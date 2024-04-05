@@ -1,5 +1,5 @@
 import { useRecoilCallback, useRecoilValue } from "recoil";
-import { AddAdultToFamilyCommand, AddChildToFamilyCommand, AddPersonAddress, AddPersonEmailAddress, AddPersonPhoneNumber, Address, Age, CompositeRecordsCommand, CreateVolunteerFamilyWithNewAdultCommand, CustodialRelationship, EmailAddress, EmailAddressType, FamilyAdultRelationshipInfo, Gender, PersonCommand, PhoneNumber, PhoneNumberType, UpdatePersonAddress, UpdatePersonConcerns, UpdatePersonEmailAddress, UpdatePersonName, UpdatePersonNotes, UpdatePersonPhoneNumber, NoteCommand, CreateDraftNote, EditDraftNote, ApproveNote, DiscardDraftNote, CreatePartneringFamilyWithNewAdultCommand, FamilyCommand, UploadFamilyDocument, UndoCreatePerson, DeleteUploadedFamilyDocument, UpdatePersonGender, UpdatePersonAge, UpdatePersonEthnicity, UpdateAdultRelationshipToFamily, CustodialRelationshipType, UpdateCustodialRelationshipType, RemoveCustodialRelationship, ChangePrimaryFamilyContact, FamilyRecordsCommand, PersonRecordsCommand, NoteRecordsCommand, AtomicRecordsCommand, CustomField, UpdateCustomFamilyField, CommunityCommand, CommunityRecordsCommand, ConvertChildToAdult } from "../GeneratedClient";
+import { AddAdultToFamilyCommand, AddChildToFamilyCommand, AddPersonAddress, AddPersonEmailAddress, AddPersonPhoneNumber, Address, Age, CompositeRecordsCommand, CreateVolunteerFamilyWithNewAdultCommand, CustodialRelationship, EmailAddress, EmailAddressType, FamilyAdultRelationshipInfo, Gender, PersonCommand, PhoneNumber, PhoneNumberType, UpdatePersonAddress, UpdatePersonConcerns, UpdatePersonEmailAddress, UpdatePersonName, UpdatePersonNotes, UpdatePersonPhoneNumber, NoteCommand, CreateDraftNote, EditDraftNote, ApproveNote, DiscardDraftNote, CreatePartneringFamilyWithNewAdultCommand, FamilyCommand, UploadFamilyDocument, UndoCreatePerson, DeleteUploadedFamilyDocument, UpdatePersonGender, UpdatePersonAge, UpdatePersonEthnicity, UpdateAdultRelationshipToFamily, CustodialRelationshipType, UpdateCustodialRelationshipType, RemoveCustodialRelationship, ChangePrimaryFamilyContact, FamilyRecordsCommand, PersonRecordsCommand, NoteRecordsCommand, AtomicRecordsCommand, CustomField, UpdateCustomFamilyField, CommunityCommand, CommunityRecordsCommand, ConvertChildToAdult, UndoCreateFamily } from "../GeneratedClient";
 import { api } from "../Api/Api";
 import { selectedLocationContextState, visibleAggregatesState, visibleCommunitiesQuery, visibleFamiliesQuery } from "./Data";
 
@@ -72,11 +72,13 @@ export function useAtomicRecordsCommandCallback<T extends unknown[], U extends A
       const updatedAggregate = await api.records.submitAtomicRecordsCommand(organizationId, locationId, command);
 
       set(visibleAggregatesState, current =>
-        current.some(currentEntry => currentEntry.id === updatedAggregate.id && currentEntry.constructor === updatedAggregate.constructor)
-          ? current.map(currentEntry => currentEntry.id === updatedAggregate.id && currentEntry.constructor === updatedAggregate.constructor
-            ? updatedAggregate
-            : currentEntry)
-          : current.concat(updatedAggregate));
+        updatedAggregate == null
+          ? current.filter(currentEntry => currentEntry.id !== aggregateId)
+          : current.some(currentEntry => currentEntry.id === aggregateId && currentEntry.constructor === updatedAggregate.constructor)
+            ? current.map(currentEntry => currentEntry.id === aggregateId && currentEntry.constructor === updatedAggregate.constructor
+              ? updatedAggregate
+              : currentEntry)
+            : current.concat(updatedAggregate));
     };
     return asyncCallback;
   })
@@ -93,11 +95,13 @@ function useCompositeRecordsCommandCallback<T extends unknown[]>(
       const updatedAggregate = await api.records.submitCompositeRecordsCommand(organizationId, locationId, command);
 
       set(visibleAggregatesState, current =>
-        current.some(currentEntry => currentEntry.id === updatedAggregate.id)
-          ? current.map(currentEntry => currentEntry.id === updatedAggregate.id
-            ? updatedAggregate
-            : currentEntry)
-          : current.concat(updatedAggregate));
+        updatedAggregate == null
+          ? current.filter(currentEntry => currentEntry.id !== aggregateId)
+          : current.some(currentEntry => currentEntry.id === aggregateId)
+            ? current.map(currentEntry => currentEntry.id === aggregateId
+              ? updatedAggregate
+              : currentEntry)
+            : current.concat(updatedAggregate));
     };
     return asyncCallback;
   })
@@ -141,6 +145,13 @@ export function useCommunityCommand<TCommand extends CommunityCommand, TArgs ext
 }
 
 export function useDirectoryModel() {
+  const undoCreateFamily = useFamilyCommandCallback(
+    async (familyId) => {
+      const command = new UndoCreateFamily({
+        familyId: familyId
+      });
+      return command;
+    });
   const uploadFamilyDocument = useFamilyCommandCallback(
     async (familyId, uploadedDocumentId: string, uploadedFileName: string) => {
       const command = new UploadFamilyDocument({
@@ -493,6 +504,7 @@ export function useDirectoryModel() {
     });
 
   return {
+    undoCreateFamily,
     uploadFamilyDocument,
     deleteUploadedFamilyDocument,
     convertChildToAdult,

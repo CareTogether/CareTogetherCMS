@@ -102,7 +102,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
         static Person child5 = new Person(guid5, true, "Wanda", "Smith", Gender.Female, new ExactAge(new DateTime(2022, 1, 1)), "",
             ImmutableList<Address>.Empty, null, ImmutableList<PhoneNumber>.Empty, null, ImmutableList<EmailAddress>.Empty, null, null, null);
 
-        static Family family = new Family(guid0, guid1,
+        static Family family = new Family(guid0, true, guid1,
             ImmutableList<(Person, FamilyAdultRelationshipInfo)>.Empty
                 .Add((adult1, new FamilyAdultRelationshipInfo("Dad", true)))
                 .Add((adult2, new FamilyAdultRelationshipInfo("Mom", true)))
