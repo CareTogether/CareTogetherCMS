@@ -578,6 +578,13 @@ function VolunteerApproval(props: { onOpen: () => void }) {
 								{Object.entries(volunteerFamily.volunteerFamilyInfo?.individualVolunteers?.[adult.item1!.id!].approvalStatusByRole || {}).map(([role, roleApprovalStatus]) =>
 								<VolunteerRoleApprovalStatusChip key={role} roleName={role} status={roleApprovalStatus.effectiveRoleApprovalStatus} sx={{ margin: '.125rem .25rem .125rem 0' }} />)}                      
 							</TableCell>    						
+						</TableRow>))}
+						{expandedView && volunteerFamily.family?.children?.map(child => child && child.active && (
+						<TableRow key={volunteerFamily.family?.id + ":" + child.id}
+							onClick={() => openFamily(volunteerFamily.family!.id!)}>
+							{smsMode && <TableCell />}
+							<TableCell>{child.lastName}, {child.firstName}</TableCell> 
+							<TableCell></TableCell>    						
 						</TableRow>))}						
 					</React.Fragment>
 					))}
