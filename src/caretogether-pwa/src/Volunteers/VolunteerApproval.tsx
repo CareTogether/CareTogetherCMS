@@ -37,6 +37,7 @@ type filterOption = {
 	type?: filterType | undefined;
 	selected: boolean;
 }
+const catchAllLabel = "Not Applied";
 const roleFiltersState = atom({
 	key: 'newRoleFiltersState',
 	default: selector({
@@ -45,12 +46,12 @@ const roleFiltersState = atom({
 			const policy = get(policyData);
 			const familyRoles = [...Object.keys(policy.volunteerPolicy?.volunteerFamilyRoles || {})];
 			const individualRoles = [...Object.keys(policy.volunteerPolicy?.volunteerRoles || {})];
-			const combinedRoles = ["Not Applied",...familyRoles, ...individualRoles];
+			const combinedRoles = [catchAllLabel,...familyRoles, ...individualRoles];
 			const roleFilters: filterOption[] = [];
 			for (let i = 0; i < combinedRoles.length; i++) {
 				const isIndividualRole = i >= (familyRoles.length + 1);
 				const roleType = isIndividualRole ? filterType.Individual : 
-					combinedRoles[i] === "Not Applied" ? undefined : filterType.Family;				
+					combinedRoles[i] === catchAllLabel ? undefined : filterType.Family;				
 				roleFilters.push({
 					key: combinedRoles[i],
 					value: i.toString(),
@@ -68,7 +69,7 @@ const statusFiltersState = atom({
 		key: 'statusFiltersState/Default',
 		get: () => {
 			const options = [
-				{ key: "Not Applied", value: 0 },
+				{ key: catchAllLabel, value: 0 },
 				{ key: RoleApprovalStatus[RoleApprovalStatus.Prospective], value: RoleApprovalStatus.Prospective },
 				{ key: RoleApprovalStatus[RoleApprovalStatus.Approved], value: RoleApprovalStatus.Approved },
 				{ key: RoleApprovalStatus[RoleApprovalStatus.Onboarded], value: RoleApprovalStatus.Onboarded },
@@ -222,7 +223,6 @@ function VolunteerApproval(props: { onOpen: () => void }) {
 	const volunteerFamiliesLoadable = useLoadable(volunteerFamiliesData);
 	const volunteerFamilies = (volunteerFamiliesLoadable || []).map(x => x).sort((a, b) =>
 		familyLastName(a) < familyLastName(b) ? -1 : familyLastName(a) > familyLastName(b) ? 1 : 0);
-
 	const [filterText, setFilterText] = useState("");
 
 	//#region Family/Individual Filtering Code
@@ -232,148 +232,98 @@ function VolunteerApproval(props: { onOpen: () => void }) {
 	
 	//#region Family-Specific Methods	
 	function familyHasNoValidRoles(family: CombinedFamilyInfo) {
-		const familyHasNoValidRoles = roleFilters.every(filterOption => {
-			return !familyHasSpecificRoleInValidStatus(family, filterOption.key);
-		});
-		return familyHasNoValidRoles;
+		return roleFilters.every(filterOption => !familyHasSpecificRoleInValidStatus(family, filterOption.key));
 	}
 
 	function familyHasNoValidStatuses(family: CombinedFamilyInfo) {
-		const familyHasNoValidStatuses = statusFilters.every(filterOption => family.volunteerFamilyInfo?.familyRoleApprovals?.[filterOption.key] === undefined);
-		const familyMembers = ((family.volunteerFamilyInfo?.individualVolunteers && Object.entries(family.volunteerFamilyInfo?.individualVolunteers)) || []);
-		const familyMembersWithNoValidStatuses = familyMembers.filter(([, volunteer]) => statusFilters.every(filterOption => volunteer.approvalStatusByRole?.[filterOption.key] === undefined));
-		return familyHasNoValidStatuses || familyMembersWithNoValidStatuses.length > 0;
+		return statusFilters.every(filterOption => family.volunteerFamilyInfo?.familyRoleApprovals?.[filterOption.key] === undefined);
 	}
 
 	function familyHasSpecificRoleInValidStatus(family: CombinedFamilyInfo, roleName: string) {
-		const validStatuses = statusFilters.filter(filterOption => filterOption.key !== `Not Applied`);
-		const currentFamilyStatus = family.volunteerFamilyInfo?.familyRoleApprovals?.[roleName]?.currentStatus;
-		const result = validStatuses.some(status => checkStatusEquivalence(status.value, currentFamilyStatus));
-		return result;
+		return statusFilters.filter(filterOption => filterOption.key !== catchAllLabel)
+			.some(status => checkStatusEquivalence(status.value, family.volunteerFamilyInfo?.familyRoleApprovals?.[roleName]?.currentStatus));		
 	}
 
 	function familyMeetsFilterCriteria(family: CombinedFamilyInfo) {
-		if (selectedFamilyRoleKeys.length === 0) {
-			if (selectedStatusKeys.length === 0) {
-				return (selectedIndividualRoleKeys.length === 0);
+		if (!selectedFamilyRoleKeys.length) {
+			if (selectedStatusKeys.length) {
+				return !selectedIndividualRoleKeys.length;
 			}
-			const familyHasARoleInASelectedStatus = selectedStatusKeys.some(status => {
-				if (status === "Not Applied") {
-					const noValidStatuses = familyHasNoValidStatuses(family);
-					return noValidStatuses;
-				}
-				else 
-				{
-					const familyHasRoleInASelectedStatus = roleFilters.some(roleFilter => {
-						return status?.toString() === family.volunteerFamilyInfo?.familyRoleApprovals?.[roleFilter.key]?.currentStatus?.toString(); 						
-					});
-					return familyHasRoleInASelectedStatus;
-				}
-			});
-			return familyHasARoleInASelectedStatus; 
-		} 
-		const result = selectedFamilyRoleKeys.some(roleName => {
+			return selectedStatusKeys.some(status => (status === catchAllLabel) 
+				? familyHasNoValidStatuses(family)
+				: roleFilters.some(roleFilter => 
+					checkStatusEquivalence(status, family.volunteerFamilyInfo?.familyRoleApprovals?.[roleFilter.key]?.currentStatus)));
+		}
+		return selectedFamilyRoleKeys.some(roleName => {
 			const noValidRoles = familyHasNoValidRoles(family);
-			const familyHasRole = (roleName !== "Not Applied") 
+			const familyHasRole = (roleName !== catchAllLabel) 
 				? (family.volunteerFamilyInfo?.familyRoleApprovals?.[roleName] !== undefined) 
 				: noValidRoles;
-			if (!familyHasRole || (roleName === "Not Applied" && noValidRoles)) {
+			if (!familyHasRole || (roleName === catchAllLabel && noValidRoles)) {
 				return familyHasRole;
 			}
 			if (selectedStatusKeys.length === 0) {
-				const hasRoleInValidStatus = familyHasSpecificRoleInValidStatus(family, roleName);
-				return hasRoleInValidStatus || (roleName === "Not Applied" && familyHasRole);
+				return familyHasSpecificRoleInValidStatus(family, roleName) || (roleName === catchAllLabel && familyHasRole);
 			}
-			const familyHasRoleInSelectedStatus = selectedStatusKeys.some(status => {
-				const hasStatus = checkStatusEquivalence(status, family.volunteerFamilyInfo?.familyRoleApprovals?.[roleName]?.currentStatus);
-				return hasStatus;
-			});
-			return familyHasRoleInSelectedStatus;
-		});
-		return result;
+			return selectedStatusKeys.some(status => 
+				checkStatusEquivalence(status, family.volunteerFamilyInfo?.familyRoleApprovals?.[roleName]?.currentStatus));
+		});		
 	}
 	//#endregion
 
-	//#region Family Member-Specific Methods	
+	//#region Family Member-Specific Methods
+	function getFamilyMembers(family: CombinedFamilyInfo) {
+		return ((family.volunteerFamilyInfo?.individualVolunteers && Object.entries(family.volunteerFamilyInfo?.individualVolunteers)) || []);
+	}
+
 	function familyMemberHasNoValidRoles(family: CombinedFamilyInfo) {
-		const familyMembers = ((family.volunteerFamilyInfo?.individualVolunteers && Object.entries(family.volunteerFamilyInfo?.individualVolunteers)) || []);
-		const familyMembersWithNoValidRoles = familyMembers.filter(([, volunteer]) => roleFilters.every(filterOption => {
+		return getFamilyMembers(family).filter(([, volunteer]) => roleFilters.every(filterOption => {
 			return !familyMemberHasSpecificRoleInValidStatus(volunteer, filterOption.key);
-		}));
-		return (familyMembersWithNoValidRoles.length > 0);
+		})).length > 0;
 	}
 
 	function familyMemberHasNoValidStatuses(volunteer: VolunteerInfo) {
-		const noValidStatuses = statusFilters.every(filterOption => {
-			return checkStatusEquivalence(volunteer.approvalStatusByRole?.[filterOption.key].currentStatus, null);
-		});
-		return noValidStatuses;
+		return statusFilters.every(filterOption => checkStatusEquivalence(volunteer.approvalStatusByRole?.[filterOption.key].currentStatus, null));		
 	}
 
 	function familyMemberHasSpecificRoleInValidStatus(volunteer: VolunteerInfo, roleName: string) {
-		const validStatuses = statusFilters.filter(filterOption => filterOption.key !== `Not Applied`);
-		const currentFamilyMemberStatus = volunteer.approvalStatusByRole?.[roleName]?.currentStatus;
-		const result = validStatuses.some(status => {
-			const equivalent = checkStatusEquivalence(status.value, currentFamilyMemberStatus);
-			return equivalent;
-		});
-		return result;	
+		return statusFilters.filter(filterOption => filterOption.key !== catchAllLabel)
+			.some(status => checkStatusEquivalence(status.value, volunteer.approvalStatusByRole?.[roleName]?.currentStatus));
 	}
 
 	function familyMemberHasARoleInSelectedStatus(volunteer: VolunteerInfo, status: string) {
-		let result = false;
-		if (status === "Not Applied") {
-			const noValidStatuses = familyMemberHasNoValidStatuses(volunteer);
-			result = noValidStatuses;
-		}
-		else {
-			const familyMemberHasARoleInSelectedStatus = roleFilters.some(roleFilter => {
-				return checkStatusEquivalence(volunteer.approvalStatusByRole?.[roleFilter.key]?.currentStatus, status);
-			});
-			result = familyMemberHasARoleInSelectedStatus;
-		}
-		return result;
+		return (status === catchAllLabel) ? familyMemberHasNoValidStatuses(volunteer)
+			: roleFilters.some(roleFilter => checkStatusEquivalence(volunteer.approvalStatusByRole?.[roleFilter.key]?.currentStatus, status));		
 	}
 	
 	function familyMembersMeetFilterCriteria(family: CombinedFamilyInfo) {
-		const familyMembers = ((family.volunteerFamilyInfo?.individualVolunteers && Object.entries(family.volunteerFamilyInfo?.individualVolunteers)) || []);
-		if (selectedIndividualRoleKeys.length === 0) {
-			if (selectedStatusKeys.length === 0) {
-				return selectedFamilyRoleKeys.length === 0;
+		const familyMembers = getFamilyMembers(family);
+		if (!selectedIndividualRoleKeys.length) {
+			if (!selectedStatusKeys.length) {
+				return !selectedFamilyRoleKeys.length;
 			}
-			const familyMemberHasARoleInASelectedStatus = selectedStatusKeys.some(status => {				
-				const familyMembersWithRoleInSelectedStatus = familyMembers.filter(([, volunteer]) => {					
-					return familyMemberHasARoleInSelectedStatus(volunteer, status ? status : "Not Applied");
-				});
-				return familyMembersWithRoleInSelectedStatus.length > 0;
-			});
-			return familyMemberHasARoleInASelectedStatus; 
+			return selectedStatusKeys.some(status => familyMembers.filter(([, volunteer]) => 
+				familyMemberHasARoleInSelectedStatus(volunteer, status ? status : catchAllLabel)).length > 0);
 		} 
-		const result = selectedIndividualRoleKeys.some(roleName => {
+		return selectedIndividualRoleKeys.some(roleName => {
 			return familyMembers.some(([, volunteer]) => {
 				const noValidRoles = familyMemberHasNoValidRoles(family);
-				const familyMembersHaveRole = (roleName !== "Not Applied") 
+				const familyMembersHaveRole = (roleName !== catchAllLabel) 
 					? familyMemberHasSpecificRoleInValidStatus(volunteer, roleName)
 					: noValidRoles;
-				if (roleName === "Not Applied" && noValidRoles) {
+				if (roleName === catchAllLabel && noValidRoles) {
 					return familyMembersHaveRole;
 				}
-				if (selectedStatusKeys.length === 0) {
+				if (!selectedStatusKeys.length) {
 					return familyMemberHasSpecificRoleInValidStatus(volunteer, roleName);
 				}
-				const matchingStatus = selectedStatusKeys.some(status => {
-					const hasStatus = checkStatusEquivalence(status, volunteer.approvalStatusByRole?.[roleName]?.currentStatus);
-					return hasStatus;
-				});				
-				return matchingStatus;
+				return selectedStatusKeys.some(status => checkStatusEquivalence(status, volunteer.approvalStatusByRole?.[roleName]?.currentStatus));
 			});
-		});
-		return result;
+		});	
 	}
 	//#endregion
 
 	function familyOrFamilyMembersMeetFilterCriteria(family: CombinedFamilyInfo) {
-		// TODO: Simplify arrow function syntax once there's no further need for console logs
 		const familyMeetsRoleCriteria = familyMeetsFilterCriteria(family);
 		const familyMembersMeetRoleCriteria = familyMembersMeetFilterCriteria(family);
 		const familyRolesSelected = selectedFamilyRoleKeys.length > 0;
@@ -398,9 +348,8 @@ function VolunteerApproval(props: { onOpen: () => void }) {
 		filterText.length === 0 ||
 		family.family?.adults?.some(adult => simplify(`${adult.item1?.firstName} ${adult.item1?.lastName}`).includes(filterText.toLowerCase())) ||
 		family.family?.children?.some(child => simplify(`${child?.firstName} ${child?.lastName}`).includes(filterText.toLowerCase()))) &&
-		/* Filter by roles & approval status */ (
 		familyOrFamilyMembersMeetFilterCriteria(family)
-	));
+	);
 
 	const selectedFamilies = filteredVolunteerFamilies.filter(family =>
 		!uncheckedFamilies.some(f => f === family.family!.id!));
