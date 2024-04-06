@@ -303,9 +303,8 @@ function VolunteerApproval(props: { onOpen: () => void }) {
 				console.log(family.volunteerFamilyInfo?.familyRoleApprovals?.[roleName]?.currentStatus);
 				const hasStatus = checkStatusEquivalence(status, family.volunteerFamilyInfo?.familyRoleApprovals?.[roleName]?.currentStatus);
 				console.log(hasStatus);
-				console.log(Number(status) === family.volunteerFamilyInfo?.familyRoleApprovals?.[roleName]?.currentStatus);
 				console.groupEnd();
-				return Number(status) === family.volunteerFamilyInfo?.familyRoleApprovals?.[roleName]?.currentStatus;
+				return hasStatus;
 			});
 			console.groupEnd();
 			return familyHasRoleInSelectedStatus;
@@ -369,7 +368,6 @@ function VolunteerApproval(props: { onOpen: () => void }) {
 		const familyMembers = ((family.volunteerFamilyInfo?.individualVolunteers && Object.entries(family.volunteerFamilyInfo?.individualVolunteers)) || []);
 		if (selectedIndividualRoleKeys.length === 0) {
 			if (selectedStatusKeys.length === 0) {
-				console.log(`B 1`);
 				console.groupEnd();
 				return selectedFamilyRoleKeys.length === 0;
 			}
@@ -379,7 +377,6 @@ function VolunteerApproval(props: { onOpen: () => void }) {
 				});
 				return familyMembersWithRoleInSelectedStatus.length > 0;
 			});
-			console.log(`B 2`);
 			console.groupEnd();
 			return familyMemberHasARoleInASelectedStatus; 
 		} 
@@ -390,16 +387,20 @@ function VolunteerApproval(props: { onOpen: () => void }) {
 				const familyMembersHaveRole = (roleName !== "Not Applied") 
 					? familyMemberHasSpecificRoleInValidStatus(volunteer, roleName)
 					: noValidRoles;
-				if (!familyMembersHaveRole || (roleName === "Not Applied" && noValidRoles)) {
-					console.log(`B 3`);
+				if (roleName === "Not Applied" && noValidRoles) {
 					return familyMembersHaveRole;
 				}
 				if (selectedStatusKeys.length === 0) {
+					console.log('b');
 					return familyMemberHasSpecificRoleInValidStatus(volunteer, roleName);
 				}
-				console.log(`B 4`);
 				const matchingStatus = selectedStatusKeys.some(status => {
-					return Number(status) === volunteer.approvalStatusByRole?.[roleName]?.currentStatus;
+					const hasStatus = checkStatusEquivalence(status, volunteer.approvalStatusByRole?.[roleName]?.currentStatus);
+					console.group(status);
+					console.log(volunteer.approvalStatusByRole?.[roleName]?.currentStatus);
+					console.log(hasStatus);
+					console.groupEnd();
+					return hasStatus;
 				});				
 				return matchingStatus;
 			});
@@ -410,10 +411,7 @@ function VolunteerApproval(props: { onOpen: () => void }) {
 	}
 	//#endregion
 
-	function familyOrFamilyMembersMeetFilterCriteria(family: CombinedFamilyInfo) {
-		// TODO: Scenarios that aren't currently working: 
-			//"Host Family" Role (or any other valid) + "Not Applied" Status should return 3 matches, not 0
-			//"Not Applied" Role + Any Valid Status should return 0 matches, not all
+	function familyOrFamilyMembersMeetFilterCriteria(family: CombinedFamilyInfo) {		
 		// TODO: Cleanup console logs once troubleshooting is completed
 		// TODO: Integrate checkStatusEquivalence() for all filter methods in this file for consistency instead of situationally leveraging other comparison methods
 		// TODO: Simplify arrow function syntax once there's no further need for console logs
