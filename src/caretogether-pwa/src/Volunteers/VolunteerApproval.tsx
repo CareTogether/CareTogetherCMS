@@ -208,14 +208,12 @@ function VolunteerApproval(props: { onOpen: () => void }) {
 		setUncheckedFamilies([]);
 		const filterOptionToUpdate = roleFilters.find(filter => 
 			filter.value === getOptionValueFromSelection(selection));
-			console.warn(`changing ${filterOptionToUpdate?.key} to ${!filterOptionToUpdate?.selected}`);
 		setRoleFilters(getUpdatedFilters(roleFilters, filterOptionToUpdate!));
 	}
 	function changeStatusFilterSelection(selection: string | string[]) {
 		setUncheckedFamilies([]);
 		const filterOptionToUpdate = statusFilters.find(filter => 
 			filter.value === getOptionValueFromSelection(selection));
-			console.warn(`changing ${filterOptionToUpdate?.key} to ${!filterOptionToUpdate?.selected}`);
 		setStatusFilters(getUpdatedFilters(statusFilters, filterOptionToUpdate!));
 	}
 	//#endregion
@@ -255,11 +253,8 @@ function VolunteerApproval(props: { onOpen: () => void }) {
 	}
 
 	function familyMeetsFilterCriteria(family: CombinedFamilyInfo) {
-		console.group(`Family`);
 		if (selectedFamilyRoleKeys.length === 0) {
 			if (selectedStatusKeys.length === 0) {
-				console.log(selectedIndividualRoleKeys.length === 0);
-				console.groupEnd();
 				return (selectedIndividualRoleKeys.length === 0);
 			}
 			const familyHasARoleInASelectedStatus = selectedStatusKeys.some(status => {
@@ -270,47 +265,31 @@ function VolunteerApproval(props: { onOpen: () => void }) {
 				else 
 				{
 					const familyHasRoleInASelectedStatus = roleFilters.some(roleFilter => {
-						console.group(roleFilter.key);						
-						console.log(status?.toString());
-						console.log(family.volunteerFamilyInfo?.familyRoleApprovals?.[roleFilter.key]?.currentStatus?.toString());
-						console.groupEnd();
 						return status?.toString() === family.volunteerFamilyInfo?.familyRoleApprovals?.[roleFilter.key]?.currentStatus?.toString(); 						
 					});
 					return familyHasRoleInASelectedStatus;
 				}
 			});
-			console.log(familyHasARoleInASelectedStatus);
-			console.groupEnd();
 			return familyHasARoleInASelectedStatus; 
 		} 
 		const result = selectedFamilyRoleKeys.some(roleName => {
-			console.group(roleName);
 			const noValidRoles = familyHasNoValidRoles(family);
 			const familyHasRole = (roleName !== "Not Applied") 
 				? (family.volunteerFamilyInfo?.familyRoleApprovals?.[roleName] !== undefined) 
 				: noValidRoles;
 			if (!familyHasRole || (roleName === "Not Applied" && noValidRoles)) {
-				console.groupEnd();
 				return familyHasRole;
 			}
 			if (selectedStatusKeys.length === 0) {
 				const hasRoleInValidStatus = familyHasSpecificRoleInValidStatus(family, roleName);
-				console.groupEnd();
 				return hasRoleInValidStatus || (roleName === "Not Applied" && familyHasRole);
 			}
 			const familyHasRoleInSelectedStatus = selectedStatusKeys.some(status => {
-				console.group(status);
-				console.log(family.volunteerFamilyInfo?.familyRoleApprovals?.[roleName]?.currentStatus);
 				const hasStatus = checkStatusEquivalence(status, family.volunteerFamilyInfo?.familyRoleApprovals?.[roleName]?.currentStatus);
-				console.log(hasStatus);
-				console.groupEnd();
 				return hasStatus;
 			});
-			console.groupEnd();
 			return familyHasRoleInSelectedStatus;
 		});
-		console.log(result);
-		console.groupEnd();
 		return result;
 	}
 	//#endregion
@@ -334,15 +313,10 @@ function VolunteerApproval(props: { onOpen: () => void }) {
 	function familyMemberHasSpecificRoleInValidStatus(volunteer: VolunteerInfo, roleName: string) {
 		const validStatuses = statusFilters.filter(filterOption => filterOption.key !== `Not Applied`);
 		const currentFamilyMemberStatus = volunteer.approvalStatusByRole?.[roleName]?.currentStatus;
-		// console.group(`familyMemberHasSpecificRoleInValidStatus`);
-		// console.log(currentFamilyMemberStatus);	
-		// console.log(JSON.stringify(validStatuses));	
 		const result = validStatuses.some(status => {
 			const equivalent = checkStatusEquivalence(status.value, currentFamilyMemberStatus);
 			return equivalent;
 		});
-		//console.log(result);
-		//console.groupEnd();
 		return result;	
 	}
 
@@ -354,21 +328,17 @@ function VolunteerApproval(props: { onOpen: () => void }) {
 		}
 		else {
 			const familyMemberHasARoleInSelectedStatus = roleFilters.some(roleFilter => {
-				console.group
 				return checkStatusEquivalence(volunteer.approvalStatusByRole?.[roleFilter.key]?.currentStatus, status);
 			});
 			result = familyMemberHasARoleInSelectedStatus;
 		}
-		console.log(`Member HasRoleInSelectedStatus: ${result}`);
 		return result;
 	}
 	
 	function familyMembersMeetFilterCriteria(family: CombinedFamilyInfo) {
-		console.group(`Family Members`);	
 		const familyMembers = ((family.volunteerFamilyInfo?.individualVolunteers && Object.entries(family.volunteerFamilyInfo?.individualVolunteers)) || []);
 		if (selectedIndividualRoleKeys.length === 0) {
 			if (selectedStatusKeys.length === 0) {
-				console.groupEnd();
 				return selectedFamilyRoleKeys.length === 0;
 			}
 			const familyMemberHasARoleInASelectedStatus = selectedStatusKeys.some(status => {				
@@ -377,11 +347,9 @@ function VolunteerApproval(props: { onOpen: () => void }) {
 				});
 				return familyMembersWithRoleInSelectedStatus.length > 0;
 			});
-			console.groupEnd();
 			return familyMemberHasARoleInASelectedStatus; 
 		} 
 		const result = selectedIndividualRoleKeys.some(roleName => {
-			console.log(roleName);
 			return familyMembers.some(([, volunteer]) => {
 				const noValidRoles = familyMemberHasNoValidRoles(family);
 				const familyMembersHaveRole = (roleName !== "Not Applied") 
@@ -391,34 +359,21 @@ function VolunteerApproval(props: { onOpen: () => void }) {
 					return familyMembersHaveRole;
 				}
 				if (selectedStatusKeys.length === 0) {
-					console.log('b');
 					return familyMemberHasSpecificRoleInValidStatus(volunteer, roleName);
 				}
 				const matchingStatus = selectedStatusKeys.some(status => {
 					const hasStatus = checkStatusEquivalence(status, volunteer.approvalStatusByRole?.[roleName]?.currentStatus);
-					console.group(status);
-					console.log(volunteer.approvalStatusByRole?.[roleName]?.currentStatus);
-					console.log(hasStatus);
-					console.groupEnd();
 					return hasStatus;
 				});				
 				return matchingStatus;
 			});
 		});
-		console.log(result);
-		console.groupEnd();
 		return result;
 	}
 	//#endregion
 
-	function familyOrFamilyMembersMeetFilterCriteria(family: CombinedFamilyInfo) {		
-		// TODO: Cleanup console logs once troubleshooting is completed
-		// TODO: Integrate checkStatusEquivalence() for all filter methods in this file for consistency instead of situationally leveraging other comparison methods
+	function familyOrFamilyMembersMeetFilterCriteria(family: CombinedFamilyInfo) {
 		// TODO: Simplify arrow function syntax once there's no further need for console logs
-		console.group(`${familyLastName(family)}`);		
-		console.log(JSON.stringify(selectedFamilyRoleKeys));
-		console.log(JSON.stringify(selectedIndividualRoleKeys));
-		console.log(JSON.stringify(selectedStatusKeys));
 		const familyMeetsRoleCriteria = familyMeetsFilterCriteria(family);
 		const familyMembersMeetRoleCriteria = familyMembersMeetFilterCriteria(family);
 		const familyRolesSelected = selectedFamilyRoleKeys.length > 0;
@@ -434,8 +389,6 @@ function VolunteerApproval(props: { onOpen: () => void }) {
 		} else if (statusesSelected) {
 			result = familyMeetsRoleCriteria || familyMembersMeetRoleCriteria;
 		}
-		console.log(result);
-		console.groupEnd();
 		return result;		
 	}
 	//#endregion
