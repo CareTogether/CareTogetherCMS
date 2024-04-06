@@ -241,19 +241,19 @@ function VolunteerApproval(props: { onOpen: () => void }) {
 
 	function familyHasSpecificRoleInValidStatus(family: CombinedFamilyInfo, roleName: string) {
 		return statusFilters.filter(filterOption => filterOption.key !== catchAllLabel)
-			.some(status => checkStatusEquivalence(status.value, family.volunteerFamilyInfo?.familyRoleApprovals?.[roleName]?.currentStatus));		
+			.some(status => checkStatusEquivalence(status.value, family.volunteerFamilyInfo?.familyRoleApprovals?.[roleName]?.currentStatus));
 	}
 
 	function familyMeetsFilterCriteria(family: CombinedFamilyInfo) {
 		if (!selectedFamilyRoleKeys.length) {
-			if (selectedStatusKeys.length) {
-				return !selectedIndividualRoleKeys.length;
+			if (!selectedStatusKeys.length) {
+				return selectedIndividualRoleKeys.length === 0;
 			}
 			return selectedStatusKeys.some(status => (status === catchAllLabel) 
 				? familyHasNoValidStatuses(family)
 				: roleFilters.some(roleFilter => 
 					checkStatusEquivalence(status, family.volunteerFamilyInfo?.familyRoleApprovals?.[roleFilter.key]?.currentStatus)));
-		}
+		} 
 		return selectedFamilyRoleKeys.some(roleName => {
 			const noValidRoles = familyHasNoValidRoles(family);
 			const familyHasRole = (roleName !== catchAllLabel) 
@@ -267,11 +267,11 @@ function VolunteerApproval(props: { onOpen: () => void }) {
 			}
 			return selectedStatusKeys.some(status => 
 				checkStatusEquivalence(status, family.volunteerFamilyInfo?.familyRoleApprovals?.[roleName]?.currentStatus));
-		});		
+		});	
 	}
 	//#endregion
 
-	//#region Family Member-Specific Methods
+	//#region Family Member-Specific Methods	
 	function getFamilyMembers(family: CombinedFamilyInfo) {
 		return ((family.volunteerFamilyInfo?.individualVolunteers && Object.entries(family.volunteerFamilyInfo?.individualVolunteers)) || []);
 	}
