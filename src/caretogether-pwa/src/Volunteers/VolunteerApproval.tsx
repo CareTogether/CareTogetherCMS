@@ -46,12 +46,12 @@ const roleFiltersState = atom({
 			const policy = get(policyData);
 			const familyRoles = [...Object.keys(policy.volunteerPolicy?.volunteerFamilyRoles || {})];
 			const individualRoles = [...Object.keys(policy.volunteerPolicy?.volunteerRoles || {})];
-			const combinedRoles = [catchAllLabel,...familyRoles, ...individualRoles];
+			const combinedRoles = [catchAllLabel, ...familyRoles, ...individualRoles];
 			const roleFilters: filterOption[] = [];
 			for (let i = 0; i < combinedRoles.length; i++) {
 				const isIndividualRole = i >= (familyRoles.length + 1);
-				const roleType = isIndividualRole ? filterType.Individual : 
-					combinedRoles[i] === catchAllLabel ? undefined : filterType.Family;				
+				const roleType = isIndividualRole ? filterType.Individual :
+					combinedRoles[i] === catchAllLabel ? undefined : filterType.Family;
 				roleFilters.push({
 					key: combinedRoles[i],
 					value: i.toString(),
@@ -106,7 +106,7 @@ function VolunteerFilter({ label, options, setSelected }: VolunteerFilterProps) 
 					'& .MuiSelect-iconOpen': { transform: 'none' }
 				}}
 				multiple value={options.map(o => o.key)}
-				variant="standard" 
+				variant="standard"
 				label={`${label} Filters`}
 				onChange={handleChange}
 				input={<InputBase />}
@@ -127,7 +127,7 @@ function VolunteerFilter({ label, options, setSelected }: VolunteerFilterProps) 
 	)
 }
 //#endregion
-function getStatusComparisonValue(s?: string | number | RoleApprovalStatus | null | undefined): number {	
+function getStatusComparisonValue(s?: string | number | RoleApprovalStatus | null | undefined): number {
 	if (!s) return 0;
 	switch (s) {
 		case RoleApprovalStatus.Prospective:
@@ -175,15 +175,15 @@ function checkStatusEquivalence(a?: string | RoleApprovalStatus | null | undefin
 }
 function familyLastName(family: CombinedFamilyInfo) {
 	return family.family!.adults?.filter(adult =>
-		family.family!.primaryFamilyContactPersonId === adult.item1?.id)[0]?.item1?.lastName || "";
+		family.family!.primaryFamilyContactPersonId === adult.item1?.id)[0]?.item1?.lastName || "⚠ MISSING PRIMARY CONTACT";
 }
 
 function simplify(input: string) {
-  // Strip out common punctuation elements and excessive whitespace, and convert to lowercase
-  return input
-    .replace(/[.,/#!$%^&*;:{}=\-_`'"'‘’‚‛“”„‟′‵″‶`´~()]/g, "")
-    .replace(/\s{2,}/g, " ")
-    .toLowerCase();
+	// Strip out common punctuation elements and excessive whitespace, and convert to lowercase
+	return input
+		.replace(/[.,/#!$%^&*;:{}=\-_`'"'‘’‚‛“”„‟′‵″‶`´~()]/g, "")
+		.replace(/\s{2,}/g, " ")
+		.toLowerCase();
 }
 
 function VolunteerApproval(props: { onOpen: () => void }) {
@@ -200,25 +200,25 @@ function VolunteerApproval(props: { onOpen: () => void }) {
 		return optionValue ? optionValue : undefined;
 	}
 	function getUpdatedFilters(filters: filterOption[], optionToUpdate: filterOption) {
-		return filters.map(filter => 
+		return filters.map(filter =>
 			filter.key === optionToUpdate.key
-			? { ...filter, selected: !filter.selected }
-			: filter);	
+				? { ...filter, selected: !filter.selected }
+				: filter);
 	}
 	function changeRoleFilterSelection(selection: string | string[]) {
 		setUncheckedFamilies([]);
-		const filterOptionToUpdate = roleFilters.find(filter => 
+		const filterOptionToUpdate = roleFilters.find(filter =>
 			filter.value === getOptionValueFromSelection(selection));
 		setRoleFilters(getUpdatedFilters(roleFilters, filterOptionToUpdate!));
 	}
 	function changeStatusFilterSelection(selection: string | string[]) {
 		setUncheckedFamilies([]);
-		const filterOptionToUpdate = statusFilters.find(filter => 
+		const filterOptionToUpdate = statusFilters.find(filter =>
 			filter.value === getOptionValueFromSelection(selection));
 		setStatusFilters(getUpdatedFilters(statusFilters, filterOptionToUpdate!));
 	}
 	//#endregion
-	
+
 	// The array object returned by Recoil is read-only. We need to copy it before we can do an in-place sort.
 	const volunteerFamiliesLoadable = useLoadable(volunteerFamiliesData);
 	const volunteerFamilies = (volunteerFamiliesLoadable || []).map(x => x).sort((a, b) =>
@@ -229,7 +229,7 @@ function VolunteerApproval(props: { onOpen: () => void }) {
 	const selectedFamilyRoleKeys = roleFilters.filter(filterOption => (filterOption.selected && filterOption.type !== filterType.Individual)).map(filterOption => filterOption.key);
 	const selectedIndividualRoleKeys = roleFilters.filter(filterOption => (filterOption.selected && filterOption.type !== filterType.Family)).map(filterOption => filterOption.key);
 	const selectedStatusKeys = statusFilters.filter(filterOption => filterOption.selected).map(filterOption => filterOption.value);
-	
+
 	//#region Family-Specific Methods	
 	function familyHasNoValidRoles(family: CombinedFamilyInfo) {
 		return roleFilters.every(filterOption => !familyHasSpecificRoleInValidStatus(family, filterOption.key));
@@ -249,15 +249,15 @@ function VolunteerApproval(props: { onOpen: () => void }) {
 			if (!selectedStatusKeys.length) {
 				return selectedIndividualRoleKeys.length === 0;
 			}
-			return selectedStatusKeys.some(status => (status === catchAllLabel) 
+			return selectedStatusKeys.some(status => (status === catchAllLabel)
 				? familyHasNoValidStatuses(family)
-				: roleFilters.some(roleFilter => 
+				: roleFilters.some(roleFilter =>
 					checkStatusEquivalence(status, family.volunteerFamilyInfo?.familyRoleApprovals?.[roleFilter.key]?.currentStatus)));
-		} 
+		}
 		return selectedFamilyRoleKeys.some(roleName => {
 			const noValidRoles = familyHasNoValidRoles(family);
-			const familyHasRole = (roleName !== catchAllLabel) 
-				? (family.volunteerFamilyInfo?.familyRoleApprovals?.[roleName] !== undefined) 
+			const familyHasRole = (roleName !== catchAllLabel)
+				? (family.volunteerFamilyInfo?.familyRoleApprovals?.[roleName] !== undefined)
 				: noValidRoles;
 			if (!familyHasRole || (roleName === catchAllLabel && noValidRoles)) {
 				return familyHasRole;
@@ -265,9 +265,9 @@ function VolunteerApproval(props: { onOpen: () => void }) {
 			if (selectedStatusKeys.length === 0) {
 				return familyHasSpecificRoleInValidStatus(family, roleName) || (roleName === catchAllLabel && familyHasRole);
 			}
-			return selectedStatusKeys.some(status => 
+			return selectedStatusKeys.some(status =>
 				checkStatusEquivalence(status, family.volunteerFamilyInfo?.familyRoleApprovals?.[roleName]?.currentStatus));
-		});	
+		});
 	}
 	//#endregion
 
@@ -283,7 +283,7 @@ function VolunteerApproval(props: { onOpen: () => void }) {
 	}
 
 	function familyMemberHasNoValidStatuses(volunteer: VolunteerInfo) {
-		return statusFilters.every(filterOption => checkStatusEquivalence(volunteer.approvalStatusByRole?.[filterOption.key].currentStatus, null));		
+		return statusFilters.every(filterOption => checkStatusEquivalence(volunteer.approvalStatusByRole?.[filterOption.key].currentStatus, null));
 	}
 
 	function familyMemberHasSpecificRoleInValidStatus(volunteer: VolunteerInfo, roleName: string) {
@@ -293,22 +293,22 @@ function VolunteerApproval(props: { onOpen: () => void }) {
 
 	function familyMemberHasARoleInSelectedStatus(volunteer: VolunteerInfo, status: string) {
 		return (status === catchAllLabel) ? familyMemberHasNoValidStatuses(volunteer)
-			: roleFilters.some(roleFilter => checkStatusEquivalence(volunteer.approvalStatusByRole?.[roleFilter.key]?.currentStatus, status));		
+			: roleFilters.some(roleFilter => checkStatusEquivalence(volunteer.approvalStatusByRole?.[roleFilter.key]?.currentStatus, status));
 	}
-	
+
 	function familyMembersMeetFilterCriteria(family: CombinedFamilyInfo) {
 		const familyMembers = getFamilyMembers(family);
 		if (!selectedIndividualRoleKeys.length) {
 			if (!selectedStatusKeys.length) {
 				return !selectedFamilyRoleKeys.length;
 			}
-			return selectedStatusKeys.some(status => familyMembers.filter(([, volunteer]) => 
+			return selectedStatusKeys.some(status => familyMembers.filter(([, volunteer]) =>
 				familyMemberHasARoleInSelectedStatus(volunteer, status ? status : catchAllLabel)).length > 0);
-		} 
+		}
 		return selectedIndividualRoleKeys.some(roleName => {
 			return familyMembers.some(([, volunteer]) => {
 				const noValidRoles = familyMemberHasNoValidRoles(family);
-				const familyMembersHaveRole = (roleName !== catchAllLabel) 
+				const familyMembersHaveRole = (roleName !== catchAllLabel)
 					? familyMemberHasSpecificRoleInValidStatus(volunteer, roleName)
 					: noValidRoles;
 				if (roleName === catchAllLabel && noValidRoles) {
@@ -319,7 +319,7 @@ function VolunteerApproval(props: { onOpen: () => void }) {
 				}
 				return selectedStatusKeys.some(status => checkStatusEquivalence(status, volunteer.approvalStatusByRole?.[roleName]?.currentStatus));
 			});
-		});	
+		});
 	}
 	//#endregion
 
@@ -339,7 +339,7 @@ function VolunteerApproval(props: { onOpen: () => void }) {
 		} else if (statusesSelected) {
 			result = familyMeetsRoleCriteria || familyMembersMeetRoleCriteria;
 		}
-		return result;		
+		return result;
 	}
 	//#endregion
 
@@ -353,8 +353,8 @@ function VolunteerApproval(props: { onOpen: () => void }) {
 
 	const selectedFamilies = filteredVolunteerFamilies.filter(family =>
 		!uncheckedFamilies.some(f => f === family.family!.id!));
-	
-	
+
+
 	useScrollMemory();
 
 	function openFamily(familyId: string) {
@@ -372,7 +372,7 @@ function VolunteerApproval(props: { onOpen: () => void }) {
 		newExpandedView: boolean | null,
 	) => {
 		if (newExpandedView !== null) {
-		setExpandedView(newExpandedView);
+			setExpandedView(newExpandedView);
 		}
 	};
 
@@ -384,11 +384,11 @@ function VolunteerApproval(props: { onOpen: () => void }) {
 
 	function getSelectedFamiliesContactEmails() {
 		return selectedFamilies.map(family => {
-		const primaryContactPerson = family.family?.adults?.find(adult =>
-			adult.item1?.id === family.family?.primaryFamilyContactPersonId);
-		const preferredEmailAddress = primaryContactPerson?.item1?.emailAddresses?.find(email =>
-			email.id === primaryContactPerson.item1?.preferredEmailAddressId);
-		return preferredEmailAddress;
+			const primaryContactPerson = family.family?.adults?.find(adult =>
+				adult.item1?.id === family.family?.primaryFamilyContactPersonId);
+			const preferredEmailAddress = primaryContactPerson?.item1?.emailAddresses?.find(email =>
+				email.id === primaryContactPerson.item1?.preferredEmailAddressId);
+			return preferredEmailAddress;
 		}).filter(email => typeof email !== 'undefined') as EmailAddress[];
 	}
 
@@ -407,130 +407,130 @@ function VolunteerApproval(props: { onOpen: () => void }) {
 
 	return (!volunteerFamiliesLoadable
 		? <ProgressBackdrop>
-		<p>Loading families...</p>
+			<p>Loading families...</p>
 		</ProgressBackdrop>
 		: <>
-		<Grid container sx={{
-			paddingRight: smsMode && !isMobile ? '400px' : null,
-			height: smsMode && isMobile ? `${windowSize.height - 500 - 24}px` : null,
-			overflow: smsMode && isMobile ? 'scroll' : null
-		}}>
-			<Grid item xs={12}>
-			<Stack direction='row-reverse' sx={{ marginTop: 1 }}>
-				<ToggleButtonGroup value={expandedView} exclusive onChange={handleExpandCollapse}
-				size={isMobile ? 'medium' : 'small'} aria-label="row expansion">
-				<ToggleButton value={true} aria-label="expanded"><UnfoldMoreIcon /></ToggleButton>
-				<ToggleButton value={false} aria-label="collapsed"><UnfoldLessIcon /></ToggleButton>
-				</ToggleButtonGroup>
-				<SearchBar value={filterText} onChange={value => {
-				setUncheckedFamilies([]);
-				setFilterText(value);
-				}} />
-				{permissions(Permission.SendBulkSms) &&
-				<IconButton color="inherit" aria-label="copy email addresses"
-					onClick={() => copyEmailAddresses()} sx={{}}>
-					<EmailIcon />
-				</IconButton>}
-				{permissions(Permission.SendBulkSms) && smsSourcePhoneNumbers && smsSourcePhoneNumbers.length > 0 &&
-				<IconButton color={smsMode ? 'secondary' : 'inherit'} aria-label="send bulk sms"
-					onClick={() => setSmsMode(!smsMode)} sx={{ marginRight: 2 }}>
-					<SmsIcon sx={{ position: 'relative', top: 1 }} />
-				</IconButton>}
-				<Snackbar
-				open={noticeOpen}
-				autoHideDuration={5000} anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
-				onClose={() => setNoticeOpen(false)}
-				message={`Found and copied ${getSelectedFamiliesContactEmails().length} email addresses for ${selectedFamilies.length} selected families to clipboard`} />
-				<Box sx={{ display: 'flex', flexDirection: 'row', gap: '.75rem', marginRight: '.75rem', alignItems: 'center'}}>
-					<VolunteerFilter label="Roles" options={roleFilters} setSelected={changeRoleFilterSelection} />
-					<VolunteerFilter label="Statuses" options={statusFilters} setSelected={changeStatusFilterSelection} />
-				</Box>
-				<ButtonGroup variant="text" color="inherit" aria-label="text inherit button group" style={{ flexGrow: 1 }}>
-					<Button color={location.pathname.endsWith("/volunteers/approval") ? 'secondary' : 'inherit'} component={Link} to={"../approval"}>Approvals</Button>
-					<Button color={location.pathname.endsWith("/volunteers/progress") ? 'secondary' : 'inherit'} component={Link} to={"../progress"}>Progress</Button>
-				</ButtonGroup>				
-			</Stack>
+			<Grid container sx={{
+				paddingRight: smsMode && !isMobile ? '400px' : null,
+				height: smsMode && isMobile ? `${windowSize.height - 500 - 24}px` : null,
+				overflow: smsMode && isMobile ? 'scroll' : null
+			}}>
+				<Grid item xs={12}>
+					<Stack direction='row-reverse' sx={{ marginTop: 1 }}>
+						<ToggleButtonGroup value={expandedView} exclusive onChange={handleExpandCollapse}
+							size={isMobile ? 'medium' : 'small'} aria-label="row expansion">
+							<ToggleButton value={true} aria-label="expanded"><UnfoldMoreIcon /></ToggleButton>
+							<ToggleButton value={false} aria-label="collapsed"><UnfoldLessIcon /></ToggleButton>
+						</ToggleButtonGroup>
+						<SearchBar value={filterText} onChange={value => {
+							setUncheckedFamilies([]);
+							setFilterText(value);
+						}} />
+						{permissions(Permission.SendBulkSms) &&
+							<IconButton color="inherit" aria-label="copy email addresses"
+								onClick={() => copyEmailAddresses()} sx={{}}>
+								<EmailIcon />
+							</IconButton>}
+						{permissions(Permission.SendBulkSms) && smsSourcePhoneNumbers && smsSourcePhoneNumbers.length > 0 &&
+							<IconButton color={smsMode ? 'secondary' : 'inherit'} aria-label="send bulk sms"
+								onClick={() => setSmsMode(!smsMode)} sx={{ marginRight: 2 }}>
+								<SmsIcon sx={{ position: 'relative', top: 1 }} />
+							</IconButton>}
+						<Snackbar
+							open={noticeOpen}
+							autoHideDuration={5000} anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
+							onClose={() => setNoticeOpen(false)}
+							message={`Found and copied ${getSelectedFamiliesContactEmails().length} email addresses for ${selectedFamilies.length} selected families to clipboard`} />
+						<Box sx={{ display: 'flex', flexDirection: 'row', gap: '.75rem', marginRight: '.75rem', alignItems: 'center' }}>
+							<VolunteerFilter label="Roles" options={roleFilters} setSelected={changeRoleFilterSelection} />
+							<VolunteerFilter label="Statuses" options={statusFilters} setSelected={changeStatusFilterSelection} />
+						</Box>
+						<ButtonGroup variant="text" color="inherit" aria-label="text inherit button group" style={{ flexGrow: 1 }}>
+							<Button color={location.pathname.endsWith("/volunteers/approval") ? 'secondary' : 'inherit'} component={Link} to={"../approval"}>Approvals</Button>
+							<Button color={location.pathname.endsWith("/volunteers/progress") ? 'secondary' : 'inherit'} component={Link} to={"../progress"}>Progress</Button>
+						</ButtonGroup>
+					</Stack>
+				</Grid>
+				<Grid item xs={12}>
+					<TableContainer>
+						<Table sx={{ minWidth: '700px' }} size="small">
+							<TableHead>
+								<TableRow sx={{ height: '40px' }}>
+									{smsMode &&
+										<TableCell sx={{ padding: 0, width: '36px' }}>
+											<Checkbox size='small' checked={uncheckedFamilies.length === 0}
+												onChange={e => e.target.checked
+													? setUncheckedFamilies([])
+													: setUncheckedFamilies(filteredVolunteerFamilies.map(f => f.family!.id!))} />
+										</TableCell>}
+									{expandedView ?
+										<TableCell>Last Name, First Name</TableCell>
+										: <TableCell>Family</TableCell>}
+									<TableCell>Roles</TableCell>
+								</TableRow>
+							</TableHead>
+							<TableBody>
+								{filteredVolunteerFamilies.map((volunteerFamily) => (
+									<React.Fragment key={volunteerFamily.family?.id}>
+										<TableRow sx={{ backgroundColor: '#eef', height: '39px' }} onClick={() => openFamily(volunteerFamily.family!.id!)}>
+											{smsMode &&
+												<TableCell key="-" sx={{ padding: 0, width: '36px' }}>
+													<Checkbox size='small' checked={!uncheckedFamilies.some(x => x === volunteerFamily.family!.id!)}
+														onChange={e => e.target.checked
+															? setUncheckedFamilies(uncheckedFamilies.filter(x => x !== volunteerFamily.family!.id!))
+															: setUncheckedFamilies(uncheckedFamilies.concat(volunteerFamily.family!.id!))}
+														onClick={e => e.stopPropagation()} />
+												</TableCell>}
+											<TableCell key="1" colSpan={expandedView ? 1 : 1}>
+												<Typography sx={{ fontWeight: 600 }}>{familyLastName(volunteerFamily) + " Family"}</Typography>
+											</TableCell>
+											<TableCell>
+												{roleFilters.map((roleFilter, index) =>
+													<VolunteerRoleApprovalStatusChip
+														key={index}
+														sx={{ margin: '.125rem .25rem .125rem 0' }}
+														roleName={roleFilter.key}
+														status={volunteerFamily.volunteerFamilyInfo?.familyRoleApprovals?.[roleFilter.key]?.effectiveRoleApprovalStatus}
+													/>
+												)}
+											</TableCell>
+										</TableRow>
+										{expandedView && volunteerFamily.family?.adults?.map(adult => adult.item1 && adult.item1.active && (
+											<TableRow key={volunteerFamily.family?.id + ":" + adult.item1.id}
+												onClick={() => openFamily(volunteerFamily.family!.id!)}>
+												{smsMode && <TableCell />}
+												<TableCell>{adult.item1.lastName}, {adult.item1.firstName}</TableCell>
+												<TableCell>
+													{Object.entries(volunteerFamily.volunteerFamilyInfo?.individualVolunteers?.[adult.item1!.id!].approvalStatusByRole || {}).map(([role, roleApprovalStatus]) =>
+														<VolunteerRoleApprovalStatusChip key={role} roleName={role} status={roleApprovalStatus.effectiveRoleApprovalStatus} sx={{ margin: '.125rem .25rem .125rem 0' }} />)}
+												</TableCell>
+											</TableRow>))}
+										{expandedView && volunteerFamily.family?.children?.map(child => child && child.active && (
+											<TableRow key={volunteerFamily.family?.id + ":" + child.id}
+												onClick={() => openFamily(volunteerFamily.family!.id!)}
+												sx={{ color: 'ddd', fontStyle: 'italic' }}>
+												{smsMode && <TableCell />}
+												<TableCell>{child.lastName}, {child.firstName}</TableCell>
+												<TableCell></TableCell>
+											</TableRow>))}
+									</React.Fragment>
+								))}
+							</TableBody>
+						</Table>
+					</TableContainer>
+					{permissions(Permission.EditFamilyInfo) && permissions(Permission.ActivateVolunteerFamily) && <Fab color="primary" aria-label="add"
+						sx={{ position: 'fixed', right: '30px', bottom: '70px' }}
+						onClick={() => setCreateVolunteerFamilyDialogOpen(true)}>
+						<AddIcon />
+					</Fab>}
+					{createVolunteerFamilyDialogOpen && <CreateVolunteerFamilyDialog onClose={(volunteerFamilyId) => {
+						setCreateVolunteerFamilyDialogOpen(false);
+						volunteerFamilyId && openFamily(volunteerFamilyId);
+					}} />}
+				</Grid>
 			</Grid>
-			<Grid item xs={12}>
-			<TableContainer>
-				<Table sx={{ minWidth: '700px' }} size="small">
-				<TableHead>
-					<TableRow sx={{ height: '40px' }}>
-					{smsMode && 
-						<TableCell sx={{ padding: 0, width: '36px' }}>
-							<Checkbox size='small' checked={uncheckedFamilies.length === 0}
-							onChange={e => e.target.checked
-								? setUncheckedFamilies([])
-								: setUncheckedFamilies(filteredVolunteerFamilies.map(f => f.family!.id!))} />
-						</TableCell>}
-						{expandedView ? 
-							<TableCell>Last Name, First Name</TableCell>
-						:	<TableCell>Family</TableCell>}
-						<TableCell>Roles</TableCell>
-					</TableRow>
-				</TableHead>
-				<TableBody>
-					{filteredVolunteerFamilies.map((volunteerFamily) => (
-					<React.Fragment key={volunteerFamily.family?.id}>
-						<TableRow sx={{ backgroundColor: '#eef', height: '39px' }} onClick={() => openFamily(volunteerFamily.family!.id!)}>
-							{smsMode && 
-							<TableCell key="-" sx={{ padding: 0, width: '36px' }}>
-								<Checkbox size='small' checked={!uncheckedFamilies.some(x => x === volunteerFamily.family!.id!)}
-								onChange={e => e.target.checked
-									? setUncheckedFamilies(uncheckedFamilies.filter(x => x !== volunteerFamily.family!.id!))
-									: setUncheckedFamilies(uncheckedFamilies.concat(volunteerFamily.family!.id!))}
-								onClick={e => e.stopPropagation()} />
-							</TableCell>}
-							<TableCell key="1" colSpan={expandedView ? 1 : 1}>
-								<Typography sx={{ fontWeight: 600 }}>{familyLastName(volunteerFamily) + " Family"}</Typography>
-							</TableCell>
-							<TableCell>
-								{roleFilters.map((roleFilter, index) =>
-									<VolunteerRoleApprovalStatusChip 
-										key={index} 
-										sx={{ margin: '.125rem .25rem .125rem 0' }}
-										roleName={roleFilter.key} 
-										status={volunteerFamily.volunteerFamilyInfo?.familyRoleApprovals?.[roleFilter.key]?.effectiveRoleApprovalStatus} 
-									/>
-								)}
-							</TableCell>
-						</TableRow>
-						{expandedView && volunteerFamily.family?.adults?.map(adult => adult.item1 && adult.item1.active && (
-						<TableRow key={volunteerFamily.family?.id + ":" + adult.item1.id}
-							onClick={() => openFamily(volunteerFamily.family!.id!)}>
-							{smsMode && <TableCell />}
-							<TableCell>{adult.item1.lastName}, {adult.item1.firstName}</TableCell> 
-							<TableCell>
-								{Object.entries(volunteerFamily.volunteerFamilyInfo?.individualVolunteers?.[adult.item1!.id!].approvalStatusByRole || {}).map(([role, roleApprovalStatus]) =>
-								<VolunteerRoleApprovalStatusChip key={role} roleName={role} status={roleApprovalStatus.effectiveRoleApprovalStatus} sx={{ margin: '.125rem .25rem .125rem 0' }} />)}                      
-							</TableCell>    						
-						</TableRow>))}
-						{expandedView && volunteerFamily.family?.children?.map(child => child && child.active && (
-						<TableRow key={volunteerFamily.family?.id + ":" + child.id}
-							onClick={() => openFamily(volunteerFamily.family!.id!)}
-							sx={{ color: 'ddd', fontStyle: 'italic' }}>
-							{smsMode && <TableCell />}
-							<TableCell>{child.lastName}, {child.firstName}</TableCell> 
-							<TableCell></TableCell>    						
-						</TableRow>))}						
-					</React.Fragment>
-					))}
-				</TableBody>
-				</Table>
-			</TableContainer>
-			{permissions(Permission.EditFamilyInfo) && permissions(Permission.ActivateVolunteerFamily) && <Fab color="primary" aria-label="add"
-				sx={{ position: 'fixed', right: '30px', bottom: '70px' }}
-				onClick={() => setCreateVolunteerFamilyDialogOpen(true)}>
-				<AddIcon />
-			</Fab>}
-			{createVolunteerFamilyDialogOpen && <CreateVolunteerFamilyDialog onClose={(volunteerFamilyId) => {
-				setCreateVolunteerFamilyDialogOpen(false);
-				volunteerFamilyId && openFamily(volunteerFamilyId);
-			}} />}
-			</Grid>
-		</Grid>
-		{smsMode && <BulkSmsSideSheet selectedFamilies={selectedFamilies}
-			onClose={() => setSmsMode(false)} />}
+			{smsMode && <BulkSmsSideSheet selectedFamilies={selectedFamilies}
+				onClose={() => setSmsMode(false)} />}
 		</>
 	);
 }

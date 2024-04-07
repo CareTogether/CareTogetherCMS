@@ -69,14 +69,14 @@ export function AssignArrangementFunctionDialog({
   const deduplicatedCandidateAssignees = allCandidateAssignees.filter((item, i) =>
     allCandidateAssignees.indexOf(item) === i).sort((a, b) => {
       const aPrimaryContact = a.family!.adults!.find(adult =>
-        a.family.primaryFamilyContactPersonId === adult.item1!.id)!.item1!;
+        a.family.primaryFamilyContactPersonId === adult.item1!.id)?.item1;
       const bPrimaryContact = b.family!.adults!.find(adult =>
-        b.family.primaryFamilyContactPersonId === adult.item1!.id)!.item1!;
+        b.family.primaryFamilyContactPersonId === adult.item1!.id)?.item1;
 
       const aFirst = a.person ? a.person.firstName! : null;
-      const aLast = a.person ? a.person.lastName! : aPrimaryContact.lastName!;
+      const aLast = a.person ? a.person.lastName! : aPrimaryContact?.lastName ?? "";
       const bFirst = b.person ? b.person.firstName! : null;
-      const bLast = b.person ? b.person.lastName! : bPrimaryContact.lastName!;
+      const bLast = b.person ? b.person.lastName! : bPrimaryContact?.lastName ?? "";
 
       // Sort by last name, then by first name (if applicable)
       return aLast < bLast ? -1 : aLast > bLast ? 1 :
@@ -111,7 +111,9 @@ export function AssignArrangementFunctionDialog({
   const withBackdrop = useBackdrop();
 
   function getFamilyName(person: ValueTupleOfPersonAndFamilyAdultRelationshipInfo | undefined) {
-    return `${person!.item1!.firstName} ${person!.item1!.lastName} Family`
+    return person
+      ? `${person.item1!.firstName} ${person.item1!.lastName} Family`
+      : `⚠ MISSING PRIMARY CONTACT Family`;
   }
 
   async function save() {
@@ -131,8 +133,8 @@ export function AssignArrangementFunctionDialog({
 
   return (
     <Dialog maxWidth={"xs"} fullWidth={true} open={handle.open} onClose={(event: object | undefined, reason: string) => !isBackdropClick(reason) ? handle.closeDialog : ({})} key={handle.key}
-      aria-labelledby="assign-volunteer-title" sx={{'& .MuiDialog-paperFullWidth': {overflowY: 'visible'}}} >
-      <DialogTitle id="assign-volunteer-title" sx={{paddingBottom:"20px"}}>
+      aria-labelledby="assign-volunteer-title" sx={{ '& .MuiDialog-paperFullWidth': { overflowY: 'visible' } }} >
+      <DialogTitle id="assign-volunteer-title" sx={{ paddingBottom: "20px" }}>
         Assign {arrangementFunction.functionName}
       </DialogTitle>
       <DialogContent sx={{ '& .MuiDialogContent-root': { overflowY: 'visible' } }}>

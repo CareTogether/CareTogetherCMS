@@ -41,6 +41,7 @@ import { FilterMenu } from '../Generic/FilterMenu';
 import { isBackdropClick } from '../Utilities/handleBackdropClick';
 import { DeleteFamilyDialog } from './DeleteFamilyDialog';
 import { useDialogHandle } from '../Hooks/useDialogHandle';
+import { familyLastName } from './FamilyUtils';
 
 const sortArrangementsByStartDateDescThenCreateDateDesc = (a: Arrangement, b: Arrangement) => {
   return ((b.startedAtUtc ?? new Date()).getTime() - (a.startedAtUtc ?? new Date()).getTime()) ||
@@ -111,7 +112,7 @@ export function FamilyScreen() {
   const isWideScreen = useMediaQuery(theme.breakpoints.up('xl'));
 
   useScreenTitle(family
-    ? `${family.family?.adults!.filter(adult => adult.item1!.id === family.family!.primaryFamilyContactPersonId)[0]?.item1?.lastName} Family`
+    ? `${familyLastName(family)} Family`
     : "...");
 
   enum ArrangementFilterOptionLabel {
