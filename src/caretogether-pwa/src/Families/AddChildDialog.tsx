@@ -10,6 +10,7 @@ import { useParams } from 'react-router-dom';
 import { useBackdrop } from '../Hooks/useBackdrop';
 import { subYears } from 'date-fns';
 import { visibleFamiliesQuery } from '../Model/Data';
+import { familyLastName } from './FamilyUtils';
 
 interface AddChildDialogProps {
   onClose: (event: object | undefined, reason: string) => void
@@ -67,7 +68,7 @@ export function AddChildDialog({ onClose }: AddChildDialogProps) {
   return (
     <Dialog open={true} onClose={onClose} scroll='body' aria-labelledby="add-child-title">
       <DialogTitle id="add-child-title">
-        Add Child to {family.family?.adults?.filter(adult => adult.item1?.id === family.family?.primaryFamilyContactPersonId)[0]?.item1?.lastName} Family
+        Add Child to {familyLastName(family)}
       </DialogTitle>
       <DialogContent>
         {/* <DialogContentText>

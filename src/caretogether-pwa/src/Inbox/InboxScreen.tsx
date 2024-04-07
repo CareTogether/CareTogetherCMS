@@ -31,6 +31,13 @@ function getMessageProps(item: QueueItem, appNavigate: AppNavigate): InboxMessag
           </>,
         secondaryContent: <FamilyName family={item.family} />
       };
+    case 'MissingPrimaryContact':
+      return {
+        icon: <EmojiPeople color='error' />,
+        onClick: () => appNavigate.family(item.family.family!.id!),
+        primaryContent: <Typography variant='body1' sx={{ display: 'inline', fontWeight: 'bold' }}>Family missing a primary contact</Typography>,
+        secondaryContent: <FamilyName family={item.family} />
+      };
   }
 }
 

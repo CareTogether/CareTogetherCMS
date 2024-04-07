@@ -1,4 +1,4 @@
-import { Box, FormControl, InputLabel, MenuItem, Select } from '@mui/material';
+import { Box, Chip, FormControl, InputLabel, MenuItem, Select } from '@mui/material';
 import { useDirectoryModel } from '../Model/DirectoryModel';
 import { useInlineEditor } from '../Hooks/useInlineEditor';
 import { CombinedFamilyInfo, Permission } from '../GeneratedClient';
@@ -12,12 +12,15 @@ type PrimaryContactEditorProps = {
 export function PrimaryContactEditor({ family }: PrimaryContactEditorProps) {
   const directoryModel = useDirectoryModel();
 
-  const primaryContactPerson = family.family!.adults!.filter(adult =>
-    adult.item1!.id === family.family!.primaryFamilyContactPersonId)[0].item1!;
+  const primaryFamilyContactPersonId = family.family!.primaryFamilyContactPersonId!;
+
+  const primaryContactPerson = family.family!.adults!.find(adult =>
+    adult.item1!.id === primaryFamilyContactPersonId)?.item1;
+  const primaryContactPersonDeleted = !primaryContactPerson;
 
   const editor = useInlineEditor(async adultId =>
     await directoryModel.updatePrimaryFamilyContact(family.family!.id!, adultId),
-    primaryContactPerson.id!);
+    primaryFamilyContactPersonId);
 
   const permissions = useFamilyPermissions(family);
 
@@ -36,12 +39,18 @@ export function PrimaryContactEditor({ family }: PrimaryContactEditorProps) {
             <MenuItem key={adult.item1!.id!} value={adult.item1!.id!}>
               <PersonName person={adult.item1!} />
             </MenuItem>)}
+          {primaryContactPersonDeleted && (
+            <MenuItem key={primaryFamilyContactPersonId} value={primaryFamilyContactPersonId} disabled>
+              ⚠ DELETED PERSON
+            </MenuItem>
+          )}
         </Select>
       </FormControl>
       {editor.cancelButton}
       {editor.saveButton}
     </Box>
     : <Box>
+      {primaryContactPersonDeleted && <><Chip size="medium" label={"No primary contact!"} color="error" /><br /></>}
       Primary Contact: <PersonName person={primaryContactPerson} />
       {permissions(Permission.EditFamilyInfo) && editor.editButton}
     </Box>);

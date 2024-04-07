@@ -304,7 +304,8 @@ namespace CareTogether.Api.OData
         private static (CombinedFamilyInfo, Family) RenderFamily(Location location, CombinedFamilyInfo family)
         {
             var primaryContactPerson = family.Family.Adults
-                .Single(adult => adult.Item1.Id == family.Family.PrimaryFamilyContactPersonId).Item1;
+                .Select(adult => adult.Item1)
+                .SingleOrDefault(person => person.Id == family.Family.PrimaryFamilyContactPersonId);
 
             T? GetFromPrimaryContactIfAvailable<T>(Func<Resources.Directory.Person, T?> selector)
                 where T : class
@@ -317,10 +318,12 @@ namespace CareTogether.Api.OData
                 return bestResult;
             }
 
-            var familyName = $"{primaryContactPerson.FirstName} {primaryContactPerson.LastName} Family";
+            var familyName = primaryContactPerson == null
+                ? "⚠ MISSING PRIMARY CONTACT Family"
+                : $"{primaryContactPerson.FirstName} {primaryContactPerson.LastName} Family";
 
             var bestEmail = GetFromPrimaryContactIfAvailable(person => person.EmailAddresses
-                .SingleOrDefault(x => x.Id == primaryContactPerson.PreferredEmailAddressId)?.Address);
+                .SingleOrDefault(x => x.Id == primaryContactPerson!.PreferredEmailAddressId)?.Address);
 
             var bestAddress = GetFromPrimaryContactIfAvailable(person =>
             {
@@ -334,7 +337,7 @@ namespace CareTogether.Api.OData
             });
 
             var bestPhoneNumber = GetFromPrimaryContactIfAvailable(person => person.PhoneNumbers
-                .SingleOrDefault(x => x.Id == primaryContactPerson.PreferredPhoneNumberId)?.Number);
+                .SingleOrDefault(x => x.Id == primaryContactPerson!.PreferredPhoneNumberId)?.Number);
 
             return (family, new Family(family.Family.Id, location, location.Id, familyName,
                 bestEmail, bestPhoneNumber, bestAddress));
