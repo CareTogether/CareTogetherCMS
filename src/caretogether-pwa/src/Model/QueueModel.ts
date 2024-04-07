@@ -3,12 +3,17 @@ import { CombinedFamilyInfo, ExactAge, Person } from "../GeneratedClient";
 import { visibleFamiliesQuery } from "./Data";
 import { differenceInYears } from "date-fns";
 
-export type QueueItem = ChildOver18;
+export type QueueItem = ChildOver18 | MissingPrimaryContact;
 
 export interface ChildOver18 {
   type: 'ChildOver18',
   family: CombinedFamilyInfo,
   child: Person
+}
+
+export interface MissingPrimaryContact {
+  type: 'MissingPrimaryContact',
+  family: CombinedFamilyInfo
 }
 
 const childrenOver18Query = selector<ChildOver18[]>({
@@ -23,11 +28,23 @@ const childrenOver18Query = selector<ChildOver18[]>({
   }
 });
 
+const missingPrimaryContactsQuery = selector<MissingPrimaryContact[]>({
+  key: 'missingPrimaryContactsQuery',
+  get: ({ get }) => {
+    const visibleFamilies = get(visibleFamiliesQuery);
+    const missingPrimaryContacts = visibleFamilies?.filter(family =>
+      !family.family!.adults?.find(adult => adult.item1!.id === family.family?.primaryFamilyContactPersonId)).map(family =>
+        ({ type: 'MissingPrimaryContact', family } as MissingPrimaryContact)) || [];
+    return missingPrimaryContacts;
+  }
+});
+
 export const queueItemsQuery = selector<QueueItem[]>({
   key: 'queueItemsQuery',
   get: ({ get }) => {
     const childrenOver18 = get(childrenOver18Query);
-    return childrenOver18;
+    const missingPrimaryContacts = get(missingPrimaryContactsQuery);
+    return (childrenOver18 as QueueItem[]).concat(missingPrimaryContacts);
   }
 });
 
