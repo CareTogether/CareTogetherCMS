@@ -4,6 +4,7 @@ using System.Security.Claims;
 using System.Threading.Tasks;
 using CareTogether.Managers.Records;
 using CareTogether.Resources.Accounts;
+using CareTogether.Utilities.Identity;
 
 namespace CareTogether.Managers.Membership
 {
@@ -16,7 +17,7 @@ namespace CareTogether.Managers.Membership
         ImmutableList<Permission> GlobalContextPermissions,
         ImmutableList<Permission> AllVolunteerFamiliesContextPermissions,
         ImmutableList<Permission> AllPartneringFamiliesContextPermissions);
-    
+
     public sealed record UserInviteReviewInfo(
         Guid OrganizationId, string OrganizationName,
         Guid LocationId, string LocationName,
@@ -26,13 +27,15 @@ namespace CareTogether.Managers.Membership
     public interface IMembershipManager
     {
         Task<UserAccess> GetUserAccessAsync(ClaimsPrincipal user);
-        
+
+        Task<UserLoginInfo> GetPersonLoginInfo(ClaimsPrincipal user, Guid organizationId, Guid locationId, Guid personId);
+
         Task<FamilyRecordsAggregate> ChangePersonRolesAsync(ClaimsPrincipal user, Guid organizationId, Guid locationId,
             Guid personId, ImmutableList<string> roles);
 
         Task<byte[]> GenerateUserInviteNonceAsync(ClaimsPrincipal user, Guid organizationId, Guid locationId,
             Guid personId);
-        
+
         Task<UserInviteReviewInfo?> TryReviewUserInviteNonceAsync(ClaimsPrincipal user, Guid organizationId, Guid locationId,
             byte[] nonce);
 

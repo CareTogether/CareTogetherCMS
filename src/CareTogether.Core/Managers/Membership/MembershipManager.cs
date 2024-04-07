@@ -3,6 +3,7 @@ using CareTogether.Managers.Records;
 using CareTogether.Resources.Accounts;
 using CareTogether.Resources.Directory;
 using CareTogether.Resources.Policies;
+using CareTogether.Utilities.Identity;
 using System;
 using System.Collections.Immutable;
 using System.Linq;
@@ -18,17 +19,20 @@ namespace CareTogether.Managers.Membership
         private readonly IDirectoryResource directoryResource;
         private readonly IPoliciesResource policiesResource;
         private readonly CombinedFamilyInfoFormatter combinedFamilyInfoFormatter;
+        private readonly IIdentityProvider identityProvider;
 
 
         public MembershipManager(IAccountsResource accountsResource,
             IAuthorizationEngine authorizationEngine, IDirectoryResource directoryResource,
-            IPoliciesResource policiesResource, CombinedFamilyInfoFormatter combinedFamilyInfoFormatter)
+            IPoliciesResource policiesResource, CombinedFamilyInfoFormatter combinedFamilyInfoFormatter,
+            IIdentityProvider identityProvider)
         {
             this.accountsResource = accountsResource;
             this.authorizationEngine = authorizationEngine;
             this.directoryResource = directoryResource;
             this.policiesResource = policiesResource;
             this.combinedFamilyInfoFormatter = combinedFamilyInfoFormatter;
+            this.identityProvider = identityProvider;
         }
 
 
@@ -64,6 +68,32 @@ namespace CareTogether.Managers.Membership
             }));
 
             return new UserAccess(user.UserId(), organizationsAccess.ToImmutableList());
+        }
+
+        public async Task<UserLoginInfo> GetPersonLoginInfo(ClaimsPrincipal user,
+            Guid organizationId, Guid locationId, Guid personId)
+        {
+            // Confirm that the target user exists in the current user's location.
+            var personUserAccount = await accountsResource.TryGetPersonUserAccountAsync(
+                organizationId, locationId, personId);
+
+            // Look up the target user's family.
+            var targetUserFamily = await directoryResource.FindPersonFamilyAsync(
+                organizationId, locationId, personId);
+
+            if (personUserAccount == null || targetUserFamily == null)
+                throw new InvalidOperationException("The target user does not exist in the current user's location.");
+
+            // Confirm that the current user has access to view the target user's login information.
+            var targetUserFamilyContext = new FamilyAuthorizationContext(targetUserFamily.Id);
+            var globalContextPermissions = await authorizationEngine.AuthorizeUserAccessAsync(
+                organizationId, locationId, user, targetUserFamilyContext);
+            if (!globalContextPermissions.Contains(Permission.ViewPersonUserLoginInfo))
+                throw new InvalidOperationException("The user is not authorized to access this user's login information.");
+
+            var userLoginInfo = await identityProvider.GetUserLoginInfoAsync(personUserAccount.UserId);
+
+            return userLoginInfo;
         }
 
         public async Task<FamilyRecordsAggregate> ChangePersonRolesAsync(ClaimsPrincipal user,
