@@ -2,6 +2,7 @@
 using CareTogether.Managers.Membership;
 using CareTogether.Managers.Records;
 using CareTogether.Resources.Accounts;
+using CareTogether.Utilities.Identity;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -21,7 +22,7 @@ namespace CareTogether.Api.Controllers
         private sealed record PersonInviteRedemptionSession(string RedemptionSessionId,
             Guid OrganizationId, Guid LocationId, string InviteNonce);
 
-        
+
         private readonly IMembershipManager membershipManager;
         private readonly IOptions<MembershipOptions> membershipOptions;
         private readonly IMemoryCache redemptionSessionsCache;
@@ -45,6 +46,16 @@ namespace CareTogether.Api.Controllers
             return Ok(userAccess);
         }
 
+        [HttpGet("/api/[controller]/loginInfo/{organizationId:guid}/{locationId:guid}/{personId:guid}")]
+        public async Task<ActionResult<UserLoginInfo>> GetPersonLoginInfoAsync(
+            Guid organizationId, Guid locationId, Guid personId)
+        {
+            var user = await membershipManager.GetPersonLoginInfo(User,
+            organizationId, locationId, personId);
+
+            return Ok(user);
+        }
+
         [HttpPut("/api/[controller]/personRoles")]
         public async Task<ActionResult<FamilyRecordsAggregate>> ChangePersonRolesAsync(
             [FromQuery] Guid organizationId, [FromQuery] Guid locationId, [FromQuery] Guid personId,
@@ -52,7 +63,7 @@ namespace CareTogether.Api.Controllers
         {
             var result = await membershipManager.ChangePersonRolesAsync(User,
                 organizationId, locationId, personId, roles);
-            
+
             return Ok(result);
         }
 
@@ -62,9 +73,9 @@ namespace CareTogether.Api.Controllers
         {
             var inviteNonce = await membershipManager.GenerateUserInviteNonceAsync(User,
                 organizationId, locationId, personId);
-            
+
             var inviteNonceHexString = Convert.ToHexString(inviteNonce);
-            
+
             var inviteLink = new Uri(
                 string.Format(membershipOptions.Value.PersonInviteLinkFormat,
                     organizationId, locationId, inviteNonceHexString));
@@ -94,12 +105,12 @@ namespace CareTogether.Api.Controllers
 
             var redemptionSession = new PersonInviteRedemptionSession(
                 redemptionSessionId, organizationId, locationId, inviteNonce);
-            
+
             redemptionSessionsCache.Set(redemptionSessionId, redemptionSession, TimeSpan.FromMinutes(20));
 
             var redirectUrl = string.Format(membershipOptions.Value.PersonInviteRedirectFormat,
                 redemptionSessionId);
-            
+
             return Redirect(redirectUrl);
         }
 
@@ -118,10 +129,10 @@ namespace CareTogether.Api.Controllers
 
             var inviteInfo = await membershipManager.TryReviewUserInviteNonceAsync(User,
                 redemptionSession.OrganizationId, redemptionSession.LocationId, nonceBytes);
-            
+
             return Ok(inviteInfo);
         }
-        
+
 
         [HttpPost("/api/[controller]/confirmInvite")]
         public async Task<ActionResult<Account>> CompletePersonInviteRedemptionSession(
@@ -138,7 +149,7 @@ namespace CareTogether.Api.Controllers
 
             var accountAfterInviteRedemption = await membershipManager.TryRedeemUserInviteNonceAsync(User,
                 redemptionSession.OrganizationId, redemptionSession.LocationId, nonceBytes);
-            
+
             return Ok(accountAfterInviteRedemption);
         }
     }

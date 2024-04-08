@@ -18,6 +18,7 @@ namespace CareTogether
         InvitePersonUser = 50,
         EditPersonUserProtectedRoles = 51,
         EditPersonUserStandardRoles = 52,
+        ViewPersonUserLoginInfo = 53,
 
         AccessVolunteersScreen = 100,
         AccessPartneringFamiliesScreen = 101,
@@ -72,7 +73,7 @@ namespace CareTogether
         EditArrangementRequirementCompletion = 356,
         EditArrangementRequirementExemption = 357,
         DeleteArrangement = 358,
-        
+
         ViewChildLocationHistory = 380,
         TrackChildLocationChange = 381,
 

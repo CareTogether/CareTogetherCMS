@@ -233,7 +233,7 @@ export function AdultCard({ familyId, personId }: AdultCardProps) {
       {editDialogHandle.open && <EditAdultDialog handle={editDialogHandle} key={editDialogHandle.key}
         adult={adult} />}
       {manageUserDrawer.drawerFor(
-        <ManageUserDrawer adult={adult.item1} user={adultUser}
+        <ManageUserDrawer familyId={familyId} adult={adult.item1} user={adultUser}
           onClose={manageUserDrawer.closeDrawer} />
       )}
     </Card>}</>;
