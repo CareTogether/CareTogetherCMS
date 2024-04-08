@@ -629,6 +629,49 @@ export class UsersClient {
         return Promise.resolve<UserAccess>(null as any);
     }
 
+    getPersonLoginInfo(organizationId: string, locationId: string, personId: string): Promise<UserLoginInfo> {
+        let url_ = this.baseUrl + "/api/Users/loginInfo/{organizationId}/{locationId}/{personId}";
+        if (organizationId === undefined || organizationId === null)
+            throw new Error("The parameter 'organizationId' must be defined.");
+        url_ = url_.replace("{organizationId}", encodeURIComponent("" + organizationId));
+        if (locationId === undefined || locationId === null)
+            throw new Error("The parameter 'locationId' must be defined.");
+        url_ = url_.replace("{locationId}", encodeURIComponent("" + locationId));
+        if (personId === undefined || personId === null)
+            throw new Error("The parameter 'personId' must be defined.");
+        url_ = url_.replace("{personId}", encodeURIComponent("" + personId));
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: RequestInit = {
+            method: "GET",
+            headers: {
+                "Accept": "application/json"
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processGetPersonLoginInfo(_response);
+        });
+    }
+
+    protected processGetPersonLoginInfo(response: Response): Promise<UserLoginInfo> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result200 = UserLoginInfo.fromJS(resultData200);
+            return result200;
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<UserLoginInfo>(null as any);
+    }
+
     changePersonRoles(organizationId: string | undefined, locationId: string | undefined, personId: string | undefined, roles: string[]): Promise<FamilyRecordsAggregate> {
         let url_ = this.baseUrl + "/api/Users/personRoles?";
         if (organizationId === null)
@@ -1810,6 +1853,7 @@ export enum Permission {
     InvitePersonUser = 50,
     EditPersonUserProtectedRoles = 51,
     EditPersonUserStandardRoles = 52,
+    ViewPersonUserLoginInfo = 53,
     AccessVolunteersScreen = 100,
     AccessPartneringFamiliesScreen = 101,
     AccessSettingsScreen = 102,
@@ -11800,6 +11844,106 @@ export interface IUserLocationAccess {
     globalContextPermissions?: Permission[];
     allVolunteerFamiliesContextPermissions?: Permission[];
     allPartneringFamiliesContextPermissions?: Permission[];
+}
+
+export class UserLoginInfo implements IUserLoginInfo {
+    userId?: string;
+    lastSignIn?: Date | undefined;
+    displayName?: string | undefined;
+    identities?: UserLoginIdentity[];
+
+    constructor(data?: IUserLoginInfo) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.userId = _data["userId"];
+            this.lastSignIn = _data["lastSignIn"] ? new Date(_data["lastSignIn"].toString()) : <any>undefined;
+            this.displayName = _data["displayName"];
+            if (Array.isArray(_data["identities"])) {
+                this.identities = [] as any;
+                for (let item of _data["identities"])
+                    this.identities!.push(UserLoginIdentity.fromJS(item));
+            }
+        }
+    }
+
+    static fromJS(data: any): UserLoginInfo {
+        data = typeof data === 'object' ? data : {};
+        let result = new UserLoginInfo();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["userId"] = this.userId;
+        data["lastSignIn"] = this.lastSignIn ? this.lastSignIn.toISOString() : <any>undefined;
+        data["displayName"] = this.displayName;
+        if (Array.isArray(this.identities)) {
+            data["identities"] = [];
+            for (let item of this.identities)
+                data["identities"].push(item.toJSON());
+        }
+        return data;
+    }
+}
+
+export interface IUserLoginInfo {
+    userId?: string;
+    lastSignIn?: Date | undefined;
+    displayName?: string | undefined;
+    identities?: UserLoginIdentity[];
+}
+
+export class UserLoginIdentity implements IUserLoginIdentity {
+    issuer?: string | undefined;
+    signInType?: string | undefined;
+    issuerAssignedId?: string | undefined;
+
+    constructor(data?: IUserLoginIdentity) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.issuer = _data["issuer"];
+            this.signInType = _data["signInType"];
+            this.issuerAssignedId = _data["issuerAssignedId"];
+        }
+    }
+
+    static fromJS(data: any): UserLoginIdentity {
+        data = typeof data === 'object' ? data : {};
+        let result = new UserLoginIdentity();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["issuer"] = this.issuer;
+        data["signInType"] = this.signInType;
+        data["issuerAssignedId"] = this.issuerAssignedId;
+        return data;
+    }
+}
+
+export interface IUserLoginIdentity {
+    issuer?: string | undefined;
+    signInType?: string | undefined;
+    issuerAssignedId?: string | undefined;
 }
 
 export class UserInviteReviewInfo implements IUserInviteReviewInfo {

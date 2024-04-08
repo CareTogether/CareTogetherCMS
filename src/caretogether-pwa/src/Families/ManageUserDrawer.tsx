@@ -14,7 +14,7 @@ import {
   useMediaQuery
 } from "@mui/material";
 import { Permission, Person, UserInfo } from "../GeneratedClient";
-import { useGlobalPermissions } from "../Model/SessionModel";
+import { useFamilyIdPermissions, useGlobalPermissions } from "../Model/SessionModel";
 import { useBackdrop } from "../Hooks/useBackdrop";
 import { useRecoilCallback, useRecoilValue } from "recoil";
 import { personNameString } from "./PersonName";
@@ -23,14 +23,16 @@ import { organizationConfigurationQuery } from "../Model/ConfigurationModel";
 import { useState } from "react";
 import { api } from "../Api/Api";
 import { selectedLocationContextState, visibleAggregatesState } from "../Model/Data";
+import { UserLoginInfoDisplay } from "./UserLoginInfoDisplay";
 
 interface ManageUserDrawerProps {
   onClose: () => void;
+  familyId: string;
   adult: Person;
   user?: UserInfo;
 }
 
-export function ManageUserDrawer({ onClose, adult, user }: ManageUserDrawerProps) {
+export function ManageUserDrawer({ onClose, familyId, adult, user }: ManageUserDrawerProps) {
   const { organizationId, locationId } = useRecoilValue(selectedLocationContextState);
   const configuration = useRecoilValue(organizationConfigurationQuery);
 
@@ -59,7 +61,8 @@ export function ManageUserDrawer({ onClose, adult, user }: ManageUserDrawerProps
     setSelectedRoles(newSelected);
   };
 
-  const permissions = useGlobalPermissions();
+  const familyPermissions = useFamilyIdPermissions(familyId);
+  const globalPermissions = useGlobalPermissions();
 
   const theme = useTheme();
   const isDesktop = useMediaQuery(theme.breakpoints.up('sm'));
@@ -118,6 +121,8 @@ export function ManageUserDrawer({ onClose, adult, user }: ManageUserDrawerProps
               <AccountCircle />
             </Icon>
             User account activated
+            {familyPermissions(Permission.ViewPersonUserLoginInfo) && adult.id &&
+              <UserLoginInfoDisplay personId={adult.id} />}
           </p>
           : <p style={{ color: theme.palette.grey[500] }}>
             <Icon color='disabled' sx={{ verticalAlign: 'sub', marginRight: 1 }}>
@@ -141,8 +146,8 @@ export function ManageUserDrawer({ onClose, adult, user }: ManageUserDrawerProps
             <ListItem key={role.roleName} disablePadding>
               <ListItemButton role='checkbox'
                 disabled={role.isProtected
-                  ? !permissions(Permission.EditPersonUserProtectedRoles)
-                  : !permissions(Permission.EditPersonUserStandardRoles)}
+                  ? !globalPermissions(Permission.EditPersonUserProtectedRoles)
+                  : !globalPermissions(Permission.EditPersonUserStandardRoles)}
                 onClick={toggleRoleSelection(role.roleName!)}>
                 <ListItemIcon>
                   <Checkbox

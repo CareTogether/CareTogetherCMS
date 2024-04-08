@@ -663,6 +663,58 @@
         }
       }
     },
+    "/api/Users/loginInfo/{organizationId}/{locationId}/{personId}": {
+      "get": {
+        "tags": [
+          "Users"
+        ],
+        "operationId": "Users_GetPersonLoginInfo",
+        "parameters": [
+          {
+            "name": "organizationId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "guid"
+            },
+            "x-position": 1
+          },
+          {
+            "name": "locationId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "guid"
+            },
+            "x-position": 2
+          },
+          {
+            "name": "personId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "guid"
+            },
+            "x-position": 3
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserLoginInfo"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/Users/personRoles": {
       "put": {
         "tags": [
@@ -1303,6 +1355,7 @@
           "InvitePersonUser",
           "EditPersonUserProtectedRoles",
           "EditPersonUserStandardRoles",
+          "ViewPersonUserLoginInfo",
           "AccessVolunteersScreen",
           "AccessPartneringFamiliesScreen",
           "AccessSettingsScreen",
@@ -1367,6 +1420,7 @@
           50,
           51,
           52,
+          53,
           100,
           101,
           102,
@@ -6626,6 +6680,49 @@
             "items": {
               "$ref": "#/components/schemas/Permission"
             }
+          }
+        }
+      },
+      "UserLoginInfo": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "userId": {
+            "type": "string",
+            "format": "guid"
+          },
+          "lastSignIn": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "displayName": {
+            "type": "string",
+            "nullable": true
+          },
+          "identities": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/UserLoginIdentity"
+            }
+          }
+        }
+      },
+      "UserLoginIdentity": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "issuer": {
+            "type": "string",
+            "nullable": true
+          },
+          "signInType": {
+            "type": "string",
+            "nullable": true
+          },
+          "issuerAssignedId": {
+            "type": "string",
+            "nullable": true
           }
         }
       },
