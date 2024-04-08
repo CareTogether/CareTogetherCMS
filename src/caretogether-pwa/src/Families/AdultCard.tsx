@@ -82,10 +82,12 @@ export function AdultCard({ familyId, personId }: AdultCardProps) {
 
   const participatingFamilyRoles =
     Object.entries(family.volunteerFamilyInfo?.familyRoleApprovals || {}).filter(
-      ([role,]) => !family.volunteerFamilyInfo?.individualVolunteers?.[personId]?.roleRemovals?.find(x => x.roleName === role));
+      ([role, status]) => status.currentStatus != null &&
+        !family.volunteerFamilyInfo?.individualVolunteers?.[personId]?.roleRemovals?.find(x => x.roleName === role));
   const participatingIndividualRoles =
     Object.entries(family.volunteerFamilyInfo?.individualVolunteers?.[personId]?.approvalStatusByRole || {}).filter(
-      ([role,]) => !family.volunteerFamilyInfo?.individualVolunteers?.[personId]?.roleRemovals?.find(x => x.roleName === role));
+      ([role, status]) => status.currentStatus != null &&
+        !family.volunteerFamilyInfo?.individualVolunteers?.[personId]?.roleRemovals?.find(x => x.roleName === role));
   const removedRoles = family.volunteerFamilyInfo?.individualVolunteers?.[personId]?.roleRemovals || [];
 
   return <>{adult?.item1 && adult.item1.id && adult.item2 &&

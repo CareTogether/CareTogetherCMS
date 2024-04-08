@@ -78,7 +78,8 @@ export function FamilyScreen() {
 
   const participatingFamilyRoles =
     Object.entries(family?.volunteerFamilyInfo?.familyRoleApprovals || {}).filter(
-      ([role,]) => !family?.volunteerFamilyInfo?.roleRemovals?.find(x => x.roleName === role));
+      ([role, status]) => status.currentStatus != null &&
+        !family?.volunteerFamilyInfo?.roleRemovals?.find(x => x.roleName === role));
 
   const [removeRoleParameter, setRemoveRoleParameter] = useState<{ volunteerFamilyId: string, role: string } | null>(null);
   function selectRemoveRole(role: string) {
