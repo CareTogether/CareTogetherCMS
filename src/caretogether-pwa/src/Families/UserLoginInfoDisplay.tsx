@@ -19,7 +19,9 @@ export function UserLoginInfoDisplay({ personId }: { personId: string; }) {
     void loadUserLoginInfo();
   }, [organizationId, locationId, personId]);
 
-  const emailAddress = userLoginInfo?.identities?.find(i => i.signInType === "emailAddress")?.issuerAssignedId;
+  const username = userLoginInfo?.identities?.find(i => i.signInType === "emailAddress")?.issuerAssignedId ??
+    userLoginInfo?.identities?.find(i => i.signInType === "federated")?.issuer?.includes("https://login.microsoftonline.com")
+    ? "Microsoft Staff Account" : "⚠ Unknown Username";
 
   return (
     <>
@@ -27,7 +29,7 @@ export function UserLoginInfoDisplay({ personId }: { personId: string; }) {
       {userLoginInfo
         ? <>
           <br />
-          Username: <strong>{emailAddress}</strong>
+          Username: <strong>{username}</strong>
           <br />
           Last sign-in: <strong>{userLoginInfo.lastSignIn ? formatRelative(userLoginInfo.lastSignIn, new Date()) : 'never'}</strong>
           {/* <br />
