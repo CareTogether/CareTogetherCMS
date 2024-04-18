@@ -485,14 +485,54 @@ function VolunteerApproval(props: { onOpen: () => void }) {
 												<Typography sx={{ fontWeight: 600 }}>{familyLastName(volunteerFamily) + " Family"}</Typography>
 											</TableCell>
 											<TableCell>
-												{roleFilters.map((roleFilter, index) =>
-													<VolunteerRoleApprovalStatusChip
-														key={index}
-														sx={{ margin: '.125rem .25rem .125rem 0' }}
-														roleName={roleFilter.key}
-														status={volunteerFamily.volunteerFamilyInfo?.familyRoleApprovals?.[roleFilter.key]?.effectiveRoleApprovalStatus}
-													/>
-												)}
+												{expandedView ?
+													roleFilters.map((roleFilter, index) =>
+														<VolunteerRoleApprovalStatusChip
+															key={index}
+															sx={{ margin: '.125rem .25rem .125rem 0' }}
+															roleName={roleFilter.key}
+															status={volunteerFamily.volunteerFamilyInfo?.familyRoleApprovals?.[roleFilter.key]?.effectiveRoleApprovalStatus}
+														/>
+													) : <>
+													<Grid container spacing={2} sx={{ height: '50%', margin: 0, flexGrow: 1, justifyContent: 'flex-start' }}>
+														<Grid item xs={1} sx={{ minWidth: '100px', marginLeft: '-1rem', marginTop: '-.5rem' }}>
+															<Typography sx={{ margin: 0, padding: 0, minWidth: 'max-content' }}>Family:</Typography>
+														</Grid>
+														<Grid item xs={11} sx={{ justifyContent: 'flex-start', marginLeft: '-1rem', marginTop: '-.5rem' }}>
+															{roleFilters.map((roleFilter, index) =>
+																<VolunteerRoleApprovalStatusChip
+																	key={index}
+																	sx={{ margin: '.125rem .25rem .125rem 0' }}
+																	roleName={roleFilter.key}
+																	status={volunteerFamily.volunteerFamilyInfo?.familyRoleApprovals?.[roleFilter.key]?.effectiveRoleApprovalStatus}
+																/>
+															)}
+														</Grid>
+													</Grid>
+													<Grid container spacing={2} sx={{ height: '50%', margin: 0, flexGrow: 1, justifyContent: 'flex-start' }}>
+														<Grid item xs={1} sx={{ minWidth: '100px', marginLeft: '-1rem', marginTop: '-.5rem' }}>
+															<Typography sx={{ margin: 0, padding: 0 }}>Individual:</Typography>
+														</Grid>
+														<Grid item xs={11} sx={{ justifyContent: 'flex-start', marginLeft: '-1rem', marginTop: '-.5rem' }}>
+															{volunteerFamily.family?.adults?.map(adult => {
+																return Object.entries(volunteerFamily.volunteerFamilyInfo?.individualVolunteers?.[adult.item1!.id!].approvalStatusByRole || {})
+																	.map(([role, roleApprovalStatus]) =>
+																		<VolunteerRoleApprovalStatusChip 
+																			key={role} 
+																			sx={{ margin: '.125rem .25rem .125rem 0' }}
+																			roleName={role} 
+																			status={roleApprovalStatus.effectiveRoleApprovalStatus}  
+																		/>
+																	);
+															}).reduce((prev, curr) => {
+																if (prev.some(x => x.key === curr[0].key)) {
+																	return prev;
+																}
+																return prev.concat(curr);
+															}, [] as JSX.Element[])}
+														</Grid>
+													</Grid>																									
+												</>}
 											</TableCell>
 										</TableRow>
 										{expandedView && volunteerFamily.family?.adults?.map(adult => adult.item1 && adult.item1.active && (
