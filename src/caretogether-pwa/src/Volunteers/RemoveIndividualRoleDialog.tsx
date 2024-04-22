@@ -5,6 +5,7 @@ import { useVolunteersModel } from '../Model/VolunteersModel';
 import { UpdateDialog } from '../Generic/UpdateDialog';
 import { useRecoilValue } from 'recoil';
 import { policyData } from '../Model/ConfigurationModel';
+import { DatePicker } from '@mui/x-date-pickers';
 
 interface RemoveIndividualRoleDialogProps {
   volunteerFamilyId: string,
@@ -17,16 +18,18 @@ export function RemoveIndividualRoleDialog({ volunteerFamilyId, person, role, on
   const volunteerFamiliesModel = useVolunteersModel();
   const [fields, setFields] = useState({
     reason: RoleRemovalReason.Inactive,
-    additionalComments: ""
+    additionalComments: "",
+    effectiveSince: new Date() as Date | null,
+    effectiveThrough: null as Date | null
   });
-  const { reason, additionalComments } = fields;
+  const { reason, additionalComments, effectiveSince, effectiveThrough } = fields;
 
   const policy = useRecoilValue(policyData);
   const isFamilyRole = policy.volunteerPolicy?.volunteerFamilyRoles?.[role] != null;
 
   async function save() {
     await volunteerFamiliesModel.removeIndividualRole(volunteerFamilyId, person.id as string,
-      role, reason, additionalComments);
+      role, reason, additionalComments, effectiveSince, effectiveThrough);
   }
 
   return (
@@ -54,6 +57,14 @@ export function RemoveIndividualRoleDialog({ volunteerFamilyId, person, role, on
               multiline fullWidth variant="outlined" minRows={2} maxRows={5} size="small"
               value={additionalComments} onChange={e => setFields({ ...fields, additionalComments: e.target.value })}
             />
+          </Grid>
+          <Grid item xs={12}>
+            <DatePicker
+              label="Effective Since (optional - leave blank to use the current date)"
+              value={effectiveSince || null}
+              disableFuture format="M/d/yyyy"
+              onChange={(date: Date | null) => setFields({ ...fields, effectiveSince: date })}
+              slotProps={{ textField: { fullWidth: true } }} />
           </Grid>
         </Grid>
       </form>

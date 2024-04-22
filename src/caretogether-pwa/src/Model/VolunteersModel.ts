@@ -148,7 +148,8 @@ export function useVolunteersModel() {
     });
   const removeIndividualRole = useVolunteerCommandCallbackWithLocation(
     async (volunteerFamilyId, personId: string,
-      role: string, reason: RoleRemovalReason, additionalComments: string) => {
+      role: string, reason: RoleRemovalReason, additionalComments: string,
+      effectiveSince: Date | null, effectiveThrough: Date | null) => {
       const command = new RemoveVolunteerRole({
         familyId: volunteerFamilyId,
         personId: personId
@@ -156,16 +157,21 @@ export function useVolunteersModel() {
       command.roleName = role;
       command.reason = reason;
       command.additionalComments = additionalComments;
+      command.effectiveSince = effectiveSince ?? undefined;
+      command.effectiveThrough = effectiveThrough ?? undefined;
       return command;
     });
   const resetIndividualRole = useVolunteerCommandCallbackWithLocation(
     async (volunteerFamilyId, personId: string,
-      role: string) => {
+      role: string,
+      forRemovalEffectiveSince: Date | null, effectiveThrough: Date | null) => {
       const command = new ResetVolunteerRole({
         familyId: volunteerFamilyId,
         personId: personId
       });
       command.roleName = role;
+      command.forRemovalEffectiveSince = forRemovalEffectiveSince ?? undefined;
+      command.effectiveThrough = effectiveThrough ?? undefined;
       return command;
     });
 
