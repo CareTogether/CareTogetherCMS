@@ -8711,6 +8711,8 @@ export class RemoveVolunteerFamilyRole extends VolunteerFamilyCommand implements
     roleName?: string;
     reason?: RoleRemovalReason;
     additionalComments?: string | undefined;
+    effectiveSince?: Date | undefined;
+    effectiveThrough?: Date | undefined;
 
     constructor(data?: IRemoveVolunteerFamilyRole) {
         super(data);
@@ -8723,6 +8725,8 @@ export class RemoveVolunteerFamilyRole extends VolunteerFamilyCommand implements
             this.roleName = _data["roleName"];
             this.reason = _data["reason"];
             this.additionalComments = _data["additionalComments"];
+            this.effectiveSince = _data["effectiveSince"] ? new Date(_data["effectiveSince"].toString()) : <any>undefined;
+            this.effectiveThrough = _data["effectiveThrough"] ? new Date(_data["effectiveThrough"].toString()) : <any>undefined;
         }
     }
 
@@ -8738,6 +8742,8 @@ export class RemoveVolunteerFamilyRole extends VolunteerFamilyCommand implements
         data["roleName"] = this.roleName;
         data["reason"] = this.reason;
         data["additionalComments"] = this.additionalComments;
+        data["effectiveSince"] = this.effectiveSince ? formatDate(this.effectiveSince) : <any>undefined;
+        data["effectiveThrough"] = this.effectiveThrough ? formatDate(this.effectiveThrough) : <any>undefined;
         super.toJSON(data);
         return data;
     }
@@ -8747,10 +8753,14 @@ export interface IRemoveVolunteerFamilyRole extends IVolunteerFamilyCommand {
     roleName?: string;
     reason?: RoleRemovalReason;
     additionalComments?: string | undefined;
+    effectiveSince?: Date | undefined;
+    effectiveThrough?: Date | undefined;
 }
 
 export class ResetVolunteerFamilyRole extends VolunteerFamilyCommand implements IResetVolunteerFamilyRole {
     roleName?: string;
+    forRemovalEffectiveSince?: Date | undefined;
+    effectiveThrough?: Date | undefined;
 
     constructor(data?: IResetVolunteerFamilyRole) {
         super(data);
@@ -8761,6 +8771,8 @@ export class ResetVolunteerFamilyRole extends VolunteerFamilyCommand implements 
         super.init(_data);
         if (_data) {
             this.roleName = _data["roleName"];
+            this.forRemovalEffectiveSince = _data["forRemovalEffectiveSince"] ? new Date(_data["forRemovalEffectiveSince"].toString()) : <any>undefined;
+            this.effectiveThrough = _data["effectiveThrough"] ? new Date(_data["effectiveThrough"].toString()) : <any>undefined;
         }
     }
 
@@ -8774,6 +8786,8 @@ export class ResetVolunteerFamilyRole extends VolunteerFamilyCommand implements 
     toJSON(data?: any) {
         data = typeof data === 'object' ? data : {};
         data["roleName"] = this.roleName;
+        data["forRemovalEffectiveSince"] = this.forRemovalEffectiveSince ? formatDate(this.forRemovalEffectiveSince) : <any>undefined;
+        data["effectiveThrough"] = this.effectiveThrough ? formatDate(this.effectiveThrough) : <any>undefined;
         super.toJSON(data);
         return data;
     }
@@ -8781,6 +8795,8 @@ export class ResetVolunteerFamilyRole extends VolunteerFamilyCommand implements 
 
 export interface IResetVolunteerFamilyRole extends IVolunteerFamilyCommand {
     roleName?: string;
+    forRemovalEffectiveSince?: Date | undefined;
+    effectiveThrough?: Date | undefined;
 }
 
 export class UnexemptVolunteerFamilyRequirement extends VolunteerFamilyCommand implements IUnexemptVolunteerFamilyRequirement {
@@ -9796,6 +9812,8 @@ export class RemoveVolunteerRole extends VolunteerCommand implements IRemoveVolu
     roleName?: string;
     reason?: RoleRemovalReason;
     additionalComments?: string | undefined;
+    effectiveSince?: Date | undefined;
+    effectiveThrough?: Date | undefined;
 
     constructor(data?: IRemoveVolunteerRole) {
         super(data);
@@ -9808,6 +9826,8 @@ export class RemoveVolunteerRole extends VolunteerCommand implements IRemoveVolu
             this.roleName = _data["roleName"];
             this.reason = _data["reason"];
             this.additionalComments = _data["additionalComments"];
+            this.effectiveSince = _data["effectiveSince"] ? new Date(_data["effectiveSince"].toString()) : <any>undefined;
+            this.effectiveThrough = _data["effectiveThrough"] ? new Date(_data["effectiveThrough"].toString()) : <any>undefined;
         }
     }
 
@@ -9823,6 +9843,8 @@ export class RemoveVolunteerRole extends VolunteerCommand implements IRemoveVolu
         data["roleName"] = this.roleName;
         data["reason"] = this.reason;
         data["additionalComments"] = this.additionalComments;
+        data["effectiveSince"] = this.effectiveSince ? formatDate(this.effectiveSince) : <any>undefined;
+        data["effectiveThrough"] = this.effectiveThrough ? formatDate(this.effectiveThrough) : <any>undefined;
         super.toJSON(data);
         return data;
     }
@@ -9832,10 +9854,14 @@ export interface IRemoveVolunteerRole extends IVolunteerCommand {
     roleName?: string;
     reason?: RoleRemovalReason;
     additionalComments?: string | undefined;
+    effectiveSince?: Date | undefined;
+    effectiveThrough?: Date | undefined;
 }
 
 export class ResetVolunteerRole extends VolunteerCommand implements IResetVolunteerRole {
     roleName?: string;
+    forRemovalEffectiveSince?: Date | undefined;
+    effectiveThrough?: Date | undefined;
 
     constructor(data?: IResetVolunteerRole) {
         super(data);
@@ -9846,6 +9872,8 @@ export class ResetVolunteerRole extends VolunteerCommand implements IResetVolunt
         super.init(_data);
         if (_data) {
             this.roleName = _data["roleName"];
+            this.forRemovalEffectiveSince = _data["forRemovalEffectiveSince"] ? new Date(_data["forRemovalEffectiveSince"].toString()) : <any>undefined;
+            this.effectiveThrough = _data["effectiveThrough"] ? new Date(_data["effectiveThrough"].toString()) : <any>undefined;
         }
     }
 
@@ -9859,6 +9887,8 @@ export class ResetVolunteerRole extends VolunteerCommand implements IResetVolunt
     toJSON(data?: any) {
         data = typeof data === 'object' ? data : {};
         data["roleName"] = this.roleName;
+        data["forRemovalEffectiveSince"] = this.forRemovalEffectiveSince ? formatDate(this.forRemovalEffectiveSince) : <any>undefined;
+        data["effectiveThrough"] = this.effectiveThrough ? formatDate(this.effectiveThrough) : <any>undefined;
         super.toJSON(data);
         return data;
     }
@@ -9866,6 +9896,8 @@ export class ResetVolunteerRole extends VolunteerCommand implements IResetVolunt
 
 export interface IResetVolunteerRole extends IVolunteerCommand {
     roleName?: string;
+    forRemovalEffectiveSince?: Date | undefined;
+    effectiveThrough?: Date | undefined;
 }
 
 export class UnexemptVolunteerRequirement extends VolunteerCommand implements IUnexemptVolunteerRequirement {
