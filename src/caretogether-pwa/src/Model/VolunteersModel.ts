@@ -75,22 +75,28 @@ export function useVolunteersModel() {
     });
   const removeFamilyRole = useVolunteerFamilyCommandCallbackWithLocation(
     async (volunteerFamilyId,
-      role: string, reason: RoleRemovalReason, additionalComments: string) => {
+      role: string, reason: RoleRemovalReason, additionalComments: string,
+      effectiveSince: Date | null, effectiveThrough: Date | null) => {
       const command = new RemoveVolunteerFamilyRole({
         familyId: volunteerFamilyId
       });
       command.roleName = role;
       command.reason = reason;
       command.additionalComments = additionalComments;
+      command.effectiveSince = effectiveSince ?? undefined;
+      command.effectiveThrough = effectiveThrough ?? undefined;
       return command;
     });
   const resetFamilyRole = useVolunteerFamilyCommandCallbackWithLocation(
     async (volunteerFamilyId,
-      role: string) => {
+      role: string,
+      forRemovalEffectiveSince: Date | null, effectiveThrough: Date | null) => {
       const command = new ResetVolunteerFamilyRole({
         familyId: volunteerFamilyId
       });
       command.roleName = role;
+      command.forRemovalEffectiveSince = forRemovalEffectiveSince ?? undefined;
+      command.effectiveThrough = effectiveThrough ?? undefined;
       return command;
     });
   const completeIndividualRequirement = useVolunteerCommandCallbackWithLocation(
