@@ -16,6 +16,7 @@ namespace CareTogether.Resources.Approvals
         ImmutableList<Activity> History);
 
     public record RoleRemoval(string RoleName, RoleRemovalReason Reason,
+        // NOTE: Treat 'EffectiveUntil' as "effective *through*", meaning it's no longer effective after that date.
         DateOnly EffectiveSince, DateOnly? EffectiveUntil, string? AdditionalComments);
 
     public enum RoleRemovalReason { Inactive, OptOut, Denied };
@@ -47,10 +48,12 @@ namespace CareTogether.Resources.Approvals
         Guid UploadedDocumentId, string UploadedFileName)
         : VolunteerFamilyCommand(FamilyId);
     public sealed record RemoveVolunteerFamilyRole(Guid FamilyId,
-        string RoleName, RoleRemovalReason Reason, string? AdditionalComments)
+        string RoleName, RoleRemovalReason Reason, string? AdditionalComments,
+        DateOnly? EffectiveSince, DateOnly? EffectiveThrough)
         : VolunteerFamilyCommand(FamilyId);
     public sealed record ResetVolunteerFamilyRole(Guid FamilyId,
-        string RoleName)
+        string RoleName,
+        DateOnly? ForRemovalEffectiveSince, DateOnly? EffectiveThrough)
         : VolunteerFamilyCommand(FamilyId);
 
     [JsonHierarchyBase]
@@ -69,10 +72,12 @@ namespace CareTogether.Resources.Approvals
         string RequirementName)
         : VolunteerCommand(FamilyId, PersonId);
     public sealed record RemoveVolunteerRole(Guid FamilyId, Guid PersonId,
-        string RoleName, RoleRemovalReason Reason, string? AdditionalComments)
+        string RoleName, RoleRemovalReason Reason, string? AdditionalComments,
+        DateOnly? EffectiveSince, DateOnly? EffectiveThrough)
         : VolunteerCommand(FamilyId, PersonId);
     public sealed record ResetVolunteerRole(Guid FamilyId, Guid PersonId,
-        string RoleName)
+        string RoleName,
+        DateOnly? ForRemovalEffectiveSince, DateOnly? EffectiveThrough)
         : VolunteerCommand(FamilyId, PersonId);
 
     /// <summary>

@@ -79,7 +79,8 @@ export function FamilyScreen() {
   const participatingFamilyRoles =
     Object.entries(family?.volunteerFamilyInfo?.familyRoleApprovals || {}).filter(
       ([role, status]) => status.currentStatus != null &&
-        !family?.volunteerFamilyInfo?.roleRemovals?.find(x => x.roleName === role));
+        !family?.volunteerFamilyInfo?.roleRemovals?.find(x => x.roleName === role && (
+          x.effectiveUntil == null || x.effectiveUntil > new Date())));
 
   const [removeRoleParameter, setRemoveRoleParameter] = useState<{ volunteerFamilyId: string, role: string } | null>(null);
   function selectRemoveRole(role: string) {
@@ -208,7 +209,7 @@ export function FamilyScreen() {
                 </MenuItem>
               ))}
             {permissions(Permission.EditVolunteerRoleParticipation) &&
-              (family.volunteerFamilyInfo?.roleRemovals || []).map(removedRole => (
+              (family.volunteerFamilyInfo?.roleRemovals || []).filter(removedRole => !removedRole.effectiveUntil).map(removedRole => (
                 <MenuItem key={removedRole.roleName}
                   onClick={() => selectResetRole(removedRole.roleName!, removedRole.reason!, removedRole.additionalComments!)}>
                   <ListItemText primary={`Reset ${removedRole.roleName} participation`} />
@@ -355,7 +356,7 @@ export function FamilyScreen() {
                     {Object.entries(family.volunteerFamilyInfo?.familyRoleApprovals || {}).flatMap(([role, roleApprovalStatus]) =>
                       <VolunteerRoleApprovalStatusChip key={role} roleName={role} status={roleApprovalStatus.effectiveRoleApprovalStatus} />)}
                     {(family.volunteerFamilyInfo?.roleRemovals || []).map(removedRole =>
-                      <Chip key={removedRole.roleName} size="small" label={`${removedRole.roleName} - ${RoleRemovalReason[removedRole.reason!]} - ${removedRole.additionalComments}`} />)}
+                      <Chip key={removedRole.roleName} size="small" label={`${removedRole.roleName} - ${RoleRemovalReason[removedRole.reason!]} - ${removedRole.additionalComments}${removedRole.effectiveSince ? ' - effective ' + format(removedRole.effectiveSince, "M/d/yy") : ''}${removedRole.effectiveUntil ? ' - through ' + format(removedRole.effectiveUntil, "M/d/yy") : ''}`} />)}
                   </Box>
                 </Grid>
                 <Grid item xs={12} sm={6} md={4} style={{ paddingRight: 20 }}>

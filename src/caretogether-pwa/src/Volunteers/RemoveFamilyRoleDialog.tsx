@@ -3,6 +3,7 @@ import { FormControl, FormControlLabel, FormLabel, Grid, Radio, RadioGroup, Text
 import { RoleRemovalReason } from '../GeneratedClient';
 import { useVolunteersModel } from '../Model/VolunteersModel';
 import { UpdateDialog } from '../Generic/UpdateDialog';
+import { DatePicker } from '@mui/x-date-pickers';
 
 interface RemoveFamilyRoleDialogProps {
   volunteerFamilyId: string,
@@ -14,13 +15,15 @@ export function RemoveFamilyRoleDialog({ volunteerFamilyId, role, onClose }: Rem
   const volunteerFamiliesModel = useVolunteersModel();
   const [fields, setFields] = useState({
     reason: RoleRemovalReason.Inactive,
-    additionalComments: ""
+    additionalComments: "",
+    effectiveSince: new Date() as Date | null,
+    effectiveThrough: null as Date | null
   });
-  const { reason, additionalComments } = fields;
+  const { reason, additionalComments, effectiveSince, effectiveThrough } = fields;
 
   async function save() {
     await volunteerFamiliesModel.removeFamilyRole(volunteerFamilyId,
-      role, reason, additionalComments);
+      role, reason, additionalComments, effectiveSince, effectiveThrough);
   }
 
   return (
@@ -46,6 +49,14 @@ export function RemoveFamilyRoleDialog({ volunteerFamilyId, role, onClose }: Rem
               multiline fullWidth variant="outlined" minRows={2} maxRows={5} size="small"
               value={additionalComments} onChange={e => setFields({ ...fields, additionalComments: e.target.value })}
             />
+          </Grid>
+          <Grid item xs={12}>
+            <DatePicker
+              label="Effective Since (optional - leave blank to use the current date)"
+              value={effectiveSince || null}
+              disableFuture format="M/d/yyyy"
+              onChange={(date: Date | null) => setFields({ ...fields, effectiveSince: date })}
+              slotProps={{ textField: { fullWidth: true } }} />
           </Grid>
         </Grid>
       </form>

@@ -5002,6 +5002,16 @@
               "additionalComments": {
                 "type": "string",
                 "nullable": true
+              },
+              "effectiveSince": {
+                "type": "string",
+                "format": "date",
+                "nullable": true
+              },
+              "effectiveThrough": {
+                "type": "string",
+                "format": "date",
+                "nullable": true
               }
             }
           }
@@ -5018,6 +5028,16 @@
             "properties": {
               "roleName": {
                 "type": "string"
+              },
+              "forRemovalEffectiveSince": {
+                "type": "string",
+                "format": "date",
+                "nullable": true
+              },
+              "effectiveThrough": {
+                "type": "string",
+                "format": "date",
+                "nullable": true
               }
             }
           }
@@ -5543,6 +5563,16 @@
               "additionalComments": {
                 "type": "string",
                 "nullable": true
+              },
+              "effectiveSince": {
+                "type": "string",
+                "format": "date",
+                "nullable": true
+              },
+              "effectiveThrough": {
+                "type": "string",
+                "format": "date",
+                "nullable": true
               }
             }
           }
@@ -5559,6 +5589,16 @@
             "properties": {
               "roleName": {
                 "type": "string"
+              },
+              "forRemovalEffectiveSince": {
+                "type": "string",
+                "format": "date",
+                "nullable": true
+              },
+              "effectiveThrough": {
+                "type": "string",
+                "format": "date",
+                "nullable": true
               }
             }
           }
