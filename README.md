@@ -21,7 +21,7 @@ We ask that you practice effective communication, preferably through comments on
 ## Prerequisites
 You can build and run CareTogether on any operating system supported by Node.js and .NET, including Windows, MacOS, and Linux. Install the following:
 - [Node.js 18 LTS](https://nodejs.org/en/download)
-- [.NET 6 LTS](https://dotnet.microsoft.com/en-us/download/dotnet/6.0)
+- [.NET 8 LTS](https://dotnet.microsoft.com/en-us/download/dotnet/8.0)
 - [Visual Studio Code](https://code.visualstudio.com/Download) (recommended)
 
 You will also need to allow PowerShell scripts to run on your computer (see [documentation](https://learn.microsoft.com/en-us/previous-versions//bb613481(v=vs.85)?redirectedfrom=MSDN#how-to-allow-scripts-to-run)). To do this, open an administrative PowerShell session and run the following command:
