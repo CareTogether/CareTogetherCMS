@@ -111,6 +111,9 @@ namespace CareTogether.Api.OData
     [Authorize(Policies.ForbidAnonymous, AuthenticationSchemes = "Basic")]
     public class LiveODataModelController : ODataController
     {
+        private sealed record DataAccessScope(Guid OrganizationId, bool Anonymize);
+
+
         private readonly IPoliciesResource policiesResource;
         private readonly IRecordsManager recordsManager;
         private readonly IAppCache cache;
@@ -218,13 +221,17 @@ namespace CareTogether.Api.OData
 
         private async Task<LiveModel> RenderLiveModelAsync()
         {
-            var organizationId = GetUserSingleOrganizationId();
+            //NOTE: For now, we only grant access to one organization at a time.
+            //      In the future (e.g., for research purposes), data access could be broader.
+            var userDataAccessScope = GetUserDataAccessScope();
+            var organizationId = userDataAccessScope.OrganizationId;
+            var anonymize = userDataAccessScope.Anonymize;
 
             var result = await cache.GetOrAddAsync(
-                $"LiveODataModelController-RenderLiveModelAsync-{organizationId}",
+                $"LiveODataModelController-RenderLiveModelAsync-{organizationId}-{(anonymize ? "ANON" : "PII")}",
                 async cacheEntry =>
                 {
-                    var result = await RenderLiveModelInternalAsync(organizationId);
+                    var result = await RenderLiveModelInternalAsync(organizationId, anonymize);
 
                     cacheEntry.SlidingExpiration = TimeSpan.FromMinutes(1);
                     cacheEntry.AbsoluteExpiration = DateTimeOffset.Now.AddMinutes(5);
@@ -235,7 +242,7 @@ namespace CareTogether.Api.OData
             return result!; // If this is actually null, then we are already throwing an exception anyways.
         }
 
-        private async Task<LiveModel> RenderLiveModelInternalAsync(Guid organizationId)
+        private async Task<LiveModel> RenderLiveModelInternalAsync(Guid organizationId, bool anonymize)
         {
             var organizationConfiguration = await policiesResource.GetConfigurationAsync(organizationId);
 
@@ -251,14 +258,28 @@ namespace CareTogether.Api.OData
                         .Select(roleName => new Role(roleName));
                 }).Distinct().ToArray();
 
+            // Use a collection of random ZIP codes for anonymization.
+            //TODO: Pick something a little more realistic and/or mapping-friendly? :)
+            string[] anonymousLocationZipCodes = [
+                "99785",
+                "99778",
+                "99762"
+            ];
+
             var locations = organizationConfiguration.Locations
-                .Select(location => new Location(location.Id, organizationId, location.Name))
+                .Select((location, i) => new Location(location.Id, organizationId,
+                    anonymize ? $"Location {i}" : location.Name))
                 .ToArray();
 
-            var familiesByLocation = await locations.ZipSelectManyAsync(location =>
-                recordsManager.ListVisibleAggregatesAsync(User, location.OrganizationId, location.Id))
+            var familiesByLocation = await locations
+                .Select((location, i) => (location, anonymousZipCode: anonymize ? anonymousLocationZipCodes[i] : null))
+                .ZipSelectManyAsync(location =>
+                    recordsManager.ListVisibleAggregatesAsync(User, location.location.OrganizationId, location.location.Id))
                 .Where(zipResult => zipResult.Item2 is FamilyRecordsAggregate)
                 .Select(zipResult => (zipResult.Item1, (FamilyRecordsAggregate)zipResult.Item2))
+                .Select(zipResult => (zipResult.Item1.location, anonymize
+                    ? AnonymizeFamilyRecords(zipResult.Item2, zipResult.Item1.anonymousZipCode!)
+                    : zipResult.Item2))
                 .ToArrayAsync();
 
             var familiesWithInfo = familiesByLocation.Select(x => RenderFamily(x.Item1, x.Item2.Family)).ToArray();
@@ -295,10 +316,166 @@ namespace CareTogether.Api.OData
                 childLocationRecords, familyFunctionAssignments, individualFunctionAssignments);
         }
 
-        private Guid GetUserSingleOrganizationId()
+        private DataAccessScope GetUserDataAccessScope()
         {
-            var singleOrganizationId = User.Claims.Single(claim => claim.Type == Claims.OrganizationId);
-            return Guid.Parse(singleOrganizationId.Value);
+            var singleOrganizationId = Guid.Parse(User.Claims.Single(claim => claim.Type == Claims.OrganizationId).Value);
+
+            var isResearcher = User.Claims.SingleOrDefault(claim => claim.Type == Claims.Researcher)?.Value == true.ToString();
+
+            return new DataAccessScope(singleOrganizationId, Anonymize: isResearcher);
+        }
+
+        private FamilyRecordsAggregate AnonymizeFamilyRecords(FamilyRecordsAggregate data, string anonymousZipCode)
+        {
+            return data with
+            {
+                Family = data.Family with
+                {
+                    Family = data.Family.Family with
+                    {
+                        Adults = data.Family.Family.Adults.Select((adult, i) => (adult.Item1 with
+                        {
+                            Addresses = adult.Item1.Addresses.Select(address => address with
+                            {
+                                Line1 = null,
+                                Line2 = null,
+                                City = null,
+                                County = null,
+                                State = null,
+                                PostalCode = anonymousZipCode
+                            }).ToImmutableList(),
+                            Concerns = null,
+                            EmailAddresses = adult.Item1.EmailAddresses.Select((email, e) => email with
+                            {
+                                Address = $"anon_{e}@example.com"
+                            }).ToImmutableList(),
+                            FirstName = $"ADULT_{i:00}",
+                            LastName = $"FAM_{data.Id.ToString()[..4]}",
+                            Notes = null,
+                            PhoneNumbers = adult.Item1.PhoneNumbers.Select((phone, p) => phone with
+                            {
+                                Number = $"555-555-{p:0000}"
+                            }).ToImmutableList()
+                        }, adult.Item2)).ToImmutableList(),
+                        Children = data.Family.Family.Children.Select((child, i) => child with
+                        {
+                            Addresses = child.Addresses.Select(address => address with
+                            {
+                                Line1 = null,
+                                Line2 = null,
+                                City = null,
+                                County = null,
+                                State = null,
+                                PostalCode = anonymousZipCode
+                            }).ToImmutableList(),
+                            Concerns = null,
+                            EmailAddresses = child.EmailAddresses.Select((email, e) => email with
+                            {
+                                Address = $"anon_{e}@example.com"
+                            }).ToImmutableList(),
+                            FirstName = $"CHILD_{i:00}",
+                            LastName = $"FAM_{data.Id.ToString()[..4]}",
+                            Notes = null,
+                            PhoneNumbers = child.PhoneNumbers.Select((phone, p) => phone with
+                            {
+                                Number = $"555-555-{p:0000}"
+                            }).ToImmutableList()
+                        }).ToImmutableList(),
+                        CompletedCustomFields = data.Family.Family.CompletedCustomFields.Select(field => field with
+                        {
+                            Value = field.Value switch
+                            {
+                                string s => $"anon_{s.Length}",
+                                _ => field.Value
+                            }
+                        }).ToImmutableList(),
+                        DeletedDocuments = [],
+                        UploadedDocuments = [],
+                        History = []
+                    },
+                    Notes = [],
+                    PartneringFamilyInfo = data.Family.PartneringFamilyInfo == null ? null : data.Family.PartneringFamilyInfo with
+                    {
+                        ClosedReferrals = data.Family.PartneringFamilyInfo.ClosedReferrals.Select(referral => referral with
+                        {
+                            Arrangements = referral.Arrangements.Select(arrangement => arrangement with
+                            {
+                                Comments = null,
+                                ExemptedRequirements = arrangement.ExemptedRequirements.Select(exempted => exempted with
+                                {
+                                    AdditionalComments = ""
+                                }).ToImmutableList(),
+                            }).ToImmutableList(),
+                            Comments = null,
+                            CompletedCustomFields = referral.CompletedCustomFields.Select(field => field with
+                            {
+                                Value = field.Value switch
+                                {
+                                    string s => $"anon_{s.Length}",
+                                    _ => field.Value
+                                }
+                            }).ToImmutableList(),
+                            ExemptedRequirements = referral.ExemptedRequirements.Select(exempted => exempted with
+                            {
+                                AdditionalComments = ""
+                            }).ToImmutableList(),
+                        }).ToImmutableList(),
+                        History = [],
+                        OpenReferral = data.Family.PartneringFamilyInfo.OpenReferral == null ? null : data.Family.PartneringFamilyInfo.OpenReferral with
+                        {
+                            Arrangements = data.Family.PartneringFamilyInfo.OpenReferral.Arrangements.Select(arrangement => arrangement with
+                            {
+                                Comments = null,
+                                ExemptedRequirements = arrangement.ExemptedRequirements.Select(exempted => exempted with
+                                {
+                                    AdditionalComments = ""
+                                }).ToImmutableList(),
+                            }).ToImmutableList(),
+                            Comments = null,
+                            CompletedCustomFields = data.Family.PartneringFamilyInfo.OpenReferral.CompletedCustomFields.Select(field => field with
+                            {
+                                Value = field.Value switch
+                                {
+                                    string s => $"anon_{s.Length}",
+                                    _ => field.Value
+                                }
+                            }).ToImmutableList(),
+                            ExemptedRequirements = data.Family.PartneringFamilyInfo.OpenReferral.ExemptedRequirements.Select(exempted => exempted with
+                            {
+                                AdditionalComments = ""
+                            }).ToImmutableList(),
+                        }
+                    },
+                    UploadedDocuments = [],
+                    Users = data.Family.Users.Select(user => user with
+                    {
+                        UserId = null
+                    }).ToImmutableList(),
+                    VolunteerFamilyInfo = data.Family.VolunteerFamilyInfo == null ? null : data.Family.VolunteerFamilyInfo with
+                    {
+                        ExemptedRequirements = data.Family.VolunteerFamilyInfo.ExemptedRequirements.Select(exempted => exempted with
+                        {
+                            AdditionalComments = ""
+                        }).ToImmutableList(),
+                        History = [],
+                        IndividualVolunteers = data.Family.VolunteerFamilyInfo.IndividualVolunteers.ToImmutableDictionary(kvp => kvp.Key, kvp => kvp.Value with
+                        {
+                            ExemptedRequirements = kvp.Value.ExemptedRequirements.Select(exempted => exempted with
+                            {
+                                AdditionalComments = ""
+                            }).ToImmutableList(),
+                            RoleRemovals = kvp.Value.RoleRemovals.Select(removal => removal with
+                            {
+                                AdditionalComments = ""
+                            }).ToImmutableList()
+                        }).ToImmutableDictionary(),
+                        RoleRemovals = data.Family.VolunteerFamilyInfo.RoleRemovals.Select(removal => removal with
+                        {
+                            AdditionalComments = ""
+                        }).ToImmutableList()
+                    }
+                }
+            };
         }
 
         private static (CombinedFamilyInfo, Family) RenderFamily(Location location, CombinedFamilyInfo family)
