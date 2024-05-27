@@ -15,13 +15,10 @@ export function ReferralComments({ partneringFamily, referralId }: ReferralComme
   const openReferrals: Referral[] = (partneringFamily?.partneringFamilyInfo?.openReferral !== undefined) ? [partneringFamily.partneringFamilyInfo.openReferral] : [];
   const closedReferrals: Referral[] = (partneringFamily?.partneringFamilyInfo?.closedReferrals?.sort((r1, r2) => r1.closedAtUtc! > r2.closedAtUtc! ? -1 : 1 ) || []);
   const allReferrals: Referral[] = [...openReferrals, ...closedReferrals];    
-  const savedValue = allReferrals.find(r => r!.id)!.comments;
+  const savedValue = allReferrals.find(r => r!.id == referralId)!.comments;
   const editor = useInlineEditor(async savedValue => {
     await referralsModel.updateReferralComments(partneringFamily.family!.id!, referralId, savedValue);
   }, savedValue);
-  console.group("ReferralComments");
-  console.log(referralId);
-  console.groupEnd();
 
   return permissions(Permission.ViewReferralComments)
     ? 

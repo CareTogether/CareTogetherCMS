@@ -55,7 +55,10 @@ export function MissingRequirementDialog({
   const contextFamily = familyLookup(contextFamilyId);
 
   const personLookup = usePersonLookup().bind(null, contextFamilyId);
-
+  //const openReferrals: Referral[] = (family?.partneringFamilyInfo?.openReferral !== undefined) ? [family.partneringFamilyInfo.openReferral] : [];
+  //const closedReferrals: Referral[] = (family?.partneringFamilyInfo?.closedReferrals?.sort((r1, r2) => r1.closedAtUtc! > r2.closedAtUtc! ? -1 : 1 ) || []);
+  //const allReferrals: Referral[] = [...openReferrals, ...closedReferrals];   
+  //const selectedReferral = allReferrals.find(r => r.id === context.referralId) ?? contextFamily!.partneringFamilyInfo!.openReferral!; // TODO: Add check to confirm that a referralId exists for first scenario & tweak as needed if undefinied rather than null
   const availableArrangements = requirement instanceof MissingArrangementRequirement
     ? contextFamily!.partneringFamilyInfo!.openReferral!.arrangements!.filter(arrangement =>
       arrangement.missingRequirements?.some(x => {

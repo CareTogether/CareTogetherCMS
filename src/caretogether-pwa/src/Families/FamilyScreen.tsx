@@ -112,11 +112,11 @@ export function FamilyScreen() {
   }
 
   let referralRequirementContext: ReferralContext | undefined;
-  if (family?.partneringFamilyInfo?.openReferral) {
+  if (selectedReferral) {
     referralRequirementContext = {
       kind: "Referral",
       partneringFamilyId: familyId,
-      referralId: family.partneringFamilyInfo.openReferral.id!
+      referralId: selectedReferral.id!
     };
   }
 
@@ -424,6 +424,7 @@ export function FamilyScreen() {
             {permissions(Permission.ViewFamilyDocumentMetadata) &&
               <Grid item xs={12} sm={6} md={4}>
                 <h3 style={{ marginBottom: 0 }}>Documents</h3>
+				  {/* TODO: Update This? */}
                 <FamilyDocuments family={family} />
               </Grid>}
           </Grid>
