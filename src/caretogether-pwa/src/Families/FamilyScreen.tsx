@@ -1,10 +1,11 @@
-import { Container, Toolbar, Grid, Button, useMediaQuery, useTheme, Box, IconButton, ListItemText, Menu, MenuItem, MenuList, Chip, Divider } from '@mui/material';
+import { Container, Toolbar, Grid, Button, useMediaQuery, useTheme, Box, IconButton, ListItemText, Menu, MenuItem, MenuList, Chip, Divider, Card, CardHeader, ListItemButton, ListItemIcon } from '@mui/material';
 import { Arrangement, ArrangementPolicy, CompletedCustomFieldInfo, Permission, ReferralCloseReason, RoleRemovalReason } from '../GeneratedClient';
 import { useRecoilValue } from 'recoil';
 import { useParams } from 'react-router';
 import AddCircleIcon from '@mui/icons-material/AddCircle';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';
+import Diversity3Icon from '@mui/icons-material/Diversity3';
 import { AdultCard } from './AdultCard';
 import { ChildCard } from './ChildCard';
 import { useState } from 'react';
@@ -31,7 +32,7 @@ import { ReferralCustomField } from '../Referrals/ReferralCustomField';
 import { PrimaryContactEditor } from './PrimaryContactEditor';
 import useScreenTitle from '../Shell/ShellScreenTitle';
 import { ProgressBackdrop } from '../Shell/ProgressBackdrop';
-import { useFamilyLookup } from '../Model/DirectoryModel';
+import { useCommunityLookup, useFamilyLookup } from '../Model/DirectoryModel';
 import { RemoveFamilyRoleDialog } from '../Volunteers/RemoveFamilyRoleDialog';
 import { ResetFamilyRoleDialog } from '../Volunteers/ResetFamilyRoleDialog';
 import { VolunteerRoleApprovalStatusChip } from '../Volunteers/VolunteerRoleApprovalStatusChip';
@@ -42,6 +43,9 @@ import { isBackdropClick } from '../Utilities/handleBackdropClick';
 import { DeleteFamilyDialog } from './DeleteFamilyDialog';
 import { useDialogHandle } from '../Hooks/useDialogHandle';
 import { familyLastName } from './FamilyUtils';
+import { useLoadable } from '../Hooks/useLoadable';
+import { visibleCommunitiesQuery } from '../Model/Data';
+import { useAppNavigate } from '../Hooks/useAppNavigate';
 
 const sortArrangementsByStartDateDescThenCreateDateDesc = (a: Arrangement, b: Arrangement) => {
   return ((b.startedAtUtc ?? new Date()).getTime() - (a.startedAtUtc ?? new Date()).getTime()) ||
@@ -51,6 +55,18 @@ const sortArrangementsByStartDateDescThenCreateDateDesc = (a: Arrangement, b: Ar
 export function FamilyScreen() {
   const familyIdMaybe = useParams<{ familyId: string }>();
   const familyId = familyIdMaybe.familyId as string;
+
+  // TODO: When we go to optimize the layout, we should consider updating the generated client 
+  // to include the ids of the communities each family is a member of in the CombinedFamilyInfo
+  // data model so that we don't need to start by first looking up ALL communities
+  const communitiesLoadable = useLoadable(visibleCommunitiesQuery);
+  const allCommunities = (communitiesLoadable || [])
+    .map(x => x.community!)
+	.sort((a, b) => a.name! < b.name! ? -1 : a.name! > b.name! ? 1 : 0);
+  const communityLookup = useCommunityLookup();
+  const allCommunityInfo = allCommunities.map(c => communityLookup(c.id)!);
+  const familyCommunityInfo = allCommunityInfo?.filter(c => c.community?.memberFamilies?.includes(familyId));
+
 
   const familyLookup = useFamilyLookup();
   const family = familyLookup(familyId)!;
@@ -147,6 +163,7 @@ export function FamilyScreen() {
         partneringFamily={family} referralId={family.partneringFamilyInfo!.openReferral!.id!}
         arrangement={arrangement} />
     ));
+	const appNavigate = useAppNavigate();
 
   return (!family
     ? <ProgressBackdrop>
@@ -245,7 +262,7 @@ export function FamilyScreen() {
             <ActivityTimeline family={family} />
           </Grid>
         </Grid>
-        <Grid item xs={12} md={8}>
+        <Grid item xs={12} md={8}>		
           <Grid container spacing={0}>
             <Grid item xs={12} md={4}>
               <PrimaryContactEditor family={family} />
@@ -318,6 +335,25 @@ export function FamilyScreen() {
                   onClose={() => setOpenNewReferralDialogOpen(false)} />)}
             </Grid>
           </Grid>
+		<Grid container spacing={0} sx={{ marginBottom: '1rem' }}>			
+			<Grid item xs={12}>
+              <h3 style={{ marginBottom: 0 }}>Communities</h3>
+				{familyCommunityInfo?.map(communityInfo => {
+					return (
+						<ListItemButton sx={{ padding: '.5rem', border: '1px solid #e0e0e0', borderRadius: '5px' }}
+							onClick={() => communityInfo.community && communityInfo.community.id ? appNavigate.community(communityInfo.community.id) : ({})}>
+							<ListItemIcon sx={{ alignSelf: 'center', justifyContent: 'center' }}>
+								<Diversity3Icon color='primary' />
+							</ListItemIcon>
+							<ListItemText sx={{ alignSelf: 'baseline' }}
+								primary={communityInfo.community?.name}
+								primaryTypographyProps={{ color: theme.palette.primary.main }}
+							></ListItemText>
+						</ListItemButton>
+					);
+				})}
+            </Grid>
+		</Grid>
           {permissions(Permission.ViewReferralComments) && family.partneringFamilyInfo?.openReferral &&
             <Grid container spacing={0}>
               <ReferralComments partneringFamily={family}
@@ -386,6 +422,7 @@ export function FamilyScreen() {
               </Grid>}
           </Grid>
           <Grid container spacing={0}>
+			
             {family.partneringFamilyInfo?.openReferral &&
               <Grid item xs={12}>
                 <div style={{ display: `flex`, justifyContent: `space-between`, maxWidth: `100%`, flexWrap: `wrap` }}>
@@ -422,7 +459,8 @@ export function FamilyScreen() {
                     referralId={family.partneringFamilyInfo!.openReferral!.id!}
                     arrangementPolicy={createArrangementDialogParameter}
                     onClose={() => setCreateArrangementDialogParameter(null)} />}
-              </Grid>}
+              </Grid>
+			}			
             <Grid item xs={12}>
               <h3 style={{ marginBottom: 0 }}>Family Members</h3>
               <Masonry columns={isDesktop ? isWideScreen ? 3 : 2 : 1} spacing={2}>
@@ -433,7 +471,7 @@ export function FamilyScreen() {
                   <ChildCard key={child.id!} familyId={familyId} personId={child.id!} />
                 ))}
               </Masonry>
-            </Grid>
+            </Grid>			
           </Grid>
         </Grid>
       </Grid>
