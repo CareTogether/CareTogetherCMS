@@ -1,5 +1,5 @@
 import { Container, Toolbar, Grid, Button, useMediaQuery, useTheme, Box, IconButton, ListItemText, Menu, MenuItem, MenuList, Chip, Divider, ListItemButton, ListItemIcon, FormControl, FormLabel, RadioGroup, FormControlLabel, Radio } from '@mui/material';
-import { Arrangement, ArrangementPolicy, CompletedCustomFieldInfo, Permission, RoleRemovalReason } from '../GeneratedClient';
+import { Arrangement, ArrangementPolicy, CompletedCustomFieldInfo, Permission, Referral, RoleRemovalReason } from '../GeneratedClient';
 import { useRecoilValue } from 'recoil';
 import { useParams } from 'react-router';
 import AddCircleIcon from '@mui/icons-material/AddCircle';
@@ -81,24 +81,17 @@ export function FamilyScreen() {
       !arrangement.endedAtUtc && !arrangement.cancelledAtUtc) &&
     permissions(Permission.CloseReferral);
 
-  const allReferrals = [family?.partneringFamilyInfo?.openReferral, ...(family?.partneringFamilyInfo?.closedReferrals?.sort((r1, r2) => r1.closedAtUtc! > r2.closedAtUtc! ? -1 : 1 ) || [])];
-  console.group(`All Referrals`);
-  console.log(JSON.stringify(allReferrals[0]));
-  console.log(JSON.stringify(allReferrals[1]));
-  console.groupEnd();
+  const deleteFamilyDialogHandle = useDialogHandle();
+  const openReferrals: Referral[] = (family?.partneringFamilyInfo?.openReferral !== undefined) ? [family.partneringFamilyInfo.openReferral] : [];
+  const closedReferrals: Referral[] = (family?.partneringFamilyInfo?.closedReferrals?.sort((r1, r2) => r1.closedAtUtc! > r2.closedAtUtc! ? -1 : 1 ) || []);
+  const allReferrals: Referral[] = [...openReferrals, ...closedReferrals];  
   const [closeReferralDialogOpen, setCloseReferralDialogOpen] = useState(false);
   const [openNewReferralDialogOpen, setOpenNewReferralDialogOpen] = useState(false);
   const [uploadDocumentDialogOpen, setUploadDocumentDialogOpen] = useState(false);
   const [addAdultDialogOpen, setAddAdultDialogOpen] = useState(false);
   const [addChildDialogOpen, setAddChildDialogOpen] = useState(false);
   const [addNoteDialogOpen, setAddNoteDialogOpen] = useState(false);  
-  const [selectedReferral, setSelectedReferral] = useState(allReferrals[0]);
-  console.group(`Selected Referral`);
-  console.log(selectedReferral);
-  console.groupEnd();
-
-  const deleteFamilyDialogHandle = useDialogHandle();
-
+  const [selectedReferral, setSelectedReferral] = useState<Referral | undefined>(allReferrals[0]);
   const [familyMoreMenuAnchor, setFamilyMoreMenuAnchor] = useState<Element | null>(null);
 
   const participatingFamilyRoles =
@@ -277,14 +270,18 @@ export function FamilyScreen() {
               <PrimaryContactEditor family={family} />
               {permissions(Permission.ViewReferralProgress) && family.partneringFamilyInfo &&
                 <FormControl>
-                  <FormLabel id="demo-radio-buttons-group-label">Referrals</FormLabel>
+                  <FormLabel 
+					id="demo-radio-buttons-group-label"
+					sx={{ color: '#000', fontSize: '1.17em', fontWeight: 'bold', marginBottom: 0 }}
+                  >Referrals</FormLabel>
                   <RadioGroup
                     aria-labelledby="demo-radio-buttons-group-label"
                     value={selectedReferral ? selectedReferral.id : null}
                     name="radio-buttons-group"
                   >
 					{allReferrals.map(referral => <FormControlLabel 
-                      value={referral!.id} 
+                      key={referral!.id}
+                      value={referral!.id}
                       label={referral!.closedAtUtc ? `Referral Closed ${format(referral!.closedAtUtc!, "M/d/yy")}` : "Open Referral"}
                       control={<Radio />}
                       onChange={() => setSelectedReferral(allReferrals.filter(r => r!.id === referral!.id)[0])}
@@ -363,7 +360,6 @@ export function FamilyScreen() {
 				})}
             </Grid>
 		</Grid>
-		{/* TODO: Ensure Comments match referral */}
           {permissions(Permission.ViewReferralComments) && selectedReferral &&
             <Grid container spacing={0}>
               <ReferralComments partneringFamily={family}
