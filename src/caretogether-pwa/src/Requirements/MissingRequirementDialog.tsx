@@ -2,7 +2,7 @@ import { DatePicker, DateTimePicker } from '@mui/x-date-pickers';
 import { Checkbox, DialogContentText, Divider, FormControl, FormControlLabel, FormGroup, FormLabel, Grid, InputLabel, Link, MenuItem, Select, Tab, Tabs, TextField } from "@mui/material";
 import { useState } from "react";
 import { useRecoilValue } from "recoil";
-import { ActionRequirement, Arrangement, ArrangementPhase, DocumentLinkRequirement, MissingArrangementRequirement, NoteEntryRequirement } from "../GeneratedClient";
+import { ActionRequirement, Arrangement, ArrangementPhase, DocumentLinkRequirement, MissingArrangementRequirement, NoteEntryRequirement, Referral } from "../GeneratedClient";
 import { useDirectoryModel, useFamilyLookup, usePersonLookup } from "../Model/DirectoryModel";
 import { uploadFamilyFileToTenant } from "../Model/FilesModel";
 import { useReferralsModel } from "../Model/ReferralsModel";
@@ -21,9 +21,10 @@ type MissingRequirementDialogProps = {
   requirement: MissingArrangementRequirement | string
   context: RequirementContext
   policy: ActionRequirement
+  referralId?: string
 };
 export function MissingRequirementDialog({
-  handle, requirement, context, policy
+  handle, requirement, context, policy, referralId
 }: MissingRequirementDialogProps) {
   const directory = useDirectoryModel();
   const referrals = useReferralsModel();
@@ -55,12 +56,16 @@ export function MissingRequirementDialog({
   const contextFamily = familyLookup(contextFamilyId);
 
   const personLookup = usePersonLookup().bind(null, contextFamilyId);
-  //const openReferrals: Referral[] = (family?.partneringFamilyInfo?.openReferral !== undefined) ? [family.partneringFamilyInfo.openReferral] : [];
-  //const closedReferrals: Referral[] = (family?.partneringFamilyInfo?.closedReferrals?.sort((r1, r2) => r1.closedAtUtc! > r2.closedAtUtc! ? -1 : 1 ) || []);
-  //const allReferrals: Referral[] = [...openReferrals, ...closedReferrals];   
-  //const selectedReferral = allReferrals.find(r => r.id === context.referralId) ?? contextFamily!.partneringFamilyInfo!.openReferral!; // TODO: Add check to confirm that a referralId exists for first scenario & tweak as needed if undefinied rather than null
+  let selectedReferral = contextFamily!.partneringFamilyInfo!.openReferral!; // TODO: Add check to confirm that a referralId exists for first scenario & tweak as needed if undefinied rather than null
+  if (referralId) {
+	const openReferrals: Referral[] = (contextFamily?.partneringFamilyInfo?.openReferral !== undefined) ? [contextFamily.partneringFamilyInfo.openReferral] : [];
+	const closedReferrals: Referral[] = (contextFamily?.partneringFamilyInfo?.closedReferrals?.sort((r1, r2) => r1.closedAtUtc! > r2.closedAtUtc! ? -1 : 1 ) || []);
+	const allReferrals: Referral[] = [...openReferrals, ...closedReferrals];   
+	selectedReferral = allReferrals.find(r => r.id === referralId) ?? selectedReferral;
+  }
+  
   const availableArrangements = requirement instanceof MissingArrangementRequirement
-    ? contextFamily!.partneringFamilyInfo!.openReferral!.arrangements!.filter(arrangement =>
+    ? selectedReferral.arrangements!.filter(arrangement =>
       arrangement.missingRequirements?.some(x => {
         if (context.kind === 'Family Volunteer Assignment')
           return x.actionName === requirement.actionName &&

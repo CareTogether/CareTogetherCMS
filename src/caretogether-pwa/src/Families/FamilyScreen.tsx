@@ -371,7 +371,7 @@ export function FamilyScreen() {
                 <Grid item xs={12} sm={6} md={4} style={{ paddingRight: 20 }}>
                   <h3 style={{ marginBottom: 0 }}>Incomplete</h3>
                   {selectedReferral?.missingRequirements?.map((missing, i) =>
-                    <MissingRequirementRow key={`${missing}:${i}`} requirement={missing} context={referralRequirementContext!} />
+                    <MissingRequirementRow key={`${missing}:${i}`} requirement={missing} context={referralRequirementContext!} referralId={selectedReferral.id} />
                   )}
                 </Grid>
                 <Grid item xs={12} sm={6} md={4} style={{ paddingRight: 20 }}>
@@ -424,7 +424,6 @@ export function FamilyScreen() {
             {permissions(Permission.ViewFamilyDocumentMetadata) &&
               <Grid item xs={12} sm={6} md={4}>
                 <h3 style={{ marginBottom: 0 }}>Documents</h3>
-				  {/* TODO: Update This? */}
                 <FamilyDocuments family={family} />
               </Grid>}
           </Grid>
