@@ -766,18 +766,22 @@ namespace CareTogether.Api.OData
         private static IEnumerable<CommunityMemberFamily> RenderCommunityMemberFamilies(
             CommunityInfo communityInfo, Community community, Family[] families)
         {
-            return communityInfo.Community.MemberFamilies.Select(familyId =>
-                new CommunityMemberFamily(community, community.Id,
-                    families.Single(f => f.Id == familyId), familyId));
+            return communityInfo.Community.MemberFamilies
+                .Where(familyId => families.Any(f => f.Id == familyId)) // Ignore deleted families
+                .Select(familyId =>
+                    new CommunityMemberFamily(community, community.Id,
+                        families.Single(f => f.Id == familyId), familyId));
         }
 
         private static IEnumerable<CommunityRoleAssignment> RenderCommunityRoleAssignments(
             CommunityInfo communityInfo, Community community, Person[] people)
         {
-            return communityInfo.Community.CommunityRoleAssignments.Select(roleAssignment =>
-                new CommunityRoleAssignment(community, community.Id,
-                    people.Single(p => p.Id == roleAssignment.PersonId), roleAssignment.PersonId,
-                    roleAssignment.CommunityRole));
+            return communityInfo.Community.CommunityRoleAssignments
+                .Where(roleAssignment => people.Any(p => p.Id == roleAssignment.PersonId)) // Ignore deleted people
+                .Select(roleAssignment =>
+                    new CommunityRoleAssignment(community, community.Id,
+                        people.Single(p => p.Id == roleAssignment.PersonId), roleAssignment.PersonId,
+                        roleAssignment.CommunityRole));
         }
     }
 }
