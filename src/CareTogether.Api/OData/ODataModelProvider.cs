@@ -24,6 +24,9 @@ namespace CareTogether.Api.OData
             builder.EntitySet<ChildLocationRecord>("ChildLocationRecords");
             builder.EntitySet<FamilyFunctionAssignment>("FamilyFunctionAssignments");
             builder.EntitySet<IndividualFunctionAssignment>("IndividualFunctionAssignments");
+            builder.EntitySet<Community>("Communities");
+            builder.EntitySet<CommunityMemberFamily>("CommunityMemberFamilies");
+            builder.EntitySet<CommunityRoleAssignment>("CommunityRoleAssignments");
 
             return builder.GetEdmModel();
         }

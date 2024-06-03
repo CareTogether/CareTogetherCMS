@@ -27,8 +27,10 @@ namespace CareTogether.Api.OData
         Guid OrganizationId, string Name);
 
     public sealed record Family([property: Key] Guid Id,
-        [property: ForeignKey("LocationId")] Location Location, Guid LocationId, string Name,
-        string? PrimaryEmail, string? PrimaryPhoneNumber, Address? PrimaryAddress);
+        [property: ForeignKey("LocationId")] Location Location, Guid LocationId,
+        string Name,
+        string? PrimaryEmail, string? PrimaryPhoneNumber, Address? PrimaryAddress,
+        string? HomeChurch);
 
     public sealed record Person([property: Key] Guid Id,
         [property: ForeignKey("FamilyId")] Family Family, Guid FamilyId,
@@ -89,6 +91,18 @@ namespace CareTogether.Api.OData
         [property: ForeignKey("ArrangementId")] Arrangement Arrangement, [property: Key] Guid ArrangementId,
         [property: ForeignKey("PersonId")] Person Person, [property: Key] Guid PersonId,
         [property: Key] string Function);
+
+    public sealed record Community(
+        [property: Key] Guid Id, string Name);
+
+    public sealed record CommunityMemberFamily(
+        [property: ForeignKey("CommunityId")] Community Community, [property: Key] Guid CommunityId,
+        [property: ForeignKey("FamilyId")] Family Family, [property: Key] Guid FamilyId);
+
+    public sealed record CommunityRoleAssignment(
+        [property: ForeignKey("CommunityId")] Community Community, [property: Key] Guid CommunityId,
+        [property: ForeignKey("PersonId")] Person Person, [property: Key] Guid PersonId,
+        [property: Key] string Role);
 
 
     public sealed record LiveModel(IEnumerable<Location> Locations,
@@ -218,6 +232,27 @@ namespace CareTogether.Api.OData
             return liveModel.IndividualFunctionAssignments;
         }
 
+        [HttpGet("Communities")]
+        public async Task<IEnumerable<Community>> GetCommunitiesAsync()
+        {
+            var liveModel = await RenderLiveModelAsync();
+            return Array.Empty<Community>();
+        }
+
+        [HttpGet("CommunityMemberFamilies")]
+        public async Task<IEnumerable<CommunityMemberFamily>> GetCommunityMemberFamiliesAsync()
+        {
+            var liveModel = await RenderLiveModelAsync();
+            return Array.Empty<CommunityMemberFamily>();
+        }
+
+        [HttpGet("CommunityRoleAssignments")]
+        public async Task<IEnumerable<CommunityRoleAssignment>> GetCommunityRoleAssignmentsAsync()
+        {
+            var liveModel = await RenderLiveModelAsync();
+            return Array.Empty<CommunityRoleAssignment>();
+        }
+
 
         private async Task<LiveModel> RenderLiveModelAsync()
         {
@@ -275,6 +310,7 @@ namespace CareTogether.Api.OData
                 .Select((location, i) => (location, anonymousZipCode: anonymize ? anonymousLocationZipCodes[i] : null))
                 .ZipSelectManyAsync(location =>
                     recordsManager.ListVisibleAggregatesAsync(User, location.location.OrganizationId, location.location.Id))
+                //TODO: Also use the CommunityRecordsAggregate values!
                 .Where(zipResult => zipResult.Item2 is FamilyRecordsAggregate)
                 .Select(zipResult => (zipResult.Item1, (FamilyRecordsAggregate)zipResult.Item2))
                 .Select(zipResult => (zipResult.Item1.location, anonymize
