@@ -83,7 +83,8 @@ export function FamilyScreen() {
 
   const deleteFamilyDialogHandle = useDialogHandle();
   const openReferrals: Referral[] = (family?.partneringFamilyInfo?.openReferral !== undefined) ? [family.partneringFamilyInfo.openReferral] : [];
-  const closedReferrals: Referral[] = (family?.partneringFamilyInfo?.closedReferrals?.sort((r1, r2) => r1.closedAtUtc! > r2.closedAtUtc! ? -1 : 1 ) || []);
+  const closedReferrals: Referral[] = (family?.partneringFamilyInfo?.closedReferrals === undefined) ? [] : 
+  [...family.partneringFamilyInfo.closedReferrals!].sort((r1, r2) => r1.closedAtUtc!.getUTCMilliseconds() - r2.closedAtUtc!.getUTCMilliseconds());
   const allReferrals: Referral[] = [...openReferrals, ...closedReferrals];  
   const [closeReferralDialogOpen, setCloseReferralDialogOpen] = useState(false);
   const [openNewReferralDialogOpen, setOpenNewReferralDialogOpen] = useState(false);
@@ -162,7 +163,7 @@ export function FamilyScreen() {
     .sort((a, b) => sortArrangementsByStartDateDescThenCreateDateDesc(a, b))
     .map(arrangement => (
       <ArrangementCard key={arrangement.id}
-        partneringFamily={family} referralId={family.partneringFamilyInfo!.openReferral!.id!}
+        partneringFamily={family} referralId={selectedReferral.id!}
         arrangement={arrangement} />
     ));
 	const appNavigate = useAppNavigate();
@@ -312,17 +313,19 @@ export function FamilyScreen() {
                           (b instanceof CompletedCustomFieldInfo ? b.customFieldName! : b) ? 1
                           : 0).map(customField =>
                             <ReferralCustomField key={typeof customField === 'string' ? customField : customField.customFieldName}
-                              partneringFamilyId={familyId} referralId={family.partneringFamilyInfo!.openReferral!.id!}
+                              partneringFamilyId={familyId} referralId={`${selectedReferral!.id}`}
                               customField={customField} />)}
             </Grid>
             <Grid item xs={6} md={4}>
-              {canCloseReferral && <Button
-                onClick={() => setCloseReferralDialogOpen(true)}
-                variant="contained"
-                size="small"
-                sx={{ margin: 1 }}>
-                Close Referral
-              </Button>}
+              {canCloseReferral && 
+                (selectedReferral?.id?.toString() == family.partneringFamilyInfo?.openReferral?.id?.toString()) &&
+                <Button
+					onClick={() => setCloseReferralDialogOpen(true)}
+					variant="contained"
+					size="small"
+					sx={{ margin: 1 }}>
+					Close Referral
+				</Button>}
               {!family.partneringFamilyInfo?.openReferral && permissions(Permission.CreateReferral) && <Button
                 onClick={() => setOpenNewReferralDialogOpen(true)}
                 variant="contained"
@@ -333,7 +336,7 @@ export function FamilyScreen() {
               {closeReferralDialogOpen && (selectedReferral?.id === family.partneringFamilyInfo?.openReferral?.id) && (
                 <CloseReferralDialog
                   partneringFamilyId={family.family!.id!}
-                  referralId={family.partneringFamilyInfo!.openReferral!.id!}
+                  referralId={`${selectedReferral!.id}`}
                   onClose={() => setCloseReferralDialogOpen(false)} />)}
               {openNewReferralDialogOpen && (
                 <OpenNewReferralDialog
@@ -462,7 +465,7 @@ export function FamilyScreen() {
                 </Masonry>
                 {createArrangementDialogParameter &&
                   <CreateArrangementDialog
-                    referralId={family.partneringFamilyInfo!.openReferral!.id!}
+                    referralId={`${selectedReferral!.id}`}
                     arrangementPolicy={createArrangementDialogParameter}
                     onClose={() => setCreateArrangementDialogParameter(null)} />}
               </Grid>
