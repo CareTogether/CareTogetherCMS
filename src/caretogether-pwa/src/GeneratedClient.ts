@@ -2510,6 +2510,11 @@ export abstract class RecurrencePolicy implements IRecurrencePolicy {
             result.init(data);
             return result;
         }
+        if (data["discriminator"] === "OneTimeRecurrencePolicy") {
+            let result = new OneTimeRecurrencePolicy();
+            result.init(data);
+            return result;
+        }
         throw new Error("The abstract class 'RecurrencePolicy' cannot be instantiated.");
     }
 
@@ -2691,6 +2696,40 @@ export class DurationStagesRecurrencePolicy extends RecurrencePolicy implements 
 
 export interface IDurationStagesRecurrencePolicy extends IRecurrencePolicy {
     stages?: RecurrencePolicyStage[];
+}
+
+export class OneTimeRecurrencePolicy extends RecurrencePolicy implements IOneTimeRecurrencePolicy {
+    delay?: string | undefined;
+
+    constructor(data?: IOneTimeRecurrencePolicy) {
+        super(data);
+        this._discriminator = "OneTimeRecurrencePolicy";
+    }
+
+    init(_data?: any) {
+        super.init(_data);
+        if (_data) {
+            this.delay = _data["delay"];
+        }
+    }
+
+    static fromJS(data: any): OneTimeRecurrencePolicy {
+        data = typeof data === 'object' ? data : {};
+        let result = new OneTimeRecurrencePolicy();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["delay"] = this.delay;
+        super.toJSON(data);
+        return data;
+    }
+}
+
+export interface IOneTimeRecurrencePolicy extends IRecurrencePolicy {
+    delay?: string | undefined;
 }
 
 export class VolunteerPolicy implements IVolunteerPolicy {

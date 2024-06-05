@@ -77,7 +77,7 @@ namespace CareTogether.Resources.Policies
         ImmutableList<string> RequiredIntakeActionNames,
         ImmutableList<CustomField> CustomFields,
         ImmutableList<ArrangementPolicy> ArrangementPolicies);
-        //TODO: Include referral close reasons
+    //TODO: Include referral close reasons
 
     public sealed record CustomField(
         string Name,
@@ -118,6 +118,7 @@ namespace CareTogether.Resources.Policies
 
     [JsonHierarchyBase]
     public abstract partial record RecurrencePolicy();
+    public sealed record OneTimeRecurrencePolicy(TimeSpan? Delay) : RecurrencePolicy;
     public sealed record DurationStagesRecurrencePolicy(ImmutableList<RecurrencePolicyStage> Stages)
         : RecurrencePolicy;
     public sealed record DurationStagesPerChildLocationRecurrencePolicy(ImmutableList<RecurrencePolicyStage> Stages)
