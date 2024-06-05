@@ -1,4 +1,4 @@
-using CareTogether.Engines;
+﻿using CareTogether.Engines;
 using CareTogether.Engines.PolicyEvaluation;
 using CareTogether.Managers;
 using CareTogether.Managers.Records;
@@ -659,9 +659,9 @@ namespace CareTogether.Api.OData
         private static IEnumerable<Referral> RenderReferrals(
             CombinedFamilyInfo familyInfo, Family family)
         {
-            var allReferralsInfo = (familyInfo.PartneringFamilyInfo?.ClosedReferrals ?? ImmutableList.Create<Managers.Referral>()).AddRange(
+            var allReferralsInfo = (familyInfo.PartneringFamilyInfo?.ClosedReferrals ?? []).AddRange(
                 familyInfo.PartneringFamilyInfo?.OpenReferral == null
-                ? Array.Empty<Managers.Referral>() : new[] { familyInfo.PartneringFamilyInfo.OpenReferral });
+                ? [] : new[] { familyInfo.PartneringFamilyInfo.OpenReferral });
             return allReferralsInfo.Select(referralInfo => new Referral(referralInfo.Id, family, family.Id,
                 DateOnly.FromDateTime(referralInfo.OpenedAtUtc),
                 referralInfo.ClosedAtUtc.HasValue ? DateOnly.FromDateTime(referralInfo.ClosedAtUtc.Value) : null,
@@ -673,9 +673,9 @@ namespace CareTogether.Api.OData
         private static IEnumerable<Arrangement> RenderArrangements(
             CombinedFamilyInfo familyInfo, Family family, Person[] people, Referral[] referrals, ArrangementType[] arrangementTypes)
         {
-            var allReferralsInfo = (familyInfo.PartneringFamilyInfo?.ClosedReferrals ?? ImmutableList.Create<Managers.Referral>()).AddRange(
+            var allReferralsInfo = (familyInfo.PartneringFamilyInfo?.ClosedReferrals ?? []).AddRange(
                 familyInfo.PartneringFamilyInfo?.OpenReferral == null
-                ? Array.Empty<Managers.Referral>() : new[] { familyInfo.PartneringFamilyInfo.OpenReferral });
+                ? [] : new[] { familyInfo.PartneringFamilyInfo.OpenReferral });
             return allReferralsInfo.SelectMany(referralInfo =>
             {
                 var referral = referrals.Single(r => r.Id == referralInfo.Id);
@@ -695,9 +695,9 @@ namespace CareTogether.Api.OData
         private static IEnumerable<ChildLocationRecord> RenderChildLocationRecords(
             CombinedFamilyInfo familyInfo, Family family, Family[] families, Person[] people, Arrangement[] arrangements)
         {
-            var allReferralsInfo = (familyInfo.PartneringFamilyInfo?.ClosedReferrals ?? ImmutableList.Create<Managers.Referral>()).AddRange(
+            var allReferralsInfo = (familyInfo.PartneringFamilyInfo?.ClosedReferrals ?? []).AddRange(
                 familyInfo.PartneringFamilyInfo?.OpenReferral == null
-                ? Array.Empty<Managers.Referral>() : new[] { familyInfo.PartneringFamilyInfo.OpenReferral });
+                ? [] : new[] { familyInfo.PartneringFamilyInfo.OpenReferral });
             return allReferralsInfo.SelectMany(referralInfo =>
             {
                 return referralInfo.Arrangements.SelectMany(arrangement =>
@@ -730,9 +730,9 @@ namespace CareTogether.Api.OData
         private static IEnumerable<FamilyFunctionAssignment> RenderFamilyFunctionAssignments(
             CombinedFamilyInfo familyInfo, Family family, Family[] families, Person[] people, Arrangement[] arrangements)
         {
-            var allReferralsInfo = (familyInfo.PartneringFamilyInfo?.ClosedReferrals ?? ImmutableList.Create<Managers.Referral>()).AddRange(
+            var allReferralsInfo = (familyInfo.PartneringFamilyInfo?.ClosedReferrals ?? []).AddRange(
                 familyInfo.PartneringFamilyInfo?.OpenReferral == null
-                ? Array.Empty<Managers.Referral>() : new[] { familyInfo.PartneringFamilyInfo.OpenReferral });
+                ? [] : new[] { familyInfo.PartneringFamilyInfo.OpenReferral });
             return allReferralsInfo.SelectMany(referralInfo =>
             {
                 return referralInfo.Arrangements.SelectMany(arrangement =>
@@ -749,9 +749,9 @@ namespace CareTogether.Api.OData
         private static IEnumerable<IndividualFunctionAssignment> RenderIndividualFunctionAssignments(
             CombinedFamilyInfo familyInfo, Family family, Family[] families, Person[] people, Arrangement[] arrangements)
         {
-            var allReferralsInfo = (familyInfo.PartneringFamilyInfo?.ClosedReferrals ?? ImmutableList.Create<Managers.Referral>()).AddRange(
+            var allReferralsInfo = (familyInfo.PartneringFamilyInfo?.ClosedReferrals ?? []).AddRange(
                 familyInfo.PartneringFamilyInfo?.OpenReferral == null
-                ? Array.Empty<Managers.Referral>() : new[] { familyInfo.PartneringFamilyInfo.OpenReferral });
+                ? [] : new[] { familyInfo.PartneringFamilyInfo.OpenReferral });
             return allReferralsInfo.SelectMany(referralInfo =>
             {
                 return referralInfo.Arrangements.SelectMany(arrangement =>
