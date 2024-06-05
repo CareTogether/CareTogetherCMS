@@ -11,6 +11,7 @@ import { useBackdrop } from '../Hooks/useBackdrop';
 import { subYears } from 'date-fns';
 import { visibleFamiliesQuery } from '../Model/Data';
 import { AddressFormFields } from './AddressEditor';
+import { familyLastName } from './FamilyUtils';
 
 interface AddAdultDialogProps {
   onClose: (event: object | undefined, reason: string) => void
@@ -70,7 +71,7 @@ export function AddAdultDialog({ onClose }: AddAdultDialogProps) {
           address == null ? null : new Address({ ...address, id: crypto.randomUUID() }),
           optional(phoneNumber), phoneType, optional(emailAddress), emailType,
           (notes == null ? undefined : notes), (concerns == null ? undefined : concerns));
-          //TODO: Error handling (start with a basic error dialog w/ request to share a screenshot, and App Insights logging)
+        //TODO: Error handling (start with a basic error dialog w/ request to share a screenshot, and App Insights logging)
         onClose({}, ``);
       }
     });
@@ -79,7 +80,7 @@ export function AddAdultDialog({ onClose }: AddAdultDialogProps) {
   return (
     <Dialog open={true} onClose={onClose} scroll='body' aria-labelledby="add-adult-title">
       <DialogTitle id="add-adult-title">
-        Add Adult to {family.family?.adults?.filter(adult => adult.item1?.id === family.family?.primaryFamilyContactPersonId)[0]?.item1?.lastName} Family
+        Add Adult to {familyLastName(family)}
       </DialogTitle>
       <DialogContent>
         {/* <DialogContentText>

@@ -10,6 +10,7 @@ import { useParams } from 'react-router-dom';
 import { useBackdrop } from '../Hooks/useBackdrop';
 import { subYears } from 'date-fns';
 import { visibleFamiliesQuery } from '../Model/Data';
+import { familyLastName } from './FamilyUtils';
 
 interface AddChildDialogProps {
   onClose: (event: object | undefined, reason: string) => void
@@ -59,7 +60,7 @@ export function AddChildDialog({ onClose }: AddChildDialogProps) {
           }),
           (notes == null ? undefined : notes), (concerns == null ? undefined : concerns));
         //TODO: Error handling (start with a basic error dialog w/ request to share a screenshot, and App Insights logging)
-        onClose({},``);
+        onClose({}, ``);
       }
     });
   }
@@ -67,7 +68,7 @@ export function AddChildDialog({ onClose }: AddChildDialogProps) {
   return (
     <Dialog open={true} onClose={onClose} scroll='body' aria-labelledby="add-child-title">
       <DialogTitle id="add-child-title">
-        Add Child to {family.family?.adults?.filter(adult => adult.item1?.id === family.family?.primaryFamilyContactPersonId)[0]?.item1?.lastName} Family
+        Add Child to {familyLastName(family)}
       </DialogTitle>
       <DialogContent>
         {/* <DialogContentText>
@@ -134,7 +135,7 @@ export function AddChildDialog({ onClose }: AddChildDialogProps) {
             <Grid item xs={12} sm={6}>
               <DatePicker
                 label="Date of birth"
-                value={dateOfBirth} maxDate={subYears(new Date(), 18)} openTo="year"
+                value={dateOfBirth} minDate={subYears(new Date(), 18)} openTo="year"
                 format="MM/dd/yyyy"
                 onChange={(date: Date | null) => date && setFields({ ...fields, dateOfBirth: date })}
                 slotProps={{ textField: { size: "small", fullWidth: true } }} />

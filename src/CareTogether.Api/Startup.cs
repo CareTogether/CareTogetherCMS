@@ -16,6 +16,7 @@ using CareTogether.Resources.Policies;
 using CareTogether.Resources.Referrals;
 using CareTogether.Utilities.EventLog;
 using CareTogether.Utilities.FileStore;
+using CareTogether.Utilities.Identity;
 using CareTogether.Utilities.ObjectStore;
 using CareTogether.Utilities.Telephony;
 using idunno.Authentication.Basic;
@@ -142,6 +143,10 @@ namespace CareTogether.Api
             var telephony = new PlivoTelephony(
                 authId: Configuration["Telephony:Plivo:AuthId"]!,
                 authToken: Configuration["Telephony:Plivo:AuthToken"]!);
+            var identityProvider = new AzureAdB2cIdentityProvider(
+                Configuration["AzureAdB2C:TenantId"]!,
+                Configuration["AzureAdB2C:ClientId"]!,
+                Configuration["AzureAdB2C:ClientSecret"] ?? "");
 
             // Resource services
             var approvalsResource = new ApprovalsResource(approvalsEventLog);
@@ -173,7 +178,7 @@ namespace CareTogether.Api
             services.AddSingleton<IRecordsManager>(new RecordsManager(authorizationEngine, directoryResource,
                 approvalsResource, referralsResource, notesResource, communitiesResource, combinedFamilyInfoFormatter));
             services.AddSingleton<IMembershipManager>(new MembershipManager(accountsResource, authorizationEngine,
-                directoryResource, policiesResource, combinedFamilyInfoFormatter));
+                directoryResource, policiesResource, combinedFamilyInfoFormatter, identityProvider));
 
             services.AddAuthentication("Basic")
                 .AddBasic("Basic", options =>
@@ -184,6 +189,18 @@ namespace CareTogether.Api
                     {
                         OnValidateCredentials = async context =>
                         {
+                            if (context.Username == "Research" && context.Password == Configuration["Research:ApiKey"] &&
+                                Guid.TryParse(Configuration["Research:OrganizationId"], out var researchOrganizationId))
+                            {
+                                context.Principal = new ClaimsPrincipal(new ClaimsIdentity(
+                                [
+                                    new Claim(Claims.OrganizationId, Configuration["Research:OrganizationId"]!),
+                                    new Claim(Claims.Researcher, true.ToString())
+                                ], "API Key"));
+                                context.Success();
+                                return;
+                            }
+
                             if (!Guid.TryParse(context.Username, out var assertedOrganizationId))
                             {
                                 context.Fail("The username must be an organization ID in GUID format.");

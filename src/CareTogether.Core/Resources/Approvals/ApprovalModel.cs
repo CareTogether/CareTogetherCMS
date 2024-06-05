@@ -78,15 +78,22 @@ namespace CareTogether.Resources.Approvals
                 {
                     RoleRemovals = volunteerFamilyEntry.RoleRemovals.Add(
                         new RoleRemoval(c.RoleName, c.Reason,
-                            EffectiveSince: DateOnly.FromDateTime(timestampUtc),
-                            EffectiveUntil: null,
+                            EffectiveSince: c.EffectiveSince ?? DateOnly.FromDateTime(timestampUtc),
+                            EffectiveUntil: c.EffectiveThrough,
                             c.AdditionalComments))
                 },
                 ResetVolunteerFamilyRole c => volunteerFamilyEntry with
                 {
-                    RoleRemovals = volunteerFamilyEntry.RoleRemovals.UpdateAll(
-                        x => x.RoleName == c.RoleName && x.EffectiveUntil == null,
-                        x => x with { EffectiveUntil = DateOnly.FromDateTime(timestampUtc) })
+                    RoleRemovals = volunteerFamilyEntry.RoleRemovals
+                        .UpdateAll( // End the specified role removal, or all prior role removals if none is specified.
+                            x => x.RoleName == c.RoleName && x.EffectiveUntil == null &&
+                                c.ForRemovalEffectiveSince != null
+                                ? x.EffectiveSince == c.ForRemovalEffectiveSince
+                                : x.EffectiveSince <= DateOnly.FromDateTime(timestampUtc),
+                            x => x with { EffectiveUntil = c.EffectiveThrough ?? DateOnly.FromDateTime(timestampUtc).AddDays(-1) })
+                        .RemoveAll( // Remove the role removal if it is being ended before or after the day it began (i.e., treat it as an undo)
+                                    //NOTE: This is a workaround; an 'UndoRemoveVolunteerFamilyRole' command would be better.
+                            x => x.RoleName == c.RoleName && x.EffectiveUntil <= x.EffectiveSince)
                 },
                 _ => throw new NotImplementedException(
                     $"The command type '{command.GetType().FullName}' has not been implemented.")
@@ -144,15 +151,22 @@ namespace CareTogether.Resources.Approvals
                 {
                     RoleRemovals = volunteerEntry.RoleRemovals.Add(
                         new RoleRemoval(c.RoleName, c.Reason,
-                            EffectiveSince: DateOnly.FromDateTime(timestampUtc),
-                            EffectiveUntil: null,
+                            EffectiveSince: c.EffectiveSince ?? DateOnly.FromDateTime(timestampUtc),
+                            EffectiveUntil: c.EffectiveThrough,
                             c.AdditionalComments))
                 },
                 ResetVolunteerRole c => volunteerEntry with
                 {
-                    RoleRemovals = volunteerEntry.RoleRemovals.UpdateAll(
-                        x => x.RoleName == c.RoleName && x.EffectiveUntil == null,
-                        x => x with { EffectiveUntil = DateOnly.FromDateTime(timestampUtc) })
+                    RoleRemovals = volunteerEntry.RoleRemovals
+                        .UpdateAll( // End the specified role removal, or all prior role removals if none is specified.
+                            x => x.RoleName == c.RoleName && x.EffectiveUntil == null &&
+                                c.ForRemovalEffectiveSince != null
+                                ? x.EffectiveSince == c.ForRemovalEffectiveSince
+                                : x.EffectiveSince <= DateOnly.FromDateTime(timestampUtc),
+                            x => x with { EffectiveUntil = c.EffectiveThrough ?? DateOnly.FromDateTime(timestampUtc).AddDays(-1) })
+                        .RemoveAll( // Remove the role removal if it is being ended before or after the day it began (i.e., treat it as an undo)
+                                    //NOTE: This is a workaround; an 'UndoRemoveVolunteerFamilyRole' command would be better.
+                            x => x.RoleName == c.RoleName && x.EffectiveUntil <= x.EffectiveSince)
                 },
                 _ => throw new NotImplementedException(
                     $"The command type '{command.GetType().FullName}' has not been implemented.")

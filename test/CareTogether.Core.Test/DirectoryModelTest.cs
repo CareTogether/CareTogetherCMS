@@ -115,17 +115,17 @@ namespace CareTogether.Core.Test
                 ImmutableList<Address>.Empty, null, ImmutableList<PhoneNumber>.Empty, null, ImmutableList<EmailAddress>.Empty, null, null, null), people.Single(p => p.Id == guid6));
             Assert.AreEqual(1, families.Count);
             var actualFamily = families[0];
-            var expectedFamily = new Family(guid5, guid4,
+            var expectedFamily = new Family(guid5, true, guid4,
                 ImmutableList<(Person, FamilyAdultRelationshipInfo)>.Empty
                     .Add((new Person(guid1, true, "John", "Doe", Gender.Male, new ExactAge(new DateTime(1975, 1, 1)), "Ethnic",
-                        ImmutableList<Address>.Empty, null, ImmutableList<PhoneNumber>.Empty, null, ImmutableList<EmailAddress>.Empty, null,"Test", "ABC"),
+                        ImmutableList<Address>.Empty, null, ImmutableList<PhoneNumber>.Empty, null, ImmutableList<EmailAddress>.Empty, null, "Test", "ABC"),
                         new FamilyAdultRelationshipInfo("Dad", false)))
                     .Add((new Person(guid2, true, "Jane", "Doe", Gender.Female, new ExactAge(new DateTime(1979, 7, 1)), "Ethnic",
-                        ImmutableList<Address>.Empty, null, ImmutableList<PhoneNumber>.Empty, null, ImmutableList<EmailAddress>.Empty, null,null, "DEF"),
+                        ImmutableList<Address>.Empty, null, ImmutableList<PhoneNumber>.Empty, null, ImmutableList<EmailAddress>.Empty, null, null, "DEF"),
                         new FamilyAdultRelationshipInfo("Mom", true))),
                 ImmutableList<Person>.Empty
                     .Add(new Person(guid6, true, "Eric", "Doe", Gender.Male, new AgeInYears(12, new DateTime(2021, 1, 1)), "Ethnic",
-                        ImmutableList<Address>.Empty, null, ImmutableList<PhoneNumber>.Empty, null, ImmutableList<EmailAddress>.Empty, null,null, null)),
+                        ImmutableList<Address>.Empty, null, ImmutableList<PhoneNumber>.Empty, null, ImmutableList<EmailAddress>.Empty, null, null, null)),
                 ImmutableList<CustodialRelationship>.Empty
                     .Add(new CustodialRelationship(guid6, guid2, CustodialRelationshipType.ParentWithCourtAppointedCustody))
                     .Add(new CustodialRelationship(guid6, guid1, CustodialRelationshipType.ParentWithCourtAppointedCustody)),

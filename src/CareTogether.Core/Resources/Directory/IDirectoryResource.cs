@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 
 namespace CareTogether.Resources.Directory
 {
-    public sealed record Family(Guid Id, Guid PrimaryFamilyContactPersonId,
+    public sealed record Family(Guid Id, bool Active, Guid PrimaryFamilyContactPersonId,
         ImmutableList<(Person, FamilyAdultRelationshipInfo)> Adults,
         ImmutableList<Person> Children,
         ImmutableList<CustodialRelationship> CustodialRelationships,
@@ -50,11 +50,16 @@ namespace CareTogether.Resources.Directory
         ImmutableList<Guid> Children,
         ImmutableList<CustodialRelationship> CustodialRelationships)
         : FamilyCommand(FamilyId);
+    public sealed record UndoCreateFamily(Guid FamilyId)
+        : FamilyCommand(FamilyId);
     public sealed record AddAdultToFamily(Guid FamilyId, Guid AdultPersonId,
         FamilyAdultRelationshipInfo RelationshipToFamily)
         : FamilyCommand(FamilyId);
     public sealed record AddChildToFamily(Guid FamilyId, Guid ChildPersonId,
         ImmutableList<CustodialRelationship> CustodialRelationships)
+        : FamilyCommand(FamilyId);
+    public sealed record ConvertChildToAdult(Guid FamilyId, Guid PersonId,
+        FamilyAdultRelationshipInfo NewRelationshipToFamily)
         : FamilyCommand(FamilyId);
     public sealed record UpdateAdultRelationshipToFamily(Guid FamilyId, Guid AdultPersonId,
         FamilyAdultRelationshipInfo RelationshipToFamily)

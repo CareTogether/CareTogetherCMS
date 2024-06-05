@@ -17,7 +17,7 @@ namespace CareTogether.Resources.Directory
 
     public sealed class DirectoryModel
     {
-        internal record FamilyEntry(Guid Id, Guid PrimaryFamilyContactPersonId,
+        internal record FamilyEntry(Guid Id, bool Active, Guid PrimaryFamilyContactPersonId,
             ImmutableDictionary<Guid, FamilyAdultRelationshipInfo> AdultRelationships,
             ImmutableList<Guid> Children,
             ImmutableDictionary<(Guid ChildId, Guid AdultId), CustodialRelationshipType> CustodialRelationships,
@@ -26,7 +26,7 @@ namespace CareTogether.Resources.Directory
             ImmutableList<Activity> History)
         {
             internal Family ToFamily(ImmutableDictionary<Guid, PersonEntry> people) =>
-                new(Id, PrimaryFamilyContactPersonId,
+                new(Id, Active, PrimaryFamilyContactPersonId,
                     AdultRelationships.Select(ar => (people[ar.Key].ToPerson(), ar.Value)).ToImmutableList(),
                     Children.Select(c => people[c].ToPerson()).ToImmutableList(),
                     CustodialRelationships.Select(cr => new CustodialRelationship(cr.Key.ChildId, cr.Key.AdultId, cr.Value)).ToImmutableList(),
@@ -73,7 +73,7 @@ namespace CareTogether.Resources.Directory
         {
             var familyEntryToUpsert = command switch
             {
-                CreateFamily c => new FamilyEntry(c.FamilyId, c.PrimaryFamilyContactPersonId,
+                CreateFamily c => new FamilyEntry(c.FamilyId, Active: true, c.PrimaryFamilyContactPersonId,
                     AdultRelationships: ImmutableDictionary<Guid, FamilyAdultRelationshipInfo>.Empty.AddRange(
                         c.Adults?.Select(a => new KeyValuePair<Guid, FamilyAdultRelationshipInfo>(a.Item1, a.Item2))
                         ?? new List<KeyValuePair<Guid, FamilyAdultRelationshipInfo>>()),
@@ -88,6 +88,7 @@ namespace CareTogether.Resources.Directory
                 _ => families.TryGetValue(command.FamilyId, out var familyEntry)
                     ? command switch
                     {
+                        UndoCreateFamily c => familyEntry with { Active = false },
                         //TODO: Error if key already exists
                         //TODO: Error if person is not found
                         AddAdultToFamily c => familyEntry with
@@ -101,6 +102,12 @@ namespace CareTogether.Resources.Directory
                             Children = familyEntry.Children.Add(c.ChildPersonId),
                             CustodialRelationships = familyEntry.CustodialRelationships.AddRange(c.CustodialRelationships.Select(cr =>
                                 new KeyValuePair<(Guid ChildId, Guid AdultId), CustodialRelationshipType>((cr.ChildId, cr.PersonId), cr.Type)))
+                        },
+                        //TODO: Error if child is not found?
+                        ConvertChildToAdult c => familyEntry with
+                        {
+                            Children = familyEntry.Children.Remove(c.PersonId),
+                            AdultRelationships = familyEntry.AdultRelationships.Add(c.PersonId, c.NewRelationshipToFamily)
                         },
                         //TODO: Error if key is not found
                         UpdateAdultRelationshipToFamily c => familyEntry with
@@ -160,7 +167,8 @@ namespace CareTogether.Resources.Directory
                 {
                     LastKnownSequenceNumber++;
                     families = families.SetItem(familyEntryToUpsert.Id, familyEntryToUpsert);
-                });
+                }
+            );
         }
 
         public (PersonCommandExecuted Event, long SequenceNumber, Person Person, Action OnCommit)
@@ -228,7 +236,8 @@ namespace CareTogether.Resources.Directory
                 {
                     LastKnownSequenceNumber++;
                     people = people.SetItem(personEntryToUpsert.Id, personEntryToUpsert);
-                });
+                }
+            );
         }
 
         public ImmutableList<Family> FindFamilies(Func<Family, bool> predicate) =>

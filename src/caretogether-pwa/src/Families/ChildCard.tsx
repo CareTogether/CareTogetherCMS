@@ -4,14 +4,16 @@ import {
   IconButton,
   CardContent,
   Typography,
+  Chip,
 } from "@mui/material";
-import { CustodialRelationshipType, Gender, Permission } from "../GeneratedClient";
+import { CustodialRelationshipType, ExactAge, Gender, Permission } from "../GeneratedClient";
 import { AgeText } from "./AgeText";
 import EditIcon from '@mui/icons-material/Edit';
 import { useDialogHandle } from "../Hooks/useDialogHandle";
 import { EditChildDialog } from "./EditChildDialog";
 import { useFamilyPermissions } from "../Model/SessionModel";
 import { useFamilyLookup } from "../Model/DirectoryModel";
+import { differenceInYears } from "date-fns";
 
 type ChildCardProps = {
   familyId: string,
@@ -23,6 +25,9 @@ export function ChildCard({ familyId, personId }: ChildCardProps) {
   const family = familyLookup(familyId)!;
 
   const child = family.family?.children?.find(x => x.id === personId);
+
+  const isAdult = child?.age &&
+    differenceInYears(new Date(), (child.age as ExactAge).dateOfBirth!) >= 18;
 
   const editDialogHandle = useDialogHandle();
 
@@ -42,6 +47,7 @@ export function ChildCard({ familyId, personId }: ChildCardProps) {
             <EditIcon color="primary" />
           </IconButton>} />
       <CardContent sx={{ paddingTop: 1, paddingBottom: 1, maxWidth: '500px' }}>
+        {isAdult && <Chip size="small" label={"No longer under 18!"} color="error" />}
         <Typography variant="body2" component="div">
           {child.concerns && <><strong>⚠&nbsp;&nbsp;&nbsp;{child.concerns}</strong></>}
           {child.concerns && child.notes && <br />}

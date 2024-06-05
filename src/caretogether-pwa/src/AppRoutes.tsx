@@ -14,6 +14,7 @@ import { ProgressBackdrop } from "./Shell/ProgressBackdrop";
 import { useScopedTrace } from "./Hooks/useScopedTrace";
 import { useLoadable } from "./Hooks/useLoadable";
 import { useLocalStorage } from "./Hooks/useLocalStorage";
+import { InboxScreen } from "./Inbox/InboxScreen";
 
 const LAST_VISITED_LOCATION = 'lastVisitedLocation';
 
@@ -115,6 +116,7 @@ function LocationContextWrapper() {
       ? <ShellRootLayout>
         <Routes>
           <Route index element={<Dashboard />} />
+          <Route path="inbox/*" element={<InboxScreen />} />
           <Route path="families/:familyId" element={<FamilyScreen />} />
           <Route path="referrals/*" element={<Referrals />} />
           <Route path="volunteers/*" element={<Volunteers />} />
@@ -134,6 +136,7 @@ export function AppRoutes() {
     <Routes>
       <Route path="/org/:organizationId/:locationId/*" element={<LocationContextWrapper />} />
       <Route path="/me/*" /*TODO: This needs a shell!*/ element={<UserProfile />} />
+      {/* The following routes are only kept for migration/fallback purposes. */}
       <Route path="/families/:familyId" element={<RouteMigrator />} />
       <Route path="/referrals/*" element={<RouteMigrator />} />
       <Route path="/volunteers/*" element={<RouteMigrator />} />

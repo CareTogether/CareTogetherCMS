@@ -1,5 +1,5 @@
 import { Grid } from '@mui/material';
-import { DateTimePicker } from '@mui/x-date-pickers';
+import { DatePicker } from '@mui/x-date-pickers';
 import { useState } from 'react';
 import { useParams } from 'react-router';
 import { Arrangement, Person } from '../../GeneratedClient';
@@ -22,9 +22,16 @@ export function EndArrangementDialog({ referralId, arrangement, onClose }: EndAr
 
   const person = personLookup(familyId, arrangement.partneringFamilyPersonId) as Person;
 
+  const latestChildLocationChange = arrangement.childLocationHistory?.slice().sort((a, b) =>
+    a.timestampUtc! < b.timestampUtc! ? 1 : a.timestampUtc! > b.timestampUtc! ? -1 : 0)[0];
+  const earliestAllowedEndDate = latestChildLocationChange?.timestampUtc ?? arrangement.startedAtUtc;
+
   const [endedAtLocal, setEndedAtLocal] = useState(null as Date | null);
 
   async function save() {
+    // Enforce that this goes to the very end of the day (11:59:59.999 PM) for now.
+    // In the future, this should be a date-only value.
+    endedAtLocal?.setHours(23, 59, 59, 999);
     await referralsModel.endArrangement(familyId, referralId, arrangement.id!, endedAtLocal!);
   }
 
@@ -34,11 +41,11 @@ export function EndArrangementDialog({ referralId, arrangement, onClose }: EndAr
       onClose={onClose} onSave={save} enableSave={() => endedAtLocal != null}>
       <Grid container spacing={2}>
         <Grid item xs={12}>
-          <DateTimePicker
+          <DatePicker
             label="When was this arrangement ended?"
             value={endedAtLocal}
-            minDate={arrangement.startedAtUtc}
-            disableFuture format="M/d/yyyy h:mm a"
+            minDate={earliestAllowedEndDate}
+            disableFuture format="M/d/yyyy"
             onChange={(date: Date | null) => date && setEndedAtLocal(date)}
             slotProps={{ textField: { fullWidth: true, required: true, sx: { marginTop: 1 } } }} />
         </Grid>

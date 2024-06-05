@@ -1,5 +1,5 @@
 import { Grid } from '@mui/material';
-import { DateTimePicker } from '@mui/x-date-pickers';
+import { DatePicker } from '@mui/x-date-pickers';
 import { useState } from 'react';
 import { useParams } from 'react-router';
 import { Arrangement, Person } from '../../GeneratedClient';
@@ -25,6 +25,9 @@ export function StartArrangementDialog({ referralId, arrangement, onClose }: Sta
   const [startedAtLocal, setStartedAtLocal] = useState(null as Date | null);
 
   async function save() {
+    // Enforce that this goes to the very start of the day (00:00:00.000 AM) for now.
+    // In the future, this should be a date-only value.
+    startedAtLocal?.setHours(0, 0, 0, 0);
     await referralsModel.startArrangement(familyId, referralId, arrangement.id!, startedAtLocal!);
   }
 
@@ -34,10 +37,10 @@ export function StartArrangementDialog({ referralId, arrangement, onClose }: Sta
       onClose={onClose} onSave={save} enableSave={() => startedAtLocal != null}>
       <Grid container spacing={2}>
         <Grid item xs={12}>
-          <DateTimePicker
+          <DatePicker
             label="When was this arrangement started?"
             value={startedAtLocal}
-            disableFuture format="M/d/yyyy h:mm a"
+            disableFuture format="M/d/yyyy"
             onChange={(date: Date | null) => date && setStartedAtLocal(date)}
             slotProps={{ textField: { fullWidth: true, required: true, sx: { marginTop: 1 } } }} />
         </Grid>

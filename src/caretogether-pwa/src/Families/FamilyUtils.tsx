@@ -2,7 +2,7 @@ import { CombinedFamilyInfo } from "../GeneratedClient";
 import { simplify } from "../Utilities/stringUtils";
 
 export function familyLastName(family: CombinedFamilyInfo) {
-    return family.family!.adults?.filter(adult => family.family!.primaryFamilyContactPersonId === adult.item1?.id)[0]?.item1?.lastName || "";
+    return family.family!.adults?.filter(adult => family.family!.primaryFamilyContactPersonId === adult.item1?.id)[0]?.item1?.lastName || "⚠ MISSING PRIMARY CONTACT";
 }
 
 export function filterFamiliesByText(families: CombinedFamilyInfo[], inputText: string) {

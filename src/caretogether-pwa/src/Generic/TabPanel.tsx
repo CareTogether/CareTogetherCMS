@@ -4,9 +4,10 @@ interface TabPanelProps {
   children?: React.ReactNode;
   index: number;
   value: number;
+  padding?: number;
 }
 export function TabPanel(props: TabPanelProps) {
-  const { children, value, index } = props;
+  const { children, value, index, padding } = props;
 
   return (
     <div
@@ -16,7 +17,7 @@ export function TabPanel(props: TabPanelProps) {
       aria-labelledby={`full-width-tab-${index}`}
     >
       {value === index && (
-        <Box sx={{ padding: 3 }}>
+        <Box sx={{ padding: typeof padding === 'undefined' ? 3 : padding }}>
           {children}
         </Box>
       )}

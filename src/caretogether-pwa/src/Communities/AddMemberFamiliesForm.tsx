@@ -45,14 +45,14 @@ export function AddMemberFamiliesForm({ community, onClose }: AddMemberFamiliesF
   const candidateFamilies = allFamilies.filter(family =>
     !community.memberFamilies?.includes(family.family!.id!)).sort((a, b) => {
       const aPrimaryContact = a.family!.adults!.find(adult =>
-        a.family!.primaryFamilyContactPersonId === adult.item1!.id)!.item1!;
+        a.family!.primaryFamilyContactPersonId === adult.item1!.id)?.item1;
       const bPrimaryContact = b.family!.adults!.find(adult =>
-        b.family!.primaryFamilyContactPersonId === adult.item1!.id)!.item1!;
+        b.family!.primaryFamilyContactPersonId === adult.item1!.id)?.item1;
 
-      const aFirst = aPrimaryContact.firstName!;
-      const aLast = aPrimaryContact.lastName!;
-      const bFirst = bPrimaryContact.firstName!;
-      const bLast = bPrimaryContact.lastName!;
+      const aFirst = aPrimaryContact?.firstName ?? "";
+      const aLast = aPrimaryContact?.lastName ?? "";
+      const bFirst = bPrimaryContact?.firstName ?? "";
+      const bLast = bPrimaryContact?.lastName ?? "";
 
       // Sort by last name, then by first name (of the family's primary contact)
       return aLast < bLast ? -1 : aLast > bLast ? 1 :

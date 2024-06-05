@@ -164,9 +164,7 @@ namespace CareTogether.Engines.PolicyEvaluation
                 ?.Difference(expired);
 
             // Calculate the timelines for removals. Note that there could be multiple overlapping removals,
-            // so we need to calculate the union of all of them, by removal reason. The reasons of interest are
-            // Inactive and Denied; OptOut is not relevant for role approval status since it only applies to
-            // individual family members.
+            // so we need to calculate the union of all of them, by removal reason.
             var inactive = DateOnlyTimeline.UnionOf(removalsOfThisRole
                 .Where(removal => removal.Reason == RoleRemovalReason.Inactive)
                 .Select(removal => new DateRange(
@@ -179,8 +177,14 @@ namespace CareTogether.Engines.PolicyEvaluation
                     removal.EffectiveSince,
                     removal.EffectiveUntil ?? DateOnly.MaxValue))
                 .ToImmutableList());
+            var optOut = DateOnlyTimeline.UnionOf(removalsOfThisRole
+                .Where(removal => removal.Reason == RoleRemovalReason.OptOut)
+                .Select(removal => new DateRange(
+                    removal.EffectiveSince,
+                    removal.EffectiveUntil ?? DateOnly.MaxValue))
+                .ToImmutableList());
 
-            var allRemovals = DateOnlyTimeline.UnionOf(ImmutableList.Create(inactive, denied));
+            var allRemovals = DateOnlyTimeline.UnionOf(ImmutableList.Create(inactive, denied, optOut));
 
             // Merge the results (onboarded, approved, expired, prospective) into a tagged timeline.
             var taggedRanges = ImmutableList.Create(

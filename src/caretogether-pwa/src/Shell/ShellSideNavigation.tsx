@@ -1,4 +1,4 @@
-import { Divider, Drawer, List, Skeleton, Stack, useTheme } from '@mui/material';
+import { Badge, Divider, Drawer, List, Skeleton, Stack, useTheme } from '@mui/material';
 import PermPhoneMsgIcon from '@mui/icons-material/PermPhoneMsg';
 import PeopleIcon from '@mui/icons-material/People';
 import SettingsIcon from '@mui/icons-material/Settings';
@@ -12,6 +12,8 @@ import { useGlobalPermissions } from '../Model/SessionModel';
 import { Permission } from '../GeneratedClient';
 import { selectedLocationContextState } from '../Model/Data';
 import { useLoadable } from '../Hooks/useLoadable';
+import { Inbox } from '@mui/icons-material';
+import { queueItemsCountQuery } from '../Model/QueueModel';
 
 interface SideNavigationMenuProps {
   open: boolean;
@@ -23,11 +25,16 @@ function SideNavigationMenu({ open }: SideNavigationMenuProps) {
   const context = useLoadable(selectedLocationContextState);
   const locationPrefix = `/org/${context?.organizationId}/${context?.locationId}`;
 
+  const queueItemsCount = useLoadable(queueItemsCountQuery);
+
   return (
     //  <List aria-label="main navigation">
     //    <ListItemLink to="/dashboard" primary="Dashboard" icon={<DashboardIcon sx={{color: '#fff'}} />} />
     //  </List>
-    <List aria-label="secondary navigation">
+    <List aria-label="secondary navigation" sx={{
+      "& .MuiListItem-root.Mui-selected": { color: '#ffff' },
+      "& .MuiListItem-root.Mui-selected svg": { color: '#ffff' }
+    }}>
       {flags === null
         ? <>
           <Stack padding={1} spacing={1}>
@@ -45,6 +52,8 @@ function SideNavigationMenu({ open }: SideNavigationMenuProps) {
         </>
         : <>
           <ListItemLink to={`${locationPrefix}`} primary="Dashboard" icon={<DashboardIcon sx={{ color: '#fff8' }} />} />
+          <ListItemLink to={`${locationPrefix}/inbox`} primary="Inbox"
+            icon={<Badge badgeContent={queueItemsCount} color="secondary"><Inbox sx={{ color: '#fff8' }} /></Badge>} />
           {permissions(Permission.AccessPartneringFamiliesScreen) &&
             <ListItemLink to={`${locationPrefix}/referrals`} primary="Referrals" icon={<PermPhoneMsgIcon sx={{ color: '#fff8' }} />} />}
           {permissions(Permission.AccessVolunteersScreen) &&

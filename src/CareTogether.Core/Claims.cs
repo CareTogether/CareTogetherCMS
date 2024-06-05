@@ -11,5 +11,7 @@
         public const string PersonId = "PersonId";
 
         public const string Permission = "Permission";
+
+        public const string Researcher = "Researcher";
     }
 }

@@ -53,10 +53,11 @@ namespace CareTogether.Managers.Communications
                 {
                     var family = families.Single(family => family.Id == familyId);
                     var primaryContactAdult = family.Adults
-                        .Single(adult => adult.Item1.Id == family.PrimaryFamilyContactPersonId);
+                        .Select(adult => adult.Item1)
+                        .SingleOrDefault(person => person.Id == family.PrimaryFamilyContactPersonId);
                     return (familyId,
-                        phoneNumber: primaryContactAdult.Item1.PhoneNumbers
-                            .SingleOrDefault(number => number.Id == primaryContactAdult.Item1.PreferredPhoneNumberId));
+                        phoneNumber: primaryContactAdult?.PhoneNumbers
+                            .SingleOrDefault(number => number.Id == primaryContactAdult.PreferredPhoneNumberId));
                 }).ToImmutableList();
 
             var destinationNumbers = familyPrimaryContactNumbers

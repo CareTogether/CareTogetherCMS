@@ -1,10 +1,11 @@
-import { Chip } from "@mui/material";
+import { Chip, SxProps, Theme } from "@mui/material";
 import { format } from "date-fns";
 import { DateOnlyTimelineOfRoleApprovalStatus, RoleApprovalStatus } from "../GeneratedClient";
 
 type VolunteerRoleApprovalStatusChipProps = {
   roleName: string;
   status?: DateOnlyTimelineOfRoleApprovalStatus;
+  sx?: SxProps<Theme> | undefined;
 };
 
 // Date ranges may use either 'null' or the C# DateOnly.MaxValue to indicate an open-ended range.
@@ -30,7 +31,7 @@ function RoleApprovalStatusColor(status: RoleApprovalStatus): ThemeColors {
   }
 }
 
-export function VolunteerRoleApprovalStatusChip({ roleName, status }: VolunteerRoleApprovalStatusChipProps) {
+export function VolunteerRoleApprovalStatusChip({ roleName, status, sx }: VolunteerRoleApprovalStatusChipProps) {
   const now = new Date();
   const currentStatusRange = status?.ranges?.find(r => r.start && r.start <= now && (!r.end || r.end >= now));
   const currentStatusValue = currentStatusRange?.tag;
@@ -39,9 +40,10 @@ export function VolunteerRoleApprovalStatusChip({ roleName, status }: VolunteerR
 
   return currentStatusValue != null
     ? <Chip size="small"
-      color={RoleApprovalStatusColor(currentStatusValue)}
-      label={(expiresAt && expiresAt < FUTURE_CUTOFF)
-        ? `${RoleApprovalStatus[currentStatusValue]} ${roleName} until ${format(expiresAt, "M/d/yy")}`
-        : `${RoleApprovalStatus[currentStatusValue]} ${roleName}`} />
-    : <></>;
+		color={RoleApprovalStatusColor(currentStatusValue)}
+		sx={sx}
+		label={(expiresAt && expiresAt < FUTURE_CUTOFF)
+			? `${RoleApprovalStatus[currentStatusValue]} ${roleName} until ${format(expiresAt, "M/d/yy")}`
+			: `${RoleApprovalStatus[currentStatusValue]} ${roleName}`} />
+		: <></>;
 }

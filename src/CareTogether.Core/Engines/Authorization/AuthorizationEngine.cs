@@ -212,8 +212,10 @@ namespace CareTogether.Engines.Authorization
             return permissions.Contains(command switch
             {
                 CreateFamily => Permission.EditFamilyInfo,
+                UndoCreateFamily => Permission.EditFamilyInfo,
                 AddAdultToFamily => Permission.EditFamilyInfo,
                 AddChildToFamily => Permission.EditFamilyInfo,
+                ConvertChildToAdult => Permission.EditFamilyInfo,
                 UpdateAdultRelationshipToFamily => Permission.EditFamilyInfo,
                 AddCustodialRelationship => Permission.EditFamilyInfo,
                 UpdateCustodialRelationshipType => Permission.EditFamilyInfo,
