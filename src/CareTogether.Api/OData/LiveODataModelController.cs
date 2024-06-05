@@ -1,4 +1,4 @@
-﻿using CareTogether.Engines;
+using CareTogether.Engines;
 using CareTogether.Engines.PolicyEvaluation;
 using CareTogether.Managers;
 using CareTogether.Managers.Records;
@@ -65,7 +65,7 @@ namespace CareTogether.Api.OData
 
     public sealed record Referral([property: Key] Guid Id,
         [property: ForeignKey("FamilyId")] Family Family, Guid FamilyId,
-        DateOnly Opened, DateOnly? Closed,
+        DateOnly Opened, DateOnly? Closed, string? ReferralSource,
         ReferralCloseReason? CloseReason);
 
     public sealed record Arrangement([property: Key] Guid Id,
@@ -665,6 +665,8 @@ namespace CareTogether.Api.OData
             return allReferralsInfo.Select(referralInfo => new Referral(referralInfo.Id, family, family.Id,
                 DateOnly.FromDateTime(referralInfo.OpenedAtUtc),
                 referralInfo.ClosedAtUtc.HasValue ? DateOnly.FromDateTime(referralInfo.ClosedAtUtc.Value) : null,
+                // Making this 'custom field' semi-standard across organizations/policies.
+                referralInfo.CompletedCustomFields.SingleOrDefault(field => field.CustomFieldName == "Referral Source")?.Value as string,
                 referralInfo.CloseReason));
         }
 
