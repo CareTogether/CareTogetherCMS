@@ -31,6 +31,115 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
         }
 
         [TestMethod]
+        public void TestNoCompletionsOneTimeRequirementDelayedDurationBased()
+        {
+            //NOTE: This is NOT recommended. Use the OneTimeRecurrencePolicy instead!
+            var result = ReferralCalculations.CalculateMissingMonitoringRequirementInstances(
+                new DurationStagesRecurrencePolicy(ImmutableList<RecurrencePolicyStage>.Empty
+                .Add(new RecurrencePolicyStage(TimeSpan.FromDays(2), 1))),
+                filterToFamilyId: null,
+                arrangementStartedAtUtc: new DateTime(H.YEAR, 1, 1),
+                arrangementEndedAtUtc: null,
+                completions: Helpers.Dates(),
+                childLocationHistory: Helpers.LocationHistoryEntries(),
+                utcNow: new DateTime(H.YEAR, 2, 14));
+
+            AssertEx.SequenceIs(result, Helpers.Dates((1, 3)));
+        }
+
+        [TestMethod]
+        public void TestNoCompletionsOneTimeRequirementDelayed()
+        {
+            var result = ReferralCalculations.CalculateMissingMonitoringRequirementInstances(
+                new OneTimeRecurrencePolicy(TimeSpan.FromDays(2)),
+                filterToFamilyId: null,
+                arrangementStartedAtUtc: new DateTime(H.YEAR, 1, 1),
+                arrangementEndedAtUtc: null,
+                completions: Helpers.Dates(),
+                childLocationHistory: Helpers.LocationHistoryEntries(),
+                utcNow: new DateTime(H.YEAR, 2, 14));
+
+            AssertEx.SequenceIs(result, Helpers.Dates((1, 3)));
+        }
+
+        [TestMethod]
+        public void TestNoCompletionsOneTimeRequirementDelayedFuture()
+        {
+            var result = ReferralCalculations.CalculateMissingMonitoringRequirementInstances(
+                new OneTimeRecurrencePolicy(TimeSpan.FromDays(2)),
+                filterToFamilyId: null,
+                arrangementStartedAtUtc: new DateTime(H.YEAR, 1, 1),
+                arrangementEndedAtUtc: null,
+                completions: Helpers.Dates(),
+                childLocationHistory: Helpers.LocationHistoryEntries(),
+                utcNow: new DateTime(H.YEAR, 1, 2));
+
+            AssertEx.SequenceIs(result, Helpers.Dates((1, 3)));
+        }
+
+        [TestMethod]
+        public void TestOneOnTimeCompletionOneTimeRequirementDelayedFuture()
+        {
+            var result = ReferralCalculations.CalculateMissingMonitoringRequirementInstances(
+                new OneTimeRecurrencePolicy(TimeSpan.FromDays(2)),
+                filterToFamilyId: null,
+                arrangementStartedAtUtc: new DateTime(H.YEAR, 1, 1),
+                arrangementEndedAtUtc: null,
+                completions: Helpers.Dates((1, 2)),
+                childLocationHistory: Helpers.LocationHistoryEntries(),
+                utcNow: new DateTime(H.YEAR, 1, 2));
+
+            AssertEx.SequenceIs(result, []);
+        }
+
+        [TestMethod]
+        public void TestOnePastDueCompletionOneTimeRequirementDelayedFuture()
+        {
+            var result = ReferralCalculations.CalculateMissingMonitoringRequirementInstances(
+                new OneTimeRecurrencePolicy(TimeSpan.FromDays(2)),
+                filterToFamilyId: null,
+                arrangementStartedAtUtc: new DateTime(H.YEAR, 1, 1),
+                arrangementEndedAtUtc: null,
+                completions: Helpers.Dates((1, 4)),
+                childLocationHistory: Helpers.LocationHistoryEntries(),
+                utcNow: new DateTime(H.YEAR, 1, 2));
+
+            AssertEx.SequenceIs(result, Helpers.Dates((1, 3)));
+        }
+
+        [TestMethod]
+        public void TestNoCompletionsOneTimeRequirementImmediate()
+        {
+            var result = ReferralCalculations.CalculateMissingMonitoringRequirementInstances(
+                new OneTimeRecurrencePolicy(null),
+                filterToFamilyId: null,
+                arrangementStartedAtUtc: new DateTime(H.YEAR, 1, 1),
+                arrangementEndedAtUtc: null,
+                completions: Helpers.Dates(),
+                childLocationHistory: Helpers.LocationHistoryEntries(),
+                utcNow: new DateTime(H.YEAR, 2, 14));
+
+            //TODO: This could instead be "max date" -- need to decide what's more intuitive for users.
+            AssertEx.SequenceIs(result, Helpers.Dates((1, 1)));
+        }
+
+        [TestMethod]
+        public void TestOneCompletionOneTimeRequirementImmediate()
+        {
+            // Setting a delay of zero should never happen, but this documents the edge case.
+            var result = ReferralCalculations.CalculateMissingMonitoringRequirementInstances(
+                new OneTimeRecurrencePolicy(TimeSpan.Zero),
+                filterToFamilyId: null,
+                arrangementStartedAtUtc: new DateTime(H.YEAR, 1, 1),
+                arrangementEndedAtUtc: null,
+                completions: Helpers.Dates((1, 5)),
+                childLocationHistory: Helpers.LocationHistoryEntries(),
+                utcNow: new DateTime(H.YEAR, 2, 14));
+
+            AssertEx.SequenceIs(result, Helpers.Dates((1, 1)));
+        }
+
+        [TestMethod]
         public void TestNoCompletionsEnded()
         {
             var result = ReferralCalculations.CalculateMissingMonitoringRequirementInstances(
