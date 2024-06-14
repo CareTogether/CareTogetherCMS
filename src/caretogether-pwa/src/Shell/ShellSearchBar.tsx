@@ -4,8 +4,12 @@ import { Autocomplete, Container, FilterOptionsState, IconButton, InputAdornment
 import SearchIcon from '@mui/icons-material/Search';
 import { useLoadable } from '../Hooks/useLoadable';
 import { familyNameString } from '../Families/FamilyName';
-import { CombinedFamilyInfo } from '../GeneratedClient';
+import { Address, CombinedFamilyInfo, PhoneNumber } from '../GeneratedClient';
 import { visibleFamiliesQuery } from '../Model/Data';
+import { useAppNavigate } from '../Hooks/useAppNavigate';
+import { personNameString } from '../Families/PersonName';
+import { Email, Phone } from '@mui/icons-material';
+import { AddressFormFields } from '../Families/AddressEditor';
 
 interface ShellSearchBarProps {
   openMobileSearch: boolean;
@@ -20,6 +24,8 @@ export function ShellSearchBar({ openMobileSearch, setOpenMobileSearch }: ShellS
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const searchBoxRef = useRef<any | null>(null);
 
+  const navigateTo = useAppNavigate()
+
   function openAndFocusSearch() {
     flushSync(() => {
       setOpenMobileSearch(true);
@@ -30,15 +36,47 @@ export function ShellSearchBar({ openMobileSearch, setOpenMobileSearch }: ShellS
   function filterFamilies(families: CombinedFamilyInfo[], state: FilterOptionsState<CombinedFamilyInfo>) {
     const searchQueryLowercase = state.inputValue.toLowerCase();
     return families.filter(family => {
-      const familyName = familyNameString(family);
-      return familyName?.toLowerCase().includes(searchQueryLowercase);
+      //const familyName = familyNameString(family);
+      for (const adult of family.family?.adults ?? []) {
+        if (personNameString(adult.item1).toLowerCase().includes(searchQueryLowercase))
+          return true;
+        // TODO: Check email addresses (compare using lowercase)
+        if (adult?.item1?.emailAddresses?.some(email => email.address?.toLowerCase().includes(searchQueryLowercase.toLowerCase()))) {
+          return true;
+        }
+              
+        // TODO: Check phone numbers (compare using lowercase)
+        if (adult.item1?.phoneNumbers?.some(phone => phone.number?.replace(/[^0-9]/g, '').includes(searchQueryLowercase.replace(/[^0-9]/g, ''))))
+          return true;
+        // TODO: Check addresses (compare using lowercase)
+        if (adult.item1?.addresses?.find(address => {
+            const combinedAddress = `${address.line1} ${address.line2} ${address.city} ${address.state} ${address.county} ${address.postalCode}`;
+            return combinedAddress.includes(searchQueryLowercase.toLocaleLowerCase());
+          }))
+          return true;
+      }
+      // TODO: Loop through children, check their name (children don't have contact info) (compare using lowercase)
+      for (const child of family.family?.children ?? []) {
+        if (personNameString(child).toLowerCase().includes(searchQueryLowercase))
+            return true;
+      }
+
+      //if (primaryContactPerson?.emailAddresses?.find(email => email.address?.includes(searchQueryLowercase))) return true
+
+      return false
     });
   }
 
   function selectFamily(_event: React.SyntheticEvent, family: CombinedFamilyInfo | null) {
-    console.log(family);
     //TODO: Navigate to the selected family
+    navigateTo.family(family!.family!.id!)
   }
+
+  // for (const adult of family.family?.adults || []) {
+  //   const adultName = `${adult.item1?.firstName} ${adult.item1?.lastName}`.toLowerCase();
+  //   if (adultName.includes(searchQueryLowercase)) return true;
+  //   if (adult.item1?.emailAddresses?.some(email => email.address?.toLowerCase().includes(searchQueryLowercase))) return true;
+  // }
 
   const searchInner = (
     <Autocomplete
@@ -84,7 +122,9 @@ export function ShellSearchBar({ openMobileSearch, setOpenMobileSearch }: ShellS
       maxWidth={isDesktop ? 'xs' : false}
       sx={{
         width: { xs: openMobileSearch ? '100%' : 6, md: '100%' },
-        marginRight: 4
+        marginRight: 4,
+        marginLeft: 0
+        
       }}
       style={{ paddingLeft: 0, paddingRight: isDesktop ? 0 : 3 }}>
       {isDesktop
@@ -100,4 +140,5 @@ export function ShellSearchBar({ openMobileSearch, setOpenMobileSearch }: ShellS
           </IconButton>}
     </Container>
   );
+
 }

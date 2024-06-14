@@ -5,63 +5,102 @@ import { ShellContextSwitcher } from './ShellContextSwitcher';
 import { screenTitleState } from './ShellScreenTitle';
 import { useRecoilValue } from 'recoil';
 import { MenuOpen } from '@mui/icons-material';
+import { ShellSearchBar } from './ShellSearchBar';
+import { ShellUserProfileMenu } from './ShellUserProfileMenu';
 
 interface ShellAppBarProps {
-  menuDrawerOpen: boolean
-  setMenuDrawerOpen: (value: boolean) => void
-  drawerWidth: string
+  menuDrawerOpen: boolean;
+  setMenuDrawerOpen: (value: boolean) => void;
+  drawerWidth: string;
 }
+
 export function ShellAppBar({ menuDrawerOpen, setMenuDrawerOpen, drawerWidth }: ShellAppBarProps) {
   const theme = useTheme();
   const isDesktop = useMediaQuery(theme.breakpoints.up('md'));
 
-  const [openMobileSearch, /*setOpenMobileSearch*/] = useState(false);
+  const [openMobileSearch, setOpenMobileSearch] = useState(true);
 
   const screenTitle = useRecoilValue(screenTitleState);
 
   return (
-    <AppBar position='fixed' sx={{
-      zIndex: 1201,
-      backgroundColor: theme.palette.primary.main,
-      paddingLeft: isDesktop ? (menuDrawerOpen ? 0 : 0) : 0
-    }}>
-      <Toolbar variant={isDesktop ? 'dense' : 'regular'}
-        style={{ paddingLeft: isDesktop ? 0 : undefined }}>
-        {isDesktop && (menuDrawerOpen
-          ? <Box sx={{ width: drawerWidth, flexShrink: 0, position: 'relative' }}>
-            <ShellContextSwitcher />
-            <IconButton
-              size={isDesktop ? 'medium' : 'large'}
-              color='inherit'
-              aria-label="close drawer"
-              sx={{ float: 'right' }}
-              onClick={() => setMenuDrawerOpen(!menuDrawerOpen)}
-            >
-              <MenuOpen />
-            </IconButton>
+    <AppBar
+      position="fixed"
+      sx={{
+        zIndex: 1201,
+        backgroundColor: theme.palette.primary.main,
+        paddingLeft: isDesktop ? (menuDrawerOpen ? 0 : 0) : 0
+      }}
+    >
+      <Toolbar
+        variant={isDesktop ? 'dense' : 'regular'}
+        sx={{ paddingLeft: isDesktop ? 0 : undefined, display: 'flex', justifyContent: 'center' }}
+      >
+        {isDesktop && (
+          <Box sx={{ display: 'flex', alignItems: 'center' }}>
+            {menuDrawerOpen ? (
+              <Box sx={{ width: drawerWidth, flexShrink: 0, position: 'relative' }}>
+                <ShellContextSwitcher />
+                <IconButton
+                  size={isDesktop ? 'medium' : 'large'}
+                  color="inherit"
+                  aria-label="close drawer"
+                  sx={{ float: 'right' }}
+                  onClick={() => setMenuDrawerOpen(!menuDrawerOpen)}
+                >
+                  <MenuOpen />
+                </IconButton>
+              </Box>
+            ) : (
+              <IconButton
+                size={isDesktop ? 'medium' : 'large'}
+                color="inherit"
+                aria-label="open drawer"
+                sx={{ marginRight: 2 }}
+                onClick={() => setMenuDrawerOpen(!menuDrawerOpen)}
+              >
+                <MenuIcon />
+              </IconButton>
+            )}
+            {screenTitle && (
+              <Typography
+                variant="h6"
+                component="h3"
+                noWrap
+                sx={{
+                  display: { xs: openMobileSearch ? 'none' : 'block', md: 'block' },
+                  marginLeft: menuDrawerOpen ? 3 : 1
+                }}
+              >
+                {screenTitle}
+              </Typography>
+            )}
+            {!screenTitle && (
+              <Skeleton
+                variant="text"
+                sx={{ fontSize: theme.typography.h6, marginLeft: 1 }}
+                width={200}
+              />
+            )}
           </Box>
-          : <IconButton
-            size={isDesktop ? 'medium' : 'large'}
-            color='inherit'
-            aria-label="open drawer"
-            sx={{ marginRight: 2, width: drawerWidth }}
-            onClick={() => setMenuDrawerOpen(!menuDrawerOpen)}
-          >
-            <MenuIcon />
-          </IconButton>)}
-        {screenTitle
-          ? <Typography variant='h6' component="h3" noWrap sx={{
-            display: { xs: openMobileSearch ? 'none' : 'block', md: 'block' },
-            marginLeft: isDesktop ? (menuDrawerOpen ? 3 : 1) : 0
-          }}>
-            {screenTitle}
-          </Typography>
-          : <Skeleton variant="text" sx={{ fontSize: theme.typography.h6, marginLeft: 1 }} width={200} />}
-        {/* <ShellSearchBar
-          openMobileSearch={openMobileSearch}
-          setOpenMobileSearch={setOpenMobileSearch} /> */}
-        {/* <ShellUserProfileMenu /> */}
+        )}
+        <Box sx={{ flexGrow: 1, display: 'flex', justifyContent: 'center' }}>
+          <ShellSearchBar
+            openMobileSearch={openMobileSearch}
+            setOpenMobileSearch={setOpenMobileSearch}
+          />
+        </Box>
+        <Box sx={{ display: 'flex', alignItems: 'center' }}>
+          <ShellUserProfileMenu />
+        </Box>
       </Toolbar>
     </AppBar>
   );
 }
+
+
+//Next steps:
+// 1. Use the 'useAppNavigate' hook from the "Hooks" folder in the project to open the family that
+//    the user selects from the Autocomplete MUI control.
+// 2. Change the filter logic on the Autocomplete control to search families' first & last names, phone, and emails.
+//    NOTE: Use https://mui.com/material-ui/react-autocomplete/#custom-filter (custom filter section)
+
