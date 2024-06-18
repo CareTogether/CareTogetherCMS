@@ -67,8 +67,9 @@ export function ShellSearchBar({ openMobileSearch, setOpenMobileSearch }: ShellS
   }
 
   function selectFamily(_event: React.SyntheticEvent, family: CombinedFamilyInfo | null) {
-
-    navigateTo.family(family!.family!.id!)
+    if (!family)
+      return;
+    navigateTo.family(family.family!.id!)
   }
 
   const searchInner = (
@@ -81,6 +82,7 @@ export function ShellSearchBar({ openMobileSearch, setOpenMobileSearch }: ShellS
       options={families}
       openOnFocus
       filterOptions={filterFamilies}
+      getOptionKey={(family) => family.family!.id!}
       getOptionLabel={(family) => {
         return familyNameString(family) || family.family!.id!;
       }}
