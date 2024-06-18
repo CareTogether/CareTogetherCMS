@@ -189,6 +189,18 @@ namespace CareTogether.Api
                     {
                         OnValidateCredentials = async context =>
                         {
+                            if (context.Username == "Research" && context.Password == Configuration["Research:ApiKey"] &&
+                                Guid.TryParse(Configuration["Research:OrganizationId"], out var researchOrganizationId))
+                            {
+                                context.Principal = new ClaimsPrincipal(new ClaimsIdentity(
+                                [
+                                    new Claim(Claims.OrganizationId, Configuration["Research:OrganizationId"]!),
+                                    new Claim(Claims.Researcher, true.ToString())
+                                ], "API Key"));
+                                context.Success();
+                                return;
+                            }
+
                             if (!Guid.TryParse(context.Username, out var assertedOrganizationId))
                             {
                                 context.Fail("The username must be an organization ID in GUID format.");
