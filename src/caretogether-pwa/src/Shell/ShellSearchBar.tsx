@@ -35,29 +35,31 @@ export function ShellSearchBar({ openMobileSearch, setOpenMobileSearch }: ShellS
 
   function filterFamilies(families: CombinedFamilyInfo[], state: FilterOptionsState<CombinedFamilyInfo>) {
     const searchQueryLowercase = state.inputValue.toLowerCase();
+    const searchQueryPhoneNumber = searchQueryLowercase.replace(/[^0-9]/g, '');
     return families.filter(family => {
-      
+
       for (const adult of family.family?.adults ?? []) {
         if (personNameString(adult.item1).toLowerCase().includes(searchQueryLowercase))
           return true;
-        
-        if (adult?.item1?.emailAddresses?.some(email => email.address?.toLowerCase().includes(searchQueryLowercase.toLowerCase()))) {
+
+        if (adult?.item1?.emailAddresses?.some(email => email.address?.toLowerCase().includes(searchQueryLowercase))) {
           return true;
         }
-              
-        if (adult.item1?.phoneNumbers?.some(phone => phone.number?.replace(/[^0-9]/g, '').includes(searchQueryLowercase.replace(/[^0-9]/g, ''))))
+
+        if (searchQueryPhoneNumber.length > 0 &&
+          adult.item1?.phoneNumbers?.some(phone => phone.number?.replace(/[^0-9]/g, '').includes(searchQueryPhoneNumber)))
           return true;
 
         if (adult.item1?.addresses?.find(address => {
-            const combinedAddress = `${address.line1} ${address.line2} ${address.city} ${address.state} ${address.county} ${address.postalCode}`;
-            return combinedAddress.includes(searchQueryLowercase.toLocaleLowerCase());
-          }))
+          const combinedAddress = `${address.line1} ${address.line2} ${address.city} ${address.state} ${address.county} ${address.postalCode}`;
+          return combinedAddress.includes(searchQueryLowercase);
+        }))
           return true;
       }
 
       for (const child of family.family?.children ?? []) {
         if (personNameString(child).toLowerCase().includes(searchQueryLowercase))
-            return true;
+          return true;
       }
 
       return false
@@ -65,7 +67,7 @@ export function ShellSearchBar({ openMobileSearch, setOpenMobileSearch }: ShellS
   }
 
   function selectFamily(_event: React.SyntheticEvent, family: CombinedFamilyInfo | null) {
-    
+
     navigateTo.family(family!.family!.id!)
   }
 
@@ -115,7 +117,7 @@ export function ShellSearchBar({ openMobileSearch, setOpenMobileSearch }: ShellS
         width: { xs: openMobileSearch ? '100%' : 6, md: '100%' },
         marginRight: 4,
         marginLeft: 0
-        
+
       }}
       style={{ paddingLeft: 0, paddingRight: isDesktop ? 0 : 3 }}>
       {isDesktop
