@@ -97,10 +97,3 @@ export function ShellAppBar({ menuDrawerOpen, setMenuDrawerOpen, drawerWidth }: 
   );
 }
 
-
-//Next steps:
-// 1. Use the 'useAppNavigate' hook from the "Hooks" folder in the project to open the family that
-//    the user selects from the Autocomplete MUI control.
-// 2. Change the filter logic on the Autocomplete control to search families' first & last names, phone, and emails.
-//    NOTE: Use https://mui.com/material-ui/react-autocomplete/#custom-filter (custom filter section)
-
