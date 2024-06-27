@@ -1,4 +1,4 @@
-﻿using CareTogether.Resources;
+using CareTogether.Resources;
 using CareTogether.Resources.Policies;
 using CareTogether.Resources.Referrals;
 using System;
@@ -272,6 +272,8 @@ namespace CareTogether.Engines.PolicyEvaluation
         {
             return recurrence switch
             {
+                OneTimeRecurrencePolicy oneTime => CalculateMissingMonitoringRequirementInstancesForOneTimeRecurrence(
+                    oneTime, arrangementStartedAtUtc, arrangementEndedAtUtc, completions, utcNow),
                 DurationStagesRecurrencePolicy durationStages =>
                     CalculateMissingMonitoringRequirementInstancesForDurationRecurrence(
                         durationStages, arrangementStartedAtUtc, arrangementEndedAtUtc, utcNow, completions),
@@ -286,6 +288,23 @@ namespace CareTogether.Engines.PolicyEvaluation
                 _ => throw new NotImplementedException(
                     $"The recurrence policy type '{recurrence.GetType().FullName}' has not been implemented.")
             };
+        }
+
+        internal static ImmutableList<DateTime> CalculateMissingMonitoringRequirementInstancesForOneTimeRecurrence(
+            OneTimeRecurrencePolicy recurrence, DateTime arrangementStartedAtUtc, DateTime? arrangementEndedAtUtc,
+            ImmutableList<DateTime> completions, DateTime utcNow)
+        {
+            if (recurrence.Delay.HasValue)
+            {
+                var dueDate = arrangementStartedAtUtc + recurrence.Delay.Value;
+                return completions.Any(completion => completion <= dueDate)
+                    ? []
+                    : [dueDate];
+            }
+            else
+                return completions.IsEmpty
+                    ? [arrangementStartedAtUtc]
+                    : [];
         }
 
         internal static ImmutableList<DateTime> CalculateMissingMonitoringRequirementInstancesForDurationRecurrence(
