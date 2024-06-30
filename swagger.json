@@ -1626,6 +1626,13 @@
             "items": {
               "$ref": "#/components/schemas/ArrangementPolicy"
             }
+          },
+          "functionPolicies": {
+            "type": "array",
+            "nullable": true,
+            "items": {
+              "$ref": "#/components/schemas/FunctionPolicy"
+            }
           }
         }
       },
@@ -1691,18 +1698,21 @@
           },
           "eligibleIndividualVolunteerRoles": {
             "type": "array",
+            "nullable": true,
             "items": {
               "type": "string"
             }
           },
           "eligibleVolunteerFamilyRoles": {
             "type": "array",
+            "nullable": true,
             "items": {
               "type": "string"
             }
           },
           "eligiblePeople": {
             "type": "array",
+            "nullable": true,
             "items": {
               "type": "string",
               "format": "guid"
@@ -1889,6 +1899,43 @@
             }
           }
         ]
+      },
+      "FunctionPolicy": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "functionName": {
+            "type": "string"
+          },
+          "eligibility": {
+            "$ref": "#/components/schemas/FunctionEligibility"
+          }
+        }
+      },
+      "FunctionEligibility": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "eligibleIndividualVolunteerRoles": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "eligibleVolunteerFamilyRoles": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "eligiblePeople": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "guid"
+            }
+          }
+        }
       },
       "VolunteerPolicy": {
         "type": "object",
