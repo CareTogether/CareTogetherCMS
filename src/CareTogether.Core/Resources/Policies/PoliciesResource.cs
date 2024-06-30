@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace CareTogether.Resources.Policies
@@ -53,7 +54,35 @@ namespace CareTogether.Resources.Policies
         public async Task<EffectiveLocationPolicy> GetCurrentPolicy(Guid organizationId, Guid locationId)
         {
             var result = await locationPoliciesStore.GetAsync(organizationId, locationId, POLICY);
-            return result;
+
+            var effectivePolicy = result with
+            {
+                ReferralPolicy = result.ReferralPolicy with
+                {
+                    ArrangementPolicies = result.ReferralPolicy.ArrangementPolicies
+                        .Select(ap => ap with
+                        {
+                            ArrangementFunctions = ap.ArrangementFunctions
+                                .Select(af => af with
+                                {
+                                    EligibleIndividualVolunteerRoles = af.EligibleIndividualVolunteerRoles ??
+                                        result.ReferralPolicy.FunctionPolicies
+                                            ?.SingleOrDefault(fp => fp.FunctionName == af.FunctionName)
+                                            ?.Eligibility.EligibleIndividualVolunteerRoles ?? [],
+                                    EligibleVolunteerFamilyRoles = af.EligibleVolunteerFamilyRoles ??
+                                        result.ReferralPolicy.FunctionPolicies
+                                            ?.SingleOrDefault(fp => fp.FunctionName == af.FunctionName)
+                                            ?.Eligibility.EligibleVolunteerFamilyRoles ?? [],
+                                    EligiblePeople = af.EligiblePeople ??
+                                        result.ReferralPolicy.FunctionPolicies
+                                            ?.SingleOrDefault(fp => fp.FunctionName == af.FunctionName)
+                                            ?.Eligibility.EligiblePeople ?? []
+                                }).ToImmutableList()
+                        }).ToImmutableList()
+                }
+            };
+
+            return effectivePolicy;
         }
 
         public async Task<OrganizationSecrets> GetOrganizationSecretsAsync(Guid organizationId)

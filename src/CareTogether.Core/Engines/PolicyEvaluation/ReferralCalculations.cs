@@ -33,28 +33,8 @@ namespace CareTogether.Engines.PolicyEvaluation
                     ArrangementPolicy arrangementPolicy = referralPolicy.ArrangementPolicies
                         .Single(p => p.ArrangementType == arrangement.Value.ArrangementType);
 
-                    var augmentedArrangementPolicy = arrangementPolicy with
-                    {
-                        ArrangementFunctions = arrangementPolicy.ArrangementFunctions
-                            .Select(af => af with
-                            {
-                                EligibleIndividualVolunteerRoles = af.EligibleIndividualVolunteerRoles ??
-                                    referralPolicy.FunctionPolicies
-                                        ?.SingleOrDefault(fp => fp.FunctionName == af.FunctionName)
-                                        ?.Eligibility.EligibleIndividualVolunteerRoles ?? [],
-                                EligibleVolunteerFamilyRoles = af.EligibleVolunteerFamilyRoles ??
-                                    referralPolicy.FunctionPolicies
-                                        ?.SingleOrDefault(fp => fp.FunctionName == af.FunctionName)
-                                        ?.Eligibility.EligibleVolunteerFamilyRoles ?? [],
-                                EligiblePeople = af.EligiblePeople ??
-                                    referralPolicy.FunctionPolicies
-                                        ?.SingleOrDefault(fp => fp.FunctionName == af.FunctionName)
-                                        ?.Eligibility.EligiblePeople ?? []
-                            }).ToImmutableList()
-                    };
-
                     return CalculateArrangementStatus(arrangement.Value,
-                        augmentedArrangementPolicy, utcNow);
+                        arrangementPolicy, utcNow);
                 });
 
             return new ReferralStatus(
