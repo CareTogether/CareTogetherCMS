@@ -11,9 +11,10 @@ type MissingRequirementRowProps = {
   requirement: string;
   context: RequirementContext;
   isAvailableApplication?: boolean;
+  referralId?: string
 };
 
-export function MissingRequirementRow({ requirement, context, isAvailableApplication }: MissingRequirementRowProps) {
+export function MissingRequirementRow({ requirement, context, isAvailableApplication, referralId }: MissingRequirementRowProps) {
   const policy = useRecoilValue(policyData);
   const permissions = useFamilyIdPermissions(
     context.kind === 'Referral' ||
@@ -45,7 +46,7 @@ export function MissingRequirementRow({ requirement, context, isAvailableApplica
       <IconRow icon={isAvailableApplication ? "💤" : "❌"}
         onClick={canComplete || canExempt ? dialogHandle.openDialog : undefined}>{requirement}</IconRow>
       {dialogHandle.open && <MissingRequirementDialog handle={dialogHandle}
-        requirement={requirement} context={context} policy={requirementPolicy} />}
+        requirement={requirement} context={context} policy={requirementPolicy} referralId={referralId} />}
     </>
   );
 }

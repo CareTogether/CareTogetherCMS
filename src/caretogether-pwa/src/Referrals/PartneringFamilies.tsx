@@ -208,7 +208,7 @@ function PartneringFamilies() {
             <TableBody>
               {filteredPartneringFamiliesWithActiveOrAllFilter.map((partneringFamily) => (
                 <React.Fragment key={partneringFamily.family?.id}>
-                  <TableRow sx={{ backgroundColor: '#eef' }} onClick={() => openFamily(partneringFamily.family!.id!)}>
+                  <TableRow sx={{ backgroundColor: '#eef', cursor: 'pointer' }} onClick={() => openFamily(partneringFamily.family!.id!)}>
                     <TableCell><FamilyName family={partneringFamily} /></TableCell>
                     <TableCell>{
                       partneringFamily.partneringFamilyInfo?.openReferral
