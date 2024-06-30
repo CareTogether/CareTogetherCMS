@@ -636,9 +636,9 @@ namespace CareTogether.TestData
                                     EligiblePeople: [],
                                     Variants: []),
                                 new ArrangementFunction("Staff Supervision", FunctionRequirement.ExactlyOne,
-                                    EligibleIndividualVolunteerRoles: [],
-                                    EligibleVolunteerFamilyRoles: [],
-                                    EligiblePeople: [guid0],
+                                    EligibleIndividualVolunteerRoles: null,
+                                    EligibleVolunteerFamilyRoles: null,
+                                    EligiblePeople: null,
                                     Variants: [])
                             ],
                             RequiredSetupActionNames:
@@ -700,9 +700,9 @@ namespace CareTogether.TestData
                                     EligiblePeople: [],
                                     Variants: []),
                                 new ArrangementFunction("Staff Supervision", FunctionRequirement.ExactlyOne,
-                                    EligibleIndividualVolunteerRoles: [],
-                                    EligibleVolunteerFamilyRoles: [],
-                                    EligiblePeople: [guid0],
+                                    EligibleIndividualVolunteerRoles: null,
+                                    EligibleVolunteerFamilyRoles: null,
+                                    EligiblePeople: null,
                                     Variants: [])
                             ],
                             RequiredSetupActionNames:
@@ -725,16 +725,9 @@ namespace CareTogether.TestData
                             ArrangementFunctions:
                             [
                                 new ArrangementFunction("Family Friend", FunctionRequirement.OneOrMore,
-                                    EligibleIndividualVolunteerRoles:
-                                    [
-                                        "Family Coach",
-                                        "Family Friend"
-                                    ],
-                                    EligibleVolunteerFamilyRoles:
-                                    [
-                                        "Host Family"
-                                    ],
-                                    EligiblePeople: [],
+                                    EligibleIndividualVolunteerRoles: null,
+                                    EligibleVolunteerFamilyRoles: null,
+                                    EligiblePeople: null,
                                     Variants: []),
                                 new ArrangementFunction("Family Coach", FunctionRequirement.ExactlyOne,
                                     EligibleIndividualVolunteerRoles:
@@ -745,9 +738,9 @@ namespace CareTogether.TestData
                                     EligiblePeople: [],
                                     Variants: []),
                                 new ArrangementFunction("Staff Supervision", FunctionRequirement.ExactlyOne,
-                                    EligibleIndividualVolunteerRoles: [],
-                                    EligibleVolunteerFamilyRoles: [],
-                                    EligiblePeople: [guid0],
+                                    EligibleIndividualVolunteerRoles: null,
+                                    EligibleVolunteerFamilyRoles: null,
+                                    EligiblePeople: null,
                                     Variants: [])
                             ],
                             RequiredSetupActionNames:
@@ -770,6 +763,18 @@ namespace CareTogether.TestData
                             ],
                             RequiredCloseoutActionNames: new List<string>
                             { }.ToImmutableList())
+                    ],
+                    [
+                        new("Family Friend", new(
+                            EligibleIndividualVolunteerRoles: ["Family Coach", "Family Friend"],
+                            EligibleVolunteerFamilyRoles: ["Host Family"],
+                            EligiblePeople: []
+                        )),
+                        new("Staff Supervision", new(
+                            EligibleIndividualVolunteerRoles: [],
+                            EligibleVolunteerFamilyRoles: [],
+                            EligiblePeople: [guid0]
+                        ))
                     ]),
                 new VolunteerPolicy(
                     new Dictionary<string, VolunteerRolePolicy>

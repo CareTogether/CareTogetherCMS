@@ -2112,6 +2112,7 @@ export class ReferralPolicy implements IReferralPolicy {
     requiredIntakeActionNames?: string[];
     customFields?: CustomField[];
     arrangementPolicies?: ArrangementPolicy[];
+    functionPolicies?: FunctionPolicy[] | undefined;
 
     constructor(data?: IReferralPolicy) {
         if (data) {
@@ -2138,6 +2139,11 @@ export class ReferralPolicy implements IReferralPolicy {
                 this.arrangementPolicies = [] as any;
                 for (let item of _data["arrangementPolicies"])
                     this.arrangementPolicies!.push(ArrangementPolicy.fromJS(item));
+            }
+            if (Array.isArray(_data["functionPolicies"])) {
+                this.functionPolicies = [] as any;
+                for (let item of _data["functionPolicies"])
+                    this.functionPolicies!.push(FunctionPolicy.fromJS(item));
             }
         }
     }
@@ -2166,6 +2172,11 @@ export class ReferralPolicy implements IReferralPolicy {
             for (let item of this.arrangementPolicies)
                 data["arrangementPolicies"].push(item.toJSON());
         }
+        if (Array.isArray(this.functionPolicies)) {
+            data["functionPolicies"] = [];
+            for (let item of this.functionPolicies)
+                data["functionPolicies"].push(item.toJSON());
+        }
         return data;
     }
 }
@@ -2174,6 +2185,7 @@ export interface IReferralPolicy {
     requiredIntakeActionNames?: string[];
     customFields?: CustomField[];
     arrangementPolicies?: ArrangementPolicy[];
+    functionPolicies?: FunctionPolicy[] | undefined;
 }
 
 export class ArrangementPolicy implements IArrangementPolicy {
@@ -2273,9 +2285,9 @@ export enum ChildInvolvement {
 export class ArrangementFunction implements IArrangementFunction {
     functionName?: string;
     requirement?: FunctionRequirement;
-    eligibleIndividualVolunteerRoles?: string[];
-    eligibleVolunteerFamilyRoles?: string[];
-    eligiblePeople?: string[];
+    eligibleIndividualVolunteerRoles?: string[] | undefined;
+    eligibleVolunteerFamilyRoles?: string[] | undefined;
+    eligiblePeople?: string[] | undefined;
     variants?: ArrangementFunctionVariant[];
 
     constructor(data?: IArrangementFunction) {
@@ -2352,9 +2364,9 @@ export class ArrangementFunction implements IArrangementFunction {
 export interface IArrangementFunction {
     functionName?: string;
     requirement?: FunctionRequirement;
-    eligibleIndividualVolunteerRoles?: string[];
-    eligibleVolunteerFamilyRoles?: string[];
-    eligiblePeople?: string[];
+    eligibleIndividualVolunteerRoles?: string[] | undefined;
+    eligibleVolunteerFamilyRoles?: string[] | undefined;
+    eligiblePeople?: string[] | undefined;
     variants?: ArrangementFunctionVariant[];
 }
 
@@ -2730,6 +2742,114 @@ export class OneTimeRecurrencePolicy extends RecurrencePolicy implements IOneTim
 
 export interface IOneTimeRecurrencePolicy extends IRecurrencePolicy {
     delay?: string | undefined;
+}
+
+export class FunctionPolicy implements IFunctionPolicy {
+    functionName?: string;
+    eligibility?: FunctionEligibility;
+
+    constructor(data?: IFunctionPolicy) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.functionName = _data["functionName"];
+            this.eligibility = _data["eligibility"] ? FunctionEligibility.fromJS(_data["eligibility"]) : <any>undefined;
+        }
+    }
+
+    static fromJS(data: any): FunctionPolicy {
+        data = typeof data === 'object' ? data : {};
+        let result = new FunctionPolicy();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["functionName"] = this.functionName;
+        data["eligibility"] = this.eligibility ? this.eligibility.toJSON() : <any>undefined;
+        return data;
+    }
+}
+
+export interface IFunctionPolicy {
+    functionName?: string;
+    eligibility?: FunctionEligibility;
+}
+
+export class FunctionEligibility implements IFunctionEligibility {
+    eligibleIndividualVolunteerRoles?: string[];
+    eligibleVolunteerFamilyRoles?: string[];
+    eligiblePeople?: string[];
+
+    constructor(data?: IFunctionEligibility) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            if (Array.isArray(_data["eligibleIndividualVolunteerRoles"])) {
+                this.eligibleIndividualVolunteerRoles = [] as any;
+                for (let item of _data["eligibleIndividualVolunteerRoles"])
+                    this.eligibleIndividualVolunteerRoles!.push(item);
+            }
+            if (Array.isArray(_data["eligibleVolunteerFamilyRoles"])) {
+                this.eligibleVolunteerFamilyRoles = [] as any;
+                for (let item of _data["eligibleVolunteerFamilyRoles"])
+                    this.eligibleVolunteerFamilyRoles!.push(item);
+            }
+            if (Array.isArray(_data["eligiblePeople"])) {
+                this.eligiblePeople = [] as any;
+                for (let item of _data["eligiblePeople"])
+                    this.eligiblePeople!.push(item);
+            }
+        }
+    }
+
+    static fromJS(data: any): FunctionEligibility {
+        data = typeof data === 'object' ? data : {};
+        let result = new FunctionEligibility();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        if (Array.isArray(this.eligibleIndividualVolunteerRoles)) {
+            data["eligibleIndividualVolunteerRoles"] = [];
+            for (let item of this.eligibleIndividualVolunteerRoles)
+                data["eligibleIndividualVolunteerRoles"].push(item);
+        }
+        if (Array.isArray(this.eligibleVolunteerFamilyRoles)) {
+            data["eligibleVolunteerFamilyRoles"] = [];
+            for (let item of this.eligibleVolunteerFamilyRoles)
+                data["eligibleVolunteerFamilyRoles"].push(item);
+        }
+        if (Array.isArray(this.eligiblePeople)) {
+            data["eligiblePeople"] = [];
+            for (let item of this.eligiblePeople)
+                data["eligiblePeople"].push(item);
+        }
+        return data;
+    }
+}
+
+export interface IFunctionEligibility {
+    eligibleIndividualVolunteerRoles?: string[];
+    eligibleVolunteerFamilyRoles?: string[];
+    eligiblePeople?: string[];
 }
 
 export class VolunteerPolicy implements IVolunteerPolicy {
