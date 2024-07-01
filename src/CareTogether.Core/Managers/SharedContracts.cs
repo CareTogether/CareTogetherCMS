@@ -65,7 +65,7 @@ namespace CareTogether.Managers
         ImmutableList<CompletedRequirementInfo> CompletedRequirements,
         ImmutableList<ExemptedRequirementInfo> ExemptedRequirements,
         ImmutableList<string> AvailableApplications,
-        ImmutableList<string> MissingRequirements,
+        ImmutableList<(string ActionName, string Version)> MissingRequirements,
         ImmutableList<RoleRemoval> RoleRemovals);
 
     public sealed record CommunityInfo(Community Community,

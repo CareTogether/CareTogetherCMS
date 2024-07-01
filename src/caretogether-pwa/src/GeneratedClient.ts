@@ -6134,7 +6134,7 @@ export class VolunteerInfo implements IVolunteerInfo {
     completedRequirements?: CompletedRequirementInfo[];
     exemptedRequirements?: ExemptedRequirementInfo[];
     availableApplications?: string[];
-    missingRequirements?: string[];
+    missingRequirements?: ValueTupleOfStringAndString[];
     roleRemovals?: RoleRemoval[];
 
     constructor(data?: IVolunteerInfo) {
@@ -6173,7 +6173,7 @@ export class VolunteerInfo implements IVolunteerInfo {
             if (Array.isArray(_data["missingRequirements"])) {
                 this.missingRequirements = [] as any;
                 for (let item of _data["missingRequirements"])
-                    this.missingRequirements!.push(item);
+                    this.missingRequirements!.push(ValueTupleOfStringAndString.fromJS(item));
             }
             if (Array.isArray(_data["roleRemovals"])) {
                 this.roleRemovals = [] as any;
@@ -6217,7 +6217,7 @@ export class VolunteerInfo implements IVolunteerInfo {
         if (Array.isArray(this.missingRequirements)) {
             data["missingRequirements"] = [];
             for (let item of this.missingRequirements)
-                data["missingRequirements"].push(item);
+                data["missingRequirements"].push(item.toJSON());
         }
         if (Array.isArray(this.roleRemovals)) {
             data["roleRemovals"] = [];
@@ -6233,7 +6233,7 @@ export interface IVolunteerInfo {
     completedRequirements?: CompletedRequirementInfo[];
     exemptedRequirements?: ExemptedRequirementInfo[];
     availableApplications?: string[];
-    missingRequirements?: string[];
+    missingRequirements?: ValueTupleOfStringAndString[];
     roleRemovals?: RoleRemoval[];
 }
 

@@ -190,7 +190,7 @@ export function AdultCard({ familyId, personId }: AdultCardProps) {
                 <ExemptedRequirementRow key={`${exempted.requirementName}:${i}`} requirement={exempted} context={requirementContext} />
               )}
               {family.volunteerFamilyInfo?.individualVolunteers?.[adult.item1.id].missingRequirements?.map((missing, i) =>
-                <MissingRequirementRow key={`${missing}:${i}`} requirement={missing} context={requirementContext} />
+                <MissingRequirementRow key={`${missing}:${i}`} requirement={missing.item1!} policyVersion={missing.item2} context={requirementContext} />
               )}
               {family.volunteerFamilyInfo?.individualVolunteers?.[adult.item1.id].availableApplications?.map((application, i) =>
                 <MissingRequirementRow key={`${application}:${i}`} requirement={application} context={requirementContext} isAvailableApplication={true} />
