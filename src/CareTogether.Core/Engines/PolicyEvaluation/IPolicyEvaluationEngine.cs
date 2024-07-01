@@ -28,12 +28,12 @@ namespace CareTogether.Engines.PolicyEvaluation
                 .Distinct()
                 .ToImmutableList();
 
-        public ImmutableList<(Guid PersonId, string ActionName)> CurrentMissingIndividualRequirements =>
+        public ImmutableList<(Guid PersonId, string ActionName, string Version)> CurrentMissingIndividualRequirements =>
             FamilyRoleApprovals
                 .SelectMany(fra => fra.Value.CurrentMissingIndividualRequirements)
                 .Concat(IndividualApprovals
                     .SelectMany(ia => ia.Value.CurrentMissingRequirements
-                        .Select(r => (PersonId: ia.Key, ActionName: r))))
+                        .Select(r => (PersonId: ia.Key, ActionName: r.ActionName, Version: r.Version))))
                 .Distinct()
                 .ToImmutableList();
 
@@ -50,7 +50,7 @@ namespace CareTogether.Engines.PolicyEvaluation
     {
         [JsonIgnore]
         [Newtonsoft.Json.JsonIgnore]
-        public ImmutableList<string> CurrentMissingRequirements =>
+        public ImmutableList<(string ActionName, string Version)> CurrentMissingRequirements =>
             ApprovalStatusByRole
                 .SelectMany(r => r.Value.CurrentMissingRequirements)
                 .Distinct()
@@ -72,7 +72,7 @@ namespace CareTogether.Engines.PolicyEvaluation
         public RoleApprovalStatus? CurrentStatus =>
             EffectiveRoleApprovalStatus?.ValueAt(DateTime.UtcNow);
 
-        public ImmutableList<string> CurrentMissingRequirements =>
+        public ImmutableList<(string ActionName, string Version)> CurrentMissingRequirements =>
             RoleVersionApprovals
                 // The following filter selects only the "effective" version(s),
                 // allowing the 'EffectiveRoleApprovalStatus' calculation to take
@@ -80,9 +80,10 @@ namespace CareTogether.Engines.PolicyEvaluation
                 // If multiple versions contribute to the current status, we can show
                 // the requirements from all of them, and this will dynamically update
                 // as the requirements for some versions are met.
-                .Where(r => r.CurrentStatus == CurrentStatus)
-                .SelectMany(r => r.CurrentMissingRequirements)
-                .Select(r => r.ActionName)
+                //LK 7-1-24: Temporary fix
+                //.Where(r => r.CurrentStatus == CurrentStatus)
+                .SelectMany(r => r.CurrentMissingRequirements
+                    .Select(cmr => (cmr.ActionName, r.Version)))
                 .ToImmutableList();
 
         public ImmutableList<string> CurrentAvailableApplications =>
@@ -159,15 +160,16 @@ namespace CareTogether.Engines.PolicyEvaluation
                 .Select(r => r.ActionName)
                 .ToImmutableList();
 
-        public ImmutableList<(Guid PersonId, string ActionName)> CurrentMissingIndividualRequirements =>
+        public ImmutableList<(Guid PersonId, string ActionName, string Version)> CurrentMissingIndividualRequirements =>
             RoleVersionApprovals
-                .Where(r => r.CurrentStatus == CurrentStatus)
-                .SelectMany(r => r.CurrentMissingRequirements)
-                .Where(r => r.Scope == VolunteerFamilyRequirementScope.AllAdultsInTheFamily ||
-                    r.Scope == VolunteerFamilyRequirementScope.AllParticipatingAdultsInTheFamily)
-                .SelectMany(r => r.StatusDetails
-                    .Where(sd => !(sd.WhenMet?.Contains(DateOnly.FromDateTime(DateTime.UtcNow)) ?? false))
-                    .Select(sd => (sd.PersonId!.Value, r.ActionName)))
+                //LK 7-1-24: Temporary fix
+                //.Where(r => r.CurrentStatus == CurrentStatus)
+                .SelectMany(r => r.CurrentMissingRequirements
+                    .Where(cmr => cmr.Scope == VolunteerFamilyRequirementScope.AllAdultsInTheFamily ||
+                        cmr.Scope == VolunteerFamilyRequirementScope.AllParticipatingAdultsInTheFamily)
+                    .SelectMany(cmr => cmr.StatusDetails
+                        .Where(sd => !(sd.WhenMet?.Contains(DateOnly.FromDateTime(DateTime.UtcNow)) ?? false))
+                        .Select(sd => (sd.PersonId!.Value, cmr.ActionName, r.Version))))
                 .ToImmutableList();
     }
 

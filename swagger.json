@@ -3390,7 +3390,7 @@
           "currentMissingIndividualRequirements": {
             "type": "array",
             "items": {
-              "$ref": "#/components/schemas/ValueTupleOfGuidAndString"
+              "$ref": "#/components/schemas/ValueTupleOfGuidAndStringAndString"
             }
           }
         }
@@ -3541,7 +3541,7 @@
           }
         }
       },
-      "ValueTupleOfGuidAndString": {
+      "ValueTupleOfGuidAndStringAndString": {
         "type": "object",
         "additionalProperties": false,
         "properties": {
@@ -3550,6 +3550,10 @@
             "format": "guid"
           },
           "item2": {
+            "type": "string",
+            "nullable": true
+          },
+          "item3": {
             "type": "string",
             "nullable": true
           }
@@ -3665,7 +3669,7 @@
           "currentMissingRequirements": {
             "type": "array",
             "items": {
-              "type": "string"
+              "$ref": "#/components/schemas/ValueTupleOfStringAndString"
             }
           },
           "currentAvailableApplications": {
@@ -3716,6 +3720,20 @@
                 "$ref": "#/components/schemas/DateOnlyTimeline"
               }
             ]
+          }
+        }
+      },
+      "ValueTupleOfStringAndString": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "item1": {
+            "type": "string",
+            "nullable": true
+          },
+          "item2": {
+            "type": "string",
+            "nullable": true
           }
         }
       },

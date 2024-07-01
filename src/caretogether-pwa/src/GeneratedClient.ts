@@ -5612,7 +5612,7 @@ export class FamilyRoleApprovalStatus implements IFamilyRoleApprovalStatus {
     currentStatus?: RoleApprovalStatus | undefined;
     currentMissingFamilyRequirements?: string[];
     currentAvailableFamilyApplications?: string[];
-    currentMissingIndividualRequirements?: ValueTupleOfGuidAndString[];
+    currentMissingIndividualRequirements?: ValueTupleOfGuidAndStringAndString[];
 
     constructor(data?: IFamilyRoleApprovalStatus) {
         if (data) {
@@ -5645,7 +5645,7 @@ export class FamilyRoleApprovalStatus implements IFamilyRoleApprovalStatus {
             if (Array.isArray(_data["currentMissingIndividualRequirements"])) {
                 this.currentMissingIndividualRequirements = [] as any;
                 for (let item of _data["currentMissingIndividualRequirements"])
-                    this.currentMissingIndividualRequirements!.push(ValueTupleOfGuidAndString.fromJS(item));
+                    this.currentMissingIndividualRequirements!.push(ValueTupleOfGuidAndStringAndString.fromJS(item));
             }
         }
     }
@@ -5691,7 +5691,7 @@ export interface IFamilyRoleApprovalStatus {
     currentStatus?: RoleApprovalStatus | undefined;
     currentMissingFamilyRequirements?: string[];
     currentAvailableFamilyApplications?: string[];
-    currentMissingIndividualRequirements?: ValueTupleOfGuidAndString[];
+    currentMissingIndividualRequirements?: ValueTupleOfGuidAndStringAndString[];
 }
 
 export class DateOnlyTimelineOfRoleApprovalStatus implements IDateOnlyTimelineOfRoleApprovalStatus {
@@ -6027,11 +6027,12 @@ export interface IFamilyRequirementStatusDetail {
     whenMet?: DateOnlyTimeline | undefined;
 }
 
-export class ValueTupleOfGuidAndString implements IValueTupleOfGuidAndString {
+export class ValueTupleOfGuidAndStringAndString implements IValueTupleOfGuidAndStringAndString {
     item1?: string;
     item2?: string | undefined;
+    item3?: string | undefined;
 
-    constructor(data?: IValueTupleOfGuidAndString) {
+    constructor(data?: IValueTupleOfGuidAndStringAndString) {
         if (data) {
             for (var property in data) {
                 if (data.hasOwnProperty(property))
@@ -6044,12 +6045,13 @@ export class ValueTupleOfGuidAndString implements IValueTupleOfGuidAndString {
         if (_data) {
             this.item1 = _data["item1"];
             this.item2 = _data["item2"];
+            this.item3 = _data["item3"];
         }
     }
 
-    static fromJS(data: any): ValueTupleOfGuidAndString {
+    static fromJS(data: any): ValueTupleOfGuidAndStringAndString {
         data = typeof data === 'object' ? data : {};
-        let result = new ValueTupleOfGuidAndString();
+        let result = new ValueTupleOfGuidAndStringAndString();
         result.init(data);
         return result;
     }
@@ -6058,13 +6060,15 @@ export class ValueTupleOfGuidAndString implements IValueTupleOfGuidAndString {
         data = typeof data === 'object' ? data : {};
         data["item1"] = this.item1;
         data["item2"] = this.item2;
+        data["item3"] = this.item3;
         return data;
     }
 }
 
-export interface IValueTupleOfGuidAndString {
+export interface IValueTupleOfGuidAndStringAndString {
     item1?: string;
     item2?: string | undefined;
+    item3?: string | undefined;
 }
 
 export class RoleRemoval implements IRoleRemoval {
@@ -6237,7 +6241,7 @@ export class IndividualRoleApprovalStatus implements IIndividualRoleApprovalStat
     effectiveRoleApprovalStatus?: DateOnlyTimelineOfRoleApprovalStatus | undefined;
     roleVersionApprovals?: IndividualRoleVersionApprovalStatus[];
     currentStatus?: RoleApprovalStatus | undefined;
-    currentMissingRequirements?: string[];
+    currentMissingRequirements?: ValueTupleOfStringAndString[];
     currentAvailableApplications?: string[];
 
     constructor(data?: IIndividualRoleApprovalStatus) {
@@ -6261,7 +6265,7 @@ export class IndividualRoleApprovalStatus implements IIndividualRoleApprovalStat
             if (Array.isArray(_data["currentMissingRequirements"])) {
                 this.currentMissingRequirements = [] as any;
                 for (let item of _data["currentMissingRequirements"])
-                    this.currentMissingRequirements!.push(item);
+                    this.currentMissingRequirements!.push(ValueTupleOfStringAndString.fromJS(item));
             }
             if (Array.isArray(_data["currentAvailableApplications"])) {
                 this.currentAvailableApplications = [] as any;
@@ -6290,7 +6294,7 @@ export class IndividualRoleApprovalStatus implements IIndividualRoleApprovalStat
         if (Array.isArray(this.currentMissingRequirements)) {
             data["currentMissingRequirements"] = [];
             for (let item of this.currentMissingRequirements)
-                data["currentMissingRequirements"].push(item);
+                data["currentMissingRequirements"].push(item.toJSON());
         }
         if (Array.isArray(this.currentAvailableApplications)) {
             data["currentAvailableApplications"] = [];
@@ -6305,7 +6309,7 @@ export interface IIndividualRoleApprovalStatus {
     effectiveRoleApprovalStatus?: DateOnlyTimelineOfRoleApprovalStatus | undefined;
     roleVersionApprovals?: IndividualRoleVersionApprovalStatus[];
     currentStatus?: RoleApprovalStatus | undefined;
-    currentMissingRequirements?: string[];
+    currentMissingRequirements?: ValueTupleOfStringAndString[];
     currentAvailableApplications?: string[];
 }
 
@@ -6403,6 +6407,46 @@ export interface IIndividualRoleRequirementCompletionStatus {
     actionName?: string;
     stage?: RequirementStage;
     whenMet?: DateOnlyTimeline | undefined;
+}
+
+export class ValueTupleOfStringAndString implements IValueTupleOfStringAndString {
+    item1?: string | undefined;
+    item2?: string | undefined;
+
+    constructor(data?: IValueTupleOfStringAndString) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.item1 = _data["item1"];
+            this.item2 = _data["item2"];
+        }
+    }
+
+    static fromJS(data: any): ValueTupleOfStringAndString {
+        data = typeof data === 'object' ? data : {};
+        let result = new ValueTupleOfStringAndString();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["item1"] = this.item1;
+        data["item2"] = this.item2;
+        return data;
+    }
+}
+
+export interface IValueTupleOfStringAndString {
+    item1?: string | undefined;
+    item2?: string | undefined;
 }
 
 export class Note implements INote {
