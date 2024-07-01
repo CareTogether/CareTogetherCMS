@@ -6,14 +6,16 @@ import { useDialogHandle } from "../Hooks/useDialogHandle";
 import { IconRow } from "../Generic/IconRow";
 import { MissingRequirementDialog } from "./MissingRequirementDialog";
 import { RequirementContext } from "./RequirementContext";
+import { Chip } from "@mui/material";
 
 type MissingRequirementRowProps = {
   requirement: string;
+  policyVersion?: string;
   context: RequirementContext;
   isAvailableApplication?: boolean;
 };
 
-export function MissingRequirementRow({ requirement, context, isAvailableApplication }: MissingRequirementRowProps) {
+export function MissingRequirementRow({ requirement, policyVersion, context, isAvailableApplication }: MissingRequirementRowProps) {
   const policy = useRecoilValue(policyData);
   const permissions = useFamilyIdPermissions(
     context.kind === 'Referral' ||
@@ -43,7 +45,10 @@ export function MissingRequirementRow({ requirement, context, isAvailableApplica
   return (
     <>
       <IconRow icon={isAvailableApplication ? "💤" : "❌"}
-        onClick={canComplete || canExempt ? dialogHandle.openDialog : undefined}>{requirement}</IconRow>
+        onClick={canComplete || canExempt ? dialogHandle.openDialog : undefined}>
+        {requirement}
+        {policyVersion && <Chip label={policyVersion} color='default' size='small' sx={{ ml: 1 }} />}
+      </IconRow>
       {dialogHandle.open && <MissingRequirementDialog handle={dialogHandle}
         requirement={requirement} context={context} policy={requirementPolicy} />}
     </>
