@@ -76,8 +76,9 @@ namespace CareTogether.Resources.Policies
     public sealed record ReferralPolicy(
         ImmutableList<string> RequiredIntakeActionNames,
         ImmutableList<CustomField> CustomFields,
-        ImmutableList<ArrangementPolicy> ArrangementPolicies);
-        //TODO: Include referral close reasons
+        ImmutableList<ArrangementPolicy> ArrangementPolicies,
+        ImmutableList<FunctionPolicy>? FunctionPolicies);
+    //TODO: Include referral close reasons
 
     public sealed record CustomField(
         string Name,
@@ -108,8 +109,8 @@ namespace CareTogether.Resources.Policies
 
     public enum FunctionRequirement { ZeroOrMore, ExactlyOne, OneOrMore };
     public sealed record ArrangementFunction(string FunctionName, FunctionRequirement Requirement,
-        ImmutableList<string> EligibleIndividualVolunteerRoles, ImmutableList<string> EligibleVolunteerFamilyRoles,
-        ImmutableList<Guid> EligiblePeople, ImmutableList<ArrangementFunctionVariant> Variants);
+        ImmutableList<string>? EligibleIndividualVolunteerRoles, ImmutableList<string>? EligibleVolunteerFamilyRoles,
+        ImmutableList<Guid>? EligiblePeople, ImmutableList<ArrangementFunctionVariant> Variants);
 
     public sealed record ArrangementFunctionVariant(string VariantName,
         ImmutableList<string> RequiredSetupActionNames,
@@ -118,6 +119,7 @@ namespace CareTogether.Resources.Policies
 
     [JsonHierarchyBase]
     public abstract partial record RecurrencePolicy();
+    public sealed record OneTimeRecurrencePolicy(TimeSpan? Delay) : RecurrencePolicy;
     public sealed record DurationStagesRecurrencePolicy(ImmutableList<RecurrencePolicyStage> Stages)
         : RecurrencePolicy;
     public sealed record DurationStagesPerChildLocationRecurrencePolicy(ImmutableList<RecurrencePolicyStage> Stages)
@@ -127,6 +129,13 @@ namespace CareTogether.Resources.Policies
         : RecurrencePolicy;
 
     public sealed record RecurrencePolicyStage(TimeSpan Delay, int? MaxOccurrences);
+
+    public sealed record FunctionPolicy(string FunctionName, FunctionEligibility Eligibility);
+
+    public sealed record FunctionEligibility(
+        ImmutableList<string> EligibleIndividualVolunteerRoles,
+        ImmutableList<string> EligibleVolunteerFamilyRoles,
+        ImmutableList<Guid> EligiblePeople);
 
 
     public sealed record VolunteerPolicy(

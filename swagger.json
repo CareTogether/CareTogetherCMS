@@ -1626,6 +1626,13 @@
             "items": {
               "$ref": "#/components/schemas/ArrangementPolicy"
             }
+          },
+          "functionPolicies": {
+            "type": "array",
+            "nullable": true,
+            "items": {
+              "$ref": "#/components/schemas/FunctionPolicy"
+            }
           }
         }
       },
@@ -1691,18 +1698,21 @@
           },
           "eligibleIndividualVolunteerRoles": {
             "type": "array",
+            "nullable": true,
             "items": {
               "type": "string"
             }
           },
           "eligibleVolunteerFamilyRoles": {
             "type": "array",
+            "nullable": true,
             "items": {
               "type": "string"
             }
           },
           "eligiblePeople": {
             "type": "array",
+            "nullable": true,
             "items": {
               "type": "string",
               "format": "guid"
@@ -1776,7 +1786,8 @@
           "mapping": {
             "ChildCareOccurrenceBasedRecurrencePolicy": "#/components/schemas/ChildCareOccurrenceBasedRecurrencePolicy",
             "DurationStagesPerChildLocationRecurrencePolicy": "#/components/schemas/DurationStagesPerChildLocationRecurrencePolicy",
-            "DurationStagesRecurrencePolicy": "#/components/schemas/DurationStagesRecurrencePolicy"
+            "DurationStagesRecurrencePolicy": "#/components/schemas/DurationStagesRecurrencePolicy",
+            "OneTimeRecurrencePolicy": "#/components/schemas/OneTimeRecurrencePolicy"
           }
         },
         "x-abstract": true,
@@ -1870,6 +1881,61 @@
             }
           }
         ]
+      },
+      "OneTimeRecurrencePolicy": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/RecurrencePolicy"
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "delay": {
+                "type": "string",
+                "format": "duration",
+                "nullable": true
+              }
+            }
+          }
+        ]
+      },
+      "FunctionPolicy": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "functionName": {
+            "type": "string"
+          },
+          "eligibility": {
+            "$ref": "#/components/schemas/FunctionEligibility"
+          }
+        }
+      },
+      "FunctionEligibility": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "eligibleIndividualVolunteerRoles": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "eligibleVolunteerFamilyRoles": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "eligiblePeople": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "guid"
+            }
+          }
+        }
       },
       "VolunteerPolicy": {
         "type": "object",
@@ -3324,7 +3390,7 @@
           "currentMissingIndividualRequirements": {
             "type": "array",
             "items": {
-              "$ref": "#/components/schemas/ValueTupleOfGuidAndString"
+              "$ref": "#/components/schemas/ValueTupleOfGuidAndStringAndString"
             }
           }
         }
@@ -3475,7 +3541,7 @@
           }
         }
       },
-      "ValueTupleOfGuidAndString": {
+      "ValueTupleOfGuidAndStringAndString": {
         "type": "object",
         "additionalProperties": false,
         "properties": {
@@ -3484,6 +3550,10 @@
             "format": "guid"
           },
           "item2": {
+            "type": "string",
+            "nullable": true
+          },
+          "item3": {
             "type": "string",
             "nullable": true
           }
@@ -3559,7 +3629,7 @@
           "missingRequirements": {
             "type": "array",
             "items": {
-              "type": "string"
+              "$ref": "#/components/schemas/ValueTupleOfStringAndString"
             }
           },
           "roleRemovals": {
@@ -3599,7 +3669,7 @@
           "currentMissingRequirements": {
             "type": "array",
             "items": {
-              "type": "string"
+              "$ref": "#/components/schemas/ValueTupleOfStringAndString"
             }
           },
           "currentAvailableApplications": {
@@ -3650,6 +3720,20 @@
                 "$ref": "#/components/schemas/DateOnlyTimeline"
               }
             ]
+          }
+        }
+      },
+      "ValueTupleOfStringAndString": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "item1": {
+            "type": "string",
+            "nullable": true
+          },
+          "item2": {
+            "type": "string",
+            "nullable": true
           }
         }
       },
