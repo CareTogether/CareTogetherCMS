@@ -13,9 +13,10 @@ type MissingRequirementRowProps = {
   policyVersion?: string;
   context: RequirementContext;
   isAvailableApplication?: boolean;
+  referralId?: string
 };
 
-export function MissingRequirementRow({ requirement, policyVersion, context, isAvailableApplication }: MissingRequirementRowProps) {
+export function MissingRequirementRow({ requirement, policyVersion, context, isAvailableApplication, referralId }: MissingRequirementRowProps) {
   const policy = useRecoilValue(policyData);
   const permissions = useFamilyIdPermissions(
     context.kind === 'Referral' ||
@@ -50,7 +51,7 @@ export function MissingRequirementRow({ requirement, policyVersion, context, isA
         {policyVersion && <Chip label={policyVersion} color='default' size='small' sx={{ ml: 1 }} />}
       </IconRow>
       {dialogHandle.open && <MissingRequirementDialog handle={dialogHandle}
-        requirement={requirement} context={context} policy={requirementPolicy} />}
+        requirement={requirement} context={context} policy={requirementPolicy} referralId={referralId} />}
     </>
   );
 }
