@@ -92,7 +92,8 @@ export function FamilyScreen() {
   const [addAdultDialogOpen, setAddAdultDialogOpen] = useState(false);
   const [addChildDialogOpen, setAddChildDialogOpen] = useState(false);
   const [addNoteDialogOpen, setAddNoteDialogOpen] = useState(false);
-  const [selectedReferral, setSelectedReferral] = useState<Referral | undefined>(allReferrals[0]);
+  const [selectedReferralId, setSelectedReferralId] = useState<string | undefined>(allReferrals.length > 0 ? allReferrals[0].id : undefined);
+  const selectedReferral = allReferrals.find(r => r.id === selectedReferralId);
   const [familyMoreMenuAnchor, setFamilyMoreMenuAnchor] = useState<Element | null>(null);
 
   const participatingFamilyRoles =
@@ -285,7 +286,7 @@ export function FamilyScreen() {
                       value={referral!.id}
                       label={referral!.closedAtUtc ? `Referral Closed ${format(referral!.closedAtUtc!, "M/d/yy")}` : "Open Referral"}
                       control={<Radio />}
-                      onChange={() => setSelectedReferral(allReferrals.filter(r => r!.id === referral!.id)[0])}
+                      onChange={() => setSelectedReferralId(referral!.id)}
                     />)}
                   </RadioGroup>
                 </FormControl>
