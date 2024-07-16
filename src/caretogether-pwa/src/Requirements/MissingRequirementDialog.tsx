@@ -56,15 +56,13 @@ export function MissingRequirementDialog({
   const contextFamily = familyLookup(contextFamilyId);
 
   const personLookup = usePersonLookup().bind(null, contextFamilyId);
-  let selectedReferral = contextFamily!.partneringFamilyInfo!.openReferral!; // TODO: Add check to confirm that a referralId exists for first scenario & tweak as needed if undefinied rather than null
-  if (referralId) {
-	const openReferrals: Referral[] = (contextFamily?.partneringFamilyInfo?.openReferral !== undefined) ? [contextFamily.partneringFamilyInfo.openReferral] : [];
-	const closedReferrals: Referral[] = (contextFamily?.partneringFamilyInfo?.closedReferrals?.sort((r1, r2) => r1.closedAtUtc! > r2.closedAtUtc! ? -1 : 1 ) || []);
-	const allReferrals: Referral[] = [...openReferrals, ...closedReferrals];   
-	selectedReferral = allReferrals.find(r => r.id === referralId) ?? selectedReferral;
-  }
-  
-  const availableArrangements = requirement instanceof MissingArrangementRequirement
+
+  const openReferrals: Referral[] = (contextFamily?.partneringFamilyInfo?.openReferral !== undefined) ? [contextFamily.partneringFamilyInfo.openReferral] : [];
+  const closedReferrals: Referral[] = (contextFamily?.partneringFamilyInfo?.closedReferrals?.slice().sort((r1, r2) => r1.closedAtUtc! > r2.closedAtUtc! ? -1 : 1) || []);
+  const allReferrals: Referral[] = [...openReferrals, ...closedReferrals];
+  const selectedReferral = referralId ? allReferrals.find(r => r.id === referralId) : undefined;
+
+  const availableArrangements = selectedReferral && requirement instanceof MissingArrangementRequirement
     ? selectedReferral.arrangements!.filter(arrangement =>
       arrangement.missingRequirements?.some(x => {
         if (context.kind === 'Family Volunteer Assignment')

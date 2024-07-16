@@ -62,7 +62,7 @@ export function FamilyScreen() {
   const communitiesLoadable = useLoadable(visibleCommunitiesQuery);
   const allCommunities = (communitiesLoadable || [])
     .map(x => x.community!)
-	.sort((a, b) => a.name! < b.name! ? -1 : a.name! > b.name! ? 1 : 0);
+    .sort((a, b) => a.name! < b.name! ? -1 : a.name! > b.name! ? 1 : 0);
   const communityLookup = useCommunityLookup();
   const allCommunityInfo = allCommunities.map(c => communityLookup(c.id)!);
   const familyCommunityInfo = allCommunityInfo?.filter(c => c.community?.memberFamilies?.includes(familyId));
@@ -83,16 +83,17 @@ export function FamilyScreen() {
 
   const deleteFamilyDialogHandle = useDialogHandle();
   const openReferrals: Referral[] = (family?.partneringFamilyInfo?.openReferral !== undefined) ? [family.partneringFamilyInfo.openReferral] : [];
-  const closedReferrals: Referral[] = (family?.partneringFamilyInfo?.closedReferrals === undefined) ? [] : 
-  [...family.partneringFamilyInfo.closedReferrals!].sort((r1, r2) => r1.closedAtUtc!.getUTCMilliseconds() - r2.closedAtUtc!.getUTCMilliseconds());
-  const allReferrals: Referral[] = [...openReferrals, ...closedReferrals];  
+  const closedReferrals: Referral[] = (family?.partneringFamilyInfo?.closedReferrals === undefined) ? [] :
+    [...family.partneringFamilyInfo.closedReferrals!].sort((r1, r2) => r1.closedAtUtc!.getUTCMilliseconds() - r2.closedAtUtc!.getUTCMilliseconds());
+  const allReferrals: Referral[] = [...openReferrals, ...closedReferrals];
   const [closeReferralDialogOpen, setCloseReferralDialogOpen] = useState(false);
   const [openNewReferralDialogOpen, setOpenNewReferralDialogOpen] = useState(false);
   const [uploadDocumentDialogOpen, setUploadDocumentDialogOpen] = useState(false);
   const [addAdultDialogOpen, setAddAdultDialogOpen] = useState(false);
   const [addChildDialogOpen, setAddChildDialogOpen] = useState(false);
-  const [addNoteDialogOpen, setAddNoteDialogOpen] = useState(false);  
-  const [selectedReferral, setSelectedReferral] = useState<Referral | undefined>(allReferrals[0]);
+  const [addNoteDialogOpen, setAddNoteDialogOpen] = useState(false);
+  const [selectedReferralId, setSelectedReferralId] = useState<string | undefined>(allReferrals.length > 0 ? allReferrals[0].id : undefined);
+  const selectedReferral = allReferrals.find(r => r.id === selectedReferralId);
   const [familyMoreMenuAnchor, setFamilyMoreMenuAnchor] = useState<Element | null>(null);
 
   const participatingFamilyRoles =
@@ -166,7 +167,7 @@ export function FamilyScreen() {
         partneringFamily={family} referralId={selectedReferral.id!}
         arrangement={arrangement} />
     ));
-	const appNavigate = useAppNavigate();
+  const appNavigate = useAppNavigate();
 
   return (!family
     ? <ProgressBackdrop>
@@ -265,30 +266,30 @@ export function FamilyScreen() {
             <ActivityTimeline family={family} />
           </Grid>
         </Grid>
-        <Grid item xs={12} md={8}>		
+        <Grid item xs={12} md={8}>
           <Grid container spacing={0}>
             <Grid item xs={12} md={4}>
               <PrimaryContactEditor family={family} />
               {permissions(Permission.ViewReferralProgress) && family.partneringFamilyInfo &&
                 <FormControl>
-                  <FormLabel 
-					id="demo-radio-buttons-group-label"
-					sx={{ color: '#000', fontSize: '1.17em', fontWeight: 'bold', marginBottom: 0 }}
+                  <FormLabel
+                    id="demo-radio-buttons-group-label"
+                    sx={{ color: '#000', fontSize: '1.17em', fontWeight: 'bold', marginBottom: 0 }}
                   >Referrals</FormLabel>
                   <RadioGroup
                     aria-labelledby="demo-radio-buttons-group-label"
                     value={selectedReferral ? selectedReferral.id : null}
                     name="radio-buttons-group"
                   >
-					{allReferrals.map(referral => <FormControlLabel 
+                    {allReferrals.map(referral => <FormControlLabel
                       key={referral!.id}
                       value={referral!.id}
                       label={referral!.closedAtUtc ? `Referral Closed ${format(referral!.closedAtUtc!, "M/d/yy")}` : "Open Referral"}
                       control={<Radio />}
-                      onChange={() => setSelectedReferral(allReferrals.filter(r => r!.id === referral!.id)[0])}
-					/>)}
+                      onChange={() => setSelectedReferralId(referral!.id)}
+                    />)}
                   </RadioGroup>
-				</FormControl>
+                </FormControl>
               }
             </Grid>
             <Grid item xs={6} md={4}>
@@ -317,15 +318,15 @@ export function FamilyScreen() {
                               customField={customField} />)}
             </Grid>
             <Grid item xs={6} md={4}>
-              {canCloseReferral && 
+              {canCloseReferral &&
                 (selectedReferral?.id?.toString() == family.partneringFamilyInfo?.openReferral?.id?.toString()) &&
                 <Button
-					onClick={() => setCloseReferralDialogOpen(true)}
-					variant="contained"
-					size="small"
-					sx={{ margin: 1 }}>
-					Close Referral
-				</Button>}
+                  onClick={() => setCloseReferralDialogOpen(true)}
+                  variant="contained"
+                  size="small"
+                  sx={{ margin: 1 }}>
+                  Close Referral
+                </Button>}
               {!family.partneringFamilyInfo?.openReferral && permissions(Permission.CreateReferral) && <Button
                 onClick={() => setOpenNewReferralDialogOpen(true)}
                 variant="contained"
@@ -344,25 +345,25 @@ export function FamilyScreen() {
                   onClose={() => setOpenNewReferralDialogOpen(false)} />)}
             </Grid>
           </Grid>
-		<Grid container spacing={0} sx={{ marginBottom: '1rem' }}>			
-			<Grid item xs={12}>
+          <Grid container spacing={0} sx={{ marginBottom: '1rem' }}>
+            <Grid item xs={12}>
               <h3 style={{ marginBottom: 0 }}>Communities</h3>
-				{familyCommunityInfo?.map(communityInfo => {
-					return (
-						<ListItemButton sx={{ padding: '.5rem', border: '1px solid #e0e0e0', borderRadius: '5px' }}
-							onClick={() => communityInfo.community && communityInfo.community.id ? appNavigate.community(communityInfo.community.id) : ({})}>
-							<ListItemIcon sx={{ alignSelf: 'center', justifyContent: 'center' }}>
-								<Diversity3Icon color='primary' />
-							</ListItemIcon>
-							<ListItemText sx={{ alignSelf: 'baseline' }}
-								primary={communityInfo.community?.name}
-								primaryTypographyProps={{ color: theme.palette.primary.main }}
-							></ListItemText>
-						</ListItemButton>
-					);
-				})}
+              {familyCommunityInfo?.map(communityInfo => {
+                return (
+                  <ListItemButton key={communityInfo.community?.id} sx={{ padding: '.5rem', border: '1px solid #e0e0e0', borderRadius: '5px' }}
+                    onClick={() => communityInfo.community && communityInfo.community.id ? appNavigate.community(communityInfo.community.id) : ({})}>
+                    <ListItemIcon sx={{ alignSelf: 'center', justifyContent: 'center' }}>
+                      <Diversity3Icon color='primary' />
+                    </ListItemIcon>
+                    <ListItemText sx={{ alignSelf: 'baseline' }}
+                      primary={communityInfo.community?.name}
+                      primaryTypographyProps={{ color: theme.palette.primary.main }}
+                    ></ListItemText>
+                  </ListItemButton>
+                );
+              })}
             </Grid>
-		</Grid>
+          </Grid>
           {permissions(Permission.ViewReferralComments) && selectedReferral &&
             <Grid container spacing={0}>
               <ReferralComments partneringFamily={family}
@@ -431,7 +432,7 @@ export function FamilyScreen() {
               </Grid>}
           </Grid>
           <Grid container spacing={0}>
-			
+
             {selectedReferral &&
               <Grid item xs={12}>
                 <div style={{ display: `flex`, justifyContent: `space-between`, maxWidth: `100%`, flexWrap: `wrap` }}>
@@ -469,7 +470,7 @@ export function FamilyScreen() {
                     arrangementPolicy={createArrangementDialogParameter}
                     onClose={() => setCreateArrangementDialogParameter(null)} />}
               </Grid>
-			}			
+            }
             <Grid item xs={12}>
               <h3 style={{ marginBottom: 0 }}>Family Members</h3>
               <Masonry columns={isDesktop ? isWideScreen ? 3 : 2 : 1} spacing={2}>
@@ -480,7 +481,7 @@ export function FamilyScreen() {
                   <ChildCard key={child.id!} familyId={familyId} personId={child.id!} />
                 ))}
               </Masonry>
-            </Grid>			
+            </Grid>
           </Grid>
         </Grid>
       </Grid>
