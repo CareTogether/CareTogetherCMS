@@ -58,12 +58,12 @@ export function MissingRequirementDialog({
   const personLookup = usePersonLookup().bind(null, contextFamilyId);
 
   const openReferrals: Referral[] = (contextFamily?.partneringFamilyInfo?.openReferral !== undefined) ? [contextFamily.partneringFamilyInfo.openReferral] : [];
-  const closedReferrals: Referral[] = (contextFamily?.partneringFamilyInfo?.closedReferrals?.sort((r1, r2) => r1.closedAtUtc! > r2.closedAtUtc! ? -1 : 1) || []);
+  const closedReferrals: Referral[] = (contextFamily?.partneringFamilyInfo?.closedReferrals?.slice().sort((r1, r2) => r1.closedAtUtc! > r2.closedAtUtc! ? -1 : 1) || []);
   const allReferrals: Referral[] = [...openReferrals, ...closedReferrals];
   const selectedReferral = referralId ? allReferrals.find(r => r.id === referralId) : undefined;
 
-  const availableArrangements = requirement instanceof MissingArrangementRequirement
-    ? selectedReferral!.arrangements!.filter(arrangement =>
+  const availableArrangements = selectedReferral && requirement instanceof MissingArrangementRequirement
+    ? selectedReferral.arrangements!.filter(arrangement =>
       arrangement.missingRequirements?.some(x => {
         if (context.kind === 'Family Volunteer Assignment')
           return x.actionName === requirement.actionName &&
