@@ -89,7 +89,8 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
                     Variants: ImmutableList<ArrangementFunctionVariant>.Empty)),
                 RequiredSetupActionNames: Helpers.From(),
                 RequiredMonitoringActions: ImmutableList<MonitoringRequirement>.Empty,
-                RequiredCloseoutActionNames: Helpers.From())));
+                RequiredCloseoutActionNames: Helpers.From())),
+            ImmutableList<FunctionPolicy>.Empty);
 
         static Person adult1 = new Person(guid1, true, "Bob", "Smith", Gender.Male, new ExactAge(new DateTime(2000, 1, 1)), "",
             ImmutableList<Address>.Empty, null, ImmutableList<PhoneNumber>.Empty, null, ImmutableList<EmailAddress>.Empty, null, null, null);

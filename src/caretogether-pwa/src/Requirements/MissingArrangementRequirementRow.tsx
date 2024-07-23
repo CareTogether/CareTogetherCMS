@@ -70,7 +70,7 @@ export function MissingArrangementRequirementRow({ requirement, context }: Missi
             </span></>}
         </IconRow>}
       {dialogHandle.open && <MissingRequirementDialog handle={dialogHandle}
-        requirement={requirement} context={context} policy={requirementPolicy} />}
+        requirement={requirement} context={context} policy={requirementPolicy} referralId={context.referralId} />}
     </>
   );
 }

@@ -305,6 +305,27 @@ export function ArrangementCard({ partneringFamily, referralId, arrangement, sum
     }
   });
 
+  // Sort the missing requirements so that all the items with due dates are shown after
+  // the items without due dates, and so that all items with due dates are shown in
+  // chronological order by due date.
+
+  const itemsWithoutDueDates = missingRequirementsWithContext.filter(item =>
+    !item.missing.dueBy &&
+    !item.missing.pastDueSince
+  );
+
+  const itemsWithDueDates = missingRequirementsWithContext.filter(item =>
+    item.missing.dueBy || item.missing.pastDueSince
+  );
+  
+  itemsWithDueDates.sort((a, b) => {
+    const dateA = a.missing.pastDueSince || a.missing.dueBy || '2000-01-01T00:00:00Z';
+    const dateB = b.missing.pastDueSince || b.missing.dueBy || '2000-01-01T00:00:00Z';
+    return new Date(dateA).getTime() - new Date(dateB).getTime()
+  });
+
+  const mergedArray = [...itemsWithoutDueDates, ...itemsWithDueDates];
+
   const upcomingRequirementsCount = arrangement.missingRequirements?.filter(missingRequirement =>
     missingRequirement.dueBy /* Determine if this is an "upcoming" requirement */).length || 0;
 
@@ -394,7 +415,8 @@ export function ArrangementCard({ partneringFamily, referralId, arrangement, sum
                     {exemptedRequirementsWithContext.map((x, i) =>
                       <ExemptedRequirementRow key={`${x.exempted.requirementName}:${i}`} requirement={x.exempted} context={x.context} />
                     )}
-                    {missingRequirementsWithContext.map((x, i) =>
+                    
+                    {mergedArray.map((x, i) =>
                       <MissingArrangementRequirementRow key={`${x.missing.actionName}:${i}`} requirement={x.missing} context={x.context} />
                     )}
                   </Typography>

@@ -115,7 +115,7 @@ namespace CareTogether.Api.Controllers
         }
 
         [HttpGet("/api/[controller]/reviewInvite")]
-        public async Task<ActionResult<UserInviteReviewInfo>> ExaminePersonInviteRedemptionSession(
+        public async Task<ActionResult<UserInviteReviewInfo?>> ExaminePersonInviteRedemptionSession(
             [FromQuery] string redemptionSessionId)
         {
             // The client can be assumed to be making this request from JavaScript, meaning the results can

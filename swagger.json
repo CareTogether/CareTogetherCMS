@@ -1,5 +1,5 @@
 {
-  "x-generator": "NSwag v14.0.3.0 (NJsonSchema v11.0.0.0 (Newtonsoft.Json v13.0.0.0))",
+  "x-generator": "NSwag v14.0.8.0 (NJsonSchema v11.0.1.0 (Newtonsoft.Json v13.0.0.0))",
   "openapi": "3.0.0",
   "info": {
     "title": "CareTogether CMS API",
@@ -1626,6 +1626,13 @@
             "items": {
               "$ref": "#/components/schemas/ArrangementPolicy"
             }
+          },
+          "functionPolicies": {
+            "type": "array",
+            "nullable": true,
+            "items": {
+              "$ref": "#/components/schemas/FunctionPolicy"
+            }
           }
         }
       },
@@ -1691,18 +1698,21 @@
           },
           "eligibleIndividualVolunteerRoles": {
             "type": "array",
+            "nullable": true,
             "items": {
               "type": "string"
             }
           },
           "eligibleVolunteerFamilyRoles": {
             "type": "array",
+            "nullable": true,
             "items": {
               "type": "string"
             }
           },
           "eligiblePeople": {
             "type": "array",
+            "nullable": true,
             "items": {
               "type": "string",
               "format": "guid"
@@ -1889,6 +1899,43 @@
             }
           }
         ]
+      },
+      "FunctionPolicy": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "functionName": {
+            "type": "string"
+          },
+          "eligibility": {
+            "$ref": "#/components/schemas/FunctionEligibility"
+          }
+        }
+      },
+      "FunctionEligibility": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "eligibleIndividualVolunteerRoles": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "eligibleVolunteerFamilyRoles": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "eligiblePeople": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "guid"
+            }
+          }
+        }
       },
       "VolunteerPolicy": {
         "type": "object",
@@ -3343,7 +3390,7 @@
           "currentMissingIndividualRequirements": {
             "type": "array",
             "items": {
-              "$ref": "#/components/schemas/ValueTupleOfGuidAndString"
+              "$ref": "#/components/schemas/ValueTupleOfGuidAndStringAndString"
             }
           }
         }
@@ -3494,7 +3541,7 @@
           }
         }
       },
-      "ValueTupleOfGuidAndString": {
+      "ValueTupleOfGuidAndStringAndString": {
         "type": "object",
         "additionalProperties": false,
         "properties": {
@@ -3503,6 +3550,10 @@
             "format": "guid"
           },
           "item2": {
+            "type": "string",
+            "nullable": true
+          },
+          "item3": {
             "type": "string",
             "nullable": true
           }
@@ -3578,7 +3629,7 @@
           "missingRequirements": {
             "type": "array",
             "items": {
-              "type": "string"
+              "$ref": "#/components/schemas/ValueTupleOfStringAndString"
             }
           },
           "roleRemovals": {
@@ -3618,7 +3669,7 @@
           "currentMissingRequirements": {
             "type": "array",
             "items": {
-              "type": "string"
+              "$ref": "#/components/schemas/ValueTupleOfStringAndString"
             }
           },
           "currentAvailableApplications": {
@@ -3669,6 +3720,20 @@
                 "$ref": "#/components/schemas/DateOnlyTimeline"
               }
             ]
+          }
+        }
+      },
+      "ValueTupleOfStringAndString": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "item1": {
+            "type": "string",
+            "nullable": true
+          },
+          "item2": {
+            "type": "string",
+            "nullable": true
           }
         }
       },

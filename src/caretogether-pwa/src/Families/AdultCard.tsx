@@ -151,7 +151,7 @@ export function AdultCard({ familyId, personId }: AdultCardProps) {
         <Typography variant="body2" component="div">
           <ContactDisplay person={adult.item1} />
         </Typography>
-        <Accordion expanded={!collapsed} onChange={(event, isExpanded) => setCollapsed(!isExpanded)}
+        <Accordion expanded={!collapsed} onChange={(_event, isExpanded) => setCollapsed(!isExpanded)}
           variant="outlined" square disableGutters sx={{ marginLeft: -2, marginRight: -2, border: 'none' }}>
           <AccordionSummary expandIcon={<ExpandMoreIcon />} sx={{ marginTop: 1, paddingTop: 1, backgroundColor: "#0000000a" }}>
             <Grid container>
@@ -190,7 +190,7 @@ export function AdultCard({ familyId, personId }: AdultCardProps) {
                 <ExemptedRequirementRow key={`${exempted.requirementName}:${i}`} requirement={exempted} context={requirementContext} />
               )}
               {family.volunteerFamilyInfo?.individualVolunteers?.[adult.item1.id].missingRequirements?.map((missing, i) =>
-                <MissingRequirementRow key={`${missing}:${i}`} requirement={missing} context={requirementContext} />
+                <MissingRequirementRow key={`${missing}:${i}`} requirement={missing.item1!} policyVersion={missing.item2} context={requirementContext} />
               )}
               {family.volunteerFamilyInfo?.individualVolunteers?.[adult.item1.id].availableApplications?.map((application, i) =>
                 <MissingRequirementRow key={`${application}:${i}`} requirement={application} context={requirementContext} isAvailableApplication={true} />

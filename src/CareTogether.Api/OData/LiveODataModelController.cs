@@ -66,7 +66,7 @@ namespace CareTogether.Api.OData
     public sealed record Referral([property: Key] Guid Id,
         [property: ForeignKey("FamilyId")] Family Family, Guid FamilyId,
         DateOnly Opened, DateOnly? Closed, string? ReferralSource,
-        ReferralCloseReason? CloseReason);
+        ReferralCloseReason? CloseReason, string? PrimaryReasonForReferral);
 
     public sealed record Arrangement([property: Key] Guid Id,
         [property: ForeignKey("TypeName")] ArrangementType Type, string TypeName,
@@ -667,7 +667,8 @@ namespace CareTogether.Api.OData
                 referralInfo.ClosedAtUtc.HasValue ? DateOnly.FromDateTime(referralInfo.ClosedAtUtc.Value) : null,
                 // Making this 'custom field' semi-standard across organizations/policies.
                 referralInfo.CompletedCustomFields.SingleOrDefault(field => field.CustomFieldName == "Referral Source")?.Value as string,
-                referralInfo.CloseReason));
+                referralInfo.CloseReason,
+                referralInfo.CompletedCustomFields.SingleOrDefault(field => field.CustomFieldName == "Primary Reason for Referral")?.Value as string));
         }
 
         private static IEnumerable<Arrangement> RenderArrangements(

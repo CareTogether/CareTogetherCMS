@@ -216,7 +216,7 @@ namespace CareTogether.Managers
                                 .ToImmutableList(),
                             combinedFamilyApprovals.CurrentMissingIndividualRequirements
                                 .Where(y => y.PersonId == x.Key)
-                                .Select(y => y.ActionName)
+                                .Select(y => (y.ActionName, y.Version))
                                 .ToImmutableList(),
                             individualEntry?.RoleRemovals ?? ImmutableList<RoleRemoval>.Empty);
                     }),

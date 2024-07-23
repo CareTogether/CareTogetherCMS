@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Autocomplete, Button, Dialog, DialogActions, DialogContent, DialogTitle, FormControl, FormControlLabel, FormLabel, Grid, Radio, RadioGroup, TextField } from '@mui/material';
-import { ArrangementPolicy, Arrangement, ArrangementFunction, RoleApprovalStatus, Person, Family, ValueTupleOfPersonAndFamilyAdultRelationshipInfo } from '../../GeneratedClient';
+import { ArrangementPolicy, Arrangement, ArrangementFunction, RoleApprovalStatus, Person, ValueTupleOfPersonAndFamilyAdultRelationshipInfo } from '../../GeneratedClient';
 import { useRecoilValue } from 'recoil';
 import { useParams } from 'react-router-dom';
 import { useBackdrop } from '../../Hooks/useBackdrop';
@@ -36,9 +36,14 @@ export function AssignArrangementFunctionDialog({
 
   const candidateNamedPeopleAssignees = arrangementFunction.eligiblePeople
     ? arrangementFunction.eligiblePeople.map(personId =>
-      familyAndPersonLookup(personId) as { family: Family, person: Person | null }).filter(person =>
+      familyAndPersonLookup(personId)).filter(personResult =>
+        // Filter out any people who don't exist (they or their families may have been deleted, for example)
+        // rather than crashing the app with an undefined object exception.
+        personResult && personResult.family &&
         !arrangement.individualVolunteerAssignments?.find(iva =>
-          iva.arrangementFunction === arrangementFunction.functionName && iva.familyId === person.family!.id && iva.personId === person.person?.id))
+          iva.arrangementFunction === arrangementFunction.functionName && iva.familyId === personResult.family!.id && iva.personId === personResult.person?.id)).map(personResult =>
+            ({ family: personResult.family!, person: personResult.person || null })
+          )
     : [];
   const candidateVolunteerIndividualAssignees = arrangementFunction.eligibleIndividualVolunteerRoles
     ? visibleFamilies.flatMap(f => f.volunteerFamilyInfo?.individualVolunteers
