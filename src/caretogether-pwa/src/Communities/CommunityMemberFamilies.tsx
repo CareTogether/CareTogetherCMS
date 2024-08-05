@@ -1,5 +1,18 @@
-import { IconButton, List, ListItem, ListItemButton, ListItemIcon, ListItemText, useTheme } from '@mui/material';
-import { CombinedFamilyInfo, CommunityInfo, Permission, RemoveCommunityMemberFamily } from '../GeneratedClient';
+import {
+  IconButton,
+  List,
+  ListItem,
+  ListItemButton,
+  ListItemIcon,
+  ListItemText,
+  useTheme,
+} from '@mui/material';
+import {
+  CombinedFamilyInfo,
+  CommunityInfo,
+  Permission,
+  RemoveCommunityMemberFamily,
+} from '../GeneratedClient';
 import { useCommunityCommand } from '../Model/DirectoryModel';
 import { useCommunityPermissions } from '../Model/SessionModel';
 import PeopleIcon from '@mui/icons-material/People';
@@ -16,31 +29,43 @@ import { PersonName } from '../Families/PersonName';
 interface CommunityMemberFamiliesProps {
   communityInfo: CommunityInfo;
 }
-export function CommunityMemberFamilies({ communityInfo }: CommunityMemberFamiliesProps) {
+export function CommunityMemberFamilies({
+  communityInfo,
+}: CommunityMemberFamiliesProps) {
   const permissions = useCommunityPermissions(communityInfo);
   const community = communityInfo.community!;
 
   const visibleFamilies = useRecoilValue(visibleFamiliesQuery);
 
-  const memberFamilies = (community?.memberFamilies || []).map(familyId =>
-    visibleFamilies.find(family => family.family?.id === familyId)).filter(family =>
-      family).sort((a, b) => {
-        const aName = familyLastName(a!);
-        const bName = familyLastName(b!);
-        return aName?.localeCompare(bName, undefined, { sensitivity: 'base' });
-      }) as CombinedFamilyInfo[];
+  const memberFamilies = (community?.memberFamilies || [])
+    .map((familyId) =>
+      visibleFamilies.find((family) => family.family?.id === familyId)
+    )
+    .filter((family) => family)
+    .sort((a, b) => {
+      const aName = familyLastName(a!);
+      const bName = familyLastName(b!);
+      return aName?.localeCompare(bName, undefined, { sensitivity: 'base' });
+    }) as CombinedFamilyInfo[];
 
-  const removeMemberFamily = useCommunityCommand((communityId, familyId: string) => {
-    const command = new RemoveCommunityMemberFamily();
-    command.communityId = communityId;
-    command.familyId = familyId;
-    return command;
-  });
+  const removeMemberFamily = useCommunityCommand(
+    (communityId, familyId: string) => {
+      const command = new RemoveCommunityMemberFamily();
+      command.communityId = communityId;
+      command.familyId = familyId;
+      return command;
+    }
+  );
 
   const withBackdrop = useBackdrop();
   async function remove(family: CombinedFamilyInfo) {
     //TODO: Use the DeleteDocumentDialog approach - potentially making it reusable?
-    if (window.confirm("Are you sure you want to remove this member family?\n\n" + familyNameString(family))) {
+    if (
+      window.confirm(
+        'Are you sure you want to remove this member family?\n\n' +
+          familyNameString(family)
+      )
+    ) {
       await withBackdrop(async () => {
         await removeMemberFamily(community.id!, family.family!.id!);
       });
@@ -50,42 +75,86 @@ export function CommunityMemberFamilies({ communityInfo }: CommunityMemberFamili
   const theme = useTheme();
   const appNavigate = useAppNavigate();
 
-  return <List sx={{ '& .MuiListItemIcon-root': { minWidth: 36 } }}>
-    {memberFamilies.map(family =>
-      <ListItem key={family.family!.id!} disablePadding sx={{ '.MuiListItemSecondaryAction-root': { top: 20 } }}
-        secondaryAction={permissions(Permission.EditCommunityMemberFamilies)
-          ? <IconButton edge="end" aria-label="delete"
-            color='primary'
-            onClick={() => remove(family)}>
-            <GroupRemoveIcon />
-          </IconButton>
-          : null}>
-        <ListItemButton disableGutters sx={{ paddingTop: 0, paddingBottom: 0 }}
-          onClick={() => appNavigate.family(family.family!.id!)}>
-          <ListItemIcon sx={{ alignSelf: 'baseline' }}>
-            <PeopleIcon color='primary' sx={{ position: 'relative', top: 6, left: 2 }} />
-          </ListItemIcon>
-          <ListItemText sx={{ alignSelf: 'baseline' }}
-            primary={
-              <>
-                <FamilyName family={family} />{' '}
-                {Object.entries(family.volunteerFamilyInfo?.familyRoleApprovals || {}).flatMap(([role, roleApprovalStatus]) =>
-                  <VolunteerRoleApprovalStatusChip key={role} roleName={role} status={roleApprovalStatus.effectiveRoleApprovalStatus} />)}
-              </>} primaryTypographyProps={{ color: theme.palette.primary.main }}
-            secondary={
-              <List dense>
-                {family.family?.adults?.map(adult => (
-                  <ListItem key={adult.item1!.id} disablePadding>
-                    <ListItemText primary={
-                      <>
-                        <PersonName person={adult.item1!} />{' '}
-                        {Object.entries(family.volunteerFamilyInfo?.individualVolunteers?.[adult.item1!.id!].approvalStatusByRole || {}).map(([role, roleApprovalStatus]) =>
-                          <VolunteerRoleApprovalStatusChip key={role} roleName={role} status={roleApprovalStatus.effectiveRoleApprovalStatus} />)}
-                      </>} />
-                  </ListItem>))}
-              </List>}>
-          </ListItemText>
-        </ListItemButton>
-      </ListItem>)}
-  </List>;
+  return (
+    <List sx={{ '& .MuiListItemIcon-root': { minWidth: 36 } }}>
+      {memberFamilies.map((family) => (
+        <ListItem
+          key={family.family!.id!}
+          disablePadding
+          sx={{ '.MuiListItemSecondaryAction-root': { top: 20 } }}
+          secondaryAction={
+            permissions(Permission.EditCommunityMemberFamilies) ? (
+              <IconButton
+                edge="end"
+                aria-label="delete"
+                color="primary"
+                onClick={() => remove(family)}
+              >
+                <GroupRemoveIcon />
+              </IconButton>
+            ) : null
+          }
+        >
+          <ListItemButton
+            disableGutters
+            sx={{ paddingTop: 0, paddingBottom: 0 }}
+            onClick={() => appNavigate.family(family.family!.id!)}
+          >
+            <ListItemIcon sx={{ alignSelf: 'baseline' }}>
+              <PeopleIcon
+                color="primary"
+                sx={{ position: 'relative', top: 6, left: 2 }}
+              />
+            </ListItemIcon>
+            <ListItemText
+              sx={{ alignSelf: 'baseline' }}
+              primary={
+                <>
+                  <FamilyName family={family} />{' '}
+                  {Object.entries(
+                    family.volunteerFamilyInfo?.familyRoleApprovals || {}
+                  ).flatMap(([role, roleApprovalStatus]) => (
+                    <VolunteerRoleApprovalStatusChip
+                      key={role}
+                      roleName={role}
+                      status={roleApprovalStatus.effectiveRoleApprovalStatus}
+                    />
+                  ))}
+                </>
+              }
+              primaryTypographyProps={{ color: theme.palette.primary.main }}
+              secondary={
+                <List dense>
+                  {family.family?.adults?.map((adult) => (
+                    <ListItem key={adult.item1!.id} disablePadding>
+                      <ListItemText
+                        primary={
+                          <>
+                            <PersonName person={adult.item1!} />{' '}
+                            {Object.entries(
+                              family.volunteerFamilyInfo
+                                ?.individualVolunteers?.[adult.item1!.id!]
+                                .approvalStatusByRole || {}
+                            ).map(([role, roleApprovalStatus]) => (
+                              <VolunteerRoleApprovalStatusChip
+                                key={role}
+                                roleName={role}
+                                status={
+                                  roleApprovalStatus.effectiveRoleApprovalStatus
+                                }
+                              />
+                            ))}
+                          </>
+                        }
+                      />
+                    </ListItem>
+                  ))}
+                </List>
+              }
+            ></ListItemText>
+          </ListItemButton>
+        </ListItem>
+      ))}
+    </List>
+  );
 }

@@ -1,4 +1,12 @@
-import { Badge, Divider, Drawer, List, Skeleton, Stack, useTheme } from '@mui/material';
+import {
+  Badge,
+  Divider,
+  Drawer,
+  List,
+  Skeleton,
+  Stack,
+  useTheme,
+} from '@mui/material';
 import PermPhoneMsgIcon from '@mui/icons-material/PermPhoneMsg';
 import PeopleIcon from '@mui/icons-material/People';
 import SettingsIcon from '@mui/icons-material/Settings';
@@ -31,42 +39,95 @@ function SideNavigationMenu({ open }: SideNavigationMenuProps) {
     //  <List aria-label="main navigation">
     //    <ListItemLink to="/dashboard" primary="Dashboard" icon={<DashboardIcon sx={{color: '#fff'}} />} />
     //  </List>
-    <List aria-label="secondary navigation" sx={{
-      "& .MuiListItem-root.Mui-selected": { color: '#ffff' },
-      "& .MuiListItem-root.Mui-selected svg": { color: '#ffff' }
-    }}>
-      {flags === null
-        ? <>
+    <List
+      aria-label="secondary navigation"
+      sx={{
+        '& .MuiListItem-root.Mui-selected': { color: '#ffff' },
+        '& .MuiListItem-root.Mui-selected svg': { color: '#ffff' },
+      }}
+    >
+      {flags === null ? (
+        <>
           <Stack padding={1} spacing={1}>
-            <Stack direction='row'>
+            <Stack direction="row">
               <Skeleton variant="circular" width={30} height={30} />
-              {open &&
-                <Skeleton variant="rounded" width={100} height={24} sx={{ marginLeft: 2, marginTop: 0.5 }} />}
+              {open && (
+                <Skeleton
+                  variant="rounded"
+                  width={100}
+                  height={24}
+                  sx={{ marginLeft: 2, marginTop: 0.5 }}
+                />
+              )}
             </Stack>
-            <Stack direction='row'>
+            <Stack direction="row">
               <Skeleton variant="circular" width={30} height={30} />
-              {open &&
-                <Skeleton variant="rounded" width={100} height={24} sx={{ marginLeft: 2, marginTop: 0.5 }} />}
+              {open && (
+                <Skeleton
+                  variant="rounded"
+                  width={100}
+                  height={24}
+                  sx={{ marginLeft: 2, marginTop: 0.5 }}
+                />
+              )}
             </Stack>
           </Stack>
         </>
-        : <>
-          <ListItemLink to={`${locationPrefix}`} primary="Dashboard" icon={<DashboardIcon sx={{ color: '#fff8' }} />} />
-          <ListItemLink to={`${locationPrefix}/inbox`} primary="Inbox"
-            icon={<Badge badgeContent={queueItemsCount} color="secondary"><Inbox sx={{ color: '#fff8' }} /></Badge>} />
-          {permissions(Permission.AccessPartneringFamiliesScreen) &&
-            <ListItemLink to={`${locationPrefix}/referrals`} primary="Referrals" icon={<PermPhoneMsgIcon sx={{ color: '#fff8' }} />} />}
-          {permissions(Permission.AccessVolunteersScreen) &&
-            <ListItemLink to={`${locationPrefix}/volunteers`} primary="Volunteers" icon={<PeopleIcon sx={{ color: '#fff8' }} />} />}
-          {permissions(Permission.AccessCommunitiesScreen) &&
-            <ListItemLink to={`${locationPrefix}/communities`} primary="Communities" icon={<Diversity3Icon sx={{ color: '#fff8' }} />} />}
-          {permissions(Permission.AccessSettingsScreen) &&
+      ) : (
+        <>
+          <ListItemLink
+            to={`${locationPrefix}`}
+            primary="Dashboard"
+            icon={<DashboardIcon sx={{ color: '#fff8' }} />}
+          />
+          <ListItemLink
+            to={`${locationPrefix}/inbox`}
+            primary="Inbox"
+            icon={
+              <Badge badgeContent={queueItemsCount} color="secondary">
+                <Inbox sx={{ color: '#fff8' }} />
+              </Badge>
+            }
+          />
+          {permissions(Permission.AccessPartneringFamiliesScreen) && (
+            <ListItemLink
+              to={`${locationPrefix}/referrals`}
+              primary="Referrals"
+              icon={<PermPhoneMsgIcon sx={{ color: '#fff8' }} />}
+            />
+          )}
+          {permissions(Permission.AccessVolunteersScreen) && (
+            <ListItemLink
+              to={`${locationPrefix}/volunteers`}
+              primary="Volunteers"
+              icon={<PeopleIcon sx={{ color: '#fff8' }} />}
+            />
+          )}
+          {permissions(Permission.AccessCommunitiesScreen) && (
+            <ListItemLink
+              to={`${locationPrefix}/communities`}
+              primary="Communities"
+              icon={<Diversity3Icon sx={{ color: '#fff8' }} />}
+            />
+          )}
+          {permissions(Permission.AccessSettingsScreen) && (
             <>
               <Divider />
-              <ListItemLink to={`${locationPrefix}/settings`} primary="Settings" icon={<SettingsIcon sx={{ color: '#fff8' }} />} />
-              <ListItemLink to="http://support.caretogether.io" newTab primary="Support" icon={<SupportIcon sx={{ color: '#fff8' }} />} />
-            </>}
-        </>}
+              <ListItemLink
+                to={`${locationPrefix}/settings`}
+                primary="Settings"
+                icon={<SettingsIcon sx={{ color: '#fff8' }} />}
+              />
+              <ListItemLink
+                to="http://support.caretogether.io"
+                newTab
+                primary="Support"
+                icon={<SupportIcon sx={{ color: '#fff8' }} />}
+              />
+            </>
+          )}
+        </>
+      )}
     </List>
   );
 }
@@ -103,7 +164,9 @@ export function ShellSideNavigation({ open, width }: ShellSideNavigationProps) {
   // };
 
   return (
-    <Drawer variant='permanent' open={open}
+    <Drawer
+      variant="permanent"
+      open={open}
       sx={{
         width: width,
         flexShrink: 0,
@@ -112,15 +175,25 @@ export function ShellSideNavigation({ open, width }: ShellSideNavigationProps) {
         '& .MuiDrawer-paper': {
           backgroundColor: theme.palette.primary.dark,
           color: theme.palette.primary.contrastText,
-          overflowX: 'hidden'
-        }
-      }}>
+          overflowX: 'hidden',
+        },
+      }}
+    >
       <Stack sx={{ width: width, paddingTop: { xs: 7, sm: 8, md: 6 } }}>
         <SideNavigationMenu open={open} />
-        {open &&
-          <div style={{ overflowX: 'hidden', width: width - 4, position: 'fixed', bottom: 0, marginLeft: 4 }}>
+        {open && (
+          <div
+            style={{
+              overflowX: 'hidden',
+              width: width - 4,
+              position: 'fixed',
+              bottom: 0,
+              marginLeft: 4,
+            }}
+          >
             <Copyright />
-          </div>}
+          </div>
+        )}
       </Stack>
     </Drawer>
   );

@@ -1,6 +1,11 @@
-import { PublicClientApplication, IPublicClientApplication, InteractionRequiredAuthError, AuthenticationResult } from "@azure/msal-browser";
-import { AtomEffect, atom } from "recoil";
-import { loggingEffect } from "../Utilities/loggingEffect";
+import {
+  PublicClientApplication,
+  IPublicClientApplication,
+  InteractionRequiredAuthError,
+  AuthenticationResult,
+} from '@azure/msal-browser';
+import { AtomEffect, atom } from 'recoil';
+import { loggingEffect } from '../Utilities/loggingEffect';
 
 // MSAL configuration for single page application authorization. For guidance, see
 // https://docs.microsoft.com/en-us/azure/active-directory/develop/scenario-spa-app-configuration?tabs=react and
@@ -10,14 +15,15 @@ const config = {
     clientId: import.meta.env.VITE_APP_AUTH_CLIENT_ID,
     authority: import.meta.env.VITE_APP_AUTH_AUTHORITY,
     knownAuthorities: [import.meta.env.VITE_APP_AUTH_KNOWN_AUTHORITY],
-    redirectUri: import.meta.env.VITE_APP_AUTH_REDIRECT_URI
+    redirectUri: import.meta.env.VITE_APP_AUTH_REDIRECT_URI,
   },
   cache: {
-    cacheLocation: "localStorage"
-  }
+    cacheLocation: 'localStorage',
+  },
 };
 
-export const globalMsalInstance: IPublicClientApplication = new PublicClientApplication(config);
+export const globalMsalInstance: IPublicClientApplication =
+  new PublicClientApplication(config);
 
 function trace(scope: string, message: string) {
   console.debug(`[${scope}] ${message}`);
@@ -35,11 +41,7 @@ function displayableError(error: Error | unknown) {
 
 function withDefaultScopes(scopes: string[]) {
   // Add the default OpenID Connect scopes and then deduplicate the resulting entries.
-  return [...new Set(scopes.concat([
-    "openid",
-    "profile",
-    "offline_access"
-  ]))];
+  return [...new Set(scopes.concat(['openid', 'profile', 'offline_access']))];
 }
 const scopes = withDefaultScopes([import.meta.env.VITE_APP_AUTH_SCOPES]);
 
@@ -64,7 +66,10 @@ async function loginAndSetActiveAccountAsync(): Promise<string> {
   //         Note that these accounts may or may not have a valid session with Azure AD.
   trace(`Login`, `Loading authenticated accounts...`);
   const allAccounts = globalMsalInstance.getAllAccounts();
-  trace(`Login`, `MSAL accounts: ${JSON.stringify(allAccounts.map(account => account.localAccountId))}`);
+  trace(
+    `Login`,
+    `MSAL accounts: ${JSON.stringify(allAccounts.map((account) => account.localAccountId))}`
+  );
 
   // Step 4: If zero accounts were found, attempt a silent SSO to try to use the user's single
   //          active session with Azure AD (if the user has exactly one such session) to authenticate.
@@ -72,7 +77,7 @@ async function loginAndSetActiveAccountAsync(): Promise<string> {
     try {
       trace(`Login`, `Attempting silent SSO...`);
       result = await globalMsalInstance.ssoSilent({
-        scopes: scopes
+        scopes: scopes,
       });
       trace(`Login`, `Silent SSO was successful.`);
     } catch (error) {
@@ -88,7 +93,10 @@ async function loginAndSetActiveAccountAsync(): Promise<string> {
   trace(`Login`, `Active account is: ${activeAccount?.localAccountId}`);
   if (allAccounts.length > 0 && !activeAccount) {
     const firstAccount = allAccounts[0];
-    trace(`Login`, `Setting active account to first known account: ${firstAccount.localAccountId}`);
+    trace(
+      `Login`,
+      `Setting active account to first known account: ${firstAccount.localAccountId}`
+    );
     globalMsalInstance.setActiveAccount(firstAccount);
     activeAccount = firstAccount;
   }
@@ -96,13 +104,19 @@ async function loginAndSetActiveAccountAsync(): Promise<string> {
   // Step 6: If an active account is now set, attempt to acquire a token silently using the active account.
   if (activeAccount) {
     try {
-      trace(`Login`, `Attempting silent token acquisition using the active account '${activeAccount?.localAccountId}'...`);
+      trace(
+        `Login`,
+        `Attempting silent token acquisition using the active account '${activeAccount?.localAccountId}'...`
+      );
       result = await globalMsalInstance.acquireTokenSilent({
-        scopes: scopes
+        scopes: scopes,
       });
       trace(`Login`, `Silent token acquisition was successful.`);
     } catch (error) {
-      trace(`Login`, `Silent token acquisition failed with: ${renderMsalError(error)}`);
+      trace(
+        `Login`,
+        `Silent token acquisition failed with: ${renderMsalError(error)}`
+      );
       if (!(error instanceof InteractionRequiredAuthError)) {
         throw displayableError(error);
       }
@@ -116,47 +130,61 @@ async function loginAndSetActiveAccountAsync(): Promise<string> {
     return result.account.localAccountId;
   } else if (result && !result.account) {
     throw displayableError(
-      new Error("An authentication result was obtained but no account was determined to be signed in."));
+      new Error(
+        'An authentication result was obtained but no account was determined to be signed in.'
+      )
+    );
   }
 
   // Step 6: If the user needs to authenticate interactively, trigger a redirect flow.
   try {
-    trace(`Login`, `Attempting token acquisition with a redirect because interaction is required...`);
-    const stateQueryParam = new URLSearchParams(window.location.search).get("state");
+    trace(
+      `Login`,
+      `Attempting token acquisition with a redirect because interaction is required...`
+    );
+    const stateQueryParam = new URLSearchParams(window.location.search).get(
+      'state'
+    );
     await globalMsalInstance.acquireTokenRedirect({
       scopes: scopes,
       // Ensure that the 'state' parameter is always round-tripped through MSAL.
       // This is useful, e.g., for person invite redemption which may require interrupting a
       // non-authenticated user with an authentication redirect before they can complete the
       // invite redemption process.
-      state: stateQueryParam ?? undefined
+      state: stateQueryParam ?? undefined,
     });
     throw displayableError(
-      new Error("This code was expected to be unreachable since acquireTokenRedirect should never actually return."));
+      new Error(
+        'This code was expected to be unreachable since acquireTokenRedirect should never actually return.'
+      )
+    );
   } catch (error) {
-    trace(`Login`, `Token acquisition with redirect failed with: ${renderMsalError(error)}`);
+    trace(
+      `Login`,
+      `Token acquisition with redirect failed with: ${renderMsalError(error)}`
+    );
     throw displayableError(error);
   }
 }
 
 let userIdStateInitialized = false;
-const initializeUserIdStateAsync: AtomEffect<string> = params => {
+const initializeUserIdStateAsync: AtomEffect<string> = (params) => {
   trace(`InitializeUserIdStateAsync`, params.node.key);
   if (!userIdStateInitialized) {
     userIdStateInitialized = true;
     params.setSelf(loginAndSetActiveAccountAsync());
   } else {
-    trace(`InitializeUserIdStateAsync`, `Initialization has already started; skipping this atom effect invocation.`);
+    trace(
+      `InitializeUserIdStateAsync`,
+      `Initialization has already started; skipping this atom effect invocation.`
+    );
   }
-}
+};
 
 // This will be set by AuthenticationWrapper once the user has authenticated and the default account is set.
 export const userIdState = atom<string>({
   key: 'userIdState',
-  effects: [
-    loggingEffect,
-    initializeUserIdStateAsync
-  ]
+  effects: [loggingEffect, initializeUserIdStateAsync],
 });
 
 export async function tryAcquireAccessToken(): Promise<string | null> {
@@ -175,19 +203,31 @@ export async function tryAcquireAccessToken(): Promise<string | null> {
   // Step 2: Attempt to acquire an access token silently using the current active account.
   //TODO: Incorporate new AAD B2C refresh token support?
   try {
-    trace(`tryAcquireAccessToken`, `Attempting silent token acquisition using the active account '${activeAccount?.localAccountId}'...`);
+    trace(
+      `tryAcquireAccessToken`,
+      `Attempting silent token acquisition using the active account '${activeAccount?.localAccountId}'...`
+    );
     const result = await globalMsalInstance.acquireTokenSilent({
-      scopes: scopes
+      scopes: scopes,
     });
     trace(`tryAcquireAccessToken`, `Silent token acquisition was successful.`);
     return result.accessToken;
   } catch (error) {
-    trace(`tryAcquireAccessToken`, `Silent token acquisition failed with: ${renderMsalError(error)}`);
+    trace(
+      `tryAcquireAccessToken`,
+      `Silent token acquisition failed with: ${renderMsalError(error)}`
+    );
     if (!(error instanceof InteractionRequiredAuthError)) {
-      trace(`tryAcquireAccessToken`, `This error type is unexpected and requires technical support.`);
+      trace(
+        `tryAcquireAccessToken`,
+        `This error type is unexpected and requires technical support.`
+      );
       throw displayableError(error);
     } else {
-      trace(`tryAcquireAccessToken`, `User interaction with Azure AD is required.`);
+      trace(
+        `tryAcquireAccessToken`,
+        `User interaction with Azure AD is required.`
+      );
       return null;
     }
   }

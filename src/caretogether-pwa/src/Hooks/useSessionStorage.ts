@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState } from 'react';
 
 // Credit: https://usehooks.com/useLocalStorage/
 // Derived to use session storage instead, which has the same API as local storage.

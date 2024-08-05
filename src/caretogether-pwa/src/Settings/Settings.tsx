@@ -5,7 +5,7 @@ function Settings() {
   return (
     <Routes>
       <Route path="roles" element={<RoleSettings />} />
-      <Route path="*" element={<Navigate to='./roles' replace />} />
+      <Route path="*" element={<Navigate to="./roles" replace />} />
     </Routes>
   );
 }

@@ -1,8 +1,11 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect } from 'react';
 
 // Credit: https://typeofnan.dev/writing-a-custom-usewindowsize-react-hook/
 export function useWindowSize() {
-  const [size, setSize] = useState({ height: window.innerHeight, width: window.innerWidth });
+  const [size, setSize] = useState({
+    height: window.innerHeight,
+    width: window.innerWidth,
+  });
 
   useEffect(() => {
     const handleResize = () => {

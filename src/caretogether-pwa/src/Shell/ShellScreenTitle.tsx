@@ -1,9 +1,9 @@
-import { useEffect } from "react";
-import { atom, useSetRecoilState } from "recoil";
+import { useEffect } from 'react';
+import { atom, useSetRecoilState } from 'recoil';
 
 export const screenTitleState = atom<string | null>({
   key: 'screenTitleState',
-  default: null
+  default: null,
 });
 
 export default function useScreenTitle(title: string) {
