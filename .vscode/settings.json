@@ -1,4 +1,8 @@
 {
     "task.allowAutomaticTasks": "on",
-    "dotnet.defaultSolution": "CareTogetherCMS.sln"
+    "dotnet.defaultSolution": "CareTogetherCMS.sln",
+    "[javascript][typescript][javascriptreact][typescriptreact]": {
+        "editor.defaultFormatter": "esbenp.prettier-vscode",
+        "editor.formatOnSave": true
+    }
 }
