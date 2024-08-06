@@ -1,4 +1,3 @@
-
 export interface IFilterOption {
   key: string;
   text: string;

@@ -1,4 +1,10 @@
-import { Autocomplete, Button, FormControl, Grid, TextField } from '@mui/material';
+import {
+  Autocomplete,
+  Button,
+  FormControl,
+  Grid,
+  TextField,
+} from '@mui/material';
 import { AddCommunityMemberFamily, Community } from '../GeneratedClient';
 import { useCommunityCommand } from '../Model/DirectoryModel';
 import { useState } from 'react';
@@ -13,20 +19,25 @@ interface DrawerProps {
 interface AddMemberFamiliesFormProps extends DrawerProps {
   community: Community;
 }
-export function AddMemberFamiliesForm({ community, onClose }: AddMemberFamiliesFormProps) {
+export function AddMemberFamiliesForm({
+  community,
+  onClose,
+}: AddMemberFamiliesFormProps) {
   interface CandidateFamily {
-    id: string
-    label: string // Required by Autocomplete component
+    id: string;
+    label: string; // Required by Autocomplete component
   }
 
   const [families, setFamilies] = useState([] as CandidateFamily[]);
 
-  const addMemberFamily = useCommunityCommand((communityId, familyId: string) => {
-    const command = new AddCommunityMemberFamily();
-    command.communityId = communityId;
-    command.familyId = familyId;
-    return command;
-  });
+  const addMemberFamily = useCommunityCommand(
+    (communityId, familyId: string) => {
+      const command = new AddCommunityMemberFamily();
+      command.communityId = communityId;
+      command.familyId = familyId;
+      return command;
+    }
+  );
 
   const withBackdrop = useBackdrop();
 
@@ -42,26 +53,39 @@ export function AddMemberFamiliesForm({ community, onClose }: AddMemberFamiliesF
   const allFamilies = useRecoilValue(visibleFamiliesQuery);
 
   // Only include families that are not already members of this community
-  const candidateFamilies = allFamilies.filter(family =>
-    !community.memberFamilies?.includes(family.family!.id!)).sort((a, b) => {
-      const aPrimaryContact = a.family!.adults!.find(adult =>
-        a.family!.primaryFamilyContactPersonId === adult.item1!.id)?.item1;
-      const bPrimaryContact = b.family!.adults!.find(adult =>
-        b.family!.primaryFamilyContactPersonId === adult.item1!.id)?.item1;
+  const candidateFamilies = allFamilies
+    .filter((family) => !community.memberFamilies?.includes(family.family!.id!))
+    .sort((a, b) => {
+      const aPrimaryContact = a.family!.adults!.find(
+        (adult) => a.family!.primaryFamilyContactPersonId === adult.item1!.id
+      )?.item1;
+      const bPrimaryContact = b.family!.adults!.find(
+        (adult) => b.family!.primaryFamilyContactPersonId === adult.item1!.id
+      )?.item1;
 
-      const aFirst = aPrimaryContact?.firstName ?? "";
-      const aLast = aPrimaryContact?.lastName ?? "";
-      const bFirst = bPrimaryContact?.firstName ?? "";
-      const bLast = bPrimaryContact?.lastName ?? "";
+      const aFirst = aPrimaryContact?.firstName ?? '';
+      const aLast = aPrimaryContact?.lastName ?? '';
+      const bFirst = bPrimaryContact?.firstName ?? '';
+      const bLast = bPrimaryContact?.lastName ?? '';
 
       // Sort by last name, then by first name (of the family's primary contact)
-      return aLast < bLast ? -1 : aLast > bLast ? 1 :
-        aFirst < bFirst ? -1 : aFirst > bFirst ? 1 :
-          0;
-    }).map(family => ({
-      id: family.family!.id!,
-      label: familyNameString(family)
-    } as CandidateFamily));
+      return aLast < bLast
+        ? -1
+        : aLast > bLast
+          ? 1
+          : aFirst < bFirst
+            ? -1
+            : aFirst > bFirst
+              ? 1
+              : 0;
+    })
+    .map(
+      (family) =>
+        ({
+          id: family.family!.id!,
+          label: familyNameString(family),
+        }) as CandidateFamily
+    );
 
   return (
     <Grid container spacing={2} maxWidth={500}>
@@ -71,25 +95,39 @@ export function AddMemberFamiliesForm({ community, onClose }: AddMemberFamiliesF
       <Grid item xs={12}>
         <FormControl required fullWidth size="small" sx={{ marginTop: 1 }}>
           <Autocomplete
-            multiple clearOnEscape disableCloseOnSelect
+            multiple
+            clearOnEscape
+            disableCloseOnSelect
             onChange={(_event, newValue: CandidateFamily[]) => {
               setFamilies(newValue);
             }}
             options={candidateFamilies}
             isOptionEqualToValue={(option, value) => option.id === value.id}
-            renderInput={(params) => <TextField required {...params} label="Select families to add to this community" />}
+            renderInput={(params) => (
+              <TextField
+                required
+                {...params}
+                label="Select families to add to this community"
+              />
+            )}
           />
         </FormControl>
       </Grid>
       <Grid item xs={12} sx={{ textAlign: 'right' }}>
-        <Button color='secondary' variant='contained'
+        <Button
+          color="secondary"
+          variant="contained"
           sx={{ marginRight: 2 }}
-          onClick={onClose}>
+          onClick={onClose}
+        >
           Cancel
         </Button>
-        <Button color='primary' variant='contained'
+        <Button
+          color="primary"
+          variant="contained"
           disabled={families.length === 0}
-          onClick={save}>
+          onClick={save}
+        >
           Save
         </Button>
       </Grid>

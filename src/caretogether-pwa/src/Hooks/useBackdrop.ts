@@ -1,8 +1,8 @@
-import { atom, useRecoilCallback } from "recoil";
+import { atom, useRecoilCallback } from 'recoil';
 
 export const showGlobalBackdropData = atom({
   key: 'showGlobalBackdropData',
-  default: false
+  default: false,
 });
 
 export function useBackdrop() {
@@ -23,5 +23,5 @@ export function useBackdrop() {
     } finally {
       await hideBackdrop();
     }
-  }
+  };
 }

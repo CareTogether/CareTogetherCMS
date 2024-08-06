@@ -6,12 +6,16 @@ import { PersonName } from '../Families/PersonName';
 import { format } from 'date-fns';
 
 interface DiscardNoteDialogProps {
-  familyId: string,
-  note: Note,
-  onClose: () => void
+  familyId: string;
+  note: Note;
+  onClose: () => void;
 }
 
-export function DiscardNoteDialog({ familyId, note, onClose }: DiscardNoteDialogProps) {
+export function DiscardNoteDialog({
+  familyId,
+  note,
+  onClose,
+}: DiscardNoteDialogProps) {
   const directoryModel = useDirectoryModel();
   const userLookup = useUserLookup();
 
@@ -20,16 +24,17 @@ export function DiscardNoteDialog({ familyId, note, onClose }: DiscardNoteDialog
   }
 
   return (
-    <UpdateDialog title="Are you sure you want to discard this note?" onClose={onClose}
-      onSave={save}>
+    <UpdateDialog
+      title="Are you sure you want to discard this note?"
+      onClose={onClose}
+      onSave={save}
+    >
       <Typography variant="body2" component="p">
         <PersonName person={userLookup(note.authorId)} /> -&nbsp;
-        {format(note.timestampUtc!, "MM/dd/yyyy hh:mm aa")}
+        {format(note.timestampUtc!, 'MM/dd/yyyy hh:mm aa')}
       </Typography>
       <Divider />
-      <Typography>
-        {note.contents}
-      </Typography>
+      <Typography>{note.contents}</Typography>
     </UpdateDialog>
   );
 }

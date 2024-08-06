@@ -1,5 +1,14 @@
 import { useState } from 'react';
-import { Badge, BottomNavigation, BottomNavigationAction, Divider, Drawer, List, Paper, useTheme } from '@mui/material';
+import {
+  Badge,
+  BottomNavigation,
+  BottomNavigationAction,
+  Divider,
+  Drawer,
+  List,
+  Paper,
+  useTheme,
+} from '@mui/material';
 import PeopleIcon from '@mui/icons-material/People';
 import PermPhoneMsgIcon from '@mui/icons-material/PermPhoneMsg';
 import Diversity3Icon from '@mui/icons-material/Diversity3';
@@ -32,9 +41,12 @@ export function ShellBottomNavigation() {
     new RegExp(`^${locationPrefix}/*$`),
     new RegExp(`^${locationPrefix}/referrals/*.*$`),
     new RegExp(`^${locationPrefix}/volunteers/*.*$`),
-    new RegExp(`^${locationPrefix}/communities/*.*$`)
+    new RegExp(`^${locationPrefix}/communities/*.*$`),
   ];
-  const selectedLink = Math.max(links.findIndex(link => location.pathname.match(link) != null), 0);
+  const selectedLink = Math.max(
+    links.findIndex((link) => location.pathname.match(link) != null),
+    0
+  );
   const [drawerOpen, setDrawerOpen] = useState(false);
 
   const flags = useFeatureFlags();
@@ -43,11 +55,16 @@ export function ShellBottomNavigation() {
   const queueItemsCount = useLoadable(queueItemsCountQuery);
 
   return (
-    <Paper elevation={3} sx={{
-      position: 'fixed',
-      bottom: 0, left: 0, right: 0,
-      zIndex: 9999
-    }}>
+    <Paper
+      elevation={3}
+      sx={{
+        position: 'fixed',
+        bottom: 0,
+        left: 0,
+        right: 0,
+        zIndex: 9999,
+      }}
+    >
       <BottomNavigation
         showLabels
         value={selectedLink}
@@ -58,43 +75,96 @@ export function ShellBottomNavigation() {
           // backgroundColor: theme.palette.grey[300],
           backgroundColor: theme.palette.primary.dark,
           '.MuiBottomNavigationAction-root': {
-            color: theme.palette.primary.contrastText
+            color: theme.palette.primary.contrastText,
           },
           '& .MuiBottomNavigationAction-root.Mui-selected': {
-            color: theme.palette.secondary.main
-          }
+            color: theme.palette.secondary.main,
+          },
         }}
       >
-        <BottomNavigationAction icon={<MenuIcon />} onClick={() => setDrawerOpen(true)} />
-        <BottomNavigationAction component={Link} to={`${locationPrefix}/inbox`} label="Inbox"
-          icon={<Badge badgeContent={queueItemsCount} color="secondary"><Inbox /></Badge>} />
-        <BottomNavigationAction component={Link} to={`${locationPrefix}/referrals`} label="Referrals" icon={<PermPhoneMsgIcon />} />
-        <BottomNavigationAction component={Link} to={`${locationPrefix}/volunteers`} label="Volunteers" icon={<PeopleIcon />} />
+        <BottomNavigationAction
+          icon={<MenuIcon />}
+          onClick={() => setDrawerOpen(true)}
+        />
+        <BottomNavigationAction
+          component={Link}
+          to={`${locationPrefix}/inbox`}
+          label="Inbox"
+          icon={
+            <Badge badgeContent={queueItemsCount} color="secondary">
+              <Inbox />
+            </Badge>
+          }
+        />
+        <BottomNavigationAction
+          component={Link}
+          to={`${locationPrefix}/referrals`}
+          label="Referrals"
+          icon={<PermPhoneMsgIcon />}
+        />
+        <BottomNavigationAction
+          component={Link}
+          to={`${locationPrefix}/volunteers`}
+          label="Volunteers"
+          icon={<PeopleIcon />}
+        />
       </BottomNavigation>
       <Drawer
         sx={{
           zIndex: theme.zIndex.drawer + 2,
           '& .MuiDrawer-paper': {
             padding: 2,
-            width: 200
-          }
+            width: 200,
+          },
         }}
         open={drawerOpen}
         onClose={() => setDrawerOpen(false)}
       >
         <Stack padding={1} spacing={1}>
           <ShellContextSwitcher />
-          {flags && <List aria-label="secondary navigation" sx={{ position: 'relative', top: 100, zIndex: theme.zIndex.drawer + 3 }}>
-            <>
-              <Divider />
-              <ListItemLink darkColor to={`${locationPrefix}`} primary="Dashboard" icon={<DashboardIcon />} />
-              {permissions(Permission.AccessCommunitiesScreen) &&
-                <ListItemLink darkColor to={`${locationPrefix}/communities`} primary="Communities" icon={<Diversity3Icon />} />}
-              {permissions(Permission.AccessSettingsScreen) &&
-                <ListItemLink darkColor to={`${locationPrefix}/settings`} primary="Settings" icon={<SettingsIcon />} />}
-              <ListItemLink darkColor to="http://support.caretogether.io" newTab primary="Support" icon={<SupportIcon />} />
-            </>
-          </List>}
+          {flags && (
+            <List
+              aria-label="secondary navigation"
+              sx={{
+                position: 'relative',
+                top: 100,
+                zIndex: theme.zIndex.drawer + 3,
+              }}
+            >
+              <>
+                <Divider />
+                <ListItemLink
+                  darkColor
+                  to={`${locationPrefix}`}
+                  primary="Dashboard"
+                  icon={<DashboardIcon />}
+                />
+                {permissions(Permission.AccessCommunitiesScreen) && (
+                  <ListItemLink
+                    darkColor
+                    to={`${locationPrefix}/communities`}
+                    primary="Communities"
+                    icon={<Diversity3Icon />}
+                  />
+                )}
+                {permissions(Permission.AccessSettingsScreen) && (
+                  <ListItemLink
+                    darkColor
+                    to={`${locationPrefix}/settings`}
+                    primary="Settings"
+                    icon={<SettingsIcon />}
+                  />
+                )}
+                <ListItemLink
+                  darkColor
+                  to="http://support.caretogether.io"
+                  newTab
+                  primary="Support"
+                  icon={<SupportIcon />}
+                />
+              </>
+            </List>
+          )}
           {/* <div style={{ overflowX: 'hidden', position: 'fixed', bottom: 0, marginLeft: 4}}>
             <Copyright />
           </div> */}

@@ -1,4 +1,4 @@
-import { RecoilValue, useRecoilValueLoadable } from "recoil";
+import { RecoilValue, useRecoilValueLoadable } from 'recoil';
 
 export function useLoadable<T>(value: RecoilValue<T | null>) {
   const loadableValue = useRecoilValueLoadable(value);
