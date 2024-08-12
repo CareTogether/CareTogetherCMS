@@ -19,10 +19,10 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
                 .Add((TimeSpan.FromDays(2), timeSpan: new AbsoluteTimeSpan(new DateTime(2022, 1, 1), new DateTime(2022, 1, 31)))));
 
             AssertEx.SequenceIs(result,
-                new DateTime(2022, 1, 12),
-                new DateTime(2022, 1, 14),
-                new DateTime(2022, 1, 16),
-                new DateTime(2022, 1, 18));
+                new DateOnly(2022, 1, 12),
+                new DateOnly(2022, 1, 14),
+                new DateOnly(2022, 1, 16),
+                new DateOnly(2022, 1, 18));
         }
 
         [TestMethod]
@@ -35,9 +35,9 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
                 .Add((TimeSpan.FromDays(2), timeSpan: new AbsoluteTimeSpan(new DateTime(2022, 1, 1), new DateTime(2022, 1, 31)))));
 
             AssertEx.SequenceIs(result,
-                new DateTime(2022, 1, 12),
-                new DateTime(2022, 1, 14),
-                new DateTime(2022, 1, 16));
+                new DateOnly(2022, 1, 12),
+                new DateOnly(2022, 1, 14),
+                new DateOnly(2022, 1, 16));
         }
 
         [TestMethod]
@@ -50,7 +50,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
                 .Add((TimeSpan.FromDays(7), timeSpan: new AbsoluteTimeSpan(new DateTime(2022, 1, 1), new DateTime(2022, 1, 31)))));
 
             AssertEx.SequenceIs(result,
-                new DateTime(2022, 1, 17));
+                new DateOnly(2022, 1, 17));
         }
 
         [TestMethod]
@@ -63,12 +63,12 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
                 .Add((TimeSpan.FromDays(2), timeSpan: new AbsoluteTimeSpan(new DateTime(2022, 1, 1), new DateTime(2022, 1, 31)))));
 
             AssertEx.SequenceIs(result,
-                new DateTime(2022, 1, 12),
-                new DateTime(2022, 1, 14),
-                new DateTime(2022, 1, 16),
-                new DateTime(2022, 1, 18),
-                new DateTime(2022, 1, 20),
-                new DateTime(2022, 1, 22));
+                new DateOnly(2022, 1, 12),
+                new DateOnly(2022, 1, 14),
+                new DateOnly(2022, 1, 16),
+                new DateOnly(2022, 1, 18),
+                new DateOnly(2022, 1, 20),
+                new DateOnly(2022, 1, 22));
         }
 
         [TestMethod]
@@ -81,12 +81,12 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
                 .Add((TimeSpan.FromDays(2), timeSpan: new AbsoluteTimeSpan(new DateTime(2022, 1, 1), new DateTime(2022, 1, 31)))));
 
             AssertEx.SequenceIs(result,
-                new DateTime(2022, 1, 12),
-                new DateTime(2022, 1, 14),
-                new DateTime(2022, 1, 16),
-                new DateTime(2022, 1, 18),
-                new DateTime(2022, 1, 20),
-                new DateTime(2022, 1, 22));
+                new DateOnly(2022, 1, 12),
+                new DateOnly(2022, 1, 14),
+                new DateOnly(2022, 1, 16),
+                new DateOnly(2022, 1, 18),
+                new DateOnly(2022, 1, 20),
+                new DateOnly(2022, 1, 22));
         }
 
         [TestMethod]
@@ -99,9 +99,9 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
                 .Add((TimeSpan.FromDays(7), timeSpan: new AbsoluteTimeSpan(new DateTime(2022, 1, 1), new DateTime(2022, 1, 31)))));
 
             AssertEx.SequenceIs(result,
-                new DateTime(2022, 1, 17),
-                new DateTime(2022, 1, 24),
-                new DateTime(2022, 1, 31));
+                new DateOnly(2022, 1, 17),
+                new DateOnly(2022, 1, 24),
+                new DateOnly(2022, 1, 31));
         }
 
         [TestMethod]
@@ -114,8 +114,8 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
                 .Add((TimeSpan.FromDays(7), timeSpan: new AbsoluteTimeSpan(new DateTime(2022, 1, 1), new DateTime(2022, 1, 28)))));
 
             AssertEx.SequenceIs(result,
-                new DateTime(2022, 1, 17),
-                new DateTime(2022, 1, 24));
+                new DateOnly(2022, 1, 17),
+                new DateOnly(2022, 1, 24));
         }
 
         [TestMethod]
@@ -128,10 +128,10 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
                 .Add((TimeSpan.FromDays(2), timeSpan: new AbsoluteTimeSpan(new DateTime(2022, 1, 10), new DateTime(2022, 1, 31)))));
 
             AssertEx.SequenceIs(result,
-                new DateTime(2022, 1, 12),
-                new DateTime(2022, 1, 14),
-                new DateTime(2022, 1, 16),
-                new DateTime(2022, 1, 18));
+                new DateOnly(2022, 1, 12),
+                new DateOnly(2022, 1, 14),
+                new DateOnly(2022, 1, 16),
+                new DateOnly(2022, 1, 18));
         }
 
         [TestMethod]
@@ -145,10 +145,10 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
                 .Add((TimeSpan.FromDays(4), timeSpan: new AbsoluteTimeSpan(new DateTime(2022, 1, 31), new DateTime(2022, 2, 28)))));
 
             AssertEx.SequenceIs(result,
-                new DateTime(2022, 1, 12),
-                new DateTime(2022, 1, 14),
-                new DateTime(2022, 1, 16),
-                new DateTime(2022, 1, 18));
+                new DateOnly(2022, 1, 12),
+                new DateOnly(2022, 1, 14),
+                new DateOnly(2022, 1, 16),
+                new DateOnly(2022, 1, 18));
         }
 
         [TestMethod]
@@ -162,9 +162,9 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
                 .Add((TimeSpan.FromDays(4), timeSpan: new AbsoluteTimeSpan(new DateTime(2022, 1, 31), new DateTime(2022, 2, 28)))));
 
             AssertEx.SequenceIs(result,
-                new DateTime(2022, 1, 12),
-                new DateTime(2022, 1, 14),
-                new DateTime(2022, 1, 16));
+                new DateOnly(2022, 1, 12),
+                new DateOnly(2022, 1, 14),
+                new DateOnly(2022, 1, 16));
         }
 
         [TestMethod]
@@ -178,7 +178,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
                 .Add((TimeSpan.FromDays(4), timeSpan: new AbsoluteTimeSpan(new DateTime(2022, 1, 31), new DateTime(2022, 2, 28)))));
 
             AssertEx.SequenceIs(result,
-                new DateTime(2022, 1, 17));
+                new DateOnly(2022, 1, 17));
         }
 
         [TestMethod]
@@ -192,12 +192,12 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
                 .Add((TimeSpan.FromDays(4), timeSpan: new AbsoluteTimeSpan(new DateTime(2022, 1, 31), new DateTime(2022, 2, 28)))));
 
             AssertEx.SequenceIs(result,
-                new DateTime(2022, 1, 12),
-                new DateTime(2022, 1, 14),
-                new DateTime(2022, 1, 16),
-                new DateTime(2022, 1, 18),
-                new DateTime(2022, 1, 20),
-                new DateTime(2022, 1, 22));
+                new DateOnly(2022, 1, 12),
+                new DateOnly(2022, 1, 14),
+                new DateOnly(2022, 1, 16),
+                new DateOnly(2022, 1, 18),
+                new DateOnly(2022, 1, 20),
+                new DateOnly(2022, 1, 22));
         }
 
         [TestMethod]
@@ -211,12 +211,12 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
                 .Add((TimeSpan.FromDays(4), timeSpan: new AbsoluteTimeSpan(new DateTime(2022, 1, 31), new DateTime(2022, 2, 28)))));
 
             AssertEx.SequenceIs(result,
-                new DateTime(2022, 1, 12),
-                new DateTime(2022, 1, 14),
-                new DateTime(2022, 1, 16),
-                new DateTime(2022, 1, 18),
-                new DateTime(2022, 1, 20),
-                new DateTime(2022, 1, 22));
+                new DateOnly(2022, 1, 12),
+                new DateOnly(2022, 1, 14),
+                new DateOnly(2022, 1, 16),
+                new DateOnly(2022, 1, 18),
+                new DateOnly(2022, 1, 20),
+                new DateOnly(2022, 1, 22));
         }
 
         [TestMethod]
@@ -230,9 +230,9 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
                 .Add((TimeSpan.FromDays(4), timeSpan: new AbsoluteTimeSpan(new DateTime(2022, 1, 31), new DateTime(2022, 2, 28)))));
 
             AssertEx.SequenceIs(result,
-                new DateTime(2022, 1, 17),
-                new DateTime(2022, 1, 24),
-                new DateTime(2022, 1, 31));
+                new DateOnly(2022, 1, 17),
+                new DateOnly(2022, 1, 24),
+                new DateOnly(2022, 1, 31));
         }
 
         [TestMethod]
@@ -246,20 +246,20 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
                 .Add((TimeSpan.FromDays(4), timeSpan: new AbsoluteTimeSpan(new DateTime(2022, 1, 31), new DateTime(2022, 2, 28)))));
 
             AssertEx.SequenceIs(result,
-                new DateTime(2022, 1, 12),
-                new DateTime(2022, 1, 14),
-                new DateTime(2022, 1, 16),
-                new DateTime(2022, 1, 18),
-                new DateTime(2022, 1, 20),
-                new DateTime(2022, 1, 22),
-                new DateTime(2022, 1, 24),
-                new DateTime(2022, 1, 26),
-                new DateTime(2022, 1, 28),
-                new DateTime(2022, 1, 30),
-                new DateTime(2022, 2, 3),
-                new DateTime(2022, 2, 7),
-                new DateTime(2022, 2, 11),
-                new DateTime(2022, 2, 15));
+                new DateOnly(2022, 1, 12),
+                new DateOnly(2022, 1, 14),
+                new DateOnly(2022, 1, 16),
+                new DateOnly(2022, 1, 18),
+                new DateOnly(2022, 1, 20),
+                new DateOnly(2022, 1, 22),
+                new DateOnly(2022, 1, 24),
+                new DateOnly(2022, 1, 26),
+                new DateOnly(2022, 1, 28),
+                new DateOnly(2022, 1, 30),
+                new DateOnly(2022, 2, 3),
+                new DateOnly(2022, 2, 7),
+                new DateOnly(2022, 2, 11),
+                new DateOnly(2022, 2, 15));
         }
 
         [TestMethod]
@@ -273,10 +273,10 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
                 .Add((TimeSpan.FromDays(4), timeSpan: new AbsoluteTimeSpan(new DateTime(2022, 1, 31), new DateTime(2022, 2, 28)))));
 
             AssertEx.SequenceIs(result,
-                new DateTime(2022, 1, 12),
-                new DateTime(2022, 1, 14),
-                new DateTime(2022, 1, 16),
-                new DateTime(2022, 1, 18));
+                new DateOnly(2022, 1, 12),
+                new DateOnly(2022, 1, 14),
+                new DateOnly(2022, 1, 16),
+                new DateOnly(2022, 1, 18));
         }
 
         [TestMethod]
@@ -290,20 +290,20 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
                 .Add((TimeSpan.FromDays(4), timeSpan: new AbsoluteTimeSpan(new DateTime(2022, 1, 31), new DateTime(2022, 2, 28)))));
 
             AssertEx.SequenceIs(result,
-                new DateTime(2022, 1, 12),
-                new DateTime(2022, 1, 14),
-                new DateTime(2022, 1, 16),
-                new DateTime(2022, 1, 18),
-                new DateTime(2022, 1, 20),
-                new DateTime(2022, 1, 22),
-                new DateTime(2022, 1, 24),
-                new DateTime(2022, 1, 26),
-                new DateTime(2022, 1, 28),
-                new DateTime(2022, 1, 30),
-                new DateTime(2022, 2, 3),
-                new DateTime(2022, 2, 7),
-                new DateTime(2022, 2, 11),
-                new DateTime(2022, 2, 15));
+                new DateOnly(2022, 1, 12),
+                new DateOnly(2022, 1, 14),
+                new DateOnly(2022, 1, 16),
+                new DateOnly(2022, 1, 18),
+                new DateOnly(2022, 1, 20),
+                new DateOnly(2022, 1, 22),
+                new DateOnly(2022, 1, 24),
+                new DateOnly(2022, 1, 26),
+                new DateOnly(2022, 1, 28),
+                new DateOnly(2022, 1, 30),
+                new DateOnly(2022, 2, 3),
+                new DateOnly(2022, 2, 7),
+                new DateOnly(2022, 2, 11),
+                new DateOnly(2022, 2, 15));
         }
 
         [TestMethod]
@@ -318,26 +318,26 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
                 .Add((TimeSpan.FromDays(8), timeSpan: new AbsoluteTimeSpan(new DateTime(2022, 2, 28), DateTime.MaxValue))));
 
             AssertEx.SequenceIs(result,
-                new DateTime(2022, 1, 12),
-                new DateTime(2022, 1, 14),
-                new DateTime(2022, 1, 16),
-                new DateTime(2022, 1, 18),
-                new DateTime(2022, 1, 20),
-                new DateTime(2022, 1, 22),
-                new DateTime(2022, 1, 24),
-                new DateTime(2022, 1, 26),
-                new DateTime(2022, 1, 28),
-                new DateTime(2022, 1, 30),
-                new DateTime(2022, 2, 3),
-                new DateTime(2022, 2, 7),
-                new DateTime(2022, 2, 11),
-                new DateTime(2022, 2, 15),
-                new DateTime(2022, 2, 19),
-                new DateTime(2022, 2, 23),
-                new DateTime(2022, 2, 27),
-                new DateTime(2022, 3, 7),
-                new DateTime(2022, 3, 15),
-                new DateTime(2022, 3, 23));
+                new DateOnly(2022, 1, 12),
+                new DateOnly(2022, 1, 14),
+                new DateOnly(2022, 1, 16),
+                new DateOnly(2022, 1, 18),
+                new DateOnly(2022, 1, 20),
+                new DateOnly(2022, 1, 22),
+                new DateOnly(2022, 1, 24),
+                new DateOnly(2022, 1, 26),
+                new DateOnly(2022, 1, 28),
+                new DateOnly(2022, 1, 30),
+                new DateOnly(2022, 2, 3),
+                new DateOnly(2022, 2, 7),
+                new DateOnly(2022, 2, 11),
+                new DateOnly(2022, 2, 15),
+                new DateOnly(2022, 2, 19),
+                new DateOnly(2022, 2, 23),
+                new DateOnly(2022, 2, 27),
+                new DateOnly(2022, 3, 7),
+                new DateOnly(2022, 3, 15),
+                new DateOnly(2022, 3, 23));
         }
 
         [TestMethod]
@@ -352,26 +352,26 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
                 .Add((TimeSpan.FromDays(8), timeSpan: new AbsoluteTimeSpan(new DateTime(2022, 2, 28), DateTime.MaxValue))));
 
             AssertEx.SequenceIs(result,
-                new DateTime(2022, 1, 12),
-                new DateTime(2022, 1, 14),
-                new DateTime(2022, 1, 16),
-                new DateTime(2022, 1, 18),
-                new DateTime(2022, 1, 20),
-                new DateTime(2022, 1, 22),
-                new DateTime(2022, 1, 24),
-                new DateTime(2022, 1, 26),
-                new DateTime(2022, 1, 28),
-                new DateTime(2022, 1, 30),
-                new DateTime(2022, 2, 3),
-                new DateTime(2022, 2, 7),
-                new DateTime(2022, 2, 11),
-                new DateTime(2022, 2, 15),
-                new DateTime(2022, 2, 19),
-                new DateTime(2022, 2, 23),
-                new DateTime(2022, 2, 27),
-                new DateTime(2022, 3, 7),
-                new DateTime(2022, 3, 15),
-                new DateTime(2022, 3, 23));
+                new DateOnly(2022, 1, 12),
+                new DateOnly(2022, 1, 14),
+                new DateOnly(2022, 1, 16),
+                new DateOnly(2022, 1, 18),
+                new DateOnly(2022, 1, 20),
+                new DateOnly(2022, 1, 22),
+                new DateOnly(2022, 1, 24),
+                new DateOnly(2022, 1, 26),
+                new DateOnly(2022, 1, 28),
+                new DateOnly(2022, 1, 30),
+                new DateOnly(2022, 2, 3),
+                new DateOnly(2022, 2, 7),
+                new DateOnly(2022, 2, 11),
+                new DateOnly(2022, 2, 15),
+                new DateOnly(2022, 2, 19),
+                new DateOnly(2022, 2, 23),
+                new DateOnly(2022, 2, 27),
+                new DateOnly(2022, 3, 7),
+                new DateOnly(2022, 3, 15),
+                new DateOnly(2022, 3, 23));
         }
     }
 }

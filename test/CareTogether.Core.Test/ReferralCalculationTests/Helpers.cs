@@ -36,6 +36,10 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
         public static ImmutableList<DateTime> Dates(params (int month, int day)[] values) =>
             values.Select(value => new DateTime(YEAR, value.month, value.day)).ToImmutableList();
 
+        public static ImmutableList<DateOnly> DatesAsDateOnly(params (int month, int day)[] values) =>
+            values.Select(value => new DateOnly(YEAR, value.month, value.day)).ToImmutableList();
+
+
         public static ImmutableSortedSet<ChildLocationHistoryEntry> LocationHistoryEntries(
             params (ChildLocationPlan plan, int month, int day)[] values) =>
             values

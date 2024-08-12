@@ -274,7 +274,7 @@ namespace CareTogether.Engines.PolicyEvaluation
     public sealed record MissingArrangementRequirement(
         string? ArrangementFunction, string? ArrangementFunctionVariant,
         Guid? VolunteerFamilyId, Guid? PersonId,
-        string ActionName, DateTime? DueBy, DateTime? PastDueSince);
+        string ActionName, DateOnly? DueBy, DateOnly? PastDueSince);
 
     public enum ArrangementPhase { SettingUp, ReadyToStart, Started, Ended, Cancelled };
 

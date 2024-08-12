@@ -9,6 +9,36 @@ using Timelines;
 
 namespace CareTogether.Engines.PolicyEvaluation
 {
+    using System;
+    using System.Collections.Immutable;
+    using System.Text;
+
+    public static class ImmutableListExtensions
+    {
+        public static string ToHumanFriendlyString<T>(this ImmutableList<T> list)
+        {
+            if (list == null || list.Count == 0)
+            {
+                return "The list is empty.";
+            }
+
+            var sb = new StringBuilder();
+            sb.Append("List contents: [");
+
+            for (int i = 0; i < list.Count; i++)
+            {
+                sb.Append(list[i].ToString());
+                if (i < list.Count - 1)
+                {
+                    sb.Append(", ");
+                }
+            }
+
+            sb.Append("]");
+            return sb.ToString();
+        }
+    }
+
     internal static class ReferralCalculations
     {
         public static ReferralStatus CalculateReferralStatus(
@@ -173,17 +203,17 @@ namespace CareTogether.Engines.PolicyEvaluation
                             .Select(x => x.CompletedAtUtc)
                             .OrderBy(x => x).ToImmutableList(),
                         arrangement.ChildLocationHistory, utcNow)
-                    : ImmutableList<DateTime>.Empty)
+                    : ImmutableList<DateOnly>.Empty)
                     .Where(missingDueDate => !arrangement.ExemptedRequirements.Any(exempted =>
                         exempted.RequirementName == monitoringRequirement.ActionName &&
-                        (!exempted.DueDate.HasValue || exempted.DueDate == missingDueDate.ToUniversalTime()) &&
+                        (!exempted.DueDate.HasValue || DateOnly.FromDateTime(exempted.DueDate.Value) == missingDueDate) &&
                         (exempted.ExemptionExpiresAtUtc == null || exempted.ExemptionExpiresAtUtc > utcNow)))
                     .Select(missingDueDate =>
                         new MissingArrangementRequirement(
                             null, null, null, null,
                             monitoringRequirement.ActionName,
-                            DueBy: missingDueDate > utcNow ? missingDueDate : null,
-                            PastDueSince: missingDueDate <= utcNow ? missingDueDate : null)))
+                            DueBy: missingDueDate > DateOnly.FromDateTime(utcNow) ? missingDueDate : null,
+                            PastDueSince: missingDueDate <= DateOnly.FromDateTime(utcNow) ? missingDueDate : null)))
                 .ToImmutableList();
 
             var familyAssignmentResults = arrangement.FamilyVolunteerAssignments
@@ -207,17 +237,17 @@ namespace CareTogether.Engines.PolicyEvaluation
                                     .Select(x => x.CompletedAtUtc)
                                     .OrderBy(x => x).ToImmutableList(),
                                 arrangement.ChildLocationHistory, utcNow)
-                            : ImmutableList<DateTime>.Empty)
+                            : ImmutableList<DateOnly>.Empty)
                             .Where(missingDueDate => !fva.ExemptedRequirements.Any(exempted =>
                                 exempted.RequirementName == monitoringRequirement.ActionName &&
-                                (!exempted.DueDate.HasValue || exempted.DueDate == missingDueDate.ToUniversalTime()) &&
+                                (!exempted.DueDate.HasValue || DateOnly.FromDateTime(exempted.DueDate.Value) == missingDueDate) &&
                                 (exempted.ExemptionExpiresAtUtc == null || exempted.ExemptionExpiresAtUtc > utcNow)))
                             .Select(missingDueDate =>
                                 new MissingArrangementRequirement(
                                     fva.ArrangementFunction, fva.ArrangementFunctionVariant, fva.FamilyId, null,
                                     monitoringRequirement.ActionName,
-                                    DueBy: missingDueDate > utcNow ? missingDueDate : null,
-                                    PastDueSince: missingDueDate <= utcNow ? missingDueDate : null)))
+                                    DueBy: missingDueDate > DateOnly.FromDateTime(utcNow) ? missingDueDate : null,
+                                    PastDueSince: missingDueDate <= DateOnly.FromDateTime(utcNow) ? missingDueDate : null)))
                         .ToImmutableList();
                 })
                 .ToImmutableList();
@@ -243,17 +273,17 @@ namespace CareTogether.Engines.PolicyEvaluation
                                     .Select(x => x.CompletedAtUtc)
                                     .OrderBy(x => x).ToImmutableList(),
                                 arrangement.ChildLocationHistory, utcNow)
-                            : ImmutableList<DateTime>.Empty)
+                            : ImmutableList<DateOnly>.Empty)
                             .Where(missingDueDate => !iva.ExemptedRequirements.Any(exempted =>
                                 exempted.RequirementName == monitoringRequirement.ActionName &&
-                                (!exempted.DueDate.HasValue || exempted.DueDate == missingDueDate.ToUniversalTime()) &&
+                                (!exempted.DueDate.HasValue || DateOnly.FromDateTime(exempted.DueDate.Value) == missingDueDate) &&
                                 (exempted.ExemptionExpiresAtUtc == null || exempted.ExemptionExpiresAtUtc > utcNow)))
                             .Select(missingDueDate =>
                                 new MissingArrangementRequirement(
                                     iva.ArrangementFunction, iva.ArrangementFunctionVariant, iva.FamilyId, iva.PersonId,
                                     monitoringRequirement.ActionName,
-                                    DueBy: missingDueDate > utcNow ? missingDueDate : null,
-                                    PastDueSince: missingDueDate <= utcNow ? missingDueDate : null)))
+                                    DueBy: missingDueDate > DateOnly.FromDateTime(utcNow) ? missingDueDate : null,
+                                    PastDueSince: missingDueDate <= DateOnly.FromDateTime(utcNow) ? missingDueDate : null)))
                         .ToImmutableList();
                 })
                 .ToImmutableList();
@@ -264,7 +294,7 @@ namespace CareTogether.Engines.PolicyEvaluation
                 .ToImmutableList();
         }
 
-        internal static ImmutableList<DateTime> CalculateMissingMonitoringRequirementInstances(
+        internal static ImmutableList<DateOnly> CalculateMissingMonitoringRequirementInstances(
             RecurrencePolicy recurrence, Guid? filterToFamilyId,
             DateTime arrangementStartedAtUtc, DateTime? arrangementEndedAtUtc,
             ImmutableList<DateTime> completions, ImmutableSortedSet<ChildLocationHistoryEntry> childLocationHistory,
@@ -290,7 +320,7 @@ namespace CareTogether.Engines.PolicyEvaluation
             };
         }
 
-        internal static ImmutableList<DateTime> CalculateMissingMonitoringRequirementInstancesForOneTimeRecurrence(
+        internal static ImmutableList<DateOnly> CalculateMissingMonitoringRequirementInstancesForOneTimeRecurrence(
             OneTimeRecurrencePolicy recurrence, DateTime arrangementStartedAtUtc, DateTime? arrangementEndedAtUtc,
             ImmutableList<DateTime> completions, DateTime utcNow)
         {
@@ -299,15 +329,15 @@ namespace CareTogether.Engines.PolicyEvaluation
                 var dueDate = arrangementStartedAtUtc + recurrence.Delay.Value;
                 return completions.Any(completion => completion <= dueDate)
                     ? []
-                    : [dueDate];
+                    : [DateOnly.FromDateTime(dueDate)];
             }
             else
                 return completions.IsEmpty
-                    ? [arrangementStartedAtUtc]
+                    ? [DateOnly.FromDateTime(arrangementStartedAtUtc)]
                     : [];
         }
 
-        internal static ImmutableList<DateTime> CalculateMissingMonitoringRequirementInstancesForDurationRecurrence(
+        internal static ImmutableList<DateOnly> CalculateMissingMonitoringRequirementInstancesForDurationRecurrence(
             DurationStagesRecurrencePolicy recurrence,
             DateTime arrangementStartedAtUtc, DateTime? arrangementEndedAtUtc, DateTime utcNow,
             ImmutableList<DateTime> completions)
@@ -325,20 +355,30 @@ namespace CareTogether.Engines.PolicyEvaluation
             // an unlimited number of occurrences), so this calculation forces start date results to be non-null.
             var arrangementStages = recurrence.Stages
                 .Select(stage => (incrementDelay: stage.Delay, totalDuration: stage.Delay * stage.MaxOccurrences))
-                .Aggregate(ImmutableList<(TimeSpan incrementDelay, DateTime startDate, DateTime endDate)>.Empty,
-                    (priorStages, stage) => priorStages.Add((stage.incrementDelay,
-                        startDate: priorStages.Count == 0
-                        ? arrangementStartedAtUtc
-                        : priorStages.Last().endDate,
-                        endDate: stage.totalDuration.HasValue
-                        ? (priorStages.Count == 0
-                            ? arrangementStartedAtUtc + stage.totalDuration.Value
-                            : priorStages.Last().endDate + stage.totalDuration.Value)
-                        : DateTime.MaxValue)))
+                .Aggregate(ImmutableList<(TimeSpan incrementDelay, DateOnly startDate, DateOnly endDate)>.Empty,
+                    //                 (priorStages, stage) => priorStages.Add((stage.incrementDelay,
+                    // startDate: priorStages.Count == 0
+                    // ? arrangementStartedAtUtc
+                    // : priorStages.Last().endDate,
+                    // endDate: stage.totalDuration.HasValue
+                    // ? (priorStages.Count == 0
+                    //     ? arrangementStartedAtUtc + stage.totalDuration.Value
+                    //     : priorStages.Last().endDate + stage.totalDuration.Value)
+                    // : DateTime.MaxValue)))
+
+                    (priorStages, stage) =>
+                    {
+                        var startDate = priorStages.Count == 0 ? DateOnly.FromDateTime(arrangementStartedAtUtc) : priorStages.Last().endDate;
+                        var endDate = stage.totalDuration.HasValue ? (startDate.AddDays(stage.totalDuration.Value.Days)) : DateOnly.MaxValue;
+                        return priorStages.Add((stage.incrementDelay, startDate, endDate));
+                    })
                 .Select(result => (
                     result.incrementDelay,
-                    timeSpan: new AbsoluteTimeSpan(result.startDate, result.endDate)))
+                    timeSpan: new AbsoluteTimeSpan(result.startDate.ToDateTime(new TimeOnly()), result.endDate.ToDateTime(new TimeOnly()))))
                 .ToImmutableList();
+
+            System.Diagnostics.Debug.WriteLine("mmm 1");
+            System.Diagnostics.Debug.WriteLine(arrangementStages.ToHumanFriendlyString());
 
             // For each completion, find the time of the following completion (null in the case of the last completion
             // unless the arrangement has ended, in which case use the end of the arrangement).
@@ -375,7 +415,7 @@ namespace CareTogether.Engines.PolicyEvaluation
 
             return missingRequirements;
         }
-        internal static ImmutableList<DateTime> CalculateMissingMonitoringRequirementInstancesForDurationRecurrencePerChildLocation(
+        internal static ImmutableList<DateOnly> CalculateMissingMonitoringRequirementInstancesForDurationRecurrencePerChildLocation(
             DurationStagesPerChildLocationRecurrencePolicy recurrence, Guid? filterToFamilyId,
             DateTime arrangementStartedAtUtc, DateTime? arrangementEndedAtUtc, DateTime utcNow,
             ImmutableList<DateTime> completions, ImmutableSortedSet<ChildLocationHistoryEntry> childLocationHistory)
@@ -487,7 +527,7 @@ namespace CareTogether.Engines.PolicyEvaluation
             return missingRequirements;
         }
 
-        internal static ImmutableList<DateTime> CalculateMissingMonitoringRequirementsWithinCompletionGap(
+        internal static ImmutableList<DateOnly> CalculateMissingMonitoringRequirementsWithinCompletionGap(
             DateTime utcNow, Timeline gap,
             ImmutableList<(TimeSpan incrementDelay, AbsoluteTimeSpan timeSpan)> arrangementStages)
         {
@@ -508,8 +548,8 @@ namespace CareTogether.Engines.PolicyEvaluation
 
             // Calculate all missing requirements within the gap, using the stages to determine the
             // increment delays to apply.
-            var dueDatesInGap = new List<DateTime>();
-            var nextDueDate = null as DateTime?;
+            var dueDatesInGap = new List<DateOnly>();
+            var nextDueDate = null as DateOnly?;
             var endConditionExceeded = false;
             do
             {
@@ -524,13 +564,15 @@ namespace CareTogether.Engines.PolicyEvaluation
                 // TODO: An unknown issue is causing this to match no stages in some cases.
                 //       Is it possible for 'gapStages' to have zero elements?
                 var applicableStage = gapStages.FirstOrDefault(stage =>
-                    stage.timeSpan.End >= (nextDueDate ?? gap.Start) + stage.incrementDelay);
+                    DateOnly.FromDateTime(stage.timeSpan.End) >= (nextDueDate ?? DateOnly.FromDateTime(gap.Start)).AddDays(stage.incrementDelay.Days));
                 if (applicableStage == default)
                     break;
 
+
                 // Calculate the next requirement due date based on the applicable stage, using the gap's timeline.
                 // If it falls within the current completion gap (& before the current time), it is a missing requirement.
-                nextDueDate = gap.TryMapFrom(nextDueDate ?? gap.Start, applicableStage.incrementDelay);
+                var newNextDueDate = gap.TryMapFrom(nextDueDate?.ToDateTime(new TimeOnly()) ?? gap.Start, applicableStage.incrementDelay);
+                nextDueDate = newNextDueDate.HasValue ? DateOnly.FromDateTime(newNextDueDate.Value) : null;
                 if (nextDueDate == null)
                     break;
 
@@ -538,14 +580,14 @@ namespace CareTogether.Engines.PolicyEvaluation
                 // The end of the gap is a hard cut-off, but the current UTC date/time is a +1 cut-off (overshoot by one is needed).
                 // Similarly, if the current UTC date/time falls before the end of the gap, use the +1 cut-off instead of the gap end.
                 endConditionExceeded = utcNow < gap.End
-                    ? nextDueDate - applicableStage.incrementDelay > utcNow
-                    : nextDueDate >= gap.End;
+                    ? nextDueDate?.AddDays(-applicableStage.incrementDelay.Days) > DateOnly.FromDateTime(utcNow)
+                    : nextDueDate >= DateOnly.FromDateTime(gap.End);
             } while (!endConditionExceeded);
 
             return dueDatesInGap.ToImmutableList();
         }
 
-        internal static ImmutableList<DateTime>
+        internal static ImmutableList<DateOnly>
             CalculateMissingMonitoringRequirementInstancesForChildCareOccurrences(
             ChildCareOccurrenceBasedRecurrencePolicy recurrence, Guid? filterToFamilyId,
             DateTime arrangementStartedAtUtc, DateTime? arrangementEndedAtUtc,
@@ -580,7 +622,7 @@ namespace CareTogether.Engines.PolicyEvaluation
 
             // Return the due-by date of each missed occurrence.
             var missingInstances = missedOccurrences
-                .Select(x => x.startDate + recurrence.Delay)
+                .Select(x => DateOnly.FromDateTime(x.startDate + recurrence.Delay))
                 .ToImmutableList();
 
             return missingInstances;

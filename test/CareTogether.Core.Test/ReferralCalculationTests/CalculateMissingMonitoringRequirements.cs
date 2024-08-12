@@ -68,17 +68,17 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
                 utcNow: new DateTime(H.YEAR, 1, 31));
 
             AssertEx.SequenceIs(result,
-                new MissingArrangementRequirement(null, null, null, null, "A", DueBy: null, PastDueSince: new DateTime(H.YEAR, 1, 3)),
-                new MissingArrangementRequirement(null, null, null, null, "A", DueBy: null, PastDueSince: new DateTime(H.YEAR, 1, 10)),
-                new MissingArrangementRequirement(null, null, null, null, "A", DueBy: null, PastDueSince: new DateTime(H.YEAR, 1, 17)),
-                new MissingArrangementRequirement(null, null, null, null, "A", DueBy: null, PastDueSince: new DateTime(H.YEAR, 1, 24)),
-                new MissingArrangementRequirement(null, null, null, null, "A", DueBy: null, PastDueSince: new DateTime(H.YEAR, 1, 31)),
-                new MissingArrangementRequirement(null, null, null, null, "A", DueBy: new DateTime(H.YEAR, 2, 14), PastDueSince: null),
-                new MissingArrangementRequirement(null, null, null, null, "B", DueBy: null, PastDueSince: new DateTime(H.YEAR, 1, 8)),
-                new MissingArrangementRequirement(null, null, null, null, "B", DueBy: null, PastDueSince: new DateTime(H.YEAR, 1, 15)),
-                new MissingArrangementRequirement(null, null, null, null, "B", DueBy: null, PastDueSince: new DateTime(H.YEAR, 1, 22)),
-                new MissingArrangementRequirement(null, null, null, null, "B", DueBy: null, PastDueSince: new DateTime(H.YEAR, 1, 29)),
-                new MissingArrangementRequirement(null, null, null, null, "B", DueBy: new DateTime(H.YEAR, 2, 5), PastDueSince: null));
+                new MissingArrangementRequirement(null, null, null, null, "A", DueBy: null, PastDueSince: new DateOnly(H.YEAR, 1, 3)),
+                new MissingArrangementRequirement(null, null, null, null, "A", DueBy: null, PastDueSince: new DateOnly(H.YEAR, 1, 10)),
+                new MissingArrangementRequirement(null, null, null, null, "A", DueBy: null, PastDueSince: new DateOnly(H.YEAR, 1, 17)),
+                new MissingArrangementRequirement(null, null, null, null, "A", DueBy: null, PastDueSince: new DateOnly(H.YEAR, 1, 24)),
+                new MissingArrangementRequirement(null, null, null, null, "A", DueBy: null, PastDueSince: new DateOnly(H.YEAR, 1, 31)),
+                new MissingArrangementRequirement(null, null, null, null, "A", DueBy: new DateOnly(H.YEAR, 2, 14), PastDueSince: null),
+                new MissingArrangementRequirement(null, null, null, null, "B", DueBy: null, PastDueSince: new DateOnly(H.YEAR, 1, 8)),
+                new MissingArrangementRequirement(null, null, null, null, "B", DueBy: null, PastDueSince: new DateOnly(H.YEAR, 1, 15)),
+                new MissingArrangementRequirement(null, null, null, null, "B", DueBy: null, PastDueSince: new DateOnly(H.YEAR, 1, 22)),
+                new MissingArrangementRequirement(null, null, null, null, "B", DueBy: null, PastDueSince: new DateOnly(H.YEAR, 1, 29)),
+                new MissingArrangementRequirement(null, null, null, null, "B", DueBy: new DateOnly(H.YEAR, 2, 5), PastDueSince: null));
         }
 
         [TestMethod]
@@ -105,15 +105,15 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
                 utcNow: new DateTime(H.YEAR, 1, 31));
 
             AssertEx.SequenceIs(result,
-                new MissingArrangementRequirement(null, null, null, null, "A", DueBy: null, PastDueSince: new DateTime(H.YEAR, 1, 10)),
-                new MissingArrangementRequirement(null, null, null, null, "A", DueBy: null, PastDueSince: new DateTime(H.YEAR, 1, 17)),
-                new MissingArrangementRequirement(null, null, null, null, "A", DueBy: null, PastDueSince: new DateTime(H.YEAR, 1, 24)),
-                new MissingArrangementRequirement(null, null, null, null, "A", DueBy: null, PastDueSince: new DateTime(H.YEAR, 1, 31)),
-                new MissingArrangementRequirement(null, null, null, null, "A", DueBy: new DateTime(H.YEAR, 2, 14), PastDueSince: null),
-                new MissingArrangementRequirement(null, null, null, null, "B", DueBy: null, PastDueSince: new DateTime(H.YEAR, 1, 14)),
-                new MissingArrangementRequirement(null, null, null, null, "B", DueBy: null, PastDueSince: new DateTime(H.YEAR, 1, 21)),
-                new MissingArrangementRequirement(null, null, null, null, "B", DueBy: null, PastDueSince: new DateTime(H.YEAR, 1, 28)),
-                new MissingArrangementRequirement(null, null, null, null, "B", DueBy: new DateTime(H.YEAR, 2, 4), PastDueSince: null));
+                new MissingArrangementRequirement(null, null, null, null, "A", DueBy: null, PastDueSince: new DateOnly(H.YEAR, 1, 10)),
+                new MissingArrangementRequirement(null, null, null, null, "A", DueBy: null, PastDueSince: new DateOnly(H.YEAR, 1, 17)),
+                new MissingArrangementRequirement(null, null, null, null, "A", DueBy: null, PastDueSince: new DateOnly(H.YEAR, 1, 24)),
+                new MissingArrangementRequirement(null, null, null, null, "A", DueBy: null, PastDueSince: new DateOnly(H.YEAR, 1, 31)),
+                new MissingArrangementRequirement(null, null, null, null, "A", DueBy: new DateOnly(H.YEAR, 2, 14), PastDueSince: null),
+                new MissingArrangementRequirement(null, null, null, null, "B", DueBy: null, PastDueSince: new DateOnly(H.YEAR, 1, 14)),
+                new MissingArrangementRequirement(null, null, null, null, "B", DueBy: null, PastDueSince: new DateOnly(H.YEAR, 1, 21)),
+                new MissingArrangementRequirement(null, null, null, null, "B", DueBy: null, PastDueSince: new DateOnly(H.YEAR, 1, 28)),
+                new MissingArrangementRequirement(null, null, null, null, "B", DueBy: new DateOnly(H.YEAR, 2, 4), PastDueSince: null));
         }
 
         [TestMethod]
@@ -140,8 +140,8 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
                 utcNow: new DateTime(H.YEAR, 1, 8));
 
             AssertEx.SequenceIs(result,
-                new MissingArrangementRequirement(null, null, null, null, "A", DueBy: new DateTime(H.YEAR, 1, 10), PastDueSince: null),
-                new MissingArrangementRequirement(null, null, null, null, "B", DueBy: new DateTime(H.YEAR, 1, 14), PastDueSince: null));
+                new MissingArrangementRequirement(null, null, null, null, "A", DueBy: new DateOnly(H.YEAR, 1, 10), PastDueSince: null),
+                new MissingArrangementRequirement(null, null, null, null, "B", DueBy: new DateOnly(H.YEAR, 1, 14), PastDueSince: null));
         }
     }
 }

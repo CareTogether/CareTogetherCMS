@@ -96,7 +96,7 @@ export function MissingArrangementRequirementRow({
           {requirement.actionName}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
           {requirement.pastDueSince && (
             <span style={{ float: 'right' }}>
-              {format(requirement.pastDueSince, 'M/d/yy h:mm a')}
+              {format(requirement.pastDueSince, 'M/d/yy')}
             </span>
           )}
           {requirement.volunteerFamilyId && !requirement.personId && (

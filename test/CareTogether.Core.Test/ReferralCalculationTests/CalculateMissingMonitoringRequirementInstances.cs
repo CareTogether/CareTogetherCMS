@@ -27,7 +27,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
                 childLocationHistory: Helpers.LocationHistoryEntries(),
                 utcNow: new DateTime(H.YEAR, 2, 14));
 
-            AssertEx.SequenceIs(result, Helpers.Dates((1, 3), (1, 10), (1, 17), (1, 24), (1, 31), (2, 14), (2, 28)));
+            AssertEx.SequenceIs(result, Helpers.DatesAsDateOnly((1, 3), (1, 10), (1, 17), (1, 24), (1, 31), (2, 14), (2, 28)));
         }
 
         [TestMethod]
@@ -44,7 +44,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
                 childLocationHistory: Helpers.LocationHistoryEntries(),
                 utcNow: new DateTime(H.YEAR, 2, 14));
 
-            AssertEx.SequenceIs(result, Helpers.Dates((1, 3)));
+            AssertEx.SequenceIs(result, Helpers.DatesAsDateOnly((1, 3)));
         }
 
         [TestMethod]
@@ -59,7 +59,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
                 childLocationHistory: Helpers.LocationHistoryEntries(),
                 utcNow: new DateTime(H.YEAR, 2, 14));
 
-            AssertEx.SequenceIs(result, Helpers.Dates((1, 3)));
+            AssertEx.SequenceIs(result, Helpers.DatesAsDateOnly((1, 3)));
         }
 
         [TestMethod]
@@ -74,7 +74,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
                 childLocationHistory: Helpers.LocationHistoryEntries(),
                 utcNow: new DateTime(H.YEAR, 1, 2));
 
-            AssertEx.SequenceIs(result, Helpers.Dates((1, 3)));
+            AssertEx.SequenceIs(result, Helpers.DatesAsDateOnly((1, 3)));
         }
 
         [TestMethod]
@@ -104,7 +104,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
                 childLocationHistory: Helpers.LocationHistoryEntries(),
                 utcNow: new DateTime(H.YEAR, 1, 2));
 
-            AssertEx.SequenceIs(result, Helpers.Dates((1, 3)));
+            AssertEx.SequenceIs(result, Helpers.DatesAsDateOnly((1, 3)));
         }
 
         [TestMethod]
@@ -120,7 +120,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
                 utcNow: new DateTime(H.YEAR, 2, 14));
 
             //TODO: This could instead be "max date" -- need to decide what's more intuitive for users.
-            AssertEx.SequenceIs(result, Helpers.Dates((1, 1)));
+            AssertEx.SequenceIs(result, Helpers.DatesAsDateOnly((1, 1)));
         }
 
         [TestMethod]
@@ -136,7 +136,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
                 childLocationHistory: Helpers.LocationHistoryEntries(),
                 utcNow: new DateTime(H.YEAR, 2, 14));
 
-            AssertEx.SequenceIs(result, Helpers.Dates((1, 1)));
+            AssertEx.SequenceIs(result, Helpers.DatesAsDateOnly((1, 1)));
         }
 
         [TestMethod]
@@ -154,7 +154,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
                 childLocationHistory: Helpers.LocationHistoryEntries(),
                 utcNow: new DateTime(H.YEAR, 2, 14));
 
-            AssertEx.SequenceIs(result, Helpers.Dates((1, 3), (1, 10), (1, 17), (1, 24), (1, 31)));
+            AssertEx.SequenceIs(result, Helpers.DatesAsDateOnly((1, 3), (1, 10), (1, 17), (1, 24), (1, 31)));
         }
 
         [TestMethod]
@@ -185,7 +185,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
                     (ChildLocationPlan.WithParent, 2, 25)),
                 utcNow: new DateTime(H.YEAR, 2, 28));
 
-            AssertEx.SequenceIs(result, Helpers.Dates((1, 3), (1, 24), (2, 17)));
+            AssertEx.SequenceIs(result, Helpers.DatesAsDateOnly((1, 3), (1, 24), (2, 17)));
         }
 
         [TestMethod]
@@ -216,7 +216,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
                     (ChildLocationPlan.WithParent, 2, 25)),
                 utcNow: new DateTime(H.YEAR, 2, 28));
 
-            AssertEx.SequenceIs(result, Helpers.Dates((1, 17), (2, 10)));
+            AssertEx.SequenceIs(result, Helpers.DatesAsDateOnly((1, 17), (2, 10)));
         }
 
         [TestMethod]
@@ -238,7 +238,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
                     (ChildLocationPlan.DaytimeChildCare, 1, 22)),
                 utcNow: new DateTime(H.YEAR, 2, 28));
 
-            AssertEx.SequenceIs(result, Helpers.Dates((1, 3), (1, 24)));
+            AssertEx.SequenceIs(result, Helpers.DatesAsDateOnly((1, 3), (1, 24)));
         }
 
         [TestMethod]
@@ -260,7 +260,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
                     (ChildLocationPlan.DaytimeChildCare, 1, 22)),
                 utcNow: new DateTime(H.YEAR, 2, 23));
 
-            AssertEx.SequenceIs(result, Helpers.Dates((1, 3), (1, 24)));
+            AssertEx.SequenceIs(result, Helpers.DatesAsDateOnly((1, 3), (1, 24)));
         }
 
         [TestMethod]
@@ -278,7 +278,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
                 childLocationHistory: Helpers.LocationHistoryEntries(),
                 utcNow: new DateTime(H.YEAR, 2, 14));
 
-            AssertEx.SequenceIs(result, Helpers.Dates((1, 9), (1, 16), (1, 23), (1, 30), (2, 13), (2, 27)));
+            AssertEx.SequenceIs(result, Helpers.DatesAsDateOnly((1, 9), (1, 16), (1, 23), (1, 30), (2, 13), (2, 27)));
         }
 
         [TestMethod]
@@ -296,7 +296,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
                 childLocationHistory: Helpers.LocationHistoryEntries(),
                 utcNow: new DateTime(H.YEAR, 2, 14));
 
-            AssertEx.SequenceIs(result, Helpers.Dates((1, 9), (1, 16), (1, 23), (1, 30)));
+            AssertEx.SequenceIs(result, Helpers.DatesAsDateOnly((1, 9), (1, 16), (1, 23), (1, 30)));
         }
 
         [TestMethod]
@@ -312,7 +312,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
                 childLocationHistory: Helpers.LocationHistoryEntries(),
                 utcNow: new DateTime(H.YEAR, 2, 1));
 
-            AssertEx.SequenceIs(result, Helpers.Dates());
+            AssertEx.SequenceIs(result, Helpers.DatesAsDateOnly());
         }
 
         [TestMethod]
@@ -328,7 +328,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
                 childLocationHistory: Helpers.LocationHistoryEntries(),
                 utcNow: new DateTime(H.YEAR, 2, 1));
 
-            AssertEx.SequenceIs(result, Helpers.Dates());
+            AssertEx.SequenceIs(result, Helpers.DatesAsDateOnly());
         }
 
         [TestMethod]
@@ -346,7 +346,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
                 childLocationHistory: Helpers.LocationHistoryEntries(),
                 utcNow: new DateTime(H.YEAR, 2, 14));
 
-            AssertEx.SequenceIs(result, Helpers.Dates((1, 9), (1, 16), (1, 23), (1, 30), (2, 13), (2, 27)));
+            AssertEx.SequenceIs(result, Helpers.DatesAsDateOnly((1, 9), (1, 16), (1, 23), (1, 30), (2, 13), (2, 27)));
         }
 
         [TestMethod]
@@ -364,7 +364,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
                 childLocationHistory: Helpers.LocationHistoryEntries(),
                 utcNow: new DateTime(H.YEAR, 2, 14));
 
-            AssertEx.SequenceIs(result, Helpers.Dates((1, 9), (1, 16), (1, 23), (1, 30), (2, 13), (2, 27)));
+            AssertEx.SequenceIs(result, Helpers.DatesAsDateOnly((1, 9), (1, 16), (1, 23), (1, 30), (2, 13), (2, 27)));
         }
 
         [TestMethod]
@@ -382,7 +382,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
                 childLocationHistory: Helpers.LocationHistoryEntries(),
                 utcNow: new DateTime(H.YEAR, 2, 14));
 
-            AssertEx.SequenceIs(result, Helpers.Dates((1, 16), (1, 23), (1, 30), (2, 13), (2, 27)));
+            AssertEx.SequenceIs(result, Helpers.DatesAsDateOnly((1, 16), (1, 23), (1, 30), (2, 13), (2, 27)));
         }
 
         [TestMethod]
@@ -400,7 +400,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
                 childLocationHistory: Helpers.LocationHistoryEntries(),
                 utcNow: new DateTime(H.YEAR, 2, 14));
 
-            AssertEx.SequenceIs(result, Helpers.Dates((1, 9), (1, 17), (1, 24), (1, 31), (2, 14), (2, 28)));
+            AssertEx.SequenceIs(result, Helpers.DatesAsDateOnly((1, 9), (1, 17), (1, 24), (1, 31), (2, 14), (2, 28)));
         }
 
         [TestMethod]
@@ -418,7 +418,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
                 childLocationHistory: Helpers.LocationHistoryEntries(),
                 utcNow: new DateTime(H.YEAR, 2, 14));
 
-            AssertEx.SequenceIs(result, Helpers.Dates((1, 9), (1, 16), (1, 27), (2, 10), (2, 24)));
+            AssertEx.SequenceIs(result, Helpers.DatesAsDateOnly((1, 9), (1, 16), (1, 27), (2, 10), (2, 24)));
         }
 
         [TestMethod]
@@ -436,7 +436,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
                 childLocationHistory: Helpers.LocationHistoryEntries(),
                 utcNow: new DateTime(H.YEAR, 2, 14));
 
-            AssertEx.SequenceIs(result, Helpers.Dates((1, 9), (1, 16), (1, 27), (2, 23)));
+            AssertEx.SequenceIs(result, Helpers.DatesAsDateOnly((1, 9), (1, 16), (1, 27), (2, 23)));
         }
 
         [TestMethod]
@@ -454,7 +454,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
                 childLocationHistory: Helpers.LocationHistoryEntries(),
                 utcNow: new DateTime(H.YEAR, 2, 14));
 
-            AssertEx.SequenceIs(result, Helpers.Dates());
+            AssertEx.SequenceIs(result, Helpers.DatesAsDateOnly());
         }
 
         [TestMethod]
@@ -473,7 +473,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
                     (ChildLocationPlan.DaytimeChildCare, 1, 1)),
                 utcNow: new DateTime(H.YEAR, 2, 14));
 
-            AssertEx.SequenceIs(result, Helpers.Dates((1, 3), (1, 10), (1, 17), (1, 24), (1, 31), (2, 14), (2, 28)));
+            AssertEx.SequenceIs(result, Helpers.DatesAsDateOnly((1, 3), (1, 10), (1, 17), (1, 24), (1, 31), (2, 14), (2, 28)));
         }
 
         [TestMethod]
@@ -494,7 +494,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
                     (ChildLocationPlan.DaytimeChildCare, 1, 15)),
                 utcNow: new DateTime(H.YEAR, 2, 14));
 
-            AssertEx.SequenceIs(result, Helpers.Dates((1, 3), (1, 10), (1, 20), (1, 27), (2, 3), (2, 17)));
+            AssertEx.SequenceIs(result, Helpers.DatesAsDateOnly((1, 3), (1, 10), (1, 20), (1, 27), (2, 3), (2, 17)));
         }
 
         [TestMethod]
@@ -514,7 +514,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
                     (ChildLocationPlan.WithParent, 2, 7)),
                 utcNow: new DateTime(H.YEAR, 2, 14));
 
-            AssertEx.SequenceIs(result, Helpers.Dates((1, 3), (1, 10), (1, 17), (1, 24), (1, 31)));
+            AssertEx.SequenceIs(result, Helpers.DatesAsDateOnly((1, 3), (1, 10), (1, 17), (1, 24), (1, 31)));
         }
 
         [TestMethod]
@@ -533,7 +533,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
                 utcNow: new DateTime(H.YEAR, 2, 14));
 
             Assert.Inconclusive("Test not updated for multiple locations");
-            AssertEx.SequenceIs(result, Helpers.Dates(/*(1, 3), (1, 10), (1, 17), (1, 24), (1, 31), (2, 14), (2, 28)*/));
+            AssertEx.SequenceIs(result, Helpers.DatesAsDateOnly(/*(1, 3), (1, 10), (1, 17), (1, 24), (1, 31), (2, 14), (2, 28)*/));
         }
 
         //[TestMethod]
