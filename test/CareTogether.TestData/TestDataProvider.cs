@@ -28,7 +28,7 @@ namespace CareTogether.TestData
         static int YEAR = DateTime.UtcNow.Year;
         static int MONTH = DateTime.UtcNow.Month;
         static DateTime DateOf(int monthOffset, int day) => new DateTime(YEAR, MONTH, day).AddMonths(monthOffset);
-        static DateTime DateOf(int monthOffset, int day, int hour, int minute, int second) => new DateTime(YEAR, MONTH, day, hour, minute, second).AddMonths(monthOffset);
+        static DateTime DateOf(int monthOffset, int day, int hour, int minute, int second) => new DateTime(YEAR, MONTH, day, hour, minute, second, DateTimeKind.Utc).AddMonths(monthOffset);
         static DateTime StartOfCurrentMonth() => new DateTime(YEAR, MONTH, 1);
         static DateTime ReferralsMonth(int day) => DateOf(-1, day);
         static DateTime ReferralsMonth(int day, int hour, int minute, int second) => DateOf(-1, day, hour, minute, second);
@@ -317,6 +317,14 @@ namespace CareTogether.TestData
                 new ArrangementsCommandExecuted(adminId, ReferralsMonth(3, 10, 0, 0), new CreateArrangement(guid1, guid2, [guid2], "Babysitting", ReferralsMonth(2), guid3, "Assistance")),
                 new ArrangementsCommandExecuted(adminId, ReferralsMonth(3, 10, 0, 0), new CreateArrangement(guid1, guid2, [guid3], "Friending", ReferralsMonth(3), guid1, "Respite")),
                 new ArrangementsCommandExecuted(adminId, ReferralsMonth(3, 10, 0, 0), new CreateArrangement(guid1, guid2, [guid4], "Friending", ReferralsMonth(4), guid2, "Respite")),
+
+                new ArrangementsCommandExecuted(adminId, ReferralsMonth(3, 11, 0, 0), new AssignIndividualVolunteer(guid1, guid2, [guid4], guid4, guid4, "Family Coach", null)),
+                new ArrangementsCommandExecuted(adminId, ReferralsMonth(3, 11, 0, 0), new AssignIndividualVolunteer(guid1, guid2, [guid4], guid4, guid4, "Family Friend", null)),
+                new ArrangementsCommandExecuted(adminId, ReferralsMonth(3, 11, 0, 0), new AssignIndividualVolunteer(guid1, guid2, [guid4], guid0, guid0, "Staff Supervision", null)),
+                new ArrangementsCommandExecuted(adminId, ReferralsMonth(3, 11, 0, 0), new ExemptArrangementRequirement(guid1, guid2, [guid4], "Advocacy Agreement", null, "Not needed", null)),
+                new ArrangementsCommandExecuted(adminId, ReferralsMonth(3, 11, 0, 0), new StartArrangements(guid1, guid2, [guid4], ReferralsMonth(1, 15, 0, 0))),
+                new ArrangementsCommandExecuted(adminId, ReferralsMonth(3, 11, 0, 0), new CompleteArrangementRequirement(guid1, guid2, [guid4], guid3, "Family Coach Checkin", ReferralsMonth(4, 2, 59, 0), null, null)),
+
                 new ArrangementsCommandExecuted(adminId, ReferralsMonth(3, 10, 0, 0), new CreateArrangement(guid1, guid2, [guid5], "Hosting", ReferralsMonth(5), guid3, null)),
                 new ArrangementsCommandExecuted(adminId, ReferralsMonth(3, 10, 0, 0), new UpdateArrangementComments(guid1, guid2, [guid2], "Start on Friday the 11th")),
                 new ArrangementsCommandExecuted(adminId, ReferralsMonth(3, 10, 0, 0), new UpdateArrangementComments(guid1, guid2, [guid3, guid4], "Start on Saturday the 12th")),
@@ -750,6 +758,9 @@ namespace CareTogether.TestData
                             RequiredMonitoringActions:
                             [
                                 new MonitoringRequirement("Family Coach Checkin",
+                                    // new OneTimeRecurrencePolicy(
+                                    //     TimeSpan.FromDays(2)
+                                    // )),
                                     new DurationStagesRecurrencePolicy(
                                     [
                                         new RecurrencePolicyStage(TimeSpan.FromDays(2), 1),
