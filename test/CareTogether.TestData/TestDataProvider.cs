@@ -543,6 +543,7 @@ namespace CareTogether.TestData
                     ["Host Family Debriefing"] = new ActionRequirement(DocumentLinkRequirement.Required, NoteEntryRequirement.Required, null, null, null),
                     ["Advocacy Agreement"] = new ActionRequirement(DocumentLinkRequirement.Required, NoteEntryRequirement.None,
                         null, new Uri("http://example.com/forms/advocacy-v1"), null),
+                    ["One Time Checkin"] = new ActionRequirement(DocumentLinkRequirement.None, NoteEntryRequirement.Allowed, null, null, null),
                     ["Family Coach Checkin"] = new ActionRequirement(DocumentLinkRequirement.None, NoteEntryRequirement.Required, null, null, null),
                     ["Family Coach Supervision"] = new ActionRequirement(DocumentLinkRequirement.Allowed, NoteEntryRequirement.Required, null, null, null),
                     ["Family Friend Application"] = new ActionRequirement(DocumentLinkRequirement.Required, NoteEntryRequirement.None,
@@ -757,10 +758,11 @@ namespace CareTogether.TestData
                             ],
                             RequiredMonitoringActions:
                             [
+                                new MonitoringRequirement("One Time Checkin",
+                                    new OneTimeRecurrencePolicy(
+                                        TimeSpan.FromDays(2)
+                                    )),
                                 new MonitoringRequirement("Family Coach Checkin",
-                                    // new OneTimeRecurrencePolicy(
-                                    //     TimeSpan.FromDays(2)
-                                    // )),
                                     new DurationStagesRecurrencePolicy(
                                     [
                                         new RecurrencePolicyStage(TimeSpan.FromDays(2), 1),
