@@ -42,9 +42,13 @@ namespace CareTogether.Engines.PolicyEvaluation
             ReferralEntry referralEntry)
         {
             var policy = await policiesResource.GetCurrentPolicy(organizationId, locationId);
+            var config = await policiesResource.GetConfigurationAsync(organizationId);
+
+            var location = config.Locations.Find(item => item.Id == locationId);
+            TimeZoneInfo locationTimeZone = location?.timeZone ?? TimeZoneInfo.FindSystemTimeZoneById("America/New_York");
 
             return ReferralCalculations.CalculateReferralStatus(
-                policy.ReferralPolicy, referralEntry, DateTime.UtcNow);
+                policy.ReferralPolicy, referralEntry, DateTime.UtcNow, locationTimeZone);
         }
     }
 }

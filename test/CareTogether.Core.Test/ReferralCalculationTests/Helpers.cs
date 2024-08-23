@@ -10,6 +10,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
     internal class Helpers
     {
         public const int YEAR = 2024;
+        public static TimeZoneInfo US_EASTERN_TIME_ZONE = TimeZoneInfo.FindSystemTimeZoneById("America/New_York");
 
         public static ImmutableList<CompletedRequirementInfo> Completed(params (string, int)[] completionsWithDates) =>
             completionsWithDates.Select(completion =>
@@ -35,6 +36,15 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
 
         public static ImmutableList<DateTime> Dates(params (int month, int day)[] values) =>
             values.Select(value => new DateTime(YEAR, value.month, value.day)).ToImmutableList();
+
+        public static ImmutableList<DateTime> DatesFromTimeZone(TimeZoneInfo tz, params (int month, int day)[] values) =>
+            values.Select(value => TimeZoneInfo.ConvertTimeToUtc(new DateTime(YEAR, value.month, value.day), tz)).ToImmutableList();
+
+        public static DateTime DateFromTimeZone(TimeZoneInfo tz, int month, int day) =>
+            TimeZoneInfo.ConvertTimeToUtc(new DateTime(YEAR, month, day), tz);
+
+        public static ImmutableList<DateTime> DatesAtLastSecond(TimeZoneInfo tz, params (int month, int day)[] values) =>
+            values.Select(value => TimeZoneInfo.ConvertTimeToUtc(new DateTime(YEAR, value.month, value.day, 23, 59, 59), tz)).ToImmutableList();
 
         public static ImmutableSortedSet<ChildLocationHistoryEntry> LocationHistoryEntries(
             params (ChildLocationPlan plan, int month, int day)[] values) =>
