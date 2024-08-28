@@ -478,10 +478,9 @@ export function FamilyScreen() {
                   ))}
             </Grid>
 
-            <Grid item md={12}>
+            <Grid item xs={12}>
               <Typography
                 variant="h3"
-                sx={{ fontSize: '2rem' }}
                 style={{ marginTop: 0, marginBottom: 0 }}
               >
                 Communities
@@ -519,7 +518,7 @@ export function FamilyScreen() {
               })}
             </Grid>
 
-            <Grid item md={4}>
+            <Grid item xs={12} md={4}>
               {permissions(Permission.ViewReferralProgress) &&
                 family.partneringFamilyInfo && (
                   <FormControl>
@@ -533,9 +532,7 @@ export function FamilyScreen() {
                       }}
                     >
                       {' '}
-                      <Typography variant="h3" sx={{ fontSize: '2rem' }}>
-                        Referrals
-                      </Typography>
+                      <Typography variant="h3">Referrals</Typography>
                     </FormLabel>
                     <RadioGroup
                       aria-labelledby="demo-radio-buttons-group-label"
@@ -660,11 +657,7 @@ export function FamilyScreen() {
               selectedReferral && (
                 <>
                   <Grid item xs={12} sm={6} md={4} style={{ paddingRight: 20 }}>
-                    <Typography
-                      variant="h3"
-                      sx={{ fontSize: '2rem' }}
-                      style={{ marginBottom: 0 }}
-                    >
+                    <Typography variant="h3" style={{ marginBottom: 0 }}>
                       Incomplete
                     </Typography>
                     {selectedReferral?.missingRequirements?.map(
@@ -679,11 +672,7 @@ export function FamilyScreen() {
                     )}
                   </Grid>
                   <Grid item xs={12} sm={6} md={4} style={{ paddingRight: 20 }}>
-                    <Typography
-                      variant="h3"
-                      sx={{ fontSize: '2rem' }}
-                      style={{ marginBottom: 0 }}
-                    >
+                    <Typography variant="h3" style={{ marginBottom: 0 }}>
                       Completed
                     </Typography>
                     {selectedReferral?.completedRequirements?.map(
@@ -753,9 +742,7 @@ export function FamilyScreen() {
                   </Box>
                 </Grid>
                 <Grid item xs={12} sm={6} md={4} style={{ paddingRight: 20 }}>
-                  <Typography variant="h3" sx={{ fontSize: '2rem' }}>
-                    Incomplete
-                  </Typography>
+                  <Typography variant="h3">Incomplete</Typography>
                   {family.volunteerFamilyInfo?.missingRequirements?.map(
                     (missing, i) => (
                       <MissingRequirementRow
@@ -778,9 +765,7 @@ export function FamilyScreen() {
                   )}
                 </Grid>
                 <Grid item xs={12} sm={6} md={4} style={{ paddingRight: 20 }}>
-                  <Typography variant="h3" sx={{ fontSize: '2rem' }}>
-                    Completed
-                  </Typography>
+                  <Typography variant="h3">Completed</Typography>
                   {family.volunteerFamilyInfo?.completedRequirements?.map(
                     (completed, i) => (
                       <CompletedRequirementRow
@@ -804,11 +789,7 @@ export function FamilyScreen() {
             )}
             {permissions(Permission.ViewFamilyDocumentMetadata) && (
               <Grid item xs={12} sm={6} md={4}>
-                <Typography
-                  variant="h3"
-                  sx={{ fontSize: '2rem' }}
-                  style={{ marginBottom: 0 }}
-                >
+                <Typography variant="h3" style={{ marginBottom: 0 }}>
                   Documents
                 </Typography>
                 <FamilyDocuments family={family} />
@@ -836,7 +817,6 @@ export function FamilyScreen() {
                   >
                     <Typography
                       variant="h3"
-                      sx={{ fontSize: '2rem' }}
                       style={{
                         margin: 0,
                         display: `flex`,
@@ -904,11 +884,7 @@ export function FamilyScreen() {
               </Grid>
             )}
             <Grid item xs={12}>
-              <Typography
-                variant="h3"
-                sx={{ fontSize: '2rem' }}
-                style={{ marginBottom: 0 }}
-              >
+              <Typography variant="h3" style={{ marginBottom: 0 }}>
                 Family Members
               </Typography>
               <Masonry

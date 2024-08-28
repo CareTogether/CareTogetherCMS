@@ -1,4 +1,4 @@
-import { Box, TextField } from '@mui/material';
+import { Box, TextField, Typography } from '@mui/material';
 import { CombinedFamilyInfo, Permission, Referral } from '../GeneratedClient';
 import { useReferralsModel } from '../Model/ReferralsModel';
 import { useFamilyPermissions } from '../Model/SessionModel';
@@ -39,7 +39,7 @@ export function ReferralComments({
 
   return permissions(Permission.ViewReferralComments) ? (
     <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center' }}>
-      <h3 style={{ margin: 0 }}>
+      <Typography variant="h3" style={{ marginBottom: 0 }}>
         Comments
         {permissions(Permission.EditReferral) && (
           <>
@@ -48,7 +48,7 @@ export function ReferralComments({
             {editor.saveButton}
           </>
         )}
-      </h3>
+      </Typography>
       {editor.editing && permissions(Permission.EditReferral) ? (
         <TextField
           id="referral-comments"
