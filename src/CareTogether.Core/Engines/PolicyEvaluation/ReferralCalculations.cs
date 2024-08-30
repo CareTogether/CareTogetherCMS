@@ -12,7 +12,7 @@ namespace CareTogether.Engines.PolicyEvaluation
     internal static class ReferralCalculations
     {
         public static ReferralStatus CalculateReferralStatus(
-            ReferralPolicy referralPolicy, ReferralEntry referralEntry, DateTime utcNow)
+            ReferralPolicy referralPolicy, ReferralEntry referralEntry, DateTime utcNow, TimeZoneInfo locationTimeZone)
         {
             var missingIntakeRequirements = referralPolicy.RequiredIntakeActionNames.Where(requiredAction =>
                 !SharedCalculations.RequirementMetOrExempted(requiredAction,
@@ -34,7 +34,7 @@ namespace CareTogether.Engines.PolicyEvaluation
                         .Single(p => p.ArrangementType == arrangement.Value.ArrangementType);
 
                     return CalculateArrangementStatus(arrangement.Value,
-                        arrangementPolicy, utcNow);
+                        arrangementPolicy, utcNow, locationTimeZone);
                 });
 
             return new ReferralStatus(
@@ -45,12 +45,12 @@ namespace CareTogether.Engines.PolicyEvaluation
 
 
         internal static ArrangementStatus CalculateArrangementStatus(ArrangementEntry arrangement, ArrangementPolicy arrangementPolicy,
-            DateTime utcNow)
+            DateTime utcNow, TimeZoneInfo locationTimeZone)
         {
             var missingSetupRequirements = CalculateMissingSetupRequirements(
                 arrangementPolicy, arrangement, utcNow);
             var missingMonitoringRequirements = CalculateMissingMonitoringRequirements(
-                arrangementPolicy, arrangement, utcNow);
+                arrangementPolicy, arrangement, utcNow, locationTimeZone);
             var missingCloseoutRequirements = CalculateMissingCloseoutRequirements(
                 arrangementPolicy, arrangement, utcNow);
             var missingFunctionAssignments = CalculateMissingFunctionAssignments(arrangementPolicy.ArrangementFunctions,
@@ -160,7 +160,7 @@ namespace CareTogether.Engines.PolicyEvaluation
         }
 
         internal static ImmutableList<MissingArrangementRequirement> CalculateMissingMonitoringRequirements(
-            ArrangementPolicy arrangementPolicy, ArrangementEntry arrangement, DateTime utcNow)
+            ArrangementPolicy arrangementPolicy, ArrangementEntry arrangement, DateTime utcNow, TimeZoneInfo locationTimeZone)
         {
             var arrangementLevelResults = arrangementPolicy.RequiredMonitoringActions
                 .SelectMany(monitoringRequirement =>
@@ -172,7 +172,7 @@ namespace CareTogether.Engines.PolicyEvaluation
                             .Where(x => x.RequirementName == monitoringRequirement.ActionName)
                             .Select(x => x.CompletedAtUtc)
                             .OrderBy(x => x).ToImmutableList(),
-                        arrangement.ChildLocationHistory, utcNow)
+                        arrangement.ChildLocationHistory, utcNow, locationTimeZone)
                     : ImmutableList<DateTime>.Empty)
                     .Where(missingDueDate => !arrangement.ExemptedRequirements.Any(exempted =>
                         exempted.RequirementName == monitoringRequirement.ActionName &&
@@ -206,7 +206,7 @@ namespace CareTogether.Engines.PolicyEvaluation
                                     .Where(x => x.RequirementName == monitoringRequirement.ActionName)
                                     .Select(x => x.CompletedAtUtc)
                                     .OrderBy(x => x).ToImmutableList(),
-                                arrangement.ChildLocationHistory, utcNow)
+                                arrangement.ChildLocationHistory, utcNow, locationTimeZone)
                             : ImmutableList<DateTime>.Empty)
                             .Where(missingDueDate => !fva.ExemptedRequirements.Any(exempted =>
                                 exempted.RequirementName == monitoringRequirement.ActionName &&
@@ -242,7 +242,7 @@ namespace CareTogether.Engines.PolicyEvaluation
                                     .Where(x => x.RequirementName == monitoringRequirement.ActionName)
                                     .Select(x => x.CompletedAtUtc)
                                     .OrderBy(x => x).ToImmutableList(),
-                                arrangement.ChildLocationHistory, utcNow)
+                                arrangement.ChildLocationHistory, utcNow, locationTimeZone)
                             : ImmutableList<DateTime>.Empty)
                             .Where(missingDueDate => !iva.ExemptedRequirements.Any(exempted =>
                                 exempted.RequirementName == monitoringRequirement.ActionName &&
@@ -264,16 +264,55 @@ namespace CareTogether.Engines.PolicyEvaluation
                 .ToImmutableList();
         }
 
+        // The delay defined in the policies should be considered as "full days" delay. So a delay of 2 days means the
+        // requirement can be met at any time in the following 2 days after the startedAt date.
+        // For that reason, we convert the datetimes to the client (location) timezone during calculation,
+        // to avoid a completion falling in the next day for example.
         internal static ImmutableList<DateTime> CalculateMissingMonitoringRequirementInstances(
-            RecurrencePolicy recurrence, Guid? filterToFamilyId,
-            DateTime arrangementStartedAtUtc, DateTime? arrangementEndedAtUtc,
-            ImmutableList<DateTime> completions, ImmutableSortedSet<ChildLocationHistoryEntry> childLocationHistory,
-            DateTime utcNow)
+             RecurrencePolicy recurrence, Guid? filterToFamilyId,
+             DateTime arrangementStartedAtUtc, DateTime? arrangementEndedAtUtc,
+             ImmutableList<DateTime> completions, ImmutableSortedSet<ChildLocationHistoryEntry> childLocationHistory,
+             DateTime utcNow, TimeZoneInfo locationTimeZone)
         {
+            //////////////////////////////////////////////////
+            //TODO: Move these timezone conversions out of the ReferralCalculations class and into the policy evaluation engine,
+            //      where they can be performed by a helper class.
+
+            // INPUTS: Given in UTC with time --> convert to location time --> extract date-only.
+            // OUTPUTS: Calculated in date-only --> convert to location time @ midnight --> return as UTC.
+
+            var currentLocationTime = TimeZoneInfo.ConvertTimeFromUtc(utcNow, locationTimeZone);
+
+            var arrangementStartedAtInLocationTime = TimeZoneInfo.ConvertTimeFromUtc(arrangementStartedAtUtc, locationTimeZone);
+            var arrangementStartedDate = DateOnly.FromDateTime(arrangementStartedAtInLocationTime);
+
+            var completionDates = completions
+                .Select(completionWithTime =>
+                {
+                    var completionInLocationTime = TimeZoneInfo.ConvertTimeFromUtc(completionWithTime, locationTimeZone);
+                    var completionDate = DateOnly.FromDateTime(completionInLocationTime);
+                    return completionDate;
+                })
+                .ToImmutableList();
+
+            var today = DateOnly.FromDateTime(utcNow);
+
+            ImmutableList<DateTime> WrapWithTimeInUtc(ImmutableList<DateOnly> dates)
+            {
+                return dates.Select(date =>
+                {
+                    var dateInLocationTime = new DateTime(date, TimeOnly.MinValue);
+                    var dateTimeInUtc = TimeZoneInfo.ConvertTimeToUtc(dateInLocationTime, locationTimeZone);
+                    return dateTimeInUtc;
+                }).ToImmutableList();
+            }
+            //////////////////////////////////////////////////
+
             return recurrence switch
             {
-                OneTimeRecurrencePolicy oneTime => CalculateMissingMonitoringRequirementInstancesForOneTimeRecurrence(
-                    oneTime, arrangementStartedAtUtc, arrangementEndedAtUtc, completions, utcNow),
+                OneTimeRecurrencePolicy oneTime => WrapWithTimeInUtc(
+                    CalculateMissingMonitoringRequirementInstancesForOneTimeRecurrence(
+                        oneTime, arrangementStartedDate, completionDates, today)),
                 DurationStagesRecurrencePolicy durationStages =>
                     CalculateMissingMonitoringRequirementInstancesForDurationRecurrence(
                         durationStages, arrangementStartedAtUtc, arrangementEndedAtUtc, utcNow, completions),
@@ -290,23 +329,37 @@ namespace CareTogether.Engines.PolicyEvaluation
             };
         }
 
-        internal static ImmutableList<DateTime> CalculateMissingMonitoringRequirementInstancesForOneTimeRecurrence(
-            OneTimeRecurrencePolicy recurrence, DateTime arrangementStartedAtUtc, DateTime? arrangementEndedAtUtc,
-            ImmutableList<DateTime> completions, DateTime utcNow)
+        internal static ImmutableList<DateOnly> CalculateMissingMonitoringRequirementInstancesForOneTimeRecurrence(
+            OneTimeRecurrencePolicy recurrence, DateOnly arrangementStartedDate,
+            ImmutableList<DateOnly> completions, DateOnly today)
         {
             if (recurrence.Delay.HasValue)
             {
-                var dueDate = arrangementStartedAtUtc + recurrence.Delay.Value;
-                return completions.Any(completion => completion <= dueDate)
-                    ? []
-                    : [dueDate];
+                var dueDate = arrangementStartedDate.AddDays(recurrence.Delay.Value.Days);
+
+                if (completions.Any(completion => completion <= dueDate))
+                {
+                    return [];
+                }
+                else
+                {
+                    return [dueDate];
+                }
+                
             }
             else
-                return completions.IsEmpty
-                    ? [arrangementStartedAtUtc]
-                    : [];
+            {
+                if (completions.IsEmpty)
+                {
+                    return [arrangementStartedDate];
+                }
+                else
+                {
+                    return [];
+                }
+            }
         }
-
+        
         internal static ImmutableList<DateTime> CalculateMissingMonitoringRequirementInstancesForDurationRecurrence(
             DurationStagesRecurrencePolicy recurrence,
             DateTime arrangementStartedAtUtc, DateTime? arrangementEndedAtUtc, DateTime utcNow,
