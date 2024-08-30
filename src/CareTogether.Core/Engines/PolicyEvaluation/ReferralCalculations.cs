@@ -268,16 +268,51 @@ namespace CareTogether.Engines.PolicyEvaluation
         // requirement can be met at any time in the following 2 days after the startedAt date.
         // For that reason, we convert the datetimes to the client (location) timezone during calculation,
         // to avoid a completion falling in the next day for example.
-       internal static ImmutableList<DateTime> CalculateMissingMonitoringRequirementInstances(
-            RecurrencePolicy recurrence, Guid? filterToFamilyId,
-            DateTime arrangementStartedAtUtc, DateTime? arrangementEndedAtUtc,
-            ImmutableList<DateTime> completions, ImmutableSortedSet<ChildLocationHistoryEntry> childLocationHistory,
-            DateTime utcNow, TimeZoneInfo locationTimeZone)
+        internal static ImmutableList<DateTime> CalculateMissingMonitoringRequirementInstances(
+             RecurrencePolicy recurrence, Guid? filterToFamilyId,
+             DateTime arrangementStartedAtUtc, DateTime? arrangementEndedAtUtc,
+             ImmutableList<DateTime> completions, ImmutableSortedSet<ChildLocationHistoryEntry> childLocationHistory,
+             DateTime utcNow, TimeZoneInfo locationTimeZone)
         {
+            //////////////////////////////////////////////////
+            //TODO: Move these timezone conversions out of the ReferralCalculations class and into the policy evaluation engine,
+            //      where they can be performed by a helper class.
+
+            // INPUTS: Given in UTC with time --> convert to location time --> extract date-only.
+            // OUTPUTS: Calculated in date-only --> convert to location time @ midnight --> return as UTC.
+
+            var currentLocationTime = TimeZoneInfo.ConvertTimeFromUtc(utcNow, locationTimeZone);
+
+            var arrangementStartedAtInLocationTime = TimeZoneInfo.ConvertTimeFromUtc(arrangementStartedAtUtc, locationTimeZone);
+            var arrangementStartedDate = DateOnly.FromDateTime(arrangementStartedAtInLocationTime);
+
+            var completionDates = completions
+                .Select(completionWithTime =>
+                {
+                    var completionInLocationTime = TimeZoneInfo.ConvertTimeFromUtc(completionWithTime, locationTimeZone);
+                    var completionDate = DateOnly.FromDateTime(completionInLocationTime);
+                    return completionDate;
+                })
+                .ToImmutableList();
+
+            var today = DateOnly.FromDateTime(utcNow);
+
+            ImmutableList<DateTime> WrapWithTimeInUtc(ImmutableList<DateOnly> dates)
+            {
+                return dates.Select(date =>
+                {
+                    var dateInLocationTime = new DateTime(date, TimeOnly.MinValue);
+                    var dateTimeInUtc = TimeZoneInfo.ConvertTimeToUtc(dateInLocationTime, locationTimeZone);
+                    return dateTimeInUtc;
+                }).ToImmutableList();
+            }
+            //////////////////////////////////////////////////
+
             return recurrence switch
             {
-                OneTimeRecurrencePolicy oneTime => CalculateMissingMonitoringRequirementInstancesForOneTimeRecurrence(
-                    oneTime, arrangementStartedAtUtc, arrangementEndedAtUtc, completions, utcNow, locationTimeZone),
+                OneTimeRecurrencePolicy oneTime => WrapWithTimeInUtc(
+                    CalculateMissingMonitoringRequirementInstancesForOneTimeRecurrence(
+                        oneTime, arrangementStartedDate, completionDates, today)),
                 DurationStagesRecurrencePolicy durationStages =>
                     CalculateMissingMonitoringRequirementInstancesForDurationRecurrence(
                         durationStages, arrangementStartedAtUtc, arrangementEndedAtUtc, utcNow, completions),
@@ -294,28 +329,37 @@ namespace CareTogether.Engines.PolicyEvaluation
             };
         }
 
-        internal static ImmutableList<DateTime> CalculateMissingMonitoringRequirementInstancesForOneTimeRecurrence(
-            OneTimeRecurrencePolicy recurrence, DateTime arrangementStartedAtUtc, DateTime? arrangementEndedAtUtc,
-            ImmutableList<DateTime> completions, DateTime utcNow, TimeZoneInfo locationTimeZone)
+        internal static ImmutableList<DateOnly> CalculateMissingMonitoringRequirementInstancesForOneTimeRecurrence(
+            OneTimeRecurrencePolicy recurrence, DateOnly arrangementStartedDate,
+            ImmutableList<DateOnly> completions, DateOnly today)
         {
             if (recurrence.Delay.HasValue)
             {
-                var arrangementStartedAtInClientsTimeZone = TimeZoneInfo.ConvertTimeFromUtc(arrangementStartedAtUtc, locationTimeZone);
+                var dueDate = arrangementStartedDate.AddDays(recurrence.Delay.Value.Days);
 
-                var dueBaseDateInClientsTimeZone = new DateTime(DateOnly.FromDateTime(arrangementStartedAtInClientsTimeZone), new TimeOnly()).AddDays(1);
-
-                var dueDateInClientsTimeZone = (dueBaseDateInClientsTimeZone + recurrence.Delay.Value).AddSeconds(-1);
-
-                return completions.Any(completion => TimeZoneInfo.ConvertTimeFromUtc(completion, locationTimeZone) <= dueDateInClientsTimeZone)
-                    ? []
-                    : [TimeZoneInfo.ConvertTimeToUtc(dueDateInClientsTimeZone, locationTimeZone)];
+                if (completions.Any(completion => completion <= dueDate))
+                {
+                    return [];
+                }
+                else
+                {
+                    return [dueDate];
+                }
+                
             }
             else
-                return completions.IsEmpty
-                    ? [arrangementStartedAtUtc]
-                    : [];
+            {
+                if (completions.IsEmpty)
+                {
+                    return [arrangementStartedDate];
+                }
+                else
+                {
+                    return [];
+                }
+            }
         }
-
+        
         internal static ImmutableList<DateTime> CalculateMissingMonitoringRequirementInstancesForDurationRecurrence(
             DurationStagesRecurrencePolicy recurrence,
             DateTime arrangementStartedAtUtc, DateTime? arrangementEndedAtUtc, DateTime utcNow,

@@ -62,7 +62,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
                 utcNow: new DateTime(H.YEAR, 2, 14),
                 H.US_EASTERN_TIME_ZONE);
 
-            AssertEx.SequenceIs(result, Helpers.DatesAtLastSecond(H.US_EASTERN_TIME_ZONE, (1, 3)));
+            AssertEx.SequenceIs(result, Helpers.DatesFromTimeZone(H.US_EASTERN_TIME_ZONE, (1, 3)));
         }
 
         [TestMethod]
@@ -78,7 +78,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
                 utcNow: H.DateFromTimeZone(H.US_EASTERN_TIME_ZONE, 1, 2),
                 H.US_EASTERN_TIME_ZONE);
 
-            AssertEx.SequenceIs(result, Helpers.DatesAtLastSecond(H.US_EASTERN_TIME_ZONE, (1, 3)));
+            AssertEx.SequenceIs(result, Helpers.DatesFromTimeZone(H.US_EASTERN_TIME_ZONE, (1, 3)));
         }
 
         [TestMethod]
@@ -110,7 +110,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
                 utcNow: H.DateFromTimeZone(H.US_EASTERN_TIME_ZONE, 1, 2),
                 H.US_EASTERN_TIME_ZONE);
 
-            AssertEx.SequenceIs(result, Helpers.DatesAtLastSecond(H.US_EASTERN_TIME_ZONE, (1, 3)));
+            AssertEx.SequenceIs(result, Helpers.DatesFromTimeZone(H.US_EASTERN_TIME_ZONE, (1, 3)));
         }
 
         [TestMethod]
@@ -119,7 +119,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
             var result = ReferralCalculations.CalculateMissingMonitoringRequirementInstances(
                 new OneTimeRecurrencePolicy(null),
                 filterToFamilyId: null,
-                arrangementStartedAtUtc: new DateTime(H.YEAR, 1, 1),
+                arrangementStartedAtUtc: H.DateFromTimeZone(H.US_EASTERN_TIME_ZONE, 1, 1),
                 arrangementEndedAtUtc: null,
                 completions: Helpers.Dates(),
                 childLocationHistory: Helpers.LocationHistoryEntries(),
@@ -127,7 +127,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
                 H.US_EASTERN_TIME_ZONE);
 
             //TODO: This could instead be "max date" -- need to decide what's more intuitive for users.
-            AssertEx.SequenceIs(result, Helpers.Dates((1, 1)));
+            AssertEx.SequenceIs(result, Helpers.DatesFromTimeZone(H.US_EASTERN_TIME_ZONE, (1, 1)));
         }
 
         [TestMethod]
@@ -144,7 +144,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
                 utcNow: new DateTime(H.YEAR, 2, 14),
                 H.US_EASTERN_TIME_ZONE);
 
-            AssertEx.SequenceIs(result, Helpers.DatesAtLastSecond(H.US_EASTERN_TIME_ZONE, (1, 1)));
+            AssertEx.SequenceIs(result, Helpers.DatesFromTimeZone(H.US_EASTERN_TIME_ZONE, (1, 1)));
         }
 
         [TestMethod]
