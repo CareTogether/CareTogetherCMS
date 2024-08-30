@@ -14,10 +14,8 @@ export const theme = createTheme({
   typography: {
     h3: {
       fontSize: '1.3rem',
-      '@media (min-width:600px)': {
-        [createTheme().breakpoints.up('sm')]: {
-          fontSize: '2rem',
-        },
+      [createTheme().breakpoints.up('sm')]: {
+        fontSize: '2rem',
       },
     },
   },
