@@ -3214,6 +3214,7 @@ export enum VolunteerFamilyRequirementScope {
 
 export class CurrentFeatureFlags implements ICurrentFeatureFlags {
     inviteUser?: boolean;
+    familyScreenV2?: boolean;
 
     constructor(data?: ICurrentFeatureFlags) {
         if (data) {
@@ -3227,6 +3228,7 @@ export class CurrentFeatureFlags implements ICurrentFeatureFlags {
     init(_data?: any) {
         if (_data) {
             this.inviteUser = _data["inviteUser"];
+            this.familyScreenV2 = _data["familyScreenV2"];
         }
     }
 
@@ -3240,12 +3242,14 @@ export class CurrentFeatureFlags implements ICurrentFeatureFlags {
     toJSON(data?: any) {
         data = typeof data === 'object' ? data : {};
         data["inviteUser"] = this.inviteUser;
+        data["familyScreenV2"] = this.familyScreenV2;
         return data;
     }
 }
 
 export interface ICurrentFeatureFlags {
     inviteUser?: boolean;
+    familyScreenV2?: boolean;
 }
 
 export class DocumentUploadInfo implements IDocumentUploadInfo {

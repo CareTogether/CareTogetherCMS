@@ -20,6 +20,7 @@ import {
   RadioGroup,
   FormControlLabel,
   Radio,
+  Typography,
 } from '@mui/material';
 import {
   Arrangement,
@@ -92,7 +93,7 @@ const sortArrangementsByStartDateDescThenCreateDateDesc = (
   );
 };
 
-export function FamilyScreen() {
+export function FamilyScreenV2() {
   const familyIdMaybe = useParams<{ familyId: string }>();
   const familyId = familyIdMaybe.familyId as string;
 
@@ -280,6 +281,7 @@ export function FamilyScreen() {
     </ProgressBackdrop>
   ) : (
     <Container maxWidth={false} sx={{ paddingLeft: '12px' }}>
+      <Typography variant="h1">Family Screen V2</Typography>
       <Toolbar variant="dense" disableGutters={true}>
         {permissions(Permission.UploadFamilyDocuments) && (
           <Button
