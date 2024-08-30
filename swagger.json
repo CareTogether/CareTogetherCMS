@@ -943,10 +943,11 @@
         "tags": [
           "Metadata"
         ],
+        "summary": "Generates the OData $metadata document.",
         "operationId": "Metadata_GetMetadata",
         "responses": {
           "200": {
-            "description": "",
+            "description": "The IEdmModel representing $metadata.",
             "content": {
               "application/json": {
                 "schema": {
@@ -963,10 +964,11 @@
         "tags": [
           "Metadata"
         ],
+        "summary": "Generates the OData service document.",
         "operationId": "Metadata_GetServiceDocument",
         "responses": {
           "200": {
-            "description": "",
+            "description": "The service document for the service.",
             "content": {
               "application/json": {
                 "schema": {
@@ -6944,11 +6946,13 @@
       },
       "IEdmModel": {
         "type": "object",
+        "description": "Semantic representation of an EDM model.",
         "x-abstract": true,
         "additionalProperties": false,
         "properties": {
           "schemaElements": {
             "type": "array",
+            "description": "Gets the collection of schema elements that are contained in this model.",
             "nullable": true,
             "items": {
               "$ref": "#/components/schemas/IEdmSchemaElement"
@@ -6956,6 +6960,7 @@
           },
           "vocabularyAnnotations": {
             "type": "array",
+            "description": "Gets the collection of vocabulary annotations that are contained in this model.",
             "nullable": true,
             "items": {
               "$ref": "#/components/schemas/IEdmVocabularyAnnotation"
@@ -6963,6 +6968,7 @@
           },
           "referencedModels": {
             "type": "array",
+            "description": "Gets the collection of models referred to by this model (mainly by the this.References).",
             "nullable": true,
             "items": {
               "$ref": "#/components/schemas/IEdmModel"
@@ -6970,12 +6976,14 @@
           },
           "declaredNamespaces": {
             "type": "array",
+            "description": "Gets the collection of namespaces that schema elements use contained in this model.",
             "nullable": true,
             "items": {
               "type": "string"
             }
           },
           "directValueAnnotationsManager": {
+            "description": "Gets the model's annotations manager.",
             "nullable": true,
             "oneOf": [
               {
@@ -6984,6 +6992,7 @@
             ]
           },
           "entityContainer": {
+            "description": "Gets the only one entity container of the model.",
             "nullable": true,
             "oneOf": [
               {
@@ -6995,21 +7004,28 @@
       },
       "IEdmSchemaElement": {
         "type": "object",
+        "description": "Common base interface for all named children of EDM schema.",
         "x-abstract": true,
         "additionalProperties": false,
         "properties": {
           "schemaElementKind": {
-            "$ref": "#/components/schemas/EdmSchemaElementKind"
+            "description": "Gets the kind of this schema element.",
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/EdmSchemaElementKind"
+              }
+            ]
           },
           "namespace": {
             "type": "string",
+            "description": "Gets the namespace this schema element belongs to.",
             "nullable": true
           }
         }
       },
       "EdmSchemaElementKind": {
         "type": "integer",
-        "description": "",
+        "description": "Defines EDM schema element types.",
         "x-enumNames": [
           "None",
           "TypeDefinition",
@@ -7029,14 +7045,17 @@
       },
       "IEdmVocabularyAnnotation": {
         "type": "object",
+        "description": "Represents an EDM vocabulary annotation.",
         "x-abstract": true,
         "additionalProperties": false,
         "properties": {
           "qualifier": {
             "type": "string",
+            "description": "Gets the qualifier used to discriminate between multiple bindings of the same property or type.",
             "nullable": true
           },
           "term": {
+            "description": "Gets the term bound by the annotation.",
             "nullable": true,
             "oneOf": [
               {
@@ -7045,6 +7064,7 @@
             ]
           },
           "target": {
+            "description": "Gets the element the annotation applies to.",
             "nullable": true,
             "oneOf": [
               {
@@ -7053,6 +7073,7 @@
             ]
           },
           "value": {
+            "description": "Gets the expression producing the value of the annotation.",
             "nullable": true,
             "oneOf": [
               {
@@ -7064,10 +7085,12 @@
       },
       "IEdmTerm": {
         "type": "object",
+        "description": "Represents an EDM term.",
         "x-abstract": true,
         "additionalProperties": false,
         "properties": {
           "type": {
+            "description": "Gets the type of this term.",
             "nullable": true,
             "oneOf": [
               {
@@ -7077,23 +7100,28 @@
           },
           "appliesTo": {
             "type": "string",
+            "description": "Gets the AppliesTo of this term.",
             "nullable": true
           },
           "defaultValue": {
             "type": "string",
+            "description": "Gets the DefaultValue of this term.",
             "nullable": true
           }
         }
       },
       "IEdmTypeReference": {
         "type": "object",
+        "description": "Represents a references to a type.",
         "x-abstract": true,
         "additionalProperties": false,
         "properties": {
           "isNullable": {
-            "type": "boolean"
+            "type": "boolean",
+            "description": "Gets a value indicating whether this type is nullable."
           },
           "definition": {
+            "description": "Gets the definition to which this type refers.",
             "nullable": true,
             "oneOf": [
               {
@@ -7105,17 +7133,23 @@
       },
       "IEdmType": {
         "type": "object",
+        "description": "Represents the definition of an EDM type.",
         "x-abstract": true,
         "additionalProperties": false,
         "properties": {
           "typeKind": {
-            "$ref": "#/components/schemas/EdmTypeKind"
+            "description": "Gets the kind of this type.",
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/EdmTypeKind"
+              }
+            ]
           }
         }
       },
       "EdmTypeKind": {
         "type": "integer",
-        "description": "",
+        "description": "Defines EDM metatypes.",
         "x-enumNames": [
           "None",
           "Primitive",
@@ -7143,22 +7177,29 @@
       },
       "IEdmVocabularyAnnotatable": {
         "type": "object",
+        "description": "Represents an element that can be targeted by Vocabulary Annotations",
         "x-abstract": true,
         "additionalProperties": false
       },
       "IEdmExpression": {
         "type": "object",
+        "description": "Represents an EDM expression.",
         "x-abstract": true,
         "additionalProperties": false,
         "properties": {
           "expressionKind": {
-            "$ref": "#/components/schemas/EdmExpressionKind"
+            "description": "Gets the kind of this expression.",
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/EdmExpressionKind"
+              }
+            ]
           }
         }
       },
       "EdmExpressionKind": {
         "type": "integer",
-        "description": "",
+        "description": "Defines EDM expression kinds.",
         "x-enumNames": [
           "None",
           "BinaryConstant",
@@ -7218,16 +7259,19 @@
       },
       "IEdmDirectValueAnnotationsManager": {
         "type": "object",
+        "description": "Manages getting and setting direct annotations on EDM elements.",
         "x-abstract": true,
         "additionalProperties": false
       },
       "IEdmEntityContainer": {
         "type": "object",
+        "description": "Represents an EDM entity container.",
         "x-abstract": true,
         "additionalProperties": false,
         "properties": {
           "elements": {
             "type": "array",
+            "description": "Gets a collection of the elements of this entity container.",
             "nullable": true,
             "items": {
               "$ref": "#/components/schemas/IEdmEntityContainerElement"
@@ -7237,13 +7281,20 @@
       },
       "IEdmEntityContainerElement": {
         "type": "object",
+        "description": "Represents the common elements of all EDM entity container elements.",
         "x-abstract": true,
         "additionalProperties": false,
         "properties": {
           "containerElementKind": {
-            "$ref": "#/components/schemas/EdmContainerElementKind"
+            "description": "Gets the kind of element of this container element.",
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/EdmContainerElementKind"
+              }
+            ]
           },
           "container": {
+            "description": "Gets the container that contains this element.",
             "nullable": true,
             "oneOf": [
               {
@@ -7255,7 +7306,7 @@
       },
       "EdmContainerElementKind": {
         "type": "integer",
-        "description": "",
+        "description": "Defines EDM container element types.",
         "x-enumNames": [
           "None",
           "EntitySet",
@@ -7278,10 +7329,12 @@
           },
           {
             "type": "object",
+            "description": "Class representing the a service document.",
             "additionalProperties": false,
             "properties": {
               "entitySets": {
                 "type": "array",
+                "description": "Gets or sets the set of entity sets in the service document.",
                 "nullable": true,
                 "items": {
                   "$ref": "#/components/schemas/ODataEntitySetInfo"
@@ -7289,6 +7342,7 @@
               },
               "singletons": {
                 "type": "array",
+                "description": "Gets or sets the set of singletons in the service document.",
                 "nullable": true,
                 "items": {
                   "$ref": "#/components/schemas/ODataSingletonInfo"
@@ -7296,6 +7350,7 @@
               },
               "functionImports": {
                 "type": "array",
+                "description": "Gets or sets the set of function imports in the service document.",
                 "nullable": true,
                 "items": {
                   "$ref": "#/components/schemas/ODataFunctionImportInfo"
@@ -7312,6 +7367,7 @@
           },
           {
             "type": "object",
+            "description": "Class representing a entity set in a service document.",
             "additionalProperties": false
           }
         ]
@@ -7323,20 +7379,24 @@
           },
           {
             "type": "object",
+            "description": "Abstract class representing an element (EntitySet, Singleton) in a service document.",
             "x-abstract": true,
             "additionalProperties": false,
             "properties": {
               "url": {
                 "type": "string",
+                "description": "Gets or sets the URI representing the Unified Resource Locator (URL) to the element.",
                 "format": "uri",
                 "nullable": true
               },
               "name": {
                 "type": "string",
+                "description": "Gets or sets the name of the element; this is the entity set or singleton name in JSON and the HREF in Atom.",
                 "nullable": true
               },
               "title": {
                 "type": "string",
+                "description": "Gets or sets the title of the element; this is the title in JSON.",
                 "nullable": true
               }
             }
@@ -7345,10 +7405,12 @@
       },
       "ODataAnnotatable": {
         "type": "object",
+        "description": "Base class for all annotatable types in OData library.",
         "x-abstract": true,
         "additionalProperties": false,
         "properties": {
           "typeAnnotation": {
+            "description": "The annotation for storing @odata.type.",
             "nullable": true,
             "oneOf": [
               {
@@ -7360,10 +7422,12 @@
       },
       "ODataTypeAnnotation": {
         "type": "object",
+        "description": "Annotation which stores the EDM type information of a value.",
         "additionalProperties": false,
         "properties": {
           "typeName": {
             "type": "string",
+            "description": "Gets the type name to serialize, for the annotated item. ",
             "nullable": true
           }
         }
@@ -7375,6 +7439,7 @@
           },
           {
             "type": "object",
+            "description": "Class representing a singleton in a service document.",
             "additionalProperties": false
           }
         ]
@@ -7386,6 +7451,7 @@
           },
           {
             "type": "object",
+            "description": "Class representing a function Import in a service document.",
             "additionalProperties": false
           }
         ]
