@@ -6,6 +6,10 @@ import { ProgressBackdrop } from '../Shell/ProgressBackdrop';
 import { useFamilyLookup } from '../Model/DirectoryModel';
 import { familyLastName } from './FamilyUtils';
 import FamilyScreenPageVersionSwitch from './FamilyScreenPageVersionSwitch';
+import VisibilityOutlinedIcon from '@mui/icons-material/VisibilityOutlined';
+import AssignmentOutlinedIcon from '@mui/icons-material/AssignmentOutlined';
+import SourceOutlinedIcon from '@mui/icons-material/SourceOutlined';
+import TaskAltOutlinedIcon from '@mui/icons-material/TaskAltOutlined';
 
 interface TabPanelProps {
   children?: React.ReactNode;
@@ -69,10 +73,22 @@ export function FamilyScreenV2() {
           onChange={(_, newTab) => setCurrentTab(newTab)}
           aria-label="Family Screen Tabs"
         >
-          <Tab label="Overview" {...a11yProps(0)} />
-          <Tab label="Notes" {...a11yProps(1)} />
-          <Tab label="Documents" {...a11yProps(2)} />
-          <Tab label="Tasks" {...a11yProps(3)} />
+          <Tab
+            icon={<VisibilityOutlinedIcon />}
+            label="Overview"
+            {...a11yProps(0)}
+          />
+          <Tab
+            icon={<AssignmentOutlinedIcon />}
+            label="Notes"
+            {...a11yProps(1)}
+          />
+          <Tab
+            icon={<SourceOutlinedIcon />}
+            label="Documents"
+            {...a11yProps(2)}
+          />
+          <Tab icon={<TaskAltOutlinedIcon />} label="Tasks" {...a11yProps(3)} />
           <FamilyScreenPageVersionSwitch />
         </Tabs>
       </Box>
