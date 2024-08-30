@@ -1,6 +1,5 @@
 import { createTheme } from '@mui/material/styles';
 import { amber } from '@mui/material/colors';
-import { fontSize, typography } from '@mui/system';
 
 export const theme = createTheme({
   palette: {
@@ -13,10 +12,8 @@ export const theme = createTheme({
   },
   typography: {
     h3: {
-      fontSize: '1.3rem',
-      [createTheme().breakpoints.up('sm')]: {
-        fontSize: '2rem',
-      },
+      fontSize: '1.17rem',
+      fontWeight: 700,
     },
   },
 });
