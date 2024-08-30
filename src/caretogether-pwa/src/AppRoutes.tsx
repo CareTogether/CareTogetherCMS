@@ -13,7 +13,7 @@ import { Settings } from './Settings/Settings';
 import { FamilyScreen } from './Families/FamilyScreen';
 import { Communities } from './Communities/Communities';
 import { UserProfile } from './UserProfile/UserProfile';
-import { useRecoilState, useRecoilStateLoadable } from 'recoil';
+import { useRecoilStateLoadable, useRecoilValue } from 'recoil';
 import {
   LocationContext,
   selectedLocationContextState,
@@ -122,7 +122,7 @@ function LocationContextWrapper() {
     null
   );
 
-  const [familyScreenV2] = useRecoilState(familyScreenV2State);
+  const familyScreenV2 = useRecoilValue(familyScreenV2State);
 
   // We only need to change this on first load or when the location context actually changes.
   useEffect(() => {
