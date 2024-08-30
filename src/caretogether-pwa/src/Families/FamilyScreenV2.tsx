@@ -93,7 +93,7 @@ const sortArrangementsByStartDateDescThenCreateDateDesc = (
   );
 };
 
-export function FamilyScreen() {
+export function FamilyScreenV2() {
   const familyIdMaybe = useParams<{ familyId: string }>();
   const familyId = familyIdMaybe.familyId as string;
 
@@ -281,6 +281,7 @@ export function FamilyScreen() {
     </ProgressBackdrop>
   ) : (
     <Container maxWidth={false} sx={{ paddingLeft: '12px' }}>
+      <Typography variant="h1">Family Screen V2</Typography>
       <Toolbar variant="dense" disableGutters={true}>
         {permissions(Permission.UploadFamilyDocuments) && (
           <Button
@@ -434,16 +435,52 @@ export function FamilyScreen() {
         <FamilyScreenPageVersionSwitch />
       </Toolbar>
       <Grid container spacing={0}>
-        <Grid item xs={12} md={4} spacing={0}>
-          <ActivityTimeline family={family} />
+        <Grid item container xs={12} md={4} spacing={0}>
+          <Grid item xs={12}>
+            <ActivityTimeline family={family} />
+          </Grid>
         </Grid>
-        <Grid item md={8}>
-          <Grid container spacing={2}>
-            <Grid item md={4}>
+        <Grid item xs={12} md={8}>
+          <Grid container spacing={0}>
+            <Grid item xs={12} md={4}>
               <PrimaryContactEditor family={family} />
+              {permissions(Permission.ViewReferralProgress) &&
+                family.partneringFamilyInfo && (
+                  <FormControl>
+                    <FormLabel
+                      id="demo-radio-buttons-group-label"
+                      sx={{
+                        color: '#000',
+                        fontSize: '1.17em',
+                        fontWeight: 'bold',
+                        marginBottom: 0,
+                      }}
+                    >
+                      Referrals
+                    </FormLabel>
+                    <RadioGroup
+                      aria-labelledby="demo-radio-buttons-group-label"
+                      value={selectedReferral ? selectedReferral.id : null}
+                      name="radio-buttons-group"
+                    >
+                      {allReferrals.map((referral) => (
+                        <FormControlLabel
+                          key={referral!.id}
+                          value={referral!.id}
+                          label={
+                            referral!.closedAtUtc
+                              ? `Referral Closed ${format(referral!.closedAtUtc!, 'M/d/yy')}`
+                              : 'Open Referral'
+                          }
+                          control={<Radio />}
+                          onChange={() => setSelectedReferralId(referral!.id)}
+                        />
+                      ))}
+                    </RadioGroup>
+                  </FormControl>
+                )}
             </Grid>
-
-            <Grid item md={8}>
+            <Grid item xs={6} md={4}>
               {permissions(Permission.ViewFamilyCustomFields) &&
                 (
                   family.family!.completedCustomFields ||
@@ -478,91 +515,6 @@ export function FamilyScreen() {
                       customField={customField}
                     />
                   ))}
-            </Grid>
-
-            <Grid item xs={12}>
-              <Typography
-                variant="h3"
-                style={{ marginTop: 0, marginBottom: 0 }}
-              >
-                Communities
-              </Typography>
-
-              {familyCommunityInfo?.map((communityInfo) => {
-                return (
-                  <ListItemButton
-                    key={communityInfo.community?.id}
-                    sx={{
-                      padding: '.5rem',
-                      border: '1px solid #e0e0e0',
-                      borderRadius: '5px',
-                    }}
-                    onClick={() =>
-                      communityInfo.community && communityInfo.community.id
-                        ? appNavigate.community(communityInfo.community.id)
-                        : {}
-                    }
-                  >
-                    <ListItemIcon
-                      sx={{ alignSelf: 'center', justifyContent: 'center' }}
-                    >
-                      <Diversity3Icon color="primary" />
-                    </ListItemIcon>
-                    <ListItemText
-                      sx={{ alignSelf: 'baseline' }}
-                      primary={communityInfo.community?.name}
-                      primaryTypographyProps={{
-                        color: theme.palette.primary.main,
-                      }}
-                    ></ListItemText>
-                  </ListItemButton>
-                );
-              })}
-            </Grid>
-
-            <Grid item xs={12} md={4}>
-              {permissions(Permission.ViewReferralProgress) &&
-                family.partneringFamilyInfo && (
-                  <FormControl>
-                    <FormLabel
-                      id="demo-radio-buttons-group-label"
-                      sx={{
-                        color: '#000',
-                        fontSize: '1.17em',
-                        fontWeight: 'bold',
-                        marginBottom: 0,
-                      }}
-                    >
-                      {' '}
-                      <Typography variant="h3">Referrals</Typography>
-                    </FormLabel>
-                    <RadioGroup
-                      aria-labelledby="demo-radio-buttons-group-label"
-                      value={selectedReferral ? selectedReferral.id : null}
-                      name="radio-buttons-group"
-                    >
-                      {allReferrals.map((referral) => (
-                        <FormControlLabel
-                          key={referral!.id}
-                          value={referral!.id}
-                          label={
-                            referral!.closedAtUtc
-                              ? `Referral Closed ${format(
-                                  referral!.closedAtUtc!,
-                                  'M/d/yy'
-                                )}`
-                              : 'Open Referral'
-                          }
-                          control={<Radio />}
-                          onChange={() => setSelectedReferralId(referral!.id)}
-                        />
-                      ))}
-                    </RadioGroup>
-                  </FormControl>
-                )}
-            </Grid>
-
-            <Grid item md={4}>
               {permissions(Permission.ViewReferralCustomFields) &&
                 (
                   selectedReferral?.completedCustomFields ||
@@ -599,7 +551,6 @@ export function FamilyScreen() {
                     />
                   ))}
             </Grid>
-
             <Grid item xs={6} md={4}>
               {canCloseReferral &&
                 selectedReferral?.id?.toString() ==
@@ -640,28 +591,56 @@ export function FamilyScreen() {
                 />
               )}
             </Grid>
-
-            <Grid item md={12}>
-              {permissions(Permission.ViewReferralComments) &&
-                selectedReferral && (
-                  <Grid container spacing={0}>
-                    <ReferralComments
-                      partneringFamily={family}
-                      referralId={selectedReferral.id!}
-                    />
-                  </Grid>
-                )}
+          </Grid>
+          <Grid container spacing={0} sx={{ marginBottom: '1rem' }}>
+            <Grid item xs={12}>
+              <h3 style={{ marginBottom: 0 }}>Communities</h3>
+              {familyCommunityInfo?.map((communityInfo) => {
+                return (
+                  <ListItemButton
+                    key={communityInfo.community?.id}
+                    sx={{
+                      padding: '.5rem',
+                      border: '1px solid #e0e0e0',
+                      borderRadius: '5px',
+                    }}
+                    onClick={() =>
+                      communityInfo.community && communityInfo.community.id
+                        ? appNavigate.community(communityInfo.community.id)
+                        : {}
+                    }
+                  >
+                    <ListItemIcon
+                      sx={{ alignSelf: 'center', justifyContent: 'center' }}
+                    >
+                      <Diversity3Icon color="primary" />
+                    </ListItemIcon>
+                    <ListItemText
+                      sx={{ alignSelf: 'baseline' }}
+                      primary={communityInfo.community?.name}
+                      primaryTypographyProps={{
+                        color: theme.palette.primary.main,
+                      }}
+                    ></ListItemText>
+                  </ListItemButton>
+                );
+              })}
             </Grid>
           </Grid>
-
+          {permissions(Permission.ViewReferralComments) && selectedReferral && (
+            <Grid container spacing={0}>
+              <ReferralComments
+                partneringFamily={family}
+                referralId={selectedReferral.id!}
+              />
+            </Grid>
+          )}
           <Grid container spacing={0}>
             {permissions(Permission.ViewReferralProgress) &&
               selectedReferral && (
                 <>
                   <Grid item xs={12} sm={6} md={4} style={{ paddingRight: 20 }}>
-                    <Typography variant="h3" style={{ marginBottom: 0 }}>
-                      Incomplete
-                    </Typography>
+                    <h3 style={{ marginBottom: 0 }}>Incomplete</h3>
                     {selectedReferral?.missingRequirements?.map(
                       (missing, i) => (
                         <MissingRequirementRow
@@ -674,9 +653,7 @@ export function FamilyScreen() {
                     )}
                   </Grid>
                   <Grid item xs={12} sm={6} md={4} style={{ paddingRight: 20 }}>
-                    <Typography variant="h3" style={{ marginBottom: 0 }}>
-                      Completed
-                    </Typography>
+                    <h3 style={{ marginBottom: 0 }}>Completed</h3>
                     {selectedReferral?.completedRequirements?.map(
                       (completed, i) => (
                         <CompletedRequirementRow
@@ -725,26 +702,14 @@ export function FamilyScreen() {
                         <Chip
                           key={removedRole.roleName}
                           size="small"
-                          label={`${removedRole.roleName} - ${
-                            RoleRemovalReason[removedRole.reason!]
-                          } - ${removedRole.additionalComments}${
-                            removedRole.effectiveSince
-                              ? ' - effective ' +
-                                format(removedRole.effectiveSince, 'M/d/yy')
-                              : ''
-                          }${
-                            removedRole.effectiveUntil
-                              ? ' - through ' +
-                                format(removedRole.effectiveUntil, 'M/d/yy')
-                              : ''
-                          }`}
+                          label={`${removedRole.roleName} - ${RoleRemovalReason[removedRole.reason!]} - ${removedRole.additionalComments}${removedRole.effectiveSince ? ' - effective ' + format(removedRole.effectiveSince, 'M/d/yy') : ''}${removedRole.effectiveUntil ? ' - through ' + format(removedRole.effectiveUntil, 'M/d/yy') : ''}`}
                         />
                       )
                     )}
                   </Box>
                 </Grid>
                 <Grid item xs={12} sm={6} md={4} style={{ paddingRight: 20 }}>
-                  <Typography variant="h3">Incomplete</Typography>
+                  <h3>Incomplete</h3>
                   {family.volunteerFamilyInfo?.missingRequirements?.map(
                     (missing, i) => (
                       <MissingRequirementRow
@@ -767,7 +732,7 @@ export function FamilyScreen() {
                   )}
                 </Grid>
                 <Grid item xs={12} sm={6} md={4} style={{ paddingRight: 20 }}>
-                  <Typography variant="h3">Completed</Typography>
+                  <h3>Completed</h3>
                   {family.volunteerFamilyInfo?.completedRequirements?.map(
                     (completed, i) => (
                       <CompletedRequirementRow
@@ -791,9 +756,7 @@ export function FamilyScreen() {
             )}
             {permissions(Permission.ViewFamilyDocumentMetadata) && (
               <Grid item xs={12} sm={6} md={4}>
-                <Typography variant="h3" style={{ marginBottom: 0 }}>
-                  Documents
-                </Typography>
+                <h3 style={{ marginBottom: 0 }}>Documents</h3>
                 <FamilyDocuments family={family} />
               </Grid>
             )}
@@ -817,8 +780,7 @@ export function FamilyScreen() {
                       flexWrap: `wrap`,
                     }}
                   >
-                    <Typography
-                      variant="h3"
+                    <h3
                       style={{
                         margin: 0,
                         display: `flex`,
@@ -826,7 +788,7 @@ export function FamilyScreen() {
                       }}
                     >
                       Arrangements
-                    </Typography>
+                    </h3>
                     <FilterMenu
                       singularLabel={`Arrangement`}
                       pluralLabel={`Arrangements`}
@@ -886,9 +848,7 @@ export function FamilyScreen() {
               </Grid>
             )}
             <Grid item xs={12}>
-              <Typography variant="h3" style={{ marginBottom: 0 }}>
-                Family Members
-              </Typography>
+              <h3 style={{ marginBottom: 0 }}>Family Members</h3>
               <Masonry
                 columns={isDesktop ? (isWideScreen ? 3 : 2) : 1}
                 spacing={2}

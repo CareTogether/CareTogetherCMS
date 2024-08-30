@@ -9,7 +9,11 @@ using System.Threading.Tasks;
 
 namespace CareTogether.Api.Controllers
 {
-    public sealed record CurrentFeatureFlags(bool InviteUser);
+    public sealed record CurrentFeatureFlags(
+        bool InviteUser,
+        bool FamilyScreenV2,
+        bool FamilyScreenPageVersionSwitch
+    );
 
     [ApiController]
     [Authorize(Policies.ForbidAnonymous, AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
@@ -58,7 +62,9 @@ namespace CareTogether.Api.Controllers
         public async Task<ActionResult<CurrentFeatureFlags>> GetLocationFlags(Guid organizationId)
         {
             var result = new CurrentFeatureFlags(
-                InviteUser: await featureManager.IsEnabledAsync(nameof(FeatureFlags.InviteUser))
+                InviteUser: await featureManager.IsEnabledAsync(nameof(FeatureFlags.InviteUser)),
+                FamilyScreenV2: await featureManager.IsEnabledAsync(nameof(FeatureFlags.FamilyScreenV2)),
+                FamilyScreenPageVersionSwitch: await featureManager.IsEnabledAsync(nameof(FeatureFlags.FamilyScreenPageVersionSwitch))
                 );
             return Ok(result);
         }

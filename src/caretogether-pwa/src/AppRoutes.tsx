@@ -13,7 +13,7 @@ import { Settings } from './Settings/Settings';
 import { FamilyScreen } from './Families/FamilyScreen';
 import { Communities } from './Communities/Communities';
 import { UserProfile } from './UserProfile/UserProfile';
-import { useRecoilStateLoadable } from 'recoil';
+import { useRecoilStateLoadable, useRecoilValue } from 'recoil';
 import {
   LocationContext,
   selectedLocationContextState,
@@ -25,6 +25,8 @@ import { useScopedTrace } from './Hooks/useScopedTrace';
 import { useLoadable } from './Hooks/useLoadable';
 import { useLocalStorage } from './Hooks/useLocalStorage';
 import { InboxScreen } from './Inbox/InboxScreen';
+import { FamilyScreenV2 } from './Families/FamilyScreenV2';
+import { familyScreenV2State } from './Families/familyScreenV2State';
 
 const LAST_VISITED_LOCATION = 'lastVisitedLocation';
 
@@ -120,6 +122,8 @@ function LocationContextWrapper() {
     null
   );
 
+  const familyScreenV2 = useRecoilValue(familyScreenV2State);
+
   // We only need to change this on first load or when the location context actually changes.
   useEffect(() => {
     trace(`organizationId: '${organizationId}' -- locationId: '${locationId}'`);
@@ -149,7 +153,10 @@ function LocationContextWrapper() {
         <Routes>
           <Route index element={<Dashboard />} />
           <Route path="inbox/*" element={<InboxScreen />} />
-          <Route path="families/:familyId" element={<FamilyScreen />} />
+          <Route
+            path="families/:familyId"
+            element={familyScreenV2 ? <FamilyScreenV2 /> : <FamilyScreen />}
+          />
           <Route path="referrals/*" element={<Referrals />} />
           <Route path="volunteers/*" element={<Volunteers />} />
           <Route path="communities/*" element={<Communities />} />
