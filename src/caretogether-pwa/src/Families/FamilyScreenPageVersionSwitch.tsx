@@ -16,6 +16,10 @@ export default function FamilyScreenPageVersionSwitch() {
     }
   }, [flags?.familyScreenV2, setFamilyScreenV2Flag, familyScreenV2Flag]);
 
+  if (!flags?.familyScreenPageVersionSwitch) {
+    return null;
+  }
+
   return (
     <PageVersionSwitch
       sx={{

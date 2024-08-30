@@ -11,7 +11,8 @@ namespace CareTogether.Api.Controllers
 {
     public sealed record CurrentFeatureFlags(
         bool InviteUser,
-        bool FamilyScreenV2
+        bool FamilyScreenV2,
+        bool FamilyScreenPageVersionSwitch
     );
 
     [ApiController]
@@ -62,7 +63,8 @@ namespace CareTogether.Api.Controllers
         {
             var result = new CurrentFeatureFlags(
                 InviteUser: await featureManager.IsEnabledAsync(nameof(FeatureFlags.InviteUser)),
-                FamilyScreenV2: await featureManager.IsEnabledAsync(nameof(FeatureFlags.FamilyScreenV2))
+                FamilyScreenV2: await featureManager.IsEnabledAsync(nameof(FeatureFlags.FamilyScreenV2)),
+                FamilyScreenPageVersionSwitch: await featureManager.IsEnabledAsync(nameof(FeatureFlags.FamilyScreenPageVersionSwitch))
                 );
             return Ok(result);
         }

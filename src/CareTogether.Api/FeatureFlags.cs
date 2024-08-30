@@ -4,6 +4,7 @@ namespace CareTogether.Api
     public enum FeatureFlags
     {
         InviteUser,
-        FamilyScreenV2
+        FamilyScreenV2,
+        FamilyScreenPageVersionSwitch
     }
 }
