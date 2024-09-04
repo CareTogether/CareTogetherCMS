@@ -10,6 +10,7 @@ import TaskAltOutlinedIcon from '@mui/icons-material/TaskAltOutlined';
 import HomeOutlinedIcon from '@mui/icons-material/HomeOutlined';
 import DescriptionOutlinedIcon from '@mui/icons-material/DescriptionOutlined';
 import NotesIcon from '@mui/icons-material/Notes';
+import FamilyProfile from './FamilyProfile';
 
 interface TabPanelProps {
   children?: React.ReactNode;
@@ -85,7 +86,7 @@ export function FamilyScreenV2() {
         </Tabs>
       </Box>
       <CustomTabPanel value={currentTab} index={0}>
-        Item Zero
+        <FamilyProfile />
       </CustomTabPanel>
       <CustomTabPanel value={currentTab} index={1}>
         Item One
