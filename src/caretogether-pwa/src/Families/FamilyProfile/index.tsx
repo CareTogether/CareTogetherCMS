@@ -7,7 +7,7 @@ import { useFamilyPermissions } from '../../Model/SessionModel';
 
 import { FamilyCustomField } from '../FamilyCustomField';
 import RequirementsList from './RequirementsList';
-import { CustomFieldEditorV2 } from './CustomFieldEditorNoIcon';
+import sortCompletedCustomFields from './sortCompletedCustomFields';
 
 const FamilyProfile = () => {
   const familyIdMaybe = useParams<{ familyId: string }>();
@@ -56,23 +56,7 @@ const FamilyProfile = () => {
                   ([] as Array<CompletedCustomFieldInfo | string>)
                 )
                   .concat(family.missingCustomFields || [])
-                  .sort((a, b) =>
-                    (a instanceof CompletedCustomFieldInfo
-                      ? a.customFieldName!
-                      : a) <
-                    (b instanceof CompletedCustomFieldInfo
-                      ? b.customFieldName!
-                      : b)
-                      ? -1
-                      : (a instanceof CompletedCustomFieldInfo
-                            ? a.customFieldName!
-                            : a) >
-                          (b instanceof CompletedCustomFieldInfo
-                            ? b.customFieldName!
-                            : b)
-                        ? 1
-                        : 0
-                  )
+                  .sort(sortCompletedCustomFields)
                   .map((customField) => (
                     <FamilyCustomField
                       key={
