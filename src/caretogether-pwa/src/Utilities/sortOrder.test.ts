@@ -1,15 +1,28 @@
-import { CompletedCustomFieldInfo } from '../../GeneratedClient';
-import sortCompletedCustomFields from './sortCompletedCustomFields';
+import { alphabeticallyBy } from './sortOrder';
 
-function wrapperHelper(input: (string | CompletedCustomFieldInfo)[]) {
-  return input.sort(sortCompletedCustomFields);
+class CustomClass {
+  constructor(public customName: string) {}
 }
 
-const customFieldA = new CompletedCustomFieldInfo({ customFieldName: 'A' });
-const customFieldB = new CompletedCustomFieldInfo({ customFieldName: 'B' });
+type T = CustomClass | string;
+
+function wrapperHelper(input: T[]) {
+  return input.sort(
+    alphabeticallyBy((value) => {
+      if (value instanceof CustomClass) {
+        return value.customName;
+      }
+
+      return value;
+    })
+  );
+}
+
+const customFieldA = new CustomClass('A');
+const customFieldB = new CustomClass('B');
 
 it('input should equal output if valueA is less than valueB', () => {
-  expect(sortCompletedCustomFields('1', '2')).toStrictEqual(-1);
+  expect(wrapperHelper(['1', '2'])).toStrictEqual(['1', '2']);
 
   expect(wrapperHelper(['1', '2'])).toStrictEqual(['1', '2']);
 

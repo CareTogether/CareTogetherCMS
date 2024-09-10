@@ -7,7 +7,7 @@ import { useFamilyPermissions } from '../../Model/SessionModel';
 
 import { FamilyCustomField } from '../FamilyCustomField';
 import RequirementsList from './RequirementsList';
-import sortCompletedCustomFields from './sortCompletedCustomFields';
+import { alphabeticallyBy } from '../../Utilities/sortOrder';
 
 const FamilyProfile = () => {
   const familyIdMaybe = useParams<{ familyId: string }>();
@@ -28,6 +28,11 @@ const FamilyProfile = () => {
   const firstName2 = adult2.item1?.firstName;
 
   const lastName = adult1.item1?.lastName;
+
+  const completedCustomFields = family.family!.completedCustomFields || [];
+  const missingCustomFields = family.missingCustomFields || [];
+
+  const customFields = [...completedCustomFields, ...missingCustomFields];
 
   return (
     <>
@@ -51,12 +56,16 @@ const FamilyProfile = () => {
             </Typography>
             <Grid>
               {permissions(Permission.ViewFamilyCustomFields) &&
-                (
-                  family.family!.completedCustomFields ||
-                  ([] as Array<CompletedCustomFieldInfo | string>)
-                )
-                  .concat(family.missingCustomFields || [])
-                  .sort(sortCompletedCustomFields)
+                customFields
+                  .sort(
+                    alphabeticallyBy((value) => {
+                      if (value instanceof CompletedCustomFieldInfo) {
+                        return value.customFieldName || '';
+                      }
+
+                      return value;
+                    })
+                  )
                   .map((customField) => (
                     <FamilyCustomField
                       key={
