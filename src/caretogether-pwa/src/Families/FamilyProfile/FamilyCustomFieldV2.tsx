@@ -1,20 +1,20 @@
-import { CompletedCustomFieldInfo, CustomField } from '../GeneratedClient';
+import { CompletedCustomFieldInfo, CustomField } from '../../GeneratedClient';
 import { useRecoilValue } from 'recoil';
-import { policyData } from '../Model/ConfigurationModel';
-import { CustomFieldEditor } from '../Generic/CustomFieldEditor';
-import { useDirectoryModel } from '../Model/DirectoryModel';
+import { policyData } from '../../Model/ConfigurationModel';
+import { CustomFieldEditorV2 } from '../../Families/FamilyProfile/CustomFieldEditorNoIcon';
+import { useDirectoryModel } from '../../Model/DirectoryModel';
 
-type FamilyCustomFieldProps = {
+type FamilyCustomFieldV2Props = {
   familyId: string;
   customField: CompletedCustomFieldInfo | string;
   isEditable?: boolean;
 };
 
-export function FamilyCustomField({
+export function FamilyCustomFieldV2({
   familyId,
   customField,
   isEditable = false,
-}: FamilyCustomFieldProps) {
+}: FamilyCustomFieldV2Props) {
   const policy = useRecoilValue(policyData);
 
   const savedCustomField =
@@ -28,7 +28,7 @@ export function FamilyCustomField({
   const directoryModel = useDirectoryModel();
 
   return (
-    <CustomFieldEditor
+    <CustomFieldEditorV2
       customFieldPolicy={customFieldPolicy}
       completedCustomFieldInfo={
         customField instanceof CompletedCustomFieldInfo

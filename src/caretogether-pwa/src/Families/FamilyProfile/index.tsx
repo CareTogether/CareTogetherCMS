@@ -4,8 +4,7 @@ import { useParams } from 'react-router';
 import { useFamilyLookup } from '../../Model/DirectoryModel';
 import { CompletedCustomFieldInfo, Permission } from '../../GeneratedClient';
 import { useFamilyPermissions } from '../../Model/SessionModel';
-
-import { FamilyCustomField } from '../FamilyCustomField';
+import { FamilyCustomFieldV2 } from '../FamilyProfile/FamilyCustomFieldV2';
 import RequirementsList from './RequirementsList';
 import { alphabeticallyBy } from '../../Utilities/sortOrder';
 
@@ -67,7 +66,7 @@ const FamilyProfile = () => {
                     })
                   )
                   .map((customField) => (
-                    <FamilyCustomField
+                    <FamilyCustomFieldV2
                       key={
                         typeof customField === 'string'
                           ? customField
@@ -76,7 +75,6 @@ const FamilyProfile = () => {
                       familyId={familyId}
                       customField={customField}
                       isEditable={false}
-                      isNewCustomField={true}
                     />
                   ))}
             </Grid>
