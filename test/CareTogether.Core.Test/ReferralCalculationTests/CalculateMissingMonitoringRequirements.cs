@@ -39,7 +39,8 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
                     Helpers.LocationHistoryEntries(),
                     Helpers.LocationHistoryEntries(),
                     Comments: null, Reason: null),
-                utcNow: new DateTime(H.YEAR, 1, 31));
+                utcNow: new DateTime(H.YEAR, 1, 31),
+                H.US_EASTERN_TIME_ZONE);
 
             AssertEx.SequenceIs(result);
         }
@@ -65,7 +66,8 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
                     Helpers.LocationHistoryEntries(),
                     Helpers.LocationHistoryEntries(),
                     Comments: null, Reason: null),
-                utcNow: new DateTime(H.YEAR, 1, 31));
+                utcNow: new DateTime(H.YEAR, 1, 31),
+                H.US_EASTERN_TIME_ZONE);
 
             AssertEx.SequenceIs(result,
                 new MissingArrangementRequirement(null, null, null, null, "A", DueBy: null, PastDueSince: new DateTime(H.YEAR, 1, 3)),
@@ -102,7 +104,8 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
                     Helpers.LocationHistoryEntries(),
                     Helpers.LocationHistoryEntries(),
                     Comments: null, Reason: null),
-                utcNow: new DateTime(H.YEAR, 1, 31));
+                utcNow: new DateTime(H.YEAR, 1, 31),
+                H.US_EASTERN_TIME_ZONE);
 
             AssertEx.SequenceIs(result,
                 new MissingArrangementRequirement(null, null, null, null, "A", DueBy: null, PastDueSince: new DateTime(H.YEAR, 1, 10)),
@@ -137,7 +140,8 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
                     Helpers.LocationHistoryEntries(),
                     Helpers.LocationHistoryEntries(),
                     Comments: null, Reason: null),
-                utcNow: new DateTime(H.YEAR, 1, 8));
+                utcNow: new DateTime(H.YEAR, 1, 8),
+                H.US_EASTERN_TIME_ZONE);
 
             AssertEx.SequenceIs(result,
                 new MissingArrangementRequirement(null, null, null, null, "A", DueBy: new DateTime(H.YEAR, 1, 10), PastDueSince: null),

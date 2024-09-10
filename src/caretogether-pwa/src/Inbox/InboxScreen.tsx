@@ -1,6 +1,17 @@
-import { Container, List, ListItem, ListItemButton, ListItemIcon, ListItemText, Typography } from '@mui/material';
+import {
+  Container,
+  List,
+  ListItem,
+  ListItemButton,
+  ListItemIcon,
+  ListItemText,
+  Typography,
+} from '@mui/material';
 import { useRecoilValueLoadable } from 'recoil';
-import { locationConfigurationQuery, organizationConfigurationQuery } from '../Model/ConfigurationModel';
+import {
+  locationConfigurationQuery,
+  organizationConfigurationQuery,
+} from '../Model/ConfigurationModel';
 import useScreenTitle from '../Shell/ShellScreenTitle';
 import { useDataLoaded } from '../Model/Data';
 import { ProgressBackdrop } from '../Shell/ProgressBackdrop';
@@ -18,48 +29,70 @@ interface InboxMessageProps {
   secondaryContent?: JSX.Element;
 }
 
-function getMessageProps(item: QueueItem, appNavigate: AppNavigate): InboxMessageProps {
+function getMessageProps(
+  item: QueueItem,
+  appNavigate: AppNavigate
+): InboxMessageProps {
   switch (item.type) {
     case 'ChildOver18':
       return {
-        icon: <EmojiPeople color='error' />,
+        icon: <EmojiPeople color="error" />,
         onClick: () => appNavigate.family(item.family.family!.id!),
-        primaryContent:
+        primaryContent: (
           <>
-            <Typography variant='body1' sx={{ display: 'inline', fontWeight: 'bold' }}>Child over 18: </Typography>
+            <Typography
+              variant="body1"
+              sx={{ display: 'inline', fontWeight: 'bold' }}
+            >
+              Child over 18:{' '}
+            </Typography>
             <PersonName person={item.child} />
-          </>,
-        secondaryContent: <FamilyName family={item.family} />
+          </>
+        ),
+        secondaryContent: <FamilyName family={item.family} />,
       };
     case 'MissingPrimaryContact':
       return {
-        icon: <EmojiPeople color='error' />,
+        icon: <EmojiPeople color="error" />,
         onClick: () => appNavigate.family(item.family.family!.id!),
-        primaryContent: <Typography variant='body1' sx={{ display: 'inline', fontWeight: 'bold' }}>Family missing a primary contact</Typography>,
-        secondaryContent: <FamilyName family={item.family} />
+        primaryContent: (
+          <Typography
+            variant="body1"
+            sx={{ display: 'inline', fontWeight: 'bold' }}
+          >
+            Family missing a primary contact
+          </Typography>
+        ),
+        secondaryContent: <FamilyName family={item.family} />,
       };
   }
 }
 
-function InboxMessage({ icon, onClick, primaryContent, secondaryContent }: InboxMessageProps) {
+function InboxMessage({
+  icon,
+  onClick,
+  primaryContent,
+  secondaryContent,
+}: InboxMessageProps) {
   return (
-    <ListItemButton disableGutters sx={{ paddingTop: 0, paddingBottom: 0 }}
-      onClick={onClick}>
-      <ListItemIcon sx={{ minWidth: 34 }}>
-        {icon}
-      </ListItemIcon>
-      <ListItemText
-        primary={primaryContent}
-        secondary={secondaryContent} />
+    <ListItemButton
+      disableGutters
+      sx={{ paddingTop: 0, paddingBottom: 0 }}
+      onClick={onClick}
+    >
+      <ListItemIcon sx={{ minWidth: 34 }}>{icon}</ListItemIcon>
+      <ListItemText primary={primaryContent} secondary={secondaryContent} />
     </ListItemButton>
-  )
+  );
 }
 
 function MessageList() {
   const appNavigate = useAppNavigate();
   const queueItems = useLoadable(queueItemsQuery);
 
-  const messages = queueItems?.map(item => getMessageProps(item, appNavigate));
+  const messages = queueItems?.map((item) =>
+    getMessageProps(item, appNavigate)
+  );
 
   return (
     <List>
@@ -73,18 +106,25 @@ function MessageList() {
 }
 
 export function InboxScreen() {
-  const organizationConfiguration = useRecoilValueLoadable(organizationConfigurationQuery);
-  const locationConfiguration = useRecoilValueLoadable(locationConfigurationQuery);
+  const organizationConfiguration = useRecoilValueLoadable(
+    organizationConfigurationQuery
+  );
+  const locationConfiguration = useRecoilValueLoadable(
+    locationConfigurationQuery
+  );
 
   const dataLoaded = useDataLoaded();
 
-  useScreenTitle("Inbox");
+  useScreenTitle('Inbox');
 
-  return ((!dataLoaded || locationConfiguration.state !== 'hasValue' && organizationConfiguration.state !== 'hasValue')
-    ? <ProgressBackdrop>
+  return !dataLoaded ||
+    (locationConfiguration.state !== 'hasValue' &&
+      organizationConfiguration.state !== 'hasValue') ? (
+    <ProgressBackdrop>
       <p>Loading messages...</p>
     </ProgressBackdrop>
-    : <Container maxWidth={false} sx={{ paddingLeft: '12px' }}>
+  ) : (
+    <Container maxWidth={false} sx={{ paddingLeft: '12px' }}>
       <MessageList />
     </Container>
   );

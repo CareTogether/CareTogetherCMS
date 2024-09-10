@@ -8,7 +8,10 @@ function Referrals() {
     <>
       <Routes>
         <Route path="" element={<PartneringFamilies />} />
-        <Route path="family/:familyId" element={<Navigate to={`/families/${familyId?.params.familyId}`} />} />
+        <Route
+          path="family/:familyId"
+          element={<Navigate to={`/families/${familyId?.params.familyId}`} />}
+        />
         <Route path="*" element={<Navigate to=".." replace />} />
       </Routes>
     </>

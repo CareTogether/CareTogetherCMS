@@ -1,22 +1,25 @@
-import { format } from "date-fns";
-import { useRecoilValue } from "recoil";
-import { MissingArrangementRequirement, Permission } from "../GeneratedClient";
-import { policyData } from "../Model/ConfigurationModel";
-import { useFamilyLookup, usePersonLookup } from "../Model/DirectoryModel";
-import { useFamilyIdPermissions } from "../Model/SessionModel";
-import { useDialogHandle } from "../Hooks/useDialogHandle";
-import { FamilyName } from "../Families/FamilyName";
-import { PersonName } from "../Families/PersonName";
-import { IconRow } from "../Generic/IconRow";
-import { MissingRequirementDialog } from "./MissingRequirementDialog";
-import { RequirementContext } from "./RequirementContext";
+import { format } from 'date-fns';
+import { useRecoilValue } from 'recoil';
+import { MissingArrangementRequirement, Permission } from '../GeneratedClient';
+import { policyData } from '../Model/ConfigurationModel';
+import { useFamilyLookup, usePersonLookup } from '../Model/DirectoryModel';
+import { useFamilyIdPermissions } from '../Model/SessionModel';
+import { useDialogHandle } from '../Hooks/useDialogHandle';
+import { FamilyName } from '../Families/FamilyName';
+import { PersonName } from '../Families/PersonName';
+import { IconRow } from '../Generic/IconRow';
+import { MissingRequirementDialog } from './MissingRequirementDialog';
+import { RequirementContext } from './RequirementContext';
 
 type MissingArrangementRequirementRowProps = {
   requirement: MissingArrangementRequirement;
   context: RequirementContext;
 };
 
-export function MissingArrangementRequirementRow({ requirement, context }: MissingArrangementRequirementRowProps) {
+export function MissingArrangementRequirementRow({
+  requirement,
+  context,
+}: MissingArrangementRequirementRowProps) {
   const policy = useRecoilValue(policyData);
   const permissions = useFamilyIdPermissions(
     context.kind === 'Referral' ||
@@ -31,12 +34,16 @@ export function MissingArrangementRequirementRow({ requirement, context }: Missi
 
   const requirementPolicy = policy.actionDefinitions![requirement.actionName!];
 
-  if (context.kind === 'Referral' ||
+  if (
+    context.kind === 'Referral' ||
     context.kind === 'Individual Volunteer' ||
-    context.kind === 'Volunteer Family')
+    context.kind === 'Volunteer Family'
+  )
     throw new Error(`Invalid missing requirement context '${context.kind}'`);
 
-  const canComplete = permissions(Permission.EditArrangementRequirementCompletion);
+  const canComplete = permissions(
+    Permission.EditArrangementRequirementCompletion
+  );
   const canExempt = permissions(Permission.EditArrangementRequirementExemption);
 
   const familyLookup = useFamilyLookup();
@@ -44,33 +51,88 @@ export function MissingArrangementRequirementRow({ requirement, context }: Missi
 
   return (
     <>
-      {requirement.dueBy
-        ? <IconRow icon='📅' onClick={canComplete || canExempt ? dialogHandle.openDialog : undefined}>
+      {requirement.dueBy ? (
+        <IconRow
+          icon="📅"
+          onClick={
+            canComplete || canExempt ? dialogHandle.openDialog : undefined
+          }
+        >
           {requirement.actionName}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-          <span style={{ float: 'right' }}>{format(requirement.dueBy, "M/d/yy h:mm a")}</span>
-          {requirement.volunteerFamilyId && !requirement.personId &&
-            <><br /><span style={{ paddingLeft: '30px' }}>
-              <FamilyName family={familyLookup(requirement.volunteerFamilyId)} />
-            </span></>}
-          {requirement.volunteerFamilyId && requirement.personId &&
-            <><br /><span style={{ paddingLeft: '30px' }}>
-              <PersonName person={personLookup(requirement.volunteerFamilyId, requirement.personId)} />
-            </span></>}
+          <span style={{ float: 'right' }}>
+            {format(requirement.dueBy, 'M/d/yy h:mm a')}
+          </span>
+          {requirement.volunteerFamilyId && !requirement.personId && (
+            <>
+              <br />
+              <span style={{ paddingLeft: '30px' }}>
+                <FamilyName
+                  family={familyLookup(requirement.volunteerFamilyId)}
+                />
+              </span>
+            </>
+          )}
+          {requirement.volunteerFamilyId && requirement.personId && (
+            <>
+              <br />
+              <span style={{ paddingLeft: '30px' }}>
+                <PersonName
+                  person={personLookup(
+                    requirement.volunteerFamilyId,
+                    requirement.personId
+                  )}
+                />
+              </span>
+            </>
+          )}
         </IconRow>
-        : <IconRow icon='❌' onClick={canComplete || canExempt ? dialogHandle.openDialog : undefined}>
+      ) : (
+        <IconRow
+          icon="❌"
+          onClick={
+            canComplete || canExempt ? dialogHandle.openDialog : undefined
+          }
+        >
           {requirement.actionName}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-          {requirement.pastDueSince && <span style={{ float: 'right' }}>{format(requirement.pastDueSince, "M/d/yy h:mm a")}</span>}
-          {requirement.volunteerFamilyId && !requirement.personId &&
-            <><br /><span style={{ paddingLeft: '30px' }}>
-              <FamilyName family={familyLookup(requirement.volunteerFamilyId)} />
-            </span></>}
-          {requirement.volunteerFamilyId && requirement.personId &&
-            <><br /><span style={{ paddingLeft: '30px' }}>
-              <PersonName person={personLookup(requirement.volunteerFamilyId, requirement.personId)} />
-            </span></>}
-        </IconRow>}
-      {dialogHandle.open && <MissingRequirementDialog handle={dialogHandle}
-        requirement={requirement} context={context} policy={requirementPolicy} referralId={context.referralId} />}
+          {requirement.pastDueSince && (
+            <span style={{ float: 'right' }}>
+              {format(requirement.pastDueSince, 'M/d/yy h:mm a')}
+            </span>
+          )}
+          {requirement.volunteerFamilyId && !requirement.personId && (
+            <>
+              <br />
+              <span style={{ paddingLeft: '30px' }}>
+                <FamilyName
+                  family={familyLookup(requirement.volunteerFamilyId)}
+                />
+              </span>
+            </>
+          )}
+          {requirement.volunteerFamilyId && requirement.personId && (
+            <>
+              <br />
+              <span style={{ paddingLeft: '30px' }}>
+                <PersonName
+                  person={personLookup(
+                    requirement.volunteerFamilyId,
+                    requirement.personId
+                  )}
+                />
+              </span>
+            </>
+          )}
+        </IconRow>
+      )}
+      {dialogHandle.open && (
+        <MissingRequirementDialog
+          handle={dialogHandle}
+          requirement={requirement}
+          context={context}
+          policy={requirementPolicy}
+          referralId={context.referralId}
+        />
+      )}
     </>
   );
 }

@@ -1,62 +1,123 @@
 import { useState } from 'react';
-import { FormControl, FormControlLabel, FormLabel, Grid, Radio, RadioGroup, TextField } from '@mui/material';
+import {
+  FormControl,
+  FormControlLabel,
+  FormLabel,
+  Grid,
+  Radio,
+  RadioGroup,
+  TextField,
+} from '@mui/material';
 import { RoleRemovalReason } from '../GeneratedClient';
 import { useVolunteersModel } from '../Model/VolunteersModel';
 import { UpdateDialog } from '../Generic/UpdateDialog';
 import { DatePicker } from '@mui/x-date-pickers';
 
 interface RemoveFamilyRoleDialogProps {
-  volunteerFamilyId: string,
-  role: string,
-  onClose: () => void
+  volunteerFamilyId: string;
+  role: string;
+  onClose: () => void;
 }
 
-export function RemoveFamilyRoleDialog({ volunteerFamilyId, role, onClose }: RemoveFamilyRoleDialogProps) {
+export function RemoveFamilyRoleDialog({
+  volunteerFamilyId,
+  role,
+  onClose,
+}: RemoveFamilyRoleDialogProps) {
   const volunteerFamiliesModel = useVolunteersModel();
   const [fields, setFields] = useState({
     reason: RoleRemovalReason.Inactive,
-    additionalComments: "",
+    additionalComments: '',
     effectiveSince: new Date() as Date | null,
-    effectiveThrough: null as Date | null
+    effectiveThrough: null as Date | null,
   });
-  const { reason, additionalComments, effectiveSince, effectiveThrough } = fields;
+  const { reason, additionalComments, effectiveSince, effectiveThrough } =
+    fields;
 
   async function save() {
-    await volunteerFamiliesModel.removeFamilyRole(volunteerFamilyId,
-      role, reason, additionalComments, effectiveSince, effectiveThrough);
+    await volunteerFamiliesModel.removeFamilyRole(
+      volunteerFamilyId,
+      role,
+      reason,
+      additionalComments,
+      effectiveSince,
+      effectiveThrough
+    );
   }
 
   return (
-    <UpdateDialog title={`Remove ${role} role for this family`} onClose={onClose}
-      onSave={save} enableSave={() => additionalComments !== ""}>
+    <UpdateDialog
+      title={`Remove ${role} role for this family`}
+      onClose={onClose}
+      onSave={save}
+      enableSave={() => additionalComments !== ''}
+    >
       <form noValidate autoComplete="off">
         <Grid container spacing={2}>
           <Grid item xs={12}>
             <FormControl component="fieldset">
               <FormLabel component="legend">Reason for Removal:</FormLabel>
-              <RadioGroup aria-label="reason" name="reason" row
-                value={RoleRemovalReason[reason]} onChange={e => setFields({ ...fields, reason: RoleRemovalReason[e.target.value as keyof typeof RoleRemovalReason] })}>
-                <FormControlLabel value={RoleRemovalReason[RoleRemovalReason.Inactive]} control={<Radio size="small" />} label="Inactive" />
-                <FormControlLabel value={RoleRemovalReason[RoleRemovalReason.OptOut]} control={<Radio size="small" />} label="Opted Out" />
-                <FormControlLabel value={RoleRemovalReason[RoleRemovalReason.Denied]} control={<Radio size="small" />} label="Denied" />
+              <RadioGroup
+                aria-label="reason"
+                name="reason"
+                row
+                value={RoleRemovalReason[reason]}
+                onChange={(e) =>
+                  setFields({
+                    ...fields,
+                    reason:
+                      RoleRemovalReason[
+                        e.target.value as keyof typeof RoleRemovalReason
+                      ],
+                  })
+                }
+              >
+                <FormControlLabel
+                  value={RoleRemovalReason[RoleRemovalReason.Inactive]}
+                  control={<Radio size="small" />}
+                  label="Inactive"
+                />
+                <FormControlLabel
+                  value={RoleRemovalReason[RoleRemovalReason.OptOut]}
+                  control={<Radio size="small" />}
+                  label="Opted Out"
+                />
+                <FormControlLabel
+                  value={RoleRemovalReason[RoleRemovalReason.Denied]}
+                  control={<Radio size="small" />}
+                  label="Denied"
+                />
               </RadioGroup>
             </FormControl>
           </Grid>
           <Grid item xs={12}>
             <TextField
               id="additional-comments"
-              label="Additional Comments" placeholder="Explain why the family is not going to serve in this role"
-              multiline fullWidth variant="outlined" minRows={2} maxRows={5} size="small"
-              value={additionalComments} onChange={e => setFields({ ...fields, additionalComments: e.target.value })}
+              label="Additional Comments"
+              placeholder="Explain why the family is not going to serve in this role"
+              multiline
+              fullWidth
+              variant="outlined"
+              minRows={2}
+              maxRows={5}
+              size="small"
+              value={additionalComments}
+              onChange={(e) =>
+                setFields({ ...fields, additionalComments: e.target.value })
+              }
             />
           </Grid>
           <Grid item xs={12}>
             <DatePicker
               label="Effective Since (optional - leave blank to use the current date)"
               value={effectiveSince || null}
-              disableFuture format="M/d/yyyy"
-              onChange={(date: Date | null) => setFields({ ...fields, effectiveSince: date })}
-              slotProps={{ textField: { fullWidth: true } }} />
+              disableFuture
+              format="M/d/yyyy"
+              onChange={(date: Date | null) =>
+                setFields({ ...fields, effectiveSince: date })
+              }
+              slotProps={{ textField: { fullWidth: true } }}
+            />
           </Grid>
         </Grid>
       </form>

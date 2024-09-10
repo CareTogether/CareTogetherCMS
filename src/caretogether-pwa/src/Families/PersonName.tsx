@@ -1,7 +1,7 @@
 import { Person } from '../GeneratedClient';
 
 type PersonNameProps = {
-  person?: Person
+  person?: Person;
 };
 
 // eslint-disable-next-line react-refresh/only-export-components
@@ -12,7 +12,5 @@ export function personNameString(person?: Person) {
 }
 
 export function PersonName({ person }: PersonNameProps) {
-  return (
-    <span className='ct-person-name'>{personNameString(person)}</span>
-  );
+  return <span className="ct-person-name">{personNameString(person)}</span>;
 }

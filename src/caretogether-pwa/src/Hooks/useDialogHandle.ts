@@ -1,11 +1,11 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from 'react';
 
 export type DialogHandle = {
-  open: boolean
-  key: number
-  openDialog: () => void
-  closeDialog: () => void
-}
+  open: boolean;
+  key: number;
+  openDialog: () => void;
+  closeDialog: () => void;
+};
 
 // This custom hook provides a mechanism to ensure modal dialogs are mounted and unmounted safely
 // with regard to their internal state. Credit:
@@ -19,7 +19,8 @@ export function useDialogHandle(): DialogHandle {
   const closeDialog = () => setDialogOpen(false);
 
   useEffect(() => {
-    if (dialogOpen) { // Increment id each time modal is opened
+    if (dialogOpen) {
+      // Increment id each time modal is opened
       openId.current = openId.current + 1;
     }
   }, [dialogOpen]);
@@ -28,6 +29,6 @@ export function useDialogHandle(): DialogHandle {
     open: dialogOpen,
     key: openId.current,
     openDialog: openDialog,
-    closeDialog: closeDialog
+    closeDialog: closeDialog,
   };
 }

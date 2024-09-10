@@ -1,6 +1,6 @@
-import { useRecoilValue } from "recoil";
-import { selectedLocationContextState } from "../Model/Data";
-import { useNavigate } from "react-router-dom";
+import { useRecoilValue } from 'recoil';
+import { selectedLocationContextState } from '../Model/Data';
+import { useNavigate } from 'react-router-dom';
 
 export interface AppNavigate {
   dashboard: () => void;
@@ -16,16 +16,19 @@ export interface AppNavigate {
  */
 export function useAppNavigate(): AppNavigate {
   const navigate = useNavigate();
-  const { organizationId, locationId } = useRecoilValue(selectedLocationContextState);
+  const { organizationId, locationId } = useRecoilValue(
+    selectedLocationContextState
+  );
 
   function inContext(pathSuffix: string) {
     navigate(`/org/${organizationId}/${locationId}/${pathSuffix}`);
   }
 
   return {
-    dashboard: () => inContext(""),
-    inbox: () => inContext("inbox"),
+    dashboard: () => inContext(''),
+    inbox: () => inContext('inbox'),
     family: (familyId: string) => inContext(`families/${familyId}`),
-    community: (communityId: string) => inContext(`communities/community/${communityId}`)
+    community: (communityId: string) =>
+      inContext(`communities/community/${communityId}`),
   };
 }

@@ -6,8 +6,14 @@ export const theme = createTheme({
     primary: {
       main: '#00838f',
     },
-    secondary: amber/*{
+    secondary: amber /*{
       main: amber//'#ffc400'
-    }*/
-  }
+    }*/,
+  },
+  typography: {
+    h3: {
+      fontSize: '1.17rem',
+      fontWeight: 700,
+    },
+  },
 });

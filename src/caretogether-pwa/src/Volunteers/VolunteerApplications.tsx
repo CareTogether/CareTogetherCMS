@@ -6,7 +6,7 @@
 // import { VolunteerFamilyRequirementScope } from '../GeneratedClient';
 // import React, { useState } from 'react';
 
-export {}
+export {};
 
 // const useStyles = makeStyles((theme) => ({
 //   paper: {
@@ -120,9 +120,9 @@ export {}
 //   function openVolunteerFamily(volunteerFamilyId: string) {
 //     appNavigate.family(volunteerFamilyId);
 //   }
-  
+
 //   const [drawerOpen, setDrawerOpen] = useState(false);
-  
+
 //   return (
 //     <Grid container spacing={3}>
 //       <Grid item xs={12}>

@@ -8,19 +8,26 @@ import { useReferralsModel } from '../../Model/ReferralsModel';
 import { UpdateDialog } from '../../Generic/UpdateDialog';
 
 interface StartArrangementDialogProps {
-  referralId: string,
-  arrangement: Arrangement,
-  onClose: () => void
+  referralId: string;
+  arrangement: Arrangement;
+  onClose: () => void;
 }
 
-export function StartArrangementDialog({ referralId, arrangement, onClose }: StartArrangementDialogProps) {
+export function StartArrangementDialog({
+  referralId,
+  arrangement,
+  onClose,
+}: StartArrangementDialogProps) {
   const familyIdMaybe = useParams<{ familyId: string }>();
   const familyId = familyIdMaybe.familyId as string;
 
   const referralsModel = useReferralsModel();
   const personLookup = usePersonLookup();
 
-  const person = personLookup(familyId, arrangement.partneringFamilyPersonId) as Person;
+  const person = personLookup(
+    familyId,
+    arrangement.partneringFamilyPersonId
+  ) as Person;
 
   const [startedAtLocal, setStartedAtLocal] = useState(null as Date | null);
 
@@ -28,21 +35,37 @@ export function StartArrangementDialog({ referralId, arrangement, onClose }: Sta
     // Enforce that this goes to the very start of the day (00:00:00.000 AM) for now.
     // In the future, this should be a date-only value.
     startedAtLocal?.setHours(0, 0, 0, 0);
-    await referralsModel.startArrangement(familyId, referralId, arrangement.id!, startedAtLocal!);
+    await referralsModel.startArrangement(
+      familyId,
+      referralId,
+      arrangement.id!,
+      startedAtLocal!
+    );
   }
 
   return (
     <UpdateDialog
       title={`Do you want to start this ${arrangement.arrangementType} arrangement for ${person.firstName} ${person.lastName}?`}
-      onClose={onClose} onSave={save} enableSave={() => startedAtLocal != null}>
+      onClose={onClose}
+      onSave={save}
+      enableSave={() => startedAtLocal != null}
+    >
       <Grid container spacing={2}>
         <Grid item xs={12}>
           <DatePicker
             label="When was this arrangement started?"
             value={startedAtLocal}
-            disableFuture format="M/d/yyyy"
+            disableFuture
+            format="M/d/yyyy"
             onChange={(date: Date | null) => date && setStartedAtLocal(date)}
-            slotProps={{ textField: { fullWidth: true, required: true, sx: { marginTop: 1 } } }} />
+            slotProps={{
+              textField: {
+                fullWidth: true,
+                required: true,
+                sx: { marginTop: 1 },
+              },
+            }}
+          />
         </Grid>
       </Grid>
     </UpdateDialog>

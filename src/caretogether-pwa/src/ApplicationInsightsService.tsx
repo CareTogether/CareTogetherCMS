@@ -1,4 +1,7 @@
-import { ApplicationInsights, ITelemetryItem } from '@microsoft/applicationinsights-web';
+import {
+  ApplicationInsights,
+  ITelemetryItem,
+} from '@microsoft/applicationinsights-web';
 import { ReactPlugin } from '@microsoft/applicationinsights-react-js';
 import { globalMsalInstance } from './Authentication/Auth';
 
@@ -12,8 +15,8 @@ const appInsights = new ApplicationInsights({
     enableResponseHeaderTracking: true,
     enableAjaxErrorStatusText: true,
     enableAjaxPerfTracking: true,
-    extensions: [aiReactPlugin]
-  }
+    extensions: [aiReactPlugin],
+  },
 });
 appInsights.loadAppInsights();
 
@@ -21,7 +24,7 @@ appInsights.addTelemetryInitializer((env: ITelemetryItem) => {
   const activeAccount = globalMsalInstance.getActiveAccount();
   if (activeAccount) {
     env.tags = env.tags || [];
-    env.tags["caretogether.userId"] = activeAccount.localAccountId;
+    env.tags['caretogether.userId'] = activeAccount.localAccountId;
   }
 });
 

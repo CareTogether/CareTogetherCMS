@@ -1,10 +1,11 @@
-import React from "react";
-import { appInsights } from "./ApplicationInsightsService";
+import React from 'react';
+import { appInsights } from './ApplicationInsightsService';
 
 export class GlobalErrorBoundary extends React.Component<
-  { children?: React.ReactNode; },
+  { children?: React.ReactNode },
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  { hasError: boolean; error: any; }> {
+  { hasError: boolean; error: any }
+> {
   constructor(props: object) {
     super(props);
     this.state = { hasError: false, error: null };
@@ -21,11 +22,11 @@ export class GlobalErrorBoundary extends React.Component<
     console.error(error);
     console.error(errorInfo);
     appInsights.trackEvent({
-      name: "ErrorScreen",
+      name: 'ErrorScreen',
       properties: {
-        'error': JSON.stringify(error),
-        'errorInfo': JSON.stringify(errorInfo)
-      }
+        error: JSON.stringify(error),
+        errorInfo: JSON.stringify(errorInfo),
+      },
     });
   }
 

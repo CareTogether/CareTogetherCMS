@@ -9,7 +9,7 @@ import { LocalizationProvider } from '@mui/x-date-pickers';
 import { AdapterDateFns as DateAdapter } from '@mui/x-date-pickers/AdapterDateFnsV3';
 import { GlobalErrorBoundary } from './GlobalErrorBoundary';
 import { RecoilRoot } from 'recoil';
-import { BrowserRouter as Router } from "react-router-dom";
+import { BrowserRouter as Router } from 'react-router-dom';
 import AuthenticationWrapper from './Authentication/AuthenticationWrapper';
 import { AppRoutes } from './AppRoutes';
 import RequestBackdrop from './Shell/RequestBackdrop';
@@ -28,10 +28,13 @@ root.render(
             <RecoilRoot>
               <Router>
                 <AuthenticationWrapper>
-                  <React.Suspense fallback={
-                    <ProgressBackdrop opaque>
-                      <p>Initializing...</p>
-                    </ProgressBackdrop>}>
+                  <React.Suspense
+                    fallback={
+                      <ProgressBackdrop opaque>
+                        <p>Initializing...</p>
+                      </ProgressBackdrop>
+                    }
+                  >
                     <AppRoutes />
                   </React.Suspense>
                 </AuthenticationWrapper>

@@ -1,24 +1,28 @@
-import { useLayoutEffect, useMemo } from "react";
-import { useLocation } from "react-router-dom";
-import { atomFamily, useRecoilState } from "recoil";
+import { useLayoutEffect, useMemo } from 'react';
+import { useLocation } from 'react-router-dom';
+import { atomFamily, useRecoilState } from 'recoil';
 
 type ScrollPosition = {
-  x: number,
-  y: number
-}
+  x: number;
+  y: number;
+};
 
 const pageScrollPositions = atomFamily({
   key: 'pageScrollPositions',
-  default: { x: 0, y: 0 } as ScrollPosition
+  default: { x: 0, y: 0 } as ScrollPosition,
 });
 
 export function useScrollMemory() {
   const { pathname } = useLocation();
 
-  const [pagePosition, setPagePosition] = useRecoilState(pageScrollPositions(pathname));
+  const [pagePosition, setPagePosition] = useRecoilState(
+    pageScrollPositions(pathname)
+  );
 
   const mainElement = useMemo(() => {
-    const mainElement = document.querySelector('#root > div > main') as HTMLElement;
+    const mainElement = document.querySelector(
+      '#root > div > main'
+    ) as HTMLElement;
     return mainElement;
   }, []);
 
@@ -31,7 +35,10 @@ export function useScrollMemory() {
       // Save the scroll position for the current page when unmounting it.
       // Only do this if the page has actually rendered the main element.
       if (mainElement) {
-        const positionToSave = { x: mainElement?.scrollLeft, y: mainElement?.scrollTop } as ScrollPosition;
+        const positionToSave = {
+          x: mainElement?.scrollLeft,
+          y: mainElement?.scrollTop,
+        } as ScrollPosition;
         setPagePosition(positionToSave);
       }
     };

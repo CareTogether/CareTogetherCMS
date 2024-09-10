@@ -8,40 +8,66 @@ import { useReferralsModel } from '../../Model/ReferralsModel';
 import { UpdateDialog } from '../../Generic/UpdateDialog';
 
 interface CancelArrangementDialogProps {
-  referralId: string,
-  arrangement: Arrangement,
-  onClose: () => void
+  referralId: string;
+  arrangement: Arrangement;
+  onClose: () => void;
 }
 
-export function CancelArrangementDialog({ referralId, arrangement, onClose }: CancelArrangementDialogProps) {
+export function CancelArrangementDialog({
+  referralId,
+  arrangement,
+  onClose,
+}: CancelArrangementDialogProps) {
   const familyIdMaybe = useParams<{ familyId: string }>();
   const familyId = familyIdMaybe.familyId as string;
 
   const referralsModel = useReferralsModel();
   const personLookup = usePersonLookup();
 
-  const person = personLookup(familyId, arrangement.partneringFamilyPersonId) as Person;
+  const person = personLookup(
+    familyId,
+    arrangement.partneringFamilyPersonId
+  ) as Person;
 
   const [fields, setFields] = useState({
-    cancelledAtLocal: null as Date | null
+    cancelledAtLocal: null as Date | null,
   });
   const { cancelledAtLocal } = fields;
 
   async function save() {
-    await referralsModel.cancelArrangement(familyId, referralId, arrangement.id!, cancelledAtLocal!);
+    await referralsModel.cancelArrangement(
+      familyId,
+      referralId,
+      arrangement.id!,
+      cancelledAtLocal!
+    );
   }
 
   return (
-    <UpdateDialog title={`Do you want to cancel setting up this ${arrangement.arrangementType} arrangement for ${person.firstName} ${person.lastName}?`}
-      onClose={onClose} onSave={save} enableSave={() => cancelledAtLocal != null}>
+    <UpdateDialog
+      title={`Do you want to cancel setting up this ${arrangement.arrangementType} arrangement for ${person.firstName} ${person.lastName}?`}
+      onClose={onClose}
+      onSave={save}
+      enableSave={() => cancelledAtLocal != null}
+    >
       <Grid container spacing={0}>
         <Grid item xs={12}>
           <DateTimePicker
             label="When was this arrangement cancelled?"
             value={cancelledAtLocal}
-            disableFuture format="M/d/yyyy h:mm a"
-            onChange={(date: Date | null) => date && setFields({ ...fields, cancelledAtLocal: date })}
-            slotProps={{ textField: { fullWidth: true, required: true, sx: { marginTop: 1 } } }} />
+            disableFuture
+            format="M/d/yyyy h:mm a"
+            onChange={(date: Date | null) =>
+              date && setFields({ ...fields, cancelledAtLocal: date })
+            }
+            slotProps={{
+              textField: {
+                fullWidth: true,
+                required: true,
+                sx: { marginTop: 1 },
+              },
+            }}
+          />
         </Grid>
       </Grid>
     </UpdateDialog>

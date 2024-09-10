@@ -4,12 +4,16 @@ import { DialogHandle } from '../Hooks/useDialogHandle';
 import { UpdateDialog } from '../Generic/UpdateDialog';
 
 interface DeletePersonDialogProps {
-  familyId: string,
-  person: Person,
-  handle: DialogHandle
+  familyId: string;
+  person: Person;
+  handle: DialogHandle;
 }
 
-export function DeletePersonDialog({ familyId, person, handle }: DeletePersonDialogProps) {
+export function DeletePersonDialog({
+  familyId,
+  person,
+  handle,
+}: DeletePersonDialogProps) {
   const directoryModel = useDirectoryModel();
 
   async function save() {
@@ -17,8 +21,10 @@ export function DeletePersonDialog({ familyId, person, handle }: DeletePersonDia
   }
 
   return (
-    <UpdateDialog title={`Are you sure you want to delete ${person.firstName} ${person.lastName}?`}
-      onClose={handle.closeDialog} onSave={save}>
-    </UpdateDialog>
+    <UpdateDialog
+      title={`Are you sure you want to delete ${person.firstName} ${person.lastName}?`}
+      onClose={handle.closeDialog}
+      onSave={save}
+    ></UpdateDialog>
   );
 }

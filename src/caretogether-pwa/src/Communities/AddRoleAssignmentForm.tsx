@@ -1,4 +1,15 @@
-import { Alert, Autocomplete, Button, FormControl, FormControlLabel, FormLabel, Grid, Radio, RadioGroup, TextField } from '@mui/material';
+import {
+  Alert,
+  Autocomplete,
+  Button,
+  FormControl,
+  FormControlLabel,
+  FormLabel,
+  Grid,
+  Radio,
+  RadioGroup,
+  TextField,
+} from '@mui/material';
 import { AddCommunityRoleAssignment, Community } from '../GeneratedClient';
 import { useCommunityCommand } from '../Model/DirectoryModel';
 import { useState } from 'react';
@@ -14,10 +25,13 @@ interface DrawerProps {
 interface AddRoleAssignmentFormProps extends DrawerProps {
   community: Community;
 }
-export function AddRoleAssignmentForm({ community, onClose }: AddRoleAssignmentFormProps) {
+export function AddRoleAssignmentForm({
+  community,
+  onClose,
+}: AddRoleAssignmentFormProps) {
   interface CandidatePerson {
-    id: string
-    label: string // Required by Autocomplete component
+    id: string;
+    label: string; // Required by Autocomplete component
   }
 
   const [person, setPerson] = useState<CandidatePerson | null>(null);
@@ -43,26 +57,44 @@ export function AddRoleAssignmentForm({ community, onClose }: AddRoleAssignmentF
   }
 
   const allFamilies = useRecoilValue(visibleFamiliesQuery);
-  const allAdults = allFamilies.flatMap(family => family.family!.adults!.map(adult => adult.item1!)).sort((a, b) => {
-    const aFirst = a.firstName!;
-    const aLast = a.lastName!;
-    const bFirst = b.firstName!;
-    const bLast = b.lastName!;
+  const allAdults = allFamilies
+    .flatMap((family) => family.family!.adults!.map((adult) => adult.item1!))
+    .sort((a, b) => {
+      const aFirst = a.firstName!;
+      const aLast = a.lastName!;
+      const bFirst = b.firstName!;
+      const bLast = b.lastName!;
 
-    // Sort by last name, then by first name
-    return aLast < bLast ? -1 : aLast > bLast ? 1 :
-      aFirst < bFirst ? -1 : aFirst > bFirst ? 1 :
-        0;
-  }).map(person => ({
-    id: person.id!,
-    label: personNameString(person)
-  } as CandidatePerson));
+      // Sort by last name, then by first name
+      return aLast < bLast
+        ? -1
+        : aLast > bLast
+          ? 1
+          : aFirst < bFirst
+            ? -1
+            : aFirst > bFirst
+              ? 1
+              : 0;
+    })
+    .map(
+      (person) =>
+        ({
+          id: person.id!,
+          label: personNameString(person),
+        }) as CandidatePerson
+    );
 
-  const organizationConfiguration = useRecoilValue(organizationConfigurationQuery);
+  const organizationConfiguration = useRecoilValue(
+    organizationConfigurationQuery
+  );
   const communityRoles = organizationConfiguration?.communityRoles || [];
 
-  const duplicate = !saving && (community.communityRoleAssignments?.find(cra =>
-    cra.personId === person?.id && cra.communityRole === role) || null);
+  const duplicate =
+    !saving &&
+    (community.communityRoleAssignments?.find(
+      (cra) => cra.personId === person?.id && cra.communityRole === role
+    ) ||
+      null);
 
   return (
     <Grid container spacing={2} maxWidth={500}>
@@ -78,7 +110,13 @@ export function AddRoleAssignmentForm({ community, onClose }: AddRoleAssignmentF
             }}
             options={allAdults}
             isOptionEqualToValue={(option, value) => option.id === value.id}
-            renderInput={(params) => <TextField required {...params} label="Select an adult to assign to this community" />}
+            renderInput={(params) => (
+              <TextField
+                required
+                {...params}
+                label="Select an adult to assign to this community"
+              />
+            )}
           />
         </FormControl>
       </Grid>
@@ -87,29 +125,42 @@ export function AddRoleAssignmentForm({ community, onClose }: AddRoleAssignmentF
           <FormLabel id="role">Role</FormLabel>
           <RadioGroup
             aria-labelledby="role"
-            value={role || ""}
+            value={role || ''}
             onChange={(_event, newValue) => setRole(newValue)}
           >
-            {communityRoles.map(role =>
-              <FormControlLabel key={role} value={role}
-                control={<Radio />} label={role} />)}
+            {communityRoles.map((role) => (
+              <FormControlLabel
+                key={role}
+                value={role}
+                control={<Radio />}
+                label={role}
+              />
+            ))}
           </RadioGroup>
         </FormControl>
       </Grid>
       <Grid item xs={12}>
-        {duplicate &&
-          <Alert severity="error">{person?.label} already has the {role} role in this community!</Alert>
-        }
+        {duplicate && (
+          <Alert severity="error">
+            {person?.label} already has the {role} role in this community!
+          </Alert>
+        )}
       </Grid>
       <Grid item xs={12} sx={{ textAlign: 'right' }}>
-        <Button color='secondary' variant='contained'
+        <Button
+          color="secondary"
+          variant="contained"
           sx={{ marginRight: 2 }}
-          onClick={onClose}>
+          onClick={onClose}
+        >
           Cancel
         </Button>
-        <Button color='primary' variant='contained'
+        <Button
+          color="primary"
+          variant="contained"
           disabled={person == null || role == null || duplicate != null}
-          onClick={save}>
+          onClick={save}
+        >
           Save
         </Button>
       </Grid>

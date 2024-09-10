@@ -1,5 +1,14 @@
 import { useState } from 'react';
-import { AppBar, Box, IconButton, Skeleton, Toolbar, Typography, useMediaQuery, useTheme } from '@mui/material';
+import {
+  AppBar,
+  Box,
+  IconButton,
+  Skeleton,
+  Toolbar,
+  Typography,
+  useMediaQuery,
+  useTheme,
+} from '@mui/material';
 import MenuIcon from '@mui/icons-material/Menu';
 import { ShellContextSwitcher } from './ShellContextSwitcher';
 import { screenTitleState } from './ShellScreenTitle';
@@ -14,7 +23,11 @@ interface ShellAppBarProps {
   drawerWidth: string;
 }
 
-export function ShellAppBar({ menuDrawerOpen, setMenuDrawerOpen, drawerWidth }: ShellAppBarProps) {
+export function ShellAppBar({
+  menuDrawerOpen,
+  setMenuDrawerOpen,
+  drawerWidth,
+}: ShellAppBarProps) {
   const theme = useTheme();
   const isDesktop = useMediaQuery(theme.breakpoints.up('md'));
 
@@ -28,17 +41,23 @@ export function ShellAppBar({ menuDrawerOpen, setMenuDrawerOpen, drawerWidth }: 
       sx={{
         zIndex: 1201,
         backgroundColor: theme.palette.primary.main,
-        paddingLeft: isDesktop ? (menuDrawerOpen ? 0 : 0) : 0
+        paddingLeft: isDesktop ? (menuDrawerOpen ? 0 : 0) : 0,
       }}
     >
       <Toolbar
         variant={isDesktop ? 'dense' : 'regular'}
-        sx={{ paddingLeft: isDesktop ? 0 : undefined, display: 'flex', justifyContent: 'center' }}
+        sx={{
+          paddingLeft: isDesktop ? 0 : undefined,
+          display: 'flex',
+          justifyContent: 'center',
+        }}
       >
         {isDesktop && (
           <Box sx={{ display: 'flex', alignItems: 'center' }}>
             {menuDrawerOpen ? (
-              <Box sx={{ width: drawerWidth, flexShrink: 0, position: 'relative' }}>
+              <Box
+                sx={{ width: drawerWidth, flexShrink: 0, position: 'relative' }}
+              >
                 <ShellContextSwitcher />
                 <IconButton
                   size={isDesktop ? 'medium' : 'large'}
@@ -67,8 +86,11 @@ export function ShellAppBar({ menuDrawerOpen, setMenuDrawerOpen, drawerWidth }: 
                 component="h3"
                 noWrap
                 sx={{
-                  display: { xs: openMobileSearch ? 'none' : 'block', md: 'block' },
-                  marginLeft: menuDrawerOpen ? 3 : 1
+                  display: {
+                    xs: openMobileSearch ? 'none' : 'block',
+                    md: 'block',
+                  },
+                  marginLeft: menuDrawerOpen ? 3 : 1,
                 }}
               >
                 {screenTitle}
@@ -96,4 +118,3 @@ export function ShellAppBar({ menuDrawerOpen, setMenuDrawerOpen, drawerWidth }: 
     </AppBar>
   );
 }
-

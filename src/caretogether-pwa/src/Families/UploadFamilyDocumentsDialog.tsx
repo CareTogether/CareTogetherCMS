@@ -1,5 +1,12 @@
 import { useState } from 'react';
-import { Button, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle } from '@mui/material';
+import {
+  Button,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogContentText,
+  DialogTitle,
+} from '@mui/material';
 import { CombinedFamilyInfo } from '../GeneratedClient';
 import { uploadFamilyFileToTenant } from '../Model/FilesModel';
 import { useRecoilValue } from 'recoil';
@@ -9,13 +16,18 @@ import { selectedLocationContextState } from '../Model/Data';
 import { isBackdropClick } from '../Utilities/handleBackdropClick';
 
 interface UploadFamilyDocumentsDialogProps {
-  family: CombinedFamilyInfo,
-  onClose: () => void
+  family: CombinedFamilyInfo;
+  onClose: () => void;
 }
 
-export function UploadFamilyDocumentsDialog({ family, onClose }: UploadFamilyDocumentsDialogProps) {
+export function UploadFamilyDocumentsDialog({
+  family,
+  onClose,
+}: UploadFamilyDocumentsDialogProps) {
   const [documentFiles, setDocumentFiles] = useState<FileList>();
-  const { organizationId, locationId } = useRecoilValue(selectedLocationContextState);
+  const { organizationId, locationId } = useRecoilValue(
+    selectedLocationContextState
+  );
   const directoryModel = useDirectoryModel();
 
   const withBackdrop = useBackdrop();
@@ -23,12 +35,23 @@ export function UploadFamilyDocumentsDialog({ family, onClose }: UploadFamilyDoc
   async function uploadDocument() {
     await withBackdrop(async () => {
       if (!documentFiles) {
-        alert("No files were selected. Try again.");
+        alert('No files were selected. Try again.');
       } else {
-        await Promise.all(Array.from(documentFiles).map(async documentFile => {
-          const documentId = await uploadFamilyFileToTenant(organizationId, locationId, family.family!.id!, documentFile);
-          await directoryModel.uploadFamilyDocument(family.family!.id!, documentId, documentFile.name);
-        }));
+        await Promise.all(
+          Array.from(documentFiles).map(async (documentFile) => {
+            const documentId = await uploadFamilyFileToTenant(
+              organizationId,
+              locationId,
+              family.family!.id!,
+              documentFile
+            );
+            await directoryModel.uploadFamilyDocument(
+              family.family!.id!,
+              documentId,
+              documentFile.name
+            );
+          })
+        );
         //TODO: Error handling (start with a basic error dialog w/ request to share a screenshot, and App Insights logging)
         onClose();
       }
@@ -36,10 +59,20 @@ export function UploadFamilyDocumentsDialog({ family, onClose }: UploadFamilyDoc
   }
 
   return (
-    <Dialog open={true} onClose={(event: object | undefined, reason: string) => !isBackdropClick(reason) ? onClose : ({})} aria-labelledby="upload-family-documents-title">
-      <DialogTitle id="upload-family-documents-title">Upload Family Documents</DialogTitle>
+    <Dialog
+      open={true}
+      onClose={(event: object | undefined, reason: string) =>
+        !isBackdropClick(reason) ? onClose : {}
+      }
+      aria-labelledby="upload-family-documents-title"
+    >
+      <DialogTitle id="upload-family-documents-title">
+        Upload Family Documents
+      </DialogTitle>
       <DialogContent>
-        <DialogContentText>Select one or more documents to upload for this family.</DialogContentText>
+        <DialogContentText>
+          Select one or more documents to upload for this family.
+        </DialogContentText>
         <input
           accept="*/*"
           multiple={true}

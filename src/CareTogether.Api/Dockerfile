@@ -2,6 +2,7 @@
 # More info at https://docs.microsoft.com/en-us/aspnet/core/host-and-deploy/docker/building-net-docker-images?view=aspnetcore-6.0
 
 FROM mcr.microsoft.com/dotnet/aspnet:8.0-alpine-amd64 AS base
+RUN apk add --no-cache tzdata
 WORKDIR /app
 
 FROM mcr.microsoft.com/dotnet/sdk:8.0-alpine-amd64 AS build
