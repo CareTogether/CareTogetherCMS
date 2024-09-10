@@ -7,6 +7,7 @@ import { useFamilyPermissions } from '../../Model/SessionModel';
 
 import { FamilyCustomField } from '../FamilyCustomField';
 import RequirementsList from './RequirementsList';
+import { CustomFieldEditorV2 } from './CustomFieldEditorNoIcon';
 
 const FamilyProfile = () => {
   const familyIdMaybe = useParams<{ familyId: string }>();
@@ -46,7 +47,7 @@ const FamilyProfile = () => {
               {firstName1} and {firstName2} {lastName}
             </Typography>
             <Typography variant="h5">
-              <PrimaryContactEditor family={family} />
+              <PrimaryContactEditor family={family} isEditable={false} />
             </Typography>
             <Grid>
               {permissions(Permission.ViewFamilyCustomFields) &&
@@ -81,6 +82,8 @@ const FamilyProfile = () => {
                       }
                       familyId={familyId}
                       customField={customField}
+                      isEditable={false}
+                      isNewCustomField={true}
                     />
                   ))}
             </Grid>

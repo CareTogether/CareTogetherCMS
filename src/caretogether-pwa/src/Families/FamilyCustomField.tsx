@@ -2,16 +2,21 @@ import { CompletedCustomFieldInfo, CustomField } from '../GeneratedClient';
 import { useRecoilValue } from 'recoil';
 import { policyData } from '../Model/ConfigurationModel';
 import { CustomFieldEditor } from '../Generic/CustomFieldEditor';
+import { CustomFieldEditorV2 } from '../Families/FamilyProfile/CustomFieldEditorNoIcon';
 import { useDirectoryModel } from '../Model/DirectoryModel';
 
 type FamilyCustomFieldProps = {
   familyId: string;
   customField: CompletedCustomFieldInfo | string;
+  isEditable?: boolean;
+  isNewCustomField: boolean;
 };
 
 export function FamilyCustomField({
   familyId,
   customField,
+  isEditable,
+  isNewCustomField = false,
 }: FamilyCustomFieldProps) {
   const policy = useRecoilValue(policyData);
 
@@ -25,21 +30,26 @@ export function FamilyCustomField({
 
   const directoryModel = useDirectoryModel();
 
+  const SelectedCustomFieldEditor = isNewCustomField
+    ? CustomFieldEditorV2
+    : CustomFieldEditor;
+
   return (
-    <CustomFieldEditor
+    <SelectedCustomFieldEditor
       customFieldPolicy={customFieldPolicy}
       completedCustomFieldInfo={
         customField instanceof CompletedCustomFieldInfo
           ? customField
           : undefined
       }
-      onSave={async (value) => {
+      onSave={async (value: string | boolean | null) => {
         await directoryModel.updateCustomFamilyField(
           familyId,
           customFieldPolicy,
           value
         );
       }}
+      isEditable={isEditable}
     />
   );
 }

@@ -11,8 +11,8 @@ import {
   CustomField,
   CustomFieldType,
   CustomFieldValidation,
-} from '../GeneratedClient';
-import { useInlineEditor } from '../Hooks/useInlineEditor';
+} from '../../GeneratedClient';
+import { useInlineEditor } from '../../Hooks/useInlineEditor';
 
 type CustomFieldEditorProps = {
   customFieldPolicy: CustomField;
@@ -22,7 +22,7 @@ type CustomFieldEditorProps = {
   isEditable?: boolean;
 };
 
-export function CustomFieldEditor({
+export function CustomFieldEditorV2({
   customFieldPolicy,
   completedCustomFieldInfo,
   onSave,
@@ -90,8 +90,6 @@ export function CustomFieldEditor({
               onChange={(e) => editor.setValue(e.target.value)}
             />
           )
-        ) : typeof savedValue === 'undefined' || savedValue == null ? (
-          '❓'
         ) : type === CustomFieldType.Boolean ? (
           savedValue ? (
             'Yes'
