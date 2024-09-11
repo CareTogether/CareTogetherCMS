@@ -129,8 +129,8 @@ namespace CareTogether.Managers
                 .Select(r => ToReferralAsync(r))
                 .WhenAll();
 
-            var openReferral = referrals.SingleOrDefault(r => r.CloseReason == null);
-            var closedReferrals = referrals.Where(r => r.CloseReason != null).ToImmutableList();
+            var openReferral = referrals.FirstOrDefault(r => r.CloseReason == null);
+            var closedReferrals = referrals.Where(r => r.Id != openReferral?.Id).ToImmutableList();
 
             var partneringFamilyInfo = new PartneringFamilyInfo(openReferral, closedReferrals,
                 referralEntries.SelectMany(entry => entry.History).ToImmutableList());
