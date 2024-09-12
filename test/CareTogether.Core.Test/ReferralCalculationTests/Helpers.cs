@@ -15,7 +15,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
         public static ImmutableList<CompletedRequirementInfo> Completed(params (string, int)[] completionsWithDates) =>
             completionsWithDates.Select(completion =>
                 new CompletedRequirementInfo(Guid.Empty, DateTime.MinValue,
-                    Guid.Empty, completion.Item1, new DateTime(YEAR, 1, completion.Item2), ExpiresAtUtc: null, null, null))
+                    Guid.Empty, completion.Item1, TimeZoneInfo.ConvertTimeToUtc(new DateTime(YEAR, 1, completion.Item2), US_EASTERN_TIME_ZONE), ExpiresAtUtc: null, null, null))
             .ToImmutableList();
 
         public static ImmutableList<CompletedRequirementInfo> CompletedWithExpiry(params (string, int, int?)[] completionsWithDates) =>
@@ -35,22 +35,16 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
             values.ToImmutableList();
 
         public static ImmutableList<DateTime> Dates(params (int month, int day)[] values) =>
-            values.Select(value => new DateTime(YEAR, value.month, value.day)).ToImmutableList();
+            values.Select(value => TimeZoneInfo.ConvertTimeToUtc(new DateTime(YEAR, value.month, value.day), US_EASTERN_TIME_ZONE)).ToImmutableList();
 
-        public static ImmutableList<DateTime> DatesFromTimeZone(TimeZoneInfo tz, params (int month, int day)[] values) =>
-            values.Select(value => TimeZoneInfo.ConvertTimeToUtc(new DateTime(YEAR, value.month, value.day), tz)).ToImmutableList();
-
-        public static DateTime DateFromTimeZone(TimeZoneInfo tz, int month, int day) =>
-            TimeZoneInfo.ConvertTimeToUtc(new DateTime(YEAR, month, day), tz);
-
-        public static ImmutableList<DateTime> DatesAtLastSecond(TimeZoneInfo tz, params (int month, int day)[] values) =>
-            values.Select(value => TimeZoneInfo.ConvertTimeToUtc(new DateTime(YEAR, value.month, value.day, 23, 59, 59), tz)).ToImmutableList();
+        public static DateTime Date(int month, int day) =>
+            TimeZoneInfo.ConvertTimeToUtc(new DateTime(YEAR, month, day), US_EASTERN_TIME_ZONE);
 
         public static ImmutableSortedSet<ChildLocationHistoryEntry> LocationHistoryEntries(
             params (ChildLocationPlan plan, int month, int day)[] values) =>
             values
                 .Select(value => new ChildLocationHistoryEntry(
-                    Guid.Empty, new DateTime(YEAR, value.month, value.day), Guid.Empty, Guid.Empty, value.plan, null))
+                    Guid.Empty, TimeZoneInfo.ConvertTimeToUtc(new DateTime(YEAR, value.month, value.day), US_EASTERN_TIME_ZONE), Guid.Empty, Guid.Empty, value.plan, null))
                 .ToImmutableSortedSet();
 
         public static ArrangementFunction FunctionWithoutEligibility(
