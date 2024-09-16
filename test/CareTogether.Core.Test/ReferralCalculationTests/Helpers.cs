@@ -34,8 +34,14 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
         public static ImmutableList<string> From(params string[] values) =>
             values.ToImmutableList();
 
+        public static ImmutableList<DateTime> Dates() =>
+            ImmutableList<DateTime>.Empty;
+
         public static ImmutableList<DateTime> Dates(params (int month, int day)[] values) =>
             values.Select(value => TimeZoneInfo.ConvertTimeToUtc(new DateTime(YEAR, value.month, value.day), US_EASTERN_TIME_ZONE)).ToImmutableList();
+
+        public static ImmutableList<DateTime> Dates(params (int month, int day, int hour)[] values) =>
+            values.Select(value => TimeZoneInfo.ConvertTimeToUtc(new DateTime(YEAR, value.month, value.day, value.hour, 0, 0), US_EASTERN_TIME_ZONE)).ToImmutableList();
 
         public static DateTime Date(int month, int day) =>
             TimeZoneInfo.ConvertTimeToUtc(new DateTime(YEAR, month, day), US_EASTERN_TIME_ZONE);
