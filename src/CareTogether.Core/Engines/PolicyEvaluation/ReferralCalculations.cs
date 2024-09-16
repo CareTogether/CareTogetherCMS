@@ -611,13 +611,7 @@ namespace CareTogether.Engines.PolicyEvaluation
                     : nextDueDate.Value >= completionGap.EndDate;
             } while (!endConditionExceeded);
 
-            return dueDatesInGap
-                    // .Select(date =>
-                    // {
-                    //     var asUnspecified = DateTime.SpecifyKind(date, DateTimeKind.Unspecified);
-                    //     return TimeZoneInfo.ConvertTimeToUtc(new DateTime(DateOnly.FromDateTime(asUnspecified), new TimeOnly(23, 59)), locationTimeZone);
-                    // })
-                    .ToImmutableList();
+            return dueDatesInGap.ToImmutableList();
         }
 
         internal static ImmutableList<DateOnly>

@@ -21,7 +21,6 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
                 .Add(new RecurrencePolicyStage(TimeSpan.FromDays(7), 4))
                 .Add(new RecurrencePolicyStage(TimeSpan.FromDays(14), null))),
                 filterToFamilyId: null,
-                // arrangementStartedAtUtc: new DateTime(H.YEAR, 1, 1),
                 arrangementStartedAtUtc: H.Date(1, 1),
                 arrangementEndedAtUtc: null,
                 completions: Helpers.Dates(),
@@ -461,6 +460,24 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
                 H.US_EASTERN_TIME_ZONE);
 
             AssertEx.SequenceIs(result, Helpers.Dates((1, 9), (1, 16), (1, 27), (2, 23)));
+        }
+
+        [TestMethod]
+        public void TestSeveralCompletionsWithTimes()
+        {
+            var result = ReferralCalculations.CalculateMissingMonitoringRequirementInstances(
+                new DurationStagesRecurrencePolicy(ImmutableList<RecurrencePolicyStage>.Empty
+                .Add(new RecurrencePolicyStage(TimeSpan.FromDays(2), 1))
+                .Add(new RecurrencePolicyStage(TimeSpan.FromDays(7), null))),
+                filterToFamilyId: null,
+                arrangementStartedAtUtc: Helpers.Date(8, 1),
+                arrangementEndedAtUtc: null,
+                completions: Helpers.Dates((8, 3, 10), (8, 10, 9), (8, 15, 13), (8, 22, 0), (8, 29, 13)),
+                childLocationHistory: Helpers.LocationHistoryEntries(),
+                utcNow: Helpers.Date(9, 16),
+                H.US_EASTERN_TIME_ZONE);
+
+            AssertEx.SequenceIs(result, Helpers.Dates((9, 5), (9, 12), (9, 19)));
         }
 
         [TestMethod]
