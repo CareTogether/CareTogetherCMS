@@ -1,10 +1,17 @@
-import { Box, Container, useMediaQuery, useTheme } from '@mui/material';
+import {
+  Box,
+  Container,
+  Snackbar,
+  useMediaQuery,
+  useTheme,
+} from '@mui/material';
 import { ShellBottomNavigation } from './ShellBottomNavigation';
 import { ShellAppBar } from './ShellAppBar';
 import { ShellSideNavigation } from './ShellSideNavigation';
 import { useLocalStorage } from '../Hooks/useLocalStorage';
 import React from 'react';
 import { ProgressBackdrop } from './ProgressBackdrop';
+import { useGlobalSnackBar } from '../Hooks/useGlobalSnackBar';
 
 function ShellRootLayout({ children }: React.PropsWithChildren) {
   const theme = useTheme();
@@ -16,6 +23,8 @@ function ShellRootLayout({ children }: React.PropsWithChildren) {
   );
 
   const drawerWidth = menuDrawerOpen ? 190 : 48;
+
+  const { message, resetSnackBar } = useGlobalSnackBar();
 
   return (
     <Box sx={{ flexGrow: 1 }}>
@@ -51,6 +60,14 @@ function ShellRootLayout({ children }: React.PropsWithChildren) {
         </Container>
       </Box>
       {!isDesktop && <ShellBottomNavigation />}
+
+      <Snackbar
+        open={Boolean(message)}
+        autoHideDuration={5000}
+        anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
+        message={message}
+        onClose={resetSnackBar}
+      />
     </Box>
   );
 }
