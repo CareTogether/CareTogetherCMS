@@ -19,7 +19,6 @@ import {
   InputBase,
   SelectChangeEvent,
   IconButton,
-  Snackbar,
   Stack,
   ToggleButton,
   ToggleButtonGroup,
@@ -60,6 +59,7 @@ import { ProgressBackdrop } from '../Shell/ProgressBackdrop';
 import { selectedLocationContextState } from '../Model/Data';
 import { useAppNavigate } from '../Hooks/useAppNavigate';
 import { VolunteerRoleApprovalStatusChip } from './VolunteerRoleApprovalStatusChip';
+import { useGlobalSnackBar } from '../Hooks/useGlobalSnackBar';
 
 //#region Role/Status Selection code
 enum filterType {
@@ -605,14 +605,17 @@ function VolunteerApproval(props: { onOpen: () => void }) {
       .filter((email) => typeof email !== 'undefined') as EmailAddress[];
   }
 
+  const { setAndShowGlobalSnackBar } = useGlobalSnackBar();
+
   function copyEmailAddresses() {
     const emailAddresses = getSelectedFamiliesContactEmails();
     navigator.clipboard.writeText(
       emailAddresses.map((email) => email.address).join('; ')
     );
-    setNoticeOpen(true);
+    setAndShowGlobalSnackBar(
+      `Found and copied ${getSelectedFamiliesContactEmails().length} email addresses for ${selectedFamilies.length} selected families to clipboard`
+    );
   }
-  const [noticeOpen, setNoticeOpen] = useState(false);
 
   const windowSize = useWindowSize();
 
@@ -680,13 +683,7 @@ function VolunteerApproval(props: { onOpen: () => void }) {
                   <SmsIcon sx={{ position: 'relative', top: 1 }} />
                 </IconButton>
               )}
-            <Snackbar
-              open={noticeOpen}
-              autoHideDuration={5000}
-              anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
-              onClose={() => setNoticeOpen(false)}
-              message={`Found and copied ${getSelectedFamiliesContactEmails().length} email addresses for ${selectedFamilies.length} selected families to clipboard`}
-            />
+
             <Box
               sx={{
                 display: 'flex',
