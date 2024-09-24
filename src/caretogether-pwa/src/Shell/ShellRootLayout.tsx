@@ -62,6 +62,7 @@ function ShellRootLayout({ children }: React.PropsWithChildren) {
       {!isDesktop && <ShellBottomNavigation />}
 
       <Snackbar
+        key={message}
         open={Boolean(message)}
         autoHideDuration={5000}
         anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
