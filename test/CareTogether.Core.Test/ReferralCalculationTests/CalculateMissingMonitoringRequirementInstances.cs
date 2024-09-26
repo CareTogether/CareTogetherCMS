@@ -481,6 +481,41 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
         }
 
         [TestMethod]
+        public void TestCompletionInTheStartDate()
+        {
+            var result = ReferralCalculations.CalculateMissingMonitoringRequirementInstances(
+                new DurationStagesRecurrencePolicy(ImmutableList<RecurrencePolicyStage>.Empty
+                .Add(new RecurrencePolicyStage(TimeSpan.FromDays(7), null))),
+                filterToFamilyId: null,
+                arrangementStartedAtUtc: Helpers.Date(8, 1),
+                arrangementEndedAtUtc: null,
+                completions: Helpers.Dates((8, 1)),
+                childLocationHistory: Helpers.LocationHistoryEntries(),
+                utcNow: Helpers.Date(8, 10),
+                H.US_EASTERN_TIME_ZONE);
+
+            AssertEx.SequenceIs(result, Helpers.Dates((8, 8), (8, 15)));
+        }
+
+        [TestMethod]
+        public void TestCompletionInTheStartDateWithMultipleStages()
+        {
+            var result = ReferralCalculations.CalculateMissingMonitoringRequirementInstances(
+                new DurationStagesRecurrencePolicy(ImmutableList<RecurrencePolicyStage>.Empty
+                .Add(new RecurrencePolicyStage(TimeSpan.FromDays(2), 1))
+                .Add(new RecurrencePolicyStage(TimeSpan.FromDays(7), null))),
+                filterToFamilyId: null,
+                arrangementStartedAtUtc: Helpers.Date(8, 1),
+                arrangementEndedAtUtc: null,
+                completions: Helpers.Dates((8, 1)),
+                childLocationHistory: Helpers.LocationHistoryEntries(),
+                utcNow: Helpers.Date(8, 10),
+                H.US_EASTERN_TIME_ZONE);
+
+            AssertEx.SequenceIs(result, Helpers.Dates((8, 8), (8, 15)));
+        }
+
+        [TestMethod]
         public void TestNoCompletionsWithPerChildLocationDurationStagesNoLocations()
         {
             var result = ReferralCalculations.CalculateMissingMonitoringRequirementInstances(
