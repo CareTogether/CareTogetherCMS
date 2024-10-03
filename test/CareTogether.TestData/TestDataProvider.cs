@@ -362,22 +362,22 @@ namespace CareTogether.TestData
                 new ArrangementsCommandExecuted(adminId, ReferralsMonth(11, 11, 13, 14), new AssignIndividualVolunteer(guid1, guid1, [guid1], guid4, guid4, "Family Coach", null)),
                 new ArrangementsCommandExecuted(adminId, ReferralsMonth(11, 11, 13, 55), new AssignVolunteerFamily(guid1, guid1, [guid1], guid2, "Host Family", "New Host Family")),
                 new ArrangementsCommandExecuted(adminId, ReferralsMonth(11, 12, 22, 21), new AssignVolunteerFamily(guid1, guid1, [guid1], guid3, "Host Family Friend", "Familiar Host Family")),
-                new ArrangementsCommandExecuted(adminId, ReferralsMonth(12, 16, 55, 0), new StartArrangements(guid1, guid1, [guid1], ReferralsMonth(12, 16, 55, 0))),
-                new ArrangementsCommandExecuted(adminId, ReferralsMonth(15, 8, 33, 34), new TrackChildLocationChange(guid1, guid1, [guid1],
-                    ReferralsMonth(15, 8, 33, 34), guid3, guid9, ChildLocationPlan.DaytimeChildCare, guid4)),
-                new ArrangementsCommandExecuted(adminId, ReferralsMonth(15, 20, 40, 45), new TrackChildLocationChange(guid1, guid1, [guid1],
-                    ReferralsMonth(15, 20, 40, 45), guid2, guid6, ChildLocationPlan.DaytimeChildCare, guid5)),
-                new ArrangementsCommandExecuted(adminId, ReferralsMonth(14, 10, 10, 10), new CompleteArrangementRequirement(guid1, guid1, [guid1], guid1,
-                    "Family Coach Safety Visit", ReferralsMonth(14, 10, 10, 10), guid4, guid0)),
-                new ArrangementsCommandExecuted(adminId, ReferralsMonth(21, 11, 11, 11), new CompleteArrangementRequirement(guid1, guid1, [guid1], guid2,
-                    "Family Coach Supervision", ReferralsMonth(21, 11, 11, 11), adminId, null)),
-                new ArrangementsCommandExecuted(adminId, ReferralsMonth(28, 18, 45, 0), new TrackChildLocationChange(guid1, guid1, [guid1],
-                    ReferralsMonth(22, 16, 30, 35), guid1, guid2, ChildLocationPlan.WithParent, guid6)),
-                new ArrangementsCommandExecuted(adminId, ReferralsMonth(28, 18, 46, 0), new TrackChildLocationChange(guid1, guid1, [guid1],
-                    ReferralsMonth(24, 8, 30, 35), guid2, guid5, ChildLocationPlan.OvernightHousing, guid7)),
-                new ArrangementsCommandExecuted(adminId, ReferralsMonth(28, 18, 47, 0), new TrackChildLocationChange(guid1, guid1, [guid1],
-                    ReferralsMonth(28, 18, 18, 18), guid1, guid2, ChildLocationPlan.WithParent, guid8)),
-                new ArrangementsCommandExecuted(adminId, ReferralsMonth(28, 19, 0, 0), new EndArrangements(guid1, guid1, [guid1], ReferralsMonth(28, 19, 0, 0))),
+                // new ArrangementsCommandExecuted(adminId, ReferralsMonth(12, 16, 55, 0), new StartArrangements(guid1, guid1, [guid1], ReferralsMonth(12, 16, 55, 0))),
+                // new ArrangementsCommandExecuted(adminId, ReferralsMonth(15, 8, 33, 34), new TrackChildLocationChange(guid1, guid1, [guid1],
+                //     ReferralsMonth(15, 8, 33, 34), guid3, guid9, ChildLocationPlan.DaytimeChildCare, guid4)),
+                // new ArrangementsCommandExecuted(adminId, ReferralsMonth(15, 20, 40, 45), new TrackChildLocationChange(guid1, guid1, [guid1],
+                //     ReferralsMonth(15, 20, 40, 45), guid2, guid6, ChildLocationPlan.DaytimeChildCare, guid5)),
+                // new ArrangementsCommandExecuted(adminId, ReferralsMonth(14, 10, 10, 10), new CompleteArrangementRequirement(guid1, guid1, [guid1], guid1,
+                //     "Family Coach Safety Visit", ReferralsMonth(14, 10, 10, 10), guid4, guid0)),
+                // new ArrangementsCommandExecuted(adminId, ReferralsMonth(21, 11, 11, 11), new CompleteArrangementRequirement(guid1, guid1, [guid1], guid2,
+                //     "Family Coach Supervision", ReferralsMonth(21, 11, 11, 11), adminId, null)),
+                // new ArrangementsCommandExecuted(adminId, ReferralsMonth(28, 18, 45, 0), new TrackChildLocationChange(guid1, guid1, [guid1],
+                //     ReferralsMonth(22, 16, 30, 35), guid1, guid2, ChildLocationPlan.WithParent, guid6)),
+                // new ArrangementsCommandExecuted(adminId, ReferralsMonth(28, 18, 46, 0), new TrackChildLocationChange(guid1, guid1, [guid1],
+                //     ReferralsMonth(24, 8, 30, 35), guid2, guid5, ChildLocationPlan.OvernightHousing, guid7)),
+                // new ArrangementsCommandExecuted(adminId, ReferralsMonth(28, 18, 47, 0), new TrackChildLocationChange(guid1, guid1, [guid1],
+                //     ReferralsMonth(28, 18, 18, 18), guid1, guid2, ChildLocationPlan.WithParent, guid8)),
+                // new ArrangementsCommandExecuted(adminId, ReferralsMonth(28, 19, 0, 0), new EndArrangements(guid1, guid1, [guid1], ReferralsMonth(28, 19, 0, 0))),
                 new ReferralCommandExecuted(adminId, ReferralsMonth(28, 12, 32, 55), new CloseReferral(guid1, guid1, ReferralCloseReason.NeedMet, ReferralsMonth(28, 12, 0, 0))),
                 new ReferralCommandExecuted(adminId, StartOfCurrentMonth(), new CreateReferral(guid1, guid2, ReferralsMonth(1, 19, 30, 45))),
                 new ReferralCommandExecuted(adminId, StartOfCurrentMonth(), new UpdateReferralComments(guid1, guid2, "The family needs help because Daylight Savings Time is starting up again soon.")),
@@ -410,9 +410,9 @@ namespace CareTogether.TestData
                 new ArrangementsCommandExecuted(adminId, ReferralsMonth(3, 11, 0, 0),
                     new ExemptArrangementRequirement(fisherFamilyGuid, fisherFamilyReferral1Guid, [fisherFamilyArrangement1Guid], "Advocacy Agreement", null, "Not needed", null)),
                 new ArrangementsCommandExecuted(adminId, ReferralsMonth(3, 11, 0, 0),
-                    new StartArrangements(fisherFamilyGuid, fisherFamilyReferral1Guid, [fisherFamilyArrangement1Guid], ReferralsMonth(1, 15, 0, 0))),
-                new ArrangementsCommandExecuted(adminId, ReferralsMonth(3, 11, 0, 0),
-                    new CompleteArrangementRequirement(fisherFamilyGuid, fisherFamilyReferral1Guid, [fisherFamilyArrangement1Guid], guid3, "Family Coach Checkin", ReferralsMonth(4, 2, 59, 0), null, null))
+                    new StartArrangements(fisherFamilyGuid, fisherFamilyReferral1Guid, [fisherFamilyArrangement1Guid], ReferralsMonth(1, 15, 0, 0)))
+                // new ArrangementsCommandExecuted(adminId, ReferralsMonth(3, 11, 0, 0),
+                //     new CompleteArrangementRequirement(fisherFamilyGuid, fisherFamilyReferral1Guid, [fisherFamilyArrangement1Guid], guid3, "Family Coach Checkin", ReferralsMonth(4, 2, 59, 0), null, null))
 
 
             );
@@ -861,21 +861,21 @@ namespace CareTogether.TestData
                             ],
                             RequiredMonitoringActions:
                             [
-                                new MonitoringRequirement("One Time Checkin",
-                                    new OneTimeRecurrencePolicy(
-                                        TimeSpan.FromDays(2)
-                                    )),
+                                // new MonitoringRequirement("One Time Checkin",
+                                //     new OneTimeRecurrencePolicy(
+                                //         TimeSpan.FromDays(2)
+                                //     )),
                                 new MonitoringRequirement("Family Coach Checkin",
                                     new DurationStagesRecurrencePolicy(
                                     [
-                                        new RecurrencePolicyStage(TimeSpan.FromDays(2), 1),
+                                        new RecurrencePolicyStage(TimeSpan.FromDays(2), 4),
                                         new RecurrencePolicyStage(TimeSpan.FromDays(7), null)
                                     ])),
-                                new MonitoringRequirement("Family Coach Supervision",
-                                    new DurationStagesRecurrencePolicy(
-                                    [
-                                        new RecurrencePolicyStage(TimeSpan.FromDays(7), null)
-                                    ]))
+                                // new MonitoringRequirement("Family Coach Supervision",
+                                //     new DurationStagesRecurrencePolicy(
+                                //     [
+                                //         new RecurrencePolicyStage(TimeSpan.FromDays(6), null)
+                                //     ]))
                             ],
                             RequiredCloseoutActionNames: new List<string>
                             { }.ToImmutableList())

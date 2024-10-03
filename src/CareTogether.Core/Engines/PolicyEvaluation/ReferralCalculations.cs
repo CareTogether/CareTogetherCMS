@@ -1,6 +1,7 @@
 using CareTogether.Resources;
 using CareTogether.Resources.Policies;
 using CareTogether.Resources.Referrals;
+using Microsoft.Kiota.Abstractions;
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
@@ -404,6 +405,76 @@ namespace CareTogether.Engines.PolicyEvaluation
                     timeSpan: new AbsoluteTimeSpan(new DateTime(result.startDate, new TimeOnly()), new DateTime(result.endDate, new TimeOnly()))))
                 .ToImmutableList();
 
+            ImmutableList<DateRange> calculateDateRanges(ImmutableList<DateRange> dateRanges, int delay, int occurrences)
+            {
+                if (occurrences != 0)
+                {
+                    return calculateDateRanges(
+                        dateRanges.Add(
+                            new DateRange(
+                                dateRanges.Last().End.AddDays(1),
+                                dateRanges.Last().End.AddDays(delay)
+                            )
+                        ),
+                        delay,
+                        occurrences - 1
+                    );
+                }
+
+                return dateRanges;
+            };
+
+            ImmutableList<DateRange> calculateDateRanges2(DateOnly startDate, int delay, int occurrences, ImmutableList<DateRange>? dateRanges = null)
+            {
+                if (dateRanges == null)
+                {
+                    return calculateDateRanges2(startDate, delay, occurrences - 1, [new DateRange(startDate, startDate.AddDays(delay - 1))]);
+                }
+
+                if (occurrences != 0)
+                {
+                    return calculateDateRanges2(
+                        startDate,
+                        delay,
+                        occurrences - 1,
+                        dateRanges.Add(
+                            new DateRange(
+                                dateRanges.Last().End.AddDays(1),
+                                dateRanges.Last().End.AddDays(delay)
+                            )
+                        )
+                    );
+                }
+
+                return dateRanges;
+            };
+
+            var completionWindows = recurrence.Stages
+                .Aggregate(ImmutableList<DateRange>.Empty, (windows, stage) =>
+                {
+                    var isFirst = windows.IsEmpty;
+                    var startDate = isFirst ? arrangementStartedDate : windows.Last().End.AddDays(1);
+                    var endDate = startDate.AddDays(stage.Delay.Days - (isFirst ? 0 : 1));
+
+                    var dateRange = new DateRange(startDate, endDate);
+
+                    if (stage.MaxOccurrences == null)
+                    {
+                        var occurrences = (today.DayNumber - endDate.DayNumber) / stage.Delay.Days;
+
+                        return windows.Concat(calculateDateRanges([dateRange], stage.Delay.Days, occurrences)).ToImmutableList();
+                    }
+
+                    var totalDuration = stage.Delay * stage.MaxOccurrences;
+
+                    if ((endDate.DayNumber - startDate.DayNumber) == totalDuration.Value.Days)
+                    {
+                        return windows.Add(dateRange);
+                    }
+
+                    return windows.Concat(calculateDateRanges([dateRange], stage.Delay.Days, stage.MaxOccurrences.Value)).ToImmutableList();
+                });
+
             // For each completion, find the time of the following completion (null in the case of the last completion
             // unless the arrangement has ended, in which case use the end of the arrangement).
             // This represents the set of gaps between completions in which there could be missing requirement due dates.
@@ -417,7 +488,7 @@ namespace CareTogether.Engines.PolicyEvaluation
             var validCompletions = completionDates
                 .Where(completion => completion >= arrangementStartedDate)
                 .ToImmutableList();
-            var completionGaps = validCompletions
+            var completionGapsRaw = validCompletions
                 .Where((completion, i) =>
                     i + 1 >= validCompletions.Count && arrangementEndedDate.HasValue
                         ? completion < arrangementEndedDate.Value
@@ -428,9 +499,245 @@ namespace CareTogether.Engines.PolicyEvaluation
                         : validCompletions[i + 1]))
                 .Prepend((start: arrangementStartedDate, end: validCompletions.Count > 0
                     ? validCompletions[0]
-                    : (arrangementEndedDate.HasValue ? arrangementEndedDate.Value : DateOnly.MaxValue)))
+                    : (arrangementEndedDate.HasValue ? arrangementEndedDate.Value : DateOnly.MaxValue)));
+
+            var completionGaps = completionGapsRaw
                 .Select(gap => new Timeline(new DateTime(gap.start, new TimeOnly()), new DateTime(gap.end, new TimeOnly())))
                 .ToImmutableList();
+
+            // var gaps = validCompletions
+            //     .Where((completion, i) =>
+            //         i + 1 >= validCompletions.Count && arrangementEndedDate.HasValue
+            //             ? completion < arrangementEndedDate.Value
+            //             : true)
+            //     .Select((completion, index) =>
+            //         (start: index == 0 ? arrangementStartedDate : validCompletions[index - 1], end: completion))
+            //     .ToImmutableList();
+
+            // var completionGaps2 = completionGapsRaw
+            //     .Aggregate(ImmutableList<DateRange>.Empty, (dateRanges, gap) =>
+            //     {
+            //         var isFirst = dateRanges.IsEmpty;
+
+            //         var dateRange = new DateRange(gap.start, gap.end);
+
+            //         return dateRanges.Add(dateRange);
+            //     })
+            //     .ToImmutableList();
+
+            // var completionWindowsTimeline = new DateOnlyTimeline(completionWindows);
+
+            // var completionGapsTimeline = new DateOnlyTimeline(completionGaps2);
+
+            // var diff = completionGapsTimeline.Difference(completionWindowsTimeline);
+
+            // var completionsTimeline = new DateOnlyTimeline(validCompletions.Select(completion => new DateRange(completion, completion)).ToImmutableList());
+
+            // var test = completionWindowsTimeline.Difference(completionGapsTimeline);
+
+            // var completionDateRanges = completionGapsRaw
+            // .Select(gap => new DateRange(gap.start, gap.end))
+            // .ToImmutableList();
+
+            var stages = recurrence.Stages
+                .Aggregate(ImmutableList<DateRange<RecurrencePolicyStage>>.Empty, (windows, stage) =>
+                {
+                    var isFirst = windows.IsEmpty;
+                    var startDate = isFirst ? arrangementStartedDate : windows.Last().End.AddDays(1);
+
+                    var occurrences = stage.MaxOccurrences ?? ((today.DayNumber - startDate.DayNumber) / stage.Delay.Days) + 2;
+
+                    var totalDuration = stage.Delay * occurrences;
+                    var endDate = startDate.AddDays(totalDuration.Days - (isFirst ? 0 : 1));
+
+                    var dateRange = new DateRange<RecurrencePolicyStage>(startDate, endDate, stage);
+
+                    return windows.Add(dateRange);
+                })
+                .ToImmutableList();
+
+            var stagesTimeline = new DateOnlyTimeline<RecurrencePolicyStage>(stages);
+
+
+
+
+            // completionDateRanges.Aggregate(ImmutableList<DateOnly>.Empty, (dueDates, completionRange) =>
+            // {
+
+            //     var applicableArrangementStage = stagesTimeline.ValueAt(completionRange.End);
+
+            //     var startDate = dueDates.IsEmpty ? completionRange.Start : dueDates.Last();
+
+            //     var completionWindow = new DateRange(startDate, startDate.AddDays(applicableArrangementStage.Delay.Days));
+
+            //     var tm1 = new DateOnlyTimeline([completionWindow]);
+            //     var tm2 = new DateOnlyTimeline([completionRange]);
+            //     var diff = tm1.Difference(tm2);
+
+            //     if (diff == null)
+            //     {
+            //         return dueDates;
+            //     }
+
+            //     return dueDates.Add(completionWindow.End);
+            // });
+
+            // var dueDates = validCompletions
+            //     .Select((completion, index) => new { Index = index, Value = completion })
+            //     .Aggregate(ImmutableList<DateOnly>.Empty, (dueDates, completion) =>
+            //     {
+            //         var isFirst = completion.Index == 0;
+
+            //         var applicableArrangementStage = stagesTimeline.ValueAt(completion.Value);
+
+            //         var startDate = isFirst ? arrangementStartedDate : validCompletions[completion.Index - 1].AddDays(1);
+
+
+            //         var completionTimeline = new DateRange(startDate, completion.Value);
+            //         var completionWindow = new DateRange(startDate, arrangementStartedDate.AddDays(applicableArrangementStage.Delay.Days));
+
+            //         if (DateOnlyTimeline.UnionOf(ImmutableList.Create(completionTimeline, completionWindow)).Equals(new DateOnlyTimeline([completionWindow])))
+            //         {
+            //             return dueDates;
+            //         }
+            //         else
+            //         {
+            //             return dueDates;
+            //         }
+
+
+
+
+            //         var found = stagesTimeline.Ranges.Find(range => range.Contains(completion.Value));
+
+            //         var occurrences = applicableArrangementStage.MaxOccurrences ?? ((today.DayNumber - found.Start.DayNumber) / applicableArrangementStage.Delay.Days) + 2;
+
+            //         var completionWindow2 = new DateRange(arrangementStartedDate, arrangementStartedDate.AddDays(applicableArrangementStage.Delay.Days));
+
+            //         var completionWindows = new DateOnlyTimeline(calculateDateRanges2(found.Start, applicableArrangementStage.Delay.Days, occurrences));
+
+            //         if (!completionWindow.Contains(completion.Value))
+            //         {
+            //             return dueDates.Add(completionWindow.End);
+            //         }
+
+            //         return dueDates;
+            //     });
+
+            var slots = recurrence.Stages
+                .SelectMany(stage => Enumerable.Repeat<string?>(null, stage.MaxOccurrences ?? 1).ToImmutableList(), (stage, slot) => new { stage, slot });
+
+            ImmutableList<BaseDate> calcMissing(DateOnly initialBaseDate, RecurrencePolicyStage stage, ImmutableList<BaseDate>? dates = null)
+            {
+
+                var window = new DateRange(initialBaseDate.AddDays(1), initialBaseDate.AddDays(stage.Delay.Days));
+
+                var completion = validCompletions.Find(window.Contains);
+
+                var newBaseDate = completion != default ? new BaseDate(completion, false) : new BaseDate(window.End, true);
+
+                var newDates = dates == null ? ImmutableList.Create(newBaseDate) : dates.Add(newBaseDate);
+
+                if (newBaseDate.Date >= today || newBaseDate.Date >= arrangementEndedDate)
+                {
+                    return newDates;
+                }
+
+                return calcMissing(newBaseDate.Date, stage, newDates);
+            }
+
+            var ueh = slots.Aggregate(ImmutableList<BaseDate>.Empty, (baseDates, slot) =>
+            {
+
+
+                var baseDate = baseDates.IsEmpty ? arrangementStartedDate : baseDates.Last().Date;
+
+                var window = new DateRange(baseDate.AddDays(baseDates.IsEmpty ? 0 : 1), baseDate.AddDays(slot.stage.Delay.Days));
+
+                var completion = validCompletions.Find(completion => window.Contains(completion));
+
+                var newBaseDate = completion != default ? new BaseDate(completion, false) : new BaseDate(window.End, true);
+
+                if (slot.stage.MaxOccurrences == null)
+                {
+                    return baseDates.Add(newBaseDate).Concat(calcMissing(newBaseDate.Date, slot.stage)).ToImmutableList();
+                }
+
+                return baseDates.Add(newBaseDate);
+            });
+
+            var imClose = ueh.Where(date => date.IsMissing).Select(item => item.Date).ToImmutableList();
+
+            var imClose2 = imClose.Where(date => date <= today).ToImmutableList();
+
+            var imClose3 = imClose.Count > imClose2.Count ? imClose2.Add(imClose[imClose2.Count]) : imClose2;
+
+            return imClose;
+
+            var baseDates = ImmutableList<DateOnly>.Empty;
+            var missingDueDates = ImmutableList<DateOnly>.Empty;
+            var currentCompletionIndex = 0;
+
+
+            RecurrencePolicyStage? applicableArrangementStage = null;
+            int? maxOccurrences = null;
+
+            var startDate = arrangementStartedDate;
+            var startDateForApplicable = arrangementStartedDate;
+
+            var stop = false;
+            do
+            {
+                var isFirst = baseDates.IsEmpty;
+
+                applicableArrangementStage = stagesTimeline.ValueAt(startDateForApplicable.AddDays(1));
+                // applicableArrangementStage = ;
+
+                if (applicableArrangementStage == null)
+                {
+                    break;
+                }
+
+                maxOccurrences = applicableArrangementStage.MaxOccurrences;
+
+                var endDate = startDate.AddDays(applicableArrangementStage.Delay.Days);
+
+                var window = new DateRange(startDate, endDate);
+
+                DateOnly? completion = validCompletions.Count > currentCompletionIndex ? validCompletions[currentCompletionIndex] : null;
+
+                // var dueDate = completion ?? window.End;
+
+                // startDate = dueDate;
+                // startDateForApplicable = window.End.AddDays(1);
+
+                // dueDates = dueDates.Add(dueDate);
+
+
+                if (completion == null || !window.Contains(completion.Value))
+                {
+                    missingDueDates = missingDueDates.Add(window.End);
+                    startDate = window.End;
+                    startDateForApplicable = window.End;
+                    baseDates = baseDates.Add(window.End);
+                    continue;
+                }
+
+                startDate = completion.Value;
+                baseDates = baseDates.Add(completion.Value);
+                startDateForApplicable = window.End;
+                currentCompletionIndex = currentCompletionIndex + 1;
+
+                if (!baseDates.IsEmpty && baseDates.Last() >= today)
+                {
+                    stop = true;
+                    // break;
+                }
+
+
+            } while (!stop);
+
+            // return missingDueDates.ToImmutableList();
 
             // Calculate all missing requirements within each completion gap (there may be none).
             var missingRequirements = completionGaps.SelectMany((gap, index) =>
@@ -542,7 +849,8 @@ namespace CareTogether.Engines.PolicyEvaluation
             }).ToImmutableDictionary();
 
             // Calculate all missing requirements within each completion gap timeline (there may be none).
-            var missingRequirements = completionGapsByLocation.SelectMany(locationGaps =>
+            var missingRequirements = completionGapsByLocation
+                .SelectMany(locationGaps =>
                 locationGaps.Value.SelectMany(gap =>
                     CalculateMissingMonitoringRequirementsWithinCompletionGap(today, gap,
                     arrangementStagesByLocation[locationGaps.Key])))
@@ -550,6 +858,77 @@ namespace CareTogether.Engines.PolicyEvaluation
 
             return missingRequirements;
         }
+
+        internal static ImmutableList<DateOnly> CalculateMissingMonitoringRequirementsWithinCompletionGap2(
+            DateOnly today, DateRange completionGap,
+            ImmutableList<(TimeSpan incrementDelay, AbsoluteTimeSpan timeSpan)> arrangementStages)
+        {
+            // Use the current date as the end value if either the gap has no end (represented by DateTime.MaxValue)
+            // or if the current date is before the end of the gap (these logically reduce to the same condition).
+            var effectiveCompletionGapEndDate = today <= completionGap.End ? today : completionGap.End;
+            var effectiveCompletionGapEnd = effectiveCompletionGapEndDate;
+
+            // Determine which recurrence stages apply to the completion gap.
+            // One of three conditions makes a stage apply:
+            //  1. It begins during the gap.
+            //  2. It ends during the gap.
+            //  3. It begins before the gap and either ends after the gap or doesn't end.
+            var gapStages = arrangementStages.Where(stage =>
+                (DateOnly.FromDateTime(stage.timeSpan.Start) >= completionGap.Start && DateOnly.FromDateTime(stage.timeSpan.Start) <= effectiveCompletionGapEnd) ||
+                (DateOnly.FromDateTime(stage.timeSpan.End) >= completionGap.Start && DateOnly.FromDateTime(stage.timeSpan.End) <= effectiveCompletionGapEnd) ||
+                (DateOnly.FromDateTime(stage.timeSpan.Start) < completionGap.Start && DateOnly.FromDateTime(stage.timeSpan.End) > effectiveCompletionGapEnd))
+                .ToImmutableList();
+
+            // Calculate all missing requirements within the gap, using the stages to determine the
+            // increment delays to apply.
+            var dueDatesInGap = new List<DateOnly>();
+            var nextDueDate = null as DateOnly?;
+            var stop = false;
+            do
+            {
+                if (nextDueDate != null)
+                    dueDatesInGap.Add(nextDueDate.Value);
+
+                // The applicable stage for this next requirement is either:
+                //  1. the first of the gap stages if this is the first requirement being calculated, or
+                //  2. the first of the gap stages that would end after this next requirement (self-referencing), or
+                //  3. the first of the gap stages that has no end date (i.e., the last stage).
+                //     Note that case #3 is just a subset of #2 when "no end date" is represented by DateTime.MaxValue.
+                // TODO: An unknown issue is causing this to match no stages in some cases.
+                //       Is it possible for 'gapStages' to have zero elements?
+                var applicableArrangementStage = gapStages.FirstOrDefault(stage =>
+                    DateOnly.FromDateTime(stage.timeSpan.End) >= (nextDueDate ?? completionGap.Start).AddDays(stage.incrementDelay.Days));
+                if (applicableArrangementStage == default)
+                    break;
+
+
+                // var completionWindow = new DateRange(startDate, startDate.AddDays(applicableArrangementStage.Delay.Days));
+
+                var startDate = nextDueDate ?? completionGap.Start;
+                var window = new DateOnlyTimeline([new DateRange(startDate, startDate.AddDays(applicableArrangementStage.incrementDelay.Days))]);
+                var tm2 = new DateOnlyTimeline([completionGap]);
+                var diff = window.Difference(tm2);
+
+
+
+                var fallsWithin = completionGap.Contains(nextDueDate.HasValue ? nextDueDate.Value : completionGap.Start.AddDays(applicableArrangementStage.incrementDelay.Days));
+
+                // nextDueDate = nextDueDateMap.HasValue ? DateOnly.FromDateTime(nextDueDateMap.Value) : null;
+                nextDueDate = !fallsWithin ? completionGap.End.AddDays(applicableArrangementStage.incrementDelay.Days) : null;
+                if (nextDueDate == null)
+                    break;
+
+                // Include one more if this is the last gap and we want the next due-by date (not a missing requirement per se).
+                // The end of the gap is a hard cut-off, but the current UTC date/time is a +1 cut-off (overshoot by one is needed).
+                // Similarly, if the current UTC date/time falls before the end of the gap, use the +1 cut-off instead of the gap end.
+                stop = today < completionGap.End
+                    ? nextDueDate.Value.AddDays(-applicableArrangementStage.incrementDelay.Days) > today
+                    : nextDueDate.Value >= completionGap.End;
+            } while (!stop);
+
+            return dueDatesInGap.ToImmutableList();
+        }
+
 
         internal static ImmutableList<DateOnly> CalculateMissingMonitoringRequirementsWithinCompletionGap(
             DateOnly today, Timeline completionGap,
@@ -737,3 +1116,14 @@ namespace CareTogether.Engines.PolicyEvaluation
     }
 }
 
+public class BaseDate
+{
+    public DateOnly Date { get; set; }
+    public bool IsMissing { get; set; }
+
+    public BaseDate(DateOnly baseDate, bool IsMissing)
+    {
+        Date = baseDate;
+        this.IsMissing = IsMissing;
+    }
+}
