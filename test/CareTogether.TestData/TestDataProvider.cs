@@ -28,7 +28,7 @@ namespace CareTogether.TestData
         static int YEAR = DateTime.UtcNow.Year;
         static int MONTH = DateTime.UtcNow.Month;
         static DateTime DateOf(int monthOffset, int day) => new DateTime(YEAR, MONTH, day).AddMonths(monthOffset);
-        static DateTime DateOf(int monthOffset, int day, int hour, int minute, int second) => new DateTime(YEAR, MONTH, day, hour, minute, second).AddMonths(monthOffset);
+        static DateTime DateOf(int monthOffset, int day, int hour, int minute, int second) => new DateTime(YEAR, MONTH, day, hour, minute, second, DateTimeKind.Utc).AddMonths(monthOffset);
         static DateTime StartOfCurrentMonth() => new DateTime(YEAR, MONTH, 1);
         static DateTime ReferralsMonth(int day) => DateOf(-1, day);
         static DateTime ReferralsMonth(int day, int hour, int minute, int second) => DateOf(-1, day, hour, minute, second);
@@ -81,6 +81,23 @@ namespace CareTogether.TestData
         static readonly Guid guidC = Id('c');
         static readonly Guid adminId = Guid.Parse("2b87864a-63e3-4406-bcbc-c0068a13ac05");
         static readonly Guid volunteerId = Guid.Parse("e3aaef77-0e97-47a6-b788-a67c237c781e");
+        static readonly Guid volunteerId2 = Guid.Parse("ca662f2b-270a-4a8b-baa7-c109eadbb133");
+
+
+        // Fisher family
+        static readonly Guid michaelFisherGuid = Guid.Parse("f6020665-6f2e-4c93-8673-8770f35f1609");
+
+        static readonly Guid sarahFisherGuid = Guid.Parse("7dc7e4f8-99cc-4076-9c3c-8229768f8b66");
+        static readonly Guid nemoFisherGuid = Guid.Parse("4a43d33e-e9a6-4045-b374-17ebc223daa7");
+        static readonly Guid fisherFamilyGuid = Guid.Parse("18ca8eb0-d441-44fc-82c2-f7f29b0959fb");
+        static readonly Guid fisherFamilyReferral1Guid = Guid.Parse("6d3c3034-d63d-4fc8-a12e-4ea7a8322818");
+        static readonly Guid fisherFamilyArrangement1Guid = Guid.Parse("a108cc01-c899-49ea-9e7a-36eefc90e4f1");
+
+        // Brambleswift family
+        static readonly Guid berrinBrambleswiftGuid = Guid.Parse("11768904-7738-430a-81b8-fbd7b4168f11");
+        static readonly Guid eldaBrambleswiftVolunteerGuid = Guid.Parse("3d49cfb8-af1e-429b-82dc-484559782118");
+        static readonly Guid brambleswiftFamilyGuid = Guid.Parse("3ec519ec-a262-4047-b8ef-5ad8c00a2495");
+
 
 
         public static async Task PopulateTestDataAsync(
@@ -125,7 +142,9 @@ namespace CareTogether.TestData
                 new AccountEvent(SystemConstants.SystemUserId, FIXED_DATE,
                     new LinkPersonToAcccount(UserId: adminId, OrganizationId: guid1, LocationId: guid3, PersonId: guid0)),
                 new AccountEvent(SystemConstants.SystemUserId, FIXED_DATE,
-                    new LinkPersonToAcccount(UserId: volunteerId, OrganizationId: guid1, LocationId: guid2, PersonId: guid4))
+                    new LinkPersonToAcccount(UserId: volunteerId, OrganizationId: guid1, LocationId: guid2, PersonId: guid4)),
+                new AccountEvent(SystemConstants.SystemUserId, FIXED_DATE,
+                    new LinkPersonToAcccount(UserId: volunteerId2, OrganizationId: guid1, LocationId: guid2, PersonId: eldaBrambleswiftVolunteerGuid))
             };
             var existingGlobalEvents = await accountsEventLog.GetAllEventsAsync(guid0, guid0).ToListAsync();
             var testEventsToAppend = testEventsNeeded
@@ -141,7 +160,9 @@ namespace CareTogether.TestData
                 new PersonAccessEvent(SystemConstants.SystemUserId, SetupMonth(1),
                     new ChangePersonRoles(PersonId: guid0, Roles: [SystemConstants.ORGANIZATION_ADMINISTRATOR])),
                 new PersonAccessEvent(SystemConstants.SystemUserId, SetupMonth(1),
-                    new ChangePersonRoles(PersonId: guid4, Roles: ["Volunteer"]))
+                    new ChangePersonRoles(PersonId: guid4, Roles: ["Volunteer"])),
+                new PersonAccessEvent(SystemConstants.SystemUserId, SetupMonth(1),
+                    new ChangePersonRoles(PersonId: eldaBrambleswiftVolunteerGuid, Roles: ["Volunteer"]))
                 );
             await personAccessEventLog.AppendEventsAsync(guid1, guid3,
                 new PersonAccessEvent(SystemConstants.SystemUserId, SetupMonth(1),
@@ -276,7 +297,56 @@ namespace CareTogether.TestData
                     [], null, [], null, [], null, null, null)),
                 new FamilyCommandExecuted(adminId, ReferralsMonth(21), new CreateFamily(guid5, guidB,
                     [(guidB, new FamilyAdultRelationshipInfo("Single", true))],
-                    [guidC], [new CustodialRelationship(guidC, guidB, CustodialRelationshipType.LegalGuardian)]))
+                    [guidC], [new CustodialRelationship(guidC, guidB, CustodialRelationshipType.LegalGuardian)])),
+
+
+                // Add Fisher family
+                new PersonCommandExecuted(adminId, ApprovalsMonth(1), new CreatePerson(michaelFisherGuid, "Michael", "Fisher", Gender.Male, YearsOld(35), "Caucasian",
+                    [], null, [], null, [], null, "Fisherman", null)),
+                new PersonCommandExecuted(adminId, ApprovalsMonth(1), new CreatePerson(sarahFisherGuid, "Sarah", "Fisher", Gender.Female, YearsOld(33), "Caucasian",
+                    [], null, [], null, [], null, "Marine Biologist", null)),
+                new PersonCommandExecuted(adminId, ApprovalsMonth(1), new CreatePerson(nemoFisherGuid, "Nemo", "Fisher", Gender.Male, YearsOld(7), "Caucasian",
+                    [], null, [], null, [], null, null, null)),
+                new FamilyCommandExecuted(adminId, ApprovalsMonth(1), new CreateFamily(fisherFamilyGuid, michaelFisherGuid,
+                    [
+                        (michaelFisherGuid, new FamilyAdultRelationshipInfo("Dad", true)),
+                        (sarahFisherGuid, new FamilyAdultRelationshipInfo("Mom", true)),
+                    ],
+                    [nemoFisherGuid],
+                    [
+                        new CustodialRelationship(nemoFisherGuid, michaelFisherGuid, CustodialRelationshipType.ParentWithCustody),
+                        new CustodialRelationship(nemoFisherGuid, sarahFisherGuid, CustodialRelationshipType.ParentWithCustody),
+                    ])),
+                new PersonCommandExecuted(adminId, ApprovalsMonth(1), new AddPersonAddress(michaelFisherGuid,
+                    new Address(guid4, "42 Coral Reef Lane", null, "Atlantis", null, "OC", "12345"),
+                    true)),
+                new PersonCommandExecuted(adminId, ApprovalsMonth(1), new AddPersonPhoneNumber(michaelFisherGuid,
+                    new PhoneNumber(guid4, "5551234567", PhoneNumberType.Mobile),
+                    true)),
+                new PersonCommandExecuted(adminId, ApprovalsMonth(1), new AddPersonEmailAddress(michaelFisherGuid,
+                    new EmailAddress(guid4, "michael.fisher@example.com", EmailAddressType.Personal),
+                    true)),
+
+                // Add new volunteer family
+                new PersonCommandExecuted(adminId, ApprovalsMonth(1), new CreatePerson(berrinBrambleswiftGuid, "Berrin", "Brambleswift", Gender.Male, YearsOld(40), "Giant",
+                    [], null, [], null, [], null, null, null)),
+                new PersonCommandExecuted(adminId, ApprovalsMonth(1), new CreatePerson(eldaBrambleswiftVolunteerGuid, "Elda", "Brambleswift", Gender.Female, YearsOld(38), "Giant",
+                    [], null, [], null, [], null, null, null)),
+                new FamilyCommandExecuted(adminId, ApprovalsMonth(1), new CreateFamily(brambleswiftFamilyGuid, berrinBrambleswiftGuid,
+                    [
+                        (berrinBrambleswiftGuid, new FamilyAdultRelationshipInfo("Dad", true)),
+                        (eldaBrambleswiftVolunteerGuid, new FamilyAdultRelationshipInfo("Mom", true)),
+                    ],
+                    [], [])),
+                new PersonCommandExecuted(adminId, ApprovalsMonth(1), new AddPersonAddress(berrinBrambleswiftGuid,
+                    new Address(guid5, "789 Helper St", null, "Voluntown", null, "VS", "54321"),
+                    true)),
+                new PersonCommandExecuted(adminId, ApprovalsMonth(1), new AddPersonPhoneNumber(berrinBrambleswiftGuid,
+                    new PhoneNumber(guid5, "5559876543", PhoneNumberType.Mobile),
+                    true)),
+                new PersonCommandExecuted(adminId, ApprovalsMonth(1), new AddPersonEmailAddress(berrinBrambleswiftGuid,
+                    new EmailAddress(guid5, "john.volunteer@example.com", EmailAddressType.Personal),
+                    true))
             );
         }
 
@@ -317,12 +387,34 @@ namespace CareTogether.TestData
                 new ArrangementsCommandExecuted(adminId, ReferralsMonth(3, 10, 0, 0), new CreateArrangement(guid1, guid2, [guid2], "Babysitting", ReferralsMonth(2), guid3, "Assistance")),
                 new ArrangementsCommandExecuted(adminId, ReferralsMonth(3, 10, 0, 0), new CreateArrangement(guid1, guid2, [guid3], "Friending", ReferralsMonth(3), guid1, "Respite")),
                 new ArrangementsCommandExecuted(adminId, ReferralsMonth(3, 10, 0, 0), new CreateArrangement(guid1, guid2, [guid4], "Friending", ReferralsMonth(4), guid2, "Respite")),
+
                 new ArrangementsCommandExecuted(adminId, ReferralsMonth(3, 10, 0, 0), new CreateArrangement(guid1, guid2, [guid5], "Hosting", ReferralsMonth(5), guid3, null)),
                 new ArrangementsCommandExecuted(adminId, ReferralsMonth(3, 10, 0, 0), new UpdateArrangementComments(guid1, guid2, [guid2], "Start on Friday the 11th")),
                 new ArrangementsCommandExecuted(adminId, ReferralsMonth(3, 10, 0, 0), new UpdateArrangementComments(guid1, guid2, [guid3, guid4], "Start on Saturday the 12th")),
                 new ArrangementsCommandExecuted(adminId, ReferralsMonth(3, 11, 0, 0), new AssignIndividualVolunteer(guid1, guid2, [guid5], guid4, guid4, "Family Coach", null)),
                 new ArrangementsCommandExecuted(adminId, ReferralsMonth(3, 11, 0, 0), new AssignVolunteerFamily(guid1, guid2, [guid5], guid2, "Host Family", null)), // Demonstrates invalid data (variant required by newer policy)
-                new ReferralCommandExecuted(adminId, ReferralsMonth(21, 20, 38, 0), new CreateReferral(guid5, guid3, ReferralsMonth(21, 20, 38, 0)))
+
+                new ReferralCommandExecuted(adminId, ReferralsMonth(21, 20, 38, 0), new CreateReferral(guid5, guid3, ReferralsMonth(21, 20, 38, 0))),
+
+                // Fisher family
+                new ReferralCommandExecuted(adminId, ReferralsMonth(1, 12, 0, 0), new CreateReferral(fisherFamilyGuid, fisherFamilyReferral1Guid, ReferralsMonth(1, 12, 0, 0))),
+
+                new ArrangementsCommandExecuted(adminId, ReferralsMonth(3, 10, 0, 0),
+                    new CreateArrangement(fisherFamilyGuid, fisherFamilyReferral1Guid, [fisherFamilyArrangement1Guid], "Friending", ReferralsMonth(4), michaelFisherGuid, "Respite")),
+                new ArrangementsCommandExecuted(adminId, ReferralsMonth(3, 11, 0, 0),
+                    new AssignIndividualVolunteer(fisherFamilyGuid, fisherFamilyReferral1Guid, [fisherFamilyArrangement1Guid], brambleswiftFamilyGuid, berrinBrambleswiftGuid, "Family Coach", null)),
+                new ArrangementsCommandExecuted(adminId, ReferralsMonth(3, 11, 0, 0),
+                    new AssignIndividualVolunteer(fisherFamilyGuid, fisherFamilyReferral1Guid, [fisherFamilyArrangement1Guid], brambleswiftFamilyGuid, berrinBrambleswiftGuid, "Family Friend", null)),
+                new ArrangementsCommandExecuted(adminId, ReferralsMonth(3, 11, 0, 0),
+                    new AssignIndividualVolunteer(fisherFamilyGuid, fisherFamilyReferral1Guid, [fisherFamilyArrangement1Guid], guid0, guid0, "Staff Supervision", null)),
+                new ArrangementsCommandExecuted(adminId, ReferralsMonth(3, 11, 0, 0),
+                    new ExemptArrangementRequirement(fisherFamilyGuid, fisherFamilyReferral1Guid, [fisherFamilyArrangement1Guid], "Advocacy Agreement", null, "Not needed", null)),
+                new ArrangementsCommandExecuted(adminId, ReferralsMonth(3, 11, 0, 0),
+                    new StartArrangements(fisherFamilyGuid, fisherFamilyReferral1Guid, [fisherFamilyArrangement1Guid], ReferralsMonth(1, 15, 0, 0))),
+                new ArrangementsCommandExecuted(adminId, ReferralsMonth(3, 11, 0, 0),
+                    new CompleteArrangementRequirement(fisherFamilyGuid, fisherFamilyReferral1Guid, [fisherFamilyArrangement1Guid], guid3, "Family Coach Checkin", ReferralsMonth(4, 2, 59, 0), null, null))
+
+
             );
         }
 
@@ -381,7 +473,26 @@ namespace CareTogether.TestData
                 new VolunteerCommandExecuted(adminId, ApprovalsMonth(21),
                     new ExemptVolunteerRequirement(guid3, guid9, "Host Family Training", "She's a Betazoid. Empaths don't need training.", null)),
                 new VolunteerCommandExecuted(adminId, ApprovalsMonth(25),
-                    new CompleteVolunteerRequirement(guid3, guid9, new Guid(), "Comprehensive Background Check", ApprovalsMonth(25), null, null))
+                    new CompleteVolunteerRequirement(guid3, guid9, new Guid(), "Comprehensive Background Check", ApprovalsMonth(25), null, null)),
+
+                // Add approval events for new volunteer family
+                new VolunteerFamilyCommandExecuted(adminId, ApprovalsMonth(5),
+                    new UploadVolunteerFamilyDocument(brambleswiftFamilyGuid, guid6, "volunteer_family_application.pdf")),
+                new VolunteerFamilyCommandExecuted(adminId, ApprovalsMonth(5),
+                    new CompleteVolunteerFamilyRequirement(brambleswiftFamilyGuid, guid1, "Host Family Application", ApprovalsMonth(5), guid6, null)),
+                new VolunteerCommandExecuted(adminId, ApprovalsMonth(6),
+                    new CompleteVolunteerRequirement(brambleswiftFamilyGuid, berrinBrambleswiftGuid, guid7, "Background Check", ApprovalsMonth(6), guid7, null)),
+                new VolunteerCommandExecuted(adminId, ApprovalsMonth(6),
+                    new CompleteVolunteerRequirement(brambleswiftFamilyGuid, eldaBrambleswiftVolunteerGuid, guid8, "Background Check", ApprovalsMonth(6), guid8, null)),
+                new VolunteerFamilyCommandExecuted(adminId, ApprovalsMonth(7),
+                    new CompleteVolunteerFamilyRequirement(brambleswiftFamilyGuid, guid2, "Home Screening Checklist", ApprovalsMonth(7), Guid.Empty, null)),
+                new VolunteerFamilyCommandExecuted(adminId, ApprovalsMonth(8),
+                    new CompleteVolunteerFamilyRequirement(brambleswiftFamilyGuid, guid3, "Host Family Interview", ApprovalsMonth(8), Guid.Empty, null)),
+                new VolunteerCommandExecuted(adminId, ApprovalsMonth(9),
+                    new CompleteVolunteerRequirement(brambleswiftFamilyGuid, berrinBrambleswiftGuid, guid9, "Host Family Training", ApprovalsMonth(9), null, null)),
+                new VolunteerCommandExecuted(adminId, ApprovalsMonth(9),
+                    new CompleteVolunteerRequirement(brambleswiftFamilyGuid, eldaBrambleswiftVolunteerGuid, guidA, "Host Family Training", ApprovalsMonth(9), null, null))
+
                 );
         }
 
@@ -535,6 +646,7 @@ namespace CareTogether.TestData
                     ["Host Family Debriefing"] = new ActionRequirement(DocumentLinkRequirement.Required, NoteEntryRequirement.Required, null, null, null),
                     ["Advocacy Agreement"] = new ActionRequirement(DocumentLinkRequirement.Required, NoteEntryRequirement.None,
                         null, new Uri("http://example.com/forms/advocacy-v1"), null),
+                    ["One Time Checkin"] = new ActionRequirement(DocumentLinkRequirement.None, NoteEntryRequirement.Allowed, null, null, null),
                     ["Family Coach Checkin"] = new ActionRequirement(DocumentLinkRequirement.None, NoteEntryRequirement.Required, null, null, null),
                     ["Family Coach Supervision"] = new ActionRequirement(DocumentLinkRequirement.Allowed, NoteEntryRequirement.Required, null, null, null),
                     ["Family Friend Application"] = new ActionRequirement(DocumentLinkRequirement.Required, NoteEntryRequirement.None,
@@ -749,6 +861,10 @@ namespace CareTogether.TestData
                             ],
                             RequiredMonitoringActions:
                             [
+                                new MonitoringRequirement("One Time Checkin",
+                                    new OneTimeRecurrencePolicy(
+                                        TimeSpan.FromDays(2)
+                                    )),
                                 new MonitoringRequirement("Family Coach Checkin",
                                     new DurationStagesRecurrencePolicy(
                                     [
@@ -834,6 +950,7 @@ namespace CareTogether.TestData
                     }.ToImmutableDictionary()));
 
             await policiesStore.UpsertAsync(guid1, guid2, "policy", policy);
+            await policiesStore.UpsertAsync(guid1, guid3, "policy", policy);
             await policiesStore.UpsertAsync(guid1, guid3, "policy", policy);
         }
 
