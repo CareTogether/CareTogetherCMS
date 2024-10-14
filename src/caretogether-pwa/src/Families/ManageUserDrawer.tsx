@@ -202,6 +202,7 @@ export function ManageUserDrawer({
               color="primary"
               endIcon={<PersonAdd />}
               onClick={generateInviteLink}
+              disabled={inviteLinkLoading}
               sx={{ marginLeft: 2 }}
             >
               Invite
