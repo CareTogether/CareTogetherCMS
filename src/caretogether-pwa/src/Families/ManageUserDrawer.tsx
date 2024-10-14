@@ -70,10 +70,6 @@ export function ManageUserDrawer({
   async function generateInviteLink() {
     setInviteLinkLoading(true);
 
-    await new Promise((resolve) => {
-      setTimeout(resolve, 2000);
-    });
-
     const inviteLink = await api.users.generatePersonInviteLink(
       organizationId,
       locationId,
@@ -139,11 +135,11 @@ export function ManageUserDrawer({
             currentEntry.constructor === updatedAggregate.constructor
         )
           ? current.map((currentEntry) =>
-              currentEntry.id === updatedAggregate.id &&
+            currentEntry.id === updatedAggregate.id &&
               currentEntry.constructor === updatedAggregate.constructor
-                ? updatedAggregate
-                : currentEntry
-            )
+              ? updatedAggregate
+              : currentEntry
+          )
           : current.concat(updatedAggregate)
       );
     };
@@ -217,9 +213,18 @@ export function ManageUserDrawer({
               display: 'flex',
               flexFlow: 'column',
               alignItems: 'center',
+              opacity: 0,
+              animation: 'fadeIn 0.3s ease-in-out 0.2s forwards',
+              '@keyframes fadeIn': {
+                '0%': { opacity: 0 },
+                '100%': { opacity: 1 },
+              },
             }}
           >
-            <Typography align="center" gutterBottom>
+            <Typography
+              align="center"
+              gutterBottom
+            >
               Generating invite link
             </Typography>
             <CircularProgress />
@@ -265,8 +270,8 @@ export function ManageUserDrawer({
                 disabled={
                   role.isProtected
                     ? !globalPermissions(
-                        Permission.EditPersonUserProtectedRoles
-                      )
+                      Permission.EditPersonUserProtectedRoles
+                    )
                     : !globalPermissions(Permission.EditPersonUserStandardRoles)
                 }
                 onClick={toggleRoleSelection(role.roleName!)}
