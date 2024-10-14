@@ -67,8 +67,6 @@ export function ManageUserDrawer({
   const [inviteLink, setInviteLink] = useState<string | null>(null);
   const [inviteLinkLoading, setInviteLinkLoading] = useState(false);
 
-  const [noticeOpen, setNoticeOpen] = useState(false);
-
   async function generateInviteLink() {
     setInviteLinkLoading(true);
 
