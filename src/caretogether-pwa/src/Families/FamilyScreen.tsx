@@ -440,7 +440,7 @@ export function FamilyScreen() {
         <Grid item md={8}>
           <Grid container spacing={2}>
             <Grid item md={4}>
-              <PrimaryContactEditor family={family} />
+              <PrimaryContactEditor family={family} isEditable={true} />
             </Grid>
 
             <Grid item md={8}>

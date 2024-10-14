@@ -173,7 +173,6 @@ export function MissingRequirementDialog({
     requirement instanceof MissingArrangementRequirement
       ? requirement.actionName!
       : requirement;
-
   async function markComplete() {
     let document = documentId;
     if (documentId === UPLOAD_NEW) {
@@ -367,7 +366,9 @@ export function MissingRequirementDialog({
       </Tabs>
       <TabPanel value={tabValue} index={0}>
         {policy.instructions && (
-          <DialogContentText>{policy.instructions}</DialogContentText>
+          <DialogContentText style={{ whiteSpace: 'pre-wrap' }}>
+            {policy.instructions}
+          </DialogContentText>
         )}
         {policy.infoLink && (
           <DialogContentText>
