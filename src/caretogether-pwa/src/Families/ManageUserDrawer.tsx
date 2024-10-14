@@ -12,6 +12,13 @@ import {
   Checkbox,
   ListItemText,
   useMediaQuery,
+  FormControl,
+  IconButton,
+  InputAdornment,
+  InputLabel,
+  OutlinedInput,
+  Box,
+  CircularProgress,
 } from '@mui/material';
 import { Permission, Person, UserInfo } from '../GeneratedClient';
 import {
@@ -21,7 +28,12 @@ import {
 import { useBackdrop } from '../Hooks/useBackdrop';
 import { useRecoilCallback, useRecoilValue } from 'recoil';
 import { personNameString } from './PersonName';
-import { AccountCircle, NoAccounts, PersonAdd } from '@mui/icons-material';
+import {
+  AccountCircle,
+  NoAccounts,
+  PersonAdd,
+  ContentCopy,
+} from '@mui/icons-material';
 import { organizationConfigurationQuery } from '../Model/ConfigurationModel';
 import { useState } from 'react';
 import { api } from '../Api/Api';
@@ -30,6 +42,7 @@ import {
   visibleAggregatesState,
 } from '../Model/Data';
 import { UserLoginInfoDisplay } from './UserLoginInfoDisplay';
+import { useGlobalSnackBar } from '../Hooks/useGlobalSnackBar';
 
 interface ManageUserDrawerProps {
   onClose: () => void;
@@ -51,18 +64,27 @@ export function ManageUserDrawer({
 
   const withBackdrop = useBackdrop();
 
-  async function invitePersonUser() {
-    await withBackdrop(async () => {
-      const inviteLink = await api.users.generatePersonInviteLink(
-        organizationId,
-        locationId,
-        adult.id
-      );
-      await navigator.clipboard.writeText(inviteLink);
-      alert(
-        `The invite link for ${personNameString(adult)} has been copied to your clipboard.`
-      );
-    });
+  const [inviteLink, setInviteLink] = useState<string | null>(null);
+  const [inviteLinkLoading, setInviteLinkLoading] = useState(false);
+
+  async function generateInviteLink() {
+    setInviteLinkLoading(true);
+
+    const inviteLink = await api.users.generatePersonInviteLink(
+      organizationId,
+      locationId,
+      adult.id
+    );
+
+    setInviteLinkLoading(false);
+    setInviteLink(inviteLink);
+  }
+
+  const { setAndShowGlobalSnackBar } = useGlobalSnackBar();
+
+  function copyInviteLink() {
+    navigator.clipboard.writeText(String(inviteLink));
+    setAndShowGlobalSnackBar('Invite link copied!');
   }
 
   const [selectedRoles, setSelectedRoles] = useState(user?.locationRoles ?? []);
@@ -113,11 +135,11 @@ export function ManageUserDrawer({
             currentEntry.constructor === updatedAggregate.constructor
         )
           ? current.map((currentEntry) =>
-              currentEntry.id === updatedAggregate.id &&
+            currentEntry.id === updatedAggregate.id &&
               currentEntry.constructor === updatedAggregate.constructor
-                ? updatedAggregate
-                : currentEntry
-            )
+              ? updatedAggregate
+              : currentEntry
+          )
           : current.concat(updatedAggregate)
       );
     };
@@ -175,12 +197,63 @@ export function ManageUserDrawer({
               variant="contained"
               color="primary"
               endIcon={<PersonAdd />}
-              onClick={invitePersonUser}
+              onClick={generateInviteLink}
+              disabled={inviteLinkLoading}
               sx={{ marginLeft: 2 }}
             >
               Invite
             </Button>
           </p>
+        )}
+
+        {inviteLinkLoading && (
+          <Box
+            sx={{
+              mb: 3,
+              display: 'flex',
+              flexFlow: 'column',
+              alignItems: 'center',
+              opacity: 0,
+              animation: 'fadeIn 0.3s ease-in-out 0.2s forwards',
+              '@keyframes fadeIn': {
+                '0%': { opacity: 0 },
+                '100%': { opacity: 1 },
+              },
+            }}
+          >
+            <Typography
+              align="center"
+              gutterBottom
+            >
+              Generating invite link
+            </Typography>
+            <CircularProgress />
+          </Box>
+        )}
+
+        {!inviteLinkLoading && inviteLink && (
+          <FormControl sx={{ mt: 2, mb: 3 }} fullWidth variant="outlined">
+            <InputLabel htmlFor="invite-link">Invite link</InputLabel>
+            <OutlinedInput
+              id="invite-link"
+              type="text"
+              defaultValue={inviteLink}
+              onFocus={(event) => event.target.select()}
+              readOnly
+              endAdornment={
+                <InputAdornment position="end">
+                  <IconButton
+                    aria-label="copy invite link"
+                    onClick={copyInviteLink}
+                    edge="end"
+                  >
+                    <ContentCopy />
+                  </IconButton>
+                </InputAdornment>
+              }
+              label="Invite link"
+            />
+          </FormControl>
         )}
         <Divider />
       </Grid>
@@ -197,8 +270,8 @@ export function ManageUserDrawer({
                 disabled={
                   role.isProtected
                     ? !globalPermissions(
-                        Permission.EditPersonUserProtectedRoles
-                      )
+                      Permission.EditPersonUserProtectedRoles
+                    )
                     : !globalPermissions(Permission.EditPersonUserStandardRoles)
                 }
                 onClick={toggleRoleSelection(role.roleName!)}
