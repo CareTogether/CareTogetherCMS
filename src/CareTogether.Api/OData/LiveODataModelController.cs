@@ -721,7 +721,7 @@ namespace CareTogether.Api.OData
                             arrangementPerson, arrangement.PartneringFamilyPersonId,
                             receivingFamily, history.ChildLocationFamilyId,
                             history.TimestampUtc, history.Plan,
-                            EndedAtUtc: nextLocation?.TimestampUtc,
+                            EndedAtUtc: nextLocation?.TimestampUtc ?? arrangement.EndedAtUtc,
                             Duration: effectiveDuration);
                     });
                 });
