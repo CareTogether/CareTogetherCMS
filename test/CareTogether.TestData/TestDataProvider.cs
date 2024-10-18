@@ -665,7 +665,8 @@ namespace CareTogether.TestData
                     ["Home Screening Checklist"] = new ActionRequirement(DocumentLinkRequirement.Required, NoteEntryRequirement.Allowed,
                         "Must be filled out by an approved home screener", new Uri("http://example.com/forms/hscheck"), null),
                     ["Host Family Interview"] = new ActionRequirement(DocumentLinkRequirement.Allowed, NoteEntryRequirement.Required, null, null, null),
-                    ["Meet & Greet"] = new ActionRequirement(DocumentLinkRequirement.Required, NoteEntryRequirement.Allowed, null, new Uri("http://example.com/forms/mag"), null)
+                    ["Meet & Greet"] = new ActionRequirement(DocumentLinkRequirement.Required, NoteEntryRequirement.Allowed, null, new Uri("http://example.com/forms/mag"), null),
+                    ["Complex Instructions"] = new ActionRequirement(DocumentLinkRequirement.Allowed, NoteEntryRequirement.Allowed, "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Quisque eu nisi ut nisi scelerisque blandit.\n\nAenean accumsan dui ac velit venenatis, at eleifend sapien sodales.\n\nEtiam faucibus augue sit amet purus cursus, ut tincidunt elit feugiat.", new Uri("http://example.com/forms/mag"), null) 
                 }.ToImmutableDictionary(),
                 [
                     new("Has Pool", CustomFieldType.Boolean, null, null),
@@ -756,7 +757,8 @@ namespace CareTogether.TestData
                             RequiredSetupActionNames:
                             [
                                 "Hosting Consent",
-                                "Medical POA"
+                                "Medical POA",
+                                "Complex Instructions"
                             ],
                             RequiredMonitoringActions:
                             [
