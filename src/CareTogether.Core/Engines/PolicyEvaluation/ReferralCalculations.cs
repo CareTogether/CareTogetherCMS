@@ -1,4 +1,3 @@
-using CareTogether.Resources;
 using CareTogether.Resources.Policies;
 using CareTogether.Resources.Referrals;
 using System;
@@ -385,25 +384,6 @@ namespace CareTogether.Engines.PolicyEvaluation
             if (recurrence.Stages.Take(recurrence.Stages.Count - 1).Any(stage => !stage.MaxOccurrences.HasValue))
                 throw new InvalidOperationException("A stage other than the last stage in a recurrence policy was found to have an unlimited number of occurrences.");
 
-            // Calculate the start and end dates of each stage based on the recurrence policy and the arrangement start date.
-            // A null end date means the stage continues indefinitely, so for simplicity this case will be
-            // represented as DateTime.MaxValue.
-            // A null start date will only occur if invalid data is provided (i.e., if any stage other than the last one has
-            // an unlimited number of occurrences), so this calculation forces start date results to be non-null.
-            var arrangementStages = recurrence.Stages
-                .Select(stage => (incrementDelay: stage.Delay, totalDuration: stage.Delay * stage.MaxOccurrences))
-                .Aggregate(ImmutableList<(TimeSpan incrementDelay, DateOnly startDate, DateOnly endDate)>.Empty,
-                    (priorStages, stage) =>
-                    {
-                        var startDate = priorStages.Count == 0 ? arrangementStartedDate : priorStages.Last().endDate;
-                        var endDate = stage.totalDuration.HasValue ? startDate.AddDays(stage.totalDuration.Value.Days) : DateOnly.MaxValue;
-                        return priorStages.Add((stage.incrementDelay, startDate, endDate));
-                    })
-                .Select(result => (
-                    result.incrementDelay,
-                    timeSpan: new AbsoluteTimeSpan(new DateTime(result.startDate, new TimeOnly()), new DateTime(result.endDate, new TimeOnly()))))
-                .ToImmutableList();
-
             // For each completion, find the time of the following completion (null in the case of the last completion
             // unless the arrangement has ended, in which case use the end of the arrangement).
             // This represents the set of gaps between completions in which there could be missing requirement due dates.
@@ -417,27 +397,91 @@ namespace CareTogether.Engines.PolicyEvaluation
             var validCompletions = completionDates
                 .Where(completion => completion >= arrangementStartedDate)
                 .ToImmutableList();
-            var completionGaps = validCompletions
-                .Where((completion, i) =>
-                    i + 1 >= validCompletions.Count && arrangementEndedDate.HasValue
-                        ? completion < arrangementEndedDate.Value
-                        : true)
-                .Select((completion, i) =>
-                    (start: completion, end: i + 1 >= validCompletions.Count
-                        ? (arrangementEndedDate.HasValue ? arrangementEndedDate.Value : DateOnly.MaxValue)
-                        : validCompletions[i + 1]))
-                .Prepend((start: arrangementStartedDate, end: validCompletions.Count > 0
-                    ? validCompletions[0]
-                    : (arrangementEndedDate.HasValue ? arrangementEndedDate.Value : DateOnly.MaxValue)))
-                .Select(gap => new Timeline(new DateTime(gap.start, new TimeOnly()), new DateTime(gap.end, new TimeOnly())))
-                .ToImmutableList();
 
-            // Calculate all missing requirements within each completion gap (there may be none).
-            var missingRequirements = completionGaps.SelectMany((gap, index) =>
-                CalculateMissingMonitoringRequirementsWithinCompletionGap(today, gap, arrangementStages))
-                .ToImmutableList();
+            var slots = recurrence.Stages
+                .SelectMany(stage => Enumerable.Repeat<string?>(null, stage.MaxOccurrences ?? 1).ToImmutableList(), (stage, slot) => new { stage, slot });
 
-            return missingRequirements;
+            var analyzedDates = slots.Aggregate(ImmutableList<CompletionOrMissingDate>.Empty, (dates, slot) =>
+            {
+                var baseDate = dates.IsEmpty ? arrangementStartedDate : dates.Last().Date;
+
+                return dates.Concat(
+                    composeAnalyzedDates(validCompletions, arrangementEndedDate, today, baseDate, slot.stage.Delay, slot.stage.MaxOccurrences != null, dates.IsEmpty)
+                ).ToImmutableList();
+            });
+
+
+            var missingDates = analyzedDates.Where(date => date.IsMissing).Select(item => item.Date).ToImmutableList();
+
+            if (arrangementEndedDate != null)
+            {
+                return missingDates.Where(date => date <= arrangementEndedDate).ToImmutableList();
+            }
+
+            var missingDatesUntilToday = missingDates.Where(date => date <= today).ToImmutableList();
+
+            if (missingDates.Count > missingDatesUntilToday.Count)
+            {
+                var missingDatesUntilTodayPlusOneMore = missingDatesUntilToday.Add(missingDates[missingDatesUntilToday.Count]);
+                return missingDatesUntilTodayPlusOneMore;
+            }
+
+            return missingDates;
+        }
+
+        internal static (CompletionOrMissingDate, ImmutableList<DateOnly>) analyzeDate(DateOnly date, TimeSpan delay, ImmutableList<DateOnly> completions, bool isFirst)
+        {
+            // The date range where a completion should occur
+            var window = new DateRange(date.AddDays(isFirst ? 0 : 1), date.AddDays(delay.Days));
+
+            var completion = completions.Find(window.Contains);
+            var remainingCompletions = completions.Where(item => item != completion).ToImmutableList();
+
+            if (completion != default)
+            {
+                return (new CompletionOrMissingDate(completion, isMissing: false), remainingCompletions);
+            }
+
+            return (new CompletionOrMissingDate(window.End, isMissing: true), remainingCompletions);
+        }
+
+        internal static ImmutableList<CompletionOrMissingDate> composeAnalyzedDates(
+            ImmutableList<DateOnly> completions,
+            DateOnly? arrangementEndedDate,
+            DateOnly today,
+            DateOnly initialDate,
+            TimeSpan delay,
+            bool analyzeOnce,
+            bool? isFirst = null,
+            ImmutableList<CompletionOrMissingDate>? analyzedDates = null
+        )
+        {
+            ImmutableList<CompletionOrMissingDate> compose(
+                DateOnly initialDate,
+                ImmutableList<DateOnly> completions,
+                bool analyzeOnce,
+                ImmutableList<CompletionOrMissingDate>? analyzedDates = null
+            )
+            {
+                var (analyzedDate, remainingCompletions) = analyzeDate(initialDate, delay, completions, isFirst ?? false);
+
+                var newAnalyzedDates = analyzedDates == null ? [analyzedDate] : analyzedDates.Add(analyzedDate);
+
+                if (analyzeOnce || analyzedDate.Date >= arrangementEndedDate)
+                {
+                    return newAnalyzedDates;
+                }
+
+                if (analyzedDate.Date >= today)
+                {
+                    return compose(analyzedDate.Date, remainingCompletions, analyzeOnce: true, newAnalyzedDates);
+                }
+
+                // In case MaxOccurrences is null, keep analyzing dates until arrangementEndedDate or today is reached
+                return compose(analyzedDate.Date, remainingCompletions, analyzeOnce, newAnalyzedDates);
+            }
+
+            return compose(initialDate, completions, analyzeOnce, analyzedDates);
         }
         internal static ImmutableList<DateOnly> CalculateMissingMonitoringRequirementInstancesForDurationRecurrencePerChildLocation(
             DurationStagesPerChildLocationRecurrencePolicy recurrence, Guid? filterToFamilyId,
@@ -737,3 +781,14 @@ namespace CareTogether.Engines.PolicyEvaluation
     }
 }
 
+public class CompletionOrMissingDate
+{
+    public DateOnly Date { get; set; }
+    public bool IsMissing { get; set; }
+
+    public CompletionOrMissingDate(DateOnly date, bool isMissing)
+    {
+        Date = date;
+        IsMissing = isMissing;
+    }
+}

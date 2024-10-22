@@ -682,7 +682,7 @@ public class DateOnlyTimelineTest
     }
 
     [TestMethod]
-    public void DifferenceWithPartialOverlapExcludesTheSecondTimeline()
+    public void DifferenceWithPartialOverlapExcludesTheOverlappedDates()
     {
         var input = new DateOnlyTimeline([DR(1, 1), DR(3, 4)]);
         var dut = input.Difference(new DateOnlyTimeline([DR(4, 7)]));
@@ -694,7 +694,7 @@ public class DateOnlyTimelineTest
     }
 
     [TestMethod]
-    public void DifferenceWithPartialOverlapExcludesTheSecondTimeline2()
+    public void DifferenceWithPartialOverlapExcludesTheOverlappedDates2()
     {
         var input = new DateOnlyTimeline([DR(1, 1), DR(3, 4)]);
         var dut = input.Difference(new DateOnlyTimeline([DR(2, 7)]));
@@ -706,7 +706,7 @@ public class DateOnlyTimelineTest
     }
 
     [TestMethod]
-    public void DifferenceWithPartialOverlapExcludesTheSecondTimeline3()
+    public void DifferenceWithPartialOverlapExcludesTheOverlappedDates3()
     {
         var input = new DateOnlyTimeline([DR(1, 1), DR(3, 4)]);
         var dut = input.Difference(new DateOnlyTimeline([DR(1, 3)]));
