@@ -242,6 +242,10 @@ namespace CareTogether.Engines.PolicyEvaluation
                 //TODO: Exemptions currently cannot be backdated, which may need to change in order to
                 //      fully support handling policy exemptions correctly within the supersedence constraint.
                 //      && (policyVersionSupersededAtUtc == null || exempted.TimestampUtc < policyVersionSupersededAtUtc))
+                //NOTE: Only include exemptions that are valid, i.e. that expired in the future at the time of exemption. Otherwise,
+                //      the timeline logic will not work correctly. TODO: This will need to change once backdating is enabled.
+                .Where(exempted => exempted.ExemptionExpiresAtUtc == null ||
+                    exempted.ExemptionExpiresAtUtc.Value >= exempted.TimestampUtc)
                 .Select(exempted => new DateRange(
                     //NOTE: This limits exemptions to being valid as of the time they were created.
                     //      If we want to allow backdating or postdating exemptions, we'll need to change this.
