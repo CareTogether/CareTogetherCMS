@@ -384,6 +384,9 @@ namespace CareTogether.Engines.PolicyEvaluation
             if (recurrence.Stages.Take(recurrence.Stages.Count - 1).Any(stage => !stage.MaxOccurrences.HasValue))
                 throw new InvalidOperationException("A stage other than the last stage in a recurrence policy was found to have an unlimited number of occurrences.");
 
+            //////////////////////////////////
+            //TODO (WIP): from here the logic is very similar to CalculateMissingMonitoringRequirementInstancesForDurationRecurrencePerChildLocation, better to move this to some reusable function!?
+
             // For each completion, find the time of the following completion (null in the case of the last completion
             // unless the arrangement has ended, in which case use the end of the arrangement).
             // This represents the set of gaps between completions in which there could be missing requirement due dates.
@@ -406,7 +409,7 @@ namespace CareTogether.Engines.PolicyEvaluation
                 var baseDate = dates.IsEmpty ? arrangementStartedDate : dates.Last().Date;
 
                 return dates.Concat(
-                    composeAnalyzedDates(validCompletions, arrangementEndedDate, today, baseDate, slot.stage.Delay, slot.stage.MaxOccurrences != null, dates.IsEmpty)
+                    ComposeAnalyzedDates(validCompletions, arrangementEndedDate, today, baseDate, slot.stage.Delay, slot.stage.MaxOccurrences != null, dates.IsEmpty)
                 ).ToImmutableList();
             });
 
@@ -427,25 +430,123 @@ namespace CareTogether.Engines.PolicyEvaluation
             }
 
             return missingDates;
+
+            //////////////////////////////////
         }
 
-        internal static (CompletionOrMissingDate, ImmutableList<DateOnly>) analyzeDate(DateOnly date, TimeSpan delay, ImmutableList<DateOnly> completions, bool isFirst)
+        internal static DateOnlyTimeline? GetWindow(
+            DateOnly fromDate,
+            TimeSpan delay,
+            int dateOffset,
+            ImmutableList<ChildLocationHistoryEntry>? childLocationHistoryEntries = null
+        )
         {
-            // The date range where a completion should occur
-            var window = new DateRange(date.AddDays(isFirst ? 0 : 1), date.AddDays(delay.Days));
+            var window = new DateOnlyTimeline([new DateRange(fromDate.AddDays(dateOffset), fromDate.AddDays(delay.Days))]);
 
-            var completion = completions.Find(window.Contains);
-            var remainingCompletions = completions.Where(item => item != completion).ToImmutableList();
-
-            if (completion != default)
+            if (childLocationHistoryEntries == null)
             {
-                return (new CompletionOrMissingDate(completion, isMissing: false), remainingCompletions);
+                return window;
             }
 
-            return (new CompletionOrMissingDate(window.End, isMissing: true), remainingCompletions);
+            var nextChildLocationWithinWindow = childLocationHistoryEntries?.Find(item => window.Contains(DateOnly.FromDateTime(item.TimestampUtc)));
+            var childWentToParent = nextChildLocationWithinWindow?.Plan == ChildLocationPlan.WithParent;
+
+            if (nextChildLocationWithinWindow == null || !childWentToParent)
+            {
+                return window;
+            }
+
+            var discontinuousRanges = GetDiscontinuousWindow(fromDate.AddDays(dateOffset), delay, childLocationHistoryEntries);
+
+            if (discontinuousRanges.Count < 1)
+            {
+                return null;
+            }
+
+            return new DateOnlyTimeline(discontinuousRanges);
         }
 
-        internal static ImmutableList<CompletionOrMissingDate> composeAnalyzedDates(
+        internal static ImmutableList<DateRange> GetDiscontinuousWindow(
+            DateOnly startDate,
+            TimeSpan remainingDelay,
+            ImmutableList<ChildLocationHistoryEntry> childLocationHistoryEntries,
+            bool? isPaused = false,
+            ImmutableList<DateRange>? dateRanges = null
+        )
+        {
+            ImmutableList<DateRange> nonNullDateRanges = dateRanges ?? ImmutableList<DateRange>.Empty;
+
+            int delay = remainingDelay.Days - 1;
+            var defaultWindow = new DateRange(startDate, startDate.AddDays(delay));
+
+            bool findWithParentCriterea(ChildLocationHistoryEntry item)
+            {
+                // TODO (WIP): The first condition is apparently not needed (passed on current tests), analyzing if there's a case where this is needed
+                return defaultWindow.Contains(DateOnly.FromDateTime(item.TimestampUtc)) && item.Plan == ChildLocationPlan.WithParent;
+            }
+
+            bool findWithVolunteerCriterea(ChildLocationHistoryEntry item)
+            {
+                // TODO (WIP): The first condition is apparently not needed (passed on current tests), analyzing if there's a case where this is needed
+                return DateOnly.FromDateTime(item.TimestampUtc) > startDate && item.Plan != ChildLocationPlan.WithParent;
+            }
+
+            var childLocationIndex = childLocationHistoryEntries.FindIndex(isPaused == true ? findWithVolunteerCriterea : findWithParentCriterea);
+
+            if (childLocationIndex < 0 && isPaused == true)
+            {
+                return ImmutableList<DateRange>.Empty;
+            }
+
+            if (childLocationIndex < 0)
+            {
+                return nonNullDateRanges.Add(defaultWindow);
+            }
+
+            var childLocation = childLocationHistoryEntries.ElementAt(childLocationIndex);
+            var remainingLocations = childLocationHistoryEntries.Skip(childLocationIndex + 1).ToImmutableList();
+            DateOnly childLocationDate = DateOnly.FromDateTime(childLocation.TimestampUtc);
+            int daysFromStartDateToChildLocationDate = childLocationDate.AddDays(-startDate.DayNumber + 1).DayNumber;
+            var newRemainingDelay = isPaused == true ? remainingDelay : TimeSpan.FromDays(remainingDelay.Days - daysFromStartDateToChildLocationDate);
+
+            return GetDiscontinuousWindow(
+                startDate: childLocationDate.AddDays(1),
+                remainingDelay: newRemainingDelay,
+                childLocationHistoryEntries: remainingLocations,
+                isPaused: !isPaused,
+                dateRanges: isPaused == true ? nonNullDateRanges : nonNullDateRanges.Add(new DateRange(startDate, childLocationDate))
+            );
+        }
+
+        internal static (CompletionOrMissingDate, ImmutableList<DateOnly>)? AnalyzeDate(
+            DateOnly date,
+            TimeSpan delay,
+            ImmutableList<DateOnly> completions,
+            bool isFirst, // TODO (WIP): This feels like 'leaking' some information from the caller, I almost have a mental model of a better way to handle this
+            ImmutableList<ChildLocationHistoryEntry>? childLocationHistoryDates = null
+        )
+        {
+            var window = GetWindow(fromDate: date, delay, dateOffset: isFirst ? 0 : 1, childLocationHistoryDates);
+
+            if (window == null) {
+                return null;
+            }
+
+            var completion = completions.Find(window.Contains);
+
+            var remainingCompletions = completions.Where(item => item != completion).ToImmutableList();
+
+            var completionIsMissing = completion == default;
+
+            if (!completionIsMissing)
+            {
+                return (new CompletionOrMissingDate(completion, isMissing: completionIsMissing), remainingCompletions);
+            }
+
+            return (new CompletionOrMissingDate(window.Ranges.Last().End, isMissing: true), remainingCompletions);
+        }
+
+        internal static ImmutableList<CompletionOrMissingDate> ComposeAnalyzedDates(
             ImmutableList<DateOnly> completions,
             DateOnly? arrangementEndedDate,
             DateOnly today,
@@ -453,7 +554,8 @@ namespace CareTogether.Engines.PolicyEvaluation
             TimeSpan delay,
             bool analyzeOnce,
             bool? isFirst = null,
-            ImmutableList<CompletionOrMissingDate>? analyzedDates = null
+            ImmutableList<CompletionOrMissingDate>? analyzedDates = null,
+            ImmutableList<ChildLocationHistoryEntry>? childLocationHistoryDates = null
         )
         {
             ImmutableList<CompletionOrMissingDate> compose(
@@ -463,7 +565,13 @@ namespace CareTogether.Engines.PolicyEvaluation
                 ImmutableList<CompletionOrMissingDate>? analyzedDates = null
             )
             {
-                var (analyzedDate, remainingCompletions) = analyzeDate(initialDate, delay, completions, isFirst ?? false);
+                var result = AnalyzeDate(initialDate, delay, completions, isFirst ?? false, childLocationHistoryDates);
+
+                if (result == null) {
+                    return analyzedDates ?? ImmutableList<CompletionOrMissingDate>.Empty;
+                }
+                
+                var (analyzedDate, remainingCompletions) = result.Value;
 
                 var newAnalyzedDates = analyzedDates == null ? [analyzedDate] : analyzedDates.Add(analyzedDate);
 
@@ -474,10 +582,11 @@ namespace CareTogether.Engines.PolicyEvaluation
 
                 if (analyzedDate.Date >= today)
                 {
+                    // When 'today' is reached, we only need one more due date
                     return compose(analyzedDate.Date, remainingCompletions, analyzeOnce: true, newAnalyzedDates);
                 }
 
-                // In case MaxOccurrences is null, keep analyzing dates until arrangementEndedDate or today is reached
+                // This is for when a slot is the last one (so MaxOccurrences is null), so it will continually generate due dates until 'today' or the end of the arrangement
                 return compose(analyzedDate.Date, remainingCompletions, analyzeOnce, newAnalyzedDates);
             }
 
@@ -494,168 +603,58 @@ namespace CareTogether.Engines.PolicyEvaluation
             if (recurrence.Stages.Take(recurrence.Stages.Count - 1).Any(stage => !stage.MaxOccurrences.HasValue))
                 throw new InvalidOperationException("A stage other than the last stage in a recurrence policy was found to have an unlimited number of occurrences.");
 
-            // Determine the start and end time of each child location history entry.
-            var childCareOccurrences = childLocationHistoryDates.SelectMany((entry, i) =>
+            if (childLocationHistoryDates.IsEmpty)
             {
-                if (i < childLocationHistoryDates.Count - 1)
-                {
-                    var nextEntry = childLocationHistoryDates[i + 1];
-                    return new[] { (entry: entry, startDate: entry.TimestampUtc, endDate: nextEntry.TimestampUtc as DateTime?) };
-                }
-                else
-                    return new[] { (entry: entry, startDate: entry.TimestampUtc, endDate: null as DateTime?) };
-            }).ToImmutableList();
+                return ImmutableList<DateOnly>.Empty;
+            }
 
-            // Determine which child care occurrences the requirement will apply to.
-            var applicableOccurrences = childCareOccurrences
-                .Where(x => x.entry.Plan != ChildLocationPlan.WithParent &&
-                    (filterToFamilyId == null || x.entry.ChildLocationFamilyId == filterToFamilyId))
+            //////////////////////////////////
+            //TODO (WIP): from here the logic is very similar to CalculateMissingMonitoringRequirementInstancesForDurationRecurrence, better to move this to some reusable function!?
+
+            var validCompletions = completionDates
+                .Where(completion => completion >= arrangementStartedDate)
                 .ToImmutableList();
 
-            // Group the child care occurrences by child location (i.e., by the family caring for the child).
-            // This results in a (discontinuous) timeline of start and end dates/times for the child being in this location.
-            var occurrencesByLocation = applicableOccurrences
-                .GroupBy(x => x.entry.ChildLocationFamilyId)
-                .ToImmutableDictionary(x => x.Key);
+            var slots = recurrence.Stages
+                .SelectMany(stage => Enumerable.Repeat<string?>(null, stage.MaxOccurrences ?? 1).ToImmutableList(), (stage, slot) => new { stage, slot });
 
-            // Build a (possibly discontinuous) timeline for the child's stay in each location.
-            // This will simplify subsequent calculations along this timeline.
-            var timelinesByLocation = occurrencesByLocation.Select(occurrences =>
+            var analyzedDates = slots.Aggregate(ImmutableList<CompletionOrMissingDate>.Empty, (dates, slot) =>
             {
-                var terminatingStages = occurrences.Value
-                    .Where(occurrence => occurrence.endDate != null)
-                    .Select(occurrence => new TerminatingTimelineStage(occurrence.startDate, (DateTime)occurrence.endDate!))
-                    .ToImmutableList();
+                var initialDate = dates.IsEmpty ? arrangementStartedDate : dates.Last().Date;
 
-                var currentOccurrence = occurrences.Value
-                    .SingleOrDefault(occurrence => occurrence.endDate == null);
+                return dates.Concat(
+                    ComposeAnalyzedDates(
+                        validCompletions,
+                        arrangementEndedDate,
+                        today,
+                        initialDate,
+                        delay: slot.stage.Delay,
+                        analyzeOnce: slot.stage.MaxOccurrences != null,
+                        isFirst: dates.IsEmpty,
+                        analyzedDates: null,
+                        childLocationHistoryDates: childLocationHistoryDates.ToImmutableList()
+                    )
+                ).ToImmutableList();
+            });
 
-                var timeline = currentOccurrence == default
-                ? new Timeline(terminatingStages)
-                : new Timeline(terminatingStages, new NonTerminatingTimelineStage(currentOccurrence.startDate));
+            var missingDates = analyzedDates.Where(date => date.IsMissing).Select(item => item.Date).ToImmutableList();
 
-                return KeyValuePair.Create(occurrences.Key, timeline);
-            }).ToImmutableDictionary();
-
-            // For each discontinuous child location timeline, calculate the adjusted start and end dates of each stage
-            // of the recurrence policy.
-            // A "max" end date means the stage continues indefinitely (which can only apply to the current child's location).
-            var arrangementStagesByLocation = timelinesByLocation.Select(timeline =>
+            if (arrangementEndedDate != null)
             {
-                var arrangementStages = recurrence.Stages
-                    .Select(stage => (incrementDelay: stage.Delay, totalDuration: stage.Delay * stage.MaxOccurrences))
-                    .Aggregate(ImmutableList<(TimeSpan startDelay, TimeSpan incrementDelay, TimeSpan? totalDuration)>.Empty,
-                        (priorStages, stage) => priorStages.Add(
-                            (startDelay: new TimeSpan(priorStages.Sum(x => ((TimeSpan)x.totalDuration!).Ticks)),
-                            incrementDelay: stage.incrementDelay,
-                            totalDuration: stage.totalDuration)))
-                    .Select(stage => (incrementDelay: stage.incrementDelay,
-                        timeSpan: stage.totalDuration.HasValue
-                        ? timeline.Value.MapUnbounded(stage.startDelay, (TimeSpan)stage.totalDuration)
-                        : new AbsoluteTimeSpan(timeline.Value.MapUnbounded(stage.startDelay), DateTime.MaxValue)))
-                    .ToImmutableList();
-                return KeyValuePair.Create(timeline.Key, arrangementStages);
-            }).ToImmutableDictionary();
+                return missingDates.Where(date => date <= arrangementEndedDate).ToImmutableList();
+            }
 
-            // Assign completions to their corresponding child location by determining which timeline contains them.
-            var completionGapsByLocation = timelinesByLocation.Select(location =>
+            var missingDatesUntilToday = missingDates.Where(date => date <= today).ToImmutableList();
+
+            if (missingDates.Count > missingDatesUntilToday.Count)
             {
-                var containedCompletions = completionDates
-                    .Where(completion => location.Value.Contains(new DateTime(completion, new TimeOnly())))
-                    .ToImmutableList();
+                var missingDatesUntilTodayPlusOneMore = missingDatesUntilToday.Add(missingDates[missingDatesUntilToday.Count]);
+                return missingDatesUntilTodayPlusOneMore;
+            }
 
-                // For each completion, find the time of the following completion (null in the case of the last completion
-                // unless the location's timeline terminates, in which case use the end of the location's timeline).
-                // This represents the set of gaps between completions in which there could be missing requirement due dates.
-                // Prepend this list with an entry representing the start of the location's timeline.
-                var completionGaps = containedCompletions.Select((completion, i) =>
-                    (start: completion, end: i + 1 >= containedCompletions.Count
-                        ? DateOnly.FromDateTime(location.Value.End)
-                        : containedCompletions[i + 1]))
-                    .Prepend((start: arrangementStartedDate, end: containedCompletions.Count > 0
-                        ? containedCompletions[0]
-                        : DateOnly.FromDateTime(location.Value.End)))
-                    .ToImmutableList();
+            return missingDates;
 
-                // Represent gaps as timelines (subsets of their location timeline) to automatically handle
-                // any discontinuities in the location's timeline.
-                var completionGapTimelines = completionGaps.Select(completion =>
-                    location.Value.Subset(new DateTime(completion.start, new TimeOnly()), new DateTime(completion.end, new TimeOnly()))).ToImmutableList();
-
-                return KeyValuePair.Create(location.Key, completionGapTimelines);
-            }).ToImmutableDictionary();
-
-            // Calculate all missing requirements within each completion gap timeline (there may be none).
-            var missingRequirements = completionGapsByLocation.SelectMany(locationGaps =>
-                locationGaps.Value.SelectMany(gap =>
-                    CalculateMissingMonitoringRequirementsWithinCompletionGap(today, gap,
-                    arrangementStagesByLocation[locationGaps.Key])))
-                .ToImmutableList();
-
-            return missingRequirements;
-        }
-
-        internal static ImmutableList<DateOnly> CalculateMissingMonitoringRequirementsWithinCompletionGap(
-            DateOnly today, Timeline completionGap,
-            ImmutableList<(TimeSpan incrementDelay, AbsoluteTimeSpan timeSpan)> arrangementStages)
-        {
-            // Use the current date as the end value if either the gap has no end (represented by DateTime.MaxValue)
-            // or if the current date is before the end of the gap (these logically reduce to the same condition).
-            var effectiveCompletionGapEndDate = today <= completionGap.EndDate ? today : completionGap.EndDate;
-            var effectiveCompletionGapEnd = new DateTime(effectiveCompletionGapEndDate, new TimeOnly());
-
-            // Determine which recurrence stages apply to the completion gap.
-            // One of three conditions makes a stage apply:
-            //  1. It begins during the gap.
-            //  2. It ends during the gap.
-            //  3. It begins before the gap and either ends after the gap or doesn't end.
-            var gapStages = arrangementStages.Where(stage =>
-                (stage.timeSpan.Start >= completionGap.Start && stage.timeSpan.Start <= effectiveCompletionGapEnd) ||
-                (stage.timeSpan.End >= completionGap.Start && stage.timeSpan.End <= effectiveCompletionGapEnd) ||
-                (stage.timeSpan.Start < completionGap.Start && stage.timeSpan.End > effectiveCompletionGapEnd))
-                .ToImmutableList();
-
-            // Calculate all missing requirements within the gap, using the stages to determine the
-            // increment delays to apply.
-            var dueDatesInGap = new List<DateOnly>();
-            var nextDueDate = null as DateOnly?;
-            var endConditionExceeded = false;
-            do
-            {
-                if (nextDueDate != null)
-                    dueDatesInGap.Add(nextDueDate.Value);
-
-                // The applicable stage for this next requirement is either:
-                //  1. the first of the gap stages if this is the first requirement being calculated, or
-                //  2. the first of the gap stages that would end after this next requirement (self-referencing), or
-                //  3. the first of the gap stages that has no end date (i.e., the last stage).
-                //     Note that case #3 is just a subset of #2 when "no end date" is represented by DateTime.MaxValue.
-                // TODO: An unknown issue is causing this to match no stages in some cases.
-                //       Is it possible for 'gapStages' to have zero elements?
-                var applicableArrangementStage = gapStages.FirstOrDefault(stage =>
-                    DateOnly.FromDateTime(stage.timeSpan.End) >= (nextDueDate ?? completionGap.StartDate).AddDays(stage.incrementDelay.Days));
-                if (applicableArrangementStage == default)
-                    break;
-
-                // Calculate the next requirement due date based on the applicable stage, using the gap's timeline.
-                // If it falls within the current completion gap (& before the current time), it is a missing requirement.
-                var nextDueDateMap = completionGap.TryMapFrom(
-                    nextDueDate.HasValue ? new DateTime(nextDueDate.Value, new TimeOnly()) : new DateTime(completionGap.StartDate, new TimeOnly()),
-                    applicableArrangementStage.incrementDelay
-                );
-                nextDueDate = nextDueDateMap.HasValue ? DateOnly.FromDateTime(nextDueDateMap.Value) : null;
-                if (nextDueDate == null)
-                    break;
-
-                // Include one more if this is the last gap and we want the next due-by date (not a missing requirement per se).
-                // The end of the gap is a hard cut-off, but the current UTC date/time is a +1 cut-off (overshoot by one is needed).
-                // Similarly, if the current UTC date/time falls before the end of the gap, use the +1 cut-off instead of the gap end.
-                endConditionExceeded = today < completionGap.EndDate
-                    ? nextDueDate.Value.AddDays(-applicableArrangementStage.incrementDelay.Days) > today
-                    : nextDueDate.Value >= completionGap.EndDate;
-            } while (!endConditionExceeded);
-
-            return dueDatesInGap.ToImmutableList();
+            //////////////////////////////////
         }
 
         internal static ImmutableList<DateOnly>
@@ -785,6 +784,7 @@ public class CompletionOrMissingDate
 {
     public DateOnly Date { get; set; }
     public bool IsMissing { get; set; }
+    // public bool WentHome { get; set; }
 
     public CompletionOrMissingDate(DateOnly date, bool isMissing)
     {

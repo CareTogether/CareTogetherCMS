@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
+using Timelines;
 
 namespace CareTogether.Core.Test
 {
@@ -63,6 +64,14 @@ namespace CareTogether.Core.Test
             Assert.AreEqual(expected.Count, actual.Count);
             foreach (var (First, Second) in Enumerable
                 .Zip(expected.ToImmutableSortedSet(), actual.ToImmutableSortedSet()))
+                Assert.AreEqual(First, Second);
+        }
+
+        public static void SequenceIs(ICollection<DateRange>? actual, ICollection<DateRange>? expected)
+        {
+            Assert.AreEqual(expected?.Count, actual?.Count);
+            foreach (var (First, Second) in Enumerable
+                .Zip(expected, actual))
                 Assert.AreEqual(First, Second);
         }
 

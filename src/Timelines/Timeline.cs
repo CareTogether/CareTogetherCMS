@@ -24,9 +24,6 @@ public sealed class Timeline : IEquatable<Timeline?>
 
     public DateTime End => stages.Last().End;
 
-    public DateOnly StartDate => DateOnly.FromDateTime(Start);
-
-    public DateOnly EndDate => DateOnly.FromDateTime(End);
 
     public Timeline(DateTime start, DateTime end)
         : this(ImmutableList.Create(new TerminatingTimelineStage(start, end)))
