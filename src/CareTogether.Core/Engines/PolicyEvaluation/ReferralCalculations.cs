@@ -407,9 +407,18 @@ namespace CareTogether.Engines.PolicyEvaluation
             var analyzedDates = slots.Aggregate(ImmutableList<CompletionOrMissingDate>.Empty, (dates, slot) =>
             {
                 var baseDate = dates.IsEmpty ? arrangementStartedDate : dates.Last().Date;
+                var isFirst = dates.IsEmpty;
 
                 return dates.Concat(
-                    ComposeAnalyzedDates(validCompletions, arrangementEndedDate, today, baseDate, slot.stage.Delay, slot.stage.MaxOccurrences != null, dates.IsEmpty)
+                    ComposeAnalyzedDates(
+                        validCompletions,
+                        arrangementStartedDate: isFirst ? arrangementStartedDate : null,
+                        arrangementEndedDate,
+                        today,
+                        baseDate,
+                        slot.stage.Delay,
+                        slot.stage.MaxOccurrences != null
+                    )
                 ).ToImmutableList();
             });
 
@@ -435,13 +444,19 @@ namespace CareTogether.Engines.PolicyEvaluation
         }
 
         internal static DateOnlyTimeline? GetWindow(
+            DateRange? headRange,
             DateOnly fromDate,
             TimeSpan delay,
-            int dateOffset,
             ImmutableList<ChildLocationHistoryEntry>? childLocationHistoryEntries = null
         )
         {
-            var window = new DateOnlyTimeline([new DateRange(fromDate.AddDays(dateOffset), fromDate.AddDays(delay.Days))]);
+            var defaultDateRange = new DateRange(fromDate.AddDays(1), fromDate.AddDays(delay.Days));
+
+            var window = new DateOnlyTimeline(
+                headRange != null
+                    ? ImmutableList.Create([headRange.Value, defaultDateRange])
+                    : [defaultDateRange]
+            );
 
             if (childLocationHistoryEntries == null)
             {
@@ -456,11 +471,16 @@ namespace CareTogether.Engines.PolicyEvaluation
                 return window;
             }
 
-            var discontinuousRanges = GetDiscontinuousWindow(fromDate.AddDays(dateOffset), delay, childLocationHistoryEntries);
+            var discontinuousRanges = GetDiscontinuousWindow(fromDate.AddDays(1), delay, childLocationHistoryEntries);
 
             if (discontinuousRanges.Count < 1)
             {
                 return null;
+            }
+
+            if (headRange != null)
+            {
+                return new DateOnlyTimeline(discontinuousRanges.Prepend(headRange.Value).ToImmutableList());
             }
 
             return new DateOnlyTimeline(discontinuousRanges);
@@ -519,16 +539,22 @@ namespace CareTogether.Engines.PolicyEvaluation
         }
 
         internal static (CompletionOrMissingDate, ImmutableList<DateOnly>)? AnalyzeDate(
+            DateOnly? arrangementStartedDate,
             DateOnly date,
             TimeSpan delay,
             ImmutableList<DateOnly> completions,
-            bool isFirst, // TODO (WIP): This feels like 'leaking' some information from the caller, I almost have a mental model of a better way to handle this
             ImmutableList<ChildLocationHistoryEntry>? childLocationHistoryDates = null
         )
         {
-            var window = GetWindow(fromDate: date, delay, dateOffset: isFirst ? 0 : 1, childLocationHistoryDates);
+            var window = GetWindow(
+                headRange: arrangementStartedDate != null ? new DateRange(arrangementStartedDate.Value, arrangementStartedDate.Value) : null,
+                fromDate: date,
+                delay,
+                childLocationHistoryDates
+            );
 
-            if (window == null) {
+            if (window == null)
+            {
                 return null;
             }
 
@@ -548,29 +574,31 @@ namespace CareTogether.Engines.PolicyEvaluation
 
         internal static ImmutableList<CompletionOrMissingDate> ComposeAnalyzedDates(
             ImmutableList<DateOnly> completions,
+            DateOnly? arrangementStartedDate,
             DateOnly? arrangementEndedDate,
             DateOnly today,
             DateOnly initialDate,
             TimeSpan delay,
             bool analyzeOnce,
-            bool? isFirst = null,
             ImmutableList<CompletionOrMissingDate>? analyzedDates = null,
             ImmutableList<ChildLocationHistoryEntry>? childLocationHistoryDates = null
         )
         {
             ImmutableList<CompletionOrMissingDate> compose(
+                DateOnly? arrangementStartedDate,
                 DateOnly initialDate,
                 ImmutableList<DateOnly> completions,
                 bool analyzeOnce,
                 ImmutableList<CompletionOrMissingDate>? analyzedDates = null
             )
             {
-                var result = AnalyzeDate(initialDate, delay, completions, isFirst ?? false, childLocationHistoryDates);
+                var result = AnalyzeDate(arrangementStartedDate, initialDate, delay, completions, childLocationHistoryDates);
 
-                if (result == null) {
+                if (result == null)
+                {
                     return analyzedDates ?? ImmutableList<CompletionOrMissingDate>.Empty;
                 }
-                
+
                 var (analyzedDate, remainingCompletions) = result.Value;
 
                 var newAnalyzedDates = analyzedDates == null ? [analyzedDate] : analyzedDates.Add(analyzedDate);
@@ -583,14 +611,14 @@ namespace CareTogether.Engines.PolicyEvaluation
                 if (analyzedDate.Date >= today)
                 {
                     // When 'today' is reached, we only need one more due date
-                    return compose(analyzedDate.Date, remainingCompletions, analyzeOnce: true, newAnalyzedDates);
+                    return compose(null, analyzedDate.Date, remainingCompletions, analyzeOnce: true, newAnalyzedDates);
                 }
 
                 // This is for when a slot is the last one (so MaxOccurrences is null), so it will continually generate due dates until 'today' or the end of the arrangement
-                return compose(analyzedDate.Date, remainingCompletions, analyzeOnce, newAnalyzedDates);
+                return compose(null, analyzedDate.Date, remainingCompletions, analyzeOnce, newAnalyzedDates);
             }
 
-            return compose(initialDate, completions, analyzeOnce, analyzedDates);
+            return compose(arrangementStartedDate, initialDate, completions, analyzeOnce, analyzedDates);
         }
         internal static ImmutableList<DateOnly> CalculateMissingMonitoringRequirementInstancesForDurationRecurrencePerChildLocation(
             DurationStagesPerChildLocationRecurrencePolicy recurrence, Guid? filterToFamilyId,
@@ -621,16 +649,17 @@ namespace CareTogether.Engines.PolicyEvaluation
             var analyzedDates = slots.Aggregate(ImmutableList<CompletionOrMissingDate>.Empty, (dates, slot) =>
             {
                 var initialDate = dates.IsEmpty ? arrangementStartedDate : dates.Last().Date;
+                var isFirst = dates.IsEmpty;
 
                 return dates.Concat(
                     ComposeAnalyzedDates(
                         validCompletions,
+                        arrangementStartedDate: isFirst ? arrangementStartedDate : null,
                         arrangementEndedDate,
                         today,
                         initialDate,
                         delay: slot.stage.Delay,
                         analyzeOnce: slot.stage.MaxOccurrences != null,
-                        isFirst: dates.IsEmpty,
                         analyzedDates: null,
                         childLocationHistoryDates: childLocationHistoryDates.ToImmutableList()
                     )
