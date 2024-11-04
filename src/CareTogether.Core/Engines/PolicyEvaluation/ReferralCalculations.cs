@@ -589,10 +589,10 @@ namespace CareTogether.Engines.PolicyEvaluation
 
             if (!completionIsMissing)
             {
-                return (new DateOfInterest(completion, isMissing: false), remainingCompletions);
+                return (new DateOfInterest(completion, false), remainingCompletions);
             }
 
-            return (new DateOfInterest(window.Ranges.Last().End, isMissing: true), remainingCompletions);
+            return (new DateOfInterest(window.Ranges.Last().End, true), remainingCompletions);
         }
 
         internal static ImmutableList<DateOfInterest> CalculateDatesOfInterest(
@@ -834,19 +834,5 @@ namespace CareTogether.Engines.PolicyEvaluation
                     familyVolunteerAssignments.Where(fva => fva.ArrangementFunction == vf.FunctionName).Count() == 0 &&
                     individualVolunteerAssignments.Where(iva => iva.ArrangementFunction == vf.FunctionName).Count() == 0)
                 .ToImmutableList();
-    }
-}
-
-//TODO: Convert from a class to a record
-public class DateOfInterest
-{
-    public DateOnly Date { get; set; }
-    public bool IsMissing { get; set; }
-    // public bool WentHome { get; set; }
-
-    public DateOfInterest(DateOnly date, bool isMissing)
-    {
-        Date = date;
-        IsMissing = isMissing;
     }
 }
