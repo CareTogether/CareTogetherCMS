@@ -33,6 +33,23 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
         }
 
         [TestMethod]
+        public void TestNoCompletionsOnePolicyStage()
+        {
+            var result = ReferralCalculations.CalculateMissingMonitoringRequirementInstances(
+                new DurationStagesRecurrencePolicy(ImmutableList<RecurrencePolicyStage>.Empty
+                .Add(new RecurrencePolicyStage(TimeSpan.FromDays(7), null))),
+                filterToFamilyId: null,
+                arrangementStartedAtUtc: H.Date(1, 1),
+                arrangementEndedAtUtc: null,
+                completions: Helpers.Dates(),
+                childLocationHistory: Helpers.LocationHistoryEntries(),
+                utcNow: H.Date(2, 14),
+                H.US_EASTERN_TIME_ZONE);
+
+            AssertEx.SequenceIs(result, Helpers.Dates((1, 8), (1, 15), (1, 22), (1, 29), (2, 5), (2, 12), (2, 19)));
+        }
+
+        [TestMethod]
         public void TestNoCompletionsOneTimeRequirementDelayedDurationBased()
         {
             //NOTE: This is NOT recommended. Use the OneTimeRecurrencePolicy instead!

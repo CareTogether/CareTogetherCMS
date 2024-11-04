@@ -400,41 +400,54 @@ namespace CareTogether.Engines.PolicyEvaluation
                 .Where(completion => completion >= arrangementStartedDate)
                 .ToImmutableList();
 
+            // Checking for a completion at the start date first simplifies the rest of the calculation
+            // (For example, when there's just one policy stage with MaxOccurrences = null, the resulting dates are offsetted).
+            var completionOnDayOne = validCompletions.Find(item => item == arrangementStartedDate);
+            var applicableStages = completionOnDayOne != default && recurrence.Stages.Count() > 1
+                ? recurrence.Stages.Skip(1)
+                : recurrence.Stages;
+
+            // TODO:
             // Repeat each stage the number of times specified by MaxOccurrences, or once if MaxOccurrences is null.
             // An instance of a stage is a slot in which we need to look for a completion.
-            var slots = recurrence.Stages
+            // ----
+            // Generates slots in which we need to look for a completion. Each stage generates a number of slots
+            // equal to its MaxOccurrences, or just 1 if MaxOccurrences is null (which should be the last stage, or the only one).
+            // A slot isn't a defined DateRange or Timeline because there's no way of determining all the start/end dates beforehand.
+            var slots = applicableStages
                 .SelectMany(stage =>
                     Enumerable
                         .Repeat(stage, stage.MaxOccurrences ?? 1)
                         .ToImmutableList());
 
-            // For each slot, find a list of all the due dates.
-            var analyzedDates = slots
+            // For each slot, find a list of all dates of interest.
+            var datesOfInterest = slots
                 .Aggregate(ImmutableList<DateOfInterest>.Empty, (dates, slot) =>
-                {
-                    var baseDate = dates.IsEmpty ? arrangementStartedDate : dates.Last().Date;
-                    var isFirst = dates.IsEmpty;
+                    {
+                        var lastDateOfInterest = dates.LastOrDefault()?.Date ?? arrangementStartedDate;
 
-                    var nextDates = CalculateDatesOfInterest(
-                        validCompletions,
-                        arrangementStartedDate: isFirst ? arrangementStartedDate : null,
-                        arrangementEndedDate,
-                        today,
-                        baseDate,
-                        slot.Delay,
-                        slot.MaxOccurrences != null);
+                        var nextDates =
+                            CalculateDatesOfInterest(
+                                lastDateOfInterest: lastDateOfInterest,
+                                validCompletions,
+                                calculateUntilDate: arrangementEndedDate ?? today,
+                                slot.Delay,
+                                keepCalculating: slot.MaxOccurrences == null
+                            );
 
-                    return dates
-                        .Concat(nextDates)
-                        .ToImmutableList();
-                });
+                        return dates
+                            .Concat(nextDates)
+                            .ToImmutableList();
+                    });
 
 
-            var missingDates = analyzedDates.Where(date => date.IsMissing).Select(item => item.Date).ToImmutableList();
+            var missingDates = datesOfInterest.Where(date => date.IsMissing).Select(item => item.Date).ToImmutableList();
 
             if (arrangementEndedDate != null)
             {
-                return missingDates.Where(date => date <= arrangementEndedDate).ToImmutableList();
+                var result = missingDates.Where(date => date <= arrangementEndedDate);
+
+                return result.ToImmutableList();
             }
 
             var missingDatesUntilToday = missingDates.Where(date => date <= today).ToImmutableList();
@@ -442,6 +455,7 @@ namespace CareTogether.Engines.PolicyEvaluation
             if (missingDates.Count > missingDatesUntilToday.Count)
             {
                 var missingDatesUntilTodayPlusOneMore = missingDatesUntilToday.Add(missingDates[missingDatesUntilToday.Count]);
+
                 return missingDatesUntilTodayPlusOneMore;
             }
 
@@ -454,25 +468,19 @@ namespace CareTogether.Engines.PolicyEvaluation
         /// Generate a timeline (a window) in which we expect to find a completion.
         /// This can be a continuous or discontinuous timeline.
         /// </summary>
-        /// <param name="headRange">Starts at the beginning of the arrangement and goes to __________</param>
-        /// <param name="fromDate"></param>
+        /// <param name="lastDateOfInterest"></param>
         /// <param name="delay"></param>
         /// <param name="childLocationHistoryEntries"></param>
         /// <returns></returns>
         internal static DateOnlyTimeline? GetWindowForExpectedCompletion(
-            DateRange? headRange,
-            DateOnly fromDate,
+            DateOnly lastDateOfInterest,
             TimeSpan delay,
             ImmutableList<ChildLocationHistoryEntry>? childLocationHistoryEntries = null
         )
         {
-            var defaultDateRange = new DateRange(fromDate.AddDays(1), fromDate.AddDays(delay.Days));
+            var defaultDateRange = new DateRange(lastDateOfInterest.AddDays(1), lastDateOfInterest.AddDays(delay.Days));
 
-            var window = new DateOnlyTimeline(
-                headRange != null
-                    ? ImmutableList.Create([headRange.Value, defaultDateRange])
-                    : [defaultDateRange]
-            );
+            var window = new DateOnlyTimeline([defaultDateRange]);
 
             if (childLocationHistoryEntries == null)
             {
@@ -487,16 +495,11 @@ namespace CareTogether.Engines.PolicyEvaluation
                 return window;
             }
 
-            var discontinuousRanges = GetDiscontinuousWindow(fromDate.AddDays(1), delay, childLocationHistoryEntries);
+            var discontinuousRanges = GetDiscontinuousWindow(lastDateOfInterest.AddDays(1), delay, childLocationHistoryEntries);
 
             if (discontinuousRanges.Count < 1)
             {
                 return null;
-            }
-
-            if (headRange != null)
-            {
-                return new DateOnlyTimeline(discontinuousRanges.Prepend(headRange.Value).ToImmutableList());
             }
 
             return new DateOnlyTimeline(discontinuousRanges);
@@ -515,20 +518,21 @@ namespace CareTogether.Engines.PolicyEvaluation
             int delay = remainingDelay.Days - 1;
             var defaultWindow = new DateRange(startDate, startDate.AddDays(delay));
 
-            bool findWithParentCriterea(ChildLocationHistoryEntry item)
+            bool findWithParentCriteria(ChildLocationHistoryEntry item)
             {
                 // TODO (WIP): The first condition is apparently not needed (passed on current tests), analyzing if there's a case where this is needed
                 return defaultWindow.Contains(DateOnly.FromDateTime(item.TimestampUtc)) && item.Plan == ChildLocationPlan.WithParent;
             }
 
-            bool findWithVolunteerCriterea(ChildLocationHistoryEntry item)
+            bool findWithVolunteerCriteria(ChildLocationHistoryEntry item)
             {
                 // TODO (WIP): The first condition is apparently not needed (passed on current tests), analyzing if there's a case where this is needed
                 return DateOnly.FromDateTime(item.TimestampUtc) > startDate && item.Plan != ChildLocationPlan.WithParent;
             }
 
-            var childLocationIndex = childLocationHistoryEntries.FindIndex(isPaused == true ? findWithVolunteerCriterea : findWithParentCriterea);
+            var childLocationIndex = childLocationHistoryEntries.FindIndex(isPaused == true ? findWithVolunteerCriteria : findWithParentCriteria);
 
+            // If the child is currently with parent, we don't generate a duedate.
             if (childLocationIndex < 0 && isPaused == true)
             {
                 return ImmutableList<DateRange>.Empty;
@@ -540,10 +544,11 @@ namespace CareTogether.Engines.PolicyEvaluation
             }
 
             var childLocation = childLocationHistoryEntries.ElementAt(childLocationIndex);
-            var remainingLocations = childLocationHistoryEntries.Skip(childLocationIndex + 1).ToImmutableList();
             DateOnly childLocationDate = DateOnly.FromDateTime(childLocation.TimestampUtc);
             int daysFromStartDateToChildLocationDate = childLocationDate.AddDays(-startDate.DayNumber + 1).DayNumber;
             var newRemainingDelay = isPaused == true ? remainingDelay : TimeSpan.FromDays(remainingDelay.Days - daysFromStartDateToChildLocationDate);
+
+            var remainingLocations = childLocationHistoryEntries.Skip(childLocationIndex + 1).ToImmutableList();
 
             return GetDiscontinuousWindow(
                 startDate: childLocationDate.AddDays(1),
@@ -554,98 +559,74 @@ namespace CareTogether.Engines.PolicyEvaluation
             );
         }
 
-        internal static (DateOfInterest, ImmutableList<DateOnly>)? CalculateNextDateOfInterest(
-            DateOnly? arrangementStartedDate,
-            DateOnly date,
-            TimeSpan delay,
-            ImmutableList<DateOnly> completions,
-            ImmutableList<ChildLocationHistoryEntry>? childLocationHistoryDates = null
+        internal static DateOfInterest CalculateNextDateOfInterest(
+            DateOnlyTimeline window,
+            ImmutableList<DateOnly> completions
         )
         {
-            // This is the window in which we expect to find a completion.
-            // This can be a continuous or discontinuous timeline.
-            // The end of the window represents the due date for this slot.
-            var window = GetWindowForExpectedCompletion(
-                //TODO: This feels unnecessary? Analyzing the start of the arrangement separately feels like it should just be another range.
-                headRange: arrangementStartedDate != null ? new DateRange(arrangementStartedDate.Value, arrangementStartedDate.Value) : null,
-                fromDate: date,
-                delay,
-                childLocationHistoryDates
-            );
-
-            if (window == null)
-            {
-                return null;
-            }
-
             var completion = completions.Find(window.Contains);
-
-            //TODO: Explain the need for this -- a stack overflow (infinite recursion) if a completion
-            //      occurs on the arrangement start date and the window is not advanced?
-            //      IDEA: If we check for that scenario separately, then we could simplify the rest of the logic.
-            var remainingCompletions = completions.Where(item => item != completion).ToImmutableList();
 
             var completionIsMissing = completion == default;
 
             if (!completionIsMissing)
             {
-                return (new DateOfInterest(completion, false), remainingCompletions);
+                return new DateOfInterest(completion, IsMissing: false);
             }
 
-            return (new DateOfInterest(window.Ranges.Last().End, true), remainingCompletions);
+            return new DateOfInterest(window.Ranges.Last().End, IsMissing: true);
         }
 
         internal static ImmutableList<DateOfInterest> CalculateDatesOfInterest(
+            DateOnly lastDateOfInterest,
             ImmutableList<DateOnly> completions,
-            DateOnly? arrangementStartedDate,
-            DateOnly? arrangementEndedDate,
-            DateOnly today,
-            DateOnly initialDate,
+            DateOnly calculateUntilDate,
             TimeSpan delay,
-            bool analyzeOnce, //IDEA: Instead, have two separate versions: one that recurses and one that does not.
-            ImmutableList<DateOfInterest>? analyzedDates = null,
+            bool keepCalculating,
             ImmutableList<ChildLocationHistoryEntry>? childLocationHistoryDates = null
         )
         {
             //IDEA: Instead of passing the child location history in, generate the "searchable timeline" first
             //      and pass it in.
             ImmutableList<DateOfInterest> CalculateDatesOfInterestInner(
-                DateOnly? arrangementStartedDate,
-                DateOnly initialDate,
-                ImmutableList<DateOnly> completions,
-                bool analyzeOnce,
-                ImmutableList<DateOfInterest>? analyzedDates = null
+                DateOnly lastDateOfInterest,
+                bool keepCalculating,
+                ImmutableList<DateOfInterest> datesOfInterest
             )
             {
-                // Search for a completion from the 'initialDate' for this iteration to the next due date.
+                // This is the window in which we expect to find a completion.
+                // This can be a continuous or discontinuous timeline (based on child location history).
+                // The end of the window represents the due date for this slot.
+                var window = GetWindowForExpectedCompletion(
+                    lastDateOfInterest: lastDateOfInterest,
+                    delay,
+                    childLocationHistoryDates
+                );
+
+                if (window == null)
+                {
+                    return datesOfInterest;
+                }
+
+                // Search for a completion inside current window.
                 // Note that this timeline could be discontinuous based on child location history.
-                var result = CalculateNextDateOfInterest(arrangementStartedDate, initialDate, delay, completions, childLocationHistoryDates);
+                var nextDateOfInterest = CalculateNextDateOfInterest(window, completions);
 
-                if (result == null)
+                var newDatesOfInterest = datesOfInterest.Add(nextDateOfInterest);
+
+                if (!keepCalculating)
                 {
-                    return analyzedDates ?? ImmutableList<DateOfInterest>.Empty;
+                    return newDatesOfInterest;
                 }
 
-                var (analyzedDate, remainingCompletions) = result.Value;
-
-                var newAnalyzedDates = analyzedDates == null ? [analyzedDate] : analyzedDates.Add(analyzedDate);
-
-                if (analyzeOnce || analyzedDate.Date >= arrangementEndedDate)
+                if (nextDateOfInterest.Date >= calculateUntilDate)
                 {
-                    return newAnalyzedDates;
+                    return CalculateDatesOfInterestInner(nextDateOfInterest.Date, keepCalculating: false, newDatesOfInterest);
                 }
 
-                if (analyzedDate.Date >= today)
-                {
-                    // When 'today' is reached, we only need one more due date
-                    return CalculateDatesOfInterestInner(null, analyzedDate.Date, remainingCompletions, analyzeOnce: true, newAnalyzedDates);
-                }
-
-                // This is for when a slot is the last one (so MaxOccurrences is null), so it will continually generate due dates until 'today' or the end of the arrangement
-                return CalculateDatesOfInterestInner(null, analyzedDate.Date, remainingCompletions, analyzeOnce, newAnalyzedDates);
+                return CalculateDatesOfInterestInner(nextDateOfInterest.Date, keepCalculating: true, newDatesOfInterest);
             }
 
-            return CalculateDatesOfInterestInner(arrangementStartedDate, initialDate, completions, analyzeOnce, analyzedDates);
+            return CalculateDatesOfInterestInner(lastDateOfInterest, keepCalculating, datesOfInterest: ImmutableList<DateOfInterest>.Empty);
         }
 
         internal static ImmutableList<DateOnly> CalculateMissingMonitoringRequirementInstancesForDurationRecurrencePerChildLocation(
@@ -671,30 +652,45 @@ namespace CareTogether.Engines.PolicyEvaluation
                 .Where(completion => completion >= arrangementStartedDate)
                 .ToImmutableList();
 
-            var slots = recurrence.Stages
-                .SelectMany(stage => Enumerable.Repeat<string?>(null, stage.MaxOccurrences ?? 1).ToImmutableList(), (stage, slot) => new { stage, slot });
+            // Checking for a completion at the start date first simplifies the rest of the calculation
+            // (For example, when there's just one policy stage with MaxOccurrences = null, the resulting dates are offsetted).
+            var completionOnDayOne = validCompletions.Find(item => item == arrangementStartedDate);
+            var applicableStages = completionOnDayOne != default && recurrence.Stages.Count() > 1
+                ? recurrence.Stages.Skip(1)
+                : recurrence.Stages;
 
-            var analyzedDates = slots.Aggregate(ImmutableList<DateOfInterest>.Empty, (dates, slot) =>
-            {
-                var initialDate = dates.IsEmpty ? arrangementStartedDate : dates.Last().Date;
-                var isFirst = dates.IsEmpty;
+            // TODO:
+            // Repeat each stage the number of times specified by MaxOccurrences, or once if MaxOccurrences is null.
+            // An instance of a stage is a slot in which we need to look for a completion.
+            // ----
+            // Generates slots in which we need to look for a completion. Each stage generates a number of slots
+            // equal to its MaxOccurrences, or just 1 if MaxOccurrences is null (which should be the last stage, or the only one).
+            // A slot isn't a defined DateRange or Timeline because there's no way of determining all the start/end dates beforehand.
+            var slots = applicableStages
+                .SelectMany(stage =>
+                    Enumerable
+                        .Repeat(stage, stage.MaxOccurrences ?? 1)
+                        .ToImmutableList());
 
-                return dates.Concat(
-                    CalculateDatesOfInterest(
-                        validCompletions,
-                        arrangementStartedDate: isFirst ? arrangementStartedDate : null,
-                        arrangementEndedDate,
-                        today,
-                        initialDate,
-                        delay: slot.stage.Delay,
-                        analyzeOnce: slot.stage.MaxOccurrences != null,
-                        analyzedDates: null,
-                        childLocationHistoryDates: childLocationHistoryDates.ToImmutableList()
-                    )
-                ).ToImmutableList();
-            });
+            // For each slot, find a list of all dates of interest.
+            var datesOfInterest = slots
+                .Aggregate(ImmutableList<DateOfInterest>.Empty, (dates, slot) =>
+                    {
+                        var lastDateOfInterest = dates.LastOrDefault()?.Date ?? arrangementStartedDate;
 
-            var missingDates = analyzedDates.Where(date => date.IsMissing).Select(item => item.Date).ToImmutableList();
+                        return dates.Concat(
+                            CalculateDatesOfInterest(
+                                lastDateOfInterest: lastDateOfInterest,
+                                validCompletions,
+                                calculateUntilDate: arrangementEndedDate ?? today,
+                                delay: slot.Delay,
+                                keepCalculating: slot.MaxOccurrences == null,
+                                childLocationHistoryDates: childLocationHistoryDates.ToImmutableList()
+                            )
+                        ).ToImmutableList();
+                    });
+
+            var missingDates = datesOfInterest.Where(date => date.IsMissing).Select(item => item.Date).ToImmutableList();
 
             if (arrangementEndedDate != null)
             {
