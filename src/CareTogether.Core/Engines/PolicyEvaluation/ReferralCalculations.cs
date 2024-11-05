@@ -570,14 +570,14 @@ namespace CareTogether.Engines.PolicyEvaluation
             return new DateOfInterest(window.Ranges.Last().End, IsMissing: true);
         }
 
-        internal static ImmutableList<DateOfInterest> CalculateDatesOfInterest(
+        internal static IEnumerable<DateOfInterest> CalculateDatesOfInterest(
             DateOnly lastDateOfInterest,
             ImmutableList<DateOnly> completions,
             DateOnly calculateUntilDate,
             TimeSpan delay,
             bool keepCalculating,
             ImmutableList<ChildLocation>? childLocationHistoryDates = null
-        )
+        ) //TODO: Change to an iterator (yield return), and thereby move 'calculateUntilDate' and 'keepCalculating' to the caller (use .TakeWhile(...))
         {
             //IDEA: Instead of passing the child location history in, generate the "searchable timeline" first
             //      and pass it in.
