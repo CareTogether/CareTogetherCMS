@@ -9,13 +9,13 @@ using H = CareTogether.Core.Test.ReferralCalculationTests.Helpers;
 namespace CareTogether.Core.Test.ReferralCalculationTests
 {
     [TestClass]
-    public class GetDiscontinuousWindow
+    public class GetPossiblyDiscontinuousWindowBasedOnChildLocations
     {
         [TestMethod]
         public void GetDiscontinuousWindowWithPauseInMiddle()
         {
-            var result = ReferralCalculations.GetDiscontinuousWindow(
-                startDate: DateOnly.FromDateTime(H.Date(1, 11)),
+            var result = ReferralCalculations.GetPossiblyDiscontinuousWindowBasedOnChildLocations(
+                lastDateOfInterest: DateOnly.FromDateTime(H.Date(1, 10)),
                 remainingDelay: TimeSpan.FromDays(7),
                 childLocationHistoryEntries: H.LocationHistoryEntries(
                     (ChildLocationPlan.DaytimeChildCare, 1, 1),
@@ -39,8 +39,8 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
         [TestMethod]
         public void GetDiscontinuousWindowWithTwoPauses()
         {
-            var result = ReferralCalculations.GetDiscontinuousWindow(
-                startDate: DateOnly.FromDateTime(H.Date(1, 11)),
+            var result = ReferralCalculations.GetPossiblyDiscontinuousWindowBasedOnChildLocations(
+                lastDateOfInterest: DateOnly.FromDateTime(H.Date(1, 10)),
                 remainingDelay: TimeSpan.FromDays(7),
                 childLocationHistoryEntries: H.LocationHistoryEntries(
                     (ChildLocationPlan.DaytimeChildCare, 1, 1),
@@ -70,8 +70,8 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
         [TestMethod]
         public void GetDiscontinuousWindowWithThreePauses()
         {
-            var result = ReferralCalculations.GetDiscontinuousWindow(
-                startDate: DateOnly.FromDateTime(H.Date(1, 11)),
+            var result = ReferralCalculations.GetPossiblyDiscontinuousWindowBasedOnChildLocations(
+                lastDateOfInterest: DateOnly.FromDateTime(H.Date(1, 10)),
                 remainingDelay: TimeSpan.FromDays(7),
                 childLocationHistoryEntries: H.LocationHistoryEntries(
                     (ChildLocationPlan.DaytimeChildCare, 1, 1),
@@ -107,8 +107,8 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
         [TestMethod]
         public void GetDiscontinuousWindowWithPauseWithoutResume()
         {
-            var result = ReferralCalculations.GetDiscontinuousWindow(
-                startDate: DateOnly.FromDateTime(H.Date(1, 11)),
+            var result = ReferralCalculations.GetPossiblyDiscontinuousWindowBasedOnChildLocations(
+                lastDateOfInterest: DateOnly.FromDateTime(H.Date(1, 10)),
                 remainingDelay: TimeSpan.FromDays(7),
                 childLocationHistoryEntries: H.LocationHistoryEntries(
                     (ChildLocationPlan.DaytimeChildCare, 1, 1),
@@ -123,8 +123,8 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
         [TestMethod]
         public void GetDiscontinuousWindowWithoutPause()
         {
-            var result = ReferralCalculations.GetDiscontinuousWindow(
-                startDate: DateOnly.FromDateTime(H.Date(1, 11)),
+            var result = ReferralCalculations.GetPossiblyDiscontinuousWindowBasedOnChildLocations(
+                lastDateOfInterest: DateOnly.FromDateTime(H.Date(1, 10)),
                 remainingDelay: TimeSpan.FromDays(7),
                 childLocationHistoryEntries: H.LocationHistoryEntries(
                     (ChildLocationPlan.DaytimeChildCare, 1, 1)

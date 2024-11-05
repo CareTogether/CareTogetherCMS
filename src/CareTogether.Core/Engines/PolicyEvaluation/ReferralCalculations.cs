@@ -478,9 +478,9 @@ namespace CareTogether.Engines.PolicyEvaluation
             ImmutableList<ChildLocationHistoryEntry>? childLocationHistoryEntries = null
         )
         {
-            var defaultDateRange = new DateRange(lastDateOfInterest.AddDays(1), lastDateOfInterest.AddDays(delay.Days));
-
-            var window = new DateOnlyTimeline([defaultDateRange]);
+            var window = new DateOnlyTimeline([
+                new DateRange(lastDateOfInterest.AddDays(1), lastDateOfInterest.AddDays(delay.Days))
+            ]);
 
             if (childLocationHistoryEntries == null)
             {
@@ -495,7 +495,7 @@ namespace CareTogether.Engines.PolicyEvaluation
                 return window;
             }
 
-            var discontinuousRanges = GetDiscontinuousWindow(lastDateOfInterest.AddDays(1), delay, childLocationHistoryEntries);
+            var discontinuousRanges = GetPossiblyDiscontinuousWindowBasedOnChildLocations(lastDateOfInterest, delay, childLocationHistoryEntries);
 
             if (discontinuousRanges.Count < 1)
             {
@@ -505,8 +505,8 @@ namespace CareTogether.Engines.PolicyEvaluation
             return new DateOnlyTimeline(discontinuousRanges);
         }
 
-        internal static ImmutableList<DateRange> GetDiscontinuousWindow(
-            DateOnly startDate,
+        internal static ImmutableList<DateRange> GetPossiblyDiscontinuousWindowBasedOnChildLocations(
+            DateOnly lastDateOfInterest,
             TimeSpan remainingDelay,
             ImmutableList<ChildLocationHistoryEntry> childLocationHistoryEntries,
             bool? isPaused = false,
@@ -514,9 +514,10 @@ namespace CareTogether.Engines.PolicyEvaluation
         )
         {
             ImmutableList<DateRange> nonNullDateRanges = dateRanges ?? ImmutableList<DateRange>.Empty;
+            var windowStartDate = lastDateOfInterest.AddDays(1);
 
             int delay = remainingDelay.Days - 1;
-            var defaultWindow = new DateRange(startDate, startDate.AddDays(delay));
+            var defaultWindow = new DateRange(windowStartDate, windowStartDate.AddDays(delay));
 
             bool findWithParentCriteria(ChildLocationHistoryEntry item)
             {
@@ -527,12 +528,13 @@ namespace CareTogether.Engines.PolicyEvaluation
             bool findWithVolunteerCriteria(ChildLocationHistoryEntry item)
             {
                 // TODO (WIP): The first condition is apparently not needed (passed on current tests), analyzing if there's a case where this is needed
-                return DateOnly.FromDateTime(item.TimestampUtc) > startDate && item.Plan != ChildLocationPlan.WithParent;
+                return DateOnly.FromDateTime(item.TimestampUtc) > windowStartDate && item.Plan != ChildLocationPlan.WithParent;
             }
 
             var childLocationIndex = childLocationHistoryEntries.FindIndex(isPaused == true ? findWithVolunteerCriteria : findWithParentCriteria);
 
-            // If the child is currently with parent, we don't generate a duedate.
+            // A policy is only elapsed while the child is with a volunteer, so if the child is currently with parent,
+            // the policy is 'paused', and we don't generate a duedate.
             if (childLocationIndex < 0 && isPaused == true)
             {
                 return ImmutableList<DateRange>.Empty;
@@ -545,17 +547,17 @@ namespace CareTogether.Engines.PolicyEvaluation
 
             var childLocation = childLocationHistoryEntries.ElementAt(childLocationIndex);
             DateOnly childLocationDate = DateOnly.FromDateTime(childLocation.TimestampUtc);
-            int daysFromStartDateToChildLocationDate = childLocationDate.AddDays(-startDate.DayNumber + 1).DayNumber;
+            int daysFromStartDateToChildLocationDate = childLocationDate.AddDays(-windowStartDate.DayNumber + 1).DayNumber;
             var newRemainingDelay = isPaused == true ? remainingDelay : TimeSpan.FromDays(remainingDelay.Days - daysFromStartDateToChildLocationDate);
 
             var remainingLocations = childLocationHistoryEntries.Skip(childLocationIndex + 1).ToImmutableList();
 
-            return GetDiscontinuousWindow(
-                startDate: childLocationDate.AddDays(1),
+            return GetPossiblyDiscontinuousWindowBasedOnChildLocations(
+                lastDateOfInterest: childLocationDate,
                 remainingDelay: newRemainingDelay,
                 childLocationHistoryEntries: remainingLocations,
                 isPaused: !isPaused,
-                dateRanges: isPaused == true ? nonNullDateRanges : nonNullDateRanges.Add(new DateRange(startDate, childLocationDate))
+                dateRanges: isPaused == true ? nonNullDateRanges : nonNullDateRanges.Add(new DateRange(windowStartDate, childLocationDate))
             );
         }
 
