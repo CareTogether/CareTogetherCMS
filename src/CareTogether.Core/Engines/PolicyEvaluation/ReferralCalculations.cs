@@ -430,8 +430,8 @@ namespace CareTogether.Engines.PolicyEvaluation
                                 lastDateOfInterest, validCompletions, slot.Delay);
 
                         var nextDates = slot.MaxOccurrences == null
-                            ? allPossibleNextDatesIterator.TakeWhile(nextDateOfInterest =>
-                                nextDateOfInterest.Date < (arrangementEndedDate ?? today))
+                            ? allPossibleNextDatesIterator.TakeWhilePlusOne(nextDateOfInterest =>
+                                nextDateOfInterest.Date <= (arrangementEndedDate ?? today))
                             : allPossibleNextDatesIterator.Take(1);
 
                         var aggregatedDates = dates
@@ -666,8 +666,8 @@ namespace CareTogether.Engines.PolicyEvaluation
                                 childLocationHistoryDates.ToImmutableList());
 
                         var nextDates = slot.MaxOccurrences == null
-                            ? allPossibleNextDatesIterator.TakeWhile(nextDateOfInterest =>
-                                nextDateOfInterest.Date < (arrangementEndedDate ?? today))
+                            ? allPossibleNextDatesIterator.TakeWhilePlusOne(nextDateOfInterest =>
+                                nextDateOfInterest.Date <= (arrangementEndedDate ?? today))
                             : allPossibleNextDatesIterator.Take(1);
 
                         var aggregatedDates = dates
@@ -695,6 +695,27 @@ namespace CareTogether.Engines.PolicyEvaluation
             return missingDates;
 
             //////////////////////////////////
+        }
+
+        //TODO: Move to a helper class ('Extensions.cs' or 'IEnumerableExtensions.cs') and create its own small unit test suite.
+        public static IEnumerable<T> TakeWhilePlusOne<T>(this IEnumerable<T> source, Func<T, bool> predicate)
+        {
+            using (var enumerator = source.GetEnumerator())
+            {
+                while (enumerator.MoveNext())
+                {
+                    var current = enumerator.Current;
+                    if (predicate(current))
+                    {
+                        yield return current;
+                    }
+                    else
+                    {
+                        yield return current;
+                        break;
+                    }
+                }
+            }
         }
 
         internal static ImmutableList<DateOnly>
