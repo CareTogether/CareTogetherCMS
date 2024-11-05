@@ -53,6 +53,15 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
                     Guid.Empty, TimeZoneInfo.ConvertTimeToUtc(new DateTime(YEAR, value.month, value.day), US_EASTERN_TIME_ZONE), Guid.Empty, Guid.Empty, value.plan, null))
                 .ToImmutableSortedSet();
 
+        public static ImmutableSortedSet<ChildLocation> ChildLocation(
+            params (ChildLocationPlan plan, int month, int day)[] values) =>
+            values
+                .Select(value => new ChildLocation(
+                    DateOnly.FromDateTime(Date(value.month, value.day)),
+                    value.plan
+                ))
+                .ToImmutableSortedSet();
+
         public static ArrangementFunction FunctionWithoutEligibility(
             string arrangementFunction, FunctionRequirement requirement) =>
             new ArrangementFunction(arrangementFunction, requirement,

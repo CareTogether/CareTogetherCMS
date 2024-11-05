@@ -25,7 +25,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
                 arrangementStartedAtUtc: H.Date(1, 1),
                 arrangementEndedAtUtc: null,
                 completions: Helpers.Dates(),
-                childLocationHistory: Helpers.LocationHistoryEntries(),
+                childLocationHistoryEntries: Helpers.LocationHistoryEntries(),
                 utcNow: H.Date(2, 14),
                 H.US_EASTERN_TIME_ZONE);
 
@@ -42,7 +42,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
                 arrangementStartedAtUtc: H.Date(1, 1),
                 arrangementEndedAtUtc: null,
                 completions: Helpers.Dates(),
-                childLocationHistory: Helpers.LocationHistoryEntries(),
+                childLocationHistoryEntries: Helpers.LocationHistoryEntries(),
                 utcNow: H.Date(2, 14),
                 H.US_EASTERN_TIME_ZONE);
 
@@ -60,7 +60,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
                 arrangementStartedAtUtc: H.Date(1, 1),
                 arrangementEndedAtUtc: null,
                 completions: Helpers.Dates(),
-                childLocationHistory: Helpers.LocationHistoryEntries(),
+                childLocationHistoryEntries: Helpers.LocationHistoryEntries(),
                 utcNow: H.Date(2, 14),
                 H.US_EASTERN_TIME_ZONE);
 
@@ -76,7 +76,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
                 arrangementStartedAtUtc: H.Date(1, 1),
                 arrangementEndedAtUtc: null,
                 completions: Helpers.Dates(),
-                childLocationHistory: Helpers.LocationHistoryEntries(),
+                childLocationHistoryEntries: Helpers.LocationHistoryEntries(),
                 utcNow: H.Date(2, 14),
                 H.US_EASTERN_TIME_ZONE);
 
@@ -92,7 +92,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
                 arrangementStartedAtUtc: H.Date(1, 1),
                 arrangementEndedAtUtc: null,
                 completions: Helpers.Dates(),
-                childLocationHistory: Helpers.LocationHistoryEntries(),
+                childLocationHistoryEntries: Helpers.LocationHistoryEntries(),
                 utcNow: H.Date(1, 2),
                 H.US_EASTERN_TIME_ZONE);
 
@@ -108,7 +108,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
                 arrangementStartedAtUtc: H.Date(1, 1),
                 arrangementEndedAtUtc: null,
                 completions: Helpers.Dates((1, 2)),
-                childLocationHistory: Helpers.LocationHistoryEntries(),
+                childLocationHistoryEntries: Helpers.LocationHistoryEntries(),
                 utcNow: H.Date(1, 2),
                 H.US_EASTERN_TIME_ZONE);
 
@@ -124,7 +124,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
                 arrangementStartedAtUtc: H.Date(1, 1),
                 arrangementEndedAtUtc: null,
                 completions: Helpers.Dates((1, 4)),
-                childLocationHistory: Helpers.LocationHistoryEntries(),
+                childLocationHistoryEntries: Helpers.LocationHistoryEntries(),
                 utcNow: H.Date(1, 2),
                 H.US_EASTERN_TIME_ZONE);
 
@@ -140,7 +140,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
                 arrangementStartedAtUtc: H.Date(1, 1),
                 arrangementEndedAtUtc: null,
                 completions: Helpers.Dates(),
-                childLocationHistory: Helpers.LocationHistoryEntries(),
+                childLocationHistoryEntries: Helpers.LocationHistoryEntries(),
                 utcNow: H.Date(2, 14),
                 H.US_EASTERN_TIME_ZONE);
 
@@ -158,7 +158,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
                 arrangementStartedAtUtc: H.Date(1, 1),
                 arrangementEndedAtUtc: null,
                 completions: Helpers.Dates((1, 5)),
-                childLocationHistory: Helpers.LocationHistoryEntries(),
+                childLocationHistoryEntries: Helpers.LocationHistoryEntries(),
                 utcNow: H.Date(2, 14),
                 H.US_EASTERN_TIME_ZONE);
 
@@ -177,7 +177,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
                 arrangementStartedAtUtc: H.Date(1, 1),
                 arrangementEndedAtUtc: H.Date(2, 1),
                 completions: Helpers.Dates(),
-                childLocationHistory: Helpers.LocationHistoryEntries(),
+                childLocationHistoryEntries: Helpers.LocationHistoryEntries(),
                 utcNow: H.Date(2, 14),
                 H.US_EASTERN_TIME_ZONE);
 
@@ -193,7 +193,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
                 arrangementStartedAtUtc: H.Date(1, 1),
                 arrangementEndedAtUtc: null,
                 completions: Helpers.Dates(),
-                childLocationHistory: Helpers.LocationHistoryEntries(
+                childLocationHistoryEntries: Helpers.LocationHistoryEntries(
                     (ChildLocationPlan.DaytimeChildCare, 1, 1),
                     (ChildLocationPlan.WithParent, 1, 4),
                     (ChildLocationPlan.DaytimeChildCare, 1, 8),
@@ -225,7 +225,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
                 arrangementStartedAtUtc: H.Date(1, 1),
                 arrangementEndedAtUtc: null,
                 completions: Helpers.Dates(),
-                childLocationHistory: Helpers.LocationHistoryEntries(
+                childLocationHistoryEntries: Helpers.LocationHistoryEntries(
                     (ChildLocationPlan.DaytimeChildCare, 1, 1),
                     (ChildLocationPlan.WithParent, 1, 4),
                     (ChildLocationPlan.DaytimeChildCare, 1, 8),
@@ -257,7 +257,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
                 arrangementStartedAtUtc: H.Date(1, 1),
                 arrangementEndedAtUtc: null,
                 completions: Helpers.Dates(),
-                childLocationHistory: Helpers.LocationHistoryEntries(
+                childLocationHistoryEntries: Helpers.LocationHistoryEntries(
                     (ChildLocationPlan.DaytimeChildCare, 1, 1),
                     (ChildLocationPlan.WithParent, 1, 4),
                     (ChildLocationPlan.DaytimeChildCare, 1, 8),
@@ -280,7 +280,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
                 arrangementStartedAtUtc: H.Date(1, 1),
                 arrangementEndedAtUtc: null,
                 completions: Helpers.Dates(),
-                childLocationHistory: Helpers.LocationHistoryEntries(
+                childLocationHistoryEntries: Helpers.LocationHistoryEntries(
                     (ChildLocationPlan.DaytimeChildCare, 1, 1),
                     (ChildLocationPlan.WithParent, 1, 4),
                     (ChildLocationPlan.DaytimeChildCare, 1, 8),
@@ -306,7 +306,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
                 arrangementStartedAtUtc: H.Date(1, 1),
                 arrangementEndedAtUtc: null,
                 completions: Helpers.Dates((1, 2)),
-                childLocationHistory: Helpers.LocationHistoryEntries(),
+                childLocationHistoryEntries: Helpers.LocationHistoryEntries(),
                 utcNow: H.Date(2, 14),
                 H.US_EASTERN_TIME_ZONE);
 
@@ -325,7 +325,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
                 arrangementStartedAtUtc: H.Date(1, 1),
                 arrangementEndedAtUtc: Helpers.Date(2, 1),
                 completions: Helpers.Dates((1, 2)),
-                childLocationHistory: Helpers.LocationHistoryEntries(),
+                childLocationHistoryEntries: Helpers.LocationHistoryEntries(),
                 utcNow: Helpers.Date(2, 14),
                 H.US_EASTERN_TIME_ZONE);
 
@@ -344,7 +344,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
                 arrangementStartedAtUtc: H.Date(1, 1),
                 arrangementEndedAtUtc: null,
                 completions: Helpers.Dates((1, 2), (1, 3), (1, 4), (1, 5), (1, 10)),
-                childLocationHistory: Helpers.LocationHistoryEntries(),
+                childLocationHistoryEntries: Helpers.LocationHistoryEntries(),
                 utcNow: Helpers.Date(2, 14),
                 H.US_EASTERN_TIME_ZONE);
 
@@ -363,7 +363,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
                 arrangementStartedAtUtc: H.Date(1, 1),
                 arrangementEndedAtUtc: null,
                 completions: Helpers.Dates((1, 2), (1, 4), (1, 6), (1, 17), (2, 3)),
-                childLocationHistory: Helpers.LocationHistoryEntries(),
+                childLocationHistoryEntries: Helpers.LocationHistoryEntries(),
                 utcNow: Helpers.Date(2, 14),
                 H.US_EASTERN_TIME_ZONE);
 
@@ -380,7 +380,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
                 arrangementStartedAtUtc: H.Date(1, 7),
                 arrangementEndedAtUtc: H.Date(1, 10),
                 completions: Helpers.Dates((1, 5)),
-                childLocationHistory: Helpers.LocationHistoryEntries(),
+                childLocationHistoryEntries: Helpers.LocationHistoryEntries(),
                 utcNow: H.Date(2, 1),
                 H.US_EASTERN_TIME_ZONE);
 
@@ -397,7 +397,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
                 arrangementStartedAtUtc: H.Date(1, 3),
                 arrangementEndedAtUtc: H.Date(1, 8),
                 completions: Helpers.Dates((1, 9)),
-                childLocationHistory: Helpers.LocationHistoryEntries(),
+                childLocationHistoryEntries: Helpers.LocationHistoryEntries(),
                 utcNow: H.Date(2, 1),
                 H.US_EASTERN_TIME_ZONE);
 
@@ -416,7 +416,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
                 arrangementStartedAtUtc: H.Date(1, 1),
                 arrangementEndedAtUtc: null,
                 completions: Helpers.Dates((1, 2), (1, 2)),
-                childLocationHistory: Helpers.LocationHistoryEntries(),
+                childLocationHistoryEntries: Helpers.LocationHistoryEntries(),
                 utcNow: H.Date(2, 14),
                 H.US_EASTERN_TIME_ZONE);
 
@@ -435,7 +435,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
                 arrangementStartedAtUtc: Helpers.Date(1, 1),
                 arrangementEndedAtUtc: null,
                 completions: Helpers.Dates((1, 1), (1, 2)),
-                childLocationHistory: Helpers.LocationHistoryEntries(),
+                childLocationHistoryEntries: Helpers.LocationHistoryEntries(),
                 utcNow: Helpers.Date(2, 14),
                 H.US_EASTERN_TIME_ZONE);
 
@@ -454,7 +454,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
                 arrangementStartedAtUtc: H.Date(1, 1),
                 arrangementEndedAtUtc: null,
                 completions: Helpers.Dates((1, 2), (1, 9)),
-                childLocationHistory: Helpers.LocationHistoryEntries(),
+                childLocationHistoryEntries: Helpers.LocationHistoryEntries(),
                 utcNow: H.Date(2, 14),
                 H.US_EASTERN_TIME_ZONE);
 
@@ -473,7 +473,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
                 arrangementStartedAtUtc: H.Date(1, 1),
                 arrangementEndedAtUtc: null,
                 completions: Helpers.Dates((1, 2), (1, 10)),
-                childLocationHistory: Helpers.LocationHistoryEntries(),
+                childLocationHistoryEntries: Helpers.LocationHistoryEntries(),
                 utcNow: H.Date(2, 14),
                 H.US_EASTERN_TIME_ZONE);
 
@@ -492,7 +492,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
                 arrangementStartedAtUtc: Helpers.Date(1, 1),
                 arrangementEndedAtUtc: null,
                 completions: Helpers.Dates((1, 2), (1, 20)),
-                childLocationHistory: Helpers.LocationHistoryEntries(),
+                childLocationHistoryEntries: Helpers.LocationHistoryEntries(),
                 utcNow: Helpers.Date(2, 14),
                 H.US_EASTERN_TIME_ZONE);
 
@@ -511,7 +511,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
                 arrangementStartedAtUtc: Helpers.Date(1, 1),
                 arrangementEndedAtUtc: null,
                 completions: Helpers.Dates((1, 2), (1, 20), (2, 9)),
-                childLocationHistory: Helpers.LocationHistoryEntries(),
+                childLocationHistoryEntries: Helpers.LocationHistoryEntries(),
                 utcNow: Helpers.Date(2, 14),
                 H.US_EASTERN_TIME_ZONE);
 
@@ -529,7 +529,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
                 arrangementStartedAtUtc: Helpers.Date(8, 1),
                 arrangementEndedAtUtc: null,
                 completions: Helpers.Dates((8, 3, 10), (8, 10, 9), (8, 15, 13), (8, 22, 0), (8, 29, 13)),
-                childLocationHistory: Helpers.LocationHistoryEntries(),
+                childLocationHistoryEntries: Helpers.LocationHistoryEntries(),
                 utcNow: Helpers.Date(9, 16),
                 H.US_EASTERN_TIME_ZONE);
 
@@ -546,7 +546,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
                 arrangementStartedAtUtc: Helpers.Date(8, 1),
                 arrangementEndedAtUtc: null,
                 completions: Helpers.Dates((8, 1)),
-                childLocationHistory: Helpers.LocationHistoryEntries(),
+                childLocationHistoryEntries: Helpers.LocationHistoryEntries(),
                 utcNow: Helpers.Date(8, 10),
                 H.US_EASTERN_TIME_ZONE);
 
@@ -564,7 +564,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
                 arrangementStartedAtUtc: Helpers.Date(8, 1),
                 arrangementEndedAtUtc: null,
                 completions: Helpers.Dates((8, 1)),
-                childLocationHistory: Helpers.LocationHistoryEntries(),
+                childLocationHistoryEntries: Helpers.LocationHistoryEntries(),
                 utcNow: Helpers.Date(8, 10),
                 H.US_EASTERN_TIME_ZONE);
 
@@ -583,7 +583,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
                 arrangementStartedAtUtc: H.Date(1, 1),
                 arrangementEndedAtUtc: null,
                 completions: Helpers.Dates(),
-                childLocationHistory: Helpers.LocationHistoryEntries(),
+                childLocationHistoryEntries: Helpers.LocationHistoryEntries(),
                 utcNow: H.Date(2, 14),
                 H.US_EASTERN_TIME_ZONE);
 
@@ -602,7 +602,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
                 arrangementStartedAtUtc: H.Date(1, 1),
                 arrangementEndedAtUtc: null,
                 completions: Helpers.Dates(),
-                childLocationHistory: Helpers.LocationHistoryEntries(
+                childLocationHistoryEntries: Helpers.LocationHistoryEntries(
                     (ChildLocationPlan.DaytimeChildCare, 1, 1)),
                 utcNow: H.Date(2, 14),
                 H.US_EASTERN_TIME_ZONE
@@ -623,7 +623,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
                 arrangementStartedAtUtc: H.Date(1, 1),
                 arrangementEndedAtUtc: null,
                 completions: Helpers.Dates(),
-                childLocationHistory: Helpers.LocationHistoryEntries(
+                childLocationHistoryEntries: Helpers.LocationHistoryEntries(
                     (ChildLocationPlan.DaytimeChildCare, 1, 1),
                     (ChildLocationPlan.WithParent, 1, 12),
                     (ChildLocationPlan.DaytimeChildCare, 1, 15)),
@@ -645,7 +645,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
                 arrangementStartedAtUtc: H.Date(1, 1),
                 arrangementEndedAtUtc: null,
                 completions: Helpers.Dates(),
-                childLocationHistory: Helpers.LocationHistoryEntries(
+                childLocationHistoryEntries: Helpers.LocationHistoryEntries(
                     (ChildLocationPlan.DaytimeChildCare, 1, 1),
                     (ChildLocationPlan.WithParent, 1, 12),
                     (ChildLocationPlan.DaytimeChildCare, 1, 20)),
@@ -667,7 +667,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
                 arrangementStartedAtUtc: H.Date(1, 1),
                 arrangementEndedAtUtc: null,
                 completions: Helpers.Dates(),
-                childLocationHistory: Helpers.LocationHistoryEntries(
+                childLocationHistoryEntries: Helpers.LocationHistoryEntries(
                     (ChildLocationPlan.DaytimeChildCare, 1, 1),
                     (ChildLocationPlan.WithParent, 2, 7)),
                 utcNow: H.Date(2, 14),
@@ -688,7 +688,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
                 arrangementStartedAtUtc: H.Date(1, 1),
                 arrangementEndedAtUtc: null,
                 completions: Helpers.Dates(),
-                childLocationHistory: Helpers.LocationHistoryEntries(),
+                childLocationHistoryEntries: Helpers.LocationHistoryEntries(),
                 utcNow: H.Date(2, 14),
                 H.US_EASTERN_TIME_ZONE);
 
@@ -708,7 +708,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
                 arrangementStartedAtUtc: H.Date(1, 1),
                 arrangementEndedAtUtc: H.Date(2, 1),
                 completions: Helpers.Dates(),
-                childLocationHistory: Helpers.LocationHistoryEntries((ChildLocationPlan.DaytimeChildCare, 1, 1)),
+                childLocationHistoryEntries: Helpers.LocationHistoryEntries((ChildLocationPlan.DaytimeChildCare, 1, 1)),
                 utcNow: H.Date(2, 14),
                 H.US_EASTERN_TIME_ZONE);
 
@@ -829,7 +829,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
                 arrangementStartedAtUtc: H.Date(1, 1),
                 arrangementEndedAtUtc: null,
                 completions: Helpers.Dates((1, 2)),
-                childLocationHistory: Helpers.LocationHistoryEntries((ChildLocationPlan.DaytimeChildCare, 1, 1)),
+                childLocationHistoryEntries: Helpers.LocationHistoryEntries((ChildLocationPlan.DaytimeChildCare, 1, 1)),
                 utcNow: H.Date(2, 14),
                 H.US_EASTERN_TIME_ZONE);
 
@@ -848,7 +848,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
                 arrangementStartedAtUtc: H.Date(1, 1),
                 arrangementEndedAtUtc: H.Date(2, 1),
                 completions: Helpers.Dates((1, 2)),
-                childLocationHistory: Helpers.LocationHistoryEntries((ChildLocationPlan.DaytimeChildCare, 1, 1)),
+                childLocationHistoryEntries: Helpers.LocationHistoryEntries((ChildLocationPlan.DaytimeChildCare, 1, 1)),
                 utcNow: H.Date(2, 14),
                 H.US_EASTERN_TIME_ZONE);
 
@@ -867,7 +867,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
                 arrangementStartedAtUtc: H.Date(1, 1),
                 arrangementEndedAtUtc: null,
                 completions: Helpers.Dates((1, 2), (1, 2)),
-                childLocationHistory: Helpers.LocationHistoryEntries((ChildLocationPlan.DaytimeChildCare, 1, 1)),
+                childLocationHistoryEntries: Helpers.LocationHistoryEntries((ChildLocationPlan.DaytimeChildCare, 1, 1)),
                 utcNow: H.Date(2, 14),
                 H.US_EASTERN_TIME_ZONE);
 
@@ -886,7 +886,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
                 arrangementStartedAtUtc: H.Date(1, 1),
                 arrangementEndedAtUtc: null,
                 completions: Helpers.Dates((1, 1), (1, 2)),
-                childLocationHistory: Helpers.LocationHistoryEntries((ChildLocationPlan.DaytimeChildCare, 1, 1)),
+                childLocationHistoryEntries: Helpers.LocationHistoryEntries((ChildLocationPlan.DaytimeChildCare, 1, 1)),
                 utcNow: H.Date(2, 14),
                 H.US_EASTERN_TIME_ZONE);
 
@@ -905,7 +905,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
                 arrangementStartedAtUtc: H.Date(1, 1),
                 arrangementEndedAtUtc: null,
                 completions: Helpers.Dates((1, 2), (1, 9)),
-                childLocationHistory: Helpers.LocationHistoryEntries((ChildLocationPlan.DaytimeChildCare, 1, 1)),
+                childLocationHistoryEntries: Helpers.LocationHistoryEntries((ChildLocationPlan.DaytimeChildCare, 1, 1)),
                 utcNow: H.Date(2, 14),
                 H.US_EASTERN_TIME_ZONE);
 
@@ -924,7 +924,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
                 arrangementStartedAtUtc: H.Date(1, 1),
                 arrangementEndedAtUtc: null,
                 completions: Helpers.Dates((1, 2), (1, 10)),
-                childLocationHistory: Helpers.LocationHistoryEntries((ChildLocationPlan.DaytimeChildCare, 1, 1)),
+                childLocationHistoryEntries: Helpers.LocationHistoryEntries((ChildLocationPlan.DaytimeChildCare, 1, 1)),
                 utcNow: H.Date(2, 14),
                 H.US_EASTERN_TIME_ZONE);
 
@@ -943,7 +943,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
                 arrangementStartedAtUtc: H.Date(1, 1),
                 arrangementEndedAtUtc: null,
                 completions: Helpers.Dates((1, 2), (1, 20)),
-                childLocationHistory: Helpers.LocationHistoryEntries((ChildLocationPlan.DaytimeChildCare, 1, 1)),
+                childLocationHistoryEntries: Helpers.LocationHistoryEntries((ChildLocationPlan.DaytimeChildCare, 1, 1)),
                 utcNow: H.Date(2, 14),
                 H.US_EASTERN_TIME_ZONE);
 
@@ -962,7 +962,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
                 arrangementStartedAtUtc: H.Date(1, 1),
                 arrangementEndedAtUtc: null,
                 completions: Helpers.Dates((1, 2), (1, 20), (2, 9)),
-                childLocationHistory: Helpers.LocationHistoryEntries((ChildLocationPlan.DaytimeChildCare, 1, 1)),
+                childLocationHistoryEntries: Helpers.LocationHistoryEntries((ChildLocationPlan.DaytimeChildCare, 1, 1)),
                 utcNow: H.Date(2, 14),
                 H.US_EASTERN_TIME_ZONE);
 
@@ -982,7 +982,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
                 arrangementStartedAtUtc: H.Date(9, 1),
                 arrangementEndedAtUtc: null,
                 completions: Helpers.Dates((9, 2), (9, 10), (9, 13)),
-                childLocationHistory: Helpers.LocationHistoryEntries(),
+                childLocationHistoryEntries: Helpers.LocationHistoryEntries(),
                 utcNow: H.Date(10, 1),
                 H.US_EASTERN_TIME_ZONE);
 

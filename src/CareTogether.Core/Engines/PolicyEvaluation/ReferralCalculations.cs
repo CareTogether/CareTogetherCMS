@@ -270,7 +270,7 @@ namespace CareTogether.Engines.PolicyEvaluation
         internal static ImmutableList<DateTime> CalculateMissingMonitoringRequirementInstances(
              RecurrencePolicy recurrence, Guid? filterToFamilyId,
              DateTime arrangementStartedAtUtc, DateTime? arrangementEndedAtUtc,
-             ImmutableList<DateTime> completions, ImmutableSortedSet<ChildLocationHistoryEntry> childLocationHistory,
+             ImmutableList<DateTime> completions, ImmutableSortedSet<ChildLocationHistoryEntry> childLocationHistoryEntries,
              DateTime utcNow, TimeZoneInfo locationTimeZone)
         {
             //////////////////////////////////////////////////
@@ -309,11 +309,11 @@ namespace CareTogether.Engines.PolicyEvaluation
                 }).ToImmutableList();
             }
 
-            var childLocationHistoryDates = childLocationHistory.Select(childLocation =>
+            var childLocationHistory = childLocationHistoryEntries.Select(childLocationEntry =>
             {
-                var timestampInLocationTime = TimeZoneInfo.ConvertTimeFromUtc(childLocation.TimestampUtc, locationTimeZone);
-                var childLocationWithTimestampInLocationTime = childLocation with { TimestampUtc = timestampInLocationTime };
-                return childLocationWithTimestampInLocationTime;
+                var timestampInLocationTime = TimeZoneInfo.ConvertTimeFromUtc(childLocationEntry.TimestampUtc, locationTimeZone);
+                var childLocationDate = DateOnly.FromDateTime(timestampInLocationTime);
+                return new ChildLocation(Date: childLocationDate, Plan: childLocationEntry.Plan);
             }).ToImmutableSortedSet();
 
 
@@ -330,12 +330,12 @@ namespace CareTogether.Engines.PolicyEvaluation
                 DurationStagesPerChildLocationRecurrencePolicy durationStagesPerChildLocation => WrapWithTimeInUtc(
                     CalculateMissingMonitoringRequirementInstancesForDurationRecurrencePerChildLocation(
                         durationStagesPerChildLocation, filterToFamilyId, arrangementStartedDate, arrangementEndedDate, today,
-                        completionDates, childLocationHistoryDates)
+                        completionDates, childLocationHistory)
                 ),
                 ChildCareOccurrenceBasedRecurrencePolicy childCareOccurences => WrapWithTimeInUtc(
                     CalculateMissingMonitoringRequirementInstancesForChildCareOccurrences(
                         childCareOccurences, filterToFamilyId, arrangementStartedAtUtc, arrangementEndedAtUtc,
-                        completionDates, childLocationHistoryDates, utcNow)
+                        completionDates, childLocationHistoryEntries, utcNow)
                 ),
                 _ => throw new NotImplementedException(
                     $"The recurrence policy type '{recurrence.GetType().FullName}' has not been implemented.")
@@ -470,24 +470,24 @@ namespace CareTogether.Engines.PolicyEvaluation
         /// </summary>
         /// <param name="lastDateOfInterest"></param>
         /// <param name="delay"></param>
-        /// <param name="childLocationHistoryEntries"></param>
+        /// <param name="childLocationHistory"></param>
         /// <returns></returns>
         internal static DateOnlyTimeline? GetWindowForExpectedCompletion(
             DateOnly lastDateOfInterest,
             TimeSpan delay,
-            ImmutableList<ChildLocationHistoryEntry>? childLocationHistoryEntries = null
+            ImmutableList<ChildLocation>? childLocationHistory = null
         )
         {
             var window = new DateOnlyTimeline([
                 new DateRange(lastDateOfInterest.AddDays(1), lastDateOfInterest.AddDays(delay.Days))
             ]);
 
-            if (childLocationHistoryEntries == null)
+            if (childLocationHistory == null)
             {
                 return window;
             }
 
-            var nextChildLocationWithinWindow = childLocationHistoryEntries?.Find(item => window.Contains(DateOnly.FromDateTime(item.TimestampUtc)));
+            var nextChildLocationWithinWindow = childLocationHistory?.Find(item => window.Contains(item.Date));
             var childWentToParent = nextChildLocationWithinWindow?.Plan == ChildLocationPlan.WithParent;
 
             if (nextChildLocationWithinWindow == null || !childWentToParent)
@@ -495,7 +495,7 @@ namespace CareTogether.Engines.PolicyEvaluation
                 return window;
             }
 
-            var discontinuousRanges = GetPossiblyDiscontinuousWindowBasedOnChildLocations(lastDateOfInterest, delay, childLocationHistoryEntries);
+            var discontinuousRanges = GetPossiblyDiscontinuousWindowBasedOnChildLocations(lastDateOfInterest, delay, childLocationHistory);
 
             if (discontinuousRanges.Count < 1)
             {
@@ -508,7 +508,7 @@ namespace CareTogether.Engines.PolicyEvaluation
         internal static ImmutableList<DateRange> GetPossiblyDiscontinuousWindowBasedOnChildLocations(
             DateOnly lastDateOfInterest,
             TimeSpan remainingDelay,
-            ImmutableList<ChildLocationHistoryEntry> childLocationHistoryEntries,
+            ImmutableList<ChildLocation> childLocationHistory,
             bool? isPaused = false,
             ImmutableList<DateRange>? dateRanges = null
         )
@@ -519,19 +519,19 @@ namespace CareTogether.Engines.PolicyEvaluation
             int delay = remainingDelay.Days - 1;
             var defaultWindow = new DateRange(windowStartDate, windowStartDate.AddDays(delay));
 
-            bool findWithParentCriteria(ChildLocationHistoryEntry item)
+            bool findWithParentCriteria(ChildLocation item)
             {
                 // TODO (WIP): The first condition is apparently not needed (passed on current tests), analyzing if there's a case where this is needed
-                return defaultWindow.Contains(DateOnly.FromDateTime(item.TimestampUtc)) && item.Plan == ChildLocationPlan.WithParent;
+                return defaultWindow.Contains(item.Date) && item.Plan == ChildLocationPlan.WithParent;
             }
 
-            bool findWithVolunteerCriteria(ChildLocationHistoryEntry item)
+            bool findWithVolunteerCriteria(ChildLocation item)
             {
                 // TODO (WIP): The first condition is apparently not needed (passed on current tests), analyzing if there's a case where this is needed
-                return DateOnly.FromDateTime(item.TimestampUtc) > windowStartDate && item.Plan != ChildLocationPlan.WithParent;
+                return item.Date > windowStartDate && item.Plan != ChildLocationPlan.WithParent;
             }
 
-            var childLocationIndex = childLocationHistoryEntries.FindIndex(isPaused == true ? findWithVolunteerCriteria : findWithParentCriteria);
+            var childLocationIndex = childLocationHistory.FindIndex(isPaused == true ? findWithVolunteerCriteria : findWithParentCriteria);
 
             // A policy is only elapsed while the child is with a volunteer, so if the child is currently with parent,
             // the policy is 'paused', and we don't generate a duedate.
@@ -545,17 +545,17 @@ namespace CareTogether.Engines.PolicyEvaluation
                 return nonNullDateRanges.Add(defaultWindow);
             }
 
-            var childLocation = childLocationHistoryEntries.ElementAt(childLocationIndex);
-            DateOnly childLocationDate = DateOnly.FromDateTime(childLocation.TimestampUtc);
+            var childLocation = childLocationHistory.ElementAt(childLocationIndex);
+            DateOnly childLocationDate = childLocation.Date;
             int daysFromStartDateToChildLocationDate = childLocationDate.AddDays(-windowStartDate.DayNumber + 1).DayNumber;
             var newRemainingDelay = isPaused == true ? remainingDelay : TimeSpan.FromDays(remainingDelay.Days - daysFromStartDateToChildLocationDate);
 
-            var remainingLocations = childLocationHistoryEntries.Skip(childLocationIndex + 1).ToImmutableList();
+            var remainingLocations = childLocationHistory.Skip(childLocationIndex + 1).ToImmutableList();
 
             return GetPossiblyDiscontinuousWindowBasedOnChildLocations(
                 lastDateOfInterest: childLocationDate,
                 remainingDelay: newRemainingDelay,
-                childLocationHistoryEntries: remainingLocations,
+                childLocationHistory: remainingLocations,
                 isPaused: !isPaused,
                 dateRanges: isPaused == true ? nonNullDateRanges : nonNullDateRanges.Add(new DateRange(windowStartDate, childLocationDate))
             );
@@ -584,7 +584,7 @@ namespace CareTogether.Engines.PolicyEvaluation
             DateOnly calculateUntilDate,
             TimeSpan delay,
             bool keepCalculating,
-            ImmutableList<ChildLocationHistoryEntry>? childLocationHistoryDates = null
+            ImmutableList<ChildLocation>? childLocationHistoryDates = null
         )
         {
             //IDEA: Instead of passing the child location history in, generate the "searchable timeline" first
@@ -634,7 +634,7 @@ namespace CareTogether.Engines.PolicyEvaluation
         internal static ImmutableList<DateOnly> CalculateMissingMonitoringRequirementInstancesForDurationRecurrencePerChildLocation(
             DurationStagesPerChildLocationRecurrencePolicy recurrence, Guid? filterToFamilyId,
             DateOnly arrangementStartedDate, DateOnly? arrangementEndedDate, DateOnly today,
-            ImmutableList<DateOnly> completionDates, ImmutableSortedSet<ChildLocationHistoryEntry> childLocationHistoryDates)
+            ImmutableList<DateOnly> completionDates, ImmutableSortedSet<ChildLocation> childLocationHistoryDates)
         {
             // Technically, the RecurrencePolicyStage model currently allows any stage to have an unlimited
             // # of occurrences, but that would be invalid, so check for those cases and throw an exception.
@@ -654,10 +654,14 @@ namespace CareTogether.Engines.PolicyEvaluation
                 .Where(completion => completion >= arrangementStartedDate)
                 .ToImmutableList();
 
-            // Checking for a completion at the start date first simplifies the rest of the calculation
-            // (For example, when there's just one policy stage with MaxOccurrences = null, the resulting dates are offsetted).
+            // Checking for a completion at the start date first simplifies the rest of the calculation.
+            // For example, when there's just one policy stage with MaxOccurrences = null, the resulting dates are offsetted,
+            // creating the need to make the recursive calculation aware if it's the first calculation, i. e. start date and delay are offset or not,
+            // so the rest of the calculation have a different offset, compensanting the first offset.
+            // Another problem is a stack overflow (infinite recursion), creating the need of always passing a new list of completions,
+            // removing the ones that were already checked.
             var completionOnDayOne = validCompletions.Find(item => item == arrangementStartedDate);
-            var applicableStages = completionOnDayOne != default && recurrence.Stages.Count() > 1
+            var applicableStages = completionOnDayOne != default && recurrence.Stages.Count > 1
                 ? recurrence.Stages.Skip(1)
                 : recurrence.Stages;
 
@@ -667,7 +671,8 @@ namespace CareTogether.Engines.PolicyEvaluation
             // ----
             // Generates slots in which we need to look for a completion. Each stage generates a number of slots
             // equal to its MaxOccurrences, or just 1 if MaxOccurrences is null (which should be the last stage, or the only one).
-            // A slot isn't a defined DateRange or Timeline because there's no way of determining all the start/end dates beforehand.
+            // A slot doesn't have a start/end date because there's no way of determining all the start/end dates beforehand, it depends on previus
+            // calculated dates of interest (either a completion or due date).
             var slots = applicableStages
                 .SelectMany(stage =>
                     Enumerable
