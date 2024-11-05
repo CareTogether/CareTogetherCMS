@@ -506,6 +506,17 @@ namespace CareTogether.Engines.PolicyEvaluation
             ImmutableList<DateRange>? dateRanges = null
         )
         {
+            //TODO: Plan to simplify this:
+            //      1. Replace recursion with a loop
+            //      2. Replace loop and accumulator variable of date ranges with an iterator (yield return/yield break)
+            //      3. Build the discontinuous timeline of child location-based date ranges *outside* of IterateDatesOfInterest,
+            //         instead passing in the overall "base" timeline to use for the arrangement (either continuous or discontinuous);
+            //         at that point 'childLocationHistoryDates' is no longer passed into IterateDatesOfInterest or this method
+            //      4. The logic used to build the discontinuous timline should be a fully generalizable method
+            //         called "DateOnlyTimeline.SubsetFromWithDurationInDays" or similar
+            //      5. Finally, GetWindowForExpectedCompletion will be agnostic to whatever timeline is passed into it, so
+            //         no 'if' statement
+
             ImmutableList<DateRange> nonNullDateRanges = dateRanges ?? ImmutableList<DateRange>.Empty;
             var windowStartDate = nextWindowSearchFromDate.AddDays(1);
 
