@@ -116,7 +116,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
                 ).ToImmutableList()
             );
 
-            AssertEx.SequenceIs(result, ImmutableList<DateRange>.Empty);
+            AssertEx.SequenceIs(result, null);
         }
 
 

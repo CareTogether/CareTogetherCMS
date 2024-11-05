@@ -468,7 +468,7 @@ namespace CareTogether.Engines.PolicyEvaluation
         /// Generate a timeline (a window) in which we expect to find a completion.
         /// This can be a continuous or discontinuous timeline.
         /// </summary>
-        /// <param name="lastDateOfInterest"></param>
+        /// <param name="lastDateOfInterest">The last date of interest is either the last completion date or last due date. It is used to calculate the start date of the next window.</param>
         /// <param name="delay"></param>
         /// <param name="childLocationHistory"></param>
         /// <returns></returns>
@@ -478,26 +478,18 @@ namespace CareTogether.Engines.PolicyEvaluation
             ImmutableList<ChildLocation>? childLocationHistory = null
         )
         {
-            var window = new DateOnlyTimeline([
-                new DateRange(lastDateOfInterest.AddDays(1), lastDateOfInterest.AddDays(delay.Days))
-            ]);
-
             if (childLocationHistory == null)
             {
-                return window;
-            }
+                var window = new DateOnlyTimeline([
+                    new DateRange(lastDateOfInterest.AddDays(1), lastDateOfInterest.AddDays(delay.Days))
+                ]);
 
-            var nextChildLocationWithinWindow = childLocationHistory?.Find(item => window.Contains(item.Date));
-            var childWentToParent = nextChildLocationWithinWindow?.Plan == ChildLocationPlan.WithParent;
-
-            if (nextChildLocationWithinWindow == null || !childWentToParent)
-            {
                 return window;
             }
 
             var discontinuousRanges = GetPossiblyDiscontinuousWindowBasedOnChildLocations(lastDateOfInterest, delay, childLocationHistory);
 
-            if (discontinuousRanges.Count < 1)
+            if (discontinuousRanges == null)
             {
                 return null;
             }
@@ -505,7 +497,7 @@ namespace CareTogether.Engines.PolicyEvaluation
             return new DateOnlyTimeline(discontinuousRanges);
         }
 
-        internal static ImmutableList<DateRange> GetPossiblyDiscontinuousWindowBasedOnChildLocations(
+        internal static ImmutableList<DateRange>? GetPossiblyDiscontinuousWindowBasedOnChildLocations(
             DateOnly lastDateOfInterest,
             TimeSpan remainingDelay,
             ImmutableList<ChildLocation> childLocationHistory,
@@ -537,7 +529,7 @@ namespace CareTogether.Engines.PolicyEvaluation
             // the policy is 'paused', and we don't generate a duedate.
             if (childLocationIndex < 0 && isPaused == true)
             {
-                return ImmutableList<DateRange>.Empty;
+                return null;
             }
 
             if (childLocationIndex < 0)
@@ -604,6 +596,7 @@ namespace CareTogether.Engines.PolicyEvaluation
                     childLocationHistoryDates
                 );
 
+                // This case only happens if a policy gets 'paused' (when a child location changes to WithParent) during the policy window.
                 if (window == null)
                 {
                     return datesOfInterest;

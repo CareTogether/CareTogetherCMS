@@ -69,6 +69,11 @@ namespace CareTogether.Core.Test
 
         public static void SequenceIs(ICollection<DateRange>? actual, ICollection<DateRange>? expected)
         {
+            if (actual == null && expected == null)
+            {
+                return;
+            }
+
             Assert.AreEqual(expected?.Count, actual?.Count);
             foreach (var (First, Second) in Enumerable
                 .Zip(expected, actual))
