@@ -1,7 +1,10 @@
 using System;
 using CareTogether.Resources.Referrals;
 
-public record ChildLocation(DateOnly Date, ChildLocationPlan Plan) : IComparable<ChildLocation>
+namespace CareTogether.Engines.PolicyEvaluation;
+
+public sealed record ChildLocation(DateOnly Date, ChildLocationPlan Plan)
+    : IComparable<ChildLocation>
 {
     public int CompareTo(ChildLocation? other)
     {

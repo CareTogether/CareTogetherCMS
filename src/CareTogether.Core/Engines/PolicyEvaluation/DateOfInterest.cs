@@ -1,3 +1,4 @@
 using System;
-//TODO: Convert from a class to a record
-public record DateOfInterest(DateOnly Date, bool IsMissing);
+
+//NOTE: If there are ever more than two options, IsMissing should become an enum.
+public sealed record DateOfInterest(DateOnly Date, bool IsMissing);
