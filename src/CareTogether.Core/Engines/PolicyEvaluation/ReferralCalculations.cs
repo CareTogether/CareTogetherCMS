@@ -469,26 +469,26 @@ namespace CareTogether.Engines.PolicyEvaluation
         /// Generate a timeline (a window) in which we expect to find a completion.
         /// This can be a continuous or discontinuous timeline.
         /// </summary>
-        /// <param name="lastDateOfInterest">The last date of interest is either the last completion date or last due date. It is used to calculate the start date of the next window.</param>
-        /// <param name="delay"></param>
+        /// <param name="nextWindowSearchFromDate">The last date of interest is either the last completion date or last due date. It is used to calculate the start date of the next window.</param>
+        /// <param name="windowLength"></param>
         /// <param name="childLocationHistory"></param>
         /// <returns></returns>
         internal static DateOnlyTimeline? GetWindowForExpectedCompletion(
-            DateOnly lastDateOfInterest,
-            TimeSpan delay,
+            DateOnly nextWindowSearchFromDate,
+            TimeSpan windowLength,
             ImmutableList<ChildLocation>? childLocationHistory = null
         )
         {
             if (childLocationHistory == null)
             {
                 var window = new DateOnlyTimeline([
-                    new DateRange(lastDateOfInterest.AddDays(1), lastDateOfInterest.AddDays(delay.Days))
+                    new DateRange(nextWindowSearchFromDate.AddDays(1), nextWindowSearchFromDate.AddDays(windowLength.Days))
                 ]);
 
                 return window;
             }
 
-            var discontinuousRanges = GetPossiblyDiscontinuousWindowBasedOnChildLocations(lastDateOfInterest, delay, childLocationHistory);
+            var discontinuousRanges = GetPossiblyDiscontinuousWindowBasedOnChildLocations(nextWindowSearchFromDate, windowLength, childLocationHistory);
 
             if (discontinuousRanges == null)
             {
@@ -499,17 +499,17 @@ namespace CareTogether.Engines.PolicyEvaluation
         }
 
         internal static ImmutableList<DateRange>? GetPossiblyDiscontinuousWindowBasedOnChildLocations(
-            DateOnly lastDateOfInterest,
-            TimeSpan remainingDelay,
+            DateOnly nextWindowSearchFromDate,
+            TimeSpan windowLength,
             ImmutableList<ChildLocation> childLocationHistory,
             bool? isPaused = false,
             ImmutableList<DateRange>? dateRanges = null
         )
         {
             ImmutableList<DateRange> nonNullDateRanges = dateRanges ?? ImmutableList<DateRange>.Empty;
-            var windowStartDate = lastDateOfInterest.AddDays(1);
+            var windowStartDate = nextWindowSearchFromDate.AddDays(1);
 
-            int delay = remainingDelay.Days - 1;
+            int delay = windowLength.Days - 1;
             var defaultWindow = new DateRange(windowStartDate, windowStartDate.AddDays(delay));
 
             bool findWithParentCriteria(ChildLocation item)
@@ -541,13 +541,13 @@ namespace CareTogether.Engines.PolicyEvaluation
             var childLocation = childLocationHistory.ElementAt(childLocationIndex);
             DateOnly childLocationDate = childLocation.Date;
             int daysFromStartDateToChildLocationDate = childLocationDate.AddDays(-windowStartDate.DayNumber + 1).DayNumber;
-            var newRemainingDelay = isPaused == true ? remainingDelay : TimeSpan.FromDays(remainingDelay.Days - daysFromStartDateToChildLocationDate);
+            var newRemainingDelay = isPaused == true ? windowLength : TimeSpan.FromDays(windowLength.Days - daysFromStartDateToChildLocationDate);
 
             var remainingLocations = childLocationHistory.Skip(childLocationIndex + 1).ToImmutableList();
 
             return GetPossiblyDiscontinuousWindowBasedOnChildLocations(
-                lastDateOfInterest: childLocationDate,
-                remainingDelay: newRemainingDelay,
+                nextWindowSearchFromDate: childLocationDate,
+                windowLength: newRemainingDelay,
                 childLocationHistory: remainingLocations,
                 isPaused: !isPaused,
                 dateRanges: isPaused == true ? nonNullDateRanges : nonNullDateRanges.Add(new DateRange(windowStartDate, childLocationDate))
@@ -574,7 +574,7 @@ namespace CareTogether.Engines.PolicyEvaluation
         internal static IEnumerable<DateOfInterest> IterateDatesOfInterest(
             DateOnly lastDateOfInterest,
             ImmutableList<DateOnly> completions,
-            TimeSpan delay,
+            TimeSpan windowLength,
             //IDEA: Instead of passing the child location history in, generate the "searchable timeline" first
             //      and pass it in. It is a list of dates/windows in which there is a 'pause' inside a date range.
             ImmutableList<ChildLocation>? childLocationHistoryDates = null
@@ -586,12 +586,12 @@ namespace CareTogether.Engines.PolicyEvaluation
                 // This is the window in which we expect to find a completion.
                 // This can be a continuous or discontinuous timeline (based on child location history).
                 // The end of the window represents the due date for this slot.
-                var window = GetWindowForExpectedCompletion(
-                    nextWindowSearchFromDate, delay, childLocationHistoryDates);
+                var nextWindow = GetWindowForExpectedCompletion(
+                    nextWindowSearchFromDate, windowLength, childLocationHistoryDates);
 
                 // This case only happens if a policy gets 'paused'
                 // (when a child location changes to WithParent) during the policy window.
-                if (window == null)
+                if (nextWindow == null)
                 {
                     yield break;
                 }
@@ -599,7 +599,7 @@ namespace CareTogether.Engines.PolicyEvaluation
                 // Search for a completion inside current window.
                 // Note that this timeline could be discontinuous based on child location history.
                 var nextDateOfInterest = CalculateNextDateOfInterest(
-                    window, completions);
+                    nextWindow, completions);
 
                 yield return nextDateOfInterest;
 
