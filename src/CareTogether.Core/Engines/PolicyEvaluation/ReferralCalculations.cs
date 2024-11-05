@@ -426,18 +426,19 @@ namespace CareTogether.Engines.PolicyEvaluation
                     {
                         var lastDateOfInterest = dates.LastOrDefault()?.Date ?? arrangementStartedDate;
 
-                        var nextDates =
-                            CalculateDatesOfInterest(
-                                lastDateOfInterest: lastDateOfInterest,
-                                validCompletions,
-                                calculateUntilDate: arrangementEndedDate ?? today,
-                                slot.Delay,
-                                keepCalculating: slot.MaxOccurrences == null
-                            );
+                        var allPossibleNextDatesIterator = IterateDatesOfInterest(
+                                lastDateOfInterest, validCompletions, slot.Delay);
 
-                        return dates
+                        var nextDates = slot.MaxOccurrences == null
+                            ? allPossibleNextDatesIterator.TakeWhile(nextDateOfInterest =>
+                                nextDateOfInterest.Date < (arrangementEndedDate ?? today))
+                            : allPossibleNextDatesIterator.Take(1);
+
+                        var aggregatedDates = dates
                             .Concat(nextDates)
                             .ToImmutableList();
+
+                        return aggregatedDates;
                     });
 
 
@@ -570,58 +571,40 @@ namespace CareTogether.Engines.PolicyEvaluation
             return new DateOfInterest(window.Ranges.Last().End, IsMissing: true);
         }
 
-        internal static IEnumerable<DateOfInterest> CalculateDatesOfInterest(
+        internal static IEnumerable<DateOfInterest> IterateDatesOfInterest(
             DateOnly lastDateOfInterest,
             ImmutableList<DateOnly> completions,
-            DateOnly calculateUntilDate,
             TimeSpan delay,
-            bool keepCalculating,
-            ImmutableList<ChildLocation>? childLocationHistoryDates = null
-        ) //TODO: Change to an iterator (yield return), and thereby move 'calculateUntilDate' and 'keepCalculating' to the caller (use .TakeWhile(...))
-        {
             //IDEA: Instead of passing the child location history in, generate the "searchable timeline" first
-            //      and pass it in.
-            ImmutableList<DateOfInterest> CalculateDatesOfInterestInner(
-                DateOnly lastDateOfInterest,
-                bool keepCalculating,
-                ImmutableList<DateOfInterest> datesOfInterest
-            )
+            //      and pass it in. It is a list of dates/windows in which there is a 'pause' inside a date range.
+            ImmutableList<ChildLocation>? childLocationHistoryDates = null
+        )
+        {
+            DateOnly nextWindowSearchFromDate = lastDateOfInterest;
+            while (true)
             {
                 // This is the window in which we expect to find a completion.
                 // This can be a continuous or discontinuous timeline (based on child location history).
                 // The end of the window represents the due date for this slot.
                 var window = GetWindowForExpectedCompletion(
-                    lastDateOfInterest: lastDateOfInterest,
-                    delay,
-                    childLocationHistoryDates
-                );
+                    nextWindowSearchFromDate, delay, childLocationHistoryDates);
 
-                // This case only happens if a policy gets 'paused' (when a child location changes to WithParent) during the policy window.
+                // This case only happens if a policy gets 'paused'
+                // (when a child location changes to WithParent) during the policy window.
                 if (window == null)
                 {
-                    return datesOfInterest;
+                    yield break;
                 }
 
                 // Search for a completion inside current window.
                 // Note that this timeline could be discontinuous based on child location history.
-                var nextDateOfInterest = CalculateNextDateOfInterest(window, completions);
+                var nextDateOfInterest = CalculateNextDateOfInterest(
+                    window, completions);
 
-                var newDatesOfInterest = datesOfInterest.Add(nextDateOfInterest);
+                yield return nextDateOfInterest;
 
-                if (!keepCalculating)
-                {
-                    return newDatesOfInterest;
-                }
-
-                if (nextDateOfInterest.Date >= calculateUntilDate)
-                {
-                    return CalculateDatesOfInterestInner(nextDateOfInterest.Date, keepCalculating: false, newDatesOfInterest);
-                }
-
-                return CalculateDatesOfInterestInner(nextDateOfInterest.Date, keepCalculating: true, newDatesOfInterest);
+                nextWindowSearchFromDate = nextDateOfInterest.Date;
             }
-
-            return CalculateDatesOfInterestInner(lastDateOfInterest, keepCalculating, datesOfInterest: ImmutableList<DateOfInterest>.Empty);
         }
 
         internal static ImmutableList<DateOnly> CalculateMissingMonitoringRequirementInstancesForDurationRecurrencePerChildLocation(
@@ -678,16 +661,20 @@ namespace CareTogether.Engines.PolicyEvaluation
                     {
                         var lastDateOfInterest = dates.LastOrDefault()?.Date ?? arrangementStartedDate;
 
-                        return dates.Concat(
-                            CalculateDatesOfInterest(
-                                lastDateOfInterest: lastDateOfInterest,
-                                validCompletions,
-                                calculateUntilDate: arrangementEndedDate ?? today,
-                                delay: slot.Delay,
-                                keepCalculating: slot.MaxOccurrences == null,
-                                childLocationHistoryDates: childLocationHistoryDates.ToImmutableList()
-                            )
-                        ).ToImmutableList();
+                        var allPossibleNextDatesIterator = IterateDatesOfInterest(
+                                lastDateOfInterest, validCompletions, slot.Delay,
+                                childLocationHistoryDates.ToImmutableList());
+
+                        var nextDates = slot.MaxOccurrences == null
+                            ? allPossibleNextDatesIterator.TakeWhile(nextDateOfInterest =>
+                                nextDateOfInterest.Date < (arrangementEndedDate ?? today))
+                            : allPossibleNextDatesIterator.Take(1);
+
+                        var aggregatedDates = dates
+                            .Concat(nextDates)
+                            .ToImmutableList();
+
+                        return aggregatedDates;
                     });
 
             var missingDates = datesOfInterest.Where(date => date.IsMissing).Select(item => item.Date).ToImmutableList();

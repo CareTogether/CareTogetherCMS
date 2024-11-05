@@ -279,7 +279,7 @@ public class DateOnlyTimelineTest
     [TestMethod]
     public void IntersectionOfSingleOneDayTimeline()
     {
-        var dut = DateOnlyTimeline.IntersectionOf(ImmutableList.Create([
+        var dut = DateOnlyTimeline.IntersectionOf(ImmutableList.Create<DateOnlyTimeline?>([
             new DateOnlyTimeline([DR(1, 1)])
         ]));
 
@@ -293,7 +293,7 @@ public class DateOnlyTimelineTest
     [TestMethod]
     public void IntersectionOfTwoOverlappingTimelines()
     {
-        var dut = DateOnlyTimeline.IntersectionOf(ImmutableList.Create([
+        var dut = DateOnlyTimeline.IntersectionOf(ImmutableList.Create<DateOnlyTimeline?>([
             new DateOnlyTimeline([DR(2, 2)]),
             new DateOnlyTimeline([DR(1, 3)])
         ]));
@@ -320,7 +320,7 @@ public class DateOnlyTimelineTest
     [TestMethod]
     public void IntersectionOfThreeDisjointTimelines()
     {
-        var dut = DateOnlyTimeline.IntersectionOf(ImmutableList.Create([
+        var dut = DateOnlyTimeline.IntersectionOf(ImmutableList.Create<DateOnlyTimeline?>([
             new DateOnlyTimeline([DR(2, 2)]),
             new DateOnlyTimeline([DR(1, 3)]),
             new DateOnlyTimeline([DR(4, 4)])
@@ -332,7 +332,7 @@ public class DateOnlyTimelineTest
     [TestMethod]
     public void IntersectionOfThreeOverlappingTimelines()
     {
-        var dut = DateOnlyTimeline.IntersectionOf(ImmutableList.Create([
+        var dut = DateOnlyTimeline.IntersectionOf(ImmutableList.Create<DateOnlyTimeline?>([
             new DateOnlyTimeline([DR(2, 2)]),
             new DateOnlyTimeline([DR(1, 3)]),
             new DateOnlyTimeline([DR(2, 4)])
