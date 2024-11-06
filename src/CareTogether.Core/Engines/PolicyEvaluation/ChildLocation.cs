@@ -1,9 +1,11 @@
 using System;
-using CareTogether.Resources.Referrals;
 
 namespace CareTogether.Engines.PolicyEvaluation;
 
-public sealed record ChildLocation(DateOnly Date, ChildLocationPlan Plan)
+public sealed record ChildLocation(
+    DateOnly Date,
+    bool Paused // means "from now on, we stop checking for completion until resuming"
+)
     : IComparable<ChildLocation>
 {
     public int CompareTo(ChildLocation? other)

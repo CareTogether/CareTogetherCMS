@@ -275,6 +275,51 @@ public sealed class DateOnlyTimeline : IEquatable<DateOnlyTimeline>
             hashCode.Add(range.GetHashCode());
         return hashCode.ToHashCode();
     }
+
+    public DateOnlyTimeline? CutToMaxLength(int maxLength)
+    {
+        if (maxLength <= 0)
+            throw new ArgumentException("Maximum length must be positive.", nameof(maxLength));
+
+        // If total length is already within limit, return unchanged
+        var totalLength = Ranges.Sum(r => r.End.DayNumber - r.Start.DayNumber + 1);
+        if (totalLength <= maxLength)
+            return this;
+
+        var remainingTotalLength = maxLength;
+        var newRanges = new List<DateRange>();
+
+        foreach (var range in Ranges)
+        {
+            var currentRangeLength = range.End.DayNumber - range.Start.DayNumber + 1;
+
+            if (remainingTotalLength <= 0)
+                break;
+
+            if (currentRangeLength <= remainingTotalLength)
+            {
+                newRanges.Add(range);
+                remainingTotalLength -= currentRangeLength;
+            }
+            else
+            {
+                // Only take part of this range up to remaining length
+                var partialRange = new DateRange(
+                    range.Start,
+                    DateOnly.FromDayNumber(range.Start.DayNumber + remainingTotalLength - 1)
+                );
+                newRanges.Add(partialRange);
+                break;
+            }
+        }
+
+        return new DateOnlyTimeline(newRanges.ToImmutableList());
+    }
+
+    public int TotalLength()
+    {
+        return Ranges.Sum(range => range.End.DayNumber - range.Start.DayNumber + 1);
+    }
 }
 
 public sealed class DateOnlyTimeline<T> : IEquatable<DateOnlyTimeline<T>>

@@ -313,7 +313,7 @@ namespace CareTogether.Engines.PolicyEvaluation
             {
                 var timestampInLocationTime = TimeZoneInfo.ConvertTimeFromUtc(childLocationEntry.TimestampUtc, locationTimeZone);
                 var childLocationDate = DateOnly.FromDateTime(timestampInLocationTime);
-                return new ChildLocation(Date: childLocationDate, Plan: childLocationEntry.Plan);
+                return new ChildLocation(Date: childLocationDate, Paused: childLocationEntry.Plan == ChildLocationPlan.WithParent);
             }).ToImmutableSortedSet();
 
 
@@ -426,8 +426,14 @@ namespace CareTogether.Engines.PolicyEvaluation
                     {
                         var lastDateOfInterest = dates.LastOrDefault()?.Date ?? arrangementStartedDate;
 
+                        var searchableTimeline = new DateOnlyTimeline([new DateRange(lastDateOfInterest.AddDays(1))]);
+
                         var allPossibleNextDatesIterator = IterateDatesOfInterest(
-                                lastDateOfInterest, validCompletions, slot.Delay);
+                            lastDateOfInterest,
+                            validCompletions,
+                            slot.Delay,
+                            searchableTimeline
+                        );
 
                         var nextDates = slot.MaxOccurrences == null
                             ? allPossibleNextDatesIterator.TakeWhilePlusOne(nextDateOfInterest =>
@@ -465,104 +471,56 @@ namespace CareTogether.Engines.PolicyEvaluation
             //////////////////////////////////
         }
 
-        /// <summary>
-        /// Generate a timeline (a window) in which we expect to find a completion.
-        /// This can be a continuous or discontinuous timeline.
-        /// </summary>
-        /// <param name="nextWindowSearchFromDate">The last date of interest is either the last completion date or last due date. It is used to calculate the start date of the next window.</param>
-        /// <param name="windowLength"></param>
-        /// <param name="childLocationHistory"></param>
-        /// <returns></returns>
-        internal static DateOnlyTimeline? GetWindowForExpectedCompletion(
-            DateOnly nextWindowSearchFromDate,
-            TimeSpan windowLength,
-            ImmutableList<ChildLocation>? childLocationHistory = null
-        )
+        internal static DateOnlyTimeline? CreateChildLocationBasedTimeline(ImmutableList<ChildLocation> childLocations)
         {
-            if (childLocationHistory == null)
-            {
-                var window = new DateOnlyTimeline([
-                    new DateRange(nextWindowSearchFromDate.AddDays(1), nextWindowSearchFromDate.AddDays(windowLength.Days))
-                ]);
-
-                return window;
-            }
-
-            var discontinuousRanges = GetPossiblyDiscontinuousWindowBasedOnChildLocations(nextWindowSearchFromDate, windowLength, childLocationHistory);
-
-            if (discontinuousRanges == null)
-            {
-                return null;
-            }
-
-            return new DateOnlyTimeline(discontinuousRanges);
+            return new DateOnlyTimeline(GenerateDateRanges(childLocations).ToImmutableList());
         }
 
-        internal static ImmutableList<DateRange>? GetPossiblyDiscontinuousWindowBasedOnChildLocations(
-            DateOnly nextWindowSearchFromDate,
+        private static IEnumerable<DateRange> GenerateDateRanges(ImmutableList<ChildLocation> childLocations)
+        {
+            DateOnly? startDate = null;
+
+            foreach (var childLocation in childLocations)
+            {
+                if (!startDate.HasValue && !childLocation.Paused)
+                {
+                    startDate = childLocation.Date.AddDays(1);
+                    continue;
+                }
+
+                if (startDate.HasValue && childLocation.Paused)
+                {
+                    yield return new DateRange(startDate.Value, childLocation.Date);
+                    startDate = null;
+                    continue;
+                }
+            }
+
+            if (startDate.HasValue)
+            {
+                yield return new DateRange(startDate.Value);
+            }
+        }
+
+
+        internal static DateOnlyTimeline? GetWindowForExpectedCompletion(
+            DateOnly startDate,
             TimeSpan windowLength,
-            ImmutableList<ChildLocation> childLocationHistory,
-            bool? isPaused = false,
-            ImmutableList<DateRange>? dateRanges = null
+            DateOnlyTimeline searchableTimeline
         )
         {
-            //TODO: Plan to simplify this:
-            //      1. Replace recursion with a loop
-            //      2. Replace loop and accumulator variable of date ranges with an iterator (yield return/yield break)
-            //      3. Build the discontinuous timeline of child location-based date ranges *outside* of IterateDatesOfInterest,
-            //         instead passing in the overall "base" timeline to use for the arrangement (either continuous or discontinuous);
-            //         at that point 'childLocationHistoryDates' is no longer passed into IterateDatesOfInterest or this method
-            //      4. The logic used to build the discontinuous timline should be a fully generalizable method
-            //         called "DateOnlyTimeline.SubsetFromWithDurationInDays" or similar
-            //      5. Finally, GetWindowForExpectedCompletion will be agnostic to whatever timeline is passed into it, so
-            //         no 'if' statement
+            var baseWindowTimeline = new DateOnlyTimeline([new DateRange(startDate)]);
 
-            ImmutableList<DateRange> nonNullDateRanges = dateRanges ?? ImmutableList<DateRange>.Empty;
-            var windowStartDate = nextWindowSearchFromDate.AddDays(1);
+            var searchableTimelineFromWindowStartDate = baseWindowTimeline.IntersectionWith(searchableTimeline);
 
-            int delay = windowLength.Days - 1;
-            var defaultWindow = new DateRange(windowStartDate, windowStartDate.AddDays(delay));
+            var window = searchableTimelineFromWindowStartDate?.CutToMaxLength(windowLength.Days);
 
-            bool findWithParentCriteria(ChildLocation item)
-            {
-                // TODO (WIP): The first condition is apparently not needed (passed on current tests), analyzing if there's a case where this is needed
-                return defaultWindow.Contains(item.Date) && item.Plan == ChildLocationPlan.WithParent;
-            }
-
-            bool findWithVolunteerCriteria(ChildLocation item)
-            {
-                // TODO (WIP): The first condition is apparently not needed (passed on current tests), analyzing if there's a case where this is needed
-                return item.Date > windowStartDate && item.Plan != ChildLocationPlan.WithParent;
-            }
-
-            var childLocationIndex = childLocationHistory.FindIndex(isPaused == true ? findWithVolunteerCriteria : findWithParentCriteria);
-
-            // A policy is only elapsed while the child is with a volunteer, so if the child is currently with parent,
-            // the policy is 'paused', and we don't generate a duedate.
-            if (childLocationIndex < 0 && isPaused == true)
+            if (window?.TotalLength() < windowLength.Days)
             {
                 return null;
             }
 
-            if (childLocationIndex < 0)
-            {
-                return nonNullDateRanges.Add(defaultWindow);
-            }
-
-            var childLocation = childLocationHistory.ElementAt(childLocationIndex);
-            DateOnly childLocationDate = childLocation.Date;
-            int daysFromStartDateToChildLocationDate = childLocationDate.AddDays(-windowStartDate.DayNumber + 1).DayNumber;
-            var newRemainingDelay = isPaused == true ? windowLength : TimeSpan.FromDays(windowLength.Days - daysFromStartDateToChildLocationDate);
-
-            var remainingLocations = childLocationHistory.Skip(childLocationIndex + 1).ToImmutableList();
-
-            return GetPossiblyDiscontinuousWindowBasedOnChildLocations(
-                nextWindowSearchFromDate: childLocationDate,
-                windowLength: newRemainingDelay,
-                childLocationHistory: remainingLocations,
-                isPaused: !isPaused,
-                dateRanges: isPaused == true ? nonNullDateRanges : nonNullDateRanges.Add(new DateRange(windowStartDate, childLocationDate))
-            );
+            return window;
         }
 
         internal static DateOfInterest CalculateNextDateOfInterest(
@@ -586,19 +544,24 @@ namespace CareTogether.Engines.PolicyEvaluation
             DateOnly lastDateOfInterest,
             ImmutableList<DateOnly> completions,
             TimeSpan windowLength,
-            //IDEA: Instead of passing the child location history in, generate the "searchable timeline" first
-            //      and pass it in. It is a list of dates/windows in which there is a 'pause' inside a date range.
-            ImmutableList<ChildLocation>? childLocationHistoryDates = null
+            DateOnlyTimeline searchableTimeline
+        //IDEA: Instead of passing the child location history in, generate the "searchable timeline" first
+        //      and pass it in. It is a list of dates/windows in which there is a 'pause' inside a date range.
+        // ImmutableList<ChildLocation>? childLocationHistoryDates = null
         )
         {
-            DateOnly nextWindowSearchFromDate = lastDateOfInterest;
+            DateOnly nextWindowStartDate = lastDateOfInterest.AddDays(1);
+
             while (true)
             {
                 // This is the window in which we expect to find a completion.
                 // This can be a continuous or discontinuous timeline (based on child location history).
                 // The end of the window represents the due date for this slot.
                 var nextWindow = GetWindowForExpectedCompletion(
-                    nextWindowSearchFromDate, windowLength, childLocationHistoryDates);
+                    nextWindowStartDate,
+                    windowLength,
+                    searchableTimeline
+                );
 
                 // This case only happens if a policy gets 'paused'
                 // (when a child location changes to WithParent) during the policy window.
@@ -614,7 +577,7 @@ namespace CareTogether.Engines.PolicyEvaluation
 
                 yield return nextDateOfInterest;
 
-                nextWindowSearchFromDate = nextDateOfInterest.Date;
+                nextWindowStartDate = nextDateOfInterest.Date.AddDays(1);
             }
         }
 
@@ -666,15 +629,22 @@ namespace CareTogether.Engines.PolicyEvaluation
                         .Repeat(stage, stage.MaxOccurrences ?? 1)
                         .ToImmutableList());
 
+            var searchableTimelineWithGaps = CreateChildLocationBasedTimeline(childLocationHistoryDates.ToImmutableList());
+
             // For each slot, find a list of all dates of interest.
             var datesOfInterest = slots
                 .Aggregate(ImmutableList<DateOfInterest>.Empty, (dates, slot) =>
                     {
                         var lastDateOfInterest = dates.LastOrDefault()?.Date ?? arrangementStartedDate;
 
+                        var baseWindowTimeline = new DateOnlyTimeline([new DateRange(lastDateOfInterest.AddDays(1))]);
+
                         var allPossibleNextDatesIterator = IterateDatesOfInterest(
-                                lastDateOfInterest, validCompletions, slot.Delay,
-                                childLocationHistoryDates.ToImmutableList());
+                            lastDateOfInterest,
+                            validCompletions,
+                            slot.Delay,
+                            searchableTimeline: searchableTimelineWithGaps ?? baseWindowTimeline
+                        );
 
                         var nextDates = slot.MaxOccurrences == null
                             ? allPossibleNextDatesIterator.TakeWhilePlusOne(nextDateOfInterest =>

@@ -59,7 +59,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
             values
                 .Select(value => new ChildLocation(
                     DateOnly.FromDateTime(Date(value.month, value.day)),
-                    value.plan
+                    value.plan == ChildLocationPlan.WithParent
                 ))
                 .ToImmutableSortedSet();
 

@@ -80,6 +80,24 @@ namespace CareTogether.Core.Test
                 Assert.AreEqual(First, Second);
         }
 
+        public static void SequenceIs(DateOnlyTimeline? actual, DateOnlyTimeline? expected)
+        {
+            if (actual == null && expected == null)
+            {
+                return;
+            }
+
+            if (actual == null || expected == null)
+            {
+                throw new Exception("Values are different");
+            }
+
+            if (expected.Equals(actual) != true)
+            {
+                throw new Exception("Timelines are different");
+            }
+        }
+
         public static void SequenceIs<T>(ICollection<T> actual, params T[] expected)
             where T : class
         {
