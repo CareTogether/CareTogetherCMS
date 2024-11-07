@@ -35,6 +35,11 @@ public sealed class DateOnlyTimeline : IEquatable<DateOnlyTimeline>
         }
     }
 
+    public DateOnly FirstDay =>
+        Ranges.First().Start;
+
+    public DateOnly LastDay =>
+        Ranges.Last().End;
 
     public static DateOnlyTimeline? UnionOf(ImmutableList<DateOnlyTimeline?> timelines)
     {
@@ -282,7 +287,7 @@ public sealed class DateOnlyTimeline : IEquatable<DateOnlyTimeline>
             throw new ArgumentException("Maximum length must be positive.", nameof(maxLength));
 
         // If total length is already within limit, return unchanged
-        var totalLength = Ranges.Sum(r => r.End.DayNumber - r.Start.DayNumber + 1);
+        var totalLength = Ranges.Sum(r => r.LengthInDays);
         if (totalLength <= maxLength)
             return this;
 
@@ -291,26 +296,13 @@ public sealed class DateOnlyTimeline : IEquatable<DateOnlyTimeline>
 
         foreach (var range in Ranges)
         {
-            var currentRangeLength = range.End.DayNumber - range.Start.DayNumber + 1;
-
             if (remainingTotalLength <= 0)
                 break;
 
-            if (currentRangeLength <= remainingTotalLength)
-            {
-                newRanges.Add(range);
-                remainingTotalLength -= currentRangeLength;
-            }
-            else
-            {
-                // Only take part of this range up to remaining length
-                var partialRange = new DateRange(
-                    range.Start,
-                    DateOnly.FromDayNumber(range.Start.DayNumber + remainingTotalLength - 1)
-                );
-                newRanges.Add(partialRange);
-                break;
-            }
+            // Only take part of this range up to remaining length
+            var newRange = range.TakeMaxDays(remainingTotalLength);
+            newRanges.Add(newRange);
+            remainingTotalLength -= newRange.LengthInDays;
         }
 
         return new DateOnlyTimeline(newRanges.ToImmutableList());

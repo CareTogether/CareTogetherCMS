@@ -21,6 +21,17 @@ public readonly struct DateRange : IEquatable<DateRange>
         End = end;
     }
 
+    public int LengthInDays =>
+        End.DayNumber - Start.DayNumber + 1;
+
+    public DateRange TakeMaxDays(int length)
+    {
+        if (LengthInDays <= length)
+            return this;
+
+        return new DateRange(Start, Start.AddDays(length - 1));
+    }
+
 
     public bool Contains(DateOnly value) =>
         value >= Start && value <= End;

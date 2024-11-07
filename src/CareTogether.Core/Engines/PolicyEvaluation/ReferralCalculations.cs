@@ -473,7 +473,9 @@ namespace CareTogether.Engines.PolicyEvaluation
 
         internal static DateOnlyTimeline? CreateChildLocationBasedTimeline(ImmutableList<ChildLocation> childLocations)
         {
-            return new DateOnlyTimeline(GenerateDateRanges(childLocations).ToImmutableList());
+            var dateRanges = GenerateDateRanges(childLocations).ToImmutableList();
+
+            return new DateOnlyTimeline(dateRanges);
         }
 
         private static IEnumerable<DateRange> GenerateDateRanges(ImmutableList<ChildLocation> childLocations)
@@ -484,7 +486,7 @@ namespace CareTogether.Engines.PolicyEvaluation
             {
                 if (!startDate.HasValue && !childLocation.Paused)
                 {
-                    startDate = childLocation.Date.AddDays(1);
+                    startDate = childLocation.Date;
                     continue;
                 }
 
@@ -515,9 +517,21 @@ namespace CareTogether.Engines.PolicyEvaluation
 
             var window = searchableTimelineFromWindowStartDate?.CutToMaxLength(windowLength.Days);
 
-            if (window?.TotalLength() < windowLength.Days)
+            if (window == default || window.TotalLength() < windowLength.Days)
             {
                 return null;
+            }
+
+            var isDiscontinuousWindow = window.Ranges.Count > 1;
+
+            // If resulting window is discontinuous, it means there's a pause in the timeline.
+            // Currently, the app adds 1 more day to the window length if there was a pause.
+            // So this condition is for backwards compatibility purpose.
+            if (isDiscontinuousWindow)
+            {
+                var lastDayRange = new DateRange(window.LastDay.AddDays(1), window.LastDay.AddDays(1));
+
+                return new DateOnlyTimeline(window.Ranges.Add(lastDayRange));
             }
 
             return window;

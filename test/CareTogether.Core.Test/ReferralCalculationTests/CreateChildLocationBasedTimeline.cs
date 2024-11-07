@@ -25,11 +25,11 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
 
             AssertEx.SequenceIs(result, new DateOnlyTimeline([
                 new DateRange(
-                    DateOnly.FromDateTime(H.Date(1, 2)),
+                    DateOnly.FromDateTime(H.Date(1, 1)),
                     DateOnly.FromDateTime(H.Date(1, 12))
                 ),
                 new DateRange(
-                    DateOnly.FromDateTime(H.Date(1, 21)),
+                    DateOnly.FromDateTime(H.Date(1, 20)),
                     DateOnly.FromDateTime(H.Date(1, 25))
                 )
             ]));
@@ -48,11 +48,11 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
 
             AssertEx.SequenceIs(result, new DateOnlyTimeline([
                 new DateRange(
-                    DateOnly.FromDateTime(H.Date(1, 2)),
+                    DateOnly.FromDateTime(H.Date(1, 1)),
                     DateOnly.FromDateTime(H.Date(1, 12))
                 ),
                 new DateRange(
-                    DateOnly.FromDateTime(H.Date(1, 21))
+                    DateOnly.FromDateTime(H.Date(1, 20))
                 )
             ]));
         }

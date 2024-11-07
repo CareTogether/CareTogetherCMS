@@ -612,6 +612,26 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
         }
 
         [TestMethod]
+        public void TestNoCompletionsWithPerChildLocationDurationStagesOneLocationSimplePolicy()
+        {
+            var result = ReferralCalculations.CalculateMissingMonitoringRequirementInstances(
+                new DurationStagesPerChildLocationRecurrencePolicy(ImmutableList<RecurrencePolicyStage>.Empty
+                .Add(new RecurrencePolicyStage(TimeSpan.FromDays(7), null))
+                ),
+                filterToFamilyId: null,
+                arrangementStartedAtUtc: H.Date(1, 1),
+                arrangementEndedAtUtc: null,
+                completions: Helpers.Dates(),
+                childLocationHistoryEntries: Helpers.LocationHistoryEntries(
+                    (ChildLocationPlan.DaytimeChildCare, 1, 1)),
+                utcNow: H.Date(2, 14),
+                H.US_EASTERN_TIME_ZONE
+            );
+
+            AssertEx.SequenceIs(result, Helpers.Dates((1, 8), (1, 15), (1, 22), (1, 29), (2, 5), (2, 12), (2, 19)));
+        }
+
+        [TestMethod]
         public void TestNoCompletionsWithPerChildLocationDurationStagesOneLocationWithReturnToParentInMiddle()
         {
             var result = ReferralCalculations.CalculateMissingMonitoringRequirementInstances(
@@ -631,6 +651,28 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
                 H.US_EASTERN_TIME_ZONE);
 
             AssertEx.SequenceIs(result, Helpers.Dates((1, 3), (1, 10), (1, 20), (1, 27), (2, 3), (2, 17)));
+        }
+
+        [TestMethod]
+        public void TestOneCompletionsAtResumeDateWithPerChildLocationDurationStagesOneLocationWithReturnToParentInMiddle()
+        {
+            var result = ReferralCalculations.CalculateMissingMonitoringRequirementInstances(
+                new DurationStagesPerChildLocationRecurrencePolicy(ImmutableList<RecurrencePolicyStage>.Empty
+                .Add(new RecurrencePolicyStage(TimeSpan.FromDays(2), 1))
+                .Add(new RecurrencePolicyStage(TimeSpan.FromDays(7), 4))
+                .Add(new RecurrencePolicyStage(TimeSpan.FromDays(14), null))),
+                filterToFamilyId: null,
+                arrangementStartedAtUtc: H.Date(1, 1),
+                arrangementEndedAtUtc: null,
+                completions: Helpers.Dates((1, 15)),
+                childLocationHistoryEntries: Helpers.LocationHistoryEntries(
+                    (ChildLocationPlan.DaytimeChildCare, 1, 1),
+                    (ChildLocationPlan.WithParent, 1, 12),
+                    (ChildLocationPlan.DaytimeChildCare, 1, 15)),
+                utcNow: H.Date(2, 14),
+                H.US_EASTERN_TIME_ZONE);
+
+            AssertEx.SequenceIs(result, Helpers.Dates((1, 3), (1, 10), (1, 22), (1, 29), (2, 12), (2, 26)));
         }
 
         [TestMethod]
