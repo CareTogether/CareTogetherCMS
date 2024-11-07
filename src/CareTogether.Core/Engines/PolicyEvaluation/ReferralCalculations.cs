@@ -420,13 +420,13 @@ namespace CareTogether.Engines.PolicyEvaluation
                         .Repeat(stage, stage.MaxOccurrences ?? 1)
                         .ToImmutableList());
 
+            var searchableTimeline = new DateOnlyTimeline([new DateRange(arrangementStartedDate)]);
+
             // For each slot, find a list of all dates of interest.
             var datesOfInterest = slots
                 .Aggregate(ImmutableList<DateOfInterest>.Empty, (dates, slot) =>
                     {
                         var lastDateOfInterest = dates.LastOrDefault()?.Date ?? arrangementStartedDate;
-
-                        var searchableTimeline = new DateOnlyTimeline([new DateRange(lastDateOfInterest.AddDays(1))]);
 
                         var allPossibleNextDatesIterator = IterateDatesOfInterest(
                             lastDateOfInterest,
@@ -471,7 +471,7 @@ namespace CareTogether.Engines.PolicyEvaluation
             //////////////////////////////////
         }
 
-        internal static DateOnlyTimeline? CreateChildLocationBasedTimeline(ImmutableList<ChildLocation> childLocations)
+        internal static DateOnlyTimeline CreateChildLocationBasedTimeline(ImmutableList<ChildLocation> childLocations)
         {
             var dateRanges = GenerateDateRanges(childLocations).ToImmutableList();
 
@@ -515,7 +515,7 @@ namespace CareTogether.Engines.PolicyEvaluation
 
             var searchableTimelineFromWindowStartDate = baseWindowTimeline.IntersectionWith(searchableTimeline);
 
-            var window = searchableTimelineFromWindowStartDate?.CutToMaxLength(windowLength.Days);
+            var window = searchableTimelineFromWindowStartDate?.TakeDays(windowLength.Days);
 
             if (window == default || window.TotalLength() < windowLength.Days)
             {
@@ -651,13 +651,11 @@ namespace CareTogether.Engines.PolicyEvaluation
                     {
                         var lastDateOfInterest = dates.LastOrDefault()?.Date ?? arrangementStartedDate;
 
-                        var baseWindowTimeline = new DateOnlyTimeline([new DateRange(lastDateOfInterest.AddDays(1))]);
-
                         var allPossibleNextDatesIterator = IterateDatesOfInterest(
                             lastDateOfInterest,
                             validCompletions,
                             slot.Delay,
-                            searchableTimeline: searchableTimelineWithGaps ?? baseWindowTimeline
+                            searchableTimeline: searchableTimelineWithGaps
                         );
 
                         var nextDates = slot.MaxOccurrences == null

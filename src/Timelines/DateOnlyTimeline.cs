@@ -281,17 +281,17 @@ public sealed class DateOnlyTimeline : IEquatable<DateOnlyTimeline>
         return hashCode.ToHashCode();
     }
 
-    public DateOnlyTimeline? CutToMaxLength(int maxLength)
+    public DateOnlyTimeline? TakeDays(int requestedLength)
     {
-        if (maxLength <= 0)
-            throw new ArgumentException("Maximum length must be positive.", nameof(maxLength));
+        if (requestedLength <= 0)
+            throw new ArgumentException("Requested length must be positive.", nameof(requestedLength));
 
         // If total length is already within limit, return unchanged
         var totalLength = Ranges.Sum(r => r.LengthInDays);
-        if (totalLength <= maxLength)
+        if (totalLength <= requestedLength)
             return this;
 
-        var remainingTotalLength = maxLength;
+        var remainingTotalLength = requestedLength;
         var newRanges = new List<DateRange>();
 
         foreach (var range in Ranges)
