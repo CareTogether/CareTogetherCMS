@@ -1,10 +1,10 @@
-﻿using CareTogether.Engines.PolicyEvaluation;
+﻿using System;
+using System.Collections.Immutable;
+using System.Linq;
+using CareTogether.Engines.PolicyEvaluation;
 using CareTogether.Resources;
 using CareTogether.Resources.Policies;
 using CareTogether.Resources.Referrals;
-using System;
-using System.Collections.Immutable;
-using System.Linq;
 
 namespace CareTogether.Core.Test.ReferralCalculationTests
 {
@@ -16,48 +16,90 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
         public static TimeZoneInfo US_EASTERN_TIME_ZONE = TimeZoneInfo.FindSystemTimeZoneById("America/New_York");
 
         public static ImmutableList<CompletedRequirementInfo> Completed(params (string, int)[] completionsWithDates) =>
-            completionsWithDates.Select(completion =>
-                new CompletedRequirementInfo(Guid.Empty, DateTime.MinValue,
-                    Guid.Empty, completion.Item1, TimeZoneInfo.ConvertTimeToUtc(new DateTime(YEAR, 1, completion.Item2), US_EASTERN_TIME_ZONE), ExpiresAtUtc: null, null, null))
-            .ToImmutableList();
+            completionsWithDates
+                .Select(completion => new CompletedRequirementInfo(
+                    Guid.Empty,
+                    DateTime.MinValue,
+                    Guid.Empty,
+                    completion.Item1,
+                    TimeZoneInfo.ConvertTimeToUtc(new DateTime(YEAR, 1, completion.Item2), US_EASTERN_TIME_ZONE),
+                    ExpiresAtUtc: null,
+                    null,
+                    null
+                ))
+                .ToImmutableList();
 
-        public static ImmutableList<CompletedRequirementInfo> CompletedWithExpiry(params (string, int, int?)[] completionsWithDates) =>
-            completionsWithDates.Select(completion =>
-                new CompletedRequirementInfo(Guid.Empty, DateTime.MinValue,
-                    Guid.Empty, completion.Item1, new DateTime(YEAR, 1, completion.Item2),
-                    ExpiresAtUtc: completion.Item3.HasValue ? new DateTime(YEAR, 1, completion.Item3.Value) : null, null, null))
-            .ToImmutableList();
+        public static ImmutableList<CompletedRequirementInfo> CompletedWithExpiry(
+            params (string, int, int?)[] completionsWithDates
+        ) =>
+            completionsWithDates
+                .Select(completion => new CompletedRequirementInfo(
+                    Guid.Empty,
+                    DateTime.MinValue,
+                    Guid.Empty,
+                    completion.Item1,
+                    new DateTime(YEAR, 1, completion.Item2),
+                    ExpiresAtUtc: completion.Item3.HasValue ? new DateTime(YEAR, 1, completion.Item3.Value) : null,
+                    null,
+                    null
+                ))
+                .ToImmutableList();
 
-        public static ImmutableList<ExemptedRequirementInfo> Exempted(params (string, int?)[] exemptionsWithExpirations) =>
-            exemptionsWithExpirations.Select(exemption =>
-                new ExemptedRequirementInfo(Guid.Empty, DateTime.MinValue,
-                    exemption.Item1, DueDate: null, "", exemption.Item2.HasValue ? new DateTime(YEAR, 1, exemption.Item2.Value) : null))
-            .ToImmutableList();
+        public static ImmutableList<ExemptedRequirementInfo> Exempted(
+            params (string, int?)[] exemptionsWithExpirations
+        ) =>
+            exemptionsWithExpirations
+                .Select(exemption => new ExemptedRequirementInfo(
+                    Guid.Empty,
+                    DateTime.MinValue,
+                    exemption.Item1,
+                    DueDate: null,
+                    "",
+                    exemption.Item2.HasValue ? new DateTime(YEAR, 1, exemption.Item2.Value) : null
+                ))
+                .ToImmutableList();
 
-        public static ImmutableList<string> From(params string[] values) =>
-            values.ToImmutableList();
+        public static ImmutableList<string> From(params string[] values) => values.ToImmutableList();
 
-        public static ImmutableList<DateTime> Dates() =>
-            ImmutableList<DateTime>.Empty;
+        public static ImmutableList<DateTime> Dates() => ImmutableList<DateTime>.Empty;
 
         public static ImmutableList<DateTime> Dates(params (int month, int day)[] values) =>
-            values.Select(value => TimeZoneInfo.ConvertTimeToUtc(new DateTime(YEAR, value.month, value.day), US_EASTERN_TIME_ZONE)).ToImmutableList();
+            values
+                .Select(value =>
+                    TimeZoneInfo.ConvertTimeToUtc(new DateTime(YEAR, value.month, value.day), US_EASTERN_TIME_ZONE)
+                )
+                .ToImmutableList();
 
         public static ImmutableList<DateTime> Dates(params (int month, int day, int hour)[] values) =>
-            values.Select(value => TimeZoneInfo.ConvertTimeToUtc(new DateTime(YEAR, value.month, value.day, value.hour, 0, 0), US_EASTERN_TIME_ZONE)).ToImmutableList();
+            values
+                .Select(value =>
+                    TimeZoneInfo.ConvertTimeToUtc(
+                        new DateTime(YEAR, value.month, value.day, value.hour, 0, 0),
+                        US_EASTERN_TIME_ZONE
+                    )
+                )
+                .ToImmutableList();
 
         public static DateTime Date(int month, int day) =>
             TimeZoneInfo.ConvertTimeToUtc(new DateTime(YEAR, month, day), US_EASTERN_TIME_ZONE);
 
         public static ImmutableSortedSet<ChildLocationHistoryEntry> LocationHistoryEntries(
-            params (Guid childLocationFamilyId, ChildLocationPlan plan, int month, int day)[] values) =>
+            params (Guid childLocationFamilyId, ChildLocationPlan plan, int month, int day)[] values
+        ) =>
             values
                 .Select(value => new ChildLocationHistoryEntry(
-                    Guid.Empty, TimeZoneInfo.ConvertTimeToUtc(new DateTime(YEAR, value.month, value.day), US_EASTERN_TIME_ZONE), Guid.Empty, Guid.Empty, value.plan, null))
+                    Guid.Empty,
+                    TimeZoneInfo.ConvertTimeToUtc(new DateTime(YEAR, value.month, value.day), US_EASTERN_TIME_ZONE),
+                    value.childLocationFamilyId,
+                    Guid.Empty,
+                    value.plan,
+                    null
+                ))
                 .ToImmutableSortedSet();
 
         public static ImmutableSortedSet<ChildLocation> ChildLocation(
-            params (Guid childLocationFamilyId, ChildLocationPlan plan, int month, int day)[] values) =>
+            params (Guid childLocationFamilyId, ChildLocationPlan plan, int month, int day)[] values
+        ) =>
             values
                 .Select(value => new ChildLocation(
                     value.childLocationFamilyId,
@@ -67,9 +109,16 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
                 .ToImmutableSortedSet();
 
         public static ArrangementFunction FunctionWithoutEligibility(
-            string arrangementFunction, FunctionRequirement requirement) =>
-            new ArrangementFunction(arrangementFunction, requirement,
-                ImmutableList<string>.Empty, ImmutableList<string>.Empty,
-                ImmutableList<Guid>.Empty, ImmutableList<ArrangementFunctionVariant>.Empty);
+            string arrangementFunction,
+            FunctionRequirement requirement
+        ) =>
+            new ArrangementFunction(
+                arrangementFunction,
+                requirement,
+                ImmutableList<string>.Empty,
+                ImmutableList<string>.Empty,
+                ImmutableList<Guid>.Empty,
+                ImmutableList<ArrangementFunctionVariant>.Empty
+            );
     }
 }

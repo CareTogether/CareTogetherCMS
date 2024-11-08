@@ -661,18 +661,40 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
                 .Add(new RecurrencePolicyStage(TimeSpan.FromDays(2), 1))
                 .Add(new RecurrencePolicyStage(TimeSpan.FromDays(7), 4))
                 .Add(new RecurrencePolicyStage(TimeSpan.FromDays(14), null))),
-                filterToFamilyId: null,
+                filterToFamilyId: H.Id('0'),
                 arrangementStartedAtUtc: H.Date(1, 1),
                 arrangementEndedAtUtc: null,
                 completions: Helpers.Dates(),
                 childLocationHistoryEntries: Helpers.LocationHistoryEntries(
                     (H.Id('0'), ChildLocationPlan.DaytimeChildCare, 1, 1),
                     (Guid.Empty, ChildLocationPlan.WithParent, 1, 12),
-                    (H.Id('0'), ChildLocationPlan.DaytimeChildCare, 1, 15)),
+                    (H.Id('1'), ChildLocationPlan.DaytimeChildCare, 1, 15)),
                 utcNow: H.Date(2, 14),
                 H.US_EASTERN_TIME_ZONE);
 
-            AssertEx.SequenceIs(result, Helpers.Dates((1, 3), (1, 10), (1, 16), (1, 23), (1, 30), (2, 6), (2, 13), (2, 27)));
+            AssertEx.SequenceIs(result, Helpers.Dates((1, 3), (1, 10)));
+        }
+
+        [TestMethod]
+        public void TestNoCompletionsWithPerChildLocationDurationStagesOneLocationWithReturnToParentInMiddleAndResumeWithAnotherFamily2()
+        {
+            var result = ReferralCalculations.CalculateMissingMonitoringRequirementInstances(
+                new DurationStagesPerChildLocationRecurrencePolicy(ImmutableList<RecurrencePolicyStage>.Empty
+                .Add(new RecurrencePolicyStage(TimeSpan.FromDays(2), 1))
+                .Add(new RecurrencePolicyStage(TimeSpan.FromDays(7), 4))
+                .Add(new RecurrencePolicyStage(TimeSpan.FromDays(14), null))),
+                filterToFamilyId: H.Id('1'),
+                arrangementStartedAtUtc: H.Date(1, 1),
+                arrangementEndedAtUtc: null,
+                completions: Helpers.Dates(),
+                childLocationHistoryEntries: Helpers.LocationHistoryEntries(
+                    (H.Id('0'), ChildLocationPlan.DaytimeChildCare, 1, 1),
+                    (Guid.Empty, ChildLocationPlan.WithParent, 1, 12),
+                    (H.Id('1'), ChildLocationPlan.DaytimeChildCare, 1, 15)),
+                utcNow: H.Date(2, 14),
+                H.US_EASTERN_TIME_ZONE);
+
+            AssertEx.SequenceIs(result, Helpers.Dates((1, 17), (1, 24), (1, 31), (2, 7), (2, 14), (2, 28)));
         }
 
         [TestMethod]

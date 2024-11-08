@@ -387,124 +387,68 @@ namespace CareTogether.Engines.PolicyEvaluation
             if (recurrence.Stages.Take(recurrence.Stages.Count - 1).Any(stage => !stage.MaxOccurrences.HasValue))
                 throw new InvalidOperationException("A stage other than the last stage in a recurrence policy was found to have an unlimited number of occurrences.");
 
-            //////////////////////////////////
-            //TODO (WIP): from here the logic is very similar to CalculateMissingMonitoringRequirementInstancesForDurationRecurrencePerChildLocation, better to move this to some reusable function!?
-
-            // For each completion, find the time of the following completion (null in the case of the last completion
-            // unless the arrangement has ended, in which case use the end of the arrangement).
-            // This represents the set of gaps between completions in which there could be missing requirement due dates.
-            // Prepend this list with an entry representing the start of the arrangement.
-            // Edge cases:
-            //   1. There is an edge case where the last completion occurs *after* the end of the arrangement;
-            //      in this case, exclude that completion from the list of gaps.
-            //      TODO: Should we simply ignore all completions after the end of the arrangement?
-            //   2. If a completion occurs *before* the beginning of the arrangement,
-            //      it will simply be ignored.
-            var validCompletions = completionDates
-                .Where(completion => completion >= arrangementStartedDate)
-                .ToImmutableList();
-
-            // Checking for a completion at the start date first simplifies the rest of the calculation
-            // (For example, when there's just one policy stage with MaxOccurrences = null, the resulting dates are offsetted).
-            var completionOnDayOne = validCompletions.Find(item => item == arrangementStartedDate);
-            var applicableStages = completionOnDayOne != default && recurrence.Stages.Count() > 1
-                ? recurrence.Stages.Skip(1)
-                : recurrence.Stages;
-
-            // TODO:
-            // Repeat each stage the number of times specified by MaxOccurrences, or once if MaxOccurrences is null.
-            // An instance of a stage is a slot in which we need to look for a completion.
-            // ----
-            // Generates slots in which we need to look for a completion. Each stage generates a number of slots
-            // equal to its MaxOccurrences, or just 1 if MaxOccurrences is null (which should be the last stage, or the only one).
-            // A slot isn't a defined DateRange or Timeline because there's no way of determining all the start/end dates beforehand.
-            var slots = applicableStages
-                .SelectMany(stage =>
-                    Enumerable
-                        .Repeat(stage, stage.MaxOccurrences ?? 1)
-                        .ToImmutableList());
-
             var searchableTimeline = new DateOnlyTimeline([new DateRange(arrangementStartedDate)]);
 
-            // For each slot, find a list of all dates of interest.
-            var datesOfInterest = slots
-                .Aggregate(ImmutableList<DateOfInterest>.Empty, (dates, slot) =>
-                    {
-                        var lastDateOfInterest = dates.LastOrDefault()?.Date ?? arrangementStartedDate;
+            var dueDates = CalculateDueDates(
+                recurrence.Stages,
+                today,
+                completionDates,
+                searchableTimeline,
+                arrangementStartedDate,
+                arrangementEndedDate
+            );
 
-                        var allPossibleNextDatesIterator = IterateDatesOfInterest(
-                            lastDateOfInterest,
-                            validCompletions,
-                            slot.Delay,
-                            searchableTimeline
-                        );
-
-                        var nextDates = slot.MaxOccurrences == null
-                            ? allPossibleNextDatesIterator.TakeWhilePlusOne(nextDateOfInterest =>
-                                nextDateOfInterest.Date <= (arrangementEndedDate ?? today))
-                            : allPossibleNextDatesIterator.Take(1);
-
-                        var aggregatedDates = dates
-                            .Concat(nextDates)
-                            .ToImmutableList();
-
-                        return aggregatedDates;
-                    });
-
-
-            var missingDates = datesOfInterest.Where(date => date.IsMissing).Select(item => item.Date).ToImmutableList();
-
-            if (arrangementEndedDate != null)
-            {
-                var result = missingDates.Where(date => date <= arrangementEndedDate);
-
-                return result.ToImmutableList();
-            }
-
-            var missingDatesUntilToday = missingDates.Where(date => date <= today).ToImmutableList();
-
-            if (missingDates.Count > missingDatesUntilToday.Count)
-            {
-                var missingDatesUntilTodayPlusOneMore = missingDatesUntilToday.Add(missingDates[missingDatesUntilToday.Count]);
-
-                return missingDatesUntilTodayPlusOneMore;
-            }
-
-            return missingDates;
-
-            //////////////////////////////////
+            return dueDates;
         }
 
-        internal static DateOnlyTimeline CreateChildLocationBasedTimeline(ImmutableList<ChildLocation> childLocations)
+        internal static DateOnlyTimeline? CreateChildLocationBasedTimeline(
+            ImmutableList<ChildLocation> childLocations,
+            Guid? filterToFamilyId = null
+        )
         {
             var dateRanges = GenerateDateRanges(childLocations).ToImmutableList();
 
-            return new DateOnlyTimeline(dateRanges);
+            var filteredDateRanges = (
+                    filterToFamilyId != null
+                        ? dateRanges
+                            .Where(item => item.Tag == filterToFamilyId)
+                        : dateRanges
+                )
+                .Select(item => new DateRange(item.Start, item.End))
+                .ToImmutableList();
+
+            if (filteredDateRanges.IsEmpty) {
+                return null;
+            }
+
+            return new DateOnlyTimeline(filteredDateRanges);
         }
 
-        private static IEnumerable<DateRange> GenerateDateRanges(ImmutableList<ChildLocation> childLocations)
+        private static IEnumerable<DateRange<Guid>> GenerateDateRanges(ImmutableList<ChildLocation> childLocations)
         {
             DateOnly? startDate = null;
+            Guid? tag = null;
 
             foreach (var childLocation in childLocations)
             {
                 if (!startDate.HasValue && !childLocation.Paused)
                 {
                     startDate = childLocation.Date;
+                    tag = childLocation.ChildLocationFamilyId;
                     continue;
                 }
 
-                if (startDate.HasValue && childLocation.Paused)
+                if (startDate.HasValue && tag.HasValue && childLocation.Paused)
                 {
-                    yield return new DateRange(startDate.Value, childLocation.Date);
+                    yield return new DateRange<Guid>(startDate.Value, childLocation.Date, tag.Value);
                     startDate = null;
                     continue;
                 }
             }
 
-            if (startDate.HasValue)
+            if (startDate.HasValue && tag.HasValue)
             {
-                yield return new DateRange(startDate.Value);
+                yield return new DateRange<Guid>(startDate.Value, tag.Value);
             }
         }
 
@@ -563,10 +507,7 @@ namespace CareTogether.Engines.PolicyEvaluation
             ImmutableList<DateOnly> completions,
             TimeSpan windowLength,
             DateOnlyTimeline searchableTimeline
-        //IDEA: Instead of passing the child location history in, generate the "searchable timeline" first
-        //      and pass it in. It is a list of dates/windows in which there is a 'pause' inside a date range.
-        // ImmutableList<ChildLocation>? childLocationHistoryDates = null
-        )
+       )
         {
             DateOnly nextWindowStartDate = lastDateOfInterest.AddDays(1);
 
@@ -599,49 +540,16 @@ namespace CareTogether.Engines.PolicyEvaluation
             }
         }
 
-        internal static ImmutableList<DateOnly> CalculateMissingMonitoringRequirementInstancesForDurationRecurrencePerChildLocation(
-            DurationStagesPerChildLocationRecurrencePolicy recurrence, Guid? filterToFamilyId,
-            DateOnly arrangementStartedDate, DateOnly? arrangementEndedDate, DateOnly today,
-            ImmutableList<DateOnly> completionDates, ImmutableSortedSet<ChildLocation> childLocationHistory)
+        // TODO: find a better name
+        internal static ImmutableList<DateOnly> CalculateDueDates(
+            ImmutableList<RecurrencePolicyStage> recurrenceStages,
+            DateOnly today,
+            ImmutableList<DateOnly> completionDates,
+            DateOnlyTimeline searchableTimeline,
+            DateOnly arrangementStartedDate,
+            DateOnly? arrangementEndedDate
+        )
         {
-            // Technically, the RecurrencePolicyStage model currently allows any stage to have an unlimited
-            // # of occurrences, but that would be invalid, so check for those cases and throw an exception.
-            //TODO: Move this into the policy loading code, or better yet fix the model to make this impossible.
-            if (recurrence.Stages.Take(recurrence.Stages.Count - 1).Any(stage => !stage.MaxOccurrences.HasValue))
-                throw new InvalidOperationException("A stage other than the last stage in a recurrence policy was found to have an unlimited number of occurrences.");
-
-            if (childLocationHistory.IsEmpty)
-            {
-                return ImmutableList<DateOnly>.Empty;
-            }
-
-            // Determine the start and end time of each child location history entry.
-            var childCareOccurrences = childLocationHistory.SelectMany((entry, i) =>
-            {
-                if (i < childLocationHistory.Count - 1)
-                {
-                    var nextEntry = childLocationHistory[i + 1];
-                    return new[] { (entry: entry, startDate: entry.Date, endDate: nextEntry.Date as DateOnly?) };
-                }
-                else
-                    return new[] { (entry: entry, startDate: entry.Date, endDate: null as DateOnly?) };
-            }).ToImmutableList();
-
-            // Determine which child care occurrences the requirement will apply to.
-            var applicableOccurrences = childCareOccurrences
-                .Where(x => !x.entry.Paused &&
-                    (filterToFamilyId == null || x.entry.ChildLocationFamilyId == filterToFamilyId))
-                .ToImmutableList();
-
-            // Group the child care occurrences by child location (i.e., by the family caring for the child).
-            // This results in a (discontinuous) timeline of start and end dates/times for the child being in this location.
-            var occurrencesByLocation = applicableOccurrences
-                .GroupBy(x => x.entry.ChildLocationFamilyId)
-                .ToImmutableDictionary(x => x.Key);
-
-            //////////////////////////////////
-            //TODO (WIP): from here the logic is very similar to CalculateMissingMonitoringRequirementInstancesForDurationRecurrence, better to move this to some reusable function!?
-
             var validCompletions = completionDates
                 .Where(completion => completion >= arrangementStartedDate)
                 .ToImmutableList();
@@ -653,9 +561,9 @@ namespace CareTogether.Engines.PolicyEvaluation
             // Another problem is a stack overflow (infinite recursion), creating the need of always passing a new list of completions,
             // removing the ones that were already checked.
             var completionOnDayOne = validCompletions.Find(item => item == arrangementStartedDate);
-            var applicableStages = completionOnDayOne != default && recurrence.Stages.Count > 1
-                ? recurrence.Stages.Skip(1)
-                : recurrence.Stages;
+            var applicableStages = completionOnDayOne != default && recurrenceStages.Count > 1
+                ? recurrenceStages.Skip(1)
+                : recurrenceStages;
 
             // TODO:
             // Repeat each stage the number of times specified by MaxOccurrences, or once if MaxOccurrences is null.
@@ -671,7 +579,6 @@ namespace CareTogether.Engines.PolicyEvaluation
                         .Repeat(stage, stage.MaxOccurrences ?? 1)
                         .ToImmutableList());
 
-            var searchableTimelineWithGaps = CreateChildLocationBasedTimeline(childLocationHistory.ToImmutableList());
 
             // For each slot, find a list of all dates of interest.
             var datesOfInterest = slots
@@ -683,7 +590,7 @@ namespace CareTogether.Engines.PolicyEvaluation
                             lastDateOfInterest,
                             validCompletions,
                             slot.Delay,
-                            searchableTimeline: searchableTimelineWithGaps
+                            searchableTimeline
                         );
 
                         var nextDates = slot.MaxOccurrences == null
@@ -715,7 +622,44 @@ namespace CareTogether.Engines.PolicyEvaluation
 
             return missingDates;
 
-            //////////////////////////////////
+
+        }
+
+        internal static ImmutableList<DateOnly> CalculateMissingMonitoringRequirementInstancesForDurationRecurrencePerChildLocation(
+            DurationStagesPerChildLocationRecurrencePolicy recurrence, Guid? filterToFamilyId,
+            DateOnly arrangementStartedDate, DateOnly? arrangementEndedDate, DateOnly today,
+            ImmutableList<DateOnly> completionDates, ImmutableSortedSet<ChildLocation> childLocationHistory)
+        {
+            // Technically, the RecurrencePolicyStage model currently allows any stage to have an unlimited
+            // # of occurrences, but that would be invalid, so check for those cases and throw an exception.
+            //TODO: Move this into the policy loading code, or better yet fix the model to make this impossible.
+            if (recurrence.Stages.Take(recurrence.Stages.Count - 1).Any(stage => !stage.MaxOccurrences.HasValue))
+                throw new InvalidOperationException("A stage other than the last stage in a recurrence policy was found to have an unlimited number of occurrences.");
+
+            if (childLocationHistory.IsEmpty)
+            {
+                return ImmutableList<DateOnly>.Empty;
+            }
+
+            var searchableTimeline = CreateChildLocationBasedTimeline(
+                childLocationHistory.ToImmutableList(),
+                filterToFamilyId
+            );
+
+            if (searchableTimeline == null) {
+                return ImmutableList<DateOnly>.Empty;
+            }
+
+            var dueDates = CalculateDueDates(
+                recurrence.Stages,
+                today,
+                completionDates,
+                searchableTimeline,
+                arrangementStartedDate: searchableTimeline.FirstDay,
+                arrangementEndedDate
+            );
+
+            return dueDates;
         }
 
         //TODO: Move to a helper class ('Extensions.cs' or 'IEnumerableExtensions.cs') and create its own small unit test suite.
