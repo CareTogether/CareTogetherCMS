@@ -16,10 +16,10 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
         {
             var result = ReferralCalculations.CreateChildLocationBasedTimeline(
                 H.ChildLocation(
-                    (ChildLocationPlan.DaytimeChildCare, 1, 1),
-                    (ChildLocationPlan.WithParent, 1, 12),
-                    (ChildLocationPlan.DaytimeChildCare, 1, 20),
-                    (ChildLocationPlan.WithParent, 1, 25)
+                    (H.Id('0'), ChildLocationPlan.DaytimeChildCare, 1, 1),
+                    (Guid.Empty, ChildLocationPlan.WithParent, 1, 12),
+                    (H.Id('0'), ChildLocationPlan.DaytimeChildCare, 1, 20),
+                    (Guid.Empty, ChildLocationPlan.WithParent, 1, 25)
                 ).ToImmutableList()
             );
 
@@ -40,9 +40,9 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
         {
             var result = ReferralCalculations.CreateChildLocationBasedTimeline(
                 H.ChildLocation(
-                    (ChildLocationPlan.DaytimeChildCare, 1, 1),
-                    (ChildLocationPlan.WithParent, 1, 12),
-                    (ChildLocationPlan.DaytimeChildCare, 1, 20)
+                    (H.Id('0'), ChildLocationPlan.DaytimeChildCare, 1, 1),
+                    (Guid.Empty, ChildLocationPlan.WithParent, 1, 12),
+                    (H.Id('0'), ChildLocationPlan.DaytimeChildCare, 1, 20)
                 ).ToImmutableList()
             );
 

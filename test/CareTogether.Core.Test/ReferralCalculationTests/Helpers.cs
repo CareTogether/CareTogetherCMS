@@ -10,6 +10,8 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
 {
     internal class Helpers
     {
+        public static Guid Id(char x) => Guid.Parse("xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx".Replace('x', x));
+
         public const int YEAR = 2024;
         public static TimeZoneInfo US_EASTERN_TIME_ZONE = TimeZoneInfo.FindSystemTimeZoneById("America/New_York");
 
@@ -48,16 +50,17 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
             TimeZoneInfo.ConvertTimeToUtc(new DateTime(YEAR, month, day), US_EASTERN_TIME_ZONE);
 
         public static ImmutableSortedSet<ChildLocationHistoryEntry> LocationHistoryEntries(
-            params (ChildLocationPlan plan, int month, int day)[] values) =>
+            params (Guid childLocationFamilyId, ChildLocationPlan plan, int month, int day)[] values) =>
             values
                 .Select(value => new ChildLocationHistoryEntry(
                     Guid.Empty, TimeZoneInfo.ConvertTimeToUtc(new DateTime(YEAR, value.month, value.day), US_EASTERN_TIME_ZONE), Guid.Empty, Guid.Empty, value.plan, null))
                 .ToImmutableSortedSet();
 
         public static ImmutableSortedSet<ChildLocation> ChildLocation(
-            params (ChildLocationPlan plan, int month, int day)[] values) =>
+            params (Guid childLocationFamilyId, ChildLocationPlan plan, int month, int day)[] values) =>
             values
                 .Select(value => new ChildLocation(
+                    value.childLocationFamilyId,
                     DateOnly.FromDateTime(Date(value.month, value.day)),
                     value.plan == ChildLocationPlan.WithParent
                 ))

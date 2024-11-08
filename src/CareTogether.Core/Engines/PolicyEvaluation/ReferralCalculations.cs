@@ -313,7 +313,11 @@ namespace CareTogether.Engines.PolicyEvaluation
             {
                 var timestampInLocationTime = TimeZoneInfo.ConvertTimeFromUtc(childLocationEntry.TimestampUtc, locationTimeZone);
                 var childLocationDate = DateOnly.FromDateTime(timestampInLocationTime);
-                return new ChildLocation(Date: childLocationDate, Paused: childLocationEntry.Plan == ChildLocationPlan.WithParent);
+                return new ChildLocation(
+                    childLocationEntry.ChildLocationFamilyId,
+                    childLocationDate,
+                    Paused: childLocationEntry.Plan == ChildLocationPlan.WithParent
+                );
             }).ToImmutableSortedSet();
 
 
@@ -598,7 +602,7 @@ namespace CareTogether.Engines.PolicyEvaluation
         internal static ImmutableList<DateOnly> CalculateMissingMonitoringRequirementInstancesForDurationRecurrencePerChildLocation(
             DurationStagesPerChildLocationRecurrencePolicy recurrence, Guid? filterToFamilyId,
             DateOnly arrangementStartedDate, DateOnly? arrangementEndedDate, DateOnly today,
-            ImmutableList<DateOnly> completionDates, ImmutableSortedSet<ChildLocation> childLocationHistoryDates)
+            ImmutableList<DateOnly> completionDates, ImmutableSortedSet<ChildLocation> childLocationHistory)
         {
             // Technically, the RecurrencePolicyStage model currently allows any stage to have an unlimited
             // # of occurrences, but that would be invalid, so check for those cases and throw an exception.
@@ -606,10 +610,34 @@ namespace CareTogether.Engines.PolicyEvaluation
             if (recurrence.Stages.Take(recurrence.Stages.Count - 1).Any(stage => !stage.MaxOccurrences.HasValue))
                 throw new InvalidOperationException("A stage other than the last stage in a recurrence policy was found to have an unlimited number of occurrences.");
 
-            if (childLocationHistoryDates.IsEmpty)
+            if (childLocationHistory.IsEmpty)
             {
                 return ImmutableList<DateOnly>.Empty;
             }
+
+            // Determine the start and end time of each child location history entry.
+            var childCareOccurrences = childLocationHistory.SelectMany((entry, i) =>
+            {
+                if (i < childLocationHistory.Count - 1)
+                {
+                    var nextEntry = childLocationHistory[i + 1];
+                    return new[] { (entry: entry, startDate: entry.Date, endDate: nextEntry.Date as DateOnly?) };
+                }
+                else
+                    return new[] { (entry: entry, startDate: entry.Date, endDate: null as DateOnly?) };
+            }).ToImmutableList();
+
+            // Determine which child care occurrences the requirement will apply to.
+            var applicableOccurrences = childCareOccurrences
+                .Where(x => !x.entry.Paused &&
+                    (filterToFamilyId == null || x.entry.ChildLocationFamilyId == filterToFamilyId))
+                .ToImmutableList();
+
+            // Group the child care occurrences by child location (i.e., by the family caring for the child).
+            // This results in a (discontinuous) timeline of start and end dates/times for the child being in this location.
+            var occurrencesByLocation = applicableOccurrences
+                .GroupBy(x => x.entry.ChildLocationFamilyId)
+                .ToImmutableDictionary(x => x.Key);
 
             //////////////////////////////////
             //TODO (WIP): from here the logic is very similar to CalculateMissingMonitoringRequirementInstancesForDurationRecurrence, better to move this to some reusable function!?
@@ -643,7 +671,7 @@ namespace CareTogether.Engines.PolicyEvaluation
                         .Repeat(stage, stage.MaxOccurrences ?? 1)
                         .ToImmutableList());
 
-            var searchableTimelineWithGaps = CreateChildLocationBasedTimeline(childLocationHistoryDates.ToImmutableList());
+            var searchableTimelineWithGaps = CreateChildLocationBasedTimeline(childLocationHistory.ToImmutableList());
 
             // For each slot, find a list of all dates of interest.
             var datesOfInterest = slots

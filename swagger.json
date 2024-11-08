@@ -3545,6 +3545,14 @@
             "items": {
               "$ref": "#/components/schemas/DateRange"
             }
+          },
+          "firstDay": {
+            "type": "string",
+            "format": "date"
+          },
+          "lastDay": {
+            "type": "string",
+            "format": "date"
           }
         }
       },
@@ -3559,6 +3567,10 @@
           "end": {
             "type": "string",
             "format": "date"
+          },
+          "lengthInDays": {
+            "type": "integer",
+            "format": "int32"
           }
         }
       },

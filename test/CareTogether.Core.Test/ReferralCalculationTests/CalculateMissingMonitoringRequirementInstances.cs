@@ -194,22 +194,22 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
                 arrangementEndedAtUtc: null,
                 completions: Helpers.Dates(),
                 childLocationHistoryEntries: Helpers.LocationHistoryEntries(
-                    (ChildLocationPlan.DaytimeChildCare, 1, 1),
-                    (ChildLocationPlan.WithParent, 1, 4),
-                    (ChildLocationPlan.DaytimeChildCare, 1, 8),
-                    (ChildLocationPlan.WithParent, 1, 11),
-                    (ChildLocationPlan.DaytimeChildCare, 1, 15),
-                    (ChildLocationPlan.WithParent, 1, 18),
-                    (ChildLocationPlan.DaytimeChildCare, 1, 22),
-                    (ChildLocationPlan.WithParent, 1, 25),
-                    (ChildLocationPlan.DaytimeChildCare, 1, 29),
-                    (ChildLocationPlan.WithParent, 2, 1),
-                    (ChildLocationPlan.DaytimeChildCare, 2, 8),
-                    (ChildLocationPlan.WithParent, 2, 11),
-                    (ChildLocationPlan.DaytimeChildCare, 2, 15),
-                    (ChildLocationPlan.WithParent, 2, 18),
-                    (ChildLocationPlan.DaytimeChildCare, 2, 22),
-                    (ChildLocationPlan.WithParent, 2, 25)),
+                    (H.Id('0'), ChildLocationPlan.DaytimeChildCare, 1, 1),
+                    (Guid.Empty, ChildLocationPlan.WithParent, 1, 4),
+                    (H.Id('0'), ChildLocationPlan.DaytimeChildCare, 1, 8),
+                    (Guid.Empty, ChildLocationPlan.WithParent, 1, 11),
+                    (H.Id('0'), ChildLocationPlan.DaytimeChildCare, 1, 15),
+                    (Guid.Empty, ChildLocationPlan.WithParent, 1, 18),
+                    (H.Id('0'), ChildLocationPlan.DaytimeChildCare, 1, 22),
+                    (Guid.Empty, ChildLocationPlan.WithParent, 1, 25),
+                    (H.Id('0'), ChildLocationPlan.DaytimeChildCare, 1, 29),
+                    (Guid.Empty, ChildLocationPlan.WithParent, 2, 1),
+                    (H.Id('0'), ChildLocationPlan.DaytimeChildCare, 2, 8),
+                    (Guid.Empty, ChildLocationPlan.WithParent, 2, 11),
+                    (H.Id('0'), ChildLocationPlan.DaytimeChildCare, 2, 15),
+                    (Guid.Empty, ChildLocationPlan.WithParent, 2, 18),
+                    (H.Id('0'), ChildLocationPlan.DaytimeChildCare, 2, 22),
+                    (Guid.Empty, ChildLocationPlan.WithParent, 2, 25)),
                 utcNow: H.Date(2, 28),
                 H.US_EASTERN_TIME_ZONE);
 
@@ -226,22 +226,22 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
                 arrangementEndedAtUtc: null,
                 completions: Helpers.Dates(),
                 childLocationHistoryEntries: Helpers.LocationHistoryEntries(
-                    (ChildLocationPlan.DaytimeChildCare, 1, 1),
-                    (ChildLocationPlan.WithParent, 1, 4),
-                    (ChildLocationPlan.DaytimeChildCare, 1, 8),
-                    (ChildLocationPlan.WithParent, 1, 11),
-                    (ChildLocationPlan.DaytimeChildCare, 1, 15),
-                    (ChildLocationPlan.WithParent, 1, 18),
-                    (ChildLocationPlan.DaytimeChildCare, 1, 22),
-                    (ChildLocationPlan.WithParent, 1, 25),
-                    (ChildLocationPlan.DaytimeChildCare, 1, 29),
-                    (ChildLocationPlan.WithParent, 2, 1),
-                    (ChildLocationPlan.DaytimeChildCare, 2, 8),
-                    (ChildLocationPlan.WithParent, 2, 11),
-                    (ChildLocationPlan.DaytimeChildCare, 2, 15),
-                    (ChildLocationPlan.WithParent, 2, 18),
-                    (ChildLocationPlan.DaytimeChildCare, 2, 22),
-                    (ChildLocationPlan.WithParent, 2, 25)),
+                    (H.Id('0'), ChildLocationPlan.DaytimeChildCare, 1, 1),
+                    (Guid.Empty, ChildLocationPlan.WithParent, 1, 4),
+                    (H.Id('0'), ChildLocationPlan.DaytimeChildCare, 1, 8),
+                    (Guid.Empty, ChildLocationPlan.WithParent, 1, 11),
+                    (H.Id('0'), ChildLocationPlan.DaytimeChildCare, 1, 15),
+                    (Guid.Empty, ChildLocationPlan.WithParent, 1, 18),
+                    (H.Id('0'), ChildLocationPlan.DaytimeChildCare, 1, 22),
+                    (Guid.Empty, ChildLocationPlan.WithParent, 1, 25),
+                    (H.Id('0'), ChildLocationPlan.DaytimeChildCare, 1, 29),
+                    (Guid.Empty, ChildLocationPlan.WithParent, 2, 1),
+                    (H.Id('0'), ChildLocationPlan.DaytimeChildCare, 2, 8),
+                    (Guid.Empty, ChildLocationPlan.WithParent, 2, 11),
+                    (H.Id('0'), ChildLocationPlan.DaytimeChildCare, 2, 15),
+                    (Guid.Empty, ChildLocationPlan.WithParent, 2, 18),
+                    (H.Id('0'), ChildLocationPlan.DaytimeChildCare, 2, 22),
+                    (Guid.Empty, ChildLocationPlan.WithParent, 2, 25)),
                 utcNow: H.Date(2, 28),
                 H.US_EASTERN_TIME_ZONE);
 
@@ -258,13 +258,13 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
                 arrangementEndedAtUtc: null,
                 completions: Helpers.Dates(),
                 childLocationHistoryEntries: Helpers.LocationHistoryEntries(
-                    (ChildLocationPlan.DaytimeChildCare, 1, 1),
-                    (ChildLocationPlan.WithParent, 1, 4),
-                    (ChildLocationPlan.DaytimeChildCare, 1, 8),
-                    (ChildLocationPlan.WithParent, 1, 11),
-                    (ChildLocationPlan.DaytimeChildCare, 1, 15),
-                    (ChildLocationPlan.WithParent, 1, 18),
-                    (ChildLocationPlan.DaytimeChildCare, 1, 22)),
+                    (H.Id('0'), ChildLocationPlan.DaytimeChildCare, 1, 1),
+                    (Guid.Empty, ChildLocationPlan.WithParent, 1, 4),
+                    (H.Id('0'), ChildLocationPlan.DaytimeChildCare, 1, 8),
+                    (Guid.Empty, ChildLocationPlan.WithParent, 1, 11),
+                    (H.Id('0'), ChildLocationPlan.DaytimeChildCare, 1, 15),
+                    (Guid.Empty, ChildLocationPlan.WithParent, 1, 18),
+                    (H.Id('0'), ChildLocationPlan.DaytimeChildCare, 1, 22)),
                 utcNow: H.Date(2, 28),
                 H.US_EASTERN_TIME_ZONE);
 
@@ -281,13 +281,13 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
                 arrangementEndedAtUtc: null,
                 completions: Helpers.Dates(),
                 childLocationHistoryEntries: Helpers.LocationHistoryEntries(
-                    (ChildLocationPlan.DaytimeChildCare, 1, 1),
-                    (ChildLocationPlan.WithParent, 1, 4),
-                    (ChildLocationPlan.DaytimeChildCare, 1, 8),
-                    (ChildLocationPlan.WithParent, 1, 11),
-                    (ChildLocationPlan.DaytimeChildCare, 1, 15),
-                    (ChildLocationPlan.WithParent, 1, 18),
-                    (ChildLocationPlan.DaytimeChildCare, 1, 22)),
+                    (H.Id('0'), ChildLocationPlan.DaytimeChildCare, 1, 1),
+                    (Guid.Empty, ChildLocationPlan.WithParent, 1, 4),
+                    (H.Id('0'), ChildLocationPlan.DaytimeChildCare, 1, 8),
+                    (Guid.Empty, ChildLocationPlan.WithParent, 1, 11),
+                    (H.Id('0'), ChildLocationPlan.DaytimeChildCare, 1, 15),
+                    (Guid.Empty, ChildLocationPlan.WithParent, 1, 18),
+                    (H.Id('0'), ChildLocationPlan.DaytimeChildCare, 1, 22)),
                 utcNow: H.Date(2, 23),
                 H.US_EASTERN_TIME_ZONE);
 
@@ -603,7 +603,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
                 arrangementEndedAtUtc: null,
                 completions: Helpers.Dates(),
                 childLocationHistoryEntries: Helpers.LocationHistoryEntries(
-                    (ChildLocationPlan.DaytimeChildCare, 1, 1)),
+                    (H.Id('0'), ChildLocationPlan.DaytimeChildCare, 1, 1)),
                 utcNow: H.Date(2, 14),
                 H.US_EASTERN_TIME_ZONE
             );
@@ -623,7 +623,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
                 arrangementEndedAtUtc: null,
                 completions: Helpers.Dates(),
                 childLocationHistoryEntries: Helpers.LocationHistoryEntries(
-                    (ChildLocationPlan.DaytimeChildCare, 1, 1)),
+                    (H.Id('0'), ChildLocationPlan.DaytimeChildCare, 1, 1)),
                 utcNow: H.Date(2, 14),
                 H.US_EASTERN_TIME_ZONE
             );
@@ -644,13 +644,35 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
                 arrangementEndedAtUtc: null,
                 completions: Helpers.Dates(),
                 childLocationHistoryEntries: Helpers.LocationHistoryEntries(
-                    (ChildLocationPlan.DaytimeChildCare, 1, 1),
-                    (ChildLocationPlan.WithParent, 1, 12),
-                    (ChildLocationPlan.DaytimeChildCare, 1, 15)),
+                    (H.Id('0'), ChildLocationPlan.DaytimeChildCare, 1, 1),
+                    (Guid.Empty, ChildLocationPlan.WithParent, 1, 12),
+                    (H.Id('0'), ChildLocationPlan.DaytimeChildCare, 1, 15)),
                 utcNow: H.Date(2, 14),
                 H.US_EASTERN_TIME_ZONE);
 
             AssertEx.SequenceIs(result, Helpers.Dates((1, 3), (1, 10), (1, 20), (1, 27), (2, 3), (2, 17)));
+        }
+
+        [TestMethod]
+        public void TestNoCompletionsWithPerChildLocationDurationStagesOneLocationWithReturnToParentInMiddleAndResumeWithAnotherFamily()
+        {
+            var result = ReferralCalculations.CalculateMissingMonitoringRequirementInstances(
+                new DurationStagesPerChildLocationRecurrencePolicy(ImmutableList<RecurrencePolicyStage>.Empty
+                .Add(new RecurrencePolicyStage(TimeSpan.FromDays(2), 1))
+                .Add(new RecurrencePolicyStage(TimeSpan.FromDays(7), 4))
+                .Add(new RecurrencePolicyStage(TimeSpan.FromDays(14), null))),
+                filterToFamilyId: null,
+                arrangementStartedAtUtc: H.Date(1, 1),
+                arrangementEndedAtUtc: null,
+                completions: Helpers.Dates(),
+                childLocationHistoryEntries: Helpers.LocationHistoryEntries(
+                    (H.Id('0'), ChildLocationPlan.DaytimeChildCare, 1, 1),
+                    (Guid.Empty, ChildLocationPlan.WithParent, 1, 12),
+                    (H.Id('0'), ChildLocationPlan.DaytimeChildCare, 1, 15)),
+                utcNow: H.Date(2, 14),
+                H.US_EASTERN_TIME_ZONE);
+
+            AssertEx.SequenceIs(result, Helpers.Dates((1, 3), (1, 10), (1, 16), (1, 23), (1, 30), (2, 6), (2, 13), (2, 27)));
         }
 
         [TestMethod]
@@ -666,9 +688,9 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
                 arrangementEndedAtUtc: null,
                 completions: Helpers.Dates((1, 15)),
                 childLocationHistoryEntries: Helpers.LocationHistoryEntries(
-                    (ChildLocationPlan.DaytimeChildCare, 1, 1),
-                    (ChildLocationPlan.WithParent, 1, 12),
-                    (ChildLocationPlan.DaytimeChildCare, 1, 15)),
+                    (H.Id('0'), ChildLocationPlan.DaytimeChildCare, 1, 1),
+                    (Guid.Empty, ChildLocationPlan.WithParent, 1, 12),
+                    (H.Id('0'), ChildLocationPlan.DaytimeChildCare, 1, 15)),
                 utcNow: H.Date(2, 14),
                 H.US_EASTERN_TIME_ZONE);
 
@@ -688,9 +710,9 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
                 arrangementEndedAtUtc: null,
                 completions: Helpers.Dates(),
                 childLocationHistoryEntries: Helpers.LocationHistoryEntries(
-                    (ChildLocationPlan.DaytimeChildCare, 1, 1),
-                    (ChildLocationPlan.WithParent, 1, 12),
-                    (ChildLocationPlan.DaytimeChildCare, 1, 20)),
+                    (H.Id('0'), ChildLocationPlan.DaytimeChildCare, 1, 1),
+                    (Guid.Empty, ChildLocationPlan.WithParent, 1, 12),
+                    (H.Id('0'), ChildLocationPlan.DaytimeChildCare, 1, 20)),
                 utcNow: H.Date(2, 14),
                 H.US_EASTERN_TIME_ZONE);
 
@@ -710,8 +732,8 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
                 arrangementEndedAtUtc: null,
                 completions: Helpers.Dates(),
                 childLocationHistoryEntries: Helpers.LocationHistoryEntries(
-                    (ChildLocationPlan.DaytimeChildCare, 1, 1),
-                    (ChildLocationPlan.WithParent, 2, 7)),
+                    (H.Id('0'), ChildLocationPlan.DaytimeChildCare, 1, 1),
+                    (Guid.Empty, ChildLocationPlan.WithParent, 2, 7)),
                 utcNow: H.Date(2, 14),
                 H.US_EASTERN_TIME_ZONE);
 
@@ -750,7 +772,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
                 arrangementStartedAtUtc: H.Date(1, 1),
                 arrangementEndedAtUtc: H.Date(2, 1),
                 completions: Helpers.Dates(),
-                childLocationHistoryEntries: Helpers.LocationHistoryEntries((ChildLocationPlan.DaytimeChildCare, 1, 1)),
+                childLocationHistoryEntries: Helpers.LocationHistoryEntries((H.Id('0'), ChildLocationPlan.DaytimeChildCare, 1, 1)),
                 utcNow: H.Date(2, 14),
                 H.US_EASTERN_TIME_ZONE);
 
@@ -766,22 +788,22 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
         //        arrangementEndedAtUtc: null,
         //        completions: Helpers.Dates(),
         //        childLocationHistory: Helpers.LocationHistoryEntries(
-        //            (ChildLocationPlan.DaytimeChildCare, 1, 1),
-        //            (ChildLocationPlan.WithParent, 1, 4),
-        //            (ChildLocationPlan.DaytimeChildCare, 1, 8),
-        //            (ChildLocationPlan.WithParent, 1, 11),
-        //            (ChildLocationPlan.DaytimeChildCare, 1, 15),
-        //            (ChildLocationPlan.WithParent, 1, 18),
-        //            (ChildLocationPlan.DaytimeChildCare, 1, 22),
-        //            (ChildLocationPlan.WithParent, 1, 25),
-        //            (ChildLocationPlan.DaytimeChildCare, 1, 29),
-        //            (ChildLocationPlan.WithParent, 2, 1),
-        //            (ChildLocationPlan.DaytimeChildCare, 2, 8),
-        //            (ChildLocationPlan.WithParent, 2, 11),
-        //            (ChildLocationPlan.DaytimeChildCare, 2, 15),
-        //            (ChildLocationPlan.WithParent, 2, 18),
-        //            (ChildLocationPlan.DaytimeChildCare, 2, 22),
-        //            (ChildLocationPlan.WithParent, 2, 25)),
+        //            (H.Id('0'), ChildLocationPlan.DaytimeChildCare, 1, 1),
+        //            (Guid.Empty, ChildLocationPlan.WithParent, 1, 4),
+        //            (H.Id('0'), ChildLocationPlan.DaytimeChildCare, 1, 8),
+        //            (Guid.Empty, ChildLocationPlan.WithParent, 1, 11),
+        //            (H.Id('0'), ChildLocationPlan.DaytimeChildCare, 1, 15),
+        //            (Guid.Empty, ChildLocationPlan.WithParent, 1, 18),
+        //            (H.Id('0'), ChildLocationPlan.DaytimeChildCare, 1, 22),
+        //            (Guid.Empty, ChildLocationPlan.WithParent, 1, 25),
+        //            (H.Id('0'), ChildLocationPlan.DaytimeChildCare, 1, 29),
+        //            (Guid.Empty, ChildLocationPlan.WithParent, 2, 1),
+        //            (H.Id('0'), ChildLocationPlan.DaytimeChildCare, 2, 8),
+        //            (Guid.Empty, ChildLocationPlan.WithParent, 2, 11),
+        //            (H.Id('0'), ChildLocationPlan.DaytimeChildCare, 2, 15),
+        //            (Guid.Empty, ChildLocationPlan.WithParent, 2, 18),
+        //            (H.Id('0'), ChildLocationPlan.DaytimeChildCare, 2, 22),
+        //            (Guid.Empty, ChildLocationPlan.WithParent, 2, 25)),
         //        utcNow: new DateTime(H.YEAR, 2, 28));
 
         //    AssertEx.SequenceIs(result, Helpers.Dates((1, 3), (1, 24), (2, 17)));
@@ -796,22 +818,22 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
         //        arrangementEndedAtUtc: null,
         //        completions: Helpers.Dates(),
         //        childLocationHistory: Helpers.LocationHistoryEntries(
-        //            (ChildLocationPlan.DaytimeChildCare, 1, 1),
-        //            (ChildLocationPlan.WithParent, 1, 4),
-        //            (ChildLocationPlan.DaytimeChildCare, 1, 8),
-        //            (ChildLocationPlan.WithParent, 1, 11),
-        //            (ChildLocationPlan.DaytimeChildCare, 1, 15),
-        //            (ChildLocationPlan.WithParent, 1, 18),
-        //            (ChildLocationPlan.DaytimeChildCare, 1, 22),
-        //            (ChildLocationPlan.WithParent, 1, 25),
-        //            (ChildLocationPlan.DaytimeChildCare, 1, 29),
-        //            (ChildLocationPlan.WithParent, 2, 1),
-        //            (ChildLocationPlan.DaytimeChildCare, 2, 8),
-        //            (ChildLocationPlan.WithParent, 2, 11),
-        //            (ChildLocationPlan.DaytimeChildCare, 2, 15),
-        //            (ChildLocationPlan.WithParent, 2, 18),
-        //            (ChildLocationPlan.DaytimeChildCare, 2, 22),
-        //            (ChildLocationPlan.WithParent, 2, 25)),
+        //            (H.Id('0'), ChildLocationPlan.DaytimeChildCare, 1, 1),
+        //            (Guid.Empty, ChildLocationPlan.WithParent, 1, 4),
+        //            (H.Id('0'), ChildLocationPlan.DaytimeChildCare, 1, 8),
+        //            (Guid.Empty, ChildLocationPlan.WithParent, 1, 11),
+        //            (H.Id('0'), ChildLocationPlan.DaytimeChildCare, 1, 15),
+        //            (Guid.Empty, ChildLocationPlan.WithParent, 1, 18),
+        //            (H.Id('0'), ChildLocationPlan.DaytimeChildCare, 1, 22),
+        //            (Guid.Empty, ChildLocationPlan.WithParent, 1, 25),
+        //            (H.Id('0'), ChildLocationPlan.DaytimeChildCare, 1, 29),
+        //            (Guid.Empty, ChildLocationPlan.WithParent, 2, 1),
+        //            (H.Id('0'), ChildLocationPlan.DaytimeChildCare, 2, 8),
+        //            (Guid.Empty, ChildLocationPlan.WithParent, 2, 11),
+        //            (H.Id('0'), ChildLocationPlan.DaytimeChildCare, 2, 15),
+        //            (Guid.Empty, ChildLocationPlan.WithParent, 2, 18),
+        //            (H.Id('0'), ChildLocationPlan.DaytimeChildCare, 2, 22),
+        //            (Guid.Empty, ChildLocationPlan.WithParent, 2, 25)),
         //        utcNow: new DateTime(H.YEAR, 2, 28));
 
         //    AssertEx.SequenceIs(result, Helpers.Dates((1, 17), (2, 10)));
@@ -826,13 +848,13 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
         //        arrangementEndedAtUtc: null,
         //        completions: Helpers.Dates(),
         //        childLocationHistory: Helpers.LocationHistoryEntries(
-        //            (ChildLocationPlan.DaytimeChildCare, 1, 1),
-        //            (ChildLocationPlan.WithParent, 1, 4),
-        //            (ChildLocationPlan.DaytimeChildCare, 1, 8),
-        //            (ChildLocationPlan.WithParent, 1, 11),
-        //            (ChildLocationPlan.DaytimeChildCare, 1, 15),
-        //            (ChildLocationPlan.WithParent, 1, 18),
-        //            (ChildLocationPlan.DaytimeChildCare, 1, 22)),
+        //            (H.Id('0'), ChildLocationPlan.DaytimeChildCare, 1, 1),
+        //            (Guid.Empty, ChildLocationPlan.WithParent, 1, 4),
+        //            (H.Id('0'), ChildLocationPlan.DaytimeChildCare, 1, 8),
+        //            (Guid.Empty, ChildLocationPlan.WithParent, 1, 11),
+        //            (H.Id('0'), ChildLocationPlan.DaytimeChildCare, 1, 15),
+        //            (Guid.Empty, ChildLocationPlan.WithParent, 1, 18),
+        //            (H.Id('0'), ChildLocationPlan.DaytimeChildCare, 1, 22)),
         //        utcNow: new DateTime(H.YEAR, 2, 28));
 
         //    AssertEx.SequenceIs(result, Helpers.Dates((1, 3), (1, 24)));
@@ -847,13 +869,13 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
         //        arrangementEndedAtUtc: null,
         //        completions: Helpers.Dates(),
         //        childLocationHistory: Helpers.LocationHistoryEntries(
-        //            (ChildLocationPlan.DaytimeChildCare, 1, 1),
-        //            (ChildLocationPlan.WithParent, 1, 4),
-        //            (ChildLocationPlan.DaytimeChildCare, 1, 8),
-        //            (ChildLocationPlan.WithParent, 1, 11),
-        //            (ChildLocationPlan.DaytimeChildCare, 1, 15),
-        //            (ChildLocationPlan.WithParent, 1, 18),
-        //            (ChildLocationPlan.DaytimeChildCare, 1, 22)),
+        //            (H.Id('0'), ChildLocationPlan.DaytimeChildCare, 1, 1),
+        //            (Guid.Empty, ChildLocationPlan.WithParent, 1, 4),
+        //            (H.Id('0'), ChildLocationPlan.DaytimeChildCare, 1, 8),
+        //            (Guid.Empty, ChildLocationPlan.WithParent, 1, 11),
+        //            (H.Id('0'), ChildLocationPlan.DaytimeChildCare, 1, 15),
+        //            (Guid.Empty, ChildLocationPlan.WithParent, 1, 18),
+        //            (H.Id('0'), ChildLocationPlan.DaytimeChildCare, 1, 22)),
         //        utcNow: new DateTime(H.YEAR, 2, 23));
 
         //    AssertEx.SequenceIs(result, Helpers.Dates((1, 3), (1, 24)));
@@ -871,7 +893,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
                 arrangementStartedAtUtc: H.Date(1, 1),
                 arrangementEndedAtUtc: null,
                 completions: Helpers.Dates((1, 2)),
-                childLocationHistoryEntries: Helpers.LocationHistoryEntries((ChildLocationPlan.DaytimeChildCare, 1, 1)),
+                childLocationHistoryEntries: Helpers.LocationHistoryEntries((H.Id('0'), ChildLocationPlan.DaytimeChildCare, 1, 1)),
                 utcNow: H.Date(2, 14),
                 H.US_EASTERN_TIME_ZONE);
 
@@ -890,7 +912,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
                 arrangementStartedAtUtc: H.Date(1, 1),
                 arrangementEndedAtUtc: H.Date(2, 1),
                 completions: Helpers.Dates((1, 2)),
-                childLocationHistoryEntries: Helpers.LocationHistoryEntries((ChildLocationPlan.DaytimeChildCare, 1, 1)),
+                childLocationHistoryEntries: Helpers.LocationHistoryEntries((H.Id('0'), ChildLocationPlan.DaytimeChildCare, 1, 1)),
                 utcNow: H.Date(2, 14),
                 H.US_EASTERN_TIME_ZONE);
 
@@ -909,7 +931,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
                 arrangementStartedAtUtc: H.Date(1, 1),
                 arrangementEndedAtUtc: null,
                 completions: Helpers.Dates((1, 2), (1, 2)),
-                childLocationHistoryEntries: Helpers.LocationHistoryEntries((ChildLocationPlan.DaytimeChildCare, 1, 1)),
+                childLocationHistoryEntries: Helpers.LocationHistoryEntries((H.Id('0'), ChildLocationPlan.DaytimeChildCare, 1, 1)),
                 utcNow: H.Date(2, 14),
                 H.US_EASTERN_TIME_ZONE);
 
@@ -928,7 +950,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
                 arrangementStartedAtUtc: H.Date(1, 1),
                 arrangementEndedAtUtc: null,
                 completions: Helpers.Dates((1, 1), (1, 2)),
-                childLocationHistoryEntries: Helpers.LocationHistoryEntries((ChildLocationPlan.DaytimeChildCare, 1, 1)),
+                childLocationHistoryEntries: Helpers.LocationHistoryEntries((H.Id('0'), ChildLocationPlan.DaytimeChildCare, 1, 1)),
                 utcNow: H.Date(2, 14),
                 H.US_EASTERN_TIME_ZONE);
 
@@ -947,7 +969,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
                 arrangementStartedAtUtc: H.Date(1, 1),
                 arrangementEndedAtUtc: null,
                 completions: Helpers.Dates((1, 2), (1, 9)),
-                childLocationHistoryEntries: Helpers.LocationHistoryEntries((ChildLocationPlan.DaytimeChildCare, 1, 1)),
+                childLocationHistoryEntries: Helpers.LocationHistoryEntries((H.Id('0'), ChildLocationPlan.DaytimeChildCare, 1, 1)),
                 utcNow: H.Date(2, 14),
                 H.US_EASTERN_TIME_ZONE);
 
@@ -966,7 +988,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
                 arrangementStartedAtUtc: H.Date(1, 1),
                 arrangementEndedAtUtc: null,
                 completions: Helpers.Dates((1, 2), (1, 10)),
-                childLocationHistoryEntries: Helpers.LocationHistoryEntries((ChildLocationPlan.DaytimeChildCare, 1, 1)),
+                childLocationHistoryEntries: Helpers.LocationHistoryEntries((H.Id('0'), ChildLocationPlan.DaytimeChildCare, 1, 1)),
                 utcNow: H.Date(2, 14),
                 H.US_EASTERN_TIME_ZONE);
 
@@ -985,7 +1007,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
                 arrangementStartedAtUtc: H.Date(1, 1),
                 arrangementEndedAtUtc: null,
                 completions: Helpers.Dates((1, 2), (1, 20)),
-                childLocationHistoryEntries: Helpers.LocationHistoryEntries((ChildLocationPlan.DaytimeChildCare, 1, 1)),
+                childLocationHistoryEntries: Helpers.LocationHistoryEntries((H.Id('0'), ChildLocationPlan.DaytimeChildCare, 1, 1)),
                 utcNow: H.Date(2, 14),
                 H.US_EASTERN_TIME_ZONE);
 
@@ -1004,7 +1026,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
                 arrangementStartedAtUtc: H.Date(1, 1),
                 arrangementEndedAtUtc: null,
                 completions: Helpers.Dates((1, 2), (1, 20), (2, 9)),
-                childLocationHistoryEntries: Helpers.LocationHistoryEntries((ChildLocationPlan.DaytimeChildCare, 1, 1)),
+                childLocationHistoryEntries: Helpers.LocationHistoryEntries((H.Id('0'), ChildLocationPlan.DaytimeChildCare, 1, 1)),
                 utcNow: H.Date(2, 14),
                 H.US_EASTERN_TIME_ZONE);
 

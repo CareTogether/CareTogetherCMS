@@ -5969,6 +5969,8 @@ export interface IFamilyRoleRequirementCompletionStatus {
 
 export class DateOnlyTimeline implements IDateOnlyTimeline {
     ranges?: DateRange[];
+    firstDay?: Date;
+    lastDay?: Date;
 
     constructor(data?: IDateOnlyTimeline) {
         if (data) {
@@ -5986,6 +5988,8 @@ export class DateOnlyTimeline implements IDateOnlyTimeline {
                 for (let item of _data["ranges"])
                     this.ranges!.push(DateRange.fromJS(item));
             }
+            this.firstDay = _data["firstDay"] ? new Date(_data["firstDay"].toString()) : <any>undefined;
+            this.lastDay = _data["lastDay"] ? new Date(_data["lastDay"].toString()) : <any>undefined;
         }
     }
 
@@ -6003,17 +6007,22 @@ export class DateOnlyTimeline implements IDateOnlyTimeline {
             for (let item of this.ranges)
                 data["ranges"].push(item.toJSON());
         }
+        data["firstDay"] = this.firstDay ? formatDate(this.firstDay) : <any>undefined;
+        data["lastDay"] = this.lastDay ? formatDate(this.lastDay) : <any>undefined;
         return data;
     }
 }
 
 export interface IDateOnlyTimeline {
     ranges?: DateRange[];
+    firstDay?: Date;
+    lastDay?: Date;
 }
 
 export class DateRange implements IDateRange {
     start?: Date;
     end?: Date;
+    lengthInDays?: number;
 
     constructor(data?: IDateRange) {
         if (data) {
@@ -6028,6 +6037,7 @@ export class DateRange implements IDateRange {
         if (_data) {
             this.start = _data["start"] ? new Date(_data["start"].toString()) : <any>undefined;
             this.end = _data["end"] ? new Date(_data["end"].toString()) : <any>undefined;
+            this.lengthInDays = _data["lengthInDays"];
         }
     }
 
@@ -6042,6 +6052,7 @@ export class DateRange implements IDateRange {
         data = typeof data === 'object' ? data : {};
         data["start"] = this.start ? formatDate(this.start) : <any>undefined;
         data["end"] = this.end ? formatDate(this.end) : <any>undefined;
+        data["lengthInDays"] = this.lengthInDays;
         return data;
     }
 }
@@ -6049,6 +6060,7 @@ export class DateRange implements IDateRange {
 export interface IDateRange {
     start?: Date;
     end?: Date;
+    lengthInDays?: number;
 }
 
 export class FamilyRequirementStatusDetail implements IFamilyRequirementStatusDetail {
