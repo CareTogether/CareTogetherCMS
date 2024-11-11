@@ -62,23 +62,23 @@ public class DateOnlyTimelineTest
     }
 
     [TestMethod]
-    public void FirstDayReturnsFirstDayOfFirstRange()
+    public void StartReturnsFirstDayOfFirstRange()
     {
         var dut1 = new DateOnlyTimeline([DR(1, 5)]);
         var dut2 = new DateOnlyTimeline([DR(3, 4), DR(6, 8)]);
 
-        Assert.AreEqual(D(1), dut1.FirstDay);
-        Assert.AreEqual(D(3), dut2.FirstDay);
+        Assert.AreEqual(D(1), dut1.Start);
+        Assert.AreEqual(D(3), dut2.Start);
     }
 
     [TestMethod]
-    public void LastDayReturnsLastDayOfLastRange()
+    public void EndReturnsLastDayOfLastRange()
     {
         var dut1 = new DateOnlyTimeline([DR(1, 5)]);
         var dut2 = new DateOnlyTimeline([DR(3, 4), DR(6, 8)]);
 
-        Assert.AreEqual(D(5), dut1.LastDay);
-        Assert.AreEqual(D(8), dut2.LastDay);
+        Assert.AreEqual(D(5), dut1.End);
+        Assert.AreEqual(D(8), dut2.End);
     }
 
     [TestMethod]

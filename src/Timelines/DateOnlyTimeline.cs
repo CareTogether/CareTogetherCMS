@@ -35,10 +35,10 @@ public sealed class DateOnlyTimeline : IEquatable<DateOnlyTimeline>
         }
     }
 
-    public DateOnly FirstDay =>
+    public DateOnly Start =>
         Ranges.First().Start;
 
-    public DateOnly LastDay =>
+    public DateOnly End =>
         Ranges.Last().End;
 
     public static DateOnlyTimeline? UnionOf(ImmutableList<DateOnlyTimeline?> timelines)

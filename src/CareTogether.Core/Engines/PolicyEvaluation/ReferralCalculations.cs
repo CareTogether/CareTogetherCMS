@@ -477,7 +477,7 @@ namespace CareTogether.Engines.PolicyEvaluation
             // So this condition is for backwards compatibility purpose.
             if (isDiscontinuousWindow)
             {
-                var lastDayRange = new DateRange(window.LastDay.AddDays(1), window.LastDay.AddDays(1));
+                var lastDayRange = new DateRange(window.End.AddDays(1), window.End.AddDays(1));
 
                 return new DateOnlyTimeline(window.Ranges.Add(lastDayRange));
             }
@@ -549,7 +549,7 @@ namespace CareTogether.Engines.PolicyEvaluation
         )
         {
             var validCompletions = completionDates
-                .Where(completion => completion >= searchableTimeline.FirstDay)
+                .Where(completion => completion >= searchableTimeline.Start)
                 .ToImmutableList();
 
             // Checking for a completion at the start date first simplifies the rest of the calculation.
@@ -558,7 +558,7 @@ namespace CareTogether.Engines.PolicyEvaluation
             // so the rest of the calculation have a different offset, compensanting the first offset.
             // Another problem is a stack overflow (infinite recursion), creating the need of always passing a new list of completions,
             // removing the ones that were already checked.
-            var completionOnDayOne = validCompletions.Find(item => item == searchableTimeline.FirstDay);
+            var completionOnDayOne = validCompletions.Find(item => item == searchableTimeline.Start);
             var applicableStages = completionOnDayOne != default && recurrenceStages.Count > 1
                 ? recurrenceStages.Skip(1)
                 : recurrenceStages;
@@ -579,7 +579,7 @@ namespace CareTogether.Engines.PolicyEvaluation
             var datesOfInterest = slots
                 .Aggregate(ImmutableList<DateOfInterest>.Empty, (dates, slot) =>
                     {
-                        var lastDateOfInterest = dates.LastOrDefault()?.Date ?? searchableTimeline.FirstDay;
+                        var lastDateOfInterest = dates.LastOrDefault()?.Date ?? searchableTimeline.Start;
 
                         var allPossibleNextDatesIterator = IterateDatesOfInterest(
                             lastDateOfInterest,

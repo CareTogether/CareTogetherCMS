@@ -3546,11 +3546,11 @@
               "$ref": "#/components/schemas/DateRange"
             }
           },
-          "firstDay": {
+          "start": {
             "type": "string",
             "format": "date"
           },
-          "lastDay": {
+          "end": {
             "type": "string",
             "format": "date"
           }
