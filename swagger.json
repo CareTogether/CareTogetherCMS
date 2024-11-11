@@ -3568,7 +3568,7 @@
             "type": "string",
             "format": "date"
           },
-          "lengthInDays": {
+          "totalDaysInclusive": {
             "type": "integer",
             "format": "int32"
           }

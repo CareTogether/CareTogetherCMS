@@ -70,6 +70,9 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
                 )
                 .ToImmutableList();
 
+        public static ImmutableList<DateOnly> DatesAsDateOnly(params (int month, int day)[] values) =>
+            Dates(values).Select(DateOnly.FromDateTime).ToImmutableList();
+
         public static ImmutableList<DateTime> Dates(params (int month, int day, int hour)[] values) =>
             values
                 .Select(value =>
@@ -82,6 +85,8 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
 
         public static DateTime Date(int month, int day) =>
             TimeZoneInfo.ConvertTimeToUtc(new DateTime(YEAR, month, day), US_EASTERN_TIME_ZONE);
+
+        public static DateOnly DateAsDateOnly(int month, int day) => DateOnly.FromDateTime(Date(month, day));
 
         public static ImmutableSortedSet<ChildLocationHistoryEntry> LocationHistoryEntries(
             params (Guid childLocationFamilyId, ChildLocationPlan plan, int month, int day)[] values

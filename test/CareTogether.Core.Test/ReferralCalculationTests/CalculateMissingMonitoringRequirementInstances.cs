@@ -654,7 +654,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
         }
 
         [TestMethod]
-        public void TestNoCompletionsWithPerChildLocationDurationStagesOneLocationWithReturnToParentInMiddleAndResumeWithAnotherFamily()
+        public void TestFilterToFirstFamilyWithPerChildLocationDurationStagesBeforeTransferToSecondFamily()
         {
             var result = ReferralCalculations.CalculateMissingMonitoringRequirementInstances(
                 new DurationStagesPerChildLocationRecurrencePolicy(ImmutableList<RecurrencePolicyStage>.Empty
@@ -676,7 +676,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
         }
 
         [TestMethod]
-        public void TestNoCompletionsWithPerChildLocationDurationStagesOneLocationWithReturnToParentInMiddleAndResumeWithAnotherFamily2()
+        public void TestFilterToSecondFamilyWithPerChildLocationDurationStagesAfterTransferFromFirstFamily()
         {
             var result = ReferralCalculations.CalculateMissingMonitoringRequirementInstances(
                 new DurationStagesPerChildLocationRecurrencePolicy(ImmutableList<RecurrencePolicyStage>.Empty
@@ -1053,26 +1053,6 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
                 H.US_EASTERN_TIME_ZONE);
 
             AssertEx.SequenceIs(result, Helpers.Dates((1, 9), (1, 16), (1, 27), (2, 23)));
-        }
-
-        [TestMethod]
-        public void MyTest()
-        {
-            //NOTE: This is NOT recommended. Use the OneTimeRecurrencePolicy instead!
-            var result = ReferralCalculations.CalculateMissingMonitoringRequirementInstances(
-                new DurationStagesRecurrencePolicy(ImmutableList<RecurrencePolicyStage>.Empty
-                    .Add(new RecurrencePolicyStage(TimeSpan.FromDays(2), 1))
-                    .Add(new RecurrencePolicyStage(TimeSpan.FromDays(7), null))
-                ),
-                filterToFamilyId: null,
-                arrangementStartedAtUtc: H.Date(9, 1),
-                arrangementEndedAtUtc: null,
-                completions: Helpers.Dates((9, 2), (9, 10), (9, 13)),
-                childLocationHistoryEntries: Helpers.LocationHistoryEntries(),
-                utcNow: H.Date(10, 1),
-                H.US_EASTERN_TIME_ZONE);
-
-            AssertEx.SequenceIs(result, Helpers.Dates((9, 9), (9, 20), (9, 27), (10, 4)));
         }
     }
 }

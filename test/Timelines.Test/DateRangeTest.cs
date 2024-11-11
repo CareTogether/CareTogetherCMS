@@ -19,12 +19,53 @@ public class DateRangeTest
     }
 
     [TestMethod]
-    public void DateRangeConstructorAllowsEqualValues()
+    public void DateRangeConstructorAllowsEndValue()
     {
         var dut = new DateRange(D(1), D(2));
 
         Assert.AreEqual(D(1), dut.Start);
         Assert.AreEqual(D(2), dut.End);
+    }
+
+    [TestMethod]
+    public void DateRangeConstructorAllowsEqualValues()
+    {
+        var dut = new DateRange(D(1), D(1));
+
+        Assert.AreEqual(D(1), dut.Start);
+        Assert.AreEqual(D(1), dut.End);
+    }
+
+    [TestMethod]
+    public void TotalDaysInclusiveReturnsCorrectValue()
+    {
+        var dut1 = new DateRange(D(1), D(1));
+        var dut2 = new DateRange(D(1), D(5));
+        var dut3 = new DateRange(D(1));
+
+        Assert.AreEqual(dut1.TotalDaysInclusive, 1);
+        Assert.AreEqual(dut2.TotalDaysInclusive, 5);
+        Assert.AreEqual(dut3.TotalDaysInclusive, DateOnly.MaxValue.DayNumber - D(1).DayNumber + 1);
+    }
+
+    [TestMethod]
+    public void TakeDaysReturnsExpectedRange()
+    {
+        var dut = DR(1, 5);
+        var result = dut.TakeDays(3);
+
+        Assert.AreEqual(D(1), result.Start);
+        Assert.AreEqual(D(3), result.End);
+    }
+
+    [TestMethod]
+    public void TakeDaysReturnsOriginalRangeWhenRequestedLengthExceedRange()
+    {
+        var dut = DR(1, 5);
+        var result = dut.TakeDays(10);
+
+        Assert.AreEqual(D(1), result.Start);
+        Assert.AreEqual(D(5), result.End);
     }
 
     [TestMethod]

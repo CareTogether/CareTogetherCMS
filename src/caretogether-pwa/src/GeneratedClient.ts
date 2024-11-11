@@ -6022,7 +6022,7 @@ export interface IDateOnlyTimeline {
 export class DateRange implements IDateRange {
     start?: Date;
     end?: Date;
-    lengthInDays?: number;
+    totalDaysInclusive?: number;
 
     constructor(data?: IDateRange) {
         if (data) {
@@ -6037,7 +6037,7 @@ export class DateRange implements IDateRange {
         if (_data) {
             this.start = _data["start"] ? new Date(_data["start"].toString()) : <any>undefined;
             this.end = _data["end"] ? new Date(_data["end"].toString()) : <any>undefined;
-            this.lengthInDays = _data["lengthInDays"];
+            this.totalDaysInclusive = _data["totalDaysInclusive"];
         }
     }
 
@@ -6052,7 +6052,7 @@ export class DateRange implements IDateRange {
         data = typeof data === 'object' ? data : {};
         data["start"] = this.start ? formatDate(this.start) : <any>undefined;
         data["end"] = this.end ? formatDate(this.end) : <any>undefined;
-        data["lengthInDays"] = this.lengthInDays;
+        data["totalDaysInclusive"] = this.totalDaysInclusive;
         return data;
     }
 }
@@ -6060,7 +6060,7 @@ export class DateRange implements IDateRange {
 export interface IDateRange {
     start?: Date;
     end?: Date;
-    lengthInDays?: number;
+    totalDaysInclusive?: number;
 }
 
 export class FamilyRequirementStatusDetail implements IFamilyRequirementStatusDetail {

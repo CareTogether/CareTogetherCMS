@@ -129,7 +129,6 @@ namespace CareTogether
                     yield return result;
         }
 
-        //TODO: Create its own small unit test suite.
         public static IEnumerable<T> TakeWhilePlusOne<T>(this IEnumerable<T> source, Func<T, bool> predicate)
         {
             using (var enumerator = source.GetEnumerator())

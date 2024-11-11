@@ -21,15 +21,24 @@ public readonly struct DateRange : IEquatable<DateRange>
         End = end;
     }
 
+    /// <summary>
+    /// Gets the total number of days in this date range, inclusive of both the start and end dates.
+    /// </summary>
     public int TotalDaysInclusive =>
         End.DayNumber - Start.DayNumber + 1;
 
-    public DateRange TakeMaxDays(int length)
+    /// <summary>
+    /// Returns a new DateRange that includes up to the specified number of days from the start of this range.
+    /// If the requested length is greater than or equal to the total days in this range, returns this range unchanged.
+    /// </summary>
+    /// <param name="requestedLength">The maximum number of days to include in the new range</param>
+    /// <returns>A new DateRange containing up to the specified number of days from the start of this range</returns>
+    public DateRange TakeDays(int requestedLength)
     {
-        if (TotalDaysInclusive <= length)
+        if (TotalDaysInclusive <= requestedLength)
             return this;
 
-        return new DateRange(Start, Start.AddDays(length - 1));
+        return new DateRange(Start, Start.AddDays(requestedLength - 1));
     }
 
 

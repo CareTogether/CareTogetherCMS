@@ -50,6 +50,82 @@ public class DateOnlyTimelineTest
     }
 
     [TestMethod]
+    public void TotalDaysInclusiveReturnsCorrectValue()
+    {
+        var dut1 = new DateOnlyTimeline([DR(1, 1)]);
+        var dut2 = new DateOnlyTimeline([DR(1, 5)]);
+        var dut3 = new DateOnlyTimeline([DR(1, 2), DR(4, 5)]);
+
+        Assert.AreEqual(1, dut1.TotalDaysInclusive());
+        Assert.AreEqual(5, dut2.TotalDaysInclusive());
+        Assert.AreEqual(4, dut3.TotalDaysInclusive());
+    }
+
+    [TestMethod]
+    public void FirstDayReturnsFirstDayOfFirstRange()
+    {
+        var dut1 = new DateOnlyTimeline([DR(1, 5)]);
+        var dut2 = new DateOnlyTimeline([DR(3, 4), DR(6, 8)]);
+
+        Assert.AreEqual(D(1), dut1.FirstDay);
+        Assert.AreEqual(D(3), dut2.FirstDay);
+    }
+
+    [TestMethod]
+    public void LastDayReturnsLastDayOfLastRange()
+    {
+        var dut1 = new DateOnlyTimeline([DR(1, 5)]);
+        var dut2 = new DateOnlyTimeline([DR(3, 4), DR(6, 8)]);
+
+        Assert.AreEqual(D(5), dut1.LastDay);
+        Assert.AreEqual(D(8), dut2.LastDay);
+    }
+
+    [TestMethod]
+    public void TakeDaysThrowsForNonPositiveValue()
+    {
+        var dut = new DateOnlyTimeline([DR(1, 5)]);
+        Assert.ThrowsException<ArgumentException>(() => dut.TakeDays(0));
+        Assert.ThrowsException<ArgumentException>(() => dut.TakeDays(-1));
+    }
+
+    [TestMethod]
+    public void TakeDaysReturnsOriginalTimelineWhenRequestedLengthExceedsTotal()
+    {
+        var dut = new DateOnlyTimeline([DR(1, 3), DR(5, 6)]);
+        var result = dut.TakeDays(10);
+
+        Assert.IsNotNull(result);
+        Assert.IsTrue(result.Ranges.SequenceEqual([
+            DR(1, 3), DR(5, 6)
+        ]));
+    }
+
+    [TestMethod]
+    public void TakeDaysReturnsPartialTimelineWhenRequestedLengthIsLess()
+    {
+        var dut = new DateOnlyTimeline([DR(1, 3), DR(5, 7)]);
+        var result = dut.TakeDays(4);
+
+        Assert.IsNotNull(result);
+        Assert.IsTrue(result.Ranges.SequenceEqual([
+            DR(1, 3), DR(5, 5)
+        ]));
+    }
+
+    [TestMethod]
+    public void TakeDaysHandlesSingleRange()
+    {
+        var dut = new DateOnlyTimeline([DR(1, 5)]);
+        var result = dut.TakeDays(3);
+
+        Assert.IsNotNull(result);
+        Assert.IsTrue(result.Ranges.SequenceEqual([
+            DR(1, 3)
+        ]));
+    }
+
+    [TestMethod]
     public void UnionOfEmptyListReturnsNull()
     {
         var dut = DateOnlyTimeline.UnionOf(ImmutableList<DateRange>.Empty);

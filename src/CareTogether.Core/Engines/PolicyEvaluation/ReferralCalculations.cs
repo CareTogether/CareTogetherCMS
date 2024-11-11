@@ -540,7 +540,6 @@ namespace CareTogether.Engines.PolicyEvaluation
             }
         }
 
-        // TODO: is this name good enough?
         internal static ImmutableList<DateOnly> CalculateDueDatesInTimeline(
             ImmutableList<RecurrencePolicyStage> recurrenceStages,
             ImmutableList<DateOnly> completionDates,
