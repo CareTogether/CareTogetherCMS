@@ -389,12 +389,11 @@ namespace CareTogether.Engines.PolicyEvaluation
 
             var searchableTimeline = new DateOnlyTimeline([new DateRange(arrangementStartedDate)]);
 
-            var dueDates = CalculateDueDates(
+            var dueDates = CalculateDueDatesInTimeline(
                 recurrence.Stages,
-                today,
                 completionDates,
                 searchableTimeline,
-                arrangementStartedDate,
+                today,
                 arrangementEndedDate
             );
 
@@ -417,7 +416,8 @@ namespace CareTogether.Engines.PolicyEvaluation
                 .Select(item => new DateRange(item.Start, item.End))
                 .ToImmutableList();
 
-            if (filteredDateRanges.IsEmpty) {
+            if (filteredDateRanges.IsEmpty)
+            {
                 return null;
             }
 
@@ -465,7 +465,7 @@ namespace CareTogether.Engines.PolicyEvaluation
 
             var window = searchableTimelineFromWindowStartDate?.TakeDays(windowLength.Days);
 
-            if (window == default || window.TotalLength() < windowLength.Days)
+            if (window == default || window.TotalDaysInclusive() < windowLength.Days)
             {
                 return null;
             }
@@ -540,18 +540,17 @@ namespace CareTogether.Engines.PolicyEvaluation
             }
         }
 
-        // TODO: find a better name
-        internal static ImmutableList<DateOnly> CalculateDueDates(
+        // TODO: is this name good enough?
+        internal static ImmutableList<DateOnly> CalculateDueDatesInTimeline(
             ImmutableList<RecurrencePolicyStage> recurrenceStages,
-            DateOnly today,
             ImmutableList<DateOnly> completionDates,
             DateOnlyTimeline searchableTimeline,
-            DateOnly arrangementStartedDate,
+            DateOnly today,
             DateOnly? arrangementEndedDate
         )
         {
             var validCompletions = completionDates
-                .Where(completion => completion >= arrangementStartedDate)
+                .Where(completion => completion >= searchableTimeline.FirstDay)
                 .ToImmutableList();
 
             // Checking for a completion at the start date first simplifies the rest of the calculation.
@@ -560,15 +559,11 @@ namespace CareTogether.Engines.PolicyEvaluation
             // so the rest of the calculation have a different offset, compensanting the first offset.
             // Another problem is a stack overflow (infinite recursion), creating the need of always passing a new list of completions,
             // removing the ones that were already checked.
-            var completionOnDayOne = validCompletions.Find(item => item == arrangementStartedDate);
+            var completionOnDayOne = validCompletions.Find(item => item == searchableTimeline.FirstDay);
             var applicableStages = completionOnDayOne != default && recurrenceStages.Count > 1
                 ? recurrenceStages.Skip(1)
                 : recurrenceStages;
 
-            // TODO:
-            // Repeat each stage the number of times specified by MaxOccurrences, or once if MaxOccurrences is null.
-            // An instance of a stage is a slot in which we need to look for a completion.
-            // ----
             // Generates slots in which we need to look for a completion. Each stage generates a number of slots
             // equal to its MaxOccurrences, or just 1 if MaxOccurrences is null (which should be the last stage, or the only one).
             // A slot doesn't have a start/end date because there's no way of determining all the start/end dates beforehand, it depends on previus
@@ -580,11 +575,12 @@ namespace CareTogether.Engines.PolicyEvaluation
                         .ToImmutableList());
 
 
-            // For each slot, find a list of all dates of interest.
+            // For each slot, find a list of all dates of interest (meaning dates of completion or due dates, which are used
+            // to calculate the next window).
             var datesOfInterest = slots
                 .Aggregate(ImmutableList<DateOfInterest>.Empty, (dates, slot) =>
                     {
-                        var lastDateOfInterest = dates.LastOrDefault()?.Date ?? arrangementStartedDate;
+                        var lastDateOfInterest = dates.LastOrDefault()?.Date ?? searchableTimeline.FirstDay;
 
                         var allPossibleNextDatesIterator = IterateDatesOfInterest(
                             lastDateOfInterest,
@@ -605,24 +601,16 @@ namespace CareTogether.Engines.PolicyEvaluation
                         return aggregatedDates;
                     });
 
-            var missingDates = datesOfInterest.Where(date => date.IsMissing).Select(item => item.Date).ToImmutableList();
+            var dueDates = datesOfInterest.Where(date => date.IsMissing).Select(item => item.Date).ToImmutableList();
 
             if (arrangementEndedDate != null)
             {
-                return missingDates.Where(date => date <= arrangementEndedDate).ToImmutableList();
+                return dueDates.TakeWhile(date => date <= arrangementEndedDate).ToImmutableList();
             }
 
-            var missingDatesUntilToday = missingDates.Where(date => date <= today).ToImmutableList();
+            var dueDatesUntilToday = dueDates.TakeWhilePlusOne(date => date <= today).ToImmutableList();
 
-            if (missingDates.Count > missingDatesUntilToday.Count)
-            {
-                var missingDatesUntilTodayPlusOneMore = missingDatesUntilToday.Add(missingDates[missingDatesUntilToday.Count]);
-                return missingDatesUntilTodayPlusOneMore;
-            }
-
-            return missingDates;
-
-
+            return dueDatesUntilToday;
         }
 
         internal static ImmutableList<DateOnly> CalculateMissingMonitoringRequirementInstancesForDurationRecurrencePerChildLocation(
@@ -641,46 +629,28 @@ namespace CareTogether.Engines.PolicyEvaluation
                 return ImmutableList<DateOnly>.Empty;
             }
 
+            // Get a possibly discontinuous timeline in which we will look for completions
             var searchableTimeline = CreateChildLocationBasedTimeline(
                 childLocationHistory.ToImmutableList(),
                 filterToFamilyId
             );
 
-            if (searchableTimeline == null) {
+            // It is possible that a child went to a volunteer and returned before the end of the 'window'
+            // in which a completion is expected, in this case we don't return a due date. 
+            if (searchableTimeline == null)
+            {
                 return ImmutableList<DateOnly>.Empty;
             }
 
-            var dueDates = CalculateDueDates(
+            var dueDates = CalculateDueDatesInTimeline(
                 recurrence.Stages,
-                today,
                 completionDates,
                 searchableTimeline,
-                arrangementStartedDate: searchableTimeline.FirstDay,
+                today,
                 arrangementEndedDate
             );
 
             return dueDates;
-        }
-
-        //TODO: Move to a helper class ('Extensions.cs' or 'IEnumerableExtensions.cs') and create its own small unit test suite.
-        public static IEnumerable<T> TakeWhilePlusOne<T>(this IEnumerable<T> source, Func<T, bool> predicate)
-        {
-            using (var enumerator = source.GetEnumerator())
-            {
-                while (enumerator.MoveNext())
-                {
-                    var current = enumerator.Current;
-                    if (predicate(current))
-                    {
-                        yield return current;
-                    }
-                    else
-                    {
-                        yield return current;
-                        break;
-                    }
-                }
-            }
         }
 
         internal static ImmutableList<DateOnly>

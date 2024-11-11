@@ -287,7 +287,7 @@ public sealed class DateOnlyTimeline : IEquatable<DateOnlyTimeline>
             throw new ArgumentException("Requested length must be positive.", nameof(requestedLength));
 
         // If total length is already within limit, return unchanged
-        var totalLength = Ranges.Sum(r => r.LengthInDays);
+        var totalLength = Ranges.Sum(r => r.TotalDaysInclusive);
         if (totalLength <= requestedLength)
             return this;
 
@@ -302,15 +302,15 @@ public sealed class DateOnlyTimeline : IEquatable<DateOnlyTimeline>
             // Only take part of this range up to remaining length
             var newRange = range.TakeMaxDays(remainingTotalLength);
             newRanges.Add(newRange);
-            remainingTotalLength -= newRange.LengthInDays;
+            remainingTotalLength -= newRange.TotalDaysInclusive;
         }
 
         return new DateOnlyTimeline(newRanges.ToImmutableList());
     }
 
-    public int TotalLength()
+    public int TotalDaysInclusive()
     {
-        return Ranges.Sum(range => range.End.DayNumber - range.Start.DayNumber + 1);
+        return Ranges.Sum(range => range.TotalDaysInclusive);
     }
 }
 
