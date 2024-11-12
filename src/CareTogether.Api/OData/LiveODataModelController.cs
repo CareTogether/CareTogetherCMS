@@ -1,4 +1,4 @@
-﻿using CareTogether.Engines;
+using CareTogether.Engines;
 using CareTogether.Engines.PolicyEvaluation;
 using CareTogether.Managers;
 using CareTogether.Managers.Records;
@@ -401,6 +401,12 @@ namespace CareTogether.Api.OData
                                 State = null,
                                 PostalCode = anonymousZipCode
                             }).ToImmutableList(),
+                            Age = adult.Item1.Age switch
+                            {
+                                AgeInYears age => new AgeInYears(age.Years, new DateTime(age.AsOf.Year, 1, 1)),
+                                ExactAge age => new ExactAge(new DateTime(age.DateOfBirth.Year, 1, 1)),
+                                _ => throw new NotImplementedException($"Unknown age type: {adult.Item1.Age?.GetType().Name}")
+                            },
                             Concerns = null,
                             EmailAddresses = adult.Item1.EmailAddresses.Select((email, e) => email with
                             {
@@ -425,6 +431,12 @@ namespace CareTogether.Api.OData
                                 State = null,
                                 PostalCode = anonymousZipCode
                             }).ToImmutableList(),
+                            Age = child.Age switch
+                            {
+                                AgeInYears age => new AgeInYears(age.Years, new DateTime(age.AsOf.Year, 1, 1)),
+                                ExactAge age => new ExactAge(new DateTime(age.DateOfBirth.Year, 1, 1)),
+                                _ => throw new NotImplementedException($"Unknown age type: {child.Age?.GetType().Name}")
+                            },
                             Concerns = null,
                             EmailAddresses = child.EmailAddresses.Select((email, e) => email with
                             {
