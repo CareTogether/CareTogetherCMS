@@ -405,7 +405,7 @@ namespace CareTogether.Api.OData
                             {
                                 AgeInYears age => new AgeInYears(age.Years, new DateTime(age.AsOf.Year, 1, 1)),
                                 ExactAge age => new ExactAge(new DateTime(age.DateOfBirth.Year, 1, 1)),
-                                _ => throw new NotImplementedException($"Unknown age type: {adult.Item1.Age?.GetType().Name}")
+                                _ => null
                             },
                             Concerns = null,
                             EmailAddresses = adult.Item1.EmailAddresses.Select((email, e) => email with
@@ -435,7 +435,7 @@ namespace CareTogether.Api.OData
                             {
                                 AgeInYears age => new AgeInYears(age.Years, new DateTime(age.AsOf.Year, 1, 1)),
                                 ExactAge age => new ExactAge(new DateTime(age.DateOfBirth.Year, 1, 1)),
-                                _ => throw new NotImplementedException($"Unknown age type: {child.Age?.GetType().Name}")
+                                _ => null
                             },
                             Concerns = null,
                             EmailAddresses = child.EmailAddresses.Select((email, e) => email with
