@@ -1,4 +1,4 @@
-using CareTogether.Engines;
+﻿using CareTogether.Engines;
 using CareTogether.Engines.PolicyEvaluation;
 using CareTogether.Managers;
 using CareTogether.Managers.Records;
@@ -733,7 +733,7 @@ namespace CareTogether.Api.OData
                             arrangementPerson, arrangement.PartneringFamilyPersonId,
                             receivingFamily, history.ChildLocationFamilyId,
                             history.TimestampUtc, history.Plan,
-                            EndedAtUtc: nextLocation?.TimestampUtc ?? arrangement.EndedAtUtc,
+                            EndedAtUtc: nextLocation?.TimestampUtc ?? arrangement.EndedAtUtc?.Subtract(TimeSpan.FromSeconds(1)),
                             Duration: effectiveDuration);
                     });
                 });
