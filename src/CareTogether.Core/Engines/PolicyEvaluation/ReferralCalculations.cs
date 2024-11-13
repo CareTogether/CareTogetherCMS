@@ -338,8 +338,7 @@ namespace CareTogether.Engines.PolicyEvaluation
                 ),
                 ChildCareOccurrenceBasedRecurrencePolicy childCareOccurences => WrapWithTimeInUtc(
                     CalculateMissingMonitoringRequirementInstancesForChildCareOccurrences(
-                        childCareOccurences, filterToFamilyId, arrangementStartedAtUtc, arrangementEndedAtUtc,
-                        completionDates, childLocationHistoryEntries, utcNow)
+                        childCareOccurences, filterToFamilyId, completionDates, childLocationHistory)
                 ),
                 _ => throw new NotImplementedException(
                     $"The recurrence policy type '{recurrence.GetType().FullName}' has not been implemented.")
@@ -655,26 +654,12 @@ namespace CareTogether.Engines.PolicyEvaluation
         internal static ImmutableList<DateOnly>
             CalculateMissingMonitoringRequirementInstancesForChildCareOccurrences(
             ChildCareOccurrenceBasedRecurrencePolicy recurrence, Guid? filterToFamilyId,
-            DateTime arrangementStartedAtUtc, DateTime? arrangementEndedAtUtc,
-            ImmutableList<DateOnly> completionDates, ImmutableSortedSet<ChildLocationHistoryEntry> childLocationHistory,
-            DateTime utcNow)
+            ImmutableList<DateOnly> completionDates, ImmutableSortedSet<ChildLocation> childLocationHistory)
         {
-            // Determine the start and end time of each child location history entry.
-            var childCareOccurrences = childLocationHistory.SelectMany((entry, i) =>
-            {
-                if (i < childLocationHistory.Count - 1)
-                {
-                    var nextEntry = childLocationHistory[i + 1];
-                    return new[] { (entry: entry, startDate: DateOnly.FromDateTime(entry.TimestampUtc), endDate: DateOnly.FromDateTime(nextEntry.TimestampUtc) as DateOnly?) };
-                }
-                else
-                    return new[] { (entry: entry, startDate: DateOnly.FromDateTime(entry.TimestampUtc), endDate: null as DateOnly?) };
-            }).ToImmutableList();
-
             // Determine which child care occurrences the requirement will apply to.
-            var applicableOccurrences = childCareOccurrences
-                .Where(x => x.entry.Plan != ChildLocationPlan.WithParent &&
-                    (filterToFamilyId == null || x.entry.ChildLocationFamilyId == filterToFamilyId))
+            var applicableOccurrences = childLocationHistory
+                .Where(x => !x.Paused &&
+                    (filterToFamilyId == null || x.ChildLocationFamilyId == filterToFamilyId))
                 .Where((x, i) => recurrence.Positive
                     ? i % recurrence.Frequency == recurrence.InitialSkipCount
                     : i % recurrence.Frequency != recurrence.InitialSkipCount)
@@ -682,12 +667,12 @@ namespace CareTogether.Engines.PolicyEvaluation
 
             // Determine which child care occurrences did not have a completion within the required delay timespan.
             var missedOccurrences = applicableOccurrences
-                .Where(x => !completionDates.Any(c => c >= x.startDate && c <= x.startDate.AddDays(recurrence.Delay.Days)))
+                .Where(x => !completionDates.Any(c => c >= x.Date && c <= x.Date.AddDays(recurrence.Delay.Days)))
                 .ToImmutableList();
 
             // Return the due-by date of each missed occurrence.
             var missingInstances = missedOccurrences
-                .Select(x => x.startDate.AddDays(recurrence.Delay.Days))
+                .Select(x => x.Date.AddDays(recurrence.Delay.Days))
                 .ToImmutableList();
 
             return missingInstances;
