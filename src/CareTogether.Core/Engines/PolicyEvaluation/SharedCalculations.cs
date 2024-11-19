@@ -16,27 +16,27 @@ namespace CareTogether.Engines.PolicyEvaluation
         //NOTE: This is currently being used by Referral calculations.
         internal static RequirementCheckResult RequirementMetOrExempted(string requirementName,
             DateTime? policySupersededAtUtc, DateTime utcNow,
-            ImmutableList<CompletedRequirementInfo> completedRequirements,
-            ImmutableList<ExemptedRequirementInfo> exemptedRequirements)
+            ImmutableList<CompletedRequirementInfoForCalculation> completedRequirements,
+            ImmutableList<ExemptedRequirementInfoForCalculation> exemptedRequirements)
         {
             var bestCompletion = completedRequirements
                 .Where(completed =>
                     completed.RequirementName == requirementName &&
-                    (policySupersededAtUtc == null || completed.CompletedAtUtc < policySupersededAtUtc) &&
-                    (completed.ExpiresAtUtc == null || completed.ExpiresAtUtc > utcNow))
-                .MaxBy(completed => completed.ExpiresAtUtc ?? DateTime.MaxValue);
+                    (policySupersededAtUtc == null || completed.CompletedAt < policySupersededAtUtc) &&
+                    (completed.ExpiresAt == null || completed.ExpiresAt > utcNow))
+                .MaxBy(completed => completed.ExpiresAt ?? DateTime.MaxValue);
 
             if (bestCompletion != null)
-                return new RequirementCheckResult(true, bestCompletion.ExpiresAtUtc);
+                return new RequirementCheckResult(true, bestCompletion.ExpiresAt);
 
             var bestExemption = exemptedRequirements
                 .Where(exempted =>
                     exempted.RequirementName == requirementName &&
-                    (exempted.ExemptionExpiresAtUtc == null || exempted.ExemptionExpiresAtUtc > utcNow))
-                .MaxBy(exempted => exempted.ExemptionExpiresAtUtc ?? DateTime.MaxValue);
+                    (exempted.ExemptionExpiresAt == null || exempted.ExemptionExpiresAt > utcNow))
+                .MaxBy(exempted => exempted.ExemptionExpiresAt ?? DateTime.MaxValue);
 
             if (bestExemption != null)
-                return new RequirementCheckResult(true, bestExemption.ExemptionExpiresAtUtc);
+                return new RequirementCheckResult(true, bestExemption.ExemptionExpiresAt);
 
             return new RequirementCheckResult(false, null);
         }
