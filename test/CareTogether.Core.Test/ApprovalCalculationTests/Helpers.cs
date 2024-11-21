@@ -144,7 +144,7 @@ namespace CareTogether.Core.Test.ApprovalCalculationTests
         public static
             ImmutableList<(string ActionName, RequirementStage Stage, SharedCalculations.RequirementCheckResult RequirementMetOrExempted)>
             IndividualRequirementsMetWithExpiry(params (string, RequirementStage, bool, int?)[] requirementsMet) =>
-            requirementsMet.Select(x => (x.Item1, x.Item2, new SharedCalculations.RequirementCheckResult(x.Item3, x.Item4.HasValue ? new DateTime(YEAR, 1, x.Item4.Value) : null))).ToImmutableList();
+            requirementsMet.Select(x => (x.Item1, x.Item2, new SharedCalculations.RequirementCheckResult(x.Item3, x.Item4.HasValue ? new DateOnly(YEAR, 1, x.Item4.Value) : null))).ToImmutableList();
 
         public static
             ImmutableList<(string ActionName, RequirementStage Stage, bool RequirementMetOrExempted)>

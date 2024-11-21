@@ -3233,12 +3233,12 @@
           },
           "dueBy": {
             "type": "string",
-            "format": "date-time",
+            "format": "date",
             "nullable": true
           },
           "pastDueSince": {
             "type": "string",
-            "format": "date-time",
+            "format": "date",
             "nullable": true
           }
         }

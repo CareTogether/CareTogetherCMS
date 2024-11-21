@@ -13,23 +13,21 @@ namespace CareTogether.Engines.PolicyEvaluation
 
     public sealed record CompletedRequirementInfoForCalculation(
         string RequirementName,
-        DateOnly CompletedAtDate,
-        DateTime CompletedAt,
-        DateTime? ExpiresAt
+        DateOnly CompletedAt,
+        DateOnly? ExpiresAt
     );
 
     public sealed record ExemptedRequirementInfoForCalculation(
         string RequirementName,
-        DateTime? DueDate,
-        DateOnly? ExemptionExpiresAtDate,
-        DateTime? ExemptionExpiresAt
+        DateOnly? DueDate,
+        DateOnly? ExemptionExpiresAt
     );
 
     public sealed record ArrangementEntryForCalculation(
         string ArrangementType,
-        DateOnly? StartedAtDate,
-        DateOnly? EndedAtDate,
-        DateOnly? CancelledAtUtc,
+        DateOnly? StartedAt,
+        DateOnly? EndedAt,
+        DateOnly? CancelledAt,
         Guid PartneringFamilyPersonId,
         ImmutableList<CompletedRequirementInfoForCalculation> CompletedRequirements,
         ImmutableList<ExemptedRequirementInfoForCalculation> ExemptedRequirements,

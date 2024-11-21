@@ -14,9 +14,9 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
         public void TestNothingMissingNoDates()
         {
             var result = ReferralCalculations.CalculateArrangementPhase(
-                startedAtUtc: null,
-                endedAtUtc: null,
-                cancelledAtUtc: null,
+                startedAt: null,
+                endedAt: null,
+                cancelledAt: null,
                 missingSetupRequirements: ImmutableList<MissingArrangementRequirement>.Empty,
                 missingFunctionAssignments: ImmutableList<ArrangementFunction>.Empty);
             
@@ -27,9 +27,9 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
         public void TestNothingMissingStarted()
         {
             var result = ReferralCalculations.CalculateArrangementPhase(
-                startedAtUtc: DateTime.UtcNow,
-                endedAtUtc: null,
-                cancelledAtUtc: null,
+                startedAt: DateOnly.FromDateTime(DateTime.UtcNow),
+                endedAt: null,
+                cancelledAt: null,
                 missingSetupRequirements: ImmutableList<MissingArrangementRequirement>.Empty,
                 missingFunctionAssignments: ImmutableList<ArrangementFunction>.Empty);
 
@@ -40,9 +40,9 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
         public void TestNothingMissingStartedAndEnded()
         {
             var result = ReferralCalculations.CalculateArrangementPhase(
-                startedAtUtc: DateTime.UtcNow,
-                endedAtUtc: DateTime.UtcNow,
-                cancelledAtUtc: null,
+                startedAt: DateOnly.FromDateTime(DateTime.UtcNow),
+                endedAt: DateOnly.FromDateTime(DateTime.UtcNow),
+                cancelledAt: null,
                 missingSetupRequirements: ImmutableList<MissingArrangementRequirement>.Empty,
                 missingFunctionAssignments: ImmutableList<ArrangementFunction>.Empty);
 
@@ -53,9 +53,9 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
         public void TestRequirementMissingNoDates()
         {
             var result = ReferralCalculations.CalculateArrangementPhase(
-                startedAtUtc: null,
-                endedAtUtc: null,
-                cancelledAtUtc: null,
+                startedAt: null,
+                endedAt: null,
+                cancelledAt: null,
                 missingSetupRequirements: ImmutableList<MissingArrangementRequirement>.Empty
                 .Add(new MissingArrangementRequirement(null, null, null, null, "A", null, null)),
                 missingFunctionAssignments: ImmutableList<ArrangementFunction>.Empty);
@@ -67,9 +67,9 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
         public void TestRequirementMissingCancelled()
         {
             var result = ReferralCalculations.CalculateArrangementPhase(
-                startedAtUtc: null,
-                endedAtUtc: null,
-                cancelledAtUtc: DateTime.UtcNow,
+                startedAt: null,
+                endedAt: null,
+                cancelledAt: DateOnly.FromDateTime(DateTime.UtcNow),
                 missingSetupRequirements: ImmutableList<MissingArrangementRequirement>.Empty
                 .Add(new MissingArrangementRequirement(null, null, null, null, "A", null, null)),
                 missingFunctionAssignments: ImmutableList<ArrangementFunction>.Empty);
@@ -82,9 +82,9 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
         public void TestFunctionMissingNoDates()
         {
             var result = ReferralCalculations.CalculateArrangementPhase(
-                startedAtUtc: null,
-                endedAtUtc: null,
-                cancelledAtUtc: null,
+                startedAt: null,
+                endedAt: null,
+                cancelledAt: null,
                 missingSetupRequirements: ImmutableList<MissingArrangementRequirement>.Empty,
                 missingFunctionAssignments: ImmutableList<ArrangementFunction>.Empty
                 .Add(Helpers.FunctionWithoutEligibility("X", FunctionRequirement.OneOrMore)));
@@ -99,9 +99,9 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
             // Referral policy versioning is a solution to mitigate this scenario but it cannot
             // guarantee that this scenario will never happen as long as a policy can change.
             var result = ReferralCalculations.CalculateArrangementPhase(
-                startedAtUtc: DateTime.UtcNow,
-                endedAtUtc: null,
-                cancelledAtUtc: null,
+                startedAt: DateOnly.FromDateTime(DateTime.UtcNow),
+                endedAt: null,
+                cancelledAt: null,
                 missingSetupRequirements: ImmutableList<MissingArrangementRequirement>.Empty
                 .Add(new MissingArrangementRequirement(null, null, null, null, "A", null, null)),
                 missingFunctionAssignments: ImmutableList<ArrangementFunction>.Empty
@@ -117,9 +117,9 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
             // Referral policy versioning is a solution to mitigate this scenario but it cannot
             // guarantee that this scenario will never happen as long as a policy can change.
             var result = ReferralCalculations.CalculateArrangementPhase(
-                startedAtUtc: DateTime.UtcNow,
-                endedAtUtc: DateTime.UtcNow,
-                cancelledAtUtc: null,
+                startedAt: DateOnly.FromDateTime(DateTime.UtcNow),
+                endedAt: DateOnly.FromDateTime(DateTime.UtcNow),
+                cancelledAt: null,
                 missingSetupRequirements: ImmutableList<MissingArrangementRequirement>.Empty
                 .Add(new MissingArrangementRequirement(null, null, null, null, "A", null, null)),
                 missingFunctionAssignments: ImmutableList<ArrangementFunction>.Empty

@@ -63,11 +63,7 @@ namespace CareTogether.Engines.PolicyEvaluation
 
         internal DateOnly ToDateOnlyInLocationTimeZone(DateTime dateTime, TimeZoneInfo locationTimeZone)
         {
-            var inLocationTimeZone = ToLocationTimeZone(dateTime, locationTimeZone);
-
-            var asDateOnly = DateOnly.FromDateTime(inLocationTimeZone);
-
-            return asDateOnly;
+            return DateOnly.FromDateTime(ToLocationTimeZone(dateTime, locationTimeZone));
         }
 
         internal DateOnly? ToDateOnlyInLocationTimeZone(DateTime? dateTime, TimeZoneInfo locationTimeZone)
@@ -77,7 +73,7 @@ namespace CareTogether.Engines.PolicyEvaluation
                 return null;
             }
 
-            return ToDateOnlyInLocationTimeZone(dateTime.Value, locationTimeZone);
+            return DateOnly.FromDateTime(ToLocationTimeZone(dateTime.Value, locationTimeZone));
         }
 
         internal CompletedRequirementInfoForCalculation ToCompletedRequirementsForCalculation(
@@ -88,8 +84,7 @@ namespace CareTogether.Engines.PolicyEvaluation
             return new(
                 entry.RequirementName,
                 ToDateOnlyInLocationTimeZone(entry.CompletedAtUtc, locationTimeZone),
-                ToLocationTimeZone(entry.CompletedAtUtc, locationTimeZone),
-                ToLocationTimeZone(entry.ExpiresAtUtc, locationTimeZone)
+                ToDateOnlyInLocationTimeZone(entry.ExpiresAtUtc, locationTimeZone)
             );
         }
 
@@ -100,9 +95,8 @@ namespace CareTogether.Engines.PolicyEvaluation
         {
             return new(
                 entry.RequirementName,
-                ToLocationTimeZone(entry.DueDate, locationTimeZone),
                 ToDateOnlyInLocationTimeZone(entry.DueDate, locationTimeZone),
-                ToLocationTimeZone(entry.ExemptionExpiresAtUtc, locationTimeZone)
+                ToDateOnlyInLocationTimeZone(entry.ExemptionExpiresAtUtc, locationTimeZone)
             );
         }
 
@@ -110,7 +104,7 @@ namespace CareTogether.Engines.PolicyEvaluation
         {
             return new(
                 entry.ChildLocationFamilyId,
-                ToDateOnlyInLocationTimeZone(entry.TimestampUtc, locationTimeZone),
+                DateOnly.FromDateTime(ToLocationTimeZone(entry.TimestampUtc, locationTimeZone)),
                 Paused: entry.Plan == ChildLocationPlan.WithParent
             );
         }
@@ -178,11 +172,15 @@ namespace CareTogether.Engines.PolicyEvaluation
                 .ToImmutableSortedSet();
 
             var individualVolunteerAssignments = entry
-                .IndividualVolunteerAssignments.Select(item => ToIndividualVolunteerAssignmentForCalculation(item, locationTimeZone))
+                .IndividualVolunteerAssignments.Select(item =>
+                    ToIndividualVolunteerAssignmentForCalculation(item, locationTimeZone)
+                )
                 .ToImmutableList();
 
             var familyVolunteerAssignments = entry
-                .FamilyVolunteerAssignments.Select(item => ToFamilyVolunteerAssignmentForCalculation(item, locationTimeZone))
+                .FamilyVolunteerAssignments.Select(item =>
+                    ToFamilyVolunteerAssignmentForCalculation(item, locationTimeZone)
+                )
                 .ToImmutableList();
 
             return new(
@@ -246,7 +244,7 @@ namespace CareTogether.Engines.PolicyEvaluation
             return ReferralCalculations.CalculateReferralStatus(
                 policy.ReferralPolicy,
                 referralEntryForCalculation,
-                TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, locationTimeZone)
+                DateOnly.FromDateTime(TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, locationTimeZone))
             );
         }
     }
