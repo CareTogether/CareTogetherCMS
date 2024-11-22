@@ -26,7 +26,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
         {
             var result = ReferralCalculations.CalculateMissingCloseoutRequirements(
                 CloseoutRequirements("A", "B", "C"),
-                new ArrangementEntryForCalculation(
+                new Engines.PolicyEvaluation.ArrangementEntry(
                     "",
                     StartedAt: DateOnly.MinValue,
                     EndedAt: null,
@@ -34,8 +34,8 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
                     Guid.Empty,
                     Helpers.Completed(),
                     Helpers.Exempted(),
-                    ImmutableList<IndividualVolunteerAssignmentForCalculation>.Empty,
-                    ImmutableList<FamilyVolunteerAssignmentForCalculation>.Empty,
+                    ImmutableList<Engines.PolicyEvaluation.IndividualVolunteerAssignment>.Empty,
+                    ImmutableList<Engines.PolicyEvaluation.FamilyVolunteerAssignment>.Empty,
                     Helpers.ChildLocationHistory()
                 ),
                 today: new DateOnly(2022, 2, 1)
@@ -54,7 +54,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
         {
             var result = ReferralCalculations.CalculateMissingCloseoutRequirements(
                 CloseoutRequirements("A", "B", "C"),
-                new ArrangementEntryForCalculation(
+                new Engines.PolicyEvaluation.ArrangementEntry(
                     "",
                     StartedAt: null,
                     EndedAt: null,
@@ -62,8 +62,8 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
                     Guid.Empty,
                     Helpers.Completed(("A", 1), ("A", 2), ("B", 3)),
                     Helpers.Exempted(),
-                    ImmutableList<IndividualVolunteerAssignmentForCalculation>.Empty,
-                    ImmutableList<FamilyVolunteerAssignmentForCalculation>.Empty,
+                    ImmutableList<Engines.PolicyEvaluation.IndividualVolunteerAssignment>.Empty,
+                    ImmutableList<Engines.PolicyEvaluation.FamilyVolunteerAssignment>.Empty,
                     Helpers.ChildLocationHistory()
                 ),
                 today: new DateOnly(2022, 2, 1)
@@ -77,7 +77,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
         {
             var result = ReferralCalculations.CalculateMissingCloseoutRequirements(
                 CloseoutRequirements("A", "B", "C"),
-                new ArrangementEntryForCalculation(
+                new Engines.PolicyEvaluation.ArrangementEntry(
                     "",
                     StartedAt: null,
                     EndedAt: null,
@@ -85,8 +85,8 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
                     Guid.Empty,
                     Helpers.Completed(("A", 1), ("A", 2), ("B", 3), ("C", 12)),
                     Helpers.Exempted(),
-                    ImmutableList<IndividualVolunteerAssignmentForCalculation>.Empty,
-                    ImmutableList<FamilyVolunteerAssignmentForCalculation>.Empty,
+                    ImmutableList<Engines.PolicyEvaluation.IndividualVolunteerAssignment>.Empty,
+                    ImmutableList<Engines.PolicyEvaluation.FamilyVolunteerAssignment>.Empty,
                     Helpers.ChildLocationHistory()
                 ),
                 today: new DateOnly(2022, 2, 1)

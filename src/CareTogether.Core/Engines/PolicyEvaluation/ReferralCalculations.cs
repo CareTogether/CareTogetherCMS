@@ -11,7 +11,7 @@ namespace CareTogether.Engines.PolicyEvaluation
     {
         public static ReferralStatus CalculateReferralStatus(
             ReferralPolicy referralPolicy,
-            ReferralEntryForCalculation referralEntry,
+            ReferralEntry referralEntry,
             DateOnly today
         )
         {
@@ -52,7 +52,7 @@ namespace CareTogether.Engines.PolicyEvaluation
         }
 
         internal static ArrangementStatus CalculateArrangementStatus(
-            ArrangementEntryForCalculation arrangement,
+            ArrangementEntry arrangement,
             ArrangementPolicy arrangementPolicy,
             DateOnly today
         )
@@ -126,7 +126,7 @@ namespace CareTogether.Engines.PolicyEvaluation
 
         internal static ImmutableList<MissingArrangementRequirement> CalculateMissingSetupRequirements(
             ArrangementPolicy arrangementPolicy,
-            ArrangementEntryForCalculation arrangement,
+            ArrangementEntry arrangement,
             DateOnly today
         )
         {
@@ -231,7 +231,7 @@ namespace CareTogether.Engines.PolicyEvaluation
 
         internal static ImmutableList<MissingArrangementRequirement> CalculateMissingMonitoringRequirements(
             ArrangementPolicy arrangementPolicy,
-            ArrangementEntryForCalculation arrangement,
+            ArrangementEntry arrangement,
             DateOnly today
         )
         {
@@ -788,7 +788,7 @@ namespace CareTogether.Engines.PolicyEvaluation
 
         internal static ImmutableList<MissingArrangementRequirement> CalculateMissingCloseoutRequirements(
             ArrangementPolicy arrangementPolicy,
-            ArrangementEntryForCalculation arrangement,
+            ArrangementEntry arrangement,
             DateOnly today
         )
         {
@@ -893,8 +893,8 @@ namespace CareTogether.Engines.PolicyEvaluation
 
         internal static ImmutableList<ArrangementFunction> CalculateMissingFunctionAssignments(
             ImmutableList<ArrangementFunction> volunteerFunctions,
-            ImmutableList<FamilyVolunteerAssignmentForCalculation> familyVolunteerAssignments,
-            ImmutableList<IndividualVolunteerAssignmentForCalculation> individualVolunteerAssignments
+            ImmutableList<FamilyVolunteerAssignment> familyVolunteerAssignments,
+            ImmutableList<IndividualVolunteerAssignment> individualVolunteerAssignments
         ) =>
             // NOTE: This calculation assumes that the current assignments are valid,
             //       implying that the assignments were validated when they were made.

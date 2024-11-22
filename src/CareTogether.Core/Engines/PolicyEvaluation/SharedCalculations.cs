@@ -16,8 +16,8 @@ namespace CareTogether.Engines.PolicyEvaluation
         //NOTE: This is currently being used by Referral calculations.
         internal static RequirementCheckResult RequirementMetOrExempted(string requirementName,
             DateOnly? policySupersededAt, DateOnly today,
-            ImmutableList<CompletedRequirementInfoForCalculation> completedRequirements,
-            ImmutableList<ExemptedRequirementInfoForCalculation> exemptedRequirements)
+            ImmutableList<CompletedRequirementInfo> completedRequirements,
+            ImmutableList<ExemptedRequirementInfo> exemptedRequirements)
         {
             var bestCompletion = completedRequirements
                 .Where(completed =>
@@ -218,8 +218,8 @@ namespace CareTogether.Engines.PolicyEvaluation
         //      Maybe rename it to 'FindWhenRequirementIsMet' or something like that?
         internal static DateOnlyTimeline? FindRequirementApprovals(
             string requirementName, DateTime? policyVersionSupersededAtUtc,
-            ImmutableList<CompletedRequirementInfo> completedRequirementsInScope,
-            ImmutableList<ExemptedRequirementInfo> exemptedRequirementsInScope)
+            ImmutableList<Resources.CompletedRequirementInfo> completedRequirementsInScope,
+            ImmutableList<Resources.ExemptedRequirementInfo> exemptedRequirementsInScope)
         {
             // Policy supersedence means that, as of the 'SupersededAtUtc' date, the policy version is no longer in effect.
             // As a result, while approvals granted under that policy version continue to be valid, any requirements that

@@ -15,33 +15,33 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
         public const int YEAR = 2024;
         public static TimeZoneInfo US_EASTERN_TIME_ZONE = TimeZoneInfo.FindSystemTimeZoneById("America/New_York");
 
-        public static ImmutableList<CompletedRequirementInfoForCalculation> Completed(
+        public static ImmutableList<Engines.PolicyEvaluation.CompletedRequirementInfo> Completed(
             params (string, int)[] completionsWithDates
         ) =>
             completionsWithDates
-                .Select(completion => new CompletedRequirementInfoForCalculation(
+                .Select(completion => new Engines.PolicyEvaluation.CompletedRequirementInfo(
                     completion.Item1,
                     new DateOnly(YEAR, 1, completion.Item2),
                     ExpiresAt: null
                 ))
                 .ToImmutableList();
 
-        public static ImmutableList<CompletedRequirementInfoForCalculation> CompletedWithExpiry(
+        public static ImmutableList<Engines.PolicyEvaluation.CompletedRequirementInfo> CompletedWithExpiry(
             params (string, int, int?)[] completionsWithDates
         ) =>
             completionsWithDates
-                .Select(completion => new CompletedRequirementInfoForCalculation(
+                .Select(completion => new Engines.PolicyEvaluation.CompletedRequirementInfo(
                     completion.Item1,
                     new DateOnly(YEAR, 1, completion.Item2),
                     ExpiresAt: completion.Item3.HasValue ? new DateOnly(YEAR, 1, completion.Item3.Value) : null
                 ))
                 .ToImmutableList();
 
-        public static ImmutableList<ExemptedRequirementInfoForCalculation> Exempted(
+        public static ImmutableList<Engines.PolicyEvaluation.ExemptedRequirementInfo> Exempted(
             params (string, int?)[] exemptionsWithExpirations
         ) =>
             exemptionsWithExpirations
-                .Select(exemption => new ExemptedRequirementInfoForCalculation(
+                .Select(exemption => new Engines.PolicyEvaluation.ExemptedRequirementInfo(
                     exemption.Item1,
                     DueDate: null,
                     exemption.Item2.HasValue ? new DateOnly(YEAR, 1, exemption.Item2.Value) : null

@@ -24,11 +24,11 @@ namespace CareTogether.Engines.PolicyEvaluation
             Guid organizationId,
             Guid locationId,
             Family family,
-            ImmutableList<CompletedRequirementInfo> completedFamilyRequirements,
-            ImmutableList<ExemptedRequirementInfo> exemptedFamilyRequirements,
+            ImmutableList<Resources.CompletedRequirementInfo> completedFamilyRequirements,
+            ImmutableList<Resources.ExemptedRequirementInfo> exemptedFamilyRequirements,
             ImmutableList<RoleRemoval> familyRoleRemovals,
-            ImmutableDictionary<Guid, ImmutableList<CompletedRequirementInfo>> completedIndividualRequirements,
-            ImmutableDictionary<Guid, ImmutableList<ExemptedRequirementInfo>> exemptedIndividualRequirements,
+            ImmutableDictionary<Guid, ImmutableList<Resources.CompletedRequirementInfo>> completedIndividualRequirements,
+            ImmutableDictionary<Guid, ImmutableList<Resources.ExemptedRequirementInfo>> exemptedIndividualRequirements,
             ImmutableDictionary<Guid, ImmutableList<RoleRemoval>> individualRoleRemovals
         )
         {
@@ -76,8 +76,8 @@ namespace CareTogether.Engines.PolicyEvaluation
             return DateOnly.FromDateTime(ToLocationTimeZone(dateTime.Value, locationTimeZone));
         }
 
-        internal CompletedRequirementInfoForCalculation ToCompletedRequirementsForCalculation(
-            CompletedRequirementInfo entry,
+        internal CompletedRequirementInfo ToCompletedRequirementsForCalculation(
+            Resources.CompletedRequirementInfo entry,
             TimeZoneInfo locationTimeZone
         )
         {
@@ -88,8 +88,8 @@ namespace CareTogether.Engines.PolicyEvaluation
             );
         }
 
-        internal ExemptedRequirementInfoForCalculation ToExemptedRequirementInfoForCalculation(
-            ExemptedRequirementInfo entry,
+        internal ExemptedRequirementInfo ToExemptedRequirementInfoForCalculation(
+            Resources.ExemptedRequirementInfo entry,
             TimeZoneInfo locationTimeZone
         )
         {
@@ -109,8 +109,8 @@ namespace CareTogether.Engines.PolicyEvaluation
             );
         }
 
-        internal IndividualVolunteerAssignmentForCalculation ToIndividualVolunteerAssignmentForCalculation(
-            IndividualVolunteerAssignment entry,
+        internal IndividualVolunteerAssignment ToIndividualVolunteerAssignmentForCalculation(
+            Resources.Referrals.IndividualVolunteerAssignment entry,
             TimeZoneInfo locationTimeZone
         )
         {
@@ -132,8 +132,8 @@ namespace CareTogether.Engines.PolicyEvaluation
             );
         }
 
-        internal FamilyVolunteerAssignmentForCalculation ToFamilyVolunteerAssignmentForCalculation(
-            FamilyVolunteerAssignment entry,
+        internal FamilyVolunteerAssignment ToFamilyVolunteerAssignmentForCalculation(
+            Resources.Referrals.FamilyVolunteerAssignment entry,
             TimeZoneInfo locationTimeZone
         )
         {
@@ -154,8 +154,8 @@ namespace CareTogether.Engines.PolicyEvaluation
             );
         }
 
-        internal ArrangementEntryForCalculation ToArrangementEntryForCalculation(
-            ArrangementEntry entry,
+        internal ArrangementEntry ToArrangementEntryForCalculation(
+            Resources.Referrals.ArrangementEntry entry,
             TimeZoneInfo locationTimeZone
         )
         {
@@ -197,8 +197,8 @@ namespace CareTogether.Engines.PolicyEvaluation
             );
         }
 
-        internal ReferralEntryForCalculation ToReferralEntryForCalculation(
-            ReferralEntry entry,
+        internal ReferralEntry ToReferralEntryForCalculation(
+            Resources.Referrals.ReferralEntry entry,
             TimeZoneInfo locationTimeZone
         )
         {
@@ -211,13 +211,13 @@ namespace CareTogether.Engines.PolicyEvaluation
                 .ToImmutableList();
 
             var arrangements = entry
-                .Arrangements.Select(item => new KeyValuePair<Guid, ArrangementEntryForCalculation>(
+                .Arrangements.Select(item => new KeyValuePair<Guid, ArrangementEntry>(
                     item.Key,
                     ToArrangementEntryForCalculation(item.Value, locationTimeZone)
                 ))
                 .ToImmutableDictionary();
 
-            return new ReferralEntryForCalculation(
+            return new ReferralEntry(
                 completedRequirements,
                 exemptedRequirements,
                 entry.CompletedCustomFields,
@@ -229,7 +229,7 @@ namespace CareTogether.Engines.PolicyEvaluation
             Guid organizationId,
             Guid locationId,
             Family family,
-            ReferralEntry referralEntry
+            Resources.Referrals.ReferralEntry referralEntry
         )
         {
             var policy = await policiesResource.GetCurrentPolicy(organizationId, locationId);
@@ -241,11 +241,13 @@ namespace CareTogether.Engines.PolicyEvaluation
 
             var referralEntryForCalculation = ToReferralEntryForCalculation(referralEntry, locationTimeZone);
 
-            return ReferralCalculations.CalculateReferralStatus(
+            var referralStatus = ReferralCalculations.CalculateReferralStatus(
                 policy.ReferralPolicy,
                 referralEntryForCalculation,
-                DateOnly.FromDateTime(TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, locationTimeZone))
+                ToDateOnlyInLocationTimeZone(DateTime.UtcNow, locationTimeZone)
             );
+
+            return referralStatus;
         }
     }
 }

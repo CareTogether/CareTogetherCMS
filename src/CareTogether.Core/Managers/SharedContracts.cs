@@ -27,8 +27,8 @@ namespace CareTogether.Managers
 
     public sealed record Referral(Guid Id,
         DateTime OpenedAtUtc, DateTime? ClosedAtUtc, ReferralCloseReason? CloseReason,
-        ImmutableList<CompletedRequirementInfo> CompletedRequirements,
-        ImmutableList<ExemptedRequirementInfo> ExemptedRequirements,
+        ImmutableList<Resources.CompletedRequirementInfo> CompletedRequirements,
+        ImmutableList<Resources.ExemptedRequirementInfo> ExemptedRequirements,
         ImmutableList<string> MissingRequirements,
         ImmutableList<CompletedCustomFieldInfo> CompletedCustomFields,
         ImmutableList<string> MissingCustomFields,
@@ -38,11 +38,11 @@ namespace CareTogether.Managers
     public sealed record Arrangement(Guid Id, string ArrangementType, Guid PartneringFamilyPersonId,
         ArrangementPhase Phase, DateTime RequestedAtUtc, DateTime? StartedAtUtc, DateTime? EndedAtUtc,
         DateTime? CancelledAtUtc, DateTime? PlannedStartUtc, DateTime? PlannedEndUtc,
-        ImmutableList<CompletedRequirementInfo> CompletedRequirements,
-        ImmutableList<ExemptedRequirementInfo> ExemptedRequirements,
+        ImmutableList<Resources.CompletedRequirementInfo> CompletedRequirements,
+        ImmutableList<Resources.ExemptedRequirementInfo> ExemptedRequirements,
         ImmutableList<MissingArrangementRequirement> MissingRequirements,
-        ImmutableList<IndividualVolunteerAssignment> IndividualVolunteerAssignments,
-        ImmutableList<FamilyVolunteerAssignment> FamilyVolunteerAssignments,
+        ImmutableList<Resources.Referrals.IndividualVolunteerAssignment> IndividualVolunteerAssignments,
+        ImmutableList<Resources.Referrals.FamilyVolunteerAssignment> FamilyVolunteerAssignments,
         ImmutableSortedSet<ChildLocationHistoryEntry> ChildLocationHistory,
         ImmutableSortedSet<ChildLocationHistoryEntry> ChildLocationPlan,
         string? Comments, string? Reason);
@@ -52,8 +52,8 @@ namespace CareTogether.Managers
 
     public sealed record VolunteerFamilyInfo(
         ImmutableDictionary<string, FamilyRoleApprovalStatus> FamilyRoleApprovals,
-        ImmutableList<CompletedRequirementInfo> CompletedRequirements,
-        ImmutableList<ExemptedRequirementInfo> ExemptedRequirements,
+        ImmutableList<Resources.CompletedRequirementInfo> CompletedRequirements,
+        ImmutableList<Resources.ExemptedRequirementInfo> ExemptedRequirements,
         ImmutableList<string> AvailableApplications,
         ImmutableList<string> MissingRequirements,
         ImmutableList<RoleRemoval> RoleRemovals,
@@ -62,8 +62,8 @@ namespace CareTogether.Managers
 
     public sealed record VolunteerInfo(
         ImmutableDictionary<string, IndividualRoleApprovalStatus> ApprovalStatusByRole,
-        ImmutableList<CompletedRequirementInfo> CompletedRequirements,
-        ImmutableList<ExemptedRequirementInfo> ExemptedRequirements,
+        ImmutableList<Resources.CompletedRequirementInfo> CompletedRequirements,
+        ImmutableList<Resources.ExemptedRequirementInfo> ExemptedRequirements,
         ImmutableList<string> AvailableApplications,
         ImmutableList<(string ActionName, string? Version)> MissingRequirements,
         ImmutableList<RoleRemoval> RoleRemovals);

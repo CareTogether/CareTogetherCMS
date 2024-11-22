@@ -48,7 +48,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
                             )
                         )
                 ),
-                new ArrangementEntryForCalculation(
+                new ArrangementEntry(
                     "",
                     StartedAt: null,
                     EndedAt: null,
@@ -56,8 +56,8 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
                     Guid.Empty,
                     Helpers.Completed(),
                     Helpers.Exempted(),
-                    ImmutableList<IndividualVolunteerAssignmentForCalculation>.Empty,
-                    ImmutableList<FamilyVolunteerAssignmentForCalculation>.Empty,
+                    ImmutableList<IndividualVolunteerAssignment>.Empty,
+                    ImmutableList<FamilyVolunteerAssignment>.Empty,
                     Helpers.ChildLocationHistory()
                 ),
                 today: H.Date(1, 31)
@@ -94,7 +94,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
                             )
                         )
                 ),
-                new ArrangementEntryForCalculation(
+                new ArrangementEntry(
                     "",
                     StartedAt: H.Date(1, 1),
                     EndedAt: null,
@@ -102,8 +102,8 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
                     Guid.Empty,
                     Helpers.Completed(),
                     Helpers.Exempted(),
-                    ImmutableList<IndividualVolunteerAssignmentForCalculation>.Empty,
-                    ImmutableList<FamilyVolunteerAssignmentForCalculation>.Empty,
+                    ImmutableList<IndividualVolunteerAssignment>.Empty,
+                    ImmutableList<FamilyVolunteerAssignment>.Empty,
                     Helpers.ChildLocationHistory()
                 ),
                 today: H.Date(1, 31)
@@ -241,7 +241,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
                             )
                         )
                 ),
-                new ArrangementEntryForCalculation(
+                new ArrangementEntry(
                     "",
                     StartedAt: H.Date(1, 1),
                     EndedAt: null,
@@ -249,8 +249,8 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
                     Guid.Empty,
                     Helpers.Completed(("A", 3), ("B", 7)),
                     Helpers.Exempted(),
-                    ImmutableList<IndividualVolunteerAssignmentForCalculation>.Empty,
-                    ImmutableList<FamilyVolunteerAssignmentForCalculation>.Empty,
+                    ImmutableList<IndividualVolunteerAssignment>.Empty,
+                    ImmutableList<FamilyVolunteerAssignment>.Empty,
                     Helpers.ChildLocationHistory()
                 ),
                 today: H.Date(1, 31)
@@ -370,7 +370,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
                             )
                         )
                 ),
-                new ArrangementEntryForCalculation(
+                new ArrangementEntry(
                     "",
                     StartedAt: H.Date(1, 1),
                     EndedAt: null,
@@ -378,8 +378,8 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
                     Guid.Empty,
                     Helpers.Completed(("A", 3), ("B", 7)),
                     Helpers.Exempted(),
-                    ImmutableList<IndividualVolunteerAssignmentForCalculation>.Empty,
-                    ImmutableList<FamilyVolunteerAssignmentForCalculation>.Empty,
+                    ImmutableList<IndividualVolunteerAssignment>.Empty,
+                    ImmutableList<FamilyVolunteerAssignment>.Empty,
                     Helpers.ChildLocationHistory()
                 ),
                 today: H.Date(1, 8)
