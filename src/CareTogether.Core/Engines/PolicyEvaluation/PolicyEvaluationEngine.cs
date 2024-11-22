@@ -8,6 +8,7 @@ using CareTogether.Resources.Approvals;
 using CareTogether.Resources.Directory;
 using CareTogether.Resources.Policies;
 using CareTogether.Resources.Referrals;
+using CareTogether.Utilities.Dates;
 
 namespace CareTogether.Engines.PolicyEvaluation
 {
@@ -46,36 +47,6 @@ namespace CareTogether.Engines.PolicyEvaluation
             );
         }
 
-        internal DateTime ToLocationTimeZone(DateTime dateTime, TimeZoneInfo locationTimeZone)
-        {
-            return TimeZoneInfo.ConvertTimeFromUtc(dateTime, locationTimeZone);
-        }
-
-        internal DateTime? ToLocationTimeZone(DateTime? dateTime, TimeZoneInfo locationTimeZone)
-        {
-            if (!dateTime.HasValue)
-            {
-                return null;
-            }
-
-            return TimeZoneInfo.ConvertTimeFromUtc(dateTime.Value, locationTimeZone);
-        }
-
-        internal DateOnly ToDateOnlyInLocationTimeZone(DateTime dateTime, TimeZoneInfo locationTimeZone)
-        {
-            return DateOnly.FromDateTime(ToLocationTimeZone(dateTime, locationTimeZone));
-        }
-
-        internal DateOnly? ToDateOnlyInLocationTimeZone(DateTime? dateTime, TimeZoneInfo locationTimeZone)
-        {
-            if (!dateTime.HasValue)
-            {
-                return null;
-            }
-
-            return DateOnly.FromDateTime(ToLocationTimeZone(dateTime.Value, locationTimeZone));
-        }
-
         internal CompletedRequirementInfo ToCompletedRequirementsForCalculation(
             Resources.CompletedRequirementInfo entry,
             TimeZoneInfo locationTimeZone
@@ -83,8 +54,8 @@ namespace CareTogether.Engines.PolicyEvaluation
         {
             return new(
                 entry.RequirementName,
-                ToDateOnlyInLocationTimeZone(entry.CompletedAtUtc, locationTimeZone),
-                ToDateOnlyInLocationTimeZone(entry.ExpiresAtUtc, locationTimeZone)
+                Dates.ToDateOnlyInLocationTimeZone(entry.CompletedAtUtc, locationTimeZone),
+                Dates.ToDateOnlyInLocationTimeZone(entry.ExpiresAtUtc, locationTimeZone)
             );
         }
 
@@ -95,8 +66,8 @@ namespace CareTogether.Engines.PolicyEvaluation
         {
             return new(
                 entry.RequirementName,
-                ToDateOnlyInLocationTimeZone(entry.DueDate, locationTimeZone),
-                ToDateOnlyInLocationTimeZone(entry.ExemptionExpiresAtUtc, locationTimeZone)
+                Dates.ToDateOnlyInLocationTimeZone(entry.DueDate, locationTimeZone),
+                Dates.ToDateOnlyInLocationTimeZone(entry.ExemptionExpiresAtUtc, locationTimeZone)
             );
         }
 
@@ -104,7 +75,7 @@ namespace CareTogether.Engines.PolicyEvaluation
         {
             return new(
                 entry.ChildLocationFamilyId,
-                DateOnly.FromDateTime(ToLocationTimeZone(entry.TimestampUtc, locationTimeZone)),
+                DateOnly.FromDateTime(Dates.ToLocationTimeZone(entry.TimestampUtc, locationTimeZone)),
                 Paused: entry.Plan == ChildLocationPlan.WithParent
             );
         }
@@ -185,9 +156,9 @@ namespace CareTogether.Engines.PolicyEvaluation
 
             return new(
                 entry.ArrangementType,
-                ToDateOnlyInLocationTimeZone(entry.StartedAtUtc, locationTimeZone),
-                ToDateOnlyInLocationTimeZone(entry.EndedAtUtc, locationTimeZone),
-                ToDateOnlyInLocationTimeZone(entry.CancelledAtUtc, locationTimeZone),
+                Dates.ToDateOnlyInLocationTimeZone(entry.StartedAtUtc, locationTimeZone),
+                Dates.ToDateOnlyInLocationTimeZone(entry.EndedAtUtc, locationTimeZone),
+                Dates.ToDateOnlyInLocationTimeZone(entry.CancelledAtUtc, locationTimeZone),
                 entry.PartneringFamilyPersonId,
                 completedRequirements,
                 exemptedRequirements,
@@ -244,7 +215,7 @@ namespace CareTogether.Engines.PolicyEvaluation
             var referralStatus = ReferralCalculations.CalculateReferralStatus(
                 policy.ReferralPolicy,
                 referralEntryForCalculation,
-                ToDateOnlyInLocationTimeZone(DateTime.UtcNow, locationTimeZone)
+                Dates.ToDateOnlyInLocationTimeZone(DateTime.UtcNow, locationTimeZone)
             );
 
             return referralStatus;
