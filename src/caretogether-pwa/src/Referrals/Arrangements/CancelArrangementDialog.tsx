@@ -1,5 +1,5 @@
 import { Grid } from '@mui/material';
-import { DateTimePicker } from '@mui/x-date-pickers';
+import { DatePicker } from '@mui/x-date-pickers';
 import { useState } from 'react';
 import { useParams } from 'react-router';
 import { Arrangement, Person } from '../../GeneratedClient';
@@ -52,11 +52,11 @@ export function CancelArrangementDialog({
     >
       <Grid container spacing={0}>
         <Grid item xs={12}>
-          <DateTimePicker
+          <DatePicker
             label="When was this arrangement cancelled?"
             value={cancelledAtLocal}
             disableFuture
-            format="M/d/yyyy h:mm a"
+            format="M/d/yyyy"
             onChange={(date: Date | null) =>
               date && setFields({ ...fields, cancelledAtLocal: date })
             }
