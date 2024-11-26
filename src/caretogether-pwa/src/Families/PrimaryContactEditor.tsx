@@ -14,9 +14,13 @@ import { useFamilyPermissions } from '../Model/SessionModel';
 
 type PrimaryContactEditorProps = {
   family: CombinedFamilyInfo;
+  isEditable: boolean;
 };
 
-export function PrimaryContactEditor({ family }: PrimaryContactEditorProps) {
+export function PrimaryContactEditor({
+  family,
+  isEditable,
+}: PrimaryContactEditorProps) {
   const directoryModel = useDirectoryModel();
 
   const primaryFamilyContactPersonId =
@@ -79,7 +83,9 @@ export function PrimaryContactEditor({ family }: PrimaryContactEditorProps) {
         </>
       )}
       Primary Contact: <PersonName person={primaryContactPerson} />
-      {permissions(Permission.EditFamilyInfo) && editor.editButton}
+      {isEditable &&
+        permissions(Permission.EditFamilyInfo) &&
+        editor.editButton}
     </Box>
   );
 }
