@@ -1,0 +1,138 @@
+StaticAspect "Iteration 3" { 
+  AppClient SupportClient AnalyticsClient IntegrationClient
+  ProcessManager CommunicationManager
+  EvaluationEngine
+  AccountsAccess PoliciesAccess WorkflowsAccess RecordsAccess 
+  AccountsResource PoliciesResource WorkflowsResource RecordsResource FormsResource
+  EventLogUtility
+  FileStoreUtility
+  ObjectStoreUtility
+  TelephonyUtility
+  EmailUtility
+  PushNotificationUtility
+  PubSubUtility
+  SecurityUtility
+  LoggingUtility
+}
+
+UseCase "Track Child Location" {
+  AppClient -> ProcessManager
+  ProcessManager -> EvaluationEngine
+  EvaluationEngine -> AccountsAccess -> AccountsResource
+  EvaluationEngine -> RecordsAccess -> RecordsResource
+  EvaluationEngine -> PoliciesAccess -> PoliciesResource
+  ProcessManager -> RecordsAccess -> RecordsResource
+}
+
+UseCase "Create New Arrangement" {
+  AppClient -> ProcessManager
+  ProcessManager -> EvaluationEngine
+  EvaluationEngine -> AccountsAccess -> AccountsResource
+  EvaluationEngine -> RecordsAccess -> RecordsResource
+  EvaluationEngine -> PoliciesAccess -> PoliciesResource
+  ProcessManager -> RecordsAccess -> RecordsResource
+}
+
+UseCase "Create Family" {
+  AppClient -> ProcessManager
+  ProcessManager -> EvaluationEngine
+  EvaluationEngine -> AccountsAccess -> AccountsResource
+  EvaluationEngine -> RecordsAccess -> RecordsResource
+  EvaluationEngine -> PoliciesAccess -> PoliciesResource
+  ProcessManager -> RecordsAccess -> RecordsResource
+}
+
+UseCase "Delete Family" {}
+UseCase "Add Adult" {}
+UseCase "Add Child" {}
+UseCase "Delete Person" {}
+UseCase "Move Person to Another Family" {}
+UseCase "Read Family Documents" {}
+UseCase "Upload Family Documents" {}
+UseCase "Archive Family Documents" {}
+UseCase "View Family Document Metadata" {}
+UseCase "Invite Person User" {}
+UseCase "Edit Person User Protected Roles" {}
+UseCase "Edit Person User Standard Roles" {}
+UseCase "View Person User Login Info" {}
+UseCase "Access Volunteers Screen" {}
+UseCase "Access Partnering Families Screen" {}
+UseCase "Access Settings Screen" {}
+
+UseCase "Edit Roles" {
+  AppClient -> ProcessManager
+  ProcessManager -> EvaluationEngine
+  EvaluationEngine -> AccountsAccess -> AccountsResource
+  EvaluationEngine -> RecordsAccess -> RecordsResource
+  EvaluationEngine -> PoliciesAccess -> PoliciesResource
+  ProcessManager -> PoliciesAccess -> PoliciesResource
+}
+
+UseCase "Access Communities Screen" {}
+UseCase "View Family Custom Fields" {}
+UseCase "View Family History" {}
+UseCase "View Person Concerns" {}
+UseCase "View Person Notes" {}
+UseCase "View Person Contact Info" {}
+UseCase "Edit Family Info" {}
+UseCase "Edit Person Concerns" {}
+UseCase "Edit Person Notes" {}
+UseCase "Edit Person Contact Info" {}
+UseCase "Add / Edit Draft Notes" {}
+UseCase "Discard Draft Notes" {}
+UseCase "Approve Notes" {}
+UseCase "View All Notes" {}
+UseCase "View Approval Status" {}
+UseCase "Edit Approval Requirement Completion" {}
+UseCase "Edit Approval Requirement Exemption" {}
+UseCase "Edit Volunteer Role Participation" {}
+UseCase "View Approval Progress" {}
+UseCase "View Approval History" {}
+UseCase "Activate Volunteer Family" {}
+
+UseCase "Create Referral" {
+  AppClient -> ProcessManager
+  ProcessManager -> EvaluationEngine
+  EvaluationEngine -> AccountsAccess -> AccountsResource
+  EvaluationEngine -> RecordsAccess -> RecordsResource
+  EvaluationEngine -> PoliciesAccess -> PoliciesResource
+  ProcessManager -> WorkflowsAccess -> WorkflowsResource
+  ProcessManager -> RecordsAccess -> RecordsResource
+  ProcessManager -:q> CommunicationManager
+}
+
+UseCase "Edit Referral" {}
+UseCase "Close Referral" {}
+UseCase "View Referral Custom Fields" {}
+UseCase "View Referral Comments" {}
+UseCase "View Referral Progress" {}
+UseCase "Edit Referral Requirement Completion" {}
+UseCase "Edit Referral Requirement Exemption" {}
+UseCase "View Referral History" {}
+UseCase "Create Arrangement" {}
+UseCase "Edit Arrangement" {}
+UseCase "View Assignments" {}
+UseCase "Edit Assignments" {}
+UseCase "View Arrangement Progress" {}
+UseCase "Create Community" {}
+UseCase "Edit Community" {}
+UseCase "Archive Community" {}
+UseCase "Edit Community Member Families" {}
+UseCase "Edit Community Role Assignments" {}
+UseCase "View Community Document Metadata" {}
+UseCase "Read Community Documents (Future)" {}
+UseCase "Upload Community Documents" {}
+UseCase "Archive Community Documents" {}
+UseCase "Open my family screen" {}
+UseCase "View all families" {}
+UseCase "View soft deleted document" {}
+UseCase "Restore a soft deleted document" {}
+UseCase "Set document visibility" {}
+UseCase "Set note visibility" {}
+UseCase "Edit Arrangement Requirement Completion" {}
+UseCase "Edit Arrangement Requirement Exemption" {}
+UseCase "Delete Arrangement" {}
+UseCase "View Child Location History" {}
+UseCase "Send Bulk SMS" {}
+UseCase "Work-in-progress: Cases & Referrals split" {}
+UseCase "Core Use C" {}
