@@ -1,6 +1,6 @@
 StaticAspect "Iteration 3" { 
   AppClient SupportClient AnalyticsClient IntegrationClient
-  ProcessManager CommunicationManager
+  ProcessManager CommunicationManager MembershipManager
   EvaluationEngine
   AccountsAccess PoliciesAccess WorkflowsAccess RecordsAccess 
   AccountsResource PoliciesResource WorkflowsResource RecordsResource FormsResource
@@ -13,6 +13,7 @@ StaticAspect "Iteration 3" {
   PubSubUtility
   SecurityUtility
   LoggingUtility
+  IdentityProviderUtility
 }
 
 UseCase "Track Child Location" {
@@ -124,44 +125,49 @@ UseCase "View Family Document Metadata" {
 
 /* TODO: check */
 UseCase "Invite Person User" {
-  AppClient -> ProcessManager
-  ProcessManager -> EvaluationEngine
+  AppClient -> MembershipManager
+  MembershipManager -> EvaluationEngine
   EvaluationEngine -> AccountsAccess -> AccountsResource
   EvaluationEngine -> RecordsAccess -> RecordsResource
   EvaluationEngine -> PoliciesAccess -> PoliciesResource
-  ProcessManager -> AccountsAccess -> AccountsResource
+  MembershipManager -> AccountsAccess -> AccountsResource
 }
 
 /* TODO: account or records? */
 UseCase "Edit Person User Protected Roles" {
-  AppClient -> ProcessManager
-  ProcessManager -> EvaluationEngine
+  AppClient -> MembershipManager
+  MembershipManager -> EvaluationEngine
   EvaluationEngine -> AccountsAccess -> AccountsResource
   EvaluationEngine -> RecordsAccess -> RecordsResource
   EvaluationEngine -> PoliciesAccess -> PoliciesResource
-  ProcessManager -> RecordsAccess -> RecordsResource
+  MembershipManager -> RecordsAccess -> RecordsResource
+  MembershipManager -> AccountsAccess -> AccountsResource
 }
 
 /* TODO: check */
 UseCase "Edit Person User Standard Roles" {
-  AppClient -> ProcessManager
-  ProcessManager -> EvaluationEngine
+  AppClient -> MembershipManager
+  MembershipManager -> EvaluationEngine
   EvaluationEngine -> AccountsAccess -> AccountsResource
   EvaluationEngine -> RecordsAccess -> RecordsResource
   EvaluationEngine -> PoliciesAccess -> PoliciesResource
-  ProcessManager -> RecordsAccess -> RecordsResource
+  MembershipManager -> RecordsAccess -> RecordsResource
+  MembershipManager -> AccountsAccess -> AccountsResource
 }
 
 /* TODO: check */
 UseCase "View Person User Login Info" {
-  AppClient -> ProcessManager
-  ProcessManager -> EvaluationEngine
+  AppClient -> MembershipManager
+  MembershipManager -> AccountsAccess -> AccountsResource
+  MembershipManager -> RecordsAccess -> RecordsResource
+  MembershipManager -> EvaluationEngine
   EvaluationEngine -> AccountsAccess -> AccountsResource
   EvaluationEngine -> RecordsAccess -> RecordsResource
   EvaluationEngine -> PoliciesAccess -> PoliciesResource
-  ProcessManager -> RecordsAccess -> RecordsResource
+  MembershipManager -> IdentityProviderUtility
 }
 
+/* TODO: check */
 UseCase "Access Volunteers Screen" {
   AppClient -> ProcessManager
   ProcessManager -> EvaluationEngine
@@ -171,6 +177,7 @@ UseCase "Access Volunteers Screen" {
   ProcessManager -> RecordsAccess -> RecordsResource
 }
 
+/* TODO: check */
 UseCase "Access Partnering Families Screen" {
   AppClient -> ProcessManager
   ProcessManager -> EvaluationEngine
@@ -180,6 +187,7 @@ UseCase "Access Partnering Families Screen" {
   ProcessManager -> RecordsAccess -> RecordsResource
 }
 
+/* TODO: check */
 UseCase "Access Settings Screen" {
   AppClient -> ProcessManager
   ProcessManager -> EvaluationEngine
@@ -189,24 +197,38 @@ UseCase "Access Settings Screen" {
   ProcessManager -> RecordsAccess -> RecordsResource
 }
 
+/* TODO: check (this isn't implemented currently?) */
 UseCase "Edit Roles" {
-  AppClient -> ProcessManager
-  ProcessManager -> EvaluationEngine
+  AppClient -> MembershipManager
+  MembershipManager -> AccountsAccess -> AccountsResource
+  MembershipManager -> RecordsAccess -> RecordsResource
+  MembershipManager -> EvaluationEngine
   EvaluationEngine -> AccountsAccess -> AccountsResource
   EvaluationEngine -> RecordsAccess -> RecordsResource
   EvaluationEngine -> PoliciesAccess -> PoliciesResource
-  ProcessManager -> PoliciesAccess -> PoliciesResource
+  MembershipManager -> IdentityProviderUtility
 }
 
+/* TODO: check */
 UseCase "Access Communities Screen" {
   AppClient -> ProcessManager
-  ProcessManager -> EvaluationEngine
-  EvaluationEngine -> AccountsAccess -> AccountsResource
-  EvaluationEngine -> RecordsAccess -> RecordsResource
-  EvaluationEngine -> PoliciesAccess -> PoliciesResource
+  ProcessManager -> RecordsAccess -> RecordsResource /* gets families */
+  ProcessManager -> EvaluationEngine /* evaluate which families are visible */
+  /* render combined family info */
+  ProcessManager -> PoliciesAccess -> PoliciesResource
   ProcessManager -> RecordsAccess -> RecordsResource
+  ProcessManager -> RecordsAccess -> RecordsResource /* render partnering family info */
+  ProcessManager -> RecordsAccess -> RecordsResource /* render volunteer family info */
+  ProcessManager -> EvaluationEngine -> PoliciesAccess -> PoliciesResource /* calculate approval status */
+  ProcessManager -> RecordsAccess -> RecordsResource /* get notes */
+  ProcessManager -> EvaluationEngine /* disclose family */
+  /* end */
+  ProcessManager -> RecordsAccess -> RecordsResource /* gets communities */
+  ProcessManager -> EvaluationEngine /* evaluate which communities are visible */
+  ProcessManager -> EvaluationEngine /* disclose communities */
 }
 
+/* TODO: check */
 UseCase "View Family Custom Fields" {
   AppClient -> ProcessManager
   ProcessManager -> EvaluationEngine
@@ -216,6 +238,7 @@ UseCase "View Family Custom Fields" {
   ProcessManager -> RecordsAccess -> RecordsResource
 }
 
+/* TODO: check */
 UseCase "View Family History" {
   AppClient -> ProcessManager
   ProcessManager -> EvaluationEngine
@@ -225,6 +248,7 @@ UseCase "View Family History" {
   ProcessManager -> RecordsAccess -> RecordsResource
 }
 
+/* TODO: check */
 UseCase "View Person Concerns" {
   AppClient -> ProcessManager
   ProcessManager -> EvaluationEngine
@@ -234,6 +258,7 @@ UseCase "View Person Concerns" {
   ProcessManager -> RecordsAccess -> RecordsResource
 }
 
+/* TODO: check */
 UseCase "View Person Notes" {
   AppClient -> ProcessManager
   ProcessManager -> EvaluationEngine
@@ -243,6 +268,7 @@ UseCase "View Person Notes" {
   ProcessManager -> RecordsAccess -> RecordsResource
 }
 
+/* TODO: check */
 UseCase "View Person Contact Info" {
   AppClient -> ProcessManager
   ProcessManager -> EvaluationEngine
@@ -252,6 +278,7 @@ UseCase "View Person Contact Info" {
   ProcessManager -> RecordsAccess -> RecordsResource
 }
 
+/* TODO: check */
 UseCase "Edit Family Info" {
   AppClient -> ProcessManager
   ProcessManager -> EvaluationEngine
@@ -261,6 +288,7 @@ UseCase "Edit Family Info" {
   ProcessManager -> RecordsAccess -> RecordsResource
 }
 
+/* TODO: check */
 UseCase "Edit Person Concerns" {
   AppClient -> ProcessManager
   ProcessManager -> EvaluationEngine
@@ -270,6 +298,7 @@ UseCase "Edit Person Concerns" {
   ProcessManager -> RecordsAccess -> RecordsResource
 }
 
+/* TODO: check */
 UseCase "Edit Person Notes" {
   AppClient -> ProcessManager
   ProcessManager -> EvaluationEngine
@@ -279,6 +308,7 @@ UseCase "Edit Person Notes" {
   ProcessManager -> RecordsAccess -> RecordsResource
 }
 
+/* TODO: check */
 UseCase "Edit Person Contact Info" {
   AppClient -> ProcessManager
   ProcessManager -> EvaluationEngine
@@ -288,6 +318,7 @@ UseCase "Edit Person Contact Info" {
   ProcessManager -> RecordsAccess -> RecordsResource
 }
 
+/* TODO: check */
 UseCase "Add / Edit Draft Notes" {
   AppClient -> ProcessManager
   ProcessManager -> EvaluationEngine
@@ -297,6 +328,7 @@ UseCase "Add / Edit Draft Notes" {
   ProcessManager -> RecordsAccess -> RecordsResource
 }
 
+/* TODO: check */
 UseCase "Discard Draft Notes" {
   AppClient -> ProcessManager
   ProcessManager -> EvaluationEngine
@@ -306,6 +338,7 @@ UseCase "Discard Draft Notes" {
   ProcessManager -> RecordsAccess -> RecordsResource
 }
 
+/* TODO: check */
 UseCase "Approve Notes" {
   AppClient -> ProcessManager
   ProcessManager -> EvaluationEngine
@@ -315,6 +348,7 @@ UseCase "Approve Notes" {
   ProcessManager -> RecordsAccess -> RecordsResource
 }
 
+/* TODO: check */
 UseCase "View All Notes" {
   AppClient -> ProcessManager
   ProcessManager -> EvaluationEngine
@@ -324,7 +358,9 @@ UseCase "View All Notes" {
   ProcessManager -> RecordsAccess -> RecordsResource
 }
 
-UseCase "View Approval Status" {  AppClient -> ProcessManager
+/* TODO: check */
+UseCase "View Approval Status" {  
+  AppClient -> ProcessManager
   ProcessManager -> EvaluationEngine
   EvaluationEngine -> AccountsAccess -> AccountsResource
   EvaluationEngine -> RecordsAccess -> RecordsResource
@@ -332,6 +368,7 @@ UseCase "View Approval Status" {  AppClient -> ProcessManager
   ProcessManager -> RecordsAccess -> RecordsResource
 }
 
+/* TODO: check */
 UseCase "Edit Approval Requirement Completion" {
   AppClient -> ProcessManager
   ProcessManager -> EvaluationEngine
@@ -341,6 +378,7 @@ UseCase "Edit Approval Requirement Completion" {
   ProcessManager -> RecordsAccess -> RecordsResource
 }
 
+/* TODO: check */
 UseCase "Edit Approval Requirement Exemption" {
   AppClient -> ProcessManager
   ProcessManager -> EvaluationEngine
@@ -350,6 +388,7 @@ UseCase "Edit Approval Requirement Exemption" {
   ProcessManager -> RecordsAccess -> RecordsResource
 }
 
+/* TODO: check */
 UseCase "Edit Volunteer Role Participation" {
   AppClient -> ProcessManager
   ProcessManager -> EvaluationEngine
@@ -359,6 +398,7 @@ UseCase "Edit Volunteer Role Participation" {
   ProcessManager -> RecordsAccess -> RecordsResource
 }
 
+/* TODO: check */
 UseCase "View Approval Progress" {
   AppClient -> ProcessManager
   ProcessManager -> EvaluationEngine
@@ -368,6 +408,7 @@ UseCase "View Approval Progress" {
   ProcessManager -> RecordsAccess -> RecordsResource
 }
 
+/* TODO: check */
 UseCase "View Approval History" {
   AppClient -> ProcessManager
   ProcessManager -> EvaluationEngine
@@ -377,6 +418,7 @@ UseCase "View Approval History" {
   ProcessManager -> RecordsAccess -> RecordsResource
 }
 
+/* TODO: check */
 UseCase "Activate Volunteer Family" {
   AppClient -> ProcessManager
   ProcessManager -> EvaluationEngine
@@ -386,6 +428,7 @@ UseCase "Activate Volunteer Family" {
   ProcessManager -> RecordsAccess -> RecordsResource
 }
 
+/* TODO: check */
 UseCase "Create Referral" {
   AppClient -> ProcessManager
   ProcessManager -> EvaluationEngine
@@ -397,6 +440,7 @@ UseCase "Create Referral" {
   ProcessManager -:q> CommunicationManager
 }
 
+/* TODO: check */
 UseCase "Edit Referral" {
   AppClient -> ProcessManager
   ProcessManager -> EvaluationEngine
@@ -406,6 +450,7 @@ UseCase "Edit Referral" {
   ProcessManager -> RecordsAccess -> RecordsResource
 }
 
+/* TODO: check */
 UseCase "Close Referral" {
   AppClient -> ProcessManager
   ProcessManager -> EvaluationEngine
@@ -415,6 +460,7 @@ UseCase "Close Referral" {
   ProcessManager -> RecordsAccess -> RecordsResource
 }
 
+/* TODO: check */
 UseCase "View Referral Custom Fields" {
   AppClient -> ProcessManager
   ProcessManager -> EvaluationEngine
@@ -424,6 +470,7 @@ UseCase "View Referral Custom Fields" {
   ProcessManager -> RecordsAccess -> RecordsResource
 }
 
+/* TODO: check */
 UseCase "View Referral Comments" {
   AppClient -> ProcessManager
   ProcessManager -> EvaluationEngine
@@ -433,6 +480,7 @@ UseCase "View Referral Comments" {
   ProcessManager -> RecordsAccess -> RecordsResource
 }
 
+/* TODO: check */
 UseCase "View Referral Progress" {
   AppClient -> ProcessManager
   ProcessManager -> EvaluationEngine
@@ -442,6 +490,7 @@ UseCase "View Referral Progress" {
   ProcessManager -> RecordsAccess -> RecordsResource
 }
 
+/* TODO: check */
 UseCase "Edit Referral Requirement Completion" {
   AppClient -> ProcessManager
   ProcessManager -> EvaluationEngine
@@ -451,6 +500,7 @@ UseCase "Edit Referral Requirement Completion" {
   ProcessManager -> RecordsAccess -> RecordsResource
 }
 
+/* TODO: check */
 UseCase "Edit Referral Requirement Exemption" {
   AppClient -> ProcessManager
   ProcessManager -> EvaluationEngine
@@ -460,6 +510,7 @@ UseCase "Edit Referral Requirement Exemption" {
   ProcessManager -> RecordsAccess -> RecordsResource
 }
 
+/* TODO: check */
 UseCase "View Referral History" {
   AppClient -> ProcessManager
   ProcessManager -> EvaluationEngine
@@ -469,6 +520,7 @@ UseCase "View Referral History" {
   ProcessManager -> RecordsAccess -> RecordsResource
 }
 
+/* TODO: check */
 UseCase "Create Arrangement" {
   AppClient -> ProcessManager
   ProcessManager -> EvaluationEngine
@@ -478,6 +530,7 @@ UseCase "Create Arrangement" {
   ProcessManager -> RecordsAccess -> RecordsResource
 }
 
+/* TODO: check */
 UseCase "Edit Arrangement" {
   AppClient -> ProcessManager
   ProcessManager -> EvaluationEngine
@@ -487,6 +540,7 @@ UseCase "Edit Arrangement" {
   ProcessManager -> RecordsAccess -> RecordsResource
 }
 
+/* TODO: check */
 UseCase "View Assignments" {
   AppClient -> ProcessManager
   ProcessManager -> EvaluationEngine
@@ -496,6 +550,7 @@ UseCase "View Assignments" {
   ProcessManager -> RecordsAccess -> RecordsResource
 }
 
+/* TODO: check */
 UseCase "Edit Assignments" {
   AppClient -> ProcessManager
   ProcessManager -> EvaluationEngine
@@ -505,6 +560,7 @@ UseCase "Edit Assignments" {
   ProcessManager -> RecordsAccess -> RecordsResource
 }
 
+/* TODO: check */
 UseCase "View Arrangement Progress" {
   AppClient -> ProcessManager
   ProcessManager -> EvaluationEngine
@@ -514,6 +570,7 @@ UseCase "View Arrangement Progress" {
   ProcessManager -> RecordsAccess -> RecordsResource
 }
 
+/* TODO: check */
 UseCase "Create Community" {
   AppClient -> ProcessManager
   ProcessManager -> EvaluationEngine
@@ -523,6 +580,7 @@ UseCase "Create Community" {
   ProcessManager -> RecordsAccess -> RecordsResource
 }
 
+/* TODO: check */
 UseCase "Edit Community" {
   AppClient -> ProcessManager
   ProcessManager -> EvaluationEngine
@@ -532,6 +590,7 @@ UseCase "Edit Community" {
   ProcessManager -> RecordsAccess -> RecordsResource
 }
 
+/* TODO: check */
 UseCase "Archive Community" {
   AppClient -> ProcessManager
   ProcessManager -> EvaluationEngine
@@ -541,6 +600,7 @@ UseCase "Archive Community" {
   ProcessManager -> RecordsAccess -> RecordsResource
 }
 
+/* TODO: check */
 UseCase "Edit Community Member Families" {
   AppClient -> ProcessManager
   ProcessManager -> EvaluationEngine
@@ -550,6 +610,7 @@ UseCase "Edit Community Member Families" {
   ProcessManager -> RecordsAccess -> RecordsResource
 }
 
+/* TODO: check */
 UseCase "Edit Community Role Assignments" {
   AppClient -> ProcessManager
   ProcessManager -> EvaluationEngine
@@ -559,6 +620,7 @@ UseCase "Edit Community Role Assignments" {
   ProcessManager -> RecordsAccess -> RecordsResource
 }
 
+/* TODO: check */
 UseCase "View Community Document Metadata" {
   AppClient -> ProcessManager
   ProcessManager -> EvaluationEngine
@@ -568,6 +630,7 @@ UseCase "View Community Document Metadata" {
   ProcessManager -> RecordsAccess -> RecordsResource
 }
 
+/* TODO: check */
 UseCase "Read Community Documents (Future)" {
   AppClient -> ProcessManager
   ProcessManager -> EvaluationEngine
@@ -577,6 +640,7 @@ UseCase "Read Community Documents (Future)" {
   ProcessManager -> RecordsAccess -> RecordsResource
 }
 
+/* TODO: check */
 UseCase "Upload Community Documents" {
   AppClient -> ProcessManager
   ProcessManager -> EvaluationEngine
@@ -586,6 +650,7 @@ UseCase "Upload Community Documents" {
   ProcessManager -> RecordsAccess -> RecordsResource
 }
 
+/* TODO: check */
 UseCase "Archive Community Documents" {
   AppClient -> ProcessManager
   ProcessManager -> EvaluationEngine
@@ -595,6 +660,7 @@ UseCase "Archive Community Documents" {
   ProcessManager -> RecordsAccess -> RecordsResource
 }
 
+/* TODO: check */
 UseCase "Open my family screen" {
   AppClient -> ProcessManager
   ProcessManager -> EvaluationEngine
@@ -604,6 +670,7 @@ UseCase "Open my family screen" {
   ProcessManager -> RecordsAccess -> RecordsResource
 }
 
+/* TODO: check */
 UseCase "View all families" {
   AppClient -> ProcessManager
   ProcessManager -> EvaluationEngine
@@ -613,6 +680,7 @@ UseCase "View all families" {
   ProcessManager -> RecordsAccess -> RecordsResource
 }
 
+/* TODO: check */
 UseCase "View soft deleted document" {
   AppClient -> ProcessManager
   ProcessManager -> EvaluationEngine
@@ -622,6 +690,7 @@ UseCase "View soft deleted document" {
   ProcessManager -> RecordsAccess -> RecordsResource
 }
 
+/* TODO: check */
 UseCase "Restore a soft deleted document" {
   AppClient -> ProcessManager
   ProcessManager -> EvaluationEngine
@@ -631,6 +700,7 @@ UseCase "Restore a soft deleted document" {
   ProcessManager -> RecordsAccess -> RecordsResource
 }
 
+/* TODO: check */
 UseCase "Set document visibility" {
   AppClient -> ProcessManager
   ProcessManager -> EvaluationEngine
@@ -640,6 +710,7 @@ UseCase "Set document visibility" {
   ProcessManager -> RecordsAccess -> RecordsResource
 }
 
+/* TODO: check */
 UseCase "Set note visibility" {
   AppClient -> ProcessManager
   ProcessManager -> EvaluationEngine
@@ -649,6 +720,7 @@ UseCase "Set note visibility" {
   ProcessManager -> RecordsAccess -> RecordsResource
 }
 
+/* TODO: check */
 UseCase "Edit Arrangement Requirement Completion" {
   AppClient -> ProcessManager
   ProcessManager -> EvaluationEngine
@@ -658,6 +730,7 @@ UseCase "Edit Arrangement Requirement Completion" {
   ProcessManager -> RecordsAccess -> RecordsResource
 }
 
+/* TODO: check */
 UseCase "Edit Arrangement Requirement Exemption" {
   AppClient -> ProcessManager
   ProcessManager -> EvaluationEngine
@@ -667,6 +740,7 @@ UseCase "Edit Arrangement Requirement Exemption" {
   ProcessManager -> RecordsAccess -> RecordsResource
 }
 
+/* TODO: check */
 UseCase "Delete Arrangement" {
   AppClient -> ProcessManager
   ProcessManager -> EvaluationEngine
@@ -676,6 +750,7 @@ UseCase "Delete Arrangement" {
   ProcessManager -> RecordsAccess -> RecordsResource
 }
 
+/* TODO: check */
 UseCase "View Child Location History" {
   AppClient -> ProcessManager
   ProcessManager -> EvaluationEngine
@@ -685,6 +760,7 @@ UseCase "View Child Location History" {
   ProcessManager -> RecordsAccess -> RecordsResource
 }
 
+/* TODO: check */
 UseCase "Send Bulk SMS" {
   AppClient -> CommunicationManager
   CommunicationManager -> EvaluationEngine
@@ -695,4 +771,90 @@ UseCase "Send Bulk SMS" {
   CommunicationManager -> TelephonyUtility
 }
 
-UseCase "Core Use C" {}
+/* Referrals/Cases split */
+
+UseCase "View Referrals" {
+  AppClient -> ProcessManager
+  ProcessManager -> EvaluationEngine
+  EvaluationEngine -> AccountsAccess -> AccountsResource
+  EvaluationEngine -> RecordsAccess -> RecordsResource
+  EvaluationEngine -> PoliciesAccess -> PoliciesResource
+  ProcessManager -> RecordsAccess -> RecordsResource
+}
+
+UseCase "Create Referral (after split)" {
+  AppClient -> ProcessManager
+  ProcessManager -> EvaluationEngine
+  EvaluationEngine -> AccountsAccess -> AccountsResource
+  /* does it need to interact with records and policies access? */
+  ProcessManager -> WorkflowsAccess -> WorkflowsResource
+  ProcessManager -> RecordsAccess -> RecordsResource
+  ProcessManager -:q> CommunicationManager
+}
+
+UseCase "Link Referral to Family" {
+  AppClient -> ProcessManager
+  ProcessManager -> EvaluationEngine
+  EvaluationEngine -> AccountsAccess -> AccountsResource
+  EvaluationEngine -> RecordsAccess -> RecordsResource
+  EvaluationEngine -> PoliciesAccess -> PoliciesResource
+  ProcessManager -> WorkflowsAccess -> WorkflowsResource
+  ProcessManager -> RecordsAccess -> RecordsResource
+  ProcessManager -:q> CommunicationManager
+}
+
+UseCase "Unlink Referral from Family " {
+  AppClient -> ProcessManager
+  ProcessManager -> EvaluationEngine
+  EvaluationEngine -> AccountsAccess -> AccountsResource
+  EvaluationEngine -> RecordsAccess -> RecordsResource
+  EvaluationEngine -> PoliciesAccess -> PoliciesResource
+  ProcessManager -> RecordsAccess -> RecordsResource
+}
+
+UseCase "Close Referral  (after split)" {
+  AppClient -> ProcessManager
+  ProcessManager -> EvaluationEngine
+  EvaluationEngine -> AccountsAccess -> AccountsResource
+  EvaluationEngine -> RecordsAccess -> RecordsResource
+  EvaluationEngine -> PoliciesAccess -> PoliciesResource
+  ProcessManager -> RecordsAccess -> RecordsResource
+}
+
+UseCase "Open Case" {
+  AppClient -> ProcessManager
+  ProcessManager -> EvaluationEngine
+  EvaluationEngine -> AccountsAccess -> AccountsResource
+  EvaluationEngine -> RecordsAccess -> RecordsResource
+  EvaluationEngine -> PoliciesAccess -> PoliciesResource
+  ProcessManager -> WorkflowsAccess -> WorkflowsResource
+  ProcessManager -> RecordsAccess -> RecordsResource
+  ProcessManager -:q> CommunicationManager
+}
+
+UseCase "Link Referral to Case" {
+  AppClient -> ProcessManager
+  ProcessManager -> EvaluationEngine
+  EvaluationEngine -> AccountsAccess -> AccountsResource
+  EvaluationEngine -> RecordsAccess -> RecordsResource
+  EvaluationEngine -> PoliciesAccess -> PoliciesResource
+  ProcessManager -> RecordsAccess -> RecordsResource
+}
+
+UseCase "Unlink Referral from Case" {
+  AppClient -> ProcessManager
+  ProcessManager -> EvaluationEngine
+  EvaluationEngine -> AccountsAccess -> AccountsResource
+  EvaluationEngine -> RecordsAccess -> RecordsResource
+  EvaluationEngine -> PoliciesAccess -> PoliciesResource
+  ProcessManager -> RecordsAccess -> RecordsResource
+}
+
+UseCase "Close Case" {
+  AppClient -> ProcessManager
+  ProcessManager -> EvaluationEngine
+  EvaluationEngine -> AccountsAccess -> AccountsResource
+  EvaluationEngine -> RecordsAccess -> RecordsResource
+  EvaluationEngine -> PoliciesAccess -> PoliciesResource
+  ProcessManager -> RecordsAccess -> RecordsResource
+}
