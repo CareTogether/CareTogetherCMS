@@ -1,6 +1,6 @@
-StaticAspect "Iteration 3" { 
+StaticAspect "CareTogether V2" { 
   AppClient SupportClient AnalyticsClient IntegrationClient
-  ProcessManager CommunicationManager MembershipManager
+  MembershipManager ProcessManager CommunicationManager
   EvaluationEngine
   AccountsAccess PoliciesAccess WorkflowsAccess RecordsAccess 
   AccountsResource PoliciesResource WorkflowsResource RecordsResource FormsResource
@@ -13,8 +13,193 @@ StaticAspect "Iteration 3" {
   PubSubUtility
   SecurityUtility
   LoggingUtility
-  IdentityProviderUtility
 }
+
+/*
+# MIGRATION NOTES
+- Authorize*CommandAsync methods move into the Resource Access layer (primarily into RecordsAccess)
+*/
+
+Activity "UC-Me-1: Sign In" {
+  |u|User
+  |s|System
+  |u|
+  start
+  :Browse to CareTogether;
+  if (User signed in) is (no) then
+    :Redirect to Sign-In Screen;
+    |s|
+    :Determine sign-in methods to offer;
+    |u|
+    :Select sign-in method;
+    :Enter credentials;
+    |s|
+    :Load user account;
+  else (yes)
+  end if
+  |u|
+  :Open Dashboard;
+  stop
+}
+
+/*
+UseCase "UC-Me-1: Sign In - BROKEN" {
+  AppClient - ClaimsPrincipal ISecurityUtility.Authenticate(HttpContext) > SecurityUtility
+  AppClient - AppUserAccount IMembershipManager.SignIn(ClaimsPrincipal) > MembershipManager
+  MembershipManager - Account IAccountsAccess.GetOrCreateUserAccount(ClaimsPrincipal) > AccountsAccess - Account IAccountsResource.GetOrCreateUserAccount(UserId) > AccountsResource
+}
+*/
+UseCase "UC-Me-1: Sign In - WORKING" {
+  AppClient - Response<AppUserAccount> IMembershipManager.SignIn(HttpContext) > MembershipManager
+  MembershipManager - ClaimsPrincipal ISecurityUtility.Authenticate(HttpContext) > SecurityUtility
+  MembershipManager - Response<Account> IAccountsAccess.GetOrCreateUserAccount(ClaimsPrincipal) > AccountsAccess
+  AccountsAccess - Response<Account> IAccountsResource.GetOrCreateUserAccount(GetOrCreateUserAccountRequest) > AccountsResource
+}
+
+/* HttpContext DTO is provided by ASP.NET Core */
+/* ClaimsPrincipal DTO is provided by System.Security.Claims */
+/* Response<T> DTO will need to be defined in our internal standard library */
+
+DTO AppUserAccount {
+  Guid UserId
+  /*TODO: Define this*/
+}
+
+DTO Account {
+  Guid UserId
+  AccountOrganizationAccess[] Organizations
+}
+
+DTO AccountOrganizationAccess {
+  Guid OrganizationId
+  AccountLocationAccess[] Locations
+}
+
+DTO AccountLocationAccess {
+  Guid LocationId
+  Guid PersonId
+  string[] Roles
+}
+
+DTO GetOrCreateUserAccountRequest {
+  Guid UserId
+}
+
+Activity "UC-Pr-1: Open Location" {
+  |c|Client
+  |s|System
+  |c|
+  start
+  :Sign In
+    ""<color:#777>[UC-Me-1]</color>"";
+  :Select Organization;
+  :Select Location;
+  |s|
+  :Authorize User Access in Context
+    ""<color:#777>[SUB-Pr-1]</color>"";
+  :Load Location Data; /*NOTE: This will also be the Process Manager*/
+  |c|
+  :View Location Dashboard;
+  stop
+}
+
+UseCase "UC-Pr-1: Open Location" {
+  AppClient -> ProcessManager
+  ProcessManager -> EvaluationEngine
+
+}
+
+UseCase "SUB-Pr-1: Authorize User Access in Context" {
+  ProcessManager - ContextPermissions IEvaluationEngine.AuthorizeUserAccess(AuthorizationContext) > EvaluationEngine
+  EvaluationEngine -> AccountsAccess -> AccountsResource
+  EvaluationEngine -> PoliciesAccess -> PoliciesResource
+  EvaluationEngine -> RecordsAccess -> RecordsResource
+}
+
+DTO AuthorizationContext {}
+
+/*BUG: DTO inheritance is not supported*/
+/*DTO GlobalAuthorizationContext : AuthorizationContext {}*/
+
+Activity "UC-Pr-2: View Communities List" {
+  |c|Client
+  |s|System
+  |c|
+  start
+  :Open Location
+    ""<color:#777>[UC-Pr-1]</color>"";
+  :Select Communities Screen;
+  |s|
+  :List Communities for User;
+  |c|
+  :Display Communities List;
+  stop
+}
+
+UseCase "UC-Pr-2: View Communities List" {
+  AppClient -> ProcessManager
+  ProcessManager - Response<ContextPermissions> IEvaluationEngine.AuthorizeUserAccess(GlobalAuthorizationContext) > EvaluationEngine
+  ProcessManager -> RecordsAccess
+  RecordsAccess -> RecordsResource
+}
+
+UseCase "Create Referral" {
+  AppClient -> ProcessManager
+  ProcessManager -> EvaluationEngine
+  EvaluationEngine -> AccountsAccess -> AccountsResource
+  EvaluationEngine -> PoliciesAccess -> PoliciesResource
+  EvaluationEngine -> RecordsAccess -> RecordsResource
+  ProcessManager -> RecordsAccess -> RecordsResource
+}
+
+/*
+Activity "Create Campaign From Recommendation" {
+  |c|Client
+  |s|System
+  |c|
+  start
+  :Select Recommendation (View Campaign Recommendation);
+  while (Contacts satisfactory?) is (no)
+    :Filter Eligible Contacts
+    ""<color:#777>[UC-4]</color>"";
+  endwhile (yes)
+  :Click Create Campaign;
+  |s|
+  floating note: via webhook in **V0.1**
+  :System: Create New Draft Campaign;
+  |c|
+  :View Draft Campaign (View Draft Campaign);
+  stop
+}*/
+
+UseCase "View Communities List" {
+@@@
+### Prerequisites
+- `ContextPermissions` for 'All Communities' context
+@@@
+  AppClient -> ProcessManager
+  ProcessManager -> RecordsAccess -> RecordsResource
+}
+
+/* TODO: check */
+UseCase "View Communities List V2" {
+  AppClient -> ProcessManager
+  ProcessManager -> RecordsAccess -> RecordsResource /* gets families */
+  ProcessManager -> EvaluationEngine /* evaluate which families are visible */
+  /* render combined family info */
+  ProcessManager -> PoliciesAccess -> PoliciesResource
+  ProcessManager -> RecordsAccess -> RecordsResource
+  ProcessManager -> RecordsAccess -> RecordsResource /* render partnering family info */
+  ProcessManager -> RecordsAccess -> RecordsResource /* render volunteer family info */
+  ProcessManager -> EvaluationEngine -> PoliciesAccess -> PoliciesResource /* calculate approval status */
+  ProcessManager -> RecordsAccess -> RecordsResource /* get notes */
+  ProcessManager -> EvaluationEngine /* disclose family */
+  /* end */
+  ProcessManager -> RecordsAccess -> RecordsResource /* gets communities */
+  ProcessManager -> EvaluationEngine /* evaluate which communities are visible */
+  ProcessManager -> EvaluationEngine /* disclose communities */
+}
+ 
 
 UseCase "Track Child Location" {
   AppClient -> ProcessManager
@@ -168,7 +353,7 @@ UseCase "View Person User Login Info" {
 }
 
 /* TODO: check */
-UseCase "Access Volunteers Screen" {
+UseCase "View Volunteers List" {
   AppClient -> ProcessManager
   ProcessManager -> EvaluationEngine
   EvaluationEngine -> AccountsAccess -> AccountsResource
@@ -210,7 +395,7 @@ UseCase "Edit Roles" {
 }
 
 /* TODO: check */
-UseCase "Access Communities Screen" {
+UseCase "View Communities List 0" {
   AppClient -> ProcessManager
   ProcessManager -> RecordsAccess -> RecordsResource /* gets families */
   ProcessManager -> EvaluationEngine /* evaluate which families are visible */
@@ -429,7 +614,7 @@ UseCase "Activate Volunteer Family" {
 }
 
 /* TODO: check */
-UseCase "Create Referral" {
+UseCase "Create Referral 0" {
   AppClient -> ProcessManager
   ProcessManager -> EvaluationEngine
   EvaluationEngine -> AccountsAccess -> AccountsResource
