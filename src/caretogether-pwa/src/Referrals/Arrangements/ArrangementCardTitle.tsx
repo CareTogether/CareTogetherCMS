@@ -13,7 +13,7 @@ import { EndArrangementDialog } from './EndArrangementDialog';
 import { StartArrangementDialog } from './StartArrangementDialog';
 import { useInlineEditor } from '../../Hooks/useInlineEditor';
 import { useReferralsModel } from '../../Model/ReferralsModel';
-import { DateTimePicker } from '@mui/x-date-pickers';
+import { DatePicker } from '@mui/x-date-pickers';
 import { DeleteArrangementDialog } from './DeleteArrangementDialog';
 
 type ArrangementCardTitleProps = {
@@ -115,11 +115,11 @@ export function ArrangementCardTitle({
                 <>
                   {startedAtEditor.editing ? (
                     <>
-                      <DateTimePicker
-                        label="When was this arrangement started?"
+                      <DatePicker
+                        label="When was this arrangement started???"
                         value={startedAtEditor.value}
                         disableFuture
-                        format="M/d/yyyy h:mm a"
+                        format="M/d/yyyy"
                         onChange={(date: Date | null) =>
                           date && startedAtEditor.setValue(date)
                         }

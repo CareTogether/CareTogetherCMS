@@ -1,4 +1,4 @@
-import { DatePicker, DateTimePicker } from '@mui/x-date-pickers';
+import { DatePicker } from '@mui/x-date-pickers';
 import {
   Checkbox,
   DialogContentText,
@@ -434,11 +434,11 @@ export function MissingRequirementDialog({
           )}
           <Grid item xs={12}>
             {requirement instanceof MissingArrangementRequirement ? (
-              <DateTimePicker
+              <DatePicker
                 label="When was this requirement completed?"
                 value={completedAtLocal}
                 disableFuture
-                format="M/d/yyyy h:mm a"
+                format="MM/dd/yyyy"
                 onChange={(date: Date | null) =>
                   date && setCompletedAtLocal(date)
                 }

@@ -44,12 +44,7 @@ export function CompletedRequirementRow({
         ? permissions(Permission.EditArrangementRequirementCompletion)
         : permissions(Permission.EditApprovalRequirementCompletion);
 
-  const dateFormat =
-    context.kind === 'Arrangement' ||
-    context.kind === 'Family Volunteer Assignment' ||
-    context.kind === 'Individual Volunteer Assignment'
-      ? 'M/d/yy h:mm a'
-      : 'M/d/yy';
+  const dateFormat = 'M/d/yy';
 
   const familyLookup = useFamilyLookup();
   const personLookup = usePersonLookup();

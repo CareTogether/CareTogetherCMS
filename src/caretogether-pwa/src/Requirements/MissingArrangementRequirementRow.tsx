@@ -1,4 +1,3 @@
-import { format } from 'date-fns';
 import { useRecoilValue } from 'recoil';
 import { MissingArrangementRequirement, Permission } from '../GeneratedClient';
 import { policyData } from '../Model/ConfigurationModel';
@@ -10,6 +9,7 @@ import { PersonName } from '../Families/PersonName';
 import { IconRow } from '../Generic/IconRow';
 import { MissingRequirementDialog } from './MissingRequirementDialog';
 import { RequirementContext } from './RequirementContext';
+import { formatUtcDateOnly } from '../Utilities/dateUtils';
 
 type MissingArrangementRequirementRowProps = {
   requirement: MissingArrangementRequirement;
@@ -60,7 +60,7 @@ export function MissingArrangementRequirementRow({
         >
           {requirement.actionName}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
           <span style={{ float: 'right' }}>
-            {format(requirement.dueBy, 'M/d/yy h:mm a')}
+            {formatUtcDateOnly(requirement.dueBy)}
           </span>
           {requirement.volunteerFamilyId && !requirement.personId && (
             <>
@@ -96,7 +96,7 @@ export function MissingArrangementRequirementRow({
           {requirement.actionName}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
           {requirement.pastDueSince && (
             <span style={{ float: 'right' }}>
-              {format(requirement.pastDueSince, 'M/d/yy h:mm a')}
+              {formatUtcDateOnly(requirement.pastDueSince)}
             </span>
           )}
           {requirement.volunteerFamilyId && !requirement.personId && (
