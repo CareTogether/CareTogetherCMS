@@ -274,7 +274,7 @@ namespace CareTogether.Engines.PolicyEvaluation
     public sealed record MissingArrangementRequirement(
         string? ArrangementFunction, string? ArrangementFunctionVariant,
         Guid? VolunteerFamilyId, Guid? PersonId,
-        string ActionName, DateTime? DueBy, DateTime? PastDueSince);
+        string ActionName, DateOnly? DueBy, DateOnly? PastDueSince);
 
     public enum ArrangementPhase { SettingUp, ReadyToStart, Started, Ended, Cancelled };
 
@@ -283,15 +283,15 @@ namespace CareTogether.Engines.PolicyEvaluation
         //TODO: Merge this with the CombinedFamilyInfoFormatter logic
         Task<FamilyApprovalStatus> CalculateCombinedFamilyApprovalsAsync(
             Guid organizationId, Guid locationId, Family family,
-            ImmutableList<CompletedRequirementInfo> completedFamilyRequirements,
-            ImmutableList<ExemptedRequirementInfo> exemptedFamilyRequirements,
+            ImmutableList<Resources.CompletedRequirementInfo> completedFamilyRequirements,
+            ImmutableList<Resources.ExemptedRequirementInfo> exemptedFamilyRequirements,
             ImmutableList<RoleRemoval> familyRoleRemovals,
-            ImmutableDictionary<Guid, ImmutableList<CompletedRequirementInfo>> completedIndividualRequirements,
-            ImmutableDictionary<Guid, ImmutableList<ExemptedRequirementInfo>> exemptedIndividualRequirements,
+            ImmutableDictionary<Guid, ImmutableList<Resources.CompletedRequirementInfo>> completedIndividualRequirements,
+            ImmutableDictionary<Guid, ImmutableList<Resources.ExemptedRequirementInfo>> exemptedIndividualRequirements,
             ImmutableDictionary<Guid, ImmutableList<RoleRemoval>> individualRoleRemovals);
 
         Task<ReferralStatus> CalculateReferralStatusAsync(
             Guid organizationId, Guid locationId, Family family,
-            ReferralEntry referralEntry);
+            Resources.Referrals.ReferralEntry referralEntry);
     }
 }

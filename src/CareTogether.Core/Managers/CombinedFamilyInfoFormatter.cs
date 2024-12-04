@@ -137,7 +137,7 @@ namespace CareTogether.Managers
 
             return partneringFamilyInfo;
 
-            async Task<Referral> ToReferralAsync(ReferralEntry entry)
+            async Task<Referral> ToReferralAsync(Resources.Referrals.ReferralEntry entry)
             {
                 var referralStatus = await policyEvaluationEngine.CalculateReferralStatusAsync(organizationId, locationId, family, entry);
 
@@ -151,7 +151,7 @@ namespace CareTogether.Managers
                     entry.Comments);
             }
 
-            static Arrangement ToArrangement(ArrangementEntry entry, ArrangementStatus status) =>
+            static Arrangement ToArrangement(Resources.Referrals.ArrangementEntry entry, ArrangementStatus status) =>
                 new(entry.Id, entry.ArrangementType, entry.PartneringFamilyPersonId, status.Phase,
                     entry.RequestedAtUtc, entry.StartedAtUtc, entry.EndedAtUtc, entry.CancelledAtUtc,
                     entry.PlannedStartUtc, entry.PlannedEndUtc,
@@ -182,7 +182,7 @@ namespace CareTogether.Managers
                 x => x.Value.RoleRemovals);
 
             // Apply default action expiration policies to completed requirements before running approval calculations.
-            var applyValidity = (CompletedRequirementInfo completed) =>
+            var applyValidity = (Resources.CompletedRequirementInfo completed) =>
                 ApplyValidityPolicyToCompletedRequirement(locationPolicy, completed);
             var completedFamilyRequirementsWithExpiration = entry.CompletedRequirements
                 .Select(applyValidity).ToImmutableList();
@@ -208,8 +208,8 @@ namespace CareTogether.Managers
                         completedIndividualRequirementsWithExpiration.TryGetValue(x.Key, out var completedRequirements);
                         return new VolunteerInfo(
                             x.Value.ApprovalStatusByRole,
-                            completedRequirements ?? ImmutableList<CompletedRequirementInfo>.Empty,
-                            individualEntry?.ExemptedRequirements ?? ImmutableList<ExemptedRequirementInfo>.Empty,
+                            completedRequirements ?? ImmutableList<Resources.CompletedRequirementInfo>.Empty,
+                            individualEntry?.ExemptedRequirements ?? ImmutableList<Resources.ExemptedRequirementInfo>.Empty,
                             combinedFamilyApprovals.CurrentAvailableIndividualApplications
                                 .Where(y => y.PersonId == x.Key)
                                 .Select(y => y.ActionName)
@@ -225,8 +225,8 @@ namespace CareTogether.Managers
             return (volunteerFamilyInfo, entry.UploadedDocuments);
         }
 
-        internal static CompletedRequirementInfo ApplyValidityPolicyToCompletedRequirement(
-            EffectiveLocationPolicy policy, CompletedRequirementInfo completed)
+        internal static Resources.CompletedRequirementInfo ApplyValidityPolicyToCompletedRequirement(
+            EffectiveLocationPolicy policy, Resources.CompletedRequirementInfo completed)
         {
             return policy.ActionDefinitions.TryGetValue(completed.RequirementName, out var actionDefinition)
                 ? completed with

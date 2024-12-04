@@ -15,7 +15,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
         public void CreateTimelineWithOneGap()
         {
             var result = ReferralCalculations.CreateChildLocationBasedTimeline(
-                H.ChildLocation(
+                H.ChildLocationHistory(
                     (H.Id('0'), ChildLocationPlan.DaytimeChildCare, 1, 1),
                     (Guid.Empty, ChildLocationPlan.WithParent, 1, 12),
                     (H.Id('1'), ChildLocationPlan.DaytimeChildCare, 1, 20),
@@ -25,12 +25,12 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
 
             AssertEx.SequenceIs(result, new DateOnlyTimeline([
                 new DateRange(
-                    DateOnly.FromDateTime(H.Date(1, 1)),
-                    DateOnly.FromDateTime(H.Date(1, 12))
+                    DateOnly.FromDateTime(H.DateTime(1, 1)),
+                    DateOnly.FromDateTime(H.DateTime(1, 12))
                 ),
                 new DateRange(
-                    DateOnly.FromDateTime(H.Date(1, 20)),
-                    DateOnly.FromDateTime(H.Date(1, 25))
+                    DateOnly.FromDateTime(H.DateTime(1, 20)),
+                    DateOnly.FromDateTime(H.DateTime(1, 25))
                 )
             ]));
         }
@@ -39,7 +39,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
         public void CreateTimelineWithTwoGaps()
         {
             var result = ReferralCalculations.CreateChildLocationBasedTimeline(
-                H.ChildLocation(
+                H.ChildLocationHistory(
                     (H.Id('0'), ChildLocationPlan.DaytimeChildCare, 1, 1),
                     (Guid.Empty, ChildLocationPlan.WithParent, 1, 12),
                     (H.Id('1'), ChildLocationPlan.DaytimeChildCare, 1, 20),
@@ -51,16 +51,16 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
 
             AssertEx.SequenceIs(result, new DateOnlyTimeline([
                 new DateRange(
-                    DateOnly.FromDateTime(H.Date(1, 1)),
-                    DateOnly.FromDateTime(H.Date(1, 12))
+                    DateOnly.FromDateTime(H.DateTime(1, 1)),
+                    DateOnly.FromDateTime(H.DateTime(1, 12))
                 ),
                 new DateRange(
-                    DateOnly.FromDateTime(H.Date(1, 20)),
-                    DateOnly.FromDateTime(H.Date(1, 25))
+                    DateOnly.FromDateTime(H.DateTime(1, 20)),
+                    DateOnly.FromDateTime(H.DateTime(1, 25))
                 ),
                 new DateRange(
-                    DateOnly.FromDateTime(H.Date(1, 30)),
-                    DateOnly.FromDateTime(H.Date(2, 5))
+                    DateOnly.FromDateTime(H.DateTime(1, 30)),
+                    DateOnly.FromDateTime(H.DateTime(2, 5))
                 )
             ]));
         }
@@ -69,7 +69,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
         public void CreateTimelineWithTwoGapsFilteredByFamilyId()
         {
             var result = ReferralCalculations.CreateChildLocationBasedTimeline(
-                H.ChildLocation(
+                H.ChildLocationHistory(
                     (H.Id('0'), ChildLocationPlan.DaytimeChildCare, 1, 1),
                     (Guid.Empty, ChildLocationPlan.WithParent, 1, 12),
                     (H.Id('1'), ChildLocationPlan.DaytimeChildCare, 1, 20),
@@ -82,12 +82,12 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
 
             AssertEx.SequenceIs(result, new DateOnlyTimeline([
                 new DateRange(
-                    DateOnly.FromDateTime(H.Date(1, 1)),
-                    DateOnly.FromDateTime(H.Date(1, 12))
+                    DateOnly.FromDateTime(H.DateTime(1, 1)),
+                    DateOnly.FromDateTime(H.DateTime(1, 12))
                 ),
                 new DateRange(
-                    DateOnly.FromDateTime(H.Date(1, 30)),
-                    DateOnly.FromDateTime(H.Date(2, 5))
+                    DateOnly.FromDateTime(H.DateTime(1, 30)),
+                    DateOnly.FromDateTime(H.DateTime(2, 5))
                 )
             ]));
         }
@@ -96,7 +96,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
         public void CreateTimelineChildWithParentAtEnd()
         {
             var result = ReferralCalculations.CreateChildLocationBasedTimeline(
-                H.ChildLocation(
+                H.ChildLocationHistory(
                     (H.Id('0'), ChildLocationPlan.DaytimeChildCare, 1, 1),
                     (Guid.Empty, ChildLocationPlan.WithParent, 1, 12),
                     (H.Id('0'), ChildLocationPlan.DaytimeChildCare, 1, 20)
@@ -105,11 +105,11 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
 
             AssertEx.SequenceIs(result, new DateOnlyTimeline([
                 new DateRange(
-                    DateOnly.FromDateTime(H.Date(1, 1)),
-                    DateOnly.FromDateTime(H.Date(1, 12))
+                    DateOnly.FromDateTime(H.DateTime(1, 1)),
+                    DateOnly.FromDateTime(H.DateTime(1, 12))
                 ),
                 new DateRange(
-                    DateOnly.FromDateTime(H.Date(1, 20))
+                    DateOnly.FromDateTime(H.DateTime(1, 20))
                 )
             ]));
         }

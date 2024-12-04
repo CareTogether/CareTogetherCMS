@@ -121,8 +121,8 @@ namespace CareTogether.Engines.Authorization
 
         internal static bool IsPermissionSetApplicable(ContextualPermissionSet permissionSet,
             AuthorizationContext context, Family? userFamily, Family? targetFamily,
-            bool targetFamilyIsVolunteerFamily, ImmutableList<ReferralEntry> userFamilyReferrals,
-            ImmutableList<ReferralEntry> targetFamilyReferrals, ImmutableList<ReferralEntry> assignedReferrals,
+            bool targetFamilyIsVolunteerFamily, ImmutableList<Resources.Referrals.ReferralEntry> userFamilyReferrals,
+            ImmutableList<Resources.Referrals.ReferralEntry> targetFamilyReferrals, ImmutableList<Resources.Referrals.ReferralEntry> assignedReferrals,
             ImmutableList<Guid> userFamilyCommunities, ImmutableList<Guid> targetFamilyCommunities,
             ImmutableList<(Guid Id, string CommunityRole)> userCommunityRoleAssignments)
         {
@@ -522,10 +522,10 @@ namespace CareTogether.Engines.Authorization
                     : ImmutableList<string>.Empty,
                 CompletedRequirements = contextPermissions.Contains(Permission.ViewReferralProgress)
                     ? referral.CompletedRequirements
-                    : ImmutableList<CompletedRequirementInfo>.Empty,
+                    : ImmutableList<Resources.CompletedRequirementInfo>.Empty,
                 ExemptedRequirements = contextPermissions.Contains(Permission.ViewReferralProgress)
                     ? referral.ExemptedRequirements
-                    : ImmutableList<ExemptedRequirementInfo>.Empty,
+                    : ImmutableList<Resources.ExemptedRequirementInfo>.Empty,
                 MissingRequirements = contextPermissions.Contains(Permission.ViewReferralProgress)
                     ? referral.MissingRequirements
                     : ImmutableList<string>.Empty,
@@ -537,7 +537,7 @@ namespace CareTogether.Engines.Authorization
                     : null,
                 Arrangements = referral.Arrangements
                     .Select(arrangement =>
-                        arrangement with
+                        (arrangement with
                         {
                             ChildLocationHistory = contextPermissions.Contains(Permission.ViewChildLocationHistory)
                                 ? arrangement.ChildLocationHistory
@@ -550,10 +550,10 @@ namespace CareTogether.Engines.Authorization
                                 : null,
                             CompletedRequirements = contextPermissions.Contains(Permission.ViewArrangementProgress)
                                 ? arrangement.CompletedRequirements
-                                : ImmutableList<CompletedRequirementInfo>.Empty,
+                                : ImmutableList<Resources.CompletedRequirementInfo>.Empty,
                             ExemptedRequirements = contextPermissions.Contains(Permission.ViewArrangementProgress)
                                 ? arrangement.ExemptedRequirements
-                                : ImmutableList<ExemptedRequirementInfo>.Empty,
+                                : ImmutableList<Resources.ExemptedRequirementInfo>.Empty,
                             MissingRequirements = contextPermissions.Contains(Permission.ViewArrangementProgress)
                                 ? arrangement.MissingRequirements
                                 : contextPermissions.Contains(Permission.ViewAssignedArrangementProgress)
@@ -564,41 +564,41 @@ namespace CareTogether.Engines.Authorization
                                 : ImmutableList<MissingArrangementRequirement>.Empty,
                             IndividualVolunteerAssignments = contextPermissions.Contains(Permission.ViewAssignments)
                                 ? arrangement.IndividualVolunteerAssignments
-                                    .Select(iva => iva with
+                                    .Select(iva => (iva with
                                     {
                                         CompletedRequirements = contextPermissions.Contains(Permission.ViewArrangementProgress)
                                             ? iva.CompletedRequirements
                                             : contextPermissions.Contains(Permission.ViewAssignedArrangementProgress)
                                                 && iva.FamilyId == userFamily?.Id
                                             ? iva.CompletedRequirements
-                                            : ImmutableList<CompletedRequirementInfo>.Empty,
+                                            : ImmutableList<Resources.CompletedRequirementInfo>.Empty,
                                         ExemptedRequirements = contextPermissions.Contains(Permission.ViewArrangementProgress)
                                             ? iva.ExemptedRequirements
                                             : contextPermissions.Contains(Permission.ViewAssignedArrangementProgress)
                                                 && iva.FamilyId == userFamily?.Id
                                             ? iva.ExemptedRequirements
-                                            : ImmutableList<ExemptedRequirementInfo>.Empty
-                                    }).ToImmutableList()
-                                : ImmutableList<IndividualVolunteerAssignment>.Empty,
+                                            : ImmutableList<Resources.ExemptedRequirementInfo>.Empty
+                                    })).ToImmutableList()
+                                : ImmutableList<Resources.Referrals.IndividualVolunteerAssignment>.Empty,
                             FamilyVolunteerAssignments = contextPermissions.Contains(Permission.ViewAssignments)
                                 ? arrangement.FamilyVolunteerAssignments
-                                    .Select(fva => fva with
+                                    .Select(fva => (fva with
                                     {
                                         CompletedRequirements = contextPermissions.Contains(Permission.ViewArrangementProgress)
                                             ? fva.CompletedRequirements
                                             : contextPermissions.Contains(Permission.ViewAssignedArrangementProgress)
                                                 && fva.FamilyId == userFamily?.Id
                                             ? fva.CompletedRequirements
-                                            : ImmutableList<CompletedRequirementInfo>.Empty,
+                                            : ImmutableList<Resources.CompletedRequirementInfo>.Empty,
                                         ExemptedRequirements = contextPermissions.Contains(Permission.ViewArrangementProgress)
                                             ? fva.ExemptedRequirements
                                             : contextPermissions.Contains(Permission.ViewAssignedArrangementProgress)
                                                 && fva.FamilyId == userFamily?.Id
                                             ? fva.ExemptedRequirements
-                                            : ImmutableList<ExemptedRequirementInfo>.Empty
-                                    }).ToImmutableList()
-                                : ImmutableList<FamilyVolunteerAssignment>.Empty
-                        })
+                                            : ImmutableList<Resources.ExemptedRequirementInfo>.Empty
+                                    })).ToImmutableList()
+                                : ImmutableList<Resources.Referrals.FamilyVolunteerAssignment>.Empty
+                        }))
                     .ToImmutableList()
             };
         }
@@ -616,7 +616,7 @@ namespace CareTogether.Engines.Authorization
                     : ImmutableList<RoleRemoval>.Empty,
                 IndividualVolunteers = volunteerFamilyInfo.IndividualVolunteers.ToImmutableDictionary(
                     keySelector: kvp => kvp.Key,
-                    elementSelector: kvp => kvp.Value with
+                    elementSelector: kvp => (kvp.Value with
                     {
                         RoleRemovals = contextPermissions.Contains(Permission.ViewApprovalStatus)
                             ? kvp.Value.RoleRemovals
@@ -626,17 +626,17 @@ namespace CareTogether.Engines.Authorization
                             : ImmutableDictionary<string, IndividualRoleApprovalStatus>.Empty,
                         CompletedRequirements = contextPermissions.Contains(Permission.ViewApprovalProgress)
                             ? kvp.Value.CompletedRequirements
-                            : ImmutableList<CompletedRequirementInfo>.Empty,
+                            : ImmutableList<Resources.CompletedRequirementInfo>.Empty,
                         ExemptedRequirements = contextPermissions.Contains(Permission.ViewApprovalProgress)
                             ? kvp.Value.ExemptedRequirements
-                            : ImmutableList<ExemptedRequirementInfo>.Empty
-                    }),
+                            : ImmutableList<Resources.ExemptedRequirementInfo>.Empty
+                    })),
                 CompletedRequirements = contextPermissions.Contains(Permission.ViewApprovalProgress)
                     ? volunteerFamilyInfo.CompletedRequirements
-                    : ImmutableList<CompletedRequirementInfo>.Empty,
+                    : ImmutableList<Resources.CompletedRequirementInfo>.Empty,
                 ExemptedRequirements = contextPermissions.Contains(Permission.ViewApprovalProgress)
                     ? volunteerFamilyInfo.ExemptedRequirements
-                    : ImmutableList<ExemptedRequirementInfo>.Empty,
+                    : ImmutableList<Resources.ExemptedRequirementInfo>.Empty,
                 History = contextPermissions.Contains(Permission.ViewApprovalHistory)
                     ? volunteerFamilyInfo.History
                     : ImmutableList<Activity>.Empty

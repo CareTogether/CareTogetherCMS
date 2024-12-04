@@ -12,11 +12,11 @@ namespace CareTogether.Engines.PolicyEvaluation
     {
         public static FamilyApprovalStatus CalculateCombinedFamilyApprovals(
             VolunteerPolicy volunteerPolicy, Family family,
-            ImmutableList<CompletedRequirementInfo> completedFamilyRequirements,
-            ImmutableList<ExemptedRequirementInfo> exemptedFamilyRequirements,
+            ImmutableList<Resources.CompletedRequirementInfo> completedFamilyRequirements,
+            ImmutableList<Resources.ExemptedRequirementInfo> exemptedFamilyRequirements,
             ImmutableList<RoleRemoval> familyRoleRemovals,
-            ImmutableDictionary<Guid, ImmutableList<CompletedRequirementInfo>> completedIndividualRequirements,
-            ImmutableDictionary<Guid, ImmutableList<ExemptedRequirementInfo>> exemptedIndividualRequirements,
+            ImmutableDictionary<Guid, ImmutableList<Resources.CompletedRequirementInfo>> completedIndividualRequirements,
+            ImmutableDictionary<Guid, ImmutableList<Resources.ExemptedRequirementInfo>> exemptedIndividualRequirements,
             ImmutableDictionary<Guid, ImmutableList<RoleRemoval>> individualRoleRemovals)
         {
             var allAdultsIndividualApprovalStatus = family.Adults

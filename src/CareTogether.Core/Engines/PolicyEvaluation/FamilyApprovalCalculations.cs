@@ -15,11 +15,11 @@ namespace CareTogether.Engines.PolicyEvaluation
             CalculateAllFamilyRoleApprovalStatuses(
             ImmutableDictionary<string, VolunteerFamilyRolePolicy> volunteerFamilyRoles,
             Family family,
-            ImmutableList<CompletedRequirementInfo> completedFamilyRequirements,
-            ImmutableList<ExemptedRequirementInfo> exemptedFamilyRequirements,
+            ImmutableList<Resources.CompletedRequirementInfo> completedFamilyRequirements,
+            ImmutableList<Resources.ExemptedRequirementInfo> exemptedFamilyRequirements,
             ImmutableList<RoleRemoval> familyRoleRemovals,
-            ImmutableDictionary<Guid, ImmutableList<CompletedRequirementInfo>> completedIndividualRequirements,
-            ImmutableDictionary<Guid, ImmutableList<ExemptedRequirementInfo>> exemptedIndividualRequirements,
+            ImmutableDictionary<Guid, ImmutableList<Resources.CompletedRequirementInfo>> completedIndividualRequirements,
+            ImmutableDictionary<Guid, ImmutableList<Resources.ExemptedRequirementInfo>> exemptedIndividualRequirements,
             ImmutableDictionary<Guid, ImmutableList<RoleRemoval>> individualRoleRemovals)
         {
             var allFamilyRoleApprovals = volunteerFamilyRoles
@@ -39,11 +39,11 @@ namespace CareTogether.Engines.PolicyEvaluation
         internal static FamilyRoleApprovalStatus
             CalculateFamilyRoleApprovalStatus(
             string roleName, VolunteerFamilyRolePolicy rolePolicy, Family family,
-            ImmutableList<CompletedRequirementInfo> completedFamilyRequirements,
-            ImmutableList<ExemptedRequirementInfo> exemptedFamilyRequirements,
+            ImmutableList<Resources.CompletedRequirementInfo> completedFamilyRequirements,
+            ImmutableList<Resources.ExemptedRequirementInfo> exemptedFamilyRequirements,
             ImmutableList<RoleRemoval> removalsOfThisRole,
-            ImmutableDictionary<Guid, ImmutableList<CompletedRequirementInfo>> completedIndividualRequirements,
-            ImmutableDictionary<Guid, ImmutableList<ExemptedRequirementInfo>> exemptedIndividualRequirements,
+            ImmutableDictionary<Guid, ImmutableList<Resources.CompletedRequirementInfo>> completedIndividualRequirements,
+            ImmutableDictionary<Guid, ImmutableList<Resources.ExemptedRequirementInfo>> exemptedIndividualRequirements,
             ImmutableDictionary<Guid, ImmutableList<RoleRemoval>> individualRoleRemovals)
         {
             var roleVersionApprovals = rolePolicy.PolicyVersions
@@ -69,11 +69,11 @@ namespace CareTogether.Engines.PolicyEvaluation
             CalculateFamilyRoleVersionApprovalStatus(
             string roleName, VolunteerFamilyRolePolicyVersion policyVersion,
             Family family,
-            ImmutableList<CompletedRequirementInfo> completedFamilyRequirements,
-            ImmutableList<ExemptedRequirementInfo> exemptedFamilyRequirements,
+            ImmutableList<Resources.CompletedRequirementInfo> completedFamilyRequirements,
+            ImmutableList<Resources.ExemptedRequirementInfo> exemptedFamilyRequirements,
             ImmutableList<RoleRemoval> removalsOfThisRole,
-            ImmutableDictionary<Guid, ImmutableList<CompletedRequirementInfo>> completedIndividualRequirements,
-            ImmutableDictionary<Guid, ImmutableList<ExemptedRequirementInfo>> exemptedIndividualRequirements,
+            ImmutableDictionary<Guid, ImmutableList<Resources.CompletedRequirementInfo>> completedIndividualRequirements,
+            ImmutableDictionary<Guid, ImmutableList<Resources.ExemptedRequirementInfo>> exemptedIndividualRequirements,
             ImmutableDictionary<Guid, ImmutableList<RoleRemoval>> individualRoleRemovals)
         {
             // Ignore any inactive (i.e., soft-deleted) adults.
@@ -122,11 +122,11 @@ namespace CareTogether.Engines.PolicyEvaluation
             string roleName, string requirementActionName,
             RequirementStage requirementStage, VolunteerFamilyRequirementScope requirementScope,
             DateTime? policyVersionSupersededAtUtc,
-            ImmutableList<CompletedRequirementInfo> completedFamilyRequirements,
-            ImmutableList<ExemptedRequirementInfo> exemptedFamilyRequirements,
+            ImmutableList<Resources.CompletedRequirementInfo> completedFamilyRequirements,
+            ImmutableList<Resources.ExemptedRequirementInfo> exemptedFamilyRequirements,
             ImmutableDictionary<Guid, ImmutableList<RoleRemoval>> individualRoleRemovals,
-            ImmutableList<(Guid Id, ImmutableList<CompletedRequirementInfo> CompletedRequirements,
-                ImmutableList<ExemptedRequirementInfo> ExemptedRequirements)> activeAdults)
+            ImmutableList<(Guid Id, ImmutableList<Resources.CompletedRequirementInfo> CompletedRequirements,
+                ImmutableList<Resources.ExemptedRequirementInfo> ExemptedRequirements)> activeAdults)
         {
             // If there are no active adults in the family, then the requirement cannot be met.
             if (activeAdults.Count == 0)

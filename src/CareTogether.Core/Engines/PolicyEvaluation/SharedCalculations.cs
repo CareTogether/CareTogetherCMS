@@ -11,32 +11,32 @@ namespace CareTogether.Engines.PolicyEvaluation
 {
     internal static class SharedCalculations
     {
-        public sealed record RequirementCheckResult(bool IsMetOrExempted, DateTime? ExpiresAtUtc);
+        public sealed record RequirementCheckResult(bool IsMetOrExempted, DateOnly? ExpiresAtUtc);
 
         //NOTE: This is currently being used by Referral calculations.
         internal static RequirementCheckResult RequirementMetOrExempted(string requirementName,
-            DateTime? policySupersededAtUtc, DateTime utcNow,
+            DateOnly? policySupersededAt, DateOnly today,
             ImmutableList<CompletedRequirementInfo> completedRequirements,
             ImmutableList<ExemptedRequirementInfo> exemptedRequirements)
         {
             var bestCompletion = completedRequirements
                 .Where(completed =>
                     completed.RequirementName == requirementName &&
-                    (policySupersededAtUtc == null || completed.CompletedAtUtc < policySupersededAtUtc) &&
-                    (completed.ExpiresAtUtc == null || completed.ExpiresAtUtc > utcNow))
-                .MaxBy(completed => completed.ExpiresAtUtc ?? DateTime.MaxValue);
+                    (policySupersededAt == null || completed.CompletedAt < policySupersededAt) &&
+                    (completed.ExpiresAt == null || completed.ExpiresAt > today))
+                .MaxBy(completed => completed.ExpiresAt ?? DateOnly.MaxValue);
 
             if (bestCompletion != null)
-                return new RequirementCheckResult(true, bestCompletion.ExpiresAtUtc);
+                return new RequirementCheckResult(true, bestCompletion.ExpiresAt);
 
             var bestExemption = exemptedRequirements
                 .Where(exempted =>
                     exempted.RequirementName == requirementName &&
-                    (exempted.ExemptionExpiresAtUtc == null || exempted.ExemptionExpiresAtUtc > utcNow))
-                .MaxBy(exempted => exempted.ExemptionExpiresAtUtc ?? DateTime.MaxValue);
+                    (exempted.ExemptionExpiresAt == null || exempted.ExemptionExpiresAt > today))
+                .MaxBy(exempted => exempted.ExemptionExpiresAt ?? DateOnly.MaxValue);
 
             if (bestExemption != null)
-                return new RequirementCheckResult(true, bestExemption.ExemptionExpiresAtUtc);
+                return new RequirementCheckResult(true, bestExemption.ExemptionExpiresAt);
 
             return new RequirementCheckResult(false, null);
         }
@@ -218,8 +218,8 @@ namespace CareTogether.Engines.PolicyEvaluation
         //      Maybe rename it to 'FindWhenRequirementIsMet' or something like that?
         internal static DateOnlyTimeline? FindRequirementApprovals(
             string requirementName, DateTime? policyVersionSupersededAtUtc,
-            ImmutableList<CompletedRequirementInfo> completedRequirementsInScope,
-            ImmutableList<ExemptedRequirementInfo> exemptedRequirementsInScope)
+            ImmutableList<Resources.CompletedRequirementInfo> completedRequirementsInScope,
+            ImmutableList<Resources.ExemptedRequirementInfo> exemptedRequirementsInScope)
         {
             // Policy supersedence means that, as of the 'SupersededAtUtc' date, the policy version is no longer in effect.
             // As a result, while approvals granted under that policy version continue to be valid, any requirements that
