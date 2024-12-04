@@ -97,7 +97,8 @@ Activity "UC-Pr-1: Open Location" {
   |s|
   :Authorize User Access in Context
     ""<color:#777>[SUB-Pr-1]</color>"";
-  :Load Location Data; /*NOTE: This will also be the Process Manager*/
+  :Load Location Data; 
+  'NOTE: This will also be the Process Manager
   |c|
   :View Location Dashboard;
   stop
@@ -136,11 +137,41 @@ Activity "UC-Pr-2: View Communities List" {
   stop
 }
 
-UseCase "UC-Pr-2: View Communities List" {
+UseCase "UC-Pr-2: View Communities List in Location" {
   AppClient -> ProcessManager
-  ProcessManager - Response<ContextPermissions> IEvaluationEngine.AuthorizeUserAccess(GlobalAuthorizationContext) > EvaluationEngine
-  ProcessManager -> RecordsAccess
-  RecordsAccess -> RecordsResource
+  ProcessManager - Response<ContextualPermissions> IEvaluationEngine.CalculateContextualPermissions(LocationAuthorizationContext) > EvaluationEngine
+  ProcessManager - Response<FilterCommunitiesResponse> IRecordsAccess.Filter(FilterCommunitiesAccessRequest) > RecordsAccess
+  RecordsAccess - Response<FilterCommunitiesResponse> IRecordsResource.Filter(FilterCommunitiesResourceRequest) > RecordsResource
+}
+
+UseCase "UC-Pr-2: View Communities List in Organization" {
+  AnalyticsClient -> ProcessManager
+  SupportClient -> ProcessManager
+  ProcessManager - Response<ContextualPermissions> IEvaluationEngine.AuthorizeUserAccess(OrganizationAuthorizationContext) > EvaluationEngine
+  ProcessManager - Response<FilterCommunitiesResponse> IRecordsAccess.Filter(FilterCommunitiesAccessRequest) > RecordsAccess
+  RecordsAccess - Response<FilterCommunitiesResponse> IRecordsResource.Filter(FilterCommunitiesResourceRequest) > RecordsResource
+}
+
+DTO ContextualPermissions {
+  AuthorizationContext Context
+  string[] Permissions
+}
+
+DTO Community {}
+
+DTO FilterCommunitiesResponse {
+  Community[] Communities
+}
+
+DTO FilterCommunitiesAccessRequest {
+  ContextualPermissions Permissions
+  Guid? OrganizationId
+  Guid? LocationId
+}
+
+DTO FilterCommunitiesResourceRequest {
+  Guid? OrganizationId
+  Guid? LocationId
 }
 
 UseCase "Create Referral" {
