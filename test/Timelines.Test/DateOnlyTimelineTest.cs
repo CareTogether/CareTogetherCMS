@@ -50,6 +50,82 @@ public class DateOnlyTimelineTest
     }
 
     [TestMethod]
+    public void TotalDaysInclusiveReturnsCorrectValue()
+    {
+        var dut1 = new DateOnlyTimeline([DR(1, 1)]);
+        var dut2 = new DateOnlyTimeline([DR(1, 5)]);
+        var dut3 = new DateOnlyTimeline([DR(1, 2), DR(4, 5)]);
+
+        Assert.AreEqual(1, dut1.TotalDaysInclusive());
+        Assert.AreEqual(5, dut2.TotalDaysInclusive());
+        Assert.AreEqual(4, dut3.TotalDaysInclusive());
+    }
+
+    [TestMethod]
+    public void StartReturnsFirstDayOfFirstRange()
+    {
+        var dut1 = new DateOnlyTimeline([DR(1, 5)]);
+        var dut2 = new DateOnlyTimeline([DR(3, 4), DR(6, 8)]);
+
+        Assert.AreEqual(D(1), dut1.Start);
+        Assert.AreEqual(D(3), dut2.Start);
+    }
+
+    [TestMethod]
+    public void EndReturnsLastDayOfLastRange()
+    {
+        var dut1 = new DateOnlyTimeline([DR(1, 5)]);
+        var dut2 = new DateOnlyTimeline([DR(3, 4), DR(6, 8)]);
+
+        Assert.AreEqual(D(5), dut1.End);
+        Assert.AreEqual(D(8), dut2.End);
+    }
+
+    [TestMethod]
+    public void TakeDaysThrowsForNonPositiveValue()
+    {
+        var dut = new DateOnlyTimeline([DR(1, 5)]);
+        Assert.ThrowsException<ArgumentException>(() => dut.TakeDays(0));
+        Assert.ThrowsException<ArgumentException>(() => dut.TakeDays(-1));
+    }
+
+    [TestMethod]
+    public void TakeDaysReturnsOriginalTimelineWhenRequestedLengthExceedsTotal()
+    {
+        var dut = new DateOnlyTimeline([DR(1, 3), DR(5, 6)]);
+        var result = dut.TakeDays(10);
+
+        Assert.IsNotNull(result);
+        Assert.IsTrue(result.Ranges.SequenceEqual([
+            DR(1, 3), DR(5, 6)
+        ]));
+    }
+
+    [TestMethod]
+    public void TakeDaysReturnsPartialTimelineWhenRequestedLengthIsLess()
+    {
+        var dut = new DateOnlyTimeline([DR(1, 3), DR(5, 7)]);
+        var result = dut.TakeDays(4);
+
+        Assert.IsNotNull(result);
+        Assert.IsTrue(result.Ranges.SequenceEqual([
+            DR(1, 3), DR(5, 5)
+        ]));
+    }
+
+    [TestMethod]
+    public void TakeDaysHandlesSingleRange()
+    {
+        var dut = new DateOnlyTimeline([DR(1, 5)]);
+        var result = dut.TakeDays(3);
+
+        Assert.IsNotNull(result);
+        Assert.IsTrue(result.Ranges.SequenceEqual([
+            DR(1, 3)
+        ]));
+    }
+
+    [TestMethod]
     public void UnionOfEmptyListReturnsNull()
     {
         var dut = DateOnlyTimeline.UnionOf(ImmutableList<DateRange>.Empty);
@@ -279,7 +355,7 @@ public class DateOnlyTimelineTest
     [TestMethod]
     public void IntersectionOfSingleOneDayTimeline()
     {
-        var dut = DateOnlyTimeline.IntersectionOf(ImmutableList.Create([
+        var dut = DateOnlyTimeline.IntersectionOf(ImmutableList.Create<DateOnlyTimeline?>([
             new DateOnlyTimeline([DR(1, 1)])
         ]));
 
@@ -293,7 +369,7 @@ public class DateOnlyTimelineTest
     [TestMethod]
     public void IntersectionOfTwoOverlappingTimelines()
     {
-        var dut = DateOnlyTimeline.IntersectionOf(ImmutableList.Create([
+        var dut = DateOnlyTimeline.IntersectionOf(ImmutableList.Create<DateOnlyTimeline?>([
             new DateOnlyTimeline([DR(2, 2)]),
             new DateOnlyTimeline([DR(1, 3)])
         ]));
@@ -320,7 +396,7 @@ public class DateOnlyTimelineTest
     [TestMethod]
     public void IntersectionOfThreeDisjointTimelines()
     {
-        var dut = DateOnlyTimeline.IntersectionOf(ImmutableList.Create([
+        var dut = DateOnlyTimeline.IntersectionOf(ImmutableList.Create<DateOnlyTimeline?>([
             new DateOnlyTimeline([DR(2, 2)]),
             new DateOnlyTimeline([DR(1, 3)]),
             new DateOnlyTimeline([DR(4, 4)])
@@ -332,7 +408,7 @@ public class DateOnlyTimelineTest
     [TestMethod]
     public void IntersectionOfThreeOverlappingTimelines()
     {
-        var dut = DateOnlyTimeline.IntersectionOf(ImmutableList.Create([
+        var dut = DateOnlyTimeline.IntersectionOf(ImmutableList.Create<DateOnlyTimeline?>([
             new DateOnlyTimeline([DR(2, 2)]),
             new DateOnlyTimeline([DR(1, 3)]),
             new DateOnlyTimeline([DR(2, 4)])
@@ -682,7 +758,7 @@ public class DateOnlyTimelineTest
     }
 
     [TestMethod]
-    public void DifferenceWithPartialOverlapExcludesTheSecondTimeline()
+    public void DifferenceWithPartialOverlapExcludesTheOverlappedDates()
     {
         var input = new DateOnlyTimeline([DR(1, 1), DR(3, 4)]);
         var dut = input.Difference(new DateOnlyTimeline([DR(4, 7)]));
@@ -694,7 +770,7 @@ public class DateOnlyTimelineTest
     }
 
     [TestMethod]
-    public void DifferenceWithPartialOverlapExcludesTheSecondTimeline2()
+    public void DifferenceWithPartialOverlapExcludesTheOverlappedDates2()
     {
         var input = new DateOnlyTimeline([DR(1, 1), DR(3, 4)]);
         var dut = input.Difference(new DateOnlyTimeline([DR(2, 7)]));
@@ -706,7 +782,7 @@ public class DateOnlyTimelineTest
     }
 
     [TestMethod]
-    public void DifferenceWithPartialOverlapExcludesTheSecondTimeline3()
+    public void DifferenceWithPartialOverlapExcludesTheOverlappedDates3()
     {
         var input = new DateOnlyTimeline([DR(1, 1), DR(3, 4)]);
         var dut = input.Difference(new DateOnlyTimeline([DR(1, 3)]));

@@ -3545,6 +3545,14 @@
             "items": {
               "$ref": "#/components/schemas/DateRange"
             }
+          },
+          "start": {
+            "type": "string",
+            "format": "date"
+          },
+          "end": {
+            "type": "string",
+            "format": "date"
           }
         }
       },
@@ -3559,6 +3567,10 @@
           "end": {
             "type": "string",
             "format": "date"
+          },
+          "totalDaysInclusive": {
+            "type": "integer",
+            "format": "int32"
           }
         }
       },

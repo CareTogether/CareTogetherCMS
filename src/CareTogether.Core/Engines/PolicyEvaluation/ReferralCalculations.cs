@@ -1,10 +1,9 @@
-using CareTogether.Resources;
-using CareTogether.Resources.Policies;
-using CareTogether.Resources.Referrals;
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
+using CareTogether.Resources.Policies;
+using CareTogether.Resources.Referrals;
 using Timelines;
 
 namespace CareTogether.Engines.PolicyEvaluation
@@ -12,17 +11,30 @@ namespace CareTogether.Engines.PolicyEvaluation
     internal static class ReferralCalculations
     {
         public static ReferralStatus CalculateReferralStatus(
-            ReferralPolicy referralPolicy, ReferralEntry referralEntry, DateTime utcNow, TimeZoneInfo locationTimeZone)
+            ReferralPolicy referralPolicy,
+            ReferralEntry referralEntry,
+            DateTime utcNow,
+            TimeZoneInfo locationTimeZone
+        )
         {
-            var missingIntakeRequirements = referralPolicy.RequiredIntakeActionNames.Where(requiredAction =>
-                !SharedCalculations.RequirementMetOrExempted(requiredAction,
-                    policySupersededAtUtc: null, utcNow: utcNow,
-                    completedRequirements: referralEntry.CompletedRequirements,
-                    exemptedRequirements: referralEntry.ExemptedRequirements).IsMetOrExempted)
+            var missingIntakeRequirements = referralPolicy
+                .RequiredIntakeActionNames.Where(requiredAction =>
+                    !SharedCalculations
+                        .RequirementMetOrExempted(
+                            requiredAction,
+                            policySupersededAtUtc: null,
+                            utcNow: utcNow,
+                            completedRequirements: referralEntry.CompletedRequirements,
+                            exemptedRequirements: referralEntry.ExemptedRequirements
+                        )
+                        .IsMetOrExempted
+                )
                 .ToImmutableList();
 
-            var missingCustomFields = referralPolicy.CustomFields.Where(customField =>
-                !referralEntry.CompletedCustomFields.Any(completed => completed.Key == customField.Name))
+            var missingCustomFields = referralPolicy
+                .CustomFields.Where(customField =>
+                    !referralEntry.CompletedCustomFields.Any(completed => completed.Key == customField.Name)
+                )
                 .Select(customField => customField.Name)
                 .ToImmutableList();
 
@@ -30,125 +42,187 @@ namespace CareTogether.Engines.PolicyEvaluation
                 arrangement => arrangement.Key,
                 arrangement =>
                 {
-                    ArrangementPolicy arrangementPolicy = referralPolicy.ArrangementPolicies
-                        .Single(p => p.ArrangementType == arrangement.Value.ArrangementType);
+                    ArrangementPolicy arrangementPolicy = referralPolicy.ArrangementPolicies.Single(p =>
+                        p.ArrangementType == arrangement.Value.ArrangementType
+                    );
 
-                    return CalculateArrangementStatus(arrangement.Value,
-                        arrangementPolicy, utcNow, locationTimeZone);
-                });
+                    return CalculateArrangementStatus(arrangement.Value, arrangementPolicy, utcNow, locationTimeZone);
+                }
+            );
 
-            return new ReferralStatus(
-                missingIntakeRequirements,
-                missingCustomFields,
-                individualArrangements);
+            return new ReferralStatus(missingIntakeRequirements, missingCustomFields, individualArrangements);
         }
 
-
-        internal static ArrangementStatus CalculateArrangementStatus(ArrangementEntry arrangement, ArrangementPolicy arrangementPolicy,
-            DateTime utcNow, TimeZoneInfo locationTimeZone)
+        internal static ArrangementStatus CalculateArrangementStatus(
+            ArrangementEntry arrangement,
+            ArrangementPolicy arrangementPolicy,
+            DateTime utcNow,
+            TimeZoneInfo locationTimeZone
+        )
         {
-            var missingSetupRequirements = CalculateMissingSetupRequirements(
-                arrangementPolicy, arrangement, utcNow);
+            var missingSetupRequirements = CalculateMissingSetupRequirements(arrangementPolicy, arrangement, utcNow);
             var missingMonitoringRequirements = CalculateMissingMonitoringRequirements(
-                arrangementPolicy, arrangement, utcNow, locationTimeZone);
+                arrangementPolicy,
+                arrangement,
+                utcNow,
+                locationTimeZone
+            );
             var missingCloseoutRequirements = CalculateMissingCloseoutRequirements(
-                arrangementPolicy, arrangement, utcNow);
-            var missingFunctionAssignments = CalculateMissingFunctionAssignments(arrangementPolicy.ArrangementFunctions,
-                arrangement.FamilyVolunteerAssignments, arrangement.IndividualVolunteerAssignments);
+                arrangementPolicy,
+                arrangement,
+                utcNow
+            );
+            var missingFunctionAssignments = CalculateMissingFunctionAssignments(
+                arrangementPolicy.ArrangementFunctions,
+                arrangement.FamilyVolunteerAssignments,
+                arrangement.IndividualVolunteerAssignments
+            );
 
-            var phase = CalculateArrangementPhase(arrangement.StartedAtUtc, arrangement.EndedAtUtc, arrangement.CancelledAtUtc,
-                missingSetupRequirements, missingFunctionAssignments);
+            var phase = CalculateArrangementPhase(
+                arrangement.StartedAtUtc,
+                arrangement.EndedAtUtc,
+                arrangement.CancelledAtUtc,
+                missingSetupRequirements,
+                missingFunctionAssignments
+            );
 
-            var missingRequirements = SelectMissingRequirementsForStatus(phase,
-                missingSetupRequirements, missingMonitoringRequirements, missingCloseoutRequirements);
+            var missingRequirements = SelectMissingRequirementsForStatus(
+                phase,
+                missingSetupRequirements,
+                missingMonitoringRequirements,
+                missingCloseoutRequirements
+            );
 
-            return new ArrangementStatus(phase,
-                missingRequirements); //TODO: Shouldn't missing function assignments be returned as well?
+            return new ArrangementStatus(phase, missingRequirements); //TODO: Shouldn't missing function assignments be returned as well?
         }
 
-        internal static ImmutableList<MissingArrangementRequirement> SelectMissingRequirementsForStatus(ArrangementPhase phase,
+        internal static ImmutableList<MissingArrangementRequirement> SelectMissingRequirementsForStatus(
+            ArrangementPhase phase,
             ImmutableList<MissingArrangementRequirement> missingSetupRequirements,
             ImmutableList<MissingArrangementRequirement> missingMonitoringRequirements,
-            ImmutableList<MissingArrangementRequirement> missingCloseoutRequirements) => phase switch
+            ImmutableList<MissingArrangementRequirement> missingCloseoutRequirements
+        ) =>
+            phase switch
             {
                 ArrangementPhase.SettingUp => missingSetupRequirements,
                 ArrangementPhase.ReadyToStart => ImmutableList<MissingArrangementRequirement>.Empty,
                 ArrangementPhase.Started => missingMonitoringRequirements,
-                ArrangementPhase.Ended => missingCloseoutRequirements.Concat(missingMonitoringRequirements).ToImmutableList(),
+                ArrangementPhase.Ended => missingCloseoutRequirements
+                    .Concat(missingMonitoringRequirements)
+                    .ToImmutableList(),
                 ArrangementPhase.Cancelled => ImmutableList<MissingArrangementRequirement>.Empty,
-                _ => throw new NotImplementedException($"The arrangement phase '{phase}' has not been implemented.")
+                _ => throw new NotImplementedException($"The arrangement phase '{phase}' has not been implemented."),
             };
 
         internal static ArrangementPhase CalculateArrangementPhase(
-            DateTime? startedAtUtc, DateTime? endedAtUtc, DateTime? cancelledAtUtc,
+            DateTime? startedAtUtc,
+            DateTime? endedAtUtc,
+            DateTime? cancelledAtUtc,
             ImmutableList<MissingArrangementRequirement> missingSetupRequirements,
-            ImmutableList<ArrangementFunction> missingFunctionAssignments) =>
-            cancelledAtUtc.HasValue
-                ? ArrangementPhase.Cancelled
-                : endedAtUtc.HasValue
-                ? ArrangementPhase.Ended
-                : startedAtUtc.HasValue
-                ? ArrangementPhase.Started
-                : (missingSetupRequirements.Count == 0 && missingFunctionAssignments.Count == 0)
+            ImmutableList<ArrangementFunction> missingFunctionAssignments
+        ) =>
+            cancelledAtUtc.HasValue ? ArrangementPhase.Cancelled
+            : endedAtUtc.HasValue ? ArrangementPhase.Ended
+            : startedAtUtc.HasValue ? ArrangementPhase.Started
+            : (missingSetupRequirements.Count == 0 && missingFunctionAssignments.Count == 0)
                 ? ArrangementPhase.ReadyToStart
-                : ArrangementPhase.SettingUp;
+            : ArrangementPhase.SettingUp;
 
         internal static ImmutableList<MissingArrangementRequirement> CalculateMissingSetupRequirements(
-            ArrangementPolicy arrangementPolicy, ArrangementEntry arrangement, DateTime utcNow)
+            ArrangementPolicy arrangementPolicy,
+            ArrangementEntry arrangement,
+            DateTime utcNow
+        )
         {
-            var arrangementLevelResults = arrangementPolicy.RequiredSetupActionNames
-                .Where(requiredAction =>
-                    !SharedCalculations.RequirementMetOrExempted(requiredAction,
-                        policySupersededAtUtc: null, utcNow: utcNow,
-                        completedRequirements: arrangement.CompletedRequirements,
-                        exemptedRequirements: arrangement.ExemptedRequirements).IsMetOrExempted)
+            var arrangementLevelResults = arrangementPolicy
+                .RequiredSetupActionNames.Where(requiredAction =>
+                    !SharedCalculations
+                        .RequirementMetOrExempted(
+                            requiredAction,
+                            policySupersededAtUtc: null,
+                            utcNow: utcNow,
+                            completedRequirements: arrangement.CompletedRequirements,
+                            exemptedRequirements: arrangement.ExemptedRequirements
+                        )
+                        .IsMetOrExempted
+                )
                 .Select(requiredAction => new MissingArrangementRequirement(
-                    null, null, null, null,
-                    requiredAction, null, null))
+                    null,
+                    null,
+                    null,
+                    null,
+                    requiredAction,
+                    null,
+                    null
+                ))
                 .ToImmutableList();
 
-            var familyAssignmentResults = arrangement.FamilyVolunteerAssignments
-                .SelectMany(fva =>
+            var familyAssignmentResults = arrangement
+                .FamilyVolunteerAssignments.SelectMany(fva =>
                 {
-                    var functionVariant = arrangementPolicy.ArrangementFunctions
-                        .SingleOrDefault(af => af.FunctionName == fva.ArrangementFunction)
+                    var functionVariant = arrangementPolicy
+                        .ArrangementFunctions.SingleOrDefault(af => af.FunctionName == fva.ArrangementFunction)
                         ?.Variants?.SingleOrDefault(afv => afv.VariantName == fva.ArrangementFunctionVariant);
 
                     if (functionVariant == null)
                         return ImmutableList<MissingArrangementRequirement>.Empty;
 
-                    return functionVariant.RequiredSetupActionNames
-                        .Where(requiredAction =>
-                            !SharedCalculations.RequirementMetOrExempted(requiredAction,
-                                policySupersededAtUtc: null, utcNow: utcNow,
-                                completedRequirements: fva.CompletedRequirements,
-                                exemptedRequirements: fva.ExemptedRequirements).IsMetOrExempted)
+                    return functionVariant
+                        .RequiredSetupActionNames.Where(requiredAction =>
+                            !SharedCalculations
+                                .RequirementMetOrExempted(
+                                    requiredAction,
+                                    policySupersededAtUtc: null,
+                                    utcNow: utcNow,
+                                    completedRequirements: fva.CompletedRequirements,
+                                    exemptedRequirements: fva.ExemptedRequirements
+                                )
+                                .IsMetOrExempted
+                        )
                         .Select(requiredAction => new MissingArrangementRequirement(
-                            fva.ArrangementFunction, fva.ArrangementFunctionVariant, fva.FamilyId, null,
-                            requiredAction, null, null))
+                            fva.ArrangementFunction,
+                            fva.ArrangementFunctionVariant,
+                            fva.FamilyId,
+                            null,
+                            requiredAction,
+                            null,
+                            null
+                        ))
                         .ToImmutableList();
                 })
                 .ToImmutableList();
 
-            var individualAssignmentResults = arrangement.IndividualVolunteerAssignments
-                .SelectMany(iva =>
+            var individualAssignmentResults = arrangement
+                .IndividualVolunteerAssignments.SelectMany(iva =>
                 {
-                    var functionVariant = arrangementPolicy.ArrangementFunctions
-                        .SingleOrDefault(af => af.FunctionName == iva.ArrangementFunction)
+                    var functionVariant = arrangementPolicy
+                        .ArrangementFunctions.SingleOrDefault(af => af.FunctionName == iva.ArrangementFunction)
                         ?.Variants?.SingleOrDefault(afv => afv.VariantName == iva.ArrangementFunctionVariant);
 
                     if (functionVariant == null)
                         return ImmutableList<MissingArrangementRequirement>.Empty;
 
-                    return functionVariant.RequiredSetupActionNames
-                        .Where(requiredAction =>
-                            !SharedCalculations.RequirementMetOrExempted(requiredAction,
-                                policySupersededAtUtc: null, utcNow: utcNow,
-                                completedRequirements: iva.CompletedRequirements,
-                                exemptedRequirements: iva.ExemptedRequirements).IsMetOrExempted)
+                    return functionVariant
+                        .RequiredSetupActionNames.Where(requiredAction =>
+                            !SharedCalculations
+                                .RequirementMetOrExempted(
+                                    requiredAction,
+                                    policySupersededAtUtc: null,
+                                    utcNow: utcNow,
+                                    completedRequirements: iva.CompletedRequirements,
+                                    exemptedRequirements: iva.ExemptedRequirements
+                                )
+                                .IsMetOrExempted
+                        )
                         .Select(requiredAction => new MissingArrangementRequirement(
-                            iva.ArrangementFunction, iva.ArrangementFunctionVariant, iva.FamilyId, iva.PersonId,
-                            requiredAction, null, null))
+                            iva.ArrangementFunction,
+                            iva.ArrangementFunctionVariant,
+                            iva.FamilyId,
+                            iva.PersonId,
+                            requiredAction,
+                            null,
+                            null
+                        ))
                         .ToImmutableList();
                 })
                 .ToImmutableList();
@@ -160,100 +234,165 @@ namespace CareTogether.Engines.PolicyEvaluation
         }
 
         internal static ImmutableList<MissingArrangementRequirement> CalculateMissingMonitoringRequirements(
-            ArrangementPolicy arrangementPolicy, ArrangementEntry arrangement, DateTime utcNow, TimeZoneInfo locationTimeZone)
+            ArrangementPolicy arrangementPolicy,
+            ArrangementEntry arrangement,
+            DateTime utcNow,
+            TimeZoneInfo locationTimeZone
+        )
         {
-            var arrangementLevelResults = arrangementPolicy.RequiredMonitoringActions
-                .SelectMany(monitoringRequirement =>
-                    (arrangement.StartedAtUtc.HasValue
-                    ? CalculateMissingMonitoringRequirementInstances(monitoringRequirement.Recurrence,
-                        filterToFamilyId: null,
-                        arrangement.StartedAtUtc.Value, arrangement.EndedAtUtc,
-                        arrangement.CompletedRequirements
-                            .Where(x => x.RequirementName == monitoringRequirement.ActionName)
-                            .Select(x => x.CompletedAtUtc)
-                            .OrderBy(x => x).ToImmutableList(),
-                        arrangement.ChildLocationHistory, utcNow, locationTimeZone)
-                    : ImmutableList<DateTime>.Empty)
-                    .Where(missingDueDate => !arrangement.ExemptedRequirements.Any(exempted =>
-                        exempted.RequirementName == monitoringRequirement.ActionName &&
-                        (!exempted.DueDate.HasValue || exempted.DueDate == missingDueDate.ToUniversalTime()) &&
-                        (exempted.ExemptionExpiresAtUtc == null || exempted.ExemptionExpiresAtUtc > utcNow)))
-                    .Select(missingDueDate =>
-                        new MissingArrangementRequirement(
-                            null, null, null, null,
+            var arrangementLevelResults = arrangementPolicy
+                .RequiredMonitoringActions.SelectMany(monitoringRequirement =>
+                    (
+                        arrangement.StartedAtUtc.HasValue
+                            ? CalculateMissingMonitoringRequirementInstances(
+                                monitoringRequirement.Recurrence,
+                                filterToFamilyId: null,
+                                arrangement.StartedAtUtc.Value,
+                                arrangement.EndedAtUtc,
+                                arrangement
+                                    .CompletedRequirements.Where(x =>
+                                        x.RequirementName == monitoringRequirement.ActionName
+                                    )
+                                    .Select(x => x.CompletedAtUtc)
+                                    .OrderBy(x => x)
+                                    .ToImmutableList(),
+                                arrangement.ChildLocationHistory,
+                                utcNow,
+                                locationTimeZone
+                            )
+                            : ImmutableList<DateTime>.Empty
+                    )
+                        .Where(missingDueDate =>
+                            !arrangement.ExemptedRequirements.Any(exempted =>
+                                exempted.RequirementName == monitoringRequirement.ActionName
+                                && (!exempted.DueDate.HasValue || exempted.DueDate == missingDueDate.ToUniversalTime())
+                                && (exempted.ExemptionExpiresAtUtc == null || exempted.ExemptionExpiresAtUtc > utcNow)
+                            )
+                        )
+                        .Select(missingDueDate => new MissingArrangementRequirement(
+                            null,
+                            null,
+                            null,
+                            null,
                             monitoringRequirement.ActionName,
                             DueBy: missingDueDate > utcNow ? missingDueDate : null,
-                            PastDueSince: missingDueDate <= utcNow ? missingDueDate : null)))
+                            PastDueSince: missingDueDate <= utcNow ? missingDueDate : null
+                        ))
+                )
                 .ToImmutableList();
 
-            var familyAssignmentResults = arrangement.FamilyVolunteerAssignments
-                .SelectMany(fva =>
+            var familyAssignmentResults = arrangement
+                .FamilyVolunteerAssignments.SelectMany(fva =>
                 {
-                    var functionVariant = arrangementPolicy.ArrangementFunctions
-                        .SingleOrDefault(af => af.FunctionName == fva.ArrangementFunction)
+                    var functionVariant = arrangementPolicy
+                        .ArrangementFunctions.SingleOrDefault(af => af.FunctionName == fva.ArrangementFunction)
                         ?.Variants?.SingleOrDefault(afv => afv.VariantName == fva.ArrangementFunctionVariant);
 
                     if (functionVariant == null)
                         return ImmutableList<MissingArrangementRequirement>.Empty;
 
-                    return functionVariant.RequiredMonitoringActions
-                        .SelectMany(monitoringRequirement =>
-                            (arrangement.StartedAtUtc.HasValue
-                            ? CalculateMissingMonitoringRequirementInstances(monitoringRequirement.Recurrence,
-                                filterToFamilyId: fva.FamilyId,
-                                arrangement.StartedAtUtc.Value, arrangement.EndedAtUtc,
-                                fva.CompletedRequirements
-                                    .Where(x => x.RequirementName == monitoringRequirement.ActionName)
-                                    .Select(x => x.CompletedAtUtc)
-                                    .OrderBy(x => x).ToImmutableList(),
-                                arrangement.ChildLocationHistory, utcNow, locationTimeZone)
-                            : ImmutableList<DateTime>.Empty)
-                            .Where(missingDueDate => !fva.ExemptedRequirements.Any(exempted =>
-                                exempted.RequirementName == monitoringRequirement.ActionName &&
-                                (!exempted.DueDate.HasValue || exempted.DueDate == missingDueDate.ToUniversalTime()) &&
-                                (exempted.ExemptionExpiresAtUtc == null || exempted.ExemptionExpiresAtUtc > utcNow)))
-                            .Select(missingDueDate =>
-                                new MissingArrangementRequirement(
-                                    fva.ArrangementFunction, fva.ArrangementFunctionVariant, fva.FamilyId, null,
+                    return functionVariant
+                        .RequiredMonitoringActions.SelectMany(monitoringRequirement =>
+                            (
+                                arrangement.StartedAtUtc.HasValue
+                                    ? CalculateMissingMonitoringRequirementInstances(
+                                        monitoringRequirement.Recurrence,
+                                        filterToFamilyId: fva.FamilyId,
+                                        arrangement.StartedAtUtc.Value,
+                                        arrangement.EndedAtUtc,
+                                        fva.CompletedRequirements.Where(x =>
+                                                x.RequirementName == monitoringRequirement.ActionName
+                                            )
+                                            .Select(x => x.CompletedAtUtc)
+                                            .OrderBy(x => x)
+                                            .ToImmutableList(),
+                                        arrangement.ChildLocationHistory,
+                                        utcNow,
+                                        locationTimeZone
+                                    )
+                                    : ImmutableList<DateTime>.Empty
+                            )
+                                .Where(missingDueDate =>
+                                    !fva.ExemptedRequirements.Any(exempted =>
+                                        exempted.RequirementName == monitoringRequirement.ActionName
+                                        && (
+                                            !exempted.DueDate.HasValue
+                                            || exempted.DueDate == missingDueDate.ToUniversalTime()
+                                        )
+                                        && (
+                                            exempted.ExemptionExpiresAtUtc == null
+                                            || exempted.ExemptionExpiresAtUtc > utcNow
+                                        )
+                                    )
+                                )
+                                .Select(missingDueDate => new MissingArrangementRequirement(
+                                    fva.ArrangementFunction,
+                                    fva.ArrangementFunctionVariant,
+                                    fva.FamilyId,
+                                    null,
                                     monitoringRequirement.ActionName,
                                     DueBy: missingDueDate > utcNow ? missingDueDate : null,
-                                    PastDueSince: missingDueDate <= utcNow ? missingDueDate : null)))
+                                    PastDueSince: missingDueDate <= utcNow ? missingDueDate : null
+                                ))
+                        )
                         .ToImmutableList();
                 })
                 .ToImmutableList();
 
-            var individualAssignmentResults = arrangement.IndividualVolunteerAssignments
-                .SelectMany(iva =>
+            var individualAssignmentResults = arrangement
+                .IndividualVolunteerAssignments.SelectMany(iva =>
                 {
-                    var functionVariant = arrangementPolicy.ArrangementFunctions
-                        .SingleOrDefault(af => af.FunctionName == iva.ArrangementFunction)
+                    var functionVariant = arrangementPolicy
+                        .ArrangementFunctions.SingleOrDefault(af => af.FunctionName == iva.ArrangementFunction)
                         ?.Variants?.SingleOrDefault(afv => afv.VariantName == iva.ArrangementFunctionVariant);
 
                     if (functionVariant == null)
                         return ImmutableList<MissingArrangementRequirement>.Empty;
 
-                    return functionVariant.RequiredMonitoringActions
-                        .SelectMany(monitoringRequirement =>
-                            (arrangement.StartedAtUtc.HasValue
-                            ? CalculateMissingMonitoringRequirementInstances(monitoringRequirement.Recurrence,
-                                filterToFamilyId: iva.FamilyId,
-                                arrangement.StartedAtUtc.Value, arrangement.EndedAtUtc,
-                                iva.CompletedRequirements
-                                    .Where(x => x.RequirementName == monitoringRequirement.ActionName)
-                                    .Select(x => x.CompletedAtUtc)
-                                    .OrderBy(x => x).ToImmutableList(),
-                                arrangement.ChildLocationHistory, utcNow, locationTimeZone)
-                            : ImmutableList<DateTime>.Empty)
-                            .Where(missingDueDate => !iva.ExemptedRequirements.Any(exempted =>
-                                exempted.RequirementName == monitoringRequirement.ActionName &&
-                                (!exempted.DueDate.HasValue || exempted.DueDate == missingDueDate.ToUniversalTime()) &&
-                                (exempted.ExemptionExpiresAtUtc == null || exempted.ExemptionExpiresAtUtc > utcNow)))
-                            .Select(missingDueDate =>
-                                new MissingArrangementRequirement(
-                                    iva.ArrangementFunction, iva.ArrangementFunctionVariant, iva.FamilyId, iva.PersonId,
+                    return functionVariant
+                        .RequiredMonitoringActions.SelectMany(monitoringRequirement =>
+                            (
+                                arrangement.StartedAtUtc.HasValue
+                                    ? CalculateMissingMonitoringRequirementInstances(
+                                        monitoringRequirement.Recurrence,
+                                        filterToFamilyId: iva.FamilyId,
+                                        arrangement.StartedAtUtc.Value,
+                                        arrangement.EndedAtUtc,
+                                        iva.CompletedRequirements.Where(x =>
+                                                x.RequirementName == monitoringRequirement.ActionName
+                                            )
+                                            .Select(x => x.CompletedAtUtc)
+                                            .OrderBy(x => x)
+                                            .ToImmutableList(),
+                                        arrangement.ChildLocationHistory,
+                                        utcNow,
+                                        locationTimeZone
+                                    )
+                                    : ImmutableList<DateTime>.Empty
+                            )
+                                .Where(missingDueDate =>
+                                    !iva.ExemptedRequirements.Any(exempted =>
+                                        exempted.RequirementName == monitoringRequirement.ActionName
+                                        && (
+                                            !exempted.DueDate.HasValue
+                                            || exempted.DueDate == missingDueDate.ToUniversalTime()
+                                        )
+                                        && (
+                                            exempted.ExemptionExpiresAtUtc == null
+                                            || exempted.ExemptionExpiresAtUtc > utcNow
+                                        )
+                                    )
+                                )
+                                .Select(missingDueDate => new MissingArrangementRequirement(
+                                    iva.ArrangementFunction,
+                                    iva.ArrangementFunctionVariant,
+                                    iva.FamilyId,
+                                    iva.PersonId,
                                     monitoringRequirement.ActionName,
                                     DueBy: missingDueDate > utcNow ? missingDueDate : null,
-                                    PastDueSince: missingDueDate <= utcNow ? missingDueDate : null)))
+                                    PastDueSince: missingDueDate <= utcNow ? missingDueDate : null
+                                ))
+                        )
                         .ToImmutableList();
                 })
                 .ToImmutableList();
@@ -269,10 +408,15 @@ namespace CareTogether.Engines.PolicyEvaluation
         // For that reason, we convert the datetimes to the client (location) timezone during calculation,
         // to avoid a completion falling in the next day for example.
         internal static ImmutableList<DateTime> CalculateMissingMonitoringRequirementInstances(
-             RecurrencePolicy recurrence, Guid? filterToFamilyId,
-             DateTime arrangementStartedAtUtc, DateTime? arrangementEndedAtUtc,
-             ImmutableList<DateTime> completions, ImmutableSortedSet<ChildLocationHistoryEntry> childLocationHistory,
-             DateTime utcNow, TimeZoneInfo locationTimeZone)
+            RecurrencePolicy recurrence,
+            Guid? filterToFamilyId,
+            DateTime arrangementStartedAtUtc,
+            DateTime? arrangementEndedAtUtc,
+            ImmutableList<DateTime> completions,
+            ImmutableSortedSet<ChildLocationHistoryEntry> childLocationHistoryEntries,
+            DateTime utcNow,
+            TimeZoneInfo locationTimeZone
+        )
         {
             //////////////////////////////////////////////////
             //TODO: Move these timezone conversions out of the ReferralCalculations class and into the policy evaluation engine,
@@ -283,13 +427,26 @@ namespace CareTogether.Engines.PolicyEvaluation
 
             var currentLocationTime = TimeZoneInfo.ConvertTimeFromUtc(utcNow, locationTimeZone);
 
-            var arrangementStartedAtInLocationTime = TimeZoneInfo.ConvertTimeFromUtc(arrangementStartedAtUtc, locationTimeZone);
+            var arrangementStartedAtInLocationTime = TimeZoneInfo.ConvertTimeFromUtc(
+                arrangementStartedAtUtc,
+                locationTimeZone
+            );
             var arrangementStartedDate = DateOnly.FromDateTime(arrangementStartedAtInLocationTime);
+
+            var arrangementEndedAtInLocationTime = arrangementEndedAtUtc.HasValue
+                ? TimeZoneInfo.ConvertTimeFromUtc(arrangementEndedAtUtc.Value, locationTimeZone)
+                : (DateTime?)null;
+            var arrangementEndedDate = arrangementEndedAtInLocationTime.HasValue
+                ? DateOnly.FromDateTime(arrangementEndedAtInLocationTime.Value)
+                : (DateOnly?)null;
 
             var completionDates = completions
                 .Select(completionWithTime =>
                 {
-                    var completionInLocationTime = TimeZoneInfo.ConvertTimeFromUtc(completionWithTime, locationTimeZone);
+                    var completionInLocationTime = TimeZoneInfo.ConvertTimeFromUtc(
+                        completionWithTime,
+                        locationTimeZone
+                    );
                     var completionDate = DateOnly.FromDateTime(completionInLocationTime);
                     return completionDate;
                 })
@@ -299,39 +456,82 @@ namespace CareTogether.Engines.PolicyEvaluation
 
             ImmutableList<DateTime> WrapWithTimeInUtc(ImmutableList<DateOnly> dates)
             {
-                return dates.Select(date =>
-                {
-                    var dateInLocationTime = new DateTime(date, TimeOnly.MinValue);
-                    var dateTimeInUtc = TimeZoneInfo.ConvertTimeToUtc(dateInLocationTime, locationTimeZone);
-                    return dateTimeInUtc;
-                }).ToImmutableList();
+                return dates
+                    .Select(date =>
+                    {
+                        var dateInLocationTime = new DateTime(date, TimeOnly.MinValue);
+                        var dateTimeInUtc = TimeZoneInfo.ConvertTimeToUtc(dateInLocationTime, locationTimeZone);
+                        return dateTimeInUtc;
+                    })
+                    .ToImmutableList();
             }
+
+            var childLocationHistory = childLocationHistoryEntries
+                .Select(childLocationEntry =>
+                {
+                    var timestampInLocationTime = TimeZoneInfo.ConvertTimeFromUtc(
+                        childLocationEntry.TimestampUtc,
+                        locationTimeZone
+                    );
+                    var childLocationDate = DateOnly.FromDateTime(timestampInLocationTime);
+                    return new ChildLocation(
+                        childLocationEntry.ChildLocationFamilyId,
+                        childLocationDate,
+                        Paused: childLocationEntry.Plan == ChildLocationPlan.WithParent
+                    );
+                })
+                .ToImmutableSortedSet();
+
             //////////////////////////////////////////////////
 
             return recurrence switch
             {
                 OneTimeRecurrencePolicy oneTime => WrapWithTimeInUtc(
                     CalculateMissingMonitoringRequirementInstancesForOneTimeRecurrence(
-                        oneTime, arrangementStartedDate, completionDates, today)),
-                DurationStagesRecurrencePolicy durationStages =>
+                        oneTime,
+                        arrangementStartedDate,
+                        completionDates
+                    )
+                ),
+                DurationStagesRecurrencePolicy durationStages => WrapWithTimeInUtc(
                     CalculateMissingMonitoringRequirementInstancesForDurationRecurrence(
-                        durationStages, arrangementStartedAtUtc, arrangementEndedAtUtc, utcNow, completions),
-                DurationStagesPerChildLocationRecurrencePolicy durationStagesPerChildLocation =>
+                        durationStages,
+                        arrangementStartedDate,
+                        arrangementEndedDate,
+                        today,
+                        completionDates
+                    )
+                ),
+                DurationStagesPerChildLocationRecurrencePolicy durationStagesPerChildLocation => WrapWithTimeInUtc(
                     CalculateMissingMonitoringRequirementInstancesForDurationRecurrencePerChildLocation(
-                        durationStagesPerChildLocation, filterToFamilyId, arrangementStartedAtUtc, arrangementEndedAtUtc, utcNow,
-                        completions, childLocationHistory),
-                ChildCareOccurrenceBasedRecurrencePolicy childCareOccurences =>
+                        durationStagesPerChildLocation,
+                        filterToFamilyId,
+                        arrangementStartedDate,
+                        arrangementEndedDate,
+                        today,
+                        completionDates,
+                        childLocationHistory
+                    )
+                ),
+                ChildCareOccurrenceBasedRecurrencePolicy childCareOccurences => WrapWithTimeInUtc(
                     CalculateMissingMonitoringRequirementInstancesForChildCareOccurrences(
-                        childCareOccurences, filterToFamilyId, arrangementStartedAtUtc, arrangementEndedAtUtc,
-                        completions, childLocationHistory, utcNow),
+                        childCareOccurences,
+                        filterToFamilyId,
+                        completionDates,
+                        childLocationHistory
+                    )
+                ),
                 _ => throw new NotImplementedException(
-                    $"The recurrence policy type '{recurrence.GetType().FullName}' has not been implemented.")
+                    $"The recurrence policy type '{recurrence.GetType().FullName}' has not been implemented."
+                ),
             };
         }
 
         internal static ImmutableList<DateOnly> CalculateMissingMonitoringRequirementInstancesForOneTimeRecurrence(
-            OneTimeRecurrencePolicy recurrence, DateOnly arrangementStartedDate,
-            ImmutableList<DateOnly> completions, DateOnly today)
+            OneTimeRecurrencePolicy recurrence,
+            DateOnly arrangementStartedDate,
+            ImmutableList<DateOnly> completions
+        )
         {
             if (recurrence.Delay.HasValue)
             {
@@ -345,7 +545,6 @@ namespace CareTogether.Engines.PolicyEvaluation
                 {
                     return [dueDate];
                 }
-                
             }
             else
             {
@@ -359,342 +558,412 @@ namespace CareTogether.Engines.PolicyEvaluation
                 }
             }
         }
-        
-        internal static ImmutableList<DateTime> CalculateMissingMonitoringRequirementInstancesForDurationRecurrence(
+
+        internal static ImmutableList<DateOnly> CalculateMissingMonitoringRequirementInstancesForDurationRecurrence(
             DurationStagesRecurrencePolicy recurrence,
-            DateTime arrangementStartedAtUtc, DateTime? arrangementEndedAtUtc, DateTime utcNow,
-            ImmutableList<DateTime> completions)
+            DateOnly arrangementStartedDate,
+            DateOnly? arrangementEndedDate,
+            DateOnly today,
+            ImmutableList<DateOnly> completionDates
+        )
         {
             // Technically, the RecurrencePolicyStage model currently allows any stage to have an unlimited
             // # of occurrences, but that would be invalid, so check for those cases and throw an exception.
             //TODO: Move this into the policy loading code, or better yet fix the model to make this impossible.
             if (recurrence.Stages.Take(recurrence.Stages.Count - 1).Any(stage => !stage.MaxOccurrences.HasValue))
-                throw new InvalidOperationException("A stage other than the last stage in a recurrence policy was found to have an unlimited number of occurrences.");
+                throw new InvalidOperationException(
+                    "A stage other than the last stage in a recurrence policy was found to have an unlimited number of occurrences."
+                );
 
-            // Calculate the start and end dates of each stage based on the recurrence policy and the arrangement start date.
-            // A null end date means the stage continues indefinitely, so for simplicity this case will be
-            // represented as DateTime.MaxValue.
-            // A null start date will only occur if invalid data is provided (i.e., if any stage other than the last one has
-            // an unlimited number of occurrences), so this calculation forces start date results to be non-null.
-            var arrangementStages = recurrence.Stages
-                .Select(stage => (incrementDelay: stage.Delay, totalDuration: stage.Delay * stage.MaxOccurrences))
-                .Aggregate(ImmutableList<(TimeSpan incrementDelay, DateTime startDate, DateTime endDate)>.Empty,
-                    (priorStages, stage) => priorStages.Add((stage.incrementDelay,
-                        startDate: priorStages.Count == 0
-                        ? arrangementStartedAtUtc
-                        : priorStages.Last().endDate,
-                        endDate: stage.totalDuration.HasValue
-                        ? (priorStages.Count == 0
-                            ? arrangementStartedAtUtc + stage.totalDuration.Value
-                            : priorStages.Last().endDate + stage.totalDuration.Value)
-                        : DateTime.MaxValue)))
-                .Select(result => (
-                    result.incrementDelay,
-                    timeSpan: new AbsoluteTimeSpan(result.startDate, result.endDate)))
-                .ToImmutableList();
+            var searchableTimeline = new DateOnlyTimeline([new DateRange(arrangementStartedDate)]);
 
-            // For each completion, find the time of the following completion (null in the case of the last completion
-            // unless the arrangement has ended, in which case use the end of the arrangement).
-            // This represents the set of gaps between completions in which there could be missing requirement due dates.
-            // Prepend this list with an entry representing the start of the arrangement.
-            // Edge cases:
-            //   1. There is an edge case where the last completion occurs *after* the end of the arrangement;
-            //      in this case, exclude that completion from the list of gaps.
-            //      TODO: Should we simply ignore all completions after the end of the arrangement?
-            //   2. If a completion occurs *before* the beginning of the arrangement,
-            //      it will simply be ignored.
-            var validCompletions = completions
-                .Where(completion => completion >= arrangementStartedAtUtc)
-                .ToImmutableList();
-            var completionGaps = validCompletions
-                .Where((completion, i) =>
-                    i + 1 >= validCompletions.Count && arrangementEndedAtUtc.HasValue
-                        ? completion < arrangementEndedAtUtc.Value
-                        : true)
-                .Select((completion, i) =>
-                    (start: completion, end: i + 1 >= validCompletions.Count
-                        ? (arrangementEndedAtUtc.HasValue ? arrangementEndedAtUtc.Value : DateTime.MaxValue)
-                        : validCompletions[i + 1]))
-                .Prepend((start: arrangementStartedAtUtc, end: validCompletions.Count > 0
-                    ? validCompletions[0]
-                    : (arrangementEndedAtUtc.HasValue ? arrangementEndedAtUtc.Value : DateTime.MaxValue)))
-                .Select(gap => new Timeline(gap.start, gap.end))
-                .ToImmutableList();
+            var dueDates = CalculateDueDatesInTimeline(
+                recurrence.Stages,
+                completionDates,
+                searchableTimeline,
+                today,
+                arrangementEndedDate
+            );
 
-            // Calculate all missing requirements within each completion gap (there may be none).
-            var missingRequirements = completionGaps.SelectMany(gap =>
-                CalculateMissingMonitoringRequirementsWithinCompletionGap(utcNow, gap, arrangementStages))
-                .ToImmutableList();
-
-            return missingRequirements;
+            return dueDates;
         }
-        internal static ImmutableList<DateTime> CalculateMissingMonitoringRequirementInstancesForDurationRecurrencePerChildLocation(
-            DurationStagesPerChildLocationRecurrencePolicy recurrence, Guid? filterToFamilyId,
-            DateTime arrangementStartedAtUtc, DateTime? arrangementEndedAtUtc, DateTime utcNow,
-            ImmutableList<DateTime> completions, ImmutableSortedSet<ChildLocationHistoryEntry> childLocationHistory)
+
+        internal static DateOnlyTimeline? CreateChildLocationBasedTimeline(
+            ImmutableList<ChildLocation> childLocations,
+            Guid? filterToFamilyId = null
+        )
+        {
+            var dateRanges = GenerateDateRanges(childLocations).ToImmutableList();
+
+            var filteredDateRanges = (
+                filterToFamilyId != null ? dateRanges.Where(item => item.Tag == filterToFamilyId) : dateRanges
+            )
+                .Select(item => new DateRange(item.Start, item.End))
+                .ToImmutableList();
+
+            if (filteredDateRanges.IsEmpty)
+            {
+                return null;
+            }
+
+            return new DateOnlyTimeline(filteredDateRanges);
+        }
+
+        private static IEnumerable<DateRange<Guid>> GenerateDateRanges(ImmutableList<ChildLocation> childLocations)
+        {
+            DateOnly? startDate = null;
+            Guid? tag = null;
+
+            foreach (var childLocation in childLocations)
+            {
+                if (!startDate.HasValue && !childLocation.Paused)
+                {
+                    startDate = childLocation.Date;
+                    tag = childLocation.ChildLocationFamilyId;
+                    continue;
+                }
+
+                if (startDate.HasValue && tag.HasValue && childLocation.Paused)
+                {
+                    yield return new DateRange<Guid>(startDate.Value, childLocation.Date, tag.Value);
+                    startDate = null;
+                    continue;
+                }
+            }
+
+            if (startDate.HasValue && tag.HasValue)
+            {
+                yield return new DateRange<Guid>(startDate.Value, tag.Value);
+            }
+        }
+
+        internal static DateOnlyTimeline? GetWindowForExpectedCompletion(
+            DateOnly startDate,
+            TimeSpan windowLength,
+            DateOnlyTimeline searchableTimeline
+        )
+        {
+            var baseWindowTimeline = new DateOnlyTimeline([new DateRange(startDate)]);
+
+            var searchableTimelineFromWindowStartDate = baseWindowTimeline.IntersectionWith(searchableTimeline);
+
+            var window = searchableTimelineFromWindowStartDate?.TakeDays(windowLength.Days);
+
+            if (window == default || window.TotalDaysInclusive() < windowLength.Days)
+            {
+                return null;
+            }
+
+            var isDiscontinuousWindow = window.Ranges.Count > 1;
+
+            // If resulting window is discontinuous, it means there's a pause in the timeline.
+            // Currently, the app adds 1 more day to the window length if there was a pause.
+            // So this condition is for backwards compatibility purpose.
+            if (isDiscontinuousWindow)
+            {
+                var lastDayRange = new DateRange(window.End.AddDays(1), window.End.AddDays(1));
+
+                return new DateOnlyTimeline(window.Ranges.Add(lastDayRange));
+            }
+
+            return window;
+        }
+
+        internal static DateOfInterest CalculateNextDateOfInterest(
+            DateOnlyTimeline window,
+            ImmutableList<DateOnly> completions
+        )
+        {
+            var completion = completions.Find(window.Contains);
+
+            var completionIsMissing = completion == default;
+
+            if (!completionIsMissing)
+            {
+                return new DateOfInterest(completion, IsMissing: false);
+            }
+
+            return new DateOfInterest(window.Ranges.Last().End, IsMissing: true);
+        }
+
+        internal static IEnumerable<DateOfInterest> IterateDatesOfInterest(
+            DateOnly lastDateOfInterest,
+            ImmutableList<DateOnly> completions,
+            TimeSpan windowLength,
+            DateOnlyTimeline searchableTimeline
+        )
+        {
+            DateOnly nextWindowStartDate = lastDateOfInterest.AddDays(1);
+
+            while (true)
+            {
+                // This is the window in which we expect to find a completion.
+                // This can be a continuous or discontinuous timeline (based on child location history).
+                // The end of the window represents the due date for this slot.
+                var nextWindow = GetWindowForExpectedCompletion(nextWindowStartDate, windowLength, searchableTimeline);
+
+                // This case only happens if a policy gets 'paused'
+                // (when a child location changes to WithParent) during the policy window.
+                if (nextWindow == null)
+                {
+                    yield break;
+                }
+
+                // Search for a completion inside current window.
+                // Note that this timeline could be discontinuous based on child location history.
+                var nextDateOfInterest = CalculateNextDateOfInterest(nextWindow, completions);
+
+                yield return nextDateOfInterest;
+
+                nextWindowStartDate = nextDateOfInterest.Date.AddDays(1);
+            }
+        }
+
+        internal static ImmutableList<DateOnly> CalculateDueDatesInTimeline(
+            ImmutableList<RecurrencePolicyStage> recurrenceStages,
+            ImmutableList<DateOnly> completionDates,
+            DateOnlyTimeline searchableTimeline,
+            DateOnly today,
+            DateOnly? arrangementEndedDate
+        )
+        {
+            var validCompletions = completionDates
+                .Where(completion => completion >= searchableTimeline.Start)
+                .ToImmutableList();
+
+            // Checking for a completion at the start date first simplifies the rest of the calculation.
+            // For example, when there's just one policy stage with MaxOccurrences = null, the resulting dates are offsetted,
+            // creating the need to make the recursive calculation aware if it's the first calculation, i. e. start date and delay are offset or not,
+            // so the rest of the calculation have a different offset, compensanting the first offset.
+            // Another problem is a stack overflow (infinite recursion), creating the need of always passing a new list of completions,
+            // removing the ones that were already checked.
+            var completionOnDayOne = validCompletions.Find(item => item == searchableTimeline.Start);
+            var applicableStages =
+                completionOnDayOne != default && recurrenceStages.Count > 1
+                    ? recurrenceStages.Skip(1)
+                    : recurrenceStages;
+
+            // Generates slots in which we need to look for a completion. Each stage generates a number of slots
+            // equal to its MaxOccurrences, or just 1 if MaxOccurrences is null (which should be the last stage, or the only one).
+            // A slot doesn't have a start/end date because there's no way of determining all the start/end dates beforehand, it depends on previus
+            // calculated dates of interest (either a completion or due date).
+            var slots = applicableStages.SelectMany(stage =>
+                Enumerable.Repeat(stage, stage.MaxOccurrences ?? 1).ToImmutableList()
+            );
+
+            // For each slot, find a list of all dates of interest (meaning dates of completion or due dates, which are used
+            // to calculate the next window).
+            var datesOfInterest = slots.Aggregate(
+                ImmutableList<DateOfInterest>.Empty,
+                (dates, slot) =>
+                {
+                    var lastDateOfInterest = dates.LastOrDefault()?.Date ?? searchableTimeline.Start;
+
+                    var allPossibleNextDatesIterator = IterateDatesOfInterest(
+                        lastDateOfInterest,
+                        validCompletions,
+                        slot.Delay,
+                        searchableTimeline
+                    );
+
+                    var nextDates =
+                        slot.MaxOccurrences == null
+                            ? allPossibleNextDatesIterator.TakeWhilePlusOne(nextDateOfInterest =>
+                                nextDateOfInterest.Date <= (arrangementEndedDate ?? today)
+                            )
+                            : allPossibleNextDatesIterator.Take(1);
+
+                    var aggregatedDates = dates.Concat(nextDates).ToImmutableList();
+
+                    return aggregatedDates;
+                }
+            );
+
+            var dueDates = datesOfInterest.Where(date => date.IsMissing).Select(item => item.Date).ToImmutableList();
+
+            if (arrangementEndedDate != null)
+            {
+                return dueDates.TakeWhile(date => date <= arrangementEndedDate).ToImmutableList();
+            }
+
+            var dueDatesUntilToday = dueDates.TakeWhilePlusOne(date => date <= today).ToImmutableList();
+
+            return dueDatesUntilToday;
+        }
+
+        internal static ImmutableList<DateOnly> CalculateMissingMonitoringRequirementInstancesForDurationRecurrencePerChildLocation(
+            DurationStagesPerChildLocationRecurrencePolicy recurrence,
+            Guid? filterToFamilyId,
+            DateOnly arrangementStartedDate,
+            DateOnly? arrangementEndedDate,
+            DateOnly today,
+            ImmutableList<DateOnly> completionDates,
+            ImmutableSortedSet<ChildLocation> childLocationHistory
+        )
         {
             // Technically, the RecurrencePolicyStage model currently allows any stage to have an unlimited
             // # of occurrences, but that would be invalid, so check for those cases and throw an exception.
             //TODO: Move this into the policy loading code, or better yet fix the model to make this impossible.
             if (recurrence.Stages.Take(recurrence.Stages.Count - 1).Any(stage => !stage.MaxOccurrences.HasValue))
-                throw new InvalidOperationException("A stage other than the last stage in a recurrence policy was found to have an unlimited number of occurrences.");
+                throw new InvalidOperationException(
+                    "A stage other than the last stage in a recurrence policy was found to have an unlimited number of occurrences."
+                );
 
-            // Determine the start and end time of each child location history entry.
-            var childCareOccurrences = childLocationHistory.SelectMany((entry, i) =>
+            if (childLocationHistory.IsEmpty)
             {
-                if (i < childLocationHistory.Count - 1)
-                {
-                    var nextEntry = childLocationHistory[i + 1];
-                    return new[] { (entry: entry, startDate: entry.TimestampUtc, endDate: nextEntry.TimestampUtc as DateTime?) };
-                }
-                else
-                    return new[] { (entry: entry, startDate: entry.TimestampUtc, endDate: null as DateTime?) };
-            }).ToImmutableList();
+                return ImmutableList<DateOnly>.Empty;
+            }
 
-            // Determine which child care occurrences the requirement will apply to.
-            var applicableOccurrences = childCareOccurrences
-                .Where(x => x.entry.Plan != ChildLocationPlan.WithParent &&
-                    (filterToFamilyId == null || x.entry.ChildLocationFamilyId == filterToFamilyId))
-                .ToImmutableList();
+            // Get a possibly discontinuous timeline in which we will look for completions
+            var searchableTimeline = CreateChildLocationBasedTimeline(
+                childLocationHistory.ToImmutableList(),
+                filterToFamilyId
+            );
 
-            // Group the child care occurrences by child location (i.e., by the family caring for the child).
-            // This results in a (discontinuous) timeline of start and end dates/times for the child being in this location.
-            var occurrencesByLocation = applicableOccurrences
-                .GroupBy(x => x.entry.ChildLocationFamilyId)
-                .ToImmutableDictionary(x => x.Key);
-
-            // Build a (possibly discontinuous) timeline for the child's stay in each location.
-            // This will simplify subsequent calculations along this timeline.
-            var timelinesByLocation = occurrencesByLocation.Select(occurrences =>
+            // It is possible that a child went to a volunteer and returned before the end of the 'window'
+            // in which a completion is expected, in this case we don't return a due date.
+            if (searchableTimeline == null)
             {
-                var terminatingStages = occurrences.Value
-                    .Where(occurrence => occurrence.endDate != null)
-                    .Select(occurrence => new TerminatingTimelineStage(occurrence.startDate, (DateTime)occurrence.endDate!))
-                    .ToImmutableList();
+                return ImmutableList<DateOnly>.Empty;
+            }
 
-                var currentOccurrence = occurrences.Value
-                    .SingleOrDefault(occurrence => occurrence.endDate == null);
+            var dueDates = CalculateDueDatesInTimeline(
+                recurrence.Stages,
+                completionDates,
+                searchableTimeline,
+                today,
+                arrangementEndedDate
+            );
 
-                var timeline = currentOccurrence == default
-                ? new Timeline(terminatingStages)
-                : new Timeline(terminatingStages, new NonTerminatingTimelineStage(currentOccurrence.startDate));
-
-                return KeyValuePair.Create(occurrences.Key, timeline);
-            }).ToImmutableDictionary();
-
-            // For each discontinuous child location timeline, calculate the adjusted start and end dates of each stage
-            // of the recurrence policy.
-            // A "max" end date means the stage continues indefinitely (which can only apply to the current child's location).
-            var arrangementStagesByLocation = timelinesByLocation.Select(timeline =>
-            {
-                var arrangementStages = recurrence.Stages
-                    .Select(stage => (incrementDelay: stage.Delay, totalDuration: stage.Delay * stage.MaxOccurrences))
-                    .Aggregate(ImmutableList<(TimeSpan startDelay, TimeSpan incrementDelay, TimeSpan? totalDuration)>.Empty,
-                        (priorStages, stage) => priorStages.Add(
-                            (startDelay: new TimeSpan(priorStages.Sum(x => ((TimeSpan)x.totalDuration!).Ticks)),
-                            incrementDelay: stage.incrementDelay,
-                            totalDuration: stage.totalDuration)))
-                    .Select(stage => (incrementDelay: stage.incrementDelay,
-                        timeSpan: stage.totalDuration.HasValue
-                        ? timeline.Value.MapUnbounded(stage.startDelay, (TimeSpan)stage.totalDuration)
-                        : new AbsoluteTimeSpan(timeline.Value.MapUnbounded(stage.startDelay), DateTime.MaxValue)))
-                    .ToImmutableList();
-                return KeyValuePair.Create(timeline.Key, arrangementStages);
-            }).ToImmutableDictionary();
-
-            // Assign completions to their corresponding child location by determining which timeline contains them.
-            var completionGapsByLocation = timelinesByLocation.Select(location =>
-            {
-                var containedCompletions = completions
-                    .Where(completion => location.Value.Contains(completion))
-                    .ToImmutableList();
-
-                // For each completion, find the time of the following completion (null in the case of the last completion
-                // unless the location's timeline terminates, in which case use the end of the location's timeline).
-                // This represents the set of gaps between completions in which there could be missing requirement due dates.
-                // Prepend this list with an entry representing the start of the location's timeline.
-                var completionGaps = containedCompletions.Select((completion, i) =>
-                    (start: completion, end: i + 1 >= containedCompletions.Count
-                        ? location.Value.End
-                        : containedCompletions[i + 1]))
-                    .Prepend((start: arrangementStartedAtUtc, end: containedCompletions.Count > 0
-                        ? containedCompletions[0]
-                        : location.Value.End))
-                    .ToImmutableList();
-
-                // Represent gaps as timelines (subsets of their location timeline) to automatically handle
-                // any discontinuities in the location's timeline.
-                var completionGapTimelines = completionGaps.Select(completion =>
-                    location.Value.Subset(completion.start, completion.end)).ToImmutableList();
-
-                return KeyValuePair.Create(location.Key, completionGapTimelines);
-            }).ToImmutableDictionary();
-
-            // Calculate all missing requirements within each completion gap timeline (there may be none).
-            var missingRequirements = completionGapsByLocation.SelectMany(locationGaps =>
-                locationGaps.Value.SelectMany(gap =>
-                    CalculateMissingMonitoringRequirementsWithinCompletionGap(utcNow, gap,
-                    arrangementStagesByLocation[locationGaps.Key])))
-                .ToImmutableList();
-
-            return missingRequirements;
+            return dueDates;
         }
 
-        internal static ImmutableList<DateTime> CalculateMissingMonitoringRequirementsWithinCompletionGap(
-            DateTime utcNow, Timeline gap,
-            ImmutableList<(TimeSpan incrementDelay, AbsoluteTimeSpan timeSpan)> arrangementStages)
+        internal static ImmutableList<DateOnly> CalculateMissingMonitoringRequirementInstancesForChildCareOccurrences(
+            ChildCareOccurrenceBasedRecurrencePolicy recurrence,
+            Guid? filterToFamilyId,
+            ImmutableList<DateOnly> completionDates,
+            ImmutableSortedSet<ChildLocation> childLocationHistory
+        )
         {
-            // Use the current date as the end value if either the gap has no end (represented by DateTime.MaxValue)
-            // or if the current date is before the end of the gap (these logically reduce to the same condition).
-            var effectiveEnd = utcNow <= gap.End ? utcNow : gap.End;
-
-            // Determine which recurrence stages apply to the completion gap.
-            // One of three conditions makes a stage apply:
-            //  1. It begins during the gap.
-            //  2. It ends during the gap.
-            //  3. It begins before the gap and either ends after the gap or doesn't end.
-            var gapStages = arrangementStages.Where(stage =>
-                (stage.timeSpan.Start >= gap.Start && stage.timeSpan.Start <= effectiveEnd) ||
-                (stage.timeSpan.End >= gap.Start && stage.timeSpan.End <= effectiveEnd) ||
-                (stage.timeSpan.Start < gap.Start && stage.timeSpan.End > effectiveEnd))
-                .ToImmutableList();
-
-            // Calculate all missing requirements within the gap, using the stages to determine the
-            // increment delays to apply.
-            var dueDatesInGap = new List<DateTime>();
-            var nextDueDate = null as DateTime?;
-            var endConditionExceeded = false;
-            do
-            {
-                if (nextDueDate != null)
-                    dueDatesInGap.Add(nextDueDate.Value);
-
-                // The applicable stage for this next requirement is either:
-                //  1. the first of the gap stages if this is the first requirement being calculated, or
-                //  2. the first of the gap stages that would end after this next requirement (self-referencing), or
-                //  3. the first of the gap stages that has no end date (i.e., the last stage).
-                //     Note that case #3 is just a subset of #2 when "no end date" is represented by DateTime.MaxValue.
-                // TODO: An unknown issue is causing this to match no stages in some cases.
-                //       Is it possible for 'gapStages' to have zero elements?
-                var applicableStage = gapStages.FirstOrDefault(stage =>
-                    stage.timeSpan.End >= (nextDueDate ?? gap.Start) + stage.incrementDelay);
-                if (applicableStage == default)
-                    break;
-
-                // Calculate the next requirement due date based on the applicable stage, using the gap's timeline.
-                // If it falls within the current completion gap (& before the current time), it is a missing requirement.
-                nextDueDate = gap.TryMapFrom(nextDueDate ?? gap.Start, applicableStage.incrementDelay);
-                if (nextDueDate == null)
-                    break;
-
-                // Include one more if this is the last gap and we want the next due-by date (not a missing requirement per se).
-                // The end of the gap is a hard cut-off, but the current UTC date/time is a +1 cut-off (overshoot by one is needed).
-                // Similarly, if the current UTC date/time falls before the end of the gap, use the +1 cut-off instead of the gap end.
-                endConditionExceeded = utcNow < gap.End
-                    ? nextDueDate - applicableStage.incrementDelay > utcNow
-                    : nextDueDate >= gap.End;
-            } while (!endConditionExceeded);
-
-            return dueDatesInGap.ToImmutableList();
-        }
-
-        internal static ImmutableList<DateTime>
-            CalculateMissingMonitoringRequirementInstancesForChildCareOccurrences(
-            ChildCareOccurrenceBasedRecurrencePolicy recurrence, Guid? filterToFamilyId,
-            DateTime arrangementStartedAtUtc, DateTime? arrangementEndedAtUtc,
-            ImmutableList<DateTime> completions, ImmutableSortedSet<ChildLocationHistoryEntry> childLocationHistory,
-            DateTime utcNow)
-        {
-            // Determine the start and end time of each child location history entry.
-            var childCareOccurrences = childLocationHistory.SelectMany((entry, i) =>
-            {
-                if (i < childLocationHistory.Count - 1)
-                {
-                    var nextEntry = childLocationHistory[i + 1];
-                    return new[] { (entry: entry, startDate: entry.TimestampUtc, endDate: nextEntry.TimestampUtc as DateTime?) };
-                }
-                else
-                    return new[] { (entry: entry, startDate: entry.TimestampUtc, endDate: null as DateTime?) };
-            }).ToImmutableList();
-
             // Determine which child care occurrences the requirement will apply to.
-            var applicableOccurrences = childCareOccurrences
-                .Where(x => x.entry.Plan != ChildLocationPlan.WithParent &&
-                    (filterToFamilyId == null || x.entry.ChildLocationFamilyId == filterToFamilyId))
-                .Where((x, i) => recurrence.Positive
-                    ? i % recurrence.Frequency == recurrence.InitialSkipCount
-                    : i % recurrence.Frequency != recurrence.InitialSkipCount)
+            var applicableOccurrences = childLocationHistory
+                .Where(x => !x.Paused && (filterToFamilyId == null || x.ChildLocationFamilyId == filterToFamilyId))
+                .Where(
+                    (x, i) =>
+                        recurrence.Positive
+                            ? i % recurrence.Frequency == recurrence.InitialSkipCount
+                            : i % recurrence.Frequency != recurrence.InitialSkipCount
+                )
                 .ToImmutableList();
 
             // Determine which child care occurrences did not have a completion within the required delay timespan.
             var missedOccurrences = applicableOccurrences
-                .Where(x => !completions.Any(c => c >= x.startDate && c <= x.startDate + recurrence.Delay))
+                .Where(x => !completionDates.Any(c => c >= x.Date && c <= x.Date.AddDays(recurrence.Delay.Days)))
                 .ToImmutableList();
 
             // Return the due-by date of each missed occurrence.
             var missingInstances = missedOccurrences
-                .Select(x => x.startDate + recurrence.Delay)
+                .Select(x => x.Date.AddDays(recurrence.Delay.Days))
                 .ToImmutableList();
 
             return missingInstances;
         }
 
         internal static ImmutableList<MissingArrangementRequirement> CalculateMissingCloseoutRequirements(
-            ArrangementPolicy arrangementPolicy, ArrangementEntry arrangement, DateTime utcNow)
+            ArrangementPolicy arrangementPolicy,
+            ArrangementEntry arrangement,
+            DateTime utcNow
+        )
         {
-            var arrangementLevelResults = arrangementPolicy.RequiredCloseoutActionNames
-                .Where(requiredAction =>
-                    !SharedCalculations.RequirementMetOrExempted(requiredAction,
-                        policySupersededAtUtc: null, utcNow: utcNow,
-                        completedRequirements: arrangement.CompletedRequirements,
-                        exemptedRequirements: arrangement.ExemptedRequirements).IsMetOrExempted)
+            var arrangementLevelResults = arrangementPolicy
+                .RequiredCloseoutActionNames.Where(requiredAction =>
+                    !SharedCalculations
+                        .RequirementMetOrExempted(
+                            requiredAction,
+                            policySupersededAtUtc: null,
+                            utcNow: utcNow,
+                            completedRequirements: arrangement.CompletedRequirements,
+                            exemptedRequirements: arrangement.ExemptedRequirements
+                        )
+                        .IsMetOrExempted
+                )
                 .Select(requiredAction => new MissingArrangementRequirement(
-                    null, null, null, null,
-                    requiredAction, null, null))
+                    null,
+                    null,
+                    null,
+                    null,
+                    requiredAction,
+                    null,
+                    null
+                ))
                 .ToImmutableList();
 
-            var familyAssignmentResults = arrangement.FamilyVolunteerAssignments
-                .SelectMany(fva =>
+            var familyAssignmentResults = arrangement
+                .FamilyVolunteerAssignments.SelectMany(fva =>
                 {
-                    var functionVariant = arrangementPolicy.ArrangementFunctions
-                        .SingleOrDefault(af => af.FunctionName == fva.ArrangementFunction)
+                    var functionVariant = arrangementPolicy
+                        .ArrangementFunctions.SingleOrDefault(af => af.FunctionName == fva.ArrangementFunction)
                         ?.Variants?.SingleOrDefault(afv => afv.VariantName == fva.ArrangementFunctionVariant);
 
                     if (functionVariant == null)
                         return ImmutableList<MissingArrangementRequirement>.Empty;
 
-                    return functionVariant.RequiredCloseoutActionNames
-                        .Where(requiredAction =>
-                            !SharedCalculations.RequirementMetOrExempted(requiredAction,
-                                policySupersededAtUtc: null, utcNow: utcNow,
-                                completedRequirements: fva.CompletedRequirements,
-                                exemptedRequirements: fva.ExemptedRequirements).IsMetOrExempted)
+                    return functionVariant
+                        .RequiredCloseoutActionNames.Where(requiredAction =>
+                            !SharedCalculations
+                                .RequirementMetOrExempted(
+                                    requiredAction,
+                                    policySupersededAtUtc: null,
+                                    utcNow: utcNow,
+                                    completedRequirements: fva.CompletedRequirements,
+                                    exemptedRequirements: fva.ExemptedRequirements
+                                )
+                                .IsMetOrExempted
+                        )
                         .Select(requiredAction => new MissingArrangementRequirement(
-                            fva.ArrangementFunction, fva.ArrangementFunctionVariant, fva.FamilyId, null,
-                            requiredAction, null, null))
+                            fva.ArrangementFunction,
+                            fva.ArrangementFunctionVariant,
+                            fva.FamilyId,
+                            null,
+                            requiredAction,
+                            null,
+                            null
+                        ))
                         .ToImmutableList();
                 })
                 .ToImmutableList();
 
-            var individualAssignmentResults = arrangement.IndividualVolunteerAssignments
-                .SelectMany(iva =>
+            var individualAssignmentResults = arrangement
+                .IndividualVolunteerAssignments.SelectMany(iva =>
                 {
-                    var functionVariant = arrangementPolicy.ArrangementFunctions
-                        .SingleOrDefault(af => af.FunctionName == iva.ArrangementFunction)
+                    var functionVariant = arrangementPolicy
+                        .ArrangementFunctions.SingleOrDefault(af => af.FunctionName == iva.ArrangementFunction)
                         ?.Variants?.SingleOrDefault(afv => afv.VariantName == iva.ArrangementFunctionVariant);
 
                     if (functionVariant == null)
                         return ImmutableList<MissingArrangementRequirement>.Empty;
 
-                    return functionVariant.RequiredCloseoutActionNames
-                        .Where(requiredAction =>
-                            !SharedCalculations.RequirementMetOrExempted(requiredAction,
-                                policySupersededAtUtc: null, utcNow: utcNow,
-                                completedRequirements: iva.CompletedRequirements,
-                                exemptedRequirements: iva.ExemptedRequirements).IsMetOrExempted)
+                    return functionVariant
+                        .RequiredCloseoutActionNames.Where(requiredAction =>
+                            !SharedCalculations
+                                .RequirementMetOrExempted(
+                                    requiredAction,
+                                    policySupersededAtUtc: null,
+                                    utcNow: utcNow,
+                                    completedRequirements: iva.CompletedRequirements,
+                                    exemptedRequirements: iva.ExemptedRequirements
+                                )
+                                .IsMetOrExempted
+                        )
                         .Select(requiredAction => new MissingArrangementRequirement(
-                            iva.ArrangementFunction, iva.ArrangementFunctionVariant, iva.FamilyId, iva.PersonId,
-                            requiredAction, null, null))
+                            iva.ArrangementFunction,
+                            iva.ArrangementFunctionVariant,
+                            iva.FamilyId,
+                            iva.PersonId,
+                            requiredAction,
+                            null,
+                            null
+                        ))
                         .ToImmutableList();
                 })
                 .ToImmutableList();
@@ -708,15 +977,22 @@ namespace CareTogether.Engines.PolicyEvaluation
         internal static ImmutableList<ArrangementFunction> CalculateMissingFunctionAssignments(
             ImmutableList<ArrangementFunction> volunteerFunctions,
             ImmutableList<FamilyVolunteerAssignment> familyVolunteerAssignments,
-            ImmutableList<IndividualVolunteerAssignment> individualVolunteerAssignments) =>
+            ImmutableList<IndividualVolunteerAssignment> individualVolunteerAssignments
+        ) =>
             // NOTE: This calculation assumes that the current assignments are valid,
             //       implying that the assignments were validated when they were made.
             //TODO: Ensure assignments are validated (server-side) when they are made,
             //      and decide whether to flag changes in validity here or elsewhere.
             volunteerFunctions
-                .Where(vf => (vf.Requirement == FunctionRequirement.ExactlyOne || vf.Requirement == FunctionRequirement.OneOrMore) &&
-                    familyVolunteerAssignments.Where(fva => fva.ArrangementFunction == vf.FunctionName).Count() == 0 &&
-                    individualVolunteerAssignments.Where(iva => iva.ArrangementFunction == vf.FunctionName).Count() == 0)
+                .Where(vf =>
+                    (
+                        vf.Requirement == FunctionRequirement.ExactlyOne
+                        || vf.Requirement == FunctionRequirement.OneOrMore
+                    )
+                    && familyVolunteerAssignments.Where(fva => fva.ArrangementFunction == vf.FunctionName).Count() == 0
+                    && individualVolunteerAssignments.Where(iva => iva.ArrangementFunction == vf.FunctionName).Count()
+                        == 0
+                )
                 .ToImmutableList();
     }
 }

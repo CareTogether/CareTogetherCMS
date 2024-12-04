@@ -39,5 +39,25 @@ namespace CareTogether.Core.Test
 
             AssertEx.SequenceIs(result);
         }
+
+        [TestMethod]
+        public void TestTakeWhilePlusOne()
+        {
+            var dut = ImmutableList.Create([1, 2, 3, 4, 5]);
+
+            var result = dut.TakeWhilePlusOne(x => x < 3).ToImmutableList();
+
+            AssertEx.SequenceIs(result, 1, 2, 3);
+        }
+
+        [TestMethod]
+        public void TestTakeWhilePlusOneWhenPredicateMatchesAll()
+        {
+            var dut = ImmutableList.Create([1, 2, 3]);
+
+            var result = dut.TakeWhilePlusOne(x => x < 4).ToImmutableList();
+
+            AssertEx.SequenceIs(result, 1, 2, 3);
+        }
     }
 }

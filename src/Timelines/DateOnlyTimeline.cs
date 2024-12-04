@@ -35,6 +35,11 @@ public sealed class DateOnlyTimeline : IEquatable<DateOnlyTimeline>
         }
     }
 
+    public DateOnly Start =>
+        Ranges.First().Start;
+
+    public DateOnly End =>
+        Ranges.Last().End;
 
     public static DateOnlyTimeline? UnionOf(ImmutableList<DateOnlyTimeline?> timelines)
     {
@@ -274,6 +279,51 @@ public sealed class DateOnlyTimeline : IEquatable<DateOnlyTimeline>
         foreach (var range in Ranges)
             hashCode.Add(range.GetHashCode());
         return hashCode.ToHashCode();
+    }
+
+    /// <summary>
+    /// Returns a new DateOnlyTimeline that includes up to the specified number of days from the start of this timeline.
+    /// For discontinuous timelines, this will include ranges in order until the total length is reached.
+    /// If the requested length is greater than or equal to the total days in this timeline, returns this timeline unchanged.
+    /// </summary>
+    /// <param name="requestedLength">The maximum number of days to include in the new timeline</param>
+    /// <returns>A new DateOnlyTimeline containing up to the specified number of days from the start of this timeline</returns>
+    /// <exception cref="ArgumentException">Thrown when requestedLength is not positive</exception>
+    public DateOnlyTimeline? TakeDays(int requestedLength)
+    {
+        if (requestedLength <= 0)
+            throw new ArgumentException("Requested length must be positive.", nameof(requestedLength));
+
+        // If total length is already within limit, return unchanged
+        var totalLength = Ranges.Sum(r => r.TotalDaysInclusive);
+        if (totalLength <= requestedLength)
+            return this;
+
+        var remainingTotalLength = requestedLength;
+        var newRanges = new List<DateRange>();
+
+        foreach (var range in Ranges)
+        {
+            if (remainingTotalLength <= 0)
+                break;
+
+            // Only take part of this range up to remaining length
+            var newRange = range.TakeDays(remainingTotalLength);
+            newRanges.Add(newRange);
+            remainingTotalLength -= newRange.TotalDaysInclusive;
+        }
+
+        return new DateOnlyTimeline(newRanges.ToImmutableList());
+    }
+
+    /// <summary>
+    /// Gets the total number of days in this timeline, inclusive of both the start and end dates of each range.
+    /// For discontinuous timelines, this is the sum of the lengths of each range.
+    /// </summary>
+    /// <returns>The total number of days in this timeline</returns>
+    public int TotalDaysInclusive()
+    {
+        return Ranges.Sum(range => range.TotalDaysInclusive);
     }
 }
 

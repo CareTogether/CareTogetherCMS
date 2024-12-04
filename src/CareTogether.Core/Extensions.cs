@@ -128,5 +128,25 @@ namespace CareTogether
                 await foreach (var result in selector(value))
                     yield return result;
         }
+
+        public static IEnumerable<T> TakeWhilePlusOne<T>(this IEnumerable<T> source, Func<T, bool> predicate)
+        {
+            using (var enumerator = source.GetEnumerator())
+            {
+                while (enumerator.MoveNext())
+                {
+                    var current = enumerator.Current;
+                    if (predicate(current))
+                    {
+                        yield return current;
+                    }
+                    else
+                    {
+                        yield return current;
+                        break;
+                    }
+                }
+            }
+        }
     }
 }
