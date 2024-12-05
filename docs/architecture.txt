@@ -1,9 +1,9 @@
 StaticAspect "CareTogether V2" { 
   AppClient SupportClient AnalyticsClient IntegrationClient
   MembershipManager ProcessManager CommunicationManager
-  EvaluationEngine
-  AccountsAccess PoliciesAccess WorkflowsAccess RecordsAccess 
-  AccountsResource PoliciesResource WorkflowsResource RecordsResource FormsResource
+  EvaluationEngine TransformationEngine
+  AccountsAccess PoliciesAccess WorkflowsAccess RecordsAccess AuditAccess
+  AccountsResource PoliciesResource WorkflowsResource RecordsResource FormsResource AuditResource
   EventLogUtility
   FileStoreUtility
   ObjectStoreUtility
@@ -137,42 +137,85 @@ Activity "UC-Pr-2: View Communities List" {
   stop
 }
 
-UseCase "UC-Pr-2: View Communities List in Location" {
-  AppClient -> ProcessManager
-  ProcessManager - Response<ContextualPermissions> IEvaluationEngine.CalculateContextualPermissions(LocationAuthorizationContext) > EvaluationEngine
-  ProcessManager - Response<FilterCommunitiesResponse> IRecordsAccess.Filter(FilterCommunitiesAccessRequest) > RecordsAccess
-  RecordsAccess - Response<FilterCommunitiesResponse> IRecordsResource.Filter(FilterCommunitiesResourceRequest) > RecordsResource
+UseCase "UC-Pr-2: View Families List in Location" {
+  AppClient - ProcessManager.RecordsResponse IProcessManager.RetrieveRecords(ProcessManager.RecordsCriteria) > ProcessManager
+  ProcessManager - ContextualPermissions IEvaluationEngine.CalculateContextualPermissions(LocationAuthorizationContext) > EvaluationEngine
+  ProcessManager - RecordsAccess.RecordsResponse IRecordsAccess.Filter(RecordsAccess.RecordsCriteria) > RecordsAccess -> RecordsResource
+  ProcessManager - ProcessManager.RecordsResponse ITransformationEngine.DiscloseRecords(RecordsDisclosureRequest) > TransformationEngine
+  ProcessManager -> AuditAccess -> AuditResource
 }
 
-UseCase "UC-Pr-2: View Communities List in Organization" {
-  AnalyticsClient -> ProcessManager
-  SupportClient -> ProcessManager
-  ProcessManager - Response<ContextualPermissions> IEvaluationEngine.AuthorizeUserAccess(OrganizationAuthorizationContext) > EvaluationEngine
-  ProcessManager - Response<FilterCommunitiesResponse> IRecordsAccess.Filter(FilterCommunitiesAccessRequest) > RecordsAccess
-  RecordsAccess - Response<FilterCommunitiesResponse> IRecordsResource.Filter(FilterCommunitiesResourceRequest) > RecordsResource
+UseCase "UC-Pr-3: View Families List in Organization" {
+  AnalyticsClient - ProcessManager.RecordsResponse IProcessManager.RetrieveRecords(ProcessManager.RecordsCriteria) > ProcessManager
+  SupportClient - ProcessManager.RecordsResponse IProcessManager.RetrieveRecords(ProcessManager.RecordsCriteria) > ProcessManager
+  ProcessManager - ContextualPermissions IEvaluationEngine.CalculateContextualPermissions(LocationAuthorizationContext) > EvaluationEngine
+  ProcessManager - RecordsAccess.RecordsResponse IRecordsAccess.Filter(RecordsAccess.RecordsCriteria) > RecordsAccess -> RecordsResource
+  ProcessManager - ProcessManager.RecordsResponse ITransformationEngine.DiscloseRecords(RecordsDisclosureRequest) > TransformationEngine
+  ProcessManager -> AuditAccess -> AuditResource
 }
+
+UseCase "UC-Pr-4: View Communities List in Location" {
+  AppClient - ProcessManager.RecordsResponse IProcessManager.RetrieveRecords(ProcessManager.RecordsCriteria) > ProcessManager
+  ProcessManager - ContextualPermissions IEvaluationEngine.CalculateContextualPermissions(LocationAuthorizationContext) > EvaluationEngine
+  ProcessManager - RecordsAccess.RecordsResponse IRecordsAccess.Filter(RecordsAccess.RecordsCriteria) > RecordsAccess -> RecordsResource
+  ProcessManager - ProcessManager.RecordsResponse ITransformationEngine.DiscloseRecords(RecordsDisclosureRequest) > TransformationEngine
+  ProcessManager -> AuditAccess -> AuditResource
+}
+
+UseCase "UC-Pr-5: View Communities List in Organization" {
+  AnalyticsClient - ProcessManager.RecordsResponse IProcessManager.RetrieveRecords(ProcessManager.RecordsCriteria) > ProcessManager
+  SupportClient - ProcessManager.RecordsResponse IProcessManager.RetrieveRecords(ProcessManager.RecordsCriteria) > ProcessManager
+  ProcessManager - ContextualPermissions IEvaluationEngine.AuthorizeUserAccess(OrganizationAuthorizationContext) > EvaluationEngine
+  ProcessManager - RecordsAccess.RecordsResponse IRecordsAccess.Filter(RecordsAccess.RecordsCriteria) > RecordsAccess -> RecordsResource
+  ProcessManager - ProcessManager.RecordsResponse ITransformationEngine.DiscloseRecords(RecordsDisclosureRequest) > TransformationEngine
+  ProcessManager -> AuditAccess -> AuditResource
+}
+
+DTO /*ProcessManager.*/RecordsCriteria {
+  DisclosureMethod Method
+  RecordType? RecordType
+  Guid? OrganizationId
+  Guid? LocationId
+}
+
+DTO /*ProcessManager.*/RecordsResponse {
+  Community[] Communities
+  Family[] Families
+  Organization[] Organizations
+}
+
+DTO /*ProcessManager.*/Community {}
+DTO /*ProcessManager.*/Family {}
+DTO /*ProcessManager.*/Organization {}
 
 DTO ContextualPermissions {
   AuthorizationContext Context
-  string[] Permissions
+  string[] AllowedActions
 }
 
-DTO Community {}
-
-DTO FilterCommunitiesResponse {
-  Community[] Communities
-}
-
-DTO FilterCommunitiesAccessRequest {
+DTO RecordsDisclosureRequest {
   ContextualPermissions Permissions
+  DisclosureMethod Method
+  RecordsAccess.RecordsResponse Records
+}
+
+DTO /*RecordsAccess.*/RecordsCriteria {
+  ContextualPermissions Permissions
+  DisclosureMethod Method
+  RecordType? RecordType
   Guid? OrganizationId
   Guid? LocationId
 }
 
-DTO FilterCommunitiesResourceRequest {
-  Guid? OrganizationId
-  Guid? LocationId
+DTO /*RecordsAccess.*/RecordsResponse {
+  Community[] Communities
+  Family[] Families
+  Organization[] Organizations
 }
+
+DTO /*RecordsAccess.*/Community {}
+DTO /*RecordsAccess.*/Family {}
+DTO /*RecordsAccess.*/Organization {}
 
 UseCase "Create Referral" {
   AppClient -> ProcessManager
