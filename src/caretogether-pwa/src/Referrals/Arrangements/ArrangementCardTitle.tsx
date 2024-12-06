@@ -116,7 +116,7 @@ export function ArrangementCardTitle({
                   {startedAtEditor.editing ? (
                     <>
                       <DatePicker
-                        label="When was this arrangement started???"
+                        label="When was this arrangement started?"
                         value={startedAtEditor.value}
                         disableFuture
                         format="M/d/yyyy"
