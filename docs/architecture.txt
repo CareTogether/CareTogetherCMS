@@ -153,7 +153,7 @@ UseCase "UC-Pr-4: View Communities List in Location" {
 UseCase "UC-Pr-5: View Communities List in Organization" {
   AnalyticsClient - RetrieveRecordsResponse IProcessManager.RetrieveRecords(RetrieveRecordsCriteria) > ProcessManager
   SupportClient - RetrieveRecordsResponse IProcessManager.RetrieveRecords(RetrieveRecordsCriteria) > ProcessManager
-  ProcessManager - ContextualPermissions IEvaluationEngine.AuthorizeUserAccess(OrganizationAuthorizationContext) > EvaluationEngine
+  ProcessManager - ContextualPermissions IEvaluationEngine.CalculateContextualPermissions(OrganizationAuthorizationContext) > EvaluationEngine
   ProcessManager - RecordsResponse IRecordsAccess.Filter(RecordsCriteria) > RecordsAccess -> RecordsResource
   ProcessManager - RecordsResponse ITransformationEngine.DiscloseRecords(RecordsDisclosureRequest) > TransformationEngine
   ProcessManager -> AuditAccess -> AuditResource
@@ -205,13 +205,29 @@ DTO IRecordsAccess.Community {}
 DTO IRecordsAccess.Family {}
 DTO IRecordsAccess.Organization {}
 
-UseCase "Create Referral" {
-  AppClient -> ProcessManager
-  ProcessManager -> EvaluationEngine
-  EvaluationEngine -> AccountsAccess -> AccountsResource
-  EvaluationEngine -> PoliciesAccess -> PoliciesResource
-  EvaluationEngine -> RecordsAccess -> RecordsResource
-  ProcessManager -> RecordsAccess -> RecordsResource
+UseCase "UC-Pr-6: Create Referral" {
+  AppClient - CreateReferralResponse IProcessManager.CreateReferral(CreateReferralRequest) > ProcessManager
+  ProcessManager - ContextualPermissions IEvaluationEngine.CalculateContextualPermissions(LocationAuthorizationContext) > EvaluationEngine
+  ProcessManager -> WorkflowsAccess -> WorkflowsResource /* what if RecordsAccess decides the user doesn't have the right permissions, and StoreReferral doesn't happen? */
+  ProcessManager - StoredReferral IRecordsAcess.StoreReferral(StoreReferralRequest) > RecordsAccess -> RecordsResource
+  /* here should we call TransformationEngine to map StoredReferral into CreateReferralResponse? */
+}
+
+DTO CreateReferralResponse {
+  string Comments
+}
+
+DTO CreateReferralRequest {
+  string Comments
+}
+
+DTO StoredReferral {
+  string Comments
+}
+
+DTO StoreReferralRequest {
+  ContextualPermissions Permissions
+  string Comments
 }
 
 /*
