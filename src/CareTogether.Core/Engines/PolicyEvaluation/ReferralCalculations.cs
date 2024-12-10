@@ -308,14 +308,8 @@ namespace CareTogether.Engines.PolicyEvaluation
                                 .Where(missingDueDate =>
                                     !fva.ExemptedRequirements.Any(exempted =>
                                         exempted.RequirementName == monitoringRequirement.ActionName
-                                        && (
-                                            !exempted.DueDate.HasValue
-                                            || exempted.DueDate == missingDueDate
-                                        )
-                                        && (
-                                            exempted.ExemptionExpiresAt == null
-                                            || exempted.ExemptionExpiresAt > today
-                                        )
+                                        && (!exempted.DueDate.HasValue || exempted.DueDate == missingDueDate)
+                                        && (exempted.ExemptionExpiresAt == null || exempted.ExemptionExpiresAt > today)
                                     )
                                 )
                                 .Select(missingDueDate => new MissingArrangementRequirement(
@@ -366,10 +360,7 @@ namespace CareTogether.Engines.PolicyEvaluation
                                     !iva.ExemptedRequirements.Any(exempted =>
                                         exempted.RequirementName == monitoringRequirement.ActionName
                                         && (!exempted.DueDate.HasValue || exempted.DueDate == missingDueDate)
-                                        && (
-                                            exempted.ExemptionExpiresAt == null
-                                            || exempted.ExemptionExpiresAt > today
-                                        )
+                                        && (exempted.ExemptionExpiresAt == null || exempted.ExemptionExpiresAt > today)
                                     )
                                 )
                                 .Select(missingDueDate => new MissingArrangementRequirement(
@@ -528,29 +519,38 @@ namespace CareTogether.Engines.PolicyEvaluation
 
         private static IEnumerable<DateRange<Guid>> GenerateDateRanges(ImmutableList<ChildLocation> childLocations)
         {
-            DateOnly? startDate = null;
-            Guid? tag = null;
+            (DateOnly, Guid)? entry = null;
 
             foreach (var childLocation in childLocations)
             {
-                if (!startDate.HasValue && !childLocation.Paused)
+                if (!entry.HasValue && !childLocation.Paused)
                 {
-                    startDate = childLocation.Date;
-                    tag = childLocation.ChildLocationFamilyId;
+                    entry = (childLocation.Date, childLocation.ChildLocationFamilyId);
                     continue;
                 }
 
-                if (startDate.HasValue && tag.HasValue && childLocation.Paused)
+                if (entry.HasValue && !childLocation.Paused)
                 {
-                    yield return new DateRange<Guid>(startDate.Value, childLocation.Date, tag.Value);
-                    startDate = null;
+                    yield return new DateRange<Guid>(
+                        entry.Value.Item1,
+                        childLocation.Date.AddDays(-1),
+                        entry.Value.Item2
+                    );
+                    entry = (childLocation.Date, childLocation.ChildLocationFamilyId);
+                    continue;
+                }
+
+                if (entry.HasValue && childLocation.Paused)
+                {
+                    yield return new DateRange<Guid>(entry.Value.Item1, childLocation.Date, entry.Value.Item2);
+                    entry = null;
                     continue;
                 }
             }
 
-            if (startDate.HasValue && tag.HasValue)
+            if (entry.HasValue)
             {
-                yield return new DateRange<Guid>(startDate.Value, tag.Value);
+                yield return new DateRange<Guid>(entry.Value.Item1, entry.Value.Item2);
             }
         }
 
