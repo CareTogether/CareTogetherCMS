@@ -393,7 +393,7 @@ namespace CareTogether.Engines.PolicyEvaluation
             DateOnly arrangementStartedAtDate,
             DateOnly? arrangementEndedAtDate,
             ImmutableList<DateOnly> completions,
-            ImmutableSortedSet<ChildLocation> childLocationHistory,
+            ImmutableList<ChildLocation> childLocationHistory,
             DateOnly today
         )
         {
@@ -501,7 +501,7 @@ namespace CareTogether.Engines.PolicyEvaluation
             Guid? filterToFamilyId = null
         )
         {
-            var dateRanges = GenerateDateRanges(childLocations).ToImmutableList();
+            var dateRanges = GenerateDateRanges(childLocations, filterToFamilyId).ToImmutableList();
 
             var filteredDateRanges = (
                 filterToFamilyId != null ? dateRanges.Where(item => item.Tag == filterToFamilyId) : dateRanges
@@ -514,43 +514,71 @@ namespace CareTogether.Engines.PolicyEvaluation
                 return null;
             }
 
-            return new DateOnlyTimeline(filteredDateRanges);
+            // DateOnlyTimeline.FromOverlappingDateRanges();
+
+            var nonOverlapping = filteredDateRanges.Aggregate(
+                ImmutableList<DateRange>.Empty,
+                (final, item) =>
+                {
+                    var last = final.LastOrDefault();
+
+                    if (last.End >= item.Start)
+                    {
+                        return final.Replace(last, new DateRange(last.Start, item.End));
+                    }
+
+                    return final.Add(item);
+                }
+            );
+
+            return new DateOnlyTimeline(nonOverlapping);
         }
 
-        private static IEnumerable<DateRange<Guid>> GenerateDateRanges(ImmutableList<ChildLocation> childLocations)
+        private static IEnumerable<DateRange<Guid>> GenerateDateRanges(
+            ImmutableList<ChildLocation> childLocations,
+            Guid? filterToFamilyId
+        )
         {
-            (DateOnly, Guid)? entry = null;
+            (DateOnly Date, Guid ChildLocationFamilyId)? previousChildLocation = null;
 
             foreach (var childLocation in childLocations)
             {
-                if (!entry.HasValue && !childLocation.Paused)
+                if (!previousChildLocation.HasValue && !childLocation.Paused)
                 {
-                    entry = (childLocation.Date, childLocation.ChildLocationFamilyId);
+                    previousChildLocation = (childLocation.Date, childLocation.ChildLocationFamilyId);
                     continue;
                 }
 
-                if (entry.HasValue && !childLocation.Paused)
+                if (previousChildLocation.HasValue && !childLocation.Paused)
                 {
                     yield return new DateRange<Guid>(
-                        entry.Value.Item1,
-                        childLocation.Date.AddDays(-1),
-                        entry.Value.Item2
+                        previousChildLocation.Value.Date,
+                        childLocation.Date,
+                        previousChildLocation.Value.ChildLocationFamilyId
                     );
-                    entry = (childLocation.Date, childLocation.ChildLocationFamilyId);
+
+                    previousChildLocation = (childLocation.Date, childLocation.ChildLocationFamilyId);
                     continue;
                 }
 
-                if (entry.HasValue && childLocation.Paused)
+                if (previousChildLocation.HasValue && childLocation.Paused)
                 {
-                    yield return new DateRange<Guid>(entry.Value.Item1, childLocation.Date, entry.Value.Item2);
-                    entry = null;
+                    yield return new DateRange<Guid>(
+                        previousChildLocation.Value.Date,
+                        childLocation.Date,
+                        previousChildLocation.Value.ChildLocationFamilyId
+                    );
+                    previousChildLocation = null;
                     continue;
                 }
             }
 
-            if (entry.HasValue)
+            if (previousChildLocation.HasValue)
             {
-                yield return new DateRange<Guid>(entry.Value.Item1, entry.Value.Item2);
+                yield return new DateRange<Guid>(
+                    previousChildLocation.Value.Date,
+                    previousChildLocation.Value.ChildLocationFamilyId
+                );
             }
         }
 
@@ -715,7 +743,7 @@ namespace CareTogether.Engines.PolicyEvaluation
             DateOnly? arrangementEndedDate,
             DateOnly today,
             ImmutableList<DateOnly> completionDates,
-            ImmutableSortedSet<ChildLocation> childLocationHistory
+            ImmutableList<ChildLocation> childLocationHistory
         )
         {
             // Technically, the RecurrencePolicyStage model currently allows any stage to have an unlimited
@@ -759,7 +787,7 @@ namespace CareTogether.Engines.PolicyEvaluation
             ChildCareOccurrenceBasedRecurrencePolicy recurrence,
             Guid? filterToFamilyId,
             ImmutableList<DateOnly> completionDates,
-            ImmutableSortedSet<ChildLocation> childLocationHistory
+            ImmutableList<ChildLocation> childLocationHistory
         )
         {
             // Determine which child care occurrences the requirement will apply to.

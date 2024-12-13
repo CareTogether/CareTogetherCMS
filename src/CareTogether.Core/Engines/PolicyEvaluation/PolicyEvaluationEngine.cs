@@ -28,7 +28,10 @@ namespace CareTogether.Engines.PolicyEvaluation
             ImmutableList<Resources.CompletedRequirementInfo> completedFamilyRequirements,
             ImmutableList<Resources.ExemptedRequirementInfo> exemptedFamilyRequirements,
             ImmutableList<RoleRemoval> familyRoleRemovals,
-            ImmutableDictionary<Guid, ImmutableList<Resources.CompletedRequirementInfo>> completedIndividualRequirements,
+            ImmutableDictionary<
+                Guid,
+                ImmutableList<Resources.CompletedRequirementInfo>
+            > completedIndividualRequirements,
             ImmutableDictionary<Guid, ImmutableList<Resources.ExemptedRequirementInfo>> exemptedIndividualRequirements,
             ImmutableDictionary<Guid, ImmutableList<RoleRemoval>> individualRoleRemovals
         )
@@ -140,7 +143,7 @@ namespace CareTogether.Engines.PolicyEvaluation
 
             var ChildLocationHistory = entry
                 .ChildLocationHistory.Select(item => ToChildLocation(item, locationTimeZone))
-                .ToImmutableSortedSet();
+                .ToImmutableList();
 
             var individualVolunteerAssignments = entry
                 .IndividualVolunteerAssignments.Select(item =>
