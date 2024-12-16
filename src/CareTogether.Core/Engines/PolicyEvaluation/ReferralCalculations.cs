@@ -514,24 +514,7 @@ namespace CareTogether.Engines.PolicyEvaluation
                 return null;
             }
 
-            // DateOnlyTimeline.FromOverlappingDateRanges();
-
-            var nonOverlapping = filteredDateRanges.Aggregate(
-                ImmutableList<DateRange>.Empty,
-                (final, item) =>
-                {
-                    var last = final.LastOrDefault();
-
-                    if (last.End >= item.Start)
-                    {
-                        return final.Replace(last, new DateRange(last.Start, item.End));
-                    }
-
-                    return final.Add(item);
-                }
-            );
-
-            return new DateOnlyTimeline(nonOverlapping);
+            return DateOnlyTimeline.FromOverlappingDateRanges(filteredDateRanges);
         }
 
         private static IEnumerable<DateRange<Guid>> GenerateDateRanges(
