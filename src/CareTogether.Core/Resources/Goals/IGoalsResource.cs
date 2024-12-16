@@ -1,21 +1,31 @@
-﻿using JsonPolymorph;
-using System;
+﻿using System;
 using System.Collections.Immutable;
 using System.Threading.Tasks;
+using JsonPolymorph;
 
 namespace CareTogether.Resources.Goals
 {
-    public sealed record Goal(Guid Id, Guid PersonId,
-        string Description, DateTime CreatedDate, DateTime? TargetDate, DateTime? CompletedDate);
+    public sealed record Goal(
+        Guid Id,
+        Guid PersonId,
+        string Description,
+        DateTime CreatedDate,
+        DateTime? TargetDate,
+        DateTime? CompletedDate
+    );
 
     [JsonHierarchyBase]
     public abstract partial record GoalCommand(Guid PersonId, Guid GoalId);
-    public sealed record CreateGoal(Guid PersonId, Guid GoalId, string Description,
-        DateTime? TargetDate) : GoalCommand(PersonId, GoalId);
+
+    public sealed record CreateGoal(Guid PersonId, Guid GoalId, string Description, DateTime? TargetDate)
+        : GoalCommand(PersonId, GoalId);
+
     public sealed record ChangeGoalDescription(Guid PersonId, Guid GoalId, string Description)
         : GoalCommand(PersonId, GoalId);
+
     public sealed record ChangeGoalTargetDate(Guid PersonId, Guid GoalId, DateTime? TargetDate)
         : GoalCommand(PersonId, GoalId);
+
     public sealed record MarkGoalCompleted(Guid PersonId, Guid GoalId, DateTime CompletedUtc)
         : GoalCommand(PersonId, GoalId);
 

@@ -1,7 +1,7 @@
-using CareTogether.Utilities.EventLog;
 using System;
 using System.Collections.Immutable;
 using System.Threading.Tasks;
+using CareTogether.Utilities.EventLog;
 
 namespace CareTogether.Resources.Referrals
 {
@@ -10,35 +10,42 @@ namespace CareTogether.Resources.Referrals
         private readonly IEventLog<ReferralEvent> eventLog;
         private readonly ConcurrentLockingStore<(Guid organizationId, Guid locationId), ReferralModel> tenantModels;
 
-
         public ReferralsResource(IEventLog<ReferralEvent> eventLog)
         {
             this.eventLog = eventLog;
             tenantModels = new ConcurrentLockingStore<(Guid organizationId, Guid locationId), ReferralModel>(key =>
-                ReferralModel.InitializeAsync(eventLog.GetAllEventsAsync(key.organizationId, key.locationId)));
+                ReferralModel.InitializeAsync(eventLog.GetAllEventsAsync(key.organizationId, key.locationId))
+            );
         }
 
-
-        public async Task<ReferralEntry> ExecuteReferralCommandAsync(Guid organizationId, Guid locationId,
-            ReferralCommand command, Guid userId)
+        public async Task<ReferralEntry> ExecuteReferralCommandAsync(
+            Guid organizationId,
+            Guid locationId,
+            ReferralCommand command,
+            Guid userId
+        )
         {
             using (var lockedModel = await tenantModels.WriteLockItemAsync((organizationId, locationId)))
             {
                 var result = lockedModel.Value.ExecuteReferralCommand(command, userId, DateTime.UtcNow);
-                
+
                 await eventLog.AppendEventAsync(organizationId, locationId, result.Event, result.SequenceNumber);
                 result.OnCommit();
                 return result.ReferralEntry;
             }
         }
 
-        public async Task<ReferralEntry> ExecuteArrangementsCommandAsync(Guid organizationId, Guid locationId,
-            ArrangementsCommand command, Guid userId)
+        public async Task<ReferralEntry> ExecuteArrangementsCommandAsync(
+            Guid organizationId,
+            Guid locationId,
+            ArrangementsCommand command,
+            Guid userId
+        )
         {
             using (var lockedModel = await tenantModels.WriteLockItemAsync((organizationId, locationId)))
             {
                 var result = lockedModel.Value.ExecuteArrangementsCommand(command, userId, DateTime.UtcNow);
-                
+
                 await eventLog.AppendEventAsync(organizationId, locationId, result.Event, result.SequenceNumber);
                 result.OnCommit();
                 return result.ReferralEntry;

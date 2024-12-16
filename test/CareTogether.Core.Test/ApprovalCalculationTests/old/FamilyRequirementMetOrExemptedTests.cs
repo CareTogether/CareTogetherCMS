@@ -1,9 +1,9 @@
-﻿using CareTogether.Engines;
+﻿using System;
+using CareTogether.Engines;
 using CareTogether.Engines.PolicyEvaluation;
 using CareTogether.Resources;
 using CareTogether.Resources.Policies;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using System;
 
 namespace CareTogether.Core.Test.ApprovalCalculationTests
 {

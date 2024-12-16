@@ -1,11 +1,11 @@
-﻿using CareTogether.Managers;
+﻿using System;
+using System.Collections.Generic;
+using System.Threading.Tasks;
+using CareTogether.Managers;
 using CareTogether.Managers.Records;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using System;
-using System.Collections.Generic;
-using System.Threading.Tasks;
 
 namespace CareTogether.Api.Controllers
 {
@@ -21,25 +21,38 @@ namespace CareTogether.Api.Controllers
             this.recordsManager = recordsManager;
         }
 
-
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<RecordsAggregate>>> ListVisibleAggregatesAsync(Guid organizationId, Guid locationId)
+        public async Task<ActionResult<IEnumerable<RecordsAggregate>>> ListVisibleAggregatesAsync(
+            Guid organizationId,
+            Guid locationId
+        )
         {
             var results = await recordsManager.ListVisibleAggregatesAsync(User, organizationId, locationId);
             return Ok(results);
         }
 
         [HttpPost("atomicRecordsCommand")]
-        public async Task<ActionResult<RecordsAggregate?>> SubmitAtomicRecordsCommandAsync(Guid organizationId, Guid locationId,
-            [FromBody] AtomicRecordsCommand command)
+        public async Task<ActionResult<RecordsAggregate?>> SubmitAtomicRecordsCommandAsync(
+            Guid organizationId,
+            Guid locationId,
+            [FromBody] AtomicRecordsCommand command
+        )
         {
-            var result = await recordsManager.ExecuteAtomicRecordsCommandAsync(organizationId, locationId, User, command);
+            var result = await recordsManager.ExecuteAtomicRecordsCommandAsync(
+                organizationId,
+                locationId,
+                User,
+                command
+            );
             return Ok(result);
         }
 
         [HttpPost("compositeRecordsCommand")]
-        public async Task<ActionResult<RecordsAggregate?>> SubmitCompositeRecordsCommandAsync(Guid organizationId, Guid locationId,
-            [FromBody] CompositeRecordsCommand command)
+        public async Task<ActionResult<RecordsAggregate?>> SubmitCompositeRecordsCommandAsync(
+            Guid organizationId,
+            Guid locationId,
+            [FromBody] CompositeRecordsCommand command
+        )
         {
             var result = await recordsManager.ExecuteCompositeRecordsCommand(organizationId, locationId, User, command);
             return Ok(result);
