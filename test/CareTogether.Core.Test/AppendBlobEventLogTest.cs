@@ -1,23 +1,25 @@
-﻿using Azure.Storage.Blobs;
+﻿using System;
+using System.Linq;
+using System.Threading.Tasks;
+using Azure.Storage.Blobs;
 using CareTogether.Utilities.EventLog;
 using JsonPolymorph;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using System;
-using System.Linq;
-using System.Threading.Tasks;
 
 namespace CareTogether.Core.Test
 {
     [JsonHierarchyBase]
     public abstract partial record TestEvent(int EventId);
-    public sealed record TestEventA(int EventId) : TestEvent(EventId);
-    public sealed record TestEventB(int EventId) : TestEvent(EventId);
 
+    public sealed record TestEventA(int EventId) : TestEvent(EventId);
+
+    public sealed record TestEventB(int EventId) : TestEvent(EventId);
 
     [TestClass]
     public class AppendBlobEventLogTest
     {
         private static readonly BlobServiceClient testingClient = new BlobServiceClient("UseDevelopmentStorage=true");
+
         private static Guid Id(char x) => Guid.Parse("xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx".Replace('x', x));
 
         // 'organizationId' and 'locationId' must be seeded with 1 and 2, respectively, because
@@ -27,11 +29,14 @@ namespace CareTogether.Core.Test
         static readonly Guid guid3 = Id('3');
         static readonly Guid guid4 = Id('4');
 
-        private static async Task AppendEventsAsync<T>(IEventLog<T> eventLog,
-            Guid organizationId, Guid locationId, params T[] events)
+        private static async Task AppendEventsAsync<T>(
+            IEventLog<T> eventLog,
+            Guid organizationId,
+            Guid locationId,
+            params T[] events
+        )
         {
-            foreach (var (domainEvent, index) in events
-                .Select((e, i) => (e, (long)i)))
+            foreach (var (domainEvent, index) in events.Select((e, i) => (e, (long)i)))
             {
                 await eventLog.AppendEventAsync(organizationId, locationId, domainEvent, index + 1);
             }
@@ -40,6 +45,7 @@ namespace CareTogether.Core.Test
 #nullable disable
         AppendBlobEventLog<TestEventA> directoryEventLog;
         AppendBlobEventLog<TestEventB> referralsEventLog;
+
 #nullable restore
 
         [TestInitialize]
@@ -62,13 +68,21 @@ namespace CareTogether.Core.Test
         [TestMethod]
         public async Task ResultsFromContainerAfterTestDataPopulationMatchesExpected()
         {
-            await AppendEventsAsync(directoryEventLog, organizationId, locationId,
+            await AppendEventsAsync(
+                directoryEventLog,
+                organizationId,
+                locationId,
                 new TestEventA(1),
                 new TestEventA(2),
-                new TestEventA(3));
-            await AppendEventsAsync(referralsEventLog, organizationId, locationId,
+                new TestEventA(3)
+            );
+            await AppendEventsAsync(
+                referralsEventLog,
+                organizationId,
+                locationId,
                 new TestEventB(1),
-                new TestEventB(2));
+                new TestEventB(2)
+            );
 
             var directoryEvents = await directoryEventLog.GetAllEventsAsync(organizationId, locationId).ToListAsync();
 

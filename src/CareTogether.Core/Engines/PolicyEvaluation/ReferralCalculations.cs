@@ -308,14 +308,8 @@ namespace CareTogether.Engines.PolicyEvaluation
                                 .Where(missingDueDate =>
                                     !fva.ExemptedRequirements.Any(exempted =>
                                         exempted.RequirementName == monitoringRequirement.ActionName
-                                        && (
-                                            !exempted.DueDate.HasValue
-                                            || exempted.DueDate == missingDueDate
-                                        )
-                                        && (
-                                            exempted.ExemptionExpiresAt == null
-                                            || exempted.ExemptionExpiresAt > today
-                                        )
+                                        && (!exempted.DueDate.HasValue || exempted.DueDate == missingDueDate)
+                                        && (exempted.ExemptionExpiresAt == null || exempted.ExemptionExpiresAt > today)
                                     )
                                 )
                                 .Select(missingDueDate => new MissingArrangementRequirement(
@@ -366,10 +360,7 @@ namespace CareTogether.Engines.PolicyEvaluation
                                     !iva.ExemptedRequirements.Any(exempted =>
                                         exempted.RequirementName == monitoringRequirement.ActionName
                                         && (!exempted.DueDate.HasValue || exempted.DueDate == missingDueDate)
-                                        && (
-                                            exempted.ExemptionExpiresAt == null
-                                            || exempted.ExemptionExpiresAt > today
-                                        )
+                                        && (exempted.ExemptionExpiresAt == null || exempted.ExemptionExpiresAt > today)
                                     )
                                 )
                                 .Select(missingDueDate => new MissingArrangementRequirement(

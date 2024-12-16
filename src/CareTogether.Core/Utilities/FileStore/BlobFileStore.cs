@@ -1,9 +1,9 @@
-﻿using Azure.Storage.Blobs;
-using Azure.Storage.Blobs.Specialized;
-using Azure.Storage.Sas;
-using System;
+﻿using System;
 using System.Collections.Concurrent;
 using System.Threading.Tasks;
+using Azure.Storage.Blobs;
+using Azure.Storage.Blobs.Specialized;
+using Azure.Storage.Sas;
 
 namespace CareTogether.Utilities.FileStore
 {
@@ -20,9 +20,8 @@ namespace CareTogether.Utilities.FileStore
             organizationBlobContainerClients = new(); //TODO: Share this across all services using the same blobServiceClient.
         }
 
-
-        public Task<Uri> GetValetCreateUrlAsync(Guid organizationId, Guid locationId, Guid documentId)
-            => GetValetCreateUrlAsync(organizationId, locationId, $"{documentId:D}");
+        public Task<Uri> GetValetCreateUrlAsync(Guid organizationId, Guid locationId, Guid documentId) =>
+            GetValetCreateUrlAsync(organizationId, locationId, $"{documentId:D}");
 
         public Task<Uri> GetValetCreateUrlAsync(Guid organizationId, Guid locationId, string documentSubpath)
         {
@@ -32,8 +31,8 @@ namespace CareTogether.Utilities.FileStore
             return Task.FromResult(sasUri);
         }
 
-        public Task<Uri> GetValetReadUrlAsync(Guid organizationId, Guid locationId, Guid documentId)
-            => GetValetReadUrlAsync(organizationId, locationId, $"{documentId:D}");
+        public Task<Uri> GetValetReadUrlAsync(Guid organizationId, Guid locationId, Guid documentId) =>
+            GetValetReadUrlAsync(organizationId, locationId, $"{documentId:D}");
 
         public Task<Uri> GetValetReadUrlAsync(Guid organizationId, Guid locationId, string documentSubpath)
         {
@@ -42,7 +41,6 @@ namespace CareTogether.Utilities.FileStore
             var sasUri = objectBlob.GenerateSasUri(BlobSasPermissions.Read, DateTimeOffset.UtcNow.AddMinutes(15));
             return Task.FromResult(sasUri);
         }
-
 
         private async Task<BlobContainerClient> CreateContainerIfNotExists(Guid organizationId)
         {

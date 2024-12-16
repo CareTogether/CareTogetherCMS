@@ -1,8 +1,8 @@
-using CareTogether.Utilities.EventLog;
-using CareTogether.Utilities.ObjectStore;
 using System;
 using System.Collections.Immutable;
 using System.Threading.Tasks;
+using CareTogether.Utilities.EventLog;
+using CareTogether.Utilities.ObjectStore;
 
 namespace CareTogether.Resources.Notes
 {
@@ -12,23 +12,32 @@ namespace CareTogether.Resources.Notes
         private readonly IObjectStore<string?> draftNotesStore;
         private readonly ConcurrentLockingStore<(Guid organizationId, Guid locationId), NotesModel> tenantModels;
 
-
         public NotesResource(IEventLog<NotesEvent> eventLog, IObjectStore<string?> draftNotesStore)
         {
             this.eventLog = eventLog;
             this.draftNotesStore = draftNotesStore;
             tenantModels = new ConcurrentLockingStore<(Guid organizationId, Guid locationId), NotesModel>(key =>
-                NotesModel.InitializeAsync(eventLog.GetAllEventsAsync(key.organizationId, key.locationId),
+                NotesModel.InitializeAsync(
+                    eventLog.GetAllEventsAsync(key.organizationId, key.locationId),
                     async noteId =>
                     {
-                        var draftNote = await draftNotesStore.GetAsync(key.organizationId, key.locationId, noteId.ToString());
+                        var draftNote = await draftNotesStore.GetAsync(
+                            key.organizationId,
+                            key.locationId,
+                            noteId.ToString()
+                        );
                         return draftNote;
-                    }));
+                    }
+                )
+            );
         }
 
-
-        public async Task<NoteEntry?> ExecuteNoteCommandAsync(Guid organizationId, Guid locationId,
-            NoteCommand command, Guid userId)
+        public async Task<NoteEntry?> ExecuteNoteCommandAsync(
+            Guid organizationId,
+            Guid locationId,
+            NoteCommand command,
+            Guid userId
+        )
         {
             using (var lockedModel = await tenantModels.WriteLockItemAsync((organizationId, locationId)))
             {
@@ -43,24 +52,38 @@ namespace CareTogether.Resources.Notes
 
                 var redactedEventToPersist = result.Event with
                 {
-                    Command = result.Event.Command
-                        switch
+                    Command = result.Event.Command switch
                     {
                         CreateDraftNote e => e with { DraftNoteContents = null },
                         EditDraftNote e => e with { DraftNoteContents = null },
-                        _ => result.Event.Command
-                    }
+                        _ => result.Event.Command,
+                    },
                 };
-                await eventLog.AppendEventAsync(organizationId, locationId, redactedEventToPersist, result.SequenceNumber);
+                await eventLog.AppendEventAsync(
+                    organizationId,
+                    locationId,
+                    redactedEventToPersist,
+                    result.SequenceNumber
+                );
                 result.OnCommit();
 
                 switch (result.Event.Command)
                 {
                     case CreateDraftNote c:
-                        await draftNotesStore.UpsertAsync(organizationId, locationId, command.NoteId.ToString(), c.DraftNoteContents);
+                        await draftNotesStore.UpsertAsync(
+                            organizationId,
+                            locationId,
+                            command.NoteId.ToString(),
+                            c.DraftNoteContents
+                        );
                         break;
                     case EditDraftNote c:
-                        await draftNotesStore.UpsertAsync(organizationId, locationId, command.NoteId.ToString(), c.DraftNoteContents);
+                        await draftNotesStore.UpsertAsync(
+                            organizationId,
+                            locationId,
+                            command.NoteId.ToString(),
+                            c.DraftNoteContents
+                        );
                         break;
                     case DiscardDraftNote:
                     case ApproveNote:
@@ -72,7 +95,11 @@ namespace CareTogether.Resources.Notes
             }
         }
 
-        public async Task<ImmutableList<NoteEntry>> ListFamilyNotesAsync(Guid organizationId, Guid locationId, Guid familyId)
+        public async Task<ImmutableList<NoteEntry>> ListFamilyNotesAsync(
+            Guid organizationId,
+            Guid locationId,
+            Guid familyId
+        )
         {
             using (var lockedModel = await tenantModels.ReadLockItemAsync((organizationId, locationId)))
             {

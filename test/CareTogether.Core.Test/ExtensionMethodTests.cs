@@ -1,5 +1,5 @@
-﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
-using System.Collections.Immutable;
+﻿using System.Collections.Immutable;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace CareTogether.Core.Test
 {
@@ -19,8 +19,8 @@ namespace CareTogether.Core.Test
         [TestMethod]
         public void TestImmutableDictionaryGetValueOrEmptyListMatch()
         {
-            var dut = ImmutableDictionary<char, ImmutableList<int>>.Empty
-                .Add('a', ImmutableList<int>.Empty.Add(1).Add(2))
+            var dut = ImmutableDictionary<char, ImmutableList<int>>
+                .Empty.Add('a', ImmutableList<int>.Empty.Add(1).Add(2))
                 .Add('b', ImmutableList<int>.Empty.Add(3).Add(4));
 
             var result = dut.GetValueOrEmptyList('b');
@@ -31,8 +31,8 @@ namespace CareTogether.Core.Test
         [TestMethod]
         public void TestImmutableDictionaryGetValueOrEmptyListNoMatch()
         {
-            var dut = ImmutableDictionary<char, ImmutableList<int>>.Empty
-                .Add('a', ImmutableList<int>.Empty.Add(1).Add(2))
+            var dut = ImmutableDictionary<char, ImmutableList<int>>
+                .Empty.Add('a', ImmutableList<int>.Empty.Add(1).Add(2))
                 .Add('b', ImmutableList<int>.Empty.Add(3).Add(4));
 
             var result = dut.GetValueOrEmptyList('c');

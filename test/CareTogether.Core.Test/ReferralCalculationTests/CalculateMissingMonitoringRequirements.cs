@@ -111,15 +111,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
 
             AssertEx.SequenceIs(
                 result,
-                new MissingArrangementRequirement(
-                    null,
-                    null,
-                    null,
-                    null,
-                    "A",
-                    DueBy: null,
-                    PastDueSince: H.Date(1, 3)
-                ),
+                new MissingArrangementRequirement(null, null, null, null, "A", DueBy: null, PastDueSince: H.Date(1, 3)),
                 new MissingArrangementRequirement(
                     null,
                     null,
@@ -165,15 +157,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
                     DueBy: H.Date(2, 14),
                     PastDueSince: null
                 ),
-                new MissingArrangementRequirement(
-                    null,
-                    null,
-                    null,
-                    null,
-                    "B",
-                    DueBy: null,
-                    PastDueSince: H.Date(1, 8)
-                ),
+                new MissingArrangementRequirement(null, null, null, null, "B", DueBy: null, PastDueSince: H.Date(1, 8)),
                 new MissingArrangementRequirement(
                     null,
                     null,
@@ -201,15 +185,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
                     DueBy: null,
                     PastDueSince: H.Date(1, 29)
                 ),
-                new MissingArrangementRequirement(
-                    null,
-                    null,
-                    null,
-                    null,
-                    "B",
-                    DueBy: H.Date(2, 5),
-                    PastDueSince: null
-                )
+                new MissingArrangementRequirement(null, null, null, null, "B", DueBy: H.Date(2, 5), PastDueSince: null)
             );
         }
 
@@ -330,15 +306,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
                     DueBy: null,
                     PastDueSince: H.Date(1, 28)
                 ),
-                new MissingArrangementRequirement(
-                    null,
-                    null,
-                    null,
-                    null,
-                    "B",
-                    DueBy: H.Date(2, 4),
-                    PastDueSince: null
-                )
+                new MissingArrangementRequirement(null, null, null, null, "B", DueBy: H.Date(2, 4), PastDueSince: null)
             );
         }
 
@@ -396,15 +364,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
                     DueBy: H.Date(1, 10),
                     PastDueSince: null
                 ),
-                new MissingArrangementRequirement(
-                    null,
-                    null,
-                    null,
-                    null,
-                    "B",
-                    DueBy: H.Date(1, 14),
-                    PastDueSince: null
-                )
+                new MissingArrangementRequirement(null, null, null, null, "B", DueBy: H.Date(1, 14), PastDueSince: null)
             );
         }
     }

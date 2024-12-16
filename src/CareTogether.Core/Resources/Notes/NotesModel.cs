@@ -1,31 +1,29 @@
-﻿using JsonPolymorph;
-using Nito.AsyncEx;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
 using System.Threading.Tasks;
+using JsonPolymorph;
+using Nito.AsyncEx;
 
 namespace CareTogether.Resources.Notes
 {
     [JsonHierarchyBase]
-    public abstract partial record NotesEvent(Guid UserId, DateTime TimestampUtc)
-        : DomainEvent(UserId, TimestampUtc);
-    public sealed record NoteCommandExecuted(Guid UserId, DateTime TimestampUtc,
-        NoteCommand Command) : NotesEvent(UserId, TimestampUtc);
+    public abstract partial record NotesEvent(Guid UserId, DateTime TimestampUtc) : DomainEvent(UserId, TimestampUtc);
+
+    public sealed record NoteCommandExecuted(Guid UserId, DateTime TimestampUtc, NoteCommand Command)
+        : NotesEvent(UserId, TimestampUtc);
 
     public sealed class NotesModel
     {
-        private ImmutableDictionary<Guid, NoteEntry> notes =
-            ImmutableDictionary<Guid, NoteEntry>.Empty;
-
+        private ImmutableDictionary<Guid, NoteEntry> notes = ImmutableDictionary<Guid, NoteEntry>.Empty;
 
         public long LastKnownSequenceNumber { get; private set; } = -1;
 
-
         public static async Task<NotesModel> InitializeAsync(
             IAsyncEnumerable<(NotesEvent DomainEvent, long SequenceNumber)> eventLog,
-            Func<Guid, Task<string?>> loadDraftNoteAsync)
+            Func<Guid, Task<string?>> loadDraftNoteAsync
+        )
         {
             var model = new NotesModel();
 
@@ -35,32 +33,52 @@ namespace CareTogether.Resources.Notes
             // Since draft note contents are not stored in the immutable log, note command replays will result in 'null'
             // contents for any notes that have not been approved (approved note contents are stored in the log). So, we
             // need to load the contents for any draft notes.
-            model.notes = (await model.notes.Select(async note =>
-            {
-                return (note.Key, note.Value with
-                {
-                    Contents = note.Value.Status == NoteStatus.Approved
-                        ? note.Value.Contents
-                        : await loadDraftNoteAsync(note.Key)
-                });
-            }).WhenAll()).ToImmutableDictionary(note => note.Key, note => note.Item2);
+            model.notes = (
+                await model
+                    .notes.Select(async note =>
+                    {
+                        return (
+                            note.Key,
+                            note.Value with
+                            {
+                                Contents =
+                                    note.Value.Status == NoteStatus.Approved
+                                        ? note.Value.Contents
+                                        : await loadDraftNoteAsync(note.Key),
+                            }
+                        );
+                    })
+                    .WhenAll()
+            ).ToImmutableDictionary(note => note.Key, note => note.Item2);
 
             return model;
         }
 
-
-        public (NoteCommandExecuted Event, long SequenceNumber, NoteEntry? NoteEntry, Action OnCommit)
-            ExecuteNoteCommand(NoteCommand command, Guid userId, DateTime timestampUtc)
+        public (
+            NoteCommandExecuted Event,
+            long SequenceNumber,
+            NoteEntry? NoteEntry,
+            Action OnCommit
+        ) ExecuteNoteCommand(NoteCommand command, Guid userId, DateTime timestampUtc)
         {
             if (command is CreateDraftNote && notes.ContainsKey(command.NoteId))
                 throw new InvalidOperationException(
-                    "A new note with the requested note ID could not be created because a note with that ID already exists.");
+                    "A new note with the requested note ID could not be created because a note with that ID already exists."
+                );
 
             var noteEntryToUpsert = command switch
             {
-                CreateDraftNote c => new NoteEntry(c.NoteId, c.FamilyId, userId, timestampUtc, NoteStatus.Draft,
-                    c.DraftNoteContents, ApproverId: null, ApprovedTimestampUtc: null,
-                    BackdatedTimestampUtc: c.BackdatedTimestampUtc),
+                CreateDraftNote c => new NoteEntry(
+                    c.NoteId,
+                    c.FamilyId,
+                    userId,
+                    timestampUtc,
+                    NoteStatus.Draft,
+                    c.DraftNoteContents,
+                    ApproverId: null,
+                    ApprovedTimestampUtc: null,
+                    BackdatedTimestampUtc: c.BackdatedTimestampUtc
+                ),
                 DiscardDraftNote c => null,
                 _ => notes.TryGetValue(command.NoteId, out var noteEntry)
                     ? command switch
@@ -70,7 +88,7 @@ namespace CareTogether.Resources.Notes
                         {
                             Contents = c.DraftNoteContents,
                             LastEditTimestampUtc = timestampUtc,
-                            BackdatedTimestampUtc = c.BackdatedTimestampUtc
+                            BackdatedTimestampUtc = c.BackdatedTimestampUtc,
                         },
                         ApproveNote c => noteEntry with
                         {
@@ -78,12 +96,13 @@ namespace CareTogether.Resources.Notes
                             Contents = c.FinalizedNoteContents,
                             ApprovedTimestampUtc = timestampUtc,
                             ApproverId = userId,
-                            BackdatedTimestampUtc = c.BackdatedTimestampUtc
+                            BackdatedTimestampUtc = c.BackdatedTimestampUtc,
                         },
                         _ => throw new NotImplementedException(
-                            $"The command type '{command.GetType().FullName}' has not been implemented.")
+                            $"The command type '{command.GetType().FullName}' has not been implemented."
+                        ),
                     }
-                    : throw new KeyNotFoundException("A note with the specified ID does not exist.")
+                    : throw new KeyNotFoundException("A note with the specified ID does not exist."),
             };
 
             return (
@@ -93,33 +112,36 @@ namespace CareTogether.Resources.Notes
                 OnCommit: () =>
                 {
                     LastKnownSequenceNumber++;
-                    notes = noteEntryToUpsert == null
-                        ? notes.Remove(command.NoteId)
-                        : notes.SetItem(command.NoteId, noteEntryToUpsert);
-                });
+                    notes =
+                        noteEntryToUpsert == null
+                            ? notes.Remove(command.NoteId)
+                            : notes.SetItem(command.NoteId, noteEntryToUpsert);
+                }
+            );
         }
 
         public ImmutableList<NoteEntry> FindNoteEntries(Func<NoteEntry, bool> predicate)
         {
-            return notes.Values
-                .Where(predicate)
-                .ToImmutableList();
+            return notes.Values.Where(predicate).ToImmutableList();
         }
 
         public NoteEntry GetNoteEntry(Guid noteId) => notes[noteId];
-
 
         private void ReplayEvent(NotesEvent domainEvent, long sequenceNumber)
         {
             if (domainEvent is NoteCommandExecuted noteCommandExecuted)
             {
-                var (_, _, _, onCommit) = ExecuteNoteCommand(noteCommandExecuted.Command,
-                    noteCommandExecuted.UserId, noteCommandExecuted.TimestampUtc);
+                var (_, _, _, onCommit) = ExecuteNoteCommand(
+                    noteCommandExecuted.Command,
+                    noteCommandExecuted.UserId,
+                    noteCommandExecuted.TimestampUtc
+                );
                 onCommit();
             }
             else
                 throw new NotImplementedException(
-                $"The event type '{domainEvent.GetType().FullName}' has not been implemented.");
+                    $"The event type '{domainEvent.GetType().FullName}' has not been implemented."
+                );
 
             LastKnownSequenceNumber = sequenceNumber;
         }

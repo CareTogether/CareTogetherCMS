@@ -18,25 +18,30 @@ namespace CareTogether.Utilities.Identity
 
         public async Task<UserLoginInfo> GetUserLoginInfoAsync(Guid userId)
         {
-            var user = await graphClient.Users[userId.ToString()]
-                .GetAsync(requestConfiguration =>
-                {
-                    requestConfiguration.QueryParameters.Select = [
-                        "id",
-                        "identities",
-                        "signInActivity",
-                        "displayName"
-                    ];
-                }) ?? throw new InvalidOperationException(
-                    $"User with ID '{userId}' not found in identity provider");
+            var user =
+                await graphClient
+                    .Users[userId.ToString()]
+                    .GetAsync(requestConfiguration =>
+                    {
+                        requestConfiguration.QueryParameters.Select =
+                        [
+                            "id",
+                            "identities",
+                            "signInActivity",
+                            "displayName",
+                        ];
+                    })
+                ?? throw new InvalidOperationException($"User with ID '{userId}' not found in identity provider");
 
             var lastSignIn = user.SignInActivity?.LastSignInDateTime;
             var displayName = user.DisplayName;
-            var identities = user.Identities?.Select(identity => new UserLoginIdentity(
-                identity.Issuer,
-                identity.SignInType,
-                identity.IssuerAssignedId
-            )).ToArray() ?? [];
+            var identities =
+                user.Identities?.Select(identity => new UserLoginIdentity(
+                        identity.Issuer,
+                        identity.SignInType,
+                        identity.IssuerAssignedId
+                    ))
+                    .ToArray() ?? [];
 
             return new UserLoginInfo(userId, lastSignIn, displayName, identities);
         }
