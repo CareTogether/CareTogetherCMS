@@ -308,14 +308,8 @@ namespace CareTogether.Engines.PolicyEvaluation
                                 .Where(missingDueDate =>
                                     !fva.ExemptedRequirements.Any(exempted =>
                                         exempted.RequirementName == monitoringRequirement.ActionName
-                                        && (
-                                            !exempted.DueDate.HasValue
-                                            || exempted.DueDate == missingDueDate
-                                        )
-                                        && (
-                                            exempted.ExemptionExpiresAt == null
-                                            || exempted.ExemptionExpiresAt > today
-                                        )
+                                        && (!exempted.DueDate.HasValue || exempted.DueDate == missingDueDate)
+                                        && (exempted.ExemptionExpiresAt == null || exempted.ExemptionExpiresAt > today)
                                     )
                                 )
                                 .Select(missingDueDate => new MissingArrangementRequirement(
@@ -366,10 +360,7 @@ namespace CareTogether.Engines.PolicyEvaluation
                                     !iva.ExemptedRequirements.Any(exempted =>
                                         exempted.RequirementName == monitoringRequirement.ActionName
                                         && (!exempted.DueDate.HasValue || exempted.DueDate == missingDueDate)
-                                        && (
-                                            exempted.ExemptionExpiresAt == null
-                                            || exempted.ExemptionExpiresAt > today
-                                        )
+                                        && (exempted.ExemptionExpiresAt == null || exempted.ExemptionExpiresAt > today)
                                     )
                                 )
                                 .Select(missingDueDate => new MissingArrangementRequirement(
@@ -402,7 +393,7 @@ namespace CareTogether.Engines.PolicyEvaluation
             DateOnly arrangementStartedAtDate,
             DateOnly? arrangementEndedAtDate,
             ImmutableList<DateOnly> completions,
-            ImmutableSortedSet<ChildLocation> childLocationHistory,
+            ImmutableList<ChildLocation> childLocationHistory,
             DateOnly today
         )
         {
@@ -510,7 +501,7 @@ namespace CareTogether.Engines.PolicyEvaluation
             Guid? filterToFamilyId = null
         )
         {
-            var dateRanges = GenerateDateRanges(childLocations).ToImmutableList();
+            var dateRanges = GenerateDateRanges(childLocations, filterToFamilyId).ToImmutableList();
 
             var filteredDateRanges = (
                 filterToFamilyId != null ? dateRanges.Where(item => item.Tag == filterToFamilyId) : dateRanges
@@ -523,34 +514,54 @@ namespace CareTogether.Engines.PolicyEvaluation
                 return null;
             }
 
-            return new DateOnlyTimeline(filteredDateRanges);
+            return DateOnlyTimeline.FromOverlappingDateRanges(filteredDateRanges);
         }
 
-        private static IEnumerable<DateRange<Guid>> GenerateDateRanges(ImmutableList<ChildLocation> childLocations)
+        private static IEnumerable<DateRange<Guid>> GenerateDateRanges(
+            ImmutableList<ChildLocation> childLocations,
+            Guid? filterToFamilyId
+        )
         {
-            DateOnly? startDate = null;
-            Guid? tag = null;
+            (DateOnly Date, Guid ChildLocationFamilyId)? previousChildLocation = null;
 
             foreach (var childLocation in childLocations)
             {
-                if (!startDate.HasValue && !childLocation.Paused)
+                if (!previousChildLocation.HasValue && !childLocation.Paused)
                 {
-                    startDate = childLocation.Date;
-                    tag = childLocation.ChildLocationFamilyId;
+                    previousChildLocation = (childLocation.Date, childLocation.ChildLocationFamilyId);
                     continue;
                 }
 
-                if (startDate.HasValue && tag.HasValue && childLocation.Paused)
+                if (previousChildLocation.HasValue && !childLocation.Paused)
                 {
-                    yield return new DateRange<Guid>(startDate.Value, childLocation.Date, tag.Value);
-                    startDate = null;
+                    yield return new DateRange<Guid>(
+                        previousChildLocation.Value.Date,
+                        childLocation.Date,
+                        previousChildLocation.Value.ChildLocationFamilyId
+                    );
+
+                    previousChildLocation = (childLocation.Date, childLocation.ChildLocationFamilyId);
+                    continue;
+                }
+
+                if (previousChildLocation.HasValue && childLocation.Paused)
+                {
+                    yield return new DateRange<Guid>(
+                        previousChildLocation.Value.Date,
+                        childLocation.Date,
+                        previousChildLocation.Value.ChildLocationFamilyId
+                    );
+                    previousChildLocation = null;
                     continue;
                 }
             }
 
-            if (startDate.HasValue && tag.HasValue)
+            if (previousChildLocation.HasValue)
             {
-                yield return new DateRange<Guid>(startDate.Value, tag.Value);
+                yield return new DateRange<Guid>(
+                    previousChildLocation.Value.Date,
+                    previousChildLocation.Value.ChildLocationFamilyId
+                );
             }
         }
 
@@ -715,7 +726,7 @@ namespace CareTogether.Engines.PolicyEvaluation
             DateOnly? arrangementEndedDate,
             DateOnly today,
             ImmutableList<DateOnly> completionDates,
-            ImmutableSortedSet<ChildLocation> childLocationHistory
+            ImmutableList<ChildLocation> childLocationHistory
         )
         {
             // Technically, the RecurrencePolicyStage model currently allows any stage to have an unlimited
@@ -759,7 +770,7 @@ namespace CareTogether.Engines.PolicyEvaluation
             ChildCareOccurrenceBasedRecurrencePolicy recurrence,
             Guid? filterToFamilyId,
             ImmutableList<DateOnly> completionDates,
-            ImmutableSortedSet<ChildLocation> childLocationHistory
+            ImmutableList<ChildLocation> childLocationHistory
         )
         {
             // Determine which child care occurrences the requirement will apply to.

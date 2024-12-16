@@ -79,7 +79,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
                 ))
                 .ToImmutableSortedSet();
 
-        public static ImmutableSortedSet<ChildLocation> ChildLocationHistory(
+        public static ImmutableList<ChildLocation> ChildLocationHistory(
             params (Guid childLocationFamilyId, ChildLocationPlan plan, int month, int day)[] values
         ) =>
             values
@@ -88,7 +88,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
                     DateOnly.FromDateTime(DateTime(value.month, value.day)),
                     value.plan == ChildLocationPlan.WithParent
                 ))
-                .ToImmutableSortedSet();
+                .ToImmutableList();
 
         public static ArrangementFunction FunctionWithoutEligibility(
             string arrangementFunction,

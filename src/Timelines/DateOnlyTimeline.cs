@@ -14,7 +14,6 @@ public sealed class DateOnlyTimeline : IEquatable<DateOnlyTimeline>
 {
     public ImmutableList<DateRange> Ranges { get; init; }
 
-
     public DateOnlyTimeline(ImmutableList<DateRange> ranges)
     {
         if (ranges.Count == 0)
@@ -30,16 +29,35 @@ public sealed class DateOnlyTimeline : IEquatable<DateOnlyTimeline>
             var current = Ranges[i];
 
             if (prior.End >= current.Start)
-                throw new ArgumentException("The date ranges must not overlap. Overlap detected between " +
-                    $"{prior} and {current}.");
+                throw new ArgumentException(
+                    "The date ranges must not overlap. Overlap detected between " + $"{prior} and {current}."
+                );
         }
     }
 
-    public DateOnly Start =>
-        Ranges.First().Start;
+    public static DateOnlyTimeline FromOverlappingDateRanges(ImmutableList<DateRange> dateRanges)
+    {
+        var mergedDateRanges = dateRanges.Aggregate(
+            ImmutableList<DateRange>.Empty,
+            (final, item) =>
+            {
+                var last = final.LastOrDefault();
 
-    public DateOnly End =>
-        Ranges.Last().End;
+                if (last.End >= item.Start)
+                {
+                    return final.Replace(last, new DateRange(last.Start, item.End));
+                }
+
+                return final.Add(item);
+            }
+        );
+
+        return new DateOnlyTimeline(mergedDateRanges);
+    }
+
+    public DateOnly Start => Ranges.First().Start;
+
+    public DateOnly End => Ranges.Last().End;
 
     public static DateOnlyTimeline? UnionOf(ImmutableList<DateOnlyTimeline?> timelines)
     {
@@ -57,10 +75,7 @@ public sealed class DateOnlyTimeline : IEquatable<DateOnlyTimeline>
         if (ranges.Count == 0 || ranges.All(range => range == null))
             return null;
 
-        var nonNullRanges = ranges
-            .Where(range => range != null)
-            .Cast<DateRange>()
-            .ToImmutableList();
+        var nonNullRanges = ranges.Where(range => range != null).Cast<DateRange>().ToImmutableList();
 
         return UnionOf(nonNullRanges);
     }
@@ -70,34 +85,36 @@ public sealed class DateOnlyTimeline : IEquatable<DateOnlyTimeline>
         if (ranges.Count == 0)
             return null;
 
-        var orderedAbsoluteRanges = ranges
-            .OrderBy(range => range.Start)
-            .ToImmutableList();
+        var orderedAbsoluteRanges = ranges.OrderBy(range => range.Start).ToImmutableList();
 
         // Merge any overlapping ranges, i.e., whenever the end of one range is on,
         // adjacent to, or after the start of the next range, combine them into a single range.
         var sequentialNonOverlappingRanges = orderedAbsoluteRanges
-            .Aggregate(new List<DateRange>(), (prior, current) =>
-            {
-                if (prior.Count == 0)
+            .Aggregate(
+                new List<DateRange>(),
+                (prior, current) =>
                 {
+                    if (prior.Count == 0)
+                    {
+                        prior.Add(current);
+                        return prior;
+                    }
+
+                    var mostRecentRange = prior[^1];
+                    if (mostRecentRange.End == DateOnly.MaxValue || current.Start <= mostRecentRange.End.AddDays(1))
+                    {
+                        // The resulting range should use the end date of whichever range ends later.
+                        prior[^1] = new DateRange(
+                            mostRecentRange.Start,
+                            mostRecentRange.End > current.End ? mostRecentRange.End : current.End
+                        );
+                        return prior;
+                    }
+
                     prior.Add(current);
                     return prior;
                 }
-
-                var mostRecentRange = prior[^1];
-                if (mostRecentRange.End == DateOnly.MaxValue ||
-                    current.Start <= mostRecentRange.End.AddDays(1))
-                {
-                    // The resulting range should use the end date of whichever range ends later.
-                    prior[^1] = new DateRange(mostRecentRange.Start,
-                        mostRecentRange.End > current.End ? mostRecentRange.End : current.End);
-                    return prior;
-                }
-
-                prior.Add(current);
-                return prior;
-            })
+            )
             .ToImmutableList();
 
         return new DateOnlyTimeline(sequentialNonOverlappingRanges);
@@ -126,8 +143,8 @@ public sealed class DateOnlyTimeline : IEquatable<DateOnlyTimeline>
             return null;
 
         var intersection = timelines
-            .Skip(1).Aggregate(timelines[0],
-                (prior, current) => prior?.IntersectionWith(current));
+            .Skip(1)
+            .Aggregate(timelines[0], (prior, current) => prior?.IntersectionWith(current));
 
         return intersection;
     }
@@ -141,18 +158,14 @@ public sealed class DateOnlyTimeline : IEquatable<DateOnlyTimeline>
         return timeline.Complement();
     }
 
-
-    public bool Contains(DateOnly value) =>
-        Ranges.Exists(range => range.Contains(value));
+    public bool Contains(DateOnly value) => Ranges.Exists(range => range.Contains(value));
 
     public DateOnlyTimeline? IntersectionWith(DateRange other)
     {
         // Find the intersection of each range in the timeline with the 'other' range,
         // and then combine the results as a union. Some or all of the intersections
         // may be null, so the final result may be null.
-        var rangeIntersections = Ranges
-            .Select(range => range.IntersectionWith(other))
-            .ToImmutableList();
+        var rangeIntersections = Ranges.Select(range => range.IntersectionWith(other)).ToImmutableList();
 
         return UnionOf(rangeIntersections);
     }
@@ -167,9 +180,7 @@ public sealed class DateOnlyTimeline : IEquatable<DateOnlyTimeline>
         // any such intersection must consist at most of all the time spans in the first timeline.
         // So, we can find the intersection by finding the intersection of each stage in the first
         // timeline with the second timeline, then combining the results as a union.
-        var intersections = other.Ranges
-            .Select(otherRange => IntersectionWith(otherRange))
-            .ToImmutableList();
+        var intersections = other.Ranges.Select(otherRange => IntersectionWith(otherRange)).ToImmutableList();
 
         return UnionOf(intersections);
     }
@@ -243,9 +254,7 @@ public sealed class DateOnlyTimeline : IEquatable<DateOnlyTimeline>
 
         // Otherwise, the forward-only complement is the regular complement, but
         // with the first range removed.
-        var rangesAfterFirst = fullComplement.Ranges
-            .Skip(1)
-            .ToImmutableList();
+        var rangesAfterFirst = fullComplement.Ranges.Skip(1).ToImmutableList();
         return UnionOf(rangesAfterFirst);
     }
 
@@ -258,7 +267,6 @@ public sealed class DateOnlyTimeline : IEquatable<DateOnlyTimeline>
         // first timeline with the complement of the second.
         return IntersectionWith(ComplementOf(other));
     }
-
 
     public bool Equals(DateOnlyTimeline? other)
     {
@@ -332,7 +340,6 @@ public sealed class DateOnlyTimeline<T> : IEquatable<DateOnlyTimeline<T>>
 {
     public ImmutableList<DateRange<T>> Ranges { get; init; }
 
-
     public DateOnlyTimeline(ImmutableList<DateRange<T>> ranges)
     {
         if (ranges.Count == 0)
@@ -348,11 +355,11 @@ public sealed class DateOnlyTimeline<T> : IEquatable<DateOnlyTimeline<T>>
             var current = Ranges[i];
 
             if (prior.End >= current.Start)
-                throw new ArgumentException("The date ranges must not overlap. Overlap detected between " +
-                    $"{prior} and {current}.");
+                throw new ArgumentException(
+                    "The date ranges must not overlap. Overlap detected between " + $"{prior} and {current}."
+                );
         }
     }
-
 
     public T? ValueAt(DateOnly value) =>
         // Because DateRange is a struct, the 'default' value is a range that has 'Tag' set to default(T).
@@ -360,7 +367,6 @@ public sealed class DateOnlyTimeline<T> : IEquatable<DateOnlyTimeline<T>>
         Ranges.SingleOrDefault(range => range.Contains(value)).Tag;
 
     public T? ValueAt(DateTime value) => ValueAt(DateOnly.FromDateTime(value));
-
 
     public bool Equals(DateOnlyTimeline<T>? other)
     {

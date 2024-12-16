@@ -11,11 +11,7 @@ namespace CareTogether.Engines.PolicyEvaluation
         ImmutableDictionary<Guid, ArrangementEntry> Arrangements
     );
 
-    public sealed record CompletedRequirementInfo(
-        string RequirementName,
-        DateOnly CompletedAt,
-        DateOnly? ExpiresAt
-    );
+    public sealed record CompletedRequirementInfo(string RequirementName, DateOnly CompletedAt, DateOnly? ExpiresAt);
 
     public sealed record ExemptedRequirementInfo(
         string RequirementName,
@@ -33,7 +29,7 @@ namespace CareTogether.Engines.PolicyEvaluation
         ImmutableList<ExemptedRequirementInfo> ExemptedRequirements,
         ImmutableList<IndividualVolunteerAssignment> IndividualVolunteerAssignments,
         ImmutableList<FamilyVolunteerAssignment> FamilyVolunteerAssignments,
-        ImmutableSortedSet<ChildLocation> ChildLocationHistory
+        ImmutableList<ChildLocation> ChildLocationHistory
     );
 
     public sealed record IndividualVolunteerAssignment(
