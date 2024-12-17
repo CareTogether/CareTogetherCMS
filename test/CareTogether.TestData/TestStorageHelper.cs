@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using Azure;
 using Azure.Storage.Blobs;
 using Azure.Storage.Blobs.Models;
 
@@ -6,16 +8,22 @@ namespace CareTogether.TestData
 {
     public static class TestStorageHelper
     {
+        static readonly Guid _Guid1 = Id('1');
+
         public static void ResetTestTenantData(BlobServiceClient blobServiceClient)
         {
-            var organizationId = guid1.ToString();
-            var tenantContainer = blobServiceClient.GetBlobContainerClient(organizationId);
+            string? organizationId = _Guid1.ToString();
+            BlobContainerClient? tenantContainer = blobServiceClient.GetBlobContainerClient(organizationId);
 
             tenantContainer.CreateIfNotExists();
 
-            foreach (var blobPage in tenantContainer.GetBlobs().AsPages())
-            foreach (var blob in blobPage.Values)
-                tenantContainer.DeleteBlobIfExists(blob.Name, DeleteSnapshotsOption.IncludeSnapshots);
+            foreach (Page<BlobItem>? blobPage in tenantContainer.GetBlobs().AsPages())
+            {
+                foreach (BlobItem? blob in blobPage.Values)
+                {
+                    tenantContainer.DeleteBlobIfExists(blob.Name, DeleteSnapshotsOption.IncludeSnapshots);
+                }
+            }
 
             //TODO: Fix the following logic so it works properly in Azure as well (API issue)
             if (blobServiceClient.AccountName == "devstoreaccount1")
@@ -23,9 +31,9 @@ namespace CareTogether.TestData
                 blobServiceClient.SetProperties(
                     new BlobServiceProperties
                     {
-                        Cors = new System.Collections.Generic.List<BlobCorsRule>
+                        Cors = new List<BlobCorsRule>
                         {
-                            new BlobCorsRule
+                            new()
                             {
                                 AllowedHeaders = "*",
                                 AllowedMethods = "GET,PUT",
@@ -40,8 +48,9 @@ namespace CareTogether.TestData
             }
         }
 
-        private static Guid Id(char x) => Guid.Parse("xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx".Replace('x', x));
-
-        static readonly Guid guid1 = Id('1');
+        static Guid Id(char x)
+        {
+            return Guid.Parse("xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx".Replace('x', x));
+        }
     }
 }

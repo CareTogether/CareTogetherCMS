@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
 using System.Threading.Tasks;
@@ -9,13 +8,13 @@ namespace CareTogether.Resources.Policies
 {
     public sealed class PoliciesResource : IPoliciesResource
     {
-        private const string CONFIG = "config";
-        private const string POLICY = "policy";
-        private const string SECRETS = "secrets";
+        const string CONFIG = "config";
+        const string POLICY = "policy";
+        const string SECRETS = "secrets";
 
-        private readonly IObjectStore<OrganizationConfiguration> configurationStore;
-        private readonly IObjectStore<EffectiveLocationPolicy> locationPoliciesStore;
-        private readonly IObjectStore<OrganizationSecrets> organizationSecretsStore;
+        readonly IObjectStore<OrganizationConfiguration> _ConfigurationStore;
+        readonly IObjectStore<EffectiveLocationPolicy> _LocationPoliciesStore;
+        readonly IObjectStore<OrganizationSecrets> _OrganizationSecretsStore;
 
         public PoliciesResource(
             IObjectStore<OrganizationConfiguration> configurationStore,
@@ -23,14 +22,14 @@ namespace CareTogether.Resources.Policies
             IObjectStore<OrganizationSecrets> organizationSecretsStore
         )
         {
-            this.configurationStore = configurationStore;
-            this.locationPoliciesStore = locationPoliciesStore;
-            this.organizationSecretsStore = organizationSecretsStore;
+            _ConfigurationStore = configurationStore;
+            _LocationPoliciesStore = locationPoliciesStore;
+            _OrganizationSecretsStore = organizationSecretsStore;
         }
 
         public async Task<OrganizationConfiguration> GetConfigurationAsync(Guid organizationId)
         {
-            var result = await configurationStore.GetAsync(organizationId, Guid.Empty, CONFIG);
+            OrganizationConfiguration result = await _ConfigurationStore.GetAsync(organizationId, Guid.Empty, CONFIG);
             return Render(result);
         }
 
@@ -41,19 +40,24 @@ namespace CareTogether.Resources.Policies
         )
         {
             if (roleName == SystemConstants.ORGANIZATION_ADMINISTRATOR)
+            {
                 throw new InvalidOperationException("The organization administrator role cannot be edited.");
+            }
 
-            var config = await configurationStore.GetAsync(organizationId, Guid.Empty, CONFIG);
-            var newConfig = config with { Roles = config.Roles.UpdateSingle(r => r.RoleName == roleName, _ => role) };
-            await configurationStore.UpsertAsync(organizationId, Guid.Empty, CONFIG, newConfig);
+            OrganizationConfiguration config = await _ConfigurationStore.GetAsync(organizationId, Guid.Empty, CONFIG);
+            OrganizationConfiguration newConfig = config with
+            {
+                Roles = config.Roles.UpdateSingle(r => r.RoleName == roleName, _ => role),
+            };
+            await _ConfigurationStore.UpsertAsync(organizationId, Guid.Empty, CONFIG, newConfig);
             return Render(newConfig);
         }
 
         public async Task<EffectiveLocationPolicy> GetCurrentPolicy(Guid organizationId, Guid locationId)
         {
-            var result = await locationPoliciesStore.GetAsync(organizationId, locationId, POLICY);
+            EffectiveLocationPolicy result = await _LocationPoliciesStore.GetAsync(organizationId, locationId, POLICY);
 
-            var effectivePolicy = result with
+            EffectiveLocationPolicy effectivePolicy = result with
             {
                 ReferralPolicy = result.ReferralPolicy with
                 {
@@ -103,12 +107,13 @@ namespace CareTogether.Resources.Policies
 
         public async Task<OrganizationSecrets> GetOrganizationSecretsAsync(Guid organizationId)
         {
-            var result = await organizationSecretsStore.GetAsync(organizationId, Guid.Empty, SECRETS);
+            OrganizationSecrets result = await _OrganizationSecretsStore.GetAsync(organizationId, Guid.Empty, SECRETS);
             return result;
         }
 
-        private OrganizationConfiguration Render(OrganizationConfiguration config) =>
-            config with
+        OrganizationConfiguration Render(OrganizationConfiguration config)
+        {
+            return config with
             {
                 // The 'OrganizationAdministrator' role for each organization is a specially-defined role
                 // that always has *all* permissions granted to it. This ensures that administrators never
@@ -118,7 +123,7 @@ namespace CareTogether.Resources.Policies
                     0,
                     new RoleDefinition(
                         SystemConstants.ORGANIZATION_ADMINISTRATOR,
-                        IsProtected: true,
+                        true,
                         ImmutableList.Create(
                             new ContextualPermissionSet(
                                 new GlobalPermissionContext(),
@@ -128,5 +133,6 @@ namespace CareTogether.Resources.Policies
                     )
                 ),
             };
+        }
     }
 }

@@ -31,7 +31,7 @@ namespace CareTogether.Resources.Approvals
         Inactive,
         OptOut,
         Denied,
-    };
+    }
 
     public record VolunteerEntry(
         Guid PersonId,
@@ -141,8 +141,8 @@ namespace CareTogether.Resources.Approvals
     ) : VolunteerCommand(FamilyId, PersonId);
 
     /// <summary>
-    /// The <see cref="IApprovalsResource"/> models the lifecycle of people's approval status with CareTogether organizations,
-    /// including various forms, approval, renewals, and policy changes, as well as authorizing related queries.
+    ///     The <see cref="IApprovalsResource" /> models the lifecycle of people's approval status with CareTogether organizations,
+    ///     including various forms, approval, renewals, and policy changes, as well as authorizing related queries.
     /// </summary>
     public interface IApprovalsResource
     {

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Azure.Storage.Blobs;
@@ -18,79 +19,80 @@ namespace CareTogether.Core.Test
     [TestClass]
     public class AppendBlobEventLogTest
     {
-        private static readonly BlobServiceClient testingClient = new BlobServiceClient("UseDevelopmentStorage=true");
-
-        private static Guid Id(char x) => Guid.Parse("xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx".Replace('x', x));
+        static readonly BlobServiceClient _TestingClient = new("UseDevelopmentStorage=true");
 
         // 'organizationId' and 'locationId' must be seeded with 1 and 2, respectively, because
         // PopulateTestDataAsync creates data in that organizationId and locationId only.
-        static readonly Guid organizationId = Id('1');
-        static readonly Guid locationId = Id('2');
-        static readonly Guid guid3 = Id('3');
-        static readonly Guid guid4 = Id('4');
+        static readonly Guid _OrganizationId = Id('1');
+        static readonly Guid _LocationId = Id('2');
+        static readonly Guid _Guid3 = Id('3');
+        static readonly Guid _Guid4 = Id('4');
 
-        private static async Task AppendEventsAsync<T>(
+        static Guid Id(char x)
+        {
+            return Guid.Parse("xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx".Replace('x', x));
+        }
+
+        static async Task AppendEventsAsync<T>(
             IEventLog<T> eventLog,
             Guid organizationId,
             Guid locationId,
             params T[] events
         )
         {
-            foreach (var (domainEvent, index) in events.Select((e, i) => (e, (long)i)))
+            foreach ((T domainEvent, long index) in events.Select((e, i) => (e, (long)i)))
             {
                 await eventLog.AppendEventAsync(organizationId, locationId, domainEvent, index + 1);
             }
         }
 
-#nullable disable
-        AppendBlobEventLog<TestEventA> directoryEventLog;
-        AppendBlobEventLog<TestEventB> referralsEventLog;
-
-#nullable restore
-
         [TestInitialize]
         public void TestInitialize()
         {
-            testingClient.GetBlobContainerClient(organizationId.ToString()).DeleteIfExists();
-            testingClient.GetBlobContainerClient(guid3.ToString()).DeleteIfExists();
+            _TestingClient.GetBlobContainerClient(_OrganizationId.ToString()).DeleteIfExists();
+            _TestingClient.GetBlobContainerClient(_Guid3.ToString()).DeleteIfExists();
 
-            directoryEventLog = new AppendBlobEventLog<TestEventA>(testingClient, "A");
-            referralsEventLog = new AppendBlobEventLog<TestEventB>(testingClient, "B");
+            _DirectoryEventLog = new AppendBlobEventLog<TestEventA>(_TestingClient, "A");
+            _ReferralsEventLog = new AppendBlobEventLog<TestEventB>(_TestingClient, "B");
         }
 
         [TestCleanup]
         public void TestCleanup()
         {
-            testingClient.GetBlobContainerClient(organizationId.ToString()).DeleteIfExists();
-            testingClient.GetBlobContainerClient(guid3.ToString()).DeleteIfExists();
+            _TestingClient.GetBlobContainerClient(_OrganizationId.ToString()).DeleteIfExists();
+            _TestingClient.GetBlobContainerClient(_Guid3.ToString()).DeleteIfExists();
         }
 
         [TestMethod]
         public async Task ResultsFromContainerAfterTestDataPopulationMatchesExpected()
         {
             await AppendEventsAsync(
-                directoryEventLog,
-                organizationId,
-                locationId,
+                _DirectoryEventLog,
+                _OrganizationId,
+                _LocationId,
                 new TestEventA(1),
                 new TestEventA(2),
                 new TestEventA(3)
             );
             await AppendEventsAsync(
-                referralsEventLog,
-                organizationId,
-                locationId,
+                _ReferralsEventLog,
+                _OrganizationId,
+                _LocationId,
                 new TestEventB(1),
                 new TestEventB(2)
             );
 
-            var directoryEvents = await directoryEventLog.GetAllEventsAsync(organizationId, locationId).ToListAsync();
+            List<(TestEventA DomainEvent, long SequenceNumber)> directoryEvents = await _DirectoryEventLog
+                .GetAllEventsAsync(_OrganizationId, _LocationId)
+                .ToListAsync();
 
             Assert.AreEqual(3, directoryEvents.Count);
             Assert.AreEqual(typeof(TestEventA), directoryEvents[0].DomainEvent.GetType());
             Assert.AreEqual(typeof(TestEventA), directoryEvents[2].DomainEvent.GetType());
 
-            var referralEvents = await referralsEventLog.GetAllEventsAsync(organizationId, locationId).ToListAsync();
+            List<(TestEventB DomainEvent, long SequenceNumber)> referralEvents = await _ReferralsEventLog
+                .GetAllEventsAsync(_OrganizationId, _LocationId)
+                .ToListAsync();
 
             Assert.AreEqual(2, referralEvents.Count);
             Assert.AreEqual(typeof(TestEventB), referralEvents[1].DomainEvent.GetType());
@@ -99,7 +101,8 @@ namespace CareTogether.Core.Test
         [TestMethod]
         public async Task GettingUninitializedTenantLogReturnsEmptySequence()
         {
-            var result = directoryEventLog.GetAllEventsAsync(organizationId, locationId);
+            IAsyncEnumerable<(TestEventA DomainEvent, long SequenceNumber)> result =
+                _DirectoryEventLog.GetAllEventsAsync(_OrganizationId, _LocationId);
             Assert.AreEqual(0, await result.CountAsync());
         }
 
@@ -115,8 +118,10 @@ namespace CareTogether.Core.Test
         [TestMethod]
         public async Task AppendingAnEventToAnUninitializedTenantLogStoresItWithTheCorrectSequenceNumber()
         {
-            await directoryEventLog.AppendEventAsync(organizationId, locationId, new TestEventA(1), 1);
-            var getResult = await directoryEventLog.GetAllEventsAsync(organizationId, locationId).ToListAsync();
+            await _DirectoryEventLog.AppendEventAsync(_OrganizationId, _LocationId, new TestEventA(1), 1);
+            List<(TestEventA DomainEvent, long SequenceNumber)> getResult = await _DirectoryEventLog
+                .GetAllEventsAsync(_OrganizationId, _LocationId)
+                .ToListAsync();
             Assert.AreEqual(1, getResult.Count);
             Assert.AreEqual(1, getResult[0].SequenceNumber);
         }
@@ -166,18 +171,20 @@ namespace CareTogether.Core.Test
         [TestMethod]
         public async Task AppendingMultipleEventsToMultipleTenantLogsMaintainsSeparation()
         {
-            await directoryEventLog.AppendEventAsync(organizationId, locationId, new TestEventA(1), 1);
-            await directoryEventLog.AppendEventAsync(organizationId, locationId, new TestEventA(2), 2);
-            await directoryEventLog.AppendEventAsync(organizationId, locationId, new TestEventA(3), 3);
-            await directoryEventLog.AppendEventAsync(organizationId, locationId, new TestEventA(4), 4);
-            await directoryEventLog.AppendEventAsync(organizationId, locationId, new TestEventA(5), 5);
-            await directoryEventLog.AppendEventAsync(organizationId, locationId, new TestEventA(6), 6);
-            await directoryEventLog.AppendEventAsync(guid3, guid4, new TestEventA(7), 1);
-            await directoryEventLog.AppendEventAsync(guid3, guid4, new TestEventA(8), 2);
-            await directoryEventLog.AppendEventAsync(guid3, guid4, new TestEventA(9), 3);
-            await directoryEventLog.AppendEventAsync(organizationId, locationId, new TestEventA(10), 7);
+            await _DirectoryEventLog.AppendEventAsync(_OrganizationId, _LocationId, new TestEventA(1), 1);
+            await _DirectoryEventLog.AppendEventAsync(_OrganizationId, _LocationId, new TestEventA(2), 2);
+            await _DirectoryEventLog.AppendEventAsync(_OrganizationId, _LocationId, new TestEventA(3), 3);
+            await _DirectoryEventLog.AppendEventAsync(_OrganizationId, _LocationId, new TestEventA(4), 4);
+            await _DirectoryEventLog.AppendEventAsync(_OrganizationId, _LocationId, new TestEventA(5), 5);
+            await _DirectoryEventLog.AppendEventAsync(_OrganizationId, _LocationId, new TestEventA(6), 6);
+            await _DirectoryEventLog.AppendEventAsync(_Guid3, _Guid4, new TestEventA(7), 1);
+            await _DirectoryEventLog.AppendEventAsync(_Guid3, _Guid4, new TestEventA(8), 2);
+            await _DirectoryEventLog.AppendEventAsync(_Guid3, _Guid4, new TestEventA(9), 3);
+            await _DirectoryEventLog.AppendEventAsync(_OrganizationId, _LocationId, new TestEventA(10), 7);
 
-            var getResult = await directoryEventLog.GetAllEventsAsync(organizationId, locationId).ToListAsync();
+            List<(TestEventA DomainEvent, long SequenceNumber)> getResult = await _DirectoryEventLog
+                .GetAllEventsAsync(_OrganizationId, _LocationId)
+                .ToListAsync();
             Assert.AreEqual(7, getResult.Count);
             Assert.AreEqual((new TestEventA(1), 1), getResult[0]);
             Assert.AreEqual((new TestEventA(2), 2), getResult[1]);
@@ -188,11 +195,11 @@ namespace CareTogether.Core.Test
         [TestMethod]
         public void BlobNumberCalculatedCorrectly()
         {
-            var firstResult = directoryEventLog.getBlobNumber(1);
-            var secondResult = directoryEventLog.getBlobNumber(49999);
-            var thirdResult = directoryEventLog.getBlobNumber(50000);
-            var fourthResult = directoryEventLog.getBlobNumber(50001);
-            var fifthResult = directoryEventLog.getBlobNumber(485919);
+            long firstResult = _DirectoryEventLog.getBlobNumber(1);
+            long secondResult = _DirectoryEventLog.getBlobNumber(49999);
+            long thirdResult = _DirectoryEventLog.getBlobNumber(50000);
+            long fourthResult = _DirectoryEventLog.getBlobNumber(50001);
+            long fifthResult = _DirectoryEventLog.getBlobNumber(485919);
 
             Assert.AreEqual(1, firstResult);
             Assert.AreEqual(1, secondResult);
@@ -204,11 +211,11 @@ namespace CareTogether.Core.Test
         [TestMethod]
         public void BlockNumberCalculatedCorrectly()
         {
-            var firstResult = directoryEventLog.getBlockNumber(1);
-            var secondResult = directoryEventLog.getBlockNumber(49999);
-            var thirdResult = directoryEventLog.getBlockNumber(50000);
-            var fourthResult = directoryEventLog.getBlockNumber(50001);
-            var fifthResult = directoryEventLog.getBlockNumber(485919);
+            long firstResult = _DirectoryEventLog.getBlockNumber(1);
+            long secondResult = _DirectoryEventLog.getBlockNumber(49999);
+            long thirdResult = _DirectoryEventLog.getBlockNumber(50000);
+            long fourthResult = _DirectoryEventLog.getBlockNumber(50001);
+            long fifthResult = _DirectoryEventLog.getBlockNumber(485919);
 
             Assert.AreEqual(1, firstResult);
             Assert.AreEqual(49999, secondResult);
@@ -216,5 +223,11 @@ namespace CareTogether.Core.Test
             Assert.AreEqual(1, fourthResult);
             Assert.AreEqual(35919, fifthResult);
         }
+
+#nullable disable
+        AppendBlobEventLog<TestEventA> _DirectoryEventLog;
+        AppendBlobEventLog<TestEventB> _ReferralsEventLog;
+
+#nullable restore
     }
 }

@@ -3,23 +3,24 @@ using System.Linq;
 using System.Threading.Tasks;
 using Azure.Identity;
 using Microsoft.Graph;
+using Microsoft.Graph.Models;
 
 namespace CareTogether.Utilities.Identity
 {
     public sealed class AzureAdB2cIdentityProvider : IIdentityProvider
     {
-        private readonly GraphServiceClient graphClient;
+        readonly GraphServiceClient _GraphClient;
 
         public AzureAdB2cIdentityProvider(string b2cTenantId, string b2cClientId, string b2cClientSecret)
         {
-            var credential = new ClientSecretCredential(b2cTenantId, b2cClientId, b2cClientSecret);
-            graphClient = new GraphServiceClient(credential);
+            ClientSecretCredential credential = new(b2cTenantId, b2cClientId, b2cClientSecret);
+            _GraphClient = new GraphServiceClient(credential);
         }
 
         public async Task<UserLoginInfo> GetUserLoginInfoAsync(Guid userId)
         {
-            var user =
-                await graphClient
+            User user =
+                await _GraphClient
                     .Users[userId.ToString()]
                     .GetAsync(requestConfiguration =>
                     {
@@ -33,9 +34,9 @@ namespace CareTogether.Utilities.Identity
                     })
                 ?? throw new InvalidOperationException($"User with ID '{userId}' not found in identity provider");
 
-            var lastSignIn = user.SignInActivity?.LastSignInDateTime;
-            var displayName = user.DisplayName;
-            var identities =
+            DateTimeOffset? lastSignIn = user.SignInActivity?.LastSignInDateTime;
+            string? displayName = user.DisplayName;
+            UserLoginIdentity[] identities =
                 user.Identities?.Select(identity => new UserLoginIdentity(
                         identity.Issuer,
                         identity.SignInType,

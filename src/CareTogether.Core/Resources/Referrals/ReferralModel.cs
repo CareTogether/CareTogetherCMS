@@ -52,7 +52,7 @@ namespace CareTogether.Resources.Referrals
 
     public sealed class ReferralModel
     {
-        private ImmutableDictionary<Guid, ReferralEntry> referrals = ImmutableDictionary<Guid, ReferralEntry>.Empty;
+        ImmutableDictionary<Guid, ReferralEntry> _Referrals = ImmutableDictionary<Guid, ReferralEntry>.Empty;
 
         public long LastKnownSequenceNumber { get; private set; } = -1;
 
@@ -60,10 +60,12 @@ namespace CareTogether.Resources.Referrals
             IAsyncEnumerable<(ReferralEvent DomainEvent, long SequenceNumber)> eventLog
         )
         {
-            var model = new ReferralModel();
+            ReferralModel model = new();
 
-            await foreach (var (domainEvent, sequenceNumber) in eventLog)
+            await foreach ((ReferralEvent domainEvent, long sequenceNumber) in eventLog)
+            {
                 model.ReplayEvent(domainEvent, sequenceNumber);
+            }
 
             return model;
         }
@@ -81,19 +83,19 @@ namespace CareTogether.Resources.Referrals
                     new ReferralEntry(
                         c.ReferralId,
                         c.FamilyId,
-                        OpenedAtUtc: c.OpenedAtUtc,
-                        ClosedAtUtc: null,
-                        CloseReason: null,
+                        c.OpenedAtUtc,
+                        null,
+                        null,
                         ImmutableList<CompletedRequirementInfo>.Empty,
                         ImmutableList<ExemptedRequirementInfo>.Empty,
                         ImmutableDictionary<string, CompletedCustomFieldInfo>.Empty,
                         ImmutableDictionary<Guid, ArrangementEntry>.Empty,
                         ImmutableList<Activity>.Empty,
-                        Comments: null
+                        null
                     ),
                     new ReferralOpened(userId, timestampUtc, c.OpenedAtUtc)
                 ),
-                _ => referrals.TryGetValue(command.ReferralId, out var referralEntry)
+                _ => _Referrals.TryGetValue(command.ReferralId, out ReferralEntry? referralEntry)
                     ? command switch
                     {
                         CompleteReferralRequirement c => (
@@ -106,7 +108,7 @@ namespace CareTogether.Resources.Referrals
                                         c.CompletedRequirementId,
                                         c.RequirementName,
                                         c.CompletedAtUtc,
-                                        ExpiresAtUtc: null,
+                                        null,
                                         c.UploadedDocumentId,
                                         c.NoteId
                                     )
@@ -139,7 +141,7 @@ namespace CareTogether.Resources.Referrals
                                         userId,
                                         timestampUtc,
                                         c.RequirementName,
-                                        DueDate: null,
+                                        null,
                                         c.AdditionalComments,
                                         c.ExemptionExpiresAtUtc
                                     )
@@ -202,7 +204,7 @@ namespace CareTogether.Resources.Referrals
                 OnCommit: () =>
                 {
                     LastKnownSequenceNumber++;
-                    referrals = referrals.SetItem(
+                    _Referrals = _Referrals.SetItem(
                         referralEntryToUpsert.Item1.Id,
                         referralEntryToUpsert.Item1 with
                         {
@@ -223,11 +225,14 @@ namespace CareTogether.Resources.Referrals
             Action OnCommit
         ) ExecuteArrangementsCommand(ArrangementsCommand command, Guid userId, DateTime timestampUtc)
         {
-            if (!referrals.TryGetValue(command.ReferralId, out var referralEntry))
+            if (!_Referrals.TryGetValue(command.ReferralId, out ReferralEntry? referralEntry))
+            {
                 throw new KeyNotFoundException("A referral with the specified ID does not exist.");
+            }
 
             //TODO: Generate aggregated activities for the referral history, instead of per-arrangement activity entries?
-            var arrangementEntriesToUpsert = command
+
+            ImmutableList<(ArrangementEntry, Activity?)> arrangementEntriesToUpsert = command
                 .ArrangementIds.Select<Guid, (ArrangementEntry, Activity?)>(arrangementId =>
                     command switch
                     {
@@ -235,13 +240,13 @@ namespace CareTogether.Resources.Referrals
                             new ArrangementEntry(
                                 arrangementId,
                                 c.ArrangementType,
-                                Active: true,
-                                RequestedAtUtc: c.RequestedAtUtc,
-                                StartedAtUtc: null,
-                                EndedAtUtc: null,
-                                CancelledAtUtc: null,
-                                PlannedStartUtc: null,
-                                PlannedEndUtc: null,
+                                true,
+                                c.RequestedAtUtc,
+                                null,
+                                null,
+                                null,
+                                null,
+                                null,
                                 c.PartneringFamilyPersonId,
                                 ImmutableList<CompletedRequirementInfo>.Empty,
                                 ImmutableList<ExemptedRequirementInfo>.Empty,
@@ -249,12 +254,15 @@ namespace CareTogether.Resources.Referrals
                                 ImmutableList<FamilyVolunteerAssignment>.Empty,
                                 ImmutableSortedSet<ChildLocationHistoryEntry>.Empty,
                                 ImmutableSortedSet<ChildLocationHistoryEntry>.Empty,
-                                Comments: null,
-                                Reason: c.Reason
+                                null,
+                                c.Reason
                             ),
                             null
                         ),
-                        _ => referralEntry.Arrangements.TryGetValue(arrangementId, out var arrangementEntry)
+                        _ => referralEntry.Arrangements.TryGetValue(
+                            arrangementId,
+                            out ArrangementEntry? arrangementEntry
+                        )
                             ? command switch
                             {
                                 AssignIndividualVolunteer c => (
@@ -339,7 +347,7 @@ namespace CareTogether.Resources.Referrals
                                                 c.CompletedRequirementId,
                                                 c.RequirementName,
                                                 c.CompletedAtUtc,
-                                                ExpiresAtUtc: null,
+                                                null,
                                                 c.UploadedDocumentId,
                                                 c.NoteId
                                             )
@@ -374,7 +382,7 @@ namespace CareTogether.Resources.Referrals
                                                                 c.CompletedRequirementId,
                                                                 c.RequirementName,
                                                                 c.CompletedAtUtc,
-                                                                ExpiresAtUtc: null,
+                                                                null,
                                                                 c.UploadedDocumentId,
                                                                 c.NoteId
                                                             )
@@ -412,7 +420,7 @@ namespace CareTogether.Resources.Referrals
                                                                 c.CompletedRequirementId,
                                                                 c.RequirementName,
                                                                 c.CompletedAtUtc,
-                                                                ExpiresAtUtc: null,
+                                                                null,
                                                                 c.UploadedDocumentId,
                                                                 c.NoteId
                                                             )
@@ -616,7 +624,7 @@ namespace CareTogether.Resources.Referrals
                                                 c.ChildLocationFamilyId,
                                                 c.ChildLocationReceivingAdultId,
                                                 c.Plan,
-                                                NoteId: null
+                                                null
                                             )
                                         ),
                                     },
@@ -711,7 +719,7 @@ namespace CareTogether.Resources.Referrals
                 )
                 .ToImmutableList();
 
-            var referralEntryToUpsert = referralEntry with
+            ReferralEntry referralEntryToUpsert = referralEntry with
             {
                 Arrangements = referralEntry.Arrangements.SetItems(
                     arrangementEntriesToUpsert.Select(e => new KeyValuePair<Guid, ArrangementEntry>(
@@ -730,23 +738,26 @@ namespace CareTogether.Resources.Referrals
                 OnCommit: () =>
                 {
                     LastKnownSequenceNumber++;
-                    referrals = referrals.SetItem(referralEntryToUpsert.Id, referralEntryToUpsert);
+                    _Referrals = _Referrals.SetItem(referralEntryToUpsert.Id, referralEntryToUpsert);
                 }
             );
         }
 
         public ImmutableList<ReferralEntry> FindReferralEntries(Func<ReferralEntry, bool> predicate)
         {
-            return referrals.Values.Where(predicate).ToImmutableList();
+            return _Referrals.Values.Where(predicate).ToImmutableList();
         }
 
-        public ReferralEntry GetReferralEntry(Guid referralId) => referrals[referralId];
+        public ReferralEntry GetReferralEntry(Guid referralId)
+        {
+            return _Referrals[referralId];
+        }
 
-        private void ReplayEvent(ReferralEvent domainEvent, long sequenceNumber)
+        void ReplayEvent(ReferralEvent domainEvent, long sequenceNumber)
         {
             if (domainEvent is ReferralCommandExecuted referralCommandExecuted)
             {
-                var (_, _, _, onCommit) = ExecuteReferralCommand(
+                (ReferralCommandExecuted _, long _, ReferralEntry _, Action onCommit) = ExecuteReferralCommand(
                     referralCommandExecuted.Command,
                     referralCommandExecuted.UserId,
                     referralCommandExecuted.TimestampUtc
@@ -755,7 +766,7 @@ namespace CareTogether.Resources.Referrals
             }
             else if (domainEvent is ArrangementsCommandExecuted arrangementCommandExecuted)
             {
-                var (_, _, _, onCommit) = ExecuteArrangementsCommand(
+                (ArrangementsCommandExecuted _, long _, ReferralEntry _, Action onCommit) = ExecuteArrangementsCommand(
                     arrangementCommandExecuted.Command,
                     arrangementCommandExecuted.UserId,
                     arrangementCommandExecuted.TimestampUtc
@@ -763,9 +774,11 @@ namespace CareTogether.Resources.Referrals
                 onCommit();
             }
             else
+            {
                 throw new NotImplementedException(
                     $"The event type '{domainEvent.GetType().FullName}' has not been implemented."
                 );
+            }
 
             LastKnownSequenceNumber = sequenceNumber;
         }

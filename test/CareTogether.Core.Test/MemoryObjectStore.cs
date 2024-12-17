@@ -9,21 +9,19 @@ namespace CareTogether.Core.Test
 {
     public sealed class MemoryObjectStore<T> : IObjectStore<T>
     {
-        private readonly ConcurrentDictionary<
-            (Guid organizationId, Guid locationId, string objectId),
-            T
-        > tenantObjects = new();
+        readonly ConcurrentDictionary<(Guid organizationId, Guid locationId, string objectId), T> _TenantObjects =
+            new();
 
         public async Task DeleteAsync(Guid organizationId, Guid locationId, string objectId)
         {
             await Task.Yield();
-            tenantObjects.Remove((organizationId, locationId, objectId), out _);
+            _TenantObjects.Remove((organizationId, locationId, objectId), out _);
         }
 
         public async Task<T> GetAsync(Guid organizationId, Guid locationId, string objectId)
         {
             await Task.Yield();
-            return tenantObjects.TryGetValue((organizationId, locationId, objectId), out var value)
+            return _TenantObjects.TryGetValue((organizationId, locationId, objectId), out T? value)
                 ? value
                 : throw new KeyNotFoundException();
         }
@@ -31,14 +29,16 @@ namespace CareTogether.Core.Test
         public async IAsyncEnumerable<string> ListAsync(Guid organizationId, Guid locationId)
         {
             await Task.Yield();
-            foreach (var objectId in tenantObjects.Keys.Select(key => key.objectId))
+            foreach (string? objectId in _TenantObjects.Keys.Select(key => key.objectId))
+            {
                 yield return objectId;
+            }
         }
 
         public async Task UpsertAsync(Guid organizationId, Guid locationId, string objectId, T value)
         {
             await Task.Yield();
-            tenantObjects[(organizationId, locationId, objectId)] = value;
+            _TenantObjects[(organizationId, locationId, objectId)] = value;
         }
     }
 }

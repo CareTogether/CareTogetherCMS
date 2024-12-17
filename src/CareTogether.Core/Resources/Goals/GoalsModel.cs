@@ -11,7 +11,7 @@ namespace CareTogether.Resources.Goals
 
     public sealed class GoalsModel
     {
-        private ImmutableDictionary<(Guid PersonId, Guid GoalId), Goal> goals = ImmutableDictionary<
+        ImmutableDictionary<(Guid PersonId, Guid GoalId), Goal> _Goals = ImmutableDictionary<
             (Guid PersonId, Guid GoalId),
             Goal
         >.Empty;
@@ -22,10 +22,12 @@ namespace CareTogether.Resources.Goals
             IAsyncEnumerable<(GoalCommandExecutedEvent DomainEvent, long SequenceNumber)> eventLog
         )
         {
-            var model = new GoalsModel();
+            GoalsModel model = new();
 
-            await foreach (var (domainEvent, sequenceNumber) in eventLog)
+            await foreach ((GoalCommandExecutedEvent domainEvent, long sequenceNumber) in eventLog)
+            {
                 model.ReplayEvent(domainEvent, sequenceNumber);
+            }
 
             return model;
         }
@@ -38,6 +40,7 @@ namespace CareTogether.Resources.Goals
         {
             Goal? goal;
             if (command is CreateGoal create)
+            {
                 goal = new Goal(
                     create.GoalId,
                     create.PersonId,
@@ -46,10 +49,13 @@ namespace CareTogether.Resources.Goals
                     create.TargetDate,
                     null
                 );
+            }
             else
             {
-                if (!goals.TryGetValue((command.PersonId, command.GoalId), out goal))
+                if (!_Goals.TryGetValue((command.PersonId, command.GoalId), out goal))
+                {
                     throw new KeyNotFoundException("A goal with the specified person ID and goal ID does not exist.");
+                }
 
                 goal = command switch
                 {
@@ -69,17 +75,19 @@ namespace CareTogether.Resources.Goals
                 OnCommit: () =>
                 {
                     LastKnownSequenceNumber++;
-                    goals = goals.SetItem((goal.PersonId, goal.Id), goal);
+                    _Goals = _Goals.SetItem((goal.PersonId, goal.Id), goal);
                 }
             );
         }
 
-        public ImmutableList<Goal> FindGoals(Func<Goal, bool> predicate) =>
-            goals.Values.Where(predicate).ToImmutableList();
-
-        private void ReplayEvent(GoalCommandExecutedEvent domainEvent, long sequenceNumber)
+        public ImmutableList<Goal> FindGoals(Func<Goal, bool> predicate)
         {
-            var (_, _, _, onCommit) = ExecuteGoalCommand(
+            return _Goals.Values.Where(predicate).ToImmutableList();
+        }
+
+        void ReplayEvent(GoalCommandExecutedEvent domainEvent, long sequenceNumber)
+        {
+            (GoalCommandExecutedEvent _, long _, Goal _, Action onCommit) = ExecuteGoalCommand(
                 domainEvent.Command,
                 domainEvent.UserId,
                 domainEvent.TimestampUtc

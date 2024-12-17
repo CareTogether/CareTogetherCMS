@@ -7,13 +7,13 @@ namespace CareTogether.Resources.Approvals
 {
     public sealed class ApprovalsResource : IApprovalsResource
     {
-        private readonly IEventLog<ApprovalEvent> eventLog;
-        private readonly ConcurrentLockingStore<(Guid organizationId, Guid locationId), ApprovalModel> tenantModels;
+        readonly IEventLog<ApprovalEvent> _EventLog;
+        readonly ConcurrentLockingStore<(Guid organizationId, Guid locationId), ApprovalModel> _TenantModels;
 
         public ApprovalsResource(IEventLog<ApprovalEvent> eventLog)
         {
-            this.eventLog = eventLog;
-            tenantModels = new ConcurrentLockingStore<(Guid organizationId, Guid locationId), ApprovalModel>(key =>
+            _EventLog = eventLog;
+            _TenantModels = new ConcurrentLockingStore<(Guid organizationId, Guid locationId), ApprovalModel>(key =>
                 ApprovalModel.InitializeAsync(eventLog.GetAllEventsAsync(key.organizationId, key.locationId))
             );
         }
@@ -25,11 +25,23 @@ namespace CareTogether.Resources.Approvals
             Guid userId
         )
         {
-            using (var lockedModel = await tenantModels.WriteLockItemAsync((organizationId, locationId)))
+            using (
+                ConcurrentLockingStore<
+                    (Guid organizationId, Guid locationId),
+                    ApprovalModel
+                >.LockedItem<ApprovalModel> lockedModel = await _TenantModels.WriteLockItemAsync(
+                    (organizationId, locationId)
+                )
+            )
             {
-                var result = lockedModel.Value.ExecuteVolunteerCommand(command, userId, DateTime.UtcNow);
+                (
+                    VolunteerCommandExecuted Event,
+                    long SequenceNumber,
+                    VolunteerFamilyEntry VolunteerFamilyEntry,
+                    Action OnCommit
+                ) result = lockedModel.Value.ExecuteVolunteerCommand(command, userId, DateTime.UtcNow);
 
-                await eventLog.AppendEventAsync(organizationId, locationId, result.Event, result.SequenceNumber);
+                await _EventLog.AppendEventAsync(organizationId, locationId, result.Event, result.SequenceNumber);
                 result.OnCommit();
                 return result.VolunteerFamilyEntry;
             }
@@ -42,11 +54,23 @@ namespace CareTogether.Resources.Approvals
             Guid userId
         )
         {
-            using (var lockedModel = await tenantModels.WriteLockItemAsync((organizationId, locationId)))
+            using (
+                ConcurrentLockingStore<
+                    (Guid organizationId, Guid locationId),
+                    ApprovalModel
+                >.LockedItem<ApprovalModel> lockedModel = await _TenantModels.WriteLockItemAsync(
+                    (organizationId, locationId)
+                )
+            )
             {
-                var result = lockedModel.Value.ExecuteVolunteerFamilyCommand(command, userId, DateTime.UtcNow);
+                (
+                    VolunteerFamilyCommandExecuted Event,
+                    long SequenceNumber,
+                    VolunteerFamilyEntry VolunteerFamilyEntry,
+                    Action OnCommit
+                ) result = lockedModel.Value.ExecuteVolunteerFamilyCommand(command, userId, DateTime.UtcNow);
 
-                await eventLog.AppendEventAsync(organizationId, locationId, result.Event, result.SequenceNumber);
+                await _EventLog.AppendEventAsync(organizationId, locationId, result.Event, result.SequenceNumber);
                 result.OnCommit();
                 return result.VolunteerFamilyEntry;
             }
@@ -58,7 +82,14 @@ namespace CareTogether.Resources.Approvals
             Guid familyId
         )
         {
-            using (var lockedModel = await tenantModels.ReadLockItemAsync((organizationId, locationId)))
+            using (
+                ConcurrentLockingStore<
+                    (Guid organizationId, Guid locationId),
+                    ApprovalModel
+                >.LockedItem<ApprovalModel> lockedModel = await _TenantModels.ReadLockItemAsync(
+                    (organizationId, locationId)
+                )
+            )
             {
                 return lockedModel.Value.GetVolunteerFamilyEntry(familyId);
             }
@@ -69,7 +100,14 @@ namespace CareTogether.Resources.Approvals
             Guid locationId
         )
         {
-            using (var lockedModel = await tenantModels.ReadLockItemAsync((organizationId, locationId)))
+            using (
+                ConcurrentLockingStore<
+                    (Guid organizationId, Guid locationId),
+                    ApprovalModel
+                >.LockedItem<ApprovalModel> lockedModel = await _TenantModels.ReadLockItemAsync(
+                    (organizationId, locationId)
+                )
+            )
             {
                 return lockedModel.Value.FindVolunteerFamilyEntries(_ => true);
             }

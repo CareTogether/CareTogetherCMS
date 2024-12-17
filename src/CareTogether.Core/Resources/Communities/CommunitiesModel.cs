@@ -11,7 +11,7 @@ namespace CareTogether.Resources.Communities
 
     public sealed class CommunitiesModel
     {
-        private ImmutableDictionary<Guid, Community> communities = ImmutableDictionary<Guid, Community>.Empty;
+        ImmutableDictionary<Guid, Community> _Communities = ImmutableDictionary<Guid, Community>.Empty;
 
         public long LastKnownSequenceNumber { get; private set; } = -1;
 
@@ -19,10 +19,12 @@ namespace CareTogether.Resources.Communities
             IAsyncEnumerable<(CommunityCommandExecutedEvent DomainEvent, long SequenceNumber)> eventLog
         )
         {
-            var model = new CommunitiesModel();
+            CommunitiesModel model = new();
 
-            await foreach (var (domainEvent, sequenceNumber) in eventLog)
+            await foreach ((CommunityCommandExecutedEvent domainEvent, long sequenceNumber) in eventLog)
+            {
                 model.ReplayEvent(domainEvent, sequenceNumber);
+            }
 
             return model;
         }
@@ -36,6 +38,7 @@ namespace CareTogether.Resources.Communities
         {
             Community? community;
             if (command is CreateCommunity create)
+            {
                 community = new Community(
                     create.CommunityId,
                     create.Name,
@@ -44,10 +47,13 @@ namespace CareTogether.Resources.Communities
                     ImmutableList<CommunityRoleAssignment>.Empty,
                     ImmutableList<UploadedDocumentInfo>.Empty
                 );
+            }
             else
             {
-                if (!communities.TryGetValue(command.CommunityId, out community))
+                if (!_Communities.TryGetValue(command.CommunityId, out community))
+                {
                     throw new KeyNotFoundException("A community with the specified ID does not exist.");
+                }
 
                 community = command switch
                 {
@@ -99,17 +105,19 @@ namespace CareTogether.Resources.Communities
                 OnCommit: () =>
                 {
                     LastKnownSequenceNumber++;
-                    communities = communities.SetItem(community.Id, community);
+                    _Communities = _Communities.SetItem(community.Id, community);
                 }
             );
         }
 
-        public ImmutableList<Community> FindCommunities(Func<Community, bool> predicate) =>
-            communities.Values.Where(predicate).ToImmutableList();
-
-        private void ReplayEvent(CommunityCommandExecutedEvent domainEvent, long sequenceNumber)
+        public ImmutableList<Community> FindCommunities(Func<Community, bool> predicate)
         {
-            var (_, _, _, onCommit) = ExecuteCommunityCommand(
+            return _Communities.Values.Where(predicate).ToImmutableList();
+        }
+
+        void ReplayEvent(CommunityCommandExecutedEvent domainEvent, long sequenceNumber)
+        {
+            (CommunityCommandExecutedEvent _, long _, Community _, Action onCommit) = ExecuteCommunityCommand(
                 domainEvent.Command,
                 domainEvent.UserId,
                 domainEvent.TimestampUtc

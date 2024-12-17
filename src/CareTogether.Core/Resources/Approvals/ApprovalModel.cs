@@ -22,7 +22,7 @@ namespace CareTogether.Resources.Approvals
 
     public sealed class ApprovalModel
     {
-        private ImmutableDictionary<Guid, VolunteerFamilyEntry> volunteerFamilies = ImmutableDictionary<
+        ImmutableDictionary<Guid, VolunteerFamilyEntry> _VolunteerFamilies = ImmutableDictionary<
             Guid,
             VolunteerFamilyEntry
         >.Empty;
@@ -33,10 +33,12 @@ namespace CareTogether.Resources.Approvals
             IAsyncEnumerable<(ApprovalEvent DomainEvent, long SequenceNumber)> eventLog
         )
         {
-            var model = new ApprovalModel();
+            ApprovalModel model = new();
 
-            await foreach (var (domainEvent, sequenceNumber) in eventLog)
+            await foreach ((ApprovalEvent domainEvent, long sequenceNumber) in eventLog)
+            {
                 model.ReplayEvent(domainEvent, sequenceNumber);
+            }
 
             return model;
         }
@@ -48,7 +50,8 @@ namespace CareTogether.Resources.Approvals
             Action OnCommit
         ) ExecuteVolunteerFamilyCommand(VolunteerFamilyCommand command, Guid userId, DateTime timestampUtc)
         {
-            if (!volunteerFamilies.TryGetValue(command.FamilyId, out var volunteerFamilyEntry))
+            if (!_VolunteerFamilies.TryGetValue(command.FamilyId, out VolunteerFamilyEntry? volunteerFamilyEntry))
+            {
                 volunteerFamilyEntry = new VolunteerFamilyEntry(
                     command.FamilyId,
                     ImmutableList<CompletedRequirementInfo>.Empty,
@@ -58,8 +61,9 @@ namespace CareTogether.Resources.Approvals
                     ImmutableDictionary<Guid, VolunteerEntry>.Empty,
                     ImmutableList<Activity>.Empty
                 );
+            }
 
-            var volunteerFamilyEntryToUpsert = command switch
+            VolunteerFamilyEntry volunteerFamilyEntryToUpsert = command switch
             {
                 // This command is a no-op used to initialize the volunteer family entry
                 ActivateVolunteerFamily c => volunteerFamilyEntry,
@@ -72,7 +76,7 @@ namespace CareTogether.Resources.Approvals
                             c.CompletedRequirementId,
                             c.RequirementName,
                             c.CompletedAtUtc,
-                            ExpiresAtUtc: null,
+                            null,
                             c.UploadedDocumentId,
                             c.NoteId
                         )
@@ -91,7 +95,7 @@ namespace CareTogether.Resources.Approvals
                             userId,
                             timestampUtc,
                             c.RequirementName,
-                            DueDate: null,
+                            null,
                             c.AdditionalComments,
                             c.ExemptionExpiresAtUtc
                         )
@@ -115,8 +119,8 @@ namespace CareTogether.Resources.Approvals
                         new RoleRemoval(
                             c.RoleName,
                             c.Reason,
-                            EffectiveSince: c.EffectiveSince ?? DateOnly.FromDateTime(timestampUtc),
-                            EffectiveUntil: c.EffectiveThrough,
+                            c.EffectiveSince ?? DateOnly.FromDateTime(timestampUtc),
+                            c.EffectiveThrough,
                             c.AdditionalComments
                         )
                     ),
@@ -156,7 +160,7 @@ namespace CareTogether.Resources.Approvals
                 OnCommit: () =>
                 {
                     LastKnownSequenceNumber++;
-                    volunteerFamilies = volunteerFamilies.SetItem(
+                    _VolunteerFamilies = _VolunteerFamilies.SetItem(
                         volunteerFamilyEntryToUpsert.FamilyId,
                         volunteerFamilyEntryToUpsert
                     );
@@ -171,7 +175,8 @@ namespace CareTogether.Resources.Approvals
             Action OnCommit
         ) ExecuteVolunteerCommand(VolunteerCommand command, Guid userId, DateTime timestampUtc)
         {
-            if (!volunteerFamilies.TryGetValue(command.FamilyId, out var volunteerFamilyEntry))
+            if (!_VolunteerFamilies.TryGetValue(command.FamilyId, out VolunteerFamilyEntry? volunteerFamilyEntry))
+            {
                 volunteerFamilyEntry = new VolunteerFamilyEntry(
                     command.FamilyId,
                     ImmutableList<CompletedRequirementInfo>.Empty,
@@ -181,8 +186,15 @@ namespace CareTogether.Resources.Approvals
                     ImmutableDictionary<Guid, VolunteerEntry>.Empty,
                     ImmutableList<Activity>.Empty
                 );
+            }
 
-            if (!volunteerFamilyEntry.IndividualEntries.TryGetValue(command.PersonId, out var volunteerEntry))
+            if (
+                !volunteerFamilyEntry.IndividualEntries.TryGetValue(
+                    command.PersonId,
+                    out VolunteerEntry? volunteerEntry
+                )
+            )
+            {
                 volunteerEntry = new VolunteerEntry(
                     command.PersonId,
                     true,
@@ -191,8 +203,9 @@ namespace CareTogether.Resources.Approvals
                     ImmutableList<ExemptedRequirementInfo>.Empty,
                     ImmutableList<RoleRemoval>.Empty
                 );
+            }
 
-            var volunteerEntryToUpsert = command switch
+            VolunteerEntry volunteerEntryToUpsert = command switch
             {
                 CompleteVolunteerRequirement c => volunteerEntry with
                 {
@@ -203,7 +216,7 @@ namespace CareTogether.Resources.Approvals
                             c.CompletedRequirementId,
                             c.RequirementName,
                             c.CompletedAtUtc,
-                            ExpiresAtUtc: null,
+                            null,
                             c.UploadedDocumentId,
                             c.NoteId
                         )
@@ -222,7 +235,7 @@ namespace CareTogether.Resources.Approvals
                             userId,
                             timestampUtc,
                             c.RequirementName,
-                            DueDate: null,
+                            null,
                             c.AdditionalComments,
                             c.ExemptionExpiresAtUtc
                         )
@@ -240,8 +253,8 @@ namespace CareTogether.Resources.Approvals
                         new RoleRemoval(
                             c.RoleName,
                             c.Reason,
-                            EffectiveSince: c.EffectiveSince ?? DateOnly.FromDateTime(timestampUtc),
-                            EffectiveUntil: c.EffectiveThrough,
+                            c.EffectiveSince ?? DateOnly.FromDateTime(timestampUtc),
+                            c.EffectiveThrough,
                             c.AdditionalComments
                         )
                     ),
@@ -274,7 +287,7 @@ namespace CareTogether.Resources.Approvals
                 ),
             };
 
-            var volunteerFamilyEntryToUpsert = volunteerFamilyEntry with
+            VolunteerFamilyEntry volunteerFamilyEntryToUpsert = volunteerFamilyEntry with
             {
                 IndividualEntries = volunteerFamilyEntry.IndividualEntries.SetItem(
                     command.PersonId,
@@ -288,7 +301,7 @@ namespace CareTogether.Resources.Approvals
                 OnCommit: () =>
                 {
                     LastKnownSequenceNumber++;
-                    volunteerFamilies = volunteerFamilies.SetItem(
+                    _VolunteerFamilies = _VolunteerFamilies.SetItem(
                         volunteerFamilyEntryToUpsert.FamilyId,
                         volunteerFamilyEntryToUpsert
                     );
@@ -300,26 +313,31 @@ namespace CareTogether.Resources.Approvals
             Func<VolunteerFamilyEntry, bool> predicate
         )
         {
-            return volunteerFamilies.Values.Where(predicate).ToImmutableList();
+            return _VolunteerFamilies.Values.Where(predicate).ToImmutableList();
         }
 
-        public VolunteerFamilyEntry? GetVolunteerFamilyEntry(Guid familyId) =>
-            volunteerFamilies.TryGetValue(familyId, out var volunteerFamilyEntry) ? volunteerFamilyEntry : null;
+        public VolunteerFamilyEntry? GetVolunteerFamilyEntry(Guid familyId)
+        {
+            return _VolunteerFamilies.TryGetValue(familyId, out VolunteerFamilyEntry? volunteerFamilyEntry)
+                ? volunteerFamilyEntry
+                : null;
+        }
 
-        private void ReplayEvent(ApprovalEvent domainEvent, long sequenceNumber)
+        void ReplayEvent(ApprovalEvent domainEvent, long sequenceNumber)
         {
             if (domainEvent is VolunteerFamilyCommandExecuted volunteerFamilyCommandExecuted)
             {
-                var (_, _, _, onCommit) = ExecuteVolunteerFamilyCommand(
-                    volunteerFamilyCommandExecuted.Command,
-                    volunteerFamilyCommandExecuted.UserId,
-                    volunteerFamilyCommandExecuted.TimestampUtc
-                );
+                (VolunteerFamilyCommandExecuted _, long _, VolunteerFamilyEntry _, Action onCommit) =
+                    ExecuteVolunteerFamilyCommand(
+                        volunteerFamilyCommandExecuted.Command,
+                        volunteerFamilyCommandExecuted.UserId,
+                        volunteerFamilyCommandExecuted.TimestampUtc
+                    );
                 onCommit();
             }
             else if (domainEvent is VolunteerCommandExecuted volunteerCommandExecuted)
             {
-                var (_, _, _, onCommit) = ExecuteVolunteerCommand(
+                (VolunteerCommandExecuted _, long _, VolunteerFamilyEntry _, Action onCommit) = ExecuteVolunteerCommand(
                     volunteerCommandExecuted.Command,
                     volunteerCommandExecuted.UserId,
                     volunteerCommandExecuted.TimestampUtc
@@ -327,9 +345,11 @@ namespace CareTogether.Resources.Approvals
                 onCommit();
             }
             else
+            {
                 throw new NotImplementedException(
                     $"The event type '{domainEvent.GetType().FullName}' has not been implemented."
                 );
+            }
 
             LastKnownSequenceNumber = sequenceNumber;
         }

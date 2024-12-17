@@ -19,76 +19,9 @@ namespace CareTogether.Resources.Directory
 
     public sealed class DirectoryModel
     {
-        internal record FamilyEntry(
-            Guid Id,
-            bool Active,
-            Guid PrimaryFamilyContactPersonId,
-            ImmutableDictionary<Guid, FamilyAdultRelationshipInfo> AdultRelationships,
-            ImmutableList<Guid> Children,
-            ImmutableDictionary<(Guid ChildId, Guid AdultId), CustodialRelationshipType> CustodialRelationships,
-            ImmutableList<UploadedDocumentInfo> UploadedDocuments,
-            ImmutableList<Guid> DeletedDocuments,
-            ImmutableDictionary<string, CompletedCustomFieldInfo> CompletedCustomFields,
-            ImmutableList<Activity> History
-        )
-        {
-            internal Family ToFamily(ImmutableDictionary<Guid, PersonEntry> people) =>
-                new(
-                    Id,
-                    Active,
-                    PrimaryFamilyContactPersonId,
-                    AdultRelationships.Select(ar => (people[ar.Key].ToPerson(), ar.Value)).ToImmutableList(),
-                    Children.Select(c => people[c].ToPerson()).ToImmutableList(),
-                    CustodialRelationships
-                        .Select(cr => new CustodialRelationship(cr.Key.ChildId, cr.Key.AdultId, cr.Value))
-                        .ToImmutableList(),
-                    UploadedDocuments,
-                    DeletedDocuments,
-                    CompletedCustomFields.Values.ToImmutableList(),
-                    History
-                );
-        }
+        ImmutableDictionary<Guid, FamilyEntry> _Families = ImmutableDictionary<Guid, FamilyEntry>.Empty;
 
-        internal record PersonEntry(
-            Guid Id,
-            bool Active,
-            string FirstName,
-            string LastName,
-            Gender? Gender,
-            Age? Age,
-            string? Ethnicity,
-            ImmutableList<Address> Addresses,
-            Guid? CurrentAddressId,
-            ImmutableList<PhoneNumber> PhoneNumbers,
-            Guid? PreferredPhoneNumberId,
-            ImmutableList<EmailAddress> EmailAddresses,
-            Guid? PreferredEmailAddressId,
-            string? Concerns,
-            string? Notes
-        )
-        {
-            internal Person ToPerson() =>
-                new(
-                    Id,
-                    Active,
-                    FirstName,
-                    LastName,
-                    Gender,
-                    Age,
-                    Ethnicity,
-                    Addresses,
-                    CurrentAddressId,
-                    PhoneNumbers,
-                    PreferredPhoneNumberId,
-                    EmailAddresses,
-                    PreferredEmailAddressId,
-                    Concerns,
-                    Notes
-                );
-        }
-
-        private ImmutableDictionary<Guid, PersonEntry> people = ImmutableDictionary<Guid, PersonEntry>.Empty;
-        private ImmutableDictionary<Guid, FamilyEntry> families = ImmutableDictionary<Guid, FamilyEntry>.Empty;
+        ImmutableDictionary<Guid, PersonEntry> _People = ImmutableDictionary<Guid, PersonEntry>.Empty;
 
         public long LastKnownSequenceNumber { get; private set; } = -1;
 
@@ -96,10 +29,12 @@ namespace CareTogether.Resources.Directory
             IAsyncEnumerable<(DirectoryEvent DomainEvent, long SequenceNumber)> eventLog
         )
         {
-            var model = new DirectoryModel();
+            DirectoryModel model = new();
 
-            await foreach (var (domainEvent, sequenceNumber) in eventLog)
+            await foreach ((DirectoryEvent domainEvent, long sequenceNumber) in eventLog)
+            {
                 model.ReplayEvent(domainEvent, sequenceNumber);
+            }
 
             return model;
         }
@@ -110,21 +45,18 @@ namespace CareTogether.Resources.Directory
             DateTime timestampUtc
         )
         {
-            var familyEntryToUpsert = command switch
+            FamilyEntry familyEntryToUpsert = command switch
             {
                 CreateFamily c => new FamilyEntry(
                     c.FamilyId,
-                    Active: true,
+                    true,
                     c.PrimaryFamilyContactPersonId,
-                    AdultRelationships: ImmutableDictionary<Guid, FamilyAdultRelationshipInfo>.Empty.AddRange(
+                    ImmutableDictionary<Guid, FamilyAdultRelationshipInfo>.Empty.AddRange(
                         c.Adults?.Select(a => new KeyValuePair<Guid, FamilyAdultRelationshipInfo>(a.Item1, a.Item2))
                             ?? new List<KeyValuePair<Guid, FamilyAdultRelationshipInfo>>()
                     ),
-                    Children: ImmutableList<Guid>.Empty.AddRange(c.Children ?? ImmutableList<Guid>.Empty),
-                    CustodialRelationships: ImmutableDictionary<
-                        (Guid ChildId, Guid AdultId),
-                        CustodialRelationshipType
-                    >.Empty.AddRange(
+                    ImmutableList<Guid>.Empty.AddRange(c.Children ?? ImmutableList<Guid>.Empty),
+                    ImmutableDictionary<(Guid ChildId, Guid AdultId), CustodialRelationshipType>.Empty.AddRange(
                         c.CustodialRelationships?.Select(cr => new KeyValuePair<
                             (Guid ChildId, Guid AdultId),
                             CustodialRelationshipType
@@ -132,11 +64,11 @@ namespace CareTogether.Resources.Directory
                             ?? new List<KeyValuePair<(Guid ChildId, Guid AdultId), CustodialRelationshipType>>()
                     ),
                     ImmutableList<UploadedDocumentInfo>.Empty,
-                    DeletedDocuments: ImmutableList<Guid>.Empty,
-                    CompletedCustomFields: ImmutableDictionary<string, CompletedCustomFieldInfo>.Empty,
+                    ImmutableList<Guid>.Empty,
+                    ImmutableDictionary<string, CompletedCustomFieldInfo>.Empty,
                     ImmutableList<Activity>.Empty
                 ),
-                _ => families.TryGetValue(command.FamilyId, out var familyEntry)
+                _ => _Families.TryGetValue(command.FamilyId, out FamilyEntry? familyEntry)
                     ? command switch
                     {
                         UndoCreateFamily c => familyEntry with { Active = false },
@@ -240,11 +172,11 @@ namespace CareTogether.Resources.Directory
             return (
                 Event: new FamilyCommandExecuted(userId, timestampUtc, command),
                 SequenceNumber: LastKnownSequenceNumber + 1,
-                Family: familyEntryToUpsert.ToFamily(people),
+                Family: familyEntryToUpsert.ToFamily(_People),
                 OnCommit: () =>
                 {
                     LastKnownSequenceNumber++;
-                    families = families.SetItem(familyEntryToUpsert.Id, familyEntryToUpsert);
+                    _Families = _Families.SetItem(familyEntryToUpsert.Id, familyEntryToUpsert);
                 }
             );
         }
@@ -255,11 +187,11 @@ namespace CareTogether.Resources.Directory
             DateTime timestampUtc
         )
         {
-            var personEntryToUpsert = command switch
+            PersonEntry personEntryToUpsert = command switch
             {
                 CreatePerson c => new PersonEntry(
                     c.PersonId,
-                    Active: true,
+                    true,
                     c.FirstName,
                     c.LastName,
                     c.Gender,
@@ -274,7 +206,7 @@ namespace CareTogether.Resources.Directory
                     c.Concerns,
                     c.Notes
                 ),
-                _ => people.TryGetValue(command.PersonId, out var personEntry)
+                _ => _People.TryGetValue(command.PersonId, out PersonEntry? personEntry)
                     ? command switch
                     {
                         UndoCreatePerson c => personEntry with { Active = false },
@@ -339,22 +271,26 @@ namespace CareTogether.Resources.Directory
                 OnCommit: () =>
                 {
                     LastKnownSequenceNumber++;
-                    people = people.SetItem(personEntryToUpsert.Id, personEntryToUpsert);
+                    _People = _People.SetItem(personEntryToUpsert.Id, personEntryToUpsert);
                 }
             );
         }
 
-        public ImmutableList<Family> FindFamilies(Func<Family, bool> predicate) =>
-            families.Values.Select(p => p.ToFamily(people)).Where(predicate).ToImmutableList();
+        public ImmutableList<Family> FindFamilies(Func<Family, bool> predicate)
+        {
+            return _Families.Values.Select(p => p.ToFamily(_People)).Where(predicate).ToImmutableList();
+        }
 
-        public ImmutableList<Person> FindPeople(Func<Person, bool> predicate) =>
-            people.Values.Select(p => p.ToPerson()).Where(predicate).ToImmutableList();
+        public ImmutableList<Person> FindPeople(Func<Person, bool> predicate)
+        {
+            return _People.Values.Select(p => p.ToPerson()).Where(predicate).ToImmutableList();
+        }
 
-        private void ReplayEvent(DirectoryEvent domainEvent, long sequenceNumber)
+        void ReplayEvent(DirectoryEvent domainEvent, long sequenceNumber)
         {
             if (domainEvent is FamilyCommandExecuted familyCommandExecuted)
             {
-                var (_, _, _, onCommit) = ExecuteFamilyCommand(
+                (FamilyCommandExecuted _, long _, Family _, Action onCommit) = ExecuteFamilyCommand(
                     familyCommandExecuted.Command,
                     familyCommandExecuted.UserId,
                     familyCommandExecuted.TimestampUtc
@@ -363,7 +299,7 @@ namespace CareTogether.Resources.Directory
             }
             else if (domainEvent is PersonCommandExecuted personCommandExecuted)
             {
-                var (_, _, _, onCommit) = ExecutePersonCommand(
+                (PersonCommandExecuted _, long _, Person _, Action onCommit) = ExecutePersonCommand(
                     personCommandExecuted.Command,
                     personCommandExecuted.UserId,
                     personCommandExecuted.TimestampUtc
@@ -371,11 +307,85 @@ namespace CareTogether.Resources.Directory
                 onCommit();
             }
             else
+            {
                 throw new NotImplementedException(
                     $"The event type '{domainEvent.GetType().FullName}' has not been implemented."
                 );
+            }
 
             LastKnownSequenceNumber = sequenceNumber;
+        }
+
+        internal record FamilyEntry(
+            Guid Id,
+            bool Active,
+            Guid PrimaryFamilyContactPersonId,
+            ImmutableDictionary<Guid, FamilyAdultRelationshipInfo> AdultRelationships,
+            ImmutableList<Guid> Children,
+            ImmutableDictionary<(Guid ChildId, Guid AdultId), CustodialRelationshipType> CustodialRelationships,
+            ImmutableList<UploadedDocumentInfo> UploadedDocuments,
+            ImmutableList<Guid> DeletedDocuments,
+            ImmutableDictionary<string, CompletedCustomFieldInfo> CompletedCustomFields,
+            ImmutableList<Activity> History
+        )
+        {
+            internal Family ToFamily(ImmutableDictionary<Guid, PersonEntry> people)
+            {
+                return new Family(
+                    Id,
+                    Active,
+                    PrimaryFamilyContactPersonId,
+                    AdultRelationships.Select(ar => (people[ar.Key].ToPerson(), ar.Value)).ToImmutableList(),
+                    Children.Select(c => people[c].ToPerson()).ToImmutableList(),
+                    CustodialRelationships
+                        .Select(cr => new CustodialRelationship(cr.Key.ChildId, cr.Key.AdultId, cr.Value))
+                        .ToImmutableList(),
+                    UploadedDocuments,
+                    DeletedDocuments,
+                    CompletedCustomFields.Values.ToImmutableList(),
+                    History
+                );
+            }
+        }
+
+        internal record PersonEntry(
+            Guid Id,
+            bool Active,
+            string FirstName,
+            string LastName,
+            Gender? Gender,
+            Age? Age,
+            string? Ethnicity,
+            ImmutableList<Address> Addresses,
+            Guid? CurrentAddressId,
+            ImmutableList<PhoneNumber> PhoneNumbers,
+            Guid? PreferredPhoneNumberId,
+            ImmutableList<EmailAddress> EmailAddresses,
+            Guid? PreferredEmailAddressId,
+            string? Concerns,
+            string? Notes
+        )
+        {
+            internal Person ToPerson()
+            {
+                return new Person(
+                    Id,
+                    Active,
+                    FirstName,
+                    LastName,
+                    Gender,
+                    Age,
+                    Ethnicity,
+                    Addresses,
+                    CurrentAddressId,
+                    PhoneNumbers,
+                    PreferredPhoneNumberId,
+                    EmailAddresses,
+                    PreferredEmailAddressId,
+                    Concerns,
+                    Notes
+                );
+            }
         }
     }
 }
