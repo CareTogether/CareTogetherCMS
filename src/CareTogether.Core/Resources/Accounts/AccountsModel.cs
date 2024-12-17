@@ -16,7 +16,7 @@ namespace CareTogether.Resources.Accounts
 
     public sealed class AccountsModel
     {
-        private ImmutableDictionary<Guid, AccountEntry> accounts = ImmutableDictionary<Guid, AccountEntry>.Empty;
+        ImmutableDictionary<Guid, AccountEntry> _Accounts = ImmutableDictionary<Guid, AccountEntry>.Empty;
 
         public long LastKnownSequenceNumber { get; private set; } = -1;
 
@@ -24,10 +24,12 @@ namespace CareTogether.Resources.Accounts
             IAsyncEnumerable<(AccountEvent DomainEvent, long SequenceNumber)> eventLog
         )
         {
-            var model = new AccountsModel();
+            AccountsModel model = new();
 
-            await foreach (var (domainEvent, sequenceNumber) in eventLog)
+            await foreach ((AccountEvent domainEvent, long sequenceNumber) in eventLog)
+            {
                 model.ReplayEvent(domainEvent, sequenceNumber);
+            }
 
             return model;
         }
@@ -39,13 +41,17 @@ namespace CareTogether.Resources.Accounts
         )
         {
             if (command is not LinkPersonToAcccount link)
+            {
                 throw new NotImplementedException(
                     $"The command type '{command.GetType().FullName}' has not been implemented."
                 );
+            }
 
             AccountEntry? account;
-            if (!accounts.TryGetValue(command.UserId, out account))
+            if (!_Accounts.TryGetValue(command.UserId, out account))
+            {
                 account = new AccountEntry(command.UserId, ImmutableHashSet<(Guid, Guid, Guid)>.Empty);
+            }
 
             account = account with
             {
@@ -59,19 +65,24 @@ namespace CareTogether.Resources.Accounts
                 OnCommit: () =>
                 {
                     LastKnownSequenceNumber++;
-                    accounts = accounts.SetItem(account.UserId, account);
+                    _Accounts = _Accounts.SetItem(account.UserId, account);
                 }
             );
         }
 
-        public ImmutableList<AccountEntry> FindAccounts(Func<AccountEntry, bool> predicate) =>
-            accounts.Values.Where(predicate).ToImmutableList();
-
-        public AccountEntry? TryGetAccount(Guid userId) => accounts.GetValueOrDefault(userId);
-
-        private void ReplayEvent(AccountEvent domainEvent, long sequenceNumber)
+        public ImmutableList<AccountEntry> FindAccounts(Func<AccountEntry, bool> predicate)
         {
-            var (_, _, _, onCommit) = ExecuteAccountCommand(
+            return _Accounts.Values.Where(predicate).ToImmutableList();
+        }
+
+        public AccountEntry? TryGetAccount(Guid userId)
+        {
+            return _Accounts.GetValueOrDefault(userId);
+        }
+
+        void ReplayEvent(AccountEvent domainEvent, long sequenceNumber)
+        {
+            (AccountEvent _, long _, AccountEntry _, Action onCommit) = ExecuteAccountCommand(
                 domainEvent.Command,
                 domainEvent.UserId,
                 domainEvent.TimestampUtc

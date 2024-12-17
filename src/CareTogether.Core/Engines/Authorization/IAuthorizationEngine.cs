@@ -14,13 +14,13 @@ using JsonPolymorph;
 namespace CareTogether.Engines.Authorization
 {
     [JsonHierarchyBase]
-    public abstract partial record AuthorizationContext();
+    public abstract partial record AuthorizationContext;
 
-    public sealed record GlobalAuthorizationContext() : AuthorizationContext;
+    public sealed record GlobalAuthorizationContext : AuthorizationContext;
 
-    public sealed record AllPartneringFamiliesAuthorizationContext() : AuthorizationContext;
+    public sealed record AllPartneringFamiliesAuthorizationContext : AuthorizationContext;
 
-    public sealed record AllVolunteerFamiliesAuthorizationContext() : AuthorizationContext;
+    public sealed record AllVolunteerFamiliesAuthorizationContext : AuthorizationContext;
 
     public sealed record FamilyAuthorizationContext(Guid FamilyId) : AuthorizationContext;
 

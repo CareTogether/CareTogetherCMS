@@ -48,7 +48,7 @@ namespace CareTogether.Resources.Referrals
         NoLongerNeeded,
         Resourced,
         NeedMet,
-    };
+    }
 
     public sealed record IndividualVolunteerAssignment(
         Guid FamilyId,
@@ -445,8 +445,8 @@ namespace CareTogether.Resources.Referrals
         : ArrangementsCommand(FamilyId, ReferralId, ArrangementIds);
 
     /// <summary>
-    /// The <see cref="IReferralsResource"/> models the lifecycle of people's referrals to CareTogether organizations,
-    /// including various forms, arrangements, and policy changes, as well as authorizing related queries.
+    ///     The <see cref="IReferralsResource" /> models the lifecycle of people's referrals to CareTogether organizations,
+    ///     including various forms, arrangements, and policy changes, as well as authorizing related queries.
     /// </summary>
     public interface IReferralsResource
     {

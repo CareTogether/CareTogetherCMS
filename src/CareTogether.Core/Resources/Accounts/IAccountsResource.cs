@@ -10,7 +10,7 @@ namespace CareTogether.Resources.Accounts
     public sealed record UserTenantAccessSummary(Guid OrganizationId, ImmutableList<Guid> LocationIds);
 
     /// <summary>
-    /// The <see cref="Account"/> exists at a global level, *across* organizational boundaries.
+    ///     The <see cref="Account" /> exists at a global level, *across* organizational boundaries.
     /// </summary>
     public sealed record Account(Guid UserId, ImmutableList<AccountOrganizationAccess> Organizations);
 
@@ -27,7 +27,7 @@ namespace CareTogether.Resources.Accounts
         : AccountCommand(UserId);
 
     /// <summary>
-    /// Person access records exist at a per-location level *within* organizational boundaries.
+    ///     Person access records exist at a per-location level *within* organizational boundaries.
     /// </summary>
     [JsonHierarchyBase]
     public abstract partial record PersonAccessCommand(Guid PersonId);
@@ -41,9 +41,9 @@ namespace CareTogether.Resources.Accounts
     public sealed record RedeemUserInviteNonce(Guid PersonId, byte[] Nonce) : PersonAccessCommand(PersonId);
 
     /// <summary>
-    /// The <see cref="IAccountsResource"/> is responsible for user account management in CareTogether.
-    /// This consists of managing *two* interconnected models: a global accounts model and a
-    /// per-organization-per-location person access model.
+    ///     The <see cref="IAccountsResource" /> is responsible for user account management in CareTogether.
+    ///     This consists of managing *two* interconnected models: a global accounts model and a
+    ///     per-organization-per-location person access model.
     /// </summary>
     public interface IAccountsResource
     {

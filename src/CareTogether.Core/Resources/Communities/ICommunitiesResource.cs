@@ -43,8 +43,8 @@ namespace CareTogether.Resources.Communities
         : CommunityCommand(CommunityId);
 
     /// <summary>
-    /// The <see cref="ICommunitiesResource"/> is responsible for all communities in CareTogether.
-    /// This includes family-level membership and community role assignments as well as tracking community content.
+    ///     The <see cref="ICommunitiesResource" /> is responsible for all communities in CareTogether.
+    ///     This includes family-level membership and community role assignments as well as tracking community content.
     /// </summary>
     public interface ICommunitiesResource
     {

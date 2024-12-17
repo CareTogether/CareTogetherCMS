@@ -14,12 +14,12 @@ namespace CareTogether.Managers.Membership
 {
     public sealed class MembershipManager : IMembershipManager
     {
-        private readonly IAccountsResource accountsResource;
-        private readonly IAuthorizationEngine authorizationEngine;
-        private readonly IDirectoryResource directoryResource;
-        private readonly IPoliciesResource policiesResource;
-        private readonly CombinedFamilyInfoFormatter combinedFamilyInfoFormatter;
-        private readonly IIdentityProvider identityProvider;
+        readonly IAccountsResource _AccountsResource;
+        readonly IAuthorizationEngine _AuthorizationEngine;
+        readonly CombinedFamilyInfoFormatter _CombinedFamilyInfoFormatter;
+        readonly IDirectoryResource _DirectoryResource;
+        readonly IIdentityProvider _IdentityProvider;
+        readonly IPoliciesResource _PoliciesResource;
 
         public MembershipManager(
             IAccountsResource accountsResource,
@@ -30,45 +30,48 @@ namespace CareTogether.Managers.Membership
             IIdentityProvider identityProvider
         )
         {
-            this.accountsResource = accountsResource;
-            this.authorizationEngine = authorizationEngine;
-            this.directoryResource = directoryResource;
-            this.policiesResource = policiesResource;
-            this.combinedFamilyInfoFormatter = combinedFamilyInfoFormatter;
-            this.identityProvider = identityProvider;
+            _AccountsResource = accountsResource;
+            _AuthorizationEngine = authorizationEngine;
+            _DirectoryResource = directoryResource;
+            _PoliciesResource = policiesResource;
+            _CombinedFamilyInfoFormatter = combinedFamilyInfoFormatter;
+            _IdentityProvider = identityProvider;
         }
 
         public async Task<UserAccess> GetUserAccessAsync(ClaimsPrincipal user)
         {
-            var account = await accountsResource.TryGetUserAccountAsync(user.UserId());
+            Account? account = await _AccountsResource.TryGetUserAccountAsync(user.UserId());
             if (account == null)
+            {
                 return new UserAccess(user.UserId(), ImmutableList<UserOrganizationAccess>.Empty);
+            }
 
-            var organizationsAccess = await Task.WhenAll(
+            UserOrganizationAccess[] organizationsAccess = await Task.WhenAll(
                 account.Organizations.Select(async organization =>
                 {
-                    var organizationId = organization.OrganizationId;
+                    Guid organizationId = organization.OrganizationId;
 
-                    var locationsAccess = await Task.WhenAll(
+                    UserLocationAccess[] locationsAccess = await Task.WhenAll(
                         organization.Locations.Select(async location =>
                         {
-                            var locationId = location.LocationId;
+                            Guid locationId = location.LocationId;
 
-                            var globalContextPermissions = await authorizationEngine.AuthorizeUserAccessAsync(
-                                organizationId,
-                                locationId,
-                                user,
-                                new GlobalAuthorizationContext()
-                            );
-                            var allVolunteerFamiliesContextPermissions =
-                                await authorizationEngine.AuthorizeUserAccessAsync(
+                            ImmutableList<Permission> globalContextPermissions =
+                                await _AuthorizationEngine.AuthorizeUserAccessAsync(
+                                    organizationId,
+                                    locationId,
+                                    user,
+                                    new GlobalAuthorizationContext()
+                                );
+                            ImmutableList<Permission> allVolunteerFamiliesContextPermissions =
+                                await _AuthorizationEngine.AuthorizeUserAccessAsync(
                                     organizationId,
                                     locationId,
                                     user,
                                     new AllVolunteerFamiliesAuthorizationContext()
                                 );
-                            var allPartneringFamiliesContextPermissions =
-                                await authorizationEngine.AuthorizeUserAccessAsync(
+                            ImmutableList<Permission> allPartneringFamiliesContextPermissions =
+                                await _AuthorizationEngine.AuthorizeUserAccessAsync(
                                     organizationId,
                                     locationId,
                                     user,
@@ -101,32 +104,41 @@ namespace CareTogether.Managers.Membership
         )
         {
             // Confirm that the target user exists in the current user's location.
-            var personUserAccount = await accountsResource.TryGetPersonUserAccountAsync(
+            Account? personUserAccount = await _AccountsResource.TryGetPersonUserAccountAsync(
                 organizationId,
                 locationId,
                 personId
             );
 
             // Look up the target user's family.
-            var targetUserFamily = await directoryResource.FindPersonFamilyAsync(organizationId, locationId, personId);
+            Family? targetUserFamily = await _DirectoryResource.FindPersonFamilyAsync(
+                organizationId,
+                locationId,
+                personId
+            );
 
             if (personUserAccount == null || targetUserFamily == null)
+            {
                 throw new InvalidOperationException("The target user does not exist in the current user's location.");
+            }
 
             // Confirm that the current user has access to view the target user's login information.
-            var targetUserFamilyContext = new FamilyAuthorizationContext(targetUserFamily.Id);
-            var globalContextPermissions = await authorizationEngine.AuthorizeUserAccessAsync(
+
+            FamilyAuthorizationContext targetUserFamilyContext = new(targetUserFamily.Id);
+            ImmutableList<Permission> globalContextPermissions = await _AuthorizationEngine.AuthorizeUserAccessAsync(
                 organizationId,
                 locationId,
                 user,
                 targetUserFamilyContext
             );
             if (!globalContextPermissions.Contains(Permission.ViewPersonUserLoginInfo))
+            {
                 throw new InvalidOperationException(
                     "The user is not authorized to access this user's login information."
                 );
+            }
 
-            var userLoginInfo = await identityProvider.GetUserLoginInfoAsync(personUserAccount.UserId);
+            UserLoginInfo userLoginInfo = await _IdentityProvider.GetUserLoginInfoAsync(personUserAccount.UserId);
 
             return userLoginInfo;
         }
@@ -139,27 +151,33 @@ namespace CareTogether.Managers.Membership
             ImmutableList<string> roles
         )
         {
-            var command = new ChangePersonRoles(personId, roles);
+            ChangePersonRoles command = new(personId, roles);
 
-            if (!await authorizationEngine.AuthorizePersonAccessCommandAsync(organizationId, locationId, user, command))
-                throw new Exception("The user is not authorized to perform this command.");
+            if (
+                !await _AuthorizationEngine.AuthorizePersonAccessCommandAsync(organizationId, locationId, user, command)
+            )
+            {
+                throw new InvalidOperationException("The user is not authorized to perform this command.");
+            }
 
-            var personFamily = await directoryResource.FindPersonFamilyAsync(organizationId, locationId, personId);
+            Family? personFamily = await _DirectoryResource.FindPersonFamilyAsync(organizationId, locationId, personId);
 
             //NOTE: This invariant could be revisited, but that would split 'Person' and 'Family' into separate aggregates.
             if (personFamily == null)
-                throw new Exception(
+            {
+                throw new InvalidOperationException(
                     "CareTogether currently assumes that all people should (always) belong to a family record."
                 );
+            }
 
-            var result = await accountsResource.ExecutePersonAccessCommandAsync(
+            PersonAccessEntry result = await _AccountsResource.ExecutePersonAccessCommandAsync(
                 organizationId,
                 locationId,
                 command,
                 user.UserId()
             );
 
-            var familyResult = await combinedFamilyInfoFormatter.RenderCombinedFamilyInfoAsync(
+            CombinedFamilyInfo? familyResult = await _CombinedFamilyInfoFormatter.RenderCombinedFamilyInfoAsync(
                 organizationId,
                 locationId,
                 personFamily.Id,
@@ -176,10 +194,12 @@ namespace CareTogether.Managers.Membership
             Guid personId
         )
         {
-            if (!await authorizationEngine.AuthorizeGenerateUserInviteNonceAsync(organizationId, locationId, user))
-                throw new Exception("The user is not authorized to perform this action.");
+            if (!await _AuthorizationEngine.AuthorizeGenerateUserInviteNonceAsync(organizationId, locationId, user))
+            {
+                throw new InvalidOperationException("The user is not authorized to perform this action.");
+            }
 
-            var result = await accountsResource.GenerateUserInviteNonceAsync(
+            byte[] result = await _AccountsResource.GenerateUserInviteNonceAsync(
                 organizationId,
                 locationId,
                 personId,
@@ -197,28 +217,36 @@ namespace CareTogether.Managers.Membership
         )
         {
             if (user.PersonId(organizationId, locationId) != null)
-                throw new Exception("The user is already linked to a person in this organization and location.");
+            {
+                throw new InvalidOperationException(
+                    "The user is already linked to a person in this organization and location."
+                );
+            }
 
-            var locationAccess = await accountsResource.TryLookupUserInviteNoncePersonIdAsync(
+            AccountLocationAccess? locationAccess = await _AccountsResource.TryLookupUserInviteNoncePersonIdAsync(
                 organizationId,
                 locationId,
                 nonce
             );
 
             if (locationAccess == null)
+            {
                 return null;
+            }
 
-            var family = await directoryResource.FindPersonFamilyAsync(
+            Family? family = await _DirectoryResource.FindPersonFamilyAsync(
                 organizationId,
                 locationId,
                 locationAccess.PersonId
             );
             if (family == null)
+            {
                 return null;
+            }
 
-            var person = family.Adults.Single(adult => adult.Item1.Id == locationAccess.PersonId).Item1;
+            Person person = family.Adults.Single(adult => adult.Item1.Id == locationAccess.PersonId).Item1;
 
-            var configuration = await policiesResource.GetConfigurationAsync(organizationId);
+            OrganizationConfiguration configuration = await _PoliciesResource.GetConfigurationAsync(organizationId);
 
             return new UserInviteReviewInfo(
                 organizationId,
@@ -239,7 +267,7 @@ namespace CareTogether.Managers.Membership
             byte[] nonce
         )
         {
-            var result = await accountsResource.TryRedeemUserInviteNonceAsync(
+            Account? result = await _AccountsResource.TryRedeemUserInviteNonceAsync(
                 organizationId,
                 locationId,
                 user.UserId(),

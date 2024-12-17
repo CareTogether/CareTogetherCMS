@@ -11,16 +11,17 @@ namespace CareTogether.Api
             CreateHostBuilder(args).Build().Run();
         }
 
-        public static IHostBuilder CreateHostBuilder(string[] args) =>
-            Host.CreateDefaultBuilder(args)
+        public static IHostBuilder CreateHostBuilder(string[] args)
+        {
+            return Host.CreateDefaultBuilder(args)
                 .ConfigureWebHostDefaults(webBuilder =>
                     webBuilder
                         .ConfigureAppConfiguration(config =>
                         {
-                            var settings = config.Build();
+                            IConfigurationRoot? settings = config.Build();
                             if (settings.GetSection("AppConfigService").Exists())
                             {
-                                var connection = settings["AppConfigService:ConnectionString"];
+                                string? connection = settings["AppConfigService:ConnectionString"];
                                 config.AddAzureAppConfiguration(options =>
                                     options.Connect(connection).UseFeatureFlags()
                                 );
@@ -28,5 +29,6 @@ namespace CareTogether.Api
                         })
                         .UseStartup<Startup>()
                 );
+        }
     }
 }

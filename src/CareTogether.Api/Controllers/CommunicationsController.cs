@@ -20,11 +20,11 @@ namespace CareTogether.Api.Controllers
     [Authorize(Policies.ForbidAnonymous, AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
     public class CommunicationsController : ControllerBase
     {
-        private readonly ICommunicationsManager communicationsManager;
+        readonly ICommunicationsManager _CommunicationsManager;
 
         public CommunicationsController(ICommunicationsManager communicationsManager)
         {
-            this.communicationsManager = communicationsManager;
+            _CommunicationsManager = communicationsManager;
         }
 
         [HttpPost("sendSmsToFamilyPrimaryContacts")]
@@ -36,14 +36,15 @@ namespace CareTogether.Api.Controllers
             [FromBody] SendSmsToFamilyPrimaryContactsRequest request
         )
         {
-            var result = await communicationsManager.SendSmsToFamilyPrimaryContactsAsync(
-                organizationId,
-                locationId,
-                User,
-                request.FamilyIds,
-                request.SourceNumber,
-                request.Message
-            );
+            ImmutableList<(Guid FamilyId, SmsMessageResult? Result)>? result =
+                await _CommunicationsManager.SendSmsToFamilyPrimaryContactsAsync(
+                    organizationId,
+                    locationId,
+                    User,
+                    request.FamilyIds,
+                    request.SourceNumber,
+                    request.Message
+                );
             return Ok(result);
         }
     }

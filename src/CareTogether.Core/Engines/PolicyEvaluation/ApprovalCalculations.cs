@@ -1,14 +1,13 @@
 ﻿using System;
 using System.Collections.Immutable;
 using System.Linq;
-using CareTogether.Resources;
 using CareTogether.Resources.Approvals;
 using CareTogether.Resources.Directory;
 using CareTogether.Resources.Policies;
 
 namespace CareTogether.Engines.PolicyEvaluation
 {
-    internal static class ApprovalCalculations
+    static class ApprovalCalculations
     {
         public static FamilyApprovalStatus CalculateCombinedFamilyApprovals(
             VolunteerPolicy volunteerPolicy,
@@ -24,36 +23,40 @@ namespace CareTogether.Engines.PolicyEvaluation
             ImmutableDictionary<Guid, ImmutableList<RoleRemoval>> individualRoleRemovals
         )
         {
-            var allAdultsIndividualApprovalStatus = family
+            ImmutableDictionary<Guid, IndividualApprovalStatus> allAdultsIndividualApprovalStatus = family
                 .Adults.Select(adultFamilyEntry =>
                 {
-                    var (person, familyRelationship) = adultFamilyEntry;
+                    (Person person, FamilyAdultRelationshipInfo familyRelationship) = adultFamilyEntry;
 
-                    var completedRequirements = completedIndividualRequirements.GetValueOrEmptyList(person.Id);
-                    var exemptedRequirements = exemptedIndividualRequirements.GetValueOrEmptyList(person.Id);
-                    var roleRemovals = individualRoleRemovals.GetValueOrEmptyList(person.Id);
+                    ImmutableList<Resources.CompletedRequirementInfo> completedRequirements =
+                        completedIndividualRequirements.GetValueOrEmptyList(person.Id);
+                    ImmutableList<Resources.ExemptedRequirementInfo> exemptedRequirements =
+                        exemptedIndividualRequirements.GetValueOrEmptyList(person.Id);
+                    ImmutableList<RoleRemoval> roleRemovals = individualRoleRemovals.GetValueOrEmptyList(person.Id);
 
-                    var individualApprovalStatus = IndividualApprovalCalculations.CalculateIndividualApprovalStatus(
-                        volunteerPolicy.VolunteerRoles,
-                        completedRequirements,
-                        exemptedRequirements,
-                        roleRemovals
-                    );
+                    IndividualApprovalStatus individualApprovalStatus =
+                        IndividualApprovalCalculations.CalculateIndividualApprovalStatus(
+                            volunteerPolicy.VolunteerRoles,
+                            completedRequirements,
+                            exemptedRequirements,
+                            roleRemovals
+                        );
 
                     return (person.Id, individualApprovalStatus);
                 })
                 .ToImmutableDictionary(x => x.Id, x => x.Item2);
 
-            var familyRoleApprovalStatuses = FamilyApprovalCalculations.CalculateAllFamilyRoleApprovalStatuses(
-                volunteerPolicy.VolunteerFamilyRoles,
-                family,
-                completedFamilyRequirements,
-                exemptedFamilyRequirements,
-                familyRoleRemovals,
-                completedIndividualRequirements,
-                exemptedIndividualRequirements,
-                individualRoleRemovals
-            );
+            ImmutableDictionary<string, FamilyRoleApprovalStatus> familyRoleApprovalStatuses =
+                FamilyApprovalCalculations.CalculateAllFamilyRoleApprovalStatuses(
+                    volunteerPolicy.VolunteerFamilyRoles,
+                    family,
+                    completedFamilyRequirements,
+                    exemptedFamilyRequirements,
+                    familyRoleRemovals,
+                    completedIndividualRequirements,
+                    exemptedIndividualRequirements,
+                    individualRoleRemovals
+                );
 
             return new FamilyApprovalStatus(allAdultsIndividualApprovalStatus, familyRoleApprovalStatuses);
         }

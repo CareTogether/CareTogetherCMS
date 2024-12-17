@@ -2,17 +2,14 @@
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
-using CareTogether.Resources;
 using CareTogether.Resources.Approvals;
 using CareTogether.Resources.Policies;
 using Timelines;
 
 namespace CareTogether.Engines.PolicyEvaluation
 {
-    internal static class SharedCalculations
+    static class SharedCalculations
     {
-        public sealed record RequirementCheckResult(bool IsMetOrExempted, DateOnly? ExpiresAtUtc);
-
         //NOTE: This is currently being used by Referral calculations.
         internal static RequirementCheckResult RequirementMetOrExempted(
             string requirementName,
@@ -22,7 +19,7 @@ namespace CareTogether.Engines.PolicyEvaluation
             ImmutableList<ExemptedRequirementInfo> exemptedRequirements
         )
         {
-            var bestCompletion = completedRequirements
+            CompletedRequirementInfo? bestCompletion = completedRequirements
                 .Where(completed =>
                     completed.RequirementName == requirementName
                     && (policySupersededAt == null || completed.CompletedAt < policySupersededAt)
@@ -31,9 +28,11 @@ namespace CareTogether.Engines.PolicyEvaluation
                 .MaxBy(completed => completed.ExpiresAt ?? DateOnly.MaxValue);
 
             if (bestCompletion != null)
+            {
                 return new RequirementCheckResult(true, bestCompletion.ExpiresAt);
+            }
 
-            var bestExemption = exemptedRequirements
+            ExemptedRequirementInfo? bestExemption = exemptedRequirements
                 .Where(exempted =>
                     exempted.RequirementName == requirementName
                     && (exempted.ExemptionExpiresAt == null || exempted.ExemptionExpiresAt > today)
@@ -41,34 +40,36 @@ namespace CareTogether.Engines.PolicyEvaluation
                 .MaxBy(exempted => exempted.ExemptionExpiresAt ?? DateOnly.MaxValue);
 
             if (bestExemption != null)
+            {
                 return new RequirementCheckResult(true, bestExemption.ExemptionExpiresAt);
+            }
 
             return new RequirementCheckResult(false, null);
         }
 
         /// <summary>
-        /// Given potentially multiple calculated role version approvals (due to
-        /// having multiple policies or perhaps multiple ways that the approval
-        /// was qualified for), merge the approval values to give a single
-        /// effective approval value for the overall role.
-        ///
-        /// The way this method is implemented here is to provide the most
-        /// "positive" approval value possible at any given time. For example,
-        /// if there is a Prospective approval in one role version and an Approved
-        /// approval in another version of the same role, the result is Approved.
-        ///
-        /// However, if there are any role removals, they will take precedence.
+        ///     Given potentially multiple calculated role version approvals (due to
+        ///     having multiple policies or perhaps multiple ways that the approval
+        ///     was qualified for), merge the approval values to give a single
+        ///     effective approval value for the overall role.
+        ///     The way this method is implemented here is to provide the most
+        ///     "positive" approval value possible at any given time. For example,
+        ///     if there is a Prospective approval in one role version and an Approved
+        ///     approval in another version of the same role, the result is Approved.
+        ///     However, if there are any role removals, they will take precedence.
         /// </summary>
         internal static DateOnlyTimeline<RoleApprovalStatus>? CalculateEffectiveRoleApprovalStatus(
             ImmutableList<DateOnlyTimeline<RoleApprovalStatus>?> roleVersionApprovals
         )
         {
             if (roleVersionApprovals.Count == 0)
+            {
                 return null;
+            }
 
             DateOnlyTimeline? AllRangesWith(RoleApprovalStatus value)
             {
-                var matchingRanges = roleVersionApprovals
+                ImmutableList<DateRange> matchingRanges = roleVersionApprovals
                     .SelectMany(rva =>
                         rva?.Ranges.Where(range => range.Tag == value)
                             .Select(range => new DateRange(range.Start, range.End)) ?? ImmutableList<DateRange>.Empty
@@ -78,31 +79,34 @@ namespace CareTogether.Engines.PolicyEvaluation
                 return DateOnlyTimeline.UnionOf(matchingRanges);
             }
 
-            var allDenied = AllRangesWith(RoleApprovalStatus.Denied);
-            var allInactive = AllRangesWith(RoleApprovalStatus.Inactive);
-            var allRemovals = DateOnlyTimeline.UnionOf(ImmutableList.Create(allDenied, allInactive));
+            DateOnlyTimeline? allDenied = AllRangesWith(RoleApprovalStatus.Denied);
+            DateOnlyTimeline? allInactive = AllRangesWith(RoleApprovalStatus.Inactive);
+            DateOnlyTimeline? allRemovals = DateOnlyTimeline.UnionOf(ImmutableList.Create(allDenied, allInactive));
 
-            var allOnboarded = AllRangesWith(RoleApprovalStatus.Onboarded);
-            var allApproved = AllRangesWith(RoleApprovalStatus.Approved);
-            var allExpired = AllRangesWith(RoleApprovalStatus.Expired);
-            var allProspective = AllRangesWith(RoleApprovalStatus.Prospective);
+            DateOnlyTimeline? allOnboarded = AllRangesWith(RoleApprovalStatus.Onboarded);
+            DateOnlyTimeline? allApproved = AllRangesWith(RoleApprovalStatus.Approved);
+            DateOnlyTimeline? allExpired = AllRangesWith(RoleApprovalStatus.Expired);
+            DateOnlyTimeline? allProspective = AllRangesWith(RoleApprovalStatus.Prospective);
 
             // Now evaluate the impact of role approval status precedence.
             //TODO: Handle this logic generically via IComparable<T> as a
             //      method directly on DateOnlyTimeline<T>?
-            var denied = allDenied; // Denied takes precedence over everything else
-            var inactive = allInactive?.Difference(allDenied);
-            var onboarded = allOnboarded?.Difference(allRemovals);
-            var approved = allApproved?.Difference(onboarded)?.Difference(allRemovals);
-            var expired = allExpired?.Difference(approved)?.Difference(onboarded)?.Difference(allRemovals);
-            var prospective = allProspective
+            DateOnlyTimeline? denied = allDenied; // Denied takes precedence over everything else
+            DateOnlyTimeline? inactive = allInactive?.Difference(allDenied);
+            DateOnlyTimeline? onboarded = allOnboarded?.Difference(allRemovals);
+            DateOnlyTimeline? approved = allApproved?.Difference(onboarded)?.Difference(allRemovals);
+            DateOnlyTimeline? expired = allExpired
+                ?.Difference(approved)
+                ?.Difference(onboarded)
+                ?.Difference(allRemovals);
+            DateOnlyTimeline? prospective = allProspective
                 ?.Difference(expired)
                 ?.Difference(approved)
                 ?.Difference(onboarded)
                 ?.Difference(allRemovals);
 
             // Merge the results (onboarded, approved, expired, prospective) into a tagged timeline.
-            var taggedRanges = ImmutableList
+            ImmutableList<DateRange<RoleApprovalStatus>> taggedRanges = ImmutableList
                 .Create(
                     (RoleApprovalStatus.Denied, denied),
                     (RoleApprovalStatus.Inactive, inactive),
@@ -117,7 +121,8 @@ namespace CareTogether.Engines.PolicyEvaluation
                 )
                 .ToImmutableList();
 
-            var result = taggedRanges.Count > 0 ? new DateOnlyTimeline<RoleApprovalStatus>(taggedRanges) : null;
+            DateOnlyTimeline<RoleApprovalStatus>? result =
+                taggedRanges.Count > 0 ? new DateOnlyTimeline<RoleApprovalStatus>(taggedRanges) : null;
 
             return result;
         }
@@ -138,35 +143,35 @@ namespace CareTogether.Engines.PolicyEvaluation
                 return DateOnlyTimeline.IntersectionOf(values.Select(value => value.WhenMet).ToImmutableList());
             }
 
-            var onboarded = FindRangesWhereAllAreSatisfied(requirementCompletionStatus);
+            DateOnlyTimeline? onboarded = FindRangesWhereAllAreSatisfied(requirementCompletionStatus);
 
-            var approvedOrOnboarded = FindRangesWhereAllAreSatisfied(
+            DateOnlyTimeline? approvedOrOnboarded = FindRangesWhereAllAreSatisfied(
                 requirementCompletionStatus.Where(x =>
                     x.Stage == RequirementStage.Application || x.Stage == RequirementStage.Approval
                 )
             );
 
             // Approved-only is the difference of approvedOrOnboarded and onboarded.
-            var approvedOnly = approvedOrOnboarded?.Difference(onboarded);
+            DateOnlyTimeline? approvedOnly = approvedOrOnboarded?.Difference(onboarded);
 
             // Expired is a special case. It starts *after* any ranges from 'approvedOrOnboarded' (so it's the
             // forward-only complement of 'approvedOrOnboarded'), and ends at the end of time. If there are no
             // ranges from 'approvedOrOnboarded', then it is null.
-            var expired = approvedOrOnboarded?.ForwardOnlyComplement();
+            DateOnlyTimeline? expired = approvedOrOnboarded?.ForwardOnlyComplement();
 
-            var prospectiveOrExpiredOrApprovedOrOnboarded = FindRangesWhereAllAreSatisfied(
+            DateOnlyTimeline? prospectiveOrExpiredOrApprovedOrOnboarded = FindRangesWhereAllAreSatisfied(
                 requirementCompletionStatus.Where(x => x.Stage == RequirementStage.Application)
             );
 
             // Prospective-only is the difference of prospectiveOrExpiredOrApprovedOrOnboarded and approvedOrOnboarded,
             // subsequently also subtracting out 'expired'.
-            var prospectiveOnly = prospectiveOrExpiredOrApprovedOrOnboarded
+            DateOnlyTimeline? prospectiveOnly = prospectiveOrExpiredOrApprovedOrOnboarded
                 ?.Difference(approvedOrOnboarded)
                 ?.Difference(expired);
 
             // Calculate the timelines for removals. Note that there could be multiple overlapping removals,
             // so we need to calculate the union of all of them, by removal reason.
-            var inactive = DateOnlyTimeline.UnionOf(
+            DateOnlyTimeline? inactive = DateOnlyTimeline.UnionOf(
                 removalsOfThisRole
                     .Where(removal => removal.Reason == RoleRemovalReason.Inactive)
                     .Select(removal => new DateRange(
@@ -175,7 +180,7 @@ namespace CareTogether.Engines.PolicyEvaluation
                     ))
                     .ToImmutableList()
             );
-            var denied = DateOnlyTimeline.UnionOf(
+            DateOnlyTimeline? denied = DateOnlyTimeline.UnionOf(
                 removalsOfThisRole
                     .Where(removal => removal.Reason == RoleRemovalReason.Denied)
                     .Select(removal => new DateRange(
@@ -184,7 +189,7 @@ namespace CareTogether.Engines.PolicyEvaluation
                     ))
                     .ToImmutableList()
             );
-            var optOut = DateOnlyTimeline.UnionOf(
+            DateOnlyTimeline? optOut = DateOnlyTimeline.UnionOf(
                 removalsOfThisRole
                     .Where(removal => removal.Reason == RoleRemovalReason.OptOut)
                     .Select(removal => new DateRange(
@@ -194,10 +199,10 @@ namespace CareTogether.Engines.PolicyEvaluation
                     .ToImmutableList()
             );
 
-            var allRemovals = DateOnlyTimeline.UnionOf(ImmutableList.Create(inactive, denied, optOut));
+            DateOnlyTimeline? allRemovals = DateOnlyTimeline.UnionOf(ImmutableList.Create(inactive, denied, optOut));
 
             // Merge the results (onboarded, approved, expired, prospective) into a tagged timeline.
-            var taggedRanges = ImmutableList
+            ImmutableList<DateRange<RoleApprovalStatus>> taggedRanges = ImmutableList
                 .Create(
                     (RoleApprovalStatus.Denied, denied),
                     (RoleApprovalStatus.Inactive, inactive?.Difference(denied)), // Denied takes precedence over Inactive
@@ -212,7 +217,8 @@ namespace CareTogether.Engines.PolicyEvaluation
                 )
                 .ToImmutableList();
 
-            var result = taggedRanges.Count > 0 ? new DateOnlyTimeline<RoleApprovalStatus>(taggedRanges) : null;
+            DateOnlyTimeline<RoleApprovalStatus>? result =
+                taggedRanges.Count > 0 ? new DateOnlyTimeline<RoleApprovalStatus>(taggedRanges) : null;
 
             return result;
         }
@@ -239,7 +245,7 @@ namespace CareTogether.Engines.PolicyEvaluation
             // were completed or exempted *on or after* that date cannot be taken into account for the purposes of determining
             // role approval status under this policy version.
 
-            var matchingCompletions = completedRequirementsInScope
+            ImmutableList<DateRange> matchingCompletions = completedRequirementsInScope
                 .Where(completed =>
                     completed.RequirementName == requirementName
                     && (
@@ -255,7 +261,7 @@ namespace CareTogether.Engines.PolicyEvaluation
                 ))
                 .ToImmutableList();
 
-            var matchingExemptions = exemptedRequirementsInScope
+            ImmutableList<DateRange> matchingExemptions = exemptedRequirementsInScope
                 .Where(exempted => exempted.RequirementName == requirementName)
                 //TODO: Exemptions currently cannot be backdated, which may need to change in order to
                 //      fully support handling policy exemptions correctly within the supersedence constraint.
@@ -278,5 +284,7 @@ namespace CareTogether.Engines.PolicyEvaluation
 
             return DateOnlyTimeline.UnionOf(matchingCompletions.Concat(matchingExemptions).ToImmutableList());
         }
+
+        public sealed record RequirementCheckResult(bool IsMetOrExempted, DateOnly? ExpiresAtUtc);
     }
 }

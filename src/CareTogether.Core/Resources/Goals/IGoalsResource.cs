@@ -30,9 +30,9 @@ namespace CareTogether.Resources.Goals
         : GoalCommand(PersonId, GoalId);
 
     /// <summary>
-    /// The <see cref="IGoalsResource"/> is responsible for all personal goals in CareTogether.
-    /// This includes generally-privileged information like names and contact information, as well as
-    /// more restricted information like intake forms, goals, and volunteer application forms.
+    ///     The <see cref="IGoalsResource" /> is responsible for all personal goals in CareTogether.
+    ///     This includes generally-privileged information like names and contact information, as well as
+    ///     more restricted information like intake forms, goals, and volunteer application forms.
     /// </summary>
     public interface IGoalsResource
     {

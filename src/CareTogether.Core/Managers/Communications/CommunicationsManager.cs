@@ -12,10 +12,10 @@ namespace CareTogether.Managers.Communications
 {
     public sealed class CommunicationsManager : ICommunicationsManager
     {
-        private readonly IAuthorizationEngine authorizationEngine;
-        private readonly IDirectoryResource directoryResource;
-        private readonly IPoliciesResource policiesResource;
-        private readonly ITelephony telephony;
+        readonly IAuthorizationEngine _AuthorizationEngine;
+        readonly IDirectoryResource _DirectoryResource;
+        readonly IPoliciesResource _PoliciesResource;
+        readonly ITelephony _Telephony;
 
         public CommunicationsManager(
             IAuthorizationEngine authorizationEngine,
@@ -24,10 +24,10 @@ namespace CareTogether.Managers.Communications
             ITelephony telephony
         )
         {
-            this.authorizationEngine = authorizationEngine;
-            this.directoryResource = directoryResource;
-            this.policiesResource = policiesResource;
-            this.telephony = telephony;
+            _AuthorizationEngine = authorizationEngine;
+            _DirectoryResource = directoryResource;
+            _PoliciesResource = policiesResource;
+            _Telephony = telephony;
         }
 
         public async Task<ImmutableList<(Guid FamilyId, SmsMessageResult? Result)>> SendSmsToFamilyPrimaryContactsAsync(
@@ -39,28 +39,33 @@ namespace CareTogether.Managers.Communications
             string message
         )
         {
-            if (!await authorizationEngine.AuthorizeSendSmsAsync(organizationId, locationId, user))
-                throw new Exception("The user is not authorized to perform this command.");
+            if (!await _AuthorizationEngine.AuthorizeSendSmsAsync(organizationId, locationId, user))
+            {
+                throw new InvalidOperationException("The user is not authorized to perform this command.");
+            }
 
             // Validate that the requested source number has been configured for the specified location.
-            var configuration = await policiesResource.GetConfigurationAsync(organizationId);
-            var sourcePhoneNumber = configuration
+
+            OrganizationConfiguration configuration = await _PoliciesResource.GetConfigurationAsync(organizationId);
+            string? sourcePhoneNumber = configuration
                 .Locations.Single(location => location.Id == locationId)
                 .SmsSourcePhoneNumbers.SingleOrDefault(number => number.SourcePhoneNumber == sourceNumber)
                 ?.SourcePhoneNumber;
 
             if (sourcePhoneNumber == null)
+            {
                 throw new InvalidOperationException(
                     "The specified location does not have the requested source phone number configured for SMS messages."
                 );
+            }
 
-            var families = await directoryResource.ListFamiliesAsync(organizationId, locationId);
+            ImmutableList<Family> families = await _DirectoryResource.ListFamiliesAsync(organizationId, locationId);
 
-            var familyPrimaryContactNumbers = familyIds
+            ImmutableList<(Guid familyId, PhoneNumber? phoneNumber)> familyPrimaryContactNumbers = familyIds
                 .Select(familyId =>
                 {
-                    var family = families.Single(family => family.Id == familyId);
-                    var primaryContactAdult = family
+                    Family family = families.Single(family => family.Id == familyId);
+                    Person? primaryContactAdult = family
                         .Adults.Select(adult => adult.Item1)
                         .SingleOrDefault(person => person.Id == family.PrimaryFamilyContactPersonId);
                     return (
@@ -72,18 +77,24 @@ namespace CareTogether.Managers.Communications
                 })
                 .ToImmutableList();
 
-            var destinationNumbers = familyPrimaryContactNumbers
+            ImmutableList<string> destinationNumbers = familyPrimaryContactNumbers
                 .Where(x => x.phoneNumber != null)
                 .Select(x => x.phoneNumber!.Number)
                 .Distinct()
                 .ToImmutableList();
 
-            var sendResults = await telephony.SendSmsMessageAsync(sourcePhoneNumber, destinationNumbers, message);
+            ImmutableList<SmsMessageResult> sendResults = await _Telephony.SendSmsMessageAsync(
+                sourcePhoneNumber,
+                destinationNumbers,
+                message
+            );
 
-            var allFamilyResults = familyPrimaryContactNumbers
+            ImmutableList<(Guid FamilyId, SmsMessageResult? Result)> allFamilyResults = familyPrimaryContactNumbers
                 .Select(x =>
                 {
-                    var sendResult = sendResults.SingleOrDefault(result => result.PhoneNumber == x.phoneNumber?.Number);
+                    SmsMessageResult? sendResult = sendResults.SingleOrDefault(result =>
+                        result.PhoneNumber == x.phoneNumber?.Number
+                    );
                     return (FamilyId: x.familyId, Result: sendResult);
                 })
                 .ToImmutableList();

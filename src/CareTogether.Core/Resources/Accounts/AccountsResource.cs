@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
 using System.Security.Cryptography;
@@ -9,26 +10,26 @@ namespace CareTogether.Resources.Accounts
 {
     public sealed class AccountsResource : IAccountsResource
     {
-        private const int GLOBAL_SCOPE_ID = 0; // There is only one globally-scoped accounts model.
-        private readonly IEventLog<AccountEvent> accountsEventLog;
-        private readonly IEventLog<PersonAccessEvent> personAccessEventLog;
-        private readonly ConcurrentLockingStore<int, AccountsModel> globalScopeAccountsModel;
-        private readonly ConcurrentLockingStore<(Guid organizationId, Guid locationId), PersonAccessModel> tenantModels;
-        private readonly RandomNumberGenerator randomNumberGenerator;
+        const int GLOBAL_SCOPE_ID = 0; // There is only one globally-scoped accounts model.
+        readonly IEventLog<AccountEvent> _AccountsEventLog;
+        readonly ConcurrentLockingStore<int, AccountsModel> _GlobalScopeAccountsModel;
+        readonly IEventLog<PersonAccessEvent> _PersonAccessEventLog;
+        readonly RandomNumberGenerator _RandomNumberGenerator;
+        readonly ConcurrentLockingStore<(Guid organizationId, Guid locationId), PersonAccessModel> _TenantModels;
 
         public AccountsResource(
             IEventLog<AccountEvent> accountsEventLog,
             IEventLog<PersonAccessEvent> personAccessEventLog
         )
         {
-            this.accountsEventLog = accountsEventLog;
-            this.personAccessEventLog = personAccessEventLog;
+            _AccountsEventLog = accountsEventLog;
+            _PersonAccessEventLog = personAccessEventLog;
 
-            globalScopeAccountsModel = new ConcurrentLockingStore<int, AccountsModel>(async key =>
+            _GlobalScopeAccountsModel = new ConcurrentLockingStore<int, AccountsModel>(async key =>
             {
                 return await AccountsModel.InitializeAsync(accountsEventLog.GetAllEventsAsync(Guid.Empty, Guid.Empty));
             });
-            tenantModels = new ConcurrentLockingStore<(Guid organizationId, Guid locationId), PersonAccessModel>(
+            _TenantModels = new ConcurrentLockingStore<(Guid organizationId, Guid locationId), PersonAccessModel>(
                 async key =>
                 {
                     return await PersonAccessModel.InitializeAsync(
@@ -36,7 +37,7 @@ namespace CareTogether.Resources.Accounts
                     );
                 }
             );
-            randomNumberGenerator = RandomNumberGenerator.Create();
+            _RandomNumberGenerator = RandomNumberGenerator.Create();
         }
 
         public async Task<Account?> TryGetUserAccountAsync(Guid userId)
@@ -46,16 +47,22 @@ namespace CareTogether.Resources.Accounts
             // First, look up the global account entry to determine which person access records to retrieve.
             // If the user has not been linked to any person IDs, there will not be any records for them so return null.
             AccountEntry? accountEntry;
-            using (var lockedModel = await globalScopeAccountsModel.ReadLockItemAsync(GLOBAL_SCOPE_ID))
+            using (
+                ConcurrentLockingStore<int, AccountsModel>.LockedItem<AccountsModel> lockedModel =
+                    await _GlobalScopeAccountsModel.ReadLockItemAsync(GLOBAL_SCOPE_ID)
+            )
             {
                 accountEntry = lockedModel.Value.TryGetAccount(userId);
             }
 
             if (accountEntry == null)
+            {
                 return null;
+            }
 
             // Then, retrieve and merge all the person access records that are linked to this user account.
-            var account = await RenderAccountAsync(accountEntry);
+
+            Account account = await RenderAccountAsync(accountEntry);
             return account;
         }
 
@@ -64,9 +71,12 @@ namespace CareTogether.Resources.Accounts
             //WARNING: The read/write logic in this service needs to be designed carefully to avoid deadlocks.
 
             AccountEntry? accountEntry;
-            using (var lockedModel = await globalScopeAccountsModel.ReadLockItemAsync(GLOBAL_SCOPE_ID))
+            using (
+                ConcurrentLockingStore<int, AccountsModel>.LockedItem<AccountsModel> lockedModel =
+                    await _GlobalScopeAccountsModel.ReadLockItemAsync(GLOBAL_SCOPE_ID)
+            )
             {
-                var result = lockedModel.Value.FindAccounts(account =>
+                ImmutableList<AccountEntry> result = lockedModel.Value.FindAccounts(account =>
                     account.PersonLinks.Any(link =>
                         link.OrganizationId == organizationId
                         && link.LocationId == locationId
@@ -77,7 +87,7 @@ namespace CareTogether.Resources.Accounts
                 accountEntry = result.SingleOrDefault();
             }
 
-            var account = accountEntry == null ? null : await RenderAccountAsync(accountEntry);
+            Account? account = accountEntry == null ? null : await RenderAccountAsync(accountEntry);
             return account;
         }
 
@@ -89,9 +99,16 @@ namespace CareTogether.Resources.Accounts
         {
             //WARNING: The read/write logic in this service needs to be designed carefully to avoid deadlocks.
 
-            using (var lockedModel = await tenantModels.ReadLockItemAsync((organizationId, locationId)))
+            using (
+                ConcurrentLockingStore<
+                    (Guid organizationId, Guid locationId),
+                    PersonAccessModel
+                >.LockedItem<PersonAccessModel> lockedModel = await _TenantModels.ReadLockItemAsync(
+                    (organizationId, locationId)
+                )
+            )
             {
-                var result = lockedModel.Value.TryGetAccess(personId);
+                PersonAccessEntry? result = lockedModel.Value.TryGetAccess(personId);
                 return result?.Roles;
             }
         }
@@ -100,11 +117,15 @@ namespace CareTogether.Resources.Accounts
         {
             //WARNING: The read/write logic in this service needs to be designed carefully to avoid deadlocks.
 
-            using (var lockedModel = await globalScopeAccountsModel.WriteLockItemAsync(GLOBAL_SCOPE_ID))
+            using (
+                ConcurrentLockingStore<int, AccountsModel>.LockedItem<AccountsModel> lockedModel =
+                    await _GlobalScopeAccountsModel.WriteLockItemAsync(GLOBAL_SCOPE_ID)
+            )
             {
-                var result = lockedModel.Value.ExecuteAccountCommand(command, userId, DateTime.UtcNow);
+                (AccountEvent Event, long SequenceNumber, AccountEntry Account, Action OnCommit) result =
+                    lockedModel.Value.ExecuteAccountCommand(command, userId, DateTime.UtcNow);
 
-                await accountsEventLog.AppendEventAsync(Guid.Empty, Guid.Empty, result.Event, result.SequenceNumber);
+                await _AccountsEventLog.AppendEventAsync(Guid.Empty, Guid.Empty, result.Event, result.SequenceNumber);
                 result.OnCommit();
                 return result.Account;
             }
@@ -119,11 +140,19 @@ namespace CareTogether.Resources.Accounts
         {
             //WARNING: The read/write logic in this service needs to be designed carefully to avoid deadlocks.
 
-            using (var lockedModel = await tenantModels.WriteLockItemAsync((organizationId, locationId)))
+            using (
+                ConcurrentLockingStore<
+                    (Guid organizationId, Guid locationId),
+                    PersonAccessModel
+                >.LockedItem<PersonAccessModel> lockedModel = await _TenantModels.WriteLockItemAsync(
+                    (organizationId, locationId)
+                )
+            )
             {
-                var result = lockedModel.Value.ExecuteAccessCommand(command, userId, DateTime.UtcNow);
+                (PersonAccessEvent Event, long SequenceNumber, PersonAccessEntry Access, Action OnCommit) result =
+                    lockedModel.Value.ExecuteAccessCommand(command, userId, DateTime.UtcNow);
 
-                await personAccessEventLog.AppendEventAsync(
+                await _PersonAccessEventLog.AppendEventAsync(
                     organizationId,
                     locationId,
                     result.Event,
@@ -145,18 +174,26 @@ namespace CareTogether.Resources.Accounts
 
             // A cryptographically random sequence of 128 bits is sufficiently secure.
             // We can avoid padding during base64 encoding by using 144 bits instead.
-            var nonce = new byte[144 / 8];
-            randomNumberGenerator.GetBytes(nonce);
+            byte[] nonce = new byte[144 / 8];
+            _RandomNumberGenerator.GetBytes(nonce);
 
-            using (var lockedModel = await tenantModels.WriteLockItemAsync((organizationId, locationId)))
+            using (
+                ConcurrentLockingStore<
+                    (Guid organizationId, Guid locationId),
+                    PersonAccessModel
+                >.LockedItem<PersonAccessModel> lockedModel = await _TenantModels.WriteLockItemAsync(
+                    (organizationId, locationId)
+                )
+            )
             {
-                var result = lockedModel.Value.ExecuteAccessCommand(
-                    new GenerateUserInviteNonce(personId, nonce),
-                    userId,
-                    DateTime.UtcNow
-                );
+                (PersonAccessEvent Event, long SequenceNumber, PersonAccessEntry Access, Action OnCommit) result =
+                    lockedModel.Value.ExecuteAccessCommand(
+                        new GenerateUserInviteNonce(personId, nonce),
+                        userId,
+                        DateTime.UtcNow
+                    );
 
-                await personAccessEventLog.AppendEventAsync(
+                await _PersonAccessEventLog.AppendEventAsync(
                     organizationId,
                     locationId,
                     result.Event,
@@ -176,11 +213,18 @@ namespace CareTogether.Resources.Accounts
         {
             //WARNING: The read/write logic in this service needs to be designed carefully to avoid deadlocks.
 
-            using (var lockedTenantModel = await tenantModels.ReadLockItemAsync((organizationId, locationId)))
+            using (
+                ConcurrentLockingStore<
+                    (Guid organizationId, Guid locationId),
+                    PersonAccessModel
+                >.LockedItem<PersonAccessModel> lockedTenantModel = await _TenantModels.ReadLockItemAsync(
+                    (organizationId, locationId)
+                )
+            )
             {
-                var matchingEntry = lockedTenantModel
+                PersonAccessEntry? matchingEntry = lockedTenantModel
                     .Value.FindAccess(entry =>
-                        entry.UserInviteNonce != null && Enumerable.SequenceEqual(entry.UserInviteNonce, nonce)
+                        entry.UserInviteNonce != null && entry.UserInviteNonce.SequenceEqual(nonce)
                     )
                     .SingleOrDefault();
 
@@ -201,26 +245,36 @@ namespace CareTogether.Resources.Accounts
 
             // First, try to find the person ID that matches the nonce, and mark the invite as redeemed.
             Guid personId;
-            using (var lockedTenantModel = await tenantModels.WriteLockItemAsync((organizationId, locationId)))
+            using (
+                ConcurrentLockingStore<
+                    (Guid organizationId, Guid locationId),
+                    PersonAccessModel
+                >.LockedItem<PersonAccessModel> lockedTenantModel = await _TenantModels.WriteLockItemAsync(
+                    (organizationId, locationId)
+                )
+            )
             {
-                var matchingEntry = lockedTenantModel
+                PersonAccessEntry? matchingEntry = lockedTenantModel
                     .Value.FindAccess(entry =>
-                        entry.UserInviteNonce != null && Enumerable.SequenceEqual(entry.UserInviteNonce, nonce)
+                        entry.UserInviteNonce != null && entry.UserInviteNonce.SequenceEqual(nonce)
                     )
                     .SingleOrDefault();
 
                 if (matchingEntry == null)
+                {
                     return null;
+                }
 
                 personId = matchingEntry.PersonId;
 
-                var result = lockedTenantModel.Value.ExecuteAccessCommand(
-                    new RedeemUserInviteNonce(personId, nonce),
-                    userId,
-                    DateTime.UtcNow
-                );
+                (PersonAccessEvent Event, long SequenceNumber, PersonAccessEntry Access, Action OnCommit) result =
+                    lockedTenantModel.Value.ExecuteAccessCommand(
+                        new RedeemUserInviteNonce(personId, nonce),
+                        userId,
+                        DateTime.UtcNow
+                    );
 
-                await personAccessEventLog.AppendEventAsync(
+                await _PersonAccessEventLog.AppendEventAsync(
                     organizationId,
                     locationId,
                     result.Event,
@@ -231,38 +285,45 @@ namespace CareTogether.Resources.Accounts
 
             // Next, link the person ID to the user ID.
             AccountEntry accountEntry;
-            using (var lockedGlobalModel = await globalScopeAccountsModel.WriteLockItemAsync(GLOBAL_SCOPE_ID))
+            using (
+                ConcurrentLockingStore<int, AccountsModel>.LockedItem<AccountsModel> lockedGlobalModel =
+                    await _GlobalScopeAccountsModel.WriteLockItemAsync(GLOBAL_SCOPE_ID)
+            )
             {
-                var result = lockedGlobalModel.Value.ExecuteAccountCommand(
-                    new LinkPersonToAcccount(userId, organizationId, locationId, personId),
-                    userId,
-                    DateTime.UtcNow
-                );
+                (AccountEvent Event, long SequenceNumber, AccountEntry Account, Action OnCommit) result =
+                    lockedGlobalModel.Value.ExecuteAccountCommand(
+                        new LinkPersonToAcccount(userId, organizationId, locationId, personId),
+                        userId,
+                        DateTime.UtcNow
+                    );
 
                 accountEntry = result.Account;
 
-                await accountsEventLog.AppendEventAsync(Guid.Empty, Guid.Empty, result.Event, result.SequenceNumber);
+                await _AccountsEventLog.AppendEventAsync(Guid.Empty, Guid.Empty, result.Event, result.SequenceNumber);
                 result.OnCommit();
             }
 
             // Finally, return a complete view of the user's current account & person links.
-            var account = await RenderAccountAsync(accountEntry);
+            Account account = await RenderAccountAsync(accountEntry);
             return account;
         }
 
-        private async Task<Account> RenderAccountAsync(AccountEntry accountEntry)
+        async Task<Account> RenderAccountAsync(AccountEntry accountEntry)
         {
-            var personAccessResults = (
+            Dictionary<(Guid OrganizationId, Guid LocationId), PersonAccessEntry> personAccessResults = (
                 await Task.WhenAll(
                     accountEntry.PersonLinks.Select(async link =>
                     {
                         using (
-                            var lockedModel = await tenantModels.ReadLockItemAsync(
+                            ConcurrentLockingStore<
+                                (Guid organizationId, Guid locationId),
+                                PersonAccessModel
+                            >.LockedItem<PersonAccessModel> lockedModel = await _TenantModels.ReadLockItemAsync(
                                 (link.OrganizationId, link.LocationId)
                             )
                         )
                         {
-                            var access = lockedModel.Value.TryGetAccess(link.PersonId);
+                            PersonAccessEntry? access = lockedModel.Value.TryGetAccess(link.PersonId);
                             return (link.OrganizationId, link.LocationId, access!);
                         }
                     })

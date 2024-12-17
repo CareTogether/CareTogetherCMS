@@ -8,53 +8,56 @@ namespace CareTogether
     public sealed class ConcurrentLockingStore<TKey, TValue>
         where TKey : notnull
     {
-        public sealed class LockedItem<T> : IDisposable
-        {
-            private readonly IDisposable lockHandle;
-
-            public T Value { get; }
-
-            public LockedItem(IDisposable lockHandle, T value)
-            {
-                this.lockHandle = lockHandle;
-                Value = value;
-            }
-
-            public void Dispose()
-            {
-                lockHandle.Dispose();
-            }
-        }
-
-        private readonly ConcurrentDictionary<TKey, AsyncReaderWriterLock> itemLocks = new();
-        private readonly ConcurrentDictionary<TKey, AsyncLazy<TValue>> items = new();
-        private readonly Func<TKey, Task<TValue>> valueFactory;
+        readonly ConcurrentDictionary<TKey, AsyncReaderWriterLock> _ItemLocks = new();
+        readonly ConcurrentDictionary<TKey, AsyncLazy<TValue>> _Items = new();
+        readonly Func<TKey, Task<TValue>> _ValueFactory;
 
         public ConcurrentLockingStore(Func<TKey, Task<TValue>> valueFactory)
         {
-            this.valueFactory = valueFactory;
+            _ValueFactory = valueFactory;
         }
 
         public async Task<LockedItem<TValue>> WriteLockItemAsync(TKey key)
         {
-            var (itemLock, item) = await GetOrAddAsync(key);
-            var writeLock = await itemLock.WriterLockAsync();
+            (AsyncReaderWriterLock itemLock, TValue item) = await GetOrAddAsync(key);
+            IDisposable writeLock = await itemLock.WriterLockAsync();
             return new LockedItem<TValue>(writeLock, item);
         }
 
         public async Task<LockedItem<TValue>> ReadLockItemAsync(TKey key)
         {
-            var (itemLock, item) = await GetOrAddAsync(key);
-            var writeLock = await itemLock.ReaderLockAsync();
+            (AsyncReaderWriterLock itemLock, TValue item) = await GetOrAddAsync(key);
+            IDisposable writeLock = await itemLock.ReaderLockAsync();
             return new LockedItem<TValue>(writeLock, item);
         }
 
-        private async Task<(AsyncReaderWriterLock itemLock, TValue item)> GetOrAddAsync(TKey key)
+        async Task<(AsyncReaderWriterLock itemLock, TValue item)> GetOrAddAsync(TKey key)
         {
-            var itemLock = itemLocks.GetOrAdd(key, new AsyncReaderWriterLock());
-            var lazyItem = items.GetOrAdd(key, (keyToAdd) => new AsyncLazy<TValue>(() => valueFactory(keyToAdd)));
-            var item = await lazyItem; //TODO: await lazyItem.Task instead?
+            AsyncReaderWriterLock itemLock = _ItemLocks.GetOrAdd(key, new AsyncReaderWriterLock());
+            AsyncLazy<TValue> lazyItem = _Items.GetOrAdd(
+                key,
+                keyToAdd => new AsyncLazy<TValue>(() => _ValueFactory(keyToAdd))
+            );
+            TValue? item = await lazyItem; //TODO: await lazyItem.Task instead?
             return (itemLock, item);
+        }
+
+        public sealed class LockedItem<T> : IDisposable
+        {
+            readonly IDisposable _LockHandle;
+
+            public LockedItem(IDisposable lockHandle, T value)
+            {
+                _LockHandle = lockHandle;
+                Value = value;
+            }
+
+            public T Value { get; }
+
+            public void Dispose()
+            {
+                _LockHandle.Dispose();
+            }
         }
     }
 }
