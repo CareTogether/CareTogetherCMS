@@ -1,10 +1,7 @@
 using System;
-using System.Collections.Generic;
 using System.Collections.Immutable;
-using System.Security.Claims;
 using System.Threading.Tasks;
 using CareTogether.Resources.Policies;
-using CareTogether.Resources.Referrals;
 using JsonPolymorph;
 
 namespace CareTogether.Resources.Directory
@@ -89,7 +86,7 @@ namespace CareTogether.Resources.Directory
     }
 
     [JsonHierarchyBase]
-    public abstract partial record Age();
+    public abstract partial record Age;
 
     public sealed record AgeInYears(int Years, DateTime AsOf) : Age;
 
@@ -216,8 +213,8 @@ namespace CareTogether.Resources.Directory
     ) : PersonCommand(PersonId);
 
     /// <summary>
-    /// The <see cref="IDirectoryResource"/> is responsible for the "contact list" aspects of CareTogether.
-    /// The directory includes information about people, the families they are a part of, and their contact information.
+    ///     The <see cref="IDirectoryResource" /> is responsible for the "contact list" aspects of CareTogether.
+    ///     The directory includes information about people, the families they are a part of, and their contact information.
     /// </summary>
     public interface IDirectoryResource
     {

@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Collections.Immutable;
-using System.Linq;
 using System.Threading.Tasks;
-using CareTogether.Managers;
 using CareTogether.Managers.Membership;
 using CareTogether.Managers.Records;
 using CareTogether.Resources.Accounts;
@@ -19,16 +17,9 @@ namespace CareTogether.Api.Controllers
     [Authorize(Policies.ForbidAnonymous, AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
     public class UsersController : ControllerBase
     {
-        private sealed record PersonInviteRedemptionSession(
-            string RedemptionSessionId,
-            Guid OrganizationId,
-            Guid LocationId,
-            string InviteNonce
-        );
-
-        private readonly IMembershipManager membershipManager;
-        private readonly IOptions<MembershipOptions> membershipOptions;
-        private readonly IMemoryCache redemptionSessionsCache;
+        readonly IMembershipManager _MembershipManager;
+        readonly IOptions<MembershipOptions> _MembershipOptions;
+        readonly IMemoryCache _RedemptionSessionsCache;
 
         public UsersController(
             IMembershipManager membershipManager,
@@ -36,15 +27,15 @@ namespace CareTogether.Api.Controllers
             IMemoryCache redemptionSessionsCache
         )
         {
-            this.membershipManager = membershipManager;
-            this.membershipOptions = membershipOptions;
-            this.redemptionSessionsCache = redemptionSessionsCache;
+            _MembershipManager = membershipManager;
+            _MembershipOptions = membershipOptions;
+            _RedemptionSessionsCache = redemptionSessionsCache;
         }
 
         [HttpGet("/api/[controller]/me/tenantAccess")]
         public async Task<ActionResult<UserAccess>> GetUserOrganizationAccess()
         {
-            var userAccess = await membershipManager.GetUserAccessAsync(User);
+            UserAccess? userAccess = await _MembershipManager.GetUserAccessAsync(User);
 
             return Ok(userAccess);
         }
@@ -56,7 +47,12 @@ namespace CareTogether.Api.Controllers
             Guid personId
         )
         {
-            var user = await membershipManager.GetPersonLoginInfo(User, organizationId, locationId, personId);
+            UserLoginInfo? user = await _MembershipManager.GetPersonLoginInfo(
+                User,
+                organizationId,
+                locationId,
+                personId
+            );
 
             return Ok(user);
         }
@@ -69,7 +65,7 @@ namespace CareTogether.Api.Controllers
             [FromBody] ImmutableList<string> roles
         )
         {
-            var result = await membershipManager.ChangePersonRolesAsync(
+            FamilyRecordsAggregate? result = await _MembershipManager.ChangePersonRolesAsync(
                 User,
                 organizationId,
                 locationId,
@@ -87,23 +83,24 @@ namespace CareTogether.Api.Controllers
             [FromQuery] Guid personId
         )
         {
-            var inviteNonce = await membershipManager.GenerateUserInviteNonceAsync(
+            byte[]? inviteNonce = await _MembershipManager.GenerateUserInviteNonceAsync(
                 User,
                 organizationId,
                 locationId,
                 personId
             );
 
-            var inviteNonceHexString = Convert.ToHexString(inviteNonce);
+            string? inviteNonceHexString = Convert.ToHexString(inviteNonce);
 
-            var inviteLink = new Uri(
-                string.Format(
-                    membershipOptions.Value.PersonInviteLinkFormat,
-                    organizationId,
-                    locationId,
-                    inviteNonceHexString
-                )
-            );
+            Uri? inviteLink =
+                new(
+                    string.Format(
+                        _MembershipOptions.Value.PersonInviteLinkFormat,
+                        organizationId,
+                        locationId,
+                        inviteNonceHexString
+                    )
+                );
 
             return Ok(inviteLink);
         }
@@ -129,18 +126,17 @@ namespace CareTogether.Api.Controllers
 
             //NOTE: Considering the maximum lifespan of these redemption sessions, the uniqueness guaranteed by
             //      a GUID should be sufficient protection against an attacker guessing it.
-            var redemptionSessionId = Guid.NewGuid().ToString("N");
+            string? redemptionSessionId = Guid.NewGuid().ToString("N");
 
-            var redemptionSession = new PersonInviteRedemptionSession(
-                redemptionSessionId,
-                organizationId,
-                locationId,
-                inviteNonce
+            PersonInviteRedemptionSession? redemptionSession =
+                new(redemptionSessionId, organizationId, locationId, inviteNonce);
+
+            _RedemptionSessionsCache.Set(redemptionSessionId, redemptionSession, TimeSpan.FromMinutes(20));
+
+            string? redirectUrl = string.Format(
+                _MembershipOptions.Value.PersonInviteRedirectFormat,
+                redemptionSessionId
             );
-
-            redemptionSessionsCache.Set(redemptionSessionId, redemptionSession, TimeSpan.FromMinutes(20));
-
-            var redirectUrl = string.Format(membershipOptions.Value.PersonInviteRedirectFormat, redemptionSessionId);
 
             return Redirect(redirectUrl);
         }
@@ -153,13 +149,16 @@ namespace CareTogether.Api.Controllers
             // The client can be assumed to be making this request from JavaScript, meaning the results can
             // be interpreted by client-side code rather than needing to trigger page-level navigation via redirects.
 
-            var redemptionSession = redemptionSessionsCache.Get<PersonInviteRedemptionSession>(redemptionSessionId);
+            PersonInviteRedemptionSession? redemptionSession =
+                _RedemptionSessionsCache.Get<PersonInviteRedemptionSession>(redemptionSessionId);
             if (redemptionSession == null)
+            {
                 return new BadRequestObjectResult("The specified person invite redemption session does not exist.");
+            }
 
-            var nonceBytes = Convert.FromHexString(redemptionSession.InviteNonce);
+            byte[]? nonceBytes = Convert.FromHexString(redemptionSession.InviteNonce);
 
-            var inviteInfo = await membershipManager.TryReviewUserInviteNonceAsync(
+            UserInviteReviewInfo? inviteInfo = await _MembershipManager.TryReviewUserInviteNonceAsync(
                 User,
                 redemptionSession.OrganizationId,
                 redemptionSession.LocationId,
@@ -177,13 +176,16 @@ namespace CareTogether.Api.Controllers
             // The client can be assumed to be making this request from JavaScript, meaning the results can
             // be interpreted by client-side code rather than needing to trigger page-level navigation via redirects.
 
-            var redemptionSession = redemptionSessionsCache.Get<PersonInviteRedemptionSession>(redemptionSessionId);
+            PersonInviteRedemptionSession? redemptionSession =
+                _RedemptionSessionsCache.Get<PersonInviteRedemptionSession>(redemptionSessionId);
             if (redemptionSession == null)
+            {
                 return new BadRequestObjectResult("The specified person invite redemption session does not exist.");
+            }
 
-            var nonceBytes = Convert.FromHexString(redemptionSession.InviteNonce);
+            byte[]? nonceBytes = Convert.FromHexString(redemptionSession.InviteNonce);
 
-            var accountAfterInviteRedemption = await membershipManager.TryRedeemUserInviteNonceAsync(
+            Account? accountAfterInviteRedemption = await _MembershipManager.TryRedeemUserInviteNonceAsync(
                 User,
                 redemptionSession.OrganizationId,
                 redemptionSession.LocationId,
@@ -192,5 +194,12 @@ namespace CareTogether.Api.Controllers
 
             return Ok(accountAfterInviteRedemption);
         }
+
+        sealed record PersonInviteRedemptionSession(
+            string RedemptionSessionId,
+            Guid OrganizationId,
+            Guid LocationId,
+            string InviteNonce
+        );
     }
 }

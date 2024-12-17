@@ -1,9 +1,6 @@
 ﻿using System.Collections.Immutable;
 
-namespace Timelines.Test;
-
-[TestClass]
-public class DateOnlyTimelineTest
+namespace Timelines.Test
 {
     private static DateOnly D(int day) => new(2024, 1, day);
 

@@ -21,7 +21,7 @@ namespace CareTogether.Resources.Notes
     {
         Draft,
         Approved,
-    };
+    }
 
     [JsonHierarchyBase]
     public abstract partial record NoteCommand(Guid FamilyId, Guid NoteId);
@@ -50,8 +50,8 @@ namespace CareTogether.Resources.Notes
     ) : NoteCommand(FamilyId, NoteId);
 
     /// <summary>
-    /// The <see cref="INotesResource"/> models the lifecycle of record-keeping notes in CareTogether organizations,
-    /// which are always kept at the family level, as well as authorizing related queries.
+    ///     The <see cref="INotesResource" /> models the lifecycle of record-keeping notes in CareTogether organizations,
+    ///     which are always kept at the family level, as well as authorizing related queries.
     /// </summary>
     public interface INotesResource
     {

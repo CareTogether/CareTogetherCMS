@@ -79,23 +79,23 @@ namespace CareTogether.Managers.Records
     ) : CompositeRecordsCommand(FamilyId);
 
     [JsonHierarchyBase]
-    public abstract partial record AtomicRecordsCommand();
+    public abstract partial record AtomicRecordsCommand;
 
-    public sealed record FamilyRecordsCommand(FamilyCommand Command) : AtomicRecordsCommand();
+    public sealed record FamilyRecordsCommand(FamilyCommand Command) : AtomicRecordsCommand;
 
-    public sealed record PersonRecordsCommand(Guid FamilyId, PersonCommand Command) : AtomicRecordsCommand();
+    public sealed record PersonRecordsCommand(Guid FamilyId, PersonCommand Command) : AtomicRecordsCommand;
 
-    public sealed record FamilyApprovalRecordsCommand(VolunteerFamilyCommand Command) : AtomicRecordsCommand();
+    public sealed record FamilyApprovalRecordsCommand(VolunteerFamilyCommand Command) : AtomicRecordsCommand;
 
-    public sealed record IndividualApprovalRecordsCommand(VolunteerCommand Command) : AtomicRecordsCommand();
+    public sealed record IndividualApprovalRecordsCommand(VolunteerCommand Command) : AtomicRecordsCommand;
 
-    public sealed record ReferralRecordsCommand(ReferralCommand Command) : AtomicRecordsCommand();
+    public sealed record ReferralRecordsCommand(ReferralCommand Command) : AtomicRecordsCommand;
 
-    public sealed record ArrangementRecordsCommand(ArrangementsCommand Command) : AtomicRecordsCommand();
+    public sealed record ArrangementRecordsCommand(ArrangementsCommand Command) : AtomicRecordsCommand;
 
-    public sealed record NoteRecordsCommand(NoteCommand Command) : AtomicRecordsCommand();
+    public sealed record NoteRecordsCommand(NoteCommand Command) : AtomicRecordsCommand;
 
-    public sealed record CommunityRecordsCommand(CommunityCommand Command) : AtomicRecordsCommand();
+    public sealed record CommunityRecordsCommand(CommunityCommand Command) : AtomicRecordsCommand;
 
     [JsonHierarchyBase]
     public abstract partial record RecordsAggregate(Guid Id);

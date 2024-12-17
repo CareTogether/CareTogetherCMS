@@ -6,31 +6,34 @@ namespace CareTogether.Api
 {
     public sealed class UserTargetingContextAccessor : ITargetingContextAccessor
     {
-        private const string TargetingContextLookup = "TargetingContextAccessor.TargetingContext";
+        const string TargetingContextLookup = "TargetingContextAccessor.TargetingContext";
 
-        private readonly IHttpContextAccessor httpContextAccessor;
+        readonly IHttpContextAccessor _HttpContextAccessor;
 
         public UserTargetingContextAccessor(IHttpContextAccessor httpContextAccessor)
         {
-            this.httpContextAccessor = httpContextAccessor;
+            _HttpContextAccessor = httpContextAccessor;
         }
 
         public ValueTask<TargetingContext> GetContextAsync()
         {
             // Use the HttpContext to cache the result of this lookup
-            var httpContext = httpContextAccessor.HttpContext!;
-            if (httpContext.Items.TryGetValue(TargetingContextLookup, out var value))
-                return ValueTask.FromResult((TargetingContext)value!);
-
-            var targetingContext = new TargetingContext
+            HttpContext? httpContext = _HttpContextAccessor.HttpContext!;
+            if (httpContext.Items.TryGetValue(TargetingContextLookup, out object? value))
             {
-                UserId = httpContext.User.UserId().ToString("D"),
-                Groups = new[]
+                return ValueTask.FromResult((TargetingContext)value!);
+            }
+
+            TargetingContext? targetingContext =
+                new()
                 {
-                    httpContext.User.FindFirst(Claims.OrganizationId)!.Value,
-                    httpContext.User.FindFirst(Claims.LocationId)!.Value,
-                },
-            };
+                    UserId = httpContext.User.UserId().ToString("D"),
+                    Groups = new[]
+                    {
+                        httpContext.User.FindFirst(Claims.OrganizationId)!.Value,
+                        httpContext.User.FindFirst(Claims.LocationId)!.Value,
+                    },
+                };
 
             httpContext.Items[TargetingContextLookup] = targetingContext;
 

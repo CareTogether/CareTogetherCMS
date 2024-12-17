@@ -3,11 +3,9 @@ using System.Collections.Immutable;
 using System.Linq;
 using System.Text.Json.Serialization;
 using System.Threading.Tasks;
-using CareTogether.Resources;
 using CareTogether.Resources.Approvals;
 using CareTogether.Resources.Directory;
 using CareTogether.Resources.Policies;
-using CareTogether.Resources.Referrals;
 using Timelines;
 
 namespace CareTogether.Engines.PolicyEvaluation
@@ -35,9 +33,7 @@ namespace CareTogether.Engines.PolicyEvaluation
                 .SelectMany(fra => fra.Value.CurrentMissingIndividualRequirements)
                 .Concat(
                     IndividualApprovals.SelectMany(ia =>
-                        ia.Value.CurrentMissingRequirements.Select(r =>
-                            (PersonId: ia.Key, ActionName: r.ActionName, Version: r.Version)
-                        )
+                        ia.Value.CurrentMissingRequirements.Select(r => (PersonId: ia.Key, r.ActionName, r.Version))
                     )
                 )
                 .Distinct()
@@ -76,17 +72,17 @@ namespace CareTogether.Engines.PolicyEvaluation
         {
             get
             {
-                var allMissingVersionsByItem = RoleVersionApprovals
+                ImmutableList<IGrouping<string, string>> allMissingVersionsByItem = RoleVersionApprovals
                     .SelectMany(r => r.CurrentMissingRequirements.Select(cmr => (cmr.ActionName, r.Version)))
                     .ToImmutableList()
                     .GroupBy(r => r.ActionName, r => r.Version)
                     .ToImmutableList();
 
-                var allPolicyVersions = RoleVersionApprovals.Select(r => r.Version).ToImmutableList();
+                ImmutableList<string> allPolicyVersions = RoleVersionApprovals.Select(r => r.Version).ToImmutableList();
 
                 // If the item is missing in all versions, return it once without a version annotation.
                 // If it is only missing in some versions, return each version-specific result.
-                var simplifiedResult = allMissingVersionsByItem
+                ImmutableList<(string Key, string version)> simplifiedResult = allMissingVersionsByItem
                     .SelectMany(versionsByAction =>
                         allPolicyVersions.All(policyVersion => versionsByAction.Contains(policyVersion))
                             ? [(versionsByAction.Key, null)]
@@ -209,21 +205,22 @@ namespace CareTogether.Engines.PolicyEvaluation
                     })
                     .ToImmutableList();
 
-                var allPolicyVersions = RoleVersionApprovals.Select(r => r.Version).ToImmutableList();
+                ImmutableList<string> allPolicyVersions = RoleVersionApprovals.Select(r => r.Version).ToImmutableList();
 
                 // If the item is missing in all versions for a given person, return it once without a version annotation.
                 // If it is only missing in some versions for a given person, return each version-specific result.
-                var simplifiedResult = allVersionMissingItemsByPerson
-                    .SelectMany(actionsByPerson =>
-                        actionsByPerson.Actions.SelectMany(versionsByAction =>
-                            allPolicyVersions.All(policyVersion => versionsByAction.Contains(policyVersion))
-                                ? [(actionsByPerson.PersonId, versionsByAction.Key, null)]
-                                : versionsByAction.Select(version =>
-                                    (actionsByPerson.PersonId, versionsByAction.Key, version)
-                                )
+                ImmutableList<(Guid PersonId, string Key, string version)> simplifiedResult =
+                    allVersionMissingItemsByPerson
+                        .SelectMany(actionsByPerson =>
+                            actionsByPerson.Actions.SelectMany(versionsByAction =>
+                                allPolicyVersions.All(policyVersion => versionsByAction.Contains(policyVersion))
+                                    ? [(actionsByPerson.PersonId, versionsByAction.Key, null)]
+                                    : versionsByAction.Select(version =>
+                                        (actionsByPerson.PersonId, versionsByAction.Key, version)
+                                    )
+                            )
                         )
-                    )
-                    .ToImmutableList();
+                        .ToImmutableList();
 
                 return simplifiedResult;
             }
@@ -290,7 +287,7 @@ namespace CareTogether.Engines.PolicyEvaluation
         Onboarded = 4,
         Inactive = 5,
         Denied = 6,
-    };
+    }
 
     public sealed record ReferralStatus(
         ImmutableList<string> MissingIntakeRequirements,
@@ -320,7 +317,7 @@ namespace CareTogether.Engines.PolicyEvaluation
         Started,
         Ended,
         Cancelled,
-    };
+    }
 
     public interface IPolicyEvaluationEngine
     {

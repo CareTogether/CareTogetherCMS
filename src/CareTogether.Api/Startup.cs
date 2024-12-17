@@ -16,6 +16,7 @@ using CareTogether.Resources.Goals;
 using CareTogether.Resources.Notes;
 using CareTogether.Resources.Policies;
 using CareTogether.Resources.Referrals;
+using CareTogether.TestData;
 using CareTogether.Utilities.EventLog;
 using CareTogether.Utilities.FileStore;
 using CareTogether.Utilities.Identity;
@@ -40,19 +41,20 @@ using Microsoft.FeatureManagement;
 using Microsoft.FeatureManagement.FeatureFilters;
 using Microsoft.Identity.Web;
 using Microsoft.IdentityModel.Logging;
+using NSwag;
 
 namespace CareTogether.Api
 {
     public class Startup
     {
-        public IHostEnvironment HostEnvironment { get; }
-        public IConfiguration Configuration { get; }
-
         public Startup(IHostEnvironment hostEnvironment, IConfiguration configuration)
         {
             HostEnvironment = hostEnvironment;
             Configuration = configuration;
         }
+
+        public IHostEnvironment HostEnvironment { get; }
+        public IConfiguration Configuration { get; }
 
         public void ConfigureServices(IServiceCollection services)
         {
@@ -74,8 +76,8 @@ namespace CareTogether.Api
                 //      that no IMemoryCache already exists in the dependency injection container, but
                 //      NSwag injects an IMemoryCache instance of its own when generating the OpenAPI model.
                 //      If not for this conflict, we could just call services.AddLazyCache() and be done.
-                var memoryCache = new MemoryCache(Options.Create(new MemoryCacheOptions()));
-                var memoryCacheProvider = new MemoryCacheProvider(memoryCache);
+                MemoryCache memoryCache = new(Options.Create(new MemoryCacheOptions()));
+                MemoryCacheProvider memoryCacheProvider = new(memoryCache);
                 return new CachingService(memoryCacheProvider);
             });
 
@@ -87,80 +89,65 @@ namespace CareTogether.Api
             // Note that this only has an effect when running in Azure; the local (Azurite) emulated storage is always mutable.
             // Also note that we lock the blob storage service (API) version because Azurite occasionally lags behind in
             // support for the newest versions. This service version should be reviewed at least once a year to keep it current.
-            var blobClientOptions = new BlobClientOptions(BlobClientOptions.ServiceVersion.V2021_10_04);
-            var immutableBlobServiceClient = new BlobServiceClient(
-                Configuration["Persistence:ImmutableBlobStorageConnectionString"],
-                blobClientOptions
-            );
-            var mutableBlobServiceClient = new BlobServiceClient(
-                Configuration["Persistence:MutableBlobStorageConnectionString"],
-                blobClientOptions
-            );
+            BlobClientOptions blobClientOptions = new(BlobClientOptions.ServiceVersion.V2021_10_04);
+            BlobServiceClient immutableBlobServiceClient =
+                new(Configuration["Persistence:ImmutableBlobStorageConnectionString"], blobClientOptions);
+            BlobServiceClient mutableBlobServiceClient =
+                new(Configuration["Persistence:MutableBlobStorageConnectionString"], blobClientOptions);
 
             // Utility providers
-            var uploadsStore = new BlobFileStore(immutableBlobServiceClient, "Uploads");
+            BlobFileStore uploadsStore = new(immutableBlobServiceClient, "Uploads");
 
             // Data store services
-            var defaultMemoryCacheOptions = Options.Create(new MemoryCacheOptions());
-            var accountsEventLog = new AppendBlobEventLog<AccountEvent>(immutableBlobServiceClient, "AccountsEventLog");
-            var personAccessEventLog = new AppendBlobEventLog<PersonAccessEvent>(
-                immutableBlobServiceClient,
-                "PersonAccessEventLog"
-            );
-            var directoryEventLog = new AppendBlobEventLog<DirectoryEvent>(
-                immutableBlobServiceClient,
-                "DirectoryEventLog"
-            );
-            var goalsEventLog = new AppendBlobEventLog<GoalCommandExecutedEvent>(
-                immutableBlobServiceClient,
-                "GoalsEventLog"
-            );
-            var referralsEventLog = new AppendBlobEventLog<ReferralEvent>(
-                immutableBlobServiceClient,
-                "ReferralsEventLog"
-            );
-            var approvalsEventLog = new AppendBlobEventLog<ApprovalEvent>(
-                immutableBlobServiceClient,
-                "ApprovalsEventLog"
-            );
-            var notesEventLog = new AppendBlobEventLog<NotesEvent>(immutableBlobServiceClient, "NotesEventLog");
-            var communitiesEventLog = new AppendBlobEventLog<CommunityCommandExecutedEvent>(
-                immutableBlobServiceClient,
-                "CommunitiesEventLog"
-            );
+            IOptions<MemoryCacheOptions> defaultMemoryCacheOptions = Options.Create(new MemoryCacheOptions());
+            AppendBlobEventLog<AccountEvent> accountsEventLog = new(immutableBlobServiceClient, "AccountsEventLog");
+            AppendBlobEventLog<PersonAccessEvent> personAccessEventLog =
+                new(immutableBlobServiceClient, "PersonAccessEventLog");
+            AppendBlobEventLog<DirectoryEvent> directoryEventLog = new(immutableBlobServiceClient, "DirectoryEventLog");
+            AppendBlobEventLog<GoalCommandExecutedEvent> goalsEventLog =
+                new(immutableBlobServiceClient, "GoalsEventLog");
+            AppendBlobEventLog<ReferralEvent> referralsEventLog = new(immutableBlobServiceClient, "ReferralsEventLog");
+            AppendBlobEventLog<ApprovalEvent> approvalsEventLog = new(immutableBlobServiceClient, "ApprovalsEventLog");
+            AppendBlobEventLog<NotesEvent> notesEventLog = new(immutableBlobServiceClient, "NotesEventLog");
+            AppendBlobEventLog<CommunityCommandExecutedEvent> communitiesEventLog =
+                new(immutableBlobServiceClient, "CommunitiesEventLog");
 
-            var draftNotesStore = new JsonBlobObjectStore<string?>(
-                mutableBlobServiceClient,
-                "DraftNotes",
-                new MemoryCache(defaultMemoryCacheOptions),
-                TimeSpan.FromMinutes(30)
-            );
-            var configurationStore = new JsonBlobObjectStore<OrganizationConfiguration>(
-                immutableBlobServiceClient,
-                "Configuration",
-                new MemoryCache(defaultMemoryCacheOptions),
-                TimeSpan.FromMinutes(1)
-            );
-            var policiesStore = new JsonBlobObjectStore<EffectiveLocationPolicy>(
-                immutableBlobServiceClient,
-                "LocationPolicies",
-                new MemoryCache(defaultMemoryCacheOptions),
-                TimeSpan.FromMinutes(1)
-            );
-            var organizationSecretsStore = new JsonBlobObjectStore<OrganizationSecrets>(
-                immutableBlobServiceClient,
-                "Configuration",
-                new MemoryCache(defaultMemoryCacheOptions),
-                TimeSpan.FromMinutes(1)
-            );
+            JsonBlobObjectStore<string> draftNotesStore =
+                new(
+                    mutableBlobServiceClient,
+                    "DraftNotes",
+                    new MemoryCache(defaultMemoryCacheOptions),
+                    TimeSpan.FromMinutes(30)
+                );
+            JsonBlobObjectStore<OrganizationConfiguration> configurationStore =
+                new(
+                    immutableBlobServiceClient,
+                    "Configuration",
+                    new MemoryCache(defaultMemoryCacheOptions),
+                    TimeSpan.FromMinutes(1)
+                );
+            JsonBlobObjectStore<EffectiveLocationPolicy> policiesStore =
+                new(
+                    immutableBlobServiceClient,
+                    "LocationPolicies",
+                    new MemoryCache(defaultMemoryCacheOptions),
+                    TimeSpan.FromMinutes(1)
+                );
+            JsonBlobObjectStore<OrganizationSecrets> organizationSecretsStore =
+                new(
+                    immutableBlobServiceClient,
+                    "Configuration",
+                    new MemoryCache(defaultMemoryCacheOptions),
+                    TimeSpan.FromMinutes(1)
+                );
 
             if (Configuration["OpenApiGen"] != "true")
             {
                 // Reset and populate data in the test tenant for debugging. Note that this will not affect other tenants.
-                TestData.TestStorageHelper.ResetTestTenantData(immutableBlobServiceClient);
-                TestData.TestStorageHelper.ResetTestTenantData(mutableBlobServiceClient);
-                TestData
-                    .TestDataProvider.PopulateTestDataAsync(
+                TestStorageHelper.ResetTestTenantData(immutableBlobServiceClient);
+                TestStorageHelper.ResetTestTenantData(mutableBlobServiceClient);
+                TestDataProvider
+                    .PopulateTestDataAsync(
                         accountsEventLog,
                         personAccessEventLog,
                         directoryEventLog,
@@ -179,53 +166,54 @@ namespace CareTogether.Api
             }
 
             // Other utility services
-            var telephony = new PlivoTelephony(
-                authId: Configuration["Telephony:Plivo:AuthId"]!,
-                authToken: Configuration["Telephony:Plivo:AuthToken"]!
-            );
-            var identityProvider = new AzureAdB2cIdentityProvider(
-                Configuration["AzureAdB2C:TenantId"]!,
-                Configuration["AzureAdB2C:ClientId"]!,
-                Configuration["AzureAdB2C:ClientSecret"] ?? ""
-            );
+            PlivoTelephony telephony =
+                new(Configuration["Telephony:Plivo:AuthId"]!, Configuration["Telephony:Plivo:AuthToken"]!);
+            AzureAdB2cIdentityProvider identityProvider =
+                new(
+                    Configuration["AzureAdB2C:TenantId"]!,
+                    Configuration["AzureAdB2C:ClientId"]!,
+                    Configuration["AzureAdB2C:ClientSecret"] ?? ""
+                );
 
             // Resource services
-            var approvalsResource = new ApprovalsResource(approvalsEventLog);
-            var directoryResource = new DirectoryResource(directoryEventLog, uploadsStore);
-            var goalsResource = new GoalsResource(goalsEventLog);
-            var policiesResource = new PoliciesResource(configurationStore, policiesStore, organizationSecretsStore);
-            var accountsResource = new AccountsResource(accountsEventLog, personAccessEventLog);
-            var referralsResource = new ReferralsResource(referralsEventLog);
-            var notesResource = new NotesResource(notesEventLog, draftNotesStore);
-            var communitiesResource = new CommunitiesResource(communitiesEventLog, uploadsStore);
+            ApprovalsResource approvalsResource = new(approvalsEventLog);
+            DirectoryResource directoryResource = new(directoryEventLog, uploadsStore);
+            GoalsResource goalsResource = new(goalsEventLog);
+            PoliciesResource policiesResource = new(configurationStore, policiesStore, organizationSecretsStore);
+            AccountsResource accountsResource = new(accountsEventLog, personAccessEventLog);
+            ReferralsResource referralsResource = new(referralsEventLog);
+            NotesResource notesResource = new(notesEventLog, draftNotesStore);
+            CommunitiesResource communitiesResource = new(communitiesEventLog, uploadsStore);
 
             //TODO: If we want to be strict about conventions, this should have a manager intermediary for authz.
             services.AddSingleton<IPoliciesResource>(policiesResource);
             services.AddSingleton<IAccountsResource>(accountsResource);
 
             // Engine services
-            var authorizationEngine = new AuthorizationEngine(
-                policiesResource,
-                directoryResource,
-                referralsResource,
-                approvalsResource,
-                communitiesResource,
-                accountsResource
-            );
+            AuthorizationEngine authorizationEngine =
+                new(
+                    policiesResource,
+                    directoryResource,
+                    referralsResource,
+                    approvalsResource,
+                    communitiesResource,
+                    accountsResource
+                );
             services.AddSingleton<IAuthorizationEngine>(authorizationEngine); //TODO: Temporary workaround for UsersController
-            var policyEvaluationEngine = new PolicyEvaluationEngine(policiesResource);
+            PolicyEvaluationEngine policyEvaluationEngine = new(policiesResource);
 
             // Shared family info formatting logic used by all manager services
-            var combinedFamilyInfoFormatter = new CombinedFamilyInfoFormatter(
-                policyEvaluationEngine,
-                authorizationEngine,
-                approvalsResource,
-                referralsResource,
-                directoryResource,
-                notesResource,
-                policiesResource,
-                accountsResource
-            );
+            CombinedFamilyInfoFormatter combinedFamilyInfoFormatter =
+                new(
+                    policyEvaluationEngine,
+                    authorizationEngine,
+                    approvalsResource,
+                    referralsResource,
+                    directoryResource,
+                    notesResource,
+                    policiesResource,
+                    accountsResource
+                );
 
             // Manager services
             services.AddSingleton<ICommunicationsManager>(
@@ -270,7 +258,7 @@ namespace CareTogether.Api
                                     && context.Password == Configuration["Research:ApiKey"]
                                     && Guid.TryParse(
                                         Configuration["Research:OrganizationId"],
-                                        out var researchOrganizationId
+                                        out Guid researchOrganizationId
                                     )
                                 )
                                 {
@@ -290,7 +278,7 @@ namespace CareTogether.Api
                                     return;
                                 }
 
-                                if (!Guid.TryParse(context.Username, out var assertedOrganizationId))
+                                if (!Guid.TryParse(context.Username, out Guid assertedOrganizationId))
                                 {
                                     context.Fail("The username must be an organization ID in GUID format.");
                                     return;
@@ -299,9 +287,8 @@ namespace CareTogether.Api
                                 try
                                 {
                                     // Note that it may be possible to leak valid organization IDs here via a timing attack.
-                                    var organizationSecrets = await policiesResource.GetOrganizationSecretsAsync(
-                                        assertedOrganizationId
-                                    );
+                                    OrganizationSecrets organizationSecrets =
+                                        await policiesResource.GetOrganizationSecretsAsync(assertedOrganizationId);
                                     if (
                                         organizationSecrets.ApiKey?.Length >= 32
                                         && context.Password == organizationSecrets.ApiKey
@@ -309,7 +296,7 @@ namespace CareTogether.Api
                                     {
                                         context.Principal = new ClaimsPrincipal(
                                             new ClaimsIdentity(
-                                                new Claim[] { new Claim(Claims.OrganizationId, context.Username) },
+                                                new[] { new Claim(Claims.OrganizationId, context.Username) },
                                                 "API Key"
                                             )
                                         );
@@ -320,7 +307,6 @@ namespace CareTogether.Api
                                 catch { }
 
                                 context.Fail("The API key is invalid.");
-                                return;
                             },
                         };
                     }
@@ -354,11 +340,11 @@ namespace CareTogether.Api
                     .RequireAssertion(context =>
                         context.Resource is HttpContext httpContext
                         && (
-                            !httpContext.Request.RouteValues.TryGetValue("organizationId", out var orgId)
+                            !httpContext.Request.RouteValues.TryGetValue("organizationId", out object? orgId)
                             || context.User.HasClaim("organizationId", (string)orgId!)
                         )
                         && (
-                            !httpContext.Request.RouteValues.TryGetValue("locationId", out var locId)
+                            !httpContext.Request.RouteValues.TryGetValue("locationId", out object? locId)
                             || context.User.HasClaim("locationId", (string)locId!)
                         )
                     )
@@ -372,12 +358,12 @@ namespace CareTogether.Api
                     document.Info.Version = "v1";
                     document.Info.Title = "CareTogether CMS API";
                     document.Info.Description = "API for the CareTogether Community Management System";
-                    document.Info.Contact = new NSwag.OpenApiContact
+                    document.Info.Contact = new OpenApiContact
                     {
                         Name = "CareTogether CMS Team",
                         Url = "https://caretogether.io/",
                     };
-                    document.Info.License = new NSwag.OpenApiLicense
+                    document.Info.License = new OpenApiLicense
                     {
                         Name = "Use under AGPLv3",
                         Url = "https://www.gnu.org/licenses/agpl-3.0.en.html",

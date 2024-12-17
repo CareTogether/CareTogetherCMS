@@ -1,13 +1,13 @@
 ﻿using System;
 using System.Collections.Immutable;
 using System.Linq;
-using CareTogether.Resources;
 using CareTogether.Resources.Approvals;
 using CareTogether.Resources.Policies;
+using Timelines;
 
 namespace CareTogether.Engines.PolicyEvaluation
 {
-    internal static class IndividualApprovalCalculations
+    static class IndividualApprovalCalculations
     {
         internal static IndividualApprovalStatus CalculateIndividualApprovalStatus(
             ImmutableDictionary<string, VolunteerRolePolicy> volunteerRoles,
@@ -16,16 +16,17 @@ namespace CareTogether.Engines.PolicyEvaluation
             ImmutableList<RoleRemoval> roleRemovals
         )
         {
-            var allIndividualRoleApprovals = volunteerRoles.ToImmutableDictionary(
-                rolePolicy => rolePolicy.Key,
-                rolePolicy =>
-                    CalculateIndividualRoleApprovalStatus(
-                        rolePolicy.Value,
-                        completedRequirements,
-                        exemptedRequirements,
-                        roleRemovals.Where(x => x.RoleName == rolePolicy.Key).ToImmutableList()
-                    )
-            );
+            ImmutableDictionary<string, IndividualRoleApprovalStatus> allIndividualRoleApprovals =
+                volunteerRoles.ToImmutableDictionary(
+                    rolePolicy => rolePolicy.Key,
+                    rolePolicy =>
+                        CalculateIndividualRoleApprovalStatus(
+                            rolePolicy.Value,
+                            completedRequirements,
+                            exemptedRequirements,
+                            roleRemovals.Where(x => x.RoleName == rolePolicy.Key).ToImmutableList()
+                        )
+                );
 
             return new IndividualApprovalStatus(allIndividualRoleApprovals);
         }
@@ -37,7 +38,7 @@ namespace CareTogether.Engines.PolicyEvaluation
             ImmutableList<RoleRemoval> removalsOfThisRole
         )
         {
-            var roleVersionApprovals = rolePolicy
+            ImmutableList<IndividualRoleVersionApprovalStatus> roleVersionApprovals = rolePolicy
                 .PolicyVersions.Select(policyVersion =>
                     CalculateIndividualRoleVersionApprovalStatus(
                         policyVersion,
@@ -48,9 +49,10 @@ namespace CareTogether.Engines.PolicyEvaluation
                 )
                 .ToImmutableList();
 
-            var effectiveRoleApprovalStatus = SharedCalculations.CalculateEffectiveRoleApprovalStatus(
-                roleVersionApprovals.Select(rva => rva.Status).ToImmutableList()
-            );
+            DateOnlyTimeline<RoleApprovalStatus>? effectiveRoleApprovalStatus =
+                SharedCalculations.CalculateEffectiveRoleApprovalStatus(
+                    roleVersionApprovals.Select(rva => rva.Status).ToImmutableList()
+                );
 
             return new IndividualRoleApprovalStatus(effectiveRoleApprovalStatus, roleVersionApprovals);
         }
@@ -65,7 +67,7 @@ namespace CareTogether.Engines.PolicyEvaluation
             // For each requirement of the policy version for this role,
             // find the dates for which it was met or exempted. If there
             // are none, the resulting timeline will be 'null'.
-            var requirementCompletionStatus = policyVersion
+            ImmutableList<IndividualRoleRequirementCompletionStatus> requirementCompletionStatus = policyVersion
                 .Requirements.Select(requirement =>
                     CalculateIndividualRoleRequirementCompletionStatus(
                         requirement,
@@ -78,10 +80,11 @@ namespace CareTogether.Engines.PolicyEvaluation
 
             // Calculate the combined approval status timeline for this
             // role under this policy version.
-            var roleVersionApprovalStatus = SharedCalculations.CalculateRoleVersionApprovalStatus(
-                requirementCompletionStatus.Select(x => (x.Stage, x.WhenMet)).ToImmutableList(),
-                removalsOfThisRole
-            );
+            DateOnlyTimeline<RoleApprovalStatus>? roleVersionApprovalStatus =
+                SharedCalculations.CalculateRoleVersionApprovalStatus(
+                    requirementCompletionStatus.Select(x => (x.Stage, x.WhenMet)).ToImmutableList(),
+                    removalsOfThisRole
+                );
 
             return new IndividualRoleVersionApprovalStatus(
                 policyVersion.Version,
@@ -97,7 +100,7 @@ namespace CareTogether.Engines.PolicyEvaluation
             ImmutableList<Resources.ExemptedRequirementInfo> exemptedRequirements
         )
         {
-            var whenMet = SharedCalculations.FindRequirementApprovals(
+            DateOnlyTimeline? whenMet = SharedCalculations.FindRequirementApprovals(
                 requirement.ActionName,
                 policyVersionSupersededAtUtc,
                 completedRequirements,

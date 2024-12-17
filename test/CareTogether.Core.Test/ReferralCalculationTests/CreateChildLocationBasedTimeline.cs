@@ -14,7 +14,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
         [TestMethod]
         public void CreateTimelineWithOneGap()
         {
-            var result = ReferralCalculations.CreateChildLocationBasedTimeline(
+            DateOnlyTimeline? result = ReferralCalculations.CreateChildLocationBasedTimeline(
                 H.ChildLocationHistory(
                         (H.Id('0'), ChildLocationPlan.DaytimeChildCare, 1, 1),
                         (Guid.Empty, ChildLocationPlan.WithParent, 1, 12),
@@ -44,7 +44,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
         [TestMethod]
         public void CreateTimelineWithTwoGaps()
         {
-            var result = ReferralCalculations.CreateChildLocationBasedTimeline(
+            DateOnlyTimeline? result = ReferralCalculations.CreateChildLocationBasedTimeline(
                 H.ChildLocationHistory(
                         (H.Id('0'), ChildLocationPlan.DaytimeChildCare, 1, 1),
                         (Guid.Empty, ChildLocationPlan.WithParent, 1, 12),
@@ -80,7 +80,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
         [TestMethod]
         public void CreateTimelineWithTwoGapsFilteredByFamilyId()
         {
-            var result = ReferralCalculations.CreateChildLocationBasedTimeline(
+            DateOnlyTimeline? result = ReferralCalculations.CreateChildLocationBasedTimeline(
                 H.ChildLocationHistory(
                         (H.Id('0'), ChildLocationPlan.DaytimeChildCare, 1, 1),
                         (Guid.Empty, ChildLocationPlan.WithParent, 1, 12),
@@ -90,7 +90,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
                         (Guid.Empty, ChildLocationPlan.WithParent, 2, 5)
                     )
                     .ToImmutableList(),
-                filterToFamilyId: H.Id('0')
+                H.Id('0')
             );
 
             AssertEx.SequenceIs(
@@ -113,7 +113,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
         [TestMethod]
         public void CreateTimelineChildWithParentAtEnd()
         {
-            var result = ReferralCalculations.CreateChildLocationBasedTimeline(
+            DateOnlyTimeline? result = ReferralCalculations.CreateChildLocationBasedTimeline(
                 H.ChildLocationHistory(
                         (H.Id('0'), ChildLocationPlan.DaytimeChildCare, 1, 1),
                         (Guid.Empty, ChildLocationPlan.WithParent, 1, 12),

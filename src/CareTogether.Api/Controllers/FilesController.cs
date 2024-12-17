@@ -12,13 +12,11 @@ namespace CareTogether.Api.Controllers
     [Authorize(Policies.ForbidAnonymous, AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
     public class FilesController : ControllerBase //TODO: Merge this into RecordsController
     {
-        private readonly IRecordsManager recordsManager;
-
-        public sealed record DocumentUploadInfo(Guid DocumentId, Uri ValetUrl);
+        readonly IRecordsManager _RecordsManager;
 
         public FilesController(IRecordsManager recordsManager)
         {
-            this.recordsManager = recordsManager;
+            _RecordsManager = recordsManager;
         }
 
         [HttpGet("family/{familyId:guid}/{documentId:guid}")]
@@ -29,7 +27,7 @@ namespace CareTogether.Api.Controllers
             Guid documentId
         )
         {
-            var valetUrl = await recordsManager.GetFamilyDocumentReadValetUrl(
+            Uri? valetUrl = await _RecordsManager.GetFamilyDocumentReadValetUrl(
                 organizationId,
                 locationId,
                 User,
@@ -47,7 +45,7 @@ namespace CareTogether.Api.Controllers
             Guid documentId
         )
         {
-            var valetUrl = await recordsManager.GenerateFamilyDocumentUploadValetUrl(
+            Uri? valetUrl = await _RecordsManager.GenerateFamilyDocumentUploadValetUrl(
                 organizationId,
                 locationId,
                 User,
@@ -65,7 +63,7 @@ namespace CareTogether.Api.Controllers
             Guid documentId
         )
         {
-            var valetUrl = await recordsManager.GetCommunityDocumentReadValetUrl(
+            Uri? valetUrl = await _RecordsManager.GetCommunityDocumentReadValetUrl(
                 organizationId,
                 locationId,
                 User,
@@ -83,7 +81,7 @@ namespace CareTogether.Api.Controllers
             Guid documentId
         )
         {
-            var valetUrl = await recordsManager.GenerateCommunityDocumentUploadValetUrl(
+            Uri? valetUrl = await _RecordsManager.GenerateCommunityDocumentUploadValetUrl(
                 organizationId,
                 locationId,
                 User,
@@ -92,5 +90,7 @@ namespace CareTogether.Api.Controllers
             );
             return Ok(new DocumentUploadInfo(documentId, valetUrl));
         }
+
+        public sealed record DocumentUploadInfo(Guid DocumentId, Uri ValetUrl);
     }
 }

@@ -9,9 +9,9 @@ namespace CareTogether.Core.Test
         [TestMethod]
         public void TestImmutableListWithPredicate()
         {
-            var dut = ImmutableList<int>.Empty.Add(1).Add(2).Add(3).Add(4);
+            ImmutableList<int> dut = ImmutableList<int>.Empty.Add(1).Add(2).Add(3).Add(4);
 
-            var result = dut.With(5, x => x > 2);
+            ImmutableList<int> result = dut.With(5, x => x > 2);
 
             AssertEx.SequenceIs(result, 1, 2, 5, 5);
         }
@@ -19,11 +19,11 @@ namespace CareTogether.Core.Test
         [TestMethod]
         public void TestImmutableDictionaryGetValueOrEmptyListMatch()
         {
-            var dut = ImmutableDictionary<char, ImmutableList<int>>
+            ImmutableDictionary<char, ImmutableList<int>> dut = ImmutableDictionary<char, ImmutableList<int>>
                 .Empty.Add('a', ImmutableList<int>.Empty.Add(1).Add(2))
                 .Add('b', ImmutableList<int>.Empty.Add(3).Add(4));
 
-            var result = dut.GetValueOrEmptyList('b');
+            ImmutableList<int> result = dut.GetValueOrEmptyList('b');
 
             AssertEx.SequenceIs(result, 3, 4);
         }
@@ -31,11 +31,11 @@ namespace CareTogether.Core.Test
         [TestMethod]
         public void TestImmutableDictionaryGetValueOrEmptyListNoMatch()
         {
-            var dut = ImmutableDictionary<char, ImmutableList<int>>
+            ImmutableDictionary<char, ImmutableList<int>> dut = ImmutableDictionary<char, ImmutableList<int>>
                 .Empty.Add('a', ImmutableList<int>.Empty.Add(1).Add(2))
                 .Add('b', ImmutableList<int>.Empty.Add(3).Add(4));
 
-            var result = dut.GetValueOrEmptyList('c');
+            ImmutableList<int> result = dut.GetValueOrEmptyList('c');
 
             AssertEx.SequenceIs(result);
         }
@@ -43,9 +43,9 @@ namespace CareTogether.Core.Test
         [TestMethod]
         public void TestTakeWhilePlusOne()
         {
-            var dut = ImmutableList.Create([1, 2, 3, 4, 5]);
+            ImmutableList<int> dut = ImmutableList.Create([1, 2, 3, 4, 5]);
 
-            var result = dut.TakeWhilePlusOne(x => x < 3).ToImmutableList();
+            ImmutableList<int> result = dut.TakeWhilePlusOne(x => x < 3).ToImmutableList();
 
             AssertEx.SequenceIs(result, 1, 2, 3);
         }
@@ -53,9 +53,9 @@ namespace CareTogether.Core.Test
         [TestMethod]
         public void TestTakeWhilePlusOneWhenPredicateMatchesAll()
         {
-            var dut = ImmutableList.Create([1, 2, 3]);
+            ImmutableList<int> dut = ImmutableList.Create([1, 2, 3]);
 
-            var result = dut.TakeWhilePlusOne(x => x < 4).ToImmutableList();
+            ImmutableList<int> result = dut.TakeWhilePlusOne(x => x < 4).ToImmutableList();
 
             AssertEx.SequenceIs(result, 1, 2, 3);
         }

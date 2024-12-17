@@ -1,5 +1,4 @@
-﻿using System;
-using System.Linq;
+﻿using System.Linq;
 using CareTogether.Engines.PolicyEvaluation;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Timelines;
@@ -13,7 +12,7 @@ namespace CareTogether.Core.Test.ApprovalCalculationTests
         [TestMethod]
         public void EmptyInputReturnsNull()
         {
-            var result = SharedCalculations.CalculateEffectiveRoleApprovalStatus([]);
+            DateOnlyTimeline<RoleApprovalStatus>? result = SharedCalculations.CalculateEffectiveRoleApprovalStatus([]);
 
             Assert.IsNull(result);
         }
@@ -21,7 +20,9 @@ namespace CareTogether.Core.Test.ApprovalCalculationTests
         [TestMethod]
         public void NullInputsReturnsNull()
         {
-            var result = SharedCalculations.CalculateEffectiveRoleApprovalStatus([null, null]);
+            DateOnlyTimeline<RoleApprovalStatus>? result = SharedCalculations.CalculateEffectiveRoleApprovalStatus(
+                [null, null]
+            );
 
             Assert.IsNull(result);
         }
@@ -29,7 +30,7 @@ namespace CareTogether.Core.Test.ApprovalCalculationTests
         [TestMethod]
         public void SingleVersionApprovalReturnsItUnmodified()
         {
-            var result = SharedCalculations.CalculateEffectiveRoleApprovalStatus(
+            DateOnlyTimeline<RoleApprovalStatus>? result = SharedCalculations.CalculateEffectiveRoleApprovalStatus(
                 [
                     new DateOnlyTimeline<RoleApprovalStatus>(
                         [
@@ -62,7 +63,7 @@ namespace CareTogether.Core.Test.ApprovalCalculationTests
         [TestMethod]
         public void SingleVersionApprovalWithNullsReturnsApprovalUnmodified()
         {
-            var result = SharedCalculations.CalculateEffectiveRoleApprovalStatus(
+            DateOnlyTimeline<RoleApprovalStatus>? result = SharedCalculations.CalculateEffectiveRoleApprovalStatus(
                 [
                     new DateOnlyTimeline<RoleApprovalStatus>(
                         [
@@ -97,7 +98,7 @@ namespace CareTogether.Core.Test.ApprovalCalculationTests
         [TestMethod]
         public void ProspectiveTrumpsNullAndMerges()
         {
-            var result = SharedCalculations.CalculateEffectiveRoleApprovalStatus(
+            DateOnlyTimeline<RoleApprovalStatus>? result = SharedCalculations.CalculateEffectiveRoleApprovalStatus(
                 [
                     new DateOnlyTimeline<RoleApprovalStatus>([H.DR(5, 10, RoleApprovalStatus.Prospective)]),
                     new DateOnlyTimeline<RoleApprovalStatus>([H.DR(11, 20, RoleApprovalStatus.Prospective)]),
@@ -112,7 +113,7 @@ namespace CareTogether.Core.Test.ApprovalCalculationTests
         [TestMethod]
         public void ApprovedTrumpsProspectiveAndExpiredAndNullAndMerges()
         {
-            var result = SharedCalculations.CalculateEffectiveRoleApprovalStatus(
+            DateOnlyTimeline<RoleApprovalStatus>? result = SharedCalculations.CalculateEffectiveRoleApprovalStatus(
                 [
                     new DateOnlyTimeline<RoleApprovalStatus>([H.DR(1, 20, RoleApprovalStatus.Prospective)]),
                     new DateOnlyTimeline<RoleApprovalStatus>(
@@ -144,7 +145,7 @@ namespace CareTogether.Core.Test.ApprovalCalculationTests
         [TestMethod]
         public void OnboardedTrumpsAllAndMerges()
         {
-            var result = SharedCalculations.CalculateEffectiveRoleApprovalStatus(
+            DateOnlyTimeline<RoleApprovalStatus>? result = SharedCalculations.CalculateEffectiveRoleApprovalStatus(
                 [
                     new DateOnlyTimeline<RoleApprovalStatus>(
                         [
