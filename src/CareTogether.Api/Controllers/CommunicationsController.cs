@@ -1,38 +1,50 @@
-﻿using CareTogether.Managers.Communications;
+﻿using System;
+using System.Collections.Immutable;
+using System.Threading.Tasks;
+using CareTogether.Managers.Communications;
 using CareTogether.Utilities.Telephony;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using System;
-using System.Collections.Immutable;
-using System.Threading.Tasks;
 
 namespace CareTogether.Api.Controllers
 {
     public sealed record SendSmsToFamilyPrimaryContactsRequest(
-        ImmutableList<Guid> FamilyIds, string SourceNumber, string Message);
+        ImmutableList<Guid> FamilyIds,
+        string SourceNumber,
+        string Message
+    );
 
     [ApiController]
     [Route("/api/{organizationId:guid}/{locationId:guid}/[controller]")]
     [Authorize(Policies.ForbidAnonymous, AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
     public class CommunicationsController : ControllerBase
     {
-        private readonly ICommunicationsManager communicationsManager;
+        readonly ICommunicationsManager _CommunicationsManager;
 
-        public CommunicationsController(
-            ICommunicationsManager communicationsManager)
+        public CommunicationsController(ICommunicationsManager communicationsManager)
         {
-            this.communicationsManager = communicationsManager;
+            _CommunicationsManager = communicationsManager;
         }
 
-
         [HttpPost("sendSmsToFamilyPrimaryContacts")]
-        public async Task<ActionResult<ImmutableList<(Guid FamilyId, SmsMessageResult? Result)>>>
-            SendSmsToFamilyPrimaryContactsAsync(Guid organizationId, Guid locationId,
-            [FromBody] SendSmsToFamilyPrimaryContactsRequest request)
+        public async Task<
+            ActionResult<ImmutableList<(Guid FamilyId, SmsMessageResult? Result)>>
+        > SendSmsToFamilyPrimaryContactsAsync(
+            Guid organizationId,
+            Guid locationId,
+            [FromBody] SendSmsToFamilyPrimaryContactsRequest request
+        )
         {
-            var result = await communicationsManager.SendSmsToFamilyPrimaryContactsAsync(organizationId, locationId,
-                User, request.FamilyIds, request.SourceNumber, request.Message);
+            ImmutableList<(Guid FamilyId, SmsMessageResult? Result)>? result =
+                await _CommunicationsManager.SendSmsToFamilyPrimaryContactsAsync(
+                    organizationId,
+                    locationId,
+                    User,
+                    request.FamilyIds,
+                    request.SourceNumber,
+                    request.Message
+                );
             return Ok(result);
         }
     }
