@@ -61,7 +61,7 @@ namespace CareTogether.Engines.PolicyEvaluation
 
             LocationConfiguration? location = config.Locations.Find(item => item.Id == locationId);
             TimeZoneInfo locationTimeZone =
-                location?.timeZone ?? TimeZoneInfo.FindSystemTimeZoneById("America/New_York");
+                location?.TimeZone ?? TimeZoneInfo.FindSystemTimeZoneById("America/New_York");
 
             ReferralEntry referralEntryForCalculation = ToReferralEntryForCalculation(referralEntry, locationTimeZone);
 

@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
 using System.Threading.Tasks;
-using CareTogether.Resources;
 using CareTogether.Resources.Directory;
 using CareTogether.Utilities.FileStore;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -14,33 +13,35 @@ namespace CareTogether.Core.Test
     [TestClass]
     public class DirectoryResourceTest
     {
-        private static Guid Id(char x) => Guid.Parse("xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx".Replace('x', x));
-
-        static readonly Guid guid0 = Id('0');
-        static readonly Guid guid1 = Id('1');
-        static readonly Guid guid2 = Id('2');
-        static readonly Guid guid3 = Id('3');
-        static readonly Guid guid4 = Id('4');
-        static readonly Guid guid5 = Id('5');
-        static readonly Guid guid6 = Id('6');
-        static readonly Guid guid7 = Id('7');
+        static readonly Guid _Guid0 = Id('0');
+        static readonly Guid _Guid1 = Id('1');
+        static readonly Guid _Guid2 = Id('2');
+        static readonly Guid _Guid3 = Id('3');
+        static readonly Guid _Guid4 = Id('4');
+        static readonly Guid _Guid5 = Id('5');
+        static readonly Guid _Guid6 = Id('6');
+        static readonly Guid _Guid7 = Id('7');
 
 #nullable disable
-        MemoryEventLog<DirectoryEvent> events;
+        MemoryEventLog<DirectoryEvent> _Events;
 
 #nullable restore
+        static Guid Id(char x)
+        {
+            return Guid.Parse("xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx".Replace('x', x));
+        }
 
         [TestInitialize]
         public async Task TestInitialize()
         {
-            events = new MemoryEventLog<DirectoryEvent>();
+            _Events = new MemoryEventLog<DirectoryEvent>();
             foreach (
-                var (domainEvent, index) in EventSequence(
+                (DirectoryEvent domainEvent, long index) in EventSequence(
                     new PersonCommandExecuted(
-                        guid0,
+                        _Guid0,
                         new DateTime(2021, 7, 1),
                         new CreatePerson(
-                            guid1,
+                            _Guid1,
                             "John",
                             "Doe",
                             Gender.Male,
@@ -57,10 +58,10 @@ namespace CareTogether.Core.Test
                         )
                     ),
                     new PersonCommandExecuted(
-                        guid0,
+                        _Guid0,
                         new DateTime(2021, 7, 1),
                         new CreatePerson(
-                            guid2,
+                            _Guid2,
                             "Jane",
                             "Smith",
                             Gender.Female,
@@ -77,43 +78,43 @@ namespace CareTogether.Core.Test
                         )
                     ),
                     new PersonCommandExecuted(
-                        guid0,
+                        _Guid0,
                         new DateTime(2021, 7, 1),
-                        new UpdatePersonName(guid2, "Jane", "Doe")
+                        new UpdatePersonName(_Guid2, "Jane", "Doe")
                     ),
                     new PersonCommandExecuted(
-                        guid0,
+                        _Guid0,
                         new DateTime(2021, 7, 1),
-                        new UpdatePersonAge(guid1, new ExactAge(new DateTime(1975, 1, 1)))
+                        new UpdatePersonAge(_Guid1, new ExactAge(new DateTime(1975, 1, 1)))
                     ),
                     new PersonCommandExecuted(
-                        guid0,
+                        _Guid0,
                         new DateTime(2021, 7, 1),
-                        new UpdatePersonAge(guid2, new ExactAge(new DateTime(1979, 7, 1)))
+                        new UpdatePersonAge(_Guid2, new ExactAge(new DateTime(1979, 7, 1)))
                     ),
                     new FamilyCommandExecuted(
-                        guid0,
+                        _Guid0,
                         new DateTime(2021, 7, 1),
                         new CreateFamily(
-                            guid5,
-                            guid1,
+                            _Guid5,
+                            _Guid1,
                             ImmutableList<(Guid, FamilyAdultRelationshipInfo)>.Empty.Add(
-                                (guid1, new FamilyAdultRelationshipInfo("Dad", true))
+                                (_Guid1, new FamilyAdultRelationshipInfo("Dad", true))
                             ),
                             ImmutableList<Guid>.Empty,
                             ImmutableList<CustodialRelationship>.Empty
                         )
                     ),
                     new FamilyCommandExecuted(
-                        guid0,
+                        _Guid0,
                         new DateTime(2021, 7, 1),
-                        new AddAdultToFamily(guid5, guid2, new FamilyAdultRelationshipInfo("Mom", true))
+                        new AddAdultToFamily(_Guid5, _Guid2, new FamilyAdultRelationshipInfo("Mom", true))
                     ),
                     new PersonCommandExecuted(
-                        guid0,
+                        _Guid0,
                         new DateTime(2021, 7, 1),
                         new CreatePerson(
-                            guid6,
+                            _Guid6,
                             "Eric",
                             "Doe",
                             Gender.Male,
@@ -130,69 +131,83 @@ namespace CareTogether.Core.Test
                         )
                     ),
                     new FamilyCommandExecuted(
-                        guid0,
+                        _Guid0,
                         new DateTime(2021, 7, 1),
                         new AddChildToFamily(
-                            guid5,
-                            guid6,
+                            _Guid5,
+                            _Guid6,
                             ImmutableList<CustodialRelationship>
                                 .Empty.Add(
-                                    new CustodialRelationship(guid6, guid1, CustodialRelationshipType.ParentWithCustody)
+                                    new CustodialRelationship(
+                                        _Guid6,
+                                        _Guid1,
+                                        CustodialRelationshipType.ParentWithCustody
+                                    )
                                 )
                                 .Add(
-                                    new CustodialRelationship(guid6, guid2, CustodialRelationshipType.ParentWithCustody)
+                                    new CustodialRelationship(
+                                        _Guid6,
+                                        _Guid2,
+                                        CustodialRelationshipType.ParentWithCustody
+                                    )
                                 )
                         )
                     ),
                     new FamilyCommandExecuted(
-                        guid0,
+                        _Guid0,
                         new DateTime(2021, 7, 1),
-                        new UpdateAdultRelationshipToFamily(guid5, guid1, new FamilyAdultRelationshipInfo("Dad", false))
+                        new UpdateAdultRelationshipToFamily(
+                            _Guid5,
+                            _Guid1,
+                            new FamilyAdultRelationshipInfo("Dad", false)
+                        )
                     ),
                     new FamilyCommandExecuted(
-                        guid0,
+                        _Guid0,
                         new DateTime(2021, 7, 1),
-                        new RemoveCustodialRelationship(guid5, guid6, guid1)
+                        new RemoveCustodialRelationship(_Guid5, _Guid6, _Guid1)
                     ),
                     new FamilyCommandExecuted(
-                        guid0,
+                        _Guid0,
                         new DateTime(2021, 7, 1),
                         new UpdateCustodialRelationshipType(
-                            guid5,
-                            guid6,
-                            guid2,
+                            _Guid5,
+                            _Guid6,
+                            _Guid2,
                             CustodialRelationshipType.ParentWithCourtAppointedCustody
                         )
                     ),
                     new FamilyCommandExecuted(
-                        guid0,
+                        _Guid0,
                         new DateTime(2021, 7, 1),
                         new AddCustodialRelationship(
-                            guid5,
+                            _Guid5,
                             new CustodialRelationship(
-                                guid6,
-                                guid1,
+                                _Guid6,
+                                _Guid1,
                                 CustodialRelationshipType.ParentWithCourtAppointedCustody
                             )
                         )
                     )
                 )
             )
-                await events.AppendEventAsync(guid1, guid2, domainEvent, index);
+            {
+                await _Events.AppendEventAsync(_Guid1, _Guid2, domainEvent, index);
+            }
         }
 
         [TestCleanup]
         public void TestCleanup()
         {
-            events = null;
+            _Events = null;
         }
 
         [TestMethod]
         public async Task TestListPeople()
         {
-            var dut = new DirectoryResource(events, Mock.Of<IFileStore>());
+            DirectoryResource dut = new(_Events, Mock.Of<IFileStore>());
 
-            var people = await dut.ListPeopleAsync(guid1, guid2);
+            ImmutableList<Person> people = await dut.ListPeopleAsync(_Guid1, _Guid2);
 
             Assert.AreEqual(3, people.Count);
         }
@@ -200,10 +215,10 @@ namespace CareTogether.Core.Test
         [TestMethod]
         public async Task TestListFamilies()
         {
-            var dut = new DirectoryResource(events, Mock.Of<IFileStore>());
+            DirectoryResource dut = new(_Events, Mock.Of<IFileStore>());
 
-            var families1 = await dut.ListFamiliesAsync(guid1, guid2);
-            var families2 = await dut.ListFamiliesAsync(guid2, guid1);
+            ImmutableList<Family> families1 = await dut.ListFamiliesAsync(_Guid1, _Guid2);
+            ImmutableList<Family> families2 = await dut.ListFamiliesAsync(_Guid2, _Guid1);
 
             Assert.AreEqual(1, families1.Count);
             Assert.AreEqual(0, families2.Count);
@@ -212,36 +227,36 @@ namespace CareTogether.Core.Test
         [TestMethod]
         public async Task TestExecutePersonCommand()
         {
-            var dut = new DirectoryResource(events, Mock.Of<IFileStore>());
+            DirectoryResource dut = new(_Events, Mock.Of<IFileStore>());
 
-            var result1 = await dut.ExecutePersonCommandAsync(
-                guid1,
-                guid2,
-                new UpdatePersonAge(guid6, new ExactAge(new DateTime(2021, 7, 1))),
-                guid0
+            Person result1 = await dut.ExecutePersonCommandAsync(
+                _Guid1,
+                _Guid2,
+                new UpdatePersonAge(_Guid6, new ExactAge(new DateTime(2021, 7, 1))),
+                _Guid0
             );
             await Assert.ThrowsExceptionAsync<KeyNotFoundException>(
                 () =>
                     dut.ExecutePersonCommandAsync(
-                        guid1,
-                        guid2,
-                        new UpdatePersonAge(guid5, new ExactAge(new DateTime(2021, 7, 2))),
-                        guid0
+                        _Guid1,
+                        _Guid2,
+                        new UpdatePersonAge(_Guid5, new ExactAge(new DateTime(2021, 7, 2))),
+                        _Guid0
                     )
             );
             await Assert.ThrowsExceptionAsync<KeyNotFoundException>(
                 () =>
                     dut.ExecutePersonCommandAsync(
-                        guid2,
-                        guid1,
-                        new UpdatePersonAge(guid6, new ExactAge(new DateTime(2021, 7, 3))),
-                        guid0
+                        _Guid2,
+                        _Guid1,
+                        new UpdatePersonAge(_Guid6, new ExactAge(new DateTime(2021, 7, 3))),
+                        _Guid0
                     )
             );
 
             Assert.AreEqual(
                 new Person(
-                    guid6,
+                    _Guid6,
                     true,
                     "Eric",
                     "Doe",
@@ -261,7 +276,9 @@ namespace CareTogether.Core.Test
             );
         }
 
-        private static IEnumerable<(DirectoryEvent, long)> EventSequence(params DirectoryEvent[] events) =>
-            events.Select((e, i) => (e, (long)i + 1));
+        static IEnumerable<(DirectoryEvent, long)> EventSequence(params DirectoryEvent[] events)
+        {
+            return events.Select((e, i) => (e, (long)i + 1));
+        }
     }
 }

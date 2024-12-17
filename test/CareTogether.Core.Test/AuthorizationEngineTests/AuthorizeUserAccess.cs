@@ -22,44 +22,49 @@ namespace CareTogether.Core.Test.AuthorizationEngineTests
     [TestClass]
     public class AuthorizeUserAccess
     {
-        private static Guid Id(char x) => Guid.Parse("xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx".Replace('x', x));
+        static readonly Guid _Guid0 = Id('0');
+        static readonly Guid _Guid1 = Id('1');
+        static readonly Guid _Guid2 = Id('2');
+        static readonly Guid _Guid3 = Id('3');
+        static readonly Guid _Guid4 = Id('4');
+        static readonly Guid _Guid5 = Id('5');
 
-        static readonly Guid guid0 = Id('0');
-        static readonly Guid guid1 = Id('1');
-        static readonly Guid guid2 = Id('2');
-        static readonly Guid guid3 = Id('3');
-        static readonly Guid guid4 = Id('4');
-        static readonly Guid guid5 = Id('5');
+        static readonly Permission[] _AllPermissions = Enum.GetValues<Permission>();
 
-        private static ClaimsPrincipal PersonUserWithRoles(Guid personId, params string[] roles) =>
-            new(
+        AuthorizationEngine? _Dut;
+
+        static Guid Id(char x)
+        {
+            return Guid.Parse("xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx".Replace('x', x));
+        }
+
+        static ClaimsPrincipal PersonUserWithRoles(Guid personId, params string[] roles)
+        {
+            return new ClaimsPrincipal(
                 new ClaimsIdentity(
-                    new Claim[] { new Claim(Claims.PersonId.ToString(), personId.ToString()) }.Concat(
+                    new[] { new Claim(Claims.PersonId.ToString(), personId.ToString()) }.Concat(
                         roles.Select(role => new Claim(ClaimsIdentity.DefaultRoleClaimType, role.ToString()))
                     ),
-                    $"{guid1}:{guid2}"
+                    $"{_Guid1}:{_Guid2}"
                 )
             );
-
-        private static Permission[] allPermissions = Enum.GetValues<Permission>();
-
-        private AuthorizationEngine? dut;
+        }
 
         [TestInitialize]
         public async Task TestInitializeAsync()
         {
-            var accountsEventLog = new MemoryEventLog<AccountEvent>();
-            var personAccessEventLog = new MemoryEventLog<PersonAccessEvent>();
-            var directoryEventLog = new MemoryEventLog<DirectoryEvent>();
-            var goalsEventLog = new MemoryEventLog<GoalCommandExecutedEvent>();
-            var referralsEventLog = new MemoryEventLog<ReferralEvent>();
-            var approvalsEventLog = new MemoryEventLog<ApprovalEvent>();
-            var notesEventLog = new MemoryEventLog<NotesEvent>();
-            var communitiesEventLog = new MemoryEventLog<CommunityCommandExecutedEvent>();
-            var draftNotesStore = new MemoryObjectStore<string?>();
-            var configurationStore = new MemoryObjectStore<OrganizationConfiguration>();
-            var policiesStore = new MemoryObjectStore<EffectiveLocationPolicy>();
-            var organizationSecretsStore = new MemoryObjectStore<OrganizationSecrets>();
+            MemoryEventLog<AccountEvent> accountsEventLog = new();
+            MemoryEventLog<PersonAccessEvent> personAccessEventLog = new();
+            MemoryEventLog<DirectoryEvent> directoryEventLog = new();
+            MemoryEventLog<GoalCommandExecutedEvent> goalsEventLog = new();
+            MemoryEventLog<ReferralEvent> referralsEventLog = new();
+            MemoryEventLog<ApprovalEvent> approvalsEventLog = new();
+            MemoryEventLog<NotesEvent> notesEventLog = new();
+            MemoryEventLog<CommunityCommandExecutedEvent> communitiesEventLog = new();
+            MemoryObjectStore<string?> draftNotesStore = new();
+            MemoryObjectStore<OrganizationConfiguration> configurationStore = new();
+            MemoryObjectStore<EffectiveLocationPolicy> policiesStore = new();
+            MemoryObjectStore<OrganizationSecrets> organizationSecretsStore = new();
 
             await TestDataProvider.PopulateTestDataAsync(
                 accountsEventLog,
@@ -74,17 +79,17 @@ namespace CareTogether.Core.Test.AuthorizationEngineTests
                 configurationStore,
                 policiesStore,
                 organizationSecretsStore,
-                testSourceSmsPhoneNumber: null
+                null
             );
 
-            var directoryResource = new DirectoryResource(directoryEventLog, Mock.Of<IFileStore>());
-            var policiesResource = new PoliciesResource(configurationStore, policiesStore, organizationSecretsStore);
-            var referralsResource = new ReferralsResource(referralsEventLog);
-            var approvalsResource = new ApprovalsResource(approvalsEventLog);
-            var communitiesResource = new CommunitiesResource(communitiesEventLog, Mock.Of<IFileStore>());
-            var accountsResource = new AccountsResource(accountsEventLog, personAccessEventLog);
+            DirectoryResource directoryResource = new(directoryEventLog, Mock.Of<IFileStore>());
+            PoliciesResource policiesResource = new(configurationStore, policiesStore, organizationSecretsStore);
+            ReferralsResource referralsResource = new(referralsEventLog);
+            ApprovalsResource approvalsResource = new(approvalsEventLog);
+            CommunitiesResource communitiesResource = new(communitiesEventLog, Mock.Of<IFileStore>());
+            AccountsResource accountsResource = new(accountsEventLog, personAccessEventLog);
 
-            dut = new AuthorizationEngine(
+            _Dut = new AuthorizationEngine(
                 policiesResource,
                 directoryResource,
                 referralsResource,
@@ -123,7 +128,7 @@ namespace CareTogether.Core.Test.AuthorizationEngineTests
             int expectedCommunity2
         )
         {
-            var user = PersonUserWithRoles(Id(personId));
+            ClaimsPrincipal user = PersonUserWithRoles(Id(personId));
             await EvaluateAccess(
                 user,
                 personId,
@@ -167,7 +172,7 @@ namespace CareTogether.Core.Test.AuthorizationEngineTests
             int expectedCommunity2
         )
         {
-            var user = PersonUserWithRoles(Id(personId), "OrganizationAdministrator");
+            ClaimsPrincipal user = PersonUserWithRoles(Id(personId), "OrganizationAdministrator");
             await EvaluateAccess(
                 user,
                 personId,
@@ -211,7 +216,7 @@ namespace CareTogether.Core.Test.AuthorizationEngineTests
             int expectedCommunity2
         )
         {
-            var user = PersonUserWithRoles(Id(personId), "Volunteer");
+            ClaimsPrincipal user = PersonUserWithRoles(Id(personId), "Volunteer");
             await EvaluateAccess(
                 user,
                 personId,
@@ -255,7 +260,7 @@ namespace CareTogether.Core.Test.AuthorizationEngineTests
             int expectedCommunity2
         )
         {
-            var user = PersonUserWithRoles(Id(personId), "OrganizationAdministrator", "Volunteer");
+            ClaimsPrincipal user = PersonUserWithRoles(Id(personId), "OrganizationAdministrator", "Volunteer");
             await EvaluateAccess(
                 user,
                 personId,
@@ -270,7 +275,7 @@ namespace CareTogether.Core.Test.AuthorizationEngineTests
             );
         }
 
-        private async Task EvaluateAccess(
+        async Task EvaluateAccess(
             ClaimsPrincipal user,
             char personId,
             int expected0,
@@ -286,57 +291,57 @@ namespace CareTogether.Core.Test.AuthorizationEngineTests
             static void PrintResults(string header, ImmutableList<Permission> result)
             {
                 Console.WriteLine(
-                    $"{header}: {result.Count}\t{string.Join(", ", result.Select(r => Enum.GetName<Permission>(r)))}"
+                    $"{header}: {result.Count}\t{string.Join(", ", result.Select(r => Enum.GetName(r)))}"
                 );
             }
 
-            var result0 = await dut!.AuthorizeUserAccessAsync(
-                guid1,
-                guid2,
+            ImmutableList<Permission> result0 = await _Dut!.AuthorizeUserAccessAsync(
+                _Guid1,
+                _Guid2,
                 user,
-                new FamilyAuthorizationContext(guid0)
+                new FamilyAuthorizationContext(_Guid0)
             );
-            var result1 = await dut!.AuthorizeUserAccessAsync(
-                guid1,
-                guid2,
+            ImmutableList<Permission> result1 = await _Dut!.AuthorizeUserAccessAsync(
+                _Guid1,
+                _Guid2,
                 user,
-                new FamilyAuthorizationContext(guid1)
+                new FamilyAuthorizationContext(_Guid1)
             );
-            var result2 = await dut!.AuthorizeUserAccessAsync(
-                guid1,
-                guid2,
+            ImmutableList<Permission> result2 = await _Dut!.AuthorizeUserAccessAsync(
+                _Guid1,
+                _Guid2,
                 user,
-                new FamilyAuthorizationContext(guid2)
+                new FamilyAuthorizationContext(_Guid2)
             );
-            var result3 = await dut!.AuthorizeUserAccessAsync(
-                guid1,
-                guid2,
+            ImmutableList<Permission> result3 = await _Dut!.AuthorizeUserAccessAsync(
+                _Guid1,
+                _Guid2,
                 user,
-                new FamilyAuthorizationContext(guid3)
+                new FamilyAuthorizationContext(_Guid3)
             );
-            var result4 = await dut!.AuthorizeUserAccessAsync(
-                guid1,
-                guid2,
+            ImmutableList<Permission> result4 = await _Dut!.AuthorizeUserAccessAsync(
+                _Guid1,
+                _Guid2,
                 user,
-                new FamilyAuthorizationContext(guid4)
+                new FamilyAuthorizationContext(_Guid4)
             );
-            var result5 = await dut!.AuthorizeUserAccessAsync(
-                guid1,
-                guid2,
+            ImmutableList<Permission> result5 = await _Dut!.AuthorizeUserAccessAsync(
+                _Guid1,
+                _Guid2,
                 user,
-                new FamilyAuthorizationContext(guid5)
+                new FamilyAuthorizationContext(_Guid5)
             );
-            var resultCommunity1 = await dut!.AuthorizeUserAccessAsync(
-                guid1,
-                guid2,
+            ImmutableList<Permission> resultCommunity1 = await _Dut!.AuthorizeUserAccessAsync(
+                _Guid1,
+                _Guid2,
                 user,
-                new CommunityAuthorizationContext(guid1)
+                new CommunityAuthorizationContext(_Guid1)
             );
-            var resultCommunity2 = await dut!.AuthorizeUserAccessAsync(
-                guid1,
-                guid2,
+            ImmutableList<Permission> resultCommunity2 = await _Dut!.AuthorizeUserAccessAsync(
+                _Guid1,
+                _Guid2,
                 user,
-                new CommunityAuthorizationContext(guid2)
+                new CommunityAuthorizationContext(_Guid2)
             );
 
             PrintResults($"Person '{personId}' -> Family '0'", result0);
@@ -348,7 +353,10 @@ namespace CareTogether.Core.Test.AuthorizationEngineTests
             PrintResults($"Person '{personId}' -> Community '1'", resultCommunity1);
             PrintResults($"Person '{personId}' -> Community '2'", resultCommunity2);
 
-            int X(int expected) => expected == -1 ? allPermissions.Length : expected;
+            int X(int expected)
+            {
+                return expected == -1 ? _AllPermissions.Length : expected;
+            }
 
             Assert.AreEqual(
                 X(expected0),

@@ -19,7 +19,7 @@ namespace CareTogether.Resources.Policies
         ImmutableList<string> AdultFamilyRelationships,
         ImmutableList<string>? ArrangementReasons,
         ImmutableList<SourcePhoneNumberConfiguration> SmsSourcePhoneNumbers,
-        TimeZoneInfo? timeZone = null
+        TimeZoneInfo? TimeZone = null
     );
 
     public sealed record SourcePhoneNumberConfiguration(string SourcePhoneNumber, string Description);
@@ -33,37 +33,37 @@ namespace CareTogether.Resources.Policies
     public sealed record ContextualPermissionSet(PermissionContext Context, ImmutableList<Permission> Permissions);
 
     [JsonHierarchyBase]
-    public abstract partial record PermissionContext();
+    public abstract partial record PermissionContext;
 
-    public sealed record GlobalPermissionContext() : PermissionContext();
+    public sealed record GlobalPermissionContext : PermissionContext;
 
-    public sealed record OwnFamilyPermissionContext() : PermissionContext();
+    public sealed record OwnFamilyPermissionContext : PermissionContext;
 
-    public sealed record AllVolunteerFamiliesPermissionContext() : PermissionContext();
+    public sealed record AllVolunteerFamiliesPermissionContext : PermissionContext;
 
-    public sealed record AllPartneringFamiliesPermissionContext() : PermissionContext();
+    public sealed record AllPartneringFamiliesPermissionContext : PermissionContext;
 
     public sealed record AssignedFunctionsInReferralPartneringFamilyPermissionContext(
         bool? WhenReferralIsOpen,
         ImmutableList<string>? WhenOwnFunctionIsIn
-    ) : PermissionContext();
+    ) : PermissionContext;
 
     public sealed record OwnReferralAssigneeFamiliesPermissionContext(
         bool? WhenReferralIsOpen,
         ImmutableList<string>? WhenAssigneeFunctionIsIn
-    ) : PermissionContext();
+    ) : PermissionContext;
 
     public sealed record AssignedFunctionsInReferralCoAssigneeFamiliesPermissionContext(
         bool? WhenReferralIsOpen,
         ImmutableList<string>? WhenOwnFunctionIsIn,
         ImmutableList<string>? WhenAssigneeFunctionIsIn
-    ) : PermissionContext();
+    ) : PermissionContext;
 
     public sealed record CommunityMemberPermissionContext(ImmutableList<string>? WhenOwnCommunityRoleIsIn)
-        : PermissionContext();
+        : PermissionContext;
 
     public sealed record CommunityCoMemberFamiliesPermissionContext(ImmutableList<string>? WhenOwnCommunityRoleIsIn)
-        : PermissionContext();
+        : PermissionContext;
 
     public sealed record UserAccessConfiguration(ImmutableList<UserLocationRoles> LocationRoles);
 
@@ -141,7 +141,7 @@ namespace CareTogether.Resources.Policies
         ChildHousing,
         DaytimeChildCareOnly,
         NoChildInvolvement,
-    };
+    }
 
     public sealed record MonitoringRequirement(string ActionName, RecurrencePolicy Recurrence);
 
@@ -150,7 +150,7 @@ namespace CareTogether.Resources.Policies
         ZeroOrMore,
         ExactlyOne,
         OneOrMore,
-    };
+    }
 
     public sealed record ArrangementFunction(
         string FunctionName,
@@ -169,7 +169,7 @@ namespace CareTogether.Resources.Policies
     );
 
     [JsonHierarchyBase]
-    public abstract partial record RecurrencePolicy();
+    public abstract partial record RecurrencePolicy;
 
     public sealed record OneTimeRecurrencePolicy(TimeSpan? Delay) : RecurrencePolicy;
 
@@ -242,12 +242,12 @@ namespace CareTogether.Resources.Policies
         OncePerFamily,
         AllAdultsInTheFamily,
         AllParticipatingAdultsInTheFamily,
-    };
+    }
 
     /// <summary>
-    /// The <see cref="IPoliciesResource"/> is responsible for the configuration aspects of CareTogether.
-    /// An organization can be comprised of multiple locations or chapters, each of which may implement
-    /// policies that can inherit from the organization's base policies as well as global or regional policies.
+    ///     The <see cref="IPoliciesResource" /> is responsible for the configuration aspects of CareTogether.
+    ///     An organization can be comprised of multiple locations or chapters, each of which may implement
+    ///     policies that can inherit from the organization's base policies as well as global or regional policies.
     /// </summary>
     public interface IPoliciesResource
     {

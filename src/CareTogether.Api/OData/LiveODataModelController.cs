@@ -5,7 +5,6 @@ using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
 using System.Threading.Tasks;
-using CareTogether.Engines;
 using CareTogether.Engines.PolicyEvaluation;
 using CareTogether.Managers;
 using CareTogether.Managers.Records;
@@ -19,7 +18,6 @@ using Microsoft.AspNetCore.OData.Query;
 using Microsoft.AspNetCore.OData.Routing.Controllers;
 using Nito.AsyncEx;
 using NSwag.Annotations;
-using Timelines;
 
 namespace CareTogether.Api.OData
 {
@@ -192,11 +190,10 @@ namespace CareTogether.Api.OData
     [Authorize(Policies.ForbidAnonymous, AuthenticationSchemes = "Basic")]
     public class LiveODataModelController : ODataController
     {
-        private sealed record DataAccessScope(Guid OrganizationId, bool Anonymize);
+        readonly IAppCache _Cache;
 
-        private readonly IPoliciesResource policiesResource;
-        private readonly IRecordsManager recordsManager;
-        private readonly IAppCache cache;
+        readonly IPoliciesResource _PoliciesResource;
+        readonly IRecordsManager _RecordsManager;
 
         public LiveODataModelController(
             IPoliciesResource policiesResource,
@@ -204,136 +201,136 @@ namespace CareTogether.Api.OData
             IAppCache cache
         )
         {
-            this.policiesResource = policiesResource;
-            this.recordsManager = recordsManager;
-            this.cache = cache;
+            _PoliciesResource = policiesResource;
+            _RecordsManager = recordsManager;
+            _Cache = cache;
         }
 
         [HttpGet("Location")]
         public async Task<IEnumerable<Location>> GetLocationsAsync()
         {
-            var liveModel = await RenderLiveModelAsync();
+            LiveModel? liveModel = await RenderLiveModelAsync();
             return liveModel.Locations;
         }
 
         [HttpGet("Family")]
         public async Task<IEnumerable<Family>> GetFamiliesAsync()
         {
-            var liveModel = await RenderLiveModelAsync();
+            LiveModel? liveModel = await RenderLiveModelAsync();
             return liveModel.Families;
         }
 
         [HttpGet("Person")]
         public async Task<IEnumerable<Person>> GetPeopleAsync()
         {
-            var liveModel = await RenderLiveModelAsync();
+            LiveModel? liveModel = await RenderLiveModelAsync();
             return liveModel.People;
         }
 
         [HttpGet("Role")]
         public async Task<IEnumerable<Role>> GetRolesAsync()
         {
-            var liveModel = await RenderLiveModelAsync();
+            LiveModel? liveModel = await RenderLiveModelAsync();
             return liveModel.Roles;
         }
 
         [HttpGet("FamilyRoleApprovals")]
         public async Task<IEnumerable<FamilyRoleApproval>> GetFamilyRoleApprovalsAsync()
         {
-            var liveModel = await RenderLiveModelAsync();
+            LiveModel? liveModel = await RenderLiveModelAsync();
             return liveModel.FamilyRoleApprovals;
         }
 
         [HttpGet("IndividualRoleApprovals")]
         public async Task<IEnumerable<IndividualRoleApproval>> GetIndividualRoleApprovalsAsync()
         {
-            var liveModel = await RenderLiveModelAsync();
+            LiveModel? liveModel = await RenderLiveModelAsync();
             return liveModel.IndividualRoleApprovals;
         }
 
         [HttpGet("FamilyRoleRemovedIndividuals")]
         public async Task<IEnumerable<FamilyRoleRemovedIndividual>> GetFamilyRoleRemovedIndividualsAsync()
         {
-            var liveModel = await RenderLiveModelAsync();
+            LiveModel? liveModel = await RenderLiveModelAsync();
             return liveModel.FamilyRoleRemovedIndividuals;
         }
 
         [HttpGet("Referral")]
         public async Task<IEnumerable<Referral>> GetReferralsAsync()
         {
-            var liveModel = await RenderLiveModelAsync();
+            LiveModel? liveModel = await RenderLiveModelAsync();
             return liveModel.Referrals;
         }
 
         [HttpGet("Arrangement")]
         public async Task<IEnumerable<Arrangement>> GetArrangementsAsync()
         {
-            var liveModel = await RenderLiveModelAsync();
+            LiveModel? liveModel = await RenderLiveModelAsync();
             return liveModel.Arrangements;
         }
 
         [HttpGet("ArrangementType")]
         public async Task<IEnumerable<ArrangementType>> GetArrangementTypesAsync()
         {
-            var liveModel = await RenderLiveModelAsync();
+            LiveModel? liveModel = await RenderLiveModelAsync();
             return liveModel.ArrangementTypes;
         }
 
         [HttpGet("ChildLocationRecords")]
         public async Task<IEnumerable<ChildLocationRecord>> GetChildLocationRecordsAsync()
         {
-            var liveModel = await RenderLiveModelAsync();
+            LiveModel? liveModel = await RenderLiveModelAsync();
             return liveModel.ChildLocationRecords;
         }
 
         [HttpGet("FamilyFunctionAssignments")]
         public async Task<IEnumerable<FamilyFunctionAssignment>> GetFamilyFunctionAssignmentsAsync()
         {
-            var liveModel = await RenderLiveModelAsync();
+            LiveModel? liveModel = await RenderLiveModelAsync();
             return liveModel.FamilyFunctionAssignments;
         }
 
         [HttpGet("IndividualFunctionAssignments")]
         public async Task<IEnumerable<IndividualFunctionAssignment>> GetIndividualFunctionAssignmentsAsync()
         {
-            var liveModel = await RenderLiveModelAsync();
+            LiveModel? liveModel = await RenderLiveModelAsync();
             return liveModel.IndividualFunctionAssignments;
         }
 
         [HttpGet("Communities")]
         public async Task<IEnumerable<Community>> GetCommunitiesAsync()
         {
-            var liveModel = await RenderLiveModelAsync();
+            LiveModel? liveModel = await RenderLiveModelAsync();
             return liveModel.Communities;
         }
 
         [HttpGet("CommunityMemberFamilies")]
         public async Task<IEnumerable<CommunityMemberFamily>> GetCommunityMemberFamiliesAsync()
         {
-            var liveModel = await RenderLiveModelAsync();
+            LiveModel? liveModel = await RenderLiveModelAsync();
             return liveModel.CommunityMemberFamilies;
         }
 
         [HttpGet("CommunityRoleAssignments")]
         public async Task<IEnumerable<CommunityRoleAssignment>> GetCommunityRoleAssignmentsAsync()
         {
-            var liveModel = await RenderLiveModelAsync();
+            LiveModel? liveModel = await RenderLiveModelAsync();
             return liveModel.CommunityRoleAssignments;
         }
 
-        private async Task<LiveModel> RenderLiveModelAsync()
+        async Task<LiveModel> RenderLiveModelAsync()
         {
             //NOTE: For now, we only grant access to one organization at a time.
             //      In the future (e.g., for research purposes), data access could be broader.
-            var userDataAccessScope = GetUserDataAccessScope();
-            var organizationId = userDataAccessScope.OrganizationId;
-            var anonymize = userDataAccessScope.Anonymize;
+            DataAccessScope? userDataAccessScope = GetUserDataAccessScope();
+            Guid organizationId = userDataAccessScope.OrganizationId;
+            bool anonymize = userDataAccessScope.Anonymize;
 
-            var result = await cache.GetOrAddAsync(
+            LiveModel? result = await _Cache.GetOrAddAsync(
                 $"LiveODataModelController-RenderLiveModelAsync-{organizationId}-{(anonymize ? "ANON" : "PII")}",
                 async cacheEntry =>
                 {
-                    var result = await RenderLiveModelInternalAsync(organizationId, anonymize);
+                    LiveModel? result = await RenderLiveModelInternalAsync(organizationId, anonymize);
 
                     cacheEntry.SlidingExpiration = TimeSpan.FromMinutes(1);
                     cacheEntry.AbsoluteExpiration = DateTimeOffset.Now.AddMinutes(5);
@@ -345,17 +342,20 @@ namespace CareTogether.Api.OData
             return result!; // If this is actually null, then we are already throwing an exception anyways.
         }
 
-        private async Task<LiveModel> RenderLiveModelInternalAsync(Guid organizationId, bool anonymize)
+        async Task<LiveModel> RenderLiveModelInternalAsync(Guid organizationId, bool anonymize)
         {
-            var organizationConfiguration = await policiesResource.GetConfigurationAsync(organizationId);
+            OrganizationConfiguration? organizationConfiguration = await _PoliciesResource.GetConfigurationAsync(
+                organizationId
+            );
 
-            var locationPolicies = await organizationConfiguration
-                .Locations.Select(async location =>
-                    (location, policy: await policiesResource.GetCurrentPolicy(organizationId, location.Id))
-                )
-                .WhenAll();
+            (LocationConfiguration location, EffectiveLocationPolicy policy)[]? locationPolicies =
+                await organizationConfiguration
+                    .Locations.Select(async location =>
+                        (location, policy: await _PoliciesResource.GetCurrentPolicy(organizationId, location.Id))
+                    )
+                    .WhenAll();
 
-            var roles = locationPolicies
+            Role[]? roles = locationPolicies
                 .SelectMany(locationPolicy =>
                 {
                     return locationPolicy
@@ -374,25 +374,28 @@ namespace CareTogether.Api.OData
             //TODO: Pick something a little more realistic and/or mapping-friendly? :)
             string[] anonymousLocationZipCodes = ["99785", "99778", "99762"];
 
-            var locations = organizationConfiguration
+            Location[]? locations = organizationConfiguration
                 .Locations.Select(
                     (location, i) =>
                         new Location(location.Id, organizationId, anonymize ? $"Location {i}" : location.Name)
                 )
                 .ToArray();
 
-            var visibleAggregatesByLocation = await locations
-                .Select((location, i) => (location, anonymousZipCode: anonymize ? anonymousLocationZipCodes[i] : null))
-                .ZipSelectManyAsync(location =>
-                    recordsManager.ListVisibleAggregatesAsync(
-                        User,
-                        location.location.OrganizationId,
-                        location.location.Id
+            ((Location location, string anonymousZipCode), RecordsAggregate)[]? visibleAggregatesByLocation =
+                await locations
+                    .Select(
+                        (location, i) => (location, anonymousZipCode: anonymize ? anonymousLocationZipCodes[i] : null)
                     )
-                )
-                .ToArrayAsync();
+                    .ZipSelectManyAsync(location =>
+                        _RecordsManager.ListVisibleAggregatesAsync(
+                            User,
+                            location.location.OrganizationId,
+                            location.location.Id
+                        )
+                    )
+                    .ToArrayAsync();
 
-            var familiesByLocation = visibleAggregatesByLocation
+            (Location location, FamilyRecordsAggregate)[]? familiesByLocation = visibleAggregatesByLocation
                 .Where(zipResult => zipResult.Item2 is FamilyRecordsAggregate)
                 .Select(zipResult => (zipResult.Item1, (FamilyRecordsAggregate)zipResult.Item2))
                 .Select(zipResult =>
@@ -405,7 +408,7 @@ namespace CareTogether.Api.OData
                 )
                 .ToArray();
 
-            var communitiesByLocation = visibleAggregatesByLocation
+            (Location location, CommunityRecordsAggregate)[]? communitiesByLocation = visibleAggregatesByLocation
                 .Where(zipResult => zipResult.Item2 is CommunityRecordsAggregate)
                 .Select(zipResult => (zipResult.Item1, (CommunityRecordsAggregate)zipResult.Item2))
                 .Select(zipResult =>
@@ -418,29 +421,31 @@ namespace CareTogether.Api.OData
                 )
                 .ToArray();
 
-            var familiesWithInfo = familiesByLocation.Select(x => RenderFamily(x.Item1, x.Item2.Family)).ToArray();
-            var families = familiesWithInfo.Select(family => family.Item2).ToArray();
+            (CombinedFamilyInfo, Family)[]? familiesWithInfo = familiesByLocation
+                .Select(x => RenderFamily(x.Item1, x.Item2.Family))
+                .ToArray();
+            Family[]? families = familiesWithInfo.Select(family => family.Item2).ToArray();
 
-            var people = familiesWithInfo.SelectMany(x => RenderPeople(x.Item1, x.Item2)).ToArray();
+            Person[]? people = familiesWithInfo.SelectMany(x => RenderPeople(x.Item1, x.Item2)).ToArray();
 
-            var communitiesWithInfo = communitiesByLocation
+            (CommunityInfo, Community)[]? communitiesWithInfo = communitiesByLocation
                 .Select(x => RenderCommunity(x.location, x.Item2.Community))
                 .ToArray();
-            var communities = communitiesWithInfo.Select(community => community.Item2).ToArray();
+            Community[]? communities = communitiesWithInfo.Select(community => community.Item2).ToArray();
 
-            var familyRoleApprovals = familiesWithInfo
+            FamilyRoleApproval[]? familyRoleApprovals = familiesWithInfo
                 .SelectMany(x => RenderFamilyRoleApprovals(x.Item1, x.Item2, roles))
                 .ToArray();
-            var individualRoleApprovals = familiesWithInfo
+            IndividualRoleApproval[]? individualRoleApprovals = familiesWithInfo
                 .SelectMany(x => RenderIndividualRoleApprovals(x.Item1, x.Item2, people, roles))
                 .ToArray();
-            var familyRoleRemovedIndividuals = familiesWithInfo
+            FamilyRoleRemovedIndividual[]? familyRoleRemovedIndividuals = familiesWithInfo
                 .SelectMany(x => RenderFamilyRoleRemovedIndividuals(x.Item1, x.Item2, people, roles))
                 .ToArray();
 
-            var referrals = familiesWithInfo.SelectMany(x => RenderReferrals(x.Item1, x.Item2)).ToArray();
+            Referral[]? referrals = familiesWithInfo.SelectMany(x => RenderReferrals(x.Item1, x.Item2)).ToArray();
 
-            var arrangementTypes = locationPolicies
+            ArrangementType[]? arrangementTypes = locationPolicies
                 .SelectMany(locationPolicy =>
                     locationPolicy.policy.ReferralPolicy.ArrangementPolicies.Select(
                         arrangementPolicy => new ArrangementType(
@@ -452,27 +457,27 @@ namespace CareTogether.Api.OData
                 .DistinctBy(x => x.Type)
                 .ToArray();
 
-            var arrangements = familiesWithInfo
+            Arrangement[]? arrangements = familiesWithInfo
                 .SelectMany(x => RenderArrangements(x.Item1, x.Item2, people, referrals, arrangementTypes))
                 .ToArray();
 
-            var childLocationRecords = familiesWithInfo
+            ChildLocationRecord[]? childLocationRecords = familiesWithInfo
                 .SelectMany(x => RenderChildLocationRecords(x.Item1, x.Item2, families, people, arrangements))
                 .ToArray();
 
-            var familyFunctionAssignments = familiesWithInfo
+            FamilyFunctionAssignment[]? familyFunctionAssignments = familiesWithInfo
                 .SelectMany(x => RenderFamilyFunctionAssignments(x.Item1, x.Item2, families, people, arrangements))
                 .ToArray();
 
-            var individualFunctionAssignments = familiesWithInfo
+            IndividualFunctionAssignment[]? individualFunctionAssignments = familiesWithInfo
                 .SelectMany(x => RenderIndividualFunctionAssignments(x.Item1, x.Item2, families, people, arrangements))
                 .ToArray();
 
-            var communityMemberFamilies = communitiesWithInfo
+            CommunityMemberFamily[]? communityMemberFamilies = communitiesWithInfo
                 .SelectMany(x => RenderCommunityMemberFamilies(x.Item1, x.Item2, families))
                 .ToArray();
 
-            var communityRoleAssignments = communitiesWithInfo
+            CommunityRoleAssignment[]? communityRoleAssignments = communitiesWithInfo
                 .SelectMany(x => RenderCommunityRoleAssignments(x.Item1, x.Item2, people))
                 .ToArray();
 
@@ -496,19 +501,19 @@ namespace CareTogether.Api.OData
             );
         }
 
-        private DataAccessScope GetUserDataAccessScope()
+        DataAccessScope GetUserDataAccessScope()
         {
-            var singleOrganizationId = Guid.Parse(
+            Guid singleOrganizationId = Guid.Parse(
                 User.Claims.Single(claim => claim.Type == Claims.OrganizationId).Value
             );
 
-            var isResearcher =
+            bool isResearcher =
                 User.Claims.SingleOrDefault(claim => claim.Type == Claims.Researcher)?.Value == true.ToString();
 
-            return new DataAccessScope(singleOrganizationId, Anonymize: isResearcher);
+            return new DataAccessScope(singleOrganizationId, isResearcher);
         }
 
-        private FamilyRecordsAggregate AnonymizeFamilyRecords(FamilyRecordsAggregate data, string anonymousZipCode)
+        FamilyRecordsAggregate AnonymizeFamilyRecords(FamilyRecordsAggregate data, string anonymousZipCode)
         {
             return data with
             {
@@ -771,10 +776,7 @@ namespace CareTogether.Api.OData
             };
         }
 
-        private CommunityRecordsAggregate AnonymizeCommunityRecords(
-            CommunityRecordsAggregate data,
-            string anonymousZipCode
-        )
+        CommunityRecordsAggregate AnonymizeCommunityRecords(CommunityRecordsAggregate data, string anonymousZipCode)
         {
             return data with
             {
@@ -790,16 +792,16 @@ namespace CareTogether.Api.OData
             };
         }
 
-        private static (CombinedFamilyInfo, Family) RenderFamily(Location location, CombinedFamilyInfo family)
+        static (CombinedFamilyInfo, Family) RenderFamily(Location location, CombinedFamilyInfo family)
         {
-            var primaryContactPerson = family
+            Resources.Directory.Person? primaryContactPerson = family
                 .Family.Adults.Select(adult => adult.Item1)
                 .SingleOrDefault(person => person.Id == family.Family.PrimaryFamilyContactPersonId);
 
             T? GetFromPrimaryContactIfAvailable<T>(Func<Resources.Directory.Person, T?> selector)
                 where T : class
             {
-                var bestResult = primaryContactPerson != null ? selector(primaryContactPerson) : null;
+                T? bestResult = primaryContactPerson != null ? selector(primaryContactPerson) : null;
                 bestResult ??= family
                     .Family.Adults.Select(adult => selector(adult.Item1))
                     .Where(result => result != null)
@@ -807,21 +809,23 @@ namespace CareTogether.Api.OData
                 return bestResult;
             }
 
-            var familyName =
+            string? familyName =
                 primaryContactPerson == null
                     ? "⚠ MISSING PRIMARY CONTACT Family"
                     : $"{primaryContactPerson.FirstName} {primaryContactPerson.LastName} Family";
 
-            var bestEmail = GetFromPrimaryContactIfAvailable(person =>
+            string? bestEmail = GetFromPrimaryContactIfAvailable(person =>
                 person
                     .EmailAddresses.SingleOrDefault(x => x.Id == primaryContactPerson!.PreferredEmailAddressId)
                     ?.Address
             );
 
-            var bestAddress = GetFromPrimaryContactIfAvailable(person =>
+            Address? bestAddress = GetFromPrimaryContactIfAvailable(person =>
             {
-                var primaryAddressInfo = person.Addresses.SingleOrDefault(x => x.Id == person.CurrentAddressId);
-                var primaryAddress =
+                Resources.Directory.Address? primaryAddressInfo = person.Addresses.SingleOrDefault(x =>
+                    x.Id == person.CurrentAddressId
+                );
+                Address? primaryAddress =
                     primaryAddressInfo == null
                         ? null
                         : new Address(
@@ -835,12 +839,12 @@ namespace CareTogether.Api.OData
                 return primaryAddress;
             });
 
-            var bestPhoneNumber = GetFromPrimaryContactIfAvailable(person =>
+            string? bestPhoneNumber = GetFromPrimaryContactIfAvailable(person =>
                 person.PhoneNumbers.SingleOrDefault(x => x.Id == primaryContactPerson!.PreferredPhoneNumberId)?.Number
             );
 
             // Making this 'custom field' semi-standard across organizations/policies.
-            var homeChurch =
+            string? homeChurch =
                 family
                     .Family.CompletedCustomFields.SingleOrDefault(field => field.CustomFieldName == "Home Church")
                     ?.Value as string;
@@ -860,7 +864,7 @@ namespace CareTogether.Api.OData
             );
         }
 
-        private static IEnumerable<Person> RenderPeople(CombinedFamilyInfo familyInfo, Family family)
+        static IEnumerable<Person> RenderPeople(CombinedFamilyInfo familyInfo, Family family)
         {
             return familyInfo.Family.Adults
                 .Select(adult => new Person(adult.Item1.Id, family, family.Id,
@@ -876,12 +880,12 @@ namespace CareTogether.Api.OData
                 );
         }
 
-        private static (CommunityInfo, Community) RenderCommunity(Location location, CommunityInfo community)
+        static (CommunityInfo, Community) RenderCommunity(Location location, CommunityInfo community)
         {
             return (community, new Community(community.Community.Id, location, location.Id, community.Community.Name));
         }
 
-        private static IEnumerable<FamilyRoleApproval> RenderFamilyRoleApprovals(
+        static IEnumerable<FamilyRoleApproval> RenderFamilyRoleApprovals(
             CombinedFamilyInfo familyInfo,
             Family family,
             Role[] roles
@@ -900,7 +904,7 @@ namespace CareTogether.Api.OData
                 ) ?? [];
         }
 
-        private static IEnumerable<IndividualRoleApproval> RenderIndividualRoleApprovals(
+        static IEnumerable<IndividualRoleApproval> RenderIndividualRoleApprovals(
             CombinedFamilyInfo familyInfo,
             Family family,
             Person[] people,
@@ -924,7 +928,7 @@ namespace CareTogether.Api.OData
                 ) ?? [];
         }
 
-        private static IEnumerable<FamilyRoleRemovedIndividual> RenderFamilyRoleRemovedIndividuals(
+        static IEnumerable<FamilyRoleRemovedIndividual> RenderFamilyRoleRemovedIndividuals(
             CombinedFamilyInfo familyInfo,
             Family family,
             Person[] people,
@@ -949,9 +953,11 @@ namespace CareTogether.Api.OData
                 ) ?? [];
         }
 
-        private static IEnumerable<Referral> RenderReferrals(CombinedFamilyInfo familyInfo, Family family)
+        static IEnumerable<Referral> RenderReferrals(CombinedFamilyInfo familyInfo, Family family)
         {
-            var allReferralsInfo = (familyInfo.PartneringFamilyInfo?.ClosedReferrals ?? []).AddRange(
+            ImmutableList<Managers.Referral>? allReferralsInfo = (
+                familyInfo.PartneringFamilyInfo?.ClosedReferrals ?? []
+            ).AddRange(
                 familyInfo.PartneringFamilyInfo?.OpenReferral == null
                     ? []
                     : new[] { familyInfo.PartneringFamilyInfo.OpenReferral }
@@ -975,7 +981,7 @@ namespace CareTogether.Api.OData
             ));
         }
 
-        private static IEnumerable<Arrangement> RenderArrangements(
+        static IEnumerable<Arrangement> RenderArrangements(
             CombinedFamilyInfo familyInfo,
             Family family,
             Person[] people,
@@ -983,17 +989,19 @@ namespace CareTogether.Api.OData
             ArrangementType[] arrangementTypes
         )
         {
-            var allReferralsInfo = (familyInfo.PartneringFamilyInfo?.ClosedReferrals ?? []).AddRange(
+            ImmutableList<Managers.Referral>? allReferralsInfo = (
+                familyInfo.PartneringFamilyInfo?.ClosedReferrals ?? []
+            ).AddRange(
                 familyInfo.PartneringFamilyInfo?.OpenReferral == null
                     ? []
                     : new[] { familyInfo.PartneringFamilyInfo.OpenReferral }
             );
             return allReferralsInfo.SelectMany(referralInfo =>
             {
-                var referral = referrals.Single(r => r.Id == referralInfo.Id);
+                Referral? referral = referrals.Single(r => r.Id == referralInfo.Id);
                 return referralInfo.Arrangements.Select(arrangement =>
                 {
-                    var arrangementPerson = people.Single(p => p.Id == arrangement.PartneringFamilyPersonId);
+                    Person? arrangementPerson = people.Single(p => p.Id == arrangement.PartneringFamilyPersonId);
                     return new Arrangement(
                         arrangement.Id,
                         arrangementTypes.Single(type => type.Type == arrangement.ArrangementType),
@@ -1012,7 +1020,7 @@ namespace CareTogether.Api.OData
             });
         }
 
-        private static IEnumerable<ChildLocationRecord> RenderChildLocationRecords(
+        static IEnumerable<ChildLocationRecord> RenderChildLocationRecords(
             CombinedFamilyInfo familyInfo,
             Family family,
             Family[] families,
@@ -1020,7 +1028,9 @@ namespace CareTogether.Api.OData
             Arrangement[] arrangements
         )
         {
-            var allReferralsInfo = (familyInfo.PartneringFamilyInfo?.ClosedReferrals ?? []).AddRange(
+            ImmutableList<Managers.Referral>? allReferralsInfo = (
+                familyInfo.PartneringFamilyInfo?.ClosedReferrals ?? []
+            ).AddRange(
                 familyInfo.PartneringFamilyInfo?.OpenReferral == null
                     ? []
                     : new[] { familyInfo.PartneringFamilyInfo.OpenReferral }
@@ -1029,19 +1039,19 @@ namespace CareTogether.Api.OData
             {
                 return referralInfo.Arrangements.SelectMany(arrangement =>
                 {
-                    var arrangementRecord = arrangements.Single(arr => arr.Id == arrangement.Id);
-                    var arrangementPerson = people.Single(p => p.Id == arrangement.PartneringFamilyPersonId);
+                    Arrangement? arrangementRecord = arrangements.Single(arr => arr.Id == arrangement.Id);
+                    Person? arrangementPerson = people.Single(p => p.Id == arrangement.PartneringFamilyPersonId);
                     return arrangement.ChildLocationHistory.Select(
                         (history, i) =>
                         {
-                            var receivingFamily = families.Single(f => f.Id == history.ChildLocationFamilyId);
-                            var nextLocation =
+                            Family? receivingFamily = families.Single(f => f.Id == history.ChildLocationFamilyId);
+                            ChildLocationHistoryEntry? nextLocation =
                                 arrangement.ChildLocationHistory.Count > i + 1
                                     ? arrangement.ChildLocationHistory[i + 1]
                                     : null;
-                            var locationEffectiveEndTimestamp =
+                            DateTime locationEffectiveEndTimestamp =
                                 nextLocation?.TimestampUtc ?? arrangement.EndedAtUtc ?? DateTime.UtcNow;
-                            var effectiveDuration = locationEffectiveEndTimestamp.Subtract(history.TimestampUtc);
+                            TimeSpan effectiveDuration = locationEffectiveEndTimestamp.Subtract(history.TimestampUtc);
 
                             return new ChildLocationRecord(
                                 arrangementRecord,
@@ -1052,9 +1062,8 @@ namespace CareTogether.Api.OData
                                 history.ChildLocationFamilyId,
                                 history.TimestampUtc,
                                 history.Plan,
-                                EndedAtUtc: nextLocation?.TimestampUtc
-                                    ?? arrangement.EndedAtUtc?.Subtract(TimeSpan.FromSeconds(1)),
-                                Duration: effectiveDuration
+                                nextLocation?.TimestampUtc ?? arrangement.EndedAtUtc?.Subtract(TimeSpan.FromSeconds(1)),
+                                effectiveDuration
                             );
                         }
                     );
@@ -1062,7 +1071,7 @@ namespace CareTogether.Api.OData
             });
         }
 
-        private static IEnumerable<FamilyFunctionAssignment> RenderFamilyFunctionAssignments(
+        static IEnumerable<FamilyFunctionAssignment> RenderFamilyFunctionAssignments(
             CombinedFamilyInfo familyInfo,
             Family family,
             Family[] families,
@@ -1070,7 +1079,9 @@ namespace CareTogether.Api.OData
             Arrangement[] arrangements
         )
         {
-            var allReferralsInfo = (familyInfo.PartneringFamilyInfo?.ClosedReferrals ?? []).AddRange(
+            ImmutableList<Managers.Referral>? allReferralsInfo = (
+                familyInfo.PartneringFamilyInfo?.ClosedReferrals ?? []
+            ).AddRange(
                 familyInfo.PartneringFamilyInfo?.OpenReferral == null
                     ? []
                     : new[] { familyInfo.PartneringFamilyInfo.OpenReferral }
@@ -1079,7 +1090,7 @@ namespace CareTogether.Api.OData
             {
                 return referralInfo.Arrangements.SelectMany(arrangement =>
                 {
-                    var arrangementRecord = arrangements.Single(arr => arr.Id == arrangement.Id);
+                    Arrangement? arrangementRecord = arrangements.Single(arr => arr.Id == arrangement.Id);
                     return arrangement.FamilyVolunteerAssignments.Select(fva => new FamilyFunctionAssignment(
                         arrangementRecord,
                         arrangement.Id,
@@ -1091,7 +1102,7 @@ namespace CareTogether.Api.OData
             });
         }
 
-        private static IEnumerable<IndividualFunctionAssignment> RenderIndividualFunctionAssignments(
+        static IEnumerable<IndividualFunctionAssignment> RenderIndividualFunctionAssignments(
             CombinedFamilyInfo familyInfo,
             Family family,
             Family[] families,
@@ -1099,7 +1110,9 @@ namespace CareTogether.Api.OData
             Arrangement[] arrangements
         )
         {
-            var allReferralsInfo = (familyInfo.PartneringFamilyInfo?.ClosedReferrals ?? []).AddRange(
+            ImmutableList<Managers.Referral>? allReferralsInfo = (
+                familyInfo.PartneringFamilyInfo?.ClosedReferrals ?? []
+            ).AddRange(
                 familyInfo.PartneringFamilyInfo?.OpenReferral == null
                     ? []
                     : new[] { familyInfo.PartneringFamilyInfo.OpenReferral }
@@ -1108,7 +1121,7 @@ namespace CareTogether.Api.OData
             {
                 return referralInfo.Arrangements.SelectMany(arrangement =>
                 {
-                    var arrangementRecord = arrangements.Single(arr => arr.Id == arrangement.Id);
+                    Arrangement? arrangementRecord = arrangements.Single(arr => arr.Id == arrangement.Id);
                     return arrangement.IndividualVolunteerAssignments.Select(fva => new IndividualFunctionAssignment(
                         arrangementRecord,
                         arrangement.Id,
@@ -1120,7 +1133,7 @@ namespace CareTogether.Api.OData
             });
         }
 
-        private static IEnumerable<CommunityMemberFamily> RenderCommunityMemberFamilies(
+        static IEnumerable<CommunityMemberFamily> RenderCommunityMemberFamilies(
             CommunityInfo communityInfo,
             Community community,
             Family[] families
@@ -1136,7 +1149,7 @@ namespace CareTogether.Api.OData
                 ));
         }
 
-        private static IEnumerable<CommunityRoleAssignment> RenderCommunityRoleAssignments(
+        static IEnumerable<CommunityRoleAssignment> RenderCommunityRoleAssignments(
             CommunityInfo communityInfo,
             Community community,
             Person[] people
@@ -1154,5 +1167,7 @@ namespace CareTogether.Api.OData
                     roleAssignment.CommunityRole
                 ));
         }
+
+        sealed record DataAccessScope(Guid OrganizationId, bool Anonymize);
     }
 }

@@ -7,13 +7,13 @@ namespace CareTogether.Resources.Goals
 {
     public sealed class GoalsResource : IGoalsResource
     {
-        private readonly IEventLog<GoalCommandExecutedEvent> goalsEventLog;
-        private readonly ConcurrentLockingStore<(Guid organizationId, Guid locationId), GoalsModel> tenantGoalsModels;
+        readonly IEventLog<GoalCommandExecutedEvent> _GoalsEventLog;
+        readonly ConcurrentLockingStore<(Guid organizationId, Guid locationId), GoalsModel> _TenantGoalsModels;
 
         public GoalsResource(IEventLog<GoalCommandExecutedEvent> goalsEventLog)
         {
-            this.goalsEventLog = goalsEventLog;
-            tenantGoalsModels = new ConcurrentLockingStore<(Guid organizationId, Guid locationId), GoalsModel>(key =>
+            _GoalsEventLog = goalsEventLog;
+            _TenantGoalsModels = new ConcurrentLockingStore<(Guid organizationId, Guid locationId), GoalsModel>(key =>
                 GoalsModel.InitializeAsync(goalsEventLog.GetAllEventsAsync(key.organizationId, key.locationId))
             );
         }
@@ -25,11 +25,19 @@ namespace CareTogether.Resources.Goals
             Guid userId
         )
         {
-            using (var lockedModel = await tenantGoalsModels.WriteLockItemAsync((organizationId, locationId)))
+            using (
+                ConcurrentLockingStore<
+                    (Guid organizationId, Guid locationId),
+                    GoalsModel
+                >.LockedItem<GoalsModel> lockedModel = await _TenantGoalsModels.WriteLockItemAsync(
+                    (organizationId, locationId)
+                )
+            )
             {
-                var result = lockedModel.Value.ExecuteGoalCommand(command, userId, DateTime.UtcNow);
+                (GoalCommandExecutedEvent Event, long SequenceNumber, Goal Goal, Action OnCommit) result =
+                    lockedModel.Value.ExecuteGoalCommand(command, userId, DateTime.UtcNow);
 
-                await goalsEventLog.AppendEventAsync(organizationId, locationId, result.Event, result.SequenceNumber);
+                await _GoalsEventLog.AppendEventAsync(organizationId, locationId, result.Event, result.SequenceNumber);
                 result.OnCommit();
                 return result.Goal;
             }
@@ -37,7 +45,14 @@ namespace CareTogether.Resources.Goals
 
         public async Task<ImmutableList<Goal>> ListPersonGoalsAsync(Guid organizationId, Guid locationId, Guid personId)
         {
-            using (var lockedModel = await tenantGoalsModels.ReadLockItemAsync((organizationId, locationId)))
+            using (
+                ConcurrentLockingStore<
+                    (Guid organizationId, Guid locationId),
+                    GoalsModel
+                >.LockedItem<GoalsModel> lockedModel = await _TenantGoalsModels.ReadLockItemAsync(
+                    (organizationId, locationId)
+                )
+            )
             {
                 return lockedModel.Value.FindGoals(c => c.PersonId == personId);
             }

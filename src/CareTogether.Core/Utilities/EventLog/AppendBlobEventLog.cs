@@ -1,9 +1,11 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Text;
 using System.Threading.Tasks;
+using Azure;
 using Azure.Storage.Blobs;
 using Azure.Storage.Blobs.Models;
 using Azure.Storage.Blobs.Specialized;
@@ -13,16 +15,16 @@ namespace CareTogether.Utilities.EventLog
 {
     public class AppendBlobEventLog<T> : IEventLog<T>
     {
-        private readonly string logType;
-        private readonly BlobServiceClient blobServiceClient;
-        private readonly ConcurrentDictionary<Guid, BlobContainerClient> organizationBlobContainerClients;
+        readonly BlobServiceClient _BlobServiceClient;
+        readonly string _LogType;
+        readonly ConcurrentDictionary<Guid, BlobContainerClient> _OrganizationBlobContainerClients;
 
         public AppendBlobEventLog(BlobServiceClient blobServiceClient, string logType)
         {
-            this.blobServiceClient = blobServiceClient;
-            this.logType = logType;
+            _BlobServiceClient = blobServiceClient;
+            _LogType = logType;
 
-            organizationBlobContainerClients = new();
+            _OrganizationBlobContainerClients = new ConcurrentDictionary<Guid, BlobContainerClient>();
         }
 
         public async Task AppendEventAsync(
@@ -32,45 +34,100 @@ namespace CareTogether.Utilities.EventLog
             long expectedSequenceNumber
         )
         {
-            var tenantContainer = await CreateContainerIfNotExistsAsync(organizationId);
+            BlobContainerClient tenantContainer = await CreateContainerIfNotExistsAsync(organizationId);
 
-            var currentBlobNumber = getBlobNumber(expectedSequenceNumber);
+            long currentBlobNumber = getBlobNumber(expectedSequenceNumber);
 
-            var logSegmentBlob = tenantContainer.GetAppendBlobClient(
-                $"{locationId}/{logType}/{currentBlobNumber:D5}.ndjson"
+            AppendBlobClient logSegmentBlob = tenantContainer.GetAppendBlobClient(
+                $"{locationId}/{_LogType}/{currentBlobNumber:D5}.ndjson"
             );
 
             if (!await logSegmentBlob.ExistsAsync())
+            {
                 await logSegmentBlob.CreateAsync(
                     new AppendBlobCreateOptions
                     {
                         HttpHeaders = new BlobHttpHeaders { ContentType = "application/x-ndjson" },
                     }
                 );
+            }
 
             // Explicitly setting the StringEscapeHandling property so that it's immediately obvious how escaping is being handled,
             // and so that it's easy to change the behavior if that becomes necessary in the future.
-            var eventJson =
+
+            string eventJson =
                 JsonConvert.SerializeObject(
                     domainEvent,
                     Formatting.None,
-                    new JsonSerializerSettings() { StringEscapeHandling = StringEscapeHandling.Default }
+                    new JsonSerializerSettings { StringEscapeHandling = StringEscapeHandling.Default }
                 ) + Environment.NewLine;
 
-            var eventStream = new MemoryStream(Encoding.UTF8.GetBytes(eventJson));
+            MemoryStream eventStream = new(Encoding.UTF8.GetBytes(eventJson));
 
             try
             {
-                var appendResult = await logSegmentBlob.AppendBlockAsync(eventStream);
+                Response<BlobAppendInfo> appendResult = await logSegmentBlob.AppendBlockAsync(eventStream);
             }
             catch (Exception e)
             {
-                System.Diagnostics.Debug.WriteLine(
-                    $"There was an issue appending to block {expectedSequenceNumber} in {locationId}/{logType}/{currentBlobNumber:D5}.ndjson"
+                Debug.WriteLine(
+                    $"There was an issue appending to block {expectedSequenceNumber} in {locationId}/{_LogType}/{currentBlobNumber:D5}.ndjson"
                         + $" under tenant {organizationId}: "
                         + e.Message
                 );
                 throw;
+            }
+        }
+
+        public async IAsyncEnumerable<(T DomainEvent, long SequenceNumber)> GetAllEventsAsync(
+            Guid organizationId,
+            Guid locationId
+        )
+        {
+            BlobContainerClient tenantContainer = await CreateContainerIfNotExistsAsync(organizationId);
+
+            long eventSequenceNumber = 0;
+
+            await foreach (
+                BlobItem blob in tenantContainer.GetBlobsAsync(
+                    BlobTraits.None,
+                    BlobStates.None,
+                    $"{locationId}/{_LogType}"
+                )
+            )
+            {
+                // Only process correctly named files. This is a reliability measure to protect against
+                // files that might be uploaded to the wrong directory accidentally by another process.
+                if (!blob.Name.EndsWith(".ndjson"))
+                {
+                    continue;
+                }
+
+                AppendBlobClient appendBlob = tenantContainer.GetAppendBlobClient(blob.Name);
+
+                Stream eventStream = await appendBlob.OpenReadAsync();
+
+                string eventString = new StreamReader(eventStream).ReadToEnd();
+
+                using (StringReader reader = new(eventString))
+                {
+                    string? line;
+
+                    while ((line = reader.ReadLine()) != null)
+                    {
+                        eventSequenceNumber++;
+
+                        T? item = JsonConvert.DeserializeObject<T>(line);
+
+                        yield return item == null
+                            ? throw new InvalidOperationException(
+                                $"Unexpected null object deserialized in organization {organizationId}, location {locationId}, "
+                                    + $"log type {_LogType}, blob '{blob.Name}', event sequence # {eventSequenceNumber}. "
+                                    + $"Expected type: {typeof(T).FullName}"
+                            )
+                            : (item, eventSequenceNumber);
+                    }
+                }
             }
         }
 
@@ -81,73 +138,31 @@ namespace CareTogether.Utilities.EventLog
 
         public long getBlockNumber(long sequenceNumber)
         {
-            var result = sequenceNumber % 50000L;
+            long result = sequenceNumber % 50000L;
 
             if (result == 0)
-                return 50000;
-            else
-                return result;
-        }
-
-        public async IAsyncEnumerable<(T DomainEvent, long SequenceNumber)> GetAllEventsAsync(
-            Guid organizationId,
-            Guid locationId
-        )
-        {
-            var tenantContainer = await CreateContainerIfNotExistsAsync(organizationId);
-
-            long eventSequenceNumber = 0;
-
-            await foreach (
-                var blob in tenantContainer.GetBlobsAsync(BlobTraits.None, BlobStates.None, $"{locationId}/{logType}")
-            )
             {
-                // Only process correctly named files. This is a reliability measure to protect against
-                // files that might be uploaded to the wrong directory accidentally by another process.
-                if (!blob.Name.EndsWith(".ndjson"))
-                    continue;
-
-                var appendBlob = tenantContainer.GetAppendBlobClient(blob.Name);
-
-                var eventStream = await appendBlob.OpenReadAsync();
-
-                var eventString = new StreamReader(eventStream).ReadToEnd();
-
-                using (var reader = new StringReader(eventString))
-                {
-                    string? line;
-
-                    while ((line = reader.ReadLine()) != null)
-                    {
-                        eventSequenceNumber++;
-
-                        var item = JsonConvert.DeserializeObject<T>(line);
-
-                        yield return item == null
-                            ? throw new InvalidOperationException(
-                                $"Unexpected null object deserialized in organization {organizationId}, location {locationId}, "
-                                    + $"log type {logType}, blob '{blob.Name}', event sequence # {eventSequenceNumber}. "
-                                    + $"Expected type: {typeof(T).FullName}"
-                            )
-                            : (item, eventSequenceNumber);
-                    }
-                }
+                return 50000;
             }
+
+            return result;
         }
 
-        private async Task<BlobContainerClient> CreateContainerIfNotExistsAsync(Guid organizationId)
+        async Task<BlobContainerClient> CreateContainerIfNotExistsAsync(Guid organizationId)
         {
-            if (organizationBlobContainerClients.ContainsKey(organizationId))
-                return organizationBlobContainerClients[organizationId];
+            if (_OrganizationBlobContainerClients.ContainsKey(organizationId))
+            {
+                return _OrganizationBlobContainerClients[organizationId];
+            }
 
-            var blobClient = blobServiceClient.GetBlobContainerClient(organizationId.ToString());
+            BlobContainerClient blobClient = _BlobServiceClient.GetBlobContainerClient(organizationId.ToString());
 
             if (!await blobClient.ExistsAsync())
             {
                 await blobClient.CreateAsync();
             }
 
-            organizationBlobContainerClients[organizationId] = blobClient;
+            _OrganizationBlobContainerClients[organizationId] = blobClient;
             return blobClient;
         }
     }
