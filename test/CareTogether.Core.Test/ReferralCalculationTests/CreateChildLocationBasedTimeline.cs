@@ -155,6 +155,38 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
         }
 
         [TestMethod]
+        public void CreateTimelineFilteredByFamilyIdWithPauses()
+        {
+            var result = ReferralCalculations.CreateChildLocationBasedTimeline(
+                H.ChildLocationHistory(
+                        (H.Id('0'), ChildLocationPlan.DaytimeChildCare, 1, 1),
+                        (H.Id('1'), ChildLocationPlan.DaytimeChildCare, 1, 10),
+                        (H.Id('2'), ChildLocationPlan.WithParent, 1, 12),
+                        (H.Id('1'), ChildLocationPlan.DaytimeChildCare, 1, 15),
+                        (H.Id('2'), ChildLocationPlan.WithParent, 1, 20)
+                    )
+                    .ToImmutableList(),
+                H.Id('1')
+            );
+
+            AssertEx.SequenceIs(
+                result,
+                new DateOnlyTimeline(
+                    [
+                        new DateRange(
+                            DateOnly.FromDateTime(H.DateTime(1, 10)),
+                            DateOnly.FromDateTime(H.DateTime(1, 12))
+                        ),
+                        new DateRange(
+                            DateOnly.FromDateTime(H.DateTime(1, 15)),
+                            DateOnly.FromDateTime(H.DateTime(1, 20))
+                        ),
+                    ]
+                )
+            );
+        }
+
+        [TestMethod]
         public void CreateTimelineFilteredByFamilyIdMultipleChangesInSameDay()
         {
             var hist = H.ChildLocationHistory(
