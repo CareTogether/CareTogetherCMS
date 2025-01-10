@@ -501,7 +501,7 @@ namespace CareTogether.Engines.PolicyEvaluation
             Guid? filterToFamilyId = null
         )
         {
-            var dateRanges = GenerateDateRanges(childLocations, filterToFamilyId).ToImmutableList();
+            var dateRanges = GenerateDateRanges(childLocations).ToImmutableList();
 
             var filteredDateRanges = (
                 filterToFamilyId != null ? dateRanges.Where(item => item.Tag == filterToFamilyId) : dateRanges
@@ -517,10 +517,7 @@ namespace CareTogether.Engines.PolicyEvaluation
             return DateOnlyTimeline.FromOverlappingDateRanges(filteredDateRanges);
         }
 
-        private static IEnumerable<DateRange<Guid>> GenerateDateRanges(
-            ImmutableList<ChildLocation> childLocations,
-            Guid? filterToFamilyId
-        )
+        private static IEnumerable<DateRange<Guid>> GenerateDateRanges(ImmutableList<ChildLocation> childLocations)
         {
             (DateOnly Date, Guid ChildLocationFamilyId)? previousChildLocation = null;
 
