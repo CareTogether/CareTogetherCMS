@@ -16,23 +16,29 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
         {
             var result = ReferralCalculations.CreateChildLocationBasedTimeline(
                 H.ChildLocationHistory(
-                    (H.Id('0'), ChildLocationPlan.DaytimeChildCare, 1, 1),
-                    (Guid.Empty, ChildLocationPlan.WithParent, 1, 12),
-                    (H.Id('1'), ChildLocationPlan.DaytimeChildCare, 1, 20),
-                    (Guid.Empty, ChildLocationPlan.WithParent, 1, 25)
-                ).ToImmutableList()
+                        (H.Id('0'), ChildLocationPlan.DaytimeChildCare, 1, 1),
+                        (Guid.Empty, ChildLocationPlan.WithParent, 1, 12),
+                        (H.Id('1'), ChildLocationPlan.DaytimeChildCare, 1, 20),
+                        (Guid.Empty, ChildLocationPlan.WithParent, 1, 25)
+                    )
+                    .ToImmutableList()
             );
 
-            AssertEx.SequenceIs(result, new DateOnlyTimeline([
-                new DateRange(
-                    DateOnly.FromDateTime(H.DateTime(1, 1)),
-                    DateOnly.FromDateTime(H.DateTime(1, 12))
-                ),
-                new DateRange(
-                    DateOnly.FromDateTime(H.DateTime(1, 20)),
-                    DateOnly.FromDateTime(H.DateTime(1, 25))
+            AssertEx.SequenceIs(
+                result,
+                new DateOnlyTimeline(
+                    [
+                        new DateRange(
+                            DateOnly.FromDateTime(H.DateTime(1, 1)),
+                            DateOnly.FromDateTime(H.DateTime(1, 12))
+                        ),
+                        new DateRange(
+                            DateOnly.FromDateTime(H.DateTime(1, 20)),
+                            DateOnly.FromDateTime(H.DateTime(1, 25))
+                        ),
+                    ]
                 )
-            ]));
+            );
         }
 
         [TestMethod]
@@ -40,29 +46,35 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
         {
             var result = ReferralCalculations.CreateChildLocationBasedTimeline(
                 H.ChildLocationHistory(
-                    (H.Id('0'), ChildLocationPlan.DaytimeChildCare, 1, 1),
-                    (Guid.Empty, ChildLocationPlan.WithParent, 1, 12),
-                    (H.Id('1'), ChildLocationPlan.DaytimeChildCare, 1, 20),
-                    (Guid.Empty, ChildLocationPlan.WithParent, 1, 25),
-                    (H.Id('2'), ChildLocationPlan.DaytimeChildCare, 1, 30),
-                    (Guid.Empty, ChildLocationPlan.WithParent, 2, 5)
-                ).ToImmutableList()
+                        (H.Id('0'), ChildLocationPlan.DaytimeChildCare, 1, 1),
+                        (Guid.Empty, ChildLocationPlan.WithParent, 1, 12),
+                        (H.Id('1'), ChildLocationPlan.DaytimeChildCare, 1, 20),
+                        (Guid.Empty, ChildLocationPlan.WithParent, 1, 25),
+                        (H.Id('2'), ChildLocationPlan.DaytimeChildCare, 1, 30),
+                        (Guid.Empty, ChildLocationPlan.WithParent, 2, 5)
+                    )
+                    .ToImmutableList()
             );
 
-            AssertEx.SequenceIs(result, new DateOnlyTimeline([
-                new DateRange(
-                    DateOnly.FromDateTime(H.DateTime(1, 1)),
-                    DateOnly.FromDateTime(H.DateTime(1, 12))
-                ),
-                new DateRange(
-                    DateOnly.FromDateTime(H.DateTime(1, 20)),
-                    DateOnly.FromDateTime(H.DateTime(1, 25))
-                ),
-                new DateRange(
-                    DateOnly.FromDateTime(H.DateTime(1, 30)),
-                    DateOnly.FromDateTime(H.DateTime(2, 5))
+            AssertEx.SequenceIs(
+                result,
+                new DateOnlyTimeline(
+                    [
+                        new DateRange(
+                            DateOnly.FromDateTime(H.DateTime(1, 1)),
+                            DateOnly.FromDateTime(H.DateTime(1, 12))
+                        ),
+                        new DateRange(
+                            DateOnly.FromDateTime(H.DateTime(1, 20)),
+                            DateOnly.FromDateTime(H.DateTime(1, 25))
+                        ),
+                        new DateRange(
+                            DateOnly.FromDateTime(H.DateTime(1, 30)),
+                            DateOnly.FromDateTime(H.DateTime(2, 5))
+                        ),
+                    ]
                 )
-            ]));
+            );
         }
 
         [TestMethod]
@@ -70,26 +82,32 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
         {
             var result = ReferralCalculations.CreateChildLocationBasedTimeline(
                 H.ChildLocationHistory(
-                    (H.Id('0'), ChildLocationPlan.DaytimeChildCare, 1, 1),
-                    (Guid.Empty, ChildLocationPlan.WithParent, 1, 12),
-                    (H.Id('1'), ChildLocationPlan.DaytimeChildCare, 1, 20),
-                    (Guid.Empty, ChildLocationPlan.WithParent, 1, 25),
-                    (H.Id('0'), ChildLocationPlan.DaytimeChildCare, 1, 30),
-                    (Guid.Empty, ChildLocationPlan.WithParent, 2, 5)
-                ).ToImmutableList(),
+                        (H.Id('0'), ChildLocationPlan.DaytimeChildCare, 1, 1),
+                        (Guid.Empty, ChildLocationPlan.WithParent, 1, 12),
+                        (H.Id('1'), ChildLocationPlan.DaytimeChildCare, 1, 20),
+                        (Guid.Empty, ChildLocationPlan.WithParent, 1, 25),
+                        (H.Id('0'), ChildLocationPlan.DaytimeChildCare, 1, 30),
+                        (Guid.Empty, ChildLocationPlan.WithParent, 2, 5)
+                    )
+                    .ToImmutableList(),
                 filterToFamilyId: H.Id('0')
             );
 
-            AssertEx.SequenceIs(result, new DateOnlyTimeline([
-                new DateRange(
-                    DateOnly.FromDateTime(H.DateTime(1, 1)),
-                    DateOnly.FromDateTime(H.DateTime(1, 12))
-                ),
-                new DateRange(
-                    DateOnly.FromDateTime(H.DateTime(1, 30)),
-                    DateOnly.FromDateTime(H.DateTime(2, 5))
+            AssertEx.SequenceIs(
+                result,
+                new DateOnlyTimeline(
+                    [
+                        new DateRange(
+                            DateOnly.FromDateTime(H.DateTime(1, 1)),
+                            DateOnly.FromDateTime(H.DateTime(1, 12))
+                        ),
+                        new DateRange(
+                            DateOnly.FromDateTime(H.DateTime(1, 30)),
+                            DateOnly.FromDateTime(H.DateTime(2, 5))
+                        ),
+                    ]
                 )
-            ]));
+            );
         }
 
         [TestMethod]
@@ -97,21 +115,138 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
         {
             var result = ReferralCalculations.CreateChildLocationBasedTimeline(
                 H.ChildLocationHistory(
-                    (H.Id('0'), ChildLocationPlan.DaytimeChildCare, 1, 1),
-                    (Guid.Empty, ChildLocationPlan.WithParent, 1, 12),
-                    (H.Id('0'), ChildLocationPlan.DaytimeChildCare, 1, 20)
-                ).ToImmutableList()
+                        (H.Id('0'), ChildLocationPlan.DaytimeChildCare, 1, 1),
+                        (Guid.Empty, ChildLocationPlan.WithParent, 1, 12),
+                        (H.Id('0'), ChildLocationPlan.DaytimeChildCare, 1, 20)
+                    )
+                    .ToImmutableList()
             );
 
-            AssertEx.SequenceIs(result, new DateOnlyTimeline([
-                new DateRange(
-                    DateOnly.FromDateTime(H.DateTime(1, 1)),
-                    DateOnly.FromDateTime(H.DateTime(1, 12))
-                ),
-                new DateRange(
-                    DateOnly.FromDateTime(H.DateTime(1, 20))
+            AssertEx.SequenceIs(
+                result,
+                new DateOnlyTimeline(
+                    [
+                        new DateRange(
+                            DateOnly.FromDateTime(H.DateTime(1, 1)),
+                            DateOnly.FromDateTime(H.DateTime(1, 12))
+                        ),
+                        new DateRange(DateOnly.FromDateTime(H.DateTime(1, 20))),
+                    ]
                 )
-            ]));
+            );
+        }
+
+        [TestMethod]
+        public void CreateTimelineFilteredByFamilyIdNoPauses()
+        {
+            var result = ReferralCalculations.CreateChildLocationBasedTimeline(
+                H.ChildLocationHistory(
+                        (H.Id('0'), ChildLocationPlan.DaytimeChildCare, 1, 1),
+                        (H.Id('1'), ChildLocationPlan.DaytimeChildCare, 1, 20)
+                    )
+                    .ToImmutableList(),
+                H.Id('1')
+            );
+
+            AssertEx.SequenceIs(
+                result,
+                new DateOnlyTimeline([new DateRange(DateOnly.FromDateTime(H.DateTime(1, 20)))])
+            );
+        }
+
+        [TestMethod]
+        public void CreateTimelineFilteredByFamilyIdWithPauses()
+        {
+            var result = ReferralCalculations.CreateChildLocationBasedTimeline(
+                H.ChildLocationHistory(
+                        (H.Id('0'), ChildLocationPlan.DaytimeChildCare, 1, 1),
+                        (H.Id('1'), ChildLocationPlan.DaytimeChildCare, 1, 10),
+                        (H.Id('2'), ChildLocationPlan.WithParent, 1, 12),
+                        (H.Id('1'), ChildLocationPlan.DaytimeChildCare, 1, 15),
+                        (H.Id('2'), ChildLocationPlan.WithParent, 1, 20)
+                    )
+                    .ToImmutableList(),
+                H.Id('1')
+            );
+
+            AssertEx.SequenceIs(
+                result,
+                new DateOnlyTimeline(
+                    [
+                        new DateRange(
+                            DateOnly.FromDateTime(H.DateTime(1, 10)),
+                            DateOnly.FromDateTime(H.DateTime(1, 12))
+                        ),
+                        new DateRange(
+                            DateOnly.FromDateTime(H.DateTime(1, 15)),
+                            DateOnly.FromDateTime(H.DateTime(1, 20))
+                        ),
+                    ]
+                )
+            );
+        }
+
+        [TestMethod]
+        public void CreateTimelineFilteredByFamilyIdMultipleChangesInSameDay()
+        {
+            var hist = H.ChildLocationHistory(
+                (H.Id('0'), ChildLocationPlan.WithParent, 1, 1),
+                (H.Id('1'), ChildLocationPlan.DaytimeChildCare, 1, 10),
+                (H.Id('2'), ChildLocationPlan.DaytimeChildCare, 1, 10),
+                (H.Id('1'), ChildLocationPlan.DaytimeChildCare, 1, 10),
+                (H.Id('0'), ChildLocationPlan.WithParent, 1, 15)
+            );
+
+            var result = ReferralCalculations.CreateChildLocationBasedTimeline(hist.ToImmutableList(), H.Id('1'));
+
+            AssertEx.SequenceIs(
+                result,
+                new DateOnlyTimeline(
+                    [new DateRange(DateOnly.FromDateTime(H.DateTime(1, 10)), DateOnly.FromDateTime(H.DateTime(1, 15)))]
+                )
+            );
+        }
+
+        [TestMethod]
+        public void CreateTimelineFilteredByFamilyIdMultipleChangesInSameDay2()
+        {
+            var hist = H.ChildLocationHistory(
+                (H.Id('0'), ChildLocationPlan.WithParent, 1, 1),
+                (H.Id('1'), ChildLocationPlan.DaytimeChildCare, 1, 10),
+                (H.Id('2'), ChildLocationPlan.DaytimeChildCare, 1, 10),
+                (H.Id('1'), ChildLocationPlan.DaytimeChildCare, 1, 10),
+                (H.Id('0'), ChildLocationPlan.WithParent, 1, 15)
+            );
+
+            var result = ReferralCalculations.CreateChildLocationBasedTimeline(hist.ToImmutableList(), H.Id('2'));
+
+            AssertEx.SequenceIs(
+                result,
+                new DateOnlyTimeline(
+                    [new DateRange(DateOnly.FromDateTime(H.DateTime(1, 10)), DateOnly.FromDateTime(H.DateTime(1, 10)))]
+                )
+            );
+        }
+
+        [TestMethod]
+        public void CreateTimelineMultipleChangesInSameDay()
+        {
+            var hist = H.ChildLocationHistory(
+                (H.Id('0'), ChildLocationPlan.WithParent, 1, 1),
+                (H.Id('1'), ChildLocationPlan.DaytimeChildCare, 1, 10),
+                (H.Id('2'), ChildLocationPlan.DaytimeChildCare, 1, 10),
+                (H.Id('1'), ChildLocationPlan.DaytimeChildCare, 1, 10),
+                (H.Id('0'), ChildLocationPlan.WithParent, 1, 15)
+            );
+
+            var result = ReferralCalculations.CreateChildLocationBasedTimeline(hist.ToImmutableList());
+
+            AssertEx.SequenceIs(
+                result,
+                new DateOnlyTimeline(
+                    [new DateRange(DateOnly.FromDateTime(H.DateTime(1, 10)), DateOnly.FromDateTime(H.DateTime(1, 15)))]
+                )
+            );
         }
     }
 }
