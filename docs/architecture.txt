@@ -46,7 +46,7 @@ UseCase "UC-Me-1: Sign In" {
   AppClient - ClaimsPrincipal ISecurityUtility.Authenticate(HttpContext) > SecurityUtility
   AppClient - AppUserAccount IMembershipManager.SignIn(ClaimsPrincipal) > MembershipManager
   MembershipManager - Account IAccountsAccess.GetOrCreateUserAccount(ClaimsPrincipal) > AccountsAccess
-  AccountsAccess - Account IAccountsResource.GetOrCreateUserAccount(UserId) > AccountsResource
+  AccountsAccess -> AccountsResource /*  Account IAccountsResource.GetOrCreateUserAccount(UserId) */
 }
 
 /* HttpContext DTO is provided by ASP.NET Core */
@@ -159,22 +159,48 @@ UseCase "UC-Pr-5: View Communities List in Organization" {
   ProcessManager -> AuditAccess -> AuditResource
 }
 
-DTO IProcessManager.RetrieveRecordsCriteria {
+DTO RetrieveRecordsCriteria {
   DisclosureMethod Method
   RecordType? RecordType
   Guid? OrganizationId
   Guid? LocationId
+  Filters? Filters
 }
 
-DTO IProcessManager.RetrieveRecordsResponse {
+DTO Filters { }
+
+DTO RetrieveRecordsResponse {
   Community[] Communities
   Family[] Families
   Organization[] Organizations
 }
 
-DTO IProcessManager.Community {}
-DTO IProcessManager.Family {}
-DTO IProcessManager.Organization {}
+DTO Family {
+  Guid Id,
+  Guid LocationId,
+  string Name,
+  string? PrimaryEmail,
+  string? PrimaryPhoneNumber,
+  Address? PrimaryAddress,
+  string? HomeChurch
+}
+
+DTO Address {
+  string? Line1,
+  string? Line2,
+  string? City,
+  string? Country,
+  string? State,
+  string? PostalCode
+}
+
+DTO Community {
+    Guid Id,
+    Guid LocationId,
+    string Name
+}
+
+DTO Organization {}
 
 DTO ContextualPermissions {
   AuthorizationContext Context
@@ -187,7 +213,7 @@ DTO RecordsDisclosureRequest {
   RecordsAccess.RecordsResponse Records
 }
 
-DTO IRecordsAccess.RecordsCriteria {
+DTO RecordsCriteria {
   ContextualPermissions Permissions
   DisclosureMethod Method
   RecordType? RecordType
@@ -195,39 +221,40 @@ DTO IRecordsAccess.RecordsCriteria {
   Guid? LocationId
 }
 
-DTO IRecordsAccess.RecordsResponse {
+DTO RecordsResponse {
   Community[] Communities
   Family[] Families
   Organization[] Organizations
 }
 
-DTO IRecordsAccess.Community {}
-DTO IRecordsAccess.Family {}
-DTO IRecordsAccess.Organization {}
-
 UseCase "UC-Pr-6: Create Referral" {
   AppClient - CreateReferralResponse IProcessManager.CreateReferral(CreateReferralRequest) > ProcessManager
   ProcessManager - ContextualPermissions IEvaluationEngine.CalculateContextualPermissions(LocationAuthorizationContext) > EvaluationEngine
   ProcessManager -> WorkflowsAccess -> WorkflowsResource /* what if RecordsAccess decides the user doesn't have the right permissions, and StoreReferral doesn't happen? */
-  ProcessManager - StoredReferral IRecordsAcess.StoreReferral(StoreReferralRequest) > RecordsAccess -> RecordsResource
+  ProcessManager - StoreReferralResponse IRecordsAccess.StoreReferral(ReferralEntry) > RecordsAccess -> RecordsResource
   /* here should we call TransformationEngine to map StoredReferral into CreateReferralResponse? */
 }
 
 DTO CreateReferralResponse {
-  string Comments
+  string Comments,
+  Guid? FamilyId
 }
 
 DTO CreateReferralRequest {
-  string Comments
+  string Comments,
+  Guid? FamilyId
 }
 
-DTO StoredReferral {
-  string Comments
+DTO StoreReferralResponse {
+  Guid Id,
+  string Comments,
+  Guid? FamilyId
 }
 
-DTO StoreReferralRequest {
+DTO ReferralEntry {
   ContextualPermissions Permissions
-  string Comments
+  string Comments,
+  Guid? FamilyId
 }
 
 /*
@@ -280,49 +307,143 @@ UseCase "View Communities List V2" {
  
 
 UseCase "Track Child Location" {
-  AppClient -> ProcessManager
-  ProcessManager -> EvaluationEngine
-  EvaluationEngine -> AccountsAccess -> AccountsResource
-  EvaluationEngine -> RecordsAccess -> RecordsResource
-  EvaluationEngine -> PoliciesAccess -> PoliciesResource
-  ProcessManager -> RecordsAccess -> RecordsResource
+  AppClient - TrackChildLocationResponse IProcessManager.TrackChildLocation(TrackChildLocationRequest) > ProcessManager
+  ProcessManager - ContextualPermissions IEvaluationEngine.CalculateContextualPermissions(LocationAuthorizationContext) > EvaluationEngine
+  ProcessManager - StoreChildLocationResponse IRecordsAccess.Store(ChildLocationEntry) > RecordsAccess -> RecordsResource
+}
+
+DTO TrackChildLocationResponse { }
+
+DTO TrackChildLocationRequest {
+    Guid ArrangementId,
+    Guid ChildPersonId,
+    Guid FamilyId,
+    DateTime StartedAtUtc,
+    ChildLocationPlan ChildcarePlan,
+    DateTime? EnededAtUtc,
+    TimeSpan Duration
+}
+
+DTO StoreChildLocationResponse { }
+
+DTO ChildLocationEntry {
+    Guid ArrangementId,
+    Guid ChildPersonId,
+    Guid FamilyId,
+    DateTime StartedAtUtc,
+    ChildLocationPlan ChildcarePlan,
+    DateTime? EnededAtUtc,
+    TimeSpan Duration
 }
 
 UseCase "Create New Arrangement" {
-  AppClient -> ProcessManager
-  ProcessManager -> EvaluationEngine
-  EvaluationEngine -> AccountsAccess -> AccountsResource
-  EvaluationEngine -> RecordsAccess -> RecordsResource
-  EvaluationEngine -> PoliciesAccess -> PoliciesResource
-  ProcessManager -> RecordsAccess -> RecordsResource
+  AppClient - CreateArrangementResponse IProcessManager.CreateArrangement(CreateArrangementRequest) > ProcessManager
+  ProcessManager - ContextualPermissions IEvaluationEngine.CalculateContextualPermissions(LocationAuthorizationContext) > EvaluationEngine
+  ProcessManager - StoreArrangementEntryResponse IRecordsAccess.Store(ArrangementEntry) > RecordsAccess -> RecordsResource
+}
+
+DTO CreateArrangementResponse { }
+
+DTO CreateArrangementRequest { }
+
+DTO StoreArrangementEntryResponse { }
+
+DTO ArrangementEntry {
+    Guid Id,
+    string ArrangementType,
+    bool Active,
+    DateTime RequestedAtUtc,
+    DateTime? StartedAtUtc,
+    DateTime? EndedAtUtc,
+    DateTime? CancelledAtUtc,
+    DateTime? PlannedStartUtc,
+    DateTime? PlannedEndUtc,
+    Guid PartneringFamilyPersonId,
+    ImmutableList<CompletedRequirementInfo> CompletedRequirements,
+    ImmutableList<ExemptedRequirementInfo> ExemptedRequirements,
+    ImmutableList<IndividualVolunteerAssignment> IndividualVolunteerAssignments,
+    ImmutableList<FamilyVolunteerAssignment> FamilyVolunteerAssignments,
+    ImmutableSortedSet<ChildLocationHistoryEntry> ChildLocationHistory,
+    ImmutableSortedSet<ChildLocationHistoryEntry> ChildLocationPlan,
+    string? Comments,
+    string? Reason
+}
+
+DTO CompletedRequirementInfo {
+    Guid UserId,
+    DateTime TimestampUtc,
+    Guid CompletedRequirementId,
+    string RequirementName,
+    DateTime CompletedAtUtc,
+    DateTime? ExpiresAtUtc,
+    Guid? UploadedDocumentId,
+    Guid? NoteId
+}
+
+DTO ExemptedRequirementInfo {
+    Guid UserId,
+    DateTime TimestampUtc,
+    string RequirementName,
+    DateTime? DueDate,
+    string AdditionalComments,
+    DateTime? ExemptionExpiresAtUtc
+}
+
+DTO IndividualVolunteerAssignment {
+    Guid FamilyId,
+    Guid PersonId,
+    string ArrangementFunction,
+    string? ArrangementFunctionVariant,
+    ImmutableList<CompletedRequirementInfo> CompletedRequirements,
+    ImmutableList<ExemptedRequirementInfo> ExemptedRequirements
+}
+
+DTO FamilyVolunteerAssignment {
+    Guid FamilyId,
+    string ArrangementFunction,
+    string? ArrangementFunctionVariant,
+    ImmutableList<CompletedRequirementInfo> CompletedRequirements,
+    ImmutableList<ExemptedRequirementInfo> ExemptedRequirements
+}
+
+DTO ChildLocationHistoryEntry {
+    Guid UserId,
+    DateTime TimestampUtc,
+    Guid ChildLocationFamilyId,
+    Guid ChildLocationReceivingAdultId,
+    ChildLocationPlan Plan,
+    Guid? NoteId
 }
 
 UseCase "Create Family" {
-  AppClient -> ProcessManager
-  ProcessManager -> EvaluationEngine
-  EvaluationEngine -> AccountsAccess -> AccountsResource
-  EvaluationEngine -> RecordsAccess -> RecordsResource
-  EvaluationEngine -> PoliciesAccess -> PoliciesResource
-  ProcessManager -> RecordsAccess -> RecordsResource
+  AppClient - CreateFamilyResponse IProcessManager.CreateFamily(CreateFamilyRequest) > ProcessManager
+  ProcessManager - ContextualPermissions IEvaluationEngine.CalculateContextualPermissions(LocationAuthorizationContext) > EvaluationEngine
+  ProcessManager - StoreFamilyResponse IRecordsAccess.Store(Family) > RecordsAccess -> RecordsResource
 }
 
+DTO CreateFamilyResponse { }
+
+DTO CreateFamilyRequest { }
+
+DTO StoreFamilyResponse { }
+
 UseCase "Delete Family" {
-  AppClient -> ProcessManager
-  ProcessManager -> EvaluationEngine
-  EvaluationEngine -> AccountsAccess -> AccountsResource
-  EvaluationEngine -> RecordsAccess -> RecordsResource
-  EvaluationEngine -> PoliciesAccess -> PoliciesResource
-  ProcessManager -> RecordsAccess -> RecordsResource
+  AppClient - DeleteFamilyResponse IProcessManager.DeleteFamily(DeleteFamilyRequest) > ProcessManager
+  ProcessManager - ContextualPermissions IEvaluationEngine.CalculateContextualPermissions(LocationAuthorizationContext) > EvaluationEngine
+  ProcessManager - ArchiveResponse IRecordsAccess.Archive(FamilyArchiveCriteria) > RecordsAccess -> RecordsResource
+}
+
+DTO FamilyArchiveCriteria {
+    Guid FamilyId
 }
 
 UseCase "Add Adult" {
-  AppClient -> ProcessManager
-  ProcessManager -> EvaluationEngine
-  EvaluationEngine -> AccountsAccess -> AccountsResource
-  EvaluationEngine -> RecordsAccess -> RecordsResource
-  EvaluationEngine -> PoliciesAccess -> PoliciesResource
-  ProcessManager -> RecordsAccess -> RecordsResource
+  AppClient - AddAdultResponse IProcessManager.AddAdult(AddAdultRequest) > ProcessManager
+  ProcessManager - ContextualPermissions IEvaluationEngine.CalculateContextualPermissions(LocationAuthorizationContext) > EvaluationEngine
+  ProcessManager - StoreResponse IRecordsAccess.Store(Person) > RecordsAccess -> RecordsResource
 }
+
+
 UseCase "Add Child" {
   AppClient -> ProcessManager
   ProcessManager -> EvaluationEngine
@@ -1085,15 +1206,20 @@ UseCase "Close Referral  (after split)" {
 }
 
 UseCase "Open Case" {
-  AppClient -> ProcessManager
-  ProcessManager -> EvaluationEngine
+  AppClient - OpenCaseResponse IProcessManager.OpenCase(OpenCaseRequest) > ProcessManager
+  ProcessManager - IEvaluationEngine.AuthorizeUserAccess() > EvaluationEngine
   EvaluationEngine -> AccountsAccess -> AccountsResource
   EvaluationEngine -> RecordsAccess -> RecordsResource
   EvaluationEngine -> PoliciesAccess -> PoliciesResource
-  ProcessManager -> WorkflowsAccess -> WorkflowsResource
-  ProcessManager -> RecordsAccess -> RecordsResource
-  ProcessManager -:q> CommunicationManager
+  /* Maybe insteado of InvokeWorflow, it should be something like ExecuteUserDefinedActions? sounds a bit more like a business operation verb? */
+  ProcessManager - IWorkflowsAccess.InvokeWorkflow() > WorkflowsAccess -> WorkflowsResource
+  ProcessManager - IRecordsAccess.Store() > RecordsAccess -> RecordsResource
+  ProcessManager - ICommunicationManager.Notify():q> CommunicationManager
 }
+
+DTO OpenCaseResponse {}
+
+DTO OpenCaseRequest {}
 
 UseCase "Link Referral to Case" {
   AppClient -> ProcessManager
