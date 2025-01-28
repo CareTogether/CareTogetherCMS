@@ -229,7 +229,7 @@ DTO RecordsResponse {
 }
 
 UseCase "UC-Pr-6: Create Referral" {
-  AppClient - CreateReferralResponse IProcessManager.CreateRecord(CreateReferralRequest) > ProcessManager
+  AppClient - CreateReferralResponse IProcessManager.SubmitRecords(SubmitRecordsRequest) > ProcessManager
   ProcessManager - ContextualPermissions IEvaluationEngine.CalculateContextualPermissions(LocationAuthorizationContext) > EvaluationEngine
   ProcessManager -> WorkflowsAccess -> WorkflowsResource /* what if RecordsAccess decides the user doesn't have the right permissions, and StoreReferral doesn't happen? */
   ProcessManager - StoreRecordResponse IRecordsAccess.Store(Record) > RecordsAccess -> RecordsResource
@@ -539,8 +539,9 @@ UseCase "Read Family Documents" {
 UseCase "Upload Family Documents" {
   AppClient - IProcessManager.UploadDocuments() > ProcessManager
   ProcessManager - ContextualPermissions IEvaluationEngine.CalculateContextualPermissions(LocationAuthorizationContext) > EvaluationEngine
-  ProcessManager - IFileStoreUtility.Upload() > FileStoreUtility
+  /* ProcessManager - IFileStoreUtility.Upload() > FileStoreUtility */
   ProcessManager - IRecordsAccess.Store() > RecordsAccess -> RecordsResource
+  RecordsAccess - IFileStoreUtility.Upload() > FileStoreUtility
 }
 
 UseCase "Archive Family Documents" {
