@@ -1,6 +1,6 @@
 StaticAspect "CareTogether V2" { 
   AppClient SupportClient AnalyticsClient IntegrationClient
-  MembershipManager ProcessManager CommunicationManager
+  MembershipManager ProcessManager CommunicationManager AnalysisManager /* future enhancement */
   EvaluationEngine TransformationEngine
   AccountsAccess PoliciesAccess WorkflowsAccess RecordsAccess AuditAccess
   AccountsResource PoliciesResource WorkflowsResource RecordsResource FormsResource AuditResource
@@ -15,6 +15,85 @@ StaticAspect "CareTogether V2" {
   LoggingUtility
   IdentityProviderUtility /* Was missing */
 }
+
+/* OPERATION CONTRACTS -- WORK-IN-PROGRESS
+
+ProcessManager
+  - ConfigureOrganization
+  - ConfigurePolicies // could end up just being part of ConfigureOrganization? maybe just call it 'Configure' & use polymorphism?
+  - SubmitRecords // (un)archive is a special case that could just be a validation rule: 'IsActive' flag changes cannot be accompanied by other changes
+    // SubmitRecords could actually update the record *or* decide to create a change request instead, based on policies
+    // When a change request is issued, the ProcessManager makes a queued call to CommunicationManager to notify the record owner or other responsible party (as identified by policy evaluation) of the pending change.
+  - RetrieveRecords
+  - ReviewChanges
+
+MembershipManager
+  - InviteUser
+  - RegisterAccount
+  - CloseAccount
+  - LinkAccount // links an account to a person in a location in an organization
+  - FindAccount
+
+CommunicationManager
+  ...
+  // The CommunicationManager has the ability to send email notifications as well as interactive notifications,
+  // e.g. Teams adaptive cards, for things like change request approvals.
+
+WorkflowsAccess
+  - WorkflowState Instantiate(WorkflowCriteria) // 'run user-defined actions'?
+  - WorkflowState Dispatch(InputEvent)
+
+RecordsAccess
+  - Store // upsert/PATCH semantics
+  - Filter
+  - StoreChange // add a new pending change to the underlying record's set of pending changes
+  - CommitChange // needs to reference an existing pending change
+  - CancelChange // needs to reference an existing pending change
+    // Records include: Families, Communities, Organizations
+    // Organizations could themselves be using CareTogether, allowing features like automatic transfer of intake data
+
+// Records need to include a set of 'pending changes', each of which has a 'RequestedChangeId' that is tied to the request workflow.
+// Pending changes should be stored in non-immutable storage, like draft notes are today, and only the reference to them should be
+//   made part of the immutable log.
+
+PoliciesAccess
+  ...
+
+AccountsAccess
+  ...
+
+AuditAccess
+  ...
+
+*/
+
+/*
+QUESTION: What are we storing/exposing with RecordsAccess?
+
+Option 1: only specific "Aggregates" as defined today: Families, Communities, eventually Organizations.
+>>> This feels the most consistently organized.
+
+Option 2: all "Entities" in the domain model: Families, People, Referrals, Cases, Arrangements, Communities, Organizations.
+This would actually also need to include:
+- Requirement Completions/Exemptions
+- Child Location Changes (Actual & Planned)
+- Function Assignments
+- Notes
+- Documents (reference to them)
+- Forms (reference to them)
+- Organization Members
+- Organization Roles
+
+--> This approach basically exposes a relational database!
+
+SMELL: This is fine-grained, not coarse-grained. We want to encapsulate the variability of different types of records.
+SMELL: How do you define a 'pending change' to a requirement completion? What would be an example? On the other hand, it feels very reasonable to make a 'pending change' to a *family* (or maybe a person or arrangement or referral or case?) of a requirement completion, e.g. a family coach submitting a safety visit completion. Therefore, treating a Requirement Completion *as a record* is too granular. Therefore, we need some level of combining these "entities" into "aggregates" that are reasonable to modify.
+
+Option 3?
+
+Option 4: The entire dataset for a location? Waaaaay too coarse-grained. Writes need to be made at a more granular level.
+
+*/
 
 /*
 # MIGRATION NOTES
