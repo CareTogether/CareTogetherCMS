@@ -122,6 +122,7 @@ Activity "UC-Me-1: Sign In" {
   stop
 }
 
+/* TODO: review */
 UseCase "UC-Me-1: Sign In" {
   AppClient - ClaimsPrincipal ISecurityUtility.Authenticate(HttpContext) > SecurityUtility
   AppClient - AppUserAccount IMembershipManager.SignIn(ClaimsPrincipal) > MembershipManager
@@ -395,7 +396,7 @@ UseCase "View Communities List V2" {
  
 
 UseCase "Track Child Location" {
-  AppClient - CreateChildLocationEntryResponse IProcessManager.CreateRecord(CreateChildLocationEntryRequest) > ProcessManager
+  AppClient - CreateChildLocationEntryResponse IProcessManager.SubmitRecords(CreateChildLocationEntryRequest) > ProcessManager
   ProcessManager - ContextualPermissions IEvaluationEngine.CalculateContextualPermissions(LocationAuthorizationContext) > EvaluationEngine
   ProcessManager - StoreChildLocationEntryResponse IRecordsAccess.Store(ChildLocationEntry) > RecordsAccess -> RecordsResource
 }
@@ -425,7 +426,7 @@ DTO ChildLocationEntry {
 }
 
 UseCase "Create New Arrangement" {
-  AppClient - CreateArrangementResponse IProcessManager.CreateRecord(CreateArrangementRequest) > ProcessManager
+  AppClient - CreateArrangementResponse IProcessManager.SubmitRecords(CreateArrangementRequest) > ProcessManager
   ProcessManager - ContextualPermissions IEvaluationEngine.CalculateContextualPermissions(LocationAuthorizationContext) > EvaluationEngine
   ProcessManager - StoreArrangementEntryResponse IRecordsAccess.Store(ArrangementEntry) > RecordsAccess -> RecordsResource
 }
@@ -504,7 +505,7 @@ DTO ChildLocationHistoryEntry {
 }
 
 UseCase "Create Family" {
-  AppClient - CreateFamilyResponse IProcessManager.CreateRecord(CreateFamilyRequest) > ProcessManager
+  AppClient - CreateFamilyResponse IProcessManager.SubmitRecords(CreateFamilyRequest) > ProcessManager
   ProcessManager - ContextualPermissions IEvaluationEngine.CalculateContextualPermissions(LocationAuthorizationContext) > EvaluationEngine
   ProcessManager - StoreFamilyResponse IRecordsAccess.Store(Family) > RecordsAccess -> RecordsResource
 }
@@ -516,9 +517,9 @@ DTO CreateFamilyRequest { }
 DTO StoreFamilyResponse { }
 
 UseCase "Delete Family" {
-  AppClient - ArchiveFamilyResponse IProcessManager.ArchiveRecord(ArchiveRecordRequest) > ProcessManager
+  AppClient - ArchiveFamilyResponse IProcessManager.SubmitRecords(ArchiveRecordRequest) > ProcessManager
   ProcessManager - ContextualPermissions IEvaluationEngine.CalculateContextualPermissions(LocationAuthorizationContext) > EvaluationEngine
-  ProcessManager - ArchiveResponse IRecordsAccess.Archive(RecordArchiveCriteria) > RecordsAccess -> RecordsResource
+  ProcessManager - ArchiveResponse IRecordsAccess.Store(RecordArchiveCriteria) > RecordsAccess -> RecordsResource
 }
 
 /* This is a generic type */
@@ -534,7 +535,7 @@ DTO FamilyRecordParameters /* : RecordParameters */ {
 }
 
 UseCase "Add Adult" {
-  AppClient - AddAdultResponse IProcessManager.AddFamilyMember(AddFamilyMemberRequest) > ProcessManager
+  AppClient - AddAdultResponse IProcessManager.SubmitRecords(AddFamilyMemberRequest) > ProcessManager
   ProcessManager - ContextualPermissions IEvaluationEngine.CalculateContextualPermissions(LocationAuthorizationContext) > EvaluationEngine
   ProcessManager - StoreResponse IRecordsAccess.Store(Person) > RecordsAccess -> RecordsResource
   ProcessManager - StoreResponse IRecordsAccess.Store(AddPersonToFamily) > RecordsAccess -> RecordsResource
@@ -571,7 +572,7 @@ DTO AddPersonToFamily {
 
 
 UseCase "Add Child" {
-  AppClient - AddAdultResponse IProcessManager.AddFamilyMember(AddFamilyMemberRequest) > ProcessManager
+  AppClient - AddAdultResponse IProcessManager.SubmitRecords(AddFamilyMemberRequest) > ProcessManager
   ProcessManager - ContextualPermissions IEvaluationEngine.CalculateContextualPermissions(LocationAuthorizationContext) > EvaluationEngine
   ProcessManager - StoreResponse IRecordsAccess.Store(Person) > RecordsAccess -> RecordsResource
   ProcessManager - StoreResponse IRecordsAccess.Store(AddPersonToFamily) > RecordsAccess -> RecordsResource
@@ -584,9 +585,9 @@ DTO AddChildToFamily {
 }
 
 UseCase "Delete Person" {
-  AppClient - IProcessManager.ArchiveRecord(ArchivePersonRequest) > ProcessManager
+  AppClient - IProcessManager.SubmitRecords(ArchivePersonRequest) > ProcessManager
   ProcessManager - ContextualPermissions IEvaluationEngine.CalculateContextualPermissions(LocationAuthorizationContext) > EvaluationEngine
-  ProcessManager - IRecordsAccess.Archive(RecordCriteria) > RecordsAccess -> RecordsResource
+  ProcessManager - IRecordsAccess.Store(RecordCriteria) > RecordsAccess -> RecordsResource
 }
 
 DTO ArchivePersonRequest {
@@ -598,7 +599,7 @@ DTO ArchivePersonCriteria {
 }
 
 UseCase "Move Person to Another Family" {
-  AppClient - IProcessManager.ChangePersonFamily(ChangePersonFamilyRequest) > ProcessManager
+  AppClient - IProcessManager.SubmitRecords(ChangePersonFamilyRequest) > ProcessManager
   ProcessManager - ContextualPermissions IEvaluationEngine.CalculateContextualPermissions(LocationAuthorizationContext) > EvaluationEngine
   ProcessManager - /* Are there existing commands for moving/removing person from a family? */ > RecordsAccess -> RecordsResource
 }
@@ -616,7 +617,7 @@ UseCase "Read Family Documents" {
 }
 
 UseCase "Upload Family Documents" {
-  AppClient - IProcessManager.UploadDocuments() > ProcessManager
+  AppClient - IProcessManager.SubmitRecords() > ProcessManager
   ProcessManager - ContextualPermissions IEvaluationEngine.CalculateContextualPermissions(LocationAuthorizationContext) > EvaluationEngine
   /* ProcessManager - IFileStoreUtility.Upload() > FileStoreUtility */
   ProcessManager - IRecordsAccess.Store() > RecordsAccess -> RecordsResource
@@ -626,7 +627,7 @@ UseCase "Upload Family Documents" {
 UseCase "Archive Family Documents" {
   AppClient - IProcessManager.ArchiveRecord() > ProcessManager
   ProcessManager - ContextualPermissions IEvaluationEngine.CalculateContextualPermissions(LocationAuthorizationContext) > EvaluationEngine
-  ProcessManager - IRecordsAccess.Archive() > RecordsAccess -> RecordsResource
+  ProcessManager - IRecordsAccess.Store() > RecordsAccess -> RecordsResource
 }
 
 UseCase "View Family Document Metadata" {
@@ -659,7 +660,7 @@ UseCase "Edit Person User Standard Roles" {
 /* TODO: check */
 UseCase "View Person User Login Info" {
   /* Feel like it should be similar to IProcessManager.RetrieveRecords()? */
-  AppClient - IMembershipManager.GetPersonLoginInfo() > MembershipManager
+  AppClient - IMembershipManager.FindAccount() > MembershipManager
   MembershipManager - IAccountsAccess.Filter() > AccountsAccess -> AccountsResource
   MembershipManager - IRecordsAccess.Filter() > RecordsAccess -> RecordsResource
   MembershipManager - ContextualPermissions IEvaluationEngine.CalculateContextualPermissions(LocationAuthorizationContext) > EvaluationEngine
@@ -754,35 +755,35 @@ UseCase "View Person Contact Info" {
 
 /* TODO: check */
 UseCase "Edit Family Info" {
-  AppClient - IProcessManager.UpdateRecord() > ProcessManager
+  AppClient - IProcessManager.SubmitRecords() > ProcessManager
   ProcessManager - ContextualPermissions IEvaluationEngine.CalculateContextualPermissions(LocationAuthorizationContext) > EvaluationEngine
   ProcessManager - IRecordsAccess.Store() > RecordsAccess -> RecordsResource
 }
 
 /* TODO: check */
 UseCase "Edit Person Concerns" {
-  AppClient - IProcessManager.UpdateRecord() > ProcessManager
+  AppClient - IProcessManager.SubmitRecords() > ProcessManager
   ProcessManager - ContextualPermissions IEvaluationEngine.CalculateContextualPermissions(LocationAuthorizationContext) > EvaluationEngine
   ProcessManager - IRecordsAccess.Store() > RecordsAccess -> RecordsResource
 }
 
 /* TODO: check */
 UseCase "Edit Person Notes" {
-  AppClient - IProcessManager.UpdateRecord() > ProcessManager
+  AppClient - IProcessManager.SubmitRecords() > ProcessManager
   ProcessManager - ContextualPermissions IEvaluationEngine.CalculateContextualPermissions(LocationAuthorizationContext) > EvaluationEngine
   ProcessManager - IRecordsAccess.Store() > RecordsAccess -> RecordsResource
 }
 
 /* TODO: check */
 UseCase "Edit Person Contact Info" {
-  AppClient - IProcessManager.UpdateRecord() > ProcessManager
+  AppClient - IProcessManager.SubmitRecords() > ProcessManager
   ProcessManager - ContextualPermissions IEvaluationEngine.CalculateContextualPermissions(LocationAuthorizationContext) > EvaluationEngine
   ProcessManager - IRecordsAccess.Store() > RecordsAccess -> RecordsResource
 }
 
 /* TODO: check */
 UseCase "Add / Edit Draft Notes" {
-  AppClient - IProcessManager.UpdateRecord() > ProcessManager
+  AppClient - IProcessManager.SubmitRecords() > ProcessManager
   ProcessManager - ContextualPermissions IEvaluationEngine.CalculateContextualPermissions(LocationAuthorizationContext) > EvaluationEngine
   ProcessManager - IRecordsAccess.Store() > RecordsAccess -> RecordsResource
 }
@@ -791,12 +792,12 @@ UseCase "Add / Edit Draft Notes" {
 UseCase "Discard Draft Notes" {
   AppClient - IProcessManager.ArchiveRecord() > ProcessManager
   ProcessManager - ContextualPermissions IEvaluationEngine.CalculateContextualPermissions(LocationAuthorizationContext) > EvaluationEngine
-  ProcessManager - IRecordsAccess.Archive() > RecordsAccess -> RecordsResource
+  ProcessManager - IRecordsAccess.Store() > RecordsAccess -> RecordsResource
 }
 
 /* TODO: check */
 UseCase "Approve Notes" {
-  AppClient - IProcessManager.UpdateRecord() > ProcessManager
+  AppClient - IProcessManager.SubmitRecords() > ProcessManager
   ProcessManager - ContextualPermissions IEvaluationEngine.CalculateContextualPermissions(LocationAuthorizationContext) > EvaluationEngine
   ProcessManager - IRecordsAccess.Store() > RecordsAccess -> RecordsResource
 }
@@ -817,21 +818,21 @@ UseCase "View Approval Status" {
 
 /* TODO: check */
 UseCase "Edit Approval Requirement Completion" {
-  AppClient - IProcessManager.UpdateRecord() > ProcessManager
+  AppClient - IProcessManager.SubmitRecords() > ProcessManager
   ProcessManager - ContextualPermissions IEvaluationEngine.CalculateContextualPermissions(LocationAuthorizationContext) > EvaluationEngine
   ProcessManager - IRecordsAccess.Store() > RecordsAccess -> RecordsResource
 }
 
 /* TODO: check */
 UseCase "Edit Approval Requirement Exemption" {
-  AppClient - IProcessManager.UpdateRecord() > ProcessManager
+  AppClient - IProcessManager.SubmitRecords() > ProcessManager
   ProcessManager - ContextualPermissions IEvaluationEngine.CalculateContextualPermissions(LocationAuthorizationContext) > EvaluationEngine
   ProcessManager - IRecordsAccess.Store() > RecordsAccess -> RecordsResource
 }
 
 /* TODO: check */
 UseCase "Edit Volunteer Role Participation" {
-  AppClient - IProcessManager.UpdateRecord() > ProcessManager
+  AppClient - IProcessManager.SubmitRecords() > ProcessManager
   ProcessManager - ContextualPermissions IEvaluationEngine.CalculateContextualPermissions(LocationAuthorizationContext) > EvaluationEngine
   ProcessManager - IRecordsAccess.Store() > RecordsAccess -> RecordsResource
 }
@@ -852,14 +853,14 @@ UseCase "View Approval History" {
 
 /* TODO: check */
 UseCase "Activate Volunteer Family" {
-  AppClient - IProcessManager.UpdateRecord() > ProcessManager
+  AppClient - IProcessManager.SubmitRecords() > ProcessManager
   ProcessManager - ContextualPermissions IEvaluationEngine.CalculateContextualPermissions(LocationAuthorizationContext) > EvaluationEngine
   ProcessManager - IRecordsAccess.Store() > RecordsAccess -> RecordsResource
 }
 
 /* TODO: check */
 UseCase "Edit Referral" {
-  AppClient - IProcessManager.UpdateRecord() > ProcessManager
+  AppClient - IProcessManager.SubmitRecords() > ProcessManager
   ProcessManager - ContextualPermissions IEvaluationEngine.CalculateContextualPermissions(LocationAuthorizationContext) > EvaluationEngine
   ProcessManager - IRecordsAccess.Store() > RecordsAccess -> RecordsResource
 }
@@ -868,7 +869,7 @@ UseCase "Edit Referral" {
 UseCase "Close Referral" {
   AppClient - IProcessManager.ArchiveRecord() > ProcessManager
   ProcessManager - ContextualPermissions IEvaluationEngine.CalculateContextualPermissions(LocationAuthorizationContext) > EvaluationEngine
-  ProcessManager - IRecordsAccess.Archive() > RecordsAccess -> RecordsResource
+  ProcessManager - IRecordsAccess.Store() > RecordsAccess -> RecordsResource
 }
 
 /* TODO: check */
@@ -901,7 +902,7 @@ UseCase "Edit Referral Requirement Completion" {
 
 /* TODO: check */
 UseCase "Edit Referral Requirement Exemption" {
-  AppClient - IProcessManager.UpdateRecord() > ProcessManager
+  AppClient - IProcessManager.SubmitRecords() > ProcessManager
   ProcessManager - ContextualPermissions IEvaluationEngine.CalculateContextualPermissions(LocationAuthorizationContext) > EvaluationEngine
   ProcessManager - IRecordsAccess.Store() > RecordsAccess -> RecordsResource
 }
@@ -915,14 +916,14 @@ UseCase "View Referral History" {
 
 /* TODO: check */
 UseCase "Create Arrangement" {
-  AppClient - IProcessManager.CreateRecord() > ProcessManager
+  AppClient - IProcessManager.SubmitRecords() > ProcessManager
   ProcessManager - ContextualPermissions IEvaluationEngine.CalculateContextualPermissions(LocationAuthorizationContext) > EvaluationEngine
   ProcessManager - IRecordsAccess.Store() > RecordsAccess -> RecordsResource
 }
 
 /* TODO: check */
 UseCase "Edit Arrangement" {
-  AppClient - IProcessManager.UpdateRecord() > ProcessManager
+  AppClient - IProcessManager.SubmitRecords() > ProcessManager
   ProcessManager - ContextualPermissions IEvaluationEngine.CalculateContextualPermissions(LocationAuthorizationContext) > EvaluationEngine
   ProcessManager - IRecordsAccess.Store() > RecordsAccess -> RecordsResource
 }
@@ -936,7 +937,7 @@ UseCase "View Assignments" {
 
 /* TODO: check */
 UseCase "Edit Assignments" {
-  AppClient - IProcessManager.UpdateRecord() > ProcessManager
+  AppClient - IProcessManager.SubmitRecords() > ProcessManager
   ProcessManager - ContextualPermissions IEvaluationEngine.CalculateContextualPermissions(LocationAuthorizationContext) > EvaluationEngine
   ProcessManager - IRecordsAccess.Store() > RecordsAccess -> RecordsResource
 }
@@ -950,14 +951,14 @@ UseCase "View Arrangement Progress" {
 
 /* TODO: check */
 UseCase "Create Community" {
-  AppClient - IProcessManager.CreateRecord() > ProcessManager
+  AppClient - IProcessManager.SubmitRecords() > ProcessManager
   ProcessManager - ContextualPermissions IEvaluationEngine.CalculateContextualPermissions(LocationAuthorizationContext) > EvaluationEngine
   ProcessManager - IRecordsAccess.Store() > RecordsAccess -> RecordsResource
 }
 
 /* TODO: check */
 UseCase "Edit Community" {
-  AppClient - IProcessManager.UpdateRecord() > ProcessManager
+  AppClient - IProcessManager.SubmitRecords() > ProcessManager
   ProcessManager - ContextualPermissions IEvaluationEngine.CalculateContextualPermissions(LocationAuthorizationContext) > EvaluationEngine
   ProcessManager - IRecordsAccess.Store() > RecordsAccess -> RecordsResource
 }
@@ -966,19 +967,19 @@ UseCase "Edit Community" {
 UseCase "Archive Community" {
   AppClient - IProcessManager.ArchiveRecord() > ProcessManager
   ProcessManager - ContextualPermissions IEvaluationEngine.CalculateContextualPermissions(LocationAuthorizationContext) > EvaluationEngine
-  ProcessManager - IRecordsAccess.Archive() > RecordsAccess -> RecordsResource
+  ProcessManager - IRecordsAccess.Store() > RecordsAccess -> RecordsResource
 }
 
 /* TODO: check */
 UseCase "Edit Community Member Families" {
-  AppClient - IProcessManager.UpdateRecord() > ProcessManager
+  AppClient - IProcessManager.SubmitRecords() > ProcessManager
   ProcessManager - ContextualPermissions IEvaluationEngine.CalculateContextualPermissions(LocationAuthorizationContext) > EvaluationEngine
   ProcessManager - IRecordsAccess.Store() > RecordsAccess -> RecordsResource
 }
 
 /* TODO: check */
 UseCase "Edit Community Role Assignments" {
-  AppClient - IProcessManager.UpdateRecord() > ProcessManager
+  AppClient - IProcessManager.SubmitRecords() > ProcessManager
   ProcessManager - ContextualPermissions IEvaluationEngine.CalculateContextualPermissions(LocationAuthorizationContext) > EvaluationEngine
   ProcessManager - IRecordsAccess.Store() > RecordsAccess -> RecordsResource
 }
@@ -1000,7 +1001,7 @@ UseCase "Read Community Documents (Future)" {
 
 /* TODO: check */
 UseCase "Upload Community Documents" {
-  AppClient - IProcessManager.UploadDocuments() > ProcessManager
+  AppClient - IProcessManager.SubmitRecords() > ProcessManager
   ProcessManager - ContextualPermissions IEvaluationEngine.CalculateContextualPermissions(LocationAuthorizationContext) > EvaluationEngine
   ProcessManager - IFileStoreUtility.Upload() > FileStoreUtility
   ProcessManager - IRecordsAccess.Store() > RecordsAccess -> RecordsResource
@@ -1010,7 +1011,7 @@ UseCase "Upload Community Documents" {
 UseCase "Archive Community Documents" {
   AppClient - IProcessManager.ArchiveRecord() > ProcessManager
   ProcessManager - ContextualPermissions IEvaluationEngine.CalculateContextualPermissions(LocationAuthorizationContext) > EvaluationEngine
-  ProcessManager - IRecordsAccess.Archive() > RecordsAccess -> RecordsResource
+  ProcessManager - IRecordsAccess.Store() > RecordsAccess -> RecordsResource
 }
 
 /* TODO: check */
@@ -1043,28 +1044,28 @@ UseCase "Restore a soft deleted document" {
 
 /* TODO: check */
 UseCase "Set document visibility" {
-  AppClient - IProcessManager.UpdateRecord() > ProcessManager
+  AppClient - IProcessManager.SubmitRecords() > ProcessManager
   ProcessManager - ContextualPermissions IEvaluationEngine.CalculateContextualPermissions(LocationAuthorizationContext) > EvaluationEngine
   ProcessManager - IRecordsAccess.Store() > RecordsAccess -> RecordsResource
 }
 
 /* TODO: check */
 UseCase "Set note visibility" {
-  AppClient - IProcessManager.UpdateRecord() > ProcessManager
+  AppClient - IProcessManager.SubmitRecords() > ProcessManager
   ProcessManager - ContextualPermissions IEvaluationEngine.CalculateContextualPermissions(LocationAuthorizationContext) > EvaluationEngine
   ProcessManager - IRecordsAccess.Store() > RecordsAccess -> RecordsResource
 }
 
 /* TODO: check */
 UseCase "Edit Arrangement Requirement Completion" {
-  AppClient - IProcessManager.UpdateRecord() > ProcessManager
+  AppClient - IProcessManager.SubmitRecords() > ProcessManager
   ProcessManager - ContextualPermissions IEvaluationEngine.CalculateContextualPermissions(LocationAuthorizationContext) > EvaluationEngine
   ProcessManager - IRecordsAccess.Store() > RecordsAccess -> RecordsResource
 }
 
 /* TODO: check */
 UseCase "Edit Arrangement Requirement Exemption" {
-  AppClient - IProcessManager.UpdateRecord() > ProcessManager
+  AppClient - IProcessManager.SubmitRecords() > ProcessManager
   ProcessManager - ContextualPermissions IEvaluationEngine.CalculateContextualPermissions(LocationAuthorizationContext) > EvaluationEngine
   ProcessManager - IRecordsAccess.Store() > RecordsAccess -> RecordsResource
 }
@@ -1073,7 +1074,7 @@ UseCase "Edit Arrangement Requirement Exemption" {
 UseCase "Delete Arrangement" {
   AppClient - IProcessManager.ArchiveRecord() > ProcessManager
   ProcessManager - ContextualPermissions IEvaluationEngine.CalculateContextualPermissions(LocationAuthorizationContext) > EvaluationEngine
-  ProcessManager - IRecordsAccess.Archive() > RecordsAccess -> RecordsResource
+  ProcessManager - IRecordsAccess.Store() > RecordsAccess -> RecordsResource
 }
 
 /* TODO: check */
@@ -1100,7 +1101,7 @@ UseCase "View Referrals" {
 }
 
 UseCase "Link Referral to Family" {
-  AppClient - IProcessManager.UpdateRecord() > ProcessManager
+  AppClient - IProcessManager.SubmitRecords() > ProcessManager
   ProcessManager - ContextualPermissions IEvaluationEngine.CalculateContextualPermissions(LocationAuthorizationContext) > EvaluationEngine
   ProcessManager -> WorkflowsAccess -> WorkflowsResource
   ProcessManager - IRecordsAccess.Store() > RecordsAccess -> RecordsResource
@@ -1108,7 +1109,7 @@ UseCase "Link Referral to Family" {
 }
 
 UseCase "Unlink Referral from Family " {
-  AppClient - IProcessManager.UpdateRecord() > ProcessManager
+  AppClient - IProcessManager.SubmitRecords() > ProcessManager
   ProcessManager - ContextualPermissions IEvaluationEngine.CalculateContextualPermissions(LocationAuthorizationContext) > EvaluationEngine
   ProcessManager - IRecordsAccess.Store() > RecordsAccess -> RecordsResource
 }
@@ -1116,17 +1117,16 @@ UseCase "Unlink Referral from Family " {
 UseCase "Close Referral  (after split)" {
   AppClient - IProcessManager.ArchiveRecord() > ProcessManager
   ProcessManager - ContextualPermissions IEvaluationEngine.CalculateContextualPermissions(LocationAuthorizationContext) > EvaluationEngine
-  ProcessManager - IRecordsAccess.Archive() > RecordsAccess -> RecordsResource
+  ProcessManager - IRecordsAccess.Store() > RecordsAccess -> RecordsResource
 }
 
 UseCase "Open Case" {
-  AppClient - OpenCaseResponse IProcessManager.OpenCase(OpenCaseRequest) > ProcessManager
+  AppClient - OpenCaseResponse IProcessManager.SubmitRecords(OpenCaseRequest) > ProcessManager
   ProcessManager - IEvaluationEngine.AuthorizeUserAccess() > EvaluationEngine
   EvaluationEngine -> AccountsAccess -> AccountsResource
   EvaluationEngine -> RecordsAccess -> RecordsResource
   EvaluationEngine -> PoliciesAccess -> PoliciesResource
-  /* Maybe insteado of InvokeWorflow, it should be something like ExecuteUserDefinedActions? sounds a bit more like a business operation verb? */
-  ProcessManager - IWorkflowsAccess.InvokeWorkflow() > WorkflowsAccess -> WorkflowsResource
+  ProcessManager - IWorkflowsAccess.Instantiate() > WorkflowsAccess -> WorkflowsResource
   ProcessManager - IRecordsAccess.Store() > RecordsAccess -> RecordsResource
   ProcessManager - ICommunicationManager.Notify():q> CommunicationManager
 }
@@ -1136,19 +1136,19 @@ DTO OpenCaseResponse {}
 DTO OpenCaseRequest {}
 
 UseCase "Link Referral to Case" {
-  AppClient - IProcessManager.UpdateRecord() > ProcessManager
+  AppClient - IProcessManager.SubmitRecords() > ProcessManager
   ProcessManager - ContextualPermissions IEvaluationEngine.CalculateContextualPermissions(LocationAuthorizationContext) > EvaluationEngine
   ProcessManager - IRecordsAccess.Store() > RecordsAccess -> RecordsResource
 }
 
 UseCase "Unlink Referral from Case" {
-  AppClient - IProcessManager.UpdateRecord() > ProcessManager
+  AppClient - IProcessManager.SubmitRecords() > ProcessManager
   ProcessManager - ContextualPermissions IEvaluationEngine.CalculateContextualPermissions(LocationAuthorizationContext) > EvaluationEngine
   ProcessManager - IRecordsAccess.Store() > RecordsAccess -> RecordsResource
 }
 
 UseCase "Close Case" {
-  AppClient - IProcessManager.UpdateRecord() > ProcessManager
+  AppClient - IProcessManager.SubmitRecords() > ProcessManager
   ProcessManager - ContextualPermissions IEvaluationEngine.CalculateContextualPermissions(LocationAuthorizationContext) > EvaluationEngine
   ProcessManager - IRecordsAccess.Store() > RecordsAccess -> RecordsResource
 }
