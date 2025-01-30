@@ -12,6 +12,7 @@ import { useFamilyLookup } from '../Model/DirectoryModel';
 import { familyNameString } from '../Families/FamilyName';
 import { useFilterMenu } from '../Generic/useFilterMenu';
 import { FilterMenu } from '../Generic/FilterMenu';
+import { useAppNavigate } from '../Hooks/useAppNavigate';
 
 // function renderEventContent(eventInfo: any) {
 //   return (
@@ -40,11 +41,12 @@ export function DashboardCalendar() {
       .map((arrangement) => ({
         arrangement,
         person: familyPerson(family, arrangement.partneringFamilyPersonId!),
+        familyId: family.family?.id,
       }))
   );
 
   const arrangementPlannedDurations = allArrangements.map(
-    ({ arrangement, person }) =>
+    ({ arrangement, person, familyId }) =>
       ({
         title: `${personNameString(person)} - ${arrangement.arrangementType}`,
         start:
@@ -54,72 +56,79 @@ export function DashboardCalendar() {
           arrangement.plannedEndUtc &&
           format(arrangement.plannedEndUtc, 'yyyy-MM-dd'),
         backgroundColor: 'lightblue',
+        extendedProps: { familyId },
       }) as EventInput
   );
 
   const arrangementActualStarts = allArrangements
     .filter(({ arrangement }) => arrangement.startedAtUtc)
     .map(
-      ({ arrangement, person }) =>
+      ({ arrangement, person, familyId }) =>
         ({
           title: `▶ ${personNameString(person)} - ${arrangement.arrangementType}`,
           date: arrangement.startedAtUtc,
+          extendedProps: { familyId },
         }) as EventInput
     );
 
   const arrangementActualEnds = allArrangements
     .filter(({ arrangement }) => arrangement.endedAtUtc)
     .map(
-      ({ arrangement, person }) =>
+      ({ arrangement, person, familyId }) =>
         ({
           title: `⏹ ${personNameString(person)} - ${arrangement.arrangementType}`,
           date: arrangement.endedAtUtc,
+          extendedProps: { familyId },
         }) as EventInput
     );
 
   const arrangementCompletedRequirements = allArrangements.flatMap(
-    ({ arrangement, person }) =>
+    ({ arrangement, person, familyId }) =>
       arrangement.completedRequirements?.map(
         (completed) =>
           ({
             title: `✅ ${personNameString(person)} - ${completed.requirementName}`,
             date: completed.completedAtUtc,
+            extendedProps: { familyId },
           }) as EventInput
       )
   );
 
   const allArrangementMissingRequirements = allArrangements.flatMap(
-    ({ arrangement, person }) =>
+    ({ arrangement, person, familyId }) =>
       (arrangement.missingRequirements || []).map((missing) => ({
         person,
         missing,
+        familyId,
       }))
   );
 
   const arrangementPastDueRequirements = allArrangementMissingRequirements
     .filter(({ missing }) => missing.pastDueSince)
     .map(
-      ({ missing, person }) =>
+      ({ missing, person, familyId }) =>
         ({
           title: `❌ ${personNameString(person)} - ${missing.actionName}`,
           date:
             missing.pastDueSince && format(missing.pastDueSince, 'yyyy-MM-dd'),
           color: 'red',
+          extendedProps: { familyId },
         }) as EventInput
     );
 
   const arrangementUpcomingRequirements = allArrangementMissingRequirements
     .filter(({ missing }) => missing.dueBy)
     .map(
-      ({ missing, person }) =>
+      ({ missing, person, familyId }) =>
         ({
           title: `📅 ${personNameString(person)} - ${missing.actionName}`,
           date: missing.dueBy && format(missing.dueBy, 'yyyy-MM-dd'),
+          extendedProps: { familyId },
         }) as EventInput
     );
 
   const arrangementActualChildcare = allArrangements.flatMap(
-    ({ arrangement, person }) => {
+    ({ arrangement, person, familyId }) => {
       const durationEntries = (arrangement.childLocationHistory || []).map(
         (entry, index, history) => {
           const nextEntry =
@@ -131,6 +140,7 @@ export function DashboardCalendar() {
             backgroundColor:
               entry.plan === ChildLocationPlan.WithParent ? 'green' : '#a52a2a',
             end: nextEntry?.timestampUtc,
+            extendedProps: { familyId },
           } as EventInput;
         }
       );
@@ -141,7 +151,7 @@ export function DashboardCalendar() {
   );
 
   const arrangementPlannedChildcare = allArrangements.flatMap(
-    ({ arrangement, person }) => {
+    ({ arrangement, person, familyId }) => {
       const durationEntries = (arrangement.childLocationPlan || []).map(
         (entry, index, plan) => {
           const nextEntry = index < plan.length - 1 ? plan[index + 1] : null;
@@ -154,6 +164,7 @@ export function DashboardCalendar() {
                 ? 'lightgreen'
                 : '#e58a8a',
             end: nextEntry?.timestampUtc,
+            extendedProps: { familyId },
           } as EventInput;
         }
       );
@@ -185,6 +196,8 @@ export function DashboardCalendar() {
       CalendarFilters.ArrangementActualChildcare,
     ]
   );
+
+  const appNavigate = useAppNavigate();
 
   function isSelected(option: string) {
     return (
@@ -230,7 +243,17 @@ export function DashboardCalendar() {
           handleFilterChange={handleFilterChange}
         />
       </Grid>
-      <Grid item xs={12}>
+      <Grid
+        item
+        xs={12}
+        sx={{
+          '.calendar-event': {
+            cursor: 'pointer',
+            transition: 'background-color 0.2s ease-in-out',
+            '&:hover': { backgroundColor: 'rgba(0, 0, 0, 0.1) !important' },
+          },
+        }}
+      >
         <FullCalendar /* https://fullcalendar.io/docs/react */
           plugins={[dayGridPlugin, listPlugin]}
           initialView="dayGridMonth"
@@ -243,7 +266,13 @@ export function DashboardCalendar() {
           //expandRows={true}
           events={filteredEvents}
           //eventContent={renderEventContent}
-          eventClassNames={'wrap-event'}
+          eventClassNames={() => 'calendar-event'}
+          eventClick={(info) => {
+            const familyId = info.event.extendedProps.familyId;
+            if (familyId) {
+              appNavigate.family(familyId);
+            }
+          }}
         />
       </Grid>
     </Grid>
