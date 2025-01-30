@@ -44,9 +44,10 @@ WorkflowsAccess
   - WorkflowState Dispatch(InputEvent)
 
 RecordsAccess
-  - Store // upsert/PATCH semantics
+  - Create
+  - Change
   - Filter
-  - StoreChange // add a new pending change to the underlying record's set of pending changes
+  - ProposeChange // add a new pending change to the underlying record's set of pending changes
   - CommitChange // needs to reference an existing pending change
   - CancelChange // needs to reference an existing pending change
     // Records include: Families, Communities, Organizations
@@ -70,7 +71,7 @@ AuditAccess
 /*
 QUESTION: What are we storing/exposing with RecordsAccess?
 
-Option 1: only specific "Aggregates" as defined today: Families, Communities, eventually Organizations.
+Option 1: only specific "Aggregates" as defined today: Families, Communities, Referrals, eventually Organizations.
 >>> This feels the most consistently organized.
 
 Option 2: all "Entities" in the domain model: Families, People, Referrals, Cases, Arrangements, Communities, Organizations.
@@ -186,7 +187,7 @@ UseCase "SUB-Pr-1: Authorize User Access in Context" {
   EvaluationEngine -> RecordsAccess -> RecordsResource
 }
 
-DTO AuthorizationContext {}
+DTO AuthorizationContext { }
 
 /*BUG: DTO inheritance is not supported*/
 /*DTO GlobalAuthorizationContext : AuthorizationContext {}*/
@@ -286,6 +287,7 @@ DTO Organization {}
 DTO ContextualPermissions {
   AuthorizationContext Context
   string[] AllowedActions
+  Account Account,
 }
 
 DTO RecordsDisclosureRequest {
@@ -309,41 +311,73 @@ DTO RecordsResponse {
 }
 
 UseCase "UC-Pr-6: Create Referral" {
-  AppClient - CreateReferralResponse IProcessManager.SubmitRecords(SubmitRecordsRequest) > ProcessManager
+  AppClient - SubmitRecordsResponse IProcessManager.SubmitRecords(SubmitRecordsRequest) > ProcessManager
+  /* TODO: This will require potential many calls to the EvaluationEngine */
   ProcessManager - ContextualPermissions IEvaluationEngine.CalculateContextualPermissions(LocationAuthorizationContext) > EvaluationEngine
   ProcessManager -> WorkflowsAccess -> WorkflowsResource /* what if RecordsAccess decides the user doesn't have the right permissions, and StoreReferral doesn't happen? */
-  ProcessManager - StoreRecordResponse IRecordsAccess.Store(Record) > RecordsAccess -> RecordsResource
+  ProcessManager - RecordOperationsResponse IRecordsAccess.Execute(RecordOperationsRequest) > RecordsAccess -> RecordsResource
   /* here should we call TransformationEngine to map StoredReferral into CreateReferralResponse? */
 }
 
-DTO CreateRecordResponse { }
-
-DTO CreateRecordRequest { }
-
-DTO CreateReferralResponse {
-  string Comments,
-  Guid? FamilyId
+UseCase "UC-Pr-6: Create Referral 2" {
+  AppClient - SubmitRecordsResponse IProcessManager.SubmitRecords(SubmitRecordsRequest) > ProcessManager
+  ProcessManager -> WorkflowsAccess -> WorkflowsResource /* what if RecordsAccess decides the user doesn't have the right permissions, and StoreReferral doesn't happen? */
+  ProcessManager - RecordOperationsResponse IRecordsAccess.Execute(RecordOperationsRequest) > RecordsAccess
+  RecordsAccess -> SecurityUtility 
+  RecordsAccess -> PoliciesResource
+  RecordsAccess -> RecordsResource
+  ProcessManager -> EvaluationEngine
+  EvaluationEngine -> PoliciesAccess -> PoliciesResource
+  /* here should we call TransformationEngine to map StoredReferral into CreateReferralResponse? */
 }
 
-DTO CreateReferralRequest /* : CreateRecordRequest */ {
-  string Comments,
-  Guid? FamilyId
+DTO RecordOperation {
+    /* ContextualPermissions */
+} /* This can inclue create/change/propose change/commit change/cancel change */
+
+DTO RecordOperationsRequest {
+    ClaimsPrincipal 
+    RecordOperation[] Operations
 }
 
-DTO StoreRecordResponse { }
-
-DTO StoreReferralResponse /* : StoreRecordResponse */ {
-  Guid Id,
-  string Comments,
-  Guid? FamilyId
+DTO SubmitRecordsRequest {
+    Record[] Records
 }
 
-DTO Record { }
+DTO CreateReferral /* : RecordOperation */ {
+    string Comments
+    Guid? FamilyId
+}
 
-DTO ReferralEntry /* : Record */ {
-  ContextualPermissions Permissions
-  string Comments,
-  Guid? FamilyId
+DTO Record {
+  Guid Id
+}
+
+DTO Referral /* : Record */ {
+    string Comments
+    Guid? FamilyId
+}
+
+DTO RecordOperationsResponse {
+    Record[] Records
+}
+
+DTO SubmitRecordsResponse {
+    Record[] Records
+}
+
+UseCase "Link Referral to Family 2" {
+  AppClient - IProcessManager.SubmitRecords() > ProcessManager
+  ProcessManager - ContextualPermissions IEvaluationEngine.CalculateContextualPermissions(LocationAuthorizationContext) > EvaluationEngine
+  ProcessManager -> WorkflowsAccess -> WorkflowsResource
+  ProcessManager - IRecordsAccess.Store() > RecordsAccess -> RecordsResource
+  ProcessManager -:q> CommunicationManager
+}
+
+UseCase "Unlink Referral from Family 2" {
+  AppClient - IProcessManager.SubmitRecords() > ProcessManager
+  ProcessManager - ContextualPermissions IEvaluationEngine.CalculateContextualPermissions(LocationAuthorizationContext) > EvaluationEngine
+  ProcessManager - IRecordsAccess.Store() > RecordsAccess -> RecordsResource
 }
 
 /*
