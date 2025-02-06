@@ -954,13 +954,11 @@ function VolunteerApproval(props: { onOpen: () => void }) {
                           )}
                         </TableCell>
 
-                        <>{volunteerFamily.family?.completedCustomFields?.map(customField => {
-                          return {
-                            <TableCell>
-                              {customField.value}
-                            </TableCell>
+                        {volunteerFamily.family?.completedCustomFields?.map(
+                          (customField) => {
+                            return <TableCell>{customField.value}</TableCell>;
                           }
-                        })}</> 
+                        )}
                       </TableRow>
 
                       {expandedView &&
