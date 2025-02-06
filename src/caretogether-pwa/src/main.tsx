@@ -15,35 +15,47 @@ import { AppRoutes } from './AppRoutes';
 import RequestBackdrop from './Shell/RequestBackdrop';
 import { ProgressBackdrop } from './Shell/ProgressBackdrop';
 
+import { PostHogProvider } from 'posthog-js/react';
+
 const root = ReactDOM.createRoot(
   document.getElementById('root') as HTMLElement
 );
 root.render(
   <React.StrictMode>
     <AppInsightsContext.Provider value={aiReactPlugin}>
-      <ThemeProvider theme={theme}>
-        <CssBaseline enableColorScheme />
-        <LocalizationProvider dateAdapter={DateAdapter}>
-          <GlobalErrorBoundary>
-            <RecoilRoot>
-              <Router>
-                <AuthenticationWrapper>
-                  <React.Suspense
-                    fallback={
-                      <ProgressBackdrop opaque>
-                        <p>Initializing...</p>
-                      </ProgressBackdrop>
-                    }
-                  >
-                    <AppRoutes />
-                  </React.Suspense>
-                </AuthenticationWrapper>
-              </Router>
-              <RequestBackdrop />
-            </RecoilRoot>
-          </GlobalErrorBoundary>
-        </LocalizationProvider>
-      </ThemeProvider>
+      <PostHogProvider
+        apiKey={import.meta.env.VITE_APP_PUBLIC_POSTHOG_KEY}
+        options={{
+          api_host: import.meta.env.VITE_APP_PUBLIC_POSTHOG_HOST,
+          session_recording: {
+            maskTextSelector: '*',
+          },
+        }}
+      >
+        <ThemeProvider theme={theme}>
+          <CssBaseline enableColorScheme />
+          <LocalizationProvider dateAdapter={DateAdapter}>
+            <GlobalErrorBoundary>
+              <RecoilRoot>
+                <Router>
+                  <AuthenticationWrapper>
+                    <React.Suspense
+                      fallback={
+                        <ProgressBackdrop opaque>
+                          <p>Initializing...</p>
+                        </ProgressBackdrop>
+                      }
+                    >
+                      <AppRoutes />
+                    </React.Suspense>
+                  </AuthenticationWrapper>
+                </Router>
+                <RequestBackdrop />
+              </RecoilRoot>
+            </GlobalErrorBoundary>
+          </LocalizationProvider>
+        </ThemeProvider>
+      </PostHogProvider>
     </AppInsightsContext.Provider>
   </React.StrictMode>
 );
