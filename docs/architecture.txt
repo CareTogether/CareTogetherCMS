@@ -174,6 +174,18 @@ Activity "UC-Pr-1: Open Location" {
   stop
 }
 
+UseCase "Retrieve Family Records" {
+  AppClient - IProcessManager.RetrieveRecords() > ProcessManager
+    ProcessManager - IRecordsAccess.Filter() > RecordsAccess
+      RecordsAccess -> SecurityUtility
+      RecordsAccess -> RecordsResource
+    ProcessManager -> EvaluationEngine
+      EvaluationEngine -> PoliciesAccess -> PoliciesResource
+    ProcessManager -> TransformationEngine
+    /* ProcessManager - RecordsResponse ITransformationEngine.DiscloseRecords(RecordsDisclosureRequest) > TransformationEngine
+    ProcessManager -> AuditAccess -> AuditResource */
+}
+
 UseCase "UC-Pr-1: Open Location" {
   AppClient -> ProcessManager
   ProcessManager -> EvaluationEngine
@@ -205,40 +217,6 @@ Activity "UC-Pr-2: View Communities List" {
   |c|
   :Display Communities List;
   stop
-}
-
-UseCase "UC-Pr-2: View Families List in Location" {
-  AppClient - RetrieveRecordsResponse IProcessManager.RetrieveRecords(RetrieveRecordsRequest) > ProcessManager
-  ProcessManager - ContextualPermissions IEvaluationEngine.CalculateContextualPermissions(LocationAuthorizationContext) > EvaluationEngine
-  ProcessManager - RecordsResponse IRecordsAccess.Filter(RecordsCriteria) > RecordsAccess -> RecordsResource
-  ProcessManager - RecordsResponse ITransformationEngine.DiscloseRecords(RecordsDisclosureRequest) > TransformationEngine
-  ProcessManager -> AuditAccess -> AuditResource
-}
-
-UseCase "UC-Pr-3: View Families List in Organization" {
-  AnalyticsClient - RetrieveRecordsResponse IProcessManager.RetrieveRecords(RetrieveRecordsRequest) > ProcessManager
-  SupportClient - RetrieveRecordsResponse IProcessManager.RetrieveRecords(RetrieveRecordsRequest) > ProcessManager
-  ProcessManager - ContextualPermissions IEvaluationEngine.CalculateContextualPermissions(LocationAuthorizationContext) > EvaluationEngine
-  ProcessManager - RecordsResponse IRecordsAccess.Filter(RecordsCriteria) > RecordsAccess -> RecordsResource
-  ProcessManager - RecordsResponse ITransformationEngine.DiscloseRecords(RecordsDisclosureRequest) > TransformationEngine
-  ProcessManager -> AuditAccess -> AuditResource
-}
-
-UseCase "UC-Pr-4: View Communities List in Location" {
-  AppClient - RetrieveRecordsResponse IProcessManager.RetrieveRecords(RetrieveRecordsRequest) > ProcessManager
-  ProcessManager - ContextualPermissions IEvaluationEngine.CalculateContextualPermissions(LocationAuthorizationContext) > EvaluationEngine
-  ProcessManager - RecordsResponse IRecordsAccess.Filter(RecordsCriteria) > RecordsAccess -> RecordsResource
-  ProcessManager - RecordsResponse ITransformationEngine.DiscloseRecords(RecordsDisclosureRequest) > TransformationEngine
-  ProcessManager -> AuditAccess -> AuditResource
-}
-
-UseCase "UC-Pr-5: View Communities List in Organization" {
-  AnalyticsClient - RetrieveRecordsResponse IProcessManager.RetrieveRecords(RetrieveRecordsRequest) > ProcessManager
-  SupportClient - RetrieveRecordsResponse IProcessManager.RetrieveRecords(RetrieveRecordsRequest) > ProcessManager
-  ProcessManager - ContextualPermissions IEvaluationEngine.CalculateContextualPermissions(OrganizationAuthorizationContext) > EvaluationEngine
-  ProcessManager - RecordsResponse IRecordsAccess.Filter(RecordsCriteria) > RecordsAccess -> RecordsResource
-  ProcessManager - RecordsResponse ITransformationEngine.DiscloseRecords(RecordsDisclosureRequest) > TransformationEngine
-  ProcessManager -> AuditAccess -> AuditResource
 }
 
 DTO RetrieveRecordsRequest {
@@ -762,6 +740,7 @@ DTO ChangePersonFamilyRequest {
     Guid TargetFamilyId,
 }
 
+/* TODO: Missing FileStorageUtility? */
 UseCase "UC-Pr-18: Read Family Documents" {
   AppClient - IProcessManager.RetrieveRecords() > ProcessManager
     ProcessManager - IRecordsAccess.Filter() > 
@@ -786,16 +765,6 @@ UseCase "UC-Pr-19: Upload Family Documents" {
 UseCase "UC-Pr-20: Archive Family Documents" {
   AppClient - IProcessManager.SubmitRecords() > ProcessManager
     ProcessManager - IRecordsAccess.Execute() > 
-      RecordsAccess -> SecurityUtility
-      RecordsAccess -> RecordsResource
-    ProcessManager -> EvaluationEngine
-      EvaluationEngine -> PoliciesAccess -> PoliciesResource
-    ProcessManager -> TransformationEngine
-}
-
-UseCase "UC-Pr-21: View Family Document Metadata" {
-  AppClient - IProcessManager.RetrieveRecords() > ProcessManager
-    ProcessManager - IRecordsAccess.Filter() > 
       RecordsAccess -> SecurityUtility
       RecordsAccess -> RecordsResource
     ProcessManager -> EvaluationEngine
@@ -835,97 +804,23 @@ UseCase "UC-Me-4: View Person User Login Info" {
 }
 
 /* TODO: check */
-UseCase "UC-Pr-21: View Volunteers List" {
-  AppClient - IProcessManager.RetrieveRecords() > ProcessManager
-    ProcessManager - IRecordsAccess.Filter() > 
-      RecordsAccess -> SecurityUtility
-      RecordsAccess -> RecordsResource
-    ProcessManager -> EvaluationEngine
-      EvaluationEngine -> PoliciesAccess -> PoliciesResource
-    ProcessManager -> TransformationEngine
-}
-
-/* TODO: check */
-/* Old name: "Access Partnering Families Screen" */
-UseCase "UC-Pr-22: View Partnering Families List" {
-  AppClient - IProcessManager.RetrieveRecords() > ProcessManager
-    ProcessManager - IRecordsAccess.Filter() > 
-      RecordsAccess -> SecurityUtility
-      RecordsAccess -> RecordsResource
-    ProcessManager -> EvaluationEngine
-      EvaluationEngine -> PoliciesAccess -> PoliciesResource
-    ProcessManager -> TransformationEngine
-}
-
-/* TODO: check */
 UseCase "UC-Pr-23: Access Settings Screen" {
-  AppClient -> ProcessManager
-  EvaluationEngine -> AccountsAccess -> AccountsResource
-  EvaluationEngine -> RecordsAccess -> RecordsResource
-  EvaluationEngine -> PoliciesAccess -> PoliciesResource
-  ProcessManager -> RecordsAccess -> RecordsResource
+  AppClient - IProcessManager.RetrieveRecords() > ProcessManager
+    ProcessManager - IRecordsAccess.Filter() > 
+      RecordsAccess -> SecurityUtility
+      RecordsAccess -> RecordsResource
+      RecordsAccess -> PoliciesResource
+      RecordsAccess -> AccountsResource
+      RecordsAccess -> FormsResource
+    ProcessManager -> EvaluationEngine
+      EvaluationEngine -> PoliciesAccess -> PoliciesResource
+    ProcessManager -> TransformationEngine
 }
 
-/* TODO: check (this isn't implemented currently?) */
 UseCase "UC-Me-5: Edit Roles" {
   AppClient - IMembershipManager.ChangePersonRoles() > MembershipManager
   MembershipManager - ContextualPermissions IEvaluationEngine.CalculateContextualPermissions(LocationAuthorizationContext) > EvaluationEngine
   MembershipManager - IAccountsAccess.Execute() > AccountsAccess -> AccountsResource
-}
-
-/* TODO: check */
-UseCase "UC-Pr-24: View Family Custom Fields" {
-  AppClient - IProcessManager.RetrieveRecords() > ProcessManager
-    ProcessManager - IRecordsAccess.Filter() > 
-      RecordsAccess -> SecurityUtility
-      RecordsAccess -> RecordsResource
-    ProcessManager -> EvaluationEngine
-      EvaluationEngine -> PoliciesAccess -> PoliciesResource
-    ProcessManager -> TransformationEngine
-}
-
-/* TODO: check */
-UseCase "UC-Pr-25: View Family History" {
-  AppClient - IProcessManager.RetrieveRecords() > ProcessManager
-    ProcessManager - IRecordsAccess.Filter() > 
-      RecordsAccess -> SecurityUtility
-      RecordsAccess -> RecordsResource
-    ProcessManager -> EvaluationEngine
-      EvaluationEngine -> PoliciesAccess -> PoliciesResource
-    ProcessManager -> TransformationEngine
-}
-
-/* TODO: check */
-UseCase "UC-Pr-26: View Person Concerns" {
-  AppClient - IProcessManager.RetrieveRecords() > ProcessManager
-    ProcessManager - IRecordsAccess.Filter() > 
-      RecordsAccess -> SecurityUtility
-      RecordsAccess -> RecordsResource
-    ProcessManager -> EvaluationEngine
-      EvaluationEngine -> PoliciesAccess -> PoliciesResource
-    ProcessManager -> TransformationEngine
-}
-
-/* TODO: check */
-UseCase "UC-Pr-27: View Person Notes" {
-  AppClient - IProcessManager.RetrieveRecords() > ProcessManager
-    ProcessManager - IRecordsAccess.Filter() > 
-      RecordsAccess -> SecurityUtility
-      RecordsAccess -> RecordsResource
-    ProcessManager -> EvaluationEngine
-      EvaluationEngine -> PoliciesAccess -> PoliciesResource
-    ProcessManager -> TransformationEngine
-}
-
-/* TODO: check */
-UseCase "UC-Pr-28: View Person Contact Info" {
-  AppClient - IProcessManager.RetrieveRecords() > ProcessManager
-    ProcessManager - IRecordsAccess.Filter() > 
-      RecordsAccess -> SecurityUtility
-      RecordsAccess -> RecordsResource
-    ProcessManager -> EvaluationEngine
-      EvaluationEngine -> PoliciesAccess -> PoliciesResource
-    ProcessManager -> TransformationEngine
 }
 
 /* TODO: check */
@@ -998,20 +893,6 @@ UseCase "UC-Pr-35: Approve Notes" {
 }
 
 /* TODO: check */
-UseCase "UC-Pr-36: View All Notes" {
-  AppClient - IProcessManager.RetrieveRecords() > ProcessManager
-  ProcessManager - ContextualPermissions IEvaluationEngine.CalculateContextualPermissions(LocationAuthorizationContext) > EvaluationEngine
-  ProcessManager - IRecordsAccess.Filter() > RecordsAccess -> RecordsResource
-}
-
-/* TODO: check */
-UseCase "UC-Pr-37: View Approval Status" {  
-  AppClient - IProcessManager.RetrieveRecords() > ProcessManager
-  ProcessManager - ContextualPermissions IEvaluationEngine.CalculateContextualPermissions(LocationAuthorizationContext) > EvaluationEngine
-  ProcessManager - IRecordsAccess.Filter() > RecordsAccess -> RecordsResource
-}
-
-/* TODO: check */
 UseCase "UC-Pr-38: Edit Approval Requirement Completion" {
   AppClient - IProcessManager.SubmitRecords() > ProcessManager
   ProcessManager - ContextualPermissions IEvaluationEngine.CalculateContextualPermissions(LocationAuthorizationContext) > EvaluationEngine
@@ -1030,20 +911,6 @@ UseCase "UC-Pr-40: Edit Volunteer Role Participation" {
   AppClient - IProcessManager.SubmitRecords() > ProcessManager
   ProcessManager - ContextualPermissions IEvaluationEngine.CalculateContextualPermissions(LocationAuthorizationContext) > EvaluationEngine
   ProcessManager - IRecordsAccess.Execute() > RecordsAccess -> RecordsResource
-}
-
-/* TODO: check */
-UseCase "UC-Pr-41: View Approval Progress" {
-  AppClient - IProcessManager.RetrieveRecords() > ProcessManager
-  ProcessManager - ContextualPermissions IEvaluationEngine.CalculateContextualPermissions(LocationAuthorizationContext) > EvaluationEngine
-  ProcessManager - IRecordsAccess.Filter() > RecordsAccess -> RecordsResource
-}
-
-/* TODO: check */
-UseCase "UC-Pr-42: View Approval History" {
-  AppClient - IProcessManager.RetrieveRecords() > ProcessManager
-  ProcessManager - ContextualPermissions IEvaluationEngine.CalculateContextualPermissions(LocationAuthorizationContext) > EvaluationEngine
-  ProcessManager - IRecordsAccess.Filter() > RecordsAccess -> RecordsResource
 }
 
 /* TODO: check */
@@ -1068,48 +935,6 @@ UseCase "UC-Pr-45: Close Referral" {
 }
 
 /* TODO: check */
-UseCase "UC-Pr-46: View Referral Custom Fields" {
-  AppClient - IProcessManager.RetrieveRecords() > ProcessManager
-  ProcessManager - ContextualPermissions IEvaluationEngine.CalculateContextualPermissions(LocationAuthorizationContext) > EvaluationEngine
-  ProcessManager - IRecordsAccess.Filter() > RecordsAccess -> RecordsResource
-}
-
-/* TODO: check */
-UseCase "UC-Pr-47: View Referral Comments" {
-  AppClient - IProcessManager.RetrieveRecords() > ProcessManager
-  ProcessManager - ContextualPermissions IEvaluationEngine.CalculateContextualPermissions(LocationAuthorizationContext) > EvaluationEngine
-  ProcessManager - IRecordsAccess.Filter() > RecordsAccess -> RecordsResource
-}
-
-/* TODO: check */
-UseCase "UC-Pr-48: View Referral Progress" {
-  AppClient - IProcessManager.RetrieveRecords() > ProcessManager
-  ProcessManager - ContextualPermissions IEvaluationEngine.CalculateContextualPermissions(LocationAuthorizationContext) > EvaluationEngine
-  ProcessManager - IRecordsAccess.Filter() > RecordsAccess -> RecordsResource
-}
-
-/* TODO: check */
-UseCase "UC-Pr-49: Edit Referral Requirement Completion" {
-  AppClient - IProcessManager.RetrieveRecords() > ProcessManager
-  ProcessManager - ContextualPermissions IEvaluationEngine.CalculateContextualPermissions(LocationAuthorizationContext) > EvaluationEngine
-  ProcessManager - IRecordsAccess.Filter() > RecordsAccess -> RecordsResource
-}
-
-/* TODO: check */
-UseCase "UC-Pr-50: Edit Referral Requirement Exemption" {
-  AppClient - IProcessManager.SubmitRecords() > ProcessManager
-  ProcessManager - ContextualPermissions IEvaluationEngine.CalculateContextualPermissions(LocationAuthorizationContext) > EvaluationEngine
-  ProcessManager - IRecordsAccess.Execute() > RecordsAccess -> RecordsResource
-}
-
-/* TODO: check */
-UseCase "UC-Pr-51: View Referral History" {
-  AppClient - IProcessManager.RetrieveRecords() > ProcessManager
-  ProcessManager - ContextualPermissions IEvaluationEngine.CalculateContextualPermissions(LocationAuthorizationContext) > EvaluationEngine
-  ProcessManager - IRecordsAccess.Filter() > RecordsAccess -> RecordsResource
-}
-
-/* TODO: check */
 UseCase "UC-Pr-52: Create Arrangement" {
   AppClient - IProcessManager.SubmitRecords() > ProcessManager
   ProcessManager - ContextualPermissions IEvaluationEngine.CalculateContextualPermissions(LocationAuthorizationContext) > EvaluationEngine
@@ -1124,24 +949,10 @@ UseCase "UC-Pr-53: Edit Arrangement" {
 }
 
 /* TODO: check */
-UseCase "UC-Pr-54: View Assignments" {
-  AppClient - IProcessManager.RetrieveRecords() > ProcessManager
-  ProcessManager - ContextualPermissions IEvaluationEngine.CalculateContextualPermissions(LocationAuthorizationContext) > EvaluationEngine
-  ProcessManager - IRecordsAccess.Filter() > RecordsAccess -> RecordsResource
-}
-
-/* TODO: check */
 UseCase "UC-Pr-55: Edit Assignments" {
   AppClient - IProcessManager.SubmitRecords() > ProcessManager
   ProcessManager - ContextualPermissions IEvaluationEngine.CalculateContextualPermissions(LocationAuthorizationContext) > EvaluationEngine
   ProcessManager - IRecordsAccess.Execute() > RecordsAccess -> RecordsResource
-}
-
-/* TODO: check */
-UseCase "UC-Pr-56: View Arrangement Progress" {
-  AppClient - IProcessManager.RetrieveRecords() > ProcessManager
-  ProcessManager - ContextualPermissions IEvaluationEngine.CalculateContextualPermissions(LocationAuthorizationContext) > EvaluationEngine
-  ProcessManager - IRecordsAccess.Filter() > RecordsAccess -> RecordsResource
 }
 
 /* TODO: check */
@@ -1180,21 +991,6 @@ UseCase "UC-Pr-61: Edit Community Role Assignments" {
 }
 
 /* TODO: check */
-UseCase "UC-Pr-62: View Community Document Metadata" {
-  AppClient - IProcessManager.RetrieveRecords() > ProcessManager
-  ProcessManager - ContextualPermissions IEvaluationEngine.CalculateContextualPermissions(LocationAuthorizationContext) > EvaluationEngine
-  ProcessManager - IRecordsAccess.Filter() > RecordsAccess -> RecordsResource
-}
-
-/* TODO: check */
-UseCase "UC-Pr-63: Read Community Documents (Future)" {
-  AppClient - IProcessManager.RetrieveRecords() > ProcessManager
-  ProcessManager - ContextualPermissions IEvaluationEngine.CalculateContextualPermissions(LocationAuthorizationContext) > EvaluationEngine
-  ProcessManager - IRecordsAccess.Filter() > RecordsAccess -> RecordsResource
-  ProcesssManager -> FileStoreUtility
-}
-
-/* TODO: check */
 UseCase "UC-Pr-64: Upload Community Documents" {
   AppClient - IProcessManager.SubmitRecords() > ProcessManager
   ProcessManager - ContextualPermissions IEvaluationEngine.CalculateContextualPermissions(LocationAuthorizationContext) > EvaluationEngine
@@ -1207,27 +1003,6 @@ UseCase "UC-Pr-65: Archive Community Documents" {
   AppClient - IProcessManager.ArchiveRecord() > ProcessManager
   ProcessManager - ContextualPermissions IEvaluationEngine.CalculateContextualPermissions(LocationAuthorizationContext) > EvaluationEngine
   ProcessManager - IRecordsAccess.Execute() > RecordsAccess -> RecordsResource
-}
-
-/* TODO: check */
-UseCase "UC-Pr-66: Open my family screen" {
-  AppClient - IProcessManager.RetrieveRecords() > ProcessManager
-  ProcessManager - ContextualPermissions IEvaluationEngine.CalculateContextualPermissions(LocationAuthorizationContext) > EvaluationEngine
-  ProcessManager - IRecordsAccess.Filter() > RecordsAccess -> RecordsResource
-}
-
-/* TODO: check */
-UseCase "UC-Pr-67: View all families" {
-  AppClient - IProcessManager.RetrieveRecords() > ProcessManager
-  ProcessManager - ContextualPermissions IEvaluationEngine.CalculateContextualPermissions(LocationAuthorizationContext) > EvaluationEngine
-  ProcessManager - IRecordsAccess.Filter() > RecordsAccess -> RecordsResource
-}
-
-/* TODO: check */
-UseCase "UC-Pr-68: View soft deleted document" {
-  AppClient - IProcessManager.RetrieveRecords() > ProcessManager
-  ProcessManager - ContextualPermissions IEvaluationEngine.CalculateContextualPermissions(LocationAuthorizationContext) > EvaluationEngine
-  ProcessManager - IRecordsAccess.Filter() > RecordsAccess -> RecordsResource
 }
 
 /* TODO: check */
@@ -1273,26 +1048,11 @@ UseCase "UC-Pr-74: Delete Arrangement" {
 }
 
 /* TODO: check */
-UseCase "UC-Pr-75: View Child Location History" {
-  AppClient - IProcessManager.RetrieveRecords() > ProcessManager
-  ProcessManager - ContextualPermissions IEvaluationEngine.CalculateContextualPermissions(LocationAuthorizationContext) > EvaluationEngine
-  ProcessManager - IRecordsAccess.Filter() > RecordsAccess -> RecordsResource
-}
-
-/* TODO: check */
 UseCase "UC-Pr-76: Send Bulk SMS" {
   AppClient - ICommunicationManager.Notify() > CommunicationManager
   CommunicationManager - ContextualPermissions IEvaluationEngine.CalculateContextualPermissions(LocationAuthorizationContext) > EvaluationEngine
   CommunicationManager - IRecordsAccess.Filter() > RecordsAccess -> RecordsResource
   CommunicationManager - ITelephonyUtility.Notify() > TelephonyUtility
-}
-
-/* Referrals/Cases split */
-
-UseCase "UC-Pr-77: View Referrals" {
-  AppClient - IProcessManager.RetrieveRecords() > ProcessManager
-  ProcessManager - ContextualPermissions IEvaluationEngine.CalculateContextualPermissions(LocationAuthorizationContext) > EvaluationEngine
-  ProcessManager - IRecordsAccess.Filter() > RecordsAccess -> RecordsResource
 }
 
 UseCase "UC-Pr-78: Link Referral to Family" {
