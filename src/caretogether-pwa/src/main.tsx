@@ -16,6 +16,7 @@ import RequestBackdrop from './Shell/RequestBackdrop';
 import { ProgressBackdrop } from './Shell/ProgressBackdrop';
 
 import { PostHogProvider } from 'posthog-js/react';
+import { postHogOptions } from './Utilities/instrumentation';
 
 const root = ReactDOM.createRoot(
   document.getElementById('root') as HTMLElement
@@ -27,9 +28,7 @@ root.render(
         apiKey={import.meta.env.VITE_APP_PUBLIC_POSTHOG_KEY}
         options={{
           api_host: import.meta.env.VITE_APP_PUBLIC_POSTHOG_HOST,
-          session_recording: {
-            maskTextSelector: '*',
-          },
+          ...postHogOptions,
         }}
       >
         <ThemeProvider theme={theme}>
