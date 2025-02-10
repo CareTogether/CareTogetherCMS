@@ -953,14 +953,37 @@ function VolunteerApproval(props: { onOpen: () => void }) {
                             </>
                           )}
                         </TableCell>
-
-                        {volunteerFamily.family?.completedCustomFields?.map(
-                          (customField) => {
-                            return <TableCell>{customField.value}</TableCell>;
+                        {customFieldNames.map((customFieldName) => {
+                          const familyCustomField =
+                            volunteerFamily.family?.completedCustomFields?.find(
+                              (familyCustomField) =>
+                                familyCustomField?.customFieldName ===
+                                customFieldName
+                            );
+                          const familyCustomFieldValue =
+                            familyCustomField?.value;
+                          if (familyCustomFieldValue === null) {
+                            return (
+                              <TableCell key={customFieldName}></TableCell>
+                            );
                           }
-                        )}
+                          if (familyCustomFieldValue === true) {
+                            return (
+                              <TableCell key={customFieldName}>Yes</TableCell>
+                            );
+                          }
+                          if (familyCustomFieldValue === false) {
+                            return (
+                              <TableCell key={customFieldName}>No</TableCell>
+                            );
+                          }
+                          return (
+                            <TableCell key={customFieldName}>
+                              {familyCustomFieldValue}
+                            </TableCell>
+                          );
+                        })}
                       </TableRow>
-
                       {expandedView &&
                         volunteerFamily.family?.adults?.map(
                           (adult) =>
@@ -999,6 +1022,9 @@ function VolunteerApproval(props: { onOpen: () => void }) {
                                     />
                                   ))}
                                 </TableCell>
+                                {customFieldNames.map((fieldName) => (
+                                  <TableCell key={fieldName}></TableCell>
+                                ))}
                               </TableRow>
                             )
                         )}
@@ -1022,11 +1048,7 @@ function VolunteerApproval(props: { onOpen: () => void }) {
                                 </TableCell>
                                 <TableCell></TableCell>
                                 {customFieldNames.map((fieldName) => (
-                                  <TableCell key={fieldName}>
-                                    {volunteerFamilyInfo.completedCustomFieldsInfo?.find(
-                                      (cf) => cf.customFieldName === fieldName
-                                    )?.value ?? 'No'}
-                                  </TableCell>
+                                  <TableCell key={fieldName}></TableCell>
                                 ))}
                               </TableRow>
                             )
