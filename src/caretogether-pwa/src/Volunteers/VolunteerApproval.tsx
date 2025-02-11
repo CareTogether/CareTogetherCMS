@@ -158,8 +158,11 @@ function VolunteerFilter({
   setSelected,
 }: VolunteerFilterProps) {
   const handleChange = (event: SelectChangeEvent<string[]>) => {
-    const allOptionKeysPlusSelectedOptionValue = event.target.value;
-    setSelected(allOptionKeysPlusSelectedOptionValue);
+    let selectedValue = event.target.value;
+    if (Array.isArray(selectedValue)) {
+      selectedValue = selectedValue[selectedValue.length - 1];
+    }
+    setSelected(selectedValue);
   };
 
   return (
@@ -174,7 +177,9 @@ function VolunteerFilter({
           '& .MuiSelect-iconOpen': { transform: 'none' },
         }}
         multiple
-        value={options.map((o) => o.key)}
+        value={options
+          .map((o) => o.key)
+          .filter((key): key is string => key !== undefined)}
         variant="standard"
         label={`${label} Filters`}
         onChange={handleChange}
@@ -271,6 +276,13 @@ function VolunteerApproval(props: { onOpen: () => void }) {
   const appNavigate = useAppNavigate();
   const [uncheckedFamilies, setUncheckedFamilies] = useState<string[]>([]);
 
+  const policy = useRecoilValue(policyData);
+  const customFieldNames =
+    policy.customFamilyFields?.map((field) => field.name) || [];
+  const [customFieldFilters, setCustomFieldFilters] = useState<
+    Record<string, string | null>
+  >({});
+
   //#region Role/Status Selection Code
   const [roleFilters, setRoleFilters] = useRecoilState(roleFiltersState);
   const [statusFilters, setStatusFilters] = useRecoilState(statusFiltersState);
@@ -306,6 +318,20 @@ function VolunteerApproval(props: { onOpen: () => void }) {
     );
     setStatusFilters(getUpdatedFilters(statusFilters, filterOptionToUpdate!));
   }
+
+  function changeCustomFieldFilter(fieldName: string, value: string | null) {
+    setUncheckedFamilies([]);
+
+    setCustomFieldFilters((prevFilters) => {
+      const newValue = prevFilters[fieldName] === value ? null : value;
+
+      return {
+        ...prevFilters,
+        [fieldName]: newValue,
+      };
+    });
+  }
+
   //#endregion
 
   // The array object returned by Recoil is read-only. We need to copy it before we can do an in-place sort.
@@ -526,6 +552,7 @@ function VolunteerApproval(props: { onOpen: () => void }) {
     } else if (familyRolesSelected) {
       result = familyMeetsRoleCriteria;
     } else if (individualRolesSelected) {
+      changeCustomFieldFilter;
       result = familyMembersMeetRoleCriteria;
     } else if (statusesSelected) {
       result = familyMeetsRoleCriteria || familyMembersMeetRoleCriteria;
@@ -534,7 +561,37 @@ function VolunteerApproval(props: { onOpen: () => void }) {
   }
   //#endregion
 
-  // Filter volunteer families by name and by applicable roles.
+  function familyMatchesCustomFieldFilters(family: CombinedFamilyInfo) {
+    return Object.entries(customFieldFilters).every(
+      ([fieldName, selectedValue]) => {
+        if (Array.isArray(selectedValue)) {
+          selectedValue = selectedValue[0];
+        }
+
+        if (!selectedValue) {
+          return true;
+        }
+
+        const field = family.family?.completedCustomFields?.find(
+          (customField) => customField.customFieldName === fieldName
+        );
+
+        if (!field) {
+          return selectedValue === 'Blank';
+        }
+
+        const fieldValueString =
+          field.value === true
+            ? 'Yes'
+            : field.value === false
+              ? 'No'
+              : field.value?.toString();
+
+        return fieldValueString === selectedValue;
+      }
+    );
+  }
+
   const filteredVolunteerFamilies = volunteerFamilies.filter(
     (family) =>
       /* Filter by name */ (filterText.length === 0 ||
@@ -548,7 +605,8 @@ function VolunteerApproval(props: { onOpen: () => void }) {
             filterText.toLowerCase()
           )
         )) &&
-      familyOrFamilyMembersMeetFilterCriteria(family)
+      familyOrFamilyMembersMeetFilterCriteria(family) &&
+      familyMatchesCustomFieldFilters(family)
   );
 
   const selectedFamilies = filteredVolunteerFamilies.filter(
@@ -624,9 +682,6 @@ function VolunteerApproval(props: { onOpen: () => void }) {
 
   useScreenTitle('Volunteers');
 
-  const policy = useRecoilValue(policyData);
-  const customFieldNames =
-    policy.customFamilyFields?.map((field) => field.name) || [];
   return !volunteerFamiliesLoadable ? (
     <ProgressBackdrop>
       <p>Loading families...</p>
@@ -707,6 +762,65 @@ function VolunteerApproval(props: { onOpen: () => void }) {
                 options={statusFilters}
                 setSelected={changeStatusFilterSelection}
               />
+              {customFieldNames.map((fieldName) => {
+                if (!fieldName) return null;
+
+                let uniqueValues = Array.from(
+                  new Set(
+                    volunteerFamilies
+                      .map((family) => {
+                        const field =
+                          family.family?.completedCustomFields?.find(
+                            (customField) =>
+                              customField.customFieldName === fieldName
+                          );
+                        return field?.value;
+                      })
+                      .filter((value) => value !== null && value !== undefined)
+                  )
+                );
+
+                const isBooleanField =
+                  uniqueValues.length > 0 &&
+                  uniqueValues.every((value) => typeof value === 'boolean');
+                if (isBooleanField) {
+                  uniqueValues = [true, false];
+                }
+                const filterOptions = uniqueValues.map((value) => {
+                  const stringValue =
+                    value === true
+                      ? 'Yes'
+                      : value === false
+                        ? 'No'
+                        : value?.toString() || 'Blank';
+
+                  return {
+                    key: stringValue,
+                    value: stringValue,
+                    selected: customFieldFilters[fieldName] === stringValue,
+                  };
+                });
+
+                return (
+                  <VolunteerFilter
+                    key={fieldName}
+                    label={fieldName}
+                    options={filterOptions}
+                    setSelected={(value) => {
+                      let selectedValue: string | null = null;
+
+                      if (Array.isArray(value)) {
+                        selectedValue =
+                          value.length > 0 ? value[value.length - 1] : null;
+                      } else if (typeof value === 'string') {
+                        selectedValue = value;
+                      }
+
+                      changeCustomFieldFilter(fieldName, selectedValue);
+                    }}
+                  />
+                );
+              })}
             </Box>
             <ButtonGroup
               variant="text"
