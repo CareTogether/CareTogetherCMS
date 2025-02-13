@@ -356,7 +356,7 @@ function VolunteerApproval(props: { onOpen: () => void }) {
         );
 
         if (!field) {
-          return true;
+          return selectedValue.includes('(blank)');
         }
 
         if (field.customFieldType === CustomFieldType.Boolean) {
@@ -543,69 +543,52 @@ function VolunteerApproval(props: { onOpen: () => void }) {
                 options={statusFilters}
                 setSelected={changeStatusFilterSelection}
               />
-              {customFieldNames.map((fieldName) => {
-                if (!fieldName) return null;
+              {policy.customFamilyFields?.map(
+                ({ name: fieldName, type: fieldType }) => {
+                  if (!fieldName) return null;
 
-                let uniqueValues = Array.from(
-                  new Set(
-                    volunteerFamilies
-                      .map((family) => {
-                        const field =
-                          family.family?.completedCustomFields?.find(
-                            (customField) =>
-                              customField.customFieldName === fieldName
-                          );
-                        return field?.value;
-                      })
-                      .filter((value) => value !== null && value !== undefined)
-                  )
-                );
+                  const uniqueValues = Array.from(
+                    new Set(
+                      volunteerFamilies
+                        .map((family) => {
+                          const field =
+                            family.family?.completedCustomFields?.find(
+                              (customField) =>
+                                customField.customFieldName === fieldName
+                            );
+                          return field?.value;
+                        })
+                        .filter(
+                          (value) => value !== null && value !== undefined
+                        )
+                    )
+                  );
 
-                const isBooleanField =
-                  uniqueValues.length > 0 &&
-                  uniqueValues.every((value) => typeof value === 'boolean');
-                if (isBooleanField) {
-                  uniqueValues = [true, false];
+                  const filterOptions: string[] = (
+                    fieldType === CustomFieldType.Boolean
+                      ? ['Yes', 'No']
+                      : uniqueValues.map((value) => {
+                          return value?.toString();
+                        })
+                  ).concat('(blank)');
+
+                  return (
+                    <VolunteerCustomFieldsFilter
+                      key={fieldName}
+                      label={fieldName}
+                      options={filterOptions}
+                      value={customFieldFilters[fieldName] ?? []}
+                      setSelected={(value) => {
+                        if (typeof value === 'string') {
+                          return changeCustomFieldFilter(fieldName, [value]);
+                        }
+
+                        changeCustomFieldFilter(fieldName, value);
+                      }}
+                    />
+                  );
                 }
-                const filterOptions = uniqueValues.map((value, index) => {
-                  const stringValue =
-                    value === true
-                      ? 'Yes'
-                      : value === false
-                        ? 'No'
-                        : value?.toString() || 'Blank';
-
-                  return {
-                    // key: `${stringValue} (${index})`,
-                    key: stringValue,
-                    value: stringValue,
-                    selected: Boolean(
-                      customFieldFilters[fieldName]?.find(
-                        (item) => item === stringValue
-                      )
-                    ),
-                  };
-                });
-
-                console.log('filterOptions', filterOptions);
-                // console.log('statusFilters', statusFilters);
-
-                return (
-                  <VolunteerCustomFieldsFilter
-                    key={fieldName}
-                    label={fieldName}
-                    options={filterOptions}
-                    value={customFieldFilters[fieldName] ?? []}
-                    setSelected={(value) => {
-                      if (typeof value === 'string') {
-                        return changeCustomFieldFilter(fieldName, [value]);
-                      }
-
-                      changeCustomFieldFilter(fieldName, value);
-                    }}
-                  />
-                );
-              })}
+              )}
             </Box>
             <ButtonGroup
               variant="text"
