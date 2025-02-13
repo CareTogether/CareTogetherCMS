@@ -657,11 +657,6 @@ function VolunteerApproval(props: { onOpen: () => void }) {
               </TableHead>
               <TableBody>
                 {filteredVolunteerFamilies.map((volunteerFamily) => {
-                  const volunteerFamilyInfo =
-                    volunteerFamily.volunteerFamilyInfo as {
-                      completedCustomFieldsInfo?: CompletedCustomFieldInfo[];
-                    };
-
                   return (
                     <React.Fragment key={volunteerFamily.family?.id}>
                       <TableRow
