@@ -9,7 +9,6 @@ import {
 } from '@mui/material';
 import FilterListIcon from '@mui/icons-material/FilterList';
 import { filterOption } from './filterOption';
-
 type VolunteerFilterProps = {
   label: string;
   options: filterOption[];
