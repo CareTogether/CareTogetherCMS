@@ -11,13 +11,7 @@ import {
   useTheme,
   Button,
   ButtonGroup,
-  MenuItem,
-  Select,
-  ListItemText,
   Checkbox,
-  FormControl,
-  InputBase,
-  SelectChangeEvent,
   IconButton,
   Stack,
   ToggleButton,
@@ -27,248 +21,50 @@ import {
 } from '@mui/material';
 import {
   CombinedFamilyInfo,
+  CustomFieldType,
   EmailAddress,
   Permission,
   VolunteerInfo,
-} from '../GeneratedClient';
-import { atom, selector, useRecoilState, useRecoilValue } from 'recoil';
-import { volunteerFamiliesData } from '../Model/VolunteersModel';
+} from '../../GeneratedClient';
+import { useRecoilState, useRecoilValue } from 'recoil';
+import { volunteerFamiliesData } from '../../Model/VolunteersModel';
 import {
   organizationConfigurationQuery,
   policyData,
-} from '../Model/ConfigurationModel';
-import { RoleApprovalStatus } from '../GeneratedClient';
+} from '../../Model/ConfigurationModel';
 import React, { useEffect, useState } from 'react';
 import AddIcon from '@mui/icons-material/Add';
 import SmsIcon from '@mui/icons-material/Sms';
 import EmailIcon from '@mui/icons-material/Email';
-import FilterListIcon from '@mui/icons-material/FilterList';
-import { CreateVolunteerFamilyDialog } from './CreateVolunteerFamilyDialog';
+import { CreateVolunteerFamilyDialog } from '../CreateVolunteerFamilyDialog';
 import { Link, useLocation } from 'react-router-dom';
-import { SearchBar } from '../Shell/SearchBar';
-import { useLocalStorage } from '../Hooks/useLocalStorage';
-import { useScrollMemory } from '../Hooks/useScrollMemory';
-import { useAllVolunteerFamiliesPermissions } from '../Model/SessionModel';
-import { BulkSmsSideSheet } from './BulkSmsSideSheet';
-import { useWindowSize } from '../Hooks/useWindowSize';
-import useScreenTitle from '../Shell/ShellScreenTitle';
+import { SearchBar } from '../../Shell/SearchBar';
+import { useLocalStorage } from '../../Hooks/useLocalStorage';
+import { useScrollMemory } from '../../Hooks/useScrollMemory';
+import { useAllVolunteerFamiliesPermissions } from '../../Model/SessionModel';
+import { BulkSmsSideSheet } from '../BulkSmsSideSheet';
+import { useWindowSize } from '../../Hooks/useWindowSize';
+import useScreenTitle from '../../Shell/ShellScreenTitle';
 import UnfoldLessIcon from '@mui/icons-material/UnfoldLess';
 import UnfoldMoreIcon from '@mui/icons-material/UnfoldMore';
-import { useLoadable } from '../Hooks/useLoadable';
-import { ProgressBackdrop } from '../Shell/ProgressBackdrop';
-import { selectedLocationContextState } from '../Model/Data';
-import { useAppNavigate } from '../Hooks/useAppNavigate';
-import { VolunteerRoleApprovalStatusChip } from './VolunteerRoleApprovalStatusChip';
-import { useGlobalSnackBar } from '../Hooks/useGlobalSnackBar';
-import { CompletedCustomFieldInfo } from '../GeneratedClient';
-
-//#region Role/Status Selection code
-enum filterType {
-  Family = 1,
-  Individual = 2,
-}
-type filterOption = {
-  key: string;
-  value: string | undefined;
-  type?: filterType | undefined;
-  selected: boolean;
-};
-const catchAllLabel = 'Not Applied';
-const roleFiltersState = atom({
-  key: 'newRoleFiltersState',
-  default: selector({
-    key: 'newRoleFiltersState/Default',
-    get: ({ get }) => {
-      const policy = get(policyData);
-      const familyRoles = [
-        ...Object.keys(policy.volunteerPolicy?.volunteerFamilyRoles || {}),
-      ];
-      const individualRoles = [
-        ...Object.keys(policy.volunteerPolicy?.volunteerRoles || {}),
-      ];
-      const combinedRoles = [catchAllLabel, ...familyRoles, ...individualRoles];
-      const roleFilters: filterOption[] = [];
-      for (let i = 0; i < combinedRoles.length; i++) {
-        const isIndividualRole = i >= familyRoles.length + 1;
-        const roleType = isIndividualRole
-          ? filterType.Individual
-          : combinedRoles[i] === catchAllLabel
-            ? undefined
-            : filterType.Family;
-        roleFilters.push({
-          key: combinedRoles[i],
-          value: i.toString(),
-          selected: false,
-          type: roleType,
-        });
-      }
-      return roleFilters;
-    },
-  }),
-});
-const statusFiltersState = atom({
-  key: 'statusFiltersState',
-  default: selector({
-    key: 'statusFiltersState/Default',
-    get: () => {
-      const options = [
-        { key: catchAllLabel, value: 0 },
-        {
-          key: RoleApprovalStatus[RoleApprovalStatus.Prospective],
-          value: RoleApprovalStatus.Prospective,
-        },
-        {
-          key: RoleApprovalStatus[RoleApprovalStatus.Approved],
-          value: RoleApprovalStatus.Approved,
-        },
-        {
-          key: RoleApprovalStatus[RoleApprovalStatus.Onboarded],
-          value: RoleApprovalStatus.Onboarded,
-        },
-        {
-          key: RoleApprovalStatus[RoleApprovalStatus.Expired],
-          value: RoleApprovalStatus.Expired,
-        },
-        {
-          key: RoleApprovalStatus[RoleApprovalStatus.Inactive],
-          value: RoleApprovalStatus.Inactive,
-        },
-        {
-          key: RoleApprovalStatus[RoleApprovalStatus.Denied],
-          value: RoleApprovalStatus.Denied,
-        },
-      ];
-      const statusFilters: filterOption[] = options.map((option) => ({
-        key: option.key,
-        value: option.value.toString(),
-        selected: false,
-      }));
-      return statusFilters;
-    },
-  }),
-});
-type VolunteerFilterProps = {
-  label: string;
-  options: filterOption[];
-  setSelected: (selected: string | string[]) => void;
-};
-function VolunteerFilter({
-  label,
-  options,
-  setSelected,
-}: VolunteerFilterProps) {
-  const handleChange = (event: SelectChangeEvent<string[]>) => {
-    let selectedValue = event.target.value;
-    if (Array.isArray(selectedValue)) {
-      selectedValue = selectedValue[selectedValue.length - 1];
-    }
-    setSelected(selectedValue);
-  };
-
-  return (
-    <FormControl sx={{ position: 'relative' }}>
-      <Select
-        labelId={`volunteer${label}Filter`}
-        sx={{
-          color:
-            options.filter((o) => o.selected).length === options.length
-              ? '#bdbdbd'
-              : null,
-          '& .MuiSelect-iconOpen': { transform: 'none' },
-        }}
-        multiple
-        value={options
-          .map((o) => o.key)
-          .filter((key): key is string => key !== undefined)}
-        variant="standard"
-        label={`${label} Filters`}
-        onChange={handleChange}
-        input={<InputBase />}
-        IconComponent={FilterListIcon}
-        renderValue={() => {
-          const selectedOptions = options.filter((o) => o.selected);
-          return selectedOptions.length === options.length
-            ? `${label}: all`
-            : `${label}: ${selectedOptions.length} of ${options.length}`;
-        }}
-      >
-        {options.map((option) => (
-          <MenuItem key={option.key} value={option.value ?? ''}>
-            <Checkbox checked={option.selected} />
-            <ListItemText primary={option.key} />
-          </MenuItem>
-        ))}
-      </Select>
-    </FormControl>
-  );
-}
-//#endregion
-function getStatusComparisonValue(
-  s?: string | number | RoleApprovalStatus | null | undefined
-): number {
-  if (!s) return 0;
-  switch (s) {
-    case RoleApprovalStatus.Prospective:
-    case 'Prospective':
-    case 'prospective':
-    case '1':
-    case 1:
-      return 1;
-    case RoleApprovalStatus.Approved:
-    case 'Approved':
-    case 'approved':
-    case '3':
-    case 3:
-      return 3;
-    case RoleApprovalStatus.Onboarded:
-    case 'Onboarded':
-    case 'onboarded':
-    case '4':
-    case 4:
-      return 4;
-    case RoleApprovalStatus.Expired:
-    case 'Expired':
-    case 'expired':
-    case '2':
-    case 2:
-      return 2;
-    case RoleApprovalStatus.Inactive:
-    case 'Inactive':
-    case 'inactive':
-    case '5':
-    case 5:
-      return 5;
-    case RoleApprovalStatus.Denied:
-    case 'Denied':
-    case 'denied':
-    case '6':
-    case 6:
-      return 6;
-    default:
-      return 0;
-  }
-}
-function checkStatusEquivalence(
-  a?: string | RoleApprovalStatus | null | undefined,
-  b?: string | RoleApprovalStatus | null | undefined
-): boolean {
-  return getStatusComparisonValue(a) == getStatusComparisonValue(b);
-}
-function familyLastName(family: CombinedFamilyInfo) {
-  return (
-    family.family!.adults?.filter(
-      (adult) => family.family!.primaryFamilyContactPersonId === adult.item1?.id
-    )[0]?.item1?.lastName || '⚠ MISSING PRIMARY CONTACT'
-  );
-}
-
-function simplify(input: string) {
-  // Strip out common punctuation elements and excessive whitespace, and convert to lowercase
-  return input
-    .replace(/[.,/#!$%^&*;:{}=\-_`'"'‘’‚‛“”„‟′‵″‶`´~()]/g, '')
-    .replace(/\s{2,}/g, ' ')
-    .toLowerCase();
-}
+import { useLoadable } from '../../Hooks/useLoadable';
+import { ProgressBackdrop } from '../../Shell/ProgressBackdrop';
+import { selectedLocationContextState } from '../../Model/Data';
+import { useAppNavigate } from '../../Hooks/useAppNavigate';
+import { VolunteerRoleApprovalStatusChip } from '../VolunteerRoleApprovalStatusChip';
+import { useGlobalSnackBar } from '../../Hooks/useGlobalSnackBar';
+import { CompletedCustomFieldInfo } from '../../GeneratedClient';
+import { statusFiltersState } from './statusFiltersState';
+import { checkStatusEquivalence } from './checkStatusEquivalence';
+import { familyLastName } from './familyLastName';
+import { simplify } from './simplify';
+import { filterType } from './filterType';
+import { roleFiltersState } from './roleFiltersState';
+import { VolunteerFilter } from './VolunteerFilter';
+import { catchAllLabel } from './catchAllLabel';
+import { getOptionValueFromSelection } from './getOptionValueFromSelection';
+import { getUpdatedFilters } from './getUpdatedFilters';
+import { VolunteerCustomFieldsFilter } from './VolunteerCustomFieldsFilter';
 
 function VolunteerApproval(props: { onOpen: () => void }) {
   const { onOpen } = props;
@@ -277,33 +73,20 @@ function VolunteerApproval(props: { onOpen: () => void }) {
   const [uncheckedFamilies, setUncheckedFamilies] = useState<string[]>([]);
 
   const policy = useRecoilValue(policyData);
+
   const customFieldNames =
     policy.customFamilyFields?.map((field) => field.name) || [];
+
   const [customFieldFilters, setCustomFieldFilters] = useState<
-    Record<string, string | null>
+    Record<string, string[]>
   >({});
+
+  console.log('customFieldFilters', customFieldFilters);
 
   //#region Role/Status Selection Code
   const [roleFilters, setRoleFilters] = useRecoilState(roleFiltersState);
   const [statusFilters, setStatusFilters] = useRecoilState(statusFiltersState);
-  function getOptionValueFromSelection(
-    allOptionKeysPlusSelectedOptionValue: string | string[]
-  ) {
-    const optionValue = [...allOptionKeysPlusSelectedOptionValue].filter(
-      (s: string) => !isNaN(Number(s))
-    )[0];
-    return optionValue ? optionValue : undefined;
-  }
-  function getUpdatedFilters(
-    filters: filterOption[],
-    optionToUpdate: filterOption
-  ) {
-    return filters.map((filter) =>
-      filter.key === optionToUpdate.key
-        ? { ...filter, selected: !filter.selected }
-        : filter
-    );
-  }
+
   function changeRoleFilterSelection(selection: string | string[]) {
     setUncheckedFamilies([]);
     const filterOptionToUpdate = roleFilters.find(
@@ -311,6 +94,7 @@ function VolunteerApproval(props: { onOpen: () => void }) {
     );
     setRoleFilters(getUpdatedFilters(roleFilters, filterOptionToUpdate!));
   }
+
   function changeStatusFilterSelection(selection: string | string[]) {
     setUncheckedFamilies([]);
     const filterOptionToUpdate = statusFilters.find(
@@ -319,11 +103,11 @@ function VolunteerApproval(props: { onOpen: () => void }) {
     setStatusFilters(getUpdatedFilters(statusFilters, filterOptionToUpdate!));
   }
 
-  function changeCustomFieldFilter(fieldName: string, value: string | null) {
+  function changeCustomFieldFilter(fieldName: string, value: string[]) {
     setUncheckedFamilies([]);
 
     setCustomFieldFilters((prevFilters) => {
-      const newValue = prevFilters[fieldName] === value ? null : value;
+      const newValue = prevFilters[fieldName] === value ? [] : value;
 
       return {
         ...prevFilters,
@@ -331,7 +115,6 @@ function VolunteerApproval(props: { onOpen: () => void }) {
       };
     });
   }
-
   //#endregion
 
   // The array object returned by Recoil is read-only. We need to copy it before we can do an in-place sort.
@@ -564,11 +347,7 @@ function VolunteerApproval(props: { onOpen: () => void }) {
   function familyMatchesCustomFieldFilters(family: CombinedFamilyInfo) {
     return Object.entries(customFieldFilters).every(
       ([fieldName, selectedValue]) => {
-        if (Array.isArray(selectedValue)) {
-          selectedValue = selectedValue[0];
-        }
-
-        if (!selectedValue) {
+        if (!selectedValue || selectedValue.length === 0) {
           return true;
         }
 
@@ -577,17 +356,19 @@ function VolunteerApproval(props: { onOpen: () => void }) {
         );
 
         if (!field) {
-          return selectedValue === 'Blank';
+          return true;
         }
 
-        const fieldValueString =
-          field.value === true
-            ? 'Yes'
-            : field.value === false
-              ? 'No'
-              : field.value?.toString();
+        if (field.customFieldType === CustomFieldType.Boolean) {
+          const fieldValueAsString = field.value === true ? 'Yes' : 'No';
+          return selectedValue.includes(fieldValueAsString);
+        }
 
-        return fieldValueString === selectedValue;
+        if (selectedValue.includes(field.value?.toString())) {
+          return true;
+        }
+
+        return false;
       }
     );
   }
@@ -786,7 +567,7 @@ function VolunteerApproval(props: { onOpen: () => void }) {
                 if (isBooleanField) {
                   uniqueValues = [true, false];
                 }
-                const filterOptions = uniqueValues.map((value) => {
+                const filterOptions = uniqueValues.map((value, index) => {
                   const stringValue =
                     value === true
                       ? 'Yes'
@@ -795,28 +576,32 @@ function VolunteerApproval(props: { onOpen: () => void }) {
                         : value?.toString() || 'Blank';
 
                   return {
+                    // key: `${stringValue} (${index})`,
                     key: stringValue,
                     value: stringValue,
-                    selected: customFieldFilters[fieldName] === stringValue,
+                    selected: Boolean(
+                      customFieldFilters[fieldName]?.find(
+                        (item) => item === stringValue
+                      )
+                    ),
                   };
                 });
 
+                console.log('filterOptions', filterOptions);
+                // console.log('statusFilters', statusFilters);
+
                 return (
-                  <VolunteerFilter
+                  <VolunteerCustomFieldsFilter
                     key={fieldName}
                     label={fieldName}
                     options={filterOptions}
+                    value={customFieldFilters[fieldName] ?? []}
                     setSelected={(value) => {
-                      let selectedValue: string | null = null;
-
-                      if (Array.isArray(value)) {
-                        selectedValue =
-                          value.length > 0 ? value[value.length - 1] : null;
-                      } else if (typeof value === 'string') {
-                        selectedValue = value;
+                      if (typeof value === 'string') {
+                        return changeCustomFieldFilter(fieldName, [value]);
                       }
 
-                      changeCustomFieldFilter(fieldName, selectedValue);
+                      changeCustomFieldFilter(fieldName, value);
                     }}
                   />
                 );
