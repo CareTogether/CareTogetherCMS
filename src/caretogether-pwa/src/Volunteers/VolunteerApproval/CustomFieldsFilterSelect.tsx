@@ -16,7 +16,7 @@ type VolunteerFilterProps = {
   value?: string[];
 };
 
-export function VolunteerCustomFieldsFilter({
+export function CustomFieldsFilterSelect({
   label,
   options,
   setSelected,

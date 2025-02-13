@@ -53,7 +53,6 @@ import { selectedLocationContextState } from '../../Model/Data';
 import { useAppNavigate } from '../../Hooks/useAppNavigate';
 import { VolunteerRoleApprovalStatusChip } from '../VolunteerRoleApprovalStatusChip';
 import { useGlobalSnackBar } from '../../Hooks/useGlobalSnackBar';
-import { CompletedCustomFieldInfo } from '../../GeneratedClient';
 import { statusFiltersState } from './statusFiltersState';
 import { checkStatusEquivalence } from './checkStatusEquivalence';
 import { familyLastName } from './familyLastName';
@@ -64,7 +63,7 @@ import { VolunteerFilter } from './VolunteerFilter';
 import { catchAllLabel } from './catchAllLabel';
 import { getOptionValueFromSelection } from './getOptionValueFromSelection';
 import { getUpdatedFilters } from './getUpdatedFilters';
-import { VolunteerCustomFieldsFilter } from './VolunteerCustomFieldsFilter';
+import { CustomFieldsFilter } from './CustomFieldsFilter';
 
 function VolunteerApproval(props: { onOpen: () => void }) {
   const { onOpen } = props;
@@ -335,7 +334,6 @@ function VolunteerApproval(props: { onOpen: () => void }) {
     } else if (familyRolesSelected) {
       result = familyMeetsRoleCriteria;
     } else if (individualRolesSelected) {
-      changeCustomFieldFilter;
       result = familyMembersMeetRoleCriteria;
     } else if (statusesSelected) {
       result = familyMeetsRoleCriteria || familyMembersMeetRoleCriteria;
@@ -543,52 +541,12 @@ function VolunteerApproval(props: { onOpen: () => void }) {
                 options={statusFilters}
                 setSelected={changeStatusFilterSelection}
               />
-              {policy.customFamilyFields?.map(
-                ({ name: fieldName, type: fieldType }) => {
-                  if (!fieldName) return null;
-
-                  const uniqueValues = Array.from(
-                    new Set(
-                      volunteerFamilies
-                        .map((family) => {
-                          const field =
-                            family.family?.completedCustomFields?.find(
-                              (customField) =>
-                                customField.customFieldName === fieldName
-                            );
-                          return field?.value;
-                        })
-                        .filter(
-                          (value) => value !== null && value !== undefined
-                        )
-                    )
-                  );
-
-                  const filterOptions: string[] = (
-                    fieldType === CustomFieldType.Boolean
-                      ? ['Yes', 'No']
-                      : uniqueValues.map((value) => {
-                          return value?.toString();
-                        })
-                  ).concat('(blank)');
-
-                  return (
-                    <VolunteerCustomFieldsFilter
-                      key={fieldName}
-                      label={fieldName}
-                      options={filterOptions}
-                      value={customFieldFilters[fieldName] ?? []}
-                      setSelected={(value) => {
-                        if (typeof value === 'string') {
-                          return changeCustomFieldFilter(fieldName, [value]);
-                        }
-
-                        changeCustomFieldFilter(fieldName, value);
-                      }}
-                    />
-                  );
-                }
-              )}
+              <CustomFieldsFilter
+                customFamilyFields={policy.customFamilyFields || []}
+                volunteerFamilies={volunteerFamilies}
+                customFieldFilters={customFieldFilters}
+                changeCustomFieldFilter={changeCustomFieldFilter}
+              />
             </Box>
             <ButtonGroup
               variant="text"
