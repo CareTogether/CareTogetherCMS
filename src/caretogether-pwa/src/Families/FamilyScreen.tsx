@@ -114,7 +114,6 @@ export function FamilyScreen() {
   const family = familyLookup(familyId)!;
 
   const policy = useRecoilValue(policyData);
-
   const permissions = useFamilyPermissions(family);
 
   const canCloseReferral =
@@ -442,7 +441,6 @@ export function FamilyScreen() {
             <Grid item md={4}>
               <PrimaryContactEditor family={family} />
             </Grid>
-
             <Grid item md={8}>
               {permissions(Permission.ViewFamilyCustomFields) &&
                 (
