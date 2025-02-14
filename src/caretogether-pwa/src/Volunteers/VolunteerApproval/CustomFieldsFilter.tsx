@@ -32,14 +32,12 @@ export function CustomFieldsFilter({
           })
           .filter((value) => value !== null && value !== undefined)
       )
-    );
+    ).map((value) => value.toString());
+
+    uniqueValues.sort((a, b) => a.localeCompare(b));
 
     const filterOptions: string[] = (
-      fieldType === CustomFieldType.Boolean
-        ? ['Yes', 'No']
-        : uniqueValues.map((value) => {
-            return value?.toString();
-          })
+      fieldType === CustomFieldType.Boolean ? ['Yes', 'No'] : uniqueValues
     ).concat('(blank)');
 
     return (
