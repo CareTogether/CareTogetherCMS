@@ -16,7 +16,7 @@ import RequestBackdrop from './Shell/RequestBackdrop';
 import { ProgressBackdrop } from './Shell/ProgressBackdrop';
 
 import { PostHogProvider } from 'posthog-js/react';
-import { postHogOptions } from './Utilities/instrumentation';
+import { postHogOptions } from './Utilities/Instrumentation/postHogOptions';
 
 const root = ReactDOM.createRoot(
   document.getElementById('root') as HTMLElement

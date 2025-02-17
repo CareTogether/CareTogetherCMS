@@ -7,16 +7,16 @@ import {
   RecordsAggregate,
 } from '../GeneratedClient';
 import { loggingEffect } from '../Utilities/loggingEffect';
-import { userIdState } from '../Authentication/Auth';
+import { accountInfoState } from '../Authentication/Auth';
 
-// This will be available to query (asynchronously) after the userIdState is set (i.e., post-authentication).
+// This will be available to query (asynchronously) after the accountInfoState is set (i.e., post-authentication).
 export const userOrganizationAccessQuery = selector({
   key: 'userOrganizationAccessQuery',
   get: async ({ get }) => {
     //HACK: Requiring the user ID state to be set is a workaround for fall-through issues with the AuthenticationWrapper
     //      and AuthenticatedUserWrapper. Removing this currently would cause runtime errors regarding the MsalProvider
     //      being updated while a child component is being rendered (e.g., the ShellContextSwitcher).
-    get(userIdState);
+    get(accountInfoState);
     const userResponse = await api.users.getUserOrganizationAccess();
     return userResponse;
   },
