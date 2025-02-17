@@ -880,7 +880,7 @@ function VolunteerApproval(props: { onOpen: () => void }) {
                               >
                                 {smsMode && <TableCell />}
                                 <TableCell>
-                                  {child.lastName}, {child.firstName} (Age{' '}
+                                  {child.lastName}, {child.firstName} (age{' '}
                                   <AgeText age={child.age} />)
                                 </TableCell>
                                 <TableCell></TableCell>
