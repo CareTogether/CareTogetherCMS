@@ -17,10 +17,13 @@ export const usePostHogGroups = () => {
   const locationConfiguration = useLoadable(locationConfigurationQuery);
 
   useEffect(() => {
-    if (organizationId && locationId) {
+    if (organizationId) {
       posthog.group('organization', organizationId, {
         name: organizationConfiguration?.organizationName,
       });
+    }
+
+    if (organizationId && locationId) {
       posthog.group('location', locationId, {
         name: locationConfiguration?.name,
       });
