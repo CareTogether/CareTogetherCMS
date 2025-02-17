@@ -64,6 +64,7 @@ import { catchAllLabel } from './catchAllLabel';
 import { getOptionValueFromSelection } from './getOptionValueFromSelection';
 import { getUpdatedFilters } from './getUpdatedFilters';
 import { CustomFieldsFilter } from './CustomFieldsFilter';
+import { AgeText } from '../../../src/Families/AgeText';
 
 function VolunteerApproval(props: { onOpen: () => void }) {
   const { onOpen } = props;
@@ -879,7 +880,8 @@ function VolunteerApproval(props: { onOpen: () => void }) {
                               >
                                 {smsMode && <TableCell />}
                                 <TableCell>
-                                  {child.lastName}, {child.firstName}
+                                  {child.lastName}, {child.firstName} (age{' '}
+                                  <AgeText age={child.age} />)
                                 </TableCell>
                                 <TableCell></TableCell>
                                 {customFieldNames.map((fieldName) => (
