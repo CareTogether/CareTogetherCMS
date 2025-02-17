@@ -48,6 +48,7 @@ export function ShellContextSwitcher() {
     <Stack sx={{ position: 'absolute' }}>
       {organizationConfiguration ? (
         <Typography
+          className="ph-unmask"
           variant="subtitle1"
           component="h1"
           sx={{ position: 'relative', top: -4, left: 8 }}
@@ -68,6 +69,7 @@ export function ShellContextSwitcher() {
       selectedLocationContext ? (
         availableLocations.length >= 1 ? (
           <Select
+            className="ph-unmask"
             size={isDesktop ? 'small' : 'medium'}
             variant="outlined"
             sx={{

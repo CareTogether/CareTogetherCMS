@@ -18,6 +18,7 @@ interface ListItemLinkProps {
   to: string;
   newTab?: boolean;
   darkColor?: boolean;
+  className?: string;
 }
 
 function ListItemLink(props: ListItemLinkProps) {
@@ -44,7 +45,7 @@ function ListItemLink(props: ListItemLinkProps) {
   );
 
   return (
-    <li>
+    <li className={props.className}>
       <ListItem
         button
         component={renderLink}

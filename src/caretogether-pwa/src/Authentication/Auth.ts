@@ -41,11 +41,19 @@ function displayableError(error: Error | unknown) {
 
 function withDefaultScopes(scopes: string[]) {
   // Add the default OpenID Connect scopes and then deduplicate the resulting entries.
-  return [...new Set(scopes.concat(['openid', 'profile', 'offline_access']))];
+  return [
+    ...new Set(scopes.concat(['openid', 'profile', 'offline_access', 'email'])),
+  ];
 }
 const scopes = withDefaultScopes([import.meta.env.VITE_APP_AUTH_SCOPES]);
 
-async function loginAndSetActiveAccountAsync(): Promise<string> {
+type AccountInfo = {
+  userId: string;
+  email?: string;
+  name?: string;
+};
+
+async function loginAndSetActiveAccountAsync(): Promise<AccountInfo> {
   // The ultimate objective of this function is to obtain an AuthenticationResult from Azure AD via MSAL.js
   // and return the local account ID of the authenticated account.
   let result: AuthenticationResult | null = null;
@@ -127,7 +135,11 @@ async function loginAndSetActiveAccountAsync(): Promise<string> {
   //         This account ID becomes the root of the Recoil dataflow graph. That is, all other
   //         API queries should be designed to only execute once this atom is initialized.
   if (result && result.account) {
-    return result.account.localAccountId;
+    return {
+      userId: result.account.localAccountId,
+      email: result.account.idTokenClaims?.email?.toString(),
+      name: result.account.name,
+    };
   } else if (result && !result.account) {
     throw displayableError(
       new Error(
@@ -167,24 +179,24 @@ async function loginAndSetActiveAccountAsync(): Promise<string> {
   }
 }
 
-let userIdStateInitialized = false;
-const initializeUserIdStateAsync: AtomEffect<string> = (params) => {
-  trace(`InitializeUserIdStateAsync`, params.node.key);
-  if (!userIdStateInitialized) {
-    userIdStateInitialized = true;
+let accountInfoStateInitialized = false;
+const initializeAccountInfoStateAsync: AtomEffect<AccountInfo> = (params) => {
+  trace(`InitializeAccountInfoStateAsync`, params.node.key);
+  if (!accountInfoStateInitialized) {
+    accountInfoStateInitialized = true;
     params.setSelf(loginAndSetActiveAccountAsync());
   } else {
     trace(
-      `InitializeUserIdStateAsync`,
+      `InitializeAccountInfoStateAsync`,
       `Initialization has already started; skipping this atom effect invocation.`
     );
   }
 };
 
 // This will be set by AuthenticationWrapper once the user has authenticated and the default account is set.
-export const userIdState = atom<string>({
-  key: 'userIdState',
-  effects: [loggingEffect, initializeUserIdStateAsync],
+export const accountInfoState = atom<AccountInfo>({
+  key: 'accountInfoState',
+  effects: [loggingEffect, initializeAccountInfoStateAsync],
 });
 
 export async function tryAcquireAccessToken(): Promise<string | null> {

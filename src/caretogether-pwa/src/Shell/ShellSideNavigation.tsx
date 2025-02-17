@@ -76,11 +76,13 @@ function SideNavigationMenu({ open }: SideNavigationMenuProps) {
       ) : (
         <>
           <ListItemLink
+            className="ph-unmask"
             to={`${locationPrefix}`}
             primary="Dashboard"
             icon={<DashboardIcon sx={{ color: '#fff8' }} />}
           />
           <ListItemLink
+            className="ph-unmask"
             to={`${locationPrefix}/inbox`}
             primary="Inbox"
             icon={
@@ -91,6 +93,7 @@ function SideNavigationMenu({ open }: SideNavigationMenuProps) {
           />
           {permissions(Permission.AccessPartneringFamiliesScreen) && (
             <ListItemLink
+              className="ph-unmask"
               to={`${locationPrefix}/referrals`}
               primary="Referrals"
               icon={<PermPhoneMsgIcon sx={{ color: '#fff8' }} />}
@@ -98,6 +101,7 @@ function SideNavigationMenu({ open }: SideNavigationMenuProps) {
           )}
           {permissions(Permission.AccessVolunteersScreen) && (
             <ListItemLink
+              className="ph-unmask"
               to={`${locationPrefix}/volunteers`}
               primary="Volunteers"
               icon={<PeopleIcon sx={{ color: '#fff8' }} />}
@@ -105,6 +109,7 @@ function SideNavigationMenu({ open }: SideNavigationMenuProps) {
           )}
           {permissions(Permission.AccessCommunitiesScreen) && (
             <ListItemLink
+              className="ph-unmask"
               to={`${locationPrefix}/communities`}
               primary="Communities"
               icon={<Diversity3Icon sx={{ color: '#fff8' }} />}
@@ -114,11 +119,13 @@ function SideNavigationMenu({ open }: SideNavigationMenuProps) {
             <>
               <Divider />
               <ListItemLink
+                className="ph-unmask"
                 to={`${locationPrefix}/settings`}
                 primary="Settings"
                 icon={<SettingsIcon sx={{ color: '#fff8' }} />}
               />
               <ListItemLink
+                className="ph-unmask"
                 to="http://support.caretogether.io"
                 newTab
                 primary="Support"

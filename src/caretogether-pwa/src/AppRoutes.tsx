@@ -27,11 +27,8 @@ import { useLocalStorage } from './Hooks/useLocalStorage';
 import { InboxScreen } from './Inbox/InboxScreen';
 import { FamilyScreenV2 } from './Families/FamilyScreenV2';
 import { familyScreenV2State } from './Families/familyScreenV2State';
-import posthog from 'posthog-js';
-import {
-  locationConfigurationQuery,
-  organizationConfigurationQuery,
-} from './Model/ConfigurationModel';
+import { usePostHogIdentify } from './Utilities/Instrumentation/usePostHogIdentify';
+import { usePostHogGroups } from './Utilities/Instrumentation/usePostHogGroups';
 
 const LAST_VISITED_LOCATION = 'lastVisitedLocation';
 
@@ -146,24 +143,9 @@ function LocationContextWrapper() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [organizationId, locationId, trace, setSelectedLocationContext]);
 
-  const organizationConfiguration = useLoadable(organizationConfigurationQuery);
-  const locationConfiguration = useLoadable(locationConfigurationQuery);
+  usePostHogGroups();
 
-  useEffect(() => {
-    if (organizationId && locationId) {
-      posthog.group('organization', organizationId, {
-        name: organizationConfiguration?.organizationName,
-      });
-      posthog.group('location', locationId, {
-        name: locationConfiguration?.name,
-      });
-    }
-  }, [
-    organizationId,
-    locationId,
-    organizationConfiguration?.organizationName,
-    locationConfiguration?.name,
-  ]);
+  usePostHogIdentify();
 
   return (
     // We need to wait for this to have a value before rendering the child tree; otherwise,
