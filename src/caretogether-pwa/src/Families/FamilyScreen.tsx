@@ -38,7 +38,7 @@ import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 import Diversity3Icon from '@mui/icons-material/Diversity3';
 import { AdultCard } from './AdultCard';
 import { ChildCard } from './ChildCard';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { AddAdultDialog } from './AddAdultDialog';
 import { AddChildDialog } from './AddChildDialog';
 import { AddEditNoteDialog } from '../Notes/AddEditNoteDialog';
@@ -80,6 +80,7 @@ import { useLoadable } from '../Hooks/useLoadable';
 import { visibleCommunitiesQuery } from '../Model/Data';
 import { useAppNavigate } from '../Hooks/useAppNavigate';
 import FamilyScreenPageVersionSwitch from './FamilyScreenPageVersionSwitch';
+import posthog from 'posthog-js';
 
 const sortArrangementsByStartDateDescThenCreateDateDesc = (
   a: Arrangement,
@@ -146,12 +147,28 @@ export function FamilyScreen() {
   const [addAdultDialogOpen, setAddAdultDialogOpen] = useState(false);
   const [addChildDialogOpen, setAddChildDialogOpen] = useState(false);
   const [addNoteDialogOpen, setAddNoteDialogOpen] = useState(false);
+
+  const firstReferralId =
+    allReferrals.length > 0 ? allReferrals[0].id : undefined;
+
   const [selectedReferralId, setSelectedReferralId] = useState<
     string | undefined
-  >(allReferrals.length > 0 ? allReferrals[0].id : undefined);
+  >(firstReferralId);
+
   const selectedReferral = allReferrals.find(
-    (r) => r.id === selectedReferralId
+    (referral) => referral.id === selectedReferralId
   );
+
+  // If user navigates to a different family without leaving current page (i.e. not unmounting this component),
+  // we want to auto-select the first referral
+  useEffect(() => {
+    if (!selectedReferral) {
+      posthog.capture('auto selected first referral');
+
+      setSelectedReferralId(firstReferralId);
+    }
+  }, [selectedReferral, firstReferralId]);
+
   const [familyMoreMenuAnchor, setFamilyMoreMenuAnchor] =
     useState<Element | null>(null);
 
