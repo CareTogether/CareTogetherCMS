@@ -300,6 +300,7 @@ export function FamilyScreen() {
       <Toolbar variant="dense" disableGutters={true}>
         {permissions(Permission.UploadFamilyDocuments) && (
           <Button
+            className="ph-unmask"
             onClick={() => setUploadDocumentDialogOpen(true)}
             variant="contained"
             size="small"
@@ -311,6 +312,7 @@ export function FamilyScreen() {
         )}
         {permissions(Permission.EditFamilyInfo) && (
           <Button
+            className="ph-unmask"
             onClick={() => setAddAdultDialogOpen(true)}
             variant="contained"
             size="small"
@@ -322,6 +324,7 @@ export function FamilyScreen() {
         )}
         {permissions(Permission.EditFamilyInfo) && (
           <Button
+            className="ph-unmask"
             onClick={() => setAddChildDialogOpen(true)}
             variant="contained"
             size="small"
@@ -333,6 +336,7 @@ export function FamilyScreen() {
         )}
         {permissions(Permission.AddEditDraftNotes) && (
           <Button
+            className="ph-unmask"
             onClick={() => setAddNoteDialogOpen(true)}
             variant="contained"
             size="small"
@@ -497,6 +501,7 @@ export function FamilyScreen() {
 
             <Grid item xs={12}>
               <Typography
+                className="ph-unmask"
                 variant="h3"
                 style={{ marginTop: 0, marginBottom: 0 }}
               >
@@ -549,7 +554,9 @@ export function FamilyScreen() {
                       }}
                     >
                       {' '}
-                      <Typography variant="h3">Referrals</Typography>
+                      <Typography className="ph-unmask" variant="h3">
+                        Referrals
+                      </Typography>
                     </FormLabel>
                     <RadioGroup
                       aria-labelledby="demo-radio-buttons-group-label"
@@ -561,12 +568,19 @@ export function FamilyScreen() {
                           key={referral!.id}
                           value={referral!.id}
                           label={
-                            referral!.closedAtUtc
-                              ? `Referral Closed ${format(
-                                  referral!.closedAtUtc!,
-                                  'M/d/yy'
-                                )}`
-                              : 'Open Referral'
+                            referral!.closedAtUtc ? (
+                              <>
+                                <span className="ph-unmask">
+                                  Referral Closed{' '}
+                                </span>
+
+                                <span>
+                                  {format(referral!.closedAtUtc!, 'M/d/yy')}
+                                </span>
+                              </>
+                            ) : (
+                              <span className="ph-unmask">Open Referral</span>
+                            )
                           }
                           control={<Radio />}
                           onChange={() => setSelectedReferralId(referral!.id)}
@@ -620,6 +634,7 @@ export function FamilyScreen() {
                 selectedReferral?.id?.toString() ==
                   family.partneringFamilyInfo?.openReferral?.id?.toString() && (
                   <Button
+                    className="ph-unmask"
                     onClick={() => setCloseReferralDialogOpen(true)}
                     variant="contained"
                     size="small"
@@ -631,6 +646,7 @@ export function FamilyScreen() {
               {!family.partneringFamilyInfo?.openReferral &&
                 permissions(Permission.CreateReferral) && (
                   <Button
+                    className="ph-unmask"
                     onClick={() => setOpenNewReferralDialogOpen(true)}
                     variant="contained"
                     size="small"
@@ -674,7 +690,11 @@ export function FamilyScreen() {
               selectedReferral && (
                 <>
                   <Grid item xs={12} sm={6} md={4} style={{ paddingRight: 20 }}>
-                    <Typography variant="h3" style={{ marginBottom: 0 }}>
+                    <Typography
+                      className="ph-unmask"
+                      variant="h3"
+                      style={{ marginBottom: 0 }}
+                    >
                       Incomplete
                     </Typography>
                     {selectedReferral?.missingRequirements?.map(
@@ -689,7 +709,11 @@ export function FamilyScreen() {
                     )}
                   </Grid>
                   <Grid item xs={12} sm={6} md={4} style={{ paddingRight: 20 }}>
-                    <Typography variant="h3" style={{ marginBottom: 0 }}>
+                    <Typography
+                      className="ph-unmask"
+                      variant="h3"
+                      style={{ marginBottom: 0 }}
+                    >
                       Completed
                     </Typography>
                     {selectedReferral?.completedRequirements?.map(
@@ -759,7 +783,9 @@ export function FamilyScreen() {
                   </Box>
                 </Grid>
                 <Grid item xs={12} sm={6} md={4} style={{ paddingRight: 20 }}>
-                  <Typography variant="h3">Incomplete</Typography>
+                  <Typography className="ph-unmask" variant="h3">
+                    Incomplete
+                  </Typography>
                   {family.volunteerFamilyInfo?.missingRequirements?.map(
                     (missing, i) => (
                       <MissingRequirementRow
@@ -782,7 +808,9 @@ export function FamilyScreen() {
                   )}
                 </Grid>
                 <Grid item xs={12} sm={6} md={4} style={{ paddingRight: 20 }}>
-                  <Typography variant="h3">Completed</Typography>
+                  <Typography className="ph-unmask" variant="h3">
+                    Completed
+                  </Typography>
                   {family.volunteerFamilyInfo?.completedRequirements?.map(
                     (completed, i) => (
                       <CompletedRequirementRow
@@ -806,7 +834,11 @@ export function FamilyScreen() {
             )}
             {permissions(Permission.ViewFamilyDocumentMetadata) && (
               <Grid item xs={12} sm={6} md={4}>
-                <Typography variant="h3" style={{ marginBottom: 0 }}>
+                <Typography
+                  className="ph-unmask"
+                  variant="h3"
+                  style={{ marginBottom: 0 }}
+                >
                   Documents
                 </Typography>
                 <FamilyDocuments family={family} />
@@ -833,6 +865,7 @@ export function FamilyScreen() {
                     }}
                   >
                     <Typography
+                      className="ph-unmask"
                       variant="h3"
                       style={{
                         margin: 0,
@@ -864,6 +897,7 @@ export function FamilyScreen() {
                           (arrangementPolicy) => (
                             <Box key={arrangementPolicy.arrangementType}>
                               <Button
+                                className="ph-unmask"
                                 onClick={() =>
                                   setCreateArrangementDialogParameter(
                                     arrangementPolicy
@@ -901,7 +935,11 @@ export function FamilyScreen() {
               </Grid>
             )}
             <Grid item xs={12}>
-              <Typography variant="h3" style={{ marginBottom: 0 }}>
+              <Typography
+                className="ph-unmask"
+                variant="h3"
+                style={{ marginBottom: 0 }}
+              >
                 Family Members
               </Typography>
               <Masonry

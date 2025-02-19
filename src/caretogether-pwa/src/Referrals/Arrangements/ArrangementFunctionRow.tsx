@@ -86,6 +86,7 @@ export function ArrangementFunctionRow({
     <>
       <TableRow key={functionPolicy.functionName}>
         <TableCell
+          className="ph-unmask"
           sx={{ padding: 0 }}
           colSpan={assignments.length === 0 ? 2 : 1}
           valign="top"

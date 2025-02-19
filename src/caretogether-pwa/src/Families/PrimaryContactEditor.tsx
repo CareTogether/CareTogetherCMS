@@ -74,11 +74,17 @@ export function PrimaryContactEditor({ family }: PrimaryContactEditorProps) {
     <Box>
       {primaryContactPersonDeleted && (
         <>
-          <Chip size="medium" label={'No primary contact!'} color="error" />
+          <Chip
+            className="ph-unmask"
+            size="medium"
+            label={'No primary contact!'}
+            color="error"
+          />
           <br />
         </>
       )}
-      Primary Contact: <PersonName person={primaryContactPerson} />
+      <span className="ph-unmask">Primary Contact:</span>{' '}
+      <PersonName person={primaryContactPerson} />
       {permissions(Permission.EditFamilyInfo) && editor.editButton}
     </Box>
   );

@@ -39,7 +39,11 @@ export function ReferralComments({
 
   return permissions(Permission.ViewReferralComments) ? (
     <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center' }}>
-      <Typography variant="h3" style={{ marginBottom: 0 }}>
+      <Typography
+        className="ph-unmask"
+        variant="h3"
+        style={{ marginBottom: 0 }}
+      >
         Comments
         {permissions(Permission.EditReferral) && (
           <>

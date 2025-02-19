@@ -34,7 +34,7 @@ export function CustomFieldEditor({
   return (
     <Box style={{ margin: 0 }}>
       <span>
-        {customFieldPolicy.name}:&nbsp;
+        <span className="ph-unmask">{customFieldPolicy.name}:</span>&nbsp;
         {editor.editing ? (
           type === CustomFieldType.Boolean ? (
             <>

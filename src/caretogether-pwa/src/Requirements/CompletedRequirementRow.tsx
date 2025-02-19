@@ -64,7 +64,7 @@ export function CompletedRequirementRow({
           }
         >
           <>
-            <span>
+            <span className="ph-unmask">
               {requirement.requirementName}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
               {requirement.completedAtUtc && (
                 <span style={{ float: 'right' }}>

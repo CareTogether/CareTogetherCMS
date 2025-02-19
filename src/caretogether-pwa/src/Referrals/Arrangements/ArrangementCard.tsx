@@ -228,7 +228,7 @@ function ArrangementPlannedDuration({
   }, arrangement.plannedEndUtc || null);
 
   return (
-    <Stack direction="column" sx={{ clear: 'both' }}>
+    <Stack className="ph-unmask" direction="column" sx={{ clear: 'both' }}>
       <Box>
         <span>Planned start:&nbsp;</span>
         {!summaryOnly && permissions(Permission.EditArrangement) ? (
@@ -665,7 +665,11 @@ export function ArrangementCard({
                 </TableContainer>
                 {arrangement.phase !== ArrangementPhase.Cancelled && (
                   <>
-                    <Typography variant="body2" component="div">
+                    <Typography
+                      className="ph-unmask"
+                      variant="body2"
+                      component="div"
+                    >
                       {completedRequirementsWithContext.map((x, i) => (
                         <CompletedRequirementRow
                           key={`${x.completed.completedRequirementId}:${i}`}
