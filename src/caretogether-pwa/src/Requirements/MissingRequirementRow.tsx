@@ -59,7 +59,7 @@ export function MissingRequirementRow({
         icon={isAvailableApplication ? '💤' : '❌'}
         onClick={canComplete || canExempt ? dialogHandle.openDialog : undefined}
       >
-        {requirement}
+        <span className="ph-unmask">{requirement}</span>
         {policyVersion && (
           <Chip
             label={policyVersion}

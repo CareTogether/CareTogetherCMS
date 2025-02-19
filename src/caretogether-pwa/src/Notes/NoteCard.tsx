@@ -60,6 +60,7 @@ export function NoteCard({ familyId, note }: NoteCardProps) {
         <CardActions sx={{ paddingTop: 0 }}>
           {permissions(Permission.DiscardDraftNotes) && (
             <Button
+              className="ph-unmask"
               onClick={() => setShowDiscardNoteDialog(true)}
               variant="contained"
               size="small"
@@ -72,6 +73,7 @@ export function NoteCard({ familyId, note }: NoteCardProps) {
           )}
           {permissions(Permission.AddEditDraftNotes) && (
             <Button
+              className="ph-unmask"
               onClick={() => setShowEditNoteDialog(true)}
               variant="contained"
               size="small"
@@ -83,6 +85,7 @@ export function NoteCard({ familyId, note }: NoteCardProps) {
           )}
           {permissions(Permission.ApproveNotes) && (
             <Button
+              className="ph-unmask"
               onClick={() => setShowApproveNoteDialog(true)}
               variant="contained"
               size="small"

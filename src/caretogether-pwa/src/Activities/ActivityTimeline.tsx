@@ -130,7 +130,7 @@ export function ActivityTimeline({ family }: ActivityTimelineProps) {
             }}
           >
             <Box sx={{ color: 'text.disabled', margin: 0, padding: 0 }}>
-              <span style={{ marginRight: 16 }}>
+              <span className="ph-unmask" style={{ marginRight: 16 }}>
                 {format(activity.activityTimestampUtc!, 'M/d/yy h:mm a')}
               </span>
               <PersonName person={userLookup(activity.userId)} />
