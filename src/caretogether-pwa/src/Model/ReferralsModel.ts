@@ -55,6 +55,7 @@ import {
 } from '../GeneratedClient';
 import { useAtomicRecordsCommandCallback } from './DirectoryModel';
 import { visibleFamiliesQuery } from './Data';
+import { convertUtcDateToLocalDate } from '../Utilities/dateUtils';
 
 export const partneringFamiliesData = selector({
   key: 'partneringFamiliesData',
@@ -243,6 +244,8 @@ export function useReferralsModel() {
         additionalComments: string,
         exemptionExpiresAtLocal: Date | null
       ) => {
+        const dueDateUtc = requirement.dueBy || requirement.pastDueSince;
+
         const command = new ExemptArrangementRequirement({
           familyId: partneringFamilyId,
           referralId: referralId,
@@ -251,7 +254,7 @@ export function useReferralsModel() {
         command.requirementName = requirement.actionName;
         command.dueDate = exemptAll
           ? undefined
-          : requirement.dueBy || requirement.pastDueSince;
+          : dueDateUtc && convertUtcDateToLocalDate(dueDateUtc);
         command.additionalComments = additionalComments;
         command.exemptionExpiresAtUtc = exemptionExpiresAtLocal ?? undefined;
         return command;
