@@ -5,3 +5,14 @@ export function formatUtcDateOnly(input: Date) {
     timeZone: 'UTC',
   }).format(input);
 }
+
+export function convertUtcDateToLocalDate(input: Date) {
+  return new Date(
+    input.getUTCFullYear(),
+    input.getUTCMonth(),
+    input.getUTCDate(),
+    input.getUTCHours(),
+    input.getUTCMinutes(),
+    input.getUTCSeconds()
+  );
+}
