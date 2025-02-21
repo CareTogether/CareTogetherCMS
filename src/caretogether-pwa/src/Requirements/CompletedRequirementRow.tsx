@@ -13,6 +13,7 @@ import { PersonName } from '../Families/PersonName';
 import { IconRow } from '../Generic/IconRow';
 import { CompletedRequirementDialog } from './CompletedRequirementDialog';
 import { RequirementContext } from './RequirementContext';
+import { formatUtcDateOnly } from '../Utilities/dateUtils';
 
 type CompletedRequirementRowProps = {
   requirement: CompletedRequirementInfo;
@@ -44,8 +45,6 @@ export function CompletedRequirementRow({
         ? permissions(Permission.EditArrangementRequirementCompletion)
         : permissions(Permission.EditApprovalRequirementCompletion);
 
-  const dateFormat = 'M/d/yy';
-
   const familyLookup = useFamilyLookup();
   const personLookup = usePersonLookup();
 
@@ -68,7 +67,7 @@ export function CompletedRequirementRow({
               {requirement.requirementName}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
               {requirement.completedAtUtc && (
                 <span style={{ float: 'right' }}>
-                  {format(requirement.completedAtUtc, dateFormat)}
+                  {formatUtcDateOnly(requirement.completedAtUtc)}
                 </span>
               )}
             </span>
@@ -77,10 +76,10 @@ export function CompletedRequirementRow({
                 <br />
                 <span style={{ paddingLeft: '30px' }}>
                   {requirement.expiresAtUtc > new Date() ? (
-                    `⏰ Expires ${format(requirement.expiresAtUtc, dateFormat)}`
+                    `⏰ Expires ${formatUtcDateOnly(requirement.expiresAtUtc)}`
                   ) : (
                     <span style={{ fontWeight: 'bold' }}>
-                      ⚠ Expired {format(requirement.expiresAtUtc, dateFormat)}
+                      ⚠ Expired {formatUtcDateOnly(requirement.expiresAtUtc)}
                     </span>
                   )}
                 </span>
