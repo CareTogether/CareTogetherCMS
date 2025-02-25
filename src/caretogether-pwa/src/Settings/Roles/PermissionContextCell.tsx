@@ -18,12 +18,12 @@ import {
   OwnFamilyPermissionContext,
   OwnReferralAssigneeFamiliesPermissionContext,
   PermissionContext,
-} from '../GeneratedClient';
-import { useLoadable } from '../Hooks/useLoadable';
+} from '../../GeneratedClient';
+import { useLoadable } from '../../Hooks/useLoadable';
 import {
   allFunctionsInPolicyQuery,
   organizationConfigurationQuery,
-} from '../Model/ConfigurationModel';
+} from '../../Model/ConfigurationModel';
 
 interface ContextSelectorProps<T extends PermissionContext> {
   context: T;
