@@ -16,9 +16,15 @@ namespace CareTogether
         }
 
         public static ImmutableList<T> UpdateSingle<T>(this ImmutableList<T> list, Func<T, bool> predicate,
-            Func<T, T> selector)
+            Func<T?, T> selector)
         {
-            var oldValue = list.Single(predicate);
+            var oldValue = list.SingleOrDefault(predicate);
+
+            if (oldValue == null)
+            {
+                return list.Add(selector(default));
+            }
+
             var newValue = selector(oldValue);
             return list.Replace(oldValue, newValue);
         }
