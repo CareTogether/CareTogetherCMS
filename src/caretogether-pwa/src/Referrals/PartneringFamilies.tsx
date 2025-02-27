@@ -47,6 +47,7 @@ import UnfoldMoreIcon from '@mui/icons-material/UnfoldMore';
 import { useLoadable } from '../Hooks/useLoadable';
 import { ProgressBackdrop } from '../Shell/ProgressBackdrop';
 import { useAppNavigate } from '../Hooks/useAppNavigate';
+import PhoneIcon from '@mui/icons-material/Phone';
 
 const arrangementPhaseText = new Map<number, string>([
   [ArrangementPhase.SettingUp, 'Setting Up'],
@@ -357,114 +358,152 @@ function PartneringFamilies() {
             </TableHead>
             <TableBody>
               {filteredPartneringFamiliesWithActiveOrAllFilter.map(
-                (partneringFamily) => (
-                  <React.Fragment key={partneringFamily.family?.id}>
-                    <TableRow
-                      sx={{ backgroundColor: '#eef', cursor: 'pointer' }}
-                      onClick={() => openFamily(partneringFamily.family!.id!)}
-                    >
-                      <TableCell>
-                        <FamilyName family={partneringFamily} />
-                      </TableCell>
-                      <TableCell>
-                        {
-                          partneringFamily.partneringFamilyInfo?.openReferral
-                            ? 'Open since ' +
-                              format(
-                                partneringFamily.partneringFamilyInfo
-                                  .openReferral.openedAtUtc!,
-                                'MM/dd/yyyy'
-                              )
-                            : 'Closed - ' +
-                              ReferralCloseReason[
-                                partneringFamily.partneringFamilyInfo!
-                                  .closedReferrals![
+                (partneringFamily) => {
+                  const primaryFamilyContactPersonId =
+                    partneringFamily.family?.primaryFamilyContactPersonId;
+                  const primaryContactPerson =
+                    partneringFamily.family?.adults?.find(
+                      (adult) =>
+                        adult.item1?.id === primaryFamilyContactPersonId
+                    )?.item1;
+                  const phoneNumber =
+                    primaryContactPerson?.phoneNumbers?.[0]?.number;
+                  return (
+                    <React.Fragment key={partneringFamily.family?.id}>
+                      <TableRow
+                        sx={{ backgroundColor: '#eef', cursor: 'pointer' }}
+                        onClick={() => openFamily(partneringFamily.family!.id!)}
+                      >
+                        <TableCell>
+                          <span
+                            style={{
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              gap: '10px',
+                            }}
+                          >
+                            <FamilyName family={partneringFamily} />
+                            {phoneNumber && (
+                              <>
+                                <PhoneIcon
+                                  sx={{
+                                    color: '#8B0000',
+                                    fontSize: 16,
+                                    marginLeft: '5px',
+                                  }}
+                                />
+                                <span style={{ color: 'black' }}>
+                                  {phoneNumber}
+                                </span>
+                              </>
+                            )}
+                          </span>
+                        </TableCell>
+                        <TableCell>
+                          {
+                            partneringFamily.partneringFamilyInfo?.openReferral
+                              ? 'Open since ' +
+                                format(
+                                  partneringFamily.partneringFamilyInfo
+                                    .openReferral.openedAtUtc!,
+                                  'MM/dd/yyyy'
+                                )
+                              : 'Closed - ' +
+                                ReferralCloseReason[
                                   partneringFamily.partneringFamilyInfo!
-                                    .closedReferrals!.length - 1
-                                ]!.closeReason!
-                              ]
-                          //TODO: "Closed on " + format(partneringFamily.partneringFamilyInfo?.closedReferrals?.[0]?.closedUtc) -- needs a new calculated property
-                        }
-                      </TableCell>
-                      {!expandedView ? (
-                        arrangementTypes?.map((arrangementType) => (
-                          <TableCell key={arrangementType}>
-                            <div
-                              style={{
-                                display: 'flex',
-                                rowGap: '5px',
-                                columnGap: '8px',
-                                flexWrap: 'wrap',
-                                justifyContent: 'flex-start',
-                                alignItems: 'center',
-                              }}
-                            >
-                              {arrangementStatusSummary(
-                                partneringFamily.partneringFamilyInfo!,
-                                ArrangementPhase.SettingUp,
-                                arrangementType!
-                              )}
-                              <div>
+                                    .closedReferrals![
+                                    partneringFamily.partneringFamilyInfo!
+                                      .closedReferrals!.length - 1
+                                  ]!.closeReason!
+                                ]
+                            //TODO: "Closed on " + format(partneringFamily.partneringFamilyInfo?.closedReferrals?.[0]?.closedUtc) -- needs a new calculated property
+                          }
+                        </TableCell>
+                        {!expandedView ? (
+                          arrangementTypes?.map((arrangementType) => (
+                            <TableCell key={arrangementType}>
+                              <div
+                                style={{
+                                  display: 'flex',
+                                  rowGap: '5px',
+                                  columnGap: '8px',
+                                  flexWrap: 'wrap',
+                                  justifyContent: 'flex-start',
+                                  alignItems: 'center',
+                                }}
+                              >
                                 {arrangementStatusSummary(
                                   partneringFamily.partneringFamilyInfo!,
-                                  ArrangementPhase.ReadyToStart,
+                                  ArrangementPhase.SettingUp,
                                   arrangementType!
                                 )}
+                                <div>
+                                  {arrangementStatusSummary(
+                                    partneringFamily.partneringFamilyInfo!,
+                                    ArrangementPhase.ReadyToStart,
+                                    arrangementType!
+                                  )}
+                                </div>
+                                <div>
+                                  {arrangementStatusSummary(
+                                    partneringFamily.partneringFamilyInfo!,
+                                    ArrangementPhase.Started,
+                                    arrangementType!
+                                  )}
+                                </div>
+                                <div>
+                                  {arrangementStatusSummary(
+                                    partneringFamily.partneringFamilyInfo!,
+                                    ArrangementPhase.Ended,
+                                    arrangementType!
+                                  )}
+                                </div>
                               </div>
-                              <div>
-                                {arrangementStatusSummary(
-                                  partneringFamily.partneringFamilyInfo!,
-                                  ArrangementPhase.Started,
-                                  arrangementType!
-                                )}
-                              </div>
-                              <div>
-                                {arrangementStatusSummary(
-                                  partneringFamily.partneringFamilyInfo!,
-                                  ArrangementPhase.Ended,
-                                  arrangementType!
-                                )}
-                              </div>
-                            </div>
+                            </TableCell>
+                          ))
+                        ) : (
+                          <></>
+                        )}
+                      </TableRow>
+                      {expandedView ? (
+                        <TableRow
+                          onClick={() =>
+                            openFamily(partneringFamily.family!.id!)
+                          }
+                        >
+                          <TableCell sx={{ maxWidth: '400px', paddingLeft: 3 }}>
+                            {
+                              partneringFamily.partneringFamilyInfo
+                                ?.openReferral?.comments
+                            }
                           </TableCell>
-                        ))
+                          <TableCell>
+                            <Grid container spacing={2}>
+                              {matchingArrangements(
+                                partneringFamily.partneringFamilyInfo!,
+                                arrangementsFilter
+                              ).map((arrangementEntry) => (
+                                <Grid
+                                  item
+                                  key={arrangementEntry.arrangement.id}
+                                >
+                                  <ArrangementCard
+                                    summaryOnly
+                                    partneringFamily={partneringFamily}
+                                    referralId={arrangementEntry.referralId}
+                                    arrangement={arrangementEntry.arrangement}
+                                  />
+                                </Grid>
+                              ))}
+                            </Grid>
+                          </TableCell>
+                        </TableRow>
                       ) : (
                         <></>
                       )}
-                    </TableRow>
-                    {expandedView ? (
-                      <TableRow
-                        onClick={() => openFamily(partneringFamily.family!.id!)}
-                      >
-                        <TableCell sx={{ maxWidth: '400px', paddingLeft: 3 }}>
-                          {
-                            partneringFamily.partneringFamilyInfo?.openReferral
-                              ?.comments
-                          }
-                        </TableCell>
-                        <TableCell>
-                          <Grid container spacing={2}>
-                            {matchingArrangements(
-                              partneringFamily.partneringFamilyInfo!,
-                              arrangementsFilter
-                            ).map((arrangementEntry) => (
-                              <Grid item key={arrangementEntry.arrangement.id}>
-                                <ArrangementCard
-                                  summaryOnly
-                                  partneringFamily={partneringFamily}
-                                  referralId={arrangementEntry.referralId}
-                                  arrangement={arrangementEntry.arrangement}
-                                />
-                              </Grid>
-                            ))}
-                          </Grid>
-                        </TableCell>
-                      </TableRow>
-                    ) : (
-                      <></>
-                    )}
-                  </React.Fragment>
-                )
+                    </React.Fragment>
+                  );
+                }
               )}
             </TableBody>
           </Table>
