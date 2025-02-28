@@ -100,7 +100,11 @@ export function ExemptedRequirementRow({
                 <span style={{ fontWeight: 'bold' }}>All&nbsp;</span>
               )}
               {requirement.requirementName}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-              {requirement.dueDate && formatUtcDateOnly(requirement.dueDate)}
+              {requirement.dueDate && (
+                <span style={{ float: 'right' }}>
+                  {formatUtcDateOnly(requirement.dueDate)}
+                </span>
+              )}
               {requirement.exemptionExpiresAtUtc && (
                 <span style={{ float: 'right' }}>
                   until {format(requirement.exemptionExpiresAtUtc, 'M/d/yy')}
