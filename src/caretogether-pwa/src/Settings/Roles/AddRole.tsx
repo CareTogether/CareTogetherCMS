@@ -4,6 +4,8 @@ import {
   TextField,
   Checkbox,
   FormControlLabel,
+  FormHelperText,
+  FormControl,
 } from '@mui/material';
 import { RoleDefinition } from '../../GeneratedClient';
 import { useState } from 'react';
@@ -67,16 +69,24 @@ export function AddRole({ onClose }: AddEditCommunityDrawerProps) {
       </Grid>
 
       <Grid item xs={12}>
-        <FormControlLabel
-          control={
-            <Checkbox
-              checked={isProtected}
-              onChange={(e) => setIsProtected(e.target.checked)}
-              color="primary"
-            />
-          }
-          label="Protected"
-        />
+        <FormControl>
+          <FormControlLabel
+            control={
+              <Checkbox
+                checked={isProtected}
+                onChange={(e) => setIsProtected(e.target.checked)}
+                color="primary"
+              />
+            }
+            label="Protected"
+          />
+          <FormHelperText>
+            Protected roles are roles that can only be assigned to or removed
+            from users by a user who has a role with the "Edit Person User
+            Protected Roles" permission. Use protected roles for the most
+            sensitive roles in your organization, typically staff roles.
+          </FormHelperText>
+        </FormControl>
       </Grid>
 
       <Grid item xs={12} sx={{ textAlign: 'right' }}>
