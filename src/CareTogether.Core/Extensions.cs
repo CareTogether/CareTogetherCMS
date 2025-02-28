@@ -15,7 +15,7 @@ namespace CareTogether
             return list.Select(x => predicate(x) ? valueToUpdate : x).ToImmutableList();
         }
 
-        public static ImmutableList<T> UpdateSingle<T>(this ImmutableList<T> list, Func<T, bool> predicate,
+        public static ImmutableList<T> AddOrReplace<T>(this ImmutableList<T> list, Func<T, bool> predicate,
             Func<T?, T> selector)
         {
             var oldValue = list.SingleOrDefault(predicate);

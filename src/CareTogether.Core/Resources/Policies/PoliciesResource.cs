@@ -45,7 +45,7 @@ namespace CareTogether.Resources.Policies
             var config = await configurationStore.GetAsync(organizationId, Guid.Empty, CONFIG);
             var newConfig = config with
             {
-                Roles = config.Roles.UpdateSingle(r => r.RoleName == roleName, _ => role)
+                Roles = config.Roles.AddOrReplace(r => r.RoleName == roleName, _ => role)
             };
             await configurationStore.UpsertAsync(organizationId, Guid.Empty, CONFIG, newConfig);
             return Render(newConfig);
