@@ -75,7 +75,7 @@ export function AddRole({ onClose }: AddEditCommunityDrawerProps) {
               color="primary"
             />
           }
-          label="Is Protected"
+          label="Protected"
         />
       </Grid>
 
