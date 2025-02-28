@@ -344,6 +344,8 @@ export function useReferralsModel() {
         additionalComments: string,
         exemptionExpiresAtLocal: Date | null
       ) => {
+        const dueDateUtc = requirement.dueBy || requirement.pastDueSince;
+
         const command = new ExemptVolunteerFamilyAssignmentRequirement({
           familyId: partneringFamilyId,
           referralId: referralId,
@@ -356,7 +358,7 @@ export function useReferralsModel() {
         command.requirementName = requirement.actionName;
         command.dueDate = exemptAll
           ? undefined
-          : requirement.dueBy || requirement.pastDueSince;
+          : dueDateUtc && convertUtcDateToLocalDate(dueDateUtc);
         command.additionalComments = additionalComments;
         command.exemptionExpiresAtUtc = exemptionExpiresAtLocal ?? undefined;
         return command;
