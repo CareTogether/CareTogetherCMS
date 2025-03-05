@@ -1913,7 +1913,7 @@ export enum Permission {
     AccessVolunteersScreen = 100,
     AccessPartneringFamiliesScreen = 101,
     AccessSettingsScreen = 102,
-    EditRoles = 103,
+    AddEditRoles = 103,
     AccessCommunitiesScreen = 104,
     ViewFamilyCustomFields = 150,
     ViewFamilyHistory = 151,

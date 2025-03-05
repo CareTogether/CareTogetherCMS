@@ -69,7 +69,7 @@ export function RoleEdit() {
 
   const isEditable =
     (workingRole &&
-      permissions(Permission.EditRoles) &&
+      permissions(Permission.AddEditRoles) &&
       workingRole.roleName !== 'OrganizationAdministrator') ||
     false;
 
