@@ -79,7 +79,7 @@ namespace CareTogether.Engines.PolicyEvaluation
             TimeZoneInfo locationTimeZone
         )
         {
-            return new CompletedRequirementInfo(
+            return new(
                 entry.RequirementName,
                 Dates.ToDateOnlyInLocationTimeZone(entry.CompletedAtUtc, locationTimeZone),
                 Dates.ToDateOnlyInLocationTimeZone(entry.ExpiresAtUtc, locationTimeZone)
@@ -91,7 +91,7 @@ namespace CareTogether.Engines.PolicyEvaluation
             TimeZoneInfo locationTimeZone
         )
         {
-            return new ExemptedRequirementInfo(
+            return new(
                 entry.RequirementName,
                 Dates.ToDateOnlyInLocationTimeZone(entry.DueDate, locationTimeZone),
                 Dates.ToDateOnlyInLocationTimeZone(entry.ExemptionExpiresAtUtc, locationTimeZone)
@@ -100,10 +100,10 @@ namespace CareTogether.Engines.PolicyEvaluation
 
         internal ChildLocation ToChildLocation(ChildLocationHistoryEntry entry, TimeZoneInfo locationTimeZone)
         {
-            return new ChildLocation(
+            return new(
                 entry.ChildLocationFamilyId,
                 DateOnly.FromDateTime(Dates.ToLocationTimeZone(entry.TimestampUtc, locationTimeZone)),
-                entry.Plan == ChildLocationPlan.WithParent
+                Paused: entry.Plan == ChildLocationPlan.WithParent
             );
         }
 
@@ -120,7 +120,7 @@ namespace CareTogether.Engines.PolicyEvaluation
                 .ExemptedRequirements.Select(item => ToExemptedRequirementInfoForCalculation(item, locationTimeZone))
                 .ToImmutableList();
 
-            return new IndividualVolunteerAssignment(
+            return new(
                 entry.FamilyId,
                 entry.PersonId,
                 entry.ArrangementFunction,
@@ -143,7 +143,7 @@ namespace CareTogether.Engines.PolicyEvaluation
                 .ExemptedRequirements.Select(item => ToExemptedRequirementInfoForCalculation(item, locationTimeZone))
                 .ToImmutableList();
 
-            return new FamilyVolunteerAssignment(
+            return new(
                 entry.FamilyId,
                 entry.ArrangementFunction,
                 entry.ArrangementFunctionVariant,
@@ -165,7 +165,7 @@ namespace CareTogether.Engines.PolicyEvaluation
                 .ExemptedRequirements.Select(item => ToExemptedRequirementInfoForCalculation(item, locationTimeZone))
                 .ToImmutableList();
 
-            ImmutableSortedSet<ChildLocation> childLocationHistory = entry
+            ImmutableList<ChildLocation> childLocationHistory = entry
                 .ChildLocationHistory.Select(item => ToChildLocation(item, locationTimeZone))
                 .ToImmutableList();
 
@@ -181,7 +181,7 @@ namespace CareTogether.Engines.PolicyEvaluation
                 )
                 .ToImmutableList();
 
-            return new ArrangementEntry(
+            return new(
                 entry.ArrangementType,
                 Dates.ToDateOnlyInLocationTimeZone(entry.StartedAtUtc, locationTimeZone),
                 Dates.ToDateOnlyInLocationTimeZone(entry.EndedAtUtc, locationTimeZone),

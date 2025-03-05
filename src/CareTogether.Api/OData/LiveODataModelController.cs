@@ -34,20 +34,29 @@ namespace CareTogether.Api.OData
         string? HomeChurch
     );
 
-    public sealed record Person([property: Key] Guid Id,
-        [property: ForeignKey("FamilyId")] Family Family, Guid FamilyId,
-        string FirstName, string LastName, PersonType PersonType,
-        string? Ethnicity, DateOnly? DateOfBirth);
+    public sealed record Person(
+        [property: Key] Guid Id,
+        [property: ForeignKey("FamilyId")] Family Family,
+        Guid FamilyId,
+        string FirstName,
+        string LastName,
+        PersonType PersonType,
+        string? Ethnicity,
+        DateOnly? DateOfBirth
+    );
 
     public enum PersonType
     {
         Adult,
-        Child
+        Child,
     }
 
-    public sealed record Community([property: Key] Guid Id,
-        [property: ForeignKey("LocationId")] Location Location, Guid LocationId,
-        string Name);
+    public sealed record Community(
+        [property: Key] Guid Id,
+        [property: ForeignKey("LocationId")] Location Location,
+        Guid LocationId,
+        string Name
+    );
 
     public sealed record Address(
         string? Line1,
@@ -866,14 +875,27 @@ namespace CareTogether.Api.OData
 
         static IEnumerable<Person> RenderPeople(CombinedFamilyInfo familyInfo, Family family)
         {
-            return familyInfo.Family.Adults
-                .Select(adult => new Person(adult.Item1.Id, family, family.Id,
-                    adult.Item1.FirstName, adult.Item1.LastName, PersonType.Adult,
+            return familyInfo
+                .Family.Adults.Select(adult => new Person(
+                    adult.Item1.Id,
+                    family,
+                    family.Id,
+                    adult.Item1.FirstName,
+                    adult.Item1.LastName,
+                    PersonType.Adult,
                     adult.Item1.Ethnicity,
-                    adult.Item1.Age is ExactAge ? DateOnly.FromDateTime((adult.Item1.Age as ExactAge)!.DateOfBirth) : null))
-                .Concat(familyInfo.Family.Children
-                    .Select(child => new Person(child.Id, family, family.Id,
-                        child.FirstName, child.LastName, PersonType.Child,
+                    adult.Item1.Age is ExactAge
+                        ? DateOnly.FromDateTime((adult.Item1.Age as ExactAge)!.DateOfBirth)
+                        : null
+                ))
+                .Concat(
+                    familyInfo.Family.Children.Select(child => new Person(
+                        child.Id,
+                        family,
+                        family.Id,
+                        child.FirstName,
+                        child.LastName,
+                        PersonType.Child,
                         child.Ethnicity,
                         child.Age is ExactAge ? DateOnly.FromDateTime((child.Age as ExactAge)!.DateOfBirth) : null
                     ))
