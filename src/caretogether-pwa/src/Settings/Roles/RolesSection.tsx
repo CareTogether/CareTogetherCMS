@@ -1,6 +1,5 @@
 import {
   Button,
-  Drawer,
   Table,
   TableBody,
   TableCell,
@@ -9,13 +8,13 @@ import {
   TableRow,
   Typography,
 } from '@mui/material';
-import { useState } from 'react';
 import { Permission } from '../../GeneratedClient';
 import { useAppNavigate } from '../../Hooks/useAppNavigate';
 import { useLoadable } from '../../Hooks/useLoadable';
 import { organizationConfigurationQuery } from '../../Model/ConfigurationModel';
 import { useGlobalPermissions } from '../../Model/SessionModel';
 import { AddRole } from './AddRole';
+import { useSidePanel } from '../../Hooks/useSidePanel';
 
 export function RolesSection() {
   const configuration = useLoadable(organizationConfigurationQuery);
@@ -27,7 +26,8 @@ export function RolesSection() {
 
   const appNavigate = useAppNavigate();
 
-  const [addDrawerOpen, setAddDrawerOpen] = useState(false);
+  const { SidePanel, openSidePanel, closeSidePanel } = useSidePanel();
+
   const permissions = useGlobalPermissions();
 
   return (
@@ -66,25 +66,14 @@ export function RolesSection() {
           <Button
             sx={{ marginY: 2 }}
             variant="contained"
-            onClick={() => setAddDrawerOpen(true)}
+            onClick={() => openSidePanel()}
           >
             Add new role
           </Button>
-          <Drawer
-            // For some reason, without this, the text field in AddRole will not be autofocused
-            disableRestoreFocus
-            anchor="right"
-            open={addDrawerOpen}
-            onClose={() => setAddDrawerOpen(false)}
-            sx={{
-              '.MuiDrawer-paper': {
-                padding: 2,
-                paddingTop: { xs: 7, sm: 8, md: 6 },
-              },
-            }}
-          >
-            <AddRole onClose={() => setAddDrawerOpen(false)} />
-          </Drawer>
+
+          <SidePanel>
+            <AddRole onClose={() => closeSidePanel()} />
+          </SidePanel>
         </>
       )}
     </>
