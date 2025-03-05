@@ -73,9 +73,11 @@ namespace CareTogether.Api.Controllers
         {
             CurrentFeatureFlags? result =
                 new(
-                    await _FeatureManager.IsEnabledAsync(nameof(FeatureFlags.InviteUser)),
-                    await _FeatureManager.IsEnabledAsync(nameof(FeatureFlags.FamilyScreenV2)),
-                    await _FeatureManager.IsEnabledAsync(nameof(FeatureFlags.FamilyScreenPageVersionSwitch))
+                    InviteUser: await _FeatureManager.IsEnabledAsync(nameof(FeatureFlags.InviteUser)),
+                    FamilyScreenV2: await _FeatureManager.IsEnabledAsync(nameof(FeatureFlags.FamilyScreenV2)),
+                    FamilyScreenPageVersionSwitch: await _FeatureManager.IsEnabledAsync(
+                        nameof(FeatureFlags.FamilyScreenPageVersionSwitch)
+                    )
                 );
             return Ok(result);
         }
