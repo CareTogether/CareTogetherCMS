@@ -8,7 +8,7 @@ using CareTogether.Resources.Referrals;
 
 namespace CareTogether.Core.Test.ReferralCalculationTests
 {
-    internal class Helpers
+    class Helpers
     {
         public static Guid Id(char x) => Guid.Parse("xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx".Replace('x', x));
 

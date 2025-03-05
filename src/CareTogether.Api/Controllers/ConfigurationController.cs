@@ -1,70 +1,83 @@
-﻿using CareTogether.Engines.Authorization;
+﻿using System;
+using System.Threading.Tasks;
+using CareTogether.Engines.Authorization;
 using CareTogether.Resources.Policies;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.FeatureManagement;
-using System;
-using System.Threading.Tasks;
 
 namespace CareTogether.Api.Controllers
 {
-    public sealed record CurrentFeatureFlags(
-        bool InviteUser,
-        bool FamilyScreenV2,
-        bool FamilyScreenPageVersionSwitch
-    );
+    public sealed record CurrentFeatureFlags(bool InviteUser, bool FamilyScreenV2, bool FamilyScreenPageVersionSwitch);
 
     [ApiController]
     [Authorize(Policies.ForbidAnonymous, AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
     public class ConfigurationController : ControllerBase
     {
-        private readonly IPoliciesResource policiesResource;
-        private readonly IFeatureManager featureManager;
-        private readonly IAuthorizationEngine authorizationEngine;
+        readonly IAuthorizationEngine _AuthorizationEngine;
+        readonly IFeatureManager _FeatureManager;
+        readonly IPoliciesResource _PoliciesResource;
 
-
-        public ConfigurationController(IPoliciesResource policiesResource,
-            IFeatureManager featureManager, IAuthorizationEngine authorizationEngine)
+        public ConfigurationController(
+            IPoliciesResource policiesResource,
+            IFeatureManager featureManager,
+            IAuthorizationEngine authorizationEngine
+        )
         {
             //TODO: Delegate this controller's methods to a manager service
-            this.policiesResource = policiesResource;
-            this.featureManager = featureManager;
-            this.authorizationEngine = authorizationEngine;
+            _PoliciesResource = policiesResource;
+            _FeatureManager = featureManager;
+            _AuthorizationEngine = authorizationEngine;
         }
-
 
         [HttpGet("/api/{organizationId:guid}/[controller]")]
         public async Task<ActionResult<OrganizationConfiguration>> GetOrganizationConfiguration(Guid organizationId)
         {
-            var result = await policiesResource.GetConfigurationAsync(organizationId);
+            OrganizationConfiguration? result = await _PoliciesResource.GetConfigurationAsync(organizationId);
             return Ok(result);
         }
 
         [HttpPut("/api/{organizationId:guid}/[controller]/roles/{roleName}")]
-        public async Task<ActionResult<OrganizationConfiguration>> PutRoleDefinition(Guid organizationId,
-            string roleName, [FromBody] RoleDefinition role)
+        public async Task<ActionResult<OrganizationConfiguration>> PutRoleDefinition(
+            Guid organizationId,
+            string roleName,
+            [FromBody] RoleDefinition role
+        )
         {
             if (!User.IsInRole(SystemConstants.ORGANIZATION_ADMINISTRATOR))
+            {
                 return Forbid();
-            var result = await policiesResource.UpsertRoleDefinitionAsync(organizationId, roleName, role);
+            }
+
+            OrganizationConfiguration? result = await _PoliciesResource.UpsertRoleDefinitionAsync(
+                organizationId,
+                roleName,
+                role
+            );
             return Ok(result);
         }
 
         [HttpGet("/api/{organizationId:guid}/{locationId:guid}/[controller]/policy")]
-        public async Task<ActionResult<EffectiveLocationPolicy>> GetEffectiveLocationPolicy(Guid organizationId, Guid locationId)
+        public async Task<ActionResult<EffectiveLocationPolicy>> GetEffectiveLocationPolicy(
+            Guid organizationId,
+            Guid locationId
+        )
         {
-            var result = await policiesResource.GetCurrentPolicy(organizationId, locationId);
+            EffectiveLocationPolicy? result = await _PoliciesResource.GetCurrentPolicy(organizationId, locationId);
             return Ok(result);
         }
 
         [HttpGet("/api/{organizationId:guid}/{locationId:guid}/[controller]/flags")]
-        public async Task<ActionResult<CurrentFeatureFlags>> GetLocationFlags(Guid organizationId)
+        public async Task<ActionResult<CurrentFeatureFlags>> GetLocationFlags()
         {
-            var result = new CurrentFeatureFlags(
-                InviteUser: await featureManager.IsEnabledAsync(nameof(FeatureFlags.InviteUser)),
-                FamilyScreenV2: await featureManager.IsEnabledAsync(nameof(FeatureFlags.FamilyScreenV2)),
-                FamilyScreenPageVersionSwitch: await featureManager.IsEnabledAsync(nameof(FeatureFlags.FamilyScreenPageVersionSwitch))
+            CurrentFeatureFlags? result =
+                new(
+                    InviteUser: await _FeatureManager.IsEnabledAsync(nameof(FeatureFlags.InviteUser)),
+                    FamilyScreenV2: await _FeatureManager.IsEnabledAsync(nameof(FeatureFlags.FamilyScreenV2)),
+                    FamilyScreenPageVersionSwitch: await _FeatureManager.IsEnabledAsync(
+                        nameof(FeatureFlags.FamilyScreenPageVersionSwitch)
+                    )
                 );
             return Ok(result);
         }

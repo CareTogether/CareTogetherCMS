@@ -1,4 +1,6 @@
-﻿using CareTogether.Managers;
+﻿using System;
+using System.Collections.Immutable;
+using System.Threading.Tasks;
 using CareTogether.Managers.Membership;
 using CareTogether.Managers.Records;
 using CareTogether.Resources.Accounts;
@@ -8,10 +10,6 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Options;
-using System;
-using System.Collections.Immutable;
-using System.Linq;
-using System.Threading.Tasks;
 
 namespace CareTogether.Api.Controllers
 {
@@ -19,66 +17,90 @@ namespace CareTogether.Api.Controllers
     [Authorize(Policies.ForbidAnonymous, AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
     public class UsersController : ControllerBase
     {
-        private sealed record PersonInviteRedemptionSession(string RedemptionSessionId,
-            Guid OrganizationId, Guid LocationId, string InviteNonce);
+        readonly IMembershipManager _MembershipManager;
+        readonly IOptions<MembershipOptions> _MembershipOptions;
+        readonly IMemoryCache _RedemptionSessionsCache;
 
-
-        private readonly IMembershipManager membershipManager;
-        private readonly IOptions<MembershipOptions> membershipOptions;
-        private readonly IMemoryCache redemptionSessionsCache;
-
-
-        public UsersController(IMembershipManager membershipManager,
+        public UsersController(
+            IMembershipManager membershipManager,
             IOptions<MembershipOptions> membershipOptions,
-            IMemoryCache redemptionSessionsCache)
+            IMemoryCache redemptionSessionsCache
+        )
         {
-            this.membershipManager = membershipManager;
-            this.membershipOptions = membershipOptions;
-            this.redemptionSessionsCache = redemptionSessionsCache;
+            _MembershipManager = membershipManager;
+            _MembershipOptions = membershipOptions;
+            _RedemptionSessionsCache = redemptionSessionsCache;
         }
-
 
         [HttpGet("/api/[controller]/me/tenantAccess")]
         public async Task<ActionResult<UserAccess>> GetUserOrganizationAccess()
         {
-            var userAccess = await membershipManager.GetUserAccessAsync(User);
+            UserAccess? userAccess = await _MembershipManager.GetUserAccessAsync(User);
 
             return Ok(userAccess);
         }
 
         [HttpGet("/api/[controller]/loginInfo/{organizationId:guid}/{locationId:guid}/{personId:guid}")]
         public async Task<ActionResult<UserLoginInfo>> GetPersonLoginInfoAsync(
-            Guid organizationId, Guid locationId, Guid personId)
+            Guid organizationId,
+            Guid locationId,
+            Guid personId
+        )
         {
-            var user = await membershipManager.GetPersonLoginInfo(User,
-            organizationId, locationId, personId);
+            UserLoginInfo? user = await _MembershipManager.GetPersonLoginInfo(
+                User,
+                organizationId,
+                locationId,
+                personId
+            );
 
             return Ok(user);
         }
 
         [HttpPut("/api/[controller]/personRoles")]
         public async Task<ActionResult<FamilyRecordsAggregate>> ChangePersonRolesAsync(
-            [FromQuery] Guid organizationId, [FromQuery] Guid locationId, [FromQuery] Guid personId,
-            [FromBody] ImmutableList<string> roles)
+            [FromQuery] Guid organizationId,
+            [FromQuery] Guid locationId,
+            [FromQuery] Guid personId,
+            [FromBody] ImmutableList<string> roles
+        )
         {
-            var result = await membershipManager.ChangePersonRolesAsync(User,
-                organizationId, locationId, personId, roles);
+            FamilyRecordsAggregate? result = await _MembershipManager.ChangePersonRolesAsync(
+                User,
+                organizationId,
+                locationId,
+                personId,
+                roles
+            );
 
             return Ok(result);
         }
 
         [HttpPost("/api/[controller]/personInviteLink")]
         public async Task<ActionResult<Uri>> GeneratePersonInviteLink(
-            [FromQuery] Guid organizationId, [FromQuery] Guid locationId, [FromQuery] Guid personId)
+            [FromQuery] Guid organizationId,
+            [FromQuery] Guid locationId,
+            [FromQuery] Guid personId
+        )
         {
-            var inviteNonce = await membershipManager.GenerateUserInviteNonceAsync(User,
-                organizationId, locationId, personId);
+            byte[]? inviteNonce = await _MembershipManager.GenerateUserInviteNonceAsync(
+                User,
+                organizationId,
+                locationId,
+                personId
+            );
 
-            var inviteNonceHexString = Convert.ToHexString(inviteNonce);
+            string? inviteNonceHexString = Convert.ToHexString(inviteNonce);
 
-            var inviteLink = new Uri(
-                string.Format(membershipOptions.Value.PersonInviteLinkFormat,
-                    organizationId, locationId, inviteNonceHexString));
+            Uri? inviteLink =
+                new(
+                    string.Format(
+                        _MembershipOptions.Value.PersonInviteLinkFormat,
+                        organizationId,
+                        locationId,
+                        inviteNonceHexString
+                    )
+                );
 
             return Ok(inviteLink);
         }
@@ -86,7 +108,10 @@ namespace CareTogether.Api.Controllers
         [AllowAnonymous]
         [HttpGet("/api/[controller]/personInvite")]
         public RedirectResult InitiatePersonInviteRedemptionSession(
-            [FromQuery] Guid organizationId, [FromQuery] Guid locationId, [FromQuery] string inviteNonce)
+            [FromQuery] Guid organizationId,
+            [FromQuery] Guid locationId,
+            [FromQuery] string inviteNonce
+        )
         {
             // The client can be assumed to be making this request using page-level navigation, i.e. clicking
             // a link (e.g., in an email or text message) and not having the client UI loaded yet.
@@ -101,56 +126,80 @@ namespace CareTogether.Api.Controllers
 
             //NOTE: Considering the maximum lifespan of these redemption sessions, the uniqueness guaranteed by
             //      a GUID should be sufficient protection against an attacker guessing it.
-            var redemptionSessionId = Guid.NewGuid().ToString("N");
+            string? redemptionSessionId = Guid.NewGuid().ToString("N");
 
-            var redemptionSession = new PersonInviteRedemptionSession(
-                redemptionSessionId, organizationId, locationId, inviteNonce);
+            PersonInviteRedemptionSession? redemptionSession =
+                new(redemptionSessionId, organizationId, locationId, inviteNonce);
 
-            redemptionSessionsCache.Set(redemptionSessionId, redemptionSession, TimeSpan.FromMinutes(20));
+            _RedemptionSessionsCache.Set(redemptionSessionId, redemptionSession, TimeSpan.FromMinutes(20));
 
-            var redirectUrl = string.Format(membershipOptions.Value.PersonInviteRedirectFormat,
-                redemptionSessionId);
+            string? redirectUrl = string.Format(
+                _MembershipOptions.Value.PersonInviteRedirectFormat,
+                redemptionSessionId
+            );
 
             return Redirect(redirectUrl);
         }
 
         [HttpGet("/api/[controller]/reviewInvite")]
         public async Task<ActionResult<UserInviteReviewInfo?>> ExaminePersonInviteRedemptionSession(
-            [FromQuery] string redemptionSessionId)
+            [FromQuery] string redemptionSessionId
+        )
         {
             // The client can be assumed to be making this request from JavaScript, meaning the results can
             // be interpreted by client-side code rather than needing to trigger page-level navigation via redirects.
 
-            var redemptionSession = redemptionSessionsCache.Get<PersonInviteRedemptionSession>(redemptionSessionId);
+            PersonInviteRedemptionSession? redemptionSession =
+                _RedemptionSessionsCache.Get<PersonInviteRedemptionSession>(redemptionSessionId);
             if (redemptionSession == null)
+            {
                 return new BadRequestObjectResult("The specified person invite redemption session does not exist.");
+            }
 
-            var nonceBytes = Convert.FromHexString(redemptionSession.InviteNonce);
+            byte[]? nonceBytes = Convert.FromHexString(redemptionSession.InviteNonce);
 
-            var inviteInfo = await membershipManager.TryReviewUserInviteNonceAsync(User,
-                redemptionSession.OrganizationId, redemptionSession.LocationId, nonceBytes);
+            UserInviteReviewInfo? inviteInfo = await _MembershipManager.TryReviewUserInviteNonceAsync(
+                User,
+                redemptionSession.OrganizationId,
+                redemptionSession.LocationId,
+                nonceBytes
+            );
 
             return Ok(inviteInfo);
         }
 
-
         [HttpPost("/api/[controller]/confirmInvite")]
         public async Task<ActionResult<Account>> CompletePersonInviteRedemptionSession(
-            [FromQuery] string redemptionSessionId)
+            [FromQuery] string redemptionSessionId
+        )
         {
             // The client can be assumed to be making this request from JavaScript, meaning the results can
             // be interpreted by client-side code rather than needing to trigger page-level navigation via redirects.
 
-            var redemptionSession = redemptionSessionsCache.Get<PersonInviteRedemptionSession>(redemptionSessionId);
+            PersonInviteRedemptionSession? redemptionSession =
+                _RedemptionSessionsCache.Get<PersonInviteRedemptionSession>(redemptionSessionId);
             if (redemptionSession == null)
+            {
                 return new BadRequestObjectResult("The specified person invite redemption session does not exist.");
+            }
 
-            var nonceBytes = Convert.FromHexString(redemptionSession.InviteNonce);
+            byte[]? nonceBytes = Convert.FromHexString(redemptionSession.InviteNonce);
 
-            var accountAfterInviteRedemption = await membershipManager.TryRedeemUserInviteNonceAsync(User,
-                redemptionSession.OrganizationId, redemptionSession.LocationId, nonceBytes);
+            Account? accountAfterInviteRedemption = await _MembershipManager.TryRedeemUserInviteNonceAsync(
+                User,
+                redemptionSession.OrganizationId,
+                redemptionSession.LocationId,
+                nonceBytes
+            );
 
             return Ok(accountAfterInviteRedemption);
         }
+
+        sealed record PersonInviteRedemptionSession(
+            string RedemptionSessionId,
+            Guid OrganizationId,
+            Guid LocationId,
+            string InviteNonce
+        );
     }
 }

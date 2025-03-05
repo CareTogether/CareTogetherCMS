@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
 using System.Threading.Tasks;
-using CareTogether.Resources;
 using CareTogether.Resources.Approvals;
 using CareTogether.Resources.Directory;
 using CareTogether.Resources.Policies;
@@ -14,11 +13,11 @@ namespace CareTogether.Engines.PolicyEvaluation
 {
     public sealed class PolicyEvaluationEngine : IPolicyEvaluationEngine
     {
-        private readonly IPoliciesResource policiesResource;
+        readonly IPoliciesResource _PoliciesResource;
 
         public PolicyEvaluationEngine(IPoliciesResource policiesResource)
         {
-            this.policiesResource = policiesResource;
+            _PoliciesResource = policiesResource;
         }
 
         public async Task<FamilyApprovalStatus> CalculateCombinedFamilyApprovalsAsync(
@@ -36,7 +35,7 @@ namespace CareTogether.Engines.PolicyEvaluation
             ImmutableDictionary<Guid, ImmutableList<RoleRemoval>> individualRoleRemovals
         )
         {
-            var policy = await policiesResource.GetCurrentPolicy(organizationId, locationId);
+            EffectiveLocationPolicy policy = await _PoliciesResource.GetCurrentPolicy(organizationId, locationId);
 
             return ApprovalCalculations.CalculateCombinedFamilyApprovals(
                 policy.VolunteerPolicy,
@@ -48,6 +47,31 @@ namespace CareTogether.Engines.PolicyEvaluation
                 exemptedIndividualRequirements,
                 individualRoleRemovals
             );
+        }
+
+        public async Task<ReferralStatus> CalculateReferralStatusAsync(
+            Guid organizationId,
+            Guid locationId,
+            Family family,
+            Resources.Referrals.ReferralEntry referralEntry
+        )
+        {
+            EffectiveLocationPolicy policy = await _PoliciesResource.GetCurrentPolicy(organizationId, locationId);
+            OrganizationConfiguration config = await _PoliciesResource.GetConfigurationAsync(organizationId);
+
+            LocationConfiguration? location = config.Locations.Find(item => item.Id == locationId);
+            TimeZoneInfo locationTimeZone =
+                location?.TimeZone ?? TimeZoneInfo.FindSystemTimeZoneById("America/New_York");
+
+            ReferralEntry referralEntryForCalculation = ToReferralEntryForCalculation(referralEntry, locationTimeZone);
+
+            ReferralStatus referralStatus = ReferralCalculations.CalculateReferralStatus(
+                policy.ReferralPolicy,
+                referralEntryForCalculation,
+                Dates.ToDateOnlyInLocationTimeZone(DateTime.UtcNow, locationTimeZone)
+            );
+
+            return referralStatus;
         }
 
         internal CompletedRequirementInfo ToCompletedRequirementsForCalculation(
@@ -88,11 +112,11 @@ namespace CareTogether.Engines.PolicyEvaluation
             TimeZoneInfo locationTimeZone
         )
         {
-            var completedRequirements = entry
+            ImmutableList<CompletedRequirementInfo> completedRequirements = entry
                 .CompletedRequirements.Select(item => ToCompletedRequirementsForCalculation(item, locationTimeZone))
                 .ToImmutableList();
 
-            var exemptedRequirements = entry
+            ImmutableList<ExemptedRequirementInfo> exemptedRequirements = entry
                 .ExemptedRequirements.Select(item => ToExemptedRequirementInfoForCalculation(item, locationTimeZone))
                 .ToImmutableList();
 
@@ -111,11 +135,11 @@ namespace CareTogether.Engines.PolicyEvaluation
             TimeZoneInfo locationTimeZone
         )
         {
-            var completedRequirements = entry
+            ImmutableList<CompletedRequirementInfo> completedRequirements = entry
                 .CompletedRequirements.Select(item => ToCompletedRequirementsForCalculation(item, locationTimeZone))
                 .ToImmutableList();
 
-            var exemptedRequirements = entry
+            ImmutableList<ExemptedRequirementInfo> exemptedRequirements = entry
                 .ExemptedRequirements.Select(item => ToExemptedRequirementInfoForCalculation(item, locationTimeZone))
                 .ToImmutableList();
 
@@ -133,25 +157,25 @@ namespace CareTogether.Engines.PolicyEvaluation
             TimeZoneInfo locationTimeZone
         )
         {
-            var completedRequirements = entry
+            ImmutableList<CompletedRequirementInfo> completedRequirements = entry
                 .CompletedRequirements.Select(item => ToCompletedRequirementsForCalculation(item, locationTimeZone))
                 .ToImmutableList();
 
-            var exemptedRequirements = entry
+            ImmutableList<ExemptedRequirementInfo> exemptedRequirements = entry
                 .ExemptedRequirements.Select(item => ToExemptedRequirementInfoForCalculation(item, locationTimeZone))
                 .ToImmutableList();
 
-            var ChildLocationHistory = entry
+            ImmutableList<ChildLocation> childLocationHistory = entry
                 .ChildLocationHistory.Select(item => ToChildLocation(item, locationTimeZone))
                 .ToImmutableList();
 
-            var individualVolunteerAssignments = entry
+            ImmutableList<IndividualVolunteerAssignment> individualVolunteerAssignments = entry
                 .IndividualVolunteerAssignments.Select(item =>
                     ToIndividualVolunteerAssignmentForCalculation(item, locationTimeZone)
                 )
                 .ToImmutableList();
 
-            var familyVolunteerAssignments = entry
+            ImmutableList<FamilyVolunteerAssignment> familyVolunteerAssignments = entry
                 .FamilyVolunteerAssignments.Select(item =>
                     ToFamilyVolunteerAssignmentForCalculation(item, locationTimeZone)
                 )
@@ -167,7 +191,7 @@ namespace CareTogether.Engines.PolicyEvaluation
                 exemptedRequirements,
                 individualVolunteerAssignments,
                 familyVolunteerAssignments,
-                ChildLocationHistory
+                childLocationHistory
             );
         }
 
@@ -176,15 +200,15 @@ namespace CareTogether.Engines.PolicyEvaluation
             TimeZoneInfo locationTimeZone
         )
         {
-            var completedRequirements = entry
+            ImmutableList<CompletedRequirementInfo> completedRequirements = entry
                 .CompletedRequirements.Select(item => ToCompletedRequirementsForCalculation(item, locationTimeZone))
                 .ToImmutableList();
 
-            var exemptedRequirements = entry
+            ImmutableList<ExemptedRequirementInfo> exemptedRequirements = entry
                 .ExemptedRequirements.Select(item => ToExemptedRequirementInfoForCalculation(item, locationTimeZone))
                 .ToImmutableList();
 
-            var arrangements = entry
+            ImmutableDictionary<Guid, ArrangementEntry> arrangements = entry
                 .Arrangements.Select(item => new KeyValuePair<Guid, ArrangementEntry>(
                     item.Key,
                     ToArrangementEntryForCalculation(item.Value, locationTimeZone)
@@ -197,31 +221,6 @@ namespace CareTogether.Engines.PolicyEvaluation
                 entry.CompletedCustomFields,
                 arrangements
             );
-        }
-
-        public async Task<ReferralStatus> CalculateReferralStatusAsync(
-            Guid organizationId,
-            Guid locationId,
-            Family family,
-            Resources.Referrals.ReferralEntry referralEntry
-        )
-        {
-            var policy = await policiesResource.GetCurrentPolicy(organizationId, locationId);
-            var config = await policiesResource.GetConfigurationAsync(organizationId);
-
-            var location = config.Locations.Find(item => item.Id == locationId);
-            TimeZoneInfo locationTimeZone =
-                location?.timeZone ?? TimeZoneInfo.FindSystemTimeZoneById("America/New_York");
-
-            var referralEntryForCalculation = ToReferralEntryForCalculation(referralEntry, locationTimeZone);
-
-            var referralStatus = ReferralCalculations.CalculateReferralStatus(
-                policy.ReferralPolicy,
-                referralEntryForCalculation,
-                Dates.ToDateOnlyInLocationTimeZone(DateTime.UtcNow, locationTimeZone)
-            );
-
-            return referralStatus;
         }
     }
 }

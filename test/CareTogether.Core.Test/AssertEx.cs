@@ -14,64 +14,74 @@ namespace CareTogether.Core.Test
         public static void SequenceIs(ICollection<int> actual, params int[] expected)
         {
             Assert.AreEqual(expected.Length, actual.Count);
-            foreach (
-                var (First, Second) in Enumerable.Zip(expected.ToImmutableSortedSet(), actual.ToImmutableSortedSet())
-            )
-                Assert.AreEqual(First, Second);
+            foreach ((int first, int second) in expected.ToImmutableSortedSet().Zip(actual.ToImmutableSortedSet()))
+            {
+                Assert.AreEqual(first, second);
+            }
         }
 
         public static void SequenceIs(ICollection<Guid> actual, params Guid[] expected)
         {
             Assert.AreEqual(expected.Length, actual.Count);
-            foreach (
-                var (First, Second) in Enumerable.Zip(expected.ToImmutableSortedSet(), actual.ToImmutableSortedSet())
-            )
-                Assert.AreEqual(First, Second);
+            foreach ((Guid first, Guid second) in expected.ToImmutableSortedSet().Zip(actual.ToImmutableSortedSet()))
+            {
+                Assert.AreEqual(first, second);
+            }
         }
 
         public static void SequenceIs(ICollection<string> actual, params string[] expected)
         {
             Assert.AreEqual(expected.Length, actual.Count);
             foreach (
-                var (First, Second) in Enumerable.Zip(expected.ToImmutableSortedSet(), actual.ToImmutableSortedSet())
+                (string first, string second) in expected.ToImmutableSortedSet().Zip(actual.ToImmutableSortedSet())
             )
-                Assert.AreEqual(First, Second);
+            {
+                Assert.AreEqual(first, second);
+            }
         }
 
         public static void SequenceIs(ICollection<DateTime> actual, params DateTime[] expected)
         {
             Assert.AreEqual(expected.Length, actual.Count);
             foreach (
-                var (First, Second) in Enumerable.Zip(expected.ToImmutableSortedSet(), actual.ToImmutableSortedSet())
+                (DateTime first, DateTime second) in expected.ToImmutableSortedSet().Zip(actual.ToImmutableSortedSet())
             )
-                Assert.AreEqual(First, Second);
+            {
+                Assert.AreEqual(first, second);
+            }
         }
 
         public static void SequenceIs(ICollection<DateTime> actual, ICollection<DateTime> expected)
         {
             Assert.AreEqual(expected.Count, actual.Count);
             foreach (
-                var (First, Second) in Enumerable.Zip(expected.ToImmutableSortedSet(), actual.ToImmutableSortedSet())
+                (DateTime first, DateTime second) in expected.ToImmutableSortedSet().Zip(actual.ToImmutableSortedSet())
             )
-                Assert.AreEqual(First, Second);
+            {
+                Assert.AreEqual(first, second);
+            }
         }
 
         public static void SequenceIs(ICollection<DateOnly> actual, params DateOnly[] expected)
         {
             Assert.AreEqual(expected.Length, actual.Count);
             foreach (
-                var (First, Second) in Enumerable.Zip(expected.ToImmutableSortedSet(), actual.ToImmutableSortedSet())
+                (DateOnly first, DateOnly second) in expected.ToImmutableSortedSet().Zip(actual.ToImmutableSortedSet())
             )
-                Assert.AreEqual(First, Second);
+            {
+                Assert.AreEqual(first, second);
+            }
         }
 
         public static void SequenceIs(ICollection<DateOnly> actual, ICollection<DateOnly> expected)
         {
             Assert.AreEqual(expected.Count, actual.Count);
             foreach (
-                var (First, Second) in Enumerable.Zip(expected.ToImmutableSortedSet(), actual.ToImmutableSortedSet())
+                (DateOnly first, DateOnly second) in expected.ToImmutableSortedSet().Zip(actual.ToImmutableSortedSet())
             )
-                Assert.AreEqual(First, Second);
+            {
+                Assert.AreEqual(first, second);
+            }
         }
 
         public static void SequenceIs(ICollection<DateRange>? actual, ICollection<DateRange>? expected)
@@ -82,8 +92,10 @@ namespace CareTogether.Core.Test
             }
 
             Assert.AreEqual(expected?.Count, actual?.Count);
-            foreach (var (First, Second) in Enumerable.Zip(expected, actual))
-                Assert.AreEqual(First, Second);
+            foreach ((DateRange first, DateRange second) in expected.Zip(actual))
+            {
+                Assert.AreEqual(first, second);
+            }
         }
 
         public static void SequenceIs(DateOnlyTimeline? actual, DateOnlyTimeline? expected)
@@ -95,12 +107,12 @@ namespace CareTogether.Core.Test
 
             if (actual == null || expected == null)
             {
-                throw new Exception("Values are different");
+                throw new ArgumentException("Values are different");
             }
 
             if (expected.Equals(actual) != true)
             {
-                throw new Exception("Timelines are different");
+                throw new ArgumentException("Timelines are different");
             }
         }
 
@@ -108,8 +120,10 @@ namespace CareTogether.Core.Test
             where T : class
         {
             Assert.AreEqual(expected.Length, actual.Count);
-            foreach (var (First, Second) in Enumerable.Zip(expected, actual))
-                Assert.AreEqual(First, Second);
+            foreach ((T first, T second) in expected.Zip(actual))
+            {
+                Assert.AreEqual(first, second);
+            }
         }
 
         public static void SequenceIs(
@@ -118,8 +132,12 @@ namespace CareTogether.Core.Test
         )
         {
             Assert.AreEqual(expected.Length, actual.Count);
-            foreach (var (First, Second) in Enumerable.Zip(expected, actual))
-                Assert.AreEqual(First, Second);
+            foreach (
+                (MissingArrangementRequirement first, MissingArrangementRequirement second) in expected.Zip(actual)
+            )
+            {
+                Assert.AreEqual(first, second);
+            }
         }
 
         public static void DictionaryIs(
@@ -128,14 +146,14 @@ namespace CareTogether.Core.Test
         )
         {
             Assert.AreEqual(expected.Length, actual.Count);
-            foreach (var e in expected)
+            foreach ((Guid, string[]) e in expected)
             {
-                var a = actual[e.Item1];
+                ImmutableList<string> a = actual[e.Item1];
                 Assert.AreEqual(e.Item2.Length, a.Count);
-                foreach (
-                    var (First, Second) in Enumerable.Zip(e.Item2.ToImmutableSortedSet(), a.ToImmutableSortedSet())
-                )
-                    Assert.AreEqual(First, Second);
+                foreach ((string first, string second) in e.Item2.ToImmutableSortedSet().Zip(a.ToImmutableSortedSet()))
+                {
+                    Assert.AreEqual(first, second);
+                }
             }
         }
 
@@ -145,12 +163,14 @@ namespace CareTogether.Core.Test
         )
         {
             Assert.AreEqual(expected.Length, actual.Count);
-            foreach (var e in expected)
+            foreach ((string, RoleVersionApproval[]) e in expected)
             {
-                var a = actual[e.Item1];
+                ImmutableList<RoleVersionApproval> a = actual[e.Item1];
                 Assert.AreEqual(e.Item2.Length, a.Count);
-                foreach (var (First, Second) in Enumerable.Zip(e.Item2, a))
-                    Assert.AreEqual(First, Second);
+                foreach ((RoleVersionApproval first, RoleVersionApproval second) in e.Item2.Zip(a))
+                {
+                    Assert.AreEqual(first, second);
+                }
             }
         }
     }

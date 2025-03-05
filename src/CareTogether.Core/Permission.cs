@@ -1,5 +1,4 @@
-﻿
-namespace CareTogether
+﻿namespace CareTogether
 {
     public enum Permission
     {
@@ -35,6 +34,7 @@ namespace CareTogether
         EditPersonConcerns = 156,
         EditPersonNotes = 157,
         EditPersonContactInfo = 158,
+
         //EditPersonUserLink = 159,
 
         AddEditDraftNotes = 180,
