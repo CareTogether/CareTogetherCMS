@@ -73,7 +73,7 @@ namespace CareTogether.Managers.Records
             ClaimsPrincipal user, CompositeRecordsCommand command);
 
         //TODO: Support returning *multiple* aggregates to upsert
-        Task<RecordsAggregate?> ExecuteAtomicRecordsCommandAsync(Guid organizationId, Guid locationId,
+        Task<ImmutableList<RecordsAggregate>> ExecuteAtomicRecordsCommandAsync(Guid organizationId, Guid locationId,
             ClaimsPrincipal user, AtomicRecordsCommand command);
 
         Task<Uri> GetFamilyDocumentReadValetUrl(Guid organizationId, Guid locationId,

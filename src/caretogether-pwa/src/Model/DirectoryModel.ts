@@ -152,28 +152,30 @@ export function useAtomicRecordsCommandCallback<
 
       const command = await callback(aggregateId, ...args);
 
-      const updatedAggregate = await api.records.submitAtomicRecordsCommand(
+      const updatedAggregates = await api.records.submitAtomicRecordsCommand(
         organizationId,
         locationId,
         command
       );
 
-      set(visibleAggregatesState, (current) =>
-        updatedAggregate == null
-          ? current.filter((currentEntry) => currentEntry.id !== aggregateId)
-          : current.some(
-                (currentEntry) =>
-                  currentEntry.id === aggregateId &&
+      for (const updatedAggregate of updatedAggregates) {
+        set(visibleAggregatesState, (current) =>
+          updatedAggregate == null
+            ? current.filter((currentEntry) => currentEntry.id !== aggregateId)
+            : current.some(
+                  (currentEntry) =>
+                    currentEntry.id === updatedAggregate.id &&
+                    currentEntry.constructor === updatedAggregate.constructor
+                )
+              ? current.map((currentEntry) =>
+                  currentEntry.id === updatedAggregate.id &&
                   currentEntry.constructor === updatedAggregate.constructor
-              )
-            ? current.map((currentEntry) =>
-                currentEntry.id === aggregateId &&
-                currentEntry.constructor === updatedAggregate.constructor
-                  ? updatedAggregate
-                  : currentEntry
-              )
-            : current.concat(updatedAggregate)
-      );
+                    ? updatedAggregate
+                    : currentEntry
+                )
+              : current.concat(updatedAggregate)
+        );
+      }
     };
     return asyncCallback;
   });

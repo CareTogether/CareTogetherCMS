@@ -124,7 +124,7 @@ namespace CareTogether.Managers.Records
             return familyResult == null ? null : new FamilyRecordsAggregate(familyResult);
         }
 
-        public async Task<RecordsAggregate?> ExecuteAtomicRecordsCommandAsync(Guid organizationId, Guid locationId,
+        public async Task<ImmutableList<RecordsAggregate>> ExecuteAtomicRecordsCommandAsync(Guid organizationId, Guid locationId,
             ClaimsPrincipal user, AtomicRecordsCommand command)
         {
             if (!await AuthorizeCommandAsync(organizationId, locationId, user, command))
@@ -328,7 +328,7 @@ namespace CareTogether.Managers.Records
                     $"The command type '{command.GetType().FullName}' has not been implemented.")
             };
 
-        private async Task<RecordsAggregate?> RenderCommandResultAsync(Guid organizationId, Guid locationId,
+        private async Task<ImmutableList<RecordsAggregate>> RenderCommandResultAsync(Guid organizationId, Guid locationId,
             ClaimsPrincipal user, AtomicRecordsCommand command)
         {
             if (command is CommunityRecordsCommand c)
@@ -344,29 +344,39 @@ namespace CareTogether.Managers.Records
                 var communityResult = await authorizationEngine.DiscloseCommunityAsync(user,
                     organizationId, locationId, communityInfo);
 
-                return new CommunityRecordsAggregate(communityResult);
+                return [new CommunityRecordsAggregate(communityResult)];
             }
             else
             {
-                var familyId = GetFamilyIdFromCommand(command);
+                var familyIds = GetFamilyIdsFromCommand(command);
 
-                var familyResult = await combinedFamilyInfoFormatter.RenderCombinedFamilyInfoAsync(
-                    organizationId, locationId, familyId, user);
+                var familyResults = await Task.WhenAll(familyIds.Select(familyId =>
+                    combinedFamilyInfoFormatter.RenderCombinedFamilyInfoAsync(organizationId, locationId, familyId, user)));
 
-                return familyResult == null ? null : new FamilyRecordsAggregate(familyResult);
+                return familyResults
+                    .OfType<CombinedFamilyInfo>() // Filters out null values
+                    .Select(result => new FamilyRecordsAggregate(result))
+                    .ToImmutableList<RecordsAggregate>();
             }
         }
 
-        private Guid GetFamilyIdFromCommand(AtomicRecordsCommand command) =>
+        private Guid[] GetFamilyIdsFromCommand(AtomicRecordsCommand command) =>
             command switch
             {
-                FamilyRecordsCommand c => c.Command.FamilyId,
-                PersonRecordsCommand c => c.FamilyId,
-                FamilyApprovalRecordsCommand c => c.Command.FamilyId,
-                IndividualApprovalRecordsCommand c => c.Command.FamilyId,
-                ReferralRecordsCommand c => c.Command.FamilyId,
-                ArrangementRecordsCommand c => c.Command.FamilyId,
-                NoteRecordsCommand c => c.Command.FamilyId,
+                FamilyRecordsCommand c => [c.Command.FamilyId],
+                PersonRecordsCommand c => [c.FamilyId],
+                FamilyApprovalRecordsCommand c => [c.Command.FamilyId],
+                IndividualApprovalRecordsCommand c => [c.Command.FamilyId],
+                ReferralRecordsCommand c => [c.Command.FamilyId],
+                ArrangementRecordsCommand c => c.Command switch
+                {
+                    AssignVolunteerFamily actualCommand => [actualCommand.FamilyId, actualCommand.VolunteerFamilyId],
+                    UnassignVolunteerFamily actualCommand => [actualCommand.FamilyId, actualCommand.VolunteerFamilyId],
+                    AssignIndividualVolunteer actualCommand => [actualCommand.FamilyId, actualCommand.VolunteerFamilyId],
+                    UnassignIndividualVolunteer actualCommand => [actualCommand.FamilyId, actualCommand.VolunteerFamilyId],
+                    _ => [c.Command.FamilyId],
+                },
+                NoteRecordsCommand c => [c.Command.FamilyId],
                 _ => throw new NotImplementedException(
                     $"The command type '{command.GetType().FullName}' has not been implemented.")
             };

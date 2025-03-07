@@ -194,6 +194,24 @@ namespace CareTogether.Managers
                 organizationId, locationId, family, completedFamilyRequirementsWithExpiration, entry.ExemptedRequirements, entry.RoleRemovals,
                 completedIndividualRequirementsWithExpiration, exemptedIndividualRequirements, removedIndividualRoles);
 
+            var referralEntries = (await referralsResource.ListReferralsAsync(organizationId, locationId))
+                .ToImmutableList();
+
+            var assignments = referralEntries
+                .SelectMany(entry => entry.Arrangements)
+                .Where(arrangementEntry =>
+                {
+                    var hasFamilyAssignments = arrangementEntry.Value.FamilyVolunteerAssignments.Exists(assignment =>
+                        assignment.FamilyId == family.Id
+                    );
+                    var hasIndividualAssignments = arrangementEntry.Value.IndividualVolunteerAssignments.Exists(
+                        assignment => assignment.FamilyId == family.Id
+                    );
+                    return hasFamilyAssignments || hasIndividualAssignments;
+                })
+                .Select(arrangementEntry => arrangementEntry.Value)
+                .ToImmutableList();
+
             var volunteerFamilyInfo = new VolunteerFamilyInfo(
                 combinedFamilyApprovals.FamilyRoleApprovals,
                 completedFamilyRequirementsWithExpiration, entry.ExemptedRequirements,
@@ -220,7 +238,8 @@ namespace CareTogether.Managers
                                 .ToImmutableList(),
                             individualEntry?.RoleRemovals ?? ImmutableList<RoleRemoval>.Empty);
                     }),
-                entry.History);
+                entry.History,
+                assignments);
 
             return (volunteerFamilyInfo, entry.UploadedDocuments);
         }
