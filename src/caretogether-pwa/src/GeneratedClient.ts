@@ -496,7 +496,7 @@ export class RecordsClient {
         return Promise.resolve<RecordsAggregate[]>(null as any);
     }
 
-    submitAtomicRecordsCommand(organizationId: string, locationId: string, command: AtomicRecordsCommand): Promise<RecordsAggregate> {
+    submitAtomicRecordsCommand(organizationId: string, locationId: string, command: AtomicRecordsCommand): Promise<RecordsAggregate[]> {
         let url_ = this.baseUrl + "/api/{organizationId}/{locationId}/Records/atomicRecordsCommand";
         if (organizationId === undefined || organizationId === null)
             throw new Error("The parameter 'organizationId' must be defined.");
@@ -522,14 +522,21 @@ export class RecordsClient {
         });
     }
 
-    protected processSubmitAtomicRecordsCommand(response: Response): Promise<RecordsAggregate> {
+    protected processSubmitAtomicRecordsCommand(response: Response): Promise<RecordsAggregate[]> {
         const status = response.status;
         let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
         if (status === 200) {
             return response.text().then((_responseText) => {
             let result200: any = null;
             let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
-            result200 = RecordsAggregate.fromJS(resultData200);
+            if (Array.isArray(resultData200)) {
+                result200 = [] as any;
+                for (let item of resultData200)
+                    result200!.push(RecordsAggregate.fromJS(item));
+            }
+            else {
+                result200 = <any>null;
+            }
             return result200;
             });
         } else if (status !== 200 && status !== 204) {
@@ -537,7 +544,7 @@ export class RecordsClient {
             return throwException("An unexpected server error occurred.", status, _responseText, _headers);
             });
         }
-        return Promise.resolve<RecordsAggregate>(null as any);
+        return Promise.resolve<RecordsAggregate[]>(null as any);
     }
 
     submitCompositeRecordsCommand(organizationId: string, locationId: string, command: CompositeRecordsCommand): Promise<RecordsAggregate> {
@@ -906,10 +913,6 @@ export class MetadataClient {
         this.baseUrl = baseUrl ?? "";
     }
 
-    /**
-     * Generates the OData $metadata document.
-     * @return The IEdmModel representing $metadata.
-     */
     getMetadata(): Promise<IEdmModel> {
         let url_ = this.baseUrl + "/api/odata/live/$metadata";
         url_ = url_.replace(/[?&]$/, "");
@@ -944,10 +947,6 @@ export class MetadataClient {
         return Promise.resolve<IEdmModel>(null as any);
     }
 
-    /**
-     * Generates the OData service document.
-     * @return The service document for the service.
-     */
     getServiceDocument(): Promise<ODataServiceDocument> {
         let url_ = this.baseUrl + "/api/odata/live";
         url_ = url_.replace(/[?&]$/, "");
@@ -5551,6 +5550,7 @@ export class VolunteerFamilyInfo implements IVolunteerFamilyInfo {
     roleRemovals?: RoleRemoval[];
     individualVolunteers?: { [key: string]: VolunteerInfo; };
     history?: Activity[];
+    assignments?: ArrangementEntry[];
 
     constructor(data?: IVolunteerFamilyInfo) {
         if (data) {
@@ -5606,6 +5606,11 @@ export class VolunteerFamilyInfo implements IVolunteerFamilyInfo {
                 this.history = [] as any;
                 for (let item of _data["history"])
                     this.history!.push(Activity.fromJS(item));
+            }
+            if (Array.isArray(_data["assignments"])) {
+                this.assignments = [] as any;
+                for (let item of _data["assignments"])
+                    this.assignments!.push(ArrangementEntry.fromJS(item));
             }
         }
     }
@@ -5663,6 +5668,11 @@ export class VolunteerFamilyInfo implements IVolunteerFamilyInfo {
             for (let item of this.history)
                 data["history"].push(item.toJSON());
         }
+        if (Array.isArray(this.assignments)) {
+            data["assignments"] = [];
+            for (let item of this.assignments)
+                data["assignments"].push(item.toJSON());
+        }
         return data;
     }
 }
@@ -5676,6 +5686,7 @@ export interface IVolunteerFamilyInfo {
     roleRemovals?: RoleRemoval[];
     individualVolunteers?: { [key: string]: VolunteerInfo; };
     history?: Activity[];
+    assignments?: ArrangementEntry[];
 }
 
 export class FamilyRoleApprovalStatus implements IFamilyRoleApprovalStatus {
@@ -6531,6 +6542,158 @@ export class ValueTupleOfStringAndString implements IValueTupleOfStringAndString
 export interface IValueTupleOfStringAndString {
     item1?: string | undefined;
     item2?: string | undefined;
+}
+
+export class ArrangementEntry implements IArrangementEntry {
+    id?: string;
+    arrangementType?: string;
+    active?: boolean;
+    requestedAtUtc?: Date;
+    startedAtUtc?: Date | undefined;
+    endedAtUtc?: Date | undefined;
+    cancelledAtUtc?: Date | undefined;
+    plannedStartUtc?: Date | undefined;
+    plannedEndUtc?: Date | undefined;
+    partneringFamilyPersonId?: string;
+    completedRequirements?: CompletedRequirementInfo[];
+    exemptedRequirements?: ExemptedRequirementInfo[];
+    individualVolunteerAssignments?: IndividualVolunteerAssignment[];
+    familyVolunteerAssignments?: FamilyVolunteerAssignment[];
+    childLocationHistory?: ChildLocationHistoryEntry[];
+    childLocationPlan?: ChildLocationHistoryEntry[];
+    comments?: string | undefined;
+    reason?: string | undefined;
+
+    constructor(data?: IArrangementEntry) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.id = _data["id"];
+            this.arrangementType = _data["arrangementType"];
+            this.active = _data["active"];
+            this.requestedAtUtc = _data["requestedAtUtc"] ? new Date(_data["requestedAtUtc"].toString()) : <any>undefined;
+            this.startedAtUtc = _data["startedAtUtc"] ? new Date(_data["startedAtUtc"].toString()) : <any>undefined;
+            this.endedAtUtc = _data["endedAtUtc"] ? new Date(_data["endedAtUtc"].toString()) : <any>undefined;
+            this.cancelledAtUtc = _data["cancelledAtUtc"] ? new Date(_data["cancelledAtUtc"].toString()) : <any>undefined;
+            this.plannedStartUtc = _data["plannedStartUtc"] ? new Date(_data["plannedStartUtc"].toString()) : <any>undefined;
+            this.plannedEndUtc = _data["plannedEndUtc"] ? new Date(_data["plannedEndUtc"].toString()) : <any>undefined;
+            this.partneringFamilyPersonId = _data["partneringFamilyPersonId"];
+            if (Array.isArray(_data["completedRequirements"])) {
+                this.completedRequirements = [] as any;
+                for (let item of _data["completedRequirements"])
+                    this.completedRequirements!.push(CompletedRequirementInfo.fromJS(item));
+            }
+            if (Array.isArray(_data["exemptedRequirements"])) {
+                this.exemptedRequirements = [] as any;
+                for (let item of _data["exemptedRequirements"])
+                    this.exemptedRequirements!.push(ExemptedRequirementInfo.fromJS(item));
+            }
+            if (Array.isArray(_data["individualVolunteerAssignments"])) {
+                this.individualVolunteerAssignments = [] as any;
+                for (let item of _data["individualVolunteerAssignments"])
+                    this.individualVolunteerAssignments!.push(IndividualVolunteerAssignment.fromJS(item));
+            }
+            if (Array.isArray(_data["familyVolunteerAssignments"])) {
+                this.familyVolunteerAssignments = [] as any;
+                for (let item of _data["familyVolunteerAssignments"])
+                    this.familyVolunteerAssignments!.push(FamilyVolunteerAssignment.fromJS(item));
+            }
+            if (Array.isArray(_data["childLocationHistory"])) {
+                this.childLocationHistory = [] as any;
+                for (let item of _data["childLocationHistory"])
+                    this.childLocationHistory!.push(ChildLocationHistoryEntry.fromJS(item));
+            }
+            if (Array.isArray(_data["childLocationPlan"])) {
+                this.childLocationPlan = [] as any;
+                for (let item of _data["childLocationPlan"])
+                    this.childLocationPlan!.push(ChildLocationHistoryEntry.fromJS(item));
+            }
+            this.comments = _data["comments"];
+            this.reason = _data["reason"];
+        }
+    }
+
+    static fromJS(data: any): ArrangementEntry {
+        data = typeof data === 'object' ? data : {};
+        let result = new ArrangementEntry();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["id"] = this.id;
+        data["arrangementType"] = this.arrangementType;
+        data["active"] = this.active;
+        data["requestedAtUtc"] = this.requestedAtUtc ? this.requestedAtUtc.toISOString() : <any>undefined;
+        data["startedAtUtc"] = this.startedAtUtc ? this.startedAtUtc.toISOString() : <any>undefined;
+        data["endedAtUtc"] = this.endedAtUtc ? this.endedAtUtc.toISOString() : <any>undefined;
+        data["cancelledAtUtc"] = this.cancelledAtUtc ? this.cancelledAtUtc.toISOString() : <any>undefined;
+        data["plannedStartUtc"] = this.plannedStartUtc ? this.plannedStartUtc.toISOString() : <any>undefined;
+        data["plannedEndUtc"] = this.plannedEndUtc ? this.plannedEndUtc.toISOString() : <any>undefined;
+        data["partneringFamilyPersonId"] = this.partneringFamilyPersonId;
+        if (Array.isArray(this.completedRequirements)) {
+            data["completedRequirements"] = [];
+            for (let item of this.completedRequirements)
+                data["completedRequirements"].push(item.toJSON());
+        }
+        if (Array.isArray(this.exemptedRequirements)) {
+            data["exemptedRequirements"] = [];
+            for (let item of this.exemptedRequirements)
+                data["exemptedRequirements"].push(item.toJSON());
+        }
+        if (Array.isArray(this.individualVolunteerAssignments)) {
+            data["individualVolunteerAssignments"] = [];
+            for (let item of this.individualVolunteerAssignments)
+                data["individualVolunteerAssignments"].push(item.toJSON());
+        }
+        if (Array.isArray(this.familyVolunteerAssignments)) {
+            data["familyVolunteerAssignments"] = [];
+            for (let item of this.familyVolunteerAssignments)
+                data["familyVolunteerAssignments"].push(item.toJSON());
+        }
+        if (Array.isArray(this.childLocationHistory)) {
+            data["childLocationHistory"] = [];
+            for (let item of this.childLocationHistory)
+                data["childLocationHistory"].push(item.toJSON());
+        }
+        if (Array.isArray(this.childLocationPlan)) {
+            data["childLocationPlan"] = [];
+            for (let item of this.childLocationPlan)
+                data["childLocationPlan"].push(item.toJSON());
+        }
+        data["comments"] = this.comments;
+        data["reason"] = this.reason;
+        return data;
+    }
+}
+
+export interface IArrangementEntry {
+    id?: string;
+    arrangementType?: string;
+    active?: boolean;
+    requestedAtUtc?: Date;
+    startedAtUtc?: Date | undefined;
+    endedAtUtc?: Date | undefined;
+    cancelledAtUtc?: Date | undefined;
+    plannedStartUtc?: Date | undefined;
+    plannedEndUtc?: Date | undefined;
+    partneringFamilyPersonId?: string;
+    completedRequirements?: CompletedRequirementInfo[];
+    exemptedRequirements?: ExemptedRequirementInfo[];
+    individualVolunteerAssignments?: IndividualVolunteerAssignment[];
+    familyVolunteerAssignments?: FamilyVolunteerAssignment[];
+    childLocationHistory?: ChildLocationHistoryEntry[];
+    childLocationPlan?: ChildLocationHistoryEntry[];
+    comments?: string | undefined;
+    reason?: string | undefined;
 }
 
 export class Note implements INote {
@@ -12485,19 +12648,12 @@ export interface IAccountLocationAccess {
     roles?: string[];
 }
 
-/** Semantic representation of an EDM model. */
 export abstract class IEdmModel implements IIEdmModel {
-    /** Gets the collection of schema elements that are contained in this model. */
     schemaElements?: IEdmSchemaElement[] | undefined;
-    /** Gets the collection of vocabulary annotations that are contained in this model. */
     vocabularyAnnotations?: IEdmVocabularyAnnotation[] | undefined;
-    /** Gets the collection of models referred to by this model (mainly by the this.References). */
     referencedModels?: IEdmModel[] | undefined;
-    /** Gets the collection of namespaces that schema elements use contained in this model. */
     declaredNamespaces?: string[] | undefined;
-    /** Gets the model's annotations manager. */
     directValueAnnotationsManager?: IEdmDirectValueAnnotationsManager | undefined;
-    /** Gets the only one entity container of the model. */
     entityContainer?: IEdmEntityContainer | undefined;
 
     constructor(data?: IIEdmModel) {
@@ -12569,27 +12725,17 @@ export abstract class IEdmModel implements IIEdmModel {
     }
 }
 
-/** Semantic representation of an EDM model. */
 export interface IIEdmModel {
-    /** Gets the collection of schema elements that are contained in this model. */
     schemaElements?: IEdmSchemaElement[] | undefined;
-    /** Gets the collection of vocabulary annotations that are contained in this model. */
     vocabularyAnnotations?: IEdmVocabularyAnnotation[] | undefined;
-    /** Gets the collection of models referred to by this model (mainly by the this.References). */
     referencedModels?: IEdmModel[] | undefined;
-    /** Gets the collection of namespaces that schema elements use contained in this model. */
     declaredNamespaces?: string[] | undefined;
-    /** Gets the model's annotations manager. */
     directValueAnnotationsManager?: IEdmDirectValueAnnotationsManager | undefined;
-    /** Gets the only one entity container of the model. */
     entityContainer?: IEdmEntityContainer | undefined;
 }
 
-/** Common base interface for all named children of EDM schema. */
 export abstract class IEdmSchemaElement implements IIEdmSchemaElement {
-    /** Gets the kind of this schema element. */
     schemaElementKind?: EdmSchemaElementKind;
-    /** Gets the namespace this schema element belongs to. */
     namespace?: string | undefined;
 
     constructor(data?: IIEdmSchemaElement) {
@@ -12621,15 +12767,11 @@ export abstract class IEdmSchemaElement implements IIEdmSchemaElement {
     }
 }
 
-/** Common base interface for all named children of EDM schema. */
 export interface IIEdmSchemaElement {
-    /** Gets the kind of this schema element. */
     schemaElementKind?: EdmSchemaElementKind;
-    /** Gets the namespace this schema element belongs to. */
     namespace?: string | undefined;
 }
 
-/** Defines EDM schema element types. */
 export enum EdmSchemaElementKind {
     None = 0,
     TypeDefinition = 1,
@@ -12639,15 +12781,10 @@ export enum EdmSchemaElementKind {
     Function = 5,
 }
 
-/** Represents an EDM vocabulary annotation. */
 export abstract class IEdmVocabularyAnnotation implements IIEdmVocabularyAnnotation {
-    /** Gets the qualifier used to discriminate between multiple bindings of the same property or type. */
     qualifier?: string | undefined;
-    /** Gets the term bound by the annotation. */
     term?: IEdmTerm | undefined;
-    /** Gets the element the annotation applies to. */
     target?: IEdmVocabularyAnnotatable | undefined;
-    /** Gets the expression producing the value of the annotation. */
     value?: IEdmExpression | undefined;
 
     constructor(data?: IIEdmVocabularyAnnotation) {
@@ -12683,25 +12820,16 @@ export abstract class IEdmVocabularyAnnotation implements IIEdmVocabularyAnnotat
     }
 }
 
-/** Represents an EDM vocabulary annotation. */
 export interface IIEdmVocabularyAnnotation {
-    /** Gets the qualifier used to discriminate between multiple bindings of the same property or type. */
     qualifier?: string | undefined;
-    /** Gets the term bound by the annotation. */
     term?: IEdmTerm | undefined;
-    /** Gets the element the annotation applies to. */
     target?: IEdmVocabularyAnnotatable | undefined;
-    /** Gets the expression producing the value of the annotation. */
     value?: IEdmExpression | undefined;
 }
 
-/** Represents an EDM term. */
 export abstract class IEdmTerm implements IIEdmTerm {
-    /** Gets the type of this term. */
     type?: IEdmTypeReference | undefined;
-    /** Gets the AppliesTo of this term. */
     appliesTo?: string | undefined;
-    /** Gets the DefaultValue of this term. */
     defaultValue?: string | undefined;
 
     constructor(data?: IIEdmTerm) {
@@ -12735,21 +12863,14 @@ export abstract class IEdmTerm implements IIEdmTerm {
     }
 }
 
-/** Represents an EDM term. */
 export interface IIEdmTerm {
-    /** Gets the type of this term. */
     type?: IEdmTypeReference | undefined;
-    /** Gets the AppliesTo of this term. */
     appliesTo?: string | undefined;
-    /** Gets the DefaultValue of this term. */
     defaultValue?: string | undefined;
 }
 
-/** Represents a references to a type. */
 export abstract class IEdmTypeReference implements IIEdmTypeReference {
-    /** Gets a value indicating whether this type is nullable. */
     isNullable?: boolean;
-    /** Gets the definition to which this type refers. */
     definition?: IEdmType | undefined;
 
     constructor(data?: IIEdmTypeReference) {
@@ -12781,17 +12902,12 @@ export abstract class IEdmTypeReference implements IIEdmTypeReference {
     }
 }
 
-/** Represents a references to a type. */
 export interface IIEdmTypeReference {
-    /** Gets a value indicating whether this type is nullable. */
     isNullable?: boolean;
-    /** Gets the definition to which this type refers. */
     definition?: IEdmType | undefined;
 }
 
-/** Represents the definition of an EDM type. */
 export abstract class IEdmType implements IIEdmType {
-    /** Gets the kind of this type. */
     typeKind?: EdmTypeKind;
 
     constructor(data?: IIEdmType) {
@@ -12821,13 +12937,10 @@ export abstract class IEdmType implements IIEdmType {
     }
 }
 
-/** Represents the definition of an EDM type. */
 export interface IIEdmType {
-    /** Gets the kind of this type. */
     typeKind?: EdmTypeKind;
 }
 
-/** Defines EDM metatypes. */
 export enum EdmTypeKind {
     None = 0,
     Primitive = 1,
@@ -12841,7 +12954,6 @@ export enum EdmTypeKind {
     Path = 9,
 }
 
-/** Represents an element that can be targeted by Vocabulary Annotations */
 export abstract class IEdmVocabularyAnnotatable implements IIEdmVocabularyAnnotatable {
 
     constructor(data?: IIEdmVocabularyAnnotatable) {
@@ -12867,13 +12979,10 @@ export abstract class IEdmVocabularyAnnotatable implements IIEdmVocabularyAnnota
     }
 }
 
-/** Represents an element that can be targeted by Vocabulary Annotations */
 export interface IIEdmVocabularyAnnotatable {
 }
 
-/** Represents an EDM expression. */
 export abstract class IEdmExpression implements IIEdmExpression {
-    /** Gets the kind of this expression. */
     expressionKind?: EdmExpressionKind;
 
     constructor(data?: IIEdmExpression) {
@@ -12903,13 +13012,10 @@ export abstract class IEdmExpression implements IIEdmExpression {
     }
 }
 
-/** Represents an EDM expression. */
 export interface IIEdmExpression {
-    /** Gets the kind of this expression. */
     expressionKind?: EdmExpressionKind;
 }
 
-/** Defines EDM expression kinds. */
 export enum EdmExpressionKind {
     None = 0,
     BinaryConstant = 1,
@@ -12939,7 +13045,6 @@ export enum EdmExpressionKind {
     AnnotationPath = 25,
 }
 
-/** Manages getting and setting direct annotations on EDM elements. */
 export abstract class IEdmDirectValueAnnotationsManager implements IIEdmDirectValueAnnotationsManager {
 
     constructor(data?: IIEdmDirectValueAnnotationsManager) {
@@ -12965,13 +13070,10 @@ export abstract class IEdmDirectValueAnnotationsManager implements IIEdmDirectVa
     }
 }
 
-/** Manages getting and setting direct annotations on EDM elements. */
 export interface IIEdmDirectValueAnnotationsManager {
 }
 
-/** Represents an EDM entity container. */
 export abstract class IEdmEntityContainer implements IIEdmEntityContainer {
-    /** Gets a collection of the elements of this entity container. */
     elements?: IEdmEntityContainerElement[] | undefined;
 
     constructor(data?: IIEdmEntityContainer) {
@@ -13009,17 +13111,12 @@ export abstract class IEdmEntityContainer implements IIEdmEntityContainer {
     }
 }
 
-/** Represents an EDM entity container. */
 export interface IIEdmEntityContainer {
-    /** Gets a collection of the elements of this entity container. */
     elements?: IEdmEntityContainerElement[] | undefined;
 }
 
-/** Represents the common elements of all EDM entity container elements. */
 export abstract class IEdmEntityContainerElement implements IIEdmEntityContainerElement {
-    /** Gets the kind of element of this container element. */
     containerElementKind?: EdmContainerElementKind;
-    /** Gets the container that contains this element. */
     container?: IEdmEntityContainer | undefined;
 
     constructor(data?: IIEdmEntityContainerElement) {
@@ -13051,15 +13148,11 @@ export abstract class IEdmEntityContainerElement implements IIEdmEntityContainer
     }
 }
 
-/** Represents the common elements of all EDM entity container elements. */
 export interface IIEdmEntityContainerElement {
-    /** Gets the kind of element of this container element. */
     containerElementKind?: EdmContainerElementKind;
-    /** Gets the container that contains this element. */
     container?: IEdmEntityContainer | undefined;
 }
 
-/** Defines EDM container element types. */
 export enum EdmContainerElementKind {
     None = 0,
     EntitySet = 1,
@@ -13068,9 +13161,7 @@ export enum EdmContainerElementKind {
     Singleton = 4,
 }
 
-/** Base class for all annotatable types in OData library. */
 export abstract class ODataAnnotatable implements IODataAnnotatable {
-    /** The annotation for storing @odata.type. */
     typeAnnotation?: ODataTypeAnnotation | undefined;
 
     constructor(data?: IODataAnnotatable) {
@@ -13100,19 +13191,13 @@ export abstract class ODataAnnotatable implements IODataAnnotatable {
     }
 }
 
-/** Base class for all annotatable types in OData library. */
 export interface IODataAnnotatable {
-    /** The annotation for storing @odata.type. */
     typeAnnotation?: ODataTypeAnnotation | undefined;
 }
 
-/** Class representing the a service document. */
 export class ODataServiceDocument extends ODataAnnotatable implements IODataServiceDocument {
-    /** Gets or sets the set of entity sets in the service document. */
     entitySets?: ODataEntitySetInfo[] | undefined;
-    /** Gets or sets the set of singletons in the service document. */
     singletons?: ODataSingletonInfo[] | undefined;
-    /** Gets or sets the set of function imports in the service document. */
     functionImports?: ODataFunctionImportInfo[] | undefined;
 
     constructor(data?: IODataServiceDocument) {
@@ -13169,23 +13254,15 @@ export class ODataServiceDocument extends ODataAnnotatable implements IODataServ
     }
 }
 
-/** Class representing the a service document. */
 export interface IODataServiceDocument extends IODataAnnotatable {
-    /** Gets or sets the set of entity sets in the service document. */
     entitySets?: ODataEntitySetInfo[] | undefined;
-    /** Gets or sets the set of singletons in the service document. */
     singletons?: ODataSingletonInfo[] | undefined;
-    /** Gets or sets the set of function imports in the service document. */
     functionImports?: ODataFunctionImportInfo[] | undefined;
 }
 
-/** Abstract class representing an element (EntitySet, Singleton) in a service document. */
 export abstract class ODataServiceDocumentElement extends ODataAnnotatable implements IODataServiceDocumentElement {
-    /** Gets or sets the URI representing the Unified Resource Locator (URL) to the element. */
     url?: string | undefined;
-    /** Gets or sets the name of the element; this is the entity set or singleton name in JSON and the HREF in Atom. */
     name?: string | undefined;
-    /** Gets or sets the title of the element; this is the title in JSON. */
     title?: string | undefined;
 
     constructor(data?: IODataServiceDocumentElement) {
@@ -13216,17 +13293,12 @@ export abstract class ODataServiceDocumentElement extends ODataAnnotatable imple
     }
 }
 
-/** Abstract class representing an element (EntitySet, Singleton) in a service document. */
 export interface IODataServiceDocumentElement extends IODataAnnotatable {
-    /** Gets or sets the URI representing the Unified Resource Locator (URL) to the element. */
     url?: string | undefined;
-    /** Gets or sets the name of the element; this is the entity set or singleton name in JSON and the HREF in Atom. */
     name?: string | undefined;
-    /** Gets or sets the title of the element; this is the title in JSON. */
     title?: string | undefined;
 }
 
-/** Class representing a entity set in a service document. */
 export class ODataEntitySetInfo extends ODataServiceDocumentElement implements IODataEntitySetInfo {
 
     constructor(data?: IODataEntitySetInfo) {
@@ -13251,13 +13323,10 @@ export class ODataEntitySetInfo extends ODataServiceDocumentElement implements I
     }
 }
 
-/** Class representing a entity set in a service document. */
 export interface IODataEntitySetInfo extends IODataServiceDocumentElement {
 }
 
-/** Annotation which stores the EDM type information of a value. */
 export class ODataTypeAnnotation implements IODataTypeAnnotation {
-    /** Gets the type name to serialize, for the annotated item.  */
     typeName?: string | undefined;
 
     constructor(data?: IODataTypeAnnotation) {
@@ -13289,13 +13358,10 @@ export class ODataTypeAnnotation implements IODataTypeAnnotation {
     }
 }
 
-/** Annotation which stores the EDM type information of a value. */
 export interface IODataTypeAnnotation {
-    /** Gets the type name to serialize, for the annotated item.  */
     typeName?: string | undefined;
 }
 
-/** Class representing a singleton in a service document. */
 export class ODataSingletonInfo extends ODataServiceDocumentElement implements IODataSingletonInfo {
 
     constructor(data?: IODataSingletonInfo) {
@@ -13320,11 +13386,9 @@ export class ODataSingletonInfo extends ODataServiceDocumentElement implements I
     }
 }
 
-/** Class representing a singleton in a service document. */
 export interface IODataSingletonInfo extends IODataServiceDocumentElement {
 }
 
-/** Class representing a function Import in a service document. */
 export class ODataFunctionImportInfo extends ODataServiceDocumentElement implements IODataFunctionImportInfo {
 
     constructor(data?: IODataFunctionImportInfo) {
@@ -13349,7 +13413,6 @@ export class ODataFunctionImportInfo extends ODataServiceDocumentElement impleme
     }
 }
 
-/** Class representing a function Import in a service document. */
 export interface IODataFunctionImportInfo extends IODataServiceDocumentElement {
 }
 

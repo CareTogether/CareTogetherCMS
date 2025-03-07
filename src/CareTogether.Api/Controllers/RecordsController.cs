@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Threading.Tasks;
 
 namespace CareTogether.Api.Controllers
@@ -30,7 +31,7 @@ namespace CareTogether.Api.Controllers
         }
 
         [HttpPost("atomicRecordsCommand")]
-        public async Task<ActionResult<RecordsAggregate?>> SubmitAtomicRecordsCommandAsync(Guid organizationId, Guid locationId,
+        public async Task<ActionResult<ImmutableList<RecordsAggregate>?>> SubmitAtomicRecordsCommandAsync(Guid organizationId, Guid locationId,
             [FromBody] AtomicRecordsCommand command)
         {
             var result = await recordsManager.ExecuteAtomicRecordsCommandAsync(organizationId, locationId, User, command);

@@ -58,7 +58,8 @@ namespace CareTogether.Managers
         ImmutableList<string> MissingRequirements,
         ImmutableList<RoleRemoval> RoleRemovals,
         ImmutableDictionary<Guid, VolunteerInfo> IndividualVolunteers,
-        ImmutableList<Activity> History);
+        ImmutableList<Activity> History,
+        ImmutableList<Resources.Referrals.ArrangementEntry> Assignments);
 
     public sealed record VolunteerInfo(
         ImmutableDictionary<string, IndividualRoleApprovalStatus> ApprovalStatusByRole,
