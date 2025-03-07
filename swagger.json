@@ -1396,7 +1396,7 @@
           "AccessVolunteersScreen",
           "AccessPartneringFamiliesScreen",
           "AccessSettingsScreen",
-          "EditRoles",
+          "AddEditRoles",
           "AccessCommunitiesScreen",
           "ViewFamilyCustomFields",
           "ViewFamilyHistory",

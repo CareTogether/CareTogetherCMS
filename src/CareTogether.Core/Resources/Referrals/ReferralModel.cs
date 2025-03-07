@@ -202,7 +202,7 @@ namespace CareTogether.Resources.Referrals
                                 c.RequirementName, c.CompletedAtUtc, c.UploadedDocumentId, c.NoteId)),
                             CompleteVolunteerFamilyAssignmentRequirement c => (arrangementEntry with
                             {
-                                FamilyVolunteerAssignments = arrangementEntry.FamilyVolunteerAssignments.UpdateSingle(
+                                FamilyVolunteerAssignments = arrangementEntry.FamilyVolunteerAssignments.AddOrReplace(
                                     fva => fva.ArrangementFunction == c.ArrangementFunction &&
                                         fva.ArrangementFunctionVariant == c.ArrangementFunctionVariant &&
                                         fva.FamilyId == c.VolunteerFamilyId,
@@ -216,7 +216,7 @@ namespace CareTogether.Resources.Referrals
                                 c.RequirementName, c.CompletedAtUtc, c.UploadedDocumentId, c.NoteId)),
                             CompleteIndividualVolunteerAssignmentRequirement c => (arrangementEntry with
                             {
-                                IndividualVolunteerAssignments = arrangementEntry.IndividualVolunteerAssignments.UpdateSingle(
+                                IndividualVolunteerAssignments = arrangementEntry.IndividualVolunteerAssignments.AddOrReplace(
                                     iva => iva.ArrangementFunction == c.ArrangementFunction &&
                                         iva.ArrangementFunctionVariant == c.ArrangementFunctionVariant &&
                                         iva.FamilyId == c.VolunteerFamilyId &&
@@ -236,7 +236,7 @@ namespace CareTogether.Resources.Referrals
                             }, null),
                             MarkVolunteerFamilyAssignmentRequirementIncomplete c => (arrangementEntry with
                             {
-                                FamilyVolunteerAssignments = arrangementEntry.FamilyVolunteerAssignments.UpdateSingle(
+                                FamilyVolunteerAssignments = arrangementEntry.FamilyVolunteerAssignments.AddOrReplace(
                                     fva => fva.ArrangementFunction == c.ArrangementFunction &&
                                         fva.ArrangementFunctionVariant == c.ArrangementFunctionVariant &&
                                         fva.FamilyId == c.VolunteerFamilyId,
@@ -248,7 +248,7 @@ namespace CareTogether.Resources.Referrals
                             }, null),
                             MarkIndividualVolunteerAssignmentRequirementIncomplete c => (arrangementEntry with
                             {
-                                IndividualVolunteerAssignments = arrangementEntry.IndividualVolunteerAssignments.UpdateSingle(
+                                IndividualVolunteerAssignments = arrangementEntry.IndividualVolunteerAssignments.AddOrReplace(
                                     iva => iva.ArrangementFunction == c.ArrangementFunction &&
                                         iva.ArrangementFunctionVariant == c.ArrangementFunctionVariant &&
                                         iva.FamilyId == c.VolunteerFamilyId &&
@@ -267,7 +267,7 @@ namespace CareTogether.Resources.Referrals
                             }, null),
                             ExemptVolunteerFamilyAssignmentRequirement c => (arrangementEntry with
                             {
-                                FamilyVolunteerAssignments = arrangementEntry.FamilyVolunteerAssignments.UpdateSingle(
+                                FamilyVolunteerAssignments = arrangementEntry.FamilyVolunteerAssignments.AddOrReplace(
                                     fva => fva.ArrangementFunction == c.ArrangementFunction &&
                                         fva.ArrangementFunctionVariant == c.ArrangementFunctionVariant &&
                                         fva.FamilyId == c.VolunteerFamilyId,
@@ -281,7 +281,7 @@ namespace CareTogether.Resources.Referrals
                             }, null),
                             ExemptIndividualVolunteerAssignmentRequirement c => (arrangementEntry with
                             {
-                                IndividualVolunteerAssignments = arrangementEntry.IndividualVolunteerAssignments.UpdateSingle(
+                                IndividualVolunteerAssignments = arrangementEntry.IndividualVolunteerAssignments.AddOrReplace(
                                     iva => iva.ArrangementFunction == c.ArrangementFunction &&
                                         iva.ArrangementFunctionVariant == c.ArrangementFunctionVariant &&
                                         iva.FamilyId == c.VolunteerFamilyId &&
@@ -300,7 +300,7 @@ namespace CareTogether.Resources.Referrals
                             }, null),
                             UnexemptVolunteerFamilyAssignmentRequirement c => (arrangementEntry with
                             {
-                                FamilyVolunteerAssignments = arrangementEntry.FamilyVolunteerAssignments.UpdateSingle(
+                                FamilyVolunteerAssignments = arrangementEntry.FamilyVolunteerAssignments.AddOrReplace(
                                     fva => fva.ArrangementFunction == c.ArrangementFunction &&
                                         fva.ArrangementFunctionVariant == c.ArrangementFunctionVariant &&
                                         fva.FamilyId == c.VolunteerFamilyId,
@@ -312,7 +312,7 @@ namespace CareTogether.Resources.Referrals
                             }, null),
                             UnexemptIndividualVolunteerAssignmentRequirement c => (arrangementEntry with
                             {
-                                IndividualVolunteerAssignments = arrangementEntry.IndividualVolunteerAssignments.UpdateSingle(
+                                IndividualVolunteerAssignments = arrangementEntry.IndividualVolunteerAssignments.AddOrReplace(
                                     iva => iva.ArrangementFunction == c.ArrangementFunction &&
                                         iva.ArrangementFunctionVariant == c.ArrangementFunctionVariant &&
                                         iva.FamilyId == c.VolunteerFamilyId &&

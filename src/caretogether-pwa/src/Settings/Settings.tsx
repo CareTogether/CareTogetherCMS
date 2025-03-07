@@ -1,10 +1,12 @@
 import { Navigate, Route, Routes } from 'react-router-dom';
-import { RoleSettings } from './RoleSettings';
+import { SettingsScreen } from './SettingsScreen';
+import { RoleEdit } from './Roles/RoleEdit';
 
 function Settings() {
   return (
     <Routes>
-      <Route path="roles" element={<RoleSettings />} />
+      <Route path="" element={<SettingsScreen />} />
+      <Route path="roles/:roleName" element={<RoleEdit />} />
       <Route path="*" element={<Navigate to="./roles" replace />} />
     </Routes>
   );
