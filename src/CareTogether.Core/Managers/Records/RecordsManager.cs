@@ -348,19 +348,19 @@ namespace CareTogether.Managers.Records
             }
             else
             {
-                var familyIds = GetFamilyIdFromCommand(command);
+                var familyIds = GetFamilyIdsFromCommand(command);
 
                 var familyResults = await Task.WhenAll(familyIds.Select(familyId =>
                     combinedFamilyInfoFormatter.RenderCombinedFamilyInfoAsync(organizationId, locationId, familyId, user)));
 
                 return familyResults
-                    .OfType<CombinedFamilyInfo>()
+                    .OfType<CombinedFamilyInfo>() // Filters out null values
                     .Select(result => new FamilyRecordsAggregate(result))
                     .ToImmutableList<RecordsAggregate>();
             }
         }
 
-        private Guid[] GetFamilyIdFromCommand(AtomicRecordsCommand command) =>
+        private Guid[] GetFamilyIdsFromCommand(AtomicRecordsCommand command) =>
             command switch
             {
                 FamilyRecordsCommand c => [c.Command.FamilyId],
