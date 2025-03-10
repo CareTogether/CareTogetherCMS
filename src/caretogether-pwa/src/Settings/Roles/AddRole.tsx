@@ -49,7 +49,7 @@ export function AddRole({ onClose }: AddEditCommunityDrawerProps) {
   }
 
   return (
-    <Grid container spacing={2} maxWidth={500}>
+    <Grid container spacing={2} maxWidth={500} component="form" onSubmit={save}>
       <Grid item xs={12}>
         <h3>Add New Role</h3>
       </Grid>
@@ -104,7 +104,6 @@ export function AddRole({ onClose }: AddEditCommunityDrawerProps) {
           color="primary"
           variant="contained"
           disabled={roleName.length === 0}
-          onClick={save}
         >
           Save
         </Button>
