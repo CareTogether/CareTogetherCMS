@@ -100,6 +100,7 @@ export function AddRole({ onClose }: AddEditCommunityDrawerProps) {
         </Button>
 
         <Button
+          type="submit"
           color="primary"
           variant="contained"
           disabled={roleName.length === 0}

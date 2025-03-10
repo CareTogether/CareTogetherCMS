@@ -15,6 +15,7 @@ import { organizationConfigurationQuery } from '../../Model/ConfigurationModel';
 import { useGlobalPermissions } from '../../Model/SessionModel';
 import { AddRole } from './AddRole';
 import { useSidePanel } from '../../Hooks/useSidePanel';
+import { DeleteRoleButton } from './DeleteRoleButton';
 
 export function RolesSection() {
   const configuration = useLoadable(organizationConfigurationQuery);
@@ -35,12 +36,13 @@ export function RolesSection() {
       <Typography variant="h2">Roles</Typography>
 
       <TableContainer>
-        <Table aria-label="sticky table">
+        <Table aria-label="Roles list" size="small">
           <TableHead>
             <TableRow>
               <TableCell align="left" sx={{ minWidth: 200 }}>
                 Name
               </TableCell>
+              <TableCell>Actions</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
@@ -56,11 +58,20 @@ export function RolesSection() {
                 <TableCell align="left" sx={{ minWidth: 200 }}>
                   {role.roleName}
                 </TableCell>
+
+                <TableCell
+                  // We don't want clicks in this cell to open the item
+                  // For some reason, the event is not being stopped in the IconButton in DeleteRoleButton
+                  onClick={(event) => event.stopPropagation()}
+                >
+                  <DeleteRoleButton roleName={role.roleName!} />
+                </TableCell>
               </TableRow>
             ))}
           </TableBody>
         </Table>
       </TableContainer>
+
       {permissions(Permission.CreateCommunity) && (
         <>
           <Button

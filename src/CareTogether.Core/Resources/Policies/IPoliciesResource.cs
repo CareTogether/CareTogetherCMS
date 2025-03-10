@@ -177,6 +177,9 @@ namespace CareTogether.Resources.Policies
         Task<OrganizationConfiguration> UpsertRoleDefinitionAsync(Guid organizationId,
             string roleName, RoleDefinition role);
 
+        Task<OrganizationConfiguration> RemoveRoleDefinitionAsync(Guid organizationId,
+            string roleName);
+
         Task<OrganizationSecrets> GetOrganizationSecretsAsync(Guid organizationId);
 
         Task<EffectiveLocationPolicy> GetCurrentPolicy(Guid organizationId, Guid locationId);

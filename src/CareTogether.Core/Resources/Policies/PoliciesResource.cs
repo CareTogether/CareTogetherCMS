@@ -51,6 +51,29 @@ namespace CareTogether.Resources.Policies
             return Render(newConfig);
         }
 
+        public async Task<OrganizationConfiguration> RemoveRoleDefinitionAsync(Guid organizationId,
+            string roleName)
+        {
+            if (roleName == SystemConstants.ORGANIZATION_ADMINISTRATOR)
+                throw new InvalidOperationException("The organization administrator role cannot be removed.");
+
+            var config = await configurationStore.GetAsync(organizationId, Guid.Empty, CONFIG);
+
+            var roleToRemove = config.Roles.SingleOrDefault(r => r.RoleName == roleName);
+
+            if (roleToRemove == default)
+                throw new InvalidOperationException($"Role '{roleName}' does not exist.");
+            
+            var newConfig = config with
+            {
+                Roles = config.Roles.Remove(roleToRemove)
+            };
+
+            await configurationStore.UpsertAsync(organizationId, Guid.Empty, CONFIG, newConfig);
+
+            return Render(newConfig);
+        }
+
         public async Task<EffectiveLocationPolicy> GetCurrentPolicy(Guid organizationId, Guid locationId)
         {
             var result = await locationPoliciesStore.GetAsync(organizationId, locationId, POLICY);

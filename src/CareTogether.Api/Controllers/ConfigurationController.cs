@@ -51,6 +51,16 @@ namespace CareTogether.Api.Controllers
             return Ok(result);
         }
 
+        [HttpDelete("/api/{organizationId:guid}/[controller]/roles/{roleName}")]
+        public async Task<ActionResult<OrganizationConfiguration>> RemoveRoleDefinition(Guid organizationId,
+            string roleName)
+        {
+            if (!User.IsInRole(SystemConstants.ORGANIZATION_ADMINISTRATOR))
+                return Forbid();
+            var result = await policiesResource.RemoveRoleDefinitionAsync(organizationId, roleName);
+            return Ok(result);
+        }
+
         [HttpGet("/api/{organizationId:guid}/{locationId:guid}/[controller]/policy")]
         public async Task<ActionResult<EffectiveLocationPolicy>> GetEffectiveLocationPolicy(Guid organizationId, Guid locationId)
         {
