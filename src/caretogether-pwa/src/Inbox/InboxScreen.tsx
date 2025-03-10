@@ -21,6 +21,7 @@ import { FamilyName } from '../Families/FamilyName';
 import { EmojiPeople } from '@mui/icons-material';
 import { AppNavigate, useAppNavigate } from '../Hooks/useAppNavigate';
 import { QueueItem, queueItemsQuery } from '../Model/QueueModel';
+import { ChildLocationAlert } from '../Referrals/Arrangements/ChildLocationAlert';
 
 interface InboxMessageProps {
   icon: JSX.Element;
@@ -126,6 +127,7 @@ export function InboxScreen() {
   ) : (
     <Container maxWidth={false} sx={{ paddingLeft: '12px' }}>
       <MessageList />
+      <ChildLocationAlert />
     </Container>
   );
 }
