@@ -52,12 +52,12 @@ namespace CareTogether.Api.Controllers
         }
 
         [HttpDelete("/api/{organizationId:guid}/[controller]/roles/{roleName}")]
-        public async Task<ActionResult<OrganizationConfiguration>> RemoveRoleDefinition(Guid organizationId,
+        public async Task<ActionResult<OrganizationConfiguration>> DeleteRoleDefinition(Guid organizationId,
             string roleName)
         {
             if (!User.IsInRole(SystemConstants.ORGANIZATION_ADMINISTRATOR))
                 return Forbid();
-            var result = await policiesResource.RemoveRoleDefinitionAsync(organizationId, roleName);
+            var result = await policiesResource.DeleteRoleDefinitionAsync(organizationId, roleName);
             return Ok(result);
         }
 

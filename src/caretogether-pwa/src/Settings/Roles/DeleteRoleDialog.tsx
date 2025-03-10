@@ -19,7 +19,7 @@ export function DeleteRoleDialog({
   const storeEdits = useSetRecoilState(organizationConfigurationEdited);
 
   async function save() {
-    const newConfig = await api.configuration.removeRoleDefinition(
+    const newConfig = await api.configuration.deleteRoleDefinition(
       organizationId,
       roleName
     );

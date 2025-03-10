@@ -160,7 +160,7 @@
         "tags": [
           "Configuration"
         ],
-        "operationId": "Configuration_RemoveRoleDefinition",
+        "operationId": "Configuration_DeleteRoleDefinition",
         "parameters": [
           {
             "name": "organizationId",

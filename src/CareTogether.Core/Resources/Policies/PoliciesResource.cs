@@ -51,7 +51,7 @@ namespace CareTogether.Resources.Policies
             return Render(newConfig);
         }
 
-        public async Task<OrganizationConfiguration> RemoveRoleDefinitionAsync(Guid organizationId,
+        public async Task<OrganizationConfiguration> DeleteRoleDefinitionAsync(Guid organizationId,
             string roleName)
         {
             if (roleName == SystemConstants.ORGANIZATION_ADMINISTRATOR)
