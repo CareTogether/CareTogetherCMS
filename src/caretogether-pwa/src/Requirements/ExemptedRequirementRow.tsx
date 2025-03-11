@@ -15,6 +15,7 @@ import { ExemptedRequirementDialog } from './ExemptedRequirementDialog';
 import { RequirementContext } from './RequirementContext';
 import { useRecoilValue } from 'recoil';
 import { policyData } from '../Model/ConfigurationModel';
+import { formatUtcDateOnly } from '../Utilities/dateUtils';
 
 type ExemptedRequirementRowProps = {
   requirement: ExemptedRequirementInfo;
@@ -99,6 +100,11 @@ export function ExemptedRequirementRow({
                 <span style={{ fontWeight: 'bold' }}>All&nbsp;</span>
               )}
               {requirement.requirementName}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+              {requirement.dueDate && (
+                <span style={{ float: 'right' }}>
+                  {formatUtcDateOnly(requirement.dueDate)}
+                </span>
+              )}
               {requirement.exemptionExpiresAtUtc && (
                 <span style={{ float: 'right' }}>
                   until {format(requirement.exemptionExpiresAtUtc, 'M/d/yy')}
