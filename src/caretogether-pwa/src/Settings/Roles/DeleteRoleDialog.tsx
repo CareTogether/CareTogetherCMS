@@ -4,6 +4,8 @@ import { DialogHandle } from '../../Hooks/useDialogHandle';
 import { UpdateDialog } from '../../Generic/UpdateDialog';
 import { organizationConfigurationEdited } from '../../Model/ConfigurationModel';
 import { selectedLocationContextState } from '../../Model/Data';
+import { useState } from 'react';
+import { Typography } from '@mui/material';
 
 interface DeletePersonDialogProps {
   roleName: string;
@@ -18,12 +20,18 @@ export function DeleteRoleDialog({
 
   const storeEdits = useSetRecoilState(organizationConfigurationEdited);
 
+  const [error, setError] = useState<boolean>(false);
+
   async function save() {
-    const newConfig = await api.configuration.deleteRoleDefinition(
-      organizationId,
-      roleName
-    );
-    storeEdits(newConfig);
+    try {
+      const newConfig = await api.configuration.deleteRoleDefinition(
+        organizationId,
+        roleName
+      );
+      storeEdits(newConfig);
+    } catch (error) {
+      setError(true);
+    }
   }
 
   return (
@@ -31,6 +39,13 @@ export function DeleteRoleDialog({
       title={`Are you sure you want to delete ${roleName}?`}
       onClose={handle.closeDialog}
       onSave={save}
-    ></UpdateDialog>
+      noAutoClose
+    >
+      {error && (
+        <Typography color="error">
+          Failed to delete role, is it associated with an user?
+        </Typography>
+      )}
+    </UpdateDialog>
   );
 }
