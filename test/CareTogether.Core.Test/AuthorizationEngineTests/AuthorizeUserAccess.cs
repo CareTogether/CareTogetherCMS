@@ -72,7 +72,7 @@ namespace CareTogether.Core.Test.AuthorizationEngineTests
                 testSourceSmsPhoneNumber: null);
 
             var directoryResource = new DirectoryResource(directoryEventLog, Mock.Of<IFileStore>());
-            var policiesResource = new PoliciesResource(configurationStore, policiesStore, organizationSecretsStore);
+            var policiesResource = new PoliciesResource(configurationStore, policiesStore, organizationSecretsStore, personAccessEventLog);
             var referralsResource = new ReferralsResource(referralsEventLog);
             var approvalsResource = new ApprovalsResource(approvalsEventLog);
             var communitiesResource = new CommunitiesResource(communitiesEventLog, Mock.Of<IFileStore>());

@@ -1,4 +1,6 @@
-﻿using CareTogether.Utilities.ObjectStore;
+﻿using CareTogether.Resources.Accounts;
+using CareTogether.Utilities.EventLog;
+using CareTogether.Utilities.ObjectStore;
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
@@ -17,16 +19,25 @@ namespace CareTogether.Resources.Policies
         private readonly IObjectStore<OrganizationConfiguration> configurationStore;
         private readonly IObjectStore<EffectiveLocationPolicy> locationPoliciesStore;
         private readonly IObjectStore<OrganizationSecrets> organizationSecretsStore;
+        private readonly IEventLog<PersonAccessEvent> personAccessEventLog;
+        private readonly ConcurrentLockingStore<(Guid organizationId, Guid locationId), PersonAccessModel> tenantModels;
 
 
         public PoliciesResource(
             IObjectStore<OrganizationConfiguration> configurationStore,
             IObjectStore<EffectiveLocationPolicy> locationPoliciesStore,
-            IObjectStore<OrganizationSecrets> organizationSecretsStore)
+            IObjectStore<OrganizationSecrets> organizationSecretsStore,
+            IEventLog<PersonAccessEvent> personAccessEventLog)
         {
             this.configurationStore = configurationStore;
             this.locationPoliciesStore = locationPoliciesStore;
             this.organizationSecretsStore = organizationSecretsStore;
+            this.personAccessEventLog = personAccessEventLog;
+            
+            tenantModels = new ConcurrentLockingStore<(Guid organizationId, Guid locationId), PersonAccessModel>(async key =>
+            {
+                return await PersonAccessModel.InitializeAsync(personAccessEventLog.GetAllEventsAsync(key.organizationId, key.locationId));
+            });
         }
 
 
@@ -63,6 +74,22 @@ namespace CareTogether.Resources.Policies
 
             if (roleToRemove == default)
                 throw new InvalidOperationException($"Role '{roleName}' does not exist.");
+            
+            // Check if any users have this role assigned
+            foreach (var location in config.Locations)
+            {
+                using (var lockedModel = await tenantModels.ReadLockItemAsync((organizationId, location.Id)))
+                {
+                    var usersWithRole = lockedModel.Value.FindAccess(entry => 
+                        entry.Roles.Contains(roleName));
+                    
+                    if (usersWithRole.Any())
+                    {
+                        throw new InvalidOperationException(
+                            $"Cannot delete role '{roleName}' because it is currently assigned to {usersWithRole.Count} user(s) in location '{location.Name}'.");
+                    }
+                }
+            }
             
             var newConfig = config with
             {
