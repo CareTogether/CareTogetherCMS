@@ -81,6 +81,7 @@ import { visibleCommunitiesQuery } from '../Model/Data';
 import { useAppNavigate } from '../Hooks/useAppNavigate';
 import FamilyScreenPageVersionSwitch from './FamilyScreenPageVersionSwitch';
 import posthog from 'posthog-js';
+import { AssignmentsSection } from '../Families/AssignmentsSection';
 
 const sortArrangementsByStartDateDescThenCreateDateDesc = (
   a: Arrangement,
@@ -539,6 +540,7 @@ export function FamilyScreen() {
                 );
               })}
             </Grid>
+            {family && <AssignmentsSection family={family} />}
 
             <Grid item xs={12} md={4}>
               {permissions(Permission.ViewReferralProgress) &&
