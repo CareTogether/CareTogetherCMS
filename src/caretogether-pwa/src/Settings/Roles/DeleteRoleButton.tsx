@@ -5,9 +5,13 @@ import { DeleteRoleDialog } from './DeleteRoleDialog';
 
 interface DeleteRoleButtonProps {
   roleName: string;
+  disabled?: boolean;
 }
 
-export function DeleteRoleButton(props: DeleteRoleButtonProps) {
+export function DeleteRoleButton({
+  roleName,
+  disabled = false,
+}: DeleteRoleButtonProps) {
   const deleteDialogHandle = useDialogHandle();
 
   return (
@@ -17,6 +21,8 @@ export function DeleteRoleButton(props: DeleteRoleButtonProps) {
           event.stopPropagation();
           deleteDialogHandle.openDialog();
         }}
+        title="Delete role"
+        disabled={disabled}
       >
         <DeleteIcon />
       </IconButton>
@@ -25,7 +31,7 @@ export function DeleteRoleButton(props: DeleteRoleButtonProps) {
         <DeleteRoleDialog
           key={deleteDialogHandle.key}
           handle={deleteDialogHandle}
-          roleName={props.roleName}
+          roleName={roleName}
         />
       )}
     </>

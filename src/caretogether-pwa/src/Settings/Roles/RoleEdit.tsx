@@ -27,9 +27,9 @@ import {
   IContextualPermissionSet,
   OwnFamilyPermissionContext,
   OwnReferralAssigneeFamiliesPermissionContext,
-  Permission,
   PermissionContext,
   RoleDefinition,
+  Permission,
 } from '../../GeneratedClient';
 import { useLoadable } from '../../Hooks/useLoadable';
 import {
@@ -49,6 +49,7 @@ import { useParams } from 'react-router-dom';
 import { Link } from 'react-router-dom';
 import NavigateNextIcon from '@mui/icons-material/NavigateNext';
 import { Box } from '@mui/system';
+import { isRoleEditable } from './isRoleEditable';
 
 export function RoleEdit() {
   const { roleName } = useParams<{ roleName: string }>();
@@ -67,11 +68,11 @@ export function RoleEdit() {
   );
   const [dirty, setDirty] = useState(false);
 
-  const isEditable =
-    (workingRole &&
+  const isEditable = Boolean(
+    workingRole &&
       permissions(Permission.AddEditRoles) &&
-      workingRole.roleName !== 'OrganizationAdministrator') ||
-    false;
+      isRoleEditable(workingRole)
+  );
 
   function cancel() {
     setWorkingRole(selectedRole);
