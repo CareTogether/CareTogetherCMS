@@ -15,6 +15,7 @@ type UpdateDialogProps = {
   onSave: () => Promise<void>;
   enableSave?: () => boolean;
   saveLabel?: string;
+  noAutoClose?: boolean;
   children?: React.ReactNode;
 };
 
@@ -25,6 +26,7 @@ export const UpdateDialog: React.FC<UpdateDialogProps> = ({
   onSave,
   enableSave,
   saveLabel,
+  noAutoClose = false,
   children,
 }) => {
   const withBackdrop = useBackdrop();
@@ -37,7 +39,7 @@ export const UpdateDialog: React.FC<UpdateDialogProps> = ({
   async function saveHandler() {
     await withBackdrop(async () => {
       await onSave();
-      onClose();
+      !noAutoClose && onClose();
     });
   }
 

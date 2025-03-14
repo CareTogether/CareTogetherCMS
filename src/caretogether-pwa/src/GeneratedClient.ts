@@ -161,6 +161,46 @@ export class ConfigurationClient {
         return Promise.resolve<OrganizationConfiguration>(null as any);
     }
 
+    deleteRoleDefinition(organizationId: string, roleName: string): Promise<OrganizationConfiguration> {
+        let url_ = this.baseUrl + "/api/{organizationId}/Configuration/roles/{roleName}";
+        if (organizationId === undefined || organizationId === null)
+            throw new Error("The parameter 'organizationId' must be defined.");
+        url_ = url_.replace("{organizationId}", encodeURIComponent("" + organizationId));
+        if (roleName === undefined || roleName === null)
+            throw new Error("The parameter 'roleName' must be defined.");
+        url_ = url_.replace("{roleName}", encodeURIComponent("" + roleName));
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: RequestInit = {
+            method: "DELETE",
+            headers: {
+                "Accept": "application/json"
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processDeleteRoleDefinition(_response);
+        });
+    }
+
+    protected processDeleteRoleDefinition(response: Response): Promise<OrganizationConfiguration> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result200 = OrganizationConfiguration.fromJS(resultData200);
+            return result200;
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<OrganizationConfiguration>(null as any);
+    }
+
     getEffectiveLocationPolicy(organizationId: string, locationId: string): Promise<EffectiveLocationPolicy> {
         let url_ = this.baseUrl + "/api/{organizationId}/{locationId}/Configuration/policy";
         if (organizationId === undefined || organizationId === null)
@@ -1920,7 +1960,7 @@ export enum Permission {
     AccessVolunteersScreen = 100,
     AccessPartneringFamiliesScreen = 101,
     AccessSettingsScreen = 102,
-    EditRoles = 103,
+    AddEditRoles = 103,
     AccessCommunitiesScreen = 104,
     ViewFamilyCustomFields = 150,
     ViewFamilyHistory = 151,

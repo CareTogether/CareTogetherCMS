@@ -7,6 +7,8 @@ export interface AppNavigate {
   inbox: () => void;
   family: (familyId: string) => void;
   community: (communityId: string) => void;
+  settings: () => void;
+  role: (roleId: string) => void;
 }
 
 /**
@@ -30,5 +32,7 @@ export function useAppNavigate(): AppNavigate {
     family: (familyId: string) => inContext(`families/${familyId}`),
     community: (communityId: string) =>
       inContext(`communities/community/${communityId}`),
+    settings: () => inContext(`settings`),
+    role: (roleId: string) => inContext(`settings/roles/${roleId}`),
   };
 }

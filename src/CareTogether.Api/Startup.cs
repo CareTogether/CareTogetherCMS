@@ -152,7 +152,7 @@ namespace CareTogether.Api
             var approvalsResource = new ApprovalsResource(approvalsEventLog);
             var directoryResource = new DirectoryResource(directoryEventLog, uploadsStore);
             var goalsResource = new GoalsResource(goalsEventLog);
-            var policiesResource = new PoliciesResource(configurationStore, policiesStore, organizationSecretsStore);
+            var policiesResource = new PoliciesResource(configurationStore, policiesStore, organizationSecretsStore, personAccessEventLog);
             var accountsResource = new AccountsResource(accountsEventLog, personAccessEventLog);
             var referralsResource = new ReferralsResource(referralsEventLog);
             var notesResource = new NotesResource(notesEventLog, draftNotesStore);

@@ -17,7 +17,7 @@ import {
   IContextualPermissionSet,
   Permission,
   PermissionContext,
-} from '../GeneratedClient';
+} from '../../GeneratedClient';
 import { PermissionContextCell } from './PermissionContextCell';
 
 function spacesBeforeCapitalLetters(value: string) {

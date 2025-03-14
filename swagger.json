@@ -155,6 +155,45 @@
             }
           }
         }
+      },
+      "delete": {
+        "tags": [
+          "Configuration"
+        ],
+        "operationId": "Configuration_DeleteRoleDefinition",
+        "parameters": [
+          {
+            "name": "organizationId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "guid"
+            },
+            "x-position": 1
+          },
+          {
+            "name": "roleName",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "x-position": 2
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OrganizationConfiguration"
+                }
+              }
+            }
+          }
+        }
       }
     },
     "/api/{organizationId}/{locationId}/Configuration/policy": {
@@ -1396,7 +1435,7 @@
           "AccessVolunteersScreen",
           "AccessPartneringFamiliesScreen",
           "AccessSettingsScreen",
-          "EditRoles",
+          "AddEditRoles",
           "AccessCommunitiesScreen",
           "ViewFamilyCustomFields",
           "ViewFamilyHistory",
