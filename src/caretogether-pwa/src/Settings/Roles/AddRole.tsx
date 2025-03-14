@@ -19,9 +19,9 @@ interface DrawerProps {
   onClose: () => void;
 }
 
-interface AddEditCommunityDrawerProps extends DrawerProps {}
+interface AddEditRoleDrawerProps extends DrawerProps {}
 
-export function AddRole({ onClose }: AddEditCommunityDrawerProps) {
+export function AddRole({ onClose }: AddEditRoleDrawerProps) {
   const [roleName, setRoleName] = useState('');
   const [isProtected, setIsProtected] = useState(false);
 
@@ -53,7 +53,7 @@ export function AddRole({ onClose }: AddEditCommunityDrawerProps) {
       container
       spacing={2}
       maxWidth={500}
-      component="form"
+      component="form" // This allows easier editing & submitting via the keyboard
       onSubmit={(event) => {
         // Avoids a page reload
         event.preventDefault();
@@ -70,7 +70,7 @@ export function AddRole({ onClose }: AddEditCommunityDrawerProps) {
           fullWidth
           required
           label="Name"
-          placeholder="Enter a name for the community"
+          placeholder="Enter a name for the role"
           error={roleName.length === 0}
           value={roleName}
           onChange={(e) => setRoleName(e.target.value)}

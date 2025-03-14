@@ -7,15 +7,12 @@ import { selectedLocationContextState } from '../../Model/Data';
 import { useState } from 'react';
 import { Typography } from '@mui/material';
 
-interface DeletePersonDialogProps {
+interface DeleteRoleDialogProps {
   roleName: string;
   handle: DialogHandle;
 }
 
-export function DeleteRoleDialog({
-  roleName,
-  handle,
-}: DeletePersonDialogProps) {
+export function DeleteRoleDialog({ roleName, handle }: DeleteRoleDialogProps) {
   const { organizationId } = useRecoilValue(selectedLocationContextState);
 
   const storeEdits = useSetRecoilState(organizationConfigurationEdited);
@@ -43,7 +40,7 @@ export function DeleteRoleDialog({
     >
       {error && (
         <Typography color="error">
-          Failed to delete role, is it associated with an user?
+          Failed to delete role. Is it associated with a user?
         </Typography>
       )}
     </UpdateDialog>
