@@ -1,5 +1,130 @@
+UseCase Purpose {
+@@@
+# Purpose
+The following fundamental statements define and guide both the CareTogether organization and platform.
+
+## Mission
+
+To make human services more relational.
+
+## Objectives
+
+1. Minimize the risk of platform-level as well as organization-level data breaches for all customers, while mitigating the impact of individual-level user account takeovers.
+2. Ensure system resilience, including providing for long-term support and maintenance.
+3. Help customers establish and maintain regulatory compliance.
+4. Help customers optimize their processes and communications.
+5. Allow even the smallest human services organizations to fully adopt the system.
+6. Enable even the largest human services organizations to fully embrace the platform, including qualifying for relevant grants.
+7. Build a network of partnering human services organizations that can provide wrap-around support to participants in a geographic area.
+8. Empower partners and AI agents to fully leverage the platform.
+9. Provide the highest quality user experience in the industry for all users.
+10. Build the capacity to serve the ~300,000 human services organizations in the United States and supporting global use.
+
+## Vision
+
+Develop a case management platform that reimagines connection for human services.
+
+@@@
+}
+
+UseCase Glossary {
+@@@
+# Glossary
+The following terms need to be understood and used consistently throughout both the CareTogether organization and platform.
+
+## Voice
+These terms capture the "brand voice" of CareTogether. They MUST be used only with the exact meanings that they are given here.
+
+- **Relational** - an approach to human services that emphasizes transformation via relationships, as opposed to a *transactional* approach that often fails to achieve lasting change. See [The Rise of Antipoverty Relational Work
+(Stanford Social Innovation Review, 2015)](https://ssir.org/articles/entry/the_rise_of_antipoverty_relational_work).
+
+## Who?
+- **Organizations** are human services organizations. Organizations can be formally or informally organized. Formal organizations include both nonprofit and for-profit private-sector organizations as well as government organizations.
+- **Locations** are geographically focused areas in which a specific group of people within an organization serve participants (perhaps under more than one program). Locations do not have a strict definition, but they are best defined by travel time, i.e., they should be small enough that the people who serve the participants within that location can physically interact. For example, two cities (or counties, or parts of a larger metropolitan area) that are separated by more than an hour or two of travel time should typically be separate locations. A _case_ is always tied to a single location.
+- **Programs** are the actual services, comprised of policies and procedures, that an organization offers to its participants. The mapping between locations and programs is N-to-M: multiple programs within the same location can serve the same participants, and an organization may not offer the same programs at all of its locations. Program policies and procedures can vary by location.
+- Policies
+- Procedures
+- Staff
+- Volunteers
+- **participants** (sometimes referred to as partnering families) ...
+- Referral Partner - another HSO that agrees to receive outbound referrals made by an HSO and/or provides inbound referrals to an HSO
+
+## What?
+
+Membership of organizations, staff, volunteers, and participants
+Processes for following the organization's policies and procedures
+Communication with staff, volunteers, participants, and referral partners
+
+## How?
+
+
+## Where?
+
+Human Services - official definition? Do we narrow this?
+
+Platform
+
+System
+
+Case
+
+Case Management
+
+Referral
+
+Approval
+
+Role
+
+Arrangement
+
+(Arrangement) Function
+
+@@@
+}
+
+
+/*
+## Use Cases (Activity Diagrams)
+*/
+
+Activity "XYZ" {}
+
+/*
+## Core Use Cases
+
+### Membership
+
+### Process
+
+### Communication
+
+*/
+
+UseCase Volatilities {
+@@@
+## Volatilities
+
+- XYZ
+@@@
+}
+
+StaticAspect {
+  /* Encapsulates XYZ */
+  ApiClient
+}
+
+/*
+## Use Cases (Call Chains & Sequence Diagrams), Detailed Design
+*/
+
+UseCase XYZ {}
+
+DTO XYZ {}
+
+
 StaticAspect "CareTogether V2" { 
-  AppClient SupportClient AnalyticsClient IntegrationClient
+  WebClient MobileClient VoiceClient SupportClient AnalyticsClient IntegrationClient
   MembershipManager ProcessManager CommunicationManager AnalysisManager /* future enhancement */
   EvaluationEngine TransformationEngine
   AccountsAccess PoliciesAccess WorkflowsAccess RecordsAccess AuditAccess
