@@ -540,6 +540,7 @@ export function FamilyScreen() {
                 );
               })}
             </Grid>
+
             {family && <AssignmentsSection family={family} />}
 
             <Grid item xs={12} md={4}>
