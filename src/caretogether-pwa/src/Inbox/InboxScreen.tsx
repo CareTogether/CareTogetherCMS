@@ -21,19 +21,8 @@ import { FamilyName } from '../Families/FamilyName';
 import { EmojiPeople } from '@mui/icons-material';
 import { AppNavigate, useAppNavigate } from '../Hooks/useAppNavigate';
 import { QueueItem, queueItemsQuery } from '../Model/QueueModel';
-import { ChildLocationAlert } from '../Referrals/Arrangements/ChildLocationAlert';
 
-interface InboxMessageProps {
-  icon: JSX.Element;
-  onClick: () => void;
-  primaryContent: JSX.Element;
-  secondaryContent?: JSX.Element;
-}
-
-function getMessageProps(
-  item: QueueItem,
-  appNavigate: AppNavigate
-): InboxMessageProps {
+function getMessageProps(item: QueueItem, appNavigate: AppNavigate) {
   switch (item.type) {
     case 'ChildOver18':
       return {
@@ -52,6 +41,7 @@ function getMessageProps(
         ),
         secondaryContent: <FamilyName family={item.family} />,
       };
+
     case 'MissingPrimaryContact':
       return {
         icon: <EmojiPeople color="error" />,
@@ -66,6 +56,29 @@ function getMessageProps(
         ),
         secondaryContent: <FamilyName family={item.family} />,
       };
+
+    case 'ChildNotReturned':
+      return {
+        icon: <EmojiPeople sx={{ color: 'red' }} />,
+        onClick: () => appNavigate.family(item.family.family!.id!),
+        primaryContent: (
+          <Typography
+            variant="body1"
+            sx={{ fontWeight: 'bold', color: 'black' }}
+          >
+            Child not returned to parent: {item.child.firstName}{' '}
+            {item.child.lastName}
+          </Typography>
+        ),
+        secondaryContent: (
+          <Typography variant="body2" sx={{ color: 'black' }}>
+            <FamilyName family={item.family} />
+          </Typography>
+        ),
+      };
+
+    default:
+      return null;
   }
 }
 
@@ -74,7 +87,12 @@ function InboxMessage({
   onClick,
   primaryContent,
   secondaryContent,
-}: InboxMessageProps) {
+}: {
+  icon: JSX.Element;
+  onClick: () => void;
+  primaryContent: JSX.Element;
+  secondaryContent?: JSX.Element;
+}) {
   return (
     <ListItemButton
       disableGutters
@@ -97,11 +115,13 @@ function MessageList() {
 
   return (
     <List>
-      {messages?.map((message, i) => (
-        <ListItem key={i} disableGutters>
-          <InboxMessage {...message} />
-        </ListItem>
-      ))}
+      {messages
+        ?.filter((msg) => msg !== null)
+        .map((message, i) => (
+          <ListItem key={i} disableGutters>
+            <InboxMessage {...message!} />
+          </ListItem>
+        ))}
     </List>
   );
 }
@@ -127,7 +147,6 @@ export function InboxScreen() {
   ) : (
     <Container maxWidth={false} sx={{ paddingLeft: '12px' }}>
       <MessageList />
-      <ChildLocationAlert />
     </Container>
   );
 }

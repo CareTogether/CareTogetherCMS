@@ -7,6 +7,7 @@ import {
   ChildLocationPlan,
   ArrangementPhase,
 } from '../GeneratedClient';
+
 export type QueueItem = ChildOver18 | MissingPrimaryContact | ChildNotReturned;
 
 export interface ChildOver18 {
@@ -24,14 +25,13 @@ export interface ChildNotReturned {
   type: 'ChildNotReturned';
   family: CombinedFamilyInfo;
   child: Person;
-  lastKnownLocation: string;
 }
 
 const childrenOver18Query = selector<ChildOver18[]>({
   key: 'childrenOver18Query',
   get: ({ get }) => {
     const visibleFamilies = get(visibleFamiliesQuery);
-    const childrenOver18 = visibleFamilies?.flatMap(
+    return visibleFamilies?.flatMap(
       (family) =>
         family.family?.children
           ?.filter(
@@ -42,11 +42,8 @@ const childrenOver18Query = selector<ChildOver18[]>({
                 (child.age as ExactAge).dateOfBirth!
               ) > 18
           )
-          .map(
-            (child) => ({ type: 'ChildOver18', family, child }) as ChildOver18
-          ) || []
+          .map((child) => ({ type: 'ChildOver18', family, child })) || []
     );
-    return childrenOver18;
   },
 });
 
@@ -54,7 +51,7 @@ const missingPrimaryContactsQuery = selector<MissingPrimaryContact[]>({
   key: 'missingPrimaryContactsQuery',
   get: ({ get }) => {
     const visibleFamilies = get(visibleFamiliesQuery);
-    const missingPrimaryContacts =
+    return (
       visibleFamilies
         ?.filter(
           (family) =>
@@ -63,11 +60,8 @@ const missingPrimaryContactsQuery = selector<MissingPrimaryContact[]>({
                 adult.item1!.id === family.family?.primaryFamilyContactPersonId
             )
         )
-        .map(
-          (family) =>
-            ({ type: 'MissingPrimaryContact', family }) as MissingPrimaryContact
-        ) || [];
-    return missingPrimaryContacts;
+        .map((family) => ({ type: 'MissingPrimaryContact', family })) || []
+    );
   },
 });
 
@@ -90,7 +84,6 @@ const childNotReturnedQuery = selector<ChildNotReturned[]>({
 
     return allArrangements
       .filter((arrangement) => arrangement.phase === ArrangementPhase.Ended)
-
       .filter((arrangement) => {
         const mostRecentLocation =
           arrangement.childLocationHistory &&
@@ -113,9 +106,9 @@ const childNotReturnedQuery = selector<ChildNotReturned[]>({
             f.partneringFamilyInfo?.closedReferrals?.some((referral) =>
               referral.arrangements?.includes(arrangement)
             )
-        )?.family;
+        );
 
-        const child = family?.children?.find(
+        const child = family?.family?.children?.find(
           (child) => child.id === arrangement.partneringFamilyPersonId
         );
 
@@ -123,16 +116,7 @@ const childNotReturnedQuery = selector<ChildNotReturned[]>({
           type: 'ChildNotReturned',
           family: family ?? ({} as CombinedFamilyInfo),
           child: child ?? ({} as Person),
-          lastKnownLocation:
-            arrangement.childLocationHistory &&
-            arrangement.childLocationHistory.length > 0
-              ? String(
-                  arrangement.childLocationHistory[
-                    arrangement.childLocationHistory.length - 1
-                  ].plan
-                )
-              : 'Unknown',
-        } as ChildNotReturned;
+        };
       });
   },
 });
@@ -143,9 +127,7 @@ export const queueItemsQuery = selector<QueueItem[]>({
     const childrenOver18 = get(childrenOver18Query);
     const missingPrimaryContacts = get(missingPrimaryContactsQuery);
     const childNotReturned = get(childNotReturnedQuery);
-    return (childrenOver18 as QueueItem[])
-      .concat(missingPrimaryContacts)
-      .concat(childNotReturned);
+    return [...childrenOver18, ...missingPrimaryContacts, ...childNotReturned];
   },
 });
 
