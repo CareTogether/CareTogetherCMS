@@ -54,14 +54,12 @@ namespace CareTogether.Api
             Configuration = configuration;
         }
 
-
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddApplicationInsightsTelemetry();
 
             services.AddSingleton<ITargetingContextAccessor, UserTargetingContextAccessor>();
-            services.AddFeatureManagement()
-                .AddFeatureFilter<TargetingFilter>();
+            services.AddFeatureManagement().AddFeatureFilter<TargetingFilter>();
 
             services.AddHealthChecks();
 
@@ -82,77 +80,135 @@ namespace CareTogether.Api
             });
 
             // Load shared application-specific configuration sections for use via dependency injection
-            services.Configure<MembershipOptions>(Configuration.GetSection(MembershipOptions.Membership));
+            services.Configure<MembershipOptions>(
+                Configuration.GetSection(MembershipOptions.Membership)
+            );
 
             // Configure the shared blob storage clients to authenticate according to the environment -
             // one for mutable storage and one for immutable storage.
             // Note that this only has an effect when running in Azure; the local (Azurite) emulated storage is always mutable.
             // Also note that we lock the blob storage service (API) version because Azurite occasionally lags behind in
             // support for the newest versions. This service version should be reviewed at least once a year to keep it current.
-            var blobClientOptions = new BlobClientOptions(BlobClientOptions.ServiceVersion.V2021_10_04);
+            var blobClientOptions = new BlobClientOptions(
+                BlobClientOptions.ServiceVersion.V2021_10_04
+            );
             var immutableBlobServiceClient = new BlobServiceClient(
-                Configuration["Persistence:ImmutableBlobStorageConnectionString"], blobClientOptions);
+                Configuration["Persistence:ImmutableBlobStorageConnectionString"],
+                blobClientOptions
+            );
             var mutableBlobServiceClient = new BlobServiceClient(
-                Configuration["Persistence:MutableBlobStorageConnectionString"], blobClientOptions);
+                Configuration["Persistence:MutableBlobStorageConnectionString"],
+                blobClientOptions
+            );
 
             // Utility providers
             var uploadsStore = new BlobFileStore(immutableBlobServiceClient, "Uploads");
 
             // Data store services
             var defaultMemoryCacheOptions = Options.Create(new MemoryCacheOptions());
-            var accountsEventLog = new AppendBlobEventLog<AccountEvent>(immutableBlobServiceClient, "AccountsEventLog");
-            var personAccessEventLog = new AppendBlobEventLog<PersonAccessEvent>(immutableBlobServiceClient, "PersonAccessEventLog");
-            var directoryEventLog = new AppendBlobEventLog<DirectoryEvent>(immutableBlobServiceClient, "DirectoryEventLog");
-            var goalsEventLog = new AppendBlobEventLog<GoalCommandExecutedEvent>(immutableBlobServiceClient, "GoalsEventLog");
-            var referralsEventLog = new AppendBlobEventLog<ReferralEvent>(immutableBlobServiceClient, "ReferralsEventLog");
-            var approvalsEventLog = new AppendBlobEventLog<ApprovalEvent>(immutableBlobServiceClient, "ApprovalsEventLog");
-            var notesEventLog = new AppendBlobEventLog<NotesEvent>(immutableBlobServiceClient, "NotesEventLog");
-            var communitiesEventLog = new AppendBlobEventLog<CommunityCommandExecutedEvent>(immutableBlobServiceClient, "CommunitiesEventLog");
+            var accountsEventLog = new AppendBlobEventLog<AccountEvent>(
+                immutableBlobServiceClient,
+                "AccountsEventLog"
+            );
+            var personAccessEventLog = new AppendBlobEventLog<PersonAccessEvent>(
+                immutableBlobServiceClient,
+                "PersonAccessEventLog"
+            );
+            var directoryEventLog = new AppendBlobEventLog<DirectoryEvent>(
+                immutableBlobServiceClient,
+                "DirectoryEventLog"
+            );
+            var goalsEventLog = new AppendBlobEventLog<GoalCommandExecutedEvent>(
+                immutableBlobServiceClient,
+                "GoalsEventLog"
+            );
+            var referralsEventLog = new AppendBlobEventLog<ReferralEvent>(
+                immutableBlobServiceClient,
+                "ReferralsEventLog"
+            );
+            var approvalsEventLog = new AppendBlobEventLog<ApprovalEvent>(
+                immutableBlobServiceClient,
+                "ApprovalsEventLog"
+            );
+            var notesEventLog = new AppendBlobEventLog<NotesEvent>(
+                immutableBlobServiceClient,
+                "NotesEventLog"
+            );
+            var communitiesEventLog = new AppendBlobEventLog<CommunityCommandExecutedEvent>(
+                immutableBlobServiceClient,
+                "CommunitiesEventLog"
+            );
 
-            var draftNotesStore = new JsonBlobObjectStore<string?>(mutableBlobServiceClient, "DraftNotes",
-                new MemoryCache(defaultMemoryCacheOptions), TimeSpan.FromMinutes(30));
-            var configurationStore = new JsonBlobObjectStore<OrganizationConfiguration>(immutableBlobServiceClient, "Configuration",
-                new MemoryCache(defaultMemoryCacheOptions), TimeSpan.FromMinutes(1));
-            var policiesStore = new JsonBlobObjectStore<EffectiveLocationPolicy>(immutableBlobServiceClient, "LocationPolicies",
-                new MemoryCache(defaultMemoryCacheOptions), TimeSpan.FromMinutes(1));
-            var organizationSecretsStore = new JsonBlobObjectStore<OrganizationSecrets>(immutableBlobServiceClient, "Configuration",
-                new MemoryCache(defaultMemoryCacheOptions), TimeSpan.FromMinutes(1));
+            var draftNotesStore = new JsonBlobObjectStore<string?>(
+                mutableBlobServiceClient,
+                "DraftNotes",
+                new MemoryCache(defaultMemoryCacheOptions),
+                TimeSpan.FromMinutes(30)
+            );
+            var configurationStore = new JsonBlobObjectStore<OrganizationConfiguration>(
+                immutableBlobServiceClient,
+                "Configuration",
+                new MemoryCache(defaultMemoryCacheOptions),
+                TimeSpan.FromMinutes(1)
+            );
+            var policiesStore = new JsonBlobObjectStore<EffectiveLocationPolicy>(
+                immutableBlobServiceClient,
+                "LocationPolicies",
+                new MemoryCache(defaultMemoryCacheOptions),
+                TimeSpan.FromMinutes(1)
+            );
+            var organizationSecretsStore = new JsonBlobObjectStore<OrganizationSecrets>(
+                immutableBlobServiceClient,
+                "Configuration",
+                new MemoryCache(defaultMemoryCacheOptions),
+                TimeSpan.FromMinutes(1)
+            );
 
             if (Configuration["OpenApiGen"] != "true")
             {
                 // Reset and populate data in the test tenant for debugging. Note that this will not affect other tenants.
                 TestData.TestStorageHelper.ResetTestTenantData(immutableBlobServiceClient);
                 TestData.TestStorageHelper.ResetTestTenantData(mutableBlobServiceClient);
-                TestData.TestDataProvider.PopulateTestDataAsync(
-                    accountsEventLog,
-                    personAccessEventLog,
-                    directoryEventLog,
-                    goalsEventLog,
-                    referralsEventLog,
-                    approvalsEventLog,
-                    notesEventLog,
-                    communitiesEventLog,
-                    draftNotesStore,
-                    configurationStore,
-                    policiesStore,
-                    organizationSecretsStore,
-                    Configuration["TestData:SourceSmsPhoneNumber"]).Wait();
+                TestData
+                    .TestDataProvider.PopulateTestDataAsync(
+                        accountsEventLog,
+                        personAccessEventLog,
+                        directoryEventLog,
+                        goalsEventLog,
+                        referralsEventLog,
+                        approvalsEventLog,
+                        notesEventLog,
+                        communitiesEventLog,
+                        draftNotesStore,
+                        configurationStore,
+                        policiesStore,
+                        organizationSecretsStore,
+                        Configuration["TestData:SourceSmsPhoneNumber"]
+                    )
+                    .Wait();
             }
 
             // Other utility services
             var telephony = new PlivoTelephony(
                 authId: Configuration["Telephony:Plivo:AuthId"]!,
-                authToken: Configuration["Telephony:Plivo:AuthToken"]!);
+                authToken: Configuration["Telephony:Plivo:AuthToken"]!
+            );
             var identityProvider = new AzureAdB2cIdentityProvider(
                 Configuration["AzureAdB2C:TenantId"]!,
                 Configuration["AzureAdB2C:ClientId"]!,
-                Configuration["AzureAdB2C:ClientSecret"] ?? "");
+                Configuration["AzureAdB2C:ClientSecret"] ?? ""
+            );
 
             // Resource services
             var approvalsResource = new ApprovalsResource(approvalsEventLog);
             var directoryResource = new DirectoryResource(directoryEventLog, uploadsStore);
             var goalsResource = new GoalsResource(goalsEventLog);
-            var policiesResource = new PoliciesResource(configurationStore, policiesStore, organizationSecretsStore, personAccessEventLog);
+            var policiesResource = new PoliciesResource(
+                configurationStore,
+                policiesStore,
+                organizationSecretsStore,
+                personAccessEventLog
+            );
             var accountsResource = new AccountsResource(accountsEventLog, personAccessEventLog);
             var referralsResource = new ReferralsResource(referralsEventLog);
             var notesResource = new NotesResource(notesEventLog, draftNotesStore);
@@ -163,71 +219,143 @@ namespace CareTogether.Api
             services.AddSingleton<IAccountsResource>(accountsResource);
 
             // Engine services
-            var authorizationEngine = new AuthorizationEngine(policiesResource, directoryResource,
-                referralsResource, approvalsResource, communitiesResource, accountsResource);
+            var authorizationEngine = new AuthorizationEngine(
+                policiesResource,
+                directoryResource,
+                referralsResource,
+                approvalsResource,
+                communitiesResource,
+                accountsResource
+            );
             services.AddSingleton<IAuthorizationEngine>(authorizationEngine); //TODO: Temporary workaround for UsersController
             var policyEvaluationEngine = new PolicyEvaluationEngine(policiesResource);
 
             // Shared family info formatting logic used by all manager services
-            var combinedFamilyInfoFormatter = new CombinedFamilyInfoFormatter(policyEvaluationEngine, authorizationEngine,
-                approvalsResource, referralsResource, directoryResource, notesResource, policiesResource, accountsResource);
+            var combinedFamilyInfoFormatter = new CombinedFamilyInfoFormatter(
+                policyEvaluationEngine,
+                authorizationEngine,
+                approvalsResource,
+                referralsResource,
+                directoryResource,
+                notesResource,
+                policiesResource,
+                accountsResource
+            );
 
             // Manager services
-            services.AddSingleton<ICommunicationsManager>(new CommunicationsManager(authorizationEngine, directoryResource,
-                policiesResource, telephony));
-            services.AddSingleton<IRecordsManager>(new RecordsManager(authorizationEngine, directoryResource,
-                approvalsResource, referralsResource, notesResource, communitiesResource, combinedFamilyInfoFormatter));
-            services.AddSingleton<IMembershipManager>(new MembershipManager(accountsResource, authorizationEngine,
-                directoryResource, policiesResource, combinedFamilyInfoFormatter, identityProvider));
+            services.AddSingleton<ICommunicationsManager>(
+                new CommunicationsManager(
+                    authorizationEngine,
+                    directoryResource,
+                    policiesResource,
+                    telephony
+                )
+            );
+            services.AddSingleton<IRecordsManager>(
+                new RecordsManager(
+                    authorizationEngine,
+                    directoryResource,
+                    approvalsResource,
+                    referralsResource,
+                    notesResource,
+                    communitiesResource,
+                    combinedFamilyInfoFormatter
+                )
+            );
+            services.AddSingleton<IMembershipManager>(
+                new MembershipManager(
+                    accountsResource,
+                    authorizationEngine,
+                    directoryResource,
+                    policiesResource,
+                    combinedFamilyInfoFormatter,
+                    identityProvider
+                )
+            );
 
-            services.AddAuthentication("Basic")
-                .AddBasic("Basic", options =>
-                {
-                    options.AllowInsecureProtocol = true; // Azure Front Door handles SSL termination.
-                    options.Realm = "CareTogether OData Feed";
-                    options.Events = new BasicAuthenticationEvents
+            services
+                .AddAuthentication("Basic")
+                .AddBasic(
+                    "Basic",
+                    options =>
                     {
-                        OnValidateCredentials = async context =>
+                        options.AllowInsecureProtocol = true; // Azure Front Door handles SSL termination.
+                        options.Realm = "CareTogether OData Feed";
+                        options.Events = new BasicAuthenticationEvents
                         {
-                            if (context.Username == "Research" && context.Password == Configuration["Research:ApiKey"] &&
-                                Guid.TryParse(Configuration["Research:OrganizationId"], out var researchOrganizationId))
+                            OnValidateCredentials = async context =>
                             {
-                                context.Principal = new ClaimsPrincipal(new ClaimsIdentity(
-                                [
-                                    new Claim(Claims.OrganizationId, Configuration["Research:OrganizationId"]!),
-                                    new Claim(Claims.Researcher, true.ToString())
-                                ], "API Key"));
-                                context.Success();
-                                return;
-                            }
-
-                            if (!Guid.TryParse(context.Username, out var assertedOrganizationId))
-                            {
-                                context.Fail("The username must be an organization ID in GUID format.");
-                                return;
-                            }
-
-                            try
-                            {
-                                // Note that it may be possible to leak valid organization IDs here via a timing attack.
-                                var organizationSecrets = await policiesResource.GetOrganizationSecretsAsync(assertedOrganizationId);
-                                if (organizationSecrets.ApiKey?.Length >= 32 && context.Password == organizationSecrets.ApiKey)
+                                if (
+                                    context.Username == "Research"
+                                    && context.Password == Configuration["Research:ApiKey"]
+                                    && Guid.TryParse(
+                                        Configuration["Research:OrganizationId"],
+                                        out var researchOrganizationId
+                                    )
+                                )
                                 {
-                                    context.Principal = new ClaimsPrincipal(new ClaimsIdentity(new Claim[]
-                                    {
-                                        new Claim(Claims.OrganizationId, context.Username)
-                                    }, "API Key"));
+                                    context.Principal = new ClaimsPrincipal(
+                                        new ClaimsIdentity(
+                                            [
+                                                new Claim(
+                                                    Claims.OrganizationId,
+                                                    Configuration["Research:OrganizationId"]!
+                                                ),
+                                                new Claim(Claims.Researcher, true.ToString()),
+                                            ],
+                                            "API Key"
+                                        )
+                                    );
                                     context.Success();
                                     return;
                                 }
-                            }
-                            catch { }
 
-                            context.Fail("The API key is invalid.");
-                            return;
-                        }
-                    };
-                })
+                                if (
+                                    !Guid.TryParse(context.Username, out var assertedOrganizationId)
+                                )
+                                {
+                                    context.Fail(
+                                        "The username must be an organization ID in GUID format."
+                                    );
+                                    return;
+                                }
+
+                                try
+                                {
+                                    // Note that it may be possible to leak valid organization IDs here via a timing attack.
+                                    var organizationSecrets =
+                                        await policiesResource.GetOrganizationSecretsAsync(
+                                            assertedOrganizationId
+                                        );
+                                    if (
+                                        organizationSecrets.ApiKey?.Length >= 32
+                                        && context.Password == organizationSecrets.ApiKey
+                                    )
+                                    {
+                                        context.Principal = new ClaimsPrincipal(
+                                            new ClaimsIdentity(
+                                                new Claim[]
+                                                {
+                                                    new Claim(
+                                                        Claims.OrganizationId,
+                                                        context.Username
+                                                    ),
+                                                },
+                                                "API Key"
+                                            )
+                                        );
+                                        context.Success();
+                                        return;
+                                    }
+                                }
+                                catch { }
+
+                                context.Fail("The API key is invalid.");
+                                return;
+                            },
+                        };
+                    }
+                )
                 .AddMicrosoftIdentityWebApi(Configuration.GetSection("AzureAdB2C"));
 
             services.AddTransient<IClaimsTransformation, TenantUserClaimsTransformation>();
@@ -239,26 +367,39 @@ namespace CareTogether.Api
                 .AddOData(options =>
                 {
                     options.EnableQueryFeatures();
-                    options.AddRouteComponents("api/odata/live", ODataModelProvider.GetLiveEdmModel());
+                    options.AddRouteComponents(
+                        "api/odata/live",
+                        ODataModelProvider.GetLiveEdmModel()
+                    );
                 })
                 .AddODataNewtonsoftJson();
 
             services.AddAuthorization(options =>
             {
-                options.AddPolicy(Policies.ForbidAnonymous, new AuthorizationPolicyBuilder()
-                    .RequireAuthenticatedUser()
-                    .Build());
+                options.AddPolicy(
+                    Policies.ForbidAnonymous,
+                    new AuthorizationPolicyBuilder().RequireAuthenticatedUser().Build()
+                );
 
                 // Require all users to be authenticated and have access to the specified tenant -
                 // the organization ID and location ID (if specified).
                 options.FallbackPolicy = new AuthorizationPolicyBuilder()
                     .RequireAuthenticatedUser()
                     .RequireAssertion(context =>
-                        context.Resource is HttpContext httpContext &&
-                        (!httpContext.Request.RouteValues.TryGetValue("organizationId", out var orgId) ||
-                            context.User.HasClaim("organizationId", (string)orgId!)) &&
-                        (!httpContext.Request.RouteValues.TryGetValue("locationId", out var locId) ||
-                            context.User.HasClaim("locationId", (string)locId!)))
+                        context.Resource is HttpContext httpContext
+                        && (
+                            !httpContext.Request.RouteValues.TryGetValue(
+                                "organizationId",
+                                out var orgId
+                            ) || context.User.HasClaim("organizationId", (string)orgId!)
+                        )
+                        && (
+                            !httpContext.Request.RouteValues.TryGetValue(
+                                "locationId",
+                                out var locId
+                            ) || context.User.HasClaim("locationId", (string)locId!)
+                        )
+                    )
                     .Build();
             });
 
@@ -268,16 +409,17 @@ namespace CareTogether.Api
                 {
                     document.Info.Version = "v1";
                     document.Info.Title = "CareTogether CMS API";
-                    document.Info.Description = "API for the CareTogether Community Management System";
+                    document.Info.Description =
+                        "API for the CareTogether Community Management System";
                     document.Info.Contact = new NSwag.OpenApiContact
                     {
                         Name = "CareTogether CMS Team",
-                        Url = "https://caretogether.io/"
+                        Url = "https://caretogether.io/",
                     };
                     document.Info.License = new NSwag.OpenApiLicense
                     {
                         Name = "Use under AGPLv3",
-                        Url = "https://www.gnu.org/licenses/agpl-3.0.en.html"
+                        Url = "https://www.gnu.org/licenses/agpl-3.0.en.html",
                     };
                 };
             });
@@ -294,7 +436,10 @@ namespace CareTogether.Api
 
                 app.UseOpenApi();
                 // ReDoc supports discriminators/polymorphism so we use that instead of Swagger UI.
-                app.UseReDoc(config => { config.Path = "/redoc"; });
+                app.UseReDoc(config =>
+                {
+                    config.Path = "/redoc";
+                });
 
                 app.UseCors(policy =>
                 {

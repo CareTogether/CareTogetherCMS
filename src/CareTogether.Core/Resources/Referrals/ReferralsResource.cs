@@ -8,54 +8,106 @@ namespace CareTogether.Resources.Referrals
     public sealed class ReferralsResource : IReferralsResource
     {
         private readonly IEventLog<ReferralEvent> eventLog;
-        private readonly ConcurrentLockingStore<(Guid organizationId, Guid locationId), ReferralModel> tenantModels;
-
+        private readonly ConcurrentLockingStore<
+            (Guid organizationId, Guid locationId),
+            ReferralModel
+        > tenantModels;
 
         public ReferralsResource(IEventLog<ReferralEvent> eventLog)
         {
             this.eventLog = eventLog;
-            tenantModels = new ConcurrentLockingStore<(Guid organizationId, Guid locationId), ReferralModel>(key =>
-                ReferralModel.InitializeAsync(eventLog.GetAllEventsAsync(key.organizationId, key.locationId)));
+            tenantModels = new ConcurrentLockingStore<
+                (Guid organizationId, Guid locationId),
+                ReferralModel
+            >(key =>
+                ReferralModel.InitializeAsync(
+                    eventLog.GetAllEventsAsync(key.organizationId, key.locationId)
+                )
+            );
         }
 
-
-        public async Task<ReferralEntry> ExecuteReferralCommandAsync(Guid organizationId, Guid locationId,
-            ReferralCommand command, Guid userId)
+        public async Task<ReferralEntry> ExecuteReferralCommandAsync(
+            Guid organizationId,
+            Guid locationId,
+            ReferralCommand command,
+            Guid userId
+        )
         {
-            using (var lockedModel = await tenantModels.WriteLockItemAsync((organizationId, locationId)))
+            using (
+                var lockedModel = await tenantModels.WriteLockItemAsync(
+                    (organizationId, locationId)
+                )
+            )
             {
-                var result = lockedModel.Value.ExecuteReferralCommand(command, userId, DateTime.UtcNow);
+                var result = lockedModel.Value.ExecuteReferralCommand(
+                    command,
+                    userId,
+                    DateTime.UtcNow
+                );
 
-                await eventLog.AppendEventAsync(organizationId, locationId, result.Event, result.SequenceNumber);
+                await eventLog.AppendEventAsync(
+                    organizationId,
+                    locationId,
+                    result.Event,
+                    result.SequenceNumber
+                );
                 result.OnCommit();
                 return result.ReferralEntry;
             }
         }
 
-        public async Task<ReferralEntry> ExecuteArrangementsCommandAsync(Guid organizationId, Guid locationId,
-            ArrangementsCommand command, Guid userId)
+        public async Task<ReferralEntry> ExecuteArrangementsCommandAsync(
+            Guid organizationId,
+            Guid locationId,
+            ArrangementsCommand command,
+            Guid userId
+        )
         {
-            using (var lockedModel = await tenantModels.WriteLockItemAsync((organizationId, locationId)))
+            using (
+                var lockedModel = await tenantModels.WriteLockItemAsync(
+                    (organizationId, locationId)
+                )
+            )
             {
-                var result = lockedModel.Value.ExecuteArrangementsCommand(command, userId, DateTime.UtcNow);
+                var result = lockedModel.Value.ExecuteArrangementsCommand(
+                    command,
+                    userId,
+                    DateTime.UtcNow
+                );
 
-                await eventLog.AppendEventAsync(organizationId, locationId, result.Event, result.SequenceNumber);
+                await eventLog.AppendEventAsync(
+                    organizationId,
+                    locationId,
+                    result.Event,
+                    result.SequenceNumber
+                );
                 result.OnCommit();
                 return result.ReferralEntry;
             }
         }
 
-        public async Task<ImmutableList<ReferralEntry>> ListReferralsAsync(Guid organizationId, Guid locationId)
+        public async Task<ImmutableList<ReferralEntry>> ListReferralsAsync(
+            Guid organizationId,
+            Guid locationId
+        )
         {
-            using (var lockedModel = await tenantModels.ReadLockItemAsync((organizationId, locationId)))
+            using (
+                var lockedModel = await tenantModels.ReadLockItemAsync((organizationId, locationId))
+            )
             {
                 return lockedModel.Value.FindReferralEntries(_ => true);
             }
         }
 
-        public async Task<ReferralEntry> GetReferralAsync(Guid organizationId, Guid locationId, Guid referralId)
+        public async Task<ReferralEntry> GetReferralAsync(
+            Guid organizationId,
+            Guid locationId,
+            Guid referralId
+        )
         {
-            using (var lockedModel = await tenantModels.ReadLockItemAsync((organizationId, locationId)))
+            using (
+                var lockedModel = await tenantModels.ReadLockItemAsync((organizationId, locationId))
+            )
             {
                 return lockedModel.Value.GetReferralEntry(referralId);
             }

@@ -7,15 +7,13 @@ public readonly struct DateRange : IEquatable<DateRange>
     public readonly DateOnly Start;
     public readonly DateOnly End;
 
-
-    public DateRange(DateOnly start) : this(start, DateOnly.MaxValue)
-    { }
+    public DateRange(DateOnly start)
+        : this(start, DateOnly.MaxValue) { }
 
     public DateRange(DateOnly start, DateOnly end)
     {
         if (start > end)
-            throw new ArgumentException(
-                "The start date must be on or before the end date.");
+            throw new ArgumentException("The start date must be on or before the end date.");
 
         Start = start;
         End = end;
@@ -24,8 +22,7 @@ public readonly struct DateRange : IEquatable<DateRange>
     /// <summary>
     /// Gets the total number of days in this date range, inclusive of both the start and end dates.
     /// </summary>
-    public int TotalDaysInclusive =>
-        End.DayNumber - Start.DayNumber + 1;
+    public int TotalDaysInclusive => End.DayNumber - Start.DayNumber + 1;
 
     /// <summary>
     /// Returns a new DateRange that includes up to the specified number of days from the start of this range.
@@ -41,9 +38,7 @@ public readonly struct DateRange : IEquatable<DateRange>
         return new DateRange(Start, Start.AddDays(requestedLength - 1));
     }
 
-
-    public bool Contains(DateOnly value) =>
-        value >= Start && value <= End;
+    public bool Contains(DateOnly value) => value >= Start && value <= End;
 
     /// <summary>
     /// Calculates the intersection of this date range with the given date range,
@@ -60,9 +55,9 @@ public readonly struct DateRange : IEquatable<DateRange>
 
         return new DateRange(
             Start > other.Value.Start ? Start : other.Value.Start,
-            End < other.Value.End ? End : other.Value.End);
+            End < other.Value.End ? End : other.Value.End
+        );
     }
-
 
     public bool Equals(DateRange other)
     {
@@ -94,31 +89,26 @@ public readonly struct DateRange<T> : IEquatable<DateRange<T>>
     public readonly DateOnly End;
     public readonly T Tag;
 
-
-    public DateRange(DateOnly start, T tag) : this(start, DateOnly.MaxValue, tag)
-    { }
+    public DateRange(DateOnly start, T tag)
+        : this(start, DateOnly.MaxValue, tag) { }
 
     public DateRange(DateOnly start, DateOnly end, T tag)
     {
         if (start > end)
-            throw new ArgumentException(
-                "The start date must be on or before the end date.");
+            throw new ArgumentException("The start date must be on or before the end date.");
 
         Start = start;
         End = end;
         Tag = tag;
     }
 
-
-    public bool Contains(DateOnly value) =>
-        value >= Start && value <= End;
-
+    public bool Contains(DateOnly value) => value >= Start && value <= End;
 
     public bool Equals(DateRange<T> other)
     {
-        return Start == other.Start && End == other.End && (
-            (Tag == null && other.Tag == null) ||
-            (Tag != null && Tag.Equals(other.Tag)));
+        return Start == other.Start
+            && End == other.End
+            && ((Tag == null && other.Tag == null) || (Tag != null && Tag.Equals(other.Tag)));
     }
 
     public override bool Equals([NotNullWhen(true)] object? obj)

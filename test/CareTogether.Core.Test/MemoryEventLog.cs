@@ -9,11 +9,17 @@ namespace CareTogether.Core.Test
 {
     public sealed class MemoryEventLog<T> : IEventLog<T>
     {
-        private readonly ConcurrentDictionary<(Guid organizationId, Guid locationId), List<T>> tenantLogs = new();
-
+        private readonly ConcurrentDictionary<
+            (Guid organizationId, Guid locationId),
+            List<T>
+        > tenantLogs = new();
 
         public async Task AppendEventAsync(
-            Guid organizationId, Guid locationId, T domainEvent, long expectedSequenceNumber)
+            Guid organizationId,
+            Guid locationId,
+            T domainEvent,
+            long expectedSequenceNumber
+        )
         {
             await Task.Yield();
             var tenantLog = tenantLogs.GetOrAdd((organizationId, locationId), new List<T>());
@@ -24,12 +30,17 @@ namespace CareTogether.Core.Test
         }
 
         public async IAsyncEnumerable<(T DomainEvent, long SequenceNumber)> GetAllEventsAsync(
-            Guid organizationId, Guid locationId)
+            Guid organizationId,
+            Guid locationId
+        )
         {
             await Task.Yield();
             var tenantLog = tenantLogs.GetOrAdd((organizationId, locationId), new List<T>());
-            foreach (var result in tenantLog
-                .Select((value, index) => (DomainEvent: value, SequenceNumber: index + 1)))
+            foreach (
+                var result in tenantLog.Select(
+                    (value, index) => (DomainEvent: value, SequenceNumber: index + 1)
+                )
+            )
                 yield return result;
         }
     }

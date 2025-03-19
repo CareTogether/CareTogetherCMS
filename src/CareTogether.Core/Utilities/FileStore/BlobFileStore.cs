@@ -11,7 +11,10 @@ namespace CareTogether.Utilities.FileStore
     {
         private readonly BlobServiceClient blobServiceClient;
         private readonly string fileCategory;
-        private readonly ConcurrentDictionary<Guid, BlobContainerClient> organizationBlobContainerClients;
+        private readonly ConcurrentDictionary<
+            Guid,
+            BlobContainerClient
+        > organizationBlobContainerClients;
 
         public BlobFileStore(BlobServiceClient blobServiceClient, string fileCategory)
         {
@@ -20,29 +23,55 @@ namespace CareTogether.Utilities.FileStore
             organizationBlobContainerClients = new(); //TODO: Share this across all services using the same blobServiceClient.
         }
 
+        public Task<Uri> GetValetCreateUrlAsync(
+            Guid organizationId,
+            Guid locationId,
+            Guid documentId
+        ) => GetValetCreateUrlAsync(organizationId, locationId, $"{documentId:D}");
 
-        public Task<Uri> GetValetCreateUrlAsync(Guid organizationId, Guid locationId, Guid documentId)
-            => GetValetCreateUrlAsync(organizationId, locationId, $"{documentId:D}");
-
-        public Task<Uri> GetValetCreateUrlAsync(Guid organizationId, Guid locationId, string documentSubpath)
+        public Task<Uri> GetValetCreateUrlAsync(
+            Guid organizationId,
+            Guid locationId,
+            string documentSubpath
+        )
         {
-            var tenantContainer = blobServiceClient.GetBlobContainerClient(organizationId.ToString());
-            var objectBlob = tenantContainer.GetBlockBlobClient($"{locationId}/{fileCategory}/{documentSubpath}");
-            var sasUri = objectBlob.GenerateSasUri(BlobSasPermissions.Create, DateTimeOffset.UtcNow.AddMinutes(15));
+            var tenantContainer = blobServiceClient.GetBlobContainerClient(
+                organizationId.ToString()
+            );
+            var objectBlob = tenantContainer.GetBlockBlobClient(
+                $"{locationId}/{fileCategory}/{documentSubpath}"
+            );
+            var sasUri = objectBlob.GenerateSasUri(
+                BlobSasPermissions.Create,
+                DateTimeOffset.UtcNow.AddMinutes(15)
+            );
             return Task.FromResult(sasUri);
         }
 
-        public Task<Uri> GetValetReadUrlAsync(Guid organizationId, Guid locationId, Guid documentId)
-            => GetValetReadUrlAsync(organizationId, locationId, $"{documentId:D}");
+        public Task<Uri> GetValetReadUrlAsync(
+            Guid organizationId,
+            Guid locationId,
+            Guid documentId
+        ) => GetValetReadUrlAsync(organizationId, locationId, $"{documentId:D}");
 
-        public Task<Uri> GetValetReadUrlAsync(Guid organizationId, Guid locationId, string documentSubpath)
+        public Task<Uri> GetValetReadUrlAsync(
+            Guid organizationId,
+            Guid locationId,
+            string documentSubpath
+        )
         {
-            var tenantContainer = blobServiceClient.GetBlobContainerClient(organizationId.ToString());
-            var objectBlob = tenantContainer.GetBlockBlobClient($"{locationId}/{fileCategory}/{documentSubpath}");
-            var sasUri = objectBlob.GenerateSasUri(BlobSasPermissions.Read, DateTimeOffset.UtcNow.AddMinutes(15));
+            var tenantContainer = blobServiceClient.GetBlobContainerClient(
+                organizationId.ToString()
+            );
+            var objectBlob = tenantContainer.GetBlockBlobClient(
+                $"{locationId}/{fileCategory}/{documentSubpath}"
+            );
+            var sasUri = objectBlob.GenerateSasUri(
+                BlobSasPermissions.Read,
+                DateTimeOffset.UtcNow.AddMinutes(15)
+            );
             return Task.FromResult(sasUri);
         }
-
 
         private async Task<BlobContainerClient> CreateContainerIfNotExists(Guid organizationId)
         {
@@ -52,7 +81,9 @@ namespace CareTogether.Utilities.FileStore
             }
             else
             {
-                var blobClient = blobServiceClient.GetBlobContainerClient(organizationId.ToString());
+                var blobClient = blobServiceClient.GetBlobContainerClient(
+                    organizationId.ToString()
+                );
 
                 if (!await blobClient.ExistsAsync())
                 {

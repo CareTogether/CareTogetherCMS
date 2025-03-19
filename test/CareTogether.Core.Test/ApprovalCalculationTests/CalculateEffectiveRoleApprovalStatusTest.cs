@@ -13,8 +13,7 @@ namespace CareTogether.Core.Test.ApprovalCalculationTests
         [TestMethod]
         public void EmptyInputReturnsNull()
         {
-            var result = SharedCalculations.CalculateEffectiveRoleApprovalStatus([
-            ]);
+            var result = SharedCalculations.CalculateEffectiveRoleApprovalStatus([]);
 
             Assert.IsNull(result);
         }
@@ -22,10 +21,7 @@ namespace CareTogether.Core.Test.ApprovalCalculationTests
         [TestMethod]
         public void NullInputsReturnsNull()
         {
-            var result = SharedCalculations.CalculateEffectiveRoleApprovalStatus([
-                null,
-                null
-            ]);
+            var result = SharedCalculations.CalculateEffectiveRoleApprovalStatus([null, null]);
 
             Assert.IsNull(result);
         }
@@ -33,133 +29,173 @@ namespace CareTogether.Core.Test.ApprovalCalculationTests
         [TestMethod]
         public void SingleVersionApprovalReturnsItUnmodified()
         {
-            var result = SharedCalculations.CalculateEffectiveRoleApprovalStatus([
-                new DateOnlyTimeline<RoleApprovalStatus>([
-                    H.DR(8, 9, RoleApprovalStatus.Prospective),
-                    H.DR(10, 13, RoleApprovalStatus.Approved),
-                    H.DR(14, 16, RoleApprovalStatus.Onboarded),
-                    H.DR(17, 17, RoleApprovalStatus.Expired),
-                    H.DR(18, 20, RoleApprovalStatus.Onboarded),
-                    H.DR(21, null, RoleApprovalStatus.Expired)
-                ]),
-            ]);
+            var result = SharedCalculations.CalculateEffectiveRoleApprovalStatus(
+                [
+                    new DateOnlyTimeline<RoleApprovalStatus>(
+                        [
+                            H.DR(8, 9, RoleApprovalStatus.Prospective),
+                            H.DR(10, 13, RoleApprovalStatus.Approved),
+                            H.DR(14, 16, RoleApprovalStatus.Onboarded),
+                            H.DR(17, 17, RoleApprovalStatus.Expired),
+                            H.DR(18, 20, RoleApprovalStatus.Onboarded),
+                            H.DR(21, null, RoleApprovalStatus.Expired),
+                        ]
+                    ),
+                ]
+            );
 
             Assert.IsNotNull(result);
-            Assert.IsTrue(result.Ranges.SequenceEqual([
-                H.DR(8, 9, RoleApprovalStatus.Prospective),
-                H.DR(10, 13, RoleApprovalStatus.Approved),
-                H.DR(14, 16, RoleApprovalStatus.Onboarded),
-                H.DR(17, 17, RoleApprovalStatus.Expired),
-                H.DR(18, 20, RoleApprovalStatus.Onboarded),
-                H.DR(21, null, RoleApprovalStatus.Expired)
-            ]));
+            Assert.IsTrue(
+                result.Ranges.SequenceEqual(
+                    [
+                        H.DR(8, 9, RoleApprovalStatus.Prospective),
+                        H.DR(10, 13, RoleApprovalStatus.Approved),
+                        H.DR(14, 16, RoleApprovalStatus.Onboarded),
+                        H.DR(17, 17, RoleApprovalStatus.Expired),
+                        H.DR(18, 20, RoleApprovalStatus.Onboarded),
+                        H.DR(21, null, RoleApprovalStatus.Expired),
+                    ]
+                )
+            );
         }
 
         [TestMethod]
         public void SingleVersionApprovalWithNullsReturnsApprovalUnmodified()
         {
-            var result = SharedCalculations.CalculateEffectiveRoleApprovalStatus([
-                new DateOnlyTimeline<RoleApprovalStatus>([
-                    H.DR(8, 9, RoleApprovalStatus.Prospective),
-                    H.DR(10, 13, RoleApprovalStatus.Approved),
-                    H.DR(14, 16, RoleApprovalStatus.Onboarded),
-                    H.DR(17, 17, RoleApprovalStatus.Expired),
-                    H.DR(18, 20, RoleApprovalStatus.Onboarded),
-                    H.DR(21, null, RoleApprovalStatus.Expired)
-                ]),
-                null,
-                null
-            ]);
+            var result = SharedCalculations.CalculateEffectiveRoleApprovalStatus(
+                [
+                    new DateOnlyTimeline<RoleApprovalStatus>(
+                        [
+                            H.DR(8, 9, RoleApprovalStatus.Prospective),
+                            H.DR(10, 13, RoleApprovalStatus.Approved),
+                            H.DR(14, 16, RoleApprovalStatus.Onboarded),
+                            H.DR(17, 17, RoleApprovalStatus.Expired),
+                            H.DR(18, 20, RoleApprovalStatus.Onboarded),
+                            H.DR(21, null, RoleApprovalStatus.Expired),
+                        ]
+                    ),
+                    null,
+                    null,
+                ]
+            );
 
             Assert.IsNotNull(result);
-            Assert.IsTrue(result.Ranges.SequenceEqual([
-                H.DR(8, 9, RoleApprovalStatus.Prospective),
-                H.DR(10, 13, RoleApprovalStatus.Approved),
-                H.DR(14, 16, RoleApprovalStatus.Onboarded),
-                H.DR(17, 17, RoleApprovalStatus.Expired),
-                H.DR(18, 20, RoleApprovalStatus.Onboarded),
-                H.DR(21, null, RoleApprovalStatus.Expired)
-            ]));
+            Assert.IsTrue(
+                result.Ranges.SequenceEqual(
+                    [
+                        H.DR(8, 9, RoleApprovalStatus.Prospective),
+                        H.DR(10, 13, RoleApprovalStatus.Approved),
+                        H.DR(14, 16, RoleApprovalStatus.Onboarded),
+                        H.DR(17, 17, RoleApprovalStatus.Expired),
+                        H.DR(18, 20, RoleApprovalStatus.Onboarded),
+                        H.DR(21, null, RoleApprovalStatus.Expired),
+                    ]
+                )
+            );
         }
 
         [TestMethod]
         public void ProspectiveTrumpsNullAndMerges()
         {
-            var result = SharedCalculations.CalculateEffectiveRoleApprovalStatus([
-                new DateOnlyTimeline<RoleApprovalStatus>([
-                    H.DR(5, 10, RoleApprovalStatus.Prospective),
-                ]),
-                new DateOnlyTimeline<RoleApprovalStatus>([
-                    H.DR(11, 20, RoleApprovalStatus.Prospective),
-                ]),
-                null
-            ]);
+            var result = SharedCalculations.CalculateEffectiveRoleApprovalStatus(
+                [
+                    new DateOnlyTimeline<RoleApprovalStatus>(
+                        [H.DR(5, 10, RoleApprovalStatus.Prospective)]
+                    ),
+                    new DateOnlyTimeline<RoleApprovalStatus>(
+                        [H.DR(11, 20, RoleApprovalStatus.Prospective)]
+                    ),
+                    null,
+                ]
+            );
 
             Assert.IsNotNull(result);
-            Assert.IsTrue(result.Ranges.SequenceEqual([
-                H.DR(5, 20, RoleApprovalStatus.Prospective)
-            ]));
+            Assert.IsTrue(
+                result.Ranges.SequenceEqual([H.DR(5, 20, RoleApprovalStatus.Prospective)])
+            );
         }
 
         [TestMethod]
         public void ApprovedTrumpsProspectiveAndExpiredAndNullAndMerges()
         {
-            var result = SharedCalculations.CalculateEffectiveRoleApprovalStatus([
-                new DateOnlyTimeline<RoleApprovalStatus>([
-                    H.DR(1, 20, RoleApprovalStatus.Prospective),
-                ]),
-                new DateOnlyTimeline<RoleApprovalStatus>([
-                    H.DR(10, 12, RoleApprovalStatus.Prospective),
-                    H.DR(13, 25, RoleApprovalStatus.Approved),
-                    H.DR(26, null, RoleApprovalStatus.Expired),
-                ]),
-                new DateOnlyTimeline<RoleApprovalStatus>([
-                    H.DR(11, 12, RoleApprovalStatus.Approved),
-                    H.DR(13, null, RoleApprovalStatus.Expired),
-                ]),
-                null
-            ]);
+            var result = SharedCalculations.CalculateEffectiveRoleApprovalStatus(
+                [
+                    new DateOnlyTimeline<RoleApprovalStatus>(
+                        [H.DR(1, 20, RoleApprovalStatus.Prospective)]
+                    ),
+                    new DateOnlyTimeline<RoleApprovalStatus>(
+                        [
+                            H.DR(10, 12, RoleApprovalStatus.Prospective),
+                            H.DR(13, 25, RoleApprovalStatus.Approved),
+                            H.DR(26, null, RoleApprovalStatus.Expired),
+                        ]
+                    ),
+                    new DateOnlyTimeline<RoleApprovalStatus>(
+                        [
+                            H.DR(11, 12, RoleApprovalStatus.Approved),
+                            H.DR(13, null, RoleApprovalStatus.Expired),
+                        ]
+                    ),
+                    null,
+                ]
+            );
 
             Assert.IsNotNull(result);
-            Assert.IsTrue(result.Ranges.SequenceEqual([
-                H.DR(1, 10, RoleApprovalStatus.Prospective),
-                H.DR(11, 25, RoleApprovalStatus.Approved),
-                H.DR(26, null, RoleApprovalStatus.Expired),
-            ]));
+            Assert.IsTrue(
+                result.Ranges.SequenceEqual(
+                    [
+                        H.DR(1, 10, RoleApprovalStatus.Prospective),
+                        H.DR(11, 25, RoleApprovalStatus.Approved),
+                        H.DR(26, null, RoleApprovalStatus.Expired),
+                    ]
+                )
+            );
         }
 
         [TestMethod]
         public void OnboardedTrumpsAllAndMerges()
         {
-            var result = SharedCalculations.CalculateEffectiveRoleApprovalStatus([
-                new DateOnlyTimeline<RoleApprovalStatus>([
-                    H.DR(1, 4, RoleApprovalStatus.Prospective),
-                    H.DR(5, 9, RoleApprovalStatus.Approved),
-                    H.DR(10, 15, RoleApprovalStatus.Onboarded),
-                    H.DR(16, null, RoleApprovalStatus.Expired),
-                ]),
-                new DateOnlyTimeline<RoleApprovalStatus>([
-                    H.DR(10, 15, RoleApprovalStatus.Approved),
-                    H.DR(16, 25, RoleApprovalStatus.Onboarded),
-                    H.DR(26, null, RoleApprovalStatus.Expired),
-                ]),
-                new DateOnlyTimeline<RoleApprovalStatus>([
-                    H.DR(20, 27, RoleApprovalStatus.Prospective),
-                    H.DR(28, 30, RoleApprovalStatus.Onboarded),
-                    H.DR(31, null, RoleApprovalStatus.Expired)
-                ]),
-                null
-            ]);
+            var result = SharedCalculations.CalculateEffectiveRoleApprovalStatus(
+                [
+                    new DateOnlyTimeline<RoleApprovalStatus>(
+                        [
+                            H.DR(1, 4, RoleApprovalStatus.Prospective),
+                            H.DR(5, 9, RoleApprovalStatus.Approved),
+                            H.DR(10, 15, RoleApprovalStatus.Onboarded),
+                            H.DR(16, null, RoleApprovalStatus.Expired),
+                        ]
+                    ),
+                    new DateOnlyTimeline<RoleApprovalStatus>(
+                        [
+                            H.DR(10, 15, RoleApprovalStatus.Approved),
+                            H.DR(16, 25, RoleApprovalStatus.Onboarded),
+                            H.DR(26, null, RoleApprovalStatus.Expired),
+                        ]
+                    ),
+                    new DateOnlyTimeline<RoleApprovalStatus>(
+                        [
+                            H.DR(20, 27, RoleApprovalStatus.Prospective),
+                            H.DR(28, 30, RoleApprovalStatus.Onboarded),
+                            H.DR(31, null, RoleApprovalStatus.Expired),
+                        ]
+                    ),
+                    null,
+                ]
+            );
 
             Assert.IsNotNull(result);
-            Assert.IsTrue(result.Ranges.SequenceEqual([
-                H.DR(1, 4, RoleApprovalStatus.Prospective),
-                H.DR(5, 9, RoleApprovalStatus.Approved),
-                H.DR(10, 25, RoleApprovalStatus.Onboarded),
-                H.DR(26, 27, RoleApprovalStatus.Expired),
-                H.DR(28, 30, RoleApprovalStatus.Onboarded),
-                H.DR(31, null, RoleApprovalStatus.Expired),
-            ]));
+            Assert.IsTrue(
+                result.Ranges.SequenceEqual(
+                    [
+                        H.DR(1, 4, RoleApprovalStatus.Prospective),
+                        H.DR(5, 9, RoleApprovalStatus.Approved),
+                        H.DR(10, 25, RoleApprovalStatus.Onboarded),
+                        H.DR(26, 27, RoleApprovalStatus.Expired),
+                        H.DR(28, 30, RoleApprovalStatus.Onboarded),
+                        H.DR(31, null, RoleApprovalStatus.Expired),
+                    ]
+                )
+            );
         }
     }
 }

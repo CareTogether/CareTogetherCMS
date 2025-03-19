@@ -10,12 +10,10 @@ namespace CareTogether.Api
 
         private readonly IHttpContextAccessor httpContextAccessor;
 
-
         public UserTargetingContextAccessor(IHttpContextAccessor httpContextAccessor)
         {
             this.httpContextAccessor = httpContextAccessor;
         }
-
 
         public ValueTask<TargetingContext> GetContextAsync()
         {
@@ -30,8 +28,8 @@ namespace CareTogether.Api
                 Groups = new[]
                 {
                     httpContext.User.FindFirst(Claims.OrganizationId)!.Value,
-                    httpContext.User.FindFirst(Claims.LocationId)!.Value
-                }
+                    httpContext.User.FindFirst(Claims.LocationId)!.Value,
+                },
             };
 
             httpContext.Items[TargetingContextLookup] = targetingContext;

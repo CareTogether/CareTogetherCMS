@@ -19,10 +19,17 @@ namespace CareTogether.Utilities.ObjectStore
         private readonly string objectType;
         private readonly IMemoryCache memoryCache;
         private readonly TimeSpan cacheExpiration;
-        private readonly ConcurrentDictionary<Guid, BlobContainerClient> organizationBlobContainerClients;
+        private readonly ConcurrentDictionary<
+            Guid,
+            BlobContainerClient
+        > organizationBlobContainerClients;
 
-        public JsonBlobObjectStore(BlobServiceClient blobServiceClient, string objectType,
-            IMemoryCache memoryCache, TimeSpan cacheExpiration)
+        public JsonBlobObjectStore(
+            BlobServiceClient blobServiceClient,
+            string objectType,
+            IMemoryCache memoryCache,
+            TimeSpan cacheExpiration
+        )
         {
             this.blobServiceClient = blobServiceClient;
             this.objectType = objectType;
@@ -31,25 +38,33 @@ namespace CareTogether.Utilities.ObjectStore
             organizationBlobContainerClients = new(); //TODO: Share this across all services using the same blobServiceClient.
         }
 
-
         public async Task DeleteAsync(Guid organizationId, Guid locationId, string objectId)
         {
             memoryCache.Remove(CacheKey(organizationId, locationId, objectId));
 
             var tenantContainer = await CreateContainerIfNotExists(organizationId);
-            var objectBlob = tenantContainer.GetBlockBlobClient($"{locationId}/{objectType}/{objectId}.json");
+            var objectBlob = tenantContainer.GetBlockBlobClient(
+                $"{locationId}/{objectType}/{objectId}.json"
+            );
 
             await objectBlob.DeleteIfExistsAsync();
         }
 
         public async Task<T> GetAsync(Guid organizationId, Guid locationId, string objectId)
         {
-            if (memoryCache.TryGetValue<T>(CacheKey(organizationId, locationId, objectId), out var cachedValue) &&
-                cachedValue != null)
+            if (
+                memoryCache.TryGetValue<T>(
+                    CacheKey(organizationId, locationId, objectId),
+                    out var cachedValue
+                )
+                && cachedValue != null
+            )
                 return cachedValue;
 
             var tenantContainer = await CreateContainerIfNotExists(organizationId);
-            var objectBlob = tenantContainer.GetBlockBlobClient($"{locationId}/{objectType}/{objectId}.json");
+            var objectBlob = tenantContainer.GetBlockBlobClient(
+                $"{locationId}/{objectType}/{objectId}.json"
+            );
 
             var objectStream = await objectBlob.DownloadStreamingAsync();
             var objectText = new StreamReader(objectStream.Value.Content).ReadToEnd();
@@ -57,24 +72,41 @@ namespace CareTogether.Utilities.ObjectStore
 
             if (objectValue == null)
                 throw new InvalidOperationException(
-                    $"Unexpected null object deserialized in organization {organizationId}, location {locationId}, " +
-                    $"object type {objectType}, object ID '{objectId}', blob '{objectBlob.Name}'. " +
-                    $"Expected type: {typeof(T).FullName}");
+                    $"Unexpected null object deserialized in organization {organizationId}, location {locationId}, "
+                        + $"object type {objectType}, object ID '{objectId}', blob '{objectBlob.Name}'. "
+                        + $"Expected type: {typeof(T).FullName}"
+                );
 
-            memoryCache.Set(CacheKey(organizationId, locationId, objectId), objectValue, cacheExpiration);
+            memoryCache.Set(
+                CacheKey(organizationId, locationId, objectId),
+                objectValue,
+                cacheExpiration
+            );
 
             return objectValue;
         }
 
-        public async Task UpsertAsync(Guid organizationId, Guid locationId, string objectId, T value)
+        public async Task UpsertAsync(
+            Guid organizationId,
+            Guid locationId,
+            string objectId,
+            T value
+        )
         {
             var tenantContainer = await CreateContainerIfNotExists(organizationId);
-            var objectBlob = tenantContainer.GetBlockBlobClient($"{locationId}/{objectType}/{objectId}.json");
+            var objectBlob = tenantContainer.GetBlockBlobClient(
+                $"{locationId}/{objectType}/{objectId}.json"
+            );
 
             var objectText = JsonConvert.SerializeObject(value);
             var objectStream = new MemoryStream(Encoding.UTF8.GetBytes(objectText));
-            await objectBlob.UploadAsync(objectStream,
-                new BlobUploadOptions { HttpHeaders = new BlobHttpHeaders { ContentType = "application/json" } });
+            await objectBlob.UploadAsync(
+                objectStream,
+                new BlobUploadOptions
+                {
+                    HttpHeaders = new BlobHttpHeaders { ContentType = "application/json" },
+                }
+            );
 
             memoryCache.Set(CacheKey(organizationId, locationId, objectId), value, cacheExpiration);
         }
@@ -83,13 +115,16 @@ namespace CareTogether.Utilities.ObjectStore
         {
             var tenantContainer = await CreateContainerIfNotExists(organizationId);
 
-            await foreach (var blob in tenantContainer.GetBlobsAsync(prefix: $"{locationId}/{objectType}/"))
+            await foreach (
+                var blob in tenantContainer.GetBlobsAsync(prefix: $"{locationId}/{objectType}/")
+            )
             {
-                var objectId = blob.Name.Substring(blob.Name.LastIndexOf('/') + 1).Replace(".json", "");
+                var objectId = blob
+                    .Name.Substring(blob.Name.LastIndexOf('/') + 1)
+                    .Replace(".json", "");
                 yield return objectId;
             }
         }
-
 
         private async Task<BlobContainerClient> CreateContainerIfNotExists(Guid organizationId)
         {
@@ -99,7 +134,9 @@ namespace CareTogether.Utilities.ObjectStore
             }
             else
             {
-                var blobClient = blobServiceClient.GetBlobContainerClient(organizationId.ToString());
+                var blobClient = blobServiceClient.GetBlobContainerClient(
+                    organizationId.ToString()
+                );
 
                 if (!await blobClient.ExistsAsync())
                 {

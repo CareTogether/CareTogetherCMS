@@ -13,7 +13,6 @@ namespace CareTogether.Core.Test
         static readonly Guid guid3 = Guid.Parse("33333333-3333-3333-3333-333333333333");
         static readonly Guid guid4 = Guid.Parse("44444444-4444-4444-4444-444444444444");
 
-
         [TestMethod]
         public async Task GettingUninitializedTenantLogReturnsEmptySequence()
         {
@@ -50,7 +49,9 @@ namespace CareTogether.Core.Test
         {
             var dut = new MemoryEventLog<int>();
 
-            await Assert.ThrowsExceptionAsync<InvalidOperationException>(() => dut.AppendEventAsync(guid1, guid2, 42, 2));
+            await Assert.ThrowsExceptionAsync<InvalidOperationException>(
+                () => dut.AppendEventAsync(guid1, guid2, 42, 2)
+            );
             var getResult = await dut.GetAllEventsAsync(guid1, guid2).ToListAsync();
             Assert.AreEqual(0, getResult.Count);
         }
@@ -93,7 +94,9 @@ namespace CareTogether.Core.Test
             var dut = new MemoryEventLog<int>();
 
             await dut.AppendEventAsync(guid1, guid2, 41, 1);
-            await Assert.ThrowsExceptionAsync<InvalidOperationException>(() => dut.AppendEventAsync(guid1, guid2, 42, 3));
+            await Assert.ThrowsExceptionAsync<InvalidOperationException>(
+                () => dut.AppendEventAsync(guid1, guid2, 42, 3)
+            );
             await dut.AppendEventAsync(guid1, guid2, 43, 2);
             var getResult = await dut.GetAllEventsAsync(guid1, guid2).ToListAsync();
             Assert.AreEqual(2, getResult.Count);

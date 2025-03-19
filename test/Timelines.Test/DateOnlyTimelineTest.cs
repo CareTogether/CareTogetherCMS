@@ -21,7 +21,9 @@ public class DateOnlyTimelineTest
     [TestMethod]
     public void ConstructorForbidsEmptyList()
     {
-        Assert.ThrowsException<ArgumentException>(() => new DateOnlyTimeline(ImmutableList<DateRange>.Empty));
+        Assert.ThrowsException<ArgumentException>(
+            () => new DateOnlyTimeline(ImmutableList<DateRange>.Empty)
+        );
     }
 
     [TestMethod]
@@ -256,7 +258,9 @@ public class DateOnlyTimelineTest
     [TestMethod]
     public void UnionOfNullableSingleOneDayStageWithNulls()
     {
-        var dut = DateOnlyTimeline.UnionOf(ImmutableList<DateRange?>.Empty.AddRange([null, DR(1, 1), null]));
+        var dut = DateOnlyTimeline.UnionOf(
+            ImmutableList<DateRange?>.Empty.AddRange([null, DR(1, 1), null])
+        );
 
         Assert.IsNotNull(dut);
         AssertDatesAre(dut, 1);
@@ -267,7 +271,9 @@ public class DateOnlyTimelineTest
     public void UnionOfNullableTwoDiscontinuousMultipleDayRangesWithNulls()
     {
         var dut = DateOnlyTimeline.UnionOf(
-            ImmutableList<DateRange?>.Empty.AddRange([DR(2, 3), null, null, DR(5, 5), null, null, DR(6, 8), null])
+            ImmutableList<DateRange?>.Empty.AddRange(
+                [DR(2, 3), null, null, DR(5, 5), null, null, DR(6, 8), null]
+            )
         );
 
         Assert.IsNotNull(dut);
@@ -279,7 +285,10 @@ public class DateOnlyTimelineTest
     public void UnionOfTwoUnendingRangesReturnsSingleOverlappingRange()
     {
         var dut = DateOnlyTimeline.UnionOf(
-            ImmutableList.Create(new DateRange(D(2), DateOnly.MaxValue), new DateRange(D(4), DateOnly.MaxValue))
+            ImmutableList.Create(
+                new DateRange(D(2), DateOnly.MaxValue),
+                new DateRange(D(4), DateOnly.MaxValue)
+            )
         );
 
         Assert.IsNotNull(dut);
@@ -289,7 +298,9 @@ public class DateOnlyTimelineTest
     [TestMethod]
     public void UnionOfTimelinesReturnsNullIfAllNull()
     {
-        var dut = DateOnlyTimeline.UnionOf(ImmutableList<DateOnlyTimeline?>.Empty.AddRange([null, null]));
+        var dut = DateOnlyTimeline.UnionOf(
+            ImmutableList<DateOnlyTimeline?>.Empty.AddRange([null, null])
+        );
 
         Assert.IsNull(dut);
     }
@@ -353,7 +364,9 @@ public class DateOnlyTimelineTest
     public void IntersectionOfTwoOverlappingTimelinesAndNull()
     {
         var dut = DateOnlyTimeline.IntersectionOf(
-            ImmutableList.Create([new DateOnlyTimeline([DR(2, 2)]), new DateOnlyTimeline([DR(1, 3)]), null])
+            ImmutableList.Create(
+                [new DateOnlyTimeline([DR(2, 2)]), new DateOnlyTimeline([DR(1, 3)]), null]
+            )
         );
 
         Assert.IsNull(dut);
@@ -364,7 +377,11 @@ public class DateOnlyTimelineTest
     {
         var dut = DateOnlyTimeline.IntersectionOf(
             ImmutableList.Create<DateOnlyTimeline?>(
-                [new DateOnlyTimeline([DR(2, 2)]), new DateOnlyTimeline([DR(1, 3)]), new DateOnlyTimeline([DR(4, 4)])]
+                [
+                    new DateOnlyTimeline([DR(2, 2)]),
+                    new DateOnlyTimeline([DR(1, 3)]),
+                    new DateOnlyTimeline([DR(4, 4)]),
+                ]
             )
         );
 
@@ -376,7 +393,11 @@ public class DateOnlyTimelineTest
     {
         var dut = DateOnlyTimeline.IntersectionOf(
             ImmutableList.Create<DateOnlyTimeline?>(
-                [new DateOnlyTimeline([DR(2, 2)]), new DateOnlyTimeline([DR(1, 3)]), new DateOnlyTimeline([DR(2, 4)])]
+                [
+                    new DateOnlyTimeline([DR(2, 2)]),
+                    new DateOnlyTimeline([DR(1, 3)]),
+                    new DateOnlyTimeline([DR(2, 4)]),
+                ]
             )
         );
 
@@ -454,7 +475,9 @@ public class DateOnlyTimelineTest
         var dut = DateOnlyTimeline.ComplementOf(null);
 
         Assert.IsNotNull(dut);
-        Assert.IsTrue(dut.Ranges.SequenceEqual([new DateRange(DateOnly.MinValue, DateOnly.MaxValue)]));
+        Assert.IsTrue(
+            dut.Ranges.SequenceEqual([new DateRange(DateOnly.MinValue, DateOnly.MaxValue)])
+        );
     }
 
     [TestMethod]
@@ -484,7 +507,10 @@ public class DateOnlyTimelineTest
         Assert.IsNotNull(dut);
         Assert.IsTrue(
             dut.Ranges.SequenceEqual(
-                [new DateRange(DateOnly.MinValue, D(1).AddDays(-1)), new DateRange(D(3).AddDays(1), DateOnly.MaxValue)]
+                [
+                    new DateRange(DateOnly.MinValue, D(1).AddDays(-1)),
+                    new DateRange(D(3).AddDays(1), DateOnly.MaxValue),
+                ]
             )
         );
     }
@@ -516,7 +542,10 @@ public class DateOnlyTimelineTest
         Assert.IsNotNull(dut);
         Assert.IsTrue(
             dut.Ranges.SequenceEqual(
-                [new DateRange(DateOnly.MinValue, D(1).AddDays(-1)), new DateRange(D(5).AddDays(1), DateOnly.MaxValue)]
+                [
+                    new DateRange(DateOnly.MinValue, D(1).AddDays(-1)),
+                    new DateRange(D(5).AddDays(1), DateOnly.MaxValue),
+                ]
             )
         );
     }
@@ -528,7 +557,9 @@ public class DateOnlyTimelineTest
         var dut = input.Complement();
 
         Assert.IsNotNull(dut);
-        Assert.IsTrue(dut.Ranges.SequenceEqual([new DateRange(D(3).AddDays(1), DateOnly.MaxValue)]));
+        Assert.IsTrue(
+            dut.Ranges.SequenceEqual([new DateRange(D(3).AddDays(1), DateOnly.MaxValue)])
+        );
     }
 
     [TestMethod]
@@ -538,29 +569,40 @@ public class DateOnlyTimelineTest
         var dut = input.Complement();
 
         Assert.IsNotNull(dut);
-        Assert.IsTrue(dut.Ranges.SequenceEqual([new DateRange(DateOnly.MinValue, D(1).AddDays(-1))]));
+        Assert.IsTrue(
+            dut.Ranges.SequenceEqual([new DateRange(DateOnly.MinValue, D(1).AddDays(-1))])
+        );
     }
 
     [TestMethod]
     public void ComplementOfSecondRangeAfterEndOfTimeDoesNotExist()
     {
-        var input = new DateOnlyTimeline([new DateRange(D(1), D(3)), new DateRange(D(4), DateOnly.MaxValue)]);
+        var input = new DateOnlyTimeline(
+            [new DateRange(D(1), D(3)), new DateRange(D(4), DateOnly.MaxValue)]
+        );
         var dut = input.Complement();
 
         Assert.IsNotNull(dut);
-        Assert.IsTrue(dut.Ranges.SequenceEqual([new DateRange(DateOnly.MinValue, D(1).AddDays(-1))]));
+        Assert.IsTrue(
+            dut.Ranges.SequenceEqual([new DateRange(DateOnly.MinValue, D(1).AddDays(-1))])
+        );
     }
 
     [TestMethod]
     public void ComplementOfSecondRangeAfterEndOfTimeDoesNotExist2()
     {
-        var input = new DateOnlyTimeline([new DateRange(D(1), D(2)), new DateRange(D(4), DateOnly.MaxValue)]);
+        var input = new DateOnlyTimeline(
+            [new DateRange(D(1), D(2)), new DateRange(D(4), DateOnly.MaxValue)]
+        );
         var dut = input.Complement();
 
         Assert.IsNotNull(dut);
         Assert.IsTrue(
             dut.Ranges.SequenceEqual(
-                [new DateRange(DateOnly.MinValue, D(1).AddDays(-1)), new DateRange(D(2).AddDays(1), D(4).AddDays(-1))]
+                [
+                    new DateRange(DateOnly.MinValue, D(1).AddDays(-1)),
+                    new DateRange(D(2).AddDays(1), D(4).AddDays(-1)),
+                ]
             )
         );
     }
@@ -581,7 +623,9 @@ public class DateOnlyTimelineTest
         var dut = input.ForwardOnlyComplement();
 
         Assert.IsNotNull(dut);
-        Assert.IsTrue(dut.Ranges.SequenceEqual([new DateRange(D(3).AddDays(1), DateOnly.MaxValue)]));
+        Assert.IsTrue(
+            dut.Ranges.SequenceEqual([new DateRange(D(3).AddDays(1), DateOnly.MaxValue)])
+        );
     }
 
     [TestMethod]
@@ -593,7 +637,10 @@ public class DateOnlyTimelineTest
         Assert.IsNotNull(dut);
         Assert.IsTrue(
             dut.Ranges.SequenceEqual(
-                [new DateRange(D(3).AddDays(1), D(5).AddDays(-1)), new DateRange(D(5).AddDays(1), DateOnly.MaxValue)]
+                [
+                    new DateRange(D(3).AddDays(1), D(5).AddDays(-1)),
+                    new DateRange(D(5).AddDays(1), DateOnly.MaxValue),
+                ]
             )
         );
     }
@@ -605,19 +652,26 @@ public class DateOnlyTimelineTest
         var dut = input.ForwardOnlyComplement();
 
         Assert.IsNotNull(dut);
-        Assert.IsTrue(dut.Ranges.SequenceEqual([new DateRange(D(5).AddDays(1), DateOnly.MaxValue)]));
+        Assert.IsTrue(
+            dut.Ranges.SequenceEqual([new DateRange(D(5).AddDays(1), DateOnly.MaxValue)])
+        );
     }
 
     [TestMethod]
     public void ForwardOnlyComplementOfRangeBeforeBeginningOfTimeDoesNotExist()
     {
-        var input = new DateOnlyTimeline([new DateRange(DateOnly.MinValue, D(3)), new DateRange(D(5), D(7))]);
+        var input = new DateOnlyTimeline(
+            [new DateRange(DateOnly.MinValue, D(3)), new DateRange(D(5), D(7))]
+        );
         var dut = input.ForwardOnlyComplement();
 
         Assert.IsNotNull(dut);
         Assert.IsTrue(
             dut.Ranges.SequenceEqual(
-                [new DateRange(D(3).AddDays(1), D(5).AddDays(-1)), new DateRange(D(7).AddDays(1), DateOnly.MaxValue)]
+                [
+                    new DateRange(D(3).AddDays(1), D(5).AddDays(-1)),
+                    new DateRange(D(7).AddDays(1), DateOnly.MaxValue),
+                ]
             )
         );
     }
@@ -634,7 +688,9 @@ public class DateOnlyTimelineTest
     [TestMethod]
     public void ForwardOnlyComplementOfSecondRangeAfterEndOfTimeDoesNotExist()
     {
-        var input = new DateOnlyTimeline([new DateRange(D(1), D(2)), new DateRange(D(4), DateOnly.MaxValue)]);
+        var input = new DateOnlyTimeline(
+            [new DateRange(D(1), D(2)), new DateRange(D(4), DateOnly.MaxValue)]
+        );
         var dut = input.ForwardOnlyComplement();
 
         Assert.IsNotNull(dut);
@@ -655,7 +711,9 @@ public class DateOnlyTimelineTest
     public void DifferenceWithAllOfTimeReturnsNull()
     {
         var input = new DateOnlyTimeline([DR(1, 1), DR(3, 4)]);
-        var dut = input.Difference(new DateOnlyTimeline([new DateRange(DateOnly.MinValue, DateOnly.MaxValue)]));
+        var dut = input.Difference(
+            new DateOnlyTimeline([new DateRange(DateOnly.MinValue, DateOnly.MaxValue)])
+        );
 
         Assert.IsNull(dut);
     }
@@ -781,13 +839,17 @@ public class DateOnlyTimelineTest
     [TestMethod]
     public void TaggedConstructorForbidsOverlappingRanges()
     {
-        Assert.ThrowsException<ArgumentException>(() => new DateOnlyTimeline<char>([DR(1, 2, 'A'), DR(2, 3, 'A')]));
+        Assert.ThrowsException<ArgumentException>(
+            () => new DateOnlyTimeline<char>([DR(1, 2, 'A'), DR(2, 3, 'A')])
+        );
     }
 
     [TestMethod]
     public void TaggedConstructorForbidsOverlappingRanges2()
     {
-        Assert.ThrowsException<ArgumentException>(() => new DateOnlyTimeline<char>([DR(1, 3, 'A'), DR(2, 4, 'A')]));
+        Assert.ThrowsException<ArgumentException>(
+            () => new DateOnlyTimeline<char>([DR(1, 3, 'A'), DR(2, 4, 'A')])
+        );
     }
 
     [TestMethod]

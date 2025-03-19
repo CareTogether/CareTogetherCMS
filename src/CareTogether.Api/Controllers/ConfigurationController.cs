@@ -16,16 +16,21 @@ namespace CareTogether.Api.Controllers
     );
 
     [ApiController]
-    [Authorize(Policies.ForbidAnonymous, AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+    [Authorize(
+        Policies.ForbidAnonymous,
+        AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme
+    )]
     public class ConfigurationController : ControllerBase
     {
         private readonly IPoliciesResource policiesResource;
         private readonly IFeatureManager featureManager;
         private readonly IAuthorizationEngine authorizationEngine;
 
-
-        public ConfigurationController(IPoliciesResource policiesResource,
-            IFeatureManager featureManager, IAuthorizationEngine authorizationEngine)
+        public ConfigurationController(
+            IPoliciesResource policiesResource,
+            IFeatureManager featureManager,
+            IAuthorizationEngine authorizationEngine
+        )
         {
             //TODO: Delegate this controller's methods to a manager service
             this.policiesResource = policiesResource;
@@ -33,27 +38,37 @@ namespace CareTogether.Api.Controllers
             this.authorizationEngine = authorizationEngine;
         }
 
-
         [HttpGet("/api/{organizationId:guid}/[controller]")]
-        public async Task<ActionResult<OrganizationConfiguration>> GetOrganizationConfiguration(Guid organizationId)
+        public async Task<ActionResult<OrganizationConfiguration>> GetOrganizationConfiguration(
+            Guid organizationId
+        )
         {
             var result = await policiesResource.GetConfigurationAsync(organizationId);
             return Ok(result);
         }
 
         [HttpPut("/api/{organizationId:guid}/[controller]/roles/{roleName}")]
-        public async Task<ActionResult<OrganizationConfiguration>> PutRoleDefinition(Guid organizationId,
-            string roleName, [FromBody] RoleDefinition role)
+        public async Task<ActionResult<OrganizationConfiguration>> PutRoleDefinition(
+            Guid organizationId,
+            string roleName,
+            [FromBody] RoleDefinition role
+        )
         {
             if (!User.IsInRole(SystemConstants.ORGANIZATION_ADMINISTRATOR))
                 return Forbid();
-            var result = await policiesResource.UpsertRoleDefinitionAsync(organizationId, roleName, role);
+            var result = await policiesResource.UpsertRoleDefinitionAsync(
+                organizationId,
+                roleName,
+                role
+            );
             return Ok(result);
         }
 
         [HttpDelete("/api/{organizationId:guid}/[controller]/roles/{roleName}")]
-        public async Task<ActionResult<OrganizationConfiguration>> DeleteRoleDefinition(Guid organizationId,
-            string roleName)
+        public async Task<ActionResult<OrganizationConfiguration>> DeleteRoleDefinition(
+            Guid organizationId,
+            string roleName
+        )
         {
             if (!User.IsInRole(SystemConstants.ORGANIZATION_ADMINISTRATOR))
                 return Forbid();
@@ -62,7 +77,10 @@ namespace CareTogether.Api.Controllers
         }
 
         [HttpGet("/api/{organizationId:guid}/{locationId:guid}/[controller]/policy")]
-        public async Task<ActionResult<EffectiveLocationPolicy>> GetEffectiveLocationPolicy(Guid organizationId, Guid locationId)
+        public async Task<ActionResult<EffectiveLocationPolicy>> GetEffectiveLocationPolicy(
+            Guid organizationId,
+            Guid locationId
+        )
         {
             var result = await policiesResource.GetCurrentPolicy(organizationId, locationId);
             return Ok(result);
@@ -73,9 +91,13 @@ namespace CareTogether.Api.Controllers
         {
             var result = new CurrentFeatureFlags(
                 InviteUser: await featureManager.IsEnabledAsync(nameof(FeatureFlags.InviteUser)),
-                FamilyScreenV2: await featureManager.IsEnabledAsync(nameof(FeatureFlags.FamilyScreenV2)),
-                FamilyScreenPageVersionSwitch: await featureManager.IsEnabledAsync(nameof(FeatureFlags.FamilyScreenPageVersionSwitch))
-                );
+                FamilyScreenV2: await featureManager.IsEnabledAsync(
+                    nameof(FeatureFlags.FamilyScreenV2)
+                ),
+                FamilyScreenPageVersionSwitch: await featureManager.IsEnabledAsync(
+                    nameof(FeatureFlags.FamilyScreenPageVersionSwitch)
+                )
+            );
             return Ok(result);
         }
     }

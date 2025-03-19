@@ -182,7 +182,11 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
                 "A",
                 policySupersededAt: null,
                 today: new DateOnly(H.YEAR, 1, 5),
-                completedRequirements: Helpers.CompletedWithExpiry(("A", 1, 3), ("B", 2, 4), ("A", 3, 7)),
+                completedRequirements: Helpers.CompletedWithExpiry(
+                    ("A", 1, 3),
+                    ("B", 2, 4),
+                    ("A", 3, 7)
+                ),
                 exemptedRequirements: Helpers.Exempted(("C", 10))
             );
 
