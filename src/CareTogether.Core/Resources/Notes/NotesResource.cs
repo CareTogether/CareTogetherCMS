@@ -1,8 +1,8 @@
-using CareTogether.Utilities.EventLog;
-using CareTogether.Utilities.ObjectStore;
 using System;
 using System.Collections.Immutable;
 using System.Threading.Tasks;
+using CareTogether.Utilities.EventLog;
+using CareTogether.Utilities.ObjectStore;
 
 namespace CareTogether.Resources.Notes
 {

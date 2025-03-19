@@ -1,14 +1,14 @@
+using System;
+using System.Collections.Generic;
+using System.Collections.Immutable;
+using System.Security.Claims;
+using System.Threading.Tasks;
 using CareTogether.Resources.Approvals;
 using CareTogether.Resources.Communities;
 using CareTogether.Resources.Directory;
 using CareTogether.Resources.Notes;
 using CareTogether.Resources.Referrals;
 using JsonPolymorph;
-using System;
-using System.Collections.Generic;
-using System.Collections.Immutable;
-using System.Security.Claims;
-using System.Threading.Tasks;
 
 namespace CareTogether.Managers.Records
 {

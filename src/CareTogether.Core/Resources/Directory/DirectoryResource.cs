@@ -1,9 +1,9 @@
-﻿using CareTogether.Utilities.EventLog;
-using CareTogether.Utilities.FileStore;
-using System;
+﻿using System;
 using System.Collections.Immutable;
 using System.Linq;
 using System.Threading.Tasks;
+using CareTogether.Utilities.EventLog;
+using CareTogether.Utilities.FileStore;
 
 namespace CareTogether.Resources.Directory
 {
@@ -29,7 +29,7 @@ namespace CareTogether.Resources.Directory
             using (var lockedModel = await tenantModels.WriteLockItemAsync((organizationId, locationId)))
             {
                 var result = lockedModel.Value.ExecuteFamilyCommand(command, userId, DateTime.UtcNow);
-                
+
                 await eventLog.AppendEventAsync(organizationId, locationId, result.Event, result.SequenceNumber);
                 result.OnCommit();
                 return result.Family;
@@ -42,7 +42,7 @@ namespace CareTogether.Resources.Directory
             using (var lockedModel = await tenantModels.WriteLockItemAsync((organizationId, locationId)))
             {
                 var result = lockedModel.Value.ExecutePersonCommand(command, userId, DateTime.UtcNow);
-                
+
                 await eventLog.AppendEventAsync(organizationId, locationId, result.Event, result.SequenceNumber);
                 result.OnCommit();
                 return result.Person;
@@ -97,7 +97,7 @@ namespace CareTogether.Resources.Directory
             //TODO: Concatenate 'family-' and the family ID with the 'documentId' itself to prevent hostile overwrites
             //      (requires a data migration; could use an existence check in the interim)
             var valetUrl = await fileStore.GetValetReadUrlAsync(organizationId, locationId, documentId);
-            
+
             return valetUrl;
         }
 
@@ -112,7 +112,7 @@ namespace CareTogether.Resources.Directory
             //TODO: Concatenate 'family-' and the family ID with the 'documentId' itself to prevent hostile overwrites
             //      (requires a data migration; could use an existence check in the interim)
             var valetUrl = await fileStore.GetValetCreateUrlAsync(organizationId, locationId, documentId);
-            
+
             return valetUrl;
         }
     }

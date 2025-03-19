@@ -1,4 +1,10 @@
-﻿using CareTogether.Engines.Authorization;
+﻿using System;
+using System.Collections.Generic;
+using System.Collections.Immutable;
+using System.Linq;
+using System.Security.Claims;
+using System.Threading.Tasks;
+using CareTogether.Engines.Authorization;
 using CareTogether.Resources.Approvals;
 using CareTogether.Resources.Communities;
 using CareTogether.Resources.Directory;
@@ -6,12 +12,6 @@ using CareTogether.Resources.Notes;
 using CareTogether.Resources.Referrals;
 using Nito.AsyncEx;
 using Nito.Disposables.Internals;
-using System;
-using System.Collections.Generic;
-using System.Collections.Immutable;
-using System.Linq;
-using System.Security.Claims;
-using System.Threading.Tasks;
 
 namespace CareTogether.Managers.Records
 {
@@ -201,79 +201,79 @@ namespace CareTogether.Managers.Records
             switch (command)
             {
                 case AddAdultToFamilyCommand c:
-                    {
-                        var addresses = c.Address == null ? ImmutableList<Address>.Empty : ImmutableList<Address>.Empty.Add(c.Address);
-                        var phoneNumbers = c.PhoneNumber == null ? ImmutableList<PhoneNumber>.Empty : ImmutableList<PhoneNumber>.Empty.Add(c.PhoneNumber);
-                        var emailAddresses = c.EmailAddress == null ? ImmutableList<EmailAddress>.Empty : ImmutableList<EmailAddress>.Empty.Add(c.EmailAddress);
+                {
+                    var addresses = c.Address == null ? ImmutableList<Address>.Empty : ImmutableList<Address>.Empty.Add(c.Address);
+                    var phoneNumbers = c.PhoneNumber == null ? ImmutableList<PhoneNumber>.Empty : ImmutableList<PhoneNumber>.Empty.Add(c.PhoneNumber);
+                    var emailAddresses = c.EmailAddress == null ? ImmutableList<EmailAddress>.Empty : ImmutableList<EmailAddress>.Empty.Add(c.EmailAddress);
 
-                        yield return new PersonRecordsCommand(c.FamilyId,
-                            new CreatePerson(c.PersonId, c.FirstName, c.LastName,
-                                c.Gender, c.Age, c.Ethnicity,
-                                addresses, c.Address?.Id,
-                                phoneNumbers, c.PhoneNumber?.Id,
-                                emailAddresses, c.EmailAddress?.Id,
-                                c.Concerns, c.Notes));
-                        yield return new FamilyRecordsCommand(
-                            new AddAdultToFamily(c.FamilyId, c.PersonId, c.FamilyAdultRelationshipInfo));
-                        break;
-                    }
+                    yield return new PersonRecordsCommand(c.FamilyId,
+                        new CreatePerson(c.PersonId, c.FirstName, c.LastName,
+                            c.Gender, c.Age, c.Ethnicity,
+                            addresses, c.Address?.Id,
+                            phoneNumbers, c.PhoneNumber?.Id,
+                            emailAddresses, c.EmailAddress?.Id,
+                            c.Concerns, c.Notes));
+                    yield return new FamilyRecordsCommand(
+                        new AddAdultToFamily(c.FamilyId, c.PersonId, c.FamilyAdultRelationshipInfo));
+                    break;
+                }
                 case AddChildToFamilyCommand c:
-                    {
-                        yield return new PersonRecordsCommand(c.FamilyId,
-                            new CreatePerson(c.PersonId, c.FirstName, c.LastName,
-                                c.Gender, c.Age, c.Ethnicity,
-                                ImmutableList<Address>.Empty, null,
-                                ImmutableList<PhoneNumber>.Empty, null,
-                                ImmutableList<EmailAddress>.Empty, null,
-                                c.Concerns, c.Notes));
-                        yield return new FamilyRecordsCommand(
-                            new AddChildToFamily(c.FamilyId, c.PersonId, c.CustodialRelationships.ToImmutableList()));
-                        break;
-                    }
+                {
+                    yield return new PersonRecordsCommand(c.FamilyId,
+                        new CreatePerson(c.PersonId, c.FirstName, c.LastName,
+                            c.Gender, c.Age, c.Ethnicity,
+                            ImmutableList<Address>.Empty, null,
+                            ImmutableList<PhoneNumber>.Empty, null,
+                            ImmutableList<EmailAddress>.Empty, null,
+                            c.Concerns, c.Notes));
+                    yield return new FamilyRecordsCommand(
+                        new AddChildToFamily(c.FamilyId, c.PersonId, c.CustodialRelationships.ToImmutableList()));
+                    break;
+                }
                 case CreateVolunteerFamilyWithNewAdultCommand c:
-                    {
-                        var addresses = c.Address == null ? ImmutableList<Address>.Empty : ImmutableList<Address>.Empty.Add(c.Address);
-                        var phoneNumbers = c.PhoneNumber == null ? ImmutableList<PhoneNumber>.Empty : ImmutableList<PhoneNumber>.Empty.Add(c.PhoneNumber);
-                        var emailAddresses = c.EmailAddress == null ? ImmutableList<EmailAddress>.Empty : ImmutableList<EmailAddress>.Empty.Add(c.EmailAddress);
+                {
+                    var addresses = c.Address == null ? ImmutableList<Address>.Empty : ImmutableList<Address>.Empty.Add(c.Address);
+                    var phoneNumbers = c.PhoneNumber == null ? ImmutableList<PhoneNumber>.Empty : ImmutableList<PhoneNumber>.Empty.Add(c.PhoneNumber);
+                    var emailAddresses = c.EmailAddress == null ? ImmutableList<EmailAddress>.Empty : ImmutableList<EmailAddress>.Empty.Add(c.EmailAddress);
 
-                        yield return new PersonRecordsCommand(c.FamilyId,
-                            new CreatePerson(c.PersonId, c.FirstName, c.LastName,
-                                c.Gender, c.Age, c.Ethnicity,
-                                addresses, c.Address?.Id,
-                                phoneNumbers, c.PhoneNumber?.Id,
-                                emailAddresses, c.EmailAddress?.Id,
-                                c.Concerns, c.Notes));
-                        yield return new FamilyRecordsCommand(
-                            new CreateFamily(c.FamilyId, c.PersonId,
-                                ImmutableList<(Guid, FamilyAdultRelationshipInfo)>.Empty.Add((c.PersonId, c.FamilyAdultRelationshipInfo)),
-                                ImmutableList<Guid>.Empty,
-                                ImmutableList<CustodialRelationship>.Empty));
-                        yield return new FamilyApprovalRecordsCommand(
-                            new ActivateVolunteerFamily(c.FamilyId));
-                        break;
-                    }
+                    yield return new PersonRecordsCommand(c.FamilyId,
+                        new CreatePerson(c.PersonId, c.FirstName, c.LastName,
+                            c.Gender, c.Age, c.Ethnicity,
+                            addresses, c.Address?.Id,
+                            phoneNumbers, c.PhoneNumber?.Id,
+                            emailAddresses, c.EmailAddress?.Id,
+                            c.Concerns, c.Notes));
+                    yield return new FamilyRecordsCommand(
+                        new CreateFamily(c.FamilyId, c.PersonId,
+                            ImmutableList<(Guid, FamilyAdultRelationshipInfo)>.Empty.Add((c.PersonId, c.FamilyAdultRelationshipInfo)),
+                            ImmutableList<Guid>.Empty,
+                            ImmutableList<CustodialRelationship>.Empty));
+                    yield return new FamilyApprovalRecordsCommand(
+                        new ActivateVolunteerFamily(c.FamilyId));
+                    break;
+                }
                 case CreatePartneringFamilyWithNewAdultCommand c:
-                    {
-                        var addresses = c.Address == null ? ImmutableList<Address>.Empty : ImmutableList<Address>.Empty.Add(c.Address);
-                        var phoneNumbers = c.PhoneNumber == null ? ImmutableList<PhoneNumber>.Empty : ImmutableList<PhoneNumber>.Empty.Add(c.PhoneNumber);
-                        var emailAddresses = c.EmailAddress == null ? ImmutableList<EmailAddress>.Empty : ImmutableList<EmailAddress>.Empty.Add(c.EmailAddress);
+                {
+                    var addresses = c.Address == null ? ImmutableList<Address>.Empty : ImmutableList<Address>.Empty.Add(c.Address);
+                    var phoneNumbers = c.PhoneNumber == null ? ImmutableList<PhoneNumber>.Empty : ImmutableList<PhoneNumber>.Empty.Add(c.PhoneNumber);
+                    var emailAddresses = c.EmailAddress == null ? ImmutableList<EmailAddress>.Empty : ImmutableList<EmailAddress>.Empty.Add(c.EmailAddress);
 
-                        yield return new PersonRecordsCommand(c.FamilyId,
-                            new CreatePerson(c.PersonId, c.FirstName, c.LastName,
-                                c.Gender, c.Age, c.Ethnicity,
-                                addresses, c.Address?.Id,
-                                phoneNumbers, c.PhoneNumber?.Id,
-                                emailAddresses, c.EmailAddress?.Id,
-                                c.Concerns, c.Notes));
-                        yield return new FamilyRecordsCommand(
-                            new CreateFamily(c.FamilyId, c.PersonId,
-                                ImmutableList<(Guid, FamilyAdultRelationshipInfo)>.Empty.Add((c.PersonId, c.FamilyAdultRelationshipInfo)),
-                                ImmutableList<Guid>.Empty,
-                                ImmutableList<CustodialRelationship>.Empty));
-                        yield return new ReferralRecordsCommand(
-                            new CreateReferral(c.FamilyId, c.ReferralId, c.ReferralOpenedAtUtc));
-                        break;
-                    }
+                    yield return new PersonRecordsCommand(c.FamilyId,
+                        new CreatePerson(c.PersonId, c.FirstName, c.LastName,
+                            c.Gender, c.Age, c.Ethnicity,
+                            addresses, c.Address?.Id,
+                            phoneNumbers, c.PhoneNumber?.Id,
+                            emailAddresses, c.EmailAddress?.Id,
+                            c.Concerns, c.Notes));
+                    yield return new FamilyRecordsCommand(
+                        new CreateFamily(c.FamilyId, c.PersonId,
+                            ImmutableList<(Guid, FamilyAdultRelationshipInfo)>.Empty.Add((c.PersonId, c.FamilyAdultRelationshipInfo)),
+                            ImmutableList<Guid>.Empty,
+                            ImmutableList<CustodialRelationship>.Empty));
+                    yield return new ReferralRecordsCommand(
+                        new CreateReferral(c.FamilyId, c.ReferralId, c.ReferralOpenedAtUtc));
+                    break;
+                }
                 default:
                     throw new NotImplementedException(
                         $"The command type '{command.GetType().FullName}' has not been implemented.");

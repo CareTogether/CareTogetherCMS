@@ -94,14 +94,14 @@ namespace CareTogether.Core.Test.ApprovalCalculationTests
             Assert.AreEqual("v1", result.Version);
             Assert.AreEqual(new DateOnlyTimeline<RoleApprovalStatus>([
                     H.DR(5, 10, RoleApprovalStatus.Prospective),
-                    H.DR(11, 12, RoleApprovalStatus.Approved),
-                    H.DR(13, 13, RoleApprovalStatus.Expired),
-                    H.DR(14, 15, RoleApprovalStatus.Approved),
-                    H.DR(16, 17, RoleApprovalStatus.Denied),
-                    H.DR(18, 20, RoleApprovalStatus.Approved),
-                    H.DR(21, 22, RoleApprovalStatus.Expired),
-                    H.DR(23, null, RoleApprovalStatus.Inactive),
-                ]), result.Status);
+                H.DR(11, 12, RoleApprovalStatus.Approved),
+                H.DR(13, 13, RoleApprovalStatus.Expired),
+                H.DR(14, 15, RoleApprovalStatus.Approved),
+                H.DR(16, 17, RoleApprovalStatus.Denied),
+                H.DR(18, 20, RoleApprovalStatus.Approved),
+                H.DR(21, 22, RoleApprovalStatus.Expired),
+                H.DR(23, null, RoleApprovalStatus.Inactive),
+            ]), result.Status);
             Assert.IsTrue(result.Requirements.SequenceEqual([
                 new("A", RequirementStage.Application,
                     WhenMet: new DateOnlyTimeline([

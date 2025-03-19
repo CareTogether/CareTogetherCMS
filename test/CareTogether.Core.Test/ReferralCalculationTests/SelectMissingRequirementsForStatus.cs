@@ -1,8 +1,8 @@
-﻿using CareTogether.Engines;
+﻿using System.Collections.Immutable;
+using System.Linq;
+using CareTogether.Engines;
 using CareTogether.Engines.PolicyEvaluation;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using System.Collections.Immutable;
-using System.Linq;
 
 namespace CareTogether.Core.Test.ReferralCalculationTests
 {

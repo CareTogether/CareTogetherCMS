@@ -1,11 +1,11 @@
-﻿using CareTogether.Engines;
+﻿using System;
+using System.Collections.Immutable;
+using CareTogether.Engines;
 using CareTogether.Engines.PolicyEvaluation;
 using CareTogether.Resources;
 using CareTogether.Resources.Directory;
 using CareTogether.Resources.Policies;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using System;
-using System.Collections.Immutable;
 
 namespace CareTogether.Core.Test.ApprovalCalculationTests
 {

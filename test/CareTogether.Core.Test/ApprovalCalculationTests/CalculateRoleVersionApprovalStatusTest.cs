@@ -27,10 +27,10 @@ public class CalculateRoleVersionApprovalStatusTest
     {
         var result = SharedCalculations.CalculateRoleVersionApprovalStatus([
             (RequirementStage.Application, null),
-            (RequirementStage.Approval, new DateOnlyTimeline([ H.DR(1, null)])),
-            (RequirementStage.Approval, new DateOnlyTimeline([ H.DR(1, null)])),
-            (RequirementStage.Onboarding, new DateOnlyTimeline([ H.DR(1, null)])),
-            (RequirementStage.Onboarding, new DateOnlyTimeline([ H.DR(1, null)]))
+            (RequirementStage.Approval, new DateOnlyTimeline([H.DR(1, null)])),
+            (RequirementStage.Approval, new DateOnlyTimeline([H.DR(1, null)])),
+            (RequirementStage.Onboarding, new DateOnlyTimeline([H.DR(1, null)])),
+            (RequirementStage.Onboarding, new DateOnlyTimeline([H.DR(1, null)]))
         ], [
         ]);
 
@@ -41,10 +41,10 @@ public class CalculateRoleVersionApprovalStatusTest
     public void TestAllMetWithoutAnyApplicationRequirementsReturnsOnboarded()
     {
         var result = SharedCalculations.CalculateRoleVersionApprovalStatus([
-            (RequirementStage.Approval, new DateOnlyTimeline([ H.DR(1, null)])),
-            (RequirementStage.Approval, new DateOnlyTimeline([ H.DR(1, null)])),
-            (RequirementStage.Onboarding, new DateOnlyTimeline([ H.DR(1, null)])),
-            (RequirementStage.Onboarding, new DateOnlyTimeline([ H.DR(1, null)]))
+            (RequirementStage.Approval, new DateOnlyTimeline([H.DR(1, null)])),
+            (RequirementStage.Approval, new DateOnlyTimeline([H.DR(1, null)])),
+            (RequirementStage.Onboarding, new DateOnlyTimeline([H.DR(1, null)])),
+            (RequirementStage.Onboarding, new DateOnlyTimeline([H.DR(1, null)]))
         ], [
         ]);
 
@@ -58,9 +58,9 @@ public class CalculateRoleVersionApprovalStatusTest
     public void TestApplicationsMetWithoutAnyOtherRequirementsReturnsOnboardedRangesWithExpired()
     {
         var result = SharedCalculations.CalculateRoleVersionApprovalStatus([
-            (RequirementStage.Application, new DateOnlyTimeline([ H.DR(1, 5)])),
-            (RequirementStage.Application, new DateOnlyTimeline([ H.DR(1, 5)])),
-            (RequirementStage.Application, new DateOnlyTimeline([ H.DR(1, 5)])),
+            (RequirementStage.Application, new DateOnlyTimeline([H.DR(1, 5)])),
+            (RequirementStage.Application, new DateOnlyTimeline([H.DR(1, 5)])),
+            (RequirementStage.Application, new DateOnlyTimeline([H.DR(1, 5)])),
         ], [
         ]);
 
@@ -75,9 +75,9 @@ public class CalculateRoleVersionApprovalStatusTest
     public void TestApplicationsPartiallyAndFullyMetWithoutAnyOtherRequirementsReturnsProspectiveAndOnboardedRanges()
     {
         var result = SharedCalculations.CalculateRoleVersionApprovalStatus([
-            (RequirementStage.Application, new DateOnlyTimeline([ H.DR(1, null)])),
-            (RequirementStage.Application, new DateOnlyTimeline([ H.DR(1, 5), H.DR(10, 15)])),
-            (RequirementStage.Application, new DateOnlyTimeline([ H.DR(4, 12)])),
+            (RequirementStage.Application, new DateOnlyTimeline([H.DR(1, null)])),
+            (RequirementStage.Application, new DateOnlyTimeline([H.DR(1, 5), H.DR(10, 15)])),
+            (RequirementStage.Application, new DateOnlyTimeline([H.DR(4, 12)])),
         ], [
         ]);
 
@@ -95,14 +95,14 @@ public class CalculateRoleVersionApprovalStatusTest
     public void TestStatusSequence()
     {
         var result = SharedCalculations.CalculateRoleVersionApprovalStatus([
-            (RequirementStage.Application, new DateOnlyTimeline([ H.DR(4, null)])),
-            (RequirementStage.Application, new DateOnlyTimeline([ H.DR(6, null)])),
-            (RequirementStage.Application, new DateOnlyTimeline([ H.DR(8, null)])),
-            (RequirementStage.Approval, new DateOnlyTimeline([ H.DR(7, null)])),
-            (RequirementStage.Approval, new DateOnlyTimeline([ H.DR(8, null)])),
-            (RequirementStage.Approval, new DateOnlyTimeline([ H.DR(10, 16), H.DR(18, 20)])),
-            (RequirementStage.Onboarding, new DateOnlyTimeline([ H.DR(12, null)])),
-            (RequirementStage.Onboarding, new DateOnlyTimeline([ H.DR(14, 24)])),
+            (RequirementStage.Application, new DateOnlyTimeline([H.DR(4, null)])),
+            (RequirementStage.Application, new DateOnlyTimeline([H.DR(6, null)])),
+            (RequirementStage.Application, new DateOnlyTimeline([H.DR(8, null)])),
+            (RequirementStage.Approval, new DateOnlyTimeline([H.DR(7, null)])),
+            (RequirementStage.Approval, new DateOnlyTimeline([H.DR(8, null)])),
+            (RequirementStage.Approval, new DateOnlyTimeline([H.DR(10, 16), H.DR(18, 20)])),
+            (RequirementStage.Onboarding, new DateOnlyTimeline([H.DR(12, null)])),
+            (RequirementStage.Onboarding, new DateOnlyTimeline([H.DR(14, 24)])),
         ], [
         ]);
 
@@ -121,14 +121,14 @@ public class CalculateRoleVersionApprovalStatusTest
     public void TestStatusSequenceWithRemovals()
     {
         var result = SharedCalculations.CalculateRoleVersionApprovalStatus([
-            (RequirementStage.Application, new DateOnlyTimeline([ H.DR(4, null)])),
-            (RequirementStage.Application, new DateOnlyTimeline([ H.DR(6, null)])),
-            (RequirementStage.Application, new DateOnlyTimeline([ H.DR(8, null)])),
-            (RequirementStage.Approval, new DateOnlyTimeline([ H.DR(7, null)])),
-            (RequirementStage.Approval, new DateOnlyTimeline([ H.DR(8, null)])),
-            (RequirementStage.Approval, new DateOnlyTimeline([ H.DR(10, 16), H.DR(18, 20)])),
-            (RequirementStage.Onboarding, new DateOnlyTimeline([ H.DR(12, null)])),
-            (RequirementStage.Onboarding, new DateOnlyTimeline([ H.DR(14, 24)])),
+            (RequirementStage.Application, new DateOnlyTimeline([H.DR(4, null)])),
+            (RequirementStage.Application, new DateOnlyTimeline([H.DR(6, null)])),
+            (RequirementStage.Application, new DateOnlyTimeline([H.DR(8, null)])),
+            (RequirementStage.Approval, new DateOnlyTimeline([H.DR(7, null)])),
+            (RequirementStage.Approval, new DateOnlyTimeline([H.DR(8, null)])),
+            (RequirementStage.Approval, new DateOnlyTimeline([H.DR(10, 16), H.DR(18, 20)])),
+            (RequirementStage.Onboarding, new DateOnlyTimeline([H.DR(12, null)])),
+            (RequirementStage.Onboarding, new DateOnlyTimeline([H.DR(14, 24)])),
         ], [
             new RoleRemoval("Irrelevant", RoleRemovalReason.Inactive, H.D(5), H.D(7), null),
             new RoleRemoval("Irrelevant", RoleRemovalReason.Denied, H.D(12), H.D(19), null),

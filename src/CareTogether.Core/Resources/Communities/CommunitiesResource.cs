@@ -1,9 +1,9 @@
-﻿using CareTogether.Utilities.EventLog;
-using CareTogether.Utilities.FileStore;
-using System;
+﻿using System;
 using System.Collections.Immutable;
 using System.Linq;
 using System.Threading.Tasks;
+using CareTogether.Utilities.EventLog;
+using CareTogether.Utilities.FileStore;
 
 namespace CareTogether.Resources.Communities
 {

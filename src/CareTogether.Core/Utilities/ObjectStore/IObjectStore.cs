@@ -11,7 +11,7 @@ namespace CareTogether.Utilities.ObjectStore
         Task<T> GetAsync(Guid organizationId, Guid locationId, string objectId);
 
         Task DeleteAsync(Guid organizationId, Guid locationId, string objectId);
-        
+
         IAsyncEnumerable<string> ListAsync(Guid organizationId, Guid locationId);
     }
 }
