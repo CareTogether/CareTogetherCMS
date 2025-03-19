@@ -10,7 +10,9 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
     [TestClass]
     public class CalculateMissingMonitoringRequirements
     {
-        public static ArrangementPolicy MonitoringRequirements(ImmutableList<MonitoringRequirement> values) =>
+        public static ArrangementPolicy MonitoringRequirements(
+            ImmutableList<MonitoringRequirement> values
+        ) =>
             new ArrangementPolicy(
                 string.Empty,
                 ChildInvolvement.ChildHousing,
@@ -31,7 +33,9 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
                                 "A",
                                 new DurationStagesRecurrencePolicy(
                                     ImmutableList<RecurrencePolicyStage>
-                                        .Empty.Add(new RecurrencePolicyStage(TimeSpan.FromDays(2), 1))
+                                        .Empty.Add(
+                                            new RecurrencePolicyStage(TimeSpan.FromDays(2), 1)
+                                        )
                                         .Add(new RecurrencePolicyStage(TimeSpan.FromDays(7), 4))
                                         .Add(new RecurrencePolicyStage(TimeSpan.FromDays(14), null))
                                 )
@@ -77,7 +81,9 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
                                 "A",
                                 new DurationStagesRecurrencePolicy(
                                     ImmutableList<RecurrencePolicyStage>
-                                        .Empty.Add(new RecurrencePolicyStage(TimeSpan.FromDays(2), 1))
+                                        .Empty.Add(
+                                            new RecurrencePolicyStage(TimeSpan.FromDays(2), 1)
+                                        )
                                         .Add(new RecurrencePolicyStage(TimeSpan.FromDays(7), 4))
                                         .Add(new RecurrencePolicyStage(TimeSpan.FromDays(14), null))
                                 )
@@ -224,7 +230,9 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
                                 "A",
                                 new DurationStagesRecurrencePolicy(
                                     ImmutableList<RecurrencePolicyStage>
-                                        .Empty.Add(new RecurrencePolicyStage(TimeSpan.FromDays(2), 1))
+                                        .Empty.Add(
+                                            new RecurrencePolicyStage(TimeSpan.FromDays(2), 1)
+                                        )
                                         .Add(new RecurrencePolicyStage(TimeSpan.FromDays(7), 4))
                                         .Add(new RecurrencePolicyStage(TimeSpan.FromDays(14), null))
                                 )
@@ -353,7 +361,9 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
                                 "A",
                                 new DurationStagesRecurrencePolicy(
                                     ImmutableList<RecurrencePolicyStage>
-                                        .Empty.Add(new RecurrencePolicyStage(TimeSpan.FromDays(2), 1))
+                                        .Empty.Add(
+                                            new RecurrencePolicyStage(TimeSpan.FromDays(2), 1)
+                                        )
                                         .Add(new RecurrencePolicyStage(TimeSpan.FromDays(7), 4))
                                         .Add(new RecurrencePolicyStage(TimeSpan.FromDays(14), null))
                                 )

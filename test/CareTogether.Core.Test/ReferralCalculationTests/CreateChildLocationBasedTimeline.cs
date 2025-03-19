@@ -197,12 +197,20 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
                 (H.Id('0'), ChildLocationPlan.WithParent, 1, 15)
             );
 
-            var result = ReferralCalculations.CreateChildLocationBasedTimeline(hist.ToImmutableList(), H.Id('1'));
+            var result = ReferralCalculations.CreateChildLocationBasedTimeline(
+                hist.ToImmutableList(),
+                H.Id('1')
+            );
 
             AssertEx.SequenceIs(
                 result,
                 new DateOnlyTimeline(
-                    [new DateRange(DateOnly.FromDateTime(H.DateTime(1, 10)), DateOnly.FromDateTime(H.DateTime(1, 15)))]
+                    [
+                        new DateRange(
+                            DateOnly.FromDateTime(H.DateTime(1, 10)),
+                            DateOnly.FromDateTime(H.DateTime(1, 15))
+                        ),
+                    ]
                 )
             );
         }
@@ -218,12 +226,20 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
                 (H.Id('0'), ChildLocationPlan.WithParent, 1, 15)
             );
 
-            var result = ReferralCalculations.CreateChildLocationBasedTimeline(hist.ToImmutableList(), H.Id('2'));
+            var result = ReferralCalculations.CreateChildLocationBasedTimeline(
+                hist.ToImmutableList(),
+                H.Id('2')
+            );
 
             AssertEx.SequenceIs(
                 result,
                 new DateOnlyTimeline(
-                    [new DateRange(DateOnly.FromDateTime(H.DateTime(1, 10)), DateOnly.FromDateTime(H.DateTime(1, 10)))]
+                    [
+                        new DateRange(
+                            DateOnly.FromDateTime(H.DateTime(1, 10)),
+                            DateOnly.FromDateTime(H.DateTime(1, 10))
+                        ),
+                    ]
                 )
             );
         }
@@ -239,12 +255,19 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
                 (H.Id('0'), ChildLocationPlan.WithParent, 1, 15)
             );
 
-            var result = ReferralCalculations.CreateChildLocationBasedTimeline(hist.ToImmutableList());
+            var result = ReferralCalculations.CreateChildLocationBasedTimeline(
+                hist.ToImmutableList()
+            );
 
             AssertEx.SequenceIs(
                 result,
                 new DateOnlyTimeline(
-                    [new DateRange(DateOnly.FromDateTime(H.DateTime(1, 10)), DateOnly.FromDateTime(H.DateTime(1, 15)))]
+                    [
+                        new DateRange(
+                            DateOnly.FromDateTime(H.DateTime(1, 10)),
+                            DateOnly.FromDateTime(H.DateTime(1, 15))
+                        ),
+                    ]
                 )
             );
         }

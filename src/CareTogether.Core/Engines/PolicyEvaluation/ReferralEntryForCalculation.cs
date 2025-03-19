@@ -11,7 +11,11 @@ namespace CareTogether.Engines.PolicyEvaluation
         ImmutableDictionary<Guid, ArrangementEntry> Arrangements
     );
 
-    public sealed record CompletedRequirementInfo(string RequirementName, DateOnly CompletedAt, DateOnly? ExpiresAt);
+    public sealed record CompletedRequirementInfo(
+        string RequirementName,
+        DateOnly CompletedAt,
+        DateOnly? ExpiresAt
+    );
 
     public sealed record ExemptedRequirementInfo(
         string RequirementName,

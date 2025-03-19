@@ -32,7 +32,10 @@ namespace CareTogether.Engines.PolicyEvaluation
                 Guid,
                 ImmutableList<Resources.CompletedRequirementInfo>
             > completedIndividualRequirements,
-            ImmutableDictionary<Guid, ImmutableList<Resources.ExemptedRequirementInfo>> exemptedIndividualRequirements,
+            ImmutableDictionary<
+                Guid,
+                ImmutableList<Resources.ExemptedRequirementInfo>
+            > exemptedIndividualRequirements,
             ImmutableDictionary<Guid, ImmutableList<RoleRemoval>> individualRoleRemovals
         )
         {
@@ -74,11 +77,16 @@ namespace CareTogether.Engines.PolicyEvaluation
             );
         }
 
-        internal ChildLocation ToChildLocation(ChildLocationHistoryEntry entry, TimeZoneInfo locationTimeZone)
+        internal ChildLocation ToChildLocation(
+            ChildLocationHistoryEntry entry,
+            TimeZoneInfo locationTimeZone
+        )
         {
             return new(
                 entry.ChildLocationFamilyId,
-                DateOnly.FromDateTime(Dates.ToLocationTimeZone(entry.TimestampUtc, locationTimeZone)),
+                DateOnly.FromDateTime(
+                    Dates.ToLocationTimeZone(entry.TimestampUtc, locationTimeZone)
+                ),
                 Paused: entry.Plan == ChildLocationPlan.WithParent
             );
         }
@@ -89,11 +97,15 @@ namespace CareTogether.Engines.PolicyEvaluation
         )
         {
             var completedRequirements = entry
-                .CompletedRequirements.Select(item => ToCompletedRequirementsForCalculation(item, locationTimeZone))
+                .CompletedRequirements.Select(item =>
+                    ToCompletedRequirementsForCalculation(item, locationTimeZone)
+                )
                 .ToImmutableList();
 
             var exemptedRequirements = entry
-                .ExemptedRequirements.Select(item => ToExemptedRequirementInfoForCalculation(item, locationTimeZone))
+                .ExemptedRequirements.Select(item =>
+                    ToExemptedRequirementInfoForCalculation(item, locationTimeZone)
+                )
                 .ToImmutableList();
 
             return new(
@@ -112,11 +124,15 @@ namespace CareTogether.Engines.PolicyEvaluation
         )
         {
             var completedRequirements = entry
-                .CompletedRequirements.Select(item => ToCompletedRequirementsForCalculation(item, locationTimeZone))
+                .CompletedRequirements.Select(item =>
+                    ToCompletedRequirementsForCalculation(item, locationTimeZone)
+                )
                 .ToImmutableList();
 
             var exemptedRequirements = entry
-                .ExemptedRequirements.Select(item => ToExemptedRequirementInfoForCalculation(item, locationTimeZone))
+                .ExemptedRequirements.Select(item =>
+                    ToExemptedRequirementInfoForCalculation(item, locationTimeZone)
+                )
                 .ToImmutableList();
 
             return new(
@@ -134,11 +150,15 @@ namespace CareTogether.Engines.PolicyEvaluation
         )
         {
             var completedRequirements = entry
-                .CompletedRequirements.Select(item => ToCompletedRequirementsForCalculation(item, locationTimeZone))
+                .CompletedRequirements.Select(item =>
+                    ToCompletedRequirementsForCalculation(item, locationTimeZone)
+                )
                 .ToImmutableList();
 
             var exemptedRequirements = entry
-                .ExemptedRequirements.Select(item => ToExemptedRequirementInfoForCalculation(item, locationTimeZone))
+                .ExemptedRequirements.Select(item =>
+                    ToExemptedRequirementInfoForCalculation(item, locationTimeZone)
+                )
                 .ToImmutableList();
 
             var ChildLocationHistory = entry
@@ -177,11 +197,15 @@ namespace CareTogether.Engines.PolicyEvaluation
         )
         {
             var completedRequirements = entry
-                .CompletedRequirements.Select(item => ToCompletedRequirementsForCalculation(item, locationTimeZone))
+                .CompletedRequirements.Select(item =>
+                    ToCompletedRequirementsForCalculation(item, locationTimeZone)
+                )
                 .ToImmutableList();
 
             var exemptedRequirements = entry
-                .ExemptedRequirements.Select(item => ToExemptedRequirementInfoForCalculation(item, locationTimeZone))
+                .ExemptedRequirements.Select(item =>
+                    ToExemptedRequirementInfoForCalculation(item, locationTimeZone)
+                )
                 .ToImmutableList();
 
             var arrangements = entry
@@ -213,7 +237,10 @@ namespace CareTogether.Engines.PolicyEvaluation
             TimeZoneInfo locationTimeZone =
                 location?.timeZone ?? TimeZoneInfo.FindSystemTimeZoneById("America/New_York");
 
-            var referralEntryForCalculation = ToReferralEntryForCalculation(referralEntry, locationTimeZone);
+            var referralEntryForCalculation = ToReferralEntryForCalculation(
+                referralEntry,
+                locationTimeZone
+            );
 
             var referralStatus = ReferralCalculations.CalculateReferralStatus(
                 policy.ReferralPolicy,

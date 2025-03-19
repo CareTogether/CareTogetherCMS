@@ -68,7 +68,10 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
                 today: new DateOnly(2022, 2, 1)
             );
 
-            AssertEx.SequenceIs(result, new MissingArrangementRequirement(null, null, null, null, "C", null, null));
+            AssertEx.SequenceIs(
+                result,
+                new MissingArrangementRequirement(null, null, null, null, "C", null, null)
+            );
         }
 
         [TestMethod]

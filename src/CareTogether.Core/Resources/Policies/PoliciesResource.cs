@@ -46,18 +46,28 @@ namespace CareTogether.Resources.Policies
         )
         {
             if (roleName == SystemConstants.ORGANIZATION_ADMINISTRATOR)
-                throw new InvalidOperationException("The organization administrator role cannot be edited.");
+                throw new InvalidOperationException(
+                    "The organization administrator role cannot be edited."
+                );
 
             var config = await configurationStore.GetAsync(organizationId, Guid.Empty, CONFIG);
-            var newConfig = config with { Roles = config.Roles.AddOrReplace(r => r.RoleName == roleName, _ => role) };
+            var newConfig = config with
+            {
+                Roles = config.Roles.AddOrReplace(r => r.RoleName == roleName, _ => role),
+            };
             await configurationStore.UpsertAsync(organizationId, Guid.Empty, CONFIG, newConfig);
             return Render(newConfig);
         }
 
-        public async Task<OrganizationConfiguration> DeleteRoleDefinitionAsync(Guid organizationId, string roleName)
+        public async Task<OrganizationConfiguration> DeleteRoleDefinitionAsync(
+            Guid organizationId,
+            string roleName
+        )
         {
             if (roleName == SystemConstants.ORGANIZATION_ADMINISTRATOR)
-                throw new InvalidOperationException("The organization administrator role cannot be removed.");
+                throw new InvalidOperationException(
+                    "The organization administrator role cannot be removed."
+                );
 
             var config = await configurationStore.GetAsync(organizationId, Guid.Empty, CONFIG);
 
@@ -68,21 +78,28 @@ namespace CareTogether.Resources.Policies
 
             // Create the model every time we need it, to ensure we have the latest data
             // TODO: In V2, find a better way to deal with this
-            var tenantModels = new ConcurrentLockingStore<(Guid organizationId, Guid locationId), PersonAccessModel>(
-                async key =>
-                {
-                    return await PersonAccessModel.InitializeAsync(
-                        personAccessEventLog.GetAllEventsAsync(key.organizationId, key.locationId)
-                    );
-                }
-            );
+            var tenantModels = new ConcurrentLockingStore<
+                (Guid organizationId, Guid locationId),
+                PersonAccessModel
+            >(async key =>
+            {
+                return await PersonAccessModel.InitializeAsync(
+                    personAccessEventLog.GetAllEventsAsync(key.organizationId, key.locationId)
+                );
+            });
 
             // Check if any users have this role assigned
             foreach (var location in config.Locations)
             {
-                using (var lockedModel = await tenantModels.ReadLockItemAsync((organizationId, location.Id)))
+                using (
+                    var lockedModel = await tenantModels.ReadLockItemAsync(
+                        (organizationId, location.Id)
+                    )
+                )
                 {
-                    var usersWithRole = lockedModel.Value.FindAccess(entry => entry.Roles.Contains(roleName));
+                    var usersWithRole = lockedModel.Value.FindAccess(entry =>
+                        entry.Roles.Contains(roleName)
+                    );
 
                     if (usersWithRole.Any())
                     {
@@ -100,7 +117,10 @@ namespace CareTogether.Resources.Policies
             return Render(newConfig);
         }
 
-        public async Task<EffectiveLocationPolicy> GetCurrentPolicy(Guid organizationId, Guid locationId)
+        public async Task<EffectiveLocationPolicy> GetCurrentPolicy(
+            Guid organizationId,
+            Guid locationId
+        )
         {
             var result = await locationPoliciesStore.GetAsync(organizationId, locationId, POLICY);
 
@@ -119,24 +139,24 @@ namespace CareTogether.Resources.Policies
                                             EligibleIndividualVolunteerRoles =
                                                 af.EligibleIndividualVolunteerRoles
                                                 ?? result
-                                                    .ReferralPolicy.FunctionPolicies?.SingleOrDefault(fp =>
-                                                        fp.FunctionName == af.FunctionName
+                                                    .ReferralPolicy.FunctionPolicies?.SingleOrDefault(
+                                                        fp => fp.FunctionName == af.FunctionName
                                                     )
                                                     ?.Eligibility.EligibleIndividualVolunteerRoles
                                                 ?? [],
                                             EligibleVolunteerFamilyRoles =
                                                 af.EligibleVolunteerFamilyRoles
                                                 ?? result
-                                                    .ReferralPolicy.FunctionPolicies?.SingleOrDefault(fp =>
-                                                        fp.FunctionName == af.FunctionName
+                                                    .ReferralPolicy.FunctionPolicies?.SingleOrDefault(
+                                                        fp => fp.FunctionName == af.FunctionName
                                                     )
                                                     ?.Eligibility.EligibleVolunteerFamilyRoles
                                                 ?? [],
                                             EligiblePeople =
                                                 af.EligiblePeople
                                                 ?? result
-                                                    .ReferralPolicy.FunctionPolicies?.SingleOrDefault(fp =>
-                                                        fp.FunctionName == af.FunctionName
+                                                    .ReferralPolicy.FunctionPolicies?.SingleOrDefault(
+                                                        fp => fp.FunctionName == af.FunctionName
                                                     )
                                                     ?.Eligibility.EligiblePeople
                                                 ?? [],
@@ -154,7 +174,11 @@ namespace CareTogether.Resources.Policies
 
         public async Task<OrganizationSecrets> GetOrganizationSecretsAsync(Guid organizationId)
         {
-            var result = await organizationSecretsStore.GetAsync(organizationId, Guid.Empty, SECRETS);
+            var result = await organizationSecretsStore.GetAsync(
+                organizationId,
+                Guid.Empty,
+                SECRETS
+            );
             return result;
         }
 

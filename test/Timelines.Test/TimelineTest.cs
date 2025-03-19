@@ -6,25 +6,33 @@ namespace Timelines.Test;
 public class TimelineTest
 {
     private static DateTime D(int day) => new DateTime(2022, 1, day);
+
     private static TimeSpan T(int days) => TimeSpan.FromDays(days);
-    private static AbsoluteTimeSpan M(int start, int end) =>
-        new AbsoluteTimeSpan(D(start), D(end));
+
+    private static AbsoluteTimeSpan M(int start, int end) => new AbsoluteTimeSpan(D(start), D(end));
+
     private static AbsoluteTimeSpan MMax(int start) =>
         new AbsoluteTimeSpan(D(start), DateTime.MaxValue);
-    private static AbsoluteTimeSpan MMaxMax =
-        new AbsoluteTimeSpan(DateTime.MaxValue, DateTime.MaxValue);
-    private static Timeline TL(params (int start, int? end)[] stages) =>
-        new Timeline(stages.Select(stage => new TerminatingTimelineStage(
-            Start: D(stage.start),
-            End: stage.end.HasValue ? D(stage.end.Value) : DateTime.MaxValue))
-            .ToImmutableList());
 
+    private static AbsoluteTimeSpan MMaxMax = new AbsoluteTimeSpan(
+        DateTime.MaxValue,
+        DateTime.MaxValue
+    );
+
+    private static Timeline TL(params (int start, int? end)[] stages) =>
+        new Timeline(
+            stages
+                .Select(stage => new TerminatingTimelineStage(
+                    Start: D(stage.start),
+                    End: stage.end.HasValue ? D(stage.end.Value) : DateTime.MaxValue
+                ))
+                .ToImmutableList()
+        );
 
     [TestMethod]
     public void TestSingleZeroDurationTerminatingStage()
     {
-        var dut = new Timeline(ImmutableList.Create(
-            new TerminatingTimelineStage(D(1), D(1))));
+        var dut = new Timeline(ImmutableList.Create(new TerminatingTimelineStage(D(1), D(1))));
 
         Assert.IsTrue(dut.Contains(D(1)));
         Assert.IsFalse(dut.Contains(D(2)));
@@ -70,8 +78,7 @@ public class TimelineTest
     [TestMethod]
     public void TestSingleTerminatingStage()
     {
-        var dut = new Timeline(ImmutableList.Create(
-            new TerminatingTimelineStage(D(1), D(10))));
+        var dut = new Timeline(ImmutableList.Create(new TerminatingTimelineStage(D(1), D(10))));
 
         Assert.IsTrue(dut.Contains(D(1)));
         Assert.IsTrue(dut.Contains(D(2)));
@@ -117,9 +124,12 @@ public class TimelineTest
     [TestMethod]
     public void TestTwoContinuousTerminatingStages()
     {
-        var dut = new Timeline(ImmutableList.Create(
-            new TerminatingTimelineStage(D(1), D(10)),
-            new TerminatingTimelineStage(D(10), D(20))));
+        var dut = new Timeline(
+            ImmutableList.Create(
+                new TerminatingTimelineStage(D(1), D(10)),
+                new TerminatingTimelineStage(D(10), D(20))
+            )
+        );
 
         Assert.IsTrue(dut.Contains(D(1)));
         Assert.IsTrue(dut.Contains(D(2)));
@@ -164,9 +174,12 @@ public class TimelineTest
     [TestMethod]
     public void TestTwoDiscontinuousTerminatingStages()
     {
-        var dut = new Timeline(ImmutableList.Create(
-            new TerminatingTimelineStage(D(1), D(10)),
-            new TerminatingTimelineStage(D(20), D(30))));
+        var dut = new Timeline(
+            ImmutableList.Create(
+                new TerminatingTimelineStage(D(1), D(10)),
+                new TerminatingTimelineStage(D(20), D(30))
+            )
+        );
 
         Assert.IsTrue(dut.Contains(D(1)));
         Assert.IsTrue(dut.Contains(D(2)));
@@ -211,8 +224,10 @@ public class TimelineTest
     [TestMethod]
     public void TestSingleNonTerminatingStage()
     {
-        var dut = new Timeline(ImmutableList<TerminatingTimelineStage>.Empty,
-            new NonTerminatingTimelineStage(D(1)));
+        var dut = new Timeline(
+            ImmutableList<TerminatingTimelineStage>.Empty,
+            new NonTerminatingTimelineStage(D(1))
+        );
 
         Assert.IsTrue(dut.Contains(D(1)));
         Assert.IsTrue(dut.Contains(D(2)));
@@ -257,9 +272,10 @@ public class TimelineTest
     [TestMethod]
     public void TestSingleTerminatingAndContinuousNonTerminatingStage()
     {
-        var dut = new Timeline(ImmutableList.Create(
-            new TerminatingTimelineStage(D(1), D(10))),
-            new NonTerminatingTimelineStage(D(10)));
+        var dut = new Timeline(
+            ImmutableList.Create(new TerminatingTimelineStage(D(1), D(10))),
+            new NonTerminatingTimelineStage(D(10))
+        );
 
         Assert.IsTrue(dut.Contains(D(1)));
         Assert.IsTrue(dut.Contains(D(2)));
@@ -304,9 +320,10 @@ public class TimelineTest
     [TestMethod]
     public void TestSingleTerminatingAndDiscontinuousNonTerminatingStage()
     {
-        var dut = new Timeline(ImmutableList.Create(
-            new TerminatingTimelineStage(D(1), D(10))),
-            new NonTerminatingTimelineStage(D(20)));
+        var dut = new Timeline(
+            ImmutableList.Create(new TerminatingTimelineStage(D(1), D(10))),
+            new NonTerminatingTimelineStage(D(20))
+        );
 
         Assert.IsTrue(dut.Contains(D(1)));
         Assert.IsTrue(dut.Contains(D(2)));

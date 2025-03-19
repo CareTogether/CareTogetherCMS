@@ -30,7 +30,8 @@ public sealed class DateOnlyTimeline : IEquatable<DateOnlyTimeline>
 
             if (prior.End >= current.Start)
                 throw new ArgumentException(
-                    "The date ranges must not overlap. Overlap detected between " + $"{prior} and {current}."
+                    "The date ranges must not overlap. Overlap detected between "
+                        + $"{prior} and {current}."
                 );
         }
     }
@@ -75,7 +76,10 @@ public sealed class DateOnlyTimeline : IEquatable<DateOnlyTimeline>
         if (ranges.Count == 0 || ranges.All(range => range == null))
             return null;
 
-        var nonNullRanges = ranges.Where(range => range != null).Cast<DateRange>().ToImmutableList();
+        var nonNullRanges = ranges
+            .Where(range => range != null)
+            .Cast<DateRange>()
+            .ToImmutableList();
 
         return UnionOf(nonNullRanges);
     }
@@ -101,7 +105,10 @@ public sealed class DateOnlyTimeline : IEquatable<DateOnlyTimeline>
                     }
 
                     var mostRecentRange = prior[^1];
-                    if (mostRecentRange.End == DateOnly.MaxValue || current.Start <= mostRecentRange.End.AddDays(1))
+                    if (
+                        mostRecentRange.End == DateOnly.MaxValue
+                        || current.Start <= mostRecentRange.End.AddDays(1)
+                    )
                     {
                         // The resulting range should use the end date of whichever range ends later.
                         prior[^1] = new DateRange(
@@ -165,7 +172,9 @@ public sealed class DateOnlyTimeline : IEquatable<DateOnlyTimeline>
         // Find the intersection of each range in the timeline with the 'other' range,
         // and then combine the results as a union. Some or all of the intersections
         // may be null, so the final result may be null.
-        var rangeIntersections = Ranges.Select(range => range.IntersectionWith(other)).ToImmutableList();
+        var rangeIntersections = Ranges
+            .Select(range => range.IntersectionWith(other))
+            .ToImmutableList();
 
         return UnionOf(rangeIntersections);
     }
@@ -180,7 +189,9 @@ public sealed class DateOnlyTimeline : IEquatable<DateOnlyTimeline>
         // any such intersection must consist at most of all the time spans in the first timeline.
         // So, we can find the intersection by finding the intersection of each stage in the first
         // timeline with the second timeline, then combining the results as a union.
-        var intersections = other.Ranges.Select(otherRange => IntersectionWith(otherRange)).ToImmutableList();
+        var intersections = other
+            .Ranges.Select(otherRange => IntersectionWith(otherRange))
+            .ToImmutableList();
 
         return UnionOf(intersections);
     }
@@ -207,7 +218,9 @@ public sealed class DateOnlyTimeline : IEquatable<DateOnlyTimeline>
             else if (priorRange == null)
             {
                 // If this is the first range, add a range from the beginning of time to just before the start of this range.
-                complementRanges.Add(new DateRange(DateOnly.MinValue, currentRange.Start.AddDays(-1)));
+                complementRanges.Add(
+                    new DateRange(DateOnly.MinValue, currentRange.Start.AddDays(-1))
+                );
                 priorRange = currentRange;
                 continue;
             }
@@ -220,7 +233,9 @@ public sealed class DateOnlyTimeline : IEquatable<DateOnlyTimeline>
             else
             {
                 // For all other ranges, add a range from just after the end of the prior range to just before the start of this range.
-                complementRanges.Add(new DateRange(priorRange.Value.End.AddDays(1), currentRange.Start.AddDays(-1)));
+                complementRanges.Add(
+                    new DateRange(priorRange.Value.End.AddDays(1), currentRange.Start.AddDays(-1))
+                );
                 priorRange = currentRange;
                 continue;
             }
@@ -300,7 +315,10 @@ public sealed class DateOnlyTimeline : IEquatable<DateOnlyTimeline>
     public DateOnlyTimeline? TakeDays(int requestedLength)
     {
         if (requestedLength <= 0)
-            throw new ArgumentException("Requested length must be positive.", nameof(requestedLength));
+            throw new ArgumentException(
+                "Requested length must be positive.",
+                nameof(requestedLength)
+            );
 
         // If total length is already within limit, return unchanged
         var totalLength = Ranges.Sum(r => r.TotalDaysInclusive);
@@ -356,7 +374,8 @@ public sealed class DateOnlyTimeline<T> : IEquatable<DateOnlyTimeline<T>>
 
             if (prior.End >= current.Start)
                 throw new ArgumentException(
-                    "The date ranges must not overlap. Overlap detected between " + $"{prior} and {current}."
+                    "The date ranges must not overlap. Overlap detected between "
+                        + $"{prior} and {current}."
                 );
         }
     }
