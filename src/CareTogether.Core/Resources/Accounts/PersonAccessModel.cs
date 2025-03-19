@@ -1,10 +1,10 @@
-﻿using CareTogether.Resources.Policies;
-using JsonPolymorph;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
 using System.Threading.Tasks;
+using CareTogether.Resources.Policies;
+using JsonPolymorph;
 
 namespace CareTogether.Resources.Accounts
 {

@@ -1,3 +1,8 @@
+using System;
+using System.Collections.Generic;
+using System.Collections.Immutable;
+using System.Linq;
+using System.Threading.Tasks;
 using CareTogether.Resources.Accounts;
 using CareTogether.Resources.Approvals;
 using CareTogether.Resources.Communities;
@@ -8,11 +13,6 @@ using CareTogether.Resources.Policies;
 using CareTogether.Resources.Referrals;
 using CareTogether.Utilities.EventLog;
 using CareTogether.Utilities.ObjectStore;
-using System;
-using System.Collections.Generic;
-using System.Collections.Immutable;
-using System.Linq;
-using System.Threading.Tasks;
 
 namespace CareTogether.TestData
 {
@@ -569,22 +569,31 @@ namespace CareTogether.TestData
                                         ["Crisis", "Assistance", "Respite"],
                                         sourcePhoneNumbers),
                         new LocationConfiguration(guid3, "El Dorado",
-                                        [.. new[] { "Amazon", "Caucasian", "Other" }                                                                                   ],
-                                        [.. new[] { "Single", "Spouse", "Partner", "Dad", "Mom", "Relative", "Domestic Worker" }                                                                                                                               ],
+                                        [.. new[] { "Amazon", "Caucasian", "Other" }],
+                                        [.. new[] { "Single", "Spouse", "Partner", "Dad", "Mom", "Relative", "Domestic Worker" }],
                                         ["Crisis", "Assistance", "Respite"],
                                         sourcePhoneNumbers),
                     ],
                     [new RoleDefinition("Volunteer", IsProtected: false,
                         [
                             new ContextualPermissionSet(new GlobalPermissionContext(),
-                                                [Permission.AccessPartneringFamiliesScreen, Permission.AccessVolunteersScreen, Permission.AccessCommunitiesScreen
+                                                [Permission.AccessPartneringFamiliesScreen,
+                                                    Permission.AccessVolunteersScreen,
+                                                    Permission.AccessCommunitiesScreen
 ]),
                             new ContextualPermissionSet(new OwnFamilyPermissionContext(),
-                                                [Permission.ViewPersonContactInfo, Permission.ViewApprovalProgress, Permission.ViewFamilyDocumentMetadata
+                                                [Permission.ViewPersonContactInfo,
+                                                    Permission.ViewApprovalProgress,
+                                                    Permission.ViewFamilyDocumentMetadata
 ]),
                             new ContextualPermissionSet(
                                                 new AssignedFunctionsInReferralPartneringFamilyPermissionContext(WhenReferralIsOpen: true,
-                                                    WhenOwnFunctionIsIn: ["Host Family", "Family Coach", "Family Friend", "Parent Friend", "Host Family Friend", "Staff Supervision"
+                                                    WhenOwnFunctionIsIn: ["Host Family",
+                                                        "Family Coach",
+                                                        "Family Friend",
+                                                        "Parent Friend",
+                                                        "Host Family Friend",
+                                                        "Staff Supervision"
 ]),
                                                 [
                                                     Permission.AddEditDraftNotes,
@@ -666,7 +675,7 @@ namespace CareTogether.TestData
                         "Must be filled out by an approved home screener", new Uri("http://example.com/forms/hscheck"), null),
                     ["Host Family Interview"] = new ActionRequirement(DocumentLinkRequirement.Allowed, NoteEntryRequirement.Required, null, null, null),
                     ["Meet & Greet"] = new ActionRequirement(DocumentLinkRequirement.Required, NoteEntryRequirement.Allowed, null, new Uri("http://example.com/forms/mag"), null),
-                    ["Complex Instructions"] = new ActionRequirement(DocumentLinkRequirement.Allowed, NoteEntryRequirement.Allowed, "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Quisque eu nisi ut nisi scelerisque blandit.\n\nAenean accumsan dui ac velit venenatis, at eleifend sapien sodales.\n\nEtiam faucibus augue sit amet purus cursus, ut tincidunt elit feugiat.", new Uri("http://example.com/forms/mag"), null) 
+                    ["Complex Instructions"] = new ActionRequirement(DocumentLinkRequirement.Allowed, NoteEntryRequirement.Allowed, "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Quisque eu nisi ut nisi scelerisque blandit.\n\nAenean accumsan dui ac velit venenatis, at eleifend sapien sodales.\n\nEtiam faucibus augue sit amet purus cursus, ut tincidunt elit feugiat.", new Uri("http://example.com/forms/mag"), null)
                 }.ToImmutableDictionary(),
                 [
                     new("Has Pool", CustomFieldType.Boolean, null, null),

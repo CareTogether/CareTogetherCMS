@@ -1,5 +1,5 @@
-﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
-using System.Collections.Immutable;
+﻿using System.Collections.Immutable;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace CareTogether.Core.Test
 {

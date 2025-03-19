@@ -1,9 +1,9 @@
-﻿using JsonPolymorph;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
 using System.Threading.Tasks;
+using JsonPolymorph;
 
 namespace CareTogether.Resources.Referrals
 {
@@ -126,7 +126,8 @@ namespace CareTogether.Resources.Referrals
                         ? referralEntryToUpsert.Item1.History
                         : referralEntryToUpsert.Item1.History.Add(referralEntryToUpsert.Item2)
                     });
-                });
+                }
+            );
         }
 
         public (ArrangementsCommandExecuted Event, long SequenceNumber, ReferralEntry ReferralEntry, Action OnCommit)
@@ -406,7 +407,8 @@ namespace CareTogether.Resources.Referrals
                 {
                     LastKnownSequenceNumber++;
                     referrals = referrals.SetItem(referralEntryToUpsert.Id, referralEntryToUpsert);
-                });
+                }
+            );
         }
 
         public ImmutableList<ReferralEntry> FindReferralEntries(Func<ReferralEntry, bool> predicate)

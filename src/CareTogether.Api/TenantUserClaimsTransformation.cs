@@ -1,8 +1,8 @@
-using CareTogether.Resources.Accounts;
-using Microsoft.AspNetCore.Authentication;
 using System.Linq;
 using System.Security.Claims;
 using System.Threading.Tasks;
+using CareTogether.Resources.Accounts;
+using Microsoft.AspNetCore.Authentication;
 
 namespace CareTogether.Api
 {

@@ -1,12 +1,12 @@
-﻿using CareTogether.Managers;
+﻿using System;
+using System.Collections.Generic;
+using System.Collections.Immutable;
+using System.Threading.Tasks;
+using CareTogether.Managers;
 using CareTogether.Managers.Records;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using System;
-using System.Collections.Generic;
-using System.Collections.Immutable;
-using System.Threading.Tasks;
 
 namespace CareTogether.Api.Controllers
 {

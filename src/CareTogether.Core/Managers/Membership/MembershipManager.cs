@@ -1,14 +1,14 @@
-﻿using CareTogether.Engines.Authorization;
+﻿using System;
+using System.Collections.Immutable;
+using System.Linq;
+using System.Security.Claims;
+using System.Threading.Tasks;
+using CareTogether.Engines.Authorization;
 using CareTogether.Managers.Records;
 using CareTogether.Resources.Accounts;
 using CareTogether.Resources.Directory;
 using CareTogether.Resources.Policies;
 using CareTogether.Utilities.Identity;
-using System;
-using System.Collections.Immutable;
-using System.Linq;
-using System.Security.Claims;
-using System.Threading.Tasks;
 
 namespace CareTogether.Managers.Membership
 {

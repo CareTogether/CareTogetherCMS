@@ -1,8 +1,8 @@
-﻿using JsonPolymorph;
-using NJsonSchema.Annotations;
-using System;
+﻿using System;
 using System.Collections.Immutable;
 using System.Threading.Tasks;
+using JsonPolymorph;
+using NJsonSchema.Annotations;
 
 namespace CareTogether.Resources.Accounts
 {

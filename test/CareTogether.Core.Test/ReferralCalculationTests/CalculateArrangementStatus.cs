@@ -1,9 +1,9 @@
-﻿using CareTogether.Engines;
-using CareTogether.Resources;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using CareTogether.Engines;
+using CareTogether.Resources;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace CareTogether.Core.Test.ReferralCalculationTests
 {

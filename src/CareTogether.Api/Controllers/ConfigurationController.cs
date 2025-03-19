@@ -1,11 +1,11 @@
-﻿using CareTogether.Engines.Authorization;
+﻿using System;
+using System.Threading.Tasks;
+using CareTogether.Engines.Authorization;
 using CareTogether.Resources.Policies;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.FeatureManagement;
-using System;
-using System.Threading.Tasks;
 
 namespace CareTogether.Api.Controllers
 {

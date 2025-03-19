@@ -1,15 +1,15 @@
-﻿using Azure.Storage.Blobs;
-using Azure.Storage.Blobs.Models;
-using Azure.Storage.Blobs.Specialized;
-using Microsoft.Extensions.Caching.Memory;
-using Newtonsoft.Json;
-using System;
+﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Azure.Storage.Blobs;
+using Azure.Storage.Blobs.Models;
+using Azure.Storage.Blobs.Specialized;
+using Microsoft.Extensions.Caching.Memory;
+using Newtonsoft.Json;
 
 namespace CareTogether.Utilities.ObjectStore
 {
@@ -47,7 +47,7 @@ namespace CareTogether.Utilities.ObjectStore
             if (memoryCache.TryGetValue<T>(CacheKey(organizationId, locationId, objectId), out var cachedValue) &&
                 cachedValue != null)
                 return cachedValue;
-            
+
             var tenantContainer = await CreateContainerIfNotExists(organizationId);
             var objectBlob = tenantContainer.GetBlockBlobClient($"{locationId}/{objectType}/{objectId}.json");
 

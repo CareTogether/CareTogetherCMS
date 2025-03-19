@@ -1,7 +1,7 @@
-﻿using CareTogether.Engines.PolicyEvaluation;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
-using System;
+﻿using System;
 using System.Linq;
+using CareTogether.Engines.PolicyEvaluation;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Timelines;
 using H = CareTogether.Core.Test.ApprovalCalculationTests.Helpers;
 

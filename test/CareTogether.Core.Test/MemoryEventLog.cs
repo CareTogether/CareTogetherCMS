@@ -1,9 +1,9 @@
-using CareTogether.Utilities.EventLog;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using CareTogether.Utilities.EventLog;
 
 namespace CareTogether.Core.Test
 {

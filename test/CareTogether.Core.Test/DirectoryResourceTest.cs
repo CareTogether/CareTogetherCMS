@@ -1,13 +1,13 @@
-using CareTogether.Resources;
-using CareTogether.Resources.Directory;
-using CareTogether.Utilities.FileStore;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Moq;
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
 using System.Threading.Tasks;
+using CareTogether.Resources;
+using CareTogether.Resources.Directory;
+using CareTogether.Utilities.FileStore;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Moq;
 
 namespace CareTogether.Core.Test
 {

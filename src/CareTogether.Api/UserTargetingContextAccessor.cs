@@ -1,6 +1,6 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using System.Threading.Tasks;
+using Microsoft.AspNetCore.Http;
 using Microsoft.FeatureManagement.FeatureFilters;
-using System.Threading.Tasks;
 
 namespace CareTogether.Api
 {
@@ -23,7 +23,7 @@ namespace CareTogether.Api
             var httpContext = httpContextAccessor.HttpContext!;
             if (httpContext.Items.TryGetValue(TargetingContextLookup, out var value))
                 return ValueTask.FromResult((TargetingContext)value!);
-            
+
             var targetingContext = new TargetingContext
             {
                 UserId = httpContext.User.UserId().ToString("D"),
@@ -35,7 +35,7 @@ namespace CareTogether.Api
             };
 
             httpContext.Items[TargetingContextLookup] = targetingContext;
-            
+
             return ValueTask.FromResult(targetingContext);
         }
     }

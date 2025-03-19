@@ -1,10 +1,10 @@
-﻿using JsonPolymorph;
-using Nito.AsyncEx;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
 using System.Threading.Tasks;
+using JsonPolymorph;
+using Nito.AsyncEx;
 
 namespace CareTogether.Resources.Notes
 {
@@ -96,7 +96,8 @@ namespace CareTogether.Resources.Notes
                     notes = noteEntryToUpsert == null
                         ? notes.Remove(command.NoteId)
                         : notes.SetItem(command.NoteId, noteEntryToUpsert);
-                });
+                }
+            );
         }
 
         public ImmutableList<NoteEntry> FindNoteEntries(Func<NoteEntry, bool> predicate)

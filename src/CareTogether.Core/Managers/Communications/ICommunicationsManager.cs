@@ -1,8 +1,8 @@
-using CareTogether.Utilities.Telephony;
 using System;
 using System.Collections.Immutable;
 using System.Security.Claims;
 using System.Threading.Tasks;
+using CareTogether.Utilities.Telephony;
 
 namespace CareTogether.Managers.Communications
 {

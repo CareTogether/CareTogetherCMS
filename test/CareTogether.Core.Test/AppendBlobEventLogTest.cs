@@ -1,10 +1,10 @@
-﻿using Azure.Storage.Blobs;
+﻿using System;
+using System.Linq;
+using System.Threading.Tasks;
+using Azure.Storage.Blobs;
 using CareTogether.Utilities.EventLog;
 using JsonPolymorph;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using System;
-using System.Linq;
-using System.Threading.Tasks;
 
 namespace CareTogether.Core.Test
 {

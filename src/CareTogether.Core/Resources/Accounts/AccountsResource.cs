@@ -1,9 +1,9 @@
-﻿using CareTogether.Utilities.EventLog;
-using System;
+﻿using System;
 using System.Collections.Immutable;
 using System.Linq;
 using System.Security.Cryptography;
 using System.Threading.Tasks;
+using CareTogether.Utilities.EventLog;
 
 namespace CareTogether.Resources.Accounts
 {
@@ -66,7 +66,7 @@ namespace CareTogether.Resources.Accounts
                     account.PersonLinks.Any(link => link.OrganizationId == organizationId &&
                         link.LocationId == locationId &&
                         link.PersonId == personId));
-                
+
                 accountEntry = result.SingleOrDefault();
             }
 
@@ -89,7 +89,7 @@ namespace CareTogether.Resources.Accounts
         public async Task<AccountEntry> ExecuteAccountCommandAsync(AccountCommand command, Guid userId)
         {
             //WARNING: The read/write logic in this service needs to be designed carefully to avoid deadlocks.
-            
+
             using (var lockedModel = await globalScopeAccountsModel.WriteLockItemAsync(GLOBAL_SCOPE_ID))
             {
                 var result = lockedModel.Value.ExecuteAccountCommand(command, userId, DateTime.UtcNow);
@@ -136,7 +136,7 @@ namespace CareTogether.Resources.Accounts
                 return nonce;
             }
         }
-        
+
         public async Task<AccountLocationAccess?> TryLookupUserInviteNoncePersonIdAsync(
             Guid organizationId, Guid locationId, byte[] nonce)
         {
@@ -148,7 +148,7 @@ namespace CareTogether.Resources.Accounts
                     .FindAccess(entry => entry.UserInviteNonce != null &&
                         Enumerable.SequenceEqual(entry.UserInviteNonce, nonce))
                     .SingleOrDefault();
-                
+
                 return matchingEntry == null
                     ? null
                     : new AccountLocationAccess(locationId, matchingEntry.PersonId, matchingEntry.Roles);
@@ -168,15 +168,15 @@ namespace CareTogether.Resources.Accounts
                     .FindAccess(entry => entry.UserInviteNonce != null &&
                         Enumerable.SequenceEqual(entry.UserInviteNonce, nonce))
                     .SingleOrDefault();
-                
+
                 if (matchingEntry == null)
                     return null;
-                
+
                 personId = matchingEntry.PersonId;
-                
+
                 var result = lockedTenantModel.Value.ExecuteAccessCommand(
                     new RedeemUserInviteNonce(personId, nonce), userId, DateTime.UtcNow);
-                
+
                 await personAccessEventLog.AppendEventAsync(organizationId, locationId, result.Event, result.SequenceNumber);
                 result.OnCommit();
             }
@@ -190,7 +190,7 @@ namespace CareTogether.Resources.Accounts
                     userId, DateTime.UtcNow);
 
                 accountEntry = result.Account;
-                
+
                 await accountsEventLog.AppendEventAsync(Guid.Empty, Guid.Empty, result.Event, result.SequenceNumber);
                 result.OnCommit();
             }

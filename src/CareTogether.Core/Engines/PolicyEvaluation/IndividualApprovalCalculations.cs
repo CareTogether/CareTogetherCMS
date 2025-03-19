@@ -1,9 +1,9 @@
-﻿using CareTogether.Resources;
-using CareTogether.Resources.Approvals;
-using CareTogether.Resources.Policies;
-using System;
+﻿using System;
 using System.Collections.Immutable;
 using System.Linq;
+using CareTogether.Resources;
+using CareTogether.Resources.Approvals;
+using CareTogether.Resources.Policies;
 
 namespace CareTogether.Engines.PolicyEvaluation
 {
