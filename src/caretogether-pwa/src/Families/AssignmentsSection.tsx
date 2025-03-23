@@ -1,12 +1,21 @@
 import { Grid, Typography, Card, CardContent, Box } from '@mui/material';
-import { CombinedFamilyInfo, ArrangementEntry } from '../GeneratedClient';
+import {
+  CombinedFamilyInfo,
+  ArrangementEntry,
+  PartneringFamilyInfo,
+} from '../GeneratedClient';
 import { format } from 'date-fns';
 import {
   usePersonAndFamilyLookup,
   useFamilyLookup,
 } from '../Model/DirectoryModel';
+import { partneringFamiliesData } from '../Model/ReferralsModel';
+import { useLoadable } from '../Hooks/useLoadable';
 import PersonPinCircleIcon from '@mui/icons-material/PersonPinCircle';
 import CalendarTodayIcon from '@mui/icons-material/CalendarToday';
+import { FamilyName } from '../Families/FamilyName';
+import { useNavigate } from 'react-router-dom';
+
 interface AssignmentsSectionProps {
   family: CombinedFamilyInfo;
 }
@@ -36,9 +45,27 @@ interface AssignmentCardProps {
   assignment: ArrangementEntry;
 }
 
+function allArrangements(partneringFamilyInfo: PartneringFamilyInfo) {
+  const results: { referralId: string; arrangement: ArrangementEntry }[] = [];
+  partneringFamilyInfo.closedReferrals?.forEach((x) =>
+    x.arrangements?.forEach((y) =>
+      results.push({ referralId: x.id!, arrangement: y })
+    )
+  );
+  partneringFamilyInfo.openReferral?.arrangements?.forEach((x) =>
+    results.push({
+      referralId: partneringFamilyInfo.openReferral!.id!,
+      arrangement: x,
+    })
+  );
+  return results;
+}
+
 function AssignmentCard({ assignment }: AssignmentCardProps) {
   const personAndFamilyLookup = usePersonAndFamilyLookup();
   const familyLookup = useFamilyLookup();
+  const partneringFamilies = useLoadable(partneringFamiliesData);
+  const navigate = useNavigate();
 
   const isCompleted = assignment.endedAtUtc !== undefined;
   const progressWidth = isCompleted ? '100%' : '50%';
@@ -48,50 +75,59 @@ function AssignmentCard({ assignment }: AssignmentCardProps) {
     ? personAndFamilyLookup(assignment.partneringFamilyPersonId)
     : null;
 
-  const currentLocation = assignment.childLocationHistory?.length
+  const latestLocationId = assignment.childLocationHistory?.length
     ? assignment.childLocationHistory[
         assignment.childLocationHistory.length - 1
-      ]
+      ].childLocationFamilyId
     : null;
 
-  const currentLocationName = currentLocation
-    ? familyLookup(currentLocation.childLocationFamilyId)?.family?.name
-    : 'Unspecified';
+  const latestLocationFamily = latestLocationId
+    ? familyLookup(latestLocationId)
+    : null;
 
-  const nextPlannedLocation = assignment.childLocationPlan?.length
+  const nextPlannedLocationId = assignment.childLocationPlan?.length
     ? assignment.childLocationPlan.find(
-        (entry) =>
-          !currentLocation ||
-          (entry.timestampUtc &&
-            currentLocation.timestampUtc &&
-            new Date(entry.timestampUtc) >
-              new Date(currentLocation.timestampUtc) &&
-            entry.childLocationFamilyId !==
-              currentLocation.childLocationFamilyId)
-      ) ||
-      assignment.childLocationPlan
-        .slice()
-        .reverse()
-        .find(
-          (entry) =>
-            entry.childLocationFamilyId !==
-            currentLocation?.childLocationFamilyId
-        ) ||
-      null
+        (entry) => new Date(entry.timestampUtc!) > new Date()
+      )?.childLocationFamilyId || null
     : null;
+
+  const nextPlannedLocationFamily = nextPlannedLocationId
+    ? familyLookup(nextPlannedLocationId)
+    : null;
+
+  const nextPlannedLocation =
+    assignment.childLocationPlan?.find(
+      (entry) => new Date(entry.timestampUtc!) > new Date()
+    ) ?? null;
 
   const nextPlanIsPastDue =
-    nextPlannedLocation?.timestampUtc &&
-    new Date(nextPlannedLocation.timestampUtc) < new Date();
+    nextPlannedLocation && nextPlannedLocation.timestampUtc! < new Date();
 
-  const nextPlannedLocationName = nextPlannedLocation
-    ? familyLookup(nextPlannedLocation.childLocationFamilyId)?.family?.nam
-    : 'No upcoming plans';
+  const childFamily = partneringFamilies?.find(
+    (fam) =>
+      fam.partneringFamilyInfo &&
+      allArrangements(fam.partneringFamilyInfo).some(
+        (a) => a.arrangement.id === assignment.id
+      )
+  );
 
   return (
     <Card
       variant="outlined"
-      sx={{ display: 'flex', flexDirection: 'column', minHeight: '150px' }}
+      sx={{
+        display: 'flex',
+        flexDirection: 'column',
+        minHeight: '150px',
+        cursor: childFamily?.family?.id ? 'pointer' : 'default',
+        '&:hover': {
+          backgroundColor: childFamily?.family?.id ? '#f5f5f5' : 'inherit',
+        },
+      }}
+      onClick={() => {
+        if (childFamily?.family?.id) {
+          navigate(`/families/${childFamily.family.id}`);
+        }
+      }}
     >
       <Box
         sx={{
@@ -117,7 +153,7 @@ function AssignmentCard({ assignment }: AssignmentCardProps) {
           sx={{
             display: 'grid',
             gridTemplateColumns: '1fr 1fr',
-            gap: 2,
+            gap: 1,
             marginTop: 1,
           }}
         >
@@ -141,16 +177,24 @@ function AssignmentCard({ assignment }: AssignmentCardProps) {
               variant="body2"
               sx={{ display: 'flex', alignItems: 'center', gap: 1 }}
             >
-              <PersonPinCircleIcon sx={{ color: 'gray' }} />{' '}
-              {currentLocationName}
+              <PersonPinCircleIcon sx={{ color: 'gray' }} />
+              {latestLocationFamily ? (
+                <FamilyName family={latestLocationFamily} />
+              ) : (
+                'Location Unspecified'
+              )}
             </Typography>
             <Typography
               variant="body2"
               sx={{ display: 'flex', alignItems: 'center', gap: 1 }}
             >
-              <CalendarTodayIcon sx={{ color: 'gray' }} />{' '}
+              <CalendarTodayIcon sx={{ color: 'gray' }} />
               <span style={{ color: nextPlanIsPastDue ? 'red' : 'inherit' }}>
-                {nextPlannedLocationName}
+                {nextPlannedLocationFamily ? (
+                  <FamilyName family={nextPlannedLocationFamily} />
+                ) : (
+                  'No upcoming plans'
+                )}
               </span>
             </Typography>
           </Box>
