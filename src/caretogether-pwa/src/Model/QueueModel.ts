@@ -86,16 +86,11 @@ const childNotReturnedQuery = selector<ChildNotReturned[]>({
       .filter((arrangement) => arrangement.phase === ArrangementPhase.Ended)
       .filter((arrangement) => {
         const mostRecentLocation =
-          arrangement.childLocationHistory &&
-          arrangement.childLocationHistory.length > 0
-            ? arrangement.childLocationHistory[
-                arrangement.childLocationHistory.length - 1
-              ]
-            : null;
+          arrangement?.childLocationHistory?.[
+            arrangement.childLocationHistory.length - 1
+          ];
 
-        return mostRecentLocation
-          ? mostRecentLocation.plan !== ChildLocationPlan.WithParent
-          : false;
+        return mostRecentLocation?.plan !== ChildLocationPlan.WithParent;
       })
       .map((arrangement) => {
         const family = visibleFamilies.find(

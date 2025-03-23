@@ -22,7 +22,17 @@ import { EmojiPeople } from '@mui/icons-material';
 import { AppNavigate, useAppNavigate } from '../Hooks/useAppNavigate';
 import { QueueItem, queueItemsQuery } from '../Model/QueueModel';
 
-function getMessageProps(item: QueueItem, appNavigate: AppNavigate) {
+interface InboxMessageProps {
+  icon: JSX.Element;
+  onClick: () => void;
+  primaryContent: JSX.Element;
+  secondaryContent?: JSX.Element;
+}
+
+function getMessageProps(
+  item: QueueItem,
+  appNavigate: AppNavigate
+): InboxMessageProps {
   switch (item.type) {
     case 'ChildOver18':
       return {
@@ -76,9 +86,6 @@ function getMessageProps(item: QueueItem, appNavigate: AppNavigate) {
           </Typography>
         ),
       };
-
-    default:
-      return null;
   }
 }
 
@@ -87,12 +94,7 @@ function InboxMessage({
   onClick,
   primaryContent,
   secondaryContent,
-}: {
-  icon: JSX.Element;
-  onClick: () => void;
-  primaryContent: JSX.Element;
-  secondaryContent?: JSX.Element;
-}) {
+}: InboxMessageProps) {
   return (
     <ListItemButton
       disableGutters
@@ -109,19 +111,17 @@ function MessageList() {
   const appNavigate = useAppNavigate();
   const queueItems = useLoadable(queueItemsQuery);
 
-  const messages = queueItems?.map((item) =>
+  const messages = (queueItems ?? []).map((item) =>
     getMessageProps(item, appNavigate)
   );
 
   return (
     <List>
-      {messages
-        ?.filter((msg) => msg !== null)
-        .map((message, i) => (
-          <ListItem key={i} disableGutters>
-            <InboxMessage {...message!} />
-          </ListItem>
-        ))}
+      {messages.map((message, i) => (
+        <ListItem key={i} disableGutters>
+          <InboxMessage {...message} />
+        </ListItem>
+      ))}
     </List>
   );
 }
