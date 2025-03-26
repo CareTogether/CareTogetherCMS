@@ -250,8 +250,8 @@ Activity "UC-Me-1: Sign In" {
 
 /* TODO: review */
 UseCase "UC-Me-1: Sign In" {
-  AppClient - ClaimsPrincipal ISecurityUtility.Authenticate(HttpContext) > SecurityUtility
-  AppClient - AppUserAccount IMembershipManager.SignIn(ClaimsPrincipal) > MembershipManager
+  WebClient - ClaimsPrincipal ISecurityUtility.Authenticate(HttpContext) > SecurityUtility
+  WebClient - AppUserAccount IMembershipManager.SignIn(ClaimsPrincipal) > MembershipManager
   MembershipManager - Account IAccountsAccess.GetOrCreateUserAccount(ClaimsPrincipal) > AccountsAccess
   AccountsAccess -> AccountsResource /*  Account IAccountsResource.GetOrCreateUserAccount(UserId) */
 }
@@ -300,7 +300,7 @@ Activity "UC-Pr-1: Open Location" {
 }
 
 UseCase "UC-Pr-1: Open Location" {
-  AppClient -> ProcessManager
+  WebClient -> ProcessManager
   ProcessManager -> EvaluationEngine
 }
 
@@ -317,7 +317,7 @@ DTO AuthorizationContext { }
 /*DTO GlobalAuthorizationContext : AuthorizationContext {}*/
 
 UseCase "Retrieve Records" {
-  AppClient - RetrieveRecordsResponse IProcessManager.RetrieveRecords(RetrieveRecordsRequest) > ProcessManager
+  WebClient - RetrieveRecordsResponse IProcessManager.RetrieveRecords(RetrieveRecordsRequest) > ProcessManager
     ProcessManager - RecordsResponse IRecordsAccess.Filter(RecordsCriteria) > RecordsAccess
       RecordsAccess -> SecurityUtility
       RecordsAccess -> RecordsResource
@@ -397,7 +397,7 @@ DTO RecordsResponse {
 }
 
 UseCase "UC-Pr-6: Submit Recods (create or change)" {
-  AppClient - SubmitRecordsResponse IProcessManager.SubmitRecords(SubmitRecordsRequest) > ProcessManager
+  WebClient - SubmitRecordsResponse IProcessManager.SubmitRecords(SubmitRecordsRequest) > ProcessManager
     ProcessManager -> WorkflowsAccess -> WorkflowsResource
     ProcessManager - RecordOperationsResponse IRecordsAccess.Execute(RecordOperationsRequest) > RecordsAccess
       RecordsAccess -> SecurityUtility 
@@ -434,15 +434,29 @@ DTO SubmitRecordsResponse {
 }
 
 /* TODO: check */
+UseCase "UC-Pr-34: Discard Draft Notes" {
+  WebClient - IProcessManager.ReviewChanges() > ProcessManager
+  ProcessManager - ContextualPermissions IEvaluationEngine.CalculateContextualPermissions(LocationAuthorizationContext) > EvaluationEngine
+  ProcessManager - IRecordsAccess.Execute() > RecordsAccess -> RecordsResource
+}
+
+/* TODO: check */
+UseCase "UC-Pr-35: Approve Notes" {
+  WebClient - IProcessManager.ReviewChanges() > ProcessManager
+  ProcessManager - ContextualPermissions IEvaluationEngine.CalculateContextualPermissions(LocationAuthorizationContext) > EvaluationEngine
+  ProcessManager - IRecordsAccess.Execute() > RecordsAccess -> RecordsResource
+}
+
+/* TODO: check */
 UseCase "UC-Me-1: Invite Person User" {
-  AppClient - IMembershipManager.InviteUser() > MembershipManager
+  WebClient - IMembershipManager.InviteUser() > MembershipManager
   MembershipManager - ContextualPermissions IEvaluationEngine.CalculateContextualPermissions(LocationAuthorizationContext) > EvaluationEngine
   MembershipManager -> AccountsAccess -> AccountsResource
 }
 
 /* TODO: account or records? */
 UseCase "UC-Me-2: Edit Person User Protected Roles" {
-  AppClient - IMembershipManager.ChangePersonRoles() > MembershipManager
+  WebClient - IMembershipManager.ChangePersonRoles() > MembershipManager
   MembershipManager - ContextualPermissions IEvaluationEngine.CalculateContextualPermissions(LocationAuthorizationContext) > EvaluationEngine
   MembershipManager - IAccountsAccess.Execute() > AccountsAccess -> AccountsResource
 }
@@ -450,7 +464,7 @@ UseCase "UC-Me-2: Edit Person User Protected Roles" {
 /* TODO: check */
 UseCase "UC-Me-4: View Person User Login Info" {
   /* Feel like it should be similar to IProcessManager.RetrieveRecords()? */
-  AppClient - IMembershipManager.FindAccount() > MembershipManager
+  WebClient - IMembershipManager.FindAccount() > MembershipManager
   MembershipManager - IAccountsAccess.Filter() > AccountsAccess -> AccountsResource
   MembershipManager - IRecordsAccess.Filter() > RecordsAccess -> RecordsResource
   MembershipManager - ContextualPermissions IEvaluationEngine.CalculateContextualPermissions(LocationAuthorizationContext) > EvaluationEngine
@@ -458,29 +472,14 @@ UseCase "UC-Me-4: View Person User Login Info" {
 }
 
 UseCase "UC-Me-5: Edit Roles" {
-  AppClient - IMembershipManager.ChangePersonRoles() > MembershipManager
+  WebClient - IMembershipManager.ChangePersonRoles() > MembershipManager
   MembershipManager - ContextualPermissions IEvaluationEngine.CalculateContextualPermissions(LocationAuthorizationContext) > EvaluationEngine
   MembershipManager - IAccountsAccess.Execute() > AccountsAccess -> AccountsResource
 }
 
-
-/* TODO: check */
-UseCase "UC-Pr-34: Discard Draft Notes" {
-  AppClient - IProcessManager.ReviewChanges() > ProcessManager
-  ProcessManager - ContextualPermissions IEvaluationEngine.CalculateContextualPermissions(LocationAuthorizationContext) > EvaluationEngine
-  ProcessManager - IRecordsAccess.Execute() > RecordsAccess -> RecordsResource
-}
-
-/* TODO: check */
-UseCase "UC-Pr-35: Approve Notes" {
-  AppClient - IProcessManager.ReviewChanges() > ProcessManager
-  ProcessManager - ContextualPermissions IEvaluationEngine.CalculateContextualPermissions(LocationAuthorizationContext) > EvaluationEngine
-  ProcessManager - IRecordsAccess.Execute() > RecordsAccess -> RecordsResource
-}
-
 /* TODO: check */
 UseCase "UC-Pr-76: Send Bulk SMS" {
-  AppClient - ICommunicationManager.Notify() > CommunicationManager
+  WebClient - ICommunicationManager.Notify() > CommunicationManager
   CommunicationManager - ContextualPermissions IEvaluationEngine.CalculateContextualPermissions(LocationAuthorizationContext) > EvaluationEngine
   CommunicationManager - IRecordsAccess.Filter() > RecordsAccess -> RecordsResource
   CommunicationManager - ITelephonyUtility.Notify() > TelephonyUtility
@@ -514,7 +513,7 @@ UseCase "View Communities List" {
 ### Prerequisites
 - `ContextPermissions` for 'All Communities' context
 @@@
-  AppClient - IProcessManager.RetrieveRecords() > ProcessManager
+  WebClient - IProcessManager.RetrieveRecords() > ProcessManager
     ProcessManager - IRecordsAccess.Filter() > RecordsAccess
       RecordsAccess -> SecurityUtility
       RecordsAccess -> RecordsResource
@@ -525,7 +524,7 @@ UseCase "View Communities List" {
 
 /* TODO: Missing FileStorageUtility? */
 UseCase "UC-Pr-18: Read Family Documents" {
-  AppClient - IProcessManager.RetrieveRecords() > ProcessManager
+  WebClient - IProcessManager.RetrieveRecords() > ProcessManager
     ProcessManager - IRecordsAccess.Filter() > 
       RecordsAccess -> SecurityUtility
       RecordsAccess -> RecordsResource
@@ -536,7 +535,7 @@ UseCase "UC-Pr-18: Read Family Documents" {
 
 /* TODO: check */
 UseCase "UC-Pr-23: Access Settings Screen" {
-  AppClient - IProcessManager.RetrieveRecords() > ProcessManager
+  WebClient - IProcessManager.RetrieveRecords() > ProcessManager
     ProcessManager - IRecordsAccess.Filter() > 
       RecordsAccess -> SecurityUtility
       RecordsAccess -> RecordsResource
@@ -551,7 +550,7 @@ UseCase "UC-Pr-23: Access Settings Screen" {
 /* ================== 1.2 SubmitRecords Permutations ================== */
 
 UseCase "Track Child Location" {
-  AppClient - CreateChildLocationEntryResponse IProcessManager.SubmitRecords(TrackChildLocationChange) > ProcessManager
+  WebClient - CreateChildLocationEntryResponse IProcessManager.SubmitRecords(TrackChildLocationChange) > ProcessManager
     ProcessManager - StoreChildLocationEntryResponse IRecordsAccess.Execute(ChildLocationEntry) > RecordsAccess 
       RecordsAccess -> SecurityUtility
       RecordsAccess -> RecordsResource
@@ -586,7 +585,7 @@ DTO ChildLocationEntry {
 }
 
 UseCase "UC-Pr-19: Upload Family Documents" {
-  AppClient - IProcessManager.SubmitRecords() > ProcessManager
+  WebClient - IProcessManager.SubmitRecords() > ProcessManager
     ProcessManager - IRecordsAccess.Execute() > 
       RecordsAccess -> SecurityUtility
       RecordsAccess -> RecordsResource /* TODO: Do we store a reference for the file? Should it be done after calling FileStoreUtility? */
@@ -597,7 +596,7 @@ UseCase "UC-Pr-19: Upload Family Documents" {
 }
 
 UseCase "UC-Pr-20: Archive Family Documents" {
-  AppClient - IProcessManager.SubmitRecords() > ProcessManager
+  WebClient - IProcessManager.SubmitRecords() > ProcessManager
     ProcessManager - IRecordsAccess.Execute() > 
       RecordsAccess -> SecurityUtility
       RecordsAccess -> RecordsResource
@@ -608,14 +607,14 @@ UseCase "UC-Pr-20: Archive Family Documents" {
 
 /* TODO: check */
 UseCase "UC-Pr-64: Upload Community Documents" {
-  AppClient - IProcessManager.SubmitRecords() > ProcessManager
+  WebClient - IProcessManager.SubmitRecords() > ProcessManager
   ProcessManager - ContextualPermissions IEvaluationEngine.CalculateContextualPermissions(LocationAuthorizationContext) > EvaluationEngine
   ProcessManager - IFileStoreUtility.Upload() > FileStoreUtility
   ProcessManager - IRecordsAccess.Execute() > RecordsAccess -> RecordsResource
 }
 
 UseCase "UC-Pr-81: Open Case" {
-  AppClient - OpenCaseResponse IProcessManager.SubmitRecords(OpenCaseRequest) > ProcessManager
+  WebClient - OpenCaseResponse IProcessManager.SubmitRecords(OpenCaseRequest) > ProcessManager
   ProcessManager - IEvaluationEngine.AuthorizeUserAccess() > EvaluationEngine
   EvaluationEngine -> AccountsAccess -> AccountsResource
   EvaluationEngine -> RecordsAccess -> RecordsResource
@@ -626,7 +625,7 @@ UseCase "UC-Pr-81: Open Case" {
 }
 
 UseCase "Open Referral" {
-  AppClient - OpenCaseResponse IProcessManager.SubmitRecords() > ProcessManager
+  WebClient - OpenCaseResponse IProcessManager.SubmitRecords() > ProcessManager
   ProcessManager - IEvaluationEngine.AuthorizeUserAccess() > EvaluationEngine
   EvaluationEngine -> AccountsAccess -> AccountsResource
   EvaluationEngine -> RecordsAccess -> RecordsResource
