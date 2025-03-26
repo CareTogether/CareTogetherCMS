@@ -70,21 +70,36 @@ const childNotReturnedQuery = selector<ChildNotReturned[]>({
   get: ({ get }) => {
     const visibleFamilies = get(visibleFamiliesQuery);
 
-    const allArrangements: Arrangement[] =
-      visibleFamilies?.flatMap((family) =>
-        family.partneringFamilyInfo
-          ? [
-              ...(family.partneringFamilyInfo.openReferral?.arrangements || []),
-              ...(family.partneringFamilyInfo.closedReferrals?.flatMap(
-                (referral) => referral.arrangements || []
-              ) || []),
-            ]
-          : []
-      ) || [];
+    const allArrangements: {
+      arrangement: Arrangement;
+      family: CombinedFamilyInfo;
+    }[] = visibleFamilies?.flatMap((family) => {
+      if (!family.partneringFamilyInfo) {
+        return [];
+      }
+
+      const mapArrangementAndFamily = (arrangement: Arrangement) => ({
+        arrangement,
+        family,
+      });
+
+      const openReferralArrangements =
+        family.partneringFamilyInfo.openReferral?.arrangements?.map(
+          mapArrangementAndFamily
+        ) || [];
+
+      const closedReferralsArrangements =
+        family.partneringFamilyInfo.closedReferrals?.flatMap(
+          (referral) =>
+            referral.arrangements?.map(mapArrangementAndFamily) || []
+        ) || [];
+
+      return [...openReferralArrangements, ...closedReferralsArrangements];
+    });
 
     return allArrangements
-      .filter((arrangement) => arrangement.phase === ArrangementPhase.Ended)
-      .filter((arrangement) => {
+      .filter(({ arrangement }) => arrangement.phase === ArrangementPhase.Ended)
+      .filter(({ arrangement }) => {
         const mostRecentLocation =
           arrangement?.childLocationHistory?.[
             arrangement.childLocationHistory.length - 1
@@ -92,24 +107,14 @@ const childNotReturnedQuery = selector<ChildNotReturned[]>({
 
         return mostRecentLocation?.plan !== ChildLocationPlan.WithParent;
       })
-      .map((arrangement) => {
-        const family = visibleFamilies.find(
-          (f) =>
-            f.partneringFamilyInfo?.openReferral?.arrangements?.includes(
-              arrangement
-            ) ||
-            f.partneringFamilyInfo?.closedReferrals?.some((referral) =>
-              referral.arrangements?.includes(arrangement)
-            )
-        );
-
-        const child = family?.family?.children?.find(
+      .map(({ arrangement, family }) => {
+        const child = family.family?.children?.find(
           (child) => child.id === arrangement.partneringFamilyPersonId
         );
 
         return {
           type: 'ChildNotReturned',
-          family: family ?? ({} as CombinedFamilyInfo),
+          family: family,
           child: child ?? ({} as Person),
         };
       });
