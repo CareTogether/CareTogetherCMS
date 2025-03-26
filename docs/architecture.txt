@@ -110,26 +110,14 @@ UseCase Volatilities {
 @@@
 }
 
-StaticAspect {
-  /* Encapsulates XYZ */
-  ApiClient
-}
-
-/*
-## Use Cases (Call Chains & Sequence Diagrams), Detailed Design
-*/
-
-UseCase XYZ {}
-
-DTO XYZ {}
-
 
 StaticAspect "CareTogether V2" { 
   WebClient MobileClient VoiceClient SupportClient AnalyticsClient IntegrationClient
   MembershipManager ProcessManager CommunicationManager AnalysisManager /* future enhancement */
-  EvaluationEngine TransformationEngine /* How volatile is this? */
+  EvaluationEngine
 MatchingEngine /* Possible volatility? */
   AccountsAccess NetworkAccess PoliciesAccess WorkflowsAccess AuditAccess RecordsAccess
+  /*NOTE: RecordsAccess -- Cosmos DB Graph API & Cosmos DB 'SQL' API, allowing Geode pattern */
   AccountsResource NetworkResource PoliciesResource:f WorkflowsResource AuditResource RecordsResource 
  NotesResource:f DocumentsResource:f FormsResource:a
   EventLogUtility
@@ -143,6 +131,11 @@ MatchingEngine /* Possible volatility? */
   LoggingUtility
   IdentityProviderUtility /* Was missing */
 }
+
+
+/*
+## Use Cases (Call Chains & Sequence Diagrams), Detailed Design
+*/
 
 /* OPERATION CONTRACTS -- WORK-IN-PROGRESS
 
@@ -257,6 +250,7 @@ UseCase "UC-Me-1: Sign In" {
   WebClient - AppUserAccount IMembershipManager.SignIn(ClaimsPrincipal) > MembershipManager
   MembershipManager - Account IAccountsAccess.GetOrCreateUserAccount(ClaimsPrincipal) > AccountsAccess
   AccountsAccess -> AccountsResource /*  Account IAccountsResource.GetOrCreateUserAccount(UserId) */
+  AccountsAccess -> RecordsResource
 }
 
 /* HttpContext DTO is provided by ASP.NET Core */
@@ -312,6 +306,7 @@ UseCase "SUB-Pr-1: Authorize User Access in Context" {
   EvaluationEngine -> AccountsAccess -> AccountsResource
   EvaluationEngine -> PoliciesAccess -> PoliciesResource
   EvaluationEngine -> RecordsAccess -> RecordsResource
+  ProcessManager -> SecurityUtility
 }
 
 DTO AuthorizationContext { }
@@ -321,13 +316,16 @@ DTO AuthorizationContext { }
 
 UseCase "Retrieve Records" {
   WebClient - RetrieveRecordsResponse IProcessManager.RetrieveRecords(RetrieveRecordsRequest) > ProcessManager
+    ProcessManager -> WorkflowsAccess -> WorkflowsResource
     ProcessManager - RecordsResponse IRecordsAccess.Filter(RecordsCriteria) > RecordsAccess
-      RecordsAccess -> SecurityUtility
       RecordsAccess -> RecordsResource
+      RecordsAccess -> NotesResource
+      RecordsAccess -> FormsResource
     ProcessManager -> EvaluationEngine
       EvaluationEngine -> PoliciesAccess -> PoliciesResource
-    ProcessManager - RecordsResponse ITransformationEngine.DiscloseRecords(RecordsDisclosureRequest) > TransformationEngine
-    /* ProcessManager -> AuditAccess -> AuditResource */
+    ProcessManager - RecordsResponse IEvaluationEngine.DiscloseRecords(RecordsDisclosureRequest) > EvaluationEngine
+    /* Include disclosure & authorization results */
+    ProcessManager -> AuditAccess -> AuditResource
 }
 
 DTO RetrieveRecordsRequest {
@@ -403,13 +401,15 @@ UseCase "UC-Pr-6: Submit Recods (create or change)" {
   WebClient - SubmitRecordsResponse IProcessManager.SubmitRecords(SubmitRecordsRequest) > ProcessManager
     ProcessManager -> WorkflowsAccess -> WorkflowsResource
     ProcessManager - RecordOperationsResponse IRecordsAccess.Execute(RecordOperationsRequest) > RecordsAccess
-      RecordsAccess -> SecurityUtility 
-      RecordsAccess -> PoliciesResource
       RecordsAccess -> RecordsResource
+      RecordsAccess -> NotesResource
+      RecordsAccess -> FormsResource
+      /*RecordsAccess -> DocumentsResource*/
     ProcessManager -> EvaluationEngine
       EvaluationEngine -> PoliciesAccess -> PoliciesResource
-    ProcessManager - RecordsResponse ITransformationEngine.DiscloseRecords(RecordsDisclosureRequest) > TransformationEngine
+    ProcessManager - RecordsResponse IEvaluationEngine.DiscloseRecords(RecordsDisclosureRequest) > EvaluationEngine
     ProcessManager -:q> CommunicationManager
+    ProcessManager -> AuditAccess -> AuditResource
 }
 
 DTO RecordOperation { } /* This can inclue create/change/propose change/commit change/cancel change */
@@ -522,7 +522,7 @@ UseCase "View Communities List" {
       RecordsAccess -> RecordsResource
     ProcessManager -> EvaluationEngine
       EvaluationEngine -> PoliciesAccess -> PoliciesResource
-    ProcessManager -> TransformationEngine
+    ProcessManager -> EvaluationEngine
 }
 
 /* TODO: Missing FileStorageUtility? */
@@ -533,7 +533,7 @@ UseCase "UC-Pr-18: Read Family Documents" {
       RecordsAccess -> RecordsResource
     ProcessManager -> EvaluationEngine
       EvaluationEngine -> PoliciesAccess -> PoliciesResource
-    ProcessManager -> TransformationEngine
+    ProcessManager -> EvaluationEngine
 }
 
 /* TODO: check */
@@ -547,7 +547,7 @@ UseCase "UC-Pr-23: Access Settings Screen" {
       RecordsAccess -> FormsResource
     ProcessManager -> EvaluationEngine
       EvaluationEngine -> PoliciesAccess -> PoliciesResource
-    ProcessManager -> TransformationEngine
+    ProcessManager -> EvaluationEngine
 }
 
 /* ================== 1.2 SubmitRecords Permutations ================== */
@@ -559,7 +559,7 @@ UseCase "Track Child Location" {
       RecordsAccess -> RecordsResource
     ProcessManager -> EvaluationEngine
       EvaluationEngine -> PoliciesAccess -> PoliciesResource
-    ProcessManager -> TransformationEngine
+    ProcessManager -> EvaluationEngine
 }
 
 DTO CreateChildLocationEntryResponse { }
@@ -595,7 +595,7 @@ UseCase "UC-Pr-19: Upload Family Documents" {
       RecordsAccess - IFileStoreUtility.Upload() > FileStoreUtility
     ProcessManager -> EvaluationEngine
       EvaluationEngine -> PoliciesAccess -> PoliciesResource
-    ProcessManager -> TransformationEngine
+    ProcessManager -> EvaluationEngine
 }
 
 UseCase "UC-Pr-20: Archive Family Documents" {
@@ -605,7 +605,7 @@ UseCase "UC-Pr-20: Archive Family Documents" {
       RecordsAccess -> RecordsResource
     ProcessManager -> EvaluationEngine
       EvaluationEngine -> PoliciesAccess -> PoliciesResource
-    ProcessManager -> TransformationEngine
+    ProcessManager -> EvaluationEngine
 }
 
 /* TODO: check */
