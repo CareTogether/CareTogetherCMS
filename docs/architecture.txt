@@ -19,6 +19,7 @@ To make human services more relational.
 8. Empower partners and AI agents to fully leverage the platform.
 9. Provide the highest quality user experience in the industry for all users.
 10. Build the capacity to serve the ~300,000 human services organizations in the United States and supporting global use.
+11. Enable longitudinal studies of human services outcomes and impact in order to identify and share best practices with organizations.
 
 ## Vision
 
@@ -126,9 +127,11 @@ DTO XYZ {}
 StaticAspect "CareTogether V2" { 
   WebClient MobileClient VoiceClient SupportClient AnalyticsClient IntegrationClient
   MembershipManager ProcessManager CommunicationManager AnalysisManager /* future enhancement */
-  EvaluationEngine TransformationEngine
-  AccountsAccess PoliciesAccess WorkflowsAccess RecordsAccess AuditAccess
-  AccountsResource PoliciesResource WorkflowsResource RecordsResource FormsResource AuditResource
+  EvaluationEngine TransformationEngine /* How volatile is this? */
+MatchingEngine /* Possible volatility? */
+  AccountsAccess NetworkAccess PoliciesAccess WorkflowsAccess AuditAccess RecordsAccess
+  AccountsResource NetworkResource PoliciesResource:f WorkflowsResource AuditResource RecordsResource 
+ NotesResource:f DocumentsResource:f FormsResource:a
   EventLogUtility
   FileStoreUtility
   ObjectStoreUtility
