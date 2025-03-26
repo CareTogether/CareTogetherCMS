@@ -3313,6 +3313,7 @@ export enum VolunteerFamilyRequirementScope {
     OncePerFamily = 0,
     AllAdultsInTheFamily = 1,
     AllParticipatingAdultsInTheFamily = 2,
+    AllInHouseholdParticipatingAdultsInTheFamily = 3,
 }
 
 export class CurrentFeatureFlags implements ICurrentFeatureFlags {

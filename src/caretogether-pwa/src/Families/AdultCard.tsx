@@ -160,6 +160,7 @@ export function AdultCard({ familyId, personId }: AdultCardProps) {
                 Adult, <AgeText age={adult.item1.age} />{' '}
                 {adult.item1.gender ? ', ' + Gender[adult.item1.gender] : ''}{' '}
                 {adult.item1.ethnicity ? ', ' + adult.item1.ethnicity : ''}
+                <pre>{personId}</pre>
               </>
             }
             action={
