@@ -553,39 +553,75 @@ export function FamilyScreen() {
                         marginBottom: 0,
                       }}
                     >
-                      {' '}
-                      <Typography className="ph-unmask" variant="h3">
-                        Referrals
-                      </Typography>
+                      <Box
+                        display="flex"
+                        justifyContent="space-between"
+                        alignItems="center"
+                        gap={2}
+                      >
+                        <Typography className="ph-unmask" variant="h3">
+                          Referrals
+                        </Typography>
+                        {!family.partneringFamilyInfo?.openReferral &&
+                          permissions(Permission.CreateReferral) && (
+                            <Button
+                              className="ph-unmask"
+                              onClick={() => setOpenNewReferralDialogOpen(true)}
+                              variant="contained"
+                              size="small"
+                            >
+                              Open New Referral
+                            </Button>
+                          )}
+                      </Box>
                     </FormLabel>
+
                     <RadioGroup
                       aria-labelledby="demo-radio-buttons-group-label"
                       value={selectedReferral ? selectedReferral.id : null}
                       name="radio-buttons-group"
                     >
-                      {allReferrals.map((referral) => (
-                        <FormControlLabel
-                          key={referral!.id}
-                          value={referral!.id}
-                          label={
-                            referral!.closedAtUtc ? (
-                              <>
-                                <span className="ph-unmask">
-                                  Referral Closed{' '}
-                                </span>
+                      {allReferrals.map((referral) => {
+                        const isSelected = selectedReferral?.id === referral.id;
+                        const isOpenReferral = !referral.closedAtUtc;
+                        const showCloseButton =
+                          isSelected &&
+                          isOpenReferral &&
+                          canCloseReferral &&
+                          referral.id ===
+                            family.partneringFamilyInfo?.openReferral?.id;
 
-                                <span>
-                                  {format(referral!.closedAtUtc!, 'M/d/yy')}
-                                </span>
-                              </>
-                            ) : (
-                              <span className="ph-unmask">Open Referral</span>
-                            )
-                          }
-                          control={<Radio />}
-                          onChange={() => setSelectedReferralId(referral!.id)}
-                        />
-                      ))}
+                        return (
+                          <FormControlLabel
+                            key={referral.id}
+                            value={referral.id}
+                            control={<Radio />}
+                            onChange={() => setSelectedReferralId(referral.id)}
+                            label={
+                              <Box display="flex" alignItems="center" gap={1}>
+                                <Typography className="ph-unmask">
+                                  {referral.closedAtUtc
+                                    ? `Referral Closed ${format(referral.closedAtUtc, 'M/d/yy')}`
+                                    : 'Open Referral'}
+                                </Typography>
+                                {showCloseButton && (
+                                  <Button
+                                    className="ph-unmask"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      setCloseReferralDialogOpen(true);
+                                    }}
+                                    variant="contained"
+                                    size="small"
+                                  >
+                                    Close Referral
+                                  </Button>
+                                )}
+                              </Box>
+                            }
+                          />
+                        );
+                      })}
                     </RadioGroup>
                   </FormControl>
                 )}
@@ -630,31 +666,6 @@ export function FamilyScreen() {
             </Grid>
 
             <Grid item xs={6} md={4}>
-              {canCloseReferral &&
-                selectedReferral?.id?.toString() ==
-                  family.partneringFamilyInfo?.openReferral?.id?.toString() && (
-                  <Button
-                    className="ph-unmask"
-                    onClick={() => setCloseReferralDialogOpen(true)}
-                    variant="contained"
-                    size="small"
-                    sx={{ margin: 1 }}
-                  >
-                    Close Referral
-                  </Button>
-                )}
-              {!family.partneringFamilyInfo?.openReferral &&
-                permissions(Permission.CreateReferral) && (
-                  <Button
-                    className="ph-unmask"
-                    onClick={() => setOpenNewReferralDialogOpen(true)}
-                    variant="contained"
-                    size="small"
-                    sx={{ margin: 1 }}
-                  >
-                    Open New Referral
-                  </Button>
-                )}
               {closeReferralDialogOpen &&
                 selectedReferral?.id ===
                   family.partneringFamilyInfo?.openReferral?.id && (
