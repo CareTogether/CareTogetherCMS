@@ -15,7 +15,10 @@ namespace CareTogether.Core.Test
         {
             Assert.AreEqual(expected.Length, actual.Count);
             foreach (
-                var (First, Second) in Enumerable.Zip(expected.ToImmutableSortedSet(), actual.ToImmutableSortedSet())
+                var (First, Second) in Enumerable.Zip(
+                    expected.ToImmutableSortedSet(),
+                    actual.ToImmutableSortedSet()
+                )
             )
                 Assert.AreEqual(First, Second);
         }
@@ -24,7 +27,10 @@ namespace CareTogether.Core.Test
         {
             Assert.AreEqual(expected.Length, actual.Count);
             foreach (
-                var (First, Second) in Enumerable.Zip(expected.ToImmutableSortedSet(), actual.ToImmutableSortedSet())
+                var (First, Second) in Enumerable.Zip(
+                    expected.ToImmutableSortedSet(),
+                    actual.ToImmutableSortedSet()
+                )
             )
                 Assert.AreEqual(First, Second);
         }
@@ -33,7 +39,10 @@ namespace CareTogether.Core.Test
         {
             Assert.AreEqual(expected.Length, actual.Count);
             foreach (
-                var (First, Second) in Enumerable.Zip(expected.ToImmutableSortedSet(), actual.ToImmutableSortedSet())
+                var (First, Second) in Enumerable.Zip(
+                    expected.ToImmutableSortedSet(),
+                    actual.ToImmutableSortedSet()
+                )
             )
                 Assert.AreEqual(First, Second);
         }
@@ -42,7 +51,10 @@ namespace CareTogether.Core.Test
         {
             Assert.AreEqual(expected.Length, actual.Count);
             foreach (
-                var (First, Second) in Enumerable.Zip(expected.ToImmutableSortedSet(), actual.ToImmutableSortedSet())
+                var (First, Second) in Enumerable.Zip(
+                    expected.ToImmutableSortedSet(),
+                    actual.ToImmutableSortedSet()
+                )
             )
                 Assert.AreEqual(First, Second);
         }
@@ -51,7 +63,10 @@ namespace CareTogether.Core.Test
         {
             Assert.AreEqual(expected.Count, actual.Count);
             foreach (
-                var (First, Second) in Enumerable.Zip(expected.ToImmutableSortedSet(), actual.ToImmutableSortedSet())
+                var (First, Second) in Enumerable.Zip(
+                    expected.ToImmutableSortedSet(),
+                    actual.ToImmutableSortedSet()
+                )
             )
                 Assert.AreEqual(First, Second);
         }
@@ -60,7 +75,10 @@ namespace CareTogether.Core.Test
         {
             Assert.AreEqual(expected.Length, actual.Count);
             foreach (
-                var (First, Second) in Enumerable.Zip(expected.ToImmutableSortedSet(), actual.ToImmutableSortedSet())
+                var (First, Second) in Enumerable.Zip(
+                    expected.ToImmutableSortedSet(),
+                    actual.ToImmutableSortedSet()
+                )
             )
                 Assert.AreEqual(First, Second);
         }
@@ -69,12 +87,18 @@ namespace CareTogether.Core.Test
         {
             Assert.AreEqual(expected.Count, actual.Count);
             foreach (
-                var (First, Second) in Enumerable.Zip(expected.ToImmutableSortedSet(), actual.ToImmutableSortedSet())
+                var (First, Second) in Enumerable.Zip(
+                    expected.ToImmutableSortedSet(),
+                    actual.ToImmutableSortedSet()
+                )
             )
                 Assert.AreEqual(First, Second);
         }
 
-        public static void SequenceIs(ICollection<DateRange>? actual, ICollection<DateRange>? expected)
+        public static void SequenceIs(
+            ICollection<DateRange>? actual,
+            ICollection<DateRange>? expected
+        )
         {
             if (actual == null && expected == null)
             {
@@ -133,7 +157,10 @@ namespace CareTogether.Core.Test
                 var a = actual[e.Item1];
                 Assert.AreEqual(e.Item2.Length, a.Count);
                 foreach (
-                    var (First, Second) in Enumerable.Zip(e.Item2.ToImmutableSortedSet(), a.ToImmutableSortedSet())
+                    var (First, Second) in Enumerable.Zip(
+                        e.Item2.ToImmutableSortedSet(),
+                        a.ToImmutableSortedSet()
+                    )
                 )
                     Assert.AreEqual(First, Second);
             }

@@ -22,7 +22,9 @@ namespace CareTogether.Core.Test.AuthorizationEngineTests
     [TestClass]
     public class AuthorizeUserAccess
     {
-        private static Guid Id(char x) => Guid.Parse("xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx".Replace('x', x));
+        private static Guid Id(char x) =>
+            Guid.Parse("xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx".Replace('x', x));
+
         static readonly Guid guid0 = Id('0');
         static readonly Guid guid1 = Id('1');
         static readonly Guid guid2 = Id('2');
@@ -31,10 +33,20 @@ namespace CareTogether.Core.Test.AuthorizationEngineTests
         static readonly Guid guid5 = Id('5');
 
         private static ClaimsPrincipal PersonUserWithRoles(Guid personId, params string[] roles) =>
-            new(new ClaimsIdentity(
-                new Claim[] { new Claim(Claims.PersonId.ToString(), personId.ToString()) }
-                    .Concat(roles.Select(role => new Claim(ClaimsIdentity.DefaultRoleClaimType, role.ToString()))),
-                $"{guid1}:{guid2}"));
+            new(
+                new ClaimsIdentity(
+                    new Claim[]
+                    {
+                        new Claim(Claims.PersonId.ToString(), personId.ToString()),
+                    }.Concat(
+                        roles.Select(role => new Claim(
+                            ClaimsIdentity.DefaultRoleClaimType,
+                            role.ToString()
+                        ))
+                    ),
+                    $"{guid1}:{guid2}"
+                )
+            );
 
         private static Permission[] allPermissions = Enum.GetValues<Permission>();
 
@@ -69,17 +81,32 @@ namespace CareTogether.Core.Test.AuthorizationEngineTests
                 configurationStore,
                 policiesStore,
                 organizationSecretsStore,
-                testSourceSmsPhoneNumber: null);
+                testSourceSmsPhoneNumber: null
+            );
 
             var directoryResource = new DirectoryResource(directoryEventLog, Mock.Of<IFileStore>());
-            var policiesResource = new PoliciesResource(configurationStore, policiesStore, organizationSecretsStore, personAccessEventLog);
+            var policiesResource = new PoliciesResource(
+                configurationStore,
+                policiesStore,
+                organizationSecretsStore,
+                personAccessEventLog
+            );
             var referralsResource = new ReferralsResource(referralsEventLog);
             var approvalsResource = new ApprovalsResource(approvalsEventLog);
-            var communitiesResource = new CommunitiesResource(communitiesEventLog, Mock.Of<IFileStore>());
+            var communitiesResource = new CommunitiesResource(
+                communitiesEventLog,
+                Mock.Of<IFileStore>()
+            );
             var accountsResource = new AccountsResource(accountsEventLog, personAccessEventLog);
 
-            dut = new AuthorizationEngine(policiesResource, directoryResource,
-                referralsResource, approvalsResource, communitiesResource, accountsResource);
+            dut = new AuthorizationEngine(
+                policiesResource,
+                directoryResource,
+                referralsResource,
+                approvalsResource,
+                communitiesResource,
+                accountsResource
+            );
         }
 
         [DataTestMethod]
@@ -99,13 +126,31 @@ namespace CareTogether.Core.Test.AuthorizationEngineTests
         [DataRow('d', 0, 0, 0, 0, 0, 0, 0, 0)]
         [DataRow('e', 0, 0, 0, 0, 0, 0, 0, 0)]
         [DataRow('f', 0, 0, 0, 0, 0, 0, 0, 0)]
-        public async Task TestAccessWithNoRoles(char personId,
-            int expected0, int expected1, int expected2, int expected3, int expected4, int expected5,
-            int expectedCommunity1, int expectedCommunity2)
+        public async Task TestAccessWithNoRoles(
+            char personId,
+            int expected0,
+            int expected1,
+            int expected2,
+            int expected3,
+            int expected4,
+            int expected5,
+            int expectedCommunity1,
+            int expectedCommunity2
+        )
         {
             var user = PersonUserWithRoles(Id(personId));
-            await EvaluateAccess(user, personId, expected0, expected1, expected2, expected3, expected4, expected5,
-                expectedCommunity1, expectedCommunity2);
+            await EvaluateAccess(
+                user,
+                personId,
+                expected0,
+                expected1,
+                expected2,
+                expected3,
+                expected4,
+                expected5,
+                expectedCommunity1,
+                expectedCommunity2
+            );
         }
 
         [DataTestMethod]
@@ -125,13 +170,31 @@ namespace CareTogether.Core.Test.AuthorizationEngineTests
         [DataRow('d', -1, -1, -1, -1, -1, -1, -1, -1)]
         [DataRow('e', -1, -1, -1, -1, -1, -1, -1, -1)]
         [DataRow('f', -1, -1, -1, -1, -1, -1, -1, -1)]
-        public async Task TestAccessWithOrganizationAdministratorRole(char personId,
-            int expected0, int expected1, int expected2, int expected3, int expected4, int expected5,
-            int expectedCommunity1, int expectedCommunity2)
+        public async Task TestAccessWithOrganizationAdministratorRole(
+            char personId,
+            int expected0,
+            int expected1,
+            int expected2,
+            int expected3,
+            int expected4,
+            int expected5,
+            int expectedCommunity1,
+            int expectedCommunity2
+        )
         {
             var user = PersonUserWithRoles(Id(personId), "OrganizationAdministrator");
-            await EvaluateAccess(user, personId, expected0, expected1, expected2, expected3, expected4, expected5,
-                expectedCommunity1, expectedCommunity2);
+            await EvaluateAccess(
+                user,
+                personId,
+                expected0,
+                expected1,
+                expected2,
+                expected3,
+                expected4,
+                expected5,
+                expectedCommunity1,
+                expectedCommunity2
+            );
         }
 
         [DataTestMethod]
@@ -151,13 +214,31 @@ namespace CareTogether.Core.Test.AuthorizationEngineTests
         [DataRow('d', 3, 3, 3, 3, 3, 3, 3, 3)]
         [DataRow('e', 3, 3, 3, 3, 3, 3, 3, 3)]
         [DataRow('f', 3, 3, 3, 3, 3, 3, 3, 3)]
-        public async Task TestAccessWithVolunteerRole(char personId,
-            int expected0, int expected1, int expected2, int expected3, int expected4, int expected5,
-            int expectedCommunity1, int expectedCommunity2)
+        public async Task TestAccessWithVolunteerRole(
+            char personId,
+            int expected0,
+            int expected1,
+            int expected2,
+            int expected3,
+            int expected4,
+            int expected5,
+            int expectedCommunity1,
+            int expectedCommunity2
+        )
         {
             var user = PersonUserWithRoles(Id(personId), "Volunteer");
-            await EvaluateAccess(user, personId, expected0, expected1, expected2, expected3, expected4, expected5,
-                expectedCommunity1, expectedCommunity2);
+            await EvaluateAccess(
+                user,
+                personId,
+                expected0,
+                expected1,
+                expected2,
+                expected3,
+                expected4,
+                expected5,
+                expectedCommunity1,
+                expectedCommunity2
+            );
         }
 
         [DataTestMethod]
@@ -177,33 +258,101 @@ namespace CareTogether.Core.Test.AuthorizationEngineTests
         [DataRow('d', -1, -1, -1, -1, -1, -1, -1, -1)]
         [DataRow('e', -1, -1, -1, -1, -1, -1, -1, -1)]
         [DataRow('f', -1, -1, -1, -1, -1, -1, -1, -1)]
-        public async Task TestAccessWithOrganizationAdministratorAndVolunteerRoles(char personId,
-            int expected0, int expected1, int expected2, int expected3, int expected4, int expected5,
-            int expectedCommunity1, int expectedCommunity2)
+        public async Task TestAccessWithOrganizationAdministratorAndVolunteerRoles(
+            char personId,
+            int expected0,
+            int expected1,
+            int expected2,
+            int expected3,
+            int expected4,
+            int expected5,
+            int expectedCommunity1,
+            int expectedCommunity2
+        )
         {
             var user = PersonUserWithRoles(Id(personId), "OrganizationAdministrator", "Volunteer");
-            await EvaluateAccess(user, personId, expected0, expected1, expected2, expected3, expected4, expected5,
-                expectedCommunity1, expectedCommunity2);
+            await EvaluateAccess(
+                user,
+                personId,
+                expected0,
+                expected1,
+                expected2,
+                expected3,
+                expected4,
+                expected5,
+                expectedCommunity1,
+                expectedCommunity2
+            );
         }
 
-
-        private async Task EvaluateAccess(ClaimsPrincipal user, char personId,
-            int expected0, int expected1, int expected2, int expected3, int expected4, int expected5,
-            int expectedCommunity1, int expectedCommunity2)
+        private async Task EvaluateAccess(
+            ClaimsPrincipal user,
+            char personId,
+            int expected0,
+            int expected1,
+            int expected2,
+            int expected3,
+            int expected4,
+            int expected5,
+            int expectedCommunity1,
+            int expectedCommunity2
+        )
         {
             static void PrintResults(string header, ImmutableList<Permission> result)
             {
-                Console.WriteLine($"{header}: {result.Count}\t{string.Join(", ", result.Select(r => Enum.GetName<Permission>(r)))}");
+                Console.WriteLine(
+                    $"{header}: {result.Count}\t{string.Join(", ", result.Select(r => Enum.GetName<Permission>(r)))}"
+                );
             }
 
-            var result0 = await dut!.AuthorizeUserAccessAsync(guid1, guid2, user, new FamilyAuthorizationContext(guid0));
-            var result1 = await dut!.AuthorizeUserAccessAsync(guid1, guid2, user, new FamilyAuthorizationContext(guid1));
-            var result2 = await dut!.AuthorizeUserAccessAsync(guid1, guid2, user, new FamilyAuthorizationContext(guid2));
-            var result3 = await dut!.AuthorizeUserAccessAsync(guid1, guid2, user, new FamilyAuthorizationContext(guid3));
-            var result4 = await dut!.AuthorizeUserAccessAsync(guid1, guid2, user, new FamilyAuthorizationContext(guid4));
-            var result5 = await dut!.AuthorizeUserAccessAsync(guid1, guid2, user, new FamilyAuthorizationContext(guid5));
-            var resultCommunity1 = await dut!.AuthorizeUserAccessAsync(guid1, guid2, user, new CommunityAuthorizationContext(guid1));
-            var resultCommunity2 = await dut!.AuthorizeUserAccessAsync(guid1, guid2, user, new CommunityAuthorizationContext(guid2));
+            var result0 = await dut!.AuthorizeUserAccessAsync(
+                guid1,
+                guid2,
+                user,
+                new FamilyAuthorizationContext(guid0)
+            );
+            var result1 = await dut!.AuthorizeUserAccessAsync(
+                guid1,
+                guid2,
+                user,
+                new FamilyAuthorizationContext(guid1)
+            );
+            var result2 = await dut!.AuthorizeUserAccessAsync(
+                guid1,
+                guid2,
+                user,
+                new FamilyAuthorizationContext(guid2)
+            );
+            var result3 = await dut!.AuthorizeUserAccessAsync(
+                guid1,
+                guid2,
+                user,
+                new FamilyAuthorizationContext(guid3)
+            );
+            var result4 = await dut!.AuthorizeUserAccessAsync(
+                guid1,
+                guid2,
+                user,
+                new FamilyAuthorizationContext(guid4)
+            );
+            var result5 = await dut!.AuthorizeUserAccessAsync(
+                guid1,
+                guid2,
+                user,
+                new FamilyAuthorizationContext(guid5)
+            );
+            var resultCommunity1 = await dut!.AuthorizeUserAccessAsync(
+                guid1,
+                guid2,
+                user,
+                new CommunityAuthorizationContext(guid1)
+            );
+            var resultCommunity2 = await dut!.AuthorizeUserAccessAsync(
+                guid1,
+                guid2,
+                user,
+                new CommunityAuthorizationContext(guid2)
+            );
 
             PrintResults($"Person '{personId}' -> Family '0'", result0);
             PrintResults($"Person '{personId}' -> Family '1'", result1);
@@ -216,14 +365,46 @@ namespace CareTogether.Core.Test.AuthorizationEngineTests
 
             int X(int expected) => expected == -1 ? allPermissions.Length : expected;
 
-            Assert.AreEqual(X(expected0), result0.Count, $"\nPerson '{personId}' access to family '0' expected {X(expected0)} but was {result0.Count}");
-            Assert.AreEqual(X(expected1), result1.Count, $"\nPerson '{personId}' access to family '1' expected {X(expected1)} but was {result1.Count}");
-            Assert.AreEqual(X(expected2), result2.Count, $"\nPerson '{personId}' access to family '2' expected {X(expected2)} but was {result2.Count}");
-            Assert.AreEqual(X(expected3), result3.Count, $"\nPerson '{personId}' access to family '3' expected {X(expected3)} but was {result3.Count}");
-            Assert.AreEqual(X(expected4), result4.Count, $"\nPerson '{personId}' access to family '4' expected {X(expected4)} but was {result4.Count}");
-            Assert.AreEqual(X(expected5), result5.Count, $"\nPerson '{personId}' access to family '5' expected {X(expected5)} but was {result5.Count}");
-            Assert.AreEqual(X(expectedCommunity1), resultCommunity1.Count, $"\nPerson '{personId}' access to community '1' expected {X(expectedCommunity1)} but was {resultCommunity1.Count}");
-            Assert.AreEqual(X(expectedCommunity2), resultCommunity2.Count, $"\nPerson '{personId}' access to community '2' expected {X(expectedCommunity2)} but was {resultCommunity2.Count}");
+            Assert.AreEqual(
+                X(expected0),
+                result0.Count,
+                $"\nPerson '{personId}' access to family '0' expected {X(expected0)} but was {result0.Count}"
+            );
+            Assert.AreEqual(
+                X(expected1),
+                result1.Count,
+                $"\nPerson '{personId}' access to family '1' expected {X(expected1)} but was {result1.Count}"
+            );
+            Assert.AreEqual(
+                X(expected2),
+                result2.Count,
+                $"\nPerson '{personId}' access to family '2' expected {X(expected2)} but was {result2.Count}"
+            );
+            Assert.AreEqual(
+                X(expected3),
+                result3.Count,
+                $"\nPerson '{personId}' access to family '3' expected {X(expected3)} but was {result3.Count}"
+            );
+            Assert.AreEqual(
+                X(expected4),
+                result4.Count,
+                $"\nPerson '{personId}' access to family '4' expected {X(expected4)} but was {result4.Count}"
+            );
+            Assert.AreEqual(
+                X(expected5),
+                result5.Count,
+                $"\nPerson '{personId}' access to family '5' expected {X(expected5)} but was {result5.Count}"
+            );
+            Assert.AreEqual(
+                X(expectedCommunity1),
+                resultCommunity1.Count,
+                $"\nPerson '{personId}' access to community '1' expected {X(expectedCommunity1)} but was {resultCommunity1.Count}"
+            );
+            Assert.AreEqual(
+                X(expectedCommunity2),
+                resultCommunity2.Count,
+                $"\nPerson '{personId}' access to community '2' expected {X(expectedCommunity2)} but was {resultCommunity2.Count}"
+            );
         }
     }
 }

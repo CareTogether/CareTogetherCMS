@@ -11,30 +11,42 @@ namespace CareTogether.Engines.PolicyEvaluation
     internal static class ApprovalCalculations
     {
         public static FamilyApprovalStatus CalculateCombinedFamilyApprovals(
-            VolunteerPolicy volunteerPolicy, Family family,
+            VolunteerPolicy volunteerPolicy,
+            Family family,
             ImmutableList<Resources.CompletedRequirementInfo> completedFamilyRequirements,
             ImmutableList<Resources.ExemptedRequirementInfo> exemptedFamilyRequirements,
             ImmutableList<RoleRemoval> familyRoleRemovals,
-            ImmutableDictionary<Guid, ImmutableList<Resources.CompletedRequirementInfo>> completedIndividualRequirements,
-            ImmutableDictionary<Guid, ImmutableList<Resources.ExemptedRequirementInfo>> exemptedIndividualRequirements,
-            ImmutableDictionary<Guid, ImmutableList<RoleRemoval>> individualRoleRemovals)
+            ImmutableDictionary<
+                Guid,
+                ImmutableList<Resources.CompletedRequirementInfo>
+            > completedIndividualRequirements,
+            ImmutableDictionary<
+                Guid,
+                ImmutableList<Resources.ExemptedRequirementInfo>
+            > exemptedIndividualRequirements,
+            ImmutableDictionary<Guid, ImmutableList<RoleRemoval>> individualRoleRemovals
+        )
         {
-            var allAdultsIndividualApprovalStatus = family.Adults
-                .Select(adultFamilyEntry =>
+            var allAdultsIndividualApprovalStatus = family
+                .Adults.Select(adultFamilyEntry =>
                 {
                     var (person, familyRelationship) = adultFamilyEntry;
 
-                    var completedRequirements = completedIndividualRequirements
-                        .GetValueOrEmptyList(person.Id);
-                    var exemptedRequirements = exemptedIndividualRequirements
-                        .GetValueOrEmptyList(person.Id);
-                    var roleRemovals = individualRoleRemovals
-                        .GetValueOrEmptyList(person.Id);
+                    var completedRequirements = completedIndividualRequirements.GetValueOrEmptyList(
+                        person.Id
+                    );
+                    var exemptedRequirements = exemptedIndividualRequirements.GetValueOrEmptyList(
+                        person.Id
+                    );
+                    var roleRemovals = individualRoleRemovals.GetValueOrEmptyList(person.Id);
 
                     var individualApprovalStatus =
                         IndividualApprovalCalculations.CalculateIndividualApprovalStatus(
                             volunteerPolicy.VolunteerRoles,
-                            completedRequirements, exemptedRequirements, roleRemovals);
+                            completedRequirements,
+                            exemptedRequirements,
+                            roleRemovals
+                        );
 
                     return (person.Id, individualApprovalStatus);
                 })
@@ -44,14 +56,18 @@ namespace CareTogether.Engines.PolicyEvaluation
                 FamilyApprovalCalculations.CalculateAllFamilyRoleApprovalStatuses(
                     volunteerPolicy.VolunteerFamilyRoles,
                     family,
-                    completedFamilyRequirements, exemptedFamilyRequirements,
+                    completedFamilyRequirements,
+                    exemptedFamilyRequirements,
                     familyRoleRemovals,
-                    completedIndividualRequirements, exemptedIndividualRequirements,
-                    individualRoleRemovals);
+                    completedIndividualRequirements,
+                    exemptedIndividualRequirements,
+                    individualRoleRemovals
+                );
 
             return new FamilyApprovalStatus(
                 allAdultsIndividualApprovalStatus,
-                familyRoleApprovalStatuses);
+                familyRoleApprovalStatuses
+            );
         }
     }
 }

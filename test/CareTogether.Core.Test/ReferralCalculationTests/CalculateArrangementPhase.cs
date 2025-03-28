@@ -18,7 +18,8 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
                 endedAt: null,
                 cancelledAt: null,
                 missingSetupRequirements: ImmutableList<MissingArrangementRequirement>.Empty,
-                missingFunctionAssignments: ImmutableList<ArrangementFunction>.Empty);
+                missingFunctionAssignments: ImmutableList<ArrangementFunction>.Empty
+            );
 
             Assert.AreEqual(ArrangementPhase.ReadyToStart, result);
         }
@@ -31,7 +32,8 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
                 endedAt: null,
                 cancelledAt: null,
                 missingSetupRequirements: ImmutableList<MissingArrangementRequirement>.Empty,
-                missingFunctionAssignments: ImmutableList<ArrangementFunction>.Empty);
+                missingFunctionAssignments: ImmutableList<ArrangementFunction>.Empty
+            );
 
             Assert.AreEqual(ArrangementPhase.Started, result);
         }
@@ -44,7 +46,8 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
                 endedAt: DateOnly.FromDateTime(DateTime.UtcNow),
                 cancelledAt: null,
                 missingSetupRequirements: ImmutableList<MissingArrangementRequirement>.Empty,
-                missingFunctionAssignments: ImmutableList<ArrangementFunction>.Empty);
+                missingFunctionAssignments: ImmutableList<ArrangementFunction>.Empty
+            );
 
             Assert.AreEqual(ArrangementPhase.Ended, result);
         }
@@ -56,9 +59,11 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
                 startedAt: null,
                 endedAt: null,
                 cancelledAt: null,
-                missingSetupRequirements: ImmutableList<MissingArrangementRequirement>.Empty
-                .Add(new MissingArrangementRequirement(null, null, null, null, "A", null, null)),
-                missingFunctionAssignments: ImmutableList<ArrangementFunction>.Empty);
+                missingSetupRequirements: ImmutableList<MissingArrangementRequirement>.Empty.Add(
+                    new MissingArrangementRequirement(null, null, null, null, "A", null, null)
+                ),
+                missingFunctionAssignments: ImmutableList<ArrangementFunction>.Empty
+            );
 
             Assert.AreEqual(ArrangementPhase.SettingUp, result);
         }
@@ -70,13 +75,14 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
                 startedAt: null,
                 endedAt: null,
                 cancelledAt: DateOnly.FromDateTime(DateTime.UtcNow),
-                missingSetupRequirements: ImmutableList<MissingArrangementRequirement>.Empty
-                .Add(new MissingArrangementRequirement(null, null, null, null, "A", null, null)),
-                missingFunctionAssignments: ImmutableList<ArrangementFunction>.Empty);
+                missingSetupRequirements: ImmutableList<MissingArrangementRequirement>.Empty.Add(
+                    new MissingArrangementRequirement(null, null, null, null, "A", null, null)
+                ),
+                missingFunctionAssignments: ImmutableList<ArrangementFunction>.Empty
+            );
 
             Assert.AreEqual(ArrangementPhase.Cancelled, result);
         }
-
 
         [TestMethod]
         public void TestFunctionMissingNoDates()
@@ -86,8 +92,10 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
                 endedAt: null,
                 cancelledAt: null,
                 missingSetupRequirements: ImmutableList<MissingArrangementRequirement>.Empty,
-                missingFunctionAssignments: ImmutableList<ArrangementFunction>.Empty
-                .Add(Helpers.FunctionWithoutEligibility("X", FunctionRequirement.OneOrMore)));
+                missingFunctionAssignments: ImmutableList<ArrangementFunction>.Empty.Add(
+                    Helpers.FunctionWithoutEligibility("X", FunctionRequirement.OneOrMore)
+                )
+            );
 
             Assert.AreEqual(ArrangementPhase.SettingUp, result);
         }
@@ -102,10 +110,13 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
                 startedAt: DateOnly.FromDateTime(DateTime.UtcNow),
                 endedAt: null,
                 cancelledAt: null,
-                missingSetupRequirements: ImmutableList<MissingArrangementRequirement>.Empty
-                .Add(new MissingArrangementRequirement(null, null, null, null, "A", null, null)),
-                missingFunctionAssignments: ImmutableList<ArrangementFunction>.Empty
-                .Add(Helpers.FunctionWithoutEligibility("X", FunctionRequirement.OneOrMore)));
+                missingSetupRequirements: ImmutableList<MissingArrangementRequirement>.Empty.Add(
+                    new MissingArrangementRequirement(null, null, null, null, "A", null, null)
+                ),
+                missingFunctionAssignments: ImmutableList<ArrangementFunction>.Empty.Add(
+                    Helpers.FunctionWithoutEligibility("X", FunctionRequirement.OneOrMore)
+                )
+            );
 
             Assert.AreEqual(ArrangementPhase.Started, result);
         }
@@ -120,10 +131,13 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
                 startedAt: DateOnly.FromDateTime(DateTime.UtcNow),
                 endedAt: DateOnly.FromDateTime(DateTime.UtcNow),
                 cancelledAt: null,
-                missingSetupRequirements: ImmutableList<MissingArrangementRequirement>.Empty
-                .Add(new MissingArrangementRequirement(null, null, null, null, "A", null, null)),
-                missingFunctionAssignments: ImmutableList<ArrangementFunction>.Empty
-                .Add(Helpers.FunctionWithoutEligibility("X", FunctionRequirement.OneOrMore)));
+                missingSetupRequirements: ImmutableList<MissingArrangementRequirement>.Empty.Add(
+                    new MissingArrangementRequirement(null, null, null, null, "A", null, null)
+                ),
+                missingFunctionAssignments: ImmutableList<ArrangementFunction>.Empty.Add(
+                    Helpers.FunctionWithoutEligibility("X", FunctionRequirement.OneOrMore)
+                )
+            );
 
             Assert.AreEqual(ArrangementPhase.Ended, result);
         }

@@ -31,7 +31,10 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
                 today: H.Date(2, 14)
             );
 
-            AssertEx.SequenceIs(result, H.Dates((1, 3), (1, 10), (1, 17), (1, 24), (1, 31), (2, 14), (2, 28)));
+            AssertEx.SequenceIs(
+                result,
+                H.Dates((1, 3), (1, 10), (1, 17), (1, 24), (1, 31), (2, 14), (2, 28))
+            );
         }
 
         [TestMethod]
@@ -51,7 +54,10 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
                 today: H.Date(2, 14)
             );
 
-            AssertEx.SequenceIs(result, H.Dates((1, 8), (1, 15), (1, 22), (1, 29), (2, 5), (2, 12), (2, 19)));
+            AssertEx.SequenceIs(
+                result,
+                H.Dates((1, 8), (1, 15), (1, 22), (1, 29), (2, 5), (2, 12), (2, 19))
+            );
         }
 
         [TestMethod]
@@ -60,7 +66,9 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
             //NOTE: This is NOT recommended. Use the OneTimeRecurrencePolicy instead!
             var result = ReferralCalculations.CalculateMissingMonitoringRequirementInstances(
                 new DurationStagesRecurrencePolicy(
-                    ImmutableList<RecurrencePolicyStage>.Empty.Add(new RecurrencePolicyStage(TimeSpan.FromDays(2), 1))
+                    ImmutableList<RecurrencePolicyStage>.Empty.Add(
+                        new RecurrencePolicyStage(TimeSpan.FromDays(2), 1)
+                    )
                 ),
                 filterToFamilyId: null,
                 arrangementStartedAtDate: H.Date(1, 1),
@@ -324,7 +332,10 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
                 today: H.Date(2, 14)
             );
 
-            AssertEx.SequenceIs(result, H.Dates((1, 9), (1, 16), (1, 23), (1, 30), (2, 13), (2, 27)));
+            AssertEx.SequenceIs(
+                result,
+                H.Dates((1, 9), (1, 16), (1, 23), (1, 30), (2, 13), (2, 27))
+            );
         }
 
         [TestMethod]
@@ -448,7 +459,10 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
                 today: H.Date(2, 14)
             );
 
-            AssertEx.SequenceIs(result, H.Dates((1, 9), (1, 16), (1, 23), (1, 30), (2, 13), (2, 27)));
+            AssertEx.SequenceIs(
+                result,
+                H.Dates((1, 9), (1, 16), (1, 23), (1, 30), (2, 13), (2, 27))
+            );
         }
 
         [TestMethod]
@@ -631,11 +645,16 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
                 arrangementStartedAtDate: H.Date(1, 1),
                 arrangementEndedAtDate: null,
                 completions: H.Dates(),
-                childLocationHistory: H.ChildLocationHistory((H.Id('0'), ChildLocationPlan.DaytimeChildCare, 1, 1)),
+                childLocationHistory: H.ChildLocationHistory(
+                    (H.Id('0'), ChildLocationPlan.DaytimeChildCare, 1, 1)
+                ),
                 today: H.Date(2, 14)
             );
 
-            AssertEx.SequenceIs(result, H.Dates((1, 3), (1, 10), (1, 17), (1, 24), (1, 31), (2, 14), (2, 28)));
+            AssertEx.SequenceIs(
+                result,
+                H.Dates((1, 3), (1, 10), (1, 17), (1, 24), (1, 31), (2, 14), (2, 28))
+            );
         }
 
         [TestMethod]
@@ -651,11 +670,16 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
                 arrangementStartedAtDate: H.Date(1, 1),
                 arrangementEndedAtDate: null,
                 completions: H.Dates(),
-                childLocationHistory: H.ChildLocationHistory((H.Id('0'), ChildLocationPlan.DaytimeChildCare, 1, 1)),
+                childLocationHistory: H.ChildLocationHistory(
+                    (H.Id('0'), ChildLocationPlan.DaytimeChildCare, 1, 1)
+                ),
                 today: H.Date(2, 14)
             );
 
-            AssertEx.SequenceIs(result, H.Dates((1, 8), (1, 15), (1, 22), (1, 29), (2, 5), (2, 12), (2, 19)));
+            AssertEx.SequenceIs(
+                result,
+                H.Dates((1, 8), (1, 15), (1, 22), (1, 29), (2, 5), (2, 12), (2, 19))
+            );
         }
 
         [TestMethod]
@@ -680,7 +704,10 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
                 today: H.Date(2, 14)
             );
 
-            AssertEx.SequenceIs(result, H.Dates((1, 3), (1, 10), (1, 20), (1, 27), (2, 3), (2, 17)));
+            AssertEx.SequenceIs(
+                result,
+                H.Dates((1, 3), (1, 10), (1, 20), (1, 27), (2, 3), (2, 17))
+            );
         }
 
         [TestMethod]
@@ -730,7 +757,10 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
                 today: H.Date(2, 14)
             );
 
-            AssertEx.SequenceIs(result, H.Dates((1, 17), (1, 24), (1, 31), (2, 7), (2, 14), (2, 28)));
+            AssertEx.SequenceIs(
+                result,
+                H.Dates((1, 17), (1, 24), (1, 31), (2, 7), (2, 14), (2, 28))
+            );
         }
 
         [TestMethod]
@@ -755,7 +785,10 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
                 today: H.Date(2, 14)
             );
 
-            AssertEx.SequenceIs(result, H.Dates((1, 3), (1, 10), (1, 22), (1, 29), (2, 12), (2, 26)));
+            AssertEx.SequenceIs(
+                result,
+                H.Dates((1, 3), (1, 10), (1, 22), (1, 29), (2, 12), (2, 26))
+            );
         }
 
         [TestMethod]
@@ -847,7 +880,9 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
                 arrangementStartedAtDate: H.Date(1, 1),
                 arrangementEndedAtDate: H.Date(2, 1),
                 completions: H.Dates(),
-                childLocationHistory: H.ChildLocationHistory((H.Id('0'), ChildLocationPlan.DaytimeChildCare, 1, 1)),
+                childLocationHistory: H.ChildLocationHistory(
+                    (H.Id('0'), ChildLocationPlan.DaytimeChildCare, 1, 1)
+                ),
                 today: H.Date(2, 14)
             );
 
@@ -970,11 +1005,16 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
                 arrangementStartedAtDate: H.Date(1, 1),
                 arrangementEndedAtDate: null,
                 completions: H.Dates((1, 2)),
-                childLocationHistory: H.ChildLocationHistory((H.Id('0'), ChildLocationPlan.DaytimeChildCare, 1, 1)),
+                childLocationHistory: H.ChildLocationHistory(
+                    (H.Id('0'), ChildLocationPlan.DaytimeChildCare, 1, 1)
+                ),
                 today: H.Date(2, 14)
             );
 
-            AssertEx.SequenceIs(result, H.Dates((1, 9), (1, 16), (1, 23), (1, 30), (2, 13), (2, 27)));
+            AssertEx.SequenceIs(
+                result,
+                H.Dates((1, 9), (1, 16), (1, 23), (1, 30), (2, 13), (2, 27))
+            );
         }
 
         [TestMethod]
@@ -991,7 +1031,9 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
                 arrangementStartedAtDate: H.Date(1, 1),
                 arrangementEndedAtDate: H.Date(2, 1),
                 completions: H.Dates((1, 2)),
-                childLocationHistory: H.ChildLocationHistory((H.Id('0'), ChildLocationPlan.DaytimeChildCare, 1, 1)),
+                childLocationHistory: H.ChildLocationHistory(
+                    (H.Id('0'), ChildLocationPlan.DaytimeChildCare, 1, 1)
+                ),
                 today: H.Date(2, 14)
             );
 
@@ -1012,11 +1054,16 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
                 arrangementStartedAtDate: H.Date(1, 1),
                 arrangementEndedAtDate: null,
                 completions: H.Dates((1, 2), (1, 2)),
-                childLocationHistory: H.ChildLocationHistory((H.Id('0'), ChildLocationPlan.DaytimeChildCare, 1, 1)),
+                childLocationHistory: H.ChildLocationHistory(
+                    (H.Id('0'), ChildLocationPlan.DaytimeChildCare, 1, 1)
+                ),
                 today: H.Date(2, 14)
             );
 
-            AssertEx.SequenceIs(result, H.Dates((1, 9), (1, 16), (1, 23), (1, 30), (2, 13), (2, 27)));
+            AssertEx.SequenceIs(
+                result,
+                H.Dates((1, 9), (1, 16), (1, 23), (1, 30), (2, 13), (2, 27))
+            );
         }
 
         [TestMethod]
@@ -1033,7 +1080,9 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
                 arrangementStartedAtDate: H.Date(1, 1),
                 arrangementEndedAtDate: null,
                 completions: H.Dates((1, 1), (1, 2)),
-                childLocationHistory: H.ChildLocationHistory((H.Id('0'), ChildLocationPlan.DaytimeChildCare, 1, 1)),
+                childLocationHistory: H.ChildLocationHistory(
+                    (H.Id('0'), ChildLocationPlan.DaytimeChildCare, 1, 1)
+                ),
                 today: H.Date(2, 14)
             );
 
@@ -1054,7 +1103,9 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
                 arrangementStartedAtDate: H.Date(1, 1),
                 arrangementEndedAtDate: null,
                 completions: H.Dates((1, 2), (1, 9)),
-                childLocationHistory: H.ChildLocationHistory((H.Id('0'), ChildLocationPlan.DaytimeChildCare, 1, 1)),
+                childLocationHistory: H.ChildLocationHistory(
+                    (H.Id('0'), ChildLocationPlan.DaytimeChildCare, 1, 1)
+                ),
                 today: H.Date(2, 14)
             );
 
@@ -1075,7 +1126,9 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
                 arrangementStartedAtDate: H.Date(1, 1),
                 arrangementEndedAtDate: null,
                 completions: H.Dates((1, 2), (1, 10)),
-                childLocationHistory: H.ChildLocationHistory((H.Id('0'), ChildLocationPlan.DaytimeChildCare, 1, 1)),
+                childLocationHistory: H.ChildLocationHistory(
+                    (H.Id('0'), ChildLocationPlan.DaytimeChildCare, 1, 1)
+                ),
                 today: H.Date(2, 14)
             );
 
@@ -1096,7 +1149,9 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
                 arrangementStartedAtDate: H.Date(1, 1),
                 arrangementEndedAtDate: null,
                 completions: H.Dates((1, 2), (1, 20)),
-                childLocationHistory: H.ChildLocationHistory((H.Id('0'), ChildLocationPlan.DaytimeChildCare, 1, 1)),
+                childLocationHistory: H.ChildLocationHistory(
+                    (H.Id('0'), ChildLocationPlan.DaytimeChildCare, 1, 1)
+                ),
                 today: H.Date(2, 14)
             );
 
@@ -1117,7 +1172,9 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
                 arrangementStartedAtDate: H.Date(1, 1),
                 arrangementEndedAtDate: null,
                 completions: H.Dates((1, 2), (1, 20), (2, 9)),
-                childLocationHistory: H.ChildLocationHistory((H.Id('0'), ChildLocationPlan.DaytimeChildCare, 1, 1)),
+                childLocationHistory: H.ChildLocationHistory(
+                    (H.Id('0'), ChildLocationPlan.DaytimeChildCare, 1, 1)
+                ),
                 today: H.Date(2, 14)
             );
 

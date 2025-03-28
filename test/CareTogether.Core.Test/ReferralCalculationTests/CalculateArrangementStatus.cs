@@ -10,7 +10,9 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
     [TestClass]
     public class CalculateArrangementStatus
     {
-        private static Guid Id(char x) => Guid.Parse("xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx".Replace('x', x));
+        private static Guid Id(char x) =>
+            Guid.Parse("xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx".Replace('x', x));
+
         static readonly Guid guid0 = Id('0');
         static readonly Guid guid1 = Id('1');
         static readonly Guid guid2 = Id('2');
@@ -18,7 +20,6 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
         static readonly Guid guid4 = Id('4');
         static readonly Guid guid5 = Id('5');
         static readonly Guid guid6 = Id('6');
-
 
         [TestMethod]
         public void Test()

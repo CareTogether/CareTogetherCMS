@@ -10,15 +10,20 @@ namespace CareTogether.Core.Test
 {
     [JsonHierarchyBase]
     public abstract partial record TestEvent(int EventId);
-    public sealed record TestEventA(int EventId) : TestEvent(EventId);
-    public sealed record TestEventB(int EventId) : TestEvent(EventId);
 
+    public sealed record TestEventA(int EventId) : TestEvent(EventId);
+
+    public sealed record TestEventB(int EventId) : TestEvent(EventId);
 
     [TestClass]
     public class AppendBlobEventLogTest
     {
-        private static readonly BlobServiceClient testingClient = new BlobServiceClient("UseDevelopmentStorage=true");
-        private static Guid Id(char x) => Guid.Parse("xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx".Replace('x', x));
+        private static readonly BlobServiceClient testingClient = new BlobServiceClient(
+            "UseDevelopmentStorage=true"
+        );
+
+        private static Guid Id(char x) =>
+            Guid.Parse("xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx".Replace('x', x));
 
         // 'organizationId' and 'locationId' must be seeded with 1 and 2, respectively, because
         // PopulateTestDataAsync creates data in that organizationId and locationId only.
@@ -27,11 +32,14 @@ namespace CareTogether.Core.Test
         static readonly Guid guid3 = Id('3');
         static readonly Guid guid4 = Id('4');
 
-        private static async Task AppendEventsAsync<T>(IEventLog<T> eventLog,
-            Guid organizationId, Guid locationId, params T[] events)
+        private static async Task AppendEventsAsync<T>(
+            IEventLog<T> eventLog,
+            Guid organizationId,
+            Guid locationId,
+            params T[] events
+        )
         {
-            foreach (var (domainEvent, index) in events
-                .Select((e, i) => (e, (long)i)))
+            foreach (var (domainEvent, index) in events.Select((e, i) => (e, (long)i)))
             {
                 await eventLog.AppendEventAsync(organizationId, locationId, domainEvent, index + 1);
             }
@@ -40,6 +48,7 @@ namespace CareTogether.Core.Test
 #nullable disable
         AppendBlobEventLog<TestEventA> directoryEventLog;
         AppendBlobEventLog<TestEventB> referralsEventLog;
+
 #nullable restore
 
         [TestInitialize]
@@ -62,21 +71,33 @@ namespace CareTogether.Core.Test
         [TestMethod]
         public async Task ResultsFromContainerAfterTestDataPopulationMatchesExpected()
         {
-            await AppendEventsAsync(directoryEventLog, organizationId, locationId,
+            await AppendEventsAsync(
+                directoryEventLog,
+                organizationId,
+                locationId,
                 new TestEventA(1),
                 new TestEventA(2),
-                new TestEventA(3));
-            await AppendEventsAsync(referralsEventLog, organizationId, locationId,
+                new TestEventA(3)
+            );
+            await AppendEventsAsync(
+                referralsEventLog,
+                organizationId,
+                locationId,
                 new TestEventB(1),
-                new TestEventB(2));
+                new TestEventB(2)
+            );
 
-            var directoryEvents = await directoryEventLog.GetAllEventsAsync(organizationId, locationId).ToListAsync();
+            var directoryEvents = await directoryEventLog
+                .GetAllEventsAsync(organizationId, locationId)
+                .ToListAsync();
 
             Assert.AreEqual(3, directoryEvents.Count);
             Assert.AreEqual(typeof(TestEventA), directoryEvents[0].DomainEvent.GetType());
             Assert.AreEqual(typeof(TestEventA), directoryEvents[2].DomainEvent.GetType());
 
-            var referralEvents = await referralsEventLog.GetAllEventsAsync(organizationId, locationId).ToListAsync();
+            var referralEvents = await referralsEventLog
+                .GetAllEventsAsync(organizationId, locationId)
+                .ToListAsync();
 
             Assert.AreEqual(2, referralEvents.Count);
             Assert.AreEqual(typeof(TestEventB), referralEvents[1].DomainEvent.GetType());
@@ -101,8 +122,15 @@ namespace CareTogether.Core.Test
         [TestMethod]
         public async Task AppendingAnEventToAnUninitializedTenantLogStoresItWithTheCorrectSequenceNumber()
         {
-            await directoryEventLog.AppendEventAsync(organizationId, locationId, new TestEventA(1), 1);
-            var getResult = await directoryEventLog.GetAllEventsAsync(organizationId, locationId).ToListAsync();
+            await directoryEventLog.AppendEventAsync(
+                organizationId,
+                locationId,
+                new TestEventA(1),
+                1
+            );
+            var getResult = await directoryEventLog
+                .GetAllEventsAsync(organizationId, locationId)
+                .ToListAsync();
             Assert.AreEqual(1, getResult.Count);
             Assert.AreEqual(1, getResult[0].SequenceNumber);
         }
@@ -152,18 +180,55 @@ namespace CareTogether.Core.Test
         [TestMethod]
         public async Task AppendingMultipleEventsToMultipleTenantLogsMaintainsSeparation()
         {
-            await directoryEventLog.AppendEventAsync(organizationId, locationId, new TestEventA(1), 1);
-            await directoryEventLog.AppendEventAsync(organizationId, locationId, new TestEventA(2), 2);
-            await directoryEventLog.AppendEventAsync(organizationId, locationId, new TestEventA(3), 3);
-            await directoryEventLog.AppendEventAsync(organizationId, locationId, new TestEventA(4), 4);
-            await directoryEventLog.AppendEventAsync(organizationId, locationId, new TestEventA(5), 5);
-            await directoryEventLog.AppendEventAsync(organizationId, locationId, new TestEventA(6), 6);
+            await directoryEventLog.AppendEventAsync(
+                organizationId,
+                locationId,
+                new TestEventA(1),
+                1
+            );
+            await directoryEventLog.AppendEventAsync(
+                organizationId,
+                locationId,
+                new TestEventA(2),
+                2
+            );
+            await directoryEventLog.AppendEventAsync(
+                organizationId,
+                locationId,
+                new TestEventA(3),
+                3
+            );
+            await directoryEventLog.AppendEventAsync(
+                organizationId,
+                locationId,
+                new TestEventA(4),
+                4
+            );
+            await directoryEventLog.AppendEventAsync(
+                organizationId,
+                locationId,
+                new TestEventA(5),
+                5
+            );
+            await directoryEventLog.AppendEventAsync(
+                organizationId,
+                locationId,
+                new TestEventA(6),
+                6
+            );
             await directoryEventLog.AppendEventAsync(guid3, guid4, new TestEventA(7), 1);
             await directoryEventLog.AppendEventAsync(guid3, guid4, new TestEventA(8), 2);
             await directoryEventLog.AppendEventAsync(guid3, guid4, new TestEventA(9), 3);
-            await directoryEventLog.AppendEventAsync(organizationId, locationId, new TestEventA(10), 7);
+            await directoryEventLog.AppendEventAsync(
+                organizationId,
+                locationId,
+                new TestEventA(10),
+                7
+            );
 
-            var getResult = await directoryEventLog.GetAllEventsAsync(organizationId, locationId).ToListAsync();
+            var getResult = await directoryEventLog
+                .GetAllEventsAsync(organizationId, locationId)
+                .ToListAsync();
             Assert.AreEqual(7, getResult.Count);
             Assert.AreEqual((new TestEventA(1), 1), getResult[0]);
             Assert.AreEqual((new TestEventA(2), 2), getResult[1]);

@@ -9,8 +9,10 @@ namespace CareTogether.Core.Test
 {
     public sealed class MemoryObjectStore<T> : IObjectStore<T>
     {
-        private readonly ConcurrentDictionary<(Guid organizationId, Guid locationId, string objectId), T> tenantObjects = new();
-
+        private readonly ConcurrentDictionary<
+            (Guid organizationId, Guid locationId, string objectId),
+            T
+        > tenantObjects = new();
 
         public async Task DeleteAsync(Guid organizationId, Guid locationId, string objectId)
         {
@@ -33,7 +35,12 @@ namespace CareTogether.Core.Test
                 yield return objectId;
         }
 
-        public async Task UpsertAsync(Guid organizationId, Guid locationId, string objectId, T value)
+        public async Task UpsertAsync(
+            Guid organizationId,
+            Guid locationId,
+            string objectId,
+            T value
+        )
         {
             await Task.Yield();
             tenantObjects[(organizationId, locationId, objectId)] = value;

@@ -4,10 +4,12 @@
 public class DateRangeTest
 {
     private static DateOnly D(int day) => new(2024, 1, day);
-    private static DateRange DR(int start, int end) => new(D(start), D(end));
-    private static DateRange DR(int start) => new(D(start));
-    private static DateRange<T> DR<T>(int start, int end, T tag) => new(D(start), D(end), tag);
 
+    private static DateRange DR(int start, int end) => new(D(start), D(end));
+
+    private static DateRange DR(int start) => new(D(start));
+
+    private static DateRange<T> DR<T>(int start, int end, T tag) => new(D(start), D(end), tag);
 
     [TestMethod]
     public void DateRangeConstructorWithSingleValueSetsEndToMaxValue()
@@ -80,8 +82,7 @@ public class DateRangeTest
     [TestMethod]
     public void DateRangeConstructorForbidsStartAfterEnd()
     {
-        Assert.ThrowsException<ArgumentException>(() =>
-            new DateRange(D(2), D(1)));
+        Assert.ThrowsException<ArgumentException>(() => new DateRange(D(2), D(1)));
     }
 
     [DataRow(1, 1, 1, true)]
@@ -95,8 +96,7 @@ public class DateRangeTest
     [DataRow(2, 4, 4, true)]
     [DataRow(2, 4, 5, false)]
     [DataTestMethod]
-    public void DateRangeContainsHandlesValues(
-        int start, int end, int test, bool expected)
+    public void DateRangeContainsHandlesValues(int start, int end, int test, bool expected)
     {
         var dut = new DateRange(D(start), D(end));
         Assert.AreEqual(expected, dut.Contains(D(test)));
@@ -273,8 +273,7 @@ public class DateRangeTest
     [TestMethod]
     public void TaggedDateRangeConstructorForbidsStartAfterEnd()
     {
-        Assert.ThrowsException<ArgumentException>(() =>
-            new DateRange<char>(D(2), D(1), 'A'));
+        Assert.ThrowsException<ArgumentException>(() => new DateRange<char>(D(2), D(1), 'A'));
     }
 
     [DataRow(1, 1, 1, true)]
@@ -288,8 +287,7 @@ public class DateRangeTest
     [DataRow(2, 4, 4, true)]
     [DataRow(2, 4, 5, false)]
     [DataTestMethod]
-    public void TaggedDateRangeContainsHandlesValues(
-        int start, int end, int test, bool expected)
+    public void TaggedDateRangeContainsHandlesValues(int start, int end, int test, bool expected)
     {
         var dut = new DateRange<char>(D(start), D(end), 'A');
         Assert.AreEqual(expected, dut.Contains(D(test)));

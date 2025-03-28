@@ -13,7 +13,9 @@ namespace CareTogether.Core.Test.ApprovalCalculationTests
 {
     internal class Helpers
     {
-        private static Guid Id(char x) => Guid.Parse("xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx".Replace('x', x));
+        private static Guid Id(char x) =>
+            Guid.Parse("xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx".Replace('x', x));
+
         public static readonly Guid guid0 = Id('0');
         public static readonly Guid guid1 = Id('1');
         public static readonly Guid guid2 = Id('2');
@@ -34,9 +36,14 @@ namespace CareTogether.Core.Test.ApprovalCalculationTests
         public const int YEAR = 2024;
 
         public static DateOnly D(int day) => new(YEAR, 1, day);
+
         public static DateTime DT(int day) => new(YEAR, 1, day);
-        public static DateRange DR(int start, int? end) => new(D(start), end.HasValue ? D(end.Value) : DateOnly.MaxValue);
-        public static DateRange<T> DR<T>(int start, int? end, T tag) => new(D(start), end.HasValue ? D(end.Value) : DateOnly.MaxValue, tag);
+
+        public static DateRange DR(int start, int? end) =>
+            new(D(start), end.HasValue ? D(end.Value) : DateOnly.MaxValue);
+
+        public static DateRange<T> DR<T>(int start, int? end, T tag) =>
+            new(D(start), end.HasValue ? D(end.Value) : DateOnly.MaxValue, tag);
 
         public static void AssertDatesAre(DateOnlyTimeline dut, params int[] dates)
         {
@@ -45,120 +52,310 @@ namespace CareTogether.Core.Test.ApprovalCalculationTests
                 Assert.AreEqual(dates.Contains(i), dut.Contains(D(i)), $"Failed on {i}");
         }
 
-        public static ImmutableList<Resources.CompletedRequirementInfo> Completed(params (string, int)[] completionsWithDates) =>
-            completionsWithDates.Select(completion =>
-                new Resources.CompletedRequirementInfo(Guid.Empty, DateTime.MinValue,
-                    Guid.Empty, completion.Item1, new DateTime(YEAR, 1, completion.Item2), ExpiresAtUtc: null, null, null))
-            .ToImmutableList();
+        public static ImmutableList<Resources.CompletedRequirementInfo> Completed(
+            params (string, int)[] completionsWithDates
+        ) =>
+            completionsWithDates
+                .Select(completion => new Resources.CompletedRequirementInfo(
+                    Guid.Empty,
+                    DateTime.MinValue,
+                    Guid.Empty,
+                    completion.Item1,
+                    new DateTime(YEAR, 1, completion.Item2),
+                    ExpiresAtUtc: null,
+                    null,
+                    null
+                ))
+                .ToImmutableList();
 
-        public static ImmutableList<Resources.CompletedRequirementInfo> CompletedUntil(params (string, int, int?)[] completionsWithDates) =>
-            completionsWithDates.Select(completion =>
-                new Resources.CompletedRequirementInfo(Guid.Empty, DateTime.MinValue,
-                    Guid.Empty, completion.Item1, new DateTime(YEAR, 1, completion.Item2), ExpiresAtUtc: completion.Item3.HasValue ? new DateTime(YEAR, 1, completion.Item3.Value) : null, null, null))
-            .ToImmutableList();
+        public static ImmutableList<Resources.CompletedRequirementInfo> CompletedUntil(
+            params (string, int, int?)[] completionsWithDates
+        ) =>
+            completionsWithDates
+                .Select(completion => new Resources.CompletedRequirementInfo(
+                    Guid.Empty,
+                    DateTime.MinValue,
+                    Guid.Empty,
+                    completion.Item1,
+                    new DateTime(YEAR, 1, completion.Item2),
+                    ExpiresAtUtc: completion.Item3.HasValue
+                        ? new DateTime(YEAR, 1, completion.Item3.Value)
+                        : null,
+                    null,
+                    null
+                ))
+                .ToImmutableList();
 
-        public static ImmutableList<Resources.CompletedRequirementInfo> CompletedWithExpiry(params (string, int, int?)[] completionsWithDates) =>
-            completionsWithDates.Select(completion =>
-                new Resources.CompletedRequirementInfo(Guid.Empty, DateTime.MinValue,
-                    Guid.Empty, completion.Item1, new DateTime(YEAR, 1, completion.Item2),
-                    ExpiresAtUtc: completion.Item3.HasValue ? new DateTime(YEAR, 1, completion.Item3.Value) : null, null, null))
-            .ToImmutableList();
+        public static ImmutableList<Resources.CompletedRequirementInfo> CompletedWithExpiry(
+            params (string, int, int?)[] completionsWithDates
+        ) =>
+            completionsWithDates
+                .Select(completion => new Resources.CompletedRequirementInfo(
+                    Guid.Empty,
+                    DateTime.MinValue,
+                    Guid.Empty,
+                    completion.Item1,
+                    new DateTime(YEAR, 1, completion.Item2),
+                    ExpiresAtUtc: completion.Item3.HasValue
+                        ? new DateTime(YEAR, 1, completion.Item3.Value)
+                        : null,
+                    null,
+                    null
+                ))
+                .ToImmutableList();
 
-        public static ImmutableList<Resources.ExemptedRequirementInfo> Exempted(params (string, int?)[] exemptionsWithExpirations) =>
-            exemptionsWithExpirations.Select(exemption =>
-                new Resources.ExemptedRequirementInfo(Guid.Empty, DateTime.MinValue,
-                    exemption.Item1, DueDate: null, "", exemption.Item2.HasValue ? new DateTime(YEAR, 1, exemption.Item2.Value) : null))
-            .ToImmutableList();
+        public static ImmutableList<Resources.ExemptedRequirementInfo> Exempted(
+            params (string, int?)[] exemptionsWithExpirations
+        ) =>
+            exemptionsWithExpirations
+                .Select(exemption => new Resources.ExemptedRequirementInfo(
+                    Guid.Empty,
+                    DateTime.MinValue,
+                    exemption.Item1,
+                    DueDate: null,
+                    "",
+                    exemption.Item2.HasValue ? new DateTime(YEAR, 1, exemption.Item2.Value) : null
+                ))
+                .ToImmutableList();
 
-        public static ImmutableList<Resources.ExemptedRequirementInfo> ExemptedOn(params (string, int, int?)[] datedExemptionsWithExpirations) =>
-            datedExemptionsWithExpirations.Select(exemption =>
-                new Resources.ExemptedRequirementInfo(Guid.Empty, new DateTime(YEAR, 1, exemption.Item2),
-                    exemption.Item1, DueDate: null, "", exemption.Item3.HasValue ? new DateTime(YEAR, 1, exemption.Item3.Value) : null))
-            .ToImmutableList();
+        public static ImmutableList<Resources.ExemptedRequirementInfo> ExemptedOn(
+            params (string, int, int?)[] datedExemptionsWithExpirations
+        ) =>
+            datedExemptionsWithExpirations
+                .Select(exemption => new Resources.ExemptedRequirementInfo(
+                    Guid.Empty,
+                    new DateTime(YEAR, 1, exemption.Item2),
+                    exemption.Item1,
+                    DueDate: null,
+                    "",
+                    exemption.Item3.HasValue ? new DateTime(YEAR, 1, exemption.Item3.Value) : null
+                ))
+                .ToImmutableList();
 
         public static ImmutableList<RoleRemoval> Removed(params string[] removedRoles) =>
-            removedRoles.Select(removed =>
-                new RoleRemoval(removed, RoleRemovalReason.OptOut, DateOnly.MinValue, null, null))
-            .ToImmutableList();
+            removedRoles
+                .Select(removed => new RoleRemoval(
+                    removed,
+                    RoleRemovalReason.OptOut,
+                    DateOnly.MinValue,
+                    null,
+                    null
+                ))
+                .ToImmutableList();
 
-        public static
-            ImmutableDictionary<Guid, ImmutableList<Resources.CompletedRequirementInfo>>
-            CompletedIndividualRequirements(params (Guid, string, int)[] completedIndividualRequirements) =>
-            ImmutableDictionary<Guid, ImmutableList<Resources.CompletedRequirementInfo>>.Empty.AddRange(
+        public static ImmutableDictionary<
+            Guid,
+            ImmutableList<Resources.CompletedRequirementInfo>
+        > CompletedIndividualRequirements(
+            params (Guid, string, int)[] completedIndividualRequirements
+        ) =>
+            ImmutableDictionary<
+                Guid,
+                ImmutableList<Resources.CompletedRequirementInfo>
+            >.Empty.AddRange(
                 completedIndividualRequirements
-                    .GroupBy(completed => completed.Item1, completed => (completed.Item2, new DateTime(YEAR, 1, completed.Item3)))
-                    .Select(completed => new KeyValuePair<Guid, ImmutableList<Resources.CompletedRequirementInfo>>(completed.Key,
-                        completed.Select(c => new Resources.CompletedRequirementInfo(Guid.Empty, DateTime.MinValue, new Guid(),
-                            c.Item1, c.Item2, ExpiresAtUtc: null, null, null))
-                        .ToImmutableList())));
+                    .GroupBy(
+                        completed => completed.Item1,
+                        completed => (completed.Item2, new DateTime(YEAR, 1, completed.Item3))
+                    )
+                    .Select(completed => new KeyValuePair<
+                        Guid,
+                        ImmutableList<Resources.CompletedRequirementInfo>
+                    >(
+                        completed.Key,
+                        completed
+                            .Select(c => new Resources.CompletedRequirementInfo(
+                                Guid.Empty,
+                                DateTime.MinValue,
+                                new Guid(),
+                                c.Item1,
+                                c.Item2,
+                                ExpiresAtUtc: null,
+                                null,
+                                null
+                            ))
+                            .ToImmutableList()
+                    ))
+            );
 
-        public static
-            ImmutableDictionary<Guid, ImmutableList<Resources.CompletedRequirementInfo>>
-            CompletedIndividualRequirementsWithExpiry(params (Guid, string, int, int?)[] completedIndividualRequirements) =>
-            ImmutableDictionary<Guid, ImmutableList<Resources.CompletedRequirementInfo>>.Empty.AddRange(
+        public static ImmutableDictionary<
+            Guid,
+            ImmutableList<Resources.CompletedRequirementInfo>
+        > CompletedIndividualRequirementsWithExpiry(
+            params (Guid, string, int, int?)[] completedIndividualRequirements
+        ) =>
+            ImmutableDictionary<
+                Guid,
+                ImmutableList<Resources.CompletedRequirementInfo>
+            >.Empty.AddRange(
                 completedIndividualRequirements
-                    .GroupBy(completed => completed.Item1,
-                        completed => (completed.Item2, new DateTime(YEAR, 1, completed.Item3),
-                            completed.Item4.HasValue ? new DateTime(YEAR, 1, completed.Item4.Value) as DateTime? : null))
-                    .Select(completed => new KeyValuePair<Guid, ImmutableList<Resources.CompletedRequirementInfo>>(completed.Key,
-                        completed.Select(c => new Resources.CompletedRequirementInfo(Guid.Empty, DateTime.MinValue, new Guid(),
-                            c.Item1, c.Item2, ExpiresAtUtc: c.Item3, null, null))
-                        .ToImmutableList())));
+                    .GroupBy(
+                        completed => completed.Item1,
+                        completed =>
+                            (
+                                completed.Item2,
+                                new DateTime(YEAR, 1, completed.Item3),
+                                completed.Item4.HasValue
+                                    ? new DateTime(YEAR, 1, completed.Item4.Value) as DateTime?
+                                    : null
+                            )
+                    )
+                    .Select(completed => new KeyValuePair<
+                        Guid,
+                        ImmutableList<Resources.CompletedRequirementInfo>
+                    >(
+                        completed.Key,
+                        completed
+                            .Select(c => new Resources.CompletedRequirementInfo(
+                                Guid.Empty,
+                                DateTime.MinValue,
+                                new Guid(),
+                                c.Item1,
+                                c.Item2,
+                                ExpiresAtUtc: c.Item3,
+                                null,
+                                null
+                            ))
+                            .ToImmutableList()
+                    ))
+            );
 
-        public static
-            ImmutableDictionary<Guid, ImmutableList<Resources.ExemptedRequirementInfo>>
-            ExemptedIndividualRequirements(params (Guid, string, int?)[] exemptedIndividualRequirements) =>
-            ImmutableDictionary<Guid, ImmutableList<Resources.ExemptedRequirementInfo>>.Empty.AddRange(
+        public static ImmutableDictionary<
+            Guid,
+            ImmutableList<Resources.ExemptedRequirementInfo>
+        > ExemptedIndividualRequirements(
+            params (Guid, string, int?)[] exemptedIndividualRequirements
+        ) =>
+            ImmutableDictionary<
+                Guid,
+                ImmutableList<Resources.ExemptedRequirementInfo>
+            >.Empty.AddRange(
                 exemptedIndividualRequirements
                     .GroupBy(exempted => exempted.Item1, exempted => exempted)
-                    .Select(exempted => new KeyValuePair<Guid, ImmutableList<Resources.ExemptedRequirementInfo>>(exempted.Key,
-                        exempted.Select(e => new Resources.ExemptedRequirementInfo(Guid.Empty, DateTime.MinValue,
-                            e.Item2, DueDate: null, "", e.Item3.HasValue ? new DateTime(YEAR, 1, e.Item3.Value) : null))
-                            .ToImmutableList())));
+                    .Select(exempted => new KeyValuePair<
+                        Guid,
+                        ImmutableList<Resources.ExemptedRequirementInfo>
+                    >(
+                        exempted.Key,
+                        exempted
+                            .Select(e => new Resources.ExemptedRequirementInfo(
+                                Guid.Empty,
+                                DateTime.MinValue,
+                                e.Item2,
+                                DueDate: null,
+                                "",
+                                e.Item3.HasValue ? new DateTime(YEAR, 1, e.Item3.Value) : null
+                            ))
+                            .ToImmutableList()
+                    ))
+            );
 
-        public static
-            ImmutableDictionary<Guid, ImmutableList<RoleRemoval>>
-            RemovedIndividualRoles(params (Guid, string)[] removedIndividualRoles) =>
+        public static ImmutableDictionary<Guid, ImmutableList<RoleRemoval>> RemovedIndividualRoles(
+            params (Guid, string)[] removedIndividualRoles
+        ) =>
             ImmutableDictionary<Guid, ImmutableList<RoleRemoval>>.Empty.AddRange(
                 removedIndividualRoles
                     .GroupBy(removed => removed.Item1, removed => removed.Item2)
-                    .Select(removed => new KeyValuePair<Guid, ImmutableList<RoleRemoval>>(removed.Key,
-                        removed.Select(r => new RoleRemoval(r, RoleRemovalReason.OptOut, DateOnly.MinValue, null, AdditionalComments: null))
-                        .ToImmutableList())));
+                    .Select(removed => new KeyValuePair<Guid, ImmutableList<RoleRemoval>>(
+                        removed.Key,
+                        removed
+                            .Select(r => new RoleRemoval(
+                                r,
+                                RoleRemovalReason.OptOut,
+                                DateOnly.MinValue,
+                                null,
+                                AdditionalComments: null
+                            ))
+                            .ToImmutableList()
+                    ))
+            );
 
-        public static
-            ImmutableList<(Guid Id, ImmutableList<Resources.CompletedRequirementInfo> CompletedRequirements, ImmutableList<Resources.ExemptedRequirementInfo> ExemptedRequirements)>
-            ActiveAdults(params (Guid, ImmutableList<Resources.CompletedRequirementInfo>, ImmutableList<Resources.ExemptedRequirementInfo>)[] activeAdults) =>
-                activeAdults.ToImmutableList();
+        public static ImmutableList<(
+            Guid Id,
+            ImmutableList<Resources.CompletedRequirementInfo> CompletedRequirements,
+            ImmutableList<Resources.ExemptedRequirementInfo> ExemptedRequirements
+        )> ActiveAdults(
+            params (
+                Guid,
+                ImmutableList<Resources.CompletedRequirementInfo>,
+                ImmutableList<Resources.ExemptedRequirementInfo>
+            )[] activeAdults
+        ) => activeAdults.ToImmutableList();
 
-        public static
-            ImmutableList<(string ActionName, RequirementStage Stage, VolunteerFamilyRequirementScope Scope, bool RequirementMetOrExempted, List<Guid> RequirementMissingForIndividuals)>
-            FamilyRequirementsMet(params (string, RequirementStage, VolunteerFamilyRequirementScope, bool, List<Guid>)[] requirementsMet) =>
-            requirementsMet.ToImmutableList();
+        public static ImmutableList<(
+            string ActionName,
+            RequirementStage Stage,
+            VolunteerFamilyRequirementScope Scope,
+            bool RequirementMetOrExempted,
+            List<Guid> RequirementMissingForIndividuals
+        )> FamilyRequirementsMet(
+            params (
+                string,
+                RequirementStage,
+                VolunteerFamilyRequirementScope,
+                bool,
+                List<Guid>
+            )[] requirementsMet
+        ) => requirementsMet.ToImmutableList();
 
-        public static
-            ImmutableList<(string ActionName, RequirementStage Stage, SharedCalculations.RequirementCheckResult RequirementMetOrExempted)>
-            IndividualRequirementsMet(params (string, RequirementStage, bool)[] requirementsMet) =>
-            requirementsMet.Select(x => (x.Item1, x.Item2, new SharedCalculations.RequirementCheckResult(x.Item3, null))).ToImmutableList();
+        public static ImmutableList<(
+            string ActionName,
+            RequirementStage Stage,
+            SharedCalculations.RequirementCheckResult RequirementMetOrExempted
+        )> IndividualRequirementsMet(params (string, RequirementStage, bool)[] requirementsMet) =>
+            requirementsMet
+                .Select(x =>
+                    (x.Item1, x.Item2, new SharedCalculations.RequirementCheckResult(x.Item3, null))
+                )
+                .ToImmutableList();
 
-        public static
-            ImmutableList<(string ActionName, RequirementStage Stage, SharedCalculations.RequirementCheckResult RequirementMetOrExempted)>
-            IndividualRequirementsMetWithExpiry(params (string, RequirementStage, bool, int?)[] requirementsMet) =>
-            requirementsMet.Select(x => (x.Item1, x.Item2, new SharedCalculations.RequirementCheckResult(x.Item3, x.Item4.HasValue ? new DateOnly(YEAR, 1, x.Item4.Value) : null))).ToImmutableList();
+        public static ImmutableList<(
+            string ActionName,
+            RequirementStage Stage,
+            SharedCalculations.RequirementCheckResult RequirementMetOrExempted
+        )> IndividualRequirementsMetWithExpiry(
+            params (string, RequirementStage, bool, int?)[] requirementsMet
+        ) =>
+            requirementsMet
+                .Select(x =>
+                    (
+                        x.Item1,
+                        x.Item2,
+                        new SharedCalculations.RequirementCheckResult(
+                            x.Item3,
+                            x.Item4.HasValue ? new DateOnly(YEAR, 1, x.Item4.Value) : null
+                        )
+                    )
+                )
+                .ToImmutableList();
 
-        public static
-            ImmutableList<(string ActionName, RequirementStage Stage, bool RequirementMetOrExempted)>
-            IndividualRequirementsMetSimple(params (string, RequirementStage, bool)[] requirementsMet) =>
-            requirementsMet.ToImmutableList();
+        public static ImmutableList<(
+            string ActionName,
+            RequirementStage Stage,
+            bool RequirementMetOrExempted
+        )> IndividualRequirementsMetSimple(
+            params (string, RequirementStage, bool)[] requirementsMet
+        ) => requirementsMet.ToImmutableList();
 
-        public static ImmutableList<VolunteerApprovalRequirement> IndividualApprovalRequirements(params (RequirementStage, string)[] requirements) =>
-            requirements.Select(requirement =>
-                new VolunteerApprovalRequirement(requirement.Item1, requirement.Item2))
-            .ToImmutableList();
+        public static ImmutableList<VolunteerApprovalRequirement> IndividualApprovalRequirements(
+            params (RequirementStage, string)[] requirements
+        ) =>
+            requirements
+                .Select(requirement => new VolunteerApprovalRequirement(
+                    requirement.Item1,
+                    requirement.Item2
+                ))
+                .ToImmutableList();
 
-        public static ImmutableList<VolunteerFamilyApprovalRequirement> FamilyApprovalRequirements(params (RequirementStage, string, VolunteerFamilyRequirementScope)[] requirements) =>
-            requirements.Select(requirement =>
-                new VolunteerFamilyApprovalRequirement(requirement.Item1, requirement.Item2, requirement.Item3))
-            .ToImmutableList();
+        public static ImmutableList<VolunteerFamilyApprovalRequirement> FamilyApprovalRequirements(
+            params (RequirementStage, string, VolunteerFamilyRequirementScope)[] requirements
+        ) =>
+            requirements
+                .Select(requirement => new VolunteerFamilyApprovalRequirement(
+                    requirement.Item1,
+                    requirement.Item2,
+                    requirement.Item3
+                ))
+                .ToImmutableList();
     }
 }
