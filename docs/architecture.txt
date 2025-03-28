@@ -303,9 +303,9 @@ UseCase "UC-Pr-1: Open Location" {
 
 UseCase "SUB-Pr-1: Authorize User Access in Context" {
   ProcessManager - ContextPermissions IEvaluationEngine.AuthorizeUserAccess(AuthorizationContext) > EvaluationEngine
-  EvaluationEngine -> AccountsAccess -> AccountsResource
-  EvaluationEngine -> PoliciesAccess -> PoliciesResource
-  EvaluationEngine -> RecordsAccess -> RecordsResource
+    EvaluationEngine -> AccountsAccess -> AccountsResource
+    EvaluationEngine -> PoliciesAccess -> PoliciesResource
+    EvaluationEngine -> RecordsAccess -> RecordsResource
   ProcessManager -> SecurityUtility
 }
 
@@ -820,3 +820,94 @@ recordsAccess.Execute(recordOperationsRequest);
 // Store patched record and append change to log.
 
 */
+
+UseCase "System requests approval for record change" {
+  WebClient - SubmitRecordsResponse IProcessManager.SubmitRecords(SubmitRecordsRequest) > ProcessManager
+    /* Sub-usecase "SUB-Pr-1: Authorize User Access in Context" */
+    ProcessManager -> WorkflowsAccess -> WorkflowsResource
+    ProcessManager - RecordOperationsResponse IRecordsAccess.Execute(RecordOperationsRequest) > RecordsAccess
+      RecordsAccess -> RecordsResource
+      RecordsAccess -> NotesResource
+      RecordsAccess -> FormsResource
+      /*RecordsAccess -> DocumentsResource*/
+    ProcessManager -> EvaluationEngine
+      EvaluationEngine -> PoliciesAccess -> PoliciesResource
+    ProcessManager - RecordsResponse IEvaluationEngine.DiscloseRecords(RecordsDisclosureRequest) > EvaluationEngine
+    ProcessManager -:q> CommunicationManager
+    ProcessManager -> AuditAccess -> AuditResource
+}
+
+UseCase "User approves record change" {
+  WebClient - SubmitRecordsResponse IProcessManager.SubmitRecords(SubmitRecordsRequest) > ProcessManager
+    /* Sub-usecase "SUB-Pr-1: Authorize User Access in Context" */
+    ProcessManager -> WorkflowsAccess -> WorkflowsResource
+    ProcessManager - RecordOperationsResponse IRecordsAccess.Execute(RecordOperationsRequest) > RecordsAccess
+      RecordsAccess -> RecordsResource
+      RecordsAccess -> NotesResource
+      RecordsAccess -> FormsResource
+      /*RecordsAccess -> DocumentsResource*/
+    ProcessManager -> EvaluationEngine
+      EvaluationEngine -> PoliciesAccess -> PoliciesResource
+    ProcessManager - RecordsResponse IEvaluationEngine.DiscloseRecords(RecordsDisclosureRequest) > EvaluationEngine
+    ProcessManager -:q> CommunicationManager
+    ProcessManager -> AuditAccess -> AuditResource
+}
+
+UseCase "User denies record change" {
+  WebClient - IProcessManager.ReviewChanges() > ProcessManager
+    /* Sub-usecase "SUB-Pr-1: Authorize User Access in Context" */
+    ProcessManager - IRecordsAccess.Execute() > RecordsAccess -> RecordsResource
+}
+
+UseCase "Bulk import of records" {
+  WebClient - SubmitRecordsResponse IProcessManager.SubmitRecords(SubmitRecordsRequest) > ProcessManager
+    /* Sub-usecase "SUB-Pr-1: Authorize User Access in Context" */
+    ProcessManager -> WorkflowsAccess -> WorkflowsResource
+    ProcessManager - RecordOperationsResponse IRecordsAccess.Execute(RecordOperationsRequest) > RecordsAccess
+      RecordsAccess -> RecordsResource
+      RecordsAccess -> NotesResource
+      RecordsAccess -> FormsResource
+    ProcessManager -> EvaluationEngine
+      EvaluationEngine -> PoliciesAccess -> PoliciesResource
+    ProcessManager - RecordsResponse IEvaluationEngine.DiscloseRecords(RecordsDisclosureRequest) > EvaluationEngine
+    ProcessManager -:q> CommunicationManager
+    ProcessManager -> AuditAccess -> AuditResource
+}
+
+UseCase "Bulk export of records" {
+  WebClient -> ProcessManager
+    ProcessManager -> WorkflowsAccess -> WorkflowsResource
+    ProcessManager -> RecordsAccess
+      RecordsAccess -> RecordsResource
+      RecordsAccess -> NotesResource
+      RecordsAccess -> FormsResource
+    ProcessManager -> EvaluationEngine -> PoliciesAccess -> PoliciesResource
+    ProcessManager -> AuditAccess -> AuditResource
+}
+
+UseCase "Invite a user" {
+  WebClient - IMembershipManager.InviteUser() > MembershipManager
+    /* Sub-usecase "SUB-Pr-1: Authorize User Access in Context" */
+    MembershipManager -> AccountsAccess -> AccountsResource
+    MembershipManager -> IdentityProviderUtility
+    MembershipManager -:q> CommunicationManager
+}
+
+UseCase "User sign-up" {
+  WebClient -> MembershipManager
+    MembershipManager - Account IAccountsAccess.GetOrCreateUserAccount(ClaimsPrincipal) > AccountsAccess
+      AccountsAccess -> AccountsResource
+      AccountsAccess -> RecordsResource
+    /* Should it be SecurityUtility or IdentityProviderUtility? */
+    MembershipManager - ClaimsPrincipal ISecurityUtility.Authenticate(HttpContext) > SecurityUtility 
+}
+
+UseCase "Organization onboarding" {
+  WebClient - SubmitRecordsResponse IProcessManager.SubmitRecords(SubmitRecordsRequest) > ProcessManager
+    /* Sub-usecase "SUB-Pr-1: Authorize User Access in Context" */
+    ProcessManager -> WorkflowsAccess -> WorkflowsResource
+    ProcessManager - RecordOperationsResponse IRecordsAccess.Execute(RecordOperationsRequest) > RecordsAccess
+      RecordsAccess -> PoliciesResource
+    ProcessManager -:q> CommunicationManager
+    ProcessManager -> AuditAccess -> AuditResource
+}
