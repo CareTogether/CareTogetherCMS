@@ -1,12 +1,12 @@
-﻿using CareTogether.Engines.Authorization;
-using CareTogether.Resources.Directory;
-using CareTogether.Resources.Policies;
-using CareTogether.Utilities.Telephony;
-using System;
+﻿using System;
 using System.Collections.Immutable;
 using System.Linq;
 using System.Security.Claims;
 using System.Threading.Tasks;
+using CareTogether.Engines.Authorization;
+using CareTogether.Resources.Directory;
+using CareTogether.Resources.Policies;
+using CareTogether.Utilities.Telephony;
 
 namespace CareTogether.Managers.Communications
 {

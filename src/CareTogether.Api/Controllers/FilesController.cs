@@ -1,9 +1,9 @@
-﻿using CareTogether.Managers.Records;
+﻿using System;
+using System.Threading.Tasks;
+using CareTogether.Managers.Records;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using System;
-using System.Threading.Tasks;
 
 namespace CareTogether.Api.Controllers
 {

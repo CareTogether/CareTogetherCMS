@@ -1,5 +1,5 @@
-﻿using JsonPolymorph;
-using System;
+﻿using System;
+using JsonPolymorph;
 
 namespace CareTogether
 {

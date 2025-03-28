@@ -1,4 +1,8 @@
-﻿using CareTogether.Managers;
+﻿using System;
+using System.Collections.Immutable;
+using System.Linq;
+using System.Threading.Tasks;
+using CareTogether.Managers;
 using CareTogether.Managers.Membership;
 using CareTogether.Managers.Records;
 using CareTogether.Resources.Accounts;
@@ -8,10 +12,6 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Options;
-using System;
-using System.Collections.Immutable;
-using System.Linq;
-using System.Threading.Tasks;
 
 namespace CareTogether.Api.Controllers
 {

@@ -1,8 +1,8 @@
-﻿using CareTogether.Resources.Policies;
-using JsonPolymorph;
-using System;
+﻿using System;
 using System.Collections.Immutable;
 using System.Threading.Tasks;
+using CareTogether.Resources.Policies;
+using JsonPolymorph;
 
 namespace CareTogether.Resources.Referrals
 {

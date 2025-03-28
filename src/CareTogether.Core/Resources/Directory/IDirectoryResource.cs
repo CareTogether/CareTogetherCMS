@@ -1,11 +1,11 @@
-using CareTogether.Resources.Policies;
-using CareTogether.Resources.Referrals;
-using JsonPolymorph;
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Security.Claims;
 using System.Threading.Tasks;
+using CareTogether.Resources.Policies;
+using CareTogether.Resources.Referrals;
+using JsonPolymorph;
 
 namespace CareTogether.Resources.Directory
 {

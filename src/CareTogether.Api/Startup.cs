@@ -1,3 +1,5 @@
+using System;
+using System.Security.Claims;
 using Azure.Storage.Blobs;
 using CareTogether.Api.OData;
 using CareTogether.Engines.Authorization;
@@ -38,8 +40,6 @@ using Microsoft.FeatureManagement;
 using Microsoft.FeatureManagement.FeatureFilters;
 using Microsoft.Identity.Web;
 using Microsoft.IdentityModel.Logging;
-using System;
-using System.Security.Claims;
 
 namespace CareTogether.Api
 {

@@ -1,11 +1,11 @@
-﻿using CareTogether.Managers.Communications;
+﻿using System;
+using System.Collections.Immutable;
+using System.Threading.Tasks;
+using CareTogether.Managers.Communications;
 using CareTogether.Utilities.Telephony;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using System;
-using System.Collections.Immutable;
-using System.Threading.Tasks;
 
 namespace CareTogether.Api.Controllers
 {

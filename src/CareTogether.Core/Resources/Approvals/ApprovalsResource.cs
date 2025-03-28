@@ -1,7 +1,7 @@
-﻿using CareTogether.Utilities.EventLog;
-using System;
+﻿using System;
 using System.Collections.Immutable;
 using System.Threading.Tasks;
+using CareTogether.Utilities.EventLog;
 
 namespace CareTogether.Resources.Approvals
 {
@@ -25,7 +25,7 @@ namespace CareTogether.Resources.Approvals
             using (var lockedModel = await tenantModels.WriteLockItemAsync((organizationId, locationId)))
             {
                 var result = lockedModel.Value.ExecuteVolunteerCommand(command, userId, DateTime.UtcNow);
-                
+
                 await eventLog.AppendEventAsync(organizationId, locationId, result.Event, result.SequenceNumber);
                 result.OnCommit();
                 return result.VolunteerFamilyEntry;
@@ -38,7 +38,7 @@ namespace CareTogether.Resources.Approvals
             using (var lockedModel = await tenantModels.WriteLockItemAsync((organizationId, locationId)))
             {
                 var result = lockedModel.Value.ExecuteVolunteerFamilyCommand(command, userId, DateTime.UtcNow);
-                    
+
                 await eventLog.AppendEventAsync(organizationId, locationId, result.Event, result.SequenceNumber);
                 result.OnCommit();
                 return result.VolunteerFamilyEntry;

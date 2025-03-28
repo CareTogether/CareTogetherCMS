@@ -1,7 +1,7 @@
-﻿using Nito.AsyncEx;
-using System;
+﻿using System;
 using System.Collections.Concurrent;
 using System.Threading.Tasks;
+using Nito.AsyncEx;
 
 namespace CareTogether
 {
