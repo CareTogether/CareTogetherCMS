@@ -51,6 +51,7 @@ function getMessageProps(
         ),
         secondaryContent: <FamilyName family={item.family} />,
       };
+
     case 'MissingPrimaryContact':
       return {
         icon: <EmojiPeople color="error" />,
@@ -64,6 +65,26 @@ function getMessageProps(
           </Typography>
         ),
         secondaryContent: <FamilyName family={item.family} />,
+      };
+
+    case 'ChildNotReturned':
+      return {
+        icon: <EmojiPeople sx={{ color: 'red' }} />,
+        onClick: () => appNavigate.family(item.family.family!.id!),
+        primaryContent: (
+          <Typography
+            variant="body1"
+            sx={{ fontWeight: 'bold', color: 'black' }}
+          >
+            Child not returned to parent: {item.child.firstName}{' '}
+            {item.child.lastName}
+          </Typography>
+        ),
+        secondaryContent: (
+          <Typography variant="body2" sx={{ color: 'black' }}>
+            <FamilyName family={item.family} />
+          </Typography>
+        ),
       };
   }
 }
@@ -90,13 +111,13 @@ function MessageList() {
   const appNavigate = useAppNavigate();
   const queueItems = useLoadable(queueItemsQuery);
 
-  const messages = queueItems?.map((item) =>
+  const messages = (queueItems ?? []).map((item) =>
     getMessageProps(item, appNavigate)
   );
 
   return (
     <List>
-      {messages?.map((message, i) => (
+      {messages.map((message, i) => (
         <ListItem key={i} disableGutters>
           <InboxMessage {...message} />
         </ListItem>

@@ -2,8 +2,13 @@ import { selector } from 'recoil';
 import { CombinedFamilyInfo, ExactAge, Person } from '../GeneratedClient';
 import { visibleFamiliesQuery } from './Data';
 import { differenceInYears } from 'date-fns';
+import {
+  Arrangement,
+  ChildLocationPlan,
+  ArrangementPhase,
+} from '../GeneratedClient';
 
-export type QueueItem = ChildOver18 | MissingPrimaryContact;
+export type QueueItem = ChildOver18 | MissingPrimaryContact | ChildNotReturned;
 
 export interface ChildOver18 {
   type: 'ChildOver18';
@@ -16,11 +21,17 @@ export interface MissingPrimaryContact {
   family: CombinedFamilyInfo;
 }
 
+export interface ChildNotReturned {
+  type: 'ChildNotReturned';
+  family: CombinedFamilyInfo;
+  child: Person;
+}
+
 const childrenOver18Query = selector<ChildOver18[]>({
   key: 'childrenOver18Query',
   get: ({ get }) => {
     const visibleFamilies = get(visibleFamiliesQuery);
-    const childrenOver18 = visibleFamilies?.flatMap(
+    return visibleFamilies?.flatMap(
       (family) =>
         family.family?.children
           ?.filter(
@@ -31,11 +42,8 @@ const childrenOver18Query = selector<ChildOver18[]>({
                 (child.age as ExactAge).dateOfBirth!
               ) > 18
           )
-          .map(
-            (child) => ({ type: 'ChildOver18', family, child }) as ChildOver18
-          ) || []
+          .map((child) => ({ type: 'ChildOver18', family, child })) || []
     );
-    return childrenOver18;
   },
 });
 
@@ -43,7 +51,7 @@ const missingPrimaryContactsQuery = selector<MissingPrimaryContact[]>({
   key: 'missingPrimaryContactsQuery',
   get: ({ get }) => {
     const visibleFamilies = get(visibleFamiliesQuery);
-    const missingPrimaryContacts =
+    return (
       visibleFamilies
         ?.filter(
           (family) =>
@@ -52,11 +60,64 @@ const missingPrimaryContactsQuery = selector<MissingPrimaryContact[]>({
                 adult.item1!.id === family.family?.primaryFamilyContactPersonId
             )
         )
-        .map(
-          (family) =>
-            ({ type: 'MissingPrimaryContact', family }) as MissingPrimaryContact
+        .map((family) => ({ type: 'MissingPrimaryContact', family })) || []
+    );
+  },
+});
+
+const childNotReturnedQuery = selector<ChildNotReturned[]>({
+  key: 'childNotReturnedQuery',
+  get: ({ get }) => {
+    const visibleFamilies = get(visibleFamiliesQuery);
+
+    const allArrangements: {
+      arrangement: Arrangement;
+      family: CombinedFamilyInfo;
+    }[] = visibleFamilies?.flatMap((family) => {
+      if (!family.partneringFamilyInfo) {
+        return [];
+      }
+
+      const mapArrangementAndFamily = (arrangement: Arrangement) => ({
+        arrangement,
+        family,
+      });
+
+      const openReferralArrangements =
+        family.partneringFamilyInfo.openReferral?.arrangements?.map(
+          mapArrangementAndFamily
         ) || [];
-    return missingPrimaryContacts;
+
+      const closedReferralsArrangements =
+        family.partneringFamilyInfo.closedReferrals?.flatMap(
+          (referral) =>
+            referral.arrangements?.map(mapArrangementAndFamily) || []
+        ) || [];
+
+      return [...openReferralArrangements, ...closedReferralsArrangements];
+    });
+
+    return allArrangements
+      .filter(({ arrangement }) => arrangement.phase === ArrangementPhase.Ended)
+      .filter(({ arrangement }) => {
+        const mostRecentLocation =
+          arrangement?.childLocationHistory?.[
+            arrangement.childLocationHistory.length - 1
+          ];
+
+        return mostRecentLocation?.plan !== ChildLocationPlan.WithParent;
+      })
+      .map(({ arrangement, family }) => {
+        const child = family.family?.children?.find(
+          (child) => child.id === arrangement.partneringFamilyPersonId
+        );
+
+        return {
+          type: 'ChildNotReturned',
+          family: family,
+          child: child ?? ({} as Person),
+        };
+      });
   },
 });
 
@@ -65,7 +126,8 @@ export const queueItemsQuery = selector<QueueItem[]>({
   get: ({ get }) => {
     const childrenOver18 = get(childrenOver18Query);
     const missingPrimaryContacts = get(missingPrimaryContactsQuery);
-    return (childrenOver18 as QueueItem[]).concat(missingPrimaryContacts);
+    const childNotReturned = get(childNotReturnedQuery);
+    return [...childrenOver18, ...missingPrimaryContacts, ...childNotReturned];
   },
 });
 
