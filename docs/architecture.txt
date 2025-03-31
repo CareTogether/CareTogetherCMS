@@ -20,7 +20,7 @@ To make human services more relational.
 9. Provide the highest quality user experience in the industry for all users.
 10. Build the capacity to serve the ~300,000 human services organizations in the United States and supporting global use.
 11. Enable longitudinal studies of human services outcomes and impact in order to identify and share best practices with organizations.
-12. Provide an avenue for self-insurance
+12. Provide an avenue for self-insurance.
 
 ## Vision
 
@@ -888,7 +888,7 @@ UseCase "Bulk export of records" {
     ProcessManager -> AuditAccess -> AuditResource
 }
 
-UseCase "Invite a user" {
+UseCase "M0: Invite a User to Sign Up" {
   WebClient - IMembershipManager.InviteUser() > MembershipManager
     /* Sub-usecase "SUB-Pr-1: Authorize User Access in Context" */
     MembershipManager -> AccountsAccess -> AccountsResource
@@ -896,20 +896,86 @@ UseCase "Invite a user" {
     MembershipManager -:q> CommunicationManager
 }
 
-UseCase "User sign-up" {
-  WebClient -> MembershipManager
+UseCase "M1: Sign Up as a User" {
+  @@@
+  A person wants to sign up for a CareTogether account.
+  This person MUST have an invite link to redeem, so their new account can
+  be tied to an existing CareTogether organization or allow them to sign up
+  a new organization.
+  Signing up for an account without a connection to an organization makes no sense.
+  @@@
+  WebClient - IMembershipManager.SignUpUser() > MembershipManager
     MembershipManager - Account IAccountsAccess.GetOrCreateUserAccount(ClaimsPrincipal) > AccountsAccess
       AccountsAccess -> AccountsResource
+      /* TODO: Separate out the "link user to existing organization" into a separate sub-usecase */
       AccountsAccess -> RecordsResource
     MembershipManager - ClaimsPrincipal ISecurityUtility.Authenticate(HttpContext) > SecurityUtility 
 }
 
-UseCase "Organization onboarding" {
-  WebClient - SubmitRecordsResponse IProcessManager.SubmitRecords(SubmitRecordsRequest) > ProcessManager
-    /* Sub-usecase "SUB-Pr-1: Authorize User Access in Context" */
-    ProcessManager -> WorkflowsAccess -> WorkflowsResource
-    ProcessManager - RecordOperationsResponse IRecordsAccess.Execute(RecordOperationsRequest) > RecordsAccess
-      RecordsAccess -> ConfigurationResource
-    ProcessManager -:q> CommunicationManager
-    ProcessManager -> AuditAccess -> AuditResource
+UseCase "Invite a User to Sign Up an Organization" {
+  @@@
+  A CareTogether team representative wants to invite a leader in an
+  organization to sign up their organization in CareTogether.
+  The team representative will generate an invite link and send it
+  to the leader, who may or may not already have a CareTogether account,
+  i.e. the invite link will need to double as a user invite link and as an
+  organization sign-up link.
+  The sign-up link needs to be:
+    - self-enforcing ("Person X can sign up organization Y"),
+    - self-expiring ("Valid until X/Y/ZZ"),
+    - trustworthy (digitally signed by CareTogether), and
+    - (optionally) confidential (encrypted by CareTogether).
+  It also needs to be short, i.e. the link itself should just be a UUID. To make
+  links easy to find in a database, a UUIDv7 should be used.
+  Links should expire within 24 hours.
+  The invitation process involves a "sales" workflow to send reminders with updated links
+  that encourage the user to complete the sign-up process.
+  The invitation process can include defining the initial relationships that the organization
+  may have with (especially local) network partners, which can further incentivize the sign-up process and
+  enhance post-conversion "user activation".
+  Links that allow both user sign-up and organization sign-up could be composite links, e.g.:
+  https://app.caretogether.io/signup?user_invite={123}&org_invite={456}
+  @@@
+  /* Inviting a user can optionally include inviting them to create a specific organization. */
+  SupportClient - OrganizationInvitation IMembershipManager.InviteOrganization(OrganizationInviteCriteria) > MembershipManager
+    /* The invitation workflow can send reminders with renewed links. */
+    MembershipManager -> WorkflowsAccess -> WorkflowsResource
+    MembershipManager - INetworkAccess.CreateOrganizationInvitationTableEntry() > NetworkAccess -> NetworkResource
+    MembershipManager -> AuditAccess -> AuditResource
+    MembershipManager -:q> CommunicationManager
+}
+
+DTO OrganizationInviteCriteria {
+    /* TODO: Include initial network partners, to help bootstrap the network & accelerate "activation" */
+}
+
+/* REVIEW BEGINS */
+UseCase "M2: Sign Up an Organization" {
+  @@@
+  A leader in an organization wants to sign up for CareTogether.
+  The leader must previously have signed up for a CareTogether account [M1], potentially with
+  the same invite link and immediately prior to this step.
+  The leader MUST have an invite link that grants them the ability to sign up their specific organization.
+  @@@
+  WebClient - IMembershipManager.SignUpOrganization(/*Guid*/ OrganizationInvitationId) > MembershipManager
+    /* We cannot authorize this particular use case on the basis of organizational policies, because the
+       organization itself does not exist at the beginning of the use case.
+       The security checks are therefore very basic. */
+    MembershipManager -> SecurityUtility
+    /* Initiate an organization onboarding workflow.
+       "Charity starts at home" -- when a new organization signs up, existing members can help them
+       reach "activation" which is something the onboarding workflow needs to help facilitate. */
+    MembershipManager -> WorkflowsAccess -> WorkflowsResource
+    MembershipManager - INetworkAccess.RedeemOrganizationInvitationTableEntry() > NetworkAccess -> NetworkResource
+    /* Set the initial configuration for an organization.
+       To begin with, this will largely be blank, but in the future this could allow for tying into
+       collaborative networks' shared "best practices", compliance rules, etc.
+       This also includes creating the initial location for the organization and
+       granting the leader the OrganizationAdministrator role across their entire organization. */
+    /*TODO: Review the "bootstrapping" problem of how to grant the first user access to the first location, and
+            how to grant people access to other locations than their default location.
+            Could define a (better) process for the support team, at a minimum, but self-service is important too. */
+    MembershipManager - IConfigurationAccess.InitializeConfiguration() > ConfigurationAccess -> ConfigurationResource
+    MembershipManager -> AuditAccess -> AuditResource
+    MembershipManager -:q> CommunicationManager
 }
