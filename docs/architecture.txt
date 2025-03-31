@@ -20,6 +20,7 @@ To make human services more relational.
 9. Provide the highest quality user experience in the industry for all users.
 10. Build the capacity to serve the ~300,000 human services organizations in the United States and supporting global use.
 11. Enable longitudinal studies of human services outcomes and impact in order to identify and share best practices with organizations.
+12. Provide an avenue for self-insurance
 
 ## Vision
 
@@ -116,9 +117,9 @@ StaticAspect "CareTogether V2" {
   MembershipManager ProcessManager CommunicationManager AnalysisManager /* future enhancement */
   EvaluationEngine
 MatchingEngine /* Possible volatility? */
-  AccountsAccess NetworkAccess PoliciesAccess WorkflowsAccess AuditAccess RecordsAccess
+  AccountsAccess NetworkAccess ConfigurationAccess WorkflowsAccess AuditAccess RecordsAccess
   /*NOTE: RecordsAccess -- Cosmos DB Graph API & Cosmos DB 'SQL' API, allowing Geode pattern */
-  AccountsResource NetworkResource PoliciesResource:f WorkflowsResource AuditResource RecordsResource 
+  AccountsResource NetworkResource ConfigurationResource:f WorkflowsResource AuditResource RecordsResource 
  NotesResource:f DocumentsResource:f FormsResource:a
   EventLogUtility
   FileStoreUtility
@@ -129,7 +130,6 @@ MatchingEngine /* Possible volatility? */
   PubSubUtility
   SecurityUtility
   LoggingUtility
-  IdentityProviderUtility /* Was missing */
 }
 
 
@@ -178,7 +178,7 @@ RecordsAccess
 // Pending changes should be stored in non-immutable storage, like draft notes are today, and only the reference to them should be
 //   made part of the immutable log.
 
-PoliciesAccess
+ConfigurationAccess
   ...
 
 AccountsAccess
@@ -304,7 +304,7 @@ UseCase "UC-Pr-1: Open Location" {
 UseCase "SUB-Pr-1: Authorize User Access in Context" {
   ProcessManager - ContextPermissions IEvaluationEngine.AuthorizeUserAccess(AuthorizationContext) > EvaluationEngine
     EvaluationEngine -> AccountsAccess -> AccountsResource
-    EvaluationEngine -> PoliciesAccess -> PoliciesResource
+    EvaluationEngine -> ConfigurationAccess -> ConfigurationResource
     EvaluationEngine -> RecordsAccess -> RecordsResource
   ProcessManager -> SecurityUtility
 }
@@ -322,7 +322,7 @@ UseCase "Retrieve Records" {
       RecordsAccess -> NotesResource
       RecordsAccess -> FormsResource
     ProcessManager -> EvaluationEngine
-      EvaluationEngine -> PoliciesAccess -> PoliciesResource
+      EvaluationEngine -> ConfigurationAccess -> ConfigurationResource
     ProcessManager - RecordsResponse IEvaluationEngine.DiscloseRecords(RecordsDisclosureRequest) > EvaluationEngine
     /* Include disclosure & authorization results */
     ProcessManager -> AuditAccess -> AuditResource
@@ -406,7 +406,7 @@ UseCase "UC-Pr-6: Submit Recods (create or change)" {
       RecordsAccess -> FormsResource
       /*RecordsAccess -> DocumentsResource*/
     ProcessManager -> EvaluationEngine
-      EvaluationEngine -> PoliciesAccess -> PoliciesResource
+      EvaluationEngine -> ConfigurationAccess -> ConfigurationResource
     ProcessManager - RecordsResponse IEvaluationEngine.DiscloseRecords(RecordsDisclosureRequest) > EvaluationEngine
     ProcessManager -:q> CommunicationManager
     ProcessManager -> AuditAccess -> AuditResource
@@ -471,7 +471,7 @@ UseCase "UC-Me-4: View Person User Login Info" {
   MembershipManager - IAccountsAccess.Filter() > AccountsAccess -> AccountsResource
   MembershipManager - IRecordsAccess.Filter() > RecordsAccess -> RecordsResource
   MembershipManager - ContextualPermissions IEvaluationEngine.CalculateContextualPermissions(LocationAuthorizationContext) > EvaluationEngine
-  MembershipManager - IIdentityProviderUtility.GetUserLoginInfo() > IdentityProviderUtility
+  MembershipManager - ISecurityUtility.GetUserLoginInfo() > SecurityUtility
 }
 
 UseCase "UC-Me-5: Edit Roles" {
@@ -521,7 +521,7 @@ UseCase "View Communities List" {
       RecordsAccess -> SecurityUtility
       RecordsAccess -> RecordsResource
     ProcessManager -> EvaluationEngine
-      EvaluationEngine -> PoliciesAccess -> PoliciesResource
+      EvaluationEngine -> ConfigurationAccess -> ConfigurationResource
     ProcessManager -> EvaluationEngine
 }
 
@@ -532,7 +532,7 @@ UseCase "UC-Pr-18: Read Family Documents" {
       RecordsAccess -> SecurityUtility
       RecordsAccess -> RecordsResource
     ProcessManager -> EvaluationEngine
-      EvaluationEngine -> PoliciesAccess -> PoliciesResource
+      EvaluationEngine -> ConfigurationAccess -> ConfigurationResource
     ProcessManager -> EvaluationEngine
 }
 
@@ -542,11 +542,11 @@ UseCase "UC-Pr-23: Access Settings Screen" {
     ProcessManager - IRecordsAccess.Filter() > 
       RecordsAccess -> SecurityUtility
       RecordsAccess -> RecordsResource
-      RecordsAccess -> PoliciesResource
+      RecordsAccess -> ConfigurationResource
       RecordsAccess -> AccountsResource
       RecordsAccess -> FormsResource
     ProcessManager -> EvaluationEngine
-      EvaluationEngine -> PoliciesAccess -> PoliciesResource
+      EvaluationEngine -> ConfigurationAccess -> ConfigurationResource
     ProcessManager -> EvaluationEngine
 }
 
@@ -558,7 +558,7 @@ UseCase "Track Child Location" {
       RecordsAccess -> SecurityUtility
       RecordsAccess -> RecordsResource
     ProcessManager -> EvaluationEngine
-      EvaluationEngine -> PoliciesAccess -> PoliciesResource
+      EvaluationEngine -> ConfigurationAccess -> ConfigurationResource
     ProcessManager -> EvaluationEngine
 }
 
@@ -594,7 +594,7 @@ UseCase "UC-Pr-19: Upload Family Documents" {
       RecordsAccess -> RecordsResource /* TODO: Do we store a reference for the file? Should it be done after calling FileStoreUtility? */
       RecordsAccess - IFileStoreUtility.Upload() > FileStoreUtility
     ProcessManager -> EvaluationEngine
-      EvaluationEngine -> PoliciesAccess -> PoliciesResource
+      EvaluationEngine -> ConfigurationAccess -> ConfigurationResource
     ProcessManager -> EvaluationEngine
 }
 
@@ -604,7 +604,7 @@ UseCase "UC-Pr-20: Archive Family Documents" {
       RecordsAccess -> SecurityUtility
       RecordsAccess -> RecordsResource
     ProcessManager -> EvaluationEngine
-      EvaluationEngine -> PoliciesAccess -> PoliciesResource
+      EvaluationEngine -> ConfigurationAccess -> ConfigurationResource
     ProcessManager -> EvaluationEngine
 }
 
@@ -621,7 +621,7 @@ UseCase "UC-Pr-81: Open Case" {
   ProcessManager - IEvaluationEngine.AuthorizeUserAccess() > EvaluationEngine
   EvaluationEngine -> AccountsAccess -> AccountsResource
   EvaluationEngine -> RecordsAccess -> RecordsResource
-  EvaluationEngine -> PoliciesAccess -> PoliciesResource
+  EvaluationEngine -> ConfigurationAccess -> ConfigurationResource
   ProcessManager - IWorkflowsAccess.Instantiate() > WorkflowsAccess -> WorkflowsResource
   ProcessManager - IRecordsAccess.Execute() > RecordsAccess -> RecordsResource
   ProcessManager - ICommunicationManager.Notify():q> CommunicationManager
@@ -632,7 +632,7 @@ UseCase "Open Referral" {
   ProcessManager - IEvaluationEngine.AuthorizeUserAccess() > EvaluationEngine
   EvaluationEngine -> AccountsAccess -> AccountsResource
   EvaluationEngine -> RecordsAccess -> RecordsResource
-  EvaluationEngine -> PoliciesAccess -> PoliciesResource
+  EvaluationEngine -> ConfigurationAccess -> ConfigurationResource
   ProcessManager - IWorkflowsAccess.Instantiate() > WorkflowsAccess -> WorkflowsResource
   ProcessManager - IRecordsAccess.Execute() > RecordsAccess -> RecordsResource
   ProcessManager - ICommunicationManager.Notify():q> CommunicationManager
@@ -831,7 +831,7 @@ UseCase "System requests approval for record change" {
       RecordsAccess -> FormsResource
       /*RecordsAccess -> DocumentsResource*/
     ProcessManager -> EvaluationEngine
-      EvaluationEngine -> PoliciesAccess -> PoliciesResource
+      EvaluationEngine -> ConfigurationAccess -> ConfigurationResource
     ProcessManager - RecordsResponse IEvaluationEngine.DiscloseRecords(RecordsDisclosureRequest) > EvaluationEngine
     ProcessManager -:q> CommunicationManager
     ProcessManager -> AuditAccess -> AuditResource
@@ -847,7 +847,7 @@ UseCase "User approves record change" {
       RecordsAccess -> FormsResource
       /*RecordsAccess -> DocumentsResource*/
     ProcessManager -> EvaluationEngine
-      EvaluationEngine -> PoliciesAccess -> PoliciesResource
+      EvaluationEngine -> ConfigurationAccess -> ConfigurationResource
     ProcessManager - RecordsResponse IEvaluationEngine.DiscloseRecords(RecordsDisclosureRequest) > EvaluationEngine
     ProcessManager -:q> CommunicationManager
     ProcessManager -> AuditAccess -> AuditResource
@@ -856,7 +856,10 @@ UseCase "User approves record change" {
 UseCase "User denies record change" {
   WebClient - IProcessManager.ReviewChanges() > ProcessManager
     /* Sub-usecase "SUB-Pr-1: Authorize User Access in Context" */
+    ProcessManager -> WorkflowsAccess -> WorkflowsResource
     ProcessManager - IRecordsAccess.Execute() > RecordsAccess -> RecordsResource
+    ProcessManager -:q> CommunicationManager
+    ProcessManager -> AuditAccess -> AuditResource
 }
 
 UseCase "Bulk import of records" {
@@ -868,7 +871,7 @@ UseCase "Bulk import of records" {
       RecordsAccess -> NotesResource
       RecordsAccess -> FormsResource
     ProcessManager -> EvaluationEngine
-      EvaluationEngine -> PoliciesAccess -> PoliciesResource
+      EvaluationEngine -> ConfigurationAccess -> ConfigurationResource
     ProcessManager - RecordsResponse IEvaluationEngine.DiscloseRecords(RecordsDisclosureRequest) > EvaluationEngine
     ProcessManager -:q> CommunicationManager
     ProcessManager -> AuditAccess -> AuditResource
@@ -881,7 +884,7 @@ UseCase "Bulk export of records" {
       RecordsAccess -> RecordsResource
       RecordsAccess -> NotesResource
       RecordsAccess -> FormsResource
-    ProcessManager -> EvaluationEngine -> PoliciesAccess -> PoliciesResource
+    ProcessManager -> EvaluationEngine -> ConfigurationAccess -> ConfigurationResource
     ProcessManager -> AuditAccess -> AuditResource
 }
 
@@ -889,7 +892,7 @@ UseCase "Invite a user" {
   WebClient - IMembershipManager.InviteUser() > MembershipManager
     /* Sub-usecase "SUB-Pr-1: Authorize User Access in Context" */
     MembershipManager -> AccountsAccess -> AccountsResource
-    MembershipManager -> IdentityProviderUtility
+      AccountsAccess -> SecurityUtility
     MembershipManager -:q> CommunicationManager
 }
 
@@ -898,7 +901,6 @@ UseCase "User sign-up" {
     MembershipManager - Account IAccountsAccess.GetOrCreateUserAccount(ClaimsPrincipal) > AccountsAccess
       AccountsAccess -> AccountsResource
       AccountsAccess -> RecordsResource
-    /* Should it be SecurityUtility or IdentityProviderUtility? */
     MembershipManager - ClaimsPrincipal ISecurityUtility.Authenticate(HttpContext) > SecurityUtility 
 }
 
@@ -907,7 +909,7 @@ UseCase "Organization onboarding" {
     /* Sub-usecase "SUB-Pr-1: Authorize User Access in Context" */
     ProcessManager -> WorkflowsAccess -> WorkflowsResource
     ProcessManager - RecordOperationsResponse IRecordsAccess.Execute(RecordOperationsRequest) > RecordsAccess
-      RecordsAccess -> PoliciesResource
+      RecordsAccess -> ConfigurationResource
     ProcessManager -:q> CommunicationManager
     ProcessManager -> AuditAccess -> AuditResource
 }
