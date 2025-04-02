@@ -59,20 +59,14 @@ export function AssignmentCard({ assignment }: AssignmentCardProps) {
     ? familyLookup(latestLocationId)
     : null;
 
-  const nextPlannedLocationId = assignment.childLocationPlan?.length
-    ? assignment.childLocationPlan.find(
-        (entry) => new Date(entry.timestampUtc!) > new Date()
-      )?.childLocationFamilyId || null
-    : null;
-
-  const nextPlannedLocationFamily = nextPlannedLocationId
-    ? familyLookup(nextPlannedLocationId)
-    : null;
-
   const nextPlannedLocation =
     assignment.childLocationPlan?.find(
       (entry) => new Date(entry.timestampUtc!) > new Date()
     ) ?? null;
+
+  const nextPlannedLocationFamily = nextPlannedLocation?.childLocationFamilyId
+    ? familyLookup(nextPlannedLocation.childLocationFamilyId)
+    : null;
 
   const nextPlanIsPastDue =
     nextPlannedLocation && nextPlannedLocation.timestampUtc! < new Date();
