@@ -888,6 +888,69 @@ UseCase "Bulk export of records" {
     ProcessManager -> AuditAccess -> AuditResource
 }
 
+
+Activity "Organization onboarding" {
+  |u|User
+  |s|System
+  |support| Support
+  |i|Identity Provider
+  |support|
+  start
+  :Generates invite;
+  |s|
+  :Register invite parameters;
+  :Sends invite link to contact;
+  |u|
+  :Access invite link;
+  :Enter organization and personal data;
+  |s|
+  :Receive organization and user data;
+  :Retrieve invitation entry;
+  :Validate invitation (e.g. expiration date);
+  :Initialize configuration (organization, location, base policies...);
+  |i|
+  :Create user identity;
+  |s|
+  :Create user account for identity;
+  :Link user to organization;
+  :Create family and person;
+  :Authenticate user;
+  |u|
+  :Access CareTogether;
+  stop
+}
+
+
+Activity "Invite user to existing organization" {
+  |u|User
+  |s|System
+  |support| Support
+  |i|Identity Provider
+  |u|
+  start
+  :Generates invite;
+  |s|
+  :Register invite parameters;
+  :Sends invite link to contact;
+  |u|
+  :Access invite link;
+  :Enter personal data;
+  |s|
+  :Receive user data;
+  :Retrieve invitation entry;
+  :Validate invitation (e.g. expiration date);
+  |i|
+  :Create user identity;
+  |s|
+  :Create user account for identity;
+  :Link user to organization;
+  :Create family and person;
+  :Authenticate user;
+  |u|
+  :Access CareTogether;
+  stop
+}
+
 UseCase "M0: Invite a User to Sign Up" {
   WebClient - IMembershipManager.InviteUser() > MembershipManager
     /* Sub-usecase "SUB-Pr-1: Authorize User Access in Context" */
@@ -909,6 +972,26 @@ UseCase "M1: Sign Up as a User" {
       AccountsAccess -> AccountsResource
       /* TODO: Separate out the "link user to existing organization" into a separate sub-usecase */
       AccountsAccess -> RecordsResource
+    MembershipManager - ClaimsPrincipal ISecurityUtility.Authenticate(HttpContext) > SecurityUtility 
+}
+
+UseCase "M1: Sign Up as a User (copy)" {
+  @@@
+  A person wants to sign up for a CareTogether account.
+  This person MUST have an invite link to redeem, so their new account can
+  be tied to an existing CareTogether organization or allow them to sign up
+  a new organization.
+  Signing up for an account without a connection to an organization makes no sense.
+  @@@
+  WebClient - IMembershipManager.SignUpUser(/*Guid*/ InvitationId) > MembershipManager
+    MembershipManager - INetworkAccess.RedeemOrganizationInvitationTableEntry() > NetworkAccess -> NetworkResource
+    MembershipManager - Account IAccountsAccess.GetOrCreateUserAccount(ClaimsPrincipal) > AccountsAccess -> AccountsResource
+  
+    /* Optional: only initialize config. if it's an invite to sign up organization, 
+       otherwise just link the user/person to existing organization. */
+    MembershipManager - IConfigurationAccess.InitializeConfiguration() > ConfigurationAccess -> ConfigurationResource
+    
+    MembershipManager - IRecordsAccess.CreatePerson() > RecordsAccess -> RecordsResource
     MembershipManager - ClaimsPrincipal ISecurityUtility.Authenticate(HttpContext) > SecurityUtility 
 }
 
