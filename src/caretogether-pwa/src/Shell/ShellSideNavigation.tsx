@@ -124,10 +124,10 @@ function SideNavigationMenu({ open }: SideNavigationMenuProps) {
                 primary="Settings"
                 icon={<SettingsIcon sx={{ color: '#fff8' }} />}
               />
+
               <ListItemLink
                 className="ph-unmask"
-                to="http://support.caretogether.io"
-                newTab
+                to={`${locationPrefix}/support`}
                 primary="Support"
                 icon={<SupportIcon sx={{ color: '#fff8' }} />}
               />
