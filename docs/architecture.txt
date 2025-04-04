@@ -896,25 +896,29 @@ Activity "Organization onboarding" {
   |i|Identity Provider
   |support|
   start
-  :Generates invite;
+  :Enter organization name and user email;
   |s|
   :Register invite parameters;
   :Sends invite link to contact;
   |u|
   :Access invite link;
-  :Enter organization and personal data;
   |s|
-  :Receive organization and user data;
-  :Retrieve invitation entry;
-  :Validate invitation (e.g. expiration date);
-  :Initialize configuration (organization, location, base policies...);
+  :Requires user authentication and puts link into state;
   |i|
   :Create user identity;
+  floating note left
+    In the future we can require 
+    a valid token from the system 
+    in order to allow user sign up.
+  end note
   |s|
-  :Create user account for identity;
-  :Link user to organization;
-  :Create family and person;
   :Authenticate user;
+  :Create user account for identity;
+  :Retrieve invitation entry from forwarded state;
+  :Validate invitation (e.g. expiration date);
+  :Initialize configuration (organization, location, base policies...);
+  :Create family and person;
+  :Link user to person in location;
   |u|
   :Access CareTogether;
   stop
@@ -993,6 +997,31 @@ UseCase "M1: Sign Up as a User (copy)" {
     
     MembershipManager - IRecordsAccess.CreatePerson() > RecordsAccess -> RecordsResource
     MembershipManager - ClaimsPrincipal ISecurityUtility.Authenticate(HttpContext) > SecurityUtility 
+}
+
+UseCase "M1: Sign Up as a User (copy 2)" {
+  @@@
+  A person wants to sign up for a CareTogether account.
+  This person MUST have an invite link to redeem, so their new account can
+  be tied to an existing CareTogether organization or allow them to sign up
+  a new organization.
+  Signing up for an account without a connection to an organization makes no sense.
+  @@@
+  WebClient - IMembershipManager.SignUpUser(/*Guid*/ InvitationId) > MembershipManager
+
+    /* This steps occurs in the backend or in the browser? */
+    MembershipManager - ISecurityUtility.CreateUserIdentity() > SecurityUtility
+
+    MembershipManager - ClaimsPrincipal ISecurityUtility.Authenticate(HttpContext) > SecurityUtility 
+    MembershipManager - Account IAccountsAccess.CreateUserAccount(ClaimsPrincipal) > AccountsAccess -> AccountsResource
+    MembershipManager - INetworkAccess.RedeemOrganizationInvitationTableEntry() > NetworkAccess -> NetworkResource
+
+    /* Optional: only initialize config. if it's an invite to sign up organization, 
+       otherwise just link the user/person to existing organization. */
+    MembershipManager - IConfigurationAccess.InitializeConfiguration() > ConfigurationAccess -> ConfigurationResource
+
+    /* Creates family and person, and links user to person in location */
+    MembershipManager - IRecordsAccess.Execute() > RecordsAccess -> RecordsResource
 }
 
 UseCase "Invite a User to Sign Up an Organization" {
