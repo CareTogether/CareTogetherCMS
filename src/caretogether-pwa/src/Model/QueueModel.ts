@@ -25,6 +25,8 @@ export interface ChildNotReturned {
   type: 'ChildNotReturned';
   family: CombinedFamilyInfo;
   child: Person;
+  referralId: string;
+  arrangementId: string;
 }
 
 const childrenOver18Query = selector<ChildOver18[]>({
@@ -74,9 +76,7 @@ const childNotReturnedQuery = selector<ChildNotReturned[]>({
       arrangement: Arrangement;
       family: CombinedFamilyInfo;
     }[] = visibleFamilies?.flatMap((family) => {
-      if (!family.partneringFamilyInfo) {
-        return [];
-      }
+      if (!family.partneringFamilyInfo) return [];
 
       const mapArrangementAndFamily = (arrangement: Arrangement) => ({
         arrangement,
@@ -98,12 +98,16 @@ const childNotReturnedQuery = selector<ChildNotReturned[]>({
     });
 
     return allArrangements
-      .filter(({ arrangement }) => arrangement.phase === ArrangementPhase.Ended &&
-        arrangement.childLocationHistory && arrangement.childLocationHistory.length > 0)
+      .filter(
+        ({ arrangement }) =>
+          arrangement.phase === ArrangementPhase.Ended &&
+          arrangement.childLocationHistory &&
+          arrangement.childLocationHistory.length > 0
+      )
       .filter(({ arrangement }) => {
         const mostRecentLocation =
           arrangement?.childLocationHistory?.[
-          arrangement.childLocationHistory.length - 1
+            arrangement.childLocationHistory.length - 1
           ];
 
         return mostRecentLocation?.plan !== ChildLocationPlan.WithParent;
@@ -113,10 +117,21 @@ const childNotReturnedQuery = selector<ChildNotReturned[]>({
           (child) => child.id === arrangement.partneringFamilyPersonId
         );
 
+        const referral =
+          family.partneringFamilyInfo?.openReferral?.arrangements?.includes(
+            arrangement
+          )
+            ? family.partneringFamilyInfo.openReferral
+            : family.partneringFamilyInfo?.closedReferrals?.find((referral) =>
+                referral.arrangements?.includes(arrangement)
+              );
+
         return {
           type: 'ChildNotReturned',
           family: family,
           child: child ?? ({} as Person),
+          referralId: referral?.id ?? '',
+          arrangementId: arrangement.id ?? '',
         };
       });
   },

@@ -6,6 +6,13 @@ export interface AppNavigate {
   dashboard: () => void;
   inbox: () => void;
   family: (familyId: string) => void;
+
+  familyWithQuery: (
+    familyId: string,
+    referralId: string,
+    arrangementId?: string
+  ) => void;
+
   community: (communityId: string) => void;
   settings: () => void;
   role: (roleId: string) => void;
@@ -30,6 +37,17 @@ export function useAppNavigate(): AppNavigate {
     dashboard: () => inContext(''),
     inbox: () => inContext('inbox'),
     family: (familyId: string) => inContext(`families/${familyId}`),
+    familyWithQuery: (
+      familyId: string,
+      referralId: string,
+      arrangementId?: string
+    ) =>
+      inContext(
+        `families/${familyId}?referralId=${referralId}${
+          arrangementId ? `&arrangementId=${arrangementId}` : ''
+        }`
+      ),
+
     community: (communityId: string) =>
       inContext(`communities/community/${communityId}`),
     settings: () => inContext(`settings`),
