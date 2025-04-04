@@ -29,6 +29,7 @@ import { FamilyScreenV2 } from './Families/FamilyScreenV2';
 import { familyScreenV2State } from './Families/familyScreenV2State';
 import { usePostHogIdentify } from './Utilities/Instrumentation/usePostHogIdentify';
 import { usePostHogGroups } from './Utilities/Instrumentation/usePostHogGroups';
+import { Support } from './Support';
 
 const LAST_VISITED_LOCATION = 'lastVisitedLocation';
 
@@ -167,6 +168,7 @@ function LocationContextWrapper() {
           <Route path="volunteers/*" element={<Volunteers />} />
           <Route path="communities/*" element={<Communities />} />
           <Route path="settings/*" element={<Settings />} />
+          <Route path="support/*" element={<Support />} />
           <Route path="*" element={<RouteError />} />
         </Routes>
       </ShellRootLayout>
@@ -195,6 +197,7 @@ export function AppRoutes() {
       <Route path="/volunteers/*" element={<RouteMigrator />} />
       <Route path="/communities/*" element={<RouteMigrator />} />
       <Route path="/settings/*" element={<RouteMigrator />} />
+      <Route path="/support/*" element={<RouteMigrator />} />
       <Route path="/" element={<RouteMigrator />} />
       <Route path="*" element={<RouteError />} />
     </Routes>
