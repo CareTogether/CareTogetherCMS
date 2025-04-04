@@ -70,7 +70,15 @@ function getMessageProps(
     case 'ChildNotReturned':
       return {
         icon: <EmojiPeople sx={{ color: 'red' }} />,
-        onClick: () => appNavigate.family(item.family.family!.id!),
+        onClick: () => {
+          const familyId = item.family.family?.id;
+          const referralId = item.referralId;
+          const arrangementId = item.arrangementId;
+
+          if (familyId && referralId && arrangementId) {
+            appNavigate.familyWithQuery(familyId, referralId, arrangementId);
+          }
+        },
         primaryContent: (
           <Typography
             variant="body1"
