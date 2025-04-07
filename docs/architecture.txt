@@ -21,6 +21,7 @@ To make human services more relational.
 10. Build the capacity to serve the ~300,000 human services organizations in the United States and supporting global use.
 11. Enable longitudinal studies of human services outcomes and impact in order to identify and share best practices with organizations.
 12. Provide an avenue for self-insurance.
+13. Assist organizations in networking based on insights into relevant potential partners.
 
 ## Vision
 
@@ -926,17 +927,18 @@ Activity "Organization onboarding" {
 
 
 Activity "Invite user to existing organization" {
-  |u|User
+  |u1|User 1
+  |u2|User 2
   |s|System
   |support| Support
   |i|Identity Provider
-  |u|
+  |u1|
   start
   :Generates invite;
   |s|
   :Register invite parameters;
   :Sends invite link to contact;
-  |u|
+  |u2|
   :Access invite link;
   :Enter personal data;
   |s|
@@ -950,7 +952,7 @@ Activity "Invite user to existing organization" {
   :Link user to organization;
   :Create family and person;
   :Authenticate user;
-  |u|
+  |u2|
   :Access CareTogether;
   stop
 }
