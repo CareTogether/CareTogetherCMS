@@ -3,6 +3,8 @@ import { CombinedFamilyInfo } from '../GeneratedClient';
 import { AssignmentCard } from '../Families/AssignmentCard';
 import { useState } from 'react';
 
+const MAX_INITIAL_ASSIGNMENT_ITEMS = 9;
+
 interface AssignmentsSectionProps {
   family: CombinedFamilyInfo;
 }
@@ -11,15 +13,17 @@ export function AssignmentsSection({ family }: AssignmentsSectionProps) {
   const [showAll, setShowAll] = useState(false);
   const assignments = [...(family.volunteerFamilyInfo?.assignments ?? [])].sort(
     (a, b) => {
-      const dateA = a.startedAtUtc ? new Date(a.startedAtUtc).getTime() : 0;
-      const dateB = b.startedAtUtc ? new Date(b.startedAtUtc).getTime() : 0;
+      const dateA = a.startedAtUtc?.getTime() ?? 0;
+      const dateB = b.startedAtUtc?.getTime() ?? 0;
       return dateB - dateA;
     }
   );
 
   if (assignments.length === 0) return null;
 
-  const visibleAssignments = showAll ? assignments : assignments.slice(0, 9);
+  const visibleAssignments = showAll
+    ? assignments
+    : assignments.slice(0, MAX_INITIAL_ASSIGNMENT_ITEMS);
 
   return (
     <Grid item xs={12}>
@@ -34,7 +38,7 @@ export function AssignmentsSection({ family }: AssignmentsSectionProps) {
         ))}
       </Grid>
 
-      {assignments.length > 9 && (
+      {assignments.length > MAX_INITIAL_ASSIGNMENT_ITEMS && (
         <Button
           variant="outlined"
           onClick={() => setShowAll((prev) => !prev)}
