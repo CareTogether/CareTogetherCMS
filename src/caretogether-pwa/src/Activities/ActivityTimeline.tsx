@@ -1,3 +1,5 @@
+import { useReactToPrint } from 'react-to-print';
+
 import {
   Timeline,
   TimelineItem,
@@ -21,14 +23,38 @@ import PersonPinCircleIcon from '@mui/icons-material/PersonPinCircle';
 import EditIcon from '@mui/icons-material/Edit';
 import { usePersonLookup, useUserLookup } from '../Model/DirectoryModel';
 import { PersonName } from '../Families/PersonName';
-import { Box } from '@mui/material';
+import { Box, Stack, Typography } from '@mui/material';
 import { NoteCard } from '../Notes/NoteCard';
 
 type ActivityTimelineProps = {
   family: CombinedFamilyInfo;
+  printContentRef: React.RefObject<HTMLDivElement>;
 };
 
-export function ActivityTimeline({ family }: ActivityTimelineProps) {
+const composeNoteType = (activity: Activity): string | null => {
+  if (activity instanceof ReferralRequirementCompleted) {
+    return 'Referral requirement completed';
+  }
+
+  if (activity instanceof ArrangementRequirementCompleted) {
+    return 'Arrangement requirement completed';
+  }
+
+  if (activity instanceof ChildLocationChanged) {
+    return 'Child location changed';
+  }
+
+  if (activity instanceof ReferralOpened) {
+    return 'Referral opened';
+  }
+
+  return null;
+};
+
+export function ActivityTimeline({
+  family,
+  printContentRef,
+}: ActivityTimelineProps) {
   const userLookup = useUserLookup();
   const personLookup = usePersonLookup();
 
@@ -49,6 +75,7 @@ export function ActivityTimeline({ family }: ActivityTimelineProps) {
             noteId: note.id,
           }) as Activity
       ) || [];
+
   const allActivitiesSorted = activities
     ?.concat(unmatchedNotesAsActivities)
     ?.sort((a, b) =>
@@ -97,85 +124,223 @@ export function ActivityTimeline({ family }: ActivityTimelineProps) {
     return document;
   }
 
+  const activitiesWithNotes = allActivitiesSorted
+    ?.filter((activity) => Boolean(activity.noteId))
+    .map((activity) => {
+      return {
+        activity,
+        note: noteLookup(activity.noteId),
+      };
+    });
+
   return (
-    <Timeline position="right" sx={{ padding: 0 }}>
-      {allActivitiesSorted?.map((activity, i) => (
-        <TimelineItem key={i}>
-          <TimelineOppositeContent sx={{ display: 'none' }} />
-          <TimelineSeparator>
-            <TimelineDot
-              sx={{
-                width: 36,
-                height: 36,
-                textAlign: 'center',
-                display: 'block',
+    <>
+      <div ref={printContentRef}>
+        <style>
+          {`
+            @page {
+              margin: 60px 40px !important;
+              size: auto;
+              font-size: 12pt;
+            }
+          `}
+        </style>
+        <Stack
+          className="print-container"
+          spacing={2}
+          sx={{
+            display: 'none',
+            '@media print': {
+              display: 'block',
+            },
+          }}
+        >
+          {activitiesWithNotes?.map(({ activity, note }) => {
+            const arrangementId =
+              'arrangementId' in activity &&
+              typeof activity.arrangementId === 'string'
+                ? activity.arrangementId
+                : null;
+
+            const requirementName =
+              activity instanceof ReferralRequirementCompleted ||
+              activity instanceof ArrangementRequirementCompleted
+                ? activity.requirementName
+                : null;
+
+            const activityType = composeNoteType(activity);
+
+            return (
+              <Box
+                key={activity.activityTimestampUtc?.toString()}
+                p={2}
+                border={1}
+                borderRadius={2}
+                sx={{ breakInside: 'avoid' }}
+              >
+                {note && (
+                  <>
+                    <Typography gutterBottom>
+                      <strong>Author: </strong>
+                      <PersonName person={userLookup(note.authorId)} /> at{' '}
+                      {format(note.timestampUtc!, 'M/d/yy h:mm a')}
+                    </Typography>
+
+                    <Typography gutterBottom>
+                      <strong>Approver: </strong>
+                      <PersonName
+                        person={userLookup(activity.userId)}
+                      /> at{' '}
+                      {format(activity.activityTimestampUtc!, 'M/d/yy h:mm a')}
+                    </Typography>
+
+                    {activityType && (
+                      <Typography gutterBottom>
+                        <strong>Activity type: </strong>
+
+                        {activityType}
+                      </Typography>
+                    )}
+
+                    {arrangementId && (
+                      <Typography gutterBottom>
+                        <strong>Partnering person: </strong>
+
+                        <PersonName
+                          person={arrangementPartneringPerson(arrangementId)}
+                        />
+                      </Typography>
+                    )}
+
+                    {requirementName && (
+                      <Typography gutterBottom>
+                        <strong>Requirement name: </strong> {requirementName}
+                      </Typography>
+                    )}
+
+                    {activity instanceof ChildLocationChanged && (
+                      <Typography gutterBottom>
+                        <strong>Location changed to: </strong>
+                        <PersonName
+                          person={personLookup(
+                            activity.childLocationFamilyId,
+                            activity.childLocationReceivingAdultId
+                          )}
+                        />{' '}
+                        (
+                        {activity.plan === ChildLocationPlan.DaytimeChildCare
+                          ? 'daytime'
+                          : activity.plan === ChildLocationPlan.OvernightHousing
+                            ? 'overnight'
+                            : 'parent'}
+                        )
+                      </Typography>
+                    )}
+
+                    {activity.uploadedDocumentId && (
+                      <Typography gutterBottom>
+                        <strong>Document: </strong>
+                        {
+                          documentLookup(activity.uploadedDocumentId)
+                            ?.uploadedFileName
+                        }
+                      </Typography>
+                    )}
+
+                    <Typography gutterBottom>
+                      <strong>Note: </strong>
+                      <em>{note.contents}</em>
+                    </Typography>
+                  </>
+                )}
+              </Box>
+            );
+          })}
+        </Stack>
+      </div>
+
+      <Timeline position="right" sx={{ padding: 0 }}>
+        {allActivitiesSorted?.map((activity, i) => (
+          <TimelineItem key={i}>
+            <TimelineOppositeContent sx={{ display: 'none' }} />
+            <TimelineSeparator>
+              <TimelineDot
+                sx={{
+                  width: 36,
+                  height: 36,
+                  textAlign: 'center',
+                  display: 'block',
+                }}
+              >
+                {activity instanceof ReferralRequirementCompleted ||
+                activity instanceof ArrangementRequirementCompleted ? (
+                  '✔'
+                ) : activity instanceof ChildLocationChanged ? (
+                  <PersonPinCircleIcon fontSize="medium" />
+                ) : (
+                  <EditIcon fontSize="small" />
+                )}
+              </TimelineDot>
+              {i < allActivitiesSorted.length - 1 && <TimelineConnector />}
+            </TimelineSeparator>
+            <TimelineContent
+              style={{
+                width: 200,
+                wordWrap: 'break-word',
+                whiteSpace: 'pre-wrap',
               }}
             >
+              <Box sx={{ color: 'text.disabled', margin: 0, padding: 0 }}>
+                <span className="ph-unmask" style={{ marginRight: 16 }}>
+                  {format(activity.activityTimestampUtc!, 'M/d/yy h:mm a')}
+                </span>
+                <PersonName person={userLookup(activity.userId)} />
+              </Box>
               {activity instanceof ReferralRequirementCompleted ||
               activity instanceof ArrangementRequirementCompleted ? (
-                '✔'
+                activity.requirementName
               ) : activity instanceof ChildLocationChanged ? (
-                <PersonPinCircleIcon fontSize="medium" />
-              ) : (
-                <EditIcon fontSize="small" />
+                <>
+                  <PersonName
+                    person={arrangementPartneringPerson(activity.arrangementId)}
+                  />
+                  <span> &rarr; </span>
+                  <PersonName
+                    person={personLookup(
+                      activity.childLocationFamilyId,
+                      activity.childLocationReceivingAdultId
+                    )}
+                  />
+                  <span> </span>(
+                  {activity.plan === ChildLocationPlan.DaytimeChildCare
+                    ? 'daytime'
+                    : activity.plan === ChildLocationPlan.OvernightHousing
+                      ? 'overnight'
+                      : 'parent'}
+                  )
+                </>
+              ) : activity instanceof ReferralOpened ? (
+                'Referral opened'
+              ) : null}
+              {activity.uploadedDocumentId && (
+                <Box sx={{ margin: 0, padding: 0 }}>
+                  📃{' '}
+                  {
+                    documentLookup(activity.uploadedDocumentId)
+                      ?.uploadedFileName
+                  }
+                </Box>
               )}
-            </TimelineDot>
-            {i < allActivitiesSorted.length - 1 && <TimelineConnector />}
-          </TimelineSeparator>
-          <TimelineContent
-            style={{
-              width: 200,
-              wordWrap: 'break-word',
-              whiteSpace: 'pre-wrap',
-            }}
-          >
-            <Box sx={{ color: 'text.disabled', margin: 0, padding: 0 }}>
-              <span className="ph-unmask" style={{ marginRight: 16 }}>
-                {format(activity.activityTimestampUtc!, 'M/d/yy h:mm a')}
-              </span>
-              <PersonName person={userLookup(activity.userId)} />
-            </Box>
-            {activity instanceof ReferralRequirementCompleted ||
-            activity instanceof ArrangementRequirementCompleted ? (
-              activity.requirementName
-            ) : activity instanceof ChildLocationChanged ? (
-              <>
-                <PersonName
-                  person={arrangementPartneringPerson(activity.arrangementId)}
+              {activity.noteId && (
+                <NoteCard
+                  familyId={family.family!.id!}
+                  note={noteLookup(activity.noteId)!}
                 />
-                <span> &rarr; </span>
-                <PersonName
-                  person={personLookup(
-                    activity.childLocationFamilyId,
-                    activity.childLocationReceivingAdultId
-                  )}
-                />
-                <span> </span>(
-                {activity.plan === ChildLocationPlan.DaytimeChildCare
-                  ? 'daytime'
-                  : activity.plan === ChildLocationPlan.OvernightHousing
-                    ? 'overnight'
-                    : 'parent'}
-                )
-              </>
-            ) : activity instanceof ReferralOpened ? (
-              'Referral opened'
-            ) : null}
-            {activity.uploadedDocumentId && (
-              <Box sx={{ margin: 0, padding: 0 }}>
-                📃{' '}
-                {documentLookup(activity.uploadedDocumentId)?.uploadedFileName}
-              </Box>
-            )}
-            {activity.noteId && (
-              <NoteCard
-                familyId={family.family!.id!}
-                note={noteLookup(activity.noteId)!}
-              />
-            )}
-          </TimelineContent>
-        </TimelineItem>
-      ))}
-    </Timeline>
+              )}
+            </TimelineContent>
+          </TimelineItem>
+        ))}
+      </Timeline>
+    </>
   );
 }

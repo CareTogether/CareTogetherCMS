@@ -1,3 +1,5 @@
+import { useReactToPrint } from 'react-to-print';
+
 import {
   Container,
   Toolbar,
@@ -38,7 +40,7 @@ import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 import Diversity3Icon from '@mui/icons-material/Diversity3';
 import { AdultCard } from './AdultCard';
 import { ChildCard } from './ChildCard';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { AddAdultDialog } from './AddAdultDialog';
 import { AddChildDialog } from './AddChildDialog';
 import { AddEditNoteDialog } from '../Notes/AddEditNoteDialog';
@@ -292,6 +294,9 @@ export function FamilyScreen() {
     ));
   const appNavigate = useAppNavigate();
 
+  const printContentRef = useRef<HTMLDivElement>(null);
+  const reactToPrintFn = useReactToPrint({ contentRef: printContentRef });
+
   return !family ? (
     <ProgressBackdrop>
       <p>Loading family...</p>
@@ -392,9 +397,14 @@ export function FamilyScreen() {
                     />
                   </MenuItem>
                 ))}
+
+            <MenuItem onClick={() => reactToPrintFn()}>
+              <ListItemText primary="Print notes" />
+            </MenuItem>
+
             {permissions(Permission.EditFamilyInfo) && (
               <MenuItem onClick={deleteFamilyDialogHandle.openDialog}>
-                <ListItemText primary="Delete family" />
+                <ListItemText className="ph-unmask" primary="Delete family" />
               </MenuItem>
             )}
           </MenuList>
@@ -456,7 +466,7 @@ export function FamilyScreen() {
       </Toolbar>
       <Grid container spacing={0}>
         <Grid item xs={12} md={4} spacing={0}>
-          <ActivityTimeline family={family} />
+          <ActivityTimeline family={family} printContentRef={printContentRef} />
         </Grid>
         <Grid item md={8}>
           <Grid container spacing={2}>
