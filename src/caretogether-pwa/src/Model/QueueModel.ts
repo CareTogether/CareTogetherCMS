@@ -1,5 +1,10 @@
 import { selector } from 'recoil';
-import { CombinedFamilyInfo, ExactAge, Person } from '../GeneratedClient';
+import {
+  CombinedFamilyInfo,
+  ExactAge,
+  Person,
+  Referral,
+} from '../GeneratedClient';
 import { visibleFamiliesQuery } from './Data';
 import { differenceInYears } from 'date-fns';
 import {
@@ -75,23 +80,27 @@ const childNotReturnedQuery = selector<ChildNotReturned[]>({
     const allArrangements: {
       arrangement: Arrangement;
       family: CombinedFamilyInfo;
+      referral: Referral;
     }[] = visibleFamilies?.flatMap((family) => {
       if (!family.partneringFamilyInfo) return [];
 
-      const mapArrangementAndFamily = (arrangement: Arrangement) => ({
-        arrangement,
-        family,
-      });
-
       const openReferralArrangements =
         family.partneringFamilyInfo.openReferral?.arrangements?.map(
-          mapArrangementAndFamily
+          (arrangement) => ({
+            arrangement,
+            family,
+            referral: family.partneringFamilyInfo!.openReferral!,
+          })
         ) || [];
 
       const closedReferralsArrangements =
         family.partneringFamilyInfo.closedReferrals?.flatMap(
           (referral) =>
-            referral.arrangements?.map(mapArrangementAndFamily) || []
+            referral.arrangements?.map((arrangement) => ({
+              arrangement,
+              family,
+              referral,
+            })) || []
         ) || [];
 
       return [...openReferralArrangements, ...closedReferralsArrangements];
@@ -112,19 +121,10 @@ const childNotReturnedQuery = selector<ChildNotReturned[]>({
 
         return mostRecentLocation?.plan !== ChildLocationPlan.WithParent;
       })
-      .map(({ arrangement, family }) => {
+      .map(({ arrangement, family, referral }) => {
         const child = family.family?.children?.find(
           (child) => child.id === arrangement.partneringFamilyPersonId
         );
-
-        const referral =
-          family.partneringFamilyInfo?.openReferral?.arrangements?.includes(
-            arrangement
-          )
-            ? family.partneringFamilyInfo.openReferral
-            : family.partneringFamilyInfo?.closedReferrals?.find((referral) =>
-                referral.arrangements?.includes(arrangement)
-              );
 
         return {
           type: 'ChildNotReturned',

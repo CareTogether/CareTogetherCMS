@@ -5,11 +5,9 @@ import { useNavigate } from 'react-router-dom';
 export interface AppNavigate {
   dashboard: () => void;
   inbox: () => void;
-  family: (familyId: string) => void;
-
-  familyWithQuery: (
+  family: (
     familyId: string,
-    referralId: string,
+    referralId?: string,
     arrangementId?: string
   ) => void;
 
@@ -36,17 +34,19 @@ export function useAppNavigate(): AppNavigate {
   return {
     dashboard: () => inContext(''),
     inbox: () => inContext('inbox'),
-    family: (familyId: string) => inContext(`families/${familyId}`),
-    familyWithQuery: (
-      familyId: string,
-      referralId: string,
-      arrangementId?: string
-    ) =>
-      inContext(
-        `families/${familyId}?referralId=${referralId}${
-          arrangementId ? `&arrangementId=${arrangementId}` : ''
-        }`
-      ),
+    family: (familyId: string, referralId?: string, arrangement?: string) => {
+      const searchParams = new URLSearchParams();
+      if (referralId) {
+        searchParams.append('referralId', referralId);
+      }
+      if (arrangement) {
+        searchParams.append('arrangementId', arrangement);
+      }
+      const searchParamsString = searchParams.size
+        ? `?${searchParams.toString()}`
+        : '';
+      return inContext(`families/${familyId}${searchParamsString}`);
+    },
 
     community: (communityId: string) =>
       inContext(`communities/community/${communityId}`),

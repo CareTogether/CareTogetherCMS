@@ -76,7 +76,7 @@ function getMessageProps(
           const arrangementId = item.arrangementId;
 
           if (familyId && referralId && arrangementId) {
-            appNavigate.familyWithQuery(familyId, referralId, arrangementId);
+            appNavigate.family(familyId, referralId, arrangementId);
           }
         },
         primaryContent: (
