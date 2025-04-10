@@ -348,13 +348,14 @@ namespace CareTogether.Core.Test.ApprovalCalculationTests
                 .ToImmutableList();
 
         public static ImmutableList<VolunteerFamilyApprovalRequirement> FamilyApprovalRequirements(
-            params (RequirementStage, string, VolunteerFamilyRequirementScope)[] requirements
+            params (RequirementStage, string, VolunteerFamilyRequirementScope, ScopeCriteria[]?)[] requirements
         ) =>
             requirements
                 .Select(requirement => new VolunteerFamilyApprovalRequirement(
                     requirement.Item1,
                     requirement.Item2,
-                    requirement.Item3
+                    requirement.Item3,
+                    requirement.Item4 
                 ))
                 .ToImmutableList();
     }

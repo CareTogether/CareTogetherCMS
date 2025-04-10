@@ -248,7 +248,8 @@ namespace CareTogether.Resources.Policies
     public sealed record VolunteerFamilyApprovalRequirement(
         RequirementStage Stage,
         string ActionName,
-        VolunteerFamilyRequirementScope Scope
+        VolunteerFamilyRequirementScope Scope,
+        ScopeCriteria[]? ScopeCriteria
     );
 
     public enum VolunteerFamilyRequirementScope
@@ -257,6 +258,25 @@ namespace CareTogether.Resources.Policies
         AllAdultsInTheFamily,
         AllParticipatingAdultsInTheFamily,
     };
+
+    public enum HouseholdStatus
+    {
+        IsInHousehold,
+        NotInHousehold,
+    }
+
+    public enum ParticipationStatus
+    {
+        Active,
+        Inactive,
+        OptOut,
+        Denied,
+    };
+
+    public sealed record ScopeCriteria(
+        HouseholdStatus[] HouseholdStatus,
+        ParticipationStatus[] ParticipationStatus
+    );
 
     /// <summary>
     /// The <see cref="IPoliciesResource"/> is responsible for the configuration aspects of CareTogether.

@@ -2901,32 +2901,51 @@ namespace CareTogether.TestData
                                         new VolunteerFamilyApprovalRequirement(
                                             RequirementStage.Application,
                                             "Host Family Application",
-                                            VolunteerFamilyRequirementScope.OncePerFamily
+                                            VolunteerFamilyRequirementScope.OncePerFamily,
+                                            null
                                         ),
                                         new VolunteerFamilyApprovalRequirement(
                                             RequirementStage.Approval,
                                             "Background Check",
-                                            VolunteerFamilyRequirementScope.AllAdultsInTheFamily
+                                            VolunteerFamilyRequirementScope.AllAdultsInTheFamily,
+                                            [
+                                                new ScopeCriteria(
+                                                    [HouseholdStatus.IsInHousehold],
+                                                    [
+                                                        ParticipationStatus.Active,
+                                                        ParticipationStatus.Inactive,
+                                                        ParticipationStatus.OptOut,
+                                                    ]
+                                                ),
+                                                // new ScopeCriteria(
+                                                //     [HouseholdStatus.NotInHousehold],
+                                                //     [ParticipationStatus.Active]
+                                                // ),
+                                            ]
                                         ),
                                         new VolunteerFamilyApprovalRequirement(
                                             RequirementStage.Approval,
                                             "Host Family Training",
-                                            VolunteerFamilyRequirementScope.AllParticipatingAdultsInTheFamily
+                                            VolunteerFamilyRequirementScope.AllParticipatingAdultsInTheFamily,
+                                            null
                                         ),
                                         new VolunteerFamilyApprovalRequirement(
                                             RequirementStage.Approval,
                                             "Home Screening Checklist",
-                                            VolunteerFamilyRequirementScope.OncePerFamily
+                                            VolunteerFamilyRequirementScope.OncePerFamily,
+                                            null
                                         ),
                                         new VolunteerFamilyApprovalRequirement(
                                             RequirementStage.Approval,
                                             "Host Family Interview",
-                                            VolunteerFamilyRequirementScope.OncePerFamily
+                                            VolunteerFamilyRequirementScope.OncePerFamily,
+                                            null
                                         ),
                                         new VolunteerFamilyApprovalRequirement(
                                             RequirementStage.Onboarding,
                                             "Meet & Greet",
-                                            VolunteerFamilyRequirementScope.OncePerFamily
+                                            VolunteerFamilyRequirementScope.OncePerFamily,
+                                            null
                                         ),
                                     ]
                                 ),
@@ -2937,32 +2956,38 @@ namespace CareTogether.TestData
                                         new VolunteerFamilyApprovalRequirement(
                                             RequirementStage.Application,
                                             "Host Family Application",
-                                            VolunteerFamilyRequirementScope.OncePerFamily
+                                            VolunteerFamilyRequirementScope.OncePerFamily,
+                                            null
                                         ),
                                         new VolunteerFamilyApprovalRequirement(
                                             RequirementStage.Approval,
                                             "Comprehensive Background Check",
-                                            VolunteerFamilyRequirementScope.AllAdultsInTheFamily
+                                            VolunteerFamilyRequirementScope.AllAdultsInTheFamily,
+                                            null
                                         ),
                                         new VolunteerFamilyApprovalRequirement(
                                             RequirementStage.Approval,
                                             "Host Family Training",
-                                            VolunteerFamilyRequirementScope.AllParticipatingAdultsInTheFamily
+                                            VolunteerFamilyRequirementScope.AllParticipatingAdultsInTheFamily,
+                                            null
                                         ),
                                         new VolunteerFamilyApprovalRequirement(
                                             RequirementStage.Approval,
                                             "Home Screening Checklist",
-                                            VolunteerFamilyRequirementScope.OncePerFamily
+                                            VolunteerFamilyRequirementScope.OncePerFamily,
+                                            null
                                         ),
                                         new VolunteerFamilyApprovalRequirement(
                                             RequirementStage.Approval,
                                             "Host Family Interview",
-                                            VolunteerFamilyRequirementScope.OncePerFamily
+                                            VolunteerFamilyRequirementScope.OncePerFamily,
+                                            null
                                         ),
                                         new VolunteerFamilyApprovalRequirement(
                                             RequirementStage.Onboarding,
                                             "Meet & Greet",
-                                            VolunteerFamilyRequirementScope.OncePerFamily
+                                            VolunteerFamilyRequirementScope.OncePerFamily,
+                                            null
                                         ),
                                     ]
                                 ),

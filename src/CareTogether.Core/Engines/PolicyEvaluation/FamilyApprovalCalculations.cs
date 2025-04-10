@@ -117,7 +117,7 @@ namespace CareTogether.Engines.PolicyEvaluation
                 .Adults.Where(a => a.Item1.Active)
                 .Select(a =>
                 {
-                    var (person, _) = a;
+                    var (person, familyAdultRelationshipInfo) = a;
                     var completedRequirements = completedIndividualRequirements.GetValueOrEmptyList(
                         person.Id
                     );
@@ -127,7 +127,8 @@ namespace CareTogether.Engines.PolicyEvaluation
                     return (
                         a.Item1.Id,
                         CompletedRequirements: completedRequirements,
-                        ExemptedRequirements: exemptedRequirements
+                        ExemptedRequirements: exemptedRequirements,
+                        familyAdultRelationshipInfo.IsInHousehold
                     );
                 })
                 .ToImmutableList();
@@ -142,6 +143,7 @@ namespace CareTogether.Engines.PolicyEvaluation
                         requirement.ActionName,
                         requirement.Stage,
                         requirement.Scope,
+                        requirement.ScopeCriteria,
                         policyVersion.SupersededAtUtc,
                         completedFamilyRequirements,
                         exemptedFamilyRequirements,
@@ -165,11 +167,24 @@ namespace CareTogether.Engines.PolicyEvaluation
             );
         }
 
+        internal static bool CheckInHouseHoldStatus(HouseholdStatus criteria, bool target)
+        {
+            return criteria switch
+            {
+                HouseholdStatus.IsInHousehold => target == true,
+                HouseholdStatus.NotInHousehold => target == false,
+                _ => throw new NotImplementedException(
+                    $"The household status '{criteria}' has not been implemented."
+                ),
+            };
+        }
+
         internal static FamilyRoleRequirementCompletionStatus CalculateFamilyRoleRequirementCompletionStatus(
             string roleName,
             string requirementActionName,
             RequirementStage requirementStage,
             VolunteerFamilyRequirementScope requirementScope,
+            ScopeCriteria[]? scopeCriteria,
             DateTime? policyVersionSupersededAtUtc,
             ImmutableList<Resources.CompletedRequirementInfo> completedFamilyRequirements,
             ImmutableList<Resources.ExemptedRequirementInfo> exemptedFamilyRequirements,
@@ -177,7 +192,8 @@ namespace CareTogether.Engines.PolicyEvaluation
             ImmutableList<(
                 Guid Id,
                 ImmutableList<Resources.CompletedRequirementInfo> CompletedRequirements,
-                ImmutableList<Resources.ExemptedRequirementInfo> ExemptedRequirements
+                ImmutableList<Resources.ExemptedRequirementInfo> ExemptedRequirements,
+                bool IsInHousehold
             )> activeAdults
         )
         {
@@ -194,6 +210,25 @@ namespace CareTogether.Engines.PolicyEvaluation
             var statusDetails = requirementScope switch
             {
                 VolunteerFamilyRequirementScope.AllAdultsInTheFamily => activeAdults
+                    .Where(a =>
+                    {
+                        if (scopeCriteria == null)
+                        {
+                            return true;
+                        }
+
+                        var result = scopeCriteria.Any(criteria =>
+                        {
+                            var houseHoldStatusResult = criteria.HouseholdStatus.Any(
+                                houseHoldStatusCriteria =>
+                                    CheckInHouseHoldStatus(houseHoldStatusCriteria, a.IsInHousehold)
+                            );
+
+                            return houseHoldStatusResult;
+                        });
+
+                        return result;
+                    })
                     .Select(a => new FamilyRequirementStatusDetail(
                         a.Id,
                         SharedCalculations.FindRequirementApprovals(
