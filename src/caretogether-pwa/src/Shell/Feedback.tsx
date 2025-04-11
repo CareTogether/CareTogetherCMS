@@ -1,32 +1,27 @@
 import SentimentSatisfiedAltIcon from '@mui/icons-material/SentimentSatisfiedAlt';
-import { useState } from 'react';
+import Button from '@mui/material/Button';
 
 export default function Feedback() {
-  const [isHovered, setIsHovered] = useState(false);
-
-  const buttonStyle = {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '8px',
-    padding: '8px 16px',
-    borderRadius: '16px',
-    backgroundColor: isHovered ? '#e5e7eb' : '#f3f4f6',
-    border: 'none',
-    boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)',
-    cursor: 'pointer',
-    transition: 'all 0.2s ease',
-    transform: isHovered ? 'scale(1.05)' : 'scale(1)',
-  };
-
   return (
-    <button
+    <Button
       id="posthog-feedback-btn"
-      style={buttonStyle}
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
+      startIcon={<SentimentSatisfiedAltIcon />}
+      sx={{
+        textTransform: 'none',
+        borderRadius: 10,
+        px: 2,
+        py: 1,
+        backgroundColor: 'grey.100',
+        color: 'black',
+        boxShadow: 1,
+        transition: 'transform 0.2s ease',
+        '&:hover': {
+          backgroundColor: 'grey.200',
+          transform: 'scale(1.05)',
+        },
+      }}
     >
-      <SentimentSatisfiedAltIcon />
       <span>Feedback</span>
-    </button>
+    </Button>
   );
 }
