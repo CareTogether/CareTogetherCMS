@@ -1,5 +1,10 @@
 import { selector } from 'recoil';
-import { CombinedFamilyInfo, ExactAge, Person } from '../GeneratedClient';
+import {
+  CombinedFamilyInfo,
+  ExactAge,
+  Person,
+  Referral,
+} from '../GeneratedClient';
 import { visibleFamiliesQuery } from './Data';
 import { differenceInYears } from 'date-fns';
 import {
@@ -25,6 +30,8 @@ export interface ChildNotReturned {
   type: 'ChildNotReturned';
   family: CombinedFamilyInfo;
   child: Person;
+  referralId: string;
+  arrangementId: string;
 }
 
 const childrenOver18Query = selector<ChildOver18[]>({
@@ -73,42 +80,48 @@ const childNotReturnedQuery = selector<ChildNotReturned[]>({
     const allArrangements: {
       arrangement: Arrangement;
       family: CombinedFamilyInfo;
+      referral: Referral;
     }[] = visibleFamilies?.flatMap((family) => {
-      if (!family.partneringFamilyInfo) {
-        return [];
-      }
-
-      const mapArrangementAndFamily = (arrangement: Arrangement) => ({
-        arrangement,
-        family,
-      });
+      if (!family.partneringFamilyInfo) return [];
 
       const openReferralArrangements =
         family.partneringFamilyInfo.openReferral?.arrangements?.map(
-          mapArrangementAndFamily
+          (arrangement) => ({
+            arrangement,
+            family,
+            referral: family.partneringFamilyInfo!.openReferral!,
+          })
         ) || [];
 
       const closedReferralsArrangements =
         family.partneringFamilyInfo.closedReferrals?.flatMap(
           (referral) =>
-            referral.arrangements?.map(mapArrangementAndFamily) || []
+            referral.arrangements?.map((arrangement) => ({
+              arrangement,
+              family,
+              referral,
+            })) || []
         ) || [];
 
       return [...openReferralArrangements, ...closedReferralsArrangements];
     });
 
     return allArrangements
-      .filter(({ arrangement }) => arrangement.phase === ArrangementPhase.Ended &&
-        arrangement.childLocationHistory && arrangement.childLocationHistory.length > 0)
+      .filter(
+        ({ arrangement }) =>
+          arrangement.phase === ArrangementPhase.Ended &&
+          arrangement.childLocationHistory &&
+          arrangement.childLocationHistory.length > 0
+      )
       .filter(({ arrangement }) => {
         const mostRecentLocation =
           arrangement?.childLocationHistory?.[
-          arrangement.childLocationHistory.length - 1
+            arrangement.childLocationHistory.length - 1
           ];
 
         return mostRecentLocation?.plan !== ChildLocationPlan.WithParent;
       })
-      .map(({ arrangement, family }) => {
+      .map(({ arrangement, family, referral }) => {
         const child = family.family?.children?.find(
           (child) => child.id === arrangement.partneringFamilyPersonId
         );
@@ -117,6 +130,8 @@ const childNotReturnedQuery = selector<ChildNotReturned[]>({
           type: 'ChildNotReturned',
           family: family,
           child: child ?? ({} as Person),
+          referralId: referral?.id ?? '',
+          arrangementId: arrangement.id ?? '',
         };
       });
   },
