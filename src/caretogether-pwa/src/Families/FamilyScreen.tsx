@@ -84,6 +84,7 @@ import { useAppNavigate } from '../Hooks/useAppNavigate';
 import FamilyScreenPageVersionSwitch from './FamilyScreenPageVersionSwitch';
 import posthog from 'posthog-js';
 import { AssignmentsSection } from '../Families/AssignmentsSection';
+import { useMemo } from 'react';
 
 const sortArrangementsByStartDateDescThenCreateDateDesc = (
   a: Arrangement,
@@ -101,6 +102,9 @@ export function FamilyScreen() {
   const familyIdMaybe = useParams<{ familyId: string }>();
   const familyId = familyIdMaybe.familyId as string;
 
+  const searchParams = new URLSearchParams(location.search);
+  const referralIdFromQuery = searchParams.get('referralId') ?? undefined;
+  const arrangementIdFromQuery = searchParams.get('arrangementId') ?? undefined;
   // TODO: When we go to optimize the layout, we should consider updating the generated client
   // to include the ids of the communities each family is a member of in the CombinedFamilyInfo
   // data model so that we don't need to start by first looking up ALL communities
@@ -129,19 +133,25 @@ export function FamilyScreen() {
     permissions(Permission.CloseReferral);
 
   const deleteFamilyDialogHandle = useDialogHandle();
-  const openReferrals: Referral[] =
-    family?.partneringFamilyInfo?.openReferral !== undefined
+  const openReferrals: Referral[] = useMemo(() => {
+    return family?.partneringFamilyInfo?.openReferral !== undefined
       ? [family.partneringFamilyInfo.openReferral]
       : [];
-  const closedReferrals: Referral[] =
-    family?.partneringFamilyInfo?.closedReferrals === undefined
+  }, [family?.partneringFamilyInfo?.openReferral]);
+
+  const closedReferrals: Referral[] = useMemo(() => {
+    return family?.partneringFamilyInfo?.closedReferrals === undefined
       ? []
       : [...family.partneringFamilyInfo.closedReferrals!].sort(
           (r1, r2) =>
             r1.closedAtUtc!.getUTCMilliseconds() -
             r2.closedAtUtc!.getUTCMilliseconds()
         );
-  const allReferrals: Referral[] = [...openReferrals, ...closedReferrals];
+  }, [family?.partneringFamilyInfo?.closedReferrals]);
+
+  const allReferrals: Referral[] = useMemo(() => {
+    return [...openReferrals, ...closedReferrals];
+  }, [openReferrals, closedReferrals]);
   const [closeReferralDialogOpen, setCloseReferralDialogOpen] = useState(false);
   const [openNewReferralDialogOpen, setOpenNewReferralDialogOpen] =
     useState(false);
@@ -161,6 +171,17 @@ export function FamilyScreen() {
   const selectedReferral = allReferrals.find(
     (referral) => referral.id === selectedReferralId
   );
+
+  const arrangementRefs = useRef<Record<string, HTMLDivElement | null>>({});
+
+  useEffect(() => {
+    if (
+      referralIdFromQuery &&
+      allReferrals.some((ref) => ref.id === referralIdFromQuery)
+    ) {
+      setSelectedReferralId(referralIdFromQuery);
+    }
+  }, [referralIdFromQuery, allReferrals]);
 
   // If user navigates to a different family without leaving current page (i.e. not unmounting this component),
   // we want to auto-select the first referral
@@ -285,13 +306,48 @@ export function FamilyScreen() {
     .filter((arrangement) => meetsArrangementFilterCriteria(arrangement))
     .sort((a, b) => sortArrangementsByStartDateDescThenCreateDateDesc(a, b))
     .map((arrangement) => (
-      <ArrangementCard
+      <div
         key={arrangement.id}
-        partneringFamily={family}
-        referralId={selectedReferral.id!}
-        arrangement={arrangement}
-      />
+        ref={(el) => {
+          if (arrangement.id) {
+            arrangementRefs.current[arrangement.id] = el;
+          }
+        }}
+      >
+        <ArrangementCard
+          partneringFamily={family}
+          referralId={selectedReferral.id!}
+          arrangement={arrangement}
+        />
+      </div>
     ));
+  const hasScrolledRef = useRef(false);
+
+  useEffect(() => {
+    if (!arrangementIdFromQuery || !selectedReferral || hasScrolledRef.current)
+      return;
+
+    const ref = arrangementRefs.current[arrangementIdFromQuery];
+
+    if (ref) {
+      hasScrolledRef.current = true;
+
+      setTimeout(() => {
+        const top = ref.getBoundingClientRect().top + window.pageYOffset;
+        const offset = 100;
+        const scrollTo = top - offset;
+
+        const maxScroll = document.body.scrollHeight - window.innerHeight;
+        const finalScroll = Math.min(scrollTo, maxScroll);
+
+        window.scrollTo({
+          top: finalScroll,
+          behavior: 'smooth',
+        });
+      }, 300);
+    }
+  }, [arrangementIdFromQuery, selectedReferral, filteredArrangements]);
+
   const appNavigate = useAppNavigate();
 
   const printContentRef = useRef<HTMLDivElement>(null);
