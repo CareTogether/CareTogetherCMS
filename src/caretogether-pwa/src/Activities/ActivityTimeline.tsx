@@ -1,5 +1,3 @@
-import { useReactToPrint } from 'react-to-print';
-
 import {
   Timeline,
   TimelineItem,
@@ -16,6 +14,7 @@ import {
   ChildLocationChanged,
   ChildLocationPlan,
   CombinedFamilyInfo,
+  Note,
   ReferralOpened,
   ReferralRequirementCompleted,
 } from '../GeneratedClient';
@@ -50,6 +49,30 @@ const composeNoteType = (activity: Activity): string | null => {
 
   return null;
 };
+
+function embedNotesInActivities(notes: Note[], activities: Activity[]) {
+  // We only want to show each note once, on the most recent activity entry that is
+  // linked to that particular note. The following stateful code works by pulling from the
+  // set of all the family's notes, so that each time this component renders, each note will
+  // be "found" at most once. Since activities render in order from most recent to oldest,
+  // the result is that each note is shown only on the most recent matching activity entry.
+  // This is a simplistic fix; at some point it would be better to support actual matching of
+  // related activity entries and showing those as a single "grouped" activity.
+  const unlinkedNotes = notes.slice() || [];
+  function noteLookup(noteId?: string) {
+    const noteIndex = unlinkedNotes.findIndex((n) => n.id === noteId);
+    if (noteIndex === -1) return undefined;
+    const note = unlinkedNotes.splice(noteIndex, 1)[0];
+    return note;
+  }
+
+  return activities.map((activity) => {
+    return {
+      activity,
+      note: noteLookup(activity.noteId),
+    };
+  });
+}
 
 export function ActivityTimeline({
   family,
@@ -102,21 +125,6 @@ export function ActivityTimeline({
     return partneringPerson;
   }
 
-  // We only want to show each note once, on the most recent activity entry that is
-  // linked to that particular note. The following stateful code works by pulling from the
-  // set of all the family's notes, so that each time this component renders, each note will
-  // be "found" at most once. Since activities render in order from most recent to oldest,
-  // the result is that each note is shown only on the most recent matching activity entry.
-  // This is a simplistic fix; at some point it would be better to support actual matching of
-  // related activity entries and showing those as a single "grouped" activity.
-  const unlinkedNotes = family.notes?.slice() || [];
-  function noteLookup(noteId?: string) {
-    const noteIndex = unlinkedNotes.findIndex((n) => n.id === noteId);
-    if (noteIndex === -1) return undefined;
-    const note = unlinkedNotes.splice(noteIndex, 1)[0];
-    return note;
-  }
-
   function documentLookup(uploadedDocumentId?: string) {
     const document = family.uploadedDocuments?.find(
       (d) => d.uploadedDocumentId === uploadedDocumentId
@@ -124,14 +132,14 @@ export function ActivityTimeline({
     return document;
   }
 
-  const activitiesWithNotes = allActivitiesSorted
-    ?.filter((activity) => Boolean(activity.noteId))
-    .map((activity) => {
-      return {
-        activity,
-        note: noteLookup(activity.noteId),
-      };
-    });
+  const activitiesWithEmbeddedNotes = embedNotesInActivities(
+    family.notes || [],
+    allActivitiesSorted
+  );
+
+  const onlyActivitiesWithNotes = activitiesWithEmbeddedNotes.filter((item) =>
+    Boolean(item.note)
+  );
 
   return (
     <>
@@ -155,7 +163,7 @@ export function ActivityTimeline({
             },
           }}
         >
-          {activitiesWithNotes?.map(({ activity, note }) => {
+          {onlyActivitiesWithNotes.map(({ activity, note }) => {
             const arrangementId =
               'arrangementId' in activity &&
               typeof activity.arrangementId === 'string'
@@ -260,7 +268,7 @@ export function ActivityTimeline({
       </div>
 
       <Timeline position="right" sx={{ padding: 0 }}>
-        {allActivitiesSorted?.map((activity, i) => (
+        {activitiesWithEmbeddedNotes?.map(({ activity, note }, i) => (
           <TimelineItem key={i}>
             <TimelineOppositeContent sx={{ display: 'none' }} />
             <TimelineSeparator>
@@ -331,12 +339,7 @@ export function ActivityTimeline({
                   }
                 </Box>
               )}
-              {activity.noteId && (
-                <NoteCard
-                  familyId={family.family!.id!}
-                  note={noteLookup(activity.noteId)!}
-                />
-              )}
+              {note && <NoteCard familyId={family.family!.id!} note={note} />}
             </TimelineContent>
           </TimelineItem>
         ))}

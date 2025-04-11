@@ -57,9 +57,7 @@ export function NoteCard({ familyId, note }: NoteCardProps) {
         </Typography>
       </CardContent>
       {note.status === NoteStatus.Draft && (
-        <CardActions
-          sx={{ paddingTop: 0, '@media print': { display: 'none' } }}
-        >
+        <CardActions sx={{ paddingTop: 0 }}>
           {permissions(Permission.DiscardDraftNotes) && (
             <Button
               className="ph-unmask"
