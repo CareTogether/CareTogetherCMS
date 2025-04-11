@@ -8,9 +8,9 @@ export interface AppNavigate {
   family: (
     familyId: string,
     referralId?: string,
-    arrangementId?: string
+    arrangementId?: string,
+    options?: { replace?: boolean }
   ) => void;
-
   community: (communityId: string) => void;
   settings: () => void;
   role: (roleId: string) => void;
@@ -27,14 +27,19 @@ export function useAppNavigate(): AppNavigate {
     selectedLocationContextState
   );
 
-  function inContext(pathSuffix: string) {
-    navigate(`/org/${organizationId}/${locationId}/${pathSuffix}`);
+  function inContext(pathSuffix: string, options?: { replace?: boolean }) {
+    navigate(`/org/${organizationId}/${locationId}/${pathSuffix}`, options);
   }
 
   return {
     dashboard: () => inContext(''),
     inbox: () => inContext('inbox'),
-    family: (familyId: string, referralId?: string, arrangement?: string) => {
+    family: (
+      familyId: string,
+      referralId?: string,
+      arrangement?: string,
+      options?: { replace?: boolean }
+    ) => {
       const searchParams = new URLSearchParams();
       if (referralId) {
         searchParams.append('referralId', referralId);
@@ -45,7 +50,7 @@ export function useAppNavigate(): AppNavigate {
       const searchParamsString = searchParams.size
         ? `?${searchParams.toString()}`
         : '';
-      return inContext(`families/${familyId}${searchParamsString}`);
+      return inContext(`families/${familyId}${searchParamsString}`, options);
     },
 
     community: (communityId: string) =>

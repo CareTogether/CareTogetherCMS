@@ -118,6 +118,8 @@ export function FamilyScreen() {
     c.community?.memberFamilies?.includes(familyId)
   );
 
+  const appNavigate = useAppNavigate();
+
   const familyLookup = useFamilyLookup();
   const family = familyLookup(familyId)!;
 
@@ -192,6 +194,20 @@ export function FamilyScreen() {
       setSelectedReferralId(firstReferralId);
     }
   }, [selectedReferral, firstReferralId]);
+
+  useEffect(() => {
+    const searchParams = new URLSearchParams(window.location.search);
+    const hasArrangementId = searchParams.has('arrangementId');
+
+    if (hasArrangementId) {
+      appNavigate.family(
+        familyId,
+        searchParams.get('referralId') ?? undefined,
+        undefined,
+        { replace: true }
+      );
+    }
+  }, [familyId, appNavigate]);
 
   const [familyMoreMenuAnchor, setFamilyMoreMenuAnchor] =
     useState<Element | null>(null);
@@ -348,7 +364,10 @@ export function FamilyScreen() {
     }
   }, [arrangementIdFromQuery, selectedReferral, filteredArrangements]);
 
-  const appNavigate = useAppNavigate();
+  function handleReferralChange(referralId: string) {
+    setSelectedReferralId(referralId);
+    appNavigate.family(familyId, referralId, undefined, { replace: true });
+  }
 
   const printContentRef = useRef<HTMLDivElement>(null);
   const reactToPrintFn = useReactToPrint({ contentRef: printContentRef });
@@ -665,7 +684,10 @@ export function FamilyScreen() {
                             key={referral.id}
                             value={referral.id}
                             control={<Radio />}
-                            onChange={() => setSelectedReferralId(referral.id)}
+                            onChange={() => {
+                              if (referral.id)
+                                handleReferralChange(referral.id);
+                            }}
                             label={
                               <Box display="flex" alignItems="center" gap={1}>
                                 <Typography className="ph-unmask">
