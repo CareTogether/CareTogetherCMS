@@ -22,6 +22,7 @@ import { selectedLocationContextState } from '../Model/Data';
 import { useLoadable } from '../Hooks/useLoadable';
 import { Inbox } from '@mui/icons-material';
 import { queueItemsCountQuery } from '../Model/QueueModel';
+import Feedback from './Feedback';
 
 interface SideNavigationMenuProps {
   open: boolean;
@@ -198,7 +199,10 @@ export function ShellSideNavigation({ open, width }: ShellSideNavigationProps) {
               marginLeft: 4,
             }}
           >
-            <Copyright />
+            <Stack spacing={5} alignItems="center">
+              <Feedback />
+              <Copyright />
+            </Stack>
           </div>
         )}
       </Stack>
