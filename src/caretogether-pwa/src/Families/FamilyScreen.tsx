@@ -278,39 +278,45 @@ export function FamilyScreen() {
     Cancelled = 'Cancelled',
     Ended = 'Ended',
   }
+
   const {
     filterOptions: arrangementFilterOptions,
     handleFilterChange: handleFilterArrangements,
-  } = useFilterMenu(Object.keys(ArrangementFilterOptionLabel), [
-    ArrangementFilterOptionLabel.Active,
-  ]);
+  } = useFilterMenu(Object.keys(ArrangementFilterOptionLabel), []);
 
   const meetsArrangementFilterCriteria = (
     arrangement: Arrangement
   ): boolean => {
-    return arrangementFilterOptions
+    const selectedOptions = arrangementFilterOptions
       .filter((o) => o.selected)
-      .map((o) => o.text)
-      .some((option) => {
-        const opt = option as ArrangementFilterOptionLabel;
-        if (
-          opt === ArrangementFilterOptionLabel.Active &&
-          arrangement.cancelledAtUtc === undefined
-        ) {
-          return true;
-        } else if (
-          opt === ArrangementFilterOptionLabel.Cancelled &&
-          arrangement.cancelledAtUtc !== undefined
-        ) {
-          return true;
-        } else if (
-          opt === ArrangementFilterOptionLabel.Ended &&
-          arrangement.endedAtUtc !== undefined
-        ) {
-          return true;
-        }
-        return false;
-      });
+      .map((o) => o.text as ArrangementFilterOptionLabel);
+
+    if (selectedOptions.length === 0) {
+      return true;
+    }
+
+    return selectedOptions.some((option) => {
+      if (
+        option === ArrangementFilterOptionLabel.Active &&
+        !arrangement.cancelledAtUtc &&
+        !arrangement.endedAtUtc
+      ) {
+        return true;
+      }
+      if (
+        option === ArrangementFilterOptionLabel.Cancelled &&
+        !!arrangement.cancelledAtUtc
+      ) {
+        return true;
+      }
+      if (
+        option === ArrangementFilterOptionLabel.Ended &&
+        !!arrangement.endedAtUtc
+      ) {
+        return true;
+      }
+      return false;
+    });
   };
 
   const filteredArrangements = selectedReferral?.arrangements
