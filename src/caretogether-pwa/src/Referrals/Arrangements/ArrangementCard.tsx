@@ -209,6 +209,15 @@ function ArrangementPlannedDuration({
   const partneringFamilyId = partneringFamily.family!.id!;
   const permissions = useFamilyIdPermissions(partneringFamilyId);
 
+  const requestedAtEditor = useInlineEditor(async (value) => {
+    await referralsModel.editRequestedAt(
+      partneringFamilyId,
+      referralId,
+      arrangement.id!,
+      value
+    );
+  }, arrangement.requestedAtUtc || null);
+
   const plannedStartEditor = useInlineEditor(async (value) => {
     await referralsModel.planArrangementStart(
       partneringFamilyId,
@@ -229,6 +238,39 @@ function ArrangementPlannedDuration({
 
   return (
     <Stack className="ph-unmask" direction="column" sx={{ clear: 'both' }}>
+      <Box>
+        <span>Requested at:&nbsp;</span>
+        {!summaryOnly && permissions(Permission.EditArrangement) ? (
+          requestedAtEditor.editing ? (
+            <>
+              <DatePicker
+                label="Requested at"
+                value={requestedAtEditor.value}
+                onChange={(value: Date | null) =>
+                  requestedAtEditor.setValue(value)
+                }
+                slotProps={{ textField: { size: 'small', margin: 'dense' } }}
+              />
+              {requestedAtEditor.cancelButton}
+              {requestedAtEditor.saveButton}
+            </>
+          ) : (
+            <>
+              {requestedAtEditor.value
+                ? format(requestedAtEditor.value, 'M/d/yyyy')
+                : '-'}
+              {requestedAtEditor.editButton}
+            </>
+          )
+        ) : (
+          <>
+            {requestedAtEditor.value
+              ? format(requestedAtEditor.value, 'M/d/yyyy')
+              : '-'}
+          </>
+        )}
+      </Box>
+
       <Box>
         <span>Planned start:&nbsp;</span>
         {!summaryOnly && permissions(Permission.EditArrangement) ? (

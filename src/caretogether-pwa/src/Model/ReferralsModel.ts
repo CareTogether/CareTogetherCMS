@@ -523,6 +523,26 @@ export function useReferralsModel() {
       return command;
     }
   );
+  // TODO: Backend support needed
+  // We currently use CreateArrangement here, but this won't work for editing existing arrangements, plz add a backend command, to allow users to update requestedAt after creation
+
+  const editRequestedAt = useArrangementsCommandCallbackWithLocation(
+    async (
+      partneringFamilyId: string,
+      referralId: string,
+      arrangementId: string,
+      requestedAtLocal: Date | null
+    ) => {
+      const command = new CreateArrangement({
+        familyId: partneringFamilyId,
+        referralId: referralId,
+        arrangementIds: [arrangementId],
+      });
+      command.requestedAtUtc = requestedAtLocal || undefined;
+      return command;
+    }
+  );
+
   const planArrangementStart = useArrangementsCommandCallbackWithLocation(
     async (
       partneringFamilyId: string,
@@ -917,6 +937,7 @@ export function useReferralsModel() {
     exemptIndividualVolunteerAssignmentRequirement,
     unexemptIndividualVolunteerAssignmentRequirement,
     createArrangement,
+    editRequestedAt,
     planArrangementStart,
     startArrangement,
     editArrangementStartTime,
