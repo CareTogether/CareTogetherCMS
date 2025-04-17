@@ -3,7 +3,7 @@ import { Box, Button, Typography } from '@mui/material';
 export function ScheduleCall() {
   return (
     <Box mb={4}>
-      <Typography variant="h5" gutterBottom>
+      <Typography variant="h6" gutterBottom>
         Book time with the CareTogether team
       </Typography>
       <Typography variant="body1" paragraph>
