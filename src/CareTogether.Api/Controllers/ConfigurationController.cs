@@ -64,6 +64,22 @@ namespace CareTogether.Api.Controllers
             return Ok(result);
         }
 
+        [HttpPut("/api/{organizationId:guid}/[controller]")]
+        public async Task<ActionResult<OrganizationConfiguration>> PutLocationDefinition(
+            Guid organizationId,
+            string roleName,
+            [FromBody] LocationConfiguration locationConfiguration
+        )
+        {
+            if (!User.IsInRole(SystemConstants.ORGANIZATION_ADMINISTRATOR))
+                return Forbid();
+            var result = await policiesResource.UpsertLocationDefinitionAsync(
+                organizationId,
+                locationConfiguration
+            );
+            return Ok(result);
+        }
+
         [HttpDelete("/api/{organizationId:guid}/[controller]/roles/{roleName}")]
         public async Task<ActionResult<OrganizationConfiguration>> DeleteRoleDefinition(
             Guid organizationId,

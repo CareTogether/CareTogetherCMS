@@ -117,6 +117,30 @@ namespace CareTogether.Resources.Policies
             return Render(newConfig);
         }
 
+        public async Task<OrganizationConfiguration> UpsertLocationDefinitionAsync(
+            Guid organizationId,
+            LocationConfiguration locationConfiguration
+        )
+        {
+            var config = await configurationStore.GetAsync(organizationId, Guid.Empty, CONFIG);
+
+            // F5D1O
+
+            // If location id is empty, generate a new one
+            if (locationConfiguration.Id == Guid.Empty)
+                locationConfiguration = locationConfiguration with { Id = Guid.NewGuid() };
+
+            var newConfig = config with
+            {
+                Locations = config.Locations.AddOrReplace(
+                    location => location.Id == locationConfiguration.Id,
+                    _ => locationConfiguration
+                ),
+            };
+            await configurationStore.UpsertAsync(organizationId, Guid.Empty, CONFIG, newConfig);
+            return Render(newConfig);
+        }
+
         public async Task<EffectiveLocationPolicy> GetCurrentPolicy(
             Guid organizationId,
             Guid locationId

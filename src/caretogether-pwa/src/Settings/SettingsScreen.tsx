@@ -3,6 +3,7 @@ import useScreenTitle from '../Shell/ShellScreenTitle';
 import { useDataLoaded } from '../Model/Data';
 import { Box } from '@mui/system';
 import { RolesSection } from './Roles/RolesSection';
+import { LocationsSection } from './Roles/LocationsSection';
 
 export function SettingsScreen() {
   useScreenTitle('Settings');
@@ -15,6 +16,7 @@ export function SettingsScreen() {
   ) : (
     <Box sx={{ paddingTop: 2 }}>
       <RolesSection />
+      <LocationsSection />
     </Box>
   );
 }
