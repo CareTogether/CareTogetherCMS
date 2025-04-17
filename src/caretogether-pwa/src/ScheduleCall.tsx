@@ -4,7 +4,7 @@ export function ScheduleCall() {
   return (
     <Box mb={4}>
       <Typography variant="h6" gutterBottom>
-        Book time with the CareTogether team
+        Book a call
       </Typography>
       <Typography variant="body1" paragraph>
         Need help or have questions about using CareTogether? Schedule a meeting

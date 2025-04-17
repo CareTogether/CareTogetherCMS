@@ -1,6 +1,15 @@
+import { Typography } from '@mui/material';
+
 export function OpenTicketForm() {
   return (
     <>
+      <Typography variant="h6" gutterBottom>
+        Submit a ticket (faster turnaround)
+      </Typography>
+      <Typography variant="body1" paragraph>
+        Need help with something specific? Sending us a ticket is usually the
+        fastest way to get your issue addressed.
+      </Typography>
       <script
         type="text/javascript"
         src="https://s3.amazonaws.com/assets.freshdesk.com/widget/freshwidget.js"
