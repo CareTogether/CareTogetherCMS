@@ -72,8 +72,6 @@ import { RemoveFamilyRoleDialog } from '../Volunteers/RemoveFamilyRoleDialog';
 import { ResetFamilyRoleDialog } from '../Volunteers/ResetFamilyRoleDialog';
 import { VolunteerRoleApprovalStatusChip } from '../Volunteers/VolunteerRoleApprovalStatusChip';
 import { FamilyCustomField } from './FamilyCustomField';
-import { useFilterMenu } from '../Generic/useFilterMenu';
-import { FilterMenu } from '../Generic/FilterMenu';
 import { isBackdropClick } from '../Utilities/handleBackdropClick';
 import { DeleteFamilyDialog } from './DeleteFamilyDialog';
 import { useDialogHandle } from '../Hooks/useDialogHandle';
@@ -86,18 +84,7 @@ import posthog from 'posthog-js';
 import { AssignmentsSection } from '../Families/AssignmentsSection';
 import { useMemo } from 'react';
 import { useSyncReferralIdInURL } from '../Hooks/useSyncReferralIdInURL';
-
-const sortArrangementsByStartDateDescThenCreateDateDesc = (
-  a: Arrangement,
-  b: Arrangement
-) => {
-  return (
-    (b.startedAtUtc ?? new Date()).getTime() -
-      (a.startedAtUtc ?? new Date()).getTime() ||
-    (b.requestedAtUtc ?? new Date()).getTime() -
-      (a.requestedAtUtc ?? new Date()).getTime()
-  );
-};
+import { ArrangementFilter } from '../Referrals/Arrangements/ArrangementFilter';
 
 export function FamilyScreen() {
   const familyIdMaybe = useParams<{ familyId: string }>();
@@ -228,6 +215,11 @@ export function FamilyScreen() {
     setFamilyMoreMenuAnchor(null);
     setRemoveRoleParameter({ volunteerFamilyId: familyId, role: role });
   }
+
+  const [filteredArrangements, setFilteredArrangements] = useState<
+    Arrangement[]
+  >([]);
+
   const [resetRoleParameter, setResetRoleParameter] = useState<{
     volunteerFamilyId: string;
     role: string;
@@ -273,72 +265,8 @@ export function FamilyScreen() {
 
   useScreenTitle(family ? `${familyLastName(family)} Family` : '...');
 
-  enum ArrangementFilterOptionLabel {
-    Active = 'Active',
-    Cancelled = 'Cancelled',
-    Ended = 'Ended',
-  }
+  //
 
-  const {
-    filterOptions: arrangementFilterOptions,
-    handleFilterChange: handleFilterArrangements,
-  } = useFilterMenu(Object.keys(ArrangementFilterOptionLabel), []);
-
-  const meetsArrangementFilterCriteria = (
-    arrangement: Arrangement
-  ): boolean => {
-    const selectedOptions = arrangementFilterOptions
-      .filter((o) => o.selected)
-      .map((o) => o.text as ArrangementFilterOptionLabel);
-
-    if (selectedOptions.length === 0) {
-      return true;
-    }
-
-    return selectedOptions.some((option) => {
-      if (
-        option === ArrangementFilterOptionLabel.Active &&
-        !arrangement.cancelledAtUtc &&
-        !arrangement.endedAtUtc
-      ) {
-        return true;
-      }
-      if (
-        option === ArrangementFilterOptionLabel.Cancelled &&
-        !!arrangement.cancelledAtUtc
-      ) {
-        return true;
-      }
-      if (
-        option === ArrangementFilterOptionLabel.Ended &&
-        !!arrangement.endedAtUtc
-      ) {
-        return true;
-      }
-      return false;
-    });
-  };
-
-  const filteredArrangements = selectedReferral?.arrangements
-    ?.slice()
-    .filter((arrangement) => meetsArrangementFilterCriteria(arrangement))
-    .sort((a, b) => sortArrangementsByStartDateDescThenCreateDateDesc(a, b))
-    .map((arrangement) => (
-      <div
-        key={arrangement.id}
-        ref={(el) => {
-          if (arrangement.id) {
-            arrangementRefs.current[arrangement.id] = el;
-          }
-        }}
-      >
-        <ArrangementCard
-          partneringFamily={family}
-          referralId={selectedReferral.id!}
-          arrangement={arrangement}
-        />
-      </div>
-    ));
   const hasScrolledRef = useRef(false);
 
   useEffect(() => {
@@ -967,23 +895,30 @@ export function FamilyScreen() {
                       flexWrap: `wrap`,
                     }}
                   >
-                    <Typography
-                      className="ph-unmask"
-                      variant="h3"
-                      style={{
-                        margin: 0,
-                        display: `flex`,
-                        alignSelf: `center`,
-                      }}
+                    <Box
+                      display="flex"
+                      alignItems="center"
+                      justifyContent="space-between"
+                      flexWrap="wrap"
+                      gap={2}
+                      mb={2}
                     >
-                      Arrangements
-                    </Typography>
-                    <FilterMenu
-                      singularLabel={`Arrangement`}
-                      pluralLabel={`Arrangements`}
-                      filterOptions={arrangementFilterOptions}
-                      handleFilterChange={handleFilterArrangements}
-                    />
+                      <Typography
+                        className="ph-unmask"
+                        variant="h3"
+                        sx={{ m: 0, display: 'flex', alignItems: 'center' }}
+                      >
+                        Arrangements
+                      </Typography>
+
+                      <ArrangementFilter
+                        referral={selectedReferral}
+                        onFiltered={(arrangements) =>
+                          setFilteredArrangements(arrangements)
+                        }
+                        arrangementRefs={arrangementRefs}
+                      />
+                    </Box>
                   </div>
                   {permissions(Permission.CreateArrangement) && (
                     <Box
@@ -1026,7 +961,24 @@ export function FamilyScreen() {
                     height: filteredArrangements?.length === 0 ? 0 : undefined,
                   }}
                 >
-                  {filteredArrangements || false}
+                  {filteredArrangements.map((arrangement) => (
+                    <div
+                      key={arrangement.id}
+                      ref={(el) => {
+                        if (arrangement.id) {
+                          arrangementRefs.current[arrangement.id] = el;
+                        }
+                      }}
+                    >
+                      {selectedReferral?.id && (
+                        <ArrangementCard
+                          partneringFamily={family}
+                          referralId={selectedReferral.id}
+                          arrangement={arrangement}
+                        />
+                      )}
+                    </div>
+                  ))}
                 </Masonry>
                 {createArrangementDialogParameter && (
                   <CreateArrangementDialog
