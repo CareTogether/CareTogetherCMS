@@ -957,29 +957,32 @@ export function FamilyScreen() {
                 <Masonry
                   columns={isDesktop ? (isWideScreen ? 3 : 2) : 1}
                   spacing={2}
-                  style={{
-                    height: filteredArrangements?.length === 0 ? 0 : undefined,
-                  }}
                 >
-                  {filteredArrangements.map((arrangement) => (
-                    <div
-                      key={arrangement.id}
-                      ref={(el) => {
-                        if (arrangement.id) {
-                          arrangementRefs.current[arrangement.id] = el;
-                        }
-                      }}
-                    >
-                      {selectedReferral?.id && (
+                  {filteredArrangements.length === 0 ? (
+                    <Typography variant="body2" sx={{ color: 'gray' }}>
+                      This referral doesn't have any active arrangements right
+                      now. Try adjusting your filter.
+                    </Typography>
+                  ) : (
+                    filteredArrangements.map((arrangement) => (
+                      <div
+                        key={arrangement.id}
+                        ref={(el) => {
+                          if (arrangement.id) {
+                            arrangementRefs.current[arrangement.id] = el;
+                          }
+                        }}
+                      >
                         <ArrangementCard
                           partneringFamily={family}
                           referralId={selectedReferral.id}
                           arrangement={arrangement}
                         />
-                      )}
-                    </div>
-                  ))}
+                      </div>
+                    ))
+                  )}
                 </Masonry>
+
                 {createArrangementDialogParameter && (
                   <CreateArrangementDialog
                     referralId={`${selectedReferral!.id}`}
