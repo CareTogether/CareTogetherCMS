@@ -25,14 +25,11 @@ import {
   Typography,
 } from '@mui/material';
 import {
-  Arrangement,
-  ArrangementPolicy,
   CompletedCustomFieldInfo,
   Permission,
   Referral,
   RoleRemovalReason,
 } from '../GeneratedClient';
-import { useRecoilValue } from 'recoil';
 import { useParams } from 'react-router';
 import AddCircleIcon from '@mui/icons-material/AddCircle';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
@@ -44,11 +41,8 @@ import { useEffect, useRef, useState } from 'react';
 import { AddAdultDialog } from './AddAdultDialog';
 import { AddChildDialog } from './AddChildDialog';
 import { AddEditNoteDialog } from '../Notes/AddEditNoteDialog';
-import { ArrangementCard } from '../Referrals/Arrangements/ArrangementCard';
 import { format } from 'date-fns';
 import { UploadFamilyDocumentsDialog } from './UploadFamilyDocumentsDialog';
-import { policyData } from '../Model/ConfigurationModel';
-import { CreateArrangementDialog } from '../Referrals/Arrangements/CreateArrangementDialog';
 import { CloseReferralDialog } from '../Referrals/CloseReferralDialog';
 import { OpenNewReferralDialog } from '../Referrals/OpenNewReferralDialog';
 import { FamilyDocuments } from './FamilyDocuments';
@@ -84,7 +78,7 @@ import posthog from 'posthog-js';
 import { AssignmentsSection } from '../Families/AssignmentsSection';
 import { useMemo } from 'react';
 import { useSyncReferralIdInURL } from '../Hooks/useSyncReferralIdInURL';
-import { ArrangementFilter } from '../Referrals/Arrangements/ArrangementFilter';
+import { ArrangementsSection } from '../Referrals/Arrangements/ArrangementsSection/ArrangementsSection';
 
 export function FamilyScreen() {
   const familyIdMaybe = useParams<{ familyId: string }>();
@@ -92,7 +86,7 @@ export function FamilyScreen() {
 
   const searchParams = new URLSearchParams(location.search);
   const referralIdFromQuery = searchParams.get('referralId') ?? undefined;
-  const arrangementIdFromQuery = searchParams.get('arrangementId') ?? undefined;
+
   // TODO: When we go to optimize the layout, we should consider updating the generated client
   // to include the ids of the communities each family is a member of in the CombinedFamilyInfo
   // data model so that we don't need to start by first looking up ALL communities
@@ -111,7 +105,6 @@ export function FamilyScreen() {
   const familyLookup = useFamilyLookup();
   const family = familyLookup(familyId)!;
 
-  const policy = useRecoilValue(policyData);
   const permissions = useFamilyPermissions(family);
 
   const canCloseReferral =
@@ -162,7 +155,14 @@ export function FamilyScreen() {
     (referral) => referral.id === selectedReferralId
   );
 
-  const arrangementRefs = useRef<Record<string, HTMLDivElement | null>>({});
+  useEffect(() => {
+    if (
+      referralIdFromQuery &&
+      allReferrals.some((ref) => ref.id === referralIdFromQuery)
+    ) {
+      setSelectedReferralId(referralIdFromQuery);
+    }
+  }, [referralIdFromQuery, allReferrals]);
 
   // If user navigates to a different family without leaving current page (i.e. not unmounting this component),
   // we want to auto-select the first referral
@@ -216,9 +216,7 @@ export function FamilyScreen() {
     setRemoveRoleParameter({ volunteerFamilyId: familyId, role: role });
   }
 
-  const [filteredArrangements, setFilteredArrangements] = useState<
-    Arrangement[]
-  >([]);
+  console.log('rerender');
 
   const [resetRoleParameter, setResetRoleParameter] = useState<{
     volunteerFamilyId: string;
@@ -254,11 +252,6 @@ export function FamilyScreen() {
     volunteerFamilyId: familyId,
   };
 
-  const [
-    createArrangementDialogParameter,
-    setCreateArrangementDialogParameter,
-  ] = useState<ArrangementPolicy | null>(null);
-
   const theme = useTheme();
   const isDesktop = useMediaQuery(theme.breakpoints.up('sm'));
   const isWideScreen = useMediaQuery(theme.breakpoints.up('xl'));
@@ -266,33 +259,6 @@ export function FamilyScreen() {
   useScreenTitle(family ? `${familyLastName(family)} Family` : '...');
 
   //
-
-  const hasScrolledRef = useRef(false);
-
-  useEffect(() => {
-    if (!arrangementIdFromQuery || !selectedReferral || hasScrolledRef.current)
-      return;
-
-    const ref = arrangementRefs.current[arrangementIdFromQuery];
-
-    if (ref) {
-      hasScrolledRef.current = true;
-
-      setTimeout(() => {
-        const top = ref.getBoundingClientRect().top + window.pageYOffset;
-        const offset = 100;
-        const scrollTo = top - offset;
-
-        const maxScroll = document.body.scrollHeight - window.innerHeight;
-        const finalScroll = Math.min(scrollTo, maxScroll);
-
-        window.scrollTo({
-          top: finalScroll,
-          behavior: 'smooth',
-        });
-      }, 300);
-    }
-  }, [arrangementIdFromQuery, selectedReferral, filteredArrangements]);
 
   function handleReferralChange(referralId: string) {
     setSelectedReferralId(referralId);
@@ -878,120 +844,13 @@ export function FamilyScreen() {
           </Grid>
           <Grid container spacing={0}>
             {selectedReferral && (
-              <Grid item xs={12}>
-                <div
-                  style={{
-                    display: `flex`,
-                    justifyContent: `space-between`,
-                    maxWidth: `100%`,
-                    flexWrap: `wrap`,
-                  }}
-                >
-                  <div
-                    style={{
-                      display: `flex`,
-                      justifyContent: `flex-start`,
-                      maxWidth: `100%`,
-                      flexWrap: `wrap`,
-                    }}
-                  >
-                    <Box
-                      display="flex"
-                      alignItems="center"
-                      justifyContent="space-between"
-                      flexWrap="wrap"
-                      gap={2}
-                      mb={2}
-                    >
-                      <Typography
-                        className="ph-unmask"
-                        variant="h3"
-                        sx={{ m: 0, display: 'flex', alignItems: 'center' }}
-                      >
-                        Arrangements
-                      </Typography>
-
-                      <ArrangementFilter
-                        referral={selectedReferral}
-                        onFiltered={(arrangements) =>
-                          setFilteredArrangements(arrangements)
-                        }
-                        arrangementRefs={arrangementRefs}
-                      />
-                    </Box>
-                  </div>
-                  {permissions(Permission.CreateArrangement) && (
-                    <Box
-                      sx={{
-                        textAlign: 'center',
-                        display: `flex`,
-                        flexDirection: `row`,
-                        maxWidth: `100%`,
-                        flexWrap: `wrap`,
-                      }}
-                    >
-                      {selectedReferral &&
-                        policy.referralPolicy?.arrangementPolicies?.map(
-                          (arrangementPolicy) => (
-                            <Box key={arrangementPolicy.arrangementType}>
-                              <Button
-                                className="ph-unmask"
-                                onClick={() =>
-                                  setCreateArrangementDialogParameter(
-                                    arrangementPolicy
-                                  )
-                                }
-                                variant="contained"
-                                size="small"
-                                sx={{ margin: 1 }}
-                                startIcon={<AddCircleIcon />}
-                              >
-                                {arrangementPolicy.arrangementType}
-                              </Button>
-                            </Box>
-                          )
-                        )}
-                    </Box>
-                  )}
-                </div>
-                <Masonry
-                  columns={isDesktop ? (isWideScreen ? 3 : 2) : 1}
-                  spacing={2}
-                >
-                  {filteredArrangements.length === 0 ? (
-                    <Typography variant="body2" sx={{ color: 'gray' }}>
-                      This referral doesn't have any active arrangements right
-                      now. Try adjusting your filter.
-                    </Typography>
-                  ) : (
-                    filteredArrangements.map((arrangement) => (
-                      <div
-                        key={arrangement.id}
-                        ref={(el) => {
-                          if (arrangement.id) {
-                            arrangementRefs.current[arrangement.id] = el;
-                          }
-                        }}
-                      >
-                        <ArrangementCard
-                          partneringFamily={family}
-                          referralId={selectedReferral.id}
-                          arrangement={arrangement}
-                        />
-                      </div>
-                    ))
-                  )}
-                </Masonry>
-
-                {createArrangementDialogParameter && (
-                  <CreateArrangementDialog
-                    referralId={`${selectedReferral!.id}`}
-                    arrangementPolicy={createArrangementDialogParameter}
-                    onClose={() => setCreateArrangementDialogParameter(null)}
-                  />
-                )}
-              </Grid>
+              <ArrangementsSection
+                referral={selectedReferral}
+                family={family}
+                permissions={permissions}
+              />
             )}
+
             <Grid item xs={12}>
               <Typography
                 className="ph-unmask"
