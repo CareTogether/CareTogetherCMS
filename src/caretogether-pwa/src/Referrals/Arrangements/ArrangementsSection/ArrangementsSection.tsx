@@ -1,0 +1,160 @@
+import { Masonry } from '@mui/lab';
+import AddCircleIcon from '@mui/icons-material/AddCircle';
+import { Grid, Typography, Button, useTheme } from '@mui/material';
+import { Box, useMediaQuery } from '@mui/system';
+import {
+  ArrangementPolicy,
+  CombinedFamilyInfo,
+  Permission,
+  Referral,
+} from '../../../GeneratedClient';
+import { ArrangementCard } from '../ArrangementCard';
+import { ArrangementFilter } from '../ArrangementFilter';
+import { CreateArrangementDialog } from '../CreateArrangementDialog';
+import { useRef, useState } from 'react';
+import { useRecoilValue } from 'recoil';
+import { policyData } from '../../../Model/ConfigurationModel';
+import { getFilteredArrangements } from './getFilteredArrangements';
+import { useScrollToArrangement } from './useScrollToArrangement';
+
+type ArrangementSectionProps = {
+  referral: Referral;
+  family: CombinedFamilyInfo;
+  permissions: (permission: Permission) => boolean;
+};
+
+export function ArrangementsSection({
+  referral,
+  family,
+  permissions,
+}: ArrangementSectionProps) {
+  const [selectedFilters, setSelectedFilters] = useState<string[]>(['Active']);
+
+  const policy = useRecoilValue(policyData);
+
+  const theme = useTheme();
+  const isDesktop = useMediaQuery(theme.breakpoints.up('sm'));
+  const isWideScreen = useMediaQuery(theme.breakpoints.up('xl'));
+
+  const [
+    createArrangementDialogParameter,
+    setCreateArrangementDialogParameter,
+  ] = useState<ArrangementPolicy | null>(null);
+
+  const filteredArrangements = getFilteredArrangements(
+    referral,
+    selectedFilters
+  );
+
+  const arrangementRefs = useRef<Record<string, HTMLDivElement | null>>({});
+
+  useScrollToArrangement(arrangementRefs);
+
+  return (
+    <Grid item xs={12}>
+      <div
+        style={{
+          display: `flex`,
+          justifyContent: `space-between`,
+          maxWidth: `100%`,
+          flexWrap: `wrap`,
+        }}
+      >
+        <div
+          style={{
+            display: `flex`,
+            justifyContent: `flex-start`,
+            maxWidth: `100%`,
+            flexWrap: `wrap`,
+          }}
+        >
+          <Box
+            display="flex"
+            alignItems="center"
+            justifyContent="space-between"
+            flexWrap="wrap"
+            gap={2}
+            mb={2}
+          >
+            <Typography
+              className="ph-unmask"
+              variant="h3"
+              sx={{ m: 0, display: 'flex', alignItems: 'center' }}
+            >
+              Arrangements
+            </Typography>
+
+            <ArrangementFilter
+              selectedOptions={selectedFilters}
+              onChange={setSelectedFilters}
+            />
+          </Box>
+        </div>
+        {permissions(Permission.CreateArrangement) && (
+          <Box
+            sx={{
+              textAlign: 'center',
+              display: `flex`,
+              flexDirection: `row`,
+              maxWidth: `100%`,
+              flexWrap: `wrap`,
+            }}
+          >
+            {referral &&
+              policy.referralPolicy?.arrangementPolicies?.map(
+                (arrangementPolicy) => (
+                  <Box key={arrangementPolicy.arrangementType}>
+                    <Button
+                      className="ph-unmask"
+                      onClick={() =>
+                        setCreateArrangementDialogParameter(arrangementPolicy)
+                      }
+                      variant="contained"
+                      size="small"
+                      sx={{ margin: 1 }}
+                      startIcon={<AddCircleIcon />}
+                    >
+                      {arrangementPolicy.arrangementType}
+                    </Button>
+                  </Box>
+                )
+              )}
+          </Box>
+        )}
+      </div>
+      <Masonry columns={isDesktop ? (isWideScreen ? 3 : 2) : 1} spacing={2}>
+        {filteredArrangements.length === 0 ? (
+          <Typography variant="body2" sx={{ color: 'gray' }}>
+            This referral doesn't have any active arrangements right now. Try
+            adjusting your filter.
+          </Typography>
+        ) : (
+          filteredArrangements.map((arrangement) => (
+            <div
+              key={arrangement.id}
+              ref={(el) => {
+                if (arrangement.id) {
+                  arrangementRefs.current[arrangement.id] = el;
+                }
+              }}
+            >
+              <ArrangementCard
+                partneringFamily={family}
+                referralId={referral.id!}
+                arrangement={arrangement}
+              />
+            </div>
+          ))
+        )}
+      </Masonry>
+
+      {createArrangementDialogParameter && (
+        <CreateArrangementDialog
+          referralId={`${referral!.id}`}
+          arrangementPolicy={createArrangementDialogParameter}
+          onClose={() => setCreateArrangementDialogParameter(null)}
+        />
+      )}
+    </Grid>
+  );
+}
