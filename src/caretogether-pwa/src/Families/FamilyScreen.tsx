@@ -191,9 +191,14 @@ export function FamilyScreen() {
     if (!selectedReferral) {
       posthog.capture('auto selected first referral');
 
-      setSelectedReferralId(firstReferralId);
+      if (firstReferralId) {
+        setSelectedReferralId(firstReferralId);
+        appNavigate.family(familyId, firstReferralId, undefined, {
+          replace: true,
+        });
+      }
     }
-  }, [selectedReferral, firstReferralId]);
+  }, [selectedReferral, firstReferralId, familyId, appNavigate]);
 
   useEffect(() => {
     const searchParams = new URLSearchParams(window.location.search);
