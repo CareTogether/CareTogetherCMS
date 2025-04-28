@@ -85,6 +85,7 @@ import FamilyScreenPageVersionSwitch from './FamilyScreenPageVersionSwitch';
 import posthog from 'posthog-js';
 import { AssignmentsSection } from '../Families/AssignmentsSection';
 import { useMemo } from 'react';
+import { useSyncReferralIdInURL } from '../Hooks/useSyncReferralIdInURL';
 
 const sortArrangementsByStartDateDescThenCreateDateDesc = (
   a: Arrangement,
@@ -168,22 +169,13 @@ export function FamilyScreen() {
 
   const [selectedReferralId, setSelectedReferralId] = useState<
     string | undefined
-  >(firstReferralId);
+  >(referralIdFromQuery || firstReferralId);
 
   const selectedReferral = allReferrals.find(
     (referral) => referral.id === selectedReferralId
   );
 
   const arrangementRefs = useRef<Record<string, HTMLDivElement | null>>({});
-
-  useEffect(() => {
-    if (
-      referralIdFromQuery &&
-      allReferrals.some((ref) => ref.id === referralIdFromQuery)
-    ) {
-      setSelectedReferralId(referralIdFromQuery);
-    }
-  }, [referralIdFromQuery, allReferrals]);
 
   // If user navigates to a different family without leaving current page (i.e. not unmounting this component),
   // we want to auto-select the first referral
@@ -193,12 +185,11 @@ export function FamilyScreen() {
 
       if (firstReferralId) {
         setSelectedReferralId(firstReferralId);
-        appNavigate.family(familyId, firstReferralId, undefined, {
-          replace: true,
-        });
       }
     }
   }, [selectedReferral, firstReferralId, familyId, appNavigate]);
+
+  useSyncReferralIdInURL({ familyId, referralIdFromQuery, selectedReferralId });
 
   useEffect(() => {
     const searchParams = new URLSearchParams(window.location.search);
@@ -371,7 +362,6 @@ export function FamilyScreen() {
 
   function handleReferralChange(referralId: string) {
     setSelectedReferralId(referralId);
-    appNavigate.family(familyId, referralId, undefined, { replace: true });
   }
 
   const printContentRef = useRef<HTMLDivElement>(null);
