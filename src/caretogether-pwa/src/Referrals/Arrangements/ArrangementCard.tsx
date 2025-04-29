@@ -3,14 +3,12 @@ import {
   AccordionDetails,
   AccordionSummary,
   Badge,
-  Box,
   Button,
   Card,
   CardContent,
   CardHeader,
   Divider,
   Grid,
-  Stack,
   Table,
   TableBody,
   TableContainer,
@@ -237,105 +235,138 @@ function ArrangementPlannedDuration({
   }, arrangement.plannedEndUtc || null);
 
   return (
-    <Stack className="ph-unmask" direction="column" sx={{ clear: 'both' }}>
-      <Box>
-        <span>Requested at:&nbsp;</span>
-        {!summaryOnly && permissions(Permission.EditArrangement) ? (
-          requestedAtEditor.editing ? (
-            <>
-              <DatePicker
-                label="Requested at"
-                value={requestedAtEditor.value}
-                onChange={(value: Date | null) =>
-                  requestedAtEditor.setValue(value)
-                }
-                slotProps={{ textField: { size: 'small', margin: 'dense' } }}
-              />
-              {requestedAtEditor.cancelButton}
-              {requestedAtEditor.saveButton}
-            </>
+    <Grid container spacing={0} sx={{ mb: 1 }}>
+      <Grid container spacing={0}>
+        <Grid item xs={6}>
+          Requested at:&nbsp;
+          {!summaryOnly && permissions(Permission.EditArrangement) ? (
+            requestedAtEditor.editing ? (
+              <>
+                <DatePicker
+                  label="Requested at"
+                  value={requestedAtEditor.value}
+                  onChange={(value: Date | null) =>
+                    requestedAtEditor.setValue(value)
+                  }
+                  slotProps={{ textField: { size: 'small', margin: 'none' } }}
+                />
+                {requestedAtEditor.cancelButton}
+                {requestedAtEditor.saveButton}
+              </>
+            ) : (
+              <>
+                {requestedAtEditor.value
+                  ? format(requestedAtEditor.value, 'M/d/yyyy')
+                  : '-'}
+                {requestedAtEditor.editButton}
+              </>
+            )
           ) : (
             <>
               {requestedAtEditor.value
                 ? format(requestedAtEditor.value, 'M/d/yyyy')
                 : '-'}
-              {requestedAtEditor.editButton}
             </>
-          )
-        ) : (
-          <>
-            {requestedAtEditor.value
-              ? format(requestedAtEditor.value, 'M/d/yyyy')
-              : '-'}
-          </>
-        )}
-      </Box>
+          )}
+        </Grid>
+        <Grid item xs={6}>
+          {!summaryOnly &&
+            permissions(Permission.EditArrangement) &&
+            requestedAtEditor.value && (
+              <Button
+                size="small"
+                color="error"
+                variant="text"
+                onClick={() => requestedAtEditor.setValue(null)}
+              >
+                Cancel
+              </Button>
+            )}
+        </Grid>
+      </Grid>
 
-      <Box>
-        <span>Planned start:&nbsp;</span>
-        {!summaryOnly && permissions(Permission.EditArrangement) ? (
-          plannedStartEditor.editing ? (
-            <>
-              <DatePicker
-                label="Planned start"
-                value={plannedStartEditor.value}
-                onChange={(value: Date | null) =>
-                  plannedStartEditor.setValue(value)
-                }
-                slotProps={{ textField: { size: 'small', margin: 'dense' } }}
-              />
-              {plannedStartEditor.cancelButton}
-              {plannedStartEditor.saveButton}
-            </>
+      <Grid container spacing={0}>
+        <Grid item xs={6}>
+          Planned start:&nbsp;
+          {!summaryOnly && permissions(Permission.EditArrangement) ? (
+            plannedStartEditor.editing ? (
+              <>
+                <DatePicker
+                  label="Planned start"
+                  value={plannedStartEditor.value}
+                  onChange={(value: Date | null) =>
+                    plannedStartEditor.setValue(value)
+                  }
+                  slotProps={{ textField: { size: 'small', margin: 'none' } }}
+                />
+                {plannedStartEditor.cancelButton}
+                {plannedStartEditor.saveButton}
+              </>
+            ) : (
+              <>
+                {plannedStartEditor.value
+                  ? format(plannedStartEditor.value, 'M/d/yyyy')
+                  : '-'}
+                {plannedStartEditor.editButton}
+              </>
+            )
           ) : (
             <>
               {plannedStartEditor.value
                 ? format(plannedStartEditor.value, 'M/d/yyyy')
                 : '-'}
-              {plannedStartEditor.editButton}
             </>
-          )
-        ) : (
-          <>
-            {plannedStartEditor.value
-              ? format(plannedStartEditor.value, 'M/d/yyyy')
-              : '-'}
-          </>
-        )}
-      </Box>
-      <Box>
-        <span>Planned end:&nbsp;</span>
-        {!summaryOnly && permissions(Permission.EditArrangement) ? (
-          plannedEndEditor.editing ? (
-            <>
-              <DatePicker
-                label="Planned end"
-                value={plannedEndEditor.value}
-                onChange={(value: Date | null) =>
-                  plannedEndEditor.setValue(value)
-                }
-                slotProps={{ textField: { size: 'small', margin: 'dense' } }}
-              />
-              {plannedEndEditor.cancelButton}
-              {plannedEndEditor.saveButton}
-            </>
+          )}
+        </Grid>
+        <Grid item xs={6}>
+          Started:&nbsp;
+          {arrangement.startedAtUtc
+            ? format(new Date(arrangement.startedAtUtc), 'M/d/yyyy')
+            : '-'}
+        </Grid>
+      </Grid>
+
+      <Grid container spacing={0}>
+        <Grid item xs={6}>
+          Planned end:&nbsp;
+          {!summaryOnly && permissions(Permission.EditArrangement) ? (
+            plannedEndEditor.editing ? (
+              <>
+                <DatePicker
+                  label="Planned end"
+                  value={plannedEndEditor.value}
+                  onChange={(value: Date | null) =>
+                    plannedEndEditor.setValue(value)
+                  }
+                  slotProps={{ textField: { size: 'small', margin: 'none' } }}
+                />
+                {plannedEndEditor.cancelButton}
+                {plannedEndEditor.saveButton}
+              </>
+            ) : (
+              <>
+                {plannedEndEditor.value
+                  ? format(plannedEndEditor.value, 'M/d/yyyy')
+                  : '-'}
+                {plannedEndEditor.editButton}
+              </>
+            )
           ) : (
             <>
               {plannedEndEditor.value
                 ? format(plannedEndEditor.value, 'M/d/yyyy')
                 : '-'}
-              {plannedEndEditor.editButton}
             </>
-          )
-        ) : (
-          <>
-            {plannedEndEditor.value
-              ? format(plannedEndEditor.value, 'M/d/yyyy')
-              : '-'}
-          </>
-        )}
-      </Box>
-    </Stack>
+          )}
+        </Grid>
+        <Grid item xs={6}>
+          Ended:&nbsp;
+          {arrangement.endedAtUtc
+            ? format(new Date(arrangement.endedAtUtc), 'M/d/yyyy')
+            : '-'}
+        </Grid>
+      </Grid>
+    </Grid>
   );
 }
 
