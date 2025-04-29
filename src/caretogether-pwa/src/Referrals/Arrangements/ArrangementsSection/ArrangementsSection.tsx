@@ -9,7 +9,7 @@ import {
   Referral,
 } from '../../../GeneratedClient';
 import { ArrangementCard } from '../ArrangementCard';
-import { ArrangementFilter } from '../ArrangementFilter';
+import { ToggleButton, ToggleButtonGroup } from '@mui/material';
 import { CreateArrangementDialog } from '../CreateArrangementDialog';
 import { useRef, useState } from 'react';
 import { useRecoilValue } from 'recoil';
@@ -28,7 +28,11 @@ export function ArrangementsSection({
   family,
   permissions,
 }: ArrangementSectionProps) {
-  const [selectedFilters, setSelectedFilters] = useState<string[]>(['Active']);
+  const [selectedFilters, setSelectedFilters] = useState<string[]>([
+    'Active',
+    'Ended',
+    'Cancelled',
+  ]);
 
   const policy = useRecoilValue(policyData);
 
@@ -84,10 +88,18 @@ export function ArrangementsSection({
               Arrangements
             </Typography>
 
-            <ArrangementFilter
-              selectedOptions={selectedFilters}
-              onChange={setSelectedFilters}
-            />
+            <ToggleButtonGroup
+              value={selectedFilters}
+              onChange={(_e, newFilters) => {
+                if (newFilters.length > 0) setSelectedFilters(newFilters);
+              }}
+              aria-label="Arrangement Status Filter"
+              size="small"
+            >
+              <ToggleButton value="Active">Active</ToggleButton>
+              <ToggleButton value="Ended">Ended</ToggleButton>
+              <ToggleButton value="Cancelled">Cancelled</ToggleButton>
+            </ToggleButtonGroup>
           </Box>
         </div>
         {permissions(Permission.CreateArrangement) && (
@@ -123,29 +135,22 @@ export function ArrangementsSection({
         )}
       </div>
       <Masonry columns={isDesktop ? (isWideScreen ? 3 : 2) : 1} spacing={2}>
-        {filteredArrangements.length === 0 ? (
-          <Typography variant="body2" sx={{ color: 'gray' }}>
-            This referral doesn't have any active arrangements right now. Try
-            adjusting your filter.
-          </Typography>
-        ) : (
-          filteredArrangements.map((arrangement) => (
-            <div
-              key={arrangement.id}
-              ref={(el) => {
-                if (arrangement.id) {
-                  arrangementRefs.current[arrangement.id] = el;
-                }
-              }}
-            >
-              <ArrangementCard
-                partneringFamily={family}
-                referralId={referral.id!}
-                arrangement={arrangement}
-              />
-            </div>
-          ))
-        )}
+        {filteredArrangements.map((arrangement) => (
+          <div
+            key={arrangement.id}
+            ref={(el) => {
+              if (arrangement.id) {
+                arrangementRefs.current[arrangement.id] = el;
+              }
+            }}
+          >
+            <ArrangementCard
+              partneringFamily={family}
+              referralId={referral.id!}
+              arrangement={arrangement}
+            />
+          </div>
+        ))}
       </Masonry>
 
       {createArrangementDialogParameter && (
