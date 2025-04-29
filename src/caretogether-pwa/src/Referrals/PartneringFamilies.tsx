@@ -489,12 +489,14 @@ function PartneringFamilies() {
                                 >
                                   <div
                                     style={{ cursor: 'pointer' }}
-                                    onClick={() =>
+                                    onClick={(e) => {
+                                      e.stopPropagation();
                                       appNavigate.family(
                                         partneringFamily.family!.id!,
-                                        arrangementEntry.referralId
-                                      )
-                                    }
+                                        arrangementEntry.referralId,
+                                        arrangementEntry.arrangement.id
+                                      );
+                                    }}
                                   >
                                     <ArrangementCard
                                       summaryOnly
