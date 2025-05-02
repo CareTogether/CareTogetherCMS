@@ -51,6 +51,10 @@ import { useFamilyIdPermissions } from '../../Model/SessionModel';
 import { format } from 'date-fns';
 import { DatePicker } from '@mui/x-date-pickers';
 import { ArrangementReason } from './ArrangementReason';
+import { CancelArrangementDialog } from './CancelArrangementDialog';
+import { StartArrangementDialog } from './StartArrangementDialog';
+import { EndArrangementDialog } from './EndArrangementDialog';
+import { formatRelative } from 'date-fns';
 
 interface ChildLocationIndicatorProps {
   partneringFamily: CombinedFamilyInfo;
@@ -195,12 +199,23 @@ interface ArrangementPlannedDurationProps {
   referralId: string;
   arrangement: Arrangement;
   summaryOnly?: boolean;
+  cancelButton?: React.ReactNode;
+  startButton?: React.ReactNode;
+  endButton?: React.ReactNode;
+  startedAtLabel?: React.ReactNode;
+  endedAtLabel?: React.ReactNode;
 }
+
 function ArrangementPlannedDuration({
   partneringFamily,
   referralId,
   arrangement,
   summaryOnly,
+  cancelButton,
+  startButton,
+  endButton,
+  startedAtLabel,
+  endedAtLabel,
 }: ArrangementPlannedDurationProps) {
   const referralsModel = useReferralsModel();
 
@@ -269,20 +284,7 @@ function ArrangementPlannedDuration({
             </>
           )}
         </Grid>
-        <Grid item xs={6}>
-          {!summaryOnly &&
-            permissions(Permission.EditArrangement) &&
-            requestedAtEditor.value && (
-              <Button
-                size="small"
-                color="error"
-                variant="text"
-                onClick={() => requestedAtEditor.setValue(null)}
-              >
-                Cancel
-              </Button>
-            )}
-        </Grid>
+        {cancelButton}
       </Grid>
 
       <Grid container spacing={0}>
@@ -318,12 +320,8 @@ function ArrangementPlannedDuration({
             </>
           )}
         </Grid>
-        <Grid item xs={6}>
-          Started:&nbsp;
-          {arrangement.startedAtUtc
-            ? format(new Date(arrangement.startedAtUtc), 'M/d/yyyy')
-            : '-'}
-        </Grid>
+        {!arrangement.startedAtUtc && startButton}
+        {arrangement.startedAtUtc && startedAtLabel}
       </Grid>
 
       <Grid container spacing={0}>
@@ -359,12 +357,8 @@ function ArrangementPlannedDuration({
             </>
           )}
         </Grid>
-        <Grid item xs={6}>
-          Ended:&nbsp;
-          {arrangement.endedAtUtc
-            ? format(new Date(arrangement.endedAtUtc), 'M/d/yyyy')
-            : '-'}
-        </Grid>
+        {!arrangement.endedAtUtc && endButton}
+        {arrangement.endedAtUtc && endedAtLabel}
       </Grid>
     </Grid>
   );
@@ -391,7 +385,58 @@ export function ArrangementCard({
     false
   );
 
+  const [showStartDialog, setShowStartDialog] = useState(false);
+  const [showCancelDialog, setShowCancelDialog] = useState(false);
+  const [showEndDialog, setShowEndDialog] = useState(false);
+
   const partneringFamilyId = partneringFamily.family!.id!;
+
+  const cancelButton = (
+    <Button
+      size="small"
+      variant="outlined"
+      onClick={() => setShowCancelDialog(true)}
+      sx={{ ml: 1 }}
+    >
+      Cancel
+    </Button>
+  );
+
+  const startButton = (
+    <Button
+      size="small"
+      variant="contained"
+      onClick={() => setShowStartDialog(true)}
+      sx={{ ml: 1 }}
+    >
+      Start
+    </Button>
+  );
+
+  const endButton = (
+    <Button
+      size="small"
+      variant="outlined"
+      onClick={() => setShowEndDialog(true)}
+      sx={{ ml: 1 }}
+    >
+      End
+    </Button>
+  );
+
+  const now = new Date();
+
+  const startedAtLabel = arrangement.startedAtUtc ? (
+    <Typography variant="body2" sx={{ mt: 0.5, ml: 1 }}>
+      Started {formatRelative(new Date(arrangement.startedAtUtc), now)}
+    </Typography>
+  ) : null;
+
+  const endedAtLabel = arrangement.endedAtUtc ? (
+    <Typography variant="body2" sx={{ mt: 0.5, ml: 1 }}>
+      Ended {formatRelative(new Date(arrangement.endedAtUtc), now)}
+    </Typography>
+  ) : null;
 
   const arrangementRequirementContext: ArrangementContext = {
     kind: 'Arrangement',
@@ -645,6 +690,11 @@ export function ArrangementCard({
             referralId={referralId}
             arrangement={arrangement}
             summaryOnly={summaryOnly}
+            cancelButton={cancelButton}
+            startButton={startButton}
+            endButton={endButton}
+            startedAtLabel={startedAtLabel}
+            endedAtLabel={endedAtLabel}
           />
         )}
         {!summaryOnly && (
@@ -773,6 +823,29 @@ export function ArrangementCard({
           </>
         )}
       </CardContent>
+      {showStartDialog && (
+        <StartArrangementDialog
+          referralId={referralId}
+          arrangement={arrangement}
+          onClose={() => setShowStartDialog(false)}
+        />
+      )}
+
+      {showCancelDialog && (
+        <CancelArrangementDialog
+          referralId={referralId}
+          arrangement={arrangement}
+          onClose={() => setShowCancelDialog(false)}
+        />
+      )}
+
+      {showEndDialog && (
+        <EndArrangementDialog
+          referralId={referralId}
+          arrangement={arrangement}
+          onClose={() => setShowEndDialog(false)}
+        />
+      )}
     </Card>
   );
 }
