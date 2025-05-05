@@ -7,6 +7,7 @@ import {
   Breadcrumbs,
   Link as MuiLink,
   TextField,
+  Chip,
 } from '@mui/material';
 import { useState } from 'react';
 import {
@@ -50,6 +51,11 @@ export function LocationEdit() {
   const location = configuration?.locations?.find(
     (location) => location.id === locationId
   );
+
+  const [timezone, setTimezone] = useState('America/New_York');
+  const PHONE_NUMBERS = ['+1 101-101-0101', '+1 555-555-555', '+1 202-202-202'];
+
+  const [phoneNumbers, setPhoneNumbers] = useState<string[]>(PHONE_NUMBERS);
 
   const storeEdits = useSetRecoilState(organizationConfigurationEdited);
   const roles = configuration?.roles;
@@ -170,17 +176,83 @@ export function LocationEdit() {
       </Box>
 
       <Box>
-        <TextField
-          type="text"
-          // fullWidth
-          required
-          label="Location name"
-          placeholder="Enter a name for the location"
-          // error={roleName.length === 0}
-          value={location.name}
-          // onChange={(e) => setRoleName(e.target.value)}
-          // autoFocus
-        />
+        <Typography variant="h6" sx={{ mb: 2 }}>
+          Basic configuration
+        </Typography>
+        <Stack direction="row" spacing={2} alignItems="flex-start">
+          <TextField
+            type="text"
+            // fullWidth
+            required
+            label="Location name"
+            placeholder="Enter a name for the location"
+            // error={roleName.length === 0}
+            value={location.name}
+            // onChange={(e) => setRoleName(e.target.value)}
+            // autoFocus
+          />
+          <TextField
+            label="Timezone"
+            select
+            value={timezone}
+            onChange={(e) => {
+              setTimezone(e.target.value);
+              setDirty(true);
+            }}
+          >
+            {['America/New_York', 'Europe/London', 'America/Sao_Paulo'].map(
+              (tz) => (
+                <MenuItem key={tz} value={tz}>
+                  {tz}
+                </MenuItem>
+              )
+            )}
+          </TextField>
+
+          <TextField
+            label="SMS source numbers"
+            select
+            fullWidth
+            SelectProps={{
+              multiple: true,
+              renderValue: (selected) => {
+                const selectedValues = selected as string[];
+                return (
+                  <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+                    {selectedValues.map((value) => (
+                      <Box key={value} onMouseDown={(e) => e.stopPropagation()}>
+                        <Chip
+                          label={value}
+                          onDelete={() => {
+                            setPhoneNumbers((prev) =>
+                              prev.filter((v) => v !== value)
+                            );
+                            setDirty(true);
+                          }}
+                        />
+                      </Box>
+                    ))}
+                  </Box>
+                );
+              },
+            }}
+            value={phoneNumbers}
+            onChange={(e) => {
+              const value =
+                typeof e.target.value === 'string'
+                  ? e.target.value.split(',')
+                  : e.target.value;
+              setPhoneNumbers(value);
+              setDirty(true);
+            }}
+          >
+            {PHONE_NUMBERS.map((num) => (
+              <MenuItem key={num} value={num}>
+                {num}
+              </MenuItem>
+            ))}
+          </TextField>
+        </Stack>
       </Box>
 
       {/* <TableContainer>
