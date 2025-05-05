@@ -521,10 +521,8 @@ namespace CareTogether.Api.OData
                     )
                 )
                 .WhenAll()
-                .Result.Select(item => new LocationUserAccess(
-                    item.userId ?? Guid.Empty,
-                    item.locationId
-                ));
+                .Result.Where(item => item.userId != null)
+                .Select(item => new LocationUserAccess(item.userId ?? Guid.Empty, item.locationId));
 
             var communitiesWithInfo = communitiesByLocation
                 .Select(x => RenderCommunity(x.location, x.Item2.Community))
