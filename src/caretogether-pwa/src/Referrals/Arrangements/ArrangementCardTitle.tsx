@@ -52,9 +52,7 @@ export function ArrangementCardTitle({
           {arrangement.phase === ArrangementPhase.SettingUp && (
             <span>Setting up</span>
           )}
-          {arrangement.phase === ArrangementPhase.Ended && (
-            <span>Ended {formatRelative(arrangement.endedAtUtc!, now)}</span>
-          )}
+
           {permissions(Permission.EditArrangement) &&
             arrangement.phase === ArrangementPhase.Ended && (
               <Button

@@ -216,6 +216,7 @@ function ArrangementPlannedDuration({
   startButton,
   endButton,
   startedAtLabel,
+  endedAtLabel,
 }: ArrangementPlannedDurationProps) {
   const referralsModel = useReferralsModel();
 
@@ -360,6 +361,7 @@ function ArrangementPlannedDuration({
           {!arrangement.startedAtUtc && startButton}
           {arrangement.startedAtUtc && startedAtLabel}
           {!arrangement.endedAtUtc && endButton}
+          {arrangement.endedAtUtc && endedAtLabel}
         </Box>
       </Grid>
     </Grid>
@@ -432,6 +434,13 @@ export function ArrangementCard({
     !summaryOnly && arrangement.startedAtUtc ? (
       <Typography variant="body2" sx={{ mt: 0.5, ml: 1 }}>
         Started {formatRelative(new Date(arrangement.startedAtUtc), now)}
+      </Typography>
+    ) : null;
+
+  const endedAtLabel =
+    !summaryOnly && arrangement.endedAtUtc ? (
+      <Typography variant="body2" sx={{ mt: 0.5, ml: 1 }}>
+        Ended {formatRelative(new Date(arrangement.endedAtUtc), now)}
       </Typography>
     ) : null;
 
@@ -691,6 +700,7 @@ export function ArrangementCard({
             startButton={startButton}
             endButton={endButton}
             startedAtLabel={startedAtLabel}
+            endedAtLabel={endedAtLabel}
           />
         )}
         {!summaryOnly && (
