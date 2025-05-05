@@ -9,6 +9,7 @@ using CareTogether.Engines;
 using CareTogether.Engines.PolicyEvaluation;
 using CareTogether.Managers;
 using CareTogether.Managers.Records;
+using CareTogether.Resources.Accounts;
 using CareTogether.Resources.Directory;
 using CareTogether.Resources.Policies;
 using CareTogether.Resources.Referrals;
@@ -24,6 +25,11 @@ using Timelines;
 namespace CareTogether.Api.OData
 {
     public sealed record Location([property: Key] Guid Id, Guid OrganizationId, string Name);
+
+    public sealed record LocationUserAccess(
+        [property: Key] Guid UserId,
+        [property: Key] Guid LocationId
+    );
 
     public sealed record Family(
         [property: Key] Guid Id,
@@ -181,6 +187,7 @@ namespace CareTogether.Api.OData
 
     public sealed record LiveModel(
         IEnumerable<Location> Locations,
+        IEnumerable<LocationUserAccess> LocationUserAccess,
         IEnumerable<Family> Families,
         IEnumerable<Person> People,
         IEnumerable<Community> Communities,
@@ -207,16 +214,19 @@ namespace CareTogether.Api.OData
         private sealed record DataAccessScope(Guid OrganizationId, bool Anonymize);
 
         private readonly IPoliciesResource policiesResource;
+        private readonly IAccountsResource accountsResource;
         private readonly IRecordsManager recordsManager;
         private readonly IAppCache cache;
 
         public LiveODataModelController(
             IPoliciesResource policiesResource,
+            IAccountsResource accountsResource,
             IRecordsManager recordsManager,
             IAppCache cache
         )
         {
             this.policiesResource = policiesResource;
+            this.accountsResource = accountsResource;
             this.recordsManager = recordsManager;
             this.cache = cache;
         }
@@ -226,6 +236,13 @@ namespace CareTogether.Api.OData
         {
             var liveModel = await RenderLiveModelAsync();
             return liveModel.Locations;
+        }
+
+        [HttpGet("LocationUserAccess")]
+        public async Task<IEnumerable<LocationUserAccess>> GetLocationUserAccessAsync()
+        {
+            var liveModel = await RenderLiveModelAsync();
+            return liveModel.LocationUserAccess;
         }
 
         [HttpGet("Family")]
@@ -467,6 +484,46 @@ namespace CareTogether.Api.OData
 
             var people = familiesWithInfo.SelectMany(x => RenderPeople(x.Item1, x.Item2)).ToArray();
 
+            var locationUserAccess = people
+                .Select(person =>
+                    (
+                        organizationId: person.Family.Location.OrganizationId,
+                        locationId: person.Family.Location.Id,
+                        personId: person.Id
+                    )
+                )
+                .Select(async item =>
+                    (
+                        item.organizationId,
+                        item.locationId,
+                        item.personId,
+                        roles: await accountsResource.TryGetPersonRolesAsync(
+                            item.organizationId,
+                            item.locationId,
+                            item.personId
+                        )
+                    )
+                )
+                .WhenAll()
+                .Result.Where(item =>
+                    item.roles?.Contains(SystemConstants.ORGANIZATION_ADMINISTRATOR) ?? false
+                )
+                .Select(async item =>
+                    (
+                        userId: (
+                            await accountsResource.TryGetPersonUserAccountAsync(
+                                item.organizationId,
+                                item.locationId,
+                                item.personId
+                            )
+                        )?.UserId,
+                        item.locationId
+                    )
+                )
+                .WhenAll()
+                .Result.Where(item => item.userId != null)
+                .Select(item => new LocationUserAccess(item.userId ?? Guid.Empty, item.locationId));
+
             var communitiesWithInfo = communitiesByLocation
                 .Select(x => RenderCommunity(x.location, x.Item2.Community))
                 .ToArray();
@@ -546,6 +603,7 @@ namespace CareTogether.Api.OData
 
             return new LiveModel(
                 locations,
+                locationUserAccess,
                 families,
                 people,
                 communities,
