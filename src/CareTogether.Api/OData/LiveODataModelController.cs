@@ -484,26 +484,46 @@ namespace CareTogether.Api.OData
 
             var people = familiesWithInfo.SelectMany(x => RenderPeople(x.Item1, x.Item2)).ToArray();
 
-            var locationUserAccess = (
-                await people
-                    .Select(async person =>
-                        (
-                            person,
-                            roles: await accountsResource.TryGetPersonRolesAsync(
-                                person.Family.Location.OrganizationId,
-                                person.Family.Location.Id,
-                                person.Id
-                            )
+            var locationUserAccess = people
+                .Select(person =>
+                    (
+                        organizationId: person.Family.Location.OrganizationId,
+                        locationId: person.Family.Location.Id,
+                        personId: person.Id
+                    )
+                )
+                .Select(async item =>
+                    (
+                        item.organizationId,
+                        item.locationId,
+                        item.personId,
+                        roles: await accountsResource.TryGetPersonRolesAsync(
+                            item.organizationId,
+                            item.locationId,
+                            item.personId
                         )
                     )
-                    .WhenAll()
-            )
-                .Where(person =>
-                    person.roles?.Contains(SystemConstants.ORGANIZATION_ADMINISTRATOR) ?? false
                 )
-                .Select(person => new LocationUserAccess(
-                    person.person.Id,
-                    person.person.Family.Location.Id
+                .WhenAll()
+                .Result.Where(item =>
+                    item.roles?.Contains(SystemConstants.ORGANIZATION_ADMINISTRATOR) ?? false
+                )
+                .Select(async item =>
+                    (
+                        userId: (
+                            await accountsResource.TryGetPersonUserAccountAsync(
+                                item.organizationId,
+                                item.locationId,
+                                item.personId
+                            )
+                        )?.UserId,
+                        item.locationId
+                    )
+                )
+                .WhenAll()
+                .Result.Select(item => new LocationUserAccess(
+                    item.userId ?? Guid.Empty,
+                    item.locationId
                 ));
 
             var communitiesWithInfo = communitiesByLocation
