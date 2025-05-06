@@ -187,7 +187,7 @@ export function FamilyScreen() {
         setSelectedReferralId(firstReferralId);
       }
     }
-  }, [selectedReferral, firstReferralId, familyId, appNavigate]);
+  }, [firstReferralId, selectedReferral]);
 
   useSyncReferralIdInURL({ familyId, referralIdFromQuery, selectedReferralId });
 
