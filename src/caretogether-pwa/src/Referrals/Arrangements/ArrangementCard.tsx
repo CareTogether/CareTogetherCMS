@@ -218,10 +218,9 @@ function ArrangementPlannedDuration({
   startedAtLabel,
   endedAtLabel,
 }: ArrangementPlannedDurationProps) {
-  const referralsModel = useReferralsModel();
-
   const partneringFamilyId = partneringFamily.family!.id!;
   const permissions = useFamilyIdPermissions(partneringFamilyId);
+  const referralsModel = useReferralsModel();
 
   const requestedAtEditor = useInlineEditor(async (value) => {
     await referralsModel.editArrangementRequestedAt(
@@ -358,10 +357,14 @@ function ArrangementPlannedDuration({
       <Grid item xs={3}>
         <Box display="flex" flexDirection="column" gap={1}>
           {cancelButton}
-          {!arrangement.startedAtUtc && startButton}
-          {arrangement.startedAtUtc && startedAtLabel}
-          {!arrangement.endedAtUtc && endButton}
-          {arrangement.endedAtUtc && endedAtLabel}
+          {arrangement.phase === ArrangementPhase.ReadyToStart && startButton}
+          {arrangement.phase === ArrangementPhase.Started && (
+            <>
+              {startedAtLabel}
+              {endButton}
+            </>
+          )}
+          {endedAtLabel}
         </Box>
       </Grid>
     </Grid>
@@ -383,6 +386,7 @@ export function ArrangementCard({
 }: ArrangementCardProps) {
   const policy = useRecoilValue(policyData);
   const personLookup = usePersonLookup();
+  const referralsModel = useReferralsModel();
 
   const [collapsed, setCollapsed] = useCollapsed(
     `arrangement-${referralId}-${arrangement.id}`,
@@ -430,18 +434,70 @@ export function ArrangementCard({
 
   const now = new Date();
 
+  const startedAtEditor = useInlineEditor(async (value) => {
+    if (value) value.setHours(0, 0, 0, 0);
+    await referralsModel.editArrangementStartTime(
+      partneringFamilyId,
+      referralId,
+      arrangement.id!,
+      value!
+    );
+  }, arrangement.startedAtUtc || null);
+
   const startedAtLabel =
-    !summaryOnly && arrangement.startedAtUtc ? (
-      <Typography variant="body2" sx={{ mt: 0.5, ml: 1 }}>
-        Started {formatRelative(new Date(arrangement.startedAtUtc), now)}
-      </Typography>
+    !summaryOnly && arrangement.phase === ArrangementPhase.Started ? (
+      startedAtEditor.editing ? (
+        <>
+          <DatePicker
+            label="Started at"
+            value={startedAtEditor.value}
+            onChange={(value) => startedAtEditor.setValue(value)}
+            slotProps={{ textField: { size: 'small', margin: 'none' } }}
+          />
+          {startedAtEditor.cancelButton}
+          {startedAtEditor.saveButton}
+        </>
+      ) : (
+        <>
+          {startedAtEditor.value
+            ? `Started ${formatRelative(startedAtEditor.value, now)}`
+            : '-'}
+          {startedAtEditor.editButton}
+        </>
+      )
     ) : null;
 
+  const endedAtEditor = useInlineEditor(async (value) => {
+    if (value) value.setHours(23, 59, 59, 999);
+    await referralsModel.editArrangementEndedAt(
+      partneringFamilyId,
+      referralId,
+      arrangement.id!,
+      value!
+    );
+  }, arrangement.endedAtUtc || null);
+
   const endedAtLabel =
-    !summaryOnly && arrangement.endedAtUtc ? (
-      <Typography variant="body2" sx={{ mt: 0.5, ml: 1 }}>
-        Ended {formatRelative(new Date(arrangement.endedAtUtc), now)}
-      </Typography>
+    !summaryOnly && arrangement.phase === ArrangementPhase.Ended ? (
+      endedAtEditor.editing ? (
+        <>
+          <DatePicker
+            label="Ended at"
+            value={endedAtEditor.value}
+            onChange={(value) => endedAtEditor.setValue(value)}
+            slotProps={{ textField: { size: 'small', margin: 'none' } }}
+          />
+          {endedAtEditor.cancelButton}
+          {endedAtEditor.saveButton}
+        </>
+      ) : (
+        <>
+          {endedAtEditor.value
+            ? `Ended ${formatRelative(endedAtEditor.value, now)}`
+            : '-'}
+          {endedAtEditor.editButton}
+        </>
+      )
     ) : null;
 
   const arrangementRequirementContext: ArrangementContext = {
@@ -688,9 +744,7 @@ export function ArrangementCard({
             />
           )}
         </Typography>
-        {(arrangement.phase === ArrangementPhase.SettingUp ||
-          arrangement.phase === ArrangementPhase.ReadyToStart ||
-          arrangement.phase === ArrangementPhase.Started) && (
+        {
           <ArrangementPlannedDuration
             partneringFamily={partneringFamily}
             referralId={referralId}
@@ -702,7 +756,7 @@ export function ArrangementCard({
             startedAtLabel={startedAtLabel}
             endedAtLabel={endedAtLabel}
           />
-        )}
+        }
         {!summaryOnly && (
           <>
             <ArrangementReason

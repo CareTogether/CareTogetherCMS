@@ -589,6 +589,24 @@ export function useReferralsModel() {
       return command;
     }
   );
+  //
+  const editArrangementEndedAt = useArrangementsCommandCallbackWithLocation(
+    async (
+      partneringFamilyId: string,
+      referralId: string,
+      arrangementId: string,
+      endedAtLocal: Date
+    ) => {
+      const command = new EndArrangements({
+        familyId: partneringFamilyId,
+        referralId: referralId,
+        arrangementIds: [arrangementId],
+      });
+      command.endedAtUtc = endedAtLocal;
+      return command;
+    }
+  );
+
   const editArrangementRequestedAt = useArrangementsCommandCallbackWithLocation(
     async (
       partneringFamilyId: string,
@@ -939,6 +957,7 @@ export function useReferralsModel() {
     planArrangementStart,
     startArrangement,
     editArrangementStartTime,
+    editArrangementEndedAt,
     editArrangementRequestedAt,
     planArrangementEnd,
     endArrangement,
