@@ -13,6 +13,7 @@ using CareTogether.Resources.Policies;
 using CareTogether.Resources.Referrals;
 using CareTogether.Utilities.EventLog;
 using CareTogether.Utilities.ObjectStore;
+using Plivo.XML;
 
 namespace CareTogether.TestData
 {
@@ -138,6 +139,7 @@ namespace CareTogether.TestData
             IObjectStore<OrganizationConfiguration> configurationStore,
             IObjectStore<EffectiveLocationPolicy> policiesStore,
             IObjectStore<OrganizationSecrets> organizationSecretsStore,
+            IObjectStore<GlobalConfiguration> globalConfigurationStore,
             string? testSourceSmsPhoneNumber
         )
         {
@@ -155,6 +157,7 @@ namespace CareTogether.TestData
                 testSourceSmsPhoneNumber,
                 organizationSecretsStore
             );
+            await PopulateGlobalConfigurations(globalConfigurationStore);
             await PopulatePolicies(policiesStore);
         }
 
@@ -2975,6 +2978,18 @@ namespace CareTogether.TestData
             await policiesStore.UpsertAsync(guid1, guid2, "policy", policy);
             await policiesStore.UpsertAsync(guid1, guid3, "policy", policy);
             await policiesStore.UpsertAsync(guid1, guid3, "policy", policy);
+        }
+
+        public static async Task PopulateGlobalConfigurations(
+            IObjectStore<GlobalConfiguration> globalConfigurationStore
+        )
+        {
+            await globalConfigurationStore.UpsertAsync(
+                Id('f'),
+                Guid.Empty,
+                "globalConfig",
+                new GlobalConfiguration(Guid.NewGuid(), Id('f').ToString())
+            );
         }
 
         private static async Task AppendEventsAsync<T>(

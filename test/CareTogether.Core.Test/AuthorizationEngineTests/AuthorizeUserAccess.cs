@@ -67,6 +67,7 @@ namespace CareTogether.Core.Test.AuthorizationEngineTests
             var configurationStore = new MemoryObjectStore<OrganizationConfiguration>();
             var policiesStore = new MemoryObjectStore<EffectiveLocationPolicy>();
             var organizationSecretsStore = new MemoryObjectStore<OrganizationSecrets>();
+            var globalConfigurationStore = new MemoryObjectStore<GlobalConfiguration>();
 
             await TestDataProvider.PopulateTestDataAsync(
                 accountsEventLog,
@@ -81,6 +82,7 @@ namespace CareTogether.Core.Test.AuthorizationEngineTests
                 configurationStore,
                 policiesStore,
                 organizationSecretsStore,
+                globalConfigurationStore,
                 testSourceSmsPhoneNumber: null
             );
 

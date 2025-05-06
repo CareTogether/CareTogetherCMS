@@ -163,6 +163,12 @@ namespace CareTogether.Api
                 new MemoryCache(defaultMemoryCacheOptions),
                 TimeSpan.FromMinutes(1)
             );
+            var globalConfigurationStore = new JsonBlobObjectStore<GlobalConfiguration>(
+                immutableBlobServiceClient,
+                "GlobalConfiguration",
+                new MemoryCache(defaultMemoryCacheOptions),
+                TimeSpan.FromMinutes(1)
+            );
 
             if (Configuration["OpenApiGen"] != "true")
             {
@@ -183,6 +189,7 @@ namespace CareTogether.Api
                         configurationStore,
                         policiesStore,
                         organizationSecretsStore,
+                        globalConfigurationStore,
                         Configuration["TestData:SourceSmsPhoneNumber"]
                     )
                     .Wait();

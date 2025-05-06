@@ -12,6 +12,11 @@ namespace CareTogether.Resources.Policies
         ImmutableList<string> CommunityRoles
     );
 
+    public sealed record GlobalConfiguration(
+        Guid SystemIdentityApiKey,
+        string SystemUsername
+    );
+
     public sealed record LocationConfiguration(
         Guid Id,
         string Name,
