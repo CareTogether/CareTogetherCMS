@@ -195,8 +195,6 @@ export function FamilyScreen() {
     setRemoveRoleParameter({ volunteerFamilyId: familyId, role: role });
   }
 
-  console.log('rerender');
-
   const [resetRoleParameter, setResetRoleParameter] = useState<{
     volunteerFamilyId: string;
     role: string;
