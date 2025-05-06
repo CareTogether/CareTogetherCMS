@@ -284,6 +284,9 @@ function ArrangementPlannedDuration({
                   : '-'}
               </>
             )}
+            {arrangement.phase != undefined &&
+              arrangement.phase <= ArrangementPhase.ReadyToStart &&
+              cancelButton}
           </Grid>
 
           <Grid item xs={12}>
@@ -317,6 +320,7 @@ function ArrangementPlannedDuration({
                   : '-'}
               </>
             )}
+            {arrangement.phase === ArrangementPhase.ReadyToStart && startButton}
           </Grid>
 
           <Grid item xs={12}>
@@ -350,21 +354,15 @@ function ArrangementPlannedDuration({
                   : '-'}
               </>
             )}
+            {arrangement.phase === ArrangementPhase.Started && endButton}
           </Grid>
         </Grid>
       </Grid>
 
       <Grid item xs={3}>
         <Box display="flex" flexDirection="column" gap={1}>
-          {cancelButton}
-          {arrangement.phase === ArrangementPhase.ReadyToStart && startButton}
-          {arrangement.phase === ArrangementPhase.Started && (
-            <>
-              {startedAtLabel}
-              {endButton}
-            </>
-          )}
-          {endedAtLabel}
+          {arrangement.phase === ArrangementPhase.Started && startedAtLabel}
+          {arrangement.phase === ArrangementPhase.Ended && endedAtLabel}
         </Box>
       </Grid>
     </Grid>
