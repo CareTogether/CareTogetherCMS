@@ -2985,7 +2985,7 @@ namespace CareTogether.TestData
         )
         {
             await globalConfigurationStore.UpsertAsync(
-                Id('f'),
+                guid0,
                 Guid.Empty,
                 "globalConfig",
                 new GlobalConfiguration(Guid.NewGuid(), Id('f').ToString())
