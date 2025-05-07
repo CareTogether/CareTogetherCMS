@@ -320,6 +320,25 @@ namespace CareTogether.Api
                                     return;
                                 }
 
+                                if (
+                                    context.Username == Configuration["GlobalApiAccess:Username"]
+                                    && context.Password == Configuration["GlobalApiAccess:ApiKey"]
+                                )
+                                {
+                                    context.Principal = new ClaimsPrincipal(
+                                        new ClaimsIdentity(
+                                            new Claim[]
+                                            {
+                                                new Claim(Claims.UserId, context.Username),
+                                                new Claim(Claims.Global, true.ToString()),
+                                            },
+                                            "API Key"
+                                        )
+                                    );
+                                    context.Success();
+                                    return;
+                                }
+
                                 try
                                 {
                                     // Note that it may be possible to leak valid organization IDs here via a timing attack.

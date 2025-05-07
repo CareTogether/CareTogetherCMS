@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Configuration;
 using System.Linq;
 using System.Threading.Tasks;
 using CareTogether.Engines;
@@ -24,16 +25,22 @@ using Timelines;
 
 namespace CareTogether.Api.OData
 {
+    public sealed record Organization([property: Key] Guid Id);
+
     public sealed record Location([property: Key] Guid Id, Guid OrganizationId, string Name);
 
     public sealed record LocationUserAccess(
         [property: Key] Guid UserId,
+        [property: Key] Guid OrganizationId,
         [property: Key] Guid LocationId
     );
 
     public sealed record Family(
         [property: Key] Guid Id,
-        [property: ForeignKey("LocationId")] Location Location,
+        // [property: ForeignKey("OrganizationId")] Organization Organization,
+        [property: ForeignKey("LocationId")]
+            Location Location,
+        Guid OrganizationId,
         Guid LocationId,
         string Name,
         string? PrimaryEmail,
@@ -211,7 +218,7 @@ namespace CareTogether.Api.OData
     [Authorize(Policies.ForbidAnonymous, AuthenticationSchemes = "Basic")]
     public class LiveODataModelController : ODataController
     {
-        private sealed record DataAccessScope(Guid OrganizationId, bool Anonymize);
+        private sealed record DataAccessScope(Guid OrganizationId, bool Anonymize, bool IsGlobal);
 
         private readonly IPoliciesResource policiesResource;
         private readonly IAccountsResource accountsResource;
@@ -362,17 +369,91 @@ namespace CareTogether.Api.OData
             var organizationId = userDataAccessScope.OrganizationId;
             var anonymize = userDataAccessScope.Anonymize;
 
-            var result = await cache.GetOrAddAsync(
-                $"LiveODataModelController-RenderLiveModelAsync-{organizationId}-{(anonymize ? "ANON" : "PII")}",
-                async cacheEntry =>
-                {
-                    var result = await RenderLiveModelInternalAsync(organizationId, anonymize);
+            var isGlobal = userDataAccessScope.IsGlobal;
 
-                    cacheEntry.SlidingExpiration = TimeSpan.FromMinutes(1);
-                    cacheEntry.AbsoluteExpiration = DateTimeOffset.Now.AddMinutes(5);
+            var organizationIds = isGlobal
+                ? await accountsResource.GetValidOrganizationsAsync()
+                : [organizationId];
 
-                    return result;
-                }
+            var results = await organizationIds
+                .Select(async organizationId =>
+                    await cache.GetOrAddAsync(
+                        $"LiveODataModelController-RenderLiveModelAsync-{organizationId}-{Guid.NewGuid()}-{(anonymize ? "ANON" : "PII")}",
+                        async cacheEntry =>
+                        {
+                            var result = await RenderLiveModelInternalAsync(
+                                organizationId,
+                                anonymize
+                            );
+
+                            cacheEntry.SlidingExpiration = TimeSpan.FromMinutes(1);
+                            cacheEntry.AbsoluteExpiration = DateTimeOffset.Now.AddMinutes(5);
+
+                            return result;
+                        }
+                    )
+                )
+                .WhenAll();
+
+            var result = results.Aggregate(
+                new LiveModel(
+                    Enumerable.Empty<Location>(),
+                    Enumerable.Empty<LocationUserAccess>(),
+                    Enumerable.Empty<Family>(),
+                    Enumerable.Empty<Person>(),
+                    Enumerable.Empty<Community>(),
+                    Enumerable.Empty<Role>(),
+                    Enumerable.Empty<FamilyRoleApproval>(),
+                    Enumerable.Empty<IndividualRoleApproval>(),
+                    Enumerable.Empty<FamilyRoleRemovedIndividual>(),
+                    Enumerable.Empty<Referral>(),
+                    Enumerable.Empty<Arrangement>(),
+                    Enumerable.Empty<ArrangementType>(),
+                    Enumerable.Empty<ChildLocationRecord>(),
+                    Enumerable.Empty<FamilyFunctionAssignment>(),
+                    Enumerable.Empty<IndividualFunctionAssignment>(),
+                    Enumerable.Empty<CommunityMemberFamily>(),
+                    Enumerable.Empty<CommunityRoleAssignment>()
+                ),
+                (acc, model) =>
+                    acc with
+                    {
+                        Locations = acc.Locations.Concat(model.Locations),
+                        LocationUserAccess = acc.LocationUserAccess.Concat(
+                            model.LocationUserAccess
+                        ),
+                        Families = acc.Families.Concat(model.Families),
+                        People = acc.People.Concat(model.People),
+                        Communities = acc.Communities.Concat(model.Communities),
+                        Roles = acc.Roles.Concat(model.Roles),
+                        FamilyRoleApprovals = acc.FamilyRoleApprovals.Concat(
+                            model.FamilyRoleApprovals
+                        ),
+                        IndividualRoleApprovals = acc.IndividualRoleApprovals.Concat(
+                            model.IndividualRoleApprovals
+                        ),
+                        FamilyRoleRemovedIndividuals = acc.FamilyRoleRemovedIndividuals.Concat(
+                            model.FamilyRoleRemovedIndividuals
+                        ),
+                        Referrals = acc.Referrals.Concat(model.Referrals),
+                        Arrangements = acc.Arrangements.Concat(model.Arrangements),
+                        ArrangementTypes = acc.ArrangementTypes.Concat(model.ArrangementTypes),
+                        ChildLocationRecords = acc.ChildLocationRecords.Concat(
+                            model.ChildLocationRecords
+                        ),
+                        FamilyFunctionAssignments = acc.FamilyFunctionAssignments.Concat(
+                            model.FamilyFunctionAssignments
+                        ),
+                        IndividualFunctionAssignments = acc.IndividualFunctionAssignments.Concat(
+                            model.IndividualFunctionAssignments
+                        ),
+                        CommunityMemberFamilies = acc.CommunityMemberFamilies.Concat(
+                            model.CommunityMemberFamilies
+                        ),
+                        CommunityRoleAssignments = acc.CommunityRoleAssignments.Concat(
+                            model.CommunityRoleAssignments
+                        ),
+                    }
             );
 
             return result!; // If this is actually null, then we are already throwing an exception anyways.
@@ -517,12 +598,17 @@ namespace CareTogether.Api.OData
                                 item.personId
                             )
                         )?.UserId,
+                        item.organizationId,
                         item.locationId
                     )
                 )
                 .WhenAll()
                 .Result.Where(item => item.userId != null)
-                .Select(item => new LocationUserAccess(item.userId ?? Guid.Empty, item.locationId));
+                .Select(item => new LocationUserAccess(
+                    item.userId ?? Guid.Empty,
+                    item.organizationId,
+                    item.locationId
+                ));
 
             var communitiesWithInfo = communitiesByLocation
                 .Select(x => RenderCommunity(x.location, x.Item2.Community))
@@ -624,15 +710,24 @@ namespace CareTogether.Api.OData
 
         private DataAccessScope GetUserDataAccessScope()
         {
-            var singleOrganizationId = Guid.Parse(
-                User.Claims.Single(claim => claim.Type == Claims.OrganizationId).Value
+            Guid.TryParse(
+                User.Claims.SingleOrDefault(claim => claim.Type == Claims.OrganizationId)?.Value,
+                out var singleOrganizationId
             );
 
             var isResearcher =
                 User.Claims.SingleOrDefault(claim => claim.Type == Claims.Researcher)?.Value
                 == true.ToString();
 
-            return new DataAccessScope(singleOrganizationId, Anonymize: isResearcher);
+            var isGlobal =
+                User.Claims.SingleOrDefault(claim => claim.Type == Claims.Global)?.Value
+                == true.ToString();
+
+            return new DataAccessScope(
+                singleOrganizationId,
+                Anonymize: isResearcher,
+                IsGlobal: isGlobal
+            );
         }
 
         private FamilyRecordsAggregate AnonymizeFamilyRecords(
@@ -1017,7 +1112,9 @@ namespace CareTogether.Api.OData
                 family,
                 new Family(
                     family.Family.Id,
+                    // new Organization(location.OrganizationId),
                     location,
+                    location.OrganizationId,
                     location.Id,
                     familyName,
                     bestEmail,
