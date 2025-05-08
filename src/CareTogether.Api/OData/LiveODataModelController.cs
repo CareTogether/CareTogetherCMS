@@ -135,8 +135,6 @@ namespace CareTogether.Api.OData
     public sealed record Role(
         [property: ForeignKey("OrganizationId")] Organization Organization,
         Guid OrganizationId,
-        [property: ForeignKey("LocationId")] Location Location,
-        Guid LocationId,
         [property: Key] string Name
     );
 
@@ -517,6 +515,7 @@ namespace CareTogether.Api.OData
                 )
                 .WhenAll();
 
+            // Currently, roles are defined at the organization level and assigned to users at the location level.
             var roles = locationPolicies
                 .SelectMany(locationPolicy =>
                 {
@@ -529,17 +528,7 @@ namespace CareTogether.Api.OData
                                 role => role.Value.VolunteerFamilyRoleType
                             )
                         )
-                        .Select(roleName => new Role(
-                            organization,
-                            organization.Id,
-                            new Location(
-                                locationPolicy.location.Id,
-                                organization.Id,
-                                locationPolicy.location.Name
-                            ),
-                            locationPolicy.location.Id,
-                            roleName
-                        ));
+                        .Select(roleName => new Role(organization, organization.Id, roleName));
                 })
                 .Distinct()
                 .ToArray();
@@ -1293,9 +1282,7 @@ namespace CareTogether.Api.OData
                             family,
                             family.Id,
                             roles.Single(role =>
-                                role.Name == fra.Key
-                                && role.OrganizationId == organization.Id
-                                && role.LocationId == family.Location.Id
+                                role.Name == fra.Key && role.OrganizationId == organization.Id
                             ),
                             fra.Key,
                             range.Start,
@@ -1325,9 +1312,7 @@ namespace CareTogether.Api.OData
                                 people.Single(person => person.Id == individual.Key),
                                 individual.Key,
                                 roles.Single(role =>
-                                    role.Name == ira.Key
-                                    && role.OrganizationId == organization.Id
-                                    && role.LocationId == family.Location.Id
+                                    role.Name == ira.Key && role.OrganizationId == organization.Id
                                 ),
                                 ira.Key,
                                 family,
@@ -1366,7 +1351,6 @@ namespace CareTogether.Api.OData
                             roles.Single(role =>
                                 role.Name == removal.RoleName
                                 && role.OrganizationId == organization.Id
-                                && role.LocationId == family.Location.Id
                             ),
                             removal.RoleName,
                             family,
