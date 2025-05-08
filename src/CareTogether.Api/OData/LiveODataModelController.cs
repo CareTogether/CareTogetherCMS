@@ -37,9 +37,8 @@ namespace CareTogether.Api.OData
 
     public sealed record Family(
         [property: Key] Guid Id,
-        // [property: ForeignKey("OrganizationId")] Organization Organization,
-        [property: ForeignKey("LocationId")]
-            Location Location,
+        [property: ForeignKey("OrganizationId")] Organization Organization,
+        [property: ForeignKey("LocationId")] Location Location,
         Guid OrganizationId,
         Guid LocationId,
         string Name,
@@ -378,7 +377,7 @@ namespace CareTogether.Api.OData
             var results = await organizationIds
                 .Select(async organizationId =>
                     await cache.GetOrAddAsync(
-                        $"LiveODataModelController-RenderLiveModelAsync-{organizationId}-{Guid.NewGuid()}-{(anonymize ? "ANON" : "PII")}",
+                        $"LiveODataModelController-RenderLiveModelAsync-{organizationId}-{(anonymize ? "ANON" : "PII")}",
                         async cacheEntry =>
                         {
                             var result = await RenderLiveModelInternalAsync(
@@ -416,44 +415,27 @@ namespace CareTogether.Api.OData
                     Enumerable.Empty<CommunityRoleAssignment>()
                 ),
                 (acc, model) =>
-                    acc with
-                    {
-                        Locations = acc.Locations.Concat(model.Locations),
-                        LocationUserAccess = acc.LocationUserAccess.Concat(
-                            model.LocationUserAccess
-                        ),
-                        Families = acc.Families.Concat(model.Families),
-                        People = acc.People.Concat(model.People),
-                        Communities = acc.Communities.Concat(model.Communities),
-                        Roles = acc.Roles.Concat(model.Roles),
-                        FamilyRoleApprovals = acc.FamilyRoleApprovals.Concat(
-                            model.FamilyRoleApprovals
-                        ),
-                        IndividualRoleApprovals = acc.IndividualRoleApprovals.Concat(
-                            model.IndividualRoleApprovals
-                        ),
-                        FamilyRoleRemovedIndividuals = acc.FamilyRoleRemovedIndividuals.Concat(
-                            model.FamilyRoleRemovedIndividuals
-                        ),
-                        Referrals = acc.Referrals.Concat(model.Referrals),
-                        Arrangements = acc.Arrangements.Concat(model.Arrangements),
-                        ArrangementTypes = acc.ArrangementTypes.Concat(model.ArrangementTypes),
-                        ChildLocationRecords = acc.ChildLocationRecords.Concat(
-                            model.ChildLocationRecords
-                        ),
-                        FamilyFunctionAssignments = acc.FamilyFunctionAssignments.Concat(
-                            model.FamilyFunctionAssignments
-                        ),
-                        IndividualFunctionAssignments = acc.IndividualFunctionAssignments.Concat(
+                    new LiveModel(
+                        acc.Locations.Concat(model.Locations),
+                        acc.LocationUserAccess.Concat(model.LocationUserAccess),
+                        acc.Families.Concat(model.Families),
+                        acc.People.Concat(model.People),
+                        acc.Communities.Concat(model.Communities),
+                        acc.Roles.Concat(model.Roles),
+                        acc.FamilyRoleApprovals.Concat(model.FamilyRoleApprovals),
+                        acc.IndividualRoleApprovals.Concat(model.IndividualRoleApprovals),
+                        acc.FamilyRoleRemovedIndividuals.Concat(model.FamilyRoleRemovedIndividuals),
+                        acc.Referrals.Concat(model.Referrals),
+                        acc.Arrangements.Concat(model.Arrangements),
+                        acc.ArrangementTypes.Concat(model.ArrangementTypes),
+                        acc.ChildLocationRecords.Concat(model.ChildLocationRecords),
+                        acc.FamilyFunctionAssignments.Concat(model.FamilyFunctionAssignments),
+                        acc.IndividualFunctionAssignments.Concat(
                             model.IndividualFunctionAssignments
                         ),
-                        CommunityMemberFamilies = acc.CommunityMemberFamilies.Concat(
-                            model.CommunityMemberFamilies
-                        ),
-                        CommunityRoleAssignments = acc.CommunityRoleAssignments.Concat(
-                            model.CommunityRoleAssignments
-                        ),
-                    }
+                        acc.CommunityMemberFamilies.Concat(model.CommunityMemberFamilies),
+                        acc.CommunityRoleAssignments.Concat(model.CommunityRoleAssignments)
+                    )
             );
 
             return result!; // If this is actually null, then we are already throwing an exception anyways.
@@ -467,6 +449,8 @@ namespace CareTogether.Api.OData
             var organizationConfiguration = await policiesResource.GetConfigurationAsync(
                 organizationId
             );
+
+            var organization = new Organization(organizationId);
 
             var locationPolicies = await organizationConfiguration
                 .Locations.Select(async location =>
@@ -559,7 +543,7 @@ namespace CareTogether.Api.OData
                 .ToArray();
 
             var familiesWithInfo = familiesByLocation
-                .Select(x => RenderFamily(x.Item1, x.Item2.Family))
+                .Select(x => RenderFamily(organization, x.Item1, x.Item2.Family))
                 .ToArray();
             var families = familiesWithInfo.Select(family => family.Item2).ToArray();
 
@@ -1040,6 +1024,7 @@ namespace CareTogether.Api.OData
         }
 
         private static (CombinedFamilyInfo, Family) RenderFamily(
+            Organization organization,
             Location location,
             CombinedFamilyInfo family
         )
@@ -1112,7 +1097,7 @@ namespace CareTogether.Api.OData
                 family,
                 new Family(
                     family.Family.Id,
-                    // new Organization(location.OrganizationId),
+                    organization,
                     location,
                     location.OrganizationId,
                     location.Id,
