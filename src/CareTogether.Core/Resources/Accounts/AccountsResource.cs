@@ -45,6 +45,21 @@ namespace CareTogether.Resources.Accounts
             randomNumberGenerator = RandomNumberGenerator.Create();
         }
 
+        public async Task<Guid[]> GetValidOrganizationsAsync()
+        {
+            //WARNING: The read/write logic in this service needs to be designed carefully to avoid deadlocks.
+
+            Guid[] organizationIds;
+            using (
+                var lockedModel = await globalScopeAccountsModel.ReadLockItemAsync(GLOBAL_SCOPE_ID)
+            )
+            {
+                organizationIds = lockedModel.Value.GetUniqueOrganizationIds();
+            }
+
+            return organizationIds;
+        }
+
         public async Task<Account?> TryGetUserAccountAsync(Guid userId)
         {
             //WARNING: The read/write logic in this service needs to be designed carefully to avoid deadlocks.

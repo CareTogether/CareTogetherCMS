@@ -67,6 +67,8 @@ namespace CareTogether.Resources.Accounts
     /// </summary>
     public interface IAccountsResource
     {
+        Task<Guid[]> GetValidOrganizationsAsync();
+
         Task<Account?> TryGetUserAccountAsync(Guid userId);
 
         Task<Account?> TryGetPersonUserAccountAsync(

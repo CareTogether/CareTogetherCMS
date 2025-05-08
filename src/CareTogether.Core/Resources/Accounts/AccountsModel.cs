@@ -78,6 +78,14 @@ namespace CareTogether.Resources.Accounts
 
         public AccountEntry? TryGetAccount(Guid userId) => accounts.GetValueOrDefault(userId);
 
+        public Guid[] GetUniqueOrganizationIds() =>
+            accounts
+                .Select(x => x.Value)
+                .SelectMany(x => x.PersonLinks)
+                .Select(x => x.OrganizationId)
+                .Distinct()
+                .ToArray();
+
         private void ReplayEvent(AccountEvent domainEvent, long sequenceNumber)
         {
             var (_, _, _, onCommit) = ExecuteAccountCommand(
