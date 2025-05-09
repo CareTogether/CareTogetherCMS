@@ -487,12 +487,24 @@ function PartneringFamilies() {
                                   item
                                   key={arrangementEntry.arrangement.id}
                                 >
-                                  <ArrangementCard
-                                    summaryOnly
-                                    partneringFamily={partneringFamily}
-                                    referralId={arrangementEntry.referralId}
-                                    arrangement={arrangementEntry.arrangement}
-                                  />
+                                  <div
+                                    style={{ cursor: 'pointer' }}
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      appNavigate.family(
+                                        partneringFamily.family!.id!,
+                                        arrangementEntry.referralId,
+                                        arrangementEntry.arrangement.id
+                                      );
+                                    }}
+                                  >
+                                    <ArrangementCard
+                                      summaryOnly
+                                      partneringFamily={partneringFamily}
+                                      referralId={arrangementEntry.referralId}
+                                      arrangement={arrangementEntry.arrangement}
+                                    />
+                                  </div>
                                 </Grid>
                               ))}
                             </Grid>
