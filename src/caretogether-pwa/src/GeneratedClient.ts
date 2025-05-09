@@ -6992,6 +6992,11 @@ export abstract class ArrangementsCommand implements IArrangementsCommand {
             result.init(data);
             return result;
         }
+        if (data["discriminator"] === "EditArrangementEndTime") {
+            let result = new EditArrangementEndTime();
+            result.init(data);
+            return result;
+        }
         if (data["discriminator"] === "EditArrangementReason") {
             let result = new EditArrangementReason();
             result.init(data);
@@ -7585,6 +7590,40 @@ export interface IDeletePlannedChildLocationChange extends IArrangementsCommand 
     plannedChangeUtc?: Date;
     childLocationFamilyId?: string;
     childLocationReceivingAdultId?: string;
+}
+
+export class EditArrangementEndTime extends ArrangementsCommand implements IEditArrangementEndTime {
+    endedAtUtc?: Date;
+
+    constructor(data?: IEditArrangementEndTime) {
+        super(data);
+        this._discriminator = "EditArrangementEndTime";
+    }
+
+    init(_data?: any) {
+        super.init(_data);
+        if (_data) {
+            this.endedAtUtc = _data["endedAtUtc"] ? new Date(_data["endedAtUtc"].toString()) : <any>undefined;
+        }
+    }
+
+    static fromJS(data: any): EditArrangementEndTime {
+        data = typeof data === 'object' ? data : {};
+        let result = new EditArrangementEndTime();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["endedAtUtc"] = this.endedAtUtc ? this.endedAtUtc.toISOString() : <any>undefined;
+        super.toJSON(data);
+        return data;
+    }
+}
+
+export interface IEditArrangementEndTime extends IArrangementsCommand {
+    endedAtUtc?: Date;
 }
 
 export class EditArrangementReason extends ArrangementsCommand implements IEditArrangementReason {
