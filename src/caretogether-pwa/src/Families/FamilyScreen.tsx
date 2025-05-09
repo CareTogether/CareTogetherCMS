@@ -258,8 +258,6 @@ export function FamilyScreen() {
 
   useScreenTitle(family ? `${familyLastName(family)} Family` : '...');
 
-  //
-
   const meetsArrangementFilterCriteria = (
     arrangement: Arrangement
   ): boolean => {
@@ -338,7 +336,6 @@ export function FamilyScreen() {
   function handleReferralChange(referralId: string) {
     setSelectedReferralId(referralId);
   }
-  const appNavigate = useAppNavigate();
 
   const printContentRef = useRef<HTMLDivElement>(null);
   const reactToPrintFn = useReactToPrint({ contentRef: printContentRef });
