@@ -796,13 +796,18 @@ namespace CareTogether.Api.OData
                 User.Claims.SingleOrDefault(claim => claim.Type == Claims.Researcher)?.Value
                 == true.ToString();
 
+            var anonymize =
+                isResearcher
+                || User.Claims.SingleOrDefault(claim => claim.Type == Claims.DataDisclosure)?.Value
+                    == DataDisclosure.Anonymized.ToString();
+
             var isGlobal =
                 User.Claims.SingleOrDefault(claim => claim.Type == Claims.Global)?.Value
                 == true.ToString();
 
             return new DataAccessScope(
                 singleOrganizationId,
-                Anonymize: isResearcher,
+                Anonymize: anonymize,
                 IsGlobal: isGlobal
             );
         }

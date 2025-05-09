@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using System.Security.Claims;
 using System.Threading.Tasks;
 using Azure.Storage.Blobs;
@@ -325,10 +326,16 @@ namespace CareTogether.Api
                                     return;
                                 }
 
-                                if (
-                                    context.Username == Configuration["GlobalApiAccess:Username"]
-                                    && context.Password == Configuration["GlobalApiAccess:ApiKey"]
-                                )
+                                var apiAccessEntries = Configuration
+                                    .GetSection("GlobalApiAccess")
+                                    .Get<ApiAccessEntry[]>();
+
+                                var foundCredentials = apiAccessEntries?.SingleOrDefault(entry =>
+                                    entry.Username == context.Username
+                                    && entry.ApiKey == context.Password
+                                );
+
+                                if (foundCredentials != null)
                                 {
                                     context.Principal = new ClaimsPrincipal(
                                         new ClaimsIdentity(
@@ -336,6 +343,10 @@ namespace CareTogether.Api
                                             {
                                                 new Claim(Claims.UserId, context.Username),
                                                 new Claim(Claims.Global, true.ToString()),
+                                                new Claim(
+                                                    Claims.DataDisclosure,
+                                                    foundCredentials.DataDisclosure.ToString()
+                                                ),
                                             },
                                             "API Key"
                                         )
