@@ -157,8 +157,7 @@ export function ShellBottomNavigation() {
                 )}
                 <ListItemLink
                   darkColor
-                  to="http://support.caretogether.io"
-                  newTab
+                  to={`${locationPrefix}/support`}
                   primary="Support"
                   icon={<SupportIcon />}
                 />

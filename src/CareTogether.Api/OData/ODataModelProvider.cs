@@ -12,6 +12,7 @@ namespace CareTogether.Api.OData
             builder.ContainerName = "CareTogether Data";
 
             builder.EntitySet<Location>("Location");
+            builder.EntitySet<LocationUserAccess>("LocationUserAccess");
             builder.EntitySet<Family>("Family");
             builder.EntitySet<Person>("Person");
             builder.EntitySet<Role>("Role");

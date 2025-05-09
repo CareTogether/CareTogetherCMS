@@ -52,6 +52,7 @@ import {
   ReferralRecordsCommand,
   ArrangementRecordsCommand,
   EditArrangementReason,
+  EditArrangementRequestedAt,
 } from '../GeneratedClient';
 import { useAtomicRecordsCommandCallback } from './DirectoryModel';
 import { visibleFamiliesQuery } from './Data';
@@ -570,6 +571,22 @@ export function useReferralsModel() {
       return command;
     }
   );
+  const editArrangementRequestedAt = useArrangementsCommandCallbackWithLocation(
+    async (
+      partneringFamilyId: string,
+      referralId: string,
+      arrangementId: string,
+      requestedAtLocal: Date
+    ) => {
+      const command = new EditArrangementRequestedAt({
+        familyId: partneringFamilyId,
+        referralId: referralId,
+        arrangementIds: [arrangementId],
+      });
+      command.requestedAtUtc = requestedAtLocal;
+      return command;
+    }
+  );
   const planArrangementEnd = useArrangementsCommandCallbackWithLocation(
     async (
       partneringFamilyId: string,
@@ -903,6 +920,7 @@ export function useReferralsModel() {
     planArrangementStart,
     startArrangement,
     editArrangementStartTime,
+    editArrangementRequestedAt,
     planArrangementEnd,
     endArrangement,
     reopenArrangement,

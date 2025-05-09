@@ -131,6 +131,7 @@ export function MissingArrangementRequirementRow({
           context={context}
           policy={requirementPolicy}
           referralId={context.referralId}
+          canExempt={canExempt}
         />
       )}
     </>

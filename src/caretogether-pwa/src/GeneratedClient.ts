@@ -6997,6 +6997,11 @@ export abstract class ArrangementsCommand implements IArrangementsCommand {
             result.init(data);
             return result;
         }
+        if (data["discriminator"] === "EditArrangementRequestedAt") {
+            let result = new EditArrangementRequestedAt();
+            result.init(data);
+            return result;
+        }
         if (data["discriminator"] === "EditArrangementStartTime") {
             let result = new EditArrangementStartTime();
             result.init(data);
@@ -7614,6 +7619,40 @@ export class EditArrangementReason extends ArrangementsCommand implements IEditA
 
 export interface IEditArrangementReason extends IArrangementsCommand {
     reason?: string | undefined;
+}
+
+export class EditArrangementRequestedAt extends ArrangementsCommand implements IEditArrangementRequestedAt {
+    requestedAtUtc?: Date;
+
+    constructor(data?: IEditArrangementRequestedAt) {
+        super(data);
+        this._discriminator = "EditArrangementRequestedAt";
+    }
+
+    init(_data?: any) {
+        super.init(_data);
+        if (_data) {
+            this.requestedAtUtc = _data["requestedAtUtc"] ? new Date(_data["requestedAtUtc"].toString()) : <any>undefined;
+        }
+    }
+
+    static fromJS(data: any): EditArrangementRequestedAt {
+        data = typeof data === 'object' ? data : {};
+        let result = new EditArrangementRequestedAt();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["requestedAtUtc"] = this.requestedAtUtc ? this.requestedAtUtc.toISOString() : <any>undefined;
+        super.toJSON(data);
+        return data;
+    }
+}
+
+export interface IEditArrangementRequestedAt extends IArrangementsCommand {
+    requestedAtUtc?: Date;
 }
 
 export class EditArrangementStartTime extends ArrangementsCommand implements IEditArrangementStartTime {

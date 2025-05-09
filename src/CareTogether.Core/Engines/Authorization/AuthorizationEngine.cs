@@ -53,7 +53,10 @@ namespace CareTogether.Engines.Authorization
             // If the caller is using an API key, give full access.
             if (
                 user.Identity?.AuthenticationType == "API Key"
-                && user.HasClaim(Claims.OrganizationId, organizationId.ToString())
+                && (
+                    user.HasClaim(Claims.OrganizationId, organizationId.ToString())
+                    || user.HasClaim(Claims.Global, true.ToString())
+                )
             )
                 return Enum.GetValues<Permission>().ToImmutableList();
 
@@ -461,6 +464,7 @@ namespace CareTogether.Engines.Authorization
                     PlanArrangementStart => Permission.EditArrangement,
                     StartArrangements => Permission.EditArrangement,
                     EditArrangementStartTime => Permission.EditArrangement,
+                    EditArrangementRequestedAt => Permission.EditArrangement,
                     CompleteArrangementRequirement =>
                         Permission.EditArrangementRequirementCompletion,
                     CompleteVolunteerFamilyAssignmentRequirement =>

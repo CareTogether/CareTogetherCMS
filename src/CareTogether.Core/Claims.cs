@@ -14,5 +14,9 @@
         public const string Permission = "Permission";
 
         public const string Researcher = "Researcher";
+        
+        public const string Global = "Global";
+
+        public const string DataDisclosure = "DataDisclosure";
     }
 }

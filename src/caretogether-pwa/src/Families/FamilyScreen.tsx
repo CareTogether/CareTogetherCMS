@@ -78,6 +78,7 @@ import posthog from 'posthog-js';
 import { AssignmentsSection } from '../Families/AssignmentsSection';
 import { useMemo } from 'react';
 import { ArrangementsSection } from '../Referrals/Arrangements/ArrangementsSection/ArrangementsSection';
+import { useSyncReferralIdInURL } from '../Hooks/useSyncReferralIdInURL';
 
 export function FamilyScreen() {
   const familyIdMaybe = useParams<{ familyId: string }>();
@@ -98,6 +99,8 @@ export function FamilyScreen() {
   const familyCommunityInfo = allCommunityInfo?.filter((c) =>
     c.community?.memberFamilies?.includes(familyId)
   );
+
+  const appNavigate = useAppNavigate();
 
   const familyLookup = useFamilyLookup();
   const family = familyLookup(familyId)!;
@@ -146,11 +149,13 @@ export function FamilyScreen() {
 
   const [selectedReferralId, setSelectedReferralId] = useState<
     string | undefined
-  >(firstReferralId);
+  >(referralIdFromQuery || firstReferralId);
 
   const selectedReferral = allReferrals.find(
     (referral) => referral.id === selectedReferralId
   );
+
+  const arrangementRefs = useRef<Record<string, HTMLDivElement | null>>({});
 
   useEffect(() => {
     if (
@@ -167,9 +172,27 @@ export function FamilyScreen() {
     if (!selectedReferral) {
       posthog.capture('auto selected first referral');
 
-      setSelectedReferralId(firstReferralId);
+      if (firstReferralId) {
+        setSelectedReferralId(firstReferralId);
+      }
     }
-  }, [selectedReferral, firstReferralId]);
+  }, [firstReferralId, selectedReferral]);
+
+  useSyncReferralIdInURL({ familyId, referralIdFromQuery, selectedReferralId });
+
+  useEffect(() => {
+    const searchParams = new URLSearchParams(window.location.search);
+    const hasArrangementId = searchParams.has('arrangementId');
+
+    if (hasArrangementId) {
+      appNavigate.family(
+        familyId,
+        searchParams.get('referralId') ?? undefined,
+        undefined,
+        { replace: true }
+      );
+    }
+  }, [familyId, appNavigate]);
 
   const [familyMoreMenuAnchor, setFamilyMoreMenuAnchor] =
     useState<Element | null>(null);
@@ -237,6 +260,84 @@ export function FamilyScreen() {
 
   //
 
+  const meetsArrangementFilterCriteria = (
+    arrangement: Arrangement
+  ): boolean => {
+    return arrangementFilterOptions
+      .filter((o) => o.selected)
+      .map((o) => o.text)
+      .some((option) => {
+        const opt = option as ArrangementFilterOptionLabel;
+        if (
+          opt === ArrangementFilterOptionLabel.Active &&
+          arrangement.cancelledAtUtc === undefined
+        ) {
+          return true;
+        } else if (
+          opt === ArrangementFilterOptionLabel.Cancelled &&
+          arrangement.cancelledAtUtc !== undefined
+        ) {
+          return true;
+        } else if (
+          opt === ArrangementFilterOptionLabel.Ended &&
+          arrangement.endedAtUtc !== undefined
+        ) {
+          return true;
+        }
+        return false;
+      });
+  };
+
+  const filteredArrangements = selectedReferral?.arrangements
+    ?.slice()
+    .filter((arrangement) => meetsArrangementFilterCriteria(arrangement))
+    .sort((a, b) => sortArrangementsByStartDateDescThenCreateDateDesc(a, b))
+    .map((arrangement) => (
+      <div
+        key={arrangement.id}
+        ref={(el) => {
+          if (arrangement.id) {
+            arrangementRefs.current[arrangement.id] = el;
+          }
+        }}
+      >
+        <ArrangementCard
+          partneringFamily={family}
+          referralId={selectedReferral.id!}
+          arrangement={arrangement}
+        />
+      </div>
+    ));
+  const hasScrolledRef = useRef(false);
+
+  useEffect(() => {
+    if (!arrangementIdFromQuery || !selectedReferral || hasScrolledRef.current)
+      return;
+
+    const ref = arrangementRefs.current[arrangementIdFromQuery];
+
+    if (ref) {
+      hasScrolledRef.current = true;
+
+      setTimeout(() => {
+        const top = ref.getBoundingClientRect().top + window.pageYOffset;
+        const offset = 100;
+        const scrollTo = top - offset;
+
+        const maxScroll = document.body.scrollHeight - window.innerHeight;
+        const finalScroll = Math.min(scrollTo, maxScroll);
+
+        window.scrollTo({
+          top: finalScroll,
+          behavior: 'smooth',
+        });
+      }, 300);
+    }
+  }, [arrangementIdFromQuery, selectedReferral, filteredArrangements]);
+
+  function handleReferralChange(referralId: string) {
+    setSelectedReferralId(referralId);
+  }
   const appNavigate = useAppNavigate();
 
   const printContentRef = useRef<HTMLDivElement>(null);
@@ -554,7 +655,10 @@ export function FamilyScreen() {
                             key={referral.id}
                             value={referral.id}
                             control={<Radio />}
-                            onChange={() => setSelectedReferralId(referral.id)}
+                            onChange={() => {
+                              if (referral.id)
+                                handleReferralChange(referral.id);
+                            }}
                             label={
                               <Box display="flex" alignItems="center" gap={1}>
                                 <Typography className="ph-unmask">

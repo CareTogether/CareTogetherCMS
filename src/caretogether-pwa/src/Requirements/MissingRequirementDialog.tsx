@@ -50,6 +50,7 @@ type MissingRequirementDialogProps = {
   context: RequirementContext;
   policy: ActionRequirement;
   referralId?: string;
+  canExempt: boolean;
 };
 export function MissingRequirementDialog({
   handle,
@@ -57,6 +58,7 @@ export function MissingRequirementDialog({
   context,
   policy,
   referralId,
+  canExempt,
 }: MissingRequirementDialogProps) {
   const directory = useDirectoryModel();
   const referrals = useReferralsModel();
@@ -362,7 +364,7 @@ export function MissingRequirementDialog({
         variant="fullWidth"
       >
         <Tab label="Mark Complete" {...a11yProps(0)} />
-        <Tab label="Grant Exemption" {...a11yProps(1)} />
+        {canExempt && <Tab label="Grant Exemption" {...a11yProps(1)} />}
       </Tabs>
       <TabPanel value={tabValue} index={0}>
         {policy.instructions && (
@@ -544,93 +546,95 @@ export function MissingRequirementDialog({
           )}
         </Grid>
       </TabPanel>
-      <TabPanel value={tabValue} index={1}>
-        <Grid container spacing={2}>
-          {requirement instanceof MissingArrangementRequirement && (
-            <Grid item xs={12}>
-              <FormControl component="fieldset" variant="standard">
-                <FormLabel component="legend">Exempt for</FormLabel>
-                <FormGroup>
-                  {availableArrangements.map((arrangement) => (
-                    <FormControlLabel
-                      key={arrangement.id}
-                      control={
-                        <Checkbox
-                          size="medium"
-                          checked={applyToArrangements.includes(arrangement)}
-                          onChange={(_, checked) =>
-                            toggleApplyToArrangement(arrangement, checked)
-                          }
-                          name={arrangement.id!}
-                        />
-                      }
-                      label={
-                        `${arrangement.arrangementType} - ${personNameString(personLookup(arrangement.partneringFamilyPersonId))} - ` +
-                        (arrangement.phase === ArrangementPhase.Cancelled
-                          ? `Cancelled ${formatRelative(arrangement.cancelledAtUtc!, now)}`
-                          : arrangement.phase === ArrangementPhase.SettingUp
-                            ? 'Setting up'
-                            : arrangement.phase ===
-                                ArrangementPhase.ReadyToStart
-                              ? 'Ready to start'
-                              : arrangement.phase === ArrangementPhase.Started
-                                ? `Started ${formatRelative(arrangement.startedAtUtc!, now)}`
-                                : `Ended ${formatRelative(arrangement.endedAtUtc!, now)}`)
-                      }
-                    />
-                  ))}
-                </FormGroup>
-              </FormControl>
-            </Grid>
-          )}
-          {requirement instanceof MissingArrangementRequirement &&
-            (requirement.dueBy || requirement.pastDueSince) && ( // Only monitoring requirements will have one of these dates set.
+      {canExempt && (
+        <TabPanel value={tabValue} index={1}>
+          <Grid container spacing={2}>
+            {requirement instanceof MissingArrangementRequirement && (
               <Grid item xs={12}>
-                <Divider sx={{ marginBottom: 1 }} />
                 <FormControl component="fieldset" variant="standard">
-                  <FormControlLabel
-                    control={
-                      <Checkbox
-                        size="medium"
-                        checked={exemptAll}
-                        onChange={(_, checked) => setExemptAll(checked)}
-                        name="exempt-all"
+                  <FormLabel component="legend">Exempt for</FormLabel>
+                  <FormGroup>
+                    {availableArrangements.map((arrangement) => (
+                      <FormControlLabel
+                        key={arrangement.id}
+                        control={
+                          <Checkbox
+                            size="medium"
+                            checked={applyToArrangements.includes(arrangement)}
+                            onChange={(_, checked) =>
+                              toggleApplyToArrangement(arrangement, checked)
+                            }
+                            name={arrangement.id!}
+                          />
+                        }
+                        label={
+                          `${arrangement.arrangementType} - ${personNameString(personLookup(arrangement.partneringFamilyPersonId))} - ` +
+                          (arrangement.phase === ArrangementPhase.Cancelled
+                            ? `Cancelled ${formatRelative(arrangement.cancelledAtUtc!, now)}`
+                            : arrangement.phase === ArrangementPhase.SettingUp
+                              ? 'Setting up'
+                              : arrangement.phase ===
+                                  ArrangementPhase.ReadyToStart
+                                ? 'Ready to start'
+                                : arrangement.phase === ArrangementPhase.Started
+                                  ? `Started ${formatRelative(arrangement.startedAtUtc!, now)}`
+                                  : `Ended ${formatRelative(arrangement.endedAtUtc!, now)}`)
+                        }
                       />
-                    }
-                    label="Exempt ALL instances of this requirement for the selected arrangement(s)?"
-                  />
+                    ))}
+                  </FormGroup>
                 </FormControl>
               </Grid>
             )}
-          <Grid item xs={12}>
-            <TextField
-              id="additional-comments"
-              required
-              label="Additional Comments"
-              placeholder="Explain why this requirement will be exempted"
-              multiline
-              fullWidth
-              variant="outlined"
-              minRows={2}
-              maxRows={5}
-              size="small"
-              value={additionalComments}
-              onChange={(e) => setAdditionalComments(e.target.value)}
-            />
+            {requirement instanceof MissingArrangementRequirement &&
+              (requirement.dueBy || requirement.pastDueSince) && ( // Only monitoring requirements will have one of these dates set.
+                <Grid item xs={12}>
+                  <Divider sx={{ marginBottom: 1 }} />
+                  <FormControl component="fieldset" variant="standard">
+                    <FormControlLabel
+                      control={
+                        <Checkbox
+                          size="medium"
+                          checked={exemptAll}
+                          onChange={(_, checked) => setExemptAll(checked)}
+                          name="exempt-all"
+                        />
+                      }
+                      label="Exempt ALL instances of this requirement for the selected arrangement(s)?"
+                    />
+                  </FormControl>
+                </Grid>
+              )}
+            <Grid item xs={12}>
+              <TextField
+                id="additional-comments"
+                required
+                label="Additional Comments"
+                placeholder="Explain why this requirement will be exempted"
+                multiline
+                fullWidth
+                variant="outlined"
+                minRows={2}
+                maxRows={5}
+                size="small"
+                value={additionalComments}
+                onChange={(e) => setAdditionalComments(e.target.value)}
+              />
+            </Grid>
+            <Grid item xs={12}>
+              <DatePicker
+                label="When does this exemption expire? (Default is never)"
+                value={exemptionExpiresAtLocal}
+                format="MM/dd/yyyy"
+                onChange={(date: Date | null) =>
+                  date && setExemptionExpiresAtLocal(date)
+                }
+                slotProps={{ textField: { fullWidth: true } }}
+              />
+            </Grid>
           </Grid>
-          <Grid item xs={12}>
-            <DatePicker
-              label="When does this exemption expire? (Default is never)"
-              value={exemptionExpiresAtLocal}
-              format="MM/dd/yyyy"
-              onChange={(date: Date | null) =>
-                date && setExemptionExpiresAtLocal(date)
-              }
-              slotProps={{ textField: { fullWidth: true } }}
-            />
-          </Grid>
-        </Grid>
-      </TabPanel>
+        </TabPanel>
+      )}
     </UpdateDialog>
   );
 }

@@ -4032,6 +4032,7 @@
             "DeleteChildLocationChange": "#/components/schemas/DeleteChildLocationChange",
             "DeletePlannedChildLocationChange": "#/components/schemas/DeletePlannedChildLocationChange",
             "EditArrangementReason": "#/components/schemas/EditArrangementReason",
+            "EditArrangementRequestedAt": "#/components/schemas/EditArrangementRequestedAt",
             "EditArrangementStartTime": "#/components/schemas/EditArrangementStartTime",
             "EndArrangements": "#/components/schemas/EndArrangements",
             "ExemptArrangementRequirement": "#/components/schemas/ExemptArrangementRequirement",
@@ -4383,6 +4384,23 @@
               "reason": {
                 "type": "string",
                 "nullable": true
+              }
+            }
+          }
+        ]
+      },
+      "EditArrangementRequestedAt": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/ArrangementsCommand"
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "requestedAtUtc": {
+                "type": "string",
+                "format": "date-time"
               }
             }
           }
