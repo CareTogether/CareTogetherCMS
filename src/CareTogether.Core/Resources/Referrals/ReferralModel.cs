@@ -370,6 +370,13 @@ namespace CareTogether.Resources.Referrals
                                     },
                                     null
                                 ),
+                                EditArrangementEndTime c => (
+                                    arrangementEntry with
+                                    {
+                                        EndedAtUtc = c.EndedAtUtc,
+                                    },
+                                    null
+                                ),
                                 EditArrangementRequestedAt c => (
                                     arrangementEntry with
                                     {

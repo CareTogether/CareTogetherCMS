@@ -51,7 +51,7 @@ export function ArrangementCard({
 
   const endedAtEditor = useInlineEditor(async (value) => {
     if (value) value.setHours(23, 59, 59, 999);
-    await referralsModel.editArrangementEndedAt(
+    await referralsModel.editArrangementEndTime(
       partneringFamilyId,
       referralId,
       arrangement.id!,
