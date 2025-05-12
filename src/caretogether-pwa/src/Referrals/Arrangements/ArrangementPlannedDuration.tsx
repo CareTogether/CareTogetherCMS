@@ -10,6 +10,7 @@ import {
 } from '../../GeneratedClient';
 import { useReferralsModel } from '../../Model/ReferralsModel';
 import { format } from 'date-fns';
+import { DateDisplayEditorRelative } from './DateDisplayEditorRelative';
 
 interface ArrangementPlannedDurationProps {
   partneringFamily: CombinedFamilyInfo;
@@ -19,8 +20,6 @@ interface ArrangementPlannedDurationProps {
   cancelButton?: React.ReactNode;
   startButton?: React.ReactNode;
   endButton?: React.ReactNode;
-  startedAtLabel?: React.ReactNode;
-  endedAtLabel?: React.ReactNode;
 }
 
 export function ArrangementPlannedDuration({
@@ -31,8 +30,6 @@ export function ArrangementPlannedDuration({
   cancelButton,
   startButton,
   endButton,
-  startedAtLabel,
-  endedAtLabel,
 }: ArrangementPlannedDurationProps) {
   const partneringFamilyId = partneringFamily.family!.id!;
   const permissions = useFamilyIdPermissions(partneringFamilyId);
@@ -137,7 +134,20 @@ export function ArrangementPlannedDuration({
               </>
             )}
             {arrangement.phase === ArrangementPhase.ReadyToStart && startButton}
-            {arrangement.phase === ArrangementPhase.Started && startedAtLabel}
+            {arrangement.phase === ArrangementPhase.Started && (
+              <DateDisplayEditorRelative
+                label="Started"
+                initialValue={arrangement.startedAtUtc!}
+                onChange={(newDate) => {
+                  referralsModel.editArrangementStartTime(
+                    partneringFamilyId,
+                    referralId,
+                    arrangement.id!,
+                    newDate
+                  );
+                }}
+              />
+            )}
           </Grid>
 
           <Grid item xs={12}>
@@ -172,7 +182,20 @@ export function ArrangementPlannedDuration({
               </>
             )}
             {arrangement.phase === ArrangementPhase.Started && endButton}
-            {arrangement.phase === ArrangementPhase.Ended && endedAtLabel}
+            {arrangement.phase === ArrangementPhase.Ended && (
+              <DateDisplayEditorRelative
+                label="Ended"
+                initialValue={arrangement.endedAtUtc!}
+                onChange={(newDate) => {
+                  referralsModel.editArrangementEndTime(
+                    partneringFamilyId,
+                    referralId,
+                    arrangement.id!,
+                    newDate
+                  );
+                }}
+              />
+            )}
           </Grid>
         </Grid>
       </Grid>

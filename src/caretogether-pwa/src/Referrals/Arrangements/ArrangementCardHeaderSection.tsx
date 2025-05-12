@@ -16,8 +16,6 @@ interface ArrangementCardHeaderSectionProps {
   cancelButton?: React.ReactNode;
   startButton?: React.ReactNode;
   endButton?: React.ReactNode;
-  startedAtLabel?: React.ReactNode;
-  endedAtLabel?: React.ReactNode;
 }
 
 export function ArrangementCardHeaderSection({
@@ -29,8 +27,6 @@ export function ArrangementCardHeaderSection({
   cancelButton,
   startButton,
   endButton,
-  startedAtLabel,
-  endedAtLabel,
 }: ArrangementCardHeaderSectionProps) {
   const personLookup = usePersonLookup();
 
@@ -67,8 +63,6 @@ export function ArrangementCardHeaderSection({
         cancelButton={cancelButton}
         startButton={startButton}
         endButton={endButton}
-        startedAtLabel={startedAtLabel}
-        endedAtLabel={endedAtLabel}
       />
     </>
   );

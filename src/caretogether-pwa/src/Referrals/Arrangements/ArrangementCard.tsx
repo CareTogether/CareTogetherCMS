@@ -7,16 +7,12 @@ import {
 } from '../../GeneratedClient';
 import { useRecoilValue } from 'recoil';
 import { policyData } from '../../Model/ConfigurationModel';
-import { useReferralsModel } from '../../Model/ReferralsModel';
-import { useInlineEditor } from '../../Hooks/useInlineEditor';
-import { formatRelative } from 'date-fns';
 import { ArrangementPhaseSummary } from './ArrangementPhaseSummary';
 import { ArrangementCardTitle } from './ArrangementCardTitle';
 import { ArrangementCardHeaderSection } from './ArrangementCardHeaderSection';
 import { ArrangementCardDetailsSection } from './ArrangementCardDetailsSection';
 import { ArrangementPhaseDialogs } from './ArrangementPhaseDialogs';
 import { useRequirementContextData } from './useRequirementContextData';
-import { DatePicker } from '@mui/x-date-pickers';
 
 export type ArrangementCardProps = {
   partneringFamily: CombinedFamilyInfo;
@@ -32,34 +28,9 @@ export function ArrangementCard({
   summaryOnly,
 }: ArrangementCardProps) {
   const policy = useRecoilValue(policyData);
-  const referralsModel = useReferralsModel();
   const [showStartDialog, setShowStartDialog] = useState(false);
   const [showCancelDialog, setShowCancelDialog] = useState(false);
   const [showEndDialog, setShowEndDialog] = useState(false);
-
-  const partneringFamilyId = partneringFamily.family!.id!;
-
-  const startedAtEditor = useInlineEditor(async (value) => {
-    if (value) value.setHours(0, 0, 0, 0);
-    await referralsModel.editArrangementStartTime(
-      partneringFamilyId,
-      referralId,
-      arrangement.id!,
-      value!
-    );
-  }, arrangement.startedAtUtc || null);
-
-  const endedAtEditor = useInlineEditor(async (value) => {
-    if (value) value.setHours(23, 59, 59, 999);
-    await referralsModel.editArrangementEndTime(
-      partneringFamilyId,
-      referralId,
-      arrangement.id!,
-      value!
-    );
-  }, arrangement.endedAtUtc || null);
-
-  const now = new Date();
 
   const cancelButton =
     !summaryOnly && arrangement.phase === ArrangementPhase.SettingUp ? (
@@ -94,52 +65,6 @@ export function ArrangementCard({
       End
     </Button>
   ) : null;
-
-  const startedAtLabel =
-    arrangement.phase === ArrangementPhase.Started ? (
-      startedAtEditor.editing ? (
-        <>
-          <DatePicker
-            label="Started at"
-            value={startedAtEditor.value}
-            onChange={(value) => startedAtEditor.setValue(value)}
-            slotProps={{ textField: { size: 'small', margin: 'none' } }}
-          />
-          {startedAtEditor.cancelButton}
-          {startedAtEditor.saveButton}
-        </>
-      ) : (
-        <>
-          {startedAtEditor.value
-            ? `Started ${formatRelative(startedAtEditor.value, now)}`
-            : '-'}
-          {startedAtEditor.editButton}
-        </>
-      )
-    ) : null;
-
-  const endedAtLabel =
-    arrangement.phase === ArrangementPhase.Ended ? (
-      endedAtEditor.editing ? (
-        <>
-          <DatePicker
-            label="Ended at"
-            value={endedAtEditor.value}
-            onChange={(value) => endedAtEditor.setValue(value)}
-            slotProps={{ textField: { size: 'small', margin: 'none' } }}
-          />
-          {endedAtEditor.cancelButton}
-          {endedAtEditor.saveButton}
-        </>
-      ) : (
-        <>
-          {endedAtEditor.value
-            ? `Ended ${formatRelative(endedAtEditor.value, now)}`
-            : '-'}
-          {endedAtEditor.editButton}
-        </>
-      )
-    ) : null;
 
   const arrangementPolicy = policy.referralPolicy?.arrangementPolicies?.find(
     (a) => a.arrangementType === arrangement.arrangementType
@@ -197,8 +122,6 @@ export function ArrangementCard({
           cancelButton={cancelButton}
           startButton={startButton}
           endButton={endButton}
-          startedAtLabel={!summaryOnly ? startedAtLabel : null}
-          endedAtLabel={!summaryOnly ? endedAtLabel : null}
         />
 
         {!summaryOnly && (
