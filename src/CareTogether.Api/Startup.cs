@@ -1,5 +1,7 @@
 using System;
+using System.Linq;
 using System.Security.Claims;
+using System.Threading.Tasks;
 using Azure.Storage.Blobs;
 using CareTogether.Api.OData;
 using CareTogether.Engines.Authorization;
@@ -285,6 +287,10 @@ namespace CareTogether.Api
                         {
                             OnValidateCredentials = async context =>
                             {
+                                // Prevent timing attacks.
+                                // Waits from 50 to 100 ms before checking credentials.
+                                await Task.Delay(new Random().Next(50, 100));
+
                                 if (
                                     context.Username == "Research"
                                     && context.Password == Configuration["Research:ApiKey"]
@@ -317,6 +323,35 @@ namespace CareTogether.Api
                                     context.Fail(
                                         "The username must be an organization ID in GUID format."
                                     );
+                                    return;
+                                }
+
+                                var apiAccessEntries = Configuration
+                                    .GetSection("GlobalApiAccess")
+                                    .Get<ApiAccessEntry[]>();
+
+                                var foundCredentials = apiAccessEntries?.SingleOrDefault(entry =>
+                                    entry.Username == context.Username
+                                    && entry.ApiKey == context.Password
+                                );
+
+                                if (foundCredentials != null)
+                                {
+                                    context.Principal = new ClaimsPrincipal(
+                                        new ClaimsIdentity(
+                                            new Claim[]
+                                            {
+                                                new Claim(Claims.UserId, context.Username),
+                                                new Claim(Claims.Global, true.ToString()),
+                                                new Claim(
+                                                    Claims.DataDisclosure,
+                                                    foundCredentials.DataDisclosure.ToString()
+                                                ),
+                                            },
+                                            "API Key"
+                                        )
+                                    );
+                                    context.Success();
                                     return;
                                 }
 
