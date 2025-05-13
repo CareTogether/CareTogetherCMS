@@ -1,7 +1,5 @@
 import { Grid } from '@mui/material';
 import { useFamilyIdPermissions } from '../../Model/SessionModel';
-import { useInlineEditor } from '../../Hooks/useInlineEditor';
-import { DatePicker } from '@mui/x-date-pickers';
 import {
   Arrangement,
   CombinedFamilyInfo,
@@ -9,8 +7,8 @@ import {
   ArrangementPhase,
 } from '../../GeneratedClient';
 import { useReferralsModel } from '../../Model/ReferralsModel';
-import { format } from 'date-fns';
 import { DateDisplayEditorRelative } from './DateDisplayEditorRelative';
+import { DateDisplayEditor } from './DateDisplayEditor';
 
 interface ArrangementPlannedDurationProps {
   partneringFamily: CombinedFamilyInfo;
@@ -35,104 +33,46 @@ export function ArrangementPlannedDuration({
   const permissions = useFamilyIdPermissions(partneringFamilyId);
   const referralsModel = useReferralsModel();
 
-  const requestedAtEditor = useInlineEditor(async (value) => {
-    await referralsModel.editArrangementRequestedAt(
-      partneringFamilyId,
-      referralId,
-      arrangement.id!,
-      value!
-    );
-  }, arrangement.requestedAtUtc || null);
+  const onDateChange = (
+    callback: (
+      aggregateId: string,
+      referralId: string,
+      arrangementId: string,
+      plannedStartLocal: Date
+    ) => void,
+    newDate: Date
+  ) => callback(partneringFamilyId, referralId, arrangement.id!, newDate);
 
-  const plannedStartEditor = useInlineEditor(async (value) => {
-    await referralsModel.planArrangementStart(
-      partneringFamilyId,
-      referralId,
-      arrangement.id!,
-      value
-    );
-  }, arrangement.plannedStartUtc || null);
-
-  const plannedEndEditor = useInlineEditor(async (value) => {
-    await referralsModel.planArrangementEnd(
-      partneringFamilyId,
-      referralId,
-      arrangement.id!,
-      value
-    );
-  }, arrangement.plannedEndUtc || null);
+  const canEdit = !summaryOnly && permissions(Permission.EditArrangement);
 
   return (
     <Grid container spacing={2} sx={{ mb: 1 }}>
       <Grid item xs={9}>
         <Grid container spacing={0}>
           <Grid item xs={12}>
-            Requested at:&nbsp;
-            {!summaryOnly && permissions(Permission.EditArrangement) ? (
-              requestedAtEditor.editing ? (
-                <>
-                  <DatePicker
-                    label="Requested at"
-                    value={requestedAtEditor.value}
-                    onChange={(value: Date | null) =>
-                      requestedAtEditor.setValue(value)
-                    }
-                    slotProps={{ textField: { size: 'small', margin: 'none' } }}
-                  />
-                  {requestedAtEditor.cancelButton}
-                  {requestedAtEditor.saveButton}
-                </>
-              ) : (
-                <>
-                  {requestedAtEditor.value
-                    ? format(requestedAtEditor.value, 'M/d/yyyy')
-                    : '-'}
-                  {requestedAtEditor.editButton}
-                </>
-              )
-            ) : (
-              <>
-                {requestedAtEditor.value
-                  ? format(requestedAtEditor.value, 'M/d/yyyy')
-                  : '-'}
-              </>
-            )}
+            <DateDisplayEditor
+              label="Requested at"
+              initialValue={arrangement.requestedAtUtc!}
+              canEdit={canEdit}
+              onChange={(newDate) =>
+                onDateChange(referralsModel.editArrangementRequestedAt, newDate)
+              }
+            />
             {arrangement.phase !== undefined &&
               arrangement.phase <= ArrangementPhase.ReadyToStart &&
               cancelButton}
           </Grid>
 
           <Grid item xs={12}>
-            Planned start:&nbsp;
-            {!summaryOnly && permissions(Permission.EditArrangement) ? (
-              plannedStartEditor.editing ? (
-                <>
-                  <DatePicker
-                    label="Planned start"
-                    value={plannedStartEditor.value}
-                    onChange={(value: Date | null) =>
-                      plannedStartEditor.setValue(value)
-                    }
-                    slotProps={{ textField: { size: 'small', margin: 'none' } }}
-                  />
-                  {plannedStartEditor.cancelButton}
-                  {plannedStartEditor.saveButton}
-                </>
-              ) : (
-                <>
-                  {plannedStartEditor.value
-                    ? format(plannedStartEditor.value, 'M/d/yyyy')
-                    : '-'}
-                  {plannedStartEditor.editButton}
-                </>
-              )
-            ) : (
-              <>
-                {plannedStartEditor.value
-                  ? format(plannedStartEditor.value, 'M/d/yyyy')
-                  : '-'}
-              </>
-            )}
+            <DateDisplayEditor
+              label="Planned start"
+              initialValue={arrangement.plannedStartUtc!}
+              canEdit={canEdit}
+              onChange={(newDate) =>
+                onDateChange(referralsModel.planArrangementStart, newDate)
+              }
+            />
+
             {arrangement.phase === ArrangementPhase.ReadyToStart && startButton}
             {arrangement.phase === ArrangementPhase.Started && (
               <DateDisplayEditorRelative
@@ -151,36 +91,15 @@ export function ArrangementPlannedDuration({
           </Grid>
 
           <Grid item xs={12}>
-            Planned end:&nbsp;
-            {!summaryOnly && permissions(Permission.EditArrangement) ? (
-              plannedEndEditor.editing ? (
-                <>
-                  <DatePicker
-                    label="Planned end"
-                    value={plannedEndEditor.value}
-                    onChange={(value: Date | null) =>
-                      plannedEndEditor.setValue(value)
-                    }
-                    slotProps={{ textField: { size: 'small', margin: 'none' } }}
-                  />
-                  {plannedEndEditor.cancelButton}
-                  {plannedEndEditor.saveButton}
-                </>
-              ) : (
-                <>
-                  {plannedEndEditor.value
-                    ? format(plannedEndEditor.value, 'M/d/yyyy')
-                    : '-'}
-                  {plannedEndEditor.editButton}
-                </>
-              )
-            ) : (
-              <>
-                {plannedEndEditor.value
-                  ? format(plannedEndEditor.value, 'M/d/yyyy')
-                  : '-'}
-              </>
-            )}
+            <DateDisplayEditor
+              label="Planned end"
+              initialValue={arrangement.plannedEndUtc!}
+              canEdit={canEdit}
+              onChange={(newDate) =>
+                onDateChange(referralsModel.planArrangementEnd, newDate)
+              }
+            />
+
             {arrangement.phase === ArrangementPhase.Started && endButton}
             {arrangement.phase === ArrangementPhase.Ended && (
               <DateDisplayEditorRelative
