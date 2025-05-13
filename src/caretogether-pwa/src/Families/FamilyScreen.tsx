@@ -87,18 +87,6 @@ import { AssignmentsSection } from '../Families/AssignmentsSection';
 import { useMemo } from 'react';
 import { useSyncReferralIdInURL } from '../Hooks/useSyncReferralIdInURL';
 
-const sortArrangementsByStartDateDescThenCreateDateDesc = (
-  a: Arrangement,
-  b: Arrangement
-) => {
-  return (
-    (b.startedAtUtc ?? new Date()).getTime() -
-      (a.startedAtUtc ?? new Date()).getTime() ||
-    (b.requestedAtUtc ?? new Date()).getTime() -
-      (a.requestedAtUtc ?? new Date()).getTime()
-  );
-};
-
 export function FamilyScreen() {
   const familyIdMaybe = useParams<{ familyId: string }>();
   const familyId = familyIdMaybe.familyId as string;
@@ -316,7 +304,12 @@ export function FamilyScreen() {
   const filteredArrangements = selectedReferral?.arrangements
     ?.slice()
     .filter((arrangement) => meetsArrangementFilterCriteria(arrangement))
-    .sort((a, b) => sortArrangementsByStartDateDescThenCreateDateDesc(a, b))
+    .sort((a, b) => {
+      const aDate = a.requestedAtUtc ?? a.startedAtUtc ?? new Date(0);
+      const bDate = b.requestedAtUtc ?? b.startedAtUtc ?? new Date(0);
+      return bDate.getTime() - aDate.getTime();
+    })
+
     .map((arrangement) => (
       <div
         key={arrangement.id}
