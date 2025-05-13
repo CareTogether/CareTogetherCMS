@@ -37,16 +37,18 @@ export function DashboardCalendar() {
   const allArrangements = (partneringFamilies || []).flatMap((family) =>
     (family.partneringFamilyInfo?.closedReferrals || [])
       .concat(family.partneringFamilyInfo?.openReferral || [])
-      .flatMap((referral) => referral.arrangements || [])
-      .map((arrangement) => ({
-        arrangement,
-        person: familyPerson(family, arrangement.partneringFamilyPersonId!),
-        familyId: family.family?.id,
-      }))
+      .flatMap((referral) =>
+        (referral.arrangements || []).map((arrangement) => ({
+          arrangement,
+          person: familyPerson(family, arrangement.partneringFamilyPersonId!),
+          familyId: family.family?.id,
+          referralId: referral.id,
+        }))
+      )
   );
 
   const arrangementPlannedDurations = allArrangements.map(
-    ({ arrangement, person, familyId }) =>
+    ({ arrangement, person, familyId, referralId }) =>
       ({
         title: `${personNameString(person)} - ${arrangement.arrangementType}`,
         start:
@@ -56,79 +58,101 @@ export function DashboardCalendar() {
           arrangement.plannedEndUtc &&
           format(arrangement.plannedEndUtc, 'yyyy-MM-dd'),
         backgroundColor: 'lightblue',
-        extendedProps: { familyId },
+        extendedProps: { familyId, referralId, arrangementId: arrangement.id },
       }) as EventInput
   );
 
   const arrangementActualStarts = allArrangements
     .filter(({ arrangement }) => arrangement.startedAtUtc)
     .map(
-      ({ arrangement, person, familyId }) =>
+      ({ arrangement, person, familyId, referralId }) =>
         ({
           title: `▶ ${personNameString(person)} - ${arrangement.arrangementType}`,
           date: arrangement.startedAtUtc,
-          extendedProps: { familyId },
+          extendedProps: {
+            familyId,
+            referralId,
+            arrangementId: arrangement.id,
+          },
         }) as EventInput
     );
 
   const arrangementActualEnds = allArrangements
     .filter(({ arrangement }) => arrangement.endedAtUtc)
     .map(
-      ({ arrangement, person, familyId }) =>
+      ({ arrangement, person, familyId, referralId }) =>
         ({
           title: `⏹ ${personNameString(person)} - ${arrangement.arrangementType}`,
           date: arrangement.endedAtUtc,
-          extendedProps: { familyId },
+          extendedProps: {
+            familyId,
+            referralId,
+            arrangementId: arrangement.id,
+          },
         }) as EventInput
     );
 
   const arrangementCompletedRequirements = allArrangements.flatMap(
-    ({ arrangement, person, familyId }) =>
+    ({ arrangement, person, familyId, referralId }) =>
       arrangement.completedRequirements?.map(
         (completed) =>
           ({
             title: `✅ ${personNameString(person)} - ${completed.requirementName}`,
             date: completed.completedAtUtc,
-            extendedProps: { familyId },
+            extendedProps: {
+              familyId,
+              referralId,
+              arrangementId: arrangement.id,
+            },
           }) as EventInput
       )
   );
 
   const allArrangementMissingRequirements = allArrangements.flatMap(
-    ({ arrangement, person, familyId }) =>
+    ({ arrangement, person, familyId, referralId }) =>
       (arrangement.missingRequirements || []).map((missing) => ({
         person,
         missing,
         familyId,
+        referralId,
+        arrangementId: arrangement.id,
       }))
   );
 
   const arrangementPastDueRequirements = allArrangementMissingRequirements
     .filter(({ missing }) => missing.pastDueSince)
     .map(
-      ({ missing, person, familyId }) =>
+      ({ person, missing, familyId, referralId, arrangementId }) =>
         ({
           title: `❌ ${personNameString(person)} - ${missing.actionName}`,
           date:
             missing.pastDueSince && format(missing.pastDueSince, 'yyyy-MM-dd'),
           color: 'red',
-          extendedProps: { familyId },
+          extendedProps: {
+            familyId,
+            referralId,
+            arrangementId,
+          },
         }) as EventInput
     );
 
   const arrangementUpcomingRequirements = allArrangementMissingRequirements
     .filter(({ missing }) => missing.dueBy)
     .map(
-      ({ missing, person, familyId }) =>
+      ({ person, missing, familyId, referralId, arrangementId }) =>
         ({
           title: `📅 ${personNameString(person)} - ${missing.actionName}`,
           date: missing.dueBy && format(missing.dueBy, 'yyyy-MM-dd'),
-          extendedProps: { familyId },
+          extendedProps: {
+            familyId,
+            referralId,
+            arrangementId,
+          },
         }) as EventInput
     );
 
   const arrangementActualChildcare = allArrangements.flatMap(
-    ({ arrangement, person, familyId }) => {
+    ({ arrangement, person, familyId, referralId }) => {
       const durationEntries = (arrangement.childLocationHistory || []).map(
         (entry, index, history) => {
           const nextEntry =
@@ -140,7 +164,11 @@ export function DashboardCalendar() {
             backgroundColor:
               entry.plan === ChildLocationPlan.WithParent ? 'green' : '#a52a2a',
             end: nextEntry?.timestampUtc,
-            extendedProps: { familyId },
+            extendedProps: {
+              familyId,
+              referralId,
+              arrangementId: arrangement.id,
+            },
           } as EventInput;
         }
       );
@@ -151,7 +179,7 @@ export function DashboardCalendar() {
   );
 
   const arrangementPlannedChildcare = allArrangements.flatMap(
-    ({ arrangement, person, familyId }) => {
+    ({ arrangement, person, familyId, referralId }) => {
       const durationEntries = (arrangement.childLocationPlan || []).map(
         (entry, index, plan) => {
           const nextEntry = index < plan.length - 1 ? plan[index + 1] : null;
@@ -164,7 +192,11 @@ export function DashboardCalendar() {
                 ? 'lightgreen'
                 : '#e58a8a',
             end: nextEntry?.timestampUtc,
-            extendedProps: { familyId },
+            extendedProps: {
+              familyId,
+              referralId,
+              arrangementId: arrangement.id,
+            },
           } as EventInput;
         }
       );
@@ -268,8 +300,11 @@ export function DashboardCalendar() {
           //eventContent={renderEventContent}
           eventClassNames={() => 'calendar-event'}
           eventClick={(info) => {
-            const familyId = info.event.extendedProps.familyId;
-            if (familyId) {
+            const { familyId, referralId, arrangementId } =
+              info.event.extendedProps;
+            if (familyId && referralId && arrangementId) {
+              appNavigate.family(familyId, referralId, arrangementId);
+            } else if (familyId) {
               appNavigate.family(familyId);
             }
           }}

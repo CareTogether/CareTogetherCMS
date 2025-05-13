@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Configuration;
 using System.Linq;
 using System.Threading.Tasks;
 using CareTogether.Engines;
@@ -24,16 +25,21 @@ using Timelines;
 
 namespace CareTogether.Api.OData
 {
+    public sealed record Organization([property: Key] Guid Id);
+
     public sealed record Location([property: Key] Guid Id, Guid OrganizationId, string Name);
 
     public sealed record LocationUserAccess(
         [property: Key] Guid UserId,
+        [property: Key] Guid OrganizationId,
         [property: Key] Guid LocationId
     );
 
     public sealed record Family(
         [property: Key] Guid Id,
+        [property: ForeignKey("OrganizationId")] Organization Organization,
         [property: ForeignKey("LocationId")] Location Location,
+        Guid OrganizationId,
         Guid LocationId,
         string Name,
         string? PrimaryEmail,
@@ -44,6 +50,10 @@ namespace CareTogether.Api.OData
 
     public sealed record Person(
         [property: Key] Guid Id,
+        [property: ForeignKey("OrganizationId")] Organization Organization,
+        Guid OrganizationId,
+        [property: ForeignKey("LocationId")] Location Location,
+        Guid LocationId,
         [property: ForeignKey("FamilyId")] Family Family,
         Guid FamilyId,
         string FirstName,
@@ -61,6 +71,8 @@ namespace CareTogether.Api.OData
 
     public sealed record Community(
         [property: Key] Guid Id,
+        [property: ForeignKey("OrganizationId")] Organization Organization,
+        Guid OrganizationId,
         [property: ForeignKey("LocationId")] Location Location,
         Guid LocationId,
         string Name
@@ -76,6 +88,10 @@ namespace CareTogether.Api.OData
     );
 
     public sealed record FamilyRoleApproval(
+        [property: ForeignKey("OrganizationId")] Organization Organization,
+        Guid OrganizationId,
+        [property: ForeignKey("LocationId")] Location Location,
+        Guid LocationId,
         [property: ForeignKey("FamilyId")] Family Family,
         [property: Key] Guid FamilyId,
         [property: ForeignKey("RoleName")] Role Role,
@@ -86,6 +102,10 @@ namespace CareTogether.Api.OData
     );
 
     public sealed record IndividualRoleApproval(
+        [property: ForeignKey("OrganizationId")] Organization Organization,
+        Guid OrganizationId,
+        [property: ForeignKey("LocationId")] Location Location,
+        Guid LocationId,
         [property: ForeignKey("PersonId")] Person Person,
         [property: Key] Guid PersonId,
         [property: ForeignKey("RoleName")] Role Role,
@@ -98,6 +118,10 @@ namespace CareTogether.Api.OData
     );
 
     public sealed record FamilyRoleRemovedIndividual(
+        [property: ForeignKey("OrganizationId")] Organization Organization,
+        Guid OrganizationId,
+        [property: ForeignKey("LocationId")] Location Location,
+        Guid LocationId,
         [property: ForeignKey("PersonId")] Person Person,
         [property: Key] Guid PersonId,
         [property: ForeignKey("RoleName")] Role Role,
@@ -108,10 +132,18 @@ namespace CareTogether.Api.OData
         [property: Key] DateOnly End
     );
 
-    public sealed record Role([property: Key] string Name);
+    public sealed record Role(
+        [property: ForeignKey("OrganizationId")] Organization Organization,
+        Guid OrganizationId,
+        [property: Key] string Name
+    );
 
     public sealed record Referral(
         [property: Key] Guid Id,
+        [property: ForeignKey("OrganizationId")] Organization Organization,
+        Guid OrganizationId,
+        [property: ForeignKey("LocationId")] Location Location,
+        Guid LocationId,
         [property: ForeignKey("FamilyId")] Family Family,
         Guid FamilyId,
         DateOnly Opened,
@@ -123,6 +155,10 @@ namespace CareTogether.Api.OData
 
     public sealed record Arrangement(
         [property: Key] Guid Id,
+        [property: ForeignKey("OrganizationId")] Organization Organization,
+        Guid OrganizationId,
+        [property: ForeignKey("LocationId")] Location Location,
+        Guid LocationId,
         [property: ForeignKey("TypeName")] ArrangementType Type,
         string TypeName,
         [property: ForeignKey("ReferralId")] Referral Referral,
@@ -137,11 +173,19 @@ namespace CareTogether.Api.OData
     );
 
     public sealed record ArrangementType(
+        [property: ForeignKey("OrganizationId")] Organization Organization,
+        Guid OrganizationId,
+        [property: ForeignKey("LocationId")] Location Location,
+        Guid LocationId,
         [property: Key] string Type,
         ChildInvolvement ChildInvolvement
     );
 
     public sealed record ChildLocationRecord(
+        [property: ForeignKey("OrganizationId")] Organization Organization,
+        Guid OrganizationId,
+        [property: ForeignKey("LocationId")] Location Location,
+        Guid LocationId,
         [property: ForeignKey("ArrangementId")] Arrangement Arrangement,
         [property: Key] Guid ArrangementId,
         [property: ForeignKey("ChildPersonId")] Person Child,
@@ -155,6 +199,10 @@ namespace CareTogether.Api.OData
     ); // Provide a server-calculated duration that is accurate as of the request time.
 
     public sealed record FamilyFunctionAssignment(
+        [property: ForeignKey("OrganizationId")] Organization Organization,
+        Guid OrganizationId,
+        [property: ForeignKey("LocationId")] Location Location,
+        Guid LocationId,
         [property: ForeignKey("ArrangementId")] Arrangement Arrangement,
         [property: Key] Guid ArrangementId,
         [property: ForeignKey("FamilyId")] Family Family,
@@ -163,6 +211,10 @@ namespace CareTogether.Api.OData
     );
 
     public sealed record IndividualFunctionAssignment(
+        [property: ForeignKey("OrganizationId")] Organization Organization,
+        Guid OrganizationId,
+        [property: ForeignKey("LocationId")] Location Location,
+        Guid LocationId,
         [property: ForeignKey("ArrangementId")] Arrangement Arrangement,
         [property: Key] Guid ArrangementId,
         [property: ForeignKey("PersonId")] Person Person,
@@ -171,6 +223,10 @@ namespace CareTogether.Api.OData
     );
 
     public sealed record CommunityMemberFamily(
+        [property: ForeignKey("OrganizationId")] Organization Organization,
+        Guid OrganizationId,
+        [property: ForeignKey("LocationId")] Location Location,
+        Guid LocationId,
         [property: ForeignKey("CommunityId")] Community Community,
         [property: Key] Guid CommunityId,
         [property: ForeignKey("FamilyId")] Family Family,
@@ -178,6 +234,10 @@ namespace CareTogether.Api.OData
     );
 
     public sealed record CommunityRoleAssignment(
+        [property: ForeignKey("OrganizationId")] Organization Organization,
+        Guid OrganizationId,
+        [property: ForeignKey("LocationId")] Location Location,
+        Guid LocationId,
         [property: ForeignKey("CommunityId")] Community Community,
         [property: Key] Guid CommunityId,
         [property: ForeignKey("PersonId")] Person Person,
@@ -211,7 +271,7 @@ namespace CareTogether.Api.OData
     [Authorize(Policies.ForbidAnonymous, AuthenticationSchemes = "Basic")]
     public class LiveODataModelController : ODataController
     {
-        private sealed record DataAccessScope(Guid OrganizationId, bool Anonymize);
+        private sealed record DataAccessScope(Guid OrganizationId, bool Anonymize, bool IsGlobal);
 
         private readonly IPoliciesResource policiesResource;
         private readonly IAccountsResource accountsResource;
@@ -362,17 +422,74 @@ namespace CareTogether.Api.OData
             var organizationId = userDataAccessScope.OrganizationId;
             var anonymize = userDataAccessScope.Anonymize;
 
-            var result = await cache.GetOrAddAsync(
-                $"LiveODataModelController-RenderLiveModelAsync-{organizationId}-{(anonymize ? "ANON" : "PII")}",
-                async cacheEntry =>
-                {
-                    var result = await RenderLiveModelInternalAsync(organizationId, anonymize);
+            var isGlobal = userDataAccessScope.IsGlobal;
 
-                    cacheEntry.SlidingExpiration = TimeSpan.FromMinutes(1);
-                    cacheEntry.AbsoluteExpiration = DateTimeOffset.Now.AddMinutes(5);
+            var organizationIds = isGlobal
+                ? await accountsResource.GetValidOrganizationsAsync()
+                : [organizationId];
 
-                    return result;
-                }
+            var results = await organizationIds
+                .Select(async organizationId =>
+                    await cache.GetOrAddAsync(
+                        $"LiveODataModelController-RenderLiveModelAsync-{organizationId}-{(anonymize ? "ANON" : "PII")}",
+                        async cacheEntry =>
+                        {
+                            var result = await RenderLiveModelInternalAsync(
+                                organizationId,
+                                anonymize
+                            );
+
+                            cacheEntry.SlidingExpiration = TimeSpan.FromMinutes(1);
+                            cacheEntry.AbsoluteExpiration = DateTimeOffset.Now.AddMinutes(5);
+
+                            return result;
+                        }
+                    )
+                )
+                .WhenAll();
+
+            var result = results.Aggregate(
+                new LiveModel(
+                    Enumerable.Empty<Location>(),
+                    Enumerable.Empty<LocationUserAccess>(),
+                    Enumerable.Empty<Family>(),
+                    Enumerable.Empty<Person>(),
+                    Enumerable.Empty<Community>(),
+                    Enumerable.Empty<Role>(),
+                    Enumerable.Empty<FamilyRoleApproval>(),
+                    Enumerable.Empty<IndividualRoleApproval>(),
+                    Enumerable.Empty<FamilyRoleRemovedIndividual>(),
+                    Enumerable.Empty<Referral>(),
+                    Enumerable.Empty<Arrangement>(),
+                    Enumerable.Empty<ArrangementType>(),
+                    Enumerable.Empty<ChildLocationRecord>(),
+                    Enumerable.Empty<FamilyFunctionAssignment>(),
+                    Enumerable.Empty<IndividualFunctionAssignment>(),
+                    Enumerable.Empty<CommunityMemberFamily>(),
+                    Enumerable.Empty<CommunityRoleAssignment>()
+                ),
+                (acc, model) =>
+                    new LiveModel(
+                        acc.Locations.Concat(model.Locations),
+                        acc.LocationUserAccess.Concat(model.LocationUserAccess),
+                        acc.Families.Concat(model.Families),
+                        acc.People.Concat(model.People),
+                        acc.Communities.Concat(model.Communities),
+                        acc.Roles.Concat(model.Roles),
+                        acc.FamilyRoleApprovals.Concat(model.FamilyRoleApprovals),
+                        acc.IndividualRoleApprovals.Concat(model.IndividualRoleApprovals),
+                        acc.FamilyRoleRemovedIndividuals.Concat(model.FamilyRoleRemovedIndividuals),
+                        acc.Referrals.Concat(model.Referrals),
+                        acc.Arrangements.Concat(model.Arrangements),
+                        acc.ArrangementTypes.Concat(model.ArrangementTypes),
+                        acc.ChildLocationRecords.Concat(model.ChildLocationRecords),
+                        acc.FamilyFunctionAssignments.Concat(model.FamilyFunctionAssignments),
+                        acc.IndividualFunctionAssignments.Concat(
+                            model.IndividualFunctionAssignments
+                        ),
+                        acc.CommunityMemberFamilies.Concat(model.CommunityMemberFamilies),
+                        acc.CommunityRoleAssignments.Concat(model.CommunityRoleAssignments)
+                    )
             );
 
             return result!; // If this is actually null, then we are already throwing an exception anyways.
@@ -387,6 +504,8 @@ namespace CareTogether.Api.OData
                 organizationId
             );
 
+            var organization = new Organization(organizationId);
+
             var locationPolicies = await organizationConfiguration
                 .Locations.Select(async location =>
                     (
@@ -396,6 +515,7 @@ namespace CareTogether.Api.OData
                 )
                 .WhenAll();
 
+            // Currently, roles are defined at the organization level and assigned to users at the location level.
             var roles = locationPolicies
                 .SelectMany(locationPolicy =>
                 {
@@ -408,7 +528,7 @@ namespace CareTogether.Api.OData
                                 role => role.Value.VolunteerFamilyRoleType
                             )
                         )
-                        .Select(roleName => new Role(roleName));
+                        .Select(roleName => new Role(organization, organization.Id, roleName));
                 })
                 .Distinct()
                 .ToArray();
@@ -478,11 +598,13 @@ namespace CareTogether.Api.OData
                 .ToArray();
 
             var familiesWithInfo = familiesByLocation
-                .Select(x => RenderFamily(x.Item1, x.Item2.Family))
+                .Select(x => RenderFamily(organization, x.Item1, x.Item2.Family))
                 .ToArray();
             var families = familiesWithInfo.Select(family => family.Item2).ToArray();
 
-            var people = familiesWithInfo.SelectMany(x => RenderPeople(x.Item1, x.Item2)).ToArray();
+            var people = familiesWithInfo
+                .SelectMany(x => RenderPeople(organization, x.Item1, x.Item2))
+                .ToArray();
 
             var locationUserAccess = people
                 .Select(person =>
@@ -517,38 +639,59 @@ namespace CareTogether.Api.OData
                                 item.personId
                             )
                         )?.UserId,
+                        item.organizationId,
                         item.locationId
                     )
                 )
                 .WhenAll()
                 .Result.Where(item => item.userId != null)
-                .Select(item => new LocationUserAccess(item.userId ?? Guid.Empty, item.locationId));
+                .Select(item => new LocationUserAccess(
+                    item.userId ?? Guid.Empty,
+                    item.organizationId,
+                    item.locationId
+                ));
 
             var communitiesWithInfo = communitiesByLocation
-                .Select(x => RenderCommunity(x.location, x.Item2.Community))
+                .Select(x => RenderCommunity(organization, x.location, x.Item2.Community))
                 .ToArray();
             var communities = communitiesWithInfo.Select(community => community.Item2).ToArray();
 
             var familyRoleApprovals = familiesWithInfo
-                .SelectMany(x => RenderFamilyRoleApprovals(x.Item1, x.Item2, roles))
+                .SelectMany(x => RenderFamilyRoleApprovals(organization, x.Item1, x.Item2, roles))
                 .ToArray();
             var individualRoleApprovals = familiesWithInfo
-                .SelectMany(x => RenderIndividualRoleApprovals(x.Item1, x.Item2, people, roles))
+                .SelectMany(x =>
+                    RenderIndividualRoleApprovals(organization, x.Item1, x.Item2, people, roles)
+                )
                 .ToArray();
             var familyRoleRemovedIndividuals = familiesWithInfo
                 .SelectMany(x =>
-                    RenderFamilyRoleRemovedIndividuals(x.Item1, x.Item2, people, roles)
+                    RenderFamilyRoleRemovedIndividuals(
+                        organization,
+                        x.Item1,
+                        x.Item2,
+                        people,
+                        roles
+                    )
                 )
                 .ToArray();
 
             var referrals = familiesWithInfo
-                .SelectMany(x => RenderReferrals(x.Item1, x.Item2))
+                .SelectMany(x => RenderReferrals(organization, x.Item1, x.Item2))
                 .ToArray();
 
             var arrangementTypes = locationPolicies
                 .SelectMany(locationPolicy =>
                     locationPolicy.policy.ReferralPolicy.ArrangementPolicies.Select(
                         arrangementPolicy => new ArrangementType(
+                            organization,
+                            organization.Id,
+                            new Location(
+                                locationPolicy.location.Id,
+                                organization.Id,
+                                locationPolicy.location.Name
+                            ),
+                            locationPolicy.location.Id,
                             arrangementPolicy.ArrangementType,
                             arrangementPolicy.ChildInvolvement
                         )
@@ -559,19 +702,34 @@ namespace CareTogether.Api.OData
 
             var arrangements = familiesWithInfo
                 .SelectMany(x =>
-                    RenderArrangements(x.Item1, x.Item2, people, referrals, arrangementTypes)
+                    RenderArrangements(
+                        organization,
+                        x.Item1,
+                        x.Item2,
+                        people,
+                        referrals,
+                        arrangementTypes
+                    )
                 )
                 .ToArray();
 
             var childLocationRecords = familiesWithInfo
                 .SelectMany(x =>
-                    RenderChildLocationRecords(x.Item1, x.Item2, families, people, arrangements)
+                    RenderChildLocationRecords(
+                        organization,
+                        x.Item1,
+                        x.Item2,
+                        families,
+                        people,
+                        arrangements
+                    )
                 )
                 .ToArray();
 
             var familyFunctionAssignments = familiesWithInfo
                 .SelectMany(x =>
                     RenderFamilyFunctionAssignments(
+                        organization,
                         x.Item1,
                         x.Item2,
                         families,
@@ -584,6 +742,7 @@ namespace CareTogether.Api.OData
             var individualFunctionAssignments = familiesWithInfo
                 .SelectMany(x =>
                     RenderIndividualFunctionAssignments(
+                        organization,
                         x.Item1,
                         x.Item2,
                         families,
@@ -594,11 +753,15 @@ namespace CareTogether.Api.OData
                 .ToArray();
 
             var communityMemberFamilies = communitiesWithInfo
-                .SelectMany(x => RenderCommunityMemberFamilies(x.Item1, x.Item2, families))
+                .SelectMany(x =>
+                    RenderCommunityMemberFamilies(organization, x.Item1, x.Item2, families)
+                )
                 .ToArray();
 
             var communityRoleAssignments = communitiesWithInfo
-                .SelectMany(x => RenderCommunityRoleAssignments(x.Item1, x.Item2, people))
+                .SelectMany(x =>
+                    RenderCommunityRoleAssignments(organization, x.Item1, x.Item2, people)
+                )
                 .ToArray();
 
             return new LiveModel(
@@ -624,15 +787,29 @@ namespace CareTogether.Api.OData
 
         private DataAccessScope GetUserDataAccessScope()
         {
-            var singleOrganizationId = Guid.Parse(
-                User.Claims.Single(claim => claim.Type == Claims.OrganizationId).Value
+            Guid.TryParse(
+                User.Claims.SingleOrDefault(claim => claim.Type == Claims.OrganizationId)?.Value,
+                out var singleOrganizationId
             );
 
             var isResearcher =
                 User.Claims.SingleOrDefault(claim => claim.Type == Claims.Researcher)?.Value
                 == true.ToString();
 
-            return new DataAccessScope(singleOrganizationId, Anonymize: isResearcher);
+            var anonymize =
+                isResearcher
+                || User.Claims.SingleOrDefault(claim => claim.Type == Claims.DataDisclosure)?.Value
+                    == DataDisclosure.Anonymized.ToString();
+
+            var isGlobal =
+                User.Claims.SingleOrDefault(claim => claim.Type == Claims.Global)?.Value
+                == true.ToString();
+
+            return new DataAccessScope(
+                singleOrganizationId,
+                Anonymize: anonymize,
+                IsGlobal: isGlobal
+            );
         }
 
         private FamilyRecordsAggregate AnonymizeFamilyRecords(
@@ -945,6 +1122,7 @@ namespace CareTogether.Api.OData
         }
 
         private static (CombinedFamilyInfo, Family) RenderFamily(
+            Organization organization,
             Location location,
             CombinedFamilyInfo family
         )
@@ -1017,7 +1195,9 @@ namespace CareTogether.Api.OData
                 family,
                 new Family(
                     family.Family.Id,
+                    organization,
                     location,
+                    location.OrganizationId,
                     location.Id,
                     familyName,
                     bestEmail,
@@ -1029,6 +1209,7 @@ namespace CareTogether.Api.OData
         }
 
         private static IEnumerable<Person> RenderPeople(
+            Organization organization,
             CombinedFamilyInfo familyInfo,
             Family family
         )
@@ -1036,6 +1217,10 @@ namespace CareTogether.Api.OData
             return familyInfo
                 .Family.Adults.Select(adult => new Person(
                     adult.Item1.Id,
+                    organization,
+                    organization.Id,
+                    family.Location,
+                    family.Location.Id,
                     family,
                     family.Id,
                     adult.Item1.FirstName,
@@ -1049,6 +1234,10 @@ namespace CareTogether.Api.OData
                 .Concat(
                     familyInfo.Family.Children.Select(child => new Person(
                         child.Id,
+                        organization,
+                        organization.Id,
+                        family.Location,
+                        family.Location.Id,
                         family,
                         family.Id,
                         child.FirstName,
@@ -1063,6 +1252,7 @@ namespace CareTogether.Api.OData
         }
 
         private static (CommunityInfo, Community) RenderCommunity(
+            Organization organization,
             Location location,
             CommunityInfo community
         )
@@ -1071,6 +1261,8 @@ namespace CareTogether.Api.OData
                 community,
                 new Community(
                     community.Community.Id,
+                    organization,
+                    organization.Id,
                     location,
                     location.Id,
                     community.Community.Name
@@ -1079,6 +1271,7 @@ namespace CareTogether.Api.OData
         }
 
         private static IEnumerable<FamilyRoleApproval> RenderFamilyRoleApprovals(
+            Organization organization,
             CombinedFamilyInfo familyInfo,
             Family family,
             Role[] roles
@@ -1087,9 +1280,15 @@ namespace CareTogether.Api.OData
             return familyInfo.VolunteerFamilyInfo?.FamilyRoleApprovals.SelectMany(fra =>
                     fra.Value.EffectiveRoleApprovalStatus?.Ranges.Select(
                         range => new FamilyRoleApproval(
+                            organization,
+                            organization.Id,
+                            family.Location,
+                            family.Location.Id,
                             family,
                             family.Id,
-                            roles.Single(role => role.Name == fra.Key),
+                            roles.Single(role =>
+                                role.Name == fra.Key && role.OrganizationId == organization.Id
+                            ),
                             fra.Key,
                             range.Start,
                             range.End,
@@ -1100,6 +1299,7 @@ namespace CareTogether.Api.OData
         }
 
         private static IEnumerable<IndividualRoleApproval> RenderIndividualRoleApprovals(
+            Organization organization,
             CombinedFamilyInfo familyInfo,
             Family family,
             Person[] people,
@@ -1110,9 +1310,15 @@ namespace CareTogether.Api.OData
                     individual.Value.ApprovalStatusByRole.SelectMany(ira =>
                         ira.Value.EffectiveRoleApprovalStatus?.Ranges.Select(
                             range => new IndividualRoleApproval(
+                                organization,
+                                organization.Id,
+                                family.Location,
+                                family.Location.Id,
                                 people.Single(person => person.Id == individual.Key),
                                 individual.Key,
-                                roles.Single(role => role.Name == ira.Key),
+                                roles.Single(role =>
+                                    role.Name == ira.Key && role.OrganizationId == organization.Id
+                                ),
                                 ira.Key,
                                 family,
                                 family.Id,
@@ -1126,6 +1332,7 @@ namespace CareTogether.Api.OData
         }
 
         private static IEnumerable<FamilyRoleRemovedIndividual> RenderFamilyRoleRemovedIndividuals(
+            Organization organization,
             CombinedFamilyInfo familyInfo,
             Family family,
             Person[] people,
@@ -1140,9 +1347,16 @@ namespace CareTogether.Api.OData
                             )
                         )
                         .Select(removal => new FamilyRoleRemovedIndividual(
+                            organization,
+                            organization.Id,
+                            family.Location,
+                            family.Location.Id,
                             people.Single(person => person.Id == individual.Key),
                             individual.Key,
-                            roles.Single(role => role.Name == removal.RoleName),
+                            roles.Single(role =>
+                                role.Name == removal.RoleName
+                                && role.OrganizationId == organization.Id
+                            ),
                             removal.RoleName,
                             family,
                             family.Id,
@@ -1153,6 +1367,7 @@ namespace CareTogether.Api.OData
         }
 
         private static IEnumerable<Referral> RenderReferrals(
+            Organization organization,
             CombinedFamilyInfo familyInfo,
             Family family
         )
@@ -1166,6 +1381,10 @@ namespace CareTogether.Api.OData
             );
             return allReferralsInfo.Select(referralInfo => new Referral(
                 referralInfo.Id,
+                organization,
+                organization.Id,
+                family.Location,
+                family.Location.Id,
                 family,
                 family.Id,
                 DateOnly.FromDateTime(referralInfo.OpenedAtUtc),
@@ -1188,6 +1407,7 @@ namespace CareTogether.Api.OData
         }
 
         private static IEnumerable<Arrangement> RenderArrangements(
+            Organization organization,
             CombinedFamilyInfo familyInfo,
             Family family,
             Person[] people,
@@ -1212,6 +1432,10 @@ namespace CareTogether.Api.OData
                     );
                     return new Arrangement(
                         arrangement.Id,
+                        organization,
+                        organization.Id,
+                        family.Location,
+                        family.Location.Id,
                         arrangementTypes.Single(type => type.Type == arrangement.ArrangementType),
                         arrangement.ArrangementType,
                         referral,
@@ -1229,6 +1453,7 @@ namespace CareTogether.Api.OData
         }
 
         private static IEnumerable<ChildLocationRecord> RenderChildLocationRecords(
+            Organization organization,
             CombinedFamilyInfo familyInfo,
             Family family,
             Family[] families,
@@ -1270,6 +1495,10 @@ namespace CareTogether.Api.OData
                             );
 
                             return new ChildLocationRecord(
+                                organization,
+                                organization.Id,
+                                family.Location,
+                                family.Location.Id,
                                 arrangementRecord,
                                 arrangement.Id,
                                 arrangementPerson,
@@ -1289,6 +1518,7 @@ namespace CareTogether.Api.OData
         }
 
         private static IEnumerable<FamilyFunctionAssignment> RenderFamilyFunctionAssignments(
+            Organization organization,
             CombinedFamilyInfo familyInfo,
             Family family,
             Family[] families,
@@ -1310,6 +1540,10 @@ namespace CareTogether.Api.OData
                     var arrangementRecord = arrangements.Single(arr => arr.Id == arrangement.Id);
                     return arrangement.FamilyVolunteerAssignments.Select(
                         fva => new FamilyFunctionAssignment(
+                            organization,
+                            organization.Id,
+                            family.Location,
+                            family.Location.Id,
                             arrangementRecord,
                             arrangement.Id,
                             families.Single(f => f.Id == fva.FamilyId),
@@ -1322,6 +1556,7 @@ namespace CareTogether.Api.OData
         }
 
         private static IEnumerable<IndividualFunctionAssignment> RenderIndividualFunctionAssignments(
+            Organization organization,
             CombinedFamilyInfo familyInfo,
             Family family,
             Family[] families,
@@ -1343,6 +1578,10 @@ namespace CareTogether.Api.OData
                     var arrangementRecord = arrangements.Single(arr => arr.Id == arrangement.Id);
                     return arrangement.IndividualVolunteerAssignments.Select(
                         fva => new IndividualFunctionAssignment(
+                            organization,
+                            organization.Id,
+                            family.Location,
+                            family.Location.Id,
                             arrangementRecord,
                             arrangement.Id,
                             people.Single(p => p.Id == fva.PersonId),
@@ -1355,6 +1594,7 @@ namespace CareTogether.Api.OData
         }
 
         private static IEnumerable<CommunityMemberFamily> RenderCommunityMemberFamilies(
+            Organization organization,
             CommunityInfo communityInfo,
             Community community,
             Family[] families
@@ -1363,6 +1603,10 @@ namespace CareTogether.Api.OData
             return communityInfo
                 .Community.MemberFamilies.Where(familyId => families.Any(f => f.Id == familyId)) // Ignore deleted families
                 .Select(familyId => new CommunityMemberFamily(
+                    organization,
+                    organization.Id,
+                    community.Location,
+                    community.Location.Id,
                     community,
                     community.Id,
                     families.Single(f => f.Id == familyId),
@@ -1371,6 +1615,7 @@ namespace CareTogether.Api.OData
         }
 
         private static IEnumerable<CommunityRoleAssignment> RenderCommunityRoleAssignments(
+            Organization organization,
             CommunityInfo communityInfo,
             Community community,
             Person[] people
@@ -1381,6 +1626,10 @@ namespace CareTogether.Api.OData
                     people.Any(p => p.Id == roleAssignment.PersonId)
                 ) // Ignore deleted people
                 .Select(roleAssignment => new CommunityRoleAssignment(
+                    organization,
+                    organization.Id,
+                    community.Location,
+                    community.Location.Id,
                     community,
                     community.Id,
                     people.Single(p => p.Id == roleAssignment.PersonId),

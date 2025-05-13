@@ -85,6 +85,7 @@ import FamilyScreenPageVersionSwitch from './FamilyScreenPageVersionSwitch';
 import posthog from 'posthog-js';
 import { AssignmentsSection } from '../Families/AssignmentsSection';
 import { useMemo } from 'react';
+import { useSyncReferralIdInURL } from '../Hooks/useSyncReferralIdInURL';
 
 const sortArrangementsByStartDateDescThenCreateDateDesc = (
   a: Arrangement,
@@ -117,6 +118,8 @@ export function FamilyScreen() {
   const familyCommunityInfo = allCommunityInfo?.filter((c) =>
     c.community?.memberFamilies?.includes(familyId)
   );
+
+  const appNavigate = useAppNavigate();
 
   const familyLookup = useFamilyLookup();
   const family = familyLookup(familyId)!;
@@ -166,7 +169,7 @@ export function FamilyScreen() {
 
   const [selectedReferralId, setSelectedReferralId] = useState<
     string | undefined
-  >(firstReferralId);
+  >(referralIdFromQuery || firstReferralId);
 
   const selectedReferral = allReferrals.find(
     (referral) => referral.id === selectedReferralId
@@ -174,24 +177,33 @@ export function FamilyScreen() {
 
   const arrangementRefs = useRef<Record<string, HTMLDivElement | null>>({});
 
-  useEffect(() => {
-    if (
-      referralIdFromQuery &&
-      allReferrals.some((ref) => ref.id === referralIdFromQuery)
-    ) {
-      setSelectedReferralId(referralIdFromQuery);
-    }
-  }, [referralIdFromQuery, allReferrals]);
-
   // If user navigates to a different family without leaving current page (i.e. not unmounting this component),
   // we want to auto-select the first referral
   useEffect(() => {
     if (!selectedReferral) {
       posthog.capture('auto selected first referral');
 
-      setSelectedReferralId(firstReferralId);
+      if (firstReferralId) {
+        setSelectedReferralId(firstReferralId);
+      }
     }
-  }, [selectedReferral, firstReferralId]);
+  }, [firstReferralId, selectedReferral]);
+
+  useSyncReferralIdInURL({ familyId, referralIdFromQuery, selectedReferralId });
+
+  useEffect(() => {
+    const searchParams = new URLSearchParams(window.location.search);
+    const hasArrangementId = searchParams.has('arrangementId');
+
+    if (hasArrangementId) {
+      appNavigate.family(
+        familyId,
+        searchParams.get('referralId') ?? undefined,
+        undefined,
+        { replace: true }
+      );
+    }
+  }, [familyId, appNavigate]);
 
   const [familyMoreMenuAnchor, setFamilyMoreMenuAnchor] =
     useState<Element | null>(null);
@@ -348,7 +360,9 @@ export function FamilyScreen() {
     }
   }, [arrangementIdFromQuery, selectedReferral, filteredArrangements]);
 
-  const appNavigate = useAppNavigate();
+  function handleReferralChange(referralId: string) {
+    setSelectedReferralId(referralId);
+  }
 
   const printContentRef = useRef<HTMLDivElement>(null);
   const reactToPrintFn = useReactToPrint({ contentRef: printContentRef });
@@ -665,7 +679,10 @@ export function FamilyScreen() {
                             key={referral.id}
                             value={referral.id}
                             control={<Radio />}
-                            onChange={() => setSelectedReferralId(referral.id)}
+                            onChange={() => {
+                              if (referral.id)
+                                handleReferralChange(referral.id);
+                            }}
                             label={
                               <Box display="flex" alignItems="center" gap={1}>
                                 <Typography className="ph-unmask">
