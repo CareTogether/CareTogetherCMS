@@ -112,7 +112,7 @@ export function ArrangementPlannedDuration({
           }
           unavailableTooltip="Only available when the arrangement is cancelled"
           onChange={(newDate) =>
-            onDateChange(referralsModel.editArrangementRequestedAt, newDate)
+            onDateChange(referralsModel.editArrangementCancelledAt, newDate)
           }
         />
       </Cell>

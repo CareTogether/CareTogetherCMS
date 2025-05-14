@@ -235,6 +235,13 @@ namespace CareTogether.Resources.Referrals
         DateTime RequestedAtUtc
     ) : ArrangementsCommand(FamilyId, ReferralId, ArrangementIds);
 
+    public sealed record EditArrangementCancelledAt(
+        Guid FamilyId,
+        Guid ReferralId,
+        ImmutableList<Guid> ArrangementIds,
+        DateTime CancelledAtUtc
+    ) : ArrangementsCommand(FamilyId, ReferralId, ArrangementIds);
+
     public sealed record CompleteArrangementRequirement(
         Guid FamilyId,
         Guid ReferralId,

@@ -384,6 +384,13 @@ namespace CareTogether.Resources.Referrals
                                     },
                                     null
                                 ),
+                                EditArrangementCancelledAt c => (
+                                    arrangementEntry with
+                                    {
+                                        CancelledAtUtc = c.CancelledAtUtc,
+                                    },
+                                    null
+                                ),
                                 CompleteArrangementRequirement c => (
                                     arrangementEntry with
                                     {

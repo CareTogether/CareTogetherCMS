@@ -466,6 +466,7 @@ namespace CareTogether.Engines.Authorization
                     EditArrangementStartTime => Permission.EditArrangement,
                     EditArrangementEndTime => Permission.EditArrangement,
                     EditArrangementRequestedAt => Permission.EditArrangement,
+                    EditArrangementCancelledAt => Permission.EditArrangement,
                     CompleteArrangementRequirement =>
                         Permission.EditArrangementRequirementCompletion,
                     CompleteVolunteerFamilyAssignmentRequirement =>

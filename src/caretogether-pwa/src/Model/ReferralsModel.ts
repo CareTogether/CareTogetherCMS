@@ -54,6 +54,7 @@ import {
   EditArrangementReason,
   EditArrangementRequestedAt,
   EditArrangementEndTime,
+  EditArrangementCancelledAt,
 } from '../GeneratedClient';
 import { useAtomicRecordsCommandCallback } from './DirectoryModel';
 import { visibleFamiliesQuery } from './Data';
@@ -604,6 +605,22 @@ export function useReferralsModel() {
       return command;
     }
   );
+  const editArrangementCancelledAt = useArrangementsCommandCallbackWithLocation(
+    async (
+      partneringFamilyId: string,
+      referralId: string,
+      arrangementId: string,
+      cancelledAtLocal: Date
+    ) => {
+      const command = new EditArrangementCancelledAt({
+        familyId: partneringFamilyId,
+        referralId: referralId,
+        arrangementIds: [arrangementId],
+      });
+      command.cancelledAtUtc = cancelledAtLocal;
+      return command;
+    }
+  );
   const planArrangementEnd = useArrangementsCommandCallbackWithLocation(
     async (
       partneringFamilyId: string,
@@ -939,6 +956,7 @@ export function useReferralsModel() {
     editArrangementStartTime,
     editArrangementEndTime,
     editArrangementRequestedAt,
+    editArrangementCancelledAt,
     planArrangementEnd,
     endArrangement,
     reopenArrangement,
