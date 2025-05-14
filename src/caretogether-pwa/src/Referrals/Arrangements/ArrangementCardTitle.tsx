@@ -15,6 +15,9 @@ type ArrangementCardTitleProps = {
   partneringFamilyId: string;
   referralId: string;
   arrangement: Arrangement;
+  cancelButton: React.ReactNode;
+  startButton: React.ReactNode;
+  endButton: React.ReactNode;
 };
 
 export function ArrangementCardTitle({
@@ -22,6 +25,9 @@ export function ArrangementCardTitle({
   partneringFamilyId,
   referralId,
   arrangement,
+  cancelButton,
+  startButton,
+  endButton,
 }: ArrangementCardTitleProps) {
   const now = new Date();
   const permissions = useFamilyIdPermissions(partneringFamilyId);
@@ -50,8 +56,20 @@ export function ArrangementCardTitle({
       {!summaryOnly && (
         <span className="ph-unmask" style={{ marginLeft: 0, float: 'right' }}>
           {arrangement.phase === ArrangementPhase.SettingUp && (
-            <span>Setting up</span>
+            <>
+              <span>Setting up</span>
+              {cancelButton}
+            </>
           )}
+
+          {arrangement.phase === ArrangementPhase.ReadyToStart && (
+            <>
+              {cancelButton}
+              {startButton}
+            </>
+          )}
+
+          {arrangement.phase === ArrangementPhase.Started && endButton}
 
           {permissions(Permission.EditArrangement) &&
             arrangement.phase === ArrangementPhase.Ended && (

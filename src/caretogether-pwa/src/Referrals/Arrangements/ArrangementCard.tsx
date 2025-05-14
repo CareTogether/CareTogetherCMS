@@ -32,17 +32,16 @@ export function ArrangementCard({
   const [showCancelDialog, setShowCancelDialog] = useState(false);
   const [showEndDialog, setShowEndDialog] = useState(false);
 
-  const cancelButton =
-    !summaryOnly && arrangement.phase === ArrangementPhase.SettingUp ? (
-      <Button
-        size="small"
-        variant="outlined"
-        onClick={() => setShowCancelDialog(true)}
-        sx={{ ml: 1 }}
-      >
-        Cancel
-      </Button>
-    ) : null;
+  const cancelButton = !summaryOnly ? (
+    <Button
+      size="small"
+      variant="outlined"
+      onClick={() => setShowCancelDialog(true)}
+      sx={{ ml: 1 }}
+    >
+      Cancel
+    </Button>
+  ) : null;
 
   const startButton = !summaryOnly ? (
     <Button
@@ -100,6 +99,9 @@ export function ArrangementCard({
             partneringFamilyId={partneringFamily.family!.id!}
             referralId={referralId}
             arrangement={arrangement}
+            cancelButton={cancelButton}
+            startButton={startButton}
+            endButton={endButton}
           />
         }
       />
