@@ -256,8 +256,6 @@ export function FamilyScreen() {
 
   useScreenTitle(family ? `${familyLastName(family)} Family` : '...');
 
-  //
-
   function handleReferralChange(referralId: string) {
     setSelectedReferralId(referralId);
   }
