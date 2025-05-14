@@ -1,17 +1,11 @@
-import { Card, CardContent, Button, CardHeader } from '@mui/material';
-import { useState } from 'react';
-import {
-  Arrangement,
-  CombinedFamilyInfo,
-  ArrangementPhase,
-} from '../../GeneratedClient';
+import { Card, CardContent, CardHeader } from '@mui/material';
+import { Arrangement, CombinedFamilyInfo } from '../../GeneratedClient';
 import { useRecoilValue } from 'recoil';
 import { policyData } from '../../Model/ConfigurationModel';
 import { ArrangementPhaseSummary } from './ArrangementPhaseSummary';
 import { ArrangementCardTitle } from './ArrangementCardTitle';
 import { ArrangementCardHeaderSection } from './ArrangementCardHeaderSection';
 import { ArrangementCardDetailsSection } from './ArrangementCardDetailsSection';
-import { ArrangementPhaseDialogs } from './ArrangementPhaseDialogs';
 import { useRequirementContextData } from './useRequirementContextData';
 
 export type ArrangementCardProps = {
@@ -28,42 +22,6 @@ export function ArrangementCard({
   summaryOnly,
 }: ArrangementCardProps) {
   const policy = useRecoilValue(policyData);
-  const [showStartDialog, setShowStartDialog] = useState(false);
-  const [showCancelDialog, setShowCancelDialog] = useState(false);
-  const [showEndDialog, setShowEndDialog] = useState(false);
-
-  const cancelButton = !summaryOnly ? (
-    <Button
-      size="small"
-      variant="outlined"
-      onClick={() => setShowCancelDialog(true)}
-      sx={{ ml: 1 }}
-    >
-      Cancel
-    </Button>
-  ) : null;
-
-  const startButton = !summaryOnly ? (
-    <Button
-      size="small"
-      variant="contained"
-      onClick={() => setShowStartDialog(true)}
-      sx={{ ml: 1 }}
-    >
-      Start
-    </Button>
-  ) : null;
-
-  const endButton = !summaryOnly ? (
-    <Button
-      size="small"
-      variant="outlined"
-      onClick={() => setShowEndDialog(true)}
-      sx={{ ml: 1 }}
-    >
-      End
-    </Button>
-  ) : null;
 
   const arrangementPolicy = policy.referralPolicy?.arrangementPolicies?.find(
     (a) => a.arrangementType === arrangement.arrangementType
@@ -99,9 +57,6 @@ export function ArrangementCard({
             partneringFamilyId={partneringFamily.family!.id!}
             referralId={referralId}
             arrangement={arrangement}
-            cancelButton={cancelButton}
-            startButton={startButton}
-            endButton={endButton}
           />
         }
       />
@@ -121,9 +76,6 @@ export function ArrangementCard({
           arrangement={arrangement}
           summaryOnly={summaryOnly}
           arrangementPolicy={arrangementPolicy}
-          cancelButton={cancelButton}
-          startButton={startButton}
-          endButton={endButton}
         />
 
         {!summaryOnly && (
@@ -136,17 +88,6 @@ export function ArrangementCard({
           />
         )}
       </CardContent>
-
-      <ArrangementPhaseDialogs
-        referralId={referralId}
-        arrangement={arrangement}
-        openStart={showStartDialog}
-        openCancel={showCancelDialog}
-        openEnd={showEndDialog}
-        onCloseStart={() => setShowStartDialog(false)}
-        onCloseCancel={() => setShowCancelDialog(false)}
-        onCloseEnd={() => setShowEndDialog(false)}
-      />
     </Card>
   );
 }
