@@ -15,9 +15,9 @@ type ArrangementCardTitleProps = {
   partneringFamilyId: string;
   referralId: string;
   arrangement: Arrangement;
-  cancelButton: React.ReactNode;
-  startButton: React.ReactNode;
-  endButton: React.ReactNode;
+  cancelButton?: React.ReactNode;
+  startButton?: React.ReactNode;
+  endButton?: React.ReactNode;
 };
 
 export function ArrangementCardTitle({

@@ -1,4 +1,4 @@
-import { Grid } from '@mui/material';
+import { Box, Grid, Stack } from '@mui/material';
 import { useFamilyIdPermissions } from '../../Model/SessionModel';
 import {
   Arrangement,
@@ -9,6 +9,7 @@ import {
 import { useReferralsModel } from '../../Model/ReferralsModel';
 import { DateDisplayEditor } from './DateDisplayEditor';
 import { useBackdrop } from '../../Hooks/useBackdrop';
+import { format } from 'date-fns';
 
 interface ArrangementPlannedDurationProps {
   partneringFamily: CombinedFamilyInfo;
@@ -61,6 +62,25 @@ export function ArrangementPlannedDuration({
     });
 
   const canEdit = !summaryOnly && permissions(Permission.EditArrangement);
+
+  if (summaryOnly) {
+    return (
+      <Stack className="ph-unmask" direction="column" sx={{ clear: 'both' }}>
+        <Box>
+          <span>Planned start:&nbsp;</span>
+          {arrangement.plannedStartUtc
+            ? format(arrangement.plannedStartUtc, 'M/d/yyyy')
+            : '-'}
+        </Box>
+        <Box>
+          <span>Planned end:&nbsp;</span>
+          {arrangement.plannedEndUtc
+            ? format(arrangement.plannedEndUtc, 'M/d/yyyy')
+            : '-'}
+        </Box>
+      </Stack>
+    );
+  }
 
   return (
     <Grid
