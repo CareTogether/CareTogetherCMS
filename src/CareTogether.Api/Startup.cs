@@ -316,16 +316,6 @@ namespace CareTogether.Api
                                     return;
                                 }
 
-                                if (
-                                    !Guid.TryParse(context.Username, out var assertedOrganizationId)
-                                )
-                                {
-                                    context.Fail(
-                                        "The username must be an organization ID in GUID format."
-                                    );
-                                    return;
-                                }
-
                                 var apiAccessEntries = Configuration
                                     .GetSection("GlobalApiAccess")
                                     .Get<ApiAccessEntry[]>();
@@ -352,6 +342,16 @@ namespace CareTogether.Api
                                         )
                                     );
                                     context.Success();
+                                    return;
+                                }
+
+                                if (
+                                    !Guid.TryParse(context.Username, out var assertedOrganizationId)
+                                )
+                                {
+                                    context.Fail(
+                                        "The username must be an organization ID in GUID format."
+                                    );
                                     return;
                                 }
 
