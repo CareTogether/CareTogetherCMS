@@ -553,7 +553,10 @@ namespace CareTogether.Api.OData
                     (location, i) =>
                         (
                             location,
-                            anonymousZipCode: anonymize ? anonymousLocationZipCodes[i] : null
+                            // Use modulo to safely get a zip code regardless of how many locations exist
+                            anonymousZipCode: anonymize
+                                ? anonymousLocationZipCodes[i % anonymousLocationZipCodes.Length]
+                                : null
                         )
                 )
                 .ZipSelectManyAsync(location =>
