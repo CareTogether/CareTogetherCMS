@@ -1484,6 +1484,7 @@ namespace CareTogether.Api.OData
                         {
                             var receivingFamily = families.Single(f =>
                                 f.Id == history.ChildLocationFamilyId
+                                && f.OrganizationId == organization.Id
                             );
                             var nextLocation =
                                 arrangement.ChildLocationHistory.Count > i + 1
@@ -1580,8 +1581,7 @@ namespace CareTogether.Api.OData
                 {
                     var arrangementRecord = arrangements.Single(arr => arr.Id == arrangement.Id);
                     return arrangement
-                        .IndividualVolunteerAssignments
-                        .Select(fva =>
+                        .IndividualVolunteerAssignments.Select(fva =>
                         {
                             var person = people.SingleOrDefault(p => p.Id == fva.PersonId);
                             if (person == null)
