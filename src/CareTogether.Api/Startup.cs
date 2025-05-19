@@ -3,6 +3,8 @@ using System.Linq;
 using System.Security.Claims;
 using System.Threading.Tasks;
 using Azure.Storage.Blobs;
+using CareTogether.Api.Controllers.AppOwnsData.Models;
+using CareTogether.Api.Controllers.AppOwnsData.Services;
 using CareTogether.Api.OData;
 using CareTogether.Engines.Authorization;
 using CareTogether.Engines.PolicyEvaluation;
@@ -58,6 +60,14 @@ namespace CareTogether.Api
 
         public void ConfigureServices(IServiceCollection services)
         {
+            // Register AadService and PbiEmbedService for dependency injection
+            services.AddScoped(typeof(AadService)).AddScoped(typeof(PbiEmbedService));
+
+            // Loading appsettings.json in C# Model classes
+            services
+                .Configure<AzureAd>(Configuration.GetSection("AzureAd"))
+                .Configure<PowerBI>(Configuration.GetSection("PowerBI"));
+
             services.AddApplicationInsightsTelemetry();
 
             services.AddSingleton<ITargetingContextAccessor, UserTargetingContextAccessor>();

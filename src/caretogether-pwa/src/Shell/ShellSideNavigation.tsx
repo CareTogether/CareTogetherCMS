@@ -11,6 +11,7 @@ import PermPhoneMsgIcon from '@mui/icons-material/PermPhoneMsg';
 import PeopleIcon from '@mui/icons-material/People';
 import SettingsIcon from '@mui/icons-material/Settings';
 import Diversity3Icon from '@mui/icons-material/Diversity3';
+import InsightsIcon from '@mui/icons-material/Insights';
 import DashboardIcon from '@mui/icons-material/Dashboard';
 import SupportIcon from '@mui/icons-material/Support';
 import { ListItemLink } from './ListItemLink';
@@ -116,6 +117,12 @@ function SideNavigationMenu({ open }: SideNavigationMenuProps) {
               icon={<Diversity3Icon sx={{ color: '#fff8' }} />}
             />
           )}
+          <ListItemLink
+            className="ph-unmask"
+            to={`${locationPrefix}/reports`}
+            primary="Reports"
+            icon={<InsightsIcon sx={{ color: '#fff8' }} />}
+          />
           {permissions(Permission.AccessSettingsScreen) && (
             <>
               <Divider />

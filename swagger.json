@@ -685,6 +685,46 @@
         }
       }
     },
+    "/api/{organizationId}/{locationId}/Records/getEmbedInfo": {
+      "get": {
+        "tags": [
+          "Records"
+        ],
+        "operationId": "Records_GetEmbedInfo",
+        "parameters": [
+          {
+            "name": "organizationId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "x-position": 1
+          },
+          {
+            "name": "locationId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "x-position": 2
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EmbedParams"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/Users/me/tenantAccess": {
       "get": {
         "tags": [
@@ -6947,6 +6987,58 @@
             }
           }
         ]
+      },
+      "EmbedParams": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "type": {
+            "type": "string"
+          },
+          "embedReport": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/EmbedReport"
+            }
+          },
+          "embedToken": {
+            "$ref": "#/components/schemas/EmbedToken"
+          }
+        }
+      },
+      "EmbedReport": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "reportId": {
+            "type": "string",
+            "format": "guid"
+          },
+          "reportName": {
+            "type": "string"
+          },
+          "embedUrl": {
+            "type": "string"
+          }
+        }
+      },
+      "EmbedToken": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "token": {
+            "type": "string",
+            "nullable": true
+          },
+          "tokenId": {
+            "type": "string",
+            "format": "guid"
+          },
+          "expiration": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
       },
       "UserAccess": {
         "type": "object",
