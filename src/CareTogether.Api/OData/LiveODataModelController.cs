@@ -1551,7 +1551,11 @@ namespace CareTogether.Api.OData
                             family.Location.Id,
                             arrangementRecord,
                             arrangement.Id,
-                            families.Single(f => f.Id == fva.FamilyId),
+                            families.Single(f =>
+                                f.Id == fva.FamilyId
+                                && f.OrganizationId == organization.Id
+                                && f.LocationId == family.Location.Id
+                            ),
                             fva.FamilyId,
                             fva.ArrangementFunction
                         )
