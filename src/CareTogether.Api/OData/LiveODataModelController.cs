@@ -217,7 +217,7 @@ namespace CareTogether.Api.OData
         Guid LocationId,
         [property: ForeignKey("ArrangementId")] Arrangement Arrangement,
         [property: Key] Guid ArrangementId,
-        [property: ForeignKey("PersonId")] Person Person,
+        [property: ForeignKey("PersonId")] Person? Person,
         [property: Key] Guid PersonId,
         [property: Key] string Function
     );
@@ -1587,7 +1587,7 @@ namespace CareTogether.Api.OData
                             family.Location.Id,
                             arrangementRecord,
                             arrangement.Id,
-                            people.Single(p => p.Id == fva.PersonId),
+                            people.SingleOrDefault(p => p.Id == fva.PersonId),
                             fva.PersonId,
                             fva.ArrangementFunction
                         )
