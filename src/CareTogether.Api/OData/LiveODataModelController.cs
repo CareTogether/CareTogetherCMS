@@ -1485,6 +1485,7 @@ namespace CareTogether.Api.OData
                             var receivingFamily = families.Single(f =>
                                 f.Id == history.ChildLocationFamilyId
                                 && f.OrganizationId == organization.Id
+                                && f.LocationId == family.Location.Id
                             );
                             var nextLocation =
                                 arrangement.ChildLocationHistory.Count > i + 1
