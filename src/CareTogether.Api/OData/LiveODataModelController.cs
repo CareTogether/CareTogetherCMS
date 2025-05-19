@@ -1579,19 +1579,29 @@ namespace CareTogether.Api.OData
                 return referralInfo.Arrangements.SelectMany(arrangement =>
                 {
                     var arrangementRecord = arrangements.Single(arr => arr.Id == arrangement.Id);
-                    return arrangement.IndividualVolunteerAssignments.Select(
-                        fva => new IndividualFunctionAssignment(
-                            organization,
-                            organization.Id,
-                            family.Location,
-                            family.Location.Id,
-                            arrangementRecord,
-                            arrangement.Id,
-                            people.Single(p => p.Id == fva.PersonId),
-                            fva.PersonId,
-                            fva.ArrangementFunction
-                        )
-                    );
+                    return arrangement
+                        .IndividualVolunteerAssignments
+                        .Select(fva =>
+                        {
+                            var person = people.SingleOrDefault(p => p.Id == fva.PersonId);
+                            if (person == null)
+                            {
+                                return null;
+                            }
+                            return new IndividualFunctionAssignment(
+                                organization,
+                                organization.Id,
+                                family.Location,
+                                family.Location.Id,
+                                arrangementRecord,
+                                arrangement.Id,
+                                person,
+                                fva.PersonId,
+                                fva.ArrangementFunction
+                            );
+                        })
+                        .Where(fva => fva != null)
+                        .Cast<IndividualFunctionAssignment>();
                 });
             });
         }
