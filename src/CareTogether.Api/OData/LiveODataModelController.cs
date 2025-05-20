@@ -432,38 +432,42 @@ namespace CareTogether.Api.OData
                 ? await accountsResource.GetValidOrganizationsAsync()
                 : [organizationId];
 
-            var results = await organizationIds
-                .Select(async organizationId =>
-                    await cache.GetOrAddAsync(
-                        $"LiveODataModelController-RenderLiveModelAsync-{organizationId}-{(anonymize ? "ANON" : "PII")}",
-                        async cacheEntry =>
-                        {
-                            try
+            var results = (
+                await organizationIds
+                    .Select(async organizationId =>
+                        await cache.GetOrAddAsync(
+                            $"LiveODataModelController-RenderLiveModelAsync-{organizationId}-{(anonymize ? "ANON" : "PII")}",
+                            async cacheEntry =>
                             {
-                                var result = await RenderLiveModelInternalAsync(
-                                    organizationId,
-                                    anonymize
-                                );
+                                try
+                                {
+                                    var result = await RenderLiveModelInternalAsync(
+                                        organizationId,
+                                        anonymize
+                                    );
 
-                                cacheEntry.SlidingExpiration = TimeSpan.FromMinutes(1);
-                                cacheEntry.AbsoluteExpiration = DateTimeOffset.Now.AddMinutes(5);
+                                    cacheEntry.SlidingExpiration = TimeSpan.FromMinutes(1);
+                                    cacheEntry.AbsoluteExpiration = DateTimeOffset.Now.AddMinutes(
+                                        5
+                                    );
 
-                                return result;
+                                    return result;
+                                }
+                                catch (System.Exception exception)
+                                {
+                                    logger.LogError(
+                                        exception,
+                                        "Exception occurred while loading data for organization '{OrganizationId}'.",
+                                        organizationId
+                                    );
+
+                                    return null;
+                                }
                             }
-                            catch (System.Exception exception)
-                            {
-                                logger.LogError(
-                                    exception,
-                                    "Exception occurred while loading data for organization '{OrganizationId}'.",
-                                    organizationId
-                                );
-
-                                return null;
-                            }
-                        }
+                        )
                     )
-                )
-                .WhenAll();
+                    .WhenAll()
+            ).Where(item => item != null).Cast<LiveModel>();
 
             var result = results.Aggregate(
                 new LiveModel(
