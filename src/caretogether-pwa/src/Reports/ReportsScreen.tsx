@@ -4,12 +4,13 @@ import { PowerBIEmbed } from 'powerbi-client-react';
 import { useEffect, useState } from 'react';
 import { api } from '../Api/Api';
 import { useRecoilValue } from 'recoil';
-import { selectedLocationContextState } from '../Model/Data';
+import { selectedLocationContextState, useDataLoaded } from '../Model/Data';
 import styles from './styles.module.css';
 import { Typography } from '@mui/material';
 import { useGlobalPermissions } from '../Model/SessionModel';
 import { Permission } from '../GeneratedClient';
 import { useNavigate } from 'react-router-dom';
+import { ProgressBackdrop } from '../Shell/ProgressBackdrop';
 
 export function ReportsScreen() {
   useScreenTitle('Reports');
@@ -20,6 +21,7 @@ export function ReportsScreen() {
     accessToken: string;
   } | null>(null);
 
+  const [loading, setLoading] = useState<boolean | null>(true);
   const [error, setError] = useState<boolean | null>(null);
 
   const { organizationId, locationId } = useRecoilValue(
@@ -50,12 +52,21 @@ export function ReportsScreen() {
       .catch((error) => {
         console.error('Error fetching embed info:', error);
         setError(true);
+      })
+      .finally(() => {
+        setLoading(false);
       });
-  }, []);
+  }, [locationId, organizationId]);
+
+  const dataLoaded = useDataLoaded();
 
   const navigate = useNavigate();
 
   const permissions = useGlobalPermissions();
+
+  if (!dataLoaded || loading) {
+    return <ProgressBackdrop>Loading reports...</ProgressBackdrop>;
+  }
 
   if (!permissions(Permission.AccessReportsScreen)) {
     return navigate('/');
@@ -83,9 +94,6 @@ export function ReportsScreen() {
               filters: {
                 expanded: false,
               },
-              // pageNavigation: {
-              //   position: models.PageNavigationPosition.Left,
-              // },
             },
 
             background: models.BackgroundType.Transparent,
@@ -118,9 +126,6 @@ export function ReportsScreen() {
           ])
         }
         cssClassName={styles.report}
-        // getEmbeddedComponent={(embeddedReport) => {
-        //   this.report = embeddedReport as Report;
-        // }}
       />
     )
   );
