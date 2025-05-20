@@ -7,6 +7,9 @@ import { useRecoilValue } from 'recoil';
 import { selectedLocationContextState } from '../Model/Data';
 import styles from './styles.module.css';
 import { Typography } from '@mui/material';
+import { useGlobalPermissions } from '../Model/SessionModel';
+import { Permission } from '../GeneratedClient';
+import { useNavigate } from 'react-router-dom';
 
 export function ReportsScreen() {
   useScreenTitle('Reports');
@@ -49,6 +52,14 @@ export function ReportsScreen() {
         setError(true);
       });
   }, []);
+
+  const navigate = useNavigate();
+
+  const permissions = useGlobalPermissions();
+
+  if (!permissions(Permission.AccessReportsScreen)) {
+    return navigate('/');
+  }
 
   if (error) {
     return (
