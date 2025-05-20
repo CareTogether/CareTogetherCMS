@@ -19,6 +19,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.OData.Query;
 using Microsoft.AspNetCore.OData.Routing.Controllers;
+using Microsoft.Extensions.Logging;
 using Nito.AsyncEx;
 using NSwag.Annotations;
 using Timelines;
@@ -277,18 +278,21 @@ namespace CareTogether.Api.OData
         private readonly IAccountsResource accountsResource;
         private readonly IRecordsManager recordsManager;
         private readonly IAppCache cache;
+        private readonly ILogger<LiveODataModelController> logger;
 
         public LiveODataModelController(
             IPoliciesResource policiesResource,
             IAccountsResource accountsResource,
             IRecordsManager recordsManager,
-            IAppCache cache
+            IAppCache cache,
+            ILogger<LiveODataModelController> logger
         )
         {
             this.policiesResource = policiesResource;
             this.accountsResource = accountsResource;
             this.recordsManager = recordsManager;
             this.cache = cache;
+            this.logger = logger;
         }
 
         [HttpGet("Location")]
@@ -434,15 +438,28 @@ namespace CareTogether.Api.OData
                         $"LiveODataModelController-RenderLiveModelAsync-{organizationId}-{(anonymize ? "ANON" : "PII")}",
                         async cacheEntry =>
                         {
-                            var result = await RenderLiveModelInternalAsync(
-                                organizationId,
-                                anonymize
-                            );
+                            try
+                            {
+                                var result = await RenderLiveModelInternalAsync(
+                                    organizationId,
+                                    anonymize
+                                );
 
-                            cacheEntry.SlidingExpiration = TimeSpan.FromMinutes(1);
-                            cacheEntry.AbsoluteExpiration = DateTimeOffset.Now.AddMinutes(5);
+                                cacheEntry.SlidingExpiration = TimeSpan.FromMinutes(1);
+                                cacheEntry.AbsoluteExpiration = DateTimeOffset.Now.AddMinutes(5);
 
-                            return result;
+                                return result;
+                            }
+                            catch (System.Exception exception)
+                            {
+                                logger.LogError(
+                                    exception,
+                                    "Exception occurred while loading data for organization '{OrganizationId}'.",
+                                    organizationId
+                                );
+
+                                return null;
+                            }
                         }
                     )
                 )
