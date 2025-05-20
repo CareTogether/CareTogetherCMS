@@ -1,11 +1,12 @@
 import useScreenTitle from '../Shell/ShellScreenTitle';
-import { models, Report } from 'powerbi-client';
+import { models } from 'powerbi-client';
 import { PowerBIEmbed } from 'powerbi-client-react';
 import { useEffect, useState } from 'react';
 import { api } from '../Api/Api';
 import { useRecoilValue } from 'recoil';
 import { selectedLocationContextState } from '../Model/Data';
 import styles from './styles.module.css';
+import { Typography } from '@mui/material';
 
 export function ReportsScreen() {
   useScreenTitle('Reports');
@@ -16,30 +17,46 @@ export function ReportsScreen() {
     accessToken: string;
   } | null>(null);
 
+  const [error, setError] = useState<boolean | null>(null);
+
   const { organizationId, locationId } = useRecoilValue(
     selectedLocationContextState
   );
 
   useEffect(() => {
-    api.records.getEmbedInfo(organizationId, locationId).then((embedParams) => {
-      const [report] = embedParams.embedReport || [];
+    api.records
+      .getEmbedInfo(organizationId, locationId)
+      .then((embedParams) => {
+        const [report] = embedParams.embedReport || [];
 
-      const reportId = report?.reportId;
-      const embedUrl = report?.embedUrl;
-      const accessToken = embedParams.embedToken?.token;
+        const reportId = report?.reportId;
+        const embedUrl = report?.embedUrl;
+        const accessToken = embedParams.embedToken?.token;
 
-      if (!reportId || !embedUrl || !accessToken) {
-        console.error('Missing reportId, embedUrl, or accessToken');
-        return;
-      }
+        if (!reportId || !embedUrl || !accessToken) {
+          console.error('Missing reportId, embedUrl, or accessToken');
+          return;
+        }
 
-      setEmbedConfig({
-        reportId,
-        embedUrl,
-        accessToken,
+        setEmbedConfig({
+          reportId,
+          embedUrl,
+          accessToken,
+        });
+      })
+      .catch((error) => {
+        console.error('Error fetching embed info:', error);
+        setError(true);
       });
-    });
   }, []);
+
+  if (error) {
+    return (
+      <Typography align="center" mt={10}>
+        Error loading report. Please try again later.
+      </Typography>
+    );
+  }
 
   return (
     embedConfig && (
@@ -81,7 +98,8 @@ export function ReportsScreen() {
             [
               'error',
               function (event) {
-                console.log(event?.detail);
+                console.error('Error while rendering report');
+                console.error(event?.detail);
               },
             ],
             ['visualClicked', () => console.log('visual clicked')],
