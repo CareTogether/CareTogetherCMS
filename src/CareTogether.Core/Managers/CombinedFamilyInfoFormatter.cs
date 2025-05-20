@@ -81,10 +81,10 @@ namespace CareTogether.Managers
             };
 
             var missingCustomFamilyFields = locationPolicy
-                .CustomFamilyFields.Where(customField =>
-                    !family.CompletedCustomFields.Any(completed =>
+                .CustomFamilyFields?.Where(customField =>
+                    !family.CompletedCustomFields?.Any(completed =>
                         completed.CustomFieldName == customField.Name
-                    )
+                    ) ?? false
                 )
                 .Select(customField => customField.Name)
                 .ToImmutableList();
