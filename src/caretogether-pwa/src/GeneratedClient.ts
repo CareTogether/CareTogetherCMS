@@ -2002,6 +2002,7 @@ export enum Permission {
     AccessSettingsScreen = 102,
     AddEditRoles = 103,
     AccessCommunitiesScreen = 104,
+    AccessReportsScreen = 105,
     ViewFamilyCustomFields = 150,
     ViewFamilyHistory = 151,
     ViewPersonConcerns = 152,

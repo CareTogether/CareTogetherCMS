@@ -117,12 +117,14 @@ function SideNavigationMenu({ open }: SideNavigationMenuProps) {
               icon={<Diversity3Icon sx={{ color: '#fff8' }} />}
             />
           )}
-          <ListItemLink
-            className="ph-unmask"
-            to={`${locationPrefix}/reports`}
-            primary="Reports"
-            icon={<InsightsIcon sx={{ color: '#fff8' }} />}
-          />
+          {permissions(Permission.AccessReportsScreen) && (
+            <ListItemLink
+              className="ph-unmask"
+              to={`${locationPrefix}/reports`}
+              primary="Reports"
+              icon={<InsightsIcon sx={{ color: '#fff8' }} />}
+            />
+          )}
           {permissions(Permission.AccessSettingsScreen) && (
             <>
               <Divider />
