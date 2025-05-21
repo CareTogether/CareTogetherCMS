@@ -135,7 +135,7 @@ namespace CareTogether.Api.OData
 
     public sealed record Role(
         [property: ForeignKey("OrganizationId")] Organization Organization,
-        Guid OrganizationId,
+        [property: Key] Guid OrganizationId,
         [property: Key] string Name
     );
 
