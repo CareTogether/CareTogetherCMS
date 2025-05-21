@@ -28,7 +28,11 @@ namespace CareTogether.Api.OData
 {
     public sealed record Organization([property: Key] Guid Id);
 
-    public sealed record Location([property: Key] Guid Id, Guid OrganizationId, string Name);
+    public sealed record Location(
+        [property: Key] Guid Id,
+        [property: Key] Guid OrganizationId,
+        string Name
+    );
 
     public sealed record LocationUserAccess(
         [property: Key] Guid UserId,
