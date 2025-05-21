@@ -40,8 +40,8 @@ namespace CareTogether.Api.OData
         [property: Key] Guid Id,
         [property: ForeignKey("OrganizationId")] Organization Organization,
         [property: ForeignKey("LocationId")] Location Location,
-        Guid OrganizationId,
-        Guid LocationId,
+        [property: Key] Guid OrganizationId,
+        [property: Key] Guid LocationId,
         string Name,
         string? PrimaryEmail,
         string? PrimaryPhoneNumber,
@@ -52,9 +52,9 @@ namespace CareTogether.Api.OData
     public sealed record Person(
         [property: Key] Guid Id,
         [property: ForeignKey("OrganizationId")] Organization Organization,
-        Guid OrganizationId,
+        [property: Key] Guid OrganizationId,
         [property: ForeignKey("LocationId")] Location Location,
-        Guid LocationId,
+        [property: Key] Guid LocationId,
         [property: ForeignKey("FamilyId")] Family Family,
         Guid FamilyId,
         string FirstName,
@@ -73,9 +73,9 @@ namespace CareTogether.Api.OData
     public sealed record Community(
         [property: Key] Guid Id,
         [property: ForeignKey("OrganizationId")] Organization Organization,
-        Guid OrganizationId,
+        [property: Key] Guid OrganizationId,
         [property: ForeignKey("LocationId")] Location Location,
-        Guid LocationId,
+        [property: Key] Guid LocationId,
         string Name
     );
 
@@ -90,9 +90,9 @@ namespace CareTogether.Api.OData
 
     public sealed record FamilyRoleApproval(
         [property: ForeignKey("OrganizationId")] Organization Organization,
-        Guid OrganizationId,
+        [property: Key] Guid OrganizationId,
         [property: ForeignKey("LocationId")] Location Location,
-        Guid LocationId,
+        [property: Key] Guid LocationId,
         [property: ForeignKey("FamilyId")] Family Family,
         [property: Key] Guid FamilyId,
         [property: ForeignKey("RoleName")] Role Role,
@@ -104,9 +104,9 @@ namespace CareTogether.Api.OData
 
     public sealed record IndividualRoleApproval(
         [property: ForeignKey("OrganizationId")] Organization Organization,
-        Guid OrganizationId,
+        [property: Key] Guid OrganizationId,
         [property: ForeignKey("LocationId")] Location Location,
-        Guid LocationId,
+        [property: Key] Guid LocationId,
         [property: ForeignKey("PersonId")] Person Person,
         [property: Key] Guid PersonId,
         [property: ForeignKey("RoleName")] Role Role,
@@ -120,9 +120,9 @@ namespace CareTogether.Api.OData
 
     public sealed record FamilyRoleRemovedIndividual(
         [property: ForeignKey("OrganizationId")] Organization Organization,
-        Guid OrganizationId,
+        [property: Key] Guid OrganizationId,
         [property: ForeignKey("LocationId")] Location Location,
-        Guid LocationId,
+        [property: Key] Guid LocationId,
         [property: ForeignKey("PersonId")] Person Person,
         [property: Key] Guid PersonId,
         [property: ForeignKey("RoleName")] Role Role,
@@ -142,9 +142,9 @@ namespace CareTogether.Api.OData
     public sealed record Referral(
         [property: Key] Guid Id,
         [property: ForeignKey("OrganizationId")] Organization Organization,
-        Guid OrganizationId,
+        [property: Key] Guid OrganizationId,
         [property: ForeignKey("LocationId")] Location Location,
-        Guid LocationId,
+        [property: Key] Guid LocationId,
         [property: ForeignKey("FamilyId")] Family Family,
         Guid FamilyId,
         DateOnly Opened,
@@ -157,9 +157,9 @@ namespace CareTogether.Api.OData
     public sealed record Arrangement(
         [property: Key] Guid Id,
         [property: ForeignKey("OrganizationId")] Organization Organization,
-        Guid OrganizationId,
+        [property: Key] Guid OrganizationId,
         [property: ForeignKey("LocationId")] Location Location,
-        Guid LocationId,
+        [property: Key] Guid LocationId,
         [property: ForeignKey("TypeName")] ArrangementType Type,
         string TypeName,
         [property: ForeignKey("ReferralId")] Referral Referral,
@@ -175,18 +175,18 @@ namespace CareTogether.Api.OData
 
     public sealed record ArrangementType(
         [property: ForeignKey("OrganizationId")] Organization Organization,
-        Guid OrganizationId,
+        [property: Key] Guid OrganizationId,
         [property: ForeignKey("LocationId")] Location Location,
-        Guid LocationId,
+        [property: Key] Guid LocationId,
         [property: Key] string Type,
         ChildInvolvement ChildInvolvement
     );
 
     public sealed record ChildLocationRecord(
         [property: ForeignKey("OrganizationId")] Organization Organization,
-        Guid OrganizationId,
+        [property: Key] Guid OrganizationId,
         [property: ForeignKey("LocationId")] Location Location,
-        Guid LocationId,
+        [property: Key] Guid LocationId,
         [property: ForeignKey("ArrangementId")] Arrangement Arrangement,
         [property: Key] Guid ArrangementId,
         [property: ForeignKey("ChildPersonId")] Person Child,
@@ -201,9 +201,9 @@ namespace CareTogether.Api.OData
 
     public sealed record FamilyFunctionAssignment(
         [property: ForeignKey("OrganizationId")] Organization Organization,
-        Guid OrganizationId,
+        [property: Key] Guid OrganizationId,
         [property: ForeignKey("LocationId")] Location Location,
-        Guid LocationId,
+        [property: Key] Guid LocationId,
         [property: ForeignKey("ArrangementId")] Arrangement Arrangement,
         [property: Key] Guid ArrangementId,
         [property: ForeignKey("FamilyId")] Family Family,
@@ -213,9 +213,9 @@ namespace CareTogether.Api.OData
 
     public sealed record IndividualFunctionAssignment(
         [property: ForeignKey("OrganizationId")] Organization Organization,
-        Guid OrganizationId,
+        [property: Key] Guid OrganizationId,
         [property: ForeignKey("LocationId")] Location Location,
-        Guid LocationId,
+        [property: Key] Guid LocationId,
         [property: ForeignKey("ArrangementId")] Arrangement Arrangement,
         [property: Key] Guid ArrangementId,
         [property: ForeignKey("PersonId")] Person Person,
@@ -225,9 +225,9 @@ namespace CareTogether.Api.OData
 
     public sealed record CommunityMemberFamily(
         [property: ForeignKey("OrganizationId")] Organization Organization,
-        Guid OrganizationId,
+        [property: Key] Guid OrganizationId,
         [property: ForeignKey("LocationId")] Location Location,
-        Guid LocationId,
+        [property: Key] Guid LocationId,
         [property: ForeignKey("CommunityId")] Community Community,
         [property: Key] Guid CommunityId,
         [property: ForeignKey("FamilyId")] Family Family,
@@ -236,9 +236,9 @@ namespace CareTogether.Api.OData
 
     public sealed record CommunityRoleAssignment(
         [property: ForeignKey("OrganizationId")] Organization Organization,
-        Guid OrganizationId,
+        [property: Key] Guid OrganizationId,
         [property: ForeignKey("LocationId")] Location Location,
-        Guid LocationId,
+        [property: Key] Guid LocationId,
         [property: ForeignKey("CommunityId")] Community Community,
         [property: Key] Guid CommunityId,
         [property: ForeignKey("PersonId")] Person Person,
