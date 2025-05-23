@@ -52,6 +52,8 @@ export function LocationEdit() {
     (location) => location.id === locationId
   );
 
+  useScreenTitle(`Editing ${location?.name} configuration`);
+
   const [timezone, setTimezone] = useState('America/New_York');
   const PHONE_NUMBERS = ['+1 101-101-0101', '+1 555-555-555', '+1 202-202-202'];
 
@@ -140,8 +142,6 @@ export function LocationEdit() {
     setDirty(true);
     setAddPermissionSetMenuAnchorEl(null);
   }
-
-  useScreenTitle('Roles');
 
   return !location ? (
     <ProgressBackdrop>

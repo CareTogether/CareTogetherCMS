@@ -19,10 +19,11 @@ interface ListItemLinkProps {
   newTab?: boolean;
   darkColor?: boolean;
   className?: string;
+  paddingLeft?: number;
 }
 
 function ListItemLink(props: ListItemLinkProps) {
-  const { icon, primary, to, newTab, darkColor } = props;
+  const { icon, primary, to, newTab, darkColor, paddingLeft = 1.5 } = props;
 
   const match = useMatch({
     path: to,
@@ -50,7 +51,7 @@ function ListItemLink(props: ListItemLinkProps) {
         button
         component={renderLink}
         selected={match !== null}
-        sx={{ paddingLeft: 1.5, color: darkColor ? '#555' : '#fff8' }}
+        sx={{ paddingLeft, color: darkColor ? '#555' : '#fff8' }}
       >
         {icon ? <ListItemIcon>{icon}</ListItemIcon> : null}
         <ListItemText primary={primary} sx={{ marginLeft: -2 }} />

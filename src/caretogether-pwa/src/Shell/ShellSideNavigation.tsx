@@ -1,8 +1,12 @@
 import {
   Badge,
+  Collapse,
   Divider,
   Drawer,
   List,
+  ListItem,
+  ListItemIcon,
+  ListItemText,
   Skeleton,
   Stack,
   useTheme,
@@ -23,6 +27,11 @@ import { useLoadable } from '../Hooks/useLoadable';
 import { Inbox } from '@mui/icons-material';
 import { queueItemsCountQuery } from '../Model/QueueModel';
 import Feedback from './Feedback';
+import ExpandLess from '@mui/icons-material/ExpandLess';
+import ExpandMore from '@mui/icons-material/ExpandMore';
+import LocationOnIcon from '@mui/icons-material/LocationOn';
+import AssignmentIndIcon from '@mui/icons-material/AssignmentInd';
+import { useState } from 'react';
 
 interface SideNavigationMenuProps {
   open: boolean;
@@ -35,6 +44,8 @@ function SideNavigationMenu({ open }: SideNavigationMenuProps) {
   const locationPrefix = `/org/${context?.organizationId}/${context?.locationId}`;
 
   const queueItemsCount = useLoadable(queueItemsCountQuery);
+
+  const [settingsOpen, setSettingsOpen] = useState(false);
 
   return (
     //  <List aria-label="main navigation">
@@ -119,13 +130,36 @@ function SideNavigationMenu({ open }: SideNavigationMenuProps) {
           {permissions(Permission.AccessSettingsScreen) && (
             <>
               <Divider />
-              <ListItemLink
-                className="ph-unmask"
-                to={`${locationPrefix}/settings`}
-                primary="Settings"
-                icon={<SettingsIcon sx={{ color: '#fff8' }} />}
-              />
+              <ListItem
+                button
+                onClick={() => setSettingsOpen(!settingsOpen)}
+                sx={{ paddingLeft: 1.5, color: '#fff8' }}
+              >
+                <ListItemIcon>
+                  <SettingsIcon sx={{ color: '#fff8' }} />
+                </ListItemIcon>
+                <ListItemText primary="Settings" sx={{ marginLeft: -2 }} />
+                {settingsOpen ? <ExpandLess /> : <ExpandMore />}
+              </ListItem>
 
+              <Collapse in={settingsOpen} timeout="auto" unmountOnExit>
+                <List component="div" disablePadding>
+                  <ListItemLink
+                    className="ph-unmask"
+                    to={`${locationPrefix}/settings/roles`}
+                    primary="Roles"
+                    icon={<AssignmentIndIcon sx={{ color: '#fff8' }} />}
+                    paddingLeft={4}
+                  />
+                  <ListItemLink
+                    className="ph-unmask"
+                    to={`${locationPrefix}/settings/locations`}
+                    primary="Locations"
+                    icon={<LocationOnIcon sx={{ color: '#fff8' }} />}
+                    paddingLeft={4}
+                  />
+                </List>
+              </Collapse>
               <ListItemLink
                 className="ph-unmask"
                 to={`${locationPrefix}/support`}
