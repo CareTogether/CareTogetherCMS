@@ -24,6 +24,7 @@ import { useLoadable } from '../Hooks/useLoadable';
 import { Inbox } from '@mui/icons-material';
 import { queueItemsCountQuery } from '../Model/QueueModel';
 import Feedback from './Feedback';
+import { useFeatureFlagEnabled as usePostHogFeatureFlagEnabled } from 'posthog-js/react';
 
 interface SideNavigationMenuProps {
   open: boolean;
@@ -31,6 +32,8 @@ interface SideNavigationMenuProps {
 function SideNavigationMenu({ open }: SideNavigationMenuProps) {
   const flags = useFeatureFlags();
   const permissions = useGlobalPermissions();
+
+  const showReports = usePostHogFeatureFlagEnabled('reports');
 
   const context = useLoadable(selectedLocationContextState);
   const locationPrefix = `/org/${context?.organizationId}/${context?.locationId}`;
@@ -117,7 +120,7 @@ function SideNavigationMenu({ open }: SideNavigationMenuProps) {
               icon={<Diversity3Icon sx={{ color: '#fff8' }} />}
             />
           )}
-          {permissions(Permission.AccessReportsScreen) && (
+          {permissions(Permission.AccessReportsScreen) && showReports && (
             <ListItemLink
               className="ph-unmask"
               to={`${locationPrefix}/reports`}
