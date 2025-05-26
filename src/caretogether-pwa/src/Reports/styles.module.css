@@ -1,5 +1,4 @@
 .report {
-  min-height: 800px;
   height: calc(100vh - 48px);
   width: calc(100% + 48px);
   margin-left: -24px;
