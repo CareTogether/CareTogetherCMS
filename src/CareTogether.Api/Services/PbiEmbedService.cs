@@ -79,7 +79,7 @@ namespace CareTogether.Api.Controllers.AppOwnsData.Services
                 }
 
                 // Get Embed token multiple resources
-                embedToken = await GetEmbedToken(reportId, datasetIds, workspaceId, userId);
+                embedToken = await GetEmbedToken(reportId, datasetIds, userId, workspaceId);
             }
 
             // Add report data for embedding
@@ -199,7 +199,8 @@ namespace CareTogether.Api.Controllers.AppOwnsData.Services
                 {
                     new EffectiveIdentity(
                         username: userId.ToString(),
-                        datasets: datasetIds.Select(datasetId => datasetId.ToString()).ToList()
+                        datasets: datasetIds.Select(datasetId => datasetId.ToString()).ToList(),
+                        roles: [ "Dynamic" ]
                     ),
                 }
             );
