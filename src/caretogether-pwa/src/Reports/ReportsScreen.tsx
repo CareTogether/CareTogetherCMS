@@ -97,34 +97,17 @@ export function ReportsScreen() {
             },
 
             background: models.BackgroundType.Transparent,
-            zoomLevel: 1.5,
+            bars: {
+              statusBar: {
+                visible: true,
+              },
+            },
+            layoutType: models.LayoutType.Custom,
+            customLayout: {
+              displayOption: models.DisplayOption.FitToPage,
+            },
           },
         }}
-        eventHandlers={
-          new Map([
-            [
-              'loaded',
-              function () {
-                console.log('Report loaded');
-              },
-            ],
-            [
-              'rendered',
-              function () {
-                console.log('Report rendered');
-              },
-            ],
-            [
-              'error',
-              function (event) {
-                console.error('Error while rendering report');
-                console.error(event?.detail);
-              },
-            ],
-            ['visualClicked', () => console.log('visual clicked')],
-            ['pageChanged', (event) => console.log(event)],
-          ])
-        }
         cssClassName={styles.report}
       />
     )
