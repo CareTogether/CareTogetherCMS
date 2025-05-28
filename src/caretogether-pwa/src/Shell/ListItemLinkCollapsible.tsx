@@ -48,14 +48,6 @@ export function ListItemLinkCollapsible(props: ListItemLinkCollapsibleProps) {
 
   const hasSubitems = subitems && subitems.length > 0;
 
-  if (to.includes('reports')) {
-    console.log('in', {
-      hasSubitems,
-      collapsibleOpen,
-      defaultOpen,
-    });
-  }
-
   return (
     <>
       <li className={props.className}>
