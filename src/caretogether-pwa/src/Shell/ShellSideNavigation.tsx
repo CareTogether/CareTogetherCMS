@@ -37,6 +37,9 @@ function SideNavigationMenu({ open }: SideNavigationMenuProps) {
   const permissions = useGlobalPermissions();
 
   const showReports = usePostHogFeatureFlagEnabled('reports');
+  const showReportsSubmenuItems = usePostHogFeatureFlagEnabled(
+    'reportsSubmenuItems'
+  );
 
   const context = useLoadable(selectedLocationContextState);
   const locationPrefix = `/org/${context?.organizationId}/${context?.locationId}`;
@@ -126,16 +129,29 @@ function SideNavigationMenu({ open }: SideNavigationMenuProps) {
             />
           )}
 
-          {permissions(Permission.AccessReportsScreen) && showReports && (
-            <ListItemLinkCollapsible
-              className="ph-unmask"
-              to={`${locationPrefix}/reports`}
-              primary="Reports"
-              icon={<InsightsIcon sx={{ color: '#fff8' }} />}
-              subitems={reportSubmenuItems}
-              defaultOpen
-            />
-          )}
+          {permissions(Permission.AccessReportsScreen) &&
+            showReports &&
+            !showReportsSubmenuItems && (
+              <ListItemLink
+                className="ph-unmask"
+                to={`${locationPrefix}/reports`}
+                primary="Reports"
+                icon={<InsightsIcon sx={{ color: '#fff8' }} />}
+              />
+            )}
+
+          {permissions(Permission.AccessReportsScreen) &&
+            showReports &&
+            showReportsSubmenuItems && (
+              <ListItemLinkCollapsible
+                className="ph-unmask"
+                to={`${locationPrefix}/reports`}
+                primary="Reports"
+                icon={<InsightsIcon sx={{ color: '#fff8' }} />}
+                subitems={reportSubmenuItems}
+                defaultOpen
+              />
+            )}
 
           {permissions(Permission.AccessSettingsScreen) && (
             <>
