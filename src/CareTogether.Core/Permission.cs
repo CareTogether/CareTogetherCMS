@@ -35,6 +35,8 @@
         EditPersonNotes = 157,
         EditPersonContactInfo = 158,
 
+        ViewPersonDateOfBirth = 159,
+
         //EditPersonUserLink = 159,
 
         AddEditDraftNotes = 180,

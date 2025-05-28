@@ -1971,6 +1971,7 @@ export enum Permission {
     EditPersonConcerns = 156,
     EditPersonNotes = 157,
     EditPersonContactInfo = 158,
+    ViewPersonDateOfBirth = 159,
     AddEditDraftNotes = 180,
     DiscardDraftNotes = 181,
     ApproveNotes = 182,
