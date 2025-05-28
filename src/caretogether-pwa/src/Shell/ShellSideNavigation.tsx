@@ -25,6 +25,9 @@ import { Inbox } from '@mui/icons-material';
 import { queueItemsCountQuery } from '../Model/QueueModel';
 import Feedback from './Feedback';
 import { useFeatureFlagEnabled as usePostHogFeatureFlagEnabled } from 'posthog-js/react';
+import { useRecoilValue } from 'recoil';
+import { reportSubmenuItemsAtom } from '../Model/UI';
+import { ListItemLinkCollapsible } from './ListItemLinkCollapsible';
 
 interface SideNavigationMenuProps {
   open: boolean;
@@ -39,6 +42,8 @@ function SideNavigationMenu({ open }: SideNavigationMenuProps) {
   const locationPrefix = `/org/${context?.organizationId}/${context?.locationId}`;
 
   const queueItemsCount = useLoadable(queueItemsCountQuery);
+
+  const reportSubmenuItems = useRecoilValue(reportSubmenuItemsAtom);
 
   return (
     //  <List aria-label="main navigation">
@@ -120,14 +125,18 @@ function SideNavigationMenu({ open }: SideNavigationMenuProps) {
               icon={<Diversity3Icon sx={{ color: '#fff8' }} />}
             />
           )}
+
           {permissions(Permission.AccessReportsScreen) && showReports && (
-            <ListItemLink
+            <ListItemLinkCollapsible
               className="ph-unmask"
               to={`${locationPrefix}/reports`}
               primary="Reports"
               icon={<InsightsIcon sx={{ color: '#fff8' }} />}
+              subitems={reportSubmenuItems}
+              defaultOpen
             />
           )}
+
           {permissions(Permission.AccessSettingsScreen) && (
             <>
               <Divider />
