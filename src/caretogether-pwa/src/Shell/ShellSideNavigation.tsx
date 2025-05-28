@@ -14,7 +14,6 @@ import Diversity3Icon from '@mui/icons-material/Diversity3';
 import InsightsIcon from '@mui/icons-material/Insights';
 import DashboardIcon from '@mui/icons-material/Dashboard';
 import SupportIcon from '@mui/icons-material/Support';
-import { ListItemLink } from './ListItemLink';
 import { useFeatureFlags } from '../Model/ConfigurationModel';
 import { Copyright } from './Copyright';
 import { useGlobalPermissions } from '../Model/SessionModel';
@@ -27,7 +26,7 @@ import Feedback from './Feedback';
 import { useFeatureFlagEnabled as usePostHogFeatureFlagEnabled } from 'posthog-js/react';
 import { useRecoilValue } from 'recoil';
 import { reportSubmenuItemsAtom } from '../Model/UI';
-import { ListItemLinkCollapsible } from './ListItemLinkCollapsible';
+import { ListItemLink } from './ListItemLink';
 
 interface SideNavigationMenuProps {
   open: boolean;
@@ -92,7 +91,7 @@ function SideNavigationMenu({ open }: SideNavigationMenuProps) {
             className="ph-unmask"
             to={`${locationPrefix}`}
             primary="Dashboard"
-            icon={<DashboardIcon sx={{ color: '#fff8' }} />}
+            icon={<DashboardIcon />}
           />
           <ListItemLink
             className="ph-unmask"
@@ -100,7 +99,7 @@ function SideNavigationMenu({ open }: SideNavigationMenuProps) {
             primary="Inbox"
             icon={
               <Badge badgeContent={queueItemsCount} color="secondary">
-                <Inbox sx={{ color: '#fff8' }} />
+                <Inbox />
               </Badge>
             }
           />
@@ -109,7 +108,7 @@ function SideNavigationMenu({ open }: SideNavigationMenuProps) {
               className="ph-unmask"
               to={`${locationPrefix}/referrals`}
               primary="Referrals"
-              icon={<PermPhoneMsgIcon sx={{ color: '#fff8' }} />}
+              icon={<PermPhoneMsgIcon />}
             />
           )}
           {permissions(Permission.AccessVolunteersScreen) && (
@@ -117,7 +116,7 @@ function SideNavigationMenu({ open }: SideNavigationMenuProps) {
               className="ph-unmask"
               to={`${locationPrefix}/volunteers`}
               primary="Volunteers"
-              icon={<PeopleIcon sx={{ color: '#fff8' }} />}
+              icon={<PeopleIcon />}
             />
           )}
           {permissions(Permission.AccessCommunitiesScreen) && (
@@ -125,7 +124,7 @@ function SideNavigationMenu({ open }: SideNavigationMenuProps) {
               className="ph-unmask"
               to={`${locationPrefix}/communities`}
               primary="Communities"
-              icon={<Diversity3Icon sx={{ color: '#fff8' }} />}
+              icon={<Diversity3Icon />}
             />
           )}
 
@@ -136,18 +135,18 @@ function SideNavigationMenu({ open }: SideNavigationMenuProps) {
                 className="ph-unmask"
                 to={`${locationPrefix}/reports`}
                 primary="Reports"
-                icon={<InsightsIcon sx={{ color: '#fff8' }} />}
+                icon={<InsightsIcon />}
               />
             )}
 
           {permissions(Permission.AccessReportsScreen) &&
             showReports &&
             showReportsSubmenuItems && (
-              <ListItemLinkCollapsible
+              <ListItemLink
                 className="ph-unmask"
                 to={`${locationPrefix}/reports`}
                 primary="Reports"
-                icon={<InsightsIcon sx={{ color: '#fff8' }} />}
+                icon={<InsightsIcon />}
                 subitems={reportSubmenuItems}
                 defaultOpen
               />
@@ -160,14 +159,14 @@ function SideNavigationMenu({ open }: SideNavigationMenuProps) {
                 className="ph-unmask"
                 to={`${locationPrefix}/settings`}
                 primary="Settings"
-                icon={<SettingsIcon sx={{ color: '#fff8' }} />}
+                icon={<SettingsIcon />}
               />
 
               <ListItemLink
                 className="ph-unmask"
                 to={`${locationPrefix}/support`}
                 primary="Support"
-                icon={<SupportIcon sx={{ color: '#fff8' }} />}
+                icon={<SupportIcon />}
               />
             </>
           )}
