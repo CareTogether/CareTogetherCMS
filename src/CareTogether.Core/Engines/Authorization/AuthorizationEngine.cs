@@ -1114,6 +1114,17 @@ namespace CareTogether.Engines.Authorization
                 )
                     ? person.PreferredPhoneNumberId
                     : null,
+                Age =
+                    person.Age != null
+                        ? contextPermissions.Contains(Permission.ViewPersonDateOfBirth)
+                            ? person.Age
+                            : person.Age is ExactAge exactAge
+                                ? new AgeInYears(
+                                    DateTime.UtcNow.Year - exactAge.DateOfBirth.Year,
+                                    DateTime.UtcNow
+                                )
+                                : person.Age
+                        : null,
             };
 
         internal async Task<bool> DiscloseNoteAsync(
