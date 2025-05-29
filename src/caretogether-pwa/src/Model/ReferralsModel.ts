@@ -53,6 +53,7 @@ import {
   ArrangementRecordsCommand,
   EditArrangementReason,
   EditArrangementRequestedAt,
+  EditArrangementEndTime,
 } from '../GeneratedClient';
 import { useAtomicRecordsCommandCallback } from './DirectoryModel';
 import { visibleFamiliesQuery } from './Data';
@@ -523,6 +524,24 @@ export function useReferralsModel() {
       return command;
     }
   );
+
+  const editRequestedAt = useArrangementsCommandCallbackWithLocation(
+    async (
+      partneringFamilyId: string,
+      referralId: string,
+      arrangementId: string,
+      requestedAtLocal: Date | null
+    ) => {
+      const command = new EditArrangementRequestedAt({
+        familyId: partneringFamilyId,
+        referralId: referralId,
+        arrangementIds: [arrangementId],
+      });
+      command.requestedAtUtc = requestedAtLocal ?? undefined;
+      return command;
+    }
+  );
+
   const planArrangementStart = useArrangementsCommandCallbackWithLocation(
     async (
       partneringFamilyId: string,
@@ -568,6 +587,22 @@ export function useReferralsModel() {
         arrangementIds: [arrangementId],
       });
       command.startedAtUtc = startedAtLocal;
+      return command;
+    }
+  );
+  const editArrangementEndTime = useArrangementsCommandCallbackWithLocation(
+    async (
+      partneringFamilyId: string,
+      referralId: string,
+      arrangementId: string,
+      endedAtLocal: Date
+    ) => {
+      const command = new EditArrangementEndTime({
+        familyId: partneringFamilyId,
+        referralId: referralId,
+        arrangementIds: [arrangementId],
+      });
+      command.endedAtUtc = endedAtLocal;
       return command;
     }
   );
@@ -917,9 +952,11 @@ export function useReferralsModel() {
     exemptIndividualVolunteerAssignmentRequirement,
     unexemptIndividualVolunteerAssignmentRequirement,
     createArrangement,
+    editRequestedAt,
     planArrangementStart,
     startArrangement,
     editArrangementStartTime,
+    editArrangementEndTime,
     editArrangementRequestedAt,
     planArrangementEnd,
     endArrangement,

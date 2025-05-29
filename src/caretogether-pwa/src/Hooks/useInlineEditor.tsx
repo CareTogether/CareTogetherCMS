@@ -2,7 +2,7 @@ import { Button } from '@mui/material';
 import EditIcon from '@mui/icons-material/Edit';
 import SaveIcon from '@mui/icons-material/Save';
 import UndoIcon from '@mui/icons-material/Undo';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useBackdrop } from './useBackdrop';
 
 export interface IInlineEditor<T> {
@@ -24,6 +24,12 @@ export function useInlineEditor<T, U>(
 
   const [editing, setEditing] = useState(false);
   const [value, setValue] = useState(savedValue);
+
+  useEffect(() => {
+    if (!editing) {
+      setValue(savedValue);
+    }
+  }, [savedValue, editing]);
 
   async function saveChanges() {
     await withBackdrop(async () => {
