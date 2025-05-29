@@ -14,7 +14,6 @@ import Diversity3Icon from '@mui/icons-material/Diversity3';
 import InsightsIcon from '@mui/icons-material/Insights';
 import DashboardIcon from '@mui/icons-material/Dashboard';
 import SupportIcon from '@mui/icons-material/Support';
-import { ListItemLink } from './ListItemLink';
 import { useFeatureFlags } from '../Model/ConfigurationModel';
 import { Copyright } from './Copyright';
 import { useGlobalPermissions } from '../Model/SessionModel';
@@ -25,6 +24,9 @@ import { Inbox } from '@mui/icons-material';
 import { queueItemsCountQuery } from '../Model/QueueModel';
 import Feedback from './Feedback';
 import { useFeatureFlagEnabled as usePostHogFeatureFlagEnabled } from 'posthog-js/react';
+import { useRecoilValue } from 'recoil';
+import { reportSubmenuItemsAtom } from '../Model/UI';
+import { ListItemLink } from './ListItemLink';
 
 interface SideNavigationMenuProps {
   open: boolean;
@@ -34,11 +36,16 @@ function SideNavigationMenu({ open }: SideNavigationMenuProps) {
   const permissions = useGlobalPermissions();
 
   const showReports = usePostHogFeatureFlagEnabled('reports');
+  const showReportsSubmenuItems = usePostHogFeatureFlagEnabled(
+    'reportsSubmenuItems'
+  );
 
   const context = useLoadable(selectedLocationContextState);
   const locationPrefix = `/org/${context?.organizationId}/${context?.locationId}`;
 
   const queueItemsCount = useLoadable(queueItemsCountQuery);
+
+  const reportSubmenuItems = useRecoilValue(reportSubmenuItemsAtom);
 
   return (
     //  <List aria-label="main navigation">
@@ -84,7 +91,7 @@ function SideNavigationMenu({ open }: SideNavigationMenuProps) {
             className="ph-unmask"
             to={`${locationPrefix}`}
             primary="Dashboard"
-            icon={<DashboardIcon sx={{ color: '#fff8' }} />}
+            icon={<DashboardIcon />}
           />
           <ListItemLink
             className="ph-unmask"
@@ -92,7 +99,7 @@ function SideNavigationMenu({ open }: SideNavigationMenuProps) {
             primary="Inbox"
             icon={
               <Badge badgeContent={queueItemsCount} color="secondary">
-                <Inbox sx={{ color: '#fff8' }} />
+                <Inbox />
               </Badge>
             }
           />
@@ -101,7 +108,7 @@ function SideNavigationMenu({ open }: SideNavigationMenuProps) {
               className="ph-unmask"
               to={`${locationPrefix}/referrals`}
               primary="Referrals"
-              icon={<PermPhoneMsgIcon sx={{ color: '#fff8' }} />}
+              icon={<PermPhoneMsgIcon />}
             />
           )}
           {permissions(Permission.AccessVolunteersScreen) && (
@@ -109,7 +116,7 @@ function SideNavigationMenu({ open }: SideNavigationMenuProps) {
               className="ph-unmask"
               to={`${locationPrefix}/volunteers`}
               primary="Volunteers"
-              icon={<PeopleIcon sx={{ color: '#fff8' }} />}
+              icon={<PeopleIcon />}
             />
           )}
           {permissions(Permission.AccessCommunitiesScreen) && (
@@ -117,17 +124,34 @@ function SideNavigationMenu({ open }: SideNavigationMenuProps) {
               className="ph-unmask"
               to={`${locationPrefix}/communities`}
               primary="Communities"
-              icon={<Diversity3Icon sx={{ color: '#fff8' }} />}
+              icon={<Diversity3Icon />}
             />
           )}
-          {permissions(Permission.AccessReportsScreen) && showReports && (
-            <ListItemLink
-              className="ph-unmask"
-              to={`${locationPrefix}/reports`}
-              primary="Reports"
-              icon={<InsightsIcon sx={{ color: '#fff8' }} />}
-            />
-          )}
+
+          {permissions(Permission.AccessReportsScreen) &&
+            showReports &&
+            !showReportsSubmenuItems && (
+              <ListItemLink
+                className="ph-unmask"
+                to={`${locationPrefix}/reports`}
+                primary="Reports"
+                icon={<InsightsIcon />}
+              />
+            )}
+
+          {permissions(Permission.AccessReportsScreen) &&
+            showReports &&
+            showReportsSubmenuItems && (
+              <ListItemLink
+                className="ph-unmask"
+                to={`${locationPrefix}/reports`}
+                primary="Reports"
+                icon={<InsightsIcon />}
+                subitems={reportSubmenuItems}
+                defaultOpen
+              />
+            )}
+
           {permissions(Permission.AccessSettingsScreen) && (
             <>
               <Divider />
@@ -135,14 +159,14 @@ function SideNavigationMenu({ open }: SideNavigationMenuProps) {
                 className="ph-unmask"
                 to={`${locationPrefix}/settings`}
                 primary="Settings"
-                icon={<SettingsIcon sx={{ color: '#fff8' }} />}
+                icon={<SettingsIcon />}
               />
 
               <ListItemLink
                 className="ph-unmask"
                 to={`${locationPrefix}/support`}
                 primary="Support"
-                icon={<SupportIcon sx={{ color: '#fff8' }} />}
+                icon={<SupportIcon />}
               />
             </>
           )}

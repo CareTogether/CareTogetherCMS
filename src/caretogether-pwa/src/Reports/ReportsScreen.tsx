@@ -1,68 +1,33 @@
 import useScreenTitle from '../Shell/ShellScreenTitle';
-import { models } from 'powerbi-client';
+import { models, Report } from 'powerbi-client';
 import { PowerBIEmbed } from 'powerbi-client-react';
-import { useEffect, useState } from 'react';
-import { api } from '../Api/Api';
-import { useRecoilValue } from 'recoil';
-import { selectedLocationContextState, useDataLoaded } from '../Model/Data';
+import { useDataLoaded } from '../Model/Data';
 import styles from './styles.module.css';
 import { Typography } from '@mui/material';
 import { useGlobalPermissions } from '../Model/SessionModel';
 import { Permission } from '../GeneratedClient';
 import { useNavigate } from 'react-router-dom';
 import { ProgressBackdrop } from '../Shell/ProgressBackdrop';
+import { useUpdateSideNavigation } from './useUpdateSideNavigation';
+import { useEmbedConfig } from './useEmbedConfig';
+import { useFeatureFlagEnabled as usePostHogFeatureFlagEnabled } from 'posthog-js/react';
 
 export function ReportsScreen() {
   useScreenTitle('Reports');
 
-  const [embedConfig, setEmbedConfig] = useState<{
-    reportId: string;
-    embedUrl: string;
-    accessToken: string;
-  } | null>(null);
-
-  const [loading, setLoading] = useState<boolean | null>(true);
-  const [error, setError] = useState<boolean | null>(null);
-
-  const { organizationId, locationId } = useRecoilValue(
-    selectedLocationContextState
+  const showReportsSubmenuItems = usePostHogFeatureFlagEnabled(
+    'reportsSubmenuItems'
   );
 
-  useEffect(() => {
-    api.records
-      .getEmbedInfo(organizationId, locationId)
-      .then((embedParams) => {
-        const [report] = embedParams.embedReport || [];
-
-        const reportId = report?.reportId;
-        const embedUrl = report?.embedUrl;
-        const accessToken = embedParams.embedToken?.token;
-
-        if (!reportId || !embedUrl || !accessToken) {
-          console.error('Missing reportId, embedUrl, or accessToken');
-          return;
-        }
-
-        setEmbedConfig({
-          reportId,
-          embedUrl,
-          accessToken,
-        });
-      })
-      .catch((error) => {
-        console.error('Error fetching embed info:', error);
-        setError(true);
-      })
-      .finally(() => {
-        setLoading(false);
-      });
-  }, [locationId, organizationId]);
+  const { embedConfig, loading, error } = useEmbedConfig();
 
   const dataLoaded = useDataLoaded();
 
   const navigate = useNavigate();
 
   const permissions = useGlobalPermissions();
+
+  const updateSideNavigation = useUpdateSideNavigation();
 
   if (!dataLoaded || loading) {
     return <ProgressBackdrop>Loading reports...</ProgressBackdrop>;
@@ -95,8 +60,8 @@ export function ReportsScreen() {
                 expanded: false,
               },
             },
-
             background: models.BackgroundType.Transparent,
+            navContentPaneEnabled: !showReportsSubmenuItems,
             bars: {
               statusBar: {
                 visible: true,
@@ -108,6 +73,18 @@ export function ReportsScreen() {
             },
           },
         }}
+        eventHandlers={
+          new Map([
+            [
+              'loaded',
+              (_event, embed) => {
+                if (embed && embed instanceof Report) {
+                  return updateSideNavigation(embed);
+                }
+              },
+            ],
+          ])
+        }
         cssClassName={styles.report}
       />
     )
