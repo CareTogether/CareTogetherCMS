@@ -30,6 +30,7 @@ import { familyScreenV2State } from './Families/familyScreenV2State';
 import { usePostHogIdentify } from './Utilities/Instrumentation/usePostHogIdentify';
 import { usePostHogGroups } from './Utilities/Instrumentation/usePostHogGroups';
 import { Support } from './Support';
+import { Reports } from './Reports/Reports';
 
 const LAST_VISITED_LOCATION = 'lastVisitedLocation';
 
@@ -167,6 +168,7 @@ function LocationContextWrapper() {
           <Route path="referrals/*" element={<Referrals />} />
           <Route path="volunteers/*" element={<Volunteers />} />
           <Route path="communities/*" element={<Communities />} />
+          <Route path="reports/*" element={<Reports />} />
           <Route path="settings/*" element={<Settings />} />
           <Route path="support/*" element={<Support />} />
           <Route path="*" element={<RouteError />} />

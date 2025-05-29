@@ -630,6 +630,46 @@ export class RecordsClient {
         }
         return Promise.resolve<RecordsAggregate>(null as any);
     }
+
+    getEmbedInfo(organizationId: string, locationId: string): Promise<EmbedParams> {
+        let url_ = this.baseUrl + "/api/{organizationId}/{locationId}/Records/getEmbedInfo";
+        if (organizationId === undefined || organizationId === null)
+            throw new Error("The parameter 'organizationId' must be defined.");
+        url_ = url_.replace("{organizationId}", encodeURIComponent("" + organizationId));
+        if (locationId === undefined || locationId === null)
+            throw new Error("The parameter 'locationId' must be defined.");
+        url_ = url_.replace("{locationId}", encodeURIComponent("" + locationId));
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: RequestInit = {
+            method: "GET",
+            headers: {
+                "Accept": "application/json"
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processGetEmbedInfo(_response);
+        });
+    }
+
+    protected processGetEmbedInfo(response: Response): Promise<EmbedParams> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result200 = EmbedParams.fromJS(resultData200);
+            return result200;
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<EmbedParams>(null as any);
+    }
 }
 
 export class UsersClient {
@@ -1962,6 +2002,7 @@ export enum Permission {
     AccessSettingsScreen = 102,
     AddEditRoles = 103,
     AccessCommunitiesScreen = 104,
+    AccessReportsScreen = 105,
     ViewFamilyCustomFields = 150,
     ViewFamilyHistory = 151,
     ViewPersonConcerns = 152,
@@ -12221,6 +12262,146 @@ export interface ICreateVolunteerFamilyWithNewAdultCommand extends ICompositeRec
     address?: Address | undefined;
     phoneNumber?: PhoneNumber | undefined;
     emailAddress?: EmailAddress | undefined;
+}
+
+export class EmbedParams implements IEmbedParams {
+    type?: string;
+    embedReport?: EmbedReport[];
+    embedToken?: EmbedToken;
+
+    constructor(data?: IEmbedParams) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.type = _data["type"];
+            if (Array.isArray(_data["embedReport"])) {
+                this.embedReport = [] as any;
+                for (let item of _data["embedReport"])
+                    this.embedReport!.push(EmbedReport.fromJS(item));
+            }
+            this.embedToken = _data["embedToken"] ? EmbedToken.fromJS(_data["embedToken"]) : <any>undefined;
+        }
+    }
+
+    static fromJS(data: any): EmbedParams {
+        data = typeof data === 'object' ? data : {};
+        let result = new EmbedParams();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["type"] = this.type;
+        if (Array.isArray(this.embedReport)) {
+            data["embedReport"] = [];
+            for (let item of this.embedReport)
+                data["embedReport"].push(item.toJSON());
+        }
+        data["embedToken"] = this.embedToken ? this.embedToken.toJSON() : <any>undefined;
+        return data;
+    }
+}
+
+export interface IEmbedParams {
+    type?: string;
+    embedReport?: EmbedReport[];
+    embedToken?: EmbedToken;
+}
+
+export class EmbedReport implements IEmbedReport {
+    reportId?: string;
+    reportName?: string;
+    embedUrl?: string;
+
+    constructor(data?: IEmbedReport) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.reportId = _data["reportId"];
+            this.reportName = _data["reportName"];
+            this.embedUrl = _data["embedUrl"];
+        }
+    }
+
+    static fromJS(data: any): EmbedReport {
+        data = typeof data === 'object' ? data : {};
+        let result = new EmbedReport();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["reportId"] = this.reportId;
+        data["reportName"] = this.reportName;
+        data["embedUrl"] = this.embedUrl;
+        return data;
+    }
+}
+
+export interface IEmbedReport {
+    reportId?: string;
+    reportName?: string;
+    embedUrl?: string;
+}
+
+export class EmbedToken implements IEmbedToken {
+    token?: string | undefined;
+    tokenId?: string;
+    expiration?: Date;
+
+    constructor(data?: IEmbedToken) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.token = _data["token"];
+            this.tokenId = _data["tokenId"];
+            this.expiration = _data["expiration"] ? new Date(_data["expiration"].toString()) : <any>undefined;
+        }
+    }
+
+    static fromJS(data: any): EmbedToken {
+        data = typeof data === 'object' ? data : {};
+        let result = new EmbedToken();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["token"] = this.token;
+        data["tokenId"] = this.tokenId;
+        data["expiration"] = this.expiration ? this.expiration.toISOString() : <any>undefined;
+        return data;
+    }
+}
+
+export interface IEmbedToken {
+    token?: string | undefined;
+    tokenId?: string;
+    expiration?: Date;
 }
 
 export class UserAccess implements IUserAccess {
