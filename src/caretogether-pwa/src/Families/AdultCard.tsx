@@ -44,6 +44,7 @@ import { useFeatureFlags } from '../Model/ConfigurationModel';
 import { useDrawer } from '../Generic/ShellDrawer';
 import { ManageUserDrawer } from './ManageUserDrawer';
 import { format } from 'date-fns';
+import { DateOfBirth } from './DateOfBirth';
 
 type AdultCardProps = {
   familyId: string;
@@ -257,6 +258,9 @@ export function AdultCard({ familyId, personId }: AdultCardProps) {
                 />
               )}
             </Typography>
+
+            <DateOfBirth age={adult.item1.age} permissions={permissions} />
+
             <Typography variant="body2" component="div">
               {adult.item1.concerns && (
                 <IconRow icon="⚠">
