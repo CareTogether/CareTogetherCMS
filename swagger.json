@@ -4073,6 +4073,8 @@
             "DeleteArrangements": "#/components/schemas/DeleteArrangements",
             "DeleteChildLocationChange": "#/components/schemas/DeleteChildLocationChange",
             "DeletePlannedChildLocationChange": "#/components/schemas/DeletePlannedChildLocationChange",
+            "EditArrangementCancelledAt": "#/components/schemas/EditArrangementCancelledAt",
+            "EditArrangementEndTime": "#/components/schemas/EditArrangementEndTime",
             "EditArrangementReason": "#/components/schemas/EditArrangementReason",
             "EditArrangementRequestedAt": "#/components/schemas/EditArrangementRequestedAt",
             "EditArrangementStartTime": "#/components/schemas/EditArrangementStartTime",
@@ -4409,6 +4411,40 @@
               "childLocationReceivingAdultId": {
                 "type": "string",
                 "format": "guid"
+              }
+            }
+          }
+        ]
+      },
+      "EditArrangementCancelledAt": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/ArrangementsCommand"
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "cancelledAtUtc": {
+                "type": "string",
+                "format": "date-time"
+              }
+            }
+          }
+        ]
+      },
+      "EditArrangementEndTime": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/ArrangementsCommand"
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "endedAtUtc": {
+                "type": "string",
+                "format": "date-time"
               }
             }
           }

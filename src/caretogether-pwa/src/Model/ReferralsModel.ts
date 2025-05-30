@@ -53,6 +53,8 @@ import {
   ArrangementRecordsCommand,
   EditArrangementReason,
   EditArrangementRequestedAt,
+  EditArrangementEndTime,
+  EditArrangementCancelledAt,
 } from '../GeneratedClient';
 import { useAtomicRecordsCommandCallback } from './DirectoryModel';
 import { visibleFamiliesQuery } from './Data';
@@ -571,6 +573,22 @@ export function useReferralsModel() {
       return command;
     }
   );
+  const editArrangementEndTime = useArrangementsCommandCallbackWithLocation(
+    async (
+      partneringFamilyId: string,
+      referralId: string,
+      arrangementId: string,
+      endedAtLocal: Date
+    ) => {
+      const command = new EditArrangementEndTime({
+        familyId: partneringFamilyId,
+        referralId: referralId,
+        arrangementIds: [arrangementId],
+      });
+      command.endedAtUtc = endedAtLocal;
+      return command;
+    }
+  );
   const editArrangementRequestedAt = useArrangementsCommandCallbackWithLocation(
     async (
       partneringFamilyId: string,
@@ -584,6 +602,22 @@ export function useReferralsModel() {
         arrangementIds: [arrangementId],
       });
       command.requestedAtUtc = requestedAtLocal;
+      return command;
+    }
+  );
+  const editArrangementCancelledAt = useArrangementsCommandCallbackWithLocation(
+    async (
+      partneringFamilyId: string,
+      referralId: string,
+      arrangementId: string,
+      cancelledAtLocal: Date
+    ) => {
+      const command = new EditArrangementCancelledAt({
+        familyId: partneringFamilyId,
+        referralId: referralId,
+        arrangementIds: [arrangementId],
+      });
+      command.cancelledAtUtc = cancelledAtLocal;
       return command;
     }
   );
@@ -920,7 +954,9 @@ export function useReferralsModel() {
     planArrangementStart,
     startArrangement,
     editArrangementStartTime,
+    editArrangementEndTime,
     editArrangementRequestedAt,
+    editArrangementCancelledAt,
     planArrangementEnd,
     endArrangement,
     reopenArrangement,

@@ -1,4 +1,4 @@
-import { Button } from '@mui/material';
+import { Button, IconButton } from '@mui/material';
 import EditIcon from '@mui/icons-material/Edit';
 import SaveIcon from '@mui/icons-material/Save';
 import UndoIcon from '@mui/icons-material/Undo';
@@ -42,15 +42,14 @@ export function useInlineEditor<T, U>(
     editing,
     setEditing,
     editButton: !editing && (
-      <Button
+      <IconButton
         onClick={() => setEditing(true)}
-        variant="text"
         size="small"
-        startIcon={<EditIcon />}
         sx={{ margin: 1 }}
+        color="primary"
       >
-        Edit
-      </Button>
+        <EditIcon fontSize="inherit" />
+      </IconButton>
     ),
     cancelButton: editing && (
       <Button

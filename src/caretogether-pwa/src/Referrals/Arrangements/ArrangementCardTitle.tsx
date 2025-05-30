@@ -11,9 +11,6 @@ import { CancelArrangementDialog } from './CancelArrangementDialog';
 import { ReopenArrangementDialog } from './ReopenArrangementDialog';
 import { EndArrangementDialog } from './EndArrangementDialog';
 import { StartArrangementDialog } from './StartArrangementDialog';
-import { useInlineEditor } from '../../Hooks/useInlineEditor';
-import { useReferralsModel } from '../../Model/ReferralsModel';
-import { DatePicker } from '@mui/x-date-pickers';
 import { DeleteArrangementDialog } from './DeleteArrangementDialog';
 
 type ArrangementCardTitleProps = {
@@ -31,17 +28,6 @@ export function ArrangementCardTitle({
 }: ArrangementCardTitleProps) {
   const now = new Date();
   const permissions = useFamilyIdPermissions(partneringFamilyId);
-
-  const referralsModel = useReferralsModel();
-
-  const startedAtEditor = useInlineEditor(async (value) => {
-    await referralsModel.editArrangementStartTime(
-      partneringFamilyId,
-      referralId,
-      arrangement.id!,
-      value
-    );
-  }, arrangement.startedAtUtc);
 
   const [showStartArrangementDialog, setShowStartArrangementDialog] =
     useState(false);
@@ -72,9 +58,7 @@ export function ArrangementCardTitle({
       )}
       {!summaryOnly && (
         <span className="ph-unmask" style={{ marginLeft: 0, float: 'right' }}>
-          {arrangement.phase === ArrangementPhase.Cancelled ? (
-            `Cancelled ${formatRelative(arrangement.cancelledAtUtc!, now)}`
-          ) : arrangement.phase === ArrangementPhase.SettingUp ? (
+          {arrangement.phase === ArrangementPhase.SettingUp && (
             <>
               Setting up
               {permissions(Permission.EditArrangement) && (
@@ -88,7 +72,9 @@ export function ArrangementCardTitle({
                 </Button>
               )}
             </>
-          ) : arrangement.phase === ArrangementPhase.ReadyToStart ? (
+          )}
+
+          {arrangement.phase === ArrangementPhase.ReadyToStart &&
             permissions(Permission.EditArrangement) && (
               <>
                 <Button
@@ -99,6 +85,7 @@ export function ArrangementCardTitle({
                 >
                   Cancel
                 </Button>
+
                 <Button
                   variant="contained"
                   size="small"
@@ -108,40 +95,12 @@ export function ArrangementCardTitle({
                   Start
                 </Button>
               </>
-            )
-          ) : arrangement.phase === ArrangementPhase.Started ? (
+            )}
+
+          {arrangement.phase === ArrangementPhase.Started && (
             <>
-              {permissions(Permission.EditArrangement) ? (
+              {permissions(Permission.EditArrangement) && (
                 <>
-                  {startedAtEditor.editing ? (
-                    <>
-                      <DatePicker
-                        label="When was this arrangement started?"
-                        value={startedAtEditor.value}
-                        disableFuture
-                        format="M/d/yyyy"
-                        onChange={(date: Date | null) =>
-                          date && startedAtEditor.setValue(date)
-                        }
-                        slotProps={{
-                          textField: {
-                            fullWidth: true,
-                            required: true,
-                            sx: { marginTop: 1 },
-                          },
-                        }}
-                      />
-                      {startedAtEditor.cancelButton}
-                      {startedAtEditor.saveButton}
-                    </>
-                  ) : (
-                    <>
-                      <span>
-                        Started {formatRelative(arrangement.startedAtUtc!, now)}
-                      </span>
-                      {startedAtEditor.editButton}
-                    </>
-                  )}
                   <Button
                     variant="outlined"
                     size="small"
@@ -151,15 +110,12 @@ export function ArrangementCardTitle({
                     End
                   </Button>
                 </>
-              ) : (
-                <span>
-                  Started {formatRelative(arrangement.startedAtUtc!, now)}
-                </span>
               )}
             </>
-          ) : (
+          )}
+
+          {arrangement.phase === ArrangementPhase.Ended && (
             <>
-              <span>Ended {formatRelative(arrangement.endedAtUtc!, now)}</span>
               {permissions(Permission.EditArrangement) && (
                 <Button
                   variant="outlined"
@@ -172,6 +128,7 @@ export function ArrangementCardTitle({
               )}
             </>
           )}
+
           {permissions(Permission.DeleteArrangement) && (
             <>
               <Button
