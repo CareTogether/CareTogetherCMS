@@ -6,6 +6,8 @@ import { EditDateDialog } from './EditDateDialog';
 
 interface DateDisplayEditorProps {
   initialValue: Date | undefined;
+  disablePast?: boolean;
+  disableFuture?: boolean;
   label: string;
   canEdit: boolean;
   availableInCurrentPhase: boolean;
@@ -15,6 +17,8 @@ interface DateDisplayEditorProps {
 
 export function DateDisplayEditor({
   initialValue,
+  disablePast = false,
+  disableFuture = true,
   label,
   canEdit,
   availableInCurrentPhase,
@@ -53,6 +57,8 @@ export function DateDisplayEditor({
       {editing && (
         <EditDateDialog
           initialDate={initialValue}
+          disablePast={disablePast}
+          disableFuture={disableFuture}
           label={label}
           onClose={() => setEditing(false)}
           onSave={async (date) => {

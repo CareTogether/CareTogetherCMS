@@ -121,6 +121,7 @@ export function ArrangementPlannedDuration({
         <DateDisplayEditor
           label="Planned start"
           initialValue={arrangement.plannedStartUtc!}
+          disableFuture={false}
           canEdit={canEdit}
           availableInCurrentPhase // Available in all phases
           onChange={(newDate) =>
@@ -148,6 +149,7 @@ export function ArrangementPlannedDuration({
         <DateDisplayEditor
           label="Planned end"
           initialValue={arrangement.plannedEndUtc!}
+          disableFuture={false}
           canEdit={canEdit}
           availableInCurrentPhase // Available in all phases
           onChange={(newDate) =>
