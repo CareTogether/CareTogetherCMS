@@ -1,6 +1,0 @@
-{
-  "dependencies": {
-    "powerbi-client": "^2.23.1",
-    "powerbi-client-react": "^2.0.0"
-  }
-}
