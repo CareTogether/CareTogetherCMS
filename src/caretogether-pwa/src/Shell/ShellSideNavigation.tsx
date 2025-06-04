@@ -56,6 +56,7 @@ function SideNavigationMenu({ open }: SideNavigationMenuProps) {
       sx={{
         '& .MuiListItem-root.Mui-selected': { color: '#ffff' },
         '& .MuiListItem-root.Mui-selected svg': { color: '#ffff' },
+        marginBottom: 17,
       }}
     >
       {flags === null ? (
