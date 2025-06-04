@@ -25,6 +25,7 @@ namespace CareTogether.Engines.Authorization
         private readonly IApprovalsResource approvalsResource;
         private readonly ICommunitiesResource communitiesResource;
         private readonly IAccountsResource accountsResource;
+        private readonly INotesResource notesResource;
 
         public AuthorizationEngine(
             IPoliciesResource policiesResource,
@@ -32,7 +33,8 @@ namespace CareTogether.Engines.Authorization
             IReferralsResource referralsResource,
             IApprovalsResource approvalsResource,
             ICommunitiesResource communitiesResource,
-            IAccountsResource accountsResource
+            IAccountsResource accountsResource,
+            INotesResource notesResource
         )
         {
             this.policiesResource = policiesResource;
@@ -41,6 +43,7 @@ namespace CareTogether.Engines.Authorization
             this.approvalsResource = approvalsResource;
             this.communitiesResource = communitiesResource;
             this.accountsResource = accountsResource;
+            this.notesResource = notesResource;
         }
 
         public async Task<ImmutableList<Permission>> AuthorizeUserAccessAsync(
@@ -521,7 +524,8 @@ namespace CareTogether.Engines.Authorization
                 user,
                 new FamilyAuthorizationContext(command.FamilyId)
             );
-            return permissions.Contains(
+
+            var hasPermission = permissions.Contains(
                 command switch
                 {
                     CreateDraftNote => Permission.AddEditDraftNotes,
@@ -533,6 +537,59 @@ namespace CareTogether.Engines.Authorization
                     ),
                 }
             );
+
+            if (hasPermission)
+            {
+                return true;
+            }
+
+            var hasPermissionForOwnNotes = permissions.Contains(
+                command switch
+                {
+                    CreateDraftNote => Permission.AddEditOwnDraftNotes,
+                    EditDraftNote => Permission.AddEditOwnDraftNotes,
+                    DiscardDraftNote => Permission.DiscardOwnDraftNotes,
+                    _ => throw new NotImplementedException(
+                        $"The command type '{command.GetType().FullName}' has not been implemented."
+                    ),
+                }
+            );
+
+            if (!hasPermissionForOwnNotes)
+            {
+                // At this point, if the user does not have permission to edit their own notes, they cannot edit any notes.
+                return false;
+            }
+
+            if (command is CreateDraftNote)
+            {
+                // If the command is to create a draft note, we can allow it if the user has permission to edit their own notes.
+                return true;
+            }
+
+            // If the user has permission to edit their own notes, check if the note belongs to them.
+
+            var familyNotes = await notesResource.ListFamilyNotesAsync(
+                organizationId,
+                locationId,
+                command.FamilyId
+            );
+
+            var noteEntry = familyNotes.FirstOrDefault(note => note.Id == command.NoteId);
+
+            if (noteEntry == null)
+                return false;
+
+            var noteBelongsToUser = command switch
+            {
+                EditDraftNote c => noteEntry?.AuthorId == user.UserId(),
+                DiscardDraftNote c => noteEntry?.AuthorId == user.UserId(),
+                _ => throw new NotImplementedException(
+                    $"The command type '{command.GetType().FullName}' has not been implemented."
+                ),
+            };
+
+            return noteBelongsToUser;
         }
 
         public async Task<bool> AuthorizeSendSmsAsync(

@@ -99,13 +99,16 @@ namespace CareTogether.Core.Test.AuthorizationEngineTests
             );
             var accountsResource = new AccountsResource(accountsEventLog, personAccessEventLog);
 
+            var notesResource = new NotesResource(notesEventLog, draftNotesStore);
+
             dut = new AuthorizationEngine(
                 policiesResource,
                 directoryResource,
                 referralsResource,
                 approvalsResource,
                 communitiesResource,
-                accountsResource
+                accountsResource,
+                notesResource
             );
         }
 

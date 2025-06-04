@@ -237,7 +237,8 @@ namespace CareTogether.Api
                 referralsResource,
                 approvalsResource,
                 communitiesResource,
-                accountsResource
+                accountsResource,
+                notesResource
             );
             services.AddSingleton<IAuthorizationEngine>(authorizationEngine); //TODO: Temporary workaround for UsersController
             var policyEvaluationEngine = new PolicyEvaluationEngine(policiesResource);
