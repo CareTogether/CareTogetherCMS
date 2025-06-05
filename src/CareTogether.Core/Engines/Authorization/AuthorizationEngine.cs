@@ -21,320 +21,23 @@ namespace CareTogether.Engines.Authorization
     {
         private readonly IPoliciesResource policiesResource;
         private readonly IDirectoryResource directoryResource;
-        private readonly IReferralsResource referralsResource;
-        private readonly IApprovalsResource approvalsResource;
-        private readonly ICommunitiesResource communitiesResource;
         private readonly IAccountsResource accountsResource;
         private readonly INotesResource notesResource;
+        private readonly IUserAccessCalculation userAccessCalculation;
 
         public AuthorizationEngine(
             IPoliciesResource policiesResource,
             IDirectoryResource directoryResource,
-            IReferralsResource referralsResource,
-            IApprovalsResource approvalsResource,
-            ICommunitiesResource communitiesResource,
             IAccountsResource accountsResource,
-            INotesResource notesResource
+            INotesResource notesResource,
+            IUserAccessCalculation userAccessCalculation
         )
         {
             this.policiesResource = policiesResource;
             this.directoryResource = directoryResource;
-            this.referralsResource = referralsResource;
-            this.approvalsResource = approvalsResource;
-            this.communitiesResource = communitiesResource;
             this.accountsResource = accountsResource;
             this.notesResource = notesResource;
-        }
-
-        public async Task<ImmutableList<Permission>> AuthorizeUserAccessAsync(
-            Guid organizationId,
-            Guid locationId,
-            ClaimsPrincipal user,
-            AuthorizationContext context
-        )
-        {
-            // If the caller is using an API key, give full access.
-            if (
-                user.Identity?.AuthenticationType == "API Key"
-                && (
-                    user.HasClaim(Claims.OrganizationId, organizationId.ToString())
-                    || user.HasClaim(Claims.Global, true.ToString())
-                )
-            )
-                return Enum.GetValues<Permission>().ToImmutableList();
-
-            // The user must have access to this organization and location.
-            var userLocalIdentity = user.LocationIdentity(organizationId, locationId);
-            if (userLocalIdentity == null)
-                return ImmutableList<Permission>.Empty;
-
-            // Look up the user's family, which will be referenced several times.
-            var userPersonId = user.PersonId(organizationId, locationId);
-            var userFamily =
-                userPersonId == null
-                    ? null
-                    : await directoryResource.FindPersonFamilyAsync(
-                        organizationId,
-                        locationId,
-                        userPersonId.Value
-                    );
-
-            // If in a family authorization context, look up the target family, which will be referenced several times.
-            var familyId = (context as FamilyAuthorizationContext)?.FamilyId;
-            var targetFamily = familyId.HasValue
-                ? await directoryResource.FindFamilyAsync(
-                    organizationId,
-                    locationId,
-                    familyId.Value
-                )
-                : null;
-
-            // Look up the target family's volunteer info to determine if they are a volunteer family.
-            var targetFamilyIsVolunteerFamily =
-                familyId.HasValue
-                && await approvalsResource.TryGetVolunteerFamilyAsync(
-                    organizationId,
-                    locationId,
-                    familyId.Value
-                ) != null;
-
-            // Look up the referrals info for both the user's family and the target family.
-            //TODO: This could be optimized to find only the user family's referrals or the target family's referrals.
-            var referrals = await referralsResource.ListReferralsAsync(organizationId, locationId);
-            var userFamilyReferrals = referrals
-                .Where(referral => referral.FamilyId == userFamily?.Id)
-                .ToImmutableList();
-            var targetFamilyReferrals = referrals
-                .Where(referral => referral.FamilyId == targetFamily?.Id)
-                .ToImmutableList();
-            var assignedReferrals = referrals
-                .Where(referral =>
-                    referral.Arrangements.Any(arrangement =>
-                        arrangement.Value.FamilyVolunteerAssignments.Exists(assignment =>
-                            assignment.FamilyId == userFamily?.Id
-                        )
-                        || arrangement.Value.IndividualVolunteerAssignments.Exists(assignment =>
-                            assignment.FamilyId == userFamily?.Id
-                        )
-                    )
-                )
-                .ToImmutableList();
-
-            // Look up the user's family's and target family's community memberships
-            var communities = await communitiesResource.ListLocationCommunitiesAsync(
-                organizationId,
-                locationId
-            );
-            var userFamilyCommunities =
-                userFamily != null
-                    ? communities
-                        .Where(community => community.MemberFamilies.Contains(userFamily.Id))
-                        .Select(community => community.Id)
-                        .ToImmutableList()
-                    : ImmutableList<Guid>.Empty;
-            var targetFamilyCommunities =
-                targetFamily != null
-                    ? communities
-                        .Where(community => community.MemberFamilies.Contains(targetFamily.Id))
-                        .Select(community => community.Id)
-                        .ToImmutableList()
-                    : ImmutableList<Guid>.Empty;
-            var userCommunityRoleAssignments = communities
-                .SelectMany(community =>
-                    community
-                        .CommunityRoleAssignments.Where(assignment =>
-                            assignment.PersonId == userPersonId
-                        )
-                        .Select(assignment => (community.Id, assignment.CommunityRole))
-                )
-                .ToImmutableList();
-
-            // We need to evaluate each of the user's roles to determine which permission sets
-            // apply to the user's current context.
-            var config = await policiesResource.GetConfigurationAsync(organizationId);
-            var userPermissionSets = config
-                .Roles.Where(role =>
-                    userLocalIdentity.HasClaim(userLocalIdentity.RoleClaimType, role.RoleName)
-                )
-                .SelectMany(role => role.PermissionSets)
-                .ToImmutableList();
-            var applicablePermissionSets = userPermissionSets
-                .Where(permissionSet =>
-                    IsPermissionSetApplicable(
-                        permissionSet,
-                        context,
-                        userFamily,
-                        targetFamily,
-                        targetFamilyIsVolunteerFamily,
-                        userFamilyReferrals,
-                        targetFamilyReferrals,
-                        assignedReferrals,
-                        userFamilyCommunities,
-                        targetFamilyCommunities,
-                        userCommunityRoleAssignments
-                    )
-                )
-                .ToImmutableList();
-
-            return applicablePermissionSets
-                .SelectMany(permissionSet => permissionSet.Permissions)
-                .Distinct()
-                .ToImmutableList();
-        }
-
-        internal static bool IsPermissionSetApplicable(
-            ContextualPermissionSet permissionSet,
-            AuthorizationContext context,
-            Family? userFamily,
-            Family? targetFamily,
-            bool targetFamilyIsVolunteerFamily,
-            ImmutableList<Resources.Referrals.ReferralEntry> userFamilyReferrals,
-            ImmutableList<Resources.Referrals.ReferralEntry> targetFamilyReferrals,
-            ImmutableList<Resources.Referrals.ReferralEntry> assignedReferrals,
-            ImmutableList<Guid> userFamilyCommunities,
-            ImmutableList<Guid> targetFamilyCommunities,
-            ImmutableList<(Guid Id, string CommunityRole)> userCommunityRoleAssignments
-        )
-        {
-            return permissionSet.Context switch
-            {
-                GlobalPermissionContext c => true,
-                OwnFamilyPermissionContext c => context is FamilyAuthorizationContext
-                    && userFamily != null
-                    && userFamily.Id == targetFamily?.Id,
-                AllVolunteerFamiliesPermissionContext c => context switch
-                {
-                    AllVolunteerFamiliesAuthorizationContext => true,
-                    FamilyAuthorizationContext => targetFamily != null
-                        && targetFamilyIsVolunteerFamily,
-                    _ => false,
-                },
-                AllPartneringFamiliesPermissionContext c => context switch
-                {
-                    AllPartneringFamiliesAuthorizationContext => true,
-                    FamilyAuthorizationContext => targetFamily != null
-                        && !targetFamilyReferrals.IsEmpty,
-                    _ => false,
-                },
-                //TODO: Should the following be restricted so only the assigned individual, or in the case of a family assignment,
-                //      only the participating individuals, can access the partnering family?
-                AssignedFunctionsInReferralPartneringFamilyPermissionContext c => context
-                    is FamilyAuthorizationContext
-                    && targetFamily != null
-                    && targetFamilyReferrals.Any(referral => //TODO: The individual logic blocks here can be extracted to helper methods.
-                        (
-                            c.WhenReferralIsOpen == null
-                            || c.WhenReferralIsOpen == (referral.ClosedAtUtc == null)
-                        )
-                        && referral.Arrangements.Any(arrangement =>
-                            arrangement.Value.FamilyVolunteerAssignments.Any(fva =>
-                                fva.FamilyId == userFamily?.Id
-                                && (
-                                    c.WhenOwnFunctionIsIn == null
-                                    || c.WhenOwnFunctionIsIn.Contains(fva.ArrangementFunction)
-                                )
-                            )
-                            || arrangement.Value.IndividualVolunteerAssignments.Any(iva =>
-                                iva.FamilyId == userFamily?.Id
-                                && (
-                                    c.WhenOwnFunctionIsIn == null
-                                    || c.WhenOwnFunctionIsIn.Contains(iva.ArrangementFunction)
-                                )
-                            )
-                        )
-                    ),
-                OwnReferralAssigneeFamiliesPermissionContext c => context
-                    is FamilyAuthorizationContext
-                    && targetFamily != null
-                    && userFamilyReferrals.Any(referral =>
-                        (
-                            c.WhenReferralIsOpen == null
-                            || c.WhenReferralIsOpen == (referral.ClosedAtUtc == null)
-                        )
-                        && referral.Arrangements.Any(arrangement =>
-                            arrangement.Value.FamilyVolunteerAssignments.Any(fva =>
-                                fva.FamilyId == targetFamily.Id
-                                && (
-                                    c.WhenAssigneeFunctionIsIn == null
-                                    || c.WhenAssigneeFunctionIsIn.Contains(fva.ArrangementFunction)
-                                )
-                            )
-                            || arrangement.Value.IndividualVolunteerAssignments.Any(iva =>
-                                iva.FamilyId == targetFamily.Id
-                                && (
-                                    c.WhenAssigneeFunctionIsIn == null
-                                    || c.WhenAssigneeFunctionIsIn.Contains(iva.ArrangementFunction)
-                                )
-                            )
-                        )
-                    ),
-                AssignedFunctionsInReferralCoAssigneeFamiliesPermissionContext c => context
-                    is FamilyAuthorizationContext
-                    && targetFamily != null
-                    && assignedReferrals.Any(referral =>
-                        (
-                            c.WhenReferralIsOpen == null
-                            || c.WhenReferralIsOpen == (referral.ClosedAtUtc == null)
-                        )
-                        && referral.Arrangements.Any(arrangement =>
-                            arrangement.Value.FamilyVolunteerAssignments.Any(fva =>
-                                fva.FamilyId == userFamily?.Id
-                                && (
-                                    c.WhenOwnFunctionIsIn == null
-                                    || c.WhenOwnFunctionIsIn.Contains(fva.ArrangementFunction)
-                                )
-                            )
-                            || arrangement.Value.IndividualVolunteerAssignments.Any(iva =>
-                                iva.FamilyId == userFamily?.Id
-                                && (
-                                    c.WhenOwnFunctionIsIn == null
-                                    || c.WhenOwnFunctionIsIn.Contains(iva.ArrangementFunction)
-                                )
-                            )
-                        )
-                        && referral.Arrangements.Any(arrangement =>
-                            arrangement.Value.FamilyVolunteerAssignments.Any(fva =>
-                                fva.FamilyId == targetFamily.Id
-                                && (
-                                    c.WhenAssigneeFunctionIsIn == null
-                                    || c.WhenAssigneeFunctionIsIn.Contains(fva.ArrangementFunction)
-                                )
-                            )
-                            || arrangement.Value.IndividualVolunteerAssignments.Any(iva =>
-                                iva.FamilyId == targetFamily.Id
-                                && (
-                                    c.WhenAssigneeFunctionIsIn == null
-                                    || c.WhenAssigneeFunctionIsIn.Contains(iva.ArrangementFunction)
-                                )
-                            )
-                        )
-                    ),
-                CommunityMemberPermissionContext c => context is CommunityAuthorizationContext auth
-                    && userFamilyCommunities.Contains(auth.CommunityId)
-                    && (
-                        c.WhenOwnCommunityRoleIsIn == null
-                        || c.WhenOwnCommunityRoleIsIn.Any(cr =>
-                            userCommunityRoleAssignments.Any(cra =>
-                                cra.Id == auth.CommunityId && cra.CommunityRole == cr
-                            )
-                        )
-                    ),
-                CommunityCoMemberFamiliesPermissionContext c => context
-                    is FamilyAuthorizationContext
-                    && userFamilyCommunities
-                        .Intersect(targetFamilyCommunities)
-                        .Any(community =>
-                            c.WhenOwnCommunityRoleIsIn == null
-                            || c.WhenOwnCommunityRoleIsIn.Any(cr =>
-                                userCommunityRoleAssignments.Any(cra =>
-                                    cra.Id == community && cra.CommunityRole == cr
-                                )
-                            )
-                        ),
-                _ => throw new NotImplementedException(
-                    $"The permission context type '{permissionSet.Context.GetType().FullName}' has not been implemented."
-                ),
-            };
+            this.userAccessCalculation = userAccessCalculation;
         }
 
         public async Task<bool> AuthorizeFamilyCommandAsync(
@@ -344,7 +47,7 @@ namespace CareTogether.Engines.Authorization
             FamilyCommand command
         )
         {
-            var permissions = await AuthorizeUserAccessAsync(
+            var permissions = await userAccessCalculation.AuthorizeUserAccessAsync(
                 organizationId,
                 locationId,
                 user,
@@ -381,7 +84,7 @@ namespace CareTogether.Engines.Authorization
             PersonCommand command
         )
         {
-            var permissions = await AuthorizeUserAccessAsync(
+            var permissions = await userAccessCalculation.AuthorizeUserAccessAsync(
                 organizationId,
                 locationId,
                 user,
@@ -418,7 +121,7 @@ namespace CareTogether.Engines.Authorization
             ReferralCommand command
         )
         {
-            var permissions = await AuthorizeUserAccessAsync(
+            var permissions = await userAccessCalculation.AuthorizeUserAccessAsync(
                 organizationId,
                 locationId,
                 user,
@@ -450,7 +153,7 @@ namespace CareTogether.Engines.Authorization
             ArrangementsCommand command
         )
         {
-            var permissions = await AuthorizeUserAccessAsync(
+            var permissions = await userAccessCalculation.AuthorizeUserAccessAsync(
                 organizationId,
                 locationId,
                 user,
@@ -518,7 +221,7 @@ namespace CareTogether.Engines.Authorization
             NoteCommand command
         )
         {
-            var permissions = await AuthorizeUserAccessAsync(
+            var permissions = await userAccessCalculation.AuthorizeUserAccessAsync(
                 organizationId,
                 locationId,
                 user,
@@ -598,7 +301,7 @@ namespace CareTogether.Engines.Authorization
             ClaimsPrincipal user
         )
         {
-            var permissions = await AuthorizeUserAccessAsync(
+            var permissions = await userAccessCalculation.AuthorizeUserAccessAsync(
                 organizationId,
                 locationId,
                 user,
@@ -614,7 +317,7 @@ namespace CareTogether.Engines.Authorization
             VolunteerFamilyCommand command
         )
         {
-            var permissions = await AuthorizeUserAccessAsync(
+            var permissions = await userAccessCalculation.AuthorizeUserAccessAsync(
                 organizationId,
                 locationId,
                 user,
@@ -648,7 +351,7 @@ namespace CareTogether.Engines.Authorization
             VolunteerCommand command
         )
         {
-            var permissions = await AuthorizeUserAccessAsync(
+            var permissions = await userAccessCalculation.AuthorizeUserAccessAsync(
                 organizationId,
                 locationId,
                 user,
@@ -678,7 +381,7 @@ namespace CareTogether.Engines.Authorization
             CommunityCommand command
         )
         {
-            var permissions = await AuthorizeUserAccessAsync(
+            var permissions = await userAccessCalculation.AuthorizeUserAccessAsync(
                 organizationId,
                 locationId,
                 user,
@@ -710,7 +413,7 @@ namespace CareTogether.Engines.Authorization
             PersonAccessCommand command
         )
         {
-            var permissions = await AuthorizeUserAccessAsync(
+            var permissions = await userAccessCalculation.AuthorizeUserAccessAsync(
                 organizationId,
                 locationId,
                 user,
@@ -759,7 +462,7 @@ namespace CareTogether.Engines.Authorization
             ClaimsPrincipal user
         )
         {
-            var permissions = await AuthorizeUserAccessAsync(
+            var permissions = await userAccessCalculation.AuthorizeUserAccessAsync(
                 organizationId,
                 locationId,
                 user,
@@ -785,7 +488,7 @@ namespace CareTogether.Engines.Authorization
                         userPersonId.Value
                     );
 
-            var contextPermissions = await AuthorizeUserAccessAsync(
+            var contextPermissions = await userAccessCalculation.AuthorizeUserAccessAsync(
                 organizationId,
                 locationId,
                 user,
@@ -844,7 +547,7 @@ namespace CareTogether.Engines.Authorization
             CommunityInfo community
         )
         {
-            var contextPermissions = await AuthorizeUserAccessAsync(
+            var contextPermissions = await userAccessCalculation.AuthorizeUserAccessAsync(
                 organizationId,
                 locationId,
                 user,

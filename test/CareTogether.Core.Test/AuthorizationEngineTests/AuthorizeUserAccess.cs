@@ -50,7 +50,7 @@ namespace CareTogether.Core.Test.AuthorizationEngineTests
 
         private static Permission[] allPermissions = Enum.GetValues<Permission>();
 
-        private AuthorizationEngine? dut;
+        private UserAccessCalculation? userAccessCalculation;
 
         [TestInitialize]
         public async Task TestInitializeAsync()
@@ -97,18 +97,13 @@ namespace CareTogether.Core.Test.AuthorizationEngineTests
                 communitiesEventLog,
                 Mock.Of<IFileStore>()
             );
-            var accountsResource = new AccountsResource(accountsEventLog, personAccessEventLog);
 
-            var notesResource = new NotesResource(notesEventLog, draftNotesStore);
-
-            dut = new AuthorizationEngine(
+            userAccessCalculation = new UserAccessCalculation(
                 policiesResource,
                 directoryResource,
                 referralsResource,
                 approvalsResource,
-                communitiesResource,
-                accountsResource,
-                notesResource
+                communitiesResource
             );
         }
 
@@ -308,49 +303,49 @@ namespace CareTogether.Core.Test.AuthorizationEngineTests
                 );
             }
 
-            var result0 = await dut!.AuthorizeUserAccessAsync(
+            var result0 = await userAccessCalculation!.AuthorizeUserAccessAsync(
                 guid1,
                 guid2,
                 user,
                 new FamilyAuthorizationContext(guid0)
             );
-            var result1 = await dut!.AuthorizeUserAccessAsync(
+            var result1 = await userAccessCalculation!.AuthorizeUserAccessAsync(
                 guid1,
                 guid2,
                 user,
                 new FamilyAuthorizationContext(guid1)
             );
-            var result2 = await dut!.AuthorizeUserAccessAsync(
+            var result2 = await userAccessCalculation!.AuthorizeUserAccessAsync(
                 guid1,
                 guid2,
                 user,
                 new FamilyAuthorizationContext(guid2)
             );
-            var result3 = await dut!.AuthorizeUserAccessAsync(
+            var result3 = await userAccessCalculation!.AuthorizeUserAccessAsync(
                 guid1,
                 guid2,
                 user,
                 new FamilyAuthorizationContext(guid3)
             );
-            var result4 = await dut!.AuthorizeUserAccessAsync(
+            var result4 = await userAccessCalculation!.AuthorizeUserAccessAsync(
                 guid1,
                 guid2,
                 user,
                 new FamilyAuthorizationContext(guid4)
             );
-            var result5 = await dut!.AuthorizeUserAccessAsync(
+            var result5 = await userAccessCalculation!.AuthorizeUserAccessAsync(
                 guid1,
                 guid2,
                 user,
                 new FamilyAuthorizationContext(guid5)
             );
-            var resultCommunity1 = await dut!.AuthorizeUserAccessAsync(
+            var resultCommunity1 = await userAccessCalculation!.AuthorizeUserAccessAsync(
                 guid1,
                 guid2,
                 user,
                 new CommunityAuthorizationContext(guid1)
             );
-            var resultCommunity2 = await dut!.AuthorizeUserAccessAsync(
+            var resultCommunity2 = await userAccessCalculation!.AuthorizeUserAccessAsync(
                 guid1,
                 guid2,
                 user,

@@ -16,6 +16,7 @@ namespace CareTogether.Managers.Membership
     {
         private readonly IAccountsResource accountsResource;
         private readonly IAuthorizationEngine authorizationEngine;
+        private readonly IUserAccessCalculation userAccessCalculation;
         private readonly IDirectoryResource directoryResource;
         private readonly IPoliciesResource policiesResource;
         private readonly CombinedFamilyInfoFormatter combinedFamilyInfoFormatter;
@@ -24,6 +25,7 @@ namespace CareTogether.Managers.Membership
         public MembershipManager(
             IAccountsResource accountsResource,
             IAuthorizationEngine authorizationEngine,
+            IUserAccessCalculation userAccessCalculation,
             IDirectoryResource directoryResource,
             IPoliciesResource policiesResource,
             CombinedFamilyInfoFormatter combinedFamilyInfoFormatter,
@@ -32,6 +34,7 @@ namespace CareTogether.Managers.Membership
         {
             this.accountsResource = accountsResource;
             this.authorizationEngine = authorizationEngine;
+            this.userAccessCalculation = userAccessCalculation;
             this.directoryResource = directoryResource;
             this.policiesResource = policiesResource;
             this.combinedFamilyInfoFormatter = combinedFamilyInfoFormatter;
@@ -55,21 +58,21 @@ namespace CareTogether.Managers.Membership
                             var locationId = location.LocationId;
 
                             var globalContextPermissions =
-                                await authorizationEngine.AuthorizeUserAccessAsync(
+                                await userAccessCalculation.AuthorizeUserAccessAsync(
                                     organizationId,
                                     locationId,
                                     user,
                                     new GlobalAuthorizationContext()
                                 );
                             var allVolunteerFamiliesContextPermissions =
-                                await authorizationEngine.AuthorizeUserAccessAsync(
+                                await userAccessCalculation.AuthorizeUserAccessAsync(
                                     organizationId,
                                     locationId,
                                     user,
                                     new AllVolunteerFamiliesAuthorizationContext()
                                 );
                             var allPartneringFamiliesContextPermissions =
-                                await authorizationEngine.AuthorizeUserAccessAsync(
+                                await userAccessCalculation.AuthorizeUserAccessAsync(
                                     organizationId,
                                     locationId,
                                     user,
@@ -125,7 +128,7 @@ namespace CareTogether.Managers.Membership
 
             // Confirm that the current user has access to view the target user's login information.
             var targetUserFamilyContext = new FamilyAuthorizationContext(targetUserFamily.Id);
-            var globalContextPermissions = await authorizationEngine.AuthorizeUserAccessAsync(
+            var globalContextPermissions = await userAccessCalculation.AuthorizeUserAccessAsync(
                 organizationId,
                 locationId,
                 user,

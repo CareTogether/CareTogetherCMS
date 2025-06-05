@@ -230,15 +230,21 @@ namespace CareTogether.Api
             services.AddSingleton<IPoliciesResource>(policiesResource);
             services.AddSingleton<IAccountsResource>(accountsResource);
 
-            // Engine services
-            var authorizationEngine = new AuthorizationEngine(
+            var userAccessCalculation = new UserAccessCalculation(
                 policiesResource,
                 directoryResource,
                 referralsResource,
                 approvalsResource,
-                communitiesResource,
+                communitiesResource
+            );
+
+            // Engine services
+            var authorizationEngine = new AuthorizationEngine(
+                policiesResource,
+                directoryResource,
                 accountsResource,
-                notesResource
+                notesResource,
+                userAccessCalculation
             );
             services.AddSingleton<IAuthorizationEngine>(authorizationEngine); //TODO: Temporary workaround for UsersController
             var policyEvaluationEngine = new PolicyEvaluationEngine(policiesResource);
@@ -267,6 +273,7 @@ namespace CareTogether.Api
             services.AddSingleton<IRecordsManager>(
                 new RecordsManager(
                     authorizationEngine,
+                    userAccessCalculation,
                     directoryResource,
                     approvalsResource,
                     referralsResource,
@@ -279,6 +286,7 @@ namespace CareTogether.Api
                 new MembershipManager(
                     accountsResource,
                     authorizationEngine,
+                    userAccessCalculation,
                     directoryResource,
                     policiesResource,
                     combinedFamilyInfoFormatter,
