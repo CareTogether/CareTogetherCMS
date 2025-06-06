@@ -31,41 +31,33 @@ import {
   RoleDefinition,
   Permission,
 } from '../../GeneratedClient';
-import { useLoadable } from '../../Hooks/useLoadable';
-import {
-  organizationConfigurationEdited,
-  organizationConfigurationQuery,
-} from '../../Model/ConfigurationModel';
+import { organizationConfigurationEdited } from '../../Model/ConfigurationModel';
 import { useGlobalPermissions } from '../../Model/SessionModel';
-import { ProgressBackdrop } from '../../Shell/ProgressBackdrop';
-import useScreenTitle from '../../Shell/ShellScreenTitle';
 import AddIcon from '@mui/icons-material/Add';
 import { useBackdrop } from '../../Hooks/useBackdrop';
 import { useRecoilValue, useSetRecoilState } from 'recoil';
 import { ContextualPermissionSetRow } from './ContextualPermissionSetRow';
 import { api } from '../../Api/Api';
 import { selectedLocationContextState } from '../../Model/Data';
-import { useParams } from 'react-router-dom';
 import { Link } from 'react-router-dom';
 import NavigateNextIcon from '@mui/icons-material/NavigateNext';
 import { Box } from '@mui/system';
 import { isRoleEditable } from './isRoleEditable';
 
-export function RoleEdit() {
-  const { roleName } = useParams<{ roleName: string }>();
-
-  const configuration = useLoadable(organizationConfigurationQuery);
-  const { organizationId } = useRecoilValue(selectedLocationContextState);
-  const storeEdits = useSetRecoilState(organizationConfigurationEdited);
-  const roles = configuration?.roles;
-
+export function RoleEdit({
+  roleDefinition,
+}: {
+  roleDefinition: RoleDefinition;
+}) {
   const permissions = useGlobalPermissions();
 
-  const selectedRole = roles?.find((role) => role.roleName === roleName);
+  const storeEdits = useSetRecoilState(organizationConfigurationEdited);
 
-  const [workingRole, setWorkingRole] = useState<RoleDefinition | undefined>(
-    selectedRole
-  );
+  const { organizationId } = useRecoilValue(selectedLocationContextState);
+
+  const [workingRole, setWorkingRole] =
+    useState<RoleDefinition>(roleDefinition);
+
   const [dirty, setDirty] = useState(false);
 
   const isEditable = Boolean(
@@ -75,7 +67,7 @@ export function RoleEdit() {
   );
 
   function cancel() {
-    setWorkingRole(selectedRole);
+    setWorkingRole(roleDefinition);
     setDirty(false);
   }
 
@@ -84,9 +76,9 @@ export function RoleEdit() {
   function save() {
     withBackdrop(async () => {
       const newConfig = await api.configuration.putRoleDefinition(
-        organizationId!,
-        workingRole!.roleName!,
-        workingRole!
+        organizationId,
+        workingRole.roleName!,
+        workingRole
       );
       storeEdits(newConfig);
       setDirty(false);
@@ -94,11 +86,11 @@ export function RoleEdit() {
   }
 
   function deletePermissionSetAtIndex(i: number) {
-    const newPermissionSets = workingRole!.permissionSets!.filter(
+    const newPermissionSets = workingRole.permissionSets!.filter(
       (_, j) => j !== i
     );
     const newWorkingRole = {
-      roleName: workingRole!.roleName,
+      roleName: workingRole.roleName,
       permissionSets: newPermissionSets,
     } as RoleDefinition;
     setWorkingRole(newWorkingRole);
@@ -109,11 +101,11 @@ export function RoleEdit() {
     i: number,
     newValue: IContextualPermissionSet
   ) {
-    const newPermissionSets = workingRole!.permissionSets!.map((oldValue, j) =>
+    const newPermissionSets = workingRole.permissionSets!.map((oldValue, j) =>
       j === i ? newValue : oldValue
     );
     const newWorkingRole = {
-      roleName: workingRole!.roleName,
+      roleName: workingRole.roleName,
       permissionSets: newPermissionSets,
     } as RoleDefinition;
     setWorkingRole(newWorkingRole);
@@ -130,21 +122,15 @@ export function RoleEdit() {
       permissions: [],
     });
     const newWorkingRole = {
-      roleName: workingRole!.roleName,
-      permissionSets: workingRole!.permissionSets!.concat(newSet),
+      roleName: workingRole.roleName,
+      permissionSets: workingRole.permissionSets!.concat(newSet),
     } as RoleDefinition;
     setWorkingRole(newWorkingRole);
     setDirty(true);
     setAddPermissionSetMenuAnchorEl(null);
   }
 
-  useScreenTitle('Roles');
-
-  return !roles ? (
-    <ProgressBackdrop>
-      <p>Loading roles...</p>
-    </ProgressBackdrop>
-  ) : (
+  return (
     <Stack paddingY={2} height="calc(100vh - 48px)" spacing={0}>
       <Box>
         <Breadcrumbs
@@ -164,11 +150,13 @@ export function RoleEdit() {
             Roles
           </MuiLink>
 
-          <Typography color="text.primary">{roleName}</Typography>
+          <Typography color="text.primary">
+            {roleDefinition.roleName}
+          </Typography>
         </Breadcrumbs>
 
         <Typography sx={{ marginY: 2 }} variant="h2">
-          Editing {roleName} role
+          Editing {roleDefinition.roleName} role
         </Typography>
       </Box>
 
