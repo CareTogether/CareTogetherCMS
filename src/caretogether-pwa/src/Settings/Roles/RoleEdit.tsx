@@ -43,6 +43,8 @@ import { Link } from 'react-router-dom';
 import NavigateNextIcon from '@mui/icons-material/NavigateNext';
 import { Box } from '@mui/system';
 import { isRoleEditable } from './isRoleEditable';
+import { ContextualPermissionSetRowAutocomplete } from './ContextualPermissionSetRowWithAutocomplete';
+import { useFeatureFlagEnabled } from 'posthog-js/react';
 
 export function RoleEdit({
   roleDefinition,
@@ -130,6 +132,10 @@ export function RoleEdit({
     setAddPermissionSetMenuAnchorEl(null);
   }
 
+  const shouldUseAutocomplete = useFeatureFlagEnabled(
+    'permissionsAutocomplete'
+  );
+
   return (
     <Stack paddingY={2} height="calc(100vh - 48px)" spacing={0}>
       <Box>
@@ -162,6 +168,11 @@ export function RoleEdit({
 
       <TableContainer>
         <Table sx={{ minWidth: '700px' }} stickyHeader size="small">
+          <colgroup>
+            <col />
+            <col style={{ width: '50%' }} />
+            <col style={{ width: '50%' }} />
+          </colgroup>
           <TableHead>
             <TableRow>
               <TableCell></TableCell>
@@ -170,17 +181,29 @@ export function RoleEdit({
             </TableRow>
           </TableHead>
           <TableBody>
-            {workingRole?.permissionSets?.map((permissionSet, i) => (
-              <ContextualPermissionSetRow
-                key={`${workingRole.permissionSets?.length}-${i}`}
-                editable={isEditable}
-                permissionSet={permissionSet}
-                onDelete={() => deletePermissionSetAtIndex(i)}
-                onUpdate={(newValue: IContextualPermissionSet) =>
-                  updatePermissionSetAtIndex(i, newValue)
-                }
-              />
-            ))}
+            {workingRole?.permissionSets?.map((permissionSet, i) =>
+              shouldUseAutocomplete ? (
+                <ContextualPermissionSetRowAutocomplete
+                  key={`${workingRole.permissionSets?.length}-${i}`}
+                  editable={isEditable}
+                  permissionSet={permissionSet}
+                  onDelete={() => deletePermissionSetAtIndex(i)}
+                  onUpdate={(newValue: IContextualPermissionSet) =>
+                    updatePermissionSetAtIndex(i, newValue)
+                  }
+                />
+              ) : (
+                <ContextualPermissionSetRow
+                  key={`${workingRole.permissionSets?.length}-${i}`}
+                  editable={isEditable}
+                  permissionSet={permissionSet}
+                  onDelete={() => deletePermissionSetAtIndex(i)}
+                  onUpdate={(newValue: IContextualPermissionSet) =>
+                    updatePermissionSetAtIndex(i, newValue)
+                  }
+                />
+              )
+            )}
             {isEditable && (
               <TableRow>
                 <TableCell>
@@ -287,7 +310,13 @@ export function RoleEdit({
       </Menu>
 
       <Box paddingY={2} borderTop={1} borderColor="divider">
-        <Stack direction="row" justifyContent="flex-end">
+        <Stack direction="row" justifyContent="flex-end" alignItems="center">
+          {dirty && (
+            <Typography sx={{ fontStyle: 'italic' }} mr={2}>
+              There are pending changes to be saved
+            </Typography>
+          )}
+
           {isEditable && (
             <Button
               color="secondary"
