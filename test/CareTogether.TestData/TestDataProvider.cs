@@ -1916,6 +1916,11 @@ namespace CareTogether.TestData
                 guid1,
                 guid2,
                 new NoteCommandExecuted(
+                    volunteerId2,
+                    ReferralsMonth(14, 10, 10, 10),
+                    new CreateDraftNote(guid1, guidB, null, null)
+                ),
+                new NoteCommandExecuted(
                     volunteerId,
                     ReferralsMonth(14, 10, 10, 10),
                     new CreateDraftNote(guid1, guid0, null, null)
@@ -2153,6 +2158,12 @@ namespace CareTogether.TestData
                 guid2,
                 guidA.ToString(),
                 "Jane said \"So long and thanks for all the fish.\" Not sure what to make of that."
+            );
+            await draftNotesStore.UpsertAsync(
+                guid1,
+                guid2,
+                guidB.ToString(),
+                "Note by another volunteer"
             );
         }
 

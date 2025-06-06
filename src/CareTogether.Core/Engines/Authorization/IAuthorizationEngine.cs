@@ -28,13 +28,6 @@ namespace CareTogether.Engines.Authorization
 
     public interface IAuthorizationEngine
     {
-        Task<ImmutableList<Permission>> AuthorizeUserAccessAsync(
-            Guid organizationId,
-            Guid locationId,
-            ClaimsPrincipal user,
-            AuthorizationContext context
-        );
-
         Task<bool> AuthorizeFamilyCommandAsync(
             Guid organizationId,
             Guid locationId,

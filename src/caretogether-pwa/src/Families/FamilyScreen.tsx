@@ -306,7 +306,8 @@ export function FamilyScreen() {
             Child
           </Button>
         )}
-        {permissions(Permission.AddEditDraftNotes) && (
+        {(permissions(Permission.AddEditDraftNotes) ||
+          permissions(Permission.AddEditOwnDraftNotes)) && (
           <Button
             className="ph-unmask"
             onClick={() => setAddNoteDialogOpen(true)}

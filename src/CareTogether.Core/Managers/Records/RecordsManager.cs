@@ -18,6 +18,7 @@ namespace CareTogether.Managers.Records
     public sealed class RecordsManager : IRecordsManager
     {
         private readonly IAuthorizationEngine authorizationEngine;
+        private readonly IUserAccessCalculation userAccessCalculation;
         private readonly IDirectoryResource directoryResource;
         private readonly IApprovalsResource approvalsResource;
         private readonly IReferralsResource referralsResource;
@@ -27,6 +28,7 @@ namespace CareTogether.Managers.Records
 
         public RecordsManager(
             IAuthorizationEngine authorizationEngine,
+            IUserAccessCalculation userAccessCalculation,
             IDirectoryResource directoryResource,
             IApprovalsResource approvalsResource,
             IReferralsResource referralsResource,
@@ -36,6 +38,7 @@ namespace CareTogether.Managers.Records
         )
         {
             this.authorizationEngine = authorizationEngine;
+            this.userAccessCalculation = userAccessCalculation;
             this.directoryResource = directoryResource;
             this.approvalsResource = approvalsResource;
             this.referralsResource = referralsResource;
@@ -65,7 +68,7 @@ namespace CareTogether.Managers.Records
                 await families
                     .Select(async family =>
                     {
-                        var permissions = await authorizationEngine.AuthorizeUserAccessAsync(
+                        var permissions = await userAccessCalculation.AuthorizeUserAccessAsync(
                             organizationId,
                             locationId,
                             user,
@@ -106,7 +109,7 @@ namespace CareTogether.Managers.Records
                 await communities
                     .Select(async community =>
                     {
-                        var permissions = await authorizationEngine.AuthorizeUserAccessAsync(
+                        var permissions = await userAccessCalculation.AuthorizeUserAccessAsync(
                             organizationId,
                             locationId,
                             user,
@@ -190,7 +193,7 @@ namespace CareTogether.Managers.Records
             Guid documentId
         )
         {
-            var contextPermissions = await authorizationEngine.AuthorizeUserAccessAsync(
+            var contextPermissions = await userAccessCalculation.AuthorizeUserAccessAsync(
                 organizationId,
                 locationId,
                 user,
@@ -218,7 +221,7 @@ namespace CareTogether.Managers.Records
             Guid documentId
         )
         {
-            var contextPermissions = await authorizationEngine.AuthorizeUserAccessAsync(
+            var contextPermissions = await userAccessCalculation.AuthorizeUserAccessAsync(
                 organizationId,
                 locationId,
                 user,
@@ -246,7 +249,7 @@ namespace CareTogether.Managers.Records
             Guid documentId
         )
         {
-            var contextPermissions = await authorizationEngine.AuthorizeUserAccessAsync(
+            var contextPermissions = await userAccessCalculation.AuthorizeUserAccessAsync(
                 organizationId,
                 locationId,
                 user,
@@ -274,7 +277,7 @@ namespace CareTogether.Managers.Records
             Guid documentId
         )
         {
-            var contextPermissions = await authorizationEngine.AuthorizeUserAccessAsync(
+            var contextPermissions = await userAccessCalculation.AuthorizeUserAccessAsync(
                 organizationId,
                 locationId,
                 user,
