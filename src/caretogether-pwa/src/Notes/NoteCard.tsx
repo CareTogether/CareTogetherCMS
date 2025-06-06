@@ -17,6 +17,8 @@ import { AddEditNoteDialog } from './AddEditNoteDialog';
 import { ApproveNoteDialog } from './ApproveNoteDialog';
 import { DiscardNoteDialog } from './DiscardNoteDialog';
 import { useFamilyIdPermissions } from '../Model/SessionModel';
+import { useLoadable } from '../Hooks/useLoadable';
+import { accountInfoState } from '../Authentication/Auth';
 
 type NoteCardProps = {
   familyId: string;
@@ -31,6 +33,23 @@ export function NoteCard({ familyId, note }: NoteCardProps) {
   const [showEditNoteDialog, setShowEditNoteDialog] = useState(false);
 
   const permissions = useFamilyIdPermissions(familyId);
+
+  const userId = useLoadable(accountInfoState)?.userId;
+
+  const isOwnNote = note?.authorId === userId;
+
+  const canEditOwnNote =
+    isOwnNote && permissions(Permission.AddEditOwnDraftNotes);
+
+  const canEditAnyNote = permissions(Permission.AddEditDraftNotes);
+
+  const canEdit = canEditOwnNote || canEditAnyNote;
+
+  const canDiscardOwnNote =
+    isOwnNote && permissions(Permission.DiscardOwnDraftNotes);
+  const canDiscardAnyNote = permissions(Permission.DiscardDraftNotes);
+
+  const canDiscard = canDiscardOwnNote || canDiscardAnyNote;
 
   return typeof note === 'undefined' ? null : (
     <Card sx={{ margin: 0 }} variant="outlined">
@@ -58,8 +77,7 @@ export function NoteCard({ familyId, note }: NoteCardProps) {
       </CardContent>
       {note.status === NoteStatus.Draft && (
         <CardActions sx={{ paddingTop: 0 }}>
-          {(permissions(Permission.DiscardDraftNotes) ||
-            permissions(Permission.DiscardOwnDraftNotes)) && (
+          {canDiscard && (
             <Button
               className="ph-unmask"
               onClick={() => setShowDiscardNoteDialog(true)}
@@ -72,8 +90,7 @@ export function NoteCard({ familyId, note }: NoteCardProps) {
               Delete
             </Button>
           )}
-          {(permissions(Permission.AddEditDraftNotes) ||
-            permissions(Permission.AddEditOwnDraftNotes)) && (
+          {canEdit && (
             <Button
               className="ph-unmask"
               onClick={() => setShowEditNoteDialog(true)}
