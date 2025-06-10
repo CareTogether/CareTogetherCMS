@@ -42,10 +42,11 @@
 
         AddEditDraftNotes = 180,
         DiscardDraftNotes = 181,
-        AddEditOwnDraftNotes = 182,
-        DiscardOwnDraftNotes = 183,
-        ApproveNotes = 184,
-        ViewAllNotes = 185, // Viewing your own notes is implicitly allowed
+        ApproveNotes = 182,
+        ViewAllNotes = 183, // Viewing your own notes is implicitly allowed
+        AddEditOwnDraftNotes = 184,
+        DiscardOwnDraftNotes = 185,
+
         // ---- Approvals ---- //
 
         ViewApprovalStatus = 200,
