@@ -21,11 +21,8 @@ export const getFilteredArrangements = (
       });
     })
     .sort((a, b) => {
-      const aStart = a.startedAtUtc?.getTime() || 0;
-      const bStart = b.startedAtUtc?.getTime() || 0;
-      const aRequested = a.requestedAtUtc?.getTime() || 0;
-      const bRequested = b.requestedAtUtc?.getTime() || 0;
-
-      return bStart - aStart || bRequested - aRequested;
+      const aDate = a.requestedAtUtc ?? a.startedAtUtc ?? new Date(0);
+      const bDate = b.requestedAtUtc ?? b.startedAtUtc ?? new Date(0);
+      return bDate.getTime() - aDate.getTime();
     });
 };
