@@ -54,10 +54,20 @@ namespace CareTogether.Core.Test.AuthorizationEngineTests
                 )
             );
 
-        private static Permission[] allPermissions = Enum.GetValues<Permission>();
-
         private AuthorizationEngine? dut;
         private Mock<IUserAccessCalculation>? mockUserAccessCalculation; // Change to interface
+
+        private void MockUserAccessCalculation(params Permission[] permissions) =>
+            mockUserAccessCalculation!
+                .Setup(x =>
+                    x.AuthorizeUserAccessAsync(
+                        It.IsAny<Guid>(),
+                        It.IsAny<Guid>(),
+                        It.IsAny<ClaimsPrincipal>(),
+                        It.IsAny<AuthorizationContext>()
+                    )
+                )
+                .ReturnsAsync(ImmutableList.Create(permissions));
 
         [TestInitialize]
         public async Task TestInitializeAsync()
@@ -122,16 +132,7 @@ namespace CareTogether.Core.Test.AuthorizationEngineTests
                 Guid.Parse("e3aaef77-0e97-47a6-b788-a67c237c781e")
             );
 
-            mockUserAccessCalculation!
-                .Setup(x =>
-                    x.AuthorizeUserAccessAsync(
-                        It.IsAny<Guid>(),
-                        It.IsAny<Guid>(),
-                        It.IsAny<ClaimsPrincipal>(),
-                        It.IsAny<AuthorizationContext>()
-                    )
-                )
-                .ReturnsAsync(ImmutableList<Permission>.Empty);
+            MockUserAccessCalculation([]);
 
             var response = await dut!.AuthorizeNoteCommandAsync(
                 guid1,
@@ -155,16 +156,7 @@ namespace CareTogether.Core.Test.AuthorizationEngineTests
                 "Volunteer"
             );
 
-            mockUserAccessCalculation!
-                .Setup(x =>
-                    x.AuthorizeUserAccessAsync(
-                        It.IsAny<Guid>(),
-                        It.IsAny<Guid>(),
-                        It.IsAny<ClaimsPrincipal>(),
-                        It.IsAny<AuthorizationContext>()
-                    )
-                )
-                .ReturnsAsync([Permission.AddEditDraftNotes, Permission.DiscardDraftNotes]);
+            MockUserAccessCalculation([Permission.AddEditDraftNotes, Permission.DiscardDraftNotes]);
 
             NoteCommand command = commandType switch
             {
@@ -191,16 +183,9 @@ namespace CareTogether.Core.Test.AuthorizationEngineTests
         {
             var user = PersonUserWithRoles(Id('4'), guid0, "Volunteer");
 
-            mockUserAccessCalculation!
-                .Setup(x =>
-                    x.AuthorizeUserAccessAsync(
-                        It.IsAny<Guid>(),
-                        It.IsAny<Guid>(),
-                        It.IsAny<ClaimsPrincipal>(),
-                        It.IsAny<AuthorizationContext>()
-                    )
-                )
-                .ReturnsAsync([Permission.AddEditOwnDraftNotes, Permission.DiscardOwnDraftNotes]);
+            MockUserAccessCalculation(
+                [Permission.AddEditOwnDraftNotes, Permission.DiscardOwnDraftNotes]
+            );
 
             NoteCommand command = commandType switch
             {
@@ -221,16 +206,9 @@ namespace CareTogether.Core.Test.AuthorizationEngineTests
         {
             var user = PersonUserWithRoles(Id('4'), guid0, "Volunteer");
 
-            mockUserAccessCalculation!
-                .Setup(x =>
-                    x.AuthorizeUserAccessAsync(
-                        It.IsAny<Guid>(),
-                        It.IsAny<Guid>(),
-                        It.IsAny<ClaimsPrincipal>(),
-                        It.IsAny<AuthorizationContext>()
-                    )
-                )
-                .ReturnsAsync([Permission.AddEditOwnDraftNotes, Permission.DiscardOwnDraftNotes]);
+            MockUserAccessCalculation(
+                [Permission.AddEditOwnDraftNotes, Permission.DiscardOwnDraftNotes]
+            );
 
             NoteCommand command = commandType switch
             {
@@ -256,16 +234,9 @@ namespace CareTogether.Core.Test.AuthorizationEngineTests
                 "Volunteer"
             );
 
-            mockUserAccessCalculation!
-                .Setup(x =>
-                    x.AuthorizeUserAccessAsync(
-                        It.IsAny<Guid>(),
-                        It.IsAny<Guid>(),
-                        It.IsAny<ClaimsPrincipal>(),
-                        It.IsAny<AuthorizationContext>()
-                    )
-                )
-                .ReturnsAsync([Permission.AddEditOwnDraftNotes, Permission.DiscardOwnDraftNotes]);
+            MockUserAccessCalculation(
+                [Permission.AddEditOwnDraftNotes, Permission.DiscardOwnDraftNotes]
+            );
 
             NoteCommand command = commandType switch
             {
