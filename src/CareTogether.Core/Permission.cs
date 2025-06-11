@@ -25,6 +25,7 @@
         AddEditRoles = 103,
         AccessCommunitiesScreen = 104,
         AccessReportsScreen = 105,
+        AccessSupportScreen = 106,
 
         ViewFamilyCustomFields = 150,
         ViewFamilyHistory = 151,

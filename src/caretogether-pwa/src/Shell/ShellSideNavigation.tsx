@@ -153,23 +153,25 @@ function SideNavigationMenu({ open }: SideNavigationMenuProps) {
               />
             )}
 
-          {permissions(Permission.AccessSettingsScreen) && (
-            <>
-              <Divider />
-              <ListItemLink
-                className="ph-unmask"
-                to={`${locationPrefix}/settings`}
-                primary="Settings"
-                icon={<SettingsIcon />}
-              />
+          {(permissions(Permission.AccessSettingsScreen) ||
+            permissions(Permission.AccessSupportScreen)) && <Divider />}
 
-              <ListItemLink
-                className="ph-unmask"
-                to={`${locationPrefix}/support`}
-                primary="Support"
-                icon={<SupportIcon />}
-              />
-            </>
+          {permissions(Permission.AccessSettingsScreen) && (
+            <ListItemLink
+              className="ph-unmask"
+              to={`${locationPrefix}/settings`}
+              primary="Settings"
+              icon={<SettingsIcon />}
+            />
+          )}
+
+          {permissions(Permission.AccessSupportScreen) && (
+            <ListItemLink
+              className="ph-unmask"
+              to={`${locationPrefix}/support`}
+              primary="Support"
+              icon={<SupportIcon />}
+            />
           )}
         </>
       )}
