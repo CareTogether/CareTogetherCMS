@@ -2,6 +2,7 @@ import { Autocomplete, TextField, Button, Stack } from '@mui/material';
 import { Permission } from '../../GeneratedClient';
 import { spacesBeforeCapitalLetters } from './spacesBeforeCapitalLetters';
 import { useState } from 'react';
+import { groupedPermissions } from './groupedPermissions';
 
 interface PermissionSelectProps {
   availablePermissions: [string, string | Permission][];
@@ -11,6 +12,7 @@ interface PermissionSelectProps {
 type Option = {
   title: string;
   value: Permission;
+  group: string;
 };
 
 export function PermissionsSelect({
@@ -19,10 +21,25 @@ export function PermissionsSelect({
 }: PermissionSelectProps) {
   const [value, setValue] = useState<Option[]>([]);
 
-  const options = availablePermissions.map(([name, value]) => ({
-    title: spacesBeforeCapitalLetters(name),
-    value: value as Permission,
-  }));
+  // Build options with group labels using GroupedPermissions
+  const groupedOptions: Option[] = Object.entries(groupedPermissions).flatMap(
+    ([group, permissions]) =>
+      permissions
+        .map((permission) => {
+          const found = availablePermissions.find(
+            ([, value]) => Number(value) === permission
+          );
+
+          return found
+            ? {
+                title: spacesBeforeCapitalLetters(found[0]),
+                value: found[1],
+                group,
+              }
+            : null;
+        })
+        .filter((item): item is Option => item !== null)
+  );
 
   return (
     <Stack mt={1} direction="row" spacing={1} alignItems="center">
@@ -34,9 +51,10 @@ export function PermissionsSelect({
         value={value}
         onChange={(_, newValue: Option[]) => setValue(newValue)}
         id="tags-outlined"
-        options={options}
-        isOptionEqualToValue={(option, value) => option.value === value.value}
+        options={groupedOptions}
+        groupBy={(option) => option.group}
         getOptionLabel={(option) => option.title}
+        isOptionEqualToValue={(option, value) => option.value === value.value}
         filterSelectedOptions
         renderInput={(params) => (
           <TextField
