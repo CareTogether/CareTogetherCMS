@@ -12,8 +12,13 @@ interface PermissionSelectProps {
 type Option = {
   title: string;
   value: Permission;
+  disabled: boolean;
   group: string;
 };
+
+const allPermissions = Object.entries(Permission).filter(
+  ([, permission]) => typeof permission !== 'string'
+);
 
 export function PermissionsSelect({
   availablePermissions,
@@ -26,17 +31,19 @@ export function PermissionsSelect({
     ([group, permissions]) =>
       permissions
         .map((permission) => {
+          const [permissionName, permissionValue] =
+            allPermissions.find(([, value]) => value === permission) || [];
+
           const found = availablePermissions.find(
             ([, value]) => Number(value) === permission
           );
 
-          return found
-            ? {
-                title: spacesBeforeCapitalLetters(found[0]),
-                value: found[1],
-                group,
-              }
-            : null;
+          return {
+            title: spacesBeforeCapitalLetters(permissionName || ''),
+            value: permissionValue,
+            disabled: !found,
+            group,
+          };
         })
         .filter((item): item is Option => item !== null)
   );
@@ -54,6 +61,7 @@ export function PermissionsSelect({
         options={groupedOptions}
         groupBy={(option) => option.group}
         getOptionLabel={(option) => option.title}
+        getOptionDisabled={(option) => option.disabled}
         isOptionEqualToValue={(option, value) => option.value === value.value}
         filterSelectedOptions
         renderInput={(params) => (
