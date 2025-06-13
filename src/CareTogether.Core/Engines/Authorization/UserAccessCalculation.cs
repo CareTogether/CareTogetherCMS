@@ -114,6 +114,19 @@ namespace CareTogether.Engines.Authorization
                 )
                 .ToImmutableList();
 
+            var targetFamilyAssignments = referrals
+                .Where(referral =>
+                    referral.Arrangements.Any(arrangement =>
+                        arrangement.Value.FamilyVolunteerAssignments.Exists(assignment =>
+                            assignment.FamilyId == targetFamily?.Id
+                        )
+                        || arrangement.Value.IndividualVolunteerAssignments.Exists(assignment =>
+                            assignment.FamilyId == targetFamily?.Id
+                        )
+                    )
+                )
+                .ToImmutableList();
+
             // Look up the user's family's and target family's community memberships
             var communities = await communitiesResource.ListLocationCommunitiesAsync(
                 organizationId,
@@ -163,9 +176,11 @@ namespace CareTogether.Engines.Authorization
                         userFamilyReferrals,
                         targetFamilyReferrals,
                         assignedReferrals,
+                        targetFamilyAssignments,
                         userFamilyCommunities,
                         targetFamilyCommunities,
-                        userCommunityRoleAssignments
+                        userCommunityRoleAssignments,
+                        communities
                     )
                 )
                 .ToImmutableList();
@@ -185,9 +200,11 @@ namespace CareTogether.Engines.Authorization
             ImmutableList<Resources.Referrals.ReferralEntry> userFamilyReferrals,
             ImmutableList<Resources.Referrals.ReferralEntry> targetFamilyReferrals,
             ImmutableList<Resources.Referrals.ReferralEntry> assignedReferrals,
+            ImmutableList<Resources.Referrals.ReferralEntry> targetFamilyAssignedReferrals,
             ImmutableList<Guid> userFamilyCommunities,
             ImmutableList<Guid> targetFamilyCommunities,
-            ImmutableList<(Guid Id, string CommunityRole)> userCommunityRoleAssignments
+            ImmutableList<(Guid Id, string CommunityRole)> userCommunityRoleAssignments,
+            ImmutableList<Community> communities
         )
         {
             return permissionSet.Context switch
@@ -325,6 +342,103 @@ namespace CareTogether.Engines.Authorization
                                 )
                             )
                         ),
+                CommunityCoMemberFamiliesAssignedFunctionsInReferralPartneringFamilyPermissionContext c =>
+                    context is FamilyAuthorizationContext
+                        && !userFamilyCommunities.IsEmpty
+                        && targetFamily != null
+                        && (
+                            c.WhenOwnCommunityRoleIsIn == null
+                            || c.WhenOwnCommunityRoleIsIn.Intersect(
+                                    userCommunityRoleAssignments.Select(cra => cra.CommunityRole)
+                                )
+                                .Any()
+                        )
+                        && targetFamilyReferrals.Any(referral =>
+                            referral.Arrangements.Any(arrangement =>
+                                arrangement.Value.FamilyVolunteerAssignments.Any(fva =>
+                                    (
+                                        c.WhenOwnCommunityRoleIsIn == null
+                                            ? userFamilyCommunities
+                                            : userCommunityRoleAssignments
+                                                .Where(cra =>
+                                                    c.WhenOwnCommunityRoleIsIn.Contains(
+                                                        cra.CommunityRole
+                                                    )
+                                                )
+                                                .Select(cra => cra.Id)
+                                    ).Any(communityId =>
+                                        communities.Any(community =>
+                                            community.Id == communityId
+                                            && community.MemberFamilies.Contains(fva.FamilyId)
+                                        )
+                                    )
+                                )
+                                || arrangement.Value.IndividualVolunteerAssignments.Any(iva =>
+                                    (
+                                        c.WhenOwnCommunityRoleIsIn == null
+                                            ? userFamilyCommunities
+                                            : userCommunityRoleAssignments
+                                                .Where(cra =>
+                                                    c.WhenOwnCommunityRoleIsIn.Contains(
+                                                        cra.CommunityRole
+                                                    )
+                                                )
+                                                .Select(cra => cra.Id)
+                                    ).Any(communityId =>
+                                        communities.Any(community =>
+                                            community.Id == communityId
+                                            && community.MemberFamilies.Contains(iva.FamilyId)
+                                        )
+                                    )
+                                )
+                            )
+                        ),
+                CommunityCoMemberFamiliesAssignedFunctionsInReferralCoAssignedFamiliesPermissionContext c =>
+                    context is FamilyAuthorizationContext
+                        && !userFamilyCommunities.IsEmpty
+                        && targetFamily != null
+                        && targetFamilyAssignedReferrals
+                            .SelectMany(referral =>
+                                referral.Arrangements.Select(arrangement =>
+                                    arrangement.Value.FamilyVolunteerAssignments.Any(fva =>
+                                        (
+                                            c.WhenOwnCommunityRoleIsIn == null
+                                                ? userFamilyCommunities
+                                                : userCommunityRoleAssignments
+                                                    .Where(cra =>
+                                                        c.WhenOwnCommunityRoleIsIn.Contains(
+                                                            cra.CommunityRole
+                                                        )
+                                                    )
+                                                    .Select(cra => cra.Id)
+                                        ).Any(communityId =>
+                                            communities.Any(community =>
+                                                community.Id == communityId
+                                                && community.MemberFamilies.Contains(fva.FamilyId)
+                                            )
+                                        )
+                                    )
+                                    || arrangement.Value.IndividualVolunteerAssignments.Any(iva =>
+                                        (
+                                            c.WhenOwnCommunityRoleIsIn == null
+                                                ? userFamilyCommunities
+                                                : userCommunityRoleAssignments
+                                                    .Where(cra =>
+                                                        c.WhenOwnCommunityRoleIsIn.Contains(
+                                                            cra.CommunityRole
+                                                        )
+                                                    )
+                                                    .Select(cra => cra.Id)
+                                        ).Any(communityId =>
+                                            communities.Any(community =>
+                                                community.Id == communityId
+                                                && community.MemberFamilies.Contains(iva.FamilyId)
+                                            )
+                                        )
+                                    )
+                                )
+                            )
+                            .Any(),
                 _ => throw new NotImplementedException(
                     $"The permission context type '{permissionSet.Context.GetType().FullName}' has not been implemented."
                 ),
