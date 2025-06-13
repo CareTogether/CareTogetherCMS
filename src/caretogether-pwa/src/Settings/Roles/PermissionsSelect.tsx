@@ -2,6 +2,7 @@ import { Autocomplete, TextField, Button, Stack } from '@mui/material';
 import { Permission } from '../../GeneratedClient';
 import { spacesBeforeCapitalLetters } from './spacesBeforeCapitalLetters';
 import { useState } from 'react';
+import { groupedPermissions } from './groupedPermissions';
 
 interface PermissionSelectProps {
   availablePermissions: [string, string | Permission][];
@@ -11,7 +12,13 @@ interface PermissionSelectProps {
 type Option = {
   title: string;
   value: Permission;
+  disabled: boolean;
+  group: string;
 };
+
+const allPermissions = Object.entries(Permission).filter(
+  ([, permission]) => typeof permission !== 'string'
+);
 
 export function PermissionsSelect({
   availablePermissions,
@@ -19,10 +26,27 @@ export function PermissionsSelect({
 }: PermissionSelectProps) {
   const [value, setValue] = useState<Option[]>([]);
 
-  const options = availablePermissions.map(([name, value]) => ({
-    title: spacesBeforeCapitalLetters(name),
-    value: value as Permission,
-  }));
+  // Build options with group labels using GroupedPermissions
+  const groupedOptions: Option[] = Object.entries(groupedPermissions).flatMap(
+    ([group, permissions]) =>
+      permissions
+        .map((permission) => {
+          const [permissionName, permissionValue] =
+            allPermissions.find(([, value]) => value === permission) || [];
+
+          const found = availablePermissions.find(
+            ([, value]) => Number(value) === permission
+          );
+
+          return {
+            title: spacesBeforeCapitalLetters(permissionName || ''),
+            value: permissionValue,
+            disabled: !found,
+            group,
+          };
+        })
+        .filter((item): item is Option => item !== null)
+  );
 
   return (
     <Stack mt={1} direction="row" spacing={1} alignItems="center">
@@ -34,9 +58,11 @@ export function PermissionsSelect({
         value={value}
         onChange={(_, newValue: Option[]) => setValue(newValue)}
         id="tags-outlined"
-        options={options}
-        isOptionEqualToValue={(option, value) => option.value === value.value}
+        options={groupedOptions}
+        groupBy={(option) => option.group}
         getOptionLabel={(option) => option.title}
+        getOptionDisabled={(option) => option.disabled}
+        isOptionEqualToValue={(option, value) => option.value === value.value}
         filterSelectedOptions
         renderInput={(params) => (
           <TextField
