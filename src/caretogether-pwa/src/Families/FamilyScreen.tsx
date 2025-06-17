@@ -60,7 +60,6 @@ import { ReferralComments } from '../Referrals/ReferralComments';
 import { ReferralCustomField } from '../Referrals/ReferralCustomField';
 import { PrimaryContactEditor } from './PrimaryContactEditor';
 import useScreenTitle from '../Shell/ShellScreenTitle';
-import { ProgressBackdrop } from '../Shell/ProgressBackdrop';
 import { useCommunityLookup, useFamilyLookup } from '../Model/DirectoryModel';
 import { RemoveFamilyRoleDialog } from '../Volunteers/RemoveFamilyRoleDialog';
 import { ResetFamilyRoleDialog } from '../Volunteers/ResetFamilyRoleDialog';
@@ -103,7 +102,7 @@ export function FamilyScreen() {
   const appNavigate = useAppNavigate();
 
   const familyLookup = useFamilyLookup();
-  const family = familyLookup(familyId)!;
+  const family = familyLookup(familyId);
 
   const permissions = useFamilyPermissions(family);
 
@@ -263,11 +262,27 @@ export function FamilyScreen() {
   const printContentRef = useRef<HTMLDivElement>(null);
   const reactToPrintFn = useReactToPrint({ contentRef: printContentRef });
 
-  return !family ? (
-    <ProgressBackdrop>
-      <p>Loading family...</p>
-    </ProgressBackdrop>
-  ) : (
+  if (!family) {
+    return (
+      <Box
+        height="100vh"
+        display="flex"
+        alignItems="center"
+        justifyContent="center"
+        flexDirection="column"
+        textAlign="center"
+      >
+        <Typography variant="h4" gutterBottom>
+          You don’t have permission to view this family.
+        </Typography>
+        <Button variant="contained" onClick={() => appNavigate.dashboard()}>
+          Home
+        </Button>
+      </Box>
+    );
+  }
+
+  return (
     <Container maxWidth={false} sx={{ paddingLeft: '12px' }}>
       <Toolbar variant="dense" disableGutters={true}>
         {permissions(Permission.UploadFamilyDocuments) && (
