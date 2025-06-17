@@ -264,18 +264,15 @@ export function FamilyScreen() {
 
   if (!family) {
     return (
-      <Box
-        height="100vh"
-        display="flex"
-        alignItems="center"
-        justifyContent="center"
-        flexDirection="column"
-        textAlign="center"
-      >
-        <Typography variant="h4" gutterBottom>
-          You don’t have permission to view this family.
+      <Box mt={10} textAlign="center">
+        <Typography>
+          Oops! You can’t view this family. It may be restricted or unavailable.
         </Typography>
-        <Button variant="contained" onClick={() => appNavigate.dashboard()}>
+        <Button
+          variant="contained"
+          sx={{ mt: 2 }}
+          onClick={() => appNavigate.dashboard()}
+        >
           Home
         </Button>
       </Box>
