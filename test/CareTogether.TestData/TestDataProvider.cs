@@ -1916,11 +1916,6 @@ namespace CareTogether.TestData
                 guid1,
                 guid2,
                 new NoteCommandExecuted(
-                    volunteerId2,
-                    ReferralsMonth(14, 10, 10, 10),
-                    new CreateDraftNote(guid1, guidB, null, null)
-                ),
-                new NoteCommandExecuted(
                     volunteerId,
                     ReferralsMonth(14, 10, 10, 10),
                     new CreateDraftNote(guid1, guid0, null, null)
@@ -2099,6 +2094,11 @@ namespace CareTogether.TestData
                 ),
                 new CommunityCommandExecutedEvent(
                     adminId,
+                    ApprovalsMonth(1, 10, 12, 0),
+                    new AddCommunityMemberFamily(guid1, brambleswiftFamilyGuid)
+                ),
+                new CommunityCommandExecutedEvent(
+                    adminId,
                     ApprovalsMonth(1, 10, 13, 0),
                     new AddCommunityMemberFamily(guid1, guid5)
                 ),
@@ -2158,12 +2158,6 @@ namespace CareTogether.TestData
                 guid2,
                 guidA.ToString(),
                 "Jane said \"So long and thanks for all the fish.\" Not sure what to make of that."
-            );
-            await draftNotesStore.UpsertAsync(
-                guid1,
-                guid2,
-                guidB.ToString(),
-                "Note by another volunteer"
             );
         }
 
@@ -2311,6 +2305,36 @@ namespace CareTogether.TestData
                                         Permission.ViewApprovalProgress,
                                         Permission.ViewReferralProgress,
                                         Permission.ViewArrangementProgress,
+                                    ]
+                                ),
+                                new ContextualPermissionSet(
+                                    new CommunityCoMemberFamiliesAssignedFunctionsInReferralPartneringFamilyPermissionContext(
+                                        WhenOwnCommunityRoleIsIn: null
+                                    ),
+                                    [
+                                        Permission.AddEditDraftNotes,
+                                        Permission.DiscardDraftNotes,
+                                        Permission.ViewAssignments,
+                                        Permission.ViewAssignedArrangementProgress,
+                                        Permission.ViewChildLocationHistory,
+                                        Permission.TrackChildLocationChange,
+                                        Permission.ViewPersonConcerns,
+                                        Permission.ViewPersonNotes,
+                                    ]
+                                ),
+                                new ContextualPermissionSet(
+                                    new CommunityCoMemberFamiliesAssignedFunctionsInReferralCoAssignedFamiliesPermissionContext(
+                                        WhenOwnCommunityRoleIsIn: null
+                                    ),
+                                    [
+                                        Permission.AddEditDraftNotes,
+                                        Permission.DiscardDraftNotes,
+                                        Permission.ViewAssignments,
+                                        Permission.ViewAssignedArrangementProgress,
+                                        Permission.ViewChildLocationHistory,
+                                        Permission.TrackChildLocationChange,
+                                        Permission.ViewPersonConcerns,
+                                        Permission.ViewPersonNotes,
                                     ]
                                 ),
                             ]
