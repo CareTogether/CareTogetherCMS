@@ -34,7 +34,8 @@ export function ReportsScreen() {
   }
 
   if (!permissions(Permission.AccessReportsScreen)) {
-    return navigate('/');
+    navigate('/');
+    return;
   }
 
   if (error) {

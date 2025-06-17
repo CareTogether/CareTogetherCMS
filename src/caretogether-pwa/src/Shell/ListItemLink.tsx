@@ -21,6 +21,7 @@ interface ListItemLinkCollapsibleProps {
   }[];
   defaultOpen?: boolean;
   className?: string;
+  darkColor?: boolean;
 }
 
 export function ListItemLink(props: ListItemLinkCollapsibleProps) {

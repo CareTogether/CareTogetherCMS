@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { Menu, MenuItem } from '@mui/material';
 import { format } from 'date-fns';
 import { useRecoilValue } from 'recoil';

@@ -77,7 +77,7 @@ function VolunteerProgress(props: { onOpen: () => void }) {
     true
   );
   const handleExpandCollapse = (
-    event: React.MouseEvent<HTMLElement>,
+    _: React.MouseEvent<HTMLElement>,
     newExpandedView: boolean | null
   ) => {
     if (newExpandedView !== null) {
@@ -196,7 +196,7 @@ function VolunteerProgress(props: { onOpen: () => void }) {
                                   .map((y) => y[1])
                                   .some((y) =>
                                     y.missingRequirements?.some(
-                                      (x) => x === actionName
+                                      (x) => x.item1 === actionName
                                     )
                                   ))
                             ? '❌'
@@ -240,7 +240,7 @@ function VolunteerProgress(props: { onOpen: () => void }) {
                                   {volunteerFamily.volunteerFamilyInfo?.individualVolunteers![
                                     adult.item1!.id!
                                   ]!.missingRequirements?.some(
-                                    (x) => x === actionName
+                                    (x) => x.item1 === actionName
                                   )
                                     ? '❌'
                                     : volunteerFamily.volunteerFamilyInfo?.individualVolunteers![
