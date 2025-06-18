@@ -156,12 +156,12 @@ export function RoleEdit({
             Roles
           </MuiLink>
 
-          <Typography color="text.primary">
+          <Typography color="text.primary" className="ph-unmask">
             {roleDefinition.roleName}
           </Typography>
         </Breadcrumbs>
 
-        <Typography sx={{ marginY: 2 }} variant="h2">
+        <Typography sx={{ marginY: 2 }} variant="h2" className="ph-unmask">
           Editing {roleDefinition.roleName} role
         </Typography>
       </Box>
@@ -312,7 +312,11 @@ export function RoleEdit({
       <Box paddingY={2} borderTop={1} borderColor="divider">
         <Stack direction="row" justifyContent="flex-end" alignItems="center">
           {dirty && (
-            <Typography sx={{ fontStyle: 'italic' }} mr={2}>
+            <Typography
+              sx={{ fontStyle: 'italic' }}
+              mr={2}
+              className="ph-unmask"
+            >
               There are pending changes to be saved
             </Typography>
           )}
@@ -324,6 +328,7 @@ export function RoleEdit({
               sx={{ marginRight: 2 }}
               disabled={!dirty}
               onClick={cancel}
+              className="ph-unmask"
             >
               Cancel
             </Button>
@@ -334,6 +339,7 @@ export function RoleEdit({
               variant="contained"
               disabled={!dirty}
               onClick={save}
+              className="ph-unmask"
             >
               Save
             </Button>

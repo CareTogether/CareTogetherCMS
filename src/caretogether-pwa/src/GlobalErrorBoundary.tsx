@@ -34,8 +34,8 @@ export class GlobalErrorBoundary extends React.Component<
     if (this.state.hasError) {
       return (
         <>
-          <h1>Something went wrong.</h1>
-          <pre style={{ whiteSpace: 'pre-wrap' }}>
+          <h1 className="ph-unmask">Something went wrong.</h1>
+          <pre className="ph-unmask" style={{ whiteSpace: 'pre-wrap' }}>
             {this.state.error?.message
               ? this.state.error.message
               : JSON.stringify(this.state.error)}

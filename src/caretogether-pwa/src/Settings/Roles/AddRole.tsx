@@ -61,10 +61,10 @@ export function AddRole({ onClose }: AddEditRoleDrawerProps) {
       }}
     >
       <Grid item xs={12}>
-        <h3>Add New Role</h3>
+        <h3 className="ph-unmask">Add New Role</h3>
       </Grid>
 
-      <Grid item xs={12}>
+      <Grid item xs={12} className="ph-unmask">
         <TextField
           type="text"
           fullWidth
@@ -78,7 +78,7 @@ export function AddRole({ onClose }: AddEditRoleDrawerProps) {
         />
       </Grid>
 
-      <Grid item xs={12}>
+      <Grid item xs={12} className="ph-unmask">
         <FormControl>
           <FormControlLabel
             control={
@@ -105,6 +105,7 @@ export function AddRole({ onClose }: AddEditRoleDrawerProps) {
           variant="contained"
           sx={{ marginRight: 2 }}
           onClick={onClose}
+          className="ph-unmask"
         >
           Cancel
         </Button>
@@ -114,6 +115,7 @@ export function AddRole({ onClose }: AddEditRoleDrawerProps) {
           color="primary"
           variant="contained"
           disabled={roleName.length === 0}
+          className="ph-unmask"
         >
           Save
         </Button>
