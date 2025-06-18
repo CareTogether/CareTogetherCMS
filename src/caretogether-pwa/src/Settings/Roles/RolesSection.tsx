@@ -37,9 +37,11 @@ export function RolesSection() {
 
   return (
     <>
-      <Typography variant="h2">Roles</Typography>
+      <Typography variant="h2" className="ph-unmask">
+        Roles
+      </Typography>
 
-      <TableContainer>
+      <TableContainer className="ph-unmask">
         <Table aria-label="Roles list" size="small">
           <TableHead>
             <TableRow>
@@ -69,7 +71,11 @@ export function RolesSection() {
                   sx={{ cursor: 'pointer' }}
                   onClick={() => appNavigate.role(role.roleName!)}
                 >
-                  <TableCell align="left" sx={{ minWidth: 200 }}>
+                  <TableCell
+                    align="left"
+                    sx={{ minWidth: 200 }}
+                    className="ph-unmask"
+                  >
                     {role.roleName}
                   </TableCell>
 
@@ -105,6 +111,7 @@ export function RolesSection() {
             sx={{ marginY: 2 }}
             variant="contained"
             onClick={() => openSidePanel()}
+            className="ph-unmask"
           >
             Add new role
           </Button>

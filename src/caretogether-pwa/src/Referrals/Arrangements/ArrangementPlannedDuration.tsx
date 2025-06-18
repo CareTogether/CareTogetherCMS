@@ -31,7 +31,7 @@ function Cell({ children }: { children: React.ReactNode }) {
       border="1px solid"
       borderColor="grey.200"
     >
-      {children}
+      <div className="ph-unmask">{children}</div>
     </Grid>
   );
 }
