@@ -109,7 +109,15 @@ namespace CareTogether.Resources.Policies
         NoteEntryRequirement NoteEntry,
         string? Instructions,
         Uri? InfoLink,
-        TimeSpan? Validity
+        TimeSpan? Validity,
+        string? CanView,
+        string? CanEdit
+    );
+
+    public sealed record AccessLevel(
+        string Name,
+        string[] OrganizationRoles,
+        string[] ApprovalRoles
     );
 
     public sealed record ReferralPolicy(
