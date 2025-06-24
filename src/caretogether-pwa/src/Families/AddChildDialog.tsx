@@ -348,10 +348,7 @@ export function AddChildDialog({ onClose }: AddChildDialogProps) {
         </form>
       </DialogContent>
       <DialogActions sx={{ marginBottom: 4 }}>
-        <Button
-          onClick={() => onClose?.(undefined, 'cancel')}
-          color="secondary"
-        >
+        <Button onClick={() => onClose(undefined, 'cancel')} color="secondary">
           Cancel
         </Button>
         <Button onClick={addChild} variant="contained" color="primary">

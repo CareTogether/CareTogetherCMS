@@ -441,10 +441,7 @@ export function AddAdultDialog({ onClose }: AddAdultDialogProps) {
         </form>
       </DialogContent>
       <DialogActions sx={{ marginBottom: 4 }}>
-        <Button
-          onClick={() => onClose?.(undefined, 'cancel')}
-          color="secondary"
-        >
+        <Button onClick={() => onClose(undefined, 'cancel')} color="secondary">
           Cancel
         </Button>
         <Button onClick={addAdult} variant="contained" color="primary">
