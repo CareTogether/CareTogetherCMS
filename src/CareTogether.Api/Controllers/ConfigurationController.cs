@@ -76,6 +76,23 @@ namespace CareTogether.Api.Controllers
             return Ok(result);
         }
 
+        [HttpPut("/api/{organizationId:guid}/[controller]/locations/{locationName}")]
+        public async Task<ActionResult<OrganizationConfiguration>> PutLocationConfiguration(
+            Guid organizationId,
+            string locationName,
+            [FromBody] LocationConfiguration locationConfiguration
+        )
+        {
+            if (!User.IsInRole(SystemConstants.ORGANIZATION_ADMINISTRATOR))
+                return Forbid();
+            var result = await policiesResource.UpsertLocationConfigurationAsync(
+                organizationId,
+                locationName,
+                locationConfiguration
+            );
+            return Ok(result);
+        }
+
         [HttpGet("/api/{organizationId:guid}/{locationId:guid}/[controller]/policy")]
         public async Task<ActionResult<EffectiveLocationPolicy>> GetEffectiveLocationPolicy(
             Guid organizationId,

@@ -196,6 +196,59 @@
         }
       }
     },
+    "/api/{organizationId}/Configuration/locations/{locationName}": {
+      "put": {
+        "tags": [
+          "Configuration"
+        ],
+        "operationId": "Configuration_PutLocationConfiguration",
+        "parameters": [
+          {
+            "name": "organizationId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "guid"
+            },
+            "x-position": 1
+          },
+          {
+            "name": "locationName",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "x-position": 2
+          }
+        ],
+        "requestBody": {
+          "x-name": "locationConfiguration",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LocationConfiguration"
+              }
+            }
+          },
+          "required": true,
+          "x-position": 3
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OrganizationConfiguration"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/{organizationId}/{locationId}/Configuration/policy": {
       "get": {
         "tags": [
@@ -1491,10 +1544,10 @@
           "ViewPersonDateOfBirth",
           "AddEditDraftNotes",
           "DiscardDraftNotes",
-          "AddEditOwnDraftNotes",
-          "DiscardOwnDraftNotes",
           "ApproveNotes",
           "ViewAllNotes",
+          "AddEditOwnDraftNotes",
+          "DiscardOwnDraftNotes",
           "ViewApprovalStatus",
           "EditApprovalRequirementCompletion",
           "EditApprovalRequirementExemption",

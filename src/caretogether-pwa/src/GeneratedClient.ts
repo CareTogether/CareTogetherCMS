@@ -201,6 +201,50 @@ export class ConfigurationClient {
         return Promise.resolve<OrganizationConfiguration>(null as any);
     }
 
+    putLocationConfiguration(organizationId: string, locationName: string, locationConfiguration: LocationConfiguration): Promise<OrganizationConfiguration> {
+        let url_ = this.baseUrl + "/api/{organizationId}/Configuration/locations/{locationName}";
+        if (organizationId === undefined || organizationId === null)
+            throw new Error("The parameter 'organizationId' must be defined.");
+        url_ = url_.replace("{organizationId}", encodeURIComponent("" + organizationId));
+        if (locationName === undefined || locationName === null)
+            throw new Error("The parameter 'locationName' must be defined.");
+        url_ = url_.replace("{locationName}", encodeURIComponent("" + locationName));
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(locationConfiguration);
+
+        let options_: RequestInit = {
+            body: content_,
+            method: "PUT",
+            headers: {
+                "Content-Type": "application/json",
+                "Accept": "application/json"
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processPutLocationConfiguration(_response);
+        });
+    }
+
+    protected processPutLocationConfiguration(response: Response): Promise<OrganizationConfiguration> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result200 = OrganizationConfiguration.fromJS(resultData200);
+            return result200;
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<OrganizationConfiguration>(null as any);
+    }
+
     getEffectiveLocationPolicy(organizationId: string, locationId: string): Promise<EffectiveLocationPolicy> {
         let url_ = this.baseUrl + "/api/{organizationId}/{locationId}/Configuration/policy";
         if (organizationId === undefined || organizationId === null)
@@ -2016,10 +2060,10 @@ export enum Permission {
     ViewPersonDateOfBirth = 159,
     AddEditDraftNotes = 180,
     DiscardDraftNotes = 181,
-    AddEditOwnDraftNotes = 182,
-    DiscardOwnDraftNotes = 183,
-    ApproveNotes = 184,
-    ViewAllNotes = 185,
+    ApproveNotes = 182,
+    ViewAllNotes = 183,
+    AddEditOwnDraftNotes = 184,
+    DiscardOwnDraftNotes = 185,
     ViewApprovalStatus = 200,
     EditApprovalRequirementCompletion = 201,
     EditApprovalRequirementExemption = 202,

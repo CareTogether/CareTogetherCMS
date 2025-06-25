@@ -59,6 +59,24 @@ namespace CareTogether.Resources.Policies
             return Render(newConfig);
         }
 
+        public async Task<OrganizationConfiguration> UpsertLocationConfigurationAsync(
+            Guid organizationId,
+            string locationName,
+            LocationConfiguration locationConfiguration
+        )
+        {
+            var config = await configurationStore.GetAsync(organizationId, Guid.Empty, CONFIG);
+            var newConfig = config with
+            {
+                Locations = config.Locations.AddOrReplace(
+                    location => location.Name == locationName,
+                    _ => locationConfiguration
+                ),
+            };
+            await configurationStore.UpsertAsync(organizationId, locationConfiguration.Id, CONFIG, newConfig);
+            return Render(newConfig);
+        }
+
         public async Task<OrganizationConfiguration> DeleteRoleDefinitionAsync(
             Guid organizationId,
             string roleName
