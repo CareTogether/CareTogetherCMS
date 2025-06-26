@@ -80,7 +80,7 @@ export function LocationEdit() {
   const configurationOptions = {
     timezones: configuration?.availableTimeZones || [],
     ethnicities: configuration?.ethnicities || [],
-    familyRelationships: configuration?.adultFamilyRelationships || [],
+    adultFamilyRelationships: configuration?.adultFamilyRelationships || [],
     arrangementReasons: configuration?.arrangementReasons || [],
   };
 
@@ -266,20 +266,14 @@ export function LocationEdit() {
           {activeTab === 'basic' && (
             <BasicConfiguration
               data={{
-                locationName: location?.name ?? '',
-                timezone:
-                  typeof configurationValues.timezone === 'string'
-                    ? configurationValues.timezone
-                    : '',
-                ethnicities: configurationValues.ethnicities,
-                familyRelationships: configurationValues.familyRelationships,
-                arrangementReasons: configurationValues.arrangementReasons,
+                name: location?.name || '',
+                ethnicities: location.ethnicities || [],
+                adultFamilyRelationships:
+                  location.adultFamilyRelationships || [],
+                arrangementReasons: location.arrangementReasons || [],
               }}
               options={configurationOptions}
-              onChange={handleBasicConfigChange}
-              setDirty={setDirty}
-              onSave={save}
-              onCancel={cancel}
+              currentLocationDefinition={location}
             />
           )}
           {activeTab === 'actions' && !hideActionsTab && <ActionDefinitions />}

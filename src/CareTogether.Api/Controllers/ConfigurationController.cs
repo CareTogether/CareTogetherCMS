@@ -67,7 +67,6 @@ namespace CareTogether.Api.Controllers
         [HttpPut("/api/{organizationId:guid}/[controller]")]
         public async Task<ActionResult<OrganizationConfiguration>> PutLocationDefinition(
             Guid organizationId,
-            string roleName,
             [FromBody] LocationConfiguration locationConfiguration
         )
         {

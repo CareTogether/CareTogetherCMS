@@ -1,87 +1,93 @@
-import {
-  Chip,
-  MenuItem,
-  Stack,
-  TextField,
-  Autocomplete,
-  Typography,
-  Button,
-} from '@mui/material';
-import { useEffect, useState } from 'react';
+import { Stack, TextField, Typography, Button } from '@mui/material';
+import { useForm, Controller, SubmitHandler } from 'react-hook-form';
+import { CTAutocomplete } from '../../Generic/Forms/CTAutocomplete';
+import { api } from '../../Api/Api';
+import { useRecoilValue, useSetRecoilState } from 'recoil';
+import { selectedLocationContextState } from '../../Model/Data';
+import { LocationConfiguration } from '../../GeneratedClient';
+import { organizationConfigurationEdited } from '../../Model/ConfigurationModel';
+import { useBackdrop } from '../../Hooks/useBackdrop';
 
 export type ConfigurationData = {
-  locationName: string;
-  timezone: string;
+  name: string;
+  // timeZone?: string;
   ethnicities: string[];
-  familyRelationships: string[];
+  adultFamilyRelationships: string[];
   arrangementReasons: string[];
 };
 
 export type AvailableOptions = {
   timezones: string[];
   ethnicities: string[];
-  familyRelationships: string[];
+  adultFamilyRelationships: string[];
   arrangementReasons: string[];
 };
 
 type Props = {
   data: ConfigurationData;
   options: AvailableOptions;
-  setDirty: (dirty: boolean) => void;
-  onChange: <K extends keyof Omit<ConfigurationData, 'locationName'>>(
-    key: K,
-    value: ConfigurationData[K]
-  ) => void;
-  onSave: () => void;
-  onCancel: () => void;
+  currentLocationDefinition: LocationConfiguration;
 };
 
 export default function BasicConfiguration({
   data,
   options,
-  setDirty,
-  onChange,
-  onSave,
-  onCancel,
+  currentLocationDefinition,
 }: Props) {
-  const [localData, setLocalData] = useState(data);
+  const {
+    control,
+    handleSubmit,
+    formState: { errors, isDirty },
+    reset,
+  } = useForm({
+    defaultValues: data,
+  });
 
-  useEffect(() => {
-    setLocalData(data);
-  }, [data]);
+  const { organizationId } = useRecoilValue(selectedLocationContextState);
+  const storeEdits = useSetRecoilState(organizationConfigurationEdited);
+  const withBackdrop = useBackdrop();
 
-  const handleChange = <
-    K extends keyof Omit<ConfigurationData, 'locationName'>,
-  >(
-    key: K,
-    value: ConfigurationData[K]
-  ) => {
-    setLocalData((prev) => ({ ...prev, [key]: value }));
-    onChange(key, value);
-    setDirty(true);
+  const onSubmit: SubmitHandler<ConfigurationData> = async (data) => {
+    withBackdrop(async () => {
+      const newConfig = await api.configuration.putLocationDefinition(
+        organizationId,
+        new LocationConfiguration({ ...currentLocationDefinition, ...data })
+      );
+      storeEdits(newConfig);
+    });
   };
 
   return (
-    <>
+    <form onSubmit={handleSubmit(onSubmit)}>
       <Typography variant="h6" sx={{ mb: 2 }}>
         Basic configuration
       </Typography>
 
       <Stack direction="column" spacing={3} alignItems="stretch">
         <Stack direction="row" spacing={2} alignItems="flex-start">
-          <TextField
-            type="text"
-            required
-            label="Location name"
-            value={localData.locationName}
-            disabled
+          <Controller
+            name="name"
+            control={control}
+            rules={{
+              required: true,
+            }}
+            render={({ field }) => (
+              <TextField
+                label="Location name"
+                error={errors[field.name] !== undefined}
+                helperText={errors[field.name]?.message}
+                required
+                size="small"
+                {...field}
+              />
+            )}
           />
 
-          <TextField
+          {/* <TextField
             label="Timezone"
             select
-            value={localData.timezone}
-            onChange={(e) => handleChange('timezone', e.target.value)}
+            // value={localData.timezone}
+            // onChange={(e) => handleChange('timezone', e.target.value)}
             helperText="This affects date calculations throughout the app"
           >
             {options.timezones.map((tz) => (
@@ -89,7 +95,7 @@ export default function BasicConfiguration({
                 {tz}
               </MenuItem>
             ))}
-          </TextField>
+          </TextField> */}
         </Stack>
         <Typography variant="h6">Ethnicities</Typography>
         <Typography variant="body2">
@@ -99,25 +105,12 @@ export default function BasicConfiguration({
           need anymore, it won’t change any existing records.
         </Typography>
 
-        <Autocomplete
-          multiple
-          freeSolo
+        <CTAutocomplete
+          name="ethnicities"
+          label="Ethnicities"
+          control={control}
           options={options.ethnicities}
-          value={localData.ethnicities}
-          onChange={(_, newValue) => handleChange('ethnicities', newValue)}
-          renderTags={(value, getTagProps) =>
-            value.map((option, index) => (
-              <Chip
-                variant="outlined"
-                label={option}
-                {...getTagProps({ index })}
-              />
-            ))
-          }
-          renderInput={(params) => (
-            <TextField {...params} label="Ethnicities" />
-          )}
-          fullWidth
+          helperText='Start typing and press "Enter" to add a new item'
         />
 
         <Typography variant="h6">Family relationship types</Typography>
@@ -131,27 +124,12 @@ export default function BasicConfiguration({
           change any existing records.
         </Typography>
 
-        <Autocomplete
-          multiple
-          freeSolo
-          options={options.familyRelationships}
-          value={localData.familyRelationships}
-          onChange={(_, newValue) =>
-            handleChange('familyRelationships', newValue)
-          }
-          renderTags={(value, getTagProps) =>
-            value.map((option, index) => (
-              <Chip
-                variant="outlined"
-                label={option}
-                {...getTagProps({ index })}
-              />
-            ))
-          }
-          renderInput={(params) => (
-            <TextField {...params} label="Family relationship types" />
-          )}
-          fullWidth
+        <CTAutocomplete
+          name="adultFamilyRelationships"
+          label="Family relationship types"
+          control={control}
+          options={options.adultFamilyRelationships}
+          helperText='Start typing and press "Enter" to add a new item'
         />
 
         <Typography variant="h6">Arrangement reasons</Typography>
@@ -165,38 +143,33 @@ export default function BasicConfiguration({
           change any existing records.
         </Typography>
 
-        <Autocomplete
-          multiple
-          freeSolo
+        <CTAutocomplete
+          name="arrangementReasons"
+          label="Arrangement reasons"
+          control={control}
           options={options.arrangementReasons}
-          value={localData.arrangementReasons}
-          onChange={(_, newValue) =>
-            handleChange('arrangementReasons', newValue)
-          }
-          renderTags={(value, getTagProps) =>
-            value.map((option, index) => (
-              <Chip
-                variant="outlined"
-                label={option}
-                {...getTagProps({ index })}
-              />
-            ))
-          }
-          renderInput={(params) => (
-            <TextField {...params} label="Arrangement reasons" />
-          )}
-          fullWidth
+          helperText='Start typing and press "Enter" to add a new item'
         />
 
         <Stack direction="row" spacing={2} justifyContent="flex-start">
-          <Button variant="contained" color="secondary" onClick={onCancel}>
+          <Button
+            variant="contained"
+            color="secondary"
+            onClick={() => reset()}
+            disabled={!isDirty}
+          >
             Cancel
           </Button>
-          <Button variant="contained" color="primary" onClick={onSave}>
+          <Button
+            variant="contained"
+            color="primary"
+            type="submit"
+            disabled={!isDirty}
+          >
             Save
           </Button>
         </Stack>
       </Stack>
-    </>
+    </form>
   );
 }

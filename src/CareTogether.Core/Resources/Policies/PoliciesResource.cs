@@ -124,8 +124,6 @@ namespace CareTogether.Resources.Policies
         {
             var config = await configurationStore.GetAsync(organizationId, Guid.Empty, CONFIG);
 
-            // F5D1O
-
             // If location id is empty, generate a new one
             if (locationConfiguration.Id == Guid.Empty)
                 locationConfiguration = locationConfiguration with { Id = Guid.NewGuid() };
