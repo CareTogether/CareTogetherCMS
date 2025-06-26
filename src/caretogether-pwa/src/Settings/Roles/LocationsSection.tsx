@@ -6,7 +6,6 @@ import {
   TableContainer,
   TableHead,
   TableRow,
-  Tooltip,
   Typography,
 } from '@mui/material';
 import { Permission } from '../../GeneratedClient';
@@ -14,18 +13,11 @@ import { useAppNavigate } from '../../Hooks/useAppNavigate';
 import { useLoadable } from '../../Hooks/useLoadable';
 import { organizationConfigurationQuery } from '../../Model/ConfigurationModel';
 import { useGlobalPermissions } from '../../Model/SessionModel';
-import { AddRole } from './AddRole';
 import { useSidePanel } from '../../Hooks/useSidePanel';
-import { DeleteRoleButton } from './DeleteRoleButton';
-import { isRoleEditable } from './isRoleEditable';
+import { AddLocation } from './AddLocation';
 
 export function LocationsSection() {
   const configuration = useLoadable(organizationConfigurationQuery);
-  const roles = configuration?.roles;
-
-  const sortedRoles = [...(roles || [])].sort((a, b) =>
-    a.roleName! < b.roleName! ? -1 : a.roleName! > b.roleName! ? 1 : 0
-  );
 
   const appNavigate = useAppNavigate();
 
@@ -112,7 +104,10 @@ export function LocationsSection() {
           </Button>
 
           <SidePanel>
-            <AddRole onClose={() => closeSidePanel()} />
+            <AddLocation
+              onClose={() => closeSidePanel()}
+              availableTimezones={configuration?.availableTimeZones ?? []}
+            />
           </SidePanel>
         </>
       )}

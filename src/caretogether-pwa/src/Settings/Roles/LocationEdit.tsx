@@ -1,15 +1,15 @@
 import {
   Stack,
   MenuItem,
-  Button,
   Menu,
   Typography,
   Breadcrumbs,
+  useTheme,
+  useMediaQuery,
   Link as MuiLink,
-  TextField,
-  Chip,
+  IconButton,
 } from '@mui/material';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   AllPartneringFamiliesPermissionContext,
   AllVolunteerFamiliesPermissionContext,
@@ -41,6 +41,13 @@ import { useParams } from 'react-router-dom';
 import { Link } from 'react-router-dom';
 import NavigateNextIcon from '@mui/icons-material/NavigateNext';
 import { Box } from '@mui/system';
+import BasicConfiguration from './BasicConfiguration';
+import ActionDefinitions from './ActionDefinitions';
+import ApprovalPolicies from './ApprovalPolicies';
+import SettingsTabMenu from './SettingsTabMenu';
+import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
+import ChevronRightIcon from '@mui/icons-material/ChevronRight';
+import { useFeatureFlagEnabled } from 'posthog-js/react';
 
 export function LocationEdit() {
   const { locationId } = useParams<{ locationId: string }>();
@@ -52,15 +59,46 @@ export function LocationEdit() {
     (location) => location.id === locationId
   );
 
+  console.log('Selected location:', location);
+
+  const hideActionsTab = useFeatureFlagEnabled('hide-action-definitions-tab');
+  const hidePoliciesTab = useFeatureFlagEnabled('hide-approval-policies-tab');
+
+  const availableTabs: ('basic' | 'actions' | 'policies')[] = ['basic'];
+  if (!hideActionsTab) availableTabs.push('actions');
+  if (!hidePoliciesTab) availableTabs.push('policies');
+
   useScreenTitle(`Editing ${location?.name} configuration`);
 
-  const [timezone, setTimezone] = useState('America/New_York');
-  const PHONE_NUMBERS = ['+1 101-101-0101', '+1 555-555-555', '+1 202-202-202'];
+  const [configurationValues, setConfigurationValues] = useState({
+    timezone: location?.timeZone || '',
+    ethnicities: location?.ethnicities || [],
+    familyRelationships: location?.adultFamilyRelationships || [],
+    arrangementReasons: location?.arrangementReasons || [],
+  });
 
-  const [phoneNumbers, setPhoneNumbers] = useState<string[]>(PHONE_NUMBERS);
+  const configurationOptions = {
+    timezones: configuration?.availableTimeZones || [],
+    ethnicities: configuration?.ethnicities || [],
+    familyRelationships: configuration?.adultFamilyRelationships || [],
+    arrangementReasons: configuration?.arrangementReasons || [],
+  };
 
   const storeEdits = useSetRecoilState(organizationConfigurationEdited);
   const roles = configuration?.roles;
+
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
+
+  useEffect(() => {
+    if (isMobile) {
+      setIsSidebarCollapsed(true);
+    } else {
+      setIsSidebarCollapsed(false);
+    }
+  }, [isMobile]);
 
   // const permissions = useGlobalPermissions();
 
@@ -69,7 +107,19 @@ export function LocationEdit() {
   const [workingRole, setWorkingRole] = useState<RoleDefinition | undefined>(
     selectedRole
   );
-  const [dirty, setDirty] = useState(false);
+  const [, setDirty] = useState(false);
+
+  const [activeTab, setActiveTab] = useState<'basic' | 'actions' | 'policies'>(
+    'basic'
+  );
+
+  useEffect(() => {
+    if (!availableTabs.includes(activeTab)) {
+      setActiveTab('basic');
+    }
+  }, [hideActionsTab, hidePoliciesTab]);
+
+  console.log('timezone value:', configurationValues.timezone);
 
   // const isEditable = Boolean(
   //   workingRole &&
@@ -77,7 +127,13 @@ export function LocationEdit() {
   //     isRoleEditable(workingRole)
   // );
 
-  const isEditable = true;
+  const handleBasicConfigChange = <K extends keyof typeof configurationValues>(
+    key: K,
+    value: (typeof configurationValues)[K]
+  ) => {
+    setConfigurationValues((prev) => ({ ...prev, [key]: value }));
+    setDirty(true);
+  };
 
   function cancel() {
     setWorkingRole(selectedRole);
@@ -148,7 +204,7 @@ export function LocationEdit() {
       <p>Loading location configuration...</p>
     </ProgressBackdrop>
   ) : (
-    <Stack paddingY={2} height="calc(100vh - 48px)" spacing={0}>
+    <Stack spacing={0} sx={{ height: '100%', minHeight: '100vh' }}>
       <Box>
         <Breadcrumbs
           aria-label="breadcrumb"
@@ -169,90 +225,66 @@ export function LocationEdit() {
 
           <Typography color="text.primary">{location.name}</Typography>
         </Breadcrumbs>
-
-        <Typography sx={{ marginY: 2 }} variant="h2">
-          Editing {location.name} configuration
-        </Typography>
       </Box>
 
-      <Box>
-        <Typography variant="h6" sx={{ mb: 2 }}>
-          Basic configuration
-        </Typography>
-        <Stack direction="row" spacing={2} alignItems="flex-start">
-          <TextField
-            type="text"
-            // fullWidth
-            required
-            label="Location name"
-            placeholder="Enter a name for the location"
-            // error={roleName.length === 0}
-            value={location.name}
-            // onChange={(e) => setRoleName(e.target.value)}
-            // autoFocus
-          />
-          <TextField
-            label="Timezone"
-            select
-            value={timezone}
-            onChange={(e) => {
-              setTimezone(e.target.value);
-              setDirty(true);
-            }}
-          >
-            {['America/New_York', 'Europe/London', 'America/Sao_Paulo'].map(
-              (tz) => (
-                <MenuItem key={tz} value={tz}>
-                  {tz}
-                </MenuItem>
-              )
-            )}
-          </TextField>
+      <Box display="flex" flex={1} minHeight={0} sx={{ overflow: 'auto' }}>
+        <Box
+          sx={{
+            width: isMobile && isSidebarCollapsed ? 40 : 240,
+            minHeight: '100%',
+            borderRight: '1px solid #e0e0e0',
+            p: 1,
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'stretch',
+          }}
+        >
+          {isMobile && (
+            <IconButton
+              size="small"
+              onClick={() => setIsSidebarCollapsed((prev) => !prev)}
+              sx={{ alignSelf: 'flex-end', mb: 1 }}
+              color="primary"
+            >
+              {isSidebarCollapsed ? <ChevronRightIcon /> : <ChevronLeftIcon />}
+            </IconButton>
+          )}
 
-          <TextField
-            label="SMS source numbers"
-            select
-            fullWidth
-            SelectProps={{
-              multiple: true,
-              renderValue: (selected) => {
-                const selectedValues = selected as string[];
-                return (
-                  <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
-                    {selectedValues.map((value) => (
-                      <Box key={value} onMouseDown={(e) => e.stopPropagation()}>
-                        <Chip
-                          label={value}
-                          onDelete={() => {
-                            setPhoneNumbers((prev) =>
-                              prev.filter((v) => v !== value)
-                            );
-                            setDirty(true);
-                          }}
-                        />
-                      </Box>
-                    ))}
-                  </Box>
-                );
-              },
-            }}
-            value={phoneNumbers}
-            onChange={(e) => {
-              const value =
-                typeof e.target.value === 'string'
-                  ? e.target.value.split(',')
-                  : e.target.value;
-              setPhoneNumbers(value);
-              setDirty(true);
-            }}
-          >
-            {PHONE_NUMBERS.map((num) => (
-              <MenuItem key={num} value={num}>
-                {num}
-              </MenuItem>
-            ))}
-          </TextField>
-        </Stack>
+          {(!isMobile || !isSidebarCollapsed) && (
+            <Box sx={{ flex: 1, px: 1 }}>
+              <SettingsTabMenu
+                activeTab={activeTab}
+                onTabChange={setActiveTab}
+                hideActionsTab={hideActionsTab ?? false}
+                hidePoliciesTab={hidePoliciesTab ?? false}
+              />
+            </Box>
+          )}
+        </Box>
+
+        <Box flex={1} paddingLeft={4} paddingTop={2}>
+          {activeTab === 'basic' && (
+            <BasicConfiguration
+              data={{
+                locationName: location?.name ?? '',
+                timezone:
+                  typeof configurationValues.timezone === 'string'
+                    ? configurationValues.timezone
+                    : '',
+                ethnicities: configurationValues.ethnicities,
+                familyRelationships: configurationValues.familyRelationships,
+                arrangementReasons: configurationValues.arrangementReasons,
+              }}
+              options={configurationOptions}
+              onChange={handleBasicConfigChange}
+              setDirty={setDirty}
+              onSave={save}
+              onCancel={cancel}
+            />
+          )}
+          {activeTab === 'actions' && !hideActionsTab && <ActionDefinitions />}
+          {activeTab === 'policies' && !hidePoliciesTab && <ApprovalPolicies />}
+        </Box>
       </Box>
 
       {/* <TableContainer>
@@ -380,32 +412,6 @@ export function LocationEdit() {
           Community Member - Co-Member Families
         </MenuItem>
       </Menu>
-
-      <Box paddingY={2} borderTop={1} borderColor="divider">
-        <Stack direction="row" justifyContent="flex-end">
-          {isEditable && (
-            <Button
-              color="secondary"
-              variant="contained"
-              sx={{ marginRight: 2 }}
-              disabled={!dirty}
-              onClick={cancel}
-            >
-              Cancel
-            </Button>
-          )}
-          {isEditable && (
-            <Button
-              color="primary"
-              variant="contained"
-              disabled={!dirty}
-              onClick={save}
-            >
-              Save
-            </Button>
-          )}
-        </Stack>
-      </Box>
     </Stack>
   );
 }

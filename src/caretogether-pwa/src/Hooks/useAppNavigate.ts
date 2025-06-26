@@ -15,6 +15,8 @@ export interface AppNavigate {
   settings: () => void;
   role: (roleId: string) => void;
   location: (locationId: string) => void;
+  settingsRoles: () => void;
+  settingsLocations: () => void;
 }
 
 /**
@@ -60,5 +62,7 @@ export function useAppNavigate(): AppNavigate {
     role: (roleId: string) => inContext(`settings/roles/${roleId}`),
     location: (locationId: string) =>
       inContext(`settings/locations/${locationId}`),
+    settingsRoles: () => inContext('settings/roles'),
+    settingsLocations: () => inContext('settings/locations'),
   };
 }
