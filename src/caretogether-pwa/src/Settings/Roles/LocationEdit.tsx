@@ -61,8 +61,8 @@ export function LocationEdit() {
 
   console.log('Selected location:', location);
 
-  const hideActionsTab = useFeatureFlagEnabled('hide-action-definitions-tab');
-  const hidePoliciesTab = useFeatureFlagEnabled('hide-approval-policies-tab');
+  const hideActionsTab = useFeatureFlagEnabled('actionDefinitionsTab');
+  const hidePoliciesTab = useFeatureFlagEnabled('approvalPoliciesTab');
 
   const availableTabs: ('basic' | 'actions' | 'policies')[] = ['basic'];
   if (!hideActionsTab) availableTabs.push('actions');
@@ -117,7 +117,7 @@ export function LocationEdit() {
     if (!availableTabs.includes(activeTab)) {
       setActiveTab('basic');
     }
-  }, [hideActionsTab, hidePoliciesTab]);
+  }, [activeTab, hideActionsTab, hidePoliciesTab]);
 
   console.log('timezone value:', configurationValues.timezone);
 
