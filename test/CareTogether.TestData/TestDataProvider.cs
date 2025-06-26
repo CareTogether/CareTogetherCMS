@@ -100,6 +100,7 @@ namespace CareTogether.TestData
         static readonly Guid adminId = Guid.Parse("2b87864a-63e3-4406-bcbc-c0068a13ac05");
         static readonly Guid volunteerId = Guid.Parse("e3aaef77-0e97-47a6-b788-a67c237c781e");
         static readonly Guid volunteerId2 = Guid.Parse("ca662f2b-270a-4a8b-baa7-c109eadbb133");
+        static readonly Guid noteId1 = Guid.NewGuid();
 
         // Fisher family
         static readonly Guid michaelFisherGuid = Guid.Parse("f6020665-6f2e-4c93-8673-8770f35f1609");
@@ -2049,6 +2050,21 @@ namespace CareTogether.TestData
                         "I'm a little star-struck... Emily is *amazing*!!",
                         null
                     )
+                ),
+                new NoteCommandExecuted(
+                    volunteerId2,
+                    ApprovalsMonth(28, 9, 30, 0),
+                    new CreateDraftNote(guid1, noteId1, null, null)
+                ),
+                new NoteCommandExecuted(
+                    adminId,
+                    ApprovalsMonth(28, 9, 32, 0),
+                    new ApproveNote(
+                        guid1,
+                        noteId1,
+                        "Approved note from another volunteer",
+                        null
+                    )
                 )
             );
         }
@@ -2158,6 +2174,18 @@ namespace CareTogether.TestData
                 guid2,
                 guidA.ToString(),
                 "Jane said \"So long and thanks for all the fish.\" Not sure what to make of that."
+            );
+            await draftNotesStore.UpsertAsync(
+                guid1,
+                guid2,
+                guidB.ToString(),
+                "Note by another volunteer"
+            );
+            await draftNotesStore.UpsertAsync(
+                guid1,
+                guid2,
+                noteId1.ToString(),
+                "draft"
             );
         }
 
