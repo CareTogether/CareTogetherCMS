@@ -21,10 +21,11 @@ interface ListItemLinkCollapsibleProps {
   }[];
   defaultOpen?: boolean;
   className?: string;
+  darkColor?: boolean;
 }
 
 export function ListItemLink(props: ListItemLinkCollapsibleProps) {
-  const { icon, primary, to, subitems, defaultOpen } = props;
+  const { icon, primary, to, subitems, defaultOpen, darkColor } = props;
 
   const selected =
     useMatch({
@@ -48,6 +49,11 @@ export function ListItemLink(props: ListItemLinkCollapsibleProps) {
 
   const hasSubitems = subitems && subitems.length > 0;
 
+  // TODO: Those names are a bit confusing, we should rename them
+  const desktopColor = selected ? '#fff' : '#fff8';
+  const mobileColor = '#555';
+  const color = darkColor ? mobileColor : desktopColor;
+
   return (
     <>
       <li className={props.className}>
@@ -58,14 +64,21 @@ export function ListItemLink(props: ListItemLinkCollapsibleProps) {
           sx={{ paddingLeft: 1.5 }}
         >
           {icon ? (
-            <ListItemIcon sx={{ color: selected ? '#fff' : '#fff8' }}>
+            <ListItemIcon
+              sx={{
+                color,
+              }}
+            >
               {icon}
             </ListItemIcon>
           ) : null}
 
           <ListItemText
             primary={primary}
-            sx={{ marginLeft: -2, color: selected ? '#fff' : '#fff8' }}
+            sx={{
+              marginLeft: -2,
+              color,
+            }}
           />
 
           {hasSubitems && collapseIcon}
@@ -82,7 +95,7 @@ export function ListItemLink(props: ListItemLinkCollapsibleProps) {
             <li className="ph-unmask" key={item.label}>
               <ListItemButton
                 selected={item.isActive}
-                sx={{ paddingLeft: 1.5, color: '#fff8' }}
+                sx={{ paddingLeft: 1.5 }}
                 onClick={item.onClick}
               >
                 {/* {icon ? <ListItemIcon>{icon}</ListItemIcon> : null} */}
@@ -90,7 +103,7 @@ export function ListItemLink(props: ListItemLinkCollapsibleProps) {
                   primary={item.label}
                   sx={{
                     marginLeft: 6,
-                    color: item.isActive ? '#fff' : undefined,
+                    color: item.isActive ? '#fff' : '#fff8',
                   }}
                 />
               </ListItemButton>
