@@ -55,7 +55,9 @@ export function RoleEdit() {
   const { roleName } = useParams<{ roleName: string }>();
 
   const configuration = useLoadable(organizationConfigurationQuery);
-  const { organizationId } = useRecoilValue(selectedLocationContextState);
+  const { organizationId, locationId } = useRecoilValue(
+    selectedLocationContextState
+  );
   const storeEdits = useSetRecoilState(organizationConfigurationEdited);
   const roles = configuration?.roles;
 
@@ -151,15 +153,18 @@ export function RoleEdit() {
           aria-label="breadcrumb"
           separator={<NavigateNextIcon fontSize="small" />}
         >
-          <MuiLink component={Link} underline="hover" color="inherit" to="..">
+          <MuiLink
+            component={Link}
+            to={`/org/${organizationId}/${locationId}/settings`}
+            sx={{ textDecoration: 'none', color: 'text.primary' }}
+          >
             Settings
           </MuiLink>
 
           <MuiLink
             component={Link}
-            underline="hover"
-            color="inherit"
-            to="..#roles"
+            to={`/org/${organizationId}/${locationId}/settings/roles`}
+            sx={{ textDecoration: 'none', color: 'text.primary' }}
           >
             Roles
           </MuiLink>

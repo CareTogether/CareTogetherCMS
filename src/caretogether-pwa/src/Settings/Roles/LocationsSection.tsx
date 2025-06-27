@@ -15,9 +15,18 @@ import { organizationConfigurationQuery } from '../../Model/ConfigurationModel';
 import { useGlobalPermissions } from '../../Model/SessionModel';
 import { useSidePanel } from '../../Hooks/useSidePanel';
 import { AddLocation } from './AddLocation';
+import { Breadcrumbs, Link as MuiLink } from '@mui/material';
+import { NavigateNext as NavigateNextIcon } from '@mui/icons-material';
+import { useRecoilValue } from 'recoil';
+import { selectedLocationContextState } from '../../Model/Data';
+import { Link } from 'react-router-dom';
 
 export function LocationsSection() {
   const configuration = useLoadable(organizationConfigurationQuery);
+
+  const { organizationId, locationId } = useRecoilValue(
+    selectedLocationContextState
+  );
 
   const appNavigate = useAppNavigate();
 
@@ -29,6 +38,22 @@ export function LocationsSection() {
 
   return (
     <>
+      <Breadcrumbs
+        aria-label="breadcrumb"
+        separator={<NavigateNextIcon fontSize="small" />}
+        sx={{ mb: 2, mt: 2 }}
+      >
+        <MuiLink
+          component={Link}
+          to={`/org/${organizationId}/${locationId}/settings`}
+          sx={{ textDecoration: 'none', color: 'text.primary' }}
+        >
+          Settings
+        </MuiLink>
+
+        <Typography color="text.primary">Locations</Typography>
+      </Breadcrumbs>
+
       <Typography variant="h2" mt={2}>
         Locations
       </Typography>

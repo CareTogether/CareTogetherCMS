@@ -204,21 +204,24 @@ export function LocationEdit() {
       <p>Loading location configuration...</p>
     </ProgressBackdrop>
   ) : (
-    <Stack spacing={0} sx={{ height: '100%', minHeight: '100vh' }}>
+    <Stack spacing={0} sx={{ height: '100%', minHeight: '100vh', pt: 2 }}>
       <Box>
         <Breadcrumbs
           aria-label="breadcrumb"
           separator={<NavigateNextIcon fontSize="small" />}
         >
-          <MuiLink component={Link} underline="hover" color="inherit" to="..">
+          <MuiLink
+            component={Link}
+            to={`/org/${organizationId}/${locationId}/settings`}
+            sx={{ textDecoration: 'none', color: 'text.primary' }}
+          >
             Settings
           </MuiLink>
 
           <MuiLink
             component={Link}
-            underline="hover"
-            color="inherit"
-            to="..#roles"
+            to={`/org/${organizationId}/${locationId}/settings/locations`}
+            sx={{ textDecoration: 'none', color: 'text.primary' }}
           >
             Locations
           </MuiLink>
