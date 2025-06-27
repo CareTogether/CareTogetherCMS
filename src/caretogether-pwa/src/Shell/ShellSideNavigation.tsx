@@ -1,12 +1,8 @@
 import {
   Badge,
-  Collapse,
   Divider,
   Drawer,
   List,
-  ListItem,
-  ListItemIcon,
-  ListItemText,
   Skeleton,
   Stack,
   useTheme,
@@ -31,11 +27,7 @@ import { useFeatureFlagEnabled as usePostHogFeatureFlagEnabled } from 'posthog-j
 import { useRecoilValue } from 'recoil';
 import { reportSubmenuItemsAtom } from '../Model/UI';
 import { ListItemLink } from './ListItemLink';
-import ExpandLess from '@mui/icons-material/ExpandLess';
-import ExpandMore from '@mui/icons-material/ExpandMore';
-import LocationOnIcon from '@mui/icons-material/LocationOn';
-import AssignmentIndIcon from '@mui/icons-material/AssignmentInd';
-import { useState } from 'react';
+import { useAppNavigate } from '../Hooks/useAppNavigate';
 
 interface SideNavigationMenuProps {
   open: boolean;
@@ -43,6 +35,8 @@ interface SideNavigationMenuProps {
 function SideNavigationMenu({ open }: SideNavigationMenuProps) {
   const flags = useFeatureFlags();
   const permissions = useGlobalPermissions();
+
+  const appNavigate = useAppNavigate();
 
   const showReports = usePostHogFeatureFlagEnabled('reports');
   const showReportsSubmenuItems = usePostHogFeatureFlagEnabled(
@@ -55,8 +49,6 @@ function SideNavigationMenu({ open }: SideNavigationMenuProps) {
   const queueItemsCount = useLoadable(queueItemsCountQuery);
 
   const reportSubmenuItems = useRecoilValue(reportSubmenuItemsAtom);
-
-  const [settingsOpen, setSettingsOpen] = useState(false);
 
   return (
     //  <List aria-label="main navigation">
@@ -169,41 +161,23 @@ function SideNavigationMenu({ open }: SideNavigationMenuProps) {
 
           {permissions(Permission.AccessSettingsScreen) && (
             <>
-              <ListItem
-                button
-                onClick={() => setSettingsOpen(!settingsOpen)}
-                sx={{ paddingLeft: 1.5, color: '#fff8' }}
-              >
-                <ListItemIcon>
-                  <SettingsIcon sx={{ color: '#fff8' }} />
-                </ListItemIcon>
-                <ListItemText primary="Settings" sx={{ marginLeft: -2 }} />
-                {settingsOpen ? <ExpandLess /> : <ExpandMore />}
-              </ListItem>
-
-              <Collapse in={settingsOpen} timeout="auto" unmountOnExit>
-                <List component="div" disablePadding>
-                  <ListItemLink
-                    className="ph-unmask"
-                    to={`${locationPrefix}/settings/roles`}
-                    primary="Roles"
-                    icon={<AssignmentIndIcon sx={{ color: '#fff8' }} />}
-                    paddingLeft={4}
-                  />
-                  <ListItemLink
-                    className="ph-unmask"
-                    to={`${locationPrefix}/settings/locations`}
-                    primary="Locations"
-                    icon={<LocationOnIcon sx={{ color: '#fff8' }} />}
-                    paddingLeft={4}
-                  />
-                </List>
-              </Collapse>
               <ListItemLink
                 className="ph-unmask"
-                to={`${locationPrefix}/support`}
-                primary="Support"
-                icon={<SupportIcon sx={{ color: '#fff8' }} />}
+                to={`${locationPrefix}/settings`}
+                primary="Settings"
+                icon={<SettingsIcon sx={{ color: '#fff8' }} />}
+                subitems={[
+                  {
+                    label: 'Roles',
+                    isActive: location.pathname.includes('/settings/roles'),
+                    onClick: () => appNavigate.settingsRoles(),
+                  },
+                  {
+                    label: 'Locations',
+                    isActive: location.pathname.includes('/settings/locations'),
+                    onClick: () => appNavigate.settingsLocations(),
+                  },
+                ]}
               />
             </>
           )}

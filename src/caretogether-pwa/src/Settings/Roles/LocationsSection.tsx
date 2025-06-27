@@ -41,7 +41,7 @@ export function LocationsSection() {
       <Breadcrumbs
         aria-label="breadcrumb"
         separator={<NavigateNextIcon fontSize="small" />}
-        sx={{ mb: 2, mt: 2 }}
+        sx={{ mb: 2 }}
       >
         <MuiLink
           component={Link}
