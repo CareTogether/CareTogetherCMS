@@ -671,6 +671,46 @@ export class RecordsClient {
         }
         return Promise.resolve<RecordsAggregate>(null as any);
     }
+
+    getEmbedInfo(organizationId: string, locationId: string): Promise<EmbedParams> {
+        let url_ = this.baseUrl + "/api/{organizationId}/{locationId}/Records/getEmbedInfo";
+        if (organizationId === undefined || organizationId === null)
+            throw new Error("The parameter 'organizationId' must be defined.");
+        url_ = url_.replace("{organizationId}", encodeURIComponent("" + organizationId));
+        if (locationId === undefined || locationId === null)
+            throw new Error("The parameter 'locationId' must be defined.");
+        url_ = url_.replace("{locationId}", encodeURIComponent("" + locationId));
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: RequestInit = {
+            method: "GET",
+            headers: {
+                "Accept": "application/json"
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processGetEmbedInfo(_response);
+        });
+    }
+
+    protected processGetEmbedInfo(response: Response): Promise<EmbedParams> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result200 = EmbedParams.fromJS(resultData200);
+            return result200;
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<EmbedParams>(null as any);
+    }
 }
 
 export class UsersClient {
@@ -994,10 +1034,6 @@ export class MetadataClient {
         this.baseUrl = baseUrl ?? "";
     }
 
-    /**
-     * Generates the OData $metadata document.
-     * @return The IEdmModel representing $metadata.
-     */
     getMetadata(): Promise<IEdmModel> {
         let url_ = this.baseUrl + "/api/odata/live/$metadata";
         url_ = url_.replace(/[?&]$/, "");
@@ -1032,10 +1068,6 @@ export class MetadataClient {
         return Promise.resolve<IEdmModel>(null as any);
     }
 
-    /**
-     * Generates the OData service document.
-     * @return The service document for the service.
-     */
     getServiceDocument(): Promise<ODataServiceDocument> {
         let url_ = this.baseUrl + "/api/odata/live";
         url_ = url_.replace(/[?&]$/, "");
@@ -2011,6 +2043,8 @@ export enum Permission {
     AccessSettingsScreen = 102,
     AddEditRoles = 103,
     AccessCommunitiesScreen = 104,
+    AccessReportsScreen = 105,
+    AccessSupportScreen = 106,
     ViewFamilyCustomFields = 150,
     ViewFamilyHistory = 151,
     ViewPersonConcerns = 152,
@@ -2020,10 +2054,13 @@ export enum Permission {
     EditPersonConcerns = 156,
     EditPersonNotes = 157,
     EditPersonContactInfo = 158,
+    ViewPersonDateOfBirth = 159,
     AddEditDraftNotes = 180,
     DiscardDraftNotes = 181,
     ApproveNotes = 182,
     ViewAllNotes = 183,
+    AddEditOwnDraftNotes = 184,
+    DiscardOwnDraftNotes = 185,
     ViewApprovalStatus = 200,
     EditApprovalRequirementCompletion = 201,
     EditApprovalRequirementExemption = 202,
@@ -7033,6 +7070,16 @@ export abstract class ArrangementsCommand implements IArrangementsCommand {
             result.init(data);
             return result;
         }
+        if (data["discriminator"] === "EditArrangementCancelledAt") {
+            let result = new EditArrangementCancelledAt();
+            result.init(data);
+            return result;
+        }
+        if (data["discriminator"] === "EditArrangementEndTime") {
+            let result = new EditArrangementEndTime();
+            result.init(data);
+            return result;
+        }
         if (data["discriminator"] === "EditArrangementReason") {
             let result = new EditArrangementReason();
             result.init(data);
@@ -7626,6 +7673,74 @@ export interface IDeletePlannedChildLocationChange extends IArrangementsCommand 
     plannedChangeUtc?: Date;
     childLocationFamilyId?: string;
     childLocationReceivingAdultId?: string;
+}
+
+export class EditArrangementCancelledAt extends ArrangementsCommand implements IEditArrangementCancelledAt {
+    cancelledAtUtc?: Date;
+
+    constructor(data?: IEditArrangementCancelledAt) {
+        super(data);
+        this._discriminator = "EditArrangementCancelledAt";
+    }
+
+    init(_data?: any) {
+        super.init(_data);
+        if (_data) {
+            this.cancelledAtUtc = _data["cancelledAtUtc"] ? new Date(_data["cancelledAtUtc"].toString()) : <any>undefined;
+        }
+    }
+
+    static fromJS(data: any): EditArrangementCancelledAt {
+        data = typeof data === 'object' ? data : {};
+        let result = new EditArrangementCancelledAt();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["cancelledAtUtc"] = this.cancelledAtUtc ? this.cancelledAtUtc.toISOString() : <any>undefined;
+        super.toJSON(data);
+        return data;
+    }
+}
+
+export interface IEditArrangementCancelledAt extends IArrangementsCommand {
+    cancelledAtUtc?: Date;
+}
+
+export class EditArrangementEndTime extends ArrangementsCommand implements IEditArrangementEndTime {
+    endedAtUtc?: Date;
+
+    constructor(data?: IEditArrangementEndTime) {
+        super(data);
+        this._discriminator = "EditArrangementEndTime";
+    }
+
+    init(_data?: any) {
+        super.init(_data);
+        if (_data) {
+            this.endedAtUtc = _data["endedAtUtc"] ? new Date(_data["endedAtUtc"].toString()) : <any>undefined;
+        }
+    }
+
+    static fromJS(data: any): EditArrangementEndTime {
+        data = typeof data === 'object' ? data : {};
+        let result = new EditArrangementEndTime();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["endedAtUtc"] = this.endedAtUtc ? this.endedAtUtc.toISOString() : <any>undefined;
+        super.toJSON(data);
+        return data;
+    }
+}
+
+export interface IEditArrangementEndTime extends IArrangementsCommand {
+    endedAtUtc?: Date;
 }
 
 export class EditArrangementReason extends ArrangementsCommand implements IEditArrangementReason {
@@ -12272,6 +12387,146 @@ export interface ICreateVolunteerFamilyWithNewAdultCommand extends ICompositeRec
     emailAddress?: EmailAddress | undefined;
 }
 
+export class EmbedParams implements IEmbedParams {
+    type?: string;
+    embedReport?: EmbedReport[];
+    embedToken?: EmbedToken;
+
+    constructor(data?: IEmbedParams) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.type = _data["type"];
+            if (Array.isArray(_data["embedReport"])) {
+                this.embedReport = [] as any;
+                for (let item of _data["embedReport"])
+                    this.embedReport!.push(EmbedReport.fromJS(item));
+            }
+            this.embedToken = _data["embedToken"] ? EmbedToken.fromJS(_data["embedToken"]) : <any>undefined;
+        }
+    }
+
+    static fromJS(data: any): EmbedParams {
+        data = typeof data === 'object' ? data : {};
+        let result = new EmbedParams();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["type"] = this.type;
+        if (Array.isArray(this.embedReport)) {
+            data["embedReport"] = [];
+            for (let item of this.embedReport)
+                data["embedReport"].push(item.toJSON());
+        }
+        data["embedToken"] = this.embedToken ? this.embedToken.toJSON() : <any>undefined;
+        return data;
+    }
+}
+
+export interface IEmbedParams {
+    type?: string;
+    embedReport?: EmbedReport[];
+    embedToken?: EmbedToken;
+}
+
+export class EmbedReport implements IEmbedReport {
+    reportId?: string;
+    reportName?: string;
+    embedUrl?: string;
+
+    constructor(data?: IEmbedReport) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.reportId = _data["reportId"];
+            this.reportName = _data["reportName"];
+            this.embedUrl = _data["embedUrl"];
+        }
+    }
+
+    static fromJS(data: any): EmbedReport {
+        data = typeof data === 'object' ? data : {};
+        let result = new EmbedReport();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["reportId"] = this.reportId;
+        data["reportName"] = this.reportName;
+        data["embedUrl"] = this.embedUrl;
+        return data;
+    }
+}
+
+export interface IEmbedReport {
+    reportId?: string;
+    reportName?: string;
+    embedUrl?: string;
+}
+
+export class EmbedToken implements IEmbedToken {
+    token?: string | undefined;
+    tokenId?: string;
+    expiration?: Date;
+
+    constructor(data?: IEmbedToken) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.token = _data["token"];
+            this.tokenId = _data["tokenId"];
+            this.expiration = _data["expiration"] ? new Date(_data["expiration"].toString()) : <any>undefined;
+        }
+    }
+
+    static fromJS(data: any): EmbedToken {
+        data = typeof data === 'object' ? data : {};
+        let result = new EmbedToken();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["token"] = this.token;
+        data["tokenId"] = this.tokenId;
+        data["expiration"] = this.expiration ? this.expiration.toISOString() : <any>undefined;
+        return data;
+    }
+}
+
+export interface IEmbedToken {
+    token?: string | undefined;
+    tokenId?: string;
+    expiration?: Date;
+}
+
 export class UserAccess implements IUserAccess {
     userId?: string;
     organizations?: UserOrganizationAccess[];
@@ -12776,19 +13031,12 @@ export interface IAccountLocationAccess {
     roles?: string[];
 }
 
-/** Semantic representation of an EDM model. */
 export abstract class IEdmModel implements IIEdmModel {
-    /** Gets the collection of schema elements that are contained in this model. */
     schemaElements?: IEdmSchemaElement[] | undefined;
-    /** Gets the collection of vocabulary annotations that are contained in this model. */
     vocabularyAnnotations?: IEdmVocabularyAnnotation[] | undefined;
-    /** Gets the collection of models referred to by this model (mainly by the this.References). */
     referencedModels?: IEdmModel[] | undefined;
-    /** Gets the collection of namespaces that schema elements use contained in this model. */
     declaredNamespaces?: string[] | undefined;
-    /** Gets the model's annotations manager. */
     directValueAnnotationsManager?: IEdmDirectValueAnnotationsManager | undefined;
-    /** Gets the only one entity container of the model. */
     entityContainer?: IEdmEntityContainer | undefined;
 
     constructor(data?: IIEdmModel) {
@@ -12860,27 +13108,17 @@ export abstract class IEdmModel implements IIEdmModel {
     }
 }
 
-/** Semantic representation of an EDM model. */
 export interface IIEdmModel {
-    /** Gets the collection of schema elements that are contained in this model. */
     schemaElements?: IEdmSchemaElement[] | undefined;
-    /** Gets the collection of vocabulary annotations that are contained in this model. */
     vocabularyAnnotations?: IEdmVocabularyAnnotation[] | undefined;
-    /** Gets the collection of models referred to by this model (mainly by the this.References). */
     referencedModels?: IEdmModel[] | undefined;
-    /** Gets the collection of namespaces that schema elements use contained in this model. */
     declaredNamespaces?: string[] | undefined;
-    /** Gets the model's annotations manager. */
     directValueAnnotationsManager?: IEdmDirectValueAnnotationsManager | undefined;
-    /** Gets the only one entity container of the model. */
     entityContainer?: IEdmEntityContainer | undefined;
 }
 
-/** Common base interface for all named children of EDM schema. */
 export abstract class IEdmSchemaElement implements IIEdmSchemaElement {
-    /** Gets the kind of this schema element. */
     schemaElementKind?: EdmSchemaElementKind;
-    /** Gets the namespace this schema element belongs to. */
     namespace?: string | undefined;
 
     constructor(data?: IIEdmSchemaElement) {
@@ -12912,15 +13150,11 @@ export abstract class IEdmSchemaElement implements IIEdmSchemaElement {
     }
 }
 
-/** Common base interface for all named children of EDM schema. */
 export interface IIEdmSchemaElement {
-    /** Gets the kind of this schema element. */
     schemaElementKind?: EdmSchemaElementKind;
-    /** Gets the namespace this schema element belongs to. */
     namespace?: string | undefined;
 }
 
-/** Defines EDM schema element types. */
 export enum EdmSchemaElementKind {
     None = 0,
     TypeDefinition = 1,
@@ -12930,15 +13164,10 @@ export enum EdmSchemaElementKind {
     Function = 5,
 }
 
-/** Represents an EDM vocabulary annotation. */
 export abstract class IEdmVocabularyAnnotation implements IIEdmVocabularyAnnotation {
-    /** Gets the qualifier used to discriminate between multiple bindings of the same property or type. */
     qualifier?: string | undefined;
-    /** Gets the term bound by the annotation. */
     term?: IEdmTerm | undefined;
-    /** Gets the element the annotation applies to. */
     target?: IEdmVocabularyAnnotatable | undefined;
-    /** Gets the expression producing the value of the annotation. */
     value?: IEdmExpression | undefined;
 
     constructor(data?: IIEdmVocabularyAnnotation) {
@@ -12974,25 +13203,16 @@ export abstract class IEdmVocabularyAnnotation implements IIEdmVocabularyAnnotat
     }
 }
 
-/** Represents an EDM vocabulary annotation. */
 export interface IIEdmVocabularyAnnotation {
-    /** Gets the qualifier used to discriminate between multiple bindings of the same property or type. */
     qualifier?: string | undefined;
-    /** Gets the term bound by the annotation. */
     term?: IEdmTerm | undefined;
-    /** Gets the element the annotation applies to. */
     target?: IEdmVocabularyAnnotatable | undefined;
-    /** Gets the expression producing the value of the annotation. */
     value?: IEdmExpression | undefined;
 }
 
-/** Represents an EDM term. */
 export abstract class IEdmTerm implements IIEdmTerm {
-    /** Gets the type of this term. */
     type?: IEdmTypeReference | undefined;
-    /** Gets the AppliesTo of this term. */
     appliesTo?: string | undefined;
-    /** Gets the DefaultValue of this term. */
     defaultValue?: string | undefined;
 
     constructor(data?: IIEdmTerm) {
@@ -13026,21 +13246,14 @@ export abstract class IEdmTerm implements IIEdmTerm {
     }
 }
 
-/** Represents an EDM term. */
 export interface IIEdmTerm {
-    /** Gets the type of this term. */
     type?: IEdmTypeReference | undefined;
-    /** Gets the AppliesTo of this term. */
     appliesTo?: string | undefined;
-    /** Gets the DefaultValue of this term. */
     defaultValue?: string | undefined;
 }
 
-/** Represents a references to a type. */
 export abstract class IEdmTypeReference implements IIEdmTypeReference {
-    /** Gets a value indicating whether this type is nullable. */
     isNullable?: boolean;
-    /** Gets the definition to which this type refers. */
     definition?: IEdmType | undefined;
 
     constructor(data?: IIEdmTypeReference) {
@@ -13072,17 +13285,12 @@ export abstract class IEdmTypeReference implements IIEdmTypeReference {
     }
 }
 
-/** Represents a references to a type. */
 export interface IIEdmTypeReference {
-    /** Gets a value indicating whether this type is nullable. */
     isNullable?: boolean;
-    /** Gets the definition to which this type refers. */
     definition?: IEdmType | undefined;
 }
 
-/** Represents the definition of an EDM type. */
 export abstract class IEdmType implements IIEdmType {
-    /** Gets the kind of this type. */
     typeKind?: EdmTypeKind;
 
     constructor(data?: IIEdmType) {
@@ -13112,13 +13320,10 @@ export abstract class IEdmType implements IIEdmType {
     }
 }
 
-/** Represents the definition of an EDM type. */
 export interface IIEdmType {
-    /** Gets the kind of this type. */
     typeKind?: EdmTypeKind;
 }
 
-/** Defines EDM metatypes. */
 export enum EdmTypeKind {
     None = 0,
     Primitive = 1,
@@ -13132,7 +13337,6 @@ export enum EdmTypeKind {
     Path = 9,
 }
 
-/** Represents an element that can be targeted by Vocabulary Annotations */
 export abstract class IEdmVocabularyAnnotatable implements IIEdmVocabularyAnnotatable {
 
     constructor(data?: IIEdmVocabularyAnnotatable) {
@@ -13158,13 +13362,10 @@ export abstract class IEdmVocabularyAnnotatable implements IIEdmVocabularyAnnota
     }
 }
 
-/** Represents an element that can be targeted by Vocabulary Annotations */
 export interface IIEdmVocabularyAnnotatable {
 }
 
-/** Represents an EDM expression. */
 export abstract class IEdmExpression implements IIEdmExpression {
-    /** Gets the kind of this expression. */
     expressionKind?: EdmExpressionKind;
 
     constructor(data?: IIEdmExpression) {
@@ -13194,13 +13395,10 @@ export abstract class IEdmExpression implements IIEdmExpression {
     }
 }
 
-/** Represents an EDM expression. */
 export interface IIEdmExpression {
-    /** Gets the kind of this expression. */
     expressionKind?: EdmExpressionKind;
 }
 
-/** Defines EDM expression kinds. */
 export enum EdmExpressionKind {
     None = 0,
     BinaryConstant = 1,
@@ -13230,7 +13428,6 @@ export enum EdmExpressionKind {
     AnnotationPath = 25,
 }
 
-/** Manages getting and setting direct annotations on EDM elements. */
 export abstract class IEdmDirectValueAnnotationsManager implements IIEdmDirectValueAnnotationsManager {
 
     constructor(data?: IIEdmDirectValueAnnotationsManager) {
@@ -13256,13 +13453,10 @@ export abstract class IEdmDirectValueAnnotationsManager implements IIEdmDirectVa
     }
 }
 
-/** Manages getting and setting direct annotations on EDM elements. */
 export interface IIEdmDirectValueAnnotationsManager {
 }
 
-/** Represents an EDM entity container. */
 export abstract class IEdmEntityContainer implements IIEdmEntityContainer {
-    /** Gets a collection of the elements of this entity container. */
     elements?: IEdmEntityContainerElement[] | undefined;
 
     constructor(data?: IIEdmEntityContainer) {
@@ -13300,17 +13494,12 @@ export abstract class IEdmEntityContainer implements IIEdmEntityContainer {
     }
 }
 
-/** Represents an EDM entity container. */
 export interface IIEdmEntityContainer {
-    /** Gets a collection of the elements of this entity container. */
     elements?: IEdmEntityContainerElement[] | undefined;
 }
 
-/** Represents the common elements of all EDM entity container elements. */
 export abstract class IEdmEntityContainerElement implements IIEdmEntityContainerElement {
-    /** Gets the kind of element of this container element. */
     containerElementKind?: EdmContainerElementKind;
-    /** Gets the container that contains this element. */
     container?: IEdmEntityContainer | undefined;
 
     constructor(data?: IIEdmEntityContainerElement) {
@@ -13342,15 +13531,11 @@ export abstract class IEdmEntityContainerElement implements IIEdmEntityContainer
     }
 }
 
-/** Represents the common elements of all EDM entity container elements. */
 export interface IIEdmEntityContainerElement {
-    /** Gets the kind of element of this container element. */
     containerElementKind?: EdmContainerElementKind;
-    /** Gets the container that contains this element. */
     container?: IEdmEntityContainer | undefined;
 }
 
-/** Defines EDM container element types. */
 export enum EdmContainerElementKind {
     None = 0,
     EntitySet = 1,
@@ -13359,9 +13544,7 @@ export enum EdmContainerElementKind {
     Singleton = 4,
 }
 
-/** Base class for all annotatable types in OData library. */
 export abstract class ODataAnnotatable implements IODataAnnotatable {
-    /** The annotation for storing @odata.type. */
     typeAnnotation?: ODataTypeAnnotation | undefined;
 
     constructor(data?: IODataAnnotatable) {
@@ -13391,19 +13574,13 @@ export abstract class ODataAnnotatable implements IODataAnnotatable {
     }
 }
 
-/** Base class for all annotatable types in OData library. */
 export interface IODataAnnotatable {
-    /** The annotation for storing @odata.type. */
     typeAnnotation?: ODataTypeAnnotation | undefined;
 }
 
-/** Class representing the a service document. */
 export class ODataServiceDocument extends ODataAnnotatable implements IODataServiceDocument {
-    /** Gets or sets the set of entity sets in the service document. */
     entitySets?: ODataEntitySetInfo[] | undefined;
-    /** Gets or sets the set of singletons in the service document. */
     singletons?: ODataSingletonInfo[] | undefined;
-    /** Gets or sets the set of function imports in the service document. */
     functionImports?: ODataFunctionImportInfo[] | undefined;
 
     constructor(data?: IODataServiceDocument) {
@@ -13460,23 +13637,15 @@ export class ODataServiceDocument extends ODataAnnotatable implements IODataServ
     }
 }
 
-/** Class representing the a service document. */
 export interface IODataServiceDocument extends IODataAnnotatable {
-    /** Gets or sets the set of entity sets in the service document. */
     entitySets?: ODataEntitySetInfo[] | undefined;
-    /** Gets or sets the set of singletons in the service document. */
     singletons?: ODataSingletonInfo[] | undefined;
-    /** Gets or sets the set of function imports in the service document. */
     functionImports?: ODataFunctionImportInfo[] | undefined;
 }
 
-/** Abstract class representing an element (EntitySet, Singleton) in a service document. */
 export abstract class ODataServiceDocumentElement extends ODataAnnotatable implements IODataServiceDocumentElement {
-    /** Gets or sets the URI representing the Unified Resource Locator (URL) to the element. */
     url?: string | undefined;
-    /** Gets or sets the name of the element; this is the entity set or singleton name in JSON and the HREF in Atom. */
     name?: string | undefined;
-    /** Gets or sets the title of the element; this is the title in JSON. */
     title?: string | undefined;
 
     constructor(data?: IODataServiceDocumentElement) {
@@ -13507,17 +13676,12 @@ export abstract class ODataServiceDocumentElement extends ODataAnnotatable imple
     }
 }
 
-/** Abstract class representing an element (EntitySet, Singleton) in a service document. */
 export interface IODataServiceDocumentElement extends IODataAnnotatable {
-    /** Gets or sets the URI representing the Unified Resource Locator (URL) to the element. */
     url?: string | undefined;
-    /** Gets or sets the name of the element; this is the entity set or singleton name in JSON and the HREF in Atom. */
     name?: string | undefined;
-    /** Gets or sets the title of the element; this is the title in JSON. */
     title?: string | undefined;
 }
 
-/** Class representing a entity set in a service document. */
 export class ODataEntitySetInfo extends ODataServiceDocumentElement implements IODataEntitySetInfo {
 
     constructor(data?: IODataEntitySetInfo) {
@@ -13542,13 +13706,10 @@ export class ODataEntitySetInfo extends ODataServiceDocumentElement implements I
     }
 }
 
-/** Class representing a entity set in a service document. */
 export interface IODataEntitySetInfo extends IODataServiceDocumentElement {
 }
 
-/** Annotation which stores the EDM type information of a value. */
 export class ODataTypeAnnotation implements IODataTypeAnnotation {
-    /** Gets the type name to serialize, for the annotated item.  */
     typeName?: string | undefined;
 
     constructor(data?: IODataTypeAnnotation) {
@@ -13580,13 +13741,10 @@ export class ODataTypeAnnotation implements IODataTypeAnnotation {
     }
 }
 
-/** Annotation which stores the EDM type information of a value. */
 export interface IODataTypeAnnotation {
-    /** Gets the type name to serialize, for the annotated item.  */
     typeName?: string | undefined;
 }
 
-/** Class representing a singleton in a service document. */
 export class ODataSingletonInfo extends ODataServiceDocumentElement implements IODataSingletonInfo {
 
     constructor(data?: IODataSingletonInfo) {
@@ -13611,11 +13769,9 @@ export class ODataSingletonInfo extends ODataServiceDocumentElement implements I
     }
 }
 
-/** Class representing a singleton in a service document. */
 export interface IODataSingletonInfo extends IODataServiceDocumentElement {
 }
 
-/** Class representing a function Import in a service document. */
 export class ODataFunctionImportInfo extends ODataServiceDocumentElement implements IODataFunctionImportInfo {
 
     constructor(data?: IODataFunctionImportInfo) {
@@ -13640,7 +13796,6 @@ export class ODataFunctionImportInfo extends ODataServiceDocumentElement impleme
     }
 }
 
-/** Class representing a function Import in a service document. */
 export interface IODataFunctionImportInfo extends IODataServiceDocumentElement {
 }
 

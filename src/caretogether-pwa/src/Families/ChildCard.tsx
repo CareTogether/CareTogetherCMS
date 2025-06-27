@@ -19,6 +19,7 @@ import { EditChildDialog } from './EditChildDialog';
 import { useFamilyPermissions } from '../Model/SessionModel';
 import { useFamilyLookup } from '../Model/DirectoryModel';
 import { differenceInYears } from 'date-fns';
+import { DateOfBirth } from './DateOfBirth';
 
 type ChildCardProps = {
   familyId: string;
@@ -67,6 +68,9 @@ export function ChildCard({ familyId, personId }: ChildCardProps) {
             {isAdult && (
               <Chip size="small" label={'No longer under 18!'} color="error" />
             )}
+
+            <DateOfBirth age={child.age} permissions={permissions} />
+
             <Typography variant="body2" component="div">
               {child.concerns && (
                 <>

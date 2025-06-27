@@ -27,6 +27,7 @@
     "dexie": "^3.2.7",
     "dexie-react-hooks": "^1.1.7",
     "posthog-js": "^1.215.5",
+    "powerbi-client-react": "^2.0.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "react-hook-form": "^7.58.1",

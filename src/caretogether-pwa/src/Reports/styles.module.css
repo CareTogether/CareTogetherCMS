@@ -1,0 +1,11 @@
+.report {
+  height: calc(100vh - 48px);
+  width: calc(100% + 48px);
+  margin-left: -24px;
+  background: rgb(246, 252, 252);
+}
+
+.report iframe {
+  border: none;
+  display: block;
+}

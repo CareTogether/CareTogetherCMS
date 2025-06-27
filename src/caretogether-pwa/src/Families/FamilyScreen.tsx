@@ -25,14 +25,11 @@ import {
   Typography,
 } from '@mui/material';
 import {
-  Arrangement,
-  ArrangementPolicy,
   CompletedCustomFieldInfo,
   Permission,
   Referral,
   RoleRemovalReason,
 } from '../GeneratedClient';
-import { useRecoilValue } from 'recoil';
 import { useParams } from 'react-router';
 import AddCircleIcon from '@mui/icons-material/AddCircle';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
@@ -44,11 +41,8 @@ import { useEffect, useRef, useState } from 'react';
 import { AddAdultDialog } from './AddAdultDialog';
 import { AddChildDialog } from './AddChildDialog';
 import { AddEditNoteDialog } from '../Notes/AddEditNoteDialog';
-import { ArrangementCard } from '../Referrals/Arrangements/ArrangementCard';
 import { format } from 'date-fns';
 import { UploadFamilyDocumentsDialog } from './UploadFamilyDocumentsDialog';
-import { policyData } from '../Model/ConfigurationModel';
-import { CreateArrangementDialog } from '../Referrals/Arrangements/CreateArrangementDialog';
 import { CloseReferralDialog } from '../Referrals/CloseReferralDialog';
 import { OpenNewReferralDialog } from '../Referrals/OpenNewReferralDialog';
 import { FamilyDocuments } from './FamilyDocuments';
@@ -72,8 +66,6 @@ import { RemoveFamilyRoleDialog } from '../Volunteers/RemoveFamilyRoleDialog';
 import { ResetFamilyRoleDialog } from '../Volunteers/ResetFamilyRoleDialog';
 import { VolunteerRoleApprovalStatusChip } from '../Volunteers/VolunteerRoleApprovalStatusChip';
 import { FamilyCustomField } from './FamilyCustomField';
-import { useFilterMenu } from '../Generic/useFilterMenu';
-import { FilterMenu } from '../Generic/FilterMenu';
 import { isBackdropClick } from '../Utilities/handleBackdropClick';
 import { DeleteFamilyDialog } from './DeleteFamilyDialog';
 import { useDialogHandle } from '../Hooks/useDialogHandle';
@@ -86,18 +78,7 @@ import posthog from 'posthog-js';
 import { AssignmentsSection } from '../Families/AssignmentsSection';
 import { useMemo } from 'react';
 import { useSyncReferralIdInURL } from '../Hooks/useSyncReferralIdInURL';
-
-const sortArrangementsByStartDateDescThenCreateDateDesc = (
-  a: Arrangement,
-  b: Arrangement
-) => {
-  return (
-    (b.startedAtUtc ?? new Date()).getTime() -
-      (a.startedAtUtc ?? new Date()).getTime() ||
-    (b.requestedAtUtc ?? new Date()).getTime() -
-      (a.requestedAtUtc ?? new Date()).getTime()
-  );
-};
+import { ArrangementsSection } from '../Referrals/Arrangements/ArrangementsSection/ArrangementsSection';
 
 export function FamilyScreen() {
   const familyIdMaybe = useParams<{ familyId: string }>();
@@ -105,7 +86,7 @@ export function FamilyScreen() {
 
   const searchParams = new URLSearchParams(location.search);
   const referralIdFromQuery = searchParams.get('referralId') ?? undefined;
-  const arrangementIdFromQuery = searchParams.get('arrangementId') ?? undefined;
+
   // TODO: When we go to optimize the layout, we should consider updating the generated client
   // to include the ids of the communities each family is a member of in the CombinedFamilyInfo
   // data model so that we don't need to start by first looking up ALL communities
@@ -124,7 +105,6 @@ export function FamilyScreen() {
   const familyLookup = useFamilyLookup();
   const family = familyLookup(familyId)!;
 
-  const policy = useRecoilValue(policyData);
   const permissions = useFamilyPermissions(family);
 
   const canCloseReferral =
@@ -175,7 +155,14 @@ export function FamilyScreen() {
     (referral) => referral.id === selectedReferralId
   );
 
-  const arrangementRefs = useRef<Record<string, HTMLDivElement | null>>({});
+  useEffect(() => {
+    if (
+      referralIdFromQuery &&
+      allReferrals.some((ref) => ref.id === referralIdFromQuery)
+    ) {
+      setSelectedReferralId(referralIdFromQuery);
+    }
+  }, [referralIdFromQuery, allReferrals]);
 
   // If user navigates to a different family without leaving current page (i.e. not unmounting this component),
   // we want to auto-select the first referral
@@ -228,6 +215,7 @@ export function FamilyScreen() {
     setFamilyMoreMenuAnchor(null);
     setRemoveRoleParameter({ volunteerFamilyId: familyId, role: role });
   }
+
   const [resetRoleParameter, setResetRoleParameter] = useState<{
     volunteerFamilyId: string;
     role: string;
@@ -262,103 +250,11 @@ export function FamilyScreen() {
     volunteerFamilyId: familyId,
   };
 
-  const [
-    createArrangementDialogParameter,
-    setCreateArrangementDialogParameter,
-  ] = useState<ArrangementPolicy | null>(null);
-
   const theme = useTheme();
   const isDesktop = useMediaQuery(theme.breakpoints.up('sm'));
   const isWideScreen = useMediaQuery(theme.breakpoints.up('xl'));
 
   useScreenTitle(family ? `${familyLastName(family)} Family` : '...');
-
-  enum ArrangementFilterOptionLabel {
-    Active = 'Active',
-    Cancelled = 'Cancelled',
-    Ended = 'Ended',
-  }
-  const {
-    filterOptions: arrangementFilterOptions,
-    handleFilterChange: handleFilterArrangements,
-  } = useFilterMenu(Object.keys(ArrangementFilterOptionLabel), [
-    ArrangementFilterOptionLabel.Active,
-  ]);
-
-  const meetsArrangementFilterCriteria = (
-    arrangement: Arrangement
-  ): boolean => {
-    return arrangementFilterOptions
-      .filter((o) => o.selected)
-      .map((o) => o.text)
-      .some((option) => {
-        const opt = option as ArrangementFilterOptionLabel;
-        if (
-          opt === ArrangementFilterOptionLabel.Active &&
-          arrangement.cancelledAtUtc === undefined
-        ) {
-          return true;
-        } else if (
-          opt === ArrangementFilterOptionLabel.Cancelled &&
-          arrangement.cancelledAtUtc !== undefined
-        ) {
-          return true;
-        } else if (
-          opt === ArrangementFilterOptionLabel.Ended &&
-          arrangement.endedAtUtc !== undefined
-        ) {
-          return true;
-        }
-        return false;
-      });
-  };
-
-  const filteredArrangements = selectedReferral?.arrangements
-    ?.slice()
-    .filter((arrangement) => meetsArrangementFilterCriteria(arrangement))
-    .sort((a, b) => sortArrangementsByStartDateDescThenCreateDateDesc(a, b))
-    .map((arrangement) => (
-      <div
-        key={arrangement.id}
-        ref={(el) => {
-          if (arrangement.id) {
-            arrangementRefs.current[arrangement.id] = el;
-          }
-        }}
-      >
-        <ArrangementCard
-          partneringFamily={family}
-          referralId={selectedReferral.id!}
-          arrangement={arrangement}
-        />
-      </div>
-    ));
-  const hasScrolledRef = useRef(false);
-
-  useEffect(() => {
-    if (!arrangementIdFromQuery || !selectedReferral || hasScrolledRef.current)
-      return;
-
-    const ref = arrangementRefs.current[arrangementIdFromQuery];
-
-    if (ref) {
-      hasScrolledRef.current = true;
-
-      setTimeout(() => {
-        const top = ref.getBoundingClientRect().top + window.pageYOffset;
-        const offset = 100;
-        const scrollTo = top - offset;
-
-        const maxScroll = document.body.scrollHeight - window.innerHeight;
-        const finalScroll = Math.min(scrollTo, maxScroll);
-
-        window.scrollTo({
-          top: finalScroll,
-          behavior: 'smooth',
-        });
-      }, 300);
-    }
-  }, [arrangementIdFromQuery, selectedReferral, filteredArrangements]);
 
   function handleReferralChange(referralId: string) {
     setSelectedReferralId(referralId);
@@ -410,7 +306,8 @@ export function FamilyScreen() {
             Child
           </Button>
         )}
-        {permissions(Permission.AddEditDraftNotes) && (
+        {(permissions(Permission.AddEditDraftNotes) ||
+          permissions(Permission.AddEditOwnDraftNotes)) && (
           <Button
             className="ph-unmask"
             onClick={() => setAddNoteDialogOpen(true)}
@@ -944,93 +841,13 @@ export function FamilyScreen() {
           </Grid>
           <Grid container spacing={0}>
             {selectedReferral && (
-              <Grid item xs={12}>
-                <div
-                  style={{
-                    display: `flex`,
-                    justifyContent: `space-between`,
-                    maxWidth: `100%`,
-                    flexWrap: `wrap`,
-                  }}
-                >
-                  <div
-                    style={{
-                      display: `flex`,
-                      justifyContent: `flex-start`,
-                      maxWidth: `100%`,
-                      flexWrap: `wrap`,
-                    }}
-                  >
-                    <Typography
-                      className="ph-unmask"
-                      variant="h3"
-                      style={{
-                        margin: 0,
-                        display: `flex`,
-                        alignSelf: `center`,
-                      }}
-                    >
-                      Arrangements
-                    </Typography>
-                    <FilterMenu
-                      singularLabel={`Arrangement`}
-                      pluralLabel={`Arrangements`}
-                      filterOptions={arrangementFilterOptions}
-                      handleFilterChange={handleFilterArrangements}
-                    />
-                  </div>
-                  {permissions(Permission.CreateArrangement) && (
-                    <Box
-                      sx={{
-                        textAlign: 'center',
-                        display: `flex`,
-                        flexDirection: `row`,
-                        maxWidth: `100%`,
-                        flexWrap: `wrap`,
-                      }}
-                    >
-                      {selectedReferral &&
-                        policy.referralPolicy?.arrangementPolicies?.map(
-                          (arrangementPolicy) => (
-                            <Box key={arrangementPolicy.arrangementType}>
-                              <Button
-                                className="ph-unmask"
-                                onClick={() =>
-                                  setCreateArrangementDialogParameter(
-                                    arrangementPolicy
-                                  )
-                                }
-                                variant="contained"
-                                size="small"
-                                sx={{ margin: 1 }}
-                                startIcon={<AddCircleIcon />}
-                              >
-                                {arrangementPolicy.arrangementType}
-                              </Button>
-                            </Box>
-                          )
-                        )}
-                    </Box>
-                  )}
-                </div>
-                <Masonry
-                  columns={isDesktop ? (isWideScreen ? 3 : 2) : 1}
-                  spacing={2}
-                  style={{
-                    height: filteredArrangements?.length === 0 ? 0 : undefined,
-                  }}
-                >
-                  {filteredArrangements || false}
-                </Masonry>
-                {createArrangementDialogParameter && (
-                  <CreateArrangementDialog
-                    referralId={`${selectedReferral!.id}`}
-                    arrangementPolicy={createArrangementDialogParameter}
-                    onClose={() => setCreateArrangementDialogParameter(null)}
-                  />
-                )}
-              </Grid>
+              <ArrangementsSection
+                referral={selectedReferral}
+                family={family}
+                permissions={permissions}
+              />
             )}
+
             <Grid item xs={12}>
               <Typography
                 className="ph-unmask"

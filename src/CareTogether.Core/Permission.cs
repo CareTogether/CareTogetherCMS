@@ -24,6 +24,8 @@
         AccessSettingsScreen = 102,
         AddEditRoles = 103,
         AccessCommunitiesScreen = 104,
+        AccessReportsScreen = 105,
+        AccessSupportScreen = 106,
 
         ViewFamilyCustomFields = 150,
         ViewFamilyHistory = 151,
@@ -35,12 +37,16 @@
         EditPersonNotes = 157,
         EditPersonContactInfo = 158,
 
+        ViewPersonDateOfBirth = 159,
+
         //EditPersonUserLink = 159,
 
         AddEditDraftNotes = 180,
         DiscardDraftNotes = 181,
         ApproveNotes = 182,
         ViewAllNotes = 183, // Viewing your own notes is implicitly allowed
+        AddEditOwnDraftNotes = 184,
+        DiscardOwnDraftNotes = 185,
 
         // ---- Approvals ---- //
 

@@ -31,43 +31,37 @@ import {
   RoleDefinition,
   Permission,
 } from '../../GeneratedClient';
-import { useLoadable } from '../../Hooks/useLoadable';
-import {
-  organizationConfigurationEdited,
-  organizationConfigurationQuery,
-} from '../../Model/ConfigurationModel';
+import { organizationConfigurationEdited } from '../../Model/ConfigurationModel';
 import { useGlobalPermissions } from '../../Model/SessionModel';
-import { ProgressBackdrop } from '../../Shell/ProgressBackdrop';
-import useScreenTitle from '../../Shell/ShellScreenTitle';
 import AddIcon from '@mui/icons-material/Add';
 import { useBackdrop } from '../../Hooks/useBackdrop';
 import { useRecoilValue, useSetRecoilState } from 'recoil';
 import { ContextualPermissionSetRow } from './ContextualPermissionSetRow';
 import { api } from '../../Api/Api';
 import { selectedLocationContextState } from '../../Model/Data';
-import { useParams } from 'react-router-dom';
 import { Link } from 'react-router-dom';
 import NavigateNextIcon from '@mui/icons-material/NavigateNext';
 import { Box } from '@mui/system';
 import { isRoleEditable } from './isRoleEditable';
+import { ContextualPermissionSetRowAutocomplete } from './ContextualPermissionSetRowWithAutocomplete';
+import { useFeatureFlagEnabled } from 'posthog-js/react';
 
-export function RoleEdit() {
-  const { roleName } = useParams<{ roleName: string }>();
+export function RoleEdit({
+  roleDefinition,
+}: {
+  roleDefinition: RoleDefinition;
+}) {
+  const permissions = useGlobalPermissions();
 
-  const configuration = useLoadable(organizationConfigurationQuery);
+  const storeEdits = useSetRecoilState(organizationConfigurationEdited);
+
   const { organizationId, locationId } = useRecoilValue(
     selectedLocationContextState
   );
-  const storeEdits = useSetRecoilState(organizationConfigurationEdited);
-  const roles = configuration?.roles;
 
-  const permissions = useGlobalPermissions();
+  const [workingRole, setWorkingRole] =
+    useState<RoleDefinition>(roleDefinition);
 
-  const selectedRole = roles?.find((role) => role.roleName === roleName);
-
-  const [workingRole, setWorkingRole] = useState<RoleDefinition | undefined>(
-    selectedRole
-  );
   const [dirty, setDirty] = useState(false);
 
   const isEditable = Boolean(
@@ -77,7 +71,7 @@ export function RoleEdit() {
   );
 
   function cancel() {
-    setWorkingRole(selectedRole);
+    setWorkingRole(roleDefinition);
     setDirty(false);
   }
 
@@ -86,9 +80,9 @@ export function RoleEdit() {
   function save() {
     withBackdrop(async () => {
       const newConfig = await api.configuration.putRoleDefinition(
-        organizationId!,
-        workingRole!.roleName!,
-        workingRole!
+        organizationId,
+        workingRole.roleName!,
+        workingRole
       );
       storeEdits(newConfig);
       setDirty(false);
@@ -96,11 +90,11 @@ export function RoleEdit() {
   }
 
   function deletePermissionSetAtIndex(i: number) {
-    const newPermissionSets = workingRole!.permissionSets!.filter(
+    const newPermissionSets = workingRole.permissionSets!.filter(
       (_, j) => j !== i
     );
     const newWorkingRole = {
-      roleName: workingRole!.roleName,
+      roleName: workingRole.roleName,
       permissionSets: newPermissionSets,
     } as RoleDefinition;
     setWorkingRole(newWorkingRole);
@@ -111,11 +105,11 @@ export function RoleEdit() {
     i: number,
     newValue: IContextualPermissionSet
   ) {
-    const newPermissionSets = workingRole!.permissionSets!.map((oldValue, j) =>
+    const newPermissionSets = workingRole.permissionSets!.map((oldValue, j) =>
       j === i ? newValue : oldValue
     );
     const newWorkingRole = {
-      roleName: workingRole!.roleName,
+      roleName: workingRole.roleName,
       permissionSets: newPermissionSets,
     } as RoleDefinition;
     setWorkingRole(newWorkingRole);
@@ -132,21 +126,19 @@ export function RoleEdit() {
       permissions: [],
     });
     const newWorkingRole = {
-      roleName: workingRole!.roleName,
-      permissionSets: workingRole!.permissionSets!.concat(newSet),
+      roleName: workingRole.roleName,
+      permissionSets: workingRole.permissionSets!.concat(newSet),
     } as RoleDefinition;
     setWorkingRole(newWorkingRole);
     setDirty(true);
     setAddPermissionSetMenuAnchorEl(null);
   }
 
-  useScreenTitle('Roles');
+  const shouldUseAutocomplete = useFeatureFlagEnabled(
+    'permissionsAutocomplete'
+  );
 
-  return !roles ? (
-    <ProgressBackdrop>
-      <p>Loading roles...</p>
-    </ProgressBackdrop>
-  ) : (
+  return (
     <Stack paddingY={2} height="calc(100vh - 48px)" spacing={0}>
       <Box>
         <Breadcrumbs
@@ -169,16 +161,23 @@ export function RoleEdit() {
             Roles
           </MuiLink>
 
-          <Typography color="text.primary">{roleName}</Typography>
+          <Typography color="text.primary">
+            {roleDefinition.roleName}
+          </Typography>
         </Breadcrumbs>
 
         <Typography sx={{ marginY: 2 }} variant="h2">
-          Editing {roleName} role
+          Editing {roleDefinition.roleName} role
         </Typography>
       </Box>
 
       <TableContainer>
         <Table sx={{ minWidth: '700px' }} stickyHeader size="small">
+          <colgroup>
+            <col />
+            <col style={{ width: '50%' }} />
+            <col style={{ width: '50%' }} />
+          </colgroup>
           <TableHead>
             <TableRow>
               <TableCell></TableCell>
@@ -187,17 +186,29 @@ export function RoleEdit() {
             </TableRow>
           </TableHead>
           <TableBody>
-            {workingRole?.permissionSets?.map((permissionSet, i) => (
-              <ContextualPermissionSetRow
-                key={`${workingRole.permissionSets?.length}-${i}`}
-                editable={isEditable}
-                permissionSet={permissionSet}
-                onDelete={() => deletePermissionSetAtIndex(i)}
-                onUpdate={(newValue: IContextualPermissionSet) =>
-                  updatePermissionSetAtIndex(i, newValue)
-                }
-              />
-            ))}
+            {workingRole?.permissionSets?.map((permissionSet, i) =>
+              shouldUseAutocomplete ? (
+                <ContextualPermissionSetRowAutocomplete
+                  key={`${workingRole.permissionSets?.length}-${i}`}
+                  editable={isEditable}
+                  permissionSet={permissionSet}
+                  onDelete={() => deletePermissionSetAtIndex(i)}
+                  onUpdate={(newValue: IContextualPermissionSet) =>
+                    updatePermissionSetAtIndex(i, newValue)
+                  }
+                />
+              ) : (
+                <ContextualPermissionSetRow
+                  key={`${workingRole.permissionSets?.length}-${i}`}
+                  editable={isEditable}
+                  permissionSet={permissionSet}
+                  onDelete={() => deletePermissionSetAtIndex(i)}
+                  onUpdate={(newValue: IContextualPermissionSet) =>
+                    updatePermissionSetAtIndex(i, newValue)
+                  }
+                />
+              )
+            )}
             {isEditable && (
               <TableRow>
                 <TableCell>
@@ -304,7 +315,13 @@ export function RoleEdit() {
       </Menu>
 
       <Box paddingY={2} borderTop={1} borderColor="divider">
-        <Stack direction="row" justifyContent="flex-end">
+        <Stack direction="row" justifyContent="flex-end" alignItems="center">
+          {dirty && (
+            <Typography sx={{ fontStyle: 'italic' }} mr={2}>
+              There are pending changes to be saved
+            </Typography>
+          )}
+
           {isEditable && (
             <Button
               color="secondary"
