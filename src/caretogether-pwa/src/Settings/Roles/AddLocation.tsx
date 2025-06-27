@@ -30,7 +30,6 @@ export function AddLocation({ onClose, availableTimezones }: DrawerProps) {
 
       const updated = await api.configuration.putLocationDefinition(
         organizationId!,
-        undefined,
         config
       );
 

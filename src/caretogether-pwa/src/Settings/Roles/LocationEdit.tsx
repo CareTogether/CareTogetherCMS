@@ -9,7 +9,7 @@ import {
   Link as MuiLink,
   IconButton,
 } from '@mui/material';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import {
   AllPartneringFamiliesPermissionContext,
   AllVolunteerFamiliesPermissionContext,
@@ -19,23 +19,16 @@ import {
   CommunityMemberPermissionContext,
   ContextualPermissionSet,
   GlobalPermissionContext,
-  // IContextualPermissionSet,
   OwnFamilyPermissionContext,
   OwnReferralAssigneeFamiliesPermissionContext,
   PermissionContext,
   RoleDefinition,
 } from '../../GeneratedClient';
 import { useLoadable } from '../../Hooks/useLoadable';
-import {
-  organizationConfigurationEdited,
-  organizationConfigurationQuery,
-} from '../../Model/ConfigurationModel';
-// import { useGlobalPermissions } from '../../Model/SessionModel';
+import { organizationConfigurationQuery } from '../../Model/ConfigurationModel';
 import { ProgressBackdrop } from '../../Shell/ProgressBackdrop';
 import useScreenTitle from '../../Shell/ShellScreenTitle';
-import { useBackdrop } from '../../Hooks/useBackdrop';
-import { useRecoilValue, useSetRecoilState } from 'recoil';
-import { api } from '../../Api/Api';
+import { useRecoilValue } from 'recoil';
 import { selectedLocationContextState } from '../../Model/Data';
 import { useParams } from 'react-router-dom';
 import { Link } from 'react-router-dom';
@@ -64,18 +57,14 @@ export function LocationEdit() {
   const hideActionsTab = useFeatureFlagEnabled('actionDefinitionsTab');
   const hidePoliciesTab = useFeatureFlagEnabled('approvalPoliciesTab');
 
-  const availableTabs: ('basic' | 'actions' | 'policies')[] = ['basic'];
-  if (!hideActionsTab) availableTabs.push('actions');
-  if (!hidePoliciesTab) availableTabs.push('policies');
+  const availableTabs = useMemo(() => {
+    const tabs: ('basic' | 'actions' | 'policies')[] = ['basic'];
+    if (!hideActionsTab) tabs.push('actions');
+    if (!hidePoliciesTab) tabs.push('policies');
+    return tabs;
+  }, [hideActionsTab, hidePoliciesTab]);
 
   useScreenTitle(`Editing ${location?.name} configuration`);
-
-  const [configurationValues, setConfigurationValues] = useState({
-    timezone: location?.timeZone || '',
-    ethnicities: location?.ethnicities || [],
-    familyRelationships: location?.adultFamilyRelationships || [],
-    arrangementReasons: location?.arrangementReasons || [],
-  });
 
   const configurationOptions = {
     timezones: configuration?.availableTimeZones || [],
@@ -84,7 +73,6 @@ export function LocationEdit() {
     arrangementReasons: configuration?.arrangementReasons || [],
   };
 
-  const storeEdits = useSetRecoilState(organizationConfigurationEdited);
   const roles = configuration?.roles;
 
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
@@ -117,42 +105,13 @@ export function LocationEdit() {
     if (!availableTabs.includes(activeTab)) {
       setActiveTab('basic');
     }
-  }, [activeTab, hideActionsTab, hidePoliciesTab]);
-
-  console.log('timezone value:', configurationValues.timezone);
+  }, [activeTab, hideActionsTab, hidePoliciesTab, availableTabs]);
 
   // const isEditable = Boolean(
   //   workingRole &&
   //     permissions(Permission.AddEditRoles) &&
   //     isRoleEditable(workingRole)
   // );
-
-  const handleBasicConfigChange = <K extends keyof typeof configurationValues>(
-    key: K,
-    value: (typeof configurationValues)[K]
-  ) => {
-    setConfigurationValues((prev) => ({ ...prev, [key]: value }));
-    setDirty(true);
-  };
-
-  function cancel() {
-    setWorkingRole(selectedRole);
-    setDirty(false);
-  }
-
-  const withBackdrop = useBackdrop();
-
-  function save() {
-    withBackdrop(async () => {
-      const newConfig = await api.configuration.putRoleDefinition(
-        organizationId!,
-        workingRole!.roleName!,
-        workingRole!
-      );
-      storeEdits(newConfig);
-      setDirty(false);
-    });
-  }
 
   // function deletePermissionSetAtIndex(i: number) {
   //   const newPermissionSets = workingRole!.permissionSets!.filter(
