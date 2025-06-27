@@ -22,6 +22,7 @@ interface ListItemLinkCollapsibleProps {
   defaultOpen?: boolean;
   className?: string;
   paddingLeft?: number;
+  darkColor?: boolean;
 }
 
 export function ListItemLink(props: ListItemLinkCollapsibleProps) {
@@ -33,6 +34,7 @@ export function ListItemLink(props: ListItemLinkCollapsibleProps) {
     defaultOpen,
     className,
     paddingLeft = 1.5,
+    darkColor,
   } = props;
 
   const selected =
@@ -62,7 +64,11 @@ export function ListItemLink(props: ListItemLinkCollapsibleProps) {
           <ListItemButton
             component={renderLink}
             selected={selected}
-            sx={{ paddingLeft, flexGrow: 1 }}
+            sx={{
+              paddingLeft,
+              flexGrow: 1,
+              color: darkColor ? '#555' : '#fff8',
+            }}
           >
             {icon ? (
               <ListItemIcon sx={{ color: selected ? '#fff' : '#fff8' }}>
