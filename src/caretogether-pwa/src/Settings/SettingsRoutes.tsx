@@ -1,9 +1,9 @@
 import { Navigate, Route, Routes } from 'react-router-dom';
 import { SettingsScreen } from './SettingsScreen';
 import { RoleEditScreen } from './Roles/RoleEditScreen';
-import { LocationEdit } from './Roles/LocationEdit';
+import { LocationEdit } from './Locations/LocationEdit';
 import { RolesScreen } from './Roles/RolesScreen';
-import { LocationsScreen } from './LocationsScreen';
+import { LocationsScreen } from './Locations/LocationsScreen';
 
 function Settings() {
   return (

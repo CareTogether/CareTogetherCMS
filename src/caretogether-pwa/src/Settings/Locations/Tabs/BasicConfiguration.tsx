@@ -1,12 +1,12 @@
 import { Stack, TextField, Typography, Button } from '@mui/material';
 import { useForm, Controller, SubmitHandler } from 'react-hook-form';
-import { CTAutocomplete } from '../../Generic/Forms/CTAutocomplete';
-import { api } from '../../Api/Api';
+import { CTAutocomplete } from '../../../Generic/Forms/CTAutocomplete';
+import { api } from '../../../Api/Api';
 import { useRecoilValue, useSetRecoilState } from 'recoil';
-import { selectedLocationContextState } from '../../Model/Data';
-import { LocationConfiguration } from '../../GeneratedClient';
-import { organizationConfigurationEdited } from '../../Model/ConfigurationModel';
-import { useBackdrop } from '../../Hooks/useBackdrop';
+import { selectedLocationContextState } from '../../../Model/Data';
+import { LocationConfiguration } from '../../../GeneratedClient';
+import { organizationConfigurationEdited } from '../../../Model/ConfigurationModel';
+import { useBackdrop } from '../../../Hooks/useBackdrop';
 
 export type ConfigurationData = {
   name: string;

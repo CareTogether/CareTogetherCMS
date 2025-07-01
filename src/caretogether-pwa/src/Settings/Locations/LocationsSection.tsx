@@ -14,7 +14,7 @@ import { useLoadable } from '../../Hooks/useLoadable';
 import { organizationConfigurationQuery } from '../../Model/ConfigurationModel';
 import { useGlobalPermissions } from '../../Model/SessionModel';
 import { useSidePanel } from '../../Hooks/useSidePanel';
-import { AddLocation } from './AddLocation';
+import { AddLocation } from './AddLocationSidePanel';
 import { Breadcrumbs, Link as MuiLink } from '@mui/material';
 import { NavigateNext as NavigateNextIcon } from '@mui/icons-material';
 import { useRecoilValue } from 'recoil';

@@ -1,8 +1,8 @@
-import { ProgressBackdrop } from '../Shell/ProgressBackdrop';
-import useScreenTitle from '../Shell/ShellScreenTitle';
-import { useDataLoaded } from '../Model/Data';
+import { ProgressBackdrop } from '../../Shell/ProgressBackdrop';
+import useScreenTitle from '../../Shell/ShellScreenTitle';
+import { useDataLoaded } from '../../Model/Data';
 import { Box } from '@mui/system';
-import { LocationsSection } from './Roles/LocationsSection';
+import { LocationsSection } from './LocationsSection';
 
 export function LocationsScreen() {
   useScreenTitle('Locations');
