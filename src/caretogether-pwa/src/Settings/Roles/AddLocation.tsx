@@ -1,39 +1,60 @@
-import { Button, Grid, TextField, MenuItem } from '@mui/material';
-import { useState } from 'react';
+import { Button, Grid, TextField } from '@mui/material';
 import { useBackdrop } from '../../Hooks/useBackdrop';
 import { api } from '../../Api/Api';
 import { useRecoilValue, useSetRecoilState } from 'recoil';
 import { selectedLocationContextState } from '../../Model/Data';
 import { organizationConfigurationEdited } from '../../Model/ConfigurationModel';
-import { LocationConfiguration, TimeZoneInfo } from '../../GeneratedClient';
+import { LocationConfiguration } from '../../GeneratedClient';
+import { useForm, Controller } from 'react-hook-form';
+import { useAppNavigate } from '../../Hooks/useAppNavigate';
 
 interface DrawerProps {
   onClose: () => void;
-  availableTimezones: string[];
 }
 
-export function AddLocation({ onClose, availableTimezones }: DrawerProps) {
-  const [locationName, setLocationName] = useState('');
-  const [timezone, setTimezone] = useState('');
+interface AddLocationFormValues {
+  locationName: string;
+  timeZone: string;
+}
 
+export function AddLocation({ onClose }: DrawerProps) {
   const { organizationId } = useRecoilValue(selectedLocationContextState);
   const storeEdits = useSetRecoilState(organizationConfigurationEdited);
   const withBackdrop = useBackdrop();
+  const appNavigate = useAppNavigate();
 
-  async function save() {
+  const {
+    handleSubmit,
+    control,
+    formState: { errors, isValid },
+  } = useForm<AddLocationFormValues>({
+    mode: 'onChange',
+    defaultValues: { locationName: '', timeZone: '' },
+  });
+
+  async function onSubmit(data: AddLocationFormValues) {
     await withBackdrop(async () => {
       const config = new LocationConfiguration({
         id: undefined,
-        name: locationName,
-        timeZone: new TimeZoneInfo({ id: timezone }),
+        name: data.locationName,
+        adultFamilyRelationships: [],
+        arrangementReasons: [],
+        ethnicities: [],
+        smsSourcePhoneNumbers: [],
+        timeZone: undefined, // TODO: Implement timezone
       });
-
       const updated = await api.configuration.putLocationDefinition(
         organizationId!,
         config
       );
-
       storeEdits(updated);
+      // Find the new location's id from the updated locations list (typed)
+      const newLocation = updated.locations?.find(
+        (location) => location.name === data.locationName
+      );
+      if (newLocation?.id) {
+        appNavigate.location(newLocation.id);
+      }
       onClose();
     });
   }
@@ -44,46 +65,56 @@ export function AddLocation({ onClose, availableTimezones }: DrawerProps) {
       spacing={2}
       maxWidth={500}
       component="form"
-      onSubmit={(event) => {
-        event.preventDefault();
-        save();
-      }}
+      onSubmit={handleSubmit(onSubmit)}
     >
       <Grid item xs={12}>
         <h3>Add New Location</h3>
       </Grid>
-
       <Grid item xs={12}>
-        <TextField
-          type="text"
-          fullWidth
-          required
-          label="Location Name"
-          placeholder="Enter a name for the location"
-          error={locationName.length === 0}
-          value={locationName}
-          onChange={(e) => setLocationName(e.target.value)}
-          autoFocus
+        <Controller
+          name="locationName"
+          control={control}
+          rules={{ required: 'Location name is required' }}
+          render={({ field }) => (
+            <TextField
+              {...field}
+              type="text"
+              fullWidth
+              required
+              label="Location Name"
+              placeholder="Enter a name for the location"
+              error={!!errors.locationName}
+              helperText={errors.locationName?.message}
+              autoFocus
+            />
+          )}
         />
       </Grid>
-
-      <Grid item xs={12}>
-        <TextField
-          select
-          fullWidth
-          required
-          label="Timezone"
-          value={timezone}
-          onChange={(e) => setTimezone(e.target.value)}
-        >
-          {availableTimezones.map((tz) => (
-            <MenuItem key={tz} value={tz}>
-              {tz}
-            </MenuItem>
-          ))}
-        </TextField>
-      </Grid>
-
+      {/* TODO: Implement timezone */}
+      {/* <Grid item xs={12}>
+        <Controller
+          name="timeZone"
+          control={control}
+          rules={{ required: 'Timezone is required' }}
+          render={({ field }) => (
+            <TextField
+              {...field}
+              select
+              fullWidth
+              required
+              label="Timezone"
+              error={!!errors.timeZone}
+              helperText={errors.timeZone?.message}
+            >
+              {availableTimezones.map((tz) => (
+                <MenuItem key={tz} value={tz}>
+                  {tz}
+                </MenuItem>
+              ))}
+            </TextField>
+          )}
+        />
+      </Grid> */}
       <Grid item xs={12} sx={{ textAlign: 'right' }}>
         <Button
           color="secondary"
@@ -93,12 +124,11 @@ export function AddLocation({ onClose, availableTimezones }: DrawerProps) {
         >
           Cancel
         </Button>
-
         <Button
           type="submit"
           color="primary"
           variant="contained"
-          disabled={locationName.length === 0 || timezone.length === 0}
+          disabled={!isValid}
         >
           Save
         </Button>

@@ -129,10 +129,7 @@ export function LocationsSection() {
           </Button>
 
           <SidePanel>
-            <AddLocation
-              onClose={() => closeSidePanel()}
-              availableTimezones={configuration?.availableTimeZones ?? []}
-            />
+            <AddLocation onClose={() => closeSidePanel()} />
           </SidePanel>
         </>
       )}
