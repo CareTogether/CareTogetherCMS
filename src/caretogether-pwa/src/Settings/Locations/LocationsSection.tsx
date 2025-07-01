@@ -65,7 +65,8 @@ export function LocationsSection() {
               <TableCell align="left" sx={{ minWidth: 200 }}>
                 Name
               </TableCell>
-              <TableCell>Actions</TableCell>
+              {/* TODO: implement delete location */}
+              {/* <TableCell>Actions</TableCell> */}
             </TableRow>
           </TableHead>
           <TableBody>
@@ -92,12 +93,13 @@ export function LocationsSection() {
                     {location.name}
                   </TableCell>
 
-                  <TableCell
+                  {/* TODO: implement delete location */}
+                  {/* <TableCell
                     // We don't want clicks in this cell to open the item
                     // For some reason, the event is not being stopped in the IconButton in DeleteRoleButton
                     onClick={(event) => event.stopPropagation()}
                   >
-                    {/* {canDelete ? (
+                    {canDelete ? (
                       deleteRoleButton
                     ) : (
                       // Explain why user can't delete the role. Have to use MUI's Tooltip as per:
@@ -109,8 +111,8 @@ export function LocationsSection() {
                       >
                         <span>{deleteRoleButton}</span>
                       </Tooltip>
-                    )} */}
-                  </TableCell>
+                    )}
+                  </TableCell> */}
                 </TableRow>
               );
             })}
