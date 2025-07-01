@@ -1,4 +1,4 @@
-import { Chip, TextField, Autocomplete } from '@mui/material';
+import { TextField, Autocomplete } from '@mui/material';
 import {
   Controller,
   Control,
@@ -14,7 +14,7 @@ interface ICustomTextFieldProps<T extends FieldValues> {
   rules?: RegisterOptions<T>;
   control?: Control<T>;
   defaultValue?: PathValue<T, Path<T>>;
-  options: string[];
+  options?: string[];
   helperText?: string;
 }
 
@@ -22,7 +22,7 @@ export function CTAutocomplete<T extends FieldValues>({
   name,
   label,
   control,
-  options,
+  options = [],
   helperText,
 }: ICustomTextFieldProps<T>) {
   return (

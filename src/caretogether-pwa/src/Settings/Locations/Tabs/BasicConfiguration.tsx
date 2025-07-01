@@ -25,13 +25,11 @@ export type AvailableOptions = {
 
 type Props = {
   data: ConfigurationData;
-  options: AvailableOptions;
   currentLocationDefinition: LocationConfiguration;
 };
 
 export default function BasicConfiguration({
   data,
-  options,
   currentLocationDefinition,
 }: Props) {
   const {
@@ -109,7 +107,6 @@ export default function BasicConfiguration({
           name="ethnicities"
           label="Ethnicities"
           control={control}
-          options={options.ethnicities}
           helperText='Start typing and press "Enter" to add a new item'
         />
 
@@ -128,7 +125,6 @@ export default function BasicConfiguration({
           name="adultFamilyRelationships"
           label="Family relationship types"
           control={control}
-          options={options.adultFamilyRelationships}
           helperText='Start typing and press "Enter" to add a new item'
         />
 
@@ -147,7 +143,6 @@ export default function BasicConfiguration({
           name="arrangementReasons"
           label="Arrangement reasons"
           control={control}
-          options={options.arrangementReasons}
           helperText='Start typing and press "Enter" to add a new item'
         />
 

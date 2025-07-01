@@ -1,7 +1,5 @@
 import {
   Stack,
-  MenuItem,
-  Menu,
   Typography,
   Breadcrumbs,
   useTheme,
@@ -11,20 +9,6 @@ import {
   Button,
 } from '@mui/material';
 import { useState, useEffect, useMemo } from 'react';
-import {
-  AllPartneringFamiliesPermissionContext,
-  AllVolunteerFamiliesPermissionContext,
-  AssignedFunctionsInReferralCoAssigneeFamiliesPermissionContext,
-  AssignedFunctionsInReferralPartneringFamilyPermissionContext,
-  CommunityCoMemberFamiliesPermissionContext,
-  CommunityMemberPermissionContext,
-  ContextualPermissionSet,
-  GlobalPermissionContext,
-  OwnFamilyPermissionContext,
-  OwnReferralAssigneeFamiliesPermissionContext,
-  PermissionContext,
-  RoleDefinition,
-} from '../../GeneratedClient';
 import { useLoadable } from '../../Hooks/useLoadable';
 import { organizationConfigurationQuery } from '../../Model/ConfigurationModel';
 import { ProgressBackdrop } from '../../Shell/ProgressBackdrop';
@@ -55,7 +39,7 @@ export function LocationEdit() {
     (location) => location.id === locationId
   );
 
-  console.log('Selected location:', location);
+  useScreenTitle(`Editing ${location?.name} configuration`);
 
   const hideActionsTab = useFeatureFlagEnabled('actionDefinitionsTab');
   const hidePoliciesTab = useFeatureFlagEnabled('approvalPoliciesTab');
@@ -66,17 +50,6 @@ export function LocationEdit() {
     if (!hidePoliciesTab) tabs.push('policies');
     return tabs;
   }, [hideActionsTab, hidePoliciesTab]);
-
-  useScreenTitle(`Editing ${location?.name} configuration`);
-
-  const configurationOptions = {
-    timezones: configuration?.availableTimeZones || [],
-    ethnicities: configuration?.ethnicities || [],
-    adultFamilyRelationships: configuration?.adultFamilyRelationships || [],
-    arrangementReasons: configuration?.arrangementReasons || [],
-  };
-
-  const roles = configuration?.roles;
 
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
 
@@ -91,15 +64,6 @@ export function LocationEdit() {
     }
   }, [isMobile]);
 
-  // const permissions = useGlobalPermissions();
-
-  const selectedRole = roles?.find((role) => role.roleName === locationId);
-
-  const [workingRole, setWorkingRole] = useState<RoleDefinition | undefined>(
-    selectedRole
-  );
-  const [, setDirty] = useState(false);
-
   const [activeTab, setActiveTab] = useState<'basic' | 'actions' | 'policies'>(
     'basic'
   );
@@ -109,57 +73,6 @@ export function LocationEdit() {
       setActiveTab('basic');
     }
   }, [activeTab, hideActionsTab, hidePoliciesTab, availableTabs]);
-
-  // const isEditable = Boolean(
-  //   workingRole &&
-  //     permissions(Permission.AddEditRoles) &&
-  //     isRoleEditable(workingRole)
-  // );
-
-  // function deletePermissionSetAtIndex(i: number) {
-  //   const newPermissionSets = workingRole!.permissionSets!.filter(
-  //     (_, j) => j !== i
-  //   );
-  //   const newWorkingRole = {
-  //     roleName: workingRole!.roleName,
-  //     permissionSets: newPermissionSets,
-  //   } as RoleDefinition;
-  //   setWorkingRole(newWorkingRole);
-  //   setDirty(true);
-  // }
-
-  // function updatePermissionSetAtIndex(
-  //   i: number,
-  //   newValue: IContextualPermissionSet
-  // ) {
-  //   const newPermissionSets = workingRole!.permissionSets!.map((oldValue, j) =>
-  //     j === i ? newValue : oldValue
-  //   );
-  //   const newWorkingRole = {
-  //     roleName: workingRole!.roleName,
-  //     permissionSets: newPermissionSets,
-  //   } as RoleDefinition;
-  //   setWorkingRole(newWorkingRole);
-  //   setDirty(true);
-  // }
-
-  const [addPermissionSetMenuAnchorEl, setAddPermissionSetMenuAnchorEl] =
-    useState<null | HTMLElement>(null);
-
-  function addPermissionSet<T extends PermissionContext>(factory: () => T) {
-    const newContext = factory();
-    const newSet = new ContextualPermissionSet({
-      context: newContext,
-      permissions: [],
-    });
-    const newWorkingRole = {
-      roleName: workingRole!.roleName,
-      permissionSets: workingRole!.permissionSets!.concat(newSet),
-    } as RoleDefinition;
-    setWorkingRole(newWorkingRole);
-    setDirty(true);
-    setAddPermissionSetMenuAnchorEl(null);
-  }
 
   const canEdit = useUserIsOrganizationAdministrator();
 
@@ -259,7 +172,6 @@ export function LocationEdit() {
                   location.adultFamilyRelationships || [],
                 arrangementReasons: location.arrangementReasons || [],
               }}
-              options={configurationOptions}
               currentLocationDefinition={location}
             />
           )}
@@ -267,132 +179,6 @@ export function LocationEdit() {
           {activeTab === 'policies' && !hidePoliciesTab && <ApprovalPolicies />}
         </Box>
       </Box>
-
-      {/* <TableContainer>
-        <Table sx={{ minWidth: '700px' }} stickyHeader size="small">
-          <TableHead>
-            <TableRow>
-              <TableCell></TableCell>
-              <TableCell>Context</TableCell>
-              <TableCell>Permissions</TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {workingRole?.permissionSets?.map((permissionSet, i) => (
-              <ContextualPermissionSetRow
-                key={`${workingRole.permissionSets?.length}-${i}`}
-                editable={isEditable}
-                permissionSet={permissionSet}
-                onDelete={() => deletePermissionSetAtIndex(i)}
-                onUpdate={(newValue: IContextualPermissionSet) =>
-                  updatePermissionSetAtIndex(i, newValue)
-                }
-              />
-            ))}
-            {isEditable && (
-              <TableRow>
-                <TableCell>
-                  <IconButton
-                    onClick={(event) =>
-                      setAddPermissionSetMenuAnchorEl(event.currentTarget)
-                    }
-                  >
-                    <AddIcon />
-                  </IconButton>
-                </TableCell>
-                <TableCell colSpan={2}></TableCell>
-              </TableRow>
-            )}
-          </TableBody>
-        </Table>
-      </TableContainer> */}
-
-      <Menu
-        open={Boolean(addPermissionSetMenuAnchorEl)}
-        anchorEl={addPermissionSetMenuAnchorEl}
-        onClose={() => setAddPermissionSetMenuAnchorEl(null)}
-      >
-        <MenuItem
-          dense
-          onClick={() => addPermissionSet(() => new GlobalPermissionContext())}
-        >
-          Global
-        </MenuItem>
-        <MenuItem
-          dense
-          onClick={() =>
-            addPermissionSet(() => new OwnFamilyPermissionContext())
-          }
-        >
-          Own Family
-        </MenuItem>
-        <MenuItem
-          dense
-          onClick={() =>
-            addPermissionSet(() => new AllVolunteerFamiliesPermissionContext())
-          }
-        >
-          All Volunteer Families
-        </MenuItem>
-        <MenuItem
-          dense
-          onClick={() =>
-            addPermissionSet(() => new AllPartneringFamiliesPermissionContext())
-          }
-        >
-          All Partnering Families
-        </MenuItem>
-        <MenuItem
-          dense
-          onClick={() =>
-            addPermissionSet(
-              () =>
-                new AssignedFunctionsInReferralPartneringFamilyPermissionContext()
-            )
-          }
-        >
-          Assigned Functions in Referral - Partnering Family
-        </MenuItem>
-        <MenuItem
-          dense
-          onClick={() =>
-            addPermissionSet(
-              () =>
-                new AssignedFunctionsInReferralCoAssigneeFamiliesPermissionContext()
-            )
-          }
-        >
-          Assigned Functions in Referral - Co-Assigned Families
-        </MenuItem>
-        <MenuItem
-          dense
-          onClick={() =>
-            addPermissionSet(
-              () => new OwnReferralAssigneeFamiliesPermissionContext()
-            )
-          }
-        >
-          Own Referral - Assigned Families
-        </MenuItem>
-        <MenuItem
-          dense
-          onClick={() =>
-            addPermissionSet(() => new CommunityMemberPermissionContext())
-          }
-        >
-          Community Member - Community
-        </MenuItem>
-        <MenuItem
-          dense
-          onClick={() =>
-            addPermissionSet(
-              () => new CommunityCoMemberFamiliesPermissionContext()
-            )
-          }
-        >
-          Community Member - Co-Member Families
-        </MenuItem>
-      </Menu>
     </Stack>
   );
 }
