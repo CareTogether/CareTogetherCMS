@@ -3,8 +3,8 @@ import { Stack, Typography } from '@mui/material';
 type Props = {
   activeTab: 'basic' | 'actions' | 'policies';
   onTabChange: (tab: 'basic' | 'actions' | 'policies') => void;
-  hideActionsTab: boolean;
-  hidePoliciesTab: boolean;
+  showActionsTab: boolean;
+  showPoliciesTab: boolean;
 };
 
 const tabs = [
@@ -16,12 +16,12 @@ const tabs = [
 export default function SettingsTabMenu({
   activeTab,
   onTabChange,
-  hideActionsTab,
-  hidePoliciesTab,
+  showActionsTab,
+  showPoliciesTab,
 }: Props) {
   const filteredTabs = tabs.filter((tab) => {
-    if (tab.key === 'actions' && hideActionsTab) return false;
-    if (tab.key === 'policies' && hidePoliciesTab) return false;
+    if (tab.key === 'actions' && !showActionsTab) return false;
+    if (tab.key === 'policies' && !showPoliciesTab) return false;
     return true;
   });
 

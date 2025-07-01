@@ -8,13 +8,13 @@ import {
   IconButton,
   Button,
 } from '@mui/material';
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect } from 'react';
 import { useLoadable } from '../../Hooks/useLoadable';
 import { organizationConfigurationQuery } from '../../Model/ConfigurationModel';
 import { ProgressBackdrop } from '../../Shell/ProgressBackdrop';
 import useScreenTitle from '../../Shell/ShellScreenTitle';
 import { useRecoilValue } from 'recoil';
-import { selectedLocationContextState } from '../../Model/Data';
+import { selectedLocationContextState, useDataLoaded } from '../../Model/Data';
 import { useParams } from 'react-router-dom';
 import { Link } from 'react-router-dom';
 import NavigateNextIcon from '@mui/icons-material/NavigateNext';
@@ -41,15 +41,8 @@ export function LocationEdit() {
 
   useScreenTitle(`Editing ${location?.name} configuration`);
 
-  const hideActionsTab = useFeatureFlagEnabled('actionDefinitionsTab');
-  const hidePoliciesTab = useFeatureFlagEnabled('approvalPoliciesTab');
-
-  const availableTabs = useMemo(() => {
-    const tabs: ('basic' | 'actions' | 'policies')[] = ['basic'];
-    if (!hideActionsTab) tabs.push('actions');
-    if (!hidePoliciesTab) tabs.push('policies');
-    return tabs;
-  }, [hideActionsTab, hidePoliciesTab]);
+  const showActionsTab = useFeatureFlagEnabled('actionDefinitionsTab');
+  const showPoliciesTab = useFeatureFlagEnabled('approvalPoliciesTab');
 
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
 
@@ -68,17 +61,21 @@ export function LocationEdit() {
     'basic'
   );
 
-  useEffect(() => {
-    if (!availableTabs.includes(activeTab)) {
-      setActiveTab('basic');
-    }
-  }, [activeTab, hideActionsTab, hidePoliciesTab, availableTabs]);
+  const dataLoaded = useDataLoaded();
 
   const canEdit = useUserIsOrganizationAdministrator();
 
   const appNavigate = useAppNavigate();
 
-  if (!canEdit) {
+  if (!dataLoaded) {
+    return (
+      <ProgressBackdrop>
+        <p>Loading location configuration...</p>
+      </ProgressBackdrop>
+    );
+  }
+
+  if (!canEdit || !location) {
     return (
       <Box mt={10} textAlign="center">
         <Typography>
@@ -96,11 +93,7 @@ export function LocationEdit() {
     );
   }
 
-  return !location ? (
-    <ProgressBackdrop>
-      <p>Loading location configuration...</p>
-    </ProgressBackdrop>
-  ) : (
+  return (
     <Stack spacing={0} sx={{ height: '100%', minHeight: '100vh', pt: 2 }}>
       <Box>
         <Breadcrumbs
@@ -155,8 +148,8 @@ export function LocationEdit() {
               <SettingsTabMenu
                 activeTab={activeTab}
                 onTabChange={setActiveTab}
-                hideActionsTab={hideActionsTab ?? false}
-                hidePoliciesTab={hidePoliciesTab ?? false}
+                showActionsTab={showActionsTab ?? false}
+                showPoliciesTab={showPoliciesTab ?? false}
               />
             </Box>
           )}
@@ -175,8 +168,10 @@ export function LocationEdit() {
               currentLocationDefinition={location}
             />
           )}
-          {activeTab === 'actions' && !hideActionsTab && <ActionDefinitions />}
-          {activeTab === 'policies' && !hidePoliciesTab && <ApprovalPolicies />}
+
+          {activeTab === 'actions' && showActionsTab && <ActionDefinitions />}
+
+          {activeTab === 'policies' && showPoliciesTab && <ApprovalPolicies />}
         </Box>
       </Box>
     </Stack>
