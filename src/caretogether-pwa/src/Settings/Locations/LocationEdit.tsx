@@ -8,6 +8,7 @@ import {
   useMediaQuery,
   Link as MuiLink,
   IconButton,
+  Button,
 } from '@mui/material';
 import { useState, useEffect, useMemo } from 'react';
 import {
@@ -41,6 +42,8 @@ import SettingsTabMenu from './SettingsTabMenu';
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import { useFeatureFlagEnabled } from 'posthog-js/react';
+import { useUserIsOrganizationAdministrator } from '../../Model/SessionModel';
+import { useAppNavigate } from '../../Hooks/useAppNavigate';
 
 export function LocationEdit() {
   const { locationId } = useParams<{ locationId: string }>();
@@ -156,6 +159,28 @@ export function LocationEdit() {
     setWorkingRole(newWorkingRole);
     setDirty(true);
     setAddPermissionSetMenuAnchorEl(null);
+  }
+
+  const canEdit = useUserIsOrganizationAdministrator();
+
+  const appNavigate = useAppNavigate();
+
+  if (!canEdit) {
+    return (
+      <Box mt={10} textAlign="center">
+        <Typography>
+          Oops! You can’t edit this Location. It may be restricted or
+          unavailable.
+        </Typography>
+        <Button
+          variant="contained"
+          sx={{ mt: 2 }}
+          onClick={() => appNavigate.dashboard()}
+        >
+          Home
+        </Button>
+      </Box>
+    );
   }
 
   return !location ? (

@@ -8,11 +8,10 @@ import {
   TableRow,
   Typography,
 } from '@mui/material';
-import { Permission } from '../../GeneratedClient';
 import { useAppNavigate } from '../../Hooks/useAppNavigate';
 import { useLoadable } from '../../Hooks/useLoadable';
 import { organizationConfigurationQuery } from '../../Model/ConfigurationModel';
-import { useGlobalPermissions } from '../../Model/SessionModel';
+import { useUserIsOrganizationAdministrator } from '../../Model/SessionModel';
 import { useSidePanel } from '../../Hooks/useSidePanel';
 import { AddLocation } from './AddLocationSidePanel';
 import { Breadcrumbs, Link as MuiLink } from '@mui/material';
@@ -32,9 +31,7 @@ export function LocationsSection() {
 
   const { SidePanel, openSidePanel, closeSidePanel } = useSidePanel();
 
-  const permissions = useGlobalPermissions();
-
-  const canEdit = permissions(Permission.AddEditRoles);
+  const canAddOrEdit = useUserIsOrganizationAdministrator();
 
   return (
     <>
@@ -120,7 +117,7 @@ export function LocationsSection() {
         </Table>
       </TableContainer>
 
-      {canEdit && (
+      {canAddOrEdit && (
         <>
           <Button
             sx={{ marginY: 2 }}
