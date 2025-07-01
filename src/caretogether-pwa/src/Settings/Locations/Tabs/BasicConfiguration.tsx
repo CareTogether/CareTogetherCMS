@@ -78,7 +78,6 @@ export default function BasicConfiguration({
                 helperText={errors[field.name]?.message}
                 required
                 size="small"
-                InputProps={{ readOnly: true }}
                 {...field}
               />
             )}
