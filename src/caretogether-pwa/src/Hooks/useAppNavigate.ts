@@ -14,7 +14,7 @@ export interface AppNavigate {
   community: (communityId: string) => void;
   settings: () => void;
   role: (roleId: string) => void;
-  location: (locationId: string) => void;
+  locationEdit: (locationId: string) => void;
   settingsRoles: () => void;
   settingsLocations: () => void;
 }
@@ -60,7 +60,7 @@ export function useAppNavigate(): AppNavigate {
       inContext(`communities/community/${communityId}`),
     settings: () => inContext(`settings`),
     role: (roleId: string) => inContext(`settings/roles/${roleId}`),
-    location: (locationId: string) =>
+    locationEdit: (locationId: string) =>
       inContext(`settings/locations/${locationId}`),
     settingsRoles: () => inContext('settings/roles'),
     settingsLocations: () => inContext('settings/locations'),

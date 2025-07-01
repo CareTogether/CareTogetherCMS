@@ -53,7 +53,7 @@ export function AddLocation({ onClose }: DrawerProps) {
         (location) => location.name === data.locationName
       );
       if (newLocation?.id) {
-        appNavigate.location(newLocation.id);
+        appNavigate.locationEdit(newLocation.id);
       }
       onClose();
     });

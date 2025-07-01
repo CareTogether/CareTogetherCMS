@@ -86,7 +86,7 @@ export function LocationsSection() {
                   role="listitem"
                   tabIndex={-1}
                   sx={{ cursor: 'pointer' }}
-                  onClick={() => appNavigate.location(location.id!)}
+                  onClick={() => appNavigate.locationEdit(location.id!)}
                 >
                   <TableCell align="left" sx={{ minWidth: 200 }}>
                     {location.name}
