@@ -1242,6 +1242,7 @@ export class LocationConfiguration implements ILocationConfiguration {
     adultFamilyRelationships?: string[];
     arrangementReasons?: string[] | undefined;
     smsSourcePhoneNumbers?: SourcePhoneNumberConfiguration[];
+    accessLevels?: AccessLevel[];
     timeZone?: TimeZoneInfo | undefined;
 
     constructor(data?: ILocationConfiguration) {
@@ -1276,6 +1277,11 @@ export class LocationConfiguration implements ILocationConfiguration {
                 this.smsSourcePhoneNumbers = [] as any;
                 for (let item of _data["smsSourcePhoneNumbers"])
                     this.smsSourcePhoneNumbers!.push(SourcePhoneNumberConfiguration.fromJS(item));
+            }
+            if (Array.isArray(_data["accessLevels"])) {
+                this.accessLevels = [] as any;
+                for (let item of _data["accessLevels"])
+                    this.accessLevels!.push(AccessLevel.fromJS(item));
             }
             this.timeZone = _data["timeZone"] ? TimeZoneInfo.fromJS(_data["timeZone"]) : <any>undefined;
         }
@@ -1312,6 +1318,11 @@ export class LocationConfiguration implements ILocationConfiguration {
             for (let item of this.smsSourcePhoneNumbers)
                 data["smsSourcePhoneNumbers"].push(item.toJSON());
         }
+        if (Array.isArray(this.accessLevels)) {
+            data["accessLevels"] = [];
+            for (let item of this.accessLevels)
+                data["accessLevels"].push(item.toJSON());
+        }
         data["timeZone"] = this.timeZone ? this.timeZone.toJSON() : <any>undefined;
         return data;
     }
@@ -1324,6 +1335,7 @@ export interface ILocationConfiguration {
     adultFamilyRelationships?: string[];
     arrangementReasons?: string[] | undefined;
     smsSourcePhoneNumbers?: SourcePhoneNumberConfiguration[];
+    accessLevels?: AccessLevel[];
     timeZone?: TimeZoneInfo | undefined;
 }
 
@@ -1365,6 +1377,66 @@ export class SourcePhoneNumberConfiguration implements ISourcePhoneNumberConfigu
 export interface ISourcePhoneNumberConfiguration {
     sourcePhoneNumber?: string;
     description?: string;
+}
+
+export class AccessLevel implements IAccessLevel {
+    name?: string;
+    organizationRoles?: string[];
+    approvalRoles?: string[];
+
+    constructor(data?: IAccessLevel) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.name = _data["name"];
+            if (Array.isArray(_data["organizationRoles"])) {
+                this.organizationRoles = [] as any;
+                for (let item of _data["organizationRoles"])
+                    this.organizationRoles!.push(item);
+            }
+            if (Array.isArray(_data["approvalRoles"])) {
+                this.approvalRoles = [] as any;
+                for (let item of _data["approvalRoles"])
+                    this.approvalRoles!.push(item);
+            }
+        }
+    }
+
+    static fromJS(data: any): AccessLevel {
+        data = typeof data === 'object' ? data : {};
+        let result = new AccessLevel();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["name"] = this.name;
+        if (Array.isArray(this.organizationRoles)) {
+            data["organizationRoles"] = [];
+            for (let item of this.organizationRoles)
+                data["organizationRoles"].push(item);
+        }
+        if (Array.isArray(this.approvalRoles)) {
+            data["approvalRoles"] = [];
+            for (let item of this.approvalRoles)
+                data["approvalRoles"].push(item);
+        }
+        return data;
+    }
+}
+
+export interface IAccessLevel {
+    name?: string;
+    organizationRoles?: string[];
+    approvalRoles?: string[];
 }
 
 export class TimeZoneInfo implements ITimeZoneInfo {
@@ -2229,6 +2301,8 @@ export class ActionRequirement implements IActionRequirement {
     instructions?: string | undefined;
     infoLink?: string | undefined;
     validity?: string | undefined;
+    canView?: string | undefined;
+    canEdit?: string | undefined;
 
     constructor(data?: IActionRequirement) {
         if (data) {
@@ -2246,6 +2320,8 @@ export class ActionRequirement implements IActionRequirement {
             this.instructions = _data["instructions"];
             this.infoLink = _data["infoLink"];
             this.validity = _data["validity"];
+            this.canView = _data["canView"];
+            this.canEdit = _data["canEdit"];
         }
     }
 
@@ -2263,6 +2339,8 @@ export class ActionRequirement implements IActionRequirement {
         data["instructions"] = this.instructions;
         data["infoLink"] = this.infoLink;
         data["validity"] = this.validity;
+        data["canView"] = this.canView;
+        data["canEdit"] = this.canEdit;
         return data;
     }
 }
@@ -2273,6 +2351,8 @@ export interface IActionRequirement {
     instructions?: string | undefined;
     infoLink?: string | undefined;
     validity?: string | undefined;
+    canView?: string | undefined;
+    canEdit?: string | undefined;
 }
 
 export enum DocumentLinkRequirement {
@@ -6884,6 +6964,7 @@ export class Note implements INote {
     contents?: string | undefined;
     status?: NoteStatus;
     backdatedTimestampUtc?: Date | undefined;
+    accessLevel?: string | undefined;
 
     constructor(data?: INote) {
         if (data) {
@@ -6902,6 +6983,7 @@ export class Note implements INote {
             this.contents = _data["contents"];
             this.status = _data["status"];
             this.backdatedTimestampUtc = _data["backdatedTimestampUtc"] ? new Date(_data["backdatedTimestampUtc"].toString()) : <any>undefined;
+            this.accessLevel = _data["accessLevel"];
         }
     }
 
@@ -6920,6 +7002,7 @@ export class Note implements INote {
         data["contents"] = this.contents;
         data["status"] = this.status;
         data["backdatedTimestampUtc"] = this.backdatedTimestampUtc ? this.backdatedTimestampUtc.toISOString() : <any>undefined;
+        data["accessLevel"] = this.accessLevel;
         return data;
     }
 }
@@ -6931,6 +7014,7 @@ export interface INote {
     contents?: string | undefined;
     status?: NoteStatus;
     backdatedTimestampUtc?: Date | undefined;
+    accessLevel?: string | undefined;
 }
 
 export enum NoteStatus {
@@ -10781,6 +10865,7 @@ export interface INoteCommand {
 export class ApproveNote extends NoteCommand implements IApproveNote {
     finalizedNoteContents?: string;
     backdatedTimestampUtc?: Date | undefined;
+    accessLevel?: string | undefined;
 
     constructor(data?: IApproveNote) {
         super(data);
@@ -10792,6 +10877,7 @@ export class ApproveNote extends NoteCommand implements IApproveNote {
         if (_data) {
             this.finalizedNoteContents = _data["finalizedNoteContents"];
             this.backdatedTimestampUtc = _data["backdatedTimestampUtc"] ? new Date(_data["backdatedTimestampUtc"].toString()) : <any>undefined;
+            this.accessLevel = _data["accessLevel"];
         }
     }
 
@@ -10806,6 +10892,7 @@ export class ApproveNote extends NoteCommand implements IApproveNote {
         data = typeof data === 'object' ? data : {};
         data["finalizedNoteContents"] = this.finalizedNoteContents;
         data["backdatedTimestampUtc"] = this.backdatedTimestampUtc ? this.backdatedTimestampUtc.toISOString() : <any>undefined;
+        data["accessLevel"] = this.accessLevel;
         super.toJSON(data);
         return data;
     }
@@ -10814,11 +10901,13 @@ export class ApproveNote extends NoteCommand implements IApproveNote {
 export interface IApproveNote extends INoteCommand {
     finalizedNoteContents?: string;
     backdatedTimestampUtc?: Date | undefined;
+    accessLevel?: string | undefined;
 }
 
 export class CreateDraftNote extends NoteCommand implements ICreateDraftNote {
     draftNoteContents?: string | undefined;
     backdatedTimestampUtc?: Date | undefined;
+    accessLevel?: string | undefined;
 
     constructor(data?: ICreateDraftNote) {
         super(data);
@@ -10830,6 +10919,7 @@ export class CreateDraftNote extends NoteCommand implements ICreateDraftNote {
         if (_data) {
             this.draftNoteContents = _data["draftNoteContents"];
             this.backdatedTimestampUtc = _data["backdatedTimestampUtc"] ? new Date(_data["backdatedTimestampUtc"].toString()) : <any>undefined;
+            this.accessLevel = _data["accessLevel"];
         }
     }
 
@@ -10844,6 +10934,7 @@ export class CreateDraftNote extends NoteCommand implements ICreateDraftNote {
         data = typeof data === 'object' ? data : {};
         data["draftNoteContents"] = this.draftNoteContents;
         data["backdatedTimestampUtc"] = this.backdatedTimestampUtc ? this.backdatedTimestampUtc.toISOString() : <any>undefined;
+        data["accessLevel"] = this.accessLevel;
         super.toJSON(data);
         return data;
     }
@@ -10852,6 +10943,7 @@ export class CreateDraftNote extends NoteCommand implements ICreateDraftNote {
 export interface ICreateDraftNote extends INoteCommand {
     draftNoteContents?: string | undefined;
     backdatedTimestampUtc?: Date | undefined;
+    accessLevel?: string | undefined;
 }
 
 export class DiscardDraftNote extends NoteCommand implements IDiscardDraftNote {
@@ -10885,6 +10977,7 @@ export interface IDiscardDraftNote extends INoteCommand {
 export class EditDraftNote extends NoteCommand implements IEditDraftNote {
     draftNoteContents?: string | undefined;
     backdatedTimestampUtc?: Date | undefined;
+    accessLevel?: string | undefined;
 
     constructor(data?: IEditDraftNote) {
         super(data);
@@ -10896,6 +10989,7 @@ export class EditDraftNote extends NoteCommand implements IEditDraftNote {
         if (_data) {
             this.draftNoteContents = _data["draftNoteContents"];
             this.backdatedTimestampUtc = _data["backdatedTimestampUtc"] ? new Date(_data["backdatedTimestampUtc"].toString()) : <any>undefined;
+            this.accessLevel = _data["accessLevel"];
         }
     }
 
@@ -10910,6 +11004,7 @@ export class EditDraftNote extends NoteCommand implements IEditDraftNote {
         data = typeof data === 'object' ? data : {};
         data["draftNoteContents"] = this.draftNoteContents;
         data["backdatedTimestampUtc"] = this.backdatedTimestampUtc ? this.backdatedTimestampUtc.toISOString() : <any>undefined;
+        data["accessLevel"] = this.accessLevel;
         super.toJSON(data);
         return data;
     }
@@ -10918,6 +11013,7 @@ export class EditDraftNote extends NoteCommand implements IEditDraftNote {
 export interface IEditDraftNote extends INoteCommand {
     draftNoteContents?: string | undefined;
     backdatedTimestampUtc?: Date | undefined;
+    accessLevel?: string | undefined;
 }
 
 export class PersonRecordsCommand extends AtomicRecordsCommand implements IPersonRecordsCommand {

@@ -117,7 +117,8 @@ namespace CareTogether.Managers
                         : note.LastEditTimestampUtc,
                     note.Contents,
                     note.Status,
-                    note.BackdatedTimestampUtc
+                    note.BackdatedTimestampUtc,
+                    note.AccessLevel
                 ))
                 .ToImmutableList();
 

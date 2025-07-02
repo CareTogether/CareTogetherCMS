@@ -727,11 +727,13 @@ export function useDirectoryModel() {
       familyId,
       noteId: string,
       draftNoteContents: string,
-      backdatedTimestampLocal?: Date
+      backdatedTimestampLocal?: Date,
+      accessLevel?: string
     ) => {
       const command = new CreateDraftNote({
         familyId: familyId,
         noteId: noteId,
+        accessLevel: accessLevel,
       });
       command.draftNoteContents = draftNoteContents;
       command.noteId = noteId;
@@ -744,11 +746,13 @@ export function useDirectoryModel() {
       familyId,
       noteId: string,
       draftNoteContents: string,
-      backdatedTimestampLocal?: Date
+      backdatedTimestampLocal?: Date,
+      accessLevel?: string
     ) => {
       const command = new EditDraftNote({
         familyId: familyId,
         noteId: noteId,
+        accessLevel: accessLevel,
       });
       command.draftNoteContents = draftNoteContents;
       command.backdatedTimestampUtc = backdatedTimestampLocal;
