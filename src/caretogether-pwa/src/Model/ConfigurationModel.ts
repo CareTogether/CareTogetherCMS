@@ -15,6 +15,13 @@ export const organizationConfigurationEdited =
     default: null,
   });
 
+export type ExtendedOrganizationConfiguration = OrganizationConfiguration & {
+  availableTimeZones?: string[];
+  ethnicities?: string[];
+  adultFamilyRelationships?: string[];
+  arrangementReasons?: string[];
+};
+
 export const organizationConfigurationQuery = selector({
   key: 'organizationConfigurationQuery',
   get: async ({ get }) => {
@@ -22,11 +29,11 @@ export const organizationConfigurationQuery = selector({
     if (organizationId == null) return null;
     const edited = get(organizationConfigurationEdited);
     if (edited) {
-      return edited;
+      return edited as ExtendedOrganizationConfiguration;
     } else {
       const dataResponse =
         await api.configuration.getOrganizationConfiguration(organizationId);
-      return dataResponse;
+      return dataResponse as ExtendedOrganizationConfiguration;
     }
   },
 });

@@ -278,6 +278,11 @@ namespace CareTogether.Resources.Policies
             string roleName
         );
 
+        Task<OrganizationConfiguration> UpsertLocationDefinitionAsync(
+            Guid organizationId,
+            LocationConfiguration locationConfiguration
+        );
+
         Task<OrganizationSecrets> GetOrganizationSecretsAsync(Guid organizationId);
 
         Task<EffectiveLocationPolicy> GetCurrentPolicy(Guid organizationId, Guid locationId);

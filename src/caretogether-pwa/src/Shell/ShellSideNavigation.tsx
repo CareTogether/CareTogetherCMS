@@ -27,6 +27,7 @@ import { useFeatureFlagEnabled as usePostHogFeatureFlagEnabled } from 'posthog-j
 import { useRecoilValue } from 'recoil';
 import { reportSubmenuItemsAtom } from '../Model/UI';
 import { ListItemLink } from './ListItemLink';
+import { useAppNavigate } from '../Hooks/useAppNavigate';
 
 interface SideNavigationMenuProps {
   open: boolean;
@@ -34,6 +35,8 @@ interface SideNavigationMenuProps {
 function SideNavigationMenu({ open }: SideNavigationMenuProps) {
   const flags = useFeatureFlags();
   const permissions = useGlobalPermissions();
+
+  const appNavigate = useAppNavigate();
 
   const showReports = usePostHogFeatureFlagEnabled('reports');
   const showReportsSubmenuItems = usePostHogFeatureFlagEnabled(
@@ -157,12 +160,26 @@ function SideNavigationMenu({ open }: SideNavigationMenuProps) {
             permissions(Permission.AccessSupportScreen)) && <Divider />}
 
           {permissions(Permission.AccessSettingsScreen) && (
-            <ListItemLink
-              className="ph-unmask"
-              to={`${locationPrefix}/settings`}
-              primary="Settings"
-              icon={<SettingsIcon />}
-            />
+            <>
+              <ListItemLink
+                className="ph-unmask"
+                to={`${locationPrefix}/settings`}
+                primary="Settings"
+                icon={<SettingsIcon sx={{ color: '#fff8' }} />}
+                subitems={[
+                  {
+                    label: 'Roles',
+                    isActive: location.pathname.includes('/settings/roles'),
+                    onClick: () => appNavigate.settingsRoles(),
+                  },
+                  {
+                    label: 'Locations',
+                    isActive: location.pathname.includes('/settings/locations'),
+                    onClick: () => appNavigate.settingsLocations(),
+                  },
+                ]}
+              />
+            </>
           )}
 
           {permissions(Permission.AccessSupportScreen) && (
