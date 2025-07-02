@@ -24,6 +24,7 @@
     "@testing-library/react": "^14.3.1",
     "@testing-library/user-event": "^14.5.2",
     "date-fns": "^3.6.0",
+    "dayjs": "^1.11.13",
     "dexie": "^3.2.7",
     "dexie-react-hooks": "^1.1.7",
     "posthog-js": "^1.260.1",
