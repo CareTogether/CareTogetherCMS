@@ -14,7 +14,8 @@ namespace CareTogether.Resources.Notes
         string? Contents,
         Guid? ApproverId,
         DateTime? ApprovedTimestampUtc,
-        DateTime? BackdatedTimestampUtc
+        DateTime? BackdatedTimestampUtc,
+        string? AccessLevel // changed to nullable
     );
 
     public enum NoteStatus
@@ -30,14 +31,16 @@ namespace CareTogether.Resources.Notes
         Guid FamilyId,
         Guid NoteId,
         string? DraftNoteContents,
-        DateTime? BackdatedTimestampUtc
+        DateTime? BackdatedTimestampUtc,
+        string? AccessLevel = null
     ) : NoteCommand(FamilyId, NoteId);
 
     public sealed record EditDraftNote(
         Guid FamilyId,
         Guid NoteId,
         string? DraftNoteContents,
-        DateTime? BackdatedTimestampUtc
+        DateTime? BackdatedTimestampUtc,
+        string? AccessLevel = null
     ) : NoteCommand(FamilyId, NoteId);
 
     public sealed record DiscardDraftNote(Guid FamilyId, Guid NoteId)
@@ -47,7 +50,8 @@ namespace CareTogether.Resources.Notes
         Guid FamilyId,
         Guid NoteId,
         string FinalizedNoteContents,
-        DateTime? BackdatedTimestampUtc
+        DateTime? BackdatedTimestampUtc,
+        string? AccessLevel = null
     ) : NoteCommand(FamilyId, NoteId);
 
     /// <summary>
