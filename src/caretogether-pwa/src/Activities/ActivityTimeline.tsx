@@ -339,6 +339,11 @@ export function ActivityTimeline({
                   }
                 </Box>
               )}
+
+              <Typography>
+                Note visibility: {note?.accessLevel || 'Everyone'}
+              </Typography>
+
               {note && <NoteCard familyId={family.family!.id!} note={note} />}
             </TimelineContent>
           </TimelineItem>
