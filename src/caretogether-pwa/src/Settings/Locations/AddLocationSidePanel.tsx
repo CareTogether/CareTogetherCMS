@@ -1,18 +1,27 @@
 import { Button, Grid, TextField, Typography } from '@mui/material';
 import { useBackdrop } from '../../Hooks/useBackdrop';
 import { api } from '../../Api/Api';
-import { useRecoilValue, useSetRecoilState } from 'recoil';
-import { selectedLocationContextState } from '../../Model/Data';
+import {
+  useRecoilRefresher_UNSTABLE,
+  useRecoilValue,
+  useSetRecoilState,
+} from 'recoil';
+import {
+  selectedLocationContextState,
+  userOrganizationAccessQuery,
+} from '../../Model/Data';
 import { organizationConfigurationEdited } from '../../Model/ConfigurationModel';
 import {
-  CreateNewLocationPayload,
+  ApiException,
   LocationConfiguration,
+  PutLocationPayload,
 } from '../../GeneratedClient';
 import { useForm, Controller } from 'react-hook-form';
 import { useAppNavigate } from '../../Hooks/useAppNavigate';
 import { useLoadable } from '../../Hooks/useLoadable';
 import { organizationConfigurationQuery } from '../../Model/ConfigurationModel';
 import MenuItem from '@mui/material/MenuItem';
+import { useState } from 'react';
 
 interface DrawerProps {
   onClose: () => void;
@@ -32,6 +41,10 @@ export function AddLocation({ onClose }: DrawerProps) {
   const withBackdrop = useBackdrop();
   const appNavigate = useAppNavigate();
   const configuration = useLoadable(organizationConfigurationQuery);
+  const refreshUserOrganizationAccess = useRecoilRefresher_UNSTABLE(
+    userOrganizationAccessQuery
+  );
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const {
     handleSubmit,
@@ -48,32 +61,49 @@ export function AddLocation({ onClose }: DrawerProps) {
 
   async function onSubmit(data: AddLocationFormValues) {
     await withBackdrop(async () => {
-      const config = new LocationConfiguration({
-        id: undefined,
-        name: data.locationName,
-        adultFamilyRelationships: [],
-        arrangementReasons: [],
-        ethnicities: [],
-        smsSourcePhoneNumbers: [],
-        timeZone: undefined, // TODO: Implement timezone
-      });
-      // Pass copyPoliciesFromLocationId to the API if set
-      const updated = await api.configuration.putLocationDefinition(
-        organizationId!,
-        new CreateNewLocationPayload({
-          locationConfiguration: config,
-          copyPoliciesFromLocationId: data.copyPoliciesFromLocationId,
-        })
-      );
-      storeEdits(updated);
-      // Find the new location's id from the updated locations list (typed)
-      const newLocation = updated.locations?.find(
-        (location) => location.name === data.locationName
-      );
-      if (newLocation?.id) {
-        appNavigate.locationEdit(newLocation.id);
+      try {
+        const config = new LocationConfiguration({
+          id: undefined,
+          name: data.locationName,
+          adultFamilyRelationships: [],
+          arrangementReasons: [],
+          ethnicities: [],
+          smsSourcePhoneNumbers: [],
+          timeZone: undefined, // TODO: Implement timezone
+        });
+
+        const updated = await api.configuration.putLocationDefinition(
+          organizationId!,
+          new PutLocationPayload({
+            locationConfiguration: config,
+            copyPoliciesFromLocationId: data.copyPoliciesFromLocationId,
+          })
+        );
+
+        storeEdits(updated);
+
+        const newLocation = updated.locations?.find(
+          (location) => location.name === data.locationName
+        );
+
+        // Refresh the locations access so the user is able to switch to the new location
+        refreshUserOrganizationAccess();
+
+        if (newLocation?.id) {
+          appNavigate.locationEdit(newLocation.id, {
+            replaceLocationId: newLocation.id,
+          });
+        }
+      } catch (error) {
+        if (error instanceof ApiException) {
+          setErrorMessage(error.response);
+        } else if (error instanceof Error) {
+          setErrorMessage(error.message);
+        } else {
+          setErrorMessage('An unexpected error occurred.');
+        }
+        throw error;
       }
-      onClose();
     });
   }
 
@@ -172,6 +202,17 @@ export function AddLocation({ onClose }: DrawerProps) {
         />
       </Grid> */}
       <Grid item xs={12} sx={{ textAlign: 'right' }}>
+        {errorMessage && (
+          <>
+            <Typography color="error">
+              Something went wrong while creating Location.
+            </Typography>
+            <Typography color="error" gutterBottom>
+              Backend message: {errorMessage}
+            </Typography>
+          </>
+        )}
+
         <Button
           color="secondary"
           variant="contained"

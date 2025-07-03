@@ -125,7 +125,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/CreateNewLocationPayload"
+                "$ref": "#/components/schemas/PutLocationPayload"
               }
             }
           },
@@ -1646,7 +1646,7 @@
           508
         ]
       },
-      "CreateNewLocationPayload": {
+      "PutLocationPayload": {
         "type": "object",
         "additionalProperties": false,
         "properties": {
@@ -1655,7 +1655,8 @@
           },
           "copyPoliciesFromLocationId": {
             "type": "string",
-            "format": "guid"
+            "format": "guid",
+            "nullable": true
           }
         }
       },

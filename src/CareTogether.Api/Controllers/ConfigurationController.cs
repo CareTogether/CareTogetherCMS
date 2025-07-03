@@ -22,9 +22,9 @@ namespace CareTogether.Api.Controllers
         bool FamilyScreenPageVersionSwitch
     );
 
-    public sealed record CreateNewLocationPayload(
+    public sealed record PutLocationPayload(
         LocationConfiguration locationConfiguration,
-        Guid copyPoliciesFromLocationId
+        Guid? copyPoliciesFromLocationId
     );
 
     [ApiController]
@@ -301,7 +301,7 @@ namespace CareTogether.Api.Controllers
         [HttpPut("/api/{organizationId:guid}/[controller]")]
         public async Task<ActionResult<OrganizationConfiguration>> PutLocationDefinition(
             Guid organizationId,
-            [FromBody] CreateNewLocationPayload newLocationPayload
+            [FromBody] PutLocationPayload newLocationPayload
         )
         {
             var newLocationConfiguration = newLocationPayload.locationConfiguration;
@@ -309,8 +309,21 @@ namespace CareTogether.Api.Controllers
 
             if (!User.IsInRole(SystemConstants.ORGANIZATION_ADMINISTRATOR))
                 return Forbid();
+
+            if (newLocationConfiguration.Id != Guid.Empty)
+            {
+                var updatedLocation = await policiesResource.UpsertLocationDefinitionAsync(
+                    organizationId,
+                    newLocationConfiguration
+                );
+
+                return Ok(updatedLocation.OrganizationConfiguration);
+            }
+
             if (copyPoliciesFromLocationId == Guid.Empty)
-                return BadRequest("copyPoliciesFromLocationId is required.");
+                return BadRequest(
+                    "copyPoliciesFromLocationId is required for creating a new Location."
+                );
 
             var referenceLocation = (
                 await policiesResource.GetConfigurationAsync(organizationId)
@@ -339,11 +352,6 @@ namespace CareTogether.Api.Controllers
                     "Could not find records to copy from. Ensure the user has a family and person record in the specified location."
                 );
 
-            var referenceEffectivePolicy = await policiesResource.GetCurrentPolicy(
-                organizationId,
-                referenceLocation.Id
-            );
-
             var result = await policiesResource.UpsertLocationDefinitionAsync(
                 organizationId,
                 referenceLocation with
@@ -351,6 +359,11 @@ namespace CareTogether.Api.Controllers
                     Id = Guid.Empty,
                     Name = newLocationConfiguration.Name,
                 }
+            );
+
+            var referenceEffectivePolicy = await policiesResource.GetCurrentPolicy(
+                organizationId,
+                referenceLocation.Id
             );
 
             await policiesResource.UpsertEffectiveLocationPolicyAsync(

@@ -4,7 +4,10 @@ import { CTAutocomplete } from '../../../Generic/Forms/CTAutocomplete';
 import { api } from '../../../Api/Api';
 import { useRecoilValue, useSetRecoilState } from 'recoil';
 import { selectedLocationContextState } from '../../../Model/Data';
-import { LocationConfiguration } from '../../../GeneratedClient';
+import {
+  LocationConfiguration,
+  PutLocationPayload,
+} from '../../../GeneratedClient';
 import { organizationConfigurationEdited } from '../../../Model/ConfigurationModel';
 import { useBackdrop } from '../../../Hooks/useBackdrop';
 
@@ -49,7 +52,12 @@ export default function BasicConfiguration({
     withBackdrop(async () => {
       const newConfig = await api.configuration.putLocationDefinition(
         organizationId,
-        new LocationConfiguration({ ...currentLocationDefinition, ...data })
+        new PutLocationPayload({
+          locationConfiguration: new LocationConfiguration({
+            ...currentLocationDefinition,
+            ...data,
+          }),
+        })
       );
       storeEdits(newConfig);
     });

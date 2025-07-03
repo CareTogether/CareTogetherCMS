@@ -1,6 +1,6 @@
 import { useRecoilValue } from 'recoil';
 import { selectedLocationContextState } from '../Model/Data';
-import { useNavigate } from 'react-router-dom';
+import { NavigateOptions, useLocation, useNavigate } from 'react-router-dom';
 
 export interface AppNavigate {
   dashboard: () => void;
@@ -14,10 +14,16 @@ export interface AppNavigate {
   community: (communityId: string) => void;
   settings: () => void;
   role: (roleId: string) => void;
-  locationEdit: (locationId: string) => void;
+  locationEdit: (locationId: string, options: AppNavigateOptions) => void;
   settingsRoles: () => void;
   settingsLocations: () => void;
 }
+
+type AppNavigateOptions = {
+  replaceOrganizationId?: string;
+  replaceLocationId?: string;
+  navigateOptions?: NavigateOptions;
+};
 
 /**
  * This hook provides a client-friendly set of shortcuts to enable strongly-typed navigation
@@ -30,8 +36,11 @@ export function useAppNavigate(): AppNavigate {
     selectedLocationContextState
   );
 
-  function inContext(pathSuffix: string, options?: { replace?: boolean }) {
-    navigate(`/org/${organizationId}/${locationId}/${pathSuffix}`, options);
+  function inContext(pathSuffix: string, options?: AppNavigateOptions) {
+    navigate(
+      `/org/${options?.replaceOrganizationId || organizationId}/${options?.replaceLocationId || locationId}/${pathSuffix}`,
+      options?.navigateOptions
+    );
   }
 
   return {
@@ -53,15 +62,17 @@ export function useAppNavigate(): AppNavigate {
       const searchParamsString = searchParams.size
         ? `?${searchParams.toString()}`
         : '';
-      return inContext(`families/${familyId}${searchParamsString}`, options);
+      return inContext(`families/${familyId}${searchParamsString}`, {
+        navigateOptions: { replace: options?.replace },
+      });
     },
 
     community: (communityId: string) =>
       inContext(`communities/community/${communityId}`),
     settings: () => inContext(`settings`),
     role: (roleId: string) => inContext(`settings/roles/${roleId}`),
-    locationEdit: (locationId: string) =>
-      inContext(`settings/locations/${locationId}`),
+    locationEdit: (locationId: string, options: AppNavigateOptions) =>
+      inContext(`settings/locations/${locationId}`, options),
     settingsRoles: () => inContext('settings/roles'),
     settingsLocations: () => inContext('settings/locations'),
   };

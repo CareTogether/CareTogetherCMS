@@ -117,7 +117,7 @@ export class ConfigurationClient {
         return Promise.resolve<OrganizationConfiguration>(null as any);
     }
 
-    putLocationDefinition(organizationId: string, newLocationPayload: CreateNewLocationPayload): Promise<OrganizationConfiguration> {
+    putLocationDefinition(organizationId: string, newLocationPayload: PutLocationPayload): Promise<OrganizationConfiguration> {
         let url_ = this.baseUrl + "/api/{organizationId}/Configuration";
         if (organizationId === undefined || organizationId === null)
             throw new Error("The parameter 'organizationId' must be defined.");
@@ -2100,11 +2100,11 @@ export enum Permission {
     DeleteCommunityDocuments = 508,
 }
 
-export class CreateNewLocationPayload implements ICreateNewLocationPayload {
+export class PutLocationPayload implements IPutLocationPayload {
     locationConfiguration?: LocationConfiguration;
-    copyPoliciesFromLocationId?: string;
+    copyPoliciesFromLocationId?: string | undefined;
 
-    constructor(data?: ICreateNewLocationPayload) {
+    constructor(data?: IPutLocationPayload) {
         if (data) {
             for (var property in data) {
                 if (data.hasOwnProperty(property))
@@ -2120,9 +2120,9 @@ export class CreateNewLocationPayload implements ICreateNewLocationPayload {
         }
     }
 
-    static fromJS(data: any): CreateNewLocationPayload {
+    static fromJS(data: any): PutLocationPayload {
         data = typeof data === 'object' ? data : {};
-        let result = new CreateNewLocationPayload();
+        let result = new PutLocationPayload();
         result.init(data);
         return result;
     }
@@ -2135,9 +2135,9 @@ export class CreateNewLocationPayload implements ICreateNewLocationPayload {
     }
 }
 
-export interface ICreateNewLocationPayload {
+export interface IPutLocationPayload {
     locationConfiguration?: LocationConfiguration;
-    copyPoliciesFromLocationId?: string;
+    copyPoliciesFromLocationId?: string | undefined;
 }
 
 export class EffectiveLocationPolicy implements IEffectiveLocationPolicy {
