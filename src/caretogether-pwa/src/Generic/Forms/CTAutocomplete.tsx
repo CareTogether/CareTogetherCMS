@@ -16,6 +16,8 @@ interface ICustomTextFieldProps<T extends FieldValues> {
   defaultValue?: PathValue<T, Path<T>>;
   options?: string[];
   helperText?: string;
+  minOverallWidth?: number;
+  minTypingAreaWidth?: number;
 }
 
 export function CTAutocomplete<T extends FieldValues>({
@@ -24,6 +26,8 @@ export function CTAutocomplete<T extends FieldValues>({
   control,
   options = [],
   helperText,
+  minOverallWidth = 300,
+  minTypingAreaWidth,
 }: ICustomTextFieldProps<T>) {
   return (
     <Controller
@@ -31,18 +35,26 @@ export function CTAutocomplete<T extends FieldValues>({
       control={control}
       render={({ field }) => (
         <Autocomplete
+          sx={{
+            '& .MuiAutocomplete-inputRoot .MuiAutocomplete-input': {
+              minWidth: minTypingAreaWidth,
+            },
+          }}
           multiple
           freeSolo
           options={options}
-          renderInput={(params) => (
-            <TextField
-              {...params}
-              sx={{ minWidth: 300 }}
-              fullWidth={false}
-              label={label}
-              helperText={helperText}
-            />
-          )}
+          renderInput={(params) => {
+            console.log(params);
+            return (
+              <TextField
+                {...params}
+                sx={{ minWidth: minOverallWidth }}
+                fullWidth={false}
+                label={label}
+                helperText={helperText}
+              />
+            );
+          }}
           size="small"
           {...field}
           onChange={(_, newValue) => field.onChange(newValue)}

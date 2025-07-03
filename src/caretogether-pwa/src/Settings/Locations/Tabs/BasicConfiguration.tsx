@@ -116,6 +116,7 @@ export default function BasicConfiguration({
           label="Ethnicities"
           control={control}
           helperText='Start typing and press "Enter" to add a new item'
+          minTypingAreaWidth={120}
         />
 
         <Typography variant="h6">Family relationship types</Typography>
@@ -134,6 +135,7 @@ export default function BasicConfiguration({
           label="Family relationship types"
           control={control}
           helperText='Start typing and press "Enter" to add a new item'
+          minTypingAreaWidth={120}
         />
 
         <Typography variant="h6">Arrangement reasons</Typography>
@@ -152,6 +154,7 @@ export default function BasicConfiguration({
           label="Arrangement reasons"
           control={control}
           helperText='Start typing and press "Enter" to add a new item'
+          minTypingAreaWidth={120}
         />
 
         <Stack direction="row" spacing={2} justifyContent="flex-start">
