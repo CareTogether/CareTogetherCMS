@@ -121,11 +121,11 @@
           }
         ],
         "requestBody": {
-          "x-name": "locationConfiguration",
+          "x-name": "newLocationPayload",
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/LocationConfiguration"
+                "$ref": "#/components/schemas/CreateNewLocationPayload"
               }
             }
           },
@@ -1645,6 +1645,19 @@
           507,
           508
         ]
+      },
+      "CreateNewLocationPayload": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "locationConfiguration": {
+            "$ref": "#/components/schemas/LocationConfiguration"
+          },
+          "copyPoliciesFromLocationId": {
+            "type": "string",
+            "format": "guid"
+          }
+        }
       },
       "EffectiveLocationPolicy": {
         "type": "object",

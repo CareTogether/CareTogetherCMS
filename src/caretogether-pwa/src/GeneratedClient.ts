@@ -117,14 +117,14 @@ export class ConfigurationClient {
         return Promise.resolve<OrganizationConfiguration>(null as any);
     }
 
-    putLocationDefinition(organizationId: string, locationConfiguration: LocationConfiguration): Promise<OrganizationConfiguration> {
+    putLocationDefinition(organizationId: string, newLocationPayload: CreateNewLocationPayload): Promise<OrganizationConfiguration> {
         let url_ = this.baseUrl + "/api/{organizationId}/Configuration";
         if (organizationId === undefined || organizationId === null)
             throw new Error("The parameter 'organizationId' must be defined.");
         url_ = url_.replace("{organizationId}", encodeURIComponent("" + organizationId));
         url_ = url_.replace(/[?&]$/, "");
 
-        const content_ = JSON.stringify(locationConfiguration);
+        const content_ = JSON.stringify(newLocationPayload);
 
         let options_: RequestInit = {
             body: content_,
@@ -2098,6 +2098,46 @@ export enum Permission {
     ReadCommunityDocuments = 506,
     UploadCommunityDocuments = 507,
     DeleteCommunityDocuments = 508,
+}
+
+export class CreateNewLocationPayload implements ICreateNewLocationPayload {
+    locationConfiguration?: LocationConfiguration;
+    copyPoliciesFromLocationId?: string;
+
+    constructor(data?: ICreateNewLocationPayload) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.locationConfiguration = _data["locationConfiguration"] ? LocationConfiguration.fromJS(_data["locationConfiguration"]) : <any>undefined;
+            this.copyPoliciesFromLocationId = _data["copyPoliciesFromLocationId"];
+        }
+    }
+
+    static fromJS(data: any): CreateNewLocationPayload {
+        data = typeof data === 'object' ? data : {};
+        let result = new CreateNewLocationPayload();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["locationConfiguration"] = this.locationConfiguration ? this.locationConfiguration.toJSON() : <any>undefined;
+        data["copyPoliciesFromLocationId"] = this.copyPoliciesFromLocationId;
+        return data;
+    }
+}
+
+export interface ICreateNewLocationPayload {
+    locationConfiguration?: LocationConfiguration;
+    copyPoliciesFromLocationId?: string;
 }
 
 export class EffectiveLocationPolicy implements IEffectiveLocationPolicy {

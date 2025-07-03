@@ -1,11 +1,18 @@
 ﻿using System;
+using System.Collections.Immutable;
+using System.Linq;
 using System.Threading.Tasks;
 using CareTogether.Engines.Authorization;
+using CareTogether.Resources.Accounts;
+using CareTogether.Resources.Approvals;
+using CareTogether.Resources.Directory;
 using CareTogether.Resources.Policies;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.FeatureManagement;
+using Microsoft.Kiota.Abstractions;
+using Nito.AsyncEx;
 
 namespace CareTogether.Api.Controllers
 {
@@ -13,6 +20,11 @@ namespace CareTogether.Api.Controllers
         bool InviteUser,
         bool FamilyScreenV2,
         bool FamilyScreenPageVersionSwitch
+    );
+
+    public sealed record CreateNewLocationPayload(
+        LocationConfiguration locationConfiguration,
+        Guid copyPoliciesFromLocationId
     );
 
     [ApiController]
@@ -23,17 +35,26 @@ namespace CareTogether.Api.Controllers
     public class ConfigurationController : ControllerBase
     {
         private readonly IPoliciesResource policiesResource;
+        private readonly IDirectoryResource directoryResource;
+        private readonly IAccountsResource accountsResource;
+        private readonly IApprovalsResource approvalsResource;
         private readonly IFeatureManager featureManager;
         private readonly IAuthorizationEngine authorizationEngine;
 
         public ConfigurationController(
             IPoliciesResource policiesResource,
+            IDirectoryResource directoryResource,
+            IAccountsResource accountsResource,
+            IApprovalsResource approvalsResource,
             IFeatureManager featureManager,
             IAuthorizationEngine authorizationEngine
         )
         {
             //TODO: Delegate this controller's methods to a manager service
             this.policiesResource = policiesResource;
+            this.directoryResource = directoryResource;
+            this.accountsResource = accountsResource;
+            this.approvalsResource = approvalsResource;
             this.featureManager = featureManager;
             this.authorizationEngine = authorizationEngine;
         }
@@ -64,19 +85,314 @@ namespace CareTogether.Api.Controllers
             return Ok(result);
         }
 
+        private async Task<Person> CopyOverPersonRelatedRecords(
+            Guid organizationId,
+            Guid newLocationId,
+            Person person
+        )
+        {
+            var newAddresses =
+                person
+                    .Addresses.Select(address =>
+                        (
+                            NewAddress: address with
+                            {
+                                Id = Guid.NewGuid(),
+                            },
+                            IsCurrent: address.Id == person.CurrentAddressId
+                        )
+                    )
+                    .ToImmutableList() ?? ImmutableList<(Address, bool)>.Empty;
+
+            var newEmailAddresses =
+                person
+                    .EmailAddresses.Select(emailAddress =>
+                        (
+                            NewEmailAddresses: emailAddress with
+                            {
+                                Id = Guid.NewGuid(),
+                            },
+                            IsPreferred: emailAddress.Id == person.PreferredEmailAddressId
+                        )
+                    )
+                    .ToImmutableList() ?? ImmutableList<(EmailAddress, bool)>.Empty;
+
+            var newPhoneNumbers =
+                person
+                    .PhoneNumbers.Select(phoneNumber =>
+                        (
+                            NewPhoneNumber: phoneNumber with
+                            {
+                                Id = Guid.NewGuid(),
+                            },
+                            IsPreferred: phoneNumber.Id == person.PreferredPhoneNumberId
+                        )
+                    )
+                    .ToImmutableList() ?? ImmutableList<(PhoneNumber, bool)>.Empty;
+
+            var currentAddressIdEntry = newAddresses.FirstOrDefault(a => a.IsCurrent);
+            var preferredEmailAddressIdEntry = newEmailAddresses.FirstOrDefault(a => a.IsPreferred);
+            var preferredPhoneNumberIdEntry = newPhoneNumbers.FirstOrDefault(a => a.IsPreferred);
+
+            var newPerson = person with
+            {
+                Id = Guid.NewGuid(),
+                Addresses = newAddresses.Select(a => a.NewAddress).ToImmutableList(),
+                CurrentAddressId =
+                    currentAddressIdEntry != default ? currentAddressIdEntry.NewAddress.Id : null,
+                EmailAddresses = newEmailAddresses
+                    .Select(a => a.NewEmailAddresses)
+                    .ToImmutableList(),
+                PreferredEmailAddressId =
+                    preferredEmailAddressIdEntry != default
+                        ? preferredEmailAddressIdEntry.NewEmailAddresses.Id
+                        : null,
+                PhoneNumbers = newPhoneNumbers.Select(a => a.NewPhoneNumber).ToImmutableList(),
+                PreferredPhoneNumberId =
+                    preferredEmailAddressIdEntry != default
+                        ? preferredPhoneNumberIdEntry.NewPhoneNumber.Id
+                        : null,
+            };
+
+            foreach (var addressEntry in newAddresses)
+            {
+                await directoryResource.ExecutePersonCommandAsync(
+                    organizationId,
+                    newLocationId,
+                    new AddPersonAddress(
+                        newPerson.Id,
+                        addressEntry.NewAddress,
+                        addressEntry.IsCurrent
+                    ),
+                    User.UserId()
+                );
+            }
+
+            foreach (var emailEntry in newEmailAddresses)
+            {
+                await directoryResource.ExecutePersonCommandAsync(
+                    organizationId,
+                    newLocationId,
+                    new AddPersonEmailAddress(
+                        newPerson.Id,
+                        emailEntry.NewEmailAddresses,
+                        emailEntry.IsPreferred
+                    ),
+                    User.UserId()
+                );
+            }
+
+            foreach (var phoneEntry in newPhoneNumbers)
+            {
+                await directoryResource.ExecutePersonCommandAsync(
+                    organizationId,
+                    newLocationId,
+                    new AddPersonPhoneNumber(
+                        newPerson.Id,
+                        phoneEntry.NewPhoneNumber,
+                        phoneEntry.IsPreferred
+                    ),
+                    User.UserId()
+                );
+            }
+
+            var createPersonResult = await directoryResource.ExecutePersonCommandAsync(
+                organizationId,
+                newLocationId,
+                new CreatePerson(
+                    newPerson.Id,
+                    newPerson.FirstName,
+                    newPerson.LastName,
+                    newPerson.Gender,
+                    newPerson.Age,
+                    newPerson.Ethnicity,
+                    newPerson.Addresses,
+                    newPerson.CurrentAddressId,
+                    newPerson.PhoneNumbers,
+                    newPerson.PreferredPhoneNumberId,
+                    newPerson.EmailAddresses,
+                    newPerson.PreferredEmailAddressId,
+                    newPerson.Concerns,
+                    newPerson.Notes
+                ),
+                User.UserId()
+            );
+
+            return createPersonResult;
+        }
+
+        private async Task<(Family, Guid)> CopyOverUserRecords(
+            Guid organizationId,
+            Guid newLocationId,
+            Family referenceFamily,
+            Guid referencePersonId
+        )
+        {
+            var adults = await referenceFamily
+                .Adults.Select(async adult =>
+                {
+                    var person = adult.Item1;
+
+                    var createPersonResult = await CopyOverPersonRelatedRecords(
+                        organizationId,
+                        newLocationId,
+                        person
+                    );
+
+                    return (createPersonResult, adult.Item2, oldPersonId: person.Id);
+                })
+                .WhenAll();
+
+            var newReferencePersonId = adults
+                .First(adult => adult.oldPersonId == referencePersonId)
+                .createPersonResult.Id;
+
+            var children = await referenceFamily
+                .Children.Select(async child =>
+                {
+                    var person = child;
+
+                    var createPersonResult = await CopyOverPersonRelatedRecords(
+                        organizationId,
+                        newLocationId,
+                        person
+                    );
+
+                    return (createPersonResult, oldPersonId: person.Id);
+                })
+                .WhenAll();
+
+            var custodialRelationships = referenceFamily
+                .CustodialRelationships.Select(relationship =>
+                    (
+                        relationship with
+                        {
+                            ChildId = children
+                                .First(child => child.oldPersonId == relationship.ChildId)
+                                .createPersonResult.Id,
+                            PersonId = adults
+                                .First(adult => adult.oldPersonId == relationship.PersonId)
+                                .Item1.Id,
+                        }
+                    )
+                )
+                .ToImmutableList();
+
+            var createFamilyResult = await directoryResource.ExecuteFamilyCommandAsync(
+                organizationId,
+                newLocationId,
+                new CreateFamily(
+                    Guid.NewGuid(),
+                    adults
+                        .First(adult =>
+                            adult.oldPersonId == referenceFamily.PrimaryFamilyContactPersonId
+                        )
+                        .Item1.Id,
+                    adults.Select(adult => (adult.Item1.Id, adult.Item2)).ToImmutableList(),
+                    children.Select(child => child.createPersonResult.Id).ToImmutableList(),
+                    custodialRelationships
+                ),
+                User.UserId()
+            );
+
+            return (createFamilyResult, newReferencePersonId);
+        }
+
         [HttpPut("/api/{organizationId:guid}/[controller]")]
         public async Task<ActionResult<OrganizationConfiguration>> PutLocationDefinition(
             Guid organizationId,
-            [FromBody] LocationConfiguration locationConfiguration
+            [FromBody] CreateNewLocationPayload newLocationPayload
         )
         {
+            var newLocationConfiguration = newLocationPayload.locationConfiguration;
+            var copyPoliciesFromLocationId = newLocationPayload.copyPoliciesFromLocationId;
+
             if (!User.IsInRole(SystemConstants.ORGANIZATION_ADMINISTRATOR))
                 return Forbid();
+            if (copyPoliciesFromLocationId == Guid.Empty)
+                return BadRequest("copyPoliciesFromLocationId is required.");
+
+            var referenceLocation = (
+                await policiesResource.GetConfigurationAsync(organizationId)
+            ).Locations.Find(location => location.Id == copyPoliciesFromLocationId);
+
+            if (referenceLocation == null)
+                return BadRequest("Could not find location to copy policies from.");
+
+            var personId = User.PersonId(organizationId, referenceLocation.Id);
+
+            if (personId == null)
+                return BadRequest("User does not have a person ID for the specified location.");
+
+            var referenceFamily = await directoryResource.FindPersonFamilyAsync(
+                organizationId,
+                referenceLocation.Id,
+                personId.Value
+            );
+
+            var referencePerson = referenceFamily
+                ?.Adults.Find(adult => adult.Item1.Id == personId.Value)
+                .Item1;
+
+            if (referenceFamily == null || referencePerson == null)
+                return BadRequest(
+                    "Could not find records to copy from. Ensure the user has a family and person record in the specified location."
+                );
+
+            var referenceEffectivePolicy = await policiesResource.GetCurrentPolicy(
+                organizationId,
+                referenceLocation.Id
+            );
+
             var result = await policiesResource.UpsertLocationDefinitionAsync(
                 organizationId,
-                locationConfiguration
+                referenceLocation with
+                {
+                    Id = Guid.Empty,
+                    Name = newLocationConfiguration.Name,
+                }
             );
-            return Ok(result);
+
+            await policiesResource.UpsertEffectiveLocationPolicyAsync(
+                organizationId,
+                result.LocationConfiguration.Id,
+                referenceEffectivePolicy
+            );
+
+            var (newFamily, newReferencePersonId) = await CopyOverUserRecords(
+                organizationId,
+                result.LocationConfiguration.Id,
+                referenceFamily,
+                referencePerson.Id
+            );
+            await approvalsResource.ExecuteVolunteerFamilyCommandAsync(
+                organizationId,
+                result.LocationConfiguration.Id,
+                new ActivateVolunteerFamily(newFamily.Id),
+                User.UserId()
+            );
+
+            await accountsResource.ExecutePersonAccessCommandAsync(
+                organizationId,
+                result.LocationConfiguration.Id,
+                new ChangePersonRoles(
+                    newReferencePersonId,
+                    [SystemConstants.ORGANIZATION_ADMINISTRATOR]
+                ),
+                User.UserId()
+            );
+
+            await accountsResource.ExecuteAccountCommandAsync(
+                new LinkPersonToAcccount(
+                    User.UserId(),
+                    organizationId,
+                    result.LocationConfiguration.Id,
+                    newReferencePersonId
+                ),
+                User.UserId()
+            );
+
+            return Ok(result.OrganizationConfiguration);
         }
 
         [HttpDelete("/api/{organizationId:guid}/[controller]/roles/{roleName}")]

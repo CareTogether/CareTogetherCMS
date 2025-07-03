@@ -117,7 +117,10 @@ namespace CareTogether.Resources.Policies
             return Render(newConfig);
         }
 
-        public async Task<OrganizationConfiguration> UpsertLocationDefinitionAsync(
+        public async Task<(
+            OrganizationConfiguration OrganizationConfiguration,
+            LocationConfiguration LocationConfiguration
+        )> UpsertLocationDefinitionAsync(
             Guid organizationId,
             LocationConfiguration locationConfiguration
         )
@@ -136,7 +139,23 @@ namespace CareTogether.Resources.Policies
                 ),
             };
             await configurationStore.UpsertAsync(organizationId, Guid.Empty, CONFIG, newConfig);
-            return Render(newConfig);
+            return (Render(newConfig), locationConfiguration);
+        }
+
+        public async Task<EffectiveLocationPolicy> UpsertEffectiveLocationPolicyAsync(
+            Guid organizationId,
+            Guid locationId,
+            EffectiveLocationPolicy effectiveLocationPolicy
+        )
+        {
+            await locationPoliciesStore.UpsertAsync(
+                organizationId,
+                locationId,
+                "policy",
+                effectiveLocationPolicy
+            );
+
+            return effectiveLocationPolicy;
         }
 
         public async Task<EffectiveLocationPolicy> GetCurrentPolicy(
