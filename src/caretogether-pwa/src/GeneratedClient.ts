@@ -1525,6 +1525,16 @@ export abstract class PermissionContext implements IPermissionContext {
             result.init(data);
             return result;
         }
+        if (data["discriminator"] === "CommunityCoMemberFamiliesAssignedFunctionsInReferralCoAssignedFamiliesPermissionContext") {
+            let result = new CommunityCoMemberFamiliesAssignedFunctionsInReferralCoAssignedFamiliesPermissionContext();
+            result.init(data);
+            return result;
+        }
+        if (data["discriminator"] === "CommunityCoMemberFamiliesAssignedFunctionsInReferralPartneringFamilyPermissionContext") {
+            let result = new CommunityCoMemberFamiliesAssignedFunctionsInReferralPartneringFamilyPermissionContext();
+            result.init(data);
+            return result;
+        }
         if (data["discriminator"] === "CommunityCoMemberFamiliesPermissionContext") {
             let result = new CommunityCoMemberFamiliesPermissionContext();
             result.init(data);
@@ -1721,6 +1731,90 @@ export class AssignedFunctionsInReferralPartneringFamilyPermissionContext extend
 export interface IAssignedFunctionsInReferralPartneringFamilyPermissionContext extends IPermissionContext {
     whenReferralIsOpen?: boolean | undefined;
     whenOwnFunctionIsIn?: string[] | undefined;
+}
+
+export class CommunityCoMemberFamiliesAssignedFunctionsInReferralCoAssignedFamiliesPermissionContext extends PermissionContext implements ICommunityCoMemberFamiliesAssignedFunctionsInReferralCoAssignedFamiliesPermissionContext {
+    whenOwnCommunityRoleIsIn?: string[] | undefined;
+
+    constructor(data?: ICommunityCoMemberFamiliesAssignedFunctionsInReferralCoAssignedFamiliesPermissionContext) {
+        super(data);
+        this._discriminator = "CommunityCoMemberFamiliesAssignedFunctionsInReferralCoAssignedFamiliesPermissionContext";
+    }
+
+    init(_data?: any) {
+        super.init(_data);
+        if (_data) {
+            if (Array.isArray(_data["whenOwnCommunityRoleIsIn"])) {
+                this.whenOwnCommunityRoleIsIn = [] as any;
+                for (let item of _data["whenOwnCommunityRoleIsIn"])
+                    this.whenOwnCommunityRoleIsIn!.push(item);
+            }
+        }
+    }
+
+    static fromJS(data: any): CommunityCoMemberFamiliesAssignedFunctionsInReferralCoAssignedFamiliesPermissionContext {
+        data = typeof data === 'object' ? data : {};
+        let result = new CommunityCoMemberFamiliesAssignedFunctionsInReferralCoAssignedFamiliesPermissionContext();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        if (Array.isArray(this.whenOwnCommunityRoleIsIn)) {
+            data["whenOwnCommunityRoleIsIn"] = [];
+            for (let item of this.whenOwnCommunityRoleIsIn)
+                data["whenOwnCommunityRoleIsIn"].push(item);
+        }
+        super.toJSON(data);
+        return data;
+    }
+}
+
+export interface ICommunityCoMemberFamiliesAssignedFunctionsInReferralCoAssignedFamiliesPermissionContext extends IPermissionContext {
+    whenOwnCommunityRoleIsIn?: string[] | undefined;
+}
+
+export class CommunityCoMemberFamiliesAssignedFunctionsInReferralPartneringFamilyPermissionContext extends PermissionContext implements ICommunityCoMemberFamiliesAssignedFunctionsInReferralPartneringFamilyPermissionContext {
+    whenOwnCommunityRoleIsIn?: string[] | undefined;
+
+    constructor(data?: ICommunityCoMemberFamiliesAssignedFunctionsInReferralPartneringFamilyPermissionContext) {
+        super(data);
+        this._discriminator = "CommunityCoMemberFamiliesAssignedFunctionsInReferralPartneringFamilyPermissionContext";
+    }
+
+    init(_data?: any) {
+        super.init(_data);
+        if (_data) {
+            if (Array.isArray(_data["whenOwnCommunityRoleIsIn"])) {
+                this.whenOwnCommunityRoleIsIn = [] as any;
+                for (let item of _data["whenOwnCommunityRoleIsIn"])
+                    this.whenOwnCommunityRoleIsIn!.push(item);
+            }
+        }
+    }
+
+    static fromJS(data: any): CommunityCoMemberFamiliesAssignedFunctionsInReferralPartneringFamilyPermissionContext {
+        data = typeof data === 'object' ? data : {};
+        let result = new CommunityCoMemberFamiliesAssignedFunctionsInReferralPartneringFamilyPermissionContext();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        if (Array.isArray(this.whenOwnCommunityRoleIsIn)) {
+            data["whenOwnCommunityRoleIsIn"] = [];
+            for (let item of this.whenOwnCommunityRoleIsIn)
+                data["whenOwnCommunityRoleIsIn"].push(item);
+        }
+        super.toJSON(data);
+        return data;
+    }
+}
+
+export interface ICommunityCoMemberFamiliesAssignedFunctionsInReferralPartneringFamilyPermissionContext extends IPermissionContext {
+    whenOwnCommunityRoleIsIn?: string[] | undefined;
 }
 
 export class CommunityCoMemberFamiliesPermissionContext extends PermissionContext implements ICommunityCoMemberFamiliesPermissionContext {

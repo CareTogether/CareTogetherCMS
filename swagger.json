@@ -1239,6 +1239,8 @@
             "AllVolunteerFamiliesPermissionContext": "#/components/schemas/AllVolunteerFamiliesPermissionContext",
             "AssignedFunctionsInReferralCoAssigneeFamiliesPermissionContext": "#/components/schemas/AssignedFunctionsInReferralCoAssigneeFamiliesPermissionContext",
             "AssignedFunctionsInReferralPartneringFamilyPermissionContext": "#/components/schemas/AssignedFunctionsInReferralPartneringFamilyPermissionContext",
+            "CommunityCoMemberFamiliesAssignedFunctionsInReferralCoAssignedFamiliesPermissionContext": "#/components/schemas/CommunityCoMemberFamiliesAssignedFunctionsInReferralCoAssignedFamiliesPermissionContext",
+            "CommunityCoMemberFamiliesAssignedFunctionsInReferralPartneringFamilyPermissionContext": "#/components/schemas/CommunityCoMemberFamiliesAssignedFunctionsInReferralPartneringFamilyPermissionContext",
             "CommunityCoMemberFamiliesPermissionContext": "#/components/schemas/CommunityCoMemberFamiliesPermissionContext",
             "CommunityMemberPermissionContext": "#/components/schemas/CommunityMemberPermissionContext",
             "GlobalPermissionContext": "#/components/schemas/GlobalPermissionContext",
@@ -1324,6 +1326,46 @@
                 "nullable": true
               },
               "whenOwnFunctionIsIn": {
+                "type": "array",
+                "nullable": true,
+                "items": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        ]
+      },
+      "CommunityCoMemberFamiliesAssignedFunctionsInReferralCoAssignedFamiliesPermissionContext": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/PermissionContext"
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "whenOwnCommunityRoleIsIn": {
+                "type": "array",
+                "nullable": true,
+                "items": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        ]
+      },
+      "CommunityCoMemberFamiliesAssignedFunctionsInReferralPartneringFamilyPermissionContext": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/PermissionContext"
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "whenOwnCommunityRoleIsIn": {
                 "type": "array",
                 "nullable": true,
                 "items": {

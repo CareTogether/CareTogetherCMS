@@ -12,6 +12,8 @@ import {
   AllVolunteerFamiliesPermissionContext,
   AssignedFunctionsInReferralCoAssigneeFamiliesPermissionContext,
   AssignedFunctionsInReferralPartneringFamilyPermissionContext,
+  CommunityCoMemberFamiliesAssignedFunctionsInReferralCoAssignedFamiliesPermissionContext,
+  CommunityCoMemberFamiliesAssignedFunctionsInReferralPartneringFamilyPermissionContext,
   CommunityCoMemberFamiliesPermissionContext,
   CommunityMemberPermissionContext,
   GlobalPermissionContext,
@@ -343,7 +345,12 @@ export function PermissionContextCell({
                     : context instanceof
                         CommunityCoMemberFamiliesPermissionContext
                       ? 'Community Member - Co-Member Families'
-                      : JSON.stringify(context);
+                      : context instanceof
+                          CommunityCoMemberFamiliesAssignedFunctionsInReferralPartneringFamilyPermissionContext
+                        ? 'Community Member - Co-Member Families - Assigned Functions in Referral - Partnering Family'
+                        : CommunityCoMemberFamiliesAssignedFunctionsInReferralCoAssignedFamiliesPermissionContext
+                          ? 'Community Member - Co-Member Families - Assigned Functions in Referral - Co-Assigned Families'
+                          : JSON.stringify(context);
 
   function assignedFunctionsInReferralPartneringFamilyPermissionContextFactory(
     context: AssignedFunctionsInReferralPartneringFamilyPermissionContext
@@ -387,6 +394,24 @@ export function PermissionContextCell({
     context: CommunityCoMemberFamiliesPermissionContext
   ) {
     const result = new CommunityCoMemberFamiliesPermissionContext();
+    result.whenOwnCommunityRoleIsIn = context.whenOwnCommunityRoleIsIn?.slice();
+    return result;
+  }
+
+  function communityCoMemberFamiliesAssignedFunctionsInReferralPartneringFamilyPermissionContextFactory(
+    context: CommunityCoMemberFamiliesAssignedFunctionsInReferralPartneringFamilyPermissionContext
+  ) {
+    const result =
+      new CommunityCoMemberFamiliesAssignedFunctionsInReferralPartneringFamilyPermissionContext();
+    result.whenOwnCommunityRoleIsIn = context.whenOwnCommunityRoleIsIn?.slice();
+    return result;
+  }
+
+  function communityCoMemberFamiliesAssignedFunctionsInReferralCoAssignedFamiliesPermissionContext(
+    context: CommunityCoMemberFamiliesAssignedFunctionsInReferralCoAssignedFamiliesPermissionContext
+  ) {
+    const result =
+      new CommunityCoMemberFamiliesAssignedFunctionsInReferralCoAssignedFamiliesPermissionContext();
     result.whenOwnCommunityRoleIsIn = context.whenOwnCommunityRoleIsIn?.slice();
     return result;
   }
@@ -484,6 +509,34 @@ export function PermissionContextCell({
               onUpdate={onUpdate}
               factory={() =>
                 communityCoMemberFamiliesPermissionContextFactory(context)
+              }
+            />
+          </>
+        )}
+        {context instanceof
+          CommunityCoMemberFamiliesAssignedFunctionsInReferralPartneringFamilyPermissionContext && (
+          <>
+            <OwnCommunityRoleSelector
+              context={context}
+              onUpdate={onUpdate}
+              factory={() =>
+                communityCoMemberFamiliesAssignedFunctionsInReferralPartneringFamilyPermissionContextFactory(
+                  context
+                )
+              }
+            />
+          </>
+        )}
+        {context instanceof
+          CommunityCoMemberFamiliesAssignedFunctionsInReferralCoAssignedFamiliesPermissionContext && (
+          <>
+            <OwnCommunityRoleSelector
+              context={context}
+              onUpdate={onUpdate}
+              factory={() =>
+                communityCoMemberFamiliesAssignedFunctionsInReferralCoAssignedFamiliesPermissionContext(
+                  context
+                )
               }
             />
           </>

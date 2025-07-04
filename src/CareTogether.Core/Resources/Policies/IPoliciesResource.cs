@@ -73,6 +73,14 @@ namespace CareTogether.Resources.Policies
         ImmutableList<string>? WhenOwnCommunityRoleIsIn
     ) : PermissionContext();
 
+    public sealed record CommunityCoMemberFamiliesAssignedFunctionsInReferralPartneringFamilyPermissionContext(
+        ImmutableList<string>? WhenOwnCommunityRoleIsIn
+    ) : PermissionContext();
+
+    public sealed record CommunityCoMemberFamiliesAssignedFunctionsInReferralCoAssignedFamiliesPermissionContext(
+        ImmutableList<string>? WhenOwnCommunityRoleIsIn
+    ) : PermissionContext();
+
     public sealed record UserAccessConfiguration(ImmutableList<UserLocationRoles> LocationRoles);
 
     public sealed record UserLocationRoles(
