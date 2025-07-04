@@ -1,6 +1,6 @@
 import { useRecoilValue } from 'recoil';
 import { selectedLocationContextState } from '../Model/Data';
-import { NavigateOptions, useLocation, useNavigate } from 'react-router-dom';
+import { NavigateOptions, useNavigate } from 'react-router-dom';
 
 export interface AppNavigate {
   dashboard: () => void;
@@ -14,7 +14,7 @@ export interface AppNavigate {
   community: (communityId: string) => void;
   settings: () => void;
   role: (roleId: string) => void;
-  locationEdit: (locationId: string, options: AppNavigateOptions) => void;
+  locationEdit: (locationId: string, options?: AppNavigateOptions) => void;
   settingsRoles: () => void;
   settingsLocations: () => void;
 }
@@ -71,7 +71,7 @@ export function useAppNavigate(): AppNavigate {
       inContext(`communities/community/${communityId}`),
     settings: () => inContext(`settings`),
     role: (roleId: string) => inContext(`settings/roles/${roleId}`),
-    locationEdit: (locationId: string, options: AppNavigateOptions) =>
+    locationEdit: (locationId: string, options?: AppNavigateOptions) =>
       inContext(`settings/locations/${locationId}`, options),
     settingsRoles: () => inContext('settings/roles'),
     settingsLocations: () => inContext('settings/locations'),
