@@ -459,6 +459,9 @@ namespace CareTogether.Api
 
             services.AddOpenApiDocument(options =>
             {
+                options.DocumentProcessors.Add(
+                    new ExcludeODataEndpointsDocumentProcessor()
+                );
                 options.PostProcess = document =>
                 {
                     document.Info.Version = "v1";
