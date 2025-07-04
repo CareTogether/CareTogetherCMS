@@ -81,7 +81,7 @@ export function UnassignArrangementFunctionDialog({
   return (
     <Dialog
       open={handle.open}
-      onClose={(event: object | undefined, reason: string) =>
+      onClose={(_, reason: string) =>
         !isBackdropClick(reason) ? handle.closeDialog : {}
       }
       key={handle.key}

@@ -54,7 +54,8 @@
   },
   "scripts": {
     "dev": "vite",
-    "build": "vite build",
+    "type-check": "tsc --noEmit",
+    "build": "npm run type-check && vite build",
     "lint": "eslint src --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
     "preview": "vite preview"
   },
