@@ -117,6 +117,47 @@ export class ConfigurationClient {
         return Promise.resolve<OrganizationConfiguration>(null as any);
     }
 
+    putLocationDefinition(organizationId: string, newLocationPayload: PutLocationPayload): Promise<OrganizationConfiguration> {
+        let url_ = this.baseUrl + "/api/{organizationId}/Configuration";
+        if (organizationId === undefined || organizationId === null)
+            throw new Error("The parameter 'organizationId' must be defined.");
+        url_ = url_.replace("{organizationId}", encodeURIComponent("" + organizationId));
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(newLocationPayload);
+
+        let options_: RequestInit = {
+            body: content_,
+            method: "PUT",
+            headers: {
+                "Content-Type": "application/json",
+                "Accept": "application/json"
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processPutLocationDefinition(_response);
+        });
+    }
+
+    protected processPutLocationDefinition(response: Response): Promise<OrganizationConfiguration> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result200 = OrganizationConfiguration.fromJS(resultData200);
+            return result200;
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<OrganizationConfiguration>(null as any);
+    }
+
     putRoleDefinition(organizationId: string, roleName: string, role: RoleDefinition): Promise<OrganizationConfiguration> {
         let url_ = this.baseUrl + "/api/{organizationId}/Configuration/roles/{roleName}";
         if (organizationId === undefined || organizationId === null)
@@ -2072,6 +2113,46 @@ export enum Permission {
     ReadCommunityDocuments = 506,
     UploadCommunityDocuments = 507,
     DeleteCommunityDocuments = 508,
+}
+
+export class PutLocationPayload implements IPutLocationPayload {
+    locationConfiguration?: LocationConfiguration;
+    copyPoliciesFromLocationId?: string | undefined;
+
+    constructor(data?: IPutLocationPayload) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.locationConfiguration = _data["locationConfiguration"] ? LocationConfiguration.fromJS(_data["locationConfiguration"]) : <any>undefined;
+            this.copyPoliciesFromLocationId = _data["copyPoliciesFromLocationId"];
+        }
+    }
+
+    static fromJS(data: any): PutLocationPayload {
+        data = typeof data === 'object' ? data : {};
+        let result = new PutLocationPayload();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["locationConfiguration"] = this.locationConfiguration ? this.locationConfiguration.toJSON() : <any>undefined;
+        data["copyPoliciesFromLocationId"] = this.copyPoliciesFromLocationId;
+        return data;
+    }
+}
+
+export interface IPutLocationPayload {
+    locationConfiguration?: LocationConfiguration;
+    copyPoliciesFromLocationId?: string | undefined;
 }
 
 export class EffectiveLocationPolicy implements IEffectiveLocationPolicy {
