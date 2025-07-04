@@ -260,7 +260,7 @@ export function AssignArrangementFunctionDialog({
       maxWidth={'xs'}
       fullWidth={true}
       open={handle.open}
-      onClose={(event: object | undefined, reason: string) =>
+      onClose={(_, reason: string) =>
         !isBackdropClick(reason) ? handle.closeDialog : {}
       }
       key={handle.key}
