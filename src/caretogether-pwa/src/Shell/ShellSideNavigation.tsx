@@ -23,7 +23,6 @@ import { useLoadable } from '../Hooks/useLoadable';
 import { Inbox } from '@mui/icons-material';
 import { queueItemsCountQuery } from '../Model/QueueModel';
 import Feedback from './Feedback';
-import { useFeatureFlagEnabled as usePostHogFeatureFlagEnabled } from 'posthog-js/react';
 import { useRecoilValue } from 'recoil';
 import { reportSubmenuItemsAtom } from '../Model/UI';
 import { ListItemLink } from './ListItemLink';
@@ -37,11 +36,6 @@ function SideNavigationMenu({ open }: SideNavigationMenuProps) {
   const permissions = useGlobalPermissions();
 
   const appNavigate = useAppNavigate();
-
-  const showReports = usePostHogFeatureFlagEnabled('reports');
-  const showReportsSubmenuItems = usePostHogFeatureFlagEnabled(
-    'reportsSubmenuItems'
-  );
 
   const context = useLoadable(selectedLocationContextState);
   const locationPrefix = `/org/${context?.organizationId}/${context?.locationId}`;
@@ -132,29 +126,16 @@ function SideNavigationMenu({ open }: SideNavigationMenuProps) {
             />
           )}
 
-          {permissions(Permission.AccessReportsScreen) &&
-            showReports &&
-            !showReportsSubmenuItems && (
-              <ListItemLink
-                className="ph-unmask"
-                to={`${locationPrefix}/reports`}
-                primary="Reports"
-                icon={<InsightsIcon />}
-              />
-            )}
-
-          {permissions(Permission.AccessReportsScreen) &&
-            showReports &&
-            showReportsSubmenuItems && (
-              <ListItemLink
-                className="ph-unmask"
-                to={`${locationPrefix}/reports`}
-                primary="Reports"
-                icon={<InsightsIcon />}
-                subitems={reportSubmenuItems}
-                defaultOpen
-              />
-            )}
+          {permissions(Permission.AccessReportsScreen) && (
+            <ListItemLink
+              className="ph-unmask"
+              to={`${locationPrefix}/reports`}
+              primary="Reports"
+              icon={<InsightsIcon />}
+              subitems={reportSubmenuItems}
+              defaultOpen
+            />
+          )}
 
           {(permissions(Permission.AccessSettingsScreen) ||
             permissions(Permission.AccessSupportScreen)) && <Divider />}

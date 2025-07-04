@@ -10,14 +10,9 @@ import { useNavigate } from 'react-router-dom';
 import { ProgressBackdrop } from '../Shell/ProgressBackdrop';
 import { useUpdateSideNavigation } from './useUpdateSideNavigation';
 import { useEmbedConfig } from './useEmbedConfig';
-import { useFeatureFlagEnabled as usePostHogFeatureFlagEnabled } from 'posthog-js/react';
 
 export function ReportsScreen() {
   useScreenTitle('Reports');
-
-  const showReportsSubmenuItems = usePostHogFeatureFlagEnabled(
-    'reportsSubmenuItems'
-  );
 
   const { embedConfig, loading, error } = useEmbedConfig();
 
@@ -61,7 +56,7 @@ export function ReportsScreen() {
               },
             },
             background: models.BackgroundType.Transparent,
-            navContentPaneEnabled: !showReportsSubmenuItems,
+            navContentPaneEnabled: false,
             bars: {
               statusBar: {
                 visible: true,

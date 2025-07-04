@@ -7,7 +7,7 @@ import {
   LinkProps as RouterLinkProps,
 } from 'react-router-dom';
 import { DistributiveOmit } from '@mui/types';
-import { Collapse, List, ListItemButton, Box, Divider } from '@mui/material';
+import { Collapse, List, ListItemButton } from '@mui/material';
 import { ExpandLess, ExpandMore } from '@mui/icons-material';
 
 interface ListItemLinkCollapsibleProps {
@@ -21,21 +21,11 @@ interface ListItemLinkCollapsibleProps {
   }[];
   defaultOpen?: boolean;
   className?: string;
-  paddingLeft?: number;
   darkColor?: boolean;
 }
 
 export function ListItemLink(props: ListItemLinkCollapsibleProps) {
-  const {
-    icon,
-    primary,
-    to,
-    subitems,
-    defaultOpen,
-    className,
-    paddingLeft = 1.5,
-    darkColor,
-  } = props;
+  const { icon, primary, to, subitems, defaultOpen, darkColor } = props;
 
   const selected =
     useMatch({
@@ -55,45 +45,44 @@ export function ListItemLink(props: ListItemLinkCollapsibleProps) {
     defaultOpen || false
   );
 
+  const collapseIcon = collapsibleOpen ? <ExpandLess /> : <ExpandMore />;
+
   const hasSubitems = subitems && subitems.length > 0;
+
+  // TODO: Those names are a bit confusing, we should rename them
+  const desktopColor = selected ? '#fff' : '#fff8';
+  const mobileColor = '#555';
+  const color = darkColor ? mobileColor : desktopColor;
 
   return (
     <>
-      <li className={className}>
-        <Box sx={{ display: 'flex', alignItems: 'center' }}>
-          <ListItemButton
-            component={renderLink}
-            selected={selected}
+      <li className={props.className}>
+        <ListItemButton
+          component={renderLink}
+          onClick={() => selected && setCollapsibleOpen(!collapsibleOpen)}
+          selected={selected}
+          sx={{ paddingLeft: 1.5 }}
+        >
+          {icon ? (
+            <ListItemIcon
+              sx={{
+                color,
+              }}
+            >
+              {icon}
+            </ListItemIcon>
+          ) : null}
+
+          <ListItemText
+            primary={primary}
             sx={{
-              paddingLeft,
-              flexGrow: 1,
-              color: darkColor ? '#555' : '#fff8',
+              marginLeft: -2,
+              color,
             }}
-          >
-            {icon ? (
-              <ListItemIcon sx={{ color: selected ? '#fff' : '#fff8' }}>
-                {icon}
-              </ListItemIcon>
-            ) : null}
+          />
 
-            <ListItemText
-              primary={primary}
-              sx={{ marginLeft: -2, color: selected ? '#fff' : '#fff8' }}
-            />
-          </ListItemButton>
-
-          {hasSubitems && (
-            <>
-              <Divider orientation="vertical" flexItem />
-              <Box
-                onClick={() => setCollapsibleOpen((prev) => !prev)}
-                sx={{ px: 1.5, cursor: 'pointer' }}
-              >
-                {collapsibleOpen ? <ExpandLess /> : <ExpandMore />}
-              </Box>
-            </>
-          )}
-        </Box>
+          {hasSubitems && collapseIcon}
+        </ListItemButton>
       </li>
 
       <Collapse
@@ -106,7 +95,7 @@ export function ListItemLink(props: ListItemLinkCollapsibleProps) {
             <li className="ph-unmask" key={item.label}>
               <ListItemButton
                 selected={item.isActive}
-                sx={{ paddingLeft: 1.5, color: '#fff8' }}
+                sx={{ paddingLeft: 1.5 }}
                 onClick={item.onClick}
               >
                 {/* {icon ? <ListItemIcon>{icon}</ListItemIcon> : null} */}
@@ -114,7 +103,7 @@ export function ListItemLink(props: ListItemLinkCollapsibleProps) {
                   primary={item.label}
                   sx={{
                     marginLeft: 6,
-                    color: item.isActive ? '#fff' : undefined,
+                    color: item.isActive ? '#fff' : '#fff8',
                   }}
                 />
               </ListItemButton>
