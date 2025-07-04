@@ -983,88 +983,7 @@ export class UsersClient {
     }
 }
 
-export class MetadataClient {
-    private http: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> };
-    private baseUrl: string;
-    protected jsonParseReviver: ((key: string, value: any) => any) | undefined = undefined;
-
-    constructor(baseUrl?: string, http?: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> }) {
-        this.http = http ? http : window as any;
-        this.baseUrl = baseUrl ?? "";
-    }
-
-    getMetadata(): Promise<IEdmModel> {
-        let url_ = this.baseUrl + "/api/odata/live/$metadata";
-        url_ = url_.replace(/[?&]$/, "");
-
-        let options_: RequestInit = {
-            method: "GET",
-            headers: {
-                "Accept": "application/json"
-            }
-        };
-
-        return this.http.fetch(url_, options_).then((_response: Response) => {
-            return this.processGetMetadata(_response);
-        });
-    }
-
-    protected processGetMetadata(response: Response): Promise<IEdmModel> {
-        const status = response.status;
-        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
-        if (status === 200) {
-            return response.text().then((_responseText) => {
-            let result200: any = null;
-            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
-            result200 = IEdmModel.fromJS(resultData200);
-            return result200;
-            });
-        } else if (status !== 200 && status !== 204) {
-            return response.text().then((_responseText) => {
-            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
-            });
-        }
-        return Promise.resolve<IEdmModel>(null as any);
-    }
-
-    getServiceDocument(): Promise<ODataServiceDocument> {
-        let url_ = this.baseUrl + "/api/odata/live";
-        url_ = url_.replace(/[?&]$/, "");
-
-        let options_: RequestInit = {
-            method: "GET",
-            headers: {
-                "Accept": "application/json"
-            }
-        };
-
-        return this.http.fetch(url_, options_).then((_response: Response) => {
-            return this.processGetServiceDocument(_response);
-        });
-    }
-
-    protected processGetServiceDocument(response: Response): Promise<ODataServiceDocument> {
-        const status = response.status;
-        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
-        if (status === 200) {
-            return response.text().then((_responseText) => {
-            let result200: any = null;
-            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
-            result200 = ODataServiceDocument.fromJS(resultData200);
-            return result200;
-            });
-        } else if (status !== 200 && status !== 204) {
-            return response.text().then((_responseText) => {
-            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
-            });
-        }
-        return Promise.resolve<ODataServiceDocument>(null as any);
-    }
-}
-
 export class ValueTupleOfGuidAndSmsMessageResult implements IValueTupleOfGuidAndSmsMessageResult {
-    item1?: string;
-    item2?: SmsMessageResult;
 
     constructor(data?: IValueTupleOfGuidAndSmsMessageResult) {
         if (data) {
@@ -1076,10 +995,6 @@ export class ValueTupleOfGuidAndSmsMessageResult implements IValueTupleOfGuidAnd
     }
 
     init(_data?: any) {
-        if (_data) {
-            this.item1 = _data["item1"];
-            this.item2 = _data["item2"] ? SmsMessageResult.fromJS(_data["item2"]) : <any>undefined;
-        }
     }
 
     static fromJS(data: any): ValueTupleOfGuidAndSmsMessageResult {
@@ -1091,62 +1006,11 @@ export class ValueTupleOfGuidAndSmsMessageResult implements IValueTupleOfGuidAnd
 
     toJSON(data?: any) {
         data = typeof data === 'object' ? data : {};
-        data["item1"] = this.item1;
-        data["item2"] = this.item2 ? this.item2.toJSON() : <any>undefined;
         return data;
     }
 }
 
 export interface IValueTupleOfGuidAndSmsMessageResult {
-    item1?: string;
-    item2?: SmsMessageResult;
-}
-
-export class SmsMessageResult implements ISmsMessageResult {
-    phoneNumber?: string;
-    result?: SmsResult;
-
-    constructor(data?: ISmsMessageResult) {
-        if (data) {
-            for (var property in data) {
-                if (data.hasOwnProperty(property))
-                    (<any>this)[property] = (<any>data)[property];
-            }
-        }
-    }
-
-    init(_data?: any) {
-        if (_data) {
-            this.phoneNumber = _data["phoneNumber"];
-            this.result = _data["result"];
-        }
-    }
-
-    static fromJS(data: any): SmsMessageResult {
-        data = typeof data === 'object' ? data : {};
-        let result = new SmsMessageResult();
-        result.init(data);
-        return result;
-    }
-
-    toJSON(data?: any) {
-        data = typeof data === 'object' ? data : {};
-        data["phoneNumber"] = this.phoneNumber;
-        data["result"] = this.result;
-        return data;
-    }
-}
-
-export interface ISmsMessageResult {
-    phoneNumber?: string;
-    result?: SmsResult;
-}
-
-export enum SmsResult {
-    InvalidSourcePhoneNumber = 0,
-    InvalidDestinationPhoneNumber = 1,
-    SendFailure = 2,
-    SendSuccess = 3,
 }
 
 export class SendSmsToFamilyPrimaryContactsRequest implements ISendSmsToFamilyPrimaryContactsRequest {
@@ -1425,13 +1289,13 @@ export class TimeZoneInfo implements ITimeZoneInfo {
 
     init(_data?: any) {
         if (_data) {
-            this.id = _data["Id"];
-            this.hasIanaId = _data["HasIanaId"];
-            this.displayName = _data["DisplayName"];
-            this.standardName = _data["StandardName"];
-            this.daylightName = _data["DaylightName"];
-            this.baseUtcOffset = _data["BaseUtcOffset"];
-            this.supportsDaylightSavingTime = _data["SupportsDaylightSavingTime"];
+            this.id = _data["id"];
+            this.hasIanaId = _data["hasIanaId"];
+            this.displayName = _data["displayName"];
+            this.standardName = _data["standardName"];
+            this.daylightName = _data["daylightName"];
+            this.baseUtcOffset = _data["baseUtcOffset"];
+            this.supportsDaylightSavingTime = _data["supportsDaylightSavingTime"];
         }
     }
 
@@ -1444,13 +1308,13 @@ export class TimeZoneInfo implements ITimeZoneInfo {
 
     toJSON(data?: any) {
         data = typeof data === 'object' ? data : {};
-        data["Id"] = this.id;
-        data["HasIanaId"] = this.hasIanaId;
-        data["DisplayName"] = this.displayName;
-        data["StandardName"] = this.standardName;
-        data["DaylightName"] = this.daylightName;
-        data["BaseUtcOffset"] = this.baseUtcOffset;
-        data["SupportsDaylightSavingTime"] = this.supportsDaylightSavingTime;
+        data["id"] = this.id;
+        data["hasIanaId"] = this.hasIanaId;
+        data["displayName"] = this.displayName;
+        data["standardName"] = this.standardName;
+        data["daylightName"] = this.daylightName;
+        data["baseUtcOffset"] = this.baseUtcOffset;
+        data["supportsDaylightSavingTime"] = this.supportsDaylightSavingTime;
         return data;
     }
 }
@@ -2016,10 +1880,10 @@ export enum Permission {
     ViewPersonDateOfBirth = 159,
     AddEditDraftNotes = 180,
     DiscardDraftNotes = 181,
-    AddEditOwnDraftNotes = 182,
-    DiscardOwnDraftNotes = 183,
-    ApproveNotes = 184,
-    ViewAllNotes = 185,
+    ApproveNotes = 182,
+    ViewAllNotes = 183,
+    AddEditOwnDraftNotes = 184,
+    DiscardOwnDraftNotes = 185,
     ViewApprovalStatus = 200,
     EditApprovalRequirementCompletion = 201,
     EditApprovalRequirementExemption = 202,
@@ -4009,8 +3873,6 @@ export interface IFamily {
 }
 
 export class ValueTupleOfPersonAndFamilyAdultRelationshipInfo implements IValueTupleOfPersonAndFamilyAdultRelationshipInfo {
-    item1?: Person | undefined;
-    item2?: FamilyAdultRelationshipInfo | undefined;
 
     constructor(data?: IValueTupleOfPersonAndFamilyAdultRelationshipInfo) {
         if (data) {
@@ -4022,10 +3884,6 @@ export class ValueTupleOfPersonAndFamilyAdultRelationshipInfo implements IValueT
     }
 
     init(_data?: any) {
-        if (_data) {
-            this.item1 = _data["item1"] ? Person.fromJS(_data["item1"]) : <any>undefined;
-            this.item2 = _data["item2"] ? FamilyAdultRelationshipInfo.fromJS(_data["item2"]) : <any>undefined;
-        }
     }
 
     static fromJS(data: any): ValueTupleOfPersonAndFamilyAdultRelationshipInfo {
@@ -4037,15 +3895,11 @@ export class ValueTupleOfPersonAndFamilyAdultRelationshipInfo implements IValueT
 
     toJSON(data?: any) {
         data = typeof data === 'object' ? data : {};
-        data["item1"] = this.item1 ? this.item1.toJSON() : <any>undefined;
-        data["item2"] = this.item2 ? this.item2.toJSON() : <any>undefined;
         return data;
     }
 }
 
 export interface IValueTupleOfPersonAndFamilyAdultRelationshipInfo {
-    item1?: Person | undefined;
-    item2?: FamilyAdultRelationshipInfo | undefined;
 }
 
 export class Person implements IPerson {
@@ -4442,46 +4296,6 @@ export interface IEmailAddress {
 export enum EmailAddressType {
     Personal = 0,
     Work = 1,
-}
-
-export class FamilyAdultRelationshipInfo implements IFamilyAdultRelationshipInfo {
-    relationshipToFamily?: string;
-    isInHousehold?: boolean;
-
-    constructor(data?: IFamilyAdultRelationshipInfo) {
-        if (data) {
-            for (var property in data) {
-                if (data.hasOwnProperty(property))
-                    (<any>this)[property] = (<any>data)[property];
-            }
-        }
-    }
-
-    init(_data?: any) {
-        if (_data) {
-            this.relationshipToFamily = _data["relationshipToFamily"];
-            this.isInHousehold = _data["isInHousehold"];
-        }
-    }
-
-    static fromJS(data: any): FamilyAdultRelationshipInfo {
-        data = typeof data === 'object' ? data : {};
-        let result = new FamilyAdultRelationshipInfo();
-        result.init(data);
-        return result;
-    }
-
-    toJSON(data?: any) {
-        data = typeof data === 'object' ? data : {};
-        data["relationshipToFamily"] = this.relationshipToFamily;
-        data["isInHousehold"] = this.isInHousehold;
-        return data;
-    }
-}
-
-export interface IFamilyAdultRelationshipInfo {
-    relationshipToFamily?: string;
-    isInHousehold?: boolean;
 }
 
 export class CustodialRelationship implements ICustodialRelationship {
@@ -5907,9 +5721,6 @@ export interface IDateOnlyTimelineOfRoleApprovalStatus {
 }
 
 export class DateRangeOfRoleApprovalStatus implements IDateRangeOfRoleApprovalStatus {
-    start?: Date;
-    end?: Date;
-    tag?: RoleApprovalStatus;
 
     constructor(data?: IDateRangeOfRoleApprovalStatus) {
         if (data) {
@@ -5921,11 +5732,6 @@ export class DateRangeOfRoleApprovalStatus implements IDateRangeOfRoleApprovalSt
     }
 
     init(_data?: any) {
-        if (_data) {
-            this.start = _data["start"] ? new Date(_data["start"].toString()) : <any>undefined;
-            this.end = _data["end"] ? new Date(_data["end"].toString()) : <any>undefined;
-            this.tag = _data["tag"];
-        }
     }
 
     static fromJS(data: any): DateRangeOfRoleApprovalStatus {
@@ -5937,26 +5743,11 @@ export class DateRangeOfRoleApprovalStatus implements IDateRangeOfRoleApprovalSt
 
     toJSON(data?: any) {
         data = typeof data === 'object' ? data : {};
-        data["start"] = this.start ? formatDate(this.start) : <any>undefined;
-        data["end"] = this.end ? formatDate(this.end) : <any>undefined;
-        data["tag"] = this.tag;
         return data;
     }
 }
 
 export interface IDateRangeOfRoleApprovalStatus {
-    start?: Date;
-    end?: Date;
-    tag?: RoleApprovalStatus;
-}
-
-export enum RoleApprovalStatus {
-    Prospective = 1,
-    Expired = 2,
-    Approved = 3,
-    Onboarded = 4,
-    Inactive = 5,
-    Denied = 6,
 }
 
 export class FamilyRoleVersionApprovalStatus implements IFamilyRoleVersionApprovalStatus {
@@ -6124,8 +5915,6 @@ export interface IDateOnlyTimeline {
 }
 
 export class DateRange implements IDateRange {
-    start?: Date;
-    end?: Date;
     totalDaysInclusive?: number;
 
     constructor(data?: IDateRange) {
@@ -6139,8 +5928,6 @@ export class DateRange implements IDateRange {
 
     init(_data?: any) {
         if (_data) {
-            this.start = _data["start"] ? new Date(_data["start"].toString()) : <any>undefined;
-            this.end = _data["end"] ? new Date(_data["end"].toString()) : <any>undefined;
             this.totalDaysInclusive = _data["totalDaysInclusive"];
         }
     }
@@ -6154,16 +5941,12 @@ export class DateRange implements IDateRange {
 
     toJSON(data?: any) {
         data = typeof data === 'object' ? data : {};
-        data["start"] = this.start ? formatDate(this.start) : <any>undefined;
-        data["end"] = this.end ? formatDate(this.end) : <any>undefined;
         data["totalDaysInclusive"] = this.totalDaysInclusive;
         return data;
     }
 }
 
 export interface IDateRange {
-    start?: Date;
-    end?: Date;
     totalDaysInclusive?: number;
 }
 
@@ -6207,10 +5990,16 @@ export interface IFamilyRequirementStatusDetail {
     whenMet?: DateOnlyTimeline | undefined;
 }
 
+export enum RoleApprovalStatus {
+    Prospective = 1,
+    Expired = 2,
+    Approved = 3,
+    Onboarded = 4,
+    Inactive = 5,
+    Denied = 6,
+}
+
 export class ValueTupleOfGuidAndStringAndString implements IValueTupleOfGuidAndStringAndString {
-    item1?: string;
-    item2?: string | undefined;
-    item3?: string | undefined;
 
     constructor(data?: IValueTupleOfGuidAndStringAndString) {
         if (data) {
@@ -6222,11 +6011,6 @@ export class ValueTupleOfGuidAndStringAndString implements IValueTupleOfGuidAndS
     }
 
     init(_data?: any) {
-        if (_data) {
-            this.item1 = _data["item1"];
-            this.item2 = _data["item2"];
-            this.item3 = _data["item3"];
-        }
     }
 
     static fromJS(data: any): ValueTupleOfGuidAndStringAndString {
@@ -6238,17 +6022,11 @@ export class ValueTupleOfGuidAndStringAndString implements IValueTupleOfGuidAndS
 
     toJSON(data?: any) {
         data = typeof data === 'object' ? data : {};
-        data["item1"] = this.item1;
-        data["item2"] = this.item2;
-        data["item3"] = this.item3;
         return data;
     }
 }
 
 export interface IValueTupleOfGuidAndStringAndString {
-    item1?: string;
-    item2?: string | undefined;
-    item3?: string | undefined;
 }
 
 export class RoleRemoval implements IRoleRemoval {
@@ -6590,8 +6368,6 @@ export interface IIndividualRoleRequirementCompletionStatus {
 }
 
 export class ValueTupleOfStringAndString implements IValueTupleOfStringAndString {
-    item1?: string | undefined;
-    item2?: string | undefined;
 
     constructor(data?: IValueTupleOfStringAndString) {
         if (data) {
@@ -6603,10 +6379,6 @@ export class ValueTupleOfStringAndString implements IValueTupleOfStringAndString
     }
 
     init(_data?: any) {
-        if (_data) {
-            this.item1 = _data["item1"];
-            this.item2 = _data["item2"];
-        }
     }
 
     static fromJS(data: any): ValueTupleOfStringAndString {
@@ -6618,15 +6390,11 @@ export class ValueTupleOfStringAndString implements IValueTupleOfStringAndString
 
     toJSON(data?: any) {
         data = typeof data === 'object' ? data : {};
-        data["item1"] = this.item1;
-        data["item2"] = this.item2;
         return data;
     }
 }
 
 export interface IValueTupleOfStringAndString {
-    item1?: string | undefined;
-    item2?: string | undefined;
 }
 
 export class ArrangementEntry implements IArrangementEntry {
@@ -9698,6 +9466,46 @@ export interface IAddAdultToFamily extends IFamilyCommand {
     relationshipToFamily?: FamilyAdultRelationshipInfo;
 }
 
+export class FamilyAdultRelationshipInfo implements IFamilyAdultRelationshipInfo {
+    relationshipToFamily?: string;
+    isInHousehold?: boolean;
+
+    constructor(data?: IFamilyAdultRelationshipInfo) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.relationshipToFamily = _data["relationshipToFamily"];
+            this.isInHousehold = _data["isInHousehold"];
+        }
+    }
+
+    static fromJS(data: any): FamilyAdultRelationshipInfo {
+        data = typeof data === 'object' ? data : {};
+        let result = new FamilyAdultRelationshipInfo();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["relationshipToFamily"] = this.relationshipToFamily;
+        data["isInHousehold"] = this.isInHousehold;
+        return data;
+    }
+}
+
+export interface IFamilyAdultRelationshipInfo {
+    relationshipToFamily?: string;
+    isInHousehold?: boolean;
+}
+
 export class AddChildToFamily extends FamilyCommand implements IAddChildToFamily {
     childPersonId?: string;
     custodialRelationships?: CustodialRelationship[];
@@ -9921,8 +9729,6 @@ export interface ICreateFamily extends IFamilyCommand {
 }
 
 export class ValueTupleOfGuidAndFamilyAdultRelationshipInfo implements IValueTupleOfGuidAndFamilyAdultRelationshipInfo {
-    item1?: string;
-    item2?: FamilyAdultRelationshipInfo | undefined;
 
     constructor(data?: IValueTupleOfGuidAndFamilyAdultRelationshipInfo) {
         if (data) {
@@ -9934,10 +9740,6 @@ export class ValueTupleOfGuidAndFamilyAdultRelationshipInfo implements IValueTup
     }
 
     init(_data?: any) {
-        if (_data) {
-            this.item1 = _data["item1"];
-            this.item2 = _data["item2"] ? FamilyAdultRelationshipInfo.fromJS(_data["item2"]) : <any>undefined;
-        }
     }
 
     static fromJS(data: any): ValueTupleOfGuidAndFamilyAdultRelationshipInfo {
@@ -9949,15 +9751,11 @@ export class ValueTupleOfGuidAndFamilyAdultRelationshipInfo implements IValueTup
 
     toJSON(data?: any) {
         data = typeof data === 'object' ? data : {};
-        data["item1"] = this.item1;
-        data["item2"] = this.item2 ? this.item2.toJSON() : <any>undefined;
         return data;
     }
 }
 
 export interface IValueTupleOfGuidAndFamilyAdultRelationshipInfo {
-    item1?: string;
-    item2?: FamilyAdultRelationshipInfo | undefined;
 }
 
 export class DeleteUploadedFamilyDocument extends FamilyCommand implements IDeleteUploadedFamilyDocument {
@@ -12988,774 +12786,6 @@ export interface IAccountLocationAccess {
     locationId?: string;
     personId?: string;
     roles?: string[];
-}
-
-export abstract class IEdmModel implements IIEdmModel {
-    schemaElements?: IEdmSchemaElement[] | undefined;
-    vocabularyAnnotations?: IEdmVocabularyAnnotation[] | undefined;
-    referencedModels?: IEdmModel[] | undefined;
-    declaredNamespaces?: string[] | undefined;
-    directValueAnnotationsManager?: IEdmDirectValueAnnotationsManager | undefined;
-    entityContainer?: IEdmEntityContainer | undefined;
-
-    constructor(data?: IIEdmModel) {
-        if (data) {
-            for (var property in data) {
-                if (data.hasOwnProperty(property))
-                    (<any>this)[property] = (<any>data)[property];
-            }
-        }
-    }
-
-    init(_data?: any) {
-        if (_data) {
-            if (Array.isArray(_data["schemaElements"])) {
-                this.schemaElements = [] as any;
-                for (let item of _data["schemaElements"])
-                    this.schemaElements!.push(IEdmSchemaElement.fromJS(item));
-            }
-            if (Array.isArray(_data["vocabularyAnnotations"])) {
-                this.vocabularyAnnotations = [] as any;
-                for (let item of _data["vocabularyAnnotations"])
-                    this.vocabularyAnnotations!.push(IEdmVocabularyAnnotation.fromJS(item));
-            }
-            if (Array.isArray(_data["referencedModels"])) {
-                this.referencedModels = [] as any;
-                for (let item of _data["referencedModels"])
-                    this.referencedModels!.push(IEdmModel.fromJS(item));
-            }
-            if (Array.isArray(_data["declaredNamespaces"])) {
-                this.declaredNamespaces = [] as any;
-                for (let item of _data["declaredNamespaces"])
-                    this.declaredNamespaces!.push(item);
-            }
-            this.directValueAnnotationsManager = _data["directValueAnnotationsManager"] ? IEdmDirectValueAnnotationsManager.fromJS(_data["directValueAnnotationsManager"]) : <any>undefined;
-            this.entityContainer = _data["entityContainer"] ? IEdmEntityContainer.fromJS(_data["entityContainer"]) : <any>undefined;
-        }
-    }
-
-    static fromJS(data: any): IEdmModel {
-        data = typeof data === 'object' ? data : {};
-        throw new Error("The abstract class 'IEdmModel' cannot be instantiated.");
-    }
-
-    toJSON(data?: any) {
-        data = typeof data === 'object' ? data : {};
-        if (Array.isArray(this.schemaElements)) {
-            data["schemaElements"] = [];
-            for (let item of this.schemaElements)
-                data["schemaElements"].push(item.toJSON());
-        }
-        if (Array.isArray(this.vocabularyAnnotations)) {
-            data["vocabularyAnnotations"] = [];
-            for (let item of this.vocabularyAnnotations)
-                data["vocabularyAnnotations"].push(item.toJSON());
-        }
-        if (Array.isArray(this.referencedModels)) {
-            data["referencedModels"] = [];
-            for (let item of this.referencedModels)
-                data["referencedModels"].push(item.toJSON());
-        }
-        if (Array.isArray(this.declaredNamespaces)) {
-            data["declaredNamespaces"] = [];
-            for (let item of this.declaredNamespaces)
-                data["declaredNamespaces"].push(item);
-        }
-        data["directValueAnnotationsManager"] = this.directValueAnnotationsManager ? this.directValueAnnotationsManager.toJSON() : <any>undefined;
-        data["entityContainer"] = this.entityContainer ? this.entityContainer.toJSON() : <any>undefined;
-        return data;
-    }
-}
-
-export interface IIEdmModel {
-    schemaElements?: IEdmSchemaElement[] | undefined;
-    vocabularyAnnotations?: IEdmVocabularyAnnotation[] | undefined;
-    referencedModels?: IEdmModel[] | undefined;
-    declaredNamespaces?: string[] | undefined;
-    directValueAnnotationsManager?: IEdmDirectValueAnnotationsManager | undefined;
-    entityContainer?: IEdmEntityContainer | undefined;
-}
-
-export abstract class IEdmSchemaElement implements IIEdmSchemaElement {
-    schemaElementKind?: EdmSchemaElementKind;
-    namespace?: string | undefined;
-
-    constructor(data?: IIEdmSchemaElement) {
-        if (data) {
-            for (var property in data) {
-                if (data.hasOwnProperty(property))
-                    (<any>this)[property] = (<any>data)[property];
-            }
-        }
-    }
-
-    init(_data?: any) {
-        if (_data) {
-            this.schemaElementKind = _data["schemaElementKind"];
-            this.namespace = _data["namespace"];
-        }
-    }
-
-    static fromJS(data: any): IEdmSchemaElement {
-        data = typeof data === 'object' ? data : {};
-        throw new Error("The abstract class 'IEdmSchemaElement' cannot be instantiated.");
-    }
-
-    toJSON(data?: any) {
-        data = typeof data === 'object' ? data : {};
-        data["schemaElementKind"] = this.schemaElementKind;
-        data["namespace"] = this.namespace;
-        return data;
-    }
-}
-
-export interface IIEdmSchemaElement {
-    schemaElementKind?: EdmSchemaElementKind;
-    namespace?: string | undefined;
-}
-
-export enum EdmSchemaElementKind {
-    None = 0,
-    TypeDefinition = 1,
-    Term = 2,
-    Action = 3,
-    EntityContainer = 4,
-    Function = 5,
-}
-
-export abstract class IEdmVocabularyAnnotation implements IIEdmVocabularyAnnotation {
-    qualifier?: string | undefined;
-    term?: IEdmTerm | undefined;
-    target?: IEdmVocabularyAnnotatable | undefined;
-    value?: IEdmExpression | undefined;
-
-    constructor(data?: IIEdmVocabularyAnnotation) {
-        if (data) {
-            for (var property in data) {
-                if (data.hasOwnProperty(property))
-                    (<any>this)[property] = (<any>data)[property];
-            }
-        }
-    }
-
-    init(_data?: any) {
-        if (_data) {
-            this.qualifier = _data["qualifier"];
-            this.term = _data["term"] ? IEdmTerm.fromJS(_data["term"]) : <any>undefined;
-            this.target = _data["target"] ? IEdmVocabularyAnnotatable.fromJS(_data["target"]) : <any>undefined;
-            this.value = _data["value"] ? IEdmExpression.fromJS(_data["value"]) : <any>undefined;
-        }
-    }
-
-    static fromJS(data: any): IEdmVocabularyAnnotation {
-        data = typeof data === 'object' ? data : {};
-        throw new Error("The abstract class 'IEdmVocabularyAnnotation' cannot be instantiated.");
-    }
-
-    toJSON(data?: any) {
-        data = typeof data === 'object' ? data : {};
-        data["qualifier"] = this.qualifier;
-        data["term"] = this.term ? this.term.toJSON() : <any>undefined;
-        data["target"] = this.target ? this.target.toJSON() : <any>undefined;
-        data["value"] = this.value ? this.value.toJSON() : <any>undefined;
-        return data;
-    }
-}
-
-export interface IIEdmVocabularyAnnotation {
-    qualifier?: string | undefined;
-    term?: IEdmTerm | undefined;
-    target?: IEdmVocabularyAnnotatable | undefined;
-    value?: IEdmExpression | undefined;
-}
-
-export abstract class IEdmTerm implements IIEdmTerm {
-    type?: IEdmTypeReference | undefined;
-    appliesTo?: string | undefined;
-    defaultValue?: string | undefined;
-
-    constructor(data?: IIEdmTerm) {
-        if (data) {
-            for (var property in data) {
-                if (data.hasOwnProperty(property))
-                    (<any>this)[property] = (<any>data)[property];
-            }
-        }
-    }
-
-    init(_data?: any) {
-        if (_data) {
-            this.type = _data["type"] ? IEdmTypeReference.fromJS(_data["type"]) : <any>undefined;
-            this.appliesTo = _data["appliesTo"];
-            this.defaultValue = _data["defaultValue"];
-        }
-    }
-
-    static fromJS(data: any): IEdmTerm {
-        data = typeof data === 'object' ? data : {};
-        throw new Error("The abstract class 'IEdmTerm' cannot be instantiated.");
-    }
-
-    toJSON(data?: any) {
-        data = typeof data === 'object' ? data : {};
-        data["type"] = this.type ? this.type.toJSON() : <any>undefined;
-        data["appliesTo"] = this.appliesTo;
-        data["defaultValue"] = this.defaultValue;
-        return data;
-    }
-}
-
-export interface IIEdmTerm {
-    type?: IEdmTypeReference | undefined;
-    appliesTo?: string | undefined;
-    defaultValue?: string | undefined;
-}
-
-export abstract class IEdmTypeReference implements IIEdmTypeReference {
-    isNullable?: boolean;
-    definition?: IEdmType | undefined;
-
-    constructor(data?: IIEdmTypeReference) {
-        if (data) {
-            for (var property in data) {
-                if (data.hasOwnProperty(property))
-                    (<any>this)[property] = (<any>data)[property];
-            }
-        }
-    }
-
-    init(_data?: any) {
-        if (_data) {
-            this.isNullable = _data["isNullable"];
-            this.definition = _data["definition"] ? IEdmType.fromJS(_data["definition"]) : <any>undefined;
-        }
-    }
-
-    static fromJS(data: any): IEdmTypeReference {
-        data = typeof data === 'object' ? data : {};
-        throw new Error("The abstract class 'IEdmTypeReference' cannot be instantiated.");
-    }
-
-    toJSON(data?: any) {
-        data = typeof data === 'object' ? data : {};
-        data["isNullable"] = this.isNullable;
-        data["definition"] = this.definition ? this.definition.toJSON() : <any>undefined;
-        return data;
-    }
-}
-
-export interface IIEdmTypeReference {
-    isNullable?: boolean;
-    definition?: IEdmType | undefined;
-}
-
-export abstract class IEdmType implements IIEdmType {
-    typeKind?: EdmTypeKind;
-
-    constructor(data?: IIEdmType) {
-        if (data) {
-            for (var property in data) {
-                if (data.hasOwnProperty(property))
-                    (<any>this)[property] = (<any>data)[property];
-            }
-        }
-    }
-
-    init(_data?: any) {
-        if (_data) {
-            this.typeKind = _data["typeKind"];
-        }
-    }
-
-    static fromJS(data: any): IEdmType {
-        data = typeof data === 'object' ? data : {};
-        throw new Error("The abstract class 'IEdmType' cannot be instantiated.");
-    }
-
-    toJSON(data?: any) {
-        data = typeof data === 'object' ? data : {};
-        data["typeKind"] = this.typeKind;
-        return data;
-    }
-}
-
-export interface IIEdmType {
-    typeKind?: EdmTypeKind;
-}
-
-export enum EdmTypeKind {
-    None = 0,
-    Primitive = 1,
-    Entity = 2,
-    Complex = 3,
-    Collection = 4,
-    EntityReference = 5,
-    Enum = 6,
-    TypeDefinition = 7,
-    Untyped = 8,
-    Path = 9,
-}
-
-export abstract class IEdmVocabularyAnnotatable implements IIEdmVocabularyAnnotatable {
-
-    constructor(data?: IIEdmVocabularyAnnotatable) {
-        if (data) {
-            for (var property in data) {
-                if (data.hasOwnProperty(property))
-                    (<any>this)[property] = (<any>data)[property];
-            }
-        }
-    }
-
-    init(_data?: any) {
-    }
-
-    static fromJS(data: any): IEdmVocabularyAnnotatable {
-        data = typeof data === 'object' ? data : {};
-        throw new Error("The abstract class 'IEdmVocabularyAnnotatable' cannot be instantiated.");
-    }
-
-    toJSON(data?: any) {
-        data = typeof data === 'object' ? data : {};
-        return data;
-    }
-}
-
-export interface IIEdmVocabularyAnnotatable {
-}
-
-export abstract class IEdmExpression implements IIEdmExpression {
-    expressionKind?: EdmExpressionKind;
-
-    constructor(data?: IIEdmExpression) {
-        if (data) {
-            for (var property in data) {
-                if (data.hasOwnProperty(property))
-                    (<any>this)[property] = (<any>data)[property];
-            }
-        }
-    }
-
-    init(_data?: any) {
-        if (_data) {
-            this.expressionKind = _data["expressionKind"];
-        }
-    }
-
-    static fromJS(data: any): IEdmExpression {
-        data = typeof data === 'object' ? data : {};
-        throw new Error("The abstract class 'IEdmExpression' cannot be instantiated.");
-    }
-
-    toJSON(data?: any) {
-        data = typeof data === 'object' ? data : {};
-        data["expressionKind"] = this.expressionKind;
-        return data;
-    }
-}
-
-export interface IIEdmExpression {
-    expressionKind?: EdmExpressionKind;
-}
-
-export enum EdmExpressionKind {
-    None = 0,
-    BinaryConstant = 1,
-    BooleanConstant = 2,
-    DateTimeOffsetConstant = 3,
-    DecimalConstant = 4,
-    FloatingConstant = 5,
-    GuidConstant = 6,
-    IntegerConstant = 7,
-    StringConstant = 8,
-    DurationConstant = 9,
-    Null = 10,
-    Record = 11,
-    Collection = 12,
-    Path = 13,
-    If = 14,
-    Cast = 15,
-    IsType = 16,
-    FunctionApplication = 17,
-    LabeledExpressionReference = 18,
-    Labeled = 19,
-    PropertyPath = 20,
-    NavigationPropertyPath = 21,
-    DateConstant = 22,
-    TimeOfDayConstant = 23,
-    EnumMember = 24,
-    AnnotationPath = 25,
-}
-
-export abstract class IEdmDirectValueAnnotationsManager implements IIEdmDirectValueAnnotationsManager {
-
-    constructor(data?: IIEdmDirectValueAnnotationsManager) {
-        if (data) {
-            for (var property in data) {
-                if (data.hasOwnProperty(property))
-                    (<any>this)[property] = (<any>data)[property];
-            }
-        }
-    }
-
-    init(_data?: any) {
-    }
-
-    static fromJS(data: any): IEdmDirectValueAnnotationsManager {
-        data = typeof data === 'object' ? data : {};
-        throw new Error("The abstract class 'IEdmDirectValueAnnotationsManager' cannot be instantiated.");
-    }
-
-    toJSON(data?: any) {
-        data = typeof data === 'object' ? data : {};
-        return data;
-    }
-}
-
-export interface IIEdmDirectValueAnnotationsManager {
-}
-
-export abstract class IEdmEntityContainer implements IIEdmEntityContainer {
-    elements?: IEdmEntityContainerElement[] | undefined;
-
-    constructor(data?: IIEdmEntityContainer) {
-        if (data) {
-            for (var property in data) {
-                if (data.hasOwnProperty(property))
-                    (<any>this)[property] = (<any>data)[property];
-            }
-        }
-    }
-
-    init(_data?: any) {
-        if (_data) {
-            if (Array.isArray(_data["elements"])) {
-                this.elements = [] as any;
-                for (let item of _data["elements"])
-                    this.elements!.push(IEdmEntityContainerElement.fromJS(item));
-            }
-        }
-    }
-
-    static fromJS(data: any): IEdmEntityContainer {
-        data = typeof data === 'object' ? data : {};
-        throw new Error("The abstract class 'IEdmEntityContainer' cannot be instantiated.");
-    }
-
-    toJSON(data?: any) {
-        data = typeof data === 'object' ? data : {};
-        if (Array.isArray(this.elements)) {
-            data["elements"] = [];
-            for (let item of this.elements)
-                data["elements"].push(item.toJSON());
-        }
-        return data;
-    }
-}
-
-export interface IIEdmEntityContainer {
-    elements?: IEdmEntityContainerElement[] | undefined;
-}
-
-export abstract class IEdmEntityContainerElement implements IIEdmEntityContainerElement {
-    containerElementKind?: EdmContainerElementKind;
-    container?: IEdmEntityContainer | undefined;
-
-    constructor(data?: IIEdmEntityContainerElement) {
-        if (data) {
-            for (var property in data) {
-                if (data.hasOwnProperty(property))
-                    (<any>this)[property] = (<any>data)[property];
-            }
-        }
-    }
-
-    init(_data?: any) {
-        if (_data) {
-            this.containerElementKind = _data["containerElementKind"];
-            this.container = _data["container"] ? IEdmEntityContainer.fromJS(_data["container"]) : <any>undefined;
-        }
-    }
-
-    static fromJS(data: any): IEdmEntityContainerElement {
-        data = typeof data === 'object' ? data : {};
-        throw new Error("The abstract class 'IEdmEntityContainerElement' cannot be instantiated.");
-    }
-
-    toJSON(data?: any) {
-        data = typeof data === 'object' ? data : {};
-        data["containerElementKind"] = this.containerElementKind;
-        data["container"] = this.container ? this.container.toJSON() : <any>undefined;
-        return data;
-    }
-}
-
-export interface IIEdmEntityContainerElement {
-    containerElementKind?: EdmContainerElementKind;
-    container?: IEdmEntityContainer | undefined;
-}
-
-export enum EdmContainerElementKind {
-    None = 0,
-    EntitySet = 1,
-    ActionImport = 2,
-    FunctionImport = 3,
-    Singleton = 4,
-}
-
-export abstract class ODataAnnotatable implements IODataAnnotatable {
-    typeAnnotation?: ODataTypeAnnotation | undefined;
-
-    constructor(data?: IODataAnnotatable) {
-        if (data) {
-            for (var property in data) {
-                if (data.hasOwnProperty(property))
-                    (<any>this)[property] = (<any>data)[property];
-            }
-        }
-    }
-
-    init(_data?: any) {
-        if (_data) {
-            this.typeAnnotation = _data["typeAnnotation"] ? ODataTypeAnnotation.fromJS(_data["typeAnnotation"]) : <any>undefined;
-        }
-    }
-
-    static fromJS(data: any): ODataAnnotatable {
-        data = typeof data === 'object' ? data : {};
-        throw new Error("The abstract class 'ODataAnnotatable' cannot be instantiated.");
-    }
-
-    toJSON(data?: any) {
-        data = typeof data === 'object' ? data : {};
-        data["typeAnnotation"] = this.typeAnnotation ? this.typeAnnotation.toJSON() : <any>undefined;
-        return data;
-    }
-}
-
-export interface IODataAnnotatable {
-    typeAnnotation?: ODataTypeAnnotation | undefined;
-}
-
-export class ODataServiceDocument extends ODataAnnotatable implements IODataServiceDocument {
-    entitySets?: ODataEntitySetInfo[] | undefined;
-    singletons?: ODataSingletonInfo[] | undefined;
-    functionImports?: ODataFunctionImportInfo[] | undefined;
-
-    constructor(data?: IODataServiceDocument) {
-        super(data);
-    }
-
-    init(_data?: any) {
-        super.init(_data);
-        if (_data) {
-            if (Array.isArray(_data["entitySets"])) {
-                this.entitySets = [] as any;
-                for (let item of _data["entitySets"])
-                    this.entitySets!.push(ODataEntitySetInfo.fromJS(item));
-            }
-            if (Array.isArray(_data["singletons"])) {
-                this.singletons = [] as any;
-                for (let item of _data["singletons"])
-                    this.singletons!.push(ODataSingletonInfo.fromJS(item));
-            }
-            if (Array.isArray(_data["functionImports"])) {
-                this.functionImports = [] as any;
-                for (let item of _data["functionImports"])
-                    this.functionImports!.push(ODataFunctionImportInfo.fromJS(item));
-            }
-        }
-    }
-
-    static fromJS(data: any): ODataServiceDocument {
-        data = typeof data === 'object' ? data : {};
-        let result = new ODataServiceDocument();
-        result.init(data);
-        return result;
-    }
-
-    toJSON(data?: any) {
-        data = typeof data === 'object' ? data : {};
-        if (Array.isArray(this.entitySets)) {
-            data["entitySets"] = [];
-            for (let item of this.entitySets)
-                data["entitySets"].push(item.toJSON());
-        }
-        if (Array.isArray(this.singletons)) {
-            data["singletons"] = [];
-            for (let item of this.singletons)
-                data["singletons"].push(item.toJSON());
-        }
-        if (Array.isArray(this.functionImports)) {
-            data["functionImports"] = [];
-            for (let item of this.functionImports)
-                data["functionImports"].push(item.toJSON());
-        }
-        super.toJSON(data);
-        return data;
-    }
-}
-
-export interface IODataServiceDocument extends IODataAnnotatable {
-    entitySets?: ODataEntitySetInfo[] | undefined;
-    singletons?: ODataSingletonInfo[] | undefined;
-    functionImports?: ODataFunctionImportInfo[] | undefined;
-}
-
-export abstract class ODataServiceDocumentElement extends ODataAnnotatable implements IODataServiceDocumentElement {
-    url?: string | undefined;
-    name?: string | undefined;
-    title?: string | undefined;
-
-    constructor(data?: IODataServiceDocumentElement) {
-        super(data);
-    }
-
-    init(_data?: any) {
-        super.init(_data);
-        if (_data) {
-            this.url = _data["url"];
-            this.name = _data["name"];
-            this.title = _data["title"];
-        }
-    }
-
-    static fromJS(data: any): ODataServiceDocumentElement {
-        data = typeof data === 'object' ? data : {};
-        throw new Error("The abstract class 'ODataServiceDocumentElement' cannot be instantiated.");
-    }
-
-    toJSON(data?: any) {
-        data = typeof data === 'object' ? data : {};
-        data["url"] = this.url;
-        data["name"] = this.name;
-        data["title"] = this.title;
-        super.toJSON(data);
-        return data;
-    }
-}
-
-export interface IODataServiceDocumentElement extends IODataAnnotatable {
-    url?: string | undefined;
-    name?: string | undefined;
-    title?: string | undefined;
-}
-
-export class ODataEntitySetInfo extends ODataServiceDocumentElement implements IODataEntitySetInfo {
-
-    constructor(data?: IODataEntitySetInfo) {
-        super(data);
-    }
-
-    init(_data?: any) {
-        super.init(_data);
-    }
-
-    static fromJS(data: any): ODataEntitySetInfo {
-        data = typeof data === 'object' ? data : {};
-        let result = new ODataEntitySetInfo();
-        result.init(data);
-        return result;
-    }
-
-    toJSON(data?: any) {
-        data = typeof data === 'object' ? data : {};
-        super.toJSON(data);
-        return data;
-    }
-}
-
-export interface IODataEntitySetInfo extends IODataServiceDocumentElement {
-}
-
-export class ODataTypeAnnotation implements IODataTypeAnnotation {
-    typeName?: string | undefined;
-
-    constructor(data?: IODataTypeAnnotation) {
-        if (data) {
-            for (var property in data) {
-                if (data.hasOwnProperty(property))
-                    (<any>this)[property] = (<any>data)[property];
-            }
-        }
-    }
-
-    init(_data?: any) {
-        if (_data) {
-            this.typeName = _data["typeName"];
-        }
-    }
-
-    static fromJS(data: any): ODataTypeAnnotation {
-        data = typeof data === 'object' ? data : {};
-        let result = new ODataTypeAnnotation();
-        result.init(data);
-        return result;
-    }
-
-    toJSON(data?: any) {
-        data = typeof data === 'object' ? data : {};
-        data["typeName"] = this.typeName;
-        return data;
-    }
-}
-
-export interface IODataTypeAnnotation {
-    typeName?: string | undefined;
-}
-
-export class ODataSingletonInfo extends ODataServiceDocumentElement implements IODataSingletonInfo {
-
-    constructor(data?: IODataSingletonInfo) {
-        super(data);
-    }
-
-    init(_data?: any) {
-        super.init(_data);
-    }
-
-    static fromJS(data: any): ODataSingletonInfo {
-        data = typeof data === 'object' ? data : {};
-        let result = new ODataSingletonInfo();
-        result.init(data);
-        return result;
-    }
-
-    toJSON(data?: any) {
-        data = typeof data === 'object' ? data : {};
-        super.toJSON(data);
-        return data;
-    }
-}
-
-export interface IODataSingletonInfo extends IODataServiceDocumentElement {
-}
-
-export class ODataFunctionImportInfo extends ODataServiceDocumentElement implements IODataFunctionImportInfo {
-
-    constructor(data?: IODataFunctionImportInfo) {
-        super(data);
-    }
-
-    init(_data?: any) {
-        super.init(_data);
-    }
-
-    static fromJS(data: any): ODataFunctionImportInfo {
-        data = typeof data === 'object' ? data : {};
-        let result = new ODataFunctionImportInfo();
-        result.init(data);
-        return result;
-    }
-
-    toJSON(data?: any) {
-        data = typeof data === 'object' ? data : {};
-        super.toJSON(data);
-        return data;
-    }
-}
-
-export interface IODataFunctionImportInfo extends IODataServiceDocumentElement {
 }
 
 function formatDate(d: Date) {

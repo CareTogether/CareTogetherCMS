@@ -416,17 +416,22 @@ namespace CareTogether.Api
 
             // Use legacy Newtonsoft JSON to support JsonPolymorph & NSwag for polymorphic serialization.
             // Since we are using OData, .AddODataNewtonsoftJson() replaces .AddNewtonsoftJson().
-            services
-                .AddControllers()
-                .AddOData(options =>
-                {
-                    options.EnableQueryFeatures();
-                    options.AddRouteComponents(
-                        "api/odata/live",
-                        ODataModelProvider.GetLiveEdmModel()
-                    );
-                })
-                .AddODataNewtonsoftJson();
+            var mvcBuilder = services
+                .AddControllers();
+            // Exclude OData types from the generated Swagger/OpenAPI model and generated TypeScript client.
+            if (Environment.GetEnvironmentVariable("OpenApiGen") == null)
+            {
+                mvcBuilder
+                    .AddOData(options =>
+                    {
+                        options.EnableQueryFeatures();
+                        options.AddRouteComponents(
+                            "api/odata/live",
+                            ODataModelProvider.GetLiveEdmModel()
+                        );
+                    })
+                    .AddODataNewtonsoftJson();
+            }
 
             services.AddAuthorization(options =>
             {
