@@ -69,7 +69,7 @@ export function LocationEdit() {
       id: 'actions' as const,
       label: 'Action Definitions',
       component: ActionDefinitions,
-      shouldShow: useFeatureFlagEnabled('approvalPoliciesTab'),
+      shouldShow: useFeatureFlagEnabled('actionDefinitionsTab'),
     },
     {
       id: 'approvalPolicies' as const,
