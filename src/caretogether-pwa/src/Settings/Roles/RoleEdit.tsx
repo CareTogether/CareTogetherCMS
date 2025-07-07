@@ -137,215 +137,217 @@ export function RoleEdit({
   );
 
   return (
-    <Stack paddingY={2} height="calc(100vh - 48px)" spacing={0}>
-      <Box>
-        <Breadcrumbs
-          aria-label="breadcrumb"
-          separator={<NavigateNextIcon fontSize="small" />}
-        >
-          <MuiLink component={Link} underline="hover" color="inherit" to="..">
-            Settings
-          </MuiLink>
-
-          <MuiLink
-            component={Link}
-            underline="hover"
-            color="inherit"
-            to="..#roles"
+    <div className="ph-unmask">
+      <Stack paddingY={2} height="calc(100vh - 48px)" spacing={0}>
+        <Box>
+          <Breadcrumbs
+            aria-label="breadcrumb"
+            separator={<NavigateNextIcon fontSize="small" />}
           >
-            Roles
-          </MuiLink>
+            <MuiLink component={Link} underline="hover" color="inherit" to="..">
+              Settings
+            </MuiLink>
 
-          <Typography color="text.primary" className="ph-unmask">
-            {roleDefinition.roleName}
+            <MuiLink
+              component={Link}
+              underline="hover"
+              color="inherit"
+              to="..#roles"
+            >
+              Roles
+            </MuiLink>
+
+            <Typography color="text.primary">
+              {roleDefinition.roleName}
+            </Typography>
+          </Breadcrumbs>
+
+          <Typography sx={{ marginY: 2 }} variant="h2">
+            Editing {roleDefinition.roleName} role
           </Typography>
-        </Breadcrumbs>
+        </Box>
 
-        <Typography sx={{ marginY: 2 }} variant="h2" className="ph-unmask">
-          Editing {roleDefinition.roleName} role
-        </Typography>
-      </Box>
+        <TableContainer>
+          <Table sx={{ minWidth: '700px' }} stickyHeader size="small">
+            <colgroup>
+              <col />
+              <col style={{ width: '50%' }} />
+              <col style={{ width: '50%' }} />
+            </colgroup>
+            <TableHead>
+              <TableRow>
+                <TableCell></TableCell>
+                <TableCell>Context</TableCell>
+                <TableCell>Permissions</TableCell>
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {workingRole?.permissionSets?.map((permissionSet, i) =>
+                shouldUseAutocomplete ? (
+                  <ContextualPermissionSetRowAutocomplete
+                    key={`${workingRole.permissionSets?.length}-${i}`}
+                    editable={isEditable}
+                    permissionSet={permissionSet}
+                    onDelete={() => deletePermissionSetAtIndex(i)}
+                    onUpdate={(newValue: IContextualPermissionSet) =>
+                      updatePermissionSetAtIndex(i, newValue)
+                    }
+                  />
+                ) : (
+                  <ContextualPermissionSetRow
+                    key={`${workingRole.permissionSets?.length}-${i}`}
+                    editable={isEditable}
+                    permissionSet={permissionSet}
+                    onDelete={() => deletePermissionSetAtIndex(i)}
+                    onUpdate={(newValue: IContextualPermissionSet) =>
+                      updatePermissionSetAtIndex(i, newValue)
+                    }
+                  />
+                )
+              )}
+              {isEditable && (
+                <TableRow>
+                  <TableCell>
+                    <IconButton
+                      onClick={(event) =>
+                        setAddPermissionSetMenuAnchorEl(event.currentTarget)
+                      }
+                    >
+                      <AddIcon />
+                    </IconButton>
+                  </TableCell>
+                  <TableCell colSpan={2}></TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
+        </TableContainer>
 
-      <TableContainer>
-        <Table sx={{ minWidth: '700px' }} stickyHeader size="small">
-          <colgroup>
-            <col />
-            <col style={{ width: '50%' }} />
-            <col style={{ width: '50%' }} />
-          </colgroup>
-          <TableHead>
-            <TableRow>
-              <TableCell></TableCell>
-              <TableCell>Context</TableCell>
-              <TableCell>Permissions</TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {workingRole?.permissionSets?.map((permissionSet, i) =>
-              shouldUseAutocomplete ? (
-                <ContextualPermissionSetRowAutocomplete
-                  key={`${workingRole.permissionSets?.length}-${i}`}
-                  editable={isEditable}
-                  permissionSet={permissionSet}
-                  onDelete={() => deletePermissionSetAtIndex(i)}
-                  onUpdate={(newValue: IContextualPermissionSet) =>
-                    updatePermissionSetAtIndex(i, newValue)
-                  }
-                />
-              ) : (
-                <ContextualPermissionSetRow
-                  key={`${workingRole.permissionSets?.length}-${i}`}
-                  editable={isEditable}
-                  permissionSet={permissionSet}
-                  onDelete={() => deletePermissionSetAtIndex(i)}
-                  onUpdate={(newValue: IContextualPermissionSet) =>
-                    updatePermissionSetAtIndex(i, newValue)
-                  }
-                />
+        <Menu
+          open={Boolean(addPermissionSetMenuAnchorEl)}
+          anchorEl={addPermissionSetMenuAnchorEl}
+          onClose={() => setAddPermissionSetMenuAnchorEl(null)}
+        >
+          <MenuItem
+            dense
+            onClick={() =>
+              addPermissionSet(() => new GlobalPermissionContext())
+            }
+          >
+            Global
+          </MenuItem>
+          <MenuItem
+            dense
+            onClick={() =>
+              addPermissionSet(() => new OwnFamilyPermissionContext())
+            }
+          >
+            Own Family
+          </MenuItem>
+          <MenuItem
+            dense
+            onClick={() =>
+              addPermissionSet(
+                () => new AllVolunteerFamiliesPermissionContext()
               )
+            }
+          >
+            All Volunteer Families
+          </MenuItem>
+          <MenuItem
+            dense
+            onClick={() =>
+              addPermissionSet(
+                () => new AllPartneringFamiliesPermissionContext()
+              )
+            }
+          >
+            All Partnering Families
+          </MenuItem>
+          <MenuItem
+            dense
+            onClick={() =>
+              addPermissionSet(
+                () =>
+                  new AssignedFunctionsInReferralPartneringFamilyPermissionContext()
+              )
+            }
+          >
+            Assigned Functions in Referral - Partnering Family
+          </MenuItem>
+          <MenuItem
+            dense
+            onClick={() =>
+              addPermissionSet(
+                () =>
+                  new AssignedFunctionsInReferralCoAssigneeFamiliesPermissionContext()
+              )
+            }
+          >
+            Assigned Functions in Referral - Co-Assigned Families
+          </MenuItem>
+          <MenuItem
+            dense
+            onClick={() =>
+              addPermissionSet(
+                () => new OwnReferralAssigneeFamiliesPermissionContext()
+              )
+            }
+          >
+            Own Referral - Assigned Families
+          </MenuItem>
+          <MenuItem
+            dense
+            onClick={() =>
+              addPermissionSet(() => new CommunityMemberPermissionContext())
+            }
+          >
+            Community Member - Community
+          </MenuItem>
+          <MenuItem
+            dense
+            onClick={() =>
+              addPermissionSet(
+                () => new CommunityCoMemberFamiliesPermissionContext()
+              )
+            }
+          >
+            Community Member - Co-Member Families
+          </MenuItem>
+        </Menu>
+
+        <Box paddingY={2} borderTop={1} borderColor="divider">
+          <Stack direction="row" justifyContent="flex-end" alignItems="center">
+            {dirty && (
+              <Typography sx={{ fontStyle: 'italic' }} mr={2}>
+                There are pending changes to be saved
+              </Typography>
+            )}
+
+            {isEditable && (
+              <Button
+                color="secondary"
+                variant="contained"
+                sx={{ marginRight: 2 }}
+                disabled={!dirty}
+                onClick={cancel}
+              >
+                Cancel
+              </Button>
             )}
             {isEditable && (
-              <TableRow>
-                <TableCell>
-                  <IconButton
-                    onClick={(event) =>
-                      setAddPermissionSetMenuAnchorEl(event.currentTarget)
-                    }
-                  >
-                    <AddIcon />
-                  </IconButton>
-                </TableCell>
-                <TableCell colSpan={2}></TableCell>
-              </TableRow>
+              <Button
+                color="primary"
+                variant="contained"
+                disabled={!dirty}
+                onClick={save}
+              >
+                Save
+              </Button>
             )}
-          </TableBody>
-        </Table>
-      </TableContainer>
-
-      <Menu
-        open={Boolean(addPermissionSetMenuAnchorEl)}
-        anchorEl={addPermissionSetMenuAnchorEl}
-        onClose={() => setAddPermissionSetMenuAnchorEl(null)}
-      >
-        <MenuItem
-          dense
-          onClick={() => addPermissionSet(() => new GlobalPermissionContext())}
-        >
-          Global
-        </MenuItem>
-        <MenuItem
-          dense
-          onClick={() =>
-            addPermissionSet(() => new OwnFamilyPermissionContext())
-          }
-        >
-          Own Family
-        </MenuItem>
-        <MenuItem
-          dense
-          onClick={() =>
-            addPermissionSet(() => new AllVolunteerFamiliesPermissionContext())
-          }
-        >
-          All Volunteer Families
-        </MenuItem>
-        <MenuItem
-          dense
-          onClick={() =>
-            addPermissionSet(() => new AllPartneringFamiliesPermissionContext())
-          }
-        >
-          All Partnering Families
-        </MenuItem>
-        <MenuItem
-          dense
-          onClick={() =>
-            addPermissionSet(
-              () =>
-                new AssignedFunctionsInReferralPartneringFamilyPermissionContext()
-            )
-          }
-        >
-          Assigned Functions in Referral - Partnering Family
-        </MenuItem>
-        <MenuItem
-          dense
-          onClick={() =>
-            addPermissionSet(
-              () =>
-                new AssignedFunctionsInReferralCoAssigneeFamiliesPermissionContext()
-            )
-          }
-        >
-          Assigned Functions in Referral - Co-Assigned Families
-        </MenuItem>
-        <MenuItem
-          dense
-          onClick={() =>
-            addPermissionSet(
-              () => new OwnReferralAssigneeFamiliesPermissionContext()
-            )
-          }
-        >
-          Own Referral - Assigned Families
-        </MenuItem>
-        <MenuItem
-          dense
-          onClick={() =>
-            addPermissionSet(() => new CommunityMemberPermissionContext())
-          }
-        >
-          Community Member - Community
-        </MenuItem>
-        <MenuItem
-          dense
-          onClick={() =>
-            addPermissionSet(
-              () => new CommunityCoMemberFamiliesPermissionContext()
-            )
-          }
-        >
-          Community Member - Co-Member Families
-        </MenuItem>
-      </Menu>
-
-      <Box paddingY={2} borderTop={1} borderColor="divider">
-        <Stack direction="row" justifyContent="flex-end" alignItems="center">
-          {dirty && (
-            <Typography
-              sx={{ fontStyle: 'italic' }}
-              mr={2}
-              className="ph-unmask"
-            >
-              There are pending changes to be saved
-            </Typography>
-          )}
-
-          {isEditable && (
-            <Button
-              color="secondary"
-              variant="contained"
-              sx={{ marginRight: 2 }}
-              disabled={!dirty}
-              onClick={cancel}
-              className="ph-unmask"
-            >
-              Cancel
-            </Button>
-          )}
-          {isEditable && (
-            <Button
-              color="primary"
-              variant="contained"
-              disabled={!dirty}
-              onClick={save}
-              className="ph-unmask"
-            >
-              Save
-            </Button>
-          )}
-        </Stack>
-      </Box>
-    </Stack>
+          </Stack>
+        </Box>
+      </Stack>
+    </div>
   );
 }

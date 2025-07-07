@@ -31,7 +31,7 @@ function Cell({ children }: { children: React.ReactNode }) {
       border="1px solid"
       borderColor="grey.200"
     >
-      <div className="ph-unmask">{children}</div>
+      <div>{children}</div>
     </Grid>
   );
 }
@@ -65,7 +65,7 @@ export function ArrangementPlannedDuration({
 
   if (summaryOnly) {
     return (
-      <Stack className="ph-unmask" direction="column" sx={{ clear: 'both' }}>
+      <Stack direction="column" sx={{ clear: 'both' }}>
         <Box>
           <span>Planned start:&nbsp;</span>
           {arrangement.plannedStartUtc
@@ -83,93 +83,97 @@ export function ArrangementPlannedDuration({
   }
 
   return (
-    <Grid
-      container
-      spacing={0}
-      mt={6}
-      mb={1}
-      sx={{ border: '1px solid', borderColor: 'grey.200' }}
-    >
-      <Cell>
-        <DateDisplayEditor
-          label="Requested at"
-          initialValue={arrangement.requestedAtUtc!}
-          canEdit={canEdit}
-          availableInCurrentPhase // Available in all phases
-          onChange={(newDate) =>
-            onDateChange(referralsModel.editArrangementRequestedAt, newDate)
-          }
-        />
-      </Cell>
+    <div className="ph-unmask">
+      <Grid
+        container
+        spacing={0}
+        mt={6}
+        mb={1}
+        sx={{ border: '1px solid', borderColor: 'grey.200' }}
+      >
+        <Cell>
+          <DateDisplayEditor
+            label="Requested at"
+            initialValue={arrangement.requestedAtUtc!}
+            canEdit={canEdit}
+            availableInCurrentPhase // Available in all phases
+            onChange={(newDate) =>
+              onDateChange(referralsModel.editArrangementRequestedAt, newDate)
+            }
+          />
+        </Cell>
 
-      <Cell>
-        <DateDisplayEditor
-          label="Cancelled at"
-          initialValue={arrangement.cancelledAtUtc!}
-          canEdit={canEdit}
-          availableInCurrentPhase={
-            arrangement.phase === ArrangementPhase.Cancelled
-          }
-          unavailableTooltip="Only available when the arrangement is cancelled"
-          onChange={(newDate) =>
-            onDateChange(referralsModel.editArrangementCancelledAt, newDate)
-          }
-        />
-      </Cell>
+        <Cell>
+          <DateDisplayEditor
+            label="Cancelled at"
+            initialValue={arrangement.cancelledAtUtc!}
+            canEdit={canEdit}
+            availableInCurrentPhase={
+              arrangement.phase === ArrangementPhase.Cancelled
+            }
+            unavailableTooltip="Only available when the arrangement is cancelled"
+            onChange={(newDate) =>
+              onDateChange(referralsModel.editArrangementCancelledAt, newDate)
+            }
+          />
+        </Cell>
 
-      <Cell>
-        <DateDisplayEditor
-          label="Planned start"
-          initialValue={arrangement.plannedStartUtc!}
-          disableFuture={false}
-          canEdit={canEdit}
-          availableInCurrentPhase // Available in all phases
-          onChange={(newDate) =>
-            onDateChange(referralsModel.planArrangementStart, newDate)
-          }
-        />
-      </Cell>
+        <Cell>
+          <DateDisplayEditor
+            label="Planned start"
+            initialValue={arrangement.plannedStartUtc!}
+            disableFuture={false}
+            canEdit={canEdit}
+            availableInCurrentPhase // Available in all phases
+            onChange={(newDate) =>
+              onDateChange(referralsModel.planArrangementStart, newDate)
+            }
+          />
+        </Cell>
 
-      <Cell>
-        <DateDisplayEditor
-          label="Started at"
-          initialValue={arrangement.startedAtUtc!}
-          canEdit={canEdit}
-          availableInCurrentPhase={
-            (arrangement.phase || 0) >= ArrangementPhase.Started
-          }
-          unavailableTooltip="Only available when the arrangement is started"
-          onChange={(newDate) =>
-            onDateChange(referralsModel.editArrangementStartTime, newDate)
-          }
-        />
-      </Cell>
+        <Cell>
+          <DateDisplayEditor
+            label="Started at"
+            initialValue={arrangement.startedAtUtc!}
+            canEdit={canEdit}
+            availableInCurrentPhase={
+              (arrangement.phase || 0) >= ArrangementPhase.Started
+            }
+            unavailableTooltip="Only available when the arrangement is started"
+            onChange={(newDate) =>
+              onDateChange(referralsModel.editArrangementStartTime, newDate)
+            }
+          />
+        </Cell>
 
-      <Cell>
-        <DateDisplayEditor
-          label="Planned end"
-          initialValue={arrangement.plannedEndUtc!}
-          disableFuture={false}
-          canEdit={canEdit}
-          availableInCurrentPhase // Available in all phases
-          onChange={(newDate) =>
-            onDateChange(referralsModel.planArrangementEnd, newDate)
-          }
-        />
-      </Cell>
+        <Cell>
+          <DateDisplayEditor
+            label="Planned end"
+            initialValue={arrangement.plannedEndUtc!}
+            disableFuture={false}
+            canEdit={canEdit}
+            availableInCurrentPhase // Available in all phases
+            onChange={(newDate) =>
+              onDateChange(referralsModel.planArrangementEnd, newDate)
+            }
+          />
+        </Cell>
 
-      <Cell>
-        <DateDisplayEditor
-          label="Ended at"
-          initialValue={arrangement.endedAtUtc!}
-          canEdit={canEdit}
-          availableInCurrentPhase={arrangement.phase === ArrangementPhase.Ended}
-          unavailableTooltip="Only available when the arrangement is ended"
-          onChange={(newDate) =>
-            onDateChange(referralsModel.editArrangementEndTime, newDate)
-          }
-        />
-      </Cell>
-    </Grid>
+        <Cell>
+          <DateDisplayEditor
+            label="Ended at"
+            initialValue={arrangement.endedAtUtc!}
+            canEdit={canEdit}
+            availableInCurrentPhase={
+              arrangement.phase === ArrangementPhase.Ended
+            }
+            unavailableTooltip="Only available when the arrangement is ended"
+            onChange={(newDate) =>
+              onDateChange(referralsModel.editArrangementEndTime, newDate)
+            }
+          />
+        </Cell>
+      </Grid>
+    </div>
   );
 }

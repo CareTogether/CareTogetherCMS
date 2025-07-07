@@ -41,10 +41,10 @@ export function ArrangementCardTitle({
     useState(false);
 
   return (
-    <>
-      <span className="ph-unmask">{arrangement.arrangementType}</span>
+    <div className="ph-unmask">
+      <span>{arrangement.arrangementType}</span>
       {summaryOnly && (
-        <span className="ph-unmask" style={{ marginLeft: 40, float: 'right' }}>
+        <span style={{ marginLeft: 40, float: 'right' }}>
           {arrangement.phase === ArrangementPhase.Cancelled
             ? `Cancelled ${formatRelative(arrangement.cancelledAtUtc!, now)}`
             : arrangement.phase === ArrangementPhase.SettingUp
@@ -57,7 +57,7 @@ export function ArrangementCardTitle({
         </span>
       )}
       {!summaryOnly && (
-        <span className="ph-unmask" style={{ marginLeft: 0, float: 'right' }}>
+        <span style={{ marginLeft: 0, float: 'right' }}>
           {arrangement.phase === ArrangementPhase.SettingUp && (
             <>
               Setting up
@@ -184,6 +184,6 @@ export function ArrangementCardTitle({
         />
       )) ||
         null}
-    </>
+    </div>
   );
 }

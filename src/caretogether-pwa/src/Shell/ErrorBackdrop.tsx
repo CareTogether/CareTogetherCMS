@@ -43,10 +43,7 @@ export default function ErrorBackdrop() {
           include a screenshot and a description (as precise as possible) of the
           steps you took to get here.
         </p>
-        <pre
-          className="ph-unmask"
-          style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-all' }}
-        >
+        <pre style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-all' }}>
           URL: {window.location.toString()}
         </pre>
         <pre style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-all' }}>

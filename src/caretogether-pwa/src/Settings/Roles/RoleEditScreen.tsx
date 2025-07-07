@@ -23,11 +23,17 @@ export function RoleEditScreen() {
 
   if (!selectedRole) {
     return (
-      <Typography align="center" mt={10} className="ph-unmask">
-        Role not found.
-      </Typography>
+      <div className="ph-unmask">
+        <Typography align="center" mt={10}>
+          Role not found.
+        </Typography>
+      </div>
     );
   }
 
-  return <RoleEdit roleDefinition={selectedRole} />;
+  return (
+    <div className="ph-unmask">
+      <RoleEdit roleDefinition={selectedRole} />
+    </div>
+  );
 }

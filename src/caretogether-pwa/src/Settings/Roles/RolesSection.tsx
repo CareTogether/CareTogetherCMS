@@ -36,12 +36,10 @@ export function RolesSection() {
   const canEdit = permissions(Permission.AddEditRoles);
 
   return (
-    <>
-      <Typography variant="h2" className="ph-unmask">
-        Roles
-      </Typography>
+    <div className="ph-unmask">
+      <Typography variant="h2">Roles</Typography>
 
-      <TableContainer className="ph-unmask">
+      <TableContainer>
         <Table aria-label="Roles list" size="small">
           <TableHead>
             <TableRow>
@@ -71,11 +69,7 @@ export function RolesSection() {
                   sx={{ cursor: 'pointer' }}
                   onClick={() => appNavigate.role(role.roleName!)}
                 >
-                  <TableCell
-                    align="left"
-                    sx={{ minWidth: 200 }}
-                    className="ph-unmask"
-                  >
+                  <TableCell align="left" sx={{ minWidth: 200 }}>
                     {role.roleName}
                   </TableCell>
 
@@ -111,7 +105,6 @@ export function RolesSection() {
             sx={{ marginY: 2 }}
             variant="contained"
             onClick={() => openSidePanel()}
-            className="ph-unmask"
           >
             Add new role
           </Button>
@@ -121,6 +114,6 @@ export function RolesSection() {
           </SidePanel>
         </>
       )}
-    </>
+    </div>
   );
 }
