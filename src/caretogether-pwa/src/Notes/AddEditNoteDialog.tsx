@@ -29,7 +29,7 @@ export function AddEditNoteDialog({
   const [fields, setFields] = useState({
     contents: note?.contents || '',
     backdatedTimestampLocal: note?.backdatedTimestampUtc,
-    accessLevel: note?.accessLevel || '',
+    accessLevel: note?.accessLevel || 'Everyone',
   });
   const { contents, backdatedTimestampLocal, accessLevel } = fields;
   const directoryModel = useDirectoryModel();
@@ -47,7 +47,7 @@ export function AddEditNoteDialog({
         note.id!,
         contents,
         backdatedTimestampLocal,
-        accessLevel
+        accessLevel === 'Everyone' ? undefined : accessLevel
       );
     else
       await directoryModel.createDraftNote(
@@ -55,7 +55,7 @@ export function AddEditNoteDialog({
         crypto.randomUUID(),
         contents,
         backdatedTimestampLocal,
-        accessLevel
+        accessLevel === 'Everyone' ? undefined : accessLevel
       );
   }
 
@@ -66,7 +66,8 @@ export function AddEditNoteDialog({
       onSave={save}
       enableSave={() =>
         (contents !== note?.contents ||
-          backdatedTimestampLocal !== note?.backdatedTimestampUtc) &&
+          backdatedTimestampLocal !== note?.backdatedTimestampUtc ||
+          accessLevel !== note?.accessLevel) &&
         contents.length > 0
       }
     >
