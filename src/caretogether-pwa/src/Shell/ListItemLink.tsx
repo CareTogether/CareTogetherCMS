@@ -7,7 +7,7 @@ import {
   LinkProps as RouterLinkProps,
 } from 'react-router-dom';
 import { DistributiveOmit } from '@mui/types';
-import { Collapse, List, ListItemButton } from '@mui/material';
+import { Collapse, List, ListItemButton, Box, Divider } from '@mui/material';
 import { ExpandLess, ExpandMore } from '@mui/icons-material';
 
 interface ListItemLinkCollapsibleProps {
@@ -21,11 +21,21 @@ interface ListItemLinkCollapsibleProps {
   }[];
   defaultOpen?: boolean;
   className?: string;
+  paddingLeft?: number;
   darkColor?: boolean;
 }
 
 export function ListItemLink(props: ListItemLinkCollapsibleProps) {
-  const { icon, primary, to, subitems, defaultOpen, darkColor } = props;
+  const {
+    icon,
+    primary,
+    to,
+    subitems,
+    defaultOpen,
+    className,
+    paddingLeft = 1.5,
+    darkColor,
+  } = props;
 
   const selected =
     useMatch({
@@ -45,8 +55,6 @@ export function ListItemLink(props: ListItemLinkCollapsibleProps) {
     defaultOpen || false
   );
 
-  const collapseIcon = collapsibleOpen ? <ExpandLess /> : <ExpandMore />;
-
   const hasSubitems = subitems && subitems.length > 0;
 
   // TODO: Those names are a bit confusing, we should rename them
@@ -56,33 +64,41 @@ export function ListItemLink(props: ListItemLinkCollapsibleProps) {
 
   return (
     <>
-      <li className={props.className}>
-        <ListItemButton
-          component={renderLink}
-          onClick={() => selected && setCollapsibleOpen(!collapsibleOpen)}
-          selected={selected}
-          sx={{ paddingLeft: 1.5 }}
-        >
-          {icon ? (
-            <ListItemIcon
-              sx={{
-                color,
-              }}
-            >
-              {icon}
-            </ListItemIcon>
-          ) : null}
-
-          <ListItemText
-            primary={primary}
+      <li className={className}>
+        <Box sx={{ display: 'flex', alignItems: 'center' }}>
+          <ListItemButton
+            component={renderLink}
+            selected={selected}
             sx={{
-              marginLeft: -2,
-              color,
+              paddingLeft,
+              flexGrow: 1,
+              color: darkColor ? '#555' : '#fff8',
             }}
-          />
+          >
+            {icon ? (
+              <ListItemIcon sx={{ color: selected ? '#fff' : '#fff8' }}>
+                {icon}
+              </ListItemIcon>
+            ) : null}
 
-          {hasSubitems && collapseIcon}
-        </ListItemButton>
+            <ListItemText
+              primary={primary}
+              sx={{ marginLeft: -2, color: selected ? '#fff' : '#fff8' }}
+            />
+          </ListItemButton>
+
+          {hasSubitems && (
+            <>
+              <Divider orientation="vertical" flexItem />
+              <Box
+                onClick={() => setCollapsibleOpen((prev) => !prev)}
+                sx={{ px: 1.5, cursor: 'pointer' }}
+              >
+                {collapsibleOpen ? <ExpandLess /> : <ExpandMore />}
+              </Box>
+            </>
+          )}
+        </Box>
       </li>
 
       <Collapse

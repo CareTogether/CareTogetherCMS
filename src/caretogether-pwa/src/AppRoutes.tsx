@@ -9,7 +9,7 @@ import {
 } from 'react-router-dom';
 import { Referrals } from './Referrals/Referrals';
 import { Volunteers } from './Volunteers/Volunteers';
-import { Settings } from './Settings/Settings';
+import { Settings } from './Settings/SettingsRoutes';
 import { FamilyScreen } from './Families/FamilyScreen';
 import { Communities } from './Communities/Communities';
 import { UserProfile } from './UserProfile/UserProfile';
