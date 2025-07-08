@@ -228,7 +228,8 @@ namespace CareTogether.Engines.Authorization
                 new FamilyAuthorizationContext(command.FamilyId)
             );
 
-            var hasPermission = permissions.Contains(
+            // General means permissions without the 'own' qualifier.
+            var hasGeneralPermission = permissions.Contains(
                 command switch
                 {
                     CreateDraftNote => Permission.AddEditDraftNotes,
@@ -253,13 +254,18 @@ namespace CareTogether.Engines.Authorization
                 }
             );
 
-            if (!hasPermissionForOwnNotes)
+            if (!hasGeneralPermission && !hasPermissionForOwnNotes)
             {
-                // At this point, if the user does not have permission to edit their own notes, they cannot edit any notes.
-                return false;
+                return false; // No permissions to edit notes at all.
             }
 
-            // If the user has permission to edit their own notes, check if the note belongs to them.
+            // If the command is to create a draft note, we don't need to check the access level,
+            // or if the noteEntry belongs to the user, since it's a new note.
+            if (command is CreateDraftNote)
+            {
+                return true;
+            }
+
             var familyNotes = await notesResource.ListFamilyNotesAsync(
                 organizationId,
                 locationId,
@@ -271,18 +277,34 @@ namespace CareTogether.Engines.Authorization
             if (noteEntry == null)
                 return false;
 
-            // Enforce access level for existing notes
-            if (!string.IsNullOrEmpty(noteEntry.AccessLevel))
+            var allowedPerAccessLevel = await CheckAccessLevel(
+                noteEntry.AccessLevel,
+                user,
+                organizationId,
+                locationId
+            );
+
+            if (hasGeneralPermission && allowedPerAccessLevel)
             {
-                var config = await policiesResource.GetConfigurationAsync(organizationId);
-                var location = config.Locations.FirstOrDefault(l => l.Id == locationId);
-                var accessLevel = location?.AccessLevels.FirstOrDefault(al =>
-                    al.Name == noteEntry.AccessLevel
-                );
-                if (accessLevel != null && !UserHasAnyRole(user, accessLevel.OrganizationRoles))
-                    return false;
+                // If the user has general permission to edit notes, and the note has an access level set,
+                // and user has a role included in that access level, then they can edit the note.
+                return true;
             }
 
+            if (hasGeneralPermission && !allowedPerAccessLevel)
+            {
+                // If the user has general permission to edit notes, but the note has an access level set,
+                // and the user does not have a role included in that access level,
+                // then they cannot edit the note.
+                return false;
+            }
+
+            if (!hasPermissionForOwnNotes)
+            {
+                return false;
+            }
+
+            // If the user has permission to edit their own notes, check if the note belongs to them.
             var noteBelongsToUser = command switch
             {
                 EditDraftNote c => noteEntry?.AuthorId == user.UserId(),
@@ -292,7 +314,37 @@ namespace CareTogether.Engines.Authorization
                 ),
             };
 
-            return noteBelongsToUser;
+            return noteBelongsToUser && allowedPerAccessLevel;
+        }
+
+        private async Task<bool> CheckAccessLevel(
+            string? accessLevel,
+            ClaimsPrincipal user,
+            Guid organizationId,
+            Guid locationId
+        )
+        {
+            if (accessLevel == null)
+            {
+                // If the note does not have an access level set, we assume it is allowed for 'Everyone'
+                return true; // No access level set, so everyone can access.
+            }
+
+            var config = await policiesResource.GetConfigurationAsync(organizationId);
+            var location = config.Locations.FirstOrDefault(location => location.Id == locationId);
+            var accessLevelDefinition = location?.AccessLevels.FirstOrDefault(al =>
+                al.Name == accessLevel
+            );
+
+            if (
+                accessLevelDefinition != null
+                && !UserHasAnyRole(user, accessLevelDefinition.OrganizationRoles)
+            )
+            {
+                return false;
+            }
+
+            return true;
         }
 
         // Helper to check if user has any of the required roles
