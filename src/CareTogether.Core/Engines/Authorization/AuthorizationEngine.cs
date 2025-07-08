@@ -241,25 +241,6 @@ namespace CareTogether.Engines.Authorization
                 }
             );
 
-            if (hasPermission)
-            {
-                // For new notes, access level is set on the command, not on a note entry yet
-                if (
-                    command is CreateDraftNote createDraft
-                    && !string.IsNullOrEmpty(createDraft.AccessLevel)
-                )
-                {
-                    var config = await policiesResource.GetConfigurationAsync(organizationId);
-                    var location = config.Locations.FirstOrDefault(l => l.Id == locationId);
-                    var accessLevel = location?.AccessLevels.FirstOrDefault(al =>
-                        al.Name == createDraft.AccessLevel
-                    );
-                    if (accessLevel != null && !UserHasAnyRole(user, accessLevel.OrganizationRoles))
-                        return false;
-                }
-                return true;
-            }
-
             var hasPermissionForOwnNotes = permissions.Contains(
                 command switch
                 {
@@ -276,21 +257,6 @@ namespace CareTogether.Engines.Authorization
             {
                 // At this point, if the user does not have permission to edit their own notes, they cannot edit any notes.
                 return false;
-            }
-
-            if (command is CreateDraftNote ownCreateDraft)
-            {
-                if (!string.IsNullOrEmpty(ownCreateDraft.AccessLevel))
-                {
-                    var config = await policiesResource.GetConfigurationAsync(organizationId);
-                    var location = config.Locations.FirstOrDefault(l => l.Id == locationId);
-                    var accessLevel = location?.AccessLevels.FirstOrDefault(al =>
-                        al.Name == ownCreateDraft.AccessLevel
-                    );
-                    if (accessLevel != null && !UserHasAnyRole(user, accessLevel.OrganizationRoles))
-                        return false;
-                }
-                return true;
             }
 
             // If the user has permission to edit their own notes, check if the note belongs to them.
