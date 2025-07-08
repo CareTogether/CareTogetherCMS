@@ -733,11 +733,11 @@ export function useDirectoryModel() {
       const command = new CreateDraftNote({
         familyId: familyId,
         noteId: noteId,
-        accessLevel: accessLevel,
       });
       command.draftNoteContents = draftNoteContents;
       command.noteId = noteId;
       command.backdatedTimestampUtc = backdatedTimestampLocal;
+      command.accessLevel = accessLevel;
       return command;
     }
   );
@@ -752,10 +752,10 @@ export function useDirectoryModel() {
       const command = new EditDraftNote({
         familyId: familyId,
         noteId: noteId,
-        accessLevel: accessLevel,
       });
       command.draftNoteContents = draftNoteContents;
       command.backdatedTimestampUtc = backdatedTimestampLocal;
+      command.accessLevel = accessLevel;
       return command;
     }
   );
