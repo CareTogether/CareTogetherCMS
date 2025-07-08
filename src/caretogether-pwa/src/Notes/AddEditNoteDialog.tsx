@@ -38,8 +38,6 @@ export function AddEditNoteDialog({
 
   const accessLevels = locationConfiguration?.accessLevels || [];
 
-  console.log(fields);
-
   async function save() {
     if (note)
       await directoryModel.editDraftNote(
