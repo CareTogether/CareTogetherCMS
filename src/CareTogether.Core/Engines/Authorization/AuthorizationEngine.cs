@@ -291,14 +291,6 @@ namespace CareTogether.Engines.Authorization
                 return true;
             }
 
-            if (hasGeneralPermission && !allowedPerAccessLevel)
-            {
-                // If the user has general permission to edit notes, but the note has an access level set,
-                // and the user does not have a role included in that access level,
-                // then they cannot edit the note.
-                return false;
-            }
-
             if (!hasPermissionForOwnNotes)
             {
                 return false;
@@ -314,7 +306,7 @@ namespace CareTogether.Engines.Authorization
                 ),
             };
 
-            return noteBelongsToUser && allowedPerAccessLevel;
+            return noteBelongsToUser;
         }
 
         private async Task<bool> CheckAccessLevel(
