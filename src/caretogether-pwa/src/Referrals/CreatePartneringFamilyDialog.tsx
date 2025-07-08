@@ -134,7 +134,7 @@ export function CreatePartneringFamilyDialog({
   return (
     <Dialog
       open={true}
-      onClose={(event: object | undefined, reason: string) =>
+      onClose={(_, reason: string) =>
         !isBackdropClick(reason) ? onClose() : {}
       }
       scroll="body"

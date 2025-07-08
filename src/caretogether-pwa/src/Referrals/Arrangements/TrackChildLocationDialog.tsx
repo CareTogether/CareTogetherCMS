@@ -433,9 +433,7 @@ export function TrackChildLocationDialog({
   return (
     <Dialog
       open={true}
-      onClose={(event: object | undefined, reason: string) =>
-        !isBackdropClick(reason) ? onClose : {}
-      }
+      onClose={(_, reason: string) => (!isBackdropClick(reason) ? onClose : {})}
       fullWidth
       maxWidth="md"
       aria-labelledby="track-child-location-title"

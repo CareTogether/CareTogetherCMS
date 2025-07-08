@@ -96,9 +96,7 @@ export function CreateArrangementDialog({
   return (
     <Dialog
       open={true}
-      onClose={(event: object | undefined, reason: string) =>
-        !isBackdropClick(reason) ? onClose : {}
-      }
+      onClose={(_, reason: string) => (!isBackdropClick(reason) ? onClose : {})}
       scroll="body"
       aria-labelledby="create-arrangement-title"
     >

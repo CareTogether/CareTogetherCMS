@@ -86,7 +86,7 @@ export function EditChildDialog({
   return (
     <Dialog
       open={handle.open}
-      onClose={(event: object | undefined, reason: string) =>
+      onClose={(_, reason: string) =>
         !isBackdropClick(reason) ? handle.closeDialog : {}
       }
       fullWidth

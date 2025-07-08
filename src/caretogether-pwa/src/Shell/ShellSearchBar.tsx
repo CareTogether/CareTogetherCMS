@@ -14,12 +14,10 @@ import {
 import SearchIcon from '@mui/icons-material/Search';
 import { useLoadable } from '../Hooks/useLoadable';
 import { familyNameString } from '../Families/FamilyName';
-import { Address, CombinedFamilyInfo, PhoneNumber } from '../GeneratedClient';
+import { CombinedFamilyInfo } from '../GeneratedClient';
 import { visibleFamiliesQuery } from '../Model/Data';
 import { useAppNavigate } from '../Hooks/useAppNavigate';
 import { personNameString } from '../Families/PersonName';
-import { Email, Phone } from '@mui/icons-material';
-import { AddressFormFields } from '../Families/AddressEditor';
 
 interface ShellSearchBarProps {
   openMobileSearch: boolean;

@@ -16,6 +16,9 @@ interface ArrangementPlannedDurationProps {
   referralId: string;
   arrangement: Arrangement;
   summaryOnly?: boolean;
+  cancelButton?: React.ReactNode;
+  startButton?: React.ReactNode;
+  endButton?: React.ReactNode;
 }
 
 function Cell({ children }: { children: React.ReactNode }) {

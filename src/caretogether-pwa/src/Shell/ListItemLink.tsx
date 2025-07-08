@@ -57,6 +57,11 @@ export function ListItemLink(props: ListItemLinkCollapsibleProps) {
 
   const hasSubitems = subitems && subitems.length > 0;
 
+  // TODO: Those names are a bit confusing, we should rename them
+  const desktopColor = selected ? '#fff' : '#fff8';
+  const mobileColor = '#555';
+  const color = darkColor ? mobileColor : desktopColor;
+
   return (
     <>
       <li className={className}>
@@ -106,7 +111,7 @@ export function ListItemLink(props: ListItemLinkCollapsibleProps) {
             <li className="ph-unmask" key={item.label}>
               <ListItemButton
                 selected={item.isActive}
-                sx={{ paddingLeft: 1.5, color: '#fff8' }}
+                sx={{ paddingLeft: 1.5 }}
                 onClick={item.onClick}
               >
                 {/* {icon ? <ListItemIcon>{icon}</ListItemIcon> : null} */}
@@ -114,7 +119,7 @@ export function ListItemLink(props: ListItemLinkCollapsibleProps) {
                   primary={item.label}
                   sx={{
                     marginLeft: 6,
-                    color: item.isActive ? '#fff' : undefined,
+                    color: item.isActive ? '#fff' : '#fff8',
                   }}
                 />
               </ListItemButton>
