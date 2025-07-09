@@ -1,4 +1,4 @@
-import { TextField, Autocomplete } from '@mui/material';
+import { TextField, Autocomplete, AutocompleteProps } from '@mui/material';
 import {
   Controller,
   Control,
@@ -11,6 +11,8 @@ import {
 interface ICustomTextFieldProps<T extends FieldValues> {
   name: Path<T>;
   label: string;
+  freeSolo?: boolean;
+  fullWidth?: boolean;
   rules?: RegisterOptions<T>;
   control?: Control<T>;
   defaultValue?: PathValue<T, Path<T>>;
@@ -23,6 +25,8 @@ interface ICustomTextFieldProps<T extends FieldValues> {
 export function CTAutocomplete<T extends FieldValues>({
   name,
   label,
+  freeSolo = false,
+  fullWidth = false,
   control,
   options = [],
   helperText,
@@ -41,7 +45,7 @@ export function CTAutocomplete<T extends FieldValues>({
             },
           }}
           multiple
-          freeSolo
+          freeSolo={freeSolo}
           options={options}
           renderInput={(params) => {
             console.log(params);
@@ -49,13 +53,13 @@ export function CTAutocomplete<T extends FieldValues>({
               <TextField
                 {...params}
                 sx={{ minWidth: minOverallWidth }}
-                fullWidth={false}
+                fullWidth={fullWidth}
                 label={label}
                 helperText={helperText}
               />
             );
           }}
-          size="small"
+          // size="small"
           {...field}
           onChange={(_, newValue) => field.onChange(newValue)}
         />

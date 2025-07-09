@@ -1,47 +1,39 @@
 import { Stack, Typography } from '@mui/material';
 
-type Props = {
-  activeTab: 'basic' | 'actions' | 'policies';
-  onTabChange: (tab: 'basic' | 'actions' | 'policies') => void;
-  showActionsTab: boolean;
-  showPoliciesTab: boolean;
+type Props<T> = {
+  tabs: {
+    id: T;
+    label: string;
+    shouldShow?: boolean;
+  }[];
+  activeTab: T;
+  onTabChange: (tab: T) => void;
 };
 
-const tabs = [
-  { key: 'basic', label: 'Basic configuration' },
-  { key: 'actions', label: 'Action definitions' },
-  { key: 'policies', label: 'Approval policies' },
-];
-
-export default function SettingsTabMenu({
+export default function SettingsTabMenu<T>({
+  tabs,
   activeTab,
   onTabChange,
-  showActionsTab,
-  showPoliciesTab,
-}: Props) {
-  const filteredTabs = tabs.filter((tab) => {
-    if (tab.key === 'actions' && !showActionsTab) return false;
-    if (tab.key === 'policies' && !showPoliciesTab) return false;
-    return true;
-  });
+}: Props<T>) {
+  const filteredTabs = tabs.filter((tab) => tab.shouldShow);
 
   return (
     <Stack spacing={2} sx={{ minWidth: 200 }}>
       {filteredTabs.map((tab) => (
         <Typography
-          key={tab.key}
+          key={String(tab.id)}
           variant="body1"
           sx={{
             cursor: 'pointer',
-            fontWeight: activeTab === tab.key ? 'bold' : 'normal',
-            color: activeTab === tab.key ? 'primary.main' : 'text.primary',
+            fontWeight: activeTab === tab.id ? 'bold' : 'normal',
+            color: activeTab === tab.id ? 'primary.main' : 'text.primary',
             borderLeft:
-              activeTab === tab.key
+              activeTab === tab.id
                 ? '3px solid #1976d2'
                 : '3px solid transparent',
             pl: 2,
           }}
-          onClick={() => onTabChange(tab.key as Props['activeTab'])}
+          onClick={() => onTabChange(tab.id)}
         >
           {tab.label}
         </Typography>
