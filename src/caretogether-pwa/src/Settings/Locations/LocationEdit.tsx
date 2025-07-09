@@ -28,7 +28,7 @@ import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import { useFeatureFlagEnabled } from 'posthog-js/react';
 import { useUserIsOrganizationAdministrator } from '../../Model/SessionModel';
 import { useAppNavigate } from '../../Hooks/useAppNavigate';
-import OtherPolicies from './Tabs/OtherPolicies';
+import OtherPolicies from './Tabs/OtherPolicies/OtherPolicies';
 
 export function LocationEdit() {
   const { locationId } = useParams<{ locationId: string }>();

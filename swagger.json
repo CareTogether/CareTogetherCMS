@@ -1220,6 +1220,10 @@
         "type": "object",
         "additionalProperties": false,
         "properties": {
+          "id": {
+            "type": "string",
+            "format": "guid"
+          },
           "name": {
             "type": "string"
           },

@@ -1380,6 +1380,7 @@ export interface ISourcePhoneNumberConfiguration {
 }
 
 export class AccessLevel implements IAccessLevel {
+    id?: string;
     name?: string;
     organizationRoles?: string[];
     approvalRoles?: string[];
@@ -1395,6 +1396,7 @@ export class AccessLevel implements IAccessLevel {
 
     init(_data?: any) {
         if (_data) {
+            this.id = _data["id"];
             this.name = _data["name"];
             if (Array.isArray(_data["organizationRoles"])) {
                 this.organizationRoles = [] as any;
@@ -1418,6 +1420,7 @@ export class AccessLevel implements IAccessLevel {
 
     toJSON(data?: any) {
         data = typeof data === 'object' ? data : {};
+        data["id"] = this.id;
         data["name"] = this.name;
         if (Array.isArray(this.organizationRoles)) {
             data["organizationRoles"] = [];
@@ -1434,6 +1437,7 @@ export class AccessLevel implements IAccessLevel {
 }
 
 export interface IAccessLevel {
+    id?: string;
     name?: string;
     organizationRoles?: string[];
     approvalRoles?: string[];
