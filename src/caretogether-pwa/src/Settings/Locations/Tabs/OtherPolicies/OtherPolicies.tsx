@@ -13,10 +13,6 @@ import {
   TableRow,
 } from '@mui/material';
 import { useRecoilValue } from 'recoil';
-import {
-  LocationConfiguration,
-  AccessLevel,
-} from '../../../../GeneratedClient';
 import { locationConfigurationQuery } from '../../../../Model/ConfigurationModel';
 import { useState } from 'react';
 import SearchIcon from '@mui/icons-material/Search';
@@ -39,12 +35,7 @@ export type AvailableOptions = {
   arrangementReasons: string[];
 };
 
-type Props = {
-  data: ConfigurationData;
-  currentLocationDefinition: LocationConfiguration;
-};
-
-export default function OtherPolicies({}: Props) {
+export default function OtherPolicies() {
   const location = useRecoilValue(locationConfigurationQuery);
   const accessLevels = location?.accessLevels;
 
