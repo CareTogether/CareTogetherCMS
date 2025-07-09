@@ -84,6 +84,36 @@ namespace CareTogether.TestData
         private static Guid Id(char x) =>
             Guid.Parse("xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx".Replace('x', x));
 
+        /// <summary>
+        /// Generates a Guid by filling the standard Guid template with hexadecimal characters from the provided string.
+        /// Only characters 0-9, a-f, and A-F are used; all others are ignored. The string is repeated as needed to fill the template.
+        /// </summary>
+        /// <param name="s">A string containing one or more hexadecimal characters.</param>
+        /// <returns>A Guid constructed from the provided hexadecimal characters.</returns>
+        /// <exception cref="ArgumentException">Thrown if the input string contains no hexadecimal characters.</exception>
+        /// <example>
+        /// Id("a") => aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa
+        /// Id("123") => 12312312-3123-1231-2312-312312312312
+        /// Id("deadbeef") => deadbeef-dead-beef-dead-beefdeadbeef
+        /// Id("abcxyz") => abcabcab-cabc-abca-bcab-cabcabcabcab (x, y, z ignored)
+        /// Id("g123") => 12312312-3123-1231-2312-312312312312 ('g' ignored)
+        /// </example>
+        private static Guid Id(string s)
+        {
+            const string template = "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx";
+            // Filter only hexadecimal characters
+            var hex = new string(s.Where(c => "0123456789abcdefABCDEF".Contains(c)).ToArray());
+            if (string.IsNullOrEmpty(hex))
+                throw new ArgumentException(
+                    "Input string must contain at least one hexadecimal character.",
+                    nameof(s)
+                );
+            var filled = string.Concat(
+                template.Select((c, i) => c == 'x' ? hex[i % hex.Length] : c)
+            );
+            return Guid.Parse(filled);
+        }
+
         static readonly Guid guid0 = Id('0');
         static readonly Guid guid1 = Id('1');
         static readonly Guid guid2 = Id('2');
@@ -97,11 +127,12 @@ namespace CareTogether.TestData
         static readonly Guid guidA = Id('a');
         static readonly Guid guidB = Id('b');
         static readonly Guid guidC = Id('c');
+        static readonly Guid guidD = Id('d');
         static readonly Guid adminId = Guid.Parse("2b87864a-63e3-4406-bcbc-c0068a13ac05");
         static readonly Guid volunteerId = Guid.Parse("e3aaef77-0e97-47a6-b788-a67c237c781e");
         static readonly Guid volunteerId2 = Guid.Parse("ca662f2b-270a-4a8b-baa7-c109eadbb133");
-        static readonly Guid noteId1 = Guid.NewGuid();
-        static readonly Guid noteId2 = Guid.NewGuid();
+        static readonly Guid noteId1 = Id("note1");
+        static readonly Guid noteId2 = Id("note2");
 
         // Fisher family
         static readonly Guid michaelFisherGuid = Guid.Parse("f6020665-6f2e-4c93-8673-8770f35f1609");
@@ -2311,7 +2342,7 @@ namespace CareTogether.TestData
                                         Permission.TrackChildLocationChange,
                                         Permission.ViewPersonConcerns,
                                         Permission.ViewPersonNotes,
-                                        Permission.ViewAllNotes
+                                        Permission.ViewAllNotes,
                                     ]
                                 ),
                                 new ContextualPermissionSet(
