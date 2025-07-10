@@ -21,7 +21,7 @@ import NavigateNextIcon from '@mui/icons-material/NavigateNext';
 import { Box } from '@mui/system';
 import BasicConfiguration from './Tabs/BasicConfiguration';
 import ActionDefinitions from './Tabs/ActionDefinitions';
-import ApprovalPolicies from './Tabs/ApprovalPolicies';
+import ApprovalPolicies from './Tabs/ApprovalPolicies/ApprovalPolicies';
 import SettingsTabMenu from './SettingsTabMenu';
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
