@@ -46,7 +46,19 @@ export default function OtherPolicies() {
   const [page, setPage] = useState(0);
   const rowsPerPage = 5;
 
-  const { SidePanel, openSidePanel, closeSidePanel } = useSidePanel();
+  // We use two side panels here: one for adding a new access level and one for editing an existing one.
+  // This way, the side panel for Adding is always clean (without pre-filled data).
+  const {
+    SidePanel: SidePanelAdd,
+    openSidePanel: openSidePanelAdd,
+    closeSidePanel: closeSidePanelAdd,
+  } = useSidePanel();
+
+  const {
+    SidePanel: SidePanelEdit,
+    openSidePanel: openSidePanelEdit,
+    closeSidePanel: closeSidePanelEdit,
+  } = useSidePanel();
   const [workingAccessLevel, setWorkingAccessLevel] =
     useState<AccessLevelData | null>(null);
 
@@ -106,7 +118,7 @@ export default function OtherPolicies() {
                     name: name!,
                     organizationRoles: organizationRoles!,
                   });
-                  openSidePanel();
+                  openSidePanelEdit();
                 }}
               >
                 <TableCell>{name}</TableCell>
@@ -136,20 +148,27 @@ export default function OtherPolicies() {
           <Button
             sx={{ marginY: 2 }}
             variant="contained"
-            onClick={() => openSidePanel()}
+            onClick={() => openSidePanelAdd()}
           >
             Add new Access Level
           </Button>
 
-          <SidePanel>
+          <SidePanelAdd>
+            <AddAccessLevel
+              onClose={() => {
+                closeSidePanelAdd();
+              }}
+            />
+          </SidePanelAdd>
+
+          <SidePanelEdit>
             <AddAccessLevel
               data={workingAccessLevel || undefined}
               onClose={() => {
-                setWorkingAccessLevel(null);
-                closeSidePanel();
+                closeSidePanelEdit();
               }}
             />
-          </SidePanel>
+          </SidePanelEdit>
         </>
       )}
     </Box>
