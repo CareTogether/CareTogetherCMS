@@ -346,27 +346,27 @@ DTO RetrieveRecordsResponse {
 }
 
 DTO Family {
-  Guid Id,
-  Guid LocationId,
-  string Name,
-  string? PrimaryEmail,
-  string? PrimaryPhoneNumber,
-  Address? PrimaryAddress,
+  Guid Id
+  Guid LocationId
+  string Name
+  string? PrimaryEmail
+  string? PrimaryPhoneNumber
+  Address? PrimaryAddress
   string? HomeChurch
 }
 
 DTO Address {
-  string? Line1,
-  string? Line2,
-  string? City,
-  string? Country,
-  string? State,
+  string? Line1
+  string? Line2
+  string? City
+  string? Country
+  string? State
   string? PostalCode
 }
 
 DTO Community {
-    Guid Id,
-    Guid LocationId,
+    Guid Id
+    Guid LocationId
     string Name
 }
 
@@ -375,7 +375,7 @@ DTO Organization {}
 DTO ContextualPermissions {
   AuthorizationContext Context
   string[] AllowedActions
-  Account Account,
+  Account Account
 }
 
 DTO RecordsDisclosureRequest {
@@ -579,12 +579,12 @@ DTO TrackChildLocationChange {
 DTO StoreChildLocationEntryResponse { }
 
 DTO ChildLocationEntry {
-    Guid ArrangementId,
-    Guid ChildPersonId,
-    Guid FamilyId,
-    DateTime StartedAtUtc,
-    ChildLocationPlan ChildcarePlan,
-    DateTime? EnededAtUtc,
+    Guid ArrangementId
+    Guid ChildPersonId
+    Guid FamilyId
+    DateTime StartedAtUtc
+    ChildLocationPlan ChildcarePlan
+    DateTime? EnededAtUtc
     TimeSpan Duration
 }
 
@@ -658,69 +658,69 @@ DTO CreateArrangementRequest { }
 DTO StoreArrangementEntryResponse { }
 
 DTO ArrangementEntry {
-    Guid Id,
-    string ArrangementType,
-    bool Active,
-    DateTime RequestedAtUtc,
-    DateTime? StartedAtUtc,
-    DateTime? EndedAtUtc,
-    DateTime? CancelledAtUtc,
-    DateTime? PlannedStartUtc,
-    DateTime? PlannedEndUtc,
-    Guid PartneringFamilyPersonId,
-    ImmutableList<CompletedRequirementInfo> CompletedRequirements,
-    ImmutableList<ExemptedRequirementInfo> ExemptedRequirements,
-    ImmutableList<IndividualVolunteerAssignment> IndividualVolunteerAssignments,
-    ImmutableList<FamilyVolunteerAssignment> FamilyVolunteerAssignments,
-    ImmutableSortedSet<ChildLocationHistoryEntry> ChildLocationHistory,
-    ImmutableSortedSet<ChildLocationHistoryEntry> ChildLocationPlan,
-    string? Comments,
+    Guid Id
+    string ArrangementType
+    bool Active
+    DateTime RequestedAtUtc
+    DateTime? StartedAtUtc
+    DateTime? EndedAtUtc
+    DateTime? CancelledAtUtc
+    DateTime? PlannedStartUtc
+    DateTime? PlannedEndUtc
+    Guid PartneringFamilyPersonId
+    ImmutableList<CompletedRequirementInfo> CompletedRequirements
+    ImmutableList<ExemptedRequirementInfo> ExemptedRequirements
+    ImmutableList<IndividualVolunteerAssignment> IndividualVolunteerAssignments
+    ImmutableList<FamilyVolunteerAssignment> FamilyVolunteerAssignments
+    ImmutableSortedSet<ChildLocationHistoryEntry> ChildLocationHistory
+    ImmutableSortedSet<ChildLocationHistoryEntry> ChildLocationPlan
+    string? Comments
     string? Reason
 }
 
 DTO CompletedRequirementInfo {
-    Guid UserId,
-    DateTime TimestampUtc,
-    Guid CompletedRequirementId,
-    string RequirementName,
-    DateTime CompletedAtUtc,
-    DateTime? ExpiresAtUtc,
-    Guid? UploadedDocumentId,
+    Guid UserId
+    DateTime TimestampUtc
+    Guid CompletedRequirementId
+    string RequirementName
+    DateTime CompletedAtUtc
+    DateTime? ExpiresAtUtc
+    Guid? UploadedDocumentId
     Guid? NoteId
 }
 
 DTO ExemptedRequirementInfo {
-    Guid UserId,
-    DateTime TimestampUtc,
-    string RequirementName,
-    DateTime? DueDate,
-    string AdditionalComments,
+    Guid UserId
+    DateTime TimestampUtc
+    string RequirementName
+    DateTime? DueDate
+    string AdditionalComments
     DateTime? ExemptionExpiresAtUtc
 }
 
 DTO IndividualVolunteerAssignment {
-    Guid FamilyId,
-    Guid PersonId,
-    string ArrangementFunction,
-    string? ArrangementFunctionVariant,
-    ImmutableList<CompletedRequirementInfo> CompletedRequirements,
+    Guid FamilyId
+    Guid PersonId
+    string ArrangementFunction
+    string? ArrangementFunctionVariant
+    ImmutableList<CompletedRequirementInfo> CompletedRequirements
     ImmutableList<ExemptedRequirementInfo> ExemptedRequirements
 }
 
 DTO FamilyVolunteerAssignment {
-    Guid FamilyId,
-    string ArrangementFunction,
-    string? ArrangementFunctionVariant,
-    ImmutableList<CompletedRequirementInfo> CompletedRequirements,
+    Guid FamilyId
+    string ArrangementFunction
+    string? ArrangementFunctionVariant
+    ImmutableList<CompletedRequirementInfo> CompletedRequirements
     ImmutableList<ExemptedRequirementInfo> ExemptedRequirements
 }
 
 DTO ChildLocationHistoryEntry {
-    Guid UserId,
-    DateTime TimestampUtc,
-    Guid ChildLocationFamilyId,
-    Guid ChildLocationReceivingAdultId,
-    ChildLocationPlan Plan,
+    Guid UserId
+    DateTime TimestampUtc
+    Guid ChildLocationFamilyId
+    Guid ChildLocationReceivingAdultId
+    ChildLocationPlan Plan
     Guid? NoteId
 }
 
@@ -737,37 +737,37 @@ DTO FamilyRecordParameters /* : RecordParameters */ {
 }
 
 DTO AddFamilyMemberRequest {
-  Person Person,
+  Person Person
   Guid FamilyId
   FamilyAdultRelationshipInfo RelationToFamily
 }
 
 DTO Person {
-  Guid PersonId,
-  string FirstName,
-  string LastName,
-  Gender? Gender,
-  Age? Age,
-  string? Ethnicity,
-  ImmutableList<Address> Addresses,
-  Guid? CurrentAddressId,
-  ImmutableList<PhoneNumber> PhoneNumbers,
-  Guid? PreferredPhoneNumberId,
-  ImmutableList<EmailAddress> EmailAddresses,
-  Guid? PreferredEmailAddressId,
-  string? Concerns,
+  Guid PersonId
+  string FirstName
+  string LastName
+  Gender? Gender
+  Age? Age
+  string? Ethnicity
+  ImmutableList<Address> Addresses
+  Guid? CurrentAddressId
+  ImmutableList<PhoneNumber> PhoneNumbers
+  Guid? PreferredPhoneNumberId
+  ImmutableList<EmailAddress> EmailAddresses
+  Guid? PreferredEmailAddressId
+  string? Concerns
   string? Notes
 }
 
 DTO AddPersonToFamily {
-  Guid PersonId,
-  Guid FamilyId,
+  Guid PersonId
+  Guid FamilyId
   FamilyAdultRelationshipInfo RelationToFamily
 }
 
 DTO AddChildToFamily {
-  Guid PersonId,
-  Guid FamilyId,
+  Guid PersonId
+  Guid FamilyId
   FamilyAdultRelationshipInfo RelationToFamily
 }
 
@@ -780,9 +780,9 @@ DTO ArchivePersonCriteria {
 }
 
 DTO ChangePersonFamilyRequest {
-    Guid PersonId,
-    Guid OriginalFamilyId,
-    Guid TargetFamilyId,
+    Guid PersonId
+    Guid OriginalFamilyId
+    Guid TargetFamilyId
 }
 
 /* ====================================================== */
@@ -989,7 +989,7 @@ UseCase "M1: Sign Up as a User (copy)" {
   a new organization.
   Signing up for an account without a connection to an organization makes no sense.
   @@@
-  WebClient - IMembershipManager.SignUpUser(/*Guid*/ InvitationId) > MembershipManager
+  WebClient - IMembershipManager.SignUpUser(InvitationId) > MembershipManager
     MembershipManager - INetworkAccess.RedeemOrganizationInvitationTableEntry() > NetworkAccess -> NetworkResource
     MembershipManager - Account IAccountsAccess.GetOrCreateUserAccount(ClaimsPrincipal) > AccountsAccess -> AccountsResource
   
@@ -1009,7 +1009,7 @@ UseCase "M1: Sign Up as a User (copy 2)" {
   a new organization.
   Signing up for an account without a connection to an organization makes no sense.
   @@@
-  WebClient - IMembershipManager.SignUpUser(/*Guid*/ InvitationId) > MembershipManager
+  WebClient - IMembershipManager.SignUpUser(InvitationId) > MembershipManager
 
     /* This steps occurs in the backend or in the browser? */
     MembershipManager - ISecurityUtility.CreateUserIdentity() > SecurityUtility
@@ -1071,7 +1071,7 @@ UseCase "M2: Sign Up an Organization" {
   the same invite link and immediately prior to this step.
   The leader MUST have an invite link that grants them the ability to sign up their specific organization.
   @@@
-  WebClient - IMembershipManager.SignUpOrganization(/*Guid*/ OrganizationInvitationId) > MembershipManager
+  WebClient - IMembershipManager.SignUpOrganization(OrganizationInvitationId) > MembershipManager
     /* We cannot authorize this particular use case on the basis of organizational policies, because the
        organization itself does not exist at the beginning of the use case.
        The security checks are therefore very basic. */
