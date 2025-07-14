@@ -18,10 +18,11 @@ To make human services more relational.
 7. Build a network of partnering human services organizations that can provide wrap-around support to participants in a geographic area.
 8. Empower partners and AI agents to fully leverage the platform.
 9. Provide the highest quality user experience in the industry for all users.
-10. Build the capacity to serve the ~300,000 human services organizations in the United States and supporting global use.
+10. Build the capacity to serve the ~300,000 human services organizations in the United States and support global use.
 11. Enable longitudinal studies of human services outcomes and impact in order to identify and share best practices with organizations.
 12. Provide an avenue for self-insurance.
 13. Assist organizations in networking based on insights into relevant potential partners.
+14. Empower clients to maintain effective control of their personal data.
 
 ## Vision
 
@@ -38,25 +39,25 @@ The following terms need to be understood and used consistently throughout both 
 ## Voice
 These terms capture the "brand voice" of CareTogether. They MUST be used only with the exact meanings that they are given here.
 
-- **Relational** - an approach to human services that emphasizes transformation via relationships, as opposed to a *transactional* approach that often fails to achieve lasting change. See [The Rise of Antipoverty Relational Work
+- **Relational** - an approach to human services that emphasizes transformation via relationships, as opposed to a merely *transactional* approach that often fails to achieve lasting change. See [The Rise of Antipoverty Relational Work
 (Stanford Social Innovation Review, 2015)](https://ssir.org/articles/entry/the_rise_of_antipoverty_relational_work).
 
 ## Who?
 - **Organizations** are human services organizations. Organizations can be formally or informally organized. Formal organizations include both nonprofit and for-profit private-sector organizations as well as government organizations.
-- **Locations** are geographically focused areas in which a specific group of people within an organization serve participants (perhaps under more than one program). Locations do not have a strict definition, but they are best defined by travel time, i.e., they should be small enough that the people who serve the participants within that location can physically interact. For example, two cities (or counties, or parts of a larger metropolitan area) that are separated by more than an hour or two of travel time should typically be separate locations. A _case_ is always tied to a single location.
-- **Programs** are the actual services, comprised of policies and procedures, that an organization offers to its participants. The mapping between locations and programs is N-to-M: multiple programs within the same location can serve the same participants, and an organization may not offer the same programs at all of its locations. Program policies and procedures can vary by location.
+- **Locations** are geographically focused areas in which a specific group of people within an organization serve clients (perhaps under more than one program). Locations do not have a strict definition, but they are best defined by travel time, i.e., they should be small enough that the people who serve the clients within that location can physically interact. For example, two cities (or counties, or parts of a larger metropolitan area) that are separated by more than an hour or two of travel time should typically be separate locations. A _case_ is always tied to a single location.
+- **Programs** are the actual services, comprised of policies and procedures, that an organization offers to its clients. The mapping between locations and programs is N-to-M: multiple programs within the same location can serve the same clients, and an organization may not offer the same programs at all of its locations. Program policies and procedures can vary by location.
 - Policies
 - Procedures
 - Staff
 - Volunteers
-- **participants** (sometimes referred to as partnering families) ...
+- **Clients** - Unfortunately in the IDesign Method, and software architecture generally, the term 'Client' is used for a specific technical purpose that is unrelated to this idea of a **program participant**, someone who is receiving the services offered by an HSO. However, the term **client** is the predominant (universally accepted) term in the human services sector. Thus, when talking about the _domain_, we refer to **clients**.
 - Referral Partner - another HSO that agrees to receive outbound referrals made by an HSO and/or provides inbound referrals to an HSO
 
 ## What?
 
-Membership of organizations, staff, volunteers, and participants
-Processes for following the organization's policies and procedures
-Communication with staff, volunteers, participants, and referral partners
+- **Membership** of organizations, staff, volunteers, and participants
+- **Processes** for following the organization's policies and procedures
+- **Communication** with staff, volunteers, participants, and referral partners
 
 ## How?
 
@@ -81,7 +82,13 @@ Role
 
 Arrangement
 
-(Arrangement) Function
+(Referral, Case, Arrangement) Function
+
+(Function) Assignment
+
+Community
+
+Community Members
 
 @@@
 }
