@@ -676,7 +676,7 @@ namespace CareTogether.Engines.Authorization
                     : ImmutableList<Resources.ExemptedRequirementInfo>.Empty,
                 MissingRequirements = contextPermissions.Contains(Permission.ViewReferralProgress)
                     ? referral.MissingRequirements
-                    : ImmutableList<string>.Empty,
+                    : ImmutableList<MissingRequirement>.Empty,
                 CloseReason = contextPermissions.Contains(Permission.ViewReferralComments)
                     ? referral.CloseReason
                     : null,

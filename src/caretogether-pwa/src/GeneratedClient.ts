@@ -2437,7 +2437,7 @@ export enum CustomFieldValidation {
 }
 
 export class ReferralPolicy implements IReferralPolicy {
-    requiredIntakeActionNames?: string[];
+    intakeRequirements?: IntakeRequirement[];
     customFields?: CustomField[];
     arrangementPolicies?: ArrangementPolicy[];
     functionPolicies?: FunctionPolicy[] | undefined;
@@ -2453,10 +2453,10 @@ export class ReferralPolicy implements IReferralPolicy {
 
     init(_data?: any) {
         if (_data) {
-            if (Array.isArray(_data["requiredIntakeActionNames"])) {
-                this.requiredIntakeActionNames = [] as any;
-                for (let item of _data["requiredIntakeActionNames"])
-                    this.requiredIntakeActionNames!.push(item);
+            if (Array.isArray(_data["intakeRequirements"])) {
+                this.intakeRequirements = [] as any;
+                for (let item of _data["intakeRequirements"])
+                    this.intakeRequirements!.push(IntakeRequirement.fromJS(item));
             }
             if (Array.isArray(_data["customFields"])) {
                 this.customFields = [] as any;
@@ -2485,10 +2485,10 @@ export class ReferralPolicy implements IReferralPolicy {
 
     toJSON(data?: any) {
         data = typeof data === 'object' ? data : {};
-        if (Array.isArray(this.requiredIntakeActionNames)) {
-            data["requiredIntakeActionNames"] = [];
-            for (let item of this.requiredIntakeActionNames)
-                data["requiredIntakeActionNames"].push(item);
+        if (Array.isArray(this.intakeRequirements)) {
+            data["intakeRequirements"] = [];
+            for (let item of this.intakeRequirements)
+                data["intakeRequirements"].push(item.toJSON());
         }
         if (Array.isArray(this.customFields)) {
             data["customFields"] = [];
@@ -2510,10 +2510,50 @@ export class ReferralPolicy implements IReferralPolicy {
 }
 
 export interface IReferralPolicy {
-    requiredIntakeActionNames?: string[];
+    intakeRequirements?: IntakeRequirement[];
     customFields?: CustomField[];
     arrangementPolicies?: ArrangementPolicy[];
     functionPolicies?: FunctionPolicy[] | undefined;
+}
+
+export class IntakeRequirement implements IIntakeRequirement {
+    actionName?: string;
+    isRequired?: boolean;
+
+    constructor(data?: IIntakeRequirement) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.actionName = _data["actionName"];
+            this.isRequired = _data["isRequired"];
+        }
+    }
+
+    static fromJS(data: any): IntakeRequirement {
+        data = typeof data === 'object' ? data : {};
+        let result = new IntakeRequirement();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["actionName"] = this.actionName;
+        data["isRequired"] = this.isRequired;
+        return data;
+    }
+}
+
+export interface IIntakeRequirement {
+    actionName?: string;
+    isRequired?: boolean;
 }
 
 export class ArrangementPolicy implements IArrangementPolicy {
@@ -5133,7 +5173,7 @@ export class Referral implements IReferral {
     closeReason?: ReferralCloseReason | undefined;
     completedRequirements?: CompletedRequirementInfo[];
     exemptedRequirements?: ExemptedRequirementInfo[];
-    missingRequirements?: string[];
+    missingRequirements?: MissingRequirement[];
     completedCustomFields?: CompletedCustomFieldInfo[];
     missingCustomFields?: string[];
     arrangements?: Arrangement[];
@@ -5167,7 +5207,7 @@ export class Referral implements IReferral {
             if (Array.isArray(_data["missingRequirements"])) {
                 this.missingRequirements = [] as any;
                 for (let item of _data["missingRequirements"])
-                    this.missingRequirements!.push(item);
+                    this.missingRequirements!.push(MissingRequirement.fromJS(item));
             }
             if (Array.isArray(_data["completedCustomFields"])) {
                 this.completedCustomFields = [] as any;
@@ -5214,7 +5254,7 @@ export class Referral implements IReferral {
         if (Array.isArray(this.missingRequirements)) {
             data["missingRequirements"] = [];
             for (let item of this.missingRequirements)
-                data["missingRequirements"].push(item);
+                data["missingRequirements"].push(item.toJSON());
         }
         if (Array.isArray(this.completedCustomFields)) {
             data["completedCustomFields"] = [];
@@ -5243,7 +5283,7 @@ export interface IReferral {
     closeReason?: ReferralCloseReason | undefined;
     completedRequirements?: CompletedRequirementInfo[];
     exemptedRequirements?: ExemptedRequirementInfo[];
-    missingRequirements?: string[];
+    missingRequirements?: MissingRequirement[];
     completedCustomFields?: CompletedCustomFieldInfo[];
     missingCustomFields?: string[];
     arrangements?: Arrangement[];
@@ -5376,6 +5416,46 @@ export interface IExemptedRequirementInfo {
     dueDate?: Date | undefined;
     additionalComments?: string;
     exemptionExpiresAtUtc?: Date | undefined;
+}
+
+export class MissingRequirement implements IMissingRequirement {
+    actionName?: string;
+    isRequired?: boolean;
+
+    constructor(data?: IMissingRequirement) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.actionName = _data["actionName"];
+            this.isRequired = _data["isRequired"];
+        }
+    }
+
+    static fromJS(data: any): MissingRequirement {
+        data = typeof data === 'object' ? data : {};
+        let result = new MissingRequirement();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["actionName"] = this.actionName;
+        data["isRequired"] = this.isRequired;
+        return data;
+    }
+}
+
+export interface IMissingRequirement {
+    actionName?: string;
+    isRequired?: boolean;
 }
 
 export class Arrangement implements IArrangement {

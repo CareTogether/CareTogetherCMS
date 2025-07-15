@@ -2672,7 +2672,11 @@ namespace CareTogether.TestData
                     ),
                 ],
                 new ReferralPolicy(
-                    ["Request for Help Form", "Intake Coordinator Screening Call", "Intake Form"],
+                    [
+                        new RequirementDefinition("Request for Help Form", false),
+                        new RequirementDefinition("Intake Coordinator Screening Call", true),
+                        new RequirementDefinition("Intake Form", true),
+                    ],
                     [
                         new CustomField(
                             "Referral Source",

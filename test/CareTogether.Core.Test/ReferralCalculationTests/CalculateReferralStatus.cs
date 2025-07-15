@@ -24,7 +24,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
         static readonly Guid guid6 = Id('6');
 
         static ReferralPolicy referralPolicy = new ReferralPolicy(
-            RequiredIntakeActionNames: Helpers.From(),
+            IntakeRequirements: [],
             CustomFields: ImmutableList<CustomField>.Empty,
             ArrangementPolicies: ImmutableList<ArrangementPolicy>
                 .Empty.Add(

@@ -1833,10 +1833,10 @@
         "type": "object",
         "additionalProperties": false,
         "properties": {
-          "requiredIntakeActionNames": {
+          "intakeRequirements": {
             "type": "array",
             "items": {
-              "type": "string"
+              "$ref": "#/components/schemas/IntakeRequirement"
             }
           },
           "customFields": {
@@ -1857,6 +1857,18 @@
             "items": {
               "$ref": "#/components/schemas/FunctionPolicy"
             }
+          }
+        }
+      },
+      "IntakeRequirement": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "actionName": {
+            "type": "string"
+          },
+          "isRequired": {
+            "type": "boolean"
           }
         }
       },
@@ -3164,7 +3176,7 @@
           "missingRequirements": {
             "type": "array",
             "items": {
-              "type": "string"
+              "$ref": "#/components/schemas/MissingRequirement"
             }
           },
           "completedCustomFields": {
@@ -3276,6 +3288,18 @@
             "type": "string",
             "format": "date-time",
             "nullable": true
+          }
+        }
+      },
+      "MissingRequirement": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "actionName": {
+            "type": "string"
+          },
+          "isRequired": {
+            "type": "boolean"
           }
         }
       },
