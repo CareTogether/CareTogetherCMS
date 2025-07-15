@@ -16,10 +16,10 @@ namespace CareTogether.Engines.PolicyEvaluation
         )
         {
             var missingIntakeRequirements = referralPolicy
-                .RequiredIntakeActionNames.Where(requiredAction =>
+                .IntakeRequirements.Where(requirement =>
                     !SharedCalculations
                         .RequirementMetOrExempted(
-                            requiredAction,
+                            requirement.ActionName,
                             policySupersededAt: null,
                             today,
                             completedRequirements: referralEntry.CompletedRequirements,
@@ -27,6 +27,10 @@ namespace CareTogether.Engines.PolicyEvaluation
                         )
                         .IsMetOrExempted
                 )
+                .Select(requirement => new MissingRequirement(
+                    requirement.ActionName,
+                    requirement.IsRequired
+                ))
                 .ToImmutableList();
 
             var missingCustomFields = referralPolicy

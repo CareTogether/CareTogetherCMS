@@ -337,8 +337,11 @@ namespace CareTogether.Engines.PolicyEvaluation
         Denied = 6,
     };
 
+
+    public sealed record MissingRequirement(string ActionName, bool IsRequired);
+
     public sealed record ReferralStatus(
-        ImmutableList<string> MissingIntakeRequirements,
+        ImmutableList<MissingRequirement> MissingIntakeRequirements,
         ImmutableList<string> MissingCustomFields,
         ImmutableDictionary<Guid, ArrangementStatus> IndividualArrangements
     );

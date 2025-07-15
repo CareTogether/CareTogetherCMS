@@ -120,8 +120,10 @@ namespace CareTogether.Resources.Policies
         TimeSpan? Validity
     );
 
+    public sealed record RequirementDefinition(string ActionName, bool IsRequired);
+
     public sealed record ReferralPolicy(
-        ImmutableList<string> RequiredIntakeActionNames,
+        ImmutableList<RequirementDefinition> IntakeRequirements,
         ImmutableList<CustomField> CustomFields,
         ImmutableList<ArrangementPolicy> ArrangementPolicies,
         ImmutableList<FunctionPolicy>? FunctionPolicies
