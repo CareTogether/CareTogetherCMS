@@ -10,6 +10,9 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
     [TestClass]
     public class CalculateMissingMonitoringRequirements
     {
+        private static readonly RequirementDefinition RequirementA = new RequirementDefinition("A", true);
+        private static readonly RequirementDefinition RequirementB = new RequirementDefinition("B", true);
+
         public static ArrangementPolicy MonitoringRequirements(
             ImmutableList<MonitoringRequirement> values
         ) =>
@@ -17,9 +20,9 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
                 string.Empty,
                 ChildInvolvement.ChildHousing,
                 ImmutableList<ArrangementFunction>.Empty,
-                ImmutableList<string>.Empty,
+                ImmutableList<RequirementDefinition>.Empty,
                 values,
-                ImmutableList<string>.Empty
+                ImmutableList<RequirementDefinition>.Empty
             );
 
         [TestMethod]
@@ -31,6 +34,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
                         .Empty.Add(
                             new MonitoringRequirement(
                                 "A",
+                                true,
                                 new DurationStagesRecurrencePolicy(
                                     ImmutableList<RecurrencePolicyStage>
                                         .Empty.Add(
@@ -44,6 +48,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
                         .Add(
                             new MonitoringRequirement(
                                 "B",
+                                true,
                                 new DurationStagesRecurrencePolicy(
                                     ImmutableList<RecurrencePolicyStage>.Empty.Add(
                                         new RecurrencePolicyStage(TimeSpan.FromDays(7), null)
@@ -79,6 +84,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
                         .Empty.Add(
                             new MonitoringRequirement(
                                 "A",
+                                true,
                                 new DurationStagesRecurrencePolicy(
                                     ImmutableList<RecurrencePolicyStage>
                                         .Empty.Add(
@@ -92,6 +98,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
                         .Add(
                             new MonitoringRequirement(
                                 "B",
+                                true,
                                 new DurationStagesRecurrencePolicy(
                                     ImmutableList<RecurrencePolicyStage>.Empty.Add(
                                         new RecurrencePolicyStage(TimeSpan.FromDays(7), null)
@@ -122,7 +129,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
                     null,
                     null,
                     null,
-                    "A",
+                    RequirementA,
                     DueBy: null,
                     PastDueSince: H.Date(1, 3)
                 ),
@@ -131,7 +138,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
                     null,
                     null,
                     null,
-                    "A",
+                    RequirementA,
                     DueBy: null,
                     PastDueSince: H.Date(1, 10)
                 ),
@@ -140,7 +147,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
                     null,
                     null,
                     null,
-                    "A",
+                    RequirementA,
                     DueBy: null,
                     PastDueSince: H.Date(1, 17)
                 ),
@@ -149,7 +156,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
                     null,
                     null,
                     null,
-                    "A",
+                    RequirementA,
                     DueBy: null,
                     PastDueSince: H.Date(1, 24)
                 ),
@@ -158,7 +165,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
                     null,
                     null,
                     null,
-                    "A",
+                    RequirementA,
                     DueBy: null,
                     PastDueSince: H.Date(1, 31)
                 ),
@@ -167,7 +174,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
                     null,
                     null,
                     null,
-                    "A",
+                    RequirementA,
                     DueBy: H.Date(2, 14),
                     PastDueSince: null
                 ),
@@ -176,7 +183,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
                     null,
                     null,
                     null,
-                    "B",
+                    RequirementB,
                     DueBy: null,
                     PastDueSince: H.Date(1, 8)
                 ),
@@ -185,7 +192,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
                     null,
                     null,
                     null,
-                    "B",
+                    RequirementB,
                     DueBy: null,
                     PastDueSince: H.Date(1, 15)
                 ),
@@ -194,7 +201,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
                     null,
                     null,
                     null,
-                    "B",
+                    RequirementB,
                     DueBy: null,
                     PastDueSince: H.Date(1, 22)
                 ),
@@ -203,7 +210,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
                     null,
                     null,
                     null,
-                    "B",
+                    RequirementB,
                     DueBy: null,
                     PastDueSince: H.Date(1, 29)
                 ),
@@ -212,7 +219,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
                     null,
                     null,
                     null,
-                    "B",
+                    RequirementB,
                     DueBy: H.Date(2, 5),
                     PastDueSince: null
                 )
@@ -228,6 +235,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
                         .Empty.Add(
                             new MonitoringRequirement(
                                 "A",
+                                true,
                                 new DurationStagesRecurrencePolicy(
                                     ImmutableList<RecurrencePolicyStage>
                                         .Empty.Add(
@@ -241,6 +249,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
                         .Add(
                             new MonitoringRequirement(
                                 "B",
+                                true,
                                 new DurationStagesRecurrencePolicy(
                                     ImmutableList<RecurrencePolicyStage>.Empty.Add(
                                         new RecurrencePolicyStage(TimeSpan.FromDays(7), null)
@@ -271,7 +280,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
                     null,
                     null,
                     null,
-                    "A",
+                    RequirementA,
                     DueBy: null,
                     PastDueSince: H.Date(1, 10)
                 ),
@@ -280,7 +289,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
                     null,
                     null,
                     null,
-                    "A",
+                    RequirementA,
                     DueBy: null,
                     PastDueSince: H.Date(1, 17)
                 ),
@@ -289,7 +298,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
                     null,
                     null,
                     null,
-                    "A",
+                    RequirementA,
                     DueBy: null,
                     PastDueSince: H.Date(1, 24)
                 ),
@@ -298,7 +307,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
                     null,
                     null,
                     null,
-                    "A",
+                    RequirementA,
                     DueBy: null,
                     PastDueSince: H.Date(1, 31)
                 ),
@@ -307,7 +316,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
                     null,
                     null,
                     null,
-                    "A",
+                    RequirementA,
                     DueBy: H.Date(2, 14),
                     PastDueSince: null
                 ),
@@ -316,7 +325,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
                     null,
                     null,
                     null,
-                    "B",
+                    RequirementB,
                     DueBy: null,
                     PastDueSince: H.Date(1, 14)
                 ),
@@ -325,7 +334,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
                     null,
                     null,
                     null,
-                    "B",
+                    RequirementB,
                     DueBy: null,
                     PastDueSince: H.Date(1, 21)
                 ),
@@ -334,7 +343,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
                     null,
                     null,
                     null,
-                    "B",
+                    RequirementB,
                     DueBy: null,
                     PastDueSince: H.Date(1, 28)
                 ),
@@ -343,7 +352,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
                     null,
                     null,
                     null,
-                    "B",
+                    RequirementB,
                     DueBy: H.Date(2, 4),
                     PastDueSince: null
                 )
@@ -359,6 +368,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
                         .Empty.Add(
                             new MonitoringRequirement(
                                 "A",
+                                true,
                                 new DurationStagesRecurrencePolicy(
                                     ImmutableList<RecurrencePolicyStage>
                                         .Empty.Add(
@@ -372,6 +382,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
                         .Add(
                             new MonitoringRequirement(
                                 "B",
+                                true,
                                 new DurationStagesRecurrencePolicy(
                                     ImmutableList<RecurrencePolicyStage>.Empty.Add(
                                         new RecurrencePolicyStage(TimeSpan.FromDays(7), null)
@@ -402,7 +413,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
                     null,
                     null,
                     null,
-                    "A",
+                    RequirementA,
                     DueBy: H.Date(1, 10),
                     PastDueSince: null
                 ),
@@ -411,7 +422,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
                     null,
                     null,
                     null,
-                    "B",
+                    RequirementB,
                     DueBy: H.Date(1, 14),
                     PastDueSince: null
                 )

@@ -59,6 +59,7 @@ namespace CareTogether.Managers
         ImmutableList<Resources.CompletedRequirementInfo> CompletedRequirements,
         ImmutableList<Resources.ExemptedRequirementInfo> ExemptedRequirements,
         ImmutableList<MissingArrangementRequirement> MissingRequirements,
+        ImmutableList<MissingArrangementRequirement> MissingOptionalRequirements,
         ImmutableList<Resources.Referrals.IndividualVolunteerAssignment> IndividualVolunteerAssignments,
         ImmutableList<Resources.Referrals.FamilyVolunteerAssignment> FamilyVolunteerAssignments,
         ImmutableSortedSet<ChildLocationHistoryEntry> ChildLocationHistory,

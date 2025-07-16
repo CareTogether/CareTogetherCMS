@@ -60,7 +60,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
                 endedAt: null,
                 cancelledAt: null,
                 missingSetupRequirements: ImmutableList<MissingArrangementRequirement>.Empty.Add(
-                    new MissingArrangementRequirement(null, null, null, null, "A", null, null)
+                    new MissingArrangementRequirement(null, null, null, null, new RequirementDefinition("A", true), null, null)
                 ),
                 missingFunctionAssignments: ImmutableList<ArrangementFunction>.Empty
             );
@@ -76,7 +76,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
                 endedAt: null,
                 cancelledAt: DateOnly.FromDateTime(DateTime.UtcNow),
                 missingSetupRequirements: ImmutableList<MissingArrangementRequirement>.Empty.Add(
-                    new MissingArrangementRequirement(null, null, null, null, "A", null, null)
+                    new MissingArrangementRequirement(null, null, null, null, new RequirementDefinition("A", true), null, null)
                 ),
                 missingFunctionAssignments: ImmutableList<ArrangementFunction>.Empty
             );
@@ -111,7 +111,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
                 endedAt: null,
                 cancelledAt: null,
                 missingSetupRequirements: ImmutableList<MissingArrangementRequirement>.Empty.Add(
-                    new MissingArrangementRequirement(null, null, null, null, "A", null, null)
+                    new MissingArrangementRequirement(null, null, null, null, new RequirementDefinition("A", true), null, null)
                 ),
                 missingFunctionAssignments: ImmutableList<ArrangementFunction>.Empty.Add(
                     Helpers.FunctionWithoutEligibility("X", FunctionRequirement.OneOrMore)
@@ -132,7 +132,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
                 endedAt: DateOnly.FromDateTime(DateTime.UtcNow),
                 cancelledAt: null,
                 missingSetupRequirements: ImmutableList<MissingArrangementRequirement>.Empty.Add(
-                    new MissingArrangementRequirement(null, null, null, null, "A", null, null)
+                    new MissingArrangementRequirement(null, null, null, null, new RequirementDefinition("A", true), null, null)
                 ),
                 missingFunctionAssignments: ImmutableList<ArrangementFunction>.Empty.Add(
                     Helpers.FunctionWithoutEligibility("X", FunctionRequirement.OneOrMore)

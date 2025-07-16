@@ -103,7 +103,13 @@ namespace CareTogether.Engines.PolicyEvaluation
                 missingCloseoutRequirements
             );
 
-            return new ArrangementStatus(phase, missingRequirements); //TODO: Shouldn't missing function assignments be returned as well?
+            return new ArrangementStatus(
+                phase,
+                missingRequirements.Where(missing => missing.Action.IsRequired).ToImmutableList(),
+                missingSetupRequirements
+                    .Where(missing => !missing.Action.IsRequired)
+                    .ToImmutableList()
+            ); //TODO: Shouldn't missing function assignments be returned as well?
         }
 
         internal static ImmutableList<MissingArrangementRequirement> SelectMissingRequirementsForStatus(
@@ -136,7 +142,11 @@ namespace CareTogether.Engines.PolicyEvaluation
             cancelledAt.HasValue ? ArrangementPhase.Cancelled
             : endedAt.HasValue ? ArrangementPhase.Ended
             : startedAt.HasValue ? ArrangementPhase.Started
-            : (missingSetupRequirements.Count == 0 && missingFunctionAssignments.Count == 0)
+            : (
+                missingSetupRequirements.Where(requirement => requirement.Action.IsRequired).Count()
+                    == 0
+                && missingFunctionAssignments.Count == 0
+            )
                 ? ArrangementPhase.ReadyToStart
             : ArrangementPhase.SettingUp;
 
@@ -147,10 +157,10 @@ namespace CareTogether.Engines.PolicyEvaluation
         )
         {
             var arrangementLevelResults = arrangementPolicy
-                .RequiredSetupActionNames.Where(requiredAction =>
+                .RequiredSetupActions.Where(requiredAction =>
                     !SharedCalculations
                         .RequirementMetOrExempted(
-                            requiredAction,
+                            requiredAction.ActionName,
                             policySupersededAt: null,
                             today,
                             completedRequirements: arrangement.CompletedRequirements,
@@ -187,7 +197,7 @@ namespace CareTogether.Engines.PolicyEvaluation
                         .RequiredSetupActionNames.Where(requiredAction =>
                             !SharedCalculations
                                 .RequirementMetOrExempted(
-                                    requiredAction,
+                                    requiredAction.ActionName,
                                     policySupersededAt: null,
                                     today,
                                     completedRequirements: fva.CompletedRequirements,
@@ -226,7 +236,7 @@ namespace CareTogether.Engines.PolicyEvaluation
                         .RequiredSetupActionNames.Where(requiredAction =>
                             !SharedCalculations
                                 .RequirementMetOrExempted(
-                                    requiredAction,
+                                    requiredAction.ActionName,
                                     policySupersededAt: null,
                                     today,
                                     completedRequirements: iva.CompletedRequirements,
@@ -297,7 +307,7 @@ namespace CareTogether.Engines.PolicyEvaluation
                             null,
                             null,
                             null,
-                            monitoringRequirement.ActionName,
+                            monitoringRequirement,
                             DueBy: missingDueDate > today ? missingDueDate : null,
                             PastDueSince: missingDueDate <= today ? missingDueDate : null
                         ))
@@ -357,7 +367,7 @@ namespace CareTogether.Engines.PolicyEvaluation
                                     fva.ArrangementFunctionVariant,
                                     fva.FamilyId,
                                     null,
-                                    monitoringRequirement.ActionName,
+                                    monitoringRequirement,
                                     DueBy: missingDueDate > today ? missingDueDate : null,
                                     PastDueSince: missingDueDate <= today ? missingDueDate : null
                                 ))
@@ -419,7 +429,7 @@ namespace CareTogether.Engines.PolicyEvaluation
                                     iva.ArrangementFunctionVariant,
                                     iva.FamilyId,
                                     iva.PersonId,
-                                    monitoringRequirement.ActionName,
+                                    monitoringRequirement,
                                     DueBy: missingDueDate > today ? missingDueDate : null,
                                     PastDueSince: missingDueDate <= today ? missingDueDate : null
                                 ))
@@ -895,7 +905,7 @@ namespace CareTogether.Engines.PolicyEvaluation
                 .RequiredCloseoutActionNames.Where(requiredAction =>
                     !SharedCalculations
                         .RequirementMetOrExempted(
-                            requiredAction,
+                            requiredAction.ActionName,
                             policySupersededAt: null,
                             today,
                             completedRequirements: arrangement.CompletedRequirements,
@@ -932,7 +942,7 @@ namespace CareTogether.Engines.PolicyEvaluation
                         .RequiredCloseoutActionNames.Where(requiredAction =>
                             !SharedCalculations
                                 .RequirementMetOrExempted(
-                                    requiredAction,
+                                    requiredAction.ActionName,
                                     policySupersededAt: null,
                                     today,
                                     completedRequirements: fva.CompletedRequirements,
@@ -971,7 +981,7 @@ namespace CareTogether.Engines.PolicyEvaluation
                         .RequiredCloseoutActionNames.Where(requiredAction =>
                             !SharedCalculations
                                 .RequirementMetOrExempted(
-                                    requiredAction,
+                                    requiredAction.ActionName,
                                     policySupersededAt: null,
                                     today,
                                     completedRequirements: iva.CompletedRequirements,

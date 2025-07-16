@@ -2437,7 +2437,7 @@ export enum CustomFieldValidation {
 }
 
 export class ReferralPolicy implements IReferralPolicy {
-    intakeRequirements?: IntakeRequirement[];
+    intakeRequirements?: RequirementDefinition[];
     customFields?: CustomField[];
     arrangementPolicies?: ArrangementPolicy[];
     functionPolicies?: FunctionPolicy[] | undefined;
@@ -2456,7 +2456,7 @@ export class ReferralPolicy implements IReferralPolicy {
             if (Array.isArray(_data["intakeRequirements"])) {
                 this.intakeRequirements = [] as any;
                 for (let item of _data["intakeRequirements"])
-                    this.intakeRequirements!.push(IntakeRequirement.fromJS(item));
+                    this.intakeRequirements!.push(RequirementDefinition.fromJS(item));
             }
             if (Array.isArray(_data["customFields"])) {
                 this.customFields = [] as any;
@@ -2510,17 +2510,17 @@ export class ReferralPolicy implements IReferralPolicy {
 }
 
 export interface IReferralPolicy {
-    intakeRequirements?: IntakeRequirement[];
+    intakeRequirements?: RequirementDefinition[];
     customFields?: CustomField[];
     arrangementPolicies?: ArrangementPolicy[];
     functionPolicies?: FunctionPolicy[] | undefined;
 }
 
-export class IntakeRequirement implements IIntakeRequirement {
+export class RequirementDefinition implements IRequirementDefinition {
     actionName?: string;
     isRequired?: boolean;
 
-    constructor(data?: IIntakeRequirement) {
+    constructor(data?: IRequirementDefinition) {
         if (data) {
             for (var property in data) {
                 if (data.hasOwnProperty(property))
@@ -2536,9 +2536,9 @@ export class IntakeRequirement implements IIntakeRequirement {
         }
     }
 
-    static fromJS(data: any): IntakeRequirement {
+    static fromJS(data: any): RequirementDefinition {
         data = typeof data === 'object' ? data : {};
-        let result = new IntakeRequirement();
+        let result = new RequirementDefinition();
         result.init(data);
         return result;
     }
@@ -2551,7 +2551,7 @@ export class IntakeRequirement implements IIntakeRequirement {
     }
 }
 
-export interface IIntakeRequirement {
+export interface IRequirementDefinition {
     actionName?: string;
     isRequired?: boolean;
 }
@@ -2560,9 +2560,9 @@ export class ArrangementPolicy implements IArrangementPolicy {
     arrangementType?: string;
     childInvolvement?: ChildInvolvement;
     arrangementFunctions?: ArrangementFunction[];
-    requiredSetupActionNames?: string[];
+    requiredSetupActions?: RequirementDefinition[];
     requiredMonitoringActions?: MonitoringRequirement[];
-    requiredCloseoutActionNames?: string[];
+    requiredCloseoutActionNames?: RequirementDefinition[];
 
     constructor(data?: IArrangementPolicy) {
         if (data) {
@@ -2582,10 +2582,10 @@ export class ArrangementPolicy implements IArrangementPolicy {
                 for (let item of _data["arrangementFunctions"])
                     this.arrangementFunctions!.push(ArrangementFunction.fromJS(item));
             }
-            if (Array.isArray(_data["requiredSetupActionNames"])) {
-                this.requiredSetupActionNames = [] as any;
-                for (let item of _data["requiredSetupActionNames"])
-                    this.requiredSetupActionNames!.push(item);
+            if (Array.isArray(_data["requiredSetupActions"])) {
+                this.requiredSetupActions = [] as any;
+                for (let item of _data["requiredSetupActions"])
+                    this.requiredSetupActions!.push(RequirementDefinition.fromJS(item));
             }
             if (Array.isArray(_data["requiredMonitoringActions"])) {
                 this.requiredMonitoringActions = [] as any;
@@ -2595,7 +2595,7 @@ export class ArrangementPolicy implements IArrangementPolicy {
             if (Array.isArray(_data["requiredCloseoutActionNames"])) {
                 this.requiredCloseoutActionNames = [] as any;
                 for (let item of _data["requiredCloseoutActionNames"])
-                    this.requiredCloseoutActionNames!.push(item);
+                    this.requiredCloseoutActionNames!.push(RequirementDefinition.fromJS(item));
             }
         }
     }
@@ -2616,10 +2616,10 @@ export class ArrangementPolicy implements IArrangementPolicy {
             for (let item of this.arrangementFunctions)
                 data["arrangementFunctions"].push(item.toJSON());
         }
-        if (Array.isArray(this.requiredSetupActionNames)) {
-            data["requiredSetupActionNames"] = [];
-            for (let item of this.requiredSetupActionNames)
-                data["requiredSetupActionNames"].push(item);
+        if (Array.isArray(this.requiredSetupActions)) {
+            data["requiredSetupActions"] = [];
+            for (let item of this.requiredSetupActions)
+                data["requiredSetupActions"].push(item.toJSON());
         }
         if (Array.isArray(this.requiredMonitoringActions)) {
             data["requiredMonitoringActions"] = [];
@@ -2629,7 +2629,7 @@ export class ArrangementPolicy implements IArrangementPolicy {
         if (Array.isArray(this.requiredCloseoutActionNames)) {
             data["requiredCloseoutActionNames"] = [];
             for (let item of this.requiredCloseoutActionNames)
-                data["requiredCloseoutActionNames"].push(item);
+                data["requiredCloseoutActionNames"].push(item.toJSON());
         }
         return data;
     }
@@ -2639,9 +2639,9 @@ export interface IArrangementPolicy {
     arrangementType?: string;
     childInvolvement?: ChildInvolvement;
     arrangementFunctions?: ArrangementFunction[];
-    requiredSetupActionNames?: string[];
+    requiredSetupActions?: RequirementDefinition[];
     requiredMonitoringActions?: MonitoringRequirement[];
-    requiredCloseoutActionNames?: string[];
+    requiredCloseoutActionNames?: RequirementDefinition[];
 }
 
 export enum ChildInvolvement {
@@ -2746,9 +2746,9 @@ export enum FunctionRequirement {
 
 export class ArrangementFunctionVariant implements IArrangementFunctionVariant {
     variantName?: string;
-    requiredSetupActionNames?: string[];
+    requiredSetupActionNames?: RequirementDefinition[];
     requiredMonitoringActions?: MonitoringRequirement[];
-    requiredCloseoutActionNames?: string[];
+    requiredCloseoutActionNames?: RequirementDefinition[];
 
     constructor(data?: IArrangementFunctionVariant) {
         if (data) {
@@ -2765,7 +2765,7 @@ export class ArrangementFunctionVariant implements IArrangementFunctionVariant {
             if (Array.isArray(_data["requiredSetupActionNames"])) {
                 this.requiredSetupActionNames = [] as any;
                 for (let item of _data["requiredSetupActionNames"])
-                    this.requiredSetupActionNames!.push(item);
+                    this.requiredSetupActionNames!.push(RequirementDefinition.fromJS(item));
             }
             if (Array.isArray(_data["requiredMonitoringActions"])) {
                 this.requiredMonitoringActions = [] as any;
@@ -2775,7 +2775,7 @@ export class ArrangementFunctionVariant implements IArrangementFunctionVariant {
             if (Array.isArray(_data["requiredCloseoutActionNames"])) {
                 this.requiredCloseoutActionNames = [] as any;
                 for (let item of _data["requiredCloseoutActionNames"])
-                    this.requiredCloseoutActionNames!.push(item);
+                    this.requiredCloseoutActionNames!.push(RequirementDefinition.fromJS(item));
             }
         }
     }
@@ -2793,7 +2793,7 @@ export class ArrangementFunctionVariant implements IArrangementFunctionVariant {
         if (Array.isArray(this.requiredSetupActionNames)) {
             data["requiredSetupActionNames"] = [];
             for (let item of this.requiredSetupActionNames)
-                data["requiredSetupActionNames"].push(item);
+                data["requiredSetupActionNames"].push(item.toJSON());
         }
         if (Array.isArray(this.requiredMonitoringActions)) {
             data["requiredMonitoringActions"] = [];
@@ -2803,7 +2803,7 @@ export class ArrangementFunctionVariant implements IArrangementFunctionVariant {
         if (Array.isArray(this.requiredCloseoutActionNames)) {
             data["requiredCloseoutActionNames"] = [];
             for (let item of this.requiredCloseoutActionNames)
-                data["requiredCloseoutActionNames"].push(item);
+                data["requiredCloseoutActionNames"].push(item.toJSON());
         }
         return data;
     }
@@ -2811,27 +2811,21 @@ export class ArrangementFunctionVariant implements IArrangementFunctionVariant {
 
 export interface IArrangementFunctionVariant {
     variantName?: string;
-    requiredSetupActionNames?: string[];
+    requiredSetupActionNames?: RequirementDefinition[];
     requiredMonitoringActions?: MonitoringRequirement[];
-    requiredCloseoutActionNames?: string[];
+    requiredCloseoutActionNames?: RequirementDefinition[];
 }
 
-export class MonitoringRequirement implements IMonitoringRequirement {
-    actionName?: string;
+export class MonitoringRequirement extends RequirementDefinition implements IMonitoringRequirement {
     recurrence?: RecurrencePolicy;
 
     constructor(data?: IMonitoringRequirement) {
-        if (data) {
-            for (var property in data) {
-                if (data.hasOwnProperty(property))
-                    (<any>this)[property] = (<any>data)[property];
-            }
-        }
+        super(data);
     }
 
     init(_data?: any) {
+        super.init(_data);
         if (_data) {
-            this.actionName = _data["actionName"];
             this.recurrence = _data["recurrence"] ? RecurrencePolicy.fromJS(_data["recurrence"]) : <any>undefined;
         }
     }
@@ -2845,14 +2839,13 @@ export class MonitoringRequirement implements IMonitoringRequirement {
 
     toJSON(data?: any) {
         data = typeof data === 'object' ? data : {};
-        data["actionName"] = this.actionName;
         data["recurrence"] = this.recurrence ? this.recurrence.toJSON() : <any>undefined;
+        super.toJSON(data);
         return data;
     }
 }
 
-export interface IMonitoringRequirement {
-    actionName?: string;
+export interface IMonitoringRequirement extends IRequirementDefinition {
     recurrence?: RecurrencePolicy;
 }
 
@@ -5472,6 +5465,7 @@ export class Arrangement implements IArrangement {
     completedRequirements?: CompletedRequirementInfo[];
     exemptedRequirements?: ExemptedRequirementInfo[];
     missingRequirements?: MissingArrangementRequirement[];
+    missingOptionalRequirements?: MissingArrangementRequirement[];
     individualVolunteerAssignments?: IndividualVolunteerAssignment[];
     familyVolunteerAssignments?: FamilyVolunteerAssignment[];
     childLocationHistory?: ChildLocationHistoryEntry[];
@@ -5514,6 +5508,11 @@ export class Arrangement implements IArrangement {
                 this.missingRequirements = [] as any;
                 for (let item of _data["missingRequirements"])
                     this.missingRequirements!.push(MissingArrangementRequirement.fromJS(item));
+            }
+            if (Array.isArray(_data["missingOptionalRequirements"])) {
+                this.missingOptionalRequirements = [] as any;
+                for (let item of _data["missingOptionalRequirements"])
+                    this.missingOptionalRequirements!.push(MissingArrangementRequirement.fromJS(item));
             }
             if (Array.isArray(_data["individualVolunteerAssignments"])) {
                 this.individualVolunteerAssignments = [] as any;
@@ -5574,6 +5573,11 @@ export class Arrangement implements IArrangement {
             for (let item of this.missingRequirements)
                 data["missingRequirements"].push(item.toJSON());
         }
+        if (Array.isArray(this.missingOptionalRequirements)) {
+            data["missingOptionalRequirements"] = [];
+            for (let item of this.missingOptionalRequirements)
+                data["missingOptionalRequirements"].push(item.toJSON());
+        }
         if (Array.isArray(this.individualVolunteerAssignments)) {
             data["individualVolunteerAssignments"] = [];
             for (let item of this.individualVolunteerAssignments)
@@ -5614,6 +5618,7 @@ export interface IArrangement {
     completedRequirements?: CompletedRequirementInfo[];
     exemptedRequirements?: ExemptedRequirementInfo[];
     missingRequirements?: MissingArrangementRequirement[];
+    missingOptionalRequirements?: MissingArrangementRequirement[];
     individualVolunteerAssignments?: IndividualVolunteerAssignment[];
     familyVolunteerAssignments?: FamilyVolunteerAssignment[];
     childLocationHistory?: ChildLocationHistoryEntry[];
@@ -5635,7 +5640,7 @@ export class MissingArrangementRequirement implements IMissingArrangementRequire
     arrangementFunctionVariant?: string | undefined;
     volunteerFamilyId?: string | undefined;
     personId?: string | undefined;
-    actionName?: string;
+    action?: RequirementDefinition;
     dueBy?: Date | undefined;
     pastDueSince?: Date | undefined;
 
@@ -5654,7 +5659,7 @@ export class MissingArrangementRequirement implements IMissingArrangementRequire
             this.arrangementFunctionVariant = _data["arrangementFunctionVariant"];
             this.volunteerFamilyId = _data["volunteerFamilyId"];
             this.personId = _data["personId"];
-            this.actionName = _data["actionName"];
+            this.action = _data["action"] ? RequirementDefinition.fromJS(_data["action"]) : <any>undefined;
             this.dueBy = _data["dueBy"] ? new Date(_data["dueBy"].toString()) : <any>undefined;
             this.pastDueSince = _data["pastDueSince"] ? new Date(_data["pastDueSince"].toString()) : <any>undefined;
         }
@@ -5673,7 +5678,7 @@ export class MissingArrangementRequirement implements IMissingArrangementRequire
         data["arrangementFunctionVariant"] = this.arrangementFunctionVariant;
         data["volunteerFamilyId"] = this.volunteerFamilyId;
         data["personId"] = this.personId;
-        data["actionName"] = this.actionName;
+        data["action"] = this.action ? this.action.toJSON() : <any>undefined;
         data["dueBy"] = this.dueBy ? formatDate(this.dueBy) : <any>undefined;
         data["pastDueSince"] = this.pastDueSince ? formatDate(this.pastDueSince) : <any>undefined;
         return data;
@@ -5685,7 +5690,7 @@ export interface IMissingArrangementRequirement {
     arrangementFunctionVariant?: string | undefined;
     volunteerFamilyId?: string | undefined;
     personId?: string | undefined;
-    actionName?: string;
+    action?: RequirementDefinition;
     dueBy?: Date | undefined;
     pastDueSince?: Date | undefined;
 }
