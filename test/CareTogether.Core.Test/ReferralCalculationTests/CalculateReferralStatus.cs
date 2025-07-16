@@ -72,9 +72,9 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
                                     Variants: ImmutableList<ArrangementFunctionVariant>.Empty
                                 )
                             ),
-                        RequiredSetupActionNames: Helpers.From(),
+                        RequiredSetupActions: ImmutableList<RequirementDefinition>.Empty,
                         RequiredMonitoringActions: ImmutableList<MonitoringRequirement>.Empty,
-                        RequiredCloseoutActionNames: Helpers.From()
+                        RequiredCloseoutActionNames: []
                     )
                 )
                 .Add(
@@ -122,9 +122,9 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
                                     Variants: ImmutableList<ArrangementFunctionVariant>.Empty
                                 )
                             ),
-                        RequiredSetupActionNames: Helpers.From(),
+                        RequiredSetupActions: ImmutableList<RequirementDefinition>.Empty,
                         RequiredMonitoringActions: ImmutableList<MonitoringRequirement>.Empty,
-                        RequiredCloseoutActionNames: Helpers.From()
+                        RequiredCloseoutActionNames: []
                     )
                 )
                 .Add(
@@ -152,9 +152,9 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
                                     Variants: ImmutableList<ArrangementFunctionVariant>.Empty
                                 )
                             ),
-                        RequiredSetupActionNames: Helpers.From(),
+                        RequiredSetupActions: ImmutableList<RequirementDefinition>.Empty,
                         RequiredMonitoringActions: ImmutableList<MonitoringRequirement>.Empty,
-                        RequiredCloseoutActionNames: Helpers.From()
+                        RequiredCloseoutActionNames: []
                     )
                 ),
             ImmutableList<FunctionPolicy>.Empty

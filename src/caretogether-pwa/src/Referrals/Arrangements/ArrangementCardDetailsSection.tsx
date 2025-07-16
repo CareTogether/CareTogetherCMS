@@ -184,7 +184,7 @@ export function ArrangementCardDetailsSection({
               ))}
               {mergedArray.map((x, i) => (
                 <MissingArrangementRequirementRow
-                  key={`${x.missing.actionName}:${i}`}
+                  key={`${x.missing.action?.actionName}:${i}`}
                   requirement={x.missing}
                   context={x.context}
                 />

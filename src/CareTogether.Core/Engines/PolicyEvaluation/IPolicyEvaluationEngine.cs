@@ -348,7 +348,8 @@ namespace CareTogether.Engines.PolicyEvaluation
 
     public sealed record ArrangementStatus(
         ArrangementPhase Phase,
-        ImmutableList<MissingArrangementRequirement> MissingRequirements
+        ImmutableList<MissingArrangementRequirement> MissingRequirements,
+        ImmutableList<MissingArrangementRequirement> MissingOptionalRequirements
     );
 
     public sealed record MissingArrangementRequirement(
@@ -356,7 +357,7 @@ namespace CareTogether.Engines.PolicyEvaluation
         string? ArrangementFunctionVariant,
         Guid? VolunteerFamilyId,
         Guid? PersonId,
-        string ActionName,
+        RequirementDefinition Action,
         DateOnly? DueBy,
         DateOnly? PastDueSince
     );
