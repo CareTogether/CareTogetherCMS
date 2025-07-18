@@ -1908,20 +1908,16 @@
         }
       },
       "MonitoringRequirement": {
-        "allOf": [
-          {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "action": {
             "$ref": "#/components/schemas/RequirementDefinition"
           },
-          {
-            "type": "object",
-            "additionalProperties": false,
-            "properties": {
-              "recurrence": {
-                "$ref": "#/components/schemas/RecurrencePolicy"
-              }
-            }
+          "recurrence": {
+            "$ref": "#/components/schemas/RecurrencePolicy"
           }
-        ]
+        }
       },
       "RecurrencePolicy": {
         "type": "object",
