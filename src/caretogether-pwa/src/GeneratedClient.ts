@@ -2816,16 +2816,22 @@ export interface IArrangementFunctionVariant {
     requiredCloseoutActionNames?: RequirementDefinition[];
 }
 
-export class MonitoringRequirement extends RequirementDefinition implements IMonitoringRequirement {
+export class MonitoringRequirement implements IMonitoringRequirement {
+    action?: RequirementDefinition;
     recurrence?: RecurrencePolicy;
 
     constructor(data?: IMonitoringRequirement) {
-        super(data);
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
     }
 
     init(_data?: any) {
-        super.init(_data);
         if (_data) {
+            this.action = _data["action"] ? RequirementDefinition.fromJS(_data["action"]) : <any>undefined;
             this.recurrence = _data["recurrence"] ? RecurrencePolicy.fromJS(_data["recurrence"]) : <any>undefined;
         }
     }
@@ -2839,13 +2845,14 @@ export class MonitoringRequirement extends RequirementDefinition implements IMon
 
     toJSON(data?: any) {
         data = typeof data === 'object' ? data : {};
+        data["action"] = this.action ? this.action.toJSON() : <any>undefined;
         data["recurrence"] = this.recurrence ? this.recurrence.toJSON() : <any>undefined;
-        super.toJSON(data);
         return data;
     }
 }
 
-export interface IMonitoringRequirement extends IRequirementDefinition {
+export interface IMonitoringRequirement {
+    action?: RequirementDefinition;
     recurrence?: RecurrencePolicy;
 }
 

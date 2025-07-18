@@ -130,7 +130,7 @@ namespace CareTogether.Resources.Policies
         string[] ApprovalRoles
     );
 
-    public record RequirementDefinition(string ActionName, bool IsRequired);
+    public sealed record RequirementDefinition(string ActionName, bool IsRequired);
 
     public sealed record ReferralPolicy(
         ImmutableList<RequirementDefinition> IntakeRequirements,
@@ -176,10 +176,9 @@ namespace CareTogether.Resources.Policies
     };
 
     public sealed record MonitoringRequirement(
-        string ActionName,
-        bool IsRequired,
+        RequirementDefinition Action,
         RecurrencePolicy Recurrence
-    ) : RequirementDefinition(ActionName, IsRequired);
+    );
 
     public enum FunctionRequirement
     {
