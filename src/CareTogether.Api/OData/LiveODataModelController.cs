@@ -65,7 +65,8 @@ namespace CareTogether.Api.OData
         string LastName,
         PersonType PersonType,
         string? Ethnicity,
-        DateOnly? DateOfBirth
+        DateOnly? DateOfBirth,
+        Gender? Gender
     );
 
     public enum PersonType
@@ -73,6 +74,13 @@ namespace CareTogether.Api.OData
         Adult,
         Child,
     }
+
+    public enum Gender
+    {
+        Male,
+        Female,
+        SeeNotes,
+    };
 
     public sealed record Community(
         [property: Key] Guid Id,
@@ -1257,6 +1265,11 @@ namespace CareTogether.Api.OData
                     adult.Item1.Ethnicity,
                     adult.Item1.Age is ExactAge
                         ? DateOnly.FromDateTime((adult.Item1.Age as ExactAge)!.DateOfBirth)
+                        : null,
+                    adult.Item1.Gender.HasValue
+                        ? Enum.TryParse<Gender>(adult.Item1.Gender.Value.ToString(), out var gender)
+                            ? gender
+                            : null
                         : null
                 ))
                 .Concat(
@@ -1274,6 +1287,11 @@ namespace CareTogether.Api.OData
                         child.Ethnicity,
                         child.Age is ExactAge
                             ? DateOnly.FromDateTime((child.Age as ExactAge)!.DateOfBirth)
+                            : null,
+                        child.Gender.HasValue
+                            ? Enum.TryParse<Gender>(child.Gender.Value.ToString(), out var gender)
+                                ? gender
+                                : null
                             : null
                     ))
                 );
