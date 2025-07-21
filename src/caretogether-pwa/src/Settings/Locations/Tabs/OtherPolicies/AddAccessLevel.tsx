@@ -8,7 +8,6 @@ import {
 } from '../../../../GeneratedClient';
 import { useBackdrop } from '../../../../Hooks/useBackdrop';
 import {
-  locationConfigurationQuery,
   organizationConfigurationEdited,
   organizationConfigurationQuery,
 } from '../../../../Model/ConfigurationModel';
@@ -28,9 +27,14 @@ interface DrawerProps {
 
 interface AddAccessLevelDrawerProps extends DrawerProps {
   data?: AccessLevelData;
+  locationConfiguration: LocationConfiguration;
 }
 
-export function AddAccessLevel({ data, onClose }: AddAccessLevelDrawerProps) {
+export function AddAccessLevel({
+  data,
+  locationConfiguration,
+  onClose,
+}: AddAccessLevelDrawerProps) {
   const {
     control,
     formState: { isDirty },
@@ -44,8 +48,6 @@ export function AddAccessLevel({ data, onClose }: AddAccessLevelDrawerProps) {
   });
 
   const organization = useRecoilValue(organizationConfigurationQuery);
-  const location = useRecoilValue(locationConfigurationQuery);
-
   const { organizationId } = useRecoilValue(selectedLocationContextState);
 
   const storeEdits = useSetRecoilState(organizationConfigurationEdited);
@@ -54,12 +56,14 @@ export function AddAccessLevel({ data, onClose }: AddAccessLevelDrawerProps) {
 
   const save: SubmitHandler<AccessLevelData> = async (data) => {
     await withBackdrop(async () => {
-      const newLocationConfiguration = new LocationConfiguration(location);
+      const newLocationConfiguration = new LocationConfiguration(
+        locationConfiguration
+      );
 
       // Remove any existing access level with the same name
-      const filteredAccessLevels = (location?.accessLevels || []).filter(
-        (al: AccessLevel) => al.id !== data.id
-      );
+      const filteredAccessLevels = (
+        locationConfiguration?.accessLevels || []
+      ).filter((al: AccessLevel) => al.id !== data.id);
 
       newLocationConfiguration.accessLevels = [
         ...filteredAccessLevels,
