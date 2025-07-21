@@ -18,7 +18,10 @@ import { useState } from 'react';
 import SearchIcon from '@mui/icons-material/Search';
 import { useSidePanel } from '../../../../Hooks/useSidePanel';
 import { AccessLevelData, AddAccessLevel } from './AddAccessLevel';
-import { summarizeList } from '../../../../Utilities/stringUtils';
+import {
+  camelCaseToSpaces,
+  summarizeList,
+} from '../../../../Utilities/stringUtils';
 import { useParams } from 'react-router-dom';
 
 export type ConfigurationData = {
@@ -122,14 +125,20 @@ export default function OtherPolicies() {
                   setWorkingAccessLevel({
                     id: id!,
                     name: name!,
-                    organizationRoles: organizationRoles!,
+                    organizationRoles:
+                      organizationRoles?.map((roleName) => ({
+                        title: camelCaseToSpaces(roleName),
+                        value: roleName,
+                      })) || [],
                   });
                   openSidePanelEdit();
                 }}
               >
                 <TableCell>{name}</TableCell>
                 <TableCell>
-                  {organizationRoles ? summarizeList(organizationRoles) : '-'}
+                  {organizationRoles
+                    ? summarizeList(organizationRoles.map(camelCaseToSpaces))
+                    : '-'}
                 </TableCell>
                 <TableCell sx={{ fontStyle: 'italic' }}>
                   Not implemented yet

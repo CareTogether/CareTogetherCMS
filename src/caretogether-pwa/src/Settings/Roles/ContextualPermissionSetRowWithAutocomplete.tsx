@@ -16,7 +16,7 @@ import {
 } from '../../GeneratedClient';
 import { PermissionContextCell } from './PermissionContextCell';
 import { PermissionsSelect } from './PermissionsSelect';
-import { spacesBeforeCapitalLetters } from './spacesBeforeCapitalLetters';
+import { formatPermissionName } from './formatPermissionName';
 
 interface ContextualPermissionSetRowProps {
   editable: boolean;
@@ -92,7 +92,7 @@ export function ContextualPermissionSetRowAutocomplete({
                   </IconButton>
                 )}
                 <ListItemText>
-                  {spacesBeforeCapitalLetters(Permission[permission])}
+                  {formatPermissionName(Permission[permission])}
                 </ListItemText>
               </ListItem>
             );
