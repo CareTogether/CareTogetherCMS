@@ -15,3 +15,17 @@ export function summarizeList(list: string[], size = 3) {
 
   return `${list.slice(0, size).join(', ')} +${list.length - size} more`;
 }
+
+/**
+ * Converts camelCase or PascalCase strings to space-separated words.
+ * Note: PascalCase is a variant of camelCase where the first letter is capitalized.
+ * Examples: "firstName" → "first Name", "PascalCase" → "Pascal Case"
+ */
+export function camelCaseToSpaces(input: string) {
+  return input
+    .split('')
+    .map((char, index) =>
+      index > 0 && char >= 'A' && char <= 'Z' ? ` ${char}` : char
+    )
+    .join('');
+}

@@ -1,6 +1,6 @@
 import { Autocomplete, TextField, Button, Stack } from '@mui/material';
 import { Permission } from '../../GeneratedClient';
-import { spacesBeforeCapitalLetters } from './spacesBeforeCapitalLetters';
+import { formatPermissionName } from './formatPermissionName';
 import { useState } from 'react';
 
 interface PermissionSelectProps {
@@ -20,7 +20,7 @@ export function PermissionsSelect({
   const [value, setValue] = useState<Option[]>([]);
 
   const options = availablePermissions.map(([name, value]) => ({
-    title: spacesBeforeCapitalLetters(name),
+    title: formatPermissionName(name),
     value: value as Permission,
   }));
 

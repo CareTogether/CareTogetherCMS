@@ -1,4 +1,4 @@
-import { TextField, Autocomplete, AutocompleteProps } from '@mui/material';
+import { TextField, Autocomplete } from '@mui/material';
 import {
   Controller,
   Control,
@@ -16,7 +16,7 @@ interface ICustomTextFieldProps<T extends FieldValues> {
   rules?: RegisterOptions<T>;
   control?: Control<T>;
   defaultValue?: PathValue<T, Path<T>>;
-  options?: string[];
+  options?: { title: string; value: string }[];
   helperText?: string;
   minOverallWidth?: number;
   minTypingAreaWidth?: number;
@@ -33,11 +33,14 @@ export function CTAutocomplete<T extends FieldValues>({
   minOverallWidth = 300,
   minTypingAreaWidth,
 }: ICustomTextFieldProps<T>) {
+  // console.log({ options });
+
   return (
     <Controller
       name={name}
       control={control}
       render={({ field }) => (
+        // <Autocomplete<TOption, true, boolean, boolean>
         <Autocomplete
           sx={{
             '& .MuiAutocomplete-inputRoot .MuiAutocomplete-input': {
@@ -47,8 +50,11 @@ export function CTAutocomplete<T extends FieldValues>({
           multiple
           freeSolo={freeSolo}
           options={options}
+          isOptionEqualToValue={(option, value) => option.value === value.value}
+          getOptionLabel={(option) =>
+            typeof option === 'string' ? option : option.title
+          }
           renderInput={(params) => {
-            console.log(params);
             return (
               <TextField
                 {...params}
