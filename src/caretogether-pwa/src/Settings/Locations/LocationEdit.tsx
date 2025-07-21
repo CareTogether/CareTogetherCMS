@@ -30,13 +30,16 @@ import { useUserIsOrganizationAdministrator } from '../../Model/SessionModel';
 import { useAppNavigate } from '../../Hooks/useAppNavigate';
 
 export function LocationEdit() {
-  const { locationId } = useParams<{ locationId: string }>();
+  const { locationId, editingLocationId } = useParams<{
+    locationId: string;
+    editingLocationId: string;
+  }>();
 
   const configuration = useLoadable(organizationConfigurationQuery);
   const { organizationId } = useRecoilValue(selectedLocationContextState);
 
   const location = configuration?.locations?.find(
-    (location) => location.id === locationId
+    (location) => location.id === editingLocationId
   );
 
   useScreenTitle(`Editing ${location?.name} configuration`);
