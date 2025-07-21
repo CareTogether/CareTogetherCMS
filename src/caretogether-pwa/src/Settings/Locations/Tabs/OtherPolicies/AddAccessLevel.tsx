@@ -64,7 +64,7 @@ export function AddAccessLevel({ data, onClose }: AddAccessLevelDrawerProps) {
       newLocationConfiguration.accessLevels = [
         ...filteredAccessLevels,
         new AccessLevel({
-          id: data.id || crypto.randomUUID(),
+          id: data.id,
           name: data.name,
           organizationRoles: data.organizationRoles,
           approvalRoles: [],
@@ -106,9 +106,6 @@ export function AddAccessLevel({ data, onClose }: AddAccessLevelDrawerProps) {
               required
               label="Name"
               placeholder="Enter a name for the access level"
-              // error={roleName.length === 0}
-              // value={roleName}
-              // onChange={(e) => setRoleName(e.target.value)}
               autoFocus
               {...field}
             />
