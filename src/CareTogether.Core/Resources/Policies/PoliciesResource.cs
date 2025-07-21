@@ -131,6 +131,15 @@ namespace CareTogether.Resources.Policies
             if (locationConfiguration.Id == Guid.Empty)
                 locationConfiguration = locationConfiguration with { Id = Guid.NewGuid() };
 
+            // Generate IDs for AccessLevels that don't have them
+            var updatedAccessLevels = locationConfiguration.AccessLevels?.Select(accessLevel =>
+                accessLevel.Id == Guid.Empty
+                    ? accessLevel with { Id = Guid.NewGuid() }
+                    : accessLevel
+            ).ToImmutableList() ?? ImmutableList<AccessLevel>.Empty;
+
+            locationConfiguration = locationConfiguration with { AccessLevels = updatedAccessLevels };
+
             var newConfig = config with
             {
                 Locations = config.Locations.AddOrReplace(

@@ -25,6 +25,36 @@ namespace CareTogether.Core.Test.AuthorizationEngineTests
         private static Guid Id(char x) =>
             Guid.Parse("xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx".Replace('x', x));
 
+        /// <summary>
+        /// Generates a Guid by filling the standard Guid template with hexadecimal characters from the provided string.
+        /// Only characters 0-9, a-f, and A-F are used; all others are ignored. The string is repeated as needed to fill the template.
+        /// </summary>
+        /// <param name="s">A string containing one or more hexadecimal characters.</param>
+        /// <returns>A Guid constructed from the provided hexadecimal characters.</returns>
+        /// <exception cref="ArgumentException">Thrown if the input string contains no hexadecimal characters.</exception>
+        /// <example>
+        /// Id("a") => aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa
+        /// Id("123") => 12312312-3123-1231-2312-312312312312
+        /// Id("deadbeef") => deadbeef-dead-beef-dead-beefdeadbeef
+        /// Id("abcxyz") => abcabcab-cabc-abca-bcab-cabcabcabcab (x, y, z ignored)
+        /// Id("g123") => 12312312-3123-1231-2312-312312312312 ('g' ignored)
+        /// </example>
+        private static Guid Id(string s)
+        {
+            const string template = "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx";
+            // Filter only hexadecimal characters
+            var hex = new string(s.Where(c => "0123456789abcdefABCDEF".Contains(c)).ToArray());
+            if (string.IsNullOrEmpty(hex))
+                throw new ArgumentException(
+                    "Input string must contain at least one hexadecimal character.",
+                    nameof(s)
+                );
+            var filled = string.Concat(
+                template.Select((c, i) => c == 'x' ? hex[i % hex.Length] : c)
+            );
+            return Guid.Parse(filled);
+        }
+
         static readonly Guid guid0 = Id('0');
         static readonly Guid guid1 = Id('1');
         static readonly Guid guid2 = Id('2');
@@ -160,14 +190,9 @@ namespace CareTogether.Core.Test.AuthorizationEngineTests
 
             NoteCommand command = commandType switch
             {
-                "CreateDraftNote" => new CreateDraftNote(
-                    guid1,
-                    newDraftNoteGuid,
-                    "Test Note",
-                    null
-                ),
-                "EditDraftNote" => new EditDraftNote(guid1, newDraftNoteGuid, "Test Note", null),
-                "DiscardDraftNote" => new DiscardDraftNote(guid1, newDraftNoteGuid),
+                "CreateDraftNote" => new CreateDraftNote(guid1, Guid.NewGuid(), "Test Note", null),
+                "EditDraftNote" => new EditDraftNote(guid1, Id("note1"), "Test Note", null),
+                "DiscardDraftNote" => new DiscardDraftNote(guid1, Id("note1")),
                 _ => throw new ArgumentException("Invalid command type", nameof(commandType)),
             };
 
