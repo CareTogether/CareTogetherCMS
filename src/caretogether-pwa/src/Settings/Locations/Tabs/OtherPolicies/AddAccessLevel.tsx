@@ -14,11 +14,12 @@ import {
 import { selectedLocationContextState } from '../../../../Model/Data';
 import { CTAutocomplete } from '../../../../Generic/Forms/CTAutocomplete';
 import { Controller, SubmitHandler, useForm } from 'react-hook-form';
+import { camelCaseToSpaces } from '../../../../Utilities/stringUtils';
 
 export type AccessLevelData = {
   id?: string;
   name: string;
-  organizationRoles: string[];
+  organizationRoles: { title: string; value: string }[];
 };
 
 interface DrawerProps {
@@ -70,7 +71,7 @@ export function AddAccessLevel({
         new AccessLevel({
           id: data.id,
           name: data.name,
-          organizationRoles: data.organizationRoles,
+          organizationRoles: data.organizationRoles.map((role) => role.value),
           approvalRoles: [],
         }),
       ];
@@ -123,7 +124,12 @@ export function AddAccessLevel({
           label="Organization Roles"
           fullWidth
           control={control}
-          options={organization?.roles?.map(({ roleName }) => roleName!) || []}
+          options={
+            organization?.roles?.map(({ roleName }) => ({
+              title: camelCaseToSpaces(roleName!),
+              value: roleName!,
+            })) || []
+          }
         />
       </Grid>
 

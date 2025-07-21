@@ -1,6 +1,6 @@
 import { Autocomplete, TextField, Button, Stack } from '@mui/material';
 import { Permission } from '../../GeneratedClient';
-import { spacesBeforeCapitalLetters } from './spacesBeforeCapitalLetters';
+import { formatPermissionName } from './formatPermissionName';
 import { useState } from 'react';
 import { groupedPermissions } from './groupedPermissions';
 
@@ -39,7 +39,7 @@ export function PermissionsSelect({
           );
 
           return {
-            title: spacesBeforeCapitalLetters(permissionName || ''),
+            title: formatPermissionName(permissionName || ''),
             value: permissionValue,
             disabled: !found,
             group,

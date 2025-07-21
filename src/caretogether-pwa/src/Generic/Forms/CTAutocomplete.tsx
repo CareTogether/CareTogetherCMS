@@ -16,7 +16,7 @@ interface ICustomTextFieldProps<T extends FieldValues> {
   rules?: RegisterOptions<T>;
   control?: Control<T>;
   defaultValue?: PathValue<T, Path<T>>;
-  options?: string[];
+  options?: { title: string; value: string }[];
   helperText?: string;
   minOverallWidth?: number;
   minTypingAreaWidth?: number;
@@ -47,8 +47,11 @@ export function CTAutocomplete<T extends FieldValues>({
           multiple
           freeSolo={freeSolo}
           options={options}
+          isOptionEqualToValue={(option, value) => option.value === value.value}
+          getOptionLabel={(option) =>
+            typeof option === 'string' ? option : option.title
+          }
           renderInput={(params) => {
-            console.log(params);
             return (
               <TextField
                 {...params}
@@ -59,7 +62,6 @@ export function CTAutocomplete<T extends FieldValues>({
               />
             );
           }}
-          // size="small"
           {...field}
           onChange={(_, newValue) => field.onChange(newValue)}
         />

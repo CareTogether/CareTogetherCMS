@@ -23,6 +23,7 @@ import { NavigateNext as NavigateNextIcon } from '@mui/icons-material';
 import { useRecoilValue } from 'recoil';
 import { selectedLocationContextState } from '../../Model/Data';
 import { Link } from 'react-router-dom';
+import { camelCaseToSpaces } from '../../Utilities/stringUtils';
 
 export function RolesSection() {
   const configuration = useLoadable(organizationConfigurationQuery);
@@ -95,7 +96,7 @@ export function RolesSection() {
                   onClick={() => appNavigate.role(role.roleName!)}
                 >
                   <TableCell align="left" sx={{ minWidth: 200 }}>
-                    {role.roleName}
+                    {camelCaseToSpaces(role.roleName!)}
                   </TableCell>
 
                   <TableCell
