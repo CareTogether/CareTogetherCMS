@@ -13,12 +13,13 @@ import {
   TableRow,
 } from '@mui/material';
 import { useRecoilValue } from 'recoil';
-import { locationConfigurationQuery } from '../../../../Model/ConfigurationModel';
+import { organizationConfigurationQuery } from '../../../../Model/ConfigurationModel';
 import { useState } from 'react';
 import SearchIcon from '@mui/icons-material/Search';
 import { useSidePanel } from '../../../../Hooks/useSidePanel';
 import { AccessLevelData, AddAccessLevel } from './AddAccessLevel';
 import { summarizeList } from '../../../../Utilities/stringUtils';
+import { useParams } from 'react-router-dom';
 
 export type ConfigurationData = {
   name: string;
@@ -36,10 +37,15 @@ export type AvailableOptions = {
 };
 
 export default function OtherPolicies() {
-  const location = useRecoilValue(locationConfigurationQuery);
-  const accessLevels = location?.accessLevels;
+  const params = useParams();
+  const locationId = params.locationId || '';
 
-  console.log({ accessLevels });
+  const organization = useRecoilValue(organizationConfigurationQuery);
+  const location = organization?.locations?.find(
+    (loc) => loc.id === locationId
+  );
+
+  const accessLevels = location?.accessLevels;
 
   const [searchTerm, setSearchTerm] = useState('');
 
@@ -155,6 +161,7 @@ export default function OtherPolicies() {
 
           <SidePanelAdd>
             <AddAccessLevel
+              locationConfiguration={location!}
               onClose={() => {
                 closeSidePanelAdd();
               }}
@@ -164,6 +171,7 @@ export default function OtherPolicies() {
           <SidePanelEdit>
             <AddAccessLevel
               data={workingAccessLevel || undefined}
+              locationConfiguration={location!}
               onClose={() => {
                 closeSidePanelEdit();
               }}
