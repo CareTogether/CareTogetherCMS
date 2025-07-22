@@ -5173,7 +5173,7 @@ export class Referral implements IReferral {
     closeReason?: ReferralCloseReason | undefined;
     completedRequirements?: CompletedRequirementInfo[];
     exemptedRequirements?: ExemptedRequirementInfo[];
-    missingRequirements?: MissingRequirement[];
+    missingRequirements?: RequirementDefinition[];
     completedCustomFields?: CompletedCustomFieldInfo[];
     missingCustomFields?: string[];
     arrangements?: Arrangement[];
@@ -5207,7 +5207,7 @@ export class Referral implements IReferral {
             if (Array.isArray(_data["missingRequirements"])) {
                 this.missingRequirements = [] as any;
                 for (let item of _data["missingRequirements"])
-                    this.missingRequirements!.push(MissingRequirement.fromJS(item));
+                    this.missingRequirements!.push(RequirementDefinition.fromJS(item));
             }
             if (Array.isArray(_data["completedCustomFields"])) {
                 this.completedCustomFields = [] as any;
@@ -5283,7 +5283,7 @@ export interface IReferral {
     closeReason?: ReferralCloseReason | undefined;
     completedRequirements?: CompletedRequirementInfo[];
     exemptedRequirements?: ExemptedRequirementInfo[];
-    missingRequirements?: MissingRequirement[];
+    missingRequirements?: RequirementDefinition[];
     completedCustomFields?: CompletedCustomFieldInfo[];
     missingCustomFields?: string[];
     arrangements?: Arrangement[];
@@ -5416,46 +5416,6 @@ export interface IExemptedRequirementInfo {
     dueDate?: Date | undefined;
     additionalComments?: string;
     exemptionExpiresAtUtc?: Date | undefined;
-}
-
-export class MissingRequirement implements IMissingRequirement {
-    actionName?: string;
-    isRequired?: boolean;
-
-    constructor(data?: IMissingRequirement) {
-        if (data) {
-            for (var property in data) {
-                if (data.hasOwnProperty(property))
-                    (<any>this)[property] = (<any>data)[property];
-            }
-        }
-    }
-
-    init(_data?: any) {
-        if (_data) {
-            this.actionName = _data["actionName"];
-            this.isRequired = _data["isRequired"];
-        }
-    }
-
-    static fromJS(data: any): MissingRequirement {
-        data = typeof data === 'object' ? data : {};
-        let result = new MissingRequirement();
-        result.init(data);
-        return result;
-    }
-
-    toJSON(data?: any) {
-        data = typeof data === 'object' ? data : {};
-        data["actionName"] = this.actionName;
-        data["isRequired"] = this.isRequired;
-        return data;
-    }
-}
-
-export interface IMissingRequirement {
-    actionName?: string;
-    isRequired?: boolean;
 }
 
 export class Arrangement implements IArrangement {

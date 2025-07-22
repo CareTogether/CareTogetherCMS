@@ -3176,7 +3176,7 @@
           "missingRequirements": {
             "type": "array",
             "items": {
-              "$ref": "#/components/schemas/MissingRequirement"
+              "$ref": "#/components/schemas/RequirementDefinition"
             }
           },
           "completedCustomFields": {
@@ -3288,18 +3288,6 @@
             "type": "string",
             "format": "date-time",
             "nullable": true
-          }
-        }
-      },
-      "MissingRequirement": {
-        "type": "object",
-        "additionalProperties": false,
-        "properties": {
-          "actionName": {
-            "type": "string"
-          },
-          "isRequired": {
-            "type": "boolean"
           }
         }
       },

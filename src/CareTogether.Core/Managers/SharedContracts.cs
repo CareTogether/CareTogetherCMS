@@ -38,7 +38,7 @@ namespace CareTogether.Managers
         ReferralCloseReason? CloseReason,
         ImmutableList<Resources.CompletedRequirementInfo> CompletedRequirements,
         ImmutableList<Resources.ExemptedRequirementInfo> ExemptedRequirements,
-        ImmutableList<MissingRequirement> MissingRequirements,
+        ImmutableList<RequirementDefinition> MissingRequirements,
         ImmutableList<CompletedCustomFieldInfo> CompletedCustomFields,
         ImmutableList<string> MissingCustomFields,
         ImmutableList<Arrangement> Arrangements,

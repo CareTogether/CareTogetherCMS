@@ -27,10 +27,6 @@ namespace CareTogether.Engines.PolicyEvaluation
                         )
                         .IsMetOrExempted
                 )
-                .Select(requirement => new MissingRequirement(
-                    requirement.ActionName,
-                    requirement.IsRequired
-                ))
                 .ToImmutableList();
 
             var missingCustomFields = referralPolicy

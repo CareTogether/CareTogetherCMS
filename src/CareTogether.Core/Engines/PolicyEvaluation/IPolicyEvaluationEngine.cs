@@ -338,10 +338,8 @@ namespace CareTogether.Engines.PolicyEvaluation
     };
 
 
-    public sealed record MissingRequirement(string ActionName, bool IsRequired);
-
     public sealed record ReferralStatus(
-        ImmutableList<MissingRequirement> MissingIntakeRequirements,
+        ImmutableList<RequirementDefinition> MissingIntakeRequirements,
         ImmutableList<string> MissingCustomFields,
         ImmutableDictionary<Guid, ArrangementStatus> IndividualArrangements
     );
