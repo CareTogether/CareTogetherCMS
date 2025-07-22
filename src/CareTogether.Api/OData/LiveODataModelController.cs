@@ -111,7 +111,7 @@ namespace CareTogether.Api.OData
         [property: Key] string RoleName,
         [property: Key] DateOnly Start,
         [property: Key] DateOnly End,
-        RoleApprovalStatus? Status
+        RoleApprovalStatus Status
     );
 
     public sealed record IndividualRoleApproval(
@@ -127,7 +127,7 @@ namespace CareTogether.Api.OData
         Guid FamilyId,
         [property: Key] DateOnly Start,
         [property: Key] DateOnly End,
-        RoleApprovalStatus? Status
+        RoleApprovalStatus Status
     );
 
     public sealed record FamilyRoleRemovedIndividual(
@@ -935,7 +935,7 @@ namespace CareTogether.Api.OData
                         date,
                         EntityType.Family,
                         ApprovalType.Direct,
-                        fra.Status ?? RoleApprovalStatus.Prospective,
+                        fra.Status,
                         false, // Will be calculated later
                         $"{fra.OrganizationId}-{fra.LocationId}"
                     ))
@@ -954,7 +954,7 @@ namespace CareTogether.Api.OData
                         date,
                         EntityType.Person,
                         ApprovalType.Direct,
-                        ira.Status ?? RoleApprovalStatus.Prospective,
+                        ira.Status,
                         false, // Will be calculated later
                         $"{ira.OrganizationId}-{ira.LocationId}"
                     ))
@@ -973,7 +973,7 @@ namespace CareTogether.Api.OData
                         date,
                         EntityType.Family,
                         ApprovalType.Indirect,
-                        ira.Status ?? RoleApprovalStatus.Prospective,
+                        ira.Status,
                         false, // Will be calculated later
                         $"{ira.OrganizationId}-{ira.LocationId}"
                     ))
@@ -1008,7 +1008,7 @@ namespace CareTogether.Api.OData
                             date,
                             EntityType.Person,
                             ApprovalType.Indirect,
-                            fra.Status ?? RoleApprovalStatus.Prospective,
+                            fra.Status,
                             false, // Will be calculated later
                             $"{fra.OrganizationId}-{fra.LocationId}"
                         ))
