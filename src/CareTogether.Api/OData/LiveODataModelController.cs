@@ -261,13 +261,13 @@ namespace CareTogether.Api.OData
     public enum EntityType
     {
         Family,
-        Person
+        Person,
     }
 
     public enum ApprovalType
     {
         Direct,
-        Indirect
+        Indirect,
     }
 
     public sealed record RoleApproval(
@@ -906,23 +906,26 @@ namespace CareTogether.Api.OData
             var endOfNextYear = new DateOnly(currentDate.Year + 1, 12, 31);
 
             // Helper function to generate dates between start and end (limited to end of next year)
-            static IEnumerable<DateOnly> GenerateDates(DateOnly start, DateOnly end, DateOnly endLimit)
+            static IEnumerable<DateOnly> GenerateDates(
+                DateOnly start,
+                DateOnly end,
+                DateOnly endLimit
+            )
             {
                 var finalEnd = end < endLimit ? end : endLimit;
-                if (start > endLimit) yield break;
-                
+                if (start > endLimit)
+                    yield break;
+
                 for (var date = start; date <= finalEnd; date = date.AddDays(1))
                 {
                     yield return date;
                 }
             }
 
-            var allApprovals = new List<RoleApproval>();
-
             // 1. Family Role Approvals (Direct)
             var familyDirectApprovals = familyRoleApprovals.SelectMany(fra =>
-                GenerateDates(fra.Start, fra.End, endOfNextYear).Select(date =>
-                    new RoleApproval(
+                GenerateDates(fra.Start, fra.End, endOfNextYear)
+                    .Select(date => new RoleApproval(
                         organization,
                         fra.OrganizationId,
                         fra.Location,
@@ -935,15 +938,13 @@ namespace CareTogether.Api.OData
                         fra.Status ?? RoleApprovalStatus.Prospective,
                         false, // Will be calculated later
                         $"{fra.OrganizationId}-{fra.LocationId}"
-                    )
-                )
+                    ))
             );
-            allApprovals.AddRange(familyDirectApprovals);
 
             // 2. Individual Role Approvals (Direct)
             var individualDirectApprovals = individualRoleApprovals.SelectMany(ira =>
-                GenerateDates(ira.Start, ira.End, endOfNextYear).Select(date =>
-                    new RoleApproval(
+                GenerateDates(ira.Start, ira.End, endOfNextYear)
+                    .Select(date => new RoleApproval(
                         organization,
                         ira.OrganizationId,
                         ira.Location,
@@ -956,15 +957,13 @@ namespace CareTogether.Api.OData
                         ira.Status ?? RoleApprovalStatus.Prospective,
                         false, // Will be calculated later
                         $"{ira.OrganizationId}-{ira.LocationId}"
-                    )
-                )
+                    ))
             );
-            allApprovals.AddRange(individualDirectApprovals);
 
             // 3. Indirect Family Approvals (from Individual Role Approvals)
             var indirectFamilyApprovals = individualRoleApprovals.SelectMany(ira =>
-                GenerateDates(ira.Start, ira.End, endOfNextYear).Select(date =>
-                    new RoleApproval(
+                GenerateDates(ira.Start, ira.End, endOfNextYear)
+                    .Select(date => new RoleApproval(
                         organization,
                         ira.OrganizationId,
                         ira.Location,
@@ -977,16 +976,16 @@ namespace CareTogether.Api.OData
                         ira.Status ?? RoleApprovalStatus.Prospective,
                         false, // Will be calculated later
                         $"{ira.OrganizationId}-{ira.LocationId}"
-                    )
-                )
+                    ))
             );
-            allApprovals.AddRange(indirectFamilyApprovals);
 
             // 4. Indirect Person Approvals (from Family Role Approvals, excluding removed individuals)
             var familyPersonMap = people.ToLookup(p => p.FamilyId);
             var removedIndividualsSet = familyRoleRemovedIndividuals
-                .SelectMany(fri => GenerateDates(fri.Start, fri.End, endOfNextYear)
-                    .Select(date => (fri.PersonId, fri.FamilyId, fri.RoleName, date)))
+                .SelectMany(fri =>
+                    GenerateDates(fri.Start, fri.End, endOfNextYear)
+                        .Select(date => (fri.PersonId, fri.FamilyId, fri.RoleName, date))
+                )
                 .ToHashSet();
 
             var indirectPersonApprovals = familyRoleApprovals.SelectMany(fra =>
@@ -994,48 +993,70 @@ namespace CareTogether.Api.OData
                 var familyMembers = familyPersonMap[fra.FamilyId];
                 return familyMembers.SelectMany(person =>
                     GenerateDates(fra.Start, fra.End, endOfNextYear)
-                        .Where(date => !removedIndividualsSet.Contains((person.Id, fra.FamilyId, fra.RoleName, date)))
-                        .Select(date =>
-                            new RoleApproval(
-                                organization,
-                                fra.OrganizationId,
-                                fra.Location,
-                                fra.LocationId,
-                                person.Id,
-                                fra.RoleName,
-                                date,
-                                EntityType.Person,
-                                ApprovalType.Indirect,
-                                fra.Status ?? RoleApprovalStatus.Prospective,
-                                false, // Will be calculated later
-                                $"{fra.OrganizationId}-{fra.LocationId}"
+                        .Where(date =>
+                            !removedIndividualsSet.Contains(
+                                (person.Id, fra.FamilyId, fra.RoleName, date)
                             )
                         )
+                        .Select(date => new RoleApproval(
+                            organization,
+                            fra.OrganizationId,
+                            fra.Location,
+                            fra.LocationId,
+                            person.Id,
+                            fra.RoleName,
+                            date,
+                            EntityType.Person,
+                            ApprovalType.Indirect,
+                            fra.Status ?? RoleApprovalStatus.Prospective,
+                            false, // Will be calculated later
+                            $"{fra.OrganizationId}-{fra.LocationId}"
+                        ))
                 );
             });
-            allApprovals.AddRange(indirectPersonApprovals);
 
-            // 5. Calculate status changes
-            var result = allApprovals
-                .GroupBy(ra => new { ra.EntityId, ra.RoleName })
-                .SelectMany(group =>
-                {
-                    var sortedApprovals = group.OrderBy(ra => ra.Date).ToList();
-                    
-                    for (int i = 0; i < sortedApprovals.Count; i++)
+            // 5. Calculate status changes for each approval type separately
+            var allApprovalsWithStatusChanges = new List<RoleApproval>();
+
+            // Process each approval type separately to ensure status changes are calculated correctly
+            var approvalGroups = new[]
+            {
+                familyDirectApprovals,
+                individualDirectApprovals,
+                indirectFamilyApprovals,
+                indirectPersonApprovals,
+            };
+
+            foreach (var approvalGroup in approvalGroups)
+            {
+                var processedGroup = approvalGroup
+                    .GroupBy(ra => new
                     {
-                        var current = sortedApprovals[i];
-                        var previous = i > 0 ? sortedApprovals[i - 1] : null;
-                        var statusChanged = previous == null || current.Status != previous.Status;
-                        
-                        sortedApprovals[i] = current with { StatusChanged = statusChanged };
-                    }
-                    
-                    return sortedApprovals;
-                })
-                .ToArray();
+                        ra.EntityId,
+                        ra.RoleName,
+                        ra.EntityType,
+                        ra.ApprovalType,
+                    })
+                    .SelectMany(group =>
+                    {
+                        var sortedApprovals = group.OrderBy(ra => ra.Date).ToArray();
 
-            return result;
+                        return sortedApprovals.Select(
+                            (current, index) =>
+                            {
+                                var previous = index > 0 ? sortedApprovals[index - 1] : null;
+                                var statusChanged =
+                                    previous == null || current.Status != previous.Status;
+                                return current with { StatusChanged = statusChanged };
+                            }
+                        );
+                    })
+                    .ToImmutableList();
+
+                allApprovalsWithStatusChanges.AddRange(processedGroup);
+            }
+
+            return allApprovalsWithStatusChanges;
         }
 
         private FamilyRecordsAggregate AnonymizeFamilyRecords(
