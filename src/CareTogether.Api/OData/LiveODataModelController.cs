@@ -1398,7 +1398,7 @@ namespace CareTogether.Api.OData
             var bestEmail = GetFromPrimaryContactIfAvailable(person =>
                 person
                     .EmailAddresses.SingleOrDefault(x =>
-                        x.Id == primaryContactPerson!.PreferredEmailAddressId
+                        x.Id == primaryContactPerson?.PreferredEmailAddressId
                     )
                     ?.Address
             );
