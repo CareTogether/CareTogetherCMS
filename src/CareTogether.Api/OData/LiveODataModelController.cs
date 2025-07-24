@@ -176,8 +176,8 @@ namespace CareTogether.Api.OData
         string TypeName,
         [property: ForeignKey("ReferralId")] Referral Referral,
         Guid ReferralId,
-        [property: ForeignKey("PersonId")] Person Person,
-        Guid PersonId,
+        [property: ForeignKey("PersonId")] Person? Person,
+        Guid? PersonId,
         DateOnly Requested,
         DateTime? StartedUtc,
         DateTime? EndedUtc,
@@ -201,8 +201,8 @@ namespace CareTogether.Api.OData
         [property: Key] Guid LocationId,
         [property: ForeignKey("ArrangementId")] Arrangement Arrangement,
         [property: Key] Guid ArrangementId,
-        [property: ForeignKey("ChildPersonId")] Person Child,
-        [property: Key] Guid ChildPersonId,
+        [property: ForeignKey("ChildPersonId")] Person? Child,
+        [property: Key] Guid? ChildPersonId,
         [property: ForeignKey("FamilyId")] Family Family,
         [property: Key] Guid FamilyId,
         [property: Key] DateTime StartedAtUtc,
@@ -1398,7 +1398,7 @@ namespace CareTogether.Api.OData
             var bestEmail = GetFromPrimaryContactIfAvailable(person =>
                 person
                     .EmailAddresses.SingleOrDefault(x =>
-                        x.Id == primaryContactPerson!.PreferredEmailAddressId
+                        x.Id == primaryContactPerson?.PreferredEmailAddressId
                     )
                     ?.Address
             );
@@ -1425,7 +1425,7 @@ namespace CareTogether.Api.OData
             var bestPhoneNumber = GetFromPrimaryContactIfAvailable(person =>
                 person
                     .PhoneNumbers.SingleOrDefault(x =>
-                        x.Id == primaryContactPerson!.PreferredPhoneNumberId
+                        x.Id == primaryContactPerson?.PreferredPhoneNumberId
                     )
                     ?.Number
             );
@@ -1684,7 +1684,7 @@ namespace CareTogether.Api.OData
                 var referral = referrals.Single(r => r.Id == referralInfo.Id);
                 return referralInfo.Arrangements.Select(arrangement =>
                 {
-                    var arrangementPerson = people.Single(p =>
+                    var arrangementPerson = people.SingleOrDefault(p =>
                         p.Id == arrangement.PartneringFamilyPersonId
                     );
                     return new Arrangement(
@@ -1730,7 +1730,7 @@ namespace CareTogether.Api.OData
                 return referralInfo.Arrangements.SelectMany(arrangement =>
                 {
                     var arrangementRecord = arrangements.Single(arr => arr.Id == arrangement.Id);
-                    var arrangementPerson = people.Single(p =>
+                    var arrangementPerson = people.SingleOrDefault(p =>
                         p.Id == arrangement.PartneringFamilyPersonId
                     );
                     return arrangement.ChildLocationHistory.Select(
