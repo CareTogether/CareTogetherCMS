@@ -20,7 +20,6 @@ namespace CareTogether.Engines.PolicyEvaluation
                 .RequiredIntakeActionNames.Where(requiredAction =>
                     !SharedCalculations
                         .RequirementMetOrExempted(
-                            requiredAction,
                             SharedCalculations.GetRequirementNameWithSynonyms(locationPolicy, requiredAction),
                             policySupersededAt: null,
                             today,
@@ -157,7 +156,6 @@ namespace CareTogether.Engines.PolicyEvaluation
                 .RequiredSetupActionNames.Where(requiredAction =>
                     !SharedCalculations
                         .RequirementMetOrExempted(
-                            requiredAction,
                             SharedCalculations.GetRequirementNameWithSynonyms(locationPolicy, requiredAction),
                             policySupersededAt: null,
                             today,
@@ -195,7 +193,6 @@ namespace CareTogether.Engines.PolicyEvaluation
                         .RequiredSetupActionNames.Where(requiredAction =>
                             !SharedCalculations
                                 .RequirementMetOrExempted(
-                                    requiredAction,
                                     SharedCalculations.GetRequirementNameWithSynonyms(
                                         locationPolicy,
                                         requiredAction
@@ -238,7 +235,6 @@ namespace CareTogether.Engines.PolicyEvaluation
                         .RequiredSetupActionNames.Where(requiredAction =>
                             !SharedCalculations
                                 .RequirementMetOrExempted(
-                                    requiredAction,
                                     SharedCalculations.GetRequirementNameWithSynonyms(
                                         locationPolicy,
                                         requiredAction
@@ -912,7 +908,6 @@ namespace CareTogether.Engines.PolicyEvaluation
                 .RequiredCloseoutActionNames.Where(requiredAction =>
                     !SharedCalculations
                         .RequirementMetOrExempted(
-                            requiredAction,
                             SharedCalculations.GetRequirementNameWithSynonyms(locationPolicy, requiredAction),
                             policySupersededAt: null,
                             today,
@@ -950,7 +945,6 @@ namespace CareTogether.Engines.PolicyEvaluation
                         .RequiredCloseoutActionNames.Where(requiredAction =>
                             !SharedCalculations
                                 .RequirementMetOrExempted(
-                                    requiredAction,
                                     SharedCalculations.GetRequirementNameWithSynonyms(locationPolicy, requiredAction),
                                     policySupersededAt: null,
                                     today,
@@ -990,7 +984,6 @@ namespace CareTogether.Engines.PolicyEvaluation
                         .RequiredCloseoutActionNames.Where(requiredAction =>
                             !SharedCalculations
                                 .RequirementMetOrExempted(
-                                    requiredAction,
                                     SharedCalculations.GetRequirementNameWithSynonyms(locationPolicy, requiredAction),
                                     policySupersededAt: null,
                                     today,
