@@ -1425,7 +1425,7 @@ namespace CareTogether.Api.OData
             var bestPhoneNumber = GetFromPrimaryContactIfAvailable(person =>
                 person
                     .PhoneNumbers.SingleOrDefault(x =>
-                        x.Id == primaryContactPerson!.PreferredPhoneNumberId
+                        x.Id == primaryContactPerson?.PreferredPhoneNumberId
                     )
                     ?.Number
             );
