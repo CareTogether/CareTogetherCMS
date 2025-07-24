@@ -21,8 +21,7 @@ namespace CareTogether.Engines.PolicyEvaluation
                     !SharedCalculations
                         .RequirementMetOrExempted(
                             requiredAction,
-                            FindActionDefinition(locationPolicy, requiredAction)?.AlternateNames
-                                ?? [],
+                            SharedCalculations.GetRequirementNameWithSynonyms(locationPolicy, requiredAction),
                             policySupersededAt: null,
                             today,
                             completedRequirements: referralEntry.CompletedRequirements,
@@ -63,19 +62,6 @@ namespace CareTogether.Engines.PolicyEvaluation
                 missingCustomFields,
                 individualArrangements
             );
-        }
-
-        internal static ActionRequirement? FindActionDefinition(
-            EffectiveLocationPolicy locationPolicy,
-            string requiredAction
-        )
-        {
-            return locationPolicy
-                .ActionDefinitions.ToImmutableDictionary()
-                .FirstOrDefault(item =>
-                    item.Key == requiredAction || item.Value.AlternateNames.Contains(requiredAction)
-                )
-                .Value;
         }
 
         internal static ArrangementStatus CalculateArrangementStatus(
@@ -172,8 +158,7 @@ namespace CareTogether.Engines.PolicyEvaluation
                     !SharedCalculations
                         .RequirementMetOrExempted(
                             requiredAction,
-                            FindActionDefinition(locationPolicy, requiredAction)?.AlternateNames
-                                ?? [],
+                            SharedCalculations.GetRequirementNameWithSynonyms(locationPolicy, requiredAction),
                             policySupersededAt: null,
                             today,
                             completedRequirements: arrangement.CompletedRequirements,
@@ -211,10 +196,10 @@ namespace CareTogether.Engines.PolicyEvaluation
                             !SharedCalculations
                                 .RequirementMetOrExempted(
                                     requiredAction,
-                                    FindActionDefinition(
+                                    SharedCalculations.GetRequirementNameWithSynonyms(
                                         locationPolicy,
                                         requiredAction
-                                    )?.AlternateNames ?? [],
+                                    ),
                                     policySupersededAt: null,
                                     today,
                                     completedRequirements: fva.CompletedRequirements,
@@ -254,10 +239,10 @@ namespace CareTogether.Engines.PolicyEvaluation
                             !SharedCalculations
                                 .RequirementMetOrExempted(
                                     requiredAction,
-                                    FindActionDefinition(
+                                    SharedCalculations.GetRequirementNameWithSynonyms(
                                         locationPolicy,
                                         requiredAction
-                                    )?.AlternateNames ?? [],
+                                    ),
                                     policySupersededAt: null,
                                     today,
                                     completedRequirements: iva.CompletedRequirements,
@@ -928,8 +913,7 @@ namespace CareTogether.Engines.PolicyEvaluation
                     !SharedCalculations
                         .RequirementMetOrExempted(
                             requiredAction,
-                            FindActionDefinition(locationPolicy, requiredAction)?.AlternateNames
-                                ?? [],
+                            SharedCalculations.GetRequirementNameWithSynonyms(locationPolicy, requiredAction),
                             policySupersededAt: null,
                             today,
                             completedRequirements: arrangement.CompletedRequirements,
@@ -967,10 +951,7 @@ namespace CareTogether.Engines.PolicyEvaluation
                             !SharedCalculations
                                 .RequirementMetOrExempted(
                                     requiredAction,
-                                    FindActionDefinition(
-                                        locationPolicy,
-                                        requiredAction
-                                    )?.AlternateNames ?? [],
+                                    SharedCalculations.GetRequirementNameWithSynonyms(locationPolicy, requiredAction),
                                     policySupersededAt: null,
                                     today,
                                     completedRequirements: fva.CompletedRequirements,
@@ -1010,10 +991,7 @@ namespace CareTogether.Engines.PolicyEvaluation
                             !SharedCalculations
                                 .RequirementMetOrExempted(
                                     requiredAction,
-                                    FindActionDefinition(
-                                        locationPolicy,
-                                        requiredAction
-                                    )?.AlternateNames ?? [],
+                                    SharedCalculations.GetRequirementNameWithSynonyms(locationPolicy, requiredAction),
                                     policySupersededAt: null,
                                     today,
                                     completedRequirements: iva.CompletedRequirements,
