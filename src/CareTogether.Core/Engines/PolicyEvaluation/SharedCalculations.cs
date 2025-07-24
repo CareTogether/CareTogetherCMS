@@ -13,6 +13,32 @@ namespace CareTogether.Engines.PolicyEvaluation
     {
         public sealed record RequirementCheckResult(bool IsMetOrExempted, DateOnly? ExpiresAtUtc);
 
+        private static ActionRequirement? FindActionDefinition(
+            EffectiveLocationPolicy locationPolicy,
+            string requiredAction
+        )
+        {
+            return locationPolicy
+                .ActionDefinitions.ToImmutableDictionary()
+                .FirstOrDefault(item =>
+                    item.Key == requiredAction || item.Value.AlternateNames.Contains(requiredAction)
+                )
+                .Value;
+        }
+
+        internal static ImmutableList<string> GetRequirementNameWithSynonyms(
+            EffectiveLocationPolicy locationPolicy,
+            string requirementName
+        )
+        {
+            var actionDefinition = FindActionDefinition(locationPolicy, requirementName);
+
+            return ImmutableList
+                .Create(requirementName)
+                .AddRange(actionDefinition?.AlternateNames ?? [])
+                .ToImmutableList();
+        }
+
         //NOTE: This is currently being used by Referral calculations.
         internal static RequirementCheckResult RequirementMetOrExempted(
             string requirementName,
@@ -26,7 +52,7 @@ namespace CareTogether.Engines.PolicyEvaluation
             var requirementNames = new[] { requirementName }
                 .Concat(alternativeRequirementNames)
                 .ToImmutableHashSet();
-            
+
             var bestCompletion = completedRequirements
                 .Where(completed =>
                     requirementNames.Contains(completed.RequirementName)
@@ -259,7 +285,7 @@ namespace CareTogether.Engines.PolicyEvaluation
         //TODO: Eventually this should be used for referral calculations as well!
         //      Maybe rename it to 'FindWhenRequirementIsMet' or something like that?
         internal static DateOnlyTimeline? FindRequirementApprovals(
-            string requirementName,
+            ImmutableList<string> requirementNameWithSynonyms,
             DateTime? policyVersionSupersededAtUtc,
             ImmutableList<Resources.CompletedRequirementInfo> completedRequirementsInScope,
             ImmutableList<Resources.ExemptedRequirementInfo> exemptedRequirementsInScope
@@ -272,7 +298,7 @@ namespace CareTogether.Engines.PolicyEvaluation
 
             var matchingCompletions = completedRequirementsInScope
                 .Where(completed =>
-                    completed.RequirementName == requirementName
+                    requirementNameWithSynonyms.Contains(completed.RequirementName)
                     && (
                         policyVersionSupersededAtUtc == null
                         || completed.CompletedAtUtc.Date < policyVersionSupersededAtUtc.Value.Date
@@ -287,7 +313,7 @@ namespace CareTogether.Engines.PolicyEvaluation
                 .ToImmutableList();
 
             var matchingExemptions = exemptedRequirementsInScope
-                .Where(exempted => exempted.RequirementName == requirementName)
+                .Where(exempted => requirementNameWithSynonyms.Contains(exempted.RequirementName))
                 //TODO: Exemptions currently cannot be backdated, which may need to change in order to
                 //      fully support handling policy exemptions correctly within the supersedence constraint.
                 //      && (policyVersionSupersededAtUtc == null || exempted.TimestampUtc < policyVersionSupersededAtUtc))

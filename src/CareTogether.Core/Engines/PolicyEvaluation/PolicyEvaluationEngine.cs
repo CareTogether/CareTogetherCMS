@@ -42,7 +42,7 @@ namespace CareTogether.Engines.PolicyEvaluation
             var policy = await policiesResource.GetCurrentPolicy(organizationId, locationId);
 
             return ApprovalCalculations.CalculateCombinedFamilyApprovals(
-                policy.VolunteerPolicy,
+                policy,
                 family,
                 completedFamilyRequirements,
                 exemptedFamilyRequirements,

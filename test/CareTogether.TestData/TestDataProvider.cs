@@ -2608,7 +2608,7 @@ namespace CareTogether.TestData
                     ["Comprehensive Background Check"] = new ActionRequirement(
                         DocumentLinkRequirement.Required,
                         NoteEntryRequirement.Allowed,
-                        [],
+                        ["Bg check"],
                         "This is an all-in-one background check",
                         new Uri("http://example.com/forms/compbgcheck"),
                         new TimeSpan(365 * 2, 0, 0, 0),
@@ -3033,6 +3033,10 @@ namespace CareTogether.TestData
                                         new VolunteerApprovalRequirement(
                                             RequirementStage.Approval,
                                             "Comprehensive Background Check"
+                                        ),
+                                        new VolunteerApprovalRequirement(
+                                            RequirementStage.Approval,
+                                            "Bg check"
                                         ),
                                     ]
                                 ),
