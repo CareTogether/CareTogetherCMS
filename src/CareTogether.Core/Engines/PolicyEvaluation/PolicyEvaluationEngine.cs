@@ -243,6 +243,7 @@ namespace CareTogether.Engines.PolicyEvaluation
             );
 
             var referralStatus = ReferralCalculations.CalculateReferralStatus(
+                policy,
                 policy.ReferralPolicy,
                 referralEntryForCalculation,
                 Dates.ToDateOnlyInLocationTimeZone(DateTime.UtcNow, locationTimeZone)
