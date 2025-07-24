@@ -337,15 +337,19 @@ namespace CareTogether.Engines.PolicyEvaluation
         Denied = 6,
     };
 
+
+    public sealed record MissingRequirement(string ActionName, bool IsRequired);
+
     public sealed record ReferralStatus(
-        ImmutableList<string> MissingIntakeRequirements,
+        ImmutableList<MissingRequirement> MissingIntakeRequirements,
         ImmutableList<string> MissingCustomFields,
         ImmutableDictionary<Guid, ArrangementStatus> IndividualArrangements
     );
 
     public sealed record ArrangementStatus(
         ArrangementPhase Phase,
-        ImmutableList<MissingArrangementRequirement> MissingRequirements
+        ImmutableList<MissingArrangementRequirement> MissingRequirements,
+        ImmutableList<MissingArrangementRequirement> MissingOptionalRequirements
     );
 
     public sealed record MissingArrangementRequirement(
@@ -353,7 +357,7 @@ namespace CareTogether.Engines.PolicyEvaluation
         string? ArrangementFunctionVariant,
         Guid? VolunteerFamilyId,
         Guid? PersonId,
-        string ActionName,
+        RequirementDefinition Action,
         DateOnly? DueBy,
         DateOnly? PastDueSince
     );

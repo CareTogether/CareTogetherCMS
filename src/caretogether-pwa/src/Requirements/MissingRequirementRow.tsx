@@ -1,5 +1,5 @@
 import { useRecoilValue } from 'recoil';
-import { Permission } from '../GeneratedClient';
+import { MissingRequirement, Permission } from '../GeneratedClient';
 import { policyData } from '../Model/ConfigurationModel';
 import { useFamilyIdPermissions } from '../Model/SessionModel';
 import { useDialogHandle } from '../Hooks/useDialogHandle';
@@ -9,7 +9,7 @@ import { RequirementContext } from './RequirementContext';
 import { Chip } from '@mui/material';
 
 type MissingRequirementRowProps = {
-  requirement: string;
+  requirement: string | MissingRequirement;
   policyVersion?: string;
   context: RequirementContext;
   isAvailableApplication?: boolean;
@@ -35,7 +35,13 @@ export function MissingRequirementRow({
 
   const dialogHandle = useDialogHandle();
 
-  const requirementPolicy = policy.actionDefinitions![requirement];
+  const requirementName =
+    typeof requirement === 'string' ? requirement : requirement.actionName!;
+
+  const isRequired =
+    typeof requirement === 'string' ? true : requirement.isRequired;
+
+  const requirementPolicy = policy.actionDefinitions![requirementName];
 
   if (
     context.kind === 'Arrangement' ||
@@ -56,10 +62,10 @@ export function MissingRequirementRow({
   return (
     <>
       <IconRow
-        icon={isAvailableApplication ? '💤' : '❌'}
+        icon={isAvailableApplication ? '💤' : isRequired ? '❌' : '☑️'}
         onClick={canComplete || canExempt ? dialogHandle.openDialog : undefined}
       >
-        <span className="ph-unmask">{requirement}</span>
+        <span className="ph-unmask">{requirementName}</span>
         {policyVersion && (
           <Chip
             label={policyVersion}

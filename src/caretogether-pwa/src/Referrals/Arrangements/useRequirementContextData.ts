@@ -127,48 +127,51 @@ export function useRequirementContextData(
       )
     );
 
-  const missingRequirementsWithContext = (
-    arrangement.missingRequirements || []
-  ).map((requirement) => {
-    if (requirement.personId) {
-      return {
-        missing: requirement,
-        context: {
-          kind: 'Individual Volunteer Assignment',
-          partneringFamilyId: partneringFamily.family!.id!,
-          referralId: referralId,
-          arrangementId: arrangement.id!,
-          assignment: arrangement.individualVolunteerAssignments!.find(
-            (iva) =>
-              iva.arrangementFunction === requirement.arrangementFunction &&
-              iva.arrangementFunctionVariant ===
-                requirement.arrangementFunctionVariant &&
-              iva.familyId === requirement.volunteerFamilyId &&
-              iva.personId === requirement.personId
-          )!,
-        } as RequirementContext,
-      };
-    } else if (requirement.volunteerFamilyId) {
-      return {
-        missing: requirement,
-        context: {
-          kind: 'Family Volunteer Assignment',
-          partneringFamilyId: partneringFamily.family!.id!,
-          referralId: referralId,
-          arrangementId: arrangement.id!,
-          assignment: arrangement.familyVolunteerAssignments!.find(
-            (iva) =>
-              iva.arrangementFunction === requirement.arrangementFunction &&
-              iva.arrangementFunctionVariant ===
-                requirement.arrangementFunctionVariant &&
-              iva.familyId === requirement.volunteerFamilyId
-          )!,
-        } as RequirementContext,
-      };
-    } else {
-      return { missing: requirement, context: arrangementRequirementContext };
-    }
-  });
+  const missingRequirementsWithContext =
+    // arrangement.missingRequirements || []
+    [
+      ...arrangement.missingRequirements!,
+      ...arrangement.missingOptionalRequirements!,
+    ].map((requirement) => {
+      if (requirement.personId) {
+        return {
+          missing: requirement,
+          context: {
+            kind: 'Individual Volunteer Assignment',
+            partneringFamilyId: partneringFamily.family!.id!,
+            referralId: referralId,
+            arrangementId: arrangement.id!,
+            assignment: arrangement.individualVolunteerAssignments!.find(
+              (iva) =>
+                iva.arrangementFunction === requirement.arrangementFunction &&
+                iva.arrangementFunctionVariant ===
+                  requirement.arrangementFunctionVariant &&
+                iva.familyId === requirement.volunteerFamilyId &&
+                iva.personId === requirement.personId
+            )!,
+          } as RequirementContext,
+        };
+      } else if (requirement.volunteerFamilyId) {
+        return {
+          missing: requirement,
+          context: {
+            kind: 'Family Volunteer Assignment',
+            partneringFamilyId: partneringFamily.family!.id!,
+            referralId: referralId,
+            arrangementId: arrangement.id!,
+            assignment: arrangement.familyVolunteerAssignments!.find(
+              (iva) =>
+                iva.arrangementFunction === requirement.arrangementFunction &&
+                iva.arrangementFunctionVariant ===
+                  requirement.arrangementFunctionVariant &&
+                iva.familyId === requirement.volunteerFamilyId
+            )!,
+          } as RequirementContext,
+        };
+      } else {
+        return { missing: requirement, context: arrangementRequirementContext };
+      }
+    });
 
   // Sort the missing requirements so that all the items with due dates are shown after
   // the items without due dates, and so that all items with due dates are shown in

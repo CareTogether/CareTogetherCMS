@@ -2429,6 +2429,13 @@ namespace CareTogether.TestData
                         new Uri("http://example.com/forms/advocacy-v1"),
                         null
                     ),
+                    ["Some optional action"] = new ActionRequirement(
+                        DocumentLinkRequirement.None,
+                        NoteEntryRequirement.Allowed,
+                        null,
+                        null,
+                        null
+                    ),
                     ["One Time Checkin"] = new ActionRequirement(
                         DocumentLinkRequirement.None,
                         NoteEntryRequirement.Allowed,
@@ -2538,7 +2545,11 @@ namespace CareTogether.TestData
                     ),
                 ],
                 new ReferralPolicy(
-                    ["Request for Help Form", "Intake Coordinator Screening Call", "Intake Form"],
+                    [
+                        new RequirementDefinition("Request for Help Form", false),
+                        new RequirementDefinition("Intake Coordinator Screening Call", true),
+                        new RequirementDefinition("Intake Form", true),
+                    ],
                     [
                         new CustomField(
                             "Referral Source",
@@ -2564,11 +2575,17 @@ namespace CareTogether.TestData
                                     [
                                         new ArrangementFunctionVariant(
                                             "New Host Family",
-                                            RequiredSetupActionNames: ["Family Meeting"],
+                                            RequiredSetupActionNames:
+                                            [
+                                                new RequirementDefinition("Family Meeting", true),
+                                            ],
                                             RequiredMonitoringActions:
                                             [
                                                 new MonitoringRequirement(
-                                                    "Family Coach Safety Visit",
+                                                    new RequirementDefinition(
+                                                        "Family Coach Safety Visit",
+                                                        true
+                                                    ),
                                                     new DurationStagesPerChildLocationRecurrencePolicy(
                                                         [
                                                             new RecurrencePolicyStage(
@@ -2587,7 +2604,13 @@ namespace CareTogether.TestData
                                                     )
                                                 ),
                                             ],
-                                            RequiredCloseoutActionNames: ["Host Family Debriefing"]
+                                            RequiredCloseoutActionNames:
+                                            [
+                                                new RequirementDefinition(
+                                                    "Host Family Debriefing",
+                                                    true
+                                                ),
+                                            ]
                                         ),
                                         new ArrangementFunctionVariant(
                                             "Familiar Host Family",
@@ -2595,7 +2618,10 @@ namespace CareTogether.TestData
                                             RequiredMonitoringActions:
                                             [
                                                 new MonitoringRequirement(
-                                                    "Family Coach Safety Visit",
+                                                    new RequirementDefinition(
+                                                        "Family Coach Safety Visit",
+                                                        true
+                                                    ),
                                                     new DurationStagesPerChildLocationRecurrencePolicy(
                                                         [
                                                             new RecurrencePolicyStage(
@@ -2610,7 +2636,13 @@ namespace CareTogether.TestData
                                                     )
                                                 ),
                                             ],
-                                            RequiredCloseoutActionNames: ["Host Family Debriefing"]
+                                            RequiredCloseoutActionNames:
+                                            [
+                                                new RequirementDefinition(
+                                                    "Host Family Debriefing",
+                                                    true
+                                                ),
+                                            ]
                                         ),
                                     ]
                                 ),
@@ -2655,22 +2687,25 @@ namespace CareTogether.TestData
                                     Variants: []
                                 ),
                             ],
-                            RequiredSetupActionNames:
+                            RequiredSetupActions:
                             [
-                                "Hosting Consent",
-                                "Medical POA",
-                                "Complex Instructions",
+                                new RequirementDefinition("Hosting Consent", true),
+                                new RequirementDefinition("Medical POA", true),
+                                new RequirementDefinition("Complex Instructions", true),
                             ],
                             RequiredMonitoringActions:
                             [
                                 new MonitoringRequirement(
-                                    "Family Coach Supervision",
+                                    new RequirementDefinition("Family Coach Supervision", true),
                                     new DurationStagesRecurrencePolicy(
                                         [new RecurrencePolicyStage(TimeSpan.FromDays(7), null)]
                                     )
                                 ),
                             ],
-                            RequiredCloseoutActionNames: ["Return of Child Form"]
+                            RequiredCloseoutActionNames:
+                            [
+                                new RequirementDefinition("Return of Child Form", true),
+                            ]
                         ),
                         new ArrangementPolicy(
                             "Babysitting",
@@ -2687,11 +2722,17 @@ namespace CareTogether.TestData
                                     [
                                         new ArrangementFunctionVariant(
                                             "New Host Family",
-                                            RequiredSetupActionNames: ["Family Meeting"],
+                                            RequiredSetupActionNames:
+                                            [
+                                                new RequirementDefinition("Family Meeting", true),
+                                            ],
                                             RequiredMonitoringActions:
                                             [
                                                 new MonitoringRequirement(
-                                                    "Family Coach Safety Visit",
+                                                    new RequirementDefinition(
+                                                        "Family Coach Safety Visit",
+                                                        true
+                                                    ),
                                                     new ChildCareOccurrenceBasedRecurrencePolicy(
                                                         TimeSpan.FromHours(48),
                                                         3,
@@ -2700,7 +2741,10 @@ namespace CareTogether.TestData
                                                     )
                                                 ),
                                                 new MonitoringRequirement(
-                                                    "Family Coach Checkin",
+                                                    new RequirementDefinition(
+                                                        "Family Coach Checkin",
+                                                        true
+                                                    ),
                                                     new ChildCareOccurrenceBasedRecurrencePolicy(
                                                         TimeSpan.FromHours(48),
                                                         3,
@@ -2709,7 +2753,13 @@ namespace CareTogether.TestData
                                                     )
                                                 ),
                                             ],
-                                            RequiredCloseoutActionNames: ["Host Family Debriefing"]
+                                            RequiredCloseoutActionNames:
+                                            [
+                                                new RequirementDefinition(
+                                                    "Host Family Debriefing",
+                                                    true
+                                                ),
+                                            ]
                                         ),
                                         new ArrangementFunctionVariant(
                                             "Familiar Host Family",
@@ -2717,7 +2767,10 @@ namespace CareTogether.TestData
                                             RequiredMonitoringActions:
                                             [
                                                 new MonitoringRequirement(
-                                                    "Family Coach Safety Visit",
+                                                    new RequirementDefinition(
+                                                        "Family Coach Safety Visit",
+                                                        true
+                                                    ),
                                                     new ChildCareOccurrenceBasedRecurrencePolicy(
                                                         TimeSpan.FromHours(48),
                                                         3,
@@ -2726,7 +2779,10 @@ namespace CareTogether.TestData
                                                     )
                                                 ),
                                                 new MonitoringRequirement(
-                                                    "Family Coach Checkin",
+                                                    new RequirementDefinition(
+                                                        "Family Coach Checkin",
+                                                        true
+                                                    ),
                                                     new ChildCareOccurrenceBasedRecurrencePolicy(
                                                         TimeSpan.FromHours(48),
                                                         3,
@@ -2756,17 +2812,23 @@ namespace CareTogether.TestData
                                     Variants: []
                                 ),
                             ],
-                            RequiredSetupActionNames: ["Hosting Consent"],
+                            RequiredSetupActions:
+                            [
+                                new RequirementDefinition("Hosting Consent", true),
+                            ],
                             RequiredMonitoringActions:
                             [
                                 new MonitoringRequirement(
-                                    "Family Coach Supervision",
+                                    new RequirementDefinition("Family Coach Supervision", true),
                                     new DurationStagesRecurrencePolicy(
                                         [new RecurrencePolicyStage(TimeSpan.FromDays(30), null)]
                                     )
                                 ),
                             ],
-                            RequiredCloseoutActionNames: ["Return of Child Form"]
+                            RequiredCloseoutActionNames:
+                            [
+                                new RequirementDefinition("Return of Child Form", true),
+                            ]
                         ),
                         new ArrangementPolicy(
                             "Friending",
@@ -2798,15 +2860,19 @@ namespace CareTogether.TestData
                                     Variants: []
                                 ),
                             ],
-                            RequiredSetupActionNames: ["Advocacy Agreement"],
+                            RequiredSetupActions:
+                            [
+                                new RequirementDefinition("Advocacy Agreement", true),
+                                new RequirementDefinition("Some optional action", false),
+                            ],
                             RequiredMonitoringActions:
                             [
                                 new MonitoringRequirement(
-                                    "One Time Checkin",
+                                    new RequirementDefinition("One Time Checkin", false),
                                     new OneTimeRecurrencePolicy(TimeSpan.FromDays(2))
                                 ),
                                 new MonitoringRequirement(
-                                    "Family Coach Checkin",
+                                    new RequirementDefinition("Family Coach Checkin", true),
                                     new DurationStagesRecurrencePolicy(
                                         [
                                             new RecurrencePolicyStage(TimeSpan.FromDays(2), 1),
@@ -2815,13 +2881,13 @@ namespace CareTogether.TestData
                                     )
                                 ),
                                 new MonitoringRequirement(
-                                    "Family Coach Supervision",
+                                    new RequirementDefinition("Family Coach Supervision", true),
                                     new DurationStagesRecurrencePolicy(
                                         [new RecurrencePolicyStage(TimeSpan.FromDays(7), null)]
                                     )
                                 ),
                             ],
-                            RequiredCloseoutActionNames: new List<string> { }.ToImmutableList()
+                            RequiredCloseoutActionNames: []
                         ),
                     ],
                     [
