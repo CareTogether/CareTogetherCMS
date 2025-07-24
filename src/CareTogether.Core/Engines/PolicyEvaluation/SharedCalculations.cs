@@ -41,21 +41,16 @@ namespace CareTogether.Engines.PolicyEvaluation
 
         //NOTE: This is currently being used by Referral calculations.
         internal static RequirementCheckResult RequirementMetOrExempted(
-            string requirementName,
-            ImmutableList<string> alternativeRequirementNames,
+            ImmutableList<string> requirementNameWithSynonyms,
             DateOnly? policySupersededAt,
             DateOnly today,
             ImmutableList<CompletedRequirementInfo> completedRequirements,
             ImmutableList<ExemptedRequirementInfo> exemptedRequirements
         )
         {
-            var requirementNames = new[] { requirementName }
-                .Concat(alternativeRequirementNames)
-                .ToImmutableHashSet();
-
             var bestCompletion = completedRequirements
                 .Where(completed =>
-                    requirementNames.Contains(completed.RequirementName)
+                    requirementNameWithSynonyms.Contains(completed.RequirementName)
                     // completed.RequirementName == requirementName
                     && (policySupersededAt == null || completed.CompletedAt < policySupersededAt)
                     && (completed.ExpiresAt == null || completed.ExpiresAt > today)
@@ -67,7 +62,7 @@ namespace CareTogether.Engines.PolicyEvaluation
 
             var bestExemption = exemptedRequirements
                 .Where(exempted =>
-                    requirementNames.Contains(exempted.RequirementName)
+                    requirementNameWithSynonyms.Contains(exempted.RequirementName)
                     && (exempted.ExemptionExpiresAt == null || exempted.ExemptionExpiresAt > today)
                 )
                 .MaxBy(exempted => exempted.ExemptionExpiresAt ?? DateOnly.MaxValue);
