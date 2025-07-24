@@ -1,36 +1,4 @@
-UseCase Purpose {
-@@@
-# Purpose
-The following fundamental statements define and guide both the CareTogether organization and platform.
-
-## Mission
-
-To make human services more relational.
-
-## Objectives
-
-1. Minimize the risk of platform-level as well as organization-level data breaches for all customers, while mitigating the impact of individual-level user account takeovers.
-2. Ensure system resilience, including providing for long-term support and maintenance.
-3. Help customers establish and maintain regulatory compliance.
-4. Help customers optimize their processes and communications.
-5. Allow even the smallest human services organizations to fully adopt the system.
-6. Enable even the largest human services organizations to fully embrace the platform, including qualifying for relevant grants.
-7. Build a network of partnering human services organizations that can provide wrap-around support to participants in a geographic area.
-8. Empower partners and AI agents to fully leverage the platform.
-9. Provide the highest quality user experience in the industry for all users.
-10. Build the capacity to serve the ~300,000 human services organizations in the United States and support global use.
-11. Enable longitudinal studies of human services outcomes and impact in order to identify and share best practices with organizations.
-12. Provide an avenue for self-insurance.
-13. Assist organizations in networking based on insights into relevant potential partners.
-14. Empower clients to maintain effective control of their personal data.
-
-## Vision
-
-Develop a case management platform that reimagines connection for human services.
-
-@@@
-}
-
+| "Glossary"
 UseCase Glossary {
 @@@
 # Glossary
@@ -48,7 +16,17 @@ These terms capture the "brand voice" of CareTogether. They MUST be used only wi
 - **Programs** are the actual services, comprised of policies and procedures, that an organization offers to its clients. The mapping between locations and programs is N-to-M: multiple programs within the same location can serve the same clients, and an organization may not offer the same programs at all of its locations. Program policies and procedures can vary by location.
 - Policies
 - Procedures
+- **Person** - any human being, about which we can store certain facts (name, contact info, etc.)
+- **Family** -- sort of a fiction/loose concept (important to treat it as a dimension, perhaps, at a minimum) -- we already identify families by their primary contact
+  - Record-keeping scope *may* vary by organization?
+  - Reality of families is that they are a very nebulous concept, especially for many client families
+- **Household** -- has some implications for approval rules, e.g. background checks for all household members is a policy
+  - When people *leave a household* that's typically the trigger for the actual business activity of moving them to another family "entity" today in V1.
+- "Contact" - someone from another organization who is tracked in the system, e.g. as a referral source
 - Staff
+  - Organizational function? Make this configurable? -- would be helpful to be explicit, and manually adjustable, re: which function(s) a person/family is
+  - "organizational functions" apply to people (persons), but not necessarily to families: a family can be a volunteer family, can be a client family, but cannot be a staff family.
+  - Families vs. households: need to revisit how we do recordkeeping around these overlapping concepts
 - Volunteers
 - **Clients** - Unfortunately in the IDesign Method, and software architecture generally, the term 'Client' is used for a specific technical purpose that is unrelated to this idea of a **program participant**, someone who is receiving the services offered by an HSO. However, the term **client** is the predominant (universally accepted) term in the human services sector. Thus, when talking about the _domain_, we refer to **clients**.
 - Referral Partner - another HSO that agrees to receive outbound referrals made by an HSO and/or provides inbound referrals to an HSO
@@ -94,22 +72,114 @@ Community Members
 }
 
 
-/*
-## Use Cases (Activity Diagrams)
-*/
+| "Purpose"
+UseCase Purpose {
+@@@
+# Purpose
+The following fundamental statements define and guide both the CareTogether organization and platform.
 
-Activity "XYZ" {}
+## Mission
 
-/*
-## Core Use Cases
+To make human services more relational.
 
-### Membership
+## Objectives
 
-### Process
+1. Minimize the risk of platform-level as well as organization-level data breaches for all customers, while mitigating the impact of individual-level user account takeovers.
+2. Ensure system resilience, including providing for long-term support and maintenance.
+3. Help customers establish and maintain regulatory compliance.
+4. Help customers optimize their processes and communications.
+5. Allow even the smallest human services organizations to fully adopt the system.
+6. Enable even the largest human services organizations to fully embrace the platform, including qualifying for relevant grants.
+7. Build a network of partnering human services organizations that can provide wrap-around support to participants in a geographic area.
+8. Empower partners and AI agents to fully leverage the platform.
+9. Provide the highest quality user experience in the industry for all users.
+10. Build the capacity to serve the ~300,000 human services organizations in the United States and support global use.
+11. Enable longitudinal studies of human services outcomes and impact in order to identify and share best practices with organizations.
+12. Provide an avenue for self-insurance.
+13. Assist organizations in networking based on insights into relevant potential partners.
+14. Empower clients to maintain effective control of their personal data.
 
-### Communication
+## Vision
 
-*/
+Develop a case management platform that reimagines connection for human services.
+
+@@@
+}
+
+
+| "Core Use Case: Membership"
+
+| "Facet: Organization Membership"
+Activity "Invite Organization" {}
+Activity "Accept Organization Invite" {}
+Activity "Configure Organization" {}
+Activity "Configure Organizational Single Sign-On" {}
+Activity "Configure Locations" {}
+Activity "Configure Programs" {}
+Activity "Configure Roles" {}
+Activity "Configure Community" {}
+
+| "Facet: Person Membership"
+Activity "Invite Person User" {}
+Activity "Accept Person Invite" {}
+Activity "Link Login to Person" {}
+Activity "View Person User Login Info" {}
+Activity "Assign Organization Roles" {} /*?*/
+Activity "Invite Person to Community" {} /* or is this record keeping? or both. */
+Activity "Link Person to Community" {}
+
+
+| "Core Use Case: Records"
+
+| "Facet: Organization Records"
+Activity "Configure Process" {} /* Core use case: includes policies, procedures, forms */
+
+Activity "Submit Records" {} /* Core use case; includes archiving records */
+Activity "Retrieve Records" {} /* Core use case */
+
+Activity "Approve Records Submission" {}
+Activity "Reject Records Submission" {}
+Activity "Approve Records Retrieval" {}
+Activity "Reject Records Retrieval" {}
+
+Activity "Download Document" {}
+Activity "Upload Document" {}
+
+/* Post-2025/2026 */
+Activity "Accept Inbound Referral" {}
+Activity "Submit Outbound Referral" {}
+
+| "Facet: Personal Records"
+
+Activity "Upload Requested Documentation" {}
+Activity "Generate Assertions" {}
+Activity "Share Assertions" {}
+Activity "Audit Assertions" {}
+
+| "Core Use Case: Communication"
+/* For symmetry: organization & personal facets? */
+/*TODO: This section still needs to be cleaned up */
+
+Activity "Notify Organization" {}
+
+Activity "Send Bulk SMS" {} /* This is a primitive action */
+Activity "Volunteer Search" {} /* This is a -- very complicated -- workflow */
+Activity "Communication Tree" {} /* This is a workflow */
+Activity "Notify Person" {}
+Activity "Broadcast" {} /* to an audience */
+Activity "Receive Response" {} /* this is a placeholder */
+Activity "Notify of Record Changes" {} /*TODO: Revisit what this part of the domain looks like abstractly */
+
+
+
+| "Reference --- other services' responsibilities"
+
+Activity "Query Permissions" {} /* Feels like an evaluation activity */
+Activity "Calculate Approval Status" {} /* Feels like an evaluation activity */
+Activity "Calculate Pending Steps" {} /* Feels like an evaluation activity */
+
+
+| "Volatilities"
 
 UseCase Volatilities {
 @@@
@@ -120,24 +190,22 @@ UseCase Volatilities {
 }
 
 
-StaticAspect "CareTogether V2" { 
-  WebClient MobileClient VoiceClient SupportClient AnalyticsClient IntegrationClient
-  MembershipManager ProcessManager CommunicationManager AnalysisManager /* future enhancement */
-  EvaluationEngine
-MatchingEngine /* Possible volatility? */
+| "Static Aspect"
+StaticAspect "CareTogether V2" {
+  WebAppClient /*MobileClient VoiceClient -- future enhancements */ SupportClient SdkClient
+  /* GraphQL/HTTP API layer */
+  MembershipManager RecordsManager CommunicationManager /*AnalysisManager -- future enhancement */
+  EvaluationEngine MatchingEngine
   AccountsAccess NetworkAccess ConfigurationAccess WorkflowsAccess AuditAccess RecordsAccess
   /*NOTE: RecordsAccess -- Cosmos DB Graph API & Cosmos DB 'SQL' API, allowing Geode pattern */
   AccountsResource NetworkResource ConfigurationResource:f WorkflowsResource AuditResource RecordsResource 
- NotesResource:f DocumentsResource:f FormsResource:a
-  EventLogUtility
-  FileStoreUtility
-  ObjectStoreUtility
-  TelephonyUtility
-  EmailUtility
-  PushNotificationUtility
-  PubSubUtility
+  NotesResource:f DocumentsResource:f FormsResource:a
   SecurityUtility
+  TelemetryUtility
   LoggingUtility
+  PubSubUtility /* Push notifications to WebApp are allowed, as queued calls; can include delivery via SMS, WhatsApp, Telegram, Teams, Slack, etc. */
+  /* User will subscribe to pub-sub endpoints; the CommunicationManager will generate channel-specific events in response to domain events */
+  EmailUtility
 }
 
 
