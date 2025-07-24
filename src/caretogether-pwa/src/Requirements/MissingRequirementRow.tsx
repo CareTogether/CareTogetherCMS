@@ -35,7 +35,13 @@ export function MissingRequirementRow({
 
   const dialogHandle = useDialogHandle();
 
-  const requirementPolicy = policy.actionDefinitions![requirement];
+  const requirementPolicy =
+    policy.actionDefinitions![requirement] ||
+    Object.entries(policy.actionDefinitions!).find(([, value]) =>
+      value.alternateNames?.includes(requirement)
+    );
+
+  console.log({ requirementPolicy, requirement });
 
   if (
     context.kind === 'Arrangement' ||

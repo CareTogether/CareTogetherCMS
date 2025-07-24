@@ -1,5 +1,7 @@
 ﻿using System;
+using System.Collections.Immutable;
 using CareTogether.Engines.PolicyEvaluation;
+using CareTogether.Resources.Policies;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using H = CareTogether.Core.Test.ReferralCalculationTests.Helpers;
 
@@ -13,6 +15,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
         {
             var result = SharedCalculations.RequirementMetOrExempted(
                 "A",
+                [],
                 policySupersededAt: null,
                 today: new DateOnly(H.YEAR, 1, 2),
                 completedRequirements: Helpers.Completed(("A", 1), ("B", 2)),
@@ -28,6 +31,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
         {
             var result = SharedCalculations.RequirementMetOrExempted(
                 "A",
+                [],
                 policySupersededAt: null,
                 today: new DateOnly(H.YEAR, 1, 5),
                 completedRequirements: Helpers.Completed(("A", 1), ("B", 2), ("A", 3)),
@@ -45,6 +49,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
             // documented by this test for the sake of completeness.
             var result = SharedCalculations.RequirementMetOrExempted(
                 "B",
+                [],
                 policySupersededAt: null,
                 today: new DateOnly(H.YEAR, 1, 1),
                 completedRequirements: Helpers.Completed(("A", 1), ("B", 2), ("A", 3)),
@@ -60,6 +65,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
         {
             var result = SharedCalculations.RequirementMetOrExempted(
                 "D",
+                [],
                 policySupersededAt: null,
                 today: new DateOnly(H.YEAR, 1, 5),
                 completedRequirements: Helpers.Completed(("A", 1), ("B", 2), ("A", 3)),
@@ -75,6 +81,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
         {
             var result = SharedCalculations.RequirementMetOrExempted(
                 "C",
+                [],
                 policySupersededAt: null,
                 today: new DateOnly(H.YEAR, 1, 5),
                 completedRequirements: Helpers.Completed(("A", 1), ("B", 2), ("A", 3)),
@@ -90,6 +97,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
         {
             var result = SharedCalculations.RequirementMetOrExempted(
                 "C",
+                [],
                 policySupersededAt: null,
                 today: new DateOnly(H.YEAR, 1, 12),
                 completedRequirements: Helpers.Completed(("A", 1), ("B", 2), ("A", 3)),
@@ -105,6 +113,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
         {
             var result = SharedCalculations.RequirementMetOrExempted(
                 "A",
+                [],
                 policySupersededAt: new DateOnly(H.YEAR, 1, 20),
                 today: new DateOnly(H.YEAR, 1, 22),
                 completedRequirements: Helpers.Completed(("A", 1), ("B", 2), ("A", 3)),
@@ -120,6 +129,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
         {
             var result = SharedCalculations.RequirementMetOrExempted(
                 "B",
+                [],
                 policySupersededAt: new DateOnly(H.YEAR, 1, 20),
                 today: new DateOnly(H.YEAR, 1, 22),
                 completedRequirements: Helpers.Completed(("A", 1), ("B", 22), ("A", 3)),
@@ -135,6 +145,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
         {
             var result = SharedCalculations.RequirementMetOrExempted(
                 "A",
+                [],
                 policySupersededAt: null,
                 today: new DateOnly(H.YEAR, 1, 2),
                 completedRequirements: Helpers.CompletedWithExpiry(("A", 1, 4), ("B", 2, null)),
@@ -150,6 +161,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
         {
             var result = SharedCalculations.RequirementMetOrExempted(
                 "A",
+                [],
                 policySupersededAt: null,
                 today: new DateOnly(H.YEAR, 1, 5),
                 completedRequirements: Helpers.CompletedWithExpiry(("A", 1, 4), ("B", 2, null)),
@@ -165,6 +177,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
         {
             var result = SharedCalculations.RequirementMetOrExempted(
                 "A",
+                [],
                 policySupersededAt: null,
                 today: new DateOnly(H.YEAR, 1, 4),
                 completedRequirements: Helpers.CompletedWithExpiry(("A", 1, 4), ("B", 2, null)),
@@ -180,6 +193,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
         {
             var result = SharedCalculations.RequirementMetOrExempted(
                 "A",
+                [],
                 policySupersededAt: null,
                 today: new DateOnly(H.YEAR, 1, 5),
                 completedRequirements: Helpers.CompletedWithExpiry(
