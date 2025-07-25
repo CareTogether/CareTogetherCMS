@@ -10,6 +10,7 @@ namespace CareTogether.Engines.PolicyEvaluation
     internal static class ReferralCalculations
     {
         public static ReferralStatus CalculateReferralStatus(
+            EffectiveLocationPolicy locationPolicy,
             ReferralPolicy referralPolicy,
             ReferralEntry referralEntry,
             DateOnly today
@@ -19,7 +20,7 @@ namespace CareTogether.Engines.PolicyEvaluation
                 .RequiredIntakeActionNames.Where(requiredAction =>
                     !SharedCalculations
                         .RequirementMetOrExempted(
-                            requiredAction,
+                            SharedCalculations.GetRequirementNameWithSynonyms(locationPolicy, requiredAction),
                             policySupersededAt: null,
                             today,
                             completedRequirements: referralEntry.CompletedRequirements,
@@ -46,7 +47,12 @@ namespace CareTogether.Engines.PolicyEvaluation
                         p => p.ArrangementType == arrangement.Value.ArrangementType
                     );
 
-                    return CalculateArrangementStatus(arrangement.Value, arrangementPolicy, today);
+                    return CalculateArrangementStatus(
+                        arrangement.Value,
+                        locationPolicy,
+                        arrangementPolicy,
+                        today
+                    );
                 }
             );
 
@@ -59,11 +65,13 @@ namespace CareTogether.Engines.PolicyEvaluation
 
         internal static ArrangementStatus CalculateArrangementStatus(
             ArrangementEntry arrangement,
+            EffectiveLocationPolicy locationPolicy,
             ArrangementPolicy arrangementPolicy,
             DateOnly today
         )
         {
             var missingSetupRequirements = CalculateMissingSetupRequirements(
+                locationPolicy,
                 arrangementPolicy,
                 arrangement,
                 today
@@ -74,6 +82,7 @@ namespace CareTogether.Engines.PolicyEvaluation
                 today
             );
             var missingCloseoutRequirements = CalculateMissingCloseoutRequirements(
+                locationPolicy,
                 arrangementPolicy,
                 arrangement,
                 today
@@ -137,6 +146,7 @@ namespace CareTogether.Engines.PolicyEvaluation
             : ArrangementPhase.SettingUp;
 
         internal static ImmutableList<MissingArrangementRequirement> CalculateMissingSetupRequirements(
+            EffectiveLocationPolicy locationPolicy,
             ArrangementPolicy arrangementPolicy,
             ArrangementEntry arrangement,
             DateOnly today
@@ -146,7 +156,7 @@ namespace CareTogether.Engines.PolicyEvaluation
                 .RequiredSetupActionNames.Where(requiredAction =>
                     !SharedCalculations
                         .RequirementMetOrExempted(
-                            requiredAction,
+                            SharedCalculations.GetRequirementNameWithSynonyms(locationPolicy, requiredAction),
                             policySupersededAt: null,
                             today,
                             completedRequirements: arrangement.CompletedRequirements,
@@ -183,7 +193,10 @@ namespace CareTogether.Engines.PolicyEvaluation
                         .RequiredSetupActionNames.Where(requiredAction =>
                             !SharedCalculations
                                 .RequirementMetOrExempted(
-                                    requiredAction,
+                                    SharedCalculations.GetRequirementNameWithSynonyms(
+                                        locationPolicy,
+                                        requiredAction
+                                    ),
                                     policySupersededAt: null,
                                     today,
                                     completedRequirements: fva.CompletedRequirements,
@@ -222,7 +235,10 @@ namespace CareTogether.Engines.PolicyEvaluation
                         .RequiredSetupActionNames.Where(requiredAction =>
                             !SharedCalculations
                                 .RequirementMetOrExempted(
-                                    requiredAction,
+                                    SharedCalculations.GetRequirementNameWithSynonyms(
+                                        locationPolicy,
+                                        requiredAction
+                                    ),
                                     policySupersededAt: null,
                                     today,
                                     completedRequirements: iva.CompletedRequirements,
@@ -882,6 +898,7 @@ namespace CareTogether.Engines.PolicyEvaluation
         }
 
         internal static ImmutableList<MissingArrangementRequirement> CalculateMissingCloseoutRequirements(
+            EffectiveLocationPolicy locationPolicy,
             ArrangementPolicy arrangementPolicy,
             ArrangementEntry arrangement,
             DateOnly today
@@ -891,7 +908,7 @@ namespace CareTogether.Engines.PolicyEvaluation
                 .RequiredCloseoutActionNames.Where(requiredAction =>
                     !SharedCalculations
                         .RequirementMetOrExempted(
-                            requiredAction,
+                            SharedCalculations.GetRequirementNameWithSynonyms(locationPolicy, requiredAction),
                             policySupersededAt: null,
                             today,
                             completedRequirements: arrangement.CompletedRequirements,
@@ -928,7 +945,7 @@ namespace CareTogether.Engines.PolicyEvaluation
                         .RequiredCloseoutActionNames.Where(requiredAction =>
                             !SharedCalculations
                                 .RequirementMetOrExempted(
-                                    requiredAction,
+                                    SharedCalculations.GetRequirementNameWithSynonyms(locationPolicy, requiredAction),
                                     policySupersededAt: null,
                                     today,
                                     completedRequirements: fva.CompletedRequirements,
@@ -967,7 +984,7 @@ namespace CareTogether.Engines.PolicyEvaluation
                         .RequiredCloseoutActionNames.Where(requiredAction =>
                             !SharedCalculations
                                 .RequirementMetOrExempted(
-                                    requiredAction,
+                                    SharedCalculations.GetRequirementNameWithSynonyms(locationPolicy, requiredAction),
                                     policySupersededAt: null,
                                     today,
                                     completedRequirements: iva.CompletedRequirements,
