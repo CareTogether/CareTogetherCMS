@@ -102,6 +102,48 @@
             }
           }
         }
+      },
+      "put": {
+        "tags": [
+          "Configuration"
+        ],
+        "operationId": "Configuration_PutLocationDefinition",
+        "parameters": [
+          {
+            "name": "organizationId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "guid"
+            },
+            "x-position": 1
+          }
+        ],
+        "requestBody": {
+          "x-name": "newLocationPayload",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PutLocationPayload"
+              }
+            }
+          },
+          "required": true,
+          "x-position": 2
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OrganizationConfiguration"
+                }
+              }
+            }
+          }
+        }
       }
     },
     "/api/{organizationId}/Configuration/roles/{roleName}": {
@@ -1605,6 +1647,20 @@
           507,
           508
         ]
+      },
+      "PutLocationPayload": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "locationConfiguration": {
+            "$ref": "#/components/schemas/LocationConfiguration"
+          },
+          "copyPoliciesFromLocationId": {
+            "type": "string",
+            "format": "guid",
+            "nullable": true
+          }
+        }
       },
       "EffectiveLocationPolicy": {
         "type": "object",

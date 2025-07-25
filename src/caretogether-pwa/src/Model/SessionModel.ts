@@ -8,6 +8,7 @@ import { useLoadable } from '../Hooks/useLoadable';
 import { useFamilyLookup } from './DirectoryModel';
 import { api } from '../Api/Api';
 import { currentLocationQuery } from './Data';
+import { ORGANIZATION_ADMINISTRATOR } from '../constants';
 
 export const redemptionSessionIdState = atom<string | null>({
   key: 'redemptionSessionIdState',
@@ -69,4 +70,9 @@ export function useFamilyPermissions(family?: CombinedFamilyInfo) {
 
 export function useCommunityPermissions(community?: CommunityInfo) {
   return usePermissions(community?.userPermissions);
+}
+
+export function useUserIsOrganizationAdministrator() {
+  const currentLocation = useLoadable(currentLocationQuery);
+  return currentLocation?.roles?.includes(ORGANIZATION_ADMINISTRATOR);
 }
