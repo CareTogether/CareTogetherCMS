@@ -177,7 +177,87 @@ UseCase "Fractal Musings" {
    but the fundamental purpose of networks at each level remains the same: to help.*/
 
 Activity "Establish Partnership" {} /* Are there steps here that involve the system? */
+
 Activity "Recruit Member" {}
+
+Activity "Establish Partnership (AI brainstorm)" {
+|Organization|
+start
+:Identify Need for Partnership;
+:Search for Potential Referral Partner;
+
+|Platform|
+:Validate Organization Membership;
+:Check Alignment with Program Policies;
+
+|Referral Partner|
+:Receive Initial Contact;
+:Evaluate Fit and Interest;
+
+|Organization|
+:Define Type of Partnership;
+if (Referral?) then (yes)
+  :Draft Referral Flow Agreement;
+elseif (Network Membership?) then (yes)
+  :Review Network Governance Docs;
+elseif (Resource Sharing?) then (yes)
+  :Assess Mutual Capabilities;
+endif
+
+:Negotiate Terms;
+|Platform|
+:Generate MoU Template;
+:Route for Approval;
+
+|Organization|
+:Approve Terms;
+|Referral Partner|
+:Approve Terms;
+
+|Platform|
+:Record Agreement in System;
+:Assign Roles and Permissions;
+|Organization|
+:Initiate Onboarding Activities;
+
+stop
+}
+
+Activity "Initiate Onboarding Activities (AI brainstorm)" {
+  |Organization|
+  start
+  :Designate Partnership Coordinator;
+  
+  :Invite Key Contacts;
+  :Define Roles (e.g., Referral Partner, Helper, Staff);
+  
+  |Platform|
+  :Send Access Invitations;
+  :Provision Platform Permissions;
+  
+  |Referral Partner|
+  :Accept Platform Invitation;
+  :Complete Profile Setup;
+  
+  :Review Program Policies & Procedures;
+  
+  |Organization|
+  :Schedule Orientation Session;
+  if (Referral Partnership?) then (yes)
+    :Train on Referral Submission and Intake Process;
+  elseif (Network Membership?) then (yes)
+    :Provide Network Governance & Communication Tools;
+  elseif (Resource Sharing?) then (yes)
+    :Set Up Shared Calendars / Resource Access;
+  endif
+  
+  |Platform|
+  :Enable Audit Logging;
+  :Activate Data Sharing Agreements;
+  :Record Onboarding Completion;
+  
+  stop
+}
 
 
 Activity "Invite Organization" {}
@@ -186,6 +266,14 @@ Activity "Invite Person" {}
 Activity "Accept Person Invitation" {}
 Activity "Link Login to Person" {} /* If we have multiple logins over time */
 Activity "Review Person Logins" {}
+
+/* Maybe it's part of Networking family instead of Helping, because the helping is not happening yet, but connecting/networking is. */
+Activity "Find appropriate Partner for Case" {} 
+Activity "Refer Case to Partner" {}
+
+Activity "Share resource" {}
+Activity "Govern network?" {} /* Is there some kind of governance in a network? */
+Activity "Manage network member" {} /* Include or remove a member, update status, update attributes for matching? */
 
 | "Use Case Family: Helping"
 /* The 'helping' use case family encompasses the actual services being provided to
