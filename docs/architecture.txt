@@ -14,6 +14,7 @@ These terms capture the "brand voice" of CareTogether. They MUST be used only wi
 - **Organizations** are human services organizations. Organizations can be formally or informally organized. Formal organizations include both nonprofit and for-profit private-sector organizations as well as government organizations.
 - **Locations** are geographically focused areas in which a specific group of people within an organization serve clients (perhaps under more than one program). Locations do not have a strict definition, but they are best defined by travel time, i.e., they should be small enough that the people who serve the clients within that location can physically interact. For example, two cities (or counties, or parts of a larger metropolitan area) that are separated by more than an hour or two of travel time should typically be separate locations. A _case_ is always tied to a single location.
 - **Programs** are the actual services, comprised of policies and procedures, that an organization offers to its clients. The mapping between locations and programs is N-to-M: multiple programs within the same location can serve the same clients, and an organization may not offer the same programs at all of its locations. Program policies and procedures can vary by location.
+- **Networks** are assocations of organizations, with various types of relationships established between them. For example, one organization may be a referral partner for another; referrals may flow in one direction or both between them. Other organizations (e.g., churches) may themselves represent communities of people who are helping within a program of another organization. There are also networks of networks, at several layers: a local ministry might have a network of partner churches for which they maintain records & processes in a program context, then that local ministry might participate in an area-wide referral partnership and support network, and then that area network might be part of a regional/national/international network sharing best practices and larger-scale resources (e.g., to offer capabilities like self-insurance for network members). A network can have subsets (which may not be isolated from each other but may share a common focus), e.g. an interest network or affinity network within ForCLT.
 - Policies
 - Procedures
 - **Person** - any human being, about which we can store certain facts (name, contact info, etc.)
@@ -27,7 +28,7 @@ These terms capture the "brand voice" of CareTogether. They MUST be used only wi
   - Organizational function? Make this configurable? -- would be helpful to be explicit, and manually adjustable, re: which function(s) a person/family is
   - "organizational functions" apply to people (persons), but not necessarily to families: a family can be a volunteer family, can be a client family, but cannot be a staff family.
   - Families vs. households: need to revisit how we do recordkeeping around these overlapping concepts
-- Volunteers
+- **Helpers** - people who are serving other people are called 'helpers' to be sufficiently general. Helpers may be volunteers or (paid or unpaid) staff. Note that unpaid staff have a more formal association with an organization than 'volunteers'. "Helpers" represent the counterpart to "Clients".
 - **Clients** - Unfortunately in the IDesign Method, and software architecture generally, the term 'Client' is used for a specific technical purpose that is unrelated to this idea of a **program participant**, someone who is receiving the services offered by an HSO. However, the term **client** is the predominant (universally accepted) term in the human services sector. Thus, when talking about the _domain_, we refer to **clients**.
 - Referral Partner - another HSO that agrees to receive outbound referrals made by an HSO and/or provides inbound referrals to an HSO
 
@@ -107,34 +108,114 @@ Develop a case management platform that reimagines connection for human services
 }
 
 
-| "Core Use Case: Membership"
+| "Operational Concepts & Observations"
+UseCase "Fractal Musings" {
+  @@@
+  A fractal is self-similar, which implies that our business use cases need to be
+  self-similar at each level of the proposed fractal if this is truly a fractal.
+  The levels - and associated purposes - of the proposed fracal are:
+   1. Household - household/family record management -- primarily a way to participate
+                  in the next level up in the fractal (i.e., request help/appy to help w/ orgs)
+   2. Organization - case/church management (applies to ministries and local churches)
+   3. Area - network management (needs/referrals can be shared with other network members:
+             churches, ministries, businesses)
+   4. Region - meta-network management (cities could ask for programs/ministries that they lack)
+   5. World - global management (this exists today within denominations and global ministries;
+              might tackle issues like the 10/40 Window where the fewest Gospel-centered networks
+              exist, in order to establish and promote regional networks there)
+  The organizers of networks at each layer, as well as the members/participants of
+  networks at each layer (both clients and helpers), are different.
+  In a ministry, the network organizers are the ministry staff, and the members are clients,
+  volunteers, etc. (helpers)., but also churches.
+  In a city, the network organizers are the network staff, and the members are
+  ministries, churches, businesses, etc.
+  In a region, the members are city/area networks.
+  We need to clarify all of these terms once we've definitely established the existence &
+  need for the fractal concept, but for now, any use cases we examine should be looked at in
+  the context of each of these proposed levels to see how they might play out.
+  This also means that terms like "client", "helper", "partner church", etc., which originated
+  from the 'case management' level of ministries' internal networks, are not necessarily
+  appropriate at every level of the fractal.
+  One term we need to avoid for the moment is "community", because 'community' is a distinct
+  concept from each of these things. Community is the network of people that *a person* (or
+  household) is in relationship with. That is not a "managed" network like these others are.
+  Community is something that develops as a result of relationship building, but community,
+  unlike these networks for providing care, does not have record-keeping, policies/procedures,
+  etc. It's the *result* of the work, not the components/ingredients to, of human services.
+  Like the EnergyNet: "be resilient" is the one use case. "Build community" is the one use case.
 
-| "Facet: Organization Membership"
+  Let's define some terms that can be level-agnostic (valid at every level of the fractal):
+   - **Network** - Each level of the fractal involves a network:
+     0. The atomic lowest-level unit is an individual (a person), which does not have any
+        members (i.e., no network of its own).
+     1. A household *has a* network of people. A household can be a member of any number of
+        organizations' networks, whether as a client, helper (staff or volunteer), donor, etc.
+        A household can maintain records on each household member, e.g., birth certificates,
+        paystubs, notes, etc.
+     2. An organization *has a* network of households. Not every household member needs to
+        participate in the organization's program, but the household *itself* is a member of
+        the organization's network. And, the organization can maintain records on each household
+        *as well as* each member of those households, e.g., approval or intake steps, notes, etc.
+        An organization can be a member of any number of area networks (though ideally there
+        would just be one per city, but in reality most cities have fragmented networks today).
+     3. An area *has a* network of organizations. The area can maintain membership records for
+        each member organization, as well as notes etc., and financial contributions, but can
+        also handle sharing of general need requests, support discovery of and establishment of
+        referral partnerships, and determine when area-level needs require reaching out to a
+        regional network.
+     4. A region *has a* network of areas.
+     5. The world *has a* network of regions.
+  @@@
+}
+
+
+| "Use Case Family: Networking"
+/* The 'networking' use case family captures the work of connecting organizations
+   and people in ways that allow help to be offered. This can happen at multiple
+   levels (networks of networks), which is where fractal behavior seems to emerge:
+   the kinds of help and communication that occur at each level will be different,
+   but the fundamental purpose of networks at each level remains the same: to help.*/
+
+Activity "Establish Partnership" {} /* Are there steps here that involve the system? */
+Activity "Recruit Member" {}
+
+
 Activity "Invite Organization" {}
-Activity "Accept Organization Invite" {}
-Activity "Configure Organization" {}
-Activity "Configure Organizational Single Sign-On" {}
-Activity "Configure Locations" {}
-Activity "Configure Programs" {}
-Activity "Configure Roles" {}
-Activity "Configure Community" {}
+Activity "Accept Organization Invitation" {}
+Activity "Invite Person" {}
+Activity "Accept Person Invitation" {}
+Activity "Link Login to Person" {} /* If we have multiple logins over time */
+Activity "Review Person Logins" {}
 
-| "Facet: Person Membership"
-Activity "Invite Person User" {}
-Activity "Accept Person Invite" {}
-Activity "Link Login to Person" {}
-Activity "View Person User Login Info" {}
-Activity "Assign Organization Roles" {} /*?*/
-Activity "Invite Person to Community" {} /* or is this record keeping? or both. */
-Activity "Link Person to Community" {}
+| "Use Case Family: Helping"
+/* The 'helping' use case family encompasses the actual services being provided to
+   clients, which requires defining and evaluating policies,
+   as well as procedures (workflows) for recordkeeping and oversight. */
 
-
-| "Core Use Case: Records"
-
-| "Facet: Organization Records"
+/* Facet: Organization Records */
+Activity "Configure Organization" {} /* Core use case: includes authn, locations, programs, roles */
 Activity "Configure Process" {} /* Core use case: includes policies, procedures, forms */
+Activity "Configure Member Organization" {}
 
-Activity "Submit Records" {} /* Core use case; includes archiving records */
+
+
+Activity "Request Help" {}
+Activity "Help Client" {}
+Activity "Apply to Help" {}
+Activity "Recruit Helpers" {}
+Activity "Helper Approval" {}
+Activity "Establish Referral Partner" {}
+Activity "Make Outbound Referral" {}
+Activity "Assess Impact" {}
+
+
+
+
+
+
+
+/* NOTE: The following are *operations* -- activities */
+Activity "Submit Records" {} /* Core use case; includes archiving records, managing user roles */
 Activity "Retrieve Records" {} /* Core use case */
 
 Activity "Approve Records Submission" {}
@@ -146,11 +227,13 @@ Activity "Download Document" {}
 Activity "Upload Document" {}
 
 /* Post-2025/2026 */
+/* There may be a fractal here? */
 Activity "Accept Inbound Referral" {}
 Activity "Submit Outbound Referral" {}
 
-| "Facet: Personal Records"
-
+/* Facet: Personal Records */
+/* Is a household an organization if we squint enough? Maybe. */
+/* Is an organization a person, if we squint enough? Maybe. */
 Activity "Upload Requested Documentation" {}
 Activity "Generate Assertions" {}
 Activity "Share Assertions" {}
@@ -194,7 +277,7 @@ UseCase Volatilities {
 StaticAspect "CareTogether V2" {
   WebAppClient /*MobileClient VoiceClient -- future enhancements */ SupportClient SdkClient
   /* GraphQL/HTTP API layer */
-  MembershipManager RecordsManager CommunicationManager /*AnalysisManager -- future enhancement */
+  NetworkingManager RecordsManager CommunicationManager /*AnalysisManager -- future enhancement */
   EvaluationEngine MatchingEngine
   AccountsAccess NetworkAccess ConfigurationAccess WorkflowsAccess AuditAccess RecordsAccess
   /*NOTE: RecordsAccess -- Cosmos DB Graph API & Cosmos DB 'SQL' API, allowing Geode pattern */
