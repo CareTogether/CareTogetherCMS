@@ -343,7 +343,7 @@ namespace CareTogether.Resources.Accounts
                         )
                         {
                             var access = lockedModel.Value.TryGetAccess(link.PersonId);
-                            return (link.OrganizationId, link.LocationId, access!);
+                            return (link.OrganizationId, link.LocationId, access);
                         }
                     })
                 )
@@ -362,7 +362,7 @@ namespace CareTogether.Resources.Accounts
                             .Select(link => new AccountLocationAccess(
                                 link.LocationId,
                                 link.PersonId,
-                                personAccessResults[(link.OrganizationId, link.LocationId)].Roles
+                                personAccessResults[(link.OrganizationId, link.LocationId)]?.Roles ?? []
                             ))
                             .ToImmutableList()
                     ))
