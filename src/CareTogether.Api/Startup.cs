@@ -229,6 +229,8 @@ namespace CareTogether.Api
             //TODO: If we want to be strict about conventions, this should have a manager intermediary for authz.
             services.AddSingleton<IPoliciesResource>(policiesResource);
             services.AddSingleton<IAccountsResource>(accountsResource);
+            services.AddSingleton<IDirectoryResource>(directoryResource);
+            services.AddSingleton<IApprovalsResource>(approvalsResource);
 
             var userAccessCalculation = new UserAccessCalculation(
                 policiesResource,

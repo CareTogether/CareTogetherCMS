@@ -6,31 +6,22 @@ import {
   TableContainer,
   TableHead,
   TableRow,
-  Tooltip,
   Typography,
 } from '@mui/material';
-import { Permission } from '../../GeneratedClient';
 import { useAppNavigate } from '../../Hooks/useAppNavigate';
 import { useLoadable } from '../../Hooks/useLoadable';
 import { organizationConfigurationQuery } from '../../Model/ConfigurationModel';
-import { useGlobalPermissions } from '../../Model/SessionModel';
-import { AddRole } from './AddRole';
+import { useUserIsOrganizationAdministrator } from '../../Model/SessionModel';
 import { useSidePanel } from '../../Hooks/useSidePanel';
-import { DeleteRoleButton } from './DeleteRoleButton';
-import { isRoleEditable } from './isRoleEditable';
+import { AddLocation } from './AddLocationSidePanel';
 import { Breadcrumbs, Link as MuiLink } from '@mui/material';
 import { NavigateNext as NavigateNextIcon } from '@mui/icons-material';
 import { useRecoilValue } from 'recoil';
 import { selectedLocationContextState } from '../../Model/Data';
 import { Link } from 'react-router-dom';
 
-export function RolesSection() {
+export function LocationsSection() {
   const configuration = useLoadable(organizationConfigurationQuery);
-  const roles = configuration?.roles;
-
-  const sortedRoles = [...(roles || [])].sort((a, b) =>
-    a.roleName! < b.roleName! ? -1 : a.roleName! > b.roleName! ? 1 : 0
-  );
 
   const { organizationId, locationId } = useRecoilValue(
     selectedLocationContextState
@@ -40,9 +31,7 @@ export function RolesSection() {
 
   const { SidePanel, openSidePanel, closeSidePanel } = useSidePanel();
 
-  const permissions = useGlobalPermissions();
-
-  const canEdit = permissions(Permission.AddEditRoles);
+  const canAddOrEdit = useUserIsOrganizationAdministrator();
 
   return (
     <>
@@ -59,46 +48,50 @@ export function RolesSection() {
           Settings
         </MuiLink>
 
-        <Typography color="text.primary">Roles</Typography>
+        <Typography color="text.primary">Locations</Typography>
       </Breadcrumbs>
 
-      <Typography variant="h2">Roles</Typography>
+      <Typography variant="h2" mt={2}>
+        Locations
+      </Typography>
 
       <TableContainer>
-        <Table aria-label="Roles list" size="small">
+        <Table aria-label="Locations list">
           <TableHead>
             <TableRow>
               <TableCell align="left" sx={{ minWidth: 200 }}>
                 Name
               </TableCell>
-              <TableCell>Actions</TableCell>
+              {/* TODO: implement delete location */}
+              {/* <TableCell>Actions</TableCell> */}
             </TableRow>
           </TableHead>
           <TableBody>
-            {sortedRoles.map((role) => {
-              const canDelete = isRoleEditable(role) && canEdit;
+            {configuration?.locations?.map((location) => {
+              // const canDelete = isRoleEditable(role) && canEdit;
 
-              const deleteRoleButton = (
-                <DeleteRoleButton
-                  roleName={role.roleName!}
-                  disabled={!canDelete}
-                />
-              );
+              // const deleteRoleButton = (
+              //   <DeleteRoleButton
+              //     roleName={role.roleName!}
+              //     disabled={!canDelete}
+              //   />
+              // );
 
               return (
                 <TableRow
-                  key={role.roleName}
+                  key={location.name}
                   hover
                   role="listitem"
                   tabIndex={-1}
                   sx={{ cursor: 'pointer' }}
-                  onClick={() => appNavigate.role(role.roleName!)}
+                  onClick={() => appNavigate.locationEdit(location.id!)}
                 >
                   <TableCell align="left" sx={{ minWidth: 200 }}>
-                    {role.roleName}
+                    {location.name}
                   </TableCell>
 
-                  <TableCell
+                  {/* TODO: implement delete location */}
+                  {/* <TableCell
                     // We don't want clicks in this cell to open the item
                     // For some reason, the event is not being stopped in the IconButton in DeleteRoleButton
                     onClick={(event) => event.stopPropagation()}
@@ -116,7 +109,7 @@ export function RolesSection() {
                         <span>{deleteRoleButton}</span>
                       </Tooltip>
                     )}
-                  </TableCell>
+                  </TableCell> */}
                 </TableRow>
               );
             })}
@@ -124,18 +117,18 @@ export function RolesSection() {
         </Table>
       </TableContainer>
 
-      {canEdit && (
+      {canAddOrEdit && (
         <>
           <Button
             sx={{ marginY: 2 }}
             variant="contained"
             onClick={() => openSidePanel()}
           >
-            Add new role
+            Add new location
           </Button>
 
           <SidePanel>
-            <AddRole onClose={() => closeSidePanel()} />
+            <AddLocation onClose={() => closeSidePanel()} />
           </SidePanel>
         </>
       )}
