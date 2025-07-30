@@ -1,4 +1,4 @@
-import { TextField, Autocomplete, AutocompleteProps } from '@mui/material';
+import { TextField, Autocomplete } from '@mui/material';
 import {
   Controller,
   Control,
