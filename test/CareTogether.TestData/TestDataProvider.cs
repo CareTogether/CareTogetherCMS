@@ -84,6 +84,36 @@ namespace CareTogether.TestData
         private static Guid Id(char x) =>
             Guid.Parse("xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx".Replace('x', x));
 
+        /// <summary>
+        /// Generates a Guid by filling the standard Guid template with hexadecimal characters from the provided string.
+        /// Only characters 0-9, a-f, and A-F are used; all others are ignored. The string is repeated as needed to fill the template.
+        /// </summary>
+        /// <param name="s">A string containing one or more hexadecimal characters.</param>
+        /// <returns>A Guid constructed from the provided hexadecimal characters.</returns>
+        /// <exception cref="ArgumentException">Thrown if the input string contains no hexadecimal characters.</exception>
+        /// <example>
+        /// Id("a") => aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa
+        /// Id("123") => 12312312-3123-1231-2312-312312312312
+        /// Id("deadbeef") => deadbeef-dead-beef-dead-beefdeadbeef
+        /// Id("abcxyz") => abcabcab-cabc-abca-bcab-cabcabcabcab (x, y, z ignored)
+        /// Id("g123") => 12312312-3123-1231-2312-312312312312 ('g' ignored)
+        /// </example>
+        private static Guid Id(string s)
+        {
+            const string template = "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx";
+            // Filter only hexadecimal characters
+            var hex = new string(s.Where(c => "0123456789abcdefABCDEF".Contains(c)).ToArray());
+            if (string.IsNullOrEmpty(hex))
+                throw new ArgumentException(
+                    "Input string must contain at least one hexadecimal character.",
+                    nameof(s)
+                );
+            var filled = string.Concat(
+                template.Select((c, i) => c == 'x' ? hex[i % hex.Length] : c)
+            );
+            return Guid.Parse(filled);
+        }
+
         static readonly Guid guid0 = Id('0');
         static readonly Guid guid1 = Id('1');
         static readonly Guid guid2 = Id('2');
@@ -97,9 +127,12 @@ namespace CareTogether.TestData
         static readonly Guid guidA = Id('a');
         static readonly Guid guidB = Id('b');
         static readonly Guid guidC = Id('c');
+        static readonly Guid guidD = Id('d');
         static readonly Guid adminId = Guid.Parse("2b87864a-63e3-4406-bcbc-c0068a13ac05");
         static readonly Guid volunteerId = Guid.Parse("e3aaef77-0e97-47a6-b788-a67c237c781e");
         static readonly Guid volunteerId2 = Guid.Parse("ca662f2b-270a-4a8b-baa7-c109eadbb133");
+        static readonly Guid noteId1 = Id("note1");
+        static readonly Guid noteId2 = Id("note2");
 
         // Fisher family
         static readonly Guid michaelFisherGuid = Guid.Parse("f6020665-6f2e-4c93-8673-8770f35f1609");
@@ -1916,9 +1949,14 @@ namespace CareTogether.TestData
                 guid1,
                 guid2,
                 new NoteCommandExecuted(
+                    volunteerId2,
+                    ReferralsMonth(14, 10, 10, 10),
+                    new CreateDraftNote(guid1, guidB, null, null, AccessLevel: "Staff Only")
+                ),
+                new NoteCommandExecuted(
                     volunteerId,
                     ReferralsMonth(14, 10, 10, 10),
-                    new CreateDraftNote(guid1, guid0, null, null)
+                    new CreateDraftNote(guid1, guid0, null, null, AccessLevel: "Staff Only")
                 ),
                 new NoteCommandExecuted(
                     adminId,
@@ -1927,23 +1965,24 @@ namespace CareTogether.TestData
                         guid1,
                         guid0,
                         "The kids were in awe of my carpet bag. They were such sweethearts, though I do wish to state, for the record, that they are given entirely too much sugar with their medicine.",
-                        null
+                        null,
+                        AccessLevel: "Staff Only"
                     )
                 ),
                 new NoteCommandExecuted(
                     volunteerId,
                     ReferralsMonth(15, 8, 33, 34),
-                    new CreateDraftNote(guid1, guid4, null, null)
+                    new CreateDraftNote(guid1, guid4, null, null, AccessLevel: "Staff Only")
                 ),
                 new NoteCommandExecuted(
                     adminId,
                     ReferralsMonth(15, 8, 33, 34),
-                    new ApproveNote(guid1, guid4, "Babysitting", null)
+                    new ApproveNote(guid1, guid4, "Babysitting", null, AccessLevel: "Staff Only")
                 ),
                 new NoteCommandExecuted(
                     volunteerId,
                     ReferralsMonth(15, 20, 40, 45),
-                    new CreateDraftNote(guid1, guid5, null, null)
+                    new CreateDraftNote(guid1, guid5, null, null, AccessLevel: "Staff Only")
                 ),
                 new NoteCommandExecuted(
                     adminId,
@@ -1952,13 +1991,14 @@ namespace CareTogether.TestData
                         guid1,
                         guid5,
                         "Dropped off with host parents after ☕ and 🍰",
-                        null
+                        null,
+                        AccessLevel: "Staff Only"
                     )
                 ),
                 new NoteCommandExecuted(
                     volunteerId,
                     ReferralsMonth(22, 16, 30, 35),
-                    new CreateDraftNote(guid1, guid6, null, null)
+                    new CreateDraftNote(guid1, guid6, null, null, AccessLevel: "Staff Only")
                 ),
                 new NoteCommandExecuted(
                     adminId,
@@ -1967,18 +2007,19 @@ namespace CareTogether.TestData
                         guid1,
                         guid6,
                         "Weekend with parents, met at McDonald's near mom",
-                        null
+                        null,
+                        AccessLevel: "Staff Only"
                     )
                 ),
                 new NoteCommandExecuted(
                     volunteerId,
                     ReferralsMonth(22, 18, 0, 0),
-                    new CreateDraftNote(guid1, guid1, null, null)
+                    new CreateDraftNote(guid1, guid1, null, null, AccessLevel: "Staff Only")
                 ),
                 new NoteCommandExecuted(
                     volunteerId,
                     ReferralsMonth(22, 19, 30, 0),
-                    new EditDraftNote(guid1, guid1, null, null)
+                    new EditDraftNote(guid1, guid1, null, null, AccessLevel: "Staff Only")
                 ),
                 new NoteCommandExecuted(
                     adminId,
@@ -1987,7 +2028,8 @@ namespace CareTogether.TestData
                         guid1,
                         guid1,
                         "Eric and Ben liked the Play Place and didn't want to go home.",
-                        null
+                        null,
+                        AccessLevel: "Staff Only"
                     )
                 ),
                 new NoteCommandExecuted(
@@ -2048,6 +2090,32 @@ namespace CareTogether.TestData
                         guid9,
                         "I'm a little star-struck... Emily is *amazing*!!",
                         null
+                    )
+                ),
+                new NoteCommandExecuted(
+                    volunteerId2,
+                    ApprovalsMonth(28, 9, 30, 0),
+                    new CreateDraftNote(guid1, noteId1, null, null)
+                ),
+                new NoteCommandExecuted(
+                    adminId,
+                    ApprovalsMonth(28, 9, 32, 0),
+                    new ApproveNote(guid1, noteId1, "Approved note from another volunteer", null)
+                ),
+                new NoteCommandExecuted(
+                    volunteerId2,
+                    ReferralsMonth(28, 11, 10, 10),
+                    new CreateDraftNote(guid1, noteId2, null, null, AccessLevel: "Staff Only")
+                ),
+                new NoteCommandExecuted(
+                    adminId,
+                    ReferralsMonth(28, 11, 15, 10),
+                    new ApproveNote(
+                        guid1,
+                        noteId2,
+                        "Another note for testing the access level",
+                        null,
+                        AccessLevel: "Staff Only"
                     )
                 )
             );
@@ -2159,6 +2227,14 @@ namespace CareTogether.TestData
                 guidA.ToString(),
                 "Jane said \"So long and thanks for all the fish.\" Not sure what to make of that."
             );
+            await draftNotesStore.UpsertAsync(
+                guid1,
+                guid2,
+                guidB.ToString(),
+                "Note by another volunteer"
+            );
+            await draftNotesStore.UpsertAsync(guid1, guid2, noteId1.ToString(), "draft content");
+            await draftNotesStore.UpsertAsync(guid1, guid2, noteId2.ToString(), "draft");
         }
 
         public static async Task PopulateConfigurations(
@@ -2197,7 +2273,15 @@ namespace CareTogether.TestData
                                 },
                             ],
                             ["Crisis", "Assistance", "Respite"],
-                            sourcePhoneNumbers
+                            sourcePhoneNumbers,
+                            [
+                                new AccessLevel(
+                                    Guid.NewGuid(),
+                                    "Staff Only",
+                                    OrganizationRoles: [SystemConstants.ORGANIZATION_ADMINISTRATOR],
+                                    ApprovalRoles: []
+                                ),
+                            ]
                         ),
                         new LocationConfiguration(
                             guid3,
@@ -2216,7 +2300,8 @@ namespace CareTogether.TestData
                                 },
                             ],
                             ["Crisis", "Assistance", "Respite"],
-                            sourcePhoneNumbers
+                            sourcePhoneNumbers,
+                            []
                         ),
                     ],
                     [
@@ -2262,6 +2347,7 @@ namespace CareTogether.TestData
                                         Permission.TrackChildLocationChange,
                                         Permission.ViewPersonConcerns,
                                         Permission.ViewPersonNotes,
+                                        Permission.ViewAllNotes,
                                     ]
                                 ),
                                 new ContextualPermissionSet(
@@ -2364,11 +2450,15 @@ namespace CareTogether.TestData
                         NoteEntryRequirement.Allowed,
                         "Can be done over the phone",
                         new Uri("http://example.com/forms/requestforhelp-v1"),
+                        null,
+                        null,
                         null
                     ),
                     ["Intake Coordinator Screening Call"] = new ActionRequirement(
                         DocumentLinkRequirement.None,
                         NoteEntryRequirement.Required,
+                        null,
+                        null,
                         null,
                         null,
                         null
@@ -2378,6 +2468,8 @@ namespace CareTogether.TestData
                         NoteEntryRequirement.Allowed,
                         "Email or text the Cognito Form link",
                         new Uri("http://example.com/forms/intake-v1"),
+                        null,
+                        null,
                         null
                     ),
                     ["Hosting Consent"] = new ActionRequirement(
@@ -2385,11 +2477,15 @@ namespace CareTogether.TestData
                         NoteEntryRequirement.None,
                         "This must be notarized.",
                         new Uri("http://example.com/forms/consent-v1"),
+                        null,
+                        null,
                         null
                     ),
                     ["Family Meeting"] = new ActionRequirement(
                         DocumentLinkRequirement.None,
                         NoteEntryRequirement.Required,
+                        null,
+                        null,
                         null,
                         null,
                         null
@@ -2399,11 +2495,15 @@ namespace CareTogether.TestData
                         NoteEntryRequirement.None,
                         "This must be notarized.",
                         new Uri("http://example.com/forms/medicalpoa-v2"),
+                        null,
+                        null,
                         null
                     ),
                     ["Family Coach Safety Visit"] = new ActionRequirement(
                         DocumentLinkRequirement.None,
                         NoteEntryRequirement.Required,
+                        null,
+                        null,
                         null,
                         null,
                         null
@@ -2413,11 +2513,15 @@ namespace CareTogether.TestData
                         NoteEntryRequirement.Allowed,
                         null,
                         new Uri("http://example.com/forms/returnofchild-v1"),
+                        null,
+                        null,
                         null
                     ),
                     ["Host Family Debriefing"] = new ActionRequirement(
                         DocumentLinkRequirement.Required,
                         NoteEntryRequirement.Required,
+                        null,
+                        null,
                         null,
                         null,
                         null
@@ -2427,11 +2531,15 @@ namespace CareTogether.TestData
                         NoteEntryRequirement.None,
                         null,
                         new Uri("http://example.com/forms/advocacy-v1"),
+                        null,
+                        null,
                         null
                     ),
                     ["One Time Checkin"] = new ActionRequirement(
                         DocumentLinkRequirement.None,
                         NoteEntryRequirement.Allowed,
+                        null,
+                        null,
                         null,
                         null,
                         null
@@ -2441,11 +2549,15 @@ namespace CareTogether.TestData
                         NoteEntryRequirement.Required,
                         null,
                         null,
+                        null,
+                        null,
                         null
                     ),
                     ["Family Coach Supervision"] = new ActionRequirement(
                         DocumentLinkRequirement.Allowed,
                         NoteEntryRequirement.Required,
+                        null,
+                        null,
                         null,
                         null,
                         null
@@ -2455,6 +2567,8 @@ namespace CareTogether.TestData
                         NoteEntryRequirement.None,
                         null,
                         new Uri("http://example.com/forms/app-ff"),
+                        null,
+                        null,
                         null
                     ),
                     ["Background Check"] = new ActionRequirement(
@@ -2462,13 +2576,17 @@ namespace CareTogether.TestData
                         NoteEntryRequirement.Allowed,
                         "See approval guide for directions",
                         new Uri("http://example.com/forms/bgcheck"),
-                        new TimeSpan(365 * 3, 0, 0, 0)
+                        new TimeSpan(365 * 3, 0, 0, 0),
+                        null,
+                        null
                     ),
                     ["Family Coach Application"] = new ActionRequirement(
                         DocumentLinkRequirement.Required,
                         NoteEntryRequirement.None,
                         null,
                         new Uri("http://example.com/forms/app-fc"),
+                        null,
+                        null,
                         null
                     ),
                     ["Comprehensive Background Check"] = new ActionRequirement(
@@ -2476,11 +2594,15 @@ namespace CareTogether.TestData
                         NoteEntryRequirement.Allowed,
                         "This is an all-in-one background check",
                         new Uri("http://example.com/forms/compbgcheck"),
-                        new TimeSpan(365 * 2, 0, 0, 0)
+                        new TimeSpan(365 * 2, 0, 0, 0),
+                        null,
+                        null
                     ),
                     ["Interview with Family Coach Supervisor"] = new ActionRequirement(
                         DocumentLinkRequirement.Allowed,
                         NoteEntryRequirement.Required,
+                        null,
+                        null,
                         null,
                         null,
                         null
@@ -2490,6 +2612,8 @@ namespace CareTogether.TestData
                         NoteEntryRequirement.None,
                         null,
                         new Uri("http://example.com/forms/app-hf"),
+                        null,
+                        null,
                         null
                     ),
                     ["Host Family Training"] = new ActionRequirement(
@@ -2497,6 +2621,8 @@ namespace CareTogether.TestData
                         NoteEntryRequirement.Allowed,
                         null,
                         new Uri("http://example.com/training/hf"),
+                        null,
+                        null,
                         null
                     ),
                     ["Home Screening Checklist"] = new ActionRequirement(
@@ -2504,11 +2630,15 @@ namespace CareTogether.TestData
                         NoteEntryRequirement.Allowed,
                         "Must be filled out by an approved home screener",
                         new Uri("http://example.com/forms/hscheck"),
+                        null,
+                        null,
                         null
                     ),
                     ["Host Family Interview"] = new ActionRequirement(
                         DocumentLinkRequirement.Allowed,
                         NoteEntryRequirement.Required,
+                        null,
+                        null,
                         null,
                         null,
                         null
@@ -2518,6 +2648,8 @@ namespace CareTogether.TestData
                         NoteEntryRequirement.Allowed,
                         null,
                         new Uri("http://example.com/forms/mag"),
+                        null,
+                        null,
                         null
                     ),
                     ["Complex Instructions"] = new ActionRequirement(
@@ -2525,6 +2657,8 @@ namespace CareTogether.TestData
                         NoteEntryRequirement.Allowed,
                         "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Quisque eu nisi ut nisi scelerisque blandit.\n\nAenean accumsan dui ac velit venenatis, at eleifend sapien sodales.\n\nEtiam faucibus augue sit amet purus cursus, ut tincidunt elit feugiat.",
                         new Uri("http://example.com/forms/mag"),
+                        null,
+                        null,
                         null
                     ),
                 }.ToImmutableDictionary(),

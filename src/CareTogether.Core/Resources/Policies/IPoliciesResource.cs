@@ -19,6 +19,7 @@ namespace CareTogether.Resources.Policies
         ImmutableList<string> AdultFamilyRelationships,
         ImmutableList<string>? ArrangementReasons,
         ImmutableList<SourcePhoneNumberConfiguration> SmsSourcePhoneNumbers,
+        ImmutableList<AccessLevel> AccessLevels,
         TimeZoneInfo? timeZone = null
     );
 
@@ -117,7 +118,16 @@ namespace CareTogether.Resources.Policies
         NoteEntryRequirement NoteEntry,
         string? Instructions,
         Uri? InfoLink,
-        TimeSpan? Validity
+        TimeSpan? Validity,
+        string? CanView,
+        string? CanEdit
+    );
+
+    public sealed record AccessLevel(
+        Guid Id,
+        string Name,
+        string[] OrganizationRoles,
+        string[] ApprovalRoles
     );
 
     public sealed record ReferralPolicy(

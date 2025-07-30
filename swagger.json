@@ -1188,6 +1188,12 @@
               "$ref": "#/components/schemas/SourcePhoneNumberConfiguration"
             }
           },
+          "accessLevels": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AccessLevel"
+            }
+          },
           "timeZone": {
             "nullable": true,
             "oneOf": [
@@ -1207,6 +1213,31 @@
           },
           "description": {
             "type": "string"
+          }
+        }
+      },
+      "AccessLevel": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "guid"
+          },
+          "name": {
+            "type": "string"
+          },
+          "organizationRoles": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "approvalRoles": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
           }
         }
       },
@@ -1708,6 +1739,14 @@
           "validity": {
             "type": "string",
             "format": "duration",
+            "nullable": true
+          },
+          "canView": {
+            "type": "string",
+            "nullable": true
+          },
+          "canEdit": {
+            "type": "string",
             "nullable": true
           }
         }
@@ -4065,6 +4104,10 @@
             "type": "string",
             "format": "date-time",
             "nullable": true
+          },
+          "accessLevel": {
+            "type": "string",
+            "nullable": true
           }
         }
       },
@@ -6121,6 +6164,10 @@
                 "type": "string",
                 "format": "date-time",
                 "nullable": true
+              },
+              "accessLevel": {
+                "type": "string",
+                "nullable": true
               }
             }
           }
@@ -6142,6 +6189,10 @@
               "backdatedTimestampUtc": {
                 "type": "string",
                 "format": "date-time",
+                "nullable": true
+              },
+              "accessLevel": {
+                "type": "string",
                 "nullable": true
               }
             }
@@ -6175,6 +6226,10 @@
               "backdatedTimestampUtc": {
                 "type": "string",
                 "format": "date-time",
+                "nullable": true
+              },
+              "accessLevel": {
+                "type": "string",
                 "nullable": true
               }
             }

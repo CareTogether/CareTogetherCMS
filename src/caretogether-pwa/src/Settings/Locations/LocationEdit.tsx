@@ -28,6 +28,7 @@ import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import { useFeatureFlagEnabled } from 'posthog-js/react';
 import { useUserIsOrganizationAdministrator } from '../../Model/SessionModel';
 import { useAppNavigate } from '../../Hooks/useAppNavigate';
+import OtherPolicies from './Tabs/OtherPolicies/OtherPolicies';
 
 export function LocationEdit() {
   const { locationId, editingLocationId } = useParams<{
@@ -44,9 +45,6 @@ export function LocationEdit() {
 
   useScreenTitle(`Editing ${location?.name} configuration`);
 
-  const showActionsTab = useFeatureFlagEnabled('actionDefinitionsTab');
-  const showPoliciesTab = useFeatureFlagEnabled('approvalPoliciesTab');
-
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
 
   const theme = useTheme();
@@ -60,9 +58,39 @@ export function LocationEdit() {
     }
   }, [isMobile]);
 
-  const [activeTab, setActiveTab] = useState<'basic' | 'actions' | 'policies'>(
-    'basic'
-  );
+  const tabs = [
+    {
+      id: 'basic' as const,
+      label: 'Basic Configuration',
+      component: BasicConfiguration,
+      shouldShow: true,
+    },
+    {
+      id: 'actions' as const,
+      label: 'Action Definitions',
+      component: ActionDefinitions,
+      shouldShow: useFeatureFlagEnabled('actionDefinitionsTab'),
+    },
+    {
+      id: 'approvalPolicies' as const,
+      label: 'Approval Policies',
+      component: ApprovalPolicies,
+      shouldShow: useFeatureFlagEnabled('approvalPoliciesTab'),
+    },
+    {
+      id: 'otherPolicies' as const,
+      label: 'Other Policies',
+      component: OtherPolicies,
+      shouldShow: true,
+    },
+  ];
+
+  // This result in a type like: 'basic' | 'actions' | 'policies'
+  // Depends on `as const` on the tabs const above
+  type LocationTabId = (typeof tabs)[number]['id'];
+
+  // Use the type derived from LOCATION_TABS
+  const [activeTab, setActiveTab] = useState<LocationTabId>('basic');
 
   const dataLoaded = useDataLoaded();
 
@@ -82,7 +110,7 @@ export function LocationEdit() {
     return (
       <Box mt={10} textAlign="center">
         <Typography>
-          Oops! You can’t edit this Location. It may be restricted or
+          Oops! You can't edit this Location. It may be restricted or
           unavailable.
         </Typography>
         <Button
@@ -95,6 +123,9 @@ export function LocationEdit() {
       </Box>
     );
   }
+
+  // Filter available tabs based on feature flags
+  const availableTabs = tabs.filter((tab) => tab.shouldShow);
 
   return (
     <Stack spacing={0} sx={{ height: '100%', minHeight: '100vh', pt: 2 }}>
@@ -149,32 +180,33 @@ export function LocationEdit() {
           {(!isMobile || !isSidebarCollapsed) && (
             <Box sx={{ flex: 1, px: 1 }}>
               <SettingsTabMenu
+                tabs={[...tabs]}
                 activeTab={activeTab}
                 onTabChange={setActiveTab}
-                showActionsTab={showActionsTab ?? false}
-                showPoliciesTab={showPoliciesTab ?? false}
               />
             </Box>
           )}
         </Box>
 
         <Box flex={1} paddingLeft={4} paddingTop={2}>
-          {activeTab === 'basic' && (
-            <BasicConfiguration
-              data={{
-                name: location?.name || '',
-                ethnicities: location.ethnicities || [],
-                adultFamilyRelationships:
-                  location.adultFamilyRelationships || [],
-                arrangementReasons: location.arrangementReasons || [],
-              }}
-              currentLocationDefinition={location}
-            />
+          {/* Render the active tab component */}
+          {availableTabs.map(
+            (tab) =>
+              activeTab === tab.id && (
+                <Box key={tab.id}>
+                  <tab.component
+                    data={{
+                      name: location?.name || '',
+                      ethnicities: location.ethnicities || [],
+                      adultFamilyRelationships:
+                        location.adultFamilyRelationships || [],
+                      arrangementReasons: location.arrangementReasons || [],
+                    }}
+                    currentLocationDefinition={location}
+                  />
+                </Box>
+              )
           )}
-
-          {activeTab === 'actions' && showActionsTab && <ActionDefinitions />}
-
-          {activeTab === 'policies' && showPoliciesTab && <ApprovalPolicies />}
         </Box>
       </Box>
     </Stack>

@@ -84,7 +84,8 @@ namespace CareTogether.Resources.Notes
                     c.DraftNoteContents,
                     ApproverId: null,
                     ApprovedTimestampUtc: null,
-                    BackdatedTimestampUtc: c.BackdatedTimestampUtc
+                    BackdatedTimestampUtc: c.BackdatedTimestampUtc,
+                    AccessLevel: c.AccessLevel
                 ),
                 DiscardDraftNote c => null,
                 _ => notes.TryGetValue(command.NoteId, out var noteEntry)
@@ -96,6 +97,7 @@ namespace CareTogether.Resources.Notes
                             Contents = c.DraftNoteContents,
                             LastEditTimestampUtc = timestampUtc,
                             BackdatedTimestampUtc = c.BackdatedTimestampUtc,
+                            AccessLevel = c.AccessLevel 
                         },
                         ApproveNote c => noteEntry with
                         {
@@ -104,6 +106,7 @@ namespace CareTogether.Resources.Notes
                             ApprovedTimestampUtc = timestampUtc,
                             ApproverId = userId,
                             BackdatedTimestampUtc = c.BackdatedTimestampUtc,
+                            AccessLevel = c.AccessLevel 
                         },
                         _ => throw new NotImplementedException(
                             $"The command type '{command.GetType().FullName}' has not been implemented."

@@ -114,6 +114,7 @@ export default function BasicConfiguration({
         <CTAutocomplete
           name="ethnicities"
           label="Ethnicities"
+          freeSolo
           control={control}
           helperText='Start typing and press "Enter" to add a new item'
           minTypingAreaWidth={120}
@@ -133,6 +134,7 @@ export default function BasicConfiguration({
         <CTAutocomplete
           name="adultFamilyRelationships"
           label="Family relationship types"
+          freeSolo
           control={control}
           helperText='Start typing and press "Enter" to add a new item'
           minTypingAreaWidth={120}
@@ -152,6 +154,7 @@ export default function BasicConfiguration({
         <CTAutocomplete
           name="arrangementReasons"
           label="Arrangement reasons"
+          freeSolo
           control={control}
           helperText='Start typing and press "Enter" to add a new item'
           minTypingAreaWidth={120}
