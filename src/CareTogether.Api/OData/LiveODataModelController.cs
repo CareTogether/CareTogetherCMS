@@ -579,9 +579,11 @@ namespace CareTogether.Api.OData
             {
                 organizationConfiguration = organizationConfiguration with
                 {
-                    Locations = organizationConfiguration.Locations
-                        .Where(location => location.Id != Guid.Parse("00000016-0000-0000-0000-000000000000"))
-                        .ToImmutableList()
+                    Locations = organizationConfiguration
+                        .Locations.Where(location =>
+                            location.Id != Guid.Parse("00000016-0000-0000-0000-000000000000")
+                        )
+                        .ToImmutableList(),
                 };
             }
 
@@ -781,7 +783,6 @@ namespace CareTogether.Api.OData
                         )
                     )
                 )
-                .DistinctBy(x => x.Type)
                 .ToArray();
 
             var arrangements = familiesWithInfo
@@ -1704,7 +1705,11 @@ namespace CareTogether.Api.OData
                         organization.Id,
                         family.Location,
                         family.Location.Id,
-                        arrangementTypes.Single(type => type.Type == arrangement.ArrangementType),
+                        arrangementTypes.Single(type =>
+                            type.Type == arrangement.ArrangementType
+                            && type.OrganizationId == organization.Id
+                            && type.LocationId == family.Location.Id
+                        ),
                         arrangement.ArrangementType,
                         referral,
                         referral.Id,
