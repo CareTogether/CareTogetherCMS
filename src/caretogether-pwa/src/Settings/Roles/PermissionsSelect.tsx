@@ -3,6 +3,7 @@ import { Permission } from '../../GeneratedClient';
 import { formatPermissionName } from './formatPermissionName';
 import { useState } from 'react';
 import { groupedPermissions } from './groupedPermissions';
+import { camelCaseToSpaces } from '../../Utilities/stringUtils';
 
 interface PermissionSelectProps {
   availablePermissions: [string, string | Permission][];
@@ -42,7 +43,7 @@ export function PermissionsSelect({
             title: formatPermissionName(permissionName || ''),
             value: permissionValue,
             disabled: !found,
-            group,
+            group: camelCaseToSpaces(group),
           };
         })
         .filter((item): item is Option => item !== null)
