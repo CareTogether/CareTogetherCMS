@@ -773,7 +773,8 @@ export function useDirectoryModel() {
       familyId,
       noteId: string,
       finalizedNoteContents: string,
-      backdatedTimestampLocal?: Date
+      backdatedTimestampLocal?: Date,
+      accessLevel?: string
     ) => {
       const command = new ApproveNote({
         familyId: familyId,
@@ -781,6 +782,7 @@ export function useDirectoryModel() {
       });
       command.finalizedNoteContents = finalizedNoteContents;
       command.backdatedTimestampUtc = backdatedTimestampLocal;
+      command.accessLevel = accessLevel;
       return command;
     }
   );

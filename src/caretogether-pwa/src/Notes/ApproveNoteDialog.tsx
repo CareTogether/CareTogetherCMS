@@ -24,7 +24,8 @@ export function ApproveNoteDialog({
       familyId,
       note.id!,
       note.contents!,
-      note.backdatedTimestampUtc
+      note.backdatedTimestampUtc,
+      note.accessLevel
     );
   }
 
