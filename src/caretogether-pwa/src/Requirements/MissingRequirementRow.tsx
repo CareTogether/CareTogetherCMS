@@ -1,5 +1,5 @@
 import { useRecoilValue } from 'recoil';
-import { MissingRequirement, Permission } from '../GeneratedClient';
+import { Permission, RequirementDefinition } from '../GeneratedClient';
 import { policyData } from '../Model/ConfigurationModel';
 import { useFamilyIdPermissions } from '../Model/SessionModel';
 import { useDialogHandle } from '../Hooks/useDialogHandle';
@@ -9,7 +9,7 @@ import { RequirementContext } from './RequirementContext';
 import { Chip } from '@mui/material';
 
 type MissingRequirementRowProps = {
-  requirement: string | MissingRequirement;
+  requirement: string | RequirementDefinition;
   policyVersion?: string;
   context: RequirementContext;
   isAvailableApplication?: boolean;

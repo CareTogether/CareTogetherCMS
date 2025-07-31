@@ -2540,6 +2540,8 @@ namespace CareTogether.TestData
                         NoteEntryRequirement.Allowed,
                         null,
                         null,
+                        null,
+                        null,
                         null
                     ),
                     ["One Time Checkin"] = new ActionRequirement(
@@ -2680,7 +2682,8 @@ namespace CareTogether.TestData
                 ],
                 new ReferralPolicy(
                     [
-                        new RequirementDefinition("Request for Help Form", false),
+                        new RequirementDefinition("Some optional action", false),
+                        new RequirementDefinition("Request for Help Form", true),
                         new RequirementDefinition("Intake Coordinator Screening Call", true),
                         new RequirementDefinition("Intake Form", true),
                     ],

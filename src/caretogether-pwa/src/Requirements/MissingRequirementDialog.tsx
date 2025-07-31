@@ -26,6 +26,7 @@ import {
   MissingArrangementRequirement,
   NoteEntryRequirement,
   Referral,
+  RequirementDefinition,
 } from '../GeneratedClient';
 import {
   useDirectoryModel,
@@ -46,7 +47,7 @@ import { selectedLocationContextState } from '../Model/Data';
 
 type MissingRequirementDialogProps = {
   handle: DialogHandle;
-  requirement: MissingArrangementRequirement | string;
+  requirement: MissingArrangementRequirement | RequirementDefinition | string;
   context: RequirementContext;
   policy: ActionRequirement;
   referralId?: string;
@@ -185,7 +186,10 @@ export function MissingRequirementDialog({
   const requirementName =
     requirement instanceof MissingArrangementRequirement
       ? requirement.action!.actionName!
-      : requirement;
+      : requirement instanceof RequirementDefinition
+        ? requirement.actionName!
+        : requirement;
+
   async function markComplete() {
     let document = documentId;
     if (documentId === UPLOAD_NEW) {
