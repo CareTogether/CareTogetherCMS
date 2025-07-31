@@ -19,7 +19,7 @@ namespace CareTogether.Resources.Policies
         ImmutableList<string> AdultFamilyRelationships,
         ImmutableList<string>? ArrangementReasons,
         ImmutableList<SourcePhoneNumberConfiguration> SmsSourcePhoneNumbers,
-        ImmutableList<AccessLevel> AccessLevels,
+        ImmutableList<AccessLevel>? AccessLevels,
         TimeZoneInfo? timeZone = null
     );
 
