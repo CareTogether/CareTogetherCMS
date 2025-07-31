@@ -343,6 +343,18 @@ namespace CareTogether.Resources.Accounts
                         )
                         {
                             var access = lockedModel.Value.TryGetAccess(link.PersonId);
+
+                            if (access == null)
+                            {
+                                var message =
+                                    "Access is null for person link. This could indicate a data consistency issue where person link exists but access record does not.";
+
+                                // Use both logging mechanisms for better coverage
+                                System.Diagnostics.Debug.WriteLine(
+                                    $"WARN: {message} PersonId: {link.PersonId}, Organization: {link.OrganizationId}, Location: {link.LocationId}"
+                                );
+                            }
+
                             return (link.OrganizationId, link.LocationId, access);
                         }
                     })
@@ -362,7 +374,8 @@ namespace CareTogether.Resources.Accounts
                             .Select(link => new AccountLocationAccess(
                                 link.LocationId,
                                 link.PersonId,
-                                personAccessResults[(link.OrganizationId, link.LocationId)]?.Roles ?? []
+                                personAccessResults[(link.OrganizationId, link.LocationId)]?.Roles
+                                    ?? []
                             ))
                             .ToImmutableList()
                     ))
