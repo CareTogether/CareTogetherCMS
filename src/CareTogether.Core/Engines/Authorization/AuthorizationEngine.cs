@@ -248,6 +248,7 @@ namespace CareTogether.Engines.Authorization
                     CreateDraftNote => Permission.AddEditOwnDraftNotes,
                     EditDraftNote => Permission.AddEditOwnDraftNotes,
                     DiscardDraftNote => Permission.DiscardOwnDraftNotes,
+                    ApproveNote => Permission.ApproveNotes,
                     _ => throw new NotImplementedException(
                         $"The command type '{command.GetType().FullName}' has not been implemented."
                     ),
