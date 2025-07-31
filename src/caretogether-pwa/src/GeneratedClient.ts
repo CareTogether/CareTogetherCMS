@@ -1242,7 +1242,7 @@ export class LocationConfiguration implements ILocationConfiguration {
     adultFamilyRelationships?: string[];
     arrangementReasons?: string[] | undefined;
     smsSourcePhoneNumbers?: SourcePhoneNumberConfiguration[];
-    accessLevels?: AccessLevel[];
+    accessLevels?: AccessLevel[] | undefined;
     timeZone?: TimeZoneInfo | undefined;
 
     constructor(data?: ILocationConfiguration) {
@@ -1335,7 +1335,7 @@ export interface ILocationConfiguration {
     adultFamilyRelationships?: string[];
     arrangementReasons?: string[] | undefined;
     smsSourcePhoneNumbers?: SourcePhoneNumberConfiguration[];
-    accessLevels?: AccessLevel[];
+    accessLevels?: AccessLevel[] | undefined;
     timeZone?: TimeZoneInfo | undefined;
 }
 

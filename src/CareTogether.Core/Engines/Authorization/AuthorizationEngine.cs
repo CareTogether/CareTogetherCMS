@@ -324,7 +324,7 @@ namespace CareTogether.Engines.Authorization
 
             var config = await policiesResource.GetConfigurationAsync(organizationId);
             var location = config.Locations.FirstOrDefault(location => location.Id == locationId);
-            var accessLevelDefinition = location?.AccessLevels.FirstOrDefault(al =>
+            var accessLevelDefinition = location?.AccessLevels?.FirstOrDefault(al =>
                 al.Name == accessLevel
             );
 
@@ -974,7 +974,7 @@ namespace CareTogether.Engines.Authorization
             // Enforce access level if set
             var config = await policiesResource.GetConfigurationAsync(organizationId);
             var location = config.Locations.FirstOrDefault(l => l.Id == locationId);
-            var accessLevel = location?.AccessLevels.FirstOrDefault(al =>
+            var accessLevel = location?.AccessLevels?.FirstOrDefault(al =>
                 al.Name == note.AccessLevel
             );
             var userLocalIdentity = user.LocationIdentity(organizationId, locationId);

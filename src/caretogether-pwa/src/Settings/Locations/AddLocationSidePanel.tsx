@@ -69,6 +69,7 @@ export function AddLocation({ onClose }: DrawerProps) {
           arrangementReasons: [],
           ethnicities: [],
           smsSourcePhoneNumbers: [],
+          accessLevels: [],
           timeZone: undefined, // TODO: Implement timezone
         });
 
