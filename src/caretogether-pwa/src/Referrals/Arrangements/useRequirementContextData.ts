@@ -127,9 +127,10 @@ export function useRequirementContextData(
       )
     );
 
-  const missingRequirementsWithContext = (
-    arrangement.missingRequirements || []
-  ).map((requirement) => {
+  const missingRequirementsWithContext = [
+    ...arrangement.missingRequirements!,
+    ...arrangement.missingOptionalRequirements!,
+  ].map((requirement) => {
     if (requirement.personId) {
       return {
         missing: requirement,

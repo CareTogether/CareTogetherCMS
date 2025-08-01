@@ -26,6 +26,7 @@ import {
   MissingArrangementRequirement,
   NoteEntryRequirement,
   Referral,
+  RequirementDefinition,
 } from '../GeneratedClient';
 import {
   useDirectoryModel,
@@ -46,7 +47,7 @@ import { selectedLocationContextState } from '../Model/Data';
 
 type MissingRequirementDialogProps = {
   handle: DialogHandle;
-  requirement: MissingArrangementRequirement | string;
+  requirement: MissingArrangementRequirement | RequirementDefinition | string;
   context: RequirementContext;
   policy: ActionRequirement;
   referralId?: string;
@@ -113,27 +114,38 @@ export function MissingRequirementDialog({
   const availableArrangements =
     selectedReferral && requirement instanceof MissingArrangementRequirement
       ? selectedReferral.arrangements!.filter((arrangement) =>
-          arrangement.missingRequirements?.some((x) => {
+          [
+            ...arrangement.missingRequirements!,
+            ...arrangement.missingOptionalRequirements!,
+          ].some((missingRequirementInfo) => {
             if (context.kind === 'Family Volunteer Assignment')
               return (
-                x.actionName === requirement.actionName &&
-                x.arrangementFunction ===
+                missingRequirementInfo.action?.actionName ===
+                  requirement.action?.actionName &&
+                missingRequirementInfo.arrangementFunction ===
                   context.assignment.arrangementFunction &&
-                x.arrangementFunctionVariant ===
+                missingRequirementInfo.arrangementFunctionVariant ===
                   context.assignment.arrangementFunctionVariant &&
-                x.volunteerFamilyId === context.assignment.familyId
+                missingRequirementInfo.volunteerFamilyId ===
+                  context.assignment.familyId
               );
             else if (context.kind === 'Individual Volunteer Assignment')
               return (
-                x.actionName === requirement.actionName &&
-                x.arrangementFunction ===
+                missingRequirementInfo.action?.actionName ===
+                  requirement.action?.actionName &&
+                missingRequirementInfo.arrangementFunction ===
                   context.assignment.arrangementFunction &&
-                x.arrangementFunctionVariant ===
+                missingRequirementInfo.arrangementFunctionVariant ===
                   context.assignment.arrangementFunctionVariant &&
-                x.volunteerFamilyId === context.assignment.familyId &&
-                x.personId === context.assignment.personId
+                missingRequirementInfo.volunteerFamilyId ===
+                  context.assignment.familyId &&
+                missingRequirementInfo.personId === context.assignment.personId
               );
-            else return x.actionName === requirement.actionName;
+            else
+              return (
+                missingRequirementInfo.action?.actionName ===
+                requirement.action?.actionName
+              );
           })
         )
       : [];
@@ -173,8 +185,11 @@ export function MissingRequirementDialog({
 
   const requirementName =
     requirement instanceof MissingArrangementRequirement
-      ? requirement.actionName!
-      : requirement;
+      ? requirement.action!.actionName!
+      : requirement instanceof RequirementDefinition
+        ? requirement.actionName!
+        : requirement;
+
   async function markComplete() {
     let document = documentId;
     if (documentId === UPLOAD_NEW) {

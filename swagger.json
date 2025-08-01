@@ -1833,10 +1833,10 @@
         "type": "object",
         "additionalProperties": false,
         "properties": {
-          "requiredIntakeActionNames": {
+          "intakeRequirements": {
             "type": "array",
             "items": {
-              "type": "string"
+              "$ref": "#/components/schemas/RequirementDefinition"
             }
           },
           "customFields": {
@@ -1860,6 +1860,18 @@
           }
         }
       },
+      "RequirementDefinition": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "actionName": {
+            "type": "string"
+          },
+          "isRequired": {
+            "type": "boolean"
+          }
+        }
+      },
       "ArrangementPolicy": {
         "type": "object",
         "additionalProperties": false,
@@ -1876,10 +1888,10 @@
               "$ref": "#/components/schemas/ArrangementFunction"
             }
           },
-          "requiredSetupActionNames": {
+          "requiredSetupActions": {
             "type": "array",
             "items": {
-              "type": "string"
+              "$ref": "#/components/schemas/RequirementDefinition"
             }
           },
           "requiredMonitoringActions": {
@@ -1891,7 +1903,7 @@
           "requiredCloseoutActionNames": {
             "type": "array",
             "items": {
-              "type": "string"
+              "$ref": "#/components/schemas/RequirementDefinition"
             }
           }
         }
@@ -1974,7 +1986,7 @@
           "requiredSetupActionNames": {
             "type": "array",
             "items": {
-              "type": "string"
+              "$ref": "#/components/schemas/RequirementDefinition"
             }
           },
           "requiredMonitoringActions": {
@@ -1986,7 +1998,7 @@
           "requiredCloseoutActionNames": {
             "type": "array",
             "items": {
-              "type": "string"
+              "$ref": "#/components/schemas/RequirementDefinition"
             }
           }
         }
@@ -1995,8 +2007,8 @@
         "type": "object",
         "additionalProperties": false,
         "properties": {
-          "actionName": {
-            "type": "string"
+          "action": {
+            "$ref": "#/components/schemas/RequirementDefinition"
           },
           "recurrence": {
             "$ref": "#/components/schemas/RecurrencePolicy"
@@ -3164,7 +3176,7 @@
           "missingRequirements": {
             "type": "array",
             "items": {
-              "type": "string"
+              "$ref": "#/components/schemas/RequirementDefinition"
             }
           },
           "completedCustomFields": {
@@ -3344,6 +3356,12 @@
               "$ref": "#/components/schemas/MissingArrangementRequirement"
             }
           },
+          "missingOptionalRequirements": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/MissingArrangementRequirement"
+            }
+          },
           "individualVolunteerAssignments": {
             "type": "array",
             "items": {
@@ -3418,8 +3436,8 @@
             "format": "guid",
             "nullable": true
           },
-          "actionName": {
-            "type": "string"
+          "action": {
+            "$ref": "#/components/schemas/RequirementDefinition"
           },
           "dueBy": {
             "type": "string",

@@ -254,7 +254,7 @@ export function useReferralsModel() {
           referralId: referralId,
           arrangementIds: arrangementIds,
         });
-        command.requirementName = requirement.actionName;
+        command.requirementName = requirement.action?.actionName;
         command.dueDate = exemptAll
           ? undefined
           : dueDateUtc && convertUtcDateToLocalDate(dueDateUtc);
@@ -358,7 +358,7 @@ export function useReferralsModel() {
         command.arrangementFunctionVariant =
           assignment.arrangementFunctionVariant;
         command.volunteerFamilyId = assignment.familyId;
-        command.requirementName = requirement.actionName;
+        command.requirementName = requirement.action?.actionName;
         command.dueDate = exemptAll
           ? undefined
           : dueDateUtc && convertUtcDateToLocalDate(dueDateUtc);
@@ -469,7 +469,7 @@ export function useReferralsModel() {
           assignment.arrangementFunctionVariant;
         command.volunteerFamilyId = assignment.familyId;
         command.personId = assignment.personId;
-        command.requirementName = requirement.actionName;
+        command.requirementName = requirement.action?.actionName;
         command.dueDate = exemptAll
           ? undefined
           : requirement.dueBy || requirement.pastDueSince;

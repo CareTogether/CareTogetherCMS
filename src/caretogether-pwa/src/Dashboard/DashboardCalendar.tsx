@@ -124,7 +124,7 @@ export function DashboardCalendar() {
     .map(
       ({ person, missing, familyId, referralId, arrangementId }) =>
         ({
-          title: `❌ ${personNameString(person)} - ${missing.actionName}`,
+          title: `❌ ${personNameString(person)} - ${missing.action?.actionName}`,
           date:
             missing.pastDueSince && format(missing.pastDueSince, 'yyyy-MM-dd'),
           color: 'red',
@@ -141,7 +141,7 @@ export function DashboardCalendar() {
     .map(
       ({ person, missing, familyId, referralId, arrangementId }) =>
         ({
-          title: `📅 ${personNameString(person)} - ${missing.actionName}`,
+          title: `📅 ${personNameString(person)} - ${missing.action?.actionName}`,
           date: missing.dueBy && format(missing.dueBy, 'yyyy-MM-dd'),
           extendedProps: {
             familyId,
