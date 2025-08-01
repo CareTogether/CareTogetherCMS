@@ -1,8 +1,9 @@
 import { Autocomplete, TextField, Button, Stack } from '@mui/material';
 import { Permission } from '../../GeneratedClient';
-import { spacesBeforeCapitalLetters } from './spacesBeforeCapitalLetters';
+import { formatPermissionName } from './formatPermissionName';
 import { useState } from 'react';
 import { groupedPermissions } from './groupedPermissions';
+import { camelCaseToSpaces } from '../../Utilities/stringUtils';
 
 interface PermissionSelectProps {
   availablePermissions: [string, string | Permission][];
@@ -39,10 +40,10 @@ export function PermissionsSelect({
           );
 
           return {
-            title: spacesBeforeCapitalLetters(permissionName || ''),
+            title: formatPermissionName(permissionName || ''),
             value: permissionValue,
             disabled: !found,
-            group,
+            group: camelCaseToSpaces(group),
           };
         })
         .filter((item): item is Option => item !== null)

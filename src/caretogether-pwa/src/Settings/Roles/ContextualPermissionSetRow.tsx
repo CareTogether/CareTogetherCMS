@@ -19,7 +19,7 @@ import {
   PermissionContext,
 } from '../../GeneratedClient';
 import { PermissionContextCell } from './PermissionContextCell';
-import { spacesBeforeCapitalLetters } from './spacesBeforeCapitalLetters';
+import { formatPermissionName } from './formatPermissionName';
 
 interface ContextualPermissionSetRowProps {
   editable: boolean;
@@ -107,7 +107,7 @@ export function ContextualPermissionSetRow({
                   </IconButton>
                 )}
                 <ListItemText>
-                  {spacesBeforeCapitalLetters(Permission[permission])}
+                  {formatPermissionName(Permission[permission])}
                 </ListItemText>
               </ListItem>
             );
@@ -151,7 +151,7 @@ export function ContextualPermissionSetRow({
                   dense
                   onClick={() => addPermission(permission[1] as Permission)}
                 >
-                  {spacesBeforeCapitalLetters(permission[0])}
+                  {formatPermissionName(permission[0])}
                 </MenuItem>
               );
               // Group similar permission items
