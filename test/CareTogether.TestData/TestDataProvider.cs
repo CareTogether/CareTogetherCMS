@@ -1556,7 +1556,7 @@ namespace CareTogether.TestData
                         fisherFamilyGuid,
                         fisherFamilyReferral1Guid,
                         [fisherFamilyArrangement1Guid],
-                        "Advocacy Agreement",
+                        "Advocacy Agmt",
                         null,
                         "Not needed",
                         null
@@ -1871,7 +1871,7 @@ namespace CareTogether.TestData
                         brambleswiftFamilyGuid,
                         berrinBrambleswiftGuid,
                         guid7,
-                        "Background Check",
+                        "Bg Check",
                         ApprovalsMonth(6),
                         guid7,
                         null
@@ -1908,7 +1908,7 @@ namespace CareTogether.TestData
                     new CompleteVolunteerFamilyRequirement(
                         brambleswiftFamilyGuid,
                         guid3,
-                        "Host Family Interview",
+                        "Host Interview",
                         ApprovalsMonth(8),
                         Guid.Empty,
                         null
@@ -2468,7 +2468,7 @@ namespace CareTogether.TestData
                     ["Intake Form"] = new ActionRequirement(
                         DocumentLinkRequirement.Required,
                         NoteEntryRequirement.Allowed,
-                        [],
+                        ["Fill intake form"],
                         "Email or text the Cognito Form link",
                         new Uri("http://example.com/forms/intake-v1"),
                         null,
@@ -2588,7 +2588,7 @@ namespace CareTogether.TestData
                     ["Background Check"] = new ActionRequirement(
                         DocumentLinkRequirement.Required,
                         NoteEntryRequirement.Allowed,
-                        [],
+                        ["Bg Check"],
                         "See approval guide for directions",
                         new Uri("http://example.com/forms/bgcheck"),
                         new TimeSpan(365 * 3, 0, 0, 0),
@@ -2658,7 +2658,7 @@ namespace CareTogether.TestData
                     ["Host Family Interview"] = new ActionRequirement(
                         DocumentLinkRequirement.Allowed,
                         NoteEntryRequirement.Required,
-                        [],
+                        ["Host Interview"],
                         null,
                         null,
                         null,
@@ -2696,7 +2696,7 @@ namespace CareTogether.TestData
                     ),
                 ],
                 new ReferralPolicy(
-                    ["Request for Help Form", "Intake Coordinator Screening Call", "Intake Form"],
+                    ["Request for Help Form", "Intake Coordinator Screening Call", "Intake Form", "Fill intake form"],
                     [
                         new CustomField(
                             "Referral Source",
@@ -2956,7 +2956,7 @@ namespace CareTogether.TestData
                                     Variants: []
                                 ),
                             ],
-                            RequiredSetupActionNames: ["Advocacy Agreement", "Advocacy Agmt"],
+                            RequiredSetupActionNames: ["Advocacy Agreement"],
                             RequiredMonitoringActions:
                             [
                                 new MonitoringRequirement(
