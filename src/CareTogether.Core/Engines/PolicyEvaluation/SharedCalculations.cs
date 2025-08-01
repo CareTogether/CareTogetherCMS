@@ -32,7 +32,7 @@ namespace CareTogether.Engines.PolicyEvaluation
         {
             var actionDefinition = FindActionDefinition(locationPolicy, requirementName);
 
-            if (!actionDefinition.HasValue)
+            if (!actionDefinition.HasValue || actionDefinition.Value.Key == null)
                 return [requirementName];
 
             return ImmutableList
