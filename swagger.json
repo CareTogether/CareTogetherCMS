@@ -1728,6 +1728,12 @@
           "noteEntry": {
             "$ref": "#/components/schemas/NoteEntryRequirement"
           },
+          "alternateNames": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
           "instructions": {
             "type": "string",
             "nullable": true

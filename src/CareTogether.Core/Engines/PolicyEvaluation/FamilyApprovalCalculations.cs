@@ -15,6 +15,7 @@ namespace CareTogether.Engines.PolicyEvaluation
             string,
             FamilyRoleApprovalStatus
         > CalculateAllFamilyRoleApprovalStatuses(
+            EffectiveLocationPolicy locationPolicy,
             ImmutableDictionary<string, VolunteerFamilyRolePolicy> volunteerFamilyRoles,
             Family family,
             ImmutableList<Resources.CompletedRequirementInfo> completedFamilyRequirements,
@@ -36,6 +37,7 @@ namespace CareTogether.Engines.PolicyEvaluation
                 rolePolicy =>
                     CalculateFamilyRoleApprovalStatus(
                         rolePolicy.Key,
+                        locationPolicy,
                         rolePolicy.Value,
                         family,
                         completedFamilyRequirements,
@@ -54,6 +56,7 @@ namespace CareTogether.Engines.PolicyEvaluation
 
         internal static FamilyRoleApprovalStatus CalculateFamilyRoleApprovalStatus(
             string roleName,
+            EffectiveLocationPolicy locationPolicy,
             VolunteerFamilyRolePolicy rolePolicy,
             Family family,
             ImmutableList<Resources.CompletedRequirementInfo> completedFamilyRequirements,
@@ -74,6 +77,7 @@ namespace CareTogether.Engines.PolicyEvaluation
                 .PolicyVersions.Select(policyVersion =>
                     CalculateFamilyRoleVersionApprovalStatus(
                         roleName,
+                        locationPolicy,
                         policyVersion,
                         family,
                         completedFamilyRequirements,
@@ -96,6 +100,7 @@ namespace CareTogether.Engines.PolicyEvaluation
 
         internal static FamilyRoleVersionApprovalStatus CalculateFamilyRoleVersionApprovalStatus(
             string roleName,
+            EffectiveLocationPolicy locationPolicy,
             VolunteerFamilyRolePolicyVersion policyVersion,
             Family family,
             ImmutableList<Resources.CompletedRequirementInfo> completedFamilyRequirements,
@@ -139,7 +144,10 @@ namespace CareTogether.Engines.PolicyEvaluation
                 .Requirements.Select(requirement =>
                     CalculateFamilyRoleRequirementCompletionStatus(
                         roleName,
-                        requirement.ActionName,
+                        SharedCalculations.GetRequirementNameWithSynonyms(
+                            locationPolicy,
+                            requirement.ActionName
+                        ),
                         requirement.Stage,
                         requirement.Scope,
                         policyVersion.SupersededAtUtc,
@@ -167,7 +175,7 @@ namespace CareTogether.Engines.PolicyEvaluation
 
         internal static FamilyRoleRequirementCompletionStatus CalculateFamilyRoleRequirementCompletionStatus(
             string roleName,
-            string requirementActionName,
+            ImmutableList<string> requirementNameWithSynonyms,
             RequirementStage requirementStage,
             VolunteerFamilyRequirementScope requirementScope,
             DateTime? policyVersionSupersededAtUtc,
@@ -184,7 +192,7 @@ namespace CareTogether.Engines.PolicyEvaluation
             // If there are no active adults in the family, then the requirement cannot be met.
             if (activeAdults.Count == 0)
                 return new FamilyRoleRequirementCompletionStatus(
-                    requirementActionName,
+                    requirementNameWithSynonyms.First(),
                     requirementStage,
                     requirementScope,
                     null,
@@ -197,7 +205,7 @@ namespace CareTogether.Engines.PolicyEvaluation
                     .Select(a => new FamilyRequirementStatusDetail(
                         a.Id,
                         SharedCalculations.FindRequirementApprovals(
-                            requirementActionName,
+                            requirementNameWithSynonyms,
                             policyVersionSupersededAtUtc,
                             a.CompletedRequirements,
                             a.ExemptedRequirements
@@ -218,7 +226,7 @@ namespace CareTogether.Engines.PolicyEvaluation
                     .Select(a => new FamilyRequirementStatusDetail(
                         a.Id,
                         SharedCalculations.FindRequirementApprovals(
-                            requirementActionName,
+                            requirementNameWithSynonyms,
                             policyVersionSupersededAtUtc,
                             a.CompletedRequirements,
                             a.ExemptedRequirements
@@ -229,7 +237,7 @@ namespace CareTogether.Engines.PolicyEvaluation
                     new FamilyRequirementStatusDetail(
                         PersonId: null,
                         SharedCalculations.FindRequirementApprovals(
-                            requirementActionName,
+                            requirementNameWithSynonyms,
                             policyVersionSupersededAtUtc,
                             completedFamilyRequirements,
                             exemptedFamilyRequirements
@@ -246,7 +254,7 @@ namespace CareTogether.Engines.PolicyEvaluation
             );
 
             return new FamilyRoleRequirementCompletionStatus(
-                requirementActionName,
+                requirementNameWithSynonyms.First(),
                 requirementStage,
                 requirementScope,
                 WhenMet: whenCombinedRequirementsAreMet,

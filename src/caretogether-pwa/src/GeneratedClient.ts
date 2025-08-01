@@ -2302,6 +2302,7 @@ export interface IEffectiveLocationPolicy {
 export class ActionRequirement implements IActionRequirement {
     documentLink?: DocumentLinkRequirement;
     noteEntry?: NoteEntryRequirement;
+    alternateNames?: string[];
     instructions?: string | undefined;
     infoLink?: string | undefined;
     validity?: string | undefined;
@@ -2321,6 +2322,11 @@ export class ActionRequirement implements IActionRequirement {
         if (_data) {
             this.documentLink = _data["documentLink"];
             this.noteEntry = _data["noteEntry"];
+            if (Array.isArray(_data["alternateNames"])) {
+                this.alternateNames = [] as any;
+                for (let item of _data["alternateNames"])
+                    this.alternateNames!.push(item);
+            }
             this.instructions = _data["instructions"];
             this.infoLink = _data["infoLink"];
             this.validity = _data["validity"];
@@ -2340,6 +2346,11 @@ export class ActionRequirement implements IActionRequirement {
         data = typeof data === 'object' ? data : {};
         data["documentLink"] = this.documentLink;
         data["noteEntry"] = this.noteEntry;
+        if (Array.isArray(this.alternateNames)) {
+            data["alternateNames"] = [];
+            for (let item of this.alternateNames)
+                data["alternateNames"].push(item);
+        }
         data["instructions"] = this.instructions;
         data["infoLink"] = this.infoLink;
         data["validity"] = this.validity;
@@ -2352,6 +2363,7 @@ export class ActionRequirement implements IActionRequirement {
 export interface IActionRequirement {
     documentLink?: DocumentLinkRequirement;
     noteEntry?: NoteEntryRequirement;
+    alternateNames?: string[];
     instructions?: string | undefined;
     infoLink?: string | undefined;
     validity?: string | undefined;

@@ -10,6 +10,7 @@ namespace CareTogether.Engines.PolicyEvaluation
     internal static class IndividualApprovalCalculations
     {
         internal static IndividualApprovalStatus CalculateIndividualApprovalStatus(
+            EffectiveLocationPolicy locationPolicy,
             ImmutableDictionary<string, VolunteerRolePolicy> volunteerRoles,
             ImmutableList<Resources.CompletedRequirementInfo> completedRequirements,
             ImmutableList<Resources.ExemptedRequirementInfo> exemptedRequirements,
@@ -20,6 +21,7 @@ namespace CareTogether.Engines.PolicyEvaluation
                 rolePolicy => rolePolicy.Key,
                 rolePolicy =>
                     CalculateIndividualRoleApprovalStatus(
+                        locationPolicy,
                         rolePolicy.Value,
                         completedRequirements,
                         exemptedRequirements,
@@ -31,6 +33,7 @@ namespace CareTogether.Engines.PolicyEvaluation
         }
 
         internal static IndividualRoleApprovalStatus CalculateIndividualRoleApprovalStatus(
+            EffectiveLocationPolicy locationPolicy,
             VolunteerRolePolicy rolePolicy,
             ImmutableList<Resources.CompletedRequirementInfo> completedRequirements,
             ImmutableList<Resources.ExemptedRequirementInfo> exemptedRequirements,
@@ -40,6 +43,7 @@ namespace CareTogether.Engines.PolicyEvaluation
             var roleVersionApprovals = rolePolicy
                 .PolicyVersions.Select(policyVersion =>
                     CalculateIndividualRoleVersionApprovalStatus(
+                        locationPolicy,
                         policyVersion,
                         completedRequirements,
                         exemptedRequirements,
@@ -60,6 +64,7 @@ namespace CareTogether.Engines.PolicyEvaluation
         }
 
         internal static IndividualRoleVersionApprovalStatus CalculateIndividualRoleVersionApprovalStatus(
+            EffectiveLocationPolicy locationPolicy,
             VolunteerRolePolicyVersion policyVersion,
             ImmutableList<Resources.CompletedRequirementInfo> completedRequirements,
             ImmutableList<Resources.ExemptedRequirementInfo> exemptedRequirements,
@@ -72,6 +77,7 @@ namespace CareTogether.Engines.PolicyEvaluation
             var requirementCompletionStatus = policyVersion
                 .Requirements.Select(requirement =>
                     CalculateIndividualRoleRequirementCompletionStatus(
+                        locationPolicy,
                         requirement,
                         policyVersion.SupersededAtUtc,
                         completedRequirements,
@@ -95,6 +101,7 @@ namespace CareTogether.Engines.PolicyEvaluation
         }
 
         internal static IndividualRoleRequirementCompletionStatus CalculateIndividualRoleRequirementCompletionStatus(
+            EffectiveLocationPolicy locationPolicy,
             VolunteerApprovalRequirement requirement,
             DateTime? policyVersionSupersededAtUtc,
             ImmutableList<Resources.CompletedRequirementInfo> completedRequirements,
@@ -102,7 +109,7 @@ namespace CareTogether.Engines.PolicyEvaluation
         )
         {
             var whenMet = SharedCalculations.FindRequirementApprovals(
-                requirement.ActionName,
+                SharedCalculations.GetRequirementNameWithSynonyms(locationPolicy, requirement.ActionName),
                 policyVersionSupersededAtUtc,
                 completedRequirements,
                 exemptedRequirements

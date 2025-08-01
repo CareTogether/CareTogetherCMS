@@ -1,6 +1,8 @@
 using System;
+using System.Collections.Immutable;
 using System.Linq;
 using CareTogether.Engines.PolicyEvaluation;
+using CareTogether.Resources.Policies;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Timelines;
 using H = CareTogether.Core.Test.ApprovalCalculationTests.Helpers;
@@ -14,7 +16,7 @@ public class FindRequirementApprovalsTest
     public void EmptyInputsReturnsNull()
     {
         var result = SharedCalculations.FindRequirementApprovals(
-            "A",
+            ["A"],
             null,
             H.Completed([]),
             H.ExemptedOn([])
@@ -27,7 +29,7 @@ public class FindRequirementApprovalsTest
     public void EmptyInputsWithSupersededDateReturnsNull()
     {
         var result = SharedCalculations.FindRequirementApprovals(
-            "A",
+            ["A"],
             H.DT(20),
             H.Completed([]),
             H.ExemptedOn([])
@@ -40,7 +42,7 @@ public class FindRequirementApprovalsTest
     public void NonMatchingInputsReturnsNull()
     {
         var result = SharedCalculations.FindRequirementApprovals(
-            "A",
+            ["A"],
             null,
             H.Completed([("B", 2), ("C", 3)]),
             H.ExemptedOn([("D", 4, null)])
@@ -53,7 +55,7 @@ public class FindRequirementApprovalsTest
     public void MatchingCompletedReturnsTimeline()
     {
         var result = SharedCalculations.FindRequirementApprovals(
-            "A",
+            ["A"],
             null,
             H.Completed([("A", 2)]),
             H.ExemptedOn([])
@@ -67,7 +69,7 @@ public class FindRequirementApprovalsTest
     public void MatchingCompletedMultipleReturnsSingleTimeline()
     {
         var result = SharedCalculations.FindRequirementApprovals(
-            "A",
+            ["A"],
             null,
             H.Completed([("A", 2), ("A", 5)]),
             H.ExemptedOn([])
@@ -81,7 +83,7 @@ public class FindRequirementApprovalsTest
     public void MatchingCompletedExpiringReturnsTimeline()
     {
         var result = SharedCalculations.FindRequirementApprovals(
-            "A",
+            ["A"],
             null,
             H.CompletedUntil([("A", 2, 4)]),
             H.ExemptedOn([])
@@ -95,7 +97,7 @@ public class FindRequirementApprovalsTest
     public void MatchingCompletedExpiringNonoverlappingReturnsTimeline()
     {
         var result = SharedCalculations.FindRequirementApprovals(
-            "A",
+            ["A"],
             null,
             H.CompletedUntil([("A", 2, 4), ("A", 6, 9)]),
             H.ExemptedOn([])
@@ -113,7 +115,7 @@ public class FindRequirementApprovalsTest
     public void MatchingCompletedExpiringOverlappingReturnsSingleTimeline()
     {
         var result = SharedCalculations.FindRequirementApprovals(
-            "A",
+            ["A"],
             null,
             H.CompletedUntil([("A", 2, 7), ("A", 6, 9)]),
             H.ExemptedOn([])
@@ -127,7 +129,7 @@ public class FindRequirementApprovalsTest
     public void MatchingExemptedNonexpiringReturnsTimeline()
     {
         var result = SharedCalculations.FindRequirementApprovals(
-            "A",
+            ["A"],
             null,
             H.Completed([]),
             H.ExemptedOn([("A", 3, null)])
@@ -141,7 +143,7 @@ public class FindRequirementApprovalsTest
     public void MatchingExemptedNonexpiringMultipleReturnsSingleTimeline()
     {
         var result = SharedCalculations.FindRequirementApprovals(
-            "A",
+            ["A"],
             null,
             H.Completed([]),
             H.ExemptedOn([("A", 3, null), ("A", 6, null)])
@@ -155,7 +157,7 @@ public class FindRequirementApprovalsTest
     public void MatchingCompletedAndExemptedNonexpiringMultipleReturnsSingleTimeline()
     {
         var result = SharedCalculations.FindRequirementApprovals(
-            "A",
+            ["A"],
             null,
             H.Completed([("A", 2), ("A", 5)]),
             H.ExemptedOn([("A", 3, null), ("A", 6, null)])
@@ -169,7 +171,7 @@ public class FindRequirementApprovalsTest
     public void MatchingExemptedExpiringReturnsTimeline()
     {
         var result = SharedCalculations.FindRequirementApprovals(
-            "A",
+            ["A"],
             null,
             H.Completed([]),
             H.ExemptedOn([("A", 3, 6)])
@@ -183,7 +185,7 @@ public class FindRequirementApprovalsTest
     public void MatchingExemptedExpiringMultipleReturnsSingleTimeline()
     {
         var result = SharedCalculations.FindRequirementApprovals(
-            "A",
+            ["A"],
             null,
             H.Completed([]),
             H.ExemptedOn([("A", 3, 6), ("A", 7, 9)])
@@ -197,7 +199,7 @@ public class FindRequirementApprovalsTest
     public void MatchingCompletedAndExemptedExpiringMultipleReturnsSingleTimeline()
     {
         var result = SharedCalculations.FindRequirementApprovals(
-            "A",
+            ["A"],
             null,
             H.Completed([("A", 2), ("A", 5)]),
             H.ExemptedOn([("A", 3, 6), ("A", 6, 7)])
@@ -211,7 +213,7 @@ public class FindRequirementApprovalsTest
     public void MatchingCompletedOnlyAfterSupersededReturnsNull()
     {
         var result = SharedCalculations.FindRequirementApprovals(
-            "A",
+            ["A"],
             H.DT(10),
             H.Completed([("A", 12), ("A", 15)]),
             H.ExemptedOn([])
@@ -226,7 +228,7 @@ public class FindRequirementApprovalsTest
         //NOTE: Because exemptions cannot be backdated, this is the most straightforward logic:
         //      exemptions apply (as long as they are valid) regardless of policy supersedence.
         var result = SharedCalculations.FindRequirementApprovals(
-            "A",
+            ["A"],
             H.DT(10),
             H.Completed([("A", 12), ("A", 15)]),
             H.ExemptedOn([("A", 13, 16), ("A", 16, 17)])
@@ -240,7 +242,7 @@ public class FindRequirementApprovalsTest
     public void MatchingWithSupersededReturnsOnlyNonsupersededRanges()
     {
         var result = SharedCalculations.FindRequirementApprovals(
-            "A",
+            ["A"],
             H.DT(10),
             H.Completed([("A", 12), ("A", 15)]),
             H.ExemptedOn([("A", 5, 16), ("A", 16, 17)])

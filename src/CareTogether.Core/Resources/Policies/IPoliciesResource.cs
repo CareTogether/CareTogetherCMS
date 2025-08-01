@@ -116,6 +116,7 @@ namespace CareTogether.Resources.Policies
     public sealed record ActionRequirement(
         DocumentLinkRequirement DocumentLink,
         NoteEntryRequirement NoteEntry,
+        ImmutableList<string> AlternateNames,
         string? Instructions,
         Uri? InfoLink,
         TimeSpan? Validity,
