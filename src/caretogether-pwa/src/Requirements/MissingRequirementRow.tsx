@@ -39,9 +39,7 @@ export function MissingRequirementRow({
     policy.actionDefinitions![requirement] ||
     Object.entries(policy.actionDefinitions!).find(([, value]) =>
       value.alternateNames?.includes(requirement)
-    );
-
-  console.log({ requirementPolicy, requirement });
+    )?.[1];
 
   if (
     context.kind === 'Arrangement' ||
