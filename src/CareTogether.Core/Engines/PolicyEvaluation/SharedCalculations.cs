@@ -13,7 +13,7 @@ namespace CareTogether.Engines.PolicyEvaluation
     {
         public sealed record RequirementCheckResult(bool IsMetOrExempted, DateOnly? ExpiresAtUtc);
 
-        private static ActionRequirement? FindActionDefinition(
+        private static KeyValuePair<string, ActionRequirement>? FindActionDefinition(
             EffectiveLocationPolicy locationPolicy,
             string requiredAction
         )
@@ -22,8 +22,7 @@ namespace CareTogether.Engines.PolicyEvaluation
                 .ActionDefinitions.ToImmutableDictionary()
                 .FirstOrDefault(item =>
                     item.Key == requiredAction || item.Value.AlternateNames.Contains(requiredAction)
-                )
-                .Value;
+                );
         }
 
         internal static ImmutableList<string> GetRequirementNameWithSynonyms(
@@ -33,9 +32,12 @@ namespace CareTogether.Engines.PolicyEvaluation
         {
             var actionDefinition = FindActionDefinition(locationPolicy, requirementName);
 
+            if (!actionDefinition.HasValue)
+                return [requirementName];
+
             return ImmutableList
-                .Create(requirementName)
-                .AddRange(actionDefinition?.AlternateNames ?? [])
+                .Create(actionDefinition.Value.Key)
+                .AddRange(actionDefinition.Value.Value.AlternateNames ?? [])
                 .ToImmutableList();
         }
 
@@ -51,7 +53,6 @@ namespace CareTogether.Engines.PolicyEvaluation
             var bestCompletion = completedRequirements
                 .Where(completed =>
                     requirementNameWithSynonyms.Contains(completed.RequirementName)
-                    // completed.RequirementName == requirementName
                     && (policySupersededAt == null || completed.CompletedAt < policySupersededAt)
                     && (completed.ExpiresAt == null || completed.ExpiresAt > today)
                 )
