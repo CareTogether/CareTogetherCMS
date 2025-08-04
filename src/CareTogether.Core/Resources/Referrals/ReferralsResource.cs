@@ -3,7 +3,7 @@ using System.Collections.Immutable;
 using System.Threading.Tasks;
 using CareTogether.Utilities.EventLog;
 
-namespace CareTogether.Resources.Referrals
+namespace CareTogether.Resources.V1Cases
 {
     public sealed class ReferralsResource : IReferralsResource
     {

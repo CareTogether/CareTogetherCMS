@@ -8,7 +8,7 @@ using CareTogether.Resources.Communities;
 using CareTogether.Resources.Directory;
 using CareTogether.Resources.Notes;
 using CareTogether.Resources.Policies;
-using CareTogether.Resources.Referrals;
+using CareTogether.Resources.V1Cases;
 
 namespace CareTogether.Managers
 {
@@ -59,8 +59,8 @@ namespace CareTogether.Managers
         ImmutableList<Resources.CompletedRequirementInfo> CompletedRequirements,
         ImmutableList<Resources.ExemptedRequirementInfo> ExemptedRequirements,
         ImmutableList<MissingArrangementRequirement> MissingRequirements,
-        ImmutableList<Resources.Referrals.IndividualVolunteerAssignment> IndividualVolunteerAssignments,
-        ImmutableList<Resources.Referrals.FamilyVolunteerAssignment> FamilyVolunteerAssignments,
+        ImmutableList<Resources.V1Cases.IndividualVolunteerAssignment> IndividualVolunteerAssignments,
+        ImmutableList<Resources.V1Cases.FamilyVolunteerAssignment> FamilyVolunteerAssignments,
         ImmutableSortedSet<ChildLocationHistoryEntry> ChildLocationHistory,
         ImmutableSortedSet<ChildLocationHistoryEntry> ChildLocationPlan,
         string? Comments,
@@ -86,7 +86,7 @@ namespace CareTogether.Managers
         ImmutableList<RoleRemoval> RoleRemovals,
         ImmutableDictionary<Guid, VolunteerInfo> IndividualVolunteers,
         ImmutableList<Activity> History,
-        ImmutableList<Resources.Referrals.ArrangementEntry> Assignments
+        ImmutableList<Resources.V1Cases.ArrangementEntry> Assignments
     );
 
     public sealed record VolunteerInfo(

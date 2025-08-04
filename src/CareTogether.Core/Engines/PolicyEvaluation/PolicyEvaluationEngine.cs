@@ -7,7 +7,7 @@ using CareTogether.Resources;
 using CareTogether.Resources.Approvals;
 using CareTogether.Resources.Directory;
 using CareTogether.Resources.Policies;
-using CareTogether.Resources.Referrals;
+using CareTogether.Resources.V1Cases;
 using CareTogether.Utilities.Dates;
 
 namespace CareTogether.Engines.PolicyEvaluation
@@ -92,7 +92,7 @@ namespace CareTogether.Engines.PolicyEvaluation
         }
 
         internal IndividualVolunteerAssignment ToIndividualVolunteerAssignmentForCalculation(
-            Resources.Referrals.IndividualVolunteerAssignment entry,
+            Resources.V1Cases.IndividualVolunteerAssignment entry,
             TimeZoneInfo locationTimeZone
         )
         {
@@ -119,7 +119,7 @@ namespace CareTogether.Engines.PolicyEvaluation
         }
 
         internal FamilyVolunteerAssignment ToFamilyVolunteerAssignmentForCalculation(
-            Resources.Referrals.FamilyVolunteerAssignment entry,
+            Resources.V1Cases.FamilyVolunteerAssignment entry,
             TimeZoneInfo locationTimeZone
         )
         {
@@ -145,7 +145,7 @@ namespace CareTogether.Engines.PolicyEvaluation
         }
 
         internal ArrangementEntry ToArrangementEntryForCalculation(
-            Resources.Referrals.ArrangementEntry entry,
+            Resources.V1Cases.ArrangementEntry entry,
             TimeZoneInfo locationTimeZone
         )
         {
@@ -192,7 +192,7 @@ namespace CareTogether.Engines.PolicyEvaluation
         }
 
         internal ReferralEntry ToReferralEntryForCalculation(
-            Resources.Referrals.ReferralEntry entry,
+            Resources.V1Cases.ReferralEntry entry,
             TimeZoneInfo locationTimeZone
         )
         {
@@ -227,7 +227,7 @@ namespace CareTogether.Engines.PolicyEvaluation
             Guid organizationId,
             Guid locationId,
             Family family,
-            Resources.Referrals.ReferralEntry referralEntry
+            Resources.V1Cases.ReferralEntry referralEntry
         )
         {
             var policy = await policiesResource.GetCurrentPolicy(organizationId, locationId);

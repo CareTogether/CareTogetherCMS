@@ -3,7 +3,7 @@ using System.Collections.Immutable;
 using CareTogether.Engines.PolicyEvaluation;
 using CareTogether.Resources;
 using CareTogether.Resources.Policies;
-using CareTogether.Resources.Referrals;
+using CareTogether.Resources.V1Cases;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Timelines;
 using H = CareTogether.Core.Test.ReferralCalculationTests.Helpers;

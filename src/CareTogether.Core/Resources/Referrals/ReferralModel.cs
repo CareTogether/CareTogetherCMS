@@ -5,7 +5,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using JsonPolymorph;
 
-namespace CareTogether.Resources.Referrals
+namespace CareTogether.Resources.V1Cases
 {
     [JsonHierarchyBase]
     public abstract partial record ReferralEvent(Guid UserId, DateTime TimestampUtc)

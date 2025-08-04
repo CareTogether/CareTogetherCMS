@@ -12,7 +12,7 @@ using CareTogether.Resources.Communities;
 using CareTogether.Resources.Directory;
 using CareTogether.Resources.Notes;
 using CareTogether.Resources.Policies;
-using CareTogether.Resources.Referrals;
+using CareTogether.Resources.V1Cases;
 using Nito.AsyncEx;
 
 namespace CareTogether.Engines.Authorization
@@ -197,10 +197,10 @@ namespace CareTogether.Engines.Authorization
             Family? userFamily,
             Family? targetFamily,
             bool targetFamilyIsVolunteerFamily,
-            ImmutableList<Resources.Referrals.ReferralEntry> userFamilyReferrals,
-            ImmutableList<Resources.Referrals.ReferralEntry> targetFamilyReferrals,
-            ImmutableList<Resources.Referrals.ReferralEntry> assignedReferrals,
-            ImmutableList<Resources.Referrals.ReferralEntry> targetFamilyAssignedReferrals,
+            ImmutableList<Resources.V1Cases.ReferralEntry> userFamilyReferrals,
+            ImmutableList<Resources.V1Cases.ReferralEntry> targetFamilyReferrals,
+            ImmutableList<Resources.V1Cases.ReferralEntry> assignedReferrals,
+            ImmutableList<Resources.V1Cases.ReferralEntry> targetFamilyAssignedReferrals,
             ImmutableList<Guid> userFamilyCommunities,
             ImmutableList<Guid> targetFamilyCommunities,
             ImmutableList<(Guid Id, string CommunityRole)> userCommunityRoleAssignments,

@@ -12,7 +12,7 @@ using CareTogether.Resources.Communities;
 using CareTogether.Resources.Directory;
 using CareTogether.Resources.Notes;
 using CareTogether.Resources.Policies;
-using CareTogether.Resources.Referrals;
+using CareTogether.Resources.V1Cases;
 using Nito.AsyncEx;
 
 namespace CareTogether.Engines.Authorization
@@ -761,7 +761,7 @@ namespace CareTogether.Engines.Authorization
                                             )
                                         )
                                         .ToImmutableList()
-                                    : ImmutableList<Resources.Referrals.IndividualVolunteerAssignment>.Empty,
+                                    : ImmutableList<Resources.V1Cases.IndividualVolunteerAssignment>.Empty,
                                 FamilyVolunteerAssignments = contextPermissions.Contains(
                                     Permission.ViewAssignments
                                 )
@@ -796,7 +796,7 @@ namespace CareTogether.Engines.Authorization
                                             )
                                         )
                                         .ToImmutableList()
-                                    : ImmutableList<Resources.Referrals.FamilyVolunteerAssignment>.Empty,
+                                    : ImmutableList<Resources.V1Cases.FamilyVolunteerAssignment>.Empty,
                             }
                         )
                     )

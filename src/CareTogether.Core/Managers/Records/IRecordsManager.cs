@@ -7,7 +7,7 @@ using CareTogether.Resources.Approvals;
 using CareTogether.Resources.Communities;
 using CareTogether.Resources.Directory;
 using CareTogether.Resources.Notes;
-using CareTogether.Resources.Referrals;
+using CareTogether.Resources.V1Cases;
 using JsonPolymorph;
 
 namespace CareTogether.Managers.Records

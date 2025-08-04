@@ -11,7 +11,7 @@ using CareTogether.Resources.Approvals;
 using CareTogether.Resources.Directory;
 using CareTogether.Resources.Notes;
 using CareTogether.Resources.Policies;
-using CareTogether.Resources.Referrals;
+using CareTogether.Resources.V1Cases;
 using Nito.AsyncEx;
 
 namespace CareTogether.Managers
@@ -219,7 +219,7 @@ namespace CareTogether.Managers
 
             return partneringFamilyInfo;
 
-            async Task<Referral> ToReferralAsync(Resources.Referrals.ReferralEntry entry)
+            async Task<Referral> ToReferralAsync(Resources.V1Cases.ReferralEntry entry)
             {
                 var referralStatus = await policyEvaluationEngine.CalculateReferralStatusAsync(
                     organizationId,
@@ -249,7 +249,7 @@ namespace CareTogether.Managers
             }
 
             static Arrangement ToArrangement(
-                Resources.Referrals.ArrangementEntry entry,
+                Resources.V1Cases.ArrangementEntry entry,
                 ArrangementStatus status
             ) =>
                 new(

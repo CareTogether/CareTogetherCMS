@@ -7,7 +7,7 @@ using CareTogether.Resources;
 using CareTogether.Resources.Approvals;
 using CareTogether.Resources.Directory;
 using CareTogether.Resources.Policies;
-using CareTogether.Resources.Referrals;
+using CareTogether.Resources.V1Cases;
 using Timelines;
 
 namespace CareTogether.Engines.PolicyEvaluation
@@ -392,7 +392,7 @@ namespace CareTogether.Engines.PolicyEvaluation
             Guid organizationId,
             Guid locationId,
             Family family,
-            Resources.Referrals.ReferralEntry referralEntry
+            Resources.V1Cases.ReferralEntry referralEntry
         );
     }
 }

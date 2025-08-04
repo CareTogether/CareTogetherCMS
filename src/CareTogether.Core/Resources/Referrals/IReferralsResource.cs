@@ -4,7 +4,7 @@ using System.Threading.Tasks;
 using CareTogether.Resources.Policies;
 using JsonPolymorph;
 
-namespace CareTogether.Resources.Referrals
+namespace CareTogether.Resources.V1Cases
 {
     public record ReferralEntry(
         Guid Id,
