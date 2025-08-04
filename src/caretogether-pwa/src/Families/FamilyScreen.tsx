@@ -554,7 +554,7 @@ export function FamilyScreen() {
                         gap={2}
                       >
                         <Typography className="ph-unmask" variant="h3">
-                          V1 Cases
+                          Cases
                         </Typography>
                         {!family.partneringFamilyInfo?.openReferral &&
                           permissions(Permission.CreateReferral) && (
@@ -564,7 +564,7 @@ export function FamilyScreen() {
                               variant="contained"
                               size="small"
                             >
-                              Open New V1 Case
+                              Open New Case
                             </Button>
                           )}
                       </Box>
@@ -597,8 +597,8 @@ export function FamilyScreen() {
                               <Box display="flex" alignItems="center" gap={1}>
                                 <Typography className="ph-unmask">
                                   {v1Case.closedAtUtc
-                                    ? `V1 Case Closed ${format(v1Case.closedAtUtc, 'M/d/yy')}`
-                                    : 'Open V1 Case'}
+                                    ? `Case Closed ${format(v1Case.closedAtUtc, 'M/d/yy')}`
+                                    : 'Open Case'}
                                 </Typography>
                                 {showCloseButton && (
                                   <Button
@@ -610,7 +610,7 @@ export function FamilyScreen() {
                                     variant="contained"
                                     size="small"
                                   >
-                                    Close V1 Case
+                                    Close Case
                                   </Button>
                                 )}
                               </Box>

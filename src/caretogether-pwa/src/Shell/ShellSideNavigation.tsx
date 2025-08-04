@@ -105,7 +105,7 @@ function SideNavigationMenu({ open }: SideNavigationMenuProps) {
             <ListItemLink
               className="ph-unmask"
               to={`${locationPrefix}/v1Cases`}
-              primary="V1 Cases"
+              primary="Cases"
               icon={<PermPhoneMsgIcon />}
             />
           )}

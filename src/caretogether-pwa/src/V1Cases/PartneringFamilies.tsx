@@ -291,7 +291,7 @@ function PartneringFamilies() {
 
   const permissions = useAllPartneringFamiliesPermissions();
 
-  useScreenTitle('V1 Cases');
+  useScreenTitle('Cases');
 
   return !partneringFamiliesLoadable || !arrangementTypes ? (
     <ProgressBackdrop>
@@ -344,7 +344,7 @@ function PartneringFamilies() {
             <TableHead>
               <TableRow>
                 <TableCell>Partnering Family</TableCell>
-                <TableCell>V1 Case Status</TableCell>
+                <TableCell>Case Status</TableCell>
                 {!expandedView ? (
                   arrangementTypes?.map((arrangementType) => (
                     <TableCell key={arrangementType}>

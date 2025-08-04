@@ -146,7 +146,7 @@ export function CreatePartneringFamilyDialog({
       <DialogContent>
         <Grid item xs={12} sx={{ paddingTop: 1 }}>
           <DatePicker
-            label="When was this V1 Case opened?"
+            label="When was this Case opened?"
             value={v1CaseOpenedAtLocal}
             disableFuture
             format="MM/dd/yyyy"

@@ -24,12 +24,12 @@ export function OpenNewV1CaseDialog({
   }
 
   return (
-    <UpdateDialog title={`Open a new V1 Case`} onClose={onClose} onSave={save}>
+    <UpdateDialog title={`Open a new Case`} onClose={onClose} onSave={save}>
       <form noValidate autoComplete="off">
         <Grid container spacing={2}>
           <Grid item xs={12}>
             <DatePicker
-              label="When was this V1 Case opened?"
+              label="When was this Case opened?"
               value={openedAtLocal}
               disableFuture
               format="MM/dd/yyyy"

@@ -41,7 +41,7 @@ export function CloseV1CaseDialog({
 
   return (
     <UpdateDialog
-      title={`Why is this V1 Case being closed?`}
+      title={`Why is this Case being closed?`}
       onClose={onClose}
       onSave={save}
       enableSave={() => reason != null && closedAtLocal != null}
@@ -95,7 +95,7 @@ export function CloseV1CaseDialog({
           </Grid>
           <Grid item xs={12}>
             <DatePicker
-              label="When was this V1 Case closed?"
+              label="When was this Case closed?"
               value={closedAtLocal}
               disableFuture
               format="MM/dd/yyyy"

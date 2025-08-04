@@ -273,7 +273,7 @@ export function RoleEdit({
             )
           }
         >
-          Assigned Functions in V1 Case - Partnering Family
+          Assigned Functions in Case - Partnering Family
         </MenuItem>
         <MenuItem
           dense
@@ -284,7 +284,7 @@ export function RoleEdit({
             )
           }
         >
-          Assigned Functions in V1 Case - Co-Assigned Families
+          Assigned Functions in Case - Co-Assigned Families
         </MenuItem>
         <MenuItem
           dense
@@ -294,7 +294,7 @@ export function RoleEdit({
             )
           }
         >
-          Own V1 Case - Assigned Families
+          Own Case - Assigned Families
         </MenuItem>
         <MenuItem
           dense
@@ -323,8 +323,8 @@ export function RoleEdit({
             )
           }
         >
-          Community Member - Co-Member Families - Assigned Functions in V1 Case
-          - Partnering Family
+          Community Member - Co-Member Families - Assigned Functions in Case -
+          Partnering Family
         </MenuItem>
         <MenuItem
           dense
@@ -335,8 +335,8 @@ export function RoleEdit({
             )
           }
         >
-          Community Member - Co-Member Families - Assigned Functions in V1 Case
-          - Co-Assigned Families
+          Community Member - Co-Member Families - Assigned Functions in Case -
+          Co-Assigned Families
         </MenuItem>
       </Menu>
 

@@ -60,8 +60,8 @@ export function V1CaseComments({
       {editor.editing && permissions(Permission.EditReferral) ? (
         <TextField
           id="v1case-comments"
-          helperText="V1 Case comments are visible to everyone."
-          placeholder="Space for any general notes about the V1 Case, upcoming plans, etc."
+          helperText="Case comments are visible to everyone."
+          placeholder="Space for any general notes about the Case, upcoming plans, etc."
           multiline
           fullWidth
           variant="outlined"

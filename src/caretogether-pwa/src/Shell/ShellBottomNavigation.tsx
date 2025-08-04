@@ -99,7 +99,7 @@ export function ShellBottomNavigation() {
         <BottomNavigationAction
           component={Link}
           to={`${locationPrefix}/v1cases`}
-          label="V1 Cases"
+          label="Cases"
           icon={<PermPhoneMsgIcon />}
         />
         <BottomNavigationAction

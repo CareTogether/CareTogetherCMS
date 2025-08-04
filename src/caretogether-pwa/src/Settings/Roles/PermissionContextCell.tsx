@@ -62,9 +62,7 @@ function V1CaseOpenSelector({
             }}
           />
         }
-        label={
-          hasValue ? 'Only matching v1 case status:' : 'Any v1 case status'
-        }
+        label={hasValue ? 'Only matching Case status:' : 'Any Case status'}
       />
       {hasValue && (
         <FormControlLabel
@@ -81,7 +79,7 @@ function V1CaseOpenSelector({
               }}
             />
           }
-          label={context.whenReferralIsOpen ? 'Open v1 case' : 'Closed v1 case'}
+          label={context.whenReferralIsOpen ? 'Open Case' : 'Closed Case'}
           sx={{ marginLeft: 3 }}
         />
       )}
@@ -331,12 +329,12 @@ export function PermissionContextCell({
             ? 'All Partnering Families'
             : context instanceof
                 AssignedFunctionsInV1CasePartneringFamilyPermissionContext
-              ? 'Assigned Functions in V1 Case - Partnering Family'
+              ? 'Assigned Functions in Case - Partnering Family'
               : context instanceof
                   AssignedFunctionsInV1CaseCoAssigneeFamiliesPermissionContext
-                ? 'Assigned Functions in V1 Case - Co-Assigned Families'
+                ? 'Assigned Functions in Case - Co-Assigned Families'
                 : context instanceof OwnV1CaseAssigneeFamiliesPermissionContext
-                  ? 'Own V1 Case - Assigned Families'
+                  ? 'Own Case - Assigned Families'
                   : context instanceof CommunityMemberPermissionContext
                     ? 'Community Member - Community'
                     : context instanceof
@@ -344,9 +342,9 @@ export function PermissionContextCell({
                       ? 'Community Member - Co-Member Families'
                       : context instanceof
                           CommunityCoMemberFamiliesAssignedFunctionsInV1CasePartneringFamilyPermissionContext
-                        ? 'Community Member - Co-Member Families - Assigned Functions in V1 Case - Partnering Family'
+                        ? 'Community Member - Co-Member Families - Assigned Functions in Case - Partnering Family'
                         : CommunityCoMemberFamiliesAssignedFunctionsInV1CaseCoAssignedFamiliesPermissionContext
-                          ? 'Community Member - Co-Member Families - Assigned Functions in V1 Case - Co-Assigned Families'
+                          ? 'Community Member - Co-Member Families - Assigned Functions in Case - Co-Assigned Families'
                           : JSON.stringify(context);
 
   function assignedFunctionsInV1CasePartneringFamilyPermissionContextFactory(

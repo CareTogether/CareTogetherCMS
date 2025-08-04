@@ -32,7 +32,7 @@ type ActivityTimelineProps = {
 
 const composeNoteType = (activity: Activity): string | null => {
   if (activity instanceof V1CaseRequirementCompleted) {
-    return 'V1 Case requirement completed';
+    return 'Case requirement completed';
   }
 
   if (activity instanceof ArrangementRequirementCompleted) {
@@ -44,7 +44,7 @@ const composeNoteType = (activity: Activity): string | null => {
   }
 
   if (activity instanceof V1CaseOpened) {
-    return 'V1 Case opened';
+    return 'Case opened';
   }
 
   return null;
@@ -328,7 +328,7 @@ export function ActivityTimeline({
                   )
                 </>
               ) : activity instanceof V1CaseOpened ? (
-                'V1 Case opened'
+                'Case opened'
               ) : null}
               {activity.uploadedDocumentId && (
                 <Box sx={{ margin: 0, padding: 0 }}>
