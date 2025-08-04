@@ -90,6 +90,8 @@ export function CreateVolunteerFamilyDialog({
   const relationshipTypes = useRecoilValue(adultFamilyRelationshipsData);
   const ethnicities = useRecoilValue(ethnicitiesData);
 
+  const [dobError, setDobError] = useState(false);
+
   const withBackdrop = useBackdrop();
 
   async function save() {
@@ -261,13 +263,25 @@ export function CreateVolunteerFamilyDialog({
               <DatePicker
                 label="Date of birth"
                 value={dateOfBirth}
+                minDate={new Date(1900, 0, 1)}
                 maxDate={subYears(new Date(), 18)}
                 openTo="year"
                 format="MM/dd/yyyy"
-                onChange={(date: Date | null) =>
-                  date && setFields({ ...fields, dateOfBirth: date })
-                }
-                slotProps={{ textField: { size: 'small', fullWidth: true } }}
+                onChange={(date: Date | null) => {
+                  const invalid = !date || date.getFullYear() < 1900;
+                  setDobError(invalid);
+                  if (date) setFields({ ...fields, dateOfBirth: date });
+                }}
+                slotProps={{
+                  textField: {
+                    size: 'small',
+                    fullWidth: true,
+                    error: dobError,
+                    helperText: dobError
+                      ? 'Hmm, that doesn’t seem to be a valid date. Please enter a valid date to continue.'
+                      : '',
+                  },
+                }}
               />
             </Grid>
             <Grid item xs={12} sm={6}>
@@ -442,7 +456,12 @@ export function CreateVolunteerFamilyDialog({
         <Button onClick={() => onClose()} color="secondary">
           Cancel
         </Button>
-        <Button onClick={save} variant="contained" color="primary">
+        <Button
+          onClick={save}
+          variant="contained"
+          color="primary"
+          disabled={dobError}
+        >
           Create Family
         </Button>
       </DialogActions>

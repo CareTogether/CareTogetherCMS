@@ -34,6 +34,8 @@ export function CancelArrangementDialog({
   });
   const { cancelledAtLocal } = fields;
 
+  const [dobError, setDobError] = useState(false);
+
   async function save() {
     await referralsModel.cancelArrangement(
       familyId,
@@ -48,7 +50,7 @@ export function CancelArrangementDialog({
       title={`Do you want to cancel setting up this ${arrangement.arrangementType} arrangement for ${person.firstName} ${person.lastName}?`}
       onClose={onClose}
       onSave={save}
-      enableSave={() => cancelledAtLocal != null}
+      enableSave={() => cancelledAtLocal != null && !dobError}
     >
       <Grid container spacing={0}>
         <Grid item xs={12}>
@@ -56,14 +58,21 @@ export function CancelArrangementDialog({
             label="When was this arrangement cancelled?"
             value={cancelledAtLocal}
             disableFuture
+            minDate={new Date(1900, 0, 1)}
             format="M/d/yyyy"
-            onChange={(date: Date | null) =>
-              date && setFields({ ...fields, cancelledAtLocal: date })
-            }
+            onChange={(date: Date | null) => {
+              const invalid = !date || date.getFullYear() < 1900;
+              setDobError(invalid);
+              if (date) setFields({ ...fields, cancelledAtLocal: date });
+            }}
             slotProps={{
               textField: {
                 fullWidth: true,
                 required: true,
+                error: dobError,
+                helperText: dobError
+                  ? 'Hmm, that doesn’t seem to be a valid date. Please enter a valid date to continue.'
+                  : '',
                 sx: { marginTop: 1 },
               },
             }}

@@ -38,6 +38,8 @@ export function RemoveIndividualRoleDialog({
   const { reason, additionalComments, effectiveSince, effectiveThrough } =
     fields;
 
+  const [dateError, setDateError] = useState(false);
+
   const policy = useRecoilValue(policyData);
   const isFamilyRole =
     policy.volunteerPolicy?.volunteerFamilyRoles?.[role] != null;
@@ -59,7 +61,7 @@ export function RemoveIndividualRoleDialog({
       title={`Remove ${role} role for ${person.firstName} ${person.lastName}`}
       onClose={onClose}
       onSave={save}
-      enableSave={() => additionalComments !== ''}
+      enableSave={() => additionalComments !== '' && !dateError}
     >
       <form noValidate autoComplete="off">
         <Grid container spacing={2}>
@@ -123,12 +125,23 @@ export function RemoveIndividualRoleDialog({
             <DatePicker
               label="Effective Since (optional - leave blank to use the current date)"
               value={effectiveSince || null}
+              minDate={new Date(1900, 0, 1)}
               disableFuture
               format="M/d/yyyy"
-              onChange={(date: Date | null) =>
-                setFields({ ...fields, effectiveSince: date })
-              }
-              slotProps={{ textField: { fullWidth: true } }}
+              onChange={(date: Date | null) => {
+                const invalid = date != null && date.getFullYear() < 1900;
+                setDateError(invalid);
+                setFields({ ...fields, effectiveSince: date });
+              }}
+              slotProps={{
+                textField: {
+                  fullWidth: true,
+                  error: dateError,
+                  helperText: dateError
+                    ? 'Hmm, that doesn’t seem to be a valid date. Please enter a valid date to continue.'
+                    : '',
+                },
+              }}
             />
           </Grid>
         </Grid>

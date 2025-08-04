@@ -6,6 +6,7 @@ import { AgeInYears, ExactAge } from '../GeneratedClient';
 import { AgeText } from './AgeText';
 import { format } from 'date-fns';
 import { DatePicker } from '@mui/x-date-pickers';
+import { useState } from 'react';
 
 export function AgeEditor({ familyId, person }: PersonEditorProps) {
   const directoryModel = useDirectoryModel();
@@ -22,8 +23,10 @@ export function AgeEditor({ familyId, person }: PersonEditorProps) {
       await directoryModel.updatePersonAge(familyId!, person.id!, age);
     },
     dateOfBirth,
-    (value) => value != null
+    (value) => value != null && value.getFullYear() >= 1900
   );
+
+  const [dobError, setDobError] = useState(false);
 
   return (
     <Grid container spacing={2}>
@@ -41,10 +44,23 @@ export function AgeEditor({ familyId, person }: PersonEditorProps) {
             <DatePicker
               label="Date of birth"
               value={editor.value}
+              minDate={new Date(1900, 0, 1)}
               openTo="year"
               format="MM/dd/yyyy"
-              onChange={(date: Date | null) => date && editor.setValue(date)}
-              slotProps={{ textField: { size: 'small', required: true } }}
+              onChange={(date: Date | null) => {
+                setDobError(!date || date.getFullYear() < 1900);
+                if (date) editor.setValue(date);
+              }}
+              slotProps={{
+                textField: {
+                  size: 'small',
+                  required: true,
+                  error: dobError,
+                  helperText: dobError
+                    ? 'Hmm, that doesn’t seem to be a valid date. Please enter a valid date to continue.'
+                    : '',
+                },
+              }}
             />
           </Grid>
           <Grid item xs={6}>

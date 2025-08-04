@@ -29,6 +29,8 @@ export function ResetIndividualRoleDialog({
   });
   const { forRemovalEffectiveSince, effectiveThrough } = fields;
 
+  const [dateError, setDateError] = useState(false);
+
   async function save() {
     await volunteerFamiliesModel.resetIndividualRole(
       volunteerFamilyId,
@@ -44,6 +46,7 @@ export function ResetIndividualRoleDialog({
       title={`Do you want to reset the ${role} role for ${person.firstName} ${person.lastName}?`}
       onClose={onClose}
       onSave={save}
+      enableSave={() => !dateError}
     >
       <form noValidate autoComplete="off">
         <Grid container spacing={2}>
@@ -59,12 +62,23 @@ export function ResetIndividualRoleDialog({
             <DatePicker
               label="Effective Through (optional - leave blank to use the current date)"
               value={effectiveThrough || null}
+              minDate={new Date(1900, 0, 1)}
               disableFuture
               format="M/d/yyyy"
-              onChange={(date: Date | null) =>
-                setFields({ ...fields, effectiveThrough: date })
-              }
-              slotProps={{ textField: { fullWidth: true } }}
+              onChange={(date: Date | null) => {
+                const invalid = date != null && date.getFullYear() < 1900;
+                setDateError(invalid);
+                setFields({ ...fields, effectiveThrough: date });
+              }}
+              slotProps={{
+                textField: {
+                  fullWidth: true,
+                  error: dateError,
+                  helperText: dateError
+                    ? 'Hmm, that doesn’t seem to be a valid date. Please enter a valid date to continue.'
+                    : '',
+                },
+              }}
             />
           </Grid>
         </Grid>
