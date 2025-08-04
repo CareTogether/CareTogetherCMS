@@ -3,7 +3,7 @@ import {
   CombinedFamilyInfo,
   ExactAge,
   Person,
-  Referral,
+  Referral as V1Case,
 } from '../GeneratedClient';
 import { visibleFamiliesQuery } from './Data';
 import { differenceInYears } from 'date-fns';
@@ -30,7 +30,7 @@ export interface ChildNotReturned {
   type: 'ChildNotReturned';
   family: CombinedFamilyInfo;
   child: Person;
-  referralId: string;
+  v1CaseId: string;
   arrangementId: string;
 }
 
@@ -80,30 +80,30 @@ const childNotReturnedQuery = selector<ChildNotReturned[]>({
     const allArrangements: {
       arrangement: Arrangement;
       family: CombinedFamilyInfo;
-      referral: Referral;
+      v1Case: V1Case;
     }[] = visibleFamilies?.flatMap((family) => {
       if (!family.partneringFamilyInfo) return [];
 
-      const openReferralArrangements =
+      const openV1CaseArrangements =
         family.partneringFamilyInfo.openReferral?.arrangements?.map(
           (arrangement) => ({
             arrangement,
             family,
-            referral: family.partneringFamilyInfo!.openReferral!,
+            v1Case: family.partneringFamilyInfo!.openReferral!,
           })
         ) || [];
 
-      const closedReferralsArrangements =
+      const closedV1CasesArrangements =
         family.partneringFamilyInfo.closedReferrals?.flatMap(
-          (referral) =>
-            referral.arrangements?.map((arrangement) => ({
+          (v1Case) =>
+            v1Case.arrangements?.map((arrangement) => ({
               arrangement,
               family,
-              referral,
+              v1Case,
             })) || []
         ) || [];
 
-      return [...openReferralArrangements, ...closedReferralsArrangements];
+      return [...openV1CaseArrangements, ...closedV1CasesArrangements];
     });
 
     return allArrangements
@@ -121,7 +121,7 @@ const childNotReturnedQuery = selector<ChildNotReturned[]>({
 
         return mostRecentLocation?.plan !== ChildLocationPlan.WithParent;
       })
-      .map(({ arrangement, family, referral }) => {
+      .map(({ arrangement, family, v1Case }) => {
         const child = family.family?.children?.find(
           (child) => child.id === arrangement.partneringFamilyPersonId
         );
@@ -130,7 +130,7 @@ const childNotReturnedQuery = selector<ChildNotReturned[]>({
           type: 'ChildNotReturned',
           family: family,
           child: child ?? ({} as Person),
-          referralId: referral?.id ?? '',
+          v1CaseId: v1Case?.id ?? '',
           arrangementId: arrangement.id ?? '',
         };
       });

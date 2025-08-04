@@ -52,7 +52,7 @@ const groupedPermissionsWithoutOther = {
     Permission.ViewApprovalHistory,
     Permission.ActivateVolunteerFamily,
   ],
-  Referrals: [
+  V1Cases: [
     Permission.CreateReferral,
     Permission.EditReferral,
     Permission.CloseReferral,

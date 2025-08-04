@@ -39,7 +39,7 @@ export function ShellBottomNavigation() {
   const links = [
     new RegExp(`^$never`),
     new RegExp(`^${locationPrefix}/*$`),
-    new RegExp(`^${locationPrefix}/referrals/*.*$`),
+    new RegExp(`^${locationPrefix}/v1cases/*.*$`),
     new RegExp(`^${locationPrefix}/volunteers/*.*$`),
     new RegExp(`^${locationPrefix}/communities/*.*$`),
   ];
@@ -98,8 +98,8 @@ export function ShellBottomNavigation() {
         />
         <BottomNavigationAction
           component={Link}
-          to={`${locationPrefix}/referrals`}
-          label="Referrals"
+          to={`${locationPrefix}/v1cases`}
+          label="V1 Cases"
           icon={<PermPhoneMsgIcon />}
         />
         <BottomNavigationAction

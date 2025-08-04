@@ -7,7 +7,7 @@ import {
   useNavigate,
   useParams,
 } from 'react-router-dom';
-import { Referrals } from './Referrals/Referrals';
+import { V1Cases } from './V1Cases/V1Cases';
 import { Volunteers } from './Volunteers/Volunteers';
 import { Settings } from './Settings/SettingsRoutes';
 import { FamilyScreen } from './Families/FamilyScreen';
@@ -165,7 +165,7 @@ function LocationContextWrapper() {
             path="families/:familyId"
             element={familyScreenV2 ? <FamilyScreenV2 /> : <FamilyScreen />}
           />
-          <Route path="referrals/*" element={<Referrals />} />
+          <Route path="v1cases/*" element={<V1Cases />} />
           <Route path="volunteers/*" element={<Volunteers />} />
           <Route path="communities/*" element={<Communities />} />
           <Route path="reports/*" element={<Reports />} />
@@ -195,7 +195,7 @@ export function AppRoutes() {
       />
       {/* The following routes are only kept for migration/fallback purposes. */}
       <Route path="/families/:familyId" element={<RouteMigrator />} />
-      <Route path="/referrals/*" element={<RouteMigrator />} />
+      <Route path="/v1cases/*" element={<RouteMigrator />} />
       <Route path="/volunteers/*" element={<RouteMigrator />} />
       <Route path="/communities/*" element={<RouteMigrator />} />
       <Route path="/settings/*" element={<RouteMigrator />} />
