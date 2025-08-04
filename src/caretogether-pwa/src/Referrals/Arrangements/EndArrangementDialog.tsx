@@ -43,6 +43,8 @@ export function EndArrangementDialog({
 
   const [endedAtLocal, setEndedAtLocal] = useState(null as Date | null);
 
+  const [dobError, setDobError] = useState(false);
+
   async function save() {
     // Enforce that this goes to the very end of the day (11:59:59.999 PM) for now.
     // In the future, this should be a date-only value.
@@ -60,7 +62,7 @@ export function EndArrangementDialog({
       title={`Do you want to end this ${arrangement.arrangementType} arrangement for ${person.firstName} ${person.lastName}?`}
       onClose={onClose}
       onSave={save}
-      enableSave={() => endedAtLocal != null}
+      enableSave={() => endedAtLocal !== null && !dobError}
     >
       <Grid container spacing={2}>
         <Grid item xs={12}>
@@ -70,11 +72,19 @@ export function EndArrangementDialog({
             minDate={earliestAllowedEndDate}
             disableFuture
             format="M/d/yyyy"
-            onChange={(date: Date | null) => date && setEndedAtLocal(date)}
+            onChange={(date: Date | null) => {
+              const invalid = !date || date.getFullYear() < 1900;
+              setDobError(invalid);
+              if (date) setEndedAtLocal(date);
+            }}
             slotProps={{
               textField: {
                 fullWidth: true,
                 required: true,
+                error: dobError,
+                helperText: dobError
+                  ? 'Hmm, that doesn’t seem to be a valid date. Please enter a valid date to continue.'
+                  : '',
                 sx: { marginTop: 1 },
               },
             }}

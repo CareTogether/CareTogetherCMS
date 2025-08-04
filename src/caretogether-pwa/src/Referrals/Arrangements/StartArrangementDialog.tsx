@@ -31,6 +31,8 @@ export function StartArrangementDialog({
 
   const [startedAtLocal, setStartedAtLocal] = useState(null as Date | null);
 
+  const [dobError, setDobError] = useState(false);
+
   async function save() {
     // Enforce that this goes to the very start of the day (00:00:00.000 AM) for now.
     // In the future, this should be a date-only value.
@@ -48,7 +50,7 @@ export function StartArrangementDialog({
       title={`Do you want to start this ${arrangement.arrangementType} arrangement for ${person.firstName} ${person.lastName}?`}
       onClose={onClose}
       onSave={save}
-      enableSave={() => startedAtLocal != null}
+      enableSave={() => startedAtLocal !== null && !dobError}
     >
       <Grid container spacing={2}>
         <Grid item xs={12}>
@@ -56,12 +58,21 @@ export function StartArrangementDialog({
             label="When was this arrangement started?"
             value={startedAtLocal}
             disableFuture
+            minDate={new Date(1900, 0, 1)}
             format="M/d/yyyy"
-            onChange={(date: Date | null) => date && setStartedAtLocal(date)}
+            onChange={(date: Date | null) => {
+              const invalid = !date || date.getFullYear() < 1900;
+              setDobError(invalid);
+              if (date) setStartedAtLocal(date);
+            }}
             slotProps={{
               textField: {
                 fullWidth: true,
                 required: true,
+                error: dobError,
+                helperText: dobError
+                  ? 'Hmm, that doesn’t seem to be a valid date. Please enter a valid date to continue.'
+                  : '',
                 sx: { marginTop: 1 },
               },
             }}

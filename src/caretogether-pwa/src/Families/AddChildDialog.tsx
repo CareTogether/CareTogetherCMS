@@ -78,6 +78,8 @@ export function AddChildDialog({ onClose }: AddChildDialogProps) {
 
   const ethnicities = useRecoilValue(ethnicitiesData);
 
+  const [dobError, setDobError] = useState(false);
+
   const withBackdrop = useBackdrop();
 
   async function addChild() {
@@ -271,10 +273,20 @@ export function AddChildDialog({ onClose }: AddChildDialogProps) {
                 minDate={subYears(new Date(), 18)}
                 openTo="year"
                 format="MM/dd/yyyy"
-                onChange={(date: Date | null) =>
-                  date && setFields({ ...fields, dateOfBirth: date })
-                }
-                slotProps={{ textField: { size: 'small', fullWidth: true } }}
+                onChange={(date) => {
+                  setFields({ ...fields, dateOfBirth: date });
+                  setDobError(!date || date.getFullYear() < 1900);
+                }}
+                slotProps={{
+                  textField: {
+                    size: 'small',
+                    fullWidth: true,
+                    error: dobError,
+                    helperText: dobError
+                      ? 'Hmm, that doesn’t seem to be a valid date. Please enter a valid date to continue.'
+                      : '',
+                  },
+                }}
               />
             </Grid>
             <Grid item xs={12} sm={6}>
@@ -351,7 +363,12 @@ export function AddChildDialog({ onClose }: AddChildDialogProps) {
         <Button onClick={() => onClose(undefined, 'cancel')} color="secondary">
           Cancel
         </Button>
-        <Button onClick={addChild} variant="contained" color="primary">
+        <Button
+          onClick={addChild}
+          variant="contained"
+          color="primary"
+          disabled={!dateOfBirth || dobError}
+        >
           Add to Family
         </Button>
       </DialogActions>

@@ -22,6 +22,8 @@ export function EditDateDialog({
 }: EditDateDialogProps) {
   const [dateLocal, setDateLocal] = useState(initialDate || new Date());
 
+  const [dobError, setDobError] = useState(dateLocal.getFullYear() < 1900);
+
   async function save() {
     await onSave(dateLocal);
   }
@@ -31,7 +33,7 @@ export function EditDateDialog({
       title={`Editing "${label}" date`}
       onClose={onClose}
       onSave={save}
-      enableSave={() => dateLocal != null}
+      enableSave={() => dateLocal != null && !dobError}
     >
       <Grid container spacing={2}>
         <Grid item xs={12}>
@@ -40,12 +42,21 @@ export function EditDateDialog({
             value={dateLocal}
             disablePast={disablePast}
             disableFuture={disableFuture}
+            minDate={new Date(1900, 0, 1)}
             format="M/d/yyyy"
-            onChange={(date: Date | null) => date && setDateLocal(date)}
+            onChange={(date: Date | null) => {
+              const invalid = !date || date.getFullYear() < 1900;
+              setDobError(invalid);
+              if (date) setDateLocal(date);
+            }}
             slotProps={{
               textField: {
                 fullWidth: true,
                 required: true,
+                error: dobError,
+                helperText: dobError
+                  ? 'Hmm, that doesn’t seem to be a valid date. Please enter a valid date to continue.'
+                  : '',
                 sx: { marginTop: 1 },
               },
             }}
