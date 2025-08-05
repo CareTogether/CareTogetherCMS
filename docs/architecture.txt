@@ -163,7 +163,7 @@ UseCase "Fractal Musings" {
         also handle sharing of general need requests, support discovery of and establishment of
         referral partnerships, and determine when area-level needs require reaching out to a
         regional network.
-     4. A region *has a* network of areas.
+     4. A region *has a* network of areas. (Handle insurance...)
      5. The world *has a* network of regions.
   @@@
 }
@@ -187,7 +187,6 @@ start
 :Search for Potential Referral Partner;
 
 |Platform|
-:Validate Organization Membership;
 :Check Alignment with Program Policies;
 
 |Referral Partner|
@@ -287,7 +286,65 @@ Activity "Configure Member Organization" {}
 
 
 
-Activity "Request Help" {}
+Activity "Request Help - Household to Organization" {
+  |Client|
+  start
+  :Submit request;
+  note: request can be linked to a family
+  |System|
+  :Validate request;
+  if (Request valid?) then (no)
+    |Client|
+    :Error;
+    stop
+  else (yes)
+    |System|
+    :Publish request;
+    stop
+  endif
+}
+
+Activity "Begin intake process" {
+  |System|
+  start
+  :Receive request;
+  :Create referral;
+  :Determine intake actions;
+  note: Start workflow?;
+  :Store intake actions;
+  :Publish intake started;
+}
+
+Activity "Notify intake supervisors" {
+  |System|
+  start
+  :Receive intake started;
+  :Lookup intake supervisors;
+  |Helper|
+  :Notify intake supervisors;
+}
+
+/* Scheduling process (who/what) assigns Helpers to handle intake. */
+Activity "Complete an intake action" {
+  |Helper|
+  start
+  :Complete action;
+  |System|
+  :Record action completion;
+  :Process workflow;
+  
+}
+
+Activity "Configure Intake Supervisor" {
+  |Helper|
+  start
+  :Subscribe to 'intake started';
+}
+
+
+
+Activity "Request Help - Organization to Area" {}
+
 Activity "Help Client" {}
 Activity "Apply to Help" {}
 Activity "Recruit Helpers" {}
@@ -296,6 +353,10 @@ Activity "Establish Referral Partner" {}
 Activity "Make Outbound Referral" {}
 Activity "Assess Impact" {}
 
+Activity "Client Referral Intake" {
+  start
+  stop
+}
 
 
 
