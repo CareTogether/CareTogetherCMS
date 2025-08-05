@@ -367,6 +367,19 @@ Activity "Configure Member Organization" {}
         of the fractal.
 */
 
+/*      Is helping a commodity? Are needs commodities?
+        It's a spectrum -- some help is a commodity, some is highly specialized.
+        Are we first addressing commodities or specialization?
+        Specialization is all about whether someone is available.
+        Over-the-counter transactions vs. market transactions?
+        OTC transactions is how commodities markets deal with one-offs...
+        ...
+        Difference between transactive resource management (matching a need with a helper)
+        and automatic transactive resource management.
+        Pricing/valuation component is therefore not needed.
+*/
+
+
 
 
 Activity "Request Help - Household to Organization" {
