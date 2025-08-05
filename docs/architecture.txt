@@ -49,7 +49,7 @@ Platform
 
 System
 
-Case
+Case -- NOTE: The term 'Need' may be more appropriate, especially at other levels of the fractal.
 
 Case Management
 
@@ -176,51 +176,105 @@ UseCase "Fractal Musings" {
    the kinds of help and communication that occur at each level will be different,
    but the fundamental purpose of networks at each level remains the same: to help.*/
 
+
+/* CRITICAL: A participant can and usually will have more than one network.
+             A corollary to this is that a participant will often be a *member* of
+             more than one network as well.
+             The fractal architecture allows for overlap here, so e.g. a person can
+             be in a household as a participant of a ministry as a family coach, and
+             can also be in a household as a participant of the same ministry as a
+             host family.
+             This still feels weird -- helpers who are family coaches are not usually
+             (or ever) thought of as households, e.g. a therapist is not serving their
+             client as a household but as a professional. This is still unresolved/
+             needs more discussion. */
+
+
+/* There is a symmetry between the need vetting (intake) process and the membership
+   vetting (approval) process. Prospective 'members' (whether volunteers or organizations)
+   can apply to join a 'network' (the set of members managed by a node in the fractal),
+   and those applications then trigger a vetting process that the managing node is
+   responsible for. */
+/*Aside: Are parents/guardians responsible for their children in the same way? */
+
+Activity "Apply for Membership - Household to Organization" {
+  |Client|
+  start
+  :Submit request;
+  |System|
+  :Validate request;
+  if (Request valid?) then (no)
+    |Client|
+    :Error;
+    stop
+  else (yes)
+    |System|
+    :Publish request;
+    stop
+  endif
+}
+
+Activity "Apply for Membership - Person to Organization" {
+  |Client|
+  start
+  :Submit request;
+  |System|
+  :Validate request;
+  if (Request valid?) then (no)
+    |Client|
+    :Error;
+    stop
+  else (yes)
+    |System|
+    :Publish request;
+    stop
+  endif
+} /*TODO:
+    This is a tricky problem to resolve for our fractal, if it is one?
+    The problem of a 'household of one' arises when a person then has to be in
+    two or more different 'households', e.g. once as a family coach and once as
+    a parent in a host family. The person is trying to participate both as a
+    family coach and as a host parent. The host parent participation is easy to
+    model as a household, because everyone in the household is participating in
+    serving as a host family (with possible exceptions, e.g. adult children
+    living at home). The family coach approval rules are all individual; the
+    host family approval rules are a combination of individual and family level.
+*/
+
+Activity "Begin (membership) vetting ('helper approval') process" {
+  |System|
+  start
+  :Receive request;
+  :Create helper approval;
+  :Determine vetting actions;
+  note: Start workflow?;
+  :Store helper approval actions;
+  :Publish helper approval started;
+}
+
+Activity "Notify helper approval supervisors" {
+  |System|
+  start
+  :Receive helper approval started;
+  :Lookup helper approval supervisors;
+  |Helper|
+  :Notify helper approval supervisors;
+}
+
+Activity "Complete a helper approval action" {
+  |Helper|
+  start
+  :Complete action;
+  |System|
+  :Record action completion;
+  :Process workflow;
+}
+
+
+
 Activity "Establish Partnership" {} /* Are there steps here that involve the system? */
 
 Activity "Recruit Member" {}
-
-Activity "Establish Partnership (AI brainstorm)" {
-|Organization|
-start
-:Identify Need for Partnership;
-:Search for Potential Referral Partner;
-
-|Platform|
-:Check Alignment with Program Policies;
-
-|Referral Partner|
-:Receive Initial Contact;
-:Evaluate Fit and Interest;
-
-|Organization|
-:Define Type of Partnership;
-if (Referral?) then (yes)
-  :Draft Referral Flow Agreement;
-elseif (Network Membership?) then (yes)
-  :Review Network Governance Docs;
-elseif (Resource Sharing?) then (yes)
-  :Assess Mutual Capabilities;
-endif
-
-:Negotiate Terms;
-|Platform|
-:Generate MoU Template;
-:Route for Approval;
-
-|Organization|
-:Approve Terms;
-|Referral Partner|
-:Approve Terms;
-
-|Platform|
-:Record Agreement in System;
-:Assign Roles and Permissions;
-|Organization|
-:Initiate Onboarding Activities;
-
-stop
-}
 
 Activity "Initiate Onboarding Activities (AI brainstorm)" {
   |Organization|
@@ -285,6 +339,35 @@ Activity "Configure Process" {} /* Core use case: includes policies, procedures,
 Activity "Configure Member Organization" {}
 
 
+/*NOTE: We need some sort of process that determines if we need outside help, i.e.,
+        if a new request for help needs to be issued upward or horizontally acrosss.
+        Upward would be e.g. organization to area, across would be e.g. organization to
+        organization (the classic "referral partner" model).
+        Note that *downward* is simply the search for a helper as well.
+        In every case, this involves a 'search' sequence (search down, search across,
+        and finally search up -- note that some stages may be skipped based on the need).
+        In other words, the basic behavior of each participant is that, when receiving a
+        request for help, the participant will first ask downward to all the members of
+        that participant's own network to see if a Helper can help. That may not always
+        result in actually sending requests to the Helpers if e.g. none of the helpers
+        fit the criteria for helping with the need, but it should be the first option.
+        Then, the fractal participant will next consider any horizontal partnerships
+        (relationships?) with other participants at the same fractal level; these are
+        established sometimes outside of being part of a higher-level network. E.g.,
+        an organization may forward the need to another organization that has established
+        a referral partnership with the first organization. (NOTE: During the vetting
+        process, it may be determined that a need is only a candidate for either internal
+        or partner help, as opposed to both, e.g. if a request for help is received by a
+        family preservation ministry but the need, after vetting, turns out to be for
+        temporary housing.) As a last resort, a participant may pass a need *upward* to
+        the network(s) it is a member of, i.e., outside of its own network or partners,
+        to try to find a helper there. That is a much more rare situation, but is a
+        necessary step when needs might be too great for the participant to meet alone.
+        This "algorithm" (search down, then across, then up) is consistent at every level
+        of the fractal.
+*/
+
+
 
 Activity "Request Help - Household to Organization" {
   |Client|
@@ -304,12 +387,29 @@ Activity "Request Help - Household to Organization" {
   endif
 }
 
-Activity "Begin intake process" {
+Activity "Request Help - Organization to Area" {
+  |Client|
+  start
+  :Submit request;
+  |System|
+  :Validate request;
+  if (Request valid?) then (no)
+    |Client|
+    :Error;
+    stop
+  else (yes)
+    |System|
+    :Publish request;
+    stop
+  endif
+}
+
+Activity "Begin (need) vetting ('intake') process" {
   |System|
   start
   :Receive request;
   :Create referral;
-  :Determine intake actions;
+  :Determine vetting actions;
   note: Start workflow?;
   :Store intake actions;
   :Publish intake started;
@@ -334,16 +434,13 @@ Activity "Complete an intake action" {
   :Process workflow;
   
 }
-
+/*
 Activity "Configure Intake Supervisor" {
   |Helper|
   start
   :Subscribe to 'intake started';
-}
+}*/
 
-
-
-Activity "Request Help - Organization to Area" {}
 
 Activity "Help Client" {}
 Activity "Apply to Help" {}
