@@ -787,6 +787,20 @@ export function useDirectoryModel() {
     }
   );
 
+  const updateNoteAccessLevel = async (
+    familyId: string,
+    noteId: string,
+    accessLevel: string
+  ) => {
+    // TODO: Replace this stub with the real backend call
+    console.log('[STUB] updateNoteAccessLevel called:', {
+      familyId,
+      noteId,
+      accessLevel,
+    });
+    return new Promise((resolve) => setTimeout(resolve, 500));
+  };
+
   return {
     undoCreateFamily,
     uploadFamilyDocument,
@@ -818,5 +832,6 @@ export function useDirectoryModel() {
     editDraftNote,
     discardDraftNote,
     approveNote,
+    updateNoteAccessLevel,
   };
 }
