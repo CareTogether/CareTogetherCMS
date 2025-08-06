@@ -177,6 +177,82 @@ UseCase "Fractal Musings" {
    but the fundamental purpose of networks at each level remains the same: to help.*/
 
 
+
+/* TODO: All of these could be Process? */
+
+Activity "Establish Partnership" {} /* Are there steps here that involve the system? */
+
+Activity "Recruit Member" {} /*TODO: Create an activity diagram here! */
+
+
+Activity "Invite Organization" {}
+Activity "Accept Organization Invitation" {}
+Activity "Invite Person" {}
+Activity "Accept Person Invitation" {}
+Activity "Link Login to Person" {} /* If we have multiple logins over time */
+Activity "Review Person Logins" {}
+
+/* Maybe it's part of Networking family instead of Helping, because the helping is not happening yet, but connecting/networking is. */
+Activity "Find appropriate Partner for Case" {} 
+Activity "Refer Case to Partner" {}
+
+Activity "Share resource" {}
+Activity "Govern network?" {} /* Is there some kind of governance in a network? */
+Activity "Manage network member" {} /* Include or remove a member, update status, update attributes for matching? */
+
+| "Use Case Family: Process"
+/* The 'helping' use case family encompasses the actual services being provided to
+   clients, which requires defining and evaluating policies,
+   as well as procedures (workflows) for recordkeeping and oversight. */
+
+/* Facet: Organization Records */
+Activity "Configure Organization" {} /* Core use case: includes authn, locations, programs, roles */
+Activity "Configure Process" {} /* Core use case: includes policies, procedures, forms */
+Activity "Configure Member Organization" {}
+
+
+/*NOTE: We need some sort of process that determines if we need outside help, i.e.,
+        if a new request for help needs to be issued upward or horizontally acrosss.
+        Upward would be e.g. organization to area, across would be e.g. organization to
+        organization (the classic "referral partner" model).
+        Note that *downward* is simply the search for a helper as well.
+        In every case, this involves a 'search' sequence (search down, search across,
+        and finally search up -- note that some stages may be skipped based on the need).
+        In other words, the basic behavior of each participant is that, when receiving a
+        request for help, the participant will first ask downward to all the members of
+        that participant's own network to see if a Helper can help. That may not always
+        result in actually sending requests to the Helpers if e.g. none of the helpers
+        fit the criteria for helping with the need, but it should be the first option.
+        Then, the fractal participant will next consider any horizontal partnerships
+        (relationships?) with other participants at the same fractal level; these are
+        established sometimes outside of being part of a higher-level network. E.g.,
+        an organization may forward the need to another organization that has established
+        a referral partnership with the first organization. (NOTE: During the vetting
+        process, it may be determined that a need is only a candidate for either internal
+        or partner help, as opposed to both, e.g. if a request for help is received by a
+        family preservation ministry but the need, after vetting, turns out to be for
+        temporary housing.) As a last resort, a participant may pass a need *upward* to
+        the network(s) it is a member of, i.e., outside of its own network or partners,
+        to try to find a helper there. That is a much more rare situation, but is a
+        necessary step when needs might be too great for the participant to meet alone.
+        This "algorithm" (search down, then across, then up) is consistent at every level
+        of the fractal.
+*/
+
+/*      Is helping a commodity? Are needs commodities?
+        It's a spectrum -- some help is a commodity, some is highly specialized.
+        Are we first addressing commodities or specialization?
+        Specialization is all about whether someone is available.
+        Over-the-counter transactions vs. market transactions?
+        OTC transactions is how commodities markets deal with one-offs...
+        ...
+        Difference between transactive resource management (matching a need with a helper)
+        and automatic transactive resource management.
+        Pricing/valuation component is therefore not needed.
+*/
+
+
+
 /* CRITICAL: A participant can and usually will have more than one network.
              A corollary to this is that a participant will often be a *member* of
              more than one network as well.
@@ -272,115 +348,6 @@ Activity "Complete a helper approval action" {
 
 
 
-Activity "Establish Partnership" {} /* Are there steps here that involve the system? */
-
-Activity "Recruit Member" {}
-
-Activity "Initiate Onboarding Activities (AI brainstorm)" {
-  |Organization|
-  start
-  :Designate Partnership Coordinator;
-  
-  :Invite Key Contacts;
-  :Define Roles (e.g., Referral Partner, Helper, Staff);
-  
-  |Platform|
-  :Send Access Invitations;
-  :Provision Platform Permissions;
-  
-  |Referral Partner|
-  :Accept Platform Invitation;
-  :Complete Profile Setup;
-  
-  :Review Program Policies & Procedures;
-  
-  |Organization|
-  :Schedule Orientation Session;
-  if (Referral Partnership?) then (yes)
-    :Train on Referral Submission and Intake Process;
-  elseif (Network Membership?) then (yes)
-    :Provide Network Governance & Communication Tools;
-  elseif (Resource Sharing?) then (yes)
-    :Set Up Shared Calendars / Resource Access;
-  endif
-  
-  |Platform|
-  :Enable Audit Logging;
-  :Activate Data Sharing Agreements;
-  :Record Onboarding Completion;
-  
-  stop
-}
-
-
-Activity "Invite Organization" {}
-Activity "Accept Organization Invitation" {}
-Activity "Invite Person" {}
-Activity "Accept Person Invitation" {}
-Activity "Link Login to Person" {} /* If we have multiple logins over time */
-Activity "Review Person Logins" {}
-
-/* Maybe it's part of Networking family instead of Helping, because the helping is not happening yet, but connecting/networking is. */
-Activity "Find appropriate Partner for Case" {} 
-Activity "Refer Case to Partner" {}
-
-Activity "Share resource" {}
-Activity "Govern network?" {} /* Is there some kind of governance in a network? */
-Activity "Manage network member" {} /* Include or remove a member, update status, update attributes for matching? */
-
-| "Use Case Family: Helping"
-/* The 'helping' use case family encompasses the actual services being provided to
-   clients, which requires defining and evaluating policies,
-   as well as procedures (workflows) for recordkeeping and oversight. */
-
-/* Facet: Organization Records */
-Activity "Configure Organization" {} /* Core use case: includes authn, locations, programs, roles */
-Activity "Configure Process" {} /* Core use case: includes policies, procedures, forms */
-Activity "Configure Member Organization" {}
-
-
-/*NOTE: We need some sort of process that determines if we need outside help, i.e.,
-        if a new request for help needs to be issued upward or horizontally acrosss.
-        Upward would be e.g. organization to area, across would be e.g. organization to
-        organization (the classic "referral partner" model).
-        Note that *downward* is simply the search for a helper as well.
-        In every case, this involves a 'search' sequence (search down, search across,
-        and finally search up -- note that some stages may be skipped based on the need).
-        In other words, the basic behavior of each participant is that, when receiving a
-        request for help, the participant will first ask downward to all the members of
-        that participant's own network to see if a Helper can help. That may not always
-        result in actually sending requests to the Helpers if e.g. none of the helpers
-        fit the criteria for helping with the need, but it should be the first option.
-        Then, the fractal participant will next consider any horizontal partnerships
-        (relationships?) with other participants at the same fractal level; these are
-        established sometimes outside of being part of a higher-level network. E.g.,
-        an organization may forward the need to another organization that has established
-        a referral partnership with the first organization. (NOTE: During the vetting
-        process, it may be determined that a need is only a candidate for either internal
-        or partner help, as opposed to both, e.g. if a request for help is received by a
-        family preservation ministry but the need, after vetting, turns out to be for
-        temporary housing.) As a last resort, a participant may pass a need *upward* to
-        the network(s) it is a member of, i.e., outside of its own network or partners,
-        to try to find a helper there. That is a much more rare situation, but is a
-        necessary step when needs might be too great for the participant to meet alone.
-        This "algorithm" (search down, then across, then up) is consistent at every level
-        of the fractal.
-*/
-
-/*      Is helping a commodity? Are needs commodities?
-        It's a spectrum -- some help is a commodity, some is highly specialized.
-        Are we first addressing commodities or specialization?
-        Specialization is all about whether someone is available.
-        Over-the-counter transactions vs. market transactions?
-        OTC transactions is how commodities markets deal with one-offs...
-        ...
-        Difference between transactive resource management (matching a need with a helper)
-        and automatic transactive resource management.
-        Pricing/valuation component is therefore not needed.
-*/
-
-
-
 
 Activity "Request Help - Household to Organization" {
   |Client|
@@ -453,6 +420,44 @@ Activity "Configure Intake Supervisor" {
   start
   :Subscribe to 'intake started';
 }*/
+
+
+/*SYMMETRY: Requests --> Processes --> Actions */
+
+Activity "Onboard a New Member" {}
+
+
+
+Activity "Open Case" {}
+
+Activity "Close Case" {}
+
+
+
+Activity "Set Up Arrangement" {}
+
+Activity "Complete Setup Action" {}
+
+Activity "Cancel Arrangement" {}
+
+Activity "Start Arrangement" {}
+
+Activity "Monitor Arrangement" {} /* TODO: Not sure about naming here */
+
+Activity "Complete Monitoring Action" {}
+
+Activity "Track Child Location" {} /* *VERY* specific element in the domain, not fractal-friendly */
+/* We can imagine that other human services categories will have other domain-specific "things",
+   e.g. Track Occupancy in transitional living --- this feels like 'industry' context? */
+
+Activity "Close Out Arrangement" {}
+
+Activity "Complete Closeout Action" {}
+
+Activity "Follow Up With Client" {}
+
+
+
 
 
 Activity "Help Client" {}
@@ -534,15 +539,19 @@ UseCase Volatilities {
 
 | "Static Aspect"
 StaticAspect "CareTogether V2" {
-  WebAppClient /*MobileClient VoiceClient -- future enhancements */ SupportClient SdkClient
+  WebAppClient SupportClient SdkClient
   /* GraphQL/HTTP API layer */
-  NetworkingManager RecordsManager CommunicationManager /*AnalysisManager -- future enhancement */
+  ProcessManager CommunicationManager AnalysisManager
   EvaluationEngine MatchingEngine
-  AccountsAccess NetworkAccess ConfigurationAccess WorkflowsAccess AuditAccess RecordsAccess
-  /*NOTE: RecordsAccess -- Cosmos DB Graph API & Cosmos DB 'SQL' API, allowing Geode pattern */
-  AccountsResource NetworkResource ConfigurationResource:f WorkflowsResource AuditResource RecordsResource 
-  NotesResource:f DocumentsResource:f FormsResource:a
-  SecurityUtility
+  NetworkAccess ConfigurationAccess WorkflowsAccess RecordsAccess
+  /*NOTE: RecordsAccess -- Cosmos DB Graph API & Cosmos DB 'SQL' API, allowing Geode pattern. */
+  /*NOTE: Audit logs are an aspect of record-keeping. */
+  /*NOTE: Configuration includes the DSL 'procedures' which can be *compiled* into workflows. */
+  NetworkResource ConfigurationResource:f WorkflowsResource RecordsResource 
+  /*DocumentsResource:f TODO: Do we incorporate Documents directly into Records? */
+  /*FormsResource:a TODO: Do we incorporate Forms directly into Records? */
+  /* Notes are part of RecordsResource but stored w/ immutability enabled. */
+  SecurityUtility /* Includes account management operations */
   TelemetryUtility
   LoggingUtility
   PubSubUtility /* Push notifications to WebApp are allowed, as queued calls; can include delivery via SMS, WhatsApp, Telegram, Teams, Slack, etc. */
