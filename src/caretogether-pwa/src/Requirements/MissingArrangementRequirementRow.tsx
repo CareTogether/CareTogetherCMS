@@ -32,7 +32,15 @@ export function MissingArrangementRequirementRow({
 
   const dialogHandle = useDialogHandle();
 
-  const requirementPolicy = policy.actionDefinitions![requirement.actionName!];
+  const requirementPolicy =
+    policy.actionDefinitions![requirement.actionName!] ||
+    Object.entries(policy.actionDefinitions!).find(([, value]) =>
+      value.alternateNames?.includes(requirement.actionName!)
+    );
+
+  if (requirement.actionName === 'Advocacy Agmt') {
+    console.log(policy.actionDefinitions, requirement.actionName);
+  }
 
   if (
     context.kind === 'Referral' ||

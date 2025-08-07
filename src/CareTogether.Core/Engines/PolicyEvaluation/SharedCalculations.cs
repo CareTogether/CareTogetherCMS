@@ -13,9 +13,37 @@ namespace CareTogether.Engines.PolicyEvaluation
     {
         public sealed record RequirementCheckResult(bool IsMetOrExempted, DateOnly? ExpiresAtUtc);
 
+        private static KeyValuePair<string, ActionRequirement>? FindActionDefinition(
+            EffectiveLocationPolicy locationPolicy,
+            string requiredAction
+        )
+        {
+            return locationPolicy
+                .ActionDefinitions.ToImmutableDictionary()
+                .FirstOrDefault(item =>
+                    item.Key == requiredAction || item.Value.AlternateNames.Contains(requiredAction)
+                );
+        }
+
+        internal static ImmutableList<string> GetRequirementNameWithSynonyms(
+            EffectiveLocationPolicy locationPolicy,
+            string requirementName
+        )
+        {
+            var actionDefinition = FindActionDefinition(locationPolicy, requirementName);
+
+            if (!actionDefinition.HasValue || actionDefinition.Value.Key == null)
+                return [requirementName];
+
+            return ImmutableList
+                .Create(actionDefinition.Value.Key)
+                .AddRange(actionDefinition.Value.Value.AlternateNames ?? [])
+                .ToImmutableList();
+        }
+
         //NOTE: This is currently being used by Referral calculations.
         internal static RequirementCheckResult RequirementMetOrExempted(
-            string requirementName,
+            ImmutableList<string> requirementNameWithSynonyms,
             DateOnly? policySupersededAt,
             DateOnly today,
             ImmutableList<CompletedRequirementInfo> completedRequirements,
@@ -24,7 +52,7 @@ namespace CareTogether.Engines.PolicyEvaluation
         {
             var bestCompletion = completedRequirements
                 .Where(completed =>
-                    completed.RequirementName == requirementName
+                    requirementNameWithSynonyms.Contains(completed.RequirementName)
                     && (policySupersededAt == null || completed.CompletedAt < policySupersededAt)
                     && (completed.ExpiresAt == null || completed.ExpiresAt > today)
                 )
@@ -35,7 +63,7 @@ namespace CareTogether.Engines.PolicyEvaluation
 
             var bestExemption = exemptedRequirements
                 .Where(exempted =>
-                    exempted.RequirementName == requirementName
+                    requirementNameWithSynonyms.Contains(exempted.RequirementName)
                     && (exempted.ExemptionExpiresAt == null || exempted.ExemptionExpiresAt > today)
                 )
                 .MaxBy(exempted => exempted.ExemptionExpiresAt ?? DateOnly.MaxValue);
@@ -253,7 +281,7 @@ namespace CareTogether.Engines.PolicyEvaluation
         //TODO: Eventually this should be used for referral calculations as well!
         //      Maybe rename it to 'FindWhenRequirementIsMet' or something like that?
         internal static DateOnlyTimeline? FindRequirementApprovals(
-            string requirementName,
+            ImmutableList<string> requirementNameWithSynonyms,
             DateTime? policyVersionSupersededAtUtc,
             ImmutableList<Resources.CompletedRequirementInfo> completedRequirementsInScope,
             ImmutableList<Resources.ExemptedRequirementInfo> exemptedRequirementsInScope
@@ -266,7 +294,7 @@ namespace CareTogether.Engines.PolicyEvaluation
 
             var matchingCompletions = completedRequirementsInScope
                 .Where(completed =>
-                    completed.RequirementName == requirementName
+                    requirementNameWithSynonyms.Contains(completed.RequirementName)
                     && (
                         policyVersionSupersededAtUtc == null
                         || completed.CompletedAtUtc.Date < policyVersionSupersededAtUtc.Value.Date
@@ -281,7 +309,7 @@ namespace CareTogether.Engines.PolicyEvaluation
                 .ToImmutableList();
 
             var matchingExemptions = exemptedRequirementsInScope
-                .Where(exempted => exempted.RequirementName == requirementName)
+                .Where(exempted => requirementNameWithSynonyms.Contains(exempted.RequirementName))
                 //TODO: Exemptions currently cannot be backdated, which may need to change in order to
                 //      fully support handling policy exemptions correctly within the supersedence constraint.
                 //      && (policyVersionSupersededAtUtc == null || exempted.TimestampUtc < policyVersionSupersededAtUtc))
