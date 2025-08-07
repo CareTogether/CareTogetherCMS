@@ -72,11 +72,11 @@ function getMessageProps(
         icon: <EmojiPeople sx={{ color: 'red' }} />,
         onClick: () => {
           const familyId = item.family.family?.id;
-          const referralId = item.referralId;
+          const v1CaseId = item.v1CaseId;
           const arrangementId = item.arrangementId;
 
-          if (familyId && referralId && arrangementId) {
-            appNavigate.family(familyId, referralId, arrangementId);
+          if (familyId && v1CaseId && arrangementId) {
+            appNavigate.family(familyId, v1CaseId, arrangementId);
           }
         },
         primaryContent: (

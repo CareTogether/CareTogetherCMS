@@ -25,7 +25,7 @@ export function CompletedRequirementRow({
 }: CompletedRequirementRowProps) {
   const userLookup = useUserLookup();
   const permissions = useFamilyIdPermissions(
-    context.kind === 'Referral' ||
+    context.kind === 'V1Case' ||
       context.kind === 'Arrangement' ||
       context.kind === 'Family Volunteer Assignment' ||
       context.kind === 'Individual Volunteer Assignment'
@@ -36,7 +36,7 @@ export function CompletedRequirementRow({
   const dialogHandle = useDialogHandle();
 
   const canMarkIncomplete =
-    context.kind === 'Referral'
+    context.kind === 'V1Case'
       ? permissions(Permission.EditReferralRequirementCompletion)
       : context.kind === 'Arrangement' ||
           context.kind === 'Family Volunteer Assignment' ||

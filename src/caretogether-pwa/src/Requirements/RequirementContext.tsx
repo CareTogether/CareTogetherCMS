@@ -3,23 +3,23 @@ import {
   IndividualVolunteerAssignment,
 } from '../GeneratedClient';
 
-export interface ReferralContext {
-  kind: 'Referral';
+export interface V1CaseContext {
+  kind: 'V1Case';
   partneringFamilyId: string;
-  referralId: string;
+  v1CaseId: string;
 }
 
 export interface ArrangementContext {
   kind: 'Arrangement';
   partneringFamilyId: string;
-  referralId: string;
+  v1CaseId: string;
   arrangementId: string;
 }
 
 export interface FamilyVolunteerAssignmentContext {
   kind: 'Family Volunteer Assignment';
   partneringFamilyId: string;
-  referralId: string;
+  v1CaseId: string;
   arrangementId: string;
   assignment: FamilyVolunteerAssignment;
 }
@@ -27,7 +27,7 @@ export interface FamilyVolunteerAssignmentContext {
 export interface IndividualVolunteerAssignmentContext {
   kind: 'Individual Volunteer Assignment';
   partneringFamilyId: string;
-  referralId: string;
+  v1CaseId: string;
   arrangementId: string;
   assignment: IndividualVolunteerAssignment;
 }
@@ -44,7 +44,7 @@ export interface IndividualVolunteerContext {
 }
 
 export type RequirementContext =
-  | ReferralContext
+  | V1CaseContext
   | ArrangementContext
   | FamilyVolunteerAssignmentContext
   | IndividualVolunteerAssignmentContext
