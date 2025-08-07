@@ -6,7 +6,7 @@ import {
   ArrangementPolicy,
   CombinedFamilyInfo,
   Permission,
-  Referral as V1Case,
+  V1Case,
 } from '../../../GeneratedClient';
 import { ArrangementCard } from '../ArrangementCard';
 import { ToggleButton, ToggleButtonGroup } from '@mui/material';

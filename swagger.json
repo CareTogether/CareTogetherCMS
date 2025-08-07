@@ -1578,15 +1578,15 @@
           "ViewApprovalProgress",
           "ViewApprovalHistory",
           "ActivateVolunteerFamily",
-          "CreateReferral",
-          "EditReferral",
-          "CloseReferral",
-          "ViewReferralCustomFields",
-          "ViewReferralComments",
-          "ViewReferralProgress",
-          "EditReferralRequirementCompletion",
-          "EditReferralRequirementExemption",
-          "ViewReferralHistory",
+          "CreateV1Case",
+          "EditV1Case",
+          "CloseV1Case",
+          "ViewV1CaseCustomFields",
+          "ViewV1CaseComments",
+          "ViewV1CaseProgress",
+          "EditV1CaseRequirementCompletion",
+          "EditV1CaseRequirementExemption",
+          "ViewV1CaseHistory",
           "CreateArrangement",
           "EditArrangement",
           "ViewAssignments",
@@ -1711,7 +1711,7 @@
             }
           },
           "referralPolicy": {
-            "$ref": "#/components/schemas/ReferralPolicy"
+            "$ref": "#/components/schemas/V1CasePolicy"
           },
           "volunteerPolicy": {
             "$ref": "#/components/schemas/VolunteerPolicy"
@@ -1829,7 +1829,7 @@
           0
         ]
       },
-      "ReferralPolicy": {
+      "V1CasePolicy": {
         "type": "object",
         "additionalProperties": false,
         "properties": {
@@ -3102,18 +3102,18 @@
         "type": "object",
         "additionalProperties": false,
         "properties": {
-          "openReferral": {
+          "openV1Case": {
             "nullable": true,
             "oneOf": [
               {
-                "$ref": "#/components/schemas/Referral"
+                "$ref": "#/components/schemas/V1Case"
               }
             ]
           },
-          "closedReferrals": {
+          "closedV1Cases": {
             "type": "array",
             "items": {
-              "$ref": "#/components/schemas/Referral"
+              "$ref": "#/components/schemas/V1Case"
             }
           },
           "history": {
@@ -3124,7 +3124,7 @@
           }
         }
       },
-      "Referral": {
+      "V1Case": {
         "type": "object",
         "additionalProperties": false,
         "properties": {
@@ -3145,7 +3145,7 @@
             "nullable": true,
             "oneOf": [
               {
-                "$ref": "#/components/schemas/ReferralCloseReason"
+                "$ref": "#/components/schemas/V1CaseCloseReason"
               }
             ]
           },
@@ -3191,7 +3191,7 @@
           }
         }
       },
-      "ReferralCloseReason": {
+      "V1CaseCloseReason": {
         "type": "integer",
         "description": "",
         "x-enumNames": [
@@ -6609,13 +6609,13 @@
             "additionalProperties": false,
             "properties": {
               "command": {
-                "$ref": "#/components/schemas/ReferralCommand"
+                "$ref": "#/components/schemas/V1CaseCommand"
               }
             }
           }
         ]
       },
-      "ReferralCommand": {
+      "V1CaseCommand": {
         "type": "object",
         "discriminator": {
           "propertyName": "discriminator",
@@ -6652,14 +6652,14 @@
       "CloseReferral": {
         "allOf": [
           {
-            "$ref": "#/components/schemas/ReferralCommand"
+            "$ref": "#/components/schemas/V1CaseCommand"
           },
           {
             "type": "object",
             "additionalProperties": false,
             "properties": {
               "closeReason": {
-                "$ref": "#/components/schemas/ReferralCloseReason"
+                "$ref": "#/components/schemas/V1CaseCloseReason"
               },
               "closedAtUtc": {
                 "type": "string",
@@ -6672,7 +6672,7 @@
       "CompleteReferralRequirement": {
         "allOf": [
           {
-            "$ref": "#/components/schemas/ReferralCommand"
+            "$ref": "#/components/schemas/V1CaseCommand"
           },
           {
             "type": "object",
@@ -6706,7 +6706,7 @@
       "CreateReferral": {
         "allOf": [
           {
-            "$ref": "#/components/schemas/ReferralCommand"
+            "$ref": "#/components/schemas/V1CaseCommand"
           },
           {
             "type": "object",
@@ -6723,7 +6723,7 @@
       "ExemptReferralRequirement": {
         "allOf": [
           {
-            "$ref": "#/components/schemas/ReferralCommand"
+            "$ref": "#/components/schemas/V1CaseCommand"
           },
           {
             "type": "object",
@@ -6747,7 +6747,7 @@
       "MarkReferralRequirementIncomplete": {
         "allOf": [
           {
-            "$ref": "#/components/schemas/ReferralCommand"
+            "$ref": "#/components/schemas/V1CaseCommand"
           },
           {
             "type": "object",
@@ -6767,7 +6767,7 @@
       "UnexemptReferralRequirement": {
         "allOf": [
           {
-            "$ref": "#/components/schemas/ReferralCommand"
+            "$ref": "#/components/schemas/V1CaseCommand"
           },
           {
             "type": "object",
@@ -6783,7 +6783,7 @@
       "UpdateCustomReferralField": {
         "allOf": [
           {
-            "$ref": "#/components/schemas/ReferralCommand"
+            "$ref": "#/components/schemas/V1CaseCommand"
           },
           {
             "type": "object",
@@ -6809,7 +6809,7 @@
       "UpdateReferralComments": {
         "allOf": [
           {
-            "$ref": "#/components/schemas/ReferralCommand"
+            "$ref": "#/components/schemas/V1CaseCommand"
           },
           {
             "type": "object",

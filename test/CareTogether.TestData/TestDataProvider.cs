@@ -163,7 +163,7 @@ namespace CareTogether.TestData
             IEventLog<PersonAccessEvent> personAccessEventLog,
             IEventLog<DirectoryEvent> directoryEventLog,
             IEventLog<GoalCommandExecutedEvent> goalsEventLog,
-            IEventLog<ReferralEvent> referralsEventLog,
+            IEventLog<V1CaseEvent> referralsEventLog,
             IEventLog<ApprovalEvent> approvalsEventLog,
             IEventLog<NotesEvent> notesEventLog,
             IEventLog<CommunityCommandExecutedEvent> communitiesEventLog,
@@ -1139,7 +1139,7 @@ namespace CareTogether.TestData
             );
         }
 
-        public static async Task PopulateReferralEvents(IEventLog<ReferralEvent> referralsEventLog)
+        public static async Task PopulateReferralEvents(IEventLog<V1CaseEvent> referralsEventLog)
         {
             await referralsEventLog.AppendEventsAsync(
                 guid1,
@@ -1353,7 +1353,7 @@ namespace CareTogether.TestData
                     new CloseReferral(
                         guid1,
                         guid1,
-                        ReferralCloseReason.NeedMet,
+                        V1CaseCloseReason.NeedMet,
                         ReferralsMonth(28, 12, 0, 0)
                     )
                 ),
@@ -2389,7 +2389,7 @@ namespace CareTogether.TestData
                                     ),
                                     [
                                         Permission.ViewApprovalProgress,
-                                        Permission.ViewReferralProgress,
+                                        Permission.ViewV1CaseProgress,
                                         Permission.ViewArrangementProgress,
                                     ]
                                 ),
@@ -2671,7 +2671,7 @@ namespace CareTogether.TestData
                         ["Mega Church", "Mini Church"]
                     ),
                 ],
-                new ReferralPolicy(
+                new V1CasePolicy(
                     ["Request for Help Form", "Intake Coordinator Screening Call", "Intake Form"],
                     [
                         new CustomField(

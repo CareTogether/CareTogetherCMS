@@ -1,6 +1,6 @@
 import { selector } from 'recoil';
 import {
-  ReferralCommand as V1CaseCommand,
+  V1CaseCommand,
   ArrangementsCommand,
   ActionRequirement,
   CompleteReferralRequirement as CompleteV1CaseRequirement,
@@ -10,7 +10,7 @@ import {
   EndArrangements,
   AssignVolunteerFamily,
   AssignIndividualVolunteer,
-  ReferralCloseReason as V1CaseCloseReason,
+  V1CaseCloseReason,
   CloseReferral as CloseV1Case,
   CreateReferral as CreateV1Case,
   TrackChildLocationChange,

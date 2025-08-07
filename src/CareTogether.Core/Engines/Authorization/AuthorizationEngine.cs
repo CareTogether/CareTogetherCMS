@@ -114,11 +114,11 @@ namespace CareTogether.Engines.Authorization
             );
         }
 
-        public async Task<bool> AuthorizeReferralCommandAsync(
+        public async Task<bool> AuthorizeV1CaseCommandAsync(
             Guid organizationId,
             Guid locationId,
             ClaimsPrincipal user,
-            ReferralCommand command
+            V1CaseCommand command
         )
         {
             var permissions = await userAccessCalculation.AuthorizeUserAccessAsync(
@@ -130,15 +130,15 @@ namespace CareTogether.Engines.Authorization
             return permissions.Contains(
                 command switch
                 {
-                    CreateReferral => Permission.CreateReferral,
-                    CompleteReferralRequirement => Permission.EditReferralRequirementCompletion,
+                    CreateReferral => Permission.CreateV1Case,
+                    CompleteReferralRequirement => Permission.EditV1CaseRequirementCompletion,
                     MarkReferralRequirementIncomplete =>
-                        Permission.EditReferralRequirementCompletion,
-                    ExemptReferralRequirement => Permission.EditReferralRequirementExemption,
-                    UnexemptReferralRequirement => Permission.EditReferralRequirementExemption,
-                    UpdateCustomReferralField => Permission.EditReferral,
-                    UpdateReferralComments => Permission.EditReferral,
-                    CloseReferral => Permission.CloseReferral,
+                        Permission.EditV1CaseRequirementCompletion,
+                    ExemptReferralRequirement => Permission.EditV1CaseRequirementExemption,
+                    UnexemptReferralRequirement => Permission.EditV1CaseRequirementExemption,
+                    UpdateCustomReferralField => Permission.EditV1Case,
+                    UpdateReferralComments => Permission.EditV1Case,
+                    CloseReferral => Permission.CloseV1Case,
                     _ => throw new NotImplementedException(
                         $"The command type '{command.GetType().FullName}' has not been implemented."
                     ),
@@ -632,59 +632,59 @@ namespace CareTogether.Engines.Authorization
         {
             return partneringFamilyInfo with
             {
-                OpenReferral =
-                    partneringFamilyInfo.OpenReferral != null
-                        ? DiscloseReferral(
-                            partneringFamilyInfo.OpenReferral,
+                OpenV1Case =
+                    partneringFamilyInfo.OpenV1Case != null
+                        ? DiscloseV1Case(
+                            partneringFamilyInfo.OpenV1Case,
                             userFamily,
                             contextPermissions
                         )
                         : null,
-                ClosedReferrals = partneringFamilyInfo
-                    .ClosedReferrals.Select(closedReferral =>
-                        DiscloseReferral(closedReferral, userFamily, contextPermissions)
+                ClosedV1Cases = partneringFamilyInfo
+                    .ClosedV1Cases.Select(closedV1Case =>
+                        DiscloseV1Case(closedV1Case, userFamily, contextPermissions)
                     )
                     .ToImmutableList(),
-                History = contextPermissions.Contains(Permission.ViewReferralHistory)
+                History = contextPermissions.Contains(Permission.ViewV1CaseHistory)
                     ? partneringFamilyInfo.History
                     : ImmutableList<Activity>.Empty,
             };
         }
 
-        internal Referral DiscloseReferral(
-            Referral referral,
+        internal V1Case DiscloseV1Case(
+            V1Case v1Case,
             Family? userFamily,
             ImmutableList<Permission> contextPermissions
         )
         {
-            return referral with
+            return v1Case with
             {
                 CompletedCustomFields = contextPermissions.Contains(
-                    Permission.ViewReferralCustomFields
+                    Permission.ViewV1CaseCustomFields
                 )
-                    ? referral.CompletedCustomFields
+                    ? v1Case.CompletedCustomFields
                     : ImmutableList<CompletedCustomFieldInfo>.Empty,
                 MissingCustomFields = contextPermissions.Contains(
-                    Permission.ViewReferralCustomFields
+                    Permission.ViewV1CaseCustomFields
                 )
-                    ? referral.MissingCustomFields
+                    ? v1Case.MissingCustomFields
                     : ImmutableList<string>.Empty,
-                CompletedRequirements = contextPermissions.Contains(Permission.ViewReferralProgress)
-                    ? referral.CompletedRequirements
+                CompletedRequirements = contextPermissions.Contains(Permission.ViewV1CaseProgress)
+                    ? v1Case.CompletedRequirements
                     : ImmutableList<Resources.CompletedRequirementInfo>.Empty,
-                ExemptedRequirements = contextPermissions.Contains(Permission.ViewReferralProgress)
-                    ? referral.ExemptedRequirements
+                ExemptedRequirements = contextPermissions.Contains(Permission.ViewV1CaseProgress)
+                    ? v1Case.ExemptedRequirements
                     : ImmutableList<Resources.ExemptedRequirementInfo>.Empty,
-                MissingRequirements = contextPermissions.Contains(Permission.ViewReferralProgress)
-                    ? referral.MissingRequirements
+                MissingRequirements = contextPermissions.Contains(Permission.ViewV1CaseProgress)
+                    ? v1Case.MissingRequirements
                     : ImmutableList<string>.Empty,
-                CloseReason = contextPermissions.Contains(Permission.ViewReferralComments)
-                    ? referral.CloseReason
+                CloseReason = contextPermissions.Contains(Permission.ViewV1CaseComments)
+                    ? v1Case.CloseReason
                     : null,
-                Comments = contextPermissions.Contains(Permission.ViewReferralComments)
-                    ? referral.Comments
+                Comments = contextPermissions.Contains(Permission.ViewV1CaseComments)
+                    ? v1Case.Comments
                     : null,
-                Arrangements = referral
+                Arrangements = v1Case
                     .Arrangements.Select(arrangement =>
                         (
                             arrangement with
@@ -695,12 +695,12 @@ namespace CareTogether.Engines.Authorization
                                     ? arrangement.ChildLocationHistory
                                     : ImmutableSortedSet<ChildLocationHistoryEntry>.Empty,
                                 Comments = contextPermissions.Contains(
-                                    Permission.ViewReferralComments
+                                    Permission.ViewV1CaseComments
                                 )
                                     ? arrangement.Comments
                                     : null,
                                 Reason = contextPermissions.Contains(
-                                    Permission.ViewReferralComments
+                                    Permission.ViewV1CaseComments
                                 )
                                     ? arrangement.Reason
                                     : null,

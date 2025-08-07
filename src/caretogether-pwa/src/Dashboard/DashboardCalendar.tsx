@@ -35,8 +35,8 @@ export function DashboardCalendar() {
   const partneringFamilies = useLoadable(partneringFamiliesData);
 
   const allArrangements = (partneringFamilies || []).flatMap((family) =>
-    (family.partneringFamilyInfo?.closedReferrals || [])
-      .concat(family.partneringFamilyInfo?.openReferral || [])
+    (family.partneringFamilyInfo?.closedV1Cases || [])
+      .concat(family.partneringFamilyInfo?.openV1Case || [])
       .flatMap((v1Case) =>
         (v1Case.arrangements || []).map((arrangement) => ({
           arrangement,

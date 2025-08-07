@@ -7,7 +7,7 @@ import {
   Radio,
   RadioGroup,
 } from '@mui/material';
-import { ReferralCloseReason as V1CaseCloseReason } from '../GeneratedClient';
+import { V1CaseCloseReason } from '../GeneratedClient';
 import { UpdateDialog } from '../Generic/UpdateDialog';
 import { DatePicker } from '@mui/x-date-pickers';
 import { useV1CasesModel } from '../Model/V1CasesModel';

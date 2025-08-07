@@ -43,11 +43,11 @@ namespace CareTogether.Engines.Authorization
             PersonCommand command
         );
 
-        Task<bool> AuthorizeReferralCommandAsync(
+        Task<bool> AuthorizeV1CaseCommandAsync(
             Guid organizationId,
             Guid locationId,
             ClaimsPrincipal user,
-            ReferralCommand command
+            V1CaseCommand command
         );
 
         Task<bool> AuthorizeArrangementsCommandAsync(

@@ -106,7 +106,7 @@ namespace CareTogether.Core.Test.AuthorizationEngineTests
             var personAccessEventLog = new MemoryEventLog<PersonAccessEvent>();
             var directoryEventLog = new MemoryEventLog<DirectoryEvent>();
             var goalsEventLog = new MemoryEventLog<GoalCommandExecutedEvent>();
-            var referralsEventLog = new MemoryEventLog<ReferralEvent>();
+            var referralsEventLog = new MemoryEventLog<V1CaseEvent>();
             var approvalsEventLog = new MemoryEventLog<ApprovalEvent>();
             var notesEventLog = new MemoryEventLog<NotesEvent>();
             var communitiesEventLog = new MemoryEventLog<CommunityCommandExecutedEvent>();

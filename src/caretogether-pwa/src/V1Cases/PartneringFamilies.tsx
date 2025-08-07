@@ -23,7 +23,7 @@ import { format } from 'date-fns';
 import React, { useState } from 'react';
 import AddIcon from '@mui/icons-material/Add';
 import {
-  ReferralCloseReason as V1CaseCloseReason,
+  V1CaseCloseReason,
   PartneringFamilyInfo,
   Arrangement,
   ArrangementPhase,
@@ -58,14 +58,14 @@ const arrangementPhaseText = new Map<number, string>([
 
 function allArrangements(partneringFamilyInfo: PartneringFamilyInfo) {
   const results: { v1CaseId: string; arrangement: Arrangement }[] = [];
-  partneringFamilyInfo.closedReferrals?.forEach((x) =>
+  partneringFamilyInfo.closedV1Cases?.forEach((x) =>
     x.arrangements?.forEach((y) =>
       results.push({ v1CaseId: x.id!, arrangement: y })
     )
   );
-  partneringFamilyInfo.openReferral?.arrangements?.forEach((x) =>
+  partneringFamilyInfo.openV1Case?.arrangements?.forEach((x) =>
     results.push({
-      v1CaseId: partneringFamilyInfo.openReferral!.id!,
+      v1CaseId: partneringFamilyInfo.openV1Case!.id!,
       arrangement: x,
     })
   );
@@ -78,14 +78,14 @@ function matchingArrangements(
 ) {
   const results: { v1CaseId: string; arrangement: Arrangement }[] = [];
   if (arrangementsFilter === 'All') {
-    partneringFamilyInfo.closedReferrals?.forEach((x) =>
+    partneringFamilyInfo.closedV1Cases?.forEach((x) =>
       x.arrangements?.forEach((y) =>
         results.push({ v1CaseId: x.id!, arrangement: y })
       )
     );
-    partneringFamilyInfo.openReferral?.arrangements?.forEach((x) =>
+    partneringFamilyInfo.openV1Case?.arrangements?.forEach((x) =>
       results.push({
-        v1CaseId: partneringFamilyInfo.openReferral!.id!,
+        v1CaseId: partneringFamilyInfo.openV1Case!.id!,
         arrangement: x,
       })
     );
@@ -94,13 +94,13 @@ function matchingArrangements(
       arrangementsFilter === 'Active' ||
       arrangementsFilter === 'Active + Setup'
     ) {
-      partneringFamilyInfo.openReferral?.arrangements
+      partneringFamilyInfo.openV1Case?.arrangements
         ?.filter(
           (arrangement) => arrangement.phase === ArrangementPhase.Started
         )
         .forEach((x) =>
           results.push({
-            v1CaseId: partneringFamilyInfo.openReferral!.id!,
+            v1CaseId: partneringFamilyInfo.openV1Case!.id!,
             arrangement: x,
           })
         );
@@ -109,7 +109,7 @@ function matchingArrangements(
       arrangementsFilter === 'Setup' ||
       arrangementsFilter === 'Active + Setup'
     ) {
-      partneringFamilyInfo.openReferral?.arrangements
+      partneringFamilyInfo.openV1Case?.arrangements
         ?.filter(
           (arrangement) =>
             arrangement.phase === ArrangementPhase.SettingUp ||
@@ -117,7 +117,7 @@ function matchingArrangements(
         )
         .forEach((x) =>
           results.push({
-            v1CaseId: partneringFamilyInfo.openReferral!.id!,
+            v1CaseId: partneringFamilyInfo.openV1Case!.id!,
             arrangement: x,
           })
         );
@@ -269,16 +269,16 @@ function PartneringFamilies() {
       arrangementsFilter === 'All'
         ? true
         : arrangementsFilter === 'Active'
-          ? family.partneringFamilyInfo?.openReferral?.arrangements?.some(
+          ? family.partneringFamilyInfo?.openV1Case?.arrangements?.some(
               (arrangement) => arrangement.phase === ArrangementPhase.Started
             )
           : arrangementsFilter === 'Setup'
-            ? family.partneringFamilyInfo?.openReferral?.arrangements?.some(
+            ? family.partneringFamilyInfo?.openV1Case?.arrangements?.some(
                 (arrangement) =>
                   arrangement.phase === ArrangementPhase.SettingUp ||
                   arrangement.phase === ArrangementPhase.ReadyToStart
               )
-            : family.partneringFamilyInfo?.openReferral?.arrangements?.some(
+            : family.partneringFamilyInfo?.openV1Case?.arrangements?.some(
                 (arrangement) =>
                   arrangement.phase === ArrangementPhase.Started ||
                   arrangement.phase === ArrangementPhase.SettingUp ||
@@ -401,22 +401,22 @@ function PartneringFamilies() {
                         </TableCell>
                         <TableCell>
                           {
-                            partneringFamily.partneringFamilyInfo?.openReferral
+                            partneringFamily.partneringFamilyInfo?.openV1Case
                               ? 'Open since ' +
                                 format(
                                   partneringFamily.partneringFamilyInfo
-                                    .openReferral.openedAtUtc!,
+                                    .openV1Case.openedAtUtc!,
                                   'MM/dd/yyyy'
                                 )
                               : 'Closed - ' +
                                 V1CaseCloseReason[
                                   partneringFamily.partneringFamilyInfo!
-                                    .closedReferrals![
+                                    .closedV1Cases![
                                     partneringFamily.partneringFamilyInfo!
-                                      .closedReferrals!.length - 1
+                                      .closedV1Cases!.length - 1
                                   ]!.closeReason!
                                 ]
-                            //TODO: "Closed on " + format(partneringFamily.partneringFamilyInfo?.closedReferrals?.[0]?.closedUtc) -- needs a new calculated property
+                            //TODO: "Closed on " + format(partneringFamily.partneringFamilyInfo?.closedV1Cases?.[0]?.closedUtc) -- needs a new calculated property
                           }
                         </TableCell>
                         {!expandedView ? (
@@ -473,8 +473,8 @@ function PartneringFamilies() {
                         >
                           <TableCell sx={{ maxWidth: '400px', paddingLeft: 3 }}>
                             {
-                              partneringFamily.partneringFamilyInfo
-                                ?.openReferral?.comments
+                              partneringFamily.partneringFamilyInfo?.openV1Case
+                                ?.comments
                             }
                           </TableCell>
                           <TableCell>
@@ -521,7 +521,7 @@ function PartneringFamilies() {
           </Table>
         </TableContainer>
         {permissions(Permission.EditFamilyInfo) &&
-          permissions(Permission.CreateReferral) && (
+          permissions(Permission.CreateV1Case) && (
             <Fab
               color="primary"
               aria-label="add"

@@ -134,7 +134,7 @@ namespace CareTogether.Api
                 immutableBlobServiceClient,
                 "GoalsEventLog"
             );
-            var referralsEventLog = new AppendBlobEventLog<ReferralEvent>(
+            var v1CasesEventLog = new AppendBlobEventLog<V1CaseEvent>(
                 immutableBlobServiceClient,
                 "ReferralsEventLog"
             );
@@ -187,7 +187,7 @@ namespace CareTogether.Api
                         personAccessEventLog,
                         directoryEventLog,
                         goalsEventLog,
-                        referralsEventLog,
+                        v1CasesEventLog,
                         approvalsEventLog,
                         notesEventLog,
                         communitiesEventLog,
@@ -222,7 +222,7 @@ namespace CareTogether.Api
                 personAccessEventLog
             );
             var accountsResource = new AccountsResource(accountsEventLog, personAccessEventLog);
-            var referralsResource = new ReferralsResource(referralsEventLog);
+            var v1CasesResource = new V1CasesResource(v1CasesEventLog);
             var notesResource = new NotesResource(notesEventLog, draftNotesStore);
             var communitiesResource = new CommunitiesResource(communitiesEventLog, uploadsStore);
 
@@ -235,7 +235,7 @@ namespace CareTogether.Api
             var userAccessCalculation = new UserAccessCalculation(
                 policiesResource,
                 directoryResource,
-                referralsResource,
+                v1CasesResource,
                 approvalsResource,
                 communitiesResource
             );
@@ -256,7 +256,7 @@ namespace CareTogether.Api
                 policyEvaluationEngine,
                 authorizationEngine,
                 approvalsResource,
-                referralsResource,
+                v1CasesResource,
                 directoryResource,
                 notesResource,
                 policiesResource,
@@ -278,7 +278,7 @@ namespace CareTogether.Api
                     userAccessCalculation,
                     directoryResource,
                     approvalsResource,
-                    referralsResource,
+                    v1CasesResource,
                     notesResource,
                     communitiesResource,
                     combinedFamilyInfoFormatter

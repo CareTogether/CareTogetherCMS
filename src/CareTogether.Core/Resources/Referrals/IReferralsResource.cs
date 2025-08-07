@@ -6,12 +6,12 @@ using JsonPolymorph;
 
 namespace CareTogether.Resources.V1Cases
 {
-    public record ReferralEntry(
+    public record V1CaseEntry(
         Guid Id,
         Guid FamilyId,
         DateTime OpenedAtUtc,
         DateTime? ClosedAtUtc,
-        ReferralCloseReason? CloseReason,
+        V1CaseCloseReason? CloseReason,
         ImmutableList<CompletedRequirementInfo> CompletedRequirements,
         ImmutableList<ExemptedRequirementInfo> ExemptedRequirements,
         ImmutableDictionary<string, CompletedCustomFieldInfo> CompletedCustomFields,
@@ -41,7 +41,7 @@ namespace CareTogether.Resources.V1Cases
         string? Reason
     );
 
-    public enum ReferralCloseReason
+    public enum V1CaseCloseReason
     {
         NotAppropriate,
         NoCapacity,
@@ -90,10 +90,10 @@ namespace CareTogether.Resources.V1Cases
     }
 
     [JsonHierarchyBase]
-    public abstract partial record ReferralCommand(Guid FamilyId, Guid ReferralId);
+    public abstract partial record V1CaseCommand(Guid FamilyId, Guid ReferralId);
 
     public sealed record CreateReferral(Guid FamilyId, Guid ReferralId, DateTime OpenedAtUtc)
-        : ReferralCommand(FamilyId, ReferralId);
+        : V1CaseCommand(FamilyId, ReferralId);
 
     public sealed record CompleteReferralRequirement(
         Guid FamilyId,
@@ -103,14 +103,14 @@ namespace CareTogether.Resources.V1Cases
         DateTime CompletedAtUtc,
         Guid? UploadedDocumentId,
         Guid? NoteId
-    ) : ReferralCommand(FamilyId, ReferralId);
+    ) : V1CaseCommand(FamilyId, ReferralId);
 
     public sealed record MarkReferralRequirementIncomplete(
         Guid FamilyId,
         Guid ReferralId,
         Guid CompletedRequirementId,
         string RequirementName
-    ) : ReferralCommand(FamilyId, ReferralId);
+    ) : V1CaseCommand(FamilyId, ReferralId);
 
     public sealed record ExemptReferralRequirement(
         Guid FamilyId,
@@ -118,13 +118,13 @@ namespace CareTogether.Resources.V1Cases
         string RequirementName,
         string AdditionalComments,
         DateTime? ExemptionExpiresAtUtc
-    ) : ReferralCommand(FamilyId, ReferralId);
+    ) : V1CaseCommand(FamilyId, ReferralId);
 
     public sealed record UnexemptReferralRequirement(
         Guid FamilyId,
         Guid ReferralId,
         string RequirementName
-    ) : ReferralCommand(FamilyId, ReferralId);
+    ) : V1CaseCommand(FamilyId, ReferralId);
 
     public sealed record UpdateCustomReferralField(
         Guid FamilyId,
@@ -133,17 +133,17 @@ namespace CareTogether.Resources.V1Cases
         string CustomFieldName,
         CustomFieldType CustomFieldType,
         object? Value
-    ) : ReferralCommand(FamilyId, ReferralId);
+    ) : V1CaseCommand(FamilyId, ReferralId);
 
     public sealed record UpdateReferralComments(Guid FamilyId, Guid ReferralId, string? Comments)
-        : ReferralCommand(FamilyId, ReferralId);
+        : V1CaseCommand(FamilyId, ReferralId);
 
     public sealed record CloseReferral(
         Guid FamilyId,
         Guid ReferralId,
-        ReferralCloseReason CloseReason,
+        V1CaseCloseReason CloseReason,
         DateTime ClosedAtUtc
-    ) : ReferralCommand(FamilyId, ReferralId);
+    ) : V1CaseCommand(FamilyId, ReferralId);
 
     [JsonHierarchyBase]
     public abstract partial record ArrangementsCommand(
@@ -472,23 +472,23 @@ namespace CareTogether.Resources.V1Cases
     ) : ArrangementsCommand(FamilyId, ReferralId, ArrangementIds);
 
     /// <summary>
-    /// The <see cref="IReferralsResource"/> models the lifecycle of people's referrals to CareTogether organizations,
+    /// The <see cref="IV1CasesResource"/> models the lifecycle of people's referrals to CareTogether organizations,
     /// including various forms, arrangements, and policy changes, as well as authorizing related queries.
     /// </summary>
-    public interface IReferralsResource
+    public interface IV1CasesResource
     {
-        Task<ImmutableList<ReferralEntry>> ListReferralsAsync(Guid organizationId, Guid locationId);
+        Task<ImmutableList<V1CaseEntry>> ListV1CasessAsync(Guid organizationId, Guid locationId);
 
-        Task<ReferralEntry> GetReferralAsync(Guid organizationId, Guid locationId, Guid referralId);
+        Task<V1CaseEntry> GetV1CaseAsync(Guid organizationId, Guid locationId, Guid v1CaseId);
 
-        Task<ReferralEntry> ExecuteReferralCommandAsync(
+        Task<V1CaseEntry> ExecuteV1CaseCommandAsync(
             Guid organizationId,
             Guid locationId,
-            ReferralCommand command,
+            V1CaseCommand command,
             Guid userId
         );
 
-        Task<ReferralEntry> ExecuteArrangementsCommandAsync(
+        Task<V1CaseEntry> ExecuteArrangementsCommandAsync(
             Guid organizationId,
             Guid locationId,
             ArrangementsCommand command,

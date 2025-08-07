@@ -58,17 +58,17 @@
         ViewApprovalHistory = 205,
         ActivateVolunteerFamily = 206,
 
-        // ---- Referrals ---- //
+        // ---- V1Cases ---- //
 
-        CreateReferral = 300,
-        EditReferral = 301,
-        CloseReferral = 302,
-        ViewReferralCustomFields = 303,
-        ViewReferralComments = 304,
-        ViewReferralProgress = 305,
-        EditReferralRequirementCompletion = 306, // Requires UploadFamilyDocuments
-        EditReferralRequirementExemption = 307,
-        ViewReferralHistory = 308,
+        CreateV1Case = 300,
+        EditV1Case = 301,
+        CloseV1Case = 302,
+        ViewV1CaseCustomFields = 303,
+        ViewV1CaseComments = 304,
+        ViewV1CaseProgress = 305,
+        EditV1CaseRequirementCompletion = 306, // Requires UploadFamilyDocuments
+        EditV1CaseRequirementExemption = 307,
+        ViewV1CaseHistory = 308,
 
         CreateArrangement = 350,
         EditArrangement = 351,

@@ -1,4 +1,4 @@
-import { Referral as V1Case } from '../../../GeneratedClient';
+import { V1Case } from '../../../GeneratedClient';
 
 export const getFilteredArrangements = (
   v1Case: V1Case,

@@ -92,7 +92,7 @@ namespace CareTogether.Managers.Records
     public sealed record IndividualApprovalRecordsCommand(VolunteerCommand Command)
         : AtomicRecordsCommand();
 
-    public sealed record ReferralRecordsCommand(ReferralCommand Command) : AtomicRecordsCommand();
+    public sealed record ReferralRecordsCommand(V1CaseCommand Command) : AtomicRecordsCommand();
 
     public sealed record ArrangementRecordsCommand(ArrangementsCommand Command)
         : AtomicRecordsCommand();

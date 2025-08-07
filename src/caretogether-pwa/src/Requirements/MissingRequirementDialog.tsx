@@ -25,7 +25,7 @@ import {
   DocumentLinkRequirement,
   MissingArrangementRequirement,
   NoteEntryRequirement,
-  Referral as V1Case,
+  V1Case,
 } from '../GeneratedClient';
 import {
   useDirectoryModel,
@@ -98,11 +98,11 @@ export function MissingRequirementDialog({
   const personLookup = usePersonLookup().bind(null, contextFamilyId);
 
   const openV1Cases: V1Case[] =
-    contextFamily?.partneringFamilyInfo?.openReferral !== undefined
-      ? [contextFamily.partneringFamilyInfo.openReferral]
+    contextFamily?.partneringFamilyInfo?.openV1Case !== undefined
+      ? [contextFamily.partneringFamilyInfo.openV1Case]
       : [];
   const closedV1Cases: V1Case[] =
-    contextFamily?.partneringFamilyInfo?.closedReferrals
+    contextFamily?.partneringFamilyInfo?.closedV1Cases
       ?.slice()
       .sort((r1, r2) => (r1.closedAtUtc! > r2.closedAtUtc! ? -1 : 1)) || [];
   const allV1Cases: V1Case[] = [...openV1Cases, ...closedV1Cases];

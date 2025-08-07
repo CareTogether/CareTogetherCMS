@@ -40,7 +40,7 @@ export function ExemptedRequirementRow({
 
   const canExempt =
     context.kind === 'V1Case'
-      ? permissions(Permission.EditReferralRequirementExemption)
+      ? permissions(Permission.EditV1CaseRequirementExemption)
       : context.kind === 'Arrangement' ||
           context.kind === 'Family Volunteer Assignment' ||
           context.kind === 'Individual Volunteer Assignment'
@@ -60,8 +60,8 @@ export function ExemptedRequirementRow({
       : [undefined, undefined, undefined];
   const partneringFamilyInfo =
     familyLookup(partneringFamilyId)?.partneringFamilyInfo;
-  const v1Case = partneringFamilyInfo?.closedReferrals
-    ?.concat(partneringFamilyInfo.openReferral || [])
+  const v1Case = partneringFamilyInfo?.closedV1Cases
+    ?.concat(partneringFamilyInfo.openV1Case || [])
     .find((r) => r.id === v1CaseId);
   const arrangement = v1Case?.arrangements?.find((a) => a.id === arrangementId);
   const arrangementPolicy = policy.referralPolicy?.arrangementPolicies?.find(

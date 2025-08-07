@@ -191,8 +191,8 @@ namespace CareTogether.Engines.PolicyEvaluation
             );
         }
 
-        internal ReferralEntry ToReferralEntryForCalculation(
-            Resources.V1Cases.ReferralEntry entry,
+        internal V1CaseEntry ToV1CaseEntryForCalculation(
+            Resources.V1Cases.V1CaseEntry entry,
             TimeZoneInfo locationTimeZone
         )
         {
@@ -215,7 +215,7 @@ namespace CareTogether.Engines.PolicyEvaluation
                 ))
                 .ToImmutableDictionary();
 
-            return new ReferralEntry(
+            return new V1CaseEntry(
                 completedRequirements,
                 exemptedRequirements,
                 entry.CompletedCustomFields,
@@ -223,11 +223,11 @@ namespace CareTogether.Engines.PolicyEvaluation
             );
         }
 
-        public async Task<ReferralStatus> CalculateReferralStatusAsync(
+        public async Task<V1CaseStatus> CalculateV1CaseStatusAsync(
             Guid organizationId,
             Guid locationId,
             Family family,
-            Resources.V1Cases.ReferralEntry referralEntry
+            Resources.V1Cases.V1CaseEntry v1CaseEntry
         )
         {
             var policy = await policiesResource.GetCurrentPolicy(organizationId, locationId);
@@ -237,18 +237,18 @@ namespace CareTogether.Engines.PolicyEvaluation
             TimeZoneInfo locationTimeZone =
                 location?.timeZone ?? TimeZoneInfo.FindSystemTimeZoneById("America/New_York");
 
-            var referralEntryForCalculation = ToReferralEntryForCalculation(
-                referralEntry,
+            var v1CaseEntryForCalculation = ToV1CaseEntryForCalculation(
+                v1CaseEntry,
                 locationTimeZone
             );
 
-            var referralStatus = ReferralCalculations.CalculateReferralStatus(
+            var v1CaseStatus = V1CaseCalculations.CalculateV1CaseStatus(
                 policy.ReferralPolicy,
-                referralEntryForCalculation,
+                v1CaseEntryForCalculation,
                 Dates.ToDateOnlyInLocationTimeZone(DateTime.UtcNow, locationTimeZone)
             );
 
-            return referralStatus;
+            return v1CaseStatus;
         }
     }
 }

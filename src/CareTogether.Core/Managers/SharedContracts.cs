@@ -26,16 +26,16 @@ namespace CareTogether.Managers
     public sealed record UserInfo(Guid? UserId, Guid PersonId, ImmutableList<string> LocationRoles);
 
     public sealed record PartneringFamilyInfo(
-        Referral? OpenReferral,
-        ImmutableList<Referral> ClosedReferrals,
+        V1Case? OpenV1Case,
+        ImmutableList<V1Case> ClosedV1Cases,
         ImmutableList<Activity> History
     );
 
-    public sealed record Referral(
+    public sealed record V1Case(
         Guid Id,
         DateTime OpenedAtUtc,
         DateTime? ClosedAtUtc,
-        ReferralCloseReason? CloseReason,
+        V1CaseCloseReason? CloseReason,
         ImmutableList<Resources.CompletedRequirementInfo> CompletedRequirements,
         ImmutableList<Resources.ExemptedRequirementInfo> ExemptedRequirements,
         ImmutableList<string> MissingRequirements,
