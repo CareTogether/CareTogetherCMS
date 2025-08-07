@@ -1,6 +1,6 @@
 import { DialogContentText } from '@mui/material';
 import { ExemptedRequirementInfo } from '../GeneratedClient';
-import { useReferralsModel } from '../Model/ReferralsModel';
+import { useV1CasesModel } from '../Model/V1CasesModel';
 import { useVolunteersModel } from '../Model/VolunteersModel';
 import { DialogHandle } from '../Hooks/useDialogHandle';
 import { UpdateDialog } from '../Generic/UpdateDialog';
@@ -16,7 +16,7 @@ export function ExemptedRequirementDialog({
   requirement,
   context,
 }: ExemptedRequirementDialogProps) {
-  const referrals = useReferralsModel();
+  const v1Cases = useV1CasesModel();
   const volunteers = useVolunteersModel();
 
   return (
@@ -28,34 +28,34 @@ export function ExemptedRequirementDialog({
       saveLabel="Yes, Remove Exemption"
       onSave={async () => {
         switch (context.kind) {
-          case 'Referral':
-            await referrals.unexemptReferralRequirement(
+          case 'V1Case':
+            await v1Cases.unexemptV1CaseRequirement(
               context.partneringFamilyId,
-              context.referralId,
+              context.v1CaseId,
               requirement
             );
             break;
           case 'Arrangement':
-            await referrals.unexemptArrangementRequirement(
+            await v1Cases.unexemptArrangementRequirement(
               context.partneringFamilyId,
-              context.referralId,
+              context.v1CaseId,
               context.arrangementId,
               requirement
             );
             break;
           case 'Family Volunteer Assignment':
-            await referrals.unexemptVolunteerFamilyAssignmentRequirement(
+            await v1Cases.unexemptVolunteerFamilyAssignmentRequirement(
               context.partneringFamilyId,
-              context.referralId,
+              context.v1CaseId,
               context.arrangementId,
               context.assignment,
               requirement
             );
             break;
           case 'Individual Volunteer Assignment':
-            await referrals.unexemptIndividualVolunteerAssignmentRequirement(
+            await v1Cases.unexemptIndividualVolunteerAssignmentRequirement(
               context.partneringFamilyId,
-              context.referralId,
+              context.v1CaseId,
               context.arrangementId,
               context.assignment,
               requirement

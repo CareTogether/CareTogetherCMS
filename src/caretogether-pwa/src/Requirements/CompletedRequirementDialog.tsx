@@ -1,6 +1,6 @@
 import { DialogContentText } from '@mui/material';
 import { CompletedRequirementInfo } from '../GeneratedClient';
-import { useReferralsModel } from '../Model/ReferralsModel';
+import { useV1CasesModel } from '../Model/V1CasesModel';
 import { useVolunteersModel } from '../Model/VolunteersModel';
 import { DialogHandle } from '../Hooks/useDialogHandle';
 import { UpdateDialog } from '../Generic/UpdateDialog';
@@ -16,7 +16,7 @@ export function CompletedRequirementDialog({
   requirement,
   context,
 }: CompletedRequirementDialogProps) {
-  const referrals = useReferralsModel();
+  const v1Cases = useV1CasesModel();
   const volunteers = useVolunteersModel();
 
   return (
@@ -28,34 +28,34 @@ export function CompletedRequirementDialog({
       saveLabel="Yes, Mark Incomplete"
       onSave={async () => {
         switch (context.kind) {
-          case 'Referral':
-            await referrals.markReferralRequirementIncomplete(
+          case 'V1Case':
+            await v1Cases.markV1CaseRequirementIncomplete(
               context.partneringFamilyId,
-              context.referralId,
+              context.v1CaseId,
               requirement
             );
             break;
           case 'Arrangement':
-            await referrals.markArrangementRequirementIncomplete(
+            await v1Cases.markArrangementRequirementIncomplete(
               context.partneringFamilyId,
-              context.referralId,
+              context.v1CaseId,
               context.arrangementId,
               requirement
             );
             break;
           case 'Family Volunteer Assignment':
-            await referrals.markVolunteerFamilyAssignmentRequirementIncomplete(
+            await v1Cases.markVolunteerFamilyAssignmentRequirementIncomplete(
               context.partneringFamilyId,
-              context.referralId,
+              context.v1CaseId,
               context.arrangementId,
               context.assignment,
               requirement
             );
             break;
           case 'Individual Volunteer Assignment':
-            await referrals.markIndividualVolunteerAssignmentRequirementIncomplete(
+            await v1Cases.markIndividualVolunteerAssignmentRequirementIncomplete(
               context.partneringFamilyId,
-              context.referralId,
+              context.v1CaseId,
               context.arrangementId,
               context.assignment,
               requirement

@@ -13,7 +13,7 @@ using CareTogether.Managers.Records;
 using CareTogether.Resources.Accounts;
 using CareTogether.Resources.Directory;
 using CareTogether.Resources.Policies;
-using CareTogether.Resources.Referrals;
+using CareTogether.Resources.V1Cases;
 using LazyCache;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -162,7 +162,7 @@ namespace CareTogether.Api.OData
         DateOnly Opened,
         DateOnly? Closed,
         string? ReferralSource,
-        ReferralCloseReason? CloseReason,
+        V1CaseCloseReason? CloseReason,
         string? PrimaryReasonForReferral
     );
 
@@ -1215,8 +1215,8 @@ namespace CareTogether.Api.OData
                             ? null
                             : data.Family.PartneringFamilyInfo with
                             {
-                                ClosedReferrals = data
-                                    .Family.PartneringFamilyInfo.ClosedReferrals.Select(referral =>
+                                ClosedV1Cases = data
+                                    .Family.PartneringFamilyInfo.ClosedV1Cases.Select(referral =>
                                         referral with
                                         {
                                             Arrangements = referral
@@ -1260,13 +1260,13 @@ namespace CareTogether.Api.OData
                                     )
                                     .ToImmutableList(),
                                 History = [],
-                                OpenReferral =
-                                    data.Family.PartneringFamilyInfo.OpenReferral == null
+                                OpenV1Case =
+                                    data.Family.PartneringFamilyInfo.OpenV1Case == null
                                         ? null
-                                        : data.Family.PartneringFamilyInfo.OpenReferral with
+                                        : data.Family.PartneringFamilyInfo.OpenV1Case with
                                         {
                                             Arrangements = data
-                                                .Family.PartneringFamilyInfo.OpenReferral.Arrangements.Select(
+                                                .Family.PartneringFamilyInfo.OpenV1Case.Arrangements.Select(
                                                     arrangement =>
                                                         arrangement with
                                                         {
@@ -1285,7 +1285,7 @@ namespace CareTogether.Api.OData
                                                 .ToImmutableList(),
                                             Comments = null,
                                             CompletedCustomFields = data
-                                                .Family.PartneringFamilyInfo.OpenReferral.CompletedCustomFields.Select(
+                                                .Family.PartneringFamilyInfo.OpenV1Case.CompletedCustomFields.Select(
                                                     field =>
                                                         field with
                                                         {
@@ -1298,7 +1298,7 @@ namespace CareTogether.Api.OData
                                                 )
                                                 .ToImmutableList(),
                                             ExemptedRequirements = data
-                                                .Family.PartneringFamilyInfo.OpenReferral.ExemptedRequirements.Select(
+                                                .Family.PartneringFamilyInfo.OpenV1Case.ExemptedRequirements.Select(
                                                     exempted =>
                                                         exempted with
                                                         {
@@ -1642,11 +1642,11 @@ namespace CareTogether.Api.OData
         )
         {
             var allReferralsInfo = (
-                familyInfo.PartneringFamilyInfo?.ClosedReferrals ?? []
+                familyInfo.PartneringFamilyInfo?.ClosedV1Cases ?? []
             ).AddRange(
-                familyInfo.PartneringFamilyInfo?.OpenReferral == null
+                familyInfo.PartneringFamilyInfo?.OpenV1Case == null
                     ? []
-                    : new[] { familyInfo.PartneringFamilyInfo.OpenReferral }
+                    : new[] { familyInfo.PartneringFamilyInfo.OpenV1Case }
             );
             return allReferralsInfo.Select(referralInfo => new Referral(
                 referralInfo.Id,
@@ -1685,11 +1685,11 @@ namespace CareTogether.Api.OData
         )
         {
             var allReferralsInfo = (
-                familyInfo.PartneringFamilyInfo?.ClosedReferrals ?? []
+                familyInfo.PartneringFamilyInfo?.ClosedV1Cases ?? []
             ).AddRange(
-                familyInfo.PartneringFamilyInfo?.OpenReferral == null
+                familyInfo.PartneringFamilyInfo?.OpenV1Case == null
                     ? []
-                    : new[] { familyInfo.PartneringFamilyInfo.OpenReferral }
+                    : new[] { familyInfo.PartneringFamilyInfo.OpenV1Case }
             );
             return allReferralsInfo.SelectMany(referralInfo =>
             {
@@ -1735,11 +1735,11 @@ namespace CareTogether.Api.OData
         )
         {
             var allReferralsInfo = (
-                familyInfo.PartneringFamilyInfo?.ClosedReferrals ?? []
+                familyInfo.PartneringFamilyInfo?.ClosedV1Cases ?? []
             ).AddRange(
-                familyInfo.PartneringFamilyInfo?.OpenReferral == null
+                familyInfo.PartneringFamilyInfo?.OpenV1Case == null
                     ? []
-                    : new[] { familyInfo.PartneringFamilyInfo.OpenReferral }
+                    : new[] { familyInfo.PartneringFamilyInfo.OpenV1Case }
             );
             return allReferralsInfo.SelectMany(referralInfo =>
             {
@@ -1802,11 +1802,11 @@ namespace CareTogether.Api.OData
         )
         {
             var allReferralsInfo = (
-                familyInfo.PartneringFamilyInfo?.ClosedReferrals ?? []
+                familyInfo.PartneringFamilyInfo?.ClosedV1Cases ?? []
             ).AddRange(
-                familyInfo.PartneringFamilyInfo?.OpenReferral == null
+                familyInfo.PartneringFamilyInfo?.OpenV1Case == null
                     ? []
-                    : new[] { familyInfo.PartneringFamilyInfo.OpenReferral }
+                    : new[] { familyInfo.PartneringFamilyInfo.OpenV1Case }
             );
             return allReferralsInfo.SelectMany(referralInfo =>
             {
@@ -1844,11 +1844,11 @@ namespace CareTogether.Api.OData
         )
         {
             var allReferralsInfo = (
-                familyInfo.PartneringFamilyInfo?.ClosedReferrals ?? []
+                familyInfo.PartneringFamilyInfo?.ClosedV1Cases ?? []
             ).AddRange(
-                familyInfo.PartneringFamilyInfo?.OpenReferral == null
+                familyInfo.PartneringFamilyInfo?.OpenV1Case == null
                     ? []
-                    : new[] { familyInfo.PartneringFamilyInfo.OpenReferral }
+                    : new[] { familyInfo.PartneringFamilyInfo.OpenV1Case }
             );
             return allReferralsInfo.SelectMany(referralInfo =>
             {

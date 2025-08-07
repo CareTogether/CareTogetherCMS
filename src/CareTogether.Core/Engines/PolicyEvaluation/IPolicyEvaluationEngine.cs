@@ -7,7 +7,7 @@ using CareTogether.Resources;
 using CareTogether.Resources.Approvals;
 using CareTogether.Resources.Directory;
 using CareTogether.Resources.Policies;
-using CareTogether.Resources.Referrals;
+using CareTogether.Resources.V1Cases;
 using Timelines;
 
 namespace CareTogether.Engines.PolicyEvaluation
@@ -337,7 +337,7 @@ namespace CareTogether.Engines.PolicyEvaluation
         Denied = 6,
     };
 
-    public sealed record ReferralStatus(
+    public sealed record V1CaseStatus(
         ImmutableList<string> MissingIntakeRequirements,
         ImmutableList<string> MissingCustomFields,
         ImmutableDictionary<Guid, ArrangementStatus> IndividualArrangements
@@ -388,11 +388,11 @@ namespace CareTogether.Engines.PolicyEvaluation
             ImmutableDictionary<Guid, ImmutableList<RoleRemoval>> individualRoleRemovals
         );
 
-        Task<ReferralStatus> CalculateReferralStatusAsync(
+        Task<V1CaseStatus> CalculateV1CaseStatusAsync(
             Guid organizationId,
             Guid locationId,
             Family family,
-            Resources.Referrals.ReferralEntry referralEntry
+            Resources.V1Cases.V1CaseEntry v1CaseEntry
         );
     }
 }

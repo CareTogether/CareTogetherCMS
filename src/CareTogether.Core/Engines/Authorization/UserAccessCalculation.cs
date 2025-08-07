@@ -12,7 +12,7 @@ using CareTogether.Resources.Communities;
 using CareTogether.Resources.Directory;
 using CareTogether.Resources.Notes;
 using CareTogether.Resources.Policies;
-using CareTogether.Resources.Referrals;
+using CareTogether.Resources.V1Cases;
 using Nito.AsyncEx;
 
 namespace CareTogether.Engines.Authorization
@@ -21,21 +21,21 @@ namespace CareTogether.Engines.Authorization
     {
         private readonly IPoliciesResource policiesResource;
         private readonly IDirectoryResource directoryResource;
-        private readonly IReferralsResource referralsResource;
+        private readonly IV1CasesResource v1CasesResource;
         private readonly IApprovalsResource approvalsResource;
         private readonly ICommunitiesResource communitiesResource;
 
         public UserAccessCalculation(
             IPoliciesResource policiesResource,
             IDirectoryResource directoryResource,
-            IReferralsResource referralsResource,
+            IV1CasesResource v1CasesResource,
             IApprovalsResource approvalsResource,
             ICommunitiesResource communitiesResource
         )
         {
             this.policiesResource = policiesResource;
             this.directoryResource = directoryResource;
-            this.referralsResource = referralsResource;
+            this.v1CasesResource = v1CasesResource;
             this.approvalsResource = approvalsResource;
             this.communitiesResource = communitiesResource;
         }
@@ -92,18 +92,18 @@ namespace CareTogether.Engines.Authorization
                     familyId.Value
                 ) != null;
 
-            // Look up the referrals info for both the user's family and the target family.
-            //TODO: This could be optimized to find only the user family's referrals or the target family's referrals.
-            var referrals = await referralsResource.ListReferralsAsync(organizationId, locationId);
-            var userFamilyReferrals = referrals
-                .Where(referral => referral.FamilyId == userFamily?.Id)
+            // Look up the v1 cases info for both the user's family and the target family.
+            //TODO: This could be optimized to find only the user family's v1 cases or the target family's v1 cases.
+            var v1Cases = await v1CasesResource.ListV1CasessAsync(organizationId, locationId);
+            var userFamilyV1Cases = v1Cases
+                .Where(v1Case => v1Case.FamilyId == userFamily?.Id)
                 .ToImmutableList();
-            var targetFamilyReferrals = referrals
-                .Where(referral => referral.FamilyId == targetFamily?.Id)
+            var targetFamilyV1Cases = v1Cases
+                .Where(v1Case => v1Case.FamilyId == targetFamily?.Id)
                 .ToImmutableList();
-            var assignedReferrals = referrals
-                .Where(referral =>
-                    referral.Arrangements.Any(arrangement =>
+            var assignedV1Cases = v1Cases
+                .Where(v1Case =>
+                    v1Case.Arrangements.Any(arrangement =>
                         arrangement.Value.FamilyVolunteerAssignments.Exists(assignment =>
                             assignment.FamilyId == userFamily?.Id
                         )
@@ -114,9 +114,9 @@ namespace CareTogether.Engines.Authorization
                 )
                 .ToImmutableList();
 
-            var targetFamilyAssignments = referrals
-                .Where(referral =>
-                    referral.Arrangements.Any(arrangement =>
+            var targetFamilyAssignments = v1Cases
+                .Where(v1Case =>
+                    v1Case.Arrangements.Any(arrangement =>
                         arrangement.Value.FamilyVolunteerAssignments.Exists(assignment =>
                             assignment.FamilyId == targetFamily?.Id
                         )
@@ -173,9 +173,9 @@ namespace CareTogether.Engines.Authorization
                         userFamily,
                         targetFamily,
                         targetFamilyIsVolunteerFamily,
-                        userFamilyReferrals,
-                        targetFamilyReferrals,
-                        assignedReferrals,
+                        userFamilyV1Cases,
+                        targetFamilyV1Cases,
+                        assignedV1Cases,
                         targetFamilyAssignments,
                         userFamilyCommunities,
                         targetFamilyCommunities,
@@ -197,10 +197,10 @@ namespace CareTogether.Engines.Authorization
             Family? userFamily,
             Family? targetFamily,
             bool targetFamilyIsVolunteerFamily,
-            ImmutableList<Resources.Referrals.ReferralEntry> userFamilyReferrals,
-            ImmutableList<Resources.Referrals.ReferralEntry> targetFamilyReferrals,
-            ImmutableList<Resources.Referrals.ReferralEntry> assignedReferrals,
-            ImmutableList<Resources.Referrals.ReferralEntry> targetFamilyAssignedReferrals,
+            ImmutableList<Resources.V1Cases.V1CaseEntry> userFamilyV1Cases,
+            ImmutableList<Resources.V1Cases.V1CaseEntry> targetFamilyV1Cases,
+            ImmutableList<Resources.V1Cases.V1CaseEntry> assignedV1Cases,
+            ImmutableList<Resources.V1Cases.V1CaseEntry> targetFamilyAssignedV1Cases,
             ImmutableList<Guid> userFamilyCommunities,
             ImmutableList<Guid> targetFamilyCommunities,
             ImmutableList<(Guid Id, string CommunityRole)> userCommunityRoleAssignments,
@@ -224,7 +224,7 @@ namespace CareTogether.Engines.Authorization
                 {
                     AllPartneringFamiliesAuthorizationContext => true,
                     FamilyAuthorizationContext => targetFamily != null
-                        && !targetFamilyReferrals.IsEmpty,
+                        && !targetFamilyV1Cases.IsEmpty,
                     _ => false,
                 },
                 //TODO: Should the following be restricted so only the assigned individual, or in the case of a family assignment,
@@ -232,12 +232,12 @@ namespace CareTogether.Engines.Authorization
                 AssignedFunctionsInReferralPartneringFamilyPermissionContext c => context
                     is FamilyAuthorizationContext
                     && targetFamily != null
-                    && targetFamilyReferrals.Any(referral => //TODO: The individual logic blocks here can be extracted to helper methods.
+                    && targetFamilyV1Cases.Any(v1Case => //TODO: The individual logic blocks here can be extracted to helper methods.
                         (
                             c.WhenReferralIsOpen == null
-                            || c.WhenReferralIsOpen == (referral.ClosedAtUtc == null)
+                            || c.WhenReferralIsOpen == (v1Case.ClosedAtUtc == null)
                         )
-                        && referral.Arrangements.Any(arrangement =>
+                        && v1Case.Arrangements.Any(arrangement =>
                             arrangement.Value.FamilyVolunteerAssignments.Any(fva =>
                                 fva.FamilyId == userFamily?.Id
                                 && (
@@ -257,12 +257,12 @@ namespace CareTogether.Engines.Authorization
                 OwnReferralAssigneeFamiliesPermissionContext c => context
                     is FamilyAuthorizationContext
                     && targetFamily != null
-                    && userFamilyReferrals.Any(referral =>
+                    && userFamilyV1Cases.Any(v1Case =>
                         (
                             c.WhenReferralIsOpen == null
-                            || c.WhenReferralIsOpen == (referral.ClosedAtUtc == null)
+                            || c.WhenReferralIsOpen == (v1Case.ClosedAtUtc == null)
                         )
-                        && referral.Arrangements.Any(arrangement =>
+                        && v1Case.Arrangements.Any(arrangement =>
                             arrangement.Value.FamilyVolunteerAssignments.Any(fva =>
                                 fva.FamilyId == targetFamily.Id
                                 && (
@@ -282,12 +282,12 @@ namespace CareTogether.Engines.Authorization
                 AssignedFunctionsInReferralCoAssigneeFamiliesPermissionContext c => context
                     is FamilyAuthorizationContext
                     && targetFamily != null
-                    && assignedReferrals.Any(referral =>
+                    && assignedV1Cases.Any(v1Case =>
                         (
                             c.WhenReferralIsOpen == null
-                            || c.WhenReferralIsOpen == (referral.ClosedAtUtc == null)
+                            || c.WhenReferralIsOpen == (v1Case.ClosedAtUtc == null)
                         )
-                        && referral.Arrangements.Any(arrangement =>
+                        && v1Case.Arrangements.Any(arrangement =>
                             arrangement.Value.FamilyVolunteerAssignments.Any(fva =>
                                 fva.FamilyId == userFamily?.Id
                                 && (
@@ -303,7 +303,7 @@ namespace CareTogether.Engines.Authorization
                                 )
                             )
                         )
-                        && referral.Arrangements.Any(arrangement =>
+                        && v1Case.Arrangements.Any(arrangement =>
                             arrangement.Value.FamilyVolunteerAssignments.Any(fva =>
                                 fva.FamilyId == targetFamily.Id
                                 && (
@@ -353,8 +353,8 @@ namespace CareTogether.Engines.Authorization
                                 )
                                 .Any()
                         )
-                        && targetFamilyReferrals.Any(referral =>
-                            referral.Arrangements.Any(arrangement =>
+                        && targetFamilyV1Cases.Any(v1Case =>
+                            v1Case.Arrangements.Any(arrangement =>
                                 arrangement.Value.FamilyVolunteerAssignments.Any(fva =>
                                     (
                                         c.WhenOwnCommunityRoleIsIn == null
@@ -397,9 +397,9 @@ namespace CareTogether.Engines.Authorization
                     context is FamilyAuthorizationContext
                         && !userFamilyCommunities.IsEmpty
                         && targetFamily != null
-                        && targetFamilyAssignedReferrals
-                            .SelectMany(referral =>
-                                referral.Arrangements.Select(arrangement =>
+                        && targetFamilyAssignedV1Cases
+                            .SelectMany(v1Case =>
+                                v1Case.Arrangements.Select(arrangement =>
                                     arrangement.Value.FamilyVolunteerAssignments.Any(fva =>
                                         (
                                             c.WhenOwnCommunityRoleIsIn == null

@@ -2,7 +2,7 @@
 using System.Collections.Immutable;
 using CareTogether.Engines.PolicyEvaluation;
 using CareTogether.Resources.Policies;
-using CareTogether.Resources.Referrals;
+using CareTogether.Resources.V1Cases;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace CareTogether.Core.Test.ReferralCalculationTests
@@ -23,7 +23,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
         [TestMethod]
         public void TestNoRequirementsCompleted()
         {
-            var result = ReferralCalculations.CalculateMissingSetupRequirements(
+            var result = V1CaseCalculations.CalculateMissingSetupRequirements(
                 SetupRequirements("A", "B", "C"),
                 new Engines.PolicyEvaluation.ArrangementEntry(
                     "",
@@ -51,7 +51,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
         [TestMethod]
         public void TestPartialRequirementsCompleted()
         {
-            var result = ReferralCalculations.CalculateMissingSetupRequirements(
+            var result = V1CaseCalculations.CalculateMissingSetupRequirements(
                 SetupRequirements("A", "B", "C"),
                 new Engines.PolicyEvaluation.ArrangementEntry(
                     "",
@@ -77,7 +77,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
         [TestMethod]
         public void TestAllRequirementsCompleted()
         {
-            var result = ReferralCalculations.CalculateMissingSetupRequirements(
+            var result = V1CaseCalculations.CalculateMissingSetupRequirements(
                 SetupRequirements("A", "B", "C"),
                 new Engines.PolicyEvaluation.ArrangementEntry(
                     "",

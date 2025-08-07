@@ -8,7 +8,7 @@ using CareTogether.Resources.Approvals;
 using CareTogether.Resources.Communities;
 using CareTogether.Resources.Directory;
 using CareTogether.Resources.Notes;
-using CareTogether.Resources.Referrals;
+using CareTogether.Resources.V1Cases;
 using JsonPolymorph;
 
 namespace CareTogether.Engines.Authorization
@@ -43,11 +43,11 @@ namespace CareTogether.Engines.Authorization
             PersonCommand command
         );
 
-        Task<bool> AuthorizeReferralCommandAsync(
+        Task<bool> AuthorizeV1CaseCommandAsync(
             Guid organizationId,
             Guid locationId,
             ClaimsPrincipal user,
-            ReferralCommand command
+            V1CaseCommand command
         );
 
         Task<bool> AuthorizeArrangementsCommandAsync(

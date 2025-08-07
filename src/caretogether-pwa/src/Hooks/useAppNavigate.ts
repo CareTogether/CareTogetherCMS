@@ -7,7 +7,7 @@ export interface AppNavigate {
   inbox: () => void;
   family: (
     familyId: string,
-    referralId?: string,
+    v1CaseId?: string,
     arrangementId?: string,
     options?: { replace?: boolean }
   ) => void;
@@ -48,13 +48,13 @@ export function useAppNavigate(): AppNavigate {
     inbox: () => inContext('inbox'),
     family: (
       familyId: string,
-      referralId?: string,
+      v1CaseId?: string,
       arrangement?: string,
       options?: { replace?: boolean }
     ) => {
       const searchParams = new URLSearchParams();
-      if (referralId) {
-        searchParams.append('referralId', referralId);
+      if (v1CaseId) {
+        searchParams.append('v1CaseId', v1CaseId);
       }
       if (arrangement) {
         searchParams.append('arrangementId', arrangement);
