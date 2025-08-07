@@ -29,9 +29,8 @@ export class GlobalErrorBoundary extends React.Component<
         errorInfo: JSON.stringify(errorInfo),
       },
     });
-    posthog.capture('GlobalErrorBoundary', {
-      error: error,
-      errorInfo: errorInfo,
+    posthog.captureException(error, {
+      errorInfo,
     });
   }
 
