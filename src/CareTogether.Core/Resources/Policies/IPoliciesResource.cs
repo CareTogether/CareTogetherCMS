@@ -130,8 +130,10 @@ namespace CareTogether.Resources.Policies
         string[] ApprovalRoles
     );
 
+    public sealed record RequirementDefinition(string ActionName, bool IsRequired);
+
     public sealed record ReferralPolicy(
-        ImmutableList<string> RequiredIntakeActionNames,
+        ImmutableList<RequirementDefinition> IntakeRequirements,
         ImmutableList<CustomField> CustomFields,
         ImmutableList<ArrangementPolicy> ArrangementPolicies,
         ImmutableList<FunctionPolicy>? FunctionPolicies
@@ -161,9 +163,9 @@ namespace CareTogether.Resources.Policies
         string ArrangementType,
         ChildInvolvement ChildInvolvement,
         ImmutableList<ArrangementFunction> ArrangementFunctions,
-        ImmutableList<string> RequiredSetupActionNames,
+        ImmutableList<RequirementDefinition> RequiredSetupActions,
         ImmutableList<MonitoringRequirement> RequiredMonitoringActions,
-        ImmutableList<string> RequiredCloseoutActionNames
+        ImmutableList<RequirementDefinition> RequiredCloseoutActionNames
     );
 
     public enum ChildInvolvement
@@ -173,7 +175,10 @@ namespace CareTogether.Resources.Policies
         NoChildInvolvement,
     };
 
-    public sealed record MonitoringRequirement(string ActionName, RecurrencePolicy Recurrence);
+    public sealed record MonitoringRequirement(
+        RequirementDefinition Action,
+        RecurrencePolicy Recurrence
+    );
 
     public enum FunctionRequirement
     {
@@ -193,9 +198,9 @@ namespace CareTogether.Resources.Policies
 
     public sealed record ArrangementFunctionVariant(
         string VariantName,
-        ImmutableList<string> RequiredSetupActionNames,
+        ImmutableList<RequirementDefinition> RequiredSetupActionNames,
         ImmutableList<MonitoringRequirement> RequiredMonitoringActions,
-        ImmutableList<string> RequiredCloseoutActionNames
+        ImmutableList<RequirementDefinition> RequiredCloseoutActionNames
     );
 
     [JsonHierarchyBase]

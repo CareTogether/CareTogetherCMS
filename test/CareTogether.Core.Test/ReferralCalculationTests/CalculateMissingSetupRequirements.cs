@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Immutable;
+using System.Linq;
 using CareTogether.Engines.PolicyEvaluation;
 using CareTogether.Resources.Policies;
 using CareTogether.Resources.Referrals;
@@ -10,21 +11,27 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
     [TestClass]
     public class CalculateMissingSetupRequirements
     {
-        public static ArrangementPolicy SetupRequirements(params string[] values) =>
+        private static readonly RequirementDefinition RequirementA = new RequirementDefinition("A", true);
+        private static readonly RequirementDefinition RequirementB = new RequirementDefinition("B", true);
+        private static readonly RequirementDefinition RequirementC = new RequirementDefinition("C", true);
+
+        public static ArrangementPolicy SetupRequirements(params (string, bool)[] values) =>
             new ArrangementPolicy(
                 string.Empty,
                 ChildInvolvement.ChildHousing,
                 ImmutableList<ArrangementFunction>.Empty,
-                values.ToImmutableList(),
+                values
+                    .Select(value => new RequirementDefinition(value.Item1, value.Item2))
+                    .ToImmutableList(),
                 ImmutableList<MonitoringRequirement>.Empty,
-                ImmutableList<string>.Empty
+                ImmutableList<RequirementDefinition>.Empty
             );
 
         [TestMethod]
         public void TestNoRequirementsCompleted()
         {
             var result = ReferralCalculations.CalculateMissingSetupRequirements(
-                SetupRequirements("A", "B", "C"),
+                SetupRequirements(("A", true), ("B", true), ("C", true)),
                 new Engines.PolicyEvaluation.ArrangementEntry(
                     "",
                     StartedAt: null,
@@ -42,9 +49,9 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
 
             AssertEx.SequenceIs(
                 result,
-                new MissingArrangementRequirement(null, null, null, null, "A", null, null),
-                new MissingArrangementRequirement(null, null, null, null, "B", null, null),
-                new MissingArrangementRequirement(null, null, null, null, "C", null, null)
+                new MissingArrangementRequirement(null, null, null, null, RequirementA, null, null),
+                new MissingArrangementRequirement(null, null, null, null, RequirementB, null, null),
+                new MissingArrangementRequirement(null, null, null, null, RequirementC, null, null)
             );
         }
 
@@ -52,7 +59,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
         public void TestPartialRequirementsCompleted()
         {
             var result = ReferralCalculations.CalculateMissingSetupRequirements(
-                SetupRequirements("A", "B", "C"),
+                SetupRequirements(("A", true), ("B", true), ("C", true)),
                 new Engines.PolicyEvaluation.ArrangementEntry(
                     "",
                     StartedAt: null,
@@ -70,7 +77,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
 
             AssertEx.SequenceIs(
                 result,
-                new MissingArrangementRequirement(null, null, null, null, "C", null, null)
+                new MissingArrangementRequirement(null, null, null, null, RequirementC, null, null)
             );
         }
 
@@ -78,7 +85,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
         public void TestAllRequirementsCompleted()
         {
             var result = ReferralCalculations.CalculateMissingSetupRequirements(
-                SetupRequirements("A", "B", "C"),
+                SetupRequirements(("A", true), ("B", true), ("C", true)),
                 new Engines.PolicyEvaluation.ArrangementEntry(
                     "",
                     StartedAt: null,
