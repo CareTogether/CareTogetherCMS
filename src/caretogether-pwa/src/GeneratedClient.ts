@@ -2437,10 +2437,12 @@ export enum CustomFieldValidation {
 }
 
 export class ReferralPolicy implements IReferralPolicy {
-    intakeRequirements?: RequirementDefinition[];
+    intakeRequirements_PRE_MIGRATION?: RequirementDefinition[];
+    requiredIntakeActionNames?: string[];
     customFields?: CustomField[];
     arrangementPolicies?: ArrangementPolicy[];
     functionPolicies?: FunctionPolicy[] | undefined;
+    intakeRequirements?: RequirementDefinition[] | undefined;
 
     constructor(data?: IReferralPolicy) {
         if (data) {
@@ -2453,10 +2455,15 @@ export class ReferralPolicy implements IReferralPolicy {
 
     init(_data?: any) {
         if (_data) {
-            if (Array.isArray(_data["intakeRequirements"])) {
-                this.intakeRequirements = [] as any;
-                for (let item of _data["intakeRequirements"])
-                    this.intakeRequirements!.push(RequirementDefinition.fromJS(item));
+            if (Array.isArray(_data["intakeRequirements_PRE_MIGRATION"])) {
+                this.intakeRequirements_PRE_MIGRATION = [] as any;
+                for (let item of _data["intakeRequirements_PRE_MIGRATION"])
+                    this.intakeRequirements_PRE_MIGRATION!.push(RequirementDefinition.fromJS(item));
+            }
+            if (Array.isArray(_data["requiredIntakeActionNames"])) {
+                this.requiredIntakeActionNames = [] as any;
+                for (let item of _data["requiredIntakeActionNames"])
+                    this.requiredIntakeActionNames!.push(item);
             }
             if (Array.isArray(_data["customFields"])) {
                 this.customFields = [] as any;
@@ -2473,6 +2480,11 @@ export class ReferralPolicy implements IReferralPolicy {
                 for (let item of _data["functionPolicies"])
                     this.functionPolicies!.push(FunctionPolicy.fromJS(item));
             }
+            if (Array.isArray(_data["intakeRequirements"])) {
+                this.intakeRequirements = [] as any;
+                for (let item of _data["intakeRequirements"])
+                    this.intakeRequirements!.push(RequirementDefinition.fromJS(item));
+            }
         }
     }
 
@@ -2485,10 +2497,15 @@ export class ReferralPolicy implements IReferralPolicy {
 
     toJSON(data?: any) {
         data = typeof data === 'object' ? data : {};
-        if (Array.isArray(this.intakeRequirements)) {
-            data["intakeRequirements"] = [];
-            for (let item of this.intakeRequirements)
-                data["intakeRequirements"].push(item.toJSON());
+        if (Array.isArray(this.intakeRequirements_PRE_MIGRATION)) {
+            data["intakeRequirements_PRE_MIGRATION"] = [];
+            for (let item of this.intakeRequirements_PRE_MIGRATION)
+                data["intakeRequirements_PRE_MIGRATION"].push(item.toJSON());
+        }
+        if (Array.isArray(this.requiredIntakeActionNames)) {
+            data["requiredIntakeActionNames"] = [];
+            for (let item of this.requiredIntakeActionNames)
+                data["requiredIntakeActionNames"].push(item);
         }
         if (Array.isArray(this.customFields)) {
             data["customFields"] = [];
@@ -2505,15 +2522,22 @@ export class ReferralPolicy implements IReferralPolicy {
             for (let item of this.functionPolicies)
                 data["functionPolicies"].push(item.toJSON());
         }
+        if (Array.isArray(this.intakeRequirements)) {
+            data["intakeRequirements"] = [];
+            for (let item of this.intakeRequirements)
+                data["intakeRequirements"].push(item.toJSON());
+        }
         return data;
     }
 }
 
 export interface IReferralPolicy {
-    intakeRequirements?: RequirementDefinition[];
+    intakeRequirements_PRE_MIGRATION?: RequirementDefinition[];
+    requiredIntakeActionNames?: string[];
     customFields?: CustomField[];
     arrangementPolicies?: ArrangementPolicy[];
     functionPolicies?: FunctionPolicy[] | undefined;
+    intakeRequirements?: RequirementDefinition[] | undefined;
 }
 
 export class RequirementDefinition implements IRequirementDefinition {
@@ -2557,12 +2581,18 @@ export interface IRequirementDefinition {
 }
 
 export class ArrangementPolicy implements IArrangementPolicy {
+    requiredSetupActions_PRE_MIGRATION?: RequirementDefinition[];
+    requiredMonitoringActions_PRE_MIGRATION?: MonitoringRequirement[];
+    requiredCloseoutActionNames_PRE_MIGRATION?: RequirementDefinition[];
     arrangementType?: string;
     childInvolvement?: ChildInvolvement;
     arrangementFunctions?: ArrangementFunction[];
-    requiredSetupActions?: RequirementDefinition[];
-    requiredMonitoringActions?: MonitoringRequirement[];
-    requiredCloseoutActionNames?: RequirementDefinition[];
+    requiredSetupActionNames?: string[];
+    requiredMonitoringActions?: MonitoringRequirementOld[];
+    requiredCloseoutActionNames?: string[];
+    requiredSetupActions?: RequirementDefinition[] | undefined;
+    requiredMonitoringActionsNew?: MonitoringRequirement[] | undefined;
+    requiredCloseoutActions?: RequirementDefinition[] | undefined;
 
     constructor(data?: IArrangementPolicy) {
         if (data) {
@@ -2575,6 +2605,21 @@ export class ArrangementPolicy implements IArrangementPolicy {
 
     init(_data?: any) {
         if (_data) {
+            if (Array.isArray(_data["requiredSetupActions_PRE_MIGRATION"])) {
+                this.requiredSetupActions_PRE_MIGRATION = [] as any;
+                for (let item of _data["requiredSetupActions_PRE_MIGRATION"])
+                    this.requiredSetupActions_PRE_MIGRATION!.push(RequirementDefinition.fromJS(item));
+            }
+            if (Array.isArray(_data["requiredMonitoringActions_PRE_MIGRATION"])) {
+                this.requiredMonitoringActions_PRE_MIGRATION = [] as any;
+                for (let item of _data["requiredMonitoringActions_PRE_MIGRATION"])
+                    this.requiredMonitoringActions_PRE_MIGRATION!.push(MonitoringRequirement.fromJS(item));
+            }
+            if (Array.isArray(_data["requiredCloseoutActionNames_PRE_MIGRATION"])) {
+                this.requiredCloseoutActionNames_PRE_MIGRATION = [] as any;
+                for (let item of _data["requiredCloseoutActionNames_PRE_MIGRATION"])
+                    this.requiredCloseoutActionNames_PRE_MIGRATION!.push(RequirementDefinition.fromJS(item));
+            }
             this.arrangementType = _data["arrangementType"];
             this.childInvolvement = _data["childInvolvement"];
             if (Array.isArray(_data["arrangementFunctions"])) {
@@ -2582,20 +2627,35 @@ export class ArrangementPolicy implements IArrangementPolicy {
                 for (let item of _data["arrangementFunctions"])
                     this.arrangementFunctions!.push(ArrangementFunction.fromJS(item));
             }
+            if (Array.isArray(_data["requiredSetupActionNames"])) {
+                this.requiredSetupActionNames = [] as any;
+                for (let item of _data["requiredSetupActionNames"])
+                    this.requiredSetupActionNames!.push(item);
+            }
+            if (Array.isArray(_data["requiredMonitoringActions"])) {
+                this.requiredMonitoringActions = [] as any;
+                for (let item of _data["requiredMonitoringActions"])
+                    this.requiredMonitoringActions!.push(MonitoringRequirementOld.fromJS(item));
+            }
+            if (Array.isArray(_data["requiredCloseoutActionNames"])) {
+                this.requiredCloseoutActionNames = [] as any;
+                for (let item of _data["requiredCloseoutActionNames"])
+                    this.requiredCloseoutActionNames!.push(item);
+            }
             if (Array.isArray(_data["requiredSetupActions"])) {
                 this.requiredSetupActions = [] as any;
                 for (let item of _data["requiredSetupActions"])
                     this.requiredSetupActions!.push(RequirementDefinition.fromJS(item));
             }
-            if (Array.isArray(_data["requiredMonitoringActions"])) {
-                this.requiredMonitoringActions = [] as any;
-                for (let item of _data["requiredMonitoringActions"])
-                    this.requiredMonitoringActions!.push(MonitoringRequirement.fromJS(item));
+            if (Array.isArray(_data["requiredMonitoringActionsNew"])) {
+                this.requiredMonitoringActionsNew = [] as any;
+                for (let item of _data["requiredMonitoringActionsNew"])
+                    this.requiredMonitoringActionsNew!.push(MonitoringRequirement.fromJS(item));
             }
-            if (Array.isArray(_data["requiredCloseoutActionNames"])) {
-                this.requiredCloseoutActionNames = [] as any;
-                for (let item of _data["requiredCloseoutActionNames"])
-                    this.requiredCloseoutActionNames!.push(RequirementDefinition.fromJS(item));
+            if (Array.isArray(_data["requiredCloseoutActions"])) {
+                this.requiredCloseoutActions = [] as any;
+                for (let item of _data["requiredCloseoutActions"])
+                    this.requiredCloseoutActions!.push(RequirementDefinition.fromJS(item));
             }
         }
     }
@@ -2609,6 +2669,21 @@ export class ArrangementPolicy implements IArrangementPolicy {
 
     toJSON(data?: any) {
         data = typeof data === 'object' ? data : {};
+        if (Array.isArray(this.requiredSetupActions_PRE_MIGRATION)) {
+            data["requiredSetupActions_PRE_MIGRATION"] = [];
+            for (let item of this.requiredSetupActions_PRE_MIGRATION)
+                data["requiredSetupActions_PRE_MIGRATION"].push(item.toJSON());
+        }
+        if (Array.isArray(this.requiredMonitoringActions_PRE_MIGRATION)) {
+            data["requiredMonitoringActions_PRE_MIGRATION"] = [];
+            for (let item of this.requiredMonitoringActions_PRE_MIGRATION)
+                data["requiredMonitoringActions_PRE_MIGRATION"].push(item.toJSON());
+        }
+        if (Array.isArray(this.requiredCloseoutActionNames_PRE_MIGRATION)) {
+            data["requiredCloseoutActionNames_PRE_MIGRATION"] = [];
+            for (let item of this.requiredCloseoutActionNames_PRE_MIGRATION)
+                data["requiredCloseoutActionNames_PRE_MIGRATION"].push(item.toJSON());
+        }
         data["arrangementType"] = this.arrangementType;
         data["childInvolvement"] = this.childInvolvement;
         if (Array.isArray(this.arrangementFunctions)) {
@@ -2616,10 +2691,10 @@ export class ArrangementPolicy implements IArrangementPolicy {
             for (let item of this.arrangementFunctions)
                 data["arrangementFunctions"].push(item.toJSON());
         }
-        if (Array.isArray(this.requiredSetupActions)) {
-            data["requiredSetupActions"] = [];
-            for (let item of this.requiredSetupActions)
-                data["requiredSetupActions"].push(item.toJSON());
+        if (Array.isArray(this.requiredSetupActionNames)) {
+            data["requiredSetupActionNames"] = [];
+            for (let item of this.requiredSetupActionNames)
+                data["requiredSetupActionNames"].push(item);
         }
         if (Array.isArray(this.requiredMonitoringActions)) {
             data["requiredMonitoringActions"] = [];
@@ -2629,191 +2704,40 @@ export class ArrangementPolicy implements IArrangementPolicy {
         if (Array.isArray(this.requiredCloseoutActionNames)) {
             data["requiredCloseoutActionNames"] = [];
             for (let item of this.requiredCloseoutActionNames)
-                data["requiredCloseoutActionNames"].push(item.toJSON());
+                data["requiredCloseoutActionNames"].push(item);
+        }
+        if (Array.isArray(this.requiredSetupActions)) {
+            data["requiredSetupActions"] = [];
+            for (let item of this.requiredSetupActions)
+                data["requiredSetupActions"].push(item.toJSON());
+        }
+        if (Array.isArray(this.requiredMonitoringActionsNew)) {
+            data["requiredMonitoringActionsNew"] = [];
+            for (let item of this.requiredMonitoringActionsNew)
+                data["requiredMonitoringActionsNew"].push(item.toJSON());
+        }
+        if (Array.isArray(this.requiredCloseoutActions)) {
+            data["requiredCloseoutActions"] = [];
+            for (let item of this.requiredCloseoutActions)
+                data["requiredCloseoutActions"].push(item.toJSON());
         }
         return data;
     }
 }
 
 export interface IArrangementPolicy {
+    requiredSetupActions_PRE_MIGRATION?: RequirementDefinition[];
+    requiredMonitoringActions_PRE_MIGRATION?: MonitoringRequirement[];
+    requiredCloseoutActionNames_PRE_MIGRATION?: RequirementDefinition[];
     arrangementType?: string;
     childInvolvement?: ChildInvolvement;
     arrangementFunctions?: ArrangementFunction[];
-    requiredSetupActions?: RequirementDefinition[];
-    requiredMonitoringActions?: MonitoringRequirement[];
-    requiredCloseoutActionNames?: RequirementDefinition[];
-}
-
-export enum ChildInvolvement {
-    ChildHousing = 0,
-    DaytimeChildCareOnly = 1,
-    NoChildInvolvement = 2,
-}
-
-export class ArrangementFunction implements IArrangementFunction {
-    functionName?: string;
-    requirement?: FunctionRequirement;
-    eligibleIndividualVolunteerRoles?: string[] | undefined;
-    eligibleVolunteerFamilyRoles?: string[] | undefined;
-    eligiblePeople?: string[] | undefined;
-    variants?: ArrangementFunctionVariant[];
-
-    constructor(data?: IArrangementFunction) {
-        if (data) {
-            for (var property in data) {
-                if (data.hasOwnProperty(property))
-                    (<any>this)[property] = (<any>data)[property];
-            }
-        }
-    }
-
-    init(_data?: any) {
-        if (_data) {
-            this.functionName = _data["functionName"];
-            this.requirement = _data["requirement"];
-            if (Array.isArray(_data["eligibleIndividualVolunteerRoles"])) {
-                this.eligibleIndividualVolunteerRoles = [] as any;
-                for (let item of _data["eligibleIndividualVolunteerRoles"])
-                    this.eligibleIndividualVolunteerRoles!.push(item);
-            }
-            if (Array.isArray(_data["eligibleVolunteerFamilyRoles"])) {
-                this.eligibleVolunteerFamilyRoles = [] as any;
-                for (let item of _data["eligibleVolunteerFamilyRoles"])
-                    this.eligibleVolunteerFamilyRoles!.push(item);
-            }
-            if (Array.isArray(_data["eligiblePeople"])) {
-                this.eligiblePeople = [] as any;
-                for (let item of _data["eligiblePeople"])
-                    this.eligiblePeople!.push(item);
-            }
-            if (Array.isArray(_data["variants"])) {
-                this.variants = [] as any;
-                for (let item of _data["variants"])
-                    this.variants!.push(ArrangementFunctionVariant.fromJS(item));
-            }
-        }
-    }
-
-    static fromJS(data: any): ArrangementFunction {
-        data = typeof data === 'object' ? data : {};
-        let result = new ArrangementFunction();
-        result.init(data);
-        return result;
-    }
-
-    toJSON(data?: any) {
-        data = typeof data === 'object' ? data : {};
-        data["functionName"] = this.functionName;
-        data["requirement"] = this.requirement;
-        if (Array.isArray(this.eligibleIndividualVolunteerRoles)) {
-            data["eligibleIndividualVolunteerRoles"] = [];
-            for (let item of this.eligibleIndividualVolunteerRoles)
-                data["eligibleIndividualVolunteerRoles"].push(item);
-        }
-        if (Array.isArray(this.eligibleVolunteerFamilyRoles)) {
-            data["eligibleVolunteerFamilyRoles"] = [];
-            for (let item of this.eligibleVolunteerFamilyRoles)
-                data["eligibleVolunteerFamilyRoles"].push(item);
-        }
-        if (Array.isArray(this.eligiblePeople)) {
-            data["eligiblePeople"] = [];
-            for (let item of this.eligiblePeople)
-                data["eligiblePeople"].push(item);
-        }
-        if (Array.isArray(this.variants)) {
-            data["variants"] = [];
-            for (let item of this.variants)
-                data["variants"].push(item.toJSON());
-        }
-        return data;
-    }
-}
-
-export interface IArrangementFunction {
-    functionName?: string;
-    requirement?: FunctionRequirement;
-    eligibleIndividualVolunteerRoles?: string[] | undefined;
-    eligibleVolunteerFamilyRoles?: string[] | undefined;
-    eligiblePeople?: string[] | undefined;
-    variants?: ArrangementFunctionVariant[];
-}
-
-export enum FunctionRequirement {
-    ZeroOrMore = 0,
-    ExactlyOne = 1,
-    OneOrMore = 2,
-}
-
-export class ArrangementFunctionVariant implements IArrangementFunctionVariant {
-    variantName?: string;
-    requiredSetupActionNames?: RequirementDefinition[];
-    requiredMonitoringActions?: MonitoringRequirement[];
-    requiredCloseoutActionNames?: RequirementDefinition[];
-
-    constructor(data?: IArrangementFunctionVariant) {
-        if (data) {
-            for (var property in data) {
-                if (data.hasOwnProperty(property))
-                    (<any>this)[property] = (<any>data)[property];
-            }
-        }
-    }
-
-    init(_data?: any) {
-        if (_data) {
-            this.variantName = _data["variantName"];
-            if (Array.isArray(_data["requiredSetupActionNames"])) {
-                this.requiredSetupActionNames = [] as any;
-                for (let item of _data["requiredSetupActionNames"])
-                    this.requiredSetupActionNames!.push(RequirementDefinition.fromJS(item));
-            }
-            if (Array.isArray(_data["requiredMonitoringActions"])) {
-                this.requiredMonitoringActions = [] as any;
-                for (let item of _data["requiredMonitoringActions"])
-                    this.requiredMonitoringActions!.push(MonitoringRequirement.fromJS(item));
-            }
-            if (Array.isArray(_data["requiredCloseoutActionNames"])) {
-                this.requiredCloseoutActionNames = [] as any;
-                for (let item of _data["requiredCloseoutActionNames"])
-                    this.requiredCloseoutActionNames!.push(RequirementDefinition.fromJS(item));
-            }
-        }
-    }
-
-    static fromJS(data: any): ArrangementFunctionVariant {
-        data = typeof data === 'object' ? data : {};
-        let result = new ArrangementFunctionVariant();
-        result.init(data);
-        return result;
-    }
-
-    toJSON(data?: any) {
-        data = typeof data === 'object' ? data : {};
-        data["variantName"] = this.variantName;
-        if (Array.isArray(this.requiredSetupActionNames)) {
-            data["requiredSetupActionNames"] = [];
-            for (let item of this.requiredSetupActionNames)
-                data["requiredSetupActionNames"].push(item.toJSON());
-        }
-        if (Array.isArray(this.requiredMonitoringActions)) {
-            data["requiredMonitoringActions"] = [];
-            for (let item of this.requiredMonitoringActions)
-                data["requiredMonitoringActions"].push(item.toJSON());
-        }
-        if (Array.isArray(this.requiredCloseoutActionNames)) {
-            data["requiredCloseoutActionNames"] = [];
-            for (let item of this.requiredCloseoutActionNames)
-                data["requiredCloseoutActionNames"].push(item.toJSON());
-        }
-        return data;
-    }
-}
-
-export interface IArrangementFunctionVariant {
-    variantName?: string;
-    requiredSetupActionNames?: RequirementDefinition[];
-    requiredMonitoringActions?: MonitoringRequirement[];
-    requiredCloseoutActionNames?: RequirementDefinition[];
+    requiredSetupActionNames?: string[];
+    requiredMonitoringActions?: MonitoringRequirementOld[];
+    requiredCloseoutActionNames?: string[];
+    requiredSetupActions?: RequirementDefinition[] | undefined;
+    requiredMonitoringActionsNew?: MonitoringRequirement[] | undefined;
+    requiredCloseoutActions?: RequirementDefinition[] | undefined;
 }
 
 export class MonitoringRequirement implements IMonitoringRequirement {
@@ -3110,6 +3034,290 @@ export class OneTimeRecurrencePolicy extends RecurrencePolicy implements IOneTim
 
 export interface IOneTimeRecurrencePolicy extends IRecurrencePolicy {
     delay?: string | undefined;
+}
+
+export enum ChildInvolvement {
+    ChildHousing = 0,
+    DaytimeChildCareOnly = 1,
+    NoChildInvolvement = 2,
+}
+
+export class ArrangementFunction implements IArrangementFunction {
+    functionName?: string;
+    requirement?: FunctionRequirement;
+    eligibleIndividualVolunteerRoles?: string[] | undefined;
+    eligibleVolunteerFamilyRoles?: string[] | undefined;
+    eligiblePeople?: string[] | undefined;
+    variants?: ArrangementFunctionVariant[];
+
+    constructor(data?: IArrangementFunction) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.functionName = _data["functionName"];
+            this.requirement = _data["requirement"];
+            if (Array.isArray(_data["eligibleIndividualVolunteerRoles"])) {
+                this.eligibleIndividualVolunteerRoles = [] as any;
+                for (let item of _data["eligibleIndividualVolunteerRoles"])
+                    this.eligibleIndividualVolunteerRoles!.push(item);
+            }
+            if (Array.isArray(_data["eligibleVolunteerFamilyRoles"])) {
+                this.eligibleVolunteerFamilyRoles = [] as any;
+                for (let item of _data["eligibleVolunteerFamilyRoles"])
+                    this.eligibleVolunteerFamilyRoles!.push(item);
+            }
+            if (Array.isArray(_data["eligiblePeople"])) {
+                this.eligiblePeople = [] as any;
+                for (let item of _data["eligiblePeople"])
+                    this.eligiblePeople!.push(item);
+            }
+            if (Array.isArray(_data["variants"])) {
+                this.variants = [] as any;
+                for (let item of _data["variants"])
+                    this.variants!.push(ArrangementFunctionVariant.fromJS(item));
+            }
+        }
+    }
+
+    static fromJS(data: any): ArrangementFunction {
+        data = typeof data === 'object' ? data : {};
+        let result = new ArrangementFunction();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["functionName"] = this.functionName;
+        data["requirement"] = this.requirement;
+        if (Array.isArray(this.eligibleIndividualVolunteerRoles)) {
+            data["eligibleIndividualVolunteerRoles"] = [];
+            for (let item of this.eligibleIndividualVolunteerRoles)
+                data["eligibleIndividualVolunteerRoles"].push(item);
+        }
+        if (Array.isArray(this.eligibleVolunteerFamilyRoles)) {
+            data["eligibleVolunteerFamilyRoles"] = [];
+            for (let item of this.eligibleVolunteerFamilyRoles)
+                data["eligibleVolunteerFamilyRoles"].push(item);
+        }
+        if (Array.isArray(this.eligiblePeople)) {
+            data["eligiblePeople"] = [];
+            for (let item of this.eligiblePeople)
+                data["eligiblePeople"].push(item);
+        }
+        if (Array.isArray(this.variants)) {
+            data["variants"] = [];
+            for (let item of this.variants)
+                data["variants"].push(item.toJSON());
+        }
+        return data;
+    }
+}
+
+export interface IArrangementFunction {
+    functionName?: string;
+    requirement?: FunctionRequirement;
+    eligibleIndividualVolunteerRoles?: string[] | undefined;
+    eligibleVolunteerFamilyRoles?: string[] | undefined;
+    eligiblePeople?: string[] | undefined;
+    variants?: ArrangementFunctionVariant[];
+}
+
+export enum FunctionRequirement {
+    ZeroOrMore = 0,
+    ExactlyOne = 1,
+    OneOrMore = 2,
+}
+
+export class ArrangementFunctionVariant implements IArrangementFunctionVariant {
+    requiredSetupActionNames_PRE_MIGRATION?: RequirementDefinition[];
+    requiredMonitoringActions_PRE_MIGRATION?: MonitoringRequirement[];
+    requiredCloseoutActionNames_PRE_MIGRATION?: RequirementDefinition[];
+    variantName?: string;
+    requiredSetupActionNames?: string[];
+    requiredMonitoringActions?: MonitoringRequirementOld[];
+    requiredCloseoutActionNames?: string[];
+    requiredSetupActions?: RequirementDefinition[] | undefined;
+    requiredMonitoringActionsNew?: MonitoringRequirement[] | undefined;
+    requiredCloseoutActions?: RequirementDefinition[] | undefined;
+
+    constructor(data?: IArrangementFunctionVariant) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            if (Array.isArray(_data["requiredSetupActionNames_PRE_MIGRATION"])) {
+                this.requiredSetupActionNames_PRE_MIGRATION = [] as any;
+                for (let item of _data["requiredSetupActionNames_PRE_MIGRATION"])
+                    this.requiredSetupActionNames_PRE_MIGRATION!.push(RequirementDefinition.fromJS(item));
+            }
+            if (Array.isArray(_data["requiredMonitoringActions_PRE_MIGRATION"])) {
+                this.requiredMonitoringActions_PRE_MIGRATION = [] as any;
+                for (let item of _data["requiredMonitoringActions_PRE_MIGRATION"])
+                    this.requiredMonitoringActions_PRE_MIGRATION!.push(MonitoringRequirement.fromJS(item));
+            }
+            if (Array.isArray(_data["requiredCloseoutActionNames_PRE_MIGRATION"])) {
+                this.requiredCloseoutActionNames_PRE_MIGRATION = [] as any;
+                for (let item of _data["requiredCloseoutActionNames_PRE_MIGRATION"])
+                    this.requiredCloseoutActionNames_PRE_MIGRATION!.push(RequirementDefinition.fromJS(item));
+            }
+            this.variantName = _data["variantName"];
+            if (Array.isArray(_data["requiredSetupActionNames"])) {
+                this.requiredSetupActionNames = [] as any;
+                for (let item of _data["requiredSetupActionNames"])
+                    this.requiredSetupActionNames!.push(item);
+            }
+            if (Array.isArray(_data["requiredMonitoringActions"])) {
+                this.requiredMonitoringActions = [] as any;
+                for (let item of _data["requiredMonitoringActions"])
+                    this.requiredMonitoringActions!.push(MonitoringRequirementOld.fromJS(item));
+            }
+            if (Array.isArray(_data["requiredCloseoutActionNames"])) {
+                this.requiredCloseoutActionNames = [] as any;
+                for (let item of _data["requiredCloseoutActionNames"])
+                    this.requiredCloseoutActionNames!.push(item);
+            }
+            if (Array.isArray(_data["requiredSetupActions"])) {
+                this.requiredSetupActions = [] as any;
+                for (let item of _data["requiredSetupActions"])
+                    this.requiredSetupActions!.push(RequirementDefinition.fromJS(item));
+            }
+            if (Array.isArray(_data["requiredMonitoringActionsNew"])) {
+                this.requiredMonitoringActionsNew = [] as any;
+                for (let item of _data["requiredMonitoringActionsNew"])
+                    this.requiredMonitoringActionsNew!.push(MonitoringRequirement.fromJS(item));
+            }
+            if (Array.isArray(_data["requiredCloseoutActions"])) {
+                this.requiredCloseoutActions = [] as any;
+                for (let item of _data["requiredCloseoutActions"])
+                    this.requiredCloseoutActions!.push(RequirementDefinition.fromJS(item));
+            }
+        }
+    }
+
+    static fromJS(data: any): ArrangementFunctionVariant {
+        data = typeof data === 'object' ? data : {};
+        let result = new ArrangementFunctionVariant();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        if (Array.isArray(this.requiredSetupActionNames_PRE_MIGRATION)) {
+            data["requiredSetupActionNames_PRE_MIGRATION"] = [];
+            for (let item of this.requiredSetupActionNames_PRE_MIGRATION)
+                data["requiredSetupActionNames_PRE_MIGRATION"].push(item.toJSON());
+        }
+        if (Array.isArray(this.requiredMonitoringActions_PRE_MIGRATION)) {
+            data["requiredMonitoringActions_PRE_MIGRATION"] = [];
+            for (let item of this.requiredMonitoringActions_PRE_MIGRATION)
+                data["requiredMonitoringActions_PRE_MIGRATION"].push(item.toJSON());
+        }
+        if (Array.isArray(this.requiredCloseoutActionNames_PRE_MIGRATION)) {
+            data["requiredCloseoutActionNames_PRE_MIGRATION"] = [];
+            for (let item of this.requiredCloseoutActionNames_PRE_MIGRATION)
+                data["requiredCloseoutActionNames_PRE_MIGRATION"].push(item.toJSON());
+        }
+        data["variantName"] = this.variantName;
+        if (Array.isArray(this.requiredSetupActionNames)) {
+            data["requiredSetupActionNames"] = [];
+            for (let item of this.requiredSetupActionNames)
+                data["requiredSetupActionNames"].push(item);
+        }
+        if (Array.isArray(this.requiredMonitoringActions)) {
+            data["requiredMonitoringActions"] = [];
+            for (let item of this.requiredMonitoringActions)
+                data["requiredMonitoringActions"].push(item.toJSON());
+        }
+        if (Array.isArray(this.requiredCloseoutActionNames)) {
+            data["requiredCloseoutActionNames"] = [];
+            for (let item of this.requiredCloseoutActionNames)
+                data["requiredCloseoutActionNames"].push(item);
+        }
+        if (Array.isArray(this.requiredSetupActions)) {
+            data["requiredSetupActions"] = [];
+            for (let item of this.requiredSetupActions)
+                data["requiredSetupActions"].push(item.toJSON());
+        }
+        if (Array.isArray(this.requiredMonitoringActionsNew)) {
+            data["requiredMonitoringActionsNew"] = [];
+            for (let item of this.requiredMonitoringActionsNew)
+                data["requiredMonitoringActionsNew"].push(item.toJSON());
+        }
+        if (Array.isArray(this.requiredCloseoutActions)) {
+            data["requiredCloseoutActions"] = [];
+            for (let item of this.requiredCloseoutActions)
+                data["requiredCloseoutActions"].push(item.toJSON());
+        }
+        return data;
+    }
+}
+
+export interface IArrangementFunctionVariant {
+    requiredSetupActionNames_PRE_MIGRATION?: RequirementDefinition[];
+    requiredMonitoringActions_PRE_MIGRATION?: MonitoringRequirement[];
+    requiredCloseoutActionNames_PRE_MIGRATION?: RequirementDefinition[];
+    variantName?: string;
+    requiredSetupActionNames?: string[];
+    requiredMonitoringActions?: MonitoringRequirementOld[];
+    requiredCloseoutActionNames?: string[];
+    requiredSetupActions?: RequirementDefinition[] | undefined;
+    requiredMonitoringActionsNew?: MonitoringRequirement[] | undefined;
+    requiredCloseoutActions?: RequirementDefinition[] | undefined;
+}
+
+export class MonitoringRequirementOld implements IMonitoringRequirementOld {
+    actionName?: string;
+    recurrence?: RecurrencePolicy;
+
+    constructor(data?: IMonitoringRequirementOld) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.actionName = _data["actionName"];
+            this.recurrence = _data["recurrence"] ? RecurrencePolicy.fromJS(_data["recurrence"]) : <any>undefined;
+        }
+    }
+
+    static fromJS(data: any): MonitoringRequirementOld {
+        data = typeof data === 'object' ? data : {};
+        let result = new MonitoringRequirementOld();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["actionName"] = this.actionName;
+        data["recurrence"] = this.recurrence ? this.recurrence.toJSON() : <any>undefined;
+        return data;
+    }
+}
+
+export interface IMonitoringRequirementOld {
+    actionName?: string;
+    recurrence?: RecurrencePolicy;
 }
 
 export class FunctionPolicy implements IFunctionPolicy {

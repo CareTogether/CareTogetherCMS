@@ -2681,12 +2681,7 @@ namespace CareTogether.TestData
                     ),
                 ],
                 new ReferralPolicy(
-                    [
-                        new RequirementDefinition("Some optional action", false),
-                        new RequirementDefinition("Request for Help Form", true),
-                        new RequirementDefinition("Intake Coordinator Screening Call", true),
-                        new RequirementDefinition("Intake Form", true),
-                    ],
+                    ["Request for Help Form"],
                     [
                         new CustomField(
                             "Referral Source",
@@ -2712,11 +2707,14 @@ namespace CareTogether.TestData
                                     [
                                         new ArrangementFunctionVariant(
                                             "New Host Family",
-                                            RequiredSetupActionNames:
+                                            RequiredSetupActionNames: [],
+                                            RequiredMonitoringActions: [],
+                                            RequiredCloseoutActionNames: [],
+                                            RequiredSetupActions:
                                             [
                                                 new RequirementDefinition("Family Meeting", true),
                                             ],
-                                            RequiredMonitoringActions:
+                                            RequiredMonitoringActionsNew:
                                             [
                                                 new MonitoringRequirement(
                                                     new RequirementDefinition(
@@ -2741,7 +2739,7 @@ namespace CareTogether.TestData
                                                     )
                                                 ),
                                             ],
-                                            RequiredCloseoutActionNames:
+                                            RequiredCloseoutActions:
                                             [
                                                 new RequirementDefinition(
                                                     "Host Family Debriefing",
@@ -2752,7 +2750,10 @@ namespace CareTogether.TestData
                                         new ArrangementFunctionVariant(
                                             "Familiar Host Family",
                                             RequiredSetupActionNames: [],
-                                            RequiredMonitoringActions:
+                                            RequiredMonitoringActions: [],
+                                            RequiredCloseoutActionNames: [],
+                                            RequiredSetupActions: null,
+                                            RequiredMonitoringActionsNew:
                                             [
                                                 new MonitoringRequirement(
                                                     new RequirementDefinition(
@@ -2773,7 +2774,7 @@ namespace CareTogether.TestData
                                                     )
                                                 ),
                                             ],
-                                            RequiredCloseoutActionNames:
+                                            RequiredCloseoutActions:
                                             [
                                                 new RequirementDefinition(
                                                     "Host Family Debriefing",
@@ -2824,13 +2825,16 @@ namespace CareTogether.TestData
                                     Variants: []
                                 ),
                             ],
+                            RequiredSetupActionNames: [],
+                            RequiredMonitoringActions: [],
+                            RequiredCloseoutActionNames: [],
                             RequiredSetupActions:
                             [
                                 new RequirementDefinition("Hosting Consent", true),
                                 new RequirementDefinition("Medical POA", true),
                                 new RequirementDefinition("Complex Instructions", true),
                             ],
-                            RequiredMonitoringActions:
+                            RequiredMonitoringActionsNew:
                             [
                                 new MonitoringRequirement(
                                     new RequirementDefinition("Family Coach Supervision", true),
@@ -2839,7 +2843,7 @@ namespace CareTogether.TestData
                                     )
                                 ),
                             ],
-                            RequiredCloseoutActionNames:
+                            RequiredCloseoutActions:
                             [
                                 new RequirementDefinition("Return of Child Form", true),
                             ]
@@ -2859,11 +2863,14 @@ namespace CareTogether.TestData
                                     [
                                         new ArrangementFunctionVariant(
                                             "New Host Family",
-                                            RequiredSetupActionNames:
+                                            RequiredSetupActionNames: [],
+                                            RequiredMonitoringActions: [],
+                                            RequiredCloseoutActionNames: [],
+                                            RequiredSetupActions:
                                             [
                                                 new RequirementDefinition("Family Meeting", true),
                                             ],
-                                            RequiredMonitoringActions:
+                                            RequiredMonitoringActionsNew:
                                             [
                                                 new MonitoringRequirement(
                                                     new RequirementDefinition(
@@ -2890,7 +2897,7 @@ namespace CareTogether.TestData
                                                     )
                                                 ),
                                             ],
-                                            RequiredCloseoutActionNames:
+                                            RequiredCloseoutActions:
                                             [
                                                 new RequirementDefinition(
                                                     "Host Family Debriefing",
@@ -2901,7 +2908,10 @@ namespace CareTogether.TestData
                                         new ArrangementFunctionVariant(
                                             "Familiar Host Family",
                                             RequiredSetupActionNames: [],
-                                            RequiredMonitoringActions:
+                                            RequiredMonitoringActions: [],
+                                            RequiredCloseoutActionNames: [],
+                                            RequiredSetupActions: [],
+                                            RequiredMonitoringActionsNew:
                                             [
                                                 new MonitoringRequirement(
                                                     new RequirementDefinition(
@@ -2928,7 +2938,7 @@ namespace CareTogether.TestData
                                                     )
                                                 ),
                                             ],
-                                            RequiredCloseoutActionNames: []
+                                            RequiredCloseoutActions: []
                                         ),
                                     ]
                                 ),
@@ -2949,11 +2959,14 @@ namespace CareTogether.TestData
                                     Variants: []
                                 ),
                             ],
+                            RequiredSetupActionNames: [],
+                            RequiredMonitoringActions: [],
+                            RequiredCloseoutActionNames: [],
                             RequiredSetupActions:
                             [
                                 new RequirementDefinition("Hosting Consent", true),
                             ],
-                            RequiredMonitoringActions:
+                            RequiredMonitoringActionsNew:
                             [
                                 new MonitoringRequirement(
                                     new RequirementDefinition("Family Coach Supervision", true),
@@ -2962,7 +2975,7 @@ namespace CareTogether.TestData
                                     )
                                 ),
                             ],
-                            RequiredCloseoutActionNames:
+                            RequiredCloseoutActions:
                             [
                                 new RequirementDefinition("Return of Child Form", true),
                             ]
@@ -2997,12 +3010,15 @@ namespace CareTogether.TestData
                                     Variants: []
                                 ),
                             ],
+                            RequiredSetupActionNames: [],
+                            RequiredMonitoringActions: [],
+                            RequiredCloseoutActionNames: [],
                             RequiredSetupActions:
                             [
                                 new RequirementDefinition("Advocacy Agreement", true),
                                 new RequirementDefinition("Some optional action", false),
                             ],
-                            RequiredMonitoringActions:
+                            RequiredMonitoringActionsNew:
                             [
                                 new MonitoringRequirement(
                                     new RequirementDefinition("One Time Checkin", false),
@@ -3024,7 +3040,7 @@ namespace CareTogether.TestData
                                     )
                                 ),
                             ],
-                            RequiredCloseoutActionNames: []
+                            RequiredCloseoutActions: []
                         ),
                     ],
                     [
@@ -3044,6 +3060,12 @@ namespace CareTogether.TestData
                                 EligiblePeople: [guid0]
                             )
                         ),
+                    ],
+                    IntakeRequirements:
+                    [
+                        new RequirementDefinition("Some optional action", false),
+                        new RequirementDefinition("Intake Coordinator Screening Call", true),
+                        new RequirementDefinition("Intake Form", true),
                     ]
                 ),
                 new VolunteerPolicy(
