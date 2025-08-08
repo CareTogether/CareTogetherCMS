@@ -47,7 +47,31 @@ export function CTAutocomplete<T extends FieldValues>({
           multiple
           freeSolo={freeSolo}
           options={options}
-          isOptionEqualToValue={(option, value) => option.value === value.value}
+          isOptionEqualToValue={(option, value) => {
+            // Handle string vs object comparison
+            if (typeof option === 'string' && typeof value === 'string') {
+              return option === value;
+            }
+
+            if (
+              typeof option === 'object' &&
+              typeof value === 'object' &&
+              option !== null &&
+              value !== null
+            ) {
+              return option.value === value.value;
+            }
+
+            // Handle mixed types - convert to comparable format
+            const optionValue =
+              typeof option === 'string'
+                ? option
+                : option?.title || option?.value;
+            const valueValue =
+              typeof value === 'string' ? value : value?.title || value?.value;
+
+            return optionValue === valueValue;
+          }}
           getOptionLabel={(option) =>
             typeof option === 'string' ? option : option.title
           }
