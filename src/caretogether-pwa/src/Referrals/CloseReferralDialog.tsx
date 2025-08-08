@@ -28,6 +28,9 @@ export function CloseReferralDialog({
     reason: null as ReferralCloseReason | null,
     closedAtLocal: null as Date | null,
   });
+
+  const [dobError, setDobError] = useState(false);
+
   const { reason, closedAtLocal } = fields;
 
   async function save() {
@@ -44,7 +47,7 @@ export function CloseReferralDialog({
       title={`Why is this referral being closed?`}
       onClose={onClose}
       onSave={save}
-      enableSave={() => reason != null && closedAtLocal != null}
+      enableSave={() => reason != null && closedAtLocal != null && !dobError}
     >
       <form noValidate autoComplete="off">
         <Grid container spacing={2}>
@@ -102,10 +105,22 @@ export function CloseReferralDialog({
               label="When was this referral closed?"
               value={closedAtLocal}
               disableFuture
+              minDate={new Date(1900, 0, 1)}
               format="MM/dd/yyyy"
-              onChange={(date: Date | null) =>
-                date && setFields({ ...fields, closedAtLocal: date })
-              }
+              onChange={(date: Date | null) => {
+                setDobError(!date || date.getFullYear() < 1900);
+                if (date) setFields({ ...fields, closedAtLocal: date });
+              }}
+              slotProps={{
+                textField: {
+                  error: dobError,
+                  helperText: dobError
+                    ? 'Hmm, that doesn’t seem to be a valid date. Please enter a valid date to continue.'
+                    : '',
+                  fullWidth: true,
+                  required: true,
+                },
+              }}
             />
           </Grid>
         </Grid>

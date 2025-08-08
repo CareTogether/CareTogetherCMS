@@ -75,6 +75,7 @@ export function MissingRequirementDialog({
   const [documentFile, setDocumentFile] = useState<File | null>(null);
   const [documentId, setDocumentId] = useState<string>('');
   const [completedAtLocal, setCompletedAtLocal] = useState(null as Date | null);
+  const [completedAtError, setCompletedAtError] = useState(false);
   const [notes, setNotes] = useState('');
   const UPLOAD_NEW = '__uploadnew__';
   const { organizationId, locationId } = useRecoilValue(
@@ -173,6 +174,7 @@ export function MissingRequirementDialog({
     tabValue === 0
       ? // mark complete
         completedAtLocal != null &&
+        !completedAtError &&
         ((documentId === UPLOAD_NEW && documentFile) ||
           (documentId !== UPLOAD_NEW && documentId !== '') ||
           policy.documentLink !== DocumentLinkRequirement.Required) &&
@@ -455,22 +457,46 @@ export function MissingRequirementDialog({
                 label="When was this requirement completed?"
                 value={completedAtLocal}
                 disableFuture
+                minDate={new Date(1900, 0, 1)}
                 format="MM/dd/yyyy"
-                onChange={(date: Date | null) =>
-                  date && setCompletedAtLocal(date)
-                }
-                slotProps={{ textField: { fullWidth: true, required: true } }}
+                onChange={(date: Date | null) => {
+                  const invalid = !date || date.getFullYear() < 1900;
+                  setCompletedAtError(invalid);
+                  if (date) setCompletedAtLocal(date);
+                }}
+                slotProps={{
+                  textField: {
+                    fullWidth: true,
+                    required: true,
+                    error: completedAtError,
+                    helperText: completedAtError
+                      ? 'Hmm, that doesn’t seem to be a valid date. Please enter a valid date to continue.'
+                      : '',
+                  },
+                }}
               />
             ) : (
               <DatePicker
                 label="When was this requirement completed?"
                 value={completedAtLocal}
                 disableFuture
+                minDate={new Date(1900, 0, 1)}
                 format="MM/dd/yyyy"
-                onChange={(date: Date | null) =>
-                  date && setCompletedAtLocal(date)
-                }
-                slotProps={{ textField: { fullWidth: true, required: true } }}
+                onChange={(date: Date | null) => {
+                  const invalid = !date || date.getFullYear() < 1900;
+                  setCompletedAtError(invalid);
+                  if (date) setCompletedAtLocal(date);
+                }}
+                slotProps={{
+                  textField: {
+                    fullWidth: true,
+                    required: true,
+                    error: completedAtError,
+                    helperText: completedAtError
+                      ? 'Hmm, that doesn’t seem to be a valid date. Please enter a valid date to continue.'
+                      : '',
+                  },
+                }}
               />
             )}
             {validityDuration &&
@@ -640,11 +666,22 @@ export function MissingRequirementDialog({
               <DatePicker
                 label="When does this exemption expire? (Default is never)"
                 value={exemptionExpiresAtLocal}
+                minDate={new Date(1900, 0, 1)}
                 format="MM/dd/yyyy"
-                onChange={(date: Date | null) =>
-                  date && setExemptionExpiresAtLocal(date)
-                }
-                slotProps={{ textField: { fullWidth: true } }}
+                onChange={(date: Date | null) => {
+                  const invalid = !date || date.getFullYear() < 1900;
+                  setCompletedAtError(invalid);
+                  if (date) setExemptionExpiresAtLocal(date);
+                }}
+                slotProps={{
+                  textField: {
+                    fullWidth: true,
+                    error: completedAtError,
+                    helperText: completedAtError
+                      ? 'Hmm, that doesn’t seem to be a valid date. Please enter a valid date to continue.'
+                      : '',
+                  },
+                }}
               />
             </Grid>
           </Grid>

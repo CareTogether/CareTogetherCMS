@@ -66,6 +66,8 @@ export function CreateArrangementDialog({
   });
   const { requestedAtLocal, partneringFamilyPersonId, reason } = fields;
 
+  const [dobError, setDobError] = useState(false);
+
   const referralsModel = useReferralsModel();
 
   const withBackdrop = useBackdrop();
@@ -111,14 +113,21 @@ export function CreateArrangementDialog({
                 label="Requested at"
                 value={requestedAtLocal}
                 maxDate={new Date()}
+                minDate={new Date(1900, 0, 1)}
                 format="MM/dd/yyyy"
-                onChange={(date: Date | null) =>
-                  date && setFields({ ...fields, requestedAtLocal: date })
-                }
+                onChange={(date: Date | null) => {
+                  const invalid = !date || date.getFullYear() < 1900;
+                  setDobError(invalid);
+                  if (date) setFields({ ...fields, requestedAtLocal: date });
+                }}
                 slotProps={{
                   textField: {
                     size: 'small',
                     required: true,
+                    error: dobError,
+                    helperText: dobError
+                      ? 'Hmm, that doesn’t seem to be a valid date. Please enter a valid date to continue.'
+                      : '',
                     sx: { marginTop: 1 },
                   },
                 }}
@@ -191,7 +200,8 @@ export function CreateArrangementDialog({
           color="primary"
           disabled={
             !partneringFamilyPersonId ||
-            (isReasonRequired && (!reason || reason.length == 0))
+            (isReasonRequired && (!reason || reason.length === 0)) ||
+            dobError
           }
         >
           Create Arrangement
