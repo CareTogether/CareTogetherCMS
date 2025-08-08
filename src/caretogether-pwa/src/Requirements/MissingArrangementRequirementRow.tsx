@@ -90,7 +90,7 @@ export function MissingArrangementRequirementRow({
         </IconRow>
       ) : (
         <IconRow
-          icon={requirement.action?.isRequired ? '❌' : '☑️'}
+          icon={requirement.action?.isRequired ? '❌' : '🔲'}
           onClick={
             canComplete || canExempt ? dialogHandle.openDialog : undefined
           }

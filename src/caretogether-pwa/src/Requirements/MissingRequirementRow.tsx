@@ -62,7 +62,7 @@ export function MissingRequirementRow({
   return (
     <>
       <IconRow
-        icon={isAvailableApplication ? '💤' : isRequired ? '❌' : '☑️'}
+        icon={isAvailableApplication ? '💤' : isRequired ? '❌' : '🔲'}
         onClick={canComplete || canExempt ? dialogHandle.openDialog : undefined}
       >
         <span className="ph-unmask">{requirementName}</span>
