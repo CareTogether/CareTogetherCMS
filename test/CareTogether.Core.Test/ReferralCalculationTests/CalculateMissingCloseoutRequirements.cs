@@ -12,14 +12,19 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
     [TestClass]
     public class CalculateMissingCloseoutRequirements
     {
-        public static ArrangementPolicy CloseoutRequirements(params (string ActionName, bool IsRequired)[] values) =>
+        public static ArrangementPolicy CloseoutRequirements(
+            params (string ActionName, bool IsRequired)[] values
+        ) =>
             new ArrangementPolicy(
-                string.Empty,
-                ChildInvolvement.ChildHousing,
-                ImmutableList<ArrangementFunction>.Empty,
-                ImmutableList<RequirementDefinition>.Empty,
-                ImmutableList<MonitoringRequirement>.Empty,
-                values
+                ArrangementType: string.Empty,
+                ChildInvolvement: ChildInvolvement.ChildHousing,
+                ArrangementFunctions: [],
+                RequiredSetupActionNames: [],
+                RequiredMonitoringActions: [],
+                RequiredCloseoutActionNames: [],
+                RequiredSetupActions: [],
+                RequiredMonitoringActionsNew: [],
+                RequiredCloseoutActions: values
                     .Select(value => new RequirementDefinition(value.ActionName, value.IsRequired))
                     .ToImmutableList()
             );
@@ -46,9 +51,33 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
 
             AssertEx.SequenceIs(
                 result,
-                new MissingArrangementRequirement(null, null, null, null, new RequirementDefinition("A", true), null, null),
-                new MissingArrangementRequirement(null, null, null, null, new RequirementDefinition("B", true), null, null),
-                new MissingArrangementRequirement(null, null, null, null, new RequirementDefinition("C", true), null, null)
+                new MissingArrangementRequirement(
+                    null,
+                    null,
+                    null,
+                    null,
+                    new RequirementDefinition("A", true),
+                    null,
+                    null
+                ),
+                new MissingArrangementRequirement(
+                    null,
+                    null,
+                    null,
+                    null,
+                    new RequirementDefinition("B", true),
+                    null,
+                    null
+                ),
+                new MissingArrangementRequirement(
+                    null,
+                    null,
+                    null,
+                    null,
+                    new RequirementDefinition("C", true),
+                    null,
+                    null
+                )
             );
         }
 
@@ -74,7 +103,15 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
 
             AssertEx.SequenceIs(
                 result,
-                new MissingArrangementRequirement(null, null, null, null, new RequirementDefinition("C", true), null, null)
+                new MissingArrangementRequirement(
+                    null,
+                    null,
+                    null,
+                    null,
+                    new RequirementDefinition("C", true),
+                    null,
+                    null
+                )
             );
         }
 
