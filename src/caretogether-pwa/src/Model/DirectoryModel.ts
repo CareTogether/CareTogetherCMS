@@ -51,6 +51,7 @@ import {
   CommunityRecordsCommand,
   ConvertChildToAdult,
   UndoCreateFamily,
+  UpdateNoteAccessLevel,
 } from '../GeneratedClient';
 import { api } from '../Api/Api';
 import {
@@ -786,19 +787,22 @@ export function useDirectoryModel() {
       return command;
     }
   );
+  const sendUpdateNoteAccessLevel = useNoteCommandCallback(
+    async (familyId: string, noteId: string, accessLevel?: string | null) => {
+      const command = new UpdateNoteAccessLevel({ familyId, noteId });
+      command.accessLevel = accessLevel ?? undefined;
+      return command;
+    }
+  );
 
   const updateNoteAccessLevel = async (
     familyId: string,
     noteId: string,
-    accessLevel: string
+    accessLevelName: string | undefined
   ) => {
-    // TODO: Replace this stub with the real backend call
-    console.log('[STUB] updateNoteAccessLevel called:', {
-      familyId,
-      noteId,
-      accessLevel,
-    });
-    return new Promise((resolve) => setTimeout(resolve, 500));
+    const normalized =
+      accessLevelName === 'Everyone' ? undefined : accessLevelName;
+    await sendUpdateNoteAccessLevel(familyId, noteId, normalized);
   };
 
   return {

@@ -2,15 +2,16 @@ import { useState } from 'react';
 import {
   DialogContent,
   FormControl,
-  InputLabel,
-  MenuItem,
-  Select,
+  FormLabel,
   Typography,
   Box,
   FormHelperText,
+  RadioGroup,
+  FormControlLabel,
+  Radio,
 } from '@mui/material';
 import { UpdateDialog } from '../Generic/UpdateDialog';
-import { Note } from '../GeneratedClient';
+import { Note, NoteStatus } from '../GeneratedClient';
 import { useDirectoryModel } from '../Model/DirectoryModel';
 import { useRecoilValue } from 'recoil';
 import { locationConfigurationQuery } from '../Model/ConfigurationModel';
@@ -21,7 +22,7 @@ import { format } from 'date-fns';
 interface EditNoteAccessLevelDialogProps {
   familyId: string;
   note: Note;
-  onClose: () => void;
+  onClose: (updatedAccessLevel?: string) => void;
 }
 
 export function EditNoteAccessLevelDialog({
@@ -29,35 +30,55 @@ export function EditNoteAccessLevelDialog({
   note,
   onClose,
 }: EditNoteAccessLevelDialogProps) {
-  const [accessLevel, setAccessLevel] = useState(note.accessLevel);
-
   const directoryModel = useDirectoryModel();
   const locationConfiguration = useRecoilValue(locationConfigurationQuery);
   const userLookup = useUserLookup();
 
-  const accessLevels = locationConfiguration?.accessLevels || [
-    { name: 'Everyone' },
-  ];
+  const [accessLevel, setAccessLevel] = useState<string>(
+    note.accessLevel ?? 'Everyone'
+  );
+  const [saving, setSaving] = useState(false);
+
+  const accessLevels = locationConfiguration?.accessLevels || [];
+  const options: string[] = ['Everyone', ...accessLevels.map((x) => x.name!)];
+
+  const canSave = accessLevel !== (note.accessLevel ?? 'Everyone');
 
   async function save() {
-    if (accessLevel !== note.accessLevel) {
+    if (!canSave || saving) {
+      onClose();
+      return;
+    }
+
+    setSaving(true);
+    const normalized = accessLevel === 'Everyone' ? undefined : accessLevel;
+
+    if (note.status === NoteStatus.Draft) {
+      await directoryModel.editDraftNote(
+        familyId,
+        note.id!,
+        note.contents ?? '',
+        note.backdatedTimestampUtc,
+        normalized
+      );
+    } else {
       await directoryModel.updateNoteAccessLevel(
         familyId,
         note.id!,
-        accessLevel
+        normalized ?? ''
       );
     }
-    onClose();
-  }
 
-  const canSave = accessLevel !== note.accessLevel;
+    setSaving(false);
+    onClose(accessLevel);
+  }
 
   return (
     <UpdateDialog
       title="Edit Note Visibility"
-      onClose={onClose}
+      onClose={() => onClose()}
       onSave={save}
-      enableSave={() => canSave}
+      enableSave={() => canSave && !saving}
     >
       <DialogContent>
         <Box mb={2}>
@@ -69,21 +90,26 @@ export function EditNoteAccessLevelDialog({
             {note.contents}
           </Typography>
         </Box>
-        <FormControl fullWidth>
-          <InputLabel id="access-level-label">Access Level</InputLabel>
-          <Select
-            labelId="access-level-label"
-            label="Access Level"
+
+        <FormControl component="fieldset" fullWidth>
+          <FormLabel component="legend">Who can see this note?</FormLabel>
+          <RadioGroup
+            name="note-access-level"
             value={accessLevel}
-            onChange={(e) => setAccessLevel(e.target.value)}
+            onChange={(_, val) => setAccessLevel(val)}
           >
-            {accessLevels.map((al) => (
-              <MenuItem key={al.name} value={al.name}>
-                {al.name}
-              </MenuItem>
+            {options.map((name) => (
+              <FormControlLabel
+                key={name}
+                value={name}
+                control={<Radio />}
+                label={name}
+              />
             ))}
-          </Select>
-          <FormHelperText>Who can see this note?</FormHelperText>
+          </RadioGroup>
+          <FormHelperText>
+            Current: {note.accessLevel ?? 'Everyone'}
+          </FormHelperText>
         </FormControl>
       </DialogContent>
     </UpdateDialog>
