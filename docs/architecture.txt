@@ -290,6 +290,13 @@ Activity "Apply for Membership - Household to Organization" {
   endif
 }
 
+UseCase "Apply for Membership - Household to Organization" {
+  WebAppClient - IProcessManager.SubmitRequest() > ProcessManager
+  ProcessManager - IEvaluationEngine.ValidateRequest() > EvaluationEngine
+  EvaluationEngine - IConfigurationAccess.LoadPolicy() > ConfigurationAccess -> ConfigurationResource
+  ProcessManager - IPubSubUtility.Publish() > PubSubUtility
+}
+
 Activity "Apply for Membership - Person to Organization" {
   |Client|
   start
@@ -317,6 +324,43 @@ Activity "Apply for Membership - Person to Organization" {
     host family approval rules are a combination of individual and family level.
 */
 
+UseCase "Apply for Membership - Person to Organization" {
+  WebAppClient - IProcessManager.SubmitRequest(MembershipApplication) > ProcessManager
+  /*TODO: Handle validation as a workflow step */
+  ProcessManager - IEvaluationEngine.ValidateRequest(MembershipApplication) > EvaluationEngine
+  EvaluationEngine - IConfigurationAccess.LoadPolicy() > ConfigurationAccess -> ConfigurationResource
+  /* The workflow stores the sequence/flowchart of actions to take in the helper approval process. */
+  ProcessManager - WorkflowInstance IWorkflowsAccess.InstantiateWorkflow(MembershipApplication) > WorkflowsAccess -> WorkflowsResource
+  ProcessManager - WorkflowState IWorkflowsAccess.ExecuteWorkflow(WorkflowInstance) > WorkflowsAccess -> WorkflowsResource
+
+  /*TODO: How do we represent to the user "what is left to do" -- i.e., the full past & future of the workflow?
+          What actions are past-due, which ones were exempted, etc.
+          And subject to access levels (who can see certain actions)...
+          Part of the steps in the workflow update the UI -- send XAML etc. -- or fire events,
+          have clients monitor the events. ---> all async via queues */
+}
+
+UseCase "Check Application Status" {
+  @@@
+  Could be via polling or the first time you sign into the web app in a new browser, or both.
+  @@@
+  WebAppClient - MyWorkflows CheckStatus() > ProcessManager
+  ProcessManager - MyWorkflows CheckStatus() > EvaluationEngine
+  /* UserCriteria can include interval, status, etc. */
+  EvaluationEngine - InterrogateWorkflows(UserCriteria) > WorkflowsAccess -> WorkflowsResource
+  /* TODO: Apply access level disclosure logic */
+  /* NOTE: In the future, we could apply prioritization logic based on severity, dependencies, compliance, etc. */
+}
+
+
+UseCase "Alter Policies & Procedures" {
+  /* We need to compile domain-specific procedures into workflow definitions. Here, we do this on the fly.
+     We could alternatively do this only whenever the policy/procedure is altered. */
+  ProcessManager - IEvaluationEngine.CompileProcedure() > EvaluationEngine
+  EvaluationEngine - IConfigurationAccess.LoadProcedure() > ConfigurationAccess -> ConfigurationResource
+}
+
+
 Activity "Begin (membership) vetting ('helper approval') process" {
   |System|
   start
@@ -328,6 +372,14 @@ Activity "Begin (membership) vetting ('helper approval') process" {
   :Publish helper approval started;
 }
 
+UseCase "Begin (membership) vetting ('helper approval') process" {
+  /* Reference: PubSub utility appendix in PWCF */
+  PubSubUtility - IProcessManager.OnMemberApplied() > ProcessManager
+
+}
+
+
+/* NOTE: When to notify different people/groups in the organization should be part of the workflow. */
 Activity "Notify helper approval supervisors" {
   |System|
   start
