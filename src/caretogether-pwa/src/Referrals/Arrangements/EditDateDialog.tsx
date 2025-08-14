@@ -1,5 +1,5 @@
 import { Grid } from '@mui/material';
-import { DatePicker } from '@mui/x-date-pickers';
+import { ValidateDatePicker } from '../../Generic/Forms/ValidateDatePicker';
 import { useState } from 'react';
 import { UpdateDialog } from '../../Generic/UpdateDialog';
 
@@ -22,6 +22,8 @@ export function EditDateDialog({
 }: EditDateDialogProps) {
   const [dateLocal, setDateLocal] = useState(initialDate || new Date());
 
+  const [dobError, setDobError] = useState(dateLocal.getFullYear() < 1900);
+
   async function save() {
     await onSave(dateLocal);
   }
@@ -31,23 +33,21 @@ export function EditDateDialog({
       title={`Editing "${label}" date`}
       onClose={onClose}
       onSave={save}
-      enableSave={() => dateLocal != null}
+      enableSave={() => dateLocal != null && !dobError}
     >
       <Grid container spacing={2}>
         <Grid item xs={12}>
-          <DatePicker
+          <ValidateDatePicker
             label={label}
             value={dateLocal}
+            onChange={(date) => date && setDateLocal(date)}
+            onErrorChange={setDobError}
             disablePast={disablePast}
             disableFuture={disableFuture}
-            format="M/d/yyyy"
-            onChange={(date: Date | null) => date && setDateLocal(date)}
-            slotProps={{
-              textField: {
-                fullWidth: true,
-                required: true,
-                sx: { marginTop: 1 },
-              },
+            textFieldProps={{
+              fullWidth: true,
+              required: true,
+              sx: { marginTop: 1 },
             }}
           />
         </Grid>

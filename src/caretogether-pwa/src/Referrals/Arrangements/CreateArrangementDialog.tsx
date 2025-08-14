@@ -20,7 +20,7 @@ import {
   ArrangementPolicy,
   ChildInvolvement,
 } from '../../GeneratedClient';
-import { DatePicker } from '@mui/x-date-pickers';
+import { ValidateDatePicker } from '../../Generic/Forms/ValidateDatePicker';
 import { useRecoilValue } from 'recoil';
 import { useParams } from 'react-router-dom';
 import { useBackdrop } from '../../Hooks/useBackdrop';
@@ -66,6 +66,8 @@ export function CreateArrangementDialog({
   });
   const { requestedAtLocal, partneringFamilyPersonId, reason } = fields;
 
+  const [dobError, setDobError] = useState(false);
+
   const referralsModel = useReferralsModel();
 
   const withBackdrop = useBackdrop();
@@ -107,20 +109,18 @@ export function CreateArrangementDialog({
         <form noValidate autoComplete="off">
           <Grid container spacing={2}>
             <Grid item>
-              <DatePicker
+              <ValidateDatePicker
                 label="Requested at"
                 value={requestedAtLocal}
-                maxDate={new Date()}
-                format="MM/dd/yyyy"
-                onChange={(date: Date | null) =>
-                  date && setFields({ ...fields, requestedAtLocal: date })
+                onChange={(date) =>
+                  setFields({ ...fields, requestedAtLocal: date })
                 }
-                slotProps={{
-                  textField: {
-                    size: 'small',
-                    required: true,
-                    sx: { marginTop: 1 },
-                  },
+                maxDate={new Date()}
+                onErrorChange={setDobError}
+                textFieldProps={{
+                  size: 'small',
+                  required: true,
+                  sx: { marginTop: 1 },
                 }}
               />
             </Grid>
@@ -191,7 +191,8 @@ export function CreateArrangementDialog({
           color="primary"
           disabled={
             !partneringFamilyPersonId ||
-            (isReasonRequired && (!reason || reason.length == 0))
+            (isReasonRequired && (!reason || reason.length === 0)) ||
+            dobError
           }
         >
           Create Arrangement
