@@ -9,7 +9,7 @@ import {
 } from '@mui/material';
 import { ReferralCloseReason } from '../GeneratedClient';
 import { UpdateDialog } from '../Generic/UpdateDialog';
-import { DatePicker } from '@mui/x-date-pickers';
+import { ValidateDatePicker } from '../Generic/Forms/ValidateDatePicker';
 import { useReferralsModel } from '../Model/ReferralsModel';
 
 interface CloseReferralDialogProps {
@@ -101,25 +101,15 @@ export function CloseReferralDialog({
             </FormControl>
           </Grid>
           <Grid item xs={12}>
-            <DatePicker
+            <ValidateDatePicker
               label="When was this referral closed?"
               value={closedAtLocal}
+              onChange={(date) => setFields({ ...fields, closedAtLocal: date })}
+              onErrorChange={setDobError}
               disableFuture
-              minDate={new Date(1900, 0, 1)}
-              format="MM/dd/yyyy"
-              onChange={(date: Date | null) => {
-                setDobError(!date || date.getFullYear() < 1900);
-                if (date) setFields({ ...fields, closedAtLocal: date });
-              }}
-              slotProps={{
-                textField: {
-                  error: dobError,
-                  helperText: dobError
-                    ? 'Hmm, that doesn’t seem to be a valid date. Please enter a valid date to continue.'
-                    : '',
-                  fullWidth: true,
-                  required: true,
-                },
+              textFieldProps={{
+                fullWidth: true,
+                required: true,
               }}
             />
           </Grid>

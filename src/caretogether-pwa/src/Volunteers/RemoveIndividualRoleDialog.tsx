@@ -13,7 +13,7 @@ import { useVolunteersModel } from '../Model/VolunteersModel';
 import { UpdateDialog } from '../Generic/UpdateDialog';
 import { useRecoilValue } from 'recoil';
 import { policyData } from '../Model/ConfigurationModel';
-import { DatePicker } from '@mui/x-date-pickers';
+import { ValidateDatePicker } from '../Generic/Forms/ValidateDatePicker';
 
 interface RemoveIndividualRoleDialogProps {
   volunteerFamilyId: string;
@@ -122,25 +122,18 @@ export function RemoveIndividualRoleDialog({
             />
           </Grid>
           <Grid item xs={12}>
-            <DatePicker
+            <ValidateDatePicker
               label="Effective Since (optional - leave blank to use the current date)"
-              value={effectiveSince || null}
-              minDate={new Date(1900, 0, 1)}
+              value={effectiveSince}
               disableFuture
+              minDate={new Date(1900, 0, 1)}
               format="M/d/yyyy"
-              onChange={(date: Date | null) => {
-                const invalid = date != null && date.getFullYear() < 1900;
-                setDateError(invalid);
-                setFields({ ...fields, effectiveSince: date });
-              }}
-              slotProps={{
-                textField: {
-                  fullWidth: true,
-                  error: dateError,
-                  helperText: dateError
-                    ? 'Hmm, that doesn’t seem to be a valid date. Please enter a valid date to continue.'
-                    : '',
-                },
+              onChange={(date) =>
+                setFields({ ...fields, effectiveSince: date })
+              }
+              onErrorChange={setDateError}
+              textFieldProps={{
+                fullWidth: true,
               }}
             />
           </Grid>

@@ -3,7 +3,7 @@ import { useVolunteersModel } from '../Model/VolunteersModel';
 import { UpdateDialog } from '../Generic/UpdateDialog';
 import { useState } from 'react';
 import { Grid } from '@mui/material';
-import { DatePicker } from '@mui/x-date-pickers';
+import { ValidateDatePicker } from '../Generic/Forms/ValidateDatePicker';
 
 interface ResetFamilyRoleDialogProps {
   volunteerFamilyId: string;
@@ -56,25 +56,18 @@ export function ResetFamilyRoleDialog({
             </p>
           </Grid>
           <Grid item xs={12}>
-            <DatePicker
+            <ValidateDatePicker
               label="Effective Through (optional - leave blank to use the current date)"
-              value={effectiveThrough || null}
-              minDate={new Date(1900, 0, 1)}
+              value={effectiveThrough}
               disableFuture
+              minDate={new Date(1900, 0, 1)}
               format="M/d/yyyy"
-              onChange={(date: Date | null) => {
-                const invalid = date != null && date.getFullYear() < 1900;
-                setDateError(invalid);
-                setFields({ ...fields, effectiveThrough: date });
-              }}
-              slotProps={{
-                textField: {
-                  fullWidth: true,
-                  error: dateError,
-                  helperText: dateError
-                    ? 'Hmm, that doesn’t seem to be a valid date. Please enter a valid date to continue.'
-                    : '',
-                },
+              onChange={(date) =>
+                setFields({ ...fields, effectiveThrough: date })
+              }
+              onErrorChange={setDateError}
+              textFieldProps={{
+                fullWidth: true,
               }}
             />
           </Grid>

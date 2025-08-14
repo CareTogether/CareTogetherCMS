@@ -1,5 +1,5 @@
 import { Grid } from '@mui/material';
-import { DatePicker } from '@mui/x-date-pickers';
+import { ValidateDatePicker } from '../../Generic/Forms/ValidateDatePicker';
 import { useState } from 'react';
 import { useParams } from 'react-router';
 import { Arrangement, Person } from '../../GeneratedClient';
@@ -54,27 +54,16 @@ export function StartArrangementDialog({
     >
       <Grid container spacing={2}>
         <Grid item xs={12}>
-          <DatePicker
+          <ValidateDatePicker
             label="When was this arrangement started?"
             value={startedAtLocal}
+            onChange={setStartedAtLocal}
+            onErrorChange={setDobError}
             disableFuture
-            minDate={new Date(1900, 0, 1)}
-            format="M/d/yyyy"
-            onChange={(date: Date | null) => {
-              const invalid = !date || date.getFullYear() < 1900;
-              setDobError(invalid);
-              if (date) setStartedAtLocal(date);
-            }}
-            slotProps={{
-              textField: {
-                fullWidth: true,
-                required: true,
-                error: dobError,
-                helperText: dobError
-                  ? 'Hmm, that doesn’t seem to be a valid date. Please enter a valid date to continue.'
-                  : '',
-                sx: { marginTop: 1 },
-              },
+            textFieldProps={{
+              fullWidth: true,
+              required: true,
+              sx: { marginTop: 1 },
             }}
           />
         </Grid>

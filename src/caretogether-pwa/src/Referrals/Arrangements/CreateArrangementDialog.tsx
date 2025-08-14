@@ -20,7 +20,7 @@ import {
   ArrangementPolicy,
   ChildInvolvement,
 } from '../../GeneratedClient';
-import { DatePicker } from '@mui/x-date-pickers';
+import { ValidateDatePicker } from '../../Generic/Forms/ValidateDatePicker';
 import { useRecoilValue } from 'recoil';
 import { useParams } from 'react-router-dom';
 import { useBackdrop } from '../../Hooks/useBackdrop';
@@ -109,27 +109,18 @@ export function CreateArrangementDialog({
         <form noValidate autoComplete="off">
           <Grid container spacing={2}>
             <Grid item>
-              <DatePicker
+              <ValidateDatePicker
                 label="Requested at"
                 value={requestedAtLocal}
+                onChange={(date) =>
+                  setFields({ ...fields, requestedAtLocal: date })
+                }
                 maxDate={new Date()}
-                minDate={new Date(1900, 0, 1)}
-                format="MM/dd/yyyy"
-                onChange={(date: Date | null) => {
-                  const invalid = !date || date.getFullYear() < 1900;
-                  setDobError(invalid);
-                  if (date) setFields({ ...fields, requestedAtLocal: date });
-                }}
-                slotProps={{
-                  textField: {
-                    size: 'small',
-                    required: true,
-                    error: dobError,
-                    helperText: dobError
-                      ? 'Hmm, that doesn’t seem to be a valid date. Please enter a valid date to continue.'
-                      : '',
-                    sx: { marginTop: 1 },
-                  },
+                onErrorChange={setDobError}
+                textFieldProps={{
+                  size: 'small',
+                  required: true,
+                  sx: { marginTop: 1 },
                 }}
               />
             </Grid>

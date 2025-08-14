@@ -31,7 +31,7 @@ import {
 } from '../GeneratedClient';
 import { useDirectoryModel } from '../Model/DirectoryModel';
 import WarningIcon from '@mui/icons-material/Warning';
-import { DatePicker } from '@mui/x-date-pickers';
+import { ValidateDatePicker } from '../Generic/Forms/ValidateDatePicker';
 import { useRecoilValue } from 'recoil';
 import {
   adultFamilyRelationshipsData,
@@ -261,26 +261,14 @@ export function AddAdultDialog({ onClose }: AddAdultDialogProps) {
               </FormControl>
             </Grid>
             <Grid item xs={12} sm={6}>
-              <DatePicker
+              <ValidateDatePicker
                 label="Date of birth"
                 value={dateOfBirth}
+                onChange={(date) => setFields({ ...fields, dateOfBirth: date })}
                 maxDate={subYears(new Date(), 18)}
-                minDate={new Date(1900, 0, 1)}
-                openTo="year"
-                format="MM/dd/yyyy"
-                onChange={(date: Date | null) => {
-                  setFields({ ...fields, dateOfBirth: date });
-                  setDobError(!date || date.getFullYear() < 1900);
-                }}
-                slotProps={{
-                  textField: {
-                    size: 'small',
-                    fullWidth: true,
-                    error: dobError,
-                    helperText: dobError
-                      ? 'Hmm, that doesn’t seem to be a valid date. Please enter a valid date to continue.'
-                      : '',
-                  },
+                onErrorChange={setDobError}
+                textFieldProps={{
+                  size: 'small',
                 }}
               />
             </Grid>

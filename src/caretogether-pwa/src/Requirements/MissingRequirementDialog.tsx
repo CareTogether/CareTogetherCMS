@@ -1,4 +1,3 @@
-import { DatePicker } from '@mui/x-date-pickers';
 import {
   Checkbox,
   DialogContentText,
@@ -44,6 +43,7 @@ import { DialogHandle } from '../Hooks/useDialogHandle';
 import { familyNameString } from '../Families/FamilyName';
 import { add, format, formatDuration, formatRelative, isValid } from 'date-fns';
 import { selectedLocationContextState } from '../Model/Data';
+import { ValidateDatePicker } from '../Generic/Forms/ValidateDatePicker';
 
 type MissingRequirementDialogProps = {
   handle: DialogHandle;
@@ -453,50 +453,22 @@ export function MissingRequirementDialog({
           )}
           <Grid item xs={12}>
             {requirement instanceof MissingArrangementRequirement ? (
-              <DatePicker
+              <ValidateDatePicker
                 label="When was this requirement completed?"
                 value={completedAtLocal}
-                disableFuture
-                minDate={new Date(1900, 0, 1)}
-                format="MM/dd/yyyy"
-                onChange={(date: Date | null) => {
-                  const invalid = !date || date.getFullYear() < 1900;
-                  setCompletedAtError(invalid);
-                  if (date) setCompletedAtLocal(date);
-                }}
-                slotProps={{
-                  textField: {
-                    fullWidth: true,
-                    required: true,
-                    error: completedAtError,
-                    helperText: completedAtError
-                      ? 'Hmm, that doesn’t seem to be a valid date. Please enter a valid date to continue.'
-                      : '',
-                  },
-                }}
+                maxDate={new Date()}
+                onChange={(date) => setCompletedAtLocal(date)}
+                onErrorChange={setCompletedAtError}
+                textFieldProps={{ fullWidth: true, required: true }}
               />
             ) : (
-              <DatePicker
+              <ValidateDatePicker
                 label="When was this requirement completed?"
                 value={completedAtLocal}
-                disableFuture
-                minDate={new Date(1900, 0, 1)}
-                format="MM/dd/yyyy"
-                onChange={(date: Date | null) => {
-                  const invalid = !date || date.getFullYear() < 1900;
-                  setCompletedAtError(invalid);
-                  if (date) setCompletedAtLocal(date);
-                }}
-                slotProps={{
-                  textField: {
-                    fullWidth: true,
-                    required: true,
-                    error: completedAtError,
-                    helperText: completedAtError
-                      ? 'Hmm, that doesn’t seem to be a valid date. Please enter a valid date to continue.'
-                      : '',
-                  },
-                }}
+                maxDate={new Date()}
+                onChange={(date) => setCompletedAtLocal(date)}
+                onErrorChange={setCompletedAtError}
+                textFieldProps={{ fullWidth: true, required: true }}
               />
             )}
             {validityDuration &&
@@ -663,25 +635,12 @@ export function MissingRequirementDialog({
               />
             </Grid>
             <Grid item xs={12}>
-              <DatePicker
+              <ValidateDatePicker
                 label="When does this exemption expire? (Default is never)"
                 value={exemptionExpiresAtLocal}
-                minDate={new Date(1900, 0, 1)}
-                format="MM/dd/yyyy"
-                onChange={(date: Date | null) => {
-                  const invalid = !date || date.getFullYear() < 1900;
-                  setCompletedAtError(invalid);
-                  if (date) setExemptionExpiresAtLocal(date);
-                }}
-                slotProps={{
-                  textField: {
-                    fullWidth: true,
-                    error: completedAtError,
-                    helperText: completedAtError
-                      ? 'Hmm, that doesn’t seem to be a valid date. Please enter a valid date to continue.'
-                      : '',
-                  },
-                }}
+                onChange={(date) => setExemptionExpiresAtLocal(date)}
+                onErrorChange={setCompletedAtError}
+                textFieldProps={{ fullWidth: true }}
               />
             </Grid>
           </Grid>

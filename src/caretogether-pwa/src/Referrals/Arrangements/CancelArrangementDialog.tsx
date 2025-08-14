@@ -1,11 +1,11 @@
 import { Grid } from '@mui/material';
-import { DatePicker } from '@mui/x-date-pickers';
 import { useState } from 'react';
 import { useParams } from 'react-router';
 import { Arrangement, Person } from '../../GeneratedClient';
 import { usePersonLookup } from '../../Model/DirectoryModel';
 import { useReferralsModel } from '../../Model/ReferralsModel';
 import { UpdateDialog } from '../../Generic/UpdateDialog';
+import { ValidateDatePicker } from '../../Generic/Forms/ValidateDatePicker';
 
 interface CancelArrangementDialogProps {
   referralId: string;
@@ -54,27 +54,18 @@ export function CancelArrangementDialog({
     >
       <Grid container spacing={0}>
         <Grid item xs={12}>
-          <DatePicker
+          <ValidateDatePicker
             label="When was this arrangement cancelled?"
             value={cancelledAtLocal}
+            onChange={(date) =>
+              setFields({ ...fields, cancelledAtLocal: date })
+            }
             disableFuture
-            minDate={new Date(1900, 0, 1)}
-            format="M/d/yyyy"
-            onChange={(date: Date | null) => {
-              const invalid = !date || date.getFullYear() < 1900;
-              setDobError(invalid);
-              if (date) setFields({ ...fields, cancelledAtLocal: date });
-            }}
-            slotProps={{
-              textField: {
-                fullWidth: true,
-                required: true,
-                error: dobError,
-                helperText: dobError
-                  ? 'Hmm, that doesn’t seem to be a valid date. Please enter a valid date to continue.'
-                  : '',
-                sx: { marginTop: 1 },
-              },
+            onErrorChange={setDobError}
+            textFieldProps={{
+              fullWidth: true,
+              required: true,
+              sx: { marginTop: 1 },
             }}
           />
         </Grid>
