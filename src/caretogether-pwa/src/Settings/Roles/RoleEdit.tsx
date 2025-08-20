@@ -30,8 +30,6 @@ import {
   PermissionContext,
   RoleDefinition,
   Permission,
-  CommunityCoMemberFamiliesAssignedFunctionsInReferralPartneringFamilyPermissionContext,
-  CommunityCoMemberFamiliesAssignedFunctionsInReferralCoAssignedFamiliesPermissionContext,
 } from '../../GeneratedClient';
 import { organizationConfigurationEdited } from '../../Model/ConfigurationModel';
 import { useGlobalPermissions } from '../../Model/SessionModel';
@@ -57,9 +55,7 @@ export function RoleEdit({
 
   const storeEdits = useSetRecoilState(organizationConfigurationEdited);
 
-  const { organizationId, locationId } = useRecoilValue(
-    selectedLocationContextState
-  );
+  const { organizationId } = useRecoilValue(selectedLocationContextState);
 
   const [workingRole, setWorkingRole] =
     useState<RoleDefinition>(roleDefinition);
