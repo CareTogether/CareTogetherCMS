@@ -46,7 +46,7 @@ export function RolesSection() {
   const canEdit = permissions(Permission.AddEditRoles);
 
   return (
-    <div className="ph-unmask">
+    <>
       <Breadcrumbs
         aria-label="breadcrumb"
         separator={<NavigateNextIcon fontSize="small" />}
@@ -140,6 +140,6 @@ export function RolesSection() {
           </SidePanel>
         </>
       )}
-    </div>
+    </>
   );
 }
