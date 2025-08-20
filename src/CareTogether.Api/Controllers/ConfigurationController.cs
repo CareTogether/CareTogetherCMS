@@ -154,6 +154,28 @@ namespace CareTogether.Api.Controllers
                         : null,
             };
 
+            var createPersonResult = await directoryResource.ExecutePersonCommandAsync(
+                organizationId,
+                newLocationId,
+                new CreatePerson(
+                    newPerson.Id,
+                    newPerson.FirstName,
+                    newPerson.LastName,
+                    newPerson.Gender,
+                    newPerson.Age,
+                    newPerson.Ethnicity,
+                    newPerson.Addresses,
+                    newPerson.CurrentAddressId,
+                    newPerson.PhoneNumbers,
+                    newPerson.PreferredPhoneNumberId,
+                    newPerson.EmailAddresses,
+                    newPerson.PreferredEmailAddressId,
+                    newPerson.Concerns,
+                    newPerson.Notes
+                ),
+                User.UserId()
+            );
+
             foreach (var addressEntry in newAddresses)
             {
                 await directoryResource.ExecutePersonCommandAsync(
@@ -195,28 +217,6 @@ namespace CareTogether.Api.Controllers
                     User.UserId()
                 );
             }
-
-            var createPersonResult = await directoryResource.ExecutePersonCommandAsync(
-                organizationId,
-                newLocationId,
-                new CreatePerson(
-                    newPerson.Id,
-                    newPerson.FirstName,
-                    newPerson.LastName,
-                    newPerson.Gender,
-                    newPerson.Age,
-                    newPerson.Ethnicity,
-                    newPerson.Addresses,
-                    newPerson.CurrentAddressId,
-                    newPerson.PhoneNumbers,
-                    newPerson.PreferredPhoneNumberId,
-                    newPerson.EmailAddresses,
-                    newPerson.PreferredEmailAddressId,
-                    newPerson.Concerns,
-                    newPerson.Notes
-                ),
-                User.UserId()
-            );
 
             return createPersonResult;
         }
