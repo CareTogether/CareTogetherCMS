@@ -16,6 +16,14 @@ export const postHogOptions: Partial<PostHogConfig> = {
 
       return '*'.repeat(text.length);
     },
+    maskInputFn: (text, element) => {
+      // See note on `maskTextFn` above.
+      if (element?.closest('.ph-unmask') !== null) {
+        return text;
+      }
+
+      return '*'.repeat(text.length);
+    },
   },
   mask_all_text: true,
 };
