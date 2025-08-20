@@ -68,7 +68,7 @@ export function ArrangementPlannedDuration({
 
   if (summaryOnly) {
     return (
-      <Stack direction="column" sx={{ clear: 'both' }}>
+      <Stack className="ph-unmask" direction="column" sx={{ clear: 'both' }}>
         <Box>
           <span>Planned start:&nbsp;</span>
           {arrangement.plannedStartUtc

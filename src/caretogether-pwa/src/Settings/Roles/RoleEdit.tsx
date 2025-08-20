@@ -30,6 +30,8 @@ import {
   PermissionContext,
   RoleDefinition,
   Permission,
+  CommunityCoMemberFamiliesAssignedFunctionsInReferralPartneringFamilyPermissionContext,
+  CommunityCoMemberFamiliesAssignedFunctionsInReferralCoAssignedFamiliesPermissionContext,
 } from '../../GeneratedClient';
 import { organizationConfigurationEdited } from '../../Model/ConfigurationModel';
 import { useGlobalPermissions } from '../../Model/SessionModel';
@@ -148,7 +150,13 @@ export function RoleEdit({
           aria-label="breadcrumb"
           separator={<NavigateNextIcon fontSize="small" />}
         >
-          <MuiLink component={Link} underline="hover" color="inherit" to="..">
+          <MuiLink
+            component={Link}
+            underline="hover"
+            color="inherit"
+            to="../.."
+            relative="path"
+          >
             Settings
           </MuiLink>
 
@@ -156,7 +164,8 @@ export function RoleEdit({
             component={Link}
             underline="hover"
             color="inherit"
-            to="..#roles"
+            to=".."
+            relative="path"
           >
             Roles
           </MuiLink>
@@ -311,6 +320,30 @@ export function RoleEdit({
           }
         >
           Community Member - Co-Member Families
+        </MenuItem>
+        <MenuItem
+          dense
+          onClick={() =>
+            addPermissionSet(
+              () =>
+                new CommunityCoMemberFamiliesAssignedFunctionsInReferralPartneringFamilyPermissionContext()
+            )
+          }
+        >
+          Community Member - Co-Member Families - Assigned Functions in Referral
+          - Partnering Family
+        </MenuItem>
+        <MenuItem
+          dense
+          onClick={() =>
+            addPermissionSet(
+              () =>
+                new CommunityCoMemberFamiliesAssignedFunctionsInReferralCoAssignedFamiliesPermissionContext()
+            )
+          }
+        >
+          Community Member - Co-Member Families - Assigned Functions in Referral
+          - Co-Assigned Families
         </MenuItem>
       </Menu>
 
