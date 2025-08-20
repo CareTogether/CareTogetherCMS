@@ -27,7 +27,10 @@ export function SettingsScreen() {
   }
 
   return (
-    <Box sx={{ paddingTop: 4, display: 'flex', justifyContent: 'center' }}>
+    <Box
+      className="ph-unmask"
+      sx={{ paddingTop: 4, display: 'flex', justifyContent: 'center' }}
+    >
       <Grid container spacing={3}>
         <Grid item xs={12} sm={6} md={4}>
           <Card variant="outlined">
