@@ -1,5 +1,4 @@
 import { Tooltip } from '@mui/material';
-import { format } from 'date-fns';
 import { CompletedRequirementInfo, Permission } from '../GeneratedClient';
 import {
   useFamilyLookup,

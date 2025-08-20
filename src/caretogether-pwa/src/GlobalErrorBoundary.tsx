@@ -1,5 +1,6 @@
 import React from 'react';
 import { appInsights } from './ApplicationInsightsService';
+import posthog from 'posthog-js';
 
 export class GlobalErrorBoundary extends React.Component<
   { children?: React.ReactNode },
@@ -27,6 +28,9 @@ export class GlobalErrorBoundary extends React.Component<
         error: JSON.stringify(error),
         errorInfo: JSON.stringify(errorInfo),
       },
+    });
+    posthog.captureException(error, {
+      errorInfo,
     });
   }
 

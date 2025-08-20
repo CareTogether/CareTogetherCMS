@@ -1,9 +1,19 @@
 import { useState } from 'react';
-import { Grid, TextField } from '@mui/material';
+import {
+  FormControl,
+  FormHelperText,
+  Grid,
+  InputLabel,
+  MenuItem,
+  Select,
+  TextField,
+} from '@mui/material';
 import { useDirectoryModel } from '../Model/DirectoryModel';
 import { UpdateDialog } from '../Generic/UpdateDialog';
 import { Note } from '../GeneratedClient';
 import { DateTimePicker } from '@mui/x-date-pickers';
+import { useRecoilValue } from 'recoil';
+import { locationConfigurationQuery } from '../Model/ConfigurationModel';
 
 interface AddEditNoteDialogProps {
   familyId: string;
@@ -19,9 +29,14 @@ export function AddEditNoteDialog({
   const [fields, setFields] = useState({
     contents: note?.contents || '',
     backdatedTimestampLocal: note?.backdatedTimestampUtc,
+    accessLevel: note?.accessLevel || 'Everyone',
   });
-  const { contents, backdatedTimestampLocal } = fields;
+  const { contents, backdatedTimestampLocal, accessLevel } = fields;
   const directoryModel = useDirectoryModel();
+
+  const locationConfiguration = useRecoilValue(locationConfigurationQuery);
+
+  const accessLevels = locationConfiguration?.accessLevels || [];
 
   async function save() {
     if (note)
@@ -29,14 +44,16 @@ export function AddEditNoteDialog({
         familyId,
         note.id!,
         contents,
-        backdatedTimestampLocal
+        backdatedTimestampLocal,
+        accessLevel === 'Everyone' ? undefined : accessLevel
       );
     else
       await directoryModel.createDraftNote(
         familyId,
         crypto.randomUUID(),
         contents,
-        backdatedTimestampLocal
+        backdatedTimestampLocal,
+        accessLevel === 'Everyone' ? undefined : accessLevel
       );
   }
 
@@ -47,7 +64,8 @@ export function AddEditNoteDialog({
       onSave={save}
       enableSave={() =>
         (contents !== note?.contents ||
-          backdatedTimestampLocal !== note?.backdatedTimestampUtc) &&
+          backdatedTimestampLocal !== note?.backdatedTimestampUtc ||
+          accessLevel !== note?.accessLevel) &&
         contents.length > 0
       }
     >
@@ -84,6 +102,29 @@ export function AddEditNoteDialog({
               }
               slotProps={{ textField: { fullWidth: true } }}
             />
+          </Grid>
+          <Grid item xs={12}>
+            <FormControl fullWidth>
+              <InputLabel id="access-level-label">Access Level</InputLabel>
+              <Select
+                labelId="access-level-label"
+                label="Access Level"
+                value={fields.accessLevel || ''}
+                onChange={(e) =>
+                  setFields({ ...fields, accessLevel: e.target.value })
+                }
+              >
+                <MenuItem value="Everyone">
+                  <em>Everyone</em>
+                </MenuItem>
+                {accessLevels.map((accessLevel) => (
+                  <MenuItem key={accessLevel.name} value={accessLevel.name}>
+                    {accessLevel.name}
+                  </MenuItem>
+                ))}
+              </Select>
+              <FormHelperText>Who can see this note?</FormHelperText>
+            </FormControl>
           </Grid>
         </Grid>
       </form>

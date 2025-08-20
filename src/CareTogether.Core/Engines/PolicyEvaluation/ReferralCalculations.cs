@@ -16,10 +16,10 @@ namespace CareTogether.Engines.PolicyEvaluation
         )
         {
             var missingIntakeRequirements = referralPolicy
-                .RequiredIntakeActionNames.Where(requiredAction =>
+                .IntakeRequirements.Where(requirement =>
                     !SharedCalculations
                         .RequirementMetOrExempted(
-                            requiredAction,
+                            requirement.ActionName,
                             policySupersededAt: null,
                             today,
                             completedRequirements: referralEntry.CompletedRequirements,
@@ -99,7 +99,15 @@ namespace CareTogether.Engines.PolicyEvaluation
                 missingCloseoutRequirements
             );
 
-            return new ArrangementStatus(phase, missingRequirements); //TODO: Shouldn't missing function assignments be returned as well?
+            return new ArrangementStatus(
+                phase,
+                missingRequirements.Where(missing => missing.Action.IsRequired).ToImmutableList(),
+                missingSetupRequirements
+                    .Concat(missingMonitoringRequirements)
+                    .Concat(missingCloseoutRequirements)
+                    .Where(missing => !missing.Action.IsRequired)
+                    .ToImmutableList()
+            ); //TODO: Shouldn't missing function assignments be returned as well?
         }
 
         internal static ImmutableList<MissingArrangementRequirement> SelectMissingRequirementsForStatus(
@@ -132,7 +140,11 @@ namespace CareTogether.Engines.PolicyEvaluation
             cancelledAt.HasValue ? ArrangementPhase.Cancelled
             : endedAt.HasValue ? ArrangementPhase.Ended
             : startedAt.HasValue ? ArrangementPhase.Started
-            : (missingSetupRequirements.Count == 0 && missingFunctionAssignments.Count == 0)
+            : (
+                missingSetupRequirements.Where(requirement => requirement.Action.IsRequired).Count()
+                    == 0
+                && missingFunctionAssignments.Count == 0
+            )
                 ? ArrangementPhase.ReadyToStart
             : ArrangementPhase.SettingUp;
 
@@ -143,10 +155,10 @@ namespace CareTogether.Engines.PolicyEvaluation
         )
         {
             var arrangementLevelResults = arrangementPolicy
-                .RequiredSetupActionNames.Where(requiredAction =>
+                .RequiredSetupActions.Where(requiredAction =>
                     !SharedCalculations
                         .RequirementMetOrExempted(
-                            requiredAction,
+                            requiredAction.ActionName,
                             policySupersededAt: null,
                             today,
                             completedRequirements: arrangement.CompletedRequirements,
@@ -183,7 +195,7 @@ namespace CareTogether.Engines.PolicyEvaluation
                         .RequiredSetupActionNames.Where(requiredAction =>
                             !SharedCalculations
                                 .RequirementMetOrExempted(
-                                    requiredAction,
+                                    requiredAction.ActionName,
                                     policySupersededAt: null,
                                     today,
                                     completedRequirements: fva.CompletedRequirements,
@@ -222,7 +234,7 @@ namespace CareTogether.Engines.PolicyEvaluation
                         .RequiredSetupActionNames.Where(requiredAction =>
                             !SharedCalculations
                                 .RequirementMetOrExempted(
-                                    requiredAction,
+                                    requiredAction.ActionName,
                                     policySupersededAt: null,
                                     today,
                                     completedRequirements: iva.CompletedRequirements,
@@ -266,7 +278,7 @@ namespace CareTogether.Engines.PolicyEvaluation
                                 arrangement.EndedAt,
                                 arrangement
                                     .CompletedRequirements.Where(x =>
-                                        x.RequirementName == monitoringRequirement.ActionName
+                                        x.RequirementName == monitoringRequirement.Action.ActionName
                                     )
                                     .Select(x => x.CompletedAt)
                                     .OrderBy(x => x)
@@ -278,7 +290,7 @@ namespace CareTogether.Engines.PolicyEvaluation
                     )
                         .Where(missingDueDate =>
                             !arrangement.ExemptedRequirements.Any(exempted =>
-                                exempted.RequirementName == monitoringRequirement.ActionName
+                                exempted.RequirementName == monitoringRequirement.Action.ActionName
                                 && (
                                     !exempted.DueDate.HasValue || exempted.DueDate == missingDueDate
                                 )
@@ -293,7 +305,7 @@ namespace CareTogether.Engines.PolicyEvaluation
                             null,
                             null,
                             null,
-                            monitoringRequirement.ActionName,
+                            monitoringRequirement.Action,
                             DueBy: missingDueDate > today ? missingDueDate : null,
                             PastDueSince: missingDueDate <= today ? missingDueDate : null
                         ))
@@ -325,7 +337,7 @@ namespace CareTogether.Engines.PolicyEvaluation
                                         arrangement.EndedAt,
                                         fva.CompletedRequirements.Where(x =>
                                                 x.RequirementName
-                                                == monitoringRequirement.ActionName
+                                                == monitoringRequirement.Action.ActionName
                                             )
                                             .Select(x => x.CompletedAt)
                                             .OrderBy(x => x)
@@ -337,7 +349,8 @@ namespace CareTogether.Engines.PolicyEvaluation
                             )
                                 .Where(missingDueDate =>
                                     !fva.ExemptedRequirements.Any(exempted =>
-                                        exempted.RequirementName == monitoringRequirement.ActionName
+                                        exempted.RequirementName
+                                            == monitoringRequirement.Action.ActionName
                                         && (
                                             !exempted.DueDate.HasValue
                                             || exempted.DueDate == missingDueDate
@@ -353,7 +366,7 @@ namespace CareTogether.Engines.PolicyEvaluation
                                     fva.ArrangementFunctionVariant,
                                     fva.FamilyId,
                                     null,
-                                    monitoringRequirement.ActionName,
+                                    monitoringRequirement.Action,
                                     DueBy: missingDueDate > today ? missingDueDate : null,
                                     PastDueSince: missingDueDate <= today ? missingDueDate : null
                                 ))
@@ -387,7 +400,7 @@ namespace CareTogether.Engines.PolicyEvaluation
                                         arrangement.EndedAt,
                                         iva.CompletedRequirements.Where(x =>
                                                 x.RequirementName
-                                                == monitoringRequirement.ActionName
+                                                == monitoringRequirement.Action.ActionName
                                             )
                                             .Select(x => x.CompletedAt)
                                             .OrderBy(x => x)
@@ -399,7 +412,8 @@ namespace CareTogether.Engines.PolicyEvaluation
                             )
                                 .Where(missingDueDate =>
                                     !iva.ExemptedRequirements.Any(exempted =>
-                                        exempted.RequirementName == monitoringRequirement.ActionName
+                                        exempted.RequirementName
+                                            == monitoringRequirement.Action.ActionName
                                         && (
                                             !exempted.DueDate.HasValue
                                             || exempted.DueDate == missingDueDate
@@ -415,7 +429,7 @@ namespace CareTogether.Engines.PolicyEvaluation
                                     iva.ArrangementFunctionVariant,
                                     iva.FamilyId,
                                     iva.PersonId,
-                                    monitoringRequirement.ActionName,
+                                    monitoringRequirement.Action,
                                     DueBy: missingDueDate > today ? missingDueDate : null,
                                     PastDueSince: missingDueDate <= today ? missingDueDate : null
                                 ))
@@ -891,7 +905,7 @@ namespace CareTogether.Engines.PolicyEvaluation
                 .RequiredCloseoutActionNames.Where(requiredAction =>
                     !SharedCalculations
                         .RequirementMetOrExempted(
-                            requiredAction,
+                            requiredAction.ActionName,
                             policySupersededAt: null,
                             today,
                             completedRequirements: arrangement.CompletedRequirements,
@@ -928,7 +942,7 @@ namespace CareTogether.Engines.PolicyEvaluation
                         .RequiredCloseoutActionNames.Where(requiredAction =>
                             !SharedCalculations
                                 .RequirementMetOrExempted(
-                                    requiredAction,
+                                    requiredAction.ActionName,
                                     policySupersededAt: null,
                                     today,
                                     completedRequirements: fva.CompletedRequirements,
@@ -967,7 +981,7 @@ namespace CareTogether.Engines.PolicyEvaluation
                         .RequiredCloseoutActionNames.Where(requiredAction =>
                             !SharedCalculations
                                 .RequirementMetOrExempted(
-                                    requiredAction,
+                                    requiredAction.ActionName,
                                     policySupersededAt: null,
                                     today,
                                     completedRequirements: iva.CompletedRequirements,

@@ -32,7 +32,9 @@ export function MissingArrangementRequirementRow({
 
   const dialogHandle = useDialogHandle();
 
-  const requirementPolicy = policy.actionDefinitions![requirement.actionName!];
+  const actionName = requirement.action!.actionName!;
+
+  const requirementPolicy = policy.actionDefinitions![actionName];
 
   if (
     context.kind === 'Referral' ||
@@ -58,7 +60,7 @@ export function MissingArrangementRequirementRow({
             canComplete || canExempt ? dialogHandle.openDialog : undefined
           }
         >
-          {requirement.actionName}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+          {requirement.action?.actionName}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
           <span style={{ float: 'right' }}>
             {formatUtcDateOnly(requirement.dueBy)}
           </span>
@@ -88,12 +90,12 @@ export function MissingArrangementRequirementRow({
         </IconRow>
       ) : (
         <IconRow
-          icon="❌"
+          icon={requirement.action?.isRequired ? '❌' : '🔲'}
           onClick={
             canComplete || canExempt ? dialogHandle.openDialog : undefined
           }
         >
-          {requirement.actionName}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+          {requirement.action?.actionName}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
           {requirement.pastDueSince && (
             <span style={{ float: 'right' }}>
               {formatUtcDateOnly(requirement.pastDueSince)}

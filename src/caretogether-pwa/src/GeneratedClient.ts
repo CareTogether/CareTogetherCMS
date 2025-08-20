@@ -117,6 +117,47 @@ export class ConfigurationClient {
         return Promise.resolve<OrganizationConfiguration>(null as any);
     }
 
+    putLocationDefinition(organizationId: string, newLocationPayload: PutLocationPayload): Promise<OrganizationConfiguration> {
+        let url_ = this.baseUrl + "/api/{organizationId}/Configuration";
+        if (organizationId === undefined || organizationId === null)
+            throw new Error("The parameter 'organizationId' must be defined.");
+        url_ = url_.replace("{organizationId}", encodeURIComponent("" + organizationId));
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(newLocationPayload);
+
+        let options_: RequestInit = {
+            body: content_,
+            method: "PUT",
+            headers: {
+                "Content-Type": "application/json",
+                "Accept": "application/json"
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processPutLocationDefinition(_response);
+        });
+    }
+
+    protected processPutLocationDefinition(response: Response): Promise<OrganizationConfiguration> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result200 = OrganizationConfiguration.fromJS(resultData200);
+            return result200;
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<OrganizationConfiguration>(null as any);
+    }
+
     putRoleDefinition(organizationId: string, roleName: string, role: RoleDefinition): Promise<OrganizationConfiguration> {
         let url_ = this.baseUrl + "/api/{organizationId}/Configuration/roles/{roleName}";
         if (organizationId === undefined || organizationId === null)
@@ -983,93 +1024,6 @@ export class UsersClient {
     }
 }
 
-export class MetadataClient {
-    private http: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> };
-    private baseUrl: string;
-    protected jsonParseReviver: ((key: string, value: any) => any) | undefined = undefined;
-
-    constructor(baseUrl?: string, http?: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> }) {
-        this.http = http ? http : window as any;
-        this.baseUrl = baseUrl ?? "";
-    }
-
-    /**
-     * Generates the OData $metadata document.
-     * @return The IEdmModel representing $metadata.
-     */
-    getMetadata(): Promise<IEdmModel> {
-        let url_ = this.baseUrl + "/api/odata/live/$metadata";
-        url_ = url_.replace(/[?&]$/, "");
-
-        let options_: RequestInit = {
-            method: "GET",
-            headers: {
-                "Accept": "application/json"
-            }
-        };
-
-        return this.http.fetch(url_, options_).then((_response: Response) => {
-            return this.processGetMetadata(_response);
-        });
-    }
-
-    protected processGetMetadata(response: Response): Promise<IEdmModel> {
-        const status = response.status;
-        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
-        if (status === 200) {
-            return response.text().then((_responseText) => {
-            let result200: any = null;
-            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
-            result200 = IEdmModel.fromJS(resultData200);
-            return result200;
-            });
-        } else if (status !== 200 && status !== 204) {
-            return response.text().then((_responseText) => {
-            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
-            });
-        }
-        return Promise.resolve<IEdmModel>(null as any);
-    }
-
-    /**
-     * Generates the OData service document.
-     * @return The service document for the service.
-     */
-    getServiceDocument(): Promise<ODataServiceDocument> {
-        let url_ = this.baseUrl + "/api/odata/live";
-        url_ = url_.replace(/[?&]$/, "");
-
-        let options_: RequestInit = {
-            method: "GET",
-            headers: {
-                "Accept": "application/json"
-            }
-        };
-
-        return this.http.fetch(url_, options_).then((_response: Response) => {
-            return this.processGetServiceDocument(_response);
-        });
-    }
-
-    protected processGetServiceDocument(response: Response): Promise<ODataServiceDocument> {
-        const status = response.status;
-        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
-        if (status === 200) {
-            return response.text().then((_responseText) => {
-            let result200: any = null;
-            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
-            result200 = ODataServiceDocument.fromJS(resultData200);
-            return result200;
-            });
-        } else if (status !== 200 && status !== 204) {
-            return response.text().then((_responseText) => {
-            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
-            });
-        }
-        return Promise.resolve<ODataServiceDocument>(null as any);
-    }
-}
-
 export class ValueTupleOfGuidAndSmsMessageResult implements IValueTupleOfGuidAndSmsMessageResult {
     item1?: string;
     item2?: SmsMessageResult;
@@ -1288,6 +1242,7 @@ export class LocationConfiguration implements ILocationConfiguration {
     adultFamilyRelationships?: string[];
     arrangementReasons?: string[] | undefined;
     smsSourcePhoneNumbers?: SourcePhoneNumberConfiguration[];
+    accessLevels?: AccessLevel[] | undefined;
     timeZone?: TimeZoneInfo | undefined;
 
     constructor(data?: ILocationConfiguration) {
@@ -1322,6 +1277,11 @@ export class LocationConfiguration implements ILocationConfiguration {
                 this.smsSourcePhoneNumbers = [] as any;
                 for (let item of _data["smsSourcePhoneNumbers"])
                     this.smsSourcePhoneNumbers!.push(SourcePhoneNumberConfiguration.fromJS(item));
+            }
+            if (Array.isArray(_data["accessLevels"])) {
+                this.accessLevels = [] as any;
+                for (let item of _data["accessLevels"])
+                    this.accessLevels!.push(AccessLevel.fromJS(item));
             }
             this.timeZone = _data["timeZone"] ? TimeZoneInfo.fromJS(_data["timeZone"]) : <any>undefined;
         }
@@ -1358,6 +1318,11 @@ export class LocationConfiguration implements ILocationConfiguration {
             for (let item of this.smsSourcePhoneNumbers)
                 data["smsSourcePhoneNumbers"].push(item.toJSON());
         }
+        if (Array.isArray(this.accessLevels)) {
+            data["accessLevels"] = [];
+            for (let item of this.accessLevels)
+                data["accessLevels"].push(item.toJSON());
+        }
         data["timeZone"] = this.timeZone ? this.timeZone.toJSON() : <any>undefined;
         return data;
     }
@@ -1370,6 +1335,7 @@ export interface ILocationConfiguration {
     adultFamilyRelationships?: string[];
     arrangementReasons?: string[] | undefined;
     smsSourcePhoneNumbers?: SourcePhoneNumberConfiguration[];
+    accessLevels?: AccessLevel[] | undefined;
     timeZone?: TimeZoneInfo | undefined;
 }
 
@@ -1411,6 +1377,70 @@ export class SourcePhoneNumberConfiguration implements ISourcePhoneNumberConfigu
 export interface ISourcePhoneNumberConfiguration {
     sourcePhoneNumber?: string;
     description?: string;
+}
+
+export class AccessLevel implements IAccessLevel {
+    id?: string;
+    name?: string;
+    organizationRoles?: string[];
+    approvalRoles?: string[];
+
+    constructor(data?: IAccessLevel) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.id = _data["id"];
+            this.name = _data["name"];
+            if (Array.isArray(_data["organizationRoles"])) {
+                this.organizationRoles = [] as any;
+                for (let item of _data["organizationRoles"])
+                    this.organizationRoles!.push(item);
+            }
+            if (Array.isArray(_data["approvalRoles"])) {
+                this.approvalRoles = [] as any;
+                for (let item of _data["approvalRoles"])
+                    this.approvalRoles!.push(item);
+            }
+        }
+    }
+
+    static fromJS(data: any): AccessLevel {
+        data = typeof data === 'object' ? data : {};
+        let result = new AccessLevel();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["id"] = this.id;
+        data["name"] = this.name;
+        if (Array.isArray(this.organizationRoles)) {
+            data["organizationRoles"] = [];
+            for (let item of this.organizationRoles)
+                data["organizationRoles"].push(item);
+        }
+        if (Array.isArray(this.approvalRoles)) {
+            data["approvalRoles"] = [];
+            for (let item of this.approvalRoles)
+                data["approvalRoles"].push(item);
+        }
+        return data;
+    }
+}
+
+export interface IAccessLevel {
+    id?: string;
+    name?: string;
+    organizationRoles?: string[];
+    approvalRoles?: string[];
 }
 
 export class TimeZoneInfo implements ITimeZoneInfo {
@@ -1612,6 +1642,16 @@ export abstract class PermissionContext implements IPermissionContext {
             result.init(data);
             return result;
         }
+        if (data["discriminator"] === "CommunityCoMemberFamiliesAssignedFunctionsInReferralCoAssignedFamiliesPermissionContext") {
+            let result = new CommunityCoMemberFamiliesAssignedFunctionsInReferralCoAssignedFamiliesPermissionContext();
+            result.init(data);
+            return result;
+        }
+        if (data["discriminator"] === "CommunityCoMemberFamiliesAssignedFunctionsInReferralPartneringFamilyPermissionContext") {
+            let result = new CommunityCoMemberFamiliesAssignedFunctionsInReferralPartneringFamilyPermissionContext();
+            result.init(data);
+            return result;
+        }
         if (data["discriminator"] === "CommunityCoMemberFamiliesPermissionContext") {
             let result = new CommunityCoMemberFamiliesPermissionContext();
             result.init(data);
@@ -1808,6 +1848,90 @@ export class AssignedFunctionsInReferralPartneringFamilyPermissionContext extend
 export interface IAssignedFunctionsInReferralPartneringFamilyPermissionContext extends IPermissionContext {
     whenReferralIsOpen?: boolean | undefined;
     whenOwnFunctionIsIn?: string[] | undefined;
+}
+
+export class CommunityCoMemberFamiliesAssignedFunctionsInReferralCoAssignedFamiliesPermissionContext extends PermissionContext implements ICommunityCoMemberFamiliesAssignedFunctionsInReferralCoAssignedFamiliesPermissionContext {
+    whenOwnCommunityRoleIsIn?: string[] | undefined;
+
+    constructor(data?: ICommunityCoMemberFamiliesAssignedFunctionsInReferralCoAssignedFamiliesPermissionContext) {
+        super(data);
+        this._discriminator = "CommunityCoMemberFamiliesAssignedFunctionsInReferralCoAssignedFamiliesPermissionContext";
+    }
+
+    init(_data?: any) {
+        super.init(_data);
+        if (_data) {
+            if (Array.isArray(_data["whenOwnCommunityRoleIsIn"])) {
+                this.whenOwnCommunityRoleIsIn = [] as any;
+                for (let item of _data["whenOwnCommunityRoleIsIn"])
+                    this.whenOwnCommunityRoleIsIn!.push(item);
+            }
+        }
+    }
+
+    static fromJS(data: any): CommunityCoMemberFamiliesAssignedFunctionsInReferralCoAssignedFamiliesPermissionContext {
+        data = typeof data === 'object' ? data : {};
+        let result = new CommunityCoMemberFamiliesAssignedFunctionsInReferralCoAssignedFamiliesPermissionContext();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        if (Array.isArray(this.whenOwnCommunityRoleIsIn)) {
+            data["whenOwnCommunityRoleIsIn"] = [];
+            for (let item of this.whenOwnCommunityRoleIsIn)
+                data["whenOwnCommunityRoleIsIn"].push(item);
+        }
+        super.toJSON(data);
+        return data;
+    }
+}
+
+export interface ICommunityCoMemberFamiliesAssignedFunctionsInReferralCoAssignedFamiliesPermissionContext extends IPermissionContext {
+    whenOwnCommunityRoleIsIn?: string[] | undefined;
+}
+
+export class CommunityCoMemberFamiliesAssignedFunctionsInReferralPartneringFamilyPermissionContext extends PermissionContext implements ICommunityCoMemberFamiliesAssignedFunctionsInReferralPartneringFamilyPermissionContext {
+    whenOwnCommunityRoleIsIn?: string[] | undefined;
+
+    constructor(data?: ICommunityCoMemberFamiliesAssignedFunctionsInReferralPartneringFamilyPermissionContext) {
+        super(data);
+        this._discriminator = "CommunityCoMemberFamiliesAssignedFunctionsInReferralPartneringFamilyPermissionContext";
+    }
+
+    init(_data?: any) {
+        super.init(_data);
+        if (_data) {
+            if (Array.isArray(_data["whenOwnCommunityRoleIsIn"])) {
+                this.whenOwnCommunityRoleIsIn = [] as any;
+                for (let item of _data["whenOwnCommunityRoleIsIn"])
+                    this.whenOwnCommunityRoleIsIn!.push(item);
+            }
+        }
+    }
+
+    static fromJS(data: any): CommunityCoMemberFamiliesAssignedFunctionsInReferralPartneringFamilyPermissionContext {
+        data = typeof data === 'object' ? data : {};
+        let result = new CommunityCoMemberFamiliesAssignedFunctionsInReferralPartneringFamilyPermissionContext();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        if (Array.isArray(this.whenOwnCommunityRoleIsIn)) {
+            data["whenOwnCommunityRoleIsIn"] = [];
+            for (let item of this.whenOwnCommunityRoleIsIn)
+                data["whenOwnCommunityRoleIsIn"].push(item);
+        }
+        super.toJSON(data);
+        return data;
+    }
+}
+
+export interface ICommunityCoMemberFamiliesAssignedFunctionsInReferralPartneringFamilyPermissionContext extends IPermissionContext {
+    whenOwnCommunityRoleIsIn?: string[] | undefined;
 }
 
 export class CommunityCoMemberFamiliesPermissionContext extends PermissionContext implements ICommunityCoMemberFamiliesPermissionContext {
@@ -2067,6 +2191,46 @@ export enum Permission {
     DeleteCommunityDocuments = 508,
 }
 
+export class PutLocationPayload implements IPutLocationPayload {
+    locationConfiguration?: LocationConfiguration;
+    copyPoliciesFromLocationId?: string | undefined;
+
+    constructor(data?: IPutLocationPayload) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.locationConfiguration = _data["locationConfiguration"] ? LocationConfiguration.fromJS(_data["locationConfiguration"]) : <any>undefined;
+            this.copyPoliciesFromLocationId = _data["copyPoliciesFromLocationId"];
+        }
+    }
+
+    static fromJS(data: any): PutLocationPayload {
+        data = typeof data === 'object' ? data : {};
+        let result = new PutLocationPayload();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["locationConfiguration"] = this.locationConfiguration ? this.locationConfiguration.toJSON() : <any>undefined;
+        data["copyPoliciesFromLocationId"] = this.copyPoliciesFromLocationId;
+        return data;
+    }
+}
+
+export interface IPutLocationPayload {
+    locationConfiguration?: LocationConfiguration;
+    copyPoliciesFromLocationId?: string | undefined;
+}
+
 export class EffectiveLocationPolicy implements IEffectiveLocationPolicy {
     actionDefinitions?: { [key: string]: ActionRequirement; };
     customFamilyFields?: CustomField[];
@@ -2141,6 +2305,8 @@ export class ActionRequirement implements IActionRequirement {
     instructions?: string | undefined;
     infoLink?: string | undefined;
     validity?: string | undefined;
+    canView?: string | undefined;
+    canEdit?: string | undefined;
 
     constructor(data?: IActionRequirement) {
         if (data) {
@@ -2158,6 +2324,8 @@ export class ActionRequirement implements IActionRequirement {
             this.instructions = _data["instructions"];
             this.infoLink = _data["infoLink"];
             this.validity = _data["validity"];
+            this.canView = _data["canView"];
+            this.canEdit = _data["canEdit"];
         }
     }
 
@@ -2175,6 +2343,8 @@ export class ActionRequirement implements IActionRequirement {
         data["instructions"] = this.instructions;
         data["infoLink"] = this.infoLink;
         data["validity"] = this.validity;
+        data["canView"] = this.canView;
+        data["canEdit"] = this.canEdit;
         return data;
     }
 }
@@ -2185,6 +2355,8 @@ export interface IActionRequirement {
     instructions?: string | undefined;
     infoLink?: string | undefined;
     validity?: string | undefined;
+    canView?: string | undefined;
+    canEdit?: string | undefined;
 }
 
 export enum DocumentLinkRequirement {
@@ -2265,7 +2437,7 @@ export enum CustomFieldValidation {
 }
 
 export class ReferralPolicy implements IReferralPolicy {
-    requiredIntakeActionNames?: string[];
+    intakeRequirements?: RequirementDefinition[];
     customFields?: CustomField[];
     arrangementPolicies?: ArrangementPolicy[];
     functionPolicies?: FunctionPolicy[] | undefined;
@@ -2281,10 +2453,10 @@ export class ReferralPolicy implements IReferralPolicy {
 
     init(_data?: any) {
         if (_data) {
-            if (Array.isArray(_data["requiredIntakeActionNames"])) {
-                this.requiredIntakeActionNames = [] as any;
-                for (let item of _data["requiredIntakeActionNames"])
-                    this.requiredIntakeActionNames!.push(item);
+            if (Array.isArray(_data["intakeRequirements"])) {
+                this.intakeRequirements = [] as any;
+                for (let item of _data["intakeRequirements"])
+                    this.intakeRequirements!.push(RequirementDefinition.fromJS(item));
             }
             if (Array.isArray(_data["customFields"])) {
                 this.customFields = [] as any;
@@ -2313,10 +2485,10 @@ export class ReferralPolicy implements IReferralPolicy {
 
     toJSON(data?: any) {
         data = typeof data === 'object' ? data : {};
-        if (Array.isArray(this.requiredIntakeActionNames)) {
-            data["requiredIntakeActionNames"] = [];
-            for (let item of this.requiredIntakeActionNames)
-                data["requiredIntakeActionNames"].push(item);
+        if (Array.isArray(this.intakeRequirements)) {
+            data["intakeRequirements"] = [];
+            for (let item of this.intakeRequirements)
+                data["intakeRequirements"].push(item.toJSON());
         }
         if (Array.isArray(this.customFields)) {
             data["customFields"] = [];
@@ -2338,19 +2510,59 @@ export class ReferralPolicy implements IReferralPolicy {
 }
 
 export interface IReferralPolicy {
-    requiredIntakeActionNames?: string[];
+    intakeRequirements?: RequirementDefinition[];
     customFields?: CustomField[];
     arrangementPolicies?: ArrangementPolicy[];
     functionPolicies?: FunctionPolicy[] | undefined;
+}
+
+export class RequirementDefinition implements IRequirementDefinition {
+    actionName?: string;
+    isRequired?: boolean;
+
+    constructor(data?: IRequirementDefinition) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.actionName = _data["actionName"];
+            this.isRequired = _data["isRequired"];
+        }
+    }
+
+    static fromJS(data: any): RequirementDefinition {
+        data = typeof data === 'object' ? data : {};
+        let result = new RequirementDefinition();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["actionName"] = this.actionName;
+        data["isRequired"] = this.isRequired;
+        return data;
+    }
+}
+
+export interface IRequirementDefinition {
+    actionName?: string;
+    isRequired?: boolean;
 }
 
 export class ArrangementPolicy implements IArrangementPolicy {
     arrangementType?: string;
     childInvolvement?: ChildInvolvement;
     arrangementFunctions?: ArrangementFunction[];
-    requiredSetupActionNames?: string[];
+    requiredSetupActions?: RequirementDefinition[];
     requiredMonitoringActions?: MonitoringRequirement[];
-    requiredCloseoutActionNames?: string[];
+    requiredCloseoutActionNames?: RequirementDefinition[];
 
     constructor(data?: IArrangementPolicy) {
         if (data) {
@@ -2370,10 +2582,10 @@ export class ArrangementPolicy implements IArrangementPolicy {
                 for (let item of _data["arrangementFunctions"])
                     this.arrangementFunctions!.push(ArrangementFunction.fromJS(item));
             }
-            if (Array.isArray(_data["requiredSetupActionNames"])) {
-                this.requiredSetupActionNames = [] as any;
-                for (let item of _data["requiredSetupActionNames"])
-                    this.requiredSetupActionNames!.push(item);
+            if (Array.isArray(_data["requiredSetupActions"])) {
+                this.requiredSetupActions = [] as any;
+                for (let item of _data["requiredSetupActions"])
+                    this.requiredSetupActions!.push(RequirementDefinition.fromJS(item));
             }
             if (Array.isArray(_data["requiredMonitoringActions"])) {
                 this.requiredMonitoringActions = [] as any;
@@ -2383,7 +2595,7 @@ export class ArrangementPolicy implements IArrangementPolicy {
             if (Array.isArray(_data["requiredCloseoutActionNames"])) {
                 this.requiredCloseoutActionNames = [] as any;
                 for (let item of _data["requiredCloseoutActionNames"])
-                    this.requiredCloseoutActionNames!.push(item);
+                    this.requiredCloseoutActionNames!.push(RequirementDefinition.fromJS(item));
             }
         }
     }
@@ -2404,10 +2616,10 @@ export class ArrangementPolicy implements IArrangementPolicy {
             for (let item of this.arrangementFunctions)
                 data["arrangementFunctions"].push(item.toJSON());
         }
-        if (Array.isArray(this.requiredSetupActionNames)) {
-            data["requiredSetupActionNames"] = [];
-            for (let item of this.requiredSetupActionNames)
-                data["requiredSetupActionNames"].push(item);
+        if (Array.isArray(this.requiredSetupActions)) {
+            data["requiredSetupActions"] = [];
+            for (let item of this.requiredSetupActions)
+                data["requiredSetupActions"].push(item.toJSON());
         }
         if (Array.isArray(this.requiredMonitoringActions)) {
             data["requiredMonitoringActions"] = [];
@@ -2417,7 +2629,7 @@ export class ArrangementPolicy implements IArrangementPolicy {
         if (Array.isArray(this.requiredCloseoutActionNames)) {
             data["requiredCloseoutActionNames"] = [];
             for (let item of this.requiredCloseoutActionNames)
-                data["requiredCloseoutActionNames"].push(item);
+                data["requiredCloseoutActionNames"].push(item.toJSON());
         }
         return data;
     }
@@ -2427,9 +2639,9 @@ export interface IArrangementPolicy {
     arrangementType?: string;
     childInvolvement?: ChildInvolvement;
     arrangementFunctions?: ArrangementFunction[];
-    requiredSetupActionNames?: string[];
+    requiredSetupActions?: RequirementDefinition[];
     requiredMonitoringActions?: MonitoringRequirement[];
-    requiredCloseoutActionNames?: string[];
+    requiredCloseoutActionNames?: RequirementDefinition[];
 }
 
 export enum ChildInvolvement {
@@ -2534,9 +2746,9 @@ export enum FunctionRequirement {
 
 export class ArrangementFunctionVariant implements IArrangementFunctionVariant {
     variantName?: string;
-    requiredSetupActionNames?: string[];
+    requiredSetupActionNames?: RequirementDefinition[];
     requiredMonitoringActions?: MonitoringRequirement[];
-    requiredCloseoutActionNames?: string[];
+    requiredCloseoutActionNames?: RequirementDefinition[];
 
     constructor(data?: IArrangementFunctionVariant) {
         if (data) {
@@ -2553,7 +2765,7 @@ export class ArrangementFunctionVariant implements IArrangementFunctionVariant {
             if (Array.isArray(_data["requiredSetupActionNames"])) {
                 this.requiredSetupActionNames = [] as any;
                 for (let item of _data["requiredSetupActionNames"])
-                    this.requiredSetupActionNames!.push(item);
+                    this.requiredSetupActionNames!.push(RequirementDefinition.fromJS(item));
             }
             if (Array.isArray(_data["requiredMonitoringActions"])) {
                 this.requiredMonitoringActions = [] as any;
@@ -2563,7 +2775,7 @@ export class ArrangementFunctionVariant implements IArrangementFunctionVariant {
             if (Array.isArray(_data["requiredCloseoutActionNames"])) {
                 this.requiredCloseoutActionNames = [] as any;
                 for (let item of _data["requiredCloseoutActionNames"])
-                    this.requiredCloseoutActionNames!.push(item);
+                    this.requiredCloseoutActionNames!.push(RequirementDefinition.fromJS(item));
             }
         }
     }
@@ -2581,7 +2793,7 @@ export class ArrangementFunctionVariant implements IArrangementFunctionVariant {
         if (Array.isArray(this.requiredSetupActionNames)) {
             data["requiredSetupActionNames"] = [];
             for (let item of this.requiredSetupActionNames)
-                data["requiredSetupActionNames"].push(item);
+                data["requiredSetupActionNames"].push(item.toJSON());
         }
         if (Array.isArray(this.requiredMonitoringActions)) {
             data["requiredMonitoringActions"] = [];
@@ -2591,7 +2803,7 @@ export class ArrangementFunctionVariant implements IArrangementFunctionVariant {
         if (Array.isArray(this.requiredCloseoutActionNames)) {
             data["requiredCloseoutActionNames"] = [];
             for (let item of this.requiredCloseoutActionNames)
-                data["requiredCloseoutActionNames"].push(item);
+                data["requiredCloseoutActionNames"].push(item.toJSON());
         }
         return data;
     }
@@ -2599,13 +2811,13 @@ export class ArrangementFunctionVariant implements IArrangementFunctionVariant {
 
 export interface IArrangementFunctionVariant {
     variantName?: string;
-    requiredSetupActionNames?: string[];
+    requiredSetupActionNames?: RequirementDefinition[];
     requiredMonitoringActions?: MonitoringRequirement[];
-    requiredCloseoutActionNames?: string[];
+    requiredCloseoutActionNames?: RequirementDefinition[];
 }
 
 export class MonitoringRequirement implements IMonitoringRequirement {
-    actionName?: string;
+    action?: RequirementDefinition;
     recurrence?: RecurrencePolicy;
 
     constructor(data?: IMonitoringRequirement) {
@@ -2619,7 +2831,7 @@ export class MonitoringRequirement implements IMonitoringRequirement {
 
     init(_data?: any) {
         if (_data) {
-            this.actionName = _data["actionName"];
+            this.action = _data["action"] ? RequirementDefinition.fromJS(_data["action"]) : <any>undefined;
             this.recurrence = _data["recurrence"] ? RecurrencePolicy.fromJS(_data["recurrence"]) : <any>undefined;
         }
     }
@@ -2633,14 +2845,14 @@ export class MonitoringRequirement implements IMonitoringRequirement {
 
     toJSON(data?: any) {
         data = typeof data === 'object' ? data : {};
-        data["actionName"] = this.actionName;
+        data["action"] = this.action ? this.action.toJSON() : <any>undefined;
         data["recurrence"] = this.recurrence ? this.recurrence.toJSON() : <any>undefined;
         return data;
     }
 }
 
 export interface IMonitoringRequirement {
-    actionName?: string;
+    action?: RequirementDefinition;
     recurrence?: RecurrencePolicy;
 }
 
@@ -4961,7 +5173,7 @@ export class Referral implements IReferral {
     closeReason?: ReferralCloseReason | undefined;
     completedRequirements?: CompletedRequirementInfo[];
     exemptedRequirements?: ExemptedRequirementInfo[];
-    missingRequirements?: string[];
+    missingRequirements?: RequirementDefinition[];
     completedCustomFields?: CompletedCustomFieldInfo[];
     missingCustomFields?: string[];
     arrangements?: Arrangement[];
@@ -4995,7 +5207,7 @@ export class Referral implements IReferral {
             if (Array.isArray(_data["missingRequirements"])) {
                 this.missingRequirements = [] as any;
                 for (let item of _data["missingRequirements"])
-                    this.missingRequirements!.push(item);
+                    this.missingRequirements!.push(RequirementDefinition.fromJS(item));
             }
             if (Array.isArray(_data["completedCustomFields"])) {
                 this.completedCustomFields = [] as any;
@@ -5042,7 +5254,7 @@ export class Referral implements IReferral {
         if (Array.isArray(this.missingRequirements)) {
             data["missingRequirements"] = [];
             for (let item of this.missingRequirements)
-                data["missingRequirements"].push(item);
+                data["missingRequirements"].push(item.toJSON());
         }
         if (Array.isArray(this.completedCustomFields)) {
             data["completedCustomFields"] = [];
@@ -5071,7 +5283,7 @@ export interface IReferral {
     closeReason?: ReferralCloseReason | undefined;
     completedRequirements?: CompletedRequirementInfo[];
     exemptedRequirements?: ExemptedRequirementInfo[];
-    missingRequirements?: string[];
+    missingRequirements?: RequirementDefinition[];
     completedCustomFields?: CompletedCustomFieldInfo[];
     missingCustomFields?: string[];
     arrangements?: Arrangement[];
@@ -5220,6 +5432,7 @@ export class Arrangement implements IArrangement {
     completedRequirements?: CompletedRequirementInfo[];
     exemptedRequirements?: ExemptedRequirementInfo[];
     missingRequirements?: MissingArrangementRequirement[];
+    missingOptionalRequirements?: MissingArrangementRequirement[];
     individualVolunteerAssignments?: IndividualVolunteerAssignment[];
     familyVolunteerAssignments?: FamilyVolunteerAssignment[];
     childLocationHistory?: ChildLocationHistoryEntry[];
@@ -5262,6 +5475,11 @@ export class Arrangement implements IArrangement {
                 this.missingRequirements = [] as any;
                 for (let item of _data["missingRequirements"])
                     this.missingRequirements!.push(MissingArrangementRequirement.fromJS(item));
+            }
+            if (Array.isArray(_data["missingOptionalRequirements"])) {
+                this.missingOptionalRequirements = [] as any;
+                for (let item of _data["missingOptionalRequirements"])
+                    this.missingOptionalRequirements!.push(MissingArrangementRequirement.fromJS(item));
             }
             if (Array.isArray(_data["individualVolunteerAssignments"])) {
                 this.individualVolunteerAssignments = [] as any;
@@ -5322,6 +5540,11 @@ export class Arrangement implements IArrangement {
             for (let item of this.missingRequirements)
                 data["missingRequirements"].push(item.toJSON());
         }
+        if (Array.isArray(this.missingOptionalRequirements)) {
+            data["missingOptionalRequirements"] = [];
+            for (let item of this.missingOptionalRequirements)
+                data["missingOptionalRequirements"].push(item.toJSON());
+        }
         if (Array.isArray(this.individualVolunteerAssignments)) {
             data["individualVolunteerAssignments"] = [];
             for (let item of this.individualVolunteerAssignments)
@@ -5362,6 +5585,7 @@ export interface IArrangement {
     completedRequirements?: CompletedRequirementInfo[];
     exemptedRequirements?: ExemptedRequirementInfo[];
     missingRequirements?: MissingArrangementRequirement[];
+    missingOptionalRequirements?: MissingArrangementRequirement[];
     individualVolunteerAssignments?: IndividualVolunteerAssignment[];
     familyVolunteerAssignments?: FamilyVolunteerAssignment[];
     childLocationHistory?: ChildLocationHistoryEntry[];
@@ -5383,7 +5607,7 @@ export class MissingArrangementRequirement implements IMissingArrangementRequire
     arrangementFunctionVariant?: string | undefined;
     volunteerFamilyId?: string | undefined;
     personId?: string | undefined;
-    actionName?: string;
+    action?: RequirementDefinition;
     dueBy?: Date | undefined;
     pastDueSince?: Date | undefined;
 
@@ -5402,7 +5626,7 @@ export class MissingArrangementRequirement implements IMissingArrangementRequire
             this.arrangementFunctionVariant = _data["arrangementFunctionVariant"];
             this.volunteerFamilyId = _data["volunteerFamilyId"];
             this.personId = _data["personId"];
-            this.actionName = _data["actionName"];
+            this.action = _data["action"] ? RequirementDefinition.fromJS(_data["action"]) : <any>undefined;
             this.dueBy = _data["dueBy"] ? new Date(_data["dueBy"].toString()) : <any>undefined;
             this.pastDueSince = _data["pastDueSince"] ? new Date(_data["pastDueSince"].toString()) : <any>undefined;
         }
@@ -5421,7 +5645,7 @@ export class MissingArrangementRequirement implements IMissingArrangementRequire
         data["arrangementFunctionVariant"] = this.arrangementFunctionVariant;
         data["volunteerFamilyId"] = this.volunteerFamilyId;
         data["personId"] = this.personId;
-        data["actionName"] = this.actionName;
+        data["action"] = this.action ? this.action.toJSON() : <any>undefined;
         data["dueBy"] = this.dueBy ? formatDate(this.dueBy) : <any>undefined;
         data["pastDueSince"] = this.pastDueSince ? formatDate(this.pastDueSince) : <any>undefined;
         return data;
@@ -5433,7 +5657,7 @@ export interface IMissingArrangementRequirement {
     arrangementFunctionVariant?: string | undefined;
     volunteerFamilyId?: string | undefined;
     personId?: string | undefined;
-    actionName?: string;
+    action?: RequirementDefinition;
     dueBy?: Date | undefined;
     pastDueSince?: Date | undefined;
 }
@@ -6796,6 +7020,7 @@ export class Note implements INote {
     contents?: string | undefined;
     status?: NoteStatus;
     backdatedTimestampUtc?: Date | undefined;
+    accessLevel?: string | undefined;
 
     constructor(data?: INote) {
         if (data) {
@@ -6814,6 +7039,7 @@ export class Note implements INote {
             this.contents = _data["contents"];
             this.status = _data["status"];
             this.backdatedTimestampUtc = _data["backdatedTimestampUtc"] ? new Date(_data["backdatedTimestampUtc"].toString()) : <any>undefined;
+            this.accessLevel = _data["accessLevel"];
         }
     }
 
@@ -6832,6 +7058,7 @@ export class Note implements INote {
         data["contents"] = this.contents;
         data["status"] = this.status;
         data["backdatedTimestampUtc"] = this.backdatedTimestampUtc ? this.backdatedTimestampUtc.toISOString() : <any>undefined;
+        data["accessLevel"] = this.accessLevel;
         return data;
     }
 }
@@ -6843,6 +7070,7 @@ export interface INote {
     contents?: string | undefined;
     status?: NoteStatus;
     backdatedTimestampUtc?: Date | undefined;
+    accessLevel?: string | undefined;
 }
 
 export enum NoteStatus {
@@ -10693,6 +10921,7 @@ export interface INoteCommand {
 export class ApproveNote extends NoteCommand implements IApproveNote {
     finalizedNoteContents?: string;
     backdatedTimestampUtc?: Date | undefined;
+    accessLevel?: string | undefined;
 
     constructor(data?: IApproveNote) {
         super(data);
@@ -10704,6 +10933,7 @@ export class ApproveNote extends NoteCommand implements IApproveNote {
         if (_data) {
             this.finalizedNoteContents = _data["finalizedNoteContents"];
             this.backdatedTimestampUtc = _data["backdatedTimestampUtc"] ? new Date(_data["backdatedTimestampUtc"].toString()) : <any>undefined;
+            this.accessLevel = _data["accessLevel"];
         }
     }
 
@@ -10718,6 +10948,7 @@ export class ApproveNote extends NoteCommand implements IApproveNote {
         data = typeof data === 'object' ? data : {};
         data["finalizedNoteContents"] = this.finalizedNoteContents;
         data["backdatedTimestampUtc"] = this.backdatedTimestampUtc ? this.backdatedTimestampUtc.toISOString() : <any>undefined;
+        data["accessLevel"] = this.accessLevel;
         super.toJSON(data);
         return data;
     }
@@ -10726,11 +10957,13 @@ export class ApproveNote extends NoteCommand implements IApproveNote {
 export interface IApproveNote extends INoteCommand {
     finalizedNoteContents?: string;
     backdatedTimestampUtc?: Date | undefined;
+    accessLevel?: string | undefined;
 }
 
 export class CreateDraftNote extends NoteCommand implements ICreateDraftNote {
     draftNoteContents?: string | undefined;
     backdatedTimestampUtc?: Date | undefined;
+    accessLevel?: string | undefined;
 
     constructor(data?: ICreateDraftNote) {
         super(data);
@@ -10742,6 +10975,7 @@ export class CreateDraftNote extends NoteCommand implements ICreateDraftNote {
         if (_data) {
             this.draftNoteContents = _data["draftNoteContents"];
             this.backdatedTimestampUtc = _data["backdatedTimestampUtc"] ? new Date(_data["backdatedTimestampUtc"].toString()) : <any>undefined;
+            this.accessLevel = _data["accessLevel"];
         }
     }
 
@@ -10756,6 +10990,7 @@ export class CreateDraftNote extends NoteCommand implements ICreateDraftNote {
         data = typeof data === 'object' ? data : {};
         data["draftNoteContents"] = this.draftNoteContents;
         data["backdatedTimestampUtc"] = this.backdatedTimestampUtc ? this.backdatedTimestampUtc.toISOString() : <any>undefined;
+        data["accessLevel"] = this.accessLevel;
         super.toJSON(data);
         return data;
     }
@@ -10764,6 +10999,7 @@ export class CreateDraftNote extends NoteCommand implements ICreateDraftNote {
 export interface ICreateDraftNote extends INoteCommand {
     draftNoteContents?: string | undefined;
     backdatedTimestampUtc?: Date | undefined;
+    accessLevel?: string | undefined;
 }
 
 export class DiscardDraftNote extends NoteCommand implements IDiscardDraftNote {
@@ -10797,6 +11033,7 @@ export interface IDiscardDraftNote extends INoteCommand {
 export class EditDraftNote extends NoteCommand implements IEditDraftNote {
     draftNoteContents?: string | undefined;
     backdatedTimestampUtc?: Date | undefined;
+    accessLevel?: string | undefined;
 
     constructor(data?: IEditDraftNote) {
         super(data);
@@ -10808,6 +11045,7 @@ export class EditDraftNote extends NoteCommand implements IEditDraftNote {
         if (_data) {
             this.draftNoteContents = _data["draftNoteContents"];
             this.backdatedTimestampUtc = _data["backdatedTimestampUtc"] ? new Date(_data["backdatedTimestampUtc"].toString()) : <any>undefined;
+            this.accessLevel = _data["accessLevel"];
         }
     }
 
@@ -10822,6 +11060,7 @@ export class EditDraftNote extends NoteCommand implements IEditDraftNote {
         data = typeof data === 'object' ? data : {};
         data["draftNoteContents"] = this.draftNoteContents;
         data["backdatedTimestampUtc"] = this.backdatedTimestampUtc ? this.backdatedTimestampUtc.toISOString() : <any>undefined;
+        data["accessLevel"] = this.accessLevel;
         super.toJSON(data);
         return data;
     }
@@ -10830,6 +11069,7 @@ export class EditDraftNote extends NoteCommand implements IEditDraftNote {
 export interface IEditDraftNote extends INoteCommand {
     draftNoteContents?: string | undefined;
     backdatedTimestampUtc?: Date | undefined;
+    accessLevel?: string | undefined;
 }
 
 export class PersonRecordsCommand extends AtomicRecordsCommand implements IPersonRecordsCommand {
@@ -12996,874 +13236,6 @@ export interface IAccountLocationAccess {
     locationId?: string;
     personId?: string;
     roles?: string[];
-}
-
-/** Semantic representation of an EDM model. */
-export abstract class IEdmModel implements IIEdmModel {
-    /** Gets the collection of schema elements that are contained in this model. */
-    schemaElements?: IEdmSchemaElement[] | undefined;
-    /** Gets the collection of vocabulary annotations that are contained in this model. */
-    vocabularyAnnotations?: IEdmVocabularyAnnotation[] | undefined;
-    /** Gets the collection of models referred to by this model (mainly by the this.References). */
-    referencedModels?: IEdmModel[] | undefined;
-    /** Gets the collection of namespaces that schema elements use contained in this model. */
-    declaredNamespaces?: string[] | undefined;
-    /** Gets the model's annotations manager. */
-    directValueAnnotationsManager?: IEdmDirectValueAnnotationsManager | undefined;
-    /** Gets the only one entity container of the model. */
-    entityContainer?: IEdmEntityContainer | undefined;
-
-    constructor(data?: IIEdmModel) {
-        if (data) {
-            for (var property in data) {
-                if (data.hasOwnProperty(property))
-                    (<any>this)[property] = (<any>data)[property];
-            }
-        }
-    }
-
-    init(_data?: any) {
-        if (_data) {
-            if (Array.isArray(_data["schemaElements"])) {
-                this.schemaElements = [] as any;
-                for (let item of _data["schemaElements"])
-                    this.schemaElements!.push(IEdmSchemaElement.fromJS(item));
-            }
-            if (Array.isArray(_data["vocabularyAnnotations"])) {
-                this.vocabularyAnnotations = [] as any;
-                for (let item of _data["vocabularyAnnotations"])
-                    this.vocabularyAnnotations!.push(IEdmVocabularyAnnotation.fromJS(item));
-            }
-            if (Array.isArray(_data["referencedModels"])) {
-                this.referencedModels = [] as any;
-                for (let item of _data["referencedModels"])
-                    this.referencedModels!.push(IEdmModel.fromJS(item));
-            }
-            if (Array.isArray(_data["declaredNamespaces"])) {
-                this.declaredNamespaces = [] as any;
-                for (let item of _data["declaredNamespaces"])
-                    this.declaredNamespaces!.push(item);
-            }
-            this.directValueAnnotationsManager = _data["directValueAnnotationsManager"] ? IEdmDirectValueAnnotationsManager.fromJS(_data["directValueAnnotationsManager"]) : <any>undefined;
-            this.entityContainer = _data["entityContainer"] ? IEdmEntityContainer.fromJS(_data["entityContainer"]) : <any>undefined;
-        }
-    }
-
-    static fromJS(data: any): IEdmModel {
-        data = typeof data === 'object' ? data : {};
-        throw new Error("The abstract class 'IEdmModel' cannot be instantiated.");
-    }
-
-    toJSON(data?: any) {
-        data = typeof data === 'object' ? data : {};
-        if (Array.isArray(this.schemaElements)) {
-            data["schemaElements"] = [];
-            for (let item of this.schemaElements)
-                data["schemaElements"].push(item.toJSON());
-        }
-        if (Array.isArray(this.vocabularyAnnotations)) {
-            data["vocabularyAnnotations"] = [];
-            for (let item of this.vocabularyAnnotations)
-                data["vocabularyAnnotations"].push(item.toJSON());
-        }
-        if (Array.isArray(this.referencedModels)) {
-            data["referencedModels"] = [];
-            for (let item of this.referencedModels)
-                data["referencedModels"].push(item.toJSON());
-        }
-        if (Array.isArray(this.declaredNamespaces)) {
-            data["declaredNamespaces"] = [];
-            for (let item of this.declaredNamespaces)
-                data["declaredNamespaces"].push(item);
-        }
-        data["directValueAnnotationsManager"] = this.directValueAnnotationsManager ? this.directValueAnnotationsManager.toJSON() : <any>undefined;
-        data["entityContainer"] = this.entityContainer ? this.entityContainer.toJSON() : <any>undefined;
-        return data;
-    }
-}
-
-/** Semantic representation of an EDM model. */
-export interface IIEdmModel {
-    /** Gets the collection of schema elements that are contained in this model. */
-    schemaElements?: IEdmSchemaElement[] | undefined;
-    /** Gets the collection of vocabulary annotations that are contained in this model. */
-    vocabularyAnnotations?: IEdmVocabularyAnnotation[] | undefined;
-    /** Gets the collection of models referred to by this model (mainly by the this.References). */
-    referencedModels?: IEdmModel[] | undefined;
-    /** Gets the collection of namespaces that schema elements use contained in this model. */
-    declaredNamespaces?: string[] | undefined;
-    /** Gets the model's annotations manager. */
-    directValueAnnotationsManager?: IEdmDirectValueAnnotationsManager | undefined;
-    /** Gets the only one entity container of the model. */
-    entityContainer?: IEdmEntityContainer | undefined;
-}
-
-/** Common base interface for all named children of EDM schema. */
-export abstract class IEdmSchemaElement implements IIEdmSchemaElement {
-    /** Gets the kind of this schema element. */
-    schemaElementKind?: EdmSchemaElementKind;
-    /** Gets the namespace this schema element belongs to. */
-    namespace?: string | undefined;
-
-    constructor(data?: IIEdmSchemaElement) {
-        if (data) {
-            for (var property in data) {
-                if (data.hasOwnProperty(property))
-                    (<any>this)[property] = (<any>data)[property];
-            }
-        }
-    }
-
-    init(_data?: any) {
-        if (_data) {
-            this.schemaElementKind = _data["schemaElementKind"];
-            this.namespace = _data["namespace"];
-        }
-    }
-
-    static fromJS(data: any): IEdmSchemaElement {
-        data = typeof data === 'object' ? data : {};
-        throw new Error("The abstract class 'IEdmSchemaElement' cannot be instantiated.");
-    }
-
-    toJSON(data?: any) {
-        data = typeof data === 'object' ? data : {};
-        data["schemaElementKind"] = this.schemaElementKind;
-        data["namespace"] = this.namespace;
-        return data;
-    }
-}
-
-/** Common base interface for all named children of EDM schema. */
-export interface IIEdmSchemaElement {
-    /** Gets the kind of this schema element. */
-    schemaElementKind?: EdmSchemaElementKind;
-    /** Gets the namespace this schema element belongs to. */
-    namespace?: string | undefined;
-}
-
-/** Defines EDM schema element types. */
-export enum EdmSchemaElementKind {
-    None = 0,
-    TypeDefinition = 1,
-    Term = 2,
-    Action = 3,
-    EntityContainer = 4,
-    Function = 5,
-}
-
-/** Represents an EDM vocabulary annotation. */
-export abstract class IEdmVocabularyAnnotation implements IIEdmVocabularyAnnotation {
-    /** Gets the qualifier used to discriminate between multiple bindings of the same property or type. */
-    qualifier?: string | undefined;
-    /** Gets the term bound by the annotation. */
-    term?: IEdmTerm | undefined;
-    /** Gets the element the annotation applies to. */
-    target?: IEdmVocabularyAnnotatable | undefined;
-    /** Gets the expression producing the value of the annotation. */
-    value?: IEdmExpression | undefined;
-
-    constructor(data?: IIEdmVocabularyAnnotation) {
-        if (data) {
-            for (var property in data) {
-                if (data.hasOwnProperty(property))
-                    (<any>this)[property] = (<any>data)[property];
-            }
-        }
-    }
-
-    init(_data?: any) {
-        if (_data) {
-            this.qualifier = _data["qualifier"];
-            this.term = _data["term"] ? IEdmTerm.fromJS(_data["term"]) : <any>undefined;
-            this.target = _data["target"] ? IEdmVocabularyAnnotatable.fromJS(_data["target"]) : <any>undefined;
-            this.value = _data["value"] ? IEdmExpression.fromJS(_data["value"]) : <any>undefined;
-        }
-    }
-
-    static fromJS(data: any): IEdmVocabularyAnnotation {
-        data = typeof data === 'object' ? data : {};
-        throw new Error("The abstract class 'IEdmVocabularyAnnotation' cannot be instantiated.");
-    }
-
-    toJSON(data?: any) {
-        data = typeof data === 'object' ? data : {};
-        data["qualifier"] = this.qualifier;
-        data["term"] = this.term ? this.term.toJSON() : <any>undefined;
-        data["target"] = this.target ? this.target.toJSON() : <any>undefined;
-        data["value"] = this.value ? this.value.toJSON() : <any>undefined;
-        return data;
-    }
-}
-
-/** Represents an EDM vocabulary annotation. */
-export interface IIEdmVocabularyAnnotation {
-    /** Gets the qualifier used to discriminate between multiple bindings of the same property or type. */
-    qualifier?: string | undefined;
-    /** Gets the term bound by the annotation. */
-    term?: IEdmTerm | undefined;
-    /** Gets the element the annotation applies to. */
-    target?: IEdmVocabularyAnnotatable | undefined;
-    /** Gets the expression producing the value of the annotation. */
-    value?: IEdmExpression | undefined;
-}
-
-/** Represents an EDM term. */
-export abstract class IEdmTerm implements IIEdmTerm {
-    /** Gets the type of this term. */
-    type?: IEdmTypeReference | undefined;
-    /** Gets the AppliesTo of this term. */
-    appliesTo?: string | undefined;
-    /** Gets the DefaultValue of this term. */
-    defaultValue?: string | undefined;
-
-    constructor(data?: IIEdmTerm) {
-        if (data) {
-            for (var property in data) {
-                if (data.hasOwnProperty(property))
-                    (<any>this)[property] = (<any>data)[property];
-            }
-        }
-    }
-
-    init(_data?: any) {
-        if (_data) {
-            this.type = _data["type"] ? IEdmTypeReference.fromJS(_data["type"]) : <any>undefined;
-            this.appliesTo = _data["appliesTo"];
-            this.defaultValue = _data["defaultValue"];
-        }
-    }
-
-    static fromJS(data: any): IEdmTerm {
-        data = typeof data === 'object' ? data : {};
-        throw new Error("The abstract class 'IEdmTerm' cannot be instantiated.");
-    }
-
-    toJSON(data?: any) {
-        data = typeof data === 'object' ? data : {};
-        data["type"] = this.type ? this.type.toJSON() : <any>undefined;
-        data["appliesTo"] = this.appliesTo;
-        data["defaultValue"] = this.defaultValue;
-        return data;
-    }
-}
-
-/** Represents an EDM term. */
-export interface IIEdmTerm {
-    /** Gets the type of this term. */
-    type?: IEdmTypeReference | undefined;
-    /** Gets the AppliesTo of this term. */
-    appliesTo?: string | undefined;
-    /** Gets the DefaultValue of this term. */
-    defaultValue?: string | undefined;
-}
-
-/** Represents a references to a type. */
-export abstract class IEdmTypeReference implements IIEdmTypeReference {
-    /** Gets a value indicating whether this type is nullable. */
-    isNullable?: boolean;
-    /** Gets the definition to which this type refers. */
-    definition?: IEdmType | undefined;
-
-    constructor(data?: IIEdmTypeReference) {
-        if (data) {
-            for (var property in data) {
-                if (data.hasOwnProperty(property))
-                    (<any>this)[property] = (<any>data)[property];
-            }
-        }
-    }
-
-    init(_data?: any) {
-        if (_data) {
-            this.isNullable = _data["isNullable"];
-            this.definition = _data["definition"] ? IEdmType.fromJS(_data["definition"]) : <any>undefined;
-        }
-    }
-
-    static fromJS(data: any): IEdmTypeReference {
-        data = typeof data === 'object' ? data : {};
-        throw new Error("The abstract class 'IEdmTypeReference' cannot be instantiated.");
-    }
-
-    toJSON(data?: any) {
-        data = typeof data === 'object' ? data : {};
-        data["isNullable"] = this.isNullable;
-        data["definition"] = this.definition ? this.definition.toJSON() : <any>undefined;
-        return data;
-    }
-}
-
-/** Represents a references to a type. */
-export interface IIEdmTypeReference {
-    /** Gets a value indicating whether this type is nullable. */
-    isNullable?: boolean;
-    /** Gets the definition to which this type refers. */
-    definition?: IEdmType | undefined;
-}
-
-/** Represents the definition of an EDM type. */
-export abstract class IEdmType implements IIEdmType {
-    /** Gets the kind of this type. */
-    typeKind?: EdmTypeKind;
-
-    constructor(data?: IIEdmType) {
-        if (data) {
-            for (var property in data) {
-                if (data.hasOwnProperty(property))
-                    (<any>this)[property] = (<any>data)[property];
-            }
-        }
-    }
-
-    init(_data?: any) {
-        if (_data) {
-            this.typeKind = _data["typeKind"];
-        }
-    }
-
-    static fromJS(data: any): IEdmType {
-        data = typeof data === 'object' ? data : {};
-        throw new Error("The abstract class 'IEdmType' cannot be instantiated.");
-    }
-
-    toJSON(data?: any) {
-        data = typeof data === 'object' ? data : {};
-        data["typeKind"] = this.typeKind;
-        return data;
-    }
-}
-
-/** Represents the definition of an EDM type. */
-export interface IIEdmType {
-    /** Gets the kind of this type. */
-    typeKind?: EdmTypeKind;
-}
-
-/** Defines EDM metatypes. */
-export enum EdmTypeKind {
-    None = 0,
-    Primitive = 1,
-    Entity = 2,
-    Complex = 3,
-    Collection = 4,
-    EntityReference = 5,
-    Enum = 6,
-    TypeDefinition = 7,
-    Untyped = 8,
-    Path = 9,
-}
-
-/** Represents an element that can be targeted by Vocabulary Annotations */
-export abstract class IEdmVocabularyAnnotatable implements IIEdmVocabularyAnnotatable {
-
-    constructor(data?: IIEdmVocabularyAnnotatable) {
-        if (data) {
-            for (var property in data) {
-                if (data.hasOwnProperty(property))
-                    (<any>this)[property] = (<any>data)[property];
-            }
-        }
-    }
-
-    init(_data?: any) {
-    }
-
-    static fromJS(data: any): IEdmVocabularyAnnotatable {
-        data = typeof data === 'object' ? data : {};
-        throw new Error("The abstract class 'IEdmVocabularyAnnotatable' cannot be instantiated.");
-    }
-
-    toJSON(data?: any) {
-        data = typeof data === 'object' ? data : {};
-        return data;
-    }
-}
-
-/** Represents an element that can be targeted by Vocabulary Annotations */
-export interface IIEdmVocabularyAnnotatable {
-}
-
-/** Represents an EDM expression. */
-export abstract class IEdmExpression implements IIEdmExpression {
-    /** Gets the kind of this expression. */
-    expressionKind?: EdmExpressionKind;
-
-    constructor(data?: IIEdmExpression) {
-        if (data) {
-            for (var property in data) {
-                if (data.hasOwnProperty(property))
-                    (<any>this)[property] = (<any>data)[property];
-            }
-        }
-    }
-
-    init(_data?: any) {
-        if (_data) {
-            this.expressionKind = _data["expressionKind"];
-        }
-    }
-
-    static fromJS(data: any): IEdmExpression {
-        data = typeof data === 'object' ? data : {};
-        throw new Error("The abstract class 'IEdmExpression' cannot be instantiated.");
-    }
-
-    toJSON(data?: any) {
-        data = typeof data === 'object' ? data : {};
-        data["expressionKind"] = this.expressionKind;
-        return data;
-    }
-}
-
-/** Represents an EDM expression. */
-export interface IIEdmExpression {
-    /** Gets the kind of this expression. */
-    expressionKind?: EdmExpressionKind;
-}
-
-/** Defines EDM expression kinds. */
-export enum EdmExpressionKind {
-    None = 0,
-    BinaryConstant = 1,
-    BooleanConstant = 2,
-    DateTimeOffsetConstant = 3,
-    DecimalConstant = 4,
-    FloatingConstant = 5,
-    GuidConstant = 6,
-    IntegerConstant = 7,
-    StringConstant = 8,
-    DurationConstant = 9,
-    Null = 10,
-    Record = 11,
-    Collection = 12,
-    Path = 13,
-    If = 14,
-    Cast = 15,
-    IsType = 16,
-    FunctionApplication = 17,
-    LabeledExpressionReference = 18,
-    Labeled = 19,
-    PropertyPath = 20,
-    NavigationPropertyPath = 21,
-    DateConstant = 22,
-    TimeOfDayConstant = 23,
-    EnumMember = 24,
-    AnnotationPath = 25,
-}
-
-/** Manages getting and setting direct annotations on EDM elements. */
-export abstract class IEdmDirectValueAnnotationsManager implements IIEdmDirectValueAnnotationsManager {
-
-    constructor(data?: IIEdmDirectValueAnnotationsManager) {
-        if (data) {
-            for (var property in data) {
-                if (data.hasOwnProperty(property))
-                    (<any>this)[property] = (<any>data)[property];
-            }
-        }
-    }
-
-    init(_data?: any) {
-    }
-
-    static fromJS(data: any): IEdmDirectValueAnnotationsManager {
-        data = typeof data === 'object' ? data : {};
-        throw new Error("The abstract class 'IEdmDirectValueAnnotationsManager' cannot be instantiated.");
-    }
-
-    toJSON(data?: any) {
-        data = typeof data === 'object' ? data : {};
-        return data;
-    }
-}
-
-/** Manages getting and setting direct annotations on EDM elements. */
-export interface IIEdmDirectValueAnnotationsManager {
-}
-
-/** Represents an EDM entity container. */
-export abstract class IEdmEntityContainer implements IIEdmEntityContainer {
-    /** Gets a collection of the elements of this entity container. */
-    elements?: IEdmEntityContainerElement[] | undefined;
-
-    constructor(data?: IIEdmEntityContainer) {
-        if (data) {
-            for (var property in data) {
-                if (data.hasOwnProperty(property))
-                    (<any>this)[property] = (<any>data)[property];
-            }
-        }
-    }
-
-    init(_data?: any) {
-        if (_data) {
-            if (Array.isArray(_data["elements"])) {
-                this.elements = [] as any;
-                for (let item of _data["elements"])
-                    this.elements!.push(IEdmEntityContainerElement.fromJS(item));
-            }
-        }
-    }
-
-    static fromJS(data: any): IEdmEntityContainer {
-        data = typeof data === 'object' ? data : {};
-        throw new Error("The abstract class 'IEdmEntityContainer' cannot be instantiated.");
-    }
-
-    toJSON(data?: any) {
-        data = typeof data === 'object' ? data : {};
-        if (Array.isArray(this.elements)) {
-            data["elements"] = [];
-            for (let item of this.elements)
-                data["elements"].push(item.toJSON());
-        }
-        return data;
-    }
-}
-
-/** Represents an EDM entity container. */
-export interface IIEdmEntityContainer {
-    /** Gets a collection of the elements of this entity container. */
-    elements?: IEdmEntityContainerElement[] | undefined;
-}
-
-/** Represents the common elements of all EDM entity container elements. */
-export abstract class IEdmEntityContainerElement implements IIEdmEntityContainerElement {
-    /** Gets the kind of element of this container element. */
-    containerElementKind?: EdmContainerElementKind;
-    /** Gets the container that contains this element. */
-    container?: IEdmEntityContainer | undefined;
-
-    constructor(data?: IIEdmEntityContainerElement) {
-        if (data) {
-            for (var property in data) {
-                if (data.hasOwnProperty(property))
-                    (<any>this)[property] = (<any>data)[property];
-            }
-        }
-    }
-
-    init(_data?: any) {
-        if (_data) {
-            this.containerElementKind = _data["containerElementKind"];
-            this.container = _data["container"] ? IEdmEntityContainer.fromJS(_data["container"]) : <any>undefined;
-        }
-    }
-
-    static fromJS(data: any): IEdmEntityContainerElement {
-        data = typeof data === 'object' ? data : {};
-        throw new Error("The abstract class 'IEdmEntityContainerElement' cannot be instantiated.");
-    }
-
-    toJSON(data?: any) {
-        data = typeof data === 'object' ? data : {};
-        data["containerElementKind"] = this.containerElementKind;
-        data["container"] = this.container ? this.container.toJSON() : <any>undefined;
-        return data;
-    }
-}
-
-/** Represents the common elements of all EDM entity container elements. */
-export interface IIEdmEntityContainerElement {
-    /** Gets the kind of element of this container element. */
-    containerElementKind?: EdmContainerElementKind;
-    /** Gets the container that contains this element. */
-    container?: IEdmEntityContainer | undefined;
-}
-
-/** Defines EDM container element types. */
-export enum EdmContainerElementKind {
-    None = 0,
-    EntitySet = 1,
-    ActionImport = 2,
-    FunctionImport = 3,
-    Singleton = 4,
-}
-
-/** Base class for all annotatable types in OData library. */
-export abstract class ODataAnnotatable implements IODataAnnotatable {
-    /** The annotation for storing @odata.type. */
-    typeAnnotation?: ODataTypeAnnotation | undefined;
-
-    constructor(data?: IODataAnnotatable) {
-        if (data) {
-            for (var property in data) {
-                if (data.hasOwnProperty(property))
-                    (<any>this)[property] = (<any>data)[property];
-            }
-        }
-    }
-
-    init(_data?: any) {
-        if (_data) {
-            this.typeAnnotation = _data["typeAnnotation"] ? ODataTypeAnnotation.fromJS(_data["typeAnnotation"]) : <any>undefined;
-        }
-    }
-
-    static fromJS(data: any): ODataAnnotatable {
-        data = typeof data === 'object' ? data : {};
-        throw new Error("The abstract class 'ODataAnnotatable' cannot be instantiated.");
-    }
-
-    toJSON(data?: any) {
-        data = typeof data === 'object' ? data : {};
-        data["typeAnnotation"] = this.typeAnnotation ? this.typeAnnotation.toJSON() : <any>undefined;
-        return data;
-    }
-}
-
-/** Base class for all annotatable types in OData library. */
-export interface IODataAnnotatable {
-    /** The annotation for storing @odata.type. */
-    typeAnnotation?: ODataTypeAnnotation | undefined;
-}
-
-/** Class representing the a service document. */
-export class ODataServiceDocument extends ODataAnnotatable implements IODataServiceDocument {
-    /** Gets or sets the set of entity sets in the service document. */
-    entitySets?: ODataEntitySetInfo[] | undefined;
-    /** Gets or sets the set of singletons in the service document. */
-    singletons?: ODataSingletonInfo[] | undefined;
-    /** Gets or sets the set of function imports in the service document. */
-    functionImports?: ODataFunctionImportInfo[] | undefined;
-
-    constructor(data?: IODataServiceDocument) {
-        super(data);
-    }
-
-    init(_data?: any) {
-        super.init(_data);
-        if (_data) {
-            if (Array.isArray(_data["entitySets"])) {
-                this.entitySets = [] as any;
-                for (let item of _data["entitySets"])
-                    this.entitySets!.push(ODataEntitySetInfo.fromJS(item));
-            }
-            if (Array.isArray(_data["singletons"])) {
-                this.singletons = [] as any;
-                for (let item of _data["singletons"])
-                    this.singletons!.push(ODataSingletonInfo.fromJS(item));
-            }
-            if (Array.isArray(_data["functionImports"])) {
-                this.functionImports = [] as any;
-                for (let item of _data["functionImports"])
-                    this.functionImports!.push(ODataFunctionImportInfo.fromJS(item));
-            }
-        }
-    }
-
-    static fromJS(data: any): ODataServiceDocument {
-        data = typeof data === 'object' ? data : {};
-        let result = new ODataServiceDocument();
-        result.init(data);
-        return result;
-    }
-
-    toJSON(data?: any) {
-        data = typeof data === 'object' ? data : {};
-        if (Array.isArray(this.entitySets)) {
-            data["entitySets"] = [];
-            for (let item of this.entitySets)
-                data["entitySets"].push(item.toJSON());
-        }
-        if (Array.isArray(this.singletons)) {
-            data["singletons"] = [];
-            for (let item of this.singletons)
-                data["singletons"].push(item.toJSON());
-        }
-        if (Array.isArray(this.functionImports)) {
-            data["functionImports"] = [];
-            for (let item of this.functionImports)
-                data["functionImports"].push(item.toJSON());
-        }
-        super.toJSON(data);
-        return data;
-    }
-}
-
-/** Class representing the a service document. */
-export interface IODataServiceDocument extends IODataAnnotatable {
-    /** Gets or sets the set of entity sets in the service document. */
-    entitySets?: ODataEntitySetInfo[] | undefined;
-    /** Gets or sets the set of singletons in the service document. */
-    singletons?: ODataSingletonInfo[] | undefined;
-    /** Gets or sets the set of function imports in the service document. */
-    functionImports?: ODataFunctionImportInfo[] | undefined;
-}
-
-/** Abstract class representing an element (EntitySet, Singleton) in a service document. */
-export abstract class ODataServiceDocumentElement extends ODataAnnotatable implements IODataServiceDocumentElement {
-    /** Gets or sets the URI representing the Unified Resource Locator (URL) to the element. */
-    url?: string | undefined;
-    /** Gets or sets the name of the element; this is the entity set or singleton name in JSON and the HREF in Atom. */
-    name?: string | undefined;
-    /** Gets or sets the title of the element; this is the title in JSON. */
-    title?: string | undefined;
-
-    constructor(data?: IODataServiceDocumentElement) {
-        super(data);
-    }
-
-    init(_data?: any) {
-        super.init(_data);
-        if (_data) {
-            this.url = _data["url"];
-            this.name = _data["name"];
-            this.title = _data["title"];
-        }
-    }
-
-    static fromJS(data: any): ODataServiceDocumentElement {
-        data = typeof data === 'object' ? data : {};
-        throw new Error("The abstract class 'ODataServiceDocumentElement' cannot be instantiated.");
-    }
-
-    toJSON(data?: any) {
-        data = typeof data === 'object' ? data : {};
-        data["url"] = this.url;
-        data["name"] = this.name;
-        data["title"] = this.title;
-        super.toJSON(data);
-        return data;
-    }
-}
-
-/** Abstract class representing an element (EntitySet, Singleton) in a service document. */
-export interface IODataServiceDocumentElement extends IODataAnnotatable {
-    /** Gets or sets the URI representing the Unified Resource Locator (URL) to the element. */
-    url?: string | undefined;
-    /** Gets or sets the name of the element; this is the entity set or singleton name in JSON and the HREF in Atom. */
-    name?: string | undefined;
-    /** Gets or sets the title of the element; this is the title in JSON. */
-    title?: string | undefined;
-}
-
-/** Class representing a entity set in a service document. */
-export class ODataEntitySetInfo extends ODataServiceDocumentElement implements IODataEntitySetInfo {
-
-    constructor(data?: IODataEntitySetInfo) {
-        super(data);
-    }
-
-    init(_data?: any) {
-        super.init(_data);
-    }
-
-    static fromJS(data: any): ODataEntitySetInfo {
-        data = typeof data === 'object' ? data : {};
-        let result = new ODataEntitySetInfo();
-        result.init(data);
-        return result;
-    }
-
-    toJSON(data?: any) {
-        data = typeof data === 'object' ? data : {};
-        super.toJSON(data);
-        return data;
-    }
-}
-
-/** Class representing a entity set in a service document. */
-export interface IODataEntitySetInfo extends IODataServiceDocumentElement {
-}
-
-/** Annotation which stores the EDM type information of a value. */
-export class ODataTypeAnnotation implements IODataTypeAnnotation {
-    /** Gets the type name to serialize, for the annotated item.  */
-    typeName?: string | undefined;
-
-    constructor(data?: IODataTypeAnnotation) {
-        if (data) {
-            for (var property in data) {
-                if (data.hasOwnProperty(property))
-                    (<any>this)[property] = (<any>data)[property];
-            }
-        }
-    }
-
-    init(_data?: any) {
-        if (_data) {
-            this.typeName = _data["typeName"];
-        }
-    }
-
-    static fromJS(data: any): ODataTypeAnnotation {
-        data = typeof data === 'object' ? data : {};
-        let result = new ODataTypeAnnotation();
-        result.init(data);
-        return result;
-    }
-
-    toJSON(data?: any) {
-        data = typeof data === 'object' ? data : {};
-        data["typeName"] = this.typeName;
-        return data;
-    }
-}
-
-/** Annotation which stores the EDM type information of a value. */
-export interface IODataTypeAnnotation {
-    /** Gets the type name to serialize, for the annotated item.  */
-    typeName?: string | undefined;
-}
-
-/** Class representing a singleton in a service document. */
-export class ODataSingletonInfo extends ODataServiceDocumentElement implements IODataSingletonInfo {
-
-    constructor(data?: IODataSingletonInfo) {
-        super(data);
-    }
-
-    init(_data?: any) {
-        super.init(_data);
-    }
-
-    static fromJS(data: any): ODataSingletonInfo {
-        data = typeof data === 'object' ? data : {};
-        let result = new ODataSingletonInfo();
-        result.init(data);
-        return result;
-    }
-
-    toJSON(data?: any) {
-        data = typeof data === 'object' ? data : {};
-        super.toJSON(data);
-        return data;
-    }
-}
-
-/** Class representing a singleton in a service document. */
-export interface IODataSingletonInfo extends IODataServiceDocumentElement {
-}
-
-/** Class representing a function Import in a service document. */
-export class ODataFunctionImportInfo extends ODataServiceDocumentElement implements IODataFunctionImportInfo {
-
-    constructor(data?: IODataFunctionImportInfo) {
-        super(data);
-    }
-
-    init(_data?: any) {
-        super.init(_data);
-    }
-
-    static fromJS(data: any): ODataFunctionImportInfo {
-        data = typeof data === 'object' ? data : {};
-        let result = new ODataFunctionImportInfo();
-        result.init(data);
-        return result;
-    }
-
-    toJSON(data?: any) {
-        data = typeof data === 'object' ? data : {};
-        super.toJSON(data);
-        return data;
-    }
-}
-
-/** Class representing a function Import in a service document. */
-export interface IODataFunctionImportInfo extends IODataServiceDocumentElement {
 }
 
 function formatDate(d: Date) {

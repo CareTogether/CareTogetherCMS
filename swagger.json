@@ -102,6 +102,48 @@
             }
           }
         }
+      },
+      "put": {
+        "tags": [
+          "Configuration"
+        ],
+        "operationId": "Configuration_PutLocationDefinition",
+        "parameters": [
+          {
+            "name": "organizationId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "guid"
+            },
+            "x-position": 1
+          }
+        ],
+        "requestBody": {
+          "x-name": "newLocationPayload",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PutLocationPayload"
+              }
+            }
+          },
+          "required": true,
+          "x-position": 2
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OrganizationConfiguration"
+                }
+              }
+            }
+          }
+        }
       }
     },
     "/api/{organizationId}/Configuration/roles/{roleName}": {
@@ -1019,48 +1061,6 @@
           }
         }
       }
-    },
-    "/api/odata/live/$metadata": {
-      "get": {
-        "tags": [
-          "Metadata"
-        ],
-        "summary": "Generates the OData $metadata document.",
-        "operationId": "Metadata_GetMetadata",
-        "responses": {
-          "200": {
-            "description": "The IEdmModel representing $metadata.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/IEdmModel"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/odata/live": {
-      "get": {
-        "tags": [
-          "Metadata"
-        ],
-        "summary": "Generates the OData service document.",
-        "operationId": "Metadata_GetServiceDocument",
-        "responses": {
-          "200": {
-            "description": "The service document for the service.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ODataServiceDocument"
-                }
-              }
-            }
-          }
-        }
-      }
     }
   },
   "components": {
@@ -1188,6 +1188,13 @@
               "$ref": "#/components/schemas/SourcePhoneNumberConfiguration"
             }
           },
+          "accessLevels": {
+            "type": "array",
+            "nullable": true,
+            "items": {
+              "$ref": "#/components/schemas/AccessLevel"
+            }
+          },
           "timeZone": {
             "nullable": true,
             "oneOf": [
@@ -1207,6 +1214,31 @@
           },
           "description": {
             "type": "string"
+          }
+        }
+      },
+      "AccessLevel": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "guid"
+          },
+          "name": {
+            "type": "string"
+          },
+          "organizationRoles": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "approvalRoles": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
           }
         }
       },
@@ -1281,6 +1313,8 @@
             "AllVolunteerFamiliesPermissionContext": "#/components/schemas/AllVolunteerFamiliesPermissionContext",
             "AssignedFunctionsInReferralCoAssigneeFamiliesPermissionContext": "#/components/schemas/AssignedFunctionsInReferralCoAssigneeFamiliesPermissionContext",
             "AssignedFunctionsInReferralPartneringFamilyPermissionContext": "#/components/schemas/AssignedFunctionsInReferralPartneringFamilyPermissionContext",
+            "CommunityCoMemberFamiliesAssignedFunctionsInReferralCoAssignedFamiliesPermissionContext": "#/components/schemas/CommunityCoMemberFamiliesAssignedFunctionsInReferralCoAssignedFamiliesPermissionContext",
+            "CommunityCoMemberFamiliesAssignedFunctionsInReferralPartneringFamilyPermissionContext": "#/components/schemas/CommunityCoMemberFamiliesAssignedFunctionsInReferralPartneringFamilyPermissionContext",
             "CommunityCoMemberFamiliesPermissionContext": "#/components/schemas/CommunityCoMemberFamiliesPermissionContext",
             "CommunityMemberPermissionContext": "#/components/schemas/CommunityMemberPermissionContext",
             "GlobalPermissionContext": "#/components/schemas/GlobalPermissionContext",
@@ -1366,6 +1400,46 @@
                 "nullable": true
               },
               "whenOwnFunctionIsIn": {
+                "type": "array",
+                "nullable": true,
+                "items": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        ]
+      },
+      "CommunityCoMemberFamiliesAssignedFunctionsInReferralCoAssignedFamiliesPermissionContext": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/PermissionContext"
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "whenOwnCommunityRoleIsIn": {
+                "type": "array",
+                "nullable": true,
+                "items": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        ]
+      },
+      "CommunityCoMemberFamiliesAssignedFunctionsInReferralPartneringFamilyPermissionContext": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/PermissionContext"
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "whenOwnCommunityRoleIsIn": {
                 "type": "array",
                 "nullable": true,
                 "items": {
@@ -1606,6 +1680,20 @@
           508
         ]
       },
+      "PutLocationPayload": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "locationConfiguration": {
+            "$ref": "#/components/schemas/LocationConfiguration"
+          },
+          "copyPoliciesFromLocationId": {
+            "type": "string",
+            "format": "guid",
+            "nullable": true
+          }
+        }
+      },
       "EffectiveLocationPolicy": {
         "type": "object",
         "additionalProperties": false,
@@ -1652,6 +1740,14 @@
           "validity": {
             "type": "string",
             "format": "duration",
+            "nullable": true
+          },
+          "canView": {
+            "type": "string",
+            "nullable": true
+          },
+          "canEdit": {
+            "type": "string",
             "nullable": true
           }
         }
@@ -1737,10 +1833,10 @@
         "type": "object",
         "additionalProperties": false,
         "properties": {
-          "requiredIntakeActionNames": {
+          "intakeRequirements": {
             "type": "array",
             "items": {
-              "type": "string"
+              "$ref": "#/components/schemas/RequirementDefinition"
             }
           },
           "customFields": {
@@ -1764,6 +1860,18 @@
           }
         }
       },
+      "RequirementDefinition": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "actionName": {
+            "type": "string"
+          },
+          "isRequired": {
+            "type": "boolean"
+          }
+        }
+      },
       "ArrangementPolicy": {
         "type": "object",
         "additionalProperties": false,
@@ -1780,10 +1888,10 @@
               "$ref": "#/components/schemas/ArrangementFunction"
             }
           },
-          "requiredSetupActionNames": {
+          "requiredSetupActions": {
             "type": "array",
             "items": {
-              "type": "string"
+              "$ref": "#/components/schemas/RequirementDefinition"
             }
           },
           "requiredMonitoringActions": {
@@ -1795,7 +1903,7 @@
           "requiredCloseoutActionNames": {
             "type": "array",
             "items": {
-              "type": "string"
+              "$ref": "#/components/schemas/RequirementDefinition"
             }
           }
         }
@@ -1878,7 +1986,7 @@
           "requiredSetupActionNames": {
             "type": "array",
             "items": {
-              "type": "string"
+              "$ref": "#/components/schemas/RequirementDefinition"
             }
           },
           "requiredMonitoringActions": {
@@ -1890,7 +1998,7 @@
           "requiredCloseoutActionNames": {
             "type": "array",
             "items": {
-              "type": "string"
+              "$ref": "#/components/schemas/RequirementDefinition"
             }
           }
         }
@@ -1899,8 +2007,8 @@
         "type": "object",
         "additionalProperties": false,
         "properties": {
-          "actionName": {
-            "type": "string"
+          "action": {
+            "$ref": "#/components/schemas/RequirementDefinition"
           },
           "recurrence": {
             "$ref": "#/components/schemas/RecurrencePolicy"
@@ -3068,7 +3176,7 @@
           "missingRequirements": {
             "type": "array",
             "items": {
-              "type": "string"
+              "$ref": "#/components/schemas/RequirementDefinition"
             }
           },
           "completedCustomFields": {
@@ -3248,6 +3356,12 @@
               "$ref": "#/components/schemas/MissingArrangementRequirement"
             }
           },
+          "missingOptionalRequirements": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/MissingArrangementRequirement"
+            }
+          },
           "individualVolunteerAssignments": {
             "type": "array",
             "items": {
@@ -3322,8 +3436,8 @@
             "format": "guid",
             "nullable": true
           },
-          "actionName": {
-            "type": "string"
+          "action": {
+            "$ref": "#/components/schemas/RequirementDefinition"
           },
           "dueBy": {
             "type": "string",
@@ -4008,6 +4122,10 @@
           "backdatedTimestampUtc": {
             "type": "string",
             "format": "date-time",
+            "nullable": true
+          },
+          "accessLevel": {
+            "type": "string",
             "nullable": true
           }
         }
@@ -6065,6 +6183,10 @@
                 "type": "string",
                 "format": "date-time",
                 "nullable": true
+              },
+              "accessLevel": {
+                "type": "string",
+                "nullable": true
               }
             }
           }
@@ -6086,6 +6208,10 @@
               "backdatedTimestampUtc": {
                 "type": "string",
                 "format": "date-time",
+                "nullable": true
+              },
+              "accessLevel": {
+                "type": "string",
                 "nullable": true
               }
             }
@@ -6119,6 +6245,10 @@
               "backdatedTimestampUtc": {
                 "type": "string",
                 "format": "date-time",
+                "nullable": true
+              },
+              "accessLevel": {
+                "type": "string",
                 "nullable": true
               }
             }
@@ -7288,518 +7418,6 @@
             }
           }
         }
-      },
-      "IEdmModel": {
-        "type": "object",
-        "description": "Semantic representation of an EDM model.",
-        "x-abstract": true,
-        "additionalProperties": false,
-        "properties": {
-          "schemaElements": {
-            "type": "array",
-            "description": "Gets the collection of schema elements that are contained in this model.",
-            "nullable": true,
-            "items": {
-              "$ref": "#/components/schemas/IEdmSchemaElement"
-            }
-          },
-          "vocabularyAnnotations": {
-            "type": "array",
-            "description": "Gets the collection of vocabulary annotations that are contained in this model.",
-            "nullable": true,
-            "items": {
-              "$ref": "#/components/schemas/IEdmVocabularyAnnotation"
-            }
-          },
-          "referencedModels": {
-            "type": "array",
-            "description": "Gets the collection of models referred to by this model (mainly by the this.References).",
-            "nullable": true,
-            "items": {
-              "$ref": "#/components/schemas/IEdmModel"
-            }
-          },
-          "declaredNamespaces": {
-            "type": "array",
-            "description": "Gets the collection of namespaces that schema elements use contained in this model.",
-            "nullable": true,
-            "items": {
-              "type": "string"
-            }
-          },
-          "directValueAnnotationsManager": {
-            "description": "Gets the model's annotations manager.",
-            "nullable": true,
-            "oneOf": [
-              {
-                "$ref": "#/components/schemas/IEdmDirectValueAnnotationsManager"
-              }
-            ]
-          },
-          "entityContainer": {
-            "description": "Gets the only one entity container of the model.",
-            "nullable": true,
-            "oneOf": [
-              {
-                "$ref": "#/components/schemas/IEdmEntityContainer"
-              }
-            ]
-          }
-        }
-      },
-      "IEdmSchemaElement": {
-        "type": "object",
-        "description": "Common base interface for all named children of EDM schema.",
-        "x-abstract": true,
-        "additionalProperties": false,
-        "properties": {
-          "schemaElementKind": {
-            "description": "Gets the kind of this schema element.",
-            "oneOf": [
-              {
-                "$ref": "#/components/schemas/EdmSchemaElementKind"
-              }
-            ]
-          },
-          "namespace": {
-            "type": "string",
-            "description": "Gets the namespace this schema element belongs to.",
-            "nullable": true
-          }
-        }
-      },
-      "EdmSchemaElementKind": {
-        "type": "integer",
-        "description": "Defines EDM schema element types.",
-        "x-enumNames": [
-          "None",
-          "TypeDefinition",
-          "Term",
-          "Action",
-          "EntityContainer",
-          "Function"
-        ],
-        "enum": [
-          0,
-          1,
-          2,
-          3,
-          4,
-          5
-        ]
-      },
-      "IEdmVocabularyAnnotation": {
-        "type": "object",
-        "description": "Represents an EDM vocabulary annotation.",
-        "x-abstract": true,
-        "additionalProperties": false,
-        "properties": {
-          "qualifier": {
-            "type": "string",
-            "description": "Gets the qualifier used to discriminate between multiple bindings of the same property or type.",
-            "nullable": true
-          },
-          "term": {
-            "description": "Gets the term bound by the annotation.",
-            "nullable": true,
-            "oneOf": [
-              {
-                "$ref": "#/components/schemas/IEdmTerm"
-              }
-            ]
-          },
-          "target": {
-            "description": "Gets the element the annotation applies to.",
-            "nullable": true,
-            "oneOf": [
-              {
-                "$ref": "#/components/schemas/IEdmVocabularyAnnotatable"
-              }
-            ]
-          },
-          "value": {
-            "description": "Gets the expression producing the value of the annotation.",
-            "nullable": true,
-            "oneOf": [
-              {
-                "$ref": "#/components/schemas/IEdmExpression"
-              }
-            ]
-          }
-        }
-      },
-      "IEdmTerm": {
-        "type": "object",
-        "description": "Represents an EDM term.",
-        "x-abstract": true,
-        "additionalProperties": false,
-        "properties": {
-          "type": {
-            "description": "Gets the type of this term.",
-            "nullable": true,
-            "oneOf": [
-              {
-                "$ref": "#/components/schemas/IEdmTypeReference"
-              }
-            ]
-          },
-          "appliesTo": {
-            "type": "string",
-            "description": "Gets the AppliesTo of this term.",
-            "nullable": true
-          },
-          "defaultValue": {
-            "type": "string",
-            "description": "Gets the DefaultValue of this term.",
-            "nullable": true
-          }
-        }
-      },
-      "IEdmTypeReference": {
-        "type": "object",
-        "description": "Represents a references to a type.",
-        "x-abstract": true,
-        "additionalProperties": false,
-        "properties": {
-          "isNullable": {
-            "type": "boolean",
-            "description": "Gets a value indicating whether this type is nullable."
-          },
-          "definition": {
-            "description": "Gets the definition to which this type refers.",
-            "nullable": true,
-            "oneOf": [
-              {
-                "$ref": "#/components/schemas/IEdmType"
-              }
-            ]
-          }
-        }
-      },
-      "IEdmType": {
-        "type": "object",
-        "description": "Represents the definition of an EDM type.",
-        "x-abstract": true,
-        "additionalProperties": false,
-        "properties": {
-          "typeKind": {
-            "description": "Gets the kind of this type.",
-            "oneOf": [
-              {
-                "$ref": "#/components/schemas/EdmTypeKind"
-              }
-            ]
-          }
-        }
-      },
-      "EdmTypeKind": {
-        "type": "integer",
-        "description": "Defines EDM metatypes.",
-        "x-enumNames": [
-          "None",
-          "Primitive",
-          "Entity",
-          "Complex",
-          "Collection",
-          "EntityReference",
-          "Enum",
-          "TypeDefinition",
-          "Untyped",
-          "Path"
-        ],
-        "enum": [
-          0,
-          1,
-          2,
-          3,
-          4,
-          5,
-          6,
-          7,
-          8,
-          9
-        ]
-      },
-      "IEdmVocabularyAnnotatable": {
-        "type": "object",
-        "description": "Represents an element that can be targeted by Vocabulary Annotations",
-        "x-abstract": true,
-        "additionalProperties": false
-      },
-      "IEdmExpression": {
-        "type": "object",
-        "description": "Represents an EDM expression.",
-        "x-abstract": true,
-        "additionalProperties": false,
-        "properties": {
-          "expressionKind": {
-            "description": "Gets the kind of this expression.",
-            "oneOf": [
-              {
-                "$ref": "#/components/schemas/EdmExpressionKind"
-              }
-            ]
-          }
-        }
-      },
-      "EdmExpressionKind": {
-        "type": "integer",
-        "description": "Defines EDM expression kinds.",
-        "x-enumNames": [
-          "None",
-          "BinaryConstant",
-          "BooleanConstant",
-          "DateTimeOffsetConstant",
-          "DecimalConstant",
-          "FloatingConstant",
-          "GuidConstant",
-          "IntegerConstant",
-          "StringConstant",
-          "DurationConstant",
-          "Null",
-          "Record",
-          "Collection",
-          "Path",
-          "If",
-          "Cast",
-          "IsType",
-          "FunctionApplication",
-          "LabeledExpressionReference",
-          "Labeled",
-          "PropertyPath",
-          "NavigationPropertyPath",
-          "DateConstant",
-          "TimeOfDayConstant",
-          "EnumMember",
-          "AnnotationPath"
-        ],
-        "enum": [
-          0,
-          1,
-          2,
-          3,
-          4,
-          5,
-          6,
-          7,
-          8,
-          9,
-          10,
-          11,
-          12,
-          13,
-          14,
-          15,
-          16,
-          17,
-          18,
-          19,
-          20,
-          21,
-          22,
-          23,
-          24,
-          25
-        ]
-      },
-      "IEdmDirectValueAnnotationsManager": {
-        "type": "object",
-        "description": "Manages getting and setting direct annotations on EDM elements.",
-        "x-abstract": true,
-        "additionalProperties": false
-      },
-      "IEdmEntityContainer": {
-        "type": "object",
-        "description": "Represents an EDM entity container.",
-        "x-abstract": true,
-        "additionalProperties": false,
-        "properties": {
-          "elements": {
-            "type": "array",
-            "description": "Gets a collection of the elements of this entity container.",
-            "nullable": true,
-            "items": {
-              "$ref": "#/components/schemas/IEdmEntityContainerElement"
-            }
-          }
-        }
-      },
-      "IEdmEntityContainerElement": {
-        "type": "object",
-        "description": "Represents the common elements of all EDM entity container elements.",
-        "x-abstract": true,
-        "additionalProperties": false,
-        "properties": {
-          "containerElementKind": {
-            "description": "Gets the kind of element of this container element.",
-            "oneOf": [
-              {
-                "$ref": "#/components/schemas/EdmContainerElementKind"
-              }
-            ]
-          },
-          "container": {
-            "description": "Gets the container that contains this element.",
-            "nullable": true,
-            "oneOf": [
-              {
-                "$ref": "#/components/schemas/IEdmEntityContainer"
-              }
-            ]
-          }
-        }
-      },
-      "EdmContainerElementKind": {
-        "type": "integer",
-        "description": "Defines EDM container element types.",
-        "x-enumNames": [
-          "None",
-          "EntitySet",
-          "ActionImport",
-          "FunctionImport",
-          "Singleton"
-        ],
-        "enum": [
-          0,
-          1,
-          2,
-          3,
-          4
-        ]
-      },
-      "ODataServiceDocument": {
-        "allOf": [
-          {
-            "$ref": "#/components/schemas/ODataAnnotatable"
-          },
-          {
-            "type": "object",
-            "description": "Class representing the a service document.",
-            "additionalProperties": false,
-            "properties": {
-              "entitySets": {
-                "type": "array",
-                "description": "Gets or sets the set of entity sets in the service document.",
-                "nullable": true,
-                "items": {
-                  "$ref": "#/components/schemas/ODataEntitySetInfo"
-                }
-              },
-              "singletons": {
-                "type": "array",
-                "description": "Gets or sets the set of singletons in the service document.",
-                "nullable": true,
-                "items": {
-                  "$ref": "#/components/schemas/ODataSingletonInfo"
-                }
-              },
-              "functionImports": {
-                "type": "array",
-                "description": "Gets or sets the set of function imports in the service document.",
-                "nullable": true,
-                "items": {
-                  "$ref": "#/components/schemas/ODataFunctionImportInfo"
-                }
-              }
-            }
-          }
-        ]
-      },
-      "ODataEntitySetInfo": {
-        "allOf": [
-          {
-            "$ref": "#/components/schemas/ODataServiceDocumentElement"
-          },
-          {
-            "type": "object",
-            "description": "Class representing a entity set in a service document.",
-            "additionalProperties": false
-          }
-        ]
-      },
-      "ODataServiceDocumentElement": {
-        "allOf": [
-          {
-            "$ref": "#/components/schemas/ODataAnnotatable"
-          },
-          {
-            "type": "object",
-            "description": "Abstract class representing an element (EntitySet, Singleton) in a service document.",
-            "x-abstract": true,
-            "additionalProperties": false,
-            "properties": {
-              "url": {
-                "type": "string",
-                "description": "Gets or sets the URI representing the Unified Resource Locator (URL) to the element.",
-                "format": "uri",
-                "nullable": true
-              },
-              "name": {
-                "type": "string",
-                "description": "Gets or sets the name of the element; this is the entity set or singleton name in JSON and the HREF in Atom.",
-                "nullable": true
-              },
-              "title": {
-                "type": "string",
-                "description": "Gets or sets the title of the element; this is the title in JSON.",
-                "nullable": true
-              }
-            }
-          }
-        ]
-      },
-      "ODataAnnotatable": {
-        "type": "object",
-        "description": "Base class for all annotatable types in OData library.",
-        "x-abstract": true,
-        "additionalProperties": false,
-        "properties": {
-          "typeAnnotation": {
-            "description": "The annotation for storing @odata.type.",
-            "nullable": true,
-            "oneOf": [
-              {
-                "$ref": "#/components/schemas/ODataTypeAnnotation"
-              }
-            ]
-          }
-        }
-      },
-      "ODataTypeAnnotation": {
-        "type": "object",
-        "description": "Annotation which stores the EDM type information of a value.",
-        "additionalProperties": false,
-        "properties": {
-          "typeName": {
-            "type": "string",
-            "description": "Gets the type name to serialize, for the annotated item. ",
-            "nullable": true
-          }
-        }
-      },
-      "ODataSingletonInfo": {
-        "allOf": [
-          {
-            "$ref": "#/components/schemas/ODataServiceDocumentElement"
-          },
-          {
-            "type": "object",
-            "description": "Class representing a singleton in a service document.",
-            "additionalProperties": false
-          }
-        ]
-      },
-      "ODataFunctionImportInfo": {
-        "allOf": [
-          {
-            "$ref": "#/components/schemas/ODataServiceDocumentElement"
-          },
-          {
-            "type": "object",
-            "description": "Class representing a function Import in a service document.",
-            "additionalProperties": false
-          }
-        ]
       }
     }
   }

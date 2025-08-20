@@ -19,6 +19,7 @@ namespace CareTogether.Resources.Policies
         ImmutableList<string> AdultFamilyRelationships,
         ImmutableList<string>? ArrangementReasons,
         ImmutableList<SourcePhoneNumberConfiguration> SmsSourcePhoneNumbers,
+        ImmutableList<AccessLevel>? AccessLevels,
         TimeZoneInfo? timeZone = null
     );
 
@@ -73,6 +74,14 @@ namespace CareTogether.Resources.Policies
         ImmutableList<string>? WhenOwnCommunityRoleIsIn
     ) : PermissionContext();
 
+    public sealed record CommunityCoMemberFamiliesAssignedFunctionsInReferralPartneringFamilyPermissionContext(
+        ImmutableList<string>? WhenOwnCommunityRoleIsIn
+    ) : PermissionContext();
+
+    public sealed record CommunityCoMemberFamiliesAssignedFunctionsInReferralCoAssignedFamiliesPermissionContext(
+        ImmutableList<string>? WhenOwnCommunityRoleIsIn
+    ) : PermissionContext();
+
     public sealed record UserAccessConfiguration(ImmutableList<UserLocationRoles> LocationRoles);
 
     public sealed record UserLocationRoles(
@@ -109,11 +118,22 @@ namespace CareTogether.Resources.Policies
         NoteEntryRequirement NoteEntry,
         string? Instructions,
         Uri? InfoLink,
-        TimeSpan? Validity
+        TimeSpan? Validity,
+        string? CanView,
+        string? CanEdit
     );
 
+    public sealed record AccessLevel(
+        Guid Id,
+        string Name,
+        string[] OrganizationRoles,
+        string[] ApprovalRoles
+    );
+
+    public sealed record RequirementDefinition(string ActionName, bool IsRequired);
+
     public sealed record ReferralPolicy(
-        ImmutableList<string> RequiredIntakeActionNames,
+        ImmutableList<RequirementDefinition> IntakeRequirements,
         ImmutableList<CustomField> CustomFields,
         ImmutableList<ArrangementPolicy> ArrangementPolicies,
         ImmutableList<FunctionPolicy>? FunctionPolicies
@@ -143,9 +163,9 @@ namespace CareTogether.Resources.Policies
         string ArrangementType,
         ChildInvolvement ChildInvolvement,
         ImmutableList<ArrangementFunction> ArrangementFunctions,
-        ImmutableList<string> RequiredSetupActionNames,
+        ImmutableList<RequirementDefinition> RequiredSetupActions,
         ImmutableList<MonitoringRequirement> RequiredMonitoringActions,
-        ImmutableList<string> RequiredCloseoutActionNames
+        ImmutableList<RequirementDefinition> RequiredCloseoutActionNames
     );
 
     public enum ChildInvolvement
@@ -155,7 +175,10 @@ namespace CareTogether.Resources.Policies
         NoChildInvolvement,
     };
 
-    public sealed record MonitoringRequirement(string ActionName, RecurrencePolicy Recurrence);
+    public sealed record MonitoringRequirement(
+        RequirementDefinition Action,
+        RecurrencePolicy Recurrence
+    );
 
     public enum FunctionRequirement
     {
@@ -175,9 +198,9 @@ namespace CareTogether.Resources.Policies
 
     public sealed record ArrangementFunctionVariant(
         string VariantName,
-        ImmutableList<string> RequiredSetupActionNames,
+        ImmutableList<RequirementDefinition> RequiredSetupActionNames,
         ImmutableList<MonitoringRequirement> RequiredMonitoringActions,
-        ImmutableList<string> RequiredCloseoutActionNames
+        ImmutableList<RequirementDefinition> RequiredCloseoutActionNames
     );
 
     [JsonHierarchyBase]
@@ -276,6 +299,20 @@ namespace CareTogether.Resources.Policies
         Task<OrganizationConfiguration> DeleteRoleDefinitionAsync(
             Guid organizationId,
             string roleName
+        );
+
+        Task<(
+            OrganizationConfiguration OrganizationConfiguration,
+            LocationConfiguration LocationConfiguration
+        )> UpsertLocationDefinitionAsync(
+            Guid organizationId,
+            LocationConfiguration locationConfiguration
+        );
+
+        Task<EffectiveLocationPolicy> UpsertEffectiveLocationPolicyAsync(
+            Guid organizationId,
+            Guid locationId,
+            EffectiveLocationPolicy EffectiveLocationPolicy
         );
 
         Task<OrganizationSecrets> GetOrganizationSecretsAsync(Guid organizationId);

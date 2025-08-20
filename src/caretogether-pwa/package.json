@@ -30,6 +30,7 @@
     "powerbi-client-react": "^2.0.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
+    "react-hook-form": "^7.58.1",
     "react-router-dom": "^6.24.1",
     "react-to-print": "^3.0.5",
     "recoil": "^0.7.7",
@@ -54,7 +55,8 @@
   },
   "scripts": {
     "dev": "vite",
-    "build": "vite build",
+    "type-check": "tsc --noEmit",
+    "build": "npm run type-check && vite build",
     "lint": "eslint src --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
     "preview": "vite preview"
   },

@@ -65,7 +65,8 @@ namespace CareTogether.Api.OData
         string LastName,
         PersonType PersonType,
         string? Ethnicity,
-        DateOnly? DateOfBirth
+        DateOnly? DateOfBirth,
+        Gender? Gender
     );
 
     public enum PersonType
@@ -73,6 +74,13 @@ namespace CareTogether.Api.OData
         Adult,
         Child,
     }
+
+    public enum Gender
+    {
+        Male,
+        Female,
+        SeeNotes,
+    };
 
     public sealed record Community(
         [property: Key] Guid Id,
@@ -103,7 +111,7 @@ namespace CareTogether.Api.OData
         [property: Key] string RoleName,
         [property: Key] DateOnly Start,
         [property: Key] DateOnly End,
-        RoleApprovalStatus? Status
+        RoleApprovalStatus Status
     );
 
     public sealed record IndividualRoleApproval(
@@ -119,7 +127,7 @@ namespace CareTogether.Api.OData
         Guid FamilyId,
         [property: Key] DateOnly Start,
         [property: Key] DateOnly End,
-        RoleApprovalStatus? Status
+        RoleApprovalStatus Status
     );
 
     public sealed record FamilyRoleRemovedIndividual(
@@ -168,8 +176,8 @@ namespace CareTogether.Api.OData
         string TypeName,
         [property: ForeignKey("ReferralId")] Referral Referral,
         Guid ReferralId,
-        [property: ForeignKey("PersonId")] Person Person,
-        Guid PersonId,
+        [property: ForeignKey("PersonId")] Person? Person,
+        Guid? PersonId,
         DateOnly Requested,
         DateTime? StartedUtc,
         DateTime? EndedUtc,
@@ -193,8 +201,8 @@ namespace CareTogether.Api.OData
         [property: Key] Guid LocationId,
         [property: ForeignKey("ArrangementId")] Arrangement Arrangement,
         [property: Key] Guid ArrangementId,
-        [property: ForeignKey("ChildPersonId")] Person Child,
-        [property: Key] Guid ChildPersonId,
+        [property: ForeignKey("ChildPersonId")] Person? Child,
+        [property: Key] Guid? ChildPersonId,
         [property: ForeignKey("FamilyId")] Family Family,
         [property: Key] Guid FamilyId,
         [property: Key] DateTime StartedAtUtc,
@@ -250,6 +258,33 @@ namespace CareTogether.Api.OData
         [property: Key] string Role
     );
 
+    public enum EntityType
+    {
+        Family,
+        Person,
+    }
+
+    public enum ApprovalType
+    {
+        Direct,
+        Indirect,
+    }
+
+    public sealed record RoleApproval(
+        [property: ForeignKey("OrganizationId")] Organization Organization,
+        [property: Key] Guid OrganizationId,
+        [property: ForeignKey("LocationId")] Location Location,
+        [property: Key] Guid LocationId,
+        [property: Key] Guid EntityId,
+        [property: Key] string RoleName,
+        [property: Key] DateOnly Date,
+        EntityType EntityType,
+        ApprovalType ApprovalType,
+        RoleApprovalStatus Status,
+        bool StatusChanged,
+        string RlsKey
+    );
+
     public sealed record LiveModel(
         IEnumerable<Location> Locations,
         IEnumerable<LocationUserAccess> LocationUserAccess,
@@ -267,7 +302,8 @@ namespace CareTogether.Api.OData
         IEnumerable<FamilyFunctionAssignment> FamilyFunctionAssignments,
         IEnumerable<IndividualFunctionAssignment> IndividualFunctionAssignments,
         IEnumerable<CommunityMemberFamily> CommunityMemberFamilies,
-        IEnumerable<CommunityRoleAssignment> CommunityRoleAssignments
+        IEnumerable<CommunityRoleAssignment> CommunityRoleAssignments,
+        IEnumerable<RoleApproval> RoleApprovals
     );
 
     [Route("api/odata/live")]
@@ -422,6 +458,13 @@ namespace CareTogether.Api.OData
             return liveModel.CommunityRoleAssignments;
         }
 
+        [HttpGet("RoleApprovals")]
+        public async Task<IEnumerable<RoleApproval>> GetRoleApprovalsAsync()
+        {
+            var liveModel = await RenderLiveModelAsync();
+            return liveModel.RoleApprovals;
+        }
+
         private async Task<LiveModel> RenderLiveModelAsync()
         {
             //NOTE: For now, we only grant access to one organization at a time.
@@ -491,7 +534,8 @@ namespace CareTogether.Api.OData
                     Enumerable.Empty<FamilyFunctionAssignment>(),
                     Enumerable.Empty<IndividualFunctionAssignment>(),
                     Enumerable.Empty<CommunityMemberFamily>(),
-                    Enumerable.Empty<CommunityRoleAssignment>()
+                    Enumerable.Empty<CommunityRoleAssignment>(),
+                    Enumerable.Empty<RoleApproval>()
                 ),
                 (acc, model) =>
                     new LiveModel(
@@ -513,7 +557,8 @@ namespace CareTogether.Api.OData
                             model.IndividualFunctionAssignments
                         ),
                         acc.CommunityMemberFamilies.Concat(model.CommunityMemberFamilies),
-                        acc.CommunityRoleAssignments.Concat(model.CommunityRoleAssignments)
+                        acc.CommunityRoleAssignments.Concat(model.CommunityRoleAssignments),
+                        acc.RoleApprovals.Concat(model.RoleApprovals)
                     )
             );
 
@@ -528,6 +573,19 @@ namespace CareTogether.Api.OData
             var organizationConfiguration = await policiesResource.GetConfigurationAsync(
                 organizationId
             );
+
+            //HOTFIX: Skip a transferred location temporarily until Power BI can partition records by organization.
+            if (organizationId == Guid.Parse("00000007-1000-0000-0000-000000000000"))
+            {
+                organizationConfiguration = organizationConfiguration with
+                {
+                    Locations = organizationConfiguration
+                        .Locations.Where(location =>
+                            location.Id != Guid.Parse("00000016-0000-0000-0000-000000000000")
+                        )
+                        .ToImmutableList(),
+                };
+            }
 
             var organization = new Organization(organizationId);
 
@@ -725,7 +783,6 @@ namespace CareTogether.Api.OData
                         )
                     )
                 )
-                .DistinctBy(x => x.Type)
                 .ToArray();
 
             var arrangements = familiesWithInfo
@@ -792,6 +849,14 @@ namespace CareTogether.Api.OData
                 )
                 .ToArray();
 
+            var roleApprovals = GenerateRoleApprovals(
+                organization,
+                familyRoleApprovals,
+                individualRoleApprovals,
+                familyRoleRemovedIndividuals,
+                people
+            );
+
             return new LiveModel(
                 locations,
                 locationUserAccess,
@@ -809,7 +874,8 @@ namespace CareTogether.Api.OData
                 familyFunctionAssignments,
                 individualFunctionAssignments,
                 communityMemberFamilies,
-                communityRoleAssignments
+                communityRoleAssignments,
+                roleApprovals
             );
         }
 
@@ -838,6 +904,171 @@ namespace CareTogether.Api.OData
                 Anonymize: anonymize,
                 IsGlobal: isGlobal
             );
+        }
+
+        private static IEnumerable<RoleApproval> GenerateRoleApprovals(
+            Organization organization,
+            FamilyRoleApproval[] familyRoleApprovals,
+            IndividualRoleApproval[] individualRoleApprovals,
+            FamilyRoleRemovedIndividual[] familyRoleRemovedIndividuals,
+            Person[] people
+        )
+        {
+            var currentDate = DateTime.Now;
+            var endOfNextYear = new DateOnly(currentDate.Year + 1, 12, 31);
+
+            // Helper function to generate dates between start and end (limited to end of next year)
+            static IEnumerable<DateOnly> GenerateDates(
+                DateOnly start,
+                DateOnly end,
+                DateOnly endLimit
+            )
+            {
+                var finalEnd = end < endLimit ? end : endLimit;
+                if (start > endLimit)
+                    yield break;
+
+                for (var date = start; date <= finalEnd; date = date.AddDays(1))
+                {
+                    yield return date;
+                }
+            }
+
+            // 1. Family Role Approvals (Direct)
+            var familyDirectApprovals = familyRoleApprovals.SelectMany(fra =>
+                GenerateDates(fra.Start, fra.End, endOfNextYear)
+                    .Select(date => new RoleApproval(
+                        organization,
+                        fra.OrganizationId,
+                        fra.Location,
+                        fra.LocationId,
+                        fra.FamilyId,
+                        fra.RoleName,
+                        date,
+                        EntityType.Family,
+                        ApprovalType.Direct,
+                        fra.Status,
+                        false, // Will be calculated later
+                        $"{fra.OrganizationId}-{fra.LocationId}"
+                    ))
+            );
+
+            // 2. Individual Role Approvals (Direct)
+            var individualDirectApprovals = individualRoleApprovals.SelectMany(ira =>
+                GenerateDates(ira.Start, ira.End, endOfNextYear)
+                    .Select(date => new RoleApproval(
+                        organization,
+                        ira.OrganizationId,
+                        ira.Location,
+                        ira.LocationId,
+                        ira.PersonId,
+                        ira.RoleName,
+                        date,
+                        EntityType.Person,
+                        ApprovalType.Direct,
+                        ira.Status,
+                        false, // Will be calculated later
+                        $"{ira.OrganizationId}-{ira.LocationId}"
+                    ))
+            );
+
+            // 3. Indirect Family Approvals (from Individual Role Approvals)
+            var indirectFamilyApprovals = individualRoleApprovals.SelectMany(ira =>
+                GenerateDates(ira.Start, ira.End, endOfNextYear)
+                    .Select(date => new RoleApproval(
+                        organization,
+                        ira.OrganizationId,
+                        ira.Location,
+                        ira.LocationId,
+                        ira.FamilyId,
+                        ira.RoleName,
+                        date,
+                        EntityType.Family,
+                        ApprovalType.Indirect,
+                        ira.Status,
+                        false, // Will be calculated later
+                        $"{ira.OrganizationId}-{ira.LocationId}"
+                    ))
+            );
+
+            // 4. Indirect Person Approvals (from Family Role Approvals, excluding removed individuals)
+            var familyPersonMap = people.ToLookup(p => p.FamilyId);
+            var removedIndividualsSet = familyRoleRemovedIndividuals
+                .SelectMany(fri =>
+                    GenerateDates(fri.Start, fri.End, endOfNextYear)
+                        .Select(date => (fri.PersonId, fri.FamilyId, fri.RoleName, date))
+                )
+                .ToHashSet();
+
+            var indirectPersonApprovals = familyRoleApprovals.SelectMany(fra =>
+            {
+                var familyMembers = familyPersonMap[fra.FamilyId];
+                return familyMembers.SelectMany(person =>
+                    GenerateDates(fra.Start, fra.End, endOfNextYear)
+                        .Where(date =>
+                            !removedIndividualsSet.Contains(
+                                (person.Id, fra.FamilyId, fra.RoleName, date)
+                            )
+                        )
+                        .Select(date => new RoleApproval(
+                            organization,
+                            fra.OrganizationId,
+                            fra.Location,
+                            fra.LocationId,
+                            person.Id,
+                            fra.RoleName,
+                            date,
+                            EntityType.Person,
+                            ApprovalType.Indirect,
+                            fra.Status,
+                            false, // Will be calculated later
+                            $"{fra.OrganizationId}-{fra.LocationId}"
+                        ))
+                );
+            });
+
+            // 5. Calculate status changes for each approval type separately
+            var allApprovalsWithStatusChanges = new List<RoleApproval>();
+
+            // Process each approval type separately to ensure status changes are calculated correctly
+            var approvalGroups = new[]
+            {
+                familyDirectApprovals,
+                individualDirectApprovals,
+                indirectFamilyApprovals,
+                indirectPersonApprovals,
+            };
+
+            foreach (var approvalGroup in approvalGroups)
+            {
+                var processedGroup = approvalGroup
+                    .GroupBy(ra => new
+                    {
+                        ra.EntityId,
+                        ra.RoleName,
+                        ra.EntityType,
+                        ra.ApprovalType,
+                    })
+                    .SelectMany(group =>
+                    {
+                        var sortedApprovals = group.OrderBy(ra => ra.Date).ToArray();
+
+                        return sortedApprovals.Select(
+                            (current, index) =>
+                            {
+                                var previous = index > 0 ? sortedApprovals[index - 1] : null;
+                                var statusChanged =
+                                    previous == null || current.Status != previous.Status;
+                                return current with { StatusChanged = statusChanged };
+                            }
+                        );
+                    })
+                    .ToImmutableList();
+
+                allApprovalsWithStatusChanges.AddRange(processedGroup);
+            }
+
+            return allApprovalsWithStatusChanges;
         }
 
         private FamilyRecordsAggregate AnonymizeFamilyRecords(
@@ -1179,7 +1410,7 @@ namespace CareTogether.Api.OData
             var bestEmail = GetFromPrimaryContactIfAvailable(person =>
                 person
                     .EmailAddresses.SingleOrDefault(x =>
-                        x.Id == primaryContactPerson!.PreferredEmailAddressId
+                        x.Id == primaryContactPerson?.PreferredEmailAddressId
                     )
                     ?.Address
             );
@@ -1206,7 +1437,7 @@ namespace CareTogether.Api.OData
             var bestPhoneNumber = GetFromPrimaryContactIfAvailable(person =>
                 person
                     .PhoneNumbers.SingleOrDefault(x =>
-                        x.Id == primaryContactPerson!.PreferredPhoneNumberId
+                        x.Id == primaryContactPerson?.PreferredPhoneNumberId
                     )
                     ?.Number
             );
@@ -1257,6 +1488,11 @@ namespace CareTogether.Api.OData
                     adult.Item1.Ethnicity,
                     adult.Item1.Age is ExactAge
                         ? DateOnly.FromDateTime((adult.Item1.Age as ExactAge)!.DateOfBirth)
+                        : null,
+                    adult.Item1.Gender.HasValue
+                        ? Enum.TryParse<Gender>(adult.Item1.Gender.Value.ToString(), out var gender)
+                            ? gender
+                            : null
                         : null
                 ))
                 .Concat(
@@ -1274,6 +1510,11 @@ namespace CareTogether.Api.OData
                         child.Ethnicity,
                         child.Age is ExactAge
                             ? DateOnly.FromDateTime((child.Age as ExactAge)!.DateOfBirth)
+                            : null,
+                        child.Gender.HasValue
+                            ? Enum.TryParse<Gender>(child.Gender.Value.ToString(), out var gender)
+                                ? gender
+                                : null
                             : null
                     ))
                 );
@@ -1455,7 +1696,7 @@ namespace CareTogether.Api.OData
                 var referral = referrals.Single(r => r.Id == referralInfo.Id);
                 return referralInfo.Arrangements.Select(arrangement =>
                 {
-                    var arrangementPerson = people.Single(p =>
+                    var arrangementPerson = people.SingleOrDefault(p =>
                         p.Id == arrangement.PartneringFamilyPersonId
                     );
                     return new Arrangement(
@@ -1464,7 +1705,11 @@ namespace CareTogether.Api.OData
                         organization.Id,
                         family.Location,
                         family.Location.Id,
-                        arrangementTypes.Single(type => type.Type == arrangement.ArrangementType),
+                        arrangementTypes.Single(type =>
+                            type.Type == arrangement.ArrangementType
+                            && type.OrganizationId == organization.Id
+                            && type.LocationId == family.Location.Id
+                        ),
                         arrangement.ArrangementType,
                         referral,
                         referral.Id,
@@ -1501,7 +1746,7 @@ namespace CareTogether.Api.OData
                 return referralInfo.Arrangements.SelectMany(arrangement =>
                 {
                     var arrangementRecord = arrangements.Single(arr => arr.Id == arrangement.Id);
-                    var arrangementPerson = people.Single(p =>
+                    var arrangementPerson = people.SingleOrDefault(p =>
                         p.Id == arrangement.PartneringFamilyPersonId
                     );
                     return arrangement.ChildLocationHistory.Select(

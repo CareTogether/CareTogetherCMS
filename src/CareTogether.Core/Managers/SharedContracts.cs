@@ -7,6 +7,7 @@ using CareTogether.Resources.Approvals;
 using CareTogether.Resources.Communities;
 using CareTogether.Resources.Directory;
 using CareTogether.Resources.Notes;
+using CareTogether.Resources.Policies;
 using CareTogether.Resources.Referrals;
 
 namespace CareTogether.Managers
@@ -37,7 +38,7 @@ namespace CareTogether.Managers
         ReferralCloseReason? CloseReason,
         ImmutableList<Resources.CompletedRequirementInfo> CompletedRequirements,
         ImmutableList<Resources.ExemptedRequirementInfo> ExemptedRequirements,
-        ImmutableList<string> MissingRequirements,
+        ImmutableList<RequirementDefinition> MissingRequirements,
         ImmutableList<CompletedCustomFieldInfo> CompletedCustomFields,
         ImmutableList<string> MissingCustomFields,
         ImmutableList<Arrangement> Arrangements,
@@ -58,6 +59,7 @@ namespace CareTogether.Managers
         ImmutableList<Resources.CompletedRequirementInfo> CompletedRequirements,
         ImmutableList<Resources.ExemptedRequirementInfo> ExemptedRequirements,
         ImmutableList<MissingArrangementRequirement> MissingRequirements,
+        ImmutableList<MissingArrangementRequirement> MissingOptionalRequirements,
         ImmutableList<Resources.Referrals.IndividualVolunteerAssignment> IndividualVolunteerAssignments,
         ImmutableList<Resources.Referrals.FamilyVolunteerAssignment> FamilyVolunteerAssignments,
         ImmutableSortedSet<ChildLocationHistoryEntry> ChildLocationHistory,
@@ -72,7 +74,8 @@ namespace CareTogether.Managers
         DateTime TimestampUtc,
         string? Contents,
         NoteStatus Status,
-        DateTime? BackdatedTimestampUtc
+        DateTime? BackdatedTimestampUtc,
+        string? AccessLevel
     );
 
     public sealed record VolunteerFamilyInfo(

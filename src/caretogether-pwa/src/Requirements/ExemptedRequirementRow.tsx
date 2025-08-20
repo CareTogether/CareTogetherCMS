@@ -77,7 +77,7 @@ export function ExemptedRequirementRow({
       ) || []
     );
   const isArrangementMonitoringRequirement = allMonitoringRequirements?.some(
-    (r) => r.actionName === requirement.requirementName
+    (r) => r.action?.actionName === requirement.requirementName
   );
 
   return (

@@ -117,7 +117,8 @@ namespace CareTogether.Managers
                         : note.LastEditTimestampUtc,
                     note.Contents,
                     note.Status,
-                    note.BackdatedTimestampUtc
+                    note.BackdatedTimestampUtc,
+                    note.AccessLevel
                 ))
                 .ToImmutableList();
 
@@ -265,6 +266,7 @@ namespace CareTogether.Managers
                     entry.CompletedRequirements,
                     entry.ExemptedRequirements,
                     status.MissingRequirements,
+                    status.MissingOptionalRequirements,
                     entry.IndividualVolunteerAssignments,
                     entry.FamilyVolunteerAssignments,
                     entry.ChildLocationHistory,
