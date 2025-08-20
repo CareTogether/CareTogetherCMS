@@ -16,7 +16,7 @@ namespace CareTogether.Engines.PolicyEvaluation
         )
         {
             var missingIntakeRequirements = referralPolicy
-                .IntakeRequirements.Where(requirement =>
+                .IntakeRequirements_PRE_MIGRATION.Where(requirement =>
                     !SharedCalculations
                         .RequirementMetOrExempted(
                             requirement.ActionName,
@@ -155,7 +155,7 @@ namespace CareTogether.Engines.PolicyEvaluation
         )
         {
             var arrangementLevelResults = arrangementPolicy
-                .RequiredSetupActions.Where(requiredAction =>
+                .RequiredSetupActions_PRE_MIGRATION.Where(requiredAction =>
                     !SharedCalculations
                         .RequirementMetOrExempted(
                             requiredAction.ActionName,
@@ -192,7 +192,7 @@ namespace CareTogether.Engines.PolicyEvaluation
                         return ImmutableList<MissingArrangementRequirement>.Empty;
 
                     return functionVariant
-                        .RequiredSetupActionNames.Where(requiredAction =>
+                        .RequiredSetupActionNames_PRE_MIGRATION.Where(requiredAction =>
                             !SharedCalculations
                                 .RequirementMetOrExempted(
                                     requiredAction.ActionName,
@@ -231,7 +231,7 @@ namespace CareTogether.Engines.PolicyEvaluation
                         return ImmutableList<MissingArrangementRequirement>.Empty;
 
                     return functionVariant
-                        .RequiredSetupActionNames.Where(requiredAction =>
+                        .RequiredSetupActionNames_PRE_MIGRATION.Where(requiredAction =>
                             !SharedCalculations
                                 .RequirementMetOrExempted(
                                     requiredAction.ActionName,
@@ -268,7 +268,7 @@ namespace CareTogether.Engines.PolicyEvaluation
         )
         {
             var arrangementLevelResults = arrangementPolicy
-                .RequiredMonitoringActions.SelectMany(monitoringRequirement =>
+                .RequiredMonitoringActions_PRE_MIGRATION.SelectMany(monitoringRequirement =>
                     (
                         arrangement.StartedAt.HasValue
                             ? CalculateMissingMonitoringRequirementInstances(
@@ -327,7 +327,7 @@ namespace CareTogether.Engines.PolicyEvaluation
                         return ImmutableList<MissingArrangementRequirement>.Empty;
 
                     return functionVariant
-                        .RequiredMonitoringActions.SelectMany(monitoringRequirement =>
+                        .RequiredMonitoringActions_PRE_MIGRATION.SelectMany(monitoringRequirement =>
                             (
                                 arrangement.StartedAt.HasValue
                                     ? CalculateMissingMonitoringRequirementInstances(
@@ -390,7 +390,7 @@ namespace CareTogether.Engines.PolicyEvaluation
                         return ImmutableList<MissingArrangementRequirement>.Empty;
 
                     return functionVariant
-                        .RequiredMonitoringActions.SelectMany(monitoringRequirement =>
+                        .RequiredMonitoringActions_PRE_MIGRATION.SelectMany(monitoringRequirement =>
                             (
                                 arrangement.StartedAt.HasValue
                                     ? CalculateMissingMonitoringRequirementInstances(
@@ -902,7 +902,7 @@ namespace CareTogether.Engines.PolicyEvaluation
         )
         {
             var arrangementLevelResults = arrangementPolicy
-                .RequiredCloseoutActionNames.Where(requiredAction =>
+                .RequiredCloseoutActionNames_PRE_MIGRATION.Where(requiredAction =>
                     !SharedCalculations
                         .RequirementMetOrExempted(
                             requiredAction.ActionName,
@@ -939,7 +939,7 @@ namespace CareTogether.Engines.PolicyEvaluation
                         return ImmutableList<MissingArrangementRequirement>.Empty;
 
                     return functionVariant
-                        .RequiredCloseoutActionNames.Where(requiredAction =>
+                        .RequiredCloseoutActionNames_PRE_MIGRATION.Where(requiredAction =>
                             !SharedCalculations
                                 .RequirementMetOrExempted(
                                     requiredAction.ActionName,
@@ -978,7 +978,7 @@ namespace CareTogether.Engines.PolicyEvaluation
                         return ImmutableList<MissingArrangementRequirement>.Empty;
 
                     return functionVariant
-                        .RequiredCloseoutActionNames.Where(requiredAction =>
+                        .RequiredCloseoutActionNames_PRE_MIGRATION.Where(requiredAction =>
                             !SharedCalculations
                                 .RequirementMetOrExempted(
                                     requiredAction.ActionName,

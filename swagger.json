@@ -1833,10 +1833,16 @@
         "type": "object",
         "additionalProperties": false,
         "properties": {
-          "intakeRequirements": {
+          "intakeRequirements_PRE_MIGRATION": {
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/RequirementDefinition"
+            }
+          },
+          "requiredIntakeActionNames": {
+            "type": "array",
+            "items": {
+              "type": "string"
             }
           },
           "customFields": {
@@ -1857,6 +1863,13 @@
             "items": {
               "$ref": "#/components/schemas/FunctionPolicy"
             }
+          },
+          "intakeRequirements": {
+            "type": "array",
+            "nullable": true,
+            "items": {
+              "$ref": "#/components/schemas/RequirementDefinition"
+            }
           }
         }
       },
@@ -1876,6 +1889,24 @@
         "type": "object",
         "additionalProperties": false,
         "properties": {
+          "requiredSetupActions_PRE_MIGRATION": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RequirementDefinition"
+            }
+          },
+          "requiredMonitoringActions_PRE_MIGRATION": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/MonitoringRequirement"
+            }
+          },
+          "requiredCloseoutActionNames_PRE_MIGRATION": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RequirementDefinition"
+            }
+          },
           "arrangementType": {
             "type": "string"
           },
@@ -1888,115 +1919,41 @@
               "$ref": "#/components/schemas/ArrangementFunction"
             }
           },
-          "requiredSetupActions": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/RequirementDefinition"
-            }
-          },
-          "requiredMonitoringActions": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/MonitoringRequirement"
-            }
-          },
-          "requiredCloseoutActionNames": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/RequirementDefinition"
-            }
-          }
-        }
-      },
-      "ChildInvolvement": {
-        "type": "integer",
-        "description": "",
-        "x-enumNames": [
-          "ChildHousing",
-          "DaytimeChildCareOnly",
-          "NoChildInvolvement"
-        ],
-        "enum": [
-          0,
-          1,
-          2
-        ]
-      },
-      "ArrangementFunction": {
-        "type": "object",
-        "additionalProperties": false,
-        "properties": {
-          "functionName": {
-            "type": "string"
-          },
-          "requirement": {
-            "$ref": "#/components/schemas/FunctionRequirement"
-          },
-          "eligibleIndividualVolunteerRoles": {
-            "type": "array",
-            "nullable": true,
-            "items": {
-              "type": "string"
-            }
-          },
-          "eligibleVolunteerFamilyRoles": {
-            "type": "array",
-            "nullable": true,
-            "items": {
-              "type": "string"
-            }
-          },
-          "eligiblePeople": {
-            "type": "array",
-            "nullable": true,
-            "items": {
-              "type": "string",
-              "format": "guid"
-            }
-          },
-          "variants": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/ArrangementFunctionVariant"
-            }
-          }
-        }
-      },
-      "FunctionRequirement": {
-        "type": "integer",
-        "description": "",
-        "x-enumNames": [
-          "ZeroOrMore",
-          "ExactlyOne",
-          "OneOrMore"
-        ],
-        "enum": [
-          0,
-          1,
-          2
-        ]
-      },
-      "ArrangementFunctionVariant": {
-        "type": "object",
-        "additionalProperties": false,
-        "properties": {
-          "variantName": {
-            "type": "string"
-          },
           "requiredSetupActionNames": {
             "type": "array",
             "items": {
-              "$ref": "#/components/schemas/RequirementDefinition"
+              "type": "string"
             }
           },
           "requiredMonitoringActions": {
             "type": "array",
             "items": {
-              "$ref": "#/components/schemas/MonitoringRequirement"
+              "$ref": "#/components/schemas/MonitoringRequirementOld"
             }
           },
           "requiredCloseoutActionNames": {
             "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "requiredSetupActions": {
+            "type": "array",
+            "nullable": true,
+            "items": {
+              "$ref": "#/components/schemas/RequirementDefinition"
+            }
+          },
+          "requiredMonitoringActionsNew": {
+            "type": "array",
+            "nullable": true,
+            "items": {
+              "$ref": "#/components/schemas/MonitoringRequirement"
+            }
+          },
+          "requiredCloseoutActions": {
+            "type": "array",
+            "nullable": true,
             "items": {
               "$ref": "#/components/schemas/RequirementDefinition"
             }
@@ -2135,6 +2092,152 @@
             }
           }
         ]
+      },
+      "ChildInvolvement": {
+        "type": "integer",
+        "description": "",
+        "x-enumNames": [
+          "ChildHousing",
+          "DaytimeChildCareOnly",
+          "NoChildInvolvement"
+        ],
+        "enum": [
+          0,
+          1,
+          2
+        ]
+      },
+      "ArrangementFunction": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "functionName": {
+            "type": "string"
+          },
+          "requirement": {
+            "$ref": "#/components/schemas/FunctionRequirement"
+          },
+          "eligibleIndividualVolunteerRoles": {
+            "type": "array",
+            "nullable": true,
+            "items": {
+              "type": "string"
+            }
+          },
+          "eligibleVolunteerFamilyRoles": {
+            "type": "array",
+            "nullable": true,
+            "items": {
+              "type": "string"
+            }
+          },
+          "eligiblePeople": {
+            "type": "array",
+            "nullable": true,
+            "items": {
+              "type": "string",
+              "format": "guid"
+            }
+          },
+          "variants": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ArrangementFunctionVariant"
+            }
+          }
+        }
+      },
+      "FunctionRequirement": {
+        "type": "integer",
+        "description": "",
+        "x-enumNames": [
+          "ZeroOrMore",
+          "ExactlyOne",
+          "OneOrMore"
+        ],
+        "enum": [
+          0,
+          1,
+          2
+        ]
+      },
+      "ArrangementFunctionVariant": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "requiredSetupActionNames_PRE_MIGRATION": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RequirementDefinition"
+            }
+          },
+          "requiredMonitoringActions_PRE_MIGRATION": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/MonitoringRequirement"
+            }
+          },
+          "requiredCloseoutActionNames_PRE_MIGRATION": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RequirementDefinition"
+            }
+          },
+          "variantName": {
+            "type": "string"
+          },
+          "requiredSetupActionNames": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "requiredMonitoringActions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/MonitoringRequirementOld"
+            }
+          },
+          "requiredCloseoutActionNames": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "requiredSetupActions": {
+            "type": "array",
+            "nullable": true,
+            "items": {
+              "$ref": "#/components/schemas/RequirementDefinition"
+            }
+          },
+          "requiredMonitoringActionsNew": {
+            "type": "array",
+            "nullable": true,
+            "items": {
+              "$ref": "#/components/schemas/MonitoringRequirement"
+            }
+          },
+          "requiredCloseoutActions": {
+            "type": "array",
+            "nullable": true,
+            "items": {
+              "$ref": "#/components/schemas/RequirementDefinition"
+            }
+          }
+        }
+      },
+      "MonitoringRequirementOld": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "actionName": {
+            "type": "string"
+          },
+          "recurrence": {
+            "$ref": "#/components/schemas/RecurrencePolicy"
+          }
+        }
       },
       "FunctionPolicy": {
         "type": "object",
