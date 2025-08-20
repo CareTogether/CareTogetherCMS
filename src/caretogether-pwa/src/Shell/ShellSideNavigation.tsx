@@ -236,7 +236,7 @@ export function ShellSideNavigation({ open, width }: ShellSideNavigationProps) {
               marginLeft: 4,
             }}
           >
-            <Stack spacing={5} alignItems="center">
+            <Stack className="ph-unmask" spacing={5} alignItems="center">
               <Feedback />
               <Copyright />
             </Stack>
