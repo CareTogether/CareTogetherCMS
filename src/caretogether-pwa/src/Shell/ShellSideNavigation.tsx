@@ -16,6 +16,7 @@ import DashboardIcon from '@mui/icons-material/Dashboard';
 import SupportIcon from '@mui/icons-material/Support';
 import { useFeatureFlags } from '../Model/ConfigurationModel';
 import { Copyright } from './Copyright';
+import { Version } from './Version';
 import { useGlobalPermissions } from '../Model/SessionModel';
 import { Permission } from '../GeneratedClient';
 import { selectedLocationContextState } from '../Model/Data';
@@ -238,6 +239,7 @@ export function ShellSideNavigation({ open, width }: ShellSideNavigationProps) {
           >
             <Stack className="ph-unmask" spacing={5} alignItems="center">
               <Feedback />
+              <Version />
               <Copyright />
             </Stack>
           </div>
