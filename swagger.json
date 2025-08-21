@@ -1251,7 +1251,6 @@
         "type": "object",
         "additionalProperties": false,
         "required": [
-          "id",
           "name",
           "organizationRoles",
           "approvalRoles"
@@ -1259,7 +1258,8 @@
         "properties": {
           "id": {
             "type": "string",
-            "format": "guid"
+            "format": "guid",
+            "nullable": true
           },
           "name": {
             "type": "string"

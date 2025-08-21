@@ -1396,7 +1396,7 @@ export interface ISourcePhoneNumberConfiguration {
 }
 
 export class AccessLevel implements IAccessLevel {
-    id!: string;
+    id?: string | undefined;
     name!: string;
     organizationRoles!: string[];
     approvalRoles!: string[];
@@ -1457,7 +1457,7 @@ export class AccessLevel implements IAccessLevel {
 }
 
 export interface IAccessLevel {
-    id: string;
+    id?: string | undefined;
     name: string;
     organizationRoles: string[];
     approvalRoles: string[];

@@ -133,7 +133,7 @@ namespace CareTogether.Resources.Policies
 
             // Generate IDs for AccessLevels that don't have them
             var updatedAccessLevels = locationConfiguration.AccessLevels?.Select(accessLevel =>
-                accessLevel.Id == Guid.Empty
+                accessLevel.Id == default
                     ? accessLevel with { Id = Guid.NewGuid() }
                     : accessLevel
             ).ToImmutableList() ?? ImmutableList<AccessLevel>.Empty;

@@ -125,7 +125,7 @@ namespace CareTogether.Resources.Policies
     );
 
     public sealed record AccessLevel(
-        Guid Id,
+        Guid? Id,
         string Name,
         string[] OrganizationRoles,
         string[] ApprovalRoles
