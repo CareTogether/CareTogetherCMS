@@ -65,12 +65,12 @@ export function useVolunteersModel() {
       ) => {
         const command = new CompleteVolunteerFamilyRequirement({
           familyId: volunteerFamilyId,
+          completedRequirementId: crypto.randomUUID(),
+          requirementName: requirementName,
+          completedAtUtc: completedAtLocal,
+          uploadedDocumentId: documentId ?? undefined,
+          noteId: noteId ?? undefined,
         });
-        command.completedRequirementId = crypto.randomUUID();
-        command.requirementName = requirementName;
-        command.completedAtUtc = completedAtLocal;
-        if (documentId != null) command.uploadedDocumentId = documentId;
-        if (noteId != null) command.noteId = noteId;
         return command;
       }
     );
@@ -82,10 +82,9 @@ export function useVolunteersModel() {
       ) => {
         const command = new MarkVolunteerFamilyRequirementIncomplete({
           familyId: volunteerFamilyId,
+          requirementName: completedRequirement.requirementName,
+          completedRequirementId: completedRequirement.completedRequirementId,
         });
-        command.requirementName = completedRequirement.requirementName;
-        command.completedRequirementId =
-          completedRequirement.completedRequirementId;
         return command;
       }
     );
@@ -99,10 +98,10 @@ export function useVolunteersModel() {
       ) => {
         const command = new ExemptVolunteerFamilyRequirement({
           familyId: volunteerFamilyId,
+          requirementName: requirementName,
+          additionalComments: additionalComments,
+          exemptionExpiresAtUtc: exemptionExpiresAtLocal ?? undefined,
         });
-        command.requirementName = requirementName;
-        command.additionalComments = additionalComments;
-        command.exemptionExpiresAtUtc = exemptionExpiresAtLocal ?? undefined;
         return command;
       }
     );
@@ -114,8 +113,8 @@ export function useVolunteersModel() {
       ) => {
         const command = new UnexemptVolunteerFamilyRequirement({
           familyId: volunteerFamilyId,
+          requirementName: exemptedRequirement.requirementName,
         });
-        command.requirementName = exemptedRequirement.requirementName;
         return command;
       }
     );
@@ -130,12 +129,12 @@ export function useVolunteersModel() {
     ) => {
       const command = new RemoveVolunteerFamilyRole({
         familyId: volunteerFamilyId,
+        roleName: role,
+        reason: reason,
+        additionalComments: additionalComments,
+        effectiveSince: effectiveSince ?? undefined,
+        effectiveThrough: effectiveThrough ?? undefined,
       });
-      command.roleName = role;
-      command.reason = reason;
-      command.additionalComments = additionalComments;
-      command.effectiveSince = effectiveSince ?? undefined;
-      command.effectiveThrough = effectiveThrough ?? undefined;
       return command;
     }
   );
@@ -148,10 +147,10 @@ export function useVolunteersModel() {
     ) => {
       const command = new ResetVolunteerFamilyRole({
         familyId: volunteerFamilyId,
+        roleName: role,
+        forRemovalEffectiveSince: forRemovalEffectiveSince ?? undefined,
+        effectiveThrough: effectiveThrough ?? undefined,
       });
-      command.roleName = role;
-      command.forRemovalEffectiveSince = forRemovalEffectiveSince ?? undefined;
-      command.effectiveThrough = effectiveThrough ?? undefined;
       return command;
     }
   );
@@ -168,12 +167,12 @@ export function useVolunteersModel() {
       const command = new CompleteVolunteerRequirement({
         familyId: volunteerFamilyId,
         personId: personId,
+        completedRequirementId: crypto.randomUUID(),
+        requirementName: requirementName,
+        completedAtUtc: completedAtLocal,
+        uploadedDocumentId: documentId ?? undefined,
+        noteId: noteId ?? undefined,
       });
-      command.completedRequirementId = crypto.randomUUID();
-      command.requirementName = requirementName;
-      command.completedAtUtc = completedAtLocal;
-      if (documentId != null) command.uploadedDocumentId = documentId;
-      if (noteId != null) command.noteId = noteId;
       return command;
     }
   );
@@ -187,10 +186,9 @@ export function useVolunteersModel() {
         const command = new MarkVolunteerRequirementIncomplete({
           familyId: volunteerFamilyId,
           personId: personId,
+          requirementName: completedRequirement.requirementName,
+          completedRequirementId: completedRequirement.completedRequirementId,
         });
-        command.requirementName = completedRequirement.requirementName;
-        command.completedRequirementId =
-          completedRequirement.completedRequirementId;
         return command;
       }
     );
@@ -205,10 +203,10 @@ export function useVolunteersModel() {
       const command = new ExemptVolunteerRequirement({
         familyId: volunteerFamilyId,
         personId: personId,
+        requirementName: requirementName,
+        additionalComments: additionalComments,
+        exemptionExpiresAtUtc: exemptionExpiresAtLocal ?? undefined,
       });
-      command.requirementName = requirementName;
-      command.additionalComments = additionalComments;
-      command.exemptionExpiresAtUtc = exemptionExpiresAtLocal ?? undefined;
       return command;
     }
   );
@@ -221,8 +219,8 @@ export function useVolunteersModel() {
       const command = new UnexemptVolunteerRequirement({
         familyId: volunteerFamilyId,
         personId: personId,
+        requirementName: exemptedRequirement.requirementName,
       });
-      command.requirementName = exemptedRequirement.requirementName;
       return command;
     }
   );
@@ -239,12 +237,12 @@ export function useVolunteersModel() {
       const command = new RemoveVolunteerRole({
         familyId: volunteerFamilyId,
         personId: personId,
+        roleName: role,
+        reason: reason,
+        additionalComments: additionalComments,
+        effectiveSince: effectiveSince ?? undefined,
+        effectiveThrough: effectiveThrough ?? undefined,
       });
-      command.roleName = role;
-      command.reason = reason;
-      command.additionalComments = additionalComments;
-      command.effectiveSince = effectiveSince ?? undefined;
-      command.effectiveThrough = effectiveThrough ?? undefined;
       return command;
     }
   );
@@ -259,10 +257,10 @@ export function useVolunteersModel() {
       const command = new ResetVolunteerRole({
         familyId: volunteerFamilyId,
         personId: personId,
+        roleName: role,
+        forRemovalEffectiveSince: forRemovalEffectiveSince ?? undefined,
+        effectiveThrough: effectiveThrough ?? undefined,
       });
-      command.roleName = role;
-      command.forRemovalEffectiveSince = forRemovalEffectiveSince ?? undefined;
-      command.effectiveThrough = effectiveThrough ?? undefined;
       return command;
     }
   );
