@@ -22,8 +22,10 @@ import PersonPinCircleIcon from '@mui/icons-material/PersonPinCircle';
 import EditIcon from '@mui/icons-material/Edit';
 import { usePersonLookup, useUserLookup } from '../Model/DirectoryModel';
 import { PersonName } from '../Families/PersonName';
-import { Box, Stack, Typography } from '@mui/material';
+import { Box, Stack, Typography, Link } from '@mui/material';
 import { NoteCard } from '../Notes/NoteCard';
+import { useState } from 'react';
+import { EditNoteAccessLevelDialog } from '../Notes/EditNoteAccessLevelDialog';
 
 type ActivityTimelineProps = {
   family: CombinedFamilyInfo;
@@ -80,6 +82,17 @@ export function ActivityTimeline({
 }: ActivityTimelineProps) {
   const userLookup = useUserLookup();
   const personLookup = usePersonLookup();
+
+  const [noteAccessOverrides, setNoteAccessOverrides] = useState<
+    Record<string, string>
+  >({});
+  const [selectedForVisibility, setSelectedForVisibility] =
+    useState<Note | null>(null);
+
+  const resolvedAccess = (n?: Note) =>
+    n
+      ? (noteAccessOverrides[n.id!] ?? n.accessLevel ?? 'Everyone')
+      : 'Everyone';
 
   const activities = (
     family.partneringFamilyInfo?.history?.slice() || []
@@ -341,13 +354,40 @@ export function ActivityTimeline({
               )}
 
               <Typography>
-                Note visibility: {note?.accessLevel || 'Everyone'}
+                Visible to{' '}
+                {note ? (
+                  <Link
+                    component="button"
+                    type="button"
+                    underline="hover"
+                    onClick={() => setSelectedForVisibility(note)}
+                  >
+                    {resolvedAccess(note)}
+                  </Link>
+                ) : (
+                  'Everyone'
+                )}
               </Typography>
-
               {note && <NoteCard familyId={family.family!.id!} note={note} />}
             </TimelineContent>
           </TimelineItem>
         ))}
+
+        {selectedForVisibility && (
+          <EditNoteAccessLevelDialog
+            familyId={family.family!.id!}
+            note={selectedForVisibility}
+            onClose={(updated) => {
+              if (selectedForVisibility.id && updated) {
+                setNoteAccessOverrides((prev) => ({
+                  ...prev,
+                  [selectedForVisibility.id!]: updated,
+                }));
+              }
+              setSelectedForVisibility(null);
+            }}
+          />
+        )}
       </Timeline>
     </>
   );
