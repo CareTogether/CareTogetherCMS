@@ -1,5 +1,5 @@
 import { Grid } from '@mui/material';
-import { DatePicker } from '@mui/x-date-pickers';
+import { ValidateDatePicker } from '../../Generic/Forms/ValidateDatePicker';
 import { useState } from 'react';
 import { useParams } from 'react-router';
 import { Arrangement, Person } from '../../GeneratedClient';
@@ -31,6 +31,8 @@ export function StartArrangementDialog({
 
   const [startedAtLocal, setStartedAtLocal] = useState(null as Date | null);
 
+  const [dobError, setDobError] = useState(false);
+
   async function save() {
     // Enforce that this goes to the very start of the day (00:00:00.000 AM) for now.
     // In the future, this should be a date-only value.
@@ -48,22 +50,20 @@ export function StartArrangementDialog({
       title={`Do you want to start this ${arrangement.arrangementType} arrangement for ${person.firstName} ${person.lastName}?`}
       onClose={onClose}
       onSave={save}
-      enableSave={() => startedAtLocal != null}
+      enableSave={() => startedAtLocal !== null && !dobError}
     >
       <Grid container spacing={2}>
         <Grid item xs={12}>
-          <DatePicker
+          <ValidateDatePicker
             label="When was this arrangement started?"
             value={startedAtLocal}
+            onChange={setStartedAtLocal}
+            onErrorChange={setDobError}
             disableFuture
-            format="M/d/yyyy"
-            onChange={(date: Date | null) => date && setStartedAtLocal(date)}
-            slotProps={{
-              textField: {
-                fullWidth: true,
-                required: true,
-                sx: { marginTop: 1 },
-              },
+            textFieldProps={{
+              fullWidth: true,
+              required: true,
+              sx: { marginTop: 1 },
             }}
           />
         </Grid>

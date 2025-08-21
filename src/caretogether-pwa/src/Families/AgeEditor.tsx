@@ -5,7 +5,8 @@ import { PersonEditorProps } from './PersonEditorProps';
 import { AgeInYears, ExactAge } from '../GeneratedClient';
 import { AgeText } from './AgeText';
 import { format } from 'date-fns';
-import { DatePicker } from '@mui/x-date-pickers';
+import { ValidateDatePicker } from '../Generic/Forms/ValidateDatePicker';
+import { useState } from 'react';
 
 export function AgeEditor({ familyId, person }: PersonEditorProps) {
   const directoryModel = useDirectoryModel();
@@ -22,8 +23,10 @@ export function AgeEditor({ familyId, person }: PersonEditorProps) {
       await directoryModel.updatePersonAge(familyId!, person.id!, age);
     },
     dateOfBirth,
-    (value) => value != null
+    (value) => value != null && value.getFullYear() >= 1900
   );
+
+  const [, setDobError] = useState(false);
 
   return (
     <Grid container spacing={2}>
@@ -38,13 +41,15 @@ export function AgeEditor({ familyId, person }: PersonEditorProps) {
               : ``}
           </Grid>
           <Grid item xs={12} sm={6}>
-            <DatePicker
+            <ValidateDatePicker
               label="Date of birth"
-              value={editor.value}
-              openTo="year"
-              format="MM/dd/yyyy"
-              onChange={(date: Date | null) => date && editor.setValue(date)}
-              slotProps={{ textField: { size: 'small', required: true } }}
+              value={editor.value ?? null}
+              onChange={(date) => editor.setValue(date)}
+              onErrorChange={setDobError}
+              textFieldProps={{
+                size: 'small',
+                required: true,
+              }}
             />
           </Grid>
           <Grid item xs={6}>

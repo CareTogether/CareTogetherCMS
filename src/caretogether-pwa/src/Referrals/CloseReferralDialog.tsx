@@ -9,7 +9,7 @@ import {
 } from '@mui/material';
 import { ReferralCloseReason } from '../GeneratedClient';
 import { UpdateDialog } from '../Generic/UpdateDialog';
-import { DatePicker } from '@mui/x-date-pickers';
+import { ValidateDatePicker } from '../Generic/Forms/ValidateDatePicker';
 import { useReferralsModel } from '../Model/ReferralsModel';
 
 interface CloseReferralDialogProps {
@@ -28,6 +28,9 @@ export function CloseReferralDialog({
     reason: null as ReferralCloseReason | null,
     closedAtLocal: null as Date | null,
   });
+
+  const [dobError, setDobError] = useState(false);
+
   const { reason, closedAtLocal } = fields;
 
   async function save() {
@@ -44,7 +47,7 @@ export function CloseReferralDialog({
       title={`Why is this referral being closed?`}
       onClose={onClose}
       onSave={save}
-      enableSave={() => reason != null && closedAtLocal != null}
+      enableSave={() => reason != null && closedAtLocal != null && !dobError}
     >
       <form noValidate autoComplete="off">
         <Grid container spacing={2}>
@@ -98,14 +101,16 @@ export function CloseReferralDialog({
             </FormControl>
           </Grid>
           <Grid item xs={12}>
-            <DatePicker
+            <ValidateDatePicker
               label="When was this referral closed?"
               value={closedAtLocal}
+              onChange={(date) => setFields({ ...fields, closedAtLocal: date })}
+              onErrorChange={setDobError}
               disableFuture
-              format="MM/dd/yyyy"
-              onChange={(date: Date | null) =>
-                date && setFields({ ...fields, closedAtLocal: date })
-              }
+              textFieldProps={{
+                fullWidth: true,
+                required: true,
+              }}
             />
           </Grid>
         </Grid>

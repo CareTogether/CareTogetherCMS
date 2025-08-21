@@ -31,7 +31,7 @@ import {
 } from '../GeneratedClient';
 import { useDirectoryModel } from '../Model/DirectoryModel';
 import WarningIcon from '@mui/icons-material/Warning';
-import { DatePicker } from '@mui/x-date-pickers';
+import { ValidateDatePicker } from '../Generic/Forms/ValidateDatePicker';
 import { useRecoilValue } from 'recoil';
 import {
   adultFamilyRelationshipsData,
@@ -95,6 +95,7 @@ export function AddAdultDialog({ onClose }: AddAdultDialogProps) {
 
   const relationshipTypes = useRecoilValue(adultFamilyRelationshipsData);
   const ethnicities = useRecoilValue(ethnicitiesData);
+  const [dobError, setDobError] = useState(false);
 
   const withBackdrop = useBackdrop();
 
@@ -260,16 +261,15 @@ export function AddAdultDialog({ onClose }: AddAdultDialogProps) {
               </FormControl>
             </Grid>
             <Grid item xs={12} sm={6}>
-              <DatePicker
+              <ValidateDatePicker
                 label="Date of birth"
                 value={dateOfBirth}
+                onChange={(date) => setFields({ ...fields, dateOfBirth: date })}
                 maxDate={subYears(new Date(), 18)}
-                openTo="year"
-                format="MM/dd/yyyy"
-                onChange={(date: Date | null) =>
-                  date && setFields({ ...fields, dateOfBirth: date })
-                }
-                slotProps={{ textField: { size: 'small', fullWidth: true } }}
+                onErrorChange={setDobError}
+                textFieldProps={{
+                  size: 'small',
+                }}
               />
             </Grid>
             <Grid item xs={12} sm={6}>
@@ -444,7 +444,12 @@ export function AddAdultDialog({ onClose }: AddAdultDialogProps) {
         <Button onClick={() => onClose(undefined, 'cancel')} color="secondary">
           Cancel
         </Button>
-        <Button onClick={addAdult} variant="contained" color="primary">
+        <Button
+          onClick={addAdult}
+          disabled={dobError}
+          variant="contained"
+          color="primary"
+        >
           Add to Family
         </Button>
       </DialogActions>
