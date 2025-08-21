@@ -63,7 +63,7 @@ export function useVolunteersModel() {
         documentId: string | null,
         noteId: string | null
       ) => {
-        const command = new CompleteVolunteerFamilyRequirement({
+        const command = CompleteVolunteerFamilyRequirement.fromJS({
           familyId: volunteerFamilyId,
           completedRequirementId: crypto.randomUUID(),
           requirementName: requirementName,
@@ -80,7 +80,7 @@ export function useVolunteersModel() {
         volunteerFamilyId,
         completedRequirement: CompletedRequirementInfo
       ) => {
-        const command = new MarkVolunteerFamilyRequirementIncomplete({
+        const command = MarkVolunteerFamilyRequirementIncomplete.fromJS({
           familyId: volunteerFamilyId,
           requirementName: completedRequirement.requirementName,
           completedRequirementId: completedRequirement.completedRequirementId,
@@ -96,7 +96,7 @@ export function useVolunteersModel() {
         additionalComments: string,
         exemptionExpiresAtLocal: Date | null
       ) => {
-        const command = new ExemptVolunteerFamilyRequirement({
+        const command = ExemptVolunteerFamilyRequirement.fromJS({
           familyId: volunteerFamilyId,
           requirementName: requirementName,
           additionalComments: additionalComments,
@@ -111,7 +111,7 @@ export function useVolunteersModel() {
         volunteerFamilyId,
         exemptedRequirement: ExemptedRequirementInfo
       ) => {
-        const command = new UnexemptVolunteerFamilyRequirement({
+        const command = UnexemptVolunteerFamilyRequirement.fromJS({
           familyId: volunteerFamilyId,
           requirementName: exemptedRequirement.requirementName,
         });
@@ -127,7 +127,7 @@ export function useVolunteersModel() {
       effectiveSince: Date | null,
       effectiveThrough: Date | null
     ) => {
-      const command = new RemoveVolunteerFamilyRole({
+      const command = RemoveVolunteerFamilyRole.fromJS({
         familyId: volunteerFamilyId,
         roleName: role,
         reason: reason,
@@ -145,7 +145,7 @@ export function useVolunteersModel() {
       forRemovalEffectiveSince: Date | null,
       effectiveThrough: Date | null
     ) => {
-      const command = new ResetVolunteerFamilyRole({
+      const command = ResetVolunteerFamilyRole.fromJS({
         familyId: volunteerFamilyId,
         roleName: role,
         forRemovalEffectiveSince: forRemovalEffectiveSince ?? undefined,
@@ -164,7 +164,7 @@ export function useVolunteersModel() {
       documentId: string | null,
       noteId: string | null
     ) => {
-      const command = new CompleteVolunteerRequirement({
+      const command = CompleteVolunteerRequirement.fromJS({
         familyId: volunteerFamilyId,
         personId: personId,
         completedRequirementId: crypto.randomUUID(),
@@ -183,7 +183,7 @@ export function useVolunteersModel() {
         personId: string,
         completedRequirement: CompletedRequirementInfo
       ) => {
-        const command = new MarkVolunteerRequirementIncomplete({
+        const command = MarkVolunteerRequirementIncomplete.fromJS({
           familyId: volunteerFamilyId,
           personId: personId,
           requirementName: completedRequirement.requirementName,
@@ -200,7 +200,7 @@ export function useVolunteersModel() {
       additionalComments: string,
       exemptionExpiresAtLocal: Date | null
     ) => {
-      const command = new ExemptVolunteerRequirement({
+      const command = ExemptVolunteerRequirement.fromJS({
         familyId: volunteerFamilyId,
         personId: personId,
         requirementName: requirementName,
@@ -216,7 +216,7 @@ export function useVolunteersModel() {
       personId: string,
       exemptedRequirement: ExemptedRequirementInfo
     ) => {
-      const command = new UnexemptVolunteerRequirement({
+      const command = UnexemptVolunteerRequirement.fromJS({
         familyId: volunteerFamilyId,
         personId: personId,
         requirementName: exemptedRequirement.requirementName,
@@ -234,7 +234,7 @@ export function useVolunteersModel() {
       effectiveSince: Date | null,
       effectiveThrough: Date | null
     ) => {
-      const command = new RemoveVolunteerRole({
+      const command = RemoveVolunteerRole.fromJS({
         familyId: volunteerFamilyId,
         personId: personId,
         roleName: role,
@@ -254,7 +254,7 @@ export function useVolunteersModel() {
       forRemovalEffectiveSince: Date | null,
       effectiveThrough: Date | null
     ) => {
-      const command = new ResetVolunteerRole({
+      const command = ResetVolunteerRole.fromJS({
         familyId: volunteerFamilyId,
         personId: personId,
         roleName: role,

@@ -270,7 +270,7 @@ export function useDirectoryModel() {
   });
   const uploadFamilyDocument = useFamilyCommandCallback(
     async (familyId, uploadedDocumentId: string, uploadedFileName: string) => {
-      const command = new UploadFamilyDocument({
+      const command = UploadFamilyDocument.fromJS({
         familyId: familyId,
       });
       command.uploadedDocumentId = uploadedDocumentId;
@@ -280,7 +280,7 @@ export function useDirectoryModel() {
   );
   const deleteUploadedFamilyDocument = useFamilyCommandCallback(
     async (familyId, uploadedDocumentId: string) => {
-      const command = new DeleteUploadedFamilyDocument({
+      const command = DeleteUploadedFamilyDocument.fromJS({
         familyId: familyId,
       });
       command.uploadedDocumentId = uploadedDocumentId;
@@ -293,7 +293,7 @@ export function useDirectoryModel() {
       personId: string,
       newRelationship: FamilyAdultRelationshipInfo
     ) => {
-      const command = new ConvertChildToAdult({
+      const command = ConvertChildToAdult.fromJS({
         familyId: familyId,
       });
       command.personId = personId;
@@ -307,7 +307,7 @@ export function useDirectoryModel() {
       adultPersonId: string,
       relationship: FamilyAdultRelationshipInfo
     ) => {
-      const command = new UpdateAdultRelationshipToFamily({
+      const command = UpdateAdultRelationshipToFamily.fromJS({
         familyId: familyId,
       });
       command.adultPersonId = adultPersonId;
@@ -322,7 +322,7 @@ export function useDirectoryModel() {
       adultId: string,
       type: CustodialRelationshipType
     ) => {
-      const command = new UpdateCustodialRelationshipType({
+      const command = UpdateCustodialRelationshipType.fromJS({
         familyId: familyId,
       });
       command.childPersonId = childId;
@@ -333,7 +333,7 @@ export function useDirectoryModel() {
   );
   const removeCustodialRelationship = useFamilyCommandCallback(
     async (familyId, childId: string, adultId: string) => {
-      const command = new RemoveCustodialRelationship({
+      const command = RemoveCustodialRelationship.fromJS({
         familyId: familyId,
       });
       command.childPersonId = childId;
@@ -343,7 +343,7 @@ export function useDirectoryModel() {
   );
   const updatePrimaryFamilyContact = useFamilyCommandCallback(
     async (familyId, adultId: string) => {
-      const command = new ChangePrimaryFamilyContact({
+      const command = ChangePrimaryFamilyContact.fromJS({
         familyId: familyId,
       });
       command.adultId = adultId;
@@ -356,7 +356,7 @@ export function useDirectoryModel() {
       customField: CustomField,
       value: boolean | string | null
     ) => {
-      const command = new UpdateCustomFamilyField({
+      const command = UpdateCustomFamilyField.fromJS({
         familyId: familyId,
       });
       command.completedCustomFieldId = crypto.randomUUID();
@@ -373,7 +373,7 @@ export function useDirectoryModel() {
       firstName: string,
       lastName: string
     ) => {
-      const command = new UpdatePersonName({
+      const command = UpdatePersonName.fromJS({
         personId: personId,
       });
       command.firstName = firstName;
@@ -383,7 +383,7 @@ export function useDirectoryModel() {
   );
   const updatePersonGender = usePersonCommandCallback(
     async (_familyId, personId: string, gender: Gender) => {
-      const command = new UpdatePersonGender({
+      const command = UpdatePersonGender.fromJS({
         personId: personId,
       });
       command.gender = gender;
@@ -392,7 +392,7 @@ export function useDirectoryModel() {
   );
   const updatePersonAge = usePersonCommandCallback(
     async (_familyId, personId: string, age: Age) => {
-      const command = new UpdatePersonAge({
+      const command = UpdatePersonAge.fromJS({
         personId: personId,
       });
       command.age = age;
@@ -401,7 +401,7 @@ export function useDirectoryModel() {
   );
   const updatePersonEthnicity = usePersonCommandCallback(
     async (_familyId, personId: string, ethnicity: string) => {
-      const command = new UpdatePersonEthnicity({
+      const command = UpdatePersonEthnicity.fromJS({
         personId: personId,
       });
       command.ethnicity = ethnicity;
@@ -410,7 +410,7 @@ export function useDirectoryModel() {
   );
   const updatePersonConcerns = usePersonCommandCallback(
     async (_familyId, personId: string, concerns: string | null) => {
-      const command = new UpdatePersonConcerns({
+      const command = UpdatePersonConcerns.fromJS({
         personId: personId,
       });
       command.concerns = concerns || undefined;
@@ -419,7 +419,7 @@ export function useDirectoryModel() {
   );
   const updatePersonNotes = usePersonCommandCallback(
     async (_familyId, personId: string, notes: string | null) => {
-      const command = new UpdatePersonNotes({
+      const command = UpdatePersonNotes.fromJS({
         personId: personId,
       });
       command.notes = notes || undefined;
@@ -428,7 +428,7 @@ export function useDirectoryModel() {
   );
   const undoCreatePerson = usePersonCommandCallback(
     async (_familyId, personId: string) => {
-      const command = new UndoCreatePerson({
+      const command = UndoCreatePerson.fromJS({
         personId: personId,
       });
       return command;
@@ -442,10 +442,10 @@ export function useDirectoryModel() {
       phoneType: PhoneNumberType,
       isPreferred: boolean
     ) => {
-      const command = new AddPersonPhoneNumber({
+      const command = AddPersonPhoneNumber.fromJS({
         personId: personId,
       });
-      command.phoneNumber = new PhoneNumber({
+      command.phoneNumber = PhoneNumber.fromJS({
         id: crypto.randomUUID(),
         number: phoneNumber,
         type: phoneType,
@@ -463,10 +463,10 @@ export function useDirectoryModel() {
       phoneType: PhoneNumberType,
       isPreferred: boolean
     ) => {
-      const command = new UpdatePersonPhoneNumber({
+      const command = UpdatePersonPhoneNumber.fromJS({
         personId: personId,
       });
-      command.phoneNumber = new PhoneNumber({
+      command.phoneNumber = PhoneNumber.fromJS({
         id: phoneId,
         number: phoneNumber,
         type: phoneType,
@@ -483,10 +483,10 @@ export function useDirectoryModel() {
       phoneType: EmailAddressType,
       isPreferred: boolean
     ) => {
-      const command = new AddPersonEmailAddress({
+      const command = AddPersonEmailAddress.fromJS({
         personId: personId,
       });
-      command.emailAddress = new EmailAddress({
+      command.emailAddress = EmailAddress.fromJS({
         id: crypto.randomUUID(),
         address: emailAddress,
         type: phoneType,
@@ -504,10 +504,10 @@ export function useDirectoryModel() {
       phoneType: EmailAddressType,
       isPreferred: boolean
     ) => {
-      const command = new UpdatePersonEmailAddress({
+      const command = UpdatePersonEmailAddress.fromJS({
         personId: personId,
       });
-      command.emailAddress = new EmailAddress({
+      command.emailAddress = EmailAddress.fromJS({
         id: phoneId,
         address: emailAddress,
         type: phoneType,
@@ -523,7 +523,7 @@ export function useDirectoryModel() {
       address: Address,
       isCurrent: boolean
     ) => {
-      const command = new AddPersonAddress({
+      const command = AddPersonAddress.fromJS({
         personId: personId,
       });
       command.address = address;
@@ -538,7 +538,7 @@ export function useDirectoryModel() {
       address: Address,
       isCurrent: boolean
     ) => {
-      const command = new UpdatePersonAddress({
+      const command = UpdatePersonAddress.fromJS({
         personId: personId,
       });
       command.address = address;
@@ -564,33 +564,37 @@ export function useDirectoryModel() {
       notes?: string,
       concerns?: string
     ) => {
-      const command = new AddAdultToFamilyCommand();
-      command.familyId = familyId;
-      command.personId = crypto.randomUUID();
-      command.firstName = firstName;
-      command.lastName = lastName;
-      command.gender = gender == null ? undefined : gender;
-      command.age = age == null ? undefined : age;
-      command.ethnicity = ethnicity || undefined;
-      command.concerns = concerns;
-      command.notes = notes;
-      command.familyAdultRelationshipInfo = new FamilyAdultRelationshipInfo({
-        isInHousehold: isInHousehold,
-        relationshipToFamily: relationshipToFamily,
+      const command = AddAdultToFamilyCommand.fromJS({
+        familyId: familyId,
+        personId: crypto.randomUUID(),
+        firstName: firstName,
+        lastName: lastName,
+        gender: gender ?? undefined,
+        age: age ?? undefined,
+        ethnicity: ethnicity ?? undefined,
+        concerns: concerns,
+        notes: notes,
+        familyAdultRelationshipInfo: FamilyAdultRelationshipInfo.fromJS({
+          isInHousehold: isInHousehold,
+          relationshipToFamily: relationshipToFamily,
+        }),
+        address: address ?? undefined,
+        phoneNumber: phoneNumber
+          ? PhoneNumber.fromJS({
+              id: crypto.randomUUID(),
+              number: phoneNumber,
+              type: phoneType ?? undefined,
+            })
+          : undefined,
+        emailAddress: emailAddress
+          ? EmailAddress.fromJS({
+              id: crypto.randomUUID(),
+              address: emailAddress,
+              type: emailType ?? undefined,
+            })
+          : undefined,
       });
-      command.address = address == null ? undefined : address;
-      if (phoneNumber != null) {
-        command.phoneNumber = new PhoneNumber();
-        command.phoneNumber.id = crypto.randomUUID();
-        command.phoneNumber.number = phoneNumber;
-        command.phoneNumber.type = phoneType == null ? undefined : phoneType;
-      }
-      if (emailAddress != null) {
-        command.emailAddress = new EmailAddress();
-        command.emailAddress.id = crypto.randomUUID();
-        command.emailAddress.address = emailAddress;
-        command.emailAddress.type = emailType == null ? undefined : emailType;
-      }
+
       return command;
     }
   );
