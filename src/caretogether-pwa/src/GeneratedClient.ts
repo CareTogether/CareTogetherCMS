@@ -1247,7 +1247,7 @@ export interface IOrganizationConfiguration {
 }
 
 export class LocationConfiguration implements ILocationConfiguration {
-    id!: string;
+    id?: string | undefined;
     name!: string;
     ethnicities!: string[];
     adultFamilyRelationships!: string[];
@@ -1345,7 +1345,7 @@ export class LocationConfiguration implements ILocationConfiguration {
 }
 
 export interface ILocationConfiguration {
-    id: string;
+    id?: string | undefined;
     name: string;
     ethnicities: string[];
     adultFamilyRelationships: string[];

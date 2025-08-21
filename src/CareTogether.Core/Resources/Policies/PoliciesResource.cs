@@ -93,7 +93,7 @@ namespace CareTogether.Resources.Policies
             {
                 using (
                     var lockedModel = await tenantModels.ReadLockItemAsync(
-                        (organizationId, location.Id)
+                        (organizationId, location.Id ?? Guid.Empty)
                     )
                 )
                 {

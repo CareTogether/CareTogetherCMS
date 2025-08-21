@@ -1175,7 +1175,6 @@
         "type": "object",
         "additionalProperties": false,
         "required": [
-          "id",
           "name",
           "ethnicities",
           "adultFamilyRelationships",
@@ -1184,7 +1183,8 @@
         "properties": {
           "id": {
             "type": "string",
-            "format": "guid"
+            "format": "guid",
+            "nullable": true
           },
           "name": {
             "type": "string"
