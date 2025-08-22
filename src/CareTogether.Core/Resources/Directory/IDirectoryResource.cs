@@ -77,7 +77,7 @@ namespace CareTogether.Resources.Directory
         string? PostalCode
     );
 
-    public sealed record PhoneNumber(Guid Id, string Number, PhoneNumberType Type);
+    public sealed record PhoneNumber(Guid? Id, string Number, PhoneNumberType Type);
 
     public enum PhoneNumberType
     {

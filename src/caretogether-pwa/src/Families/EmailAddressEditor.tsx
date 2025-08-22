@@ -28,7 +28,7 @@ type EmailAddressEditorProps = PersonEditorProps & {
   emailAddress?: EmailAddress;
 };
 
-type IEmailAddressWithPreference = IEmailAddress & {
+type IEmailAddressWithPreference = Partial<IEmailAddress> & {
   isPreferred?: boolean;
 };
 

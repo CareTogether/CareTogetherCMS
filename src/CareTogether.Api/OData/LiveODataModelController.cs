@@ -593,7 +593,7 @@ namespace CareTogether.Api.OData
                 .Locations.Select(async location =>
                     (
                         location,
-                        policy: await policiesResource.GetCurrentPolicy(organizationId, location.Id)
+                        policy: await policiesResource.GetCurrentPolicy(organizationId, location.Id ?? Guid.Empty)
                     )
                 )
                 .WhenAll();
@@ -624,7 +624,7 @@ namespace CareTogether.Api.OData
                 .Locations.Select(
                     (location, i) =>
                         new Location(
-                            location.Id,
+                            location.Id ?? Guid.Empty,
                             organizationId,
                             anonymize ? $"Location {i}" : location.Name
                         )
@@ -773,11 +773,11 @@ namespace CareTogether.Api.OData
                             organization,
                             organization.Id,
                             new Location(
-                                locationPolicy.location.Id,
+                                locationPolicy.location.Id ?? Guid.Empty,
                                 organization.Id,
                                 locationPolicy.location.Name
                             ),
-                            locationPolicy.location.Id,
+                            locationPolicy.location.Id ?? Guid.Empty,
                             arrangementPolicy.ArrangementType,
                             arrangementPolicy.ChildInvolvement
                         )

@@ -23,7 +23,7 @@ function isSet(value: string | undefined) {
   return typeof value !== 'undefined' && value != null && value.length > 0;
 }
 
-function isInputValid(value: IAddress) {
+function isInputValid(value: Partial<IAddress>): value is IAddress {
   return (
     isSet(value.line1) ||
     isSet(value.line2) ||
@@ -35,7 +35,7 @@ function isInputValid(value: IAddress) {
 }
 
 export function AddressFormFields({ address, onEdit }: AddressFormFieldsProps) {
-  function onEditField(value: IAddress) {
+  function onEditField(value: Partial<IAddress>) {
     if (isInputValid(value)) {
       onEdit(value); //TODO: Note that this does not determine whether to add an ID; that is handled by the caller.
     } else {
