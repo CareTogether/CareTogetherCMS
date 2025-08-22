@@ -11,8 +11,6 @@ import {
   Button,
   Menu,
   Typography,
-  Breadcrumbs,
-  Link as MuiLink,
 } from '@mui/material';
 import { useState } from 'react';
 import {
@@ -41,12 +39,11 @@ import { useRecoilValue, useSetRecoilState } from 'recoil';
 import { ContextualPermissionSetRow } from './ContextualPermissionSetRow';
 import { api } from '../../Api/Api';
 import { selectedLocationContextState } from '../../Model/Data';
-import { Link } from 'react-router-dom';
-import NavigateNextIcon from '@mui/icons-material/NavigateNext';
 import { Box } from '@mui/system';
 import { isRoleEditable } from './isRoleEditable';
 import { ContextualPermissionSetRowAutocomplete } from './ContextualPermissionSetRowWithAutocomplete';
 import { useFeatureFlagEnabled } from 'posthog-js/react';
+import { StandardBreadcrumbs } from '../../Generic/StandardBreadcrumbs';
 
 export function RoleEdit({
   roleDefinition,
@@ -146,34 +143,21 @@ export function RoleEdit({
       spacing={0}
     >
       <Box>
-        <Breadcrumbs
-          aria-label="breadcrumb"
-          separator={<NavigateNextIcon fontSize="small" />}
-        >
-          <MuiLink
-            component={Link}
-            underline="hover"
-            color="inherit"
-            to="../.."
-            relative="path"
-          >
-            Settings
-          </MuiLink>
-
-          <MuiLink
-            component={Link}
-            underline="hover"
-            color="inherit"
-            to=".."
-            relative="path"
-          >
-            Roles
-          </MuiLink>
-
-          <Typography color="text.primary">
-            {roleDefinition.roleName}
-          </Typography>
-        </Breadcrumbs>
+        <StandardBreadcrumbs
+          items={[
+            {
+              label: 'Settings',
+              to: '../..',
+              relative: 'path',
+            },
+            {
+              label: 'Roles',
+              to: '..',
+              relative: 'path',
+            },
+          ]}
+          currentPageLabel={roleDefinition.roleName || ''}
+        />
 
         <Typography sx={{ marginY: 2 }} variant="h2">
           Editing {roleDefinition.roleName} role

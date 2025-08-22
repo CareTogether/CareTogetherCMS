@@ -14,11 +14,9 @@ import { organizationConfigurationQuery } from '../../Model/ConfigurationModel';
 import { useUserIsOrganizationAdministrator } from '../../Model/SessionModel';
 import { useSidePanel } from '../../Hooks/useSidePanel';
 import { AddLocation } from './AddLocationSidePanel';
-import { Breadcrumbs, Link as MuiLink } from '@mui/material';
-import { NavigateNext as NavigateNextIcon } from '@mui/icons-material';
 import { useRecoilValue } from 'recoil';
 import { selectedLocationContextState } from '../../Model/Data';
-import { Link } from 'react-router-dom';
+import { StandardBreadcrumbs } from '../../Generic/StandardBreadcrumbs';
 
 export function LocationsSection() {
   const configuration = useLoadable(organizationConfigurationQuery);
@@ -35,21 +33,16 @@ export function LocationsSection() {
 
   return (
     <>
-      <Breadcrumbs
-        aria-label="breadcrumb"
-        separator={<NavigateNextIcon fontSize="small" />}
+      <StandardBreadcrumbs
+        items={[
+          {
+            label: 'Settings',
+            to: `/org/${organizationId}/${locationId}/settings`,
+          },
+        ]}
+        currentPageLabel="Locations"
         sx={{ mb: 2 }}
-      >
-        <MuiLink
-          component={Link}
-          to={`/org/${organizationId}/${locationId}/settings`}
-          sx={{ textDecoration: 'none', color: 'text.primary' }}
-        >
-          Settings
-        </MuiLink>
-
-        <Typography color="text.primary">Locations</Typography>
-      </Breadcrumbs>
+      />
 
       <Typography variant="h2" mt={2}>
         Locations
