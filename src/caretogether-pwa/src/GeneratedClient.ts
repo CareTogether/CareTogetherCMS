@@ -4904,7 +4904,7 @@ export interface IAddress {
 }
 
 export class PhoneNumber implements IPhoneNumber {
-    id!: string;
+    id?: string | undefined;
     number!: string;
     type!: PhoneNumberType;
 
@@ -4942,7 +4942,7 @@ export class PhoneNumber implements IPhoneNumber {
 }
 
 export interface IPhoneNumber {
-    id: string;
+    id?: string | undefined;
     number: string;
     type: PhoneNumberType;
 }

@@ -3158,14 +3158,14 @@
         "type": "object",
         "additionalProperties": false,
         "required": [
-          "id",
           "number",
           "type"
         ],
         "properties": {
           "id": {
             "type": "string",
-            "format": "guid"
+            "format": "guid",
+            "nullable": true
           },
           "number": {
             "type": "string"

@@ -263,7 +263,7 @@ export function useCommunityCommand<
 
 export function useDirectoryModel() {
   const undoCreateFamily = useFamilyCommandCallback(async (familyId) => {
-    const command = new UndoCreateFamily({
+    const command = UndoCreateFamily.fromJS({
       familyId: familyId,
     });
     return command;
@@ -610,20 +610,23 @@ export function useDirectoryModel() {
       notes?: string,
       concerns?: string
     ) => {
-      const command = new AddChildToFamilyCommand();
-      command.familyId = familyId;
-      command.personId = crypto.randomUUID();
-      command.firstName = firstName;
-      command.lastName = lastName;
-      command.gender = gender == null ? undefined : gender;
-      command.age = age == null ? undefined : age;
-      command.ethnicity = ethnicity || undefined;
-      command.custodialRelationships = custodialRelationships.map((cr) => {
-        cr.childId = command.personId;
-        return cr;
+      const personId = crypto.randomUUID();
+
+      const command = AddChildToFamilyCommand.fromJS({
+        familyId: familyId,
+        personId: personId,
+        firstName: firstName,
+        lastName: lastName,
+        gender: gender ?? undefined,
+        age: age ?? undefined,
+        ethnicity: ethnicity ?? undefined,
+        custodialRelationships: custodialRelationships.map((cr) => {
+          cr.childId = personId;
+          return cr;
+        }),
+        concerns: concerns,
+        notes: notes,
       });
-      command.concerns = concerns;
-      command.notes = notes;
       return command;
     }
   );
@@ -645,33 +648,36 @@ export function useDirectoryModel() {
       notes?: string,
       concerns?: string
     ) => {
-      const command = new CreateVolunteerFamilyWithNewAdultCommand();
-      command.familyId = familyId;
-      command.personId = crypto.randomUUID();
-      command.firstName = firstName;
-      command.lastName = lastName;
-      command.gender = gender == null ? undefined : gender;
-      command.age = age == null ? undefined : age;
-      command.ethnicity = ethnicity || undefined;
-      command.concerns = concerns;
-      command.notes = notes;
-      command.familyAdultRelationshipInfo = new FamilyAdultRelationshipInfo({
-        isInHousehold: isInHousehold,
-        relationshipToFamily: relationshipToFamily,
+      const command = CreateVolunteerFamilyWithNewAdultCommand.fromJS({
+        familyId: familyId,
+        personId: crypto.randomUUID(),
+        firstName: firstName,
+        lastName: lastName,
+        gender: gender == null ? undefined : gender,
+        age: age == null ? undefined : age,
+        ethnicity: ethnicity || undefined,
+        concerns: concerns,
+        notes: notes,
+        familyAdultRelationshipInfo: FamilyAdultRelationshipInfo.fromJS({
+          isInHousehold: isInHousehold,
+          relationshipToFamily: relationshipToFamily,
+        }),
+        address: address == null ? undefined : address,
+        phoneNumber: phoneNumber
+          ? PhoneNumber.fromJS({
+              id: crypto.randomUUID(),
+              number: phoneNumber,
+              type: phoneType ?? undefined,
+            })
+          : undefined,
+        emailAddress: emailAddress
+          ? EmailAddress.fromJS({
+              id: crypto.randomUUID(),
+              address: emailAddress,
+              type: emailType ?? undefined,
+            })
+          : undefined,
       });
-      command.address = address == null ? undefined : address;
-      if (phoneNumber != null) {
-        command.phoneNumber = new PhoneNumber();
-        command.phoneNumber.id = crypto.randomUUID();
-        command.phoneNumber.number = phoneNumber;
-        command.phoneNumber.type = phoneType == null ? undefined : phoneType;
-      }
-      if (emailAddress != null) {
-        command.emailAddress = new EmailAddress();
-        command.emailAddress.id = crypto.randomUUID();
-        command.emailAddress.address = emailAddress;
-        command.emailAddress.type = emailType == null ? undefined : emailType;
-      }
       return command;
     }
   );
@@ -694,35 +700,38 @@ export function useDirectoryModel() {
       notes?: string,
       concerns?: string
     ) => {
-      const command = new CreatePartneringFamilyWithNewAdultCommand();
-      command.familyId = familyId;
-      command.personId = crypto.randomUUID();
-      command.referralId = crypto.randomUUID();
-      command.referralOpenedAtUtc = referralOpenedAtUtc;
-      command.firstName = firstName;
-      command.lastName = lastName;
-      command.gender = gender == null ? undefined : gender;
-      command.age = age == null ? undefined : age;
-      command.ethnicity = ethnicity || undefined;
-      command.concerns = concerns;
-      command.notes = notes;
-      command.familyAdultRelationshipInfo = new FamilyAdultRelationshipInfo({
-        isInHousehold: isInHousehold,
-        relationshipToFamily: relationshipToFamily,
+      const command = CreatePartneringFamilyWithNewAdultCommand.fromJS({
+        familyId: familyId,
+        personId: crypto.randomUUID(),
+        referralId: crypto.randomUUID(),
+        referralOpenedAtUtc: referralOpenedAtUtc,
+        firstName: firstName,
+        lastName: lastName,
+        gender: gender == null ? undefined : gender,
+        age: age == null ? undefined : age,
+        ethnicity: ethnicity || undefined,
+        concerns: concerns,
+        notes: notes,
+        familyAdultRelationshipInfo: FamilyAdultRelationshipInfo.fromJS({
+          isInHousehold: isInHousehold,
+          relationshipToFamily: relationshipToFamily,
+        }),
+        address: address == null ? undefined : address,
+        phoneNumber: phoneNumber
+          ? PhoneNumber.fromJS({
+              id: crypto.randomUUID(),
+              number: phoneNumber,
+              type: phoneType ?? undefined,
+            })
+          : undefined,
+        emailAddress: emailAddress
+          ? EmailAddress.fromJS({
+              id: crypto.randomUUID(),
+              address: emailAddress,
+              type: emailType ?? undefined,
+            })
+          : undefined,
       });
-      command.address = address == null ? undefined : address;
-      if (phoneNumber != null) {
-        command.phoneNumber = new PhoneNumber();
-        command.phoneNumber.id = crypto.randomUUID();
-        command.phoneNumber.number = phoneNumber;
-        command.phoneNumber.type = phoneType == null ? undefined : phoneType;
-      }
-      if (emailAddress != null) {
-        command.emailAddress = new EmailAddress();
-        command.emailAddress.id = crypto.randomUUID();
-        command.emailAddress.address = emailAddress;
-        command.emailAddress.type = emailType == null ? undefined : emailType;
-      }
       return command;
     }
   );
@@ -734,14 +743,13 @@ export function useDirectoryModel() {
       backdatedTimestampLocal?: Date,
       accessLevel?: string
     ) => {
-      const command = new CreateDraftNote({
+      const command = CreateDraftNote.fromJS({
         familyId: familyId,
         noteId: noteId,
+        draftNoteContents: draftNoteContents,
+        backdatedTimestampUtc: backdatedTimestampLocal,
+        accessLevel: accessLevel,
       });
-      command.draftNoteContents = draftNoteContents;
-      command.noteId = noteId;
-      command.backdatedTimestampUtc = backdatedTimestampLocal;
-      command.accessLevel = accessLevel;
       return command;
     }
   );
@@ -753,19 +761,19 @@ export function useDirectoryModel() {
       backdatedTimestampLocal?: Date,
       accessLevel?: string
     ) => {
-      const command = new EditDraftNote({
+      const command = EditDraftNote.fromJS({
         familyId: familyId,
         noteId: noteId,
+        draftNoteContents: draftNoteContents,
+        backdatedTimestampUtc: backdatedTimestampLocal,
+        accessLevel: accessLevel,
       });
-      command.draftNoteContents = draftNoteContents;
-      command.backdatedTimestampUtc = backdatedTimestampLocal;
-      command.accessLevel = accessLevel;
       return command;
     }
   );
   const discardDraftNote = useNoteCommandCallback(
     async (familyId, noteId: string) => {
-      const command = new DiscardDraftNote({
+      const command = DiscardDraftNote.fromJS({
         familyId: familyId,
         noteId: noteId,
       });
@@ -780,13 +788,13 @@ export function useDirectoryModel() {
       backdatedTimestampLocal?: Date,
       accessLevel?: string
     ) => {
-      const command = new ApproveNote({
+      const command = ApproveNote.fromJS({
         familyId: familyId,
         noteId: noteId,
+        finalizedNoteContents: finalizedNoteContents,
+        backdatedTimestampUtc: backdatedTimestampLocal,
+        accessLevel: accessLevel,
       });
-      command.finalizedNoteContents = finalizedNoteContents;
-      command.backdatedTimestampUtc = backdatedTimestampLocal;
-      command.accessLevel = accessLevel;
       return command;
     }
   );

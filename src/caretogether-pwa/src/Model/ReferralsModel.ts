@@ -99,15 +99,15 @@ export function useReferralsModel() {
       documentId: string | null,
       noteId: string | null
     ) => {
-      const command = new CompleteReferralRequirement({
+      const command = CompleteReferralRequirement.fromJS({
         familyId: partneringFamilyId,
         referralId: referralId,
+        completedRequirementId: crypto.randomUUID(),
+        requirementName: requirementName,
+        completedAtUtc: completedAtLocal,
+        uploadedDocumentId: documentId ?? undefined,
+        noteId: noteId ?? undefined,
       });
-      command.completedRequirementId = crypto.randomUUID();
-      command.requirementName = requirementName;
-      command.completedAtUtc = completedAtLocal;
-      if (documentId != null) command.uploadedDocumentId = documentId;
-      if (noteId != null) command.noteId = noteId;
       return command;
     }
   );
@@ -118,13 +118,12 @@ export function useReferralsModel() {
         referralId: string,
         completedRequirement: CompletedRequirementInfo
       ) => {
-        const command = new MarkReferralRequirementIncomplete({
+        const command = MarkReferralRequirementIncomplete.fromJS({
           familyId: partneringFamilyId,
           referralId: referralId,
+          requirementName: completedRequirement.requirementName,
+          completedRequirementId: completedRequirement.completedRequirementId,
         });
-        command.requirementName = completedRequirement.requirementName;
-        command.completedRequirementId =
-          completedRequirement.completedRequirementId;
         return command;
       }
     );
@@ -136,13 +135,13 @@ export function useReferralsModel() {
       additionalComments: string,
       exemptionExpiresAtLocal: Date | null
     ) => {
-      const command = new ExemptReferralRequirement({
+      const command = ExemptReferralRequirement.fromJS({
         familyId: partneringFamilyId,
         referralId: referralId,
+        requirementName: requirementName,
+        additionalComments: additionalComments,
+        exemptionExpiresAtUtc: exemptionExpiresAtLocal ?? undefined,
       });
-      command.requirementName = requirementName;
-      command.additionalComments = additionalComments;
-      command.exemptionExpiresAtUtc = exemptionExpiresAtLocal ?? undefined;
       return command;
     }
   );
@@ -152,11 +151,11 @@ export function useReferralsModel() {
       referralId: string,
       exemptedRequirement: ExemptedRequirementInfo
     ) => {
-      const command = new UnexemptReferralRequirement({
+      const command = UnexemptReferralRequirement.fromJS({
         familyId: partneringFamilyId,
         referralId: referralId,
+        requirementName: exemptedRequirement.requirementName,
       });
-      command.requirementName = exemptedRequirement.requirementName;
       return command;
     }
   );
@@ -167,14 +166,14 @@ export function useReferralsModel() {
       customField: CustomField,
       value: boolean | string | null
     ) => {
-      const command = new UpdateCustomReferralField({
+      const command = UpdateCustomReferralField.fromJS({
         familyId: partneringFamilyId,
         referralId: referralId,
+        completedCustomFieldId: crypto.randomUUID(),
+        customFieldName: customField.name,
+        customFieldType: customField.type,
+        value: value,
       });
-      command.completedCustomFieldId = crypto.randomUUID();
-      command.customFieldName = customField.name;
-      command.customFieldType = customField.type;
-      command.value = value;
       return command;
     }
   );
@@ -184,11 +183,11 @@ export function useReferralsModel() {
       referralId: string,
       comments: string | undefined
     ) => {
-      const command = new UpdateReferralComments({
+      const command = UpdateReferralComments.fromJS({
         familyId: partneringFamilyId,
         referralId: referralId,
+        comments: comments,
       });
-      command.comments = comments;
       return command;
     }
   );
@@ -204,16 +203,16 @@ export function useReferralsModel() {
         documentId: string | null,
         noteId: string | null
       ) => {
-        const command = new CompleteArrangementRequirement({
+        const command = CompleteArrangementRequirement.fromJS({
           familyId: partneringFamilyId,
           referralId: referralId,
           arrangementIds: arrangementIds,
+          completedRequirementId: crypto.randomUUID(),
+          requirementName: requirementName,
+          completedAtUtc: completedAtLocal,
+          uploadedDocumentId: documentId ?? undefined,
+          noteId: noteId ?? undefined,
         });
-        command.completedRequirementId = crypto.randomUUID();
-        command.requirementName = requirementName;
-        command.completedAtUtc = completedAtLocal;
-        if (documentId != null) command.uploadedDocumentId = documentId;
-        if (noteId != null) command.noteId = noteId;
         return command;
       }
     );
@@ -225,14 +224,13 @@ export function useReferralsModel() {
         arrangementId: string,
         completedRequirement: CompletedRequirementInfo
       ) => {
-        const command = new MarkArrangementRequirementIncomplete({
+        const command = MarkArrangementRequirementIncomplete.fromJS({
           familyId: partneringFamilyId,
           referralId: referralId,
           arrangementIds: [arrangementId],
+          requirementName: completedRequirement.requirementName,
+          completedRequirementId: completedRequirement.completedRequirementId,
         });
-        command.requirementName = completedRequirement.requirementName;
-        command.completedRequirementId =
-          completedRequirement.completedRequirementId;
         return command;
       }
     );
@@ -249,17 +247,17 @@ export function useReferralsModel() {
       ) => {
         const dueDateUtc = requirement.dueBy || requirement.pastDueSince;
 
-        const command = new ExemptArrangementRequirement({
+        const command = ExemptArrangementRequirement.fromJS({
           familyId: partneringFamilyId,
           referralId: referralId,
           arrangementIds: arrangementIds,
+          requirementName: requirement.action?.actionName,
+          dueDate: exemptAll
+            ? undefined
+            : dueDateUtc && convertUtcDateToLocalDate(dueDateUtc),
+          additionalComments: additionalComments,
+          exemptionExpiresAtUtc: exemptionExpiresAtLocal ?? undefined,
         });
-        command.requirementName = requirement.action?.actionName;
-        command.dueDate = exemptAll
-          ? undefined
-          : dueDateUtc && convertUtcDateToLocalDate(dueDateUtc);
-        command.additionalComments = additionalComments;
-        command.exemptionExpiresAtUtc = exemptionExpiresAtLocal ?? undefined;
         return command;
       }
     );
@@ -271,13 +269,13 @@ export function useReferralsModel() {
         arrangementId: string,
         exemptedRequirement: ExemptedRequirementInfo
       ) => {
-        const command = new UnexemptArrangementRequirement({
+        const command = UnexemptArrangementRequirement.fromJS({
           familyId: partneringFamilyId,
           referralId: referralId,
           arrangementIds: [arrangementId],
+          requirementName: exemptedRequirement.requirementName,
+          dueDate: exemptedRequirement.dueDate,
         });
-        command.requirementName = exemptedRequirement.requirementName;
-        command.dueDate = exemptedRequirement.dueDate;
         return command;
       }
     );
@@ -295,19 +293,18 @@ export function useReferralsModel() {
         documentId: string | null,
         noteId: string | null
       ) => {
-        const command = new CompleteVolunteerFamilyAssignmentRequirement({
+        const command = CompleteVolunteerFamilyAssignmentRequirement.fromJS({
           familyId: partneringFamilyId,
           referralId: referralId,
           arrangementIds: arrangementIds,
+          arrangementFunction: assignment.arrangementFunction,
+          arrangementFunctionVariant: assignment.arrangementFunctionVariant,
+          volunteerFamilyId: assignment.familyId,
+          requirementName: requirementName,
+          completedAtUtc: completedAtLocal,
+          uploadedDocumentId: documentId ?? undefined,
+          noteId: noteId ?? undefined,
         });
-        command.arrangementFunction = assignment.arrangementFunction;
-        command.arrangementFunctionVariant =
-          assignment.arrangementFunctionVariant;
-        command.volunteerFamilyId = assignment.familyId;
-        command.requirementName = requirementName;
-        command.completedAtUtc = completedAtLocal;
-        if (documentId != null) command.uploadedDocumentId = documentId;
-        if (noteId != null) command.noteId = noteId;
         return command;
       }
     );
@@ -320,18 +317,17 @@ export function useReferralsModel() {
         assignment: FamilyVolunteerAssignment,
         completedRequirement: CompletedRequirementInfo
       ) => {
-        const command = new MarkVolunteerFamilyAssignmentRequirementIncomplete({
-          familyId: partneringFamilyId,
-          referralId: referralId,
-          arrangementIds: [arrangementId],
-        });
-        command.arrangementFunction = assignment.arrangementFunction;
-        command.arrangementFunctionVariant =
-          assignment.arrangementFunctionVariant;
-        command.volunteerFamilyId = assignment.familyId;
-        command.requirementName = completedRequirement.requirementName;
-        command.completedRequirementId =
-          completedRequirement.completedRequirementId;
+        const command =
+          MarkVolunteerFamilyAssignmentRequirementIncomplete.fromJS({
+            familyId: partneringFamilyId,
+            referralId: referralId,
+            arrangementIds: [arrangementId],
+            arrangementFunction: assignment.arrangementFunction,
+            arrangementFunctionVariant: assignment.arrangementFunctionVariant,
+            volunteerFamilyId: assignment.familyId,
+            requirementName: completedRequirement.requirementName,
+            completedRequirementId: completedRequirement.completedRequirementId,
+          });
         return command;
       }
     );
@@ -349,7 +345,7 @@ export function useReferralsModel() {
       ) => {
         const dueDateUtc = requirement.dueBy || requirement.pastDueSince;
 
-        const command = new ExemptVolunteerFamilyAssignmentRequirement({
+        const command = ExemptVolunteerFamilyAssignmentRequirement.fromJS({
           familyId: partneringFamilyId,
           referralId: referralId,
           arrangementIds: arrangementIds,
@@ -376,7 +372,7 @@ export function useReferralsModel() {
         assignment: FamilyVolunteerAssignment,
         exemptedRequirement: ExemptedRequirementInfo
       ) => {
-        const command = new UnexemptVolunteerFamilyAssignmentRequirement({
+        const command = UnexemptVolunteerFamilyAssignmentRequirement.fromJS({
           familyId: partneringFamilyId,
           referralId: referralId,
           arrangementIds: [arrangementId],
@@ -404,11 +400,13 @@ export function useReferralsModel() {
         documentId: string | null,
         noteId: string | null
       ) => {
-        const command = new CompleteIndividualVolunteerAssignmentRequirement({
-          familyId: partneringFamilyId,
-          referralId: referralId,
-          arrangementIds: arrangementIds,
-        });
+        const command = CompleteIndividualVolunteerAssignmentRequirement.fromJS(
+          {
+            familyId: partneringFamilyId,
+            referralId: referralId,
+            arrangementIds: arrangementIds,
+          }
+        );
         command.arrangementFunction = assignment.arrangementFunction;
         command.arrangementFunctionVariant =
           assignment.arrangementFunctionVariant;
@@ -431,7 +429,7 @@ export function useReferralsModel() {
         completedRequirement: CompletedRequirementInfo
       ) => {
         const command =
-          new MarkIndividualVolunteerAssignmentRequirementIncomplete({
+          MarkIndividualVolunteerAssignmentRequirementIncomplete.fromJS({
             familyId: partneringFamilyId,
             referralId: referralId,
             arrangementIds: [arrangementId],
@@ -459,7 +457,7 @@ export function useReferralsModel() {
         additionalComments: string,
         exemptionExpiresAtLocal: Date | null
       ) => {
-        const command = new ExemptIndividualVolunteerAssignmentRequirement({
+        const command = ExemptIndividualVolunteerAssignmentRequirement.fromJS({
           familyId: partneringFamilyId,
           referralId: referralId,
           arrangementIds: arrangementIds,
@@ -487,11 +485,13 @@ export function useReferralsModel() {
         assignment: IndividualVolunteerAssignment,
         exemptedRequirement: ExemptedRequirementInfo
       ) => {
-        const command = new UnexemptIndividualVolunteerAssignmentRequirement({
-          familyId: partneringFamilyId,
-          referralId: referralId,
-          arrangementIds: [arrangementId],
-        });
+        const command = UnexemptIndividualVolunteerAssignmentRequirement.fromJS(
+          {
+            familyId: partneringFamilyId,
+            referralId: referralId,
+            arrangementIds: [arrangementId],
+          }
+        );
         command.arrangementFunction = assignment.arrangementFunction;
         command.arrangementFunctionVariant =
           assignment.arrangementFunctionVariant;
@@ -512,16 +512,15 @@ export function useReferralsModel() {
       partneringFamilyPersonId: string,
       reason: string | null
     ) => {
-      const command = new CreateArrangement({
+      const command = CreateArrangement.fromJS({
         familyId: partneringFamilyId,
         referralId: referralId,
-        arrangementIds: [],
+        arrangementIds: [crypto.randomUUID()],
+        arrangementType: arrangementType,
+        requestedAtUtc: requestedAtLocal,
+        partneringFamilyPersonId: partneringFamilyPersonId,
+        reason: reason || undefined,
       });
-      command.arrangementIds = [crypto.randomUUID()];
-      command.arrangementType = arrangementType;
-      command.requestedAtUtc = requestedAtLocal;
-      command.partneringFamilyPersonId = partneringFamilyPersonId;
-      command.reason = reason || undefined;
       return command;
     }
   );
@@ -533,7 +532,7 @@ export function useReferralsModel() {
       arrangementId: string,
       plannedStartLocal: Date | null
     ) => {
-      const command = new PlanArrangementStart({
+      const command = PlanArrangementStart.fromJS({
         familyId: partneringFamilyId,
         referralId: referralId,
         arrangementIds: [arrangementId],
@@ -549,7 +548,7 @@ export function useReferralsModel() {
       arrangementId: string,
       startedAtLocal: Date
     ) => {
-      const command = new StartArrangements({
+      const command = StartArrangements.fromJS({
         familyId: partneringFamilyId,
         referralId: referralId,
         arrangementIds: [arrangementId],
@@ -565,7 +564,7 @@ export function useReferralsModel() {
       arrangementId: string,
       startedAtLocal: Date
     ) => {
-      const command = new EditArrangementStartTime({
+      const command = EditArrangementStartTime.fromJS({
         familyId: partneringFamilyId,
         referralId: referralId,
         arrangementIds: [arrangementId],
@@ -581,7 +580,7 @@ export function useReferralsModel() {
       arrangementId: string,
       endedAtLocal: Date
     ) => {
-      const command = new EditArrangementEndTime({
+      const command = EditArrangementEndTime.fromJS({
         familyId: partneringFamilyId,
         referralId: referralId,
         arrangementIds: [arrangementId],
@@ -597,7 +596,7 @@ export function useReferralsModel() {
       arrangementId: string,
       requestedAtLocal: Date
     ) => {
-      const command = new EditArrangementRequestedAt({
+      const command = EditArrangementRequestedAt.fromJS({
         familyId: partneringFamilyId,
         referralId: referralId,
         arrangementIds: [arrangementId],
@@ -613,7 +612,7 @@ export function useReferralsModel() {
       arrangementId: string,
       cancelledAtLocal: Date
     ) => {
-      const command = new EditArrangementCancelledAt({
+      const command = EditArrangementCancelledAt.fromJS({
         familyId: partneringFamilyId,
         referralId: referralId,
         arrangementIds: [arrangementId],
@@ -629,7 +628,7 @@ export function useReferralsModel() {
       arrangementId: string,
       plannedEndLocal: Date | null
     ) => {
-      const command = new PlanArrangementEnd({
+      const command = PlanArrangementEnd.fromJS({
         familyId: partneringFamilyId,
         referralId: referralId,
         arrangementIds: [arrangementId],
@@ -645,7 +644,7 @@ export function useReferralsModel() {
       arrangementId: string,
       endedAtLocal: Date
     ) => {
-      const command = new EndArrangements({
+      const command = EndArrangements.fromJS({
         familyId: partneringFamilyId,
         referralId: referralId,
         arrangementIds: [arrangementId],
@@ -661,7 +660,7 @@ export function useReferralsModel() {
       arrangementId: string,
       noteId: string | null
     ) => {
-      const command = new ReopenArrangements({
+      const command = ReopenArrangements.fromJS({
         familyId: partneringFamilyId,
         referralId: referralId,
         arrangementIds: [arrangementId],
@@ -677,7 +676,7 @@ export function useReferralsModel() {
       arrangementId: string,
       cancelledAtLocal: Date
     ) => {
-      const command = new CancelArrangementsSetup({
+      const command = CancelArrangementsSetup.fromJS({
         familyId: partneringFamilyId,
         referralId: referralId,
         arrangementIds: [arrangementId],
@@ -692,7 +691,7 @@ export function useReferralsModel() {
       referralId: string,
       arrangementId: string
     ) => {
-      const command = new DeleteArrangements({
+      const command = DeleteArrangements.fromJS({
         familyId: partneringFamilyId,
         referralId: referralId,
         arrangementIds: [arrangementId],
@@ -709,7 +708,7 @@ export function useReferralsModel() {
       arrangementFunction: string,
       arrangementFunctionVariant?: string
     ) => {
-      const command = new AssignVolunteerFamily({
+      const command = AssignVolunteerFamily.fromJS({
         familyId: partneringFamilyId,
         referralId: referralId,
         arrangementIds: [arrangementId],
@@ -730,7 +729,7 @@ export function useReferralsModel() {
       arrangementFunction: string,
       arrangementFunctionVariant?: string
     ) => {
-      const command = new AssignIndividualVolunteer({
+      const command = AssignIndividualVolunteer.fromJS({
         familyId: partneringFamilyId,
         referralId: referralId,
         arrangementIds: [arrangementId],
@@ -751,7 +750,7 @@ export function useReferralsModel() {
       arrangementFunction: string,
       arrangementFunctionVariant?: string
     ) => {
-      const command = new UnassignVolunteerFamily({
+      const command = UnassignVolunteerFamily.fromJS({
         familyId: partneringFamilyId,
         referralId: referralId,
         arrangementIds: [arrangementId],
@@ -773,7 +772,7 @@ export function useReferralsModel() {
         arrangementFunction: string,
         arrangementFunctionVariant?: string
       ) => {
-        const command = new UnassignIndividualVolunteer({
+        const command = UnassignIndividualVolunteer.fromJS({
           familyId: partneringFamilyId,
           referralId: referralId,
           arrangementIds: [arrangementId],
@@ -796,7 +795,7 @@ export function useReferralsModel() {
       childLocationPlan: ChildLocationPlan,
       noteId: string | null
     ) => {
-      const command = new TrackChildLocationChange({
+      const command = TrackChildLocationChange.fromJS({
         familyId: partneringFamilyId,
         referralId: referralId,
         arrangementIds: [arrangementId],
@@ -819,7 +818,7 @@ export function useReferralsModel() {
       changedAtLocal: Date,
       noteId: string | null
     ) => {
-      const command = new DeleteChildLocationChange({
+      const command = DeleteChildLocationChange.fromJS({
         familyId: partneringFamilyId,
         referralId: referralId,
         arrangementIds: [arrangementId],
@@ -841,7 +840,7 @@ export function useReferralsModel() {
       changedAtLocal: Date,
       childLocationPlan: ChildLocationPlan
     ) => {
-      const command = new PlanChildLocationChange({
+      const command = PlanChildLocationChange.fromJS({
         familyId: partneringFamilyId,
         referralId: referralId,
         arrangementIds: [arrangementId],
@@ -862,7 +861,7 @@ export function useReferralsModel() {
       childLocationAdultId: string,
       changedAtLocal: Date
     ) => {
-      const command = new DeletePlannedChildLocationChange({
+      const command = DeletePlannedChildLocationChange.fromJS({
         familyId: partneringFamilyId,
         referralId: referralId,
         arrangementIds: [arrangementId],
@@ -880,7 +879,7 @@ export function useReferralsModel() {
       arrangementId: string,
       comments: string | undefined
     ) => {
-      const command = new UpdateArrangementComments({
+      const command = UpdateArrangementComments.fromJS({
         familyId: partneringFamilyId,
         referralId: referralId,
         arrangementIds: [arrangementId],
@@ -896,7 +895,7 @@ export function useReferralsModel() {
       arrangementId: string,
       reason: string | null
     ) => {
-      const command = new EditArrangementReason({
+      const command = EditArrangementReason.fromJS({
         familyId: partneringFamilyId,
         referralId: referralId,
         arrangementIds: [arrangementId],
@@ -912,7 +911,7 @@ export function useReferralsModel() {
       reason: ReferralCloseReason,
       closedAtLocal: Date
     ) => {
-      const command = new CloseReferral({
+      const command = CloseReferral.fromJS({
         familyId: partneringFamilyId,
         referralId: referralId,
       });
@@ -923,7 +922,7 @@ export function useReferralsModel() {
   );
   const openReferral = useReferralCommandCallbackWithLocation(
     async (partneringFamilyId: string, openedAtLocal: Date) => {
-      const command = new CreateReferral({
+      const command = CreateReferral.fromJS({
         familyId: partneringFamilyId,
       });
       command.referralId = crypto.randomUUID();
