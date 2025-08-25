@@ -79,7 +79,7 @@ export function LocationEdit() {
     },
     {
       id: 'otherPolicies' as const,
-      label: 'Other Policies',
+      label: 'Access Levels',
       component: OtherPolicies,
       shouldShow: true,
     },
@@ -126,6 +126,13 @@ export function LocationEdit() {
 
   // Filter available tabs based on feature flags
   const availableTabs = tabs.filter((tab) => tab.shouldShow);
+
+  const basicData = {
+    name: location?.name || '',
+    ethnicities: location.ethnicities || [],
+    adultFamilyRelationships: location.adultFamilyRelationships || [],
+    arrangementReasons: location.arrangementReasons || [],
+  };
 
   return (
     <Stack
@@ -184,7 +191,7 @@ export function LocationEdit() {
           {(!isMobile || !isSidebarCollapsed) && (
             <Box sx={{ flex: 1, px: 1 }}>
               <SettingsTabMenu
-                tabs={[...tabs]}
+                tabs={availableTabs}
                 activeTab={activeTab}
                 onTabChange={setActiveTab}
               />
@@ -194,22 +201,19 @@ export function LocationEdit() {
 
         <Box flex={1} paddingLeft={4} paddingTop={2}>
           {/* Render the active tab component */}
-          {availableTabs.map(
-            (tab) =>
-              activeTab === tab.id && (
-                <Box key={tab.id}>
-                  <tab.component
-                    data={{
-                      name: location?.name || '',
-                      ethnicities: location.ethnicities || [],
-                      adultFamilyRelationships:
-                        location.adultFamilyRelationships || [],
-                      arrangementReasons: location.arrangementReasons || [],
-                    }}
-                    currentLocationDefinition={location}
-                  />
-                </Box>
-              )
+          {activeTab === 'basic' && (
+            <Box key="basic">
+              <BasicConfiguration
+                data={basicData}
+                currentLocationDefinition={location}
+              />
+            </Box>
+          )}
+
+          {activeTab === 'otherPolicies' && (
+            <Box key="otherPolicies">
+              <OtherPolicies locationConfiguration={location} />
+            </Box>
           )}
         </Box>
       </Box>
