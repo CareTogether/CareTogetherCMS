@@ -5363,7 +5363,6 @@
             "required": [
               "arrangementFunction",
               "volunteerFamilyId",
-              "personId",
               "requirementName",
               "additionalComments"
             ],
@@ -5381,7 +5380,8 @@
               },
               "personId": {
                 "type": "string",
-                "format": "guid"
+                "format": "guid",
+                "nullable": true
               },
               "requirementName": {
                 "type": "string"
@@ -5791,7 +5791,6 @@
             "required": [
               "arrangementFunction",
               "volunteerFamilyId",
-              "personId",
               "requirementName"
             ],
             "properties": {
@@ -5808,7 +5807,8 @@
               },
               "personId": {
                 "type": "string",
-                "format": "guid"
+                "format": "guid",
+                "nullable": true
               },
               "requirementName": {
                 "type": "string"

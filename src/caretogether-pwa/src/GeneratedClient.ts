@@ -8617,7 +8617,7 @@ export class ExemptVolunteerFamilyAssignmentRequirement extends ArrangementsComm
     arrangementFunction!: string;
     arrangementFunctionVariant?: string | undefined;
     volunteerFamilyId!: string;
-    personId!: string;
+    personId?: string | undefined;
     requirementName!: string;
     dueDate?: Date | undefined;
     additionalComments!: string;
@@ -8668,7 +8668,7 @@ export interface IExemptVolunteerFamilyAssignmentRequirement extends IArrangemen
     arrangementFunction: string;
     arrangementFunctionVariant?: string | undefined;
     volunteerFamilyId: string;
-    personId: string;
+    personId?: string | undefined;
     requirementName: string;
     dueDate?: Date | undefined;
     additionalComments: string;
@@ -9233,7 +9233,7 @@ export class UnexemptVolunteerFamilyAssignmentRequirement extends ArrangementsCo
     arrangementFunction!: string;
     arrangementFunctionVariant?: string | undefined;
     volunteerFamilyId!: string;
-    personId!: string;
+    personId?: string | undefined;
     requirementName!: string;
     dueDate?: Date | undefined;
 
@@ -9278,7 +9278,7 @@ export interface IUnexemptVolunteerFamilyAssignmentRequirement extends IArrangem
     arrangementFunction: string;
     arrangementFunctionVariant?: string | undefined;
     volunteerFamilyId: string;
-    personId: string;
+    personId?: string | undefined;
     requirementName: string;
     dueDate?: Date | undefined;
 }

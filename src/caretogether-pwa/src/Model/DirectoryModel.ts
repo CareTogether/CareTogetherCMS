@@ -59,6 +59,7 @@ import {
   visibleCommunitiesQuery,
   visibleFamiliesQuery,
 } from './Data';
+import { commandFactory } from './CommandFactory';
 
 export function usePersonLookup() {
   const visibleFamilies = useRecoilValue(visibleFamiliesQuery);
@@ -263,27 +264,28 @@ export function useCommunityCommand<
 
 export function useDirectoryModel() {
   const undoCreateFamily = useFamilyCommandCallback(async (familyId) => {
-    const command = UndoCreateFamily.fromJS({
+    const command = commandFactory(UndoCreateFamily, {
       familyId: familyId,
     });
     return command;
   });
   const uploadFamilyDocument = useFamilyCommandCallback(
     async (familyId, uploadedDocumentId: string, uploadedFileName: string) => {
-      const command = UploadFamilyDocument.fromJS({
+      const command = commandFactory(UploadFamilyDocument, {
         familyId: familyId,
+        uploadedDocumentId: uploadedDocumentId,
+        uploadedFileName: uploadedFileName,
       });
-      command.uploadedDocumentId = uploadedDocumentId;
-      command.uploadedFileName = uploadedFileName;
+
       return command;
     }
   );
   const deleteUploadedFamilyDocument = useFamilyCommandCallback(
     async (familyId, uploadedDocumentId: string) => {
-      const command = DeleteUploadedFamilyDocument.fromJS({
+      const command = commandFactory(DeleteUploadedFamilyDocument, {
         familyId: familyId,
+        uploadedDocumentId: uploadedDocumentId,
       });
-      command.uploadedDocumentId = uploadedDocumentId;
       return command;
     }
   );
@@ -293,11 +295,11 @@ export function useDirectoryModel() {
       personId: string,
       newRelationship: FamilyAdultRelationshipInfo
     ) => {
-      const command = ConvertChildToAdult.fromJS({
+      const command = commandFactory(ConvertChildToAdult, {
         familyId: familyId,
+        personId: personId,
+        newRelationshipToFamily: newRelationship,
       });
-      command.personId = personId;
-      command.newRelationshipToFamily = newRelationship;
       return command;
     }
   );
@@ -307,11 +309,11 @@ export function useDirectoryModel() {
       adultPersonId: string,
       relationship: FamilyAdultRelationshipInfo
     ) => {
-      const command = UpdateAdultRelationshipToFamily.fromJS({
+      const command = commandFactory(UpdateAdultRelationshipToFamily, {
         familyId: familyId,
+        adultPersonId: adultPersonId,
+        relationshipToFamily: relationship,
       });
-      command.adultPersonId = adultPersonId;
-      command.relationshipToFamily = relationship;
       return command;
     }
   );
@@ -322,31 +324,31 @@ export function useDirectoryModel() {
       adultId: string,
       type: CustodialRelationshipType
     ) => {
-      const command = UpdateCustodialRelationshipType.fromJS({
+      const command = commandFactory(UpdateCustodialRelationshipType, {
         familyId: familyId,
+        childPersonId: childId,
+        adultPersonId: adultId,
+        type: type,
       });
-      command.childPersonId = childId;
-      command.adultPersonId = adultId;
-      command.type = type;
       return command;
     }
   );
   const removeCustodialRelationship = useFamilyCommandCallback(
     async (familyId, childId: string, adultId: string) => {
-      const command = RemoveCustodialRelationship.fromJS({
+      const command = commandFactory(RemoveCustodialRelationship, {
         familyId: familyId,
+        childPersonId: childId,
+        adultPersonId: adultId,
       });
-      command.childPersonId = childId;
-      command.adultPersonId = adultId;
       return command;
     }
   );
   const updatePrimaryFamilyContact = useFamilyCommandCallback(
     async (familyId, adultId: string) => {
-      const command = ChangePrimaryFamilyContact.fromJS({
+      const command = commandFactory(ChangePrimaryFamilyContact, {
         familyId: familyId,
+        adultId: adultId,
       });
-      command.adultId = adultId;
       return command;
     }
   );
@@ -356,13 +358,13 @@ export function useDirectoryModel() {
       customField: CustomField,
       value: boolean | string | null
     ) => {
-      const command = UpdateCustomFamilyField.fromJS({
+      const command = commandFactory(UpdateCustomFamilyField, {
         familyId: familyId,
+        completedCustomFieldId: crypto.randomUUID(),
+        customFieldName: customField.name,
+        customFieldType: customField.type,
+        value: value,
       });
-      command.completedCustomFieldId = crypto.randomUUID();
-      command.customFieldName = customField.name;
-      command.customFieldType = customField.type;
-      command.value = value;
       return command;
     }
   );
@@ -373,62 +375,62 @@ export function useDirectoryModel() {
       firstName: string,
       lastName: string
     ) => {
-      const command = UpdatePersonName.fromJS({
+      const command = commandFactory(UpdatePersonName, {
         personId: personId,
+        firstName: firstName,
+        lastName: lastName,
       });
-      command.firstName = firstName;
-      command.lastName = lastName;
       return command;
     }
   );
   const updatePersonGender = usePersonCommandCallback(
     async (_familyId, personId: string, gender: Gender) => {
-      const command = UpdatePersonGender.fromJS({
+      const command = commandFactory(UpdatePersonGender, {
         personId: personId,
+        gender: gender,
       });
-      command.gender = gender;
       return command;
     }
   );
   const updatePersonAge = usePersonCommandCallback(
     async (_familyId, personId: string, age: Age) => {
-      const command = UpdatePersonAge.fromJS({
+      const command = commandFactory(UpdatePersonAge, {
         personId: personId,
+        age: age,
       });
-      command.age = age;
       return command;
     }
   );
   const updatePersonEthnicity = usePersonCommandCallback(
     async (_familyId, personId: string, ethnicity: string) => {
-      const command = UpdatePersonEthnicity.fromJS({
+      const command = commandFactory(UpdatePersonEthnicity, {
         personId: personId,
+        ethnicity: ethnicity,
       });
-      command.ethnicity = ethnicity;
       return command;
     }
   );
   const updatePersonConcerns = usePersonCommandCallback(
     async (_familyId, personId: string, concerns: string | null) => {
-      const command = UpdatePersonConcerns.fromJS({
+      const command = commandFactory(UpdatePersonConcerns, {
         personId: personId,
+        concerns: concerns || undefined,
       });
-      command.concerns = concerns || undefined;
       return command;
     }
   );
   const updatePersonNotes = usePersonCommandCallback(
     async (_familyId, personId: string, notes: string | null) => {
-      const command = UpdatePersonNotes.fromJS({
+      const command = commandFactory(UpdatePersonNotes, {
         personId: personId,
+        notes: notes || undefined,
       });
-      command.notes = notes || undefined;
       return command;
     }
   );
   const undoCreatePerson = usePersonCommandCallback(
     async (_familyId, personId: string) => {
-      const command = UndoCreatePerson.fromJS({
+      const command = commandFactory(UndoCreatePerson, {
         personId: personId,
       });
       return command;
@@ -442,15 +444,15 @@ export function useDirectoryModel() {
       phoneType: PhoneNumberType,
       isPreferred: boolean
     ) => {
-      const command = AddPersonPhoneNumber.fromJS({
+      const command = commandFactory(AddPersonPhoneNumber, {
         personId: personId,
+        phoneNumber: commandFactory(PhoneNumber, {
+          id: crypto.randomUUID(),
+          number: phoneNumber,
+          type: phoneType,
+        }),
+        isPreferredPhoneNumber: isPreferred,
       });
-      command.phoneNumber = PhoneNumber.fromJS({
-        id: crypto.randomUUID(),
-        number: phoneNumber,
-        type: phoneType,
-      });
-      command.isPreferredPhoneNumber = isPreferred;
       return command;
     }
   );
@@ -463,15 +465,15 @@ export function useDirectoryModel() {
       phoneType: PhoneNumberType,
       isPreferred: boolean
     ) => {
-      const command = UpdatePersonPhoneNumber.fromJS({
+      const command = commandFactory(UpdatePersonPhoneNumber, {
         personId: personId,
+        phoneNumber: commandFactory(PhoneNumber, {
+          id: phoneId,
+          number: phoneNumber,
+          type: phoneType,
+        }),
+        isPreferredPhoneNumber: isPreferred,
       });
-      command.phoneNumber = PhoneNumber.fromJS({
-        id: phoneId,
-        number: phoneNumber,
-        type: phoneType,
-      });
-      command.isPreferredPhoneNumber = isPreferred;
       return command;
     }
   );
@@ -483,15 +485,15 @@ export function useDirectoryModel() {
       phoneType: EmailAddressType,
       isPreferred: boolean
     ) => {
-      const command = AddPersonEmailAddress.fromJS({
+      const command = commandFactory(AddPersonEmailAddress, {
         personId: personId,
+        emailAddress: commandFactory(EmailAddress, {
+          id: crypto.randomUUID(),
+          address: emailAddress,
+          type: phoneType,
+        }),
+        isPreferredEmailAddress: isPreferred,
       });
-      command.emailAddress = EmailAddress.fromJS({
-        id: crypto.randomUUID(),
-        address: emailAddress,
-        type: phoneType,
-      });
-      command.isPreferredEmailAddress = isPreferred;
       return command;
     }
   );
@@ -504,15 +506,15 @@ export function useDirectoryModel() {
       phoneType: EmailAddressType,
       isPreferred: boolean
     ) => {
-      const command = UpdatePersonEmailAddress.fromJS({
+      const command = commandFactory(UpdatePersonEmailAddress, {
         personId: personId,
+        emailAddress: commandFactory(EmailAddress, {
+          id: phoneId,
+          address: emailAddress,
+          type: phoneType,
+        }),
+        isPreferredEmailAddress: isPreferred,
       });
-      command.emailAddress = EmailAddress.fromJS({
-        id: phoneId,
-        address: emailAddress,
-        type: phoneType,
-      });
-      command.isPreferredEmailAddress = isPreferred;
       return command;
     }
   );
@@ -523,11 +525,11 @@ export function useDirectoryModel() {
       address: Address,
       isCurrent: boolean
     ) => {
-      const command = AddPersonAddress.fromJS({
+      const command = commandFactory(AddPersonAddress, {
         personId: personId,
+        address: address,
+        isCurrentAddress: isCurrent,
       });
-      command.address = address;
-      command.isCurrentAddress = isCurrent;
       return command;
     }
   );
@@ -538,11 +540,11 @@ export function useDirectoryModel() {
       address: Address,
       isCurrent: boolean
     ) => {
-      const command = UpdatePersonAddress.fromJS({
+      const command = commandFactory(UpdatePersonAddress, {
         personId: personId,
+        address: address,
+        isCurrentAddress: isCurrent,
       });
-      command.address = address;
-      command.isCurrentAddress = isCurrent;
       return command;
     }
   );
@@ -558,13 +560,13 @@ export function useDirectoryModel() {
       relationshipToFamily: string,
       address: Address | null,
       phoneNumber: string | null,
-      phoneType: PhoneNumberType | null,
+      phoneType: PhoneNumberType,
       emailAddress: string | null,
-      emailType: EmailAddressType | null,
+      emailType: EmailAddressType,
       notes?: string,
       concerns?: string
     ) => {
-      const command = AddAdultToFamilyCommand.fromJS({
+      const command = commandFactory(AddAdultToFamilyCommand, {
         familyId: familyId,
         personId: crypto.randomUUID(),
         firstName: firstName,
@@ -574,23 +576,26 @@ export function useDirectoryModel() {
         ethnicity: ethnicity ?? undefined,
         concerns: concerns,
         notes: notes,
-        familyAdultRelationshipInfo: FamilyAdultRelationshipInfo.fromJS({
-          isInHousehold: isInHousehold,
-          relationshipToFamily: relationshipToFamily,
-        }),
+        familyAdultRelationshipInfo: commandFactory(
+          FamilyAdultRelationshipInfo,
+          {
+            isInHousehold: isInHousehold,
+            relationshipToFamily: relationshipToFamily,
+          }
+        ),
         address: address ?? undefined,
         phoneNumber: phoneNumber
-          ? PhoneNumber.fromJS({
+          ? commandFactory(PhoneNumber, {
               id: crypto.randomUUID(),
               number: phoneNumber,
-              type: phoneType ?? undefined,
+              type: phoneType,
             })
           : undefined,
         emailAddress: emailAddress
-          ? EmailAddress.fromJS({
+          ? commandFactory(EmailAddress, {
               id: crypto.randomUUID(),
               address: emailAddress,
-              type: emailType ?? undefined,
+              type: emailType,
             })
           : undefined,
       });
@@ -612,7 +617,7 @@ export function useDirectoryModel() {
     ) => {
       const personId = crypto.randomUUID();
 
-      const command = AddChildToFamilyCommand.fromJS({
+      const command = commandFactory(AddChildToFamilyCommand, {
         familyId: familyId,
         personId: personId,
         firstName: firstName,
@@ -642,13 +647,13 @@ export function useDirectoryModel() {
       relationshipToFamily: string,
       address: Address | null,
       phoneNumber: string | null,
-      phoneType: PhoneNumberType | null,
+      phoneType: PhoneNumberType,
       emailAddress: string | null,
-      emailType: EmailAddressType | null,
+      emailType: EmailAddressType,
       notes?: string,
       concerns?: string
     ) => {
-      const command = CreateVolunteerFamilyWithNewAdultCommand.fromJS({
+      const command = commandFactory(CreateVolunteerFamilyWithNewAdultCommand, {
         familyId: familyId,
         personId: crypto.randomUUID(),
         firstName: firstName,
@@ -658,23 +663,26 @@ export function useDirectoryModel() {
         ethnicity: ethnicity || undefined,
         concerns: concerns,
         notes: notes,
-        familyAdultRelationshipInfo: FamilyAdultRelationshipInfo.fromJS({
-          isInHousehold: isInHousehold,
-          relationshipToFamily: relationshipToFamily,
-        }),
+        familyAdultRelationshipInfo: commandFactory(
+          FamilyAdultRelationshipInfo,
+          {
+            isInHousehold: isInHousehold,
+            relationshipToFamily: relationshipToFamily,
+          }
+        ),
         address: address == null ? undefined : address,
         phoneNumber: phoneNumber
-          ? PhoneNumber.fromJS({
+          ? commandFactory(PhoneNumber, {
               id: crypto.randomUUID(),
               number: phoneNumber,
-              type: phoneType ?? undefined,
+              type: phoneType,
             })
           : undefined,
         emailAddress: emailAddress
-          ? EmailAddress.fromJS({
+          ? commandFactory(EmailAddress, {
               id: crypto.randomUUID(),
               address: emailAddress,
-              type: emailType ?? undefined,
+              type: emailType,
             })
           : undefined,
       });
@@ -694,44 +702,50 @@ export function useDirectoryModel() {
       relationshipToFamily: string,
       address: Address | null,
       phoneNumber: string | null,
-      phoneType: PhoneNumberType | null,
+      phoneType: PhoneNumberType,
       emailAddress: string | null,
-      emailType: EmailAddressType | null,
+      emailType: EmailAddressType,
       notes?: string,
       concerns?: string
     ) => {
-      const command = CreatePartneringFamilyWithNewAdultCommand.fromJS({
-        familyId: familyId,
-        personId: crypto.randomUUID(),
-        referralId: crypto.randomUUID(),
-        referralOpenedAtUtc: referralOpenedAtUtc,
-        firstName: firstName,
-        lastName: lastName,
-        gender: gender == null ? undefined : gender,
-        age: age == null ? undefined : age,
-        ethnicity: ethnicity || undefined,
-        concerns: concerns,
-        notes: notes,
-        familyAdultRelationshipInfo: FamilyAdultRelationshipInfo.fromJS({
-          isInHousehold: isInHousehold,
-          relationshipToFamily: relationshipToFamily,
-        }),
-        address: address == null ? undefined : address,
-        phoneNumber: phoneNumber
-          ? PhoneNumber.fromJS({
-              id: crypto.randomUUID(),
-              number: phoneNumber,
-              type: phoneType ?? undefined,
-            })
-          : undefined,
-        emailAddress: emailAddress
-          ? EmailAddress.fromJS({
-              id: crypto.randomUUID(),
-              address: emailAddress,
-              type: emailType ?? undefined,
-            })
-          : undefined,
-      });
+      const command = commandFactory(
+        CreatePartneringFamilyWithNewAdultCommand,
+        {
+          familyId: familyId,
+          personId: crypto.randomUUID(),
+          referralId: crypto.randomUUID(),
+          referralOpenedAtUtc: referralOpenedAtUtc,
+          firstName: firstName,
+          lastName: lastName,
+          gender: gender == null ? undefined : gender,
+          age: age == null ? undefined : age,
+          ethnicity: ethnicity || undefined,
+          concerns: concerns,
+          notes: notes,
+          familyAdultRelationshipInfo: commandFactory(
+            FamilyAdultRelationshipInfo,
+            {
+              isInHousehold: isInHousehold,
+              relationshipToFamily: relationshipToFamily,
+            }
+          ),
+          address: address == null ? undefined : address,
+          phoneNumber: phoneNumber
+            ? commandFactory(PhoneNumber, {
+                id: crypto.randomUUID(),
+                number: phoneNumber,
+                type: phoneType,
+              })
+            : undefined,
+          emailAddress: emailAddress
+            ? commandFactory(EmailAddress, {
+                id: crypto.randomUUID(),
+                address: emailAddress,
+                type: emailType,
+              })
+            : undefined,
+        }
+      );
       return command;
     }
   );
@@ -743,7 +757,7 @@ export function useDirectoryModel() {
       backdatedTimestampLocal?: Date,
       accessLevel?: string
     ) => {
-      const command = CreateDraftNote.fromJS({
+      const command = commandFactory(CreateDraftNote, {
         familyId: familyId,
         noteId: noteId,
         draftNoteContents: draftNoteContents,
@@ -761,7 +775,7 @@ export function useDirectoryModel() {
       backdatedTimestampLocal?: Date,
       accessLevel?: string
     ) => {
-      const command = EditDraftNote.fromJS({
+      const command = commandFactory(EditDraftNote, {
         familyId: familyId,
         noteId: noteId,
         draftNoteContents: draftNoteContents,
@@ -773,7 +787,7 @@ export function useDirectoryModel() {
   );
   const discardDraftNote = useNoteCommandCallback(
     async (familyId, noteId: string) => {
-      const command = DiscardDraftNote.fromJS({
+      const command = commandFactory(DiscardDraftNote, {
         familyId: familyId,
         noteId: noteId,
       });
@@ -788,7 +802,7 @@ export function useDirectoryModel() {
       backdatedTimestampLocal?: Date,
       accessLevel?: string
     ) => {
-      const command = ApproveNote.fromJS({
+      const command = commandFactory(ApproveNote, {
         familyId: familyId,
         noteId: noteId,
         finalizedNoteContents: finalizedNoteContents,
