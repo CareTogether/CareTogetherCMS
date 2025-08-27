@@ -1815,6 +1815,13 @@
           "canEdit": {
             "type": "string",
             "nullable": true
+          },
+          "alternateNames": {
+            "type": "array",
+            "nullable": true,
+            "items": {
+              "type": "string"
+            }
           }
         }
       },

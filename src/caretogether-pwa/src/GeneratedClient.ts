@@ -2342,6 +2342,7 @@ export class ActionRequirement implements IActionRequirement {
     validity?: string | undefined;
     canView?: string | undefined;
     canEdit?: string | undefined;
+    alternateNames?: string[] | undefined;
 
     constructor(data?: IActionRequirement) {
         if (data) {
@@ -2361,6 +2362,11 @@ export class ActionRequirement implements IActionRequirement {
             this.validity = _data["validity"];
             this.canView = _data["canView"];
             this.canEdit = _data["canEdit"];
+            if (Array.isArray(_data["alternateNames"])) {
+                this.alternateNames = [] as any;
+                for (let item of _data["alternateNames"])
+                    this.alternateNames!.push(item);
+            }
         }
     }
 
@@ -2380,6 +2386,11 @@ export class ActionRequirement implements IActionRequirement {
         data["validity"] = this.validity;
         data["canView"] = this.canView;
         data["canEdit"] = this.canEdit;
+        if (Array.isArray(this.alternateNames)) {
+            data["alternateNames"] = [];
+            for (let item of this.alternateNames)
+                data["alternateNames"].push(item);
+        }
         return data;
     }
 }
@@ -2392,6 +2403,7 @@ export interface IActionRequirement {
     validity?: string | undefined;
     canView?: string | undefined;
     canEdit?: string | undefined;
+    alternateNames?: string[] | undefined;
 }
 
 export enum DocumentLinkRequirement {

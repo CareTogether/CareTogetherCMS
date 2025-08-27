@@ -121,7 +121,8 @@ namespace CareTogether.Resources.Policies
         Uri? InfoLink,
         TimeSpan? Validity,
         string? CanView,
-        string? CanEdit
+        string? CanEdit,
+        ImmutableList<string>? AlternateNames
     );
 
     public sealed record AccessLevel(
