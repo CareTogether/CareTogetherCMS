@@ -21,7 +21,7 @@ namespace CareTogether.Engines.PolicyEvaluation
             return locationPolicy
                 .ActionDefinitions.ToImmutableDictionary()
                 .FirstOrDefault(item =>
-                    item.Key == requiredAction || item.Value.AlternateNames.Contains(requiredAction)
+                    item.Key == requiredAction || (item.Value.AlternateNames != null && item.Value.AlternateNames.Contains(requiredAction))
                 );
         }
 

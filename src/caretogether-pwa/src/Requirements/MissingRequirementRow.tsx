@@ -44,7 +44,7 @@ export function MissingRequirementRow({
   const requirementPolicy =
     policy.actionDefinitions[requirementName] ||
     Object.entries(policy.actionDefinitions).find(([, value]) =>
-      value.alternateNames.includes(requirementName)
+      value.alternateNames?.includes(requirementName)
     )?.[1];
 
   if (

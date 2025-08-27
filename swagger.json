@@ -1785,8 +1785,7 @@
         "additionalProperties": false,
         "required": [
           "documentLink",
-          "noteEntry",
-          "alternateNames"
+          "noteEntry"
         ],
         "properties": {
           "documentLink": {
@@ -1794,12 +1793,6 @@
           },
           "noteEntry": {
             "$ref": "#/components/schemas/NoteEntryRequirement"
-          },
-          "alternateNames": {
-            "type": "array",
-            "items": {
-              "type": "string"
-            }
           },
           "instructions": {
             "type": "string",
@@ -1822,6 +1815,13 @@
           "canEdit": {
             "type": "string",
             "nullable": true
+          },
+          "alternateNames": {
+            "type": "array",
+            "nullable": true,
+            "items": {
+              "type": "string"
+            }
           }
         }
       },

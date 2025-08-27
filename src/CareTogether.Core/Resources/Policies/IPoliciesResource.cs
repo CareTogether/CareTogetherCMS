@@ -117,12 +117,12 @@ namespace CareTogether.Resources.Policies
     public sealed record ActionRequirement(
         DocumentLinkRequirement DocumentLink,
         NoteEntryRequirement NoteEntry,
-        ImmutableList<string> AlternateNames,
         string? Instructions,
         Uri? InfoLink,
         TimeSpan? Validity,
         string? CanView,
-        string? CanEdit
+        string? CanEdit,
+        ImmutableList<string>? AlternateNames
     );
 
     public sealed record AccessLevel(
