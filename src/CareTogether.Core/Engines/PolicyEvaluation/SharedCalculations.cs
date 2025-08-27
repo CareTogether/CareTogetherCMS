@@ -13,6 +13,9 @@ namespace CareTogether.Engines.PolicyEvaluation
     {
         public sealed record RequirementCheckResult(bool IsMetOrExempted, DateOnly? ExpiresAtUtc);
 
+        // TODO: Is this the best place for this logic?
+        // Doesn't sound like it should be part of SharedCalculations,
+        // although it's currently being used by Referral and Approval calculations.
         private static KeyValuePair<string, ActionRequirement>? FindActionDefinition(
             EffectiveLocationPolicy locationPolicy,
             string requiredAction
@@ -25,6 +28,9 @@ namespace CareTogether.Engines.PolicyEvaluation
                 );
         }
 
+        // TODO: Is this the best place for this logic?
+        // Doesn't sound like it should be part of SharedCalculations,
+        // although it's currently being used by Referral and Approval calculations.
         internal static ImmutableList<string> GetRequirementNameWithSynonyms(
             EffectiveLocationPolicy locationPolicy,
             string requirementName
