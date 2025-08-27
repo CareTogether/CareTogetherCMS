@@ -1785,7 +1785,8 @@
         "additionalProperties": false,
         "required": [
           "documentLink",
-          "noteEntry"
+          "noteEntry",
+          "alternateNames"
         ],
         "properties": {
           "documentLink": {

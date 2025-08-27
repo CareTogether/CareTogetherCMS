@@ -2548,6 +2548,7 @@ namespace CareTogether.TestData
                     ["Some optional action"] = new ActionRequirement(
                         DocumentLinkRequirement.None,
                         NoteEntryRequirement.Allowed,
+                        [],
                         null,
                         null,
                         null,
