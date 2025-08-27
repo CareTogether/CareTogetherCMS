@@ -23,6 +23,7 @@ import {
 } from '../GeneratedClient';
 import { useAtomicRecordsCommandCallback } from './DirectoryModel';
 import { visibleFamiliesQuery } from './Data';
+import { commandFactory } from './CommandFactory';
 
 export const volunteerFamiliesData = selector({
   key: 'volunteerFamiliesData',
@@ -63,7 +64,7 @@ export function useVolunteersModel() {
         documentId: string | null,
         noteId: string | null
       ) => {
-        const command = CompleteVolunteerFamilyRequirement.fromJS({
+        const command = commandFactory(CompleteVolunteerFamilyRequirement, {
           familyId: volunteerFamilyId,
           completedRequirementId: crypto.randomUUID(),
           requirementName: requirementName,
@@ -80,11 +81,14 @@ export function useVolunteersModel() {
         volunteerFamilyId,
         completedRequirement: CompletedRequirementInfo
       ) => {
-        const command = MarkVolunteerFamilyRequirementIncomplete.fromJS({
-          familyId: volunteerFamilyId,
-          requirementName: completedRequirement.requirementName,
-          completedRequirementId: completedRequirement.completedRequirementId,
-        });
+        const command = commandFactory(
+          MarkVolunteerFamilyRequirementIncomplete,
+          {
+            familyId: volunteerFamilyId,
+            requirementName: completedRequirement.requirementName,
+            completedRequirementId: completedRequirement.completedRequirementId,
+          }
+        );
         return command;
       }
     );
@@ -96,7 +100,7 @@ export function useVolunteersModel() {
         additionalComments: string,
         exemptionExpiresAtLocal: Date | null
       ) => {
-        const command = ExemptVolunteerFamilyRequirement.fromJS({
+        const command = commandFactory(ExemptVolunteerFamilyRequirement, {
           familyId: volunteerFamilyId,
           requirementName: requirementName,
           additionalComments: additionalComments,
@@ -111,7 +115,7 @@ export function useVolunteersModel() {
         volunteerFamilyId,
         exemptedRequirement: ExemptedRequirementInfo
       ) => {
-        const command = UnexemptVolunteerFamilyRequirement.fromJS({
+        const command = commandFactory(UnexemptVolunteerFamilyRequirement, {
           familyId: volunteerFamilyId,
           requirementName: exemptedRequirement.requirementName,
         });
@@ -127,7 +131,7 @@ export function useVolunteersModel() {
       effectiveSince: Date | null,
       effectiveThrough: Date | null
     ) => {
-      const command = RemoveVolunteerFamilyRole.fromJS({
+      const command = commandFactory(RemoveVolunteerFamilyRole, {
         familyId: volunteerFamilyId,
         roleName: role,
         reason: reason,
@@ -145,7 +149,7 @@ export function useVolunteersModel() {
       forRemovalEffectiveSince: Date | null,
       effectiveThrough: Date | null
     ) => {
-      const command = ResetVolunteerFamilyRole.fromJS({
+      const command = commandFactory(ResetVolunteerFamilyRole, {
         familyId: volunteerFamilyId,
         roleName: role,
         forRemovalEffectiveSince: forRemovalEffectiveSince ?? undefined,
@@ -164,7 +168,7 @@ export function useVolunteersModel() {
       documentId: string | null,
       noteId: string | null
     ) => {
-      const command = CompleteVolunteerRequirement.fromJS({
+      const command = commandFactory(CompleteVolunteerRequirement, {
         familyId: volunteerFamilyId,
         personId: personId,
         completedRequirementId: crypto.randomUUID(),
@@ -183,7 +187,7 @@ export function useVolunteersModel() {
         personId: string,
         completedRequirement: CompletedRequirementInfo
       ) => {
-        const command = MarkVolunteerRequirementIncomplete.fromJS({
+        const command = commandFactory(MarkVolunteerRequirementIncomplete, {
           familyId: volunteerFamilyId,
           personId: personId,
           requirementName: completedRequirement.requirementName,
@@ -200,7 +204,7 @@ export function useVolunteersModel() {
       additionalComments: string,
       exemptionExpiresAtLocal: Date | null
     ) => {
-      const command = ExemptVolunteerRequirement.fromJS({
+      const command = commandFactory(ExemptVolunteerRequirement, {
         familyId: volunteerFamilyId,
         personId: personId,
         requirementName: requirementName,
@@ -216,7 +220,7 @@ export function useVolunteersModel() {
       personId: string,
       exemptedRequirement: ExemptedRequirementInfo
     ) => {
-      const command = UnexemptVolunteerRequirement.fromJS({
+      const command = commandFactory(UnexemptVolunteerRequirement, {
         familyId: volunteerFamilyId,
         personId: personId,
         requirementName: exemptedRequirement.requirementName,
@@ -234,7 +238,7 @@ export function useVolunteersModel() {
       effectiveSince: Date | null,
       effectiveThrough: Date | null
     ) => {
-      const command = RemoveVolunteerRole.fromJS({
+      const command = commandFactory(RemoveVolunteerRole, {
         familyId: volunteerFamilyId,
         personId: personId,
         roleName: role,
@@ -254,7 +258,7 @@ export function useVolunteersModel() {
       forRemovalEffectiveSince: Date | null,
       effectiveThrough: Date | null
     ) => {
-      const command = ResetVolunteerRole.fromJS({
+      const command = commandFactory(ResetVolunteerRole, {
         familyId: volunteerFamilyId,
         personId: personId,
         roleName: role,
