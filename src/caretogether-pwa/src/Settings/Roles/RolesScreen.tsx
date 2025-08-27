@@ -10,10 +10,10 @@ export function RolesScreen() {
   const dataLoaded = useDataLoaded();
   return !dataLoaded ? (
     <ProgressBackdrop>
-      <p>Loading roles...</p>
+      <p className="ph-unmask">Loading roles...</p>
     </ProgressBackdrop>
   ) : (
-    <Box sx={{ paddingTop: 2 }}>
+    <Box className="ph-unmask" sx={{ paddingTop: 2 }}>
       <RolesSection />
     </Box>
   );

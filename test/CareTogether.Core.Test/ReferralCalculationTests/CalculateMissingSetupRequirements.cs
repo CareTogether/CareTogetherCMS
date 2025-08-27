@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Immutable;
+using System.Linq;
 using CareTogether.Engines.PolicyEvaluation;
 using CareTogether.Resources.Policies;
 using CareTogether.Resources.Referrals;
@@ -26,14 +27,32 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
                 )
             );
 
-        public static ArrangementPolicy SetupRequirements(params string[] values) =>
+        private static readonly RequirementDefinition RequirementA = new RequirementDefinition(
+            "A",
+            true
+        );
+        private static readonly RequirementDefinition RequirementB = new RequirementDefinition(
+            "B",
+            true
+        );
+        private static readonly RequirementDefinition RequirementC = new RequirementDefinition(
+            "C",
+            true
+        );
+
+        public static ArrangementPolicy SetupRequirements(params (string, bool)[] values) =>
             new ArrangementPolicy(
-                string.Empty,
-                ChildInvolvement.ChildHousing,
-                ImmutableList<ArrangementFunction>.Empty,
-                values.ToImmutableList(),
-                ImmutableList<MonitoringRequirement>.Empty,
-                ImmutableList<string>.Empty
+                ArrangementType: string.Empty,
+                ChildInvolvement: ChildInvolvement.ChildHousing,
+                ArrangementFunctions: [],
+                RequiredSetupActionNames: [],
+                RequiredMonitoringActions: [],
+                RequiredCloseoutActionNames: [],
+                RequiredSetupActions: values
+                    .Select(value => new RequirementDefinition(value.Item1, value.Item2))
+                    .ToImmutableList(),
+                RequiredMonitoringActionsNew: [],
+                RequiredCloseoutActions: []
             );
 
         [TestMethod]
@@ -41,7 +60,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
         {
             var result = ReferralCalculations.CalculateMissingSetupRequirements(
                 TestLocationPolicy,
-                SetupRequirements("A", "B", "C"),
+                SetupRequirements(("A", true), ("B", true), ("C", true)),
                 new Engines.PolicyEvaluation.ArrangementEntry(
                     "",
                     StartedAt: null,
@@ -59,9 +78,9 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
 
             AssertEx.SequenceIs(
                 result,
-                new MissingArrangementRequirement(null, null, null, null, "A", null, null),
-                new MissingArrangementRequirement(null, null, null, null, "B", null, null),
-                new MissingArrangementRequirement(null, null, null, null, "C", null, null)
+                new MissingArrangementRequirement(null, null, null, null, RequirementA, null, null),
+                new MissingArrangementRequirement(null, null, null, null, RequirementB, null, null),
+                new MissingArrangementRequirement(null, null, null, null, RequirementC, null, null)
             );
         }
 
@@ -70,7 +89,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
         {
             var result = ReferralCalculations.CalculateMissingSetupRequirements(
                 TestLocationPolicy,
-                SetupRequirements("A", "B", "C"),
+                SetupRequirements(("A", true), ("B", true), ("C", true)),
                 new Engines.PolicyEvaluation.ArrangementEntry(
                     "",
                     StartedAt: null,
@@ -88,7 +107,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
 
             AssertEx.SequenceIs(
                 result,
-                new MissingArrangementRequirement(null, null, null, null, "C", null, null)
+                new MissingArrangementRequirement(null, null, null, null, RequirementC, null, null)
             );
         }
 
@@ -97,7 +116,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
         {
             var result = ReferralCalculations.CalculateMissingSetupRequirements(
                 TestLocationPolicy,
-                SetupRequirements("A", "B", "C"),
+                SetupRequirements(("A", true), ("B", true), ("C", true)),
                 new Engines.PolicyEvaluation.ArrangementEntry(
                     "",
                     StartedAt: null,
