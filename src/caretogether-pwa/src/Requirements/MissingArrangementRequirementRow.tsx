@@ -35,8 +35,8 @@ export function MissingArrangementRequirementRow({
   const actionName = requirement.action.actionName;
 
   const requirementPolicy =
-    policy.actionDefinitions![actionName] ||
-    Object.entries(policy.actionDefinitions!).find(([, value]) =>
+    policy.actionDefinitions[actionName] ||
+    Object.entries(policy.actionDefinitions).find(([, value]) =>
       value.alternateNames?.includes(actionName)
     );
 

@@ -42,9 +42,9 @@ export function MissingRequirementRow({
     typeof requirement === 'string' ? true : requirement.isRequired;
 
   const requirementPolicy =
-    policy.actionDefinitions![requirementName] ||
-    Object.entries(policy.actionDefinitions!).find(([, value]) =>
-      value.alternateNames?.includes(requirementName)
+    policy.actionDefinitions[requirementName] ||
+    Object.entries(policy.actionDefinitions).find(([, value]) =>
+      value.alternateNames.includes(requirementName)
     )?.[1];
 
   if (
