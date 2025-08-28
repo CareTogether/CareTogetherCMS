@@ -31,7 +31,6 @@ import {
 } from '../GeneratedClient';
 import { useDirectoryModel } from '../Model/DirectoryModel';
 import WarningIcon from '@mui/icons-material/Warning';
-import { DatePicker } from '@mui/x-date-pickers';
 import { useRecoilValue } from 'recoil';
 import {
   adultFamilyRelationshipsData,
@@ -41,6 +40,7 @@ import { useBackdrop } from '../Hooks/useBackdrop';
 import { subYears } from 'date-fns';
 import { AddressFormFields } from '../Families/AddressEditor';
 import { isBackdropClick } from '../Utilities/handleBackdropClick';
+import { ValidateDatePicker } from '../Generic/Forms/ValidateDatePicker';
 
 interface CreateVolunteerFamilyDialogProps {
   onClose: (volunteerFamilyId?: string) => void;
@@ -89,6 +89,8 @@ export function CreateVolunteerFamilyDialog({
 
   const relationshipTypes = useRecoilValue(adultFamilyRelationshipsData);
   const ethnicities = useRecoilValue(ethnicitiesData);
+
+  const [dobError, setDobError] = useState(false);
 
   const withBackdrop = useBackdrop();
 
@@ -258,16 +260,18 @@ export function CreateVolunteerFamilyDialog({
               </FormControl>
             </Grid>
             <Grid item xs={12} sm={6}>
-              <DatePicker
+              <ValidateDatePicker
                 label="Date of birth"
                 value={dateOfBirth}
+                minDate={new Date(1900, 0, 1)}
                 maxDate={subYears(new Date(), 18)}
-                openTo="year"
-                format="MM/dd/yyyy"
-                onChange={(date: Date | null) =>
-                  date && setFields({ ...fields, dateOfBirth: date })
-                }
-                slotProps={{ textField: { size: 'small', fullWidth: true } }}
+                onChange={(date) => setFields({ ...fields, dateOfBirth: date })}
+                onErrorChange={setDobError}
+                textFieldProps={{
+                  size: 'small',
+                  fullWidth: true,
+                  required: true,
+                }}
               />
             </Grid>
             <Grid item xs={12} sm={6}>
@@ -442,7 +446,12 @@ export function CreateVolunteerFamilyDialog({
         <Button onClick={() => onClose()} color="secondary">
           Cancel
         </Button>
-        <Button onClick={save} variant="contained" color="primary">
+        <Button
+          onClick={save}
+          variant="contained"
+          color="primary"
+          disabled={dobError}
+        >
           Create Family
         </Button>
       </DialogActions>
