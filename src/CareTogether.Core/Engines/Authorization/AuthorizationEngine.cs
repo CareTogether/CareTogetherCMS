@@ -236,6 +236,7 @@ namespace CareTogether.Engines.Authorization
                     EditDraftNote => Permission.AddEditDraftNotes,
                     DiscardDraftNote => Permission.DiscardDraftNotes,
                     ApproveNote => Permission.ApproveNotes,
+                    UpdateNoteAccessLevel => Permission.ApproveNotes,
                     _ => throw new NotImplementedException(
                         $"The command type '{command.GetType().FullName}' has not been implemented."
                     ),
@@ -249,6 +250,7 @@ namespace CareTogether.Engines.Authorization
                     EditDraftNote => Permission.AddEditOwnDraftNotes,
                     DiscardDraftNote => Permission.DiscardOwnDraftNotes,
                     ApproveNote => Permission.ApproveNotes,
+                    UpdateNoteAccessLevel => Permission.ApproveNotes,
                     _ => throw new NotImplementedException(
                         $"The command type '{command.GetType().FullName}' has not been implemented."
                     ),
@@ -284,6 +286,16 @@ namespace CareTogether.Engines.Authorization
                 organizationId,
                 locationId
             );
+
+             if (command is UpdateNoteAccessLevel)
+    {
+        if (!hasGeneralPermission) return false;
+        if (noteEntry.Status != NoteStatus.Approved) return false;
+
+        if (!allowedPerAccessLevel) return false;
+
+        return true;
+    }
 
             if (hasGeneralPermission && allowedPerAccessLevel)
             {
