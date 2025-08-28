@@ -324,14 +324,39 @@ Activity "Apply for Membership - Person to Organization" {
     host family approval rules are a combination of individual and family level.
 */
 
+/*TODO: Eventually need to discuss invitations, discovery, etc. */
+
+/* The system deals with policies and procedures in the Process Manager.
+   Policies are system-enforced invariants (although users can exempt policy requirements with the right permissions),
+   and so policy *evaluation* is handled by the EvaluationEngine. This logic exists in V1 today. A future rewrite may implement a DSL here.
+   For now, the 'EvaluateApproval' activity for the approval policy is just an activity in the Elsa workflow.
+
+   Our first pass is that every Elsa activity should be an operation on a SoEx service. Later on we can introduce composite activities.
+
+   Procedures are freeform drag-and-drop workflows that hook into the invariant elements of the system,
+   from a ready-made closed set of activities, e.g.,
+   an 'Approval Procedure' will need to be defined per "tenant" (possibly more granular, e.g. varying by program). */
+
+/* This use case is for configuring a policy (whether a true DSL or not) */
+UseCase "Configure Membership Approval Policy" {
+  WebAppClient - ConfigurePolicy(ApprovalPolicy) > ProcessManager
+  /*TODO: Validate the policy */
+  ProcessManager - Store(ApprovalPolicy) > ConfigurationAccess -> ConfigurationResource
+}
+
+/* For now, this could be done out-of-band using Elsa Studio behind the scenes.
+   In the future, this needs to be integrated into the WebAppClient and the ProcessManager needs to orchestrate the use case. */
+UseCase "Configure Membership Approval Procedure" {
+  SupportClient - Edit(WorkflowDefinition) > WorkflowUtility
+}
+
 UseCase "Apply for Membership - Person to Organization" {
-  WebAppClient - IProcessManager.SubmitRequest(MembershipApplication) > ProcessManager
-  /*TODO: Handle validation as a workflow step */
-  ProcessManager - IEvaluationEngine.ValidateRequest(MembershipApplication) > EvaluationEngine
-  EvaluationEngine - IConfigurationAccess.LoadPolicy() > ConfigurationAccess -> ConfigurationResource
+  /* MembershipApplication is applicable to both volunteer applications (organization level), membership applications (area network), membership applications (regional network)... */
+  WebAppClient - WorkflowInstance IProcessManager.SubmitRequest(MembershipApplication) > ProcessManager
   /* The workflow stores the sequence/flowchart of actions to take in the helper approval process. */
-  ProcessManager - WorkflowInstance IWorkflowsAccess.InstantiateWorkflow(MembershipApplication) > WorkflowsAccess -> WorkflowsResource
-  ProcessManager - WorkflowState IWorkflowsAccess.ExecuteWorkflow(WorkflowInstance) > WorkflowsAccess -> WorkflowsResource
+  /*BLAIR: IMembershipSomething etc. breaks the parser */
+  /* The approval process starts with a membership application. It ends with an approval decision. */
+  ProcessManager - WorkflowInstance IWorkflowUtility.Approve(MembershipApplication) > WorkflowUtility
 
   /*TODO: How do we represent to the user "what is left to do" -- i.e., the full past & future of the workflow?
           What actions are past-due, which ones were exempted, etc.
@@ -339,6 +364,65 @@ UseCase "Apply for Membership - Person to Organization" {
           Part of the steps in the workflow update the UI -- send XAML etc. -- or fire events,
           have clients monitor the events. ---> all async via queues */
 }
+
+DTO WorkflowInstanceId {} /* GUID value type */
+
+DTO WorkflowInstance {
+  WorkflowInstanceId Id
+  WorkflowState State
+}
+
+UseCase "Validate Membership Application" {
+  ProcessManager - IEvaluationEngine.Validate(MembershipApplication) > EvaluationEngine
+  EvaluationEngine - Policy IConfigurationAccess.LoadPolicy() > ConfigurationAccess -> ConfigurationResource
+}
+
+UseCase "Validate Referral Request" {
+  ProcessManager - IEvaluationEngine.Validate(ReferralRequest) > EvaluationEngine
+  EvaluationEngine - Policy IConfigurationAccess.LoadPolicy() > ConfigurationAccess -> ConfigurationResource
+}
+
+UseCase "Evaluate Approval Policy" {
+  /* The workflow can decide, based on the ApprovalResult ('outcome' in Elsa terms), what to do next. */
+  ProcessManager - ApprovalResult IEvaluationEngine.Review(MembershipApplication) > EvaluationEngine
+  EvaluationEngine - Policy IConfigurationAccess.LoadPolicy() > ConfigurationAccess -> ConfigurationResource
+  /* Fancy internal algorithm runs here */
+  EvaluationEngine - IRecordsAccess.Store(ApprovalResult) > RecordsAccess -> RecordsResource
+}
+
+UseCase "Publish Membership Application Approval Request" {
+  ProcessManager - IMembershipEvents.OnApplicationReceived(MembershipApplication) > PubSubUtility
+  /* The PubSubUtility will pass this to its subscribers. Subscribers *also* implement IMembershipEvents */
+}
+
+/* PWCF: Transient subscribers vs. persistent subscribers... */
+/* Subscription management application... -- in domain-informed terms */
+
+UseCase "Configure Membership Application Approval Request Subscription" {
+  SupportClient - IMembershipEventsPublisher.AddMembershipApplicationApprover(ApproverParameters) > PubSubUtility
+}
+
+UseCase "Receive Membership Application Approval Request" {
+  /* The implementation of this will send the email that based on the channel */
+  PubSubUtility - IMembershipEvents.OnApplicationReceived(MembershipApplication) > EmailAccess
+}
+
+/*TODO: How do we notify potential approvers that there is something to approve?
+        We need to post an event... */
+
+/*TODO: This is an example, needs to be refined further */
+UseCase "Approve Membership Application Document" {
+  WebAppClient -> ProcessManager
+  ProcessManager - WorkflowState IWorkflowsAccess.ResumeWorkflow(ResumeParameters) > WorkflowsAccess -> WorkflowsResource
+}
+
+DTO ResumeParameters {
+  WorkflowInstanceId Id /* The specific workflow instance to resume */
+  ActivityId ActivityId /* The activity that was completed by the user/system client. */
+  /*TODO: Need to source-generate the known types for this */
+  T Parameters /* The DTO representing the values to provide */
+}
+
 
 UseCase "Check Application Status" {
   @@@
@@ -595,11 +679,11 @@ StaticAspect "CareTogether V2" {
   /* GraphQL/HTTP API layer */
   ProcessManager CommunicationManager AnalysisManager
   EvaluationEngine MatchingEngine
-  NetworkAccess ConfigurationAccess WorkflowsAccess RecordsAccess
+  NetworkAccess ConfigurationAccess /*WorkflowsAccess*/ RecordsAccess
   /*NOTE: RecordsAccess -- Cosmos DB Graph API & Cosmos DB 'SQL' API, allowing Geode pattern. */
   /*NOTE: Audit logs are an aspect of record-keeping. */
   /*NOTE: Configuration includes the DSL 'procedures' which can be *compiled* into workflows. */
-  NetworkResource ConfigurationResource:f WorkflowsResource RecordsResource 
+  NetworkResource ConfigurationResource:f /*WorkflowsResource*/ RecordsResource 
   /*DocumentsResource:f TODO: Do we incorporate Documents directly into Records? */
   /*FormsResource:a TODO: Do we incorporate Forms directly into Records? */
   /* Notes are part of RecordsResource but stored w/ immutability enabled. */
@@ -608,6 +692,7 @@ StaticAspect "CareTogether V2" {
   LoggingUtility
   PubSubUtility /* Push notifications to WebApp are allowed, as queued calls; can include delivery via SMS, WhatsApp, Telegram, Teams, Slack, etc. */
   /* User will subscribe to pub-sub endpoints; the CommunicationManager will generate channel-specific events in response to domain events */
+  WorkflowUtility
   EmailUtility
 }
 
