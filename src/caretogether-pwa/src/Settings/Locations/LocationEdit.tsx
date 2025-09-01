@@ -100,18 +100,16 @@ export function LocationEdit() {
 
   const [searchParams, setSearchParams] = useSearchParams();
 
-  const urlTab = searchParams.get('tab') as LocationTabId | null;
+  const urlTab = searchParams.get('tab');
 
   useEffect(() => {
-    const matched = tabs.find((tab) => tab.id === urlTab);
-    if (!urlTab || !matched) {
-      const fallback = 'basic';
-      if (urlTab !== fallback) {
-        setSearchParams({ tab: fallback });
-      }
-    } else {
-      setActiveTab(urlTab);
+    const match = tabs.find((tab) => tab.id === urlTab);
+    if (!match) {
+      setSearchParams({ tab: 'basic' });
+      return;
     }
+
+    setActiveTab(urlTab as LocationTabId);
   }, [urlTab, tabs, setSearchParams]);
 
   const dataLoaded = useDataLoaded();
