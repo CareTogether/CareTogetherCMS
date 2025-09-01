@@ -8,7 +8,7 @@ import {
   IconButton,
   Button,
 } from '@mui/material';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useLoadable } from '../../Hooks/useLoadable';
 import { organizationConfigurationQuery } from '../../Model/ConfigurationModel';
 import { ProgressBackdrop } from '../../Shell/ProgressBackdrop';
@@ -29,6 +29,7 @@ import { useFeatureFlagEnabled } from 'posthog-js/react';
 import { useUserIsOrganizationAdministrator } from '../../Model/SessionModel';
 import { useAppNavigate } from '../../Hooks/useAppNavigate';
 import OtherPolicies from './Tabs/OtherPolicies/OtherPolicies';
+import { useSearchParams } from 'react-router-dom';
 
 export function LocationEdit() {
   const { locationId, editingLocationId } = useParams<{
@@ -57,33 +58,38 @@ export function LocationEdit() {
       setIsSidebarCollapsed(false);
     }
   }, [isMobile]);
+  const actionTabEnabled = useFeatureFlagEnabled('actionDefinitionsTab');
+  const approvalTabEnabled = useFeatureFlagEnabled('approvalPoliciesTab');
 
-  const tabs = [
-    {
-      id: 'basic' as const,
-      label: 'Basic Configuration',
-      component: BasicConfiguration,
-      shouldShow: true,
-    },
-    {
-      id: 'actions' as const,
-      label: 'Action Definitions',
-      component: ActionDefinitions,
-      shouldShow: useFeatureFlagEnabled('actionDefinitionsTab'),
-    },
-    {
-      id: 'approvalPolicies' as const,
-      label: 'Approval Policies',
-      component: ApprovalPolicies,
-      shouldShow: useFeatureFlagEnabled('approvalPoliciesTab'),
-    },
-    {
-      id: 'otherPolicies' as const,
-      label: 'Other Policies',
-      component: OtherPolicies,
-      shouldShow: true,
-    },
-  ];
+  const tabs = useMemo(
+    () => [
+      {
+        id: 'basic' as const,
+        label: 'Basic Configuration',
+        component: BasicConfiguration,
+        shouldShow: true,
+      },
+      {
+        id: 'actions' as const,
+        label: 'Action Definitions',
+        component: ActionDefinitions,
+        shouldShow: actionTabEnabled,
+      },
+      {
+        id: 'approvalPolicies' as const,
+        label: 'Approval Policies',
+        component: ApprovalPolicies,
+        shouldShow: approvalTabEnabled,
+      },
+      {
+        id: 'otherPolicies' as const,
+        label: 'Other Policies',
+        component: OtherPolicies,
+        shouldShow: true,
+      },
+    ],
+    [actionTabEnabled, approvalTabEnabled]
+  );
 
   // This result in a type like: 'basic' | 'actions' | 'policies'
   // Depends on `as const` on the tabs const above
@@ -91,6 +97,20 @@ export function LocationEdit() {
 
   // Use the type derived from LOCATION_TABS
   const [activeTab, setActiveTab] = useState<LocationTabId>('basic');
+
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  const urlTab = searchParams.get('tab');
+
+  useEffect(() => {
+    const match = tabs.find((tab) => tab.id === urlTab);
+    if (!match) {
+      setSearchParams({ tab: 'basic' });
+      return;
+    }
+
+    setActiveTab(urlTab as LocationTabId);
+  }, [urlTab, tabs, setSearchParams]);
 
   const dataLoaded = useDataLoaded();
 
@@ -186,7 +206,10 @@ export function LocationEdit() {
               <SettingsTabMenu
                 tabs={[...tabs]}
                 activeTab={activeTab}
-                onTabChange={setActiveTab}
+                onTabChange={(tabId) => {
+                  setActiveTab(tabId);
+                  setSearchParams({ tab: tabId });
+                }}
               />
             </Box>
           )}
