@@ -28,7 +28,7 @@ type PhoneNumberEditorProps = PersonEditorProps & {
   phoneNumber?: PhoneNumber;
 };
 
-type IPhoneNumberWithPreference = IPhoneNumber & {
+type IPhoneNumberWithPreference = Partial<IPhoneNumber> & {
   isPreferred?: boolean;
 };
 

@@ -464,6 +464,9 @@ namespace CareTogether.Api
                 options.DocumentProcessors.Add(
                     new ExcludeODataEndpointsDocumentProcessor()
                 );
+                options.SchemaSettings.SchemaProcessors.Add(
+                    new MarkAsRequiredIfNonNullableSchemaProcessor()
+                );
                 options.PostProcess = document =>
                 {
                     document.Info.Version = "v1";
