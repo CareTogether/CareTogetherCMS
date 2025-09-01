@@ -97,7 +97,7 @@ namespace CareTogether.Resources.Notes
                             Contents = c.DraftNoteContents,
                             LastEditTimestampUtc = timestampUtc,
                             BackdatedTimestampUtc = c.BackdatedTimestampUtc,
-                            AccessLevel = c.AccessLevel
+                            AccessLevel = c.AccessLevel,
                         },
                         ApproveNote c => noteEntry with
                         {
@@ -106,14 +106,16 @@ namespace CareTogether.Resources.Notes
                             ApprovedTimestampUtc = timestampUtc,
                             ApproverId = userId,
                             BackdatedTimestampUtc = c.BackdatedTimestampUtc,
-                            AccessLevel = c.AccessLevel
+                            AccessLevel = c.AccessLevel,
                         },
-                         UpdateNoteAccessLevel c when noteEntry.Status == NoteStatus.Approved => noteEntry with
-                        {
-
-                            AccessLevel = string.IsNullOrWhiteSpace(c.AccessLevel) ? null : c.AccessLevel,
-                            LastEditTimestampUtc = timestampUtc,
-                        },
+                        UpdateNoteAccessLevel c when noteEntry.Status == NoteStatus.Approved =>
+                            noteEntry with
+                            {
+                                AccessLevel = string.IsNullOrWhiteSpace(c.AccessLevel)
+                                    ? null
+                                    : c.AccessLevel,
+                                LastEditTimestampUtc = timestampUtc,
+                            },
                         UpdateNoteAccessLevel _ => throw new InvalidOperationException(
                             "Just approved notes can change access levels"
                         ),

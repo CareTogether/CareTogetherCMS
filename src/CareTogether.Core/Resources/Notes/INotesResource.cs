@@ -54,11 +54,11 @@ namespace CareTogether.Resources.Notes
         string? AccessLevel = null
     ) : NoteCommand(FamilyId, NoteId);
 
-public sealed record UpdateNoteAccessLevel(
-    Guid FamilyId,
-    Guid NoteId,
-    string? AccessLevel = null
-) : NoteCommand(FamilyId, NoteId);
+    public sealed record UpdateNoteAccessLevel(
+        Guid FamilyId,
+        Guid NoteId,
+        string? AccessLevel = null
+    ) : NoteCommand(FamilyId, NoteId);
 
     /// <summary>
     /// The <see cref="INotesResource"/> models the lifecycle of record-keeping notes in CareTogether organizations,
