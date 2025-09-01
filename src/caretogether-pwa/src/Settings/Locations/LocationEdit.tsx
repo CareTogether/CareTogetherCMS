@@ -28,7 +28,7 @@ import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import { useFeatureFlagEnabled } from 'posthog-js/react';
 import { useUserIsOrganizationAdministrator } from '../../Model/SessionModel';
 import { useAppNavigate } from '../../Hooks/useAppNavigate';
-import OtherPolicies from './Tabs/OtherPolicies/OtherPolicies';
+import AccessLevels from './Tabs/AccessLevels/AccessLevels';
 import { useSearchParams } from 'react-router-dom';
 
 export function LocationEdit() {
@@ -82,9 +82,9 @@ export function LocationEdit() {
         shouldShow: approvalTabEnabled,
       },
       {
-        id: 'otherPolicies' as const,
-        label: 'Other Policies',
-        component: OtherPolicies,
+        id: 'accessLevels' as const,
+        label: 'Access Levels',
+        component: AccessLevels,
         shouldShow: true,
       },
     ],
@@ -147,6 +147,13 @@ export function LocationEdit() {
   // Filter available tabs based on feature flags
   const availableTabs = tabs.filter((tab) => tab.shouldShow);
 
+  const basicData = {
+    name: location?.name || '',
+    ethnicities: location.ethnicities || [],
+    adultFamilyRelationships: location.adultFamilyRelationships || [],
+    arrangementReasons: location.arrangementReasons || [],
+  };
+
   return (
     <Stack
       className="ph-unmask"
@@ -204,7 +211,7 @@ export function LocationEdit() {
           {(!isMobile || !isSidebarCollapsed) && (
             <Box sx={{ flex: 1, px: 1 }}>
               <SettingsTabMenu
-                tabs={[...tabs]}
+                tabs={availableTabs}
                 activeTab={activeTab}
                 onTabChange={(tabId) => {
                   setActiveTab(tabId);
@@ -217,22 +224,19 @@ export function LocationEdit() {
 
         <Box flex={1} paddingLeft={4} paddingTop={2}>
           {/* Render the active tab component */}
-          {availableTabs.map(
-            (tab) =>
-              activeTab === tab.id && (
-                <Box key={tab.id}>
-                  <tab.component
-                    data={{
-                      name: location?.name || '',
-                      ethnicities: location.ethnicities || [],
-                      adultFamilyRelationships:
-                        location.adultFamilyRelationships || [],
-                      arrangementReasons: location.arrangementReasons || [],
-                    }}
-                    currentLocationDefinition={location}
-                  />
-                </Box>
-              )
+          {activeTab === 'basic' && (
+            <Box key="basic">
+              <BasicConfiguration
+                data={basicData}
+                currentLocationDefinition={location}
+              />
+            </Box>
+          )}
+
+          {activeTab === 'accessLevels' && (
+            <Box key="accessLevels">
+              <AccessLevels locationConfiguration={location} />
+            </Box>
           )}
         </Box>
       </Box>

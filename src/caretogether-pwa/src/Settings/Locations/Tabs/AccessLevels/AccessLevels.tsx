@@ -12,8 +12,6 @@ import {
   TablePagination,
   TableRow,
 } from '@mui/material';
-import { useRecoilValue } from 'recoil';
-import { organizationConfigurationQuery } from '../../../../Model/ConfigurationModel';
 import { useState } from 'react';
 import SearchIcon from '@mui/icons-material/Search';
 import { useSidePanel } from '../../../../Hooks/useSidePanel';
@@ -22,7 +20,7 @@ import {
   camelCaseToSpaces,
   summarizeList,
 } from '../../../../Utilities/stringUtils';
-import { useParams } from 'react-router-dom';
+import { LocationConfiguration } from '../../../../GeneratedClient';
 
 export type ConfigurationData = {
   name: string;
@@ -39,16 +37,9 @@ export type AvailableOptions = {
   arrangementReasons: string[];
 };
 
-export default function OtherPolicies() {
-  const params = useParams();
-  const locationId = params.locationId || '';
-
-  const organization = useRecoilValue(organizationConfigurationQuery);
-  const location = organization?.locations?.find(
-    (loc) => loc.id === locationId
-  );
-
-  const accessLevels = location?.accessLevels;
+type Props = { locationConfiguration: LocationConfiguration };
+export default function AccessLevels({ locationConfiguration }: Props) {
+  const accessLevels = locationConfiguration?.accessLevels ?? [];
 
   const [searchTerm, setSearchTerm] = useState('');
 
@@ -73,10 +64,6 @@ export default function OtherPolicies() {
 
   const canEdit = true; // Replace with actual permission check if needed
 
-  if (!accessLevels) {
-    return <Typography variant="body2">No Access Levels found.</Typography>;
-  }
-
   const rows = accessLevels.filter(({ name }) =>
     name?.toLowerCase().includes(searchTerm.toLowerCase())
   );
@@ -84,11 +71,12 @@ export default function OtherPolicies() {
     page * rowsPerPage,
     page * rowsPerPage + rowsPerPage
   );
+  const hasRows = rows.length > 0;
 
   return (
     <Box>
       <Typography variant="h6" sx={{ mb: 2 }}>
-        Other Policies
+        Access Levels
       </Typography>
 
       <TextField
@@ -107,56 +95,68 @@ export default function OtherPolicies() {
         onChange={(e) => setSearchTerm(e.target.value)}
       />
 
-      <TableContainer sx={{ mb: 1 }}>
-        <Table>
-          <TableHead>
-            <TableRow>
-              <TableCell>Name</TableCell>
-              <TableCell>Organization Roles</TableCell>
-              <TableCell>Approval Roles</TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {paginatedRows.map(({ id, name, organizationRoles }) => (
-              <TableRow
-                key={name}
-                sx={{ cursor: 'pointer' }}
-                onClick={() => {
-                  setWorkingAccessLevel({
-                    id: id!,
-                    name: name!,
-                    organizationRoles:
-                      organizationRoles?.map((roleName) => ({
-                        title: camelCaseToSpaces(roleName),
-                        value: roleName,
-                      })) || [],
-                  });
-                  openSidePanelEdit();
-                }}
-              >
-                <TableCell>{name}</TableCell>
-                <TableCell>
-                  {organizationRoles
-                    ? summarizeList(organizationRoles.map(camelCaseToSpaces))
-                    : '-'}
-                </TableCell>
-                <TableCell sx={{ fontStyle: 'italic' }}>
-                  Not implemented yet
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </TableContainer>
+      {hasRows ? (
+        <>
+          <TableContainer sx={{ mb: 1 }}>
+            <Table>
+              <TableHead>
+                <TableRow>
+                  <TableCell>Name</TableCell>
+                  <TableCell>Organization Roles</TableCell>
+                  <TableCell>Approval Roles</TableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {paginatedRows.map(({ id, name, organizationRoles }) => (
+                  <TableRow
+                    key={name}
+                    sx={{ cursor: 'pointer' }}
+                    onClick={() => {
+                      setWorkingAccessLevel({
+                        id: id!,
+                        name: name!,
+                        organizationRoles:
+                          organizationRoles?.map((roleName) => ({
+                            title: camelCaseToSpaces(roleName),
+                            value: roleName,
+                          })) || [],
+                      });
+                      openSidePanelEdit();
+                    }}
+                  >
+                    <TableCell>{name}</TableCell>
+                    <TableCell>
+                      {organizationRoles
+                        ? summarizeList(
+                            organizationRoles.map(camelCaseToSpaces)
+                          )
+                        : '-'}
+                    </TableCell>
+                    <TableCell sx={{ fontStyle: 'italic' }}>
+                      Not implemented yet
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </TableContainer>
 
-      <TablePagination
-        component="div"
-        count={rows.length}
-        page={page}
-        onPageChange={(_, newPage) => setPage(newPage)}
-        rowsPerPage={rowsPerPage}
-        rowsPerPageOptions={[]}
-      />
+          <TablePagination
+            component="div"
+            count={rows.length}
+            page={page}
+            onPageChange={(_, newPage) => setPage(newPage)}
+            rowsPerPage={rowsPerPage}
+            rowsPerPageOptions={[]}
+          />
+        </>
+      ) : (
+        <Box sx={{ my: 2 }}>
+          <Typography variant="body2" sx={{ mb: 1 }}>
+            No access levels yet for this location.
+          </Typography>
+        </Box>
+      )}
 
       {canEdit && (
         <>
@@ -170,7 +170,7 @@ export default function OtherPolicies() {
 
           <SidePanelAdd>
             <AddAccessLevel
-              locationConfiguration={location!}
+              locationConfiguration={locationConfiguration}
               onClose={() => {
                 closeSidePanelAdd();
               }}
@@ -179,8 +179,8 @@ export default function OtherPolicies() {
 
           <SidePanelEdit>
             <AddAccessLevel
-              data={workingAccessLevel || undefined}
-              locationConfiguration={location!}
+              data={workingAccessLevel ?? undefined}
+              locationConfiguration={locationConfiguration}
               onClose={() => {
                 closeSidePanelEdit();
               }}
