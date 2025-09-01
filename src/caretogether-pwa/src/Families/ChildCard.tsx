@@ -91,28 +91,31 @@ export function ChildCard({ familyId, personId }: ChildCardProps) {
               >
                 {family.family?.custodialRelationships
                   ?.filter((relationship) => relationship.childId === child.id)
-                  ?.map((relationship) => (
-                    <li key={relationship.personId} style={{ marginTop: 4 }}>
-                      {
-                        family.family?.adults?.filter(
-                          (x) => x.item1?.id === relationship.personId
-                        )[0].item1?.firstName
-                      }
-                      :&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-                      <span style={{ float: 'right' }}>
-                        {relationship.type ===
-                        CustodialRelationshipType.LegalGuardian
-                          ? 'legal guardian'
-                          : relationship.type ===
-                              CustodialRelationshipType.ParentWithCustody
-                            ? 'parent with custody'
+                  ?.map((relationship) => {
+                    const adult =
+                      family.family?.adults?.filter(
+                        (x) => x.item1?.id === relationship.personId
+                      )[0]?.item1?.firstName ?? '(adult not found)';
+
+                    return (
+                      <li key={relationship.personId} style={{ marginTop: 4 }}>
+                        {adult}
+                        :&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                        <span style={{ float: 'right' }}>
+                          {relationship.type ===
+                          CustodialRelationshipType.LegalGuardian
+                            ? 'legal guardian'
                             : relationship.type ===
-                                CustodialRelationshipType.ParentWithCourtAppointedCustody
-                              ? 'parent with court-appointed sole custody'
-                              : null}
-                      </span>
-                    </li>
-                  ))}
+                                CustodialRelationshipType.ParentWithCustody
+                              ? 'parent with custody'
+                              : relationship.type ===
+                                  CustodialRelationshipType.ParentWithCourtAppointedCustody
+                                ? 'parent with court-appointed sole custody'
+                                : null}
+                        </span>
+                      </li>
+                    );
+                  })}
               </ul>
             </Typography>
           </CardContent>

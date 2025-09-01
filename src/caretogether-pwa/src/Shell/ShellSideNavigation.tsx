@@ -141,13 +141,13 @@ function SideNavigationMenu({ open }: SideNavigationMenuProps) {
             permissions(Permission.AccessSupportScreen)) && <Divider />}
 
           {permissions(Permission.AccessSettingsScreen) && (
-            <>
-              <ListItemLink
-                className="ph-unmask"
-                to={`${locationPrefix}/settings`}
-                primary="Settings"
-                icon={<SettingsIcon sx={{ color: '#fff8' }} />}
-                subitems={[
+            <ListItemLink
+              className="ph-unmask"
+              to={`${locationPrefix}/settings`}
+              primary="Settings"
+              icon={<SettingsIcon sx={{ color: '#fff8' }} />}
+              {...(open && {
+                subitems: [
                   {
                     label: 'Roles',
                     isActive: location.pathname.includes('/settings/roles'),
@@ -158,9 +158,9 @@ function SideNavigationMenu({ open }: SideNavigationMenuProps) {
                     isActive: location.pathname.includes('/settings/locations'),
                     onClick: () => appNavigate.settingsLocations(),
                   },
-                ]}
-              />
-            </>
+                ],
+              })}
+            />
           )}
 
           {permissions(Permission.AccessSupportScreen) && (
@@ -236,7 +236,7 @@ export function ShellSideNavigation({ open, width }: ShellSideNavigationProps) {
               marginLeft: 4,
             }}
           >
-            <Stack spacing={5} alignItems="center">
+            <Stack className="ph-unmask" spacing={5} alignItems="center">
               <Feedback />
               <Copyright />
             </Stack>

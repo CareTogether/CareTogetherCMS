@@ -101,14 +101,14 @@ export function LocationEdit() {
   if (!dataLoaded) {
     return (
       <ProgressBackdrop>
-        <p>Loading location configuration...</p>
+        <p className="ph-unmask">Loading location configuration...</p>
       </ProgressBackdrop>
     );
   }
 
   if (!canEdit || !location) {
     return (
-      <Box mt={10} textAlign="center">
+      <Box className="ph-unmask" mt={10} textAlign="center">
         <Typography>
           Oops! You can't edit this Location. It may be restricted or
           unavailable.
@@ -128,7 +128,11 @@ export function LocationEdit() {
   const availableTabs = tabs.filter((tab) => tab.shouldShow);
 
   return (
-    <Stack spacing={0} sx={{ height: '100%', minHeight: '100vh', pt: 2 }}>
+    <Stack
+      className="ph-unmask"
+      spacing={0}
+      sx={{ height: '100%', minHeight: '100vh', pt: 2 }}
+    >
       <Box>
         <Breadcrumbs
           aria-label="breadcrumb"

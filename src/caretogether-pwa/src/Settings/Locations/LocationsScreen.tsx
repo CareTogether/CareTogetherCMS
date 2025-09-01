@@ -10,10 +10,10 @@ export function LocationsScreen() {
   const dataLoaded = useDataLoaded();
   return !dataLoaded ? (
     <ProgressBackdrop>
-      <p>Loading locations...</p>
+      <p className="ph-unmask">Loading locations...</p>
     </ProgressBackdrop>
   ) : (
-    <Box sx={{ paddingTop: 2 }}>
+    <Box className="ph-unmask" sx={{ paddingTop: 2 }}>
       <LocationsSection />
     </Box>
   );

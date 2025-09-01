@@ -154,6 +154,28 @@ namespace CareTogether.Api.Controllers
                         : null,
             };
 
+            var createPersonResult = await directoryResource.ExecutePersonCommandAsync(
+                organizationId,
+                newLocationId,
+                new CreatePerson(
+                    newPerson.Id,
+                    newPerson.FirstName,
+                    newPerson.LastName,
+                    newPerson.Gender,
+                    newPerson.Age,
+                    newPerson.Ethnicity,
+                    newPerson.Addresses,
+                    newPerson.CurrentAddressId,
+                    newPerson.PhoneNumbers,
+                    newPerson.PreferredPhoneNumberId,
+                    newPerson.EmailAddresses,
+                    newPerson.PreferredEmailAddressId,
+                    newPerson.Concerns,
+                    newPerson.Notes
+                ),
+                User.UserId()
+            );
+
             foreach (var addressEntry in newAddresses)
             {
                 await directoryResource.ExecutePersonCommandAsync(
@@ -195,28 +217,6 @@ namespace CareTogether.Api.Controllers
                     User.UserId()
                 );
             }
-
-            var createPersonResult = await directoryResource.ExecutePersonCommandAsync(
-                organizationId,
-                newLocationId,
-                new CreatePerson(
-                    newPerson.Id,
-                    newPerson.FirstName,
-                    newPerson.LastName,
-                    newPerson.Gender,
-                    newPerson.Age,
-                    newPerson.Ethnicity,
-                    newPerson.Addresses,
-                    newPerson.CurrentAddressId,
-                    newPerson.PhoneNumbers,
-                    newPerson.PreferredPhoneNumberId,
-                    newPerson.EmailAddresses,
-                    newPerson.PreferredEmailAddressId,
-                    newPerson.Concerns,
-                    newPerson.Notes
-                ),
-                User.UserId()
-            );
 
             return createPersonResult;
         }
@@ -310,7 +310,7 @@ namespace CareTogether.Api.Controllers
             if (!User.IsInRole(SystemConstants.ORGANIZATION_ADMINISTRATOR))
                 return Forbid();
 
-            if (newLocationConfiguration.Id != Guid.Empty)
+            if (newLocationConfiguration.Id != default)
             {
                 var updatedLocation = await policiesResource.UpsertLocationDefinitionAsync(
                     organizationId,
@@ -332,14 +332,16 @@ namespace CareTogether.Api.Controllers
             if (referenceLocation == null)
                 return BadRequest("Could not find location to copy policies from.");
 
-            var personId = User.PersonId(organizationId, referenceLocation.Id);
+            var referenceLocationId = referenceLocation.Id ?? Guid.Empty;
+
+            var personId = User.PersonId(organizationId, referenceLocationId);
 
             if (personId == null)
                 return BadRequest("User does not have a person ID for the specified location.");
 
             var referenceFamily = await directoryResource.FindPersonFamilyAsync(
                 organizationId,
-                referenceLocation.Id,
+                referenceLocationId,
                 personId.Value
             );
 
@@ -363,31 +365,31 @@ namespace CareTogether.Api.Controllers
 
             var referenceEffectivePolicy = await policiesResource.GetCurrentPolicy(
                 organizationId,
-                referenceLocation.Id
+                referenceLocationId
             );
 
             await policiesResource.UpsertEffectiveLocationPolicyAsync(
                 organizationId,
-                result.LocationConfiguration.Id,
+                result.LocationConfiguration.Id ?? Guid.Empty,
                 referenceEffectivePolicy
             );
 
             var (newFamily, newReferencePersonId) = await CopyOverUserRecords(
                 organizationId,
-                result.LocationConfiguration.Id,
+                result.LocationConfiguration.Id ?? Guid.Empty,
                 referenceFamily,
                 referencePerson.Id
             );
             await approvalsResource.ExecuteVolunteerFamilyCommandAsync(
                 organizationId,
-                result.LocationConfiguration.Id,
+                result.LocationConfiguration.Id ?? Guid.Empty,
                 new ActivateVolunteerFamily(newFamily.Id),
                 User.UserId()
             );
 
             await accountsResource.ExecutePersonAccessCommandAsync(
                 organizationId,
-                result.LocationConfiguration.Id,
+                result.LocationConfiguration.Id ?? Guid.Empty,
                 new ChangePersonRoles(
                     newReferencePersonId,
                     [SystemConstants.ORGANIZATION_ADMINISTRATOR]
@@ -399,7 +401,7 @@ namespace CareTogether.Api.Controllers
                 new LinkPersonToAcccount(
                     User.UserId(),
                     organizationId,
-                    result.LocationConfiguration.Id,
+                    result.LocationConfiguration.Id ?? Guid.Empty,
                     newReferencePersonId
                 ),
                 User.UserId()

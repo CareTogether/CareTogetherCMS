@@ -110,6 +110,7 @@ export function AddLocation({ onClose }: DrawerProps) {
 
   return (
     <Grid
+      className="ph-unmask"
       container
       spacing={2}
       maxWidth={500}
