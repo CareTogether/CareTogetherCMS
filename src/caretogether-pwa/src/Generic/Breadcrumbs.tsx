@@ -1,5 +1,5 @@
 import {
-  Breadcrumbs,
+  Breadcrumbs as MuiBreadcrumbs,
   Link as MuiLink,
   Typography,
 } from '@mui/material';
@@ -18,13 +18,13 @@ export interface StandardBreadcrumbsProps {
   sx?: object;
 }
 
-export function StandardBreadcrumbs({
+export function Breadcrumbs({
   items,
   currentPageLabel,
   sx,
 }: StandardBreadcrumbsProps) {
   return (
-    <Breadcrumbs
+    <MuiBreadcrumbs
       aria-label="breadcrumb"
       separator={<NavigateNextIcon fontSize="small" />}
       sx={sx}
@@ -43,6 +43,6 @@ export function StandardBreadcrumbs({
       ))}
 
       <Typography color="text.primary">{currentPageLabel}</Typography>
-    </Breadcrumbs>
+    </MuiBreadcrumbs>
   );
 }

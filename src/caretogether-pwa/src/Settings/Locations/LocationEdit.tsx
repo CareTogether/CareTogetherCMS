@@ -25,7 +25,7 @@ import { useFeatureFlagEnabled } from 'posthog-js/react';
 import { useUserIsOrganizationAdministrator } from '../../Model/SessionModel';
 import { useAppNavigate } from '../../Hooks/useAppNavigate';
 import OtherPolicies from './Tabs/OtherPolicies/OtherPolicies';
-import { StandardBreadcrumbs } from '../../Generic/StandardBreadcrumbs';
+import { Breadcrumbs } from '../../Generic/Breadcrumbs';
 
 export function LocationEdit() {
   const { locationId, editingLocationId } = useParams<{
@@ -131,7 +131,7 @@ export function LocationEdit() {
       sx={{ height: '100%', minHeight: '100vh', pt: 2 }}
     >
       <Box>
-        <StandardBreadcrumbs
+        <Breadcrumbs
           items={[
             {
               label: 'Settings',

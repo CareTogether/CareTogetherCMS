@@ -16,7 +16,7 @@ import { useSidePanel } from '../../Hooks/useSidePanel';
 import { AddLocation } from './AddLocationSidePanel';
 import { useRecoilValue } from 'recoil';
 import { selectedLocationContextState } from '../../Model/Data';
-import { StandardBreadcrumbs } from '../../Generic/StandardBreadcrumbs';
+import { Breadcrumbs } from '../../Generic/Breadcrumbs';
 
 export function LocationsSection() {
   const configuration = useLoadable(organizationConfigurationQuery);
@@ -33,7 +33,7 @@ export function LocationsSection() {
 
   return (
     <>
-      <StandardBreadcrumbs
+      <Breadcrumbs
         items={[
           {
             label: 'Settings',

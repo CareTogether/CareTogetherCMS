@@ -21,7 +21,7 @@ import { isRoleEditable } from './isRoleEditable';
 import { useRecoilValue } from 'recoil';
 import { selectedLocationContextState } from '../../Model/Data';
 import { camelCaseToSpaces } from '../../Utilities/stringUtils';
-import { StandardBreadcrumbs } from '../../Generic/StandardBreadcrumbs';
+import { Breadcrumbs } from '../../Generic/Breadcrumbs';
 
 export function RolesSection() {
   const configuration = useLoadable(organizationConfigurationQuery);
@@ -45,7 +45,7 @@ export function RolesSection() {
 
   return (
     <>
-      <StandardBreadcrumbs
+      <Breadcrumbs
         items={[
           {
             label: 'Settings',

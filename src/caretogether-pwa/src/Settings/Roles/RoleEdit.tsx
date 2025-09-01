@@ -43,7 +43,7 @@ import { Box } from '@mui/system';
 import { isRoleEditable } from './isRoleEditable';
 import { ContextualPermissionSetRowAutocomplete } from './ContextualPermissionSetRowWithAutocomplete';
 import { useFeatureFlagEnabled } from 'posthog-js/react';
-import { StandardBreadcrumbs } from '../../Generic/StandardBreadcrumbs';
+import { Breadcrumbs } from '../../Generic/Breadcrumbs';
 
 export function RoleEdit({
   roleDefinition,
@@ -143,7 +143,7 @@ export function RoleEdit({
       spacing={0}
     >
       <Box>
-        <StandardBreadcrumbs
+        <Breadcrumbs
           items={[
             {
               label: 'Settings',
