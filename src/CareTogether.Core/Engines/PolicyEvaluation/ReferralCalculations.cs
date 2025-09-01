@@ -10,6 +10,7 @@ namespace CareTogether.Engines.PolicyEvaluation
     internal static class ReferralCalculations
     {
         public static ReferralStatus CalculateReferralStatus(
+            EffectiveLocationPolicy locationPolicy,
             ReferralPolicy referralPolicy,
             ReferralEntry referralEntry,
             DateOnly today
@@ -19,7 +20,10 @@ namespace CareTogether.Engines.PolicyEvaluation
                 .IntakeRequirements_PRE_MIGRATION.Where(requirement =>
                     !SharedCalculations
                         .RequirementMetOrExempted(
-                            requirement.ActionName,
+                            SharedCalculations.GetRequirementNameWithSynonyms(
+                                locationPolicy,
+                                requirement.ActionName
+                            ),
                             policySupersededAt: null,
                             today,
                             completedRequirements: referralEntry.CompletedRequirements,
@@ -46,7 +50,12 @@ namespace CareTogether.Engines.PolicyEvaluation
                         p => p.ArrangementType == arrangement.Value.ArrangementType
                     );
 
-                    return CalculateArrangementStatus(arrangement.Value, arrangementPolicy, today);
+                    return CalculateArrangementStatus(
+                        arrangement.Value,
+                        locationPolicy,
+                        arrangementPolicy,
+                        today
+                    );
                 }
             );
 
@@ -59,11 +68,13 @@ namespace CareTogether.Engines.PolicyEvaluation
 
         internal static ArrangementStatus CalculateArrangementStatus(
             ArrangementEntry arrangement,
+            EffectiveLocationPolicy locationPolicy,
             ArrangementPolicy arrangementPolicy,
             DateOnly today
         )
         {
             var missingSetupRequirements = CalculateMissingSetupRequirements(
+                locationPolicy,
                 arrangementPolicy,
                 arrangement,
                 today
@@ -74,6 +85,7 @@ namespace CareTogether.Engines.PolicyEvaluation
                 today
             );
             var missingCloseoutRequirements = CalculateMissingCloseoutRequirements(
+                locationPolicy,
                 arrangementPolicy,
                 arrangement,
                 today
@@ -149,6 +161,7 @@ namespace CareTogether.Engines.PolicyEvaluation
             : ArrangementPhase.SettingUp;
 
         internal static ImmutableList<MissingArrangementRequirement> CalculateMissingSetupRequirements(
+            EffectiveLocationPolicy locationPolicy,
             ArrangementPolicy arrangementPolicy,
             ArrangementEntry arrangement,
             DateOnly today
@@ -158,7 +171,10 @@ namespace CareTogether.Engines.PolicyEvaluation
                 .RequiredSetupActions_PRE_MIGRATION.Where(requiredAction =>
                     !SharedCalculations
                         .RequirementMetOrExempted(
-                            requiredAction.ActionName,
+                            SharedCalculations.GetRequirementNameWithSynonyms(
+                                locationPolicy,
+                                requiredAction.ActionName
+                            ),
                             policySupersededAt: null,
                             today,
                             completedRequirements: arrangement.CompletedRequirements,
@@ -195,7 +211,10 @@ namespace CareTogether.Engines.PolicyEvaluation
                         .RequiredSetupActionNames_PRE_MIGRATION.Where(requiredAction =>
                             !SharedCalculations
                                 .RequirementMetOrExempted(
-                                    requiredAction.ActionName,
+                                    SharedCalculations.GetRequirementNameWithSynonyms(
+                                        locationPolicy,
+                                        requiredAction.ActionName
+                                    ),
                                     policySupersededAt: null,
                                     today,
                                     completedRequirements: fva.CompletedRequirements,
@@ -234,7 +253,10 @@ namespace CareTogether.Engines.PolicyEvaluation
                         .RequiredSetupActionNames_PRE_MIGRATION.Where(requiredAction =>
                             !SharedCalculations
                                 .RequirementMetOrExempted(
-                                    requiredAction.ActionName,
+                                    SharedCalculations.GetRequirementNameWithSynonyms(
+                                        locationPolicy,
+                                        requiredAction.ActionName
+                                    ),
                                     policySupersededAt: null,
                                     today,
                                     completedRequirements: iva.CompletedRequirements,
@@ -896,6 +918,7 @@ namespace CareTogether.Engines.PolicyEvaluation
         }
 
         internal static ImmutableList<MissingArrangementRequirement> CalculateMissingCloseoutRequirements(
+            EffectiveLocationPolicy locationPolicy,
             ArrangementPolicy arrangementPolicy,
             ArrangementEntry arrangement,
             DateOnly today
@@ -905,7 +928,10 @@ namespace CareTogether.Engines.PolicyEvaluation
                 .RequiredCloseoutActionNames_PRE_MIGRATION.Where(requiredAction =>
                     !SharedCalculations
                         .RequirementMetOrExempted(
-                            requiredAction.ActionName,
+                            SharedCalculations.GetRequirementNameWithSynonyms(
+                                locationPolicy,
+                                requiredAction.ActionName
+                            ),
                             policySupersededAt: null,
                             today,
                             completedRequirements: arrangement.CompletedRequirements,
@@ -942,7 +968,10 @@ namespace CareTogether.Engines.PolicyEvaluation
                         .RequiredCloseoutActionNames_PRE_MIGRATION.Where(requiredAction =>
                             !SharedCalculations
                                 .RequirementMetOrExempted(
-                                    requiredAction.ActionName,
+                                    SharedCalculations.GetRequirementNameWithSynonyms(
+                                        locationPolicy,
+                                        requiredAction.ActionName
+                                    ),
                                     policySupersededAt: null,
                                     today,
                                     completedRequirements: fva.CompletedRequirements,
@@ -981,7 +1010,10 @@ namespace CareTogether.Engines.PolicyEvaluation
                         .RequiredCloseoutActionNames_PRE_MIGRATION.Where(requiredAction =>
                             !SharedCalculations
                                 .RequirementMetOrExempted(
-                                    requiredAction.ActionName,
+                                    SharedCalculations.GetRequirementNameWithSynonyms(
+                                        locationPolicy,
+                                        requiredAction.ActionName
+                                    ),
                                     policySupersededAt: null,
                                     today,
                                     completedRequirements: iva.CompletedRequirements,

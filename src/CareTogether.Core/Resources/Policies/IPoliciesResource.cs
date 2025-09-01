@@ -14,7 +14,7 @@ namespace CareTogether.Resources.Policies
     );
 
     public sealed record LocationConfiguration(
-        Guid Id,
+        Guid? Id,
         string Name,
         ImmutableList<string> Ethnicities,
         ImmutableList<string> AdultFamilyRelationships,
@@ -121,11 +121,12 @@ namespace CareTogether.Resources.Policies
         Uri? InfoLink,
         TimeSpan? Validity,
         string? CanView,
-        string? CanEdit
+        string? CanEdit,
+        ImmutableList<string>? AlternateNames
     );
 
     public sealed record AccessLevel(
-        Guid Id,
+        Guid? Id,
         string Name,
         string[] OrganizationRoles,
         string[] ApprovalRoles
