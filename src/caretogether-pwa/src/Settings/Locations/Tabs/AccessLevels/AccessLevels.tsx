@@ -38,7 +38,7 @@ export type AvailableOptions = {
 };
 
 type Props = { locationConfiguration: LocationConfiguration };
-export default function OtherPolicies({ locationConfiguration }: Props) {
+export default function AccessLevels({ locationConfiguration }: Props) {
   const accessLevels = locationConfiguration?.accessLevels ?? [];
 
   const [searchTerm, setSearchTerm] = useState('');

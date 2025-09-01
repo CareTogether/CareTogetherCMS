@@ -28,7 +28,7 @@ import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import { useFeatureFlagEnabled } from 'posthog-js/react';
 import { useUserIsOrganizationAdministrator } from '../../Model/SessionModel';
 import { useAppNavigate } from '../../Hooks/useAppNavigate';
-import OtherPolicies from './Tabs/OtherPolicies/OtherPolicies';
+import AccessLevels from './Tabs/AccessLevels/AccessLevels';
 import { useSearchParams } from 'react-router-dom';
 
 export function LocationEdit() {
@@ -82,9 +82,9 @@ export function LocationEdit() {
         shouldShow: approvalTabEnabled,
       },
       {
-        id: 'otherPolicies' as const,
+        id: 'accessLevels' as const,
         label: 'Access Levels',
-        component: OtherPolicies,
+        component: AccessLevels,
         shouldShow: true,
       },
     ],
@@ -233,9 +233,9 @@ export function LocationEdit() {
             </Box>
           )}
 
-          {activeTab === 'otherPolicies' && (
-            <Box key="otherPolicies">
-              <OtherPolicies locationConfiguration={location} />
+          {activeTab === 'accessLevels' && (
+            <Box key="accessLevels">
+              <AccessLevels locationConfiguration={location} />
             </Box>
           )}
         </Box>
