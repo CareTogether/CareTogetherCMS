@@ -31,7 +31,7 @@ import {
 } from '../GeneratedClient';
 import { useDirectoryModel } from '../Model/DirectoryModel';
 import WarningIcon from '@mui/icons-material/Warning';
-import { DatePicker } from '@mui/x-date-pickers';
+import { ValidateDatePicker } from '../Generic/Forms/ValidateDatePicker';
 import { useRecoilValue } from 'recoil';
 import {
   adultFamilyRelationshipsData,
@@ -92,7 +92,11 @@ export function CreatePartneringFamilyDialog({
   const relationshipTypes = useRecoilValue(adultFamilyRelationshipsData);
   const ethnicities = useRecoilValue(ethnicitiesData);
 
+  const [dobError, setDobError] = useState(false);
+
   const withBackdrop = useBackdrop();
+
+  const [referralDateError, setReferralDateError] = useState(false);
 
   async function save() {
     await withBackdrop(async () => {
@@ -145,15 +149,19 @@ export function CreatePartneringFamilyDialog({
       </DialogTitle>
       <DialogContent>
         <Grid item xs={12} sx={{ paddingTop: 1 }}>
-          <DatePicker
+          <ValidateDatePicker
             label="When was this referral opened?"
             value={referralOpenedAtLocal}
             disableFuture
-            format="MM/dd/yyyy"
-            onChange={(date: Date | null) =>
-              date && setFields({ ...fields, referralOpenedAtLocal: date })
-            }
-            slotProps={{ textField: { fullWidth: true, required: true } }}
+            minDate={new Date(1900, 0, 1)}
+            onChange={(date) => {
+              if (date) setFields({ ...fields, referralOpenedAtLocal: date });
+            }}
+            onErrorChange={setReferralDateError}
+            textFieldProps={{
+              fullWidth: true,
+              required: true,
+            }}
           />
         </Grid>
         <DialogContentText>
@@ -273,16 +281,16 @@ export function CreatePartneringFamilyDialog({
               </FormControl>
             </Grid>
             <Grid item xs={12} sm={6}>
-              <DatePicker
+              <ValidateDatePicker
                 label="Date of birth"
                 value={dateOfBirth}
                 maxDate={subYears(new Date(), 16)}
-                openTo="year"
-                format="MM/dd/yyyy"
-                onChange={(date: Date | null) =>
-                  date && setFields({ ...fields, dateOfBirth: date })
-                }
-                slotProps={{ textField: { size: 'small', fullWidth: true } }}
+                onChange={(date) => setFields({ ...fields, dateOfBirth: date })}
+                onErrorChange={setDobError}
+                textFieldProps={{
+                  size: 'small',
+                  fullWidth: true,
+                }}
               />
             </Grid>
             <Grid item xs={12} sm={6}>
@@ -457,7 +465,12 @@ export function CreatePartneringFamilyDialog({
         <Button onClick={() => onClose()} color="secondary">
           Cancel
         </Button>
-        <Button onClick={save} variant="contained" color="primary">
+        <Button
+          onClick={save}
+          variant="contained"
+          color="primary"
+          disabled={dobError || referralDateError}
+        >
           Create Family
         </Button>
       </DialogActions>
