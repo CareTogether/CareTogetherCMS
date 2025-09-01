@@ -1,5 +1,6 @@
 import {
   Badge,
+  Box,
   Divider,
   Drawer,
   List,
@@ -16,6 +17,7 @@ import DashboardIcon from '@mui/icons-material/Dashboard';
 import SupportIcon from '@mui/icons-material/Support';
 import { useFeatureFlags } from '../Model/ConfigurationModel';
 import { Copyright } from './Copyright';
+import { Version } from './Version';
 import { useGlobalPermissions } from '../Model/SessionModel';
 import { Permission } from '../GeneratedClient';
 import { selectedLocationContextState } from '../Model/Data';
@@ -236,8 +238,11 @@ export function ShellSideNavigation({ open, width }: ShellSideNavigationProps) {
               marginLeft: 4,
             }}
           >
-            <Stack className="ph-unmask" spacing={5} alignItems="center">
-              <Feedback />
+            <Stack className="ph-unmask" alignItems="center">
+              <Box mb={5}>
+                <Feedback />
+              </Box>
+              <Version />
               <Copyright />
             </Stack>
           </div>
