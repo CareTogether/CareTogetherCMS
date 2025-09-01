@@ -1,5 +1,6 @@
 import {
   Badge,
+  Box,
   Divider,
   Drawer,
   List,
@@ -237,8 +238,10 @@ export function ShellSideNavigation({ open, width }: ShellSideNavigationProps) {
               marginLeft: 4,
             }}
           >
-            <Stack className="ph-unmask" spacing={5} alignItems="center">
-              <Feedback />
+            <Stack className="ph-unmask" alignItems="center">
+              <Box mb={5}>
+                <Feedback />
+              </Box>
               <Version />
               <Copyright />
             </Stack>

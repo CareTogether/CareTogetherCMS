@@ -5,10 +5,10 @@ export function Version() {
   return (
     <Box sx={{ textAlign: 'center' }}>
       <Typography
-        variant="caption"
-        color="#fff6"
+        variant="body2"
+        color="#fff8"
         align="center"
-        sx={{ lineHeight: '1.5em', fontSize: '0.7rem' }}
+        sx={{ lineHeight: '1.5em' }}
         className="ph-unmask"
       >
         Version: {getAppVersion()}
