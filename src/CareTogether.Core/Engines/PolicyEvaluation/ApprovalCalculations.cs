@@ -11,7 +11,7 @@ namespace CareTogether.Engines.PolicyEvaluation
     internal static class ApprovalCalculations
     {
         public static FamilyApprovalStatus CalculateCombinedFamilyApprovals(
-            VolunteerPolicy volunteerPolicy,
+            EffectiveLocationPolicy locationPolicy,
             Family family,
             ImmutableList<Resources.CompletedRequirementInfo> completedFamilyRequirements,
             ImmutableList<Resources.ExemptedRequirementInfo> exemptedFamilyRequirements,
@@ -27,6 +27,8 @@ namespace CareTogether.Engines.PolicyEvaluation
             ImmutableDictionary<Guid, ImmutableList<RoleRemoval>> individualRoleRemovals
         )
         {
+            var volunteerPolicy = locationPolicy.VolunteerPolicy;
+            
             var allAdultsIndividualApprovalStatus = family
                 .Adults.Select(adultFamilyEntry =>
                 {
@@ -42,6 +44,7 @@ namespace CareTogether.Engines.PolicyEvaluation
 
                     var individualApprovalStatus =
                         IndividualApprovalCalculations.CalculateIndividualApprovalStatus(
+                            locationPolicy,
                             volunteerPolicy.VolunteerRoles,
                             completedRequirements,
                             exemptedRequirements,
@@ -54,6 +57,7 @@ namespace CareTogether.Engines.PolicyEvaluation
 
             var familyRoleApprovalStatuses =
                 FamilyApprovalCalculations.CalculateAllFamilyRoleApprovalStatuses(
+                    locationPolicy,
                     volunteerPolicy.VolunteerFamilyRoles,
                     family,
                     completedFamilyRequirements,

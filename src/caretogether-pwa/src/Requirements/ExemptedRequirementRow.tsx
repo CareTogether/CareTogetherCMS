@@ -70,10 +70,12 @@ export function ExemptedRequirementRow({
     (a) => a.arrangementType === arrangement?.arrangementType
   );
   const allMonitoringRequirements =
-    arrangementPolicy?.requiredMonitoringActions?.concat(
+    arrangementPolicy?.requiredMonitoringActions_PRE_MIGRATION?.concat(
       arrangementPolicy.arrangementFunctions?.flatMap(
         (f) =>
-          f.variants?.flatMap((v) => v.requiredMonitoringActions || []) || []
+          f.variants?.flatMap(
+            (v) => v.requiredMonitoringActions_PRE_MIGRATION || []
+          ) || []
       ) || []
     );
   const isArrangementMonitoringRequirement = allMonitoringRequirements?.some(

@@ -27,10 +27,13 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
             new ArrangementPolicy(
                 string.Empty,
                 ChildInvolvement.ChildHousing,
-                ImmutableList<ArrangementFunction>.Empty,
-                ImmutableList<RequirementDefinition>.Empty,
+                [],
+                [],
+                [],
+                [],
+                [],
                 values,
-                ImmutableList<RequirementDefinition>.Empty
+                []
             );
 
         [TestMethod]

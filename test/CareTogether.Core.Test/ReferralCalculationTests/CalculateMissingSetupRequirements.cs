@@ -11,26 +11,55 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
     [TestClass]
     public class CalculateMissingSetupRequirements
     {
-        private static readonly RequirementDefinition RequirementA = new RequirementDefinition("A", true);
-        private static readonly RequirementDefinition RequirementB = new RequirementDefinition("B", true);
-        private static readonly RequirementDefinition RequirementC = new RequirementDefinition("C", true);
+        private static readonly EffectiveLocationPolicy TestLocationPolicy =
+            new EffectiveLocationPolicy(
+                ImmutableDictionary<string, ActionRequirement>.Empty,
+                ImmutableList<CustomField>.Empty,
+                new ReferralPolicy(
+                    ImmutableList<string>.Empty,
+                    ImmutableList<CustomField>.Empty,
+                    ImmutableList<ArrangementPolicy>.Empty,
+                    ImmutableList<FunctionPolicy>.Empty
+                ),
+                new VolunteerPolicy(
+                    ImmutableDictionary<string, VolunteerRolePolicy>.Empty,
+                    ImmutableDictionary<string, VolunteerFamilyRolePolicy>.Empty
+                )
+            );
+
+        private static readonly RequirementDefinition RequirementA = new RequirementDefinition(
+            "A",
+            true
+        );
+        private static readonly RequirementDefinition RequirementB = new RequirementDefinition(
+            "B",
+            true
+        );
+        private static readonly RequirementDefinition RequirementC = new RequirementDefinition(
+            "C",
+            true
+        );
 
         public static ArrangementPolicy SetupRequirements(params (string, bool)[] values) =>
             new ArrangementPolicy(
-                string.Empty,
-                ChildInvolvement.ChildHousing,
-                ImmutableList<ArrangementFunction>.Empty,
-                values
+                ArrangementType: string.Empty,
+                ChildInvolvement: ChildInvolvement.ChildHousing,
+                ArrangementFunctions: [],
+                RequiredSetupActionNames: [],
+                RequiredMonitoringActions: [],
+                RequiredCloseoutActionNames: [],
+                RequiredSetupActions: values
                     .Select(value => new RequirementDefinition(value.Item1, value.Item2))
                     .ToImmutableList(),
-                ImmutableList<MonitoringRequirement>.Empty,
-                ImmutableList<RequirementDefinition>.Empty
+                RequiredMonitoringActionsNew: [],
+                RequiredCloseoutActions: []
             );
 
         [TestMethod]
         public void TestNoRequirementsCompleted()
         {
             var result = ReferralCalculations.CalculateMissingSetupRequirements(
+                TestLocationPolicy,
                 SetupRequirements(("A", true), ("B", true), ("C", true)),
                 new Engines.PolicyEvaluation.ArrangementEntry(
                     "",
@@ -59,6 +88,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
         public void TestPartialRequirementsCompleted()
         {
             var result = ReferralCalculations.CalculateMissingSetupRequirements(
+                TestLocationPolicy,
                 SetupRequirements(("A", true), ("B", true), ("C", true)),
                 new Engines.PolicyEvaluation.ArrangementEntry(
                     "",
@@ -85,6 +115,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
         public void TestAllRequirementsCompleted()
         {
             var result = ReferralCalculations.CalculateMissingSetupRequirements(
+                TestLocationPolicy,
                 SetupRequirements(("A", true), ("B", true), ("C", true)),
                 new Engines.PolicyEvaluation.ArrangementEntry(
                     "",

@@ -115,7 +115,7 @@ export function CreatePartneringFamilyDialog({
           firstName,
           lastName,
           gender,
-          age,
+          age?.toJSON(),
           optional(ethnicity),
           isInHousehold,
           relationshipToFamily,

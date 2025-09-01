@@ -12,14 +12,35 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
     [TestClass]
     public class CalculateMissingCloseoutRequirements
     {
-        public static ArrangementPolicy CloseoutRequirements(params (string ActionName, bool IsRequired)[] values) =>
+        private static readonly EffectiveLocationPolicy TestLocationPolicy =
+            new EffectiveLocationPolicy(
+                ImmutableDictionary<string, ActionRequirement>.Empty,
+                ImmutableList<CustomField>.Empty,
+                new ReferralPolicy(
+                    ImmutableList<string>.Empty,
+                    ImmutableList<CustomField>.Empty,
+                    ImmutableList<ArrangementPolicy>.Empty,
+                    ImmutableList<FunctionPolicy>.Empty
+                ),
+                new VolunteerPolicy(
+                    ImmutableDictionary<string, VolunteerRolePolicy>.Empty,
+                    ImmutableDictionary<string, VolunteerFamilyRolePolicy>.Empty
+                )
+            );
+
+        public static ArrangementPolicy CloseoutRequirements(
+            params (string ActionName, bool IsRequired)[] values
+        ) =>
             new ArrangementPolicy(
-                string.Empty,
-                ChildInvolvement.ChildHousing,
-                ImmutableList<ArrangementFunction>.Empty,
-                ImmutableList<RequirementDefinition>.Empty,
-                ImmutableList<MonitoringRequirement>.Empty,
-                values
+                ArrangementType: string.Empty,
+                ChildInvolvement: ChildInvolvement.ChildHousing,
+                ArrangementFunctions: [],
+                RequiredSetupActionNames: [],
+                RequiredMonitoringActions: [],
+                RequiredCloseoutActionNames: [],
+                RequiredSetupActions: [],
+                RequiredMonitoringActionsNew: [],
+                RequiredCloseoutActions: values
                     .Select(value => new RequirementDefinition(value.ActionName, value.IsRequired))
                     .ToImmutableList()
             );
@@ -28,6 +49,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
         public void TestNoRequirementsCompleted()
         {
             var result = ReferralCalculations.CalculateMissingCloseoutRequirements(
+                TestLocationPolicy,
                 CloseoutRequirements(("A", true), ("B", true), ("C", true)),
                 new Engines.PolicyEvaluation.ArrangementEntry(
                     "",
@@ -46,9 +68,33 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
 
             AssertEx.SequenceIs(
                 result,
-                new MissingArrangementRequirement(null, null, null, null, new RequirementDefinition("A", true), null, null),
-                new MissingArrangementRequirement(null, null, null, null, new RequirementDefinition("B", true), null, null),
-                new MissingArrangementRequirement(null, null, null, null, new RequirementDefinition("C", true), null, null)
+                new MissingArrangementRequirement(
+                    null,
+                    null,
+                    null,
+                    null,
+                    new RequirementDefinition("A", true),
+                    null,
+                    null
+                ),
+                new MissingArrangementRequirement(
+                    null,
+                    null,
+                    null,
+                    null,
+                    new RequirementDefinition("B", true),
+                    null,
+                    null
+                ),
+                new MissingArrangementRequirement(
+                    null,
+                    null,
+                    null,
+                    null,
+                    new RequirementDefinition("C", true),
+                    null,
+                    null
+                )
             );
         }
 
@@ -56,6 +102,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
         public void TestPartialRequirementsCompleted()
         {
             var result = ReferralCalculations.CalculateMissingCloseoutRequirements(
+                TestLocationPolicy,
                 CloseoutRequirements(("A", true), ("B", true), ("C", true)),
                 new Engines.PolicyEvaluation.ArrangementEntry(
                     "",
@@ -74,7 +121,15 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
 
             AssertEx.SequenceIs(
                 result,
-                new MissingArrangementRequirement(null, null, null, null, new RequirementDefinition("C", true), null, null)
+                new MissingArrangementRequirement(
+                    null,
+                    null,
+                    null,
+                    null,
+                    new RequirementDefinition("C", true),
+                    null,
+                    null
+                )
             );
         }
 
@@ -82,6 +137,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
         public void TestAllRequirementsCompleted()
         {
             var result = ReferralCalculations.CalculateMissingCloseoutRequirements(
+                TestLocationPolicy,
                 CloseoutRequirements(("A", true), ("B", true), ("C", true)),
                 new Engines.PolicyEvaluation.ArrangementEntry(
                     "",

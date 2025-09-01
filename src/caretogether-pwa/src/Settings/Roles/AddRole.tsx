@@ -50,6 +50,7 @@ export function AddRole({ onClose }: AddEditRoleDrawerProps) {
 
   return (
     <Grid
+      className="ph-unmask"
       container
       spacing={2}
       maxWidth={500}
