@@ -287,15 +287,18 @@ namespace CareTogether.Engines.Authorization
                 locationId
             );
 
-             if (command is UpdateNoteAccessLevel)
-    {
-        if (!hasGeneralPermission) return false;
-        if (noteEntry.Status != NoteStatus.Approved) return false;
+            if (command is UpdateNoteAccessLevel)
+            {
+                if (!hasGeneralPermission)
+                    return false;
+                if (noteEntry.Status != NoteStatus.Approved)
+                    return false;
 
-        if (!allowedPerAccessLevel) return false;
+                if (!allowedPerAccessLevel)
+                    return false;
 
-        return true;
-    }
+                return true;
+            }
 
             if (hasGeneralPermission && allowedPerAccessLevel)
             {
