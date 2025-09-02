@@ -1,10 +1,8 @@
 import {
   Stack,
   Typography,
-  Breadcrumbs,
   useTheme,
   useMediaQuery,
-  Link as MuiLink,
   IconButton,
   Button,
 } from '@mui/material';
@@ -16,8 +14,6 @@ import useScreenTitle from '../../Shell/ShellScreenTitle';
 import { useRecoilValue } from 'recoil';
 import { selectedLocationContextState, useDataLoaded } from '../../Model/Data';
 import { useParams } from 'react-router-dom';
-import { Link } from 'react-router-dom';
-import NavigateNextIcon from '@mui/icons-material/NavigateNext';
 import { Box } from '@mui/system';
 import BasicConfiguration from './Tabs/BasicConfiguration';
 import ActionDefinitions from './Tabs/ActionDefinitions';
@@ -29,6 +25,7 @@ import { useFeatureFlagEnabled } from 'posthog-js/react';
 import { useUserIsOrganizationAdministrator } from '../../Model/SessionModel';
 import { useAppNavigate } from '../../Hooks/useAppNavigate';
 import AccessLevels from './Tabs/AccessLevels/AccessLevels';
+import { Breadcrumbs } from '../../Generic/Breadcrumbs';
 import { useSearchParams } from 'react-router-dom';
 
 export function LocationEdit() {
@@ -162,27 +159,18 @@ export function LocationEdit() {
     >
       <Box>
         <Breadcrumbs
-          aria-label="breadcrumb"
-          separator={<NavigateNextIcon fontSize="small" />}
-        >
-          <MuiLink
-            component={Link}
-            to={`/org/${organizationId}/${locationId}/settings`}
-            sx={{ textDecoration: 'none', color: 'text.primary' }}
-          >
-            Settings
-          </MuiLink>
-
-          <MuiLink
-            component={Link}
-            to={`/org/${organizationId}/${locationId}/settings/locations`}
-            sx={{ textDecoration: 'none', color: 'text.primary' }}
-          >
-            Locations
-          </MuiLink>
-
-          <Typography color="text.primary">{location.name}</Typography>
-        </Breadcrumbs>
+          items={[
+            {
+              label: 'Settings',
+              to: `/org/${organizationId}/${locationId}/settings`,
+            },
+            {
+              label: 'Locations',
+              to: `/org/${organizationId}/${locationId}/settings/locations`,
+            },
+          ]}
+          currentPageLabel={location.name || ''}
+        />
       </Box>
 
       <Box display="flex" flex={1} minHeight={0} sx={{ overflow: 'auto' }}>
