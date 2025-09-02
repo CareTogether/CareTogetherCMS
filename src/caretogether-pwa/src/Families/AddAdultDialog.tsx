@@ -266,6 +266,8 @@ export function AddAdultDialog({ onClose }: AddAdultDialogProps) {
                 value={dateOfBirth}
                 onChange={(date) => setFields({ ...fields, dateOfBirth: date })}
                 maxDate={subYears(new Date(), 18)}
+                openTo="year"
+                disableFuture
                 onErrorChange={setDobError}
                 textFieldProps={{
                   size: 'small',

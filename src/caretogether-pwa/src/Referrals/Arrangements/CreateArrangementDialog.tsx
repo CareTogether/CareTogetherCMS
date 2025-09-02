@@ -115,7 +115,7 @@ export function CreateArrangementDialog({
                 onChange={(date) =>
                   setFields({ ...fields, requestedAtLocal: date })
                 }
-                maxDate={new Date()}
+                disableFuture
                 onErrorChange={setDobError}
                 textFieldProps={{
                   size: 'small',

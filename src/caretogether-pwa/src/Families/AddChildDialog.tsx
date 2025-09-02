@@ -271,7 +271,9 @@ export function AddChildDialog({ onClose }: AddChildDialogProps) {
                 label="Date of birth"
                 value={dateOfBirth}
                 onChange={(date) => setFields({ ...fields, dateOfBirth: date })}
-                maxDate={subYears(new Date(), 18)}
+                minDate={subYears(new Date(), 18)}
+                disableFuture
+                openTo="year"
                 onErrorChange={setDobError}
                 textFieldProps={{
                   size: 'small',

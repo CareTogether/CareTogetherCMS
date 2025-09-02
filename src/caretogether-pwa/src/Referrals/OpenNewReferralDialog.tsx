@@ -39,7 +39,6 @@ export function OpenNewReferralDialog({
               label="When was this referral opened?"
               value={openedAtLocal}
               disableFuture
-              minDate={new Date(1900, 0, 1)}
               onChange={(date) => {
                 if (date) setFields({ ...fields, openedAtLocal: date });
               }}

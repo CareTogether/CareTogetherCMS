@@ -41,7 +41,6 @@ export function ValidateDatePicker<TDate extends Date>({
       value={value}
       onChange={onChange}
       label={label}
-      disableFuture
       minDate={minDate}
       format="MM/dd/yyyy"
       slotProps={{
