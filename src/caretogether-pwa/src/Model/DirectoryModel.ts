@@ -813,23 +813,16 @@ export function useDirectoryModel() {
       return command;
     }
   );
-  const sendUpdateNoteAccessLevel = useNoteCommandCallback(
+  const updateNoteAccessLevel = useNoteCommandCallback(
     async (familyId: string, noteId: string, accessLevel?: string | null) => {
-      const command = new UpdateNoteAccessLevel({ familyId, noteId });
-      command.accessLevel = accessLevel ?? undefined;
+      const command = commandFactory(UpdateNoteAccessLevel, {
+        familyId,
+        noteId,
+        accessLevel: accessLevel ?? undefined,
+      });
       return command;
     }
   );
-
-  const updateNoteAccessLevel = async (
-    familyId: string,
-    noteId: string,
-    accessLevelName: string | undefined
-  ) => {
-    const normalized =
-      accessLevelName === 'Everyone' ? undefined : accessLevelName;
-    await sendUpdateNoteAccessLevel(familyId, noteId, normalized);
-  };
 
   return {
     undoCreateFamily,
