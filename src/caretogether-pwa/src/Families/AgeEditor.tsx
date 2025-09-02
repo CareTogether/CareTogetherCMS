@@ -45,6 +45,8 @@ export function AgeEditor({ familyId, person }: PersonEditorProps) {
               label="Date of birth"
               value={editor.value ?? null}
               onChange={(date) => editor.setValue(date)}
+              openTo="year"
+              disableFuture
               onErrorChange={setDobError}
               textFieldProps={{
                 size: 'small',

@@ -456,6 +456,7 @@ export function MissingRequirementDialog({
               <ValidateDatePicker
                 label="When was this requirement completed?"
                 value={completedAtLocal}
+                disableFuture
                 maxDate={new Date()}
                 onChange={(date) => setCompletedAtLocal(date)}
                 onErrorChange={setCompletedAtError}
@@ -465,7 +466,7 @@ export function MissingRequirementDialog({
               <ValidateDatePicker
                 label="When was this requirement completed?"
                 value={completedAtLocal}
-                maxDate={new Date()}
+                disableFuture
                 onChange={(date) => setCompletedAtLocal(date)}
                 onErrorChange={setCompletedAtError}
                 textFieldProps={{ fullWidth: true, required: true }}

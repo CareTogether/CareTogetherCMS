@@ -60,7 +60,6 @@ export function ResetFamilyRoleDialog({
               label="Effective Through (optional - leave blank to use the current date)"
               value={effectiveThrough}
               disableFuture
-              minDate={new Date(1900, 0, 1)}
               format="M/d/yyyy"
               onChange={(date) =>
                 setFields({ ...fields, effectiveThrough: date })

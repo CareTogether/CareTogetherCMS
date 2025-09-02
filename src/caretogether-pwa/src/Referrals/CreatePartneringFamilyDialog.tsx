@@ -153,7 +153,6 @@ export function CreatePartneringFamilyDialog({
             label="When was this referral opened?"
             value={referralOpenedAtLocal}
             disableFuture
-            minDate={new Date(1900, 0, 1)}
             onChange={(date) => {
               if (date) setFields({ ...fields, referralOpenedAtLocal: date });
             }}
@@ -285,6 +284,7 @@ export function CreatePartneringFamilyDialog({
                 label="Date of birth"
                 value={dateOfBirth}
                 maxDate={subYears(new Date(), 16)}
+                openTo="year"
                 onChange={(date) => setFields({ ...fields, dateOfBirth: date })}
                 onErrorChange={setDobError}
                 textFieldProps={{

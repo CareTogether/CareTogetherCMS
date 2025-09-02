@@ -263,8 +263,8 @@ export function CreateVolunteerFamilyDialog({
               <ValidateDatePicker
                 label="Date of birth"
                 value={dateOfBirth}
-                minDate={new Date(1900, 0, 1)}
                 maxDate={subYears(new Date(), 18)}
+                openTo="year"
                 onChange={(date) => setFields({ ...fields, dateOfBirth: date })}
                 onErrorChange={setDobError}
                 textFieldProps={{
