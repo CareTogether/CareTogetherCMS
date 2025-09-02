@@ -10,14 +10,13 @@ import {
   FormControlLabel,
   Radio,
 } from '@mui/material';
-import { UpdateDialog } from '../Generic/UpdateDialog';
-import { Note, NoteStatus } from '../GeneratedClient';
-import { useDirectoryModel } from '../Model/DirectoryModel';
 import { useRecoilValue } from 'recoil';
-import { locationConfigurationQuery } from '../Model/ConfigurationModel';
-import { PersonName } from '../Families/PersonName';
-import { useUserLookup } from '../Model/DirectoryModel';
 import { format } from 'date-fns';
+import { PersonName } from '../../Families/PersonName';
+import { Note, NoteStatus } from '../../GeneratedClient';
+import { UpdateDialog } from '../../Generic/UpdateDialog';
+import { locationConfigurationQuery } from '../../Model/ConfigurationModel';
+import { useDirectoryModel, useUserLookup } from '../../Model/DirectoryModel';
 
 interface EditNoteAccessLevelDialogProps {
   familyId: string;
@@ -25,7 +24,7 @@ interface EditNoteAccessLevelDialogProps {
   onClose: (updatedAccessLevel?: string) => void;
 }
 
-export function EditNoteAccessLevelDialog({
+export function AccessLevelDialog({
   familyId,
   note,
   onClose,
