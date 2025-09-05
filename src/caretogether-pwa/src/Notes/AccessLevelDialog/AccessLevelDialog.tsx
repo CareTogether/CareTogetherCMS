@@ -52,20 +52,24 @@ export function AccessLevelDialog({
     setSaving(true);
     const normalized = accessLevel === 'Everyone' ? undefined : accessLevel;
 
-    if (note.status === NoteStatus.Draft) {
-      await directoryModel.editDraftNote(
-        familyId,
-        note.id!,
-        note.contents ?? '',
-        note.backdatedTimestampUtc,
-        normalized
-      );
-    } else {
-      await directoryModel.updateNoteAccessLevel(
-        familyId,
-        note.id!,
-        normalized ?? ''
-      );
+    try {
+      if (note.status === NoteStatus.Draft) {
+        await directoryModel.editDraftNote(
+          familyId,
+          note.id!,
+          note.contents ?? '',
+          note.backdatedTimestampUtc,
+          normalized
+        );
+      } else {
+        await directoryModel.updateNoteAccessLevel(
+          familyId,
+          note.id!,
+          normalized ?? ''
+        );
+      }
+    } catch (error) {
+      setSaving(false);
     }
 
     setSaving(false);

@@ -2178,6 +2178,7 @@ export enum Permission {
     ViewAllNotes = 183,
     AddEditOwnDraftNotes = 184,
     DiscardOwnDraftNotes = 185,
+    UpdateOthersNoteAccessLevel = 186,
     ViewApprovalStatus = 200,
     EditApprovalRequirementCompletion = 201,
     EditApprovalRequirementExemption = 202,
