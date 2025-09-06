@@ -1624,6 +1624,7 @@
           "ViewAllNotes",
           "AddEditOwnDraftNotes",
           "DiscardOwnDraftNotes",
+          "UpdateOthersNoteAccessLevel",
           "ViewApprovalStatus",
           "EditApprovalRequirementCompletion",
           "EditApprovalRequirementExemption",
@@ -1694,6 +1695,7 @@
           183,
           184,
           185,
+          186,
           200,
           201,
           202,
@@ -7003,7 +7005,8 @@
             "ApproveNote": "#/components/schemas/ApproveNote",
             "CreateDraftNote": "#/components/schemas/CreateDraftNote",
             "DiscardDraftNote": "#/components/schemas/DiscardDraftNote",
-            "EditDraftNote": "#/components/schemas/EditDraftNote"
+            "EditDraftNote": "#/components/schemas/EditDraftNote",
+            "UpdateNoteAccessLevel": "#/components/schemas/UpdateNoteAccessLevel"
           }
         },
         "x-abstract": true,
@@ -7110,6 +7113,23 @@
                 "format": "date-time",
                 "nullable": true
               },
+              "accessLevel": {
+                "type": "string",
+                "nullable": true
+              }
+            }
+          }
+        ]
+      },
+      "UpdateNoteAccessLevel": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/NoteCommand"
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
               "accessLevel": {
                 "type": "string",
                 "nullable": true

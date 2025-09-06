@@ -128,11 +128,26 @@ namespace CareTogether.TestData
         static readonly Guid guidB = Id('b');
         static readonly Guid guidC = Id('c');
         static readonly Guid guidD = Id('d');
+
         static readonly Guid adminId = Guid.Parse("2b87864a-63e3-4406-bcbc-c0068a13ac05");
+
         static readonly Guid volunteerId = Guid.Parse("e3aaef77-0e97-47a6-b788-a67c237c781e");
         static readonly Guid volunteerId2 = Guid.Parse("ca662f2b-270a-4a8b-baa7-c109eadbb133");
-        static readonly Guid noteId1 = Id("note1");
-        static readonly Guid noteId2 = Id("note2");
+
+        static readonly Guid noteId0 = Id('0');
+        static readonly Guid noteId1 = Id('1');
+        static readonly Guid noteId2 = Id('2');
+        static readonly Guid noteId3 = Id('3');
+        static readonly Guid noteId4 = Id('4');
+        static readonly Guid noteId5 = Id('5');
+        static readonly Guid noteId6 = Id('6');
+        static readonly Guid noteId7 = Id('7');
+        static readonly Guid noteId8 = Id('8');
+        static readonly Guid noteId9 = Id('9');
+        static readonly Guid noteIdA = Id('a');
+        static readonly Guid noteIdB = Id('b');
+        static readonly Guid noteIdC = Id('c');
+        static readonly Guid noteIdD = Id('d');
 
         // Fisher family
         static readonly Guid michaelFisherGuid = Guid.Parse("f6020665-6f2e-4c93-8673-8770f35f1609");
@@ -1949,21 +1964,16 @@ namespace CareTogether.TestData
                 guid1,
                 guid2,
                 new NoteCommandExecuted(
-                    volunteerId2,
-                    ReferralsMonth(14, 10, 10, 10),
-                    new CreateDraftNote(guid1, guidB, null, null, AccessLevel: "Staff Only")
-                ),
-                new NoteCommandExecuted(
                     volunteerId,
                     ReferralsMonth(14, 10, 10, 10),
-                    new CreateDraftNote(guid1, guid0, null, null, AccessLevel: "Staff Only")
+                    new CreateDraftNote(guid1, noteId0, null, null, AccessLevel: "Staff Only")
                 ),
                 new NoteCommandExecuted(
                     adminId,
                     ReferralsMonth(14, 11, 10, 10),
                     new ApproveNote(
                         guid1,
-                        guid0,
+                        noteId0,
                         "The kids were in awe of my carpet bag. They were such sweethearts, though I do wish to state, for the record, that they are given entirely too much sugar with their medicine.",
                         null,
                         AccessLevel: "Staff Only"
@@ -1972,24 +1982,24 @@ namespace CareTogether.TestData
                 new NoteCommandExecuted(
                     volunteerId,
                     ReferralsMonth(15, 8, 33, 34),
-                    new CreateDraftNote(guid1, guid4, null, null, AccessLevel: "Staff Only")
+                    new CreateDraftNote(guid1, noteId4, null, null, AccessLevel: "Staff Only")
                 ),
                 new NoteCommandExecuted(
                     adminId,
                     ReferralsMonth(15, 8, 33, 34),
-                    new ApproveNote(guid1, guid4, "Babysitting", null, AccessLevel: "Staff Only")
+                    new ApproveNote(guid1, noteId4, "Babysitting", null, AccessLevel: "Staff Only")
                 ),
                 new NoteCommandExecuted(
                     volunteerId,
                     ReferralsMonth(15, 20, 40, 45),
-                    new CreateDraftNote(guid1, guid5, null, null, AccessLevel: "Staff Only")
+                    new CreateDraftNote(guid1, noteId5, null, null, AccessLevel: "Staff Only")
                 ),
                 new NoteCommandExecuted(
                     adminId,
                     ReferralsMonth(15, 20, 40, 45),
                     new ApproveNote(
                         guid1,
-                        guid5,
+                        noteId5,
                         "Dropped off with host parents after ☕ and 🍰",
                         null,
                         AccessLevel: "Staff Only"
@@ -1998,14 +2008,14 @@ namespace CareTogether.TestData
                 new NoteCommandExecuted(
                     volunteerId,
                     ReferralsMonth(22, 16, 30, 35),
-                    new CreateDraftNote(guid1, guid6, null, null, AccessLevel: "Staff Only")
+                    new CreateDraftNote(guid1, noteId6, null, null, AccessLevel: "Staff Only")
                 ),
                 new NoteCommandExecuted(
                     adminId,
                     ReferralsMonth(22, 16, 30, 35),
                     new ApproveNote(
                         guid1,
-                        guid6,
+                        noteId6,
                         "Weekend with parents, met at McDonald's near mom",
                         null,
                         AccessLevel: "Staff Only"
@@ -2014,19 +2024,19 @@ namespace CareTogether.TestData
                 new NoteCommandExecuted(
                     volunteerId,
                     ReferralsMonth(22, 18, 0, 0),
-                    new CreateDraftNote(guid1, guid1, null, null, AccessLevel: "Staff Only")
+                    new CreateDraftNote(guid1, noteId1, null, null, AccessLevel: "Staff Only")
                 ),
                 new NoteCommandExecuted(
                     volunteerId,
                     ReferralsMonth(22, 19, 30, 0),
-                    new EditDraftNote(guid1, guid1, null, null, AccessLevel: "Staff Only")
+                    new EditDraftNote(guid1, noteId1, null, null, AccessLevel: "Staff Only")
                 ),
                 new NoteCommandExecuted(
                     adminId,
                     ReferralsMonth(22, 19, 45, 0),
                     new ApproveNote(
                         guid1,
-                        guid1,
+                        noteId1,
                         "Eric and Ben liked the Play Place and didn't want to go home.",
                         null,
                         AccessLevel: "Staff Only"
@@ -2035,59 +2045,59 @@ namespace CareTogether.TestData
                 new NoteCommandExecuted(
                     volunteerId,
                     ReferralsMonth(24, 8, 30, 35),
-                    new CreateDraftNote(guid1, guid7, null, null)
+                    new CreateDraftNote(guid1, noteId7, null, null)
                 ),
                 new NoteCommandExecuted(
                     adminId,
                     ReferralsMonth(24, 8, 30, 35),
-                    new ApproveNote(guid1, guid7, "Mom dropped off on way to work", null)
+                    new ApproveNote(guid1, noteId7, "Mom dropped off on way to work", null)
                 ),
                 new NoteCommandExecuted(
                     volunteerId,
                     ReferralsMonth(24, 8, 45, 0),
-                    new CreateDraftNote(guid1, guid2, null, null)
+                    new CreateDraftNote(guid1, noteId2, null, null)
                 ),
                 new NoteCommandExecuted(
                     volunteerId,
                     ReferralsMonth(24, 8, 50, 0),
-                    new DiscardDraftNote(guid1, guid2)
+                    new DiscardDraftNote(guid1, noteId2)
                 ),
                 new NoteCommandExecuted(
                     volunteerId,
                     ReferralsMonth(24, 8, 55, 0),
-                    new CreateDraftNote(guid1, guid3, null, null)
+                    new CreateDraftNote(guid1, noteId3, null, null)
                 ),
                 new NoteCommandExecuted(
                     volunteerId,
                     ReferralsMonth(24, 8, 57, 0),
-                    new EditDraftNote(guid1, guid3, null, null)
+                    new EditDraftNote(guid1, noteId3, null, null)
                 ),
                 new NoteCommandExecuted(
                     volunteerId,
                     ReferralsMonth(28, 18, 18, 18),
-                    new CreateDraftNote(guid1, guid8, null, null)
+                    new CreateDraftNote(guid1, noteId8, null, null)
                 ),
                 new NoteCommandExecuted(
                     adminId,
                     ReferralsMonth(28, 18, 18, 18),
-                    new ApproveNote(guid1, guid8, "Mom met us and picked him up at DQ", null)
+                    new ApproveNote(guid1, noteId8, "Mom met us and picked him up at DQ", null)
                 ),
                 new NoteCommandExecuted(
                     adminId,
                     ReferralsMonth(28, 10, 0, 0),
-                    new CreateDraftNote(guid1, guidA, null, null)
+                    new CreateDraftNote(guid1, noteIdA, null, null)
                 ),
                 new NoteCommandExecuted(
                     adminId,
                     ApprovalsMonth(10, 9, 30, 0),
-                    new CreateDraftNote(guid4, guid9, null, null)
+                    new CreateDraftNote(guid4, noteId9, null, null)
                 ),
                 new NoteCommandExecuted(
                     adminId,
                     ApprovalsMonth(10, 9, 32, 0),
                     new ApproveNote(
                         guid4,
-                        guid9,
+                        noteId9,
                         "I'm a little star-struck... Emily is *amazing*!!",
                         null
                     )
@@ -2095,28 +2105,33 @@ namespace CareTogether.TestData
                 new NoteCommandExecuted(
                     volunteerId2,
                     ApprovalsMonth(28, 9, 30, 0),
-                    new CreateDraftNote(guid1, noteId1, null, null)
+                    new CreateDraftNote(guid1, noteIdB, null, null)
                 ),
                 new NoteCommandExecuted(
                     adminId,
                     ApprovalsMonth(28, 9, 32, 0),
-                    new ApproveNote(guid1, noteId1, "Approved note from another volunteer", null)
+                    new ApproveNote(guid1, noteIdB, "Approved note from another volunteer", null)
                 ),
                 new NoteCommandExecuted(
                     volunteerId2,
                     ReferralsMonth(28, 11, 10, 10),
-                    new CreateDraftNote(guid1, noteId2, null, null, AccessLevel: "Staff Only")
+                    new CreateDraftNote(guid1, noteIdC, null, null, AccessLevel: "Staff Only")
                 ),
                 new NoteCommandExecuted(
                     adminId,
                     ReferralsMonth(28, 11, 15, 10),
                     new ApproveNote(
                         guid1,
-                        noteId2,
+                        noteIdC,
                         "Another note for testing the access level",
                         null,
                         AccessLevel: "Staff Only"
                     )
+                ),
+                new NoteCommandExecuted(
+                    volunteerId2,
+                    ReferralsMonth(28, 19, 0, 0),
+                    new CreateDraftNote(guid1, noteIdD, null, null, AccessLevel: "Staff Only")
                 )
             );
         }
@@ -2233,8 +2248,12 @@ namespace CareTogether.TestData
                 guidB.ToString(),
                 "Note by another volunteer"
             );
-            await draftNotesStore.UpsertAsync(guid1, guid2, noteId1.ToString(), "draft content");
-            await draftNotesStore.UpsertAsync(guid1, guid2, noteId2.ToString(), "draft");
+            await draftNotesStore.UpsertAsync(
+                guid1,
+                guid2,
+                noteIdD.ToString(),
+                "A draft note that was created with Staff Only access level"
+            );
         }
 
         public static async Task PopulateConfigurations(

@@ -2178,6 +2178,7 @@ export enum Permission {
     ViewAllNotes = 183,
     AddEditOwnDraftNotes = 184,
     DiscardOwnDraftNotes = 185,
+    UpdateOthersNoteAccessLevel = 186,
     ViewApprovalStatus = 200,
     EditApprovalRequirementCompletion = 201,
     EditApprovalRequirementExemption = 202,
@@ -11364,6 +11365,11 @@ export abstract class NoteCommand implements INoteCommand {
             result.init(data);
             return result;
         }
+        if (data["discriminator"] === "UpdateNoteAccessLevel") {
+            let result = new UpdateNoteAccessLevel();
+            result.init(data);
+            return result;
+        }
         throw new Error("The abstract class 'NoteCommand' cannot be instantiated.");
     }
 
@@ -11532,6 +11538,40 @@ export class EditDraftNote extends NoteCommand implements IEditDraftNote {
 export interface IEditDraftNote extends INoteCommand {
     draftNoteContents?: string | undefined;
     backdatedTimestampUtc?: Date | undefined;
+    accessLevel?: string | undefined;
+}
+
+export class UpdateNoteAccessLevel extends NoteCommand implements IUpdateNoteAccessLevel {
+    accessLevel?: string | undefined;
+
+    constructor(data?: IUpdateNoteAccessLevel) {
+        super(data);
+        this._discriminator = "UpdateNoteAccessLevel";
+    }
+
+    init(_data?: any) {
+        super.init(_data);
+        if (_data) {
+            this.accessLevel = _data["accessLevel"];
+        }
+    }
+
+    static fromJS(data: any): UpdateNoteAccessLevel {
+        data = typeof data === 'object' ? data : {};
+        let result = new UpdateNoteAccessLevel();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["accessLevel"] = this.accessLevel;
+        super.toJSON(data);
+        return data;
+    }
+}
+
+export interface IUpdateNoteAccessLevel extends INoteCommand {
     accessLevel?: string | undefined;
 }
 

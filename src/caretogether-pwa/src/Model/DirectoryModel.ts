@@ -51,6 +51,7 @@ import {
   CommunityRecordsCommand,
   ConvertChildToAdult,
   UndoCreateFamily,
+  UpdateNoteAccessLevel,
 } from '../GeneratedClient';
 import { api } from '../Api/Api';
 import {
@@ -812,6 +813,16 @@ export function useDirectoryModel() {
       return command;
     }
   );
+  const updateNoteAccessLevel = useNoteCommandCallback(
+    async (familyId: string, noteId: string, accessLevel?: string | null) => {
+      const command = commandFactory(UpdateNoteAccessLevel, {
+        familyId,
+        noteId,
+        accessLevel: accessLevel ?? undefined,
+      });
+      return command;
+    }
+  );
 
   return {
     undoCreateFamily,
@@ -844,5 +855,6 @@ export function useDirectoryModel() {
     editDraftNote,
     discardDraftNote,
     approveNote,
+    updateNoteAccessLevel,
   };
 }
