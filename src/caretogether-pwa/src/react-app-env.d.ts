@@ -9,3 +9,5 @@ declare namespace NodeJS {
     REACT_APP_AUTH_SCOPES: string;
   }
 }
+
+declare const __APP_VERSION__: string;

@@ -1,11 +1,11 @@
 import { Grid } from '@mui/material';
-import { DatePicker } from '@mui/x-date-pickers';
 import { useState } from 'react';
 import { useParams } from 'react-router';
 import { Arrangement, Person } from '../../GeneratedClient';
 import { usePersonLookup } from '../../Model/DirectoryModel';
 import { useV1CasesModel } from '../../Model/V1CasesModel';
 import { UpdateDialog } from '../../Generic/UpdateDialog';
+import { ValidateDatePicker } from '../../Generic/Forms/ValidateDatePicker';
 
 interface CancelArrangementDialogProps {
   v1CaseId: string;
@@ -34,6 +34,8 @@ export function CancelArrangementDialog({
   });
   const { cancelledAtLocal } = fields;
 
+  const [dobError, setDobError] = useState(false);
+
   async function save() {
     await v1CasesModel.cancelArrangement(
       familyId,
@@ -48,24 +50,22 @@ export function CancelArrangementDialog({
       title={`Do you want to cancel setting up this ${arrangement.arrangementType} arrangement for ${person.firstName} ${person.lastName}?`}
       onClose={onClose}
       onSave={save}
-      enableSave={() => cancelledAtLocal != null}
+      enableSave={() => cancelledAtLocal != null && !dobError}
     >
       <Grid container spacing={0}>
         <Grid item xs={12}>
-          <DatePicker
+          <ValidateDatePicker
             label="When was this arrangement cancelled?"
             value={cancelledAtLocal}
-            disableFuture
-            format="M/d/yyyy"
-            onChange={(date: Date | null) =>
-              date && setFields({ ...fields, cancelledAtLocal: date })
+            onChange={(date) =>
+              setFields({ ...fields, cancelledAtLocal: date })
             }
-            slotProps={{
-              textField: {
-                fullWidth: true,
-                required: true,
-                sx: { marginTop: 1 },
-              },
+            disableFuture
+            onErrorChange={setDobError}
+            textFieldProps={{
+              fullWidth: true,
+              required: true,
+              sx: { marginTop: 1 },
             }}
           />
         </Grid>

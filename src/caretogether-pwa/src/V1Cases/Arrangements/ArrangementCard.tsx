@@ -35,7 +35,7 @@ export function ArrangementCard({
   );
 
   return (
-    <Card variant="outlined">
+    <Card variant="outlined" onClick={() => console.log(arrangement)}>
       <ArrangementPhaseSummary
         phase={arrangement.phase!}
         requestedAtUtc={arrangement.requestedAtUtc!}

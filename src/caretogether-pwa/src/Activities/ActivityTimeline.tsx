@@ -22,8 +22,9 @@ import PersonPinCircleIcon from '@mui/icons-material/PersonPinCircle';
 import EditIcon from '@mui/icons-material/Edit';
 import { usePersonLookup, useUserLookup } from '../Model/DirectoryModel';
 import { PersonName } from '../Families/PersonName';
-import { Box, Stack, Typography } from '@mui/material';
+import { Box, Stack, Typography, Link } from '@mui/material';
 import { NoteCard } from '../Notes/NoteCard';
+import { useAccessLevelDialog } from '../Notes/AccessLevelDialog/useAccessLevelDialog';
 
 type ActivityTimelineProps = {
   family: CombinedFamilyInfo;
@@ -140,6 +141,10 @@ export function ActivityTimeline({
   const onlyActivitiesWithNotes = activitiesWithEmbeddedNotes.filter((item) =>
     Boolean(item.note)
   );
+
+  const { noteAccessLevelDialog, open } = useAccessLevelDialog({
+    familyId: family.family.id,
+  });
 
   return (
     <>
@@ -341,13 +346,28 @@ export function ActivityTimeline({
               )}
 
               <Typography>
-                Note visibility: {note?.accessLevel || 'Everyone'}
+                Visible to{' '}
+                {note ? (
+                  <Link
+                    component="button"
+                    type="button"
+                    underline="hover"
+                    onClick={() => {
+                      open(note);
+                    }}
+                  >
+                    {note.accessLevel ?? 'Everyone'}
+                  </Link>
+                ) : (
+                  'Everyone'
+                )}
               </Typography>
-
               {note && <NoteCard familyId={family.family!.id!} note={note} />}
             </TimelineContent>
           </TimelineItem>
         ))}
+
+        {noteAccessLevelDialog}
       </Timeline>
     </>
   );

@@ -456,10 +456,8 @@ export function FamilyScreen() {
             </Grid>
             <Grid item md={8}>
               {permissions(Permission.ViewFamilyCustomFields) &&
-                (
-                  family.family!.completedCustomFields ||
-                  ([] as Array<CompletedCustomFieldInfo | string>)
-                )
+                Array<CompletedCustomFieldInfo | string>()
+                  .concat(family.family!.completedCustomFields)
                   .concat(family.missingCustomFields || [])
                   .sort((a, b) =>
                     (a instanceof CompletedCustomFieldInfo

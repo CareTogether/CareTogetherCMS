@@ -13,7 +13,7 @@ import { useVolunteersModel } from '../Model/VolunteersModel';
 import { UpdateDialog } from '../Generic/UpdateDialog';
 import { useRecoilValue } from 'recoil';
 import { policyData } from '../Model/ConfigurationModel';
-import { DatePicker } from '@mui/x-date-pickers';
+import { ValidateDatePicker } from '../Generic/Forms/ValidateDatePicker';
 
 interface RemoveIndividualRoleDialogProps {
   volunteerFamilyId: string;
@@ -38,6 +38,8 @@ export function RemoveIndividualRoleDialog({
   const { reason, additionalComments, effectiveSince, effectiveThrough } =
     fields;
 
+  const [dateError, setDateError] = useState(false);
+
   const policy = useRecoilValue(policyData);
   const isFamilyRole =
     policy.volunteerPolicy?.volunteerFamilyRoles?.[role] != null;
@@ -59,7 +61,7 @@ export function RemoveIndividualRoleDialog({
       title={`Remove ${role} role for ${person.firstName} ${person.lastName}`}
       onClose={onClose}
       onSave={save}
-      enableSave={() => additionalComments !== ''}
+      enableSave={() => additionalComments !== '' && !dateError}
     >
       <form noValidate autoComplete="off">
         <Grid container spacing={2}>
@@ -120,15 +122,18 @@ export function RemoveIndividualRoleDialog({
             />
           </Grid>
           <Grid item xs={12}>
-            <DatePicker
+            <ValidateDatePicker
               label="Effective Since (optional - leave blank to use the current date)"
-              value={effectiveSince || null}
+              value={effectiveSince}
               disableFuture
               format="M/d/yyyy"
-              onChange={(date: Date | null) =>
+              onChange={(date) =>
                 setFields({ ...fields, effectiveSince: date })
               }
-              slotProps={{ textField: { fullWidth: true } }}
+              onErrorChange={setDateError}
+              textFieldProps={{
+                fullWidth: true,
+              }}
             />
           </Grid>
         </Grid>

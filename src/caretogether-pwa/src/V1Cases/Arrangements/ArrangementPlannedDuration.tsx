@@ -87,6 +87,7 @@ export function ArrangementPlannedDuration({
 
   return (
     <Grid
+      className="ph-unmask"
       container
       spacing={0}
       mt={6}

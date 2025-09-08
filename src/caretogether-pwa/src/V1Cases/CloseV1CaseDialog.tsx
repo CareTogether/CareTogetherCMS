@@ -9,7 +9,7 @@ import {
 } from '@mui/material';
 import { ReferralCloseReason as V1CaseCloseReason } from '../GeneratedClient';
 import { UpdateDialog } from '../Generic/UpdateDialog';
-import { DatePicker } from '@mui/x-date-pickers';
+import { ValidateDatePicker } from '../Generic/Forms/ValidateDatePicker';
 import { useV1CasesModel } from '../Model/V1CasesModel';
 
 interface CloseV1CaseDialogProps {
@@ -28,6 +28,9 @@ export function CloseV1CaseDialog({
     reason: null as V1CaseCloseReason | null,
     closedAtLocal: null as Date | null,
   });
+
+  const [dobError, setDobError] = useState(false);
+
   const { reason, closedAtLocal } = fields;
 
   async function save() {
@@ -44,7 +47,7 @@ export function CloseV1CaseDialog({
       title={`Why is this Case being closed?`}
       onClose={onClose}
       onSave={save}
-      enableSave={() => reason != null && closedAtLocal != null}
+      enableSave={() => reason != null && closedAtLocal != null && !dobError}
     >
       <form noValidate autoComplete="off">
         <Grid container spacing={2}>
@@ -94,14 +97,16 @@ export function CloseV1CaseDialog({
             </FormControl>
           </Grid>
           <Grid item xs={12}>
-            <DatePicker
+            <ValidateDatePicker
               label="When was this Case closed?"
               value={closedAtLocal}
+              onChange={(date) => setFields({ ...fields, closedAtLocal: date })}
+              onErrorChange={setDobError}
               disableFuture
-              format="MM/dd/yyyy"
-              onChange={(date: Date | null) =>
-                date && setFields({ ...fields, closedAtLocal: date })
-              }
+              textFieldProps={{
+                fullWidth: true,
+                required: true,
+              }}
             />
           </Grid>
         </Grid>

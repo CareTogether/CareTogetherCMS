@@ -26,6 +26,7 @@ export default function ErrorBackdrop() {
       onClick={() => setErrorInfo(null)}
     >
       <div
+        className="ph-unmask"
         style={{
           backgroundColor: '#fff',
           padding: 20,

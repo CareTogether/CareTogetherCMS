@@ -221,93 +221,247 @@ namespace CareTogether.Engines.Authorization
             NoteCommand command
         )
         {
-            var permissions = await userAccessCalculation.AuthorizeUserAccessAsync(
+            var userPermissions = await userAccessCalculation.AuthorizeUserAccessAsync(
                 organizationId,
                 locationId,
                 user,
                 new FamilyAuthorizationContext(command.FamilyId)
             );
 
-            // General means permissions without the 'own' qualifier.
-            var hasGeneralPermission = permissions.Contains(
-                command switch
-                {
-                    CreateDraftNote => Permission.AddEditDraftNotes,
-                    EditDraftNote => Permission.AddEditDraftNotes,
-                    DiscardDraftNote => Permission.DiscardDraftNotes,
-                    ApproveNote => Permission.ApproveNotes,
-                    _ => throw new NotImplementedException(
-                        $"The command type '{command.GetType().FullName}' has not been implemented."
-                    ),
-                }
-            );
-
-            var hasPermissionForOwnNotes = permissions.Contains(
-                command switch
-                {
-                    CreateDraftNote => Permission.AddEditOwnDraftNotes,
-                    EditDraftNote => Permission.AddEditOwnDraftNotes,
-                    DiscardDraftNote => Permission.DiscardOwnDraftNotes,
-                    ApproveNote => Permission.ApproveNotes,
-                    _ => throw new NotImplementedException(
-                        $"The command type '{command.GetType().FullName}' has not been implemented."
-                    ),
-                }
-            );
-
-            if (!hasGeneralPermission && !hasPermissionForOwnNotes)
-            {
-                return false; // No permissions to edit notes at all.
-            }
-
-            // If the command is to create a draft note, we don't need to check the access level,
-            // or if the noteEntry belongs to the user, since it's a new note.
-            if (command is CreateDraftNote)
-            {
-                return true;
-            }
-
-            var familyNotes = await notesResource.ListFamilyNotesAsync(
+            var noteEntry = await GetNoteEntryAsync(
                 organizationId,
                 locationId,
-                command.FamilyId
+                command.FamilyId,
+                command.NoteId
             );
 
-            var noteEntry = familyNotes.FirstOrDefault(note => note.Id == command.NoteId);
-
-            if (noteEntry == null)
-                return false;
+            var noteBelongsToUser = noteEntry?.AuthorId == user.UserId();
 
             var allowedPerAccessLevel = await CheckAccessLevel(
-                noteEntry.AccessLevel,
+                noteEntry?.AccessLevel,
                 user,
                 organizationId,
                 locationId
             );
 
-            if (hasGeneralPermission && allowedPerAccessLevel)
+            var hasPermission = command switch
             {
-                // If the user has general permission to edit notes, and the note has an access level set,
-                // and user has a role included in that access level, then they can edit the note.
-                return true;
-            }
-
-            if (!hasPermissionForOwnNotes)
-            {
-                return false;
-            }
-
-            // If the user has permission to edit their own notes, check if the note belongs to them.
-            var noteBelongsToUser = command switch
-            {
-                EditDraftNote c => noteEntry?.AuthorId == user.UserId(),
-                DiscardDraftNote c => noteEntry?.AuthorId == user.UserId(),
+                CreateDraftNote => CheckCreateDraftNotePermission(
+                    noteEntry,
+                    noteBelongsToUser,
+                    userPermissions,
+                    allowedPerAccessLevel
+                ),
+                EditDraftNote => CheckEditDraftNotePermission(
+                    noteEntry,
+                    noteBelongsToUser,
+                    userPermissions,
+                    allowedPerAccessLevel
+                ),
+                DiscardDraftNote => CheckDiscardDraftNotePermission(
+                    noteEntry,
+                    noteBelongsToUser,
+                    userPermissions,
+                    allowedPerAccessLevel
+                ),
+                ApproveNote => CheckApproveNotePermission(
+                    noteEntry,
+                    noteBelongsToUser,
+                    userPermissions,
+                    allowedPerAccessLevel
+                ),
+                UpdateNoteAccessLevel => CheckUpdateNoteAccessLevelPermission(
+                    noteEntry,
+                    noteBelongsToUser,
+                    userPermissions,
+                    allowedPerAccessLevel
+                ),
                 _ => throw new NotImplementedException(
                     $"The command type '{command.GetType().FullName}' has not been implemented."
                 ),
             };
 
-            return noteBelongsToUser;
+            if (!hasPermission.Item1)
+            {
+                System.Diagnostics.Debug.WriteLine(
+                    $"Note command validation failed: {hasPermission.Item2}"
+                );
+                return false;
+            }
+
+            return true;
+        }
+
+        private (bool, string) CheckIfNoteExists(NoteEntry? noteEntry)
+        {
+            if (noteEntry == null)
+            {
+                return (false, "Note does not exist.");
+            }
+
+            return (true, string.Empty);
+        }
+
+        private (bool, string) CheckCreateDraftNotePermission(
+            NoteEntry? noteEntry,
+            bool noteBelongsToUser,
+            ImmutableList<Permission> userPermissions,
+            bool allowedPerAccessLevel
+        )
+        {
+            if (noteEntry != null)
+            {
+                return (
+                    false,
+                    "Cannot create a draft note when a note with the same ID already exists."
+                );
+            }
+
+            var hasPermission =
+                userPermissions.Contains(Permission.AddEditDraftNotes)
+                || userPermissions.Contains(Permission.AddEditOwnDraftNotes);
+
+            if (!hasPermission)
+            {
+                return (false, "User does not have permission to create draft notes.");
+            }
+
+            return (true, string.Empty);
+        }
+
+        private (bool, string) CheckEditDraftNotePermission(
+            NoteEntry? noteEntry,
+            bool noteBelongsToUser,
+            ImmutableList<Permission> userPermissions,
+            bool allowedPerAccessLevel
+        )
+        {
+            var noteExists = CheckIfNoteExists(noteEntry);
+            if (!noteExists.Item1)
+            {
+                return noteExists;
+            }
+
+            if (noteEntry?.Status != NoteStatus.Draft)
+            {
+                return (false, "Cannot edit a note that is not in Draft status.");
+            }
+
+            var hasPermission =
+                (userPermissions.Contains(Permission.AddEditDraftNotes) && allowedPerAccessLevel)
+                || (userPermissions.Contains(Permission.AddEditOwnDraftNotes) && noteBelongsToUser);
+
+            if (!hasPermission)
+            {
+                return (false, "User does not have permission to edit notes.");
+            }
+
+            return (true, string.Empty);
+        }
+
+        private (bool, string) CheckDiscardDraftNotePermission(
+            NoteEntry? noteEntry,
+            bool noteBelongsToUser,
+            ImmutableList<Permission> userPermissions,
+            bool allowedPerAccessLevel
+        )
+        {
+            var noteExists = CheckIfNoteExists(noteEntry);
+            if (!noteExists.Item1)
+            {
+                return noteExists;
+            }
+
+            if (noteEntry?.Status != NoteStatus.Draft)
+            {
+                return (false, "Cannot discard a note that is not in Draft status.");
+            }
+
+            var hasPermission =
+                (userPermissions.Contains(Permission.DiscardDraftNotes) && allowedPerAccessLevel)
+                || (userPermissions.Contains(Permission.DiscardOwnDraftNotes) && noteBelongsToUser);
+
+            if (!hasPermission)
+            {
+                return (false, "User does not have permission to discard notes.");
+            }
+
+            return (true, string.Empty);
+        }
+
+        private (bool, string) CheckApproveNotePermission(
+            NoteEntry? noteEntry,
+            bool noteBelongsToUser,
+            ImmutableList<Permission> userPermissions,
+            bool allowedPerAccessLevel
+        )
+        {
+            var noteExists = CheckIfNoteExists(noteEntry);
+            if (!noteExists.Item1)
+            {
+                return noteExists;
+            }
+
+            if (noteEntry?.Status != NoteStatus.Draft)
+            {
+                return (false, "Cannot approve a note that is not in Draft status.");
+            }
+
+            var hasPermission = userPermissions.Contains(Permission.ApproveNotes);
+
+            if (!hasPermission)
+            {
+                return (false, "User does not have permission to approve notes.");
+            }
+
+            return (true, string.Empty);
+        }
+
+        private (bool, string) CheckUpdateNoteAccessLevelPermission(
+            NoteEntry? noteEntry,
+            bool noteBelongsToUser,
+            ImmutableList<Permission> userPermissions,
+            bool allowedPerAccessLevel
+        )
+        {
+            var noteExists = CheckIfNoteExists(noteEntry);
+            if (!noteExists.Item1)
+            {
+                return noteExists;
+            }
+
+            if (noteEntry?.Status != NoteStatus.Approved)
+            {
+                return (false, "Cannot update the access level of a note that is not Approved.");
+            }
+
+            var hasPermission = (
+                userPermissions.Contains(Permission.UpdateOthersNoteAccessLevel)
+                || (userPermissions.Contains(Permission.AddEditOwnDraftNotes) && noteBelongsToUser)
+            );
+
+            if (!hasPermission)
+            {
+                return (false, "User does not have permission to update the note access level.");
+            }
+
+            return (true, string.Empty);
+        }
+
+        private async Task<NoteEntry?> GetNoteEntryAsync(
+            Guid organizationId,
+            Guid locationId,
+            Guid familyId,
+            Guid noteId
+        )
+        {
+            var familyNotes = await notesResource.ListFamilyNotesAsync(
+                organizationId,
+                locationId,
+                familyId
+            );
+
+            return familyNotes.FirstOrDefault(note => note.Id == noteId);
         }
 
         private async Task<bool> CheckAccessLevel(
@@ -677,7 +831,7 @@ namespace CareTogether.Engines.Authorization
                     : ImmutableList<Resources.ExemptedRequirementInfo>.Empty,
                 MissingRequirements = contextPermissions.Contains(Permission.ViewReferralProgress)
                     ? referral.MissingRequirements
-                    : ImmutableList<string>.Empty,
+                    : ImmutableList<RequirementDefinition>.Empty,
                 CloseReason = contextPermissions.Contains(Permission.ViewReferralComments)
                     ? referral.CloseReason
                     : null,

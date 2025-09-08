@@ -11,8 +11,6 @@ import {
   Button,
   Menu,
   Typography,
-  Breadcrumbs,
-  Link as MuiLink,
 } from '@mui/material';
 import { useState } from 'react';
 import {
@@ -41,12 +39,11 @@ import { useRecoilValue, useSetRecoilState } from 'recoil';
 import { ContextualPermissionSetRow } from './ContextualPermissionSetRow';
 import { api } from '../../Api/Api';
 import { selectedLocationContextState } from '../../Model/Data';
-import { Link } from 'react-router-dom';
-import NavigateNextIcon from '@mui/icons-material/NavigateNext';
 import { Box } from '@mui/system';
 import { isRoleEditable } from './isRoleEditable';
 import { ContextualPermissionSetRowAutocomplete } from './ContextualPermissionSetRowWithAutocomplete';
 import { useFeatureFlagEnabled } from 'posthog-js/react';
+import { Breadcrumbs } from '../../Generic/Breadcrumbs';
 
 export function RoleEdit({
   roleDefinition,
@@ -57,9 +54,7 @@ export function RoleEdit({
 
   const storeEdits = useSetRecoilState(organizationConfigurationEdited);
 
-  const { organizationId, locationId } = useRecoilValue(
-    selectedLocationContextState
-  );
+  const { organizationId } = useRecoilValue(selectedLocationContextState);
 
   const [workingRole, setWorkingRole] =
     useState<RoleDefinition>(roleDefinition);
@@ -141,32 +136,28 @@ export function RoleEdit({
   );
 
   return (
-    <Stack paddingY={2} height="calc(100vh - 48px)" spacing={0}>
+    <Stack
+      className="ph-unmask"
+      paddingY={2}
+      height="calc(100vh - 48px)"
+      spacing={0}
+    >
       <Box>
         <Breadcrumbs
-          aria-label="breadcrumb"
-          separator={<NavigateNextIcon fontSize="small" />}
-        >
-          <MuiLink
-            component={Link}
-            to={`/org/${organizationId}/${locationId}/settings`}
-            sx={{ textDecoration: 'none', color: 'text.primary' }}
-          >
-            Settings
-          </MuiLink>
-
-          <MuiLink
-            component={Link}
-            to={`/org/${organizationId}/${locationId}/settings/roles`}
-            sx={{ textDecoration: 'none', color: 'text.primary' }}
-          >
-            Roles
-          </MuiLink>
-
-          <Typography color="text.primary">
-            {roleDefinition.roleName}
-          </Typography>
-        </Breadcrumbs>
+          items={[
+            {
+              label: 'Settings',
+              to: '../..',
+              relative: 'path',
+            },
+            {
+              label: 'Roles',
+              to: '..',
+              relative: 'path',
+            },
+          ]}
+          currentPageLabel={roleDefinition.roleName || ''}
+        />
 
         <Typography sx={{ marginY: 2 }} variant="h2">
           Editing {roleDefinition.roleName} role
