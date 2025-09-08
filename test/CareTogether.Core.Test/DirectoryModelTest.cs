@@ -464,7 +464,8 @@ namespace CareTogether.Core.Test
                 ImmutableList<UploadedDocumentInfo>.Empty,
                 ImmutableList<Guid>.Empty,
                 ImmutableList<CompletedCustomFieldInfo>.Empty,
-                ImmutableList<Activity>.Empty
+                ImmutableList<Activity>.Empty,
+                false
             );
             Assert.AreEqual(expectedFamily.Id, actualFamily.Id);
             Assert.AreEqual(expectedFamily.Adults.Count, actualFamily.Adults.Count);

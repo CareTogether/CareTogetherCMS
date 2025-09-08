@@ -83,6 +83,14 @@ export function FamilyScreen() {
   const familyIdMaybe = useParams<{ familyId: string }>();
   const familyId = familyIdMaybe.familyId as string;
 
+  const routeParams = useParams<{
+    organizationId: string;
+    locationId: string;
+  }>();
+
+  const organizationId = routeParams.organizationId!;
+  const locationId = routeParams.locationId!;
+
   const searchParams = new URLSearchParams(location.search);
   const referralIdFromQuery = searchParams.get('referralId') ?? undefined;
 
@@ -387,6 +395,47 @@ export function FamilyScreen() {
               </MenuItem>
             )}
           </MenuList>
+          {permissions(Permission.EditFamilyInfo) && (
+            <MenuItem
+              onClick={async (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+
+                try {
+                  const isCurrentlyTest = family.family?.isTestFamily ?? false;
+
+                  const res = await fetch(
+                    `/api/${organizationId}/${locationId}/records/families/${family.family!.id}/toggleTestFamilyFlag`,
+                    {
+                      method: 'PUT',
+                      headers: {
+                        'Content-Type': 'application/json',
+                      },
+                      body: JSON.stringify({ isTestFamily: !isCurrentlyTest }),
+                    }
+                  );
+
+                  if (!res.ok) {
+                    throw new Error('Request failed');
+                  }
+
+                  setFamilyMoreMenuAnchor(null);
+                  window.location.reload();
+                } catch (error) {
+                  console.error(error);
+                }
+              }}
+            >
+              <ListItemText
+                className="ph-unmask"
+                primary={
+                  family.family?.isTestFamily
+                    ? 'Undo Mark as Test Family'
+                    : 'Mark as Test Family'
+                }
+              />
+            </MenuItem>
+          )}
         </Menu>
         {uploadDocumentDialogOpen && (
           <UploadFamilyDocumentsDialog

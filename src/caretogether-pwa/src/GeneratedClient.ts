@@ -672,6 +672,57 @@ export class RecordsClient {
         return Promise.resolve<RecordsAggregate>(null as any);
     }
 
+    toggleTestFamilyFlag(organizationId: string, locationId: string, familyId: string, payload: ToggleTestFamilyFlagRequest): Promise<FileResponse> {
+        let url_ = this.baseUrl + "/api/{organizationId}/{locationId}/Records/families/{familyId}/toggleTestFamilyFlag";
+        if (organizationId === undefined || organizationId === null)
+            throw new Error("The parameter 'organizationId' must be defined.");
+        url_ = url_.replace("{organizationId}", encodeURIComponent("" + organizationId));
+        if (locationId === undefined || locationId === null)
+            throw new Error("The parameter 'locationId' must be defined.");
+        url_ = url_.replace("{locationId}", encodeURIComponent("" + locationId));
+        if (familyId === undefined || familyId === null)
+            throw new Error("The parameter 'familyId' must be defined.");
+        url_ = url_.replace("{familyId}", encodeURIComponent("" + familyId));
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(payload);
+
+        let options_: RequestInit = {
+            body: content_,
+            method: "PUT",
+            headers: {
+                "Content-Type": "application/json",
+                "Accept": "application/octet-stream"
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processToggleTestFamilyFlag(_response);
+        });
+    }
+
+    protected processToggleTestFamilyFlag(response: Response): Promise<FileResponse> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200 || status === 206) {
+            const contentDisposition = response.headers ? response.headers.get("content-disposition") : undefined;
+            let fileNameMatch = contentDisposition ? /filename\*=(?:(\\?['"])(.*?)\1|(?:[^\s]+'.*?')?([^;\n]*))/g.exec(contentDisposition) : undefined;
+            let fileName = fileNameMatch && fileNameMatch.length > 1 ? fileNameMatch[3] || fileNameMatch[2] : undefined;
+            if (fileName) {
+                fileName = decodeURIComponent(fileName);
+            } else {
+                fileNameMatch = contentDisposition ? /filename="?([^"]*?)"?(;|$)/g.exec(contentDisposition) : undefined;
+                fileName = fileNameMatch && fileNameMatch.length > 1 ? fileNameMatch[1] : undefined;
+            }
+            return response.blob().then(blob => { return { fileName: fileName, data: blob, status: status, headers: _headers }; });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<FileResponse>(null as any);
+    }
+
     getEmbedInfo(organizationId: string, locationId: string): Promise<EmbedParams> {
         let url_ = this.baseUrl + "/api/{organizationId}/{locationId}/Records/getEmbedInfo";
         if (organizationId === undefined || organizationId === null)
@@ -4448,6 +4499,7 @@ export class Family implements IFamily {
     deletedDocuments!: string[];
     completedCustomFields!: CompletedCustomFieldInfo[];
     history!: Activity[];
+    isTestFamily!: boolean;
 
     constructor(data?: IFamily) {
         if (data) {
@@ -4507,6 +4559,7 @@ export class Family implements IFamily {
                 for (let item of _data["history"])
                     this.history!.push(Activity.fromJS(item));
             }
+            this.isTestFamily = _data["isTestFamily"];
         }
     }
 
@@ -4557,6 +4610,7 @@ export class Family implements IFamily {
             for (let item of this.history)
                 data["history"].push(item.toJSON());
         }
+        data["isTestFamily"] = this.isTestFamily;
         return data;
     }
 }
@@ -4572,6 +4626,7 @@ export interface IFamily {
     deletedDocuments: string[];
     completedCustomFields: CompletedCustomFieldInfo[];
     history: Activity[];
+    isTestFamily: boolean;
 }
 
 export class ValueTupleOfPersonAndFamilyAdultRelationshipInfo implements IValueTupleOfPersonAndFamilyAdultRelationshipInfo {
@@ -10299,6 +10354,11 @@ export abstract class FamilyCommand implements IFamilyCommand {
             result.init(data);
             return result;
         }
+        if (data["discriminator"] === "ToggleTestFamilyFlag") {
+            let result = new ToggleTestFamilyFlag();
+            result.init(data);
+            return result;
+        }
         if (data["discriminator"] === "UndoCreateFamily") {
             let result = new UndoCreateFamily();
             result.init(data);
@@ -10726,6 +10786,40 @@ export class RemoveCustodialRelationship extends FamilyCommand implements IRemov
 export interface IRemoveCustodialRelationship extends IFamilyCommand {
     childPersonId: string;
     adultPersonId: string;
+}
+
+export class ToggleTestFamilyFlag extends FamilyCommand implements IToggleTestFamilyFlag {
+    isTestFamily!: boolean;
+
+    constructor(data?: IToggleTestFamilyFlag) {
+        super(data);
+        this._discriminator = "ToggleTestFamilyFlag";
+    }
+
+    init(_data?: any) {
+        super.init(_data);
+        if (_data) {
+            this.isTestFamily = _data["isTestFamily"];
+        }
+    }
+
+    static fromJS(data: any): ToggleTestFamilyFlag {
+        data = typeof data === 'object' ? data : {};
+        let result = new ToggleTestFamilyFlag();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["isTestFamily"] = this.isTestFamily;
+        super.toJSON(data);
+        return data;
+    }
+}
+
+export interface IToggleTestFamilyFlag extends IFamilyCommand {
+    isTestFamily: boolean;
 }
 
 export class UndoCreateFamily extends FamilyCommand implements IUndoCreateFamily {
@@ -13090,6 +13184,42 @@ export interface ICreateVolunteerFamilyWithNewAdultCommand extends ICompositeRec
     address?: Address | undefined;
     phoneNumber?: PhoneNumber | undefined;
     emailAddress?: EmailAddress | undefined;
+}
+
+export class ToggleTestFamilyFlagRequest implements IToggleTestFamilyFlagRequest {
+    isTestFamily!: boolean;
+
+    constructor(data?: IToggleTestFamilyFlagRequest) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.isTestFamily = _data["isTestFamily"];
+        }
+    }
+
+    static fromJS(data: any): ToggleTestFamilyFlagRequest {
+        data = typeof data === 'object' ? data : {};
+        let result = new ToggleTestFamilyFlagRequest();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["isTestFamily"] = this.isTestFamily;
+        return data;
+    }
+}
+
+export interface IToggleTestFamilyFlagRequest {
+    isTestFamily: boolean;
 }
 
 export class EmbedParams implements IEmbedParams {

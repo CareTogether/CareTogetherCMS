@@ -727,6 +727,71 @@
         }
       }
     },
+    "/api/{organizationId}/{locationId}/Records/families/{familyId}/toggleTestFamilyFlag": {
+      "put": {
+        "tags": [
+          "Records"
+        ],
+        "operationId": "Records_ToggleTestFamilyFlag",
+        "parameters": [
+          {
+            "name": "organizationId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "guid"
+            },
+            "x-position": 1
+          },
+          {
+            "name": "locationId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "guid"
+            },
+            "x-position": 2
+          },
+          {
+            "name": "familyId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "guid"
+            },
+            "x-position": 3
+          }
+        ],
+        "requestBody": {
+          "x-name": "payload",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ToggleTestFamilyFlagRequest"
+              }
+            }
+          },
+          "required": true,
+          "x-position": 4
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/octet-stream": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/{organizationId}/{locationId}/Records/getEmbedInfo": {
       "get": {
         "tags": [
@@ -2875,7 +2940,8 @@
           "uploadedDocuments",
           "deletedDocuments",
           "completedCustomFields",
-          "history"
+          "history",
+          "isTestFamily"
         ],
         "properties": {
           "id": {
@@ -2931,6 +2997,9 @@
             "items": {
               "$ref": "#/components/schemas/Activity"
             }
+          },
+          "isTestFamily": {
+            "type": "boolean"
           }
         }
       },
@@ -6383,6 +6452,7 @@
             "CreateFamily": "#/components/schemas/CreateFamily",
             "DeleteUploadedFamilyDocument": "#/components/schemas/DeleteUploadedFamilyDocument",
             "RemoveCustodialRelationship": "#/components/schemas/RemoveCustodialRelationship",
+            "ToggleTestFamilyFlag": "#/components/schemas/ToggleTestFamilyFlag",
             "UndoCreateFamily": "#/components/schemas/UndoCreateFamily",
             "UpdateAdultRelationshipToFamily": "#/components/schemas/UpdateAdultRelationshipToFamily",
             "UpdateCustodialRelationshipType": "#/components/schemas/UpdateCustodialRelationshipType",
@@ -6623,6 +6693,25 @@
               "adultPersonId": {
                 "type": "string",
                 "format": "guid"
+              }
+            }
+          }
+        ]
+      },
+      "ToggleTestFamilyFlag": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/FamilyCommand"
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "isTestFamily"
+            ],
+            "properties": {
+              "isTestFamily": {
+                "type": "boolean"
               }
             }
           }
@@ -8137,6 +8226,18 @@
             }
           }
         ]
+      },
+      "ToggleTestFamilyFlagRequest": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "isTestFamily"
+        ],
+        "properties": {
+          "isTestFamily": {
+            "type": "boolean"
+          }
+        }
       },
       "EmbedParams": {
         "type": "object",
