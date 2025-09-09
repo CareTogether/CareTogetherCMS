@@ -42,7 +42,7 @@ namespace CareTogether.Engines.PolicyEvaluation
             var policy = await policiesResource.GetCurrentPolicy(organizationId, locationId);
 
             return ApprovalCalculations.CalculateCombinedFamilyApprovals(
-                policy.VolunteerPolicy,
+                policy,
                 family,
                 completedFamilyRequirements,
                 exemptedFamilyRequirements,
@@ -243,6 +243,7 @@ namespace CareTogether.Engines.PolicyEvaluation
             );
 
             var v1CaseStatus = V1CaseCalculations.CalculateV1CaseStatus(
+                policy,
                 policy.ReferralPolicy,
                 v1CaseEntryForCalculation,
                 Dates.ToDateOnlyInLocationTimeZone(DateTime.UtcNow, locationTimeZone)

@@ -1,5 +1,5 @@
 import { Grid } from '@mui/material';
-import { DatePicker } from '@mui/x-date-pickers';
+import { ValidateDatePicker } from '../../Generic/Forms/ValidateDatePicker';
 import { useState } from 'react';
 import { useParams } from 'react-router';
 import { Arrangement, Person } from '../../GeneratedClient';
@@ -43,6 +43,8 @@ export function EndArrangementDialog({
 
   const [endedAtLocal, setEndedAtLocal] = useState(null as Date | null);
 
+  const [dobError, setDobError] = useState(false);
+
   async function save() {
     // Enforce that this goes to the very end of the day (11:59:59.999 PM) for now.
     // In the future, this should be a date-only value.
@@ -60,23 +62,21 @@ export function EndArrangementDialog({
       title={`Do you want to end this ${arrangement.arrangementType} arrangement for ${person.firstName} ${person.lastName}?`}
       onClose={onClose}
       onSave={save}
-      enableSave={() => endedAtLocal != null}
+      enableSave={() => endedAtLocal !== null && !dobError}
     >
       <Grid container spacing={2}>
         <Grid item xs={12}>
-          <DatePicker
+          <ValidateDatePicker
             label="When was this arrangement ended?"
             value={endedAtLocal}
-            minDate={earliestAllowedEndDate}
+            onChange={(date) => setEndedAtLocal(date)}
+            onErrorChange={setDobError}
             disableFuture
-            format="M/d/yyyy"
-            onChange={(date: Date | null) => date && setEndedAtLocal(date)}
-            slotProps={{
-              textField: {
-                fullWidth: true,
-                required: true,
-                sx: { marginTop: 1 },
-              },
+            minDate={earliestAllowedEndDate}
+            textFieldProps={{
+              fullWidth: true,
+              required: true,
+              sx: { marginTop: 1 },
             }}
           />
         </Grid>

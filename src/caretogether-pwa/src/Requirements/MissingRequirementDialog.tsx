@@ -1,4 +1,3 @@
-import { DatePicker } from '@mui/x-date-pickers';
 import {
   Checkbox,
   DialogContentText,
@@ -26,6 +25,7 @@ import {
   MissingArrangementRequirement,
   NoteEntryRequirement,
   V1Case,
+  RequirementDefinition,
 } from '../GeneratedClient';
 import {
   useDirectoryModel,
@@ -43,10 +43,11 @@ import { DialogHandle } from '../Hooks/useDialogHandle';
 import { familyNameString } from '../Families/FamilyName';
 import { add, format, formatDuration, formatRelative, isValid } from 'date-fns';
 import { selectedLocationContextState } from '../Model/Data';
+import { ValidateDatePicker } from '../Generic/Forms/ValidateDatePicker';
 
 type MissingRequirementDialogProps = {
   handle: DialogHandle;
-  requirement: MissingArrangementRequirement | string;
+  requirement: MissingArrangementRequirement | RequirementDefinition | string;
   context: RequirementContext;
   policy: ActionRequirement;
   v1CaseId?: string;
@@ -74,6 +75,7 @@ export function MissingRequirementDialog({
   const [documentFile, setDocumentFile] = useState<File | null>(null);
   const [documentId, setDocumentId] = useState<string>('');
   const [completedAtLocal, setCompletedAtLocal] = useState(null as Date | null);
+  const [completedAtError, setCompletedAtError] = useState(false);
   const [notes, setNotes] = useState('');
   const UPLOAD_NEW = '__uploadnew__';
   const { organizationId, locationId } = useRecoilValue(
@@ -113,27 +115,38 @@ export function MissingRequirementDialog({
   const availableArrangements =
     selectedV1Case && requirement instanceof MissingArrangementRequirement
       ? selectedV1Case.arrangements!.filter((arrangement) =>
-          arrangement.missingRequirements?.some((x) => {
+          [
+            ...arrangement.missingRequirements!,
+            ...arrangement.missingOptionalRequirements!,
+          ].some((missingRequirementInfo) => {
             if (context.kind === 'Family Volunteer Assignment')
               return (
-                x.actionName === requirement.actionName &&
-                x.arrangementFunction ===
+                missingRequirementInfo.action?.actionName ===
+                  requirement.action?.actionName &&
+                missingRequirementInfo.arrangementFunction ===
                   context.assignment.arrangementFunction &&
-                x.arrangementFunctionVariant ===
+                missingRequirementInfo.arrangementFunctionVariant ===
                   context.assignment.arrangementFunctionVariant &&
-                x.volunteerFamilyId === context.assignment.familyId
+                missingRequirementInfo.volunteerFamilyId ===
+                  context.assignment.familyId
               );
             else if (context.kind === 'Individual Volunteer Assignment')
               return (
-                x.actionName === requirement.actionName &&
-                x.arrangementFunction ===
+                missingRequirementInfo.action?.actionName ===
+                  requirement.action?.actionName &&
+                missingRequirementInfo.arrangementFunction ===
                   context.assignment.arrangementFunction &&
-                x.arrangementFunctionVariant ===
+                missingRequirementInfo.arrangementFunctionVariant ===
                   context.assignment.arrangementFunctionVariant &&
-                x.volunteerFamilyId === context.assignment.familyId &&
-                x.personId === context.assignment.personId
+                missingRequirementInfo.volunteerFamilyId ===
+                  context.assignment.familyId &&
+                missingRequirementInfo.personId === context.assignment.personId
               );
-            else return x.actionName === requirement.actionName;
+            else
+              return (
+                missingRequirementInfo.action?.actionName ===
+                requirement.action?.actionName
+              );
           })
         )
       : [];
@@ -161,6 +174,7 @@ export function MissingRequirementDialog({
     tabValue === 0
       ? // mark complete
         completedAtLocal != null &&
+        !completedAtError &&
         ((documentId === UPLOAD_NEW && documentFile) ||
           (documentId !== UPLOAD_NEW && documentId !== '') ||
           policy.documentLink !== DocumentLinkRequirement.Required) &&
@@ -173,8 +187,11 @@ export function MissingRequirementDialog({
 
   const requirementName =
     requirement instanceof MissingArrangementRequirement
-      ? requirement.actionName!
-      : requirement;
+      ? requirement.action!.actionName!
+      : requirement instanceof RequirementDefinition
+        ? requirement.actionName!
+        : requirement;
+
   async function markComplete() {
     let document = documentId;
     if (documentId === UPLOAD_NEW) {
@@ -436,26 +453,23 @@ export function MissingRequirementDialog({
           )}
           <Grid item xs={12}>
             {requirement instanceof MissingArrangementRequirement ? (
-              <DatePicker
+              <ValidateDatePicker
                 label="When was this requirement completed?"
                 value={completedAtLocal}
                 disableFuture
-                format="MM/dd/yyyy"
-                onChange={(date: Date | null) =>
-                  date && setCompletedAtLocal(date)
-                }
-                slotProps={{ textField: { fullWidth: true, required: true } }}
+                maxDate={new Date()}
+                onChange={(date) => setCompletedAtLocal(date)}
+                onErrorChange={setCompletedAtError}
+                textFieldProps={{ fullWidth: true, required: true }}
               />
             ) : (
-              <DatePicker
+              <ValidateDatePicker
                 label="When was this requirement completed?"
                 value={completedAtLocal}
                 disableFuture
-                format="MM/dd/yyyy"
-                onChange={(date: Date | null) =>
-                  date && setCompletedAtLocal(date)
-                }
-                slotProps={{ textField: { fullWidth: true, required: true } }}
+                onChange={(date) => setCompletedAtLocal(date)}
+                onErrorChange={setCompletedAtError}
+                textFieldProps={{ fullWidth: true, required: true }}
               />
             )}
             {validityDuration &&
@@ -622,14 +636,12 @@ export function MissingRequirementDialog({
               />
             </Grid>
             <Grid item xs={12}>
-              <DatePicker
+              <ValidateDatePicker
                 label="When does this exemption expire? (Default is never)"
                 value={exemptionExpiresAtLocal}
-                format="MM/dd/yyyy"
-                onChange={(date: Date | null) =>
-                  date && setExemptionExpiresAtLocal(date)
-                }
-                slotProps={{ textField: { fullWidth: true } }}
+                onChange={(date) => setExemptionExpiresAtLocal(date)}
+                onErrorChange={setCompletedAtError}
+                textFieldProps={{ fullWidth: true }}
               />
             </Grid>
           </Grid>

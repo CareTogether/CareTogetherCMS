@@ -61,6 +61,17 @@ namespace CareTogether.Core.Test.AuthorizationEngineTests
         static readonly Guid guid3 = Id('3');
         static readonly Guid guid4 = Id('4');
         static readonly Guid guid5 = Id('5');
+        static readonly Guid guidA = Id('a');
+        static readonly Guid noteId0 = Id('0');
+        static readonly Guid noteId1 = Id('1');
+        static readonly Guid noteId2 = Id('2');
+        static readonly Guid noteId3 = Id('3');
+        static readonly Guid noteId4 = Id('4');
+        static readonly Guid noteId5 = Id('5');
+        static readonly Guid noteIdA = Id('a');
+        static readonly Guid noteIdB = Id('b');
+        static readonly Guid noteIdC = Id('c');
+        static readonly Guid noteIdD = Id('d');
         static readonly Guid newDraftNoteGuid = Guid.NewGuid();
 
         private static ClaimsPrincipal PersonUserWithRoles(
@@ -80,7 +91,7 @@ namespace CareTogether.Core.Test.AuthorizationEngineTests
                             role.ToString()
                         ))
                     ),
-                    $"{guid1}:{guid2}"
+                    $"{noteId1}:{noteId2}"
                 )
             );
 
@@ -165,8 +176,8 @@ namespace CareTogether.Core.Test.AuthorizationEngineTests
             MockUserAccessCalculation([]);
 
             var response = await dut!.AuthorizeNoteCommandAsync(
-                guid1,
-                guid2,
+                noteId1,
+                noteId2,
                 user,
                 new CreateDraftNote(guid1, newDraftNoteGuid, "Test Note", null)
             );
@@ -191,8 +202,8 @@ namespace CareTogether.Core.Test.AuthorizationEngineTests
             NoteCommand command = commandType switch
             {
                 "CreateDraftNote" => new CreateDraftNote(guid1, Guid.NewGuid(), "Test Note", null),
-                "EditDraftNote" => new EditDraftNote(guid1, Id("note1"), "Test Note", null),
-                "DiscardDraftNote" => new DiscardDraftNote(guid1, Id("note1")),
+                "EditDraftNote" => new EditDraftNote(guid1, noteId3, "Test Note", null),
+                "DiscardDraftNote" => new DiscardDraftNote(guid1, noteId3),
                 _ => throw new ArgumentException("Invalid command type", nameof(commandType)),
             };
 
@@ -214,8 +225,8 @@ namespace CareTogether.Core.Test.AuthorizationEngineTests
 
             NoteCommand command = commandType switch
             {
-                "EditDraftNote" => new EditDraftNote(guid3, guid0, "Test Note", null),
-                "DiscardDraftNote" => new DiscardDraftNote(guid3, guid0),
+                "EditDraftNote" => new EditDraftNote(guid3, noteId0, "Test Note", null),
+                "DiscardDraftNote" => new DiscardDraftNote(guid3, noteId0),
                 _ => throw new ArgumentException("Invalid command type", nameof(commandType)),
             };
 
@@ -237,8 +248,8 @@ namespace CareTogether.Core.Test.AuthorizationEngineTests
 
             NoteCommand command = commandType switch
             {
-                "EditDraftNote" => new EditDraftNote(guid1, guid0, "Test Note", null),
-                "DiscardDraftNote" => new DiscardDraftNote(guid1, guid0),
+                "EditDraftNote" => new EditDraftNote(guid1, noteIdD, "Test Note", null),
+                "DiscardDraftNote" => new DiscardDraftNote(guid1, noteIdD),
                 _ => throw new ArgumentException("Invalid command type", nameof(commandType)),
             };
 
@@ -271,8 +282,8 @@ namespace CareTogether.Core.Test.AuthorizationEngineTests
                     "Test Note",
                     null
                 ),
-                "EditDraftNote" => new EditDraftNote(guid1, guid0, "Test Note", null),
-                "DiscardDraftNote" => new DiscardDraftNote(guid1, guid0),
+                "EditDraftNote" => new EditDraftNote(guid1, noteId3, "Test Note", null),
+                "DiscardDraftNote" => new DiscardDraftNote(guid1, noteId3),
                 _ => throw new ArgumentException("Invalid command type", nameof(commandType)),
             };
 

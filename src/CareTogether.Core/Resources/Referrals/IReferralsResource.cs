@@ -330,7 +330,7 @@ namespace CareTogether.Resources.V1Cases
         string ArrangementFunction,
         string? ArrangementFunctionVariant,
         Guid VolunteerFamilyId,
-        Guid PersonId,
+        Guid? PersonId,
         string RequirementName,
         DateTime? DueDate,
         string AdditionalComments,
@@ -366,7 +366,7 @@ namespace CareTogether.Resources.V1Cases
         string ArrangementFunction,
         string? ArrangementFunctionVariant,
         Guid VolunteerFamilyId,
-        Guid PersonId,
+        Guid? PersonId,
         string RequirementName,
         DateTime? DueDate
     ) : ArrangementsCommand(FamilyId, ReferralId, ArrangementIds);

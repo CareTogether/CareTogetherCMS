@@ -3,7 +3,7 @@ import { useVolunteersModel } from '../Model/VolunteersModel';
 import { UpdateDialog } from '../Generic/UpdateDialog';
 import { useState } from 'react';
 import { Grid } from '@mui/material';
-import { DatePicker } from '@mui/x-date-pickers';
+import { ValidateDatePicker } from '../Generic/Forms/ValidateDatePicker';
 
 interface ResetFamilyRoleDialogProps {
   volunteerFamilyId: string;
@@ -27,6 +27,8 @@ export function ResetFamilyRoleDialog({
   });
   const { forRemovalEffectiveSince, effectiveThrough } = fields;
 
+  const [dateError, setDateError] = useState(false);
+
   async function save() {
     await volunteerFamiliesModel.resetFamilyRole(
       volunteerFamilyId,
@@ -41,6 +43,7 @@ export function ResetFamilyRoleDialog({
       title={`Do you want to reset the ${role} role for this family?`}
       onClose={onClose}
       onSave={save}
+      enableSave={() => !dateError}
     >
       <form noValidate autoComplete="off">
         <Grid container spacing={2}>
@@ -53,15 +56,18 @@ export function ResetFamilyRoleDialog({
             </p>
           </Grid>
           <Grid item xs={12}>
-            <DatePicker
+            <ValidateDatePicker
               label="Effective Through (optional - leave blank to use the current date)"
-              value={effectiveThrough || null}
+              value={effectiveThrough}
               disableFuture
               format="M/d/yyyy"
-              onChange={(date: Date | null) =>
+              onChange={(date) =>
                 setFields({ ...fields, effectiveThrough: date })
               }
-              slotProps={{ textField: { fullWidth: true } }}
+              onErrorChange={setDateError}
+              textFieldProps={{
+                fullWidth: true,
+              }}
             />
           </Grid>
         </Grid>

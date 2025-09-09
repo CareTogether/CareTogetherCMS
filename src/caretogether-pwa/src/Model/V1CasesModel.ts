@@ -59,6 +59,7 @@ import {
 import { useAtomicRecordsCommandCallback } from './DirectoryModel';
 import { visibleFamiliesQuery } from './Data';
 import { convertUtcDateToLocalDate } from '../Utilities/dateUtils';
+import { commandFactory } from './CommandFactory';
 
 export const partneringFamiliesData = selector({
   key: 'partneringFamiliesData',
@@ -99,31 +100,30 @@ export function useV1CasesModel() {
       documentId: string | null,
       noteId: string | null
     ) => {
-      const command = new CompleteV1CaseRequirement({
+      const command = commandFactory(CompleteV1CaseRequirement, {
         familyId: partneringFamilyId,
         referralId: v1CaseId,
+        completedRequirementId: crypto.randomUUID(),
+        requirementName: requirementName,
+        completedAtUtc: completedAtLocal,
+        uploadedDocumentId: documentId ?? undefined,
+        noteId: noteId ?? undefined,
       });
-      command.completedRequirementId = crypto.randomUUID();
-      command.requirementName = requirementName;
-      command.completedAtUtc = completedAtLocal;
-      if (documentId != null) command.uploadedDocumentId = documentId;
-      if (noteId != null) command.noteId = noteId;
       return command;
     }
   );
   const markV1CaseRequirementIncomplete = useV1CaseCommandCallbackWithLocation(
     async (
       partneringFamilyId: string,
-      v1CaseId: string,
+      referralId: string,
       completedRequirement: CompletedRequirementInfo
     ) => {
-      const command = new MarkV1CaseRequirementIncomplete({
+      const command = commandFactory(MarkV1CaseRequirementIncomplete, {
         familyId: partneringFamilyId,
-        referralId: v1CaseId,
+        referralId: referralId,
+        requirementName: completedRequirement.requirementName,
+        completedRequirementId: completedRequirement.completedRequirementId,
       });
-      command.requirementName = completedRequirement.requirementName;
-      command.completedRequirementId =
-        completedRequirement.completedRequirementId;
       return command;
     }
   );
@@ -135,13 +135,13 @@ export function useV1CasesModel() {
       additionalComments: string,
       exemptionExpiresAtLocal: Date | null
     ) => {
-      const command = new ExemptV1CaseRequirement({
+      const command = commandFactory(ExemptV1CaseRequirement, {
         familyId: partneringFamilyId,
         referralId: v1CaseId,
+        requirementName: requirementName,
+        additionalComments: additionalComments,
+        exemptionExpiresAtUtc: exemptionExpiresAtLocal ?? undefined,
       });
-      command.requirementName = requirementName;
-      command.additionalComments = additionalComments;
-      command.exemptionExpiresAtUtc = exemptionExpiresAtLocal ?? undefined;
       return command;
     }
   );
@@ -151,11 +151,11 @@ export function useV1CasesModel() {
       v1CaseId: string,
       exemptedRequirement: ExemptedRequirementInfo
     ) => {
-      const command = new UnexemptV1CaseRequirement({
+      const command = commandFactory(UnexemptV1CaseRequirement, {
         familyId: partneringFamilyId,
         referralId: v1CaseId,
+        requirementName: exemptedRequirement.requirementName,
       });
-      command.requirementName = exemptedRequirement.requirementName;
       return command;
     }
   );
@@ -166,14 +166,14 @@ export function useV1CasesModel() {
       customField: CustomField,
       value: boolean | string | null
     ) => {
-      const command = new UpdateCustomV1CaseField({
+      const command = commandFactory(UpdateCustomV1CaseField, {
         familyId: partneringFamilyId,
         referralId: v1CaseId,
+        completedCustomFieldId: crypto.randomUUID(),
+        customFieldName: customField.name,
+        customFieldType: customField.type,
+        value: value,
       });
-      command.completedCustomFieldId = crypto.randomUUID();
-      command.customFieldName = customField.name;
-      command.customFieldType = customField.type;
-      command.value = value;
       return command;
     }
   );
@@ -183,11 +183,11 @@ export function useV1CasesModel() {
       v1CaseId: string,
       comments: string | undefined
     ) => {
-      const command = new UpdateV1CaseComments({
+      const command = commandFactory(UpdateV1CaseComments, {
         familyId: partneringFamilyId,
         referralId: v1CaseId,
+        comments: comments,
       });
-      command.comments = comments;
       return command;
     }
   );
@@ -203,16 +203,16 @@ export function useV1CasesModel() {
         documentId: string | null,
         noteId: string | null
       ) => {
-        const command = new CompleteArrangementRequirement({
+        const command = commandFactory(CompleteArrangementRequirement, {
           familyId: partneringFamilyId,
           referralId: v1CaseId,
           arrangementIds: arrangementIds,
+          completedRequirementId: crypto.randomUUID(),
+          requirementName: requirementName,
+          completedAtUtc: completedAtLocal,
+          uploadedDocumentId: documentId ?? undefined,
+          noteId: noteId ?? undefined,
         });
-        command.completedRequirementId = crypto.randomUUID();
-        command.requirementName = requirementName;
-        command.completedAtUtc = completedAtLocal;
-        if (documentId != null) command.uploadedDocumentId = documentId;
-        if (noteId != null) command.noteId = noteId;
         return command;
       }
     );
@@ -224,14 +224,13 @@ export function useV1CasesModel() {
         arrangementId: string,
         completedRequirement: CompletedRequirementInfo
       ) => {
-        const command = new MarkArrangementRequirementIncomplete({
+        const command = commandFactory(MarkArrangementRequirementIncomplete, {
           familyId: partneringFamilyId,
           referralId: v1CaseId,
           arrangementIds: [arrangementId],
+          requirementName: completedRequirement.requirementName,
+          completedRequirementId: completedRequirement.completedRequirementId,
         });
-        command.requirementName = completedRequirement.requirementName;
-        command.completedRequirementId =
-          completedRequirement.completedRequirementId;
         return command;
       }
     );
@@ -248,17 +247,17 @@ export function useV1CasesModel() {
       ) => {
         const dueDateUtc = requirement.dueBy || requirement.pastDueSince;
 
-        const command = new ExemptArrangementRequirement({
+        const command = commandFactory(ExemptArrangementRequirement, {
           familyId: partneringFamilyId,
           referralId: v1CaseId,
           arrangementIds: arrangementIds,
+          requirementName: requirement.action?.actionName,
+          dueDate: exemptAll
+            ? undefined
+            : dueDateUtc && convertUtcDateToLocalDate(dueDateUtc),
+          additionalComments: additionalComments,
+          exemptionExpiresAtUtc: exemptionExpiresAtLocal ?? undefined,
         });
-        command.requirementName = requirement.actionName;
-        command.dueDate = exemptAll
-          ? undefined
-          : dueDateUtc && convertUtcDateToLocalDate(dueDateUtc);
-        command.additionalComments = additionalComments;
-        command.exemptionExpiresAtUtc = exemptionExpiresAtLocal ?? undefined;
         return command;
       }
     );
@@ -270,13 +269,13 @@ export function useV1CasesModel() {
         arrangementId: string,
         exemptedRequirement: ExemptedRequirementInfo
       ) => {
-        const command = new UnexemptArrangementRequirement({
+        const command = commandFactory(UnexemptArrangementRequirement, {
           familyId: partneringFamilyId,
           referralId: v1CaseId,
           arrangementIds: [arrangementId],
+          requirementName: exemptedRequirement.requirementName,
+          dueDate: exemptedRequirement.dueDate,
         });
-        command.requirementName = exemptedRequirement.requirementName;
-        command.dueDate = exemptedRequirement.dueDate;
         return command;
       }
     );
@@ -294,19 +293,22 @@ export function useV1CasesModel() {
         documentId: string | null,
         noteId: string | null
       ) => {
-        const command = new CompleteVolunteerFamilyAssignmentRequirement({
-          familyId: partneringFamilyId,
-          referralId: v1CaseId,
-          arrangementIds: arrangementIds,
-        });
-        command.arrangementFunction = assignment.arrangementFunction;
-        command.arrangementFunctionVariant =
-          assignment.arrangementFunctionVariant;
-        command.volunteerFamilyId = assignment.familyId;
-        command.requirementName = requirementName;
-        command.completedAtUtc = completedAtLocal;
-        if (documentId != null) command.uploadedDocumentId = documentId;
-        if (noteId != null) command.noteId = noteId;
+        const command = commandFactory(
+          CompleteVolunteerFamilyAssignmentRequirement,
+          {
+            familyId: partneringFamilyId,
+            referralId: v1CaseId,
+            arrangementIds: arrangementIds,
+            arrangementFunction: assignment.arrangementFunction,
+            arrangementFunctionVariant: assignment.arrangementFunctionVariant,
+            volunteerFamilyId: assignment.familyId,
+            completedRequirementId: crypto.randomUUID(),
+            requirementName: requirementName,
+            completedAtUtc: completedAtLocal,
+            uploadedDocumentId: documentId ?? undefined,
+            noteId: noteId ?? undefined,
+          }
+        );
         return command;
       }
     );
@@ -319,18 +321,19 @@ export function useV1CasesModel() {
         assignment: FamilyVolunteerAssignment,
         completedRequirement: CompletedRequirementInfo
       ) => {
-        const command = new MarkVolunteerFamilyAssignmentRequirementIncomplete({
-          familyId: partneringFamilyId,
-          referralId: v1CaseId,
-          arrangementIds: [arrangementId],
-        });
-        command.arrangementFunction = assignment.arrangementFunction;
-        command.arrangementFunctionVariant =
-          assignment.arrangementFunctionVariant;
-        command.volunteerFamilyId = assignment.familyId;
-        command.requirementName = completedRequirement.requirementName;
-        command.completedRequirementId =
-          completedRequirement.completedRequirementId;
+        const command = commandFactory(
+          MarkVolunteerFamilyAssignmentRequirementIncomplete,
+          {
+            familyId: partneringFamilyId,
+            referralId: v1CaseId,
+            arrangementIds: [arrangementId],
+            arrangementFunction: assignment.arrangementFunction,
+            arrangementFunctionVariant: assignment.arrangementFunctionVariant,
+            volunteerFamilyId: assignment.familyId,
+            requirementName: completedRequirement.requirementName,
+            completedRequirementId: completedRequirement.completedRequirementId,
+          }
+        );
         return command;
       }
     );
@@ -348,21 +351,24 @@ export function useV1CasesModel() {
       ) => {
         const dueDateUtc = requirement.dueBy || requirement.pastDueSince;
 
-        const command = new ExemptVolunteerFamilyAssignmentRequirement({
-          familyId: partneringFamilyId,
-          referralId: v1CaseId,
-          arrangementIds: arrangementIds,
-        });
-        command.arrangementFunction = assignment.arrangementFunction;
-        command.arrangementFunctionVariant =
-          assignment.arrangementFunctionVariant;
-        command.volunteerFamilyId = assignment.familyId;
-        command.requirementName = requirement.actionName;
-        command.dueDate = exemptAll
-          ? undefined
-          : dueDateUtc && convertUtcDateToLocalDate(dueDateUtc);
-        command.additionalComments = additionalComments;
-        command.exemptionExpiresAtUtc = exemptionExpiresAtLocal ?? undefined;
+        const command = commandFactory(
+          ExemptVolunteerFamilyAssignmentRequirement,
+          {
+            familyId: partneringFamilyId,
+            referralId: v1CaseId,
+            arrangementIds: arrangementIds,
+            arrangementFunction: assignment.arrangementFunction,
+            arrangementFunctionVariant: assignment.arrangementFunctionVariant,
+            volunteerFamilyId: assignment.familyId,
+            requirementName: requirement.action?.actionName,
+            dueDate: exemptAll
+              ? undefined
+              : dueDateUtc && convertUtcDateToLocalDate(dueDateUtc),
+            additionalComments: additionalComments,
+            exemptionExpiresAtUtc: exemptionExpiresAtLocal ?? undefined,
+          }
+        );
+
         return command;
       }
     );
@@ -375,17 +381,19 @@ export function useV1CasesModel() {
         assignment: FamilyVolunteerAssignment,
         exemptedRequirement: ExemptedRequirementInfo
       ) => {
-        const command = new UnexemptVolunteerFamilyAssignmentRequirement({
-          familyId: partneringFamilyId,
-          referralId: v1CaseId,
-          arrangementIds: [arrangementId],
-        });
-        command.arrangementFunction = assignment.arrangementFunction;
-        command.arrangementFunctionVariant =
-          assignment.arrangementFunctionVariant;
-        command.volunteerFamilyId = assignment.familyId;
-        command.requirementName = exemptedRequirement.requirementName;
-        command.dueDate = exemptedRequirement.dueDate;
+        const command = commandFactory(
+          UnexemptVolunteerFamilyAssignmentRequirement,
+          {
+            familyId: partneringFamilyId,
+            referralId: v1CaseId,
+            arrangementIds: [arrangementId],
+            arrangementFunction: assignment.arrangementFunction,
+            arrangementFunctionVariant: assignment.arrangementFunctionVariant,
+            volunteerFamilyId: assignment.familyId,
+            requirementName: exemptedRequirement.requirementName,
+            dueDate: exemptedRequirement.dueDate,
+          }
+        );
         return command;
       }
     );
@@ -403,20 +411,23 @@ export function useV1CasesModel() {
         documentId: string | null,
         noteId: string | null
       ) => {
-        const command = new CompleteIndividualVolunteerAssignmentRequirement({
-          familyId: partneringFamilyId,
-          referralId: v1CaseId,
-          arrangementIds: arrangementIds,
-        });
-        command.arrangementFunction = assignment.arrangementFunction;
-        command.arrangementFunctionVariant =
-          assignment.arrangementFunctionVariant;
-        command.volunteerFamilyId = assignment.familyId;
-        command.personId = assignment.personId;
-        command.requirementName = requirementName;
-        command.completedAtUtc = completedAtLocal;
-        if (documentId != null) command.uploadedDocumentId = documentId;
-        if (noteId != null) command.noteId = noteId;
+        const command = commandFactory(
+          CompleteIndividualVolunteerAssignmentRequirement,
+          {
+            familyId: partneringFamilyId,
+            referralId: v1CaseId,
+            arrangementIds: arrangementIds,
+            arrangementFunction: assignment.arrangementFunction,
+            arrangementFunctionVariant: assignment.arrangementFunctionVariant,
+            volunteerFamilyId: assignment.familyId,
+            personId: assignment.personId,
+            completedRequirementId: crypto.randomUUID(),
+            requirementName: requirementName,
+            completedAtUtc: completedAtLocal,
+            uploadedDocumentId: documentId ?? undefined,
+            noteId: noteId ?? undefined,
+          }
+        );
         return command;
       }
     );
@@ -429,20 +440,20 @@ export function useV1CasesModel() {
         assignment: IndividualVolunteerAssignment,
         completedRequirement: CompletedRequirementInfo
       ) => {
-        const command =
-          new MarkIndividualVolunteerAssignmentRequirementIncomplete({
+        const command = commandFactory(
+          MarkIndividualVolunteerAssignmentRequirementIncomplete,
+          {
             familyId: partneringFamilyId,
             referralId: v1CaseId,
             arrangementIds: [arrangementId],
-          });
-        command.arrangementFunction = assignment.arrangementFunction;
-        command.arrangementFunctionVariant =
-          assignment.arrangementFunctionVariant;
-        command.volunteerFamilyId = assignment.familyId;
-        command.personId = assignment.personId;
-        command.requirementName = completedRequirement.requirementName;
-        command.completedRequirementId =
-          completedRequirement.completedRequirementId;
+            arrangementFunction: assignment.arrangementFunction,
+            arrangementFunctionVariant: assignment.arrangementFunctionVariant,
+            volunteerFamilyId: assignment.familyId,
+            personId: assignment.personId,
+            requirementName: completedRequirement.requirementName,
+            completedRequirementId: completedRequirement.completedRequirementId,
+          }
+        );
         return command;
       }
     );
@@ -458,22 +469,24 @@ export function useV1CasesModel() {
         additionalComments: string,
         exemptionExpiresAtLocal: Date | null
       ) => {
-        const command = new ExemptIndividualVolunteerAssignmentRequirement({
-          familyId: partneringFamilyId,
-          referralId: v1CaseId,
-          arrangementIds: arrangementIds,
-        });
-        command.arrangementFunction = assignment.arrangementFunction;
-        command.arrangementFunctionVariant =
-          assignment.arrangementFunctionVariant;
-        command.volunteerFamilyId = assignment.familyId;
-        command.personId = assignment.personId;
-        command.requirementName = requirement.actionName;
-        command.dueDate = exemptAll
-          ? undefined
-          : requirement.dueBy || requirement.pastDueSince;
-        command.additionalComments = additionalComments;
-        command.exemptionExpiresAtUtc = exemptionExpiresAtLocal ?? undefined;
+        const command = commandFactory(
+          ExemptIndividualVolunteerAssignmentRequirement,
+          {
+            familyId: partneringFamilyId,
+            referralId: v1CaseId,
+            arrangementIds: arrangementIds,
+            arrangementFunction: assignment.arrangementFunction,
+            arrangementFunctionVariant: assignment.arrangementFunctionVariant,
+            volunteerFamilyId: assignment.familyId,
+            personId: assignment.personId,
+            requirementName: requirement.action?.actionName,
+            dueDate: exemptAll
+              ? undefined
+              : requirement.dueBy || requirement.pastDueSince,
+            additionalComments: additionalComments,
+            exemptionExpiresAtUtc: exemptionExpiresAtLocal ?? undefined,
+          }
+        );
         return command;
       }
     );
@@ -486,18 +499,20 @@ export function useV1CasesModel() {
         assignment: IndividualVolunteerAssignment,
         exemptedRequirement: ExemptedRequirementInfo
       ) => {
-        const command = new UnexemptIndividualVolunteerAssignmentRequirement({
-          familyId: partneringFamilyId,
-          referralId: v1CaseId,
-          arrangementIds: [arrangementId],
-        });
-        command.arrangementFunction = assignment.arrangementFunction;
-        command.arrangementFunctionVariant =
-          assignment.arrangementFunctionVariant;
-        command.volunteerFamilyId = assignment.familyId;
-        command.personId = assignment.personId;
-        command.requirementName = exemptedRequirement.requirementName;
-        command.dueDate = exemptedRequirement.dueDate;
+        const command = commandFactory(
+          UnexemptIndividualVolunteerAssignmentRequirement,
+          {
+            familyId: partneringFamilyId,
+            referralId: v1CaseId,
+            arrangementIds: [arrangementId],
+            arrangementFunction: assignment.arrangementFunction,
+            arrangementFunctionVariant: assignment.arrangementFunctionVariant,
+            volunteerFamilyId: assignment.familyId,
+            personId: assignment.personId,
+            requirementName: exemptedRequirement.requirementName,
+            dueDate: exemptedRequirement.dueDate,
+          }
+        );
         return command;
       }
     );
@@ -511,16 +526,15 @@ export function useV1CasesModel() {
       partneringFamilyPersonId: string,
       reason: string | null
     ) => {
-      const command = new CreateArrangement({
+      const command = commandFactory(CreateArrangement, {
         familyId: partneringFamilyId,
         referralId: v1CaseId,
-        arrangementIds: [],
+        arrangementIds: [crypto.randomUUID()],
+        arrangementType: arrangementType,
+        requestedAtUtc: requestedAtLocal,
+        partneringFamilyPersonId: partneringFamilyPersonId,
+        reason: reason || undefined,
       });
-      command.arrangementIds = [crypto.randomUUID()];
-      command.arrangementType = arrangementType;
-      command.requestedAtUtc = requestedAtLocal;
-      command.partneringFamilyPersonId = partneringFamilyPersonId;
-      command.reason = reason || undefined;
       return command;
     }
   );
@@ -532,12 +546,12 @@ export function useV1CasesModel() {
       arrangementId: string,
       plannedStartLocal: Date | null
     ) => {
-      const command = new PlanArrangementStart({
+      const command = commandFactory(PlanArrangementStart, {
         familyId: partneringFamilyId,
         referralId: v1CaseId,
         arrangementIds: [arrangementId],
+        plannedStartUtc: plannedStartLocal || undefined,
       });
-      command.plannedStartUtc = plannedStartLocal || undefined;
       return command;
     }
   );
@@ -548,12 +562,12 @@ export function useV1CasesModel() {
       arrangementId: string,
       startedAtLocal: Date
     ) => {
-      const command = new StartArrangements({
+      const command = commandFactory(StartArrangements, {
         familyId: partneringFamilyId,
         referralId: v1CaseId,
         arrangementIds: [arrangementId],
+        startedAtUtc: startedAtLocal,
       });
-      command.startedAtUtc = startedAtLocal;
       return command;
     }
   );
@@ -564,12 +578,12 @@ export function useV1CasesModel() {
       arrangementId: string,
       startedAtLocal: Date
     ) => {
-      const command = new EditArrangementStartTime({
+      const command = commandFactory(EditArrangementStartTime, {
         familyId: partneringFamilyId,
         referralId: v1CaseId,
         arrangementIds: [arrangementId],
+        startedAtUtc: startedAtLocal,
       });
-      command.startedAtUtc = startedAtLocal;
       return command;
     }
   );
@@ -580,12 +594,12 @@ export function useV1CasesModel() {
       arrangementId: string,
       endedAtLocal: Date
     ) => {
-      const command = new EditArrangementEndTime({
+      const command = commandFactory(EditArrangementEndTime, {
         familyId: partneringFamilyId,
         referralId: v1CaseId,
         arrangementIds: [arrangementId],
+        endedAtUtc: endedAtLocal,
       });
-      command.endedAtUtc = endedAtLocal;
       return command;
     }
   );
@@ -596,12 +610,12 @@ export function useV1CasesModel() {
       arrangementId: string,
       requestedAtLocal: Date
     ) => {
-      const command = new EditArrangementRequestedAt({
+      const command = commandFactory(EditArrangementRequestedAt, {
         familyId: partneringFamilyId,
         referralId: v1CaseId,
         arrangementIds: [arrangementId],
+        requestedAtUtc: requestedAtLocal,
       });
-      command.requestedAtUtc = requestedAtLocal;
       return command;
     }
   );
@@ -612,12 +626,12 @@ export function useV1CasesModel() {
       arrangementId: string,
       cancelledAtLocal: Date
     ) => {
-      const command = new EditArrangementCancelledAt({
+      const command = commandFactory(EditArrangementCancelledAt, {
         familyId: partneringFamilyId,
         referralId: v1CaseId,
         arrangementIds: [arrangementId],
+        cancelledAtUtc: cancelledAtLocal,
       });
-      command.cancelledAtUtc = cancelledAtLocal;
       return command;
     }
   );
@@ -628,12 +642,13 @@ export function useV1CasesModel() {
       arrangementId: string,
       plannedEndLocal: Date | null
     ) => {
-      const command = new PlanArrangementEnd({
+      const command = commandFactory(PlanArrangementEnd, {
         familyId: partneringFamilyId,
         referralId: v1CaseId,
         arrangementIds: [arrangementId],
+
+        plannedEndUtc: plannedEndLocal || undefined,
       });
-      command.plannedEndUtc = plannedEndLocal || undefined;
       return command;
     }
   );
@@ -644,12 +659,12 @@ export function useV1CasesModel() {
       arrangementId: string,
       endedAtLocal: Date
     ) => {
-      const command = new EndArrangements({
+      const command = commandFactory(EndArrangements, {
         familyId: partneringFamilyId,
         referralId: v1CaseId,
         arrangementIds: [arrangementId],
+        endedAtUtc: endedAtLocal,
       });
-      command.endedAtUtc = endedAtLocal;
       return command;
     }
   );
@@ -660,12 +675,12 @@ export function useV1CasesModel() {
       arrangementId: string,
       noteId: string | null
     ) => {
-      const command = new ReopenArrangements({
+      const command = commandFactory(ReopenArrangements, {
         familyId: partneringFamilyId,
         referralId: v1CaseId,
         arrangementIds: [arrangementId],
+        noteId: noteId ?? undefined,
       });
-      if (noteId != null) command.noteId = noteId;
       return command;
     }
   );
@@ -676,12 +691,12 @@ export function useV1CasesModel() {
       arrangementId: string,
       cancelledAtLocal: Date
     ) => {
-      const command = new CancelArrangementsSetup({
+      const command = commandFactory(CancelArrangementsSetup, {
         familyId: partneringFamilyId,
         referralId: v1CaseId,
         arrangementIds: [arrangementId],
+        cancelledAtUtc: cancelledAtLocal,
       });
-      command.cancelledAtUtc = cancelledAtLocal;
       return command;
     }
   );
@@ -691,7 +706,7 @@ export function useV1CasesModel() {
       v1CaseId: string,
       arrangementId: string
     ) => {
-      const command = new DeleteArrangements({
+      const command = commandFactory(DeleteArrangements, {
         familyId: partneringFamilyId,
         referralId: v1CaseId,
         arrangementIds: [arrangementId],
@@ -708,14 +723,14 @@ export function useV1CasesModel() {
       arrangementFunction: string,
       arrangementFunctionVariant?: string
     ) => {
-      const command = new AssignVolunteerFamily({
+      const command = commandFactory(AssignVolunteerFamily, {
         familyId: partneringFamilyId,
         referralId: v1CaseId,
         arrangementIds: [arrangementId],
+        volunteerFamilyId: volunteerFamilyId,
+        arrangementFunction: arrangementFunction,
+        arrangementFunctionVariant: arrangementFunctionVariant,
       });
-      command.volunteerFamilyId = volunteerFamilyId;
-      command.arrangementFunction = arrangementFunction;
-      command.arrangementFunctionVariant = arrangementFunctionVariant;
       return command;
     }
   );
@@ -729,15 +744,15 @@ export function useV1CasesModel() {
       arrangementFunction: string,
       arrangementFunctionVariant?: string
     ) => {
-      const command = new AssignIndividualVolunteer({
+      const command = commandFactory(AssignIndividualVolunteer, {
         familyId: partneringFamilyId,
         referralId: v1CaseId,
         arrangementIds: [arrangementId],
+        volunteerFamilyId: volunteerFamilyId,
+        personId: personId,
+        arrangementFunction: arrangementFunction,
+        arrangementFunctionVariant: arrangementFunctionVariant,
       });
-      command.volunteerFamilyId = volunteerFamilyId;
-      command.personId = personId;
-      command.arrangementFunction = arrangementFunction;
-      command.arrangementFunctionVariant = arrangementFunctionVariant;
       return command;
     }
   );
@@ -750,14 +765,14 @@ export function useV1CasesModel() {
       arrangementFunction: string,
       arrangementFunctionVariant?: string
     ) => {
-      const command = new UnassignVolunteerFamily({
+      const command = commandFactory(UnassignVolunteerFamily, {
         familyId: partneringFamilyId,
         referralId: v1CaseId,
         arrangementIds: [arrangementId],
+        volunteerFamilyId: volunteerFamilyId,
+        arrangementFunction: arrangementFunction,
+        arrangementFunctionVariant: arrangementFunctionVariant,
       });
-      command.volunteerFamilyId = volunteerFamilyId;
-      command.arrangementFunction = arrangementFunction;
-      command.arrangementFunctionVariant = arrangementFunctionVariant;
       return command;
     }
   );
@@ -772,15 +787,15 @@ export function useV1CasesModel() {
         arrangementFunction: string,
         arrangementFunctionVariant?: string
       ) => {
-        const command = new UnassignIndividualVolunteer({
+        const command = commandFactory(UnassignIndividualVolunteer, {
           familyId: partneringFamilyId,
           referralId: v1CaseId,
           arrangementIds: [arrangementId],
+          volunteerFamilyId: volunteerFamilyId,
+          personId: personId,
+          arrangementFunction: arrangementFunction,
+          arrangementFunctionVariant: arrangementFunctionVariant,
         });
-        command.volunteerFamilyId = volunteerFamilyId;
-        command.personId = personId;
-        command.arrangementFunction = arrangementFunction;
-        command.arrangementFunctionVariant = arrangementFunctionVariant;
         return command;
       }
     );
@@ -795,16 +810,16 @@ export function useV1CasesModel() {
       childLocationPlan: ChildLocationPlan,
       noteId: string | null
     ) => {
-      const command = new TrackChildLocationChange({
+      const command = commandFactory(TrackChildLocationChange, {
         familyId: partneringFamilyId,
         referralId: v1CaseId,
         arrangementIds: [arrangementId],
+        childLocationFamilyId: childLocationFamilyId,
+        childLocationReceivingAdultId: childLocationAdultId,
+        changedAtUtc: changedAtLocal,
+        plan: childLocationPlan,
+        noteId: noteId ?? undefined,
       });
-      command.childLocationFamilyId = childLocationFamilyId;
-      command.childLocationReceivingAdultId = childLocationAdultId;
-      command.changedAtUtc = changedAtLocal;
-      command.plan = childLocationPlan;
-      if (noteId != null) command.noteId = noteId;
       return command;
     }
   );
@@ -818,15 +833,15 @@ export function useV1CasesModel() {
       changedAtLocal: Date,
       noteId: string | null
     ) => {
-      const command = new DeleteChildLocationChange({
+      const command = commandFactory(DeleteChildLocationChange, {
         familyId: partneringFamilyId,
         referralId: v1CaseId,
         arrangementIds: [arrangementId],
+        childLocationFamilyId: childLocationFamilyId,
+        childLocationReceivingAdultId: childLocationAdultId,
+        changedAtUtc: changedAtLocal,
+        noteId: noteId ?? undefined,
       });
-      command.childLocationFamilyId = childLocationFamilyId;
-      command.childLocationReceivingAdultId = childLocationAdultId;
-      command.changedAtUtc = changedAtLocal;
-      if (noteId != null) command.noteId = noteId;
       return command;
     }
   );
@@ -840,15 +855,15 @@ export function useV1CasesModel() {
       changedAtLocal: Date,
       childLocationPlan: ChildLocationPlan
     ) => {
-      const command = new PlanChildLocationChange({
+      const command = commandFactory(PlanChildLocationChange, {
         familyId: partneringFamilyId,
         referralId: v1CaseId,
         arrangementIds: [arrangementId],
+        childLocationFamilyId: childLocationFamilyId,
+        childLocationReceivingAdultId: childLocationAdultId,
+        plannedChangeUtc: changedAtLocal,
+        plan: childLocationPlan,
       });
-      command.childLocationFamilyId = childLocationFamilyId;
-      command.childLocationReceivingAdultId = childLocationAdultId;
-      command.plannedChangeUtc = changedAtLocal;
-      command.plan = childLocationPlan;
       return command;
     }
   );
@@ -861,14 +876,14 @@ export function useV1CasesModel() {
       childLocationAdultId: string,
       changedAtLocal: Date
     ) => {
-      const command = new DeletePlannedChildLocationChange({
+      const command = commandFactory(DeletePlannedChildLocationChange, {
         familyId: partneringFamilyId,
         referralId: v1CaseId,
         arrangementIds: [arrangementId],
+        childLocationFamilyId: childLocationFamilyId,
+        childLocationReceivingAdultId: childLocationAdultId,
+        plannedChangeUtc: changedAtLocal,
       });
-      command.childLocationFamilyId = childLocationFamilyId;
-      command.childLocationReceivingAdultId = childLocationAdultId;
-      command.plannedChangeUtc = changedAtLocal;
       return command;
     }
   );
@@ -879,12 +894,12 @@ export function useV1CasesModel() {
       arrangementId: string,
       comments: string | undefined
     ) => {
-      const command = new UpdateArrangementComments({
+      const command = commandFactory(UpdateArrangementComments, {
         familyId: partneringFamilyId,
         referralId: v1CaseId,
         arrangementIds: [arrangementId],
+        comments: comments,
       });
-      command.comments = comments;
       return command;
     }
   );
@@ -895,12 +910,12 @@ export function useV1CasesModel() {
       arrangementId: string,
       reason: string | null
     ) => {
-      const command = new EditArrangementReason({
+      const command = commandFactory(EditArrangementReason, {
         familyId: partneringFamilyId,
         referralId: v1CaseId,
         arrangementIds: [arrangementId],
+        reason: reason || undefined,
       });
-      command.reason = reason || undefined;
       return command;
     }
   );
@@ -911,22 +926,22 @@ export function useV1CasesModel() {
       reason: V1CaseCloseReason,
       closedAtLocal: Date
     ) => {
-      const command = new CloseV1Case({
+      const command = commandFactory(CloseV1Case, {
         familyId: partneringFamilyId,
         referralId: v1CaseId,
+        closeReason: reason,
+        closedAtUtc: closedAtLocal,
       });
-      command.closeReason = reason;
-      command.closedAtUtc = closedAtLocal;
       return command;
     }
   );
   const openV1Case = useV1CaseCommandCallbackWithLocation(
     async (partneringFamilyId: string, openedAtLocal: Date) => {
-      const command = new CreateV1Case({
+      const command = commandFactory(CreateV1Case, {
         familyId: partneringFamilyId,
+        referralId: crypto.randomUUID(),
+        openedAtUtc: openedAtLocal,
       });
-      command.referralId = crypto.randomUUID();
-      command.openedAtUtc = openedAtLocal;
       return command;
     }
   );

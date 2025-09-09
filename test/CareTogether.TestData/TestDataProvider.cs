@@ -128,11 +128,26 @@ namespace CareTogether.TestData
         static readonly Guid guidB = Id('b');
         static readonly Guid guidC = Id('c');
         static readonly Guid guidD = Id('d');
+
         static readonly Guid adminId = Guid.Parse("2b87864a-63e3-4406-bcbc-c0068a13ac05");
+
         static readonly Guid volunteerId = Guid.Parse("e3aaef77-0e97-47a6-b788-a67c237c781e");
         static readonly Guid volunteerId2 = Guid.Parse("ca662f2b-270a-4a8b-baa7-c109eadbb133");
-        static readonly Guid noteId1 = Id("note1");
-        static readonly Guid noteId2 = Id("note2");
+
+        static readonly Guid noteId0 = Id('0');
+        static readonly Guid noteId1 = Id('1');
+        static readonly Guid noteId2 = Id('2');
+        static readonly Guid noteId3 = Id('3');
+        static readonly Guid noteId4 = Id('4');
+        static readonly Guid noteId5 = Id('5');
+        static readonly Guid noteId6 = Id('6');
+        static readonly Guid noteId7 = Id('7');
+        static readonly Guid noteId8 = Id('8');
+        static readonly Guid noteId9 = Id('9');
+        static readonly Guid noteIdA = Id('a');
+        static readonly Guid noteIdB = Id('b');
+        static readonly Guid noteIdC = Id('c');
+        static readonly Guid noteIdD = Id('d');
 
         // Fisher family
         static readonly Guid michaelFisherGuid = Guid.Parse("f6020665-6f2e-4c93-8673-8770f35f1609");
@@ -1556,7 +1571,7 @@ namespace CareTogether.TestData
                         fisherFamilyGuid,
                         fisherFamilyReferral1Guid,
                         [fisherFamilyArrangement1Guid],
-                        "Advocacy Agreement",
+                        "Advocacy Agmt",
                         null,
                         "Not needed",
                         null
@@ -1871,7 +1886,7 @@ namespace CareTogether.TestData
                         brambleswiftFamilyGuid,
                         berrinBrambleswiftGuid,
                         guid7,
-                        "Background Check",
+                        "Bg Check",
                         ApprovalsMonth(6),
                         guid7,
                         null
@@ -1908,7 +1923,7 @@ namespace CareTogether.TestData
                     new CompleteVolunteerFamilyRequirement(
                         brambleswiftFamilyGuid,
                         guid3,
-                        "Host Family Interview",
+                        "Host Interview",
                         ApprovalsMonth(8),
                         Guid.Empty,
                         null
@@ -1949,21 +1964,16 @@ namespace CareTogether.TestData
                 guid1,
                 guid2,
                 new NoteCommandExecuted(
-                    volunteerId2,
-                    ReferralsMonth(14, 10, 10, 10),
-                    new CreateDraftNote(guid1, guidB, null, null, AccessLevel: "Staff Only")
-                ),
-                new NoteCommandExecuted(
                     volunteerId,
                     ReferralsMonth(14, 10, 10, 10),
-                    new CreateDraftNote(guid1, guid0, null, null, AccessLevel: "Staff Only")
+                    new CreateDraftNote(guid1, noteId0, null, null, AccessLevel: "Staff Only")
                 ),
                 new NoteCommandExecuted(
                     adminId,
                     ReferralsMonth(14, 11, 10, 10),
                     new ApproveNote(
                         guid1,
-                        guid0,
+                        noteId0,
                         "The kids were in awe of my carpet bag. They were such sweethearts, though I do wish to state, for the record, that they are given entirely too much sugar with their medicine.",
                         null,
                         AccessLevel: "Staff Only"
@@ -1972,24 +1982,24 @@ namespace CareTogether.TestData
                 new NoteCommandExecuted(
                     volunteerId,
                     ReferralsMonth(15, 8, 33, 34),
-                    new CreateDraftNote(guid1, guid4, null, null, AccessLevel: "Staff Only")
+                    new CreateDraftNote(guid1, noteId4, null, null, AccessLevel: "Staff Only")
                 ),
                 new NoteCommandExecuted(
                     adminId,
                     ReferralsMonth(15, 8, 33, 34),
-                    new ApproveNote(guid1, guid4, "Babysitting", null, AccessLevel: "Staff Only")
+                    new ApproveNote(guid1, noteId4, "Babysitting", null, AccessLevel: "Staff Only")
                 ),
                 new NoteCommandExecuted(
                     volunteerId,
                     ReferralsMonth(15, 20, 40, 45),
-                    new CreateDraftNote(guid1, guid5, null, null, AccessLevel: "Staff Only")
+                    new CreateDraftNote(guid1, noteId5, null, null, AccessLevel: "Staff Only")
                 ),
                 new NoteCommandExecuted(
                     adminId,
                     ReferralsMonth(15, 20, 40, 45),
                     new ApproveNote(
                         guid1,
-                        guid5,
+                        noteId5,
                         "Dropped off with host parents after ☕ and 🍰",
                         null,
                         AccessLevel: "Staff Only"
@@ -1998,14 +2008,14 @@ namespace CareTogether.TestData
                 new NoteCommandExecuted(
                     volunteerId,
                     ReferralsMonth(22, 16, 30, 35),
-                    new CreateDraftNote(guid1, guid6, null, null, AccessLevel: "Staff Only")
+                    new CreateDraftNote(guid1, noteId6, null, null, AccessLevel: "Staff Only")
                 ),
                 new NoteCommandExecuted(
                     adminId,
                     ReferralsMonth(22, 16, 30, 35),
                     new ApproveNote(
                         guid1,
-                        guid6,
+                        noteId6,
                         "Weekend with parents, met at McDonald's near mom",
                         null,
                         AccessLevel: "Staff Only"
@@ -2014,19 +2024,19 @@ namespace CareTogether.TestData
                 new NoteCommandExecuted(
                     volunteerId,
                     ReferralsMonth(22, 18, 0, 0),
-                    new CreateDraftNote(guid1, guid1, null, null, AccessLevel: "Staff Only")
+                    new CreateDraftNote(guid1, noteId1, null, null, AccessLevel: "Staff Only")
                 ),
                 new NoteCommandExecuted(
                     volunteerId,
                     ReferralsMonth(22, 19, 30, 0),
-                    new EditDraftNote(guid1, guid1, null, null, AccessLevel: "Staff Only")
+                    new EditDraftNote(guid1, noteId1, null, null, AccessLevel: "Staff Only")
                 ),
                 new NoteCommandExecuted(
                     adminId,
                     ReferralsMonth(22, 19, 45, 0),
                     new ApproveNote(
                         guid1,
-                        guid1,
+                        noteId1,
                         "Eric and Ben liked the Play Place and didn't want to go home.",
                         null,
                         AccessLevel: "Staff Only"
@@ -2035,59 +2045,59 @@ namespace CareTogether.TestData
                 new NoteCommandExecuted(
                     volunteerId,
                     ReferralsMonth(24, 8, 30, 35),
-                    new CreateDraftNote(guid1, guid7, null, null)
+                    new CreateDraftNote(guid1, noteId7, null, null)
                 ),
                 new NoteCommandExecuted(
                     adminId,
                     ReferralsMonth(24, 8, 30, 35),
-                    new ApproveNote(guid1, guid7, "Mom dropped off on way to work", null)
+                    new ApproveNote(guid1, noteId7, "Mom dropped off on way to work", null)
                 ),
                 new NoteCommandExecuted(
                     volunteerId,
                     ReferralsMonth(24, 8, 45, 0),
-                    new CreateDraftNote(guid1, guid2, null, null)
+                    new CreateDraftNote(guid1, noteId2, null, null)
                 ),
                 new NoteCommandExecuted(
                     volunteerId,
                     ReferralsMonth(24, 8, 50, 0),
-                    new DiscardDraftNote(guid1, guid2)
+                    new DiscardDraftNote(guid1, noteId2)
                 ),
                 new NoteCommandExecuted(
                     volunteerId,
                     ReferralsMonth(24, 8, 55, 0),
-                    new CreateDraftNote(guid1, guid3, null, null)
+                    new CreateDraftNote(guid1, noteId3, null, null)
                 ),
                 new NoteCommandExecuted(
                     volunteerId,
                     ReferralsMonth(24, 8, 57, 0),
-                    new EditDraftNote(guid1, guid3, null, null)
+                    new EditDraftNote(guid1, noteId3, null, null)
                 ),
                 new NoteCommandExecuted(
                     volunteerId,
                     ReferralsMonth(28, 18, 18, 18),
-                    new CreateDraftNote(guid1, guid8, null, null)
+                    new CreateDraftNote(guid1, noteId8, null, null)
                 ),
                 new NoteCommandExecuted(
                     adminId,
                     ReferralsMonth(28, 18, 18, 18),
-                    new ApproveNote(guid1, guid8, "Mom met us and picked him up at DQ", null)
+                    new ApproveNote(guid1, noteId8, "Mom met us and picked him up at DQ", null)
                 ),
                 new NoteCommandExecuted(
                     adminId,
                     ReferralsMonth(28, 10, 0, 0),
-                    new CreateDraftNote(guid1, guidA, null, null)
+                    new CreateDraftNote(guid1, noteIdA, null, null)
                 ),
                 new NoteCommandExecuted(
                     adminId,
                     ApprovalsMonth(10, 9, 30, 0),
-                    new CreateDraftNote(guid4, guid9, null, null)
+                    new CreateDraftNote(guid4, noteId9, null, null)
                 ),
                 new NoteCommandExecuted(
                     adminId,
                     ApprovalsMonth(10, 9, 32, 0),
                     new ApproveNote(
                         guid4,
-                        guid9,
+                        noteId9,
                         "I'm a little star-struck... Emily is *amazing*!!",
                         null
                     )
@@ -2095,28 +2105,33 @@ namespace CareTogether.TestData
                 new NoteCommandExecuted(
                     volunteerId2,
                     ApprovalsMonth(28, 9, 30, 0),
-                    new CreateDraftNote(guid1, noteId1, null, null)
+                    new CreateDraftNote(guid1, noteIdB, null, null)
                 ),
                 new NoteCommandExecuted(
                     adminId,
                     ApprovalsMonth(28, 9, 32, 0),
-                    new ApproveNote(guid1, noteId1, "Approved note from another volunteer", null)
+                    new ApproveNote(guid1, noteIdB, "Approved note from another volunteer", null)
                 ),
                 new NoteCommandExecuted(
                     volunteerId2,
                     ReferralsMonth(28, 11, 10, 10),
-                    new CreateDraftNote(guid1, noteId2, null, null, AccessLevel: "Staff Only")
+                    new CreateDraftNote(guid1, noteIdC, null, null, AccessLevel: "Staff Only")
                 ),
                 new NoteCommandExecuted(
                     adminId,
                     ReferralsMonth(28, 11, 15, 10),
                     new ApproveNote(
                         guid1,
-                        noteId2,
+                        noteIdC,
                         "Another note for testing the access level",
                         null,
                         AccessLevel: "Staff Only"
                     )
+                ),
+                new NoteCommandExecuted(
+                    volunteerId2,
+                    ReferralsMonth(28, 19, 0, 0),
+                    new CreateDraftNote(guid1, noteIdD, null, null, AccessLevel: "Staff Only")
                 )
             );
         }
@@ -2233,8 +2248,12 @@ namespace CareTogether.TestData
                 guidB.ToString(),
                 "Note by another volunteer"
             );
-            await draftNotesStore.UpsertAsync(guid1, guid2, noteId1.ToString(), "draft content");
-            await draftNotesStore.UpsertAsync(guid1, guid2, noteId2.ToString(), "draft");
+            await draftNotesStore.UpsertAsync(
+                guid1,
+                guid2,
+                noteIdD.ToString(),
+                "A draft note that was created with Staff Only access level"
+            );
         }
 
         public static async Task PopulateConfigurations(
@@ -2301,7 +2320,7 @@ namespace CareTogether.TestData
                             ],
                             ["Crisis", "Assistance", "Respite"],
                             sourcePhoneNumbers,
-                            []
+                            null
                         ),
                     ],
                     [
@@ -2452,11 +2471,13 @@ namespace CareTogether.TestData
                         new Uri("http://example.com/forms/requestforhelp-v1"),
                         null,
                         null,
+                        null,
                         null
                     ),
                     ["Intake Coordinator Screening Call"] = new ActionRequirement(
                         DocumentLinkRequirement.None,
                         NoteEntryRequirement.Required,
+                        null,
                         null,
                         null,
                         null,
@@ -2470,7 +2491,8 @@ namespace CareTogether.TestData
                         new Uri("http://example.com/forms/intake-v1"),
                         null,
                         null,
-                        null
+                        null,
+                        ["Fill intake form"]
                     ),
                     ["Hosting Consent"] = new ActionRequirement(
                         DocumentLinkRequirement.Required,
@@ -2479,11 +2501,13 @@ namespace CareTogether.TestData
                         new Uri("http://example.com/forms/consent-v1"),
                         null,
                         null,
+                        null,
                         null
                     ),
                     ["Family Meeting"] = new ActionRequirement(
                         DocumentLinkRequirement.None,
                         NoteEntryRequirement.Required,
+                        null,
                         null,
                         null,
                         null,
@@ -2497,11 +2521,13 @@ namespace CareTogether.TestData
                         new Uri("http://example.com/forms/medicalpoa-v2"),
                         null,
                         null,
+                        null,
                         null
                     ),
                     ["Family Coach Safety Visit"] = new ActionRequirement(
                         DocumentLinkRequirement.None,
                         NoteEntryRequirement.Required,
+                        null,
                         null,
                         null,
                         null,
@@ -2515,11 +2541,13 @@ namespace CareTogether.TestData
                         new Uri("http://example.com/forms/returnofchild-v1"),
                         null,
                         null,
+                        null,
                         null
                     ),
                     ["Host Family Debriefing"] = new ActionRequirement(
                         DocumentLinkRequirement.Required,
                         NoteEntryRequirement.Required,
+                        null,
                         null,
                         null,
                         null,
@@ -2533,11 +2561,23 @@ namespace CareTogether.TestData
                         new Uri("http://example.com/forms/advocacy-v1"),
                         null,
                         null,
+                        null,
+                        ["Advocacy Agmt"]
+                    ),
+                    ["Some optional action"] = new ActionRequirement(
+                        DocumentLinkRequirement.None,
+                        NoteEntryRequirement.Allowed,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
                         null
                     ),
                     ["One Time Checkin"] = new ActionRequirement(
                         DocumentLinkRequirement.None,
                         NoteEntryRequirement.Allowed,
+                        null,
                         null,
                         null,
                         null,
@@ -2551,11 +2591,13 @@ namespace CareTogether.TestData
                         null,
                         null,
                         null,
+                        null,
                         null
                     ),
                     ["Family Coach Supervision"] = new ActionRequirement(
                         DocumentLinkRequirement.Allowed,
                         NoteEntryRequirement.Required,
+                        null,
                         null,
                         null,
                         null,
@@ -2569,6 +2611,7 @@ namespace CareTogether.TestData
                         new Uri("http://example.com/forms/app-ff"),
                         null,
                         null,
+                        null,
                         null
                     ),
                     ["Background Check"] = new ActionRequirement(
@@ -2578,13 +2621,15 @@ namespace CareTogether.TestData
                         new Uri("http://example.com/forms/bgcheck"),
                         new TimeSpan(365 * 3, 0, 0, 0),
                         null,
-                        null
+                        null,
+                        ["Bg Check"]
                     ),
                     ["Family Coach Application"] = new ActionRequirement(
                         DocumentLinkRequirement.Required,
                         NoteEntryRequirement.None,
                         null,
                         new Uri("http://example.com/forms/app-fc"),
+                        null,
                         null,
                         null,
                         null
@@ -2596,11 +2641,13 @@ namespace CareTogether.TestData
                         new Uri("http://example.com/forms/compbgcheck"),
                         new TimeSpan(365 * 2, 0, 0, 0),
                         null,
-                        null
+                        null,
+                        ["Bg check"]
                     ),
                     ["Interview with Family Coach Supervisor"] = new ActionRequirement(
                         DocumentLinkRequirement.Allowed,
                         NoteEntryRequirement.Required,
+                        null,
                         null,
                         null,
                         null,
@@ -2614,6 +2661,7 @@ namespace CareTogether.TestData
                         new Uri("http://example.com/forms/app-hf"),
                         null,
                         null,
+                        null,
                         null
                     ),
                     ["Host Family Training"] = new ActionRequirement(
@@ -2621,6 +2669,7 @@ namespace CareTogether.TestData
                         NoteEntryRequirement.Allowed,
                         null,
                         new Uri("http://example.com/training/hf"),
+                        null,
                         null,
                         null,
                         null
@@ -2632,6 +2681,7 @@ namespace CareTogether.TestData
                         new Uri("http://example.com/forms/hscheck"),
                         null,
                         null,
+                        null,
                         null
                     ),
                     ["Host Family Interview"] = new ActionRequirement(
@@ -2641,13 +2691,15 @@ namespace CareTogether.TestData
                         null,
                         null,
                         null,
-                        null
+                        null,
+                        ["Host Interview"]
                     ),
                     ["Meet & Greet"] = new ActionRequirement(
                         DocumentLinkRequirement.Required,
                         NoteEntryRequirement.Allowed,
                         null,
                         new Uri("http://example.com/forms/mag"),
+                        null,
                         null,
                         null,
                         null
@@ -2657,6 +2709,7 @@ namespace CareTogether.TestData
                         NoteEntryRequirement.Allowed,
                         "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Quisque eu nisi ut nisi scelerisque blandit.\n\nAenean accumsan dui ac velit venenatis, at eleifend sapien sodales.\n\nEtiam faucibus augue sit amet purus cursus, ut tincidunt elit feugiat.",
                         new Uri("http://example.com/forms/mag"),
+                        null,
                         null,
                         null,
                         null
@@ -2672,7 +2725,7 @@ namespace CareTogether.TestData
                     ),
                 ],
                 new V1CasePolicy(
-                    ["Request for Help Form", "Intake Coordinator Screening Call", "Intake Form"],
+                    ["Request for Help Form", "Fill intake form"],
                     [
                         new CustomField(
                             "Referral Source",
@@ -2698,11 +2751,20 @@ namespace CareTogether.TestData
                                     [
                                         new ArrangementFunctionVariant(
                                             "New Host Family",
-                                            RequiredSetupActionNames: ["Family Meeting"],
-                                            RequiredMonitoringActions:
+                                            RequiredSetupActionNames: [],
+                                            RequiredMonitoringActions: [],
+                                            RequiredCloseoutActionNames: [],
+                                            RequiredSetupActions:
+                                            [
+                                                new RequirementDefinition("Family Meeting", true),
+                                            ],
+                                            RequiredMonitoringActionsNew:
                                             [
                                                 new MonitoringRequirement(
-                                                    "Family Coach Safety Visit",
+                                                    new RequirementDefinition(
+                                                        "Family Coach Safety Visit",
+                                                        true
+                                                    ),
                                                     new DurationStagesPerChildLocationRecurrencePolicy(
                                                         [
                                                             new RecurrencePolicyStage(
@@ -2721,15 +2783,27 @@ namespace CareTogether.TestData
                                                     )
                                                 ),
                                             ],
-                                            RequiredCloseoutActionNames: ["Host Family Debriefing"]
+                                            RequiredCloseoutActions:
+                                            [
+                                                new RequirementDefinition(
+                                                    "Host Family Debriefing",
+                                                    true
+                                                ),
+                                            ]
                                         ),
                                         new ArrangementFunctionVariant(
                                             "Familiar Host Family",
                                             RequiredSetupActionNames: [],
-                                            RequiredMonitoringActions:
+                                            RequiredMonitoringActions: [],
+                                            RequiredCloseoutActionNames: [],
+                                            RequiredSetupActions: null,
+                                            RequiredMonitoringActionsNew:
                                             [
                                                 new MonitoringRequirement(
-                                                    "Family Coach Safety Visit",
+                                                    new RequirementDefinition(
+                                                        "Family Coach Safety Visit",
+                                                        true
+                                                    ),
                                                     new DurationStagesPerChildLocationRecurrencePolicy(
                                                         [
                                                             new RecurrencePolicyStage(
@@ -2744,7 +2818,13 @@ namespace CareTogether.TestData
                                                     )
                                                 ),
                                             ],
-                                            RequiredCloseoutActionNames: ["Host Family Debriefing"]
+                                            RequiredCloseoutActions:
+                                            [
+                                                new RequirementDefinition(
+                                                    "Host Family Debriefing",
+                                                    true
+                                                ),
+                                            ]
                                         ),
                                     ]
                                 ),
@@ -2789,22 +2869,28 @@ namespace CareTogether.TestData
                                     Variants: []
                                 ),
                             ],
-                            RequiredSetupActionNames:
+                            RequiredSetupActionNames: [],
+                            RequiredMonitoringActions: [],
+                            RequiredCloseoutActionNames: [],
+                            RequiredSetupActions:
                             [
-                                "Hosting Consent",
-                                "Medical POA",
-                                "Complex Instructions",
+                                new RequirementDefinition("Hosting Consent", true),
+                                new RequirementDefinition("Medical POA", true),
+                                new RequirementDefinition("Complex Instructions", true),
                             ],
-                            RequiredMonitoringActions:
+                            RequiredMonitoringActionsNew:
                             [
                                 new MonitoringRequirement(
-                                    "Family Coach Supervision",
+                                    new RequirementDefinition("Family Coach Supervision", true),
                                     new DurationStagesRecurrencePolicy(
                                         [new RecurrencePolicyStage(TimeSpan.FromDays(7), null)]
                                     )
                                 ),
                             ],
-                            RequiredCloseoutActionNames: ["Return of Child Form"]
+                            RequiredCloseoutActions:
+                            [
+                                new RequirementDefinition("Return of Child Form", true),
+                            ]
                         ),
                         new ArrangementPolicy(
                             "Babysitting",
@@ -2821,11 +2907,20 @@ namespace CareTogether.TestData
                                     [
                                         new ArrangementFunctionVariant(
                                             "New Host Family",
-                                            RequiredSetupActionNames: ["Family Meeting"],
-                                            RequiredMonitoringActions:
+                                            RequiredSetupActionNames: [],
+                                            RequiredMonitoringActions: [],
+                                            RequiredCloseoutActionNames: [],
+                                            RequiredSetupActions:
+                                            [
+                                                new RequirementDefinition("Family Meeting", true),
+                                            ],
+                                            RequiredMonitoringActionsNew:
                                             [
                                                 new MonitoringRequirement(
-                                                    "Family Coach Safety Visit",
+                                                    new RequirementDefinition(
+                                                        "Family Coach Safety Visit",
+                                                        true
+                                                    ),
                                                     new ChildCareOccurrenceBasedRecurrencePolicy(
                                                         TimeSpan.FromHours(48),
                                                         3,
@@ -2834,7 +2929,10 @@ namespace CareTogether.TestData
                                                     )
                                                 ),
                                                 new MonitoringRequirement(
-                                                    "Family Coach Checkin",
+                                                    new RequirementDefinition(
+                                                        "Family Coach Checkin",
+                                                        true
+                                                    ),
                                                     new ChildCareOccurrenceBasedRecurrencePolicy(
                                                         TimeSpan.FromHours(48),
                                                         3,
@@ -2843,15 +2941,27 @@ namespace CareTogether.TestData
                                                     )
                                                 ),
                                             ],
-                                            RequiredCloseoutActionNames: ["Host Family Debriefing"]
+                                            RequiredCloseoutActions:
+                                            [
+                                                new RequirementDefinition(
+                                                    "Host Family Debriefing",
+                                                    true
+                                                ),
+                                            ]
                                         ),
                                         new ArrangementFunctionVariant(
                                             "Familiar Host Family",
                                             RequiredSetupActionNames: [],
-                                            RequiredMonitoringActions:
+                                            RequiredMonitoringActions: [],
+                                            RequiredCloseoutActionNames: [],
+                                            RequiredSetupActions: [],
+                                            RequiredMonitoringActionsNew:
                                             [
                                                 new MonitoringRequirement(
-                                                    "Family Coach Safety Visit",
+                                                    new RequirementDefinition(
+                                                        "Family Coach Safety Visit",
+                                                        true
+                                                    ),
                                                     new ChildCareOccurrenceBasedRecurrencePolicy(
                                                         TimeSpan.FromHours(48),
                                                         3,
@@ -2860,7 +2970,10 @@ namespace CareTogether.TestData
                                                     )
                                                 ),
                                                 new MonitoringRequirement(
-                                                    "Family Coach Checkin",
+                                                    new RequirementDefinition(
+                                                        "Family Coach Checkin",
+                                                        true
+                                                    ),
                                                     new ChildCareOccurrenceBasedRecurrencePolicy(
                                                         TimeSpan.FromHours(48),
                                                         3,
@@ -2869,7 +2982,7 @@ namespace CareTogether.TestData
                                                     )
                                                 ),
                                             ],
-                                            RequiredCloseoutActionNames: []
+                                            RequiredCloseoutActions: []
                                         ),
                                     ]
                                 ),
@@ -2890,17 +3003,26 @@ namespace CareTogether.TestData
                                     Variants: []
                                 ),
                             ],
-                            RequiredSetupActionNames: ["Hosting Consent"],
-                            RequiredMonitoringActions:
+                            RequiredSetupActionNames: [],
+                            RequiredMonitoringActions: [],
+                            RequiredCloseoutActionNames: [],
+                            RequiredSetupActions:
+                            [
+                                new RequirementDefinition("Hosting Consent", true),
+                            ],
+                            RequiredMonitoringActionsNew:
                             [
                                 new MonitoringRequirement(
-                                    "Family Coach Supervision",
+                                    new RequirementDefinition("Family Coach Supervision", true),
                                     new DurationStagesRecurrencePolicy(
                                         [new RecurrencePolicyStage(TimeSpan.FromDays(30), null)]
                                     )
                                 ),
                             ],
-                            RequiredCloseoutActionNames: ["Return of Child Form"]
+                            RequiredCloseoutActions:
+                            [
+                                new RequirementDefinition("Return of Child Form", true),
+                            ]
                         ),
                         new ArrangementPolicy(
                             "Friending",
@@ -2932,15 +3054,22 @@ namespace CareTogether.TestData
                                     Variants: []
                                 ),
                             ],
-                            RequiredSetupActionNames: ["Advocacy Agreement"],
-                            RequiredMonitoringActions:
+                            RequiredSetupActionNames: [],
+                            RequiredMonitoringActions: [],
+                            RequiredCloseoutActionNames: [],
+                            RequiredSetupActions:
+                            [
+                                new RequirementDefinition("Advocacy Agreement", true),
+                                new RequirementDefinition("Some optional action", false),
+                            ],
+                            RequiredMonitoringActionsNew:
                             [
                                 new MonitoringRequirement(
-                                    "One Time Checkin",
+                                    new RequirementDefinition("One Time Checkin", false),
                                     new OneTimeRecurrencePolicy(TimeSpan.FromDays(2))
                                 ),
                                 new MonitoringRequirement(
-                                    "Family Coach Checkin",
+                                    new RequirementDefinition("Family Coach Checkin", true),
                                     new DurationStagesRecurrencePolicy(
                                         [
                                             new RecurrencePolicyStage(TimeSpan.FromDays(2), 1),
@@ -2949,13 +3078,13 @@ namespace CareTogether.TestData
                                     )
                                 ),
                                 new MonitoringRequirement(
-                                    "Family Coach Supervision",
+                                    new RequirementDefinition("Family Coach Supervision", true),
                                     new DurationStagesRecurrencePolicy(
                                         [new RecurrencePolicyStage(TimeSpan.FromDays(7), null)]
                                     )
                                 ),
                             ],
-                            RequiredCloseoutActionNames: new List<string> { }.ToImmutableList()
+                            RequiredCloseoutActions: []
                         ),
                     ],
                     [
@@ -2975,6 +3104,12 @@ namespace CareTogether.TestData
                                 EligiblePeople: [guid0]
                             )
                         ),
+                    ],
+                    IntakeRequirements:
+                    [
+                        new RequirementDefinition("Some optional action", false),
+                        new RequirementDefinition("Intake Coordinator Screening Call", true),
+                        new RequirementDefinition("Intake Form", true),
                     ]
                 ),
                 new VolunteerPolicy(
@@ -3009,6 +3144,10 @@ namespace CareTogether.TestData
                                         new VolunteerApprovalRequirement(
                                             RequirementStage.Approval,
                                             "Comprehensive Background Check"
+                                        ),
+                                        new VolunteerApprovalRequirement(
+                                            RequirementStage.Approval,
+                                            "Bg check"
                                         ),
                                     ]
                                 ),

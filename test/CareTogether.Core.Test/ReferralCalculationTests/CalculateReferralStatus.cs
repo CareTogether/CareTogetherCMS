@@ -24,7 +24,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
         static readonly Guid guid6 = Id('6');
 
         static V1CasePolicy referralPolicy = new V1CasePolicy(
-            RequiredIntakeActionNames: Helpers.From(),
+            RequiredIntakeActionNames: [],
             CustomFields: ImmutableList<CustomField>.Empty,
             ArrangementPolicies: ImmutableList<ArrangementPolicy>
                 .Empty.Add(
@@ -72,9 +72,9 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
                                     Variants: ImmutableList<ArrangementFunctionVariant>.Empty
                                 )
                             ),
-                        RequiredSetupActionNames: Helpers.From(),
-                        RequiredMonitoringActions: ImmutableList<MonitoringRequirement>.Empty,
-                        RequiredCloseoutActionNames: Helpers.From()
+                        RequiredSetupActionNames: [],
+                        RequiredMonitoringActions: [],
+                        RequiredCloseoutActionNames: []
                     )
                 )
                 .Add(
@@ -122,9 +122,9 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
                                     Variants: ImmutableList<ArrangementFunctionVariant>.Empty
                                 )
                             ),
-                        RequiredSetupActionNames: Helpers.From(),
-                        RequiredMonitoringActions: ImmutableList<MonitoringRequirement>.Empty,
-                        RequiredCloseoutActionNames: Helpers.From()
+                        RequiredSetupActionNames: [],
+                        RequiredMonitoringActions: [],
+                        RequiredCloseoutActionNames: []
                     )
                 )
                 .Add(
@@ -152,9 +152,9 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
                                     Variants: ImmutableList<ArrangementFunctionVariant>.Empty
                                 )
                             ),
-                        RequiredSetupActionNames: Helpers.From(),
-                        RequiredMonitoringActions: ImmutableList<MonitoringRequirement>.Empty,
-                        RequiredCloseoutActionNames: Helpers.From()
+                        RequiredSetupActionNames: [],
+                        RequiredMonitoringActions: [],
+                        RequiredCloseoutActionNames: []
                     )
                 ),
             ImmutableList<FunctionPolicy>.Empty

@@ -1,6 +1,7 @@
 import React from 'react';
 import { appInsights } from './ApplicationInsightsService';
 import posthog from 'posthog-js';
+import { getAppVersion } from './Utilities/appVersion';
 
 export class GlobalErrorBoundary extends React.Component<
   { children?: React.ReactNode },
@@ -27,25 +28,28 @@ export class GlobalErrorBoundary extends React.Component<
       properties: {
         error: JSON.stringify(error),
         errorInfo: JSON.stringify(errorInfo),
+        app_version: getAppVersion(),
       },
     });
-    posthog.capture('GlobalErrorBoundary', {
-      error: error,
-      errorInfo: errorInfo,
+    posthog.captureException(error, {
+      errorInfo,
     });
   }
 
   render() {
     if (this.state.hasError) {
       return (
-        <>
-          <h1 className="ph-unmask">Something went wrong.</h1>
-          <pre className="ph-unmask" style={{ whiteSpace: 'pre-wrap' }}>
+        <div className="ph-unmask">
+          <h1>Something went wrong.</h1>
+          <p style={{ fontSize: '0.8rem', color: '#666', margin: '0.5rem 0' }}>
+            Version: {getAppVersion()}
+          </p>
+          <pre style={{ whiteSpace: 'pre-wrap' }}>
             {this.state.error?.message
               ? this.state.error.message
               : JSON.stringify(this.state.error)}
           </pre>
-        </>
+        </div>
       );
     }
 

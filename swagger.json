@@ -1068,6 +1068,10 @@
       "ValueTupleOfGuidAndSmsMessageResult": {
         "type": "object",
         "additionalProperties": false,
+        "required": [
+          "item1",
+          "item2"
+        ],
         "properties": {
           "item1": {
             "type": "string",
@@ -1081,6 +1085,10 @@
       "SmsMessageResult": {
         "type": "object",
         "additionalProperties": false,
+        "required": [
+          "phoneNumber",
+          "result"
+        ],
         "properties": {
           "phoneNumber": {
             "type": "string"
@@ -1109,6 +1117,11 @@
       "SendSmsToFamilyPrimaryContactsRequest": {
         "type": "object",
         "additionalProperties": false,
+        "required": [
+          "familyIds",
+          "sourceNumber",
+          "message"
+        ],
         "properties": {
           "familyIds": {
             "type": "array",
@@ -1128,6 +1141,12 @@
       "OrganizationConfiguration": {
         "type": "object",
         "additionalProperties": false,
+        "required": [
+          "organizationName",
+          "locations",
+          "roles",
+          "communityRoles"
+        ],
         "properties": {
           "organizationName": {
             "type": "string"
@@ -1155,10 +1174,17 @@
       "LocationConfiguration": {
         "type": "object",
         "additionalProperties": false,
+        "required": [
+          "name",
+          "ethnicities",
+          "adultFamilyRelationships",
+          "smsSourcePhoneNumbers"
+        ],
         "properties": {
           "id": {
             "type": "string",
-            "format": "guid"
+            "format": "guid",
+            "nullable": true
           },
           "name": {
             "type": "string"
@@ -1208,6 +1234,10 @@
       "SourcePhoneNumberConfiguration": {
         "type": "object",
         "additionalProperties": false,
+        "required": [
+          "sourcePhoneNumber",
+          "description"
+        ],
         "properties": {
           "sourcePhoneNumber": {
             "type": "string"
@@ -1220,10 +1250,16 @@
       "AccessLevel": {
         "type": "object",
         "additionalProperties": false,
+        "required": [
+          "name",
+          "organizationRoles",
+          "approvalRoles"
+        ],
         "properties": {
           "id": {
             "type": "string",
-            "format": "guid"
+            "format": "guid",
+            "nullable": true
           },
           "name": {
             "type": "string"
@@ -1245,6 +1281,15 @@
       "TimeZoneInfo": {
         "type": "object",
         "additionalProperties": false,
+        "required": [
+          "Id",
+          "HasIanaId",
+          "DisplayName",
+          "StandardName",
+          "DaylightName",
+          "BaseUtcOffset",
+          "SupportsDaylightSavingTime"
+        ],
         "properties": {
           "Id": {
             "type": "string"
@@ -1273,6 +1318,10 @@
       "RoleDefinition": {
         "type": "object",
         "additionalProperties": false,
+        "required": [
+          "roleName",
+          "permissionSets"
+        ],
         "properties": {
           "roleName": {
             "type": "string"
@@ -1292,6 +1341,10 @@
       "ContextualPermissionSet": {
         "type": "object",
         "additionalProperties": false,
+        "required": [
+          "context",
+          "permissions"
+        ],
         "properties": {
           "context": {
             "$ref": "#/components/schemas/PermissionContext"
@@ -1571,6 +1624,7 @@
           "ViewAllNotes",
           "AddEditOwnDraftNotes",
           "DiscardOwnDraftNotes",
+          "UpdateOthersNoteAccessLevel",
           "ViewApprovalStatus",
           "EditApprovalRequirementCompletion",
           "EditApprovalRequirementExemption",
@@ -1641,6 +1695,7 @@
           183,
           184,
           185,
+          186,
           200,
           201,
           202,
@@ -1683,6 +1738,9 @@
       "PutLocationPayload": {
         "type": "object",
         "additionalProperties": false,
+        "required": [
+          "locationConfiguration"
+        ],
         "properties": {
           "locationConfiguration": {
             "$ref": "#/components/schemas/LocationConfiguration"
@@ -1697,6 +1755,12 @@
       "EffectiveLocationPolicy": {
         "type": "object",
         "additionalProperties": false,
+        "required": [
+          "actionDefinitions",
+          "customFamilyFields",
+          "referralPolicy",
+          "volunteerPolicy"
+        ],
         "properties": {
           "actionDefinitions": {
             "type": "object",
@@ -1721,6 +1785,10 @@
       "ActionRequirement": {
         "type": "object",
         "additionalProperties": false,
+        "required": [
+          "documentLink",
+          "noteEntry"
+        ],
         "properties": {
           "documentLink": {
             "$ref": "#/components/schemas/DocumentLinkRequirement"
@@ -1749,6 +1817,13 @@
           "canEdit": {
             "type": "string",
             "nullable": true
+          },
+          "alternateNames": {
+            "type": "array",
+            "nullable": true,
+            "items": {
+              "type": "string"
+            }
           }
         }
       },
@@ -1783,6 +1858,10 @@
       "CustomField": {
         "type": "object",
         "additionalProperties": false,
+        "required": [
+          "name",
+          "type"
+        ],
         "properties": {
           "name": {
             "type": "string"
@@ -1832,7 +1911,19 @@
       "V1CasePolicy": {
         "type": "object",
         "additionalProperties": false,
+        "required": [
+          "intakeRequirements_PRE_MIGRATION",
+          "requiredIntakeActionNames",
+          "customFields",
+          "arrangementPolicies"
+        ],
         "properties": {
+          "intakeRequirements_PRE_MIGRATION": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RequirementDefinition"
+            }
+          },
           "requiredIntakeActionNames": {
             "type": "array",
             "items": {
@@ -1857,13 +1948,65 @@
             "items": {
               "$ref": "#/components/schemas/FunctionPolicy"
             }
+          },
+          "intakeRequirements": {
+            "type": "array",
+            "nullable": true,
+            "items": {
+              "$ref": "#/components/schemas/RequirementDefinition"
+            }
+          }
+        }
+      },
+      "RequirementDefinition": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "actionName",
+          "isRequired"
+        ],
+        "properties": {
+          "actionName": {
+            "type": "string"
+          },
+          "isRequired": {
+            "type": "boolean"
           }
         }
       },
       "ArrangementPolicy": {
         "type": "object",
         "additionalProperties": false,
+        "required": [
+          "requiredSetupActions_PRE_MIGRATION",
+          "requiredMonitoringActions_PRE_MIGRATION",
+          "requiredCloseoutActionNames_PRE_MIGRATION",
+          "arrangementType",
+          "childInvolvement",
+          "arrangementFunctions",
+          "requiredSetupActionNames",
+          "requiredMonitoringActions",
+          "requiredCloseoutActionNames"
+        ],
         "properties": {
+          "requiredSetupActions_PRE_MIGRATION": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RequirementDefinition"
+            }
+          },
+          "requiredMonitoringActions_PRE_MIGRATION": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/MonitoringRequirement"
+            }
+          },
+          "requiredCloseoutActionNames_PRE_MIGRATION": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RequirementDefinition"
+            }
+          },
           "arrangementType": {
             "type": "string"
           },
@@ -1885,7 +2028,7 @@
           "requiredMonitoringActions": {
             "type": "array",
             "items": {
-              "$ref": "#/components/schemas/MonitoringRequirement"
+              "$ref": "#/components/schemas/MonitoringRequirementOld"
             }
           },
           "requiredCloseoutActionNames": {
@@ -1893,8 +2036,181 @@
             "items": {
               "type": "string"
             }
+          },
+          "requiredSetupActions": {
+            "type": "array",
+            "nullable": true,
+            "items": {
+              "$ref": "#/components/schemas/RequirementDefinition"
+            }
+          },
+          "requiredMonitoringActionsNew": {
+            "type": "array",
+            "nullable": true,
+            "items": {
+              "$ref": "#/components/schemas/MonitoringRequirement"
+            }
+          },
+          "requiredCloseoutActions": {
+            "type": "array",
+            "nullable": true,
+            "items": {
+              "$ref": "#/components/schemas/RequirementDefinition"
+            }
           }
         }
+      },
+      "MonitoringRequirement": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "action",
+          "recurrence"
+        ],
+        "properties": {
+          "action": {
+            "$ref": "#/components/schemas/RequirementDefinition"
+          },
+          "recurrence": {
+            "$ref": "#/components/schemas/RecurrencePolicy"
+          }
+        }
+      },
+      "RecurrencePolicy": {
+        "type": "object",
+        "discriminator": {
+          "propertyName": "discriminator",
+          "mapping": {
+            "ChildCareOccurrenceBasedRecurrencePolicy": "#/components/schemas/ChildCareOccurrenceBasedRecurrencePolicy",
+            "DurationStagesPerChildLocationRecurrencePolicy": "#/components/schemas/DurationStagesPerChildLocationRecurrencePolicy",
+            "DurationStagesRecurrencePolicy": "#/components/schemas/DurationStagesRecurrencePolicy",
+            "OneTimeRecurrencePolicy": "#/components/schemas/OneTimeRecurrencePolicy"
+          }
+        },
+        "x-abstract": true,
+        "additionalProperties": false,
+        "required": [
+          "discriminator"
+        ],
+        "properties": {
+          "discriminator": {
+            "type": "string"
+          }
+        }
+      },
+      "ChildCareOccurrenceBasedRecurrencePolicy": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/RecurrencePolicy"
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "delay",
+              "frequency",
+              "initialSkipCount",
+              "positive"
+            ],
+            "properties": {
+              "delay": {
+                "type": "string",
+                "format": "duration"
+              },
+              "frequency": {
+                "type": "integer",
+                "format": "int32"
+              },
+              "initialSkipCount": {
+                "type": "integer",
+                "format": "int32"
+              },
+              "positive": {
+                "type": "boolean"
+              }
+            }
+          }
+        ]
+      },
+      "DurationStagesPerChildLocationRecurrencePolicy": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/RecurrencePolicy"
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "stages"
+            ],
+            "properties": {
+              "stages": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/RecurrencePolicyStage"
+                }
+              }
+            }
+          }
+        ]
+      },
+      "RecurrencePolicyStage": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "delay"
+        ],
+        "properties": {
+          "delay": {
+            "type": "string",
+            "format": "duration"
+          },
+          "maxOccurrences": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          }
+        }
+      },
+      "DurationStagesRecurrencePolicy": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/RecurrencePolicy"
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "stages"
+            ],
+            "properties": {
+              "stages": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/RecurrencePolicyStage"
+                }
+              }
+            }
+          }
+        ]
+      },
+      "OneTimeRecurrencePolicy": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/RecurrencePolicy"
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "delay": {
+                "type": "string",
+                "format": "duration",
+                "nullable": true
+              }
+            }
+          }
+        ]
       },
       "ChildInvolvement": {
         "type": "integer",
@@ -1913,6 +2229,11 @@
       "ArrangementFunction": {
         "type": "object",
         "additionalProperties": false,
+        "required": [
+          "functionName",
+          "requirement",
+          "variants"
+        ],
         "properties": {
           "functionName": {
             "type": "string"
@@ -1967,7 +2288,34 @@
       "ArrangementFunctionVariant": {
         "type": "object",
         "additionalProperties": false,
+        "required": [
+          "requiredSetupActionNames_PRE_MIGRATION",
+          "requiredMonitoringActions_PRE_MIGRATION",
+          "requiredCloseoutActionNames_PRE_MIGRATION",
+          "variantName",
+          "requiredSetupActionNames",
+          "requiredMonitoringActions",
+          "requiredCloseoutActionNames"
+        ],
         "properties": {
+          "requiredSetupActionNames_PRE_MIGRATION": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RequirementDefinition"
+            }
+          },
+          "requiredMonitoringActions_PRE_MIGRATION": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/MonitoringRequirement"
+            }
+          },
+          "requiredCloseoutActionNames_PRE_MIGRATION": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RequirementDefinition"
+            }
+          },
           "variantName": {
             "type": "string"
           },
@@ -1980,7 +2328,7 @@
           "requiredMonitoringActions": {
             "type": "array",
             "items": {
-              "$ref": "#/components/schemas/MonitoringRequirement"
+              "$ref": "#/components/schemas/MonitoringRequirementOld"
             }
           },
           "requiredCloseoutActionNames": {
@@ -1988,12 +2336,37 @@
             "items": {
               "type": "string"
             }
+          },
+          "requiredSetupActions": {
+            "type": "array",
+            "nullable": true,
+            "items": {
+              "$ref": "#/components/schemas/RequirementDefinition"
+            }
+          },
+          "requiredMonitoringActionsNew": {
+            "type": "array",
+            "nullable": true,
+            "items": {
+              "$ref": "#/components/schemas/MonitoringRequirement"
+            }
+          },
+          "requiredCloseoutActions": {
+            "type": "array",
+            "nullable": true,
+            "items": {
+              "$ref": "#/components/schemas/RequirementDefinition"
+            }
           }
         }
       },
-      "MonitoringRequirement": {
+      "MonitoringRequirementOld": {
         "type": "object",
         "additionalProperties": false,
+        "required": [
+          "actionName",
+          "recurrence"
+        ],
         "properties": {
           "actionName": {
             "type": "string"
@@ -2003,130 +2376,13 @@
           }
         }
       },
-      "RecurrencePolicy": {
-        "type": "object",
-        "discriminator": {
-          "propertyName": "discriminator",
-          "mapping": {
-            "ChildCareOccurrenceBasedRecurrencePolicy": "#/components/schemas/ChildCareOccurrenceBasedRecurrencePolicy",
-            "DurationStagesPerChildLocationRecurrencePolicy": "#/components/schemas/DurationStagesPerChildLocationRecurrencePolicy",
-            "DurationStagesRecurrencePolicy": "#/components/schemas/DurationStagesRecurrencePolicy",
-            "OneTimeRecurrencePolicy": "#/components/schemas/OneTimeRecurrencePolicy"
-          }
-        },
-        "x-abstract": true,
-        "additionalProperties": false,
-        "required": [
-          "discriminator"
-        ],
-        "properties": {
-          "discriminator": {
-            "type": "string"
-          }
-        }
-      },
-      "ChildCareOccurrenceBasedRecurrencePolicy": {
-        "allOf": [
-          {
-            "$ref": "#/components/schemas/RecurrencePolicy"
-          },
-          {
-            "type": "object",
-            "additionalProperties": false,
-            "properties": {
-              "delay": {
-                "type": "string",
-                "format": "duration"
-              },
-              "frequency": {
-                "type": "integer",
-                "format": "int32"
-              },
-              "initialSkipCount": {
-                "type": "integer",
-                "format": "int32"
-              },
-              "positive": {
-                "type": "boolean"
-              }
-            }
-          }
-        ]
-      },
-      "DurationStagesPerChildLocationRecurrencePolicy": {
-        "allOf": [
-          {
-            "$ref": "#/components/schemas/RecurrencePolicy"
-          },
-          {
-            "type": "object",
-            "additionalProperties": false,
-            "properties": {
-              "stages": {
-                "type": "array",
-                "items": {
-                  "$ref": "#/components/schemas/RecurrencePolicyStage"
-                }
-              }
-            }
-          }
-        ]
-      },
-      "RecurrencePolicyStage": {
-        "type": "object",
-        "additionalProperties": false,
-        "properties": {
-          "delay": {
-            "type": "string",
-            "format": "duration"
-          },
-          "maxOccurrences": {
-            "type": "integer",
-            "format": "int32",
-            "nullable": true
-          }
-        }
-      },
-      "DurationStagesRecurrencePolicy": {
-        "allOf": [
-          {
-            "$ref": "#/components/schemas/RecurrencePolicy"
-          },
-          {
-            "type": "object",
-            "additionalProperties": false,
-            "properties": {
-              "stages": {
-                "type": "array",
-                "items": {
-                  "$ref": "#/components/schemas/RecurrencePolicyStage"
-                }
-              }
-            }
-          }
-        ]
-      },
-      "OneTimeRecurrencePolicy": {
-        "allOf": [
-          {
-            "$ref": "#/components/schemas/RecurrencePolicy"
-          },
-          {
-            "type": "object",
-            "additionalProperties": false,
-            "properties": {
-              "delay": {
-                "type": "string",
-                "format": "duration",
-                "nullable": true
-              }
-            }
-          }
-        ]
-      },
       "FunctionPolicy": {
         "type": "object",
         "additionalProperties": false,
+        "required": [
+          "functionName",
+          "eligibility"
+        ],
         "properties": {
           "functionName": {
             "type": "string"
@@ -2139,6 +2395,11 @@
       "FunctionEligibility": {
         "type": "object",
         "additionalProperties": false,
+        "required": [
+          "eligibleIndividualVolunteerRoles",
+          "eligibleVolunteerFamilyRoles",
+          "eligiblePeople"
+        ],
         "properties": {
           "eligibleIndividualVolunteerRoles": {
             "type": "array",
@@ -2164,6 +2425,10 @@
       "VolunteerPolicy": {
         "type": "object",
         "additionalProperties": false,
+        "required": [
+          "volunteerRoles",
+          "volunteerFamilyRoles"
+        ],
         "properties": {
           "volunteerRoles": {
             "type": "object",
@@ -2182,6 +2447,10 @@
       "VolunteerRolePolicy": {
         "type": "object",
         "additionalProperties": false,
+        "required": [
+          "volunteerRoleType",
+          "policyVersions"
+        ],
         "properties": {
           "volunteerRoleType": {
             "type": "string"
@@ -2197,6 +2466,10 @@
       "VolunteerRolePolicyVersion": {
         "type": "object",
         "additionalProperties": false,
+        "required": [
+          "version",
+          "requirements"
+        ],
         "properties": {
           "version": {
             "type": "string"
@@ -2217,6 +2490,10 @@
       "VolunteerApprovalRequirement": {
         "type": "object",
         "additionalProperties": false,
+        "required": [
+          "stage",
+          "actionName"
+        ],
         "properties": {
           "stage": {
             "$ref": "#/components/schemas/RequirementStage"
@@ -2243,6 +2520,10 @@
       "VolunteerFamilyRolePolicy": {
         "type": "object",
         "additionalProperties": false,
+        "required": [
+          "volunteerFamilyRoleType",
+          "policyVersions"
+        ],
         "properties": {
           "volunteerFamilyRoleType": {
             "type": "string"
@@ -2258,6 +2539,10 @@
       "VolunteerFamilyRolePolicyVersion": {
         "type": "object",
         "additionalProperties": false,
+        "required": [
+          "version",
+          "requirements"
+        ],
         "properties": {
           "version": {
             "type": "string"
@@ -2278,6 +2563,11 @@
       "VolunteerFamilyApprovalRequirement": {
         "type": "object",
         "additionalProperties": false,
+        "required": [
+          "stage",
+          "actionName",
+          "scope"
+        ],
         "properties": {
           "stage": {
             "$ref": "#/components/schemas/RequirementStage"
@@ -2307,6 +2597,11 @@
       "CurrentFeatureFlags": {
         "type": "object",
         "additionalProperties": false,
+        "required": [
+          "inviteUser",
+          "familyScreenV2",
+          "familyScreenPageVersionSwitch"
+        ],
         "properties": {
           "inviteUser": {
             "type": "boolean"
@@ -2322,6 +2617,10 @@
       "DocumentUploadInfo": {
         "type": "object",
         "additionalProperties": false,
+        "required": [
+          "documentId",
+          "valetUrl"
+        ],
         "properties": {
           "documentId": {
             "type": "string",
@@ -2345,7 +2644,8 @@
         "x-abstract": true,
         "additionalProperties": false,
         "required": [
-          "discriminator"
+          "discriminator",
+          "id"
         ],
         "properties": {
           "id": {
@@ -2365,6 +2665,9 @@
           {
             "type": "object",
             "additionalProperties": false,
+            "required": [
+              "community"
+            ],
             "properties": {
               "community": {
                 "$ref": "#/components/schemas/CommunityInfo"
@@ -2376,6 +2679,10 @@
       "CommunityInfo": {
         "type": "object",
         "additionalProperties": false,
+        "required": [
+          "community",
+          "userPermissions"
+        ],
         "properties": {
           "community": {
             "$ref": "#/components/schemas/Community"
@@ -2391,6 +2698,14 @@
       "Community": {
         "type": "object",
         "additionalProperties": false,
+        "required": [
+          "id",
+          "name",
+          "description",
+          "memberFamilies",
+          "communityRoleAssignments",
+          "uploadedDocuments"
+        ],
         "properties": {
           "id": {
             "type": "string",
@@ -2426,6 +2741,10 @@
       "CommunityRoleAssignment": {
         "type": "object",
         "additionalProperties": false,
+        "required": [
+          "personId",
+          "communityRole"
+        ],
         "properties": {
           "personId": {
             "type": "string",
@@ -2439,6 +2758,12 @@
       "UploadedDocumentInfo": {
         "type": "object",
         "additionalProperties": false,
+        "required": [
+          "userId",
+          "timestampUtc",
+          "uploadedDocumentId",
+          "uploadedFileName"
+        ],
         "properties": {
           "userId": {
             "type": "string",
@@ -2465,6 +2790,9 @@
           {
             "type": "object",
             "additionalProperties": false,
+            "required": [
+              "family"
+            ],
             "properties": {
               "family": {
                 "$ref": "#/components/schemas/CombinedFamilyInfo"
@@ -2476,6 +2804,14 @@
       "CombinedFamilyInfo": {
         "type": "object",
         "additionalProperties": false,
+        "required": [
+          "family",
+          "users",
+          "notes",
+          "uploadedDocuments",
+          "missingCustomFields",
+          "userPermissions"
+        ],
         "properties": {
           "family": {
             "$ref": "#/components/schemas/Family"
@@ -2531,6 +2867,18 @@
       "Family": {
         "type": "object",
         "additionalProperties": false,
+        "required": [
+          "id",
+          "active",
+          "primaryFamilyContactPersonId",
+          "adults",
+          "children",
+          "custodialRelationships",
+          "uploadedDocuments",
+          "deletedDocuments",
+          "completedCustomFields",
+          "history"
+        ],
         "properties": {
           "id": {
             "type": "string",
@@ -2613,6 +2961,15 @@
       "Person": {
         "type": "object",
         "additionalProperties": false,
+        "required": [
+          "id",
+          "active",
+          "firstName",
+          "lastName",
+          "addresses",
+          "phoneNumbers",
+          "emailAddresses"
+        ],
         "properties": {
           "id": {
             "type": "string",
@@ -2732,6 +3089,10 @@
           {
             "type": "object",
             "additionalProperties": false,
+            "required": [
+              "years",
+              "asOf"
+            ],
             "properties": {
               "years": {
                 "type": "integer",
@@ -2753,6 +3114,9 @@
           {
             "type": "object",
             "additionalProperties": false,
+            "required": [
+              "dateOfBirth"
+            ],
             "properties": {
               "dateOfBirth": {
                 "type": "string",
@@ -2765,6 +3129,9 @@
       "Address": {
         "type": "object",
         "additionalProperties": false,
+        "required": [
+          "id"
+        ],
         "properties": {
           "id": {
             "type": "string",
@@ -2799,10 +3166,15 @@
       "PhoneNumber": {
         "type": "object",
         "additionalProperties": false,
+        "required": [
+          "number",
+          "type"
+        ],
         "properties": {
           "id": {
             "type": "string",
-            "format": "guid"
+            "format": "guid",
+            "nullable": true
           },
           "number": {
             "type": "string"
@@ -2831,6 +3203,11 @@
       "EmailAddress": {
         "type": "object",
         "additionalProperties": false,
+        "required": [
+          "id",
+          "address",
+          "type"
+        ],
         "properties": {
           "id": {
             "type": "string",
@@ -2859,6 +3236,10 @@
       "FamilyAdultRelationshipInfo": {
         "type": "object",
         "additionalProperties": false,
+        "required": [
+          "relationshipToFamily",
+          "isInHousehold"
+        ],
         "properties": {
           "relationshipToFamily": {
             "type": "string"
@@ -2871,6 +3252,11 @@
       "CustodialRelationship": {
         "type": "object",
         "additionalProperties": false,
+        "required": [
+          "childId",
+          "personId",
+          "type"
+        ],
         "properties": {
           "childId": {
             "type": "string",
@@ -2902,6 +3288,13 @@
       "CompletedCustomFieldInfo": {
         "type": "object",
         "additionalProperties": false,
+        "required": [
+          "userId",
+          "timestampUtc",
+          "completedCustomFieldId",
+          "customFieldName",
+          "customFieldType"
+        ],
         "properties": {
           "userId": {
             "type": "string",
@@ -2940,7 +3333,10 @@
         "x-abstract": true,
         "additionalProperties": false,
         "required": [
-          "discriminator"
+          "discriminator",
+          "userId",
+          "auditTimestampUtc",
+          "activityTimestampUtc"
         ],
         "properties": {
           "userId": {
@@ -2978,6 +3374,11 @@
           {
             "type": "object",
             "additionalProperties": false,
+            "required": [
+              "arrangementId",
+              "requirementName",
+              "completedAtUtc"
+            ],
             "properties": {
               "arrangementId": {
                 "type": "string",
@@ -3002,6 +3403,13 @@
           {
             "type": "object",
             "additionalProperties": false,
+            "required": [
+              "arrangementId",
+              "changedAtUtc",
+              "childLocationFamilyId",
+              "childLocationReceivingAdultId",
+              "plan"
+            ],
             "properties": {
               "arrangementId": {
                 "type": "string",
@@ -3048,6 +3456,9 @@
           {
             "type": "object",
             "additionalProperties": false,
+            "required": [
+              "openedAtUtc"
+            ],
             "properties": {
               "openedAtUtc": {
                 "type": "string",
@@ -3065,6 +3476,10 @@
           {
             "type": "object",
             "additionalProperties": false,
+            "required": [
+              "requirementName",
+              "completedAtUtc"
+            ],
             "properties": {
               "requirementName": {
                 "type": "string"
@@ -3080,6 +3495,10 @@
       "UserInfo": {
         "type": "object",
         "additionalProperties": false,
+        "required": [
+          "personId",
+          "locationRoles"
+        ],
         "properties": {
           "userId": {
             "type": "string",
@@ -3101,6 +3520,10 @@
       "PartneringFamilyInfo": {
         "type": "object",
         "additionalProperties": false,
+        "required": [
+          "closedReferrals",
+          "history"
+        ],
         "properties": {
           "openV1Case": {
             "nullable": true,
@@ -3127,6 +3550,16 @@
       "V1Case": {
         "type": "object",
         "additionalProperties": false,
+        "required": [
+          "id",
+          "openedAtUtc",
+          "completedRequirements",
+          "exemptedRequirements",
+          "missingRequirements",
+          "completedCustomFields",
+          "missingCustomFields",
+          "arrangements"
+        ],
         "properties": {
           "id": {
             "type": "string",
@@ -3164,7 +3597,7 @@
           "missingRequirements": {
             "type": "array",
             "items": {
-              "type": "string"
+              "$ref": "#/components/schemas/RequirementDefinition"
             }
           },
           "completedCustomFields": {
@@ -3212,6 +3645,13 @@
       "CompletedRequirementInfo": {
         "type": "object",
         "additionalProperties": false,
+        "required": [
+          "userId",
+          "timestampUtc",
+          "completedRequirementId",
+          "requirementName",
+          "completedAtUtc"
+        ],
         "properties": {
           "userId": {
             "type": "string",
@@ -3252,6 +3692,12 @@
       "ExemptedRequirementInfo": {
         "type": "object",
         "additionalProperties": false,
+        "required": [
+          "userId",
+          "timestampUtc",
+          "requirementName",
+          "additionalComments"
+        ],
         "properties": {
           "userId": {
             "type": "string",
@@ -3282,6 +3728,21 @@
       "Arrangement": {
         "type": "object",
         "additionalProperties": false,
+        "required": [
+          "id",
+          "arrangementType",
+          "partneringFamilyPersonId",
+          "phase",
+          "requestedAtUtc",
+          "completedRequirements",
+          "exemptedRequirements",
+          "missingRequirements",
+          "missingOptionalRequirements",
+          "individualVolunteerAssignments",
+          "familyVolunteerAssignments",
+          "childLocationHistory",
+          "childLocationPlan"
+        ],
         "properties": {
           "id": {
             "type": "string",
@@ -3344,6 +3805,12 @@
               "$ref": "#/components/schemas/MissingArrangementRequirement"
             }
           },
+          "missingOptionalRequirements": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/MissingArrangementRequirement"
+            }
+          },
           "individualVolunteerAssignments": {
             "type": "array",
             "items": {
@@ -3399,6 +3866,9 @@
       "MissingArrangementRequirement": {
         "type": "object",
         "additionalProperties": false,
+        "required": [
+          "action"
+        ],
         "properties": {
           "arrangementFunction": {
             "type": "string",
@@ -3418,8 +3888,8 @@
             "format": "guid",
             "nullable": true
           },
-          "actionName": {
-            "type": "string"
+          "action": {
+            "$ref": "#/components/schemas/RequirementDefinition"
           },
           "dueBy": {
             "type": "string",
@@ -3436,6 +3906,13 @@
       "IndividualVolunteerAssignment": {
         "type": "object",
         "additionalProperties": false,
+        "required": [
+          "familyId",
+          "personId",
+          "arrangementFunction",
+          "completedRequirements",
+          "exemptedRequirements"
+        ],
         "properties": {
           "familyId": {
             "type": "string",
@@ -3469,6 +3946,12 @@
       "FamilyVolunteerAssignment": {
         "type": "object",
         "additionalProperties": false,
+        "required": [
+          "familyId",
+          "arrangementFunction",
+          "completedRequirements",
+          "exemptedRequirements"
+        ],
         "properties": {
           "familyId": {
             "type": "string",
@@ -3498,6 +3981,13 @@
       "ChildLocationHistoryEntry": {
         "type": "object",
         "additionalProperties": false,
+        "required": [
+          "userId",
+          "timestampUtc",
+          "childLocationFamilyId",
+          "childLocationReceivingAdultId",
+          "plan"
+        ],
         "properties": {
           "userId": {
             "type": "string",
@@ -3528,6 +4018,17 @@
       "VolunteerFamilyInfo": {
         "type": "object",
         "additionalProperties": false,
+        "required": [
+          "familyRoleApprovals",
+          "completedRequirements",
+          "exemptedRequirements",
+          "availableApplications",
+          "missingRequirements",
+          "roleRemovals",
+          "individualVolunteers",
+          "history",
+          "assignments"
+        ],
         "properties": {
           "familyRoleApprovals": {
             "type": "object",
@@ -3588,6 +4089,12 @@
       "FamilyRoleApprovalStatus": {
         "type": "object",
         "additionalProperties": false,
+        "required": [
+          "roleVersionApprovals",
+          "currentMissingFamilyRequirements",
+          "currentAvailableFamilyApplications",
+          "currentMissingIndividualRequirements"
+        ],
         "properties": {
           "effectiveRoleApprovalStatus": {
             "nullable": true,
@@ -3634,6 +4141,9 @@
       "DateOnlyTimelineOfRoleApprovalStatus": {
         "type": "object",
         "additionalProperties": false,
+        "required": [
+          "ranges"
+        ],
         "properties": {
           "ranges": {
             "type": "array",
@@ -3646,6 +4156,11 @@
       "DateRangeOfRoleApprovalStatus": {
         "type": "object",
         "additionalProperties": false,
+        "required": [
+          "start",
+          "end",
+          "tag"
+        ],
         "properties": {
           "start": {
             "type": "string",
@@ -3683,6 +4198,10 @@
       "FamilyRoleVersionApprovalStatus": {
         "type": "object",
         "additionalProperties": false,
+        "required": [
+          "version",
+          "requirements"
+        ],
         "properties": {
           "version": {
             "type": "string"
@@ -3706,6 +4225,12 @@
       "FamilyRoleRequirementCompletionStatus": {
         "type": "object",
         "additionalProperties": false,
+        "required": [
+          "actionName",
+          "stage",
+          "scope",
+          "statusDetails"
+        ],
         "properties": {
           "actionName": {
             "type": "string"
@@ -3735,6 +4260,11 @@
       "DateOnlyTimeline": {
         "type": "object",
         "additionalProperties": false,
+        "required": [
+          "ranges",
+          "start",
+          "end"
+        ],
         "properties": {
           "ranges": {
             "type": "array",
@@ -3755,6 +4285,11 @@
       "DateRange": {
         "type": "object",
         "additionalProperties": false,
+        "required": [
+          "start",
+          "end",
+          "totalDaysInclusive"
+        ],
         "properties": {
           "start": {
             "type": "string",
@@ -3792,6 +4327,9 @@
       "ValueTupleOfGuidAndStringAndString": {
         "type": "object",
         "additionalProperties": false,
+        "required": [
+          "item1"
+        ],
         "properties": {
           "item1": {
             "type": "string",
@@ -3810,6 +4348,11 @@
       "RoleRemoval": {
         "type": "object",
         "additionalProperties": false,
+        "required": [
+          "roleName",
+          "reason",
+          "effectiveSince"
+        ],
         "properties": {
           "roleName": {
             "type": "string"
@@ -3849,6 +4392,14 @@
       "VolunteerInfo": {
         "type": "object",
         "additionalProperties": false,
+        "required": [
+          "approvalStatusByRole",
+          "completedRequirements",
+          "exemptedRequirements",
+          "availableApplications",
+          "missingRequirements",
+          "roleRemovals"
+        ],
         "properties": {
           "approvalStatusByRole": {
             "type": "object",
@@ -3891,6 +4442,11 @@
       "IndividualRoleApprovalStatus": {
         "type": "object",
         "additionalProperties": false,
+        "required": [
+          "roleVersionApprovals",
+          "currentMissingRequirements",
+          "currentAvailableApplications"
+        ],
         "properties": {
           "effectiveRoleApprovalStatus": {
             "nullable": true,
@@ -3931,6 +4487,10 @@
       "IndividualRoleVersionApprovalStatus": {
         "type": "object",
         "additionalProperties": false,
+        "required": [
+          "version",
+          "requirements"
+        ],
         "properties": {
           "version": {
             "type": "string"
@@ -3954,6 +4514,10 @@
       "IndividualRoleRequirementCompletionStatus": {
         "type": "object",
         "additionalProperties": false,
+        "required": [
+          "actionName",
+          "stage"
+        ],
         "properties": {
           "actionName": {
             "type": "string"
@@ -3988,6 +4552,19 @@
       "ArrangementEntry": {
         "type": "object",
         "additionalProperties": false,
+        "required": [
+          "id",
+          "arrangementType",
+          "active",
+          "requestedAtUtc",
+          "partneringFamilyPersonId",
+          "completedRequirements",
+          "exemptedRequirements",
+          "individualVolunteerAssignments",
+          "familyVolunteerAssignments",
+          "childLocationHistory",
+          "childLocationPlan"
+        ],
         "properties": {
           "id": {
             "type": "string",
@@ -4081,6 +4658,12 @@
       "Note": {
         "type": "object",
         "additionalProperties": false,
+        "required": [
+          "id",
+          "authorId",
+          "timestampUtc",
+          "status"
+        ],
         "properties": {
           "id": {
             "type": "string",
@@ -4158,6 +4741,9 @@
           {
             "type": "object",
             "additionalProperties": false,
+            "required": [
+              "command"
+            ],
             "properties": {
               "command": {
                 "$ref": "#/components/schemas/ArrangementsCommand"
@@ -4210,7 +4796,10 @@
         "x-abstract": true,
         "additionalProperties": false,
         "required": [
-          "discriminator"
+          "discriminator",
+          "familyId",
+          "referralId",
+          "arrangementIds"
         ],
         "properties": {
           "familyId": {
@@ -4241,6 +4830,11 @@
           {
             "type": "object",
             "additionalProperties": false,
+            "required": [
+              "volunteerFamilyId",
+              "personId",
+              "arrangementFunction"
+            ],
             "properties": {
               "volunteerFamilyId": {
                 "type": "string",
@@ -4269,6 +4863,10 @@
           {
             "type": "object",
             "additionalProperties": false,
+            "required": [
+              "volunteerFamilyId",
+              "arrangementFunction"
+            ],
             "properties": {
               "volunteerFamilyId": {
                 "type": "string",
@@ -4293,6 +4891,9 @@
           {
             "type": "object",
             "additionalProperties": false,
+            "required": [
+              "cancelledAtUtc"
+            ],
             "properties": {
               "cancelledAtUtc": {
                 "type": "string",
@@ -4310,6 +4911,11 @@
           {
             "type": "object",
             "additionalProperties": false,
+            "required": [
+              "completedRequirementId",
+              "requirementName",
+              "completedAtUtc"
+            ],
             "properties": {
               "completedRequirementId": {
                 "type": "string",
@@ -4344,6 +4950,14 @@
           {
             "type": "object",
             "additionalProperties": false,
+            "required": [
+              "arrangementFunction",
+              "volunteerFamilyId",
+              "personId",
+              "completedRequirementId",
+              "requirementName",
+              "completedAtUtc"
+            ],
             "properties": {
               "arrangementFunction": {
                 "type": "string"
@@ -4393,6 +5007,13 @@
           {
             "type": "object",
             "additionalProperties": false,
+            "required": [
+              "arrangementFunction",
+              "volunteerFamilyId",
+              "completedRequirementId",
+              "requirementName",
+              "completedAtUtc"
+            ],
             "properties": {
               "arrangementFunction": {
                 "type": "string"
@@ -4438,6 +5059,11 @@
           {
             "type": "object",
             "additionalProperties": false,
+            "required": [
+              "arrangementType",
+              "requestedAtUtc",
+              "partneringFamilyPersonId"
+            ],
             "properties": {
               "arrangementType": {
                 "type": "string"
@@ -4477,6 +5103,11 @@
           {
             "type": "object",
             "additionalProperties": false,
+            "required": [
+              "changedAtUtc",
+              "childLocationFamilyId",
+              "childLocationReceivingAdultId"
+            ],
             "properties": {
               "changedAtUtc": {
                 "type": "string",
@@ -4507,6 +5138,11 @@
           {
             "type": "object",
             "additionalProperties": false,
+            "required": [
+              "plannedChangeUtc",
+              "childLocationFamilyId",
+              "childLocationReceivingAdultId"
+            ],
             "properties": {
               "plannedChangeUtc": {
                 "type": "string",
@@ -4532,6 +5168,9 @@
           {
             "type": "object",
             "additionalProperties": false,
+            "required": [
+              "cancelledAtUtc"
+            ],
             "properties": {
               "cancelledAtUtc": {
                 "type": "string",
@@ -4549,6 +5188,9 @@
           {
             "type": "object",
             "additionalProperties": false,
+            "required": [
+              "endedAtUtc"
+            ],
             "properties": {
               "endedAtUtc": {
                 "type": "string",
@@ -4583,6 +5225,9 @@
           {
             "type": "object",
             "additionalProperties": false,
+            "required": [
+              "requestedAtUtc"
+            ],
             "properties": {
               "requestedAtUtc": {
                 "type": "string",
@@ -4600,6 +5245,9 @@
           {
             "type": "object",
             "additionalProperties": false,
+            "required": [
+              "startedAtUtc"
+            ],
             "properties": {
               "startedAtUtc": {
                 "type": "string",
@@ -4617,6 +5265,9 @@
           {
             "type": "object",
             "additionalProperties": false,
+            "required": [
+              "endedAtUtc"
+            ],
             "properties": {
               "endedAtUtc": {
                 "type": "string",
@@ -4634,6 +5285,10 @@
           {
             "type": "object",
             "additionalProperties": false,
+            "required": [
+              "requirementName",
+              "additionalComments"
+            ],
             "properties": {
               "requirementName": {
                 "type": "string"
@@ -4663,6 +5318,13 @@
           {
             "type": "object",
             "additionalProperties": false,
+            "required": [
+              "arrangementFunction",
+              "volunteerFamilyId",
+              "personId",
+              "requirementName",
+              "additionalComments"
+            ],
             "properties": {
               "arrangementFunction": {
                 "type": "string"
@@ -4707,6 +5369,12 @@
           {
             "type": "object",
             "additionalProperties": false,
+            "required": [
+              "arrangementFunction",
+              "volunteerFamilyId",
+              "requirementName",
+              "additionalComments"
+            ],
             "properties": {
               "arrangementFunction": {
                 "type": "string"
@@ -4721,7 +5389,8 @@
               },
               "personId": {
                 "type": "string",
-                "format": "guid"
+                "format": "guid",
+                "nullable": true
               },
               "requirementName": {
                 "type": "string"
@@ -4751,6 +5420,10 @@
           {
             "type": "object",
             "additionalProperties": false,
+            "required": [
+              "completedRequirementId",
+              "requirementName"
+            ],
             "properties": {
               "completedRequirementId": {
                 "type": "string",
@@ -4771,6 +5444,13 @@
           {
             "type": "object",
             "additionalProperties": false,
+            "required": [
+              "arrangementFunction",
+              "volunteerFamilyId",
+              "personId",
+              "completedRequirementId",
+              "requirementName"
+            ],
             "properties": {
               "arrangementFunction": {
                 "type": "string"
@@ -4806,6 +5486,12 @@
           {
             "type": "object",
             "additionalProperties": false,
+            "required": [
+              "arrangementFunction",
+              "volunteerFamilyId",
+              "completedRequirementId",
+              "requirementName"
+            ],
             "properties": {
               "arrangementFunction": {
                 "type": "string"
@@ -4873,6 +5559,12 @@
           {
             "type": "object",
             "additionalProperties": false,
+            "required": [
+              "plannedChangeUtc",
+              "childLocationFamilyId",
+              "childLocationReceivingAdultId",
+              "plan"
+            ],
             "properties": {
               "plannedChangeUtc": {
                 "type": "string",
@@ -4919,6 +5611,9 @@
           {
             "type": "object",
             "additionalProperties": false,
+            "required": [
+              "startedAtUtc"
+            ],
             "properties": {
               "startedAtUtc": {
                 "type": "string",
@@ -4936,6 +5631,12 @@
           {
             "type": "object",
             "additionalProperties": false,
+            "required": [
+              "changedAtUtc",
+              "childLocationFamilyId",
+              "childLocationReceivingAdultId",
+              "plan"
+            ],
             "properties": {
               "changedAtUtc": {
                 "type": "string",
@@ -4969,6 +5670,11 @@
           {
             "type": "object",
             "additionalProperties": false,
+            "required": [
+              "volunteerFamilyId",
+              "personId",
+              "arrangementFunction"
+            ],
             "properties": {
               "volunteerFamilyId": {
                 "type": "string",
@@ -4997,6 +5703,10 @@
           {
             "type": "object",
             "additionalProperties": false,
+            "required": [
+              "volunteerFamilyId",
+              "arrangementFunction"
+            ],
             "properties": {
               "volunteerFamilyId": {
                 "type": "string",
@@ -5021,6 +5731,9 @@
           {
             "type": "object",
             "additionalProperties": false,
+            "required": [
+              "requirementName"
+            ],
             "properties": {
               "requirementName": {
                 "type": "string"
@@ -5042,6 +5755,12 @@
           {
             "type": "object",
             "additionalProperties": false,
+            "required": [
+              "arrangementFunction",
+              "volunteerFamilyId",
+              "personId",
+              "requirementName"
+            ],
             "properties": {
               "arrangementFunction": {
                 "type": "string"
@@ -5078,6 +5797,11 @@
           {
             "type": "object",
             "additionalProperties": false,
+            "required": [
+              "arrangementFunction",
+              "volunteerFamilyId",
+              "requirementName"
+            ],
             "properties": {
               "arrangementFunction": {
                 "type": "string"
@@ -5092,7 +5816,8 @@
               },
               "personId": {
                 "type": "string",
-                "format": "guid"
+                "format": "guid",
+                "nullable": true
               },
               "requirementName": {
                 "type": "string"
@@ -5131,6 +5856,9 @@
           {
             "type": "object",
             "additionalProperties": false,
+            "required": [
+              "command"
+            ],
             "properties": {
               "command": {
                 "$ref": "#/components/schemas/CommunityCommand"
@@ -5158,7 +5886,8 @@
         "x-abstract": true,
         "additionalProperties": false,
         "required": [
-          "discriminator"
+          "discriminator",
+          "communityId"
         ],
         "properties": {
           "communityId": {
@@ -5178,6 +5907,9 @@
           {
             "type": "object",
             "additionalProperties": false,
+            "required": [
+              "familyId"
+            ],
             "properties": {
               "familyId": {
                 "type": "string",
@@ -5195,6 +5927,10 @@
           {
             "type": "object",
             "additionalProperties": false,
+            "required": [
+              "personId",
+              "communityRole"
+            ],
             "properties": {
               "personId": {
                 "type": "string",
@@ -5215,6 +5951,10 @@
           {
             "type": "object",
             "additionalProperties": false,
+            "required": [
+              "name",
+              "description"
+            ],
             "properties": {
               "name": {
                 "type": "string"
@@ -5234,6 +5974,9 @@
           {
             "type": "object",
             "additionalProperties": false,
+            "required": [
+              "uploadedDocumentId"
+            ],
             "properties": {
               "uploadedDocumentId": {
                 "type": "string",
@@ -5251,6 +5994,9 @@
           {
             "type": "object",
             "additionalProperties": false,
+            "required": [
+              "description"
+            ],
             "properties": {
               "description": {
                 "type": "string"
@@ -5267,6 +6013,9 @@
           {
             "type": "object",
             "additionalProperties": false,
+            "required": [
+              "familyId"
+            ],
             "properties": {
               "familyId": {
                 "type": "string",
@@ -5284,6 +6033,10 @@
           {
             "type": "object",
             "additionalProperties": false,
+            "required": [
+              "personId",
+              "communityRole"
+            ],
             "properties": {
               "personId": {
                 "type": "string",
@@ -5304,6 +6057,9 @@
           {
             "type": "object",
             "additionalProperties": false,
+            "required": [
+              "name"
+            ],
             "properties": {
               "name": {
                 "type": "string"
@@ -5320,6 +6076,10 @@
           {
             "type": "object",
             "additionalProperties": false,
+            "required": [
+              "uploadedDocumentId",
+              "uploadedFileName"
+            ],
             "properties": {
               "uploadedDocumentId": {
                 "type": "string",
@@ -5340,6 +6100,9 @@
           {
             "type": "object",
             "additionalProperties": false,
+            "required": [
+              "command"
+            ],
             "properties": {
               "command": {
                 "$ref": "#/components/schemas/VolunteerFamilyCommand"
@@ -5366,7 +6129,8 @@
         "x-abstract": true,
         "additionalProperties": false,
         "required": [
-          "discriminator"
+          "discriminator",
+          "familyId"
         ],
         "properties": {
           "familyId": {
@@ -5397,6 +6161,11 @@
           {
             "type": "object",
             "additionalProperties": false,
+            "required": [
+              "completedRequirementId",
+              "requirementName",
+              "completedAtUtc"
+            ],
             "properties": {
               "completedRequirementId": {
                 "type": "string",
@@ -5431,6 +6200,10 @@
           {
             "type": "object",
             "additionalProperties": false,
+            "required": [
+              "requirementName",
+              "additionalComments"
+            ],
             "properties": {
               "requirementName": {
                 "type": "string"
@@ -5455,6 +6228,10 @@
           {
             "type": "object",
             "additionalProperties": false,
+            "required": [
+              "completedRequirementId",
+              "requirementName"
+            ],
             "properties": {
               "completedRequirementId": {
                 "type": "string",
@@ -5475,6 +6252,10 @@
           {
             "type": "object",
             "additionalProperties": false,
+            "required": [
+              "roleName",
+              "reason"
+            ],
             "properties": {
               "roleName": {
                 "type": "string"
@@ -5508,6 +6289,9 @@
           {
             "type": "object",
             "additionalProperties": false,
+            "required": [
+              "roleName"
+            ],
             "properties": {
               "roleName": {
                 "type": "string"
@@ -5534,6 +6318,9 @@
           {
             "type": "object",
             "additionalProperties": false,
+            "required": [
+              "requirementName"
+            ],
             "properties": {
               "requirementName": {
                 "type": "string"
@@ -5550,6 +6337,10 @@
           {
             "type": "object",
             "additionalProperties": false,
+            "required": [
+              "uploadedDocumentId",
+              "uploadedFileName"
+            ],
             "properties": {
               "uploadedDocumentId": {
                 "type": "string",
@@ -5570,6 +6361,9 @@
           {
             "type": "object",
             "additionalProperties": false,
+            "required": [
+              "command"
+            ],
             "properties": {
               "command": {
                 "$ref": "#/components/schemas/FamilyCommand"
@@ -5601,7 +6395,8 @@
         "x-abstract": true,
         "additionalProperties": false,
         "required": [
-          "discriminator"
+          "discriminator",
+          "familyId"
         ],
         "properties": {
           "familyId": {
@@ -5621,6 +6416,10 @@
           {
             "type": "object",
             "additionalProperties": false,
+            "required": [
+              "adultPersonId",
+              "relationshipToFamily"
+            ],
             "properties": {
               "adultPersonId": {
                 "type": "string",
@@ -5641,6 +6440,10 @@
           {
             "type": "object",
             "additionalProperties": false,
+            "required": [
+              "childPersonId",
+              "custodialRelationships"
+            ],
             "properties": {
               "childPersonId": {
                 "type": "string",
@@ -5664,6 +6467,9 @@
           {
             "type": "object",
             "additionalProperties": false,
+            "required": [
+              "custodialRelationship"
+            ],
             "properties": {
               "custodialRelationship": {
                 "$ref": "#/components/schemas/CustodialRelationship"
@@ -5680,6 +6486,9 @@
           {
             "type": "object",
             "additionalProperties": false,
+            "required": [
+              "adultId"
+            ],
             "properties": {
               "adultId": {
                 "type": "string",
@@ -5697,6 +6506,10 @@
           {
             "type": "object",
             "additionalProperties": false,
+            "required": [
+              "personId",
+              "newRelationshipToFamily"
+            ],
             "properties": {
               "personId": {
                 "type": "string",
@@ -5717,6 +6530,12 @@
           {
             "type": "object",
             "additionalProperties": false,
+            "required": [
+              "primaryFamilyContactPersonId",
+              "adults",
+              "children",
+              "custodialRelationships"
+            ],
             "properties": {
               "primaryFamilyContactPersonId": {
                 "type": "string",
@@ -5748,6 +6567,9 @@
       "ValueTupleOfGuidAndFamilyAdultRelationshipInfo": {
         "type": "object",
         "additionalProperties": false,
+        "required": [
+          "item1"
+        ],
         "properties": {
           "item1": {
             "type": "string",
@@ -5771,6 +6593,9 @@
           {
             "type": "object",
             "additionalProperties": false,
+            "required": [
+              "uploadedDocumentId"
+            ],
             "properties": {
               "uploadedDocumentId": {
                 "type": "string",
@@ -5788,6 +6613,10 @@
           {
             "type": "object",
             "additionalProperties": false,
+            "required": [
+              "childPersonId",
+              "adultPersonId"
+            ],
             "properties": {
               "childPersonId": {
                 "type": "string",
@@ -5820,6 +6649,10 @@
           {
             "type": "object",
             "additionalProperties": false,
+            "required": [
+              "adultPersonId",
+              "relationshipToFamily"
+            ],
             "properties": {
               "adultPersonId": {
                 "type": "string",
@@ -5840,6 +6673,11 @@
           {
             "type": "object",
             "additionalProperties": false,
+            "required": [
+              "childPersonId",
+              "adultPersonId",
+              "type"
+            ],
             "properties": {
               "childPersonId": {
                 "type": "string",
@@ -5864,6 +6702,11 @@
           {
             "type": "object",
             "additionalProperties": false,
+            "required": [
+              "completedCustomFieldId",
+              "customFieldName",
+              "customFieldType"
+            ],
             "properties": {
               "completedCustomFieldId": {
                 "type": "string",
@@ -5890,6 +6733,10 @@
           {
             "type": "object",
             "additionalProperties": false,
+            "required": [
+              "uploadedDocumentId",
+              "uploadedFileName"
+            ],
             "properties": {
               "uploadedDocumentId": {
                 "type": "string",
@@ -5910,6 +6757,9 @@
           {
             "type": "object",
             "additionalProperties": false,
+            "required": [
+              "command"
+            ],
             "properties": {
               "command": {
                 "$ref": "#/components/schemas/VolunteerCommand"
@@ -5934,7 +6784,9 @@
         "x-abstract": true,
         "additionalProperties": false,
         "required": [
-          "discriminator"
+          "discriminator",
+          "familyId",
+          "personId"
         ],
         "properties": {
           "familyId": {
@@ -5958,6 +6810,11 @@
           {
             "type": "object",
             "additionalProperties": false,
+            "required": [
+              "completedRequirementId",
+              "requirementName",
+              "completedAtUtc"
+            ],
             "properties": {
               "completedRequirementId": {
                 "type": "string",
@@ -5992,6 +6849,10 @@
           {
             "type": "object",
             "additionalProperties": false,
+            "required": [
+              "requirementName",
+              "additionalComments"
+            ],
             "properties": {
               "requirementName": {
                 "type": "string"
@@ -6016,6 +6877,10 @@
           {
             "type": "object",
             "additionalProperties": false,
+            "required": [
+              "completedRequirementId",
+              "requirementName"
+            ],
             "properties": {
               "completedRequirementId": {
                 "type": "string",
@@ -6036,6 +6901,10 @@
           {
             "type": "object",
             "additionalProperties": false,
+            "required": [
+              "roleName",
+              "reason"
+            ],
             "properties": {
               "roleName": {
                 "type": "string"
@@ -6069,6 +6938,9 @@
           {
             "type": "object",
             "additionalProperties": false,
+            "required": [
+              "roleName"
+            ],
             "properties": {
               "roleName": {
                 "type": "string"
@@ -6095,6 +6967,9 @@
           {
             "type": "object",
             "additionalProperties": false,
+            "required": [
+              "requirementName"
+            ],
             "properties": {
               "requirementName": {
                 "type": "string"
@@ -6111,6 +6986,9 @@
           {
             "type": "object",
             "additionalProperties": false,
+            "required": [
+              "command"
+            ],
             "properties": {
               "command": {
                 "$ref": "#/components/schemas/NoteCommand"
@@ -6127,13 +7005,16 @@
             "ApproveNote": "#/components/schemas/ApproveNote",
             "CreateDraftNote": "#/components/schemas/CreateDraftNote",
             "DiscardDraftNote": "#/components/schemas/DiscardDraftNote",
-            "EditDraftNote": "#/components/schemas/EditDraftNote"
+            "EditDraftNote": "#/components/schemas/EditDraftNote",
+            "UpdateNoteAccessLevel": "#/components/schemas/UpdateNoteAccessLevel"
           }
         },
         "x-abstract": true,
         "additionalProperties": false,
         "required": [
-          "discriminator"
+          "discriminator",
+          "familyId",
+          "noteId"
         ],
         "properties": {
           "familyId": {
@@ -6157,6 +7038,9 @@
           {
             "type": "object",
             "additionalProperties": false,
+            "required": [
+              "finalizedNoteContents"
+            ],
             "properties": {
               "finalizedNoteContents": {
                 "type": "string"
@@ -6237,6 +7121,23 @@
           }
         ]
       },
+      "UpdateNoteAccessLevel": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/NoteCommand"
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "accessLevel": {
+                "type": "string",
+                "nullable": true
+              }
+            }
+          }
+        ]
+      },
       "PersonRecordsCommand": {
         "allOf": [
           {
@@ -6245,6 +7146,10 @@
           {
             "type": "object",
             "additionalProperties": false,
+            "required": [
+              "familyId",
+              "command"
+            ],
             "properties": {
               "familyId": {
                 "type": "string",
@@ -6281,7 +7186,8 @@
         "x-abstract": true,
         "additionalProperties": false,
         "required": [
-          "discriminator"
+          "discriminator",
+          "personId"
         ],
         "properties": {
           "personId": {
@@ -6301,6 +7207,10 @@
           {
             "type": "object",
             "additionalProperties": false,
+            "required": [
+              "address",
+              "isCurrentAddress"
+            ],
             "properties": {
               "address": {
                 "$ref": "#/components/schemas/Address"
@@ -6320,6 +7230,10 @@
           {
             "type": "object",
             "additionalProperties": false,
+            "required": [
+              "emailAddress",
+              "isPreferredEmailAddress"
+            ],
             "properties": {
               "emailAddress": {
                 "$ref": "#/components/schemas/EmailAddress"
@@ -6339,6 +7253,10 @@
           {
             "type": "object",
             "additionalProperties": false,
+            "required": [
+              "phoneNumber",
+              "isPreferredPhoneNumber"
+            ],
             "properties": {
               "phoneNumber": {
                 "$ref": "#/components/schemas/PhoneNumber"
@@ -6358,6 +7276,13 @@
           {
             "type": "object",
             "additionalProperties": false,
+            "required": [
+              "firstName",
+              "lastName",
+              "addresses",
+              "phoneNumbers",
+              "emailAddresses"
+            ],
             "properties": {
               "firstName": {
                 "type": "string"
@@ -6449,6 +7374,10 @@
           {
             "type": "object",
             "additionalProperties": false,
+            "required": [
+              "address",
+              "isCurrentAddress"
+            ],
             "properties": {
               "address": {
                 "$ref": "#/components/schemas/Address"
@@ -6468,6 +7397,9 @@
           {
             "type": "object",
             "additionalProperties": false,
+            "required": [
+              "age"
+            ],
             "properties": {
               "age": {
                 "$ref": "#/components/schemas/Age"
@@ -6501,6 +7433,10 @@
           {
             "type": "object",
             "additionalProperties": false,
+            "required": [
+              "emailAddress",
+              "isPreferredEmailAddress"
+            ],
             "properties": {
               "emailAddress": {
                 "$ref": "#/components/schemas/EmailAddress"
@@ -6520,6 +7456,9 @@
           {
             "type": "object",
             "additionalProperties": false,
+            "required": [
+              "ethnicity"
+            ],
             "properties": {
               "ethnicity": {
                 "type": "string"
@@ -6536,6 +7475,9 @@
           {
             "type": "object",
             "additionalProperties": false,
+            "required": [
+              "gender"
+            ],
             "properties": {
               "gender": {
                 "$ref": "#/components/schemas/Gender"
@@ -6552,6 +7494,10 @@
           {
             "type": "object",
             "additionalProperties": false,
+            "required": [
+              "firstName",
+              "lastName"
+            ],
             "properties": {
               "firstName": {
                 "type": "string"
@@ -6588,6 +7534,10 @@
           {
             "type": "object",
             "additionalProperties": false,
+            "required": [
+              "phoneNumber",
+              "isPreferredPhoneNumber"
+            ],
             "properties": {
               "phoneNumber": {
                 "$ref": "#/components/schemas/PhoneNumber"
@@ -6607,6 +7557,9 @@
           {
             "type": "object",
             "additionalProperties": false,
+            "required": [
+              "command"
+            ],
             "properties": {
               "command": {
                 "$ref": "#/components/schemas/V1CaseCommand"
@@ -6633,7 +7586,9 @@
         "x-abstract": true,
         "additionalProperties": false,
         "required": [
-          "discriminator"
+          "discriminator",
+          "familyId",
+          "referralId"
         ],
         "properties": {
           "familyId": {
@@ -6657,6 +7612,10 @@
           {
             "type": "object",
             "additionalProperties": false,
+            "required": [
+              "closeReason",
+              "closedAtUtc"
+            ],
             "properties": {
               "closeReason": {
                 "$ref": "#/components/schemas/V1CaseCloseReason"
@@ -6677,6 +7636,11 @@
           {
             "type": "object",
             "additionalProperties": false,
+            "required": [
+              "completedRequirementId",
+              "requirementName",
+              "completedAtUtc"
+            ],
             "properties": {
               "completedRequirementId": {
                 "type": "string",
@@ -6711,6 +7675,9 @@
           {
             "type": "object",
             "additionalProperties": false,
+            "required": [
+              "openedAtUtc"
+            ],
             "properties": {
               "openedAtUtc": {
                 "type": "string",
@@ -6728,6 +7695,10 @@
           {
             "type": "object",
             "additionalProperties": false,
+            "required": [
+              "requirementName",
+              "additionalComments"
+            ],
             "properties": {
               "requirementName": {
                 "type": "string"
@@ -6752,6 +7723,10 @@
           {
             "type": "object",
             "additionalProperties": false,
+            "required": [
+              "completedRequirementId",
+              "requirementName"
+            ],
             "properties": {
               "completedRequirementId": {
                 "type": "string",
@@ -6772,6 +7747,9 @@
           {
             "type": "object",
             "additionalProperties": false,
+            "required": [
+              "requirementName"
+            ],
             "properties": {
               "requirementName": {
                 "type": "string"
@@ -6788,6 +7766,11 @@
           {
             "type": "object",
             "additionalProperties": false,
+            "required": [
+              "completedCustomFieldId",
+              "customFieldName",
+              "customFieldType"
+            ],
             "properties": {
               "completedCustomFieldId": {
                 "type": "string",
@@ -6837,7 +7820,8 @@
         "x-abstract": true,
         "additionalProperties": false,
         "required": [
-          "discriminator"
+          "discriminator",
+          "familyId"
         ],
         "properties": {
           "familyId": {
@@ -6857,6 +7841,12 @@
           {
             "type": "object",
             "additionalProperties": false,
+            "required": [
+              "personId",
+              "firstName",
+              "lastName",
+              "familyAdultRelationshipInfo"
+            ],
             "properties": {
               "personId": {
                 "type": "string",
@@ -6935,6 +7925,12 @@
           {
             "type": "object",
             "additionalProperties": false,
+            "required": [
+              "personId",
+              "firstName",
+              "lastName",
+              "custodialRelationships"
+            ],
             "properties": {
               "personId": {
                 "type": "string",
@@ -6992,6 +7988,14 @@
           {
             "type": "object",
             "additionalProperties": false,
+            "required": [
+              "personId",
+              "referralId",
+              "referralOpenedAtUtc",
+              "firstName",
+              "lastName",
+              "familyAdultRelationshipInfo"
+            ],
             "properties": {
               "personId": {
                 "type": "string",
@@ -7078,6 +8082,12 @@
           {
             "type": "object",
             "additionalProperties": false,
+            "required": [
+              "personId",
+              "firstName",
+              "lastName",
+              "familyAdultRelationshipInfo"
+            ],
             "properties": {
               "personId": {
                 "type": "string",
@@ -7151,6 +8161,11 @@
       "EmbedParams": {
         "type": "object",
         "additionalProperties": false,
+        "required": [
+          "type",
+          "embedReport",
+          "embedToken"
+        ],
         "properties": {
           "type": {
             "type": "string"
@@ -7169,6 +8184,11 @@
       "EmbedReport": {
         "type": "object",
         "additionalProperties": false,
+        "required": [
+          "reportId",
+          "reportName",
+          "embedUrl"
+        ],
         "properties": {
           "reportId": {
             "type": "string",
@@ -7185,6 +8205,10 @@
       "EmbedToken": {
         "type": "object",
         "additionalProperties": false,
+        "required": [
+          "tokenId",
+          "expiration"
+        ],
         "properties": {
           "token": {
             "type": "string",
@@ -7203,6 +8227,10 @@
       "UserAccess": {
         "type": "object",
         "additionalProperties": false,
+        "required": [
+          "userId",
+          "organizations"
+        ],
         "properties": {
           "userId": {
             "type": "string",
@@ -7219,6 +8247,10 @@
       "UserOrganizationAccess": {
         "type": "object",
         "additionalProperties": false,
+        "required": [
+          "organizationId",
+          "locations"
+        ],
         "properties": {
           "organizationId": {
             "type": "string",
@@ -7235,6 +8267,14 @@
       "UserLocationAccess": {
         "type": "object",
         "additionalProperties": false,
+        "required": [
+          "locationId",
+          "personId",
+          "roles",
+          "globalContextPermissions",
+          "allVolunteerFamiliesContextPermissions",
+          "allPartneringFamiliesContextPermissions"
+        ],
         "properties": {
           "locationId": {
             "type": "string",
@@ -7273,6 +8313,10 @@
       "UserLoginInfo": {
         "type": "object",
         "additionalProperties": false,
+        "required": [
+          "userId",
+          "identities"
+        ],
         "properties": {
           "userId": {
             "type": "string",
@@ -7316,6 +8360,16 @@
       "UserInviteReviewInfo": {
         "type": "object",
         "additionalProperties": false,
+        "required": [
+          "organizationId",
+          "organizationName",
+          "locationId",
+          "locationName",
+          "personId",
+          "firstName",
+          "lastName",
+          "roles"
+        ],
         "properties": {
           "organizationId": {
             "type": "string",
@@ -7352,6 +8406,10 @@
       "Account": {
         "type": "object",
         "additionalProperties": false,
+        "required": [
+          "userId",
+          "organizations"
+        ],
         "properties": {
           "userId": {
             "type": "string",
@@ -7368,6 +8426,10 @@
       "AccountOrganizationAccess": {
         "type": "object",
         "additionalProperties": false,
+        "required": [
+          "organizationId",
+          "locations"
+        ],
         "properties": {
           "organizationId": {
             "type": "string",
@@ -7384,6 +8446,11 @@
       "AccountLocationAccess": {
         "type": "object",
         "additionalProperties": false,
+        "required": [
+          "locationId",
+          "personId",
+          "roles"
+        ],
         "properties": {
           "locationId": {
             "type": "string",
