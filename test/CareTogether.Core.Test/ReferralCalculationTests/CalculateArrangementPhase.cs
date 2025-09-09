@@ -5,7 +5,7 @@ using CareTogether.Resources;
 using CareTogether.Resources.Policies;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-namespace CareTogether.Core.Test.ReferralCalculationTests
+namespace CareTogether.Core.Test.V1CaseCalculationTests
 {
     [TestClass]
     public class CalculateArrangementPhase
@@ -104,7 +104,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
         public void TestRequirementsAndFunctionsMissingStarted()
         {
             // This could be a valid state if the policy has changed since the arrangement started.
-            // Referral policy versioning is a solution to mitigate this scenario but it cannot
+            // V1 Case policy versioning is a solution to mitigate this scenario but it cannot
             // guarantee that this scenario will never happen as long as a policy can change.
             var result = V1CaseCalculations.CalculateArrangementPhase(
                 startedAt: DateOnly.FromDateTime(DateTime.UtcNow),
@@ -125,7 +125,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
         public void TestRequirementsAndFunctionsMissingStartedAndEnded()
         {
             // This could be a valid state if the policy has changed since the arrangement ended.
-            // Referral policy versioning is a solution to mitigate this scenario but it cannot
+            // V1 Case policy versioning is a solution to mitigate this scenario but it cannot
             // guarantee that this scenario will never happen as long as a policy can change.
             var result = V1CaseCalculations.CalculateArrangementPhase(
                 startedAt: DateOnly.FromDateTime(DateTime.UtcNow),

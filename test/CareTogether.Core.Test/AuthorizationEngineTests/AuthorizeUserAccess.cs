@@ -59,7 +59,7 @@ namespace CareTogether.Core.Test.AuthorizationEngineTests
             var personAccessEventLog = new MemoryEventLog<PersonAccessEvent>();
             var directoryEventLog = new MemoryEventLog<DirectoryEvent>();
             var goalsEventLog = new MemoryEventLog<GoalCommandExecutedEvent>();
-            var referralsEventLog = new MemoryEventLog<V1CaseEvent>();
+            var v1CasesEventLog = new MemoryEventLog<V1CaseEvent>();
             var approvalsEventLog = new MemoryEventLog<ApprovalEvent>();
             var notesEventLog = new MemoryEventLog<NotesEvent>();
             var communitiesEventLog = new MemoryEventLog<CommunityCommandExecutedEvent>();
@@ -73,7 +73,7 @@ namespace CareTogether.Core.Test.AuthorizationEngineTests
                 personAccessEventLog,
                 directoryEventLog,
                 goalsEventLog,
-                referralsEventLog,
+                v1CasesEventLog,
                 approvalsEventLog,
                 notesEventLog,
                 communitiesEventLog,
@@ -91,7 +91,7 @@ namespace CareTogether.Core.Test.AuthorizationEngineTests
                 organizationSecretsStore,
                 personAccessEventLog
             );
-            var referralsResource = new V1CasesResource(referralsEventLog);
+            var v1CasesResource = new V1CasesResource(v1CasesEventLog);
             var approvalsResource = new ApprovalsResource(approvalsEventLog);
             var communitiesResource = new CommunitiesResource(
                 communitiesEventLog,
@@ -101,7 +101,7 @@ namespace CareTogether.Core.Test.AuthorizationEngineTests
             userAccessCalculation = new UserAccessCalculation(
                 policiesResource,
                 directoryResource,
-                referralsResource,
+                v1CasesResource,
                 approvalsResource,
                 communitiesResource
             );

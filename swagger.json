@@ -3521,7 +3521,7 @@
         "type": "object",
         "additionalProperties": false,
         "required": [
-          "closedReferrals",
+          "closedV1Cases",
           "history"
         ],
         "properties": {

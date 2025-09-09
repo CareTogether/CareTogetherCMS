@@ -7,7 +7,7 @@ using CareTogether.Resources.Policies;
 using CareTogether.Resources.V1Cases;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-namespace CareTogether.Core.Test.ReferralCalculationTests
+namespace CareTogether.Core.Test.V1CaseCalculationTests
 {
     [TestClass]
     public class CalculateMissingCloseoutRequirements
@@ -16,7 +16,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
             new EffectiveLocationPolicy(
                 ImmutableDictionary<string, ActionRequirement>.Empty,
                 ImmutableList<CustomField>.Empty,
-                new ReferralPolicy(
+                new V1CasePolicy(
                     ImmutableList<string>.Empty,
                     ImmutableList<CustomField>.Empty,
                     ImmutableList<ArrangementPolicy>.Empty,

@@ -5,7 +5,7 @@ using CareTogether.Resources.Policies;
 using CareTogether.Resources.V1Cases;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-namespace CareTogether.Core.Test.ReferralCalculationTests
+namespace CareTogether.Core.Test.V1CaseCalculationTests
 {
     [TestClass]
     public class CalculateMissingFunctionAssignments

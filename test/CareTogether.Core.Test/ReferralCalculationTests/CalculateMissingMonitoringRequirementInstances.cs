@@ -6,9 +6,9 @@ using CareTogether.Resources.Policies;
 using CareTogether.Resources.V1Cases;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Timelines;
-using H = CareTogether.Core.Test.ReferralCalculationTests.Helpers;
+using H = CareTogether.Core.Test.V1CaseCalculationTests.Helpers;
 
-namespace CareTogether.Core.Test.ReferralCalculationTests
+namespace CareTogether.Core.Test.V1CaseCalculationTests
 {
     [TestClass]
     public class CalculateMissingMonitoringRequirementInstances
@@ -892,7 +892,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
         // [TestMethod]
         // public void TestNoCompletionsOccurrenceBasedNoSkip()
         // {
-        //    var result = ReferralCalculations.CalculateMissingMonitoringRequirementInstances(
+        //    var result = V1CaseCalculations.CalculateMissingMonitoringRequirementInstances(
         //        new ChildCareOccurrenceBasedRecurrencePolicy(TimeSpan.FromDays(2), 3, 0, true),
         //        arrangementStartedAtDate: new DateTime(H.YEAR, 1, 1),
         //        arrangementEndedAtDate: null,
@@ -922,7 +922,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
         // [TestMethod]
         // public void TestNoCompletionsOccurrenceBasedWithSkip()
         // {
-        //    var result = ReferralCalculations.CalculateMissingMonitoringRequirementInstances(
+        //    var result = V1CaseCalculations.CalculateMissingMonitoringRequirementInstances(
         //        new ChildCareOccurrenceBasedRecurrencePolicy(TimeSpan.FromDays(2), 3, 2, true),
         //        arrangementStartedAtDate: new DateTime(H.YEAR, 1, 1),
         //        arrangementEndedAtDate: null,
@@ -952,7 +952,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
         // [TestMethod]
         // public void TestNoCompletionsOccurrenceBasedNotYetReturnedPastDue()
         // {
-        //    var result = ReferralCalculations.CalculateMissingMonitoringRequirementInstances(
+        //    var result = V1CaseCalculations.CalculateMissingMonitoringRequirementInstances(
         //        new ChildCareOccurrenceBasedRecurrencePolicy(TimeSpan.FromDays(2), 3, 0, true),
         //        arrangementStartedAtDate: new DateTime(H.YEAR, 1, 1),
         //        arrangementEndedAtDate: null,
@@ -973,7 +973,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
         // [TestMethod]
         // public void TestNoCompletionsOccurrenceBasedNotYetReturnedDueInFuture()
         // {
-        //    var result = ReferralCalculations.CalculateMissingMonitoringRequirementInstances(
+        //    var result = V1CaseCalculations.CalculateMissingMonitoringRequirementInstances(
         //        new ChildCareOccurrenceBasedRecurrencePolicy(TimeSpan.FromDays(2), 3, 0, true),
         //        arrangementStartedAtDate: new DateTime(H.YEAR, 1, 1),
         //        arrangementEndedAtDate: null,
