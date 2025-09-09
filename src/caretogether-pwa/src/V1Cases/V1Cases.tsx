@@ -2,7 +2,7 @@ import { Navigate, Route, Routes, useMatch } from 'react-router-dom';
 import { PartneringFamilies } from './PartneringFamilies';
 
 export function V1Cases() {
-  const familyId = useMatch('/v1cases/family/:familyId');
+  const familyId = useMatch('/cases/family/:familyId');
 
   return (
     <>

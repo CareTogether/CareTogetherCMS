@@ -106,7 +106,7 @@ function SideNavigationMenu({ open }: SideNavigationMenuProps) {
           {permissions(Permission.AccessPartneringFamiliesScreen) && (
             <ListItemLink
               className="ph-unmask"
-              to={`${locationPrefix}/v1Cases`}
+              to={`${locationPrefix}/cases`}
               primary="Cases"
               icon={<PermPhoneMsgIcon />}
             />
