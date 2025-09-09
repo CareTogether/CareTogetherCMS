@@ -693,7 +693,7 @@ export function useDirectoryModel() {
   const createPartneringFamilyWithNewAdult = useCompositeRecordsCommandCallback(
     async (
       familyId: string,
-      referralOpenedAtUtc: Date,
+      v1CaseOpenedAtUtc: Date,
       firstName: string,
       lastName: string,
       gender: Gender | null,
@@ -715,7 +715,7 @@ export function useDirectoryModel() {
           familyId: familyId,
           personId: crypto.randomUUID(),
           referralId: crypto.randomUUID(),
-          referralOpenedAtUtc: referralOpenedAtUtc,
+          referralOpenedAtUtc: v1CaseOpenedAtUtc,
           firstName: firstName,
           lastName: lastName,
           gender: gender == null ? undefined : gender,

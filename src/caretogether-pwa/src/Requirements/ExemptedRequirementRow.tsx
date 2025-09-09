@@ -28,7 +28,7 @@ export function ExemptedRequirementRow({
 }: ExemptedRequirementRowProps) {
   const userLookup = useUserLookup();
   const permissions = useFamilyIdPermissions(
-    context.kind === 'Referral' ||
+    context.kind === 'V1Case' ||
       context.kind === 'Arrangement' ||
       context.kind === 'Family Volunteer Assignment' ||
       context.kind === 'Individual Volunteer Assignment'
@@ -39,7 +39,7 @@ export function ExemptedRequirementRow({
   const dialogHandle = useDialogHandle();
 
   const canExempt =
-    context.kind === 'Referral'
+    context.kind === 'V1Case'
       ? permissions(Permission.EditReferralRequirementExemption)
       : context.kind === 'Arrangement' ||
           context.kind === 'Family Volunteer Assignment' ||
@@ -52,20 +52,18 @@ export function ExemptedRequirementRow({
 
   const policy = useRecoilValue(policyData);
 
-  const [partneringFamilyId, referralId, arrangementId] =
+  const [partneringFamilyId, v1CaseId, arrangementId] =
     context.kind === 'Arrangement' ||
     context.kind === 'Family Volunteer Assignment' ||
     context.kind === 'Individual Volunteer Assignment'
-      ? [context.partneringFamilyId, context.referralId, context.arrangementId]
+      ? [context.partneringFamilyId, context.v1CaseId, context.arrangementId]
       : [undefined, undefined, undefined];
   const partneringFamilyInfo =
     familyLookup(partneringFamilyId)?.partneringFamilyInfo;
-  const referral = partneringFamilyInfo?.closedReferrals
+  const v1Case = partneringFamilyInfo?.closedReferrals
     ?.concat(partneringFamilyInfo.openReferral || [])
-    .find((r) => r.id === referralId);
-  const arrangement = referral?.arrangements?.find(
-    (a) => a.id === arrangementId
-  );
+    .find((r) => r.id === v1CaseId);
+  const arrangement = v1Case?.arrangements?.find((a) => a.id === arrangementId);
   const arrangementPolicy = policy.referralPolicy?.arrangementPolicies?.find(
     (a) => a.arrangementType === arrangement?.arrangementType
   );

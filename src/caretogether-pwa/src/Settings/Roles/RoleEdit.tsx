@@ -16,20 +16,20 @@ import { useState } from 'react';
 import {
   AllPartneringFamiliesPermissionContext,
   AllVolunteerFamiliesPermissionContext,
-  AssignedFunctionsInReferralCoAssigneeFamiliesPermissionContext,
-  AssignedFunctionsInReferralPartneringFamilyPermissionContext,
+  AssignedFunctionsInReferralCoAssigneeFamiliesPermissionContext as AssignedFunctionsInV1CaseCoAssigneeFamiliesPermissionContext,
+  AssignedFunctionsInReferralPartneringFamilyPermissionContext as AssignedFunctionsInV1CasePartneringFamilyPermissionContext,
   CommunityCoMemberFamiliesPermissionContext,
   CommunityMemberPermissionContext,
   ContextualPermissionSet,
   GlobalPermissionContext,
   IContextualPermissionSet,
   OwnFamilyPermissionContext,
-  OwnReferralAssigneeFamiliesPermissionContext,
+  OwnReferralAssigneeFamiliesPermissionContext as OwnV1CaseAssigneeFamiliesPermissionContext,
   PermissionContext,
   RoleDefinition,
   Permission,
-  CommunityCoMemberFamiliesAssignedFunctionsInReferralPartneringFamilyPermissionContext,
-  CommunityCoMemberFamiliesAssignedFunctionsInReferralCoAssignedFamiliesPermissionContext,
+  CommunityCoMemberFamiliesAssignedFunctionsInReferralPartneringFamilyPermissionContext as CommunityCoMemberFamiliesAssignedFunctionsInV1CasePartneringFamilyPermissionContext,
+  CommunityCoMemberFamiliesAssignedFunctionsInReferralCoAssignedFamiliesPermissionContext as CommunityCoMemberFamiliesAssignedFunctionsInV1CaseCoAssignedFamiliesPermissionContext,
 } from '../../GeneratedClient';
 import { organizationConfigurationEdited } from '../../Model/ConfigurationModel';
 import { useGlobalPermissions } from '../../Model/SessionModel';
@@ -260,32 +260,32 @@ export function RoleEdit({
           onClick={() =>
             addPermissionSet(
               () =>
-                new AssignedFunctionsInReferralPartneringFamilyPermissionContext()
+                new AssignedFunctionsInV1CasePartneringFamilyPermissionContext()
             )
           }
         >
-          Assigned Functions in Referral - Partnering Family
+          Assigned Functions in Case - Partnering Family
         </MenuItem>
         <MenuItem
           dense
           onClick={() =>
             addPermissionSet(
               () =>
-                new AssignedFunctionsInReferralCoAssigneeFamiliesPermissionContext()
+                new AssignedFunctionsInV1CaseCoAssigneeFamiliesPermissionContext()
             )
           }
         >
-          Assigned Functions in Referral - Co-Assigned Families
+          Assigned Functions in Case - Co-Assigned Families
         </MenuItem>
         <MenuItem
           dense
           onClick={() =>
             addPermissionSet(
-              () => new OwnReferralAssigneeFamiliesPermissionContext()
+              () => new OwnV1CaseAssigneeFamiliesPermissionContext()
             )
           }
         >
-          Own Referral - Assigned Families
+          Own Case - Assigned Families
         </MenuItem>
         <MenuItem
           dense
@@ -310,24 +310,24 @@ export function RoleEdit({
           onClick={() =>
             addPermissionSet(
               () =>
-                new CommunityCoMemberFamiliesAssignedFunctionsInReferralPartneringFamilyPermissionContext()
+                new CommunityCoMemberFamiliesAssignedFunctionsInV1CasePartneringFamilyPermissionContext()
             )
           }
         >
-          Community Member - Co-Member Families - Assigned Functions in Referral
-          - Partnering Family
+          Community Member - Co-Member Families - Assigned Functions in Case -
+          Partnering Family
         </MenuItem>
         <MenuItem
           dense
           onClick={() =>
             addPermissionSet(
               () =>
-                new CommunityCoMemberFamiliesAssignedFunctionsInReferralCoAssignedFamiliesPermissionContext()
+                new CommunityCoMemberFamiliesAssignedFunctionsInV1CaseCoAssignedFamiliesPermissionContext()
             )
           }
         >
-          Community Member - Co-Member Families - Assigned Functions in Referral
-          - Co-Assigned Families
+          Community Member - Co-Member Families - Assigned Functions in Case -
+          Co-Assigned Families
         </MenuItem>
       </Menu>
 

@@ -15,8 +15,8 @@ import {
   ChildLocationPlan,
   CombinedFamilyInfo,
   Note,
-  ReferralOpened,
-  ReferralRequirementCompleted,
+  ReferralOpened as V1CaseOpened,
+  ReferralRequirementCompleted as V1CaseRequirementCompleted,
 } from '../GeneratedClient';
 import PersonPinCircleIcon from '@mui/icons-material/PersonPinCircle';
 import EditIcon from '@mui/icons-material/Edit';
@@ -32,8 +32,8 @@ type ActivityTimelineProps = {
 };
 
 const composeNoteType = (activity: Activity): string | null => {
-  if (activity instanceof ReferralRequirementCompleted) {
-    return 'Referral requirement completed';
+  if (activity instanceof V1CaseRequirementCompleted) {
+    return 'Case requirement completed';
   }
 
   if (activity instanceof ArrangementRequirementCompleted) {
@@ -44,8 +44,8 @@ const composeNoteType = (activity: Activity): string | null => {
     return 'Child location changed';
   }
 
-  if (activity instanceof ReferralOpened) {
-    return 'Referral opened';
+  if (activity instanceof V1CaseOpened) {
+    return 'Case opened';
   }
 
   return null;
@@ -176,7 +176,7 @@ export function ActivityTimeline({
                 : null;
 
             const requirementName =
-              activity instanceof ReferralRequirementCompleted ||
+              activity instanceof V1CaseRequirementCompleted ||
               activity instanceof ArrangementRequirementCompleted
                 ? activity.requirementName
                 : null;
@@ -285,7 +285,7 @@ export function ActivityTimeline({
                   display: 'block',
                 }}
               >
-                {activity instanceof ReferralRequirementCompleted ||
+                {activity instanceof V1CaseRequirementCompleted ||
                 activity instanceof ArrangementRequirementCompleted ? (
                   '✔'
                 ) : activity instanceof ChildLocationChanged ? (
@@ -309,7 +309,7 @@ export function ActivityTimeline({
                 </span>
                 <PersonName person={userLookup(activity.userId)} />
               </Box>
-              {activity instanceof ReferralRequirementCompleted ||
+              {activity instanceof V1CaseRequirementCompleted ||
               activity instanceof ArrangementRequirementCompleted ? (
                 activity.requirementName
               ) : activity instanceof ChildLocationChanged ? (
@@ -332,8 +332,8 @@ export function ActivityTimeline({
                       : 'parent'}
                   )
                 </>
-              ) : activity instanceof ReferralOpened ? (
-                'Referral opened'
+              ) : activity instanceof V1CaseOpened ? (
+                'Case opened'
               ) : null}
               {activity.uploadedDocumentId && (
                 <Box sx={{ margin: 0, padding: 0 }}>
