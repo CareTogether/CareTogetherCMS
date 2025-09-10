@@ -7,16 +7,16 @@ using Timelines;
 
 namespace CareTogether.Engines.PolicyEvaluation
 {
-    internal static class ReferralCalculations
+    internal static class V1CaseCalculations
     {
-        public static ReferralStatus CalculateReferralStatus(
+        public static V1CaseStatus CalculateV1CaseStatus(
             EffectiveLocationPolicy locationPolicy,
-            ReferralPolicy referralPolicy,
-            ReferralEntry referralEntry,
+            V1CasePolicy v1CasePolicy,
+            V1CaseEntry v1CaseEntry,
             DateOnly today
         )
         {
-            var missingIntakeRequirements = referralPolicy
+            var missingIntakeRequirements = v1CasePolicy
                 .IntakeRequirements_PRE_MIGRATION.Where(requirement =>
                     !SharedCalculations
                         .RequirementMetOrExempted(
@@ -26,27 +26,27 @@ namespace CareTogether.Engines.PolicyEvaluation
                             ),
                             policySupersededAt: null,
                             today,
-                            completedRequirements: referralEntry.CompletedRequirements,
-                            exemptedRequirements: referralEntry.ExemptedRequirements
+                            completedRequirements: v1CaseEntry.CompletedRequirements,
+                            exemptedRequirements: v1CaseEntry.ExemptedRequirements
                         )
                         .IsMetOrExempted
                 )
                 .ToImmutableList();
 
-            var missingCustomFields = referralPolicy
+            var missingCustomFields = v1CasePolicy
                 .CustomFields.Where(customField =>
-                    !referralEntry.CompletedCustomFields.Any(completed =>
+                    !v1CaseEntry.CompletedCustomFields.Any(completed =>
                         completed.Key == customField.Name
                     )
                 )
                 .Select(customField => customField.Name)
                 .ToImmutableList();
 
-            var individualArrangements = referralEntry.Arrangements.ToImmutableDictionary(
+            var individualArrangements = v1CaseEntry.Arrangements.ToImmutableDictionary(
                 arrangement => arrangement.Key,
                 arrangement =>
                 {
-                    ArrangementPolicy arrangementPolicy = referralPolicy.ArrangementPolicies.Single(
+                    ArrangementPolicy arrangementPolicy = v1CasePolicy.ArrangementPolicies.Single(
                         p => p.ArrangementType == arrangement.Value.ArrangementType
                     );
 
@@ -59,7 +59,7 @@ namespace CareTogether.Engines.PolicyEvaluation
                 }
             );
 
-            return new ReferralStatus(
+            return new V1CaseStatus(
                 missingIntakeRequirements,
                 missingCustomFields,
                 individualArrangements

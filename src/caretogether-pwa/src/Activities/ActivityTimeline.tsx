@@ -112,9 +112,9 @@ export function ActivityTimeline({
 
   function arrangementPartneringPerson(arrangementId?: string) {
     const allArrangements = (
-      family.partneringFamilyInfo?.openReferral?.arrangements || []
+      family.partneringFamilyInfo?.openV1Case?.arrangements || []
     ).concat(
-      family.partneringFamilyInfo?.closedReferrals?.flatMap(
+      family.partneringFamilyInfo?.closedV1Cases?.flatMap(
         (r) => r.arrangements || []
       ) || []
     );

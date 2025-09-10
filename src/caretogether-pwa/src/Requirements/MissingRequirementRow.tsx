@@ -56,11 +56,11 @@ export function MissingRequirementRow({
 
   const canComplete =
     context.kind === 'V1Case'
-      ? permissions(Permission.EditReferralRequirementCompletion)
+      ? permissions(Permission.EditV1CaseRequirementCompletion)
       : permissions(Permission.EditApprovalRequirementCompletion);
   const canExempt =
     context.kind === 'V1Case'
-      ? permissions(Permission.EditReferralRequirementExemption)
+      ? permissions(Permission.EditV1CaseRequirementExemption)
       : permissions(Permission.EditApprovalRequirementExemption);
 
   return (

@@ -5,7 +5,7 @@ using CareTogether.Engines.PolicyEvaluation;
 using CareTogether.Resources.Policies;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-namespace CareTogether.Core.Test.ReferralCalculationTests
+namespace CareTogether.Core.Test.V1CaseCalculationTests
 {
     [TestClass]
     public class SelectMissingRequirementsForStatus
@@ -29,7 +29,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
                 )
                 .Add(new MissingArrangementRequirement(null, null, null, null, new RequirementDefinition("C2", true), null, null));
 
-            var result = ReferralCalculations.SelectMissingRequirementsForStatus(
+            var result = V1CaseCalculations.SelectMissingRequirementsForStatus(
                 ArrangementPhase.SettingUp,
                 missingSetupRequirements,
                 missingMonitoringRequirements,
@@ -58,7 +58,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
                 )
                 .Add(new MissingArrangementRequirement(null, null, null, null, new RequirementDefinition("C2", true), null, null));
 
-            var result = ReferralCalculations.SelectMissingRequirementsForStatus(
+            var result = V1CaseCalculations.SelectMissingRequirementsForStatus(
                 ArrangementPhase.ReadyToStart,
                 missingSetupRequirements,
                 missingMonitoringRequirements,
@@ -87,7 +87,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
                 )
                 .Add(new MissingArrangementRequirement(null, null, null, null, new RequirementDefinition("C2", true), null, null));
 
-            var result = ReferralCalculations.SelectMissingRequirementsForStatus(
+            var result = V1CaseCalculations.SelectMissingRequirementsForStatus(
                 ArrangementPhase.Started,
                 missingSetupRequirements,
                 missingMonitoringRequirements,
@@ -116,7 +116,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
                 )
                 .Add(new MissingArrangementRequirement(null, null, null, null, new RequirementDefinition("C2", true), null, null));
 
-            var result = ReferralCalculations.SelectMissingRequirementsForStatus(
+            var result = V1CaseCalculations.SelectMissingRequirementsForStatus(
                 ArrangementPhase.Ended,
                 missingSetupRequirements,
                 missingMonitoringRequirements,

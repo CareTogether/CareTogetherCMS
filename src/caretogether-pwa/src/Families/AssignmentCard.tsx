@@ -18,7 +18,7 @@ interface AssignmentCardProps {
 
 function allArrangements(partneringFamilyInfo: PartneringFamilyInfo) {
   const closedV1CaseArrangements =
-    partneringFamilyInfo.closedReferrals?.flatMap(
+    partneringFamilyInfo.closedV1Cases?.flatMap(
       (v1Case) =>
         v1Case.arrangements?.map((arrangement) => ({
           referralId: v1Case.id!,
@@ -27,8 +27,8 @@ function allArrangements(partneringFamilyInfo: PartneringFamilyInfo) {
     ) ?? [];
 
   const openV1CaseArrangements =
-    partneringFamilyInfo.openReferral?.arrangements?.map((arrangement) => ({
-      referralId: partneringFamilyInfo.openReferral!.id!,
+    partneringFamilyInfo.openV1Case?.arrangements?.map((arrangement) => ({
+      referralId: partneringFamilyInfo.openV1Case!.id!,
       arrangement,
     })) ?? [];
 

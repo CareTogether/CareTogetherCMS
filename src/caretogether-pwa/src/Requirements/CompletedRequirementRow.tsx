@@ -37,7 +37,7 @@ export function CompletedRequirementRow({
 
   const canMarkIncomplete =
     context.kind === 'V1Case'
-      ? permissions(Permission.EditReferralRequirementCompletion)
+      ? permissions(Permission.EditV1CaseRequirementCompletion)
       : context.kind === 'Arrangement' ||
           context.kind === 'Family Volunteer Assignment' ||
           context.kind === 'Individual Volunteer Assignment'

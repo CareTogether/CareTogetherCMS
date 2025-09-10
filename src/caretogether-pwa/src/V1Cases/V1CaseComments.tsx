@@ -1,9 +1,5 @@
 import { Box, TextField, Typography } from '@mui/material';
-import {
-  CombinedFamilyInfo,
-  Permission,
-  Referral as V1Case,
-} from '../GeneratedClient';
+import { CombinedFamilyInfo, Permission, V1Case } from '../GeneratedClient';
 import { useV1CasesModel } from '../Model/V1CasesModel';
 import { useFamilyPermissions } from '../Model/SessionModel';
 import { useInlineEditor } from '../Hooks/useInlineEditor';
@@ -20,13 +16,13 @@ export function V1CaseComments({
   const v1CasesModel = useV1CasesModel();
   const permissions = useFamilyPermissions(partneringFamily);
   const openV1Cases: V1Case[] =
-    partneringFamily?.partneringFamilyInfo?.openReferral !== undefined
-      ? [partneringFamily.partneringFamilyInfo.openReferral]
+    partneringFamily?.partneringFamilyInfo?.openV1Case !== undefined
+      ? [partneringFamily.partneringFamilyInfo.openV1Case]
       : [];
   const closedV1Cases: V1Case[] =
-    partneringFamily?.partneringFamilyInfo?.closedReferrals === undefined
+    partneringFamily?.partneringFamilyInfo?.closedV1Cases === undefined
       ? []
-      : [...partneringFamily.partneringFamilyInfo.closedReferrals!].sort(
+      : [...partneringFamily.partneringFamilyInfo.closedV1Cases!].sort(
           (r1, r2) =>
             r1.closedAtUtc!.getUTCMilliseconds() -
             r2.closedAtUtc!.getUTCMilliseconds()
@@ -41,7 +37,7 @@ export function V1CaseComments({
     );
   }, savedValue);
 
-  return permissions(Permission.ViewReferralComments) ? (
+  return permissions(Permission.ViewV1CaseComments) ? (
     <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center' }}>
       <Typography
         className="ph-unmask"
@@ -49,7 +45,7 @@ export function V1CaseComments({
         style={{ marginBottom: 0 }}
       >
         Comments
-        {permissions(Permission.EditReferral) && (
+        {permissions(Permission.EditV1Case) && (
           <>
             {editor.editButton}
             {editor.cancelButton}
@@ -57,7 +53,7 @@ export function V1CaseComments({
           </>
         )}
       </Typography>
-      {editor.editing && permissions(Permission.EditReferral) ? (
+      {editor.editing && permissions(Permission.EditV1Case) ? (
         <TextField
           id="v1case-comments"
           helperText="Case comments are visible to everyone."

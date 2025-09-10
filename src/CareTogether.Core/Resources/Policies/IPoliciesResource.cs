@@ -96,7 +96,7 @@ namespace CareTogether.Resources.Policies
     public sealed record EffectiveLocationPolicy(
         ImmutableDictionary<string, ActionRequirement> ActionDefinitions,
         ImmutableList<CustomField> CustomFamilyFields,
-        ReferralPolicy ReferralPolicy,
+        V1CasePolicy ReferralPolicy,
         VolunteerPolicy VolunteerPolicy
     );
 
@@ -134,7 +134,7 @@ namespace CareTogether.Resources.Policies
 
     public sealed record RequirementDefinition(string ActionName, bool IsRequired);
 
-    public sealed record ReferralPolicy(
+    public sealed record V1CasePolicy(
         ImmutableList<string> RequiredIntakeActionNames,
         ImmutableList<CustomField> CustomFields,
         ImmutableList<ArrangementPolicy> ArrangementPolicies,

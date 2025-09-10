@@ -4,7 +4,7 @@ using CareTogether.Resources;
 
 namespace CareTogether.Engines.PolicyEvaluation
 {
-    public sealed record ReferralEntry(
+    public sealed record V1CaseEntry(
         ImmutableList<CompletedRequirementInfo> CompletedRequirements,
         ImmutableList<ExemptedRequirementInfo> ExemptedRequirements,
         ImmutableDictionary<string, CompletedCustomFieldInfo> CompletedCustomFields,

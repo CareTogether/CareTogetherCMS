@@ -27,7 +27,7 @@ import {
 import {
   CompletedCustomFieldInfo,
   Permission,
-  Referral as V1Case,
+  V1Case,
   RoleRemovalReason,
 } from '../GeneratedClient';
 import { useParams } from 'react-router';
@@ -107,29 +107,29 @@ export function FamilyScreen() {
   const permissions = useFamilyPermissions(family);
 
   const canCloseV1Case =
-    family?.partneringFamilyInfo?.openReferral &&
-    !family.partneringFamilyInfo.openReferral.closeReason &&
-    !family.partneringFamilyInfo.openReferral.arrangements?.some(
+    family?.partneringFamilyInfo?.openV1Case &&
+    !family.partneringFamilyInfo.openV1Case.closeReason &&
+    !family.partneringFamilyInfo.openV1Case.arrangements?.some(
       (arrangement) => !arrangement.endedAtUtc && !arrangement.cancelledAtUtc
     ) &&
-    permissions(Permission.CloseReferral);
+    permissions(Permission.CloseV1Case);
 
   const deleteFamilyDialogHandle = useDialogHandle();
   const openV1Cases: V1Case[] = useMemo(() => {
-    return family?.partneringFamilyInfo?.openReferral !== undefined
-      ? [family.partneringFamilyInfo.openReferral]
+    return family?.partneringFamilyInfo?.openV1Case !== undefined
+      ? [family.partneringFamilyInfo.openV1Case]
       : [];
-  }, [family?.partneringFamilyInfo?.openReferral]);
+  }, [family?.partneringFamilyInfo?.openV1Case]);
 
   const closedV1Cases: V1Case[] = useMemo(() => {
-    return family?.partneringFamilyInfo?.closedReferrals === undefined
+    return family?.partneringFamilyInfo?.closedV1Cases === undefined
       ? []
-      : [...family.partneringFamilyInfo.closedReferrals!].sort(
+      : [...family.partneringFamilyInfo.closedV1Cases!].sort(
           (r1, r2) =>
             r1.closedAtUtc!.getUTCMilliseconds() -
             r2.closedAtUtc!.getUTCMilliseconds()
         );
-  }, [family?.partneringFamilyInfo?.closedReferrals]);
+  }, [family?.partneringFamilyInfo?.closedV1Cases]);
 
   const allV1Cases: V1Case[] = useMemo(() => {
     return [...openV1Cases, ...closedV1Cases];
@@ -533,7 +533,7 @@ export function FamilyScreen() {
             {family && <AssignmentsSection family={family} />}
 
             <Grid item xs={12} md={4}>
-              {permissions(Permission.ViewReferralProgress) &&
+              {permissions(Permission.ViewV1CaseProgress) &&
                 family.partneringFamilyInfo && (
                   <FormControl>
                     <FormLabel
@@ -554,8 +554,8 @@ export function FamilyScreen() {
                         <Typography className="ph-unmask" variant="h3">
                           Cases
                         </Typography>
-                        {!family.partneringFamilyInfo?.openReferral &&
-                          permissions(Permission.CreateReferral) && (
+                        {!family.partneringFamilyInfo?.openV1Case &&
+                          permissions(Permission.CreateV1Case) && (
                             <Button
                               className="ph-unmask"
                               onClick={() => setOpenNewV1CaseDialogOpen(true)}
@@ -581,7 +581,7 @@ export function FamilyScreen() {
                           isOpenV1Case &&
                           canCloseV1Case &&
                           v1Case.id ===
-                            family.partneringFamilyInfo?.openReferral?.id;
+                            family.partneringFamilyInfo?.openV1Case?.id;
 
                         return (
                           <FormControlLabel
@@ -622,7 +622,7 @@ export function FamilyScreen() {
             </Grid>
 
             <Grid item md={4}>
-              {permissions(Permission.ViewReferralCustomFields) &&
+              {permissions(Permission.ViewV1CaseCustomFields) &&
                 (
                   selectedV1Case?.completedCustomFields ||
                   ([] as Array<CompletedCustomFieldInfo | string>)
@@ -662,7 +662,7 @@ export function FamilyScreen() {
             <Grid item xs={6} md={4}>
               {closeV1CaseDialogOpen &&
                 selectedV1Case?.id ===
-                  family.partneringFamilyInfo?.openReferral?.id && (
+                  family.partneringFamilyInfo?.openV1Case?.id && (
                   <CloseV1CaseDialog
                     partneringFamilyId={family.family!.id!}
                     v1CaseId={`${selectedV1Case!.id}`}
@@ -678,20 +678,19 @@ export function FamilyScreen() {
             </Grid>
 
             <Grid item md={12}>
-              {permissions(Permission.ViewReferralComments) &&
-                selectedV1Case && (
-                  <Grid container spacing={0}>
-                    <V1CaseComments
-                      partneringFamily={family}
-                      v1CaseId={selectedV1Case.id!}
-                    />
-                  </Grid>
-                )}
+              {permissions(Permission.ViewV1CaseComments) && selectedV1Case && (
+                <Grid container spacing={0}>
+                  <V1CaseComments
+                    partneringFamily={family}
+                    v1CaseId={selectedV1Case.id!}
+                  />
+                </Grid>
+              )}
             </Grid>
           </Grid>
 
           <Grid container spacing={0}>
-            {permissions(Permission.ViewReferralProgress) && selectedV1Case && (
+            {permissions(Permission.ViewV1CaseProgress) && selectedV1Case && (
               <>
                 <Grid item xs={12} sm={6} md={4} style={{ paddingRight: 20 }}>
                   <Typography

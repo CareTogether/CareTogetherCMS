@@ -3,7 +3,7 @@ import {
   CombinedFamilyInfo,
   ExactAge,
   Person,
-  Referral as V1Case,
+  V1Case,
 } from '../GeneratedClient';
 import { visibleFamiliesQuery } from './Data';
 import { differenceInYears } from 'date-fns';
@@ -85,16 +85,16 @@ const childNotReturnedQuery = selector<ChildNotReturned[]>({
       if (!family.partneringFamilyInfo) return [];
 
       const openV1CaseArrangements =
-        family.partneringFamilyInfo.openReferral?.arrangements?.map(
+        family.partneringFamilyInfo.openV1Case?.arrangements?.map(
           (arrangement) => ({
             arrangement,
             family,
-            v1Case: family.partneringFamilyInfo!.openReferral!,
+            v1Case: family.partneringFamilyInfo!.openV1Case!,
           })
         ) || [];
 
       const closedV1CasesArrangements =
-        family.partneringFamilyInfo.closedReferrals?.flatMap(
+        family.partneringFamilyInfo.closedV1Cases?.flatMap(
           (v1Case) =>
             v1Case.arrangements?.map((arrangement) => ({
               arrangement,

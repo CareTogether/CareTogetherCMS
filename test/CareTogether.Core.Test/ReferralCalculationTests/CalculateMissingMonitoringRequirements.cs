@@ -3,9 +3,9 @@ using System.Collections.Immutable;
 using CareTogether.Engines.PolicyEvaluation;
 using CareTogether.Resources.Policies;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using H = CareTogether.Core.Test.ReferralCalculationTests.Helpers;
+using H = CareTogether.Core.Test.V1CaseCalculationTests.Helpers;
 
-namespace CareTogether.Core.Test.ReferralCalculationTests
+namespace CareTogether.Core.Test.V1CaseCalculationTests
 {
     [TestClass]
     public class CalculateMissingMonitoringRequirements
@@ -39,7 +39,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
         [TestMethod]
         public void TestNotStarted()
         {
-            var result = ReferralCalculations.CalculateMissingMonitoringRequirements(
+            var result = V1CaseCalculations.CalculateMissingMonitoringRequirements(
                 MonitoringRequirements(
                     ImmutableList<MonitoringRequirement>
                         .Empty.Add(
@@ -87,7 +87,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
         [TestMethod]
         public void TestStartedNoCompletions()
         {
-            var result = ReferralCalculations.CalculateMissingMonitoringRequirements(
+            var result = V1CaseCalculations.CalculateMissingMonitoringRequirements(
                 MonitoringRequirements(
                     ImmutableList<MonitoringRequirement>
                         .Empty.Add(
@@ -236,7 +236,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
         [TestMethod]
         public void TestStartedSomeCompletions()
         {
-            var result = ReferralCalculations.CalculateMissingMonitoringRequirements(
+            var result = V1CaseCalculations.CalculateMissingMonitoringRequirements(
                 MonitoringRequirements(
                     ImmutableList<MonitoringRequirement>
                         .Empty.Add(
@@ -367,7 +367,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
         [TestMethod]
         public void TestStartedUpToDate()
         {
-            var result = ReferralCalculations.CalculateMissingMonitoringRequirements(
+            var result = V1CaseCalculations.CalculateMissingMonitoringRequirements(
                 MonitoringRequirements(
                     ImmutableList<MonitoringRequirement>
                         .Empty.Add(
@@ -435,7 +435,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
         [TestMethod]
         public void TestStartedUpToDateWithOptionalRequirement()
         {
-            var result = ReferralCalculations.CalculateMissingMonitoringRequirements(
+            var result = V1CaseCalculations.CalculateMissingMonitoringRequirements(
                 MonitoringRequirements(
                     ImmutableList<MonitoringRequirement>
                         .Empty.Add(

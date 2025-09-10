@@ -3,12 +3,12 @@ using System.Collections.Immutable;
 using CareTogether.Engines.PolicyEvaluation;
 using CareTogether.Resources;
 using CareTogether.Resources.Policies;
-using CareTogether.Resources.Referrals;
+using CareTogether.Resources.V1Cases;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Timelines;
-using H = CareTogether.Core.Test.ReferralCalculationTests.Helpers;
+using H = CareTogether.Core.Test.V1CaseCalculationTests.Helpers;
 
-namespace CareTogether.Core.Test.ReferralCalculationTests
+namespace CareTogether.Core.Test.V1CaseCalculationTests
 {
     [TestClass]
     public class CalculateMissingMonitoringRequirementInstances
@@ -16,7 +16,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
         [TestMethod]
         public void TestNoCompletions()
         {
-            var result = ReferralCalculations.CalculateMissingMonitoringRequirementInstances(
+            var result = V1CaseCalculations.CalculateMissingMonitoringRequirementInstances(
                 new DurationStagesRecurrencePolicy(
                     ImmutableList<RecurrencePolicyStage>
                         .Empty.Add(new RecurrencePolicyStage(TimeSpan.FromDays(2), 1))
@@ -40,7 +40,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
         [TestMethod]
         public void TestNoCompletionsOnePolicyStage()
         {
-            var result = ReferralCalculations.CalculateMissingMonitoringRequirementInstances(
+            var result = V1CaseCalculations.CalculateMissingMonitoringRequirementInstances(
                 new DurationStagesRecurrencePolicy(
                     ImmutableList<RecurrencePolicyStage>.Empty.Add(
                         new RecurrencePolicyStage(TimeSpan.FromDays(7), null)
@@ -64,7 +64,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
         public void TestNoCompletionsOneTimeRequirementDelayedDurationBased()
         {
             //NOTE: This is NOT recommended. Use the OneTimeRecurrencePolicy instead!
-            var result = ReferralCalculations.CalculateMissingMonitoringRequirementInstances(
+            var result = V1CaseCalculations.CalculateMissingMonitoringRequirementInstances(
                 new DurationStagesRecurrencePolicy(
                     ImmutableList<RecurrencePolicyStage>.Empty.Add(
                         new RecurrencePolicyStage(TimeSpan.FromDays(2), 1)
@@ -84,7 +84,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
         [TestMethod]
         public void TestNoCompletionsOneTimeRequirementDelayed()
         {
-            var result = ReferralCalculations.CalculateMissingMonitoringRequirementInstances(
+            var result = V1CaseCalculations.CalculateMissingMonitoringRequirementInstances(
                 new OneTimeRecurrencePolicy(TimeSpan.FromDays(2)),
                 filterToFamilyId: null,
                 arrangementStartedAtDate: H.Date(1, 1),
@@ -100,7 +100,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
         [TestMethod]
         public void TestNoCompletionsOneTimeRequirementDelayedFuture()
         {
-            var result = ReferralCalculations.CalculateMissingMonitoringRequirementInstances(
+            var result = V1CaseCalculations.CalculateMissingMonitoringRequirementInstances(
                 new OneTimeRecurrencePolicy(TimeSpan.FromDays(2)),
                 filterToFamilyId: null,
                 arrangementStartedAtDate: H.Date(1, 1),
@@ -116,7 +116,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
         [TestMethod]
         public void TestOneOnTimeCompletionOneTimeRequirementDelayedFuture()
         {
-            var result = ReferralCalculations.CalculateMissingMonitoringRequirementInstances(
+            var result = V1CaseCalculations.CalculateMissingMonitoringRequirementInstances(
                 new OneTimeRecurrencePolicy(TimeSpan.FromDays(2)),
                 filterToFamilyId: null,
                 arrangementStartedAtDate: H.Date(1, 1),
@@ -132,7 +132,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
         [TestMethod]
         public void TestOnePastDueCompletionOneTimeRequirementDelayedFuture()
         {
-            var result = ReferralCalculations.CalculateMissingMonitoringRequirementInstances(
+            var result = V1CaseCalculations.CalculateMissingMonitoringRequirementInstances(
                 new OneTimeRecurrencePolicy(TimeSpan.FromDays(2)),
                 filterToFamilyId: null,
                 arrangementStartedAtDate: H.Date(1, 1),
@@ -148,7 +148,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
         [TestMethod]
         public void TestNoCompletionsOneTimeRequirementImmediate()
         {
-            var result = ReferralCalculations.CalculateMissingMonitoringRequirementInstances(
+            var result = V1CaseCalculations.CalculateMissingMonitoringRequirementInstances(
                 new OneTimeRecurrencePolicy(null),
                 filterToFamilyId: null,
                 arrangementStartedAtDate: H.Date(1, 1),
@@ -166,7 +166,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
         public void TestOneCompletionOneTimeRequirementImmediate()
         {
             // Setting a delay of zero should never happen, but this documents the edge case.
-            var result = ReferralCalculations.CalculateMissingMonitoringRequirementInstances(
+            var result = V1CaseCalculations.CalculateMissingMonitoringRequirementInstances(
                 new OneTimeRecurrencePolicy(TimeSpan.Zero),
                 filterToFamilyId: null,
                 arrangementStartedAtDate: H.Date(1, 1),
@@ -182,7 +182,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
         [TestMethod]
         public void TestNoCompletionsEnded()
         {
-            var result = ReferralCalculations.CalculateMissingMonitoringRequirementInstances(
+            var result = V1CaseCalculations.CalculateMissingMonitoringRequirementInstances(
                 new DurationStagesRecurrencePolicy(
                     ImmutableList<RecurrencePolicyStage>
                         .Empty.Add(new RecurrencePolicyStage(TimeSpan.FromDays(2), 1))
@@ -203,7 +203,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
         [TestMethod]
         public void TestNoCompletionsOccurrenceBasedNoSkip()
         {
-            var result = ReferralCalculations.CalculateMissingMonitoringRequirementInstances(
+            var result = V1CaseCalculations.CalculateMissingMonitoringRequirementInstances(
                 new ChildCareOccurrenceBasedRecurrencePolicy(TimeSpan.FromDays(2), 3, 0, true),
                 filterToFamilyId: null,
                 arrangementStartedAtDate: H.Date(1, 1),
@@ -236,7 +236,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
         [TestMethod]
         public void TestNoCompletionsOccurrenceBasedWithSkip()
         {
-            var result = ReferralCalculations.CalculateMissingMonitoringRequirementInstances(
+            var result = V1CaseCalculations.CalculateMissingMonitoringRequirementInstances(
                 new ChildCareOccurrenceBasedRecurrencePolicy(TimeSpan.FromDays(2), 3, 2, true),
                 filterToFamilyId: null,
                 arrangementStartedAtDate: H.Date(1, 1),
@@ -269,7 +269,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
         [TestMethod]
         public void TestNoCompletionsOccurrenceBasedNotYetReturnedPastDue()
         {
-            var result = ReferralCalculations.CalculateMissingMonitoringRequirementInstances(
+            var result = V1CaseCalculations.CalculateMissingMonitoringRequirementInstances(
                 new ChildCareOccurrenceBasedRecurrencePolicy(TimeSpan.FromDays(2), 3, 0, true),
                 filterToFamilyId: null,
                 arrangementStartedAtDate: H.Date(1, 1),
@@ -293,7 +293,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
         [TestMethod]
         public void TestNoCompletionsOccurrenceBasedNotYetReturnedDueInFuture()
         {
-            var result = ReferralCalculations.CalculateMissingMonitoringRequirementInstances(
+            var result = V1CaseCalculations.CalculateMissingMonitoringRequirementInstances(
                 new ChildCareOccurrenceBasedRecurrencePolicy(TimeSpan.FromDays(2), 3, 0, true),
                 filterToFamilyId: null,
                 arrangementStartedAtDate: H.Date(1, 1),
@@ -317,7 +317,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
         [TestMethod]
         public void TestOneCompletion()
         {
-            var result = ReferralCalculations.CalculateMissingMonitoringRequirementInstances(
+            var result = V1CaseCalculations.CalculateMissingMonitoringRequirementInstances(
                 new DurationStagesRecurrencePolicy(
                     ImmutableList<RecurrencePolicyStage>
                         .Empty.Add(new RecurrencePolicyStage(TimeSpan.FromDays(2), 1))
@@ -341,7 +341,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
         [TestMethod]
         public void TestOneCompletionEnded()
         {
-            var result = ReferralCalculations.CalculateMissingMonitoringRequirementInstances(
+            var result = V1CaseCalculations.CalculateMissingMonitoringRequirementInstances(
                 new DurationStagesRecurrencePolicy(
                     ImmutableList<RecurrencePolicyStage>
                         .Empty.Add(new RecurrencePolicyStage(TimeSpan.FromDays(2), 1))
@@ -362,7 +362,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
         [TestMethod]
         public void TestCompletionsOnConsecutiveDays()
         {
-            var result = ReferralCalculations.CalculateMissingMonitoringRequirementInstances(
+            var result = V1CaseCalculations.CalculateMissingMonitoringRequirementInstances(
                 new DurationStagesRecurrencePolicy(
                     ImmutableList<RecurrencePolicyStage>
                         .Empty.Add(new RecurrencePolicyStage(TimeSpan.FromDays(2), 1))
@@ -383,7 +383,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
         [TestMethod]
         public void TestMultipleCompletionsOnRandomDays()
         {
-            var result = ReferralCalculations.CalculateMissingMonitoringRequirementInstances(
+            var result = V1CaseCalculations.CalculateMissingMonitoringRequirementInstances(
                 new DurationStagesRecurrencePolicy(
                     ImmutableList<RecurrencePolicyStage>
                         .Empty.Add(new RecurrencePolicyStage(TimeSpan.FromDays(2), 1))
@@ -404,7 +404,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
         [TestMethod]
         public void TestEdgeCaseOneCompletionBeforeStarted()
         {
-            var result = ReferralCalculations.CalculateMissingMonitoringRequirementInstances(
+            var result = V1CaseCalculations.CalculateMissingMonitoringRequirementInstances(
                 new DurationStagesRecurrencePolicy(
                     ImmutableList<RecurrencePolicyStage>.Empty.Add(
                         new RecurrencePolicyStage(TimeSpan.FromDays(7), null)
@@ -424,7 +424,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
         [TestMethod]
         public void TestEdgeCaseOneCompletionAfterEnded()
         {
-            var result = ReferralCalculations.CalculateMissingMonitoringRequirementInstances(
+            var result = V1CaseCalculations.CalculateMissingMonitoringRequirementInstances(
                 new DurationStagesRecurrencePolicy(
                     ImmutableList<RecurrencePolicyStage>.Empty.Add(
                         new RecurrencePolicyStage(TimeSpan.FromDays(7), null)
@@ -444,7 +444,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
         [TestMethod]
         public void TestTwoCompletionsInFirstStage()
         {
-            var result = ReferralCalculations.CalculateMissingMonitoringRequirementInstances(
+            var result = V1CaseCalculations.CalculateMissingMonitoringRequirementInstances(
                 new DurationStagesRecurrencePolicy(
                     ImmutableList<RecurrencePolicyStage>
                         .Empty.Add(new RecurrencePolicyStage(TimeSpan.FromDays(2), 1))
@@ -468,7 +468,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
         [TestMethod]
         public void TestTwoCompletionsInFirstStageOnStageEndDate()
         {
-            var result = ReferralCalculations.CalculateMissingMonitoringRequirementInstances(
+            var result = V1CaseCalculations.CalculateMissingMonitoringRequirementInstances(
                 new DurationStagesRecurrencePolicy(
                     ImmutableList<RecurrencePolicyStage>
                         .Empty.Add(new RecurrencePolicyStage(TimeSpan.FromDays(2), 1))
@@ -489,7 +489,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
         [TestMethod]
         public void TestTwoCompletionsInFirstAndSecondStages()
         {
-            var result = ReferralCalculations.CalculateMissingMonitoringRequirementInstances(
+            var result = V1CaseCalculations.CalculateMissingMonitoringRequirementInstances(
                 new DurationStagesRecurrencePolicy(
                     ImmutableList<RecurrencePolicyStage>
                         .Empty.Add(new RecurrencePolicyStage(TimeSpan.FromDays(2), 1))
@@ -510,7 +510,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
         [TestMethod]
         public void TestTwoCompletionsInFirstAndSecondStagesOneMissedDate()
         {
-            var result = ReferralCalculations.CalculateMissingMonitoringRequirementInstances(
+            var result = V1CaseCalculations.CalculateMissingMonitoringRequirementInstances(
                 new DurationStagesRecurrencePolicy(
                     ImmutableList<RecurrencePolicyStage>
                         .Empty.Add(new RecurrencePolicyStage(TimeSpan.FromDays(2), 1))
@@ -531,7 +531,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
         [TestMethod]
         public void TestTwoCompletionsInFirstAndSecondStagesTwoMissedDates()
         {
-            var result = ReferralCalculations.CalculateMissingMonitoringRequirementInstances(
+            var result = V1CaseCalculations.CalculateMissingMonitoringRequirementInstances(
                 new DurationStagesRecurrencePolicy(
                     ImmutableList<RecurrencePolicyStage>
                         .Empty.Add(new RecurrencePolicyStage(TimeSpan.FromDays(2), 1))
@@ -552,7 +552,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
         [TestMethod]
         public void TestTwoCompletionsInFirstAndSecondStagesTwoGapsOfMissedDates()
         {
-            var result = ReferralCalculations.CalculateMissingMonitoringRequirementInstances(
+            var result = V1CaseCalculations.CalculateMissingMonitoringRequirementInstances(
                 new DurationStagesRecurrencePolicy(
                     ImmutableList<RecurrencePolicyStage>
                         .Empty.Add(new RecurrencePolicyStage(TimeSpan.FromDays(2), 1))
@@ -573,7 +573,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
         [TestMethod]
         public void TestCompletionInTheStartDate()
         {
-            var result = ReferralCalculations.CalculateMissingMonitoringRequirementInstances(
+            var result = V1CaseCalculations.CalculateMissingMonitoringRequirementInstances(
                 new DurationStagesRecurrencePolicy(
                     ImmutableList<RecurrencePolicyStage>.Empty.Add(
                         new RecurrencePolicyStage(TimeSpan.FromDays(7), null)
@@ -593,7 +593,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
         [TestMethod]
         public void TestCompletionInTheStartDateWithMultipleStages()
         {
-            var result = ReferralCalculations.CalculateMissingMonitoringRequirementInstances(
+            var result = V1CaseCalculations.CalculateMissingMonitoringRequirementInstances(
                 new DurationStagesRecurrencePolicy(
                     ImmutableList<RecurrencePolicyStage>
                         .Empty.Add(new RecurrencePolicyStage(TimeSpan.FromDays(2), 1))
@@ -613,7 +613,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
         [TestMethod]
         public void TestNoCompletionsWithPerChildLocationDurationStagesNoLocations()
         {
-            var result = ReferralCalculations.CalculateMissingMonitoringRequirementInstances(
+            var result = V1CaseCalculations.CalculateMissingMonitoringRequirementInstances(
                 new DurationStagesPerChildLocationRecurrencePolicy(
                     ImmutableList<RecurrencePolicyStage>
                         .Empty.Add(new RecurrencePolicyStage(TimeSpan.FromDays(2), 1))
@@ -634,7 +634,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
         [TestMethod]
         public void TestNoCompletionsWithPerChildLocationDurationStagesOneLocation()
         {
-            var result = ReferralCalculations.CalculateMissingMonitoringRequirementInstances(
+            var result = V1CaseCalculations.CalculateMissingMonitoringRequirementInstances(
                 new DurationStagesPerChildLocationRecurrencePolicy(
                     ImmutableList<RecurrencePolicyStage>
                         .Empty.Add(new RecurrencePolicyStage(TimeSpan.FromDays(2), 1))
@@ -660,7 +660,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
         [TestMethod]
         public void TestNoCompletionsWithPerChildLocationDurationStagesOneLocationSimplePolicy()
         {
-            var result = ReferralCalculations.CalculateMissingMonitoringRequirementInstances(
+            var result = V1CaseCalculations.CalculateMissingMonitoringRequirementInstances(
                 new DurationStagesPerChildLocationRecurrencePolicy(
                     ImmutableList<RecurrencePolicyStage>.Empty.Add(
                         new RecurrencePolicyStage(TimeSpan.FromDays(7), null)
@@ -685,7 +685,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
         [TestMethod]
         public void TestNoCompletionsWithPerChildLocationDurationStagesOneLocationWithReturnToParentInMiddle()
         {
-            var result = ReferralCalculations.CalculateMissingMonitoringRequirementInstances(
+            var result = V1CaseCalculations.CalculateMissingMonitoringRequirementInstances(
                 new DurationStagesPerChildLocationRecurrencePolicy(
                     ImmutableList<RecurrencePolicyStage>
                         .Empty.Add(new RecurrencePolicyStage(TimeSpan.FromDays(2), 1))
@@ -713,7 +713,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
         [TestMethod]
         public void TestFilterToFirstFamilyWithPerChildLocationDurationStagesBeforeTransferToSecondFamily()
         {
-            var result = ReferralCalculations.CalculateMissingMonitoringRequirementInstances(
+            var result = V1CaseCalculations.CalculateMissingMonitoringRequirementInstances(
                 new DurationStagesPerChildLocationRecurrencePolicy(
                     ImmutableList<RecurrencePolicyStage>
                         .Empty.Add(new RecurrencePolicyStage(TimeSpan.FromDays(2), 1))
@@ -738,7 +738,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
         [TestMethod]
         public void TestFilterToSecondFamilyWithPerChildLocationDurationStagesAfterTransferFromFirstFamily()
         {
-            var result = ReferralCalculations.CalculateMissingMonitoringRequirementInstances(
+            var result = V1CaseCalculations.CalculateMissingMonitoringRequirementInstances(
                 new DurationStagesPerChildLocationRecurrencePolicy(
                     ImmutableList<RecurrencePolicyStage>
                         .Empty.Add(new RecurrencePolicyStage(TimeSpan.FromDays(2), 1))
@@ -766,7 +766,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
         [TestMethod]
         public void TestOneCompletionsAtResumeDateWithPerChildLocationDurationStagesOneLocationWithReturnToParentInMiddle()
         {
-            var result = ReferralCalculations.CalculateMissingMonitoringRequirementInstances(
+            var result = V1CaseCalculations.CalculateMissingMonitoringRequirementInstances(
                 new DurationStagesPerChildLocationRecurrencePolicy(
                     ImmutableList<RecurrencePolicyStage>
                         .Empty.Add(new RecurrencePolicyStage(TimeSpan.FromDays(2), 1))
@@ -794,7 +794,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
         [TestMethod]
         public void TestNoCompletionsWithPerChildLocationDurationStagesOneLocationWithReturnToParentInMiddle2()
         {
-            var result = ReferralCalculations.CalculateMissingMonitoringRequirementInstances(
+            var result = V1CaseCalculations.CalculateMissingMonitoringRequirementInstances(
                 new DurationStagesPerChildLocationRecurrencePolicy(
                     ImmutableList<RecurrencePolicyStage>
                         .Empty.Add(new RecurrencePolicyStage(TimeSpan.FromDays(2), 1))
@@ -819,7 +819,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
         [TestMethod]
         public void TestNoCompletionsWithPerChildLocationDurationStagesOneLocationWithReturnToParentAtEnd()
         {
-            var result = ReferralCalculations.CalculateMissingMonitoringRequirementInstances(
+            var result = V1CaseCalculations.CalculateMissingMonitoringRequirementInstances(
                 new DurationStagesPerChildLocationRecurrencePolicy(
                     ImmutableList<RecurrencePolicyStage>
                         .Empty.Add(new RecurrencePolicyStage(TimeSpan.FromDays(2), 1))
@@ -843,7 +843,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
         [TestMethod]
         public void TestNoCompletionsWithPerChildLocationDurationStagesTwoLocations()
         {
-            var result = ReferralCalculations.CalculateMissingMonitoringRequirementInstances(
+            var result = V1CaseCalculations.CalculateMissingMonitoringRequirementInstances(
                 new DurationStagesPerChildLocationRecurrencePolicy(
                     ImmutableList<RecurrencePolicyStage>
                         .Empty.Add(new RecurrencePolicyStage(TimeSpan.FromDays(2), 1))
@@ -869,7 +869,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
         [TestMethod]
         public void TestNoCompletionsEndedWithPerChildLocationDurationStages()
         {
-            var result = ReferralCalculations.CalculateMissingMonitoringRequirementInstances(
+            var result = V1CaseCalculations.CalculateMissingMonitoringRequirementInstances(
                 new DurationStagesPerChildLocationRecurrencePolicy(
                     ImmutableList<RecurrencePolicyStage>
                         .Empty.Add(new RecurrencePolicyStage(TimeSpan.FromDays(2), 1))
@@ -892,7 +892,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
         // [TestMethod]
         // public void TestNoCompletionsOccurrenceBasedNoSkip()
         // {
-        //    var result = ReferralCalculations.CalculateMissingMonitoringRequirementInstances(
+        //    var result = V1CaseCalculations.CalculateMissingMonitoringRequirementInstances(
         //        new ChildCareOccurrenceBasedRecurrencePolicy(TimeSpan.FromDays(2), 3, 0, true),
         //        arrangementStartedAtDate: new DateTime(H.YEAR, 1, 1),
         //        arrangementEndedAtDate: null,
@@ -922,7 +922,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
         // [TestMethod]
         // public void TestNoCompletionsOccurrenceBasedWithSkip()
         // {
-        //    var result = ReferralCalculations.CalculateMissingMonitoringRequirementInstances(
+        //    var result = V1CaseCalculations.CalculateMissingMonitoringRequirementInstances(
         //        new ChildCareOccurrenceBasedRecurrencePolicy(TimeSpan.FromDays(2), 3, 2, true),
         //        arrangementStartedAtDate: new DateTime(H.YEAR, 1, 1),
         //        arrangementEndedAtDate: null,
@@ -952,7 +952,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
         // [TestMethod]
         // public void TestNoCompletionsOccurrenceBasedNotYetReturnedPastDue()
         // {
-        //    var result = ReferralCalculations.CalculateMissingMonitoringRequirementInstances(
+        //    var result = V1CaseCalculations.CalculateMissingMonitoringRequirementInstances(
         //        new ChildCareOccurrenceBasedRecurrencePolicy(TimeSpan.FromDays(2), 3, 0, true),
         //        arrangementStartedAtDate: new DateTime(H.YEAR, 1, 1),
         //        arrangementEndedAtDate: null,
@@ -973,7 +973,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
         // [TestMethod]
         // public void TestNoCompletionsOccurrenceBasedNotYetReturnedDueInFuture()
         // {
-        //    var result = ReferralCalculations.CalculateMissingMonitoringRequirementInstances(
+        //    var result = V1CaseCalculations.CalculateMissingMonitoringRequirementInstances(
         //        new ChildCareOccurrenceBasedRecurrencePolicy(TimeSpan.FromDays(2), 3, 0, true),
         //        arrangementStartedAtDate: new DateTime(H.YEAR, 1, 1),
         //        arrangementEndedAtDate: null,
@@ -994,7 +994,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
         [TestMethod]
         public void TestOneCompletionWithPerChildLocationDurationStages()
         {
-            var result = ReferralCalculations.CalculateMissingMonitoringRequirementInstances(
+            var result = V1CaseCalculations.CalculateMissingMonitoringRequirementInstances(
                 new DurationStagesPerChildLocationRecurrencePolicy(
                     ImmutableList<RecurrencePolicyStage>
                         .Empty.Add(new RecurrencePolicyStage(TimeSpan.FromDays(2), 1))
@@ -1020,7 +1020,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
         [TestMethod]
         public void TestOneCompletionEndedWithPerChildLocationDurationStages()
         {
-            var result = ReferralCalculations.CalculateMissingMonitoringRequirementInstances(
+            var result = V1CaseCalculations.CalculateMissingMonitoringRequirementInstances(
                 new DurationStagesPerChildLocationRecurrencePolicy(
                     ImmutableList<RecurrencePolicyStage>
                         .Empty.Add(new RecurrencePolicyStage(TimeSpan.FromDays(2), 1))
@@ -1043,7 +1043,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
         [TestMethod]
         public void TestTwoCompletionsInFirstStageWithPerChildLocationDurationStages()
         {
-            var result = ReferralCalculations.CalculateMissingMonitoringRequirementInstances(
+            var result = V1CaseCalculations.CalculateMissingMonitoringRequirementInstances(
                 new DurationStagesPerChildLocationRecurrencePolicy(
                     ImmutableList<RecurrencePolicyStage>
                         .Empty.Add(new RecurrencePolicyStage(TimeSpan.FromDays(2), 1))
@@ -1069,7 +1069,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
         [TestMethod]
         public void TestTwoCompletionsInFirstStageOnStageEndDateWithPerChildLocationDurationStages()
         {
-            var result = ReferralCalculations.CalculateMissingMonitoringRequirementInstances(
+            var result = V1CaseCalculations.CalculateMissingMonitoringRequirementInstances(
                 new DurationStagesPerChildLocationRecurrencePolicy(
                     ImmutableList<RecurrencePolicyStage>
                         .Empty.Add(new RecurrencePolicyStage(TimeSpan.FromDays(2), 1))
@@ -1092,7 +1092,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
         [TestMethod]
         public void TestTwoCompletionsInFirstAndSecondStagesWithPerChildLocationDurationStages()
         {
-            var result = ReferralCalculations.CalculateMissingMonitoringRequirementInstances(
+            var result = V1CaseCalculations.CalculateMissingMonitoringRequirementInstances(
                 new DurationStagesPerChildLocationRecurrencePolicy(
                     ImmutableList<RecurrencePolicyStage>
                         .Empty.Add(new RecurrencePolicyStage(TimeSpan.FromDays(2), 1))
@@ -1115,7 +1115,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
         [TestMethod]
         public void TestTwoCompletionsInFirstAndSecondStagesOneMissedDateWithPerChildLocationDurationStages()
         {
-            var result = ReferralCalculations.CalculateMissingMonitoringRequirementInstances(
+            var result = V1CaseCalculations.CalculateMissingMonitoringRequirementInstances(
                 new DurationStagesPerChildLocationRecurrencePolicy(
                     ImmutableList<RecurrencePolicyStage>
                         .Empty.Add(new RecurrencePolicyStage(TimeSpan.FromDays(2), 1))
@@ -1138,7 +1138,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
         [TestMethod]
         public void TestTwoCompletionsInFirstAndSecondStagesTwoMissedDatesWithPerChildLocationDurationStages()
         {
-            var result = ReferralCalculations.CalculateMissingMonitoringRequirementInstances(
+            var result = V1CaseCalculations.CalculateMissingMonitoringRequirementInstances(
                 new DurationStagesPerChildLocationRecurrencePolicy(
                     ImmutableList<RecurrencePolicyStage>
                         .Empty.Add(new RecurrencePolicyStage(TimeSpan.FromDays(2), 1))
@@ -1161,7 +1161,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
         [TestMethod]
         public void TestTwoCompletionsInFirstAndSecondStagesTwoGapsOfMissedDatesWithPerChildLocationDurationStages()
         {
-            var result = ReferralCalculations.CalculateMissingMonitoringRequirementInstances(
+            var result = V1CaseCalculations.CalculateMissingMonitoringRequirementInstances(
                 new DurationStagesPerChildLocationRecurrencePolicy(
                     ImmutableList<RecurrencePolicyStage>
                         .Empty.Add(new RecurrencePolicyStage(TimeSpan.FromDays(2), 1))
