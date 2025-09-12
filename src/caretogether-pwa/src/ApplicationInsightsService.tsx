@@ -10,11 +10,19 @@ const appInsights = new ApplicationInsights({
   config: {
     connectionString: import.meta.env.VITE_APP_APPINSIGHTS_CONNECTIONSTRING,
     enableAutoRouteTracking: true,
-    enableCorsCorrelation: true,
+    enableCorsCorrelation: !import.meta.env.DEV, // Disable in development to avoid CORS issues
     enableRequestHeaderTracking: true,
     enableResponseHeaderTracking: true,
     enableAjaxErrorStatusText: true,
     enableAjaxPerfTracking: true,
+    correlationHeaderExcludedDomains: [
+      '*.featurebase.app',
+      'do.featurebase.app',
+      'featurebase.app',
+      '*.googleapis.com',
+      '*.google.com',
+      '*.gstatic.com',
+    ],
     extensions: [aiReactPlugin],
   },
 });
