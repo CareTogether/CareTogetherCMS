@@ -391,48 +391,44 @@ export function FamilyScreen() {
             </MenuItem>
 
             {permissions(Permission.EditFamilyInfo) && (
-              <MenuItem onClick={deleteFamilyDialogHandle.openDialog}>
-                <ListItemText className="ph-unmask" primary="Delete family" />
-              </MenuItem>
-            )}
-          </MenuList>
-          {permissions(Permission.EditFamilyInfo) && (
-            <MenuItem
-              onClick={async (e) => {
-                e.preventDefault();
-                e.stopPropagation();
+              <MenuItem
+                onClick={async (e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
 
-                setFamilyMoreMenuAnchor(null);
+                  setFamilyMoreMenuAnchor(null);
 
-                try {
-                  const isCurrentlyTest = family.family?.isTestFamily ?? false;
-                  await withBackdrop(async () => {
-                    await directoryModel.updateTestFamilyFlag(
-                      family.family!.id!,
-                      !isCurrentlyTest
-                    );
-                  });
-                } catch (error) {
-                  console.error(error);
-                }
-              }}
-            >
-              <Box display="flex" alignItems="center" gap={1}>
+                  try {
+                    const isCurrentlyTest =
+                      family.family?.isTestFamily ?? false;
+                    await withBackdrop(async () => {
+                      await directoryModel.updateTestFamilyFlag(
+                        family.family!.id!,
+                        !isCurrentlyTest
+                      );
+                    });
+                  } catch (error) {
+                    console.error(error);
+                  }
+                }}
+              >
                 <ListItemText
+                  className="ph-unmask"
                   primary={
                     family.family?.isTestFamily
                       ? 'Unmark as test family'
                       : 'Mark as test family'
                   }
-                  primaryTypographyProps={{
-                    variant: 'body2',
-                    color: 'inherit',
-                  }}
-                  className="ph-unmask"
                 />
-              </Box>
-            </MenuItem>
-          )}
+              </MenuItem>
+            )}
+
+            {permissions(Permission.EditFamilyInfo) && (
+              <MenuItem onClick={deleteFamilyDialogHandle.openDialog}>
+                <ListItemText className="ph-unmask" primary="Delete family" />
+              </MenuItem>
+            )}
+          </MenuList>
         </Menu>
         {uploadDocumentDialogOpen && (
           <UploadFamilyDocumentsDialog
