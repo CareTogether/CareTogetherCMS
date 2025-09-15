@@ -116,8 +116,6 @@ namespace CareTogether.Resources.Directory
 
     public sealed record UndoCreateFamily(Guid FamilyId) : FamilyCommand(FamilyId);
 
-    public sealed record ToggleTestFamilyFlag(Guid FamilyId, bool IsTestFamily)
-    : FamilyCommand(FamilyId);
 
 
     public sealed record AddAdultToFamily(
@@ -173,6 +171,9 @@ namespace CareTogether.Resources.Directory
 
     public sealed record ChangePrimaryFamilyContact(Guid FamilyId, Guid AdultId)
         : FamilyCommand(FamilyId);
+
+    public sealed record ToggleTestFamilyFlag(Guid FamilyId, bool IsTestFamily)
+    : FamilyCommand(FamilyId);
 
     public sealed record UpdateCustomFamilyField(
         Guid FamilyId,

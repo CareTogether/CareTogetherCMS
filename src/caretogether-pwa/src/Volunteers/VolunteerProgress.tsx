@@ -38,6 +38,7 @@ import UnfoldMoreIcon from '@mui/icons-material/UnfoldMore';
 import { useLoadable } from '../Hooks/useLoadable';
 import { ProgressBackdrop } from '../Shell/ProgressBackdrop';
 import { useAppNavigate } from '../Hooks/useAppNavigate';
+import { FamilyTestBadge } from '../Families/FamilyTestBadge';
 
 function VolunteerProgress(props: { onOpen: () => void }) {
   const { onOpen } = props;
@@ -167,10 +168,23 @@ function VolunteerProgress(props: { onOpen: () => void }) {
                     sx={{ backgroundColor: '#eef' }}
                     onClick={() => openFamily(volunteerFamily.family!.id!)}
                   >
-                    <TableCell key="1" colSpan={expandedView ? 2 : 1}>
-                      <Typography sx={{ fontWeight: 600 }}>
-                        {familyLastName(volunteerFamily) + ' Family'}
-                      </Typography>
+                    <TableCell
+                      key="1"
+                      colSpan={1}
+                      sx={{ whiteSpace: 'nowrap' }}
+                    >
+                      <span
+                        style={{
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: 8,
+                        }}
+                      >
+                        <Typography sx={{ fontWeight: 600 }}>
+                          {familyLastName(volunteerFamily) + ' Family'}
+                        </Typography>
+                        <FamilyTestBadge family={volunteerFamily} />
+                      </span>
                     </TableCell>
                     {allApprovalAndOnboardingRequirements.map((actionName) => (
                       <TableCell key={actionName}>

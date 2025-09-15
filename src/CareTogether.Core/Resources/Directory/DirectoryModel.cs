@@ -39,7 +39,7 @@ namespace CareTogether.Resources.Directory
             ImmutableList<Guid> DeletedDocuments,
             ImmutableDictionary<string, CompletedCustomFieldInfo> CompletedCustomFields,
             ImmutableList<Activity> History,
-            bool IsTestFamily = false
+            bool IsTestFamily
         )
         {
             internal Family ToFamily(ImmutableDictionary<Guid, PersonEntry> people) =>
@@ -174,7 +174,8 @@ namespace CareTogether.Resources.Directory
                         CompletedCustomFieldInfo
                     >.Empty,
                     ImmutableList<Activity>.Empty,
-                    IsTestFamily: false
+                        IsTestFamily: false
+
                 ),
                 _ => families.TryGetValue(command.FamilyId, out var familyEntry)
                     ? command switch

@@ -15,16 +15,15 @@ using Microsoft.Extensions.Options;
 using Microsoft.Rest;
 using CareTogether.Resources.Directory;
 
-public sealed record ToggleTestFamilyFlagRequest(bool IsTestFamily);
 
 namespace CareTogether.Api.Controllers
 {
     [ApiController]
     [Route("/api/{organizationId:guid}/{locationId:guid}/[controller]")]
-    // [Authorize(
-    //     Policies.ForbidAnonymous,
-    //     AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme
-    // )]
+    [Authorize(
+        Policies.ForbidAnonymous,
+        AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme
+    )]
     public class RecordsController : ControllerBase
     {
         private readonly IRecordsManager recordsManager;
@@ -93,25 +92,6 @@ namespace CareTogether.Api.Controllers
             return Ok(result);
         }
 
-        [HttpPut("families/{familyId}/toggleTestFamilyFlag")]
-public async Task<IActionResult> ToggleTestFamilyFlagAsync(
-    Guid organizationId,
-    Guid locationId,
-    Guid familyId,
-    [FromBody] ToggleTestFamilyFlagRequest payload
-)
-{
-    var command = new ToggleTestFamilyFlag(familyId, payload.IsTestFamily);
-
-    var result = await recordsManager.ExecuteAtomicRecordsCommandAsync(
-        organizationId,
-        locationId,
-        User,
-        new FamilyRecordsCommand(command)
-    );
-
-    return Ok(result);
-}
 
 
         /// <summary>

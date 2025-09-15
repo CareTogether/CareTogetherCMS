@@ -415,6 +415,8 @@ namespace CareTogether.Managers.Records
                             ),
                             ImmutableList<Guid>.Empty,
                             ImmutableList<CustodialRelationship>.Empty
+
+
                         )
                     );
                     yield return new FamilyApprovalRecordsCommand(
@@ -465,6 +467,8 @@ namespace CareTogether.Managers.Records
                             ),
                             ImmutableList<Guid>.Empty,
                             ImmutableList<CustodialRelationship>.Empty
+
+
                         )
                     );
                     yield return new ReferralRecordsCommand(

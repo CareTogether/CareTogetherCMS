@@ -23,6 +23,8 @@ import {
   FormControlLabel,
   Radio,
   Typography,
+  Backdrop,
+  CircularProgress,
 } from '@mui/material';
 import {
   CompletedCustomFieldInfo,
@@ -60,7 +62,11 @@ import { ReferralComments } from '../Referrals/ReferralComments';
 import { ReferralCustomField } from '../Referrals/ReferralCustomField';
 import { PrimaryContactEditor } from './PrimaryContactEditor';
 import useScreenTitle from '../Shell/ShellScreenTitle';
-import { useCommunityLookup, useFamilyLookup } from '../Model/DirectoryModel';
+import {
+  useCommunityLookup,
+  useFamilyLookup,
+  useDirectoryModel,
+} from '../Model/DirectoryModel';
 import { RemoveFamilyRoleDialog } from '../Volunteers/RemoveFamilyRoleDialog';
 import { ResetFamilyRoleDialog } from '../Volunteers/ResetFamilyRoleDialog';
 import { VolunteerRoleApprovalStatusChip } from '../Volunteers/VolunteerRoleApprovalStatusChip';
@@ -83,14 +89,6 @@ export function FamilyScreen() {
   const familyIdMaybe = useParams<{ familyId: string }>();
   const familyId = familyIdMaybe.familyId as string;
 
-  const routeParams = useParams<{
-    organizationId: string;
-    locationId: string;
-  }>();
-
-  const organizationId = routeParams.organizationId!;
-  const locationId = routeParams.locationId!;
-
   const searchParams = new URLSearchParams(location.search);
   const referralIdFromQuery = searchParams.get('referralId') ?? undefined;
 
@@ -111,6 +109,10 @@ export function FamilyScreen() {
 
   const familyLookup = useFamilyLookup();
   const family = familyLookup(familyId);
+
+  const directoryModel = useDirectoryModel();
+
+  const [isTogglingTestFlag, setIsTogglingTestFlag] = useState(false);
 
   const permissions = useFamilyPermissions(family);
 
@@ -397,43 +399,44 @@ export function FamilyScreen() {
           </MenuList>
           {permissions(Permission.EditFamilyInfo) && (
             <MenuItem
+              disabled={isTogglingTestFlag}
               onClick={async (e) => {
                 e.preventDefault();
                 e.stopPropagation();
 
+                setFamilyMoreMenuAnchor(null);
+                setIsTogglingTestFlag(true);
+
                 try {
                   const isCurrentlyTest = family.family?.isTestFamily ?? false;
-
-                  const res = await fetch(
-                    `/api/${organizationId}/${locationId}/records/families/${family.family!.id}/toggleTestFamilyFlag`,
-                    {
-                      method: 'PUT',
-                      headers: {
-                        'Content-Type': 'application/json',
-                      },
-                      body: JSON.stringify({ isTestFamily: !isCurrentlyTest }),
-                    }
+                  await directoryModel.updateTestFamilyFlag(
+                    family.family!.id!,
+                    !isCurrentlyTest
                   );
-
-                  if (!res.ok) {
-                    throw new Error('Request failed');
-                  }
-
-                  setFamilyMoreMenuAnchor(null);
-                  window.location.reload();
                 } catch (error) {
                   console.error(error);
+                } finally {
+                  setIsTogglingTestFlag(false);
                 }
               }}
             >
-              <ListItemText
-                className="ph-unmask"
-                primary={
-                  family.family?.isTestFamily
-                    ? 'Undo Mark as Test Family'
-                    : 'Mark as Test Family'
-                }
-              />
+              <Box display="flex" alignItems="center" gap={1}>
+                {isTogglingTestFlag && (
+                  <CircularProgress size={16} thickness={5} />
+                )}
+                <ListItemText
+                  primary={
+                    family.family?.isTestFamily
+                      ? 'Unmark as test family'
+                      : 'Mark as test family'
+                  }
+                  primaryTypographyProps={{
+                    variant: 'body2',
+                    color: 'inherit',
+                  }}
+                  className="ph-unmask"
+                />
+              </Box>
             </MenuItem>
           )}
         </Menu>
@@ -947,6 +950,17 @@ export function FamilyScreen() {
           </Grid>
         </Grid>
       </Grid>
+      <Backdrop
+        open={isTogglingTestFlag}
+        sx={{
+          zIndex: (theme) => theme.zIndex.modal + 1,
+          backgroundColor: 'rgba(255,255,255,0.55)',
+        }}
+        aria-live="polite"
+        aria-busy={isTogglingTestFlag}
+      >
+        <CircularProgress color="secondary" size={32} thickness={4} />
+      </Backdrop>
     </Container>
   );
 }

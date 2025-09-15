@@ -51,6 +51,7 @@ import {
   CommunityRecordsCommand,
   ConvertChildToAdult,
   UndoCreateFamily,
+  ToggleTestFamilyFlag,
 } from '../GeneratedClient';
 import { api } from '../Api/Api';
 import {
@@ -364,6 +365,15 @@ export function useDirectoryModel() {
         customFieldName: customField.name,
         customFieldType: customField.type,
         value: value,
+      });
+      return command;
+    }
+  );
+  const updateTestFamilyFlag = useFamilyCommandCallback(
+    async (familyId, isTestFamily: boolean) => {
+      const command = commandFactory(ToggleTestFamilyFlag, {
+        familyId: familyId,
+        isTestFamily: isTestFamily,
       });
       return command;
     }
@@ -844,5 +854,6 @@ export function useDirectoryModel() {
     editDraftNote,
     discardDraftNote,
     approveNote,
+    updateTestFamilyFlag,
   };
 }

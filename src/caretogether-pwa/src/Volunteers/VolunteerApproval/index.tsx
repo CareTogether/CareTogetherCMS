@@ -65,6 +65,7 @@ import { getOptionValueFromSelection } from './getOptionValueFromSelection';
 import { getUpdatedFilters } from './getUpdatedFilters';
 import { CustomFieldsFilter } from './CustomFieldsFilter';
 import { AgeText } from '../../../src/Families/AgeText';
+import { FamilyTestBadge } from '../../Families/FamilyTestBadge';
 
 function VolunteerApproval(props: { onOpen: () => void }) {
   const { onOpen } = props;
@@ -648,10 +649,23 @@ function VolunteerApproval(props: { onOpen: () => void }) {
                             />
                           </TableCell>
                         )}
-                        <TableCell key="1" colSpan={expandedView ? 1 : 1}>
-                          <Typography sx={{ fontWeight: 600 }}>
-                            {familyLastName(volunteerFamily) + ' Family'}
-                          </Typography>
+                        <TableCell
+                          key="1"
+                          colSpan={1}
+                          sx={{ whiteSpace: 'nowrap' }}
+                        >
+                          <span
+                            style={{
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              gap: 8,
+                            }}
+                          >
+                            <Typography sx={{ fontWeight: 600 }}>
+                              {familyLastName(volunteerFamily) + ' Family'}
+                            </Typography>
+                            <FamilyTestBadge family={volunteerFamily} />
+                          </span>
                         </TableCell>
                         <TableCell>
                           {expandedView ? (
