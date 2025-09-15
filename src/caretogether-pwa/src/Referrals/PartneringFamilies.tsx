@@ -48,7 +48,7 @@ import { useLoadable } from '../Hooks/useLoadable';
 import { ProgressBackdrop } from '../Shell/ProgressBackdrop';
 import { useAppNavigate } from '../Hooks/useAppNavigate';
 import PhoneIcon from '@mui/icons-material/Phone';
-import { FamilyTestBadge } from '../Families/FamilyTestBadge';
+import { TestFamilyBadge } from '../Families/TestFamilyBadge';
 
 const arrangementPhaseText = new Map<number, string>([
   [ArrangementPhase.SettingUp, 'Setting Up'],
@@ -398,7 +398,7 @@ function PartneringFamilies() {
                                 </span>
                               </>
                             )}
-                            <FamilyTestBadge family={partneringFamily} />
+                            <TestFamilyBadge family={partneringFamily} />
                           </span>
                         </TableCell>
                         <TableCell>

@@ -65,7 +65,7 @@ import { getOptionValueFromSelection } from './getOptionValueFromSelection';
 import { getUpdatedFilters } from './getUpdatedFilters';
 import { CustomFieldsFilter } from './CustomFieldsFilter';
 import { AgeText } from '../../../src/Families/AgeText';
-import { FamilyTestBadge } from '../../Families/FamilyTestBadge';
+import { TestFamilyBadge } from '../../Families/TestFamilyBadge';
 
 function VolunteerApproval(props: { onOpen: () => void }) {
   const { onOpen } = props;
@@ -664,7 +664,7 @@ function VolunteerApproval(props: { onOpen: () => void }) {
                             <Typography sx={{ fontWeight: 600 }}>
                               {familyLastName(volunteerFamily) + ' Family'}
                             </Typography>
-                            <FamilyTestBadge family={volunteerFamily} />
+                            <TestFamilyBadge family={volunteerFamily} />
                           </span>
                         </TableCell>
                         <TableCell>
