@@ -10303,11 +10303,6 @@ export abstract class FamilyCommand implements IFamilyCommand {
             result.init(data);
             return result;
         }
-        if (data["discriminator"] === "ToggleTestFamilyFlag") {
-            let result = new ToggleTestFamilyFlag();
-            result.init(data);
-            return result;
-        }
         if (data["discriminator"] === "UndoCreateFamily") {
             let result = new UndoCreateFamily();
             result.init(data);
@@ -10325,6 +10320,11 @@ export abstract class FamilyCommand implements IFamilyCommand {
         }
         if (data["discriminator"] === "UpdateCustomFamilyField") {
             let result = new UpdateCustomFamilyField();
+            result.init(data);
+            return result;
+        }
+        if (data["discriminator"] === "UpdateTestFamilyFlag") {
+            let result = new UpdateTestFamilyFlag();
             result.init(data);
             return result;
         }
@@ -10737,40 +10737,6 @@ export interface IRemoveCustodialRelationship extends IFamilyCommand {
     adultPersonId: string;
 }
 
-export class ToggleTestFamilyFlag extends FamilyCommand implements IToggleTestFamilyFlag {
-    isTestFamily!: boolean;
-
-    constructor(data?: IToggleTestFamilyFlag) {
-        super(data);
-        this._discriminator = "ToggleTestFamilyFlag";
-    }
-
-    init(_data?: any) {
-        super.init(_data);
-        if (_data) {
-            this.isTestFamily = _data["isTestFamily"];
-        }
-    }
-
-    static fromJS(data: any): ToggleTestFamilyFlag {
-        data = typeof data === 'object' ? data : {};
-        let result = new ToggleTestFamilyFlag();
-        result.init(data);
-        return result;
-    }
-
-    toJSON(data?: any) {
-        data = typeof data === 'object' ? data : {};
-        data["isTestFamily"] = this.isTestFamily;
-        super.toJSON(data);
-        return data;
-    }
-}
-
-export interface IToggleTestFamilyFlag extends IFamilyCommand {
-    isTestFamily: boolean;
-}
-
 export class UndoCreateFamily extends FamilyCommand implements IUndoCreateFamily {
 
     constructor(data?: IUndoCreateFamily) {
@@ -10926,6 +10892,40 @@ export interface IUpdateCustomFamilyField extends IFamilyCommand {
     customFieldName: string;
     customFieldType: CustomFieldType;
     value?: any | undefined;
+}
+
+export class UpdateTestFamilyFlag extends FamilyCommand implements IUpdateTestFamilyFlag {
+    isTestFamily!: boolean;
+
+    constructor(data?: IUpdateTestFamilyFlag) {
+        super(data);
+        this._discriminator = "UpdateTestFamilyFlag";
+    }
+
+    init(_data?: any) {
+        super.init(_data);
+        if (_data) {
+            this.isTestFamily = _data["isTestFamily"];
+        }
+    }
+
+    static fromJS(data: any): UpdateTestFamilyFlag {
+        data = typeof data === 'object' ? data : {};
+        let result = new UpdateTestFamilyFlag();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["isTestFamily"] = this.isTestFamily;
+        super.toJSON(data);
+        return data;
+    }
+}
+
+export interface IUpdateTestFamilyFlag extends IFamilyCommand {
+    isTestFamily: boolean;
 }
 
 export class UploadFamilyDocument extends FamilyCommand implements IUploadFamilyDocument {

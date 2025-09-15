@@ -281,7 +281,7 @@ namespace CareTogether.Resources.Directory
                                 )
                             ),
                         },
-                        ToggleTestFamilyFlag c => familyEntry with { IsTestFamily = c.IsTestFamily },
+                        UpdateTestFamilyFlag c => familyEntry with { IsTestFamily = c.IsTestFamily },
 
                         _ => throw new NotImplementedException(
                             $"The command type '{command.GetType().FullName}' has not been implemented."

@@ -51,7 +51,7 @@ import {
   CommunityRecordsCommand,
   ConvertChildToAdult,
   UndoCreateFamily,
-  ToggleTestFamilyFlag,
+  UpdateTestFamilyFlag,
 } from '../GeneratedClient';
 import { api } from '../Api/Api';
 import {
@@ -371,7 +371,7 @@ export function useDirectoryModel() {
   );
   const updateTestFamilyFlag = useFamilyCommandCallback(
     async (familyId, isTestFamily: boolean) => {
-      const command = commandFactory(ToggleTestFamilyFlag, {
+      const command = commandFactory(UpdateTestFamilyFlag, {
         familyId: familyId,
         isTestFamily: isTestFamily,
       });

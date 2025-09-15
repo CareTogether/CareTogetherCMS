@@ -172,7 +172,7 @@ namespace CareTogether.Resources.Directory
     public sealed record ChangePrimaryFamilyContact(Guid FamilyId, Guid AdultId)
         : FamilyCommand(FamilyId);
 
-    public sealed record ToggleTestFamilyFlag(Guid FamilyId, bool IsTestFamily)
+    public sealed record UpdateTestFamilyFlag(Guid FamilyId, bool IsTestFamily)
     : FamilyCommand(FamilyId);
 
     public sealed record UpdateCustomFamilyField(

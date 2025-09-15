@@ -6387,11 +6387,11 @@
             "CreateFamily": "#/components/schemas/CreateFamily",
             "DeleteUploadedFamilyDocument": "#/components/schemas/DeleteUploadedFamilyDocument",
             "RemoveCustodialRelationship": "#/components/schemas/RemoveCustodialRelationship",
-            "ToggleTestFamilyFlag": "#/components/schemas/ToggleTestFamilyFlag",
             "UndoCreateFamily": "#/components/schemas/UndoCreateFamily",
             "UpdateAdultRelationshipToFamily": "#/components/schemas/UpdateAdultRelationshipToFamily",
             "UpdateCustodialRelationshipType": "#/components/schemas/UpdateCustodialRelationshipType",
             "UpdateCustomFamilyField": "#/components/schemas/UpdateCustomFamilyField",
+            "UpdateTestFamilyFlag": "#/components/schemas/UpdateTestFamilyFlag",
             "UploadFamilyDocument": "#/components/schemas/UploadFamilyDocument"
           }
         },
@@ -6633,25 +6633,6 @@
           }
         ]
       },
-      "ToggleTestFamilyFlag": {
-        "allOf": [
-          {
-            "$ref": "#/components/schemas/FamilyCommand"
-          },
-          {
-            "type": "object",
-            "additionalProperties": false,
-            "required": [
-              "isTestFamily"
-            ],
-            "properties": {
-              "isTestFamily": {
-                "type": "boolean"
-              }
-            }
-          }
-        ]
-      },
       "UndoCreateFamily": {
         "allOf": [
           {
@@ -6742,6 +6723,25 @@
               },
               "value": {
                 "nullable": true
+              }
+            }
+          }
+        ]
+      },
+      "UpdateTestFamilyFlag": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/FamilyCommand"
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "isTestFamily"
+            ],
+            "properties": {
+              "isTestFamily": {
+                "type": "boolean"
               }
             }
           }
