@@ -14,7 +14,7 @@ namespace CareTogether.Core.Test.V1CaseCalculationTests
     {
         private static readonly EffectiveLocationPolicy TestLocationPolicy =
             new EffectiveLocationPolicy(
-                ImmutableDictionary<string, ActionRequirement>.Empty,
+                ImmutableSortedDictionary<string, ActionRequirement>.Empty,
                 ImmutableList<CustomField>.Empty,
                 new V1CasePolicy(
                     ImmutableList<string>.Empty,

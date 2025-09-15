@@ -2262,7 +2262,7 @@ export interface IPutLocationPayload {
 }
 
 export class EffectiveLocationPolicy implements IEffectiveLocationPolicy {
-    actionDefinitions!: { [key: string]: ActionRequirement; };
+    actionDefinitions!: ActionDefinitionEntry[];
     customFamilyFields!: CustomField[];
     referralPolicy!: V1CasePolicy;
     volunteerPolicy!: VolunteerPolicy;
@@ -2275,7 +2275,7 @@ export class EffectiveLocationPolicy implements IEffectiveLocationPolicy {
             }
         }
         if (!data) {
-            this.actionDefinitions = {};
+            this.actionDefinitions = [];
             this.customFamilyFields = [];
             this.referralPolicy = new V1CasePolicy();
             this.volunteerPolicy = new VolunteerPolicy();
@@ -2284,12 +2284,10 @@ export class EffectiveLocationPolicy implements IEffectiveLocationPolicy {
 
     init(_data?: any) {
         if (_data) {
-            if (_data["actionDefinitions"]) {
-                this.actionDefinitions = {} as any;
-                for (let key in _data["actionDefinitions"]) {
-                    if (_data["actionDefinitions"].hasOwnProperty(key))
-                        (<any>this.actionDefinitions)![key] = _data["actionDefinitions"][key] ? ActionRequirement.fromJS(_data["actionDefinitions"][key]) : new ActionRequirement();
-                }
+            if (Array.isArray(_data["actionDefinitions"])) {
+                this.actionDefinitions = [] as any;
+                for (let item of _data["actionDefinitions"])
+                    this.actionDefinitions!.push(ActionDefinitionEntry.fromJS(item));
             }
             if (Array.isArray(_data["customFamilyFields"])) {
                 this.customFamilyFields = [] as any;
@@ -2310,12 +2308,10 @@ export class EffectiveLocationPolicy implements IEffectiveLocationPolicy {
 
     toJSON(data?: any) {
         data = typeof data === 'object' ? data : {};
-        if (this.actionDefinitions) {
-            data["actionDefinitions"] = {};
-            for (let key in this.actionDefinitions) {
-                if (this.actionDefinitions.hasOwnProperty(key))
-                    (<any>data["actionDefinitions"])[key] = this.actionDefinitions[key] ? this.actionDefinitions[key].toJSON() : <any>undefined;
-            }
+        if (Array.isArray(this.actionDefinitions)) {
+            data["actionDefinitions"] = [];
+            for (let item of this.actionDefinitions)
+                data["actionDefinitions"].push(item.toJSON());
         }
         if (Array.isArray(this.customFamilyFields)) {
             data["customFamilyFields"] = [];
@@ -2329,10 +2325,53 @@ export class EffectiveLocationPolicy implements IEffectiveLocationPolicy {
 }
 
 export interface IEffectiveLocationPolicy {
-    actionDefinitions: { [key: string]: ActionRequirement; };
+    actionDefinitions: ActionDefinitionEntry[];
     customFamilyFields: CustomField[];
     referralPolicy: V1CasePolicy;
     volunteerPolicy: VolunteerPolicy;
+}
+
+export class ActionDefinitionEntry implements IActionDefinitionEntry {
+    key!: string;
+    value!: ActionRequirement;
+
+    constructor(data?: IActionDefinitionEntry) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+        if (!data) {
+            this.value = new ActionRequirement();
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.key = _data["key"];
+            this.value = _data["value"] ? ActionRequirement.fromJS(_data["value"]) : new ActionRequirement();
+        }
+    }
+
+    static fromJS(data: any): ActionDefinitionEntry {
+        data = typeof data === 'object' ? data : {};
+        let result = new ActionDefinitionEntry();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["key"] = this.key;
+        data["value"] = this.value ? this.value.toJSON() : <any>undefined;
+        return data;
+    }
+}
+
+export interface IActionDefinitionEntry {
+    key: string;
+    value: ActionRequirement;
 }
 
 export class ActionRequirement implements IActionRequirement {

@@ -27,6 +27,15 @@ namespace CareTogether.Api.Controllers
         Guid? copyPoliciesFromLocationId
     );
 
+    public sealed record ActionDefinitionEntry(string Key, ActionRequirement Value);
+
+    public sealed record EffectiveLocationPolicy(
+        ImmutableList<ActionDefinitionEntry> ActionDefinitions,
+        ImmutableList<CustomField> CustomFamilyFields,
+        V1CasePolicy ReferralPolicy,
+        VolunteerPolicy VolunteerPolicy
+    );
+
     [ApiController]
     [Authorize(
         Policies.ForbidAnonymous,
@@ -429,7 +438,17 @@ namespace CareTogether.Api.Controllers
         )
         {
             var result = await policiesResource.GetCurrentPolicy(organizationId, locationId);
-            return Ok(result);
+
+            // Convert ActionDefinitions dictionary to ordered array while preserving other properties
+            var response = new EffectiveLocationPolicy(
+                ActionDefinitions: result
+                    .ActionDefinitions.Select(kvp => new ActionDefinitionEntry(kvp.Key, kvp.Value))
+                    .ToImmutableList(),
+                CustomFamilyFields: result.CustomFamilyFields,
+                ReferralPolicy: result.ReferralPolicy,
+                VolunteerPolicy: result.VolunteerPolicy
+            );
+            return Ok(response);
         }
 
         [HttpGet("/api/{organizationId:guid}/{locationId:guid}/[controller]/flags")]

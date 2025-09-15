@@ -83,13 +83,13 @@ export const allApprovalAndOnboardingRequirementsData = selector({
   key: 'allApprovalAndOnboardingRequirementsData',
   get: ({ get }) => {
     const policy = get(policyData);
-    const ActionNames =
+    const actionNames =
       (policy.actionDefinitions &&
-        Object.entries(policy.actionDefinitions).map(
-          ([actionName]) => actionName
+        policy.actionDefinitions.map(
+          (actionDefinition) => actionDefinition.key
         )) ||
       [];
-    return ActionNames.filter(
+    return actionNames.filter(
       (actionName) =>
         (policy.volunteerPolicy?.volunteerFamilyRoles &&
           Object.entries(policy.volunteerPolicy.volunteerFamilyRoles).some(

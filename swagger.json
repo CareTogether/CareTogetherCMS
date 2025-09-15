@@ -1763,9 +1763,9 @@
         ],
         "properties": {
           "actionDefinitions": {
-            "type": "object",
-            "additionalProperties": {
-              "$ref": "#/components/schemas/ActionRequirement"
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ActionDefinitionEntry"
             }
           },
           "customFamilyFields": {
@@ -1779,6 +1779,22 @@
           },
           "volunteerPolicy": {
             "$ref": "#/components/schemas/VolunteerPolicy"
+          }
+        }
+      },
+      "ActionDefinitionEntry": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "key",
+          "value"
+        ],
+        "properties": {
+          "key": {
+            "type": "string"
+          },
+          "value": {
+            "$ref": "#/components/schemas/ActionRequirement"
           }
         }
       },

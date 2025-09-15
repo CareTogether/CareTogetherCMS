@@ -2462,7 +2462,7 @@ namespace CareTogether.TestData
         )
         {
             var policy = new EffectiveLocationPolicy(
-                ActionDefinitions: new Dictionary<string, ActionRequirement>
+                ActionDefinitions: new SortedDictionary<string, ActionRequirement>
                 {
                     ["Request for Help Form"] = new ActionRequirement(
                         DocumentLinkRequirement.Allowed,
@@ -2714,7 +2714,7 @@ namespace CareTogether.TestData
                         null,
                         null
                     ),
-                }.ToImmutableDictionary(),
+                }.ToImmutableSortedDictionary(),
                 [
                     new("Has Pool", CustomFieldType.Boolean, null, null),
                     new(
