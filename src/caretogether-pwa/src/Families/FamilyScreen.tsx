@@ -23,8 +23,6 @@ import {
   FormControlLabel,
   Radio,
   Typography,
-  Backdrop,
-  CircularProgress,
 } from '@mui/material';
 import {
   CompletedCustomFieldInfo,
@@ -84,6 +82,7 @@ import { AssignmentsSection } from '../Families/AssignmentsSection';
 import { useMemo } from 'react';
 import { useSyncReferralIdInURL } from '../Hooks/useSyncReferralIdInURL';
 import { ArrangementsSection } from '../Referrals/Arrangements/ArrangementsSection/ArrangementsSection';
+import { useBackdrop } from '../Hooks/useBackdrop';
 
 export function FamilyScreen() {
   const familyIdMaybe = useParams<{ familyId: string }>();
@@ -112,7 +111,7 @@ export function FamilyScreen() {
 
   const directoryModel = useDirectoryModel();
 
-  const [isTogglingTestFlag, setIsTogglingTestFlag] = useState(false);
+  const withBackdrop = useBackdrop();
 
   const permissions = useFamilyPermissions(family);
 
@@ -399,31 +398,26 @@ export function FamilyScreen() {
           </MenuList>
           {permissions(Permission.EditFamilyInfo) && (
             <MenuItem
-              disabled={isTogglingTestFlag}
               onClick={async (e) => {
                 e.preventDefault();
                 e.stopPropagation();
 
                 setFamilyMoreMenuAnchor(null);
-                setIsTogglingTestFlag(true);
 
                 try {
                   const isCurrentlyTest = family.family?.isTestFamily ?? false;
-                  await directoryModel.updateTestFamilyFlag(
-                    family.family!.id!,
-                    !isCurrentlyTest
-                  );
+                  await withBackdrop(async () => {
+                    await directoryModel.updateTestFamilyFlag(
+                      family.family!.id!,
+                      !isCurrentlyTest
+                    );
+                  });
                 } catch (error) {
                   console.error(error);
-                } finally {
-                  setIsTogglingTestFlag(false);
                 }
               }}
             >
               <Box display="flex" alignItems="center" gap={1}>
-                {isTogglingTestFlag && (
-                  <CircularProgress size={16} thickness={5} />
-                )}
                 <ListItemText
                   primary={
                     family.family?.isTestFamily
@@ -950,17 +944,6 @@ export function FamilyScreen() {
           </Grid>
         </Grid>
       </Grid>
-      <Backdrop
-        open={isTogglingTestFlag}
-        sx={{
-          zIndex: (theme) => theme.zIndex.modal + 1,
-          backgroundColor: 'rgba(255,255,255,0.55)',
-        }}
-        aria-live="polite"
-        aria-busy={isTogglingTestFlag}
-      >
-        <CircularProgress color="secondary" size={32} thickness={4} />
-      </Backdrop>
     </Container>
   );
 }
