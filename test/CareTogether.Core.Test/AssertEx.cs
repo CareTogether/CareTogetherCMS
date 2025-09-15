@@ -105,12 +105,9 @@ namespace CareTogether.Core.Test
                 return;
             }
 
-             Assert.IsNotNull(actual);
-    Assert.IsNotNull(expected);
-    Assert.AreEqual(expected.Count, actual.Count);
-
-    foreach (var (First, Second) in Enumerable.Zip(expected, actual))
-        Assert.AreEqual(First, Second);
+            Assert.AreEqual(expected?.Count, actual?.Count);
+            foreach (var (First, Second) in Enumerable.Zip(expected, actual))
+                Assert.AreEqual(First, Second);
         }
 
         public static void SequenceIs(DateOnlyTimeline? actual, DateOnlyTimeline? expected)
