@@ -13,8 +13,6 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
 using Microsoft.Rest;
-using CareTogether.Resources.Directory;
-
 
 namespace CareTogether.Api.Controllers
 {
@@ -91,8 +89,6 @@ namespace CareTogether.Api.Controllers
             );
             return Ok(result);
         }
-
-
 
         /// <summary>
         /// Returns Embed token, Embed URL, and Embed token expiry to the client
