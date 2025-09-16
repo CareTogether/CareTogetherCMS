@@ -4449,6 +4449,7 @@ export class Family implements IFamily {
     deletedDocuments!: string[];
     completedCustomFields!: CompletedCustomFieldInfo[];
     history!: Activity[];
+    isTestFamily!: boolean;
 
     constructor(data?: IFamily) {
         if (data) {
@@ -4508,6 +4509,7 @@ export class Family implements IFamily {
                 for (let item of _data["history"])
                     this.history!.push(Activity.fromJS(item));
             }
+            this.isTestFamily = _data["isTestFamily"];
         }
     }
 
@@ -4558,6 +4560,7 @@ export class Family implements IFamily {
             for (let item of this.history)
                 data["history"].push(item.toJSON());
         }
+        data["isTestFamily"] = this.isTestFamily;
         return data;
     }
 }
@@ -4573,6 +4576,7 @@ export interface IFamily {
     deletedDocuments: string[];
     completedCustomFields: CompletedCustomFieldInfo[];
     history: Activity[];
+    isTestFamily: boolean;
 }
 
 export class ValueTupleOfPersonAndFamilyAdultRelationshipInfo implements IValueTupleOfPersonAndFamilyAdultRelationshipInfo {
@@ -10320,6 +10324,11 @@ export abstract class FamilyCommand implements IFamilyCommand {
             result.init(data);
             return result;
         }
+        if (data["discriminator"] === "UpdateTestFamilyFlag") {
+            let result = new UpdateTestFamilyFlag();
+            result.init(data);
+            return result;
+        }
         if (data["discriminator"] === "UploadFamilyDocument") {
             let result = new UploadFamilyDocument();
             result.init(data);
@@ -10884,6 +10893,40 @@ export interface IUpdateCustomFamilyField extends IFamilyCommand {
     customFieldName: string;
     customFieldType: CustomFieldType;
     value?: any | undefined;
+}
+
+export class UpdateTestFamilyFlag extends FamilyCommand implements IUpdateTestFamilyFlag {
+    isTestFamily!: boolean;
+
+    constructor(data?: IUpdateTestFamilyFlag) {
+        super(data);
+        this._discriminator = "UpdateTestFamilyFlag";
+    }
+
+    init(_data?: any) {
+        super.init(_data);
+        if (_data) {
+            this.isTestFamily = _data["isTestFamily"];
+        }
+    }
+
+    static fromJS(data: any): UpdateTestFamilyFlag {
+        data = typeof data === 'object' ? data : {};
+        let result = new UpdateTestFamilyFlag();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["isTestFamily"] = this.isTestFamily;
+        super.toJSON(data);
+        return data;
+    }
+}
+
+export interface IUpdateTestFamilyFlag extends IFamilyCommand {
+    isTestFamily: boolean;
 }
 
 export class UploadFamilyDocument extends FamilyCommand implements IUploadFamilyDocument {

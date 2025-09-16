@@ -2877,7 +2877,8 @@
           "uploadedDocuments",
           "deletedDocuments",
           "completedCustomFields",
-          "history"
+          "history",
+          "isTestFamily"
         ],
         "properties": {
           "id": {
@@ -2933,6 +2934,9 @@
             "items": {
               "$ref": "#/components/schemas/Activity"
             }
+          },
+          "isTestFamily": {
+            "type": "boolean"
           }
         }
       },
@@ -6389,6 +6393,7 @@
             "UpdateAdultRelationshipToFamily": "#/components/schemas/UpdateAdultRelationshipToFamily",
             "UpdateCustodialRelationshipType": "#/components/schemas/UpdateCustodialRelationshipType",
             "UpdateCustomFamilyField": "#/components/schemas/UpdateCustomFamilyField",
+            "UpdateTestFamilyFlag": "#/components/schemas/UpdateTestFamilyFlag",
             "UploadFamilyDocument": "#/components/schemas/UploadFamilyDocument"
           }
         },
@@ -6720,6 +6725,25 @@
               },
               "value": {
                 "nullable": true
+              }
+            }
+          }
+        ]
+      },
+      "UpdateTestFamilyFlag": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/FamilyCommand"
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "isTestFamily"
+            ],
+            "properties": {
+              "isTestFamily": {
+                "type": "boolean"
               }
             }
           }
