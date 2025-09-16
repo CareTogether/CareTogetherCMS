@@ -51,11 +51,8 @@ import {
   CommunityRecordsCommand,
   ConvertChildToAdult,
   UndoCreateFamily,
-<<<<<<< HEAD
-  UpdateTestFamilyFlag,
-=======
   UpdateNoteAccessLevel,
->>>>>>> main
+  UpdateTestFamilyFlag,
 } from '../GeneratedClient';
 import { api } from '../Api/Api';
 import {
@@ -868,10 +865,7 @@ export function useDirectoryModel() {
     editDraftNote,
     discardDraftNote,
     approveNote,
-<<<<<<< HEAD
-    updateTestFamilyFlag,
-=======
     updateNoteAccessLevel,
->>>>>>> main
+    updateTestFamilyFlag,
   };
 }
