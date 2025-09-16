@@ -3,10 +3,10 @@ using System.Collections.Immutable;
 using System.Linq;
 using CareTogether.Engines.PolicyEvaluation;
 using CareTogether.Resources.Policies;
-using CareTogether.Resources.Referrals;
+using CareTogether.Resources.V1Cases;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-namespace CareTogether.Core.Test.ReferralCalculationTests
+namespace CareTogether.Core.Test.V1CaseCalculationTests
 {
     [TestClass]
     public class CalculateMissingSetupRequirements
@@ -15,7 +15,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
             new EffectiveLocationPolicy(
                 ImmutableDictionary<string, ActionRequirement>.Empty,
                 ImmutableList<CustomField>.Empty,
-                new ReferralPolicy(
+                new V1CasePolicy(
                     ImmutableList<string>.Empty,
                     ImmutableList<CustomField>.Empty,
                     ImmutableList<ArrangementPolicy>.Empty,
@@ -58,7 +58,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
         [TestMethod]
         public void TestNoRequirementsCompleted()
         {
-            var result = ReferralCalculations.CalculateMissingSetupRequirements(
+            var result = V1CaseCalculations.CalculateMissingSetupRequirements(
                 TestLocationPolicy,
                 SetupRequirements(("A", true), ("B", true), ("C", true)),
                 new Engines.PolicyEvaluation.ArrangementEntry(
@@ -87,7 +87,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
         [TestMethod]
         public void TestPartialRequirementsCompleted()
         {
-            var result = ReferralCalculations.CalculateMissingSetupRequirements(
+            var result = V1CaseCalculations.CalculateMissingSetupRequirements(
                 TestLocationPolicy,
                 SetupRequirements(("A", true), ("B", true), ("C", true)),
                 new Engines.PolicyEvaluation.ArrangementEntry(
@@ -114,7 +114,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
         [TestMethod]
         public void TestAllRequirementsCompleted()
         {
-            var result = ReferralCalculations.CalculateMissingSetupRequirements(
+            var result = V1CaseCalculations.CalculateMissingSetupRequirements(
                 TestLocationPolicy,
                 SetupRequirements(("A", true), ("B", true), ("C", true)),
                 new Engines.PolicyEvaluation.ArrangementEntry(

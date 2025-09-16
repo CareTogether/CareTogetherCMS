@@ -13,7 +13,7 @@ type MissingRequirementRowProps = {
   policyVersion?: string;
   context: RequirementContext;
   isAvailableApplication?: boolean;
-  referralId?: string;
+  v1CaseId?: string;
 };
 
 export function MissingRequirementRow({
@@ -21,11 +21,11 @@ export function MissingRequirementRow({
   policyVersion,
   context,
   isAvailableApplication,
-  referralId,
+  v1CaseId,
 }: MissingRequirementRowProps) {
   const policy = useRecoilValue(policyData);
   const permissions = useFamilyIdPermissions(
-    context.kind === 'Referral' ||
+    context.kind === 'V1Case' ||
       context.kind === 'Arrangement' ||
       context.kind === 'Family Volunteer Assignment' ||
       context.kind === 'Individual Volunteer Assignment'
@@ -55,12 +55,12 @@ export function MissingRequirementRow({
     throw new Error(`Invalid missing requirement context '${context.kind}'`);
 
   const canComplete =
-    context.kind === 'Referral'
-      ? permissions(Permission.EditReferralRequirementCompletion)
+    context.kind === 'V1Case'
+      ? permissions(Permission.EditV1CaseRequirementCompletion)
       : permissions(Permission.EditApprovalRequirementCompletion);
   const canExempt =
-    context.kind === 'Referral'
-      ? permissions(Permission.EditReferralRequirementExemption)
+    context.kind === 'V1Case'
+      ? permissions(Permission.EditV1CaseRequirementExemption)
       : permissions(Permission.EditApprovalRequirementExemption);
 
   return (
@@ -85,7 +85,7 @@ export function MissingRequirementRow({
           requirement={requirement}
           context={context}
           policy={requirementPolicy}
-          referralId={referralId}
+          v1CaseId={v1CaseId}
           canExempt={canExempt}
         />
       )}

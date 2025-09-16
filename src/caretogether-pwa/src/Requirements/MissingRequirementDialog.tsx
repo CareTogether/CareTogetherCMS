@@ -24,7 +24,7 @@ import {
   DocumentLinkRequirement,
   MissingArrangementRequirement,
   NoteEntryRequirement,
-  Referral,
+  V1Case,
   RequirementDefinition,
 } from '../GeneratedClient';
 import {
@@ -33,7 +33,7 @@ import {
   usePersonLookup,
 } from '../Model/DirectoryModel';
 import { uploadFamilyFileToTenant } from '../Model/FilesModel';
-import { useReferralsModel } from '../Model/ReferralsModel';
+import { useV1CasesModel } from '../Model/V1CasesModel';
 import { useVolunteersModel } from '../Model/VolunteersModel';
 import { UpdateDialog } from '../Generic/UpdateDialog';
 import { RequirementContext } from './RequirementContext';
@@ -50,7 +50,7 @@ type MissingRequirementDialogProps = {
   requirement: MissingArrangementRequirement | RequirementDefinition | string;
   context: RequirementContext;
   policy: ActionRequirement;
-  referralId?: string;
+  v1CaseId?: string;
   canExempt: boolean;
 };
 export function MissingRequirementDialog({
@@ -58,11 +58,11 @@ export function MissingRequirementDialog({
   requirement,
   context,
   policy,
-  referralId,
+  v1CaseId,
   canExempt,
 }: MissingRequirementDialogProps) {
   const directory = useDirectoryModel();
-  const referrals = useReferralsModel();
+  const v1Cases = useV1CasesModel();
   const volunteers = useVolunteersModel();
 
   const now = new Date();
@@ -89,7 +89,7 @@ export function MissingRequirementDialog({
 
   const familyLookup = useFamilyLookup();
   const contextFamilyId =
-    context.kind === 'Referral' ||
+    context.kind === 'V1Case' ||
     context.kind === 'Arrangement' ||
     context.kind === 'Family Volunteer Assignment' ||
     context.kind === 'Individual Volunteer Assignment'
@@ -99,22 +99,22 @@ export function MissingRequirementDialog({
 
   const personLookup = usePersonLookup().bind(null, contextFamilyId);
 
-  const openReferrals: Referral[] =
-    contextFamily?.partneringFamilyInfo?.openReferral !== undefined
-      ? [contextFamily.partneringFamilyInfo.openReferral]
+  const openV1Cases: V1Case[] =
+    contextFamily?.partneringFamilyInfo?.openV1Case !== undefined
+      ? [contextFamily.partneringFamilyInfo.openV1Case]
       : [];
-  const closedReferrals: Referral[] =
-    contextFamily?.partneringFamilyInfo?.closedReferrals
+  const closedV1Cases: V1Case[] =
+    contextFamily?.partneringFamilyInfo?.closedV1Cases
       ?.slice()
       .sort((r1, r2) => (r1.closedAtUtc! > r2.closedAtUtc! ? -1 : 1)) || [];
-  const allReferrals: Referral[] = [...openReferrals, ...closedReferrals];
-  const selectedReferral = referralId
-    ? allReferrals.find((r) => r.id === referralId)
+  const allV1Cases: V1Case[] = [...openV1Cases, ...closedV1Cases];
+  const selectedV1Case = v1CaseId
+    ? allV1Cases.find((r) => r.id === v1CaseId)
     : undefined;
 
   const availableArrangements =
-    selectedReferral && requirement instanceof MissingArrangementRequirement
-      ? selectedReferral.arrangements!.filter((arrangement) =>
+    selectedV1Case && requirement instanceof MissingArrangementRequirement
+      ? selectedV1Case.arrangements!.filter((arrangement) =>
           [
             ...arrangement.missingRequirements!,
             ...arrangement.missingOptionalRequirements!,
@@ -218,10 +218,10 @@ export function MissingRequirementDialog({
       );
     }
     switch (context.kind) {
-      case 'Referral':
-        await referrals.completeReferralRequirement(
+      case 'V1Case':
+        await v1Cases.completeV1CaseRequirement(
           contextFamilyId,
-          context.referralId,
+          context.v1CaseId,
           requirementName,
           policy,
           completedAtLocal!,
@@ -230,9 +230,9 @@ export function MissingRequirementDialog({
         );
         break;
       case 'Arrangement':
-        await referrals.completeArrangementRequirement(
+        await v1Cases.completeArrangementRequirement(
           contextFamilyId,
-          context.referralId,
+          context.v1CaseId,
           applyToArrangements.map((arrangement) => arrangement.id!),
           requirementName,
           policy,
@@ -242,9 +242,9 @@ export function MissingRequirementDialog({
         );
         break;
       case 'Family Volunteer Assignment':
-        await referrals.completeVolunteerFamilyAssignmentRequirement(
+        await v1Cases.completeVolunteerFamilyAssignmentRequirement(
           contextFamilyId,
-          context.referralId,
+          context.v1CaseId,
           applyToArrangements.map((arrangement) => arrangement.id!),
           context.assignment,
           requirementName,
@@ -255,9 +255,9 @@ export function MissingRequirementDialog({
         );
         break;
       case 'Individual Volunteer Assignment':
-        await referrals.completeIndividualVolunteerAssignmentRequirement(
+        await v1Cases.completeIndividualVolunteerAssignmentRequirement(
           contextFamilyId,
-          context.referralId,
+          context.v1CaseId,
           applyToArrangements.map((arrangement) => arrangement.id!),
           context.assignment,
           requirementName,
@@ -293,19 +293,19 @@ export function MissingRequirementDialog({
 
   async function exempt() {
     switch (context.kind) {
-      case 'Referral':
-        await referrals.exemptReferralRequirement(
+      case 'V1Case':
+        await v1Cases.exemptV1CaseRequirement(
           contextFamilyId,
-          context.referralId,
+          context.v1CaseId,
           requirementName,
           additionalComments,
           exemptionExpiresAtLocal
         );
         break;
       case 'Arrangement':
-        await referrals.exemptArrangementRequirement(
+        await v1Cases.exemptArrangementRequirement(
           contextFamilyId,
-          context.referralId,
+          context.v1CaseId,
           applyToArrangements.map((arrangement) => arrangement.id!),
           requirement as MissingArrangementRequirement,
           exemptAll,
@@ -314,9 +314,9 @@ export function MissingRequirementDialog({
         );
         break;
       case 'Family Volunteer Assignment':
-        await referrals.exemptVolunteerFamilyAssignmentRequirement(
+        await v1Cases.exemptVolunteerFamilyAssignmentRequirement(
           contextFamilyId,
-          context.referralId,
+          context.v1CaseId,
           applyToArrangements.map((arrangement) => arrangement.id!),
           context.assignment,
           requirement as MissingArrangementRequirement,
@@ -326,9 +326,9 @@ export function MissingRequirementDialog({
         );
         break;
       case 'Individual Volunteer Assignment':
-        await referrals.exemptIndividualVolunteerAssignmentRequirement(
+        await v1Cases.exemptIndividualVolunteerAssignmentRequirement(
           contextFamilyId,
-          context.referralId,
+          context.v1CaseId,
           applyToArrangements.map((arrangement) => arrangement.id!),
           context.assignment,
           requirement as MissingArrangementRequirement,

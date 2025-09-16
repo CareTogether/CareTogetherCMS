@@ -22,7 +22,7 @@ export function MissingArrangementRequirementRow({
 }: MissingArrangementRequirementRowProps) {
   const policy = useRecoilValue(policyData);
   const permissions = useFamilyIdPermissions(
-    context.kind === 'Referral' ||
+    context.kind === 'V1Case' ||
       context.kind === 'Arrangement' ||
       context.kind === 'Family Volunteer Assignment' ||
       context.kind === 'Individual Volunteer Assignment'
@@ -41,7 +41,7 @@ export function MissingArrangementRequirementRow({
     );
 
   if (
-    context.kind === 'Referral' ||
+    context.kind === 'V1Case' ||
     context.kind === 'Individual Volunteer' ||
     context.kind === 'Volunteer Family'
   )
@@ -136,7 +136,7 @@ export function MissingArrangementRequirementRow({
           requirement={requirement}
           context={context}
           policy={requirementPolicy}
-          referralId={context.referralId}
+          v1CaseId={context.v1CaseId}
           canExempt={canExempt}
         />
       )}

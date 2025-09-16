@@ -12,7 +12,7 @@ using CareTogether.Resources.Communities;
 using CareTogether.Resources.Directory;
 using CareTogether.Resources.Notes;
 using CareTogether.Resources.Policies;
-using CareTogether.Resources.Referrals;
+using CareTogether.Resources.V1Cases;
 using Nito.AsyncEx;
 
 namespace CareTogether.Engines.Authorization
@@ -115,11 +115,11 @@ namespace CareTogether.Engines.Authorization
             );
         }
 
-        public async Task<bool> AuthorizeReferralCommandAsync(
+        public async Task<bool> AuthorizeV1CaseCommandAsync(
             Guid organizationId,
             Guid locationId,
             ClaimsPrincipal user,
-            ReferralCommand command
+            V1CaseCommand command
         )
         {
             var permissions = await userAccessCalculation.AuthorizeUserAccessAsync(
@@ -131,15 +131,15 @@ namespace CareTogether.Engines.Authorization
             return permissions.Contains(
                 command switch
                 {
-                    CreateReferral => Permission.CreateReferral,
-                    CompleteReferralRequirement => Permission.EditReferralRequirementCompletion,
+                    CreateReferral => Permission.CreateV1Case,
+                    CompleteReferralRequirement => Permission.EditV1CaseRequirementCompletion,
                     MarkReferralRequirementIncomplete =>
-                        Permission.EditReferralRequirementCompletion,
-                    ExemptReferralRequirement => Permission.EditReferralRequirementExemption,
-                    UnexemptReferralRequirement => Permission.EditReferralRequirementExemption,
-                    UpdateCustomReferralField => Permission.EditReferral,
-                    UpdateReferralComments => Permission.EditReferral,
-                    CloseReferral => Permission.CloseReferral,
+                        Permission.EditV1CaseRequirementCompletion,
+                    ExemptReferralRequirement => Permission.EditV1CaseRequirementExemption,
+                    UnexemptReferralRequirement => Permission.EditV1CaseRequirementExemption,
+                    UpdateCustomReferralField => Permission.EditV1Case,
+                    UpdateReferralComments => Permission.EditV1Case,
+                    CloseReferral => Permission.CloseV1Case,
                     _ => throw new NotImplementedException(
                         $"The command type '{command.GetType().FullName}' has not been implemented."
                     ),
@@ -222,93 +222,247 @@ namespace CareTogether.Engines.Authorization
             NoteCommand command
         )
         {
-            var permissions = await userAccessCalculation.AuthorizeUserAccessAsync(
+            var userPermissions = await userAccessCalculation.AuthorizeUserAccessAsync(
                 organizationId,
                 locationId,
                 user,
                 new FamilyAuthorizationContext(command.FamilyId)
             );
 
-            // General means permissions without the 'own' qualifier.
-            var hasGeneralPermission = permissions.Contains(
-                command switch
-                {
-                    CreateDraftNote => Permission.AddEditDraftNotes,
-                    EditDraftNote => Permission.AddEditDraftNotes,
-                    DiscardDraftNote => Permission.DiscardDraftNotes,
-                    ApproveNote => Permission.ApproveNotes,
-                    _ => throw new NotImplementedException(
-                        $"The command type '{command.GetType().FullName}' has not been implemented."
-                    ),
-                }
-            );
-
-            var hasPermissionForOwnNotes = permissions.Contains(
-                command switch
-                {
-                    CreateDraftNote => Permission.AddEditOwnDraftNotes,
-                    EditDraftNote => Permission.AddEditOwnDraftNotes,
-                    DiscardDraftNote => Permission.DiscardOwnDraftNotes,
-                    ApproveNote => Permission.ApproveNotes,
-                    _ => throw new NotImplementedException(
-                        $"The command type '{command.GetType().FullName}' has not been implemented."
-                    ),
-                }
-            );
-
-            if (!hasGeneralPermission && !hasPermissionForOwnNotes)
-            {
-                return false; // No permissions to edit notes at all.
-            }
-
-            // If the command is to create a draft note, we don't need to check the access level,
-            // or if the noteEntry belongs to the user, since it's a new note.
-            if (command is CreateDraftNote)
-            {
-                return true;
-            }
-
-            var familyNotes = await notesResource.ListFamilyNotesAsync(
+            var noteEntry = await GetNoteEntryAsync(
                 organizationId,
                 locationId,
-                command.FamilyId
+                command.FamilyId,
+                command.NoteId
             );
 
-            var noteEntry = familyNotes.FirstOrDefault(note => note.Id == command.NoteId);
-
-            if (noteEntry == null)
-                return false;
+            var noteBelongsToUser = noteEntry?.AuthorId == user.UserId();
 
             var allowedPerAccessLevel = await CheckAccessLevel(
-                noteEntry.AccessLevel,
+                noteEntry?.AccessLevel,
                 user,
                 organizationId,
                 locationId
             );
 
-            if (hasGeneralPermission && allowedPerAccessLevel)
+            var hasPermission = command switch
             {
-                // If the user has general permission to edit notes, and the note has an access level set,
-                // and user has a role included in that access level, then they can edit the note.
-                return true;
-            }
-
-            if (!hasPermissionForOwnNotes)
-            {
-                return false;
-            }
-
-            // If the user has permission to edit their own notes, check if the note belongs to them.
-            var noteBelongsToUser = command switch
-            {
-                EditDraftNote c => noteEntry?.AuthorId == user.UserId(),
-                DiscardDraftNote c => noteEntry?.AuthorId == user.UserId(),
+                CreateDraftNote => CheckCreateDraftNotePermission(
+                    noteEntry,
+                    noteBelongsToUser,
+                    userPermissions,
+                    allowedPerAccessLevel
+                ),
+                EditDraftNote => CheckEditDraftNotePermission(
+                    noteEntry,
+                    noteBelongsToUser,
+                    userPermissions,
+                    allowedPerAccessLevel
+                ),
+                DiscardDraftNote => CheckDiscardDraftNotePermission(
+                    noteEntry,
+                    noteBelongsToUser,
+                    userPermissions,
+                    allowedPerAccessLevel
+                ),
+                ApproveNote => CheckApproveNotePermission(
+                    noteEntry,
+                    noteBelongsToUser,
+                    userPermissions,
+                    allowedPerAccessLevel
+                ),
+                UpdateNoteAccessLevel => CheckUpdateNoteAccessLevelPermission(
+                    noteEntry,
+                    noteBelongsToUser,
+                    userPermissions,
+                    allowedPerAccessLevel
+                ),
                 _ => throw new NotImplementedException(
                     $"The command type '{command.GetType().FullName}' has not been implemented."
                 ),
             };
 
-            return noteBelongsToUser;
+            if (!hasPermission.Item1)
+            {
+                System.Diagnostics.Debug.WriteLine(
+                    $"Note command validation failed: {hasPermission.Item2}"
+                );
+                return false;
+            }
+
+            return true;
+        }
+
+        private (bool, string) CheckIfNoteExists(NoteEntry? noteEntry)
+        {
+            if (noteEntry == null)
+            {
+                return (false, "Note does not exist.");
+            }
+
+            return (true, string.Empty);
+        }
+
+        private (bool, string) CheckCreateDraftNotePermission(
+            NoteEntry? noteEntry,
+            bool noteBelongsToUser,
+            ImmutableList<Permission> userPermissions,
+            bool allowedPerAccessLevel
+        )
+        {
+            if (noteEntry != null)
+            {
+                return (
+                    false,
+                    "Cannot create a draft note when a note with the same ID already exists."
+                );
+            }
+
+            var hasPermission =
+                userPermissions.Contains(Permission.AddEditDraftNotes)
+                || userPermissions.Contains(Permission.AddEditOwnDraftNotes);
+
+            if (!hasPermission)
+            {
+                return (false, "User does not have permission to create draft notes.");
+            }
+
+            return (true, string.Empty);
+        }
+
+        private (bool, string) CheckEditDraftNotePermission(
+            NoteEntry? noteEntry,
+            bool noteBelongsToUser,
+            ImmutableList<Permission> userPermissions,
+            bool allowedPerAccessLevel
+        )
+        {
+            var noteExists = CheckIfNoteExists(noteEntry);
+            if (!noteExists.Item1)
+            {
+                return noteExists;
+            }
+
+            if (noteEntry?.Status != NoteStatus.Draft)
+            {
+                return (false, "Cannot edit a note that is not in Draft status.");
+            }
+
+            var hasPermission =
+                (userPermissions.Contains(Permission.AddEditDraftNotes) && allowedPerAccessLevel)
+                || (userPermissions.Contains(Permission.AddEditOwnDraftNotes) && noteBelongsToUser);
+
+            if (!hasPermission)
+            {
+                return (false, "User does not have permission to edit notes.");
+            }
+
+            return (true, string.Empty);
+        }
+
+        private (bool, string) CheckDiscardDraftNotePermission(
+            NoteEntry? noteEntry,
+            bool noteBelongsToUser,
+            ImmutableList<Permission> userPermissions,
+            bool allowedPerAccessLevel
+        )
+        {
+            var noteExists = CheckIfNoteExists(noteEntry);
+            if (!noteExists.Item1)
+            {
+                return noteExists;
+            }
+
+            if (noteEntry?.Status != NoteStatus.Draft)
+            {
+                return (false, "Cannot discard a note that is not in Draft status.");
+            }
+
+            var hasPermission =
+                (userPermissions.Contains(Permission.DiscardDraftNotes) && allowedPerAccessLevel)
+                || (userPermissions.Contains(Permission.DiscardOwnDraftNotes) && noteBelongsToUser);
+
+            if (!hasPermission)
+            {
+                return (false, "User does not have permission to discard notes.");
+            }
+
+            return (true, string.Empty);
+        }
+
+        private (bool, string) CheckApproveNotePermission(
+            NoteEntry? noteEntry,
+            bool noteBelongsToUser,
+            ImmutableList<Permission> userPermissions,
+            bool allowedPerAccessLevel
+        )
+        {
+            var noteExists = CheckIfNoteExists(noteEntry);
+            if (!noteExists.Item1)
+            {
+                return noteExists;
+            }
+
+            if (noteEntry?.Status != NoteStatus.Draft)
+            {
+                return (false, "Cannot approve a note that is not in Draft status.");
+            }
+
+            var hasPermission = userPermissions.Contains(Permission.ApproveNotes);
+
+            if (!hasPermission)
+            {
+                return (false, "User does not have permission to approve notes.");
+            }
+
+            return (true, string.Empty);
+        }
+
+        private (bool, string) CheckUpdateNoteAccessLevelPermission(
+            NoteEntry? noteEntry,
+            bool noteBelongsToUser,
+            ImmutableList<Permission> userPermissions,
+            bool allowedPerAccessLevel
+        )
+        {
+            var noteExists = CheckIfNoteExists(noteEntry);
+            if (!noteExists.Item1)
+            {
+                return noteExists;
+            }
+
+            if (noteEntry?.Status != NoteStatus.Approved)
+            {
+                return (false, "Cannot update the access level of a note that is not Approved.");
+            }
+
+            var hasPermission = (
+                userPermissions.Contains(Permission.UpdateOthersNoteAccessLevel)
+                || (userPermissions.Contains(Permission.AddEditOwnDraftNotes) && noteBelongsToUser)
+            );
+
+            if (!hasPermission)
+            {
+                return (false, "User does not have permission to update the note access level.");
+            }
+
+            return (true, string.Empty);
+        }
+
+        private async Task<NoteEntry?> GetNoteEntryAsync(
+            Guid organizationId,
+            Guid locationId,
+            Guid familyId,
+            Guid noteId
+        )
+        {
+            var familyNotes = await notesResource.ListFamilyNotesAsync(
+                organizationId,
+                locationId,
+                familyId
+            );
+
+            return familyNotes.FirstOrDefault(note => note.Id == noteId);
         }
 
         private async Task<bool> CheckAccessLevel(
@@ -633,59 +787,59 @@ namespace CareTogether.Engines.Authorization
         {
             return partneringFamilyInfo with
             {
-                OpenReferral =
-                    partneringFamilyInfo.OpenReferral != null
-                        ? DiscloseReferral(
-                            partneringFamilyInfo.OpenReferral,
+                OpenV1Case =
+                    partneringFamilyInfo.OpenV1Case != null
+                        ? DiscloseV1Case(
+                            partneringFamilyInfo.OpenV1Case,
                             userFamily,
                             contextPermissions
                         )
                         : null,
-                ClosedReferrals = partneringFamilyInfo
-                    .ClosedReferrals.Select(closedReferral =>
-                        DiscloseReferral(closedReferral, userFamily, contextPermissions)
+                ClosedV1Cases = partneringFamilyInfo
+                    .ClosedV1Cases.Select(closedV1Case =>
+                        DiscloseV1Case(closedV1Case, userFamily, contextPermissions)
                     )
                     .ToImmutableList(),
-                History = contextPermissions.Contains(Permission.ViewReferralHistory)
+                History = contextPermissions.Contains(Permission.ViewV1CaseHistory)
                     ? partneringFamilyInfo.History
                     : ImmutableList<Activity>.Empty,
             };
         }
 
-        internal Referral DiscloseReferral(
-            Referral referral,
+        internal V1Case DiscloseV1Case(
+            V1Case v1Case,
             Family? userFamily,
             ImmutableList<Permission> contextPermissions
         )
         {
-            return referral with
+            return v1Case with
             {
                 CompletedCustomFields = contextPermissions.Contains(
-                    Permission.ViewReferralCustomFields
+                    Permission.ViewV1CaseCustomFields
                 )
-                    ? referral.CompletedCustomFields
+                    ? v1Case.CompletedCustomFields
                     : ImmutableList<CompletedCustomFieldInfo>.Empty,
                 MissingCustomFields = contextPermissions.Contains(
-                    Permission.ViewReferralCustomFields
+                    Permission.ViewV1CaseCustomFields
                 )
-                    ? referral.MissingCustomFields
+                    ? v1Case.MissingCustomFields
                     : ImmutableList<string>.Empty,
-                CompletedRequirements = contextPermissions.Contains(Permission.ViewReferralProgress)
-                    ? referral.CompletedRequirements
+                CompletedRequirements = contextPermissions.Contains(Permission.ViewV1CaseProgress)
+                    ? v1Case.CompletedRequirements
                     : ImmutableList<Resources.CompletedRequirementInfo>.Empty,
-                ExemptedRequirements = contextPermissions.Contains(Permission.ViewReferralProgress)
-                    ? referral.ExemptedRequirements
+                ExemptedRequirements = contextPermissions.Contains(Permission.ViewV1CaseProgress)
+                    ? v1Case.ExemptedRequirements
                     : ImmutableList<Resources.ExemptedRequirementInfo>.Empty,
-                MissingRequirements = contextPermissions.Contains(Permission.ViewReferralProgress)
-                    ? referral.MissingRequirements
+                MissingRequirements = contextPermissions.Contains(Permission.ViewV1CaseProgress)
+                    ? v1Case.MissingRequirements
                     : ImmutableList<RequirementDefinition>.Empty,
-                CloseReason = contextPermissions.Contains(Permission.ViewReferralComments)
-                    ? referral.CloseReason
+                CloseReason = contextPermissions.Contains(Permission.ViewV1CaseComments)
+                    ? v1Case.CloseReason
                     : null,
-                Comments = contextPermissions.Contains(Permission.ViewReferralComments)
-                    ? referral.Comments
+                Comments = contextPermissions.Contains(Permission.ViewV1CaseComments)
+                    ? v1Case.Comments
                     : null,
-                Arrangements = referral
+                Arrangements = v1Case
                     .Arrangements.Select(arrangement =>
                         (
                             arrangement with
@@ -696,12 +850,12 @@ namespace CareTogether.Engines.Authorization
                                     ? arrangement.ChildLocationHistory
                                     : ImmutableSortedSet<ChildLocationHistoryEntry>.Empty,
                                 Comments = contextPermissions.Contains(
-                                    Permission.ViewReferralComments
+                                    Permission.ViewV1CaseComments
                                 )
                                     ? arrangement.Comments
                                     : null,
                                 Reason = contextPermissions.Contains(
-                                    Permission.ViewReferralComments
+                                    Permission.ViewV1CaseComments
                                 )
                                     ? arrangement.Reason
                                     : null,
@@ -762,7 +916,7 @@ namespace CareTogether.Engines.Authorization
                                             )
                                         )
                                         .ToImmutableList()
-                                    : ImmutableList<Resources.Referrals.IndividualVolunteerAssignment>.Empty,
+                                    : ImmutableList<Resources.V1Cases.IndividualVolunteerAssignment>.Empty,
                                 FamilyVolunteerAssignments = contextPermissions.Contains(
                                     Permission.ViewAssignments
                                 )
@@ -797,7 +951,7 @@ namespace CareTogether.Engines.Authorization
                                             )
                                         )
                                         .ToImmutableList()
-                                    : ImmutableList<Resources.Referrals.FamilyVolunteerAssignment>.Empty,
+                                    : ImmutableList<Resources.V1Cases.FamilyVolunteerAssignment>.Empty,
                             }
                         )
                     )

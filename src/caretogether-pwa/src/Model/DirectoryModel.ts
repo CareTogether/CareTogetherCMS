@@ -51,7 +51,11 @@ import {
   CommunityRecordsCommand,
   ConvertChildToAdult,
   UndoCreateFamily,
+<<<<<<< HEAD
   UpdateTestFamilyFlag,
+=======
+  UpdateNoteAccessLevel,
+>>>>>>> main
 } from '../GeneratedClient';
 import { api } from '../Api/Api';
 import {
@@ -702,7 +706,7 @@ export function useDirectoryModel() {
   const createPartneringFamilyWithNewAdult = useCompositeRecordsCommandCallback(
     async (
       familyId: string,
-      referralOpenedAtUtc: Date,
+      v1CaseOpenedAtUtc: Date,
       firstName: string,
       lastName: string,
       gender: Gender | null,
@@ -724,7 +728,7 @@ export function useDirectoryModel() {
           familyId: familyId,
           personId: crypto.randomUUID(),
           referralId: crypto.randomUUID(),
-          referralOpenedAtUtc: referralOpenedAtUtc,
+          referralOpenedAtUtc: v1CaseOpenedAtUtc,
           firstName: firstName,
           lastName: lastName,
           gender: gender == null ? undefined : gender,
@@ -822,6 +826,16 @@ export function useDirectoryModel() {
       return command;
     }
   );
+  const updateNoteAccessLevel = useNoteCommandCallback(
+    async (familyId: string, noteId: string, accessLevel?: string | null) => {
+      const command = commandFactory(UpdateNoteAccessLevel, {
+        familyId,
+        noteId,
+        accessLevel: accessLevel ?? undefined,
+      });
+      return command;
+    }
+  );
 
   return {
     undoCreateFamily,
@@ -854,6 +868,10 @@ export function useDirectoryModel() {
     editDraftNote,
     discardDraftNote,
     approveNote,
+<<<<<<< HEAD
     updateTestFamilyFlag,
+=======
+    updateNoteAccessLevel,
+>>>>>>> main
   };
 }

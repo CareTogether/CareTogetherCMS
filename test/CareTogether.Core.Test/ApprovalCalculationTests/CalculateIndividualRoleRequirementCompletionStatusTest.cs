@@ -16,7 +16,7 @@ namespace CareTogether.Core.Test.ApprovalCalculationTests
             new EffectiveLocationPolicy(
                 ImmutableDictionary<string, ActionRequirement>.Empty,
                 ImmutableList<CustomField>.Empty,
-                new ReferralPolicy(
+                new V1CasePolicy(
                     ImmutableList<string>.Empty,
                     ImmutableList<CustomField>.Empty,
                     ImmutableList<ArrangementPolicy>.Empty,

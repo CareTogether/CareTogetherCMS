@@ -15,15 +15,16 @@ import {
   ChildLocationPlan,
   CombinedFamilyInfo,
   Note,
-  ReferralOpened,
-  ReferralRequirementCompleted,
+  ReferralOpened as V1CaseOpened,
+  ReferralRequirementCompleted as V1CaseRequirementCompleted,
 } from '../GeneratedClient';
 import PersonPinCircleIcon from '@mui/icons-material/PersonPinCircle';
 import EditIcon from '@mui/icons-material/Edit';
 import { usePersonLookup, useUserLookup } from '../Model/DirectoryModel';
 import { PersonName } from '../Families/PersonName';
-import { Box, Stack, Typography } from '@mui/material';
+import { Box, Stack, Typography, Link } from '@mui/material';
 import { NoteCard } from '../Notes/NoteCard';
+import { useAccessLevelDialog } from '../Notes/AccessLevelDialog/useAccessLevelDialog';
 
 type ActivityTimelineProps = {
   family: CombinedFamilyInfo;
@@ -31,8 +32,8 @@ type ActivityTimelineProps = {
 };
 
 const composeNoteType = (activity: Activity): string | null => {
-  if (activity instanceof ReferralRequirementCompleted) {
-    return 'Referral requirement completed';
+  if (activity instanceof V1CaseRequirementCompleted) {
+    return 'Case requirement completed';
   }
 
   if (activity instanceof ArrangementRequirementCompleted) {
@@ -43,8 +44,8 @@ const composeNoteType = (activity: Activity): string | null => {
     return 'Child location changed';
   }
 
-  if (activity instanceof ReferralOpened) {
-    return 'Referral opened';
+  if (activity instanceof V1CaseOpened) {
+    return 'Case opened';
   }
 
   return null;
@@ -111,9 +112,9 @@ export function ActivityTimeline({
 
   function arrangementPartneringPerson(arrangementId?: string) {
     const allArrangements = (
-      family.partneringFamilyInfo?.openReferral?.arrangements || []
+      family.partneringFamilyInfo?.openV1Case?.arrangements || []
     ).concat(
-      family.partneringFamilyInfo?.closedReferrals?.flatMap(
+      family.partneringFamilyInfo?.closedV1Cases?.flatMap(
         (r) => r.arrangements || []
       ) || []
     );
@@ -140,6 +141,10 @@ export function ActivityTimeline({
   const onlyActivitiesWithNotes = activitiesWithEmbeddedNotes.filter((item) =>
     Boolean(item.note)
   );
+
+  const { noteAccessLevelDialog, open } = useAccessLevelDialog({
+    familyId: family.family.id,
+  });
 
   return (
     <>
@@ -171,7 +176,7 @@ export function ActivityTimeline({
                 : null;
 
             const requirementName =
-              activity instanceof ReferralRequirementCompleted ||
+              activity instanceof V1CaseRequirementCompleted ||
               activity instanceof ArrangementRequirementCompleted
                 ? activity.requirementName
                 : null;
@@ -280,7 +285,7 @@ export function ActivityTimeline({
                   display: 'block',
                 }}
               >
-                {activity instanceof ReferralRequirementCompleted ||
+                {activity instanceof V1CaseRequirementCompleted ||
                 activity instanceof ArrangementRequirementCompleted ? (
                   '✔'
                 ) : activity instanceof ChildLocationChanged ? (
@@ -304,7 +309,7 @@ export function ActivityTimeline({
                 </span>
                 <PersonName person={userLookup(activity.userId)} />
               </Box>
-              {activity instanceof ReferralRequirementCompleted ||
+              {activity instanceof V1CaseRequirementCompleted ||
               activity instanceof ArrangementRequirementCompleted ? (
                 activity.requirementName
               ) : activity instanceof ChildLocationChanged ? (
@@ -327,8 +332,8 @@ export function ActivityTimeline({
                       : 'parent'}
                   )
                 </>
-              ) : activity instanceof ReferralOpened ? (
-                'Referral opened'
+              ) : activity instanceof V1CaseOpened ? (
+                'Case opened'
               ) : null}
               {activity.uploadedDocumentId && (
                 <Box sx={{ margin: 0, padding: 0 }}>
@@ -341,13 +346,28 @@ export function ActivityTimeline({
               )}
 
               <Typography>
-                Note visibility: {note?.accessLevel || 'Everyone'}
+                Visible to{' '}
+                {note ? (
+                  <Link
+                    component="button"
+                    type="button"
+                    underline="hover"
+                    onClick={() => {
+                      open(note);
+                    }}
+                  >
+                    {note.accessLevel ?? 'Everyone'}
+                  </Link>
+                ) : (
+                  'Everyone'
+                )}
               </Typography>
-
               {note && <NoteCard familyId={family.family!.id!} note={note} />}
             </TimelineContent>
           </TimelineItem>
         ))}
+
+        {noteAccessLevelDialog}
       </Timeline>
     </>
   );

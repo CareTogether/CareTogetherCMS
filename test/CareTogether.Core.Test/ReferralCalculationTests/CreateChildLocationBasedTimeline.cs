@@ -1,12 +1,12 @@
 using System;
 using System.Collections.Immutable;
 using CareTogether.Engines.PolicyEvaluation;
-using CareTogether.Resources.Referrals;
+using CareTogether.Resources.V1Cases;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Timelines;
-using H = CareTogether.Core.Test.ReferralCalculationTests.Helpers;
+using H = CareTogether.Core.Test.V1CaseCalculationTests.Helpers;
 
-namespace CareTogether.Core.Test.ReferralCalculationTests
+namespace CareTogether.Core.Test.V1CaseCalculationTests
 {
     [TestClass]
     public class CreateChildLocationBasedTimeline
@@ -14,7 +14,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
         [TestMethod]
         public void CreateTimelineWithOneGap()
         {
-            var result = ReferralCalculations.CreateChildLocationBasedTimeline(
+            var result = V1CaseCalculations.CreateChildLocationBasedTimeline(
                 H.ChildLocationHistory(
                         (H.Id('0'), ChildLocationPlan.DaytimeChildCare, 1, 1),
                         (Guid.Empty, ChildLocationPlan.WithParent, 1, 12),
@@ -44,7 +44,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
         [TestMethod]
         public void CreateTimelineWithTwoGaps()
         {
-            var result = ReferralCalculations.CreateChildLocationBasedTimeline(
+            var result = V1CaseCalculations.CreateChildLocationBasedTimeline(
                 H.ChildLocationHistory(
                         (H.Id('0'), ChildLocationPlan.DaytimeChildCare, 1, 1),
                         (Guid.Empty, ChildLocationPlan.WithParent, 1, 12),
@@ -80,7 +80,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
         [TestMethod]
         public void CreateTimelineWithTwoGapsFilteredByFamilyId()
         {
-            var result = ReferralCalculations.CreateChildLocationBasedTimeline(
+            var result = V1CaseCalculations.CreateChildLocationBasedTimeline(
                 H.ChildLocationHistory(
                         (H.Id('0'), ChildLocationPlan.DaytimeChildCare, 1, 1),
                         (Guid.Empty, ChildLocationPlan.WithParent, 1, 12),
@@ -113,7 +113,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
         [TestMethod]
         public void CreateTimelineChildWithParentAtEnd()
         {
-            var result = ReferralCalculations.CreateChildLocationBasedTimeline(
+            var result = V1CaseCalculations.CreateChildLocationBasedTimeline(
                 H.ChildLocationHistory(
                         (H.Id('0'), ChildLocationPlan.DaytimeChildCare, 1, 1),
                         (Guid.Empty, ChildLocationPlan.WithParent, 1, 12),
@@ -139,7 +139,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
         [TestMethod]
         public void CreateTimelineFilteredByFamilyIdNoPauses()
         {
-            var result = ReferralCalculations.CreateChildLocationBasedTimeline(
+            var result = V1CaseCalculations.CreateChildLocationBasedTimeline(
                 H.ChildLocationHistory(
                         (H.Id('0'), ChildLocationPlan.DaytimeChildCare, 1, 1),
                         (H.Id('1'), ChildLocationPlan.DaytimeChildCare, 1, 20)
@@ -157,7 +157,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
         [TestMethod]
         public void CreateTimelineFilteredByFamilyIdWithPauses()
         {
-            var result = ReferralCalculations.CreateChildLocationBasedTimeline(
+            var result = V1CaseCalculations.CreateChildLocationBasedTimeline(
                 H.ChildLocationHistory(
                         (H.Id('0'), ChildLocationPlan.DaytimeChildCare, 1, 1),
                         (H.Id('1'), ChildLocationPlan.DaytimeChildCare, 1, 10),
@@ -197,7 +197,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
                 (H.Id('0'), ChildLocationPlan.WithParent, 1, 15)
             );
 
-            var result = ReferralCalculations.CreateChildLocationBasedTimeline(
+            var result = V1CaseCalculations.CreateChildLocationBasedTimeline(
                 hist.ToImmutableList(),
                 H.Id('1')
             );
@@ -226,7 +226,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
                 (H.Id('0'), ChildLocationPlan.WithParent, 1, 15)
             );
 
-            var result = ReferralCalculations.CreateChildLocationBasedTimeline(
+            var result = V1CaseCalculations.CreateChildLocationBasedTimeline(
                 hist.ToImmutableList(),
                 H.Id('2')
             );
@@ -255,7 +255,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
                 (H.Id('0'), ChildLocationPlan.WithParent, 1, 15)
             );
 
-            var result = ReferralCalculations.CreateChildLocationBasedTimeline(
+            var result = V1CaseCalculations.CreateChildLocationBasedTimeline(
                 hist.ToImmutableList()
             );
 

@@ -27,7 +27,7 @@ import {
 import {
   CompletedCustomFieldInfo,
   Permission,
-  Referral,
+  V1Case,
   RoleRemovalReason,
 } from '../GeneratedClient';
 import { useParams } from 'react-router';
@@ -43,8 +43,8 @@ import { AddChildDialog } from './AddChildDialog';
 import { AddEditNoteDialog } from '../Notes/AddEditNoteDialog';
 import { format } from 'date-fns';
 import { UploadFamilyDocumentsDialog } from './UploadFamilyDocumentsDialog';
-import { CloseReferralDialog } from '../Referrals/CloseReferralDialog';
-import { OpenNewReferralDialog } from '../Referrals/OpenNewReferralDialog';
+import { CloseV1CaseDialog } from '../V1Cases/CloseV1CaseDialog';
+import { OpenNewV1CaseDialog } from '../V1Cases/OpenNewV1CaseDialog';
 import { FamilyDocuments } from './FamilyDocuments';
 import { useFamilyPermissions } from '../Model/SessionModel';
 import { Masonry } from '@mui/lab';
@@ -52,12 +52,12 @@ import { MissingRequirementRow } from '../Requirements/MissingRequirementRow';
 import { ExemptedRequirementRow } from '../Requirements/ExemptedRequirementRow';
 import { CompletedRequirementRow } from '../Requirements/CompletedRequirementRow';
 import {
-  ReferralContext,
+  V1CaseContext as V1CaseContext,
   VolunteerFamilyContext,
 } from '../Requirements/RequirementContext';
 import { ActivityTimeline } from '../Activities/ActivityTimeline';
-import { ReferralComments } from '../Referrals/ReferralComments';
-import { ReferralCustomField } from '../Referrals/ReferralCustomField';
+import { V1CaseComments } from '../V1Cases/V1CaseComments';
+import { V1CaseCustomField } from '../V1Cases/V1CaseCustomField';
 import { PrimaryContactEditor } from './PrimaryContactEditor';
 import useScreenTitle from '../Shell/ShellScreenTitle';
 import {
@@ -80,16 +80,16 @@ import FamilyScreenPageVersionSwitch from './FamilyScreenPageVersionSwitch';
 import posthog from 'posthog-js';
 import { AssignmentsSection } from '../Families/AssignmentsSection';
 import { useMemo } from 'react';
-import { useSyncReferralIdInURL } from '../Hooks/useSyncReferralIdInURL';
-import { ArrangementsSection } from '../Referrals/Arrangements/ArrangementsSection/ArrangementsSection';
 import { useBackdrop } from '../Hooks/useBackdrop';
+import { useSyncV1CaseIdInURL } from '../Hooks/useSyncV1CaseIdInURL';
+import { ArrangementsSection } from '../V1Cases/Arrangements/ArrangementsSection/ArrangementsSection';
 
 export function FamilyScreen() {
   const familyIdMaybe = useParams<{ familyId: string }>();
   const familyId = familyIdMaybe.familyId as string;
 
   const searchParams = new URLSearchParams(location.search);
-  const referralIdFromQuery = searchParams.get('referralId') ?? undefined;
+  const v1CaseIdFromQuery = searchParams.get('v1CaseId') ?? undefined;
 
   // TODO: When we go to optimize the layout, we should consider updating the generated client
   // to include the ids of the communities each family is a member of in the CombinedFamilyInfo
@@ -115,76 +115,78 @@ export function FamilyScreen() {
 
   const permissions = useFamilyPermissions(family);
 
-  const canCloseReferral =
-    family?.partneringFamilyInfo?.openReferral &&
-    !family.partneringFamilyInfo.openReferral.closeReason &&
-    !family.partneringFamilyInfo.openReferral.arrangements?.some(
+  const canCloseV1Case =
+    family?.partneringFamilyInfo?.openV1Case &&
+    !family.partneringFamilyInfo.openV1Case.closeReason &&
+    !family.partneringFamilyInfo.openV1Case.arrangements?.some(
       (arrangement) => !arrangement.endedAtUtc && !arrangement.cancelledAtUtc
     ) &&
-    permissions(Permission.CloseReferral);
+    permissions(Permission.CloseV1Case);
 
   const deleteFamilyDialogHandle = useDialogHandle();
-  const openReferrals: Referral[] = useMemo(() => {
-    return family?.partneringFamilyInfo?.openReferral !== undefined
-      ? [family.partneringFamilyInfo.openReferral]
+  const openV1Cases: V1Case[] = useMemo(() => {
+    return family?.partneringFamilyInfo?.openV1Case !== undefined
+      ? [family.partneringFamilyInfo.openV1Case]
       : [];
-  }, [family?.partneringFamilyInfo?.openReferral]);
+  }, [family?.partneringFamilyInfo?.openV1Case]);
 
-  const closedReferrals: Referral[] = useMemo(() => {
-    return family?.partneringFamilyInfo?.closedReferrals === undefined
+  const closedV1Cases: V1Case[] = useMemo(() => {
+    return family?.partneringFamilyInfo?.closedV1Cases === undefined
       ? []
-      : [...family.partneringFamilyInfo.closedReferrals!].sort(
+      : [...family.partneringFamilyInfo.closedV1Cases!].sort(
           (r1, r2) =>
             r1.closedAtUtc!.getUTCMilliseconds() -
             r2.closedAtUtc!.getUTCMilliseconds()
         );
-  }, [family?.partneringFamilyInfo?.closedReferrals]);
+  }, [family?.partneringFamilyInfo?.closedV1Cases]);
 
-  const allReferrals: Referral[] = useMemo(() => {
-    return [...openReferrals, ...closedReferrals];
-  }, [openReferrals, closedReferrals]);
-  const [closeReferralDialogOpen, setCloseReferralDialogOpen] = useState(false);
-  const [openNewReferralDialogOpen, setOpenNewReferralDialogOpen] =
-    useState(false);
+  const allV1Cases: V1Case[] = useMemo(() => {
+    return [...openV1Cases, ...closedV1Cases];
+  }, [openV1Cases, closedV1Cases]);
+  const [closeV1CaseDialogOpen, setCloseV1CaseDialogOpen] = useState(false);
+  const [openNewV1CaseDialogOpen, setOpenNewV1CaseDialogOpen] = useState(false);
   const [uploadDocumentDialogOpen, setUploadDocumentDialogOpen] =
     useState(false);
   const [addAdultDialogOpen, setAddAdultDialogOpen] = useState(false);
   const [addChildDialogOpen, setAddChildDialogOpen] = useState(false);
   const [addNoteDialogOpen, setAddNoteDialogOpen] = useState(false);
 
-  const firstReferralId =
-    allReferrals.length > 0 ? allReferrals[0].id : undefined;
+  const firstV1CaseId = allV1Cases.length > 0 ? allV1Cases[0].id : undefined;
 
-  const [selectedReferralId, setSelectedReferralId] = useState<
-    string | undefined
-  >(referralIdFromQuery || firstReferralId);
+  const [selectedV1CaseId, setSelectedV1CaseId] = useState<string | undefined>(
+    v1CaseIdFromQuery || firstV1CaseId
+  );
 
-  const selectedReferral = allReferrals.find(
-    (referral) => referral.id === selectedReferralId
+  const selectedV1Case = allV1Cases.find(
+    (v1Case) => v1Case.id === selectedV1CaseId
   );
 
   useEffect(() => {
     if (
-      referralIdFromQuery &&
-      allReferrals.some((ref) => ref.id === referralIdFromQuery)
+      v1CaseIdFromQuery &&
+      allV1Cases.some((ref) => ref.id === v1CaseIdFromQuery)
     ) {
-      setSelectedReferralId(referralIdFromQuery);
+      setSelectedV1CaseId(v1CaseIdFromQuery);
     }
-  }, [referralIdFromQuery, allReferrals]);
+  }, [v1CaseIdFromQuery, allV1Cases]);
 
   // If user navigates to a different family without leaving current page (i.e. not unmounting this component),
-  // we want to auto-select the first referral
+  // we want to auto-select the first v1Case
   useEffect(() => {
-    if (!selectedReferral) {
-      posthog.capture('auto selected first referral');
+    if (!selectedV1Case) {
+      posthog.capture('auto selected first v1Case');
 
-      if (firstReferralId) {
-        setSelectedReferralId(firstReferralId);
+      if (firstV1CaseId) {
+        setSelectedV1CaseId(firstV1CaseId);
       }
     }
-  }, [firstReferralId, selectedReferral]);
+  }, [firstV1CaseId, selectedV1Case]);
 
-  useSyncReferralIdInURL({ familyId, referralIdFromQuery, selectedReferralId });
+  useSyncV1CaseIdInURL({
+    familyId,
+    v1CaseIdFromQuery,
+    selectedV1CaseId,
+  });
 
   useEffect(() => {
     const searchParams = new URLSearchParams(window.location.search);
@@ -193,7 +195,7 @@ export function FamilyScreen() {
     if (hasArrangementId) {
       appNavigate.family(
         familyId,
-        searchParams.get('referralId') ?? undefined,
+        searchParams.get('v1CaseId') ?? undefined,
         undefined,
         { replace: true }
       );
@@ -244,12 +246,12 @@ export function FamilyScreen() {
     });
   }
 
-  let referralRequirementContext: ReferralContext | undefined;
-  if (selectedReferral) {
-    referralRequirementContext = {
-      kind: 'Referral',
+  let v1CaseRequirementContext: V1CaseContext | undefined;
+  if (selectedV1Case) {
+    v1CaseRequirementContext = {
+      kind: 'V1Case',
       partneringFamilyId: familyId,
-      referralId: selectedReferral.id!,
+      v1CaseId: selectedV1Case.id!,
     };
   }
 
@@ -264,8 +266,8 @@ export function FamilyScreen() {
 
   useScreenTitle(family ? `${familyLastName(family)} Family` : '...');
 
-  function handleReferralChange(referralId: string) {
-    setSelectedReferralId(referralId);
+  function handleV1CaseChange(v1CaseId: string) {
+    setSelectedV1CaseId(v1CaseId);
   }
 
   const printContentRef = useRef<HTMLDivElement>(null);
@@ -573,7 +575,7 @@ export function FamilyScreen() {
             {family && <AssignmentsSection family={family} />}
 
             <Grid item xs={12} md={4}>
-              {permissions(Permission.ViewReferralProgress) &&
+              {permissions(Permission.ViewV1CaseProgress) &&
                 family.partneringFamilyInfo && (
                   <FormControl>
                     <FormLabel
@@ -592,17 +594,17 @@ export function FamilyScreen() {
                         gap={2}
                       >
                         <Typography className="ph-unmask" variant="h3">
-                          Referrals
+                          Cases
                         </Typography>
-                        {!family.partneringFamilyInfo?.openReferral &&
-                          permissions(Permission.CreateReferral) && (
+                        {!family.partneringFamilyInfo?.openV1Case &&
+                          permissions(Permission.CreateV1Case) && (
                             <Button
                               className="ph-unmask"
-                              onClick={() => setOpenNewReferralDialogOpen(true)}
+                              onClick={() => setOpenNewV1CaseDialogOpen(true)}
                               variant="contained"
                               size="small"
                             >
-                              Open New Referral
+                              Open New Case
                             </Button>
                           )}
                       </Box>
@@ -610,46 +612,45 @@ export function FamilyScreen() {
 
                     <RadioGroup
                       aria-labelledby="demo-radio-buttons-group-label"
-                      value={selectedReferral ? selectedReferral.id : null}
+                      value={selectedV1Case ? selectedV1Case.id : null}
                       name="radio-buttons-group"
                     >
-                      {allReferrals.map((referral) => {
-                        const isSelected = selectedReferral?.id === referral.id;
-                        const isOpenReferral = !referral.closedAtUtc;
+                      {allV1Cases.map((v1Case) => {
+                        const isSelected = selectedV1Case?.id === v1Case.id;
+                        const isOpenV1Case = !v1Case.closedAtUtc;
                         const showCloseButton =
                           isSelected &&
-                          isOpenReferral &&
-                          canCloseReferral &&
-                          referral.id ===
-                            family.partneringFamilyInfo?.openReferral?.id;
+                          isOpenV1Case &&
+                          canCloseV1Case &&
+                          v1Case.id ===
+                            family.partneringFamilyInfo?.openV1Case?.id;
 
                         return (
                           <FormControlLabel
-                            key={referral.id}
-                            value={referral.id}
+                            key={v1Case.id}
+                            value={v1Case.id}
                             control={<Radio />}
                             onChange={() => {
-                              if (referral.id)
-                                handleReferralChange(referral.id);
+                              if (v1Case.id) handleV1CaseChange(v1Case.id);
                             }}
                             label={
                               <Box display="flex" alignItems="center" gap={1}>
                                 <Typography className="ph-unmask">
-                                  {referral.closedAtUtc
-                                    ? `Referral Closed ${format(referral.closedAtUtc, 'M/d/yy')}`
-                                    : 'Open Referral'}
+                                  {v1Case.closedAtUtc
+                                    ? `Case Closed ${format(v1Case.closedAtUtc, 'M/d/yy')}`
+                                    : 'Open Case'}
                                 </Typography>
                                 {showCloseButton && (
                                   <Button
                                     className="ph-unmask"
                                     onClick={(e) => {
                                       e.stopPropagation();
-                                      setCloseReferralDialogOpen(true);
+                                      setCloseV1CaseDialogOpen(true);
                                     }}
                                     variant="contained"
                                     size="small"
                                   >
-                                    Close Referral
+                                    Close Case
                                   </Button>
                                 )}
                               </Box>
@@ -663,12 +664,12 @@ export function FamilyScreen() {
             </Grid>
 
             <Grid item md={4}>
-              {permissions(Permission.ViewReferralCustomFields) &&
+              {permissions(Permission.ViewV1CaseCustomFields) &&
                 (
-                  selectedReferral?.completedCustomFields ||
+                  selectedV1Case?.completedCustomFields ||
                   ([] as Array<CompletedCustomFieldInfo | string>)
                 )
-                  .concat(selectedReferral?.missingCustomFields || [])
+                  .concat(selectedV1Case?.missingCustomFields || [])
                   .sort((a, b) =>
                     (a instanceof CompletedCustomFieldInfo
                       ? a.customFieldName!
@@ -687,102 +688,96 @@ export function FamilyScreen() {
                         : 0
                   )
                   .map((customField) => (
-                    <ReferralCustomField
+                    <V1CaseCustomField
                       key={
                         typeof customField === 'string'
                           ? customField
                           : customField.customFieldName
                       }
                       partneringFamilyId={familyId}
-                      referralId={`${selectedReferral!.id}`}
+                      v1CaseId={`${selectedV1Case!.id}`}
                       customField={customField}
                     />
                   ))}
             </Grid>
 
             <Grid item xs={6} md={4}>
-              {closeReferralDialogOpen &&
-                selectedReferral?.id ===
-                  family.partneringFamilyInfo?.openReferral?.id && (
-                  <CloseReferralDialog
+              {closeV1CaseDialogOpen &&
+                selectedV1Case?.id ===
+                  family.partneringFamilyInfo?.openV1Case?.id && (
+                  <CloseV1CaseDialog
                     partneringFamilyId={family.family!.id!}
-                    referralId={`${selectedReferral!.id}`}
-                    onClose={() => setCloseReferralDialogOpen(false)}
+                    v1CaseId={`${selectedV1Case!.id}`}
+                    onClose={() => setCloseV1CaseDialogOpen(false)}
                   />
                 )}
-              {openNewReferralDialogOpen && (
-                <OpenNewReferralDialog
+              {openNewV1CaseDialogOpen && (
+                <OpenNewV1CaseDialog
                   partneringFamilyId={family.family!.id!}
-                  onClose={() => setOpenNewReferralDialogOpen(false)}
+                  onClose={() => setOpenNewV1CaseDialogOpen(false)}
                 />
               )}
             </Grid>
 
             <Grid item md={12}>
-              {permissions(Permission.ViewReferralComments) &&
-                selectedReferral && (
-                  <Grid container spacing={0}>
-                    <ReferralComments
-                      partneringFamily={family}
-                      referralId={selectedReferral.id!}
-                    />
-                  </Grid>
-                )}
+              {permissions(Permission.ViewV1CaseComments) && selectedV1Case && (
+                <Grid container spacing={0}>
+                  <V1CaseComments
+                    partneringFamily={family}
+                    v1CaseId={selectedV1Case.id!}
+                  />
+                </Grid>
+              )}
             </Grid>
           </Grid>
 
           <Grid container spacing={0}>
-            {permissions(Permission.ViewReferralProgress) &&
-              selectedReferral && (
-                <>
-                  <Grid item xs={12} sm={6} md={4} style={{ paddingRight: 20 }}>
-                    <Typography
-                      className="ph-unmask"
-                      variant="h3"
-                      style={{ marginBottom: 0 }}
-                    >
-                      Incomplete
-                    </Typography>
-                    {selectedReferral?.missingRequirements?.map(
-                      (missing, i) => (
-                        <MissingRequirementRow
-                          key={`${missing}:${i}`}
-                          requirement={missing}
-                          context={referralRequirementContext!}
-                          referralId={selectedReferral.id}
-                        />
-                      )
-                    )}
-                  </Grid>
-                  <Grid item xs={12} sm={6} md={4} style={{ paddingRight: 20 }}>
-                    <Typography
-                      className="ph-unmask"
-                      variant="h3"
-                      style={{ marginBottom: 0 }}
-                    >
-                      Completed
-                    </Typography>
-                    {selectedReferral?.completedRequirements?.map(
-                      (completed, i) => (
-                        <CompletedRequirementRow
-                          key={`${completed.completedRequirementId}:${i}`}
-                          requirement={completed}
-                          context={referralRequirementContext!}
-                        />
-                      )
-                    )}
-                    {selectedReferral?.exemptedRequirements?.map(
-                      (exempted, i) => (
-                        <ExemptedRequirementRow
-                          key={`${exempted.requirementName}:${i}`}
-                          requirement={exempted}
-                          context={referralRequirementContext!}
-                        />
-                      )
-                    )}
-                  </Grid>
-                </>
-              )}
+            {permissions(Permission.ViewV1CaseProgress) && selectedV1Case && (
+              <>
+                <Grid item xs={12} sm={6} md={4} style={{ paddingRight: 20 }}>
+                  <Typography
+                    className="ph-unmask"
+                    variant="h3"
+                    style={{ marginBottom: 0 }}
+                  >
+                    Incomplete
+                  </Typography>
+                  {selectedV1Case?.missingRequirements?.map((missing, i) => (
+                    <MissingRequirementRow
+                      key={`${missing}:${i}`}
+                      requirement={missing}
+                      context={v1CaseRequirementContext!}
+                      v1CaseId={selectedV1Case.id}
+                    />
+                  ))}
+                </Grid>
+                <Grid item xs={12} sm={6} md={4} style={{ paddingRight: 20 }}>
+                  <Typography
+                    className="ph-unmask"
+                    variant="h3"
+                    style={{ marginBottom: 0 }}
+                  >
+                    Completed
+                  </Typography>
+                  {selectedV1Case?.completedRequirements?.map(
+                    (completed, i) => (
+                      <CompletedRequirementRow
+                        key={`${completed.completedRequirementId}:${i}`}
+                        requirement={completed}
+                        context={v1CaseRequirementContext!}
+                      />
+                    )
+                  )}
+                  {selectedV1Case?.exemptedRequirements?.map((exempted, i) => (
+                    <ExemptedRequirementRow
+                      key={`${exempted.requirementName}:${i}`}
+                      requirement={exempted}
+                      context={v1CaseRequirementContext!}
+                    />
+                  ))}
+                </Grid>
+              </>
+            )}
             {family.volunteerFamilyInfo && (
               <>
                 <Grid item xs={12}>
@@ -892,9 +887,9 @@ export function FamilyScreen() {
             )}
           </Grid>
           <Grid container spacing={0}>
-            {selectedReferral && (
+            {selectedV1Case && (
               <ArrangementsSection
-                referral={selectedReferral}
+                v1Case={selectedV1Case}
                 family={family}
                 permissions={permissions}
               />

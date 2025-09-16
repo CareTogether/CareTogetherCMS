@@ -7,10 +7,10 @@ using CareTogether.Resources.Directory;
 using CareTogether.Resources.Policies;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-namespace CareTogether.Core.Test.ReferralCalculationTests
+namespace CareTogether.Core.Test.V1CaseCalculationTests
 {
     [TestClass]
-    public class CalculateReferralStatus
+    public class CalculateV1CaseStatus
     {
         private static Guid Id(char x) =>
             Guid.Parse("xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx".Replace('x', x));
@@ -23,7 +23,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
         static readonly Guid guid5 = Id('5');
         static readonly Guid guid6 = Id('6');
 
-        static ReferralPolicy referralPolicy = new ReferralPolicy(
+        static V1CasePolicy v1CasePolicy = new V1CasePolicy(
             RequiredIntakeActionNames: [],
             CustomFields: ImmutableList<CustomField>.Empty,
             ArrangementPolicies: ImmutableList<ArrangementPolicy>

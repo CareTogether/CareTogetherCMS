@@ -47,7 +47,7 @@ namespace CareTogether.Engines.PolicyEvaluation
                 .ToImmutableList();
         }
 
-        //NOTE: This is currently being used by Referral calculations.
+        //NOTE: This is currently being used by V1 Cases calculations.
         internal static RequirementCheckResult RequirementMetOrExempted(
             ImmutableList<string> requirementNameWithSynonyms,
             DateOnly? policySupersededAt,
@@ -284,7 +284,7 @@ namespace CareTogether.Engines.PolicyEvaluation
         //      approval *was* met or exempted, even if it is now expired.
         //      A return value of 'null' indicates no approval.
         //      Further note: action validity was previously not being handled but now is.
-        //TODO: Eventually this should be used for referral calculations as well!
+        //TODO: Eventually this should be used for V1 Cases calculations as well!
         //      Maybe rename it to 'FindWhenRequirementIsMet' or something like that?
         internal static DateOnlyTimeline? FindRequirementApprovals(
             ImmutableList<string> requirementNameWithSynonyms,

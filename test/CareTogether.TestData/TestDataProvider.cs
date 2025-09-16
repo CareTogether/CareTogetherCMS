@@ -10,7 +10,7 @@ using CareTogether.Resources.Directory;
 using CareTogether.Resources.Goals;
 using CareTogether.Resources.Notes;
 using CareTogether.Resources.Policies;
-using CareTogether.Resources.Referrals;
+using CareTogether.Resources.V1Cases;
 using CareTogether.Utilities.EventLog;
 using CareTogether.Utilities.ObjectStore;
 
@@ -21,7 +21,7 @@ namespace CareTogether.TestData
         /* The following fields are used to keep the test data relatively current.
          * In general:
          * - the current month is intended to be blank after midnight of the 1st (to prevent 'after UtcNow' issues),
-         * - month-1 is for partnering families, referrals, and goals;
+         * - month-1 is for partnering families, v1 cases, and goals;
          * - month-2 is for volunteer approvals and communities;
          * - month-3 is for organization setup.
          */
@@ -38,9 +38,9 @@ namespace CareTogether.TestData
 
         static DateTime StartOfCurrentMonth() => new DateTime(YEAR, MONTH, 1);
 
-        static DateTime ReferralsMonth(int day) => DateOf(-1, day);
+        static DateTime V1CasesMonth(int day) => DateOf(-1, day);
 
-        static DateTime ReferralsMonth(int day, int hour, int minute, int second) =>
+        static DateTime V1CasesMonth(int day, int hour, int minute, int second) =>
             DateOf(-1, day, hour, minute, second);
 
         static DateTime ApprovalsMonth(int day) => DateOf(-2, day);
@@ -128,11 +128,26 @@ namespace CareTogether.TestData
         static readonly Guid guidB = Id('b');
         static readonly Guid guidC = Id('c');
         static readonly Guid guidD = Id('d');
+
         static readonly Guid adminId = Guid.Parse("2b87864a-63e3-4406-bcbc-c0068a13ac05");
+
         static readonly Guid volunteerId = Guid.Parse("e3aaef77-0e97-47a6-b788-a67c237c781e");
         static readonly Guid volunteerId2 = Guid.Parse("ca662f2b-270a-4a8b-baa7-c109eadbb133");
-        static readonly Guid noteId1 = Id("note1");
-        static readonly Guid noteId2 = Id("note2");
+
+        static readonly Guid noteId0 = Id('0');
+        static readonly Guid noteId1 = Id('1');
+        static readonly Guid noteId2 = Id('2');
+        static readonly Guid noteId3 = Id('3');
+        static readonly Guid noteId4 = Id('4');
+        static readonly Guid noteId5 = Id('5');
+        static readonly Guid noteId6 = Id('6');
+        static readonly Guid noteId7 = Id('7');
+        static readonly Guid noteId8 = Id('8');
+        static readonly Guid noteId9 = Id('9');
+        static readonly Guid noteIdA = Id('a');
+        static readonly Guid noteIdB = Id('b');
+        static readonly Guid noteIdC = Id('c');
+        static readonly Guid noteIdD = Id('d');
 
         // Fisher family
         static readonly Guid michaelFisherGuid = Guid.Parse("f6020665-6f2e-4c93-8673-8770f35f1609");
@@ -140,7 +155,7 @@ namespace CareTogether.TestData
         static readonly Guid sarahFisherGuid = Guid.Parse("7dc7e4f8-99cc-4076-9c3c-8229768f8b66");
         static readonly Guid nemoFisherGuid = Guid.Parse("4a43d33e-e9a6-4045-b374-17ebc223daa7");
         static readonly Guid fisherFamilyGuid = Guid.Parse("18ca8eb0-d441-44fc-82c2-f7f29b0959fb");
-        static readonly Guid fisherFamilyReferral1Guid = Guid.Parse(
+        static readonly Guid fisherFamilyV1Case1Guid = Guid.Parse(
             "6d3c3034-d63d-4fc8-a12e-4ea7a8322818"
         );
         static readonly Guid fisherFamilyArrangement1Guid = Guid.Parse(
@@ -163,7 +178,7 @@ namespace CareTogether.TestData
             IEventLog<PersonAccessEvent> personAccessEventLog,
             IEventLog<DirectoryEvent> directoryEventLog,
             IEventLog<GoalCommandExecutedEvent> goalsEventLog,
-            IEventLog<ReferralEvent> referralsEventLog,
+            IEventLog<V1CaseEvent> v1CasesEventLog,
             IEventLog<ApprovalEvent> approvalsEventLog,
             IEventLog<NotesEvent> notesEventLog,
             IEventLog<CommunityCommandExecutedEvent> communitiesEventLog,
@@ -178,7 +193,7 @@ namespace CareTogether.TestData
             await PopulatePersonAccessEvents(personAccessEventLog);
             await PopulateDirectoryEvents(directoryEventLog);
             await PopulateGoalEvents(goalsEventLog);
-            await PopulateReferralEvents(referralsEventLog);
+            await PopulateV1CaseEvents(v1CasesEventLog);
             await PopulateApprovalEvents(approvalsEventLog);
             await PopulateNoteEvents(notesEventLog);
             await PopulateCommunityEvents(communitiesEventLog);
@@ -409,7 +424,7 @@ namespace CareTogether.TestData
                 new FamilyCommandExecuted(
                     adminId,
                     ApprovalsMonth(5, 4, 15, 15),
-                    new UploadFamilyDocument(guid1, guid1, "Jane Doe referral info.pdf")
+                    new UploadFamilyDocument(guid1, guid1, "Jane Doe case info.pdf")
                 ),
                 new PersonCommandExecuted(
                     adminId,
@@ -771,7 +786,7 @@ namespace CareTogether.TestData
                 //    "Cannot receive voicemails")),
                 new PersonCommandExecuted(
                     adminId,
-                    ReferralsMonth(1),
+                    V1CasesMonth(1),
                     new AddPersonAddress(
                         guid4,
                         new Address(guid3, "456 Old Ave.", null, "Bigtown", "Down", "TX", "67890"),
@@ -780,7 +795,7 @@ namespace CareTogether.TestData
                 ),
                 new PersonCommandExecuted(
                     adminId,
-                    ReferralsMonth(1),
+                    V1CasesMonth(1),
                     new AddPersonPhoneNumber(
                         guid4,
                         new PhoneNumber(guid2, "1235554567", PhoneNumberType.Mobile),
@@ -789,7 +804,7 @@ namespace CareTogether.TestData
                 ),
                 new PersonCommandExecuted(
                     adminId,
-                    ReferralsMonth(1),
+                    V1CasesMonth(1),
                     new AddPersonEmailAddress(
                         guid4,
                         new EmailAddress(guid2, "personal@example.com", EmailAddressType.Personal),
@@ -798,7 +813,7 @@ namespace CareTogether.TestData
                 ),
                 new PersonCommandExecuted(
                     adminId,
-                    ReferralsMonth(1),
+                    V1CasesMonth(1),
                     new AddPersonAddress(
                         guid4,
                         new Address(
@@ -815,7 +830,7 @@ namespace CareTogether.TestData
                 ),
                 new PersonCommandExecuted(
                     adminId,
-                    ReferralsMonth(1),
+                    V1CasesMonth(1),
                     new UpdatePersonAddress(
                         guid4,
                         new Address(guid3, "456 Old Ave.", null, "Bigtown", "Down", "TX", "67890"),
@@ -824,7 +839,7 @@ namespace CareTogether.TestData
                 ),
                 new PersonCommandExecuted(
                     adminId,
-                    ReferralsMonth(1),
+                    V1CasesMonth(1),
                     new AddPersonPhoneNumber(
                         guid4,
                         new PhoneNumber(guid3, "1235555555", PhoneNumberType.Home),
@@ -833,7 +848,7 @@ namespace CareTogether.TestData
                 ),
                 new PersonCommandExecuted(
                     adminId,
-                    ReferralsMonth(1),
+                    V1CasesMonth(1),
                     new UpdatePersonPhoneNumber(
                         guid4,
                         new PhoneNumber(guid2, "1235554567", PhoneNumberType.Mobile),
@@ -842,7 +857,7 @@ namespace CareTogether.TestData
                 ),
                 new PersonCommandExecuted(
                     adminId,
-                    ReferralsMonth(1),
+                    V1CasesMonth(1),
                     new AddPersonEmailAddress(
                         guid4,
                         new EmailAddress(guid3, "work@example.com", EmailAddressType.Work),
@@ -851,23 +866,23 @@ namespace CareTogether.TestData
                 ),
                 new PersonCommandExecuted(
                     adminId,
-                    ReferralsMonth(1),
+                    V1CasesMonth(1),
                     new UpdatePersonEmailAddress(
                         guid4,
                         new EmailAddress(guid2, "personal@example.com", EmailAddressType.Personal),
                         false
                     )
                 ),
-                //new PersonCommandExecuted(adminId, ReferralsMonth(1), new UpdatePersonContactMethodPreferenceNotes(guid4,
+                //new PersonCommandExecuted(adminId, V1CasesMonth(1), new UpdatePersonContactMethodPreferenceNotes(guid4,
                 //    "Cannot receive voicemails"))
                 new FamilyCommandExecuted(
                     adminId,
                     StartOfCurrentMonth(),
-                    new UploadFamilyDocument(guid1, guid2, "Jane Doe second referral info.pdf")
+                    new UploadFamilyDocument(guid1, guid2, "Jane Doe second case info.pdf")
                 ),
                 new PersonCommandExecuted(
                     adminId,
-                    ReferralsMonth(21),
+                    V1CasesMonth(21),
                     new CreatePerson(
                         guidB,
                         "Emmett",
@@ -887,7 +902,7 @@ namespace CareTogether.TestData
                 ),
                 new PersonCommandExecuted(
                     adminId,
-                    ReferralsMonth(21),
+                    V1CasesMonth(21),
                     new CreatePerson(
                         guidC,
                         "Marty",
@@ -907,7 +922,7 @@ namespace CareTogether.TestData
                 ),
                 new FamilyCommandExecuted(
                     adminId,
-                    ReferralsMonth(21),
+                    V1CasesMonth(21),
                     new CreateFamily(
                         guid5,
                         guidB,
@@ -1139,45 +1154,45 @@ namespace CareTogether.TestData
             );
         }
 
-        public static async Task PopulateReferralEvents(IEventLog<ReferralEvent> referralsEventLog)
+        public static async Task PopulateV1CaseEvents(IEventLog<V1CaseEvent> v1CasesEventLog)
         {
-            await referralsEventLog.AppendEventsAsync(
+            await v1CasesEventLog.AppendEventsAsync(
                 guid1,
                 guid2,
                 new ReferralCommandExecuted(
                     adminId,
-                    ReferralsMonth(5, 4, 10, 0),
-                    new CreateReferral(guid1, guid1, ReferralsMonth(5, 4, 10, 0))
+                    V1CasesMonth(5, 4, 10, 0),
+                    new CreateReferral(guid1, guid1, V1CasesMonth(5, 4, 10, 0))
                 ),
                 new ReferralCommandExecuted(
                     adminId,
-                    ReferralsMonth(5, 4, 15, 15),
+                    V1CasesMonth(5, 4, 15, 15),
                     new CompleteReferralRequirement(
                         guid1,
                         guid1,
                         guid1,
                         "Request for Help Form",
-                        ReferralsMonth(5, 4, 12, 15),
+                        V1CasesMonth(5, 4, 12, 15),
                         guid1,
                         null
                     )
                 ),
                 new ReferralCommandExecuted(
                     adminId,
-                    ReferralsMonth(6, 8, 45, 30),
+                    V1CasesMonth(6, 8, 45, 30),
                     new CompleteReferralRequirement(
                         guid1,
                         guid1,
                         guid2,
                         "Intake Coordinator Screening Call",
-                        ReferralsMonth(6, 8, 45, 30),
+                        V1CasesMonth(6, 8, 45, 30),
                         adminId,
                         null
                     )
                 ),
                 new ReferralCommandExecuted(
                     adminId,
-                    ReferralsMonth(6, 8, 45, 45),
+                    V1CasesMonth(6, 8, 45, 45),
                     new UpdateReferralComments(
                         guid1,
                         guid1,
@@ -1186,25 +1201,25 @@ namespace CareTogether.TestData
                 ),
                 new ArrangementsCommandExecuted(
                     adminId,
-                    ReferralsMonth(11, 11, 12, 13),
+                    V1CasesMonth(11, 11, 12, 13),
                     new CreateArrangement(
                         guid1,
                         guid1,
                         [guid1],
                         "Hosting",
-                        ReferralsMonth(11),
+                        V1CasesMonth(11),
                         guid3,
                         null
                     )
                 ),
                 new ArrangementsCommandExecuted(
                     adminId,
-                    ReferralsMonth(11, 11, 13, 10),
+                    V1CasesMonth(11, 11, 13, 10),
                     new EditArrangementReason(guid1, guid1, [guid1], "Crisis")
                 ),
                 new ArrangementsCommandExecuted(
                     adminId,
-                    ReferralsMonth(11, 11, 13, 14),
+                    V1CasesMonth(11, 11, 13, 14),
                     new AssignIndividualVolunteer(
                         guid1,
                         guid1,
@@ -1217,7 +1232,7 @@ namespace CareTogether.TestData
                 ),
                 new ArrangementsCommandExecuted(
                     adminId,
-                    ReferralsMonth(11, 11, 13, 55),
+                    V1CasesMonth(11, 11, 13, 55),
                     new AssignVolunteerFamily(
                         guid1,
                         guid1,
@@ -1229,7 +1244,7 @@ namespace CareTogether.TestData
                 ),
                 new ArrangementsCommandExecuted(
                     adminId,
-                    ReferralsMonth(11, 12, 22, 21),
+                    V1CasesMonth(11, 12, 22, 21),
                     new AssignVolunteerFamily(
                         guid1,
                         guid1,
@@ -1241,17 +1256,17 @@ namespace CareTogether.TestData
                 ),
                 new ArrangementsCommandExecuted(
                     adminId,
-                    ReferralsMonth(12, 16, 55, 0),
-                    new StartArrangements(guid1, guid1, [guid1], ReferralsMonth(12, 16, 55, 0))
+                    V1CasesMonth(12, 16, 55, 0),
+                    new StartArrangements(guid1, guid1, [guid1], V1CasesMonth(12, 16, 55, 0))
                 ),
                 new ArrangementsCommandExecuted(
                     adminId,
-                    ReferralsMonth(15, 8, 33, 34),
+                    V1CasesMonth(15, 8, 33, 34),
                     new TrackChildLocationChange(
                         guid1,
                         guid1,
                         [guid1],
-                        ReferralsMonth(15, 8, 33, 34),
+                        V1CasesMonth(15, 8, 33, 34),
                         guid3,
                         guid9,
                         ChildLocationPlan.DaytimeChildCare,
@@ -1260,12 +1275,12 @@ namespace CareTogether.TestData
                 ),
                 new ArrangementsCommandExecuted(
                     adminId,
-                    ReferralsMonth(15, 20, 40, 45),
+                    V1CasesMonth(15, 20, 40, 45),
                     new TrackChildLocationChange(
                         guid1,
                         guid1,
                         [guid1],
-                        ReferralsMonth(15, 20, 40, 45),
+                        V1CasesMonth(15, 20, 40, 45),
                         guid2,
                         guid6,
                         ChildLocationPlan.DaytimeChildCare,
@@ -1274,40 +1289,40 @@ namespace CareTogether.TestData
                 ),
                 new ArrangementsCommandExecuted(
                     adminId,
-                    ReferralsMonth(14, 10, 10, 10),
+                    V1CasesMonth(14, 10, 10, 10),
                     new CompleteArrangementRequirement(
                         guid1,
                         guid1,
                         [guid1],
                         guid1,
                         "Family Coach Safety Visit",
-                        ReferralsMonth(14, 10, 10, 10),
+                        V1CasesMonth(14, 10, 10, 10),
                         guid4,
                         guid0
                     )
                 ),
                 new ArrangementsCommandExecuted(
                     adminId,
-                    ReferralsMonth(21, 11, 11, 11),
+                    V1CasesMonth(21, 11, 11, 11),
                     new CompleteArrangementRequirement(
                         guid1,
                         guid1,
                         [guid1],
                         guid2,
                         "Family Coach Supervision",
-                        ReferralsMonth(21, 11, 11, 11),
+                        V1CasesMonth(21, 11, 11, 11),
                         adminId,
                         null
                     )
                 ),
                 new ArrangementsCommandExecuted(
                     adminId,
-                    ReferralsMonth(28, 18, 45, 0),
+                    V1CasesMonth(28, 18, 45, 0),
                     new TrackChildLocationChange(
                         guid1,
                         guid1,
                         [guid1],
-                        ReferralsMonth(22, 16, 30, 35),
+                        V1CasesMonth(22, 16, 30, 35),
                         guid1,
                         guid2,
                         ChildLocationPlan.WithParent,
@@ -1316,12 +1331,12 @@ namespace CareTogether.TestData
                 ),
                 new ArrangementsCommandExecuted(
                     adminId,
-                    ReferralsMonth(28, 18, 46, 0),
+                    V1CasesMonth(28, 18, 46, 0),
                     new TrackChildLocationChange(
                         guid1,
                         guid1,
                         [guid1],
-                        ReferralsMonth(24, 8, 30, 35),
+                        V1CasesMonth(24, 8, 30, 35),
                         guid2,
                         guid5,
                         ChildLocationPlan.OvernightHousing,
@@ -1330,12 +1345,12 @@ namespace CareTogether.TestData
                 ),
                 new ArrangementsCommandExecuted(
                     adminId,
-                    ReferralsMonth(28, 18, 47, 0),
+                    V1CasesMonth(28, 18, 47, 0),
                     new TrackChildLocationChange(
                         guid1,
                         guid1,
                         [guid1],
-                        ReferralsMonth(28, 18, 18, 18),
+                        V1CasesMonth(28, 18, 18, 18),
                         guid1,
                         guid2,
                         ChildLocationPlan.WithParent,
@@ -1344,23 +1359,23 @@ namespace CareTogether.TestData
                 ),
                 new ArrangementsCommandExecuted(
                     adminId,
-                    ReferralsMonth(28, 19, 0, 0),
-                    new EndArrangements(guid1, guid1, [guid1], ReferralsMonth(28, 19, 0, 0))
+                    V1CasesMonth(28, 19, 0, 0),
+                    new EndArrangements(guid1, guid1, [guid1], V1CasesMonth(28, 19, 0, 0))
                 ),
                 new ReferralCommandExecuted(
                     adminId,
-                    ReferralsMonth(28, 12, 32, 55),
+                    V1CasesMonth(28, 12, 32, 55),
                     new CloseReferral(
                         guid1,
                         guid1,
-                        ReferralCloseReason.NeedMet,
-                        ReferralsMonth(28, 12, 0, 0)
+                        V1CaseCloseReason.NeedMet,
+                        V1CasesMonth(28, 12, 0, 0)
                     )
                 ),
                 new ReferralCommandExecuted(
                     adminId,
                     StartOfCurrentMonth(),
-                    new CreateReferral(guid1, guid2, ReferralsMonth(1, 19, 30, 45))
+                    new CreateReferral(guid1, guid2, V1CasesMonth(1, 19, 30, 45))
                 ),
                 new ReferralCommandExecuted(
                     adminId,
@@ -1379,7 +1394,7 @@ namespace CareTogether.TestData
                         guid2,
                         guid3,
                         "Request for Help Form",
-                        ReferralsMonth(2, 18, 0, 0),
+                        V1CasesMonth(2, 18, 0, 0),
                         guid2,
                         null
                     )
@@ -1399,64 +1414,64 @@ namespace CareTogether.TestData
                 ),
                 new ArrangementsCommandExecuted(
                     adminId,
-                    ReferralsMonth(3, 10, 0, 0),
+                    V1CasesMonth(3, 10, 0, 0),
                     new CreateArrangement(
                         guid1,
                         guid2,
                         [guid2],
                         "Babysitting",
-                        ReferralsMonth(2),
+                        V1CasesMonth(2),
                         guid3,
                         "Assistance"
                     )
                 ),
                 new ArrangementsCommandExecuted(
                     adminId,
-                    ReferralsMonth(3, 10, 0, 0),
+                    V1CasesMonth(3, 10, 0, 0),
                     new CreateArrangement(
                         guid1,
                         guid2,
                         [guid3],
                         "Friending",
-                        ReferralsMonth(3),
+                        V1CasesMonth(3),
                         guid1,
                         "Respite"
                     )
                 ),
                 new ArrangementsCommandExecuted(
                     adminId,
-                    ReferralsMonth(3, 10, 0, 0),
+                    V1CasesMonth(3, 10, 0, 0),
                     new CreateArrangement(
                         guid1,
                         guid2,
                         [guid4],
                         "Friending",
-                        ReferralsMonth(4),
+                        V1CasesMonth(4),
                         guid2,
                         "Respite"
                     )
                 ),
                 new ArrangementsCommandExecuted(
                     adminId,
-                    ReferralsMonth(3, 10, 0, 0),
+                    V1CasesMonth(3, 10, 0, 0),
                     new CreateArrangement(
                         guid1,
                         guid2,
                         [guid5],
                         "Hosting",
-                        ReferralsMonth(5),
+                        V1CasesMonth(5),
                         guid3,
                         null
                     )
                 ),
                 new ArrangementsCommandExecuted(
                     adminId,
-                    ReferralsMonth(3, 10, 0, 0),
+                    V1CasesMonth(3, 10, 0, 0),
                     new UpdateArrangementComments(guid1, guid2, [guid2], "Start on Friday the 11th")
                 ),
                 new ArrangementsCommandExecuted(
                     adminId,
-                    ReferralsMonth(3, 10, 0, 0),
+                    V1CasesMonth(3, 10, 0, 0),
                     new UpdateArrangementComments(
                         guid1,
                         guid2,
@@ -1466,7 +1481,7 @@ namespace CareTogether.TestData
                 ),
                 new ArrangementsCommandExecuted(
                     adminId,
-                    ReferralsMonth(3, 11, 0, 0),
+                    V1CasesMonth(3, 11, 0, 0),
                     new AssignIndividualVolunteer(
                         guid1,
                         guid2,
@@ -1479,43 +1494,43 @@ namespace CareTogether.TestData
                 ),
                 new ArrangementsCommandExecuted(
                     adminId,
-                    ReferralsMonth(3, 11, 0, 0),
+                    V1CasesMonth(3, 11, 0, 0),
                     new AssignVolunteerFamily(guid1, guid2, [guid5], guid2, "Host Family", null)
                 ), // Demonstrates invalid data (variant required by newer policy)
                 new ReferralCommandExecuted(
                     adminId,
-                    ReferralsMonth(21, 20, 38, 0),
-                    new CreateReferral(guid5, guid3, ReferralsMonth(21, 20, 38, 0))
+                    V1CasesMonth(21, 20, 38, 0),
+                    new CreateReferral(guid5, guid3, V1CasesMonth(21, 20, 38, 0))
                 ),
                 // Fisher family
                 new ReferralCommandExecuted(
                     adminId,
-                    ReferralsMonth(1, 12, 0, 0),
+                    V1CasesMonth(1, 12, 0, 0),
                     new CreateReferral(
                         fisherFamilyGuid,
-                        fisherFamilyReferral1Guid,
-                        ReferralsMonth(1, 12, 0, 0)
+                        fisherFamilyV1Case1Guid,
+                        V1CasesMonth(1, 12, 0, 0)
                     )
                 ),
                 new ArrangementsCommandExecuted(
                     adminId,
-                    ReferralsMonth(3, 10, 0, 0),
+                    V1CasesMonth(3, 10, 0, 0),
                     new CreateArrangement(
                         fisherFamilyGuid,
-                        fisherFamilyReferral1Guid,
+                        fisherFamilyV1Case1Guid,
                         [fisherFamilyArrangement1Guid],
                         "Friending",
-                        ReferralsMonth(4),
+                        V1CasesMonth(4),
                         michaelFisherGuid,
                         "Respite"
                     )
                 ),
                 new ArrangementsCommandExecuted(
                     adminId,
-                    ReferralsMonth(3, 11, 0, 0),
+                    V1CasesMonth(3, 11, 0, 0),
                     new AssignIndividualVolunteer(
                         fisherFamilyGuid,
-                        fisherFamilyReferral1Guid,
+                        fisherFamilyV1Case1Guid,
                         [fisherFamilyArrangement1Guid],
                         brambleswiftFamilyGuid,
                         berrinBrambleswiftGuid,
@@ -1525,10 +1540,10 @@ namespace CareTogether.TestData
                 ),
                 new ArrangementsCommandExecuted(
                     adminId,
-                    ReferralsMonth(3, 11, 0, 0),
+                    V1CasesMonth(3, 11, 0, 0),
                     new AssignIndividualVolunteer(
                         fisherFamilyGuid,
-                        fisherFamilyReferral1Guid,
+                        fisherFamilyV1Case1Guid,
                         [fisherFamilyArrangement1Guid],
                         brambleswiftFamilyGuid,
                         berrinBrambleswiftGuid,
@@ -1538,10 +1553,10 @@ namespace CareTogether.TestData
                 ),
                 new ArrangementsCommandExecuted(
                     adminId,
-                    ReferralsMonth(3, 11, 0, 0),
+                    V1CasesMonth(3, 11, 0, 0),
                     new AssignIndividualVolunteer(
                         fisherFamilyGuid,
-                        fisherFamilyReferral1Guid,
+                        fisherFamilyV1Case1Guid,
                         [fisherFamilyArrangement1Guid],
                         guid0,
                         guid0,
@@ -1551,10 +1566,10 @@ namespace CareTogether.TestData
                 ),
                 new ArrangementsCommandExecuted(
                     adminId,
-                    ReferralsMonth(3, 11, 0, 0),
+                    V1CasesMonth(3, 11, 0, 0),
                     new ExemptArrangementRequirement(
                         fisherFamilyGuid,
-                        fisherFamilyReferral1Guid,
+                        fisherFamilyV1Case1Guid,
                         [fisherFamilyArrangement1Guid],
                         "Advocacy Agmt",
                         null,
@@ -1564,24 +1579,24 @@ namespace CareTogether.TestData
                 ),
                 new ArrangementsCommandExecuted(
                     adminId,
-                    ReferralsMonth(3, 11, 0, 0),
+                    V1CasesMonth(3, 11, 0, 0),
                     new StartArrangements(
                         fisherFamilyGuid,
-                        fisherFamilyReferral1Guid,
+                        fisherFamilyV1Case1Guid,
                         [fisherFamilyArrangement1Guid],
-                        ReferralsMonth(1, 15, 0, 0)
+                        V1CasesMonth(1, 15, 0, 0)
                     )
                 ),
                 new ArrangementsCommandExecuted(
                     adminId,
-                    ReferralsMonth(3, 11, 0, 0),
+                    V1CasesMonth(3, 11, 0, 0),
                     new CompleteArrangementRequirement(
                         fisherFamilyGuid,
-                        fisherFamilyReferral1Guid,
+                        fisherFamilyV1Case1Guid,
                         [fisherFamilyArrangement1Guid],
                         guid3,
                         "Family Coach Checkin",
-                        ReferralsMonth(4, 2, 59, 0),
+                        V1CasesMonth(4, 2, 59, 0),
                         null,
                         null
                     )
@@ -1598,33 +1613,33 @@ namespace CareTogether.TestData
                 guid2,
                 new GoalCommandExecutedEvent(
                     adminId,
-                    ReferralsMonth(11),
+                    V1CasesMonth(11),
                     new CreateGoal(guid2, guid1, "Get an apartment", StartOfCurrentMonth())
                 ),
                 new GoalCommandExecutedEvent(
                     adminId,
-                    ReferralsMonth(11),
+                    V1CasesMonth(11),
                     new CreateGoal(guid2, guid2, "Find a job", StartOfCurrentMonth())
                 ),
                 new GoalCommandExecutedEvent(
                     adminId,
-                    ReferralsMonth(11),
+                    V1CasesMonth(11),
                     new CreateGoal(guid2, guid2, "Get daytime childcare", StartOfCurrentMonth())
                 ),
                 new GoalCommandExecutedEvent(
                     adminId,
-                    ReferralsMonth(12),
+                    V1CasesMonth(12),
                     new ChangeGoalDescription(guid2, guid1, "Find stable housing")
                 ),
                 new GoalCommandExecutedEvent(
                     adminId,
-                    ReferralsMonth(21),
-                    new ChangeGoalTargetDate(guid2, guid1, ReferralsMonth(28))
+                    V1CasesMonth(21),
+                    new ChangeGoalTargetDate(guid2, guid1, V1CasesMonth(28))
                 ),
                 new GoalCommandExecutedEvent(
                     adminId,
-                    ReferralsMonth(28),
-                    new MarkGoalCompleted(guid2, guid1, ReferralsMonth(27))
+                    V1CasesMonth(28),
+                    new MarkGoalCompleted(guid2, guid1, V1CasesMonth(27))
                 )
             );
         }
@@ -1943,27 +1958,22 @@ namespace CareTogether.TestData
             );
         }
 
-        public static async Task PopulateNoteEvents(IEventLog<NotesEvent> referralsEventLog)
+        public static async Task PopulateNoteEvents(IEventLog<NotesEvent> v1CasesEventLog)
         {
-            await referralsEventLog.AppendEventsAsync(
+            await v1CasesEventLog.AppendEventsAsync(
                 guid1,
                 guid2,
                 new NoteCommandExecuted(
-                    volunteerId2,
-                    ReferralsMonth(14, 10, 10, 10),
-                    new CreateDraftNote(guid1, guidB, null, null, AccessLevel: "Staff Only")
-                ),
-                new NoteCommandExecuted(
                     volunteerId,
-                    ReferralsMonth(14, 10, 10, 10),
-                    new CreateDraftNote(guid1, guid0, null, null, AccessLevel: "Staff Only")
+                    V1CasesMonth(14, 10, 10, 10),
+                    new CreateDraftNote(guid1, noteId0, null, null, AccessLevel: "Staff Only")
                 ),
                 new NoteCommandExecuted(
                     adminId,
-                    ReferralsMonth(14, 11, 10, 10),
+                    V1CasesMonth(14, 11, 10, 10),
                     new ApproveNote(
                         guid1,
-                        guid0,
+                        noteId0,
                         "The kids were in awe of my carpet bag. They were such sweethearts, though I do wish to state, for the record, that they are given entirely too much sugar with their medicine.",
                         null,
                         AccessLevel: "Staff Only"
@@ -1971,25 +1981,25 @@ namespace CareTogether.TestData
                 ),
                 new NoteCommandExecuted(
                     volunteerId,
-                    ReferralsMonth(15, 8, 33, 34),
-                    new CreateDraftNote(guid1, guid4, null, null, AccessLevel: "Staff Only")
+                    V1CasesMonth(15, 8, 33, 34),
+                    new CreateDraftNote(guid1, noteId4, null, null, AccessLevel: "Staff Only")
                 ),
                 new NoteCommandExecuted(
                     adminId,
-                    ReferralsMonth(15, 8, 33, 34),
-                    new ApproveNote(guid1, guid4, "Babysitting", null, AccessLevel: "Staff Only")
+                    V1CasesMonth(15, 8, 33, 34),
+                    new ApproveNote(guid1, noteId4, "Babysitting", null, AccessLevel: "Staff Only")
                 ),
                 new NoteCommandExecuted(
                     volunteerId,
-                    ReferralsMonth(15, 20, 40, 45),
-                    new CreateDraftNote(guid1, guid5, null, null, AccessLevel: "Staff Only")
+                    V1CasesMonth(15, 20, 40, 45),
+                    new CreateDraftNote(guid1, noteId5, null, null, AccessLevel: "Staff Only")
                 ),
                 new NoteCommandExecuted(
                     adminId,
-                    ReferralsMonth(15, 20, 40, 45),
+                    V1CasesMonth(15, 20, 40, 45),
                     new ApproveNote(
                         guid1,
-                        guid5,
+                        noteId5,
                         "Dropped off with host parents after ☕ and 🍰",
                         null,
                         AccessLevel: "Staff Only"
@@ -1997,15 +2007,15 @@ namespace CareTogether.TestData
                 ),
                 new NoteCommandExecuted(
                     volunteerId,
-                    ReferralsMonth(22, 16, 30, 35),
-                    new CreateDraftNote(guid1, guid6, null, null, AccessLevel: "Staff Only")
+                    V1CasesMonth(22, 16, 30, 35),
+                    new CreateDraftNote(guid1, noteId6, null, null, AccessLevel: "Staff Only")
                 ),
                 new NoteCommandExecuted(
                     adminId,
-                    ReferralsMonth(22, 16, 30, 35),
+                    V1CasesMonth(22, 16, 30, 35),
                     new ApproveNote(
                         guid1,
-                        guid6,
+                        noteId6,
                         "Weekend with parents, met at McDonald's near mom",
                         null,
                         AccessLevel: "Staff Only"
@@ -2013,20 +2023,20 @@ namespace CareTogether.TestData
                 ),
                 new NoteCommandExecuted(
                     volunteerId,
-                    ReferralsMonth(22, 18, 0, 0),
-                    new CreateDraftNote(guid1, guid1, null, null, AccessLevel: "Staff Only")
+                    V1CasesMonth(22, 18, 0, 0),
+                    new CreateDraftNote(guid1, noteId1, null, null, AccessLevel: "Staff Only")
                 ),
                 new NoteCommandExecuted(
                     volunteerId,
-                    ReferralsMonth(22, 19, 30, 0),
-                    new EditDraftNote(guid1, guid1, null, null, AccessLevel: "Staff Only")
+                    V1CasesMonth(22, 19, 30, 0),
+                    new EditDraftNote(guid1, noteId1, null, null, AccessLevel: "Staff Only")
                 ),
                 new NoteCommandExecuted(
                     adminId,
-                    ReferralsMonth(22, 19, 45, 0),
+                    V1CasesMonth(22, 19, 45, 0),
                     new ApproveNote(
                         guid1,
-                        guid1,
+                        noteId1,
                         "Eric and Ben liked the Play Place and didn't want to go home.",
                         null,
                         AccessLevel: "Staff Only"
@@ -2034,60 +2044,60 @@ namespace CareTogether.TestData
                 ),
                 new NoteCommandExecuted(
                     volunteerId,
-                    ReferralsMonth(24, 8, 30, 35),
-                    new CreateDraftNote(guid1, guid7, null, null)
+                    V1CasesMonth(24, 8, 30, 35),
+                    new CreateDraftNote(guid1, noteId7, null, null)
                 ),
                 new NoteCommandExecuted(
                     adminId,
-                    ReferralsMonth(24, 8, 30, 35),
-                    new ApproveNote(guid1, guid7, "Mom dropped off on way to work", null)
+                    V1CasesMonth(24, 8, 30, 35),
+                    new ApproveNote(guid1, noteId7, "Mom dropped off on way to work", null)
                 ),
                 new NoteCommandExecuted(
                     volunteerId,
-                    ReferralsMonth(24, 8, 45, 0),
-                    new CreateDraftNote(guid1, guid2, null, null)
+                    V1CasesMonth(24, 8, 45, 0),
+                    new CreateDraftNote(guid1, noteId2, null, null)
                 ),
                 new NoteCommandExecuted(
                     volunteerId,
-                    ReferralsMonth(24, 8, 50, 0),
-                    new DiscardDraftNote(guid1, guid2)
+                    V1CasesMonth(24, 8, 50, 0),
+                    new DiscardDraftNote(guid1, noteId2)
                 ),
                 new NoteCommandExecuted(
                     volunteerId,
-                    ReferralsMonth(24, 8, 55, 0),
-                    new CreateDraftNote(guid1, guid3, null, null)
+                    V1CasesMonth(24, 8, 55, 0),
+                    new CreateDraftNote(guid1, noteId3, null, null)
                 ),
                 new NoteCommandExecuted(
                     volunteerId,
-                    ReferralsMonth(24, 8, 57, 0),
-                    new EditDraftNote(guid1, guid3, null, null)
+                    V1CasesMonth(24, 8, 57, 0),
+                    new EditDraftNote(guid1, noteId3, null, null)
                 ),
                 new NoteCommandExecuted(
                     volunteerId,
-                    ReferralsMonth(28, 18, 18, 18),
-                    new CreateDraftNote(guid1, guid8, null, null)
+                    V1CasesMonth(28, 18, 18, 18),
+                    new CreateDraftNote(guid1, noteId8, null, null)
                 ),
                 new NoteCommandExecuted(
                     adminId,
-                    ReferralsMonth(28, 18, 18, 18),
-                    new ApproveNote(guid1, guid8, "Mom met us and picked him up at DQ", null)
+                    V1CasesMonth(28, 18, 18, 18),
+                    new ApproveNote(guid1, noteId8, "Mom met us and picked him up at DQ", null)
                 ),
                 new NoteCommandExecuted(
                     adminId,
-                    ReferralsMonth(28, 10, 0, 0),
-                    new CreateDraftNote(guid1, guidA, null, null)
+                    V1CasesMonth(28, 10, 0, 0),
+                    new CreateDraftNote(guid1, noteIdA, null, null)
                 ),
                 new NoteCommandExecuted(
                     adminId,
                     ApprovalsMonth(10, 9, 30, 0),
-                    new CreateDraftNote(guid4, guid9, null, null)
+                    new CreateDraftNote(guid4, noteId9, null, null)
                 ),
                 new NoteCommandExecuted(
                     adminId,
                     ApprovalsMonth(10, 9, 32, 0),
                     new ApproveNote(
                         guid4,
-                        guid9,
+                        noteId9,
                         "I'm a little star-struck... Emily is *amazing*!!",
                         null
                     )
@@ -2095,28 +2105,33 @@ namespace CareTogether.TestData
                 new NoteCommandExecuted(
                     volunteerId2,
                     ApprovalsMonth(28, 9, 30, 0),
-                    new CreateDraftNote(guid1, noteId1, null, null)
+                    new CreateDraftNote(guid1, noteIdB, null, null)
                 ),
                 new NoteCommandExecuted(
                     adminId,
                     ApprovalsMonth(28, 9, 32, 0),
-                    new ApproveNote(guid1, noteId1, "Approved note from another volunteer", null)
+                    new ApproveNote(guid1, noteIdB, "Approved note from another volunteer", null)
                 ),
                 new NoteCommandExecuted(
                     volunteerId2,
-                    ReferralsMonth(28, 11, 10, 10),
-                    new CreateDraftNote(guid1, noteId2, null, null, AccessLevel: "Staff Only")
+                    V1CasesMonth(28, 11, 10, 10),
+                    new CreateDraftNote(guid1, noteIdC, null, null, AccessLevel: "Staff Only")
                 ),
                 new NoteCommandExecuted(
                     adminId,
-                    ReferralsMonth(28, 11, 15, 10),
+                    V1CasesMonth(28, 11, 15, 10),
                     new ApproveNote(
                         guid1,
-                        noteId2,
+                        noteIdC,
                         "Another note for testing the access level",
                         null,
                         AccessLevel: "Staff Only"
                     )
+                ),
+                new NoteCommandExecuted(
+                    volunteerId2,
+                    V1CasesMonth(28, 19, 0, 0),
+                    new CreateDraftNote(guid1, noteIdD, null, null, AccessLevel: "Staff Only")
                 )
             );
         }
@@ -2233,8 +2248,12 @@ namespace CareTogether.TestData
                 guidB.ToString(),
                 "Note by another volunteer"
             );
-            await draftNotesStore.UpsertAsync(guid1, guid2, noteId1.ToString(), "draft content");
-            await draftNotesStore.UpsertAsync(guid1, guid2, noteId2.ToString(), "draft");
+            await draftNotesStore.UpsertAsync(
+                guid1,
+                guid2,
+                noteIdD.ToString(),
+                "A draft note that was created with Staff Only access level"
+            );
         }
 
         public static async Task PopulateConfigurations(
@@ -2389,7 +2408,7 @@ namespace CareTogether.TestData
                                     ),
                                     [
                                         Permission.ViewApprovalProgress,
-                                        Permission.ViewReferralProgress,
+                                        Permission.ViewV1CaseProgress,
                                         Permission.ViewArrangementProgress,
                                     ]
                                 ),
@@ -2705,7 +2724,7 @@ namespace CareTogether.TestData
                         ["Mega Church", "Mini Church"]
                     ),
                 ],
-                new ReferralPolicy(
+                new V1CasePolicy(
                     ["Request for Help Form", "Fill intake form"],
                     [
                         new CustomField(

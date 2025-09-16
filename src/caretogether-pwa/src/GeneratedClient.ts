@@ -2178,6 +2178,7 @@ export enum Permission {
     ViewAllNotes = 183,
     AddEditOwnDraftNotes = 184,
     DiscardOwnDraftNotes = 185,
+    UpdateOthersNoteAccessLevel = 186,
     ViewApprovalStatus = 200,
     EditApprovalRequirementCompletion = 201,
     EditApprovalRequirementExemption = 202,
@@ -2185,15 +2186,15 @@ export enum Permission {
     ViewApprovalProgress = 204,
     ViewApprovalHistory = 205,
     ActivateVolunteerFamily = 206,
-    CreateReferral = 300,
-    EditReferral = 301,
-    CloseReferral = 302,
-    ViewReferralCustomFields = 303,
-    ViewReferralComments = 304,
-    ViewReferralProgress = 305,
-    EditReferralRequirementCompletion = 306,
-    EditReferralRequirementExemption = 307,
-    ViewReferralHistory = 308,
+    CreateV1Case = 300,
+    EditV1Case = 301,
+    CloseV1Case = 302,
+    ViewV1CaseCustomFields = 303,
+    ViewV1CaseComments = 304,
+    ViewV1CaseProgress = 305,
+    EditV1CaseRequirementCompletion = 306,
+    EditV1CaseRequirementExemption = 307,
+    ViewV1CaseHistory = 308,
     CreateArrangement = 350,
     EditArrangement = 351,
     ViewAssignments = 352,
@@ -2263,7 +2264,7 @@ export interface IPutLocationPayload {
 export class EffectiveLocationPolicy implements IEffectiveLocationPolicy {
     actionDefinitions!: { [key: string]: ActionRequirement; };
     customFamilyFields!: CustomField[];
-    referralPolicy!: ReferralPolicy;
+    referralPolicy!: V1CasePolicy;
     volunteerPolicy!: VolunteerPolicy;
 
     constructor(data?: IEffectiveLocationPolicy) {
@@ -2276,7 +2277,7 @@ export class EffectiveLocationPolicy implements IEffectiveLocationPolicy {
         if (!data) {
             this.actionDefinitions = {};
             this.customFamilyFields = [];
-            this.referralPolicy = new ReferralPolicy();
+            this.referralPolicy = new V1CasePolicy();
             this.volunteerPolicy = new VolunteerPolicy();
         }
     }
@@ -2295,7 +2296,7 @@ export class EffectiveLocationPolicy implements IEffectiveLocationPolicy {
                 for (let item of _data["customFamilyFields"])
                     this.customFamilyFields!.push(CustomField.fromJS(item));
             }
-            this.referralPolicy = _data["referralPolicy"] ? ReferralPolicy.fromJS(_data["referralPolicy"]) : new ReferralPolicy();
+            this.referralPolicy = _data["referralPolicy"] ? V1CasePolicy.fromJS(_data["referralPolicy"]) : new V1CasePolicy();
             this.volunteerPolicy = _data["volunteerPolicy"] ? VolunteerPolicy.fromJS(_data["volunteerPolicy"]) : new VolunteerPolicy();
         }
     }
@@ -2330,7 +2331,7 @@ export class EffectiveLocationPolicy implements IEffectiveLocationPolicy {
 export interface IEffectiveLocationPolicy {
     actionDefinitions: { [key: string]: ActionRequirement; };
     customFamilyFields: CustomField[];
-    referralPolicy: ReferralPolicy;
+    referralPolicy: V1CasePolicy;
     volunteerPolicy: VolunteerPolicy;
 }
 
@@ -2483,7 +2484,7 @@ export enum CustomFieldValidation {
     SuggestOnly = 0,
 }
 
-export class ReferralPolicy implements IReferralPolicy {
+export class V1CasePolicy implements IV1CasePolicy {
     intakeRequirements_PRE_MIGRATION!: RequirementDefinition[];
     requiredIntakeActionNames!: string[];
     customFields!: CustomField[];
@@ -2491,7 +2492,7 @@ export class ReferralPolicy implements IReferralPolicy {
     functionPolicies?: FunctionPolicy[] | undefined;
     intakeRequirements?: RequirementDefinition[] | undefined;
 
-    constructor(data?: IReferralPolicy) {
+    constructor(data?: IV1CasePolicy) {
         if (data) {
             for (var property in data) {
                 if (data.hasOwnProperty(property))
@@ -2541,9 +2542,9 @@ export class ReferralPolicy implements IReferralPolicy {
         }
     }
 
-    static fromJS(data: any): ReferralPolicy {
+    static fromJS(data: any): V1CasePolicy {
         data = typeof data === 'object' ? data : {};
-        let result = new ReferralPolicy();
+        let result = new V1CasePolicy();
         result.init(data);
         return result;
     }
@@ -2584,7 +2585,7 @@ export class ReferralPolicy implements IReferralPolicy {
     }
 }
 
-export interface IReferralPolicy {
+export interface IV1CasePolicy {
     intakeRequirements_PRE_MIGRATION: RequirementDefinition[];
     requiredIntakeActionNames: string[];
     customFields: CustomField[];
@@ -5465,8 +5466,8 @@ export interface IUserInfo {
 }
 
 export class PartneringFamilyInfo implements IPartneringFamilyInfo {
-    openReferral?: Referral | undefined;
-    closedReferrals!: Referral[];
+    openV1Case?: V1Case | undefined;
+    closedV1Cases!: V1Case[];
     history!: Activity[];
 
     constructor(data?: IPartneringFamilyInfo) {
@@ -5477,18 +5478,18 @@ export class PartneringFamilyInfo implements IPartneringFamilyInfo {
             }
         }
         if (!data) {
-            this.closedReferrals = [];
+            this.closedV1Cases = [];
             this.history = [];
         }
     }
 
     init(_data?: any) {
         if (_data) {
-            this.openReferral = _data["openReferral"] ? Referral.fromJS(_data["openReferral"]) : <any>undefined;
-            if (Array.isArray(_data["closedReferrals"])) {
-                this.closedReferrals = [] as any;
-                for (let item of _data["closedReferrals"])
-                    this.closedReferrals!.push(Referral.fromJS(item));
+            this.openV1Case = _data["openV1Case"] ? V1Case.fromJS(_data["openV1Case"]) : <any>undefined;
+            if (Array.isArray(_data["closedV1Cases"])) {
+                this.closedV1Cases = [] as any;
+                for (let item of _data["closedV1Cases"])
+                    this.closedV1Cases!.push(V1Case.fromJS(item));
             }
             if (Array.isArray(_data["history"])) {
                 this.history = [] as any;
@@ -5507,11 +5508,11 @@ export class PartneringFamilyInfo implements IPartneringFamilyInfo {
 
     toJSON(data?: any) {
         data = typeof data === 'object' ? data : {};
-        data["openReferral"] = this.openReferral ? this.openReferral.toJSON() : <any>undefined;
-        if (Array.isArray(this.closedReferrals)) {
-            data["closedReferrals"] = [];
-            for (let item of this.closedReferrals)
-                data["closedReferrals"].push(item.toJSON());
+        data["openV1Case"] = this.openV1Case ? this.openV1Case.toJSON() : <any>undefined;
+        if (Array.isArray(this.closedV1Cases)) {
+            data["closedV1Cases"] = [];
+            for (let item of this.closedV1Cases)
+                data["closedV1Cases"].push(item.toJSON());
         }
         if (Array.isArray(this.history)) {
             data["history"] = [];
@@ -5523,16 +5524,16 @@ export class PartneringFamilyInfo implements IPartneringFamilyInfo {
 }
 
 export interface IPartneringFamilyInfo {
-    openReferral?: Referral | undefined;
-    closedReferrals: Referral[];
+    openV1Case?: V1Case | undefined;
+    closedV1Cases: V1Case[];
     history: Activity[];
 }
 
-export class Referral implements IReferral {
+export class V1Case implements IV1Case {
     id!: string;
     openedAtUtc!: Date;
     closedAtUtc?: Date | undefined;
-    closeReason?: ReferralCloseReason | undefined;
+    closeReason?: V1CaseCloseReason | undefined;
     completedRequirements!: CompletedRequirementInfo[];
     exemptedRequirements!: ExemptedRequirementInfo[];
     missingRequirements!: RequirementDefinition[];
@@ -5541,7 +5542,7 @@ export class Referral implements IReferral {
     arrangements!: Arrangement[];
     comments?: string | undefined;
 
-    constructor(data?: IReferral) {
+    constructor(data?: IV1Case) {
         if (data) {
             for (var property in data) {
                 if (data.hasOwnProperty(property))
@@ -5598,9 +5599,9 @@ export class Referral implements IReferral {
         }
     }
 
-    static fromJS(data: any): Referral {
+    static fromJS(data: any): V1Case {
         data = typeof data === 'object' ? data : {};
-        let result = new Referral();
+        let result = new V1Case();
         result.init(data);
         return result;
     }
@@ -5646,11 +5647,11 @@ export class Referral implements IReferral {
     }
 }
 
-export interface IReferral {
+export interface IV1Case {
     id: string;
     openedAtUtc: Date;
     closedAtUtc?: Date | undefined;
-    closeReason?: ReferralCloseReason | undefined;
+    closeReason?: V1CaseCloseReason | undefined;
     completedRequirements: CompletedRequirementInfo[];
     exemptedRequirements: ExemptedRequirementInfo[];
     missingRequirements: RequirementDefinition[];
@@ -5660,7 +5661,7 @@ export interface IReferral {
     comments?: string | undefined;
 }
 
-export enum ReferralCloseReason {
+export enum V1CaseCloseReason {
     NotAppropriate = 0,
     NoCapacity = 1,
     NoLongerNeeded = 2,
@@ -11407,6 +11408,11 @@ export abstract class NoteCommand implements INoteCommand {
             result.init(data);
             return result;
         }
+        if (data["discriminator"] === "UpdateNoteAccessLevel") {
+            let result = new UpdateNoteAccessLevel();
+            result.init(data);
+            return result;
+        }
         throw new Error("The abstract class 'NoteCommand' cannot be instantiated.");
     }
 
@@ -11575,6 +11581,40 @@ export class EditDraftNote extends NoteCommand implements IEditDraftNote {
 export interface IEditDraftNote extends INoteCommand {
     draftNoteContents?: string | undefined;
     backdatedTimestampUtc?: Date | undefined;
+    accessLevel?: string | undefined;
+}
+
+export class UpdateNoteAccessLevel extends NoteCommand implements IUpdateNoteAccessLevel {
+    accessLevel?: string | undefined;
+
+    constructor(data?: IUpdateNoteAccessLevel) {
+        super(data);
+        this._discriminator = "UpdateNoteAccessLevel";
+    }
+
+    init(_data?: any) {
+        super.init(_data);
+        if (_data) {
+            this.accessLevel = _data["accessLevel"];
+        }
+    }
+
+    static fromJS(data: any): UpdateNoteAccessLevel {
+        data = typeof data === 'object' ? data : {};
+        let result = new UpdateNoteAccessLevel();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["accessLevel"] = this.accessLevel;
+        super.toJSON(data);
+        return data;
+    }
+}
+
+export interface IUpdateNoteAccessLevel extends INoteCommand {
     accessLevel?: string | undefined;
 }
 
@@ -12318,7 +12358,7 @@ export interface IUpdatePersonPhoneNumber extends IPersonCommand {
 }
 
 export class ReferralRecordsCommand extends AtomicRecordsCommand implements IReferralRecordsCommand {
-    command!: ReferralCommand;
+    command!: V1CaseCommand;
 
     constructor(data?: IReferralRecordsCommand) {
         super(data);
@@ -12328,7 +12368,7 @@ export class ReferralRecordsCommand extends AtomicRecordsCommand implements IRef
     init(_data?: any) {
         super.init(_data);
         if (_data) {
-            this.command = _data["command"] ? ReferralCommand.fromJS(_data["command"]) : <any>undefined;
+            this.command = _data["command"] ? V1CaseCommand.fromJS(_data["command"]) : <any>undefined;
         }
     }
 
@@ -12348,23 +12388,23 @@ export class ReferralRecordsCommand extends AtomicRecordsCommand implements IRef
 }
 
 export interface IReferralRecordsCommand extends IAtomicRecordsCommand {
-    command: ReferralCommand;
+    command: V1CaseCommand;
 }
 
-export abstract class ReferralCommand implements IReferralCommand {
+export abstract class V1CaseCommand implements IV1CaseCommand {
     familyId!: string;
     referralId!: string;
 
     protected _discriminator: string;
 
-    constructor(data?: IReferralCommand) {
+    constructor(data?: IV1CaseCommand) {
         if (data) {
             for (var property in data) {
                 if (data.hasOwnProperty(property))
                     (<any>this)[property] = (<any>data)[property];
             }
         }
-        this._discriminator = "ReferralCommand";
+        this._discriminator = "V1CaseCommand";
     }
 
     init(_data?: any) {
@@ -12374,7 +12414,7 @@ export abstract class ReferralCommand implements IReferralCommand {
         }
     }
 
-    static fromJS(data: any): ReferralCommand {
+    static fromJS(data: any): V1CaseCommand {
         data = typeof data === 'object' ? data : {};
         if (data["discriminator"] === "CloseReferral") {
             let result = new CloseReferral();
@@ -12416,7 +12456,7 @@ export abstract class ReferralCommand implements IReferralCommand {
             result.init(data);
             return result;
         }
-        throw new Error("The abstract class 'ReferralCommand' cannot be instantiated.");
+        throw new Error("The abstract class 'V1CaseCommand' cannot be instantiated.");
     }
 
     toJSON(data?: any) {
@@ -12428,13 +12468,13 @@ export abstract class ReferralCommand implements IReferralCommand {
     }
 }
 
-export interface IReferralCommand {
+export interface IV1CaseCommand {
     familyId: string;
     referralId: string;
 }
 
-export class CloseReferral extends ReferralCommand implements ICloseReferral {
-    closeReason!: ReferralCloseReason;
+export class CloseReferral extends V1CaseCommand implements ICloseReferral {
+    closeReason!: V1CaseCloseReason;
     closedAtUtc!: Date;
 
     constructor(data?: ICloseReferral) {
@@ -12466,12 +12506,12 @@ export class CloseReferral extends ReferralCommand implements ICloseReferral {
     }
 }
 
-export interface ICloseReferral extends IReferralCommand {
-    closeReason: ReferralCloseReason;
+export interface ICloseReferral extends IV1CaseCommand {
+    closeReason: V1CaseCloseReason;
     closedAtUtc: Date;
 }
 
-export class CompleteReferralRequirement extends ReferralCommand implements ICompleteReferralRequirement {
+export class CompleteReferralRequirement extends V1CaseCommand implements ICompleteReferralRequirement {
     completedRequirementId!: string;
     requirementName!: string;
     completedAtUtc!: Date;
@@ -12513,7 +12553,7 @@ export class CompleteReferralRequirement extends ReferralCommand implements ICom
     }
 }
 
-export interface ICompleteReferralRequirement extends IReferralCommand {
+export interface ICompleteReferralRequirement extends IV1CaseCommand {
     completedRequirementId: string;
     requirementName: string;
     completedAtUtc: Date;
@@ -12521,7 +12561,7 @@ export interface ICompleteReferralRequirement extends IReferralCommand {
     noteId?: string | undefined;
 }
 
-export class CreateReferral extends ReferralCommand implements ICreateReferral {
+export class CreateReferral extends V1CaseCommand implements ICreateReferral {
     openedAtUtc!: Date;
 
     constructor(data?: ICreateReferral) {
@@ -12551,11 +12591,11 @@ export class CreateReferral extends ReferralCommand implements ICreateReferral {
     }
 }
 
-export interface ICreateReferral extends IReferralCommand {
+export interface ICreateReferral extends IV1CaseCommand {
     openedAtUtc: Date;
 }
 
-export class ExemptReferralRequirement extends ReferralCommand implements IExemptReferralRequirement {
+export class ExemptReferralRequirement extends V1CaseCommand implements IExemptReferralRequirement {
     requirementName!: string;
     additionalComments!: string;
     exemptionExpiresAtUtc?: Date | undefined;
@@ -12591,13 +12631,13 @@ export class ExemptReferralRequirement extends ReferralCommand implements IExemp
     }
 }
 
-export interface IExemptReferralRequirement extends IReferralCommand {
+export interface IExemptReferralRequirement extends IV1CaseCommand {
     requirementName: string;
     additionalComments: string;
     exemptionExpiresAtUtc?: Date | undefined;
 }
 
-export class MarkReferralRequirementIncomplete extends ReferralCommand implements IMarkReferralRequirementIncomplete {
+export class MarkReferralRequirementIncomplete extends V1CaseCommand implements IMarkReferralRequirementIncomplete {
     completedRequirementId!: string;
     requirementName!: string;
 
@@ -12630,12 +12670,12 @@ export class MarkReferralRequirementIncomplete extends ReferralCommand implement
     }
 }
 
-export interface IMarkReferralRequirementIncomplete extends IReferralCommand {
+export interface IMarkReferralRequirementIncomplete extends IV1CaseCommand {
     completedRequirementId: string;
     requirementName: string;
 }
 
-export class UnexemptReferralRequirement extends ReferralCommand implements IUnexemptReferralRequirement {
+export class UnexemptReferralRequirement extends V1CaseCommand implements IUnexemptReferralRequirement {
     requirementName!: string;
 
     constructor(data?: IUnexemptReferralRequirement) {
@@ -12665,11 +12705,11 @@ export class UnexemptReferralRequirement extends ReferralCommand implements IUne
     }
 }
 
-export interface IUnexemptReferralRequirement extends IReferralCommand {
+export interface IUnexemptReferralRequirement extends IV1CaseCommand {
     requirementName: string;
 }
 
-export class UpdateCustomReferralField extends ReferralCommand implements IUpdateCustomReferralField {
+export class UpdateCustomReferralField extends V1CaseCommand implements IUpdateCustomReferralField {
     completedCustomFieldId!: string;
     customFieldName!: string;
     customFieldType!: CustomFieldType;
@@ -12708,14 +12748,14 @@ export class UpdateCustomReferralField extends ReferralCommand implements IUpdat
     }
 }
 
-export interface IUpdateCustomReferralField extends IReferralCommand {
+export interface IUpdateCustomReferralField extends IV1CaseCommand {
     completedCustomFieldId: string;
     customFieldName: string;
     customFieldType: CustomFieldType;
     value?: any | undefined;
 }
 
-export class UpdateReferralComments extends ReferralCommand implements IUpdateReferralComments {
+export class UpdateReferralComments extends V1CaseCommand implements IUpdateReferralComments {
     comments?: string | undefined;
 
     constructor(data?: IUpdateReferralComments) {
@@ -12745,7 +12785,7 @@ export class UpdateReferralComments extends ReferralCommand implements IUpdateRe
     }
 }
 
-export interface IUpdateReferralComments extends IReferralCommand {
+export interface IUpdateReferralComments extends IV1CaseCommand {
     comments?: string | undefined;
 }
 

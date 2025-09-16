@@ -2,10 +2,10 @@
 using System.Collections.Immutable;
 using CareTogether.Engines.PolicyEvaluation;
 using CareTogether.Resources.Policies;
-using CareTogether.Resources.Referrals;
+using CareTogether.Resources.V1Cases;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-namespace CareTogether.Core.Test.ReferralCalculationTests
+namespace CareTogether.Core.Test.V1CaseCalculationTests
 {
     [TestClass]
     public class CalculateMissingFunctionAssignments
@@ -26,7 +26,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
         {
             var role = Helpers.FunctionWithoutEligibility("iA1+", FunctionRequirement.OneOrMore);
 
-            var result = ReferralCalculations.CalculateMissingFunctionAssignments(
+            var result = V1CaseCalculations.CalculateMissingFunctionAssignments(
                 ImmutableList<ArrangementFunction>.Empty.Add(role),
                 ImmutableList<Engines.PolicyEvaluation.FamilyVolunteerAssignment>.Empty,
                 ImmutableList<Engines.PolicyEvaluation.IndividualVolunteerAssignment>.Empty
@@ -40,7 +40,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
         {
             var role = Helpers.FunctionWithoutEligibility("iA1+", FunctionRequirement.OneOrMore);
 
-            var result = ReferralCalculations.CalculateMissingFunctionAssignments(
+            var result = V1CaseCalculations.CalculateMissingFunctionAssignments(
                 ImmutableList<ArrangementFunction>.Empty.Add(role),
                 ImmutableList<Engines.PolicyEvaluation.FamilyVolunteerAssignment>.Empty,
                 ImmutableList<Engines.PolicyEvaluation.IndividualVolunteerAssignment>.Empty.Add(
@@ -63,7 +63,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
         {
             var role = Helpers.FunctionWithoutEligibility("iA1+", FunctionRequirement.OneOrMore);
 
-            var result = ReferralCalculations.CalculateMissingFunctionAssignments(
+            var result = V1CaseCalculations.CalculateMissingFunctionAssignments(
                 ImmutableList<ArrangementFunction>.Empty.Add(role),
                 ImmutableList<Engines.PolicyEvaluation.FamilyVolunteerAssignment>.Empty,
                 ImmutableList<Engines.PolicyEvaluation.IndividualVolunteerAssignment>
@@ -97,7 +97,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
         {
             var role = Helpers.FunctionWithoutEligibility("iA1+", FunctionRequirement.OneOrMore);
 
-            var result = ReferralCalculations.CalculateMissingFunctionAssignments(
+            var result = V1CaseCalculations.CalculateMissingFunctionAssignments(
                 ImmutableList<ArrangementFunction>.Empty.Add(role),
                 ImmutableList<Engines.PolicyEvaluation.FamilyVolunteerAssignment>.Empty.Add(
                     new Engines.PolicyEvaluation.FamilyVolunteerAssignment(
@@ -119,7 +119,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
         {
             var role = Helpers.FunctionWithoutEligibility("iA1+", FunctionRequirement.OneOrMore);
 
-            var result = ReferralCalculations.CalculateMissingFunctionAssignments(
+            var result = V1CaseCalculations.CalculateMissingFunctionAssignments(
                 ImmutableList<ArrangementFunction>.Empty.Add(role),
                 ImmutableList<Engines.PolicyEvaluation.FamilyVolunteerAssignment>
                     .Empty.Add(
@@ -151,7 +151,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
         {
             var role = Helpers.FunctionWithoutEligibility("iA1", FunctionRequirement.ExactlyOne);
 
-            var result = ReferralCalculations.CalculateMissingFunctionAssignments(
+            var result = V1CaseCalculations.CalculateMissingFunctionAssignments(
                 ImmutableList<ArrangementFunction>.Empty.Add(role),
                 ImmutableList<Engines.PolicyEvaluation.FamilyVolunteerAssignment>.Empty,
                 ImmutableList<Engines.PolicyEvaluation.IndividualVolunteerAssignment>.Empty
@@ -165,7 +165,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
         {
             var role = Helpers.FunctionWithoutEligibility("iA1", FunctionRequirement.ExactlyOne);
 
-            var result = ReferralCalculations.CalculateMissingFunctionAssignments(
+            var result = V1CaseCalculations.CalculateMissingFunctionAssignments(
                 ImmutableList<ArrangementFunction>.Empty.Add(role),
                 ImmutableList<Engines.PolicyEvaluation.FamilyVolunteerAssignment>.Empty,
                 ImmutableList<Engines.PolicyEvaluation.IndividualVolunteerAssignment>.Empty.Add(
@@ -188,7 +188,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
         {
             var role = Helpers.FunctionWithoutEligibility("iA1", FunctionRequirement.ExactlyOne);
 
-            var result = ReferralCalculations.CalculateMissingFunctionAssignments(
+            var result = V1CaseCalculations.CalculateMissingFunctionAssignments(
                 ImmutableList<ArrangementFunction>.Empty.Add(role),
                 ImmutableList<Engines.PolicyEvaluation.FamilyVolunteerAssignment>.Empty,
                 ImmutableList<Engines.PolicyEvaluation.IndividualVolunteerAssignment>
@@ -222,7 +222,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
         {
             var role = Helpers.FunctionWithoutEligibility("iA1", FunctionRequirement.ExactlyOne);
 
-            var result = ReferralCalculations.CalculateMissingFunctionAssignments(
+            var result = V1CaseCalculations.CalculateMissingFunctionAssignments(
                 ImmutableList<ArrangementFunction>.Empty.Add(role),
                 ImmutableList<Engines.PolicyEvaluation.FamilyVolunteerAssignment>.Empty.Add(
                     new Engines.PolicyEvaluation.FamilyVolunteerAssignment(
@@ -244,7 +244,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
         {
             var role = Helpers.FunctionWithoutEligibility("iA1", FunctionRequirement.ExactlyOne);
 
-            var result = ReferralCalculations.CalculateMissingFunctionAssignments(
+            var result = V1CaseCalculations.CalculateMissingFunctionAssignments(
                 ImmutableList<ArrangementFunction>.Empty.Add(role),
                 ImmutableList<Engines.PolicyEvaluation.FamilyVolunteerAssignment>
                     .Empty.Add(
@@ -276,7 +276,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
         {
             var role = Helpers.FunctionWithoutEligibility("iA0+", FunctionRequirement.ZeroOrMore);
 
-            var result = ReferralCalculations.CalculateMissingFunctionAssignments(
+            var result = V1CaseCalculations.CalculateMissingFunctionAssignments(
                 ImmutableList<ArrangementFunction>.Empty.Add(role),
                 ImmutableList<Engines.PolicyEvaluation.FamilyVolunteerAssignment>.Empty,
                 ImmutableList<Engines.PolicyEvaluation.IndividualVolunteerAssignment>.Empty
@@ -290,7 +290,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
         {
             var role = Helpers.FunctionWithoutEligibility("iA0+", FunctionRequirement.ZeroOrMore);
 
-            var result = ReferralCalculations.CalculateMissingFunctionAssignments(
+            var result = V1CaseCalculations.CalculateMissingFunctionAssignments(
                 ImmutableList<ArrangementFunction>.Empty.Add(role),
                 ImmutableList<Engines.PolicyEvaluation.FamilyVolunteerAssignment>.Empty,
                 ImmutableList<Engines.PolicyEvaluation.IndividualVolunteerAssignment>.Empty.Add(
@@ -313,7 +313,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
         {
             var role = Helpers.FunctionWithoutEligibility("iA0+", FunctionRequirement.ZeroOrMore);
 
-            var result = ReferralCalculations.CalculateMissingFunctionAssignments(
+            var result = V1CaseCalculations.CalculateMissingFunctionAssignments(
                 ImmutableList<ArrangementFunction>.Empty.Add(role),
                 ImmutableList<Engines.PolicyEvaluation.FamilyVolunteerAssignment>.Empty,
                 ImmutableList<Engines.PolicyEvaluation.IndividualVolunteerAssignment>
@@ -347,7 +347,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
         {
             var role = Helpers.FunctionWithoutEligibility("iA0+", FunctionRequirement.ZeroOrMore);
 
-            var result = ReferralCalculations.CalculateMissingFunctionAssignments(
+            var result = V1CaseCalculations.CalculateMissingFunctionAssignments(
                 ImmutableList<ArrangementFunction>.Empty.Add(role),
                 ImmutableList<Engines.PolicyEvaluation.FamilyVolunteerAssignment>.Empty.Add(
                     new Engines.PolicyEvaluation.FamilyVolunteerAssignment(
@@ -369,7 +369,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
         {
             var role = Helpers.FunctionWithoutEligibility("iA0+", FunctionRequirement.ZeroOrMore);
 
-            var result = ReferralCalculations.CalculateMissingFunctionAssignments(
+            var result = V1CaseCalculations.CalculateMissingFunctionAssignments(
                 ImmutableList<ArrangementFunction>.Empty.Add(role),
                 ImmutableList<Engines.PolicyEvaluation.FamilyVolunteerAssignment>
                     .Empty.Add(
@@ -407,7 +407,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
                 FunctionRequirement.ZeroOrMore
             );
 
-            var result = ReferralCalculations.CalculateMissingFunctionAssignments(
+            var result = V1CaseCalculations.CalculateMissingFunctionAssignments(
                 ImmutableList<ArrangementFunction>
                     .Empty.Add(role1)
                     .Add(role2)
@@ -431,7 +431,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
                 FunctionRequirement.ZeroOrMore
             );
 
-            var result = ReferralCalculations.CalculateMissingFunctionAssignments(
+            var result = V1CaseCalculations.CalculateMissingFunctionAssignments(
                 ImmutableList<ArrangementFunction>
                     .Empty.Add(role1)
                     .Add(role2)
@@ -538,7 +538,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
                 Variants: ImmutableList<ArrangementFunctionVariant>.Empty
             );
 
-            var result = ReferralCalculations.CalculateMissingFunctionAssignments(
+            var result = V1CaseCalculations.CalculateMissingFunctionAssignments(
                 ImmutableList<ArrangementFunction>
                     .Empty.Add(role1)
                     .Add(role2)
@@ -588,7 +588,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
                 Variants: ImmutableList<ArrangementFunctionVariant>.Empty
             );
 
-            var result = ReferralCalculations.CalculateMissingFunctionAssignments(
+            var result = V1CaseCalculations.CalculateMissingFunctionAssignments(
                 ImmutableList<ArrangementFunction>
                     .Empty.Add(role1)
                     .Add(role2)
