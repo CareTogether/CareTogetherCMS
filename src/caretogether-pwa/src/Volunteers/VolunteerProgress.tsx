@@ -39,6 +39,7 @@ import { useLoadable } from '../Hooks/useLoadable';
 import { ProgressBackdrop } from '../Shell/ProgressBackdrop';
 import { useAppNavigate } from '../Hooks/useAppNavigate';
 import { TestFamilyBadge } from '../Families/TestFamilyBadge';
+import { useFeatureFlagEnabled } from 'posthog-js/react';
 
 function VolunteerProgress(props: { onOpen: () => void }) {
   const { onOpen } = props;
@@ -72,6 +73,10 @@ function VolunteerProgress(props: { onOpen: () => void }) {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   const location = useLocation();
+
+  const updateTestFamilyFlagEnabled = useFeatureFlagEnabled(
+    'updateTestFamilyFlag'
+  );
 
   const [expandedView, setExpandedView] = useLocalStorage(
     'volunteer-progress-expanded',
@@ -183,7 +188,9 @@ function VolunteerProgress(props: { onOpen: () => void }) {
                         <Typography sx={{ fontWeight: 600 }}>
                           {familyLastName(volunteerFamily) + ' Family'}
                         </Typography>
-                        <TestFamilyBadge family={volunteerFamily} />
+                        {updateTestFamilyFlagEnabled && (
+                          <TestFamilyBadge family={volunteerFamily} />
+                        )}
                       </span>
                     </TableCell>
                     {allApprovalAndOnboardingRequirements.map((actionName) => (

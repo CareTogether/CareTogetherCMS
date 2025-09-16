@@ -83,6 +83,7 @@ import { useMemo } from 'react';
 import { useBackdrop } from '../Hooks/useBackdrop';
 import { useSyncV1CaseIdInURL } from '../Hooks/useSyncV1CaseIdInURL';
 import { ArrangementsSection } from '../V1Cases/Arrangements/ArrangementsSection/ArrangementsSection';
+import { useFeatureFlagEnabled } from 'posthog-js/react';
 
 export function FamilyScreen() {
   const familyIdMaybe = useParams<{ familyId: string }>();
@@ -264,6 +265,10 @@ export function FamilyScreen() {
   const isDesktop = useMediaQuery(theme.breakpoints.up('sm'));
   const isWideScreen = useMediaQuery(theme.breakpoints.up('xl'));
 
+  const updateTestFamilyFlagEnabled = useFeatureFlagEnabled(
+    'updateTestFamilyFlag'
+  );
+
   useScreenTitle(family ? `${familyLastName(family)} Family` : '...');
 
   function handleV1CaseChange(v1CaseId: string) {
@@ -392,38 +397,39 @@ export function FamilyScreen() {
               <ListItemText primary="Print notes" />
             </MenuItem>
 
-            {permissions(Permission.EditFamilyInfo) && (
-              <MenuItem
-                onClick={async (e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
+            {permissions(Permission.EditFamilyInfo) &&
+              updateTestFamilyFlagEnabled && (
+                <MenuItem
+                  onClick={async (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
 
-                  setFamilyMoreMenuAnchor(null);
+                    setFamilyMoreMenuAnchor(null);
 
-                  try {
-                    const isCurrentlyTest =
-                      family.family?.isTestFamily ?? false;
-                    await withBackdrop(async () => {
-                      await directoryModel.updateTestFamilyFlag(
-                        family.family!.id!,
-                        !isCurrentlyTest
-                      );
-                    });
-                  } catch (error) {
-                    console.error(error);
-                  }
-                }}
-              >
-                <ListItemText
-                  className="ph-unmask"
-                  primary={
-                    family.family?.isTestFamily
-                      ? 'Unmark as test family'
-                      : 'Mark as test family'
-                  }
-                />
-              </MenuItem>
-            )}
+                    try {
+                      const isCurrentlyTest =
+                        family.family?.isTestFamily ?? false;
+                      await withBackdrop(async () => {
+                        await directoryModel.updateTestFamilyFlag(
+                          family.family!.id!,
+                          !isCurrentlyTest
+                        );
+                      });
+                    } catch (error) {
+                      console.error(error);
+                    }
+                  }}
+                >
+                  <ListItemText
+                    className="ph-unmask"
+                    primary={
+                      family.family?.isTestFamily
+                        ? 'Unmark as test family'
+                        : 'Mark as test family'
+                    }
+                  />
+                </MenuItem>
+              )}
 
             {permissions(Permission.EditFamilyInfo) && (
               <MenuItem onClick={deleteFamilyDialogHandle.openDialog}>

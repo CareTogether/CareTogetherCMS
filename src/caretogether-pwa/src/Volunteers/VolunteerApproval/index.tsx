@@ -66,6 +66,7 @@ import { getUpdatedFilters } from './getUpdatedFilters';
 import { CustomFieldsFilter } from './CustomFieldsFilter';
 import { AgeText } from '../../../src/Families/AgeText';
 import { TestFamilyBadge } from '../../Families/TestFamilyBadge';
+import { useFeatureFlagEnabled } from 'posthog-js/react';
 
 function VolunteerApproval(props: { onOpen: () => void }) {
   const { onOpen } = props;
@@ -406,6 +407,10 @@ function VolunteerApproval(props: { onOpen: () => void }) {
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   const location = useLocation();
 
+  const updateTestFamilyFlagEnabled = useFeatureFlagEnabled(
+    'updateTestFamilyFlag'
+  );
+
   const [expandedView, setExpandedView] = useLocalStorage(
     'volunteer-approval-expanded',
     true
@@ -664,7 +669,9 @@ function VolunteerApproval(props: { onOpen: () => void }) {
                             <Typography sx={{ fontWeight: 600 }}>
                               {familyLastName(volunteerFamily) + ' Family'}
                             </Typography>
-                            <TestFamilyBadge family={volunteerFamily} />
+                            {updateTestFamilyFlagEnabled && (
+                              <TestFamilyBadge family={volunteerFamily} />
+                            )}
                           </span>
                         </TableCell>
                         <TableCell>
