@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Immutable;
 using System.Linq;
+using System.Security.Cryptography;
+using System.Text;
 using System.Threading.Tasks;
 using CareTogether.Managers;
 using CareTogether.Managers.Membership;
@@ -11,6 +13,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Caching.Memory;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Options;
 
 namespace CareTogether.Api.Controllers
@@ -32,16 +35,19 @@ namespace CareTogether.Api.Controllers
         private readonly IMembershipManager membershipManager;
         private readonly IOptions<MembershipOptions> membershipOptions;
         private readonly IMemoryCache redemptionSessionsCache;
+        private readonly IConfiguration configuration;
 
         public UsersController(
             IMembershipManager membershipManager,
             IOptions<MembershipOptions> membershipOptions,
-            IMemoryCache redemptionSessionsCache
+            IMemoryCache redemptionSessionsCache,
+            IConfiguration configuration
         )
         {
             this.membershipManager = membershipManager;
             this.membershipOptions = membershipOptions;
             this.redemptionSessionsCache = redemptionSessionsCache;
+            this.configuration = configuration;
         }
 
         [HttpGet("/api/[controller]/me/tenantAccess")]
@@ -50,6 +56,45 @@ namespace CareTogether.Api.Controllers
             var userAccess = await membershipManager.GetUserAccessAsync(User);
 
             return Ok(userAccess);
+        }
+
+        [HttpGet("/api/[controller]/me/featurebase-identity")]
+        public ActionResult<string> GetFeaturebaseIdentityHash()
+        {
+            try
+            {
+                // Get the current user's ID
+                var userId = User.UserId();
+                
+                // Get the Featurebase identity verification secret from configuration
+                var secret = configuration["Featurebase:IdentityVerificationSecret"];
+                if (string.IsNullOrEmpty(secret))
+                {
+                    return BadRequest("Featurebase identity verification is not configured");
+                }
+
+                // Use the user ID as the identifier for HMAC generation
+                var userIdentifier = userId.ToString();
+
+                // Generate HMAC SHA256 hash
+                var userHash = GenerateHmacSha256(userIdentifier, secret);
+
+                return Ok(userHash);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest($"Failed to generate identity hash: {ex.Message}");
+            }
+        }
+
+        private static string GenerateHmacSha256(string message, string secret)
+        {
+            var keyBytes = Encoding.UTF8.GetBytes(secret);
+            var messageBytes = Encoding.UTF8.GetBytes(message);
+
+            using var hmac = new HMACSHA256(keyBytes);
+            var hashBytes = hmac.ComputeHash(messageBytes);
+            return Convert.ToHexString(hashBytes).ToLowerInvariant();
         }
 
         [HttpGet(

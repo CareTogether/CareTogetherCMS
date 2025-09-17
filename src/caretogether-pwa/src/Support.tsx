@@ -1,8 +1,28 @@
 import { Route, Routes } from 'react-router-dom';
 import { useEffect } from 'react';
-import { OpenTicketForm } from './OpenTicketForm';
-import { ScheduleCall } from './ScheduleCall';
-import { Box, Grid } from '@mui/material';
+import {
+  Box,
+  Button,
+  Card,
+  CardActions,
+  CardContent,
+  Container,
+  Grid,
+  Typography,
+} from '@mui/material';
+import {
+  Chat as ChatIcon,
+  VideoCall as VideoCallIcon,
+} from '@mui/icons-material';
+import { useLoadable } from './Hooks/useLoadable';
+import { accountInfoState } from './Authentication/Auth';
+import { selectedLocationContextState } from './Model/Data';
+import {
+  organizationConfigurationQuery,
+  locationConfigurationQuery,
+} from './Model/ConfigurationModel';
+import { authenticatingFetch } from './Authentication/AuthenticatedHttp';
+import { api } from './Api/Api';
 
 // Extend the Window interface to include Featurebase
 declare global {
@@ -15,6 +35,12 @@ declare global {
 }
 
 const FeaturebaseMessenger = () => {
+  // Get user data from Recoil state
+  const accountInfo = useLoadable(accountInfoState);
+  const organizationConfiguration = useLoadable(organizationConfigurationQuery);
+  const locationConfiguration = useLoadable(locationConfigurationQuery);
+  const locationContext = useLoadable(selectedLocationContextState);
+
   useEffect(() => {
     const win = window;
 
@@ -25,18 +51,38 @@ const FeaturebaseMessenger = () => {
       };
     }
 
-    // Boot Featurebase messenger with configuration
-    win.Featurebase('boot', {
-      appId: '6890e41acb9e844a4374a7a8', // required
-      // email: "user@example.com",         // optional
-      // userId: "12345",                   // optional (will be stringified)
-      // createdAt: "2025-05-06T12:00:00Z", // optional
-      // theme: "light",                    // "light" or "dark"
-      // language: "en",                    // short code (e.g. "en", "de", etc.)
-      // userHash: generatedToken         // Check the docs for additional details below
-      // + feel free to add any more custom values about the user here
-    });
-  }, []);
+    // Only boot Featurebase if we have user data
+    if (accountInfo?.userId) {
+      // Fetch the userHash from the backend for identity verification
+      api.users.getFeaturebaseIdentityHash().then((userHash) => {
+        // Boot Featurebase messenger with configuration including user attributes
+        win.Featurebase('boot', {
+          appId: '6890e41acb9e844a4374a7a8', // required
+          email: accountInfo.email,
+          userId: accountInfo.userId,
+          name: accountInfo.name,
+          userHash: userHash, // Add the generated userHash for identity verification
+          theme: 'light',
+          language: 'en',
+          companies: [
+            {
+              id: locationContext?.organizationId,
+              name: organizationConfiguration?.organizationName,
+              customFields: {
+                locationId: locationContext?.locationId,
+                locationName: locationConfiguration?.name,
+              },
+            },
+          ],
+        });
+      });
+    }
+  }, [
+    accountInfo,
+    organizationConfiguration,
+    locationConfiguration,
+    locationContext,
+  ]);
 
   useEffect(() => {
     // Load the Featurebase SDK script (React equivalent of Next.js Script component)
@@ -72,16 +118,124 @@ export function Support() {
         <Route
           path="*"
           element={
-            <Box px={2} py={4}>
-              <Grid container spacing={4}>
-                <Grid item xs={12} lg={4}>
-                  <ScheduleCall />
+            <Container maxWidth="lg" sx={{ py: 6 }}>
+              {/* Header Section */}
+              <Box textAlign="center" mb={6}>
+                <Typography
+                  variant="h3"
+                  component="h1"
+                  gutterBottom
+                  sx={{ fontWeight: 600 }}
+                >
+                  Get Support
+                </Typography>
+                <Typography
+                  variant="h6"
+                  color="text.secondary"
+                  sx={{ maxWidth: '600px', mx: 'auto' }}
+                >
+                  Need help with CareTogether? We're here to support you every
+                  step of the way.
+                </Typography>
+              </Box>
+
+              {/* Support Options */}
+              <Grid container spacing={4} sx={{ mb: 6 }}>
+                <Grid item xs={12} md={6}>
+                  <Card
+                    variant="outlined"
+                    sx={{
+                      height: '100%',
+                      display: 'flex',
+                      flexDirection: 'column',
+                    }}
+                  >
+                    <CardContent
+                      sx={{ flexGrow: 1, textAlign: 'center', p: 4 }}
+                    >
+                      <ChatIcon
+                        sx={{ fontSize: 48, color: 'primary.main', mb: 2 }}
+                      />
+                      <Typography variant="h5" component="h2" gutterBottom>
+                        Ticket Support
+                      </Typography>
+                      <Typography
+                        variant="body1"
+                        color="text.secondary"
+                        paragraph
+                      >
+                        Get asynchronous help through our ticket support.
+                        Perfect for quick questions, troubleshooting, and
+                        general support.
+                      </Typography>
+                    </CardContent>
+                    <CardActions sx={{ p: 3, pt: 0 }}>
+                      <Button
+                        variant="contained"
+                        fullWidth
+                        size="large"
+                        onClick={() => {
+                          if (window.Featurebase) {
+                            window.Featurebase('showNewMessage');
+                          }
+                        }}
+                        startIcon={<ChatIcon />}
+                      >
+                        Open Ticket
+                      </Button>
+                    </CardActions>
+                  </Card>
                 </Grid>
-                <Grid item xs={12} lg={8}>
-                  <OpenTicketForm />
+
+                <Grid item xs={12} md={6}>
+                  <Card
+                    variant="outlined"
+                    sx={{
+                      height: '100%',
+                      display: 'flex',
+                      flexDirection: 'column',
+                    }}
+                  >
+                    <CardContent
+                      sx={{ flexGrow: 1, textAlign: 'center', p: 4 }}
+                    >
+                      <VideoCallIcon
+                        sx={{ fontSize: 48, color: 'primary.main', mb: 2 }}
+                      />
+                      <Typography variant="h5" component="h2" gutterBottom>
+                        Schedule a Call
+                      </Typography>
+                      <Typography
+                        variant="body1"
+                        color="text.secondary"
+                        paragraph
+                      >
+                        Book a one-on-one call with our support team for
+                        in-depth assistance and personalized guidance.
+                      </Typography>
+                    </CardContent>
+                    <CardActions sx={{ p: 3, pt: 0 }}>
+                      <Button
+                        variant="outlined"
+                        fullWidth
+                        size="large"
+                        onClick={() => {
+                          if (window.Featurebase) {
+                            window.Featurebase(
+                              'showNewMessage',
+                              'I would like to schedule a call for in-depth assistance and personalized guidance.'
+                            );
+                          }
+                        }}
+                        startIcon={<VideoCallIcon />}
+                      >
+                        Schedule a Call
+                      </Button>
+                    </CardActions>
+                  </Card>
                 </Grid>
               </Grid>
-            </Box>
+            </Container>
           }
         />
       </Routes>
