@@ -21,6 +21,7 @@ import {
   locationConfigurationQuery,
 } from './Model/ConfigurationModel';
 import { api } from './Api/Api';
+import useScreenTitle from './Shell/ShellScreenTitle';
 
 // Extend the Window interface to include Featurebase
 declare global {
@@ -109,6 +110,8 @@ const FeaturebaseMessenger = () => {
 };
 
 export function Support() {
+  useScreenTitle('Support');
+
   return (
     <>
       <FeaturebaseMessenger />
