@@ -1,4 +1,3 @@
-import { Route, Routes } from 'react-router-dom';
 import { useEffect } from 'react';
 import {
   Box,
@@ -113,131 +112,107 @@ export function Support() {
   return (
     <>
       <FeaturebaseMessenger />
-      <Routes>
-        <Route
-          path="*"
-          element={
-            <Container maxWidth="lg" sx={{ py: 6 }}>
-              {/* Header Section */}
-              <Box textAlign="center" mb={6}>
-                <Typography
-                  variant="h3"
-                  component="h1"
-                  gutterBottom
-                  sx={{ fontWeight: 600 }}
-                >
-                  Get Support
-                </Typography>
-                <Typography
-                  variant="h6"
-                  color="text.secondary"
-                  sx={{ maxWidth: '600px', mx: 'auto' }}
-                >
-                  Need help with CareTogether? We're here to support you every
-                  step of the way.
-                </Typography>
-              </Box>
+      <Container maxWidth="lg" sx={{ py: 6 }}>
+        <Box textAlign="center" mb={6}>
+          <Typography
+            variant="h3"
+            component="h1"
+            gutterBottom
+            sx={{ fontWeight: 600 }}
+          >
+            Get Support
+          </Typography>
+          <Typography
+            variant="h6"
+            color="text.secondary"
+            sx={{ maxWidth: '600px', mx: 'auto' }}
+          >
+            Need help with CareTogether? We're here to support you every step of
+            the way.
+          </Typography>
+        </Box>
 
-              {/* Support Options */}
-              <Grid container spacing={4} sx={{ mb: 6 }}>
-                <Grid item xs={12} md={6}>
-                  <Card
-                    variant="outlined"
-                    sx={{
-                      height: '100%',
-                      display: 'flex',
-                      flexDirection: 'column',
-                    }}
-                  >
-                    <CardContent
-                      sx={{ flexGrow: 1, textAlign: 'center', p: 4 }}
-                    >
-                      <ChatIcon
-                        sx={{ fontSize: 48, color: 'primary.main', mb: 2 }}
-                      />
-                      <Typography variant="h5" component="h2" gutterBottom>
-                        Ticket Support
-                      </Typography>
-                      <Typography
-                        variant="body1"
-                        color="text.secondary"
-                        paragraph
-                      >
-                        Get asynchronous help through our ticket support.
-                        Perfect for quick questions, troubleshooting, and
-                        general support.
-                      </Typography>
-                    </CardContent>
-                    <CardActions sx={{ p: 3, pt: 0 }}>
-                      <Button
-                        variant="contained"
-                        fullWidth
-                        size="large"
-                        onClick={() => {
-                          if (window.Featurebase) {
-                            window.Featurebase('showNewMessage');
-                          }
-                        }}
-                        startIcon={<ChatIcon />}
-                      >
-                        Open Ticket
-                      </Button>
-                    </CardActions>
-                  </Card>
-                </Grid>
+        <Grid container spacing={4} sx={{ mb: 6 }}>
+          <Grid item xs={12} md={6}>
+            <Card
+              variant="outlined"
+              sx={{
+                height: '100%',
+                display: 'flex',
+                flexDirection: 'column',
+              }}
+            >
+              <CardContent sx={{ flexGrow: 1, textAlign: 'center', p: 4 }}>
+                <ChatIcon sx={{ fontSize: 48, color: 'primary.main', mb: 2 }} />
+                <Typography variant="h5" component="h2" gutterBottom>
+                  Ticket Support
+                </Typography>
+                <Typography variant="body1" color="text.secondary" paragraph>
+                  Get asynchronous help through our ticket support. Perfect for
+                  quick questions, troubleshooting, and general support.
+                </Typography>
+              </CardContent>
+              <CardActions sx={{ p: 3, pt: 0 }}>
+                <Button
+                  variant="contained"
+                  fullWidth
+                  size="large"
+                  onClick={() => {
+                    if (window.Featurebase) {
+                      window.Featurebase('showNewMessage');
+                    }
+                  }}
+                  startIcon={<ChatIcon />}
+                >
+                  Open Ticket
+                </Button>
+              </CardActions>
+            </Card>
+          </Grid>
 
-                <Grid item xs={12} md={6}>
-                  <Card
-                    variant="outlined"
-                    sx={{
-                      height: '100%',
-                      display: 'flex',
-                      flexDirection: 'column',
-                    }}
-                  >
-                    <CardContent
-                      sx={{ flexGrow: 1, textAlign: 'center', p: 4 }}
-                    >
-                      <VideoCallIcon
-                        sx={{ fontSize: 48, color: 'primary.main', mb: 2 }}
-                      />
-                      <Typography variant="h5" component="h2" gutterBottom>
-                        Schedule a Call
-                      </Typography>
-                      <Typography
-                        variant="body1"
-                        color="text.secondary"
-                        paragraph
-                      >
-                        Book a one-on-one call with our support team for
-                        in-depth assistance and personalized guidance.
-                      </Typography>
-                    </CardContent>
-                    <CardActions sx={{ p: 3, pt: 0 }}>
-                      <Button
-                        variant="outlined"
-                        fullWidth
-                        size="large"
-                        onClick={() => {
-                          if (window.Featurebase) {
-                            window.Featurebase(
-                              'showNewMessage',
-                              'I would like to schedule a call for in-depth assistance and personalized guidance.'
-                            );
-                          }
-                        }}
-                        startIcon={<VideoCallIcon />}
-                      >
-                        Schedule a Call
-                      </Button>
-                    </CardActions>
-                  </Card>
-                </Grid>
-              </Grid>
-            </Container>
-          }
-        />
-      </Routes>
+          <Grid item xs={12} md={6}>
+            <Card
+              variant="outlined"
+              sx={{
+                height: '100%',
+                display: 'flex',
+                flexDirection: 'column',
+              }}
+            >
+              <CardContent sx={{ flexGrow: 1, textAlign: 'center', p: 4 }}>
+                <VideoCallIcon
+                  sx={{ fontSize: 48, color: 'primary.main', mb: 2 }}
+                />
+                <Typography variant="h5" component="h2" gutterBottom>
+                  Schedule a Call
+                </Typography>
+                <Typography variant="body1" color="text.secondary" paragraph>
+                  Book a one-on-one call with our support team for in-depth
+                  assistance and personalized guidance.
+                </Typography>
+              </CardContent>
+              <CardActions sx={{ p: 3, pt: 0 }}>
+                <Button
+                  variant="outlined"
+                  fullWidth
+                  size="large"
+                  onClick={() => {
+                    if (window.Featurebase) {
+                      window.Featurebase(
+                        'showNewMessage',
+                        'I would like to schedule a call for in-depth assistance and personalized guidance.'
+                      );
+                    }
+                  }}
+                  startIcon={<VideoCallIcon />}
+                >
+                  Schedule a Call
+                </Button>
+              </CardActions>
+            </Card>
+          </Grid>
+        </Grid>
+      </Container>
     </>
   );
 }
