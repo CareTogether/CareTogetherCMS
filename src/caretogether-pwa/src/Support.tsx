@@ -21,7 +21,6 @@ import {
   organizationConfigurationQuery,
   locationConfigurationQuery,
 } from './Model/ConfigurationModel';
-import { authenticatingFetch } from './Authentication/AuthenticatedHttp';
 import { api } from './Api/Api';
 
 // Extend the Window interface to include Featurebase
