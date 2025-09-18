@@ -787,6 +787,26 @@
         }
       }
     },
+    "/api/Users/me/featurebase-identity": {
+      "get": {
+        "tags": [
+          "Users"
+        ],
+        "operationId": "Users_GetFeaturebaseIdentityHash",
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/Users/loginInfo/{organizationId}/{locationId}/{personId}": {
       "get": {
         "tags": [
