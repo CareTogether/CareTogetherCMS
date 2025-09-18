@@ -58,6 +58,7 @@ namespace CareTogether.Api.Controllers
             return Ok(userAccess);
         }
 
+        // As per https://help.featurebase.app/en/articles/4543540-set-up-identity-verification
         [HttpGet("/api/[controller]/me/featurebase-identity")]
         public ActionResult<string> GetFeaturebaseIdentityHash()
         {
@@ -65,7 +66,7 @@ namespace CareTogether.Api.Controllers
             {
                 // Get the current user's ID
                 var userId = User.UserId();
-                
+
                 // Get the Featurebase identity verification secret from configuration
                 var secret = configuration["Featurebase:IdentityVerificationSecret"];
                 if (string.IsNullOrEmpty(secret))
