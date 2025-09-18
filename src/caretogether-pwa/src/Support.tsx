@@ -196,14 +196,9 @@ export function Support() {
                   variant="outlined"
                   fullWidth
                   size="large"
-                  onClick={() => {
-                    if (window.Featurebase) {
-                      window.Featurebase(
-                        'showNewMessage',
-                        'I would like to schedule a call for in-depth assistance and personalized guidance.'
-                      );
-                    }
-                  }}
+                  href="https://support.caretogether.io/"
+                  target="_blank"
+                  rel="noopener noreferrer"
                   startIcon={<VideoCallIcon />}
                 >
                   Schedule a Call
