@@ -148,10 +148,10 @@ export function Support() {
               <CardContent sx={{ flexGrow: 1, textAlign: 'center', p: 4 }}>
                 <ChatIcon sx={{ fontSize: 48, color: 'primary.main', mb: 2 }} />
                 <Typography variant="h5" component="h2" gutterBottom>
-                  Ticket Support
+                  Chat Support
                 </Typography>
                 <Typography variant="body1" color="text.secondary" paragraph>
-                  Get asynchronous help through our ticket support. Perfect for
+                  Get asynchronous help through our chat support. Perfect for
                   quick questions, troubleshooting, and general support.
                 </Typography>
               </CardContent>
@@ -167,7 +167,7 @@ export function Support() {
                   }}
                   startIcon={<ChatIcon />}
                 >
-                  Open Ticket
+                  Send a Message
                 </Button>
               </CardActions>
             </Card>
