@@ -6,7 +6,6 @@ import {
   TableCell,
   TableHead,
   TableRow,
-  Fab,
   useMediaQuery,
   useTheme,
   Button,
@@ -579,6 +578,18 @@ function VolunteerApproval(props: { onOpen: () => void }) {
               </Button>
             </ButtonGroup>
           </Stack>
+
+          {permissions(Permission.EditFamilyInfo) &&
+            permissions(Permission.ActivateVolunteerFamily) && (
+              <Button
+                variant="contained"
+                startIcon={<AddIcon />}
+                onClick={() => setCreateVolunteerFamilyDialogOpen(true)}
+                sx={{ marginRight: 'auto', marginY: 2 }}
+              >
+                Add new volunteer family
+              </Button>
+            )}
         </Grid>
         <Grid item xs={12}>
           <TableContainer>
@@ -896,17 +907,7 @@ function VolunteerApproval(props: { onOpen: () => void }) {
               </TableBody>
             </Table>
           </TableContainer>
-          {permissions(Permission.EditFamilyInfo) &&
-            permissions(Permission.ActivateVolunteerFamily) && (
-              <Fab
-                color="primary"
-                aria-label="add"
-                sx={{ position: 'fixed', right: '30px', bottom: '70px' }}
-                onClick={() => setCreateVolunteerFamilyDialogOpen(true)}
-              >
-                <AddIcon />
-              </Fab>
-            )}
+
           {createVolunteerFamilyDialogOpen && (
             <CreateVolunteerFamilyDialog
               onClose={(volunteerFamilyId) => {

@@ -232,10 +232,9 @@ export function ShellSideNavigation({ open, width }: ShellSideNavigationProps) {
           <div
             style={{
               overflowX: 'hidden',
-              width: width - 4,
+              width: width,
               position: 'fixed',
               bottom: 0,
-              marginLeft: 4,
             }}
           >
             <Stack className="ph-unmask" alignItems="center">
