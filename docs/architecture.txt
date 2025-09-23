@@ -72,7 +72,7 @@ Community Members
 @@@
 }
 
-
+|
 | "Purpose"
 UseCase Purpose {
 @@@
@@ -107,7 +107,7 @@ Develop a case management platform that reimagines connection for human services
 @@@
 }
 
-
+|
 | "Operational Concepts & Observations"
 UseCase "Fractal Musings" {
   @@@
@@ -168,7 +168,7 @@ UseCase "Fractal Musings" {
   @@@
 }
 
-
+|
 | "Use Case Family: Networking"
 /* The 'networking' use case family captures the work of connecting organizations
    and people in ways that allow help to be offered. This can happen at multiple
@@ -200,6 +200,7 @@ Activity "Share resource" {}
 Activity "Govern network?" {} /* Is there some kind of governance in a network? */
 Activity "Manage network member" {} /* Include or remove a member, update status, update attributes for matching? */
 
+|
 | "Use Case Family: Process"
 /* The 'helping' use case family encompasses the actual services being provided to
    clients, which requires defining and evaluating policies,
@@ -391,7 +392,7 @@ UseCase "Evaluate Approval Policy" {
 }
 
 UseCase "Publish Membership Application Approval Request" {
-  ProcessManager - IMembershipEvents.OnApplicationReceived(MembershipApplication) > PubSubUtility
+  ProcessManager - IMembershipEvent.OnApplicationReceived(MembershipApplication) > PubSubUtility
   /* The PubSubUtility will pass this to its subscribers. Subscribers *also* implement IMembershipEvents */
 }
 
@@ -399,12 +400,13 @@ UseCase "Publish Membership Application Approval Request" {
 /* Subscription management application... -- in domain-informed terms */
 
 UseCase "Configure Membership Application Approval Request Subscription" {
-  SupportClient - IMembershipEventsPublisher.AddMembershipApplicationApprover(ApproverParameters) > PubSubUtility
+  /*BLAIR: 'IMembershipEventPublisher' is not allowed? */
+  SupportClient - IPublishMembershipEvent.AddMembershipApplicationApprover(ApproverParameters) > PubSubUtility
 }
 
 UseCase "Receive Membership Application Approval Request" {
   /* The implementation of this will send the email that based on the channel */
-  PubSubUtility - IMembershipEvents.OnApplicationReceived(MembershipApplication) > EmailAccess
+  PubSubUtility - IMembershipEvent.OnApplicationReceived(MembershipApplication) > EmailAccess
 }
 
 /*TODO: How do we notify potential approvers that there is something to approve?
@@ -413,7 +415,7 @@ UseCase "Receive Membership Application Approval Request" {
 /*TODO: This is an example, needs to be refined further */
 UseCase "Approve Membership Application Document" {
   WebAppClient -> ProcessManager
-  ProcessManager - WorkflowState IWorkflowsAccess.ResumeWorkflow(ResumeParameters) > WorkflowsAccess -> WorkflowsResource
+  ProcessManager - WorkflowState IWorkflowsAccess.ResumeWorkflow(ResumeParameters) > WorkflowUtility
 }
 
 DTO ResumeParameters {
@@ -431,7 +433,7 @@ UseCase "Check Application Status" {
   WebAppClient - MyWorkflows CheckStatus() > ProcessManager
   ProcessManager - MyWorkflows CheckStatus() > EvaluationEngine
   /* UserCriteria can include interval, status, etc. */
-  EvaluationEngine - InterrogateWorkflows(UserCriteria) > WorkflowsAccess -> WorkflowsResource
+  EvaluationEngine - InterrogateWorkflows(UserCriteria) > WorkflowUtility
   /* TODO: Apply access level disclosure logic */
   /* NOTE: In the future, we could apply prioritization logic based on severity, dependencies, compliance, etc. */
 }
@@ -639,6 +641,7 @@ Activity "Generate Assertions" {}
 Activity "Share Assertions" {}
 Activity "Audit Assertions" {}
 
+|
 | "Core Use Case: Communication"
 /* For symmetry: organization & personal facets? */
 /*TODO: This section still needs to be cleaned up */
@@ -654,7 +657,7 @@ Activity "Receive Response" {} /* this is a placeholder */
 Activity "Notify of Record Changes" {} /*TODO: Revisit what this part of the domain looks like abstractly */
 
 
-
+|
 | "Reference --- other services' responsibilities"
 
 Activity "Query Permissions" {} /* Feels like an evaluation activity */
@@ -662,6 +665,7 @@ Activity "Calculate Approval Status" {} /* Feels like an evaluation activity */
 Activity "Calculate Pending Steps" {} /* Feels like an evaluation activity */
 
 
+|
 | "Volatilities"
 
 UseCase Volatilities {
@@ -673,6 +677,7 @@ UseCase Volatilities {
 }
 
 
+|
 | "Static Aspect"
 StaticAspect "CareTogether V2" {
   WebAppClient SupportClient SdkClient
@@ -680,10 +685,11 @@ StaticAspect "CareTogether V2" {
   ProcessManager CommunicationManager AnalysisManager
   EvaluationEngine MatchingEngine
   NetworkAccess ConfigurationAccess /*WorkflowsAccess*/ RecordsAccess
+  EmailAccess /*TODO: Not sure if this should be an EmailUtility instead */
   /*NOTE: RecordsAccess -- Cosmos DB Graph API & Cosmos DB 'SQL' API, allowing Geode pattern. */
   /*NOTE: Audit logs are an aspect of record-keeping. */
   /*NOTE: Configuration includes the DSL 'procedures' which can be *compiled* into workflows. */
-  NetworkResource ConfigurationResource:f /*WorkflowsResource*/ RecordsResource 
+  NetworkResource ConfigurationResource:f RecordsResource /*WorkflowsResource*/
   /*DocumentsResource:f TODO: Do we incorporate Documents directly into Records? */
   /*FormsResource:a TODO: Do we incorporate Forms directly into Records? */
   /* Notes are part of RecordsResource but stored w/ immutability enabled. */
@@ -1656,3 +1662,6 @@ UseCase "M2: Sign Up an Organization" {
     MembershipManager -> AuditAccess -> AuditResource
     MembershipManager -:q> CommunicationManager
 }
+
+
+|
