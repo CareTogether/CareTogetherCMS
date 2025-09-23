@@ -109,96 +109,6 @@ Develop a case management platform that reimagines connection for human services
 
 |
 | "Operational Concepts & Observations"
-UseCase "Fractal Musings" {
-  @@@
-  A fractal is self-similar, which implies that our business use cases need to be
-  self-similar at each level of the proposed fractal if this is truly a fractal.
-  The levels - and associated purposes - of the proposed fracal are:
-   1. Household - household/family record management -- primarily a way to participate
-                  in the next level up in the fractal (i.e., request help/appy to help w/ orgs)
-   2. Organization - case/church management (applies to ministries and local churches)
-   3. Area - network management (needs/referrals can be shared with other network members:
-             churches, ministries, businesses)
-   4. Region - meta-network management (cities could ask for programs/ministries that they lack)
-   5. World - global management (this exists today within denominations and global ministries;
-              might tackle issues like the 10/40 Window where the fewest Gospel-centered networks
-              exist, in order to establish and promote regional networks there)
-  The organizers of networks at each layer, as well as the members/participants of
-  networks at each layer (both clients and helpers), are different.
-  In a ministry, the network organizers are the ministry staff, and the members are clients,
-  volunteers, etc. (helpers)., but also churches.
-  In a city, the network organizers are the network staff, and the members are
-  ministries, churches, businesses, etc.
-  In a region, the members are city/area networks.
-  We need to clarify all of these terms once we've definitely established the existence &
-  need for the fractal concept, but for now, any use cases we examine should be looked at in
-  the context of each of these proposed levels to see how they might play out.
-  This also means that terms like "client", "helper", "partner church", etc., which originated
-  from the 'case management' level of ministries' internal networks, are not necessarily
-  appropriate at every level of the fractal.
-  One term we need to avoid for the moment is "community", because 'community' is a distinct
-  concept from each of these things. Community is the network of people that *a person* (or
-  household) is in relationship with. That is not a "managed" network like these others are.
-  Community is something that develops as a result of relationship building, but community,
-  unlike these networks for providing care, does not have record-keeping, policies/procedures,
-  etc. It's the *result* of the work, not the components/ingredients to, of human services.
-  Like the EnergyNet: "be resilient" is the one use case. "Build community" is the one use case.
-
-  Let's define some terms that can be level-agnostic (valid at every level of the fractal):
-   - **Network** - Each level of the fractal involves a network:
-     0. The atomic lowest-level unit is an individual (a person), which does not have any
-        members (i.e., no network of its own).
-     1. A household *has a* network of people. A household can be a member of any number of
-        organizations' networks, whether as a client, helper (staff or volunteer), donor, etc.
-        A household can maintain records on each household member, e.g., birth certificates,
-        paystubs, notes, etc.
-     2. An organization *has a* network of households. Not every household member needs to
-        participate in the organization's program, but the household *itself* is a member of
-        the organization's network. And, the organization can maintain records on each household
-        *as well as* each member of those households, e.g., approval or intake steps, notes, etc.
-        An organization can be a member of any number of area networks (though ideally there
-        would just be one per city, but in reality most cities have fragmented networks today).
-     3. An area *has a* network of organizations. The area can maintain membership records for
-        each member organization, as well as notes etc., and financial contributions, but can
-        also handle sharing of general need requests, support discovery of and establishment of
-        referral partnerships, and determine when area-level needs require reaching out to a
-        regional network.
-     4. A region *has a* network of areas. (Handle insurance...)
-     5. The world *has a* network of regions.
-  @@@
-}
-
-|
-| "Use Case Family: Networking"
-/* The 'networking' use case family captures the work of connecting organizations
-   and people in ways that allow help to be offered. This can happen at multiple
-   levels (networks of networks), which is where fractal behavior seems to emerge:
-   the kinds of help and communication that occur at each level will be different,
-   but the fundamental purpose of networks at each level remains the same: to help.*/
-
-
-
-/* TODO: All of these could be Process? */
-
-Activity "Establish Partnership" {} /* Are there steps here that involve the system? */
-
-Activity "Recruit Member" {} /*TODO: Create an activity diagram here! */
-
-
-Activity "Invite Organization" {}
-Activity "Accept Organization Invitation" {}
-Activity "Invite Person" {}
-Activity "Accept Person Invitation" {}
-Activity "Link Login to Person" {} /* If we have multiple logins over time */
-Activity "Review Person Logins" {}
-
-/* Maybe it's part of Networking family instead of Helping, because the helping is not happening yet, but connecting/networking is. */
-Activity "Find appropriate Partner for Case" {} 
-Activity "Refer Case to Partner" {}
-
-Activity "Share resource" {}
-Activity "Govern network?" {} /* Is there some kind of governance in a network? */
-Activity "Manage network member" {} /* Include or remove a member, update status, update attributes for matching? */
 
 |
 | "Use Case Family: Process"
@@ -206,75 +116,24 @@ Activity "Manage network member" {} /* Include or remove a member, update status
    clients, which requires defining and evaluating policies,
    as well as procedures (workflows) for recordkeeping and oversight. */
 
+
+Activity "Invite Person" {}
+Activity "Accept Person Invitation" {}
+Activity "Link New Login to Person" {}
+Activity "Review Person Logins" {}
+
+
+
 /* Facet: Organization Records */
 Activity "Configure Organization" {} /* Core use case: includes authn, locations, programs, roles */
 Activity "Configure Process" {} /* Core use case: includes policies, procedures, forms */
-Activity "Configure Member Organization" {}
-
-
-/*NOTE: We need some sort of process that determines if we need outside help, i.e.,
-        if a new request for help needs to be issued upward or horizontally acrosss.
-        Upward would be e.g. organization to area, across would be e.g. organization to
-        organization (the classic "referral partner" model).
-        Note that *downward* is simply the search for a helper as well.
-        In every case, this involves a 'search' sequence (search down, search across,
-        and finally search up -- note that some stages may be skipped based on the need).
-        In other words, the basic behavior of each participant is that, when receiving a
-        request for help, the participant will first ask downward to all the members of
-        that participant's own network to see if a Helper can help. That may not always
-        result in actually sending requests to the Helpers if e.g. none of the helpers
-        fit the criteria for helping with the need, but it should be the first option.
-        Then, the fractal participant will next consider any horizontal partnerships
-        (relationships?) with other participants at the same fractal level; these are
-        established sometimes outside of being part of a higher-level network. E.g.,
-        an organization may forward the need to another organization that has established
-        a referral partnership with the first organization. (NOTE: During the vetting
-        process, it may be determined that a need is only a candidate for either internal
-        or partner help, as opposed to both, e.g. if a request for help is received by a
-        family preservation ministry but the need, after vetting, turns out to be for
-        temporary housing.) As a last resort, a participant may pass a need *upward* to
-        the network(s) it is a member of, i.e., outside of its own network or partners,
-        to try to find a helper there. That is a much more rare situation, but is a
-        necessary step when needs might be too great for the participant to meet alone.
-        This "algorithm" (search down, then across, then up) is consistent at every level
-        of the fractal.
-*/
-
-/*      Is helping a commodity? Are needs commodities?
-        It's a spectrum -- some help is a commodity, some is highly specialized.
-        Are we first addressing commodities or specialization?
-        Specialization is all about whether someone is available.
-        Over-the-counter transactions vs. market transactions?
-        OTC transactions is how commodities markets deal with one-offs...
-        ...
-        Difference between transactive resource management (matching a need with a helper)
-        and automatic transactive resource management.
-        Pricing/valuation component is therefore not needed.
-*/
 
 
 
-/* CRITICAL: A participant can and usually will have more than one network.
-             A corollary to this is that a participant will often be a *member* of
-             more than one network as well.
-             The fractal architecture allows for overlap here, so e.g. a person can
-             be in a household as a participant of a ministry as a family coach, and
-             can also be in a household as a participant of the same ministry as a
-             host family.
-             This still feels weird -- helpers who are family coaches are not usually
-             (or ever) thought of as households, e.g. a therapist is not serving their
-             client as a household but as a professional. This is still unresolved/
-             needs more discussion. */
+/* There is a symmetry between the need vetting (intake) process and the sign-up
+   vetting (approval) process. */
 
-
-/* There is a symmetry between the need vetting (intake) process and the membership
-   vetting (approval) process. Prospective 'members' (whether volunteers or organizations)
-   can apply to join a 'network' (the set of members managed by a node in the fractal),
-   and those applications then trigger a vetting process that the managing node is
-   responsible for. */
-/*Aside: Are parents/guardians responsible for their children in the same way? */
-
-Activity "Apply for Membership - Household to Organization" {
+Activity "Request to Serve" {
   |Client|
   start
   :Submit request;
@@ -291,7 +150,7 @@ Activity "Apply for Membership - Household to Organization" {
   endif
 }
 
-UseCase "Apply for Membership - Household to Organization" {
+UseCase "Apply to Serve" {
   WebAppClient - IProcessManager.SubmitRequest() > ProcessManager
   ProcessManager - IEvaluationEngine.ValidateRequest() > EvaluationEngine
   EvaluationEngine - IConfigurationAccess.LoadPolicy() > ConfigurationAccess -> ConfigurationResource
@@ -487,59 +346,77 @@ Activity "Complete a helper approval action" {
 
 
 
-Activity "Request Help - Household to Organization" {
+Activity "Create Referral" {
   |Client|
   start
-  :Submit request;
-  note: request can be linked to a family
+  :Submit referral request;
+  note: Referral can be linked to a client household.
   |System|
-  :Validate request;
+  :Validate referral request;
   if (Request valid?) then (no)
     |Client|
     :Error;
     stop
   else (yes)
     |System|
-    :Publish request;
+    :Create referral;
+    :Determine intake steps;
+    :Store intake steps;
+    :Publish referral created;
     stop
   endif
 }
 
-Activity "Request Help - Organization to Area" {
-  |Client|
-  start
-  :Submit request;
-  |System|
-  :Validate request;
-  if (Request valid?) then (no)
-    |Client|
-    :Error;
-    stop
-  else (yes)
-    |System|
-    :Publish request;
-    stop
-  endif
+UseCase "Create Referral" {
+  @@@
+  ### Actor(s)
+  User identity or Organization identity.
+  
+  ### Operational Concept
+  The system:
+  1. validates the caller's account,
+  2. 
+
+  ### API
+  `POST /referrals/{referralId}`
+  
+  ### Test Cases
+  1. **Given** ...,
+     **when** requesting help **then** ...
+  2. **Given** the referral request is invalid,
+     **when** requesting help **then** an opaque fault is returned.
+  @@@
+  WebAppClient - Referral SubmitRequest(ReferralRequest) > ProcessManager
+  ProcessManager - void Validate(ReferralRequest) > EvaluationEngine
+  ProcessManager - Referral CreateReferral(ReferralRequest) > RecordsAccess -> RecordsResource
+  ProcessManager - IntakeSteps DetermineIntakeSteps(Referral) > EvaluationEngine
+  EvaluationEngine - IntakePolicy LookupIntakePolicy() > ConfigurationAccess -> ConfigurationResource
+  ProcessManager - SaveIntakeSteps(IntakeSteps) > RecordsAccess -> RecordsResource
+  ProcessManager - IProcessEvent.OnReferralCreated(Referral) > PubSubUtility
 }
 
-Activity "Begin (need) vetting ('intake') process" {
-  |System|
-  start
-  :Receive request;
-  :Create referral;
-  :Determine vetting actions;
-  note: Start workflow?;
-  :Store intake actions;
-  :Publish intake started;
+UseCase "Custom procedure when a referral is created" {
+  @@@
+  This is an example of a custom procedure "hook" that the system exposes.
+  @@@
+  PubSubUtility - IProcessEvent.OnReferralCreated(Referral) > WorkflowUtility
 }
 
+/* TODO: This feels like it's just pub/sub and not a dedicated usecase. */
 Activity "Notify intake supervisors" {
   |System|
   start
-  :Receive intake started;
+  :Receive referral created;
   :Lookup intake supervisors;
   |Helper|
   :Notify intake supervisors;
+}
+
+UseCase "Notify intake supervisors" {
+  PubSubUtility - IProcessEvent.OnReferralCreated(Referral) > CommunicationManager
+  CommunicationManager - CommunicationPolicy LookupCommunicationPolicy() > ConfigurationAccess -> ConfigurationResource
+  /*TODO: This is not great */
+  CommunicationManager - Send(Message) > PubSubUtility
 }
 
 /* Scheduling process (who/what) assigns Helpers to handle intake. */
@@ -684,24 +561,187 @@ StaticAspect "CareTogether V2" {
   /* GraphQL/HTTP API layer */
   ProcessManager CommunicationManager AnalysisManager
   EvaluationEngine MatchingEngine
-  NetworkAccess ConfigurationAccess /*WorkflowsAccess*/ RecordsAccess
-  EmailAccess /*TODO: Not sure if this should be an EmailUtility instead */
-  /*NOTE: RecordsAccess -- Cosmos DB Graph API & Cosmos DB 'SQL' API, allowing Geode pattern. */
-  /*NOTE: Audit logs are an aspect of record-keeping. */
+  NetworkAccess ConfigurationAccess RecordsAccess
+  /*NOTE: NetworkResource? -- Cosmos DB Graph API & Cosmos DB 'SQL' API, allowing Geode pattern. */
+  NetworkResource
   /*NOTE: Configuration includes the DSL 'procedures' which can be *compiled* into workflows. */
-  NetworkResource ConfigurationResource:f RecordsResource /*WorkflowsResource*/
-  /*DocumentsResource:f TODO: Do we incorporate Documents directly into Records? */
-  /*FormsResource:a TODO: Do we incorporate Forms directly into Records? */
-  /* Notes are part of RecordsResource but stored w/ immutability enabled. */
+  ConfigurationResource:f
+  /*NOTE: Audit logs are an aspect of record-keeping. */
+  /* Notes are part of RecordsResource but stored w/ immutability enabled.
+     Forms are part of RecordsResource. */
+  RecordsResource
   SecurityUtility /* Includes account management operations */
   TelemetryUtility
   LoggingUtility
   PubSubUtility /* Push notifications to WebApp are allowed, as queued calls; can include delivery via SMS, WhatsApp, Telegram, Teams, Slack, etc. */
   /* User will subscribe to pub-sub endpoints; the CommunicationManager will generate channel-specific events in response to domain events */
   WorkflowUtility
-  EmailUtility
 }
 
+
+|
+| "Fractal Concepts"
+
+UseCase "Fractal Musings" {
+  @@@
+  A fractal is self-similar, which implies that our business use cases need to be
+  self-similar at each level of the proposed fractal if this is truly a fractal.
+  The levels - and associated purposes - of the proposed fracal are:
+   1. Household - household/family record management -- primarily a way to participate
+                  in the next level up in the fractal (i.e., request help/appy to help w/ orgs)
+   2. Organization - case/church management (applies to ministries and local churches)
+   3. Area - network management (needs/referrals can be shared with other network members:
+             churches, ministries, businesses)
+   4. Region - meta-network management (cities could ask for programs/ministries that they lack)
+   5. World - global management (this exists today within denominations and global ministries;
+              might tackle issues like the 10/40 Window where the fewest Gospel-centered networks
+              exist, in order to establish and promote regional networks there)
+  The organizers of networks at each layer, as well as the members/participants of
+  networks at each layer (both clients and helpers), are different.
+  In a ministry, the network organizers are the ministry staff, and the members are clients,
+  volunteers, etc. (helpers)., but also churches.
+  In a city, the network organizers are the network staff, and the members are
+  ministries, churches, businesses, etc.
+  In a region, the members are city/area networks.
+  We need to clarify all of these terms once we've definitely established the existence &
+  need for the fractal concept, but for now, any use cases we examine should be looked at in
+  the context of each of these proposed levels to see how they might play out.
+  This also means that terms like "client", "helper", "partner church", etc., which originated
+  from the 'case management' level of ministries' internal networks, are not necessarily
+  appropriate at every level of the fractal.
+  One term we need to avoid for the moment is "community", because 'community' is a distinct
+  concept from each of these things. Community is the network of people that *a person* (or
+  household) is in relationship with. That is not a "managed" network like these others are.
+  Community is something that develops as a result of relationship building, but community,
+  unlike these networks for providing care, does not have record-keeping, policies/procedures,
+  etc. It's the *result* of the work, not the components/ingredients to, of human services.
+  Like the EnergyNet: "be resilient" is the one use case. "Build community" is the one use case.
+
+  Let's define some terms that can be level-agnostic (valid at every level of the fractal):
+   - **Network** - Each level of the fractal involves a network:
+     0. The atomic lowest-level unit is an individual (a person), which does not have any
+        members (i.e., no network of its own).
+     1. A household *has a* network of people. A household can be a member of any number of
+        organizations' networks, whether as a client, helper (staff or volunteer), donor, etc.
+        A household can maintain records on each household member, e.g., birth certificates,
+        paystubs, notes, etc.
+     2. An organization *has a* network of households. Not every household member needs to
+        participate in the organization's program, but the household *itself* is a member of
+        the organization's network. And, the organization can maintain records on each household
+        *as well as* each member of those households, e.g., approval or intake steps, notes, etc.
+        An organization can be a member of any number of area networks (though ideally there
+        would just be one per city, but in reality most cities have fragmented networks today).
+     3. An area *has a* network of organizations. The area can maintain membership records for
+        each member organization, as well as notes etc., and financial contributions, but can
+        also handle sharing of general need requests, support discovery of and establishment of
+        referral partnerships, and determine when area-level needs require reaching out to a
+        regional network.
+     4. A region *has a* network of areas. (Handle insurance...)
+     5. The world *has a* network of regions.
+
+  The fly in the ointment here is that the details of child location tracking, for example, do
+  *NOT* translate readily to every level of this proposed fractal. Therefore, we'll defer the
+  fractal discussion for now. The organizational networking component may be the one aspect of
+  CareTogether that does exhibit true fractal behavior.
+  @@@
+}
+
+
+/* The 'networking' use case family captures the work of connecting organizations
+   and people in ways that allow help to be offered. This can happen at multiple
+   levels (networks of networks), which is where fractal behavior seems to emerge:
+   the kinds of help and communication that occur at each level will be different,
+   but the fundamental purpose of networks at each level remains the same: to help.*/
+
+
+Activity "Discover Potential Referral Partners" {}
+
+Activity "Establish Referral Partnership" {}
+
+Activity "Invite Organization" {}
+
+Activity "Accept Organization Invitation" {}
+
+/* We want to eventually reach the point where an individual or household 'login' to
+   CareTogether can be linked to multiple organizations with which that individual/household
+   wants to work, e.g. to offer to help/volunteer for more than one organization. This in
+   turn implies that the linking of household/individual "nodes" to organizations *is* a
+   fractal relationship that can be optionally established. */
+
+Activity "Recruit Member" {} /*TODO: Create an activity diagram here! */
+
+
+/* Maybe it's part of Networking family instead of Helping, because the helping is not happening yet, but connecting/networking is. */
+Activity "Find appropriate Partner for Case" {} 
+Activity "Refer Case to Partner" {}
+
+Activity "Share resource" {}
+Activity "Govern network?" {} /* Is there some kind of governance in a network? */
+Activity "Manage network member" {} /* Include or remove a member, update status, update attributes for matching? */
+
+
+/*NOTE: We need some sort of process that determines if we need outside help, i.e.,
+        if a new request for help needs to be issued upward or horizontally acrosss.
+        Upward would be e.g. organization to area, across would be e.g. organization to
+        organization (the classic "referral partner" model).
+        Note that *downward* is simply the search for a helper as well.
+        In every case, this involves a 'search' sequence (search down, search across,
+        and finally search up -- note that some stages may be skipped based on the need).
+        In other words, the basic behavior of each participant is that, when receiving a
+        request for help, the participant will first ask downward to all the members of
+        that participant's own network to see if a Helper can help. That may not always
+        result in actually sending requests to the Helpers if e.g. none of the helpers
+        fit the criteria for helping with the need, but it should be the first option.
+        Then, the fractal participant will next consider any horizontal partnerships
+        (relationships?) with other participants at the same fractal level; these are
+        established sometimes outside of being part of a higher-level network. E.g.,
+        an organization may forward the need to another organization that has established
+        a referral partnership with the first organization. (NOTE: During the vetting
+        process, it may be determined that a need is only a candidate for either internal
+        or partner help, as opposed to both, e.g. if a request for help is received by a
+        family preservation ministry but the need, after vetting, turns out to be for
+        temporary housing.) As a last resort, a participant may pass a need *upward* to
+        the network(s) it is a member of, i.e., outside of its own network or partners,
+        to try to find a helper there. That is a much more rare situation, but is a
+        necessary step when needs might be too great for the participant to meet alone.
+        This "algorithm" (search down, then across, then up) is consistent at every level
+        of the fractal.
+*/
+
+/*      Is helping a commodity? Are needs commodities?
+        It's a spectrum -- some help is a commodity, some is highly specialized.
+        Are we first addressing commodities or specialization?
+        Specialization is all about whether someone is available.
+        Over-the-counter transactions vs. market transactions?
+        OTC transactions is how commodities markets deal with one-offs...
+        ...
+        Difference between transactive resource management (matching a need with a helper)
+        and automatic transactive resource management.
+        Pricing/valuation component is therefore not needed.
+*/
+
+
+
+/* CRITICAL: A participant can and usually will have more than one network.
+             A corollary to this is that a participant will often be a *member* of
+             more than one network as well.
+             The fractal architecture allows for overlap here, so e.g. a person can
+             be in a household as a participant of a ministry as a family coach, and
+             can also be in a household as a participant of the same ministry as a
+             host family.
+             This still feels weird -- helpers who are family coaches are not usually
+             (or ever) thought of as households, e.g. a therapist is not serving their
+             client as a household but as a professional. This is still unresolved/
+             needs more discussion. */
+
+/*
+Prospective 'members' (whether volunteers or organizations)
+   can apply to join a 'network' (the set of members managed by a node in the fractal),
+   and those applications then trigger a vetting process that the managing node is
+   responsible for.
+*/
+|
+| "Other DD"
 
 /*
 ## Use Cases (Call Chains & Sequence Diagrams), Detailed Design
