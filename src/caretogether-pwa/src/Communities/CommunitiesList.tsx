@@ -1,6 +1,6 @@
 import {
+  Button,
   Drawer,
-  Fab,
   Table,
   TableBody,
   TableCell,
@@ -44,6 +44,15 @@ export function CommunitiesList() {
     </ProgressBackdrop>
   ) : (
     <>
+      <Button
+        variant="contained"
+        startIcon={<AddIcon />}
+        onClick={() => setAddDrawerOpen(true)}
+        sx={{ marginRight: 'auto', marginY: 2 }}
+      >
+        Add new community
+      </Button>
+
       <TableContainer>
         <Table aria-label="sticky table">
           <TableHead>
@@ -90,29 +99,19 @@ export function CommunitiesList() {
         </Table>
       </TableContainer>
       {permissions(Permission.CreateCommunity) && (
-        <>
-          <Fab
-            color="primary"
-            aria-label="add"
-            sx={{ position: 'fixed', right: '30px', bottom: '70px' }}
-            onClick={() => setAddDrawerOpen(true)}
-          >
-            <AddIcon />
-          </Fab>
-          <Drawer
-            anchor="right"
-            open={addDrawerOpen}
-            onClose={() => setAddDrawerOpen(false)}
-            sx={{
-              '.MuiDrawer-paper': {
-                padding: 2,
-                paddingTop: { xs: 7, sm: 8, md: 6 },
-              },
-            }}
-          >
-            <AddEditCommunity onClose={() => setAddDrawerOpen(false)} />
-          </Drawer>
-        </>
+        <Drawer
+          anchor="right"
+          open={addDrawerOpen}
+          onClose={() => setAddDrawerOpen(false)}
+          sx={{
+            '.MuiDrawer-paper': {
+              padding: 2,
+              paddingTop: { xs: 7, sm: 8, md: 6 },
+            },
+          }}
+        >
+          <AddEditCommunity onClose={() => setAddDrawerOpen(false)} />
+        </Drawer>
       )}
     </>
   );

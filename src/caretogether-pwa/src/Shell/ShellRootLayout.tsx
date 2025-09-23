@@ -9,6 +9,7 @@ import { ShellBottomNavigation } from './ShellBottomNavigation';
 import { ShellAppBar } from './ShellAppBar';
 import { ShellSideNavigation } from './ShellSideNavigation';
 import { useLocalStorage } from '../Hooks/useLocalStorage';
+import { useFeaturebase } from '../Hooks/useFeaturebase';
 import React from 'react';
 import { ProgressBackdrop } from './ProgressBackdrop';
 import { useGlobalSnackBar } from '../Hooks/useGlobalSnackBar';
@@ -25,6 +26,9 @@ function ShellRootLayout({ children }: React.PropsWithChildren) {
   const drawerWidth = menuDrawerOpen ? 190 : 48;
 
   const { message, resetSnackBar } = useGlobalSnackBar();
+
+  // Initialize Featurebase across the entire app
+  useFeaturebase();
 
   return (
     <Box sx={{ flexGrow: 1 }}>
