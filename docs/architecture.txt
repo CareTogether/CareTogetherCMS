@@ -387,10 +387,11 @@ UseCase "Create Referral" {
      **when** requesting help **then** an opaque fault is returned.
   @@@
   WebAppClient - Referral SubmitRequest(ReferralRequest) > ProcessManager
-  ProcessManager - void Validate(ReferralRequest) > EvaluationEngine
+  /*TODO: We may not need an engine to validate requests. */
+  /*ProcessManager - void Validate(ReferralRequest) > EvaluationEngine*/
   ProcessManager - Referral CreateReferral(ReferralRequest) > RecordsAccess -> RecordsResource
-  ProcessManager - IntakeSteps DetermineIntakeSteps(Referral) > EvaluationEngine
-  EvaluationEngine - IntakePolicy LookupIntakePolicy() > ConfigurationAccess -> ConfigurationResource
+  ProcessManager - IntakePolicy LookupIntakePolicy(DefaultPolicyCritera) > ConfigurationAccess -> ConfigurationResource
+  /* This tags the referral with the intake policy version that was applied. */
   ProcessManager - SaveIntakeSteps(IntakeSteps) > RecordsAccess -> RecordsResource
   ProcessManager - IProcessEvent.OnReferralCreated(Referral) > PubSubUtility
 }
@@ -402,7 +403,6 @@ UseCase "Custom procedure when a referral is created" {
   PubSubUtility - IProcessEvent.OnReferralCreated(Referral) > WorkflowUtility
 }
 
-/* TODO: This feels like it's just pub/sub and not a dedicated usecase. */
 Activity "Notify intake supervisors" {
   |System|
   start
@@ -415,20 +415,231 @@ Activity "Notify intake supervisors" {
 UseCase "Notify intake supervisors" {
   PubSubUtility - IProcessEvent.OnReferralCreated(Referral) > CommunicationManager
   CommunicationManager - CommunicationPolicy LookupCommunicationPolicy() > ConfigurationAccess -> ConfigurationResource
-  /*TODO: This is not great */
-  CommunicationManager - Send(Message) > PubSubUtility
+  CommunicationManager - Array<Person> GetPeople(ListedPeopleCriteria) > RecordsAccess -> RecordsResource
+  /* This can be email, SMS, Teams, Slack, etc. */
+  /*TODO: Factor out the abstraction across all message transport types */
+  CommunicationManager - Send(Message) > MessagingUtility
 }
 
-/* Scheduling process (who/what) assigns Helpers to handle intake. */
-Activity "Complete an intake action" {
-  |Helper|
+Activity "User uploads a document" {
+  |Client|
   start
-  :Complete action;
+  :Upload document;
   |System|
-  :Record action completion;
-  :Process workflow;
-  
+  :Save document;
+  :Publish document uploaded;
+  stop
 }
+
+UseCase "Upload a document" {
+  @@@
+  ### Actor(s)
+  User identity or Organization identity.
+  
+  ### Operational Concept
+  The system:
+  1. validates the caller's account,
+  2. validates the user-specified access level to associate with the document,
+  3. and saves the document in the specified (client, helper, etc.) record.
+
+  ### API
+  `POST /documents`
+  
+  ### Test Cases
+  1. **Given** ...,
+     **when** uploading a document **then** ...
+  2. **Given** the requested access level is invalid for the user,
+     **when** uploading a document **then** an opaque fault is returned.
+  @@@
+  WebAppClient - RecordId IProcessManager.Submit(Document) > ProcessManager
+  ProcessManager - IConfigurationAccess.LookupAccessLevelPolicy() > ConfigurationAccess -> ConfigurationResource
+  ProcessManager - Store(Document) > RecordsAccess -> RecordsResource
+  ProcessManager - IProcessEvent.OnSubmitted(Document) > PubSubUtility
+}
+
+Activity "User enters a note" {
+  |Client|
+  start
+  :Enter note;
+  |System|
+  :Save draft note;
+  note: Notes always require human verification before finalizing.
+  :Publish this draft note entered;
+  stop
+}
+
+UseCase "Enter a note" {
+  @@@
+  ### Actor(s)
+  User identity or Organization identity.
+  
+  ### Operational Concept
+  The system:
+  1. validates the caller's account,
+  2. validates the user-specified access level to associate with the note,
+  3. and saves the draft note in the specified (client, helper, etc.) record.
+
+  ### API
+  `POST /notes`
+  
+  ### Test Cases
+  1. **Given** ...,
+     **when** entering a note **then** ...
+  2. **Given** the requested access level is invalid for the user,
+     **when** entering a note **then** an opaque fault is returned.
+  @@@
+  /*BLAIR: Pressing 'Enter' after the '@@@' puts the newline on the line before the '@@@' for some reason. */
+  WebAppClient - RecordId IProcessManager.Submit(Note) > ProcessManager
+  ProcessManager - IConfigurationAccess.LookupAccessLevelPolicy() > ConfigurationAccess -> ConfigurationResource
+  ProcessManager - Store(Note) > RecordsAccess -> RecordsResource
+  ProcessManager - IProcessEvent.OnSubmitted(Note) > PubSubUtility
+}
+
+DTO RecordId {
+  Guid Id
+}
+DTO AccessLevelId {
+  Guid Id
+}
+DTO UserId {
+  Guid Id
+}
+DTO OrganizationId {
+  Guid Id
+}
+DTO Timestamp {
+  DateTime Utc
+}
+DTO DateRange {
+  DateOnly Start
+  DateOnly End /* A DateRange can have a max-value end date. */
+}
+
+DTO /*abstract*/ Identity {}
+DTO UserIdentity : Identity {
+  UserId UserId
+}
+DTO OrganizationIdentity : Identity {
+  OrganizationId OrganizationId
+}
+
+DTO /*abstract*/ IProcessManager Record {
+  RecordId Id
+  AccessLevelId AccessLevel
+  AuditEntry[] History
+}
+
+DTO /*abstract*/ IProcessManager AuditEntry {
+  Identity Identity
+  Timestamp Timestamp
+  IpAddress ClientIp
+}
+DTO IProcessManager Submitted : AuditEntry {}
+DTO IProcessManager Edited : AuditEntry {}
+DTO IProcessManager Verified : AuditEntry {}
+
+DTO IProcessManager Note : Record {
+  string Text
+  DateOnly Date /* Will default to today's date */
+}
+
+DTO IProcessManager Document : Record {
+  string Filename
+  byte[] Contents
+}
+
+DTO IProcessManager StepCompletion : Record {
+  StepId Step
+  DateRange CompletedDuring
+  RecordId[] LinkedNotes
+  RecordId[] LinkedDocuments
+}
+
+DTO IProcessManager StepExemption : Record {
+  StepId Step
+  DateRange ExemptedDuring
+}
+
+Activity "User completes an abstract step" {
+  |Client|
+  start
+  :Complete step
+    (may reference a document and/or note);
+  |System|
+  if (Verification required?) then (yes)
+    :Save this draft;
+    :Publish verification request;
+    stop
+  else (no)
+    :Record this step completion;
+    :Publish this step completed;
+    stop
+  endif
+}
+
+UseCase "Complete a step" {
+  @@@
+  ### Actor(s)
+  User identity or Organization identity.
+  
+  ### Operational Concept
+  The system:
+  1. validates the caller's account,
+  2. validates the user-specified access level to associate with the step completion,
+  3. determines whether the step completion requires verification,
+     1. if so,
+        1. saves this completion as a draft in the specified (client, helper, etc.) record
+        2. and publishes a verification request;
+     2. if not,
+        1. records this completion in the specified (client, helper, etc.) record
+        2. and publishes the step completion.
+
+  ### API
+  `POST /steps`
+  
+  ### Test Cases
+  1. **Given** ...,
+     **when** completing a step **then** ...
+  2. **Given** the requested access level is invalid for the user,
+     **when** completing a step **then** an opaque fault is returned.
+  @@@
+  WebAppClient - RecordId IProcessManager.Submit(StepCompletion) > ProcessManager
+  ProcessManager - IConfigurationAccess.LookupAccessLevelPolicy() > ConfigurationAccess -> ConfigurationResource
+  ProcessManager - IConfigurationAccess.LookupStepCompletionVerificationPolicy() > ConfigurationAccess -> ConfigurationResource
+  /* See child use cases for the variation in the remainder of the logic */
+}
+
+UseCase "Complete a step - no verification required" {
+  /*BLAIR: Can we write 'if' statements in here? Full pseudocode. :) */
+  WebAppClient - RecordId IProcessManager.Submit(StepCompletion) > ProcessManager
+  ProcessManager - IConfigurationAccess.LookupAccessLevelPolicy() > ConfigurationAccess -> ConfigurationResource
+  ProcessManager - IConfigurationAccess.LookupStepCompletionVerificationPolicy() > ConfigurationAccess -> ConfigurationResource
+  ProcessManager - Store(StepCompletion) > RecordsAccess -> RecordsResource
+  ProcessManager - IProcessEvent.OnSubmitted(StepCompletion) > PubSubUtility
+}
+
+UseCase "Complete a step - verification required" {
+  WebAppClient - RecordId IProcessManager.Submit(StepCompletion) > ProcessManager
+  ProcessManager - IConfigurationAccess.LookupAccessLevelPolicy() > ConfigurationAccess -> ConfigurationResource
+  ProcessManager - IConfigurationAccess.LookupStepCompletionVerificationPolicy() > ConfigurationAccess -> ConfigurationResource
+  ProcessManager - StoreDraft(StepCompletion) > RecordsAccess -> RecordsResource
+  ProcessManager - IProcessEvent.OnVerificationRequested(StepCompletion) > PubSubUtility
+}
+
+
+/*TODO: We need a 'garbage collector'/timer/similar to automatically, reliably,
+        flag records that are no longer completed or no longer exempted, and
+        update the containing record's state -- the associated step needs to be
+        treated as incomplete and the appropriate users need to be notified.
+        HOWEVER, this is also something we will want to do *ahead of time*, not
+        just at/after the expiration, so that users can have a heads-up of a
+        pending expiration. The general term for this is a "recertification" or
+        "renewal", aka a "grace period" if it is after the fact.
+        For now, we will approach this from the 'heads-up' point of view. */
+
+
+
+
 /*
 Activity "Configure Intake Supervisor" {
   |Helper|
@@ -576,6 +787,7 @@ StaticAspect "CareTogether V2" {
   PubSubUtility /* Push notifications to WebApp are allowed, as queued calls; can include delivery via SMS, WhatsApp, Telegram, Teams, Slack, etc. */
   /* User will subscribe to pub-sub endpoints; the CommunicationManager will generate channel-specific events in response to domain events */
   WorkflowUtility
+  MessagingUtility
 }
 
 
@@ -741,6 +953,42 @@ Prospective 'members' (whether volunteers or organizations)
    responsible for.
 */
 |
+
+| "Post-V2 Feature Ideas"
+
+/* Referrals could have stages
+    if (Referral stage should be updated?) then (yes)
+      :Update referral stage;
+    endif
+*/
+
+/* Scheduling process to automatically assign Helpers to handle intake. */
+
+
+/* An example of future capabilities for metadata-enhanced steps */
+Activity "Client provides proof of identity" {
+  |Client|
+  start
+  :Upload drivers license;
+  |System|
+  note: May add automatic drivers license verification in the future.
+  if (Verification required?) then (yes)
+    :Record this step draft completion;
+    :Notify helper(s) who need to verify;
+    stop
+  else (no)
+    :Record this step completion;
+    :Publish this step completed;
+    stop
+  endif
+}
+
+DTO IProcessManager MediaNote : Note {} /* Could allow photo/audio/video notes */
+
+/* Predictive analytics! */
+
+|
+
 | "Other DD"
 
 /*
