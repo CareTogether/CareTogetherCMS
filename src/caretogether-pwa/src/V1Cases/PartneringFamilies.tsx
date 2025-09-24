@@ -48,6 +48,8 @@ import { useLoadable } from '../Hooks/useLoadable';
 import { ProgressBackdrop } from '../Shell/ProgressBackdrop';
 import { useAppNavigate } from '../Hooks/useAppNavigate';
 import PhoneIcon from '@mui/icons-material/Phone';
+import { TestFamilyBadge } from '../Families/TestFamilyBadge';
+import { useFeatureFlagEnabled } from 'posthog-js/react';
 
 const arrangementPhaseText = new Map<number, string>([
   [ArrangementPhase.SettingUp, 'Setting Up'],
@@ -289,6 +291,10 @@ function PartneringFamilies() {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
 
+  const updateTestFamilyFlagEnabled = useFeatureFlagEnabled(
+    'updateTestFamilyFlag'
+  );
+
   const permissions = useAllPartneringFamiliesPermissions();
 
   useScreenTitle('Cases');
@@ -410,6 +416,9 @@ function PartneringFamilies() {
                                   {phoneNumber}
                                 </span>
                               </>
+                            )}
+                            {updateTestFamilyFlagEnabled && (
+                              <TestFamilyBadge family={partneringFamily} />
                             )}
                           </span>
                         </TableCell>
