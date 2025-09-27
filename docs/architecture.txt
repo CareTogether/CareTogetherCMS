@@ -265,7 +265,7 @@ UseCase "Configure Membership Application Approval Request Subscription" {
 
 UseCase "Receive Membership Application Approval Request" {
   /* The implementation of this will send the email that based on the channel */
-  PubSubUtility - IMembershipEvent.OnApplicationReceived(MembershipApplication) > EmailAccess
+  PubSubUtility - IMembershipEvent.OnApplicationReceived(MembershipApplication) > MessagingUtility
 }
 
 /*TODO: How do we notify potential approvers that there is something to approve?
@@ -491,8 +491,11 @@ UseCase "Enter a note" {
   /*BLAIR: Pressing 'Enter' after the '@@@' puts the newline on the line before the '@@@' for some reason. */
   WebAppClient - RecordId IProcessManager.Submit(Note) > ProcessManager
   ProcessManager - IConfigurationAccess.LookupAccessLevelPolicy() > ConfigurationAccess -> ConfigurationResource
-  ProcessManager - Store(Note) > RecordsAccess -> RecordsResource
-  ProcessManager - IProcessEvent.OnSubmitted(Note) > PubSubUtility
+  /* Legal question: Do draft notes fall under peer review privilege? If so, it's better to store the intermediate versions as well. */
+  /* Aside: Customers need to indemnify CareTogether against any liability arising from their use of the software. */
+  /* Desirable: Overall limitation of liability. */
+  ProcessManager - StoreDraft(Note) > RecordsAccess -> RecordsResource
+  ProcessManager - IProcessEvent.OnVerificationRequested(Note) > PubSubUtility
 }
 
 DTO RecordId {
@@ -536,7 +539,12 @@ DTO /*abstract*/ IProcessManager AuditEntry {
 }
 DTO IProcessManager Submitted : AuditEntry {}
 DTO IProcessManager Edited : AuditEntry {}
+DTO IProcessManager Feedback : AuditEntry {
+  string Comment
+}
 DTO IProcessManager Verified : AuditEntry {}
+DTO IProcessManager Listed : AuditEntry {} /* E.g., appeared in a search result */
+DTO IProcessManager Retrieved : AuditEntry {}
 
 DTO IProcessManager Note : Record {
   string Text
@@ -626,6 +634,298 @@ UseCase "Complete a step - verification required" {
   ProcessManager - IProcessEvent.OnVerificationRequested(StepCompletion) > PubSubUtility
 }
 
+Activity "User searches for a record" {
+  |Client|
+  start
+  :Provide search parameters;
+  |System|
+  :Search for matching records;
+  stop
+}
+
+UseCase "User searches for a record" {
+  @@@
+  ### Actor(s)
+  User identity or Organization identity.
+  
+  ### Operational Concept
+  The system:
+  1. validates the caller's account,
+  2. authorizes the user's ability to verify the specified draft record,
+  ...
+
+  ### API
+  ...
+  
+  ### Test Cases
+  1. **Given** ...,
+     **when** verifying a draft record **then** ...
+  @@@
+  WebAppClient - Array<RecordHeader> IProcessManager.Search(RecordCriteria) > ProcessManager
+  ProcessManager - Array<RecordHeader> IMatchingEngine.Search(RecordCriteria) > MatchingEngine
+  MatchingEngine - IRecordsAccess.FilterRecords(RecordCriteria)> RecordsAccess -> RecordsResource
+  /*BLAIR: Need to pass an array as the request DTO here */
+  ProcessManager - void IRecordsAccess.TrackListing(RecordHeader) > RecordsAccess -> RecordsResource
+}
+
+Activity "User looks up pending verification requests" {
+  |Client|
+  start
+  :Look up pending verification requests;
+  |System|
+  :List pending verification requests for this user;
+  stop
+}
+
+UseCase "User looks up pending verification requests" {
+  @@@
+  ### Actor(s)
+  User identity only, no Organization identity.
+  
+  ### Operational Concept
+  The system:
+  1. validates the caller's account,
+  2. authorizes the user's ability to verify the specified draft record,
+  ...
+
+  ### API
+  ...
+  
+  ### Test Cases
+  1. **Given** ...,
+     **when** verifying a draft record **then** ...
+  @@@
+  /*TODO: Revise this: things I'm not happy with include:
+          1. VerificationRequest feels very similar to the RecordHeader
+          2. Polymorphic 'Search' with two different types of content feels wrong
+          3. Search passing through to Search is at least concerning
+          4. Search followed by List feels redundant */
+  WebAppClient - Array<VerificationRequest> IProcessManager.Search(RequestCriteria) > ProcessManager
+  ProcessManager - Array<VerificationRequest> IMatchingEngine.Search(RequestCriteria) > MatchingEngine
+  MatchingEngine - IRecordsAccess.ListRecords(RequestCriteria)> RecordsAccess -> RecordsResource
+  /*BLAIR: Need to pass an array as the request DTO here */
+  ProcessManager - void IRecordsAccess.TrackListing(RecordHeader) > RecordsAccess -> RecordsResource
+}
+
+Activity "User reviews a record based on a search result" {
+  |Client|
+  start
+  :Select a search result;
+  |System|
+  :Retrieve record;
+  stop
+}
+
+Activity "User reviews a record based on a verification request" {
+  |Client|
+  start
+  :Select verification request;
+  |System|
+  :Retrieve corresponding draft record;
+  stop
+}
+
+UseCase "User retrieves records" {
+  @@@
+  ### Actor(s)
+  User identity or Organization identity.
+  
+  ### Operational Concept
+  The system:
+  1. validates the caller's account,
+  2. delegates to the evaluation engine the following:
+     1. look up the specified records, TODO: Does authorization depend on record contents in V2?
+     2. authorize the user's ability to retrieve the specified records (which may be based on record contents),
+     3. disclose the records per the data disclosure policy
+
+  ### API
+  ...
+  
+  ### Test Cases
+  1. **Given** ...,
+     **when** verifying a draft record **then** ...
+  @@@
+  /*BLAIR: Need to pass an array as the request and response DTO here */
+  WebAppClient - Array<Record> IProcessManager.Retrieve(RecordId) > ProcessManager
+  /*BLAIR: Need to pass an array as the request and response DTO here */
+  ProcessManager - Array<Record> IEvaluationEngine.Disclose(Record) > EvaluationEngine
+  EvaluationEngine - IRecordsAccess.ListRecords(RecordId) > RecordsAccess -> RecordsResource
+  EvaluationEngine - IConfigurationAccess.LoadDisclosurePolicy() > ConfigurationAccess -> ConfigurationResource
+  /*BLAIR: Need to pass an array as the request DTO here */
+  ProcessManager - void IRecordsAccess.TrackRetrieval(RecordId) > RecordsAccess -> RecordsResource
+}
+
+Activity "User verifies a draft record" {
+  |Client|
+  start
+  :Verify record;
+  |System|
+  if (Record has pending feedback) then (yes)
+    note: Post-V2, we may want to require feedback items to be addressed explicitly.
+  endif
+  :Store record verification;
+  :Publish record verified;
+  stop
+}
+
+UseCase "User verifies a draft record" {
+  @@@
+  ### Actor(s)
+  User identity only, no Organization identity.
+  
+  ### Operational Concept
+  The system:
+  1. validates the caller's account,
+  2. ...
+
+  ### API
+  ...
+  
+  ### Test Cases
+  1. **Given** ...,
+     **when** approving a draft record **then** ...
+  @@@
+  WebAppClient - IProcessManager.Verify(RecordHeader) > ProcessManager
+  /* TODO: This should be applied at an interceptor level. */
+  ProcessManager - ISecurityUtility.PreAuthorize(OrganizationAccess) > SecurityUtility
+  ProcessManager - AuthorizationResult IEvaluationEngine.Authorize(RecordVerification) > EvaluationEngine
+  EvaluationEngine - IConfigurationAccess.LookupVerificationPolicy() > ConfigurationAccess -> ConfigurationResource
+  EvaluationEngine - Record IRecordsAccess.Filter(RecordCriteria) > RecordsAccess -> RecordsResource
+  /*TODO: This feels like it needs revision */
+  ProcessManager - IRecordsAccess.Verify(RecordHeader) > RecordsAccess -> RecordsResource
+  ProcessManager - IProcessEvent.OnVerified(RecordHeader) > PubSubUtility
+  ProcessManager - IProcessEvent.OnRejected(RecordApproval) > PubSubUtility
+}
+
+Activity "User revises a draft record" {
+  |Client|
+  start
+  :Submit revision;
+  |System|
+  if (Record is already verified) then (yes)
+    stop
+    note: Verification is final.
+  else
+    :Store record revision;
+    :Publish record revised;
+    stop
+  endif
+}
+
+UseCase "User revises a draft record" {
+  @@@
+  ### Actor(s)
+  User identity only, no Organization identity.
+  
+  ### Operational Concept
+  The system:
+  1. validates the caller's account,
+  2. ...
+
+  ### API
+  ...
+  
+  ### Test Cases
+  1. **Given** ...,
+     **when** revising a draft record **then** ...
+  @@@
+  WebAppClient - IProcessManager.Revise(Record) > ProcessManager
+  ProcessManager - AuthorizationResult IEvaluationEngine.Authorize(RecordRevision) > EvaluationEngine
+  EvaluationEngine - IConfigurationAccess.LookupRevisionPolicy() > ConfigurationAccess -> ConfigurationResource
+  EvaluationEngine - Record IRecordsAccess.Filter(RecordCriteria) > RecordsAccess -> RecordsResource
+  ProcessManager - IProcessEvent.OnRejected(RecordRevision) > PubSubUtility
+  ProcessManager - IRecordsAccess.Store(Record) > RecordsAccess -> RecordsResource
+  ProcessManager - IProcessEvent.OnRevised(Record) > PubSubUtility
+}
+
+Activity "User creates a household with first adult" {
+  |Client|
+  start
+  :Provide information on first adult in household;
+  |System|
+  :Create household;
+  :Create person;
+  :Link person to household;
+  note: Creating a household does not require verification, only authorization.
+  stop
+}
+
+UseCase "User creates a household with first adult" {
+  @@@
+  ### Actor(s)
+  User identity or Organization identity.
+  
+  ### Operational Concept
+  The system:
+  1. validates the caller's account,
+  2. ...
+
+  ### API
+  ...
+  
+  ### Test Cases
+  1. **Given** ...,
+     **when** creating a household **then** ...
+  @@@
+  WebAppClient - IProcessManager.Submit(Household) > ProcessManager
+  ProcessManager - IEvaluationEngine.Authorize(CreateHousehold) > EvaluationEngine
+  EvaluationEngine - IConfigurationAccess.LoadPolicy() > ConfigurationAccess -> ConfigurationResource
+  ProcessManager - IAuthorizationEvent.OnRejected(CreateHousehold) > PubSubUtility
+  ProcessManager - IRecordsAccess.Store(Household) > RecordsAccess -> RecordsResource
+  ProcessManager - IAuthorizationEvent.OnApproved(CreateHousehold) > PubSubUtility
+}
+
+DTO IProcessManager Household {
+  Person[] People
+}
+
+DTO IProcessManager Person {}
+
+Activity "User adds a person to a household" {
+  note: A person can be an adult or a child.
+  |Client|
+  start
+  :Select household;
+  :Provide information on person to add;
+  |System|
+  :Create person;
+  :Link person to household;
+  stop
+}
+
+Activity "User links a referral to a household" {
+  note: This implicitly designates the household as a client household.
+  |Client|
+  start
+  :Select referral;
+  :Select household to link to referral as client;
+  |System|
+  :Link household to referral;
+  :Publish referral linked to household;
+  stop
+}
+
+Activity "User opens a case from a referral" {
+  |Client|
+  start
+  :Select referral;
+  :Open case;
+  |System|
+  :Open a case, linked to the referral;
+  :Publish case opened;
+  stop
+}
+
+Activity "User closes a referral" {
+  |Client|
+  start
+  :Select referral;
+  :Provide referral close reason;
+  |System|
+  :Close referral with specified reason;
+  :Publish referral closed;
+  stop
+}
 
 /*TODO: We need a 'garbage collector'/timer/similar to automatically, reliably,
         flag records that are no longer completed or no longer exempted, and
@@ -788,1167 +1088,6 @@ StaticAspect "CareTogether V2" {
   /* User will subscribe to pub-sub endpoints; the CommunicationManager will generate channel-specific events in response to domain events */
   WorkflowUtility
   MessagingUtility
-}
-
-
-|
-| "Fractal Concepts"
-
-UseCase "Fractal Musings" {
-  @@@
-  A fractal is self-similar, which implies that our business use cases need to be
-  self-similar at each level of the proposed fractal if this is truly a fractal.
-  The levels - and associated purposes - of the proposed fracal are:
-   1. Household - household/family record management -- primarily a way to participate
-                  in the next level up in the fractal (i.e., request help/appy to help w/ orgs)
-   2. Organization - case/church management (applies to ministries and local churches)
-   3. Area - network management (needs/referrals can be shared with other network members:
-             churches, ministries, businesses)
-   4. Region - meta-network management (cities could ask for programs/ministries that they lack)
-   5. World - global management (this exists today within denominations and global ministries;
-              might tackle issues like the 10/40 Window where the fewest Gospel-centered networks
-              exist, in order to establish and promote regional networks there)
-  The organizers of networks at each layer, as well as the members/participants of
-  networks at each layer (both clients and helpers), are different.
-  In a ministry, the network organizers are the ministry staff, and the members are clients,
-  volunteers, etc. (helpers)., but also churches.
-  In a city, the network organizers are the network staff, and the members are
-  ministries, churches, businesses, etc.
-  In a region, the members are city/area networks.
-  We need to clarify all of these terms once we've definitely established the existence &
-  need for the fractal concept, but for now, any use cases we examine should be looked at in
-  the context of each of these proposed levels to see how they might play out.
-  This also means that terms like "client", "helper", "partner church", etc., which originated
-  from the 'case management' level of ministries' internal networks, are not necessarily
-  appropriate at every level of the fractal.
-  One term we need to avoid for the moment is "community", because 'community' is a distinct
-  concept from each of these things. Community is the network of people that *a person* (or
-  household) is in relationship with. That is not a "managed" network like these others are.
-  Community is something that develops as a result of relationship building, but community,
-  unlike these networks for providing care, does not have record-keeping, policies/procedures,
-  etc. It's the *result* of the work, not the components/ingredients to, of human services.
-  Like the EnergyNet: "be resilient" is the one use case. "Build community" is the one use case.
-
-  Let's define some terms that can be level-agnostic (valid at every level of the fractal):
-   - **Network** - Each level of the fractal involves a network:
-     0. The atomic lowest-level unit is an individual (a person), which does not have any
-        members (i.e., no network of its own).
-     1. A household *has a* network of people. A household can be a member of any number of
-        organizations' networks, whether as a client, helper (staff or volunteer), donor, etc.
-        A household can maintain records on each household member, e.g., birth certificates,
-        paystubs, notes, etc.
-     2. An organization *has a* network of households. Not every household member needs to
-        participate in the organization's program, but the household *itself* is a member of
-        the organization's network. And, the organization can maintain records on each household
-        *as well as* each member of those households, e.g., approval or intake steps, notes, etc.
-        An organization can be a member of any number of area networks (though ideally there
-        would just be one per city, but in reality most cities have fragmented networks today).
-     3. An area *has a* network of organizations. The area can maintain membership records for
-        each member organization, as well as notes etc., and financial contributions, but can
-        also handle sharing of general need requests, support discovery of and establishment of
-        referral partnerships, and determine when area-level needs require reaching out to a
-        regional network.
-     4. A region *has a* network of areas. (Handle insurance...)
-     5. The world *has a* network of regions.
-
-  The fly in the ointment here is that the details of child location tracking, for example, do
-  *NOT* translate readily to every level of this proposed fractal. Therefore, we'll defer the
-  fractal discussion for now. The organizational networking component may be the one aspect of
-  CareTogether that does exhibit true fractal behavior.
-  @@@
-}
-
-
-/* The 'networking' use case family captures the work of connecting organizations
-   and people in ways that allow help to be offered. This can happen at multiple
-   levels (networks of networks), which is where fractal behavior seems to emerge:
-   the kinds of help and communication that occur at each level will be different,
-   but the fundamental purpose of networks at each level remains the same: to help.*/
-
-
-Activity "Discover Potential Referral Partners" {}
-
-Activity "Establish Referral Partnership" {}
-
-Activity "Invite Organization" {}
-
-Activity "Accept Organization Invitation" {}
-
-/* We want to eventually reach the point where an individual or household 'login' to
-   CareTogether can be linked to multiple organizations with which that individual/household
-   wants to work, e.g. to offer to help/volunteer for more than one organization. This in
-   turn implies that the linking of household/individual "nodes" to organizations *is* a
-   fractal relationship that can be optionally established. */
-
-Activity "Recruit Member" {} /*TODO: Create an activity diagram here! */
-
-
-/* Maybe it's part of Networking family instead of Helping, because the helping is not happening yet, but connecting/networking is. */
-Activity "Find appropriate Partner for Case" {} 
-Activity "Refer Case to Partner" {}
-
-Activity "Share resource" {}
-Activity "Govern network?" {} /* Is there some kind of governance in a network? */
-Activity "Manage network member" {} /* Include or remove a member, update status, update attributes for matching? */
-
-
-/*NOTE: We need some sort of process that determines if we need outside help, i.e.,
-        if a new request for help needs to be issued upward or horizontally acrosss.
-        Upward would be e.g. organization to area, across would be e.g. organization to
-        organization (the classic "referral partner" model).
-        Note that *downward* is simply the search for a helper as well.
-        In every case, this involves a 'search' sequence (search down, search across,
-        and finally search up -- note that some stages may be skipped based on the need).
-        In other words, the basic behavior of each participant is that, when receiving a
-        request for help, the participant will first ask downward to all the members of
-        that participant's own network to see if a Helper can help. That may not always
-        result in actually sending requests to the Helpers if e.g. none of the helpers
-        fit the criteria for helping with the need, but it should be the first option.
-        Then, the fractal participant will next consider any horizontal partnerships
-        (relationships?) with other participants at the same fractal level; these are
-        established sometimes outside of being part of a higher-level network. E.g.,
-        an organization may forward the need to another organization that has established
-        a referral partnership with the first organization. (NOTE: During the vetting
-        process, it may be determined that a need is only a candidate for either internal
-        or partner help, as opposed to both, e.g. if a request for help is received by a
-        family preservation ministry but the need, after vetting, turns out to be for
-        temporary housing.) As a last resort, a participant may pass a need *upward* to
-        the network(s) it is a member of, i.e., outside of its own network or partners,
-        to try to find a helper there. That is a much more rare situation, but is a
-        necessary step when needs might be too great for the participant to meet alone.
-        This "algorithm" (search down, then across, then up) is consistent at every level
-        of the fractal.
-*/
-
-/*      Is helping a commodity? Are needs commodities?
-        It's a spectrum -- some help is a commodity, some is highly specialized.
-        Are we first addressing commodities or specialization?
-        Specialization is all about whether someone is available.
-        Over-the-counter transactions vs. market transactions?
-        OTC transactions is how commodities markets deal with one-offs...
-        ...
-        Difference between transactive resource management (matching a need with a helper)
-        and automatic transactive resource management.
-        Pricing/valuation component is therefore not needed.
-*/
-
-
-
-/* CRITICAL: A participant can and usually will have more than one network.
-             A corollary to this is that a participant will often be a *member* of
-             more than one network as well.
-             The fractal architecture allows for overlap here, so e.g. a person can
-             be in a household as a participant of a ministry as a family coach, and
-             can also be in a household as a participant of the same ministry as a
-             host family.
-             This still feels weird -- helpers who are family coaches are not usually
-             (or ever) thought of as households, e.g. a therapist is not serving their
-             client as a household but as a professional. This is still unresolved/
-             needs more discussion. */
-
-/*
-Prospective 'members' (whether volunteers or organizations)
-   can apply to join a 'network' (the set of members managed by a node in the fractal),
-   and those applications then trigger a vetting process that the managing node is
-   responsible for.
-*/
-|
-
-| "Post-V2 Feature Ideas"
-
-/* Referrals could have stages
-    if (Referral stage should be updated?) then (yes)
-      :Update referral stage;
-    endif
-*/
-
-/* Scheduling process to automatically assign Helpers to handle intake. */
-
-
-/* An example of future capabilities for metadata-enhanced steps */
-Activity "Client provides proof of identity" {
-  |Client|
-  start
-  :Upload drivers license;
-  |System|
-  note: May add automatic drivers license verification in the future.
-  if (Verification required?) then (yes)
-    :Record this step draft completion;
-    :Notify helper(s) who need to verify;
-    stop
-  else (no)
-    :Record this step completion;
-    :Publish this step completed;
-    stop
-  endif
-}
-
-DTO IProcessManager MediaNote : Note {} /* Could allow photo/audio/video notes */
-
-/* Predictive analytics! */
-
-|
-
-| "Other DD"
-
-/*
-## Use Cases (Call Chains & Sequence Diagrams), Detailed Design
-*/
-
-/* OPERATION CONTRACTS -- WORK-IN-PROGRESS
-
-ProcessManager
-  - ConfigureOrganization
-  - ConfigurePolicies // could end up just being part of ConfigureOrganization? maybe just call it 'Configure' & use polymorphism?
-  - SubmitRecords // (un)archive is a special case that could just be a validation rule: 'IsActive' flag changes cannot be accompanied by other changes
-    // SubmitRecords could actually update the record *or* decide to create a change request instead, based on policies
-    // When a change request is issued, the ProcessManager makes a queued call to CommunicationManager to notify the record owner or other responsible party (as identified by policy evaluation) of the pending change.
-  - RetrieveRecords
-  - ReviewChanges
-
-MembershipManager
-  - InviteUser
-  - RegisterAccount
-  - CloseAccount
-  - LinkAccount // links an account to a person in a location in an organization
-  - FindAccount
-
-CommunicationManager
-  ...
-  // The CommunicationManager has the ability to send email notifications as well as interactive notifications,
-  // e.g. Teams adaptive cards, for things like change request approvals.
-
-WorkflowsAccess
-  - WorkflowState Instantiate(WorkflowCriteria) // 'run user-defined actions'?
-  - WorkflowState Dispatch(InputEvent)
-
-RecordsAccess
-  - Create
-  - Change
-  - Filter
-  - ProposeChange // add a new pending change to the underlying record's set of pending changes
-  - CommitChange // needs to reference an existing pending change
-  - CancelChange // needs to reference an existing pending change
-    // Records include: Families, Communities, Organizations
-    // Organizations could themselves be using CareTogether, allowing features like automatic transfer of intake data
-
-// Records need to include a set of 'pending changes', each of which has a 'RequestedChangeId' that is tied to the request workflow.
-// Pending changes should be stored in non-immutable storage, like draft notes are today, and only the reference to them should be
-//   made part of the immutable log.
-
-ConfigurationAccess
-  ...
-
-AccountsAccess
-  ...
-
-AuditAccess
-  ...
-
-*/
-
-/*
-QUESTION: What are we storing/exposing with RecordsAccess?
-
-Option 1: only specific "Aggregates" as defined today: Families, Communities, Referrals, eventually Organizations.
->>> This feels the most consistently organized.
-
-Option 2: all "Entities" in the domain model: Families, People, Referrals, Cases, Arrangements, Communities, Organizations.
-This would actually also need to include:
-- Requirement Completions/Exemptions
-- Child Location Changes (Actual & Planned)
-- Function Assignments
-- Notes
-- Documents (reference to them)
-- Forms (reference to them)
-- Organization Members
-- Organization Roles
-
---> This approach basically exposes a relational database!
-
-SMELL: This is fine-grained, not coarse-grained. We want to encapsulate the variability of different types of records.
-SMELL: How do you define a 'pending change' to a requirement completion? What would be an example? On the other hand, it feels very reasonable to make a 'pending change' to a *family* (or maybe a person or arrangement or referral or case?) of a requirement completion, e.g. a family coach submitting a safety visit completion. Therefore, treating a Requirement Completion *as a record* is too granular. Therefore, we need some level of combining these "entities" into "aggregates" that are reasonable to modify.
-
-Option 3?
-
-Option 4: The entire dataset for a location? Waaaaay too coarse-grained. Writes need to be made at a more granular level.
-
-*/
-
-/*
-# MIGRATION NOTES
-- Authorize*CommandAsync methods move into the Resource Access layer (primarily into RecordsAccess)
-*/
-
-Activity "UC-Me-1: Sign In" {
-  |u|User
-  |s|System
-  |u|
-  start
-  :Browse to CareTogether;
-  if (User signed in) is (no) then
-    :Redirect to Sign-In Screen;
-    |s|
-    :Determine sign-in methods to offer;
-    |u|
-    :Select sign-in method;
-    :Enter credentials;
-    |s|
-    :Load user account;
-  else (yes)
-  end if
-  |u|
-  :Open Dashboard;
-  stop
-}
-
-/* TODO: review */
-UseCase "UC-Me-1: Sign In" {
-  WebClient - ClaimsPrincipal ISecurityUtility.Authenticate(HttpContext) > SecurityUtility
-  WebClient - AppUserAccount IMembershipManager.SignIn(ClaimsPrincipal) > MembershipManager
-  MembershipManager - Account IAccountsAccess.GetOrCreateUserAccount(ClaimsPrincipal) > AccountsAccess
-  AccountsAccess -> AccountsResource /*  Account IAccountsResource.GetOrCreateUserAccount(UserId) */
-  AccountsAccess -> RecordsResource
-}
-
-/* HttpContext DTO is provided by ASP.NET Core */
-/* ClaimsPrincipal DTO is provided by System.Security.Claims */
-
-DTO AppUserAccount {
-  Guid UserId
-  /*TODO: Define this*/
-}
-
-DTO Account {
-  Guid UserId
-  AccountOrganizationAccess[] Organizations
-}
-
-DTO AccountOrganizationAccess {
-  Guid OrganizationId
-  AccountLocationAccess[] Locations
-}
-
-DTO AccountLocationAccess {
-  Guid LocationId
-  Guid PersonId
-  string[] Roles
-}
-
-Activity "UC-Pr-1: Open Location" {
-  |c|Client
-  |s|System
-  |c|
-  start
-  :Sign In
-    ""<color:#777>[UC-Me-1]</color>"";
-  :Select Organization;
-  :Select Location;
-  |s|
-  :Authorize User Access in Context
-    ""<color:#777>[SUB-Pr-1]</color>"";
-  :Load Location Data; 
-  'NOTE: This will also be the Process Manager
-  |c|
-  :View Location Dashboard;
-  stop
-}
-
-UseCase "UC-Pr-1: Open Location" {
-  WebClient -> ProcessManager
-  ProcessManager -> EvaluationEngine
-}
-
-UseCase "SUB-Pr-1: Authorize User Access in Context" {
-  ProcessManager - ContextPermissions IEvaluationEngine.AuthorizeUserAccess(AuthorizationContext) > EvaluationEngine
-    EvaluationEngine -> AccountsAccess -> AccountsResource
-    EvaluationEngine -> ConfigurationAccess -> ConfigurationResource
-    EvaluationEngine -> RecordsAccess -> RecordsResource
-  ProcessManager -> SecurityUtility
-}
-
-DTO AuthorizationContext { }
-
-/*BUG: DTO inheritance is not supported*/
-/*DTO GlobalAuthorizationContext : AuthorizationContext {}*/
-
-UseCase "Retrieve Records" {
-  WebClient - RetrieveRecordsResponse IProcessManager.RetrieveRecords(RetrieveRecordsRequest) > ProcessManager
-    ProcessManager -> WorkflowsAccess -> WorkflowsResource
-    ProcessManager - RecordsResponse IRecordsAccess.Filter(RecordsCriteria) > RecordsAccess
-      RecordsAccess -> RecordsResource
-      RecordsAccess -> NotesResource
-      RecordsAccess -> FormsResource
-    ProcessManager -> EvaluationEngine
-      EvaluationEngine -> ConfigurationAccess -> ConfigurationResource
-    ProcessManager - RecordsResponse IEvaluationEngine.DiscloseRecords(RecordsDisclosureRequest) > EvaluationEngine
-    /* Include disclosure & authorization results */
-    ProcessManager -> AuditAccess -> AuditResource
-}
-
-DTO RetrieveRecordsRequest {
-  DisclosureMethod Method
-  RecordType? RecordType
-  Guid? OrganizationId
-  Guid? LocationId
-  Filters? Filters
-}
-
-DTO Filters { }
-
-DTO RetrieveRecordsResponse {
-  Community[] Communities
-  Family[] Families
-  Organization[] Organizations
-}
-
-DTO Family {
-  Guid Id
-  Guid LocationId
-  string Name
-  string? PrimaryEmail
-  string? PrimaryPhoneNumber
-  Address? PrimaryAddress
-  string? HomeChurch
-}
-
-DTO Address {
-  string? Line1
-  string? Line2
-  string? City
-  string? Country
-  string? State
-  string? PostalCode
-}
-
-DTO Community {
-    Guid Id
-    Guid LocationId
-    string Name
-}
-
-DTO Organization {}
-
-DTO ContextualPermissions {
-  AuthorizationContext Context
-  string[] AllowedActions
-  Account Account
-}
-
-DTO RecordsDisclosureRequest {
-  ContextualPermissions Permissions
-  DisclosureMethod Method
-  RecordsAccess.RecordsResponse Records
-}
-
-DTO RecordsCriteria {
-  ContextualPermissions Permissions
-  DisclosureMethod Method
-  RecordType? RecordType
-  Guid? OrganizationId
-  Guid? LocationId
-}
-
-DTO RecordsResponse {
-  Community[] Communities
-  Family[] Families
-  Organization[] Organizations
-}
-
-UseCase "UC-Pr-6: Submit Recods (create or change)" {
-  WebClient - SubmitRecordsResponse IProcessManager.SubmitRecords(SubmitRecordsRequest) > ProcessManager
-    ProcessManager -> WorkflowsAccess -> WorkflowsResource
-    ProcessManager - RecordOperationsResponse IRecordsAccess.Execute(RecordOperationsRequest) > RecordsAccess
-      RecordsAccess -> RecordsResource
-      RecordsAccess -> NotesResource
-      RecordsAccess -> FormsResource
-      /*RecordsAccess -> DocumentsResource*/
-    ProcessManager -> EvaluationEngine
-      EvaluationEngine -> ConfigurationAccess -> ConfigurationResource
-    ProcessManager - RecordsResponse IEvaluationEngine.DiscloseRecords(RecordsDisclosureRequest) > EvaluationEngine
-    ProcessManager -:q> CommunicationManager
-    ProcessManager -> AuditAccess -> AuditResource
-}
-
-DTO RecordOperation { } /* This can inclue create/change/propose change/commit change/cancel change */
-
-DTO RecordOperationsRequest {
-    ClaimsPrincipal 
-    RecordOperation[] Operations
-}
-
-DTO SubmitRecordsRequest {
-    Record[] Records
-}
-
-
-DTO Record {
-  Guid Id
-}
-
-DTO RecordOperationsResponse {
-    Record[] Records
-}
-
-DTO SubmitRecordsResponse {
-    Record[] Records
-}
-
-/* TODO: check */
-UseCase "UC-Pr-34: Discard Draft Notes" {
-  WebClient - IProcessManager.ReviewChanges() > ProcessManager
-  ProcessManager - ContextualPermissions IEvaluationEngine.CalculateContextualPermissions(LocationAuthorizationContext) > EvaluationEngine
-  ProcessManager - IRecordsAccess.Execute() > RecordsAccess -> RecordsResource
-}
-
-/* TODO: check */
-UseCase "UC-Pr-35: Approve Notes" {
-  WebClient - IProcessManager.ReviewChanges() > ProcessManager
-  ProcessManager - ContextualPermissions IEvaluationEngine.CalculateContextualPermissions(LocationAuthorizationContext) > EvaluationEngine
-  ProcessManager - IRecordsAccess.Execute() > RecordsAccess -> RecordsResource
-}
-
-/* TODO: check */
-UseCase "UC-Me-1: Invite Person User" {
-  WebClient - IMembershipManager.InviteUser() > MembershipManager
-  MembershipManager - ContextualPermissions IEvaluationEngine.CalculateContextualPermissions(LocationAuthorizationContext) > EvaluationEngine
-  MembershipManager -> AccountsAccess -> AccountsResource
-}
-
-/* TODO: account or records? */
-UseCase "UC-Me-2: Edit Person User Protected Roles" {
-  WebClient - IMembershipManager.ChangePersonRoles() > MembershipManager
-  MembershipManager - ContextualPermissions IEvaluationEngine.CalculateContextualPermissions(LocationAuthorizationContext) > EvaluationEngine
-  MembershipManager - IAccountsAccess.Execute() > AccountsAccess -> AccountsResource
-}
-
-/* TODO: check */
-UseCase "UC-Me-4: View Person User Login Info" {
-  /* Feel like it should be similar to IProcessManager.RetrieveRecords()? */
-  WebClient - IMembershipManager.FindAccount() > MembershipManager
-  MembershipManager - IAccountsAccess.Filter() > AccountsAccess -> AccountsResource
-  MembershipManager - IRecordsAccess.Filter() > RecordsAccess -> RecordsResource
-  MembershipManager - ContextualPermissions IEvaluationEngine.CalculateContextualPermissions(LocationAuthorizationContext) > EvaluationEngine
-  MembershipManager - ISecurityUtility.GetUserLoginInfo() > SecurityUtility
-}
-
-UseCase "UC-Me-5: Edit Roles" {
-  WebClient - IMembershipManager.ChangePersonRoles() > MembershipManager
-  MembershipManager - ContextualPermissions IEvaluationEngine.CalculateContextualPermissions(LocationAuthorizationContext) > EvaluationEngine
-  MembershipManager - IAccountsAccess.Execute() > AccountsAccess -> AccountsResource
-}
-
-/* TODO: check */
-UseCase "UC-Pr-76: Send Bulk SMS" {
-  WebClient - ICommunicationManager.Notify() > CommunicationManager
-  CommunicationManager - ContextualPermissions IEvaluationEngine.CalculateContextualPermissions(LocationAuthorizationContext) > EvaluationEngine
-  CommunicationManager - IRecordsAccess.Filter() > RecordsAccess -> RecordsResource
-  CommunicationManager - ITelephonyUtility.Notify() > TelephonyUtility
-}
-
-DTO OpenCaseResponse {}
-
-DTO OpenCaseRequest {}
-
-/* ================== 1. Other use cases ================== */
-
-/* ================== 1.1 RetrieveRecords Permutations ================== */
-
-Activity "UC-Pr-2: View Communities List" {
-  |c|Client
-  |s|System
-  |c|
-  start
-  :Open Location
-    ""<color:#777>[UC-Pr-1]</color>"";
-  :Select Communities Screen;
-  |s|
-  :List Communities for User;
-  |c|
-  :Display Communities List;
-  stop
-}
-
-UseCase "View Communities List" {
-@@@
-### Prerequisites
-- `ContextPermissions` for 'All Communities' context
-@@@
-  WebClient - IProcessManager.RetrieveRecords() > ProcessManager
-    ProcessManager - IRecordsAccess.Filter() > RecordsAccess
-      RecordsAccess -> SecurityUtility
-      RecordsAccess -> RecordsResource
-    ProcessManager -> EvaluationEngine
-      EvaluationEngine -> ConfigurationAccess -> ConfigurationResource
-    ProcessManager -> EvaluationEngine
-}
-
-/* TODO: Missing FileStorageUtility? */
-UseCase "UC-Pr-18: Read Family Documents" {
-  WebClient - IProcessManager.RetrieveRecords() > ProcessManager
-    ProcessManager - IRecordsAccess.Filter() > 
-      RecordsAccess -> SecurityUtility
-      RecordsAccess -> RecordsResource
-    ProcessManager -> EvaluationEngine
-      EvaluationEngine -> ConfigurationAccess -> ConfigurationResource
-    ProcessManager -> EvaluationEngine
-}
-
-/* TODO: check */
-UseCase "UC-Pr-23: Access Settings Screen" {
-  WebClient - IProcessManager.RetrieveRecords() > ProcessManager
-    ProcessManager - IRecordsAccess.Filter() > 
-      RecordsAccess -> SecurityUtility
-      RecordsAccess -> RecordsResource
-      RecordsAccess -> ConfigurationResource
-      RecordsAccess -> AccountsResource
-      RecordsAccess -> FormsResource
-    ProcessManager -> EvaluationEngine
-      EvaluationEngine -> ConfigurationAccess -> ConfigurationResource
-    ProcessManager -> EvaluationEngine
-}
-
-/* ================== 1.2 SubmitRecords Permutations ================== */
-
-UseCase "Track Child Location" {
-  WebClient - CreateChildLocationEntryResponse IProcessManager.SubmitRecords(TrackChildLocationChange) > ProcessManager
-    ProcessManager - StoreChildLocationEntryResponse IRecordsAccess.Execute(ChildLocationEntry) > RecordsAccess 
-      RecordsAccess -> SecurityUtility
-      RecordsAccess -> RecordsResource
-    ProcessManager -> EvaluationEngine
-      EvaluationEngine -> ConfigurationAccess -> ConfigurationResource
-    ProcessManager -> EvaluationEngine
-}
-
-DTO CreateChildLocationEntryResponse { }
-
-DTO TrackChildLocationChange {
-    Guid FamilyId
-    Guid ReferralId
-    Guid[] ArrangementIds
-    DateTime ChangedAtUtc
-    Guid ChildLocationFamilyId
-    Guid ChildLocationReceivingAdultId
-    ChildLocationPlan Plan
-    Guid? NoteId
-}
-
-DTO StoreChildLocationEntryResponse { }
-
-DTO ChildLocationEntry {
-    Guid ArrangementId
-    Guid ChildPersonId
-    Guid FamilyId
-    DateTime StartedAtUtc
-    ChildLocationPlan ChildcarePlan
-    DateTime? EnededAtUtc
-    TimeSpan Duration
-}
-
-UseCase "UC-Pr-19: Upload Family Documents" {
-  WebClient - IProcessManager.SubmitRecords() > ProcessManager
-    ProcessManager - IRecordsAccess.Execute() > 
-      RecordsAccess -> SecurityUtility
-      RecordsAccess -> RecordsResource /* TODO: Do we store a reference for the file? Should it be done after calling FileStoreUtility? */
-      RecordsAccess - IFileStoreUtility.Upload() > FileStoreUtility
-    ProcessManager -> EvaluationEngine
-      EvaluationEngine -> ConfigurationAccess -> ConfigurationResource
-    ProcessManager -> EvaluationEngine
-}
-
-UseCase "UC-Pr-20: Archive Family Documents" {
-  WebClient - IProcessManager.SubmitRecords() > ProcessManager
-    ProcessManager - IRecordsAccess.Execute() > 
-      RecordsAccess -> SecurityUtility
-      RecordsAccess -> RecordsResource
-    ProcessManager -> EvaluationEngine
-      EvaluationEngine -> ConfigurationAccess -> ConfigurationResource
-    ProcessManager -> EvaluationEngine
-}
-
-/* TODO: check */
-UseCase "UC-Pr-64: Upload Community Documents" {
-  WebClient - IProcessManager.SubmitRecords() > ProcessManager
-  ProcessManager - ContextualPermissions IEvaluationEngine.CalculateContextualPermissions(LocationAuthorizationContext) > EvaluationEngine
-  ProcessManager - IFileStoreUtility.Upload() > FileStoreUtility
-  ProcessManager - IRecordsAccess.Execute() > RecordsAccess -> RecordsResource
-}
-
-UseCase "UC-Pr-81: Open Case" {
-  WebClient - OpenCaseResponse IProcessManager.SubmitRecords(OpenCaseRequest) > ProcessManager
-  ProcessManager - IEvaluationEngine.AuthorizeUserAccess() > EvaluationEngine
-  EvaluationEngine -> AccountsAccess -> AccountsResource
-  EvaluationEngine -> RecordsAccess -> RecordsResource
-  EvaluationEngine -> ConfigurationAccess -> ConfigurationResource
-  ProcessManager - IWorkflowsAccess.Instantiate() > WorkflowsAccess -> WorkflowsResource
-  ProcessManager - IRecordsAccess.Execute() > RecordsAccess -> RecordsResource
-  ProcessManager - ICommunicationManager.Notify():q> CommunicationManager
-}
-
-UseCase "Open Referral" {
-  WebClient - OpenCaseResponse IProcessManager.SubmitRecords() > ProcessManager
-  ProcessManager - IEvaluationEngine.AuthorizeUserAccess() > EvaluationEngine
-  EvaluationEngine -> AccountsAccess -> AccountsResource
-  EvaluationEngine -> RecordsAccess -> RecordsResource
-  EvaluationEngine -> ConfigurationAccess -> ConfigurationResource
-  ProcessManager - IWorkflowsAccess.Instantiate() > WorkflowsAccess -> WorkflowsResource
-  ProcessManager - IRecordsAccess.Execute() > RecordsAccess -> RecordsResource
-  ProcessManager - ICommunicationManager.Notify():q> CommunicationManager
-}
-
-/* ================== 2. Other Data Models ================== */
-
-DTO CreateReferral /* : RecordOperation */ {
-    string Comments
-    Guid? FamilyId
-}
-
-DTO Referral /* : Record */ {
-    string Comments
-    Guid? FamilyId
-}
-
-DTO CreateArrangementResponse { }
-
-DTO CreateArrangementRequest { }
-
-DTO StoreArrangementEntryResponse { }
-
-DTO ArrangementEntry {
-    Guid Id
-    string ArrangementType
-    bool Active
-    DateTime RequestedAtUtc
-    DateTime? StartedAtUtc
-    DateTime? EndedAtUtc
-    DateTime? CancelledAtUtc
-    DateTime? PlannedStartUtc
-    DateTime? PlannedEndUtc
-    Guid PartneringFamilyPersonId
-    ImmutableList<CompletedRequirementInfo> CompletedRequirements
-    ImmutableList<ExemptedRequirementInfo> ExemptedRequirements
-    ImmutableList<IndividualVolunteerAssignment> IndividualVolunteerAssignments
-    ImmutableList<FamilyVolunteerAssignment> FamilyVolunteerAssignments
-    ImmutableSortedSet<ChildLocationHistoryEntry> ChildLocationHistory
-    ImmutableSortedSet<ChildLocationHistoryEntry> ChildLocationPlan
-    string? Comments
-    string? Reason
-}
-
-DTO CompletedRequirementInfo {
-    Guid UserId
-    DateTime TimestampUtc
-    Guid CompletedRequirementId
-    string RequirementName
-    DateTime CompletedAtUtc
-    DateTime? ExpiresAtUtc
-    Guid? UploadedDocumentId
-    Guid? NoteId
-}
-
-DTO ExemptedRequirementInfo {
-    Guid UserId
-    DateTime TimestampUtc
-    string RequirementName
-    DateTime? DueDate
-    string AdditionalComments
-    DateTime? ExemptionExpiresAtUtc
-}
-
-DTO IndividualVolunteerAssignment {
-    Guid FamilyId
-    Guid PersonId
-    string ArrangementFunction
-    string? ArrangementFunctionVariant
-    ImmutableList<CompletedRequirementInfo> CompletedRequirements
-    ImmutableList<ExemptedRequirementInfo> ExemptedRequirements
-}
-
-DTO FamilyVolunteerAssignment {
-    Guid FamilyId
-    string ArrangementFunction
-    string? ArrangementFunctionVariant
-    ImmutableList<CompletedRequirementInfo> CompletedRequirements
-    ImmutableList<ExemptedRequirementInfo> ExemptedRequirements
-}
-
-DTO ChildLocationHistoryEntry {
-    Guid UserId
-    DateTime TimestampUtc
-    Guid ChildLocationFamilyId
-    Guid ChildLocationReceivingAdultId
-    ChildLocationPlan Plan
-    Guid? NoteId
-}
-
-DTO CreateFamilyResponse { }
-
-DTO CreateFamilyRequest { }
-
-DTO StoreFamilyResponse { }
-
-DTO RecordParameters { }
-
-DTO FamilyRecordParameters /* : RecordParameters */ {
-    Guid FamilyId
-}
-
-DTO AddFamilyMemberRequest {
-  Person Person
-  Guid FamilyId
-  FamilyAdultRelationshipInfo RelationToFamily
-}
-
-DTO Person {
-  Guid PersonId
-  string FirstName
-  string LastName
-  Gender? Gender
-  Age? Age
-  string? Ethnicity
-  ImmutableList<Address> Addresses
-  Guid? CurrentAddressId
-  ImmutableList<PhoneNumber> PhoneNumbers
-  Guid? PreferredPhoneNumberId
-  ImmutableList<EmailAddress> EmailAddresses
-  Guid? PreferredEmailAddressId
-  string? Concerns
-  string? Notes
-}
-
-DTO AddPersonToFamily {
-  Guid PersonId
-  Guid FamilyId
-  FamilyAdultRelationshipInfo RelationToFamily
-}
-
-DTO AddChildToFamily {
-  Guid PersonId
-  Guid FamilyId
-  FamilyAdultRelationshipInfo RelationToFamily
-}
-
-DTO ArchivePersonRequest {
-    Guid PersonId
-}
-
-DTO ArchivePersonCriteria {
-    Guid PersonId
-}
-
-DTO ChangePersonFamilyRequest {
-    Guid PersonId
-    Guid OriginalFamilyId
-    Guid TargetFamilyId
-}
-
-/* ====================================================== */
-
-/* 
-Example draft implementation of changing a referral record.
-
-Example SubmitRecordsRequest (ProcessManager.SubmitRecords input):
-
-[{
-  "Change": {
-      "Comments": "Test",
-      "Discriminator": "UpdateReferralComments",
-      "FamilyId": "11111111-1111-1111-1111-111111111111",
-      "ReferralId": "22222222-2222-2222-2222-222222222222",
-  },
-}]
-
-var recordOperationsRequest = [
-  {
-    "Change": {
-        "Comments": "Test",
-        "Discriminator": "UpdateReferralComments",
-        "FamilyId": "11111111-1111-1111-1111-111111111111",
-        "ReferralId": "22222222-2222-2222-2222-222222222222",
-    },
-  }
-]
-
-recordsAccess.Execute(recordOperationsRequest);
-
-// Check user's permissions.
-
-// Apply change.
-
-// Store patched record and append change to log.
-
-*/
-
-UseCase "System requests approval for record change" {
-  WebClient - SubmitRecordsResponse IProcessManager.SubmitRecords(SubmitRecordsRequest) > ProcessManager
-    /* Sub-usecase "SUB-Pr-1: Authorize User Access in Context" */
-    ProcessManager -> WorkflowsAccess -> WorkflowsResource
-    ProcessManager - RecordOperationsResponse IRecordsAccess.Execute(RecordOperationsRequest) > RecordsAccess
-      RecordsAccess -> RecordsResource
-      RecordsAccess -> NotesResource
-      RecordsAccess -> FormsResource
-      /*RecordsAccess -> DocumentsResource*/
-    ProcessManager -> EvaluationEngine
-      EvaluationEngine -> ConfigurationAccess -> ConfigurationResource
-    ProcessManager - RecordsResponse IEvaluationEngine.DiscloseRecords(RecordsDisclosureRequest) > EvaluationEngine
-    ProcessManager -:q> CommunicationManager
-    ProcessManager -> AuditAccess -> AuditResource
-}
-
-UseCase "User approves record change" {
-  WebClient - SubmitRecordsResponse IProcessManager.SubmitRecords(SubmitRecordsRequest) > ProcessManager
-    /* Sub-usecase "SUB-Pr-1: Authorize User Access in Context" */
-    ProcessManager -> WorkflowsAccess -> WorkflowsResource
-    ProcessManager - RecordOperationsResponse IRecordsAccess.Execute(RecordOperationsRequest) > RecordsAccess
-      RecordsAccess -> RecordsResource
-      RecordsAccess -> NotesResource
-      RecordsAccess -> FormsResource
-      /*RecordsAccess -> DocumentsResource*/
-    ProcessManager -> EvaluationEngine
-      EvaluationEngine -> ConfigurationAccess -> ConfigurationResource
-    ProcessManager - RecordsResponse IEvaluationEngine.DiscloseRecords(RecordsDisclosureRequest) > EvaluationEngine
-    ProcessManager -:q> CommunicationManager
-    ProcessManager -> AuditAccess -> AuditResource
-}
-
-UseCase "User denies record change" {
-  WebClient - IProcessManager.ReviewChanges() > ProcessManager
-    /* Sub-usecase "SUB-Pr-1: Authorize User Access in Context" */
-    ProcessManager -> WorkflowsAccess -> WorkflowsResource
-    ProcessManager - IRecordsAccess.Execute() > RecordsAccess -> RecordsResource
-    ProcessManager -:q> CommunicationManager
-    ProcessManager -> AuditAccess -> AuditResource
-}
-
-UseCase "Bulk import of records" {
-  WebClient - SubmitRecordsResponse IProcessManager.SubmitRecords(SubmitRecordsRequest) > ProcessManager
-    /* Sub-usecase "SUB-Pr-1: Authorize User Access in Context" */
-    ProcessManager -> WorkflowsAccess -> WorkflowsResource
-    ProcessManager - RecordOperationsResponse IRecordsAccess.Execute(RecordOperationsRequest) > RecordsAccess
-      RecordsAccess -> RecordsResource
-      RecordsAccess -> NotesResource
-      RecordsAccess -> FormsResource
-    ProcessManager -> EvaluationEngine
-      EvaluationEngine -> ConfigurationAccess -> ConfigurationResource
-    ProcessManager - RecordsResponse IEvaluationEngine.DiscloseRecords(RecordsDisclosureRequest) > EvaluationEngine
-    ProcessManager -:q> CommunicationManager
-    ProcessManager -> AuditAccess -> AuditResource
-}
-
-UseCase "Bulk export of records" {
-  WebClient -> ProcessManager
-    ProcessManager -> WorkflowsAccess -> WorkflowsResource
-    ProcessManager -> RecordsAccess
-      RecordsAccess -> RecordsResource
-      RecordsAccess -> NotesResource
-      RecordsAccess -> FormsResource
-    ProcessManager -> EvaluationEngine -> ConfigurationAccess -> ConfigurationResource
-    ProcessManager -> AuditAccess -> AuditResource
-}
-
-
-Activity "Organization onboarding" {
-  |u|User
-  |s|System
-  |support| Support
-  |i|Identity Provider
-  |support|
-  start
-  :Enter organization name and user email;
-  |s|
-  :Register invite parameters;
-  :Sends invite link to contact;
-  |u|
-  :Access invite link;
-  |s|
-  :Requires user authentication and puts link into state;
-  |i|
-  :Create user identity;
-  floating note left
-    In the future we can require 
-    a valid token from the system 
-    in order to allow user sign up.
-  end note
-  |s|
-  :Authenticate user;
-  :Create user account for identity;
-  :Retrieve invitation entry from forwarded state;
-  :Validate invitation (e.g. expiration date);
-  :Initialize configuration (organization, location, base policies...);
-  :Create family and person;
-  :Link user to person in location;
-  |u|
-  :Access CareTogether;
-  stop
-}
-
-
-Activity "Invite user to existing organization" {
-  |u1|User 1
-  |u2|User 2
-  |s|System
-  |support| Support
-  |i|Identity Provider
-  |u1|
-  start
-  :Generates invite;
-  |s|
-  :Register invite parameters;
-  :Sends invite link to contact;
-  |u2|
-  :Access invite link;
-  :Enter personal data;
-  |s|
-  :Receive user data;
-  :Retrieve invitation entry;
-  :Validate invitation (e.g. expiration date);
-  |i|
-  :Create user identity;
-  |s|
-  :Create user account for identity;
-  :Link user to organization;
-  :Create family and person;
-  :Authenticate user;
-  |u2|
-  :Access CareTogether;
-  stop
-}
-
-UseCase "M0: Invite a User to Sign Up" {
-  WebClient - IMembershipManager.InviteUser() > MembershipManager
-    /* Sub-usecase "SUB-Pr-1: Authorize User Access in Context" */
-    MembershipManager -> AccountsAccess -> AccountsResource
-      AccountsAccess -> SecurityUtility
-    MembershipManager -:q> CommunicationManager
-}
-
-UseCase "M1: Sign Up as a User" {
-  @@@
-  A person wants to sign up for a CareTogether account.
-  This person MUST have an invite link to redeem, so their new account can
-  be tied to an existing CareTogether organization or allow them to sign up
-  a new organization.
-  Signing up for an account without a connection to an organization makes no sense.
-  @@@
-  WebClient - IMembershipManager.SignUpUser() > MembershipManager
-    MembershipManager - Account IAccountsAccess.GetOrCreateUserAccount(ClaimsPrincipal) > AccountsAccess
-      AccountsAccess -> AccountsResource
-      /* TODO: Separate out the "link user to existing organization" into a separate sub-usecase */
-      AccountsAccess -> RecordsResource
-    MembershipManager - ClaimsPrincipal ISecurityUtility.Authenticate(HttpContext) > SecurityUtility 
-}
-
-UseCase "M1: Sign Up as a User (copy)" {
-  @@@
-  A person wants to sign up for a CareTogether account.
-  This person MUST have an invite link to redeem, so their new account can
-  be tied to an existing CareTogether organization or allow them to sign up
-  a new organization.
-  Signing up for an account without a connection to an organization makes no sense.
-  @@@
-  WebClient - IMembershipManager.SignUpUser(InvitationId) > MembershipManager
-    MembershipManager - INetworkAccess.RedeemOrganizationInvitationTableEntry() > NetworkAccess -> NetworkResource
-    MembershipManager - Account IAccountsAccess.GetOrCreateUserAccount(ClaimsPrincipal) > AccountsAccess -> AccountsResource
-  
-    /* Optional: only initialize config. if it's an invite to sign up organization, 
-       otherwise just link the user/person to existing organization. */
-    MembershipManager - IConfigurationAccess.InitializeConfiguration() > ConfigurationAccess -> ConfigurationResource
-    
-    MembershipManager - IRecordsAccess.CreatePerson() > RecordsAccess -> RecordsResource
-    MembershipManager - ClaimsPrincipal ISecurityUtility.Authenticate(HttpContext) > SecurityUtility 
-}
-
-UseCase "M1: Sign Up as a User (copy 2)" {
-  @@@
-  A person wants to sign up for a CareTogether account.
-  This person MUST have an invite link to redeem, so their new account can
-  be tied to an existing CareTogether organization or allow them to sign up
-  a new organization.
-  Signing up for an account without a connection to an organization makes no sense.
-  @@@
-  WebClient - IMembershipManager.SignUpUser(InvitationId) > MembershipManager
-
-    /* This steps occurs in the backend or in the browser? */
-    MembershipManager - ISecurityUtility.CreateUserIdentity() > SecurityUtility
-
-    MembershipManager - ClaimsPrincipal ISecurityUtility.Authenticate(HttpContext) > SecurityUtility 
-    MembershipManager - Account IAccountsAccess.CreateUserAccount(ClaimsPrincipal) > AccountsAccess -> AccountsResource
-    MembershipManager - INetworkAccess.RedeemOrganizationInvitationTableEntry() > NetworkAccess -> NetworkResource
-
-    /* Optional: only initialize config. if it's an invite to sign up organization, 
-       otherwise just link the user/person to existing organization. */
-    MembershipManager - IConfigurationAccess.InitializeConfiguration() > ConfigurationAccess -> ConfigurationResource
-
-    /* Creates family and person, and links user to person in location */
-    MembershipManager - IRecordsAccess.Execute() > RecordsAccess -> RecordsResource
-}
-
-UseCase "Invite a User to Sign Up an Organization" {
-  @@@
-  A CareTogether team representative wants to invite a leader in an
-  organization to sign up their organization in CareTogether.
-  The team representative will generate an invite link and send it
-  to the leader, who may or may not already have a CareTogether account,
-  i.e. the invite link will need to double as a user invite link and as an
-  organization sign-up link.
-  The sign-up link needs to be:
-    - self-enforcing ("Person X can sign up organization Y"),
-    - self-expiring ("Valid until X/Y/ZZ"),
-    - trustworthy (digitally signed by CareTogether), and
-    - (optionally) confidential (encrypted by CareTogether).
-  It also needs to be short, i.e. the link itself should just be a UUID. To make
-  links easy to find in a database, a UUIDv7 should be used.
-  Links should expire within 24 hours.
-  The invitation process involves a "sales" workflow to send reminders with updated links
-  that encourage the user to complete the sign-up process.
-  The invitation process can include defining the initial relationships that the organization
-  may have with (especially local) network partners, which can further incentivize the sign-up process and
-  enhance post-conversion "user activation".
-  Links that allow both user sign-up and organization sign-up could be composite links, e.g.:
-  https://app.caretogether.io/signup?user_invite={123}&org_invite={456}
-  @@@
-  /* Inviting a user can optionally include inviting them to create a specific organization. */
-  SupportClient - OrganizationInvitation IMembershipManager.InviteOrganization(OrganizationInviteCriteria) > MembershipManager
-    /* The invitation workflow can send reminders with renewed links. */
-    MembershipManager -> WorkflowsAccess -> WorkflowsResource
-    MembershipManager - INetworkAccess.CreateOrganizationInvitationTableEntry() > NetworkAccess -> NetworkResource
-    MembershipManager -> AuditAccess -> AuditResource
-    MembershipManager -:q> CommunicationManager
-}
-
-DTO OrganizationInviteCriteria {
-    /* TODO: Include initial network partners, to help bootstrap the network & accelerate "activation" */
-}
-
-/* REVIEW BEGINS */
-UseCase "M2: Sign Up an Organization" {
-  @@@
-  A leader in an organization wants to sign up for CareTogether.
-  The leader must previously have signed up for a CareTogether account [M1], potentially with
-  the same invite link and immediately prior to this step.
-  The leader MUST have an invite link that grants them the ability to sign up their specific organization.
-  @@@
-  WebClient - IMembershipManager.SignUpOrganization(OrganizationInvitationId) > MembershipManager
-    /* We cannot authorize this particular use case on the basis of organizational policies, because the
-       organization itself does not exist at the beginning of the use case.
-       The security checks are therefore very basic. */
-    MembershipManager -> SecurityUtility
-    /* Initiate an organization onboarding workflow.
-       "Charity starts at home" -- when a new organization signs up, existing members can help them
-       reach "activation" which is something the onboarding workflow needs to help facilitate. */
-    MembershipManager -> WorkflowsAccess -> WorkflowsResource
-    MembershipManager - INetworkAccess.RedeemOrganizationInvitationTableEntry() > NetworkAccess -> NetworkResource
-    /* Set the initial configuration for an organization.
-       To begin with, this will largely be blank, but in the future this could allow for tying into
-       collaborative networks' shared "best practices", compliance rules, etc.
-       This also includes creating the initial location for the organization and
-       granting the leader the OrganizationAdministrator role across their entire organization. */
-    /*TODO: Review the "bootstrapping" problem of how to grant the first user access to the first location, and
-            how to grant people access to other locations than their default location.
-            Could define a (better) process for the support team, at a minimum, but self-service is important too. */
-    MembershipManager - IConfigurationAccess.InitializeConfiguration() > ConfigurationAccess -> ConfigurationResource
-    MembershipManager -> AuditAccess -> AuditResource
-    MembershipManager -:q> CommunicationManager
 }
 
 
