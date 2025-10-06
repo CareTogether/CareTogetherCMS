@@ -112,6 +112,8 @@ namespace CareTogether.Managers
                 .Select(note => new Note(
                     note.Id,
                     note.AuthorId,
+                     note.CreatedTimestampUtc,
+                     note.LastEditTimestampUtc,
                     TimestampUtc: note.Status == NoteStatus.Approved
                         ? note.ApprovedTimestampUtc!.Value
                         : note.LastEditTimestampUtc,

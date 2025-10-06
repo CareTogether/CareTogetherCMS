@@ -19,6 +19,7 @@ import { DiscardNoteDialog } from './DiscardNoteDialog';
 import { useFamilyIdPermissions } from '../Model/SessionModel';
 import { useLoadable } from '../Hooks/useLoadable';
 import { accountInfoState } from '../Authentication/Auth';
+import { format } from 'date-fns';
 
 type NoteCardProps = {
   familyId: string;
@@ -57,6 +58,25 @@ export function NoteCard({ familyId, note }: NoteCardProps) {
         sx={{ padding: 1 }}
         subheader={
           <>
+            {(() => {
+              const created = note.createdTimestampUtc
+                ? new Date(note.createdTimestampUtc)
+                : null;
+              const edited = note.lastEditTimestampUtc
+                ? new Date(note.lastEditTimestampUtc)
+                : null;
+
+              if (edited && created && edited.getTime() !== created.getTime()) {
+                return <>Edited {format(edited, 'M/d/yy h:mm a')}&nbsp;</>;
+              }
+
+              if (created) {
+                return <>Created {format(created, 'M/d/yy h:mm a')}&nbsp;</>;
+              }
+
+              return null;
+            })()}
+
             <PersonName person={userLookup(note.authorId)} />
             {note.status === NoteStatus.Draft ? ' - DRAFT' : ''}
           </>

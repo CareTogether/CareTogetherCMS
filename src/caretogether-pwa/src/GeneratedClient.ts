@@ -7492,6 +7492,8 @@ export interface IArrangementEntry {
 export class Note implements INote {
     id!: string;
     authorId!: string;
+    createdTimestampUtc!: Date;
+    lastEditTimestampUtc!: Date;
     timestampUtc!: Date;
     contents?: string | undefined;
     status!: NoteStatus;
@@ -7511,6 +7513,8 @@ export class Note implements INote {
         if (_data) {
             this.id = _data["id"];
             this.authorId = _data["authorId"];
+            this.createdTimestampUtc = _data["createdTimestampUtc"] ? new Date(_data["createdTimestampUtc"].toString()) : <any>undefined;
+            this.lastEditTimestampUtc = _data["lastEditTimestampUtc"] ? new Date(_data["lastEditTimestampUtc"].toString()) : <any>undefined;
             this.timestampUtc = _data["timestampUtc"] ? new Date(_data["timestampUtc"].toString()) : <any>undefined;
             this.contents = _data["contents"];
             this.status = _data["status"];
@@ -7530,6 +7534,8 @@ export class Note implements INote {
         data = typeof data === 'object' ? data : {};
         data["id"] = this.id;
         data["authorId"] = this.authorId;
+        data["createdTimestampUtc"] = this.createdTimestampUtc ? this.createdTimestampUtc.toISOString() : <any>undefined;
+        data["lastEditTimestampUtc"] = this.lastEditTimestampUtc ? this.lastEditTimestampUtc.toISOString() : <any>undefined;
         data["timestampUtc"] = this.timestampUtc ? this.timestampUtc.toISOString() : <any>undefined;
         data["contents"] = this.contents;
         data["status"] = this.status;
@@ -7542,6 +7548,8 @@ export class Note implements INote {
 export interface INote {
     id: string;
     authorId: string;
+    createdTimestampUtc: Date;
+    lastEditTimestampUtc: Date;
     timestampUtc: Date;
     contents?: string | undefined;
     status: NoteStatus;
