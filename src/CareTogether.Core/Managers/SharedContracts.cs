@@ -74,6 +74,7 @@ namespace CareTogether.Managers
         DateTime CreatedTimestampUtc,
         DateTime LastEditTimestampUtc,
         DateTime TimestampUtc,
+        DateTime? ApprovedTimestampUtc,
         string? Contents,
         NoteStatus Status,
         DateTime? BackdatedTimestampUtc,

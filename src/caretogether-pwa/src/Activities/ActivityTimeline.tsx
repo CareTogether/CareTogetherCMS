@@ -25,6 +25,8 @@ import { PersonName } from '../Families/PersonName';
 import { Box, Stack, Typography, Link } from '@mui/material';
 import { NoteCard } from '../Notes/NoteCard';
 import { useAccessLevelDialog } from '../Notes/AccessLevelDialog/useAccessLevelDialog';
+import { FormControl, InputLabel, Select, MenuItem } from '@mui/material';
+import { useState } from 'react';
 
 type ActivityTimelineProps = {
   family: CombinedFamilyInfo;
@@ -133,18 +135,67 @@ export function ActivityTimeline({
     return document;
   }
 
+  const { noteAccessLevelDialog, open } = useAccessLevelDialog({
+    familyId: family.family.id,
+  });
+
+  const [sortBy, setSortBy] = useState<
+    'all' | 'created' | 'edited' | 'approved'
+  >('all');
+
+  const getDateValue = (value?: string | Date | null): number => {
+    if (!value) return 0;
+    if (value instanceof Date) return value.getTime();
+    return new Date(value).getTime();
+  };
+
+  const sortedNotes = [...(family.notes || [])].sort((a, b) => {
+    if (sortBy === 'created') {
+      return (
+        getDateValue(b.createdTimestampUtc) -
+        getDateValue(a.createdTimestampUtc)
+      );
+    } else if (sortBy === 'edited') {
+      return (
+        getDateValue(b.lastEditTimestampUtc) -
+        getDateValue(a.lastEditTimestampUtc)
+      );
+    } else if (sortBy === 'approved') {
+      return (
+        getDateValue(b.approvedTimestampUtc) -
+        getDateValue(a.approvedTimestampUtc)
+      );
+    }
+    return 0;
+  });
+
+  const notesToRender =
+    sortBy === 'approved'
+      ? sortedNotes.filter((n) => n.approvedTimestampUtc)
+      : sortBy === 'created'
+        ? sortedNotes.filter(
+            (n) =>
+              !n.lastEditTimestampUtc ||
+              getDateValue(n.lastEditTimestampUtc) ===
+                getDateValue(n.createdTimestampUtc)
+          )
+        : sortBy === 'edited'
+          ? sortedNotes.filter(
+              (n) =>
+                n.lastEditTimestampUtc &&
+                getDateValue(n.lastEditTimestampUtc) !==
+                  getDateValue(n.createdTimestampUtc)
+            )
+          : sortedNotes;
+
   const activitiesWithEmbeddedNotes = embedNotesInActivities(
-    family.notes || [],
+    notesToRender,
     allActivitiesSorted
   );
 
   const onlyActivitiesWithNotes = activitiesWithEmbeddedNotes.filter((item) =>
     Boolean(item.note)
   );
-
-  const { noteAccessLevelDialog, open } = useAccessLevelDialog({
-    familyId: family.family.id,
-  });
 
   return (
     <>
@@ -273,6 +324,26 @@ export function ActivityTimeline({
       </div>
 
       <Timeline position="right" sx={{ padding: 0 }}>
+        <Box sx={{ display: 'flex', justifyContent: 'flex-start', mb: 1 }}>
+          <FormControl size="small" sx={{ minWidth: 160 }}>
+            <InputLabel>Sort by</InputLabel>
+            <Select
+              value={sortBy}
+              label="Sort by"
+              onChange={(e) =>
+                setSortBy(
+                  e.target.value as 'all' | 'created' | 'edited' | 'approved'
+                )
+              }
+            >
+              <MenuItem value="all">All Notes</MenuItem>
+              <MenuItem value="created">Created Date</MenuItem>
+              <MenuItem value="edited">Last Edited Date</MenuItem>
+              <MenuItem value="approved">Approved Date</MenuItem>
+            </Select>
+          </FormControl>
+        </Box>
+
         {activitiesWithEmbeddedNotes?.map(({ activity, note }, i) => (
           <TimelineItem key={i}>
             <TimelineOppositeContent sx={{ display: 'none' }} />

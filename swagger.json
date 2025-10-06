@@ -4707,6 +4707,11 @@
             "type": "string",
             "format": "date-time"
           },
+          "approvedTimestampUtc": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
           "contents": {
             "type": "string",
             "nullable": true

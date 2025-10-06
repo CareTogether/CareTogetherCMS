@@ -7495,6 +7495,7 @@ export class Note implements INote {
     createdTimestampUtc!: Date;
     lastEditTimestampUtc!: Date;
     timestampUtc!: Date;
+    approvedTimestampUtc?: Date | undefined;
     contents?: string | undefined;
     status!: NoteStatus;
     backdatedTimestampUtc?: Date | undefined;
@@ -7516,6 +7517,7 @@ export class Note implements INote {
             this.createdTimestampUtc = _data["createdTimestampUtc"] ? new Date(_data["createdTimestampUtc"].toString()) : <any>undefined;
             this.lastEditTimestampUtc = _data["lastEditTimestampUtc"] ? new Date(_data["lastEditTimestampUtc"].toString()) : <any>undefined;
             this.timestampUtc = _data["timestampUtc"] ? new Date(_data["timestampUtc"].toString()) : <any>undefined;
+            this.approvedTimestampUtc = _data["approvedTimestampUtc"] ? new Date(_data["approvedTimestampUtc"].toString()) : <any>undefined;
             this.contents = _data["contents"];
             this.status = _data["status"];
             this.backdatedTimestampUtc = _data["backdatedTimestampUtc"] ? new Date(_data["backdatedTimestampUtc"].toString()) : <any>undefined;
@@ -7537,6 +7539,7 @@ export class Note implements INote {
         data["createdTimestampUtc"] = this.createdTimestampUtc ? this.createdTimestampUtc.toISOString() : <any>undefined;
         data["lastEditTimestampUtc"] = this.lastEditTimestampUtc ? this.lastEditTimestampUtc.toISOString() : <any>undefined;
         data["timestampUtc"] = this.timestampUtc ? this.timestampUtc.toISOString() : <any>undefined;
+        data["approvedTimestampUtc"] = this.approvedTimestampUtc ? this.approvedTimestampUtc.toISOString() : <any>undefined;
         data["contents"] = this.contents;
         data["status"] = this.status;
         data["backdatedTimestampUtc"] = this.backdatedTimestampUtc ? this.backdatedTimestampUtc.toISOString() : <any>undefined;
@@ -7551,6 +7554,7 @@ export interface INote {
     createdTimestampUtc: Date;
     lastEditTimestampUtc: Date;
     timestampUtc: Date;
+    approvedTimestampUtc?: Date | undefined;
     contents?: string | undefined;
     status: NoteStatus;
     backdatedTimestampUtc?: Date | undefined;
