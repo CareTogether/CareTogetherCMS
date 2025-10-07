@@ -6,6 +6,8 @@ import {
 } from '@azure/msal-browser';
 import { AtomEffect, atom } from 'recoil';
 import { loggingEffect } from '../Utilities/loggingEffect';
+import { appInsights } from '../ApplicationInsightsService';
+import posthog from 'posthog-js';
 
 // MSAL configuration for single page application authorization. For guidance, see
 // https://docs.microsoft.com/en-us/azure/active-directory/develop/scenario-spa-app-configuration?tabs=react and
@@ -27,7 +29,22 @@ export const globalMsalInstance: IPublicClientApplication =
 
 function trace(scope: string, message: string) {
   console.debug(`[${scope}] ${message}`);
-  //TODO: Invoke App Insights as well.
+
+  // Send trace to Application Insights
+  appInsights.trackTrace({
+    message: message,
+    properties: {
+      'Component Name': scope,
+      'Auth Flow': 'MSAL Authentication',
+    },
+  });
+
+  // Send trace to PostHog
+  posthog.capture('auth_trace', {
+    scope: scope,
+    message: message,
+    auth_flow: 'msal_authentication',
+  });
 }
 
 function renderMsalError(error: unknown) {
