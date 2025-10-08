@@ -69,6 +69,7 @@ namespace CareTogether.Engines.Authorization
                     DeleteUploadedFamilyDocument => Permission.DeleteFamilyDocuments,
                     ChangePrimaryFamilyContact => Permission.EditFamilyInfo,
                     UpdateCustomFamilyField => Permission.EditFamilyInfo,
+                    UpdateTestFamilyFlag => Permission.EditFamilyInfo,
                     _ => throw new NotImplementedException(
                         $"The command type '{command.GetType().FullName}' has not been implemented."
                     ),
