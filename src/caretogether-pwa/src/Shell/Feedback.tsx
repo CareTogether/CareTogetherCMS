@@ -1,5 +1,14 @@
-import { Chat, SentimentSatisfiedAlt } from '@mui/icons-material';
-import { Stack } from '@mui/material';
+import React from 'react';
+import {
+  Box,
+  Popover,
+  MenuList,
+  MenuItem,
+  ListItemIcon,
+  ListItemText,
+} from '@mui/material';
+import StarBorderIcon from '@mui/icons-material/StarBorder';
+import BugReportIcon from '@mui/icons-material/BugReport';
 import Button from '@mui/material/Button';
 import { Permission } from '../GeneratedClient';
 import { useGlobalPermissions } from '../Model/SessionModel';
@@ -8,57 +17,94 @@ export default function Feedback() {
   const permissions = useGlobalPermissions();
   const hasAccessToSupport = permissions(Permission.AccessSupportScreen);
 
+  const [anchorEl, setAnchorEl] = React.useState<HTMLElement | null>(null);
+  const open = Boolean(anchorEl);
+
+  const handleOpen = (e: React.MouseEvent<HTMLElement>) =>
+    setAnchorEl(e.currentTarget);
+  const handleClose = () => setAnchorEl(null);
+
   return (
-    <Stack spacing={2} alignItems="center">
+    <Box sx={{ textAlign: 'center' }}>
       <Button
-        href="https://caretogether.featurebase.app/"
-        target="_blank"
-        rel="noopener noreferrer"
-        startIcon={<SentimentSatisfiedAlt />}
+        disableRipple
+        variant="contained"
+        onClick={handleOpen}
         sx={{
+          position: 'relative',
+          borderRadius: '50px 50px 50px 0',
+          backgroundColor: '#fff',
+          color: (theme) => theme.palette.primary.main,
+          fontWeight: 'bold',
+          fontSize: '0.95rem',
+          px: 3,
+          py: 1.2,
+          boxShadow: 4,
           textTransform: 'none',
-          borderRadius: 10,
-          px: 2,
-          py: 1,
-          backgroundColor: 'grey.100',
-          color: 'black',
-          boxShadow: 1,
-          transition: 'transform 0.2s ease',
+          transition: 'all 0.2s ease',
+          '&:after': {
+            content: '""',
+            position: 'absolute',
+            bottom: 0,
+            right: 18,
+            width: 0,
+            height: 0,
+            borderLeft: '10px solid transparent',
+            borderTop: '10px solid #fff',
+            pointerEvents: 'none',
+          },
           '&:hover': {
-            backgroundColor: 'grey.200',
-            transform: 'scale(1.05)',
+            backgroundColor: '#f5f5f5',
+            boxShadow: 6,
+            transform: 'translateY(-2px)',
           },
         }}
       >
-        <span>Feature requests</span>
+        Need Help?
       </Button>
 
-      {hasAccessToSupport && (
-        <Button
-          onClick={() => {
-            if (window.Featurebase) {
-              window.Featurebase('showNewMessage');
-            }
-          }}
-          startIcon={<Chat />}
-          sx={{
-            textTransform: 'none',
-            borderRadius: 10,
-            px: 2,
-            py: 1,
-            backgroundColor: 'grey.100',
-            color: 'black',
-            boxShadow: 1,
-            transition: 'transform 0.2s ease',
-            '&:hover': {
-              backgroundColor: 'grey.200',
-              transform: 'scale(1.05)',
-            },
-          }}
-        >
-          <span>I have a problem</span>
-        </Button>
-      )}
-    </Stack>
+      <Popover
+        open={open}
+        anchorEl={anchorEl}
+        onClose={handleClose}
+        anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
+        transformOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+        slotProps={{
+          paper: { sx: { borderRadius: 2, boxShadow: 4, minWidth: 200 } },
+        }}
+      >
+        <MenuList dense>
+          <MenuItem
+            onClick={() => {
+              handleClose();
+              window.open(
+                'https://caretogether.featurebase.app/',
+                '_blank',
+                'noopener,noreferrer'
+              );
+            }}
+          >
+            <ListItemIcon>
+              <StarBorderIcon fontSize="small" />
+            </ListItemIcon>
+            <ListItemText primary="Request feature" />
+          </MenuItem>
+
+          {hasAccessToSupport && (
+            <MenuItem
+              onClick={() => {
+                handleClose();
+                if (window.Featurebase) window.Featurebase('showNewMessage');
+              }}
+            >
+              <ListItemIcon>
+                <BugReportIcon fontSize="small" />
+              </ListItemIcon>
+              <ListItemText primary="I have a problem" />
+            </MenuItem>
+          )}
+        </MenuList>
+      </Popover>
+    </Box>
   );
 }
