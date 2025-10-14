@@ -593,7 +593,10 @@ namespace CareTogether.Api.OData
                 .Locations.Select(async location =>
                     (
                         location,
-                        policy: await policiesResource.GetCurrentPolicy(organizationId, location.Id ?? Guid.Empty)
+                        policy: await policiesResource.GetCurrentPolicy(
+                            organizationId,
+                            location.Id ?? Guid.Empty
+                        )
                     )
                 )
                 .WhenAll();
@@ -692,7 +695,7 @@ namespace CareTogether.Api.OData
                 .SelectMany(x => RenderPeople(organization, x.Item1, x.Item2))
                 .ToArray();
 
-            var locationUserAccess = people
+            var userRolesWithAccess = await people
                 .Select(person =>
                     (
                         organizationId: person.Family.Location.OrganizationId,
@@ -712,10 +715,38 @@ namespace CareTogether.Api.OData
                         )
                     )
                 )
-                .WhenAll()
-                .Result.Where(item =>
-                    item.roles?.Contains(SystemConstants.ORGANIZATION_ADMINISTRATOR) ?? false
-                )
+                .WhenAll();
+
+            var filteredUserRoles = await userRolesWithAccess
+                .Where(item => item.roles != null)
+                .Select(async item =>
+                {
+                    // Check if user is organization administrator
+                    var isOrgAdmin =
+                        item.roles?.Contains(SystemConstants.ORGANIZATION_ADMINISTRATOR) ?? false;
+
+                    if (isOrgAdmin)
+                        return (item, hasAccess: true);
+
+                    // Check if user has any role with AccessReportsScreen permission
+                    var orgConfig = await policiesResource.GetConfigurationAsync(
+                        item.organizationId
+                    );
+                    var hasAccessReportsPermission = orgConfig
+                        .Roles.Where(role => item.roles!.Contains(role.RoleName))
+                        .Any(roleDefinition =>
+                            roleDefinition.PermissionSets.Any(permissionSet =>
+                                permissionSet.Permissions.Contains(Permission.AccessReportsScreen)
+                            )
+                        );
+
+                    return (item, hasAccess: hasAccessReportsPermission);
+                })
+                .WhenAll();
+
+            var locationUserAccess = filteredUserRoles
+                .Where(result => result.hasAccess)
+                .Select(result => result.item)
                 .Select(async item =>
                     (
                         userId: (
@@ -1641,9 +1672,7 @@ namespace CareTogether.Api.OData
             Family family
         )
         {
-            var allReferralsInfo = (
-                familyInfo.PartneringFamilyInfo?.ClosedV1Cases ?? []
-            ).AddRange(
+            var allReferralsInfo = (familyInfo.PartneringFamilyInfo?.ClosedV1Cases ?? []).AddRange(
                 familyInfo.PartneringFamilyInfo?.OpenV1Case == null
                     ? []
                     : new[] { familyInfo.PartneringFamilyInfo.OpenV1Case }
@@ -1684,9 +1713,7 @@ namespace CareTogether.Api.OData
             ArrangementType[] arrangementTypes
         )
         {
-            var allReferralsInfo = (
-                familyInfo.PartneringFamilyInfo?.ClosedV1Cases ?? []
-            ).AddRange(
+            var allReferralsInfo = (familyInfo.PartneringFamilyInfo?.ClosedV1Cases ?? []).AddRange(
                 familyInfo.PartneringFamilyInfo?.OpenV1Case == null
                     ? []
                     : new[] { familyInfo.PartneringFamilyInfo.OpenV1Case }
@@ -1734,9 +1761,7 @@ namespace CareTogether.Api.OData
             Arrangement[] arrangements
         )
         {
-            var allReferralsInfo = (
-                familyInfo.PartneringFamilyInfo?.ClosedV1Cases ?? []
-            ).AddRange(
+            var allReferralsInfo = (familyInfo.PartneringFamilyInfo?.ClosedV1Cases ?? []).AddRange(
                 familyInfo.PartneringFamilyInfo?.OpenV1Case == null
                     ? []
                     : new[] { familyInfo.PartneringFamilyInfo.OpenV1Case }
@@ -1801,9 +1826,7 @@ namespace CareTogether.Api.OData
             Arrangement[] arrangements
         )
         {
-            var allReferralsInfo = (
-                familyInfo.PartneringFamilyInfo?.ClosedV1Cases ?? []
-            ).AddRange(
+            var allReferralsInfo = (familyInfo.PartneringFamilyInfo?.ClosedV1Cases ?? []).AddRange(
                 familyInfo.PartneringFamilyInfo?.OpenV1Case == null
                     ? []
                     : new[] { familyInfo.PartneringFamilyInfo.OpenV1Case }
@@ -1843,9 +1866,7 @@ namespace CareTogether.Api.OData
             Arrangement[] arrangements
         )
         {
-            var allReferralsInfo = (
-                familyInfo.PartneringFamilyInfo?.ClosedV1Cases ?? []
-            ).AddRange(
+            var allReferralsInfo = (familyInfo.PartneringFamilyInfo?.ClosedV1Cases ?? []).AddRange(
                 familyInfo.PartneringFamilyInfo?.OpenV1Case == null
                     ? []
                     : new[] { familyInfo.PartneringFamilyInfo.OpenV1Case }
