@@ -1448,7 +1448,7 @@ namespace CareTogether.Api.OData
 
             var bestAddress = GetFromPrimaryContactIfAvailable(person =>
             {
-                var primaryAddressInfo = person.Addresses.SingleOrDefault(x =>
+                var primaryAddressInfo = person.Addresses.FirstOrDefault(x =>
                     x.Id == person.CurrentAddressId
                 );
                 var primaryAddress =
