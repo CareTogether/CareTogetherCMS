@@ -1440,7 +1440,7 @@ namespace CareTogether.Api.OData
 
             var bestEmail = GetFromPrimaryContactIfAvailable(person =>
                 person
-                    .EmailAddresses.SingleOrDefault(x =>
+                    .EmailAddresses.FirstOrDefault(x =>
                         x.Id == primaryContactPerson?.PreferredEmailAddressId
                     )
                     ?.Address
