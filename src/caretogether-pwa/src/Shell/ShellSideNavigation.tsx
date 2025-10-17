@@ -52,16 +52,6 @@ function SideNavigationMenu({ open }: SideNavigationMenuProps) {
       sx={{
         '& .MuiListItem-root.Mui-selected': { color: '#ffff' },
         '& .MuiListItem-root.Mui-selected svg': { color: '#ffff' },
-        // Prevent horizontal overflow and text wrapping
-        '& .MuiListItem-root': {
-          paddingLeft: 2,
-          paddingRight: 1,
-        },
-        '& .MuiListItemText-primary': {
-          whiteSpace: 'nowrap',
-          overflow: 'hidden',
-          textOverflow: 'ellipsis',
-        },
       }}
     >
       {flags === null ? (
