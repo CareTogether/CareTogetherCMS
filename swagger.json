@@ -4681,6 +4681,8 @@
         "required": [
           "id",
           "authorId",
+          "createdTimestampUtc",
+          "lastEditTimestampUtc",
           "timestampUtc",
           "status"
         ],
@@ -4693,9 +4695,22 @@
             "type": "string",
             "format": "guid"
           },
+          "createdTimestampUtc": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "lastEditTimestampUtc": {
+            "type": "string",
+            "format": "date-time"
+          },
           "timestampUtc": {
             "type": "string",
             "format": "date-time"
+          },
+          "approvedTimestampUtc": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
           },
           "contents": {
             "type": "string",

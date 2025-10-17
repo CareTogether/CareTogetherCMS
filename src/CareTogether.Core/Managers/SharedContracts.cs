@@ -71,7 +71,10 @@ namespace CareTogether.Managers
     public sealed record Note(
         Guid Id,
         Guid AuthorId,
+        DateTime CreatedTimestampUtc,
+        DateTime LastEditTimestampUtc,
         DateTime TimestampUtc,
+        DateTime? ApprovedTimestampUtc,
         string? Contents,
         NoteStatus Status,
         DateTime? BackdatedTimestampUtc,
