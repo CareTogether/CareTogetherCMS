@@ -47,15 +47,21 @@ function SideNavigationMenu({ open }: SideNavigationMenuProps) {
   const reportSubmenuItems = useRecoilValue(reportSubmenuItemsAtom);
 
   return (
-    //  <List aria-label="main navigation">
-    //    <ListItemLink to="/dashboard" primary="Dashboard" icon={<DashboardIcon sx={{color: '#fff'}} />} />
-    //  </List>
     <List
       aria-label="secondary navigation"
       sx={{
         '& .MuiListItem-root.Mui-selected': { color: '#ffff' },
         '& .MuiListItem-root.Mui-selected svg': { color: '#ffff' },
-        marginBottom: 17,
+        // Prevent horizontal overflow and text wrapping
+        '& .MuiListItem-root': {
+          paddingLeft: 2,
+          paddingRight: 1,
+        },
+        '& .MuiListItemText-primary': {
+          whiteSpace: 'nowrap',
+          overflow: 'hidden',
+          textOverflow: 'ellipsis',
+        },
       }}
     >
       {flags === null ? (
@@ -186,30 +192,6 @@ interface ShellSideNavigationProps {
 export function ShellSideNavigation({ open, width }: ShellSideNavigationProps) {
   const theme = useTheme();
 
-  // const drawerPaperOpenStyle = {
-  //   position: 'relative',
-  //   whiteSpace: 'nowrap',
-  //   width: 200,
-  //   transition: theme.transitions.create('width', {
-  //     easing: theme.transitions.easing.sharp,
-  //     duration: theme.transitions.duration.enteringScreen
-  //   })
-  // };
-
-  // const drawerPaperCloseStyle = {
-  //   position: 'relative',
-  //   whiteSpace: 'nowrap',
-  //   overflowX: 'hidden',
-  //   width: theme.spacing(7),
-  //   [theme.breakpoints.up('sm')]: {
-  //     width: theme.spacing(9),
-  //   },
-  //   transition: theme.transitions.create('width', {
-  //     easing: theme.transitions.easing.sharp,
-  //     duration: theme.transitions.duration.leavingScreen,
-  //   })
-  // };
-
   return (
     <Drawer
       variant="permanent"
@@ -220,33 +202,45 @@ export function ShellSideNavigation({ open, width }: ShellSideNavigationProps) {
         whiteSpace: 'nowrap',
         overflowX: 'hidden',
         '& .MuiDrawer-paper': {
+          width: width, // Force fixed width
+          minWidth: width, // Prevent shrinking
+          maxWidth: width, // Prevent expanding
           backgroundColor: theme.palette.primary.dark,
           color: theme.palette.primary.contrastText,
           overflowX: 'hidden',
+          display: 'flex',
+          flexDirection: 'column',
         },
       }}
     >
-      <Stack sx={{ width: width, paddingTop: { xs: 7, sm: 8, md: 6 } }}>
+      <Box sx={{ paddingTop: { xs: 7, sm: 8, md: 6 } }}>
+        {/* Spacer for top app bar */}
+      </Box>
+      <Box
+        sx={{
+          flex: 1,
+          overflowY: 'auto',
+          overflowX: 'hidden',
+        }}
+      >
         <SideNavigationMenu open={open} />
-        {open && (
-          <div
-            style={{
-              overflowX: 'hidden',
-              width: width,
-              position: 'fixed',
-              bottom: 0,
-            }}
-          >
-            <Stack className="ph-unmask" alignItems="center">
-              <Box mb={5}>
-                <Feedback />
-              </Box>
-              <Version />
-              <Copyright />
-            </Stack>
-          </div>
-        )}
-      </Stack>
+      </Box>
+      {open && (
+        <Box
+          sx={{
+            backgroundColor: theme.palette.primary.dark,
+            borderTop: `1px solid ${theme.palette.divider}`,
+          }}
+        >
+          <Stack className="ph-unmask" alignItems="center" sx={{ py: 2 }}>
+            <Box mb={2}>
+              <Feedback />
+            </Box>
+            <Version />
+            <Copyright />
+          </Stack>
+        </Box>
+      )}
     </Drawer>
   );
 }
