@@ -31,12 +31,14 @@ import {
 } from '../Families/FamilyUtils';
 import { useAllVolunteerFamiliesPermissions } from '../Model/SessionModel';
 import { Permission } from '../GeneratedClient';
-import useScreenTitle from '../Shell/ShellScreenTitle';
+import { useScreenTitle } from '../Shell/ShellScreenTitle';
 import UnfoldLessIcon from '@mui/icons-material/UnfoldLess';
 import UnfoldMoreIcon from '@mui/icons-material/UnfoldMore';
 import { useLoadable } from '../Hooks/useLoadable';
 import { ProgressBackdrop } from '../Shell/ProgressBackdrop';
 import { useAppNavigate } from '../Hooks/useAppNavigate';
+import { TestFamilyBadge } from '../Families/TestFamilyBadge';
+import { useFeatureFlagEnabled } from 'posthog-js/react';
 
 function VolunteerProgress(props: { onOpen: () => void }) {
   const { onOpen } = props;
@@ -70,6 +72,10 @@ function VolunteerProgress(props: { onOpen: () => void }) {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   const location = useLocation();
+
+  const updateTestFamilyFlagEnabled = useFeatureFlagEnabled(
+    'updateTestFamilyFlag'
+  );
 
   const [expandedView, setExpandedView] = useLocalStorage(
     'volunteer-progress-expanded',
@@ -178,10 +184,21 @@ function VolunteerProgress(props: { onOpen: () => void }) {
                     sx={{ backgroundColor: '#eef' }}
                     onClick={() => openFamily(volunteerFamily.family!.id!)}
                   >
-                    <TableCell key="1" colSpan={expandedView ? 2 : 1}>
-                      <Typography sx={{ fontWeight: 600 }}>
-                        {familyLastName(volunteerFamily) + ' Family'}
-                      </Typography>
+                    <TableCell key="1" sx={{ whiteSpace: 'nowrap' }}>
+                      <span
+                        style={{
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: 8,
+                        }}
+                      >
+                        <Typography sx={{ fontWeight: 600 }}>
+                          {familyLastName(volunteerFamily) + ' Family'}
+                        </Typography>
+                        {updateTestFamilyFlagEnabled && (
+                          <TestFamilyBadge family={volunteerFamily} />
+                        )}
+                      </span>
                     </TableCell>
                     {allApprovalAndOnboardingRequirements.map((actionName) => (
                       <TableCell key={actionName}>

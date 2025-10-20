@@ -59,8 +59,15 @@ import { ActivityTimeline } from '../Activities/ActivityTimeline';
 import { V1CaseComments } from '../V1Cases/V1CaseComments';
 import { V1CaseCustomField } from '../V1Cases/V1CaseCustomField';
 import { PrimaryContactEditor } from './PrimaryContactEditor';
-import useScreenTitle from '../Shell/ShellScreenTitle';
-import { useCommunityLookup, useFamilyLookup } from '../Model/DirectoryModel';
+import {
+  useScreenTitleComponent,
+  useScreenTitle,
+} from '../Shell/ShellScreenTitle';
+import {
+  useCommunityLookup,
+  useFamilyLookup,
+  useDirectoryModel,
+} from '../Model/DirectoryModel';
 import { RemoveFamilyRoleDialog } from '../Volunteers/RemoveFamilyRoleDialog';
 import { ResetFamilyRoleDialog } from '../Volunteers/ResetFamilyRoleDialog';
 import { VolunteerRoleApprovalStatusChip } from '../Volunteers/VolunteerRoleApprovalStatusChip';
@@ -76,8 +83,11 @@ import FamilyScreenPageVersionSwitch from './FamilyScreenPageVersionSwitch';
 import posthog from 'posthog-js';
 import { AssignmentsSection } from '../Families/AssignmentsSection';
 import { useMemo } from 'react';
+import { useBackdrop } from '../Hooks/useBackdrop';
 import { useSyncV1CaseIdInURL } from '../Hooks/useSyncV1CaseIdInURL';
 import { ArrangementsSection } from '../V1Cases/Arrangements/ArrangementsSection/ArrangementsSection';
+import { useFeatureFlagEnabled } from 'posthog-js/react';
+import { TestFamilyBadge } from './TestFamilyBadge';
 
 export function FamilyScreen() {
   const familyIdMaybe = useParams<{ familyId: string }>();
@@ -103,6 +113,10 @@ export function FamilyScreen() {
 
   const familyLookup = useFamilyLookup();
   const family = familyLookup(familyId);
+
+  const directoryModel = useDirectoryModel();
+
+  const withBackdrop = useBackdrop();
 
   const permissions = useFamilyPermissions(family);
 
@@ -255,7 +269,12 @@ export function FamilyScreen() {
   const isDesktop = useMediaQuery(theme.breakpoints.up('sm'));
   const isWideScreen = useMediaQuery(theme.breakpoints.up('xl'));
 
+  const updateTestFamilyFlagEnabled = useFeatureFlagEnabled(
+    'updateTestFamilyFlag'
+  );
+
   useScreenTitle(family ? `${familyLastName(family)} Family` : '...');
+  useScreenTitleComponent(family ? <TestFamilyBadge family={family} /> : null);
 
   function handleV1CaseChange(v1CaseId: string) {
     setSelectedV1CaseId(v1CaseId);
@@ -382,6 +401,40 @@ export function FamilyScreen() {
             <MenuItem onClick={() => reactToPrintFn()}>
               <ListItemText primary="Print notes" />
             </MenuItem>
+
+            {permissions(Permission.EditFamilyInfo) &&
+              updateTestFamilyFlagEnabled && (
+                <MenuItem
+                  onClick={async (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+
+                    setFamilyMoreMenuAnchor(null);
+
+                    try {
+                      const isCurrentlyTest =
+                        family.family?.isTestFamily ?? false;
+                      await withBackdrop(async () => {
+                        await directoryModel.updateTestFamilyFlag(
+                          family.family.id,
+                          !isCurrentlyTest
+                        );
+                      });
+                    } catch (error) {
+                      console.error(error);
+                    }
+                  }}
+                >
+                  <ListItemText
+                    className="ph-unmask"
+                    primary={
+                      family.family?.isTestFamily
+                        ? 'Unmark as test family'
+                        : 'Mark as test family'
+                    }
+                  />
+                </MenuItem>
+              )}
 
             {permissions(Permission.EditFamilyInfo) && (
               <MenuItem onClick={deleteFamilyDialogHandle.openDialog}>

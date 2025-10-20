@@ -43,7 +43,7 @@ import { useScrollMemory } from '../../Hooks/useScrollMemory';
 import { useAllVolunteerFamiliesPermissions } from '../../Model/SessionModel';
 import { BulkSmsSideSheet } from '../BulkSmsSideSheet';
 import { useWindowSize } from '../../Hooks/useWindowSize';
-import useScreenTitle from '../../Shell/ShellScreenTitle';
+import { useScreenTitle } from '../../Shell/ShellScreenTitle';
 import UnfoldLessIcon from '@mui/icons-material/UnfoldLess';
 import UnfoldMoreIcon from '@mui/icons-material/UnfoldMore';
 import { useLoadable } from '../../Hooks/useLoadable';
@@ -64,6 +64,8 @@ import { getOptionValueFromSelection } from './getOptionValueFromSelection';
 import { getUpdatedFilters } from './getUpdatedFilters';
 import { CustomFieldsFilter } from './CustomFieldsFilter';
 import { AgeText } from '../../../src/Families/AgeText';
+import { TestFamilyBadge } from '../../Families/TestFamilyBadge';
+import { useFeatureFlagEnabled } from 'posthog-js/react';
 
 function VolunteerApproval(props: { onOpen: () => void }) {
   const { onOpen } = props;
@@ -404,6 +406,10 @@ function VolunteerApproval(props: { onOpen: () => void }) {
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   const location = useLocation();
 
+  const updateTestFamilyFlagEnabled = useFeatureFlagEnabled(
+    'updateTestFamilyFlag'
+  );
+
   const [expandedView, setExpandedView] = useLocalStorage(
     'volunteer-approval-expanded',
     true
@@ -659,10 +665,25 @@ function VolunteerApproval(props: { onOpen: () => void }) {
                             />
                           </TableCell>
                         )}
-                        <TableCell key="1" colSpan={expandedView ? 1 : 1}>
-                          <Typography sx={{ fontWeight: 600 }}>
-                            {familyLastName(volunteerFamily) + ' Family'}
-                          </Typography>
+                        <TableCell
+                          key="1"
+                          colSpan={1}
+                          sx={{ whiteSpace: 'nowrap' }}
+                        >
+                          <span
+                            style={{
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              gap: 8,
+                            }}
+                          >
+                            <Typography sx={{ fontWeight: 600 }}>
+                              {familyLastName(volunteerFamily) + ' Family'}
+                            </Typography>
+                            {updateTestFamilyFlagEnabled && (
+                              <TestFamilyBadge family={volunteerFamily} />
+                            )}
+                          </span>
                         </TableCell>
                         <TableCell>
                           {expandedView ? (

@@ -276,7 +276,8 @@ namespace CareTogether.Core.Test.V1CaseCalculationTests
             ImmutableList<UploadedDocumentInfo>.Empty,
             ImmutableList<Guid>.Empty,
             ImmutableList<CompletedCustomFieldInfo>.Empty,
-            ImmutableList<Activity>.Empty
+            ImmutableList<Activity>.Empty,
+            false
         );
 
         [TestMethod]

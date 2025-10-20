@@ -52,6 +52,7 @@ import {
   ConvertChildToAdult,
   UndoCreateFamily,
   UpdateNoteAccessLevel,
+  UpdateTestFamilyFlag,
 } from '../GeneratedClient';
 import { api } from '../Api/Api';
 import {
@@ -365,6 +366,15 @@ export function useDirectoryModel() {
         customFieldName: customField.name,
         customFieldType: customField.type,
         value: value,
+      });
+      return command;
+    }
+  );
+  const updateTestFamilyFlag = useFamilyCommandCallback(
+    async (familyId, isTestFamily: boolean) => {
+      const command = commandFactory(UpdateTestFamilyFlag, {
+        familyId: familyId,
+        isTestFamily: isTestFamily,
       });
       return command;
     }
@@ -856,5 +866,6 @@ export function useDirectoryModel() {
     discardDraftNote,
     approveNote,
     updateNoteAccessLevel,
+    updateTestFamilyFlag,
   };
 }

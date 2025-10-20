@@ -7,7 +7,7 @@ import {
   Typography,
 } from '@mui/material';
 import { ProgressBackdrop } from '../Shell/ProgressBackdrop';
-import useScreenTitle from '../Shell/ShellScreenTitle';
+import { useScreenTitle } from '../Shell/ShellScreenTitle';
 import { useDataLoaded } from '../Model/Data';
 import AssignmentIndIcon from '@mui/icons-material/AssignmentInd';
 import LocationOnIcon from '@mui/icons-material/LocationOn';

@@ -655,7 +655,7 @@ namespace CareTogether.Api.OData
                 .ToArrayAsync();
 
             var familiesByLocation = visibleAggregatesByLocation
-                .Where(zipResult => zipResult.Item2 is FamilyRecordsAggregate)
+                .Where(zipResult => zipResult.Item2 is FamilyRecordsAggregate fra && !fra.Family.Family.IsTestFamily)
                 .Select(zipResult => (zipResult.Item1, (FamilyRecordsAggregate)zipResult.Item2))
                 .Select(zipResult =>
                     (

@@ -12,7 +12,7 @@ import {
   redemptionSessionIdState,
 } from '../Model/SessionModel';
 import { ProgressBackdrop } from '../Shell/ProgressBackdrop';
-import useScreenTitle from '../Shell/ShellScreenTitle';
+import { useScreenTitle } from '../Shell/ShellScreenTitle';
 import { api } from '../Api/Api';
 import { userOrganizationAccessQuery } from '../Model/Data';
 

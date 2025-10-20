@@ -21,7 +21,8 @@ namespace CareTogether.Resources.Directory
         // and can instead just merge the deletions in the CombinedFamilyInfoFormatter.
         ImmutableList<Guid> DeletedDocuments,
         ImmutableList<CompletedCustomFieldInfo> CompletedCustomFields,
-        ImmutableList<Activity> History
+        ImmutableList<Activity> History,
+        bool IsTestFamily
     );
 
     public sealed record Person(
@@ -115,6 +116,8 @@ namespace CareTogether.Resources.Directory
 
     public sealed record UndoCreateFamily(Guid FamilyId) : FamilyCommand(FamilyId);
 
+
+
     public sealed record AddAdultToFamily(
         Guid FamilyId,
         Guid AdultPersonId,
@@ -168,6 +171,9 @@ namespace CareTogether.Resources.Directory
 
     public sealed record ChangePrimaryFamilyContact(Guid FamilyId, Guid AdultId)
         : FamilyCommand(FamilyId);
+
+    public sealed record UpdateTestFamilyFlag(Guid FamilyId, bool IsTestFamily)
+    : FamilyCommand(FamilyId);
 
     public sealed record UpdateCustomFamilyField(
         Guid FamilyId,

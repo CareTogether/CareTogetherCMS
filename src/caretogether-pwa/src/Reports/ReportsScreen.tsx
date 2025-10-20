@@ -1,4 +1,4 @@
-import useScreenTitle from '../Shell/ShellScreenTitle';
+import { useScreenTitle } from '../Shell/ShellScreenTitle';
 import { models, Report } from 'powerbi-client';
 import { PowerBIEmbed } from 'powerbi-client-react';
 import { useDataLoaded } from '../Model/Data';

@@ -4,7 +4,7 @@ import {
   locationConfigurationQuery,
   organizationConfigurationQuery,
 } from '../Model/ConfigurationModel';
-import useScreenTitle from '../Shell/ShellScreenTitle';
+import { useScreenTitle } from '../Shell/ShellScreenTitle';
 import { useDataLoaded } from '../Model/Data';
 import { ProgressBackdrop } from '../Shell/ProgressBackdrop';
 import { DashboardCalendar } from './DashboardCalendar';
