@@ -41,7 +41,7 @@ import {
   sortFamiliesByLastNameDesc,
 } from '../Families/FamilyUtils';
 import { useAllPartneringFamiliesPermissions } from '../Model/SessionModel';
-import useScreenTitle from '../Shell/ShellScreenTitle';
+import { useScreenTitle } from '../Shell/ShellScreenTitle';
 import UnfoldLessIcon from '@mui/icons-material/UnfoldLess';
 import UnfoldMoreIcon from '@mui/icons-material/UnfoldMore';
 import { useLoadable } from '../Hooks/useLoadable';

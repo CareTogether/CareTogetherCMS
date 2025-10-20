@@ -1,7 +1,7 @@
 import { Container, Box, Tabs, Tab } from '@mui/material';
 import { useParams } from 'react-router';
 import { useState } from 'react';
-import useScreenTitle from '../Shell/ShellScreenTitle';
+import { useScreenTitle } from '../Shell/ShellScreenTitle';
 import { ProgressBackdrop } from '../Shell/ProgressBackdrop';
 import { useFamilyLookup } from '../Model/DirectoryModel';
 import { familyLastName } from './FamilyUtils';

@@ -10,7 +10,7 @@ import { useState, useEffect, useMemo } from 'react';
 import { useLoadable } from '../../Hooks/useLoadable';
 import { organizationConfigurationQuery } from '../../Model/ConfigurationModel';
 import { ProgressBackdrop } from '../../Shell/ProgressBackdrop';
-import useScreenTitle from '../../Shell/ShellScreenTitle';
+import { useScreenTitle } from '../../Shell/ShellScreenTitle';
 import { useRecoilValue } from 'recoil';
 import { selectedLocationContextState, useDataLoaded } from '../../Model/Data';
 import { useParams } from 'react-router-dom';

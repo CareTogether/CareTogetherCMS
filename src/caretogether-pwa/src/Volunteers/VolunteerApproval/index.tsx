@@ -43,7 +43,7 @@ import { useScrollMemory } from '../../Hooks/useScrollMemory';
 import { useAllVolunteerFamiliesPermissions } from '../../Model/SessionModel';
 import { BulkSmsSideSheet } from '../BulkSmsSideSheet';
 import { useWindowSize } from '../../Hooks/useWindowSize';
-import useScreenTitle from '../../Shell/ShellScreenTitle';
+import { useScreenTitle } from '../../Shell/ShellScreenTitle';
 import UnfoldLessIcon from '@mui/icons-material/UnfoldLess';
 import UnfoldMoreIcon from '@mui/icons-material/UnfoldMore';
 import { useLoadable } from '../../Hooks/useLoadable';

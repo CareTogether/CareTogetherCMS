@@ -1,5 +1,5 @@
 import { ProgressBackdrop } from '../../Shell/ProgressBackdrop';
-import useScreenTitle from '../../Shell/ShellScreenTitle';
+import { useScreenTitle } from '../../Shell/ShellScreenTitle';
 import { useDataLoaded } from '../../Model/Data';
 import { Box } from '@mui/system';
 import { RolesSection } from './RolesSection';

@@ -11,7 +11,10 @@ import {
 } from '@mui/material';
 import MenuIcon from '@mui/icons-material/Menu';
 import { ShellContextSwitcher } from './ShellContextSwitcher';
-import { screenTitleState } from './ShellScreenTitle';
+import {
+  screenTitleComponentState,
+  screenTitleState,
+} from './ShellScreenTitle';
 import { useRecoilValue } from 'recoil';
 import { MenuOpen } from '@mui/icons-material';
 import { ShellSearchBar } from './ShellSearchBar';
@@ -34,6 +37,7 @@ export function ShellAppBar({
   const [openMobileSearch, setOpenMobileSearch] = useState(true);
 
   const screenTitle = useRecoilValue(screenTitleState);
+  const screenTitleComponent = useRecoilValue(screenTitleComponentState);
 
   return (
     <AppBar
@@ -96,6 +100,7 @@ export function ShellAppBar({
                 {screenTitle}
               </Typography>
             )}
+            {screenTitleComponent}
             {!screenTitle && (
               <Skeleton
                 variant="text"

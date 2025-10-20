@@ -59,7 +59,10 @@ import { ActivityTimeline } from '../Activities/ActivityTimeline';
 import { V1CaseComments } from '../V1Cases/V1CaseComments';
 import { V1CaseCustomField } from '../V1Cases/V1CaseCustomField';
 import { PrimaryContactEditor } from './PrimaryContactEditor';
-import useScreenTitle from '../Shell/ShellScreenTitle';
+import {
+  useScreenTitleComponent,
+  useScreenTitle,
+} from '../Shell/ShellScreenTitle';
 import {
   useCommunityLookup,
   useFamilyLookup,
@@ -84,6 +87,7 @@ import { useBackdrop } from '../Hooks/useBackdrop';
 import { useSyncV1CaseIdInURL } from '../Hooks/useSyncV1CaseIdInURL';
 import { ArrangementsSection } from '../V1Cases/Arrangements/ArrangementsSection/ArrangementsSection';
 import { useFeatureFlagEnabled } from 'posthog-js/react';
+import { TestFamilyBadge } from './TestFamilyBadge';
 
 export function FamilyScreen() {
   const familyIdMaybe = useParams<{ familyId: string }>();
@@ -270,6 +274,7 @@ export function FamilyScreen() {
   );
 
   useScreenTitle(family ? `${familyLastName(family)} Family` : '...');
+  useScreenTitleComponent(family ? <TestFamilyBadge family={family} /> : null);
 
   function handleV1CaseChange(v1CaseId: string) {
     setSelectedV1CaseId(v1CaseId);

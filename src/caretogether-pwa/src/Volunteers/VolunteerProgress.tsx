@@ -31,7 +31,7 @@ import {
 } from '../Families/FamilyUtils';
 import { useAllVolunteerFamiliesPermissions } from '../Model/SessionModel';
 import { Permission } from '../GeneratedClient';
-import useScreenTitle from '../Shell/ShellScreenTitle';
+import { useScreenTitle } from '../Shell/ShellScreenTitle';
 import UnfoldLessIcon from '@mui/icons-material/UnfoldLess';
 import UnfoldMoreIcon from '@mui/icons-material/UnfoldMore';
 import { useLoadable } from '../Hooks/useLoadable';

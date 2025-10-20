@@ -12,7 +12,7 @@ import {
   Chat as ChatIcon,
   VideoCall as VideoCallIcon,
 } from '@mui/icons-material';
-import useScreenTitle from './Shell/ShellScreenTitle';
+import { useScreenTitle } from './Shell/ShellScreenTitle';
 
 // Extend the Window interface to include Featurebase
 declare global {
