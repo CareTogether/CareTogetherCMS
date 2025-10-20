@@ -1,5 +1,5 @@
 import {
-  Fab,
+  Button,
   Grid,
   Stack,
   Table,
@@ -306,22 +306,19 @@ function PartneringFamilies() {
   ) : (
     <Grid container>
       <Grid item xs={12}>
-        <Stack direction="row-reverse" sx={{ marginTop: 1 }}>
-          <ToggleButtonGroup
-            value={expandedView}
-            exclusive
-            onChange={handleExpandCollapse}
-            size={isMobile ? 'medium' : 'small'}
-            aria-label="row expansion"
-          >
-            <ToggleButton value={true} aria-label="expanded">
-              <UnfoldMoreIcon />
-            </ToggleButton>
-            <ToggleButton value={false} aria-label="collapsed">
-              <UnfoldLessIcon />
-            </ToggleButton>
-          </ToggleButtonGroup>
-          <SearchBar value={filterText} onChange={setFilterText} />
+        <Stack direction="row" sx={{ marginTop: 2, marginBottom: 2 }}>
+          {permissions(Permission.EditFamilyInfo) &&
+            permissions(Permission.CreateV1Case) && (
+              <Button
+                variant="contained"
+                startIcon={<AddIcon />}
+                onClick={() => setCreatePartneringFamilyDialogOpen(true)}
+                sx={{ marginRight: 'auto' }}
+              >
+                Add new client family
+              </Button>
+            )}
+
           <ToggleButtonGroup
             value={arrangementsFilter}
             exclusive
@@ -342,6 +339,23 @@ function PartneringFamilies() {
               Active + Setup
             </ToggleButton>
           </ToggleButtonGroup>
+
+          <SearchBar value={filterText} onChange={setFilterText} />
+
+          <ToggleButtonGroup
+            value={expandedView}
+            exclusive
+            onChange={handleExpandCollapse}
+            size={isMobile ? 'medium' : 'small'}
+            aria-label="row expansion"
+          >
+            <ToggleButton value={true} aria-label="expanded">
+              <UnfoldMoreIcon />
+            </ToggleButton>
+            <ToggleButton value={false} aria-label="collapsed">
+              <UnfoldLessIcon />
+            </ToggleButton>
+          </ToggleButtonGroup>
         </Stack>
       </Grid>
       <Grid item xs={12}>
@@ -349,7 +363,7 @@ function PartneringFamilies() {
           <Table sx={{ minWidth: '700px' }} size="small">
             <TableHead>
               <TableRow>
-                <TableCell>Partnering Family</TableCell>
+                <TableCell>Client Family</TableCell>
                 <TableCell>Case Status</TableCell>
                 {!expandedView ? (
                   arrangementTypes?.map((arrangementType) => (
@@ -529,17 +543,7 @@ function PartneringFamilies() {
             </TableBody>
           </Table>
         </TableContainer>
-        {permissions(Permission.EditFamilyInfo) &&
-          permissions(Permission.CreateV1Case) && (
-            <Fab
-              color="primary"
-              aria-label="add"
-              sx={{ position: 'fixed', right: '30px', bottom: '70px' }}
-              onClick={() => setCreatePartneringFamilyDialogOpen(true)}
-            >
-              <AddIcon />
-            </Fab>
-          )}
+
         {createPartneringFamilyDialogOpen && (
           <CreatePartneringFamilyDialog
             onClose={(partneringFamilyId) => {
