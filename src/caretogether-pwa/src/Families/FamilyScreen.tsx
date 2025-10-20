@@ -411,7 +411,7 @@ export function FamilyScreen() {
                         family.family?.isTestFamily ?? false;
                       await withBackdrop(async () => {
                         await directoryModel.updateTestFamilyFlag(
-                          family.family!.id!,
+                          family.family.id,
                           !isCurrentlyTest
                         );
                       });
