@@ -184,11 +184,7 @@ function VolunteerProgress(props: { onOpen: () => void }) {
                     sx={{ backgroundColor: '#eef' }}
                     onClick={() => openFamily(volunteerFamily.family!.id!)}
                   >
-                    <TableCell
-                      key="1"
-                      colSpan={1}
-                      sx={{ whiteSpace: 'nowrap' }}
-                    >
+                    <TableCell key="1" sx={{ whiteSpace: 'nowrap' }}>
                       <span
                         style={{
                           display: 'inline-flex',
