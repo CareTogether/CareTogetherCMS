@@ -5,6 +5,8 @@ import {
   CardActions,
   Button,
   Typography,
+  Box,
+  Collapse,
 } from '@mui/material';
 import { useState } from 'react';
 import { Note, NoteStatus, Permission } from '../GeneratedClient';
@@ -32,6 +34,7 @@ export function NoteCard({ familyId, note }: NoteCardProps) {
   const [showDiscardNoteDialog, setShowDiscardNoteDialog] = useState(false);
   const [showApproveNoteDialog, setShowApproveNoteDialog] = useState(false);
   const [showEditNoteDialog, setShowEditNoteDialog] = useState(false);
+  const [showMoreDetails, setShowMoreDetails] = useState(false);
 
   const permissions = useFamilyIdPermissions(familyId);
 
@@ -94,48 +97,104 @@ export function NoteCard({ familyId, note }: NoteCardProps) {
         <Typography variant="body2" component="p">
           {note.contents}
         </Typography>
+
+        <Collapse in={showMoreDetails} timeout={300}>
+          <Box
+            sx={{
+              backgroundColor: '#f5f5f5',
+              padding: 1,
+              marginTop: 2,
+              borderRadius: 1,
+            }}
+          >
+            <Typography variant="caption">
+              <>
+                Author: <PersonName person={userLookup(note.authorId)} />
+                <br />
+                Created at: {format(note.createdTimestampUtc, 'M/d/yy h:mm a')}
+                <br />
+                Last edited at:{' '}
+                {note.lastEditTimestampUtc
+                  ? format(note.lastEditTimestampUtc, 'M/d/yy h:mm a')
+                  : 'N/A'}
+                <br />
+                Backdated as:{' '}
+                {note.backdatedTimestampUtc
+                  ? format(note.backdatedTimestampUtc, 'M/d/yy h:mm a')
+                  : 'N/A'}
+                <hr />
+                Approved by: {/* TODO: should be activity.userId */}
+                {note.authorId ? (
+                  <PersonName person={userLookup(note.authorId)} />
+                ) : (
+                  'N/A'
+                )}
+                <br />
+                Approved at:{' '}
+                {note.approvedTimestampUtc
+                  ? format(note.approvedTimestampUtc, 'M/d/yy h:mm a')
+                  : 'N/A'}
+              </>
+            </Typography>
+          </Box>
+        </Collapse>
       </CardContent>
-      {note.status === NoteStatus.Draft && (
-        <CardActions sx={{ paddingTop: 0 }}>
-          {canDiscard && (
-            <Button
-              className="ph-unmask"
-              onClick={() => setShowDiscardNoteDialog(true)}
-              variant="contained"
-              size="small"
-              color="secondary"
-              sx={{ marginTop: 1, marginLeft: 'auto !important' }}
-              startIcon={<DeleteForeverIcon />}
-            >
-              Delete
-            </Button>
-          )}
-          {canEdit && (
-            <Button
-              className="ph-unmask"
-              onClick={() => setShowEditNoteDialog(true)}
-              variant="contained"
-              size="small"
-              sx={{ marginTop: 1, marginLeft: 'auto !important' }}
-              startIcon={<EditIcon />}
-            >
-              Edit
-            </Button>
-          )}
-          {permissions(Permission.ApproveNotes) && (
-            <Button
-              className="ph-unmask"
-              onClick={() => setShowApproveNoteDialog(true)}
-              variant="contained"
-              size="small"
-              sx={{ marginTop: 1, marginLeft: 'auto !important' }}
-              startIcon={<CheckIcon />}
-            >
-              Approve
-            </Button>
-          )}
-        </CardActions>
-      )}
+      <CardActions sx={{ paddingTop: 0 }}>
+        <Button
+          className="ph-unmask"
+          size="small"
+          sx={{
+            marginTop: 1,
+            marginRight: 'auto',
+            transition: 'all 0.2s ease-in-out',
+          }}
+          onClick={() => setShowMoreDetails(!showMoreDetails)}
+        >
+          {showMoreDetails ? 'Hide Details' : 'More Details'}
+        </Button>
+        {note.status === NoteStatus.Draft && (
+          <>
+            {canDiscard && (
+              <Button
+                className="ph-unmask"
+                onClick={() => setShowDiscardNoteDialog(true)}
+                variant="outlined"
+                size="small"
+                color="error"
+                sx={{ marginTop: 1 }}
+                startIcon={<DeleteForeverIcon />}
+              >
+                Delete
+              </Button>
+            )}
+            {canEdit && (
+              <Button
+                className="ph-unmask"
+                onClick={() => setShowEditNoteDialog(true)}
+                variant="outlined"
+                size="small"
+                sx={{ marginTop: 1 }}
+                startIcon={<EditIcon />}
+              >
+                Edit
+              </Button>
+            )}
+            {permissions(Permission.ApproveNotes) && (
+              <Button
+                className="ph-unmask"
+                onClick={() => setShowApproveNoteDialog(true)}
+                variant="contained"
+                size="small"
+                sx={{ marginTop: 1 }}
+                startIcon={<CheckIcon />}
+              >
+                Approve
+              </Button>
+            )}
+          </>
+        )}
+      </CardActions>
+
       {(showDiscardNoteDialog && (
         <DiscardNoteDialog
           familyId={familyId}

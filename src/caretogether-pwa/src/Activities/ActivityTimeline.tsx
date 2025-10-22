@@ -22,7 +22,7 @@ import PersonPinCircleIcon from '@mui/icons-material/PersonPinCircle';
 import EditIcon from '@mui/icons-material/Edit';
 import { usePersonLookup, useUserLookup } from '../Model/DirectoryModel';
 import { PersonName } from '../Families/PersonName';
-import { Box, Stack, Typography, Link } from '@mui/material';
+import { Box, Stack, Typography, Link, Tooltip } from '@mui/material';
 import { NoteCard } from '../Notes/NoteCard';
 import { useAccessLevelDialog } from '../Notes/AccessLevelDialog/useAccessLevelDialog';
 import { FormControl, InputLabel, Select, MenuItem } from '@mui/material';
@@ -96,7 +96,7 @@ export function ActivityTimeline({
           ({
             userId: note.authorId,
             activityTimestampUtc:
-              note.backdatedTimestampUtc ?? note.timestampUtc,
+              note.backdatedTimestampUtc ?? note.createdTimestampUtc,
             auditTimestampUtc: note.timestampUtc,
             noteId: note.id,
           }) as Activity
@@ -323,7 +323,13 @@ export function ActivityTimeline({
         </Stack>
       </div>
 
-      <Timeline position="right" sx={{ padding: 0 }}>
+      <Timeline
+        position="right"
+        sx={{ padding: 0 }}
+        onClick={() => {
+          // console.log(activitiesWithEmbeddedNotes);
+        }}
+      >
         <Box sx={{ display: 'flex', justifyContent: 'flex-start', mb: 1 }}>
           <FormControl size="small" sx={{ minWidth: 160 }}>
             <InputLabel>Sort by</InputLabel>
@@ -345,7 +351,12 @@ export function ActivityTimeline({
         </Box>
 
         {activitiesWithEmbeddedNotes?.map(({ activity, note }, i) => (
-          <TimelineItem key={i}>
+          <TimelineItem
+            key={i}
+            onClick={() => {
+              console.log({ activity, note });
+            }}
+          >
             <TimelineOppositeContent sx={{ display: 'none' }} />
             <TimelineSeparator>
               <TimelineDot

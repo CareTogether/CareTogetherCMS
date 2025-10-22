@@ -2079,7 +2079,7 @@ namespace CareTogether.TestData
                 ),
                 new NoteCommandExecuted(
                     adminId,
-                    V1CasesMonth(28, 18, 18, 18),
+                    V1CasesMonth(28, 19, 20, 18),
                     new ApproveNote(guid1, noteId8, "Mom met us and picked him up at DQ", null)
                 ),
                 new NoteCommandExecuted(
