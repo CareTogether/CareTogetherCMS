@@ -121,7 +121,8 @@ namespace CareTogether.Managers
                     note.Contents,
                     note.Status,
                     note.BackdatedTimestampUtc,
-                    note.AccessLevel
+                    note.AccessLevel,
+                    note.ApproverId
                 ))
                 .ToImmutableList();
 

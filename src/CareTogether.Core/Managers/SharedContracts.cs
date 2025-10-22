@@ -78,7 +78,8 @@ namespace CareTogether.Managers
         string? Contents,
         NoteStatus Status,
         DateTime? BackdatedTimestampUtc,
-        string? AccessLevel
+        string? AccessLevel,
+        Guid? ApproverId
     );
 
     public sealed record VolunteerFamilyInfo(

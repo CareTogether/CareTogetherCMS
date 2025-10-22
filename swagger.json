@@ -4727,6 +4727,11 @@
           "accessLevel": {
             "type": "string",
             "nullable": true
+          },
+          "approverId": {
+            "type": "string",
+            "format": "guid",
+            "nullable": true
           }
         }
       },

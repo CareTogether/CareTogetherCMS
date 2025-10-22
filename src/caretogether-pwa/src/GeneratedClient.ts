@@ -7500,6 +7500,7 @@ export class Note implements INote {
     status!: NoteStatus;
     backdatedTimestampUtc?: Date | undefined;
     accessLevel?: string | undefined;
+    approverId?: string | undefined;
 
     constructor(data?: INote) {
         if (data) {
@@ -7522,6 +7523,7 @@ export class Note implements INote {
             this.status = _data["status"];
             this.backdatedTimestampUtc = _data["backdatedTimestampUtc"] ? new Date(_data["backdatedTimestampUtc"].toString()) : <any>undefined;
             this.accessLevel = _data["accessLevel"];
+            this.approverId = _data["approverId"];
         }
     }
 
@@ -7544,6 +7546,7 @@ export class Note implements INote {
         data["status"] = this.status;
         data["backdatedTimestampUtc"] = this.backdatedTimestampUtc ? this.backdatedTimestampUtc.toISOString() : <any>undefined;
         data["accessLevel"] = this.accessLevel;
+        data["approverId"] = this.approverId;
         return data;
     }
 }
@@ -7559,6 +7562,7 @@ export interface INote {
     status: NoteStatus;
     backdatedTimestampUtc?: Date | undefined;
     accessLevel?: string | undefined;
+    approverId?: string | undefined;
 }
 
 export enum NoteStatus {

@@ -94,9 +94,9 @@ export function ActivityTimeline({
       ?.map(
         (note) =>
           ({
-            userId: note.authorId,
+            userId: note.approverId ?? note.authorId,
             activityTimestampUtc:
-              note.backdatedTimestampUtc ?? note.timestampUtc,
+              note.backdatedTimestampUtc ?? note.lastEditTimestampUtc,
             auditTimestampUtc: note.timestampUtc,
             noteId: note.id,
           }) as Activity
@@ -345,7 +345,7 @@ export function ActivityTimeline({
         </Box>
 
         {activitiesWithEmbeddedNotes?.map(({ activity, note }, i) => (
-          <TimelineItem key={i}>
+          <TimelineItem key={i} onClick={() => console.log({ activity, note })}>
             <TimelineOppositeContent sx={{ display: 'none' }} />
             <TimelineSeparator>
               <TimelineDot
