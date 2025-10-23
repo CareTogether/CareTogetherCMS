@@ -29,6 +29,7 @@ import {
   Arrangement,
   ArrangementPhase,
   Permission,
+  CompletedCustomFieldInfo,
 } from '../GeneratedClient';
 import { FamilyName } from '../Families/FamilyName';
 import { ArrangementCard } from './Arrangements/ArrangementCard';
@@ -49,6 +50,7 @@ import { useLoadable } from '../Hooks/useLoadable';
 import { ProgressBackdrop } from '../Shell/ProgressBackdrop';
 import { useAppNavigate } from '../Hooks/useAppNavigate';
 import PhoneIcon from '@mui/icons-material/Phone';
+import { ReferralCustomFieldFilter } from '../V1Cases/Arrangements/ReferralCustomFieldFilter';
 import { TestFamilyBadge } from '../Families/TestFamilyBadge';
 import { useFeatureFlagEnabled } from 'posthog-js/react';
 
@@ -149,11 +151,64 @@ function PartneringFamilies() {
     return a.arrangementType!;
   });
 
+  const loadablePolicy = useLoadable(policyData);
+
+  const referralCustomFields = React.useMemo(() => {
+    return loadablePolicy?.referralPolicy?.customFields || [];
+  }, [loadablePolicy]);
+
   const [filterText, setFilterText] = useState('');
   const filteredPartneringFamilies = filterFamiliesByText(
     partneringFamilies,
     filterText
   );
+
+  type FilterOption = { key: string; value?: string; selected: boolean };
+
+  const [customFieldFilterOptions, setCustomFieldFilterOptions] = useState<
+    Record<string, FilterOption[]>
+  >({});
+
+  React.useEffect(() => {
+    setCustomFieldFilterOptions((prev) => {
+      const optionsByField: Record<string, FilterOption[]> = { ...prev };
+
+      referralCustomFields.forEach((field) => {
+        const existing = prev[field.name] || [];
+
+        const values = new Set(existing.map((o) => o.value ?? ''));
+
+        partneringFamilies.forEach((family) => {
+          const val =
+            family.partneringFamilyInfo?.openV1Case?.completedCustomFields?.find(
+              (f) => f.customFieldName === field.name
+            )?.value;
+
+          let normalized: string;
+          if (val === true) normalized = 'Yes';
+          else if (val === false) normalized = 'No';
+          else if (val === undefined || val === null || val === '')
+            normalized = 'Blank';
+          else normalized = val.toString();
+
+          values.add(normalized);
+        });
+
+        const updatedOptions = Array.from(values).map((v) => {
+          const existingOption = existing.find((o) => o.value === v);
+          return {
+            key: v,
+            value: v,
+            selected: existingOption?.selected ?? false,
+          };
+        });
+
+        optionsByField[field.name] = updatedOptions;
+      });
+
+      return optionsByField;
+    });
+  }, [partneringFamilies, referralCustomFields]);
 
   useScrollMemory();
 
@@ -273,41 +328,66 @@ function PartneringFamilies() {
     'All' | 'Intake' | 'Active' | 'Setup' | 'Active + Setup'
   >('partnering-families-arrangementsFilter', 'All');
   const filteredPartneringFamiliesWithActiveOrAllFilter =
-    filteredPartneringFamilies.filter((family) => {
-      const openCase = family.partneringFamilyInfo?.openV1Case;
-      const arrangements = openCase?.arrangements ?? [];
+    filteredPartneringFamilies
+      .filter((family) => {
+        return referralCustomFields.every((field) => {
+          const options = customFieldFilterOptions[field.name];
+          if (!options) return true;
 
-      switch (arrangementsFilter) {
-        case 'All':
-          return true;
+          const selectedValues = options
+            .filter((o) => o.selected)
+            .map((o) => o.value);
 
-        case 'Intake':
-          return !!openCase && arrangements.length === 0;
+          const rawVal =
+            family.partneringFamilyInfo?.openV1Case?.completedCustomFields?.find(
+              (f) => f.customFieldName === field.name
+            )?.value;
 
-        case 'Active':
-          return arrangements.some(
-            (arrangement) => arrangement.phase === ArrangementPhase.Started
-          );
+          let value: string;
+          if (rawVal === true) value = 'Yes';
+          else if (rawVal === false) value = 'No';
+          else if (rawVal === undefined || rawVal === null || rawVal === '')
+            value = 'Blank';
+          else value = rawVal.toString();
 
-        case 'Setup':
-          return arrangements.some(
-            (arrangement) =>
-              arrangement.phase === ArrangementPhase.SettingUp ||
-              arrangement.phase === ArrangementPhase.ReadyToStart
-          );
+          return selectedValues.length === 0 || selectedValues.includes(value);
+        });
+      })
+      .filter((family) => {
+        const openCase = family.partneringFamilyInfo?.openV1Case;
+        const arrangements = openCase?.arrangements ?? [];
 
-        case 'Active + Setup':
-          return arrangements.some(
-            (arrangement) =>
-              arrangement.phase === ArrangementPhase.Started ||
-              arrangement.phase === ArrangementPhase.SettingUp ||
-              arrangement.phase === ArrangementPhase.ReadyToStart
-          );
+        switch (arrangementsFilter) {
+          case 'All':
+            return true;
 
-        default:
-          return true;
-      }
-    });
+          case 'Intake':
+            return !!openCase && arrangements.length === 0;
+
+          case 'Active':
+            return arrangements.some(
+              (arrangement) => arrangement.phase === ArrangementPhase.Started
+            );
+
+          case 'Setup':
+            return arrangements.some(
+              (arrangement) =>
+                arrangement.phase === ArrangementPhase.SettingUp ||
+                arrangement.phase === ArrangementPhase.ReadyToStart
+            );
+
+          case 'Active + Setup':
+            return arrangements.some(
+              (arrangement) =>
+                arrangement.phase === ArrangementPhase.Started ||
+                arrangement.phase === ArrangementPhase.SettingUp ||
+                arrangement.phase === ArrangementPhase.ReadyToStart
+            );
+
+          default:
+            return true;
+        }
+      });
 
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
@@ -327,7 +407,16 @@ function PartneringFamilies() {
   ) : (
     <Grid container>
       <Grid item xs={12}>
-        <Stack direction="row" sx={{ marginTop: 2, marginBottom: 2 }}>
+        <Stack
+          direction="row"
+          sx={{
+            marginTop: 2,
+            marginBottom: 2,
+            flexWrap: 'wrap',
+            alignItems: 'center',
+            gap: 1,
+          }}
+        >
           {permissions(Permission.EditFamilyInfo) &&
             permissions(Permission.CreateV1Case) && (
               <Button
@@ -381,6 +470,34 @@ function PartneringFamilies() {
             </Tooltip>
           </ToggleButtonGroup>
 
+          {referralCustomFields.map((field) => {
+            const options = customFieldFilterOptions[field.name];
+            if (!options) return null;
+
+            const handleFilterChange = (selectedValues: string[]) => {
+              setCustomFieldFilterOptions((prev) => {
+                const fieldOptions = prev[field.name];
+                if (!fieldOptions) return prev;
+                return {
+                  ...prev,
+                  [field.name]: fieldOptions.map((opt) => ({
+                    ...opt,
+                    selected: selectedValues.includes(opt.value ?? 'Blank'),
+                  })),
+                };
+              });
+            };
+
+            return (
+              <ReferralCustomFieldFilter
+                key={field.name}
+                label={field.name}
+                options={options}
+                onChange={handleFilterChange}
+              />
+            );
+          })}
+
           <SearchBar value={filterText} onChange={setFilterText} />
 
           <ToggleButtonGroup
@@ -400,23 +517,42 @@ function PartneringFamilies() {
         </Stack>
       </Grid>
       <Grid item xs={12}>
-        <TableContainer>
+        <TableContainer
+          sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}
+        >
           <Table sx={{ minWidth: '700px' }} size="small">
             <TableHead>
               <TableRow>
-                <TableCell>Client Family</TableCell>
-                <TableCell>Case Status</TableCell>
-                {!expandedView ? (
+                <TableCell sx={{ fontWeight: 600 }}>Client Family</TableCell>
+                <TableCell sx={{ fontWeight: 600 }}>Case Status</TableCell>
+                {referralCustomFields.map((field) => (
+                  <TableCell
+                    key={field.name}
+                    sx={{
+                      fontWeight: 600,
+                      textAlign: 'center',
+                      whiteSpace: 'nowrap',
+                    }}
+                  >
+                    {field.name}
+                  </TableCell>
+                ))}
+
+                {!expandedView &&
                   arrangementTypes?.map((arrangementType) => (
-                    <TableCell key={arrangementType}>
+                    <TableCell
+                      key={arrangementType}
+                      sx={{
+                        fontWeight: 600,
+                        textAlign: 'center',
+                      }}
+                    >
                       {arrangementType}
                     </TableCell>
-                  ))
-                ) : (
-                  <></>
-                )}
+                  ))}
               </TableRow>
             </TableHead>
+
             <TableBody>
               {filteredPartneringFamiliesWithActiveOrAllFilter.map(
                 (partneringFamily) => {
@@ -537,6 +673,37 @@ function PartneringFamilies() {
                         ) : (
                           <></>
                         )}
+                        {referralCustomFields.map((field) => {
+                          const completedFields =
+                            partneringFamily.partneringFamilyInfo?.openV1Case
+                              ?.completedCustomFields ?? [];
+
+                          const matchingField = completedFields.find(
+                            (customField: CompletedCustomFieldInfo) =>
+                              customField.customFieldName === field.name
+                          );
+
+                          const fieldValue = matchingField?.value;
+
+                          let displayValue = '';
+                          if (fieldValue === true) displayValue = 'Yes';
+                          else if (fieldValue === false) displayValue = 'No';
+                          else if (
+                            fieldValue === undefined ||
+                            fieldValue === null
+                          )
+                            displayValue = '';
+                          else displayValue = fieldValue.toString();
+
+                          return (
+                            <TableCell
+                              key={field.name}
+                              sx={{ textAlign: 'center' }}
+                            >
+                              {displayValue}
+                            </TableCell>
+                          );
+                        })}
                       </TableRow>
                       {expandedView ? (
                         <TableRow
