@@ -94,10 +94,10 @@ export function ActivityTimeline({
       ?.map(
         (note) =>
           ({
-            userId: note.approverId ?? note.authorId,
+            userId: note.authorId,
             activityTimestampUtc:
               note.backdatedTimestampUtc ?? note.lastEditTimestampUtc,
-            auditTimestampUtc: note.timestampUtc,
+            auditTimestampUtc: note.createdTimestampUtc,
             noteId: note.id,
           }) as Activity
       ) || [];
@@ -247,15 +247,23 @@ export function ActivityTimeline({
                     <Typography gutterBottom>
                       <strong>Author: </strong>
                       <PersonName person={userLookup(note.authorId)} /> at{' '}
-                      {format(note.timestampUtc!, 'M/d/yy h:mm a')}
+                      {note.createdTimestampUtc
+                        ? format(note.createdTimestampUtc, 'M/d/yy h:mm a')
+                        : null}
                     </Typography>
 
                     <Typography gutterBottom>
                       <strong>Approver: </strong>
-                      <PersonName
-                        person={userLookup(activity.userId)}
-                      /> at{' '}
-                      {format(activity.activityTimestampUtc!, 'M/d/yy h:mm a')}
+                      {note.approverId ? (
+                        <>
+                          <PersonName person={userLookup(note.approverId)} /> at{' '}
+                          {note.approvedTimestampUtc
+                            ? format(note.approvedTimestampUtc, 'M/d/yy h:mm a')
+                            : null}
+                        </>
+                      ) : (
+                        'N/A'
+                      )}
                     </Typography>
 
                     {activityType && (
@@ -376,7 +384,9 @@ export function ActivityTimeline({
             >
               <Box sx={{ color: 'text.disabled', margin: 0, padding: 0 }}>
                 <span className="ph-unmask" style={{ marginRight: 16 }}>
-                  {format(activity.activityTimestampUtc!, 'M/d/yy h:mm a')}
+                  {activity.activityTimestampUtc
+                    ? format(activity.activityTimestampUtc, 'M/d/yy h:mm a')
+                    : null}
                 </span>
                 <PersonName person={userLookup(activity.userId)} />
               </Box>

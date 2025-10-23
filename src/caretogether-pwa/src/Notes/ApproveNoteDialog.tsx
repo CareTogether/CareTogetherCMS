@@ -37,7 +37,7 @@ export function ApproveNoteDialog({
     >
       <Typography variant="body2" component="p">
         <PersonName person={userLookup(note.authorId)} /> -&nbsp;
-        {format(note.timestampUtc!, 'MM/dd/yyyy hh:mm aa')}
+        {format(note.lastEditTimestampUtc, 'MM/dd/yyyy hh:mm aa')}
       </Typography>
       {note.backdatedTimestampUtc && (
         <Typography variant="body2" component="p">

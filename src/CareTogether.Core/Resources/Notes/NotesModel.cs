@@ -81,7 +81,6 @@ namespace CareTogether.Resources.Notes
                     userId,
                     CreatedTimestampUtc: timestampUtc,
                     LastEditTimestampUtc: timestampUtc,
-                    TimestampUtc: timestampUtc,
                     NoteStatus.Draft,
                     c.DraftNoteContents,
                     ApproverId: null,

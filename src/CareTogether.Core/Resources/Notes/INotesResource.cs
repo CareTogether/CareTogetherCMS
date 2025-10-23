@@ -9,15 +9,14 @@ namespace CareTogether.Resources.Notes
         Guid Id,
         Guid FamilyId,
         Guid AuthorId,
-        DateTime CreatedTimestampUtc,
+        DateTime? CreatedTimestampUtc,
         DateTime LastEditTimestampUtc,
-        DateTime TimestampUtc,
         NoteStatus Status,
         string? Contents,
         Guid? ApproverId,
         DateTime? ApprovedTimestampUtc,
         DateTime? BackdatedTimestampUtc,
-        string? AccessLevel // changed to nullable
+        string? AccessLevel 
     );
 
     public enum NoteStatus

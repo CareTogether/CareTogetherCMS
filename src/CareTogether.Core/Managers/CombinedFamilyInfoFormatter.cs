@@ -114,9 +114,6 @@ namespace CareTogether.Managers
                     note.AuthorId,
                     note.CreatedTimestampUtc,
                     note.LastEditTimestampUtc,
-                    TimestampUtc: note.Status == NoteStatus.Approved
-                    ? note.ApprovedTimestampUtc ?? note.LastEditTimestampUtc
-                    : note.LastEditTimestampUtc,
                     note.ApprovedTimestampUtc,
                     note.Contents,
                     note.Status,

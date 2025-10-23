@@ -4681,9 +4681,7 @@
         "required": [
           "id",
           "authorId",
-          "createdTimestampUtc",
           "lastEditTimestampUtc",
-          "timestampUtc",
           "status"
         ],
         "properties": {
@@ -4697,13 +4695,10 @@
           },
           "createdTimestampUtc": {
             "type": "string",
-            "format": "date-time"
+            "format": "date-time",
+            "nullable": true
           },
           "lastEditTimestampUtc": {
-            "type": "string",
-            "format": "date-time"
-          },
-          "timestampUtc": {
             "type": "string",
             "format": "date-time"
           },
