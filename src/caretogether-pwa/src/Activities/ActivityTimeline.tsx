@@ -96,7 +96,7 @@ export function ActivityTimeline({
           ({
             userId: note.authorId,
             activityTimestampUtc:
-              note.backdatedTimestampUtc ?? note.lastEditTimestampUtc,
+              note.backdatedTimestampUtc ?? note.createdTimestampUtc,
             auditTimestampUtc: note.createdTimestampUtc,
             noteId: note.id,
           }) as Activity

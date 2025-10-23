@@ -31,7 +31,10 @@ export function DiscardNoteDialog({
     >
       <Typography variant="body2" component="p">
         <PersonName person={userLookup(note.authorId)} /> -&nbsp;
-        {format(note.timestampUtc!, 'MM/dd/yyyy hh:mm aa')}
+        {format(
+          note.createdTimestampUtc ?? note.lastEditTimestampUtc,
+          'MM/dd/yyyy hh:mm aa'
+        )}
       </Typography>
       <Divider />
       <Typography>{note.contents}</Typography>
