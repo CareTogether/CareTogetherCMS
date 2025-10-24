@@ -33,6 +33,8 @@ type ActivityTimelineProps = {
   printContentRef: React.RefObject<HTMLDivElement>;
 };
 
+type ActivitySorting = 'activity' | 'created' | 'edited' | 'approved';
+
 const composeNoteType = (activity: Activity): string | null => {
   if (activity instanceof V1CaseRequirementCompleted) {
     return 'Case requirement completed';
@@ -96,8 +98,11 @@ export function ActivityTimeline({
           ({
             userId: note.authorId,
             activityTimestampUtc:
-              note.backdatedTimestampUtc ?? note.createdTimestampUtc,
-            auditTimestampUtc: note.createdTimestampUtc,
+              note.backdatedTimestampUtc ??
+              note.createdTimestampUtc ??
+              note.lastEditTimestampUtc,
+            auditTimestampUtc:
+              note.createdTimestampUtc ?? note.lastEditTimestampUtc,
             noteId: note.id,
           }) as Activity
       ) || [];
@@ -139,9 +144,7 @@ export function ActivityTimeline({
     familyId: family.family.id,
   });
 
-  const [sortBy, setSortBy] = useState<
-    'all' | 'created' | 'edited' | 'approved'
-  >('all');
+  const [sortBy, setSortBy] = useState<ActivitySorting>('activity');
 
   const getDateValue = (value?: string | Date | null): number => {
     if (!value) return 0;
@@ -149,51 +152,51 @@ export function ActivityTimeline({
     return new Date(value).getTime();
   };
 
-  const sortedNotes = [...(family.notes || [])].sort((a, b) => {
-    if (sortBy === 'created') {
-      return (
-        getDateValue(b.createdTimestampUtc) -
-        getDateValue(a.createdTimestampUtc)
-      );
-    } else if (sortBy === 'edited') {
-      return (
-        getDateValue(b.lastEditTimestampUtc) -
-        getDateValue(a.lastEditTimestampUtc)
-      );
-    } else if (sortBy === 'approved') {
-      return (
-        getDateValue(b.approvedTimestampUtc) -
-        getDateValue(a.approvedTimestampUtc)
-      );
-    }
-    return 0;
-  });
-
-  const notesToRender =
-    sortBy === 'approved'
-      ? sortedNotes.filter((n) => n.approvedTimestampUtc)
-      : sortBy === 'created'
-        ? sortedNotes.filter(
-            (n) =>
-              !n.lastEditTimestampUtc ||
-              getDateValue(n.lastEditTimestampUtc) ===
-                getDateValue(n.createdTimestampUtc)
-          )
-        : sortBy === 'edited'
-          ? sortedNotes.filter(
-              (n) =>
-                n.lastEditTimestampUtc &&
-                getDateValue(n.lastEditTimestampUtc) !==
-                  getDateValue(n.createdTimestampUtc)
-            )
-          : sortedNotes;
-
   const activitiesWithEmbeddedNotes = embedNotesInActivities(
-    notesToRender,
+    family.notes || [],
     allActivitiesSorted
   );
 
-  const onlyActivitiesWithNotes = activitiesWithEmbeddedNotes.filter((item) =>
+  type ActivityWithNote = {
+    activity: Activity;
+    note: Note | undefined;
+  };
+
+  const sortStrategies: Record<
+    ActivitySorting,
+    (a: ActivityWithNote, b: ActivityWithNote) => number
+  > = {
+    created: (a, b) =>
+      getDateValue(
+        b.note?.createdTimestampUtc ?? b.activity.activityTimestampUtc
+      ) -
+      getDateValue(
+        a.note?.createdTimestampUtc ?? a.activity.activityTimestampUtc
+      ),
+    edited: (a, b) =>
+      getDateValue(
+        b.note?.lastEditTimestampUtc ?? b.activity.activityTimestampUtc
+      ) -
+      getDateValue(
+        a.note?.lastEditTimestampUtc ?? a.activity.activityTimestampUtc
+      ),
+    approved: (a, b) =>
+      getDateValue(
+        b.note?.approvedTimestampUtc ?? b.activity.activityTimestampUtc
+      ) -
+      getDateValue(
+        a.note?.approvedTimestampUtc ?? a.activity.activityTimestampUtc
+      ),
+    activity: (a, b) =>
+      getDateValue(b.activity.activityTimestampUtc) -
+      getDateValue(a.activity.activityTimestampUtc),
+  };
+
+  const sortedActivitiesWithNotes = activitiesWithEmbeddedNotes.sort(
+    sortStrategies[sortBy]
+  );
+
+  const onlyActivitiesWithNotes = sortedActivitiesWithNotes.filter((item) =>
     Boolean(item.note)
   );
 
@@ -338,22 +341,18 @@ export function ActivityTimeline({
             <Select
               value={sortBy}
               label="Sort by"
-              onChange={(e) =>
-                setSortBy(
-                  e.target.value as 'all' | 'created' | 'edited' | 'approved'
-                )
-              }
+              onChange={(e) => setSortBy(e.target.value as ActivitySorting)}
             >
-              <MenuItem value="all">All Notes</MenuItem>
-              <MenuItem value="created">Created Date</MenuItem>
-              <MenuItem value="edited">Last Edited Date</MenuItem>
-              <MenuItem value="approved">Approved Date</MenuItem>
+              <MenuItem value="activity">Activity date (default)</MenuItem>
+              <MenuItem value="created">Note created date</MenuItem>
+              <MenuItem value="edited">Note last edited date</MenuItem>
+              <MenuItem value="approved">Note approved date</MenuItem>
             </Select>
           </FormControl>
         </Box>
 
-        {activitiesWithEmbeddedNotes?.map(({ activity, note }, i) => (
-          <TimelineItem key={i} onClick={() => console.log({ activity, note })}>
+        {sortedActivitiesWithNotes?.map(({ activity, note }, i) => (
+          <TimelineItem key={i}>
             <TimelineOppositeContent sx={{ display: 'none' }} />
             <TimelineSeparator>
               <TimelineDot
