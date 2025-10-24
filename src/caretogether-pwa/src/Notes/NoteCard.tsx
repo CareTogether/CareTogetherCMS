@@ -22,6 +22,7 @@ import { useFamilyIdPermissions } from '../Model/SessionModel';
 import { useLoadable } from '../Hooks/useLoadable';
 import { accountInfoState } from '../Authentication/Auth';
 import { format } from 'date-fns';
+import { ChevronRight } from '@mui/icons-material';
 
 type NoteCardProps = {
   familyId: string;
@@ -61,27 +62,28 @@ export function NoteCard({ familyId, note }: NoteCardProps) {
         sx={{ padding: 1 }}
         subheader={
           <>
-            {(() => {
-              const created = note.createdTimestampUtc
-                ? new Date(note.createdTimestampUtc)
-                : null;
-              const edited = note.lastEditTimestampUtc
-                ? new Date(note.lastEditTimestampUtc)
-                : null;
-
-              if (edited && created && edited.getTime() !== created.getTime()) {
-                return <>Edited {format(edited, 'M/d/yy h:mm a')}&nbsp;</>;
-              }
-
-              if (created) {
-                return <>Created {format(created, 'M/d/yy h:mm a')}&nbsp;</>;
-              }
-
-              return null;
-            })()}
-
-            <PersonName person={userLookup(note.authorId)} />
-            {note.status === NoteStatus.Draft ? ' - DRAFT' : ''}
+            {note.status === NoteStatus.Draft ? 'Draft note' : ''}
+            {note.status === NoteStatus.Approved ? 'Approved note' : ''} -{' '}
+            <span
+              style={{
+                cursor: 'pointer',
+                userSelect: 'none',
+                display: 'inline-flex',
+                alignItems: 'center',
+              }}
+              onClick={() => setShowMoreDetails(!showMoreDetails)}
+            >
+              {showMoreDetails ? 'hide details' : 'more details'}{' '}
+              <ChevronRight
+                sx={{
+                  transform: showMoreDetails
+                    ? 'rotate(-90deg)'
+                    : 'rotate(90deg)',
+                  transition: 'transform 0.2s ease-in-out',
+                  fontSize: 'inherit',
+                }}
+              />
+            </span>
           </>
         }
       />
@@ -94,16 +96,12 @@ export function NoteCard({ familyId, note }: NoteCardProps) {
           overflowWrap: 'anywhere',
         }}
       >
-        <Typography variant="body2" component="p">
-          {note.contents}
-        </Typography>
-
         <Collapse in={showMoreDetails} timeout={300}>
           <Box
             sx={{
               backgroundColor: '#f5f5f5',
               padding: 1,
-              marginTop: 2,
+              marginBottom: 1,
               borderRadius: 1,
             }}
           >
@@ -141,20 +139,14 @@ export function NoteCard({ familyId, note }: NoteCardProps) {
             </Typography>
           </Box>
         </Collapse>
+
+        <Typography variant="body2" component="p">
+          {note.contents}
+        </Typography>
       </CardContent>
-      <CardActions sx={{ paddingTop: 0 }}>
-        <Button
-          className="ph-unmask"
-          size="small"
-          sx={{
-            marginTop: 1,
-            marginRight: 'auto',
-            transition: 'all 0.2s ease-in-out',
-          }}
-          onClick={() => setShowMoreDetails(!showMoreDetails)}
-        >
-          {showMoreDetails ? 'Hide Details' : 'More Details'}
-        </Button>
+      <CardActions
+        sx={{ paddingTop: 0, justifyContent: 'flex-end', flexWrap: 'wrap' }}
+      >
         {note.status === NoteStatus.Draft && (
           <>
             {canDiscard && (
