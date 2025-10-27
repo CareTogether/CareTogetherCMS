@@ -71,11 +71,14 @@ namespace CareTogether.Managers
     public sealed record Note(
         Guid Id,
         Guid AuthorId,
-        DateTime TimestampUtc,
+        DateTime? CreatedTimestampUtc,
+        DateTime LastEditTimestampUtc,
+        DateTime? ApprovedTimestampUtc,
         string? Contents,
         NoteStatus Status,
         DateTime? BackdatedTimestampUtc,
-        string? AccessLevel
+        string? AccessLevel,
+        Guid? ApproverId
     );
 
     public sealed record VolunteerFamilyInfo(

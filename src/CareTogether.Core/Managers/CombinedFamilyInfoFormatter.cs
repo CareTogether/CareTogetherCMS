@@ -112,13 +112,14 @@ namespace CareTogether.Managers
                 .Select(note => new Note(
                     note.Id,
                     note.AuthorId,
-                    TimestampUtc: note.Status == NoteStatus.Approved
-                        ? note.ApprovedTimestampUtc!.Value
-                        : note.LastEditTimestampUtc,
+                    note.CreatedTimestampUtc,
+                    note.LastEditTimestampUtc,
+                    note.ApprovedTimestampUtc,
                     note.Contents,
                     note.Status,
                     note.BackdatedTimestampUtc,
-                    note.AccessLevel
+                    note.AccessLevel,
+                    note.ApproverId
                 ))
                 .ToImmutableList();
 

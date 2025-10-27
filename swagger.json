@@ -4685,7 +4685,7 @@
         "required": [
           "id",
           "authorId",
-          "timestampUtc",
+          "lastEditTimestampUtc",
           "status"
         ],
         "properties": {
@@ -4697,9 +4697,19 @@
             "type": "string",
             "format": "guid"
           },
-          "timestampUtc": {
+          "createdTimestampUtc": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "lastEditTimestampUtc": {
             "type": "string",
             "format": "date-time"
+          },
+          "approvedTimestampUtc": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
           },
           "contents": {
             "type": "string",
@@ -4715,6 +4725,11 @@
           },
           "accessLevel": {
             "type": "string",
+            "nullable": true
+          },
+          "approverId": {
+            "type": "string",
+            "format": "guid",
             "nullable": true
           }
         }

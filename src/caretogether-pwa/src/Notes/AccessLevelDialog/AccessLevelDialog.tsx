@@ -87,7 +87,10 @@ export function AccessLevelDialog({
         <Box mb={2}>
           <Typography variant="body2">
             <PersonName person={userLookup(note.authorId)} /> –{' '}
-            {format(note.timestampUtc!, 'MM/dd/yyyy hh:mm aa')}
+            {format(
+              note.createdTimestampUtc ?? note.lastEditTimestampUtc,
+              'MM/dd/yyyy hh:mm aa'
+            )}
           </Typography>
           <Typography variant="body2" color="text.secondary">
             {note.contents}
