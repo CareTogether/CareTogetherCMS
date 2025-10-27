@@ -24,9 +24,7 @@
                     "BROWSER": "none"
                 }
             },
-            "dependsOn": [
-                "npm install"
-            ],
+            "dependsOn": ["npm install"],
             "runOptions": {
                 "runOn": "folderOpen"
             },
@@ -38,8 +36,16 @@
                     "endsPattern": "Finished.+"
                 },
                 "pattern": {
-                    "regexp": "",
+                    "regexp": ""
                 }
+            }
+        },
+        {
+            "label": "frontend type-check",
+            "type": "shell",
+            "command": "npm run type-check",
+            "options": {
+                "cwd": "${workspaceFolder}/src/caretogether-pwa"
             }
         },
         {
