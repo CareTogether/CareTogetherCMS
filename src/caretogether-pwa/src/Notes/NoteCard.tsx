@@ -124,7 +124,7 @@ export function NoteCard({ familyId, note }: NoteCardProps) {
                   ? format(note.backdatedTimestampUtc, 'M/d/yy h:mm a')
                   : 'N/A'}
                 <hr />
-                Approved by:
+                Approved by:{' '}
                 {note.approverId ? (
                   <PersonName person={userLookup(note.approverId)} />
                 ) : (
