@@ -17,7 +17,7 @@ namespace CareTogether.Engines.PolicyEvaluation
         ImmutableDictionary<string, FamilyRoleApprovalStatus> FamilyRoleApprovals
     )
     {
-        public ImmutableList<(string ActionName, string[] Version)> CurrentMissingFamilyRequirements =>
+        public ImmutableList<(string ActionName, string[] Versions)> CurrentMissingFamilyRequirements =>
             FamilyRoleApprovals
                 .SelectMany(r => r.Value.CurrentMissingFamilyRequirements)
                 .Distinct()
@@ -32,14 +32,14 @@ namespace CareTogether.Engines.PolicyEvaluation
         public ImmutableList<(
             Guid PersonId,
             string ActionName,
-            string[] Version
+            string[] Versions
         )> CurrentMissingIndividualRequirements =>
             FamilyRoleApprovals
                 .SelectMany(fra => fra.Value.CurrentMissingIndividualRequirements)
                 .Concat(
                     IndividualApprovals.SelectMany(ia =>
                         ia.Value.CurrentMissingRequirements.Select(r =>
-                            (PersonId: ia.Key, ActionName: r.ActionName, Version: r.Version)
+                            (PersonId: ia.Key, ActionName: r.ActionName, Versions: r.Versions)
                         )
                     )
                 )
@@ -66,7 +66,7 @@ namespace CareTogether.Engines.PolicyEvaluation
     {
         [JsonIgnore]
         [Newtonsoft.Json.JsonIgnore]
-        public ImmutableList<(string ActionName, string[] Version)> CurrentMissingRequirements =>
+        public ImmutableList<(string ActionName, string[] Versions)> CurrentMissingRequirements =>
             ApprovalStatusByRole
                 .SelectMany(r => r.Value.CurrentMissingRequirements)
                 .Distinct()
@@ -89,7 +89,7 @@ namespace CareTogether.Engines.PolicyEvaluation
         public RoleApprovalStatus? CurrentStatus =>
             EffectiveRoleApprovalStatus?.ValueAt(DateTime.UtcNow);
 
-        public ImmutableList<(string ActionName, string[] Version)> CurrentMissingRequirements
+        public ImmutableList<(string ActionName, string[] Versions)> CurrentMissingRequirements
         {
             get
             {
@@ -199,7 +199,7 @@ namespace CareTogether.Engines.PolicyEvaluation
         public ImmutableList<(
             Guid PersonId,
             string ActionName,
-            string[] Version
+            string[] Versions
         )> CurrentMissingIndividualRequirements
         {
             get
@@ -231,7 +231,7 @@ namespace CareTogether.Engines.PolicyEvaluation
                         (
                             PersonId: group.Key.PersonId,
                             ActionName: group.Key.ActionName,
-                            Version: group.Select(x => x.Version).ToArray()
+                            Versions: group.Select(x => x.Version).ToArray()
                         )
                     )
                     .ToImmutableList();

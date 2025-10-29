@@ -843,7 +843,7 @@ export function FamilyScreen() {
                       <MissingRequirementRow
                         key={`${missing}:${i}`}
                         requirement={missing.item1 || ''}
-                        policyVersion={missing.item2}
+                        policyVersions={missing.item2}
                         context={volunteerFamilyRequirementContext}
                       />
                     )

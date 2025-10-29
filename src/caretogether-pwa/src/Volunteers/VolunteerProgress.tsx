@@ -204,7 +204,7 @@ function VolunteerProgress(props: { onOpen: () => void }) {
                       <TableCell key={actionName}>
                         {expandedView
                           ? volunteerFamily.volunteerFamilyInfo?.missingRequirements?.some(
-                              (x) => x === actionName
+                              (x) => x.item1 === actionName
                             )
                             ? '❌'
                             : volunteerFamily.volunteerFamilyInfo?.completedRequirements?.some(
@@ -213,7 +213,7 @@ function VolunteerProgress(props: { onOpen: () => void }) {
                               ? '✅'
                               : ''
                           : volunteerFamily.volunteerFamilyInfo?.missingRequirements?.some(
-                                (x) => x === actionName
+                                (x) => x.item1 === actionName
                               ) ||
                               (volunteerFamily.volunteerFamilyInfo
                                 ?.individualVolunteers &&
