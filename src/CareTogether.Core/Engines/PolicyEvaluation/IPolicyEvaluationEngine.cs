@@ -17,7 +17,7 @@ namespace CareTogether.Engines.PolicyEvaluation
         ImmutableDictionary<string, FamilyRoleApprovalStatus> FamilyRoleApprovals
     )
     {
-        public ImmutableList<string> CurrentMissingFamilyRequirements =>
+        public ImmutableList<(string ActionName, string[] Version)> CurrentMissingFamilyRequirements =>
             FamilyRoleApprovals
                 .SelectMany(r => r.Value.CurrentMissingFamilyRequirements)
                 .Distinct()
@@ -32,7 +32,7 @@ namespace CareTogether.Engines.PolicyEvaluation
         public ImmutableList<(
             Guid PersonId,
             string ActionName,
-            string? Version
+            string[] Version
         )> CurrentMissingIndividualRequirements =>
             FamilyRoleApprovals
                 .SelectMany(fra => fra.Value.CurrentMissingIndividualRequirements)
@@ -66,7 +66,7 @@ namespace CareTogether.Engines.PolicyEvaluation
     {
         [JsonIgnore]
         [Newtonsoft.Json.JsonIgnore]
-        public ImmutableList<(string ActionName, string? Version)> CurrentMissingRequirements =>
+        public ImmutableList<(string ActionName, string[] Version)> CurrentMissingRequirements =>
             ApprovalStatusByRole
                 .SelectMany(r => r.Value.CurrentMissingRequirements)
                 .Distinct()
@@ -89,35 +89,20 @@ namespace CareTogether.Engines.PolicyEvaluation
         public RoleApprovalStatus? CurrentStatus =>
             EffectiveRoleApprovalStatus?.ValueAt(DateTime.UtcNow);
 
-        public ImmutableList<(string ActionName, string? Version)> CurrentMissingRequirements
+        public ImmutableList<(string ActionName, string[] Version)> CurrentMissingRequirements
         {
             get
             {
-                var allMissingVersionsByItem = RoleVersionApprovals
+                var missingRequirements = RoleVersionApprovals
                     .SelectMany(r =>
                         r.CurrentMissingRequirements.Select(cmr => (cmr.ActionName, r.Version))
                     )
                     .ToImmutableList()
-                    .GroupBy(r => r.ActionName, r => r.Version)
+                    .GroupBy(r => r.ActionName)
+                    .Select(g => (g.Key, g.Select(x => x.Version).ToArray()))
                     .ToImmutableList();
 
-                var allPolicyVersions = RoleVersionApprovals
-                    .Select(r => r.Version)
-                    .ToImmutableList();
-
-                // If the item is missing in all versions, return it once without a version annotation.
-                // If it is only missing in some versions, return each version-specific result.
-                var simplifiedResult = allMissingVersionsByItem
-                    .SelectMany(versionsByAction =>
-                        allPolicyVersions.All(policyVersion =>
-                            versionsByAction.Contains(policyVersion)
-                        )
-                            ? [(versionsByAction.Key, null)]
-                            : versionsByAction.Select(version => (versionsByAction.Key, version))
-                    )
-                    .ToImmutableList();
-
-                return simplifiedResult;
+                return missingRequirements;
             }
         }
 
@@ -188,7 +173,7 @@ namespace CareTogether.Engines.PolicyEvaluation
         public RoleApprovalStatus? CurrentStatus =>
             EffectiveRoleApprovalStatus?.ValueAt(DateTime.UtcNow);
 
-        public ImmutableList<string> CurrentMissingFamilyRequirements =>
+        public ImmutableList<(string ActionName, string[] Versions)> CurrentMissingFamilyRequirements =>
             RoleVersionApprovals
                 // The following filter selects only the "effective" version(s),
                 // allowing the 'EffectiveRoleApprovalStatus' calculation to take
@@ -197,9 +182,10 @@ namespace CareTogether.Engines.PolicyEvaluation
                 // the requirements from all of them, and this will dynamically update
                 // as the requirements for some versions are met.
                 .Where(r => r.CurrentStatus == CurrentStatus)
-                .SelectMany(r => r.CurrentMissingRequirements)
-                .Where(r => r.Scope == VolunteerFamilyRequirementScope.OncePerFamily)
-                .Select(r => r.ActionName)
+                .SelectMany(r => r.CurrentMissingRequirements.Select(cmr => (CurrentMissingRequirement: cmr, Version: r.Version)))
+                .Where(r => r.CurrentMissingRequirement.Scope == VolunteerFamilyRequirementScope.OncePerFamily)
+                .GroupBy(r => r.CurrentMissingRequirement.ActionName)
+                .Select(g => (g.Key, g.Select(x => x.Version).ToArray()))
                 .ToImmutableList();
 
         public ImmutableList<string> CurrentAvailableFamilyApplications =>
@@ -213,12 +199,13 @@ namespace CareTogether.Engines.PolicyEvaluation
         public ImmutableList<(
             Guid PersonId,
             string ActionName,
-            string? Version
+            string[] Version
         )> CurrentMissingIndividualRequirements
         {
             get
             {
-                var allVersionMissingItemsByPerson = RoleVersionApprovals
+                // Extract all missing requirements that apply to individuals, grouped by person and action
+                var missingRequirements = RoleVersionApprovals
                     .SelectMany(r =>
                         r.CurrentMissingRequirements.Where(cmr =>
                                 cmr.Scope == VolunteerFamilyRequirementScope.AllAdultsInTheFamily
@@ -227,47 +214,29 @@ namespace CareTogether.Engines.PolicyEvaluation
                             )
                             .SelectMany(cmr =>
                                 cmr.StatusDetails.Where(sd =>
-                                        !(
-                                            sd.WhenMet?.Contains(
-                                                DateOnly.FromDateTime(DateTime.UtcNow)
-                                            ) ?? false
-                                        )
+                                        sd.WhenMet?.Contains(DateOnly.FromDateTime(DateTime.UtcNow))
+                                        != true
                                     )
                                     .Select(sd =>
-                                        (PersonId: sd.PersonId!.Value, cmr.ActionName, r.Version)
+                                        (
+                                            PersonId: sd.PersonId!.Value,
+                                            ActionName: cmr.ActionName,
+                                            Version: r.Version
+                                        )
                                     )
                             )
                     )
-                    .ToImmutableList()
-                    .GroupBy(r => r.PersonId)
-                    .Select(r => new
-                    {
-                        PersonId = r.Key,
-                        Actions = r.GroupBy(a => a.ActionName, a => a.Version).ToImmutableList(),
-                    })
-                    .ToImmutableList();
-
-                var allPolicyVersions = RoleVersionApprovals
-                    .Select(r => r.Version)
-                    .ToImmutableList();
-
-                // If the item is missing in all versions for a given person, return it once without a version annotation.
-                // If it is only missing in some versions for a given person, return each version-specific result.
-                var simplifiedResult = allVersionMissingItemsByPerson
-                    .SelectMany(actionsByPerson =>
-                        actionsByPerson.Actions.SelectMany(versionsByAction =>
-                            allPolicyVersions.All(policyVersion =>
-                                versionsByAction.Contains(policyVersion)
-                            )
-                                ? [(actionsByPerson.PersonId, versionsByAction.Key, null)]
-                                : versionsByAction.Select(version =>
-                                    (actionsByPerson.PersonId, versionsByAction.Key, version)
-                                )
+                    .GroupBy(item => (item.PersonId, item.ActionName))
+                    .Select(group =>
+                        (
+                            PersonId: group.Key.PersonId,
+                            ActionName: group.Key.ActionName,
+                            Version: group.Select(x => x.Version).ToArray()
                         )
                     )
                     .ToImmutableList();
 
-                return simplifiedResult;
+                return missingRequirements;
             }
         }
     }
@@ -336,7 +305,6 @@ namespace CareTogether.Engines.PolicyEvaluation
         Inactive = 5,
         Denied = 6,
     };
-
 
     public sealed record V1CaseStatus(
         ImmutableList<RequirementDefinition> MissingIntakeRequirements,

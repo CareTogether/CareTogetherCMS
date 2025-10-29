@@ -86,7 +86,7 @@ namespace CareTogether.Managers
         ImmutableList<Resources.CompletedRequirementInfo> CompletedRequirements,
         ImmutableList<Resources.ExemptedRequirementInfo> ExemptedRequirements,
         ImmutableList<string> AvailableApplications,
-        ImmutableList<string> MissingRequirements,
+        ImmutableList<(string ActionName, string[]? Version)> MissingRequirements,
         ImmutableList<RoleRemoval> RoleRemovals,
         ImmutableDictionary<Guid, VolunteerInfo> IndividualVolunteers,
         ImmutableList<Activity> History,
@@ -98,7 +98,7 @@ namespace CareTogether.Managers
         ImmutableList<Resources.CompletedRequirementInfo> CompletedRequirements,
         ImmutableList<Resources.ExemptedRequirementInfo> ExemptedRequirements,
         ImmutableList<string> AvailableApplications,
-        ImmutableList<(string ActionName, string? Version)> MissingRequirements,
+        ImmutableList<(string ActionName, string[]? Version)> MissingRequirements,
         ImmutableList<RoleRemoval> RoleRemovals
     );
 
