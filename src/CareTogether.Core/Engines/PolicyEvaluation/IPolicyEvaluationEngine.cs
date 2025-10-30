@@ -17,10 +17,14 @@ namespace CareTogether.Engines.PolicyEvaluation
         ImmutableDictionary<string, FamilyRoleApprovalStatus> FamilyRoleApprovals
     )
     {
-        public ImmutableList<(string ActionName, string[] Versions)> CurrentMissingFamilyRequirements =>
+        public ImmutableList<(
+            string ActionName,
+            string[] Versions
+        )> CurrentMissingFamilyRequirements =>
             FamilyRoleApprovals
                 .SelectMany(r => r.Value.CurrentMissingFamilyRequirements)
-                .Distinct()
+                .GroupBy(r => r.ActionName)
+                .Select(g => (g.Key, g.SelectMany(x => x.Versions).ToArray()))
                 .ToImmutableList();
 
         public ImmutableList<string> CurrentAvailableFamilyApplications =>
@@ -43,7 +47,14 @@ namespace CareTogether.Engines.PolicyEvaluation
                         )
                     )
                 )
-                .Distinct()
+                .GroupBy(r => (r.ActionName, r.PersonId))
+                .Select(g =>
+                    (
+                        PersonId: g.Key.PersonId,
+                        ActionName: g.Key.ActionName,
+                        Versions: g.SelectMany(x => x.Versions).ToArray()
+                    )
+                )
                 .ToImmutableList();
 
         public ImmutableList<(
@@ -173,7 +184,10 @@ namespace CareTogether.Engines.PolicyEvaluation
         public RoleApprovalStatus? CurrentStatus =>
             EffectiveRoleApprovalStatus?.ValueAt(DateTime.UtcNow);
 
-        public ImmutableList<(string ActionName, string[] Versions)> CurrentMissingFamilyRequirements =>
+        public ImmutableList<(
+            string ActionName,
+            string[] Versions
+        )> CurrentMissingFamilyRequirements =>
             RoleVersionApprovals
                 // The following filter selects only the "effective" version(s),
                 // allowing the 'EffectiveRoleApprovalStatus' calculation to take
@@ -182,8 +196,15 @@ namespace CareTogether.Engines.PolicyEvaluation
                 // the requirements from all of them, and this will dynamically update
                 // as the requirements for some versions are met.
                 .Where(r => r.CurrentStatus == CurrentStatus)
-                .SelectMany(r => r.CurrentMissingRequirements.Select(cmr => (CurrentMissingRequirement: cmr, Version: r.Version)))
-                .Where(r => r.CurrentMissingRequirement.Scope == VolunteerFamilyRequirementScope.OncePerFamily)
+                .SelectMany(r =>
+                    r.CurrentMissingRequirements.Select(cmr =>
+                        (CurrentMissingRequirement: cmr, Version: r.Version)
+                    )
+                )
+                .Where(r =>
+                    r.CurrentMissingRequirement.Scope
+                    == VolunteerFamilyRequirementScope.OncePerFamily
+                )
                 .GroupBy(r => r.CurrentMissingRequirement.ActionName)
                 .Select(g => (g.Key, g.Select(x => x.Version).ToArray()))
                 .ToImmutableList();
