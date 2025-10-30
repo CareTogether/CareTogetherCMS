@@ -19,7 +19,7 @@ namespace CareTogether.Engines.PolicyEvaluation
     {
         public ImmutableList<(
             string ActionName,
-            string[] Versions
+            (string Version, string RoleName)[] Versions
         )> CurrentMissingFamilyRequirements =>
             FamilyRoleApprovals
                 .SelectMany(r => r.Value.CurrentMissingFamilyRequirements)
@@ -36,7 +36,7 @@ namespace CareTogether.Engines.PolicyEvaluation
         public ImmutableList<(
             Guid PersonId,
             string ActionName,
-            string[] Versions
+            (string Version, string RoleName)[] Versions
         )> CurrentMissingIndividualRequirements =>
             FamilyRoleApprovals
                 .SelectMany(fra => fra.Value.CurrentMissingIndividualRequirements)
@@ -77,7 +77,7 @@ namespace CareTogether.Engines.PolicyEvaluation
     {
         [JsonIgnore]
         [Newtonsoft.Json.JsonIgnore]
-        public ImmutableList<(string ActionName, string[] Versions)> CurrentMissingRequirements =>
+        public ImmutableList<(string ActionName, (string Version, string RoleName)[] Versions)> CurrentMissingRequirements =>
             ApprovalStatusByRole
                 .SelectMany(r => r.Value.CurrentMissingRequirements)
                 .Distinct()
@@ -100,17 +100,17 @@ namespace CareTogether.Engines.PolicyEvaluation
         public RoleApprovalStatus? CurrentStatus =>
             EffectiveRoleApprovalStatus?.ValueAt(DateTime.UtcNow);
 
-        public ImmutableList<(string ActionName, string[] Versions)> CurrentMissingRequirements
+        public ImmutableList<(string ActionName, (string Version, string RoleName)[] Versions)> CurrentMissingRequirements
         {
             get
             {
                 var missingRequirements = RoleVersionApprovals
                     .SelectMany(r =>
-                        r.CurrentMissingRequirements.Select(cmr => (cmr.ActionName, r.Version))
+                        r.CurrentMissingRequirements.Select(cmr => (cmr.ActionName, (r.Version, r.RoleName)))
                     )
                     .ToImmutableList()
                     .GroupBy(r => r.ActionName)
-                    .Select(g => (g.Key, g.Select(x => x.Version).ToArray()))
+                    .Select(g => (g.Key, g.Select(x => x.Item2).ToArray()))
                     .ToImmutableList();
 
                 return missingRequirements;
@@ -126,6 +126,7 @@ namespace CareTogether.Engines.PolicyEvaluation
     }
 
     public sealed record IndividualRoleVersionApprovalStatus(
+        string RoleName,
         string Version,
         DateOnlyTimeline<RoleApprovalStatus>? Status,
         ImmutableList<IndividualRoleRequirementCompletionStatus> Requirements
@@ -186,7 +187,7 @@ namespace CareTogether.Engines.PolicyEvaluation
 
         public ImmutableList<(
             string ActionName,
-            string[] Versions
+            (string Version, string RoleName)[] Versions
         )> CurrentMissingFamilyRequirements =>
             RoleVersionApprovals
                 // The following filter selects only the "effective" version(s),
@@ -198,7 +199,7 @@ namespace CareTogether.Engines.PolicyEvaluation
                 .Where(r => r.CurrentStatus == CurrentStatus)
                 .SelectMany(r =>
                     r.CurrentMissingRequirements.Select(cmr =>
-                        (CurrentMissingRequirement: cmr, Version: r.Version)
+                        (CurrentMissingRequirement: cmr, Version: (r.Version, r.RoleName))
                     )
                 )
                 .Where(r =>
@@ -220,7 +221,7 @@ namespace CareTogether.Engines.PolicyEvaluation
         public ImmutableList<(
             Guid PersonId,
             string ActionName,
-            string[] Versions
+            (string Version, string RoleName)[] Versions
         )> CurrentMissingIndividualRequirements
         {
             get
@@ -242,7 +243,7 @@ namespace CareTogether.Engines.PolicyEvaluation
                                         (
                                             PersonId: sd.PersonId!.Value,
                                             ActionName: cmr.ActionName,
-                                            Version: r.Version
+                                            Version: (r.Version, r.RoleName)
                                         )
                                     )
                             )
@@ -263,6 +264,7 @@ namespace CareTogether.Engines.PolicyEvaluation
     }
 
     public sealed record FamilyRoleVersionApprovalStatus(
+        string RoleName,
         string Version,
         DateOnlyTimeline<RoleApprovalStatus>? Status,
         ImmutableList<FamilyRoleRequirementCompletionStatus> Requirements

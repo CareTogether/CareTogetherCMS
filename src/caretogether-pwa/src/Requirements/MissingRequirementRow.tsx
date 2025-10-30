@@ -6,11 +6,11 @@ import { useDialogHandle } from '../Hooks/useDialogHandle';
 import { IconRow } from '../Generic/IconRow';
 import { MissingRequirementDialog } from './MissingRequirementDialog';
 import { RequirementContext } from './RequirementContext';
-import { Chip } from '@mui/material';
+import { Chip, Tooltip } from '@mui/material';
 
 type MissingRequirementRowProps = {
   requirement: string | RequirementDefinition;
-  policyVersions?: string[];
+  policyVersions?: { version: string; roleName: string }[];
   context: RequirementContext;
   isAvailableApplication?: boolean;
   v1CaseId?: string;
@@ -70,15 +70,47 @@ export function MissingRequirementRow({
         onClick={canComplete || canExempt ? dialogHandle.openDialog : undefined}
       >
         <span className="ph-unmask">{requirementName}</span>
-        {policyVersions?.map((version) => (
-          <Chip
-            key={version}
-            label={version}
-            color="default"
-            size="small"
-            sx={{ ml: 1 }}
-          />
-        ))}
+        {policyVersions
+          ?.reduce<{ version: string; roleNames: string[] }[]>(
+            (final, item) => {
+              const existing = final.find((v) => v.version === item.version);
+
+              if (existing) {
+                existing.roleNames.push(item.roleName);
+                return final;
+              }
+
+              final.push({
+                version: item.version,
+                roleNames: [item.roleName],
+              });
+
+              return final;
+            },
+            []
+          )
+          ?.map((version) => (
+            <Tooltip
+              key={version.version}
+              title={
+                <>
+                  Needed for:
+                  <br />
+                  {version.roleNames.flatMap((roleName) => [
+                    `- ${roleName}`,
+                    <br />,
+                  ])}
+                </>
+              }
+            >
+              <Chip
+                label={version.version}
+                color="default"
+                size="small"
+                sx={{ ml: 1 }}
+              />
+            </Tooltip>
+          ))}
       </IconRow>
       {dialogHandle.open && (
         <MissingRequirementDialog

@@ -78,6 +78,7 @@ namespace CareTogether.Engines.PolicyEvaluation
                     CalculateFamilyRoleVersionApprovalStatus(
                         roleName,
                         locationPolicy,
+                        rolePolicy,
                         policyVersion,
                         family,
                         completedFamilyRequirements,
@@ -101,6 +102,7 @@ namespace CareTogether.Engines.PolicyEvaluation
         internal static FamilyRoleVersionApprovalStatus CalculateFamilyRoleVersionApprovalStatus(
             string roleName,
             EffectiveLocationPolicy locationPolicy,
+            VolunteerFamilyRolePolicy rolePolicy,
             VolunteerFamilyRolePolicyVersion policyVersion,
             Family family,
             ImmutableList<Resources.CompletedRequirementInfo> completedFamilyRequirements,
@@ -167,6 +169,7 @@ namespace CareTogether.Engines.PolicyEvaluation
             );
 
             return new FamilyRoleVersionApprovalStatus(
+                rolePolicy.VolunteerFamilyRoleType,
                 policyVersion.Version,
                 roleVersionApprovalStatus,
                 requirementCompletions
