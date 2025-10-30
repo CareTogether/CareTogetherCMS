@@ -36,6 +36,7 @@ namespace CareTogether.Core.Test.ApprovalCalculationTests
             var result =
                 IndividualApprovalCalculations.CalculateIndividualRoleVersionApprovalStatus(
                     locationPolicy: TestLocationPolicy,
+                    new VolunteerRolePolicy("Family Coach", []),
                     new VolunteerRolePolicyVersion(
                         "v1",
                         SupersededAtUtc: H.DT(20),
@@ -75,6 +76,7 @@ namespace CareTogether.Core.Test.ApprovalCalculationTests
             var result =
                 IndividualApprovalCalculations.CalculateIndividualRoleVersionApprovalStatus(
                     locationPolicy: TestLocationPolicy,
+                    new VolunteerRolePolicy("Family Coach", []),
                     new VolunteerRolePolicyVersion(
                         "v1",
                         SupersededAtUtc: H.DT(20),

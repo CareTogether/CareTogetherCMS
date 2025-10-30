@@ -44,6 +44,7 @@ namespace CareTogether.Engines.PolicyEvaluation
                 .PolicyVersions.Select(policyVersion =>
                     CalculateIndividualRoleVersionApprovalStatus(
                         locationPolicy,
+                        rolePolicy,
                         policyVersion,
                         completedRequirements,
                         exemptedRequirements,
@@ -65,6 +66,7 @@ namespace CareTogether.Engines.PolicyEvaluation
 
         internal static IndividualRoleVersionApprovalStatus CalculateIndividualRoleVersionApprovalStatus(
             EffectiveLocationPolicy locationPolicy,
+            VolunteerRolePolicy rolePolicy,
             VolunteerRolePolicyVersion policyVersion,
             ImmutableList<Resources.CompletedRequirementInfo> completedRequirements,
             ImmutableList<Resources.ExemptedRequirementInfo> exemptedRequirements,
@@ -94,6 +96,7 @@ namespace CareTogether.Engines.PolicyEvaluation
             );
 
             return new IndividualRoleVersionApprovalStatus(
+                rolePolicy.VolunteerRoleType,
                 policyVersion.Version,
                 roleVersionApprovalStatus,
                 requirementCompletionStatus

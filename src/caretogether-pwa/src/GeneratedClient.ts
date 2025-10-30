@@ -6290,7 +6290,7 @@ export class VolunteerFamilyInfo implements IVolunteerFamilyInfo {
     completedRequirements!: CompletedRequirementInfo[];
     exemptedRequirements!: ExemptedRequirementInfo[];
     availableApplications!: string[];
-    missingRequirements!: ValueTupleOfStringAndStringOf[];
+    missingRequirements!: ValueTupleOfStringAndValueTuple_2Of[];
     roleRemovals!: RoleRemoval[];
     individualVolunteers!: { [key: string]: VolunteerInfo; };
     history!: Activity[];
@@ -6343,7 +6343,7 @@ export class VolunteerFamilyInfo implements IVolunteerFamilyInfo {
             if (Array.isArray(_data["missingRequirements"])) {
                 this.missingRequirements = [] as any;
                 for (let item of _data["missingRequirements"])
-                    this.missingRequirements!.push(ValueTupleOfStringAndStringOf.fromJS(item));
+                    this.missingRequirements!.push(ValueTupleOfStringAndValueTuple_2Of.fromJS(item));
             }
             if (Array.isArray(_data["roleRemovals"])) {
                 this.roleRemovals = [] as any;
@@ -6437,7 +6437,7 @@ export interface IVolunteerFamilyInfo {
     completedRequirements: CompletedRequirementInfo[];
     exemptedRequirements: ExemptedRequirementInfo[];
     availableApplications: string[];
-    missingRequirements: ValueTupleOfStringAndStringOf[];
+    missingRequirements: ValueTupleOfStringAndValueTuple_2Of[];
     roleRemovals: RoleRemoval[];
     individualVolunteers: { [key: string]: VolunteerInfo; };
     history: Activity[];
@@ -6448,9 +6448,9 @@ export class FamilyRoleApprovalStatus implements IFamilyRoleApprovalStatus {
     effectiveRoleApprovalStatus?: DateOnlyTimelineOfRoleApprovalStatus | undefined;
     roleVersionApprovals!: FamilyRoleVersionApprovalStatus[];
     currentStatus?: RoleApprovalStatus | undefined;
-    currentMissingFamilyRequirements!: ValueTupleOfStringAndStringOf[];
+    currentMissingFamilyRequirements!: ValueTupleOfStringAndValueTuple_2Of[];
     currentAvailableFamilyApplications!: string[];
-    currentMissingIndividualRequirements!: ValueTupleOfGuidAndStringAndStringOf[];
+    currentMissingIndividualRequirements!: ValueTupleOfGuidAndStringAndValueTuple_2Of[];
 
     constructor(data?: IFamilyRoleApprovalStatus) {
         if (data) {
@@ -6479,7 +6479,7 @@ export class FamilyRoleApprovalStatus implements IFamilyRoleApprovalStatus {
             if (Array.isArray(_data["currentMissingFamilyRequirements"])) {
                 this.currentMissingFamilyRequirements = [] as any;
                 for (let item of _data["currentMissingFamilyRequirements"])
-                    this.currentMissingFamilyRequirements!.push(ValueTupleOfStringAndStringOf.fromJS(item));
+                    this.currentMissingFamilyRequirements!.push(ValueTupleOfStringAndValueTuple_2Of.fromJS(item));
             }
             if (Array.isArray(_data["currentAvailableFamilyApplications"])) {
                 this.currentAvailableFamilyApplications = [] as any;
@@ -6489,7 +6489,7 @@ export class FamilyRoleApprovalStatus implements IFamilyRoleApprovalStatus {
             if (Array.isArray(_data["currentMissingIndividualRequirements"])) {
                 this.currentMissingIndividualRequirements = [] as any;
                 for (let item of _data["currentMissingIndividualRequirements"])
-                    this.currentMissingIndividualRequirements!.push(ValueTupleOfGuidAndStringAndStringOf.fromJS(item));
+                    this.currentMissingIndividualRequirements!.push(ValueTupleOfGuidAndStringAndValueTuple_2Of.fromJS(item));
             }
         }
     }
@@ -6533,9 +6533,9 @@ export interface IFamilyRoleApprovalStatus {
     effectiveRoleApprovalStatus?: DateOnlyTimelineOfRoleApprovalStatus | undefined;
     roleVersionApprovals: FamilyRoleVersionApprovalStatus[];
     currentStatus?: RoleApprovalStatus | undefined;
-    currentMissingFamilyRequirements: ValueTupleOfStringAndStringOf[];
+    currentMissingFamilyRequirements: ValueTupleOfStringAndValueTuple_2Of[];
     currentAvailableFamilyApplications: string[];
-    currentMissingIndividualRequirements: ValueTupleOfGuidAndStringAndStringOf[];
+    currentMissingIndividualRequirements: ValueTupleOfGuidAndStringAndValueTuple_2Of[];
 }
 
 export class DateOnlyTimelineOfRoleApprovalStatus implements IDateOnlyTimelineOfRoleApprovalStatus {
@@ -6639,6 +6639,7 @@ export enum RoleApprovalStatus {
 }
 
 export class FamilyRoleVersionApprovalStatus implements IFamilyRoleVersionApprovalStatus {
+    roleName!: string;
     version!: string;
     status?: DateOnlyTimelineOfRoleApprovalStatus | undefined;
     requirements!: FamilyRoleRequirementCompletionStatus[];
@@ -6657,6 +6658,7 @@ export class FamilyRoleVersionApprovalStatus implements IFamilyRoleVersionApprov
 
     init(_data?: any) {
         if (_data) {
+            this.roleName = _data["roleName"];
             this.version = _data["version"];
             this.status = _data["status"] ? DateOnlyTimelineOfRoleApprovalStatus.fromJS(_data["status"]) : <any>undefined;
             if (Array.isArray(_data["requirements"])) {
@@ -6676,6 +6678,7 @@ export class FamilyRoleVersionApprovalStatus implements IFamilyRoleVersionApprov
 
     toJSON(data?: any) {
         data = typeof data === 'object' ? data : {};
+        data["roleName"] = this.roleName;
         data["version"] = this.version;
         data["status"] = this.status ? this.status.toJSON() : <any>undefined;
         if (Array.isArray(this.requirements)) {
@@ -6688,6 +6691,7 @@ export class FamilyRoleVersionApprovalStatus implements IFamilyRoleVersionApprov
 }
 
 export interface IFamilyRoleVersionApprovalStatus {
+    roleName: string;
     version: string;
     status?: DateOnlyTimelineOfRoleApprovalStatus | undefined;
     requirements: FamilyRoleRequirementCompletionStatus[];
@@ -6895,11 +6899,11 @@ export interface IFamilyRequirementStatusDetail {
     whenMet?: DateOnlyTimeline | undefined;
 }
 
-export class ValueTupleOfStringAndStringOf implements IValueTupleOfStringAndStringOf {
+export class ValueTupleOfStringAndValueTuple_2Of implements IValueTupleOfStringAndValueTuple_2Of {
     item1?: string | undefined;
-    item2?: string[] | undefined;
+    item2?: ValueTupleOfStringAndString[] | undefined;
 
-    constructor(data?: IValueTupleOfStringAndStringOf) {
+    constructor(data?: IValueTupleOfStringAndValueTuple_2Of) {
         if (data) {
             for (var property in data) {
                 if (data.hasOwnProperty(property))
@@ -6914,14 +6918,14 @@ export class ValueTupleOfStringAndStringOf implements IValueTupleOfStringAndStri
             if (Array.isArray(_data["item2"])) {
                 this.item2 = [] as any;
                 for (let item of _data["item2"])
-                    this.item2!.push(item);
+                    this.item2!.push(ValueTupleOfStringAndString.fromJS(item));
             }
         }
     }
 
-    static fromJS(data: any): ValueTupleOfStringAndStringOf {
+    static fromJS(data: any): ValueTupleOfStringAndValueTuple_2Of {
         data = typeof data === 'object' ? data : {};
-        let result = new ValueTupleOfStringAndStringOf();
+        let result = new ValueTupleOfStringAndValueTuple_2Of();
         result.init(data);
         return result;
     }
@@ -6932,23 +6936,63 @@ export class ValueTupleOfStringAndStringOf implements IValueTupleOfStringAndStri
         if (Array.isArray(this.item2)) {
             data["item2"] = [];
             for (let item of this.item2)
-                data["item2"].push(item);
+                data["item2"].push(item.toJSON());
         }
         return data;
     }
 }
 
-export interface IValueTupleOfStringAndStringOf {
+export interface IValueTupleOfStringAndValueTuple_2Of {
     item1?: string | undefined;
-    item2?: string[] | undefined;
+    item2?: ValueTupleOfStringAndString[] | undefined;
 }
 
-export class ValueTupleOfGuidAndStringAndStringOf implements IValueTupleOfGuidAndStringAndStringOf {
+export class ValueTupleOfStringAndString implements IValueTupleOfStringAndString {
+    item1?: string | undefined;
+    item2?: string | undefined;
+
+    constructor(data?: IValueTupleOfStringAndString) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.item1 = _data["item1"];
+            this.item2 = _data["item2"];
+        }
+    }
+
+    static fromJS(data: any): ValueTupleOfStringAndString {
+        data = typeof data === 'object' ? data : {};
+        let result = new ValueTupleOfStringAndString();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["item1"] = this.item1;
+        data["item2"] = this.item2;
+        return data;
+    }
+}
+
+export interface IValueTupleOfStringAndString {
+    item1?: string | undefined;
+    item2?: string | undefined;
+}
+
+export class ValueTupleOfGuidAndStringAndValueTuple_2Of implements IValueTupleOfGuidAndStringAndValueTuple_2Of {
     item1!: string;
     item2?: string | undefined;
-    item3?: string[] | undefined;
+    item3?: ValueTupleOfStringAndString[] | undefined;
 
-    constructor(data?: IValueTupleOfGuidAndStringAndStringOf) {
+    constructor(data?: IValueTupleOfGuidAndStringAndValueTuple_2Of) {
         if (data) {
             for (var property in data) {
                 if (data.hasOwnProperty(property))
@@ -6964,14 +7008,14 @@ export class ValueTupleOfGuidAndStringAndStringOf implements IValueTupleOfGuidAn
             if (Array.isArray(_data["item3"])) {
                 this.item3 = [] as any;
                 for (let item of _data["item3"])
-                    this.item3!.push(item);
+                    this.item3!.push(ValueTupleOfStringAndString.fromJS(item));
             }
         }
     }
 
-    static fromJS(data: any): ValueTupleOfGuidAndStringAndStringOf {
+    static fromJS(data: any): ValueTupleOfGuidAndStringAndValueTuple_2Of {
         data = typeof data === 'object' ? data : {};
-        let result = new ValueTupleOfGuidAndStringAndStringOf();
+        let result = new ValueTupleOfGuidAndStringAndValueTuple_2Of();
         result.init(data);
         return result;
     }
@@ -6983,16 +7027,16 @@ export class ValueTupleOfGuidAndStringAndStringOf implements IValueTupleOfGuidAn
         if (Array.isArray(this.item3)) {
             data["item3"] = [];
             for (let item of this.item3)
-                data["item3"].push(item);
+                data["item3"].push(item.toJSON());
         }
         return data;
     }
 }
 
-export interface IValueTupleOfGuidAndStringAndStringOf {
+export interface IValueTupleOfGuidAndStringAndValueTuple_2Of {
     item1: string;
     item2?: string | undefined;
-    item3?: string[] | undefined;
+    item3?: ValueTupleOfStringAndString[] | undefined;
 }
 
 export class RoleRemoval implements IRoleRemoval {
@@ -7058,7 +7102,7 @@ export class VolunteerInfo implements IVolunteerInfo {
     completedRequirements!: CompletedRequirementInfo[];
     exemptedRequirements!: ExemptedRequirementInfo[];
     availableApplications!: string[];
-    missingRequirements!: ValueTupleOfStringAndStringOf[];
+    missingRequirements!: ValueTupleOfStringAndValueTuple_2Of[];
     roleRemovals!: RoleRemoval[];
 
     constructor(data?: IVolunteerInfo) {
@@ -7105,7 +7149,7 @@ export class VolunteerInfo implements IVolunteerInfo {
             if (Array.isArray(_data["missingRequirements"])) {
                 this.missingRequirements = [] as any;
                 for (let item of _data["missingRequirements"])
-                    this.missingRequirements!.push(ValueTupleOfStringAndStringOf.fromJS(item));
+                    this.missingRequirements!.push(ValueTupleOfStringAndValueTuple_2Of.fromJS(item));
             }
             if (Array.isArray(_data["roleRemovals"])) {
                 this.roleRemovals = [] as any;
@@ -7165,7 +7209,7 @@ export interface IVolunteerInfo {
     completedRequirements: CompletedRequirementInfo[];
     exemptedRequirements: ExemptedRequirementInfo[];
     availableApplications: string[];
-    missingRequirements: ValueTupleOfStringAndStringOf[];
+    missingRequirements: ValueTupleOfStringAndValueTuple_2Of[];
     roleRemovals: RoleRemoval[];
 }
 
@@ -7173,7 +7217,7 @@ export class IndividualRoleApprovalStatus implements IIndividualRoleApprovalStat
     effectiveRoleApprovalStatus?: DateOnlyTimelineOfRoleApprovalStatus | undefined;
     roleVersionApprovals!: IndividualRoleVersionApprovalStatus[];
     currentStatus?: RoleApprovalStatus | undefined;
-    currentMissingRequirements!: ValueTupleOfStringAndStringOf[];
+    currentMissingRequirements!: ValueTupleOfStringAndValueTuple_2Of[];
     currentAvailableApplications!: string[];
 
     constructor(data?: IIndividualRoleApprovalStatus) {
@@ -7202,7 +7246,7 @@ export class IndividualRoleApprovalStatus implements IIndividualRoleApprovalStat
             if (Array.isArray(_data["currentMissingRequirements"])) {
                 this.currentMissingRequirements = [] as any;
                 for (let item of _data["currentMissingRequirements"])
-                    this.currentMissingRequirements!.push(ValueTupleOfStringAndStringOf.fromJS(item));
+                    this.currentMissingRequirements!.push(ValueTupleOfStringAndValueTuple_2Of.fromJS(item));
             }
             if (Array.isArray(_data["currentAvailableApplications"])) {
                 this.currentAvailableApplications = [] as any;
@@ -7246,11 +7290,12 @@ export interface IIndividualRoleApprovalStatus {
     effectiveRoleApprovalStatus?: DateOnlyTimelineOfRoleApprovalStatus | undefined;
     roleVersionApprovals: IndividualRoleVersionApprovalStatus[];
     currentStatus?: RoleApprovalStatus | undefined;
-    currentMissingRequirements: ValueTupleOfStringAndStringOf[];
+    currentMissingRequirements: ValueTupleOfStringAndValueTuple_2Of[];
     currentAvailableApplications: string[];
 }
 
 export class IndividualRoleVersionApprovalStatus implements IIndividualRoleVersionApprovalStatus {
+    roleName!: string;
     version!: string;
     status?: DateOnlyTimelineOfRoleApprovalStatus | undefined;
     requirements!: IndividualRoleRequirementCompletionStatus[];
@@ -7269,6 +7314,7 @@ export class IndividualRoleVersionApprovalStatus implements IIndividualRoleVersi
 
     init(_data?: any) {
         if (_data) {
+            this.roleName = _data["roleName"];
             this.version = _data["version"];
             this.status = _data["status"] ? DateOnlyTimelineOfRoleApprovalStatus.fromJS(_data["status"]) : <any>undefined;
             if (Array.isArray(_data["requirements"])) {
@@ -7288,6 +7334,7 @@ export class IndividualRoleVersionApprovalStatus implements IIndividualRoleVersi
 
     toJSON(data?: any) {
         data = typeof data === 'object' ? data : {};
+        data["roleName"] = this.roleName;
         data["version"] = this.version;
         data["status"] = this.status ? this.status.toJSON() : <any>undefined;
         if (Array.isArray(this.requirements)) {
@@ -7300,6 +7347,7 @@ export class IndividualRoleVersionApprovalStatus implements IIndividualRoleVersi
 }
 
 export interface IIndividualRoleVersionApprovalStatus {
+    roleName: string;
     version: string;
     status?: DateOnlyTimelineOfRoleApprovalStatus | undefined;
     requirements: IndividualRoleRequirementCompletionStatus[];

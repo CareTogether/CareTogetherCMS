@@ -4081,7 +4081,7 @@
           "missingRequirements": {
             "type": "array",
             "items": {
-              "$ref": "#/components/schemas/ValueTupleOfStringAndStringOf"
+              "$ref": "#/components/schemas/ValueTupleOfStringAndValueTuple_2Of"
             }
           },
           "roleRemovals": {
@@ -4145,7 +4145,7 @@
           "currentMissingFamilyRequirements": {
             "type": "array",
             "items": {
-              "$ref": "#/components/schemas/ValueTupleOfStringAndStringOf"
+              "$ref": "#/components/schemas/ValueTupleOfStringAndValueTuple_2Of"
             }
           },
           "currentAvailableFamilyApplications": {
@@ -4157,7 +4157,7 @@
           "currentMissingIndividualRequirements": {
             "type": "array",
             "items": {
-              "$ref": "#/components/schemas/ValueTupleOfGuidAndStringAndStringOf"
+              "$ref": "#/components/schemas/ValueTupleOfGuidAndStringAndValueTuple_2Of"
             }
           }
         }
@@ -4223,10 +4223,14 @@
         "type": "object",
         "additionalProperties": false,
         "required": [
+          "roleName",
           "version",
           "requirements"
         ],
         "properties": {
+          "roleName": {
+            "type": "string"
+          },
           "version": {
             "type": "string"
           },
@@ -4348,7 +4352,7 @@
           }
         }
       },
-      "ValueTupleOfStringAndStringOf": {
+      "ValueTupleOfStringAndValueTuple_2Of": {
         "type": "object",
         "additionalProperties": false,
         "properties": {
@@ -4360,12 +4364,26 @@
             "type": "array",
             "nullable": true,
             "items": {
-              "type": "string"
+              "$ref": "#/components/schemas/ValueTupleOfStringAndString"
             }
           }
         }
       },
-      "ValueTupleOfGuidAndStringAndStringOf": {
+      "ValueTupleOfStringAndString": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "item1": {
+            "type": "string",
+            "nullable": true
+          },
+          "item2": {
+            "type": "string",
+            "nullable": true
+          }
+        }
+      },
+      "ValueTupleOfGuidAndStringAndValueTuple_2Of": {
         "type": "object",
         "additionalProperties": false,
         "required": [
@@ -4384,7 +4402,7 @@
             "type": "array",
             "nullable": true,
             "items": {
-              "type": "string"
+              "$ref": "#/components/schemas/ValueTupleOfStringAndString"
             }
           }
         }
@@ -4472,7 +4490,7 @@
           "missingRequirements": {
             "type": "array",
             "items": {
-              "$ref": "#/components/schemas/ValueTupleOfStringAndStringOf"
+              "$ref": "#/components/schemas/ValueTupleOfStringAndValueTuple_2Of"
             }
           },
           "roleRemovals": {
@@ -4517,7 +4535,7 @@
           "currentMissingRequirements": {
             "type": "array",
             "items": {
-              "$ref": "#/components/schemas/ValueTupleOfStringAndStringOf"
+              "$ref": "#/components/schemas/ValueTupleOfStringAndValueTuple_2Of"
             }
           },
           "currentAvailableApplications": {
@@ -4532,10 +4550,14 @@
         "type": "object",
         "additionalProperties": false,
         "required": [
+          "roleName",
           "version",
           "requirements"
         ],
         "properties": {
+          "roleName": {
+            "type": "string"
+          },
           "version": {
             "type": "string"
           },
