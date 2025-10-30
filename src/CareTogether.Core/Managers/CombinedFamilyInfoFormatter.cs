@@ -387,7 +387,7 @@ namespace CareTogether.Managers
                                 .CurrentMissingIndividualRequirements.Where(y =>
                                     y.PersonId == x.Key
                                 )
-                                .Select(y => (y.ActionName, y.Version))
+                                .Select(y => (y.ActionName, y.Versions))
                                 .ToImmutableList(),
                             individualEntry?.RoleRemovals ?? ImmutableList<RoleRemoval>.Empty
                         );

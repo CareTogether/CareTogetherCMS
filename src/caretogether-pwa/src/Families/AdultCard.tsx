@@ -367,7 +367,7 @@ export function AdultCard({ familyId, personId }: AdultCardProps) {
                     <MissingRequirementRow
                       key={`${missing}:${i}`}
                       requirement={missing.item1!}
-                      policyVersion={missing.item2}
+                      policyVersions={missing.item2}
                       context={requirementContext}
                     />
                   ))}

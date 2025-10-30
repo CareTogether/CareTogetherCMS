@@ -4081,7 +4081,7 @@
           "missingRequirements": {
             "type": "array",
             "items": {
-              "type": "string"
+              "$ref": "#/components/schemas/ValueTupleOfStringAndStringOf"
             }
           },
           "roleRemovals": {
@@ -4145,7 +4145,7 @@
           "currentMissingFamilyRequirements": {
             "type": "array",
             "items": {
-              "type": "string"
+              "$ref": "#/components/schemas/ValueTupleOfStringAndStringOf"
             }
           },
           "currentAvailableFamilyApplications": {
@@ -4157,7 +4157,7 @@
           "currentMissingIndividualRequirements": {
             "type": "array",
             "items": {
-              "$ref": "#/components/schemas/ValueTupleOfGuidAndStringAndString"
+              "$ref": "#/components/schemas/ValueTupleOfGuidAndStringAndStringOf"
             }
           }
         }
@@ -4348,7 +4348,24 @@
           }
         }
       },
-      "ValueTupleOfGuidAndStringAndString": {
+      "ValueTupleOfStringAndStringOf": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "item1": {
+            "type": "string",
+            "nullable": true
+          },
+          "item2": {
+            "type": "array",
+            "nullable": true,
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "ValueTupleOfGuidAndStringAndStringOf": {
         "type": "object",
         "additionalProperties": false,
         "required": [
@@ -4364,8 +4381,11 @@
             "nullable": true
           },
           "item3": {
-            "type": "string",
-            "nullable": true
+            "type": "array",
+            "nullable": true,
+            "items": {
+              "type": "string"
+            }
           }
         }
       },
@@ -4452,7 +4472,7 @@
           "missingRequirements": {
             "type": "array",
             "items": {
-              "$ref": "#/components/schemas/ValueTupleOfStringAndString"
+              "$ref": "#/components/schemas/ValueTupleOfStringAndStringOf"
             }
           },
           "roleRemovals": {
@@ -4497,7 +4517,7 @@
           "currentMissingRequirements": {
             "type": "array",
             "items": {
-              "$ref": "#/components/schemas/ValueTupleOfStringAndString"
+              "$ref": "#/components/schemas/ValueTupleOfStringAndStringOf"
             }
           },
           "currentAvailableApplications": {
@@ -4556,20 +4576,6 @@
                 "$ref": "#/components/schemas/DateOnlyTimeline"
               }
             ]
-          }
-        }
-      },
-      "ValueTupleOfStringAndString": {
-        "type": "object",
-        "additionalProperties": false,
-        "properties": {
-          "item1": {
-            "type": "string",
-            "nullable": true
-          },
-          "item2": {
-            "type": "string",
-            "nullable": true
           }
         }
       },

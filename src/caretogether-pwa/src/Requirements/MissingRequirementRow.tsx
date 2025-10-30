@@ -10,7 +10,7 @@ import { Chip } from '@mui/material';
 
 type MissingRequirementRowProps = {
   requirement: string | RequirementDefinition;
-  policyVersion?: string;
+  policyVersions?: string[];
   context: RequirementContext;
   isAvailableApplication?: boolean;
   v1CaseId?: string;
@@ -18,7 +18,7 @@ type MissingRequirementRowProps = {
 
 export function MissingRequirementRow({
   requirement,
-  policyVersion,
+  policyVersions,
   context,
   isAvailableApplication,
   v1CaseId,
@@ -70,14 +70,15 @@ export function MissingRequirementRow({
         onClick={canComplete || canExempt ? dialogHandle.openDialog : undefined}
       >
         <span className="ph-unmask">{requirementName}</span>
-        {policyVersion && (
+        {policyVersions?.map((version) => (
           <Chip
-            label={policyVersion}
+            key={version}
+            label={version}
             color="default"
             size="small"
             sx={{ ml: 1 }}
           />
-        )}
+        ))}
       </IconRow>
       {dialogHandle.open && (
         <MissingRequirementDialog
