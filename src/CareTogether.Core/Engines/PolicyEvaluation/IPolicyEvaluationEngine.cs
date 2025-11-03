@@ -13,32 +13,6 @@ using Timelines;
 
 namespace CareTogether.Engines.PolicyEvaluation
 {
-    internal static class PolicyEvaluationHelpers
-    {
-        internal static ImmutableList<RequirementStage> GetStagesToHide(RoleApprovalStatus highestStatus) =>
-            highestStatus switch
-            {
-                RoleApprovalStatus.Onboarded => ImmutableList.Create(RequirementStage.Application, RequirementStage.Approval, RequirementStage.Onboarding),
-                RoleApprovalStatus.Approved => ImmutableList.Create(RequirementStage.Application, RequirementStage.Approval),
-                RoleApprovalStatus.Prospective => ImmutableList.Create(RequirementStage.Application),
-                _ => ImmutableList<RequirementStage>.Empty
-            };
-
-        internal static RoleApprovalStatus? GetMaxRoleStatus(ImmutableList<IndividualRoleVersionApprovalStatus> versions) =>
-            versions.Select(r => r.CurrentStatus)
-                   .Where(s => s != null)
-                   .Cast<RoleApprovalStatus>()
-                   .DefaultIfEmpty()
-                   .MaxBy(s => (int)s);
-
-        internal static RoleApprovalStatus? GetMaxRoleStatus(ImmutableList<FamilyRoleVersionApprovalStatus> versions) =>
-            versions.Select(r => r.CurrentStatus)
-                   .Where(s => s != null)
-                   .Cast<RoleApprovalStatus>()
-                   .DefaultIfEmpty()
-                   .MaxBy(s => (int)s);
-    }
-
     public sealed record FamilyApprovalStatus(
         ImmutableDictionary<Guid, IndividualApprovalStatus> IndividualApprovals,
         ImmutableDictionary<string, FamilyRoleApprovalStatus> FamilyRoleApprovals
@@ -48,19 +22,28 @@ namespace CareTogether.Engines.PolicyEvaluation
 
         private ImmutableDictionary<string, RoleApprovalStatus> RoleHighestStatuses =>
             FamilyRoleApprovals
-                .Select(kvp => new RoleStatusPair(kvp.Key, PolicyEvaluationHelpers.GetMaxRoleStatus(kvp.Value.RoleVersionApprovals)))
+                .Select(kvp => new RoleStatusPair(
+                    kvp.Key,
+                    PolicyEvaluationHelpers.GetMaxRoleStatus(kvp.Value.RoleVersionApprovals)
+                ))
                 .Concat(
-                    IndividualApprovals
-                        .SelectMany(ind => ind.Value.ApprovalStatusByRole
-                            .Select(roleKvp => new RoleStatusPair(roleKvp.Key, PolicyEvaluationHelpers.GetMaxRoleStatus(roleKvp.Value.RoleVersionApprovals))))
+                    IndividualApprovals.SelectMany(ind =>
+                        ind.Value.ApprovalStatusByRole.Select(roleKvp => new RoleStatusPair(
+                            roleKvp.Key,
+                            PolicyEvaluationHelpers.GetMaxRoleStatus(
+                                roleKvp.Value.RoleVersionApprovals
+                            )
+                        ))
+                    )
                 )
                 .GroupBy(x => x.RoleName)
                 .ToImmutableDictionary(
                     g => g.Key,
-                    g => g.Select(x => x.Status ?? default)
-                          .Where(s => s != default)
-                          .DefaultIfEmpty()
-                          .Max()
+                    g =>
+                        g.Select(x => x.Status ?? default)
+                            .Where(s => s != default)
+                            .DefaultIfEmpty()
+                            .Max()
                 );
 
         public ImmutableList<(
@@ -86,56 +69,84 @@ namespace CareTogether.Engines.PolicyEvaluation
         )> CurrentMissingIndividualRequirements =>
             FamilyRoleApprovals
                 .SelectMany(fra => GetMissingRequirementsFromFamilyRole(fra.Key, fra.Value))
-                .Concat(IndividualApprovals
-                    .SelectMany(ia => GetMissingRequirementsFromIndividual(ia.Key, ia.Value)))
+                .Concat(
+                    IndividualApprovals.SelectMany(ia =>
+                        GetMissingRequirementsFromIndividual(ia.Key, ia.Value)
+                    )
+                )
                 .GroupBy(r => (r.PersonId, r.ActionName))
-                .Select(g => (
-                    PersonId: g.Key.PersonId,
-                    ActionName: g.Key.ActionName,
-                    Versions: g.Select(x => x.Version).ToArray()
-                ))
+                .Select(g =>
+                    (
+                        PersonId: g.Key.PersonId,
+                        ActionName: g.Key.ActionName,
+                        Versions: g.Select(x => x.Version).ToArray()
+                    )
+                )
                 .ToImmutableList();
 
-        private IEnumerable<(Guid PersonId, string ActionName, (string Version, string RoleName) Version)> GetMissingRequirementsFromFamilyRole(
-            string roleName, FamilyRoleApprovalStatus familyRoleStatus)
+        private IEnumerable<(
+            Guid PersonId,
+            string ActionName,
+            (string Version, string RoleName) Version
+        )> GetMissingRequirementsFromFamilyRole(
+            string roleName,
+            FamilyRoleApprovalStatus familyRoleStatus
+        )
         {
             var highestStatus = RoleHighestStatuses.GetValueOrDefault(roleName);
             var stagesToHide = PolicyEvaluationHelpers.GetStagesToHide(highestStatus);
 
-            return familyRoleStatus.RoleVersionApprovals
-                .SelectMany(r =>
-                    r.CurrentMissingRequirements
-                        .Where(cmr => !stagesToHide.Contains(cmr.Stage))
-                        .Where(cmr =>
-                            cmr.Scope == VolunteerFamilyRequirementScope.AllAdultsInTheFamily
-                            || cmr.Scope == VolunteerFamilyRequirementScope.AllParticipatingAdultsInTheFamily
-                        )
-                        .SelectMany(cmr =>
-                            cmr.StatusDetails
-                                .Where(sd => sd.WhenMet?.Contains(DateOnly.FromDateTime(DateTime.UtcNow)) != true)
-                                .Select(sd => (PersonId: sd.PersonId!.Value, ActionName: cmr.ActionName, Version: (r.Version, r.RoleName)))
-                        )
-                );
+            return familyRoleStatus.RoleVersionApprovals.SelectMany(r =>
+                r.CurrentMissingRequirements.Where(cmr => !stagesToHide.Contains(cmr.Stage))
+                    .Where(cmr =>
+                        cmr.Scope == VolunteerFamilyRequirementScope.AllAdultsInTheFamily
+                        || cmr.Scope
+                            == VolunteerFamilyRequirementScope.AllParticipatingAdultsInTheFamily
+                    )
+                    .SelectMany(cmr =>
+                        cmr.StatusDetails.Where(sd =>
+                                sd.WhenMet?.Contains(DateOnly.FromDateTime(DateTime.UtcNow)) != true
+                            )
+                            .Select(sd =>
+                                (
+                                    PersonId: sd.PersonId!.Value,
+                                    ActionName: cmr.ActionName,
+                                    Version: (r.Version, r.RoleName)
+                                )
+                            )
+                    )
+            );
         }
 
-        private IEnumerable<(Guid PersonId, string ActionName, (string Version, string RoleName) Version)> GetMissingRequirementsFromIndividual(
-            Guid personId, IndividualApprovalStatus individualStatus)
+        private IEnumerable<(
+            Guid PersonId,
+            string ActionName,
+            (string Version, string RoleName) Version
+        )> GetMissingRequirementsFromIndividual(
+            Guid personId,
+            IndividualApprovalStatus individualStatus
+        )
         {
-            return individualStatus.ApprovalStatusByRole
-                .SelectMany(kv =>
-                {
-                    var roleName = kv.Key;
-                    var highestStatus = RoleHighestStatuses.GetValueOrDefault(roleName);
-                    var stagesToHide = PolicyEvaluationHelpers.GetStagesToHide(highestStatus);
+            return individualStatus.ApprovalStatusByRole.SelectMany(kv =>
+            {
+                var roleName = kv.Key;
+                var highestStatus = RoleHighestStatuses.GetValueOrDefault(roleName);
+                var stagesToHide = PolicyEvaluationHelpers.GetStagesToHide(highestStatus);
 
-                    return kv.Value.RoleVersionApprovals
-                        .SelectMany(r =>
-                            r.CurrentMissingRequirements
-                                .Where(cmr => !stagesToHide.Contains(cmr.Stage))
-                                .Where(cmr => cmr.WhenMet?.Contains(DateOnly.FromDateTime(DateTime.UtcNow)) != true)
-                                .Select(cmr => (PersonId: personId, ActionName: cmr.ActionName, Version: (r.Version, r.RoleName)))
-                        );
-                });
+                return kv.Value.RoleVersionApprovals.SelectMany(r =>
+                    r.CurrentMissingRequirements.Where(cmr => !stagesToHide.Contains(cmr.Stage))
+                        .Where(cmr =>
+                            cmr.WhenMet?.Contains(DateOnly.FromDateTime(DateTime.UtcNow)) != true
+                        )
+                        .Select(cmr =>
+                            (
+                                PersonId: personId,
+                                ActionName: cmr.ActionName,
+                                Version: (r.Version, r.RoleName)
+                            )
+                        )
+                );
+            });
         }
 
         public ImmutableList<(
@@ -143,20 +154,24 @@ namespace CareTogether.Engines.PolicyEvaluation
             string ActionName
         )> CurrentAvailableIndividualApplications =>
             IndividualApprovals
-                .SelectMany(ia => ia.Value.ApprovalStatusByRole.SelectMany(kv =>
-                {
-                    var roleName = kv.Key;
-                    var highestStatus = RoleHighestStatuses.GetValueOrDefault(roleName);
-                    
-                    // If role has achieved Prospective or higher status, hide applications
-                    if (highestStatus >= RoleApprovalStatus.Prospective)
-                        return Enumerable.Empty<(Guid, string)>();
+                .SelectMany(ia =>
+                    ia.Value.ApprovalStatusByRole.SelectMany(kv =>
+                    {
+                        var roleName = kv.Key;
+                        var highestStatus = RoleHighestStatuses.GetValueOrDefault(roleName);
 
-                    return kv.Value.RoleVersionApprovals
-                        .Where(r => r.CurrentStatus == null && kv.Value.CurrentStatus == null)
-                        .SelectMany(r => r.CurrentAvailableApplications)
-                        .Select(a => (ia.Key, a.ActionName));
-                }))
+                        // If role has achieved Prospective or higher status, hide applications
+                        if (highestStatus >= RoleApprovalStatus.Prospective)
+                            return Enumerable.Empty<(Guid, string)>();
+
+                        return kv
+                            .Value.RoleVersionApprovals.Where(r =>
+                                r.CurrentStatus == null && kv.Value.CurrentStatus == null
+                            )
+                            .SelectMany(r => r.CurrentAvailableApplications)
+                            .Select(a => (ia.Key, a.ActionName));
+                    })
+                )
                 .Distinct()
                 .Select(t => (PersonId: t.Item1, ActionName: t.Item2))
                 .ToImmutableList();
@@ -168,7 +183,10 @@ namespace CareTogether.Engines.PolicyEvaluation
     {
         [JsonIgnore]
         [Newtonsoft.Json.JsonIgnore]
-        public ImmutableList<(string ActionName, (string Version, string RoleName)[] Versions)> CurrentMissingRequirements =>
+        public ImmutableList<(
+            string ActionName,
+            (string Version, string RoleName)[] Versions
+        )> CurrentMissingRequirements =>
             ApprovalStatusByRole
                 .SelectMany(r => r.Value.CurrentMissingRequirements)
                 .Distinct()
@@ -191,15 +209,19 @@ namespace CareTogether.Engines.PolicyEvaluation
         public RoleApprovalStatus? CurrentStatus =>
             EffectiveRoleApprovalStatus?.ValueAt(DateTime.UtcNow);
 
-        public ImmutableList<(string ActionName, (string Version, string RoleName)[] Versions)> CurrentMissingRequirements
+        public ImmutableList<(
+            string ActionName,
+            (string Version, string RoleName)[] Versions
+        )> CurrentMissingRequirements
         {
             get
             {
                 // Return raw per-version missing requirements (family-level logic will decide hiding)
                 var missingRequirements = RoleVersionApprovals
                     .SelectMany(r =>
-                        r.CurrentMissingRequirements
-                            .Select(cmr => (cmr.ActionName, (r.Version, r.RoleName)))
+                        r.CurrentMissingRequirements.Select(cmr =>
+                            (cmr.ActionName, (r.Version, r.RoleName))
+                        )
                     )
                     .ToImmutableList()
                     .GroupBy(r => r.ActionName)
@@ -297,8 +319,7 @@ namespace CareTogether.Engines.PolicyEvaluation
 
                 return RoleVersionApprovals
                     .SelectMany(r =>
-                        r.CurrentMissingRequirements
-                            .Where(cmr => !stagesToHide.Contains(cmr.Stage))
+                        r.CurrentMissingRequirements.Where(cmr => !stagesToHide.Contains(cmr.Stage))
                             .Select(cmr =>
                                 (CurrentMissingRequirement: cmr, Version: (r.Version, r.RoleName))
                             )
@@ -317,7 +338,8 @@ namespace CareTogether.Engines.PolicyEvaluation
         {
             get
             {
-                var highestStatus = PolicyEvaluationHelpers.GetMaxRoleStatus(RoleVersionApprovals) ?? default;
+                var highestStatus =
+                    PolicyEvaluationHelpers.GetMaxRoleStatus(RoleVersionApprovals) ?? default;
 
                 return highestStatus >= RoleApprovalStatus.Prospective
                     ? ImmutableList<string>.Empty
