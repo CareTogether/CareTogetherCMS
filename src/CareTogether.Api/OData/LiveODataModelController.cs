@@ -574,19 +574,6 @@ namespace CareTogether.Api.OData
                 organizationId
             );
 
-            //HOTFIX: Skip a transferred location temporarily until Power BI can partition records by organization.
-            if (organizationId == Guid.Parse("00000007-1000-0000-0000-000000000000"))
-            {
-                organizationConfiguration = organizationConfiguration with
-                {
-                    Locations = organizationConfiguration
-                        .Locations.Where(location =>
-                            location.Id != Guid.Parse("00000016-0000-0000-0000-000000000000")
-                        )
-                        .ToImmutableList(),
-                };
-            }
-
             var organization = new Organization(organizationId);
 
             var locationPolicies = await organizationConfiguration
