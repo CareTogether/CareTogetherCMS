@@ -60,6 +60,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Timelines", "src\Timelines\
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Timelines.Test", "test\Timelines.Test\Timelines.Test.csproj", "{3C0F8F56-17BB-4BF7-8D59-51D8A5F635CA}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CareTogether.Importer", "src\CareTogether.Importer\CareTogether.Importer.csproj", "{98A1782F-DBC4-4CE5-A6E2-5804C9DF6013}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -90,6 +92,10 @@ Global
 		{3C0F8F56-17BB-4BF7-8D59-51D8A5F635CA}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{3C0F8F56-17BB-4BF7-8D59-51D8A5F635CA}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{3C0F8F56-17BB-4BF7-8D59-51D8A5F635CA}.Release|Any CPU.Build.0 = Release|Any CPU
+		{98A1782F-DBC4-4CE5-A6E2-5804C9DF6013}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{98A1782F-DBC4-4CE5-A6E2-5804C9DF6013}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{98A1782F-DBC4-4CE5-A6E2-5804C9DF6013}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{98A1782F-DBC4-4CE5-A6E2-5804C9DF6013}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -105,6 +111,7 @@ Global
 		{7DC7327F-6F01-4561-943D-D385FB5637E1} = {42D43EAF-EE89-479A-B304-3B5DF56A3494}
 		{97B1250A-5BD6-4C12-8D9B-63EEBAFB8DC9} = {465BA74E-CEF3-4608-8809-8C7A2E979DAC}
 		{3C0F8F56-17BB-4BF7-8D59-51D8A5F635CA} = {42D43EAF-EE89-479A-B304-3B5DF56A3494}
+		{98A1782F-DBC4-4CE5-A6E2-5804C9DF6013} = {465BA74E-CEF3-4608-8809-8C7A2E979DAC}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {E09CB79A-6E5B-4BAD-B356-64D949892A7E}
