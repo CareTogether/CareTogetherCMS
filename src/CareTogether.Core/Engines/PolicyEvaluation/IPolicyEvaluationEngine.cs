@@ -232,18 +232,13 @@ namespace CareTogether.Engines.PolicyEvaluation
             }
         }
 
-        public ImmutableList<string> CurrentAvailableApplications
-        {
-            get
-            {
+        public ImmutableList<string> CurrentAvailableApplications =>
                 // Return raw per-version available applications (family-level logic will decide hiding)
-                return RoleVersionApprovals
+                RoleVersionApprovals
                     .Where(r => r.CurrentStatus == null && CurrentStatus == null)
                     .SelectMany(r => r.CurrentAvailableApplications)
                     .Select(r => r.ActionName)
                     .ToImmutableList();
-            }
-        }
     }
 
     public sealed record IndividualRoleVersionApprovalStatus(
