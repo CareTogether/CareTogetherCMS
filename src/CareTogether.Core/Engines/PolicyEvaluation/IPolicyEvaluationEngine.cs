@@ -93,29 +93,38 @@ namespace CareTogether.Engines.PolicyEvaluation
             FamilyRoleApprovalStatus familyRoleStatus
         )
         {
-            var highestStatus = RoleHighestStatuses.GetValueOrDefault(roleName);
-            var stagesToHide = PolicyEvaluationHelpers.GetStagesToHide(highestStatus);
-
-            return familyRoleStatus.RoleVersionApprovals.SelectMany(r =>
-                r.CurrentMissingRequirements.Where(cmr => !stagesToHide.Contains(cmr.Stage))
-                    .Where(cmr =>
-                        cmr.Scope == VolunteerFamilyRequirementScope.AllAdultsInTheFamily
-                        || cmr.Scope
-                            == VolunteerFamilyRequirementScope.AllParticipatingAdultsInTheFamily
-                    )
-                    .SelectMany(cmr =>
-                        cmr.StatusDetails.Where(sd =>
-                                sd.WhenMet?.Contains(DateOnly.FromDateTime(DateTime.UtcNow)) != true
-                            )
-                            .Select(sd =>
-                                (
-                                    PersonId: sd.PersonId!.Value,
-                                    ActionName: cmr.ActionName,
-                                    Version: (r.Version, r.RoleName)
-                                )
-                            )
-                    )
+            // Determine the highest status among the versions for this family role.
+            // If there is a definitive max status, only consider missing requirements from
+            // versions that have that same status; this hides missing requirements from
+            // other versions of the same policy regardless of requirement stage.
+            var maxVersionStatus = PolicyEvaluationHelpers.GetMaxRoleStatus(
+                familyRoleStatus.RoleVersionApprovals
             );
+
+            return familyRoleStatus
+                .RoleVersionApprovals.Where(r =>
+                    maxVersionStatus == null || r.CurrentStatus == maxVersionStatus
+                )
+                .SelectMany(r =>
+                    r.CurrentMissingRequirements.Where(cmr =>
+                            cmr.Scope == VolunteerFamilyRequirementScope.AllAdultsInTheFamily
+                            || cmr.Scope
+                                == VolunteerFamilyRequirementScope.AllParticipatingAdultsInTheFamily
+                        )
+                        .SelectMany(cmr =>
+                            cmr.StatusDetails.Where(sd =>
+                                    sd.WhenMet?.Contains(DateOnly.FromDateTime(DateTime.UtcNow))
+                                    != true
+                                )
+                                .Select(sd =>
+                                    (
+                                        PersonId: sd.PersonId!.Value,
+                                        ActionName: cmr.ActionName,
+                                        Version: (r.Version, r.RoleName)
+                                    )
+                                )
+                        )
+                );
         }
 
         private IEnumerable<(
@@ -130,22 +139,30 @@ namespace CareTogether.Engines.PolicyEvaluation
             return individualStatus.ApprovalStatusByRole.SelectMany(kv =>
             {
                 var roleName = kv.Key;
-                var highestStatus = RoleHighestStatuses.GetValueOrDefault(roleName);
-                var stagesToHide = PolicyEvaluationHelpers.GetStagesToHide(highestStatus);
-
-                return kv.Value.RoleVersionApprovals.SelectMany(r =>
-                    r.CurrentMissingRequirements.Where(cmr => !stagesToHide.Contains(cmr.Stage))
-                        .Where(cmr =>
-                            cmr.WhenMet?.Contains(DateOnly.FromDateTime(DateTime.UtcNow)) != true
-                        )
-                        .Select(cmr =>
-                            (
-                                PersonId: personId,
-                                ActionName: cmr.ActionName,
-                                Version: (r.Version, r.RoleName)
-                            )
-                        )
+                // Hide missing requirements from other versions of the same role
+                // if there exists a version with a higher/equivalent max status. This
+                // is independent of requirement stage.
+                var maxVersionStatus = PolicyEvaluationHelpers.GetMaxRoleStatus(
+                    kv.Value.RoleVersionApprovals
                 );
+
+                return kv
+                    .Value.RoleVersionApprovals.Where(r =>
+                        maxVersionStatus == null || r.CurrentStatus == maxVersionStatus
+                    )
+                    .SelectMany(r =>
+                        r.CurrentMissingRequirements.Where(cmr =>
+                                cmr.WhenMet?.Contains(DateOnly.FromDateTime(DateTime.UtcNow))
+                                != true
+                            )
+                            .Select(cmr =>
+                                (
+                                    PersonId: personId,
+                                    ActionName: cmr.ActionName,
+                                    Version: (r.Version, r.RoleName)
+                                )
+                            )
+                    );
             });
         }
 
@@ -233,12 +250,12 @@ namespace CareTogether.Engines.PolicyEvaluation
         }
 
         public ImmutableList<string> CurrentAvailableApplications =>
-                // Return raw per-version available applications (family-level logic will decide hiding)
-                RoleVersionApprovals
-                    .Where(r => r.CurrentStatus == null && CurrentStatus == null)
-                    .SelectMany(r => r.CurrentAvailableApplications)
-                    .Select(r => r.ActionName)
-                    .ToImmutableList();
+            // Return raw per-version available applications (family-level logic will decide hiding)
+            RoleVersionApprovals
+                .Where(r => r.CurrentStatus == null && CurrentStatus == null)
+                .SelectMany(r => r.CurrentAvailableApplications)
+                .Select(r => r.ActionName)
+                .ToImmutableList();
     }
 
     public sealed record IndividualRoleVersionApprovalStatus(
@@ -308,16 +325,20 @@ namespace CareTogether.Engines.PolicyEvaluation
         {
             get
             {
-                var stagesToHide = PolicyEvaluationHelpers.GetStagesToHide(
-                    PolicyEvaluationHelpers.GetMaxRoleStatus(RoleVersionApprovals) ?? default
+                // Determine the highest status across role versions. If there is a max
+                // status, only consider missing requirements from versions that share
+                // that status, which hides missing requirements from other versions
+                // of the same policy (independent of requirement stage).
+                var maxVersionStatus = PolicyEvaluationHelpers.GetMaxRoleStatus(
+                    RoleVersionApprovals
                 );
 
                 return RoleVersionApprovals
+                    .Where(r => maxVersionStatus == null || r.CurrentStatus == maxVersionStatus)
                     .SelectMany(r =>
-                        r.CurrentMissingRequirements.Where(cmr => !stagesToHide.Contains(cmr.Stage))
-                            .Select(cmr =>
-                                (CurrentMissingRequirement: cmr, Version: (r.Version, r.RoleName))
-                            )
+                        r.CurrentMissingRequirements.Select(cmr =>
+                            (CurrentMissingRequirement: cmr, Version: (r.Version, r.RoleName))
+                        )
                     )
                     .Where(r =>
                         r.CurrentMissingRequirement.Scope

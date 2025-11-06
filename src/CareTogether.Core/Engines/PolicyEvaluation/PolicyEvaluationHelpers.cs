@@ -6,26 +6,6 @@ namespace CareTogether.Engines.PolicyEvaluation
 {
     internal static class PolicyEvaluationHelpers
     {
-        internal static ImmutableList<RequirementStage> GetStagesToHide(
-            RoleApprovalStatus highestStatus
-        ) =>
-            highestStatus switch
-            {
-                RoleApprovalStatus.Onboarded => ImmutableList.Create(
-                    RequirementStage.Application,
-                    RequirementStage.Approval,
-                    RequirementStage.Onboarding
-                ),
-                RoleApprovalStatus.Approved => ImmutableList.Create(
-                    RequirementStage.Application,
-                    RequirementStage.Approval
-                ),
-                RoleApprovalStatus.Prospective => ImmutableList.Create(
-                    RequirementStage.Application
-                ),
-                _ => ImmutableList<RequirementStage>.Empty,
-            };
-
         internal static RoleApprovalStatus? GetMaxRoleStatus(
             ImmutableList<IndividualRoleVersionApprovalStatus> versions
         ) =>

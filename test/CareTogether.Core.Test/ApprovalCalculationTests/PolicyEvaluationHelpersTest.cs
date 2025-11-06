@@ -13,34 +13,6 @@ namespace CareTogether.Core.Test.ApprovalCalculationTests
     public class PolicyEvaluationHelpersTest
     {
         [TestClass]
-        public class GetStagesToHideTests
-        {
-            [DataTestMethod]
-            [DataRow(RoleApprovalStatus.Onboarded, "Application,Approval,Onboarding")]
-            [DataRow(RoleApprovalStatus.Approved, "Application,Approval")]
-            [DataRow(RoleApprovalStatus.Prospective, "Application")]
-            [DataRow(RoleApprovalStatus.Expired, "")]
-            [DataRow(RoleApprovalStatus.Inactive, "")]
-            [DataRow(RoleApprovalStatus.Denied, "")]
-            public void GetStagesToHide_ReturnsCorrectStages(
-                RoleApprovalStatus status,
-                string expectedStagesStr
-            )
-            {
-                var result = PolicyEvaluationHelpers.GetStagesToHide(status);
-
-                var expectedStages = string.IsNullOrEmpty(expectedStagesStr)
-                    ? ImmutableList<RequirementStage>.Empty
-                    : expectedStagesStr
-                        .Split(',')
-                        .Select(s => Enum.Parse<RequirementStage>(s.Trim()))
-                        .ToImmutableList();
-
-                Assert.IsTrue(result.SequenceEqual(expectedStages));
-            }
-        }
-
-        [TestClass]
         public class GetMaxRoleStatusIndividualTests
         {
             private static IndividualRoleVersionApprovalStatus CreateIndividualVersion(
