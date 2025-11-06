@@ -29,6 +29,7 @@ import { useRecoilValue } from 'recoil';
 import { reportSubmenuItemsAtom } from '../Model/UI';
 import { ListItemLink } from './ListItemLink';
 import { useAppNavigate } from '../Hooks/useAppNavigate';
+import WhatsNew from './WhatsNew';
 
 interface SideNavigationMenuProps {
   open: boolean;
@@ -169,6 +170,7 @@ function SideNavigationMenu({ open }: SideNavigationMenuProps) {
               icon={<SupportIcon />}
             />
           )}
+          <WhatsNew />
         </>
       )}
     </List>

@@ -55,7 +55,8 @@ function TruncatedTooltip({
 interface ListItemLinkCollapsibleProps {
   icon?: React.ReactElement;
   primary: string;
-  to: string;
+  to?: string;
+  onClick?: () => void;
   subitems?: {
     label: string;
     isActive: boolean;
@@ -72,6 +73,7 @@ export function ListItemLink(props: ListItemLinkCollapsibleProps) {
     icon,
     primary,
     to,
+    onClick,
     subitems,
     defaultOpen,
     className,
@@ -79,15 +81,16 @@ export function ListItemLink(props: ListItemLinkCollapsibleProps) {
     darkColor,
   } = props;
 
-  const selected =
-    useMatch({
-      path: to,
-    }) !== null;
+  const match = useMatch(to ?? '');
+  const selected = !!match;
+
   const renderLink = React.useMemo(
     () =>
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       React.forwardRef<any, DistributiveOmit<RouterLinkProps, 'to'>>(
-        (itemProps, ref) => <RouterLink to={to} ref={ref} {...itemProps} />
+        (itemProps, ref) => (
+          <RouterLink to={to ?? ''} ref={ref} {...itemProps} />
+        )
       ),
     [to]
   );
@@ -107,12 +110,15 @@ export function ListItemLink(props: ListItemLinkCollapsibleProps) {
       <li className={className}>
         <Box sx={{ display: 'flex', alignItems: 'center' }}>
           <ListItemButton
-            component={renderLink}
+            component={to ? renderLink : 'button'}
+            {...(to ? { to } : {})}
+            onClick={onClick}
             selected={selected}
             sx={{
               paddingLeft,
               flexGrow: 1,
               color,
+              cursor: onClick ? 'pointer' : 'default',
             }}
           >
             {icon ? <ListItemIcon sx={{ color }}>{icon}</ListItemIcon> : null}
