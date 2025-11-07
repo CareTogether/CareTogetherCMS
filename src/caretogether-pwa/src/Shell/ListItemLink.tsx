@@ -13,6 +13,7 @@ import {
   Divider,
   List,
   ListItemButton,
+  ListItemButtonProps,
   Tooltip,
 } from '@mui/material';
 import { ExpandLess, ExpandMore } from '@mui/icons-material';
@@ -66,6 +67,8 @@ interface ListItemLinkCollapsibleProps {
   className?: string;
   paddingLeft?: number;
   darkColor?: boolean;
+  buttonProps?: Omit<ListItemButtonProps, 'onClick' | 'selected' | 'sx'> &
+    Record<string, unknown>;
 }
 
 export function ListItemLink(props: ListItemLinkCollapsibleProps) {
@@ -79,6 +82,7 @@ export function ListItemLink(props: ListItemLinkCollapsibleProps) {
     className,
     paddingLeft = 1.5,
     darkColor,
+    buttonProps,
   } = props;
 
   const match = useMatch(to ?? '');
@@ -120,6 +124,7 @@ export function ListItemLink(props: ListItemLinkCollapsibleProps) {
               color,
               cursor: onClick ? 'pointer' : 'default',
             }}
+            {...buttonProps}
           >
             {icon ? <ListItemIcon sx={{ color }}>{icon}</ListItemIcon> : null}
 
