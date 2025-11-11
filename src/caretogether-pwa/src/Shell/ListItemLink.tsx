@@ -57,7 +57,6 @@ interface ListItemLinkCollapsibleProps {
   icon?: React.ReactElement;
   primary: string;
   to?: string;
-  onClick?: () => void;
   subitems?: {
     label: string;
     isActive: boolean;
@@ -76,7 +75,6 @@ export function ListItemLink(props: ListItemLinkCollapsibleProps) {
     icon,
     primary,
     to,
-    onClick,
     subitems,
     defaultOpen,
     className,
@@ -115,14 +113,11 @@ export function ListItemLink(props: ListItemLinkCollapsibleProps) {
         <Box sx={{ display: 'flex', alignItems: 'center' }}>
           <ListItemButton
             component={to ? renderLink : 'button'}
-            {...(to ? { to } : {})}
-            onClick={onClick}
             selected={selected}
             sx={{
               paddingLeft,
               flexGrow: 1,
               color,
-              cursor: onClick ? 'pointer' : 'default',
             }}
             {...buttonProps}
           >
