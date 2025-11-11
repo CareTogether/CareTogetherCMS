@@ -1,4 +1,5 @@
 import { useEffect } from 'react';
+import { atom, useSetRecoilState } from 'recoil';
 import { useLoadable } from './useLoadable';
 import { accountInfoState } from '../Authentication/Auth';
 import { selectedLocationContextState } from '../Model/Data';
@@ -9,6 +10,12 @@ import {
 import { api } from '../Api/Api';
 import { useGlobalPermissions } from '../Model/SessionModel';
 import { Permission } from '../GeneratedClient';
+
+// Recoil atom for changelog unread count
+export const changelogUnreadCountState = atom<number>({
+  key: 'changelogUnreadCountState',
+  default: 0,
+});
 
 // Extend the Window interface to include Featurebase
 declare global {
@@ -26,6 +33,7 @@ export const useFeaturebase = () => {
   const organizationConfiguration = useLoadable(organizationConfigurationQuery);
   const locationConfiguration = useLoadable(locationConfigurationQuery);
   const locationContext = useLoadable(selectedLocationContextState);
+  const setChangelogUnreadCount = useSetRecoilState(changelogUnreadCountState);
 
   // Check if user has permission to access support screen
   const permissions = useGlobalPermissions();
@@ -70,6 +78,34 @@ export const useFeaturebase = () => {
             },
           ],
         });
+
+        // Initialize changelog widget after Featurebase is booted
+        win.Featurebase(
+          'init_changelog_widget',
+          {
+            organization: 'caretogether',
+            theme: 'light',
+            locale: 'en',
+            dropdown: {
+              enabled: true,
+              placement: 'left',
+            },
+            popup: {
+              enabled: false,
+              autoOpenForNewUpdates: false,
+            },
+          },
+          (
+            error: unknown,
+            data: { action?: string; unreadCount?: number } | null
+          ) => {
+            if (error) return;
+
+            if (data?.action === 'unreadChangelogsCountChanged') {
+              setChangelogUnreadCount(data.unreadCount ?? 0);
+            }
+          }
+        );
       });
     }
   }, [
@@ -78,6 +114,7 @@ export const useFeaturebase = () => {
     organizationConfiguration,
     locationConfiguration,
     locationContext,
+    setChangelogUnreadCount,
   ]);
 
   useEffect(() => {

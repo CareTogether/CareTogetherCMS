@@ -13,6 +13,7 @@ import {
   Divider,
   List,
   ListItemButton,
+  ListItemButtonProps,
   Tooltip,
 } from '@mui/material';
 import { ExpandLess, ExpandMore } from '@mui/icons-material';
@@ -55,7 +56,7 @@ function TruncatedTooltip({
 interface ListItemLinkCollapsibleProps {
   icon?: React.ReactElement;
   primary: string;
-  to: string;
+  to?: string;
   subitems?: {
     label: string;
     isActive: boolean;
@@ -65,6 +66,8 @@ interface ListItemLinkCollapsibleProps {
   className?: string;
   paddingLeft?: number;
   darkColor?: boolean;
+  buttonProps?: Omit<ListItemButtonProps, 'onClick' | 'selected' | 'sx'> &
+    Record<string, unknown>;
 }
 
 export function ListItemLink(props: ListItemLinkCollapsibleProps) {
@@ -77,17 +80,19 @@ export function ListItemLink(props: ListItemLinkCollapsibleProps) {
     className,
     paddingLeft = 1.5,
     darkColor,
+    buttonProps,
   } = props;
 
-  const selected =
-    useMatch({
-      path: to,
-    }) !== null;
+  const match = useMatch(to ?? '');
+  const selected = !!match;
+
   const renderLink = React.useMemo(
     () =>
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       React.forwardRef<any, DistributiveOmit<RouterLinkProps, 'to'>>(
-        (itemProps, ref) => <RouterLink to={to} ref={ref} {...itemProps} />
+        (itemProps, ref) => (
+          <RouterLink to={to ?? ''} ref={ref} {...itemProps} />
+        )
       ),
     [to]
   );
@@ -107,13 +112,14 @@ export function ListItemLink(props: ListItemLinkCollapsibleProps) {
       <li className={className}>
         <Box sx={{ display: 'flex', alignItems: 'center' }}>
           <ListItemButton
-            component={renderLink}
+            component={to ? renderLink : 'button'}
             selected={selected}
             sx={{
               paddingLeft,
               flexGrow: 1,
               color,
             }}
+            {...buttonProps}
           >
             {icon ? <ListItemIcon sx={{ color }}>{icon}</ListItemIcon> : null}
 
