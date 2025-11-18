@@ -54,7 +54,7 @@ export function CompleteOtherDialog({
 
   return (
     <Dialog open={open} onClose={onClose} fullWidth maxWidth="sm">
-      <DialogTitle>Complete Other</DialogTitle>
+      <DialogTitle>Complete other...</DialogTitle>
 
       <DialogContent sx={{ mt: 2 }}>
         <Autocomplete
