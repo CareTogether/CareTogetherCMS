@@ -49,9 +49,14 @@ import { DateOfBirth } from './DateOfBirth';
 type AdultCardProps = {
   familyId: string;
   personId: string;
+  onCompleteOther?: (personId: string) => void;
 };
 
-export function AdultCard({ familyId, personId }: AdultCardProps) {
+export function AdultCard({
+  familyId,
+  personId,
+  onCompleteOther,
+}: AdultCardProps) {
   const familyLookup = useFamilyLookup();
   const family = familyLookup(familyId)!;
 
@@ -60,6 +65,9 @@ export function AdultCard({ familyId, personId }: AdultCardProps) {
   const adultUser = family.users?.find((x) => x.personId === personId);
 
   const permissions = useFamilyPermissions(family);
+
+  const isVolunteer =
+    family.volunteerFamilyInfo?.individualVolunteers?.[personId] != null;
 
   const editDialogHandle = useDialogHandle();
 
@@ -451,6 +459,16 @@ export function AdultCard({ familyId, personId }: AdultCardProps) {
                 }}
               >
                 <ListItemText primary="Manage user..." />
+              </MenuItem>
+            )}
+            {isVolunteer && (
+              <MenuItem
+                onClick={() => {
+                  if (onCompleteOther) onCompleteOther(personId);
+                  setAdultMoreMenuAnchor(null);
+                }}
+              >
+                <ListItemText primary="Complete other..." />
               </MenuItem>
             )}
           </Menu>
