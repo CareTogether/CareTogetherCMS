@@ -14,6 +14,7 @@ import {
   Badge,
   Grid,
   Tooltip,
+  Box,
 } from '@mui/material';
 import { useState } from 'react';
 import {
@@ -268,7 +269,18 @@ export function AdultCard({ familyId, personId }: AdultCardProps) {
                 </IconRow>
               )}
               {adult.item1.notes && (
-                <IconRow icon="📝">{adult.item1.notes}</IconRow>
+                <IconRow icon="📝">
+                  <Box
+                    sx={{
+                      whiteSpace: 'pre-wrap',
+                      overflowWrap: 'break-word',
+                      lineHeight: 1.45,
+                      fontSize: '0.95rem',
+                    }}
+                  >
+                    {adult.item1.notes}
+                  </Box>
+                </IconRow>
               )}
             </Typography>
             <Typography variant="body2" component="div">
