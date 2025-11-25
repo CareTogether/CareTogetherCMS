@@ -14,7 +14,6 @@ import {
   Badge,
   Grid,
   Tooltip,
-  Box,
 } from '@mui/material';
 import { useState } from 'react';
 import {
@@ -46,6 +45,7 @@ import { useDrawer } from '../Generic/ShellDrawer';
 import { ManageUserDrawer } from './ManageUserDrawer';
 import { format } from 'date-fns';
 import { DateOfBirth } from './DateOfBirth';
+import { ReadMoreText } from '../Generic/Forms/ReadMoreText';
 
 type AdultCardProps = {
   familyId: string;
@@ -270,16 +270,7 @@ export function AdultCard({ familyId, personId }: AdultCardProps) {
               )}
               {adult.item1.notes && (
                 <IconRow icon="📝">
-                  <Box
-                    sx={{
-                      whiteSpace: 'pre-wrap',
-                      overflowWrap: 'break-word',
-                      lineHeight: 1.45,
-                      fontSize: '0.95rem',
-                    }}
-                  >
-                    {adult.item1.notes}
-                  </Box>
+                  <ReadMoreText text={adult.item1.notes} />
                 </IconRow>
               )}
             </Typography>

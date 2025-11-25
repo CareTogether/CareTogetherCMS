@@ -14,6 +14,7 @@ import { useState } from 'react';
 import { CombinedFamilyInfo, Permission, V1Case } from '../GeneratedClient';
 import { useV1CasesModel } from '../Model/V1CasesModel';
 import { useFamilyPermissions } from '../Model/SessionModel';
+import { ReadMoreText } from '../Generic/Forms/ReadMoreText';
 
 type V1CaseCommentsProps = {
   partneringFamily: CombinedFamilyInfo;
@@ -32,7 +33,11 @@ export function V1CaseComments({
     : [];
 
   const closedCases: V1Case[] =
-    partneringFamily.partneringFamilyInfo?.closedV1Cases || [];
+    partneringFamily?.partneringFamilyInfo?.closedV1Cases === undefined
+      ? []
+      : [...partneringFamily.partneringFamilyInfo.closedV1Cases!].sort(
+          (r1, r2) => r1.closedAtUtc!.getTime() - r2.closedAtUtc!.getTime()
+        );
 
   const allCases = [...openCases, ...closedCases];
 
@@ -81,11 +86,14 @@ export function V1CaseComments({
           paddingRight: 1,
         }}
       >
-        {savedValue || (
+        {savedValue ? (
+          <>
+            <ReadMoreText text={savedValue} />
+          </>
+        ) : (
           <Typography color="text.secondary">No comments yet.</Typography>
         )}
       </Box>
-
       <Dialog
         open={open}
         onClose={() => setOpen(false)}
