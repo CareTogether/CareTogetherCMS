@@ -13,6 +13,7 @@ import {
   Tooltip,
   useMediaQuery,
   useTheme,
+  Box,
 } from '@mui/material';
 import AccessTimeIcon from '@mui/icons-material/AccessTime';
 import PendingOutlinedIcon from '@mui/icons-material/PendingOutlined';
@@ -388,6 +389,15 @@ function PartneringFamilies() {
                     )?.item1;
                   const phoneNumber =
                     primaryContactPerson?.phoneNumbers?.[0]?.number;
+                  const comments =
+                    partneringFamily.partneringFamilyInfo?.openV1Case
+                      ?.comments ?? '';
+
+                  const preview =
+                    comments.length > 500
+                      ? comments.slice(0, 500) + '...'
+                      : comments;
+
                   return (
                     <React.Fragment key={partneringFamily.family?.id}>
                       <TableRow
@@ -495,11 +505,16 @@ function PartneringFamilies() {
                           }
                         >
                           <TableCell sx={{ maxWidth: '400px', paddingLeft: 3 }}>
-                            {
-                              partneringFamily.partneringFamilyInfo?.openV1Case
-                                ?.comments
-                            }
+                            <Box
+                              sx={{
+                                whiteSpace: 'pre-wrap',
+                                overflowWrap: 'break-word',
+                              }}
+                            >
+                              {preview}
+                            </Box>
                           </TableCell>
+
                           <TableCell>
                             <Grid container spacing={2}>
                               {matchingArrangements(

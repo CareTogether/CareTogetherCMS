@@ -45,6 +45,7 @@ import { useDrawer } from '../Generic/ShellDrawer';
 import { ManageUserDrawer } from './ManageUserDrawer';
 import { format } from 'date-fns';
 import { DateOfBirth } from './DateOfBirth';
+import { ReadMoreText } from '../Generic/Forms/ReadMoreText';
 
 type AdultCardProps = {
   familyId: string;
@@ -268,7 +269,9 @@ export function AdultCard({ familyId, personId }: AdultCardProps) {
                 </IconRow>
               )}
               {adult.item1.notes && (
-                <IconRow icon="📝">{adult.item1.notes}</IconRow>
+                <IconRow icon="📝">
+                  <ReadMoreText text={adult.item1.notes} />
+                </IconRow>
               )}
             </Typography>
             <Typography variant="body2" component="div">
