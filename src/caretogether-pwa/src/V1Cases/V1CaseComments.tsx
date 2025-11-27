@@ -28,36 +28,36 @@ export function V1CaseComments({
   const v1CasesModel = useV1CasesModel();
   const permissions = useFamilyPermissions(partneringFamily);
 
-  const openCases: V1Case[] = partneringFamily.partneringFamilyInfo?.openV1Case
+  const openV1Cases: V1Case[] = partneringFamily.partneringFamilyInfo
+    ?.openV1Case
     ? [partneringFamily.partneringFamilyInfo.openV1Case]
     : [];
 
-  const closedCases: V1Case[] =
+  const closedV1Cases: V1Case[] =
     partneringFamily?.partneringFamilyInfo?.closedV1Cases === undefined
       ? []
       : [...partneringFamily.partneringFamilyInfo.closedV1Cases!].sort(
           (r1, r2) => r1.closedAtUtc!.getTime() - r2.closedAtUtc!.getTime()
         );
 
-  const allCases = [...openCases, ...closedCases];
-
-  const savedValue =
-    allCases.find((item) => item.id === v1CaseId)?.comments ?? '';
+  const allV1Cases = [...openV1Cases, ...closedV1Cases];
 
   const [open, setOpen] = useState(false);
-  const [draft, setDraft] = useState(savedValue);
+  const [comment, setComment] = useState(
+    allV1Cases.find((item) => item.id === v1CaseId)?.comments ?? ''
+  );
 
   async function handleSave() {
     await v1CasesModel.updateV1CaseComments(
       partneringFamily.family!.id!,
       v1CaseId,
-      draft
+      comment
     );
     setOpen(false);
   }
 
   return (
-    <Box sx={{ width: '100%' }}>
+    <Box sx={{ width: '100%' }} mb={2}>
       <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
         <Typography className="ph-unmask" variant="h3">
           Comments
@@ -68,7 +68,6 @@ export function V1CaseComments({
             size="small"
             color="primary"
             onClick={() => {
-              setDraft(savedValue);
               setOpen(true);
             }}
           >
@@ -86,9 +85,9 @@ export function V1CaseComments({
           paddingRight: 1,
         }}
       >
-        {savedValue ? (
+        {comment ? (
           <>
-            <ReadMoreText text={savedValue} />
+            <ReadMoreText text={comment} />
           </>
         ) : (
           <Typography color="text.secondary">No comments yet.</Typography>
@@ -111,9 +110,10 @@ export function V1CaseComments({
             fullWidth
             variant="outlined"
             minRows={6}
+            maxRows="20"
             size="medium"
-            value={draft}
-            onChange={(e) => setDraft(e.target.value)}
+            value={comment}
+            onChange={(e) => setComment(e.target.value)}
           />
         </DialogContent>
 
