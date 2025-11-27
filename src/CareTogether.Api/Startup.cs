@@ -274,6 +274,7 @@ namespace CareTogether.Api
             );
             services.AddSingleton<IRecordsManager>(
                 new RecordsManager(
+                    policiesResource,
                     authorizationEngine,
                     userAccessCalculation,
                     directoryResource,

@@ -22,23 +22,26 @@ namespace CareTogether.Engines.Authorization
 
     public sealed record AllVolunteerFamiliesAuthorizationContext() : AuthorizationContext;
 
-    public sealed record FamilyAuthorizationContext(Guid FamilyId) : AuthorizationContext;
+    public sealed record FamilyAuthorizationContext(Guid FamilyId, Family? Family = null)
+        : AuthorizationContext;
 
     public sealed record CommunityAuthorizationContext(Guid CommunityId) : AuthorizationContext;
+
+    public sealed record SessionUserContext(ClaimsPrincipal User, Family? UserFamily);
 
     public interface IAuthorizationEngine
     {
         Task<bool> AuthorizeFamilyCommandAsync(
             Guid organizationId,
             Guid locationId,
-            ClaimsPrincipal user,
+            SessionUserContext user,
             FamilyCommand command
         );
 
         Task<bool> AuthorizePersonCommandAsync(
             Guid organizationId,
             Guid locationId,
-            ClaimsPrincipal user,
+            SessionUserContext user,
             Guid familyId,
             PersonCommand command
         );
@@ -46,73 +49,73 @@ namespace CareTogether.Engines.Authorization
         Task<bool> AuthorizeV1CaseCommandAsync(
             Guid organizationId,
             Guid locationId,
-            ClaimsPrincipal user,
+            SessionUserContext user,
             V1CaseCommand command
         );
 
         Task<bool> AuthorizeArrangementsCommandAsync(
             Guid organizationId,
             Guid locationId,
-            ClaimsPrincipal user,
+            SessionUserContext user,
             ArrangementsCommand command
         );
 
         Task<bool> AuthorizeNoteCommandAsync(
             Guid organizationId,
             Guid locationId,
-            ClaimsPrincipal user,
+            SessionUserContext user,
             NoteCommand command
         );
 
         Task<bool> AuthorizeSendSmsAsync(
             Guid organizationId,
             Guid locationId,
-            ClaimsPrincipal user
+            SessionUserContext user
         );
 
         Task<bool> AuthorizeVolunteerFamilyCommandAsync(
             Guid organizationId,
             Guid locationId,
-            ClaimsPrincipal user,
+            SessionUserContext user,
             VolunteerFamilyCommand command
         );
 
         Task<bool> AuthorizeVolunteerCommandAsync(
             Guid organizationId,
             Guid locationId,
-            ClaimsPrincipal user,
+            SessionUserContext user,
             VolunteerCommand command
         );
 
         Task<bool> AuthorizeCommunityCommandAsync(
             Guid organizationId,
             Guid locationId,
-            ClaimsPrincipal user,
+            SessionUserContext user,
             CommunityCommand command
         );
 
         Task<bool> AuthorizePersonAccessCommandAsync(
             Guid organizationId,
             Guid locationId,
-            ClaimsPrincipal user,
+            SessionUserContext user,
             PersonAccessCommand command
         );
 
         Task<bool> AuthorizeGenerateUserInviteNonceAsync(
             Guid organizationId,
             Guid locationId,
-            ClaimsPrincipal user
+            SessionUserContext user
         );
 
         Task<CombinedFamilyInfo> DiscloseFamilyAsync(
-            ClaimsPrincipal user,
+            SessionUserContext user,
             Guid organizationId,
             Guid locationId,
             CombinedFamilyInfo family
         );
 
         Task<CommunityInfo> DiscloseCommunityAsync(
-            ClaimsPrincipal user,
+            SessionUserContext user,
             Guid organizationId,
             Guid locationId,
             CommunityInfo community

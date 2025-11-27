@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Immutable;
 using System.Linq;
-using System.Security.Claims;
 using System.Threading.Tasks;
 using CareTogether.Engines.Authorization;
 using CareTogether.Engines.PolicyEvaluation;
@@ -50,21 +49,17 @@ namespace CareTogether.Managers
 
         public async Task<CombinedFamilyInfo?> RenderCombinedFamilyInfoAsync(
             Guid organizationId,
+            EffectiveLocationPolicy locationPolicy,
             Guid locationId,
             Guid familyId,
-            ClaimsPrincipal user
+            Family? family,
+            SessionUserContext userContext
         )
         {
-            var locationPolicy = await policiesResource.GetCurrentPolicy(
-                organizationId,
-                locationId
-            );
+            family =
+                family
+                ?? await directoryResource.FindFamilyAsync(organizationId, locationId, familyId);
 
-            var family = await directoryResource.FindFamilyAsync(
-                organizationId,
-                locationId,
-                familyId
-            );
             if (family == null)
                 throw new InvalidOperationException("The specified family ID was not found.");
 
@@ -184,11 +179,12 @@ namespace CareTogether.Managers
             );
 
             var disclosedFamily = await authorizationEngine.DiscloseFamilyAsync(
-                user,
+                userContext,
                 organizationId,
                 locationId,
                 renderedFamily
             );
+
             return disclosedFamily;
         }
 
