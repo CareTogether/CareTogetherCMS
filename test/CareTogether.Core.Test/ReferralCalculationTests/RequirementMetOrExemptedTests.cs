@@ -1,9 +1,11 @@
 ﻿using System;
+using System.Collections.Immutable;
 using CareTogether.Engines.PolicyEvaluation;
+using CareTogether.Resources.Policies;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using H = CareTogether.Core.Test.ReferralCalculationTests.Helpers;
+using H = CareTogether.Core.Test.V1CaseCalculationTests.Helpers;
 
-namespace CareTogether.Core.Test.ReferralCalculationTests
+namespace CareTogether.Core.Test.V1CaseCalculationTests
 {
     [TestClass]
     public class RequirementMetOrExemptedTests
@@ -12,7 +14,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
         public void TestRequirementMetOrExemptedThatWasMet()
         {
             var result = SharedCalculations.RequirementMetOrExempted(
-                "A",
+                ["A"],
                 policySupersededAt: null,
                 today: new DateOnly(H.YEAR, 1, 2),
                 completedRequirements: Helpers.Completed(("A", 1), ("B", 2)),
@@ -27,7 +29,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
         public void TestRequirementMetOrExemptedThatWasMetMultipleTimes()
         {
             var result = SharedCalculations.RequirementMetOrExempted(
-                "A",
+                ["A"],
                 policySupersededAt: null,
                 today: new DateOnly(H.YEAR, 1, 5),
                 completedRequirements: Helpers.Completed(("A", 1), ("B", 2), ("A", 3)),
@@ -44,7 +46,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
             // Granted, this is an unusual situation. The behavior is
             // documented by this test for the sake of completeness.
             var result = SharedCalculations.RequirementMetOrExempted(
-                "B",
+                ["B"],
                 policySupersededAt: null,
                 today: new DateOnly(H.YEAR, 1, 1),
                 completedRequirements: Helpers.Completed(("A", 1), ("B", 2), ("A", 3)),
@@ -59,7 +61,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
         public void TestRequirementMetOrExemptedThatWasNotMet()
         {
             var result = SharedCalculations.RequirementMetOrExempted(
-                "D",
+                ["D"],
                 policySupersededAt: null,
                 today: new DateOnly(H.YEAR, 1, 5),
                 completedRequirements: Helpers.Completed(("A", 1), ("B", 2), ("A", 3)),
@@ -74,7 +76,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
         public void TestRequirementMetOrExemptedThatIsCurrentlyExempted()
         {
             var result = SharedCalculations.RequirementMetOrExempted(
-                "C",
+                ["C"],
                 policySupersededAt: null,
                 today: new DateOnly(H.YEAR, 1, 5),
                 completedRequirements: Helpers.Completed(("A", 1), ("B", 2), ("A", 3)),
@@ -89,7 +91,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
         public void TestRequirementMetOrExemptedThatIsNoLongerExempted()
         {
             var result = SharedCalculations.RequirementMetOrExempted(
-                "C",
+                ["C"],
                 policySupersededAt: null,
                 today: new DateOnly(H.YEAR, 1, 12),
                 completedRequirements: Helpers.Completed(("A", 1), ("B", 2), ("A", 3)),
@@ -104,7 +106,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
         public void TestRequirementMetOrExemptedThatWasMetBeforeThePolicyWasSuperseded()
         {
             var result = SharedCalculations.RequirementMetOrExempted(
-                "A",
+                ["A"],
                 policySupersededAt: new DateOnly(H.YEAR, 1, 20),
                 today: new DateOnly(H.YEAR, 1, 22),
                 completedRequirements: Helpers.Completed(("A", 1), ("B", 2), ("A", 3)),
@@ -119,7 +121,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
         public void TestRequirementMetOrExemptedThatWasMetAfterThePolicyWasSuperseded()
         {
             var result = SharedCalculations.RequirementMetOrExempted(
-                "B",
+                ["B"],
                 policySupersededAt: new DateOnly(H.YEAR, 1, 20),
                 today: new DateOnly(H.YEAR, 1, 22),
                 completedRequirements: Helpers.Completed(("A", 1), ("B", 22), ("A", 3)),
@@ -134,7 +136,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
         public void TestRequirementMetOrExemptedThatWasMetAndNotYetExpired()
         {
             var result = SharedCalculations.RequirementMetOrExempted(
-                "A",
+                ["A"],
                 policySupersededAt: null,
                 today: new DateOnly(H.YEAR, 1, 2),
                 completedRequirements: Helpers.CompletedWithExpiry(("A", 1, 4), ("B", 2, null)),
@@ -149,7 +151,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
         public void TestRequirementMetOrExemptedThatWasMetButExpired()
         {
             var result = SharedCalculations.RequirementMetOrExempted(
-                "A",
+                ["A"],
                 policySupersededAt: null,
                 today: new DateOnly(H.YEAR, 1, 5),
                 completedRequirements: Helpers.CompletedWithExpiry(("A", 1, 4), ("B", 2, null)),
@@ -164,7 +166,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
         public void TestRequirementMetOrExemptedThatWasMetButExpiredJustNow()
         {
             var result = SharedCalculations.RequirementMetOrExempted(
-                "A",
+                ["A"],
                 policySupersededAt: null,
                 today: new DateOnly(H.YEAR, 1, 4),
                 completedRequirements: Helpers.CompletedWithExpiry(("A", 1, 4), ("B", 2, null)),
@@ -179,7 +181,7 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
         public void TestRequirementMetOrExemptedThatWasMetMultipleTimesWithSomeExpired()
         {
             var result = SharedCalculations.RequirementMetOrExempted(
-                "A",
+                ["A"],
                 policySupersededAt: null,
                 today: new DateOnly(H.YEAR, 1, 5),
                 completedRequirements: Helpers.CompletedWithExpiry(

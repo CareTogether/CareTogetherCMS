@@ -7,7 +7,7 @@ import {
   Typography,
 } from '@mui/material';
 import { ProgressBackdrop } from '../Shell/ProgressBackdrop';
-import useScreenTitle from '../Shell/ShellScreenTitle';
+import { useScreenTitle } from '../Shell/ShellScreenTitle';
 import { useDataLoaded } from '../Model/Data';
 import AssignmentIndIcon from '@mui/icons-material/AssignmentInd';
 import LocationOnIcon from '@mui/icons-material/LocationOn';
@@ -27,7 +27,10 @@ export function SettingsScreen() {
   }
 
   return (
-    <Box sx={{ paddingTop: 4, display: 'flex', justifyContent: 'center' }}>
+    <Box
+      className="ph-unmask"
+      sx={{ paddingTop: 4, display: 'flex', justifyContent: 'center' }}
+    >
       <Grid container spacing={3}>
         <Grid item xs={12} sm={6} md={4}>
           <Card variant="outlined">
@@ -56,7 +59,7 @@ export function SettingsScreen() {
                 <Typography variant="h6">Locations</Typography>
                 <Typography variant="body2" color="text.secondary">
                   Manage your locations, configure approval and arrangement
-                  policies, and set up custom fields for family and referrals.
+                  policies, and set up custom fields for family and Cases.
                 </Typography>
               </CardContent>
             </CardActionArea>

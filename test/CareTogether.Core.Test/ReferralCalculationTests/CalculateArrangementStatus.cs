@@ -5,7 +5,7 @@ using CareTogether.Engines;
 using CareTogether.Resources;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-namespace CareTogether.Core.Test.ReferralCalculationTests
+namespace CareTogether.Core.Test.V1CaseCalculationTests
 {
     [TestClass]
     public class CalculateArrangementStatus

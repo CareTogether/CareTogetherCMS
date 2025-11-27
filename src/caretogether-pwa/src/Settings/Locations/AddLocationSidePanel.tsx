@@ -1,12 +1,27 @@
-import { Button, Grid, TextField } from '@mui/material';
+import { Button, Grid, TextField, Typography } from '@mui/material';
 import { useBackdrop } from '../../Hooks/useBackdrop';
 import { api } from '../../Api/Api';
-import { useRecoilValue, useSetRecoilState } from 'recoil';
-import { selectedLocationContextState } from '../../Model/Data';
+import {
+  useRecoilRefresher_UNSTABLE,
+  useRecoilValue,
+  useSetRecoilState,
+} from 'recoil';
+import {
+  selectedLocationContextState,
+  userOrganizationAccessQuery,
+} from '../../Model/Data';
 import { organizationConfigurationEdited } from '../../Model/ConfigurationModel';
-import { LocationConfiguration } from '../../GeneratedClient';
+import {
+  ApiException,
+  LocationConfiguration,
+  PutLocationPayload,
+} from '../../GeneratedClient';
 import { useForm, Controller } from 'react-hook-form';
 import { useAppNavigate } from '../../Hooks/useAppNavigate';
+import { useLoadable } from '../../Hooks/useLoadable';
+import { organizationConfigurationQuery } from '../../Model/ConfigurationModel';
+import MenuItem from '@mui/material/MenuItem';
+import { useState } from 'react';
 
 interface DrawerProps {
   onClose: () => void;
@@ -15,13 +30,21 @@ interface DrawerProps {
 interface AddLocationFormValues {
   locationName: string;
   timeZone: string;
+  copyPoliciesFromLocationId?: string;
 }
 
 export function AddLocation({ onClose }: DrawerProps) {
-  const { organizationId } = useRecoilValue(selectedLocationContextState);
+  const { organizationId, locationId } = useRecoilValue(
+    selectedLocationContextState
+  );
   const storeEdits = useSetRecoilState(organizationConfigurationEdited);
   const withBackdrop = useBackdrop();
   const appNavigate = useAppNavigate();
+  const configuration = useLoadable(organizationConfigurationQuery);
+  const refreshUserOrganizationAccess = useRecoilRefresher_UNSTABLE(
+    userOrganizationAccessQuery
+  );
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const {
     handleSubmit,
@@ -29,38 +52,65 @@ export function AddLocation({ onClose }: DrawerProps) {
     formState: { errors, isValid },
   } = useForm<AddLocationFormValues>({
     mode: 'onChange',
-    defaultValues: { locationName: '', timeZone: '' },
+    defaultValues: {
+      locationName: '',
+      timeZone: '',
+      copyPoliciesFromLocationId: locationId || '',
+    },
   });
 
   async function onSubmit(data: AddLocationFormValues) {
     await withBackdrop(async () => {
-      const config = new LocationConfiguration({
-        id: undefined,
-        name: data.locationName,
-        adultFamilyRelationships: [],
-        arrangementReasons: [],
-        ethnicities: [],
-        smsSourcePhoneNumbers: [],
-        timeZone: undefined, // TODO: Implement timezone
-      });
-      const updated = await api.configuration.putLocationDefinition(
-        organizationId!,
-        config
-      );
-      storeEdits(updated);
-      // Find the new location's id from the updated locations list (typed)
-      const newLocation = updated.locations?.find(
-        (location) => location.name === data.locationName
-      );
-      if (newLocation?.id) {
-        appNavigate.locationEdit(newLocation.id);
+      try {
+        const config = new LocationConfiguration({
+          id: undefined,
+          name: data.locationName,
+          adultFamilyRelationships: [],
+          arrangementReasons: [],
+          ethnicities: [],
+          smsSourcePhoneNumbers: [],
+          accessLevels: [],
+          timeZone: undefined, // TODO: Implement timezone
+        });
+
+        const updated = await api.configuration.putLocationDefinition(
+          organizationId!,
+          new PutLocationPayload({
+            locationConfiguration: config,
+            copyPoliciesFromLocationId: data.copyPoliciesFromLocationId,
+          })
+        );
+
+        storeEdits(updated);
+
+        const newLocation = updated.locations?.find(
+          (location) => location.name === data.locationName
+        );
+
+        // Refresh the locations access so the user is able to switch to the new location
+        refreshUserOrganizationAccess();
+
+        if (newLocation?.id) {
+          appNavigate.locationEdit(newLocation.id, {
+            replaceLocationId: newLocation.id,
+          });
+        }
+      } catch (error) {
+        if (error instanceof ApiException) {
+          setErrorMessage(error.response);
+        } else if (error instanceof Error) {
+          setErrorMessage(error.message);
+        } else {
+          setErrorMessage('An unexpected error occurred.');
+        }
+        throw error;
       }
-      onClose();
     });
   }
 
   return (
     <Grid
+      className="ph-unmask"
       container
       spacing={2}
       maxWidth={500}
@@ -69,6 +119,17 @@ export function AddLocation({ onClose }: DrawerProps) {
     >
       <Grid item xs={12}>
         <h3>Add New Location</h3>
+
+        <Typography gutterBottom>
+          When creating a new location, you can copy policies from an existing
+          location. This will help you quickly set up the new location with
+          similar policies.
+        </Typography>
+
+        <Typography>
+          Keep in mind your family records will also be copied over to the new
+          location.
+        </Typography>
       </Grid>
       <Grid item xs={12}>
         <Controller
@@ -87,6 +148,33 @@ export function AddLocation({ onClose }: DrawerProps) {
               helperText={errors.locationName?.message}
               autoFocus
             />
+          )}
+        />
+      </Grid>
+      <Grid item xs={12}>
+        <Controller
+          name="copyPoliciesFromLocationId"
+          control={control}
+          rules={{
+            required: 'You must select a location to copy policies from',
+          }}
+          render={({ field }) => (
+            <TextField
+              {...field}
+              select
+              fullWidth
+              required
+              label="Copy policies from..."
+              placeholder="Select a location to copy policies from"
+              error={!!errors.copyPoliciesFromLocationId}
+              helperText={errors.copyPoliciesFromLocationId?.message}
+            >
+              {configuration?.locations?.map((location) => (
+                <MenuItem key={location.id} value={location.id}>
+                  {location.name}
+                </MenuItem>
+              ))}
+            </TextField>
           )}
         />
       </Grid>
@@ -116,6 +204,17 @@ export function AddLocation({ onClose }: DrawerProps) {
         />
       </Grid> */}
       <Grid item xs={12} sx={{ textAlign: 'right' }}>
+        {errorMessage && (
+          <>
+            <Typography color="error">
+              Something went wrong while creating Location.
+            </Typography>
+            <Typography color="error" gutterBottom>
+              Backend message: {errorMessage}
+            </Typography>
+          </>
+        )}
+
         <Button
           color="secondary"
           variant="contained"

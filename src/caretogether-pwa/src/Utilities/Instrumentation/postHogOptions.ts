@@ -1,4 +1,5 @@
 import { PostHogConfig } from 'posthog-js';
+import { getAppVersion } from '../appVersion';
 
 export const postHogOptions: Partial<PostHogConfig> = {
   session_recording: {
@@ -16,6 +17,18 @@ export const postHogOptions: Partial<PostHogConfig> = {
 
       return '*'.repeat(text.length);
     },
+    maskInputFn: (text, element) => {
+      // See note on `maskTextFn` above.
+      if (element?.closest('.ph-unmask') !== null) {
+        return text;
+      }
+
+      return '*'.repeat(text.length);
+    },
   },
   mask_all_text: true,
+  // Include app version in all events
+  loaded: (posthog) => {
+    posthog.register({ app_version: getAppVersion() });
+  },
 };

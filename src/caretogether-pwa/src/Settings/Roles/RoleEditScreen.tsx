@@ -5,7 +5,7 @@ import { ProgressBackdrop } from '../../Shell/ProgressBackdrop';
 import { useDataLoaded } from '../../Model/Data';
 import { useParams } from 'react-router-dom';
 import { RoleEdit } from './RoleEdit';
-import useScreenTitle from '../../Shell/ShellScreenTitle';
+import { useScreenTitle } from '../../Shell/ShellScreenTitle';
 
 export function RoleEditScreen() {
   useScreenTitle('Roles');
@@ -23,7 +23,7 @@ export function RoleEditScreen() {
 
   if (!selectedRole) {
     return (
-      <Typography align="center" mt={10}>
+      <Typography className="ph-unmask" align="center" mt={10}>
         Role not found.
       </Typography>
     );

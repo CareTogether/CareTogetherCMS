@@ -1,5 +1,4 @@
 import { Tooltip } from '@mui/material';
-import { format } from 'date-fns';
 import { CompletedRequirementInfo, Permission } from '../GeneratedClient';
 import {
   useFamilyLookup,
@@ -26,7 +25,7 @@ export function CompletedRequirementRow({
 }: CompletedRequirementRowProps) {
   const userLookup = useUserLookup();
   const permissions = useFamilyIdPermissions(
-    context.kind === 'Referral' ||
+    context.kind === 'V1Case' ||
       context.kind === 'Arrangement' ||
       context.kind === 'Family Volunteer Assignment' ||
       context.kind === 'Individual Volunteer Assignment'
@@ -37,8 +36,8 @@ export function CompletedRequirementRow({
   const dialogHandle = useDialogHandle();
 
   const canMarkIncomplete =
-    context.kind === 'Referral'
-      ? permissions(Permission.EditReferralRequirementCompletion)
+    context.kind === 'V1Case'
+      ? permissions(Permission.EditV1CaseRequirementCompletion)
       : context.kind === 'Arrangement' ||
           context.kind === 'Family Volunteer Assignment' ||
           context.kind === 'Individual Volunteer Assignment'

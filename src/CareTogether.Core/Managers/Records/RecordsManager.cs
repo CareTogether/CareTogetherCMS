@@ -9,7 +9,7 @@ using CareTogether.Resources.Approvals;
 using CareTogether.Resources.Communities;
 using CareTogether.Resources.Directory;
 using CareTogether.Resources.Notes;
-using CareTogether.Resources.Referrals;
+using CareTogether.Resources.V1Cases;
 using Nito.AsyncEx;
 using Nito.Disposables.Internals;
 
@@ -21,7 +21,7 @@ namespace CareTogether.Managers.Records
         private readonly IUserAccessCalculation userAccessCalculation;
         private readonly IDirectoryResource directoryResource;
         private readonly IApprovalsResource approvalsResource;
-        private readonly IReferralsResource referralsResource;
+        private readonly IV1CasesResource v1CasesResource;
         private readonly INotesResource notesResource;
         private readonly ICommunitiesResource communitiesResource;
         private readonly CombinedFamilyInfoFormatter combinedFamilyInfoFormatter;
@@ -31,7 +31,7 @@ namespace CareTogether.Managers.Records
             IUserAccessCalculation userAccessCalculation,
             IDirectoryResource directoryResource,
             IApprovalsResource approvalsResource,
-            IReferralsResource referralsResource,
+            IV1CasesResource v1CasesResource,
             INotesResource notesResource,
             ICommunitiesResource communitiesResource,
             CombinedFamilyInfoFormatter combinedFamilyInfoFormatter
@@ -41,7 +41,7 @@ namespace CareTogether.Managers.Records
             this.userAccessCalculation = userAccessCalculation;
             this.directoryResource = directoryResource;
             this.approvalsResource = approvalsResource;
-            this.referralsResource = referralsResource;
+            this.v1CasesResource = v1CasesResource;
             this.notesResource = notesResource;
             this.communitiesResource = communitiesResource;
             this.combinedFamilyInfoFormatter = combinedFamilyInfoFormatter;
@@ -514,7 +514,7 @@ namespace CareTogether.Managers.Records
                         user,
                         c.Command
                     ),
-                ReferralRecordsCommand c => authorizationEngine.AuthorizeReferralCommandAsync(
+                ReferralRecordsCommand c => authorizationEngine.AuthorizeV1CaseCommandAsync(
                     organizationId,
                     locationId,
                     user,
@@ -578,13 +578,13 @@ namespace CareTogether.Managers.Records
                         c.Command,
                         user.UserId()
                     ),
-                ReferralRecordsCommand c => referralsResource.ExecuteReferralCommandAsync(
+                ReferralRecordsCommand c => v1CasesResource.ExecuteV1CaseCommandAsync(
                     organizationId,
                     locationId,
                     c.Command,
                     user.UserId()
                 ),
-                ArrangementRecordsCommand c => referralsResource.ExecuteArrangementsCommandAsync(
+                ArrangementRecordsCommand c => v1CasesResource.ExecuteArrangementsCommandAsync(
                     organizationId,
                     locationId,
                     c.Command,

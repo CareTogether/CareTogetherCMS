@@ -4,7 +4,7 @@ using System.Collections.Immutable;
 using System.Security.Claims;
 using System.Threading.Tasks;
 using CareTogether.Resources.Policies;
-using CareTogether.Resources.Referrals;
+using CareTogether.Resources.V1Cases;
 using JsonPolymorph;
 
 namespace CareTogether.Resources.Directory
@@ -21,7 +21,8 @@ namespace CareTogether.Resources.Directory
         // and can instead just merge the deletions in the CombinedFamilyInfoFormatter.
         ImmutableList<Guid> DeletedDocuments,
         ImmutableList<CompletedCustomFieldInfo> CompletedCustomFields,
-        ImmutableList<Activity> History
+        ImmutableList<Activity> History,
+        bool IsTestFamily
     );
 
     public sealed record Person(
@@ -77,7 +78,7 @@ namespace CareTogether.Resources.Directory
         string? PostalCode
     );
 
-    public sealed record PhoneNumber(Guid Id, string Number, PhoneNumberType Type);
+    public sealed record PhoneNumber(Guid? Id, string Number, PhoneNumberType Type);
 
     public enum PhoneNumberType
     {
@@ -114,6 +115,8 @@ namespace CareTogether.Resources.Directory
     ) : FamilyCommand(FamilyId);
 
     public sealed record UndoCreateFamily(Guid FamilyId) : FamilyCommand(FamilyId);
+
+
 
     public sealed record AddAdultToFamily(
         Guid FamilyId,
@@ -168,6 +171,9 @@ namespace CareTogether.Resources.Directory
 
     public sealed record ChangePrimaryFamilyContact(Guid FamilyId, Guid AdultId)
         : FamilyCommand(FamilyId);
+
+    public sealed record UpdateTestFamilyFlag(Guid FamilyId, bool IsTestFamily)
+    : FamilyCommand(FamilyId);
 
     public sealed record UpdateCustomFamilyField(
         Guid FamilyId,

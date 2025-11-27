@@ -4,7 +4,10 @@ import { CTAutocomplete } from '../../../Generic/Forms/CTAutocomplete';
 import { api } from '../../../Api/Api';
 import { useRecoilValue, useSetRecoilState } from 'recoil';
 import { selectedLocationContextState } from '../../../Model/Data';
-import { LocationConfiguration } from '../../../GeneratedClient';
+import {
+  LocationConfiguration,
+  PutLocationPayload,
+} from '../../../GeneratedClient';
 import { organizationConfigurationEdited } from '../../../Model/ConfigurationModel';
 import { useBackdrop } from '../../../Hooks/useBackdrop';
 
@@ -49,7 +52,12 @@ export default function BasicConfiguration({
     withBackdrop(async () => {
       const newConfig = await api.configuration.putLocationDefinition(
         organizationId,
-        new LocationConfiguration({ ...currentLocationDefinition, ...data })
+        new PutLocationPayload({
+          locationConfiguration: new LocationConfiguration({
+            ...currentLocationDefinition,
+            ...data,
+          }),
+        })
       );
       storeEdits(newConfig);
     });
@@ -106,8 +114,10 @@ export default function BasicConfiguration({
         <CTAutocomplete
           name="ethnicities"
           label="Ethnicities"
+          freeSolo
           control={control}
           helperText='Start typing and press "Enter" to add a new item'
+          minTypingAreaWidth={120}
         />
 
         <Typography variant="h6">Family relationship types</Typography>
@@ -124,8 +134,10 @@ export default function BasicConfiguration({
         <CTAutocomplete
           name="adultFamilyRelationships"
           label="Family relationship types"
+          freeSolo
           control={control}
           helperText='Start typing and press "Enter" to add a new item'
+          minTypingAreaWidth={120}
         />
 
         <Typography variant="h6">Arrangement reasons</Typography>
@@ -142,8 +154,10 @@ export default function BasicConfiguration({
         <CTAutocomplete
           name="arrangementReasons"
           label="Arrangement reasons"
+          freeSolo
           control={control}
           helperText='Start typing and press "Enter" to add a new item'
+          minTypingAreaWidth={120}
         />
 
         <Stack direction="row" spacing={2} justifyContent="flex-start">

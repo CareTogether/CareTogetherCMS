@@ -11,7 +11,7 @@ using CareTogether.Resources.Directory;
 using CareTogether.Resources.Goals;
 using CareTogether.Resources.Notes;
 using CareTogether.Resources.Policies;
-using CareTogether.Resources.Referrals;
+using CareTogether.Resources.V1Cases;
 using CareTogether.TestData;
 using CareTogether.Utilities.FileStore;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -25,12 +25,53 @@ namespace CareTogether.Core.Test.AuthorizationEngineTests
         private static Guid Id(char x) =>
             Guid.Parse("xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx".Replace('x', x));
 
+        /// <summary>
+        /// Generates a Guid by filling the standard Guid template with hexadecimal characters from the provided string.
+        /// Only characters 0-9, a-f, and A-F are used; all others are ignored. The string is repeated as needed to fill the template.
+        /// </summary>
+        /// <param name="s">A string containing one or more hexadecimal characters.</param>
+        /// <returns>A Guid constructed from the provided hexadecimal characters.</returns>
+        /// <exception cref="ArgumentException">Thrown if the input string contains no hexadecimal characters.</exception>
+        /// <example>
+        /// Id("a") => aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa
+        /// Id("123") => 12312312-3123-1231-2312-312312312312
+        /// Id("deadbeef") => deadbeef-dead-beef-dead-beefdeadbeef
+        /// Id("abcxyz") => abcabcab-cabc-abca-bcab-cabcabcabcab (x, y, z ignored)
+        /// Id("g123") => 12312312-3123-1231-2312-312312312312 ('g' ignored)
+        /// </example>
+        private static Guid Id(string s)
+        {
+            const string template = "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx";
+            // Filter only hexadecimal characters
+            var hex = new string(s.Where(c => "0123456789abcdefABCDEF".Contains(c)).ToArray());
+            if (string.IsNullOrEmpty(hex))
+                throw new ArgumentException(
+                    "Input string must contain at least one hexadecimal character.",
+                    nameof(s)
+                );
+            var filled = string.Concat(
+                template.Select((c, i) => c == 'x' ? hex[i % hex.Length] : c)
+            );
+            return Guid.Parse(filled);
+        }
+
         static readonly Guid guid0 = Id('0');
         static readonly Guid guid1 = Id('1');
         static readonly Guid guid2 = Id('2');
         static readonly Guid guid3 = Id('3');
         static readonly Guid guid4 = Id('4');
         static readonly Guid guid5 = Id('5');
+        static readonly Guid guidA = Id('a');
+        static readonly Guid noteId0 = Id('0');
+        static readonly Guid noteId1 = Id('1');
+        static readonly Guid noteId2 = Id('2');
+        static readonly Guid noteId3 = Id('3');
+        static readonly Guid noteId4 = Id('4');
+        static readonly Guid noteId5 = Id('5');
+        static readonly Guid noteIdA = Id('a');
+        static readonly Guid noteIdB = Id('b');
+        static readonly Guid noteIdC = Id('c');
+        static readonly Guid noteIdD = Id('d');
         static readonly Guid newDraftNoteGuid = Guid.NewGuid();
 
         private static ClaimsPrincipal PersonUserWithRoles(
@@ -50,7 +91,7 @@ namespace CareTogether.Core.Test.AuthorizationEngineTests
                             role.ToString()
                         ))
                     ),
-                    $"{guid1}:{guid2}"
+                    $"{noteId1}:{noteId2}"
                 )
             );
 
@@ -76,7 +117,7 @@ namespace CareTogether.Core.Test.AuthorizationEngineTests
             var personAccessEventLog = new MemoryEventLog<PersonAccessEvent>();
             var directoryEventLog = new MemoryEventLog<DirectoryEvent>();
             var goalsEventLog = new MemoryEventLog<GoalCommandExecutedEvent>();
-            var referralsEventLog = new MemoryEventLog<ReferralEvent>();
+            var v1CasesEventLog = new MemoryEventLog<V1CaseEvent>();
             var approvalsEventLog = new MemoryEventLog<ApprovalEvent>();
             var notesEventLog = new MemoryEventLog<NotesEvent>();
             var communitiesEventLog = new MemoryEventLog<CommunityCommandExecutedEvent>();
@@ -90,7 +131,7 @@ namespace CareTogether.Core.Test.AuthorizationEngineTests
                 personAccessEventLog,
                 directoryEventLog,
                 goalsEventLog,
-                referralsEventLog,
+                v1CasesEventLog,
                 approvalsEventLog,
                 notesEventLog,
                 communitiesEventLog,
@@ -135,8 +176,8 @@ namespace CareTogether.Core.Test.AuthorizationEngineTests
             MockUserAccessCalculation([]);
 
             var response = await dut!.AuthorizeNoteCommandAsync(
-                guid1,
-                guid2,
+                noteId1,
+                noteId2,
                 user,
                 new CreateDraftNote(guid1, newDraftNoteGuid, "Test Note", null)
             );
@@ -160,14 +201,9 @@ namespace CareTogether.Core.Test.AuthorizationEngineTests
 
             NoteCommand command = commandType switch
             {
-                "CreateDraftNote" => new CreateDraftNote(
-                    guid1,
-                    newDraftNoteGuid,
-                    "Test Note",
-                    null
-                ),
-                "EditDraftNote" => new EditDraftNote(guid1, newDraftNoteGuid, "Test Note", null),
-                "DiscardDraftNote" => new DiscardDraftNote(guid1, newDraftNoteGuid),
+                "CreateDraftNote" => new CreateDraftNote(guid1, Guid.NewGuid(), "Test Note", null),
+                "EditDraftNote" => new EditDraftNote(guid1, noteId3, "Test Note", null),
+                "DiscardDraftNote" => new DiscardDraftNote(guid1, noteId3),
                 _ => throw new ArgumentException("Invalid command type", nameof(commandType)),
             };
 
@@ -189,8 +225,8 @@ namespace CareTogether.Core.Test.AuthorizationEngineTests
 
             NoteCommand command = commandType switch
             {
-                "EditDraftNote" => new EditDraftNote(guid3, guid0, "Test Note", null),
-                "DiscardDraftNote" => new DiscardDraftNote(guid3, guid0),
+                "EditDraftNote" => new EditDraftNote(guid3, noteId0, "Test Note", null),
+                "DiscardDraftNote" => new DiscardDraftNote(guid3, noteId0),
                 _ => throw new ArgumentException("Invalid command type", nameof(commandType)),
             };
 
@@ -212,8 +248,8 @@ namespace CareTogether.Core.Test.AuthorizationEngineTests
 
             NoteCommand command = commandType switch
             {
-                "EditDraftNote" => new EditDraftNote(guid1, guid0, "Test Note", null),
-                "DiscardDraftNote" => new DiscardDraftNote(guid1, guid0),
+                "EditDraftNote" => new EditDraftNote(guid1, noteIdD, "Test Note", null),
+                "DiscardDraftNote" => new DiscardDraftNote(guid1, noteIdD),
                 _ => throw new ArgumentException("Invalid command type", nameof(commandType)),
             };
 
@@ -246,8 +282,8 @@ namespace CareTogether.Core.Test.AuthorizationEngineTests
                     "Test Note",
                     null
                 ),
-                "EditDraftNote" => new EditDraftNote(guid1, guid0, "Test Note", null),
-                "DiscardDraftNote" => new DiscardDraftNote(guid1, guid0),
+                "EditDraftNote" => new EditDraftNote(guid1, noteId3, "Test Note", null),
+                "DiscardDraftNote" => new DiscardDraftNote(guid1, noteId3),
                 _ => throw new ArgumentException("Invalid command type", nameof(commandType)),
             };
 

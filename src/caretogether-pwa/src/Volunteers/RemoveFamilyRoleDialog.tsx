@@ -11,7 +11,7 @@ import {
 import { RoleRemovalReason } from '../GeneratedClient';
 import { useVolunteersModel } from '../Model/VolunteersModel';
 import { UpdateDialog } from '../Generic/UpdateDialog';
-import { DatePicker } from '@mui/x-date-pickers';
+import { ValidateDatePicker } from '../Generic/Forms/ValidateDatePicker';
 
 interface RemoveFamilyRoleDialogProps {
   volunteerFamilyId: string;
@@ -31,6 +31,9 @@ export function RemoveFamilyRoleDialog({
     effectiveSince: new Date() as Date | null,
     effectiveThrough: null as Date | null,
   });
+
+  const [dateError, setDateError] = useState(false);
+
   const { reason, additionalComments, effectiveSince, effectiveThrough } =
     fields;
 
@@ -50,7 +53,7 @@ export function RemoveFamilyRoleDialog({
       title={`Remove ${role} role for this family`}
       onClose={onClose}
       onSave={save}
-      enableSave={() => additionalComments !== ''}
+      enableSave={() => additionalComments !== '' && !dateError}
     >
       <form noValidate autoComplete="off">
         <Grid container spacing={2}>
@@ -108,15 +111,18 @@ export function RemoveFamilyRoleDialog({
             />
           </Grid>
           <Grid item xs={12}>
-            <DatePicker
+            <ValidateDatePicker
               label="Effective Since (optional - leave blank to use the current date)"
-              value={effectiveSince || null}
+              value={effectiveSince}
               disableFuture
               format="M/d/yyyy"
-              onChange={(date: Date | null) =>
+              onChange={(date) =>
                 setFields({ ...fields, effectiveSince: date })
               }
-              slotProps={{ textField: { fullWidth: true } }}
+              onErrorChange={setDateError}
+              textFieldProps={{
+                fullWidth: true,
+              }}
             />
           </Grid>
         </Grid>

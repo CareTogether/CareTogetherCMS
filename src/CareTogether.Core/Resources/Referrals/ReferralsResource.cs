@@ -3,33 +3,33 @@ using System.Collections.Immutable;
 using System.Threading.Tasks;
 using CareTogether.Utilities.EventLog;
 
-namespace CareTogether.Resources.Referrals
+namespace CareTogether.Resources.V1Cases
 {
-    public sealed class ReferralsResource : IReferralsResource
+    public sealed class V1CasesResource : IV1CasesResource
     {
-        private readonly IEventLog<ReferralEvent> eventLog;
+        private readonly IEventLog<V1CaseEvent> eventLog;
         private readonly ConcurrentLockingStore<
             (Guid organizationId, Guid locationId),
-            ReferralModel
+            V1CaseModel
         > tenantModels;
 
-        public ReferralsResource(IEventLog<ReferralEvent> eventLog)
+        public V1CasesResource(IEventLog<V1CaseEvent> eventLog)
         {
             this.eventLog = eventLog;
             tenantModels = new ConcurrentLockingStore<
                 (Guid organizationId, Guid locationId),
-                ReferralModel
+                V1CaseModel
             >(key =>
-                ReferralModel.InitializeAsync(
+                V1CaseModel.InitializeAsync(
                     eventLog.GetAllEventsAsync(key.organizationId, key.locationId)
                 )
             );
         }
 
-        public async Task<ReferralEntry> ExecuteReferralCommandAsync(
+        public async Task<V1CaseEntry> ExecuteV1CaseCommandAsync(
             Guid organizationId,
             Guid locationId,
-            ReferralCommand command,
+            V1CaseCommand command,
             Guid userId
         )
         {
@@ -39,7 +39,7 @@ namespace CareTogether.Resources.Referrals
                 )
             )
             {
-                var result = lockedModel.Value.ExecuteReferralCommand(
+                var result = lockedModel.Value.ExecuteV1CaseCommand(
                     command,
                     userId,
                     DateTime.UtcNow
@@ -52,11 +52,11 @@ namespace CareTogether.Resources.Referrals
                     result.SequenceNumber
                 );
                 result.OnCommit();
-                return result.ReferralEntry;
+                return result.V1CaseEntry;
             }
         }
 
-        public async Task<ReferralEntry> ExecuteArrangementsCommandAsync(
+        public async Task<V1CaseEntry> ExecuteArrangementsCommandAsync(
             Guid organizationId,
             Guid locationId,
             ArrangementsCommand command,
@@ -82,11 +82,11 @@ namespace CareTogether.Resources.Referrals
                     result.SequenceNumber
                 );
                 result.OnCommit();
-                return result.ReferralEntry;
+                return result.V1CaseEntry;
             }
         }
 
-        public async Task<ImmutableList<ReferralEntry>> ListReferralsAsync(
+        public async Task<ImmutableList<V1CaseEntry>> ListV1CasessAsync(
             Guid organizationId,
             Guid locationId
         )
@@ -95,21 +95,21 @@ namespace CareTogether.Resources.Referrals
                 var lockedModel = await tenantModels.ReadLockItemAsync((organizationId, locationId))
             )
             {
-                return lockedModel.Value.FindReferralEntries(_ => true);
+                return lockedModel.Value.FindV1CaseEntries(_ => true);
             }
         }
 
-        public async Task<ReferralEntry> GetReferralAsync(
+        public async Task<V1CaseEntry> GetV1CaseAsync(
             Guid organizationId,
             Guid locationId,
-            Guid referralId
+            Guid v1CaseId
         )
         {
             using (
                 var lockedModel = await tenantModels.ReadLockItemAsync((organizationId, locationId))
             )
             {
-                return lockedModel.Value.GetReferralEntry(referralId);
+                return lockedModel.Value.GetV1CaseEntry(v1CaseId);
             }
         }
     }

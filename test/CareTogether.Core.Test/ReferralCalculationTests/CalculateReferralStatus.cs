@@ -7,10 +7,10 @@ using CareTogether.Resources.Directory;
 using CareTogether.Resources.Policies;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-namespace CareTogether.Core.Test.ReferralCalculationTests
+namespace CareTogether.Core.Test.V1CaseCalculationTests
 {
     [TestClass]
-    public class CalculateReferralStatus
+    public class CalculateV1CaseStatus
     {
         private static Guid Id(char x) =>
             Guid.Parse("xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx".Replace('x', x));
@@ -23,8 +23,8 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
         static readonly Guid guid5 = Id('5');
         static readonly Guid guid6 = Id('6');
 
-        static ReferralPolicy referralPolicy = new ReferralPolicy(
-            RequiredIntakeActionNames: Helpers.From(),
+        static V1CasePolicy v1CasePolicy = new V1CasePolicy(
+            RequiredIntakeActionNames: [],
             CustomFields: ImmutableList<CustomField>.Empty,
             ArrangementPolicies: ImmutableList<ArrangementPolicy>
                 .Empty.Add(
@@ -72,9 +72,9 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
                                     Variants: ImmutableList<ArrangementFunctionVariant>.Empty
                                 )
                             ),
-                        RequiredSetupActionNames: Helpers.From(),
-                        RequiredMonitoringActions: ImmutableList<MonitoringRequirement>.Empty,
-                        RequiredCloseoutActionNames: Helpers.From()
+                        RequiredSetupActionNames: [],
+                        RequiredMonitoringActions: [],
+                        RequiredCloseoutActionNames: []
                     )
                 )
                 .Add(
@@ -122,9 +122,9 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
                                     Variants: ImmutableList<ArrangementFunctionVariant>.Empty
                                 )
                             ),
-                        RequiredSetupActionNames: Helpers.From(),
-                        RequiredMonitoringActions: ImmutableList<MonitoringRequirement>.Empty,
-                        RequiredCloseoutActionNames: Helpers.From()
+                        RequiredSetupActionNames: [],
+                        RequiredMonitoringActions: [],
+                        RequiredCloseoutActionNames: []
                     )
                 )
                 .Add(
@@ -152,9 +152,9 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
                                     Variants: ImmutableList<ArrangementFunctionVariant>.Empty
                                 )
                             ),
-                        RequiredSetupActionNames: Helpers.From(),
-                        RequiredMonitoringActions: ImmutableList<MonitoringRequirement>.Empty,
-                        RequiredCloseoutActionNames: Helpers.From()
+                        RequiredSetupActionNames: [],
+                        RequiredMonitoringActions: [],
+                        RequiredCloseoutActionNames: []
                     )
                 ),
             ImmutableList<FunctionPolicy>.Empty
@@ -276,7 +276,8 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
             ImmutableList<UploadedDocumentInfo>.Empty,
             ImmutableList<Guid>.Empty,
             ImmutableList<CompletedCustomFieldInfo>.Empty,
-            ImmutableList<Activity>.Empty
+            ImmutableList<Activity>.Empty,
+            false
         );
 
         [TestMethod]

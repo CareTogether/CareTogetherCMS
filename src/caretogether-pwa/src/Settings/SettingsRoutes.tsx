@@ -12,7 +12,7 @@ function Settings() {
       <Route path="roles" element={<RolesScreen />} />
       <Route path="locations" element={<LocationsScreen />} />
       <Route path="roles/:roleName" element={<RoleEditScreen />} />
-      <Route path="locations/:locationId" element={<LocationEdit />} />
+      <Route path="locations/:editingLocationId" element={<LocationEdit />} />
       <Route path="*" element={<Navigate to="./roles" replace />} />
     </Routes>
   );

@@ -5,23 +5,23 @@ using System.Linq;
 using System.Threading.Tasks;
 using JsonPolymorph;
 
-namespace CareTogether.Resources.Referrals
+namespace CareTogether.Resources.V1Cases
 {
     [JsonHierarchyBase]
-    public abstract partial record ReferralEvent(Guid UserId, DateTime TimestampUtc)
+    public abstract partial record V1CaseEvent(Guid UserId, DateTime TimestampUtc)
         : DomainEvent(UserId, TimestampUtc);
 
     public sealed record ReferralCommandExecuted(
         Guid UserId,
         DateTime TimestampUtc,
-        ReferralCommand Command
-    ) : ReferralEvent(UserId, TimestampUtc);
+        V1CaseCommand Command
+    ) : V1CaseEvent(UserId, TimestampUtc);
 
     public sealed record ArrangementsCommandExecuted(
         Guid UserId,
         DateTime TimestampUtc,
         ArrangementsCommand Command
-    ) : ReferralEvent(UserId, TimestampUtc);
+    ) : V1CaseEvent(UserId, TimestampUtc);
 
     public sealed record ReferralOpened(
         Guid UserId,
@@ -59,20 +59,20 @@ namespace CareTogether.Resources.Referrals
         Guid? NoteId
     ) : Activity(UserId, AuditTimestampUtc, ChangedAtUtc, null, NoteId);
 
-    public sealed class ReferralModel
+    public sealed class V1CaseModel
     {
-        private ImmutableDictionary<Guid, ReferralEntry> referrals = ImmutableDictionary<
+        private ImmutableDictionary<Guid, V1CaseEntry> v1Cases = ImmutableDictionary<
             Guid,
-            ReferralEntry
+            V1CaseEntry
         >.Empty;
 
         public long LastKnownSequenceNumber { get; private set; } = -1;
 
-        public static async Task<ReferralModel> InitializeAsync(
-            IAsyncEnumerable<(ReferralEvent DomainEvent, long SequenceNumber)> eventLog
+        public static async Task<V1CaseModel> InitializeAsync(
+            IAsyncEnumerable<(V1CaseEvent DomainEvent, long SequenceNumber)> eventLog
         )
         {
-            var model = new ReferralModel();
+            var model = new V1CaseModel();
 
             await foreach (var (domainEvent, sequenceNumber) in eventLog)
                 model.ReplayEvent(domainEvent, sequenceNumber);
@@ -83,14 +83,14 @@ namespace CareTogether.Resources.Referrals
         public (
             ReferralCommandExecuted Event,
             long SequenceNumber,
-            ReferralEntry ReferralEntry,
+            V1CaseEntry V1CaseEntry,
             Action OnCommit
-        ) ExecuteReferralCommand(ReferralCommand command, Guid userId, DateTime timestampUtc)
+        ) ExecuteV1CaseCommand(V1CaseCommand command, Guid userId, DateTime timestampUtc)
         {
-            (ReferralEntry, Activity?) referralEntryToUpsert = command switch
+            (V1CaseEntry, Activity?) v1CaseEntryToUpsert = command switch
             {
                 CreateReferral c => (
-                    new ReferralEntry(
+                    new V1CaseEntry(
                         c.ReferralId,
                         c.FamilyId,
                         OpenedAtUtc: c.OpenedAtUtc,
@@ -105,13 +105,13 @@ namespace CareTogether.Resources.Referrals
                     ),
                     new ReferralOpened(userId, timestampUtc, c.OpenedAtUtc)
                 ),
-                _ => referrals.TryGetValue(command.ReferralId, out var referralEntry)
+                _ => v1Cases.TryGetValue(command.ReferralId, out var v1CaseEntry)
                     ? command switch
                     {
                         CompleteReferralRequirement c => (
-                            referralEntry with
+                            v1CaseEntry with
                             {
-                                CompletedRequirements = referralEntry.CompletedRequirements.Add(
+                                CompletedRequirements = v1CaseEntry.CompletedRequirements.Add(
                                     new CompletedRequirementInfo(
                                         userId,
                                         timestampUtc,
@@ -134,10 +134,10 @@ namespace CareTogether.Resources.Referrals
                             )
                         ),
                         MarkReferralRequirementIncomplete c => (
-                            referralEntry with
+                            v1CaseEntry with
                             {
                                 CompletedRequirements =
-                                    referralEntry.CompletedRequirements.RemoveAll(x =>
+                                    v1CaseEntry.CompletedRequirements.RemoveAll(x =>
                                         x.RequirementName == c.RequirementName
                                         && x.CompletedRequirementId == c.CompletedRequirementId
                                     ),
@@ -145,9 +145,9 @@ namespace CareTogether.Resources.Referrals
                             null
                         ),
                         ExemptReferralRequirement c => (
-                            referralEntry with
+                            v1CaseEntry with
                             {
-                                ExemptedRequirements = referralEntry.ExemptedRequirements.Add(
+                                ExemptedRequirements = v1CaseEntry.ExemptedRequirements.Add(
                                     new ExemptedRequirementInfo(
                                         userId,
                                         timestampUtc,
@@ -161,18 +161,18 @@ namespace CareTogether.Resources.Referrals
                             null
                         ),
                         UnexemptReferralRequirement c => (
-                            referralEntry with
+                            v1CaseEntry with
                             {
-                                ExemptedRequirements = referralEntry.ExemptedRequirements.RemoveAll(
+                                ExemptedRequirements = v1CaseEntry.ExemptedRequirements.RemoveAll(
                                     x => x.RequirementName == c.RequirementName
                                 ),
                             },
                             null
                         ),
                         UpdateCustomReferralField c => (
-                            referralEntry with
+                            v1CaseEntry with
                             {
-                                CompletedCustomFields = referralEntry.CompletedCustomFields.SetItem(
+                                CompletedCustomFields = v1CaseEntry.CompletedCustomFields.SetItem(
                                     c.CustomFieldName,
                                     new CompletedCustomFieldInfo(
                                         userId,
@@ -187,14 +187,14 @@ namespace CareTogether.Resources.Referrals
                             null
                         ),
                         UpdateReferralComments c => (
-                            referralEntry with
+                            v1CaseEntry with
                             {
                                 Comments = c.Comments,
                             },
                             null
                         ),
                         CloseReferral c => (
-                            referralEntry with
+                            v1CaseEntry with
                             {
                                 CloseReason = c.CloseReason,
                                 ClosedAtUtc = c.ClosedAtUtc,
@@ -206,32 +206,32 @@ namespace CareTogether.Resources.Referrals
                         ),
                     }
                     : throw new KeyNotFoundException(
-                        "A referral with the specified ID does not exist."
+                        "A v1 case with the specified ID does not exist."
                     ),
             };
 
             return (
                 Event: new ReferralCommandExecuted(userId, timestampUtc, command),
                 SequenceNumber: LastKnownSequenceNumber + 1,
-                ReferralEntry: referralEntryToUpsert.Item1 with
+                V1CaseEntry: v1CaseEntryToUpsert.Item1 with
                 {
                     History =
-                        referralEntryToUpsert.Item2 == null
-                            ? referralEntryToUpsert.Item1.History
-                            : referralEntryToUpsert.Item1.History.Add(referralEntryToUpsert.Item2),
+                        v1CaseEntryToUpsert.Item2 == null
+                            ? v1CaseEntryToUpsert.Item1.History
+                            : v1CaseEntryToUpsert.Item1.History.Add(v1CaseEntryToUpsert.Item2),
                 },
                 OnCommit: () =>
                 {
                     LastKnownSequenceNumber++;
-                    referrals = referrals.SetItem(
-                        referralEntryToUpsert.Item1.Id,
-                        referralEntryToUpsert.Item1 with
+                    v1Cases = v1Cases.SetItem(
+                        v1CaseEntryToUpsert.Item1.Id,
+                        v1CaseEntryToUpsert.Item1 with
                         {
                             History =
-                                referralEntryToUpsert.Item2 == null
-                                    ? referralEntryToUpsert.Item1.History
-                                    : referralEntryToUpsert.Item1.History.Add(
-                                        referralEntryToUpsert.Item2
+                                v1CaseEntryToUpsert.Item2 == null
+                                    ? v1CaseEntryToUpsert.Item1.History
+                                    : v1CaseEntryToUpsert.Item1.History.Add(
+                                        v1CaseEntryToUpsert.Item2
                                     ),
                         }
                     );
@@ -242,7 +242,7 @@ namespace CareTogether.Resources.Referrals
         public (
             ArrangementsCommandExecuted Event,
             long SequenceNumber,
-            ReferralEntry ReferralEntry,
+            V1CaseEntry V1CaseEntry,
             Action OnCommit
         ) ExecuteArrangementsCommand(
             ArrangementsCommand command,
@@ -250,7 +250,7 @@ namespace CareTogether.Resources.Referrals
             DateTime timestampUtc
         )
         {
-            if (!referrals.TryGetValue(command.ReferralId, out var referralEntry))
+            if (!v1Cases.TryGetValue(command.ReferralId, out var v1CaseEntry))
                 throw new KeyNotFoundException("A referral with the specified ID does not exist.");
 
             //TODO: Generate aggregated activities for the referral history, instead of per-arrangement activity entries?
@@ -281,7 +281,7 @@ namespace CareTogether.Resources.Referrals
                             ),
                             null
                         ),
-                        _ => referralEntry.Arrangements.TryGetValue(
+                        _ => v1CaseEntry.Arrangements.TryGetValue(
                             arrangementId,
                             out var arrangementEntry
                         )
@@ -832,15 +832,15 @@ namespace CareTogether.Resources.Referrals
                 )
                 .ToImmutableList();
 
-            var referralEntryToUpsert = referralEntry with
+            var v1CaseEntryToUpsert = v1CaseEntry with
             {
-                Arrangements = referralEntry.Arrangements.SetItems(
+                Arrangements = v1CaseEntry.Arrangements.SetItems(
                     arrangementEntriesToUpsert.Select(e => new KeyValuePair<Guid, ArrangementEntry>(
                         e.Item1.Id,
                         e.Item1
                     ))
                 ),
-                History = referralEntry.History.AddRange(
+                History = v1CaseEntry.History.AddRange(
                     arrangementEntriesToUpsert
                         .Select(e => e.Item2)
                         .Where(activity => activity != null)
@@ -850,27 +850,27 @@ namespace CareTogether.Resources.Referrals
             return (
                 Event: new ArrangementsCommandExecuted(userId, timestampUtc, command),
                 SequenceNumber: LastKnownSequenceNumber + 1,
-                ReferralEntry: referralEntryToUpsert,
+                V1CaseEntry: v1CaseEntryToUpsert,
                 OnCommit: () =>
                 {
                     LastKnownSequenceNumber++;
-                    referrals = referrals.SetItem(referralEntryToUpsert.Id, referralEntryToUpsert);
+                    v1Cases = v1Cases.SetItem(v1CaseEntryToUpsert.Id, v1CaseEntryToUpsert);
                 }
             );
         }
 
-        public ImmutableList<ReferralEntry> FindReferralEntries(Func<ReferralEntry, bool> predicate)
+        public ImmutableList<V1CaseEntry> FindV1CaseEntries(Func<V1CaseEntry, bool> predicate)
         {
-            return referrals.Values.Where(predicate).ToImmutableList();
+            return v1Cases.Values.Where(predicate).ToImmutableList();
         }
 
-        public ReferralEntry GetReferralEntry(Guid referralId) => referrals[referralId];
+        public V1CaseEntry GetV1CaseEntry(Guid v1CaseId) => v1Cases[v1CaseId];
 
-        private void ReplayEvent(ReferralEvent domainEvent, long sequenceNumber)
+        private void ReplayEvent(V1CaseEvent domainEvent, long sequenceNumber)
         {
             if (domainEvent is ReferralCommandExecuted referralCommandExecuted)
             {
-                var (_, _, _, onCommit) = ExecuteReferralCommand(
+                var (_, _, _, onCommit) = ExecuteV1CaseCommand(
                     referralCommandExecuted.Command,
                     referralCommandExecuted.UserId,
                     referralCommandExecuted.TimestampUtc

@@ -1,5 +1,6 @@
 import {
   Badge,
+  Box,
   Divider,
   Drawer,
   List,
@@ -16,6 +17,7 @@ import DashboardIcon from '@mui/icons-material/Dashboard';
 import SupportIcon from '@mui/icons-material/Support';
 import { useFeatureFlags } from '../Model/ConfigurationModel';
 import { Copyright } from './Copyright';
+import { Version } from './Version';
 import { useGlobalPermissions } from '../Model/SessionModel';
 import { Permission } from '../GeneratedClient';
 import { selectedLocationContextState } from '../Model/Data';
@@ -23,11 +25,11 @@ import { useLoadable } from '../Hooks/useLoadable';
 import { Inbox } from '@mui/icons-material';
 import { queueItemsCountQuery } from '../Model/QueueModel';
 import Feedback from './Feedback';
-import { useFeatureFlagEnabled as usePostHogFeatureFlagEnabled } from 'posthog-js/react';
 import { useRecoilValue } from 'recoil';
 import { reportSubmenuItemsAtom } from '../Model/UI';
 import { ListItemLink } from './ListItemLink';
 import { useAppNavigate } from '../Hooks/useAppNavigate';
+import WhatsNew from './WhatsNew';
 
 interface SideNavigationMenuProps {
   open: boolean;
@@ -38,11 +40,6 @@ function SideNavigationMenu({ open }: SideNavigationMenuProps) {
 
   const appNavigate = useAppNavigate();
 
-  const showReports = usePostHogFeatureFlagEnabled('reports');
-  const showReportsSubmenuItems = usePostHogFeatureFlagEnabled(
-    'reportsSubmenuItems'
-  );
-
   const context = useLoadable(selectedLocationContextState);
   const locationPrefix = `/org/${context?.organizationId}/${context?.locationId}`;
 
@@ -51,15 +48,11 @@ function SideNavigationMenu({ open }: SideNavigationMenuProps) {
   const reportSubmenuItems = useRecoilValue(reportSubmenuItemsAtom);
 
   return (
-    //  <List aria-label="main navigation">
-    //    <ListItemLink to="/dashboard" primary="Dashboard" icon={<DashboardIcon sx={{color: '#fff'}} />} />
-    //  </List>
     <List
       aria-label="secondary navigation"
       sx={{
         '& .MuiListItem-root.Mui-selected': { color: '#ffff' },
         '& .MuiListItem-root.Mui-selected svg': { color: '#ffff' },
-        marginBottom: 17,
       }}
     >
       {flags === null ? (
@@ -110,8 +103,8 @@ function SideNavigationMenu({ open }: SideNavigationMenuProps) {
           {permissions(Permission.AccessPartneringFamiliesScreen) && (
             <ListItemLink
               className="ph-unmask"
-              to={`${locationPrefix}/referrals`}
-              primary="Referrals"
+              to={`${locationPrefix}/cases`}
+              primary="Cases"
               icon={<PermPhoneMsgIcon />}
             />
           )}
@@ -132,41 +125,28 @@ function SideNavigationMenu({ open }: SideNavigationMenuProps) {
             />
           )}
 
-          {permissions(Permission.AccessReportsScreen) &&
-            showReports &&
-            !showReportsSubmenuItems && (
-              <ListItemLink
-                className="ph-unmask"
-                to={`${locationPrefix}/reports`}
-                primary="Reports"
-                icon={<InsightsIcon />}
-              />
-            )}
-
-          {permissions(Permission.AccessReportsScreen) &&
-            showReports &&
-            showReportsSubmenuItems && (
-              <ListItemLink
-                className="ph-unmask"
-                to={`${locationPrefix}/reports`}
-                primary="Reports"
-                icon={<InsightsIcon />}
-                subitems={reportSubmenuItems}
-                defaultOpen
-              />
-            )}
+          {permissions(Permission.AccessReportsScreen) && (
+            <ListItemLink
+              className="ph-unmask"
+              to={`${locationPrefix}/reports`}
+              primary="Reports"
+              icon={<InsightsIcon />}
+              subitems={reportSubmenuItems}
+              defaultOpen
+            />
+          )}
 
           {(permissions(Permission.AccessSettingsScreen) ||
             permissions(Permission.AccessSupportScreen)) && <Divider />}
 
           {permissions(Permission.AccessSettingsScreen) && (
-            <>
-              <ListItemLink
-                className="ph-unmask"
-                to={`${locationPrefix}/settings`}
-                primary="Settings"
-                icon={<SettingsIcon sx={{ color: '#fff8' }} />}
-                subitems={[
+            <ListItemLink
+              className="ph-unmask"
+              to={`${locationPrefix}/settings`}
+              primary="Settings"
+              icon={<SettingsIcon sx={{ color: '#fff8' }} />}
+              {...(open && {
+                subitems: [
                   {
                     label: 'Roles',
                     isActive: location.pathname.includes('/settings/roles'),
@@ -177,9 +157,9 @@ function SideNavigationMenu({ open }: SideNavigationMenuProps) {
                     isActive: location.pathname.includes('/settings/locations'),
                     onClick: () => appNavigate.settingsLocations(),
                   },
-                ]}
-              />
-            </>
+                ],
+              })}
+            />
           )}
 
           {permissions(Permission.AccessSupportScreen) && (
@@ -190,6 +170,7 @@ function SideNavigationMenu({ open }: SideNavigationMenuProps) {
               icon={<SupportIcon />}
             />
           )}
+          <WhatsNew />
         </>
       )}
     </List>
@@ -203,30 +184,6 @@ interface ShellSideNavigationProps {
 export function ShellSideNavigation({ open, width }: ShellSideNavigationProps) {
   const theme = useTheme();
 
-  // const drawerPaperOpenStyle = {
-  //   position: 'relative',
-  //   whiteSpace: 'nowrap',
-  //   width: 200,
-  //   transition: theme.transitions.create('width', {
-  //     easing: theme.transitions.easing.sharp,
-  //     duration: theme.transitions.duration.enteringScreen
-  //   })
-  // };
-
-  // const drawerPaperCloseStyle = {
-  //   position: 'relative',
-  //   whiteSpace: 'nowrap',
-  //   overflowX: 'hidden',
-  //   width: theme.spacing(7),
-  //   [theme.breakpoints.up('sm')]: {
-  //     width: theme.spacing(9),
-  //   },
-  //   transition: theme.transitions.create('width', {
-  //     easing: theme.transitions.easing.sharp,
-  //     duration: theme.transitions.duration.leavingScreen,
-  //   })
-  // };
-
   return (
     <Drawer
       variant="permanent"
@@ -237,31 +194,45 @@ export function ShellSideNavigation({ open, width }: ShellSideNavigationProps) {
         whiteSpace: 'nowrap',
         overflowX: 'hidden',
         '& .MuiDrawer-paper': {
+          width: width, // Force fixed width
+          minWidth: width, // Prevent shrinking
+          maxWidth: width, // Prevent expanding
           backgroundColor: theme.palette.primary.dark,
           color: theme.palette.primary.contrastText,
           overflowX: 'hidden',
+          display: 'flex',
+          flexDirection: 'column',
         },
       }}
     >
-      <Stack sx={{ width: width, paddingTop: { xs: 7, sm: 8, md: 6 } }}>
+      <Box sx={{ paddingTop: { xs: 7, sm: 8, md: 6 } }}>
+        {/* Spacer for top app bar */}
+      </Box>
+      <Box
+        sx={{
+          flex: 1,
+          overflowY: 'auto',
+          overflowX: 'hidden',
+        }}
+      >
         <SideNavigationMenu open={open} />
-        {open && (
-          <div
-            style={{
-              overflowX: 'hidden',
-              width: width - 4,
-              position: 'fixed',
-              bottom: 0,
-              marginLeft: 4,
-            }}
-          >
-            <Stack spacing={5} alignItems="center">
+      </Box>
+      {open && (
+        <Box
+          sx={{
+            backgroundColor: theme.palette.primary.dark,
+            borderTop: `1px solid ${theme.palette.divider}`,
+          }}
+        >
+          <Stack className="ph-unmask" alignItems="center" sx={{ py: 2 }}>
+            <Box mb={2}>
               <Feedback />
-              <Copyright />
-            </Stack>
-          </div>
-        )}
-      </Stack>
+            </Box>
+            <Version />
+            <Copyright />
+          </Stack>
+        </Box>
+      )}
     </Drawer>
   );
 }

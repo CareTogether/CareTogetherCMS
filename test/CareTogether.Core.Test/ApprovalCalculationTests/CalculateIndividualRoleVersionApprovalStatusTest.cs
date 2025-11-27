@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Immutable;
 using System.Linq;
 using CareTogether.Engines.PolicyEvaluation;
 using CareTogether.Resources;
@@ -13,11 +14,29 @@ namespace CareTogether.Core.Test.ApprovalCalculationTests
     [TestClass]
     public class CalculateIndividualRoleVersionApprovalStatusTest
     {
+        private static readonly EffectiveLocationPolicy TestLocationPolicy =
+            new EffectiveLocationPolicy(
+                ImmutableDictionary<string, ActionRequirement>.Empty,
+                ImmutableList<CustomField>.Empty,
+                new V1CasePolicy(
+                    ImmutableList<string>.Empty,
+                    ImmutableList<CustomField>.Empty,
+                    ImmutableList<ArrangementPolicy>.Empty,
+                    ImmutableList<FunctionPolicy>.Empty
+                ),
+                new VolunteerPolicy(
+                    ImmutableDictionary<string, VolunteerRolePolicy>.Empty,
+                    ImmutableDictionary<string, VolunteerFamilyRolePolicy>.Empty
+                )
+            );
+
         [TestMethod]
         public void WhenNoneCompleted()
         {
             var result =
                 IndividualApprovalCalculations.CalculateIndividualRoleVersionApprovalStatus(
+                    locationPolicy: TestLocationPolicy,
+                    new VolunteerRolePolicy("Family Coach", []),
                     new VolunteerRolePolicyVersion(
                         "v1",
                         SupersededAtUtc: H.DT(20),
@@ -56,6 +75,8 @@ namespace CareTogether.Core.Test.ApprovalCalculationTests
         {
             var result =
                 IndividualApprovalCalculations.CalculateIndividualRoleVersionApprovalStatus(
+                    locationPolicy: TestLocationPolicy,
+                    new VolunteerRolePolicy("Family Coach", []),
                     new VolunteerRolePolicyVersion(
                         "v1",
                         SupersededAtUtc: H.DT(20),

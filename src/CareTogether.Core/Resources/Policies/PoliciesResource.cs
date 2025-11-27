@@ -93,7 +93,7 @@ namespace CareTogether.Resources.Policies
             {
                 using (
                     var lockedModel = await tenantModels.ReadLockItemAsync(
-                        (organizationId, location.Id)
+                        (organizationId, location.Id ?? Guid.Empty)
                     )
                 )
                 {
@@ -117,7 +117,10 @@ namespace CareTogether.Resources.Policies
             return Render(newConfig);
         }
 
-        public async Task<OrganizationConfiguration> UpsertLocationDefinitionAsync(
+        public async Task<(
+            OrganizationConfiguration OrganizationConfiguration,
+            LocationConfiguration LocationConfiguration
+        )> UpsertLocationDefinitionAsync(
             Guid organizationId,
             LocationConfiguration locationConfiguration
         )
@@ -128,6 +131,15 @@ namespace CareTogether.Resources.Policies
             if (locationConfiguration.Id == Guid.Empty)
                 locationConfiguration = locationConfiguration with { Id = Guid.NewGuid() };
 
+            // Generate IDs for AccessLevels that don't have them
+            var updatedAccessLevels = locationConfiguration.AccessLevels?.Select(accessLevel =>
+                accessLevel.Id == default
+                    ? accessLevel with { Id = Guid.NewGuid() }
+                    : accessLevel
+            ).ToImmutableList() ?? ImmutableList<AccessLevel>.Empty;
+
+            locationConfiguration = locationConfiguration with { AccessLevels = updatedAccessLevels };
+
             var newConfig = config with
             {
                 Locations = config.Locations.AddOrReplace(
@@ -136,7 +148,23 @@ namespace CareTogether.Resources.Policies
                 ),
             };
             await configurationStore.UpsertAsync(organizationId, Guid.Empty, CONFIG, newConfig);
-            return Render(newConfig);
+            return (Render(newConfig), locationConfiguration);
+        }
+
+        public async Task<EffectiveLocationPolicy> UpsertEffectiveLocationPolicyAsync(
+            Guid organizationId,
+            Guid locationId,
+            EffectiveLocationPolicy effectiveLocationPolicy
+        )
+        {
+            await locationPoliciesStore.UpsertAsync(
+                organizationId,
+                locationId,
+                "policy",
+                effectiveLocationPolicy
+            );
+
+            return effectiveLocationPolicy;
         }
 
         public async Task<EffectiveLocationPolicy> GetCurrentPolicy(

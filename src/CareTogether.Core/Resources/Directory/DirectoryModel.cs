@@ -38,7 +38,8 @@ namespace CareTogether.Resources.Directory
             ImmutableList<UploadedDocumentInfo> UploadedDocuments,
             ImmutableList<Guid> DeletedDocuments,
             ImmutableDictionary<string, CompletedCustomFieldInfo> CompletedCustomFields,
-            ImmutableList<Activity> History
+            ImmutableList<Activity> History,
+            bool IsTestFamily
         )
         {
             internal Family ToFamily(ImmutableDictionary<Guid, PersonEntry> people) =>
@@ -60,7 +61,8 @@ namespace CareTogether.Resources.Directory
                     UploadedDocuments,
                     DeletedDocuments,
                     CompletedCustomFields.Values.ToImmutableList(),
-                    History
+                    History,
+                    IsTestFamily
                 );
         }
 
@@ -171,7 +173,9 @@ namespace CareTogether.Resources.Directory
                         string,
                         CompletedCustomFieldInfo
                     >.Empty,
-                    ImmutableList<Activity>.Empty
+                    ImmutableList<Activity>.Empty,
+                        IsTestFamily: false
+
                 ),
                 _ => families.TryGetValue(command.FamilyId, out var familyEntry)
                     ? command switch
@@ -277,6 +281,8 @@ namespace CareTogether.Resources.Directory
                                 )
                             ),
                         },
+                        UpdateTestFamilyFlag c => familyEntry with { IsTestFamily = c.IsTestFamily },
+
                         _ => throw new NotImplementedException(
                             $"The command type '{command.GetType().FullName}' has not been implemented."
                         ),

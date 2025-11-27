@@ -7,13 +7,56 @@ import {
   LinkProps as RouterLinkProps,
 } from 'react-router-dom';
 import { DistributiveOmit } from '@mui/types';
-import { Collapse, List, ListItemButton, Box, Divider } from '@mui/material';
+import {
+  Box,
+  Collapse,
+  Divider,
+  List,
+  ListItemButton,
+  ListItemButtonProps,
+  Tooltip,
+} from '@mui/material';
 import { ExpandLess, ExpandMore } from '@mui/icons-material';
+
+function TruncatedTooltip({
+  children,
+  title,
+}: {
+  children: React.ReactElement;
+  title: string;
+}) {
+  const [showTooltip, setShowTooltip] = React.useState(false);
+
+  const handleMouseEnter = (event: React.MouseEvent<HTMLElement>) => {
+    const textElement = event.currentTarget.querySelector(
+      '.MuiListItemText-primary'
+    ) as HTMLElement;
+    if (textElement) {
+      setShowTooltip(textElement.offsetWidth < textElement.scrollWidth);
+    }
+  };
+
+  return (
+    <Tooltip title={showTooltip ? title : ''} placement="right" arrow>
+      <Box
+        onMouseEnter={handleMouseEnter}
+        sx={{
+          minWidth: 0,
+          flex: 1,
+          display: 'flex',
+          alignItems: 'center',
+        }}
+      >
+        {children}
+      </Box>
+    </Tooltip>
+  );
+}
 
 interface ListItemLinkCollapsibleProps {
   icon?: React.ReactElement;
   primary: string;
-  to: string;
+  to?: string;
   subitems?: {
     label: string;
     isActive: boolean;
@@ -23,6 +66,8 @@ interface ListItemLinkCollapsibleProps {
   className?: string;
   paddingLeft?: number;
   darkColor?: boolean;
+  buttonProps?: Omit<ListItemButtonProps, 'onClick' | 'selected' | 'sx'> &
+    Record<string, unknown>;
 }
 
 export function ListItemLink(props: ListItemLinkCollapsibleProps) {
@@ -35,51 +80,66 @@ export function ListItemLink(props: ListItemLinkCollapsibleProps) {
     className,
     paddingLeft = 1.5,
     darkColor,
+    buttonProps,
   } = props;
 
-  const selected =
-    useMatch({
-      path: to,
-    }) !== null;
+  const match = useMatch(to ?? '');
+  const selected = !!match;
 
   const renderLink = React.useMemo(
     () =>
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       React.forwardRef<any, DistributiveOmit<RouterLinkProps, 'to'>>(
-        (itemProps, ref) => <RouterLink to={to} ref={ref} {...itemProps} />
+        (itemProps, ref) => (
+          <RouterLink to={to ?? ''} ref={ref} {...itemProps} />
+        )
       ),
     [to]
   );
-
   const [collapsibleOpen, setCollapsibleOpen] = React.useState(
     defaultOpen || false
   );
 
   const hasSubitems = subitems && subitems.length > 0;
 
+  // TODO: Those names are a bit confusing, we should rename them
+  const desktopColor = selected ? '#fff' : '#fff8';
+  const mobileColor = '#555';
+  const color = darkColor ? mobileColor : desktopColor;
+
   return (
     <>
       <li className={className}>
         <Box sx={{ display: 'flex', alignItems: 'center' }}>
           <ListItemButton
-            component={renderLink}
+            component={to ? renderLink : 'button'}
             selected={selected}
             sx={{
               paddingLeft,
               flexGrow: 1,
-              color: darkColor ? '#555' : '#fff8',
+              color,
             }}
+            {...buttonProps}
           >
-            {icon ? (
-              <ListItemIcon sx={{ color: selected ? '#fff' : '#fff8' }}>
-                {icon}
-              </ListItemIcon>
-            ) : null}
+            {icon ? <ListItemIcon sx={{ color }}>{icon}</ListItemIcon> : null}
 
-            <ListItemText
-              primary={primary}
-              sx={{ marginLeft: -2, color: selected ? '#fff' : '#fff8' }}
-            />
+            <TruncatedTooltip title={primary}>
+              <ListItemText
+                primary={primary}
+                sx={{
+                  marginLeft: -2,
+                  color,
+                  // Ensure the text container allows truncation
+                  minWidth: 0,
+                  flex: 1,
+                  '& .MuiListItemText-primary': {
+                    whiteSpace: 'nowrap',
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                  },
+                }}
+              />
+            </TruncatedTooltip>
           </ListItemButton>
 
           {hasSubitems && (
@@ -95,7 +155,6 @@ export function ListItemLink(props: ListItemLinkCollapsibleProps) {
           )}
         </Box>
       </li>
-
       <Collapse
         in={hasSubitems && collapsibleOpen}
         timeout="auto"
@@ -106,17 +165,26 @@ export function ListItemLink(props: ListItemLinkCollapsibleProps) {
             <li className="ph-unmask" key={item.label}>
               <ListItemButton
                 selected={item.isActive}
-                sx={{ paddingLeft: 1.5, color: '#fff8' }}
+                sx={{ paddingLeft: 1.5 }}
                 onClick={item.onClick}
               >
-                {/* {icon ? <ListItemIcon>{icon}</ListItemIcon> : null} */}
-                <ListItemText
-                  primary={item.label}
-                  sx={{
-                    marginLeft: 6,
-                    color: item.isActive ? '#fff' : undefined,
-                  }}
-                />
+                <TruncatedTooltip title={item.label}>
+                  <ListItemText
+                    primary={item.label}
+                    sx={{
+                      marginLeft: 6,
+                      color: item.isActive ? '#fff' : '#fff8',
+                      // Ensure the text container allows truncation
+                      minWidth: 0,
+                      flex: 1,
+                      '& .MuiListItemText-primary': {
+                        whiteSpace: 'nowrap',
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                      },
+                    }}
+                  />
+                </TruncatedTooltip>
               </ListItemButton>
             </li>
           ))}

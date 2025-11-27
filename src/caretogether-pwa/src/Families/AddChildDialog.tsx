@@ -27,7 +27,7 @@ import {
 } from '../GeneratedClient';
 import { useDirectoryModel } from '../Model/DirectoryModel';
 import WarningIcon from '@mui/icons-material/Warning';
-import { DatePicker } from '@mui/x-date-pickers';
+import { ValidateDatePicker } from '../Generic/Forms/ValidateDatePicker';
 import { useRecoilValue } from 'recoil';
 import { ethnicitiesData } from '../Model/ConfigurationModel';
 import { useParams } from 'react-router-dom';
@@ -77,6 +77,8 @@ export function AddChildDialog({ onClose }: AddChildDialogProps) {
   const directoryModel = useDirectoryModel();
 
   const ethnicities = useRecoilValue(ethnicitiesData);
+
+  const [dobError, setDobError] = useState(false);
 
   const withBackdrop = useBackdrop();
 
@@ -265,16 +267,18 @@ export function AddChildDialog({ onClose }: AddChildDialogProps) {
               </FormControl>
             </Grid>
             <Grid item xs={12} sm={6}>
-              <DatePicker
+              <ValidateDatePicker
                 label="Date of birth"
                 value={dateOfBirth}
+                onChange={(date) => setFields({ ...fields, dateOfBirth: date })}
                 minDate={subYears(new Date(), 18)}
+                disableFuture
                 openTo="year"
-                format="MM/dd/yyyy"
-                onChange={(date: Date | null) =>
-                  date && setFields({ ...fields, dateOfBirth: date })
-                }
-                slotProps={{ textField: { size: 'small', fullWidth: true } }}
+                onErrorChange={setDobError}
+                textFieldProps={{
+                  size: 'small',
+                  fullWidth: true,
+                }}
               />
             </Grid>
             <Grid item xs={12} sm={6}>
@@ -348,10 +352,15 @@ export function AddChildDialog({ onClose }: AddChildDialogProps) {
         </form>
       </DialogContent>
       <DialogActions sx={{ marginBottom: 4 }}>
-        <Button onClick={onClose} color="secondary">
+        <Button onClick={() => onClose(undefined, 'cancel')} color="secondary">
           Cancel
         </Button>
-        <Button onClick={addChild} variant="contained" color="primary">
+        <Button
+          onClick={addChild}
+          variant="contained"
+          color="primary"
+          disabled={!dateOfBirth || dobError}
+        >
           Add to Family
         </Button>
       </DialogActions>

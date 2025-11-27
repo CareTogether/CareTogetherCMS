@@ -1,26 +1,22 @@
 import {
   Stack,
   Typography,
-  Breadcrumbs,
   useTheme,
   useMediaQuery,
-  Link as MuiLink,
   IconButton,
   Button,
 } from '@mui/material';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useLoadable } from '../../Hooks/useLoadable';
 import {
   organizationConfigurationQuery,
   policyData,
 } from '../../Model/ConfigurationModel';
 import { ProgressBackdrop } from '../../Shell/ProgressBackdrop';
-import useScreenTitle from '../../Shell/ShellScreenTitle';
+import { useScreenTitle } from '../../Shell/ShellScreenTitle';
 import { useRecoilValue } from 'recoil';
 import { selectedLocationContextState, useDataLoaded } from '../../Model/Data';
 import { useParams } from 'react-router-dom';
-import { Link } from 'react-router-dom';
-import NavigateNextIcon from '@mui/icons-material/NavigateNext';
 import { Box } from '@mui/system';
 import BasicConfiguration from './Tabs/BasicConfiguration';
 import ActionDefinitions from './Tabs/ActionDefinitions';
@@ -31,15 +27,21 @@ import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import { useFeatureFlagEnabled } from 'posthog-js/react';
 import { useUserIsOrganizationAdministrator } from '../../Model/SessionModel';
 import { useAppNavigate } from '../../Hooks/useAppNavigate';
+import AccessLevels from './Tabs/AccessLevels/AccessLevels';
+import { Breadcrumbs } from '../../Generic/Breadcrumbs';
+import { useSearchParams } from 'react-router-dom';
 
 export function LocationEdit() {
-  const { locationId } = useParams<{ locationId: string }>();
+  const { locationId, editingLocationId } = useParams<{
+    locationId: string;
+    editingLocationId: string;
+  }>();
 
   const configuration = useLoadable(organizationConfigurationQuery);
   const { organizationId } = useRecoilValue(selectedLocationContextState);
 
   const location = configuration?.locations?.find(
-    (location) => location.id === locationId
+    (location) => location.id === editingLocationId
   );
 
   const effectiveLocationPolicy = useRecoilValue(policyData);
@@ -48,9 +50,6 @@ export function LocationEdit() {
   console.log({ effectiveLocationPolicy });
 
   useScreenTitle(`Editing ${location?.name} configuration`);
-
-  const showActionsTab = useFeatureFlagEnabled('actionDefinitionsTab');
-  const showPoliciesTab = useFeatureFlagEnabled('approvalPoliciesTab');
 
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
 
@@ -64,10 +63,59 @@ export function LocationEdit() {
       setIsSidebarCollapsed(false);
     }
   }, [isMobile]);
+  const actionTabEnabled = useFeatureFlagEnabled('actionDefinitionsTab');
+  const approvalTabEnabled = useFeatureFlagEnabled('approvalPoliciesTab');
 
-  const [activeTab, setActiveTab] = useState<'basic' | 'actions' | 'policies'>(
-    'basic'
+  const tabs = useMemo(
+    () => [
+      {
+        id: 'basic' as const,
+        label: 'Basic Configuration',
+        component: BasicConfiguration,
+        shouldShow: true,
+      },
+      {
+        id: 'actions' as const,
+        label: 'Action Definitions',
+        component: ActionDefinitions,
+        shouldShow: actionTabEnabled,
+      },
+      {
+        id: 'approvalPolicies' as const,
+        label: 'Approval Policies',
+        component: ApprovalPolicies,
+        shouldShow: approvalTabEnabled,
+      },
+      {
+        id: 'accessLevels' as const,
+        label: 'Access Levels',
+        component: AccessLevels,
+        shouldShow: true,
+      },
+    ],
+    [actionTabEnabled, approvalTabEnabled]
   );
+
+  // This result in a type like: 'basic' | 'actions' | 'policies'
+  // Depends on `as const` on the tabs const above
+  type LocationTabId = (typeof tabs)[number]['id'];
+
+  // Use the type derived from LOCATION_TABS
+  const [activeTab, setActiveTab] = useState<LocationTabId>('basic');
+
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  const urlTab = searchParams.get('tab');
+
+  useEffect(() => {
+    const match = tabs.find((tab) => tab.id === urlTab);
+    if (!match) {
+      setSearchParams({ tab: 'basic' });
+      return;
+    }
+
+    setActiveTab(urlTab as LocationTabId);
+  }, [urlTab, tabs, setSearchParams]);
 
   const dataLoaded = useDataLoaded();
 
@@ -78,16 +126,16 @@ export function LocationEdit() {
   if (!dataLoaded) {
     return (
       <ProgressBackdrop>
-        <p>Loading location configuration...</p>
+        <p className="ph-unmask">Loading location configuration...</p>
       </ProgressBackdrop>
     );
   }
 
   if (!canEdit || !location) {
     return (
-      <Box mt={10} textAlign="center">
+      <Box className="ph-unmask" mt={10} textAlign="center">
         <Typography>
-          Oops! You can’t edit this Location. It may be restricted or
+          Oops! You can't edit this Location. It may be restricted or
           unavailable.
         </Typography>
         <Button
@@ -101,31 +149,36 @@ export function LocationEdit() {
     );
   }
 
+  // Filter available tabs based on feature flags
+  const availableTabs = tabs.filter((tab) => tab.shouldShow);
+
+  const basicData = {
+    name: location?.name || '',
+    ethnicities: location.ethnicities || [],
+    adultFamilyRelationships: location.adultFamilyRelationships || [],
+    arrangementReasons: location.arrangementReasons || [],
+  };
+
   return (
-    <Stack spacing={0} sx={{ height: '100%', minHeight: '100vh', pt: 2 }}>
+    <Stack
+      className="ph-unmask"
+      spacing={0}
+      sx={{ height: '100%', minHeight: '100vh', pt: 2 }}
+    >
       <Box>
         <Breadcrumbs
-          aria-label="breadcrumb"
-          separator={<NavigateNextIcon fontSize="small" />}
-        >
-          <MuiLink
-            component={Link}
-            to={`/org/${organizationId}/${locationId}/settings`}
-            sx={{ textDecoration: 'none', color: 'text.primary' }}
-          >
-            Settings
-          </MuiLink>
-
-          <MuiLink
-            component={Link}
-            to={`/org/${organizationId}/${locationId}/settings/locations`}
-            sx={{ textDecoration: 'none', color: 'text.primary' }}
-          >
-            Locations
-          </MuiLink>
-
-          <Typography color="text.primary">{location.name}</Typography>
-        </Breadcrumbs>
+          items={[
+            {
+              label: 'Settings',
+              to: `/org/${organizationId}/${locationId}/settings`,
+            },
+            {
+              label: 'Locations',
+              to: `/org/${organizationId}/${locationId}/settings/locations`,
+            },
+          ]}
+          currentPageLabel={location.name || ''}
+        />
       </Box>
 
       <Box display="flex" flex={1} minHeight={0} sx={{ overflow: 'auto' }}>
@@ -154,32 +207,33 @@ export function LocationEdit() {
           {(!isMobile || !isSidebarCollapsed) && (
             <Box sx={{ flex: 1, px: 1 }}>
               <SettingsTabMenu
+                tabs={availableTabs}
                 activeTab={activeTab}
-                onTabChange={setActiveTab}
-                showActionsTab={showActionsTab ?? false}
-                showPoliciesTab={showPoliciesTab ?? false}
+                onTabChange={(tabId) => {
+                  setActiveTab(tabId);
+                  setSearchParams({ tab: tabId });
+                }}
               />
             </Box>
           )}
         </Box>
 
         <Box flex={1} paddingLeft={4} paddingTop={2}>
+          {/* Render the active tab component */}
           {activeTab === 'basic' && (
-            <BasicConfiguration
-              data={{
-                name: location?.name || '',
-                ethnicities: location.ethnicities || [],
-                adultFamilyRelationships:
-                  location.adultFamilyRelationships || [],
-                arrangementReasons: location.arrangementReasons || [],
-              }}
-              currentLocationDefinition={location}
-            />
+            <Box key="basic">
+              <BasicConfiguration
+                data={basicData}
+                currentLocationDefinition={location}
+              />
+            </Box>
           )}
 
-          {activeTab === 'actions' && showActionsTab && <ActionDefinitions />}
-
-          {activeTab === 'policies' && showPoliciesTab && <ApprovalPolicies />}
+          {activeTab === 'accessLevels' && (
+            <Box key="accessLevels">
+              <AccessLevels locationConfiguration={location} />
+            </Box>
+          )}
         </Box>
       </Box>
     </Stack>

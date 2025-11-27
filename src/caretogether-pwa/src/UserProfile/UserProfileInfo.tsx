@@ -1,4 +1,4 @@
-import useScreenTitle from '../Shell/ShellScreenTitle';
+import { useScreenTitle } from '../Shell/ShellScreenTitle';
 
 function UserProfileInfo() {
   //TODO: Get account info

@@ -10,13 +10,15 @@ import {
 import {
   AllPartneringFamiliesPermissionContext,
   AllVolunteerFamiliesPermissionContext,
-  AssignedFunctionsInReferralCoAssigneeFamiliesPermissionContext,
-  AssignedFunctionsInReferralPartneringFamilyPermissionContext,
+  AssignedFunctionsInReferralCoAssigneeFamiliesPermissionContext as AssignedFunctionsInV1CaseCoAssigneeFamiliesPermissionContext,
+  AssignedFunctionsInReferralPartneringFamilyPermissionContext as AssignedFunctionsInV1CasePartneringFamilyPermissionContext,
+  CommunityCoMemberFamiliesAssignedFunctionsInReferralCoAssignedFamiliesPermissionContext as CommunityCoMemberFamiliesAssignedFunctionsInV1CaseCoAssignedFamiliesPermissionContext,
+  CommunityCoMemberFamiliesAssignedFunctionsInReferralPartneringFamilyPermissionContext as CommunityCoMemberFamiliesAssignedFunctionsInV1CasePartneringFamilyPermissionContext,
   CommunityCoMemberFamiliesPermissionContext,
   CommunityMemberPermissionContext,
   GlobalPermissionContext,
   OwnFamilyPermissionContext,
-  OwnReferralAssigneeFamiliesPermissionContext,
+  OwnReferralAssigneeFamiliesPermissionContext as OwnV1CaseAssigneeFamiliesPermissionContext,
   PermissionContext,
 } from '../../GeneratedClient';
 import { useLoadable } from '../../Hooks/useLoadable';
@@ -31,14 +33,14 @@ interface ContextSelectorProps<T extends PermissionContext> {
   onUpdate: (newValue: PermissionContext) => void;
 }
 
-function ReferralOpenSelector({
+function V1CaseOpenSelector({
   context,
   factory,
   onUpdate,
 }: ContextSelectorProps<
-  | AssignedFunctionsInReferralPartneringFamilyPermissionContext
-  | AssignedFunctionsInReferralCoAssigneeFamiliesPermissionContext
-  | OwnReferralAssigneeFamiliesPermissionContext
+  | AssignedFunctionsInV1CasePartneringFamilyPermissionContext
+  | AssignedFunctionsInV1CaseCoAssigneeFamiliesPermissionContext
+  | OwnV1CaseAssigneeFamiliesPermissionContext
 >) {
   const hasValue =
     typeof context.whenReferralIsOpen !== 'undefined' &&
@@ -60,9 +62,7 @@ function ReferralOpenSelector({
             }}
           />
         }
-        label={
-          hasValue ? 'Only matching referral status:' : 'Any referral status'
-        }
+        label={hasValue ? 'Only matching Case status:' : 'Any Case status'}
       />
       {hasValue && (
         <FormControlLabel
@@ -79,9 +79,7 @@ function ReferralOpenSelector({
               }}
             />
           }
-          label={
-            context.whenReferralIsOpen ? 'Open referral' : 'Closed referral'
-          }
+          label={context.whenReferralIsOpen ? 'Open Case' : 'Closed Case'}
           sx={{ marginLeft: 3 }}
         />
       )}
@@ -94,8 +92,8 @@ function OwnFunctionSelector({
   factory,
   onUpdate,
 }: ContextSelectorProps<
-  | AssignedFunctionsInReferralPartneringFamilyPermissionContext
-  | AssignedFunctionsInReferralCoAssigneeFamiliesPermissionContext
+  | AssignedFunctionsInV1CasePartneringFamilyPermissionContext
+  | AssignedFunctionsInV1CaseCoAssigneeFamiliesPermissionContext
 >) {
   const allFunctionsInPolicy = useLoadable(allFunctionsInPolicyQuery);
   const hasValue =
@@ -168,8 +166,8 @@ function AssigneeFunctionSelector({
   factory,
   onUpdate,
 }: ContextSelectorProps<
-  | AssignedFunctionsInReferralCoAssigneeFamiliesPermissionContext
-  | OwnReferralAssigneeFamiliesPermissionContext
+  | AssignedFunctionsInV1CaseCoAssigneeFamiliesPermissionContext
+  | OwnV1CaseAssigneeFamiliesPermissionContext
 >) {
   const allFunctionsInPolicy = useLoadable(allFunctionsInPolicyQuery);
   const hasValue =
@@ -330,46 +328,50 @@ export function PermissionContextCell({
           : context instanceof AllPartneringFamiliesPermissionContext
             ? 'All Partnering Families'
             : context instanceof
-                AssignedFunctionsInReferralPartneringFamilyPermissionContext
-              ? 'Assigned Functions in Referral - Partnering Family'
+                AssignedFunctionsInV1CasePartneringFamilyPermissionContext
+              ? 'Assigned Functions in Case - Partnering Family'
               : context instanceof
-                  AssignedFunctionsInReferralCoAssigneeFamiliesPermissionContext
-                ? 'Assigned Functions in Referral - Co-Assigned Families'
-                : context instanceof
-                    OwnReferralAssigneeFamiliesPermissionContext
-                  ? 'Own Referral - Assigned Families'
+                  AssignedFunctionsInV1CaseCoAssigneeFamiliesPermissionContext
+                ? 'Assigned Functions in Case - Co-Assigned Families'
+                : context instanceof OwnV1CaseAssigneeFamiliesPermissionContext
+                  ? 'Own Case - Assigned Families'
                   : context instanceof CommunityMemberPermissionContext
                     ? 'Community Member - Community'
                     : context instanceof
                         CommunityCoMemberFamiliesPermissionContext
                       ? 'Community Member - Co-Member Families'
-                      : JSON.stringify(context);
+                      : context instanceof
+                          CommunityCoMemberFamiliesAssignedFunctionsInV1CasePartneringFamilyPermissionContext
+                        ? 'Community Member - Co-Member Families - Assigned Functions in Case - Partnering Family'
+                        : CommunityCoMemberFamiliesAssignedFunctionsInV1CaseCoAssignedFamiliesPermissionContext
+                          ? 'Community Member - Co-Member Families - Assigned Functions in Case - Co-Assigned Families'
+                          : JSON.stringify(context);
 
-  function assignedFunctionsInReferralPartneringFamilyPermissionContextFactory(
-    context: AssignedFunctionsInReferralPartneringFamilyPermissionContext
+  function assignedFunctionsInV1CasePartneringFamilyPermissionContextFactory(
+    context: AssignedFunctionsInV1CasePartneringFamilyPermissionContext
   ) {
     const result =
-      new AssignedFunctionsInReferralPartneringFamilyPermissionContext();
+      new AssignedFunctionsInV1CasePartneringFamilyPermissionContext();
     result.whenReferralIsOpen = context.whenReferralIsOpen;
     result.whenOwnFunctionIsIn = context.whenOwnFunctionIsIn?.slice();
     return result;
   }
 
-  function assignedFunctionsInReferralCoAssigneeFamiliesPermissionContextFactory(
-    context: AssignedFunctionsInReferralCoAssigneeFamiliesPermissionContext
+  function assignedFunctionsInV1CaseCoAssigneeFamiliesPermissionContextFactory(
+    context: AssignedFunctionsInV1CaseCoAssigneeFamiliesPermissionContext
   ) {
     const result =
-      new AssignedFunctionsInReferralCoAssigneeFamiliesPermissionContext();
+      new AssignedFunctionsInV1CaseCoAssigneeFamiliesPermissionContext();
     result.whenReferralIsOpen = context.whenReferralIsOpen;
     result.whenOwnFunctionIsIn = context.whenOwnFunctionIsIn?.slice();
     result.whenAssigneeFunctionIsIn = context.whenAssigneeFunctionIsIn?.slice();
     return result;
   }
 
-  function ownReferralAssigneeFamiliesPermissionContextFactory(
-    context: OwnReferralAssigneeFamiliesPermissionContext
+  function ownV1CaseAssigneeFamiliesPermissionContextFactory(
+    context: OwnV1CaseAssigneeFamiliesPermissionContext
   ) {
-    const result = new OwnReferralAssigneeFamiliesPermissionContext();
+    const result = new OwnV1CaseAssigneeFamiliesPermissionContext();
     result.whenReferralIsOpen = context.whenReferralIsOpen;
     result.whenAssigneeFunctionIsIn = context.whenAssigneeFunctionIsIn?.slice();
     return result;
@@ -391,18 +393,36 @@ export function PermissionContextCell({
     return result;
   }
 
+  function communityCoMemberFamiliesAssignedFunctionsInV1CasePartneringFamilyPermissionContextFactory(
+    context: CommunityCoMemberFamiliesAssignedFunctionsInV1CasePartneringFamilyPermissionContext
+  ) {
+    const result =
+      new CommunityCoMemberFamiliesAssignedFunctionsInV1CasePartneringFamilyPermissionContext();
+    result.whenOwnCommunityRoleIsIn = context.whenOwnCommunityRoleIsIn?.slice();
+    return result;
+  }
+
+  function communityCoMemberFamiliesAssignedFunctionsInV1CaseCoAssignedFamiliesPermissionContext(
+    context: CommunityCoMemberFamiliesAssignedFunctionsInV1CaseCoAssignedFamiliesPermissionContext
+  ) {
+    const result =
+      new CommunityCoMemberFamiliesAssignedFunctionsInV1CaseCoAssignedFamiliesPermissionContext();
+    result.whenOwnCommunityRoleIsIn = context.whenOwnCommunityRoleIsIn?.slice();
+    return result;
+  }
+
   return (
     <Stack>
       <Typography variant="h6">{contextLabel}</Typography>
       <Stack dir="row">
         {context instanceof
-          AssignedFunctionsInReferralPartneringFamilyPermissionContext && (
+          AssignedFunctionsInV1CasePartneringFamilyPermissionContext && (
           <>
-            <ReferralOpenSelector
+            <V1CaseOpenSelector
               context={context}
               onUpdate={onUpdate}
               factory={() =>
-                assignedFunctionsInReferralPartneringFamilyPermissionContextFactory(
+                assignedFunctionsInV1CasePartneringFamilyPermissionContextFactory(
                   context
                 )
               }
@@ -411,7 +431,7 @@ export function PermissionContextCell({
               context={context}
               onUpdate={onUpdate}
               factory={() =>
-                assignedFunctionsInReferralPartneringFamilyPermissionContextFactory(
+                assignedFunctionsInV1CasePartneringFamilyPermissionContextFactory(
                   context
                 )
               }
@@ -419,13 +439,13 @@ export function PermissionContextCell({
           </>
         )}
         {context instanceof
-          AssignedFunctionsInReferralCoAssigneeFamiliesPermissionContext && (
+          AssignedFunctionsInV1CaseCoAssigneeFamiliesPermissionContext && (
           <>
-            <ReferralOpenSelector
+            <V1CaseOpenSelector
               context={context}
               onUpdate={onUpdate}
               factory={() =>
-                assignedFunctionsInReferralCoAssigneeFamiliesPermissionContextFactory(
+                assignedFunctionsInV1CaseCoAssigneeFamiliesPermissionContextFactory(
                   context
                 )
               }
@@ -434,7 +454,7 @@ export function PermissionContextCell({
               context={context}
               onUpdate={onUpdate}
               factory={() =>
-                assignedFunctionsInReferralCoAssigneeFamiliesPermissionContextFactory(
+                assignedFunctionsInV1CaseCoAssigneeFamiliesPermissionContextFactory(
                   context
                 )
               }
@@ -443,27 +463,27 @@ export function PermissionContextCell({
               context={context}
               onUpdate={onUpdate}
               factory={() =>
-                assignedFunctionsInReferralCoAssigneeFamiliesPermissionContextFactory(
+                assignedFunctionsInV1CaseCoAssigneeFamiliesPermissionContextFactory(
                   context
                 )
               }
             />
           </>
         )}
-        {context instanceof OwnReferralAssigneeFamiliesPermissionContext && (
+        {context instanceof OwnV1CaseAssigneeFamiliesPermissionContext && (
           <>
-            <ReferralOpenSelector
+            <V1CaseOpenSelector
               context={context}
               onUpdate={onUpdate}
               factory={() =>
-                ownReferralAssigneeFamiliesPermissionContextFactory(context)
+                ownV1CaseAssigneeFamiliesPermissionContextFactory(context)
               }
             />
             <AssigneeFunctionSelector
               context={context}
               onUpdate={onUpdate}
               factory={() =>
-                ownReferralAssigneeFamiliesPermissionContextFactory(context)
+                ownV1CaseAssigneeFamiliesPermissionContextFactory(context)
               }
             />
           </>
@@ -484,6 +504,34 @@ export function PermissionContextCell({
               onUpdate={onUpdate}
               factory={() =>
                 communityCoMemberFamiliesPermissionContextFactory(context)
+              }
+            />
+          </>
+        )}
+        {context instanceof
+          CommunityCoMemberFamiliesAssignedFunctionsInV1CasePartneringFamilyPermissionContext && (
+          <>
+            <OwnCommunityRoleSelector
+              context={context}
+              onUpdate={onUpdate}
+              factory={() =>
+                communityCoMemberFamiliesAssignedFunctionsInV1CasePartneringFamilyPermissionContextFactory(
+                  context
+                )
+              }
+            />
+          </>
+        )}
+        {context instanceof
+          CommunityCoMemberFamiliesAssignedFunctionsInV1CaseCoAssignedFamiliesPermissionContext && (
+          <>
+            <OwnCommunityRoleSelector
+              context={context}
+              onUpdate={onUpdate}
+              factory={() =>
+                communityCoMemberFamiliesAssignedFunctionsInV1CaseCoAssignedFamiliesPermissionContext(
+                  context
+                )
               }
             />
           </>

@@ -23,6 +23,7 @@ import {
 } from '../GeneratedClient';
 import { useAtomicRecordsCommandCallback } from './DirectoryModel';
 import { visibleFamiliesQuery } from './Data';
+import { commandFactory } from './CommandFactory';
 
 export const volunteerFamiliesData = selector({
   key: 'volunteerFamiliesData',
@@ -63,14 +64,14 @@ export function useVolunteersModel() {
         documentId: string | null,
         noteId: string | null
       ) => {
-        const command = new CompleteVolunteerFamilyRequirement({
+        const command = commandFactory(CompleteVolunteerFamilyRequirement, {
           familyId: volunteerFamilyId,
+          completedRequirementId: crypto.randomUUID(),
+          requirementName: requirementName,
+          completedAtUtc: completedAtLocal,
+          uploadedDocumentId: documentId ?? undefined,
+          noteId: noteId ?? undefined,
         });
-        command.completedRequirementId = crypto.randomUUID();
-        command.requirementName = requirementName;
-        command.completedAtUtc = completedAtLocal;
-        if (documentId != null) command.uploadedDocumentId = documentId;
-        if (noteId != null) command.noteId = noteId;
         return command;
       }
     );
@@ -80,12 +81,14 @@ export function useVolunteersModel() {
         volunteerFamilyId,
         completedRequirement: CompletedRequirementInfo
       ) => {
-        const command = new MarkVolunteerFamilyRequirementIncomplete({
-          familyId: volunteerFamilyId,
-        });
-        command.requirementName = completedRequirement.requirementName;
-        command.completedRequirementId =
-          completedRequirement.completedRequirementId;
+        const command = commandFactory(
+          MarkVolunteerFamilyRequirementIncomplete,
+          {
+            familyId: volunteerFamilyId,
+            requirementName: completedRequirement.requirementName,
+            completedRequirementId: completedRequirement.completedRequirementId,
+          }
+        );
         return command;
       }
     );
@@ -97,12 +100,12 @@ export function useVolunteersModel() {
         additionalComments: string,
         exemptionExpiresAtLocal: Date | null
       ) => {
-        const command = new ExemptVolunteerFamilyRequirement({
+        const command = commandFactory(ExemptVolunteerFamilyRequirement, {
           familyId: volunteerFamilyId,
+          requirementName: requirementName,
+          additionalComments: additionalComments,
+          exemptionExpiresAtUtc: exemptionExpiresAtLocal ?? undefined,
         });
-        command.requirementName = requirementName;
-        command.additionalComments = additionalComments;
-        command.exemptionExpiresAtUtc = exemptionExpiresAtLocal ?? undefined;
         return command;
       }
     );
@@ -112,10 +115,10 @@ export function useVolunteersModel() {
         volunteerFamilyId,
         exemptedRequirement: ExemptedRequirementInfo
       ) => {
-        const command = new UnexemptVolunteerFamilyRequirement({
+        const command = commandFactory(UnexemptVolunteerFamilyRequirement, {
           familyId: volunteerFamilyId,
+          requirementName: exemptedRequirement.requirementName,
         });
-        command.requirementName = exemptedRequirement.requirementName;
         return command;
       }
     );
@@ -128,14 +131,14 @@ export function useVolunteersModel() {
       effectiveSince: Date | null,
       effectiveThrough: Date | null
     ) => {
-      const command = new RemoveVolunteerFamilyRole({
+      const command = commandFactory(RemoveVolunteerFamilyRole, {
         familyId: volunteerFamilyId,
+        roleName: role,
+        reason: reason,
+        additionalComments: additionalComments,
+        effectiveSince: effectiveSince ?? undefined,
+        effectiveThrough: effectiveThrough ?? undefined,
       });
-      command.roleName = role;
-      command.reason = reason;
-      command.additionalComments = additionalComments;
-      command.effectiveSince = effectiveSince ?? undefined;
-      command.effectiveThrough = effectiveThrough ?? undefined;
       return command;
     }
   );
@@ -146,12 +149,12 @@ export function useVolunteersModel() {
       forRemovalEffectiveSince: Date | null,
       effectiveThrough: Date | null
     ) => {
-      const command = new ResetVolunteerFamilyRole({
+      const command = commandFactory(ResetVolunteerFamilyRole, {
         familyId: volunteerFamilyId,
+        roleName: role,
+        forRemovalEffectiveSince: forRemovalEffectiveSince ?? undefined,
+        effectiveThrough: effectiveThrough ?? undefined,
       });
-      command.roleName = role;
-      command.forRemovalEffectiveSince = forRemovalEffectiveSince ?? undefined;
-      command.effectiveThrough = effectiveThrough ?? undefined;
       return command;
     }
   );
@@ -165,15 +168,15 @@ export function useVolunteersModel() {
       documentId: string | null,
       noteId: string | null
     ) => {
-      const command = new CompleteVolunteerRequirement({
+      const command = commandFactory(CompleteVolunteerRequirement, {
         familyId: volunteerFamilyId,
         personId: personId,
+        completedRequirementId: crypto.randomUUID(),
+        requirementName: requirementName,
+        completedAtUtc: completedAtLocal,
+        uploadedDocumentId: documentId ?? undefined,
+        noteId: noteId ?? undefined,
       });
-      command.completedRequirementId = crypto.randomUUID();
-      command.requirementName = requirementName;
-      command.completedAtUtc = completedAtLocal;
-      if (documentId != null) command.uploadedDocumentId = documentId;
-      if (noteId != null) command.noteId = noteId;
       return command;
     }
   );
@@ -184,13 +187,12 @@ export function useVolunteersModel() {
         personId: string,
         completedRequirement: CompletedRequirementInfo
       ) => {
-        const command = new MarkVolunteerRequirementIncomplete({
+        const command = commandFactory(MarkVolunteerRequirementIncomplete, {
           familyId: volunteerFamilyId,
           personId: personId,
+          requirementName: completedRequirement.requirementName,
+          completedRequirementId: completedRequirement.completedRequirementId,
         });
-        command.requirementName = completedRequirement.requirementName;
-        command.completedRequirementId =
-          completedRequirement.completedRequirementId;
         return command;
       }
     );
@@ -202,13 +204,13 @@ export function useVolunteersModel() {
       additionalComments: string,
       exemptionExpiresAtLocal: Date | null
     ) => {
-      const command = new ExemptVolunteerRequirement({
+      const command = commandFactory(ExemptVolunteerRequirement, {
         familyId: volunteerFamilyId,
         personId: personId,
+        requirementName: requirementName,
+        additionalComments: additionalComments,
+        exemptionExpiresAtUtc: exemptionExpiresAtLocal ?? undefined,
       });
-      command.requirementName = requirementName;
-      command.additionalComments = additionalComments;
-      command.exemptionExpiresAtUtc = exemptionExpiresAtLocal ?? undefined;
       return command;
     }
   );
@@ -218,11 +220,11 @@ export function useVolunteersModel() {
       personId: string,
       exemptedRequirement: ExemptedRequirementInfo
     ) => {
-      const command = new UnexemptVolunteerRequirement({
+      const command = commandFactory(UnexemptVolunteerRequirement, {
         familyId: volunteerFamilyId,
         personId: personId,
+        requirementName: exemptedRequirement.requirementName,
       });
-      command.requirementName = exemptedRequirement.requirementName;
       return command;
     }
   );
@@ -236,15 +238,15 @@ export function useVolunteersModel() {
       effectiveSince: Date | null,
       effectiveThrough: Date | null
     ) => {
-      const command = new RemoveVolunteerRole({
+      const command = commandFactory(RemoveVolunteerRole, {
         familyId: volunteerFamilyId,
         personId: personId,
+        roleName: role,
+        reason: reason,
+        additionalComments: additionalComments,
+        effectiveSince: effectiveSince ?? undefined,
+        effectiveThrough: effectiveThrough ?? undefined,
       });
-      command.roleName = role;
-      command.reason = reason;
-      command.additionalComments = additionalComments;
-      command.effectiveSince = effectiveSince ?? undefined;
-      command.effectiveThrough = effectiveThrough ?? undefined;
       return command;
     }
   );
@@ -256,13 +258,13 @@ export function useVolunteersModel() {
       forRemovalEffectiveSince: Date | null,
       effectiveThrough: Date | null
     ) => {
-      const command = new ResetVolunteerRole({
+      const command = commandFactory(ResetVolunteerRole, {
         familyId: volunteerFamilyId,
         personId: personId,
+        roleName: role,
+        forRemovalEffectiveSince: forRemovalEffectiveSince ?? undefined,
+        effectiveThrough: effectiveThrough ?? undefined,
       });
-      command.roleName = role;
-      command.forRemovalEffectiveSince = forRemovalEffectiveSince ?? undefined;
-      command.effectiveThrough = effectiveThrough ?? undefined;
       return command;
     }
   );

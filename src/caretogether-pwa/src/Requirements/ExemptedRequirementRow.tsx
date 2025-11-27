@@ -28,7 +28,7 @@ export function ExemptedRequirementRow({
 }: ExemptedRequirementRowProps) {
   const userLookup = useUserLookup();
   const permissions = useFamilyIdPermissions(
-    context.kind === 'Referral' ||
+    context.kind === 'V1Case' ||
       context.kind === 'Arrangement' ||
       context.kind === 'Family Volunteer Assignment' ||
       context.kind === 'Individual Volunteer Assignment'
@@ -39,8 +39,8 @@ export function ExemptedRequirementRow({
   const dialogHandle = useDialogHandle();
 
   const canExempt =
-    context.kind === 'Referral'
-      ? permissions(Permission.EditReferralRequirementExemption)
+    context.kind === 'V1Case'
+      ? permissions(Permission.EditV1CaseRequirementExemption)
       : context.kind === 'Arrangement' ||
           context.kind === 'Family Volunteer Assignment' ||
           context.kind === 'Individual Volunteer Assignment'
@@ -52,32 +52,32 @@ export function ExemptedRequirementRow({
 
   const policy = useRecoilValue(policyData);
 
-  const [partneringFamilyId, referralId, arrangementId] =
+  const [partneringFamilyId, v1CaseId, arrangementId] =
     context.kind === 'Arrangement' ||
     context.kind === 'Family Volunteer Assignment' ||
     context.kind === 'Individual Volunteer Assignment'
-      ? [context.partneringFamilyId, context.referralId, context.arrangementId]
+      ? [context.partneringFamilyId, context.v1CaseId, context.arrangementId]
       : [undefined, undefined, undefined];
   const partneringFamilyInfo =
     familyLookup(partneringFamilyId)?.partneringFamilyInfo;
-  const referral = partneringFamilyInfo?.closedReferrals
-    ?.concat(partneringFamilyInfo.openReferral || [])
-    .find((r) => r.id === referralId);
-  const arrangement = referral?.arrangements?.find(
-    (a) => a.id === arrangementId
-  );
+  const v1Case = partneringFamilyInfo?.closedV1Cases
+    ?.concat(partneringFamilyInfo.openV1Case || [])
+    .find((r) => r.id === v1CaseId);
+  const arrangement = v1Case?.arrangements?.find((a) => a.id === arrangementId);
   const arrangementPolicy = policy.referralPolicy?.arrangementPolicies?.find(
     (a) => a.arrangementType === arrangement?.arrangementType
   );
   const allMonitoringRequirements =
-    arrangementPolicy?.requiredMonitoringActions?.concat(
+    arrangementPolicy?.requiredMonitoringActions_PRE_MIGRATION?.concat(
       arrangementPolicy.arrangementFunctions?.flatMap(
         (f) =>
-          f.variants?.flatMap((v) => v.requiredMonitoringActions || []) || []
+          f.variants?.flatMap(
+            (v) => v.requiredMonitoringActions_PRE_MIGRATION || []
+          ) || []
       ) || []
     );
   const isArrangementMonitoringRequirement = allMonitoringRequirements?.some(
-    (r) => r.actionName === requirement.requirementName
+    (r) => r.action?.actionName === requirement.requirementName
   );
 
   return (

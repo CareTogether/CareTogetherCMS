@@ -7,7 +7,7 @@ import {
   useFamilyLookup,
 } from '../Model/DirectoryModel';
 import { useLoadable } from '../Hooks/useLoadable';
-import { partneringFamiliesData } from '../Model/ReferralsModel';
+import { partneringFamiliesData } from '../Model/V1CasesModel';
 import { useAppNavigate } from '../Hooks/useAppNavigate';
 import { format } from 'date-fns';
 import { FamilyName } from './FamilyName';
@@ -17,22 +17,22 @@ interface AssignmentCardProps {
 }
 
 function allArrangements(partneringFamilyInfo: PartneringFamilyInfo) {
-  const closedReferralArrangements =
-    partneringFamilyInfo.closedReferrals?.flatMap(
-      (referral) =>
-        referral.arrangements?.map((arrangement) => ({
-          referralId: referral.id!,
+  const closedV1CaseArrangements =
+    partneringFamilyInfo.closedV1Cases?.flatMap(
+      (v1Case) =>
+        v1Case.arrangements?.map((arrangement) => ({
+          referralId: v1Case.id!,
           arrangement,
         })) ?? []
     ) ?? [];
 
-  const openReferralArrangements =
-    partneringFamilyInfo.openReferral?.arrangements?.map((arrangement) => ({
-      referralId: partneringFamilyInfo.openReferral!.id!,
+  const openV1CaseArrangements =
+    partneringFamilyInfo.openV1Case?.arrangements?.map((arrangement) => ({
+      referralId: partneringFamilyInfo.openV1Case!.id!,
       arrangement,
     })) ?? [];
 
-  return [...closedReferralArrangements, ...openReferralArrangements];
+  return [...closedV1CaseArrangements, ...openV1CaseArrangements];
 }
 
 export function AssignmentCard({ assignment }: AssignmentCardProps) {

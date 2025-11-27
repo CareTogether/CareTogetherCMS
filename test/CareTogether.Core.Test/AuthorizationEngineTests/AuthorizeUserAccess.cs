@@ -11,7 +11,7 @@ using CareTogether.Resources.Directory;
 using CareTogether.Resources.Goals;
 using CareTogether.Resources.Notes;
 using CareTogether.Resources.Policies;
-using CareTogether.Resources.Referrals;
+using CareTogether.Resources.V1Cases;
 using CareTogether.TestData;
 using CareTogether.Utilities.FileStore;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -59,7 +59,7 @@ namespace CareTogether.Core.Test.AuthorizationEngineTests
             var personAccessEventLog = new MemoryEventLog<PersonAccessEvent>();
             var directoryEventLog = new MemoryEventLog<DirectoryEvent>();
             var goalsEventLog = new MemoryEventLog<GoalCommandExecutedEvent>();
-            var referralsEventLog = new MemoryEventLog<ReferralEvent>();
+            var v1CasesEventLog = new MemoryEventLog<V1CaseEvent>();
             var approvalsEventLog = new MemoryEventLog<ApprovalEvent>();
             var notesEventLog = new MemoryEventLog<NotesEvent>();
             var communitiesEventLog = new MemoryEventLog<CommunityCommandExecutedEvent>();
@@ -73,7 +73,7 @@ namespace CareTogether.Core.Test.AuthorizationEngineTests
                 personAccessEventLog,
                 directoryEventLog,
                 goalsEventLog,
-                referralsEventLog,
+                v1CasesEventLog,
                 approvalsEventLog,
                 notesEventLog,
                 communitiesEventLog,
@@ -91,7 +91,7 @@ namespace CareTogether.Core.Test.AuthorizationEngineTests
                 organizationSecretsStore,
                 personAccessEventLog
             );
-            var referralsResource = new ReferralsResource(referralsEventLog);
+            var v1CasesResource = new V1CasesResource(v1CasesEventLog);
             var approvalsResource = new ApprovalsResource(approvalsEventLog);
             var communitiesResource = new CommunitiesResource(
                 communitiesEventLog,
@@ -101,7 +101,7 @@ namespace CareTogether.Core.Test.AuthorizationEngineTests
             userAccessCalculation = new UserAccessCalculation(
                 policiesResource,
                 directoryResource,
-                referralsResource,
+                v1CasesResource,
                 approvalsResource,
                 communitiesResource
             );
@@ -200,15 +200,15 @@ namespace CareTogether.Core.Test.AuthorizationEngineTests
         [DataRow('1', 3, 6, 3, 3, 3, 3, 3, 3)]
         [DataRow('2', 3, 6, 3, 3, 3, 3, 3, 3)]
         [DataRow('3', 3, 6, 3, 3, 3, 3, 3, 3)]
-        [DataRow('4', 3, 11, 4, 5, 7, 5, 5, 3)]
-        [DataRow('5', 3, 11, 6, 4, 4, 3, 3, 3)]
-        [DataRow('6', 3, 11, 6, 4, 4, 3, 3, 3)]
-        [DataRow('7', 3, 11, 6, 4, 4, 3, 3, 3)]
-        [DataRow('8', 3, 3, 4, 9, 8, 8, 5, 3)]
-        [DataRow('9', 3, 3, 4, 7, 5, 5, 4, 3)]
-        [DataRow('a', 3, 11, 6, 4, 4, 3, 3, 3)]
-        [DataRow('b', 3, 3, 3, 5, 5, 7, 4, 3)]
-        [DataRow('c', 3, 3, 3, 5, 5, 7, 4, 3)]
+        [DataRow('4', 11, 12, 12, 13, 15, 5, 5, 3)]
+        [DataRow('5', 3, 12, 6, 4, 4, 3, 3, 3)]
+        [DataRow('6', 3, 12, 6, 4, 4, 3, 3, 3)]
+        [DataRow('7', 3, 12, 6, 4, 4, 3, 3, 3)]
+        [DataRow('8', 11, 11, 12, 17, 16, 8, 5, 3)]
+        [DataRow('9', 11, 11, 12, 15, 13, 5, 4, 3)]
+        [DataRow('a', 3, 12, 6, 4, 4, 3, 3, 3)]
+        [DataRow('b', 11, 11, 11, 13, 13, 7, 4, 3)]
+        [DataRow('c', 11, 11, 11, 13, 13, 7, 4, 3)]
         [DataRow('d', 3, 3, 3, 3, 3, 3, 3, 3)]
         [DataRow('e', 3, 3, 3, 3, 3, 3, 3, 3)]
         [DataRow('f', 3, 3, 3, 3, 3, 3, 3, 3)]

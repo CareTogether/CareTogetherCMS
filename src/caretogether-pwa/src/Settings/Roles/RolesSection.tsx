@@ -18,11 +18,10 @@ import { AddRole } from './AddRole';
 import { useSidePanel } from '../../Hooks/useSidePanel';
 import { DeleteRoleButton } from './DeleteRoleButton';
 import { isRoleEditable } from './isRoleEditable';
-import { Breadcrumbs, Link as MuiLink } from '@mui/material';
-import { NavigateNext as NavigateNextIcon } from '@mui/icons-material';
 import { useRecoilValue } from 'recoil';
 import { selectedLocationContextState } from '../../Model/Data';
-import { Link } from 'react-router-dom';
+import { camelCaseToSpaces } from '../../Utilities/stringUtils';
+import { Breadcrumbs } from '../../Generic/Breadcrumbs';
 
 export function RolesSection() {
   const configuration = useLoadable(organizationConfigurationQuery);
@@ -47,20 +46,15 @@ export function RolesSection() {
   return (
     <>
       <Breadcrumbs
-        aria-label="breadcrumb"
-        separator={<NavigateNextIcon fontSize="small" />}
+        items={[
+          {
+            label: 'Settings',
+            to: `/org/${organizationId}/${locationId}/settings`,
+          },
+        ]}
+        currentPageLabel="Roles"
         sx={{ mb: 2 }}
-      >
-        <MuiLink
-          component={Link}
-          to={`/org/${organizationId}/${locationId}/settings`}
-          sx={{ textDecoration: 'none', color: 'text.primary' }}
-        >
-          Settings
-        </MuiLink>
-
-        <Typography color="text.primary">Roles</Typography>
-      </Breadcrumbs>
+      />
 
       <Typography variant="h2">Roles</Typography>
 
@@ -95,7 +89,7 @@ export function RolesSection() {
                   onClick={() => appNavigate.role(role.roleName!)}
                 >
                   <TableCell align="left" sx={{ minWidth: 200 }}>
-                    {role.roleName}
+                    {camelCaseToSpaces(role.roleName!)}
                   </TableCell>
 
                   <TableCell

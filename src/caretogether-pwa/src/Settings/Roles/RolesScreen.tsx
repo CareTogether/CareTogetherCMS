@@ -1,5 +1,5 @@
 import { ProgressBackdrop } from '../../Shell/ProgressBackdrop';
-import useScreenTitle from '../../Shell/ShellScreenTitle';
+import { useScreenTitle } from '../../Shell/ShellScreenTitle';
 import { useDataLoaded } from '../../Model/Data';
 import { Box } from '@mui/system';
 import { RolesSection } from './RolesSection';
@@ -10,10 +10,10 @@ export function RolesScreen() {
   const dataLoaded = useDataLoaded();
   return !dataLoaded ? (
     <ProgressBackdrop>
-      <p>Loading roles...</p>
+      <p className="ph-unmask">Loading roles...</p>
     </ProgressBackdrop>
   ) : (
-    <Box sx={{ paddingTop: 2 }}>
+    <Box className="ph-unmask" sx={{ paddingTop: 2 }}>
       <RolesSection />
     </Box>
   );

@@ -51,6 +51,8 @@ import {
   CommunityRecordsCommand,
   ConvertChildToAdult,
   UndoCreateFamily,
+  UpdateNoteAccessLevel,
+  UpdateTestFamilyFlag,
 } from '../GeneratedClient';
 import { api } from '../Api/Api';
 import {
@@ -59,6 +61,7 @@ import {
   visibleCommunitiesQuery,
   visibleFamiliesQuery,
 } from './Data';
+import { commandFactory } from './CommandFactory';
 
 export function usePersonLookup() {
   const visibleFamilies = useRecoilValue(visibleFamiliesQuery);
@@ -263,27 +266,28 @@ export function useCommunityCommand<
 
 export function useDirectoryModel() {
   const undoCreateFamily = useFamilyCommandCallback(async (familyId) => {
-    const command = new UndoCreateFamily({
+    const command = commandFactory(UndoCreateFamily, {
       familyId: familyId,
     });
     return command;
   });
   const uploadFamilyDocument = useFamilyCommandCallback(
     async (familyId, uploadedDocumentId: string, uploadedFileName: string) => {
-      const command = new UploadFamilyDocument({
+      const command = commandFactory(UploadFamilyDocument, {
         familyId: familyId,
+        uploadedDocumentId: uploadedDocumentId,
+        uploadedFileName: uploadedFileName,
       });
-      command.uploadedDocumentId = uploadedDocumentId;
-      command.uploadedFileName = uploadedFileName;
+
       return command;
     }
   );
   const deleteUploadedFamilyDocument = useFamilyCommandCallback(
     async (familyId, uploadedDocumentId: string) => {
-      const command = new DeleteUploadedFamilyDocument({
+      const command = commandFactory(DeleteUploadedFamilyDocument, {
         familyId: familyId,
+        uploadedDocumentId: uploadedDocumentId,
       });
-      command.uploadedDocumentId = uploadedDocumentId;
       return command;
     }
   );
@@ -293,11 +297,11 @@ export function useDirectoryModel() {
       personId: string,
       newRelationship: FamilyAdultRelationshipInfo
     ) => {
-      const command = new ConvertChildToAdult({
+      const command = commandFactory(ConvertChildToAdult, {
         familyId: familyId,
+        personId: personId,
+        newRelationshipToFamily: newRelationship,
       });
-      command.personId = personId;
-      command.newRelationshipToFamily = newRelationship;
       return command;
     }
   );
@@ -307,11 +311,11 @@ export function useDirectoryModel() {
       adultPersonId: string,
       relationship: FamilyAdultRelationshipInfo
     ) => {
-      const command = new UpdateAdultRelationshipToFamily({
+      const command = commandFactory(UpdateAdultRelationshipToFamily, {
         familyId: familyId,
+        adultPersonId: adultPersonId,
+        relationshipToFamily: relationship,
       });
-      command.adultPersonId = adultPersonId;
-      command.relationshipToFamily = relationship;
       return command;
     }
   );
@@ -322,31 +326,31 @@ export function useDirectoryModel() {
       adultId: string,
       type: CustodialRelationshipType
     ) => {
-      const command = new UpdateCustodialRelationshipType({
+      const command = commandFactory(UpdateCustodialRelationshipType, {
         familyId: familyId,
+        childPersonId: childId,
+        adultPersonId: adultId,
+        type: type,
       });
-      command.childPersonId = childId;
-      command.adultPersonId = adultId;
-      command.type = type;
       return command;
     }
   );
   const removeCustodialRelationship = useFamilyCommandCallback(
     async (familyId, childId: string, adultId: string) => {
-      const command = new RemoveCustodialRelationship({
+      const command = commandFactory(RemoveCustodialRelationship, {
         familyId: familyId,
+        childPersonId: childId,
+        adultPersonId: adultId,
       });
-      command.childPersonId = childId;
-      command.adultPersonId = adultId;
       return command;
     }
   );
   const updatePrimaryFamilyContact = useFamilyCommandCallback(
     async (familyId, adultId: string) => {
-      const command = new ChangePrimaryFamilyContact({
+      const command = commandFactory(ChangePrimaryFamilyContact, {
         familyId: familyId,
+        adultId: adultId,
       });
-      command.adultId = adultId;
       return command;
     }
   );
@@ -356,13 +360,22 @@ export function useDirectoryModel() {
       customField: CustomField,
       value: boolean | string | null
     ) => {
-      const command = new UpdateCustomFamilyField({
+      const command = commandFactory(UpdateCustomFamilyField, {
         familyId: familyId,
+        completedCustomFieldId: crypto.randomUUID(),
+        customFieldName: customField.name,
+        customFieldType: customField.type,
+        value: value,
       });
-      command.completedCustomFieldId = crypto.randomUUID();
-      command.customFieldName = customField.name;
-      command.customFieldType = customField.type;
-      command.value = value;
+      return command;
+    }
+  );
+  const updateTestFamilyFlag = useFamilyCommandCallback(
+    async (familyId, isTestFamily: boolean) => {
+      const command = commandFactory(UpdateTestFamilyFlag, {
+        familyId: familyId,
+        isTestFamily: isTestFamily,
+      });
       return command;
     }
   );
@@ -373,62 +386,62 @@ export function useDirectoryModel() {
       firstName: string,
       lastName: string
     ) => {
-      const command = new UpdatePersonName({
+      const command = commandFactory(UpdatePersonName, {
         personId: personId,
+        firstName: firstName,
+        lastName: lastName,
       });
-      command.firstName = firstName;
-      command.lastName = lastName;
       return command;
     }
   );
   const updatePersonGender = usePersonCommandCallback(
     async (_familyId, personId: string, gender: Gender) => {
-      const command = new UpdatePersonGender({
+      const command = commandFactory(UpdatePersonGender, {
         personId: personId,
+        gender: gender,
       });
-      command.gender = gender;
       return command;
     }
   );
   const updatePersonAge = usePersonCommandCallback(
     async (_familyId, personId: string, age: Age) => {
-      const command = new UpdatePersonAge({
+      const command = commandFactory(UpdatePersonAge, {
         personId: personId,
+        age: age,
       });
-      command.age = age;
       return command;
     }
   );
   const updatePersonEthnicity = usePersonCommandCallback(
     async (_familyId, personId: string, ethnicity: string) => {
-      const command = new UpdatePersonEthnicity({
+      const command = commandFactory(UpdatePersonEthnicity, {
         personId: personId,
+        ethnicity: ethnicity,
       });
-      command.ethnicity = ethnicity;
       return command;
     }
   );
   const updatePersonConcerns = usePersonCommandCallback(
     async (_familyId, personId: string, concerns: string | null) => {
-      const command = new UpdatePersonConcerns({
+      const command = commandFactory(UpdatePersonConcerns, {
         personId: personId,
+        concerns: concerns || undefined,
       });
-      command.concerns = concerns || undefined;
       return command;
     }
   );
   const updatePersonNotes = usePersonCommandCallback(
     async (_familyId, personId: string, notes: string | null) => {
-      const command = new UpdatePersonNotes({
+      const command = commandFactory(UpdatePersonNotes, {
         personId: personId,
+        notes: notes || undefined,
       });
-      command.notes = notes || undefined;
       return command;
     }
   );
   const undoCreatePerson = usePersonCommandCallback(
     async (_familyId, personId: string) => {
-      const command = new UndoCreatePerson({
+      const command = commandFactory(UndoCreatePerson, {
         personId: personId,
       });
       return command;
@@ -442,15 +455,15 @@ export function useDirectoryModel() {
       phoneType: PhoneNumberType,
       isPreferred: boolean
     ) => {
-      const command = new AddPersonPhoneNumber({
+      const command = commandFactory(AddPersonPhoneNumber, {
         personId: personId,
+        phoneNumber: commandFactory(PhoneNumber, {
+          id: crypto.randomUUID(),
+          number: phoneNumber,
+          type: phoneType,
+        }),
+        isPreferredPhoneNumber: isPreferred,
       });
-      command.phoneNumber = new PhoneNumber({
-        id: crypto.randomUUID(),
-        number: phoneNumber,
-        type: phoneType,
-      });
-      command.isPreferredPhoneNumber = isPreferred;
       return command;
     }
   );
@@ -463,15 +476,15 @@ export function useDirectoryModel() {
       phoneType: PhoneNumberType,
       isPreferred: boolean
     ) => {
-      const command = new UpdatePersonPhoneNumber({
+      const command = commandFactory(UpdatePersonPhoneNumber, {
         personId: personId,
+        phoneNumber: commandFactory(PhoneNumber, {
+          id: phoneId,
+          number: phoneNumber,
+          type: phoneType,
+        }),
+        isPreferredPhoneNumber: isPreferred,
       });
-      command.phoneNumber = new PhoneNumber({
-        id: phoneId,
-        number: phoneNumber,
-        type: phoneType,
-      });
-      command.isPreferredPhoneNumber = isPreferred;
       return command;
     }
   );
@@ -483,15 +496,15 @@ export function useDirectoryModel() {
       phoneType: EmailAddressType,
       isPreferred: boolean
     ) => {
-      const command = new AddPersonEmailAddress({
+      const command = commandFactory(AddPersonEmailAddress, {
         personId: personId,
+        emailAddress: commandFactory(EmailAddress, {
+          id: crypto.randomUUID(),
+          address: emailAddress,
+          type: phoneType,
+        }),
+        isPreferredEmailAddress: isPreferred,
       });
-      command.emailAddress = new EmailAddress({
-        id: crypto.randomUUID(),
-        address: emailAddress,
-        type: phoneType,
-      });
-      command.isPreferredEmailAddress = isPreferred;
       return command;
     }
   );
@@ -504,15 +517,15 @@ export function useDirectoryModel() {
       phoneType: EmailAddressType,
       isPreferred: boolean
     ) => {
-      const command = new UpdatePersonEmailAddress({
+      const command = commandFactory(UpdatePersonEmailAddress, {
         personId: personId,
+        emailAddress: commandFactory(EmailAddress, {
+          id: phoneId,
+          address: emailAddress,
+          type: phoneType,
+        }),
+        isPreferredEmailAddress: isPreferred,
       });
-      command.emailAddress = new EmailAddress({
-        id: phoneId,
-        address: emailAddress,
-        type: phoneType,
-      });
-      command.isPreferredEmailAddress = isPreferred;
       return command;
     }
   );
@@ -523,11 +536,11 @@ export function useDirectoryModel() {
       address: Address,
       isCurrent: boolean
     ) => {
-      const command = new AddPersonAddress({
+      const command = commandFactory(AddPersonAddress, {
         personId: personId,
+        address: address,
+        isCurrentAddress: isCurrent,
       });
-      command.address = address;
-      command.isCurrentAddress = isCurrent;
       return command;
     }
   );
@@ -538,11 +551,11 @@ export function useDirectoryModel() {
       address: Address,
       isCurrent: boolean
     ) => {
-      const command = new UpdatePersonAddress({
+      const command = commandFactory(UpdatePersonAddress, {
         personId: personId,
+        address: address,
+        isCurrentAddress: isCurrent,
       });
-      command.address = address;
-      command.isCurrentAddress = isCurrent;
       return command;
     }
   );
@@ -558,39 +571,46 @@ export function useDirectoryModel() {
       relationshipToFamily: string,
       address: Address | null,
       phoneNumber: string | null,
-      phoneType: PhoneNumberType | null,
+      phoneType: PhoneNumberType,
       emailAddress: string | null,
-      emailType: EmailAddressType | null,
+      emailType: EmailAddressType,
       notes?: string,
       concerns?: string
     ) => {
-      const command = new AddAdultToFamilyCommand();
-      command.familyId = familyId;
-      command.personId = crypto.randomUUID();
-      command.firstName = firstName;
-      command.lastName = lastName;
-      command.gender = gender == null ? undefined : gender;
-      command.age = age == null ? undefined : age;
-      command.ethnicity = ethnicity || undefined;
-      command.concerns = concerns;
-      command.notes = notes;
-      command.familyAdultRelationshipInfo = new FamilyAdultRelationshipInfo({
-        isInHousehold: isInHousehold,
-        relationshipToFamily: relationshipToFamily,
+      const command = commandFactory(AddAdultToFamilyCommand, {
+        familyId: familyId,
+        personId: crypto.randomUUID(),
+        firstName: firstName,
+        lastName: lastName,
+        gender: gender ?? undefined,
+        age: age ?? undefined,
+        ethnicity: ethnicity ?? undefined,
+        concerns: concerns,
+        notes: notes,
+        familyAdultRelationshipInfo: commandFactory(
+          FamilyAdultRelationshipInfo,
+          {
+            isInHousehold: isInHousehold,
+            relationshipToFamily: relationshipToFamily,
+          }
+        ),
+        address: address ?? undefined,
+        phoneNumber: phoneNumber
+          ? commandFactory(PhoneNumber, {
+              id: crypto.randomUUID(),
+              number: phoneNumber,
+              type: phoneType,
+            })
+          : undefined,
+        emailAddress: emailAddress
+          ? commandFactory(EmailAddress, {
+              id: crypto.randomUUID(),
+              address: emailAddress,
+              type: emailType,
+            })
+          : undefined,
       });
-      command.address = address == null ? undefined : address;
-      if (phoneNumber != null) {
-        command.phoneNumber = new PhoneNumber();
-        command.phoneNumber.id = crypto.randomUUID();
-        command.phoneNumber.number = phoneNumber;
-        command.phoneNumber.type = phoneType == null ? undefined : phoneType;
-      }
-      if (emailAddress != null) {
-        command.emailAddress = new EmailAddress();
-        command.emailAddress.id = crypto.randomUUID();
-        command.emailAddress.address = emailAddress;
-        command.emailAddress.type = emailType == null ? undefined : emailType;
-      }
+
       return command;
     }
   );
@@ -606,20 +626,23 @@ export function useDirectoryModel() {
       notes?: string,
       concerns?: string
     ) => {
-      const command = new AddChildToFamilyCommand();
-      command.familyId = familyId;
-      command.personId = crypto.randomUUID();
-      command.firstName = firstName;
-      command.lastName = lastName;
-      command.gender = gender == null ? undefined : gender;
-      command.age = age == null ? undefined : age;
-      command.ethnicity = ethnicity || undefined;
-      command.custodialRelationships = custodialRelationships.map((cr) => {
-        cr.childId = command.personId;
-        return cr;
+      const personId = crypto.randomUUID();
+
+      const command = commandFactory(AddChildToFamilyCommand, {
+        familyId: familyId,
+        personId: personId,
+        firstName: firstName,
+        lastName: lastName,
+        gender: gender ?? undefined,
+        age: age ?? undefined,
+        ethnicity: ethnicity ?? undefined,
+        custodialRelationships: custodialRelationships.map((cr) => {
+          cr.childId = personId;
+          return cr;
+        }),
+        concerns: concerns,
+        notes: notes,
       });
-      command.concerns = concerns;
-      command.notes = notes;
       return command;
     }
   );
@@ -635,46 +658,52 @@ export function useDirectoryModel() {
       relationshipToFamily: string,
       address: Address | null,
       phoneNumber: string | null,
-      phoneType: PhoneNumberType | null,
+      phoneType: PhoneNumberType,
       emailAddress: string | null,
-      emailType: EmailAddressType | null,
+      emailType: EmailAddressType,
       notes?: string,
       concerns?: string
     ) => {
-      const command = new CreateVolunteerFamilyWithNewAdultCommand();
-      command.familyId = familyId;
-      command.personId = crypto.randomUUID();
-      command.firstName = firstName;
-      command.lastName = lastName;
-      command.gender = gender == null ? undefined : gender;
-      command.age = age == null ? undefined : age;
-      command.ethnicity = ethnicity || undefined;
-      command.concerns = concerns;
-      command.notes = notes;
-      command.familyAdultRelationshipInfo = new FamilyAdultRelationshipInfo({
-        isInHousehold: isInHousehold,
-        relationshipToFamily: relationshipToFamily,
+      const command = commandFactory(CreateVolunteerFamilyWithNewAdultCommand, {
+        familyId: familyId,
+        personId: crypto.randomUUID(),
+        firstName: firstName,
+        lastName: lastName,
+        gender: gender == null ? undefined : gender,
+        age: age == null ? undefined : age,
+        ethnicity: ethnicity || undefined,
+        concerns: concerns,
+        notes: notes,
+        familyAdultRelationshipInfo: commandFactory(
+          FamilyAdultRelationshipInfo,
+          {
+            isInHousehold: isInHousehold,
+            relationshipToFamily: relationshipToFamily,
+          }
+        ),
+        address: address == null ? undefined : address,
+        phoneNumber: phoneNumber
+          ? commandFactory(PhoneNumber, {
+              id: crypto.randomUUID(),
+              number: phoneNumber,
+              type: phoneType,
+            })
+          : undefined,
+        emailAddress: emailAddress
+          ? commandFactory(EmailAddress, {
+              id: crypto.randomUUID(),
+              address: emailAddress,
+              type: emailType,
+            })
+          : undefined,
       });
-      command.address = address == null ? undefined : address;
-      if (phoneNumber != null) {
-        command.phoneNumber = new PhoneNumber();
-        command.phoneNumber.id = crypto.randomUUID();
-        command.phoneNumber.number = phoneNumber;
-        command.phoneNumber.type = phoneType == null ? undefined : phoneType;
-      }
-      if (emailAddress != null) {
-        command.emailAddress = new EmailAddress();
-        command.emailAddress.id = crypto.randomUUID();
-        command.emailAddress.address = emailAddress;
-        command.emailAddress.type = emailType == null ? undefined : emailType;
-      }
       return command;
     }
   );
   const createPartneringFamilyWithNewAdult = useCompositeRecordsCommandCallback(
     async (
       familyId: string,
-      referralOpenedAtUtc: Date,
+      v1CaseOpenedAtUtc: Date,
       firstName: string,
       lastName: string,
       gender: Gender | null,
@@ -684,41 +713,50 @@ export function useDirectoryModel() {
       relationshipToFamily: string,
       address: Address | null,
       phoneNumber: string | null,
-      phoneType: PhoneNumberType | null,
+      phoneType: PhoneNumberType,
       emailAddress: string | null,
-      emailType: EmailAddressType | null,
+      emailType: EmailAddressType,
       notes?: string,
       concerns?: string
     ) => {
-      const command = new CreatePartneringFamilyWithNewAdultCommand();
-      command.familyId = familyId;
-      command.personId = crypto.randomUUID();
-      command.referralId = crypto.randomUUID();
-      command.referralOpenedAtUtc = referralOpenedAtUtc;
-      command.firstName = firstName;
-      command.lastName = lastName;
-      command.gender = gender == null ? undefined : gender;
-      command.age = age == null ? undefined : age;
-      command.ethnicity = ethnicity || undefined;
-      command.concerns = concerns;
-      command.notes = notes;
-      command.familyAdultRelationshipInfo = new FamilyAdultRelationshipInfo({
-        isInHousehold: isInHousehold,
-        relationshipToFamily: relationshipToFamily,
-      });
-      command.address = address == null ? undefined : address;
-      if (phoneNumber != null) {
-        command.phoneNumber = new PhoneNumber();
-        command.phoneNumber.id = crypto.randomUUID();
-        command.phoneNumber.number = phoneNumber;
-        command.phoneNumber.type = phoneType == null ? undefined : phoneType;
-      }
-      if (emailAddress != null) {
-        command.emailAddress = new EmailAddress();
-        command.emailAddress.id = crypto.randomUUID();
-        command.emailAddress.address = emailAddress;
-        command.emailAddress.type = emailType == null ? undefined : emailType;
-      }
+      const command = commandFactory(
+        CreatePartneringFamilyWithNewAdultCommand,
+        {
+          familyId: familyId,
+          personId: crypto.randomUUID(),
+          referralId: crypto.randomUUID(),
+          referralOpenedAtUtc: v1CaseOpenedAtUtc,
+          firstName: firstName,
+          lastName: lastName,
+          gender: gender == null ? undefined : gender,
+          age: age == null ? undefined : age,
+          ethnicity: ethnicity || undefined,
+          concerns: concerns,
+          notes: notes,
+          familyAdultRelationshipInfo: commandFactory(
+            FamilyAdultRelationshipInfo,
+            {
+              isInHousehold: isInHousehold,
+              relationshipToFamily: relationshipToFamily,
+            }
+          ),
+          address: address == null ? undefined : address,
+          phoneNumber: phoneNumber
+            ? commandFactory(PhoneNumber, {
+                id: crypto.randomUUID(),
+                number: phoneNumber,
+                type: phoneType,
+              })
+            : undefined,
+          emailAddress: emailAddress
+            ? commandFactory(EmailAddress, {
+                id: crypto.randomUUID(),
+                address: emailAddress,
+                type: emailType,
+              })
+            : undefined,
+        }
+      );
       return command;
     }
   );
@@ -727,15 +765,16 @@ export function useDirectoryModel() {
       familyId,
       noteId: string,
       draftNoteContents: string,
-      backdatedTimestampLocal?: Date
+      backdatedTimestampLocal?: Date,
+      accessLevel?: string
     ) => {
-      const command = new CreateDraftNote({
+      const command = commandFactory(CreateDraftNote, {
         familyId: familyId,
         noteId: noteId,
+        draftNoteContents: draftNoteContents,
+        backdatedTimestampUtc: backdatedTimestampLocal,
+        accessLevel: accessLevel,
       });
-      command.draftNoteContents = draftNoteContents;
-      command.noteId = noteId;
-      command.backdatedTimestampUtc = backdatedTimestampLocal;
       return command;
     }
   );
@@ -744,20 +783,22 @@ export function useDirectoryModel() {
       familyId,
       noteId: string,
       draftNoteContents: string,
-      backdatedTimestampLocal?: Date
+      backdatedTimestampLocal?: Date,
+      accessLevel?: string
     ) => {
-      const command = new EditDraftNote({
+      const command = commandFactory(EditDraftNote, {
         familyId: familyId,
         noteId: noteId,
+        draftNoteContents: draftNoteContents,
+        backdatedTimestampUtc: backdatedTimestampLocal,
+        accessLevel: accessLevel,
       });
-      command.draftNoteContents = draftNoteContents;
-      command.backdatedTimestampUtc = backdatedTimestampLocal;
       return command;
     }
   );
   const discardDraftNote = useNoteCommandCallback(
     async (familyId, noteId: string) => {
-      const command = new DiscardDraftNote({
+      const command = commandFactory(DiscardDraftNote, {
         familyId: familyId,
         noteId: noteId,
       });
@@ -769,14 +810,26 @@ export function useDirectoryModel() {
       familyId,
       noteId: string,
       finalizedNoteContents: string,
-      backdatedTimestampLocal?: Date
+      backdatedTimestampLocal?: Date,
+      accessLevel?: string
     ) => {
-      const command = new ApproveNote({
+      const command = commandFactory(ApproveNote, {
         familyId: familyId,
         noteId: noteId,
+        finalizedNoteContents: finalizedNoteContents,
+        backdatedTimestampUtc: backdatedTimestampLocal,
+        accessLevel: accessLevel,
       });
-      command.finalizedNoteContents = finalizedNoteContents;
-      command.backdatedTimestampUtc = backdatedTimestampLocal;
+      return command;
+    }
+  );
+  const updateNoteAccessLevel = useNoteCommandCallback(
+    async (familyId: string, noteId: string, accessLevel?: string | null) => {
+      const command = commandFactory(UpdateNoteAccessLevel, {
+        familyId,
+        noteId,
+        accessLevel: accessLevel ?? undefined,
+      });
       return command;
     }
   );
@@ -812,5 +865,7 @@ export function useDirectoryModel() {
     editDraftNote,
     discardDraftNote,
     approveNote,
+    updateNoteAccessLevel,
+    updateTestFamilyFlag,
   };
 }

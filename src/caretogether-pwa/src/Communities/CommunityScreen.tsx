@@ -12,7 +12,7 @@ import { Permission } from '../GeneratedClient';
 import { useCommunityLookup } from '../Model/DirectoryModel';
 import { useCommunityPermissions } from '../Model/SessionModel';
 import { ProgressBackdrop } from '../Shell/ProgressBackdrop';
-import useScreenTitle from '../Shell/ShellScreenTitle';
+import { useScreenTitle } from '../Shell/ShellScreenTitle';
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 import EditIcon from '@mui/icons-material/Edit';
 import { AddEditCommunity } from './AddEditCommunity';

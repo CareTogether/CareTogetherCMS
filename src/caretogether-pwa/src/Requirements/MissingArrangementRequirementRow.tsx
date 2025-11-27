@@ -22,7 +22,7 @@ export function MissingArrangementRequirementRow({
 }: MissingArrangementRequirementRowProps) {
   const policy = useRecoilValue(policyData);
   const permissions = useFamilyIdPermissions(
-    context.kind === 'Referral' ||
+    context.kind === 'V1Case' ||
       context.kind === 'Arrangement' ||
       context.kind === 'Family Volunteer Assignment' ||
       context.kind === 'Individual Volunteer Assignment'
@@ -32,10 +32,16 @@ export function MissingArrangementRequirementRow({
 
   const dialogHandle = useDialogHandle();
 
-  const requirementPolicy = policy.actionDefinitions![requirement.actionName!];
+  const actionName = requirement.action.actionName;
+
+  const requirementPolicy =
+    policy.actionDefinitions[actionName] ||
+    Object.entries(policy.actionDefinitions).find(([, value]) =>
+      value.alternateNames?.includes(actionName)
+    );
 
   if (
-    context.kind === 'Referral' ||
+    context.kind === 'V1Case' ||
     context.kind === 'Individual Volunteer' ||
     context.kind === 'Volunteer Family'
   )
@@ -58,7 +64,7 @@ export function MissingArrangementRequirementRow({
             canComplete || canExempt ? dialogHandle.openDialog : undefined
           }
         >
-          {requirement.actionName}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+          {requirement.action?.actionName}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
           <span style={{ float: 'right' }}>
             {formatUtcDateOnly(requirement.dueBy)}
           </span>
@@ -88,12 +94,12 @@ export function MissingArrangementRequirementRow({
         </IconRow>
       ) : (
         <IconRow
-          icon="❌"
+          icon={requirement.action?.isRequired ? '❌' : '🔲'}
           onClick={
             canComplete || canExempt ? dialogHandle.openDialog : undefined
           }
         >
-          {requirement.actionName}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+          {requirement.action?.actionName}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
           {requirement.pastDueSince && (
             <span style={{ float: 'right' }}>
               {formatUtcDateOnly(requirement.pastDueSince)}
@@ -130,7 +136,7 @@ export function MissingArrangementRequirementRow({
           requirement={requirement}
           context={context}
           policy={requirementPolicy}
-          referralId={context.referralId}
+          v1CaseId={context.v1CaseId}
           canExempt={canExempt}
         />
       )}

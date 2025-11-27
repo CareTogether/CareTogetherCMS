@@ -7,7 +7,7 @@ using CareTogether.Resources;
 using CareTogether.Resources.Approvals;
 using CareTogether.Resources.Directory;
 using CareTogether.Resources.Policies;
-using CareTogether.Resources.Referrals;
+using CareTogether.Resources.V1Cases;
 using CareTogether.Utilities.Dates;
 
 namespace CareTogether.Engines.PolicyEvaluation
@@ -42,7 +42,7 @@ namespace CareTogether.Engines.PolicyEvaluation
             var policy = await policiesResource.GetCurrentPolicy(organizationId, locationId);
 
             return ApprovalCalculations.CalculateCombinedFamilyApprovals(
-                policy.VolunteerPolicy,
+                policy,
                 family,
                 completedFamilyRequirements,
                 exemptedFamilyRequirements,
@@ -92,7 +92,7 @@ namespace CareTogether.Engines.PolicyEvaluation
         }
 
         internal IndividualVolunteerAssignment ToIndividualVolunteerAssignmentForCalculation(
-            Resources.Referrals.IndividualVolunteerAssignment entry,
+            Resources.V1Cases.IndividualVolunteerAssignment entry,
             TimeZoneInfo locationTimeZone
         )
         {
@@ -119,7 +119,7 @@ namespace CareTogether.Engines.PolicyEvaluation
         }
 
         internal FamilyVolunteerAssignment ToFamilyVolunteerAssignmentForCalculation(
-            Resources.Referrals.FamilyVolunteerAssignment entry,
+            Resources.V1Cases.FamilyVolunteerAssignment entry,
             TimeZoneInfo locationTimeZone
         )
         {
@@ -145,7 +145,7 @@ namespace CareTogether.Engines.PolicyEvaluation
         }
 
         internal ArrangementEntry ToArrangementEntryForCalculation(
-            Resources.Referrals.ArrangementEntry entry,
+            Resources.V1Cases.ArrangementEntry entry,
             TimeZoneInfo locationTimeZone
         )
         {
@@ -191,8 +191,8 @@ namespace CareTogether.Engines.PolicyEvaluation
             );
         }
 
-        internal ReferralEntry ToReferralEntryForCalculation(
-            Resources.Referrals.ReferralEntry entry,
+        internal V1CaseEntry ToV1CaseEntryForCalculation(
+            Resources.V1Cases.V1CaseEntry entry,
             TimeZoneInfo locationTimeZone
         )
         {
@@ -215,7 +215,7 @@ namespace CareTogether.Engines.PolicyEvaluation
                 ))
                 .ToImmutableDictionary();
 
-            return new ReferralEntry(
+            return new V1CaseEntry(
                 completedRequirements,
                 exemptedRequirements,
                 entry.CompletedCustomFields,
@@ -223,11 +223,11 @@ namespace CareTogether.Engines.PolicyEvaluation
             );
         }
 
-        public async Task<ReferralStatus> CalculateReferralStatusAsync(
+        public async Task<V1CaseStatus> CalculateV1CaseStatusAsync(
             Guid organizationId,
             Guid locationId,
             Family family,
-            Resources.Referrals.ReferralEntry referralEntry
+            Resources.V1Cases.V1CaseEntry v1CaseEntry
         )
         {
             var policy = await policiesResource.GetCurrentPolicy(organizationId, locationId);
@@ -237,18 +237,19 @@ namespace CareTogether.Engines.PolicyEvaluation
             TimeZoneInfo locationTimeZone =
                 location?.timeZone ?? TimeZoneInfo.FindSystemTimeZoneById("America/New_York");
 
-            var referralEntryForCalculation = ToReferralEntryForCalculation(
-                referralEntry,
+            var v1CaseEntryForCalculation = ToV1CaseEntryForCalculation(
+                v1CaseEntry,
                 locationTimeZone
             );
 
-            var referralStatus = ReferralCalculations.CalculateReferralStatus(
+            var v1CaseStatus = V1CaseCalculations.CalculateV1CaseStatus(
+                policy,
                 policy.ReferralPolicy,
-                referralEntryForCalculation,
+                v1CaseEntryForCalculation,
                 Dates.ToDateOnlyInLocationTimeZone(DateTime.UtcNow, locationTimeZone)
             );
 
-            return referralStatus;
+            return v1CaseStatus;
         }
     }
 }

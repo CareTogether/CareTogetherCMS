@@ -2,9 +2,10 @@
 using System.Linq;
 using CareTogether.Engines;
 using CareTogether.Engines.PolicyEvaluation;
+using CareTogether.Resources.Policies;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-namespace CareTogether.Core.Test.ReferralCalculationTests
+namespace CareTogether.Core.Test.V1CaseCalculationTests
 {
     [TestClass]
     public class SelectMissingRequirementsForStatus
@@ -14,21 +15,21 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
         {
             var missingSetupRequirements = ImmutableList<MissingArrangementRequirement>
                 .Empty.Add(
-                    new MissingArrangementRequirement(null, null, null, null, "S1", null, null)
+                    new MissingArrangementRequirement(null, null, null, null, new RequirementDefinition("S1", true), null, null)
                 )
-                .Add(new MissingArrangementRequirement(null, null, null, null, "S2", null, null));
+                .Add(new MissingArrangementRequirement(null, null, null, null, new RequirementDefinition("S2", true), null, null));
             var missingMonitoringRequirements = ImmutableList<MissingArrangementRequirement>
                 .Empty.Add(
-                    new MissingArrangementRequirement(null, null, null, null, "M1", null, null)
+                    new MissingArrangementRequirement(null, null, null, null, new RequirementDefinition("M1", true), null, null)
                 )
-                .Add(new MissingArrangementRequirement(null, null, null, null, "M2", null, null));
+                .Add(new MissingArrangementRequirement(null, null, null, null, new RequirementDefinition("M2", true), null, null));
             var missingCloseoutRequirements = ImmutableList<MissingArrangementRequirement>
                 .Empty.Add(
-                    new MissingArrangementRequirement(null, null, null, null, "C1", null, null)
+                    new MissingArrangementRequirement(null, null, null, null, new RequirementDefinition("C1", true), null, null)
                 )
-                .Add(new MissingArrangementRequirement(null, null, null, null, "C2", null, null));
+                .Add(new MissingArrangementRequirement(null, null, null, null, new RequirementDefinition("C2", true), null, null));
 
-            var result = ReferralCalculations.SelectMissingRequirementsForStatus(
+            var result = V1CaseCalculations.SelectMissingRequirementsForStatus(
                 ArrangementPhase.SettingUp,
                 missingSetupRequirements,
                 missingMonitoringRequirements,
@@ -43,21 +44,21 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
         {
             var missingSetupRequirements = ImmutableList<MissingArrangementRequirement>
                 .Empty.Add(
-                    new MissingArrangementRequirement(null, null, null, null, "S1", null, null)
+                    new MissingArrangementRequirement(null, null, null, null, new RequirementDefinition("S1", true), null, null)
                 )
-                .Add(new MissingArrangementRequirement(null, null, null, null, "S2", null, null));
+                .Add(new MissingArrangementRequirement(null, null, null, null, new RequirementDefinition("S2", true), null, null));
             var missingMonitoringRequirements = ImmutableList<MissingArrangementRequirement>
                 .Empty.Add(
-                    new MissingArrangementRequirement(null, null, null, null, "M1", null, null)
+                    new MissingArrangementRequirement(null, null, null, null, new RequirementDefinition("M1", true), null, null)
                 )
-                .Add(new MissingArrangementRequirement(null, null, null, null, "M2", null, null));
+                .Add(new MissingArrangementRequirement(null, null, null, null, new RequirementDefinition("M2", true), null, null));
             var missingCloseoutRequirements = ImmutableList<MissingArrangementRequirement>
                 .Empty.Add(
-                    new MissingArrangementRequirement(null, null, null, null, "C1", null, null)
+                    new MissingArrangementRequirement(null, null, null, null, new RequirementDefinition("C1", true), null, null)
                 )
-                .Add(new MissingArrangementRequirement(null, null, null, null, "C2", null, null));
+                .Add(new MissingArrangementRequirement(null, null, null, null, new RequirementDefinition("C2", true), null, null));
 
-            var result = ReferralCalculations.SelectMissingRequirementsForStatus(
+            var result = V1CaseCalculations.SelectMissingRequirementsForStatus(
                 ArrangementPhase.ReadyToStart,
                 missingSetupRequirements,
                 missingMonitoringRequirements,
@@ -72,21 +73,21 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
         {
             var missingSetupRequirements = ImmutableList<MissingArrangementRequirement>
                 .Empty.Add(
-                    new MissingArrangementRequirement(null, null, null, null, "S1", null, null)
+                    new MissingArrangementRequirement(null, null, null, null, new RequirementDefinition("S1", true), null, null)
                 )
-                .Add(new MissingArrangementRequirement(null, null, null, null, "S2", null, null));
+                .Add(new MissingArrangementRequirement(null, null, null, null, new RequirementDefinition("S2", true), null, null));
             var missingMonitoringRequirements = ImmutableList<MissingArrangementRequirement>
                 .Empty.Add(
-                    new MissingArrangementRequirement(null, null, null, null, "M1", null, null)
+                    new MissingArrangementRequirement(null, null, null, null, new RequirementDefinition("M1", true), null, null)
                 )
-                .Add(new MissingArrangementRequirement(null, null, null, null, "M2", null, null));
+                .Add(new MissingArrangementRequirement(null, null, null, null, new RequirementDefinition("M2", true), null, null));
             var missingCloseoutRequirements = ImmutableList<MissingArrangementRequirement>
                 .Empty.Add(
-                    new MissingArrangementRequirement(null, null, null, null, "C1", null, null)
+                    new MissingArrangementRequirement(null, null, null, null, new RequirementDefinition("C1", true), null, null)
                 )
-                .Add(new MissingArrangementRequirement(null, null, null, null, "C2", null, null));
+                .Add(new MissingArrangementRequirement(null, null, null, null, new RequirementDefinition("C2", true), null, null));
 
-            var result = ReferralCalculations.SelectMissingRequirementsForStatus(
+            var result = V1CaseCalculations.SelectMissingRequirementsForStatus(
                 ArrangementPhase.Started,
                 missingSetupRequirements,
                 missingMonitoringRequirements,
@@ -101,21 +102,21 @@ namespace CareTogether.Core.Test.ReferralCalculationTests
         {
             var missingSetupRequirements = ImmutableList<MissingArrangementRequirement>
                 .Empty.Add(
-                    new MissingArrangementRequirement(null, null, null, null, "S1", null, null)
+                    new MissingArrangementRequirement(null, null, null, null, new RequirementDefinition("S1", true), null, null)
                 )
-                .Add(new MissingArrangementRequirement(null, null, null, null, "S2", null, null));
+                .Add(new MissingArrangementRequirement(null, null, null, null, new RequirementDefinition("S2", true), null, null));
             var missingMonitoringRequirements = ImmutableList<MissingArrangementRequirement>
                 .Empty.Add(
-                    new MissingArrangementRequirement(null, null, null, null, "M1", null, null)
+                    new MissingArrangementRequirement(null, null, null, null, new RequirementDefinition("M1", true), null, null)
                 )
-                .Add(new MissingArrangementRequirement(null, null, null, null, "M2", null, null));
+                .Add(new MissingArrangementRequirement(null, null, null, null, new RequirementDefinition("M2", true), null, null));
             var missingCloseoutRequirements = ImmutableList<MissingArrangementRequirement>
                 .Empty.Add(
-                    new MissingArrangementRequirement(null, null, null, null, "C1", null, null)
+                    new MissingArrangementRequirement(null, null, null, null, new RequirementDefinition("C1", true), null, null)
                 )
-                .Add(new MissingArrangementRequirement(null, null, null, null, "C2", null, null));
+                .Add(new MissingArrangementRequirement(null, null, null, null, new RequirementDefinition("C2", true), null, null));
 
-            var result = ReferralCalculations.SelectMissingRequirementsForStatus(
+            var result = V1CaseCalculations.SelectMissingRequirementsForStatus(
                 ArrangementPhase.Ended,
                 missingSetupRequirements,
                 missingMonitoringRequirements,
