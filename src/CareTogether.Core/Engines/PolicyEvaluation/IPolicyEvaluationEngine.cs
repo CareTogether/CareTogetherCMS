@@ -18,34 +18,6 @@ namespace CareTogether.Engines.PolicyEvaluation
         ImmutableDictionary<string, FamilyRoleApprovalStatus> FamilyRoleApprovals
     )
     {
-        private record RoleStatusPair(string RoleName, RoleApprovalStatus? Status);
-
-        private ImmutableDictionary<string, RoleApprovalStatus> RoleHighestStatuses =>
-            FamilyRoleApprovals
-                .Select(kvp => new RoleStatusPair(
-                    kvp.Key,
-                    PolicyEvaluationHelpers.GetMaxRoleStatus(kvp.Value.RoleVersionApprovals)
-                ))
-                .Concat(
-                    IndividualApprovals.SelectMany(ind =>
-                        ind.Value.ApprovalStatusByRole.Select(roleKvp => new RoleStatusPair(
-                            roleKvp.Key,
-                            PolicyEvaluationHelpers.GetMaxRoleStatus(
-                                roleKvp.Value.RoleVersionApprovals
-                            )
-                        ))
-                    )
-                )
-                .GroupBy(x => x.RoleName)
-                .ToImmutableDictionary(
-                    g => g.Key,
-                    g =>
-                        g.Select(x => x.Status ?? default)
-                            .Where(s => s != default)
-                            .DefaultIfEmpty()
-                            .Max()
-                );
-
         public ImmutableList<(
             string ActionName,
             (string Version, string RoleName)[] Versions
