@@ -148,6 +148,7 @@ namespace CareTogether.Engines.PolicyEvaluation
                     {
                         var roleName = kv.Key;
 
+                        // If role has achieved Prospective or higher status, hide applications
                         var individualHighestStatus = PolicyEvaluationHelpers.GetMaxRoleStatus(
                             kv.Value.RoleVersionApprovals
                         );
