@@ -175,10 +175,12 @@ namespace CareTogether.Engines.PolicyEvaluation
                     ia.Value.ApprovalStatusByRole.SelectMany(kv =>
                     {
                         var roleName = kv.Key;
-                        var highestStatus = RoleHighestStatuses.GetValueOrDefault(roleName);
 
-                        // If role has achieved Prospective or higher status, hide applications
-                        if (highestStatus >= RoleApprovalStatus.Prospective)
+                        var individualHighestStatus = PolicyEvaluationHelpers.GetMaxRoleStatus(
+                            kv.Value.RoleVersionApprovals
+                        );
+
+                        if (individualHighestStatus >= RoleApprovalStatus.Prospective)
                             return Enumerable.Empty<(Guid, string)>();
 
                         return kv
