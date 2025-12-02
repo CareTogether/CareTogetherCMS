@@ -41,6 +41,25 @@ namespace CareTogether.Managers.Membership
             this.identityProvider = identityProvider;
         }
 
+        private async Task<SessionUserContext> CreateSessionUserContext(
+            ClaimsPrincipal user,
+            Guid organizationId,
+            Guid locationId
+        )
+        {
+            var userPersonId = user.PersonId(organizationId, locationId);
+            var userFamily =
+                userPersonId == null
+                    ? null
+                    : await directoryResource.FindPersonFamilyAsync(
+                        organizationId,
+                        locationId,
+                        userPersonId.Value
+                    );
+            var userContext = new SessionUserContext(user, userFamily);
+            return userContext;
+        }
+
         public async Task<UserAccess> GetUserAccessAsync(ClaimsPrincipal user)
         {
             var account = await accountsResource.TryGetUserAccountAsync(user.UserId());
@@ -57,25 +76,31 @@ namespace CareTogether.Managers.Membership
                         {
                             var locationId = location.LocationId;
 
+                            var userContext = await CreateSessionUserContext(
+                                user,
+                                organizationId,
+                                locationId
+                            );
+
                             var globalContextPermissions =
                                 await userAccessCalculation.AuthorizeUserAccessAsync(
                                     organizationId,
                                     locationId,
-                                    user,
+                                    userContext,
                                     new GlobalAuthorizationContext()
                                 );
                             var allVolunteerFamiliesContextPermissions =
                                 await userAccessCalculation.AuthorizeUserAccessAsync(
                                     organizationId,
                                     locationId,
-                                    user,
+                                    userContext,
                                     new AllVolunteerFamiliesAuthorizationContext()
                                 );
                             var allPartneringFamiliesContextPermissions =
                                 await userAccessCalculation.AuthorizeUserAccessAsync(
                                     organizationId,
                                     locationId,
-                                    user,
+                                    userContext,
                                     new AllPartneringFamiliesAuthorizationContext()
                                 );
 
@@ -127,11 +152,14 @@ namespace CareTogether.Managers.Membership
                 );
 
             // Confirm that the current user has access to view the target user's login information.
-            var targetUserFamilyContext = new FamilyAuthorizationContext(targetUserFamily.Id);
+
+            var userContext = await CreateSessionUserContext(user, organizationId, locationId);
+
+            var targetUserFamilyContext = new FamilyAuthorizationContext(targetUserFamily.Id, null);
             var globalContextPermissions = await userAccessCalculation.AuthorizeUserAccessAsync(
                 organizationId,
                 locationId,
-                user,
+                userContext,
                 targetUserFamilyContext
             );
             if (!globalContextPermissions.Contains(Permission.ViewPersonUserLoginInfo))
@@ -154,13 +182,20 @@ namespace CareTogether.Managers.Membership
             ImmutableList<string> roles
         )
         {
+            var locationPolicy = await policiesResource.GetCurrentPolicy(
+                organizationId,
+                locationId
+            );
+
             var command = new ChangePersonRoles(personId, roles);
+
+            var userContext = await CreateSessionUserContext(user, organizationId, locationId);
 
             if (
                 !await authorizationEngine.AuthorizePersonAccessCommandAsync(
                     organizationId,
                     locationId,
-                    user,
+                    userContext,
                     command
                 )
             )
@@ -178,7 +213,7 @@ namespace CareTogether.Managers.Membership
                     "CareTogether currently assumes that all people should (always) belong to a family record."
                 );
 
-            var result = await accountsResource.ExecutePersonAccessCommandAsync(
+            await accountsResource.ExecutePersonAccessCommandAsync(
                 organizationId,
                 locationId,
                 command,
@@ -187,9 +222,11 @@ namespace CareTogether.Managers.Membership
 
             var familyResult = await combinedFamilyInfoFormatter.RenderCombinedFamilyInfoAsync(
                 organizationId,
+                locationPolicy,
                 locationId,
                 personFamily.Id,
-                user
+                personFamily,
+                userContext
             );
 
             return new FamilyRecordsAggregate(familyResult!);
@@ -202,11 +239,13 @@ namespace CareTogether.Managers.Membership
             Guid personId
         )
         {
+            var userContext = await CreateSessionUserContext(user, organizationId, locationId);
+
             if (
                 !await authorizationEngine.AuthorizeGenerateUserInviteNonceAsync(
                     organizationId,
                     locationId,
-                    user
+                    userContext
                 )
             )
                 throw new Exception("The user is not authorized to perform this action.");

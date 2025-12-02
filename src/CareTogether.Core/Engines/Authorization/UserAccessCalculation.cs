@@ -1,19 +1,12 @@
 using System;
 using System.Collections.Immutable;
 using System.Linq;
-using System.Security.Claims;
 using System.Threading.Tasks;
-using CareTogether.Engines.PolicyEvaluation;
-using CareTogether.Managers;
-using CareTogether.Resources;
-using CareTogether.Resources.Accounts;
 using CareTogether.Resources.Approvals;
 using CareTogether.Resources.Communities;
 using CareTogether.Resources.Directory;
-using CareTogether.Resources.Notes;
 using CareTogether.Resources.Policies;
 using CareTogether.Resources.V1Cases;
-using Nito.AsyncEx;
 
 namespace CareTogether.Engines.Authorization
 {
@@ -43,44 +36,50 @@ namespace CareTogether.Engines.Authorization
         public async Task<ImmutableList<Permission>> AuthorizeUserAccessAsync(
             Guid organizationId,
             Guid locationId,
-            ClaimsPrincipal user,
+            SessionUserContext userContext,
             AuthorizationContext context
         )
         {
             // If the caller is using an API key, give full access.
             if (
-                user.Identity?.AuthenticationType == "API Key"
+                userContext.User.Identity?.AuthenticationType == "API Key"
                 && (
-                    user.HasClaim(Claims.OrganizationId, organizationId.ToString())
-                    || user.HasClaim(Claims.Global, true.ToString())
+                    userContext.User.HasClaim(Claims.OrganizationId, organizationId.ToString())
+                    || userContext.User.HasClaim(Claims.Global, true.ToString())
                 )
             )
                 return Enum.GetValues<Permission>().ToImmutableList();
 
             // The user must have access to this organization and location.
-            var userLocalIdentity = user.LocationIdentity(organizationId, locationId);
+            var userLocalIdentity = userContext.User.LocationIdentity(organizationId, locationId);
             if (userLocalIdentity == null)
                 return ImmutableList<Permission>.Empty;
 
             // Look up the user's family, which will be referenced several times.
-            var userPersonId = user.PersonId(organizationId, locationId);
+            var userPersonId = userContext.User.PersonId(organizationId, locationId);
             var userFamily =
-                userPersonId == null
-                    ? null
-                    : await directoryResource.FindPersonFamilyAsync(
-                        organizationId,
-                        locationId,
-                        userPersonId.Value
-                    );
+                userContext.UserFamily
+                ?? (
+                    userPersonId == null
+                        ? null
+                        : await directoryResource.FindPersonFamilyAsync(
+                            organizationId,
+                            locationId,
+                            userPersonId.Value
+                        )
+                );
 
             // If in a family authorization context, look up the target family, which will be referenced several times.
-            var familyId = (context as FamilyAuthorizationContext)?.FamilyId;
-            var targetFamily = familyId.HasValue
-                ? await directoryResource.FindFamilyAsync(
-                    organizationId,
-                    locationId,
-                    familyId.Value
-                )
+            var familyAuthorizationContext = context is FamilyAuthorizationContext fac ? fac : null;
+            var familyId = familyAuthorizationContext?.FamilyId;
+            var targetFamily =
+                familyAuthorizationContext?.Family != null ? familyAuthorizationContext?.Family
+                : familyId.HasValue
+                    ? await directoryResource.FindFamilyAsync(
+                        organizationId,
+                        locationId,
+                        familyId.Value
+                    )
                 : null;
 
             // Look up the target family's volunteer info to determine if they are a volunteer family.
@@ -135,7 +134,9 @@ namespace CareTogether.Engines.Authorization
             var userFamilyCommunities =
                 userFamily != null
                     ? communities
-                        .Where(community => community.MemberFamilies.Contains(userFamily.Id))
+                        .Where(community =>
+                            community.MemberFamilies.Contains(userFamily.Id)
+                        )
                         .Select(community => community.Id)
                         .ToImmutableList()
                     : ImmutableList<Guid>.Empty;

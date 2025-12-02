@@ -104,7 +104,7 @@ namespace CareTogether.Core.Test.AuthorizationEngineTests
                     x.AuthorizeUserAccessAsync(
                         It.IsAny<Guid>(),
                         It.IsAny<Guid>(),
-                        It.IsAny<ClaimsPrincipal>(),
+                        It.IsAny<SessionUserContext>(),
                         It.IsAny<AuthorizationContext>()
                     )
                 )
@@ -178,7 +178,7 @@ namespace CareTogether.Core.Test.AuthorizationEngineTests
             var response = await dut!.AuthorizeNoteCommandAsync(
                 noteId1,
                 noteId2,
-                user,
+                new SessionUserContext(user, null),
                 new CreateDraftNote(guid1, newDraftNoteGuid, "Test Note", null)
             );
 
@@ -207,7 +207,7 @@ namespace CareTogether.Core.Test.AuthorizationEngineTests
                 _ => throw new ArgumentException("Invalid command type", nameof(commandType)),
             };
 
-            var response = await dut!.AuthorizeNoteCommandAsync(guid1, guid2, user, command);
+            var response = await dut!.AuthorizeNoteCommandAsync(guid1, guid2, new SessionUserContext(user, null), command);
 
             Assert.IsTrue(response);
         }
@@ -230,7 +230,7 @@ namespace CareTogether.Core.Test.AuthorizationEngineTests
                 _ => throw new ArgumentException("Invalid command type", nameof(commandType)),
             };
 
-            var response = await dut!.AuthorizeNoteCommandAsync(guid1, guid2, user, command);
+            var response = await dut!.AuthorizeNoteCommandAsync(guid1, guid2, new SessionUserContext(user, null), command);
 
             Assert.IsFalse(response);
         }
@@ -253,7 +253,7 @@ namespace CareTogether.Core.Test.AuthorizationEngineTests
                 _ => throw new ArgumentException("Invalid command type", nameof(commandType)),
             };
 
-            var response = await dut!.AuthorizeNoteCommandAsync(guid1, guid2, user, command);
+            var response = await dut!.AuthorizeNoteCommandAsync(guid1, guid2, new SessionUserContext(user, null), command);
 
             Assert.IsFalse(response);
         }
@@ -287,7 +287,7 @@ namespace CareTogether.Core.Test.AuthorizationEngineTests
                 _ => throw new ArgumentException("Invalid command type", nameof(commandType)),
             };
 
-            var response = await dut!.AuthorizeNoteCommandAsync(guid1, guid2, user, command);
+            var response = await dut!.AuthorizeNoteCommandAsync(guid1, guid2, new SessionUserContext(user, null), command);
 
             Assert.IsTrue(response);
         }

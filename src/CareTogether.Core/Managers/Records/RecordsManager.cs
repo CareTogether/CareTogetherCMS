@@ -9,6 +9,7 @@ using CareTogether.Resources.Approvals;
 using CareTogether.Resources.Communities;
 using CareTogether.Resources.Directory;
 using CareTogether.Resources.Notes;
+using CareTogether.Resources.Policies;
 using CareTogether.Resources.V1Cases;
 using Nito.AsyncEx;
 using Nito.Disposables.Internals;
@@ -17,6 +18,7 @@ namespace CareTogether.Managers.Records
 {
     public sealed class RecordsManager : IRecordsManager
     {
+        private readonly IPoliciesResource policiesResource;
         private readonly IAuthorizationEngine authorizationEngine;
         private readonly IUserAccessCalculation userAccessCalculation;
         private readonly IDirectoryResource directoryResource;
@@ -27,6 +29,7 @@ namespace CareTogether.Managers.Records
         private readonly CombinedFamilyInfoFormatter combinedFamilyInfoFormatter;
 
         public RecordsManager(
+            IPoliciesResource policiesResource,
             IAuthorizationEngine authorizationEngine,
             IUserAccessCalculation userAccessCalculation,
             IDirectoryResource directoryResource,
@@ -37,6 +40,7 @@ namespace CareTogether.Managers.Records
             CombinedFamilyInfoFormatter combinedFamilyInfoFormatter
         )
         {
+            this.policiesResource = policiesResource;
             this.authorizationEngine = authorizationEngine;
             this.userAccessCalculation = userAccessCalculation;
             this.directoryResource = directoryResource;
@@ -47,12 +51,38 @@ namespace CareTogether.Managers.Records
             this.combinedFamilyInfoFormatter = combinedFamilyInfoFormatter;
         }
 
+        private async Task<SessionUserContext> CreateSessionUserContext(
+            ClaimsPrincipal user,
+            Guid organizationId,
+            Guid locationId
+        )
+        {
+            var userPersonId = user.PersonId(organizationId, locationId);
+            var userFamily =
+                userPersonId == null
+                    ? null
+                    : await directoryResource.FindPersonFamilyAsync(
+                        organizationId,
+                        locationId,
+                        userPersonId.Value
+                    );
+            var userContext = new SessionUserContext(user, userFamily);
+            return userContext;
+        }
+
         public async Task<ImmutableList<RecordsAggregate>> ListVisibleAggregatesAsync(
             ClaimsPrincipal user,
             Guid organizationId,
             Guid locationId
         )
         {
+            var userContext = await CreateSessionUserContext(user, organizationId, locationId);
+
+            var locationPolicy = await policiesResource.GetCurrentPolicy(
+                organizationId,
+                locationId
+            );
+
             // The following permissions should not be construed as granting access to an actual aggregate.
             //TODO: More of this logic should be handled by the AuthorizationEngine.
             var irrelevantPermissions = ImmutableHashSet.Create(
@@ -71,8 +101,8 @@ namespace CareTogether.Managers.Records
                         var permissions = await userAccessCalculation.AuthorizeUserAccessAsync(
                             organizationId,
                             locationId,
-                            user,
-                            new FamilyAuthorizationContext(family.Id)
+                            userContext,
+                            new FamilyAuthorizationContext(family.Id, family)
                         );
                         return (
                             family,
@@ -89,9 +119,11 @@ namespace CareTogether.Managers.Records
                         var renderedFamily =
                             await combinedFamilyInfoFormatter.RenderCombinedFamilyInfoAsync(
                                 organizationId,
+                                locationPolicy,
                                 locationId,
                                 family.Id,
-                                user
+                                family,
+                                userContext
                             );
                         if (renderedFamily == null)
                             return null;
@@ -112,7 +144,7 @@ namespace CareTogether.Managers.Records
                         var permissions = await userAccessCalculation.AuthorizeUserAccessAsync(
                             organizationId,
                             locationId,
-                            user,
+                            userContext,
                             new CommunityAuthorizationContext(community.Id)
                         );
                         return (
@@ -128,7 +160,7 @@ namespace CareTogether.Managers.Records
                 {
                     //TODO: Rendering actions (e.g., permissions - which can be on a base aggregate type along with ID!)
                     var renderedCommunity = await authorizationEngine.DiscloseCommunityAsync(
-                        user,
+                        userContext,
                         organizationId,
                         locationId,
                         new CommunityInfo(community, ImmutableList<Permission>.Empty)
@@ -150,21 +182,47 @@ namespace CareTogether.Managers.Records
             CompositeRecordsCommand command
         )
         {
+            var locationPolicy = await policiesResource.GetCurrentPolicy(
+                organizationId,
+                locationId
+            );
+
+            var userContext = await CreateSessionUserContext(user, organizationId, locationId);
+
             var atomicCommands = GenerateAtomicCommandsForCompositeCommand(command)
                 .ToImmutableList();
 
             foreach (var atomicCommand in atomicCommands)
-                if (!await AuthorizeCommandAsync(organizationId, locationId, user, atomicCommand))
+                if (
+                    !await AuthorizeCommandAsync(
+                        organizationId,
+                        locationId,
+                        userContext,
+                        atomicCommand
+                    )
+                )
                     throw new Exception("The user is not authorized to perform this command.");
 
             foreach (var atomicCommand in atomicCommands)
                 await ExecuteCommandAsync(organizationId, locationId, user, atomicCommand);
 
+            var userPersonId = user.PersonId(organizationId, locationId);
+            var userFamily =
+                userPersonId == null
+                    ? null
+                    : await directoryResource.FindPersonFamilyAsync(
+                        organizationId,
+                        locationId,
+                        userPersonId.Value
+                    );
+
             var familyResult = await combinedFamilyInfoFormatter.RenderCombinedFamilyInfoAsync(
                 organizationId,
+                locationPolicy,
                 locationId,
                 command.FamilyId,
-                user
+                null,
+                userContext
             );
 
             return familyResult == null ? null : new FamilyRecordsAggregate(familyResult);
@@ -177,12 +235,13 @@ namespace CareTogether.Managers.Records
             AtomicRecordsCommand command
         )
         {
-            if (!await AuthorizeCommandAsync(organizationId, locationId, user, command))
+            var userContext = await CreateSessionUserContext(user, organizationId, locationId);
+            if (!await AuthorizeCommandAsync(organizationId, locationId, userContext, command))
                 throw new Exception("The user is not authorized to perform this command.");
 
             await ExecuteCommandAsync(organizationId, locationId, user, command);
 
-            return await RenderCommandResultAsync(organizationId, locationId, user, command);
+            return await RenderCommandResultAsync(organizationId, locationId, userContext, command);
         }
 
         public async Task<Uri> GetFamilyDocumentReadValetUrl(
@@ -193,10 +252,12 @@ namespace CareTogether.Managers.Records
             Guid documentId
         )
         {
+            var userContext = await CreateSessionUserContext(user, organizationId, locationId);
+
             var contextPermissions = await userAccessCalculation.AuthorizeUserAccessAsync(
                 organizationId,
                 locationId,
-                user,
+                userContext,
                 new FamilyAuthorizationContext(familyId)
             );
 
@@ -221,11 +282,13 @@ namespace CareTogether.Managers.Records
             Guid documentId
         )
         {
+            var userContext = await CreateSessionUserContext(user, organizationId, locationId);
+
             var contextPermissions = await userAccessCalculation.AuthorizeUserAccessAsync(
                 organizationId,
                 locationId,
-                user,
-                new FamilyAuthorizationContext(familyId)
+                userContext,
+                new FamilyAuthorizationContext(familyId, null)
             );
 
             if (!contextPermissions.Contains(Permission.UploadFamilyDocuments))
@@ -249,10 +312,12 @@ namespace CareTogether.Managers.Records
             Guid documentId
         )
         {
+            var userContext = await CreateSessionUserContext(user, organizationId, locationId);
+
             var contextPermissions = await userAccessCalculation.AuthorizeUserAccessAsync(
                 organizationId,
                 locationId,
-                user,
+                userContext,
                 new CommunityAuthorizationContext(communityId)
             );
 
@@ -277,10 +342,12 @@ namespace CareTogether.Managers.Records
             Guid documentId
         )
         {
+            var userContext = await CreateSessionUserContext(user, organizationId, locationId);
+
             var contextPermissions = await userAccessCalculation.AuthorizeUserAccessAsync(
                 organizationId,
                 locationId,
-                user,
+                userContext,
                 new CommunityAuthorizationContext(communityId)
             );
 
@@ -482,7 +549,7 @@ namespace CareTogether.Managers.Records
         private Task<bool> AuthorizeCommandAsync(
             Guid organizationId,
             Guid locationId,
-            ClaimsPrincipal user,
+            SessionUserContext userContext,
             AtomicRecordsCommand command
         ) =>
             command switch
@@ -490,13 +557,13 @@ namespace CareTogether.Managers.Records
                 FamilyRecordsCommand c => authorizationEngine.AuthorizeFamilyCommandAsync(
                     organizationId,
                     locationId,
-                    user,
+                    userContext,
                     c.Command
                 ),
                 PersonRecordsCommand c => authorizationEngine.AuthorizePersonCommandAsync(
                     organizationId,
                     locationId,
-                    user,
+                    userContext,
                     c.FamilyId,
                     c.Command
                 ),
@@ -504,39 +571,39 @@ namespace CareTogether.Managers.Records
                     authorizationEngine.AuthorizeVolunteerFamilyCommandAsync(
                         organizationId,
                         locationId,
-                        user,
+                        userContext,
                         c.Command
                     ),
                 IndividualApprovalRecordsCommand c =>
                     authorizationEngine.AuthorizeVolunteerCommandAsync(
                         organizationId,
                         locationId,
-                        user,
+                        userContext,
                         c.Command
                     ),
                 ReferralRecordsCommand c => authorizationEngine.AuthorizeV1CaseCommandAsync(
                     organizationId,
                     locationId,
-                    user,
+                    userContext,
                     c.Command
                 ),
                 ArrangementRecordsCommand c =>
                     authorizationEngine.AuthorizeArrangementsCommandAsync(
                         organizationId,
                         locationId,
-                        user,
+                        userContext,
                         c.Command
                     ),
                 NoteRecordsCommand c => authorizationEngine.AuthorizeNoteCommandAsync(
                     organizationId,
                     locationId,
-                    user,
+                    userContext,
                     c.Command
                 ),
                 CommunityRecordsCommand c => authorizationEngine.AuthorizeCommunityCommandAsync(
                     organizationId,
                     locationId,
-                    user,
+                    userContext,
                     c.Command
                 ),
                 _ => throw new NotImplementedException(
@@ -610,10 +677,15 @@ namespace CareTogether.Managers.Records
         private async Task<ImmutableList<RecordsAggregate>> RenderCommandResultAsync(
             Guid organizationId,
             Guid locationId,
-            ClaimsPrincipal user,
+            SessionUserContext userContext,
             AtomicRecordsCommand command
         )
         {
+            var locationPolicy = await policiesResource.GetCurrentPolicy(
+                organizationId,
+                locationId
+            );
+
             if (command is CommunityRecordsCommand c)
             {
                 var communityId = c.Command.CommunityId;
@@ -627,7 +699,7 @@ namespace CareTogether.Managers.Records
                 var communityInfo = new CommunityInfo(community, ImmutableList<Permission>.Empty);
 
                 var communityResult = await authorizationEngine.DiscloseCommunityAsync(
-                    user,
+                    userContext,
                     organizationId,
                     locationId,
                     communityInfo
@@ -643,9 +715,11 @@ namespace CareTogether.Managers.Records
                     familyIds.Select(familyId =>
                         combinedFamilyInfoFormatter.RenderCombinedFamilyInfoAsync(
                             organizationId,
+                            locationPolicy,
                             locationId,
                             familyId,
-                            user
+                            null,
+                            userContext
                         )
                     )
                 );

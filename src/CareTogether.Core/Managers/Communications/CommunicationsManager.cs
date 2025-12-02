@@ -17,6 +17,25 @@ namespace CareTogether.Managers.Communications
         private readonly IPoliciesResource policiesResource;
         private readonly ITelephony telephony;
 
+        private async Task<SessionUserContext> CreateSessionUserContext(
+            ClaimsPrincipal user,
+            Guid organizationId,
+            Guid locationId
+        )
+        {
+            var userPersonId = user.PersonId(organizationId, locationId);
+            var userFamily =
+                userPersonId == null
+                    ? null
+                    : await directoryResource.FindPersonFamilyAsync(
+                        organizationId,
+                        locationId,
+                        userPersonId.Value
+                    );
+            var userContext = new SessionUserContext(user, userFamily);
+            return userContext;
+        }
+
         public CommunicationsManager(
             IAuthorizationEngine authorizationEngine,
             IDirectoryResource directoryResource,
@@ -41,7 +60,15 @@ namespace CareTogether.Managers.Communications
             string message
         )
         {
-            if (!await authorizationEngine.AuthorizeSendSmsAsync(organizationId, locationId, user))
+            var userContext = await CreateSessionUserContext(user, organizationId, locationId);
+
+            if (
+                !await authorizationEngine.AuthorizeSendSmsAsync(
+                    organizationId,
+                    locationId,
+                    userContext
+                )
+            )
                 throw new Exception("The user is not authorized to perform this command.");
 
             // Validate that the requested source number has been configured for the specified location.
