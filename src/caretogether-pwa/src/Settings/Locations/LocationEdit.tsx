@@ -229,6 +229,12 @@ export function LocationEdit() {
             </Box>
           )}
 
+          {activeTab === 'actions' && (
+            <Box key="actions">
+              <ActionDefinitions />
+            </Box>
+          )}
+
           {activeTab === 'accessLevels' && (
             <Box key="accessLevels">
               <AccessLevels locationConfiguration={location} />

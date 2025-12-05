@@ -1,17 +1,9 @@
-import {
-  Button,
-  TextField,
-  Typography,
-  Radio,
-  RadioGroup,
-  FormControl,
-  FormLabel,
-  FormControlLabel,
-  FormHelperText,
-  Stack,
-  Box,
-} from '@mui/material';
+import { Button, TextField, Typography, Stack, MenuItem } from '@mui/material';
 import { useForm, Controller } from 'react-hook-form';
+import { useRecoilValue } from 'recoil';
+import { selectedLocationContextState } from '../../../Model/Data';
+import { api } from '../../../Api/Api';
+import { EffectiveLocationPolicy } from '../../../GeneratedClient';
 
 interface DrawerProps {
   onClose: () => void;
@@ -19,13 +11,25 @@ interface DrawerProps {
 
 interface AddActionDefinitionFormValues {
   name: string;
-  documentRequirement: 'None' | 'Allowed' | 'Required';
-  noteRequirement: 'None' | 'Allowed' | 'Required';
+  alternateNames: string;
   instructions: string;
   infoLink: string;
+  documentRequirement: 0 | 1 | 2;
+  noteRequirement: 0 | 1 | 2;
+  validityInDays: number | null;
 }
 
+const requirementOptions = [
+  { label: 'None', value: 0 },
+  { label: 'Allowed', value: 1 },
+  { label: 'Required', value: 2 },
+];
+
 export function AddActionDefinition({ onClose }: DrawerProps) {
+  const { organizationId, locationId } = useRecoilValue(
+    selectedLocationContextState
+  );
+
   const {
     handleSubmit,
     control,
@@ -34,21 +38,76 @@ export function AddActionDefinition({ onClose }: DrawerProps) {
     mode: 'onChange',
     defaultValues: {
       name: '',
-      documentRequirement: 'Allowed',
-      noteRequirement: 'Allowed',
+      alternateNames: '',
       instructions: '',
       infoLink: '',
+      documentRequirement: 0,
+      noteRequirement: 0,
+      validityInDays: null,
     },
   });
 
-  const onSubmit = () => {
+  const convertToBackend = (data: AddActionDefinitionFormValues) => {
+    const parsedAlternateNames = data.alternateNames
+      ? data.alternateNames.split(',').map((x) => x.trim())
+      : [];
+
+    const validity =
+      data.validityInDays && data.validityInDays > 0
+        ? `${data.validityInDays}.00:00:00`
+        : null;
+
+    return {
+      name: data.name,
+      alternateNames: parsedAlternateNames,
+      instructions: data.instructions || null,
+      infoLink: data.infoLink || null,
+      documentLink: data.documentRequirement,
+      noteEntry: data.noteRequirement,
+      validity,
+      canView: null,
+      canEdit: null,
+    };
+  };
+
+  const onSubmit = async (values: AddActionDefinitionFormValues) => {
+    const newAction = convertToBackend(values);
+
+    const currentPolicy = await api.configuration.getEffectiveLocationPolicy(
+      organizationId,
+      locationId
+    );
+
+    const updatedPolicy = {
+      ...currentPolicy,
+      actionDefinitions: {
+        ...currentPolicy.actionDefinitions,
+        [newAction.name]: {
+          documentLink: newAction.documentLink,
+          noteEntry: newAction.noteEntry,
+          instructions: newAction.instructions,
+          infoLink: newAction.infoLink,
+          validity: newAction.validity,
+          canView: null,
+          canEdit: null,
+          alternateNames: newAction.alternateNames,
+        },
+      },
+    };
+
+    await api.configuration.putEffectiveLocationPolicy(
+      organizationId,
+      locationId,
+      updatedPolicy as unknown as EffectiveLocationPolicy
+    );
+
     onClose();
   };
 
   return (
     <form onSubmit={handleSubmit(onSubmit)}>
-      <Stack spacing={0.25} maxWidth={500}>
-        <Typography variant="h6">Add new action definition</Typography>
+      <Stack spacing={2} maxWidth={500}>
+        <Typography variant="h6">Add New Action Definition</Typography>
 
         <Controller
           name="name"
@@ -57,71 +116,21 @@ export function AddActionDefinition({ onClose }: DrawerProps) {
           render={({ field }) => (
             <TextField
               {...field}
-              type="text"
-              fullWidth
-              required
               label="Name"
+              fullWidth
               error={!!errors.name}
               helperText={errors.name?.message}
             />
           )}
         />
 
-        <FormControl component="fieldset">
-          <FormLabel component="legend">Document</FormLabel>
-          <Controller
-            name="documentRequirement"
-            control={control}
-            render={({ field }) => (
-              <RadioGroup {...field}>
-                <Stack spacing={1}>
-                  {['Allowed', 'Required', 'None'].map((value) => (
-                    <Box key={value}>
-                      <FormControlLabel
-                        value={value}
-                        control={<Radio />}
-                        label={value}
-                      />
-                      <FormHelperText sx={{ ml: 4 }}>
-                        {value === 'Allowed' && 'Document is optional'}
-                        {value === 'Required' && 'Always require a document'}
-                        {value === 'None' && 'Don’t ask for a document'}
-                      </FormHelperText>
-                    </Box>
-                  ))}
-                </Stack>
-              </RadioGroup>
-            )}
-          />
-        </FormControl>
-
-        <FormControl component="fieldset">
-          <FormLabel component="legend">Note</FormLabel>
-          <Controller
-            name="noteRequirement"
-            control={control}
-            render={({ field }) => (
-              <RadioGroup {...field}>
-                <Stack spacing={1}>
-                  {['Allowed', 'Required', 'None'].map((value) => (
-                    <Box key={value}>
-                      <FormControlLabel
-                        value={value}
-                        control={<Radio />}
-                        label={value}
-                      />
-                      <FormHelperText sx={{ ml: 4 }}>
-                        {value === 'Allowed' && 'Note is optional'}
-                        {value === 'Required' && 'Always require a note'}
-                        {value === 'None' && 'Don’t ask for a note'}
-                      </FormHelperText>
-                    </Box>
-                  ))}
-                </Stack>
-              </RadioGroup>
-            )}
-          />
-        </FormControl>
+        <Controller
+          name="alternateNames"
+          control={control}
+          render={({ field }) => (
+            <TextField {...field} label="Alternate name(s)" fullWidth />
+          )}
+        />
 
         <Controller
           name="instructions"
@@ -132,7 +141,7 @@ export function AddActionDefinition({ onClose }: DrawerProps) {
               label="Instructions"
               fullWidth
               multiline
-              rows={2}
+              rows={3}
             />
           )}
         />
@@ -145,14 +154,56 @@ export function AddActionDefinition({ onClose }: DrawerProps) {
           )}
         />
 
-        <Stack direction="row" spacing={2} justifyContent="flex-end">
-          <Button color="secondary" variant="contained" onClick={onClose}>
+        <Controller
+          name="documentRequirement"
+          control={control}
+          render={({ field }) => (
+            <TextField {...field} label="Document" select fullWidth>
+              {requirementOptions.map((opt) => (
+                <MenuItem key={opt.value} value={opt.value}>
+                  {opt.label}
+                </MenuItem>
+              ))}
+            </TextField>
+          )}
+        />
+
+        <Controller
+          name="noteRequirement"
+          control={control}
+          render={({ field }) => (
+            <TextField {...field} label="Note" select fullWidth>
+              {requirementOptions.map((opt) => (
+                <MenuItem key={opt.value} value={opt.value}>
+                  {opt.label}
+                </MenuItem>
+              ))}
+            </TextField>
+          )}
+        />
+
+        <Controller
+          name="validityInDays"
+          control={control}
+          render={({ field }) => (
+            <TextField
+              {...field}
+              label="Validity (days)"
+              type="number"
+              fullWidth
+              InputProps={{ inputProps: { min: 0 } }}
+            />
+          )}
+        />
+
+        <Stack direction="row" justifyContent="flex-end" spacing={2}>
+          <Button variant="contained" color="secondary" onClick={onClose}>
             Cancel
           </Button>
           <Button
             type="submit"
-            color="primary"
             variant="contained"
+            color="primary"
             disabled={!isValid}
           >
             Save
