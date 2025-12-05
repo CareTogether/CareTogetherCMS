@@ -14,53 +14,63 @@ import {
   Link,
   TablePagination,
   Drawer,
+  InputAdornment,
 } from '@mui/material';
+import SearchIcon from '@mui/icons-material/Search';
+import { useState, useMemo } from 'react';
 import { useRecoilValue } from 'recoil';
 import { policyData } from '../../../Model/ConfigurationModel';
-import { useState } from 'react';
 import { AddActionDefinition } from './AddActionDefinition';
-import SearchIcon from '@mui/icons-material/Search';
-import dayjs from 'dayjs';
-import duration from 'dayjs/plugin/duration';
-import relativeTime from 'dayjs/plugin/relativeTime';
-import InputAdornment from '@mui/material/InputAdornment';
 
-dayjs.extend(duration);
-dayjs.extend(relativeTime);
+const requirementLabel: Record<number, string> = {
+  0: 'None',
+  1: 'Allowed',
+  2: 'Required',
+};
+
+function truncate(text?: string | null, length = 40) {
+  if (!text) return '-';
+  return text.length <= length ? text : text.slice(0, length) + '…';
+}
+
+function formatValidity(value?: string | null) {
+  if (!value) return '-';
+  const [days] = value.split('.');
+  return `${days} days`;
+}
 
 export default function ActionDefinitions() {
   const effectiveLocationPolicy = useRecoilValue(policyData);
   const actionDefinitions = effectiveLocationPolicy?.actionDefinitions;
 
   const [searchTerm, setSearchTerm] = useState('');
-
   const [page, setPage] = useState(0);
   const rowsPerPage = 5;
-
   const [openDrawer, setOpenDrawer] = useState(false);
 
-  if (!actionDefinitions || Object.keys(actionDefinitions).length === 0) {
-    return (
-      <Typography variant="body2">No action definitions found.</Typography>
-    );
-  }
+  const entries = Object.entries(actionDefinitions ?? {});
 
-  const rows = Object.entries(actionDefinitions).filter(([name]) =>
-    name.toLowerCase().includes(searchTerm.toLowerCase())
+  const filtered = useMemo(
+    () =>
+      entries.filter(([name]) =>
+        name.toLowerCase().includes(searchTerm.toLowerCase())
+      ),
+    [entries, searchTerm]
   );
-  const paginatedRows = rows.slice(
+
+  const paginated = filtered.slice(
     page * rowsPerPage,
     page * rowsPerPage + rowsPerPage
   );
 
+  if (!actionDefinitions) {
+    return <Typography>No action definitions found.</Typography>;
+  }
+
   return (
     <Box>
       <Typography variant="h6" sx={{ mb: 1 }}>
-        Action definitions
-      </Typography>
-      <Typography variant="body2" sx={{ mb: 3 }}>
-        Actions can not be delete, nor have its name changed. All the other
-        properties can be changed.
+        Action Definitions
       </Typography>
 
       <TextField
@@ -79,43 +89,53 @@ export default function ActionDefinitions() {
         onChange={(e) => setSearchTerm(e.target.value)}
       />
 
-      <TableContainer component={Paper} sx={{ mb: 1 }}>
+      <TableContainer component={Paper} sx={{ mt: 2 }}>
         <Table size="small">
           <TableHead>
             <TableRow>
               <TableCell>Name</TableCell>
-              <TableCell>Document</TableCell>
+              <TableCell>Document Link</TableCell>
               <TableCell>Note</TableCell>
               <TableCell>Instructions</TableCell>
-              <TableCell>Info link</TableCell>
+              <TableCell>Info Link</TableCell>
               <TableCell>Validity</TableCell>
             </TableRow>
           </TableHead>
+
           <TableBody>
-            {paginatedRows.map(([name, definition]) => (
+            {paginated.map(([name, def]) => (
               <TableRow key={name}>
-                <TableCell>{name}</TableCell>
-                <TableCell>{definition.documentLink || '-'}</TableCell>
-                <TableCell>{definition.noteEntry || '-'}</TableCell>
-                <TableCell>{definition.instructions || '-'}</TableCell>
                 <TableCell>
-                  {definition.infoLink ? (
+                  {name}
+
+                  {def.alternateNames && def.alternateNames.length > 0 && (
+                    <Typography
+                      variant="body2"
+                      color="text.secondary"
+                      sx={{ display: 'block', mt: 0.5 }}
+                    >
+                      {def.alternateNames.join(', ')}
+                    </Typography>
+                  )}
+                </TableCell>
+
+                <TableCell>{requirementLabel[def.documentLink]}</TableCell>
+                <TableCell>{requirementLabel[def.noteEntry]}</TableCell>
+                <TableCell>{truncate(def.instructions)}</TableCell>
+                <TableCell>
+                  {def.infoLink ? (
                     <Link
-                      href={definition.infoLink}
+                      href={def.infoLink}
                       target="_blank"
                       rel="noopener noreferrer"
                     >
-                      {definition.infoLink}
+                      {def.infoLink}
                     </Link>
                   ) : (
                     '-'
                   )}
                 </TableCell>
-                <TableCell>
-                  {definition.validity
-                    ? dayjs.duration(definition.validity).humanize()
-                    : '-'}
-                </TableCell>
+                <TableCell>{formatValidity(def.validity)}</TableCell>
               </TableRow>
             ))}
           </TableBody>
@@ -124,7 +144,7 @@ export default function ActionDefinitions() {
 
       <TablePagination
         component="div"
-        count={rows.length}
+        count={filtered.length}
         page={page}
         onPageChange={(_, newPage) => setPage(newPage)}
         rowsPerPage={rowsPerPage}
@@ -132,12 +152,8 @@ export default function ActionDefinitions() {
       />
 
       <Stack direction="row" spacing={2} sx={{ mt: 2 }}>
-        <Button
-          variant="contained"
-          color="primary"
-          onClick={() => setOpenDrawer(true)}
-        >
-          Add New Action Definition
+        <Button variant="contained" onClick={() => setOpenDrawer(true)}>
+          Add new action definition
         </Button>
       </Stack>
 
