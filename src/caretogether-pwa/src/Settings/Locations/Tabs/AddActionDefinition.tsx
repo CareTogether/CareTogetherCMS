@@ -3,7 +3,12 @@ import { useForm, Controller } from 'react-hook-form';
 import { useRecoilValue } from 'recoil';
 import { selectedLocationContextState } from '../../../Model/Data';
 import { api } from '../../../Api/Api';
-import { EffectiveLocationPolicy } from '../../../GeneratedClient';
+import {
+  EffectiveLocationPolicy,
+  ActionRequirement,
+} from '../../../GeneratedClient';
+import { useSetRecoilState } from 'recoil';
+import { effectiveLocationPolicyEdited } from '../../../Model/ConfigurationModel';
 
 interface DrawerProps {
   onClose: () => void;
@@ -30,6 +35,8 @@ export function AddActionDefinition({ onClose }: DrawerProps) {
     selectedLocationContextState
   );
 
+  const setEditedPolicy = useSetRecoilState(effectiveLocationPolicyEdited);
+
   const {
     handleSubmit,
     control,
@@ -55,18 +62,18 @@ export function AddActionDefinition({ onClose }: DrawerProps) {
     const validity =
       data.validityInDays && data.validityInDays > 0
         ? `${data.validityInDays}.00:00:00`
-        : null;
+        : undefined;
 
     return {
-      name: data.name,
+      actionName: data.name,
       alternateNames: parsedAlternateNames,
-      instructions: data.instructions || null,
-      infoLink: data.infoLink || null,
+      instructions: data.instructions || undefined,
+      infoLink: data.infoLink || undefined,
       documentLink: data.documentRequirement,
       noteEntry: data.noteRequirement,
       validity,
-      canView: null,
-      canEdit: null,
+      canView: undefined,
+      canEdit: undefined,
     };
   };
 
@@ -78,28 +85,21 @@ export function AddActionDefinition({ onClose }: DrawerProps) {
       locationId
     );
 
-    const updatedPolicy = {
+    const updatedPolicy = new EffectiveLocationPolicy({
       ...currentPolicy,
       actionDefinitions: {
         ...currentPolicy.actionDefinitions,
-        [newAction.name]: {
-          documentLink: newAction.documentLink,
-          noteEntry: newAction.noteEntry,
-          instructions: newAction.instructions,
-          infoLink: newAction.infoLink,
-          validity: newAction.validity,
-          canView: null,
-          canEdit: null,
-          alternateNames: newAction.alternateNames,
-        },
+        [newAction.actionName]: new ActionRequirement(newAction),
       },
-    };
+    });
 
     await api.configuration.putEffectiveLocationPolicy(
       organizationId,
       locationId,
       updatedPolicy as unknown as EffectiveLocationPolicy
     );
+
+    setEditedPolicy(updatedPolicy);
 
     onClose();
   };
