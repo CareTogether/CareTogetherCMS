@@ -140,8 +140,8 @@ export function FamilyScreen() {
       ? []
       : [...family.partneringFamilyInfo.closedV1Cases!].sort(
           (r1, r2) =>
-            r1.closedAtUtc!.getUTCMilliseconds() -
-            r2.closedAtUtc!.getUTCMilliseconds()
+            (r1.closedAtUtc?.getUTCMilliseconds() ?? 0) -
+            (r2.closedAtUtc?.getUTCMilliseconds() ?? 0)
         );
   }, [family?.partneringFamilyInfo?.closedV1Cases]);
 
