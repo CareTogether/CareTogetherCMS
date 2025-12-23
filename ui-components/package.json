@@ -1,0 +1,6 @@
+{
+  "name": "@caretogether/ui-components",
+  "version": "0.1.0",
+  "description": "CareTogether UI component library - built with Deno",
+  "private": true
+}
