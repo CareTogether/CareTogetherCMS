@@ -9,6 +9,7 @@ import {
   useTheme,
 } from '@mui/material';
 import PermPhoneMsgIcon from '@mui/icons-material/PermPhoneMsg';
+import HandshakeIcon from '@mui/icons-material/Handshake';
 import PeopleIcon from '@mui/icons-material/People';
 import SettingsIcon from '@mui/icons-material/Settings';
 import Diversity3Icon from '@mui/icons-material/Diversity3';
@@ -103,9 +104,17 @@ function SideNavigationMenu({ open }: SideNavigationMenuProps) {
           {permissions(Permission.AccessPartneringFamiliesScreen) && (
             <ListItemLink
               className="ph-unmask"
+              to={`${locationPrefix}/referrals`}
+              primary="Referrals"
+              icon={<PermPhoneMsgIcon />}
+            />
+          )}
+          {permissions(Permission.AccessPartneringFamiliesScreen) && (
+            <ListItemLink
+              className="ph-unmask"
               to={`${locationPrefix}/cases`}
               primary="Cases"
-              icon={<PermPhoneMsgIcon />}
+              icon={<HandshakeIcon />}
             />
           )}
           {permissions(Permission.AccessVolunteersScreen) && (
