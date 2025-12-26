@@ -30,7 +30,6 @@ import {
   ArrangementPhase,
   Permission,
   CompletedCustomFieldInfo,
-  CustomFieldType,
 } from '../GeneratedClient';
 import { FamilyName } from '../Families/FamilyName';
 import { ArrangementCard } from './Arrangements/ArrangementCard';
@@ -51,7 +50,9 @@ import { useLoadable } from '../Hooks/useLoadable';
 import { ProgressBackdrop } from '../Shell/ProgressBackdrop';
 import { useAppNavigate } from '../Hooks/useAppNavigate';
 import PhoneIcon from '@mui/icons-material/Phone';
-import { ReferralCustomFieldFilter } from '../V1Cases/Arrangements/ReferralCustomFieldFilter';
+import { ReferralCustomFieldFilters } from './CustomFieldFilters/ReferralCustomFieldFilters';
+import { useReferralCustomFieldFilters } from './CustomFieldFilters/useReferralCustomFieldFilters';
+import { matchesCustomFieldFiltersForFamily } from './CustomFieldFilters/matchesCustomFieldFiltersForFamily';
 import { TestFamilyBadge } from '../Families/TestFamilyBadge';
 import { useFeatureFlagEnabled } from 'posthog-js/react';
 
@@ -146,86 +147,14 @@ function PartneringFamilies() {
     filterText
   );
 
-  type FilterValue = string | boolean | null;
-
-  type FilterOption = {
-    key: string;
-    value: FilterValue;
-    selected: boolean;
-  };
-
-  const [
-    selectedCustomFieldValuesByField,
-    setSelectedCustomFieldValuesByField,
-  ] = useState<Record<string, FilterValue[]>>({});
-
-  const customFieldFilterOptionsByField = React.useMemo(() => {
-    return Object.fromEntries(
-      referralCustomFields.map((field) => {
-        const seedValues: FilterValue[] =
-          field.type === CustomFieldType.Boolean ? [true, false, null] : [];
-
-        const observedValues: FilterValue[] = partneringFamilies.flatMap(
-          (family) => {
-            const openCase = family.partneringFamilyInfo?.openV1Case;
-            const isMissing =
-              openCase?.missingCustomFields?.includes(field.name) ?? false;
-
-            if (isMissing) {
-              return [null];
-            }
-
-            const val = openCase?.completedCustomFields?.find(
-              (f) => f.customFieldName === field.name
-            )?.value;
-
-            if (field.type === CustomFieldType.Boolean) {
-              if (val === true) return [true];
-              if (val === false) return [false];
-              return [];
-            }
-
-            if (val !== undefined && val !== null && val !== '') {
-              return [val.toString()];
-            }
-
-            return [];
-          }
-        );
-
-        const values = Array.from(
-          new Set<FilterValue>([...seedValues, ...observedValues])
-        );
-
-        const selectedValues = new Set<FilterValue>(
-          selectedCustomFieldValuesByField[field.name] ?? []
-        );
-
-        const options = values.map((v) => {
-          const key =
-            v === null
-              ? 'Blank'
-              : field.type === CustomFieldType.Boolean
-                ? v === true
-                  ? 'Yes'
-                  : 'No'
-                : v.toString();
-
-          return {
-            key,
-            value: v,
-            selected: selectedValues.has(v),
-          };
-        });
-
-        return [field.name, options] as const;
-      })
-    ) as Record<string, FilterOption[]>;
-  }, [
-    partneringFamilies,
+  const {
+    selectedValuesByField: selectedCustomFieldValuesByField,
+    setSelectedValuesForField: setSelectedCustomFieldValuesForField,
+    optionsByField: customFieldFilterOptionsByField,
+  } = useReferralCustomFieldFilters({
     referralCustomFields,
-    selectedCustomFieldValuesByField,
-  ]);
+    partneringFamilies,
+  });
 
   useScrollMemory();
 
@@ -346,35 +275,13 @@ function PartneringFamilies() {
   >('partnering-families-arrangementsFilter', 'All');
   const filteredPartneringFamiliesWithActiveOrAllFilter =
     filteredPartneringFamilies
-      .filter((family) => {
-        return referralCustomFields.every((field) => {
-          const selectedValues =
-            selectedCustomFieldValuesByField[field.name] ?? [];
-
-          if (selectedValues.length === 0) return true;
-
-          const openCase = family.partneringFamilyInfo?.openV1Case;
-          const isMissing =
-            openCase?.missingCustomFields?.includes(field.name) ?? false;
-
-          if (selectedValues.includes(null) && isMissing) return true;
-
-          const rawVal = openCase?.completedCustomFields?.find(
-            (f) => f.customFieldName === field.name
-          )?.value;
-
-          if (field.type === CustomFieldType.Boolean) {
-            if (selectedValues.includes(true) && rawVal === true) return true;
-            if (selectedValues.includes(false) && rawVal === false) return true;
-            return false;
-          }
-
-          if (rawVal === undefined || rawVal === null || rawVal === '')
-            return false;
-
-          return selectedValues.includes(rawVal.toString());
-        });
-      })
+      .filter((family) =>
+        matchesCustomFieldFiltersForFamily(
+          family,
+          referralCustomFields,
+          selectedCustomFieldValuesByField
+        )
+      )
       .filter((family) => {
         const openCase = family.partneringFamilyInfo?.openV1Case;
         const arrangements = openCase?.arrangements ?? [];
@@ -492,27 +399,11 @@ function PartneringFamilies() {
             </Tooltip>
           </ToggleButtonGroup>
 
-          {referralCustomFields.map((field) => {
-            const options = customFieldFilterOptionsByField[field.name] ?? [];
-
-            const handleFilterChange = (
-              selectedValues: Array<string | boolean | null>
-            ) => {
-              setSelectedCustomFieldValuesByField((prev) => ({
-                ...prev,
-                [field.name]: selectedValues,
-              }));
-            };
-
-            return (
-              <ReferralCustomFieldFilter
-                key={field.name}
-                label={field.name}
-                options={options}
-                onChange={handleFilterChange}
-              />
-            );
-          })}
+          <ReferralCustomFieldFilters
+            referralCustomFields={referralCustomFields}
+            optionsByField={customFieldFilterOptionsByField}
+            onFieldChange={setSelectedCustomFieldValuesForField}
+          />
 
           <SearchBar value={filterText} onChange={setFilterText} />
 
