@@ -161,23 +161,32 @@ export function useAtomicRecordsCommandCallback<
         command
       );
 
-      for (const updatedAggregate of updatedAggregates) {
+      // If backend returns empty array, it means the aggregate was deleted
+      if (updatedAggregates.length === 0) {
         set(visibleAggregatesState, (current) =>
-          updatedAggregate == null
-            ? current.filter((currentEntry) => currentEntry.id !== aggregateId)
-            : current.some(
-                  (currentEntry) =>
+          current.filter((currentEntry) => currentEntry.id !== aggregateId)
+        );
+      } else {
+        for (const updatedAggregate of updatedAggregates) {
+          set(visibleAggregatesState, (current) =>
+            updatedAggregate == null
+              ? current.filter(
+                  (currentEntry) => currentEntry.id !== aggregateId
+                )
+              : current.some(
+                    (currentEntry) =>
+                      currentEntry.id === updatedAggregate.id &&
+                      currentEntry.constructor === updatedAggregate.constructor
+                  )
+                ? current.map((currentEntry) =>
                     currentEntry.id === updatedAggregate.id &&
                     currentEntry.constructor === updatedAggregate.constructor
-                )
-              ? current.map((currentEntry) =>
-                  currentEntry.id === updatedAggregate.id &&
-                  currentEntry.constructor === updatedAggregate.constructor
-                    ? updatedAggregate
-                    : currentEntry
-                )
-              : current.concat(updatedAggregate)
-        );
+                      ? updatedAggregate
+                      : currentEntry
+                  )
+                : current.concat(updatedAggregate)
+          );
+        }
       }
     };
     return asyncCallback;
