@@ -20,7 +20,6 @@ import {
 } from '@mui/material';
 import {
   CombinedFamilyInfo,
-  CustomFieldType,
   EmailAddress,
   Permission,
   VolunteerInfo,
@@ -62,7 +61,10 @@ import { VolunteerFilter } from './VolunteerFilter';
 import { catchAllLabel } from './catchAllLabel';
 import { getOptionValueFromSelection } from './getOptionValueFromSelection';
 import { getUpdatedFilters } from './getUpdatedFilters';
-import { CustomFieldsFilter } from './CustomFieldsFilter';
+import { CustomFieldsFilter } from '../../Generic/CustomFieldsFilter/CustomFieldsFilter';
+import { useCustomFieldFilters } from '../../Generic/CustomFieldsFilter/useCustomFieldFilters';
+import { matchesCustomFieldFilters } from '../../Generic/CustomFieldsFilter/matchesCustomFieldFilters';
+import { CustomFieldFilterValue } from '../../Generic/CustomFieldsFilter/types';
 import { AgeText } from '../../../src/Families/AgeText';
 import { TestFamilyBadge } from '../../Families/TestFamilyBadge';
 import { useFeatureFlagEnabled } from 'posthog-js/react';
@@ -77,12 +79,6 @@ function VolunteerApproval(props: { onOpen: () => void }) {
 
   const customFieldNames =
     policy.customFamilyFields?.map((field) => field.name) || [];
-
-  const [customFieldFilters, setCustomFieldFilters] = useState<
-    Record<string, string[]>
-  >({});
-
-  console.log('customFieldFilters', customFieldFilters);
 
   //#region Role/Status Selection Code
   const [roleFilters, setRoleFilters] = useRecoilState(roleFiltersState);
@@ -104,17 +100,12 @@ function VolunteerApproval(props: { onOpen: () => void }) {
     setStatusFilters(getUpdatedFilters(statusFilters, filterOptionToUpdate!));
   }
 
-  function changeCustomFieldFilter(fieldName: string, value: string[]) {
+  function changeCustomFieldFilter(
+    fieldName: string,
+    value: CustomFieldFilterValue[]
+  ) {
     setUncheckedFamilies([]);
-
-    setCustomFieldFilters((prevFilters) => {
-      const newValue = prevFilters[fieldName] === value ? [] : value;
-
-      return {
-        ...prevFilters,
-        [fieldName]: newValue,
-      };
-    });
+    setCustomFieldFilter(fieldName, value);
   }
   //#endregion
 
@@ -129,6 +120,27 @@ function VolunteerApproval(props: { onOpen: () => void }) {
           ? 1
           : 0
     );
+
+  const {
+    selectedValuesByField: customFieldFilters,
+    setSelectedValuesForField: setCustomFieldFilter,
+    optionsByField: customFieldFilterOptionsByField,
+  } = useCustomFieldFilters({
+    customFields: policy.customFamilyFields ?? [],
+    items: volunteerFamilies,
+    isBlank: (family, fieldName) => {
+      const field = family.family?.completedCustomFields?.find(
+        (customField) => customField.customFieldName === fieldName
+      );
+      return !field || field.value === undefined || field.value === null;
+    },
+    getValue: (family, fieldName) => {
+      const field = family.family?.completedCustomFields?.find(
+        (customField) => customField.customFieldName === fieldName
+      );
+      return field?.value;
+    },
+  });
   const [filterText, setFilterText] = useState('');
 
   //#region Family/Individual Filtering Code
@@ -345,32 +357,23 @@ function VolunteerApproval(props: { onOpen: () => void }) {
   //#endregion
 
   function familyMatchesCustomFieldFilters(family: CombinedFamilyInfo) {
-    return Object.entries(customFieldFilters).every(
-      ([fieldName, selectedValue]) => {
-        if (!selectedValue || selectedValue.length === 0) {
-          return true;
-        }
-
-        const field = family.family?.completedCustomFields?.find(
+    return matchesCustomFieldFilters({
+      item: family,
+      customFields: policy.customFamilyFields ?? [],
+      selectedValuesByField: customFieldFilters,
+      isBlank: (f, fieldName) => {
+        const field = f.family?.completedCustomFields?.find(
           (customField) => customField.customFieldName === fieldName
         );
-
-        if (!field) {
-          return selectedValue.includes('(blank)');
-        }
-
-        if (field.customFieldType === CustomFieldType.Boolean) {
-          const fieldValueAsString = field.value === true ? 'Yes' : 'No';
-          return selectedValue.includes(fieldValueAsString);
-        }
-
-        if (selectedValue.includes(field.value?.toString())) {
-          return true;
-        }
-
-        return false;
-      }
-    );
+        return !field || field.value === undefined || field.value === null;
+      },
+      getValue: (f, fieldName) => {
+        const field = f.family?.completedCustomFields?.find(
+          (customField) => customField.customFieldName === fieldName
+        );
+        return field?.value;
+      },
+    });
   }
 
   const filteredVolunteerFamilies = volunteerFamilies.filter(
@@ -548,10 +551,10 @@ function VolunteerApproval(props: { onOpen: () => void }) {
                 setSelected={changeStatusFilterSelection}
               />
               <CustomFieldsFilter
-                customFamilyFields={policy.customFamilyFields || []}
-                volunteerFamilies={volunteerFamilies}
-                customFieldFilters={customFieldFilters}
-                changeCustomFieldFilter={changeCustomFieldFilter}
+                customFields={policy.customFamilyFields || []}
+                optionsByField={customFieldFilterOptionsByField}
+                selectedValuesByField={customFieldFilters}
+                onFieldChange={changeCustomFieldFilter as any}
               />
             </Box>
             <ButtonGroup

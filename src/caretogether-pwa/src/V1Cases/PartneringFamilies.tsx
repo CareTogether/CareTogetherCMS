@@ -50,9 +50,9 @@ import { useLoadable } from '../Hooks/useLoadable';
 import { ProgressBackdrop } from '../Shell/ProgressBackdrop';
 import { useAppNavigate } from '../Hooks/useAppNavigate';
 import PhoneIcon from '@mui/icons-material/Phone';
-import { ReferralCustomFieldFilters } from './CustomFieldFilters/ReferralCustomFieldFilters';
-import { useReferralCustomFieldFilters } from './CustomFieldFilters/useReferralCustomFieldFilters';
-import { matchesCustomFieldFiltersForFamily } from './CustomFieldFilters/matchesCustomFieldFiltersForFamily';
+import { CustomFieldsFilter } from '../Generic/CustomFieldsFilter/CustomFieldsFilter';
+import { useCustomFieldFilters } from '../Generic/CustomFieldsFilter/useCustomFieldFilters';
+import { matchesCustomFieldFilters } from '../Generic/CustomFieldsFilter/matchesCustomFieldFilters';
 import { TestFamilyBadge } from '../Families/TestFamilyBadge';
 import { useFeatureFlagEnabled } from 'posthog-js/react';
 
@@ -151,9 +151,17 @@ function PartneringFamilies() {
     selectedValuesByField: selectedCustomFieldValuesByField,
     setSelectedValuesForField: setSelectedCustomFieldValuesForField,
     optionsByField: customFieldFilterOptionsByField,
-  } = useReferralCustomFieldFilters({
-    referralCustomFields,
-    partneringFamilies,
+  } = useCustomFieldFilters({
+    customFields: referralCustomFields,
+    items: partneringFamilies,
+    isBlank: (family, fieldName) =>
+      family.partneringFamilyInfo?.openV1Case?.missingCustomFields?.includes(
+        fieldName
+      ) ?? false,
+    getValue: (family, fieldName) =>
+      family.partneringFamilyInfo?.openV1Case?.completedCustomFields?.find(
+        (f) => f.customFieldName === fieldName
+      )?.value,
   });
 
   useScrollMemory();
@@ -276,11 +284,19 @@ function PartneringFamilies() {
   const filteredPartneringFamiliesWithActiveOrAllFilter =
     filteredPartneringFamilies
       .filter((family) =>
-        matchesCustomFieldFiltersForFamily(
-          family,
-          referralCustomFields,
-          selectedCustomFieldValuesByField
-        )
+        matchesCustomFieldFilters({
+          item: family,
+          customFields: referralCustomFields,
+          selectedValuesByField: selectedCustomFieldValuesByField,
+          isBlank: (f, fieldName) =>
+            f.partneringFamilyInfo?.openV1Case?.missingCustomFields?.includes(
+              fieldName
+            ) ?? false,
+          getValue: (f, fieldName) =>
+            f.partneringFamilyInfo?.openV1Case?.completedCustomFields?.find(
+              (x) => x.customFieldName === fieldName
+            )?.value,
+        })
       )
       .filter((family) => {
         const openCase = family.partneringFamilyInfo?.openV1Case;
@@ -399,9 +415,10 @@ function PartneringFamilies() {
             </Tooltip>
           </ToggleButtonGroup>
 
-          <ReferralCustomFieldFilters
-            referralCustomFields={referralCustomFields}
+          <CustomFieldsFilter
+            customFields={referralCustomFields}
             optionsByField={customFieldFilterOptionsByField}
+            selectedValuesByField={selectedCustomFieldValuesByField}
             onFieldChange={setSelectedCustomFieldValuesForField}
           />
 
