@@ -29,6 +29,7 @@ import {
   Arrangement,
   ArrangementPhase,
   Permission,
+  CompletedCustomFieldInfo,
 } from '../GeneratedClient';
 import { FamilyName } from '../Families/FamilyName';
 import { ArrangementCard } from './Arrangements/ArrangementCard';
@@ -49,6 +50,9 @@ import { useLoadable } from '../Hooks/useLoadable';
 import { ProgressBackdrop } from '../Shell/ProgressBackdrop';
 import { useAppNavigate } from '../Hooks/useAppNavigate';
 import PhoneIcon from '@mui/icons-material/Phone';
+import { CustomFieldsFilter } from '../Generic/CustomFieldsFilter/CustomFieldsFilter';
+import { useCustomFieldFilters } from '../Generic/CustomFieldsFilter/useCustomFieldFilters';
+import { matchesCustomFieldFilters } from '../Generic/CustomFieldsFilter/matchesCustomFieldFilters';
 import { TestFamilyBadge } from '../Families/TestFamilyBadge';
 import { useFeatureFlagEnabled } from 'posthog-js/react';
 
@@ -60,78 +64,60 @@ const arrangementPhaseText = new Map<number, string>([
 ]);
 
 function allArrangements(partneringFamilyInfo: PartneringFamilyInfo) {
-  const results: { v1CaseId: string; arrangement: Arrangement }[] = [];
-  partneringFamilyInfo.closedV1Cases?.forEach((x) =>
-    x.arrangements?.forEach((y) =>
-      results.push({ v1CaseId: x.id!, arrangement: y })
-    )
+  const closed = (partneringFamilyInfo.closedV1Cases ?? []).flatMap((v1Case) =>
+    (v1Case.arrangements ?? []).map((arrangement) => ({
+      v1CaseId: v1Case.id!,
+      arrangement,
+    }))
   );
-  partneringFamilyInfo.openV1Case?.arrangements?.forEach((x) =>
-    results.push({
-      v1CaseId: partneringFamilyInfo.openV1Case!.id!,
-      arrangement: x,
-    })
-  );
-  return results;
+
+  const openV1Case = partneringFamilyInfo.openV1Case;
+  const open = (openV1Case?.arrangements ?? []).map((arrangement) => ({
+    v1CaseId: openV1Case!.id!,
+    arrangement,
+  }));
+
+  return [...closed, ...open];
 }
 
 function matchingArrangements(
   partneringFamilyInfo: PartneringFamilyInfo,
   arrangementsFilter: 'All' | 'Intake' | 'Active' | 'Setup' | 'Active + Setup'
 ) {
-  const results: { v1CaseId: string; arrangement: Arrangement }[] = [];
-
   if (arrangementsFilter === 'Intake') {
     return [];
   }
 
   if (arrangementsFilter === 'All') {
-    partneringFamilyInfo.closedV1Cases?.forEach((x) =>
-      x.arrangements?.forEach((y) =>
-        results.push({ v1CaseId: x.id!, arrangement: y })
-      )
-    );
-    partneringFamilyInfo.openV1Case?.arrangements?.forEach((x) =>
-      results.push({
-        v1CaseId: partneringFamilyInfo.openV1Case!.id!,
-        arrangement: x,
-      })
-    );
-  } else {
-    if (
-      arrangementsFilter === 'Active' ||
-      arrangementsFilter === 'Active + Setup'
-    ) {
-      partneringFamilyInfo.openV1Case?.arrangements
-        ?.filter(
-          (arrangement) => arrangement.phase === ArrangementPhase.Started
-        )
-        .forEach((x) =>
-          results.push({
-            v1CaseId: partneringFamilyInfo.openV1Case!.id!,
-            arrangement: x,
-          })
-        );
-    }
-    if (
-      arrangementsFilter === 'Setup' ||
-      arrangementsFilter === 'Active + Setup'
-    ) {
-      partneringFamilyInfo.openV1Case?.arrangements
-        ?.filter(
-          (arrangement) =>
-            arrangement.phase === ArrangementPhase.SettingUp ||
-            arrangement.phase === ArrangementPhase.ReadyToStart
-        )
-        .forEach((x) =>
-          results.push({
-            v1CaseId: partneringFamilyInfo.openV1Case!.id!,
-            arrangement: x,
-          })
-        );
-    }
+    return allArrangements(partneringFamilyInfo);
   }
-  return results;
+
+  const openV1Case = partneringFamilyInfo.openV1Case;
+  const openArrangements = openV1Case?.arrangements ?? [];
+
+  const matchesPhase = (arrangement: Arrangement) => {
+    if (arrangementsFilter === 'Active') {
+      return arrangement.phase === ArrangementPhase.Started;
+    }
+
+    if (arrangementsFilter === 'Setup') {
+      return (
+        arrangement.phase === ArrangementPhase.SettingUp ||
+        arrangement.phase === ArrangementPhase.ReadyToStart
+      );
+    }
+
+    return (
+      arrangement.phase === ArrangementPhase.Started ||
+      arrangement.phase === ArrangementPhase.SettingUp ||
+      arrangement.phase === ArrangementPhase.ReadyToStart
+    );
+  };
+
+  return openArrangements.filter(matchesPhase).map((arrangement) => ({
+    v1CaseId: openV1Case!.id!,
+    arrangement,
+  }));
 }
 
 function PartneringFamilies() {
@@ -149,11 +135,34 @@ function PartneringFamilies() {
     return a.arrangementType!;
   });
 
+  const loadablePolicy = useLoadable(policyData);
+
+  const referralCustomFields = React.useMemo(() => {
+    return loadablePolicy?.referralPolicy?.customFields || [];
+  }, [loadablePolicy]);
+
   const [filterText, setFilterText] = useState('');
   const filteredPartneringFamilies = filterFamiliesByText(
     partneringFamilies,
     filterText
   );
+
+  const {
+    selectedValuesByField: selectedCustomFieldValuesByField,
+    setSelectedValuesForField: setSelectedCustomFieldValuesForField,
+    optionsByField: customFieldFilterOptionsByField,
+  } = useCustomFieldFilters({
+    customFields: referralCustomFields,
+    items: partneringFamilies,
+    isBlank: (family, fieldName) =>
+      family.partneringFamilyInfo?.openV1Case?.missingCustomFields?.includes(
+        fieldName
+      ) ?? false,
+    getValue: (family, fieldName) =>
+      family.partneringFamilyInfo?.openV1Case?.completedCustomFields?.find(
+        (f) => f.customFieldName === fieldName
+      )?.value,
+  });
 
   useScrollMemory();
 
@@ -273,41 +282,57 @@ function PartneringFamilies() {
     'All' | 'Intake' | 'Active' | 'Setup' | 'Active + Setup'
   >('partnering-families-arrangementsFilter', 'All');
   const filteredPartneringFamiliesWithActiveOrAllFilter =
-    filteredPartneringFamilies.filter((family) => {
-      const openCase = family.partneringFamilyInfo?.openV1Case;
-      const arrangements = openCase?.arrangements ?? [];
+    filteredPartneringFamilies
+      .filter((family) =>
+        matchesCustomFieldFilters({
+          item: family,
+          customFields: referralCustomFields,
+          selectedValuesByField: selectedCustomFieldValuesByField,
+          isBlank: (f, fieldName) =>
+            f.partneringFamilyInfo?.openV1Case?.missingCustomFields?.includes(
+              fieldName
+            ) ?? false,
+          getValue: (f, fieldName) =>
+            f.partneringFamilyInfo?.openV1Case?.completedCustomFields?.find(
+              (x) => x.customFieldName === fieldName
+            )?.value,
+        })
+      )
+      .filter((family) => {
+        const openCase = family.partneringFamilyInfo?.openV1Case;
+        const arrangements = openCase?.arrangements ?? [];
 
-      switch (arrangementsFilter) {
-        case 'All':
-          return true;
+        switch (arrangementsFilter) {
+          case 'All':
+            return true;
 
-        case 'Intake':
-          return !!openCase && arrangements.length === 0;
+          case 'Intake':
+            return !!openCase && arrangements.length === 0;
 
-        case 'Active':
-          return arrangements.some(
-            (arrangement) => arrangement.phase === ArrangementPhase.Started
-          );
+          case 'Active':
+            return arrangements.some(
+              (arrangement) => arrangement.phase === ArrangementPhase.Started
+            );
 
-        case 'Setup':
-          return arrangements.some(
-            (arrangement) =>
-              arrangement.phase === ArrangementPhase.SettingUp ||
-              arrangement.phase === ArrangementPhase.ReadyToStart
-          );
+          case 'Setup':
+            return arrangements.some(
+              (arrangement) =>
+                arrangement.phase === ArrangementPhase.SettingUp ||
+                arrangement.phase === ArrangementPhase.ReadyToStart
+            );
 
-        case 'Active + Setup':
-          return arrangements.some(
-            (arrangement) =>
-              arrangement.phase === ArrangementPhase.Started ||
-              arrangement.phase === ArrangementPhase.SettingUp ||
-              arrangement.phase === ArrangementPhase.ReadyToStart
-          );
+          case 'Active + Setup':
+            return arrangements.some(
+              (arrangement) =>
+                arrangement.phase === ArrangementPhase.Started ||
+                arrangement.phase === ArrangementPhase.SettingUp ||
+                arrangement.phase === ArrangementPhase.ReadyToStart
+            );
 
-        default:
-          return true;
-      }
-    });
+          default:
+            return true;
+        }
+      });
 
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
@@ -327,7 +352,16 @@ function PartneringFamilies() {
   ) : (
     <Grid container>
       <Grid item xs={12}>
-        <Stack direction="row" sx={{ marginTop: 2, marginBottom: 2 }}>
+        <Stack
+          direction="row"
+          sx={{
+            marginTop: 2,
+            marginBottom: 2,
+            flexWrap: 'wrap',
+            alignItems: 'center',
+            gap: 1,
+          }}
+        >
           {permissions(Permission.EditFamilyInfo) &&
             permissions(Permission.CreateV1Case) && (
               <Button
@@ -381,6 +415,13 @@ function PartneringFamilies() {
             </Tooltip>
           </ToggleButtonGroup>
 
+          <CustomFieldsFilter
+            customFields={referralCustomFields}
+            optionsByField={customFieldFilterOptionsByField}
+            selectedValuesByField={selectedCustomFieldValuesByField}
+            onFieldChange={setSelectedCustomFieldValuesForField}
+          />
+
           <SearchBar value={filterText} onChange={setFilterText} />
 
           <ToggleButtonGroup
@@ -400,23 +441,42 @@ function PartneringFamilies() {
         </Stack>
       </Grid>
       <Grid item xs={12}>
-        <TableContainer>
+        <TableContainer
+          sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}
+        >
           <Table sx={{ minWidth: '700px' }} size="small">
             <TableHead>
               <TableRow>
-                <TableCell>Client Family</TableCell>
-                <TableCell>Case Status</TableCell>
-                {!expandedView ? (
+                <TableCell sx={{ fontWeight: 600 }}>Client Family</TableCell>
+                <TableCell sx={{ fontWeight: 600 }}>Case Status</TableCell>
+                {referralCustomFields.map((field) => (
+                  <TableCell
+                    key={field.name}
+                    sx={{
+                      fontWeight: 600,
+                      textAlign: 'center',
+                      whiteSpace: 'nowrap',
+                    }}
+                  >
+                    {field.name}
+                  </TableCell>
+                ))}
+
+                {!expandedView &&
                   arrangementTypes?.map((arrangementType) => (
-                    <TableCell key={arrangementType}>
+                    <TableCell
+                      key={arrangementType}
+                      sx={{
+                        fontWeight: 600,
+                        textAlign: 'center',
+                      }}
+                    >
                       {arrangementType}
                     </TableCell>
-                  ))
-                ) : (
-                  <></>
-                )}
+                  ))}
               </TableRow>
             </TableHead>
+
             <TableBody>
               {filteredPartneringFamiliesWithActiveOrAllFilter.map(
                 (partneringFamily) => {
@@ -537,6 +597,37 @@ function PartneringFamilies() {
                         ) : (
                           <></>
                         )}
+                        {referralCustomFields.map((field) => {
+                          const completedFields =
+                            partneringFamily.partneringFamilyInfo?.openV1Case
+                              ?.completedCustomFields ?? [];
+
+                          const matchingField = completedFields.find(
+                            (customField: CompletedCustomFieldInfo) =>
+                              customField.customFieldName === field.name
+                          );
+
+                          const fieldValue = matchingField?.value;
+
+                          const displayValue =
+                            fieldValue === true
+                              ? 'Yes'
+                              : fieldValue === false
+                                ? 'No'
+                                : fieldValue === undefined ||
+                                    fieldValue === null
+                                  ? ''
+                                  : fieldValue.toString();
+
+                          return (
+                            <TableCell
+                              key={field.name}
+                              sx={{ textAlign: 'center' }}
+                            >
+                              {displayValue}
+                            </TableCell>
+                          );
+                        })}
                       </TableRow>
                       {expandedView ? (
                         <TableRow
