@@ -31,6 +31,7 @@ import { usePostHogIdentify } from './Utilities/Instrumentation/usePostHogIdenti
 import { usePostHogGroups } from './Utilities/Instrumentation/usePostHogGroups';
 import { Support } from './Support';
 import { Reports } from './Reports/Reports';
+import { V1Referrals } from './V1Referrals/V1Referrals';
 
 const LAST_VISITED_LOCATION = 'lastVisitedLocation';
 
@@ -112,26 +113,6 @@ function RouteError(): React.ReactElement {
 //   throw new Error(`The URL path '${window.location.href}' is invalid.`);
 // }
 
-function ReferralsToCasesRedirect() {
-  const { organizationId, locationId } = useParams<{
-    organizationId: string;
-    locationId: string;
-  }>();
-  const navigate = useNavigate();
-
-  useEffect(() => {
-    if (organizationId && locationId) {
-      navigate(`/org/${organizationId}/${locationId}/cases`, { replace: true });
-    }
-  }, [organizationId, locationId, navigate]);
-
-  return (
-    <ProgressBackdrop opaque>
-      <p>Redirecting to cases...</p>
-    </ProgressBackdrop>
-  );
-}
-
 function LocationContextWrapper() {
   const trace = useScopedTrace('LocationContext');
   const { organizationId, locationId } = useParams<{
@@ -186,7 +167,7 @@ function LocationContextWrapper() {
             element={familyScreenV2 ? <FamilyScreenV2 /> : <FamilyScreen />}
           />
           <Route path="cases/*" element={<V1Cases />} />
-          <Route path="referrals/*" element={<ReferralsToCasesRedirect />} />
+          <Route path="referrals/*" element={<V1Referrals />} />
           <Route path="volunteers/*" element={<Volunteers />} />
           <Route path="communities/*" element={<Communities />} />
           <Route path="reports/*" element={<Reports />} />

@@ -97,7 +97,6 @@ namespace CareTogether.Managers
                     locationPolicy,
                     family
                 );
-
             var notes = await notesResource.ListFamilyNotesAsync(
                 organizationId,
                 locationId,
