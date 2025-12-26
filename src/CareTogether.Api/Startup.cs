@@ -239,6 +239,7 @@ namespace CareTogether.Api
                 approvalsResource,
                 communitiesResource
             );
+            services.AddSingleton<IUserAccessCalculation>(userAccessCalculation);
 
             // Engine services
             var authorizationEngine = new AuthorizationEngine(

@@ -301,7 +301,13 @@ export function FamilyScreen() {
   }
 
   return (
-    <Container maxWidth={false} sx={{ paddingLeft: '12px' }}>
+    <Container
+      maxWidth={false}
+      sx={{ paddingLeft: '12px' }}
+      onClick={() => {
+        console.log(family);
+      }}
+    >
       <Toolbar variant="dense" disableGutters={true}>
         {permissions(Permission.UploadFamilyDocuments) && (
           <Button

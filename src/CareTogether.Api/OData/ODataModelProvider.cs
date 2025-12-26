@@ -29,6 +29,7 @@ namespace CareTogether.Api.OData
             builder.EntitySet<CommunityMemberFamily>("CommunityMemberFamilies");
             builder.EntitySet<CommunityRoleAssignment>("CommunityRoleAssignments");
             builder.EntitySet<RoleApproval>("RoleApprovals");
+            builder.EntitySet<AdminUser>("AdminUsers");
 
             return builder.GetEdmModel();
         }

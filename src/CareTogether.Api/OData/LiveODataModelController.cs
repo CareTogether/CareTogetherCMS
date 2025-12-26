@@ -7,6 +7,7 @@ using System.Configuration;
 using System.Linq;
 using System.Threading.Tasks;
 using CareTogether.Engines;
+using CareTogether.Engines.Authorization;
 using CareTogether.Engines.PolicyEvaluation;
 using CareTogether.Managers;
 using CareTogether.Managers.Records;
@@ -285,6 +286,13 @@ namespace CareTogether.Api.OData
         string RlsKey
     );
 
+    public sealed record AdminUser(
+        [property: Key] Guid PersonId,
+        string FirstName,
+        string LastName,
+        string? Email
+    );
+
     public sealed record LiveModel(
         IEnumerable<Location> Locations,
         IEnumerable<LocationUserAccess> LocationUserAccess,
@@ -303,7 +311,8 @@ namespace CareTogether.Api.OData
         IEnumerable<IndividualFunctionAssignment> IndividualFunctionAssignments,
         IEnumerable<CommunityMemberFamily> CommunityMemberFamilies,
         IEnumerable<CommunityRoleAssignment> CommunityRoleAssignments,
-        IEnumerable<RoleApproval> RoleApprovals
+        IEnumerable<RoleApproval> RoleApprovals,
+        IEnumerable<AdminUser> AdminUsers
     );
 
     [Route("api/odata/live")]
@@ -319,13 +328,17 @@ namespace CareTogether.Api.OData
         private readonly IRecordsManager recordsManager;
         private readonly IAppCache cache;
         private readonly ILogger<LiveODataModelController> logger;
+        private readonly IDirectoryResource directoryResource;
+        private readonly IUserAccessCalculation userAccessCalculation;
 
         public LiveODataModelController(
             IPoliciesResource policiesResource,
             IAccountsResource accountsResource,
             IRecordsManager recordsManager,
             IAppCache cache,
-            ILogger<LiveODataModelController> logger
+            ILogger<LiveODataModelController> logger,
+            IDirectoryResource directoryResource,
+            IUserAccessCalculation userAccessCalculation
         )
         {
             this.policiesResource = policiesResource;
@@ -333,6 +346,8 @@ namespace CareTogether.Api.OData
             this.recordsManager = recordsManager;
             this.cache = cache;
             this.logger = logger;
+            this.directoryResource = directoryResource;
+            this.userAccessCalculation = userAccessCalculation;
         }
 
         [HttpGet("Location")]
@@ -465,6 +480,13 @@ namespace CareTogether.Api.OData
             return liveModel.RoleApprovals;
         }
 
+        [HttpGet("AdminUsers")]
+        public async Task<IEnumerable<AdminUser>> GetAdminUsersAsync()
+        {
+            var liveModel = await RenderLiveModelAsync();
+            return liveModel.AdminUsers;
+        }
+
         private async Task<LiveModel> RenderLiveModelAsync()
         {
             //NOTE: For now, we only grant access to one organization at a time.
@@ -535,7 +557,8 @@ namespace CareTogether.Api.OData
                     Enumerable.Empty<IndividualFunctionAssignment>(),
                     Enumerable.Empty<CommunityMemberFamily>(),
                     Enumerable.Empty<CommunityRoleAssignment>(),
-                    Enumerable.Empty<RoleApproval>()
+                    Enumerable.Empty<RoleApproval>(),
+                    Enumerable.Empty<AdminUser>()
                 ),
                 (acc, model) =>
                     new LiveModel(
@@ -558,7 +581,8 @@ namespace CareTogether.Api.OData
                         ),
                         acc.CommunityMemberFamilies.Concat(model.CommunityMemberFamilies),
                         acc.CommunityRoleAssignments.Concat(model.CommunityRoleAssignments),
-                        acc.RoleApprovals.Concat(model.RoleApprovals)
+                        acc.RoleApprovals.Concat(model.RoleApprovals),
+                        acc.AdminUsers.Concat(model.AdminUsers)
                     )
             );
 
@@ -642,7 +666,9 @@ namespace CareTogether.Api.OData
                 .ToArrayAsync();
 
             var familiesByLocation = visibleAggregatesByLocation
-                .Where(zipResult => zipResult.Item2 is FamilyRecordsAggregate fra && !fra.Family.Family.IsTestFamily)
+                .Where(zipResult =>
+                    zipResult.Item2 is FamilyRecordsAggregate fra && !fra.Family.Family.IsTestFamily
+                )
                 .Select(zipResult => (zipResult.Item1, (FamilyRecordsAggregate)zipResult.Item2))
                 .Select(zipResult =>
                     (
@@ -875,6 +901,68 @@ namespace CareTogether.Api.OData
                 people
             );
 
+            var adminUsers = (
+                await familiesWithInfo
+                    .SelectMany(x => x.Item1.Family.Adults)
+                    .Select(async adultTuple =>
+                    {
+                        var (adult, _) = adultTuple;
+                        var familyInfo = familiesWithInfo.First(f =>
+                            f.Item1.Family.Adults.Any(a => a.Item1.Id == adult.Id)
+                        );
+
+                        // Check if the adult's user has permission to access the support screen
+                        var adultRoleInfo = userRolesWithAccess.FirstOrDefault(r =>
+                            r.organizationId == organizationId
+                            && r.locationId == familyInfo.Item2.LocationId
+                            && r.personId == adult.Id
+                        );
+
+                        if (adultRoleInfo.roles == null || adultRoleInfo.roles.Count == 0)
+                            return null;
+
+                        // Check if adult is organization administrator
+                        var isOrgAdmin = adultRoleInfo.roles.Contains(
+                            SystemConstants.ORGANIZATION_ADMINISTRATOR
+                        );
+
+                        // Fetch org config for non-admin permission checks
+                        var orgConfig = await policiesResource.GetConfigurationAsync(
+                            organizationId
+                        );
+
+                        var hasAccessSupportScreenPermission =
+                            isOrgAdmin
+                            || orgConfig
+                                .Roles.Where(role => adultRoleInfo.roles.Contains(role.RoleName))
+                                .Any(roleDefinition =>
+                                    roleDefinition.PermissionSets.Any(permissionSet =>
+                                        permissionSet.Permissions.Contains(
+                                            Permission.AccessSupportScreen
+                                        )
+                                    )
+                                );
+
+                        if (!hasAccessSupportScreenPermission)
+                            return null;
+
+                        var preferredEmail =
+                            adult
+                                .EmailAddresses.FirstOrDefault(e =>
+                                    e.Id == adult.PreferredEmailAddressId
+                                )
+                                ?.Address ?? adult.EmailAddresses.FirstOrDefault()?.Address;
+
+                        return new AdminUser(
+                            adult.Id,
+                            adult.FirstName,
+                            adult.LastName,
+                            preferredEmail
+                        );
+                    })
+                    .WhenAll()
+            ).Where(user => user != null).Cast<AdminUser>().DistinctBy(user => user.PersonId).ToArray();
+
             return new LiveModel(
                 locations,
                 locationUserAccess,
@@ -893,7 +981,8 @@ namespace CareTogether.Api.OData
                 individualFunctionAssignments,
                 communityMemberFamilies,
                 communityRoleAssignments,
-                roleApprovals
+                roleApprovals,
+                adminUsers
             );
         }
 
