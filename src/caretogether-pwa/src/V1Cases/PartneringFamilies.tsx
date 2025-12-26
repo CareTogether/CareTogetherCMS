@@ -77,9 +77,14 @@ function allArrangements(partneringFamilyInfo: PartneringFamilyInfo) {
 
 function matchingArrangements(
   partneringFamilyInfo: PartneringFamilyInfo,
-  arrangementsFilter: 'All' | 'Active' | 'Setup' | 'Active + Setup'
+  arrangementsFilter: 'All' | 'Intake' | 'Active' | 'Setup' | 'Active + Setup'
 ) {
   const results: { v1CaseId: string; arrangement: Arrangement }[] = [];
+
+  if (arrangementsFilter === 'Intake') {
+    return [];
+  }
+
   if (arrangementsFilter === 'All') {
     partneringFamilyInfo.closedV1Cases?.forEach((x) =>
       x.arrangements?.forEach((y) =>
@@ -265,29 +270,44 @@ function PartneringFamilies() {
   };
 
   const [arrangementsFilter, setArrangementsFilter] = useLocalStorage<
-    'All' | 'Active' | 'Setup' | 'Active + Setup'
+    'All' | 'Intake' | 'Active' | 'Setup' | 'Active + Setup'
   >('partnering-families-arrangementsFilter', 'All');
   const filteredPartneringFamiliesWithActiveOrAllFilter =
-    filteredPartneringFamilies.filter((family) =>
-      arrangementsFilter === 'All'
-        ? true
-        : arrangementsFilter === 'Active'
-          ? family.partneringFamilyInfo?.openV1Case?.arrangements?.some(
-              (arrangement) => arrangement.phase === ArrangementPhase.Started
-            )
-          : arrangementsFilter === 'Setup'
-            ? family.partneringFamilyInfo?.openV1Case?.arrangements?.some(
-                (arrangement) =>
-                  arrangement.phase === ArrangementPhase.SettingUp ||
-                  arrangement.phase === ArrangementPhase.ReadyToStart
-              )
-            : family.partneringFamilyInfo?.openV1Case?.arrangements?.some(
-                (arrangement) =>
-                  arrangement.phase === ArrangementPhase.Started ||
-                  arrangement.phase === ArrangementPhase.SettingUp ||
-                  arrangement.phase === ArrangementPhase.ReadyToStart
-              )
-    );
+    filteredPartneringFamilies.filter((family) => {
+      const openCase = family.partneringFamilyInfo?.openV1Case;
+      const arrangements = openCase?.arrangements ?? [];
+
+      switch (arrangementsFilter) {
+        case 'All':
+          return true;
+
+        case 'Intake':
+          return !!openCase && arrangements.length === 0;
+
+        case 'Active':
+          return arrangements.some(
+            (arrangement) => arrangement.phase === ArrangementPhase.Started
+          );
+
+        case 'Setup':
+          return arrangements.some(
+            (arrangement) =>
+              arrangement.phase === ArrangementPhase.SettingUp ||
+              arrangement.phase === ArrangementPhase.ReadyToStart
+          );
+
+        case 'Active + Setup':
+          return arrangements.some(
+            (arrangement) =>
+              arrangement.phase === ArrangementPhase.Started ||
+              arrangement.phase === ArrangementPhase.SettingUp ||
+              arrangement.phase === ArrangementPhase.ReadyToStart
+          );
+
+        default:
+          return true;
+      }
+    });
 
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
@@ -327,18 +347,38 @@ function PartneringFamilies() {
             size={isMobile ? 'medium' : 'small'}
             aria-label="row expansion"
           >
-            <ToggleButton value={'All'} aria-label="expanded">
-              All
-            </ToggleButton>
-            <ToggleButton value={'Active'} aria-label="collapsed">
-              Active
-            </ToggleButton>
-            <ToggleButton value={'Setup'} aria-label="collapsed">
-              Setup
-            </ToggleButton>
-            <ToggleButton value={'Active + Setup'} aria-label="collapsed">
-              Active + Setup
-            </ToggleButton>
+            <Tooltip title="Shows all cases" arrow>
+              <ToggleButton value={'All'} aria-label="expanded">
+                All
+              </ToggleButton>
+            </Tooltip>
+            <Tooltip title="Shows open cases with no arrangements yet" arrow>
+              <ToggleButton value={'Intake'}>Intake</ToggleButton>
+            </Tooltip>
+            <Tooltip
+              title="Shows cases with at least one active arrangement"
+              arrow
+            >
+              <ToggleButton value={'Active'} aria-label="collapsed">
+                Active
+              </ToggleButton>
+            </Tooltip>
+            <Tooltip
+              title="Shows cases with arrangements in the setup phase"
+              arrow
+            >
+              <ToggleButton value={'Setup'} aria-label="collapsed">
+                Setup
+              </ToggleButton>
+            </Tooltip>
+            <Tooltip
+              title="Shows cases with arrangements that are either active or in setup"
+              arrow
+            >
+              <ToggleButton value={'Active + Setup'} aria-label="collapsed">
+                Active + Setup
+              </ToggleButton>
+            </Tooltip>
           </ToggleButtonGroup>
 
           <SearchBar value={filterText} onChange={setFilterText} />
