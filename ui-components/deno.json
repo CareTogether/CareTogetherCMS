@@ -16,7 +16,8 @@
   "imports": {
     "react": "npm:react@19.2.3",
     "react-dom": "npm:react-dom@19.2.3",
-    "react/": "npm:/react/",
+    "react/": "npm:react@19.2.3/",
+    "react-dom/": "npm:react-dom@19.2.3/",
     "@mui/material": "npm:@mui/material@7.3.6",
     "@mui/material/": "npm:/@mui/material/",
     "@mui/icons-material": "npm:@mui/icons-material@7.3.6",

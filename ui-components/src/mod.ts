@@ -1,9 +1,15 @@
 // Theme
 export { theme } from "./theme/theme.ts";
 
-// Shell Components
-export { Header, Sidebar, Footer } from "./components/index.ts";
-export type { HeaderProps, SidebarProps, FooterProps } from "./components/index.ts";
+// Shell Components (Compound Component Pattern)
+export { Shell } from "./components/index.ts";
+export type {
+  ShellProps,
+  ShellHeaderProps,
+  ShellSidebarProps,
+  ShellContentProps,
+  ShellFooterProps,
+} from "./components/index.ts";
 
 // Context Components
 export { ContextHeader } from "./components/index.ts";
@@ -30,4 +36,5 @@ export type {
 export type { Size, Color, Variant } from "./types/common.ts";
 
 // Utilities
-export { classNames } from "./utils/index.ts";
+export { classNames, useShellState } from "./utils/index.ts";
+export type { UseShellStateReturn } from "./utils/index.ts";

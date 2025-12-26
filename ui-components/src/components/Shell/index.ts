@@ -1,8 +1,6 @@
-export { Header } from "./Header/index.ts";
-export type { HeaderProps } from "./Header/index.ts";
-
-export { Sidebar } from "./Sidebar/index.ts";
-export type { SidebarProps } from "./Sidebar/index.ts";
-
-export { Footer } from "./Footer/index.ts";
-export type { FooterProps } from "./Footer/index.ts";
+export { Shell } from "./Shell";
+export type { ShellProps } from "./Shell.tsx";
+export type { ShellHeaderProps } from "./ShellHeader.tsx";
+export type { ShellSidebarProps } from "./ShellSidebar.tsx";
+export type { ShellContentProps } from "./ShellContent.tsx";
+export type { ShellFooterProps } from "./ShellFooter.tsx";
