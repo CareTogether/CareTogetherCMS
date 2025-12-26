@@ -30,6 +30,7 @@ import {
   ArrangementPhase,
   Permission,
   CompletedCustomFieldInfo,
+  CustomFieldType,
 } from '../GeneratedClient';
 import { FamilyName } from '../Families/FamilyName';
 import { ArrangementCard } from './Arrangements/ArrangementCard';
@@ -62,78 +63,60 @@ const arrangementPhaseText = new Map<number, string>([
 ]);
 
 function allArrangements(partneringFamilyInfo: PartneringFamilyInfo) {
-  const results: { v1CaseId: string; arrangement: Arrangement }[] = [];
-  partneringFamilyInfo.closedV1Cases?.forEach((x) =>
-    x.arrangements?.forEach((y) =>
-      results.push({ v1CaseId: x.id!, arrangement: y })
-    )
+  const closed = (partneringFamilyInfo.closedV1Cases ?? []).flatMap((v1Case) =>
+    (v1Case.arrangements ?? []).map((arrangement) => ({
+      v1CaseId: v1Case.id!,
+      arrangement,
+    }))
   );
-  partneringFamilyInfo.openV1Case?.arrangements?.forEach((x) =>
-    results.push({
-      v1CaseId: partneringFamilyInfo.openV1Case!.id!,
-      arrangement: x,
-    })
-  );
-  return results;
+
+  const openV1Case = partneringFamilyInfo.openV1Case;
+  const open = (openV1Case?.arrangements ?? []).map((arrangement) => ({
+    v1CaseId: openV1Case!.id!,
+    arrangement,
+  }));
+
+  return [...closed, ...open];
 }
 
 function matchingArrangements(
   partneringFamilyInfo: PartneringFamilyInfo,
   arrangementsFilter: 'All' | 'Intake' | 'Active' | 'Setup' | 'Active + Setup'
 ) {
-  const results: { v1CaseId: string; arrangement: Arrangement }[] = [];
-
   if (arrangementsFilter === 'Intake') {
     return [];
   }
 
   if (arrangementsFilter === 'All') {
-    partneringFamilyInfo.closedV1Cases?.forEach((x) =>
-      x.arrangements?.forEach((y) =>
-        results.push({ v1CaseId: x.id!, arrangement: y })
-      )
-    );
-    partneringFamilyInfo.openV1Case?.arrangements?.forEach((x) =>
-      results.push({
-        v1CaseId: partneringFamilyInfo.openV1Case!.id!,
-        arrangement: x,
-      })
-    );
-  } else {
-    if (
-      arrangementsFilter === 'Active' ||
-      arrangementsFilter === 'Active + Setup'
-    ) {
-      partneringFamilyInfo.openV1Case?.arrangements
-        ?.filter(
-          (arrangement) => arrangement.phase === ArrangementPhase.Started
-        )
-        .forEach((x) =>
-          results.push({
-            v1CaseId: partneringFamilyInfo.openV1Case!.id!,
-            arrangement: x,
-          })
-        );
-    }
-    if (
-      arrangementsFilter === 'Setup' ||
-      arrangementsFilter === 'Active + Setup'
-    ) {
-      partneringFamilyInfo.openV1Case?.arrangements
-        ?.filter(
-          (arrangement) =>
-            arrangement.phase === ArrangementPhase.SettingUp ||
-            arrangement.phase === ArrangementPhase.ReadyToStart
-        )
-        .forEach((x) =>
-          results.push({
-            v1CaseId: partneringFamilyInfo.openV1Case!.id!,
-            arrangement: x,
-          })
-        );
-    }
+    return allArrangements(partneringFamilyInfo);
   }
-  return results;
+
+  const openV1Case = partneringFamilyInfo.openV1Case;
+  const openArrangements = openV1Case?.arrangements ?? [];
+
+  const matchesPhase = (arrangement: Arrangement) => {
+    if (arrangementsFilter === 'Active') {
+      return arrangement.phase === ArrangementPhase.Started;
+    }
+
+    if (arrangementsFilter === 'Setup') {
+      return (
+        arrangement.phase === ArrangementPhase.SettingUp ||
+        arrangement.phase === ArrangementPhase.ReadyToStart
+      );
+    }
+
+    return (
+      arrangement.phase === ArrangementPhase.Started ||
+      arrangement.phase === ArrangementPhase.SettingUp ||
+      arrangement.phase === ArrangementPhase.ReadyToStart
+    );
+  };
+
+  return openArrangements.filter(matchesPhase).map((arrangement) => ({
+    v1CaseId: openV1Case!.id!,
+    arrangement,
+  }));
 }
 
 function PartneringFamilies() {
@@ -163,52 +146,86 @@ function PartneringFamilies() {
     filterText
   );
 
-  type FilterOption = { key: string; value?: string; selected: boolean };
+  type FilterValue = string | boolean | null;
 
-  const [customFieldFilterOptions, setCustomFieldFilterOptions] = useState<
-    Record<string, FilterOption[]>
-  >({});
+  type FilterOption = {
+    key: string;
+    value: FilterValue;
+    selected: boolean;
+  };
 
-  React.useEffect(() => {
-    setCustomFieldFilterOptions((prev) => {
-      const optionsByField: Record<string, FilterOption[]> = { ...prev };
+  const [
+    selectedCustomFieldValuesByField,
+    setSelectedCustomFieldValuesByField,
+  ] = useState<Record<string, FilterValue[]>>({});
 
-      referralCustomFields.forEach((field) => {
-        const existing = prev[field.name] || [];
+  const customFieldFilterOptionsByField = React.useMemo(() => {
+    return Object.fromEntries(
+      referralCustomFields.map((field) => {
+        const seedValues: FilterValue[] =
+          field.type === CustomFieldType.Boolean ? [true, false, null] : [];
 
-        const values = new Set(existing.map((o) => o.value ?? ''));
+        const observedValues: FilterValue[] = partneringFamilies.flatMap(
+          (family) => {
+            const openCase = family.partneringFamilyInfo?.openV1Case;
+            const isMissing =
+              openCase?.missingCustomFields?.includes(field.name) ?? false;
 
-        partneringFamilies.forEach((family) => {
-          const val =
-            family.partneringFamilyInfo?.openV1Case?.completedCustomFields?.find(
+            if (isMissing) {
+              return [null];
+            }
+
+            const val = openCase?.completedCustomFields?.find(
               (f) => f.customFieldName === field.name
             )?.value;
 
-          let normalized: string;
-          if (val === true) normalized = 'Yes';
-          else if (val === false) normalized = 'No';
-          else if (val === undefined || val === null || val === '')
-            normalized = 'Blank';
-          else normalized = val.toString();
+            if (field.type === CustomFieldType.Boolean) {
+              if (val === true) return [true];
+              if (val === false) return [false];
+              return [];
+            }
 
-          values.add(normalized);
-        });
+            if (val !== undefined && val !== null && val !== '') {
+              return [val.toString()];
+            }
 
-        const updatedOptions = Array.from(values).map((v) => {
-          const existingOption = existing.find((o) => o.value === v);
+            return [];
+          }
+        );
+
+        const values = Array.from(
+          new Set<FilterValue>([...seedValues, ...observedValues])
+        );
+
+        const selectedValues = new Set<FilterValue>(
+          selectedCustomFieldValuesByField[field.name] ?? []
+        );
+
+        const options = values.map((v) => {
+          const key =
+            v === null
+              ? 'Blank'
+              : field.type === CustomFieldType.Boolean
+                ? v === true
+                  ? 'Yes'
+                  : 'No'
+                : v.toString();
+
           return {
-            key: v,
+            key,
             value: v,
-            selected: existingOption?.selected ?? false,
+            selected: selectedValues.has(v),
           };
         });
 
-        optionsByField[field.name] = updatedOptions;
-      });
-
-      return optionsByField;
-    });
-  }, [partneringFamilies, referralCustomFields]);
+        return [field.name, options] as const;
+      })
+    ) as Record<string, FilterOption[]>;
+  }, [
+    partneringFamilies,
+    referralCustomFields,
+    selectedCustomFieldValuesByField,
+  ]);
 
   useScrollMemory();
 
@@ -331,26 +348,31 @@ function PartneringFamilies() {
     filteredPartneringFamilies
       .filter((family) => {
         return referralCustomFields.every((field) => {
-          const options = customFieldFilterOptions[field.name];
-          if (!options) return true;
+          const selectedValues =
+            selectedCustomFieldValuesByField[field.name] ?? [];
 
-          const selectedValues = options
-            .filter((o) => o.selected)
-            .map((o) => o.value);
+          if (selectedValues.length === 0) return true;
 
-          const rawVal =
-            family.partneringFamilyInfo?.openV1Case?.completedCustomFields?.find(
-              (f) => f.customFieldName === field.name
-            )?.value;
+          const openCase = family.partneringFamilyInfo?.openV1Case;
+          const isMissing =
+            openCase?.missingCustomFields?.includes(field.name) ?? false;
 
-          let value: string;
-          if (rawVal === true) value = 'Yes';
-          else if (rawVal === false) value = 'No';
-          else if (rawVal === undefined || rawVal === null || rawVal === '')
-            value = 'Blank';
-          else value = rawVal.toString();
+          if (selectedValues.includes(null) && isMissing) return true;
 
-          return selectedValues.length === 0 || selectedValues.includes(value);
+          const rawVal = openCase?.completedCustomFields?.find(
+            (f) => f.customFieldName === field.name
+          )?.value;
+
+          if (field.type === CustomFieldType.Boolean) {
+            if (selectedValues.includes(true) && rawVal === true) return true;
+            if (selectedValues.includes(false) && rawVal === false) return true;
+            return false;
+          }
+
+          if (rawVal === undefined || rawVal === null || rawVal === '')
+            return false;
+
+          return selectedValues.includes(rawVal.toString());
         });
       })
       .filter((family) => {
@@ -471,21 +493,15 @@ function PartneringFamilies() {
           </ToggleButtonGroup>
 
           {referralCustomFields.map((field) => {
-            const options = customFieldFilterOptions[field.name];
-            if (!options) return null;
+            const options = customFieldFilterOptionsByField[field.name] ?? [];
 
-            const handleFilterChange = (selectedValues: string[]) => {
-              setCustomFieldFilterOptions((prev) => {
-                const fieldOptions = prev[field.name];
-                if (!fieldOptions) return prev;
-                return {
-                  ...prev,
-                  [field.name]: fieldOptions.map((opt) => ({
-                    ...opt,
-                    selected: selectedValues.includes(opt.value ?? 'Blank'),
-                  })),
-                };
-              });
+            const handleFilterChange = (
+              selectedValues: Array<string | boolean | null>
+            ) => {
+              setSelectedCustomFieldValuesByField((prev) => ({
+                ...prev,
+                [field.name]: selectedValues,
+              }));
             };
 
             return (

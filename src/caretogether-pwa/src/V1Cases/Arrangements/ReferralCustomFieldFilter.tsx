@@ -5,20 +5,19 @@ import {
   ListItemText,
   MenuItem,
   Select,
-  SelectChangeEvent,
 } from '@mui/material';
 import FilterListIcon from '@mui/icons-material/FilterList';
 
 type FilterOption = {
   key: string;
-  value?: string;
+  value: string | boolean | null;
   selected: boolean;
 };
 
 type ReferralCustomFieldFilterProps = {
   label: string;
   options: FilterOption[];
-  onChange: (selected: string[]) => void;
+  onChange: (selected: Array<string | boolean | null>) => void;
 };
 
 export function ReferralCustomFieldFilter({
@@ -26,35 +25,12 @@ export function ReferralCustomFieldFilter({
   options,
   onChange,
 }: ReferralCustomFieldFilterProps) {
-  const displayOptions = [...options];
-  if (!displayOptions.some((o) => o.key === 'Blank')) {
-    displayOptions.push({ key: 'Blank', value: 'Blank', selected: false });
-  }
-
-  displayOptions.sort((a, b) => {
-    const order = (key: string): number => {
-      if (key === 'Yes') return 1;
-      if (key === 'No') return 2;
-      if (key === 'Blank') return 999;
-      return 500;
-    };
-
-    const orderDiff = order(a.key) - order(b.key);
-    if (orderDiff !== 0) return orderDiff;
-    return a.key.localeCompare(b.key);
-  });
-
-  const selectedValues = displayOptions
-    .filter((o) => o.selected)
-    .map((o) => o.value ?? '');
-
-  const handleChange = (event: SelectChangeEvent<string[]>) => {
-    const selected = event.target.value as string[];
-    onChange(selected);
-  };
+  const selectedValues = options
+    .filter((option) => option.selected)
+    .map((o) => o.value);
 
   const selectedCount = selectedValues.length;
-  const displayText = `${label}: ${selectedCount} of ${displayOptions.length}`;
+  const displayText = `${label}: ${selectedCount} of ${options.length}`;
 
   return (
     <FormControl
@@ -69,7 +45,12 @@ export function ReferralCustomFieldFilter({
         variant="standard"
         displayEmpty
         value={selectedValues}
-        onChange={handleChange}
+        onChange={(event) => {
+          const selected = event.target.value;
+          if (typeof selected !== 'string') {
+            onChange(selected);
+          }
+        }}
         input={<InputBase />}
         IconComponent={FilterListIcon}
         renderValue={() => displayText}
@@ -78,10 +59,10 @@ export function ReferralCustomFieldFilter({
           '& .MuiSelect-select': { fontSize: 14 },
         }}
       >
-        {displayOptions.map((option) => {
-          const isChecked = selectedValues.includes(option.value ?? '');
+        {options.map((option) => {
+          const isChecked = selectedValues.includes(option.value);
           return (
-            <MenuItem key={option.key} value={option.value ?? ''}>
+            <MenuItem key={option.key} value={option.value as any}>
               <Checkbox checked={isChecked} />
               <ListItemText primary={option.key} />
             </MenuItem>
