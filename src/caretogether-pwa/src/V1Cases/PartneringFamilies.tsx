@@ -609,15 +609,15 @@ function PartneringFamilies() {
 
                           const fieldValue = matchingField?.value;
 
-                          let displayValue = '';
-                          if (fieldValue === true) displayValue = 'Yes';
-                          else if (fieldValue === false) displayValue = 'No';
-                          else if (
-                            fieldValue === undefined ||
-                            fieldValue === null
-                          )
-                            displayValue = '';
-                          else displayValue = fieldValue.toString();
+                          const displayValue =
+                            fieldValue === true
+                              ? 'Yes'
+                              : fieldValue === false
+                                ? 'No'
+                                : fieldValue === undefined ||
+                                    fieldValue === null
+                                  ? ''
+                                  : fieldValue.toString();
 
                           return (
                             <TableCell
