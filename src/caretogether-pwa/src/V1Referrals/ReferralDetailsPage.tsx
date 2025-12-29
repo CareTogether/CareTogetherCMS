@@ -14,7 +14,7 @@ import { FamilyName } from '../Families/FamilyName';
 import { useScreenTitle } from '../Shell/ShellScreenTitle';
 import { referralsQuery, useV1ReferralsModel } from '../Model/V1ReferralsModel';
 import { V1ReferralStatus } from '../GeneratedClient';
-import { CreatePartneringFamilyDialog } from '../V1Cases/CreatePartneringFamilyDialog';
+import { CreatePartneringFamilyDialog } from '../V1Cases/CreatePartneringFamilyDrawer';
 
 function statusToLabel(status: V1ReferralStatus): 'Open' | 'Closed' {
   return status === V1ReferralStatus.Open ? 'Open' : 'Closed';

@@ -32,7 +32,7 @@ import {
 } from '../GeneratedClient';
 import { FamilyName } from '../Families/FamilyName';
 import { ArrangementCard } from './Arrangements/ArrangementCard';
-import { CreatePartneringFamilyDialog } from './CreatePartneringFamilyDialog';
+import { CreatePartneringFamilyDialog } from './CreatePartneringFamilyDrawer';
 import { useScrollMemory } from '../Hooks/useScrollMemory';
 import { useLocalStorage } from '../Hooks/useLocalStorage';
 import { policyData } from '../Model/ConfigurationModel';
