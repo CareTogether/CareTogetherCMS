@@ -1,4 +1,4 @@
-export { Shell } from "./Shell";
+export { Shell } from "./Shell.tsx";
 export type { ShellProps } from "./Shell.tsx";
 export type { ShellHeaderProps } from "./ShellHeader.tsx";
 export type { ShellSidebarProps } from "./ShellSidebar.tsx";
