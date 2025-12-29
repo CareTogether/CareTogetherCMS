@@ -22,3 +22,6 @@ export type { LabelAccordionProps } from "./IntakeStepNav/index";
 
 export { Steps } from "./IntakeStepNav/index";
 export type { StepsProps, StepItem } from "./IntakeStepNav/index";
+
+export { NavItem } from "./NavItem/index";
+export type { NavItemProps } from "./NavItem/index.ts";
