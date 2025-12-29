@@ -11,8 +11,8 @@ export type {
 export { ContextHeader } from "./ContextHeader/index.ts";
 export type { ContextHeaderProps, BreadcrumbItem } from "./ContextHeader/index.ts";
 
-export { StatusChip } from "./Chips/index.ts";
-export type { StatusChipProps, StatusType } from "./Chips/index.ts";
+export { ColoredChip } from "./Chips/index.ts";
+export type { ColoredChipProps } from "./Chips/index.ts";
 
 export { IntakeStepNav } from "./IntakeStepNav/index.ts";
 export type { IntakeStepNavProps, StepItem, StepGroup } from "./IntakeStepNav/index.ts";

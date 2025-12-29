@@ -1,2 +1,2 @@
-export { StatusChip } from "./StatusChip/index.ts";
-export type { StatusChipProps, StatusType } from "./StatusChip/index.ts";
+export { ColoredChip } from "./ColoredChip/index.ts";
+export type { ColoredChipProps } from "./ColoredChip/index.ts";

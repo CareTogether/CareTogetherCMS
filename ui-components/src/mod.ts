@@ -16,8 +16,8 @@ export { ContextHeader } from "./components/index.ts";
 export type { ContextHeaderProps, BreadcrumbItem } from "./components/index.ts";
 
 // Chips
-export { StatusChip } from "./components/index.ts";
-export type { StatusChipProps, StatusType } from "./components/index.ts";
+export { ColoredChip } from "./components/index.ts";
+export type { ColoredChipProps } from "./components/index.ts";
 
 // MUI Components
 export { Alert, Button } from "./components/index.ts";
