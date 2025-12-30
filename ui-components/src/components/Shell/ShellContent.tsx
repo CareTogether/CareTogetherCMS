@@ -25,7 +25,7 @@ export interface ShellContentProps extends ShellContentBaseProps {
  * Shell content area component providing proper spacing for the main application content.
  * Use as part of the Shell compound component pattern.
  * Automatically handles spacing to avoid overlap with fixed headers, sidebars, and footers.
- * 
+ *
  * @component
  * @example
  * <Shell.Content marginTop="64px" marginLeft="240px">

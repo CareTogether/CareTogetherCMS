@@ -23,11 +23,11 @@ interface ShellComposition {
 /**
  * Root shell layout container using compound component pattern.
  * Provides the base structure for application layouts with flexible composition.
- * 
+ *
  * @component
  * @example
  * <Shell>
- *   <Shell.Header 
+ *   <Shell.Header
  *     leftContent={<MenuButton />}
  *     centerContent={<Title />}
  *     rightContent={<UserMenu />}
@@ -43,17 +43,14 @@ interface ShellComposition {
  *   </Shell.Footer>
  * </Shell>
  */
-export const Shell: React.FC<ShellProps> & ShellComposition = ({ 
-  children, 
-  sx 
-}) => {
+export const Shell: React.FC<ShellProps> & ShellComposition = ({ children, sx }) => {
   return (
-    <Box 
-      sx={{ 
-        display: 'flex', 
-        flexDirection: 'column', 
-        minHeight: '100vh',
-        ...sx 
+    <Box
+      sx={{
+        display: "flex",
+        flexDirection: "column",
+        minHeight: "100vh",
+        ...sx,
       }}
     >
       {children}

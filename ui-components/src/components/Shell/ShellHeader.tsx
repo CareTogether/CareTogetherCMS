@@ -20,7 +20,7 @@ export interface ShellHeaderProps extends ShellHeaderBaseProps {
 /**
  * Shell header component providing a flexible header layout with three content areas.
  * Use as part of the Shell compound component pattern.
- * 
+ *
  * @component
  * @example
  * <Shell.Header
@@ -48,15 +48,13 @@ export const ShellHeader = ({
         }}
       >
         {leftContent && (
-          <Box sx={{ display: "flex", alignItems: "center", flexShrink: 0 }}>
-            {leftContent}
-          </Box>
+          <Box sx={{ display: "flex", alignItems: "center", flexShrink: 0 }}>{leftContent}</Box>
         )}
         {centerContent && (
-          <Box 
-            sx={{ 
-              display: "flex", 
-              alignItems: "center", 
+          <Box
+            sx={{
+              display: "flex",
+              alignItems: "center",
               flexGrow: 1,
               justifyContent: "center",
               overflow: "hidden",

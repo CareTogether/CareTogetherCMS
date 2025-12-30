@@ -17,7 +17,7 @@ export interface ShellFooterProps extends ShellFooterBaseProps {
  * Shell footer component providing a flexible footer layout.
  * Use as part of the Shell compound component pattern.
  * Consumers are responsible for providing their own footer content (copyright, version, links, etc.).
- * 
+ *
  * @component
  * @example
  * <Shell.Footer>

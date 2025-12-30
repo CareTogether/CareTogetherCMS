@@ -1,4 +1,4 @@
-import type { Meta, StoryObj } from "npm:@storybook/react@^8.0.0";
+import type { Meta, StoryObj } from "@storybook/react";
 import { Box } from "@mui/material";
 import CircleIcon from "@mui/icons-material/Circle";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
@@ -6,7 +6,7 @@ import InfoIcon from "@mui/icons-material/Info";
 import WarningIcon from "@mui/icons-material/Warning";
 import ErrorIcon from "@mui/icons-material/Error";
 import StarIcon from "@mui/icons-material/Star";
-import { ColoredChip } from "./ColoredChip.tsx";
+import { ColoredChip } from "./ColoredChip";
 
 const meta: Meta<typeof ColoredChip> = {
   title: "Chips/ColoredChip",

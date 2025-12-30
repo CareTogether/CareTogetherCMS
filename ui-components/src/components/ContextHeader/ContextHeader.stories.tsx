@@ -1,5 +1,5 @@
-import type { Meta, StoryObj } from "npm:@storybook/react@^8.0.0";
-import { ContextHeader } from "./ContextHeader.tsx";
+import type { Meta, StoryObj } from "@storybook/react";
+import { ContextHeader } from "./ContextHeader";
 
 const meta: Meta<typeof ContextHeader> = {
   title: "Context/ContextHeader",

@@ -1,40 +1,31 @@
 // Theme
-export { theme } from "./theme/theme.ts";
+export { theme } from "./theme/theme";
 
 // Shell Components (Compound Component Pattern)
-export { Shell } from "./components/index.ts";
+export { Shell } from "./components/index";
 export type {
   ShellProps,
   ShellHeaderProps,
   ShellSidebarProps,
   ShellContentProps,
   ShellFooterProps,
-} from "./components/index.ts";
+} from "./components/index";
 
 // Context Components
-export { ContextHeader } from "./components/index.ts";
-export type { ContextHeaderProps, BreadcrumbItem } from "./components/index.ts";
+export { ContextHeader } from "./components/index";
+export type { ContextHeaderProps, BreadcrumbItem } from "./components/index";
 
 // Chips
-export { ColoredChip } from "./components/index.ts";
-export type { ColoredChipProps } from "./components/index.ts";
-
-// MUI Components
-export { Alert, Button } from "./components/index.ts";
-export type { AlertProps, ButtonProps } from "./components/index.ts";
+export { ColoredChip } from "./components/index";
+export type { ColoredChipProps } from "./components/index";
 
 // Navigation Components
-export { IntakeStepNav, LabelAccordion, Steps } from "./components/index.ts";
-export type {
-  IntakeStepNavProps,
-  LabelAccordionProps,
-  StepsProps,
-  StepItem,
-} from "./components/index.ts";
+export { IntakeStepNav, Steps } from "./components/index";
+export type { IntakeStepNavProps, StepsProps, StepItem } from "./components/index";
 
 // Common Types
-export type { Size, Color, Variant } from "./types/common.ts";
+export type { Size, Color, Variant } from "./types/common";
 
 // Utilities
-export { classNames, useShellState } from "./utils/index.ts";
-export type { UseShellStateReturn } from "./utils/index.ts";
+export { classNames, useShellState } from "./utils/index";
+export type { UseShellStateReturn } from "./utils/index";

@@ -74,21 +74,17 @@ const CustomStepIcon = (props: StepIconProps) => {
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
-        backgroundColor: active || completed
-          ? theme.palette.primary.main
-          : theme.palette.background.paper,
-          borderWidth: 1,
-          borderStyle: "solid",
-          borderColor: active || completed
-            ? theme.palette.primary.main
-            : theme.palette.action.disabled,
+        backgroundColor:
+          active || completed ? theme.palette.primary.main : theme.palette.background.paper,
+        borderWidth: 1,
+        borderStyle: "solid",
+        borderColor:
+          active || completed ? theme.palette.primary.main : theme.palette.action.disabled,
         color: active || completed ? theme.palette.background.default : theme.palette.text.primary,
         fontSize: "0.75rem",
       }}
     >
-      {completed ? (
-        <CheckIcon />
-        ) : icon}
+      {completed ? <CheckIcon /> : icon}
     </Box>
   );
 };
@@ -118,11 +114,7 @@ export const Steps = ({
 
   return (
     <Box sx={{ width: "100%" }}>
-      <Stepper
-        activeStep={activeStep}
-        orientation={orientation}
-        connector={<ColorlibConnector />}
-      >
+      <Stepper activeStep={activeStep} orientation={orientation} connector={<ColorlibConnector />}>
         {steps.map((step, index) => {
           const isActive = index === activeStep;
           const isCompleted = step.completed || false;
@@ -133,14 +125,20 @@ export const Steps = ({
               {onStepClick ? (
                 <StepButton
                   onClick={() => onStepClick(index)}
-                  icon={<CustomStepIcon active={isActive} completed={isCompleted} icon={globalStepNumber} />}
+                  icon={
+                    <CustomStepIcon
+                      active={isActive}
+                      completed={isCompleted}
+                      icon={globalStepNumber}
+                    />
+                  }
                   sx={{
                     "& .MuiStepLabel-label": {
                       color: isCompleted
                         ? theme.palette.primary.dark
                         : isActive
-                        ? theme.palette.primary.main
-                        : theme.palette.text.primary,
+                          ? theme.palette.primary.main
+                          : theme.palette.text.primary,
                       fontWeight: isActive ? 600 : 400,
                     },
                   }}
@@ -157,8 +155,8 @@ export const Steps = ({
                       color: isCompleted
                         ? theme.palette.primary.dark
                         : isActive
-                        ? theme.palette.primary.main
-                        : theme.palette.text.primary,
+                          ? theme.palette.primary.main
+                          : theme.palette.text.primary,
                       fontWeight: isActive ? 600 : 400,
                     },
                   }}

@@ -1,5 +1,5 @@
-import type { Meta, StoryObj } from "npm:@storybook/react@^8.0.0";
-import { Steps } from "./Steps.tsx";
+import type { Meta, StoryObj } from "@storybook/react";
+import { Steps } from "./Steps";
 
 const meta: Meta<typeof Steps> = {
   title: "IntakeStepNav/Steps",

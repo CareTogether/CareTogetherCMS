@@ -1,2 +1,2 @@
-export { ContextHeader } from "./ContextHeader.tsx";
-export type { ContextHeaderProps, BreadcrumbItem } from "./ContextHeader.tsx";
+export { ContextHeader } from "./ContextHeader";
+export type { ContextHeaderProps, BreadcrumbItem } from "./ContextHeader";

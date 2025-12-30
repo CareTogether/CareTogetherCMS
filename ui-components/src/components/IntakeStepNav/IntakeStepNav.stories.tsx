@@ -1,5 +1,5 @@
-import type { Meta, StoryObj } from "npm:@storybook/react@^8.0.0";
-import { IntakeStepNav } from "./IntakeStepNav.tsx";
+import type { Meta, StoryObj } from "@storybook/react";
+import { IntakeStepNav } from "./IntakeStepNav";
 import { Box } from "@mui/material";
 
 const meta: Meta<typeof IntakeStepNav> = {
@@ -73,18 +73,11 @@ export const WithClickHandler: Story = {
       },
       {
         label: "Needs Assessment",
-        steps: [
-          { label: "Current Situation" },
-          { label: "Support Needs" },
-          { label: "Goals" },
-        ],
+        steps: [{ label: "Current Situation" }, { label: "Support Needs" }, { label: "Goals" }],
       },
       {
         label: "Documentation",
-        steps: [
-          { label: "Upload Documents" },
-          { label: "Review & Submit" },
-        ],
+        steps: [{ label: "Upload Documents" }, { label: "Review & Submit" }],
       },
     ],
     activeStep: 1,
@@ -129,18 +122,12 @@ export const WithCustomExpansion: Story = {
       },
       {
         label: "Current Section",
-        steps: [
-          { label: "Step 3", completed: false },
-          { label: "Step 4" },
-        ],
+        steps: [{ label: "Step 3", completed: false }, { label: "Step 4" }],
         defaultExpanded: true,
       },
       {
         label: "Future Section",
-        steps: [
-          { label: "Step 5" },
-          { label: "Step 6" },
-        ],
+        steps: [{ label: "Step 5" }, { label: "Step 6" }],
         defaultExpanded: false,
       },
     ],
@@ -166,10 +153,7 @@ export const InContainer: Story = {
       },
       {
         label: "Final Steps",
-        steps: [
-          { label: "Skills & Interests" },
-          { label: "Submit" },
-        ],
+        steps: [{ label: "Skills & Interests" }, { label: "Submit" }],
       },
     ],
     activeStep: 1,

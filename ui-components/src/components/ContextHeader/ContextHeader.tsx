@@ -26,18 +26,13 @@ export interface ContextHeaderProps extends ContextHeaderBaseProps {
  * Context-aware header for page-specific information
  * @component
  * @example
- * <ContextHeader 
- *   title="Family Details" 
+ * <ContextHeader
+ *   title="Family Details"
  *   subtitle="Smith Family"
  *   breadcrumbs={[{label: "Home", href: "/"}, {label: "Families"}]}
  * />
  */
-export const ContextHeader = ({
-  title,
-  subtitle,
-  breadcrumbs,
-  sx,
-}: ContextHeaderProps) => {
+export const ContextHeader = ({ title, subtitle, breadcrumbs, sx }: ContextHeaderProps) => {
   return (
     <Box
       sx={{
@@ -51,7 +46,7 @@ export const ContextHeader = ({
     >
       {breadcrumbs && breadcrumbs.length > 0 && (
         <Breadcrumbs sx={{ mb: 2 }}>
-          {breadcrumbs.map((item, index) => (
+          {breadcrumbs.map((item, index) =>
             item.href ? (
               <Link key={index} href={item.href} underline="hover" color="inherit">
                 {item.label}
@@ -61,7 +56,7 @@ export const ContextHeader = ({
                 {item.label}
               </Typography>
             )
-          ))}
+          )}
         </Breadcrumbs>
       )}
       <Typography variant="h4" component="h1" gutterBottom>

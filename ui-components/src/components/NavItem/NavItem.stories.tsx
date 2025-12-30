@@ -1,5 +1,5 @@
-import type { Meta, StoryObj } from "npm:@storybook/react@^8.0.0";
-import { NavItem } from "./NavItem.tsx";
+import type { Meta, StoryObj } from "@storybook/react";
+import { NavItem } from "./NavItem";
 import { Box } from "@mui/material";
 import HomeIcon from "@mui/icons-material/Home";
 import PeopleIcon from "@mui/icons-material/People";

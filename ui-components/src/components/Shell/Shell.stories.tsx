@@ -1,11 +1,11 @@
 import type { Meta, StoryObj } from "@storybook/react";
-import { Shell } from "./Shell.tsx";
-import { 
-  Typography, 
-  IconButton, 
-  List, 
-  ListItem, 
-  ListItemIcon, 
+import { Shell } from "./Shell";
+import {
+  Typography,
+  IconButton,
+  List,
+  ListItem,
+  ListItemIcon,
   ListItemText,
   Box,
   Container,
@@ -61,7 +61,7 @@ export const Complete: Story = {
             </IconButton>
           }
         />
-        
+
         <Box sx={{ display: "flex", flexGrow: 1 }}>
           <Shell.Sidebar open={sidebarOpen} width={240}>
             <List>
@@ -92,7 +92,7 @@ export const Complete: Story = {
                 Welcome to CareTogether
               </Typography>
               <Typography variant="body1" paragraph>
-                This is an example of the Shell compound component pattern. The header, sidebar, 
+                This is an example of the Shell compound component pattern. The header, sidebar,
                 content area, and footer are all composable parts that you can customize.
               </Typography>
               <Button variant="contained" color="primary">
@@ -123,12 +123,8 @@ export const Complete: Story = {
 export const MinimalLayout: Story = {
   render: () => (
     <Shell>
-      <Shell.Header
-        centerContent={
-          <Typography variant="h6">Simple App</Typography>
-        }
-      />
-      
+      <Shell.Header centerContent={<Typography variant="h6">Simple App</Typography>} />
+
       <Shell.Content marginTop="64px">
         <Container sx={{ py: 4 }}>
           <Typography variant="h4">Minimal Layout</Typography>
@@ -155,9 +151,7 @@ export const HeaderOnly: Story = {
           <Typography variant="h6">My App</Typography>
         </Box>
       }
-      centerContent={
-        <Typography variant="body1">Dashboard</Typography>
-      }
+      centerContent={<Typography variant="body1">Dashboard</Typography>}
       rightContent={
         <>
           <Button color="inherit">Login</Button>
@@ -176,16 +170,12 @@ export const HeaderOnly: Story = {
 export const SidebarOnly: Story = {
   render: () => {
     const [open, setOpen] = useState(true);
-    
+
     return (
       <Box sx={{ display: "flex", height: "100vh" }}>
         <Shell.Sidebar open={open} width={240}>
           <Box sx={{ p: 2 }}>
-            <Button 
-              fullWidth 
-              variant="outlined" 
-              onClick={() => setOpen(!open)}
-            >
+            <Button fullWidth variant="outlined" onClick={() => setOpen(!open)}>
               Toggle Sidebar
             </Button>
           </Box>
@@ -204,12 +194,10 @@ export const SidebarOnly: Story = {
             </ListItem>
           </List>
         </Shell.Sidebar>
-        
+
         <Box sx={{ flexGrow: 1, p: 3 }}>
           <Typography variant="h5">Main Content Area</Typography>
-          <Typography variant="body1">
-            The sidebar is {open ? "open" : "closed"}.
-          </Typography>
+          <Typography variant="body1">The sidebar is {open ? "open" : "closed"}.</Typography>
         </Box>
       </Box>
     );
@@ -252,7 +240,7 @@ export const FixedHeaderFooter: Story = {
         position="fixed"
         leftContent={<Typography variant="h6">Fixed Layout</Typography>}
       />
-      
+
       <Shell.Content marginTop="64px" marginBottom="48px">
         <Container sx={{ py: 4 }}>
           {Array.from({ length: 50 }, (_, i) => (

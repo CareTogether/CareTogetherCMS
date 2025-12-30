@@ -2,7 +2,7 @@ import { createTheme } from "@mui/material/styles";
 
 /**
  * CareTogether MUI Theme
- * 
+ *
  * Primary color: #07666C (teal)
  * Primary dark: #00616F
  * Secondary: #D32F2F (red)

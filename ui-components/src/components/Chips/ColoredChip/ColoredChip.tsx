@@ -21,16 +21,16 @@ export interface ColoredChipProps extends ColoredChipBaseProps {
 
 /**
  * Generic chip component with optional colored icon and lightened background
- * 
+ *
  * @component
  * @example
  * // Basic chip with no icon
  * <ColoredChip label="Family Type A" />
- * 
+ *
  * @example
  * // Chip with theme color
  * <ColoredChip label="In Progress" icon={<CircleIcon />} iconColor="info" />
- * 
+ *
  * @example
  * // Chip with custom color
  * <ColoredChip label="Custom Status" icon={<StarIcon />} iconColor="#9C27B0" />
@@ -86,12 +86,12 @@ export const ColoredChip = ({
           fontSize: "24px",
           width: "24px",
           height: "24px",
-          marginRight: .75,
+          marginRight: 0.75,
           marginLeft: 0,
         },
         "& .MuiChip-label": {
           fontSize: "14px",
-          px: 0
+          px: 0,
         },
         ...sx,
       }}

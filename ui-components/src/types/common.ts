@@ -10,13 +10,7 @@ export type Size = "small" | "medium" | "large";
 /**
  * Standard color variants matching MUI theme
  */
-export type Color =
-  | "primary"
-  | "secondary"
-  | "error"
-  | "warning"
-  | "info"
-  | "success";
+export type Color = "primary" | "secondary" | "error" | "warning" | "info" | "success";
 
 /**
  * Standard variant types for components

@@ -12,13 +12,13 @@ export interface UseShellStateReturn {
 /**
  * Hook for managing shell layout state (sidebar open/close).
  * This is an optional convenience hook - consumers can use their own state management.
- * 
+ *
  * @param initialOpen - Initial open state for the sidebar (default: true)
  * @returns Object with sidebar state and control functions
- * 
+ *
  * @example
  * const { sidebarOpen, toggleSidebar } = useShellState(true);
- * 
+ *
  * <Shell>
  *   <Shell.Header
  *     leftContent={

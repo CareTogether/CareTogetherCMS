@@ -25,11 +25,11 @@ export interface ShellSidebarProps extends ShellSidebarBaseProps {
  * Shell sidebar component providing a flexible navigation drawer.
  * Use as part of the Shell compound component pattern.
  * Consumers are responsible for providing their own navigation items and state management.
- * 
+ *
  * @component
  * @example
  * const [open, setOpen] = useState(true);
- * 
+ *
  * <Shell.Sidebar open={open} width={240}>
  *   <List>
  *     <ListItem button><ListItemText primary="Dashboard" /></ListItem>
@@ -62,9 +62,7 @@ export const ShellSidebar = ({
         ...sx,
       }}
     >
-      <Box sx={{ overflow: "auto", height: "100%" }}>
-        {children}
-      </Box>
+      <Box sx={{ overflow: "auto", height: "100%" }}>{children}</Box>
     </Drawer>
   );
 };

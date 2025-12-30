@@ -1,2 +1,2 @@
-export { NavItem } from "./NavItem.tsx";
-export type { NavItemProps } from "./NavItem.tsx";
+export { NavItem } from "./NavItem";
+export type { NavItemProps } from "./NavItem";

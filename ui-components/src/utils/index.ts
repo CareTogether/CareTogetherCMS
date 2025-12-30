@@ -9,5 +9,5 @@ export const classNames = (...classes: (string | undefined | null | false)[]) =>
   return classes.filter(Boolean).join(" ");
 };
 
-export { useShellState } from "./useShellState.ts";
-export type { UseShellStateReturn } from "./useShellState.ts";
+export { useShellState } from "./useShellState";
+export type { UseShellStateReturn } from "./useShellState";

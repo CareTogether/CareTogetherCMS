@@ -25,36 +25,32 @@ export interface NavItemProps extends NavItemBaseProps {
    * Can be a string for HTML elements or a React component (e.g., Link from react-router)
    */
   component?: ElementType;
-  /**
-   * Additional props to pass to the underlying component
-   */
-  [key: string]: any;
 }
 
 /**
  * Navigation item component with icon and text
- * 
+ *
  * @component
  * @example
  * // As a button
  * <NavItem icon={<HomeIcon />} text="Dashboard" onClick={handleClick} />
- * 
+ *
  * @example
  * // As a router link
- * <NavItem 
- *   icon={<HomeIcon />} 
- *   text="Dashboard" 
- *   component={Link} 
- *   to="/dashboard" 
+ * <NavItem
+ *   icon={<HomeIcon />}
+ *   text="Dashboard"
+ *   component={Link}
+ *   to="/dashboard"
  * />
- * 
+ *
  * @example
  * // As a native link
- * <NavItem 
- *   icon={<HomeIcon />} 
- *   text="External" 
- *   component="a" 
- *   href="https://example.com" 
+ * <NavItem
+ *   icon={<HomeIcon />}
+ *   text="External"
+ *   component="a"
+ *   href="https://example.com"
  *   target="_blank"
  * />
  */
@@ -112,9 +108,7 @@ export const NavItem = ({
         ...sx,
       }}
     >
-      <Box className="navitem-icon">
-        {icon}
-      </Box>
+      <Box className="navitem-icon">{icon}</Box>
       {!collapsed && (
         <Typography
           className="navitem-text"

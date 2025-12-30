@@ -8,7 +8,7 @@ import {
   Divider,
 } from "@mui/material";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
-import { Steps, StepItem } from "./Steps/Steps.tsx";
+import { Steps, StepItem } from "./Steps/Steps";
 
 export type { StepItem };
 
@@ -60,7 +60,7 @@ export interface IntakeStepNavProps {
 
 /**
  * Intake navigation component with vertical steps organized into accordion groups.
- * 
+ *
  * @component
  * @example
  * <IntakeStepNav
@@ -120,17 +120,14 @@ export const IntakeStepNav = ({
       {groupsWithOffsets.map((group, groupIndex) => {
         // Determine if active step is in this group
         const localActiveStep = activeStep - group.offset;
-        const isActiveInGroup =
-          localActiveStep >= 0 && localActiveStep < group.stepCount;
+        const isActiveInGroup = localActiveStep >= 0 && localActiveStep < group.stepCount;
 
         return (
           <Box key={groupIndex}>
             <Accordion
               defaultExpanded={group.defaultExpanded ?? true}
               expanded={group.expanded}
-              onChange={(_, isExpanded) =>
-                group.onExpansionChange?.(isExpanded)
-              }
+              onChange={(_, isExpanded) => group.onExpansionChange?.(isExpanded)}
               elevation={0}
             >
               <AccordionSummary
@@ -138,7 +135,7 @@ export const IntakeStepNav = ({
                 sx={{
                   p: 0,
                   "&.Mui-expanded": {
-                    minHeight: 'auto',
+                    minHeight: "auto",
                   },
                   "& .MuiAccordionSummary-content": {
                     my: 0,
@@ -148,8 +145,8 @@ export const IntakeStepNav = ({
                   },
                 }}
               >
-                <Typography 
-                  variant="subtitle1" 
+                <Typography
+                  variant="subtitle1"
                   fontWeight={500}
                   sx={{
                     color: isActiveInGroup ? "primary.dark" : "text.primary",
@@ -164,18 +161,14 @@ export const IntakeStepNav = ({
                   steps={group.steps}
                   activeStep={isActiveInGroup ? localActiveStep : -1}
                   onStepClick={
-                    onStepClick
-                      ? (localIndex) => onStepClick(group.offset + localIndex)
-                      : undefined
+                    onStepClick ? (localIndex) => onStepClick(group.offset + localIndex) : undefined
                   }
                   orientation="vertical"
                   stepOffset={group.offset}
                 />
               </AccordionDetails>
             </Accordion>
-            {groupIndex < groupsWithOffsets.length - 1 && (
-              <Divider sx={{ my: 3 }} />
-            )}
+            {groupIndex < groupsWithOffsets.length - 1 && <Divider sx={{ my: 3 }} />}
           </Box>
         );
       })}

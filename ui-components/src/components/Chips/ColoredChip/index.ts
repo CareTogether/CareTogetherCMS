@@ -1,2 +1,2 @@
-export { ColoredChip } from "./ColoredChip.tsx";
-export type { ColoredChipProps } from "./ColoredChip.tsx";
+export { ColoredChip } from "./ColoredChip";
+export type { ColoredChipProps } from "./ColoredChip";
