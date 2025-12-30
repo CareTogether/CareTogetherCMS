@@ -39,31 +39,45 @@ export const theme = createTheme({
     fontFamily: '"Poppins", "Helvetica", "Arial", sans-serif',
     h1: {
       fontFamily: '"Poppins", "Helvetica", "Arial", sans-serif',
-      fontWeight: 600,
+      fontSize: "40px",
+      fontWeight: 500,
+      lineHeight: 1.167,
+      letterSpacing: "-1.5px",
     },
     h2: {
       fontFamily: '"Poppins", "Helvetica", "Arial", sans-serif',
-      fontSize: "1.5rem",
-      fontWeight: 600,
-      lineHeight: 1.5,
-      letterSpacing: "0.0075em",
+      fontSize: "32px",
+      fontWeight: 500,
+      lineHeight: 1.2,
+      letterSpacing: "-0.5px",
     },
     h3: {
       fontFamily: '"Poppins", "Helvetica", "Arial", sans-serif',
-      fontSize: "1.17rem",
-      fontWeight: 700,
+      fontSize: "28px",
+      fontWeight: 500,
+      lineHeight: 1.25,
+      letterSpacing: "0px",
     },
     h4: {
       fontFamily: '"Poppins", "Helvetica", "Arial", sans-serif',
-      fontWeight: 600,
+      fontSize: "22px",
+      fontWeight: 700,
+      lineHeight: 1.3,
+      letterSpacing: "0.25px",
     },
     h5: {
       fontFamily: '"Poppins", "Helvetica", "Arial", sans-serif',
-      fontWeight: 600,
+      fontSize: "20px",
+      fontWeight: 500,
+      lineHeight: 1.35,
+      letterSpacing: "0px",
     },
     h6: {
       fontFamily: '"Poppins", "Helvetica", "Arial", sans-serif',
-      fontWeight: 600,
+      fontSize: "18px",
+      fontWeight: 500,
+      lineHeight: 1.4,
+      letterSpacing: "0.15px",
     },
     body1: {
       fontFamily: '"Poppins", "Helvetica", "Arial", sans-serif',
@@ -80,9 +94,10 @@ export const theme = createTheme({
     MuiButton: {
       styleOverrides: {
         root: {
-          borderRadius: 8,
+          borderRadius: 24,
           textTransform: "none",
           fontWeight: 500,
+          lineHeight: 1.5,
         },
       },
     },
@@ -97,6 +112,19 @@ export const theme = createTheme({
       styleOverrides: {
         root: {
           borderRadius: 8,
+        },
+      },
+    },
+    MuiBreadcrumbs: {
+      styleOverrides: {
+        root: {
+          "& a": {
+            color: "#00616F",
+            textDecoration: "none",
+            "&:hover": {
+              textDecoration: "underline",
+            },
+          },
         },
       },
     },
