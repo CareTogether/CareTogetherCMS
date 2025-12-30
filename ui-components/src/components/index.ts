@@ -22,3 +22,6 @@ export type { StepsProps } from "./IntakeStepNav/index";
 
 export { NavItem } from "./NavItem/index";
 export type { NavItemProps } from "./NavItem/index";
+
+export { Progress } from "./Progress/index";
+export type { ProgressProps, ProgressStep } from "./Progress/index";

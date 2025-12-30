@@ -23,6 +23,10 @@ export type { ColoredChipProps } from "./components/index";
 export { IntakeStepNav, Steps } from "./components/index";
 export type { IntakeStepNavProps, StepsProps, StepItem } from "./components/index";
 
+// Progress Components
+export { Progress } from "./components/index";
+export type { ProgressProps, ProgressStep } from "./components/index";
+
 // Common Types
 export type { Size, Color, Variant } from "./types/common";
 
