@@ -20,20 +20,7 @@ export interface ColoredChipProps extends ColoredChipBaseProps {
 }
 
 /**
- * Generic chip component with optional colored icon and lightened background
- *
- * @component
- * @example
- * // Basic chip with no icon
- * <ColoredChip label="Family Type A" />
- *
- * @example
- * // Chip with theme color
- * <ColoredChip label="In Progress" icon={<CircleIcon />} iconColor="info" />
- *
- * @example
- * // Chip with custom color
- * <ColoredChip label="Custom Status" icon={<StarIcon />} iconColor="#9C27B0" />
+ * Generic chip component with optional colored icon and lightened background.
  */
 export const ColoredChip = ({
   label,

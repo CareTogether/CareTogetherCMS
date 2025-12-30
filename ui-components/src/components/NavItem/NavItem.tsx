@@ -29,30 +29,6 @@ export interface NavItemProps extends NavItemBaseProps {
 
 /**
  * Navigation item component with icon and text
- *
- * @component
- * @example
- * // As a button
- * <NavItem icon={<HomeIcon />} text="Dashboard" onClick={handleClick} />
- *
- * @example
- * // As a router link
- * <NavItem
- *   icon={<HomeIcon />}
- *   text="Dashboard"
- *   component={Link}
- *   to="/dashboard"
- * />
- *
- * @example
- * // As a native link
- * <NavItem
- *   icon={<HomeIcon />}
- *   text="External"
- *   component="a"
- *   href="https://example.com"
- *   target="_blank"
- * />
  */
 export const NavItem = ({
   icon,

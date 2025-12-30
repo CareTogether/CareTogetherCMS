@@ -60,30 +60,6 @@ export interface IntakeStepNavProps {
 
 /**
  * Intake navigation component with vertical steps organized into accordion groups.
- *
- * @component
- * @example
- * <IntakeStepNav
- *   title="Application Process"
- *   stepGroups={[
- *     {
- *       label: "Basic Information",
- *       steps: [
- *         { label: "Personal Info", completed: true },
- *         { label: "Contact Details" }
- *       ]
- *     },
- *     {
- *       label: "Documentation",
- *       steps: [
- *         { label: "Upload ID" },
- *         { label: "Review" }
- *       ]
- *     }
- *   ]}
- *   activeStep={1}
- *   onStepClick={(index) => console.log(index)}
- * />
  */
 export const IntakeStepNav = ({
   title,

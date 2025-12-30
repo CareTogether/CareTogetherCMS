@@ -91,17 +91,6 @@ const CustomStepIcon = (props: StepIconProps) => {
 
 /**
  * Step indicator component for multi-step forms/workflows.
- * Completed steps show checkmarks, active steps are highlighted in primary color.
- * @component
- * @example
- * <Steps
- *   steps={[
- *     {label: "Step 1", completed: true},
- *     {label: "Step 2"}
- *   ]}
- *   activeStep={1}
- *   orientation="vertical"
- * />
  */
 export const Steps = ({
   steps,
