@@ -45,6 +45,7 @@ import { useDrawer } from '../Generic/ShellDrawer';
 import { ManageUserDrawer } from './ManageUserDrawer';
 import { format } from 'date-fns';
 import { DateOfBirth } from './DateOfBirth';
+import { WithComma } from '../Utilities/WithComma';
 import { ReadMoreText } from '../Generic/Forms/ReadMoreText';
 
 type AdultCardProps = {
@@ -158,11 +159,14 @@ export function AdultCard({ familyId, personId }: AdultCardProps) {
             sx={{ paddingBottom: 0 }}
             title={adult.item1.firstName + ' ' + adult.item1.lastName}
             subheader={
-              <>
-                Adult, <AgeText age={adult.item1.age} />{' '}
-                {adult.item1.gender ? ', ' + Gender[adult.item1.gender] : ''}{' '}
-                {adult.item1.ethnicity ? ', ' + adult.item1.ethnicity : ''}
-              </>
+              <WithComma
+                items={[
+                  'Adult',
+                  <AgeText age={adult.item1.age} />,
+                  adult.item1.gender && Gender[adult.item1.gender],
+                  adult.item1.ethnicity,
+                ].filter(Boolean)}
+              />
             }
             action={
               <>
