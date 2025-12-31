@@ -9,6 +9,7 @@ const meta: Meta<typeof Progress> = {
     layout: "padded",
   },
   tags: ["autodocs"],
+  decorators: [(story) => <div style={{ maxWidth: 330 }}>{story()}</div>],
 };
 
 export default meta;
@@ -22,27 +23,27 @@ export const Default: Story = {
     header: "Header",
     steps: [
       {
-        label: "Lorem ipsum dolor sit amet consectetur",
+        label: "Lorem ipsum dolor sit amet",
         description: "Nibh pellentesque orci lorem odio in. Viverra nunc lectus odio pharetra.",
         completed: false,
       },
       {
-        label: "Lorem ipsum dolor sit amet consectetur",
+        label: "Lorem ipsum dolor sit amet",
         description: "Nibh pellentesque orci lorem odio in. Viverra nunc lectus odio pharetra.",
         completed: false,
       },
       {
-        label: "Lorem ipsum dolor sit amet consectetur",
+        label: "Lorem ipsum dolor sit amet",
         description: "Nibh pellentesque orci lorem odio in. Viverra nunc lectus odio pharetra.",
         completed: false,
       },
       {
-        label: "Lorem ipsum dolor sit amet consectetur",
+        label: "Lorem ipsum dolor sit amet",
         description: "Nibh pellentesque orci lorem odio in. Viverra nunc lectus odio pharetra.",
         completed: false,
       },
       {
-        label: "Lorem ipsum dolor sit amet consectetur",
+        label: "Lorem ipsum dolor sit amet",
         description: "Nibh pellentesque orci lorem odio in. Viverra nunc lectus odio pharetra.",
         completed: false,
       },

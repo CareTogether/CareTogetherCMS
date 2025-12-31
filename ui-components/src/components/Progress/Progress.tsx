@@ -108,6 +108,7 @@ const ProgressStepIcon = (props: StepIconProps) => {
         borderColor: active ? "primary.main" : "divider",
         color: completed ? "background.default" : "transparent",
         flexShrink: 0,
+        marginLeft: "1px",
       }}
     >
       {completed && <CheckIcon sx={{ fontSize: 16 }} />}
@@ -164,7 +165,7 @@ export const Progress = ({
             borderWidth: "2px",
             borderColor: "divider",
             ml: "12px",
-            pl: "20px",
+            pl: "23px",
           },
           "& .MuiStep-root": {
             pb: 0,
@@ -190,7 +191,8 @@ export const Progress = ({
                 variant="body1"
                 sx={{
                   fontWeight: 500,
-                  pt: 0.325,
+                  pt: 0.5,
+                  lineHeight: 1.3,
                 }}
               >
                 {step.label}
