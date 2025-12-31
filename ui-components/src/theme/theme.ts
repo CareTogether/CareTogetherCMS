@@ -74,8 +74,8 @@ export const theme = createTheme({
     },
     h6: {
       fontFamily: '"Poppins", "Helvetica", "Arial", sans-serif',
-      fontSize: "18px",
-      fontWeight: 500,
+      fontSize: "16px",
+      fontWeight: 600,
       lineHeight: 1.4,
       letterSpacing: "0.15px",
     },
@@ -91,6 +91,18 @@ export const theme = createTheme({
     },
   },
   components: {
+    MuiLink: {
+      styleOverrides: {
+        root: ({ theme }) => ({
+          color: theme.palette.primary.main,
+          textDecoration: "none",
+          fontWeight: 500,
+          "&:hover, &:focus-visible": {
+            textDecoration: "underline",
+          },
+        }),
+      },
+    },
     MuiButton: {
       styleOverrides: {
         root: {
@@ -103,9 +115,11 @@ export const theme = createTheme({
     },
     MuiCard: {
       styleOverrides: {
-        root: {
+        root: ({ theme }) => ({
           borderRadius: 8,
-        },
+          border: "1px solid",
+          borderColor: theme.palette.grey[300],
+        }),
       },
     },
     MuiChip: {
@@ -117,15 +131,15 @@ export const theme = createTheme({
     },
     MuiBreadcrumbs: {
       styleOverrides: {
-        root: {
+        root: ({ theme }) => ({
           "& a": {
-            color: "#00616F",
+            color: theme.palette.primary.dark,
             textDecoration: "none",
             "&:hover": {
               textDecoration: "underline",
             },
           },
-        },
+        }),
       },
     },
   },

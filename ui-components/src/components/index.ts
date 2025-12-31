@@ -25,3 +25,12 @@ export type { NavItemProps } from "./NavItem/index";
 
 export { Progress } from "./Progress/index";
 export type { ProgressProps, ProgressStep } from "./Progress/index";
+
+export { ActivityIcon, ActivityItem, RecentActivity } from "./Activities/index";
+export type {
+  ActivityIconProps,
+  ActivityItemProps,
+  RecentActivityProps,
+  RecentActivityHeaderProps,
+  RecentActivityGroupProps,
+} from "./Activities/index";

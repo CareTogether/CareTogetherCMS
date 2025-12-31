@@ -1,6 +1,7 @@
 import {
   Box,
   BoxProps,
+  Card,
   Stepper,
   Step,
   StepLabel,
@@ -133,7 +134,14 @@ export const Progress = ({
   const totalCount = steps.length;
 
   return (
-    <Box sx={{ width: "100%", ...sx }} className={className}>
+    <Card
+      elevation={0}
+      sx={{
+        p: 2,
+        ...sx,
+      }}
+      className={className}
+    >
       {/* Optional Header with completion count */}
       {header && (
         <Box
@@ -211,6 +219,6 @@ export const Progress = ({
 
       {/* Optional Actions */}
       {actions && <Box sx={{ mt: 3, display: "flex", justifyContent: "center" }}>{actions}</Box>}
-    </Box>
+    </Card>
   );
 };
