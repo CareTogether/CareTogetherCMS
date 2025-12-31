@@ -10,3 +10,9 @@ export type {
   RecentActivityHeaderProps,
   RecentActivityGroupProps,
 } from "./RecentActivity";
+
+export { TimelineCard } from "./TimelineCard";
+export type { TimelineCardProps, TimelineItemData } from "./TimelineCard";
+
+export { TimelineItem } from "./TimelineItem";
+export type { TimelineItemProps } from "./TimelineItem";

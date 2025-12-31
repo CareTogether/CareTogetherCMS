@@ -89,6 +89,17 @@ export const theme = createTheme({
       fontFamily: '"Poppins", "Helvetica", "Arial", sans-serif',
       fontWeight: 500,
     },
+    subtitle1: {
+      fontSize: "16px",
+      fontWeight: 600,
+      letterSpacing: "0.17px",
+    },
+    subtitle2: {
+      color: "#212121",
+      fontSize: "14px",
+      fontWeight: 600,
+      letterSpacing: "0.17px",
+    },
   },
   components: {
     MuiLink: {
