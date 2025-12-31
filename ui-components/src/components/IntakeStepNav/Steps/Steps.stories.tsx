@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from "@storybook/react";
 import { Steps } from "./Steps";
 
 const meta: Meta<typeof Steps> = {
-  title: "IntakeStepNav/Steps",
+  title: "Components/Navigation/Steps",
   component: Steps,
   tags: ["autodocs"],
 };

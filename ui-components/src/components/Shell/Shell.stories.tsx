@@ -19,7 +19,7 @@ import SettingsIcon from "@mui/icons-material/Settings";
 import { useState } from "react";
 
 const meta: Meta<typeof Shell> = {
-  title: "Shell/Shell (Compound Component)",
+  title: "Components/Layout/Shell",
   component: Shell,
   tags: ["autodocs"],
   parameters: {

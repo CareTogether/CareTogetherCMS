@@ -3,7 +3,7 @@ import { Progress } from "./Progress";
 import { Button } from "@mui/material";
 
 const meta: Meta<typeof Progress> = {
-  title: "Components/Progress",
+  title: "Components/Feedback/Progress",
   component: Progress,
   parameters: {
     layout: "padded",

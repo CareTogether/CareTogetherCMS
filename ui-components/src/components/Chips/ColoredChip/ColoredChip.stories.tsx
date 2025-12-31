@@ -9,7 +9,7 @@ import StarIcon from "@mui/icons-material/Star";
 import { ColoredChip } from "./ColoredChip";
 
 const meta: Meta<typeof ColoredChip> = {
-  title: "Chips/ColoredChip",
+  title: "Components/Display/ColoredChip",
   component: ColoredChip,
   tags: ["autodocs"],
   argTypes: {

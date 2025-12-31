@@ -7,7 +7,7 @@ import AccessTimeFilledIcon from "@mui/icons-material/AccessTimeFilled";
 import MoreVertIcon from "@mui/icons-material/MoreVert";
 
 const meta: Meta<typeof ContextHeader> = {
-  title: "Context/ContextHeader",
+  title: "Components/Layout/ContextHeader",
   component: ContextHeader,
   tags: ["autodocs"],
   parameters: {

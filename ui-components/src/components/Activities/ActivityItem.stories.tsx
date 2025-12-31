@@ -4,7 +4,7 @@ import { ActivityIcon } from "./ActivityIcon";
 import { Box, Link, Button } from "@mui/material";
 
 const meta = {
-  title: "Components/Activities/ActivityItem",
+  title: "Components/Display/ActivityItem",
   component: ActivityItem,
   parameters: {
     layout: "padded",

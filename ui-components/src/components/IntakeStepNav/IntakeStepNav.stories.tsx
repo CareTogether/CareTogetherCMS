@@ -3,7 +3,7 @@ import { IntakeStepNav } from "./IntakeStepNav";
 import { Box } from "@mui/material";
 
 const meta: Meta<typeof IntakeStepNav> = {
-  title: "IntakeStepNav/IntakeStepNav",
+  title: "Components/Navigation/IntakeStepNav",
   component: IntakeStepNav,
   tags: ["autodocs"],
 };

@@ -5,7 +5,7 @@ import { ActivityIcon } from "./ActivityIcon";
 import { Link } from "@mui/material";
 
 const meta = {
-  title: "Components/Activities/RecentActivity",
+  title: "Components/Display/RecentActivity",
   component: RecentActivity,
   parameters: {
     layout: "padded",

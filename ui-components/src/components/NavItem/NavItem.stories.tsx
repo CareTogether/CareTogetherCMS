@@ -8,7 +8,7 @@ import SettingsIcon from "@mui/icons-material/Settings";
 import DashboardIcon from "@mui/icons-material/Dashboard";
 
 const meta: Meta<typeof NavItem> = {
-  title: "Navigation/NavItem",
+  title: "Components/Navigation/NavItem",
   component: NavItem,
   tags: ["autodocs"],
   parameters: {
