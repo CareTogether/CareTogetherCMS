@@ -7,7 +7,7 @@ import {
   TextField,
   Typography,
 } from '@mui/material';
-import { useSetRecoilState } from 'recoil';
+import { useRecoilValue, useSetRecoilState } from 'recoil';
 import { ValidateDatePicker } from '../Generic/Forms/ValidateDatePicker';
 import { FamilyName, familyNameString } from '../Families/FamilyName';
 import { useLoadable } from '../Hooks/useLoadable';
@@ -16,6 +16,9 @@ import {
   useV1ReferralsModel,
   referralsRefreshTrigger,
 } from '../Model/V1ReferralsModel';
+import { policyData } from '../Model/ConfigurationModel';
+import { CustomField } from '../GeneratedClient';
+import { CustomFieldInput } from '../Generic/CustomFieldInput';
 
 interface AddNewReferralDrawerProps {
   onClose: () => void;
@@ -28,10 +31,17 @@ interface ReferralFields {
   comment: string;
 }
 
+type CustomFieldValue = string | boolean | number | null | undefined;
+
 export function AddNewReferralDrawer({ onClose }: AddNewReferralDrawerProps) {
   const families = useLoadable(partneringFamiliesData) || [];
+  const policy = useRecoilValue(policyData);
+
   const { createReferral } = useV1ReferralsModel();
   const bumpRefresh = useSetRecoilState(referralsRefreshTrigger);
+
+  const referralCustomFields: CustomField[] =
+    policy.referralPolicy?.customFields ?? [];
 
   const familyOptions = [
     { id: null, label: 'Family Not Yet Known', family: null },
@@ -49,6 +59,10 @@ export function AddNewReferralDrawer({ onClose }: AddNewReferralDrawerProps) {
     comment: '',
   });
 
+  const [customFieldValues, setCustomFieldValues] = useState<
+    Record<string, CustomFieldValue>
+  >({});
+
   const [dateError, setDateError] = useState(false);
   const [saving, setSaving] = useState(false);
 
@@ -59,15 +73,20 @@ export function AddNewReferralDrawer({ onClose }: AddNewReferralDrawerProps) {
     setFields((prev) => ({ ...prev, [key]: value }));
   }
 
+  function updateCustomField(name: string, value: CustomFieldValue) {
+    setCustomFieldValues((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+  }
+
   async function save() {
     if (saving || !fields.title || dateError) return;
 
     try {
       setSaving(true);
 
-      const referralId = crypto.randomUUID();
-
-      await createReferral(referralId, {
+      await createReferral(crypto.randomUUID(), {
         familyId: fields.familyId,
         openedAtUtc: new Date(fields.openedAtLocal),
         title: fields.title,
@@ -75,7 +94,6 @@ export function AddNewReferralDrawer({ onClose }: AddNewReferralDrawerProps) {
       });
 
       bumpRefresh((x) => x + 1);
-
       onClose();
     } finally {
       setSaving(false);
@@ -147,6 +165,34 @@ export function AddNewReferralDrawer({ onClose }: AddNewReferralDrawerProps) {
             )}
           />
         </Grid>
+
+        {referralCustomFields.length > 0 && (
+          <Grid item xs={12}>
+            <Typography sx={{ fontWeight: 600, mb: 1 }}>
+              Referral Details
+            </Typography>
+
+            <Grid container spacing={2}>
+              {referralCustomFields.map((field) => (
+                <Grid item xs={12} key={field.name}>
+                  <Typography
+                    variant="body2"
+                    sx={{ fontWeight: 600, mb: 0.5 }}
+                    className="ph-unmask"
+                  >
+                    {field.name}
+                  </Typography>
+
+                  <CustomFieldInput
+                    customFieldPolicy={field}
+                    value={customFieldValues[field.name!]}
+                    onChange={(value) => updateCustomField(field.name!, value)}
+                  />
+                </Grid>
+              ))}
+            </Grid>
+          </Grid>
+        )}
 
         <Grid item xs={12}>
           <TextField
