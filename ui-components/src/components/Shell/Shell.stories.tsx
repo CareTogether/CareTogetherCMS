@@ -5,6 +5,7 @@ import {
   IconButton,
   List,
   ListItem,
+  ListItemButton,
   ListItemIcon,
   ListItemText,
   Box,
@@ -32,22 +33,19 @@ type Story = StoryObj<typeof Shell>;
 
 /**
  * Basic shell layout with all components composed together.
+ * The Shell component automatically arranges the header full-width at top,
+ * sidebar and content side-by-side below (using CSS Grid), and footer full-width at bottom.
  */
 export const Complete: Story = {
   render: () => {
-    const [sidebarOpen, setSidebarOpen] = useState(true);
+    const [collapsed, setCollapsed] = useState(false);
 
     return (
       <Shell>
         <Shell.Header
           leftContent={
             <>
-              <IconButton
-                color="inherit"
-                onClick={() => setSidebarOpen(!sidebarOpen)}
-                edge="start"
-                sx={{ mr: 2 }}
-              >
+              <IconButton onClick={() => setCollapsed(!collapsed)} edge="start" sx={{ mr: 2 }}>
                 <MenuIcon />
               </IconButton>
               <Typography variant="h6" noWrap>
@@ -56,51 +54,55 @@ export const Complete: Story = {
             </>
           }
           rightContent={
-            <IconButton color="inherit">
+            <IconButton>
               <AccountCircle />
             </IconButton>
           }
         />
 
-        <Box sx={{ display: "flex", flexGrow: 1 }}>
-          <Shell.Sidebar open={sidebarOpen} width={240}>
-            <List>
-              <ListItem button>
+        <Shell.Sidebar collapsed={collapsed}>
+          <List>
+            <ListItem disablePadding>
+              <ListItemButton>
                 <ListItemIcon>
                   <DashboardIcon />
                 </ListItemIcon>
                 <ListItemText primary="Dashboard" />
-              </ListItem>
-              <ListItem button>
+              </ListItemButton>
+            </ListItem>
+            <ListItem disablePadding>
+              <ListItemButton>
                 <ListItemIcon>
                   <PeopleIcon />
                 </ListItemIcon>
                 <ListItemText primary="Families" />
-              </ListItem>
-              <ListItem button>
+              </ListItemButton>
+            </ListItem>
+            <ListItem disablePadding>
+              <ListItemButton>
                 <ListItemIcon>
                   <SettingsIcon />
                 </ListItemIcon>
                 <ListItemText primary="Settings" />
-              </ListItem>
-            </List>
-          </Shell.Sidebar>
+              </ListItemButton>
+            </ListItem>
+          </List>
+        </Shell.Sidebar>
 
-          <Shell.Content marginTop="64px" marginLeft={sidebarOpen ? "240px" : "0"}>
-            <Container sx={{ py: 4 }}>
-              <Typography variant="h4" gutterBottom>
-                Welcome to CareTogether
-              </Typography>
-              <Typography variant="body1" paragraph>
-                This is an example of the Shell compound component pattern. The header, sidebar,
-                content area, and footer are all composable parts that you can customize.
-              </Typography>
-              <Button variant="contained" color="primary">
-                Get Started
-              </Button>
-            </Container>
-          </Shell.Content>
-        </Box>
+        <Shell.Content>
+          <Container sx={{ py: 4 }}>
+            <Typography variant="h4" gutterBottom>
+              Welcome to CareTogether
+            </Typography>
+            <Typography variant="body1" paragraph>
+              This is an example of the Shell compound component pattern. The header, sidebar,
+              content area, and footer are all composable parts that you can customize.
+            </Typography>
+            <Button variant="contained" color="primary">
+              Get Started
+            </Button>
+          </Container>
+        </Shell.Content>
 
         <Shell.Footer>
           <Box sx={{ display: "flex", justifyContent: "space-between" }}>
@@ -125,7 +127,7 @@ export const MinimalLayout: Story = {
     <Shell>
       <Shell.Header centerContent={<Typography variant="h6">Simple App</Typography>} />
 
-      <Shell.Content marginTop="64px">
+      <Shell.Content>
         <Container sx={{ py: 4 }}>
           <Typography variant="h4">Minimal Layout</Typography>
           <Typography variant="body1">
@@ -145,7 +147,7 @@ export const HeaderOnly: Story = {
     <Shell.Header
       leftContent={
         <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
-          <IconButton color="inherit">
+          <IconButton>
             <MenuIcon />
           </IconButton>
           <Typography variant="h6">My App</Typography>
@@ -154,8 +156,8 @@ export const HeaderOnly: Story = {
       centerContent={<Typography variant="body1">Dashboard</Typography>}
       rightContent={
         <>
-          <Button color="inherit">Login</Button>
-          <IconButton color="inherit">
+          <Button>Login</Button>
+          <IconButton>
             <AccountCircle />
           </IconButton>
         </>
@@ -165,39 +167,45 @@ export const HeaderOnly: Story = {
 };
 
 /**
- * Sidebar component in isolation.
+ * Sidebar component in isolation showing collapsed and expanded states.
  */
 export const SidebarOnly: Story = {
   render: () => {
-    const [open, setOpen] = useState(true);
+    const [collapsed, setCollapsed] = useState(false);
 
     return (
       <Box sx={{ display: "flex", height: "100vh" }}>
-        <Shell.Sidebar open={open} width={240}>
+        <Shell.Sidebar collapsed={collapsed}>
           <Box sx={{ p: 2 }}>
-            <Button fullWidth variant="outlined" onClick={() => setOpen(!open)}>
-              Toggle Sidebar
+            <Button fullWidth variant="outlined" onClick={() => setCollapsed(!collapsed)}>
+              {collapsed ? "Expand" : "Collapse"}
             </Button>
           </Box>
           <List>
-            <ListItem button>
-              <ListItemIcon>
-                <DashboardIcon />
-              </ListItemIcon>
-              <ListItemText primary="Dashboard" />
+            <ListItem disablePadding>
+              <ListItemButton>
+                <ListItemIcon>
+                  <DashboardIcon />
+                </ListItemIcon>
+                <ListItemText primary="Dashboard" />
+              </ListItemButton>
             </ListItem>
-            <ListItem button>
-              <ListItemIcon>
-                <PeopleIcon />
-              </ListItemIcon>
-              <ListItemText primary="Users" />
+            <ListItem disablePadding>
+              <ListItemButton>
+                <ListItemIcon>
+                  <PeopleIcon />
+                </ListItemIcon>
+                <ListItemText primary="Users" />
+              </ListItemButton>
             </ListItem>
           </List>
         </Shell.Sidebar>
 
         <Box sx={{ flexGrow: 1, p: 3 }}>
           <Typography variant="h5">Main Content Area</Typography>
-          <Typography variant="body1">The sidebar is {open ? "open" : "closed"}.</Typography>
+          <Typography variant="body1">
+            The sidebar is {collapsed ? "collapsed (88px)" : "expanded (236px)"}.
+          </Typography>
         </Box>
       </Box>
     );
@@ -241,7 +249,7 @@ export const FixedHeaderFooter: Story = {
         leftContent={<Typography variant="h6">Fixed Layout</Typography>}
       />
 
-      <Shell.Content marginTop="64px" marginBottom="48px">
+      <Shell.Content>
         <Container sx={{ py: 4 }}>
           {Array.from({ length: 50 }, (_, i) => (
             <Typography key={i} paragraph>

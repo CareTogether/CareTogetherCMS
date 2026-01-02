@@ -20,26 +20,26 @@ export interface ShellHeaderProps extends ShellHeaderBaseProps {
 /**
  * Shell header component providing a flexible header layout with three content areas.
  * Use as part of the Shell compound component pattern.
- *
- * @component
- * @example
- * <Shell.Header
- *   leftContent={<IconButton><MenuIcon /></IconButton>}
- *   centerContent={<Typography variant="h6">My App</Typography>}
- *   rightContent={<UserProfileMenu />}
- * />
  */
 export const ShellHeader = ({
   leftContent,
   centerContent,
   rightContent,
   position = "fixed",
-  elevation = 1,
-  color = "primary",
+  elevation = 3,
+  color = "transparent",
   sx,
 }: ShellHeaderProps) => {
   return (
-    <AppBar position={position} elevation={elevation} color={color} sx={sx}>
+    <AppBar
+      position={position}
+      elevation={elevation}
+      color={color}
+      sx={{
+        bgcolor: "background.paper",
+        ...sx,
+      }}
+    >
       <Toolbar
         sx={{
           display: "flex",

@@ -25,6 +25,7 @@ export const RecentActivity: React.FC<RecentActivityProps> & RecentActivityCompo
 }) => {
   return (
     <Card
+      variant="outlined"
       elevation={0}
       className={className}
       sx={{

@@ -135,6 +135,7 @@ export const Progress = ({
 
   return (
     <Card
+      variant="outlined"
       elevation={0}
       sx={{
         p: 2,

@@ -93,8 +93,8 @@ export const TimelineItem = ({
             alignItems: "center",
             justifyContent: "center",
             "& > *": {
-              width: 24,
-              height: 24,
+              fontSize: "inherit",
+              flexShrink: 0,
             },
           }}
           aria-hidden="true"

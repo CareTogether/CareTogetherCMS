@@ -65,7 +65,7 @@ export const TimelineCard = ({
   timelineAriaLabel = "Timeline",
   sx,
   className,
-  variant,
+  variant = "outlined",
   elevation = 0,
 }: TimelineCardProps) => {
   return (

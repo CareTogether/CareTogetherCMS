@@ -16,16 +16,6 @@ export interface ShellFooterProps extends ShellFooterBaseProps {
 /**
  * Shell footer component providing a flexible footer layout.
  * Use as part of the Shell compound component pattern.
- * Consumers are responsible for providing their own footer content (copyright, version, links, etc.).
- *
- * @component
- * @example
- * <Shell.Footer>
- *   <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
- *     <Typography variant="body2">© 2025 MyApp</Typography>
- *     <Typography variant="caption">v1.0.0</Typography>
- *   </Box>
- * </Shell.Footer>
  */
 export const ShellFooter = ({
   children,
