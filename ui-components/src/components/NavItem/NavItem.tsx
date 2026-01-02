@@ -61,7 +61,7 @@ export const NavItem = ({
         justifyContent: collapsed ? "center" : "flex-start",
         textDecoration: "none",
         "& .navitem-icon": {
-          color: "primary.dark",
+          color: "tertiary.main",
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
@@ -72,7 +72,7 @@ export const NavItem = ({
           transition: "color 0.2s ease-in-out",
         },
         "&:hover, &:focus-visible": {
-          backgroundColor: "primary.dark",
+          backgroundColor: "tertiary.main",
           outline: "none",
           "& .navitem-icon": {
             color: "#ffffff",

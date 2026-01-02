@@ -76,13 +76,35 @@ export const CompleteShowcase: Story = {
           />
           <ColorSwatch
             color={theme.palette.primary.main}
-            label="Main (#07666C)"
+            label="Main (#26A3AB)"
             textColor={theme.palette.primary.contrastText}
           />
           <ColorSwatch
             color={theme.palette.primary.dark}
-            label="Dark"
+            label="Dark (#07666C)"
             textColor={theme.palette.primary.contrastText}
+          />
+        </Stack>
+
+        {/* Primary Dark - Custom Color */}
+        <Typography variant="h6" gutterBottom>
+          Primary Dark (Deep Teal) - Available as color="primaryDark"
+        </Typography>
+        <Stack direction="row" spacing={2} sx={{ mb: 3 }}>
+          <ColorSwatch
+            color={theme.palette.primaryDark.light}
+            label="Light"
+            textColor={theme.palette.primaryDark.contrastText}
+          />
+          <ColorSwatch
+            color={theme.palette.primaryDark.main}
+            label="Main (#07666C)"
+            textColor={theme.palette.primaryDark.contrastText}
+          />
+          <ColorSwatch
+            color={theme.palette.primaryDark.dark}
+            label="Dark"
+            textColor={theme.palette.primaryDark.contrastText}
           />
         </Stack>
 
@@ -105,6 +127,28 @@ export const CompleteShowcase: Story = {
             color={theme.palette.secondary.dark}
             label="Dark"
             textColor={theme.palette.secondary.contrastText}
+          />
+        </Stack>
+
+        {/* Tertiary Colors */}
+        <Typography variant="h6" gutterBottom>
+          Tertiary (Medium Teal) - Available as color="tertiary"
+        </Typography>
+        <Stack direction="row" spacing={2} sx={{ mb: 3 }}>
+          <ColorSwatch
+            color={theme.palette.tertiary.light}
+            label="Light"
+            textColor={theme.palette.tertiary.contrastText}
+          />
+          <ColorSwatch
+            color={theme.palette.tertiary.main}
+            label="Main (#00616F)"
+            textColor={theme.palette.tertiary.contrastText}
+          />
+          <ColorSwatch
+            color={theme.palette.tertiary.dark}
+            label="Dark"
+            textColor={theme.palette.tertiary.contrastText}
           />
         </Stack>
 
@@ -205,6 +249,9 @@ export const CompleteShowcase: Story = {
               <Button variant="contained" color="primary">
                 Primary
               </Button>
+              <Button variant="contained" color="primaryDark">
+                Primary Dark
+              </Button>
               <Button variant="contained" color="secondary">
                 Secondary
               </Button>
@@ -234,6 +281,9 @@ export const CompleteShowcase: Story = {
               <Button variant="outlined" color="primary">
                 Primary
               </Button>
+              <Button variant="outlined" color="primaryDark">
+                Primary Dark
+              </Button>
               <Button variant="outlined" color="secondary">
                 Secondary
               </Button>
@@ -253,6 +303,9 @@ export const CompleteShowcase: Story = {
             <Stack direction="row" spacing={2} flexWrap="wrap">
               <Button variant="text" color="primary">
                 Primary
+              </Button>
+              <Button variant="text" color="primaryDark">
+                Primary Dark
               </Button>
               <Button variant="text" color="secondary">
                 Secondary
@@ -389,6 +442,7 @@ export const CompleteShowcase: Story = {
             </Typography>
             <Stack direction="row" spacing={1} flexWrap="wrap">
               <Chip label="Primary" color="primary" />
+              <Chip label="Primary Dark" color="primaryDark" />
               <Chip label="Secondary" color="secondary" />
               <Chip label="Success" color="success" />
               <Chip label="Error" color="error" />
@@ -404,6 +458,7 @@ export const CompleteShowcase: Story = {
             </Typography>
             <Stack direction="row" spacing={1} flexWrap="wrap">
               <Chip label="Primary" color="primary" variant="outlined" />
+              <Chip label="Primary Dark" color="primaryDark" variant="outlined" />
               <Chip label="Secondary" color="secondary" variant="outlined" />
               <Chip label="Default" variant="outlined" />
             </Stack>

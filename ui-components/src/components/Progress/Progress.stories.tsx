@@ -124,9 +124,14 @@ export const WithActions: Story = {
     ],
     activeStep: 0,
     actions: (
-      <Button variant="outlined" color="secondary">
-        Secondary
-      </Button>
+      <>
+        <Button variant="outlined" color="secondary">
+          Back
+        </Button>
+        <Button variant="contained" color="primaryDark">
+          Continue
+        </Button>
+      </>
     ),
   },
 };

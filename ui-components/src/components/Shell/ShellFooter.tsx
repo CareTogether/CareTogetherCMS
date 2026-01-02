@@ -1,47 +1,31 @@
-import { Box, BoxProps } from "@mui/material";
+import { CardProps, Card } from "@mui/material";
 
-type ShellFooterBaseProps = Pick<BoxProps, "sx" | "component">;
+type ShellFooterBaseProps = Pick<CardProps, "sx" | "component">;
 
 export interface ShellFooterProps extends ShellFooterBaseProps {
   /**
    * Footer content
    */
   children?: React.ReactNode;
-  /**
-   * Position of the footer
-   */
-  position?: "static" | "fixed" | "sticky";
 }
 
 /**
  * Shell footer component providing a flexible footer layout.
  * Use as part of the Shell compound component pattern.
  */
-export const ShellFooter = ({
-  children,
-  position = "static",
-  component = "footer",
-  sx,
-}: ShellFooterProps) => {
+export const ShellFooter = ({ children, component = "footer", sx }: ShellFooterProps) => {
   return (
-    <Box
+    <Card
       component={component}
+      elevation={2}
       sx={{
-        py: 2,
-        px: 3,
-        mt: position === "static" ? "auto" : 0,
-        borderTop: "1px solid",
-        borderColor: "divider",
-        backgroundColor: "background.paper",
-        position,
-        bottom: position === "fixed" ? 0 : undefined,
-        left: position === "fixed" ? 0 : undefined,
-        right: position === "fixed" ? 0 : undefined,
-        zIndex: position === "fixed" ? 1000 : undefined,
+        mt: "auto",
+        borderRadius: 0,
+        flexShrink: 0,
         ...sx,
       }}
     >
       {children}
-    </Box>
+    </Card>
   );
 };

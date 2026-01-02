@@ -1,21 +1,34 @@
 import { createTheme } from "@mui/material/styles";
+import "./theme.d";
 
 /**
  * CareTogether MUI Theme
  *
- * Primary color: #07666C (teal)
- * Primary dark: #00616F
+ * Primary color: #26A3AB (teal)
+ * Primary dark: #07666C (deep teal - available as "primaryDark" color prop)
  * Secondary: #D32F2F (red)
+ * Tertiary: #00616F (medium teal - available as "tertiary" color prop)
  * Background: #F6FCFC (light cyan)
- * Border radius: 8px
+ * Border radius: 8px for shapes, 24px for buttons
  * Font: Poppins
  */
 export const theme = createTheme({
   palette: {
     primary: {
+      main: "#26A3AB",
+      dark: "#07666C",
+      contrastText: "#ffffff",
+    },
+    primaryDark: {
       main: "#07666C",
-      dark: "#00616F",
-      light: "#338a8f",
+      light: "#26A3AB",
+      dark: "#065C61",
+      contrastText: "#ffffff",
+    },
+    tertiary: {
+      main: "#00616F",
+      light: "#26A3AB",
+      dark: "#005764",
       contrastText: "#ffffff",
     },
     secondary: {

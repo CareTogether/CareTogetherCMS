@@ -98,7 +98,7 @@ export const Complete: Story = {
               This is an example of the Shell compound component pattern. The header, sidebar,
               content area, and footer are all composable parts that you can customize.
             </Typography>
-            <Button variant="contained" color="primary">
+            <Button variant="contained" color="primaryDark">
               Get Started
             </Button>
           </Container>
@@ -164,6 +164,13 @@ export const HeaderOnly: Story = {
       }
     />
   ),
+  decorators: [
+    (Story) => (
+      <Box sx={{ minHeight: "64px", bgcolor: "background.default" }}>
+        <Story />
+      </Box>
+    ),
+  ],
 };
 
 /**
@@ -239,9 +246,9 @@ export const FooterOnly: Story = {
 };
 
 /**
- * Fixed header and footer with scrollable content.
+ * Fixed header with scrollable content.
  */
-export const FixedHeaderFooter: Story = {
+export const FixedHeader: Story = {
   render: () => (
     <Shell>
       <Shell.Header
@@ -259,9 +266,9 @@ export const FixedHeaderFooter: Story = {
         </Container>
       </Shell.Content>
 
-      <Shell.Footer position="fixed">
+      <Shell.Footer>
         <Typography variant="body2" color="text.secondary" textAlign="center">
-          Fixed footer stays at bottom
+          Footer stays at bottom
         </Typography>
       </Shell.Footer>
     </Shell>

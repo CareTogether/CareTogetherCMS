@@ -120,11 +120,11 @@ export const TitleWithChipAndActions: Story = {
         chip={<ColoredChip label="Primary" iconColor="primary" />}
         actions={
           <>
-            <Button variant="outlined" size="small">
-              Secondary
+            <Button variant="outlined" size="small" color="secondary">
+              Cancel
             </Button>
-            <Button variant="contained" size="small">
-              Primary
+            <Button variant="contained" size="small" color="primaryDark">
+              Complete
             </Button>
           </>
         }
@@ -151,11 +151,11 @@ export const WithContentParagraph: Story = {
         chip={<ColoredChip label="Territory" iconColor="info" />}
         actions={
           <>
-            <Button variant="outlined" size="small">
-              Secondary
+            <Button variant="outlined" size="small" color="secondary">
+              Decline
             </Button>
-            <Button variant="contained" size="small">
-              Primary
+            <Button variant="contained" size="small" color="primaryDark">
+              Accept
             </Button>
           </>
         }
@@ -188,11 +188,11 @@ export const WithMetadata: Story = {
         chip={<ColoredChip label="Tag" icon={<span>🏷️</span>} />}
         actions={
           <>
-            <Button variant="outlined" size="small">
-              Secondary
+            <Button variant="outlined" size="small" color="secondary">
+              Edit
             </Button>
-            <Button variant="contained" size="small">
-              Primary
+            <Button variant="contained" size="small" color="primaryDark">
+              Save
             </Button>
           </>
         }
@@ -329,11 +329,11 @@ export const FullExample: Story = {
           chip={<ColoredChip label="Territory" iconColor="info" />}
           actions={
             <>
-              <Button variant="outlined" size="small">
-                Secondary
+              <Button variant="outlined" size="small" color="secondary">
+                Cancel
               </Button>
-              <Button variant="contained" size="small">
-                Primary
+              <Button variant="contained" size="small" color="primaryDark">
+                Save Changes
               </Button>
               <IconButton size="small">
                 <MoreVertIcon />
