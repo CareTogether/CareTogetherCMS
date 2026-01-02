@@ -13,6 +13,7 @@ using CareTogether.Resources.Directory;
 using CareTogether.Resources.Notes;
 using CareTogether.Resources.Policies;
 using CareTogether.Resources.V1Cases;
+using CareTogether.Resources.V1Referrals;
 using Nito.AsyncEx;
 
 namespace CareTogether.Engines.Authorization
@@ -213,6 +214,82 @@ namespace CareTogether.Engines.Authorization
                 }
             );
         }
+
+        public async Task<bool> AuthorizeV1ReferralCommandAsync(
+    Guid organizationId,
+    Guid locationId,
+    SessionUserContext userContext,
+    V1ReferralCommand command
+)
+{
+
+
+    var permissions = command switch
+    {
+        CreateV1Referral => await userAccessCalculation.AuthorizeUserAccessAsync(
+            organizationId,
+            locationId,
+            userContext,
+            new GlobalAuthorizationContext()
+        ),
+
+        UpdateV1ReferralFamily c => await userAccessCalculation.AuthorizeUserAccessAsync(
+            organizationId,
+            locationId,
+            userContext,
+            new FamilyAuthorizationContext(c.FamilyId)
+        ),
+
+        CloseV1Referral c => await userAccessCalculation.AuthorizeUserAccessAsync(
+            organizationId,
+            locationId,
+            userContext,
+            new GlobalAuthorizationContext()
+        ),
+
+        ReopenV1Referral => await userAccessCalculation.AuthorizeUserAccessAsync(
+            organizationId,
+            locationId,
+            userContext,
+            new GlobalAuthorizationContext()
+        ),
+
+        _ => throw new NotImplementedException(
+            $"The command type '{command.GetType().FullName}' has not been implemented."
+        ),
+    };
+
+    return permissions.Contains(
+        command switch
+        {
+            CreateV1Referral => Permission.CreateV1Referral,
+            UpdateV1ReferralFamily => Permission.EditV1Referral,
+            CloseV1Referral => Permission.CloseV1Referral,
+            ReopenV1Referral => Permission.ReopenV1Referral,
+            _ => throw new NotImplementedException(
+                $"The command type '{command.GetType().FullName}' has not been implemented."
+            ),
+        }
+    );
+}
+
+public async Task<bool> AuthorizeV1ReferralReadAsync(
+    Guid organizationId,
+    Guid locationId,
+    SessionUserContext userContext
+)
+{
+    var permissions = await userAccessCalculation.AuthorizeUserAccessAsync(
+        organizationId,
+        locationId,
+        userContext,
+        new GlobalAuthorizationContext()
+    );
+
+    return permissions.Contains(Permission.ViewV1Referral);
+}
+
+
 
         public async Task<bool> AuthorizeNoteCommandAsync(
             Guid organizationId,

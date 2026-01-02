@@ -59,6 +59,15 @@
         ViewApprovalHistory = 205,
         ActivateVolunteerFamily = 206,
 
+        // ---- V1Referrals ---- //
+
+        CreateV1Referral = 260,
+        EditV1Referral = 261,
+        CloseV1Referral = 262,
+        ReopenV1Referral = 263,
+        ViewV1Referral = 264,
+
+
         // ---- V1Cases ---- //
 
         CreateV1Case = 300,

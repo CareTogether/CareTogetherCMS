@@ -1059,6 +1059,64 @@ export class UsersClient {
     }
 }
 
+export class V1ReferralsClient {
+    private http: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> };
+    private baseUrl: string;
+    protected jsonParseReviver: ((key: string, value: any) => any) | undefined = undefined;
+
+    constructor(baseUrl?: string, http?: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> }) {
+        this.http = http ? http : window as any;
+        this.baseUrl = baseUrl ?? "";
+    }
+
+    listReferrals(organizationId: string, locationId: string): Promise<V1Referral[]> {
+        let url_ = this.baseUrl + "/api/{organizationId}/{locationId}/referrals";
+        if (organizationId === undefined || organizationId === null)
+            throw new Error("The parameter 'organizationId' must be defined.");
+        url_ = url_.replace("{organizationId}", encodeURIComponent("" + organizationId));
+        if (locationId === undefined || locationId === null)
+            throw new Error("The parameter 'locationId' must be defined.");
+        url_ = url_.replace("{locationId}", encodeURIComponent("" + locationId));
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: RequestInit = {
+            method: "GET",
+            headers: {
+                "Accept": "application/json"
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processListReferrals(_response);
+        });
+    }
+
+    protected processListReferrals(response: Response): Promise<V1Referral[]> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            if (Array.isArray(resultData200)) {
+                result200 = [] as any;
+                for (let item of resultData200)
+                    result200!.push(V1Referral.fromJS(item));
+            }
+            else {
+                result200 = <any>null;
+            }
+            return result200;
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<V1Referral[]>(null as any);
+    }
+}
+
 export class ValueTupleOfGuidAndSmsMessageResult implements IValueTupleOfGuidAndSmsMessageResult {
     item1!: string;
     item2!: SmsMessageResult;
@@ -2221,6 +2279,11 @@ export enum Permission {
     ViewApprovalProgress = 204,
     ViewApprovalHistory = 205,
     ActivateVolunteerFamily = 206,
+    CreateV1Referral = 260,
+    EditV1Referral = 261,
+    CloseV1Referral = 262,
+    ReopenV1Referral = 263,
+    ViewV1Referral = 264,
     CreateV1Case = 300,
     EditV1Case = 301,
     CloseV1Case = 302,
@@ -7693,6 +7756,11 @@ export abstract class AtomicRecordsCommand implements IAtomicRecordsCommand {
             result.init(data);
             return result;
         }
+        if (data["discriminator"] === "V1ReferralRecordsCommand") {
+            let result = new V1ReferralRecordsCommand();
+            result.init(data);
+            return result;
+        }
         throw new Error("The abstract class 'AtomicRecordsCommand' cannot be instantiated.");
     }
 
@@ -12900,6 +12968,250 @@ export interface IUpdateReferralComments extends IV1CaseCommand {
     comments?: string | undefined;
 }
 
+export class V1ReferralRecordsCommand extends AtomicRecordsCommand implements IV1ReferralRecordsCommand {
+    command!: V1ReferralCommand;
+
+    constructor(data?: IV1ReferralRecordsCommand) {
+        super(data);
+        this._discriminator = "V1ReferralRecordsCommand";
+    }
+
+    init(_data?: any) {
+        super.init(_data);
+        if (_data) {
+            this.command = _data["command"] ? V1ReferralCommand.fromJS(_data["command"]) : <any>undefined;
+        }
+    }
+
+    static fromJS(data: any): V1ReferralRecordsCommand {
+        data = typeof data === 'object' ? data : {};
+        let result = new V1ReferralRecordsCommand();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["command"] = this.command ? this.command.toJSON() : <any>undefined;
+        super.toJSON(data);
+        return data;
+    }
+}
+
+export interface IV1ReferralRecordsCommand extends IAtomicRecordsCommand {
+    command: V1ReferralCommand;
+}
+
+export abstract class V1ReferralCommand implements IV1ReferralCommand {
+    referralId!: string;
+
+    protected _discriminator: string;
+
+    constructor(data?: IV1ReferralCommand) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+        this._discriminator = "V1ReferralCommand";
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.referralId = _data["referralId"];
+        }
+    }
+
+    static fromJS(data: any): V1ReferralCommand {
+        data = typeof data === 'object' ? data : {};
+        if (data["discriminator"] === "CloseV1Referral") {
+            let result = new CloseV1Referral();
+            result.init(data);
+            return result;
+        }
+        if (data["discriminator"] === "CreateV1Referral") {
+            let result = new CreateV1Referral();
+            result.init(data);
+            return result;
+        }
+        if (data["discriminator"] === "ReopenV1Referral") {
+            let result = new ReopenV1Referral();
+            result.init(data);
+            return result;
+        }
+        if (data["discriminator"] === "UpdateV1ReferralFamily") {
+            let result = new UpdateV1ReferralFamily();
+            result.init(data);
+            return result;
+        }
+        throw new Error("The abstract class 'V1ReferralCommand' cannot be instantiated.");
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["discriminator"] = this._discriminator;
+        data["referralId"] = this.referralId;
+        return data;
+    }
+}
+
+export interface IV1ReferralCommand {
+    referralId: string;
+}
+
+export class CloseV1Referral extends V1ReferralCommand implements ICloseV1Referral {
+    closedAtUtc!: Date;
+    closeReason!: string;
+
+    constructor(data?: ICloseV1Referral) {
+        super(data);
+        this._discriminator = "CloseV1Referral";
+    }
+
+    init(_data?: any) {
+        super.init(_data);
+        if (_data) {
+            this.closedAtUtc = _data["closedAtUtc"] ? new Date(_data["closedAtUtc"].toString()) : <any>undefined;
+            this.closeReason = _data["closeReason"];
+        }
+    }
+
+    static fromJS(data: any): CloseV1Referral {
+        data = typeof data === 'object' ? data : {};
+        let result = new CloseV1Referral();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["closedAtUtc"] = this.closedAtUtc ? this.closedAtUtc.toISOString() : <any>undefined;
+        data["closeReason"] = this.closeReason;
+        super.toJSON(data);
+        return data;
+    }
+}
+
+export interface ICloseV1Referral extends IV1ReferralCommand {
+    closedAtUtc: Date;
+    closeReason: string;
+}
+
+export class CreateV1Referral extends V1ReferralCommand implements ICreateV1Referral {
+    familyId?: string | undefined;
+    createdAtUtc!: Date;
+    title!: string;
+    comment?: string | undefined;
+
+    constructor(data?: ICreateV1Referral) {
+        super(data);
+        this._discriminator = "CreateV1Referral";
+    }
+
+    init(_data?: any) {
+        super.init(_data);
+        if (_data) {
+            this.familyId = _data["familyId"];
+            this.createdAtUtc = _data["createdAtUtc"] ? new Date(_data["createdAtUtc"].toString()) : <any>undefined;
+            this.title = _data["title"];
+            this.comment = _data["comment"];
+        }
+    }
+
+    static fromJS(data: any): CreateV1Referral {
+        data = typeof data === 'object' ? data : {};
+        let result = new CreateV1Referral();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["familyId"] = this.familyId;
+        data["createdAtUtc"] = this.createdAtUtc ? this.createdAtUtc.toISOString() : <any>undefined;
+        data["title"] = this.title;
+        data["comment"] = this.comment;
+        super.toJSON(data);
+        return data;
+    }
+}
+
+export interface ICreateV1Referral extends IV1ReferralCommand {
+    familyId?: string | undefined;
+    createdAtUtc: Date;
+    title: string;
+    comment?: string | undefined;
+}
+
+export class ReopenV1Referral extends V1ReferralCommand implements IReopenV1Referral {
+    reopenedAtUtc!: Date;
+
+    constructor(data?: IReopenV1Referral) {
+        super(data);
+        this._discriminator = "ReopenV1Referral";
+    }
+
+    init(_data?: any) {
+        super.init(_data);
+        if (_data) {
+            this.reopenedAtUtc = _data["reopenedAtUtc"] ? new Date(_data["reopenedAtUtc"].toString()) : <any>undefined;
+        }
+    }
+
+    static fromJS(data: any): ReopenV1Referral {
+        data = typeof data === 'object' ? data : {};
+        let result = new ReopenV1Referral();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["reopenedAtUtc"] = this.reopenedAtUtc ? this.reopenedAtUtc.toISOString() : <any>undefined;
+        super.toJSON(data);
+        return data;
+    }
+}
+
+export interface IReopenV1Referral extends IV1ReferralCommand {
+    reopenedAtUtc: Date;
+}
+
+export class UpdateV1ReferralFamily extends V1ReferralCommand implements IUpdateV1ReferralFamily {
+    familyId!: string;
+
+    constructor(data?: IUpdateV1ReferralFamily) {
+        super(data);
+        this._discriminator = "UpdateV1ReferralFamily";
+    }
+
+    init(_data?: any) {
+        super.init(_data);
+        if (_data) {
+            this.familyId = _data["familyId"];
+        }
+    }
+
+    static fromJS(data: any): UpdateV1ReferralFamily {
+        data = typeof data === 'object' ? data : {};
+        let result = new UpdateV1ReferralFamily();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["familyId"] = this.familyId;
+        super.toJSON(data);
+        return data;
+    }
+}
+
+export interface IUpdateV1ReferralFamily extends IV1ReferralCommand {
+    familyId: string;
+}
+
 export abstract class CompositeRecordsCommand implements ICompositeRecordsCommand {
     familyId!: string;
 
@@ -13959,6 +14271,75 @@ export interface IAccountLocationAccess {
     locationId: string;
     personId: string;
     roles: string[];
+}
+
+export class V1Referral implements IV1Referral {
+    referralId!: string;
+    familyId?: string | undefined;
+    createdAtUtc!: Date;
+    title!: string;
+    status!: V1ReferralStatus;
+    comment?: string | undefined;
+    closedAtUtc?: Date | undefined;
+    closeReason?: string | undefined;
+
+    constructor(data?: IV1Referral) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.referralId = _data["referralId"];
+            this.familyId = _data["familyId"];
+            this.createdAtUtc = _data["createdAtUtc"] ? new Date(_data["createdAtUtc"].toString()) : <any>undefined;
+            this.title = _data["title"];
+            this.status = _data["status"];
+            this.comment = _data["comment"];
+            this.closedAtUtc = _data["closedAtUtc"] ? new Date(_data["closedAtUtc"].toString()) : <any>undefined;
+            this.closeReason = _data["closeReason"];
+        }
+    }
+
+    static fromJS(data: any): V1Referral {
+        data = typeof data === 'object' ? data : {};
+        let result = new V1Referral();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["referralId"] = this.referralId;
+        data["familyId"] = this.familyId;
+        data["createdAtUtc"] = this.createdAtUtc ? this.createdAtUtc.toISOString() : <any>undefined;
+        data["title"] = this.title;
+        data["status"] = this.status;
+        data["comment"] = this.comment;
+        data["closedAtUtc"] = this.closedAtUtc ? this.closedAtUtc.toISOString() : <any>undefined;
+        data["closeReason"] = this.closeReason;
+        return data;
+    }
+}
+
+export interface IV1Referral {
+    referralId: string;
+    familyId?: string | undefined;
+    createdAtUtc: Date;
+    title: string;
+    status: V1ReferralStatus;
+    comment?: string | undefined;
+    closedAtUtc?: Date | undefined;
+    closeReason?: string | undefined;
+}
+
+export enum V1ReferralStatus {
+    Open = 0,
+    Closed = 1,
 }
 
 function formatDate(d: Date) {
