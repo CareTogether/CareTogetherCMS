@@ -87,7 +87,7 @@ export const IntakeStepNav = ({
             color: "primary.dark",
             fontWeight: 600,
             letterSpacing: "0.15px",
-            mb: 3,
+            mb: 2,
           }}
         >
           {title}
@@ -105,11 +105,13 @@ export const IntakeStepNav = ({
               expanded={group.expanded}
               onChange={(_, isExpanded) => group.onExpansionChange?.(isExpanded)}
               elevation={0}
+              sx={{ backgroundColor: "transparent" }}
             >
               <AccordionSummary
                 expandIcon={<ExpandMoreIcon />}
                 sx={{
-                  p: 0,
+                  pl: 1,
+                  py: 1,
                   "&.Mui-expanded": {
                     minHeight: "auto",
                   },
@@ -132,7 +134,7 @@ export const IntakeStepNav = ({
                   {group.stepCount})
                 </Typography>
               </AccordionSummary>
-              <AccordionDetails sx={{ p: 0, px: 2, pt: 3 }}>
+              <AccordionDetails sx={{ p: 0, px: 2, pt: 2, pb: 1 }}>
                 <Steps
                   steps={group.steps}
                   activeStep={isActiveInGroup ? localActiveStep : -1}
@@ -144,7 +146,7 @@ export const IntakeStepNav = ({
                 />
               </AccordionDetails>
             </Accordion>
-            {groupIndex < groupsWithOffsets.length - 1 && <Divider sx={{ my: 3 }} />}
+            {groupIndex < groupsWithOffsets.length - 1 && <Divider sx={{ my: 2 }} />}
           </Box>
         );
       })}

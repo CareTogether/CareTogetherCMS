@@ -122,13 +122,14 @@ export const Steps = ({
                     />
                   }
                   sx={{
-                    "& .MuiStepLabel-label": {
+                    "& .MuiStepLabel-root": {
                       color: isCompleted
                         ? theme.palette.primary.dark
                         : isActive
                           ? theme.palette.primary.main
                           : theme.palette.text.primary,
                       fontWeight: isActive ? 600 : 400,
+                      py: 0,
                     },
                   }}
                 >
@@ -147,6 +148,7 @@ export const Steps = ({
                           ? theme.palette.primary.main
                           : theme.palette.text.primary,
                       fontWeight: isActive ? 600 : 400,
+                      py: 0,
                     },
                   }}
                 >
