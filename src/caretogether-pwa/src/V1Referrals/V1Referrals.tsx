@@ -46,6 +46,10 @@ export function V1Referrals() {
     id: r.referralId,
     title: r.title,
     status: statusToUi(r.status),
+
+    openedAtUtc: r.createdAtUtc,
+    closedAtUtc: r.closedAtUtc,
+
     clientFamilyName: r.familyId
       ? (() => {
           const family = familyLookup(r.familyId);
