@@ -10,8 +10,10 @@ import {
   TabsProps,
   Menu,
   MenuItem,
+  useTheme,
+  useMediaQuery,
 } from "@mui/material";
-import { ReactNode, useState } from "react";
+import { ReactNode, useState, MouseEvent } from "react";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 
 type ContextHeaderBaseProps = Pick<BoxProps, "sx" | "className">;
@@ -61,16 +63,21 @@ const ContextHeaderBreadcrumbs = ({
   sx,
   className,
 }: ContextHeaderBreadcrumbsProps) => {
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
+
   return (
     <Box
       sx={{
         display: "flex",
+        flexDirection: isMobile && rightContent ? "column" : "row",
         justifyContent: "space-between",
-        alignItems: "center",
+        alignItems: isMobile && rightContent ? "flex-start" : "center",
+        gap: isMobile && rightContent ? 1.5 : 0,
         my: 2.5,
       }}
     >
-      <MuiBreadcrumbs className={className} sx={sx}>
+      <MuiBreadcrumbs className={className} sx={{ minWidth: 0, ...sx }}>
         {items.map((item, index) =>
           item.href || item.onClick ? (
             <Link
@@ -79,18 +86,31 @@ const ContextHeaderBreadcrumbs = ({
               onClick={item.onClick}
               underline="hover"
               color="inherit"
-              sx={{ cursor: item.onClick ? "pointer" : undefined }}
+              sx={{
+                cursor: item.onClick ? "pointer" : undefined,
+                overflow: "hidden",
+                textOverflow: "ellipsis",
+                whiteSpace: "nowrap",
+              }}
             >
               {item.label}
             </Link>
           ) : (
-            <Typography key={index} color="text.primary">
+            <Typography
+              key={index}
+              color="text.primary"
+              sx={{
+                overflow: "hidden",
+                textOverflow: "ellipsis",
+                whiteSpace: "nowrap",
+              }}
+            >
               {item.label}
             </Typography>
           )
         )}
       </MuiBreadcrumbs>
-      {rightContent && <Box sx={{ ml: 2 }}>{rightContent}</Box>}
+      {rightContent && <Box sx={{ ml: isMobile ? 0 : 2, flexShrink: 0 }}>{rightContent}</Box>}
     </Box>
   );
 };
@@ -131,10 +151,13 @@ const ContextHeaderTitle = ({
   sx,
   className,
 }: ContextHeaderTitleProps) => {
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
+  const isTablet = useMediaQuery(theme.breakpoints.down("md"));
   const [anchorEl, setAnchorEl] = useState<HTMLButtonElement | null>(null);
   const open = Boolean(anchorEl);
 
-  const handleClick = (event: React.MouseEvent<HTMLButtonElement>) => {
+  const handleClick = (event: MouseEvent<HTMLButtonElement>) => {
     setAnchorEl(event.currentTarget);
   };
 
@@ -147,18 +170,40 @@ const ContextHeaderTitle = ({
     handleClose();
   };
 
+  // Responsive typography styles
+  const responsiveTitleSx = {
+    fontSize: isMobile ? "1.75rem" : isTablet ? "2rem" : undefined,
+    overflow: "hidden",
+    textOverflow: "ellipsis",
+    display: "-webkit-box",
+    WebkitLineClamp: isMobile ? 2 : 1,
+    WebkitBoxOrient: "vertical" as const,
+    wordBreak: "break-word" as const,
+  };
+
   return (
     <Box
       sx={{
         display: "flex",
+        flexDirection: isMobile && actions ? "column" : "row",
         justifyContent: "space-between",
-        alignItems: "center",
+        alignItems: isMobile && actions ? "flex-start" : "center",
+        gap: isMobile && actions ? 2 : 0,
         my: 2.5,
       }}
     >
-      <Box sx={{ display: "flex", alignItems: "center", gap: 2, minWidth: 0 }}>
+      <Box
+        sx={{
+          display: "flex",
+          alignItems: "center",
+          flexWrap: "wrap",
+          gap: isMobile ? 1 : 2,
+          minWidth: 0,
+          flex: 1,
+        }}
+      >
         {dropdownItems ? (
-          <Box sx={{ display: "flex", alignItems: "center" }}>
+          <Box sx={{ display: "flex", alignItems: "center", minWidth: 0 }}>
             <button
               onClick={handleClick}
               aria-controls={open ? "title-menu" : undefined}
@@ -175,6 +220,7 @@ const ContextHeaderTitle = ({
                 display: "flex",
                 alignItems: "center",
                 gap: "4px",
+                minWidth: 0,
               }}
             >
               <Typography
@@ -184,20 +230,29 @@ const ContextHeaderTitle = ({
                   "&:hover": {
                     textDecoration: "underline",
                   },
+                  ...responsiveTitleSx,
                   ...sx,
                 }}
               >
                 {title}
               </Typography>
-              <ExpandMoreIcon sx={{ color: "primary.main", fontSize: "2rem" }} />
+              <ExpandMoreIcon
+                sx={{
+                  color: "primary.main",
+                  fontSize: isMobile ? "1.5rem" : "2rem",
+                  flexShrink: 0,
+                }}
+              />
             </button>
             <Menu
               id="title-menu"
               anchorEl={anchorEl}
               open={open}
               onClose={handleClose}
-              MenuListProps={{
-                "aria-labelledby": "title-button",
+              slotProps={{
+                list: {
+                  "aria-labelledby": "title-button",
+                },
               }}
             >
               {dropdownItems.map((item, index) => (
@@ -208,13 +263,32 @@ const ContextHeaderTitle = ({
             </Menu>
           </Box>
         ) : (
-          <Typography variant="h1" className={className} sx={sx}>
+          <Typography
+            variant="h1"
+            className={className}
+            sx={{
+              ...responsiveTitleSx,
+              ...sx,
+            }}
+          >
             {title}
           </Typography>
         )}
         {chip}
       </Box>
-      {actions && <Box sx={{ display: "flex", gap: 1, ml: 2 }}>{actions}</Box>}
+      {actions && (
+        <Box
+          sx={{
+            display: "flex",
+            flexWrap: "wrap",
+            gap: 1,
+            ml: isMobile ? 0 : 2,
+            flexShrink: 0,
+          }}
+        >
+          {actions}
+        </Box>
+      )}
     </Box>
   );
 };
@@ -265,19 +339,38 @@ const ContextHeaderTabs = ({
   sx,
   className,
 }: ContextHeaderTabsProps) => {
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
+  const isTablet = useMediaQuery(theme.breakpoints.down("md"));
+
   return (
     <Box
       sx={{
         display: "flex",
+        flexDirection: isMobile && rightContent ? "column" : "row",
         justifyContent: "space-between",
-        alignItems: "center",
+        alignItems: isMobile && rightContent ? "flex-start" : "center",
+        gap: isMobile && rightContent ? 2 : 0,
         mt: 4,
       }}
     >
-      <Tabs value={value} onChange={onChange} className={className} sx={sx}>
+      <Tabs
+        value={value}
+        onChange={onChange}
+        className={className}
+        variant={isTablet ? "scrollable" : "standard"}
+        scrollButtons={isTablet ? "auto" : false}
+        sx={{
+          minWidth: 0,
+          flex: 1,
+          ...sx,
+        }}
+      >
         {children}
       </Tabs>
-      {rightContent && <Box sx={{ ml: 2, flexShrink: 0 }}>{rightContent}</Box>}
+      {rightContent && (
+        <Box sx={{ ml: isMobile ? 0 : 2, mt: isMobile ? 0 : 0, flexShrink: 0 }}>{rightContent}</Box>
+      )}
     </Box>
   );
 };

@@ -18,7 +18,7 @@ type Story = StoryObj<typeof meta>;
 
 // Helper to create icon with background
 const TimelineIcon = ({ color, Icon }: { color: string; Icon: typeof HomeIcon }) => (
-  <Icon sx={{ fontSize: 16, color }} />
+  <Icon sx={{ color }} />
 );
 
 const sampleItems = [
