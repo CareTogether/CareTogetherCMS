@@ -24,15 +24,6 @@ export interface ActivityItemProps extends ActivityItemBaseProps {
 
 /**
  * Activity item component displaying an icon, timestamp, title, and optional action.
- *
- * @component
- * @example
- * <ActivityItem
- *   icon={<ActivityIcon color="#FDD835" />}
- *   time="2:30 PM"
- *   title="Task completed"
- *   action={<Link href="/details">View details</Link>}
- * />
  */
 export const ActivityItem = ({ icon, time, title, action, sx, className }: ActivityItemProps) => {
   return (

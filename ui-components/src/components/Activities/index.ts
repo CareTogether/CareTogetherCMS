@@ -4,6 +4,9 @@ export type { ActivityIconProps } from "./ActivityIcon";
 export { ActivityItem } from "./ActivityItem";
 export type { ActivityItemProps } from "./ActivityItem";
 
+export { ScheduleItem } from "./ScheduleItem";
+export type { ScheduleItemProps } from "./ScheduleItem";
+
 export { RecentActivity } from "./RecentActivity";
 export type {
   RecentActivityProps,

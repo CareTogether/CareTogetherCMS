@@ -11,3 +11,6 @@ export const classNames = (...classes: (string | undefined | null | false)[]) =>
 
 export { useShellState } from "./useShellState";
 export type { UseShellStateReturn } from "./useShellState";
+
+export { resolveThemeColor } from "./resolveThemeColor";
+export type { ThemeColor } from "./resolveThemeColor";

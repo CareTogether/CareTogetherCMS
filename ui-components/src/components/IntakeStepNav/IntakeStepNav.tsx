@@ -141,7 +141,6 @@ export const IntakeStepNav = ({
                   onStepClick={
                     onStepClick ? (localIndex) => onStepClick(group.offset + localIndex) : undefined
                   }
-                  orientation="vertical"
                   stepOffset={group.offset}
                 />
               </AccordionDetails>

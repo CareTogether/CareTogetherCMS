@@ -26,10 +26,11 @@ export type { NavItemProps } from "./NavItem/index";
 export { ProgressCard } from "./ProgressCard/index";
 export type { ProgressCardProps, ProgressCardStep } from "./ProgressCard/index";
 
-export { ActivityIcon, ActivityItem, RecentActivity } from "./Activities/index";
+export { ActivityIcon, ActivityItem, ScheduleItem, RecentActivity } from "./Activities/index";
 export type {
   ActivityIconProps,
   ActivityItemProps,
+  ScheduleItemProps,
   RecentActivityProps,
   RecentActivityHeaderProps,
   RecentActivityGroupProps,

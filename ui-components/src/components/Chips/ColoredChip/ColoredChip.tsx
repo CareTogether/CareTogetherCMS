@@ -1,5 +1,6 @@
 import { Chip, ChipProps, useTheme, alpha } from "@mui/material";
 import { ReactElement } from "react";
+import { resolveThemeColor } from "../../../utils";
 
 type ColoredChipBaseProps = Pick<ChipProps, "size" | "variant" | "sx" | "className">;
 
@@ -33,26 +34,8 @@ export const ColoredChip = ({
   const theme = useTheme();
 
   // Resolve the icon color from theme or use custom color
-  const resolvedIconColor = (() => {
-    switch (iconColor) {
-      case "success":
-        return theme.palette.success.main;
-      case "info":
-        return theme.palette.info.main;
-      case "warning":
-        return theme.palette.warning.main;
-      case "error":
-        return theme.palette.error.main;
-      case "primary":
-        return theme.palette.primary.main;
-      case "secondary":
-        return theme.palette.secondary.main;
-      case "grey.900":
-        return theme.palette.grey[900];
-      default:
-        return iconColor; // Assume it's a custom color string
-    }
-  })();
+  const resolvedIconColor =
+    iconColor === "grey.900" ? theme.palette.grey[900] : resolveThemeColor(iconColor, theme);
 
   // Create lightened background color
   const backgroundColor = alpha(resolvedIconColor, 0.12);

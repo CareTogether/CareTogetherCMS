@@ -27,9 +27,20 @@ export type { IntakeStepNavProps, StepsProps, StepItem } from "./components/inde
 export { ProgressCard } from "./components/index";
 export type { ProgressCardProps, ProgressCardStep } from "./components/index";
 
+// Activity Components
+export { ActivityIcon, ActivityItem, ScheduleItem, RecentActivity } from "./components/index";
+export type {
+  ActivityIconProps,
+  ActivityItemProps,
+  ScheduleItemProps,
+  RecentActivityProps,
+  RecentActivityHeaderProps,
+  RecentActivityGroupProps,
+} from "./components/index";
+
 // Common Types
 export type { Size, Color, Variant } from "./types/common";
 
 // Utilities
-export { classNames, useShellState } from "./utils/index";
-export type { UseShellStateReturn } from "./utils/index";
+export { classNames, useShellState, resolveThemeColor } from "./utils/index";
+export type { UseShellStateReturn, ThemeColor } from "./utils/index";
