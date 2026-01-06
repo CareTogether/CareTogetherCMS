@@ -14,7 +14,6 @@ import { policyData } from '../Model/ConfigurationModel';
 type CompleteOtherDialogProps = {
   open: boolean;
   onClose: () => void;
-
   onSelectAction: (actionName: string) => void;
 };
 
@@ -47,9 +46,8 @@ export function CompleteOtherDialog({
   function handleCompleteClick() {
     if (!selectedRequirement) return;
 
-    onClose();
-
     onSelectAction(selectedRequirement);
+    onClose();
   }
 
   return (

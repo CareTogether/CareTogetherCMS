@@ -88,11 +88,6 @@ import { useSyncV1CaseIdInURL } from '../Hooks/useSyncV1CaseIdInURL';
 import { ArrangementsSection } from '../V1Cases/Arrangements/ArrangementsSection/ArrangementsSection';
 import { useFeatureFlagEnabled } from 'posthog-js/react';
 import { TestFamilyBadge } from './TestFamilyBadge';
-import { CompleteOtherDialog } from '../Requirements/CompleteOtherDialog';
-import { MissingRequirementDialog } from '../Requirements/MissingRequirementDialog';
-import { IndividualVolunteerContext } from '../Requirements/RequirementContext';
-import { useRecoilValue } from 'recoil';
-import { policyData } from '../Model/ConfigurationModel';
 
 export function FamilyScreen() {
   const familyIdMaybe = useParams<{ familyId: string }>();
@@ -124,59 +119,6 @@ export function FamilyScreen() {
   const withBackdrop = useBackdrop();
 
   const permissions = useFamilyPermissions(family);
-
-  const [
-    showCompleteOtherRequirementDialog,
-    setShowCompleteOtherRequirementDialog,
-  ] = useState(false);
-
-  const [selectedRequirement, setSelectedRequirement] = useState<string | null>(
-    null
-  );
-
-  const policy = useRecoilValue(policyData);
-
-  const completeOtherHandle = useDialogHandle();
-
-  const [completeOtherDialogOpen, setCompleteOtherDialogOpen] = useState(false);
-  const [
-    selectedPersonIdForCompleteOther,
-    setSelectedPersonIdForCompleteOther,
-  ] = useState<string | null>(null);
-
-  const [completeOtherContext, setCompleteOtherContext] =
-    useState<IndividualVolunteerContext | null>(null);
-
-  function handleCompleteOtherRequirement(actionName: string) {
-    if (!selectedPersonIdForCompleteOther) return;
-
-    setCompleteOtherContext({
-      kind: 'Individual Volunteer',
-      volunteerFamilyId: familyId,
-      personId: selectedPersonIdForCompleteOther,
-    });
-
-    setSelectedRequirement(actionName);
-
-    completeOtherHandle.openDialog();
-    setShowCompleteOtherRequirementDialog(true);
-  }
-
-  function openCompleteOtherDialog(personId: string) {
-    setSelectedPersonIdForCompleteOther(personId);
-    setCompleteOtherDialogOpen(true);
-  }
-
-  const selectedPolicy = useMemo(() => {
-    if (!selectedRequirement) return undefined;
-
-    const direct = policy.actionDefinitions[selectedRequirement];
-    if (direct) return direct;
-
-    return Object.values(policy.actionDefinitions).find((def) =>
-      def.alternateNames?.includes(selectedRequirement)
-    );
-  }, [selectedRequirement, policy]);
 
   const canCloseV1Case =
     family?.partneringFamilyInfo?.openV1Case &&
@@ -525,27 +467,6 @@ export function FamilyScreen() {
           <AddEditNoteDialog
             familyId={family.family!.id!}
             onClose={() => setAddNoteDialogOpen(false)}
-          />
-        )}
-
-        {showCompleteOtherRequirementDialog &&
-          selectedRequirement &&
-          completeOtherContext &&
-          selectedPolicy && (
-            <MissingRequirementDialog
-              handle={completeOtherHandle}
-              requirement={selectedRequirement}
-              context={completeOtherContext}
-              policy={selectedPolicy}
-              canExempt={true}
-            />
-          )}
-
-        {completeOtherDialogOpen && selectedPersonIdForCompleteOther && (
-          <CompleteOtherDialog
-            open={completeOtherDialogOpen}
-            onClose={() => setCompleteOtherDialogOpen(false)}
-            onSelectAction={handleCompleteOtherRequirement}
           />
         )}
 
@@ -1012,7 +933,6 @@ export function FamilyScreen() {
                         key={adult.item1.id}
                         familyId={familyId}
                         personId={adult.item1.id}
-                        onCompleteOther={openCompleteOtherDialog}
                       />
                     )
                 )}
