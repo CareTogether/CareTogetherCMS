@@ -56,12 +56,15 @@ export function CompleteOtherController({
     requirementDialogHandle.closeDialog();
     onClose();
   }
+  function handleCloseChooser() {
+    onClose();
+  }
 
   return (
     <>
       <CompleteOtherDialog
         open={open}
-        onClose={() => {}}
+        onClose={handleCloseChooser}
         onSelectAction={handleSelectAction}
       />
 
