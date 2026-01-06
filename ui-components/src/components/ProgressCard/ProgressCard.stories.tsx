@@ -1,10 +1,10 @@
 import type { Meta, StoryObj } from "@storybook/react";
-import { Progress } from "./Progress";
+import { ProgressCard } from "./ProgressCard";
 import { Button } from "@mui/material";
 
-const meta: Meta<typeof Progress> = {
-  title: "Components/Feedback/Progress",
-  component: Progress,
+const meta: Meta<typeof ProgressCard> = {
+  title: "Components/Feedback/ProgressCard",
+  component: ProgressCard,
   parameters: {
     layout: "padded",
   },
@@ -13,7 +13,7 @@ const meta: Meta<typeof Progress> = {
 };
 
 export default meta;
-type Story = StoryObj<typeof Progress>;
+type Story = StoryObj<typeof ProgressCard>;
 
 /**
  * Default progress component with header and completion count

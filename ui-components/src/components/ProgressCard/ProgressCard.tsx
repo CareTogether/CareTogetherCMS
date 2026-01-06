@@ -17,9 +17,9 @@ import CheckIcon from "@mui/icons-material/Check";
 import { ReactNode } from "react";
 
 /**
- * Individual step in the progress component
+ * Individual step in the progress card component
  */
-export interface ProgressStep {
+export interface ProgressCardStep {
   /**
    * Label/header for the step
    */
@@ -35,14 +35,14 @@ export interface ProgressStep {
 }
 
 /**
- * Base props for Progress component, inheriting selected MUI Box props
+ * Base props for ProgressCard component, inheriting selected MUI Box props
  */
-type ProgressBaseProps = Pick<BoxProps, "sx" | "className">;
+type ProgressCardBaseProps = Pick<BoxProps, "sx" | "className">;
 
 /**
- * Props for the Progress component
+ * Props for the ProgressCard component
  */
-export interface ProgressProps extends ProgressBaseProps {
+export interface ProgressCardProps extends ProgressCardBaseProps {
   /**
    * Optional header text displayed at the top
    */
@@ -50,7 +50,7 @@ export interface ProgressProps extends ProgressBaseProps {
   /**
    * Array of progress steps
    */
-  steps: ProgressStep[];
+  steps: ProgressCardStep[];
   /**
    * Current active step index (0-based)
    */
@@ -83,7 +83,7 @@ const ProgressConnector = styled(StepConnector)(({ theme }: { theme: Theme }) =>
     },
   },
   [`& .${stepConnectorClasses.line}`]: {
-    borderColor: theme.palette.divider,
+    borderColor: theme.palette.grey[300],
     borderLeftWidth: 2,
     minHeight: 24,
   },
@@ -92,7 +92,7 @@ const ProgressConnector = styled(StepConnector)(({ theme }: { theme: Theme }) =>
 /**
  * Custom step icon component that displays circles and checkmarks
  */
-const ProgressStepIcon = (props: StepIconProps) => {
+const ProgressCardStepIcon = (props: StepIconProps) => {
   const { active, completed } = props;
 
   return (
@@ -118,10 +118,10 @@ const ProgressStepIcon = (props: StepIconProps) => {
 };
 
 /**
- * Progress component displays a vertical stepper with optional header and actions.
+ * ProgressCard component displays a vertical stepper with optional header and actions.
  * Shows step labels, descriptions, and completion status with checkmarks.
  */
-export const Progress = ({
+export const ProgressCard = ({
   header,
   steps,
   activeStep = 0,
@@ -129,7 +129,7 @@ export const Progress = ({
   showCompletionCount = true,
   sx,
   className,
-}: ProgressProps) => {
+}: ProgressCardProps) => {
   const completedCount = steps.filter((step) => step.completed).length;
   const totalCount = steps.length;
 
@@ -182,15 +182,37 @@ export const Progress = ({
         }}
       >
         {steps.map((step, index) => (
-          <Step key={index} completed={step.completed}>
+          <Step
+            key={index}
+            completed={step.completed}
+            sx={{
+              "&:last-child .MuiStepLabel-iconContainer:before": {
+                display: "none",
+              },
+            }}
+          >
             <StepLabel
-              slots={{ stepIcon: ProgressStepIcon }}
+              slots={{ stepIcon: ProgressCardStepIcon }}
               sx={{
                 alignItems: "flex-start",
                 py: 0,
                 "& .MuiStepLabel-iconContainer": {
                   pt: 0.25,
+                  position: "relative",
                 },
+                "& .MuiStepLabel-iconContainer > *": {
+                  position: "relative",
+                },
+                "& .MuiStepLabel-iconContainer:before": {
+                  content: '""',
+                  position: "absolute",
+                  top: "calc(100% + 2px)",
+                  left: "calc(50% - 4px)",
+                  width: "2px",
+                  height: "calc(100% - 2px)",
+                  backgroundColor: step.completed ? "primary.main" : "grey.300",
+                },
+
                 "& .MuiStepLabel-labelContainer": {
                   ml: 0.5,
                 },

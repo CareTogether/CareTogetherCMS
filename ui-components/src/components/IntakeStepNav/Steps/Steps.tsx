@@ -32,10 +32,6 @@ export interface StepsProps {
    */
   onStepClick?: (stepIndex: number) => void;
   /**
-   * Orientation of the stepper
-   */
-  orientation?: "horizontal" | "vertical";
-  /**
    * Global step offset for numbering
    */
   stepOffset?: number;
@@ -92,18 +88,12 @@ const CustomStepIcon = (props: StepIconProps) => {
 /**
  * Step indicator component for multi-step forms/workflows.
  */
-export const Steps = ({
-  steps,
-  activeStep,
-  onStepClick,
-  orientation = "horizontal",
-  stepOffset = 0,
-}: StepsProps) => {
+export const Steps = ({ steps, activeStep, onStepClick, stepOffset = 0 }: StepsProps) => {
   const theme = useTheme();
 
   return (
     <Box sx={{ width: "100%" }}>
-      <Stepper activeStep={activeStep} orientation={orientation} connector={<ColorlibConnector />}>
+      <Stepper activeStep={activeStep} orientation="vertical" connector={<ColorlibConnector />}>
         {steps.map((step, index) => {
           const isActive = index === activeStep;
           const isCompleted = step.completed || false;

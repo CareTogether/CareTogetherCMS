@@ -23,8 +23,8 @@ export type { StepsProps } from "./IntakeStepNav/index";
 export { NavItem } from "./NavItem/index";
 export type { NavItemProps } from "./NavItem/index";
 
-export { Progress } from "./Progress/index";
-export type { ProgressProps, ProgressStep } from "./Progress/index";
+export { ProgressCard } from "./ProgressCard/index";
+export type { ProgressCardProps, ProgressCardStep } from "./ProgressCard/index";
 
 export { ActivityIcon, ActivityItem, RecentActivity } from "./Activities/index";
 export type {
