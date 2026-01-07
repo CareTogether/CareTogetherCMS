@@ -89,8 +89,8 @@ export const ScheduleItem = <C extends React.ElementType = "div">({
           duration: theme.transitions.duration.shorter,
         }),
         ...(isInteractive && {
-          "&:hover, &:focus-visible": {
-            transform: "translateX(0.125em)",
+          "&:hover .schedule-item__text, &:focus-visible .schedule-item__text": {
+            textDecoration: "underline",
           },
         }),
         ...sx,
@@ -98,7 +98,7 @@ export const ScheduleItem = <C extends React.ElementType = "div">({
       {...rest}
     >
       <Box
-        className="indicator-bar"
+        className="schedule-item__indicator-bar"
         sx={{
           inlineSize: ".25em",
           blockSize: "1em",
@@ -123,12 +123,17 @@ export const ScheduleItem = <C extends React.ElementType = "div">({
         </Box>
       )}
       <Typography
+        className="schedule-item__text"
         component="span"
         sx={{
           fontSize: sizeConfig.fontSize,
           lineHeight: 1.5,
           flex: 1,
+          overflow: "hidden",
+          textOverflow: "ellipsis",
+          whiteSpace: "nowrap",
         }}
+        title={label}
       >
         {label}
       </Typography>

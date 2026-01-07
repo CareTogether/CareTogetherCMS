@@ -159,3 +159,32 @@ export const SizeComparison: Story = {
     </Box>
   ),
 };
+
+/**
+ * Long text with ellipsis overflow when container width is constrained.
+ */
+export const TextOverflow: Story = {
+  render: () => (
+    <Box sx={{ display: "flex", flexDirection: "column", gap: 2, maxWidth: 300 }}>
+      <ScheduleItem
+        label="This is a very long schedule item label that will overflow"
+        color="primary"
+        startIcon={<EventIcon />}
+      />
+      <ScheduleItem
+        label="Transportation to multiple appointments across the city today"
+        color="#9C27B0"
+        startIcon={<DirectionsCarIcon />}
+        component="a"
+        href="#"
+      />
+      <ScheduleItem
+        label="Small size with extremely long text that definitely needs truncation"
+        color="success"
+        size="small"
+        startIcon={<MedicalServicesIcon />}
+      />
+      <ScheduleItem label="Short text" color="info" startIcon={<EventIcon />} />
+    </Box>
+  ),
+};
