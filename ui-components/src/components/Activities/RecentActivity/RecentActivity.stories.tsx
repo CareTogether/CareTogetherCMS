@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/react";
 import { RecentActivity } from "./RecentActivity";
-import { ActivityItem } from "./ActivityItem";
-import { ActivityIcon } from "./ActivityIcon";
+import { ActivityItem } from "../ActivityItem";
+import { ActivityIcon } from "../ActivityIcon";
 import { Link } from "@mui/material";
 
 const meta = {

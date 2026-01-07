@@ -20,15 +20,22 @@ export { ColoredChip } from "./components/index";
 export type { ColoredChipProps } from "./components/index";
 
 // Navigation Components
-export { IntakeStepNav, Steps } from "./components/index";
-export type { IntakeStepNavProps, StepsProps, StepItem } from "./components/index";
+export { NavItem, IntakeStepNav, Steps } from "./components/index";
+export type { NavItemProps, IntakeStepNavProps, StepsProps, StepItem } from "./components/index";
 
 // Progress Components
 export { ProgressCard } from "./components/index";
 export type { ProgressCardProps, ProgressCardStep } from "./components/index";
 
 // Activity Components
-export { ActivityIcon, ActivityItem, ScheduleItem, RecentActivity } from "./components/index";
+export {
+  ActivityIcon,
+  ActivityItem,
+  ScheduleItem,
+  RecentActivity,
+  TimelineCard,
+  TimelineItem,
+} from "./components/index";
 export type {
   ActivityIconProps,
   ActivityItemProps,
@@ -36,6 +43,9 @@ export type {
   RecentActivityProps,
   RecentActivityHeaderProps,
   RecentActivityGroupProps,
+  TimelineCardProps,
+  TimelineItemProps,
+  TimelineItemData,
 } from "./components/index";
 
 // Common Types

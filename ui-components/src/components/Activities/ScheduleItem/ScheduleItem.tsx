@@ -27,6 +27,10 @@ export interface ScheduleItemOwnProps {
    * Optional icon or start content
    */
   startIcon?: ReactElement;
+  /**
+   * Accessible label for screen readers when used as interactive element
+   */
+  "aria-label"?: string;
 }
 
 export type ScheduleItemProps<C extends React.ElementType = "div"> = ScheduleItemOwnProps &

@@ -39,7 +39,7 @@ export const Basic: Story = {
 export const WithSuccessIcon: Story = {
   args: {
     label: "Approved",
-    icon: <CheckCircleIcon />,
+    startIcon: <CheckCircleIcon />,
     iconColor: "success",
   },
 };
@@ -47,7 +47,7 @@ export const WithSuccessIcon: Story = {
 export const WithInfoIcon: Story = {
   args: {
     label: "In Progress",
-    icon: <CircleIcon />,
+    startIcon: <CircleIcon />,
     iconColor: "info",
   },
 };
@@ -55,7 +55,7 @@ export const WithInfoIcon: Story = {
 export const WithWarningIcon: Story = {
   args: {
     label: "Pending",
-    icon: <WarningIcon />,
+    startIcon: <WarningIcon />,
     iconColor: "warning",
   },
 };
@@ -63,7 +63,7 @@ export const WithWarningIcon: Story = {
 export const WithErrorIcon: Story = {
   args: {
     label: "Rejected",
-    icon: <ErrorIcon />,
+    startIcon: <ErrorIcon />,
     iconColor: "error",
   },
 };
@@ -71,7 +71,7 @@ export const WithErrorIcon: Story = {
 export const WithCustomColor: Story = {
   args: {
     label: "Custom Status",
-    icon: <StarIcon />,
+    startIcon: <StarIcon />,
     iconColor: "#9C27B0",
   },
 };
@@ -79,13 +79,13 @@ export const WithCustomColor: Story = {
 export const AllThemeColors: Story = {
   render: () => (
     <Box sx={{ display: "flex", gap: 1, flexWrap: "wrap" }}>
-      <ColoredChip label="Success" icon={<CheckCircleIcon />} iconColor="success" />
-      <ColoredChip label="Info" icon={<InfoIcon />} iconColor="info" />
-      <ColoredChip label="Warning" icon={<WarningIcon />} iconColor="warning" />
-      <ColoredChip label="Error" icon={<ErrorIcon />} iconColor="error" />
-      <ColoredChip label="Primary" icon={<CircleIcon />} iconColor="primary" />
-      <ColoredChip label="Secondary" icon={<CircleIcon />} iconColor="secondary" />
-      <ColoredChip label="Default" icon={<CircleIcon />} />
+      <ColoredChip label="Success" startIcon={<CheckCircleIcon />} iconColor="success" />
+      <ColoredChip label="Info" startIcon={<InfoIcon />} iconColor="info" />
+      <ColoredChip label="Warning" startIcon={<WarningIcon />} iconColor="warning" />
+      <ColoredChip label="Error" startIcon={<ErrorIcon />} iconColor="error" />
+      <ColoredChip label="Primary" startIcon={<CircleIcon />} iconColor="primary" />
+      <ColoredChip label="Secondary" startIcon={<CircleIcon />} iconColor="secondary" />
+      <ColoredChip label="Default" startIcon={<CircleIcon />} />
     </Box>
   ),
 };

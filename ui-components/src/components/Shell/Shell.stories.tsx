@@ -38,14 +38,14 @@ type Story = StoryObj<typeof Shell>;
  */
 export const Complete: Story = {
   render: () => {
-    const [collapsed, setCollapsed] = useState(false);
+    const [open, setOpen] = useState(true);
 
     return (
-      <Shell>
+      <Shell sidebarOpen={open}>
         <Shell.Header
           leftContent={
             <>
-              <IconButton onClick={() => setCollapsed(!collapsed)} edge="start" sx={{ mr: 2 }}>
+              <IconButton onClick={() => setOpen(!open)} edge="start" sx={{ mr: 2 }}>
                 <MenuIcon />
               </IconButton>
               <Typography variant="h6" noWrap>
@@ -60,7 +60,7 @@ export const Complete: Story = {
           }
         />
 
-        <Shell.Sidebar collapsed={collapsed}>
+        <Shell.Sidebar open={open}>
           <List>
             <ListItem disablePadding>
               <ListItemButton>
@@ -174,18 +174,18 @@ export const HeaderOnly: Story = {
 };
 
 /**
- * Sidebar component in isolation showing collapsed and expanded states.
+ * Sidebar component in isolation showing open and closed states.
  */
 export const SidebarOnly: Story = {
   render: () => {
-    const [collapsed, setCollapsed] = useState(false);
+    const [open, setOpen] = useState(true);
 
     return (
       <Box sx={{ display: "flex", height: "100vh" }}>
-        <Shell.Sidebar collapsed={collapsed}>
+        <Shell.Sidebar open={open}>
           <Box sx={{ p: 2 }}>
-            <Button fullWidth variant="outlined" onClick={() => setCollapsed(!collapsed)}>
-              {collapsed ? "Expand" : "Collapse"}
+            <Button fullWidth variant="outlined" onClick={() => setOpen(!open)}>
+              {open ? "Close" : "Open"}
             </Button>
           </Box>
           <List>
@@ -211,7 +211,7 @@ export const SidebarOnly: Story = {
         <Box sx={{ flexGrow: 1, p: 3 }}>
           <Typography variant="h5">Main Content Area</Typography>
           <Typography variant="body1">
-            The sidebar is {collapsed ? "collapsed (88px)" : "expanded (236px)"}.
+            The sidebar is {open ? "expanded (236px)" : "collapsed (88px)"}.
           </Typography>
         </Box>
       </Box>

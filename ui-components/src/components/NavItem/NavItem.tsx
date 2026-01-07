@@ -25,6 +25,10 @@ export interface NavItemProps extends NavItemBaseProps {
    * Can be a string for HTML elements or a React component (e.g., Link from react-router)
    */
   component?: ElementType;
+  /**
+   * Accessible label for screen readers (defaults to text prop)
+   */
+  "aria-label"?: string;
 }
 
 /**
@@ -40,11 +44,14 @@ export const NavItem = ({
   className,
   ...rest
 }: NavItemProps) => {
+  const ariaLabel = rest["aria-label"] ?? text;
+
   const content = (
     <Box
       component={component}
       onClick={onClick}
       className={className}
+      aria-label={ariaLabel}
       {...rest}
       sx={{
         display: "flex",

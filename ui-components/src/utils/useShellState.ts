@@ -3,10 +3,12 @@ import { useState, useCallback } from "react";
 export interface UseShellStateReturn {
   /** Whether the sidebar is currently open */
   sidebarOpen: boolean;
-  /** Set the sidebar open state */
-  setSidebarOpen: (open: boolean) => void;
   /** Toggle the sidebar open/closed */
   toggleSidebar: () => void;
+  /** Open the sidebar */
+  openSidebar: () => void;
+  /** Close the sidebar */
+  closeSidebar: () => void;
 }
 
 /**
@@ -37,9 +39,18 @@ export function useShellState(initialOpen = true): UseShellStateReturn {
     setSidebarOpen((prev: boolean) => !prev);
   }, []);
 
+  const openSidebar = useCallback(() => {
+    setSidebarOpen(true);
+  }, []);
+
+  const closeSidebar = useCallback(() => {
+    setSidebarOpen(false);
+  }, []);
+
   return {
     sidebarOpen,
-    setSidebarOpen,
     toggleSidebar,
+    openSidebar,
+    closeSidebar,
   };
 }

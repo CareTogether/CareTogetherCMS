@@ -1,9 +1,10 @@
 import { Box, BoxProps } from "@mui/material";
-import React from "react";
+import React, { useMemo } from "react";
 import { ShellHeader } from "./ShellHeader";
 import { ShellSidebar, ShellSidebarProps } from "./ShellSidebar";
 import { ShellContent } from "./ShellContent";
 import { ShellFooter } from "./ShellFooter";
+import { ShellContext } from "./ShellContext";
 
 type ShellBaseProps = Pick<BoxProps, "sx">;
 
@@ -12,6 +13,22 @@ export interface ShellProps extends ShellBaseProps {
    * Shell layout children (typically Shell.Header, Shell.Sidebar, Shell.Content, Shell.Footer)
    */
   children: React.ReactNode;
+  /**
+   * Whether the sidebar is open (expanded) or closed (collapsed)
+   * Only needed if using a sidebar
+   * @default true
+   */
+  sidebarOpen?: boolean;
+  /**
+   * Width of the sidebar when expanded (in pixels)
+   * @default 236
+   */
+  sidebarExpandedWidth?: number;
+  /**
+   * Width of the sidebar when collapsed (in pixels)
+   * @default 88
+   */
+  sidebarCollapsedWidth?: number;
 }
 
 interface ShellComposition {
@@ -25,7 +42,13 @@ interface ShellComposition {
  * Root shell layout container using compound component pattern.
  * Provides the base structure for application layouts with flexible composition.
  */
-export const Shell: React.FC<ShellProps> & ShellComposition = ({ children, sx }) => {
+export const Shell: React.FC<ShellProps> & ShellComposition = ({
+  children,
+  sx,
+  sidebarOpen = true,
+  sidebarExpandedWidth = 236,
+  sidebarCollapsedWidth = 88,
+}) => {
   // Separate children by type to arrange them properly
   const childArray = React.Children.toArray(children);
   const header = childArray.find(
@@ -41,62 +64,61 @@ export const Shell: React.FC<ShellProps> & ShellComposition = ({ children, sx })
     (child) => React.isValidElement(child) && child.type === ShellFooter
   );
 
-  // Get sidebar width from props
-  const sidebarCollapsed = React.isValidElement(sidebar)
-    ? ((sidebar.props as { collapsed?: boolean }).collapsed ?? false)
-    : false;
-  const expandedWidth = React.isValidElement(sidebar)
-    ? ((sidebar.props as { expandedWidth?: number }).expandedWidth ?? 236)
-    : 236;
-  const collapsedWidth = React.isValidElement(sidebar)
-    ? ((sidebar.props as { collapsedWidth?: number }).collapsedWidth ?? 88)
-    : 88;
-  const sidebarWidth = sidebar ? (sidebarCollapsed ? collapsedWidth : expandedWidth) : 0;
+  // Calculate sidebar width from Shell's own props
+  const sidebarWidth = sidebar ? (sidebarOpen ? sidebarExpandedWidth : sidebarCollapsedWidth) : 0;
 
   const headerHeight = 64; // Standard AppBar height
 
+  // Memoize context value to prevent unnecessary re-renders
+  const contextValue = useMemo(
+    () => ({ headerHeight, sidebarWidth }),
+    [headerHeight, sidebarWidth]
+  );
+
   return (
-    <Box
-      sx={{
-        display: "flex",
-        flexDirection: "column",
-        height: "100vh",
-        overflow: "hidden",
-        ...sx,
-      }}
-    >
-      {/* Header - Full width, fixed */}
-      {header}
-
-      {/* Sidebar - Fixed position */}
-      {sidebar &&
-        React.isValidElement<ShellSidebarProps>(sidebar) &&
-        React.cloneElement(sidebar, {
-          sx: {
-            position: "fixed",
-            top: headerHeight,
-            left: 0,
-            height: `calc(100vh - ${headerHeight}px)`,
-            ...sidebar.props.sx,
-          },
-        })}
-
-      {/* Content column - Scrollable with padding for fixed elements */}
+    <ShellContext.Provider value={contextValue}>
       <Box
         sx={{
           display: "flex",
           flexDirection: "column",
-          flex: 1,
-          overflow: "auto",
-          marginTop: `${headerHeight}px`,
-          marginLeft: `${sidebarWidth}px`,
-          transition: "margin-left 0.2s ease-in-out",
+          height: "100vh",
+          overflow: "hidden",
+          ...sx,
         }}
       >
-        {content}
-        {footer}
+        {/* Header - Full width, fixed */}
+        {header}
+
+        {/* Sidebar - Fixed position */}
+        {sidebar &&
+          React.isValidElement<ShellSidebarProps>(sidebar) &&
+          React.cloneElement(sidebar, {
+            sx: {
+              position: "fixed",
+              top: headerHeight,
+              left: 0,
+              height: `calc(100vh - ${headerHeight}px)`,
+              ...sidebar.props.sx,
+            },
+          })}
+
+        {/* Content column - Scrollable with padding for fixed elements */}
+        <Box
+          sx={{
+            display: "flex",
+            flexDirection: "column",
+            flex: 1,
+            overflow: "auto",
+            marginTop: `${headerHeight}px`,
+            marginLeft: `${sidebarWidth}px`,
+            transition: "margin-left 0.2s ease-in-out",
+          }}
+        >
+          {content}
+          {footer}
+        </Box>
       </Box>
-    </Box>
+    </ShellContext.Provider>
   );
 };
 

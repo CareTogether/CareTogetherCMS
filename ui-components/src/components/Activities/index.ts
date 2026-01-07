@@ -1,21 +1,21 @@
-export { ActivityIcon } from "./ActivityIcon";
-export type { ActivityIconProps } from "./ActivityIcon";
+export { ActivityIcon } from "./ActivityIcon/index";
+export type { ActivityIconProps } from "./ActivityIcon/index";
 
-export { ActivityItem } from "./ActivityItem";
-export type { ActivityItemProps } from "./ActivityItem";
+export { ActivityItem } from "./ActivityItem/index";
+export type { ActivityItemProps } from "./ActivityItem/index";
 
 export { ScheduleItem } from "./ScheduleItem";
 export type { ScheduleItemProps } from "./ScheduleItem";
 
-export { RecentActivity } from "./RecentActivity";
+export { RecentActivity } from "./RecentActivity/index";
 export type {
   RecentActivityProps,
   RecentActivityHeaderProps,
   RecentActivityGroupProps,
-} from "./RecentActivity";
+} from "./RecentActivity/index";
 
-export { TimelineCard } from "./TimelineCard";
-export type { TimelineCardProps, TimelineItemData } from "./TimelineCard";
+export { TimelineCard } from "./TimelineCard/index";
+export type { TimelineCardProps, TimelineItemData } from "./TimelineCard/index";
 
-export { TimelineItem } from "./TimelineItem";
-export type { TimelineItemProps } from "./TimelineItem";
+export { TimelineItem } from "./TimelineItem/index";
+export type { TimelineItemProps } from "./TimelineItem/index";

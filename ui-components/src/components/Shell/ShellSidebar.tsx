@@ -4,16 +4,20 @@ type ShellSidebarBaseProps = Pick<BoxProps, "sx">;
 
 export interface ShellSidebarProps extends ShellSidebarBaseProps {
   /**
-   * Whether the sidebar is collapsed (88px) or expanded (236px)
+   * Whether the sidebar is open (expanded) or closed (collapsed)
+   * Note: This prop is for styling only. Pass sidebarOpen to the Shell component for layout.
+   * @default true
    */
-  collapsed?: boolean;
+  open?: boolean;
   /**
    * Width of the sidebar when expanded (in pixels)
+   * Note: This prop is for styling only. Pass sidebarExpandedWidth to Shell for layout.
    * @default 236
    */
   expandedWidth?: number;
   /**
    * Width of the sidebar when collapsed (in pixels)
+   * Note: This prop is for styling only. Pass sidebarCollapsedWidth to Shell for layout.
    * @default 88
    */
   collapsedWidth?: number;
@@ -28,13 +32,13 @@ export interface ShellSidebarProps extends ShellSidebarBaseProps {
  * Use as part of the Shell compound component pattern.
  */
 export const ShellSidebar = ({
-  collapsed = false,
+  open = true,
   expandedWidth = 236,
   collapsedWidth = 88,
   children,
   sx,
 }: ShellSidebarProps) => {
-  const currentWidth = collapsed ? collapsedWidth : expandedWidth;
+  const currentWidth = open ? expandedWidth : collapsedWidth;
 
   return (
     <Box

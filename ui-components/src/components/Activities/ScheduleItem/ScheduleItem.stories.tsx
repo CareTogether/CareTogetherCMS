@@ -171,7 +171,7 @@ export const TextOverflow: Story = {
         color="primary"
         startIcon={<EventIcon />}
       />
-      <ScheduleItem
+      <ScheduleItem<"a">
         label="Transportation to multiple appointments across the city today"
         color="#9C27B0"
         startIcon={<DirectionsCarIcon />}

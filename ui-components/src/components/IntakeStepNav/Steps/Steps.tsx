@@ -104,6 +104,7 @@ export const Steps = ({ steps, activeStep, onStepClick, stepOffset = 0 }: StepsP
               {onStepClick ? (
                 <StepButton
                   onClick={() => onStepClick(index)}
+                  aria-label={`${step.label}${step.completed ? " (completed)" : ""}${isActive ? " (current step)" : ""}`}
                   icon={
                     <CustomStepIcon
                       active={isActive}

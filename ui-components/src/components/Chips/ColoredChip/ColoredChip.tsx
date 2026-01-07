@@ -12,7 +12,7 @@ export interface ColoredChipProps extends ColoredChipBaseProps {
   /**
    * Optional icon element to display before the label
    */
-  icon?: ReactElement;
+  startIcon?: ReactElement;
   /**
    * Icon color - can be a theme color key or custom hex color
    * @default "grey.900"
@@ -25,7 +25,7 @@ export interface ColoredChipProps extends ColoredChipBaseProps {
  */
 export const ColoredChip = ({
   label,
-  icon,
+  startIcon,
   iconColor = "grey.900",
   size = "small",
   sx,
@@ -43,7 +43,7 @@ export const ColoredChip = ({
   return (
     <Chip
       label={label}
-      icon={icon}
+      icon={startIcon}
       size={size}
       sx={{
         backgroundColor,

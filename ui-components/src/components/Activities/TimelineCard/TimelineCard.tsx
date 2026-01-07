@@ -1,6 +1,6 @@
 import { Box, Card, CardProps, Typography } from "@mui/material";
 import { ReactNode } from "react";
-import { TimelineItem } from "./TimelineItem";
+import { TimelineItem } from "../TimelineItem";
 
 type TimelineCardBaseProps = Pick<CardProps, "sx" | "className" | "variant" | "elevation">;
 
