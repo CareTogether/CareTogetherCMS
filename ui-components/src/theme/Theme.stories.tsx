@@ -88,7 +88,7 @@ export const CompleteShowcase: Story = {
 
         {/* Primary Dark - Custom Color */}
         <Typography variant="h6" gutterBottom>
-          Primary Dark (Deep Teal) - Available as color="primaryDark"
+          Primary Dark (Deep Teal) - Available as color=&quot;primaryDark&quot;
         </Typography>
         <Stack direction="row" spacing={2} sx={{ mb: 3 }}>
           <ColorSwatch
@@ -132,7 +132,7 @@ export const CompleteShowcase: Story = {
 
         {/* Tertiary Colors */}
         <Typography variant="h6" gutterBottom>
-          Tertiary (Medium Teal) - Available as color="tertiary"
+          Tertiary (Medium Teal) - Available as color=&quot;tertiary&quot;
         </Typography>
         <Stack direction="row" spacing={2} sx={{ mb: 3 }}>
           <ColorSwatch

@@ -40,6 +40,7 @@ export default [
       ...reactHooksPlugin.configs.recommended.rules,
       "react/react-in-jsx-scope": "off",
       "react/prop-types": "off",
+      "no-undef": "off", // TypeScript handles this better
       "@typescript-eslint/no-unused-vars": [
         "warn",
         {

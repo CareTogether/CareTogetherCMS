@@ -28,7 +28,7 @@ export interface ContextHeaderProps extends ContextHeaderBaseProps {
   /**
    * Content of the header (use compound components)
    */
-  children?: ReactNode;
+  children: ReactNode;
 }
 
 /**
@@ -116,7 +116,10 @@ const ContextHeaderBreadcrumbs = ({
 };
 
 // Title sub-component
-type ContextHeaderTitleBaseProps = Pick<TypographyProps, "sx" | "className">;
+type ContextHeaderTitleBaseProps = Pick<
+  TypographyProps,
+  "sx" | "className" | "component" | "variant"
+>;
 
 export interface DropdownItem {
   label: string;
@@ -150,6 +153,8 @@ const ContextHeaderTitle = ({
   actions,
   sx,
   className,
+  component = "h1",
+  variant = "h1",
 }: ContextHeaderTitleProps) => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
@@ -224,10 +229,11 @@ const ContextHeaderTitle = ({
               }}
             >
               <Typography
-                variant="h1"
+                component={component}
+                variant={variant}
                 sx={{
                   color: "primary.main",
-                  "&:hover": {
+                  "&:hover, &:focus-visible": {
                     textDecoration: "underline",
                   },
                   ...responsiveTitleSx,
@@ -264,7 +270,8 @@ const ContextHeaderTitle = ({
           </Box>
         ) : (
           <Typography
-            variant="h1"
+            component={component}
+            variant={variant}
             className={className}
             sx={{
               ...responsiveTitleSx,
