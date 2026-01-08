@@ -1,4 +1,3 @@
-import { useState } from 'react';
 import {
   Autocomplete,
   Button,
@@ -7,7 +6,10 @@ import {
   TextField,
   Typography,
 } from '@mui/material';
+import { Controller, useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
 import { useRecoilValue } from 'recoil';
+
 import { ValidateDatePicker } from '../Generic/Forms/ValidateDatePicker';
 import { FamilyName, familyNameString } from '../Families/FamilyName';
 import { useLoadable } from '../Hooks/useLoadable';
@@ -17,23 +19,18 @@ import { policyData } from '../Model/ConfigurationModel';
 import { CustomField } from '../GeneratedClient';
 import { CustomFieldInput } from '../Generic/CustomFieldInput';
 
+import {
+  addReferralSchema,
+  AddReferralFormValues,
+} from '../V1Referrals/ReferralSchema';
+
 interface AddNewReferralDrawerProps {
   onClose: () => void;
 }
 
-interface ReferralFields {
-  openedAtLocal: Date;
-  title: string;
-  familyId: string | null;
-  comment: string;
-}
-
-type CustomFieldValue = string | boolean | number | null | undefined;
-
 export function AddNewReferralDrawer({ onClose }: AddNewReferralDrawerProps) {
   const families = useLoadable(partneringFamiliesData) || [];
   const policy = useRecoilValue(policyData);
-
   const { createReferral } = useV1ReferralsModel();
 
   const referralCustomFields: CustomField[] =
@@ -48,55 +45,31 @@ export function AddNewReferralDrawer({ onClose }: AddNewReferralDrawerProps) {
     })),
   ];
 
-  const [fields, setFields] = useState<ReferralFields>({
-    openedAtLocal: new Date(),
-    title: '',
-    familyId: null,
-    comment: '',
+  const {
+    control,
+    handleSubmit,
+    formState: { isSubmitting },
+  } = useForm<AddReferralFormValues>({
+    resolver: zodResolver(addReferralSchema),
+    defaultValues: {
+      openedAtLocal: new Date(),
+      title: '',
+      familyId: null,
+      comment: '',
+      customFields: {},
+    },
   });
 
-  const [customFieldValues, setCustomFieldValues] = useState<
-    Record<string, CustomFieldValue>
-  >({});
+  const onSubmit = async (data: AddReferralFormValues) => {
+    await createReferral(crypto.randomUUID(), {
+      familyId: data.familyId,
+      openedAtUtc: data.openedAtLocal,
+      title: data.title,
+      comment: data.comment || undefined,
+    });
 
-  const [dateError, setDateError] = useState(false);
-  const [saving, setSaving] = useState(false);
-
-  function update<K extends keyof ReferralFields>(
-    key: K,
-    value: ReferralFields[K]
-  ) {
-    setFields((prev) => ({ ...prev, [key]: value }));
-  }
-
-  function updateCustomField(name: string, value: CustomFieldValue) {
-    setCustomFieldValues((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
-  }
-
-  async function save() {
-    if (saving || !fields.title || dateError) return;
-
-    try {
-      setSaving(true);
-
-      await createReferral(crypto.randomUUID(), {
-        familyId: fields.familyId,
-        openedAtUtc: new Date(fields.openedAtLocal),
-        title: fields.title,
-        comment: fields.comment || undefined,
-      });
-
-      onClose();
-    } finally {
-      setSaving(false);
-    }
-  }
-
-  const selectedFamily =
-    familyOptions.find((o) => o.id === fields.familyId) ?? familyOptions[0];
+    onClose();
+  };
 
   return (
     <Drawer
@@ -111,116 +84,155 @@ export function AddNewReferralDrawer({ onClose }: AddNewReferralDrawerProps) {
         },
       }}
     >
-      <Grid container spacing={2}>
-        <Grid item xs={12}>
-          <Typography variant="h6">Open New Referral</Typography>
-        </Grid>
-
-        <Grid item xs={12}>
-          <ValidateDatePicker
-            label="When was this referral opened?"
-            value={fields.openedAtLocal}
-            disableFuture
-            onChange={(date) => date && update('openedAtLocal', date)}
-            onErrorChange={setDateError}
-            textFieldProps={{ fullWidth: true, required: true }}
-          />
-        </Grid>
-
-        <Grid item xs={12}>
-          <TextField
-            label="Referral Title"
-            fullWidth
-            required
-            value={fields.title}
-            onChange={(e) => update('title', e.target.value)}
-          />
-        </Grid>
-
-        <Grid item xs={12}>
-          <Typography sx={{ fontWeight: 600, mb: 1 }}>Family</Typography>
-
-          <Autocomplete
-            fullWidth
-            options={familyOptions}
-            value={selectedFamily}
-            getOptionLabel={(opt) => opt.label}
-            onChange={(_, option) => update('familyId', option?.id ?? null)}
-            renderOption={(props, option) => (
-              <li {...props}>
-                {option.family ? (
-                  <FamilyName family={option.family} />
-                ) : (
-                  option.label
-                )}
-              </li>
-            )}
-            renderInput={(params) => (
-              <TextField {...params} label="Select Family" />
-            )}
-          />
-        </Grid>
-
-        {referralCustomFields.length > 0 && (
+      <form onSubmit={handleSubmit(onSubmit)}>
+        <Grid container spacing={2}>
           <Grid item xs={12}>
-            <Typography sx={{ fontWeight: 600, mb: 1 }}>
-              Referral Details
-            </Typography>
-
-            <Grid container spacing={2}>
-              {referralCustomFields.map((field) => (
-                <Grid item xs={12} key={field.name}>
-                  <Typography
-                    variant="body2"
-                    sx={{ fontWeight: 600, mb: 0.5 }}
-                    className="ph-unmask"
-                  >
-                    {field.name}
-                  </Typography>
-
-                  <CustomFieldInput
-                    customFieldPolicy={field}
-                    value={customFieldValues[field.name!]}
-                    onChange={(value) => updateCustomField(field.name!, value)}
-                  />
-                </Grid>
-              ))}
-            </Grid>
+            <Typography variant="h6">Open New Referral</Typography>
           </Grid>
-        )}
 
-        <Grid item xs={12}>
-          <TextField
-            label="Referral Comment"
-            fullWidth
-            multiline
-            minRows={3}
-            value={fields.comment}
-            onChange={(e) => update('comment', e.target.value)}
-          />
+          <Grid item xs={12}>
+            <Controller
+              name="openedAtLocal"
+              control={control}
+              render={({ field, fieldState }) => (
+                <ValidateDatePicker
+                  label="When was this referral opened?"
+                  value={field.value}
+                  disableFuture
+                  onChange={(date) => field.onChange(date)}
+                  textFieldProps={{
+                    fullWidth: true,
+                    required: true,
+                    error: !!fieldState.error,
+                    helperText: fieldState.error?.message,
+                  }}
+                />
+              )}
+            />
+          </Grid>
+
+          <Grid item xs={12}>
+            <Controller
+              name="title"
+              control={control}
+              render={({ field, fieldState }) => (
+                <TextField
+                  {...field}
+                  label="Referral Title"
+                  fullWidth
+                  required
+                  error={!!fieldState.error}
+                  helperText={fieldState.error?.message}
+                />
+              )}
+            />
+          </Grid>
+
+          <Grid item xs={12}>
+            <Typography sx={{ fontWeight: 600, mb: 1 }}>Family</Typography>
+
+            <Controller
+              name="familyId"
+              control={control}
+              render={({ field }) => (
+                <Autocomplete
+                  fullWidth
+                  options={familyOptions}
+                  value={
+                    familyOptions.find((o) => o.id === field.value) ??
+                    familyOptions[0]
+                  }
+                  getOptionLabel={(opt) => opt.label}
+                  onChange={(_, option) => field.onChange(option?.id ?? null)}
+                  renderOption={(props, option) => (
+                    <li {...props}>
+                      {option.family ? (
+                        <FamilyName family={option.family} />
+                      ) : (
+                        option.label
+                      )}
+                    </li>
+                  )}
+                  renderInput={(params) => (
+                    <TextField {...params} label="Select Family" />
+                  )}
+                />
+              )}
+            />
+          </Grid>
+
+          {referralCustomFields.length > 0 && (
+            <Grid item xs={12}>
+              <Typography sx={{ fontWeight: 600, mb: 1 }}>
+                Referral Details
+              </Typography>
+
+              <Grid container spacing={2}>
+                {referralCustomFields.map((field) => (
+                  <Grid item xs={12} key={field.name}>
+                    <Typography
+                      variant="body2"
+                      sx={{ fontWeight: 600, mb: 0.5 }}
+                      className="ph-unmask"
+                    >
+                      {field.name}
+                    </Typography>
+
+                    <Controller
+                      name={`customFields.${field.name}` as const}
+                      control={control}
+                      render={({ field: rhfField }) => (
+                        <CustomFieldInput
+                          customFieldPolicy={field}
+                          value={rhfField.value}
+                          onChange={rhfField.onChange}
+                        />
+                      )}
+                    />
+                  </Grid>
+                ))}
+              </Grid>
+            </Grid>
+          )}
+
+          <Grid item xs={12}>
+            <Controller
+              name="comment"
+              control={control}
+              render={({ field }) => (
+                <TextField
+                  {...field}
+                  label="Referral Comment"
+                  fullWidth
+                  multiline
+                  minRows={3}
+                />
+              )}
+            />
+          </Grid>
+
+          <Grid item xs={12} sx={{ textAlign: 'right' }}>
+            <Button
+              color="secondary"
+              variant="contained"
+              sx={{ mr: 2 }}
+              onClick={onClose}
+              disabled={isSubmitting}
+            >
+              Cancel
+            </Button>
+
+            <Button
+              color="primary"
+              variant="contained"
+              type="submit"
+              disabled={isSubmitting}
+            >
+              Save
+            </Button>
+          </Grid>
         </Grid>
-
-        <Grid item xs={12} sx={{ textAlign: 'right' }}>
-          <Button
-            color="secondary"
-            variant="contained"
-            sx={{ mr: 2 }}
-            onClick={onClose}
-            disabled={saving}
-          >
-            Cancel
-          </Button>
-
-          <Button
-            color="primary"
-            variant="contained"
-            disabled={!fields.title || dateError || saving}
-            onClick={save}
-          >
-            Save
-          </Button>
-        </Grid>
-      </Grid>
+      </form>
     </Drawer>
   );
 }
