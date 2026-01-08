@@ -13,23 +13,30 @@ export interface ShellContextValue {
    * Current width of the sidebar in pixels (based on open/collapsed state)
    */
   sidebarWidth: number;
+  /**
+   * Whether the sidebar is open (expanded) or closed (collapsed)
+   * Only present when inside a Shell component
+   */
+  sidebarOpen?: boolean;
+  /**
+   * Width of the sidebar when expanded (in pixels)
+   * Only present when inside a Shell component
+   */
+  sidebarExpandedWidth?: number;
+  /**
+   * Width of the sidebar when collapsed (in pixels)
+   * Only present when inside a Shell component
+   */
+  sidebarCollapsedWidth?: number;
 }
 
-const defaultContextValue: ShellContextValue = {
-  headerHeight: 64,
-  sidebarWidth: 236,
-};
-
-export const ShellContext = createContext<ShellContextValue>(defaultContextValue);
+export const ShellContext = createContext<ShellContextValue | null>(null);
 
 /**
- * Hook to access Shell context values
- * @returns Shell context with headerHeight and sidebarWidth
+ * Hook to access Shell context values.
+ * Returns null when not used within a Shell component (e.g., standalone usage).
+ * @returns Shell context with layout values, or null if not in Shell
  */
 export const useShellContext = () => {
-  const context = useContext(ShellContext);
-  if (!context) {
-    throw new Error("useShellContext must be used within a Shell component");
-  }
-  return context;
+  return useContext(ShellContext);
 };

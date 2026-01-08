@@ -40,7 +40,6 @@ export type ScheduleItemProps<C extends React.ElementType = "div"> = ScheduleIte
 /**
  * A flexible display component for showing schedule items with a colored
  * indicator bar and label. Can be rendered as a link, button, or static display.
- *
  */
 export const ScheduleItem = <C extends React.ElementType = "div">({
   label,

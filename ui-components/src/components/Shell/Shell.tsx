@@ -1,7 +1,7 @@
 import { Box, BoxProps } from "@mui/material";
 import React, { useMemo } from "react";
 import { ShellHeader } from "./ShellHeader";
-import { ShellSidebar, ShellSidebarProps } from "./ShellSidebar";
+import { ShellSidebar } from "./ShellSidebar";
 import { ShellContent } from "./ShellContent";
 import { ShellFooter } from "./ShellFooter";
 import { ShellContext } from "./ShellContext";
@@ -14,18 +14,17 @@ export interface ShellProps extends ShellBaseProps {
    */
   children: React.ReactNode;
   /**
-   * Whether the sidebar is open (expanded) or closed (collapsed)
-   * Only needed if using a sidebar
+   * Whether the sidebar is open (expanded) or closed (collapsed).
    * @default true
    */
   sidebarOpen?: boolean;
   /**
-   * Width of the sidebar when expanded (in pixels)
+   * Width of the sidebar when expanded (in pixels).
    * @default 236
    */
   sidebarExpandedWidth?: number;
   /**
-   * Width of the sidebar when collapsed (in pixels)
+   * Width of the sidebar when collapsed (in pixels).
    * @default 88
    */
   sidebarCollapsedWidth?: number;
@@ -71,8 +70,14 @@ export const Shell: React.FC<ShellProps> & ShellComposition = ({
 
   // Memoize context value to prevent unnecessary re-renders
   const contextValue = useMemo(
-    () => ({ headerHeight, sidebarWidth }),
-    [headerHeight, sidebarWidth]
+    () => ({
+      headerHeight,
+      sidebarWidth,
+      sidebarOpen,
+      sidebarExpandedWidth,
+      sidebarCollapsedWidth,
+    }),
+    [headerHeight, sidebarWidth, sidebarOpen, sidebarExpandedWidth, sidebarCollapsedWidth]
   );
 
   return (
@@ -89,18 +94,8 @@ export const Shell: React.FC<ShellProps> & ShellComposition = ({
         {/* Header - Full width, fixed */}
         {header}
 
-        {/* Sidebar - Fixed position */}
-        {sidebar &&
-          React.isValidElement<ShellSidebarProps>(sidebar) &&
-          React.cloneElement(sidebar, {
-            sx: {
-              position: "fixed",
-              top: headerHeight,
-              left: 0,
-              height: `calc(100vh - ${headerHeight}px)`,
-              ...sidebar.props.sx,
-            },
-          })}
+        {/* Sidebar - Fixed position, consumes context for state */}
+        {sidebar}
 
         {/* Content column - Scrollable with padding for fixed elements */}
         <Box

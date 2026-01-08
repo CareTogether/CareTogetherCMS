@@ -1,30 +1,40 @@
 // Shell components (compound component pattern)
-export { Shell } from "./Shell/index";
+export { Shell } from "./Shell";
 export type {
   ShellProps,
   ShellHeaderProps,
   ShellSidebarProps,
   ShellContentProps,
   ShellFooterProps,
-} from "./Shell/index";
+  ShellContextValue,
+} from "./Shell";
+export { useShellContext } from "./Shell";
 
-export { ContextHeader } from "./ContextHeader/index";
-export type { ContextHeaderProps, BreadcrumbItem } from "./ContextHeader/index";
+export { ContextHeader } from "./ContextHeader";
+export type {
+  ContextHeaderProps,
+  BreadcrumbItem,
+  ContextHeaderBreadcrumbsProps,
+  ContextHeaderTitleProps,
+  ContextHeaderContentProps,
+  ContextHeaderTabsProps,
+  DropdownItem,
+} from "./ContextHeader";
 
-export { ColoredChip } from "./Chips/index";
-export type { ColoredChipProps } from "./Chips/index";
+export { ColoredChip } from "./Chips";
+export type { ColoredChipProps } from "./Chips";
 
-export { IntakeStepNav } from "./IntakeStepNav/index";
-export type { IntakeStepNavProps, StepItem, StepGroup } from "./IntakeStepNav/index";
+export { IntakeStepNav } from "./IntakeStepNav";
+export type { IntakeStepNavProps, StepItem, StepGroup } from "./IntakeStepNav";
 
-export { Steps } from "./IntakeStepNav/index";
-export type { StepsProps } from "./IntakeStepNav/index";
+export { Steps } from "./IntakeStepNav";
+export type { StepsProps } from "./IntakeStepNav";
 
-export { NavItem } from "./NavItem/index";
-export type { NavItemProps } from "./NavItem/index";
+export { NavItem } from "./NavItem";
+export type { NavItemProps } from "./NavItem";
 
-export { ProgressCard } from "./ProgressCard/index";
-export type { ProgressCardProps, ProgressCardStep } from "./ProgressCard/index";
+export { ProgressCard } from "./ProgressCard";
+export type { ProgressCardProps, ProgressCardStep } from "./ProgressCard";
 
 export {
   ActivityIcon,
@@ -33,7 +43,7 @@ export {
   RecentActivity,
   TimelineCard,
   TimelineItem,
-} from "./Activities/index";
+} from "./Activities";
 export type {
   ActivityIconProps,
   ActivityItemProps,
@@ -44,4 +54,4 @@ export type {
   TimelineCardProps,
   TimelineItemProps,
   TimelineItemData,
-} from "./Activities/index";
+} from "./Activities";

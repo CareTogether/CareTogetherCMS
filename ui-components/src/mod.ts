@@ -2,18 +2,27 @@
 export { theme } from "./theme/theme";
 
 // Shell Components (Compound Component Pattern)
-export { Shell } from "./components/index";
+export { Shell, useShellContext } from "./components/index";
 export type {
   ShellProps,
   ShellHeaderProps,
   ShellSidebarProps,
   ShellContentProps,
   ShellFooterProps,
+  ShellContextValue,
 } from "./components/index";
 
 // Context Components
 export { ContextHeader } from "./components/index";
-export type { ContextHeaderProps, BreadcrumbItem } from "./components/index";
+export type {
+  ContextHeaderProps,
+  BreadcrumbItem,
+  ContextHeaderBreadcrumbsProps,
+  ContextHeaderTitleProps,
+  ContextHeaderContentProps,
+  ContextHeaderTabsProps,
+  DropdownItem,
+} from "./components/index";
 
 // Chips
 export { ColoredChip } from "./components/index";
@@ -21,7 +30,13 @@ export type { ColoredChipProps } from "./components/index";
 
 // Navigation Components
 export { NavItem, IntakeStepNav, Steps } from "./components/index";
-export type { NavItemProps, IntakeStepNavProps, StepsProps, StepItem } from "./components/index";
+export type {
+  NavItemProps,
+  IntakeStepNavProps,
+  StepsProps,
+  StepItem,
+  StepGroup,
+} from "./components/index";
 
 // Progress Components
 export { ProgressCard } from "./components/index";

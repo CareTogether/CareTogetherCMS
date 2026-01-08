@@ -98,9 +98,38 @@ export const Complete: Story = {
               This is an example of the Shell compound component pattern. The header, sidebar,
               content area, and footer are all composable parts that you can customize.
             </Typography>
-            <Button variant="contained" color="primaryDark">
+            <Button variant="contained" color="primaryDark" sx={{ mb: 4 }}>
               Get Started
             </Button>
+
+            <Typography variant="h5" gutterBottom sx={{ mt: 4 }}>
+              Scrollable Content
+            </Typography>
+            <Typography variant="body1" paragraph>
+              Scroll down to see how the shell handles longer content. The header stays at the top,
+              the sidebar remains fixed on the left, and the content area is scrollable.
+            </Typography>
+
+            {Array.from({ length: 40 }, (_, i) => (
+              <Box key={i} sx={{ mb: 3 }}>
+                <Typography variant="h6" gutterBottom>
+                  Section {i + 1}
+                </Typography>
+                <Typography variant="body2" paragraph>
+                  This is placeholder content to demonstrate scrolling behavior. The Shell component
+                  provides a flexible layout system that adapts to different content heights. Notice
+                  how the sidebar and header remain in their positions as you scroll through the
+                  content.
+                </Typography>
+              </Box>
+            ))}
+
+            <Typography variant="h5" gutterBottom>
+              End of Content
+            </Typography>
+            <Typography variant="body1" paragraph>
+              You&apos;ve reached the bottom! The footer should be visible below this content.
+            </Typography>
           </Container>
         </Shell.Content>
 
