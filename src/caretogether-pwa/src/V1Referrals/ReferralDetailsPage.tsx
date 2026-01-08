@@ -12,7 +12,8 @@ import { useRecoilValue } from 'recoil';
 import { useFamilyLookup } from '../Model/DirectoryModel';
 import { FamilyName } from '../Families/FamilyName';
 import { useScreenTitle } from '../Shell/ShellScreenTitle';
-import { referralsQuery, useV1ReferralsModel } from '../Model/V1ReferralsModel';
+import { visibleReferralsQuery } from '../Model/Data';
+import { useV1ReferralsModel } from '../Model/V1ReferralsModel';
 import { V1ReferralStatus } from '../GeneratedClient';
 import { CreatePartneringFamilyDialog } from '../V1Cases/CreatePartneringFamilyDrawer';
 
@@ -26,7 +27,7 @@ export function ReferralDetailsPage() {
   const { referralId } = useParams<{ referralId: string }>();
   const familyLookup = useFamilyLookup();
 
-  const referrals = useRecoilValue(referralsQuery);
+  const referrals = useRecoilValue(visibleReferralsQuery);
   const { closeReferral, reopenReferral } = useV1ReferralsModel();
 
   const [working, setWorking] = useState(false);

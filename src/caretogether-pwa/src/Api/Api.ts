@@ -4,7 +4,6 @@ import {
   FilesClient,
   RecordsClient,
   UsersClient,
-  V1ReferralsClient,
 } from '../GeneratedClient';
 import { authenticatingFetch } from '../Authentication/AuthenticatedHttp';
 
@@ -14,11 +13,6 @@ const usersClient = new UsersClient(
 );
 
 const configurationClient = new ConfigurationClient(
-  import.meta.env.VITE_APP_API_HOST,
-  authenticatingFetch
-);
-
-const v1ReferralsClient = new V1ReferralsClient(
   import.meta.env.VITE_APP_API_HOST,
   authenticatingFetch
 );
@@ -44,5 +38,4 @@ export const api = {
   records: recordsClient,
   files: filesClient,
   communications: communicationsClient,
-  v1Referrals: v1ReferralsClient,
 };

@@ -7,15 +7,12 @@ import {
   TextField,
   Typography,
 } from '@mui/material';
-import { useRecoilValue, useSetRecoilState } from 'recoil';
+import { useRecoilValue } from 'recoil';
 import { ValidateDatePicker } from '../Generic/Forms/ValidateDatePicker';
 import { FamilyName, familyNameString } from '../Families/FamilyName';
 import { useLoadable } from '../Hooks/useLoadable';
 import { partneringFamiliesData } from '../Model/V1CasesModel';
-import {
-  useV1ReferralsModel,
-  referralsRefreshTrigger,
-} from '../Model/V1ReferralsModel';
+import { useV1ReferralsModel } from '../Model/V1ReferralsModel';
 import { policyData } from '../Model/ConfigurationModel';
 import { CustomField } from '../GeneratedClient';
 import { CustomFieldInput } from '../Generic/CustomFieldInput';
@@ -38,7 +35,6 @@ export function AddNewReferralDrawer({ onClose }: AddNewReferralDrawerProps) {
   const policy = useRecoilValue(policyData);
 
   const { createReferral } = useV1ReferralsModel();
-  const bumpRefresh = useSetRecoilState(referralsRefreshTrigger);
 
   const referralCustomFields: CustomField[] =
     policy.referralPolicy?.customFields ?? [];
@@ -93,7 +89,6 @@ export function AddNewReferralDrawer({ onClose }: AddNewReferralDrawerProps) {
         comment: fields.comment || undefined,
       });
 
-      bumpRefresh((x) => x + 1);
       onClose();
     } finally {
       setSaving(false);

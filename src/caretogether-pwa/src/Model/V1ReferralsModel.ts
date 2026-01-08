@@ -1,36 +1,11 @@
-import { selector, atom } from 'recoil';
 import {
   V1ReferralRecordsCommand,
   CreateV1Referral,
   CloseV1Referral,
   ReopenV1Referral,
 } from '../GeneratedClient';
-import { api } from '../Api/Api';
-import { currentLocationQuery, currentOrganizationQuery } from './Data';
 import { useAtomicRecordsCommandCallback } from './DirectoryModel';
 import { commandFactory } from './CommandFactory';
-
-export const referralsRefreshTrigger = atom<number>({
-  key: 'referralsRefreshTrigger',
-  default: 0,
-});
-
-export const referralsQuery = selector({
-  key: 'referralsQuery',
-  get: async ({ get }) => {
-    get(referralsRefreshTrigger);
-
-    const location = get(currentLocationQuery);
-    const organization = get(currentOrganizationQuery);
-
-    if (!location || !organization) return [];
-
-    return api.v1Referrals.listReferrals(
-      organization.organizationId,
-      location.locationId
-    );
-  },
-});
 
 interface CreateReferralPayload {
   familyId: string | null;

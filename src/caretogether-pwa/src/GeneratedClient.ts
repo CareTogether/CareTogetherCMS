@@ -1059,64 +1059,6 @@ export class UsersClient {
     }
 }
 
-export class V1ReferralsClient {
-    private http: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> };
-    private baseUrl: string;
-    protected jsonParseReviver: ((key: string, value: any) => any) | undefined = undefined;
-
-    constructor(baseUrl?: string, http?: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> }) {
-        this.http = http ? http : window as any;
-        this.baseUrl = baseUrl ?? "";
-    }
-
-    listReferrals(organizationId: string, locationId: string): Promise<V1Referral[]> {
-        let url_ = this.baseUrl + "/api/{organizationId}/{locationId}/referrals";
-        if (organizationId === undefined || organizationId === null)
-            throw new Error("The parameter 'organizationId' must be defined.");
-        url_ = url_.replace("{organizationId}", encodeURIComponent("" + organizationId));
-        if (locationId === undefined || locationId === null)
-            throw new Error("The parameter 'locationId' must be defined.");
-        url_ = url_.replace("{locationId}", encodeURIComponent("" + locationId));
-        url_ = url_.replace(/[?&]$/, "");
-
-        let options_: RequestInit = {
-            method: "GET",
-            headers: {
-                "Accept": "application/json"
-            }
-        };
-
-        return this.http.fetch(url_, options_).then((_response: Response) => {
-            return this.processListReferrals(_response);
-        });
-    }
-
-    protected processListReferrals(response: Response): Promise<V1Referral[]> {
-        const status = response.status;
-        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
-        if (status === 200) {
-            return response.text().then((_responseText) => {
-            let result200: any = null;
-            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
-            if (Array.isArray(resultData200)) {
-                result200 = [] as any;
-                for (let item of resultData200)
-                    result200!.push(V1Referral.fromJS(item));
-            }
-            else {
-                result200 = <any>null;
-            }
-            return result200;
-            });
-        } else if (status !== 200 && status !== 204) {
-            return response.text().then((_responseText) => {
-            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
-            });
-        }
-        return Promise.resolve<V1Referral[]>(null as any);
-    }
-}
-
 export class ValueTupleOfGuidAndSmsMessageResult implements IValueTupleOfGuidAndSmsMessageResult {
     item1!: string;
     item2!: SmsMessageResult;
@@ -4107,6 +4049,11 @@ export abstract class RecordsAggregate implements IRecordsAggregate {
         }
         if (data["discriminator"] === "FamilyRecordsAggregate") {
             let result = new FamilyRecordsAggregate();
+            result.init(data);
+            return result;
+        }
+        if (data["discriminator"] === "ReferralRecordsAggregate") {
+            let result = new ReferralRecordsAggregate();
             result.init(data);
             return result;
         }
@@ -7695,6 +7642,112 @@ export interface INote {
 export enum NoteStatus {
     Draft = 0,
     Approved = 1,
+}
+
+export class ReferralRecordsAggregate extends RecordsAggregate implements IReferralRecordsAggregate {
+    referral!: V1Referral;
+
+    constructor(data?: IReferralRecordsAggregate) {
+        super(data);
+        if (!data) {
+            this.referral = new V1Referral();
+        }
+        this._discriminator = "ReferralRecordsAggregate";
+    }
+
+    init(_data?: any) {
+        super.init(_data);
+        if (_data) {
+            this.referral = _data["referral"] ? V1Referral.fromJS(_data["referral"]) : new V1Referral();
+        }
+    }
+
+    static fromJS(data: any): ReferralRecordsAggregate {
+        data = typeof data === 'object' ? data : {};
+        let result = new ReferralRecordsAggregate();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["referral"] = this.referral ? this.referral.toJSON() : <any>undefined;
+        super.toJSON(data);
+        return data;
+    }
+}
+
+export interface IReferralRecordsAggregate extends IRecordsAggregate {
+    referral: V1Referral;
+}
+
+export class V1Referral implements IV1Referral {
+    referralId!: string;
+    familyId?: string | undefined;
+    createdAtUtc!: Date;
+    title!: string;
+    status!: V1ReferralStatus;
+    comment?: string | undefined;
+    closedAtUtc?: Date | undefined;
+    closeReason?: string | undefined;
+
+    constructor(data?: IV1Referral) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.referralId = _data["referralId"];
+            this.familyId = _data["familyId"];
+            this.createdAtUtc = _data["createdAtUtc"] ? new Date(_data["createdAtUtc"].toString()) : <any>undefined;
+            this.title = _data["title"];
+            this.status = _data["status"];
+            this.comment = _data["comment"];
+            this.closedAtUtc = _data["closedAtUtc"] ? new Date(_data["closedAtUtc"].toString()) : <any>undefined;
+            this.closeReason = _data["closeReason"];
+        }
+    }
+
+    static fromJS(data: any): V1Referral {
+        data = typeof data === 'object' ? data : {};
+        let result = new V1Referral();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["referralId"] = this.referralId;
+        data["familyId"] = this.familyId;
+        data["createdAtUtc"] = this.createdAtUtc ? this.createdAtUtc.toISOString() : <any>undefined;
+        data["title"] = this.title;
+        data["status"] = this.status;
+        data["comment"] = this.comment;
+        data["closedAtUtc"] = this.closedAtUtc ? this.closedAtUtc.toISOString() : <any>undefined;
+        data["closeReason"] = this.closeReason;
+        return data;
+    }
+}
+
+export interface IV1Referral {
+    referralId: string;
+    familyId?: string | undefined;
+    createdAtUtc: Date;
+    title: string;
+    status: V1ReferralStatus;
+    comment?: string | undefined;
+    closedAtUtc?: Date | undefined;
+    closeReason?: string | undefined;
+}
+
+export enum V1ReferralStatus {
+    Open = 0,
+    Closed = 1,
 }
 
 export abstract class AtomicRecordsCommand implements IAtomicRecordsCommand {
@@ -14271,75 +14324,6 @@ export interface IAccountLocationAccess {
     locationId: string;
     personId: string;
     roles: string[];
-}
-
-export class V1Referral implements IV1Referral {
-    referralId!: string;
-    familyId?: string | undefined;
-    createdAtUtc!: Date;
-    title!: string;
-    status!: V1ReferralStatus;
-    comment?: string | undefined;
-    closedAtUtc?: Date | undefined;
-    closeReason?: string | undefined;
-
-    constructor(data?: IV1Referral) {
-        if (data) {
-            for (var property in data) {
-                if (data.hasOwnProperty(property))
-                    (<any>this)[property] = (<any>data)[property];
-            }
-        }
-    }
-
-    init(_data?: any) {
-        if (_data) {
-            this.referralId = _data["referralId"];
-            this.familyId = _data["familyId"];
-            this.createdAtUtc = _data["createdAtUtc"] ? new Date(_data["createdAtUtc"].toString()) : <any>undefined;
-            this.title = _data["title"];
-            this.status = _data["status"];
-            this.comment = _data["comment"];
-            this.closedAtUtc = _data["closedAtUtc"] ? new Date(_data["closedAtUtc"].toString()) : <any>undefined;
-            this.closeReason = _data["closeReason"];
-        }
-    }
-
-    static fromJS(data: any): V1Referral {
-        data = typeof data === 'object' ? data : {};
-        let result = new V1Referral();
-        result.init(data);
-        return result;
-    }
-
-    toJSON(data?: any) {
-        data = typeof data === 'object' ? data : {};
-        data["referralId"] = this.referralId;
-        data["familyId"] = this.familyId;
-        data["createdAtUtc"] = this.createdAtUtc ? this.createdAtUtc.toISOString() : <any>undefined;
-        data["title"] = this.title;
-        data["status"] = this.status;
-        data["comment"] = this.comment;
-        data["closedAtUtc"] = this.closedAtUtc ? this.closedAtUtc.toISOString() : <any>undefined;
-        data["closeReason"] = this.closeReason;
-        return data;
-    }
-}
-
-export interface IV1Referral {
-    referralId: string;
-    familyId?: string | undefined;
-    createdAtUtc: Date;
-    title: string;
-    status: V1ReferralStatus;
-    comment?: string | undefined;
-    closedAtUtc?: Date | undefined;
-    closeReason?: string | undefined;
-}
-
-export enum V1ReferralStatus {
-    Open = 0,
-    Closed = 1,
 }
 
 function formatDate(d: Date) {

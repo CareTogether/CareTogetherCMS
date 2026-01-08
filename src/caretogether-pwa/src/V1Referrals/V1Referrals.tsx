@@ -19,7 +19,7 @@ import { AddNewReferralDrawer } from './AddNewReferralDrawer';
 import { ReferralDetailsPage } from './ReferralDetailsPage';
 import { useFamilyLookup } from '../Model/DirectoryModel';
 import { familyNameString } from '../Families/FamilyName';
-import { referralsQuery } from '../Model/V1ReferralsModel';
+import { visibleReferralsQuery } from '../Model/Data';
 import { V1ReferralStatus } from '../GeneratedClient';
 
 function statusToUi(status: V1ReferralStatus): 'OPEN' | 'CLOSED' {
@@ -29,7 +29,7 @@ function statusToUi(status: V1ReferralStatus): 'OPEN' | 'CLOSED' {
 export function V1Referrals() {
   useScreenTitle('Referrals');
 
-  const referralsLoadable = useRecoilValueLoadable(referralsQuery);
+  const referralsLoadable = useRecoilValueLoadable(visibleReferralsQuery);
   const familyLookup = useFamilyLookup();
 
   const [filterText, setFilterText] = useState('');

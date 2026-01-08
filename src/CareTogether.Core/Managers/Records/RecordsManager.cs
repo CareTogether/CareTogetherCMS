@@ -142,6 +142,26 @@ namespace CareTogether.Managers.Records
                 locationId
             );
 
+            var referrals = await v1ReferralsResource.ListReferralsAsync(
+                organizationId,
+                locationId
+            );
+
+ var canViewReferrals = await authorizationEngine.AuthorizeV1ReferralReadAsync(
+    organizationId,
+    locationId,
+    userContext
+);
+
+var renderedReferrals = canViewReferrals
+    ? referrals
+        .Select(r => new ReferralRecordsAggregate(r))
+        .Cast<RecordsAggregate>()
+        .ToImmutableList()
+    : ImmutableList<RecordsAggregate>.Empty;
+
+
+
             var visibleCommunities = (
                 await communities
                     .Select(async community =>
@@ -177,6 +197,7 @@ namespace CareTogether.Managers.Records
             return renderedFamilies
                 .Cast<RecordsAggregate>()
                 .Concat(renderedCommunities)
+                .Concat(renderedReferrals)
                 .ToImmutableList();
         }
 
@@ -703,6 +724,23 @@ namespace CareTogether.Managers.Records
                 organizationId,
                 locationId
             );
+
+            if (command is V1ReferralRecordsCommand referralCommand)
+{
+    var referralId = referralCommand.Command.ReferralId;
+
+    var referral = (
+        await v1ReferralsResource.ListReferralsAsync(
+            organizationId,
+            locationId
+        )
+    ).Single(r => r.ReferralId == referralId);
+
+    return ImmutableList.Create<RecordsAggregate>(
+        new ReferralRecordsAggregate(referral)
+    );
+}
+
 
             if (command is CommunityRecordsCommand c)
             {

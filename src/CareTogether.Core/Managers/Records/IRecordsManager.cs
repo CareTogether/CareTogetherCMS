@@ -115,6 +115,10 @@ namespace CareTogether.Managers.Records
     public sealed record CommunityRecordsAggregate(CommunityInfo Community)
         : RecordsAggregate(Community.Community.Id);
 
+    public sealed record ReferralRecordsAggregate(V1Referral Referral)
+        : RecordsAggregate(Referral.ReferralId);
+
+
     public interface IRecordsManager
     {
         Task<ImmutableList<RecordsAggregate>> ListVisibleAggregatesAsync(
