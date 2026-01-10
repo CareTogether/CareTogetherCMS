@@ -35,7 +35,7 @@ export interface StepGroup {
   onExpansionChange?: (expanded: boolean) => void;
 }
 
-export interface IntakeStepNavProps {
+export interface StepNavProps {
   /**
    * Optional title displayed above the accordions (primary.dark color, weight 600, letter-spacing 0.15px)
    */
@@ -59,15 +59,9 @@ export interface IntakeStepNavProps {
 }
 
 /**
- * Intake navigation component with vertical steps organized into accordion groups.
+ * Step navigation component with vertical steps organized into accordion groups.
  */
-export const IntakeStepNav = ({
-  title,
-  stepGroups,
-  activeStep,
-  onStepClick,
-  sx,
-}: IntakeStepNavProps) => {
+export const StepNav = ({ title, stepGroups, activeStep, onStepClick, sx }: StepNavProps) => {
   // Calculate global step indices and completion counts
   let globalStepOffset = 0;
   const groupsWithOffsets = stepGroups.map((group) => {

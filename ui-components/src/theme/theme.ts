@@ -10,7 +10,7 @@ import "./theme.d";
  * Tertiary: #00616F (medium teal - available as "tertiary" color prop)
  * Background: #F6FCFC (light cyan)
  * Border radius: 8px for shapes, 24px for buttons
- * Font: Poppins
+ * Font: Inter
  */
 export const theme = createTheme({
   palette: {
@@ -49,57 +49,57 @@ export const theme = createTheme({
     borderRadius: 8,
   },
   typography: {
-    fontFamily: '"Poppins", "Helvetica", "Arial", sans-serif',
+    fontFamily: '"Inter", "Helvetica", "Arial", sans-serif',
     h1: {
-      fontFamily: '"Poppins", "Helvetica", "Arial", sans-serif',
+      fontFamily: '"Inter", "Helvetica", "Arial", sans-serif',
       fontSize: "40px",
       fontWeight: 500,
       lineHeight: 1.167,
       letterSpacing: "-1.5px",
     },
     h2: {
-      fontFamily: '"Poppins", "Helvetica", "Arial", sans-serif',
+      fontFamily: '"Inter", "Helvetica", "Arial", sans-serif',
       fontSize: "32px",
       fontWeight: 500,
       lineHeight: 1.2,
       letterSpacing: "-0.5px",
     },
     h3: {
-      fontFamily: '"Poppins", "Helvetica", "Arial", sans-serif',
+      fontFamily: '"Inter", "Helvetica", "Arial", sans-serif',
       fontSize: "28px",
       fontWeight: 500,
       lineHeight: 1.25,
       letterSpacing: "0px",
     },
     h4: {
-      fontFamily: '"Poppins", "Helvetica", "Arial", sans-serif',
+      fontFamily: '"Inter", "Helvetica", "Arial", sans-serif',
       fontSize: "22px",
       fontWeight: 700,
       lineHeight: 1.3,
       letterSpacing: "0.25px",
     },
     h5: {
-      fontFamily: '"Poppins", "Helvetica", "Arial", sans-serif',
+      fontFamily: '"Inter", "Helvetica", "Arial", sans-serif',
       fontSize: "20px",
       fontWeight: 500,
       lineHeight: 1.35,
       letterSpacing: "0px",
     },
     h6: {
-      fontFamily: '"Poppins", "Helvetica", "Arial", sans-serif',
+      fontFamily: '"Inter", "Helvetica", "Arial", sans-serif',
       fontSize: "16px",
       fontWeight: 600,
       lineHeight: 1.4,
       letterSpacing: "0.15px",
     },
     body1: {
-      fontFamily: '"Poppins", "Helvetica", "Arial", sans-serif',
+      fontFamily: '"Inter", "Helvetica", "Arial", sans-serif',
     },
     body2: {
-      fontFamily: '"Poppins", "Helvetica", "Arial", sans-serif',
+      fontFamily: '"Inter", "Helvetica", "Arial", sans-serif',
     },
     button: {
-      fontFamily: '"Poppins", "Helvetica", "Arial", sans-serif',
+      fontFamily: '"Inter", "Helvetica", "Arial", sans-serif',
       fontWeight: 500,
     },
     subtitle1: {

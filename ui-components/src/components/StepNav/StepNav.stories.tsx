@@ -1,15 +1,15 @@
 import type { Meta, StoryObj } from "@storybook/react";
-import { IntakeStepNav } from "./IntakeStepNav";
+import { StepNav } from "./StepNav";
 import { Box } from "@mui/material";
 
-const meta: Meta<typeof IntakeStepNav> = {
-  title: "Components/Navigation/IntakeStepNav",
-  component: IntakeStepNav,
+const meta: Meta<typeof StepNav> = {
+  title: "Components/Navigation/StepNav",
+  component: StepNav,
   tags: ["autodocs"],
 };
 
 export default meta;
-type Story = StoryObj<typeof IntakeStepNav>;
+type Story = StoryObj<typeof StepNav>;
 
 export const SingleGroup: Story = {
   args: {
@@ -138,7 +138,7 @@ export const WithCustomExpansion: Story = {
 export const InContainer: Story = {
   render: (args) => (
     <Box sx={{ maxWidth: 600, mx: "auto", p: 3 }}>
-      <IntakeStepNav {...args} />
+      <StepNav {...args} />
     </Box>
   ),
   args: {

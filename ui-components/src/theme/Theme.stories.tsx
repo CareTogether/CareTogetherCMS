@@ -200,7 +200,7 @@ export const CompleteShowcase: Story = {
           gutterBottom
           sx={{ mb: 3, color: "text.secondary" }}
         >
-          Font Family: Poppins | Border Radius: 8px
+          Font Family: Inter | Border Radius: 8px
         </Typography>
 
         <Stack spacing={2}>
@@ -705,7 +705,7 @@ export const TypographyOnly: Story = {
         gutterBottom
         sx={{ mb: 4, color: "text.secondary" }}
       >
-        Font Family: Poppins, Helvetica, Arial, sans-serif
+        Font Family: Inter, Helvetica, Arial, sans-serif
       </Typography>
 
       <Stack spacing={3}>

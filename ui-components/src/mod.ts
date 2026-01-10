@@ -29,10 +29,10 @@ export { ColoredChip } from "./components/index";
 export type { ColoredChipProps } from "./components/index";
 
 // Navigation Components
-export { NavItem, IntakeStepNav, Steps } from "./components/index";
+export { NavItem, StepNav, Steps } from "./components/index";
 export type {
   NavItemProps,
-  IntakeStepNavProps,
+  StepNavProps,
   StepsProps,
   StepItem,
   StepGroup,

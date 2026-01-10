@@ -24,11 +24,11 @@ export type {
 export { ColoredChip } from "./Chips";
 export type { ColoredChipProps } from "./Chips";
 
-export { IntakeStepNav } from "./IntakeStepNav";
-export type { IntakeStepNavProps, StepItem, StepGroup } from "./IntakeStepNav";
+export { StepNav } from "./StepNav";
+export type { StepNavProps, StepItem, StepGroup } from "./StepNav";
 
-export { Steps } from "./IntakeStepNav";
-export type { StepsProps } from "./IntakeStepNav";
+export { Steps } from "./StepNav";
+export type { StepsProps } from "./StepNav";
 
 export { NavItem } from "./NavItem";
 export type { NavItemProps } from "./NavItem";
