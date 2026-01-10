@@ -11,6 +11,9 @@ import "@fontsource/inter/600.css";
 import "@fontsource/inter/700.css";
 import "@fontsource/material-icons";
 
+// Import theme type augmentations globally for all stories
+import "../src/theme/theme.d";
+
 const preview: Preview = {
   parameters: {
     actions: { argTypesRegex: "^on[A-Z].*" },

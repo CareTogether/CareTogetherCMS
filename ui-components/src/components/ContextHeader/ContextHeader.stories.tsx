@@ -5,6 +5,7 @@ import { Button, Typography, Tab, IconButton, Box } from "@mui/material";
 import { useState } from "react";
 import AccessTimeFilledIcon from "@mui/icons-material/AccessTimeFilled";
 import MoreVertIcon from "@mui/icons-material/MoreVert";
+import { Tag } from "@mui/icons-material";
 
 const meta: Meta<typeof ContextHeader> = {
   title: "Components/Layout/ContextHeader",
@@ -67,7 +68,11 @@ export const BreadcrumbsWithChip: Story = {
           { label: "Smith Family" },
         ]}
         rightContent={
-          <ColoredChip icon={<AccessTimeFilledIcon />} iconColor="error" label="Days remaining" />
+          <ColoredChip
+            startIcon={<AccessTimeFilledIcon />}
+            iconColor="error"
+            label="Days remaining"
+          />
         }
       />
       <ContextHeader.Title title="Smith Family" />
@@ -185,7 +190,7 @@ export const WithMetadata: Story = {
       />
       <ContextHeader.Title
         title="Jane Doe"
-        chip={<ColoredChip label="Tag" icon={<span>🏷️</span>} />}
+        chip={<ColoredChip label="Tag" startIcon={<Tag />} />}
         actions={
           <>
             <Button variant="outlined" size="small" color="secondary">
@@ -223,7 +228,7 @@ export const WithTabs: Story = {
         />
         <ContextHeader.Title
           title="Smith Family"
-          chip={<ColoredChip label="Tag" icon={<span>🏷️</span>} />}
+          chip={<ColoredChip label="Tag" startIcon={<Tag />} />}
         />
         <ContextHeader.Content>
           <Typography variant="body2">
@@ -259,7 +264,7 @@ export const TabsWithMetadata: Story = {
         />
         <ContextHeader.Title
           title="Smith Family"
-          chip={<ColoredChip label="Tag" icon={<span>🏷️</span>} />}
+          chip={<ColoredChip label="Tag" startIcon={<Tag />} />}
         />
         <ContextHeader.Content>
           <Typography variant="body2">Gender, X years old, Culture | School | Source:</Typography>
