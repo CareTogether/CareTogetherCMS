@@ -55,3 +55,6 @@ declare module "@mui/material/Badge" {
     tertiary: true;
   }
 }
+
+// This export statement makes the file a module (required for TypeScript)
+export {};

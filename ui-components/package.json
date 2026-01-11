@@ -14,7 +14,7 @@
       "require": "./dist/index.cjs"
     },
     "./theme": {
-      "types": "./dist/theme.d.ts",
+      "types": "./dist/theme/theme.d.ts",
       "import": "./dist/theme.js",
       "require": "./dist/theme.cjs"
     }
@@ -26,7 +26,7 @@
     "dev": "npm run storybook",
     "storybook": "storybook dev -p 6006",
     "build-storybook": "storybook build",
-    "build": "tsc && vite build",
+    "build": "vite build",
     "type-check": "tsc --noEmit",
     "lint": "eslint src --ext .ts,.tsx",
     "lint:fix": "eslint src --ext .ts,.tsx --fix",
