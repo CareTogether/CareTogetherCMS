@@ -1,7 +1,7 @@
 import { CssBaseline, ThemeProvider } from "@mui/material";
 import { withThemeFromJSXProvider } from "@storybook/addon-themes";
 import { theme } from "../src/theme/theme.ts";
-import type { Preview } from "@storybook/react";
+import type { Preview } from "@storybook/react-vite";
 
 // Font imports per MUI recipe
 import "@fontsource/inter/300.css";

@@ -1,4 +1,4 @@
-import type { Meta, StoryObj } from "@storybook/react";
+import type { Meta, StoryObj } from "@storybook/react-vite";
 import { RecentActivity } from "./RecentActivity";
 import { ActivityItem } from "../ActivityItem";
 import { ActivityIcon } from "../ActivityIcon";

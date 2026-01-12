@@ -1,4 +1,4 @@
-import type { Meta, StoryObj } from "@storybook/react";
+import type { Meta, StoryObj } from "@storybook/react-vite";
 import { ContextHeader } from "./ContextHeader";
 import { ColoredChip } from "../Chips/ColoredChip";
 import { Button, Typography, Tab, IconButton, Box } from "@mui/material";

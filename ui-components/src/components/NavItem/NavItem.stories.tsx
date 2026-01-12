@@ -1,4 +1,4 @@
-import type { Meta, StoryObj } from "@storybook/react";
+import type { Meta, StoryObj } from "@storybook/react-vite";
 import { NavItem } from "./NavItem";
 import { Box } from "@mui/material";
 import HomeIcon from "@mui/icons-material/Home";
