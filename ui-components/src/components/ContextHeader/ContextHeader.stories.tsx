@@ -68,11 +68,7 @@ export const BreadcrumbsWithChip: Story = {
           { label: "Smith Family" },
         ]}
         rightContent={
-          <ColoredChip
-            startIcon={<AccessTimeFilledIcon />}
-            iconColor="error"
-            label="Days remaining"
-          />
+          <ColoredChip startIcon={<AccessTimeFilledIcon />} color="error" label="Days remaining" />
         }
       />
       <ContextHeader.Title title="Smith Family" />
@@ -122,7 +118,7 @@ export const TitleWithChipAndActions: Story = {
       />
       <ContextHeader.Title
         title="1 week hosting for newborn baby"
-        chip={<ColoredChip label="Primary" iconColor="primary" />}
+        chip={<ColoredChip label="Primary" color="primary" />}
         actions={
           <>
             <Button variant="outlined" size="small" color="secondary">
@@ -153,7 +149,7 @@ export const WithContentParagraph: Story = {
       />
       <ContextHeader.Title
         title="Referral Name"
-        chip={<ColoredChip label="Territory" iconColor="info" />}
+        chip={<ColoredChip label="Territory" color="info" />}
         actions={
           <>
             <Button variant="outlined" size="small" color="secondary">
@@ -331,7 +327,7 @@ export const FullExample: Story = {
             { label: "Person 1", onClick: () => console.log("Selected Person 1") },
             { label: "Person 2", onClick: () => console.log("Selected Person 2") },
           ]}
-          chip={<ColoredChip label="Territory" iconColor="info" />}
+          chip={<ColoredChip label="Territory" color="info" />}
           actions={
             <>
               <Button variant="outlined" size="small" color="secondary">

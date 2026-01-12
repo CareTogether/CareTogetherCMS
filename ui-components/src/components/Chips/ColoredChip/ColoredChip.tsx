@@ -17,7 +17,7 @@ export interface ColoredChipProps extends ColoredChipBaseProps {
    * Icon color - can be a theme color key or custom hex color
    * @default "grey.900"
    */
-  iconColor?: "success" | "info" | "warning" | "error" | "primary" | "secondary" | string;
+  color?: "success" | "info" | "warning" | "error" | "primary" | "secondary" | string;
 }
 
 /**
@@ -26,7 +26,7 @@ export interface ColoredChipProps extends ColoredChipBaseProps {
 export const ColoredChip = ({
   label,
   startIcon,
-  iconColor = "grey.900",
+  color = "grey.900",
   size = "small",
   sx,
   ...rest
@@ -35,7 +35,7 @@ export const ColoredChip = ({
 
   // Resolve the icon color from theme or use custom color
   const resolvedIconColor =
-    iconColor === "grey.900" ? theme.palette.grey[900] : resolveThemeColor(iconColor, theme);
+    color === "grey.900" ? theme.palette.grey[900] : resolveThemeColor(color, theme);
 
   // Create lightened background color
   const backgroundColor = alpha(resolvedIconColor, 0.12);
