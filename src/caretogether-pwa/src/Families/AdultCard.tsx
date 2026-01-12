@@ -163,7 +163,8 @@ export function AdultCard({ familyId, personId }: AdultCardProps) {
                 items={[
                   'Adult',
                   <AgeText age={adult.item1.age} />,
-                  adult.item1.gender && Gender[adult.item1.gender],
+                  adult.item1.gender !== undefined &&
+                    Gender[adult.item1.gender],
                   adult.item1.ethnicity,
                 ].filter(Boolean)}
               />
