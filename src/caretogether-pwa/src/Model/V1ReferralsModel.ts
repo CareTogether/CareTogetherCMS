@@ -3,6 +3,7 @@ import {
   CreateV1Referral,
   CloseV1Referral,
   ReopenV1Referral,
+  UpdateV1ReferralFamily,
 } from '../GeneratedClient';
 import { useAtomicRecordsCommandCallback } from './DirectoryModel';
 import { commandFactory } from './CommandFactory';
@@ -58,9 +59,23 @@ export function useV1ReferralsModel() {
     }
   );
 
+  const updateReferralFamily = useAtomicRecordsCommandCallback(
+    async (referralId: string, familyId: string) => {
+      const command = new V1ReferralRecordsCommand();
+
+      command.command = commandFactory(UpdateV1ReferralFamily, {
+        referralId,
+        familyId,
+      });
+
+      return command;
+    }
+  );
+
   return {
     createReferral,
     closeReferral,
     reopenReferral,
+    updateReferralFamily,
   };
 }
