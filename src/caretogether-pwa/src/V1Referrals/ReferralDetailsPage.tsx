@@ -18,11 +18,16 @@ import { FamilyName, familyNameString } from '../Families/FamilyName';
 import { useScreenTitle } from '../Shell/ShellScreenTitle';
 import { visibleReferralsQuery } from '../Model/Data';
 import { useV1ReferralsModel } from '../Model/V1ReferralsModel';
-import { V1ReferralStatus } from '../GeneratedClient';
+import {
+  V1ReferralStatus,
+  CustomField,
+  CustomFieldType,
+} from '../GeneratedClient';
 import { CreatePartneringFamilyDialog } from '../V1Cases/CreatePartneringFamilyDrawer';
 import { partneringFamiliesData } from '../Model/V1CasesModel';
 import { useLoadable } from '../Hooks/useLoadable';
 import { EditReferralDrawer } from '../V1Referrals/EditReferralDrawer';
+import { policyData } from '../Model/ConfigurationModel';
 
 function formatStatusWithDate(
   status: V1ReferralStatus,
@@ -52,6 +57,7 @@ export function ReferralDetailsPage() {
   const referrals = useRecoilValue(visibleReferralsQuery);
   const familyLookup = useFamilyLookup();
   const families = useLoadable(partneringFamiliesData) || [];
+  const policy = useRecoilValue(policyData);
 
   const { closeReferral, reopenReferral, updateReferralFamily } =
     useV1ReferralsModel();
@@ -90,6 +96,9 @@ export function ReferralDetailsPage() {
     label: familyNameString(f),
     family: f,
   }));
+
+  const referralCustomFields: CustomField[] =
+    policy.referralPolicy?.customFields ?? [];
 
   async function handleToggleReferral() {
     if (!referral || working) return;
@@ -213,6 +222,34 @@ export function ReferralDetailsPage() {
       </Grid>
 
       <Divider sx={{ width: '100%', mb: 2 }} />
+
+      {referralCustomFields.length > 0 && (
+        <Grid item xs={12} sx={{ mb: 2 }}>
+          <Typography fontWeight={600} sx={{ mb: 1 }}>
+            Referral Custom Fields
+          </Typography>
+
+          {referralCustomFields.map((field) => {
+            const value = referral.completedCustomFields?.[field.name]?.value;
+
+            let displayValue: string = '—';
+
+            if (value !== null && value !== undefined && value !== '') {
+              if (field.type === CustomFieldType.Boolean) {
+                displayValue = value === true ? 'Yes' : 'No';
+              } else {
+                displayValue = String(value);
+              }
+            }
+
+            return (
+              <Typography key={field.name} variant="body2" sx={{ mb: 0.5 }}>
+                <strong>{field.name}:</strong> {displayValue}
+              </Typography>
+            );
+          })}
+        </Grid>
+      )}
 
       {referral.comment && (
         <Grid item xs={12}>

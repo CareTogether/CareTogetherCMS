@@ -5,6 +5,8 @@ import {
   ReopenV1Referral,
   UpdateV1ReferralDetails,
   UpdateV1ReferralFamily,
+  UpdateCustomV1ReferralField,
+  CustomField,
 } from '../GeneratedClient';
 import { useAtomicRecordsCommandCallback } from './DirectoryModel';
 import { commandFactory } from './CommandFactory';
@@ -34,6 +36,26 @@ export function useV1ReferralsModel() {
         createdAtUtc: payload.openedAtUtc,
         title: payload.title,
         comment: payload.comment,
+      });
+
+      return command;
+    }
+  );
+
+  const updateCustomReferralField = useAtomicRecordsCommandCallback(
+    async (
+      referralId: string,
+      customField: CustomField,
+      value: boolean | string | null
+    ) => {
+      const command = new V1ReferralRecordsCommand();
+
+      command.command = commandFactory(UpdateCustomV1ReferralField, {
+        referralId,
+        completedCustomFieldId: crypto.randomUUID(),
+        customFieldName: customField.name,
+        customFieldType: customField.type,
+        value,
       });
 
       return command;
@@ -98,9 +120,10 @@ export function useV1ReferralsModel() {
 
   return {
     createReferral,
+    updateCustomReferralField,
     updateReferralDetails,
+    updateReferralFamily,
     closeReferral,
     reopenReferral,
-    updateReferralFamily,
   };
 }

@@ -1,6 +1,9 @@
 using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Linq;
+using CareTogether.Resources.V1Cases;
+using CareTogether.Resources.Policies;
 
 namespace CareTogether.Resources.V1Referrals
 {
@@ -12,7 +15,8 @@ namespace CareTogether.Resources.V1Referrals
         V1ReferralStatus Status,
         string? Comment,
         DateTime? ClosedAtUtc,
-        string? CloseReason
+        string? CloseReason,
+        ImmutableDictionary<string, CompletedCustomFieldInfo> CompletedCustomFields
     )
     {
         public static V1Referral Rehydrate(IEnumerable<V1ReferralEvent> events)
@@ -31,7 +35,8 @@ namespace CareTogether.Resources.V1Referrals
                         V1ReferralStatus.Open,
                         created.Comment,
                         null,
-                        null
+                        null,
+                        ImmutableDictionary<string, CompletedCustomFieldInfo>.Empty
                     ),
 
                     V1ReferralFamilyUpdated updated => referral! with
@@ -59,6 +64,22 @@ namespace CareTogether.Resources.V1Referrals
                         Status = V1ReferralStatus.Open,
                         ClosedAtUtc = null,
                         CloseReason = null
+                    },
+
+                    V1ReferralCustomFieldUpdated cf => referral! with
+                    {
+                        CompletedCustomFields =
+                            referral!.CompletedCustomFields.SetItem(
+                                cf.CustomFieldName,
+                                new CompletedCustomFieldInfo(
+                                    cf.ActorUserId,
+                                    cf.UpdatedAtUtc,
+                                    cf.CompletedCustomFieldId,
+                                    cf.CustomFieldName,
+                                    cf.CustomFieldType,
+                                    cf.Value
+                                )
+                            )
                     },
 
                     _ => referral

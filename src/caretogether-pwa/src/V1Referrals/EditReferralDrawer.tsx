@@ -16,15 +16,13 @@ import { useLoadable } from '../Hooks/useLoadable';
 import { partneringFamiliesData } from '../Model/V1CasesModel';
 import { useV1ReferralsModel } from '../Model/V1ReferralsModel';
 import { policyData } from '../Model/ConfigurationModel';
-import { CustomField } from '../GeneratedClient';
+import { CustomField, V1Referral } from '../GeneratedClient';
 import { CustomFieldInput } from '../Generic/CustomFieldInput';
 
 import {
   addReferralSchema,
   AddReferralFormValues,
 } from '../V1Referrals/ReferralSchema';
-
-import { V1Referral } from '../GeneratedClient';
 
 interface EditReferralDrawerProps {
   referral: V1Referral;
@@ -37,7 +35,9 @@ export function EditReferralDrawer({
 }: EditReferralDrawerProps) {
   const families = useLoadable(partneringFamiliesData) || [];
   const policy = useRecoilValue(policyData);
-  const { updateReferralDetails } = useV1ReferralsModel();
+
+  const { updateReferralDetails, updateCustomReferralField } =
+    useV1ReferralsModel();
 
   const referralCustomFields: CustomField[] =
     policy.referralPolicy?.customFields ?? [];
@@ -62,7 +62,12 @@ export function EditReferralDrawer({
       title: referral.title,
       familyId: referral.familyId ?? null,
       comment: referral.comment ?? '',
-      customFields: {},
+      customFields: Object.fromEntries(
+        referralCustomFields.map((field) => [
+          field.name,
+          referral.completedCustomFields?.[field.name]?.value ?? undefined,
+        ])
+      ),
     },
   });
 
@@ -74,6 +79,13 @@ export function EditReferralDrawer({
       comment: data.comment || undefined,
     });
 
+    for (const field of referralCustomFields) {
+      const value = data.customFields?.[field.name];
+
+      if (value !== undefined) {
+        await updateCustomReferralField(referral.referralId, field, value);
+      }
+    }
     onClose();
   };
 
@@ -90,11 +102,7 @@ export function EditReferralDrawer({
         },
       }}
     >
-      <form
-        onSubmit={(e) => {
-          return handleSubmit(onSubmit)(e);
-        }}
-      >
+      <form onSubmit={handleSubmit(onSubmit)}>
         <Grid container spacing={2}>
           <Grid item xs={12}>
             <Typography variant="h6">Edit Referral</Typography>
@@ -182,7 +190,7 @@ export function EditReferralDrawer({
                   <Grid item xs={12} key={field.name}>
                     <Typography
                       variant="body2"
-                      sx={{ fontWeight: 600, mb: 0.5 }}
+                      sx={{ mb: 0.5 }}
                       className="ph-unmask"
                     >
                       {field.name}

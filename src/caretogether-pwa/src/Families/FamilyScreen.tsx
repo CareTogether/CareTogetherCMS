@@ -57,7 +57,6 @@ import {
 } from '../Requirements/RequirementContext';
 import { ActivityTimeline } from '../Activities/ActivityTimeline';
 import { V1CaseComments } from '../V1Cases/V1CaseComments';
-import { V1CaseCustomField } from '../V1Cases/V1CaseCustomField';
 import { PrimaryContactEditor } from './PrimaryContactEditor';
 import {
   useScreenTitleComponent,
@@ -674,43 +673,7 @@ export function FamilyScreen() {
                 )}
             </Grid>
 
-            <Grid item md={4}>
-              {permissions(Permission.ViewV1CaseCustomFields) &&
-                (
-                  selectedV1Case?.completedCustomFields ||
-                  ([] as Array<CompletedCustomFieldInfo | string>)
-                )
-                  .concat(selectedV1Case?.missingCustomFields || [])
-                  .sort((a, b) =>
-                    (a instanceof CompletedCustomFieldInfo
-                      ? a.customFieldName!
-                      : a) <
-                    (b instanceof CompletedCustomFieldInfo
-                      ? b.customFieldName!
-                      : b)
-                      ? -1
-                      : (a instanceof CompletedCustomFieldInfo
-                            ? a.customFieldName!
-                            : a) >
-                          (b instanceof CompletedCustomFieldInfo
-                            ? b.customFieldName!
-                            : b)
-                        ? 1
-                        : 0
-                  )
-                  .map((customField) => (
-                    <V1CaseCustomField
-                      key={
-                        typeof customField === 'string'
-                          ? customField
-                          : customField.customFieldName
-                      }
-                      partneringFamilyId={familyId}
-                      v1CaseId={`${selectedV1Case!.id}`}
-                      customField={customField}
-                    />
-                  ))}
-            </Grid>
+            <Grid item md={4}></Grid>
 
             <Grid item xs={6} md={4}>
               {closeV1CaseDialogOpen &&

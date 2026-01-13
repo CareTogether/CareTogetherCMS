@@ -17,12 +17,12 @@ import { partneringFamiliesData } from '../Model/V1CasesModel';
 import { useV1ReferralsModel } from '../Model/V1ReferralsModel';
 import { policyData } from '../Model/ConfigurationModel';
 import { CustomField } from '../GeneratedClient';
-import { CustomFieldInput } from '../Generic/CustomFieldInput';
-
 import {
   addReferralSchema,
   AddReferralFormValues,
 } from '../V1Referrals/ReferralSchema';
+
+import { ReferralCustomFieldsSection } from '../V1Referrals/ReferralCustomFieldsSection';
 
 interface AddNewReferralDrawerProps {
   onClose: () => void;
@@ -31,7 +31,7 @@ interface AddNewReferralDrawerProps {
 export function AddNewReferralDrawer({ onClose }: AddNewReferralDrawerProps) {
   const families = useLoadable(partneringFamiliesData) || [];
   const policy = useRecoilValue(policyData);
-  const { createReferral } = useV1ReferralsModel();
+  const { createReferral, updateCustomReferralField } = useV1ReferralsModel();
 
   const referralCustomFields: CustomField[] =
     policy.referralPolicy?.customFields ?? [];
@@ -61,12 +61,22 @@ export function AddNewReferralDrawer({ onClose }: AddNewReferralDrawerProps) {
   });
 
   const onSubmit = async (data: AddReferralFormValues) => {
-    await createReferral(crypto.randomUUID(), {
+    const referralId = crypto.randomUUID();
+
+    await createReferral(referralId, {
       familyId: data.familyId,
       openedAtUtc: data.openedAtLocal,
       title: data.title,
       comment: data.comment || undefined,
     });
+
+    for (const customField of referralCustomFields) {
+      const value = data.customFields?.[customField.name];
+
+      if (value !== undefined && value !== null && value !== '') {
+        await updateCustomReferralField(referralId, customField, value);
+      }
+    }
 
     onClose();
   };
@@ -161,39 +171,11 @@ export function AddNewReferralDrawer({ onClose }: AddNewReferralDrawerProps) {
             />
           </Grid>
 
-          {referralCustomFields.length > 0 && (
-            <Grid item xs={12}>
-              <Typography sx={{ fontWeight: 600, mb: 1 }}>
-                Referral Details
-              </Typography>
-
-              <Grid container spacing={2}>
-                {referralCustomFields.map((field) => (
-                  <Grid item xs={12} key={field.name}>
-                    <Typography
-                      variant="body2"
-                      sx={{ fontWeight: 600, mb: 0.5 }}
-                      className="ph-unmask"
-                    >
-                      {field.name}
-                    </Typography>
-
-                    <Controller
-                      name={`customFields.${field.name}` as const}
-                      control={control}
-                      render={({ field: rhfField }) => (
-                        <CustomFieldInput
-                          customFieldPolicy={field}
-                          value={rhfField.value}
-                          onChange={rhfField.onChange}
-                        />
-                      )}
-                    />
-                  </Grid>
-                ))}
-              </Grid>
-            </Grid>
-          )}
+          <ReferralCustomFieldsSection
+            customFields={referralCustomFields}
+            control={control}
+            namePrefix="customFields"
+          />
 
           <Grid item xs={12}>
             <Controller

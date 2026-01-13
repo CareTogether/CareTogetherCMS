@@ -7690,6 +7690,7 @@ export class V1Referral implements IV1Referral {
     comment?: string | undefined;
     closedAtUtc?: Date | undefined;
     closeReason?: string | undefined;
+    completedCustomFields!: { [key: string]: CompletedCustomFieldInfo; };
 
     constructor(data?: IV1Referral) {
         if (data) {
@@ -7697,6 +7698,9 @@ export class V1Referral implements IV1Referral {
                 if (data.hasOwnProperty(property))
                     (<any>this)[property] = (<any>data)[property];
             }
+        }
+        if (!data) {
+            this.completedCustomFields = {};
         }
     }
 
@@ -7710,6 +7714,13 @@ export class V1Referral implements IV1Referral {
             this.comment = _data["comment"];
             this.closedAtUtc = _data["closedAtUtc"] ? new Date(_data["closedAtUtc"].toString()) : <any>undefined;
             this.closeReason = _data["closeReason"];
+            if (_data["completedCustomFields"]) {
+                this.completedCustomFields = {} as any;
+                for (let key in _data["completedCustomFields"]) {
+                    if (_data["completedCustomFields"].hasOwnProperty(key))
+                        (<any>this.completedCustomFields)![key] = _data["completedCustomFields"][key] ? CompletedCustomFieldInfo.fromJS(_data["completedCustomFields"][key]) : new CompletedCustomFieldInfo();
+                }
+            }
         }
     }
 
@@ -7730,6 +7741,13 @@ export class V1Referral implements IV1Referral {
         data["comment"] = this.comment;
         data["closedAtUtc"] = this.closedAtUtc ? this.closedAtUtc.toISOString() : <any>undefined;
         data["closeReason"] = this.closeReason;
+        if (this.completedCustomFields) {
+            data["completedCustomFields"] = {};
+            for (let key in this.completedCustomFields) {
+                if (this.completedCustomFields.hasOwnProperty(key))
+                    (<any>data["completedCustomFields"])[key] = this.completedCustomFields[key] ? this.completedCustomFields[key].toJSON() : <any>undefined;
+            }
+        }
         return data;
     }
 }
@@ -7743,6 +7761,7 @@ export interface IV1Referral {
     comment?: string | undefined;
     closedAtUtc?: Date | undefined;
     closeReason?: string | undefined;
+    completedCustomFields: { [key: string]: CompletedCustomFieldInfo; };
 }
 
 export enum V1ReferralStatus {
@@ -13093,6 +13112,11 @@ export abstract class V1ReferralCommand implements IV1ReferralCommand {
             result.init(data);
             return result;
         }
+        if (data["discriminator"] === "UpdateCustomV1ReferralField") {
+            let result = new UpdateCustomV1ReferralField();
+            result.init(data);
+            return result;
+        }
         if (data["discriminator"] === "UpdateV1ReferralDetails") {
             let result = new UpdateV1ReferralDetails();
             result.init(data);
@@ -13234,6 +13258,52 @@ export class ReopenV1Referral extends V1ReferralCommand implements IReopenV1Refe
 
 export interface IReopenV1Referral extends IV1ReferralCommand {
     reopenedAtUtc: Date;
+}
+
+export class UpdateCustomV1ReferralField extends V1ReferralCommand implements IUpdateCustomV1ReferralField {
+    completedCustomFieldId!: string;
+    customFieldName!: string;
+    customFieldType!: CustomFieldType;
+    value?: any | undefined;
+
+    constructor(data?: IUpdateCustomV1ReferralField) {
+        super(data);
+        this._discriminator = "UpdateCustomV1ReferralField";
+    }
+
+    init(_data?: any) {
+        super.init(_data);
+        if (_data) {
+            this.completedCustomFieldId = _data["completedCustomFieldId"];
+            this.customFieldName = _data["customFieldName"];
+            this.customFieldType = _data["customFieldType"];
+            this.value = _data["value"];
+        }
+    }
+
+    static fromJS(data: any): UpdateCustomV1ReferralField {
+        data = typeof data === 'object' ? data : {};
+        let result = new UpdateCustomV1ReferralField();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["completedCustomFieldId"] = this.completedCustomFieldId;
+        data["customFieldName"] = this.customFieldName;
+        data["customFieldType"] = this.customFieldType;
+        data["value"] = this.value;
+        super.toJSON(data);
+        return data;
+    }
+}
+
+export interface IUpdateCustomV1ReferralField extends IV1ReferralCommand {
+    completedCustomFieldId: string;
+    customFieldName: string;
+    customFieldType: CustomFieldType;
+    value?: any | undefined;
 }
 
 export class UpdateV1ReferralDetails extends V1ReferralCommand implements IUpdateV1ReferralDetails {

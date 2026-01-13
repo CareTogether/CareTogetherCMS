@@ -249,6 +249,14 @@ namespace CareTogether.Engines.Authorization
                 : new GlobalAuthorizationContext()
         ),
 
+        UpdateCustomV1ReferralField => await userAccessCalculation.AuthorizeUserAccessAsync(
+            organizationId,
+            locationId,
+            userContext,
+            new GlobalAuthorizationContext()
+        ),
+
+
 
         CloseV1Referral c => await userAccessCalculation.AuthorizeUserAccessAsync(
             organizationId,
@@ -275,6 +283,7 @@ namespace CareTogether.Engines.Authorization
             CreateV1Referral => Permission.CreateV1Referral,
             UpdateV1ReferralFamily => Permission.EditV1Referral,
             UpdateV1ReferralDetails => Permission.EditV1Referral,
+            UpdateCustomV1ReferralField => Permission.EditV1Referral,
             CloseV1Referral => Permission.CloseV1Referral,
             ReopenV1Referral => Permission.ReopenV1Referral,
             _ => throw new NotImplementedException(

@@ -50,6 +50,9 @@ namespace CareTogether.Resources.V1Referrals
                 ReopenV1Referral c =>
                     HandleReopen(c, referral, actorUserId),
 
+                UpdateCustomV1ReferralField c =>
+                    HandleUpdateCustomField(c, referral, actorUserId),
+
                 _ => throw new InvalidOperationException("Unknown referral command")
             };
 
@@ -58,6 +61,117 @@ namespace CareTogether.Resources.V1Referrals
                 locationId,
                 newEvent,
                 lastSequence
+            );
+        }
+
+        private static V1ReferralEvent HandleCreate(
+            CreateV1Referral command,
+            V1Referral? existing,
+            Guid actorUserId
+        )
+        {
+            if (existing != null)
+                throw new InvalidOperationException("Referral already exists.");
+
+            return new V1ReferralCreated(
+                command.ReferralId,
+                command.FamilyId,
+                command.CreatedAtUtc,
+                command.Title,
+                command.Comment,
+                actorUserId
+            );
+        }
+
+        private static V1ReferralEvent HandleUpdateFamily(
+            UpdateV1ReferralFamily command,
+            V1Referral? referral,
+            Guid actorUserId
+        )
+        {
+            EnsureExists(referral);
+            EnsureOpen(referral!);
+
+            return new V1ReferralFamilyUpdated(
+                command.ReferralId,
+                command.FamilyId,
+                DateTime.UtcNow,
+                actorUserId
+            );
+        }
+
+        private static V1ReferralEvent HandleUpdateDetails(
+            UpdateV1ReferralDetails command,
+            V1Referral? referral,
+            Guid actorUserId
+        )
+        {
+            EnsureExists(referral);
+            EnsureOpen(referral!);
+
+            return new V1ReferralDetailsUpdated(
+                command.ReferralId,
+                command.FamilyId,
+                command.Title,
+                command.Comment,
+                command.CreatedAtUtc,
+                DateTime.UtcNow,
+                actorUserId
+            );
+        }
+
+        private static V1ReferralEvent HandleClose(
+            CloseV1Referral command,
+            V1Referral? referral,
+            Guid actorUserId
+        )
+        {
+            EnsureExists(referral);
+            EnsureOpen(referral!);
+
+            return new V1ReferralClosed(
+                command.ReferralId,
+                command.ClosedAtUtc,
+                command.CloseReason,
+                actorUserId
+            );
+        }
+
+        private static V1ReferralEvent HandleReopen(
+            ReopenV1Referral command,
+            V1Referral? referral,
+            Guid actorUserId
+        )
+        {
+            EnsureExists(referral);
+
+            if (referral!.Status != V1ReferralStatus.Closed)
+                throw new InvalidOperationException("Only closed referrals can be reopened.");
+
+            return new V1ReferralReopened(
+                command.ReferralId,
+                command.ReopenedAtUtc,
+                actorUserId
+            );
+        }
+
+        private static V1ReferralEvent HandleUpdateCustomField(
+            UpdateCustomV1ReferralField command,
+            V1Referral? referral,
+            Guid actorUserId
+        )
+        {
+            EnsureExists(referral);
+            EnsureOpen(referral!);
+
+            return new V1ReferralCustomFieldUpdated(
+                command.ReferralId,
+                command.CompletedCustomFieldId,
+                command.CustomFieldName,
+                command.CustomFieldType,
+                command.Value,
+                DateTime.UtcNow,
+                actorUserId
             );
         }
 
@@ -127,96 +241,6 @@ namespace CareTogether.Resources.V1Referrals
             }
 
             return (events, lastSequence);
-        }
-
-        private static V1ReferralEvent HandleCreate(
-            CreateV1Referral command,
-            V1Referral? existing,
-            Guid actorUserId
-        )
-        {
-            if (existing != null)
-                throw new InvalidOperationException("Referral already exists.");
-
-            return new V1ReferralCreated(
-                command.ReferralId,
-                command.FamilyId,
-                command.CreatedAtUtc,
-                command.Title,
-                command.Comment,
-                actorUserId
-            );
-        }
-
-        private static V1ReferralEvent HandleUpdateFamily(
-            UpdateV1ReferralFamily command,
-            V1Referral? referral,
-            Guid actorUserId
-        )
-        {
-            EnsureExists(referral);
-            EnsureOpen(referral!);
-
-            return new V1ReferralFamilyUpdated(
-                command.ReferralId,
-                command.FamilyId,
-                DateTime.UtcNow,
-                actorUserId
-            );
-        }
-        private static V1ReferralEvent HandleUpdateDetails(
-            UpdateV1ReferralDetails command,
-            V1Referral? referral,
-            Guid actorUserId
-        )
-        {
-            EnsureExists(referral);
-            EnsureOpen(referral!);
-
-            return new V1ReferralDetailsUpdated(
-                command.ReferralId,
-                command.FamilyId,
-                command.Title,
-                command.Comment,
-                command.CreatedAtUtc,
-                DateTime.UtcNow,
-                actorUserId
-            );
-        }
-
-        private static V1ReferralEvent HandleClose(
-            CloseV1Referral command,
-            V1Referral? referral,
-            Guid actorUserId
-        )
-        {
-            EnsureExists(referral);
-            EnsureOpen(referral!);
-
-            return new V1ReferralClosed(
-                command.ReferralId,
-                command.ClosedAtUtc,
-                command.CloseReason,
-                actorUserId
-            );
-        }
-
-        private static V1ReferralEvent HandleReopen(
-            ReopenV1Referral command,
-            V1Referral? referral,
-            Guid actorUserId
-        )
-        {
-            EnsureExists(referral);
-
-            if (referral!.Status != V1ReferralStatus.Closed)
-                throw new InvalidOperationException("Only closed referrals can be reopened.");
-
-            return new V1ReferralReopened(
-                command.ReferralId,
-                command.ReopenedAtUtc,
-                actorUserId
-            );
         }
 
         private static void EnsureExists(V1Referral? referral)

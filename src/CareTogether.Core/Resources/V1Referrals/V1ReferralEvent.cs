@@ -1,5 +1,6 @@
 using System;
 using JsonPolymorph;
+using CareTogether.Resources.Policies;
 
 namespace CareTogether.Resources.V1Referrals
 {
@@ -38,12 +39,23 @@ namespace CareTogether.Resources.V1Referrals
         DateTime ReopenedAtUtc,
         Guid ActorUserId
     ) : V1ReferralEvent(ReferralId, ReopenedAtUtc, ActorUserId);
+
     public sealed record V1ReferralDetailsUpdated(
         Guid ReferralId,
         Guid? FamilyId,
         string Title,
         string? Comment,
         DateTime CreatedAtUtc,
+        DateTime UpdatedAtUtc,
+        Guid ActorUserId
+    ) : V1ReferralEvent(ReferralId, UpdatedAtUtc, ActorUserId);
+
+    public sealed record V1ReferralCustomFieldUpdated(
+        Guid ReferralId,
+        Guid CompletedCustomFieldId,
+        string CustomFieldName,
+        CustomFieldType CustomFieldType,
+        object? Value,
         DateTime UpdatedAtUtc,
         Guid ActorUserId
     ) : V1ReferralEvent(ReferralId, UpdatedAtUtc, ActorUserId);

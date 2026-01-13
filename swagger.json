@@ -4811,7 +4811,8 @@
           "referralId",
           "createdAtUtc",
           "title",
-          "status"
+          "status",
+          "completedCustomFields"
         ],
         "properties": {
           "referralId": {
@@ -4845,6 +4846,12 @@
           "closeReason": {
             "type": "string",
             "nullable": true
+          },
+          "completedCustomFields": {
+            "type": "object",
+            "additionalProperties": {
+              "$ref": "#/components/schemas/CompletedCustomFieldInfo"
+            }
           }
         }
       },
@@ -8007,6 +8014,7 @@
             "CloseV1Referral": "#/components/schemas/CloseV1Referral",
             "CreateV1Referral": "#/components/schemas/CreateV1Referral",
             "ReopenV1Referral": "#/components/schemas/ReopenV1Referral",
+            "UpdateCustomV1ReferralField": "#/components/schemas/UpdateCustomV1ReferralField",
             "UpdateV1ReferralDetails": "#/components/schemas/UpdateV1ReferralDetails",
             "UpdateV1ReferralFamily": "#/components/schemas/UpdateV1ReferralFamily"
           }
@@ -8099,6 +8107,37 @@
               "reopenedAtUtc": {
                 "type": "string",
                 "format": "date-time"
+              }
+            }
+          }
+        ]
+      },
+      "UpdateCustomV1ReferralField": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/V1ReferralCommand"
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "completedCustomFieldId",
+              "customFieldName",
+              "customFieldType"
+            ],
+            "properties": {
+              "completedCustomFieldId": {
+                "type": "string",
+                "format": "guid"
+              },
+              "customFieldName": {
+                "type": "string"
+              },
+              "customFieldType": {
+                "$ref": "#/components/schemas/CustomFieldType"
+              },
+              "value": {
+                "nullable": true
               }
             }
           }

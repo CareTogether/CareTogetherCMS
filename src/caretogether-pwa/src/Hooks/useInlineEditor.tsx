@@ -15,19 +15,14 @@ export interface IInlineEditor<T> {
   saveButton: false | JSX.Element;
 }
 
-type InlineEditorOptions<T> = {
-  startEditing?: boolean;
-  validate?: (value?: T) => boolean;
-};
-
 export function useInlineEditor<T, U>(
   onSave: (value: T) => Promise<U>,
   savedValue?: T,
-  options?: InlineEditorOptions<T>
+  validate?: (value?: T) => boolean
 ): IInlineEditor<T> {
   const withBackdrop = useBackdrop();
 
-  const [editing, setEditing] = useState(options?.startEditing ?? false);
+  const [editing, setEditing] = useState(false);
   const [value, setValue] = useState(savedValue);
 
   async function saveChanges() {
@@ -36,7 +31,6 @@ export function useInlineEditor<T, U>(
       setEditing(false);
     });
   }
-
   function cancelEditing() {
     setEditing(false);
     setValue(savedValue);
@@ -59,7 +53,7 @@ export function useInlineEditor<T, U>(
     ),
     cancelButton: editing && (
       <Button
-        onClick={cancelEditing}
+        onClick={() => cancelEditing()}
         variant="contained"
         size="small"
         startIcon={<UndoIcon />}
@@ -74,7 +68,7 @@ export function useInlineEditor<T, U>(
         disabled={
           value === savedValue ||
           typeof value === 'undefined' ||
-          (options?.validate && !options.validate(value))
+          (typeof validate !== 'undefined' && !validate(value))
         }
         onClick={saveChanges}
         variant="contained"
