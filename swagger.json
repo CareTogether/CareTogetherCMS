@@ -8007,6 +8007,7 @@
             "CloseV1Referral": "#/components/schemas/CloseV1Referral",
             "CreateV1Referral": "#/components/schemas/CreateV1Referral",
             "ReopenV1Referral": "#/components/schemas/ReopenV1Referral",
+            "UpdateV1ReferralDetails": "#/components/schemas/UpdateV1ReferralDetails",
             "UpdateV1ReferralFamily": "#/components/schemas/UpdateV1ReferralFamily"
           }
         },
@@ -8096,6 +8097,39 @@
             ],
             "properties": {
               "reopenedAtUtc": {
+                "type": "string",
+                "format": "date-time"
+              }
+            }
+          }
+        ]
+      },
+      "UpdateV1ReferralDetails": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/V1ReferralCommand"
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "title",
+              "createdAtUtc"
+            ],
+            "properties": {
+              "familyId": {
+                "type": "string",
+                "format": "guid",
+                "nullable": true
+              },
+              "title": {
+                "type": "string"
+              },
+              "comment": {
+                "type": "string",
+                "nullable": true
+              },
+              "createdAtUtc": {
                 "type": "string",
                 "format": "date-time"
               }

@@ -33,10 +33,18 @@ namespace CareTogether.Resources.V1Referrals
         Guid ActorUserId
     ) : V1ReferralEvent(ReferralId, ClosedAtUtc, ActorUserId);
 
-
     public sealed record V1ReferralReopened(
         Guid ReferralId,
         DateTime ReopenedAtUtc,
         Guid ActorUserId
     ) : V1ReferralEvent(ReferralId, ReopenedAtUtc, ActorUserId);
+    public sealed record V1ReferralDetailsUpdated(
+        Guid ReferralId,
+        Guid? FamilyId,
+        string Title,
+        string? Comment,
+        DateTime CreatedAtUtc,
+        DateTime UpdatedAtUtc,
+        Guid ActorUserId
+    ) : V1ReferralEvent(ReferralId, UpdatedAtUtc, ActorUserId);
 }

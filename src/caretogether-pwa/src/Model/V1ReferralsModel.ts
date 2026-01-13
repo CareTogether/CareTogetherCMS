@@ -3,6 +3,7 @@ import {
   CreateV1Referral,
   CloseV1Referral,
   ReopenV1Referral,
+  UpdateV1ReferralDetails,
   UpdateV1ReferralFamily,
 } from '../GeneratedClient';
 import { useAtomicRecordsCommandCallback } from './DirectoryModel';
@@ -13,6 +14,13 @@ interface CreateReferralPayload {
   openedAtUtc: Date;
   title: string;
   comment?: string;
+}
+
+interface UpdateReferralDetailsPayload {
+  familyId?: string | null;
+  title: string;
+  comment?: string;
+  openedAtUtc: Date;
 }
 
 export function useV1ReferralsModel() {
@@ -26,6 +34,35 @@ export function useV1ReferralsModel() {
         createdAtUtc: payload.openedAtUtc,
         title: payload.title,
         comment: payload.comment,
+      });
+
+      return command;
+    }
+  );
+
+  const updateReferralFamily = useAtomicRecordsCommandCallback(
+    async (referralId: string, familyId: string) => {
+      const command = new V1ReferralRecordsCommand();
+
+      command.command = commandFactory(UpdateV1ReferralFamily, {
+        referralId,
+        familyId,
+      });
+
+      return command;
+    }
+  );
+
+  const updateReferralDetails = useAtomicRecordsCommandCallback(
+    async (referralId: string, payload: UpdateReferralDetailsPayload) => {
+      const command = new V1ReferralRecordsCommand();
+
+      command.command = commandFactory(UpdateV1ReferralDetails, {
+        referralId,
+        familyId: payload.familyId ?? undefined,
+        title: payload.title,
+        comment: payload.comment,
+        createdAtUtc: payload.openedAtUtc,
       });
 
       return command;
@@ -59,21 +96,9 @@ export function useV1ReferralsModel() {
     }
   );
 
-  const updateReferralFamily = useAtomicRecordsCommandCallback(
-    async (referralId: string, familyId: string) => {
-      const command = new V1ReferralRecordsCommand();
-
-      command.command = commandFactory(UpdateV1ReferralFamily, {
-        referralId,
-        familyId,
-      });
-
-      return command;
-    }
-  );
-
   return {
     createReferral,
+    updateReferralDetails,
     closeReferral,
     reopenReferral,
     updateReferralFamily,

@@ -10,6 +10,7 @@ import {
   Autocomplete,
   TextField,
 } from '@mui/material';
+import EditIcon from '@mui/icons-material/Edit';
 import { useRecoilValue } from 'recoil';
 
 import { useFamilyLookup } from '../Model/DirectoryModel';
@@ -21,6 +22,7 @@ import { V1ReferralStatus } from '../GeneratedClient';
 import { CreatePartneringFamilyDialog } from '../V1Cases/CreatePartneringFamilyDrawer';
 import { partneringFamiliesData } from '../Model/V1CasesModel';
 import { useLoadable } from '../Hooks/useLoadable';
+import { EditReferralDrawer } from '../V1Referrals/EditReferralDrawer';
 
 function formatStatusWithDate(
   status: V1ReferralStatus,
@@ -57,6 +59,7 @@ export function ReferralDetailsPage() {
   const [working, setWorking] = useState(false);
   const [openCreateFamily, setOpenCreateFamily] = useState(false);
   const [selectingFamily, setSelectingFamily] = useState(false);
+  const [openEditReferral, setOpenEditReferral] = useState(false);
 
   const referral = useMemo(
     () => referrals.find((r) => r.referralId === referralId),
@@ -127,9 +130,22 @@ export function ReferralDetailsPage() {
           mb: 3,
         }}
       >
-        <Typography variant="h5" fontWeight={600}>
-          {referral.title}
-        </Typography>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+          <Typography variant="h5" fontWeight={600}>
+            {referral.title}
+          </Typography>
+
+          {!isClosed && (
+            <Button
+              size="small"
+              variant="text"
+              onClick={() => setOpenEditReferral(true)}
+              sx={{ minWidth: 'auto', p: 0.5 }}
+            >
+              <EditIcon fontSize="small" />
+            </Button>
+          )}
+        </Box>
 
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 3 }}>
           <Box sx={{ display: 'flex', gap: 2 }}>
@@ -220,6 +236,13 @@ export function ReferralDetailsPage() {
       {openCreateFamily && (
         <CreatePartneringFamilyDialog
           onClose={() => setOpenCreateFamily(false)}
+        />
+      )}
+
+      {openEditReferral && (
+        <EditReferralDrawer
+          referral={referral}
+          onClose={() => setOpenEditReferral(false)}
         />
       )}
     </Grid>

@@ -5,7 +5,6 @@ using CareTogether.Utilities.EventLog;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 
-
 namespace CareTogether.Resources.V1Referrals
 {
     public sealed class V1ReferralsResource : IV1ReferralsResource
@@ -36,10 +35,21 @@ namespace CareTogether.Resources.V1Referrals
 
             var newEvent = command switch
             {
-                CreateV1Referral c => HandleCreate(c, referral, actorUserId),
-                UpdateV1ReferralFamily c => HandleUpdateFamily(c, referral, actorUserId),
-                CloseV1Referral c => HandleClose(c, referral, actorUserId),
-                ReopenV1Referral c => HandleReopen(c, referral, actorUserId),
+                CreateV1Referral c =>
+                    HandleCreate(c, referral, actorUserId),
+
+                UpdateV1ReferralFamily c =>
+                    HandleUpdateFamily(c, referral, actorUserId),
+
+                UpdateV1ReferralDetails c =>
+                    HandleUpdateDetails(c, referral, actorUserId),
+
+                CloseV1Referral c =>
+                    HandleClose(c, referral, actorUserId),
+
+                ReopenV1Referral c =>
+                    HandleReopen(c, referral, actorUserId),
+
                 _ => throw new InvalidOperationException("Unknown referral command")
             };
 
@@ -68,7 +78,7 @@ namespace CareTogether.Resources.V1Referrals
                 : null;
         }
 
-            public async Task<ImmutableList<V1Referral>> ListReferralsAsync(
+        public async Task<ImmutableList<V1Referral>> ListReferralsAsync(
             Guid organizationId,
             Guid locationId
         )
@@ -93,7 +103,6 @@ namespace CareTogether.Resources.V1Referrals
                 .Select(V1Referral.Rehydrate)
                 .ToImmutableList();
         }
-
 
         private async Task<(List<V1ReferralEvent> Events, long LastSequence)>
             LoadReferralEventsAsync(
@@ -151,6 +160,25 @@ namespace CareTogether.Resources.V1Referrals
             return new V1ReferralFamilyUpdated(
                 command.ReferralId,
                 command.FamilyId,
+                DateTime.UtcNow,
+                actorUserId
+            );
+        }
+        private static V1ReferralEvent HandleUpdateDetails(
+            UpdateV1ReferralDetails command,
+            V1Referral? referral,
+            Guid actorUserId
+        )
+        {
+            EnsureExists(referral);
+            EnsureOpen(referral!);
+
+            return new V1ReferralDetailsUpdated(
+                command.ReferralId,
+                command.FamilyId,
+                command.Title,
+                command.Comment,
+                command.CreatedAtUtc,
                 DateTime.UtcNow,
                 actorUserId
             );

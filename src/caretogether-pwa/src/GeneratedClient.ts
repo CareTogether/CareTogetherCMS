@@ -13093,6 +13093,11 @@ export abstract class V1ReferralCommand implements IV1ReferralCommand {
             result.init(data);
             return result;
         }
+        if (data["discriminator"] === "UpdateV1ReferralDetails") {
+            let result = new UpdateV1ReferralDetails();
+            result.init(data);
+            return result;
+        }
         if (data["discriminator"] === "UpdateV1ReferralFamily") {
             let result = new UpdateV1ReferralFamily();
             result.init(data);
@@ -13229,6 +13234,52 @@ export class ReopenV1Referral extends V1ReferralCommand implements IReopenV1Refe
 
 export interface IReopenV1Referral extends IV1ReferralCommand {
     reopenedAtUtc: Date;
+}
+
+export class UpdateV1ReferralDetails extends V1ReferralCommand implements IUpdateV1ReferralDetails {
+    familyId?: string | undefined;
+    title!: string;
+    comment?: string | undefined;
+    createdAtUtc!: Date;
+
+    constructor(data?: IUpdateV1ReferralDetails) {
+        super(data);
+        this._discriminator = "UpdateV1ReferralDetails";
+    }
+
+    init(_data?: any) {
+        super.init(_data);
+        if (_data) {
+            this.familyId = _data["familyId"];
+            this.title = _data["title"];
+            this.comment = _data["comment"];
+            this.createdAtUtc = _data["createdAtUtc"] ? new Date(_data["createdAtUtc"].toString()) : <any>undefined;
+        }
+    }
+
+    static fromJS(data: any): UpdateV1ReferralDetails {
+        data = typeof data === 'object' ? data : {};
+        let result = new UpdateV1ReferralDetails();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["familyId"] = this.familyId;
+        data["title"] = this.title;
+        data["comment"] = this.comment;
+        data["createdAtUtc"] = this.createdAtUtc ? this.createdAtUtc.toISOString() : <any>undefined;
+        super.toJSON(data);
+        return data;
+    }
+}
+
+export interface IUpdateV1ReferralDetails extends IV1ReferralCommand {
+    familyId?: string | undefined;
+    title: string;
+    comment?: string | undefined;
+    createdAtUtc: Date;
 }
 
 export class UpdateV1ReferralFamily extends V1ReferralCommand implements IUpdateV1ReferralFamily {

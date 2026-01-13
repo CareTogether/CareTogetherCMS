@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Collections.Immutable;
 using System.Linq;
 
 namespace CareTogether.Resources.V1Referrals
@@ -38,6 +37,14 @@ namespace CareTogether.Resources.V1Referrals
                     V1ReferralFamilyUpdated updated => referral! with
                     {
                         FamilyId = updated.FamilyId
+                    },
+
+                    V1ReferralDetailsUpdated updated => referral! with
+                    {
+                        FamilyId = updated.FamilyId,
+                        Title = updated.Title,
+                        Comment = updated.Comment,
+                        CreatedAtUtc = updated.CreatedAtUtc
                     },
 
                     V1ReferralClosed closed => referral! with

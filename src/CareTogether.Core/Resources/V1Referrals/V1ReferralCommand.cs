@@ -31,4 +31,11 @@ namespace CareTogether.Resources.V1Referrals
         Guid ReferralId,
         DateTime ReopenedAtUtc
     ) : V1ReferralCommand(ReferralId);
+    public sealed record UpdateV1ReferralDetails(
+        Guid ReferralId,
+        Guid? FamilyId,
+        string Title,
+        string? Comment,
+        DateTime CreatedAtUtc
+    ) : V1ReferralCommand(ReferralId);
 }
