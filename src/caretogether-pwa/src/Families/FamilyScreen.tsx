@@ -29,6 +29,7 @@ import {
   Permission,
   V1Case,
   RoleRemovalReason,
+  V1ReferralStatus,
 } from '../GeneratedClient';
 import { useParams } from 'react-router';
 import AddCircleIcon from '@mui/icons-material/AddCircle';
@@ -76,7 +77,7 @@ import { DeleteFamilyDialog } from './DeleteFamilyDialog';
 import { useDialogHandle } from '../Hooks/useDialogHandle';
 import { familyLastName } from './FamilyUtils';
 import { useLoadable } from '../Hooks/useLoadable';
-import { visibleCommunitiesQuery } from '../Model/Data';
+import { visibleCommunitiesQuery, visibleReferralsQuery } from '../Model/Data';
 import { useAppNavigate } from '../Hooks/useAppNavigate';
 import FamilyScreenPageVersionSwitch from './FamilyScreenPageVersionSwitch';
 import posthog from 'posthog-js';
@@ -87,6 +88,7 @@ import { useSyncV1CaseIdInURL } from '../Hooks/useSyncV1CaseIdInURL';
 import { ArrangementsSection } from '../V1Cases/Arrangements/ArrangementsSection/ArrangementsSection';
 import { useFeatureFlagEnabled } from 'posthog-js/react';
 import { TestFamilyBadge } from './TestFamilyBadge';
+import { useRecoilValue } from 'recoil';
 
 export function FamilyScreen() {
   const familyIdMaybe = useParams<{ familyId: string }>();
@@ -107,6 +109,8 @@ export function FamilyScreen() {
   const familyCommunityInfo = allCommunityInfo?.filter((c) =>
     c.community?.memberFamilies?.includes(familyId)
   );
+
+  const referrals = useRecoilValue(visibleReferralsQuery);
 
   const appNavigate = useAppNavigate();
 
@@ -143,6 +147,10 @@ export function FamilyScreen() {
             r2.closedAtUtc!.getUTCMilliseconds()
         );
   }, [family?.partneringFamilyInfo?.closedV1Cases]);
+
+  const familyReferrals = useMemo(() => {
+    return referrals.filter((referral) => referral.familyId === familyId);
+  }, [referrals, familyId]);
 
   const allV1Cases: V1Case[] = useMemo(() => {
     return [...openV1Cases, ...closedV1Cases];
@@ -581,6 +589,50 @@ export function FamilyScreen() {
                 );
               })}
             </Grid>
+
+            {familyReferrals.length > 0 && (
+              <Grid item xs={12}>
+                <Typography
+                  className="ph-unmask"
+                  variant="h3"
+                  style={{ marginTop: 16, marginBottom: 8 }}
+                >
+                  Referrals
+                </Typography>
+
+                {familyReferrals.map((referral) => {
+                  const date =
+                    referral.status === V1ReferralStatus.Open
+                      ? referral.createdAtUtc
+                      : referral.closedAtUtc;
+
+                  return (
+                    <Box
+                      key={referral.referralId}
+                      onClick={() => appNavigate.referral(referral.referralId)}
+                      sx={{
+                        cursor: 'pointer',
+                        py: 0.5,
+                        '&:hover': {
+                          textDecoration: 'underline',
+                        },
+                      }}
+                    >
+                      <Typography className="ph-unmask">
+                        {referral.title}{' '}
+                        <Typography component="span" color="text.secondary">
+                          ·{' '}
+                          {referral.status === V1ReferralStatus.Open
+                            ? 'Open'
+                            : 'Closed'}{' '}
+                          · {date ? format(date, 'M/d/yy') : ''}
+                        </Typography>
+                      </Typography>
+                    </Box>
+                  );
+                })}
+              </Grid>
+            )}
 
             {family && <AssignmentsSection family={family} />}
 

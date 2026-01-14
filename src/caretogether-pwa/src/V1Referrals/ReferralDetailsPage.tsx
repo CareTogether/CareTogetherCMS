@@ -10,7 +10,6 @@ import {
   Autocomplete,
   TextField,
 } from '@mui/material';
-import EditIcon from '@mui/icons-material/Edit';
 import { useRecoilValue } from 'recoil';
 
 import { useFamilyLookup } from '../Model/DirectoryModel';
@@ -28,6 +27,7 @@ import { partneringFamiliesData } from '../Model/V1CasesModel';
 import { useLoadable } from '../Hooks/useLoadable';
 import { EditReferralDrawer } from '../V1Referrals/EditReferralDrawer';
 import { policyData } from '../Model/ConfigurationModel';
+import { OpenNewV1CaseDialog } from '../V1Cases/OpenNewV1CaseDialog';
 
 function formatStatusWithDate(
   status: V1ReferralStatus,
@@ -66,6 +66,7 @@ export function ReferralDetailsPage() {
   const [openCreateFamily, setOpenCreateFamily] = useState(false);
   const [selectingFamily, setSelectingFamily] = useState(false);
   const [openEditReferral, setOpenEditReferral] = useState(false);
+  const [openOpenCaseDialog, setOpenOpenCaseDialog] = useState(false);
 
   const referral = useMemo(
     () => referrals.find((r) => r.referralId === referralId),
@@ -143,47 +144,49 @@ export function ReferralDetailsPage() {
           <Typography variant="h5" fontWeight={600}>
             {referral.title}
           </Typography>
-
-          {!isClosed && (
-            <Button
-              size="small"
-              variant="text"
-              onClick={() => setOpenEditReferral(true)}
-              sx={{ minWidth: 'auto', p: 0.5 }}
-            >
-              <EditIcon fontSize="small" />
-            </Button>
-          )}
         </Box>
 
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 3 }}>
-          <Box sx={{ display: 'flex', gap: 2 }}>
-            {canSelectFamily && !selectingFamily && (
-              <Button
-                variant="contained"
-                onClick={() => setSelectingFamily(true)}
-              >
-                Select Family
-              </Button>
-            )}
-
-            {!isClosed && (
-              <Button
-                variant="contained"
-                onClick={() => setOpenCreateFamily(true)}
-              >
-                Open Case
-              </Button>
-            )}
-          </Box>
+          {!isClosed && (
+            <Button
+              variant="outlined"
+              onClick={() => setOpenEditReferral(true)}
+            >
+              Edit Referral
+            </Button>
+          )}
 
           <Button
-            variant="text"
+            variant={isClosed ? 'contained' : 'outlined'}
             disabled={working}
             onClick={handleToggleReferral}
           >
             {isClosed ? 'Reopen Referral' : 'Close Referral'}
           </Button>
+
+          {!isClosed && (
+            <Button
+              variant="contained"
+              onClick={() => {
+                if (referral.familyId) {
+                  setOpenOpenCaseDialog(true);
+                } else {
+                  setOpenCreateFamily(true);
+                }
+              }}
+            >
+              Open Case
+            </Button>
+          )}
+
+          {canSelectFamily && !selectingFamily && (
+            <Button
+              variant="contained"
+              onClick={() => setSelectingFamily(true)}
+            >
+              Select Family
+            </Button>
+          )}
         </Box>
       </Grid>
 
@@ -280,6 +283,13 @@ export function ReferralDetailsPage() {
         <EditReferralDrawer
           referral={referral}
           onClose={() => setOpenEditReferral(false)}
+        />
+      )}
+
+      {openOpenCaseDialog && referral.familyId && (
+        <OpenNewV1CaseDialog
+          partneringFamilyId={referral.familyId}
+          onClose={() => setOpenOpenCaseDialog(false)}
         />
       )}
     </Grid>
