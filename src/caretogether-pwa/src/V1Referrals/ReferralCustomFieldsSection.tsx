@@ -18,9 +18,9 @@ export function ReferralCustomFieldsSection<T extends FieldValues>({
 
   return (
     <Grid item xs={12}>
-      <Typography sx={{ fontWeight: 600, mb: 1 }}>
+      {/* <Typography sx={{ fontWeight: 600, mb: 1 }}>
         Referral Custom Fields
-      </Typography>
+      </Typography> */}
 
       <Grid container spacing={2}>
         {customFields.map((field) => {
