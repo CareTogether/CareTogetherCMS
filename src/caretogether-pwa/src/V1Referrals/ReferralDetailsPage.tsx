@@ -164,18 +164,21 @@ export function ReferralDetailsPage() {
             {isClosed ? 'Reopen Referral' : 'Close Referral'}
           </Button>
 
-          {!isClosed && (
+          {!isClosed && referral.familyId && (
             <Button
               variant="contained"
-              onClick={() => {
-                if (referral.familyId) {
-                  setOpenOpenCaseDialog(true);
-                } else {
-                  setOpenCreateFamily(true);
-                }
-              }}
+              onClick={() => setOpenOpenCaseDialog(true)}
             >
               Open Case
+            </Button>
+          )}
+
+          {!isClosed && !referral.familyId && (
+            <Button
+              variant="contained"
+              onClick={() => setOpenCreateFamily(true)}
+            >
+              ADD NEW CLIENT FAMILY
             </Button>
           )}
 
@@ -275,7 +278,13 @@ export function ReferralDetailsPage() {
 
       {openCreateFamily && (
         <CreatePartneringFamilyDialog
-          onClose={() => setOpenCreateFamily(false)}
+          onClose={async (familyId?: string) => {
+            setOpenCreateFamily(false);
+
+            if (!familyId || !referral) return;
+
+            await updateReferralFamily(referral.referralId, familyId);
+          }}
         />
       )}
 
