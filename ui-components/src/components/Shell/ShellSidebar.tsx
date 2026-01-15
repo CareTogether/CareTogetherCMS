@@ -55,6 +55,7 @@ export const ShellSidebar = ({
     <Box
       component="nav"
       sx={{
+        backgroundColor: "background.paper",
         width: currentWidth,
         transition: "width 0.2s ease-in-out",
         overflow: "auto",

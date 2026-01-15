@@ -61,6 +61,7 @@ export const NavItem = ({
         py: 2,
         border: "none",
         background: "transparent",
+        borderRadius: 0,
         cursor: "pointer",
         transition: "all 0.2s ease-in-out",
         width: "100%",
