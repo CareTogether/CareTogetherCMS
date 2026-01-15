@@ -11,6 +11,8 @@ import UnfoldMoreIcon from '@mui/icons-material/UnfoldMore';
 import UnfoldLessIcon from '@mui/icons-material/UnfoldLess';
 import { MouseEvent } from 'react';
 import { SearchBar } from '../Shell/SearchBar';
+import { CombinedFamilyInfo } from '../GeneratedClient';
+import { CountyFilter } from '../V1Referrals/CountyFilter';
 
 interface ReferralsFiltersProps {
   filterText: string;
@@ -23,6 +25,10 @@ interface ReferralsFiltersProps {
 
   statusFilter: ReferralStatusFilter;
   setStatusFilter: (value: ReferralStatusFilter) => void;
+
+  countyFilter: string[];
+  setCountyFilter: (value: string[]) => void;
+  familiesForCountyFilter: CombinedFamilyInfo[];
 }
 export type ReferralStatusFilter = 'ALL' | 'OPEN' | 'CLOSED';
 
@@ -34,6 +40,9 @@ export function ReferralsFilters({
   onAddNewReferral,
   statusFilter,
   setStatusFilter,
+  countyFilter,
+  setCountyFilter,
+  familiesForCountyFilter,
 }: ReferralsFiltersProps) {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
@@ -71,6 +80,12 @@ export function ReferralsFilters({
       </ToggleButtonGroup>
 
       <SearchBar value={filterText} onChange={setFilterText} />
+
+      <CountyFilter
+        families={familiesForCountyFilter}
+        value={countyFilter}
+        onChange={setCountyFilter}
+      />
 
       <ToggleButtonGroup
         value={expandedView}

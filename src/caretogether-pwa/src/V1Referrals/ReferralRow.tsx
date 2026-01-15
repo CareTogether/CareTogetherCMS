@@ -8,6 +8,7 @@ export interface ReferralRowModel {
   openedAtUtc?: Date;
   closedAtUtc?: Date;
   clientFamilyName: string;
+  county?: string;
   comments?: string;
 }
 
@@ -50,6 +51,8 @@ export function ReferralRow({ referral, expanded }: ReferralRowProps) {
         </TableCell>
 
         <TableCell>{referral.clientFamilyName}</TableCell>
+
+        <TableCell>{referral.county ?? '—'}</TableCell>
       </TableRow>
 
       {expanded && comments && (
@@ -57,7 +60,7 @@ export function ReferralRow({ referral, expanded }: ReferralRowProps) {
           sx={{ cursor: 'pointer' }}
           onClick={() => appNavigate.referral(referral.id)}
         >
-          <TableCell colSpan={3} sx={{ pl: 3 }}>
+          <TableCell colSpan={4} sx={{ pl: 3 }}>
             <Box sx={{ whiteSpace: 'pre-wrap', overflowWrap: 'break-word' }}>
               {preview}
             </Box>

@@ -51,6 +51,8 @@ import { useAppNavigate } from '../Hooks/useAppNavigate';
 import PhoneIcon from '@mui/icons-material/Phone';
 import { TestFamilyBadge } from '../Families/TestFamilyBadge';
 import { useFeatureFlagEnabled } from 'posthog-js/react';
+import { CountyFilter } from '../V1Referrals/CountyFilter';
+import { getFamilyCounty } from '../Utilities/getFamilyCounty';
 
 const arrangementPhaseText = new Map<number, string>([
   [ArrangementPhase.SettingUp, 'Setting Up'],
@@ -145,10 +147,22 @@ function PartneringFamilies() {
   });
 
   const [filterText, setFilterText] = useState('');
+  const [countyFilter, setCountyFilter] = useState<string[]>([]);
+
   const filteredPartneringFamilies = filterFamiliesByText(
     partneringFamilies,
     filterText
   );
+
+  const countyFilteredFamilies =
+    countyFilter.length === 0
+      ? filteredPartneringFamilies
+      : filteredPartneringFamilies.filter((family) => {
+          const county = getFamilyCounty(family);
+          return county === '—'
+            ? countyFilter.includes('(blank)')
+            : countyFilter.includes(county);
+        });
 
   useScrollMemory();
 
@@ -268,7 +282,7 @@ function PartneringFamilies() {
     'All' | 'Active' | 'Setup' | 'Active + Setup'
   >('partnering-families-arrangementsFilter', 'All');
   const filteredPartneringFamiliesWithActiveOrAllFilter =
-    filteredPartneringFamilies.filter((family) =>
+    countyFilteredFamilies.filter((family) =>
       arrangementsFilter === 'All'
         ? true
         : arrangementsFilter === 'Active'
@@ -343,6 +357,12 @@ function PartneringFamilies() {
 
           <SearchBar value={filterText} onChange={setFilterText} />
 
+          <CountyFilter
+            families={partneringFamilies}
+            value={countyFilter}
+            onChange={setCountyFilter}
+          />
+
           <ToggleButtonGroup
             value={expandedView}
             exclusive
@@ -366,6 +386,7 @@ function PartneringFamilies() {
               <TableRow>
                 <TableCell>Client Family</TableCell>
                 <TableCell>Case Status</TableCell>
+                <TableCell>County</TableCell>
                 {!expandedView ? (
                   arrangementTypes?.map((arrangementType) => (
                     <TableCell key={arrangementType}>
@@ -452,6 +473,9 @@ function PartneringFamilies() {
                             //TODO: "Closed on " + format(partneringFamily.partneringFamilyInfo?.closedV1Cases?.[0]?.closedUtc) -- needs a new calculated property
                           }
                         </TableCell>
+                        <TableCell>
+                          {getFamilyCounty(partneringFamily)}
+                        </TableCell>
                         {!expandedView ? (
                           arrangementTypes?.map((arrangementType) => (
                             <TableCell key={arrangementType}>
@@ -498,13 +522,13 @@ function PartneringFamilies() {
                           <></>
                         )}
                       </TableRow>
-                      {expandedView ? (
+                      {expandedView && (
                         <TableRow
                           onClick={() =>
                             openFamily(partneringFamily.family!.id!)
                           }
                         >
-                          <TableCell sx={{ maxWidth: '400px', paddingLeft: 3 }}>
+                          <TableCell colSpan={3} sx={{ pl: 3 }}>
                             <Box
                               sx={{
                                 whiteSpace: 'pre-wrap',
@@ -513,10 +537,8 @@ function PartneringFamilies() {
                             >
                               {preview}
                             </Box>
-                          </TableCell>
 
-                          <TableCell>
-                            <Grid container spacing={2}>
+                            <Grid container spacing={2} sx={{ mt: 1 }}>
                               {matchingArrangements(
                                 partneringFamily.partneringFamilyInfo!,
                                 arrangementsFilter
@@ -548,8 +570,6 @@ function PartneringFamilies() {
                             </Grid>
                           </TableCell>
                         </TableRow>
-                      ) : (
-                        <></>
                       )}
                     </React.Fragment>
                   );

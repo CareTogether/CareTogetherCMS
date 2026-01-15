@@ -21,6 +21,7 @@ import { useFamilyLookup } from '../Model/DirectoryModel';
 import { familyNameString } from '../Families/FamilyName';
 import { visibleReferralsQuery } from '../Model/Data';
 import { V1ReferralStatus } from '../GeneratedClient';
+import { getFamilyCounty } from '../Utilities/getFamilyCounty';
 
 function statusToUi(status: V1ReferralStatus): 'OPEN' | 'CLOSED' {
   return status === V1ReferralStatus.Open ? 'OPEN' : 'CLOSED';
@@ -38,27 +39,25 @@ export function V1Referrals() {
   );
   const [expandedView, setExpandedView] = useState(true);
   const [openNewReferral, setOpenNewReferral] = useState(false);
+  const [countyFilter, setCountyFilter] = useState<string[]>([]);
 
   const referrals =
     referralsLoadable.state === 'hasValue' ? referralsLoadable.contents : [];
 
-  const rows = referrals.map((r) => ({
-    id: r.referralId,
-    title: r.title,
-    status: statusToUi(r.status),
+  const rows = referrals.map((r) => {
+    const family = r.familyId ? familyLookup(r.familyId) : null;
 
-    openedAtUtc: r.createdAtUtc,
-    closedAtUtc: r.closedAtUtc,
-
-    clientFamilyName: r.familyId
-      ? (() => {
-          const family = familyLookup(r.familyId);
-          return family ? familyNameString(family) : '-';
-        })()
-      : '-',
-
-    comments: r.comment ?? '',
-  }));
+    return {
+      id: r.referralId,
+      title: r.title,
+      status: statusToUi(r.status),
+      openedAtUtc: r.createdAtUtc,
+      closedAtUtc: r.closedAtUtc,
+      clientFamilyName: family ? familyNameString(family) : '-',
+      county: family ? getFamilyCounty(family) : '—',
+      comments: r.comment ?? '',
+    };
+  });
 
   const filteredRows = rows.filter((r) => {
     const matchesText =
@@ -67,7 +66,14 @@ export function V1Referrals() {
 
     const matchesStatus = statusFilter === 'ALL' || r.status === statusFilter;
 
-    return matchesText && matchesStatus;
+    const matchesCounty =
+      countyFilter.length === 0
+        ? true
+        : r.county === '—'
+          ? countyFilter.includes('(blank)')
+          : countyFilter.includes(r.county);
+
+    return matchesText && matchesStatus && matchesCounty;
   });
 
   return (
@@ -85,6 +91,14 @@ export function V1Referrals() {
                 onAddNewReferral={() => setOpenNewReferral(true)}
                 statusFilter={statusFilter}
                 setStatusFilter={setStatusFilter}
+                countyFilter={countyFilter}
+                setCountyFilter={setCountyFilter}
+                familiesForCountyFilter={referrals
+                  .map((r) => (r.familyId ? familyLookup(r.familyId) : null))
+                  .filter(
+                    (family): family is NonNullable<typeof family> =>
+                      family != null
+                  )}
               />
             </Grid>
 
@@ -96,6 +110,7 @@ export function V1Referrals() {
                       <TableCell>Referral Title</TableCell>
                       <TableCell>Status</TableCell>
                       <TableCell>Client Family</TableCell>
+                      <TableCell>County</TableCell>
                     </TableRow>
                   </TableHead>
 
