@@ -1,5 +1,5 @@
+import { useState } from 'react';
 import {
-  Select,
   MenuItem,
   TextField,
   InputAdornment,
@@ -8,14 +8,15 @@ import {
   Avatar,
   Divider,
   Stack,
-  Button,
   Typography,
+  ListItemText,
 } from '@mui/material';
 import {
   Search as SearchIcon,
   Notifications as NotificationsIcon,
   KeyboardArrowDown as KeyboardArrowDownIcon,
 } from '@mui/icons-material';
+import { Dropdown } from '@caretogether/ui-components';
 
 interface AppHeaderProps {
   onToggleSidebar: () => void;
@@ -31,19 +32,59 @@ export function AppHeader({
   searchValue,
   onSearchChange,
 }: AppHeaderProps) {
+  const [locationMenuOpen, setLocationMenuOpen] = useState(false);
+  const [userMenuOpen, setUserMenuOpen] = useState(false);
+
+  const getLocationLabel = (value: string) => {
+    switch (value) {
+      case 'atlantis':
+        return 'Atlantis';
+      case 'central':
+        return 'Central';
+      case 'north':
+        return 'North Campus';
+      default:
+        return value;
+    }
+  };
   const leftContent = (
     <Stack direction="row" alignItems="center" spacing={2}>
       <img src="/caretogether-logo.avif" alt="CareTogether Logo" style={{ height: 40 }} />
       <Divider orientation="vertical" flexItem sx={{ mx: 1 }} />
-      <Select
-        size="small"
-        value={selectedLocation}
-        onChange={e => onLocationChange(e.target.value)}
-      >
-        <MenuItem value="atlantis">Atlantis</MenuItem>
-        <MenuItem value="central">Central</MenuItem>
-        <MenuItem value="north">North Campus</MenuItem>
-      </Select>
+      <Dropdown open={locationMenuOpen} setOpen={setLocationMenuOpen}>
+        <Dropdown.Button
+          size="small"
+          color="inherit"
+          endIcon={<KeyboardArrowDownIcon />}
+          sx={{
+            textTransform: 'none',
+            minWidth: 120,
+          }}
+          aria-label="Select location"
+        >
+          {getLocationLabel(selectedLocation)}
+        </Dropdown.Button>
+        <Dropdown.Menu placement="bottom-start" closeOnItemClick>
+          <MenuItem
+            onClick={() => onLocationChange('atlantis')}
+            selected={selectedLocation === 'atlantis'}
+          >
+            <ListItemText>Atlantis</ListItemText>
+          </MenuItem>
+          <MenuItem
+            onClick={() => onLocationChange('central')}
+            selected={selectedLocation === 'central'}
+          >
+            <ListItemText>Central</ListItemText>
+          </MenuItem>
+          <MenuItem
+            onClick={() => onLocationChange('north')}
+            selected={selectedLocation === 'north'}
+          >
+            <ListItemText>North Campus</ListItemText>
+          </MenuItem>
+        </Dropdown.Menu>
+      </Dropdown>
     </Stack>
   );
 
@@ -75,19 +116,33 @@ export function AppHeader({
           <NotificationsIcon />
         </Badge>
       </IconButton>
-      <Button
-        color="inherit"
-        sx={{
-          textTransform: 'none',
-          display: 'flex',
-          alignItems: 'center',
-          gap: 1,
-        }}
-        endIcon={<KeyboardArrowDownIcon />}
-      >
-        <Avatar sx={{ width: 32, height: 32, bgcolor: 'secondary.main' }}>MM</Avatar>
-        <Typography variant="body2">Meghan Macy</Typography>
-      </Button>
+      <Dropdown open={userMenuOpen} setOpen={setUserMenuOpen}>
+        <Dropdown.Button
+          color="inherit"
+          sx={{
+            textTransform: 'none',
+            display: 'flex',
+            alignItems: 'center',
+            gap: 1,
+          }}
+          endIcon={<KeyboardArrowDownIcon />}
+          aria-label="User menu"
+        >
+          <Avatar sx={{ width: 32, height: 32, bgcolor: 'secondary.main' }}>MM</Avatar>
+          <Typography variant="body2">Meghan Macy</Typography>
+        </Dropdown.Button>
+        <Dropdown.Menu placement="bottom-end" closeOnItemClick>
+          <MenuItem onClick={() => console.log('Profile')}>
+            <ListItemText>Profile</ListItemText>
+          </MenuItem>
+          <MenuItem onClick={() => console.log('Settings')}>
+            <ListItemText>Settings</ListItemText>
+          </MenuItem>
+          <MenuItem onClick={() => console.log('Logout')}>
+            <ListItemText>Logout</ListItemText>
+          </MenuItem>
+        </Dropdown.Menu>
+      </Dropdown>
     </Stack>
   );
 

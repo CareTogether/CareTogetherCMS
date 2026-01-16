@@ -1,6 +1,5 @@
-import { List } from '@mui/material';
+import { Divider, List } from '@mui/material';
 import {
-  Dashboard as DashboardIcon,
   FamilyRestroom as FamilyRestroomIcon,
   VolunteerActivism as VolunteerActivismIcon,
   Diversity3 as Diversity3Icon,
@@ -16,12 +15,6 @@ interface AppSidebarProps {
 export function AppSidebar({ collapsed }: AppSidebarProps) {
   return (
     <List sx={{ pt: 2 }}>
-      <NavItem
-        icon={<DashboardIcon />}
-        text="Dashboard"
-        collapsed={collapsed}
-        onClick={() => console.log('Navigate to Dashboard')}
-      />
       <NavItem
         icon={<FamilyRestroomIcon />}
         text="Referrals"
@@ -40,6 +33,7 @@ export function AppSidebar({ collapsed }: AppSidebarProps) {
         collapsed={collapsed}
         onClick={() => console.log('Navigate to Communities')}
       />
+      <Divider sx={{ my: 3 }} />
       <NavItem
         icon={<SettingsIcon />}
         text="Settings"

@@ -33,8 +33,21 @@ export type { StepsProps } from "./StepNav";
 export { NavItem } from "./NavItem";
 export type { NavItemProps } from "./NavItem";
 
+export { Dropdown } from "./Dropdown";
+export type {
+  DropdownProps,
+  DropdownMenuProps,
+  DropdownButtonProps,
+  DropdownIconButtonProps,
+  DropdownContextType,
+} from "./Dropdown";
+export { useDropdown } from "./Dropdown";
+
 export { ProgressCard } from "./ProgressCard";
 export type { ProgressCardProps, ProgressCardStep } from "./ProgressCard";
+
+export { AccessiblePopover } from "./AccessiblePopover";
+export type { AccessiblePopoverProps } from "./AccessiblePopover";
 
 export {
   ActivityIcon,

@@ -29,18 +29,27 @@ export { ColoredChip } from "./components/index";
 export type { ColoredChipProps } from "./components/index";
 
 // Navigation Components
-export { NavItem, StepNav, Steps } from "./components/index";
+export { NavItem, StepNav, Steps, Dropdown, useDropdown } from "./components/index";
 export type {
   NavItemProps,
   StepNavProps,
   StepsProps,
   StepItem,
   StepGroup,
+  DropdownProps,
+  DropdownMenuProps,
+  DropdownButtonProps,
+  DropdownIconButtonProps,
+  DropdownContextType,
 } from "./components/index";
 
 // Progress Components
 export { ProgressCard } from "./components/index";
 export type { ProgressCardProps, ProgressCardStep } from "./components/index";
+
+// Display Components
+export { AccessiblePopover } from "./components/index";
+export type { AccessiblePopoverProps } from "./components/index";
 
 // Activity Components
 export {
