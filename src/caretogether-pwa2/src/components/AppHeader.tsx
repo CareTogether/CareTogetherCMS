@@ -10,11 +10,12 @@ import {
   Stack,
   Typography,
   ListItemText,
+  Box,
 } from '@mui/material';
 import {
   Search as SearchIcon,
   Notifications as NotificationsIcon,
-  KeyboardArrowDown as KeyboardArrowDownIcon,
+  KeyboardArrowDownRounded as KeyboardArrowDownIcon,
 } from '@mui/icons-material';
 import { Dropdown, Shell } from '@caretogether/ui-components';
 
@@ -48,17 +49,19 @@ export function AppHeader({
     }
   };
   const leftContent = (
-    <Stack direction="row" alignItems="center" spacing={2}>
-      <img src="/caretogether-logo.avif" alt="CareTogether Logo" style={{ height: 40 }} />
-      <Divider orientation="vertical" flexItem sx={{ mx: 1 }} />
+    <Stack direction="row" alignItems="center" gap={1.5}>
+      <Stack alignItems="center" direction="row">
+        <img src="/caretogether-logo.avif" alt="CareTogether Logo" style={{ height: 23 }} />
+      </Stack>
+      <Divider orientation="vertical" flexItem sx={{ height: 30 }} />
       <Dropdown open={locationMenuOpen} setOpen={setLocationMenuOpen}>
         <Dropdown.Button
           size="small"
-          color="inherit"
-          endIcon={<KeyboardArrowDownIcon />}
+          color="primaryDark"
+          endIcon={<KeyboardArrowDownIcon sx={{ ml: -0.5 }} />}
           sx={{
-            textTransform: 'none',
-            minWidth: 120,
+            px: 1.5,
+            ml: -1,
           }}
           aria-label="Select location"
         >
@@ -113,26 +116,33 @@ export function AppHeader({
   );
 
   const rightContent = (
-    <Stack direction="row" alignItems="center" spacing={2}>
-      <IconButton color="inherit">
+    <Stack direction="row" alignItems="center" spacing={0.5}>
+      <IconButton color="tertiary" aria-label="Notifications">
         <Badge badgeContent={3} color="error">
           <NotificationsIcon />
         </Badge>
       </IconButton>
       <Dropdown open={userMenuOpen} setOpen={setUserMenuOpen}>
         <Dropdown.Button
-          color="inherit"
+          color="tertiary"
           sx={{
-            textTransform: 'none',
             display: 'flex',
             alignItems: 'center',
             gap: 1,
+            '& .MuiButton-icon': { margin: 0 },
           }}
           endIcon={<KeyboardArrowDownIcon />}
           aria-label="User menu"
         >
-          <Avatar sx={{ width: 32, height: 32, bgcolor: 'secondary.main' }}>MM</Avatar>
-          <Typography variant="body2">Meghan Macy</Typography>
+          <Avatar sx={{ bgcolor: 'tertiary.main' }}>MM</Avatar>
+          <Box component="span" textAlign="left">
+            <Typography variant="body1" lineHeight={1.15}>
+              Meghan Macy
+            </Typography>
+            <Typography color="grey.900" variant="body2" lineHeight={1.15}>
+              Intake coordinator
+            </Typography>
+          </Box>
         </Dropdown.Button>
         <Dropdown.Menu placement="bottom-end" closeOnItemClick>
           <MenuItem onClick={() => console.log('Profile')}>
