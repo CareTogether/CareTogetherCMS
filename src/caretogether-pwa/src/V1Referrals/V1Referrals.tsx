@@ -39,7 +39,7 @@ export function V1Referrals() {
   );
   const [expandedView, setExpandedView] = useState(true);
   const [openNewReferral, setOpenNewReferral] = useState(false);
-  const [countyFilter, setCountyFilter] = useState<string[]>([]);
+  const [countyFilter, setCountyFilter] = useState<(string | null)[]>([]);
 
   const referrals =
     referralsLoadable.state === 'hasValue' ? referralsLoadable.contents : [];
@@ -53,8 +53,8 @@ export function V1Referrals() {
       status: statusToUi(r.status),
       openedAtUtc: r.createdAtUtc,
       closedAtUtc: r.closedAtUtc,
-      clientFamilyName: family ? familyNameString(family) : '-',
-      county: family ? getFamilyCounty(family) : '—',
+      clientFamilyName: family ? familyNameString(family) : null,
+      county: family ? getFamilyCounty(family) : null,
       comments: r.comment ?? '',
     };
   });
@@ -62,15 +62,16 @@ export function V1Referrals() {
   const filteredRows = rows.filter((r) => {
     const matchesText =
       r.title.toLowerCase().includes(filterText.toLowerCase()) ||
-      r.clientFamilyName.toLowerCase().includes(filterText.toLowerCase());
+      (r.clientFamilyName?.toLowerCase().includes(filterText.toLowerCase()) ??
+        false);
 
     const matchesStatus = statusFilter === 'ALL' || r.status === statusFilter;
 
     const matchesCounty =
       countyFilter.length === 0
         ? true
-        : r.county === '—'
-          ? countyFilter.includes('(blank)')
+        : r.county === null
+          ? countyFilter.includes(null)
           : countyFilter.includes(r.county);
 
     return matchesText && matchesStatus && matchesCounty;

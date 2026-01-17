@@ -14,6 +14,8 @@ import { SearchBar } from '../Shell/SearchBar';
 import { CombinedFamilyInfo } from '../GeneratedClient';
 import { CountyFilter } from '../V1Referrals/CountyFilter';
 
+export type ReferralStatusFilter = 'ALL' | 'OPEN' | 'CLOSED';
+
 interface ReferralsFiltersProps {
   filterText: string;
   setFilterText: (value: string) => void;
@@ -26,11 +28,11 @@ interface ReferralsFiltersProps {
   statusFilter: ReferralStatusFilter;
   setStatusFilter: (value: ReferralStatusFilter) => void;
 
-  countyFilter: string[];
-  setCountyFilter: (value: string[]) => void;
+  countyFilter: (string | null)[];
+  setCountyFilter: (value: (string | null)[]) => void;
+
   familiesForCountyFilter: CombinedFamilyInfo[];
 }
-export type ReferralStatusFilter = 'ALL' | 'OPEN' | 'CLOSED';
 
 export function ReferralsFilters({
   filterText,
@@ -79,13 +81,13 @@ export function ReferralsFilters({
         <ToggleButton value="CLOSED">CLOSED</ToggleButton>
       </ToggleButtonGroup>
 
-      <SearchBar value={filterText} onChange={setFilterText} />
-
       <CountyFilter
         families={familiesForCountyFilter}
         value={countyFilter}
         onChange={setCountyFilter}
       />
+
+      <SearchBar value={filterText} onChange={setFilterText} />
 
       <ToggleButtonGroup
         value={expandedView}

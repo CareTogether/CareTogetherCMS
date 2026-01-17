@@ -7,8 +7,8 @@ export interface ReferralRowModel {
   status: 'OPEN' | 'CLOSED';
   openedAtUtc?: Date;
   closedAtUtc?: Date;
-  clientFamilyName: string;
-  county?: string;
+  clientFamilyName: string | null;
+  county: string | null;
   comments?: string;
 }
 
@@ -50,9 +50,9 @@ export function ReferralRow({ referral, expanded }: ReferralRowProps) {
           </Box>
         </TableCell>
 
-        <TableCell>{referral.clientFamilyName}</TableCell>
+        <TableCell>{referral.clientFamilyName ?? ''}</TableCell>
 
-        <TableCell>{referral.county ?? '—'}</TableCell>
+        <TableCell>{referral.county ?? ''}</TableCell>
       </TableRow>
 
       {expanded && comments && (

@@ -29,6 +29,7 @@ import {
   Arrangement,
   ArrangementPhase,
   Permission,
+  CompletedCustomFieldInfo,
 } from '../GeneratedClient';
 import { FamilyName } from '../Families/FamilyName';
 import { ArrangementCard } from './Arrangements/ArrangementCard';
@@ -49,6 +50,9 @@ import { useLoadable } from '../Hooks/useLoadable';
 import { ProgressBackdrop } from '../Shell/ProgressBackdrop';
 import { useAppNavigate } from '../Hooks/useAppNavigate';
 import PhoneIcon from '@mui/icons-material/Phone';
+import { CustomFieldsFilter } from '../Generic/CustomFieldsFilter/CustomFieldsFilter';
+import { useCustomFieldFilters } from '../Generic/CustomFieldsFilter/useCustomFieldFilters';
+import { matchesCustomFieldFilters } from '../Generic/CustomFieldsFilter/matchesCustomFieldFilters';
 import { TestFamilyBadge } from '../Families/TestFamilyBadge';
 import { useFeatureFlagEnabled } from 'posthog-js/react';
 import { CountyFilter } from '../V1Referrals/CountyFilter';
@@ -62,73 +66,60 @@ const arrangementPhaseText = new Map<number, string>([
 ]);
 
 function allArrangements(partneringFamilyInfo: PartneringFamilyInfo) {
-  const results: { v1CaseId: string; arrangement: Arrangement }[] = [];
-  partneringFamilyInfo.closedV1Cases?.forEach((x) =>
-    x.arrangements?.forEach((y) =>
-      results.push({ v1CaseId: x.id!, arrangement: y })
-    )
+  const closed = (partneringFamilyInfo.closedV1Cases ?? []).flatMap((v1Case) =>
+    (v1Case.arrangements ?? []).map((arrangement) => ({
+      v1CaseId: v1Case.id!,
+      arrangement,
+    }))
   );
-  partneringFamilyInfo.openV1Case?.arrangements?.forEach((x) =>
-    results.push({
-      v1CaseId: partneringFamilyInfo.openV1Case!.id!,
-      arrangement: x,
-    })
-  );
-  return results;
+
+  const openV1Case = partneringFamilyInfo.openV1Case;
+  const open = (openV1Case?.arrangements ?? []).map((arrangement) => ({
+    v1CaseId: openV1Case!.id!,
+    arrangement,
+  }));
+
+  return [...closed, ...open];
 }
 
 function matchingArrangements(
   partneringFamilyInfo: PartneringFamilyInfo,
-  arrangementsFilter: 'All' | 'Active' | 'Setup' | 'Active + Setup'
+  arrangementsFilter: 'All' | 'Intake' | 'Active' | 'Setup' | 'Active + Setup'
 ) {
-  const results: { v1CaseId: string; arrangement: Arrangement }[] = [];
-  if (arrangementsFilter === 'All') {
-    partneringFamilyInfo.closedV1Cases?.forEach((x) =>
-      x.arrangements?.forEach((y) =>
-        results.push({ v1CaseId: x.id!, arrangement: y })
-      )
-    );
-    partneringFamilyInfo.openV1Case?.arrangements?.forEach((x) =>
-      results.push({
-        v1CaseId: partneringFamilyInfo.openV1Case!.id!,
-        arrangement: x,
-      })
-    );
-  } else {
-    if (
-      arrangementsFilter === 'Active' ||
-      arrangementsFilter === 'Active + Setup'
-    ) {
-      partneringFamilyInfo.openV1Case?.arrangements
-        ?.filter(
-          (arrangement) => arrangement.phase === ArrangementPhase.Started
-        )
-        .forEach((x) =>
-          results.push({
-            v1CaseId: partneringFamilyInfo.openV1Case!.id!,
-            arrangement: x,
-          })
-        );
-    }
-    if (
-      arrangementsFilter === 'Setup' ||
-      arrangementsFilter === 'Active + Setup'
-    ) {
-      partneringFamilyInfo.openV1Case?.arrangements
-        ?.filter(
-          (arrangement) =>
-            arrangement.phase === ArrangementPhase.SettingUp ||
-            arrangement.phase === ArrangementPhase.ReadyToStart
-        )
-        .forEach((x) =>
-          results.push({
-            v1CaseId: partneringFamilyInfo.openV1Case!.id!,
-            arrangement: x,
-          })
-        );
-    }
+  if (arrangementsFilter === 'Intake') {
+    return [];
   }
-  return results;
+
+  if (arrangementsFilter === 'All') {
+    return allArrangements(partneringFamilyInfo);
+  }
+
+  const openV1Case = partneringFamilyInfo.openV1Case;
+  const openArrangements = openV1Case?.arrangements ?? [];
+
+  const matchesPhase = (arrangement: Arrangement) => {
+    if (arrangementsFilter === 'Active') {
+      return arrangement.phase === ArrangementPhase.Started;
+    }
+
+    if (arrangementsFilter === 'Setup') {
+      return (
+        arrangement.phase === ArrangementPhase.SettingUp ||
+        arrangement.phase === ArrangementPhase.ReadyToStart
+      );
+    }
+
+    return (
+      arrangement.phase === ArrangementPhase.Started ||
+      arrangement.phase === ArrangementPhase.SettingUp ||
+      arrangement.phase === ArrangementPhase.ReadyToStart
+    );
+  };
+
+  return openArrangements.filter(matchesPhase).map((arrangement) => ({
+    v1CaseId: openV1Case!.id!,
+    arrangement,
+  }));
 }
 
 function PartneringFamilies() {
@@ -146,23 +137,36 @@ function PartneringFamilies() {
     return a.arrangementType!;
   });
 
+  const loadablePolicy = useLoadable(policyData);
+
+  const referralCustomFields = React.useMemo(() => {
+    return loadablePolicy?.referralPolicy?.customFields || [];
+  }, [loadablePolicy]);
+
   const [filterText, setFilterText] = useState('');
-  const [countyFilter, setCountyFilter] = useState<string[]>([]);
+  const [countyFilter, setCountyFilter] = useState<(string | null)[]>([]);
 
   const filteredPartneringFamilies = filterFamiliesByText(
     partneringFamilies,
     filterText
   );
 
-  const countyFilteredFamilies =
-    countyFilter.length === 0
-      ? filteredPartneringFamilies
-      : filteredPartneringFamilies.filter((family) => {
-          const county = getFamilyCounty(family);
-          return county === '—'
-            ? countyFilter.includes('(blank)')
-            : countyFilter.includes(county);
-        });
+  const {
+    selectedValuesByField: selectedCustomFieldValuesByField,
+    setSelectedValuesForField: setSelectedCustomFieldValuesForField,
+    optionsByField: customFieldFilterOptionsByField,
+  } = useCustomFieldFilters({
+    customFields: referralCustomFields,
+    items: partneringFamilies,
+    isBlank: (family, fieldName) =>
+      family.partneringFamilyInfo?.openV1Case?.missingCustomFields?.includes(
+        fieldName
+      ) ?? false,
+    getValue: (family, fieldName) =>
+      family.partneringFamilyInfo?.openV1Case?.completedCustomFields?.find(
+        (f) => f.customFieldName === fieldName
+      )?.value,
+  });
 
   useScrollMemory();
 
@@ -279,29 +283,68 @@ function PartneringFamilies() {
   };
 
   const [arrangementsFilter, setArrangementsFilter] = useLocalStorage<
-    'All' | 'Active' | 'Setup' | 'Active + Setup'
+    'All' | 'Intake' | 'Active' | 'Setup' | 'Active + Setup'
   >('partnering-families-arrangementsFilter', 'All');
   const filteredPartneringFamiliesWithActiveOrAllFilter =
-    countyFilteredFamilies.filter((family) =>
-      arrangementsFilter === 'All'
-        ? true
-        : arrangementsFilter === 'Active'
-          ? family.partneringFamilyInfo?.openV1Case?.arrangements?.some(
+    filteredPartneringFamilies
+      .filter((family) =>
+        matchesCustomFieldFilters({
+          item: family,
+          customFields: referralCustomFields,
+          selectedValuesByField: selectedCustomFieldValuesByField,
+          isBlank: (f, fieldName) =>
+            f.partneringFamilyInfo?.openV1Case?.missingCustomFields?.includes(
+              fieldName
+            ) ?? false,
+          getValue: (f, fieldName) =>
+            f.partneringFamilyInfo?.openV1Case?.completedCustomFields?.find(
+              (x) => x.customFieldName === fieldName
+            )?.value,
+        })
+      )
+      .filter((family) => {
+        if (countyFilter.length === 0) return true;
+
+        const county = getFamilyCounty(family);
+        return county === '—'
+          ? countyFilter.includes(null)
+          : countyFilter.includes(county);
+      })
+      .filter((family) => {
+        const openCase = family.partneringFamilyInfo?.openV1Case;
+        const arrangements = openCase?.arrangements ?? [];
+
+        switch (arrangementsFilter) {
+          case 'All':
+            return true;
+
+          case 'Intake':
+            return !!openCase && arrangements.length === 0;
+
+          case 'Active':
+            return arrangements.some(
               (arrangement) => arrangement.phase === ArrangementPhase.Started
-            )
-          : arrangementsFilter === 'Setup'
-            ? family.partneringFamilyInfo?.openV1Case?.arrangements?.some(
-                (arrangement) =>
-                  arrangement.phase === ArrangementPhase.SettingUp ||
-                  arrangement.phase === ArrangementPhase.ReadyToStart
-              )
-            : family.partneringFamilyInfo?.openV1Case?.arrangements?.some(
-                (arrangement) =>
-                  arrangement.phase === ArrangementPhase.Started ||
-                  arrangement.phase === ArrangementPhase.SettingUp ||
-                  arrangement.phase === ArrangementPhase.ReadyToStart
-              )
-    );
+            );
+
+          case 'Setup':
+            return arrangements.some(
+              (arrangement) =>
+                arrangement.phase === ArrangementPhase.SettingUp ||
+                arrangement.phase === ArrangementPhase.ReadyToStart
+            );
+
+          case 'Active + Setup':
+            return arrangements.some(
+              (arrangement) =>
+                arrangement.phase === ArrangementPhase.Started ||
+                arrangement.phase === ArrangementPhase.SettingUp ||
+                arrangement.phase === ArrangementPhase.ReadyToStart
+            );
+
+          default:
+            return true;
+        }
+      });
 
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
@@ -321,7 +364,16 @@ function PartneringFamilies() {
   ) : (
     <Grid container>
       <Grid item xs={12}>
-        <Stack direction="row" sx={{ marginTop: 2, marginBottom: 2 }}>
+        <Stack
+          direction="row"
+          sx={{
+            marginTop: 2,
+            marginBottom: 2,
+            flexWrap: 'wrap',
+            alignItems: 'center',
+            gap: 1,
+          }}
+        >
           {permissions(Permission.EditFamilyInfo) &&
             permissions(Permission.CreateV1Case) && (
               <Button
@@ -341,27 +393,54 @@ function PartneringFamilies() {
             size={isMobile ? 'medium' : 'small'}
             aria-label="row expansion"
           >
-            <ToggleButton value={'All'} aria-label="expanded">
-              All
-            </ToggleButton>
-            <ToggleButton value={'Active'} aria-label="collapsed">
-              Active
-            </ToggleButton>
-            <ToggleButton value={'Setup'} aria-label="collapsed">
-              Setup
-            </ToggleButton>
-            <ToggleButton value={'Active + Setup'} aria-label="collapsed">
-              Active + Setup
-            </ToggleButton>
+            <Tooltip title="Shows all cases" arrow>
+              <ToggleButton value={'All'} aria-label="expanded">
+                All
+              </ToggleButton>
+            </Tooltip>
+            <Tooltip title="Shows open cases with no arrangements yet" arrow>
+              <ToggleButton value={'Intake'}>Intake</ToggleButton>
+            </Tooltip>
+            <Tooltip
+              title="Shows cases with at least one active arrangement"
+              arrow
+            >
+              <ToggleButton value={'Active'} aria-label="collapsed">
+                Active
+              </ToggleButton>
+            </Tooltip>
+            <Tooltip
+              title="Shows cases with arrangements in the setup phase"
+              arrow
+            >
+              <ToggleButton value={'Setup'} aria-label="collapsed">
+                Setup
+              </ToggleButton>
+            </Tooltip>
+            <Tooltip
+              title="Shows cases with arrangements that are either active or in setup"
+              arrow
+            >
+              <ToggleButton value={'Active + Setup'} aria-label="collapsed">
+                Active + Setup
+              </ToggleButton>
+            </Tooltip>
           </ToggleButtonGroup>
 
-          <SearchBar value={filterText} onChange={setFilterText} />
+          <CustomFieldsFilter
+            customFields={referralCustomFields}
+            optionsByField={customFieldFilterOptionsByField}
+            selectedValuesByField={selectedCustomFieldValuesByField}
+            onFieldChange={setSelectedCustomFieldValuesForField}
+          />
 
           <CountyFilter
             families={partneringFamilies}
             value={countyFilter}
             onChange={setCountyFilter}
           />
+
+          <SearchBar value={filterText} onChange={setFilterText} />
 
           <ToggleButtonGroup
             value={expandedView}
@@ -380,24 +459,43 @@ function PartneringFamilies() {
         </Stack>
       </Grid>
       <Grid item xs={12}>
-        <TableContainer>
+        <TableContainer
+          sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}
+        >
           <Table sx={{ minWidth: '700px' }} size="small">
             <TableHead>
               <TableRow>
-                <TableCell>Client Family</TableCell>
-                <TableCell>Case Status</TableCell>
-                <TableCell>County</TableCell>
-                {!expandedView ? (
+                <TableCell sx={{ fontWeight: 600 }}>Client Family</TableCell>
+                <TableCell sx={{ fontWeight: 600 }}>Case Status</TableCell>
+                <TableCell sx={{ fontWeight: 600 }}>County</TableCell>
+                {referralCustomFields.map((field) => (
+                  <TableCell
+                    key={field.name}
+                    sx={{
+                      fontWeight: 600,
+                      textAlign: 'center',
+                      whiteSpace: 'nowrap',
+                    }}
+                  >
+                    {field.name}
+                  </TableCell>
+                ))}
+
+                {!expandedView &&
                   arrangementTypes?.map((arrangementType) => (
-                    <TableCell key={arrangementType}>
+                    <TableCell
+                      key={arrangementType}
+                      sx={{
+                        fontWeight: 600,
+                        textAlign: 'center',
+                      }}
+                    >
                       {arrangementType}
                     </TableCell>
-                  ))
-                ) : (
-                  <></>
-                )}
+                  ))}
               </TableRow>
             </TableHead>
+
             <TableBody>
               {filteredPartneringFamiliesWithActiveOrAllFilter.map(
                 (partneringFamily) => {
@@ -521,6 +619,37 @@ function PartneringFamilies() {
                         ) : (
                           <></>
                         )}
+                        {referralCustomFields.map((field) => {
+                          const completedFields =
+                            partneringFamily.partneringFamilyInfo?.openV1Case
+                              ?.completedCustomFields ?? [];
+
+                          const matchingField = completedFields.find(
+                            (customField: CompletedCustomFieldInfo) =>
+                              customField.customFieldName === field.name
+                          );
+
+                          const fieldValue = matchingField?.value;
+
+                          const displayValue =
+                            fieldValue === true
+                              ? 'Yes'
+                              : fieldValue === false
+                                ? 'No'
+                                : fieldValue === undefined ||
+                                    fieldValue === null
+                                  ? ''
+                                  : fieldValue.toString();
+
+                          return (
+                            <TableCell
+                              key={field.name}
+                              sx={{ textAlign: 'center' }}
+                            >
+                              {displayValue}
+                            </TableCell>
+                          );
+                        })}
                       </TableRow>
                       {expandedView && (
                         <TableRow
@@ -528,7 +657,7 @@ function PartneringFamilies() {
                             openFamily(partneringFamily.family!.id!)
                           }
                         >
-                          <TableCell colSpan={3} sx={{ pl: 3 }}>
+                          <TableCell colSpan={5} sx={{ pl: 3 }}>
                             <Box
                               sx={{
                                 whiteSpace: 'pre-wrap',

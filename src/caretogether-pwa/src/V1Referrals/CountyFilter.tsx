@@ -1,10 +1,13 @@
 import { CombinedFamilyInfo, IAddress } from '../GeneratedClient';
-import { CustomFieldsFilterSelect } from '../Volunteers/VolunteerApproval/CustomFieldsFilterSelect';
+import { CustomFieldsFilterSelect } from '../Generic/CustomFieldsFilter/CustomFieldsFilterSelect';
+import { CustomFieldFilterOption } from '../Generic/CustomFieldsFilter/types';
+
+type CountyFilterValue = string | null;
 
 type CountyFilterProps = {
   families: CombinedFamilyInfo[];
-  value: string[];
-  onChange: (value: string[]) => void;
+  value: CountyFilterValue[];
+  onChange: (value: CountyFilterValue[]) => void;
 };
 
 function getCountyFromFamily(familyInfo: CombinedFamilyInfo): string | null {
@@ -41,19 +44,30 @@ export function CountyFilter({ families, value, onChange }: CountyFilterProps) {
     )
   ).sort((a, b) => a.localeCompare(b));
 
-  const options = counties.concat('(blank)');
+  const options: CustomFieldFilterOption[] = [
+    {
+      key: '(blank)',
+      value: null,
+      selected: value.includes(null),
+    },
+    ...counties.map((county) => ({
+      key: county,
+      value: county,
+      selected: value.includes(county),
+    })),
+  ];
 
   return (
     <CustomFieldsFilterSelect
       label="County"
       options={options}
-      value={value}
-      setSelected={(val) => {
-        if (typeof val === 'string') {
-          onChange([val]);
-        } else {
-          onChange(val);
-        }
+      selectedValues={value}
+      onChange={(selected) => {
+        onChange(
+          selected.filter(
+            (v): v is string | null => typeof v === 'string' || v === null
+          )
+        );
       }}
     />
   );
