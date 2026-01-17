@@ -10,9 +10,21 @@ type ShellBaseProps = Pick<BoxProps, "sx">;
 
 export interface ShellProps extends ShellBaseProps {
   /**
-   * Shell layout children (typically Shell.Header, Shell.Sidebar, Shell.Content, Shell.Footer)
+   * Header slot - typically a Shell.Header component
    */
-  children: React.ReactNode;
+  header?: React.ReactNode;
+  /**
+   * Sidebar slot - typically a Shell.Sidebar component
+   */
+  sidebar?: React.ReactNode;
+  /**
+   * Content slot - typically a Shell.Content component
+   */
+  content?: React.ReactNode;
+  /**
+   * Footer slot - typically a Shell.Footer component
+   */
+  footer?: React.ReactNode;
   /**
    * Whether the sidebar is open (expanded) or closed (collapsed).
    * @default true
@@ -54,19 +66,22 @@ interface ShellComposition {
 }
 
 /**
- * Root shell layout container using compound component pattern.
+ * Root shell layout container using slots-based API.
  * Provides the base structure for application layouts with flexible composition.
  *
  * For mobile navigation, use the `hideSidebarBelow` prop to hide the sidebar on smaller screens,
  * then implement your own mobile menu solution (e.g., MUI Drawer, BottomNavigation).
  */
 export const Shell: React.FC<ShellProps> & ShellComposition = ({
-  children,
   sx,
   sidebarOpen = true,
   sidebarExpandedWidth = 236,
   sidebarCollapsedWidth = 88,
   hideSidebarBelow,
+  header,
+  sidebar: sidebarChild,
+  content,
+  footer,
 }) => {
   const theme = useTheme();
   // Always call useMediaQuery unconditionally to follow React Hooks rules
@@ -74,21 +89,6 @@ export const Shell: React.FC<ShellProps> & ShellComposition = ({
     hideSidebarBelow ? theme.breakpoints.down(hideSidebarBelow) : "(min-width: 0px)"
   );
   const shouldHideSidebar = hideSidebarBelow ? isBelowBreakpoint : false;
-
-  // Separate children by type to arrange them properly
-  const childArray = React.Children.toArray(children);
-  const header = childArray.find(
-    (child) => React.isValidElement(child) && child.type === ShellHeader
-  );
-  const sidebarChild = childArray.find(
-    (child) => React.isValidElement(child) && child.type === ShellSidebar
-  );
-  const content = childArray.find(
-    (child) => React.isValidElement(child) && child.type === ShellContent
-  );
-  const footer = childArray.find(
-    (child) => React.isValidElement(child) && child.type === ShellFooter
-  );
 
   // Conditionally hide sidebar based on responsive breakpoint
   const sidebar = shouldHideSidebar ? null : sidebarChild;

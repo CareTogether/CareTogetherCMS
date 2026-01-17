@@ -41,118 +41,125 @@ export default meta;
 type Story = StoryObj<typeof Shell>;
 
 /**
- * Basic shell layout with all components composed together.
+ * Basic shell layout with all components composed together using slots API.
  * The Shell component automatically arranges the header full-width at top,
- * sidebar and content side-by-side below (using CSS Grid), and footer full-width at bottom.
+ * sidebar and content side-by-side below, and footer full-width at bottom.
  */
 export const Complete: Story = {
   render: () => {
     const [open, setOpen] = useState(true);
 
     return (
-      <Shell sidebarOpen={open}>
-        <Shell.Header
-          leftContent={
-            <>
-              <IconButton onClick={() => setOpen(!open)} edge="start" sx={{ mr: 2 }}>
-                <MenuIcon />
+      <Shell
+        sidebarOpen={open}
+        header={
+          <Shell.Header
+            leftContent={
+              <>
+                <IconButton onClick={() => setOpen(!open)} edge="start" sx={{ mr: 2 }}>
+                  <MenuIcon />
+                </IconButton>
+                <Typography variant="h6" noWrap>
+                  CareTogether CMS
+                </Typography>
+              </>
+            }
+            rightContent={
+              <IconButton>
+                <AccountCircle />
               </IconButton>
-              <Typography variant="h6" noWrap>
-                CareTogether CMS
+            }
+          />
+        }
+        sidebar={
+          <Shell.Sidebar open={open}>
+            <List>
+              <ListItem disablePadding>
+                <ListItemButton>
+                  <ListItemIcon>
+                    <DashboardIcon />
+                  </ListItemIcon>
+                  <ListItemText primary="Dashboard" />
+                </ListItemButton>
+              </ListItem>
+              <ListItem disablePadding>
+                <ListItemButton>
+                  <ListItemIcon>
+                    <PeopleIcon />
+                  </ListItemIcon>
+                  <ListItemText primary="Families" />
+                </ListItemButton>
+              </ListItem>
+              <ListItem disablePadding>
+                <ListItemButton>
+                  <ListItemIcon>
+                    <SettingsIcon />
+                  </ListItemIcon>
+                  <ListItemText primary="Settings" />
+                </ListItemButton>
+              </ListItem>
+            </List>
+          </Shell.Sidebar>
+        }
+        content={
+          <Shell.Content>
+            <Container sx={{ py: 4 }}>
+              <Typography variant="h4" gutterBottom>
+                Welcome to CareTogether
               </Typography>
-            </>
-          }
-          rightContent={
-            <IconButton>
-              <AccountCircle />
-            </IconButton>
-          }
-        />
+              <Typography variant="body1" paragraph>
+                This is an example of the Shell slots API. The header, sidebar, content area, and
+                footer are all passed as props for maximum flexibility and Fast Refresh
+                compatibility.
+              </Typography>
+              <Button variant="contained" color="primaryDark" sx={{ mb: 4 }}>
+                Get Started
+              </Button>
 
-        <Shell.Sidebar open={open}>
-          <List>
-            <ListItem disablePadding>
-              <ListItemButton>
-                <ListItemIcon>
-                  <DashboardIcon />
-                </ListItemIcon>
-                <ListItemText primary="Dashboard" />
-              </ListItemButton>
-            </ListItem>
-            <ListItem disablePadding>
-              <ListItemButton>
-                <ListItemIcon>
-                  <PeopleIcon />
-                </ListItemIcon>
-                <ListItemText primary="Families" />
-              </ListItemButton>
-            </ListItem>
-            <ListItem disablePadding>
-              <ListItemButton>
-                <ListItemIcon>
-                  <SettingsIcon />
-                </ListItemIcon>
-                <ListItemText primary="Settings" />
-              </ListItemButton>
-            </ListItem>
-          </List>
-        </Shell.Sidebar>
+              <Typography variant="h5" gutterBottom sx={{ mt: 4 }}>
+                Scrollable Content
+              </Typography>
+              <Typography variant="body1" paragraph>
+                Scroll down to see how the shell handles longer content. The header stays at the
+                top, the sidebar remains fixed on the left, and the content area is scrollable.
+              </Typography>
 
-        <Shell.Content>
-          <Container sx={{ py: 4 }}>
-            <Typography variant="h4" gutterBottom>
-              Welcome to CareTogether
-            </Typography>
-            <Typography variant="body1" paragraph>
-              This is an example of the Shell compound component pattern. The header, sidebar,
-              content area, and footer are all composable parts that you can customize.
-            </Typography>
-            <Button variant="contained" color="primaryDark" sx={{ mb: 4 }}>
-              Get Started
-            </Button>
+              {Array.from({ length: 40 }, (_, i) => (
+                <Box key={i} sx={{ mb: 3 }}>
+                  <Typography variant="h6" gutterBottom>
+                    Section {i + 1}
+                  </Typography>
+                  <Typography variant="body2" paragraph>
+                    This is placeholder content to demonstrate scrolling behavior. The Shell
+                    component provides a flexible layout system that adapts to different content
+                    heights. Notice how the sidebar and header remain in their positions as you
+                    scroll through the content.
+                  </Typography>
+                </Box>
+              ))}
 
-            <Typography variant="h5" gutterBottom sx={{ mt: 4 }}>
-              Scrollable Content
-            </Typography>
-            <Typography variant="body1" paragraph>
-              Scroll down to see how the shell handles longer content. The header stays at the top,
-              the sidebar remains fixed on the left, and the content area is scrollable.
-            </Typography>
-
-            {Array.from({ length: 40 }, (_, i) => (
-              <Box key={i} sx={{ mb: 3 }}>
-                <Typography variant="h6" gutterBottom>
-                  Section {i + 1}
-                </Typography>
-                <Typography variant="body2" paragraph>
-                  This is placeholder content to demonstrate scrolling behavior. The Shell component
-                  provides a flexible layout system that adapts to different content heights. Notice
-                  how the sidebar and header remain in their positions as you scroll through the
-                  content.
-                </Typography>
-              </Box>
-            ))}
-
-            <Typography variant="h5" gutterBottom>
-              End of Content
-            </Typography>
-            <Typography variant="body1" paragraph>
-              You&apos;ve reached the bottom! The footer should be visible below this content.
-            </Typography>
-          </Container>
-        </Shell.Content>
-
-        <Shell.Footer>
-          <Box sx={{ display: "flex", justifyContent: "space-between" }}>
-            <Typography variant="body2" color="text.secondary">
-              © 2025 CareTogether
-            </Typography>
-            <Typography variant="caption" color="text.secondary">
-              v1.0.0
-            </Typography>
-          </Box>
-        </Shell.Footer>
-      </Shell>
+              <Typography variant="h5" gutterBottom>
+                End of Content
+              </Typography>
+              <Typography variant="body1" paragraph>
+                You&apos;ve reached the bottom! The footer should be visible below this content.
+              </Typography>
+            </Container>
+          </Shell.Content>
+        }
+        footer={
+          <Shell.Footer>
+            <Box sx={{ display: "flex", justifyContent: "space-between" }}>
+              <Typography variant="body2" color="text.secondary">
+                © 2025 CareTogether
+              </Typography>
+              <Typography variant="caption" color="text.secondary">
+                v1.0.0
+              </Typography>
+            </Box>
+          </Shell.Footer>
+        }
+      />
     );
   },
 };
@@ -162,18 +169,19 @@ export const Complete: Story = {
  */
 export const MinimalLayout: Story = {
   render: () => (
-    <Shell>
-      <Shell.Header centerContent={<Typography variant="h6">Simple App</Typography>} />
-
-      <Shell.Content>
-        <Container sx={{ py: 4 }}>
-          <Typography variant="h4">Minimal Layout</Typography>
-          <Typography variant="body1">
-            This example shows a minimal shell with just a header and content area.
-          </Typography>
-        </Container>
-      </Shell.Content>
-    </Shell>
+    <Shell
+      header={<Shell.Header centerContent={<Typography variant="h6">Simple App</Typography>} />}
+      content={
+        <Shell.Content>
+          <Container sx={{ py: 4 }}>
+            <Typography variant="h4">Minimal Layout</Typography>
+            <Typography variant="body1">
+              This example shows a minimal shell with just a header and content area.
+            </Typography>
+          </Container>
+        </Shell.Content>
+      }
+    />
   ),
 };
 
@@ -288,28 +296,32 @@ export const FooterOnly: Story = {
  */
 export const FixedHeader: Story = {
   render: () => (
-    <Shell>
-      <Shell.Header
-        position="fixed"
-        leftContent={<Typography variant="h6">Fixed Layout</Typography>}
-      />
-
-      <Shell.Content>
-        <Container sx={{ py: 4 }}>
-          {Array.from({ length: 50 }, (_, i) => (
-            <Typography key={i} paragraph>
-              Content line {i + 1}. Scroll to see the fixed header and footer in action.
-            </Typography>
-          ))}
-        </Container>
-      </Shell.Content>
-
-      <Shell.Footer>
-        <Typography variant="body2" color="text.secondary" textAlign="center">
-          Footer stays at bottom
-        </Typography>
-      </Shell.Footer>
-    </Shell>
+    <Shell
+      header={
+        <Shell.Header
+          position="fixed"
+          leftContent={<Typography variant="h6">Fixed Layout</Typography>}
+        />
+      }
+      content={
+        <Shell.Content>
+          <Container sx={{ py: 4 }}>
+            {Array.from({ length: 50 }, (_, i) => (
+              <Typography key={i} paragraph>
+                Content line {i + 1}. Scroll to see the fixed header and footer in action.
+              </Typography>
+            ))}
+          </Container>
+        </Shell.Content>
+      }
+      footer={
+        <Shell.Footer>
+          <Typography variant="body2" color="text.secondary" textAlign="center">
+            Footer stays at bottom
+          </Typography>
+        </Shell.Footer>
+      }
+    />
   ),
 };
 
@@ -342,116 +354,123 @@ export const MobileNavigation: Story = {
 
     return (
       <>
-        <Shell sidebarOpen={sidebarOpen} hideSidebarBelow="md">
-          <Shell.Header
-            leftContent={
-              <>
-                <IconButton
-                  onClick={() =>
-                    isMobile ? setMobileMenuOpen(true) : setSidebarOpen(!sidebarOpen)
-                  }
-                  edge="start"
-                  sx={{ mr: 2 }}
-                  aria-label={isMobile ? "open menu" : "toggle sidebar"}
-                >
-                  <MenuIcon />
+        <Shell
+          sidebarOpen={sidebarOpen}
+          hideSidebarBelow="md"
+          header={
+            <Shell.Header
+              leftContent={
+                <>
+                  <IconButton
+                    onClick={() =>
+                      isMobile ? setMobileMenuOpen(true) : setSidebarOpen(!sidebarOpen)
+                    }
+                    edge="start"
+                    sx={{ mr: 2 }}
+                    aria-label={isMobile ? "open menu" : "toggle sidebar"}
+                  >
+                    <MenuIcon />
+                  </IconButton>
+                  <Typography variant="h6" noWrap>
+                    CareTogether
+                  </Typography>
+                </>
+              }
+              rightContent={
+                <IconButton aria-label="account">
+                  <AccountCircle />
                 </IconButton>
-                <Typography variant="h6" noWrap>
-                  CareTogether
+              }
+            />
+          }
+          sidebar={
+            <Shell.Sidebar>
+              <List>
+                {navigationItems.map((item, index) => (
+                  <ListItem key={index} disablePadding>
+                    <ListItemButton selected={index === 0}>
+                      <ListItemIcon>{item.icon}</ListItemIcon>
+                      <ListItemText primary={item.label} />
+                    </ListItemButton>
+                  </ListItem>
+                ))}
+              </List>
+            </Shell.Sidebar>
+          }
+          content={
+            <Shell.Content>
+              <Container sx={{ py: 4, pb: isMobile ? 10 : 4 }}>
+                <Typography variant="h4" gutterBottom>
+                  Responsive Navigation Example
                 </Typography>
-              </>
-            }
-            rightContent={
-              <IconButton aria-label="account">
-                <AccountCircle />
-              </IconButton>
-            }
-          />
 
-          <Shell.Sidebar>
-            <List>
-              {navigationItems.map((item, index) => (
-                <ListItem key={index} disablePadding>
-                  <ListItemButton selected={index === 0}>
-                    <ListItemIcon>{item.icon}</ListItemIcon>
-                    <ListItemText primary={item.label} />
-                  </ListItemButton>
-                </ListItem>
-              ))}
-            </List>
-          </Shell.Sidebar>
+                <Paper sx={{ p: 3, mb: 3, bgcolor: "info.light", color: "info.contrastText" }}>
+                  <Typography variant="h6" gutterBottom>
+                    Current View: {isMobile ? "Mobile" : "Desktop"}
+                  </Typography>
+                  <Typography variant="body2">
+                    {isMobile
+                      ? "📱 Sidebar hidden. Using hamburger menu + bottom navigation."
+                      : "🖥️ Sidebar visible. Toggle with menu button."}
+                  </Typography>
+                </Paper>
 
-          <Shell.Content>
-            <Container sx={{ py: 4, pb: isMobile ? 10 : 4 }}>
-              <Typography variant="h4" gutterBottom>
-                Responsive Navigation Example
-              </Typography>
-
-              <Paper sx={{ p: 3, mb: 3, bgcolor: "info.light", color: "info.contrastText" }}>
-                <Typography variant="h6" gutterBottom>
-                  Current View: {isMobile ? "Mobile" : "Desktop"}
+                <Typography variant="h5" gutterBottom sx={{ mt: 4 }}>
+                  Implementation Notes
                 </Typography>
-                <Typography variant="body2">
-                  {isMobile
-                    ? "📱 Sidebar hidden. Using hamburger menu + bottom navigation."
-                    : "🖥️ Sidebar visible. Toggle with menu button."}
+                <Typography variant="body1" paragraph>
+                  This pattern demonstrates the recommended approach for responsive navigation:
                 </Typography>
-              </Paper>
+                <Box component="ul" sx={{ pl: 3 }}>
+                  <li>
+                    <Typography variant="body2" paragraph>
+                      <strong>Shell Component:</strong> Set{" "}
+                      <code>hideSidebarBelow=&quot;md&quot;</code> to automatically hide the sidebar
+                      on mobile screens.
+                    </Typography>
+                  </li>
+                  <li>
+                    <Typography variant="body2" paragraph>
+                      <strong>Header Button:</strong> Conditionally render hamburger (mobile) vs
+                      sidebar toggle (desktop) using <code>useMediaQuery</code>.
+                    </Typography>
+                  </li>
+                  <li>
+                    <Typography variant="body2" paragraph>
+                      <strong>Mobile Menu:</strong> Implement your own MUI Drawer for mobile
+                      navigation with application-specific menu items and logic.
+                    </Typography>
+                  </li>
+                  <li>
+                    <Typography variant="body2" paragraph>
+                      <strong>Bottom Navigation (Optional):</strong> Add BottomNavigation for quick
+                      access to primary actions on mobile.
+                    </Typography>
+                  </li>
+                </Box>
 
-              <Typography variant="h5" gutterBottom sx={{ mt: 4 }}>
-                Implementation Notes
-              </Typography>
-              <Typography variant="body1" paragraph>
-                This pattern demonstrates the recommended approach for responsive navigation:
-              </Typography>
-              <Box component="ul" sx={{ pl: 3 }}>
-                <li>
-                  <Typography variant="body2" paragraph>
-                    <strong>Shell Component:</strong> Set{" "}
-                    <code>hideSidebarBelow=&quot;md&quot;</code> to automatically hide the sidebar
-                    on mobile screens.
-                  </Typography>
-                </li>
-                <li>
-                  <Typography variant="body2" paragraph>
-                    <strong>Header Button:</strong> Conditionally render hamburger (mobile) vs
-                    sidebar toggle (desktop) using <code>useMediaQuery</code>.
-                  </Typography>
-                </li>
-                <li>
-                  <Typography variant="body2" paragraph>
-                    <strong>Mobile Menu:</strong> Implement your own MUI Drawer for mobile
-                    navigation with application-specific menu items and logic.
-                  </Typography>
-                </li>
-                <li>
-                  <Typography variant="body2" paragraph>
-                    <strong>Bottom Navigation (Optional):</strong> Add BottomNavigation for quick
-                    access to primary actions on mobile.
-                  </Typography>
-                </li>
-              </Box>
+                <Divider sx={{ my: 4 }} />
 
-              <Divider sx={{ my: 4 }} />
-
-              <Typography variant="h5" gutterBottom>
-                Scrollable Content
-              </Typography>
-              {Array.from({ length: 20 }, (_, i) => (
-                <Typography key={i} variant="body2" paragraph>
-                  Content section {i + 1}. Scroll to see how the layout adapts. On mobile, notice
-                  the bottom navigation stays fixed at the bottom of the viewport.
+                <Typography variant="h5" gutterBottom>
+                  Scrollable Content
                 </Typography>
-              ))}
-            </Container>
-          </Shell.Content>
-
-          <Shell.Footer>
-            <Typography variant="body2" color="text.secondary">
-              © 2025 CareTogether
-            </Typography>
-          </Shell.Footer>
-        </Shell>
+                {Array.from({ length: 20 }, (_, i) => (
+                  <Typography key={i} variant="body2" paragraph>
+                    Content section {i + 1}. Scroll to see how the layout adapts. On mobile, notice
+                    the bottom navigation stays fixed at the bottom of the viewport.
+                  </Typography>
+                ))}
+              </Container>
+            </Shell.Content>
+          }
+          footer={
+            <Shell.Footer>
+              <Typography variant="body2" color="text.secondary">
+                © 2025 CareTogether
+              </Typography>
+            </Shell.Footer>
+          }
+        />
 
         {/* Mobile Drawer Menu - Consumer's responsibility */}
         <Drawer

@@ -19,54 +19,61 @@ function App() {
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
-      <Shell sidebarOpen={sidebarOpen}>
-        <Shell.Header
-          {...AppHeader({
-            onToggleSidebar: () => setSidebarOpen(!sidebarOpen),
-            selectedLocation,
-            onLocationChange: setSelectedLocation,
-            searchValue,
-            onSearchChange: setSearchValue,
-          })}
-        />
-        <Shell.Sidebar>
-          <AppSidebar collapsed={!sidebarOpen} />
-        </Shell.Sidebar>
-        <Shell.Content>
-          <Container maxWidth="md">
-            <ContextHeader>
-              <ContextHeader.Breadcrumbs
-                items={[{ label: 'Home', onClick: () => {} }, { label: 'Current Page' }]}
-              />
-              <ContextHeader.Title title="Page Title"></ContextHeader.Title>
-            </ContextHeader>
-            {/* Your content here */}
-            <Box sx={{ textAlign: 'center', py: 8 }}>
-              <Typography variant="h2" component="h1" gutterBottom>
-                CareTogether PWA
-              </Typography>
-              <Typography variant="h5" color="text.secondary" paragraph>
-                Built with Vite 7, React 19, TypeScript, and MUI 7
-              </Typography>
-              <Box sx={{ mt: 4 }}>
-                <Button
-                  variant="contained"
-                  size="large"
-                  onClick={() => setCount(count => count + 1)}
-                >
-                  Count is {count}
-                </Button>
+      <Shell
+        sidebarOpen={sidebarOpen}
+        header={
+          <AppHeader
+            onToggleSidebar={() => setSidebarOpen(!sidebarOpen)}
+            selectedLocation={selectedLocation}
+            onLocationChange={setSelectedLocation}
+            searchValue={searchValue}
+            onSearchChange={setSearchValue}
+          />
+        }
+        sidebar={
+          <Shell.Sidebar>
+            <AppSidebar collapsed={!sidebarOpen} />
+          </Shell.Sidebar>
+        }
+        content={
+          <Shell.Content>
+            <Container maxWidth="md">
+              <ContextHeader>
+                <ContextHeader.Breadcrumbs
+                  items={[{ label: 'Home', onClick: () => {} }, { label: 'Current Page' }]}
+                />
+                <ContextHeader.Title title="Page Title"></ContextHeader.Title>
+              </ContextHeader>
+              {/* Your content here */}
+              <Box sx={{ textAlign: 'center', py: 8 }}>
+                <Typography variant="h2" component="h1" gutterBottom>
+                  CareTogether PWA
+                </Typography>
+                <Typography variant="h5" color="text.secondary" paragraph>
+                  Built with Vite 7, React 19, TypeScript, and MUI 7
+                </Typography>
+                <Box sx={{ mt: 4 }}>
+                  <Button
+                    variant="contained"
+                    size="large"
+                    onClick={() => setCount(count => count + 1)}
+                  >
+                    Count is {count}
+                  </Button>
+                </Box>
+                <Typography variant="body2" color="text.secondary" sx={{ mt: 4 }}>
+                  Edit src/App.tsx and save to test HMR
+                </Typography>
               </Box>
-              <Typography variant="body2" color="text.secondary" sx={{ mt: 4 }}>
-                Edit src/App.tsx and save to test HMR
-              </Typography>
-            </Box>
-          </Container>
-        </Shell.Content>
-        <Shell.Footer>
-          <AppFooter />
-        </Shell.Footer>
-      </Shell>
+            </Container>
+          </Shell.Content>
+        }
+        footer={
+          <Shell.Footer>
+            <AppFooter />
+          </Shell.Footer>
+        }
+      />
     </ThemeProvider>
   );
 }

@@ -16,7 +16,7 @@ import {
   Notifications as NotificationsIcon,
   KeyboardArrowDown as KeyboardArrowDownIcon,
 } from '@mui/icons-material';
-import { Dropdown } from '@caretogether/ui-components';
+import { Dropdown, Shell } from '@caretogether/ui-components';
 
 interface AppHeaderProps {
   onToggleSidebar: () => void;
@@ -95,7 +95,10 @@ export function AppHeader({
       value={searchValue}
       onChange={e => onSearchChange(e.target.value)}
       sx={{
-        width: 300,
+        width: 350,
+        '& .MuiInputBase-root': {
+          height: '48px',
+        },
       }}
       slotProps={{
         input: {
@@ -146,5 +149,11 @@ export function AppHeader({
     </Stack>
   );
 
-  return { leftContent, centerContent, rightContent };
+  return (
+    <Shell.Header
+      leftContent={leftContent}
+      centerContent={centerContent}
+      rightContent={rightContent}
+    />
+  );
 }
