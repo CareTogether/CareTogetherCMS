@@ -1,6 +1,15 @@
-import { useState } from 'react';
-import { Card, CardContent, Typography, Box, Button, IconButton, Link } from '@mui/material';
-import { NavigateNext as NavigateNextIcon } from '@mui/icons-material';
+import {
+  Card,
+  CardContent,
+  Typography,
+  Box,
+  Button,
+  IconButton,
+  Stack,
+  Divider,
+} from '@mui/material';
+import { KeyboardArrowRightSharp as KeyboardArrowRightIcon } from '@mui/icons-material';
+import { ExpandableText } from '@caretogether/ui-components';
 import { ReferralStatusChip } from '../chips/ReferralStatusChip';
 import { FamilyTypeChip } from '../chips/FamilyTypeChip';
 import { ReferralStatus, FamilyType } from '../chips/chipTypes';
@@ -72,10 +81,6 @@ export const ReferralCard = ({
   onNewNote,
   onNavigateNext,
 }: ReferralCardProps) => {
-  const [isExpanded, setIsExpanded] = useState(false);
-
-  const toggleDescription = () => setIsExpanded(!isExpanded);
-
   const fullName = `${data.primaryContact.firstName} ${data.primaryContact.lastName}`;
   const dateOpenedFormatted = data.openedAtUtc.toLocaleDateString('en-US', {
     month: '2-digit',
@@ -83,94 +88,64 @@ export const ReferralCard = ({
     year: 'numeric',
   });
 
-  // Truncate description at ~150 characters
-  const description = data.comments || '';
-  const shouldTruncate = description.length > 150;
-  const displayDescription =
-    shouldTruncate && !isExpanded ? description.slice(0, 150) + '...' : description;
-
   return (
-    <Card sx={{ borderRadius: 2 }}>
+    <Card>
       <CardContent>
         {/* Header Section */}
-        <Box
-          sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 2 }}
-        >
+        <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ mb: 2 }}>
           <Box>
-            <Typography variant="caption" color="text.secondary" sx={{ display: 'block' }}>
-              Date Opened: {dateOpenedFormatted}
-            </Typography>
-            <Typography variant="h6" sx={{ fontWeight: 600, mt: 0.5 }}>
+            <Typography variant="body2">Date Opened: {dateOpenedFormatted}</Typography>
+            <Typography component="h2" variant="h6" color="tertiary.main">
               {data.familyName}
             </Typography>
           </Box>
-          <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
-            <Typography variant="body2" sx={{ mr: 1 }}>
-              {fullName}
-            </Typography>
+          <Stack direction="row" alignItems="center" spacing={2}>
+            <Typography variant="body2">{fullName}</Typography>
             <FamilyTypeChip familyType={data.familyType} size="small" />
-            <Button variant="outlined" onClick={onNewNote}>
+            <Button color="primaryDark" variant="outlined" onClick={onNewNote}>
               New Note
             </Button>
-            <IconButton size="small" onClick={onNavigateNext}>
-              <NavigateNextIcon />
+            <IconButton color="primaryDark" onClick={onNavigateNext}>
+              <KeyboardArrowRightIcon />
             </IconButton>
-          </Box>
-        </Box>
+          </Stack>
+        </Stack>
 
         {/* Action & Metadata Section */}
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap', mb: 2 }}>
-          <Button variant="outlined" onClick={onAssignClient}>
+          <Button color="primaryDark" variant="outlined" onClick={onAssignClient}>
             Assign Client
           </Button>
           <ReferralStatusChip status={data.status} size="small" />
           {/* {data.arrangements?.map(arr => (
             <Chip key={arr.id} label={arr.arrangementType} size="small" />
           ))} */}
-          <Typography variant="body2" color="text.secondary" sx={{ mx: 1 }}>
-            |
-          </Typography>
+          <Divider orientation="vertical" sx={{ height: 24 }} />
           {data.primaryContact.phone && (
             <>
-              <Typography variant="body2">{data.primaryContact.phone}</Typography>
-              <Typography variant="body2" color="text.secondary" sx={{ mx: 1 }}>
-                |
-              </Typography>
+              <Button color="primaryDark" variant="text" href={`tel:${data.primaryContact.phone}`}>
+                {data.primaryContact.phone}
+              </Button>
+              <Divider orientation="vertical" sx={{ height: 24 }} />
             </>
           )}
           {data.primaryContact.email && (
             <>
-              <Typography variant="body2">{data.primaryContact.email}</Typography>
-              <Typography variant="body2" color="text.secondary" sx={{ mx: 1 }}>
-                |
-              </Typography>
+              <Button
+                color="primaryDark"
+                variant="text"
+                href={`mailto:${data.primaryContact.email}`}
+              >
+                {data.primaryContact.email}
+              </Button>
+              <Divider orientation="vertical" sx={{ height: 24 }} />
             </>
           )}
-          {data.source && (
-            <Typography variant="body2" color="text.secondary">
-              Source: {data.source}
-            </Typography>
-          )}
+          {data.source && <Typography variant="body2">Source: {data.source}</Typography>}
         </Box>
 
         {/* Description Section */}
-        {/* Description Section */}
-        {description && (
-          // TODO: turn this into its own component for expanding text blocks
-          <Typography variant="body2" color="text.secondary">
-            {displayDescription}{' '}
-            {shouldTruncate && (
-              <Link
-                component="button"
-                variant="body2"
-                onClick={toggleDescription}
-                sx={{ cursor: 'pointer', fontWeight: 500 }}
-              >
-                {isExpanded ? 'Less' : 'More'}
-              </Link>
-            )}
-          </Typography>
-        )}
+        {data.comments && <ExpandableText text={data.comments} length={150} variant="body2" />}
       </CardContent>
     </Card>
   );

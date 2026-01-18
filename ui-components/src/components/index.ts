@@ -49,6 +49,9 @@ export type { ProgressCardProps, ProgressCardStep } from "./ProgressCard";
 export { AccessiblePopover } from "./AccessiblePopover";
 export type { AccessiblePopoverProps } from "./AccessiblePopover";
 
+export { ExpandableText } from "./ExpandableText";
+export type { ExpandableTextProps } from "./ExpandableText";
+
 export {
   ActivityIcon,
   ActivityItem,

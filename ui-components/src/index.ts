@@ -48,8 +48,8 @@ export { ProgressCard } from "./components/index";
 export type { ProgressCardProps, ProgressCardStep } from "./components/index";
 
 // Display Components
-export { AccessiblePopover } from "./components/index";
-export type { AccessiblePopoverProps } from "./components/index";
+export { AccessiblePopover, ExpandableText } from "./components/index";
+export type { AccessiblePopoverProps, ExpandableTextProps } from "./components/index";
 
 // Activity Components
 export {

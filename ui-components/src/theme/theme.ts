@@ -81,14 +81,14 @@ export const theme = createTheme({
     h5: {
       fontFamily: '"Inter", "Helvetica", "Arial", sans-serif',
       fontSize: "20px",
-      fontWeight: 500,
+      fontWeight: 700,
       lineHeight: 1.35,
       letterSpacing: "0px",
     },
     h6: {
       fontFamily: '"Inter", "Helvetica", "Arial", sans-serif',
-      fontSize: "16px",
-      fontWeight: 600,
+      fontSize: "20px",
+      fontWeight: 500,
       lineHeight: 1.4,
       letterSpacing: "0.15px",
     },

@@ -152,7 +152,7 @@ export const PersonProfileCard = ({
   const commentsText = data.concerns || data.notes || 'Comments about this arrangement';
 
   return (
-    <Card sx={{ borderRadius: 2 }}>
+    <Card>
       <CardContent>
         {/* Header with Avatar & Name */}
         <Stack direction="row" alignItems="center" sx={{ mb: 2 }}>

@@ -70,7 +70,7 @@ npm install
 ### Import Components
 
 ```typescript
-import { Shell, ContextHeader, ColoredChip } from "@caretogether/ui-components";
+import { Shell, ContextHeader, ColoredChip, ExpandableText } from "@caretogether/ui-components";
 import { theme } from "@caretogether/ui-components/theme";
 import type { ShellProps, BreadcrumbItem } from "@caretogether/ui-components";
 ```
