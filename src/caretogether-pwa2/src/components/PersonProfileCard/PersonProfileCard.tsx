@@ -1,10 +1,18 @@
-import { Card, CardContent, Typography, Box, Avatar, IconButton, Link } from '@mui/material';
 import {
-  Phone as PhoneIcon,
-  Email as EmailIcon,
-  Home as HomeIcon,
-  MoreVert as MoreVertIcon,
-  Description as DescriptionIcon,
+  Card,
+  CardContent,
+  Typography,
+  Box,
+  Avatar,
+  IconButton,
+  Link,
+  Stack,
+  Divider,
+  Button,
+} from '@mui/material';
+import {
+  MoreHoriz as MoreHorizIcon,
+  ArticleOutlined as ArticleOutlinedIcon,
 } from '@mui/icons-material';
 import { ProjectStatusChip } from '../chips/ProjectStatusChip';
 import { ProjectStatus } from '../chips/chipTypes';
@@ -147,63 +155,62 @@ export const PersonProfileCard = ({
     <Card sx={{ borderRadius: 2 }}>
       <CardContent>
         {/* Header with Avatar & Name */}
-        <Box sx={{ display: 'flex', alignItems: 'flex-start', mb: 2 }}>
+        <Stack direction="row" alignItems="center" sx={{ mb: 2 }}>
           <Avatar
             src={data.avatarUrl}
             sx={{
-              width: 56,
-              height: 56,
+              bgcolor: 'primaryDark.main',
+              width: 58,
+              height: 58,
               mr: 2,
-              bgcolor: '#E0E0E0',
-              color: '#616161',
-              fontSize: '1.25rem',
-              fontWeight: 600,
             }}
           >
             {initials}
           </Avatar>
           <Box sx={{ flex: 1 }}>
-            <Typography variant="h6" sx={{ fontWeight: 600, mb: 0.5 }}>
-              {fullName}
-            </Typography>
-            <Typography variant="body2" color="text.secondary">
-              Adult{age ? `, ${age}` : ''}
-              {data.ethnicity ? `, ${data.ethnicity}` : ''}
-            </Typography>
+            <Stack direction="row" alignItems="center" gap={3}>
+              <Typography variant="h6" sx={{ fontWeight: 600, mb: 0.5 }}>
+                {fullName}
+              </Typography>
+              <Typography variant="body2">
+                Adult{age ? `, ${age}` : ''}
+                {data.ethnicity ? `, ${data.ethnicity}` : ''}
+              </Typography>
+            </Stack>
+            <Stack direction="row" alignItems="center" gap={1}>
+              {/* Contact Information */}
+              {addressString && (
+                <Typography variant="body2" color="grey.700">
+                  {addressString}
+                </Typography>
+              )}
+              {addressString && (preferredPhone || preferredEmail) && (
+                <Divider orientation="vertical" flexItem />
+              )}
+              {preferredPhone && (
+                <Link variant="body2" href={`tel:${preferredPhone.number}`} fontWeight={500}>
+                  {preferredPhone.number}
+                </Link>
+              )}
+              {preferredPhone && preferredEmail && <Divider orientation="vertical" flexItem />}
+              {preferredEmail && (
+                <Link variant="body2" href={`mailto:${preferredEmail.address}`} fontWeight={500}>
+                  {preferredEmail.address}
+                </Link>
+              )}
+            </Stack>
           </Box>
-          <IconButton size="small" onClick={onMoreClick}>
-            <MoreVertIcon />
+          <IconButton color="primary" size="small" onClick={onMoreClick}>
+            <MoreHorizIcon />
           </IconButton>
-        </Box>
-
-        {/* Contact Information */}
-        {addressString && (
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
-            <HomeIcon sx={{ fontSize: 18, color: 'text.secondary' }} />
-            <Typography variant="body2">{addressString}</Typography>
-          </Box>
-        )}
-        {preferredPhone && (
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
-            <PhoneIcon sx={{ fontSize: 18, color: 'text.secondary' }} />
-            <Typography variant="body2">{preferredPhone.number}</Typography>
-          </Box>
-        )}
-        {preferredEmail && (
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
-            <EmailIcon sx={{ fontSize: 18, color: 'text.secondary' }} />
-            <Typography variant="body2">{preferredEmail.address}</Typography>
-          </Box>
-        )}
+        </Stack>
 
         {/* Comments & Completion Status */}
         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
           {hasComments ? (
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-              <DescriptionIcon sx={{ fontSize: 18, color: 'text.secondary' }} />
-              <Typography variant="body2" color="text.secondary">
-                {commentsText}
-              </Typography>
+              <ArticleOutlinedIcon sx={{ fontSize: 20, color: 'tertiary.main' }} />
+              <Typography variant="body2">{commentsText}</Typography>
             </Box>
           ) : (
             <Box />
@@ -211,35 +218,30 @@ export const PersonProfileCard = ({
           <ProjectStatusChip status={data.completionStatus} size="small" />
         </Box>
 
+        <Divider sx={{ my: 2 }} />
+
         {/* Volunteer Assignments */}
         {data.volunteerAssignments && data.volunteerAssignments.length > 0 && (
-          <Box sx={{ mb: 2 }}>
-            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-              {data.volunteerAssignments.map(assignment => (
-                <ScheduleItem
-                  key={assignment.id}
-                  label={assignment.arrangementType}
-                  color={assignment.color}
-                  size="small"
-                  onClick={assignment.onClick}
-                />
-              ))}
-            </Box>
-          </Box>
-        )}
-
-        {/* View Schedule Link */}
-        {data.volunteerAssignments && data.volunteerAssignments.length > 0 && (
-          <Box sx={{ textAlign: 'center', mt: 2 }}>
-            <Link
-              component="button"
-              variant="body2"
-              onClick={onViewSchedule}
-              sx={{ cursor: 'pointer', fontWeight: 500, color: '#07666C' }}
-            >
-              View Schedule
-            </Link>
-          </Box>
+          <Stack direction="row" alignItems="center" spacing={2}>
+            {data.volunteerAssignments.map(assignment => (
+              <ScheduleItem
+                key={assignment.id}
+                label={assignment.arrangementType}
+                color={assignment.color}
+                size="small"
+                onClick={assignment.onClick}
+              />
+            ))}
+            {data.volunteerAssignments && data.volunteerAssignments.length > 0 && (
+              <>
+                <Divider orientation="vertical" flexItem />
+                {/* View Schedule Link */}
+                <Button variant="text" onClick={onViewSchedule} color="primaryDark">
+                  View Schedule
+                </Button>
+              </>
+            )}
+          </Stack>
         )}
       </CardContent>
     </Card>

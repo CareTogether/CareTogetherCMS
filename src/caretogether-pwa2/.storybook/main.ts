@@ -4,7 +4,14 @@ const config: StorybookConfig = {
   "stories": [
     "../src/**/*.stories.@(js|jsx|mjs|ts|tsx)"
   ],
-  "addons": [],
-  "framework": "@storybook/react-vite"
+  "addons": [
+    "@storybook/addon-docs",
+    "@storybook/addon-links",
+    "@storybook/addon-themes"
+  ],
+  "framework": "@storybook/react-vite",
+  "docs": {
+    "autodocs": true
+  }
 };
 export default config;
