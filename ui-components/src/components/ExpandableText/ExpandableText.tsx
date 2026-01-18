@@ -96,7 +96,7 @@ export const ExpandableText = ({
               fontSize: "inherit",
               lineHeight: "inherit",
               verticalAlign: "baseline",
-              "&:hover": {
+              "&:hover, &:focus-visible": {
                 backgroundColor: "transparent",
                 textDecoration: "underline",
               },

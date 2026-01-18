@@ -144,7 +144,7 @@ export function AppHeader({
             </Typography>
           </Box>
         </Dropdown.Button>
-        <Dropdown.Menu placement="bottom-end" closeOnItemClick>
+        <Dropdown.Menu placement="bottom" closeOnItemClick>
           <MenuItem onClick={() => console.log('Profile')}>
             <ListItemText>Profile</ListItemText>
           </MenuItem>

@@ -76,14 +76,20 @@ type RecentActivityGroupBaseProps = Pick<BoxProps, "sx" | "className">;
 export interface RecentActivityGroupProps extends RecentActivityGroupBaseProps {
   /**
    * Group title/header text (e.g., "Today", "Yesterday")
+   * Optional - if not provided, no title will be displayed
    */
   title?: string;
   /**
    * Activity items to display in this group
+   * Typically a collection of ActivityItem components
    */
   children: ReactNode;
 }
 
+/**
+ * Group sub-component for organizing activity items by time period or category.
+ * Automatically adds spacing between groups and displays an optional title.
+ */
 const RecentActivityGroup = ({ title, children, sx, className }: RecentActivityGroupProps) => {
   return (
     <Box

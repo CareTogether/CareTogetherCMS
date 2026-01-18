@@ -25,6 +25,11 @@ export interface TimelineItemProps extends TimelineItemBaseProps {
    * @default false
    */
   isLast?: boolean;
+  /**
+   * Width of the timestamp column
+   * @default "140px"
+   */
+  timestampWidth?: string | number;
 }
 
 /**
@@ -37,6 +42,7 @@ export const TimelineItem = ({
   name,
   description,
   isLast = false,
+  timestampWidth = "140px",
   sx,
   className,
 }: TimelineItemProps) => {
@@ -57,7 +63,7 @@ export const TimelineItem = ({
       <Box
         sx={{
           flexShrink: 0,
-          width: "140px",
+          width: timestampWidth,
           pt: 0.5,
         }}
       >

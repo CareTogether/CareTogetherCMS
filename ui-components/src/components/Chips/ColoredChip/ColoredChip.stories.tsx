@@ -33,6 +33,21 @@ type Story = StoryObj<typeof ColoredChip>;
 export const Basic: Story = {
   args: {
     label: "Basic Chip",
+    size: "medium",
+  },
+};
+
+export const SmallSize: Story = {
+  args: {
+    label: "Small Chip",
+    size: "small",
+  },
+};
+
+export const MediumSize: Story = {
+  args: {
+    label: "Medium Chip",
+    size: "medium",
   },
 };
 
@@ -41,6 +56,7 @@ export const WithSuccessIcon: Story = {
     label: "Approved",
     startIcon: <CheckCircleIcon />,
     color: "success",
+    size: "medium",
   },
 };
 
@@ -49,6 +65,7 @@ export const WithInfoIcon: Story = {
     label: "In Progress",
     startIcon: <CircleIcon />,
     color: "info",
+    size: "medium",
   },
 };
 
@@ -57,6 +74,7 @@ export const WithWarningIcon: Story = {
     label: "Pending",
     startIcon: <WarningIcon />,
     color: "warning",
+    size: "medium",
   },
 };
 
@@ -65,6 +83,7 @@ export const WithErrorIcon: Story = {
     label: "Rejected",
     startIcon: <ErrorIcon />,
     color: "error",
+    size: "medium",
   },
 };
 
@@ -73,6 +92,7 @@ export const WithCustomColor: Story = {
     label: "Custom Status",
     startIcon: <StarIcon />,
     color: "#9C27B0",
+    size: "medium",
   },
 };
 
@@ -86,6 +106,31 @@ export const AllThemeColors: Story = {
       <ColoredChip label="Primary" startIcon={<CircleIcon />} color="primary" />
       <ColoredChip label="Secondary" startIcon={<CircleIcon />} color="secondary" />
       <ColoredChip label="Default" startIcon={<CircleIcon />} />
+    </Box>
+  ),
+};
+
+export const SizeComparison: Story = {
+  render: () => (
+    <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
+      <Box sx={{ display: "flex", gap: 1, alignItems: "center" }}>
+        <ColoredChip label="Small" size="small" />
+        <ColoredChip
+          label="Small with Icon"
+          startIcon={<CheckCircleIcon />}
+          color="success"
+          size="small"
+        />
+      </Box>
+      <Box sx={{ display: "flex", gap: 1, alignItems: "center" }}>
+        <ColoredChip label="Medium" size="medium" />
+        <ColoredChip
+          label="Medium with Icon"
+          startIcon={<CheckCircleIcon />}
+          color="success"
+          size="medium"
+        />
+      </Box>
     </Box>
   ),
 };

@@ -1,5 +1,4 @@
-import React, { useRef, useState, useCallback } from "react";
-import { uniqueId } from "lodash";
+import React, { useId, useState, useCallback } from "react";
 import { DropdownContext } from "./useDropdown";
 import { DropdownMenu } from "./DropdownMenu";
 import { DropdownButton } from "./DropdownButton";
@@ -54,9 +53,10 @@ export const Dropdown: React.FC<DropdownProps> & DropdownComposition = ({
   );
 
   // Generate unique IDs for accessibility connections
-  const dropdownId = useRef(uniqueId(id ?? "dropdown-"));
-  const buttonId = `${dropdownId.current}-button`;
-  const menuId = `${dropdownId.current}-menu`;
+  const reactId = useId();
+  const dropdownId = id ?? `dropdown-${reactId}`;
+  const buttonId = `${dropdownId}-button`;
+  const menuId = `${dropdownId}-menu`;
 
   return (
     <DropdownContext.Provider

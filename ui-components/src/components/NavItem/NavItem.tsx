@@ -83,10 +83,10 @@ export const NavItem = ({
           backgroundColor: "tertiary.main",
           outline: "none",
           "& .navitem-icon": {
-            color: "#ffffff",
+            color: "tertiary.contrastText",
           },
           "& .navitem-text": {
-            color: "#ffffff",
+            color: "tertiary.contrastText",
           },
         },
         ...sx,

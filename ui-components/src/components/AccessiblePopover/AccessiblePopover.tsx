@@ -1,6 +1,5 @@
-import React, { useState, cloneElement, ReactElement } from "react";
+import React, { useId, useState, cloneElement, ReactElement } from "react";
 import { Popover, PopoverProps } from "@mui/material";
-import { uniqueId } from "lodash";
 
 type AccessiblePopoverBaseProps = Pick<PopoverProps, "sx" | "className">;
 
@@ -51,7 +50,8 @@ export function AccessiblePopover({
   sx,
   className,
 }: AccessiblePopoverProps) {
-  const [id] = useState(() => uniqueId("accessible-popover-"));
+  const reactId = useId();
+  const id = `accessible-popover-${reactId}`;
   const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
 
   const handlePopoverOpen = (event: React.MouseEvent<HTMLElement>) => {
