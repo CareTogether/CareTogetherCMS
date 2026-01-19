@@ -64,6 +64,37 @@ namespace CareTogether.Resources.V1Referrals
             );
         }
 
+        public async Task<V1Referral?> GetOpenReferralForFamilyAsync(
+            Guid organizationId,
+            Guid locationId,
+            Guid familyId
+        )
+        {
+            var eventsByReferral = new Dictionary<Guid, List<V1ReferralEvent>>();
+
+            await foreach (var (domainEvent, _) in eventLog.GetAllEventsAsync(
+                organizationId,
+                locationId
+            ))
+            {
+                if (!eventsByReferral.TryGetValue(domainEvent.ReferralId, out var list))
+                {
+                    list = new List<V1ReferralEvent>();
+                    eventsByReferral[domainEvent.ReferralId] = list;
+                }
+
+                list.Add(domainEvent);
+            }
+
+            return eventsByReferral.Values
+                .Select(V1Referral.Rehydrate)
+                .FirstOrDefault(r =>
+                    r.Status == V1ReferralStatus.Open &&
+                    r.FamilyId == familyId
+                );
+        }
+
+
         private static V1ReferralEvent HandleCreate(
             CreateV1Referral command,
             V1Referral? existing,

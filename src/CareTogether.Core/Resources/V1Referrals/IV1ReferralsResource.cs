@@ -20,9 +20,15 @@ namespace CareTogether.Resources.V1Referrals
             Guid referralId
         );
 
-            Task<ImmutableList<V1Referral>> ListReferralsAsync(
+        Task<ImmutableList<V1Referral>> ListReferralsAsync(
             Guid organizationId,
             Guid locationId
+        );
+
+        Task<V1Referral?> GetOpenReferralForFamilyAsync(
+            Guid organizationId,
+            Guid locationId,
+            Guid familyId
         );
     }
 }

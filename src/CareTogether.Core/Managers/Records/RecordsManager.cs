@@ -267,6 +267,54 @@ var renderedReferrals = canViewReferrals
 
             await ExecuteCommandAsync(organizationId, locationId, user, command);
 
+if (command is ReferralRecordsCommand caseCommand &&
+    caseCommand.Command is CreateReferral)
+
+{
+    var familyId = caseCommand.Command.FamilyId;
+
+var openReferrals = (
+    await v1ReferralsResource.ListReferralsAsync(
+        organizationId,
+        locationId
+    )
+).Where(r =>
+    r.FamilyId == familyId &&
+    r.Status == V1ReferralStatus.Open
+);
+
+foreach (var referral in openReferrals)
+{
+    await AutoCloseReferralIfFamilyHasOpenCaseAsync(
+        organizationId,
+        locationId,
+        user,
+        referral
+    );
+}
+
+}
+if (command is V1ReferralRecordsCommand referralCommand &&
+    referralCommand.Command is UpdateV1ReferralFamily updateFamily)
+{
+    var referral = await v1ReferralsResource.GetReferralAsync(
+        organizationId,
+        locationId,
+        updateFamily.ReferralId
+    );
+
+    if (referral != null)
+    {
+        await AutoCloseReferralIfFamilyHasOpenCaseAsync(
+            organizationId,
+            locationId,
+            user,
+            referral
+        );
+    }
+}
+
+
             return await RenderCommandResultAsync(organizationId, locationId, userContext, command);
         }
 
@@ -825,5 +873,56 @@ var renderedReferrals = canViewReferrals
                     $"The command type '{command.GetType().FullName}' has not been implemented."
                 ),
             };
+            private async Task<bool> FamilyHasOpenCaseAsync(
+    Guid organizationId,
+    Guid locationId,
+    Guid familyId
+)
+{
+    var cases = await v1CasesResource.ListV1CasessAsync(
+        organizationId,
+        locationId
+    );
+
+    return cases.Any(c =>
+        c.FamilyId == familyId &&
+        c.CloseReason == null
+    );
+}
+
+private async Task AutoCloseReferralIfFamilyHasOpenCaseAsync(
+    Guid organizationId,
+    Guid locationId,
+    ClaimsPrincipal user,
+    V1Referral referral
+)
+{
+    if (referral.Status != V1ReferralStatus.Open)
+        return;
+
+    if (referral.FamilyId == null)
+        return;
+
+    var hasOpenCase = await FamilyHasOpenCaseAsync(
+        organizationId,
+        locationId,
+        referral.FamilyId.Value
+    );
+
+    if (!hasOpenCase)
+        return;
+
+    await v1ReferralsResource.ExecuteV1ReferralCommandAsync(
+        organizationId,
+        locationId,
+        new CloseV1Referral(
+            referral.ReferralId,
+            DateTime.UtcNow,
+            "Automatically closed because family has an open case"
+        ),
+        user.UserId()
+    );
+}
+
     }
 }
