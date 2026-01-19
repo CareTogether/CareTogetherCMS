@@ -10,9 +10,11 @@ import {
   TabsProps,
   Menu,
   MenuItem,
+  Container,
   useTheme,
   useMediaQuery,
 } from "@mui/material";
+import type { Breakpoint } from "@mui/material";
 import { ReactNode, useState, MouseEvent } from "react";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 
@@ -29,17 +31,42 @@ export interface ContextHeaderProps extends ContextHeaderBaseProps {
    * Content of the header (use compound components)
    */
   children: ReactNode;
+  /**
+   * Max width for the container. Set to false to disable container wrapping.
+   * @default "lg"
+   */
+  maxWidth?: Breakpoint | false;
+  /**
+   * If true, removes horizontal padding from the container.
+   * @default false
+   */
+  disableGutters?: boolean;
 }
 
 /**
  * Context-aware header for page-specific information.
  * Use compound components to compose the header layout.
  */
-export const ContextHeader = ({ children, sx, className }: ContextHeaderProps) => {
+export const ContextHeader = ({
+  children,
+  sx,
+  className,
+  maxWidth = "lg",
+  disableGutters = false,
+}: ContextHeaderProps) => {
+  // If maxWidth is false, don't use Container
+  if (maxWidth === false) {
+    return (
+      <Box className={className} sx={sx}>
+        {children}
+      </Box>
+    );
+  }
+
   return (
-    <Box className={className} sx={sx}>
+    <Container maxWidth={maxWidth} disableGutters={disableGutters} className={className} sx={sx}>
       {children}
-    </Box>
+    </Container>
   );
 };
 

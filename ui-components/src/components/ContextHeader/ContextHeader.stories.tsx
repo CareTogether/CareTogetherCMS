@@ -27,6 +27,89 @@ export default meta;
 type Story = StoryObj<typeof ContextHeader>;
 
 /**
+ * Default behavior with container maxWidth="lg" (default)
+ */
+export const DefaultContainer: Story = {
+  render: () => (
+    <ContextHeader>
+      <ContextHeader.Title title="Default Container (lg)" />
+      <ContextHeader.Content>
+        <Typography variant="body2">
+          By default, ContextHeader wraps content in a Container with maxWidth="lg". This provides
+          consistent page-level spacing.
+        </Typography>
+      </ContextHeader.Content>
+    </ContextHeader>
+  ),
+};
+
+/**
+ * Custom container width (xl)
+ */
+export const ExtraLargeContainer: Story = {
+  render: () => (
+    <ContextHeader maxWidth="xl">
+      <ContextHeader.Title title="Extra Large Container" />
+      <ContextHeader.Content>
+        <Typography variant="body2">
+          You can customize the container width using the maxWidth prop (xs, sm, md, lg, xl).
+        </Typography>
+      </ContextHeader.Content>
+    </ContextHeader>
+  ),
+};
+
+/**
+ * No container (maxWidth={false})
+ */
+export const NoContainer: Story = {
+  render: () => (
+    <ContextHeader maxWidth={false}>
+      <ContextHeader.Title title="No Container" />
+      <ContextHeader.Content>
+        <Typography variant="body2">
+          Set maxWidth=false to disable the container and handle layout yourself. Useful for
+          full-width layouts or custom spacing requirements.
+        </Typography>
+      </ContextHeader.Content>
+    </ContextHeader>
+  ),
+};
+
+/**
+ * Container with custom spacing via sx prop
+ */
+export const ContainerWithCustomSpacing: Story = {
+  render: () => (
+    <ContextHeader sx={{ py: 6, px: 4 }}>
+      <ContextHeader.Title title="Custom Spacing" />
+      <ContextHeader.Content>
+        <Typography variant="body2">
+          Use the sx prop to add custom spacing or styles to the container. This example has py: 6,
+          px: 4.
+        </Typography>
+      </ContextHeader.Content>
+    </ContextHeader>
+  ),
+};
+
+/**
+ * Container without gutters
+ */
+export const NoGutters: Story = {
+  render: () => (
+    <ContextHeader disableGutters>
+      <ContextHeader.Title title="No Gutters" />
+      <ContextHeader.Content>
+        <Typography variant="body2">
+          Set disableGutters=true to remove horizontal padding from the container.
+        </Typography>
+      </ContextHeader.Content>
+    </ContextHeader>
+  ),
+};
+
+/**
  * Simple header with just a title
  */
 export const Simple: Story = {
