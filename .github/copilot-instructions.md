@@ -6,31 +6,32 @@ CareTogether is an open-source case management system for nonprofits connecting 
 
 **Three-Layer Backend Architecture:**
 
-- **API Layer** (`src/CareTogether.Api`): ASP.NET Core controllers expose REST endpoints
+- **API Layer** (`src/CareTogether.Api`): ASP.NET Core controllers expose REST endpoints (.NET 8)
 - **Managers Layer** (`src/CareTogether.Core/Managers`): Business logic orchestration (`CommunicationsManager`, `MembershipManager`, `RecordsManager`)
 - **Resources Layer** (`src/CareTogether.Core/Resources`): Domain data access with event sourcing via `IEventLog<T>` interfaces
 
 **Event-Sourced Persistence:**
-All domain state changes are persisted as immutable events in append-only blob logs (`AppendBlobEventLog<T>`). Each resource (Accounts, Directory, Approvals, Goals, Notes, Communities, V1Cases) maintains its own event log stored in Azure Blob Storage (or Azurite locally). Events inherit from `DomainEvent(Guid UserId, DateTime TimestampUtc)`.
+All domain state changes are persisted as immutable events in append-only blob logs (`AppendBlobEventLog<T>`). Each resource (Accounts, Directory, Approvals, Goals, Notes, Communities, V1Cases) maintains its own event log stored in Azure Blob Storage (or Azurite locally). Events inherit from `DomainEvent(Guid UserId, DateTime TimestampUtc)`. Event logs use optimistic concurrency via sequence numbers.
 
 **Frontend Architecture:**
 
-- React 19 SPA built with Vite 7, TypeScript, and MUI v7 in `src/caretogether-pwa2`
-- **Directly consumes `ui-components` library** via local package reference (workspace:\*)
+- **Two PWA implementations:** `src/caretogether-pwa` (legacy, port 3000) and `src/caretogether-pwa2` (modern, port 5173)
+- **Active development in `caretogether-pwa2`**: React 19, Vite 7, TypeScript 5.9, MUI v7
+- **Directly consumes `ui-components` library** via local package reference (`file:../../ui-components`)
 - Uses CareTogether theme and all available UI components (Shell, ContextHeader, IntakeStepNav, etc.)
-- Includes Storybook 10 for component development and documentation (port 6007)
+- Both PWAs include Storybook 10 for component development (pwa2 on port 6006)
 - ESLint and Prettier configured for code quality
-- Development: `npm run dev` (Vite on port 5173), `npm run storybook` (Storybook on port 6007)
+- Development: `npm run dev` (Vite on port 5173), `npm run storybook` (port 6006)
 - Serves as a reference implementation showing how to use ui-components in a real application
 
 **UI Components Library:**
 
-- Standalone component library in `ui-components/` built with Node.js, TypeScript, Vite, and MUI v7
-- Local package for development (can be published to npm as private package)
-- Custom CareTogether theme with Poppins font (Primary: #07666C, Secondary: #D32F2F, Background: #F6FCFC, Border Radius: 8px for shapes, 24px for buttons)
-- Interactive development via Storybook on port 6006 (`npm run storybook`)
-- 7 core components: Shell (with Header/Sidebar/Content/Footer), ContextHeader, IntakeStepNav, Progress, NavItem, ColoredChip, Steps
-- Components follow **compound component pattern** (Shell, ContextHeader) for maximum flexibility
+- Standalone component library in `ui-components/` built with Node.js 20+, TypeScript, Vite, and MUI v7
+- Local package for development linked via `file:../../ui-components` in PWA2 package.json (can be published to npm as private package)
+- Custom CareTogether theme with Inter font (Primary: #07666C, Secondary: #D32F2F, Background: #F6FCFC, Border Radius: 8px for shapes, 24px for buttons)
+- Interactive development via Storybook on port 6006 (`npm run storybook` in `ui-components/`)
+- **13 core components**: Shell (with Header/Sidebar/Content/Footer), ContextHeader, IntakeStepNav, ProgressCard, NavItem, ColoredChip, Steps, ExpandableText, ActivityIcon, ActivityItem, ScheduleItem, RecentActivity, TimelineCard with TimelineItem
+- Components follow **compound component pattern** (Shell, ContextHeader, RecentActivity, TimelineCard) for maximum flexibility
 - All components use **MUI prop inheritance pattern** via `Pick<MuiComponentProps, "sx" | ...>` for selective prop inheritance
 - Shell components provide layout primitives (not fully-integrated shells) - consumers compose their own layouts
 - All components include TypeScript interfaces, comprehensive Storybook stories, and JSDoc documentation
@@ -40,16 +41,19 @@ All domain state changes are persisted as immutable events in append-only blob l
 
 **Local Development Setup:**
 
-1. Press F5 in VS Code to launch both frontend (port 3000) and backend simultaneously
-2. Azurite storage emulator auto-starts via background task (see `.vscode/launch.json`)
-3. Test credentials: `test@bynalogic.com` / `P@ssw0rd` (admin) or `test2@bynalogic.com` / `P@ssw0rd` (volunteer)
+1. Press F5 in VS Code to launch both frontend (legacy PWA on port 3000) and backend (.NET 8) simultaneously
+2. Azurite storage emulator auto-starts via background task (see `.vscode/launch.json` and `tasks.json`)
+3. For modern PWA2: Run `npm run dev` in `src/caretogether-pwa2` (port 5173) separately
+4. Test credentials: `test@bynalogic.com` / `P@ssw0rd` (admin) or `test2@bynalogic.com` / `P@ssw0rd` (volunteer)
+5. Prerequisites: Node.js 18+, .NET 8 LTS, PowerShell execution policy set to RemoteSigned
 
 **Build & Test Commands:**
 
-- Frontend (`src/caretogether-pwa2`): `npm run dev` (port 5173), `npm run storybook` (port 6007), `npm run type-check`
-- Backend: `dotnet build CareTogetherCMS.sln`, `dotnet test` for unit tests
+- Frontend PWA2 (`src/caretogether-pwa2`): `npm run dev` (port 5173), `npm run storybook` (port 6006), `npm run type-check`, `npm run lint:fix`, `npm run format`
+- Frontend Legacy (`src/caretogether-pwa`): `npm run dev` (port 3000), configured in F5 debug launch
+- Backend: `dotnet build CareTogetherCMS.sln`, `dotnet test` for unit tests (MSTest framework)
 - UI Components: `npm run storybook` (in `ui-components/`) for Storybook (port 6006), `npm run build` to build library, `npm run type-check` for TypeScript validation
-- Available VS Code tasks: Use Run Task menu for "npm install", "vite dev", "frontend type-check", "build", "restore"
+- Available VS Code tasks: "npm install", "vite dev", "frontend type-check", "build", "restore", "Azurite" (storage emulator)
 
 **Testing:**
 
@@ -67,9 +71,10 @@ Permission enum in [src/CareTogether.Core/Permission.cs](src/CareTogether.Core/P
 
 **Environment Configuration:**
 
-- Frontend uses Vite env vars: `VITE_APP_API_HOST`, `VITE_APP_AUTH_*` (see `src/caretogether-pwa2/src/env.d.ts`)
+- Frontend uses Vite env vars: `VITE_APP_API_HOST`, `VITE_APP_AUTH_*` (see `src/caretogether-pwa/src/env.d.ts` and `src/caretogether-pwa2/src/`)
 - Backend config in `appsettings.Development.json` for local dev (Azure AD B2C, Azurite storage, feature flags)
 - Feature flags managed via Microsoft.FeatureManagement with `ITargetingContextAccessor`
+- Backend targets .NET 8 LTS with C# 9+ record types for immutability
 
 **Timeline Utilities:**
 `Timelines` project provides immutable timeline data structures (`DateOnlyTimeline`, `DateRange`) for managing time-based state changes (volunteer assignments, approval expirations, etc.).
@@ -169,10 +174,12 @@ When creating new components in `ui-components/`:
 
 ## Common Gotchas
 
-- **Storage Emulator:** If seeing "No connection could be made" errors, manually install Azurite: `npm install -g azurite`, then run `azurite-blob --loose` from repo root
-- **Event Log Sequence Numbers:** When appending events, must provide expected sequence number for optimistic concurrency
-- **Organization/Location Context:** Most API calls require `organizationId` and `locationId`
-- **Git Commit Hash in Build:** Frontend build embeds git hash for versioning via `__APP_VERSION__` (see [vite.config.ts](src/caretogether-pwa2/vite.config.ts))
-- **C# Records:** Core domain models use C# 9 record types extensively for immutability
-- **UI Components Development:** Run `npm run storybook` from `ui-components/` directory to develop components in isolation before integrating with PWA
-- **UI Components Dependencies:** If seeing MUI module errors, run `npm install` in `ui-components/` and restart TypeScript server in VS Code
+- **Storage Emulator:** If seeing "No connection could be made" errors, manually install Azurite: `npm install -g azurite`, then run `azurite-blob --loose` from repo root. Azurite task should auto-start in VS Code but may fail on first run.
+- **Event Log Sequence Numbers:** When appending events, must provide expected sequence number for optimistic concurrency - sequence mismatch errors indicate concurrent modification
+- **Organization/Location Context:** Most API calls require `organizationId` and `locationId` parameters - these are tenant identifiers
+- **Two PWA Directories:** `caretogether-pwa` is the legacy React app (port 3000, used in F5 debug), `caretogether-pwa2` is the modern implementation (port 5173). Use PWA2 for new development.
+- **Git Commit Hash in Build:** Legacy PWA build embeds git hash for versioning via `__APP_VERSION__` (see [vite.config.ts](src/caretogether-pwa/vite.config.ts))
+- **C# Records:** Core domain models use C# 9+ record types extensively for immutability
+- **UI Components Development:** Run `npm run storybook` from `ui-components/` directory (port 6006) to develop components in isolation before integrating with PWA
+- **UI Components Dependencies:** If seeing MUI module errors, run `npm install` in `ui-components/`, rebuild library (`npm run build`), then `npm install` in PWA2, and restart TypeScript server in VS Code
+- **Module Resolution:** PWA2 uses Vite alias to resolve `@caretogether/ui-components` to built dist files (see vite.config.ts). Ensure ui-components is built before running PWA2.
