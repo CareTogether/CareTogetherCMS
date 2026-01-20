@@ -218,9 +218,8 @@ namespace CareTogether.Resources.Policies
                         .ToImmutableList(),
                 },
             };
-
-            return effectivePolicy;
-        }
+    return effectivePolicy;
+}
 
         public async Task<OrganizationSecrets> GetOrganizationSecretsAsync(Guid organizationId)
         {
