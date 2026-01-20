@@ -169,7 +169,7 @@ function VolunteerApproval(props: { onOpen: () => void }) {
   }
 
   function familyHasNoValidStatuses(family: CombinedFamilyInfo) {
-    return statusFilters.every(
+    return roleFilters.every(
       (filterOption) =>
         family.volunteerFamilyInfo?.familyRoleApprovals?.[filterOption.key] ===
         undefined
@@ -259,9 +259,9 @@ function VolunteerApproval(props: { onOpen: () => void }) {
   }
 
   function familyMemberHasNoValidStatuses(volunteer: VolunteerInfo) {
-    return statusFilters.every((filterOption) =>
+    return roleFilters.every((filterOption) =>
       checkStatusEquivalence(
-        volunteer.approvalStatusByRole?.[filterOption.key].currentStatus,
+        volunteer.approvalStatusByRole?.[filterOption.key]?.currentStatus,
         null
       )
     );
