@@ -13,7 +13,7 @@ import {
 import { useRecoilValue } from 'recoil';
 
 import { useFamilyLookup } from '../Model/DirectoryModel';
-import { FamilyName, familyNameString } from '../Families/FamilyName';
+import { familyNameString } from '../Families/FamilyName';
 import { useScreenTitle } from '../Shell/ShellScreenTitle';
 import { visibleReferralsQuery } from '../Model/Data';
 import { useV1ReferralsModel } from '../Model/V1ReferralsModel';
@@ -28,6 +28,7 @@ import { useLoadable } from '../Hooks/useLoadable';
 import { EditReferralDrawer } from '../V1Referrals/EditReferralDrawer';
 import { policyData } from '../Model/ConfigurationModel';
 import { OpenNewV1CaseDialog } from '../V1Cases/OpenNewV1CaseDialog';
+import { useAppNavigate } from '../Hooks/useAppNavigate';
 
 function formatStatusWithDate(
   status: V1ReferralStatus,
@@ -58,6 +59,7 @@ export function ReferralDetailsPage() {
   const familyLookup = useFamilyLookup();
   const families = useLoadable(partneringFamiliesData) || [];
   const policy = useRecoilValue(policyData);
+  const appNavigate = useAppNavigate();
 
   const { closeReferral, reopenReferral, updateReferralFamily } =
     useV1ReferralsModel();
@@ -204,9 +206,18 @@ export function ReferralDetailsPage() {
         </Typography>
 
         <Box sx={{ mt: 1 }}>
-          <Typography fontWeight={600}>Family</Typography>
-
-          {family && <FamilyName family={family} />}
+          {family && (
+            <Typography>
+              <strong>Family:</strong>{' '}
+              <Button
+                variant="text"
+                sx={{ padding: 0, minWidth: 'auto', textTransform: 'none' }}
+                onClick={() => appNavigate.family(family.family.id)}
+              >
+                {familyNameString(family)}
+              </Button>
+            </Typography>
+          )}
 
           {selectingFamily && (
             <Box sx={{ mt: 1, maxWidth: 400 }}>

@@ -254,7 +254,8 @@ namespace CareTogether.Api
                 directoryResource,
                 accountsResource,
                 notesResource,
-                userAccessCalculation
+                userAccessCalculation,
+                v1ReferralsResource
             );
             services.AddSingleton<IAuthorizationEngine>(authorizationEngine); //TODO: Temporary workaround for UsersController
             var policyEvaluationEngine = new PolicyEvaluationEngine(policiesResource);
