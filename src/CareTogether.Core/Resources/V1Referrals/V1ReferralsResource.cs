@@ -44,6 +44,10 @@ namespace CareTogether.Resources.V1Referrals
                 UpdateV1ReferralDetails c =>
                     HandleUpdateDetails(c, referral, actorUserId),
 
+                    AcceptV1Referral c =>
+    HandleAccept(c, referral, actorUserId),
+
+
                 CloseV1Referral c =>
                     HandleClose(c, referral, actorUserId),
 
@@ -150,6 +154,23 @@ namespace CareTogether.Resources.V1Referrals
                 actorUserId
             );
         }
+
+        private static V1ReferralEvent HandleAccept(
+    AcceptV1Referral command,
+    V1Referral? referral,
+    Guid actorUserId
+)
+{
+    EnsureExists(referral);
+    EnsureOpen(referral!);
+
+    return new V1ReferralAccepted(
+        command.ReferralId,
+        command.AcceptedAtUtc,
+        actorUserId
+    );
+}
+
 
         private static V1ReferralEvent HandleClose(
             CloseV1Referral command,

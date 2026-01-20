@@ -27,6 +27,14 @@ namespace CareTogether.Resources.V1Referrals
         Guid ActorUserId
     ) : V1ReferralEvent(ReferralId, UpdatedAtUtc, ActorUserId);
 
+
+    public sealed record V1ReferralAccepted(
+    Guid ReferralId,
+    DateTime AcceptedAtUtc,
+    Guid ActorUserId
+) : V1ReferralEvent(ReferralId, AcceptedAtUtc, ActorUserId);
+
+
     public sealed record V1ReferralClosed(
         Guid ReferralId,
         DateTime ClosedAtUtc,

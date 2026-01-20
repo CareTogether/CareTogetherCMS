@@ -4838,6 +4838,11 @@
             "type": "string",
             "nullable": true
           },
+          "acceptedAtUtc": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
           "closedAtUtc": {
             "type": "string",
             "format": "date-time",
@@ -4860,11 +4865,13 @@
         "description": "",
         "x-enumNames": [
           "Open",
+          "Accepted",
           "Closed"
         ],
         "enum": [
           0,
-          1
+          1,
+          2
         ]
       },
       "AtomicRecordsCommand": {
@@ -8011,6 +8018,7 @@
         "discriminator": {
           "propertyName": "discriminator",
           "mapping": {
+            "AcceptV1Referral": "#/components/schemas/AcceptV1Referral",
             "CloseV1Referral": "#/components/schemas/CloseV1Referral",
             "CreateV1Referral": "#/components/schemas/CreateV1Referral",
             "ReopenV1Referral": "#/components/schemas/ReopenV1Referral",
@@ -8034,6 +8042,26 @@
             "type": "string"
           }
         }
+      },
+      "AcceptV1Referral": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/V1ReferralCommand"
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "acceptedAtUtc"
+            ],
+            "properties": {
+              "acceptedAtUtc": {
+                "type": "string",
+                "format": "date-time"
+              }
+            }
+          }
+        ]
       },
       "CloseV1Referral": {
         "allOf": [

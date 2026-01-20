@@ -22,9 +22,17 @@ import { familyNameString } from '../Families/FamilyName';
 import { visibleReferralsQuery } from '../Model/Data';
 import { V1ReferralStatus } from '../GeneratedClient';
 import { getFamilyCounty } from '../Utilities/getFamilyCounty';
+import { ReferralStatusFilter } from './ReferralsFilters';
 
-function statusToUi(status: V1ReferralStatus): 'OPEN' | 'CLOSED' {
-  return status === V1ReferralStatus.Open ? 'OPEN' : 'CLOSED';
+function statusToUi(status: V1ReferralStatus): 'OPEN' | 'ACCEPTED' | 'CLOSED' {
+  switch (status) {
+    case V1ReferralStatus.Open:
+      return 'OPEN';
+    case V1ReferralStatus.Accepted:
+      return 'ACCEPTED';
+    case V1ReferralStatus.Closed:
+      return 'CLOSED';
+  }
 }
 
 export function V1Referrals() {
@@ -34,9 +42,7 @@ export function V1Referrals() {
   const familyLookup = useFamilyLookup();
 
   const [filterText, setFilterText] = useState('');
-  const [statusFilter, setStatusFilter] = useState<'ALL' | 'OPEN' | 'CLOSED'>(
-    'ALL'
-  );
+  const [statusFilter, setStatusFilter] = useState<ReferralStatusFilter>('ALL');
   const [expandedView, setExpandedView] = useState(true);
   const [openNewReferral, setOpenNewReferral] = useState(false);
   const [countyFilter, setCountyFilter] = useState<(string | null)[]>([]);
@@ -52,6 +58,7 @@ export function V1Referrals() {
       title: r.title,
       status: statusToUi(r.status),
       openedAtUtc: r.createdAtUtc,
+      acceptedAtUtc: r.acceptedAtUtc,
       closedAtUtc: r.closedAtUtc,
       clientFamilyName: family ? familyNameString(family) : null,
       county: family ? getFamilyCounty(family) : null,

@@ -4,8 +4,9 @@ import { useAppNavigate } from '../Hooks/useAppNavigate';
 export interface ReferralRowModel {
   id: string;
   title: string;
-  status: 'OPEN' | 'CLOSED';
+  status: 'OPEN' | 'ACCEPTED' | 'CLOSED';
   openedAtUtc?: Date;
+  acceptedAtUtc?: Date;
   closedAtUtc?: Date;
   clientFamilyName: string | null;
   county: string | null;
@@ -29,8 +30,19 @@ export function ReferralRow({ referral, expanded }: ReferralRowProps) {
   const preview =
     comments.length > 500 ? comments.slice(0, 500) + '…' : comments;
 
+  const statusLabel =
+    referral.status === 'OPEN'
+      ? 'Open since'
+      : referral.status === 'ACCEPTED'
+        ? 'Accepted on'
+        : 'Closed since';
+
   const statusDate =
-    referral.status === 'OPEN' ? referral.openedAtUtc : referral.closedAtUtc;
+    referral.status === 'OPEN'
+      ? referral.openedAtUtc
+      : referral.status === 'ACCEPTED'
+        ? referral.acceptedAtUtc
+        : referral.closedAtUtc;
 
   return (
     <>
@@ -41,7 +53,7 @@ export function ReferralRow({ referral, expanded }: ReferralRowProps) {
         <TableCell>{referral.title}</TableCell>
         <TableCell>
           <Box sx={{ fontWeight: 400, fontSize: '0.875rem' }}>
-            {referral.status === 'OPEN' ? 'Open since' : 'Closed since'}
+            {statusLabel}
             {statusDate && (
               <Box component="span" sx={{ ml: 0.5 }}>
                 {formatDate(statusDate)}

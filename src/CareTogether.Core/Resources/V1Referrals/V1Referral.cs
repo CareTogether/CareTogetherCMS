@@ -14,6 +14,7 @@ namespace CareTogether.Resources.V1Referrals
         string Title,
         V1ReferralStatus Status,
         string? Comment,
+        DateTime? AcceptedAtUtc,
         DateTime? ClosedAtUtc,
         string? CloseReason,
         ImmutableDictionary<string, CompletedCustomFieldInfo> CompletedCustomFields
@@ -36,6 +37,7 @@ namespace CareTogether.Resources.V1Referrals
                         created.Comment,
                         null,
                         null,
+                        null,
                         ImmutableDictionary<string, CompletedCustomFieldInfo>.Empty
                     ),
 
@@ -51,6 +53,13 @@ namespace CareTogether.Resources.V1Referrals
                         Comment = updated.Comment,
                         CreatedAtUtc = updated.CreatedAtUtc
                     },
+
+                 V1ReferralAccepted accepted => referral! with
+                {
+                    Status = V1ReferralStatus.Accepted,
+                    AcceptedAtUtc = accepted.AcceptedAtUtc
+                },
+
 
                     V1ReferralClosed closed => referral! with
                     {

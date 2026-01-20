@@ -9,6 +9,8 @@ import {
   Typography,
   Autocomplete,
   TextField,
+  Snackbar,
+  Alert,
 } from '@mui/material';
 import { useRecoilValue } from 'recoil';
 
@@ -33,6 +35,7 @@ import { useAppNavigate } from '../Hooks/useAppNavigate';
 function formatStatusWithDate(
   status: V1ReferralStatus,
   openedAt?: Date,
+  acceptedAt?: Date,
   closedAt?: Date
 ) {
   const format = (date?: Date) =>
@@ -46,6 +49,10 @@ function formatStatusWithDate(
 
   if (status === V1ReferralStatus.Open) {
     return `Open since ${format(openedAt)}`;
+  }
+
+  if (status === V1ReferralStatus.Accepted) {
+    return `Accepted on ${format(acceptedAt)}`;
   }
 
   return `Closed on ${format(closedAt)}`;
@@ -69,6 +76,7 @@ export function ReferralDetailsPage() {
   const [selectingFamily, setSelectingFamily] = useState(false);
   const [openEditReferral, setOpenEditReferral] = useState(false);
   const [openOpenCaseDialog, setOpenOpenCaseDialog] = useState(false);
+  const [showAcceptedMessage, setShowAcceptedMessage] = useState(false);
 
   const referral = useMemo(
     () => referrals.find((r) => r.referralId === referralId),
@@ -91,8 +99,9 @@ export function ReferralDetailsPage() {
     ? familyLookup(referral.familyId)
     : undefined;
 
+  const isOpen = referral.status === V1ReferralStatus.Open;
   const isClosed = referral.status === V1ReferralStatus.Closed;
-  const canSelectFamily = !isClosed && !referral.familyId;
+  const canSelectFamily = isOpen && !referral.familyId;
 
   const familyOptions = families.map((f) => ({
     id: f.family?.id ?? '',
@@ -124,6 +133,7 @@ export function ReferralDetailsPage() {
     try {
       setWorking(true);
       await updateReferralFamily(referral.referralId, familyId);
+      setShowAcceptedMessage(true);
       setSelectingFamily(false);
     } finally {
       setWorking(false);
@@ -149,7 +159,7 @@ export function ReferralDetailsPage() {
         </Box>
 
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 3 }}>
-          {!isClosed && (
+          {isOpen && (
             <Button
               variant="outlined"
               onClick={() => setOpenEditReferral(true)}
@@ -158,15 +168,27 @@ export function ReferralDetailsPage() {
             </Button>
           )}
 
-          <Button
-            variant={isClosed ? 'contained' : 'outlined'}
-            disabled={working}
-            onClick={handleToggleReferral}
-          >
-            {isClosed ? 'Reopen Referral' : 'Close Referral'}
-          </Button>
+          {isOpen && (
+            <Button
+              variant="outlined"
+              disabled={working}
+              onClick={handleToggleReferral}
+            >
+              Close Referral
+            </Button>
+          )}
 
-          {!isClosed && referral.familyId && (
+          {isClosed && (
+            <Button
+              variant="contained"
+              disabled={working}
+              onClick={handleToggleReferral}
+            >
+              Reopen Referral
+            </Button>
+          )}
+
+          {isOpen && referral.familyId && (
             <Button
               variant="contained"
               onClick={() => setOpenOpenCaseDialog(true)}
@@ -201,6 +223,7 @@ export function ReferralDetailsPage() {
           {formatStatusWithDate(
             referral.status,
             referral.createdAtUtc,
+            referral.acceptedAtUtc,
             referral.closedAtUtc
           )}
         </Typography>
@@ -312,6 +335,22 @@ export function ReferralDetailsPage() {
           onClose={() => setOpenOpenCaseDialog(false)}
         />
       )}
+
+      <Snackbar
+        open={showAcceptedMessage}
+        autoHideDuration={5000}
+        onClose={() => setShowAcceptedMessage(false)}
+        anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
+      >
+        <Alert
+          severity="warning"
+          variant="filled"
+          onClose={() => setShowAcceptedMessage(false)}
+        >
+          This referral has been accepted since the family already has an open
+          case.
+        </Alert>
+      </Snackbar>
     </Grid>
   );
 }

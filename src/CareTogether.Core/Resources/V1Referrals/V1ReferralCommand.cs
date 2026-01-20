@@ -22,6 +22,12 @@ namespace CareTogether.Resources.V1Referrals
         Guid FamilyId
     ) : V1ReferralCommand(ReferralId);
 
+
+    public sealed record AcceptV1Referral(
+        Guid ReferralId,
+        DateTime AcceptedAtUtc
+    ) : V1ReferralCommand(ReferralId);
+
     public sealed record CloseV1Referral(
         Guid ReferralId,
         DateTime ClosedAtUtc,

@@ -14,7 +14,7 @@ import { SearchBar } from '../Shell/SearchBar';
 import { CombinedFamilyInfo } from '../GeneratedClient';
 import { CountyFilter } from '../V1Referrals/CountyFilter';
 
-export type ReferralStatusFilter = 'ALL' | 'OPEN' | 'CLOSED';
+export type ReferralStatusFilter = 'ALL' | 'OPEN' | 'ACCEPTED' | 'CLOSED';
 
 interface ReferralsFiltersProps {
   filterText: string;
@@ -78,6 +78,7 @@ export function ReferralsFilters({
       >
         <ToggleButton value="ALL">ALL</ToggleButton>
         <ToggleButton value="OPEN">OPEN</ToggleButton>
+        <ToggleButton value="ACCEPTED">ACCEPTED</ToggleButton>
         <ToggleButton value="CLOSED">CLOSED</ToggleButton>
       </ToggleButtonGroup>
 

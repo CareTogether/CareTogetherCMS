@@ -7688,6 +7688,7 @@ export class V1Referral implements IV1Referral {
     title!: string;
     status!: V1ReferralStatus;
     comment?: string | undefined;
+    acceptedAtUtc?: Date | undefined;
     closedAtUtc?: Date | undefined;
     closeReason?: string | undefined;
     completedCustomFields!: { [key: string]: CompletedCustomFieldInfo; };
@@ -7712,6 +7713,7 @@ export class V1Referral implements IV1Referral {
             this.title = _data["title"];
             this.status = _data["status"];
             this.comment = _data["comment"];
+            this.acceptedAtUtc = _data["acceptedAtUtc"] ? new Date(_data["acceptedAtUtc"].toString()) : <any>undefined;
             this.closedAtUtc = _data["closedAtUtc"] ? new Date(_data["closedAtUtc"].toString()) : <any>undefined;
             this.closeReason = _data["closeReason"];
             if (_data["completedCustomFields"]) {
@@ -7739,6 +7741,7 @@ export class V1Referral implements IV1Referral {
         data["title"] = this.title;
         data["status"] = this.status;
         data["comment"] = this.comment;
+        data["acceptedAtUtc"] = this.acceptedAtUtc ? this.acceptedAtUtc.toISOString() : <any>undefined;
         data["closedAtUtc"] = this.closedAtUtc ? this.closedAtUtc.toISOString() : <any>undefined;
         data["closeReason"] = this.closeReason;
         if (this.completedCustomFields) {
@@ -7759,6 +7762,7 @@ export interface IV1Referral {
     title: string;
     status: V1ReferralStatus;
     comment?: string | undefined;
+    acceptedAtUtc?: Date | undefined;
     closedAtUtc?: Date | undefined;
     closeReason?: string | undefined;
     completedCustomFields: { [key: string]: CompletedCustomFieldInfo; };
@@ -7766,7 +7770,8 @@ export interface IV1Referral {
 
 export enum V1ReferralStatus {
     Open = 0,
-    Closed = 1,
+    Accepted = 1,
+    Closed = 2,
 }
 
 export abstract class AtomicRecordsCommand implements IAtomicRecordsCommand {
@@ -13097,6 +13102,11 @@ export abstract class V1ReferralCommand implements IV1ReferralCommand {
 
     static fromJS(data: any): V1ReferralCommand {
         data = typeof data === 'object' ? data : {};
+        if (data["discriminator"] === "AcceptV1Referral") {
+            let result = new AcceptV1Referral();
+            result.init(data);
+            return result;
+        }
         if (data["discriminator"] === "CloseV1Referral") {
             let result = new CloseV1Referral();
             result.init(data);
@@ -13140,6 +13150,40 @@ export abstract class V1ReferralCommand implements IV1ReferralCommand {
 
 export interface IV1ReferralCommand {
     referralId: string;
+}
+
+export class AcceptV1Referral extends V1ReferralCommand implements IAcceptV1Referral {
+    acceptedAtUtc!: Date;
+
+    constructor(data?: IAcceptV1Referral) {
+        super(data);
+        this._discriminator = "AcceptV1Referral";
+    }
+
+    init(_data?: any) {
+        super.init(_data);
+        if (_data) {
+            this.acceptedAtUtc = _data["acceptedAtUtc"] ? new Date(_data["acceptedAtUtc"].toString()) : <any>undefined;
+        }
+    }
+
+    static fromJS(data: any): AcceptV1Referral {
+        data = typeof data === 'object' ? data : {};
+        let result = new AcceptV1Referral();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["acceptedAtUtc"] = this.acceptedAtUtc ? this.acceptedAtUtc.toISOString() : <any>undefined;
+        super.toJSON(data);
+        return data;
+    }
+}
+
+export interface IAcceptV1Referral extends IV1ReferralCommand {
+    acceptedAtUtc: Date;
 }
 
 export class CloseV1Referral extends V1ReferralCommand implements ICloseV1Referral {

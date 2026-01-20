@@ -285,12 +285,13 @@ var openReferrals = (
 
 foreach (var referral in openReferrals)
 {
-    await AutoCloseReferralIfFamilyHasOpenCaseAsync(
-        organizationId,
-        locationId,
-        user,
-        referral
-    );
+    await AutoAcceptReferralIfFamilyHasOpenCaseAsync(
+    organizationId,
+    locationId,
+    user,
+    referral
+);
+
 }
 
 }
@@ -305,7 +306,7 @@ if (command is V1ReferralRecordsCommand referralCommand &&
 
     if (referral != null)
     {
-        await AutoCloseReferralIfFamilyHasOpenCaseAsync(
+        await AutoAcceptReferralIfFamilyHasOpenCaseAsync(
             organizationId,
             locationId,
             user,
@@ -890,7 +891,7 @@ if (command is V1ReferralRecordsCommand referralCommand &&
     );
 }
 
-private async Task AutoCloseReferralIfFamilyHasOpenCaseAsync(
+private async Task AutoAcceptReferralIfFamilyHasOpenCaseAsync(
     Guid organizationId,
     Guid locationId,
     ClaimsPrincipal user,
@@ -915,10 +916,9 @@ private async Task AutoCloseReferralIfFamilyHasOpenCaseAsync(
     await v1ReferralsResource.ExecuteV1ReferralCommandAsync(
         organizationId,
         locationId,
-        new CloseV1Referral(
+        new AcceptV1Referral(
             referral.ReferralId,
-            DateTime.UtcNow,
-            "Automatically closed because family has an open case"
+            DateTime.UtcNow
         ),
         user.UserId()
     );
