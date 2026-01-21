@@ -13,25 +13,28 @@ namespace CareTogether.Engines.PolicyEvaluation
     {
         public sealed record RequirementCheckResult(bool IsMetOrExempted, DateOnly? ExpiresAtUtc);
 
-        // TODO: Is this the best place for this logic?
-        // Doesn't sound like it should be part of SharedCalculations,
-        // although it's currently being used by Referral and Approval calculations.
         private static KeyValuePair<string, ActionRequirement>? FindActionDefinition(
             EffectiveLocationPolicy locationPolicy,
             string requiredAction
         )
         {
-            return locationPolicy
-                .ActionDefinitions.ToImmutableDictionary()
-                .FirstOrDefault(item =>
-                    item.Key == requiredAction || (item.Value.AlternateNames != null && item.Value.AlternateNames.Contains(requiredAction))
-                );
+            var actionDefinitions = locationPolicy.ActionDefinitions.ToImmutableDictionary();
+
+            // First, try to find an exact match by key (primary name).
+            // This takes priority over alternate name matches to ensure
+            // we return the correct action when the requiredAction matches
+            // a key directly, even if another action has it as an alternate name.
+            if (actionDefinitions.TryGetValue(requiredAction, out var exactMatch))
+                return new KeyValuePair<string, ActionRequirement>(requiredAction, exactMatch);
+
+            // If no exact key match, search for a match by alternate name.
+            return actionDefinitions.FirstOrDefault(item =>
+                item.Value.AlternateNames != null
+                && item.Value.AlternateNames.Contains(requiredAction)
+            );
         }
 
-        // TODO: Is this the best place for this logic?
-        // Doesn't sound like it should be part of SharedCalculations,
-        // although it's currently being used by Referral and Approval calculations.
-        internal static ImmutableList<string> GetRequirementNameWithSynonyms(
+       internal static ImmutableList<string> GetRequirementNameWithSynonyms(
             EffectiveLocationPolicy locationPolicy,
             string requirementName
         )
@@ -42,8 +45,10 @@ namespace CareTogether.Engines.PolicyEvaluation
                 return [requirementName];
 
             return ImmutableList
-                .Create(actionDefinition.Value.Key)
+                .Create(requirementName)
+                .Add(actionDefinition.Value.Key)
                 .AddRange(actionDefinition.Value.Value.AlternateNames ?? [])
+                .Distinct()
                 .ToImmutableList();
         }
 
