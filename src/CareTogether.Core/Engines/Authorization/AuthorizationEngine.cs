@@ -220,106 +220,117 @@ namespace CareTogether.Engines.Authorization
                 }
             );
         }
-
-        public async Task<bool> AuthorizeV1ReferralCommandAsync(
+public async Task<bool> AuthorizeV1ReferralCommandAsync(
     Guid organizationId,
     Guid locationId,
     SessionUserContext userContext,
     V1ReferralCommand command
 )
 {
-
-    if (command is UpdateV1ReferralFamily updateFamily)
-{
-    var referral = await v1ReferralsResource.GetReferralAsync(
-        organizationId,
-        locationId,
-        updateFamily.ReferralId
-    );
-
-    if (referral == null)
-        return false;
-
-    if (referral.FamilyId.HasValue)
+    if (command is CloseV1Referral close)
     {
-        var existingFamilyPermissions =
+        var referral = await v1ReferralsResource.GetReferralAsync(
+            organizationId,
+            locationId,
+            close.ReferralId
+        );
+
+        if (referral == null)
+            throw new InvalidOperationException("Referral does not exist.");
+
+        if (referral.FamilyId.HasValue)
+            throw new InvalidOperationException("Accepted referrals cannot be closed.");
+
+        var closeReferralPermissions =
             await userAccessCalculation.AuthorizeUserAccessAsync(
                 organizationId,
                 locationId,
                 userContext,
-                new FamilyAuthorizationContext(referral.FamilyId.Value)
+                new GlobalAuthorizationContext()
             );
 
-        if (!existingFamilyPermissions.Contains(Permission.EditV1Referral))
-            return false;
+        return closeReferralPermissions.Contains(Permission.CloseV1Referral);
     }
 
-    var newFamilyPermissions =
-        await userAccessCalculation.AuthorizeUserAccessAsync(
+    if (command is UpdateV1ReferralFamily updateFamily)
+    {
+        var referral = await v1ReferralsResource.GetReferralAsync(
+            organizationId,
+            locationId,
+            updateFamily.ReferralId
+        );
+
+        if (referral == null)
+            return false;
+
+        if (referral.FamilyId.HasValue)
+        {
+            var existingFamilyPermissions =
+                await userAccessCalculation.AuthorizeUserAccessAsync(
+                    organizationId,
+                    locationId,
+                    userContext,
+                    new FamilyAuthorizationContext(referral.FamilyId.Value)
+                );
+
+            if (!existingFamilyPermissions.Contains(Permission.EditV1Referral))
+                return false;
+        }
+
+        var newFamilyPermissions =
+            await userAccessCalculation.AuthorizeUserAccessAsync(
+                organizationId,
+                locationId,
+                userContext,
+                new FamilyAuthorizationContext(updateFamily.FamilyId)
+            );
+
+        return newFamilyPermissions.Contains(Permission.EditV1Referral);
+    }
+
+    var defaultPermissions = command switch
+    {
+        CreateV1Referral => await userAccessCalculation.AuthorizeUserAccessAsync(
             organizationId,
             locationId,
             userContext,
-            new FamilyAuthorizationContext(updateFamily.FamilyId)
-        );
+            new GlobalAuthorizationContext()
+        ),
 
-    return newFamilyPermissions.Contains(Permission.EditV1Referral);
-}
+        UpdateV1ReferralDetails c => await userAccessCalculation.AuthorizeUserAccessAsync(
+            organizationId,
+            locationId,
+            userContext,
+            c.FamilyId.HasValue
+                ? new FamilyAuthorizationContext(c.FamilyId.Value)
+                : new GlobalAuthorizationContext()
+        ),
 
+        UpdateCustomV1ReferralField => await userAccessCalculation.AuthorizeUserAccessAsync(
+            organizationId,
+            locationId,
+            userContext,
+            new GlobalAuthorizationContext()
+        ),
 
+        ReopenV1Referral => await userAccessCalculation.AuthorizeUserAccessAsync(
+            organizationId,
+            locationId,
+            userContext,
+            new GlobalAuthorizationContext()
+        ),
 
-  var permissions = command switch
-{
-    CreateV1Referral => await userAccessCalculation.AuthorizeUserAccessAsync(
-        organizationId,
-        locationId,
-        userContext,
-        new GlobalAuthorizationContext()
-    ),
+        _ => throw new NotImplementedException(
+            $"The command type '{command.GetType().FullName}' has not been implemented."
+        ),
+    };
 
-    UpdateV1ReferralDetails c => await userAccessCalculation.AuthorizeUserAccessAsync(
-        organizationId,
-        locationId,
-        userContext,
-        c.FamilyId.HasValue
-            ? new FamilyAuthorizationContext(c.FamilyId.Value)
-            : new GlobalAuthorizationContext()
-    ),
-
-    UpdateCustomV1ReferralField => await userAccessCalculation.AuthorizeUserAccessAsync(
-        organizationId,
-        locationId,
-        userContext,
-        new GlobalAuthorizationContext()
-    ),
-
-    CloseV1Referral => await userAccessCalculation.AuthorizeUserAccessAsync(
-        organizationId,
-        locationId,
-        userContext,
-        new GlobalAuthorizationContext()
-    ),
-
-    ReopenV1Referral => await userAccessCalculation.AuthorizeUserAccessAsync(
-        organizationId,
-        locationId,
-        userContext,
-        new GlobalAuthorizationContext()
-    ),
-
-    _ => throw new NotImplementedException(
-        $"The command type '{command.GetType().FullName}' has not been implemented."
-    ),
-};
-
-
-    return permissions.Contains(
+    return defaultPermissions.Contains(
         command switch
         {
             CreateV1Referral => Permission.CreateV1Referral,
-            UpdateV1ReferralFamily => Permission.EditV1Referral,
             UpdateV1ReferralDetails => Permission.EditV1Referral,
             UpdateCustomV1ReferralField => Permission.EditV1Referral,
-            CloseV1Referral => Permission.CloseV1Referral,
             ReopenV1Referral => Permission.ReopenV1Referral,
             _ => throw new NotImplementedException(
                 $"The command type '{command.GetType().FullName}' has not been implemented."
@@ -327,6 +338,7 @@ namespace CareTogether.Engines.Authorization
         }
     );
 }
+
 
 public async Task<bool> AuthorizeV1ReferralReadAsync(
     Guid organizationId,

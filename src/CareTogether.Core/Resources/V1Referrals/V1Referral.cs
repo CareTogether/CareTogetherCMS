@@ -16,7 +16,7 @@ namespace CareTogether.Resources.V1Referrals
         string? Comment,
         DateTime? AcceptedAtUtc,
         DateTime? ClosedAtUtc,
-        string? CloseReason,
+        V1ReferralCloseReason? CloseReason,
         ImmutableDictionary<string, CompletedCustomFieldInfo> CompletedCustomFields
     )
     {
@@ -24,7 +24,9 @@ namespace CareTogether.Resources.V1Referrals
         {
             V1Referral? referral = null;
 
-            foreach (var e in events.OrderBy(e => e.OccurredAtUtc))
+            foreach (var e in events
+                .OrderBy(e => e is V1ReferralCreated ? 0 : 1)
+                .ThenBy(e => e.OccurredAtUtc))
             {
                 referral = e switch
                 {
@@ -41,12 +43,14 @@ namespace CareTogether.Resources.V1Referrals
                         ImmutableDictionary<string, CompletedCustomFieldInfo>.Empty
                     ),
 
-                    V1ReferralFamilyUpdated updated => referral! with
+                    _ when referral == null => referral,
+
+                    V1ReferralFamilyUpdated updated => referral with
                     {
                         FamilyId = updated.FamilyId
                     },
 
-                    V1ReferralDetailsUpdated updated => referral! with
+                    V1ReferralDetailsUpdated updated => referral with
                     {
                         FamilyId = updated.FamilyId,
                         Title = updated.Title,
@@ -54,31 +58,26 @@ namespace CareTogether.Resources.V1Referrals
                         CreatedAtUtc = updated.CreatedAtUtc
                     },
 
-                 V1ReferralAccepted accepted => referral! with
-                {
-                    Status = V1ReferralStatus.Accepted,
-                    AcceptedAtUtc = accepted.AcceptedAtUtc
-                },
-
-
-                    V1ReferralClosed closed => referral! with
+                    V1ReferralAccepted accepted => referral with
                     {
-                        Status = V1ReferralStatus.Closed,
-                        ClosedAtUtc = closed.ClosedAtUtc,
-                        CloseReason = closed.CloseReason
+                        Status = V1ReferralStatus.Accepted,
+                        AcceptedAtUtc = accepted.AcceptedAtUtc
                     },
 
-                    V1ReferralReopened => referral! with
+                    V1ReferralClosed closed => ApplyClosed(referral, closed),
+
+                    V1ReferralReopened => referral with
                     {
                         Status = V1ReferralStatus.Open,
+                        FamilyId = null,
                         ClosedAtUtc = null,
                         CloseReason = null
                     },
 
-                    V1ReferralCustomFieldUpdated cf => referral! with
+                    V1ReferralCustomFieldUpdated cf => referral with
                     {
                         CompletedCustomFields =
-                            referral!.CompletedCustomFields.SetItem(
+                            referral.CompletedCustomFields.SetItem(
                                 cf.CustomFieldName,
                                 new CompletedCustomFieldInfo(
                                     cf.ActorUserId,
@@ -95,7 +94,25 @@ namespace CareTogether.Resources.V1Referrals
                 };
             }
 
-            return referral!;
+            if (referral == null)
+                throw new InvalidOperationException(
+                    "This referral is missing its creation event."
+                );
+
+            return referral;
+        }
+
+        private static V1Referral ApplyClosed(
+            V1Referral referral,
+            V1ReferralClosed closed
+        )
+        {
+            return referral with
+            {
+                Status = V1ReferralStatus.Closed,
+                ClosedAtUtc = closed.ClosedAtUtc,
+                CloseReason = closed.CloseReason
+            };
         }
     }
 }

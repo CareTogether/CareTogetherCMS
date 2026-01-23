@@ -31,6 +31,7 @@ import { EditReferralDrawer } from '../V1Referrals/EditReferralDrawer';
 import { policyData } from '../Model/ConfigurationModel';
 import { OpenNewV1CaseDialog } from '../V1Cases/OpenNewV1CaseDialog';
 import { useAppNavigate } from '../Hooks/useAppNavigate';
+import { CloseV1ReferralDrawer } from './CloseV1ReferralDrawer';
 
 function formatStatusWithDate(
   status: V1ReferralStatus,
@@ -68,8 +69,7 @@ export function ReferralDetailsPage() {
   const policy = useRecoilValue(policyData);
   const appNavigate = useAppNavigate();
 
-  const { closeReferral, reopenReferral, updateReferralFamily } =
-    useV1ReferralsModel();
+  const { reopenReferral, updateReferralFamily } = useV1ReferralsModel();
 
   const [working, setWorking] = useState(false);
   const [openCreateFamily, setOpenCreateFamily] = useState(false);
@@ -77,6 +77,7 @@ export function ReferralDetailsPage() {
   const [openEditReferral, setOpenEditReferral] = useState(false);
   const [openOpenCaseDialog, setOpenOpenCaseDialog] = useState(false);
   const [showAcceptedMessage, setShowAcceptedMessage] = useState(false);
+  const [openCloseReferralDialog, setOpenCloseReferralDialog] = useState(false);
 
   const referral = useMemo(
     () => referrals.find((r) => r.referralId === referralId),
@@ -111,21 +112,6 @@ export function ReferralDetailsPage() {
 
   const referralCustomFields: CustomField[] =
     policy.referralPolicy?.customFields ?? [];
-
-  async function handleToggleReferral() {
-    if (!referral || working) return;
-
-    try {
-      setWorking(true);
-      if (isClosed) {
-        await reopenReferral(referral.referralId);
-      } else {
-        await closeReferral(referral.referralId);
-      }
-    } finally {
-      setWorking(false);
-    }
-  }
 
   async function handleSelectFamily(familyId: string) {
     if (!referral || working) return;
@@ -168,11 +154,10 @@ export function ReferralDetailsPage() {
             </Button>
           )}
 
-          {isOpen && (
+          {isOpen && !referral.familyId && (
             <Button
               variant="outlined"
-              disabled={working}
-              onClick={handleToggleReferral}
+              onClick={() => setOpenCloseReferralDialog(true)}
             >
               Close Referral
             </Button>
@@ -182,7 +167,14 @@ export function ReferralDetailsPage() {
             <Button
               variant="contained"
               disabled={working}
-              onClick={handleToggleReferral}
+              onClick={async () => {
+                setWorking(true);
+                try {
+                  await reopenReferral(referral.referralId);
+                } finally {
+                  setWorking(false);
+                }
+              }}
             >
               Reopen Referral
             </Button>
@@ -333,6 +325,13 @@ export function ReferralDetailsPage() {
         <OpenNewV1CaseDialog
           partneringFamilyId={referral.familyId}
           onClose={() => setOpenOpenCaseDialog(false)}
+        />
+      )}
+
+      {openCloseReferralDialog && (
+        <CloseV1ReferralDrawer
+          referralId={referral.referralId}
+          onClose={() => setOpenCloseReferralDialog(false)}
         />
       )}
 

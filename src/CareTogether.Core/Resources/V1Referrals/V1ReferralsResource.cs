@@ -44,9 +44,8 @@ namespace CareTogether.Resources.V1Referrals
                 UpdateV1ReferralDetails c =>
                     HandleUpdateDetails(c, referral, actorUserId),
 
-                    AcceptV1Referral c =>
-    HandleAccept(c, referral, actorUserId),
-
+                AcceptV1Referral c =>
+                    HandleAccept(c, referral, actorUserId),
 
                 CloseV1Referral c =>
                     HandleClose(c, referral, actorUserId),
@@ -97,7 +96,6 @@ namespace CareTogether.Resources.V1Referrals
                     r.FamilyId == familyId
                 );
         }
-
 
         private static V1ReferralEvent HandleCreate(
             CreateV1Referral command,
@@ -156,24 +154,7 @@ namespace CareTogether.Resources.V1Referrals
         }
 
         private static V1ReferralEvent HandleAccept(
-    AcceptV1Referral command,
-    V1Referral? referral,
-    Guid actorUserId
-)
-{
-    EnsureExists(referral);
-    EnsureOpen(referral!);
-
-    return new V1ReferralAccepted(
-        command.ReferralId,
-        command.AcceptedAtUtc,
-        actorUserId
-    );
-}
-
-
-        private static V1ReferralEvent HandleClose(
-            CloseV1Referral command,
+            AcceptV1Referral command,
             V1Referral? referral,
             Guid actorUserId
         )
@@ -181,13 +162,29 @@ namespace CareTogether.Resources.V1Referrals
             EnsureExists(referral);
             EnsureOpen(referral!);
 
-            return new V1ReferralClosed(
+            return new V1ReferralAccepted(
                 command.ReferralId,
-                command.ClosedAtUtc,
-                command.CloseReason,
+                command.AcceptedAtUtc,
                 actorUserId
             );
         }
+
+  private static V1ReferralEvent HandleClose(
+    CloseV1Referral command,
+    V1Referral? referral,
+    Guid actorUserId
+)
+{
+    EnsureExists(referral);
+    EnsureOpen(referral!);
+
+    return new V1ReferralClosed(
+        command.ReferralId,
+        command.ClosedAtUtc,
+        command.CloseReason,
+        actorUserId
+    );
+}
 
         private static V1ReferralEvent HandleReopen(
             ReopenV1Referral command,
@@ -198,7 +195,9 @@ namespace CareTogether.Resources.V1Referrals
             EnsureExists(referral);
 
             if (referral!.Status != V1ReferralStatus.Closed)
-                throw new InvalidOperationException("Only closed referrals can be reopened.");
+                throw new InvalidOperationException(
+                    "Only closed referrals can be reopened."
+                );
 
             return new V1ReferralReopened(
                 command.ReferralId,

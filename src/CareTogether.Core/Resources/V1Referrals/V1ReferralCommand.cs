@@ -29,10 +29,11 @@ namespace CareTogether.Resources.V1Referrals
     ) : V1ReferralCommand(ReferralId);
 
     public sealed record CloseV1Referral(
-        Guid ReferralId,
-        DateTime ClosedAtUtc,
-        string CloseReason
-    ) : V1ReferralCommand(ReferralId);
+    Guid ReferralId,
+    DateTime ClosedAtUtc,
+    V1ReferralCloseReason CloseReason
+) : V1ReferralCommand(ReferralId);
+
 
     public sealed record ReopenV1Referral(
         Guid ReferralId,

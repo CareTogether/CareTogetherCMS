@@ -4849,8 +4849,12 @@
             "nullable": true
           },
           "closeReason": {
-            "type": "string",
-            "nullable": true
+            "nullable": true,
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/V1ReferralCloseReason"
+              }
+            ]
           },
           "completedCustomFields": {
             "type": "object",
@@ -4872,6 +4876,24 @@
           0,
           1,
           2
+        ]
+      },
+      "V1ReferralCloseReason": {
+        "type": "integer",
+        "description": "",
+        "x-enumNames": [
+          "NotAppropriate",
+          "NoCapacity",
+          "NoLongerNeeded",
+          "Resourced",
+          "NeedMet"
+        ],
+        "enum": [
+          0,
+          1,
+          2,
+          3,
+          4
         ]
       },
       "AtomicRecordsCommand": {
@@ -8081,7 +8103,7 @@
                 "format": "date-time"
               },
               "closeReason": {
-                "type": "string"
+                "$ref": "#/components/schemas/V1ReferralCloseReason"
               }
             }
           }

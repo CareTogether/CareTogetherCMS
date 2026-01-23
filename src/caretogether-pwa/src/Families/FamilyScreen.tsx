@@ -30,6 +30,7 @@ import {
   V1Case,
   RoleRemovalReason,
   V1ReferralStatus,
+  V1CaseCloseReason,
 } from '../GeneratedClient';
 import { useParams } from 'react-router';
 import AddCircleIcon from '@mui/icons-material/AddCircle';
@@ -44,7 +45,7 @@ import { AddChildDialog } from './AddChildDialog';
 import { AddEditNoteDialog } from '../Notes/AddEditNoteDialog';
 import { format } from 'date-fns';
 import { UploadFamilyDocumentsDialog } from './UploadFamilyDocumentsDialog';
-import { CloseV1CaseDialog } from '../V1Cases/CloseV1CaseDialog';
+import { useV1CasesModel } from '../Model/V1CasesModel';
 import { OpenNewV1CaseDialog } from '../V1Cases/OpenNewV1CaseDialog';
 import { FamilyDocuments } from './FamilyDocuments';
 import { useFamilyPermissions } from '../Model/SessionModel';
@@ -155,7 +156,8 @@ export function FamilyScreen() {
   const allV1Cases: V1Case[] = useMemo(() => {
     return [...openV1Cases, ...closedV1Cases];
   }, [openV1Cases, closedV1Cases]);
-  const [closeV1CaseDialogOpen, setCloseV1CaseDialogOpen] = useState(false);
+  const v1CasesModel = useV1CasesModel();
+  const [closingV1Case, setClosingV1Case] = useState(false);
   const [openNewV1CaseDialogOpen, setOpenNewV1CaseDialogOpen] = useState(false);
   const [uploadDocumentDialogOpen, setUploadDocumentDialogOpen] =
     useState(false);
@@ -172,6 +174,23 @@ export function FamilyScreen() {
   const selectedV1Case = allV1Cases.find(
     (v1Case) => v1Case.id === selectedV1CaseId
   );
+  async function handleCloseV1Case(v1CaseId: string) {
+    if (closingV1Case || !family) return;
+
+    setClosingV1Case(true);
+    try {
+      await withBackdrop(async () => {
+        await v1CasesModel.closeV1Case(
+          family.family!.id!,
+          v1CaseId,
+          V1CaseCloseReason.NoLongerNeeded,
+          new Date()
+        );
+      });
+    } finally {
+      setClosingV1Case(false);
+    }
+  }
 
   useEffect(() => {
     if (
@@ -707,10 +726,12 @@ export function FamilyScreen() {
                                     className="ph-unmask"
                                     onClick={(e) => {
                                       e.stopPropagation();
-                                      setCloseV1CaseDialogOpen(true);
+                                      handleCloseV1Case(v1Case.id!);
                                     }}
                                     variant="contained"
                                     size="small"
+                                    color="primary"
+                                    disabled={closingV1Case}
                                   >
                                     Close Case
                                   </Button>
@@ -728,15 +749,6 @@ export function FamilyScreen() {
             <Grid item md={4}></Grid>
 
             <Grid item xs={6} md={4}>
-              {closeV1CaseDialogOpen &&
-                selectedV1Case?.id ===
-                  family.partneringFamilyInfo?.openV1Case?.id && (
-                  <CloseV1CaseDialog
-                    partneringFamilyId={family.family!.id!}
-                    v1CaseId={`${selectedV1Case!.id}`}
-                    onClose={() => setCloseV1CaseDialogOpen(false)}
-                  />
-                )}
               {openNewV1CaseDialogOpen && (
                 <OpenNewV1CaseDialog
                   partneringFamilyId={family.family!.id!}

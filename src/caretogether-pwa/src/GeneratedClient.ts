@@ -7690,7 +7690,7 @@ export class V1Referral implements IV1Referral {
     comment?: string | undefined;
     acceptedAtUtc?: Date | undefined;
     closedAtUtc?: Date | undefined;
-    closeReason?: string | undefined;
+    closeReason?: V1ReferralCloseReason | undefined;
     completedCustomFields!: { [key: string]: CompletedCustomFieldInfo; };
 
     constructor(data?: IV1Referral) {
@@ -7764,7 +7764,7 @@ export interface IV1Referral {
     comment?: string | undefined;
     acceptedAtUtc?: Date | undefined;
     closedAtUtc?: Date | undefined;
-    closeReason?: string | undefined;
+    closeReason?: V1ReferralCloseReason | undefined;
     completedCustomFields: { [key: string]: CompletedCustomFieldInfo; };
 }
 
@@ -7772,6 +7772,14 @@ export enum V1ReferralStatus {
     Open = 0,
     Accepted = 1,
     Closed = 2,
+}
+
+export enum V1ReferralCloseReason {
+    NotAppropriate = 0,
+    NoCapacity = 1,
+    NoLongerNeeded = 2,
+    Resourced = 3,
+    NeedMet = 4,
 }
 
 export abstract class AtomicRecordsCommand implements IAtomicRecordsCommand {
@@ -13188,7 +13196,7 @@ export interface IAcceptV1Referral extends IV1ReferralCommand {
 
 export class CloseV1Referral extends V1ReferralCommand implements ICloseV1Referral {
     closedAtUtc!: Date;
-    closeReason!: string;
+    closeReason!: V1ReferralCloseReason;
 
     constructor(data?: ICloseV1Referral) {
         super(data);
@@ -13221,7 +13229,7 @@ export class CloseV1Referral extends V1ReferralCommand implements ICloseV1Referr
 
 export interface ICloseV1Referral extends IV1ReferralCommand {
     closedAtUtc: Date;
-    closeReason: string;
+    closeReason: V1ReferralCloseReason;
 }
 
 export class CreateV1Referral extends V1ReferralCommand implements ICreateV1Referral {

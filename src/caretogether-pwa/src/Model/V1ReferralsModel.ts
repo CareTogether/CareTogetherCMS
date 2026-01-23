@@ -7,6 +7,8 @@ import {
   UpdateV1ReferralFamily,
   UpdateCustomV1ReferralField,
   CustomField,
+  V1ReferralCloseReason,
+  V1ReferralCommand,
 } from '../GeneratedClient';
 import { useAtomicRecordsCommandCallback } from './DirectoryModel';
 import { commandFactory } from './CommandFactory';
@@ -23,6 +25,18 @@ interface UpdateReferralDetailsPayload {
   title: string;
   comment?: string;
   openedAtUtc: Date;
+}
+
+function useV1ReferralCommandCallback<T extends unknown[]>(
+  callback: (referralId: string, ...args: T) => Promise<V1ReferralCommand>
+) {
+  return useAtomicRecordsCommandCallback(
+    async (referralId: string, ...args: T) => {
+      const command = new V1ReferralRecordsCommand();
+      command.command = await callback(referralId, ...args);
+      return command;
+    }
+  );
 }
 
 export function useV1ReferralsModel() {
@@ -91,31 +105,25 @@ export function useV1ReferralsModel() {
     }
   );
 
-  const closeReferral = useAtomicRecordsCommandCallback(
-    async (referralId: string) => {
-      const command = new V1ReferralRecordsCommand();
-
-      command.command = commandFactory(CloseV1Referral, {
+  const closeReferral = useV1ReferralCommandCallback(
+    async (
+      referralId: string,
+      reason: V1ReferralCloseReason,
+      closedAtLocal: Date
+    ) =>
+      commandFactory(CloseV1Referral, {
         referralId,
-        closedAtUtc: new Date(),
-        closeReason: 'Closed by user',
-      });
-
-      return command;
-    }
+        closeReason: reason,
+        closedAtUtc: new Date(closedAtLocal.toISOString()),
+      })
   );
 
-  const reopenReferral = useAtomicRecordsCommandCallback(
-    async (referralId: string) => {
-      const command = new V1ReferralRecordsCommand();
-
-      command.command = commandFactory(ReopenV1Referral, {
+  const reopenReferral = useV1ReferralCommandCallback(
+    async (referralId: string) =>
+      commandFactory(ReopenV1Referral, {
         referralId,
         reopenedAtUtc: new Date(),
-      });
-
-      return command;
-    }
+      })
   );
 
   return {
