@@ -61,6 +61,7 @@ namespace CareTogether.Resources.V1Referrals
                     V1ReferralAccepted accepted => referral with
                     {
                         Status = V1ReferralStatus.Accepted,
+                        FamilyId = accepted.FamilyId,
                         AcceptedAtUtc = accepted.AcceptedAtUtc
                     },
 
@@ -70,6 +71,7 @@ namespace CareTogether.Resources.V1Referrals
                     {
                         Status = V1ReferralStatus.Open,
                         FamilyId = null,
+                        AcceptedAtUtc = null,
                         ClosedAtUtc = null,
                         CloseReason = null
                     },

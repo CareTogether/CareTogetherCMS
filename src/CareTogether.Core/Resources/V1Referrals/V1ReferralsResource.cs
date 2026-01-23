@@ -115,7 +115,6 @@ namespace CareTogether.Resources.V1Referrals
                 actorUserId
             );
         }
-
         private static V1ReferralEvent HandleUpdateFamily(
             UpdateV1ReferralFamily command,
             V1Referral? referral,
@@ -124,6 +123,16 @@ namespace CareTogether.Resources.V1Referrals
         {
             EnsureExists(referral);
             EnsureOpen(referral!);
+
+            if (!referral!.FamilyId.HasValue)
+            {
+                return new V1ReferralAccepted(
+                    command.ReferralId,
+                    command.FamilyId,
+                    DateTime.UtcNow,
+                    actorUserId
+                );
+            }
 
             return new V1ReferralFamilyUpdated(
                 command.ReferralId,
@@ -164,27 +173,34 @@ namespace CareTogether.Resources.V1Referrals
 
             return new V1ReferralAccepted(
                 command.ReferralId,
+                referral!.FamilyId!.Value,
                 command.AcceptedAtUtc,
                 actorUserId
             );
         }
 
-  private static V1ReferralEvent HandleClose(
-    CloseV1Referral command,
-    V1Referral? referral,
-    Guid actorUserId
-)
-{
-    EnsureExists(referral);
-    EnsureOpen(referral!);
+        private static V1ReferralEvent HandleClose(
+            CloseV1Referral command,
+            V1Referral? referral,
+            Guid actorUserId
+        )
+        {
+            EnsureExists(referral);
 
-    return new V1ReferralClosed(
-        command.ReferralId,
-        command.ClosedAtUtc,
-        command.CloseReason,
-        actorUserId
-    );
-}
+            if (referral!.Status == V1ReferralStatus.Accepted)
+                throw new InvalidOperationException(
+                    "Accepted referrals cannot be closed."
+                );
+
+            EnsureOpen(referral);
+
+            return new V1ReferralClosed(
+                command.ReferralId,
+                command.ClosedAtUtc,
+                command.CloseReason,
+                actorUserId
+            );
+        }
 
         private static V1ReferralEvent HandleReopen(
             ReopenV1Referral command,
