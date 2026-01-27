@@ -104,7 +104,7 @@ namespace CareTogether.Resources.Policies
                     if (usersWithRole.Any())
                     {
                         throw new InvalidOperationException(
-                            $"Cannot delete role '{roleName}' because it is currently assigned to {usersWithRole.Count} user(s) in location '{location.Name}'."
+                            $"Cannot delete role '{roleName}' because it is currently assigned to {usersWithRole.Count} user(s) in location '{location.Name}': {string.Join(", ", usersWithRole.Select(u => u.PersonId))}."
                         );
                     }
                 }
