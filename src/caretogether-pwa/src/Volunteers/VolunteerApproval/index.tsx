@@ -169,11 +169,13 @@ function VolunteerApproval(props: { onOpen: () => void }) {
   }
 
   function familyHasNoValidStatuses(family: CombinedFamilyInfo) {
-    return statusFilters.every(
-      (filterOption) =>
-        family.volunteerFamilyInfo?.familyRoleApprovals?.[filterOption.key] ===
-        undefined
-    );
+    return roleFilters
+      .filter((filterOption) => filterOption.key !== catchAllLabel)
+      .every(
+        (filterOption) =>
+          family.volunteerFamilyInfo?.familyRoleApprovals?.[filterOption.key] ===
+          undefined
+      );
   }
 
   function familyHasSpecificRoleInValidStatus(
@@ -259,12 +261,14 @@ function VolunteerApproval(props: { onOpen: () => void }) {
   }
 
   function familyMemberHasNoValidStatuses(volunteer: VolunteerInfo) {
-    return statusFilters.every((filterOption) =>
-      checkStatusEquivalence(
-        volunteer.approvalStatusByRole?.[filterOption.key].currentStatus,
-        null
-      )
-    );
+    return roleFilters
+      .filter((filterOption) => filterOption.key !== catchAllLabel)
+      .every((filterOption) =>
+        checkStatusEquivalence(
+          volunteer.approvalStatusByRole?.[filterOption.key]?.currentStatus,
+          null
+        )
+      );
   }
 
   function familyMemberHasSpecificRoleInValidStatus(
