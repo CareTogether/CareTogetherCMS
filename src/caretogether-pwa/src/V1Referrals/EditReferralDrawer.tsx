@@ -1,19 +1,9 @@
-import {
-  Autocomplete,
-  Button,
-  Drawer,
-  Grid,
-  TextField,
-  Typography,
-} from '@mui/material';
+import { Button, Drawer, Grid, TextField, Typography } from '@mui/material';
 import { Controller, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useRecoilValue } from 'recoil';
 
 import { ValidateDatePicker } from '../Generic/Forms/ValidateDatePicker';
-import { FamilyName, familyNameString } from '../Families/FamilyName';
-import { useLoadable } from '../Hooks/useLoadable';
-import { partneringFamiliesData } from '../Model/V1CasesModel';
 import { useV1ReferralsModel } from '../Model/V1ReferralsModel';
 import { policyData } from '../Model/ConfigurationModel';
 import { CustomField, V1Referral } from '../GeneratedClient';
@@ -33,7 +23,6 @@ export function EditReferralDrawer({
   referral,
   onClose,
 }: EditReferralDrawerProps) {
-  const families = useLoadable(partneringFamiliesData) || [];
   const policy = useRecoilValue(policyData);
 
   const { updateReferralDetails, updateCustomReferralField } =
@@ -41,15 +30,6 @@ export function EditReferralDrawer({
 
   const referralCustomFields: CustomField[] =
     policy.referralPolicy?.customFields ?? [];
-
-  const familyOptions = [
-    { id: null, label: 'Family Not Yet Known', family: null },
-    ...families.map((f) => ({
-      id: f.family?.id ?? null,
-      label: familyNameString(f),
-      family: f,
-    })),
-  ];
 
   const {
     control,
@@ -146,45 +126,8 @@ export function EditReferralDrawer({
             />
           </Grid>
 
-          <Grid item xs={12}>
-            <Typography sx={{ fontWeight: 600, mb: 1 }}>Family</Typography>
-
-            <Controller
-              name="familyId"
-              control={control}
-              render={({ field }) => (
-                <Autocomplete
-                  fullWidth
-                  options={familyOptions}
-                  value={
-                    familyOptions.find((o) => o.id === field.value) ??
-                    familyOptions[0]
-                  }
-                  getOptionLabel={(opt) => opt.label}
-                  onChange={(_, option) => field.onChange(option?.id ?? null)}
-                  renderOption={(props, option) => (
-                    <li {...props}>
-                      {option.family ? (
-                        <FamilyName family={option.family} />
-                      ) : (
-                        option.label
-                      )}
-                    </li>
-                  )}
-                  renderInput={(params) => (
-                    <TextField {...params} label="Select Family" />
-                  )}
-                />
-              )}
-            />
-          </Grid>
-
           {referralCustomFields.length > 0 && (
             <Grid item xs={12}>
-              <Typography sx={{ fontWeight: 600, mb: 1 }}>
-                Referral Details
-              </Typography>
-
               <Grid container spacing={2}>
                 {referralCustomFields.map((field) => (
                   <Grid item xs={12} key={field.name}>
