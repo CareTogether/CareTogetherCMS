@@ -8,6 +8,7 @@ using CareTogether.Resources.Communities;
 using CareTogether.Resources.Directory;
 using CareTogether.Resources.Notes;
 using CareTogether.Resources.V1Cases;
+using CareTogether.Resources.V1Referrals;
 using JsonPolymorph;
 
 namespace CareTogether.Managers.Records
@@ -94,6 +95,10 @@ namespace CareTogether.Managers.Records
 
     public sealed record ReferralRecordsCommand(V1CaseCommand Command) : AtomicRecordsCommand();
 
+    public sealed record V1ReferralRecordsCommand(V1ReferralCommand Command)
+    : AtomicRecordsCommand();
+
+
     public sealed record ArrangementRecordsCommand(ArrangementsCommand Command)
         : AtomicRecordsCommand();
 
@@ -109,6 +114,10 @@ namespace CareTogether.Managers.Records
 
     public sealed record CommunityRecordsAggregate(CommunityInfo Community)
         : RecordsAggregate(Community.Community.Id);
+
+    public sealed record ReferralRecordsAggregate(V1Referral Referral)
+        : RecordsAggregate(Referral.ReferralId);
+
 
     public interface IRecordsManager
     {
