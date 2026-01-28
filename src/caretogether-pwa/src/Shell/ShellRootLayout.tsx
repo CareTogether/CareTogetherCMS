@@ -24,10 +24,11 @@ function ShellRootLayout({ children }: React.PropsWithChildren) {
   );
 
   const drawerWidth = menuDrawerOpen ? 190 : 48;
+  const CHAT_WIDGET_SAFE_HEIGHT = 96;
+  const MOBILE_BOTTOM_NAV_HEIGHT = 56;
 
   const { message, resetSnackBar } = useGlobalSnackBar();
 
-  // Initialize Featurebase across the entire app
   useFeaturebase();
 
   return (
@@ -41,14 +42,19 @@ function ShellRootLayout({ children }: React.PropsWithChildren) {
         <ShellSideNavigation open={menuDrawerOpen} width={drawerWidth} />
       )}
       <Box
-        sx={{ flexGrow: 1, marginLeft: isDesktop ? drawerWidth + 'px' : null }}
+        sx={{
+          flexGrow: 1,
+          marginLeft: isDesktop ? drawerWidth + 'px' : undefined,
+        }}
       >
         <Container
           maxWidth={false}
           sx={{
             marginTop: { xs: 7, sm: 8, md: 6 },
-            marginBottom: isDesktop ? 0 : 7,
-            paddingBottom: isDesktop ? 0 : 7,
+            paddingBottom: {
+              xs: CHAT_WIDGET_SAFE_HEIGHT + MOBILE_BOTTOM_NAV_HEIGHT,
+              md: CHAT_WIDGET_SAFE_HEIGHT,
+            },
             backgroundColor: '#fff',
           }}
         >
