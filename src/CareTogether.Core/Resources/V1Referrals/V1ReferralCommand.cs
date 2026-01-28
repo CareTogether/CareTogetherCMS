@@ -23,10 +23,12 @@ namespace CareTogether.Resources.V1Referrals
     ) : V1ReferralCommand(ReferralId);
 
 
-    public sealed record AcceptV1Referral(
-        Guid ReferralId,
-        DateTime AcceptedAtUtc
-    ) : V1ReferralCommand(ReferralId);
+public sealed record AcceptV1Referral(
+    Guid ReferralId,
+    Guid FamilyId,
+    DateTime AcceptedAtUtc
+) : V1ReferralCommand(ReferralId);
+
 
     public sealed record CloseV1Referral(
     Guid ReferralId,

@@ -100,6 +100,8 @@ export function ReferralDetailsPage() {
     ? familyLookup(referral.familyId)
     : undefined;
 
+  const familyHasOpenCase = !!family?.partneringFamilyInfo?.openV1Case;
+
   const isOpen = referral.status === V1ReferralStatus.Open;
   const isClosed = referral.status === V1ReferralStatus.Closed;
   const canSelectFamily = isOpen && !referral.familyId;
@@ -116,10 +118,18 @@ export function ReferralDetailsPage() {
   async function handleSelectFamily(familyId: string) {
     if (!referral || working) return;
 
+    const selectedFamily = familyLookup(familyId);
+    const hasOpenCase = !!selectedFamily?.partneringFamilyInfo?.openV1Case;
+
     try {
       setWorking(true);
+
       await updateReferralFamily(referral.referralId, familyId);
-      setShowAcceptedMessage(true);
+
+      if (hasOpenCase) {
+        setShowAcceptedMessage(true);
+      }
+
       setSelectingFamily(false);
     } finally {
       setWorking(false);
@@ -180,7 +190,7 @@ export function ReferralDetailsPage() {
             </Button>
           )}
 
-          {isOpen && referral.familyId && (
+          {isOpen && referral.familyId && !familyHasOpenCase && (
             <Button
               variant="contained"
               onClick={() => setOpenOpenCaseDialog(true)}
@@ -309,7 +319,7 @@ export function ReferralDetailsPage() {
 
             if (!familyId || !referral) return;
 
-            await updateReferralFamily(referral.referralId, familyId);
+            await handleSelectFamily(familyId);
           }}
         />
       )}

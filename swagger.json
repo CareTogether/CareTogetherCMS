@@ -8074,9 +8074,14 @@
             "type": "object",
             "additionalProperties": false,
             "required": [
+              "familyId",
               "acceptedAtUtc"
             ],
             "properties": {
+              "familyId": {
+                "type": "string",
+                "format": "guid"
+              },
               "acceptedAtUtc": {
                 "type": "string",
                 "format": "date-time"

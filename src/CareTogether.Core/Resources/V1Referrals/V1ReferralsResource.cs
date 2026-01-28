@@ -115,32 +115,33 @@ namespace CareTogether.Resources.V1Referrals
                 actorUserId
             );
         }
-        private static V1ReferralEvent HandleUpdateFamily(
-            UpdateV1ReferralFamily command,
-            V1Referral? referral,
-            Guid actorUserId
-        )
-        {
-            EnsureExists(referral);
-            EnsureOpen(referral!);
+ private static V1ReferralEvent HandleUpdateFamily(
+    UpdateV1ReferralFamily command,
+    V1Referral? referral,
+    Guid actorUserId
+)
+{
+    EnsureExists(referral);
+    EnsureOpen(referral!);
 
-            if (!referral!.FamilyId.HasValue)
-            {
-                return new V1ReferralAccepted(
-                    command.ReferralId,
-                    command.FamilyId,
-                    DateTime.UtcNow,
-                    actorUserId
-                );
-            }
+    if (referral!.FamilyId == null)
+    {
+        return new V1ReferralFamilyUpdated(
+            command.ReferralId,
+            command.FamilyId,
+            DateTime.UtcNow,
+            actorUserId
+        );
+    }
 
-            return new V1ReferralFamilyUpdated(
-                command.ReferralId,
-                command.FamilyId,
-                DateTime.UtcNow,
-                actorUserId
-            );
-        }
+    return new V1ReferralFamilyUpdated(
+        command.ReferralId,
+        command.FamilyId,
+        DateTime.UtcNow,
+        actorUserId
+    );
+}
+
 
         private static V1ReferralEvent HandleUpdateDetails(
             UpdateV1ReferralDetails command,
@@ -173,7 +174,7 @@ namespace CareTogether.Resources.V1Referrals
 
             return new V1ReferralAccepted(
                 command.ReferralId,
-                referral!.FamilyId!.Value,
+                command.FamilyId,
                 command.AcceptedAtUtc,
                 actorUserId
             );

@@ -13161,6 +13161,7 @@ export interface IV1ReferralCommand {
 }
 
 export class AcceptV1Referral extends V1ReferralCommand implements IAcceptV1Referral {
+    familyId!: string;
     acceptedAtUtc!: Date;
 
     constructor(data?: IAcceptV1Referral) {
@@ -13171,6 +13172,7 @@ export class AcceptV1Referral extends V1ReferralCommand implements IAcceptV1Refe
     init(_data?: any) {
         super.init(_data);
         if (_data) {
+            this.familyId = _data["familyId"];
             this.acceptedAtUtc = _data["acceptedAtUtc"] ? new Date(_data["acceptedAtUtc"].toString()) : <any>undefined;
         }
     }
@@ -13184,6 +13186,7 @@ export class AcceptV1Referral extends V1ReferralCommand implements IAcceptV1Refe
 
     toJSON(data?: any) {
         data = typeof data === 'object' ? data : {};
+        data["familyId"] = this.familyId;
         data["acceptedAtUtc"] = this.acceptedAtUtc ? this.acceptedAtUtc.toISOString() : <any>undefined;
         super.toJSON(data);
         return data;
@@ -13191,6 +13194,7 @@ export class AcceptV1Referral extends V1ReferralCommand implements IAcceptV1Refe
 }
 
 export interface IAcceptV1Referral extends IV1ReferralCommand {
+    familyId: string;
     acceptedAtUtc: Date;
 }
 
