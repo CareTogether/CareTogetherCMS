@@ -29,6 +29,8 @@ function ShellRootLayout({ children }: React.PropsWithChildren) {
 
   const { message, resetSnackBar } = useGlobalSnackBar();
 
+  // Initialize Featurebase across the entire app
+
   useFeaturebase();
 
   return (
