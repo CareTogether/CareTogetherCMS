@@ -149,6 +149,7 @@ export function LocationEdit() {
     ethnicities: location.ethnicities || [],
     adultFamilyRelationships: location.adultFamilyRelationships || [],
     arrangementReasons: location.arrangementReasons || [],
+    referralCloseReasons: configuration?.referralCloseReasons || [],
   };
 
   return (

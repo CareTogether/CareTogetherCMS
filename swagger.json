@@ -1188,6 +1188,13 @@
             "items": {
               "type": "string"
             }
+          },
+          "referralCloseReasons": {
+            "type": "array",
+            "nullable": true,
+            "items": {
+              "type": "string"
+            }
           }
         }
       },
@@ -1652,6 +1659,11 @@
           "ViewApprovalProgress",
           "ViewApprovalHistory",
           "ActivateVolunteerFamily",
+          "CreateV1Referral",
+          "EditV1Referral",
+          "CloseV1Referral",
+          "ReopenV1Referral",
+          "ViewV1Referral",
           "CreateV1Case",
           "EditV1Case",
           "CloseV1Case",
@@ -1723,6 +1735,11 @@
           204,
           205,
           206,
+          260,
+          261,
+          262,
+          263,
+          264,
           300,
           301,
           302,
@@ -2658,7 +2675,8 @@
           "propertyName": "discriminator",
           "mapping": {
             "CommunityRecordsAggregate": "#/components/schemas/CommunityRecordsAggregate",
-            "FamilyRecordsAggregate": "#/components/schemas/FamilyRecordsAggregate"
+            "FamilyRecordsAggregate": "#/components/schemas/FamilyRecordsAggregate",
+            "ReferralRecordsAggregate": "#/components/schemas/ReferralRecordsAggregate"
           }
         },
         "x-abstract": true,
@@ -4774,6 +4792,95 @@
           1
         ]
       },
+      "ReferralRecordsAggregate": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/RecordsAggregate"
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "referral"
+            ],
+            "properties": {
+              "referral": {
+                "$ref": "#/components/schemas/V1Referral"
+              }
+            }
+          }
+        ]
+      },
+      "V1Referral": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "referralId",
+          "createdAtUtc",
+          "title",
+          "status",
+          "completedCustomFields"
+        ],
+        "properties": {
+          "referralId": {
+            "type": "string",
+            "format": "guid"
+          },
+          "familyId": {
+            "type": "string",
+            "format": "guid",
+            "nullable": true
+          },
+          "createdAtUtc": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "title": {
+            "type": "string"
+          },
+          "status": {
+            "$ref": "#/components/schemas/V1ReferralStatus"
+          },
+          "comment": {
+            "type": "string",
+            "nullable": true
+          },
+          "acceptedAtUtc": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "closedAtUtc": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "closeReason": {
+            "type": "string",
+            "nullable": true
+          },
+          "completedCustomFields": {
+            "type": "object",
+            "additionalProperties": {
+              "$ref": "#/components/schemas/CompletedCustomFieldInfo"
+            }
+          }
+        }
+      },
+      "V1ReferralStatus": {
+        "type": "integer",
+        "description": "",
+        "x-enumNames": [
+          "Open",
+          "Accepted",
+          "Closed"
+        ],
+        "enum": [
+          0,
+          1,
+          2
+        ]
+      },
       "AtomicRecordsCommand": {
         "type": "object",
         "discriminator": {
@@ -4786,7 +4893,8 @@
             "IndividualApprovalRecordsCommand": "#/components/schemas/IndividualApprovalRecordsCommand",
             "NoteRecordsCommand": "#/components/schemas/NoteRecordsCommand",
             "PersonRecordsCommand": "#/components/schemas/PersonRecordsCommand",
-            "ReferralRecordsCommand": "#/components/schemas/ReferralRecordsCommand"
+            "ReferralRecordsCommand": "#/components/schemas/ReferralRecordsCommand",
+            "V1ReferralRecordsCommand": "#/components/schemas/V1ReferralRecordsCommand"
           }
         },
         "x-abstract": true,
@@ -7888,6 +7996,231 @@
               "comments": {
                 "type": "string",
                 "nullable": true
+              }
+            }
+          }
+        ]
+      },
+      "V1ReferralRecordsCommand": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/AtomicRecordsCommand"
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "command"
+            ],
+            "properties": {
+              "command": {
+                "$ref": "#/components/schemas/V1ReferralCommand"
+              }
+            }
+          }
+        ]
+      },
+      "V1ReferralCommand": {
+        "type": "object",
+        "discriminator": {
+          "propertyName": "discriminator",
+          "mapping": {
+            "AcceptV1Referral": "#/components/schemas/AcceptV1Referral",
+            "CloseV1Referral": "#/components/schemas/CloseV1Referral",
+            "CreateV1Referral": "#/components/schemas/CreateV1Referral",
+            "ReopenV1Referral": "#/components/schemas/ReopenV1Referral",
+            "UpdateCustomV1ReferralField": "#/components/schemas/UpdateCustomV1ReferralField",
+            "UpdateV1ReferralDetails": "#/components/schemas/UpdateV1ReferralDetails",
+            "UpdateV1ReferralFamily": "#/components/schemas/UpdateV1ReferralFamily"
+          }
+        },
+        "x-abstract": true,
+        "additionalProperties": false,
+        "required": [
+          "discriminator",
+          "referralId"
+        ],
+        "properties": {
+          "referralId": {
+            "type": "string",
+            "format": "guid"
+          },
+          "discriminator": {
+            "type": "string"
+          }
+        }
+      },
+      "AcceptV1Referral": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/V1ReferralCommand"
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "acceptedAtUtc"
+            ],
+            "properties": {
+              "acceptedAtUtc": {
+                "type": "string",
+                "format": "date-time"
+              }
+            }
+          }
+        ]
+      },
+      "CloseV1Referral": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/V1ReferralCommand"
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "closedAtUtc",
+              "closeReason"
+            ],
+            "properties": {
+              "closedAtUtc": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "closeReason": {
+                "type": "string"
+              }
+            }
+          }
+        ]
+      },
+      "CreateV1Referral": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/V1ReferralCommand"
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "createdAtUtc",
+              "title"
+            ],
+            "properties": {
+              "familyId": {
+                "type": "string",
+                "format": "guid",
+                "nullable": true
+              },
+              "createdAtUtc": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "title": {
+                "type": "string"
+              },
+              "comment": {
+                "type": "string",
+                "nullable": true
+              }
+            }
+          }
+        ]
+      },
+      "ReopenV1Referral": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/V1ReferralCommand"
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "reopenedAtUtc"
+            ],
+            "properties": {
+              "reopenedAtUtc": {
+                "type": "string",
+                "format": "date-time"
+              }
+            }
+          }
+        ]
+      },
+      "UpdateCustomV1ReferralField": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/V1ReferralCommand"
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "completedCustomFieldId",
+              "customFieldName",
+              "customFieldType"
+            ],
+            "properties": {
+              "completedCustomFieldId": {
+                "type": "string",
+                "format": "guid"
+              },
+              "customFieldName": {
+                "type": "string"
+              },
+              "customFieldType": {
+                "$ref": "#/components/schemas/CustomFieldType"
+              },
+              "value": {
+                "nullable": true
+              }
+            }
+          }
+        ]
+      },
+      "UpdateV1ReferralDetails": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/V1ReferralCommand"
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "title",
+              "createdAtUtc"
+            ],
+            "properties": {
+              "title": {
+                "type": "string"
+              },
+              "comment": {
+                "type": "string",
+                "nullable": true
+              },
+              "createdAtUtc": {
+                "type": "string",
+                "format": "date-time"
+              }
+            }
+          }
+        ]
+      },
+      "UpdateV1ReferralFamily": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/V1ReferralCommand"
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "familyId"
+            ],
+            "properties": {
+              "familyId": {
+                "type": "string",
+                "format": "guid"
               }
             }
           }

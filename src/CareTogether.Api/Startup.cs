@@ -44,6 +44,7 @@ using Microsoft.FeatureManagement;
 using Microsoft.FeatureManagement.FeatureFilters;
 using Microsoft.Identity.Web;
 using Microsoft.IdentityModel.Logging;
+using CareTogether.Resources.V1Referrals;
 
 namespace CareTogether.Api
 {
@@ -138,6 +139,11 @@ namespace CareTogether.Api
                 immutableBlobServiceClient,
                 "ReferralsEventLog"
             );
+            var v1ReferralsEventLog = new AppendBlobEventLog<V1ReferralEvent>(
+                immutableBlobServiceClient,
+                "V1ReferralsEventLog"
+            );
+
             var approvalsEventLog = new AppendBlobEventLog<ApprovalEvent>(
                 immutableBlobServiceClient,
                 "ApprovalsEventLog"
@@ -223,6 +229,10 @@ namespace CareTogether.Api
             );
             var accountsResource = new AccountsResource(accountsEventLog, personAccessEventLog);
             var v1CasesResource = new V1CasesResource(v1CasesEventLog);
+            var v1ReferralsResource = new V1ReferralsResource(
+    v1ReferralsEventLog
+);
+
             var notesResource = new NotesResource(notesEventLog, draftNotesStore);
             var communitiesResource = new CommunitiesResource(communitiesEventLog, uploadsStore);
 
@@ -231,6 +241,7 @@ namespace CareTogether.Api
             services.AddSingleton<IAccountsResource>(accountsResource);
             services.AddSingleton<IDirectoryResource>(directoryResource);
             services.AddSingleton<IApprovalsResource>(approvalsResource);
+            services.AddSingleton<IV1ReferralsResource>(v1ReferralsResource);
 
             var userAccessCalculation = new UserAccessCalculation(
                 policiesResource,
@@ -246,7 +257,8 @@ namespace CareTogether.Api
                 directoryResource,
                 accountsResource,
                 notesResource,
-                userAccessCalculation
+                userAccessCalculation,
+                v1ReferralsResource
             );
             services.AddSingleton<IAuthorizationEngine>(authorizationEngine); //TODO: Temporary workaround for UsersController
             var policyEvaluationEngine = new PolicyEvaluationEngine(policiesResource);
@@ -280,6 +292,7 @@ namespace CareTogether.Api
                     directoryResource,
                     approvalsResource,
                     v1CasesResource,
+                    v1ReferralsResource,
                     notesResource,
                     communitiesResource,
                     combinedFamilyInfoFormatter

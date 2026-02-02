@@ -5,6 +5,7 @@ import {
   CommunityRecordsAggregate,
   FamilyRecordsAggregate,
   RecordsAggregate,
+  ReferralRecordsAggregate,
 } from '../GeneratedClient';
 import { loggingEffect } from '../Utilities/loggingEffect';
 import { accountInfoState } from '../Authentication/Auth';
@@ -142,5 +143,16 @@ export const visibleCommunitiesQuery = selector({
     return visibleAggregates
       .filter((aggregate) => aggregate instanceof CommunityRecordsAggregate)
       .map((aggregate) => (aggregate as CommunityRecordsAggregate).community!);
+  },
+});
+
+export const visibleReferralsQuery = selector({
+  key: 'visibleReferralsQuery',
+  get: ({ get }) => {
+    const visibleAggregates = get(visibleAggregatesState);
+
+    return visibleAggregates
+      .filter((aggregate) => aggregate instanceof ReferralRecordsAggregate)
+      .map((aggregate) => (aggregate as ReferralRecordsAggregate).referral!);
   },
 });

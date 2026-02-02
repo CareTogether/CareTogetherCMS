@@ -13,6 +13,7 @@ using CareTogether.Resources.Directory;
 using CareTogether.Resources.Notes;
 using CareTogether.Resources.Policies;
 using CareTogether.Resources.V1Cases;
+using CareTogether.Resources.V1Referrals;
 using Nito.AsyncEx;
 
 namespace CareTogether.Engines.Authorization
@@ -25,12 +26,17 @@ namespace CareTogether.Engines.Authorization
         private readonly INotesResource notesResource;
         private readonly IUserAccessCalculation userAccessCalculation;
 
+        private readonly IV1ReferralsResource v1ReferralsResource;
+
+
         public AuthorizationEngine(
             IPoliciesResource policiesResource,
             IDirectoryResource directoryResource,
             IAccountsResource accountsResource,
             INotesResource notesResource,
-            IUserAccessCalculation userAccessCalculation
+            IUserAccessCalculation userAccessCalculation,
+            IV1ReferralsResource v1ReferralsResource
+
         )
         {
             this.policiesResource = policiesResource;
@@ -38,6 +44,7 @@ namespace CareTogether.Engines.Authorization
             this.accountsResource = accountsResource;
             this.notesResource = notesResource;
             this.userAccessCalculation = userAccessCalculation;
+            this.v1ReferralsResource = v1ReferralsResource;
         }
 
         public async Task<bool> AuthorizeFamilyCommandAsync(
@@ -213,6 +220,57 @@ namespace CareTogether.Engines.Authorization
                 }
             );
         }
+public async Task<bool> AuthorizeV1ReferralCommandAsync(
+    Guid organizationId,
+    Guid locationId,
+    SessionUserContext userContext,
+    V1ReferralCommand command
+)
+{
+    var permissions = await userAccessCalculation.AuthorizeUserAccessAsync(
+        organizationId,
+        locationId,
+        userContext,
+        new GlobalAuthorizationContext()
+    );
+
+    return permissions.Contains(
+        command switch
+        {
+            CreateV1Referral => Permission.CreateV1Referral,
+
+            UpdateV1ReferralFamily => Permission.EditV1Referral,
+            AcceptV1Referral => Permission.EditV1Referral,
+
+            UpdateV1ReferralDetails => Permission.EditV1Referral,
+            UpdateCustomV1ReferralField => Permission.EditV1Referral,
+
+            CloseV1Referral => Permission.CloseV1Referral,
+            ReopenV1Referral => Permission.ReopenV1Referral,
+            _ => throw new NotImplementedException(
+                $"The command type '{command.GetType().FullName}' has not been implemented."
+            ),
+        }
+    );
+}
+
+public async Task<bool> AuthorizeV1ReferralReadAsync(
+    Guid organizationId,
+    Guid locationId,
+    SessionUserContext userContext
+)
+{
+    var permissions = await userAccessCalculation.AuthorizeUserAccessAsync(
+        organizationId,
+        locationId,
+        userContext,
+        new GlobalAuthorizationContext()
+    );
+
+    return permissions.Contains(Permission.ViewV1Referral);
+}
+
+
 
         public async Task<bool> AuthorizeNoteCommandAsync(
             Guid organizationId,

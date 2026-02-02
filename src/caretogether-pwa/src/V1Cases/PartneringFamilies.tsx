@@ -33,7 +33,7 @@ import {
 } from '../GeneratedClient';
 import { FamilyName } from '../Families/FamilyName';
 import { ArrangementCard } from './Arrangements/ArrangementCard';
-import { CreatePartneringFamilyDialog } from './CreatePartneringFamilyDialog';
+import { CreatePartneringFamilyDialog } from './CreatePartneringFamilyDrawer';
 import { useScrollMemory } from '../Hooks/useScrollMemory';
 import { useLocalStorage } from '../Hooks/useLocalStorage';
 import { policyData } from '../Model/ConfigurationModel';
@@ -55,6 +55,8 @@ import { useCustomFieldFilters } from '../Generic/CustomFieldsFilter/useCustomFi
 import { matchesCustomFieldFilters } from '../Generic/CustomFieldsFilter/matchesCustomFieldFilters';
 import { TestFamilyBadge } from '../Families/TestFamilyBadge';
 import { useFeatureFlagEnabled } from 'posthog-js/react';
+import { CountyFilter } from '../V1Referrals/CountyFilter';
+import { getFamilyCounty } from '../Utilities/getFamilyCounty';
 
 const arrangementPhaseText = new Map<number, string>([
   [ArrangementPhase.SettingUp, 'Setting Up'],
@@ -142,6 +144,8 @@ function PartneringFamilies() {
   }, [loadablePolicy]);
 
   const [filterText, setFilterText] = useState('');
+  const [countyFilter, setCountyFilter] = useState<(string | null)[]>([]);
+
   const filteredPartneringFamilies = filterFamiliesByText(
     partneringFamilies,
     filterText
@@ -299,6 +303,14 @@ function PartneringFamilies() {
         })
       )
       .filter((family) => {
+        if (countyFilter.length === 0) return true;
+
+        const county = getFamilyCounty(family);
+        return county === '—'
+          ? countyFilter.includes(null)
+          : countyFilter.includes(county);
+      })
+      .filter((family) => {
         const openCase = family.partneringFamilyInfo?.openV1Case;
         const arrangements = openCase?.arrangements ?? [];
 
@@ -422,6 +434,12 @@ function PartneringFamilies() {
             onFieldChange={setSelectedCustomFieldValuesForField}
           />
 
+          <CountyFilter
+            families={partneringFamilies}
+            value={countyFilter}
+            onChange={setCountyFilter}
+          />
+
           <SearchBar value={filterText} onChange={setFilterText} />
 
           <ToggleButtonGroup
@@ -449,6 +467,7 @@ function PartneringFamilies() {
               <TableRow>
                 <TableCell sx={{ fontWeight: 600 }}>Client Family</TableCell>
                 <TableCell sx={{ fontWeight: 600 }}>Case Status</TableCell>
+                <TableCell sx={{ fontWeight: 600 }}>County</TableCell>
                 {referralCustomFields.map((field) => (
                   <TableCell
                     key={field.name}
@@ -552,6 +571,9 @@ function PartneringFamilies() {
                             //TODO: "Closed on " + format(partneringFamily.partneringFamilyInfo?.closedV1Cases?.[0]?.closedUtc) -- needs a new calculated property
                           }
                         </TableCell>
+                        <TableCell>
+                          {getFamilyCounty(partneringFamily)}
+                        </TableCell>
                         {!expandedView ? (
                           arrangementTypes?.map((arrangementType) => (
                             <TableCell key={arrangementType}>
@@ -629,13 +651,13 @@ function PartneringFamilies() {
                           );
                         })}
                       </TableRow>
-                      {expandedView ? (
+                      {expandedView && (
                         <TableRow
                           onClick={() =>
                             openFamily(partneringFamily.family!.id!)
                           }
                         >
-                          <TableCell sx={{ maxWidth: '400px', paddingLeft: 3 }}>
+                          <TableCell colSpan={5} sx={{ pl: 3 }}>
                             <Box
                               sx={{
                                 whiteSpace: 'pre-wrap',
@@ -644,10 +666,8 @@ function PartneringFamilies() {
                             >
                               {preview}
                             </Box>
-                          </TableCell>
 
-                          <TableCell>
-                            <Grid container spacing={2}>
+                            <Grid container spacing={2} sx={{ mt: 1 }}>
                               {matchingArrangements(
                                 partneringFamily.partneringFamilyInfo!,
                                 arrangementsFilter
@@ -679,8 +699,6 @@ function PartneringFamilies() {
                             </Grid>
                           </TableCell>
                         </TableRow>
-                      ) : (
-                        <></>
                       )}
                     </React.Fragment>
                   );
