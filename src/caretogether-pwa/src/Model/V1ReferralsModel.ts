@@ -7,7 +7,6 @@ import {
   UpdateV1ReferralFamily,
   UpdateCustomV1ReferralField,
   CustomField,
-  V1ReferralCloseReason,
   V1ReferralCommand,
 } from '../GeneratedClient';
 import { useAtomicRecordsCommandCallback } from './DirectoryModel';
@@ -106,11 +105,7 @@ export function useV1ReferralsModel() {
   );
 
   const closeReferral = useV1ReferralCommandCallback(
-    async (
-      referralId: string,
-      reason: V1ReferralCloseReason,
-      closedAtLocal: Date
-    ) =>
+    async (referralId: string, reason: string, closedAtLocal: Date) =>
       commandFactory(CloseV1Referral, {
         referralId,
         closeReason: reason,

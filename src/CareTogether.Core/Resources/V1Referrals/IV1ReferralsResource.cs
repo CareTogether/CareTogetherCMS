@@ -2,7 +2,6 @@ using System;
 using System.Threading.Tasks;
 using System.Collections.Immutable;
 
-
 namespace CareTogether.Resources.V1Referrals
 {
     public interface IV1ReferralsResource
@@ -23,12 +22,6 @@ namespace CareTogether.Resources.V1Referrals
         Task<ImmutableList<V1Referral>> ListReferralsAsync(
             Guid organizationId,
             Guid locationId
-        );
-
-        Task<V1Referral?> GetOpenReferralForFamilyAsync(
-            Guid organizationId,
-            Guid locationId,
-            Guid familyId
         );
     }
 }

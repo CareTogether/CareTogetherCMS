@@ -10,9 +10,10 @@ import {
   RadioGroup,
   Typography,
 } from '@mui/material';
-import { V1ReferralCloseReason } from '../GeneratedClient';
 import { ValidateDatePicker } from '../Generic/Forms/ValidateDatePicker';
 import { useV1ReferralsModel } from '../Model/V1ReferralsModel';
+import { useRecoilValue } from 'recoil';
+import { referralCloseReasonsData } from '../Model/ConfigurationModel';
 
 interface CloseV1ReferralDrawerProps {
   referralId: string;
@@ -24,9 +25,10 @@ export function CloseV1ReferralDrawer({
   onClose,
 }: CloseV1ReferralDrawerProps) {
   const { closeReferral } = useV1ReferralsModel();
+  const referralCloseReasons = useRecoilValue(referralCloseReasonsData);
 
   const [fields, setFields] = useState<{
-    reason: V1ReferralCloseReason | null;
+    reason: string | null;
     closedAtLocal: Date | null;
   }>({
     reason: null,
@@ -48,15 +50,9 @@ export function CloseV1ReferralDrawer({
       anchor="right"
       open
       onClose={onClose}
-      PaperProps={{
-        sx: {
-          width: 500,
-          p: 3,
-          top: 45,
-        },
-      }}
+      PaperProps={{ sx: { width: 500, p: 3, top: 45 } }}
     >
-      <form noValidate autoComplete="off">
+      <form noValidate>
         <Grid container spacing={2}>
           <Grid item xs={12}>
             <Typography variant="h6">
@@ -66,43 +62,22 @@ export function CloseV1ReferralDrawer({
 
           <Grid item xs={12}>
             <FormControl component="fieldset">
-              <FormLabel component="legend">Reason for Closing:</FormLabel>
+              <FormLabel>Reason for Closing:</FormLabel>
 
               <RadioGroup
-                name="reason"
                 value={reason ?? ''}
                 onChange={(e) =>
-                  setFields({
-                    ...fields,
-                    reason: Number(e.target.value) as V1ReferralCloseReason,
-                  })
+                  setFields({ ...fields, reason: e.target.value })
                 }
               >
-                <FormControlLabel
-                  value={V1ReferralCloseReason.NotAppropriate}
-                  control={<Radio size="small" />}
-                  label="Not Appropriate"
-                />
-                <FormControlLabel
-                  value={V1ReferralCloseReason.NoCapacity}
-                  control={<Radio size="small" />}
-                  label="No Capacity"
-                />
-                <FormControlLabel
-                  value={V1ReferralCloseReason.NoLongerNeeded}
-                  control={<Radio size="small" />}
-                  label="No Longer Needed"
-                />
-                <FormControlLabel
-                  value={V1ReferralCloseReason.Resourced}
-                  control={<Radio size="small" />}
-                  label="Resourced"
-                />
-                <FormControlLabel
-                  value={V1ReferralCloseReason.NeedMet}
-                  control={<Radio size="small" />}
-                  label="Need Met"
-                />
+                {referralCloseReasons.map((reasonOption) => (
+                  <FormControlLabel
+                    key={reasonOption}
+                    value={reasonOption}
+                    control={<Radio size="small" />}
+                    label={reasonOption}
+                  />
+                ))}
               </RadioGroup>
             </FormControl>
           </Grid>
@@ -114,10 +89,7 @@ export function CloseV1ReferralDrawer({
               onChange={(date) => setFields({ ...fields, closedAtLocal: date })}
               onErrorChange={setDateError}
               disableFuture
-              textFieldProps={{
-                fullWidth: true,
-                required: true,
-              }}
+              textFieldProps={{ fullWidth: true, required: true }}
             />
           </Grid>
 

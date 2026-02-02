@@ -1188,6 +1188,13 @@
             "items": {
               "type": "string"
             }
+          },
+          "referralCloseReasons": {
+            "type": "array",
+            "nullable": true,
+            "items": {
+              "type": "string"
+            }
           }
         }
       },
@@ -4849,12 +4856,8 @@
             "nullable": true
           },
           "closeReason": {
-            "nullable": true,
-            "oneOf": [
-              {
-                "$ref": "#/components/schemas/V1ReferralCloseReason"
-              }
-            ]
+            "type": "string",
+            "nullable": true
           },
           "completedCustomFields": {
             "type": "object",
@@ -4876,24 +4879,6 @@
           0,
           1,
           2
-        ]
-      },
-      "V1ReferralCloseReason": {
-        "type": "integer",
-        "description": "",
-        "x-enumNames": [
-          "NotAppropriate",
-          "NoCapacity",
-          "NoLongerNeeded",
-          "Resourced",
-          "NeedMet"
-        ],
-        "enum": [
-          0,
-          1,
-          2,
-          3,
-          4
         ]
       },
       "AtomicRecordsCommand": {
@@ -8074,14 +8059,9 @@
             "type": "object",
             "additionalProperties": false,
             "required": [
-              "familyId",
               "acceptedAtUtc"
             ],
             "properties": {
-              "familyId": {
-                "type": "string",
-                "format": "guid"
-              },
               "acceptedAtUtc": {
                 "type": "string",
                 "format": "date-time"
@@ -8108,7 +8088,7 @@
                 "format": "date-time"
               },
               "closeReason": {
-                "$ref": "#/components/schemas/V1ReferralCloseReason"
+                "type": "string"
               }
             }
           }
@@ -8211,11 +8191,6 @@
               "createdAtUtc"
             ],
             "properties": {
-              "familyId": {
-                "type": "string",
-                "format": "guid",
-                "nullable": true
-              },
               "title": {
                 "type": "string"
               },

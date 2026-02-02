@@ -25,15 +25,14 @@ namespace CareTogether.Resources.V1Referrals
 
 public sealed record AcceptV1Referral(
     Guid ReferralId,
-    Guid FamilyId,
     DateTime AcceptedAtUtc
 ) : V1ReferralCommand(ReferralId);
 
 
-    public sealed record CloseV1Referral(
+public sealed record CloseV1Referral(
     Guid ReferralId,
     DateTime ClosedAtUtc,
-    V1ReferralCloseReason CloseReason
+    string CloseReason
 ) : V1ReferralCommand(ReferralId);
 
 
@@ -42,13 +41,13 @@ public sealed record AcceptV1Referral(
         DateTime ReopenedAtUtc
     ) : V1ReferralCommand(ReferralId);
 
-    public sealed record UpdateV1ReferralDetails(
-        Guid ReferralId,
-        Guid? FamilyId,
-        string Title,
-        string? Comment,
-        DateTime CreatedAtUtc
-    ) : V1ReferralCommand(ReferralId);
+public sealed record UpdateV1ReferralDetails(
+    Guid ReferralId,
+    string Title,
+    string? Comment,
+    DateTime CreatedAtUtc
+)
+: V1ReferralCommand(ReferralId);
 
     public sealed record UpdateCustomV1ReferralField(
         Guid ReferralId,

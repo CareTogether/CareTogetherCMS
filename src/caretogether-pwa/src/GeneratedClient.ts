@@ -1209,6 +1209,7 @@ export class OrganizationConfiguration implements IOrganizationConfiguration {
     locations!: LocationConfiguration[];
     roles!: RoleDefinition[];
     communityRoles!: string[];
+    referralCloseReasons?: string[] | undefined;
 
     constructor(data?: IOrganizationConfiguration) {
         if (data) {
@@ -1242,6 +1243,11 @@ export class OrganizationConfiguration implements IOrganizationConfiguration {
                 for (let item of _data["communityRoles"])
                     this.communityRoles!.push(item);
             }
+            if (Array.isArray(_data["referralCloseReasons"])) {
+                this.referralCloseReasons = [] as any;
+                for (let item of _data["referralCloseReasons"])
+                    this.referralCloseReasons!.push(item);
+            }
         }
     }
 
@@ -1270,6 +1276,11 @@ export class OrganizationConfiguration implements IOrganizationConfiguration {
             for (let item of this.communityRoles)
                 data["communityRoles"].push(item);
         }
+        if (Array.isArray(this.referralCloseReasons)) {
+            data["referralCloseReasons"] = [];
+            for (let item of this.referralCloseReasons)
+                data["referralCloseReasons"].push(item);
+        }
         return data;
     }
 }
@@ -1279,6 +1290,7 @@ export interface IOrganizationConfiguration {
     locations: LocationConfiguration[];
     roles: RoleDefinition[];
     communityRoles: string[];
+    referralCloseReasons?: string[] | undefined;
 }
 
 export class LocationConfiguration implements ILocationConfiguration {
@@ -7690,7 +7702,7 @@ export class V1Referral implements IV1Referral {
     comment?: string | undefined;
     acceptedAtUtc?: Date | undefined;
     closedAtUtc?: Date | undefined;
-    closeReason?: V1ReferralCloseReason | undefined;
+    closeReason?: string | undefined;
     completedCustomFields!: { [key: string]: CompletedCustomFieldInfo; };
 
     constructor(data?: IV1Referral) {
@@ -7764,7 +7776,7 @@ export interface IV1Referral {
     comment?: string | undefined;
     acceptedAtUtc?: Date | undefined;
     closedAtUtc?: Date | undefined;
-    closeReason?: V1ReferralCloseReason | undefined;
+    closeReason?: string | undefined;
     completedCustomFields: { [key: string]: CompletedCustomFieldInfo; };
 }
 
@@ -7772,14 +7784,6 @@ export enum V1ReferralStatus {
     Open = 0,
     Accepted = 1,
     Closed = 2,
-}
-
-export enum V1ReferralCloseReason {
-    NotAppropriate = 0,
-    NoCapacity = 1,
-    NoLongerNeeded = 2,
-    Resourced = 3,
-    NeedMet = 4,
 }
 
 export abstract class AtomicRecordsCommand implements IAtomicRecordsCommand {
@@ -13161,7 +13165,6 @@ export interface IV1ReferralCommand {
 }
 
 export class AcceptV1Referral extends V1ReferralCommand implements IAcceptV1Referral {
-    familyId!: string;
     acceptedAtUtc!: Date;
 
     constructor(data?: IAcceptV1Referral) {
@@ -13172,7 +13175,6 @@ export class AcceptV1Referral extends V1ReferralCommand implements IAcceptV1Refe
     init(_data?: any) {
         super.init(_data);
         if (_data) {
-            this.familyId = _data["familyId"];
             this.acceptedAtUtc = _data["acceptedAtUtc"] ? new Date(_data["acceptedAtUtc"].toString()) : <any>undefined;
         }
     }
@@ -13186,7 +13188,6 @@ export class AcceptV1Referral extends V1ReferralCommand implements IAcceptV1Refe
 
     toJSON(data?: any) {
         data = typeof data === 'object' ? data : {};
-        data["familyId"] = this.familyId;
         data["acceptedAtUtc"] = this.acceptedAtUtc ? this.acceptedAtUtc.toISOString() : <any>undefined;
         super.toJSON(data);
         return data;
@@ -13194,13 +13195,12 @@ export class AcceptV1Referral extends V1ReferralCommand implements IAcceptV1Refe
 }
 
 export interface IAcceptV1Referral extends IV1ReferralCommand {
-    familyId: string;
     acceptedAtUtc: Date;
 }
 
 export class CloseV1Referral extends V1ReferralCommand implements ICloseV1Referral {
     closedAtUtc!: Date;
-    closeReason!: V1ReferralCloseReason;
+    closeReason!: string;
 
     constructor(data?: ICloseV1Referral) {
         super(data);
@@ -13233,7 +13233,7 @@ export class CloseV1Referral extends V1ReferralCommand implements ICloseV1Referr
 
 export interface ICloseV1Referral extends IV1ReferralCommand {
     closedAtUtc: Date;
-    closeReason: V1ReferralCloseReason;
+    closeReason: string;
 }
 
 export class CreateV1Referral extends V1ReferralCommand implements ICreateV1Referral {
@@ -13363,7 +13363,6 @@ export interface IUpdateCustomV1ReferralField extends IV1ReferralCommand {
 }
 
 export class UpdateV1ReferralDetails extends V1ReferralCommand implements IUpdateV1ReferralDetails {
-    familyId?: string | undefined;
     title!: string;
     comment?: string | undefined;
     createdAtUtc!: Date;
@@ -13376,7 +13375,6 @@ export class UpdateV1ReferralDetails extends V1ReferralCommand implements IUpdat
     init(_data?: any) {
         super.init(_data);
         if (_data) {
-            this.familyId = _data["familyId"];
             this.title = _data["title"];
             this.comment = _data["comment"];
             this.createdAtUtc = _data["createdAtUtc"] ? new Date(_data["createdAtUtc"].toString()) : <any>undefined;
@@ -13392,7 +13390,6 @@ export class UpdateV1ReferralDetails extends V1ReferralCommand implements IUpdat
 
     toJSON(data?: any) {
         data = typeof data === 'object' ? data : {};
-        data["familyId"] = this.familyId;
         data["title"] = this.title;
         data["comment"] = this.comment;
         data["createdAtUtc"] = this.createdAtUtc ? this.createdAtUtc.toISOString() : <any>undefined;
@@ -13402,7 +13399,6 @@ export class UpdateV1ReferralDetails extends V1ReferralCommand implements IUpdat
 }
 
 export interface IUpdateV1ReferralDetails extends IV1ReferralCommand {
-    familyId?: string | undefined;
     title: string;
     comment?: string | undefined;
     createdAtUtc: Date;

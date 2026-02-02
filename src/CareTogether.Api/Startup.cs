@@ -229,7 +229,10 @@ namespace CareTogether.Api
             );
             var accountsResource = new AccountsResource(accountsEventLog, personAccessEventLog);
             var v1CasesResource = new V1CasesResource(v1CasesEventLog);
-            var v1ReferralsResource = new V1ReferralsResource(v1ReferralsEventLog);
+            var v1ReferralsResource = new V1ReferralsResource(
+    v1ReferralsEventLog
+);
+
             var notesResource = new NotesResource(notesEventLog, draftNotesStore);
             var communitiesResource = new CommunitiesResource(communitiesEventLog, uploadsStore);
 
