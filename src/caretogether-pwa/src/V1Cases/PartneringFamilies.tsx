@@ -17,10 +17,7 @@ import {
 import { partneringFamiliesData } from '../Model/V1CasesModel';
 import React, { useState } from 'react';
 import AddIcon from '@mui/icons-material/Add';
-import {
-  ArrangementPhase,
-  Permission,
-} from '../GeneratedClient';
+import { ArrangementPhase, Permission } from '../GeneratedClient';
 import { CreatePartneringFamilyDialog } from './CreatePartneringFamilyDialog';
 import { useScrollMemory } from '../Hooks/useScrollMemory';
 import { useLocalStorage } from '../Hooks/useLocalStorage';
@@ -114,10 +111,11 @@ function PartneringFamilies() {
     }
   };
 
-  const [arrangementsFilter, setArrangementsFilter] = useLocalStorage<ArrangementsFilter>(
-    'partnering-families-arrangementsFilter',
-    'All'
-  );
+  const [arrangementsFilter, setArrangementsFilter] =
+    useLocalStorage<ArrangementsFilter>(
+      'partnering-families-arrangementsFilter',
+      'All'
+    );
   const filteredPartneringFamiliesWithActiveOrAllFilter =
     filteredPartneringFamilies
       .filter((family) =>
@@ -281,9 +279,12 @@ function PartneringFamilies() {
           </ToggleButtonGroup>
         </Stack>
       </Grid>
-      <Grid item xs={12}>
+      <Grid item xs={12} className="cases-table">
         <TableContainer
-          sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}
+          sx={{
+            borderBottom: '1px solid rgba(224, 224, 224, 1)',
+            overflow: 'visible',
+          }}
         >
           <Table sx={{ minWidth: '700px' }} size="small">
             <TableHead>

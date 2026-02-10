@@ -1,0 +1,29 @@
+/* Persistent table headers (Referrals, Cases, Volunteers) */
+.cases-table thead {
+  position: relative;
+  z-index: 11;
+}
+
+.cases-table thead th {
+  position: sticky;
+  top: 64px;
+  z-index: 1;
+  background-color: #fff;
+
+  font-weight: 600;
+  white-space: nowrap;
+  padding: 12px;
+
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.06);
+}
+
+
+
+@media (max-width: 600px) {
+  .cases-table thead th {
+    top: 56px;
+    font-size: 0.75rem;
+    padding: 8px;
+    box-shadow: none;
+  }
+}
