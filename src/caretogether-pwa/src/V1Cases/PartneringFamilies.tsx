@@ -55,6 +55,7 @@ import { useCustomFieldFilters } from '../Generic/CustomFieldsFilter/useCustomFi
 import { matchesCustomFieldFilters } from '../Generic/CustomFieldsFilter/matchesCustomFieldFilters';
 import { TestFamilyBadge } from '../Families/TestFamilyBadge';
 import { useFeatureFlagEnabled } from 'posthog-js/react';
+import '../../../index.css';
 
 const arrangementPhaseText = new Map<number, string>([
   [ArrangementPhase.SettingUp, 'Setting Up'],
@@ -440,9 +441,12 @@ function PartneringFamilies() {
           </ToggleButtonGroup>
         </Stack>
       </Grid>
-      <Grid item xs={12}>
+      <Grid item xs={12} className="cases-table">
         <TableContainer
-          sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}
+          sx={{
+            borderBottom: '1px solid rgba(224, 224, 224, 1)',
+            overflow: 'visible',
+          }}
         >
           <Table sx={{ minWidth: '700px' }} size="small">
             <TableHead>
