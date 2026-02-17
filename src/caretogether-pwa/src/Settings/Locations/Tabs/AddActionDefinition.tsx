@@ -10,6 +10,7 @@ import {
 import { useSetRecoilState } from 'recoil';
 import { effectiveLocationPolicyEdited } from '../../../Model/ConfigurationModel';
 import { useBackdrop } from '../../../Hooks/useBackdrop';
+import { getUpdatedActionDefinitionOrder } from './actionDefinitionOrderUtils';
 
 interface DrawerProps {
   onClose: () => void;
@@ -102,6 +103,7 @@ export function AddActionDefinition({
   const onSubmit = async (values: AddActionDefinitionFormValues) => {
     await withBackdrop(async () => {
       const newAction = convertToBackend(values);
+      const newActionName = newAction.actionName;
       const currentPolicy = await api.configuration.getEffectiveLocationPolicy(
         organizationId,
         locationId
@@ -112,13 +114,20 @@ export function AddActionDefinition({
       if (originalActionName) {
         delete updatedActionDefinitions[originalActionName];
       }
-      updatedActionDefinitions[newAction.actionName] = new ActionRequirement(
-        newAction
-      );
+      updatedActionDefinitions[newActionName] = new ActionRequirement(newAction);
+
+      const updatedActionDefinitionOrder = getUpdatedActionDefinitionOrder({
+        currentActionDefinitions: currentPolicy.actionDefinitions,
+        currentActionDefinitionOrder: currentPolicy.actionDefinitionOrder,
+        updatedActionDefinitions,
+        originalActionName,
+        newActionName,
+      });
 
       const updatedPolicy = new EffectiveLocationPolicy({
         ...currentPolicy,
         actionDefinitions: updatedActionDefinitions,
+        actionDefinitionOrder: updatedActionDefinitionOrder,
       });
 
       const savedPolicy = await api.configuration.putEffectiveLocationPolicy(

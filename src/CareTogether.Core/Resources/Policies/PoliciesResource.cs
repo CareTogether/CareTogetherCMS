@@ -157,14 +157,16 @@ namespace CareTogether.Resources.Policies
             EffectiveLocationPolicy effectiveLocationPolicy
         )
         {
+            var normalizedPolicy = NormalizeActionDefinitionOrder(effectiveLocationPolicy);
+
             await locationPoliciesStore.UpsertAsync(
                 organizationId,
                 locationId,
                 "policy",
-                effectiveLocationPolicy
+                normalizedPolicy
             );
 
-            return effectiveLocationPolicy;
+            return normalizedPolicy;
         }
 
         public async Task<EffectiveLocationPolicy> GetCurrentPolicy(
@@ -173,12 +175,13 @@ namespace CareTogether.Resources.Policies
         )
         {
             var result = await locationPoliciesStore.GetAsync(organizationId, locationId, POLICY);
+            var normalizedPolicy = NormalizeActionDefinitionOrder(result);
 
-            var effectivePolicy = result with
+            var effectivePolicy = normalizedPolicy with
             {
-                ReferralPolicy = result.ReferralPolicy with
+                ReferralPolicy = normalizedPolicy.ReferralPolicy with
                 {
-                    ArrangementPolicies = result
+                    ArrangementPolicies = normalizedPolicy
                         .ReferralPolicy.ArrangementPolicies.Select(ap =>
                             ap with
                             {
@@ -188,7 +191,7 @@ namespace CareTogether.Resources.Policies
                                         {
                                             EligibleIndividualVolunteerRoles =
                                                 af.EligibleIndividualVolunteerRoles
-                                                ?? result
+                                                ?? normalizedPolicy
                                                     .ReferralPolicy.FunctionPolicies?.SingleOrDefault(
                                                         fp => fp.FunctionName == af.FunctionName
                                                     )
@@ -196,7 +199,7 @@ namespace CareTogether.Resources.Policies
                                                 ?? [],
                                             EligibleVolunteerFamilyRoles =
                                                 af.EligibleVolunteerFamilyRoles
-                                                ?? result
+                                                ?? normalizedPolicy
                                                     .ReferralPolicy.FunctionPolicies?.SingleOrDefault(
                                                         fp => fp.FunctionName == af.FunctionName
                                                     )
@@ -204,7 +207,7 @@ namespace CareTogether.Resources.Policies
                                                 ?? [],
                                             EligiblePeople =
                                                 af.EligiblePeople
-                                                ?? result
+                                                ?? normalizedPolicy
                                                     .ReferralPolicy.FunctionPolicies?.SingleOrDefault(
                                                         fp => fp.FunctionName == af.FunctionName
                                                     )
@@ -218,8 +221,8 @@ namespace CareTogether.Resources.Policies
                         .ToImmutableList(),
                 },
             };
-    return effectivePolicy;
-}
+            return effectivePolicy;
+        }
 
         public async Task<OrganizationSecrets> GetOrganizationSecretsAsync(Guid organizationId)
         {
@@ -252,5 +255,46 @@ namespace CareTogether.Resources.Policies
                     )
                 ),
             };
+
+        private static EffectiveLocationPolicy NormalizeActionDefinitionOrder(
+            EffectiveLocationPolicy policy
+        )
+        {
+            var actionDefinitions =
+                policy.ActionDefinitions ?? ImmutableDictionary<string, ActionRequirement>.Empty;
+            var normalizedOrder = NormalizeActionDefinitionOrder(
+                actionDefinitions,
+                policy.ActionDefinitionOrder
+            );
+
+            return policy with
+            {
+                ActionDefinitions = actionDefinitions,
+                ActionDefinitionOrder = normalizedOrder,
+            };
+        }
+
+        private static ImmutableList<string> NormalizeActionDefinitionOrder(
+            ImmutableDictionary<string, ActionRequirement> actionDefinitions,
+            ImmutableList<string>? actionDefinitionOrder
+        )
+        {
+            var remainingNames = actionDefinitions.Keys.ToHashSet();
+            var normalizedOrder = ImmutableList.CreateBuilder<string>();
+
+            foreach (var actionName in actionDefinitionOrder ?? ImmutableList<string>.Empty)
+            {
+                if (remainingNames.Remove(actionName))
+                    normalizedOrder.Add(actionName);
+            }
+
+            foreach (var actionName in actionDefinitions.Keys)
+            {
+                if (remainingNames.Remove(actionName))
+                    normalizedOrder.Add(actionName);
+            }
+
+            return normalizedOrder.ToImmutable();
+        }
     }
 }

@@ -7,6 +7,7 @@ import { useMemo, useState } from 'react';
 import { useRecoilValue } from 'recoil';
 import { useSidePanel } from '../../../../Hooks/useSidePanel';
 import { policyData } from '../../../../Model/ConfigurationModel';
+import { getOrderedActionDefinitionEntries } from '../../../../Model/ActionDefinitionOrder';
 import { useUserIsOrganizationAdministrator } from '../../../../Model/SessionModel';
 import {
   RequirementStage,
@@ -110,13 +111,13 @@ export default function VolunteerPolicies() {
   const volunteerPolicy = effectiveLocationPolicy?.volunteerPolicy;
   const actionNameOptions = useMemo<ActionNameOption[]>(
     () =>
-      Object.entries(effectiveLocationPolicy?.actionDefinitions ?? {}).map(
+      getOrderedActionDefinitionEntries(effectiveLocationPolicy).map(
         ([name, definition]) => ({
           name,
           alternateNames: definition.alternateNames ?? [],
         })
       ),
-    [effectiveLocationPolicy?.actionDefinitions]
+    [effectiveLocationPolicy]
   );
 
   const canEdit = useUserIsOrganizationAdministrator();

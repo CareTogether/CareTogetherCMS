@@ -13,6 +13,7 @@ import { useMemo } from 'react';
 import { useRecoilValue } from 'recoil';
 import { useSearchParams } from 'react-router-dom';
 import { policyData } from '../../../../Model/ConfigurationModel';
+import { getOrderedActionDefinitionEntries } from '../../../../Model/ActionDefinitionOrder';
 import {
   RequirementStage,
   VolunteerFamilyRequirementScope,
@@ -116,12 +117,13 @@ export default function VolunteerPolicies3() {
 
   const actionNameOptions = useMemo<ActionNameOption[]>(
     () =>
-      Object.entries(effectiveLocationPolicy?.actionDefinitions ?? {})
-        .map(([name, definition]) => ({
+      getOrderedActionDefinitionEntries(effectiveLocationPolicy).map(
+        ([name, definition]) => ({
           name,
           alternateNames: definition.alternateNames ?? [],
-        })),
-    [effectiveLocationPolicy?.actionDefinitions]
+        })
+      ),
+    [effectiveLocationPolicy]
   );
 
   const individualRows = useMemo(

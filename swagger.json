@@ -1851,6 +1851,13 @@
           },
           "volunteerPolicy": {
             "$ref": "#/components/schemas/VolunteerPolicy"
+          },
+          "actionDefinitionOrder": {
+            "type": "array",
+            "nullable": true,
+            "items": {
+              "type": "string"
+            }
           }
         }
       },

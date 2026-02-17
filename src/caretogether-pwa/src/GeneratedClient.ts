@@ -2345,6 +2345,7 @@ export class EffectiveLocationPolicy implements IEffectiveLocationPolicy {
     customFamilyFields!: CustomField[];
     referralPolicy!: V1CasePolicy;
     volunteerPolicy!: VolunteerPolicy;
+    actionDefinitionOrder?: string[] | undefined;
 
     constructor(data?: IEffectiveLocationPolicy) {
         if (data) {
@@ -2377,6 +2378,11 @@ export class EffectiveLocationPolicy implements IEffectiveLocationPolicy {
             }
             this.referralPolicy = _data["referralPolicy"] ? V1CasePolicy.fromJS(_data["referralPolicy"]) : new V1CasePolicy();
             this.volunteerPolicy = _data["volunteerPolicy"] ? VolunteerPolicy.fromJS(_data["volunteerPolicy"]) : new VolunteerPolicy();
+            if (Array.isArray(_data["actionDefinitionOrder"])) {
+                this.actionDefinitionOrder = [] as any;
+                for (let item of _data["actionDefinitionOrder"])
+                    this.actionDefinitionOrder!.push(item);
+            }
         }
     }
 
@@ -2403,6 +2409,11 @@ export class EffectiveLocationPolicy implements IEffectiveLocationPolicy {
         }
         data["referralPolicy"] = this.referralPolicy ? this.referralPolicy.toJSON() : <any>undefined;
         data["volunteerPolicy"] = this.volunteerPolicy ? this.volunteerPolicy.toJSON() : <any>undefined;
+        if (Array.isArray(this.actionDefinitionOrder)) {
+            data["actionDefinitionOrder"] = [];
+            for (let item of this.actionDefinitionOrder)
+                data["actionDefinitionOrder"].push(item);
+        }
         return data;
     }
 }
@@ -2412,6 +2423,7 @@ export interface IEffectiveLocationPolicy {
     customFamilyFields: CustomField[];
     referralPolicy: V1CasePolicy;
     volunteerPolicy: VolunteerPolicy;
+    actionDefinitionOrder?: string[] | undefined;
 }
 
 export class ActionRequirement implements IActionRequirement {

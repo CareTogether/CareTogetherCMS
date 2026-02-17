@@ -97,7 +97,8 @@ namespace CareTogether.Resources.Policies
         ImmutableDictionary<string, ActionRequirement> ActionDefinitions,
         ImmutableList<CustomField> CustomFamilyFields,
         V1CasePolicy ReferralPolicy,
-        VolunteerPolicy VolunteerPolicy
+        VolunteerPolicy VolunteerPolicy,
+        ImmutableList<string>? ActionDefinitionOrder = null
     );
 
     public enum DocumentLinkRequirement

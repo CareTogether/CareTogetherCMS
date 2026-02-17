@@ -30,6 +30,7 @@ import {
   effectiveLocationPolicyEdited,
   policyData,
 } from '../../../../Model/ConfigurationModel';
+import { getOrderedActionDefinitionEntries } from '../../../../Model/ActionDefinitionOrder';
 import { selectedLocationContextState } from '../../../../Model/Data';
 import { api } from '../../../../Api/Api';
 import { useBackdrop } from '../../../../Hooks/useBackdrop';
@@ -243,8 +244,8 @@ export default function VolunteerRolesMatrix() {
   );
 
   const actionOptions = useMemo<ActionOption[]>(() => {
-    const configured = Object.entries(
-      effectiveLocationPolicy?.actionDefinitions ?? {}
+    const configured = getOrderedActionDefinitionEntries(
+      effectiveLocationPolicy
     ).flatMap(([name, definition]) => [
       { value: name, label: name },
       ...(definition.alternateNames ?? []).map((alternateName) => ({
@@ -274,10 +275,8 @@ export default function VolunteerRolesMatrix() {
       }
     });
 
-    return [...mapByValue.values()].sort((a, b) =>
-      a.label.localeCompare(b.label)
-    );
-  }, [effectiveLocationPolicy?.actionDefinitions, volunteerFamilyRoles, volunteerRoles]);
+    return [...mapByValue.values()];
+  }, [effectiveLocationPolicy, volunteerFamilyRoles, volunteerRoles]);
 
   const initialRows = useMemo(
     () =>

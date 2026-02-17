@@ -1,13 +1,34 @@
-import { Box, Button, Typography, Link } from '@mui/material';
-import { useState, useMemo } from 'react';
-import { useRecoilValue } from 'recoil';
-import { policyData } from '../../../Model/ConfigurationModel';
+import {
+  Box,
+  Button,
+  IconButton,
+  Link,
+  Stack,
+  Tooltip,
+  Typography,
+} from '@mui/material';
+import ArrowUpwardIcon from '@mui/icons-material/ArrowUpward';
+import ArrowDownwardIcon from '@mui/icons-material/ArrowDownward';
+import { useCallback, useMemo, useState } from 'react';
+import { useRecoilValue, useSetRecoilState } from 'recoil';
+import {
+  effectiveLocationPolicyEdited,
+  policyData,
+} from '../../../Model/ConfigurationModel';
+import {
+  getOrderedActionDefinitionEntries,
+  normalizeActionDefinitionOrder,
+} from '../../../Model/ActionDefinitionOrder';
 import {
   AddActionDefinition,
   ActionDefinitionData,
 } from './AddActionDefinition';
 import { useSidePanel } from '../../../Hooks/useSidePanel';
 import { useUserIsOrganizationAdministrator } from '../../../Model/SessionModel';
+import { selectedLocationContextState } from '../../../Model/Data';
+import { api } from '../../../Api/Api';
+import { EffectiveLocationPolicy } from '../../../GeneratedClient';
+import { useBackdrop } from '../../../Hooks/useBackdrop';
 import {
   DataGrid,
   GridColDef,
@@ -54,7 +75,11 @@ function parseValidityInDays(value?: string | null) {
 
 export default function ActionDefinitions() {
   const effectiveLocationPolicy = useRecoilValue(policyData);
-  const actionDefinitions = effectiveLocationPolicy?.actionDefinitions;
+  const { organizationId, locationId } = useRecoilValue(
+    selectedLocationContextState
+  );
+  const setEditedPolicy = useSetRecoilState(effectiveLocationPolicyEdited);
+  const withBackdrop = useBackdrop();
 
   const [rowsPerPage, setRowsPerPage] = useState(10);
   const canEdit = useUserIsOrganizationAdministrator();
@@ -72,7 +97,21 @@ export default function ActionDefinitions() {
   const [workingActionDefinition, setWorkingActionDefinition] =
     useState<ActionDefinitionData | null>(null);
 
-  const entries = Object.entries(actionDefinitions ?? {});
+  const entries = useMemo(
+    () => getOrderedActionDefinitionEntries(effectiveLocationPolicy),
+    [effectiveLocationPolicy]
+  );
+  const actionDefinitionOrder = useMemo(
+    () => entries.map(([name]) => name),
+    [entries]
+  );
+  const rowOrderIndexByName = useMemo(
+    () =>
+      new Map(
+        actionDefinitionOrder.map((actionName, index) => [actionName, index])
+      ),
+    [actionDefinitionOrder]
+  );
 
   const rows = useMemo<ActionDefinitionRow[]>(
     () =>
@@ -89,6 +128,56 @@ export default function ActionDefinitions() {
         canEdit: def.canEdit,
       })),
     [entries]
+  );
+
+  const moveAction = useCallback(
+    async (actionName: string, direction: 'up' | 'down'): Promise<void> => {
+      if (!canEdit) return;
+
+      const currentIndex = actionDefinitionOrder.indexOf(actionName);
+      if (currentIndex < 0) return;
+
+      const targetIndex =
+        direction === 'up' ? currentIndex - 1 : currentIndex + 1;
+      if (targetIndex < 0 || targetIndex >= actionDefinitionOrder.length) return;
+
+      const nextOrder = [...actionDefinitionOrder];
+      [nextOrder[currentIndex], nextOrder[targetIndex]] = [
+        nextOrder[targetIndex],
+        nextOrder[currentIndex],
+      ];
+
+      await withBackdrop(async () => {
+        const currentPolicy = await api.configuration.getEffectiveLocationPolicy(
+          organizationId,
+          locationId
+        );
+
+        const updatedPolicy = new EffectiveLocationPolicy({
+          ...currentPolicy,
+          actionDefinitionOrder: normalizeActionDefinitionOrder(
+            currentPolicy.actionDefinitions,
+            nextOrder
+          ),
+        });
+
+        const savedPolicy = await api.configuration.putEffectiveLocationPolicy(
+          organizationId,
+          locationId,
+          updatedPolicy
+        );
+
+        setEditedPolicy(savedPolicy);
+      });
+    },
+    [
+      canEdit,
+      actionDefinitionOrder,
+      withBackdrop,
+      organizationId,
+      locationId,
+      setEditedPolicy,
+    ]
   );
 
   const columns = useMemo<GridColDef<ActionDefinitionRow>[]>(
@@ -163,8 +252,59 @@ export default function ActionDefinitions() {
         flex: 0.6,
         renderCell: (params) => formatValidity(params.row.validity),
       },
+      {
+        field: 'orderActions',
+        headerName: 'Order',
+        minWidth: 96,
+        width: 96,
+        sortable: false,
+        filterable: false,
+        disableColumnMenu: true,
+        renderCell: (params) => {
+          if (!canEdit) return '-';
+
+          const rowIndex = rowOrderIndexByName.get(params.row.name) ?? -1;
+          const isFirst = rowIndex <= 0;
+          const isLast =
+            rowIndex < 0 || rowIndex === actionDefinitionOrder.length - 1;
+
+          return (
+            <Stack direction="row" spacing={0.5} onClick={(e) => e.stopPropagation()}>
+              <Tooltip title="Move up">
+                <span>
+                  <IconButton
+                    size="small"
+                    disabled={isFirst}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      void moveAction(params.row.name, 'up');
+                    }}
+                  >
+                    <ArrowUpwardIcon fontSize="inherit" />
+                  </IconButton>
+                </span>
+              </Tooltip>
+
+              <Tooltip title="Move down">
+                <span>
+                  <IconButton
+                    size="small"
+                    disabled={isLast}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      void moveAction(params.row.name, 'down');
+                    }}
+                  >
+                    <ArrowDownwardIcon fontSize="inherit" />
+                  </IconButton>
+                </span>
+              </Tooltip>
+            </Stack>
+          );
+        },
+      },
     ],
-    []
+    [canEdit, rowOrderIndexByName, actionDefinitionOrder.length, moveAction]
   );
 
   return (
@@ -193,11 +333,6 @@ export default function ActionDefinitions() {
           }}
           localeText={{
             noRowsLabel: 'No action definitions yet for this location.',
-          }}
-          initialState={{
-            sorting: {
-              sortModel: [{ field: 'name', sort: 'asc' }],
-            },
           }}
           onRowClick={(params: GridRowParams<ActionDefinitionRow>) => {
             if (!canEdit) return;
