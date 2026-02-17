@@ -1,4 +1,4 @@
-import { Button, TextField, Typography, Stack, MenuItem } from '@mui/material';
+import { Button, TextField, Typography, Grid, MenuItem } from '@mui/material';
 import { useForm, Controller } from 'react-hook-form';
 import { useRecoilValue } from 'recoil';
 import { selectedLocationContextState } from '../../../Model/Data';
@@ -9,9 +9,23 @@ import {
 } from '../../../GeneratedClient';
 import { useSetRecoilState } from 'recoil';
 import { effectiveLocationPolicyEdited } from '../../../Model/ConfigurationModel';
+import { useBackdrop } from '../../../Hooks/useBackdrop';
 
 interface DrawerProps {
   onClose: () => void;
+}
+
+export interface ActionDefinitionData {
+  originalActionName?: string;
+  name: string;
+  alternateNames: string[];
+  instructions?: string;
+  infoLink?: string;
+  documentRequirement: 0 | 1 | 2;
+  noteRequirement: 0 | 1 | 2;
+  validityInDays: number | null;
+  canView?: string;
+  canEdit?: string;
 }
 
 interface AddActionDefinitionFormValues {
@@ -24,18 +38,26 @@ interface AddActionDefinitionFormValues {
   validityInDays: number | null;
 }
 
+interface AddActionDefinitionDrawerProps extends DrawerProps {
+  data?: ActionDefinitionData;
+}
+
 const requirementOptions = [
   { label: 'None', value: 0 },
   { label: 'Allowed', value: 1 },
   { label: 'Required', value: 2 },
 ];
 
-export function AddActionDefinition({ onClose }: DrawerProps) {
+export function AddActionDefinition({
+  data,
+  onClose,
+}: AddActionDefinitionDrawerProps) {
   const { organizationId, locationId } = useRecoilValue(
     selectedLocationContextState
   );
 
   const setEditedPolicy = useSetRecoilState(effectiveLocationPolicyEdited);
+  const withBackdrop = useBackdrop();
 
   const {
     handleSubmit,
@@ -44,71 +66,87 @@ export function AddActionDefinition({ onClose }: DrawerProps) {
   } = useForm<AddActionDefinitionFormValues>({
     mode: 'onChange',
     defaultValues: {
-      name: '',
-      alternateNames: '',
-      instructions: '',
-      infoLink: '',
-      documentRequirement: 0,
-      noteRequirement: 0,
-      validityInDays: null,
+      name: data?.name ?? '',
+      alternateNames: data?.alternateNames?.join(', ') ?? '',
+      instructions: data?.instructions ?? '',
+      infoLink: data?.infoLink ?? '',
+      documentRequirement: data?.documentRequirement ?? 0,
+      noteRequirement: data?.noteRequirement ?? 0,
+      validityInDays: data?.validityInDays ?? null,
     },
   });
 
-  const convertToBackend = (data: AddActionDefinitionFormValues) => {
-    const parsedAlternateNames = data.alternateNames
-      ? data.alternateNames.split(',').map((x) => x.trim())
+  const convertToBackend = (formData: AddActionDefinitionFormValues) => {
+    const parsedAlternateNames = formData.alternateNames
+      ? formData.alternateNames.split(',').map((x) => x.trim())
       : [];
 
     const validity =
-      data.validityInDays && data.validityInDays > 0
-        ? `${data.validityInDays}.00:00:00`
+      formData.validityInDays && formData.validityInDays > 0
+        ? `${formData.validityInDays}.00:00:00`
         : undefined;
 
     return {
-      actionName: data.name,
+      actionName: formData.name,
       alternateNames: parsedAlternateNames,
-      instructions: data.instructions || undefined,
-      infoLink: data.infoLink || undefined,
-      documentLink: data.documentRequirement,
-      noteEntry: data.noteRequirement,
+      instructions: formData.instructions || undefined,
+      infoLink: formData.infoLink || undefined,
+      documentLink: formData.documentRequirement,
+      noteEntry: formData.noteRequirement,
       validity,
-      canView: undefined,
-      canEdit: undefined,
+      canView: data?.canView,
+      canEdit: data?.canEdit,
     };
   };
 
   const onSubmit = async (values: AddActionDefinitionFormValues) => {
-    const newAction = convertToBackend(values);
+    await withBackdrop(async () => {
+      const newAction = convertToBackend(values);
+      const currentPolicy = await api.configuration.getEffectiveLocationPolicy(
+        organizationId,
+        locationId
+      );
 
-    const currentPolicy = await api.configuration.getEffectiveLocationPolicy(
-      organizationId,
-      locationId
-    );
+      const updatedActionDefinitions = { ...currentPolicy.actionDefinitions };
+      const originalActionName = data?.originalActionName ?? data?.name;
+      if (originalActionName) {
+        delete updatedActionDefinitions[originalActionName];
+      }
+      updatedActionDefinitions[newAction.actionName] = new ActionRequirement(
+        newAction
+      );
 
-    const updatedPolicy = new EffectiveLocationPolicy({
-      ...currentPolicy,
-      actionDefinitions: {
-        ...currentPolicy.actionDefinitions,
-        [newAction.actionName]: new ActionRequirement(newAction),
-      },
+      const updatedPolicy = new EffectiveLocationPolicy({
+        ...currentPolicy,
+        actionDefinitions: updatedActionDefinitions,
+      });
+
+      const savedPolicy = await api.configuration.putEffectiveLocationPolicy(
+        organizationId,
+        locationId,
+        updatedPolicy
+      );
+
+      setEditedPolicy(savedPolicy);
+      onClose();
     });
-
-    await api.configuration.putEffectiveLocationPolicy(
-      organizationId,
-      locationId,
-      updatedPolicy as unknown as EffectiveLocationPolicy
-    );
-
-    setEditedPolicy(updatedPolicy);
-
-    onClose();
   };
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)}>
-      <Stack spacing={2} maxWidth={500}>
-        <Typography variant="h6">Add New Action Definition</Typography>
+    <Grid
+      container
+      spacing={2}
+      maxWidth={500}
+      component="form"
+      onSubmit={handleSubmit(onSubmit)}
+    >
+      <Grid item xs={12}>
+        <Typography variant="h6" mt={2}>
+          {data ? 'Edit Action Definition' : 'Add New Action Definition'}
+        </Typography>
+      </Grid>
 
+      <Grid item xs={12}>
         <Controller
           name="name"
           control={control}
@@ -118,12 +156,15 @@ export function AddActionDefinition({ onClose }: DrawerProps) {
               {...field}
               label="Name"
               fullWidth
+              autoFocus
               error={!!errors.name}
               helperText={errors.name?.message}
             />
           )}
         />
+      </Grid>
 
+      <Grid item xs={12}>
         <Controller
           name="alternateNames"
           control={control}
@@ -131,7 +172,9 @@ export function AddActionDefinition({ onClose }: DrawerProps) {
             <TextField {...field} label="Alternate name(s)" fullWidth />
           )}
         />
+      </Grid>
 
+      <Grid item xs={12}>
         <Controller
           name="instructions"
           control={control}
@@ -145,7 +188,9 @@ export function AddActionDefinition({ onClose }: DrawerProps) {
             />
           )}
         />
+      </Grid>
 
+      <Grid item xs={12}>
         <Controller
           name="infoLink"
           control={control}
@@ -153,7 +198,9 @@ export function AddActionDefinition({ onClose }: DrawerProps) {
             <TextField {...field} label="Info link" fullWidth />
           )}
         />
+      </Grid>
 
+      <Grid item xs={12}>
         <Controller
           name="documentRequirement"
           control={control}
@@ -167,7 +214,9 @@ export function AddActionDefinition({ onClose }: DrawerProps) {
             </TextField>
           )}
         />
+      </Grid>
 
+      <Grid item xs={12}>
         <Controller
           name="noteRequirement"
           control={control}
@@ -181,7 +230,9 @@ export function AddActionDefinition({ onClose }: DrawerProps) {
             </TextField>
           )}
         />
+      </Grid>
 
+      <Grid item xs={12}>
         <Controller
           name="validityInDays"
           control={control}
@@ -195,21 +246,26 @@ export function AddActionDefinition({ onClose }: DrawerProps) {
             />
           )}
         />
+      </Grid>
 
-        <Stack direction="row" justifyContent="flex-end" spacing={2}>
-          <Button variant="contained" color="secondary" onClick={onClose}>
-            Cancel
-          </Button>
-          <Button
-            type="submit"
-            variant="contained"
-            color="primary"
-            disabled={!isValid}
-          >
-            Save
-          </Button>
-        </Stack>
-      </Stack>
-    </form>
+      <Grid item xs={12} sx={{ textAlign: 'right' }}>
+        <Button
+          variant="contained"
+          color="secondary"
+          onClick={onClose}
+          sx={{ marginRight: 2 }}
+        >
+          Cancel
+        </Button>
+        <Button
+          type="submit"
+          variant="contained"
+          color="primary"
+          disabled={!isValid}
+        >
+          Save
+        </Button>
+      </Grid>
+    </Grid>
   );
 }
