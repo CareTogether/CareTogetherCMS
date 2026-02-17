@@ -28,6 +28,9 @@ import { useFeatureFlagEnabled } from 'posthog-js/react';
 import { useUserIsOrganizationAdministrator } from '../../Model/SessionModel';
 import { useAppNavigate } from '../../Hooks/useAppNavigate';
 import AccessLevels from './Tabs/AccessLevels/AccessLevels';
+import VolunteerPolicies from './Tabs/VolunteerPolicies/VolunteerPolicies';
+import VolunteerRolesMatrix from './Tabs/VolunteerPolicies/VolunteerRolesMatrix';
+import VolunteerPolicies3 from './Tabs/VolunteerPolicies/VolunteerPolicies3';
 import { Breadcrumbs } from '../../Generic/Breadcrumbs';
 import { useSearchParams } from 'react-router-dom';
 
@@ -90,6 +93,24 @@ export function LocationEdit() {
         id: 'accessLevels' as const,
         label: 'Access Levels',
         component: AccessLevels,
+        shouldShow: true,
+      },
+      {
+        id: 'volunteerPolicies' as const,
+        label: 'Volunteer Policies',
+        component: VolunteerPolicies,
+        shouldShow: true,
+      },
+      {
+        id: 'volunteerRolesMatrix' as const,
+        label: 'Volunteer Roles Matrix',
+        component: VolunteerRolesMatrix,
+        shouldShow: true,
+      },
+      {
+        id: 'volunteerPolicies3' as const,
+        label: 'Volunteer Policies 3',
+        component: VolunteerPolicies3,
         shouldShow: true,
       },
     ],
@@ -238,6 +259,24 @@ export function LocationEdit() {
           {activeTab === 'accessLevels' && (
             <Box key="accessLevels">
               <AccessLevels locationConfiguration={location} />
+            </Box>
+          )}
+
+          {activeTab === 'volunteerPolicies' && (
+            <Box key="volunteerPolicies">
+              <VolunteerPolicies />
+            </Box>
+          )}
+
+          {activeTab === 'volunteerRolesMatrix' && (
+            <Box key="volunteerRolesMatrix">
+              <VolunteerRolesMatrix />
+            </Box>
+          )}
+
+          {activeTab === 'volunteerPolicies3' && (
+            <Box key="volunteerPolicies3">
+              <VolunteerPolicies3 />
             </Box>
           )}
         </Box>

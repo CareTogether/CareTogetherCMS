@@ -1,4 +1,4 @@
-import { Button, Grid, TextField } from '@mui/material';
+import { Button, Grid, TextField, Typography } from '@mui/material';
 import { useRecoilValue, useSetRecoilState } from 'recoil';
 import { api } from '../../../../Api/Api';
 import {
@@ -97,7 +97,9 @@ export function AddAccessLevel({
       onSubmit={handleSubmit(save)}
     >
       <Grid item xs={12}>
-        <h3>Add New Access Level</h3>
+        <Typography variant="h6" mt={2}>
+          Add New Access Level
+        </Typography>
       </Grid>
 
       <Grid item xs={12}>

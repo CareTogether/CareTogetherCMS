@@ -1,26 +1,32 @@
-import {
-  Box,
-  Button,
-  Stack,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  TextField,
-  Typography,
-  Paper,
-  Link,
-  TablePagination,
-  Drawer,
-  InputAdornment,
-} from '@mui/material';
-import SearchIcon from '@mui/icons-material/Search';
+import { Box, Button, Typography, Link } from '@mui/material';
 import { useState, useMemo } from 'react';
 import { useRecoilValue } from 'recoil';
 import { policyData } from '../../../Model/ConfigurationModel';
-import { AddActionDefinition } from './AddActionDefinition';
+import {
+  AddActionDefinition,
+  ActionDefinitionData,
+} from './AddActionDefinition';
+import { useSidePanel } from '../../../Hooks/useSidePanel';
+import { useUserIsOrganizationAdministrator } from '../../../Model/SessionModel';
+import {
+  DataGrid,
+  GridColDef,
+  GridRowParams,
+  GridToolbar,
+} from '@mui/x-data-grid';
+
+type ActionDefinitionRow = {
+  id: string;
+  name: string;
+  alternateNames: string[];
+  documentRequirement: 0 | 1 | 2;
+  noteRequirement: 0 | 1 | 2;
+  instructions?: string;
+  infoLink?: string;
+  validity?: string;
+  canView?: string;
+  canEdit?: string;
+};
 
 const requirementLabel: Record<number, string> = {
   0: 'None',
@@ -39,133 +45,213 @@ function formatValidity(value?: string | null) {
   return `${days} days`;
 }
 
+function parseValidityInDays(value?: string | null) {
+  if (!value) return null;
+  const [days] = value.split('.');
+  const parsed = Number.parseInt(days, 10);
+  return Number.isFinite(parsed) ? parsed : null;
+}
+
 export default function ActionDefinitions() {
   const effectiveLocationPolicy = useRecoilValue(policyData);
   const actionDefinitions = effectiveLocationPolicy?.actionDefinitions;
 
-  const [searchTerm, setSearchTerm] = useState('');
-  const [page, setPage] = useState(0);
-  const rowsPerPage = 5;
-  const [openDrawer, setOpenDrawer] = useState(false);
+  const [rowsPerPage, setRowsPerPage] = useState(10);
+  const canEdit = useUserIsOrganizationAdministrator();
+
+  const {
+    SidePanel: SidePanelAdd,
+    openSidePanel: openSidePanelAdd,
+    closeSidePanel: closeSidePanelAdd,
+  } = useSidePanel();
+  const {
+    SidePanel: SidePanelEdit,
+    openSidePanel: openSidePanelEdit,
+    closeSidePanel: closeSidePanelEdit,
+  } = useSidePanel();
+  const [workingActionDefinition, setWorkingActionDefinition] =
+    useState<ActionDefinitionData | null>(null);
 
   const entries = Object.entries(actionDefinitions ?? {});
 
-  const filtered = useMemo(
+  const rows = useMemo<ActionDefinitionRow[]>(
     () =>
-      entries.filter(([name]) =>
-        name.toLowerCase().includes(searchTerm.toLowerCase())
-      ),
-    [entries, searchTerm]
+      entries.map(([name, def]) => ({
+        id: name,
+        name,
+        alternateNames: def.alternateNames ?? [],
+        documentRequirement: def.documentLink as 0 | 1 | 2,
+        noteRequirement: def.noteEntry as 0 | 1 | 2,
+        instructions: def.instructions ?? undefined,
+        infoLink: def.infoLink ?? undefined,
+        validity: def.validity ?? undefined,
+        canView: def.canView,
+        canEdit: def.canEdit,
+      })),
+    [entries]
   );
 
-  const paginated = filtered.slice(
-    page * rowsPerPage,
-    page * rowsPerPage + rowsPerPage
+  const columns = useMemo<GridColDef<ActionDefinitionRow>[]>(
+    () => [
+      {
+        field: 'name',
+        headerName: 'Name',
+        minWidth: 220,
+        flex: 1.2,
+        renderCell: (params) => (
+          <Box sx={{ py: 0.5 }}>
+            <Typography variant="body2">{params.row.name}</Typography>
+            {params.row.alternateNames.length > 0 && (
+              <Typography
+                variant="body2"
+                color="text.secondary"
+                sx={{ display: 'block', mt: 0.5 }}
+              >
+                {params.row.alternateNames.join(', ')}
+              </Typography>
+            )}
+          </Box>
+        ),
+      },
+      {
+        field: 'documentRequirement',
+        headerName: 'Document Link',
+        minWidth: 140,
+        flex: 0.7,
+        valueFormatter: (params) =>
+          requirementLabel[params.value as number] ?? '-',
+      },
+      {
+        field: 'noteRequirement',
+        headerName: 'Note',
+        minWidth: 110,
+        flex: 0.6,
+        valueFormatter: (params) =>
+          requirementLabel[params.value as number] ?? '-',
+      },
+      {
+        field: 'instructions',
+        headerName: 'Instructions',
+        minWidth: 180,
+        flex: 1,
+        renderCell: (params) => truncate(params.row.instructions),
+      },
+      {
+        field: 'infoLink',
+        headerName: 'Info Link',
+        minWidth: 220,
+        flex: 1,
+        sortable: false,
+        renderCell: (params) =>
+          params.row.infoLink ? (
+            <Link
+              href={params.row.infoLink}
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {params.row.infoLink}
+            </Link>
+          ) : (
+            '-'
+          ),
+      },
+      {
+        field: 'validity',
+        headerName: 'Validity',
+        minWidth: 110,
+        flex: 0.6,
+        renderCell: (params) => formatValidity(params.row.validity),
+      },
+    ],
+    []
   );
-
-  if (!actionDefinitions) {
-    return <Typography>No action definitions found.</Typography>;
-  }
 
   return (
     <Box>
-      <Typography variant="h6" sx={{ mb: 1 }}>
+      <Typography variant="h6" sx={{ mb: 2 }}>
         Action Definitions
       </Typography>
 
-      <TextField
-        placeholder="Search..."
-        size="small"
-        fullWidth
-        sx={{ maxWidth: 300 }}
-        InputProps={{
-          startAdornment: (
-            <InputAdornment position="start">
-              <SearchIcon />
-            </InputAdornment>
-          ),
-        }}
-        value={searchTerm}
-        onChange={(e) => setSearchTerm(e.target.value)}
-      />
+      <Box sx={{ width: '100%', mb: 1 }}>
+        <DataGrid
+          autoHeight
+          rows={rows}
+          columns={columns}
+          pageSize={rowsPerPage}
+          onPageSizeChange={(newPageSize) => setRowsPerPage(newPageSize)}
+          rowsPerPageOptions={[5, 10, 25, 50]}
+          pagination
+          rowHeight={64}
+          disableSelectionOnClick
+          components={{ Toolbar: GridToolbar }}
+          componentsProps={{
+            toolbar: {
+              showQuickFilter: true,
+              quickFilterProps: { debounceMs: 300 },
+            },
+          }}
+          localeText={{
+            noRowsLabel: 'No action definitions yet for this location.',
+          }}
+          initialState={{
+            sorting: {
+              sortModel: [{ field: 'name', sort: 'asc' }],
+            },
+          }}
+          onRowClick={(params: GridRowParams<ActionDefinitionRow>) => {
+            if (!canEdit) return;
+            const row = params.row;
+            setWorkingActionDefinition({
+              originalActionName: row.name,
+              name: row.name,
+              alternateNames: row.alternateNames,
+              instructions: row.instructions,
+              infoLink: row.infoLink,
+              documentRequirement: row.documentRequirement,
+              noteRequirement: row.noteRequirement,
+              validityInDays: parseValidityInDays(row.validity),
+              canView: row.canView,
+              canEdit: row.canEdit,
+            });
+            openSidePanelEdit();
+          }}
+          sx={{
+            '& .MuiDataGrid-row': {
+              cursor: canEdit ? 'pointer' : 'default',
+            },
+          }}
+        />
+      </Box>
 
-      <TableContainer component={Paper} sx={{ mt: 2 }}>
-        <Table size="small">
-          <TableHead>
-            <TableRow>
-              <TableCell>Name</TableCell>
-              <TableCell>Document Link</TableCell>
-              <TableCell>Note</TableCell>
-              <TableCell>Instructions</TableCell>
-              <TableCell>Info Link</TableCell>
-              <TableCell>Validity</TableCell>
-            </TableRow>
-          </TableHead>
+      {canEdit && (
+        <>
+          <Button
+            sx={{ marginY: 2 }}
+            variant="contained"
+            onClick={() => openSidePanelAdd()}
+          >
+            Add new action definition
+          </Button>
 
-          <TableBody>
-            {paginated.map(([name, def]) => (
-              <TableRow key={name}>
-                <TableCell>
-                  {name}
+          <SidePanelAdd>
+            <AddActionDefinition
+              onClose={() => {
+                closeSidePanelAdd();
+              }}
+            />
+          </SidePanelAdd>
 
-                  {def.alternateNames && def.alternateNames.length > 0 && (
-                    <Typography
-                      variant="body2"
-                      color="text.secondary"
-                      sx={{ display: 'block', mt: 0.5 }}
-                    >
-                      {def.alternateNames.join(', ')}
-                    </Typography>
-                  )}
-                </TableCell>
-
-                <TableCell>{requirementLabel[def.documentLink]}</TableCell>
-                <TableCell>{requirementLabel[def.noteEntry]}</TableCell>
-                <TableCell>{truncate(def.instructions)}</TableCell>
-                <TableCell>
-                  {def.infoLink ? (
-                    <Link
-                      href={def.infoLink}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                    >
-                      {def.infoLink}
-                    </Link>
-                  ) : (
-                    '-'
-                  )}
-                </TableCell>
-                <TableCell>{formatValidity(def.validity)}</TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </TableContainer>
-
-      <TablePagination
-        component="div"
-        count={filtered.length}
-        page={page}
-        onPageChange={(_, newPage) => setPage(newPage)}
-        rowsPerPage={rowsPerPage}
-        rowsPerPageOptions={[]}
-      />
-
-      <Stack direction="row" spacing={2} sx={{ mt: 2 }}>
-        <Button variant="contained" onClick={() => setOpenDrawer(true)}>
-          Add new action definition
-        </Button>
-      </Stack>
-
-      <Drawer
-        anchor="right"
-        open={openDrawer}
-        onClose={() => setOpenDrawer(false)}
-      >
-        <Box sx={{ width: 500, padding: 3, pt: 7 }}>
-          <AddActionDefinition onClose={() => setOpenDrawer(false)} />
-        </Box>
-      </Drawer>
+          <SidePanelEdit>
+            <AddActionDefinition
+              data={workingActionDefinition ?? undefined}
+              onClose={() => {
+                closeSidePanelEdit();
+              }}
+            />
+          </SidePanelEdit>
+        </>
+      )}
     </Box>
   );
 }
