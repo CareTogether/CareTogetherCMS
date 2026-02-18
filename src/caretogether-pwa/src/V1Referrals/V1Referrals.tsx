@@ -23,6 +23,9 @@ import { visibleReferralsQuery } from '../Model/Data';
 import { V1ReferralStatus } from '../GeneratedClient';
 import { getFamilyCounty } from '../Utilities/getFamilyCounty';
 import { ReferralStatusFilter } from './ReferralsFilters';
+import { useFeatureFlagEnabled } from 'posthog-js/react';
+import { useAppNavigate } from '../Hooks/useAppNavigate';
+import { useEffect } from 'react';
 
 function statusToUi(status: V1ReferralStatus): 'OPEN' | 'ACCEPTED' | 'CLOSED' {
   switch (status) {
@@ -46,6 +49,14 @@ export function V1Referrals() {
   const [expandedView, setExpandedView] = useState(true);
   const [openNewReferral, setOpenNewReferral] = useState(false);
   const [countyFilter, setCountyFilter] = useState<(string | null)[]>([]);
+
+  const referralsEnabled = useFeatureFlagEnabled('referrals');
+  const appNavigate = useAppNavigate();
+  useEffect(() => {
+    if (referralsEnabled === false) {
+      appNavigate.dashboard();
+    }
+  }, [referralsEnabled, appNavigate]);
 
   const referrals =
     referralsLoadable.state === 'hasValue' ? referralsLoadable.contents : [];
