@@ -144,10 +144,11 @@ namespace CareTogether.Resources.Policies
         ImmutableList<RequirementDefinition>? IntakeRequirements = null
     )
     {
-        public ImmutableList<RequirementDefinition> IntakeRequirements_PRE_MIGRATION = RequiredIntakeActionNames
-            .Select(requirementName => new RequirementDefinition(requirementName, true))
-            .Concat(IntakeRequirements ?? ImmutableList<RequirementDefinition>.Empty)
-            .ToImmutableList();
+        public ImmutableList<RequirementDefinition> IntakeRequirements_PRE_MIGRATION =
+            RequiredIntakeActionNames
+                .Select(requirementName => new RequirementDefinition(requirementName, true))
+                .Concat(IntakeRequirements ?? ImmutableList<RequirementDefinition>.Empty)
+                .ToImmutableList();
     };
 
     //TODO: Include referral close reasons
@@ -183,10 +184,11 @@ namespace CareTogether.Resources.Policies
         ImmutableList<RequirementDefinition>? RequiredCloseoutActions = null
     )
     {
-        public ImmutableList<RequirementDefinition> RequiredSetupActions_PRE_MIGRATION = RequiredSetupActionNames
-            .Select(requirementName => new RequirementDefinition(requirementName, true))
-            .Concat(RequiredSetupActions ?? ImmutableList<RequirementDefinition>.Empty)
-            .ToImmutableList();
+        public ImmutableList<RequirementDefinition> RequiredSetupActions_PRE_MIGRATION =
+            RequiredSetupActionNames
+                .Select(requirementName => new RequirementDefinition(requirementName, true))
+                .Concat(RequiredSetupActions ?? ImmutableList<RequirementDefinition>.Empty)
+                .ToImmutableList();
 
         public ImmutableList<MonitoringRequirement> RequiredMonitoringActions_PRE_MIGRATION =
             RequiredMonitoringActions
@@ -200,9 +202,7 @@ namespace CareTogether.Resources.Policies
         public ImmutableList<RequirementDefinition> RequiredCloseoutActionNames_PRE_MIGRATION =
             RequiredCloseoutActionNames
                 .Select(requirementName => new RequirementDefinition(requirementName, true))
-                .Concat(
-                    RequiredCloseoutActions ?? ImmutableList<RequirementDefinition>.Empty
-                )
+                .Concat(RequiredCloseoutActions ?? ImmutableList<RequirementDefinition>.Empty)
                 .ToImmutableList();
     };
 
@@ -211,6 +211,7 @@ namespace CareTogether.Resources.Policies
         ChildHousing,
         DaytimeChildCareOnly,
         NoChildInvolvement,
+        ChildOrAdultInvolvement,
     };
 
     // TODO: Remove after migration (see TODO in ReferralPolicy)
@@ -248,10 +249,11 @@ namespace CareTogether.Resources.Policies
         ImmutableList<RequirementDefinition>? RequiredCloseoutActions
     )
     {
-        public ImmutableList<RequirementDefinition> RequiredSetupActionNames_PRE_MIGRATION = RequiredSetupActionNames
-            .Select(requirementName => new RequirementDefinition(requirementName, true))
-            .Concat(RequiredSetupActions ?? ImmutableList<RequirementDefinition>.Empty)
-            .ToImmutableList();
+        public ImmutableList<RequirementDefinition> RequiredSetupActionNames_PRE_MIGRATION =
+            RequiredSetupActionNames
+                .Select(requirementName => new RequirementDefinition(requirementName, true))
+                .Concat(RequiredSetupActions ?? ImmutableList<RequirementDefinition>.Empty)
+                .ToImmutableList();
 
         public ImmutableList<MonitoringRequirement> RequiredMonitoringActions_PRE_MIGRATION =
             RequiredMonitoringActions
@@ -265,9 +267,7 @@ namespace CareTogether.Resources.Policies
         public ImmutableList<RequirementDefinition> RequiredCloseoutActionNames_PRE_MIGRATION =
             RequiredCloseoutActionNames
                 .Select(requirementName => new RequirementDefinition(requirementName, true))
-                .Concat(
-                    RequiredCloseoutActions ?? ImmutableList<RequirementDefinition>.Empty
-                )
+                .Concat(RequiredCloseoutActions ?? ImmutableList<RequirementDefinition>.Empty)
                 .ToImmutableList();
     };
 
