@@ -3086,6 +3086,54 @@ namespace CareTogether.TestData
                             ],
                             RequiredCloseoutActions: []
                         ),
+                        new ArrangementPolicy(
+                            "Mentoring",
+                            ChildInvolvement.ChildOrAdultInvolvement,
+                            ArrangementFunctions:
+                            [
+                                new ArrangementFunction(
+                                    "Family Friend",
+                                    FunctionRequirement.OneOrMore,
+                                    EligibleIndividualVolunteerRoles: null,
+                                    EligibleVolunteerFamilyRoles: null,
+                                    EligiblePeople: null,
+                                    Variants: []
+                                ),
+                                new ArrangementFunction(
+                                    "Family Coach",
+                                    FunctionRequirement.ExactlyOne,
+                                    EligibleIndividualVolunteerRoles: ["Family Coach"],
+                                    EligibleVolunteerFamilyRoles: [],
+                                    EligiblePeople: [],
+                                    Variants: []
+                                ),
+                                new ArrangementFunction(
+                                    "Staff Supervision",
+                                    FunctionRequirement.ExactlyOne,
+                                    EligibleIndividualVolunteerRoles: null,
+                                    EligibleVolunteerFamilyRoles: null,
+                                    EligiblePeople: null,
+                                    Variants: []
+                                ),
+                            ],
+                            RequiredSetupActionNames: [],
+                            RequiredMonitoringActions: [],
+                            RequiredCloseoutActionNames: [],
+                            RequiredSetupActions:
+                            [
+                                new RequirementDefinition("Advocacy Agreement", true),
+                            ],
+                            RequiredMonitoringActionsNew:
+                            [
+                                new MonitoringRequirement(
+                                    new RequirementDefinition("Family Coach Checkin", true),
+                                    new DurationStagesRecurrencePolicy(
+                                        [new RecurrencePolicyStage(TimeSpan.FromDays(7), null)]
+                                    )
+                                ),
+                            ],
+                            RequiredCloseoutActions: []
+                        ),
                     ],
                     [
                         new(

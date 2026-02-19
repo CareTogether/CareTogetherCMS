@@ -3147,6 +3147,7 @@ export enum ChildInvolvement {
     ChildHousing = 0,
     DaytimeChildCareOnly = 1,
     NoChildInvolvement = 2,
+    ChildOrAdultInvolvement = 3,
 }
 
 export class ArrangementFunction implements IArrangementFunction {
