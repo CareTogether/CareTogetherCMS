@@ -20,6 +20,7 @@ export type ExtendedOrganizationConfiguration = OrganizationConfiguration & {
   ethnicities?: string[];
   adultFamilyRelationships?: string[];
   arrangementReasons?: string[];
+  referralCloseReasons?: string[];
 };
 
 export const organizationConfigurationQuery = selector({
@@ -55,6 +56,14 @@ export const ethnicitiesData = selector({
   get: ({ get }) => {
     const locationConfiguration = get(locationConfigurationQuery);
     return locationConfiguration!.ethnicities!;
+  },
+});
+
+export const referralCloseReasonsData = selector({
+  key: 'COMPATIBILITY__referralCloseReasonsData',
+  get: ({ get }) => {
+    const organizationConfiguration = get(organizationConfigurationQuery);
+    return organizationConfiguration?.referralCloseReasons ?? [];
   },
 });
 

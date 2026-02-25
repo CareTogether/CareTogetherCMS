@@ -232,6 +232,16 @@ namespace CareTogether.Resources.Policies
             return result;
         }
 
+        private static readonly ImmutableList<string> DefaultReferralCloseReasons =
+    ImmutableList.Create(
+        "Not appropriate",
+        "No capacity",
+        "No longer needed",
+        "Resourced",
+        "Need met"
+    );
+
+
         private OrganizationConfiguration Render(OrganizationConfiguration config) =>
             config with
             {
@@ -252,6 +262,9 @@ namespace CareTogether.Resources.Policies
                         )
                     )
                 ),
+            ReferralCloseReasons =
+            config.ReferralCloseReasons
+            ?? DefaultReferralCloseReasons,
             };
     }
 }

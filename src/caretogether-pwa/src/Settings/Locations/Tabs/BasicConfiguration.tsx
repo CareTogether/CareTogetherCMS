@@ -7,6 +7,7 @@ import { selectedLocationContextState } from '../../../Model/Data';
 import {
   LocationConfiguration,
   PutLocationPayload,
+  OrganizationConfiguration,
 } from '../../../GeneratedClient';
 import { organizationConfigurationEdited } from '../../../Model/ConfigurationModel';
 import { useBackdrop } from '../../../Hooks/useBackdrop';
@@ -17,6 +18,7 @@ export type ConfigurationData = {
   ethnicities: string[];
   adultFamilyRelationships: string[];
   arrangementReasons: string[];
+  referralCloseReasons: string[];
 };
 
 export type AvailableOptions = {
@@ -24,6 +26,7 @@ export type AvailableOptions = {
   ethnicities: string[];
   adultFamilyRelationships: string[];
   arrangementReasons: string[];
+  referralCloseReasons: string[];
 };
 
 type Props = {
@@ -50,16 +53,24 @@ export default function BasicConfiguration({
 
   const onSubmit: SubmitHandler<ConfigurationData> = async (data) => {
     withBackdrop(async () => {
-      const newConfig = await api.configuration.putLocationDefinition(
+      const { referralCloseReasons, ...locationData } = data;
+
+      const updatedOrgConfig = await api.configuration.putLocationDefinition(
         organizationId,
         new PutLocationPayload({
           locationConfiguration: new LocationConfiguration({
             ...currentLocationDefinition,
-            ...data,
+            ...locationData,
           }),
         })
       );
-      storeEdits(newConfig);
+
+      storeEdits(
+        new OrganizationConfiguration({
+          ...updatedOrgConfig,
+          referralCloseReasons,
+        })
+      );
     });
   };
 
@@ -154,6 +165,27 @@ export default function BasicConfiguration({
         <CTAutocomplete
           name="arrangementReasons"
           label="Arrangement reasons"
+          freeSolo
+          control={control}
+          helperText='Start typing and press "Enter" to add a new item'
+          minTypingAreaWidth={120}
+        />
+
+        <Typography variant="h6">Referral close reasons</Typography>
+
+        <Typography variant="body2">
+          Here you can customize the list of reasons for closing referrals.
+          <br />
+          These options will be available when closing a referral across the
+          organization.
+          <br />
+          You can add new ones or remove ones you don’t need anymore, it won’t
+          change any existing records.
+        </Typography>
+
+        <CTAutocomplete
+          name="referralCloseReasons"
+          label="Referral close reasons"
           freeSolo
           control={control}
           helperText='Start typing and press "Enter" to add a new item'

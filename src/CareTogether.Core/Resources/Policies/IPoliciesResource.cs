@@ -10,7 +10,8 @@ namespace CareTogether.Resources.Policies
         string OrganizationName,
         ImmutableList<LocationConfiguration> Locations,
         ImmutableList<RoleDefinition> Roles,
-        ImmutableList<string> CommunityRoles
+        ImmutableList<string> CommunityRoles,
+        ImmutableList<string>? ReferralCloseReasons
     );
 
     public sealed record LocationConfiguration(

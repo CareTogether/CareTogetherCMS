@@ -479,6 +479,13 @@ namespace CareTogether.Resources.V1Cases
     {
         Task<ImmutableList<V1CaseEntry>> ListV1CasessAsync(Guid organizationId, Guid locationId);
 
+        Task<bool> FamilyHasOpenCaseAsync(
+    Guid organizationId,
+    Guid locationId,
+    Guid familyId
+);
+
+
         Task<V1CaseEntry> GetV1CaseAsync(Guid organizationId, Guid locationId, Guid v1CaseId);
 
         Task<V1CaseEntry> ExecuteV1CaseCommandAsync(

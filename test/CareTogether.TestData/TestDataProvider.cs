@@ -2445,7 +2445,15 @@ namespace CareTogether.TestData
                             ]
                         ),
                     ],
-                    ["Community Organizer", "Community Co-Organizer"]
+                    ["Community Organizer", "Community Co-Organizer"],
+
+                      ImmutableList.Create(
+        "Not appropriate",
+        "No capacity",
+        "No longer needed",
+        "Resourced",
+        "Need met"
+    )
                 )
             );
 

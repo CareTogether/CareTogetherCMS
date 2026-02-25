@@ -16,6 +16,8 @@ using CareTogether.TestData;
 using CareTogether.Utilities.FileStore;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
+using CareTogether.Resources.V1Referrals;
+
 
 namespace CareTogether.Core.Test.AuthorizationEngineTests
 {
@@ -98,6 +100,9 @@ namespace CareTogether.Core.Test.AuthorizationEngineTests
         private AuthorizationEngine? dut;
         private Mock<IUserAccessCalculation>? mockUserAccessCalculation; // Change to interface
 
+        private Mock<IV1ReferralsResource>? mockV1ReferralsResource;
+
+
         private void MockUserAccessCalculation(params Permission[] permissions) =>
             mockUserAccessCalculation!
                 .Setup(x =>
@@ -155,13 +160,15 @@ namespace CareTogether.Core.Test.AuthorizationEngineTests
 
             // Replace UserAccess with IUserAccess mock:
             mockUserAccessCalculation = new Mock<IUserAccessCalculation>();
+            mockV1ReferralsResource = new Mock<IV1ReferralsResource>();
 
             dut = new AuthorizationEngine(
                 policiesResource,
                 directoryResource,
                 accountsResource,
                 notesResource,
-                mockUserAccessCalculation.Object // Use the interface mock here
+                mockUserAccessCalculation.Object, // Use the interface mock here
+                mockV1ReferralsResource.Object
             );
         }
 

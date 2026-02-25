@@ -29,6 +29,8 @@ import {
   Permission,
   V1Case,
   RoleRemovalReason,
+  V1ReferralStatus,
+  V1CaseCloseReason,
 } from '../GeneratedClient';
 import { useParams } from 'react-router';
 import AddCircleIcon from '@mui/icons-material/AddCircle';
@@ -43,7 +45,7 @@ import { AddChildDialog } from './AddChildDialog';
 import { AddEditNoteDialog } from '../Notes/AddEditNoteDialog';
 import { format } from 'date-fns';
 import { UploadFamilyDocumentsDialog } from './UploadFamilyDocumentsDialog';
-import { CloseV1CaseDialog } from '../V1Cases/CloseV1CaseDialog';
+import { useV1CasesModel } from '../Model/V1CasesModel';
 import { OpenNewV1CaseDialog } from '../V1Cases/OpenNewV1CaseDialog';
 import { FamilyDocuments } from './FamilyDocuments';
 import { useFamilyPermissions } from '../Model/SessionModel';
@@ -57,7 +59,6 @@ import {
 } from '../Requirements/RequirementContext';
 import { ActivityTimeline } from '../Activities/ActivityTimeline';
 import { V1CaseComments } from '../V1Cases/V1CaseComments';
-import { V1CaseCustomField } from '../V1Cases/V1CaseCustomField';
 import { PrimaryContactEditor } from './PrimaryContactEditor';
 import {
   useScreenTitleComponent,
@@ -77,7 +78,7 @@ import { DeleteFamilyDialog } from './DeleteFamilyDialog';
 import { useDialogHandle } from '../Hooks/useDialogHandle';
 import { familyLastName } from './FamilyUtils';
 import { useLoadable } from '../Hooks/useLoadable';
-import { visibleCommunitiesQuery } from '../Model/Data';
+import { visibleCommunitiesQuery, visibleReferralsQuery } from '../Model/Data';
 import { useAppNavigate } from '../Hooks/useAppNavigate';
 import FamilyScreenPageVersionSwitch from './FamilyScreenPageVersionSwitch';
 import posthog from 'posthog-js';
@@ -88,6 +89,7 @@ import { useSyncV1CaseIdInURL } from '../Hooks/useSyncV1CaseIdInURL';
 import { ArrangementsSection } from '../V1Cases/Arrangements/ArrangementsSection/ArrangementsSection';
 import { useFeatureFlagEnabled } from 'posthog-js/react';
 import { TestFamilyBadge } from './TestFamilyBadge';
+import { useRecoilValue } from 'recoil';
 
 export function FamilyScreen() {
   const familyIdMaybe = useParams<{ familyId: string }>();
@@ -108,6 +110,8 @@ export function FamilyScreen() {
   const familyCommunityInfo = allCommunityInfo?.filter((c) =>
     c.community?.memberFamilies?.includes(familyId)
   );
+
+  const referrals = useRecoilValue(visibleReferralsQuery);
 
   const appNavigate = useAppNavigate();
 
@@ -145,10 +149,15 @@ export function FamilyScreen() {
         );
   }, [family?.partneringFamilyInfo?.closedV1Cases]);
 
+  const familyReferrals = useMemo(() => {
+    return referrals.filter((referral) => referral.familyId === familyId);
+  }, [referrals, familyId]);
+
   const allV1Cases: V1Case[] = useMemo(() => {
     return [...openV1Cases, ...closedV1Cases];
   }, [openV1Cases, closedV1Cases]);
-  const [closeV1CaseDialogOpen, setCloseV1CaseDialogOpen] = useState(false);
+  const v1CasesModel = useV1CasesModel();
+  const [closingV1Case, setClosingV1Case] = useState(false);
   const [openNewV1CaseDialogOpen, setOpenNewV1CaseDialogOpen] = useState(false);
   const [uploadDocumentDialogOpen, setUploadDocumentDialogOpen] =
     useState(false);
@@ -165,6 +174,23 @@ export function FamilyScreen() {
   const selectedV1Case = allV1Cases.find(
     (v1Case) => v1Case.id === selectedV1CaseId
   );
+  async function handleCloseV1Case(v1CaseId: string) {
+    if (closingV1Case || !family) return;
+
+    setClosingV1Case(true);
+    try {
+      await withBackdrop(async () => {
+        await v1CasesModel.closeV1Case(
+          family.family!.id!,
+          v1CaseId,
+          V1CaseCloseReason.NoLongerNeeded,
+          new Date()
+        );
+      });
+    } finally {
+      setClosingV1Case(false);
+    }
+  }
 
   useEffect(() => {
     if (
@@ -583,6 +609,50 @@ export function FamilyScreen() {
               })}
             </Grid>
 
+            {familyReferrals.length > 0 && (
+              <Grid item xs={12}>
+                <Typography
+                  className="ph-unmask"
+                  variant="h3"
+                  style={{ marginTop: 16, marginBottom: 8 }}
+                >
+                  Referrals
+                </Typography>
+
+                {familyReferrals.map((referral) => {
+                  const date =
+                    referral.status === V1ReferralStatus.Open
+                      ? referral.createdAtUtc
+                      : referral.closedAtUtc;
+
+                  return (
+                    <Box
+                      key={referral.referralId}
+                      onClick={() => appNavigate.referral(referral.referralId)}
+                      sx={{
+                        cursor: 'pointer',
+                        py: 0.5,
+                        '&:hover': {
+                          textDecoration: 'underline',
+                        },
+                      }}
+                    >
+                      <Typography className="ph-unmask">
+                        {referral.title}{' '}
+                        <Typography component="span" color="text.secondary">
+                          ·{' '}
+                          {referral.status === V1ReferralStatus.Open
+                            ? 'Open'
+                            : 'Closed'}{' '}
+                          · {date ? format(date, 'M/d/yy') : ''}
+                        </Typography>
+                      </Typography>
+                    </Box>
+                  );
+                })}
+              </Grid>
+            )}
+
             {family && <AssignmentsSection family={family} />}
 
             <Grid item xs={12} md={4}>
@@ -656,10 +726,12 @@ export function FamilyScreen() {
                                     className="ph-unmask"
                                     onClick={(e) => {
                                       e.stopPropagation();
-                                      setCloseV1CaseDialogOpen(true);
+                                      handleCloseV1Case(v1Case.id!);
                                     }}
                                     variant="contained"
                                     size="small"
+                                    color="primary"
+                                    disabled={closingV1Case}
                                   >
                                     Close Case
                                   </Button>
@@ -674,54 +746,9 @@ export function FamilyScreen() {
                 )}
             </Grid>
 
-            <Grid item md={4}>
-              {permissions(Permission.ViewV1CaseCustomFields) &&
-                (
-                  selectedV1Case?.completedCustomFields ||
-                  ([] as Array<CompletedCustomFieldInfo | string>)
-                )
-                  .concat(selectedV1Case?.missingCustomFields || [])
-                  .sort((a, b) =>
-                    (a instanceof CompletedCustomFieldInfo
-                      ? a.customFieldName!
-                      : a) <
-                    (b instanceof CompletedCustomFieldInfo
-                      ? b.customFieldName!
-                      : b)
-                      ? -1
-                      : (a instanceof CompletedCustomFieldInfo
-                            ? a.customFieldName!
-                            : a) >
-                          (b instanceof CompletedCustomFieldInfo
-                            ? b.customFieldName!
-                            : b)
-                        ? 1
-                        : 0
-                  )
-                  .map((customField) => (
-                    <V1CaseCustomField
-                      key={
-                        typeof customField === 'string'
-                          ? customField
-                          : customField.customFieldName
-                      }
-                      partneringFamilyId={familyId}
-                      v1CaseId={`${selectedV1Case!.id}`}
-                      customField={customField}
-                    />
-                  ))}
-            </Grid>
+            <Grid item md={4}></Grid>
 
             <Grid item xs={6} md={4}>
-              {closeV1CaseDialogOpen &&
-                selectedV1Case?.id ===
-                  family.partneringFamilyInfo?.openV1Case?.id && (
-                  <CloseV1CaseDialog
-                    partneringFamilyId={family.family!.id!}
-                    v1CaseId={`${selectedV1Case!.id}`}
-                    onClose={() => setCloseV1CaseDialogOpen(false)}
-                  />
-                )}
               {openNewV1CaseDialogOpen && (
                 <OpenNewV1CaseDialog
                   partneringFamilyId={family.family!.id!}
