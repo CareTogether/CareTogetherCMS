@@ -261,3 +261,11 @@ export async function tryAcquireAccessToken(): Promise<string | null> {
     }
   }
 }
+
+export async function logoutAsync(): Promise<void> {
+  trace(`Logout`, `Signing out the active account...`);
+
+  await globalMsalInstance.logoutRedirect({
+    account: globalMsalInstance.getActiveAccount() ?? undefined,
+  });
+}
