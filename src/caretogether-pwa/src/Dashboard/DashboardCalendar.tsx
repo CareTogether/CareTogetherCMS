@@ -23,6 +23,8 @@ import { useAppNavigate } from '../Hooks/useAppNavigate';
 //   )
 // }
 
+const DASHBOARD_CALENDAR_VIEW_KEY = 'dashboardCalendarView';
+
 function familyPerson(family: CombinedFamilyInfo, personId: string) {
   const familyPeople = (family.family?.adults || [])
     .map((adult) => adult.item1!)
@@ -33,6 +35,8 @@ function familyPerson(family: CombinedFamilyInfo, personId: string) {
 export function DashboardCalendar() {
   const familyLookup = useFamilyLookup();
   const partneringFamilies = useLoadable(partneringFamiliesData);
+  const savedInitialView =
+    localStorage.getItem(DASHBOARD_CALENDAR_VIEW_KEY) || 'dayGridMonth';
 
   const allArrangements = (partneringFamilies || []).flatMap((family) =>
     (family.partneringFamilyInfo?.closedV1Cases || [])
@@ -288,7 +292,7 @@ export function DashboardCalendar() {
       >
         <FullCalendar /* https://fullcalendar.io/docs/react */
           plugins={[dayGridPlugin, listPlugin]}
-          initialView="dayGridMonth"
+          initialView={savedInitialView}
           headerToolbar={{
             left: 'prevYear,prev,today,next,nextYear',
             center: 'title',
@@ -299,6 +303,9 @@ export function DashboardCalendar() {
           events={filteredEvents}
           //eventContent={renderEventContent}
           eventClassNames={() => 'calendar-event'}
+          datesSet={(arg) => {
+            localStorage.setItem(DASHBOARD_CALENDAR_VIEW_KEY, arg.view.type);
+          }}
           eventClick={(info) => {
             const { familyId, v1CaseId, arrangementId } =
               info.event.extendedProps;
