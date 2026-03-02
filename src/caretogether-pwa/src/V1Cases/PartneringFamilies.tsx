@@ -43,6 +43,8 @@ import { PartneringFamilyTableItem } from './PartneringFamilies/PartneringFamily
 import { arrangementStatusSummary } from './PartneringFamilies/arrangementStatusSummary';
 import { ArrangementsFilter } from './PartneringFamilies/types';
 
+import '../../../index.css';
+
 function PartneringFamilies() {
   const appNavigate = useAppNavigate();
 
