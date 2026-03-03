@@ -20,8 +20,6 @@ import {
   ToggleButton,
   ToggleButtonGroup,
   Box,
-  Popover,
-  Typography,
 } from '@mui/material';
 import {
   CombinedFamilyInfo,
@@ -66,13 +64,14 @@ import { VolunteerFilter } from './VolunteerFilter';
 import { catchAllLabel } from './catchAllLabel';
 import { getOptionValueFromSelection } from './getOptionValueFromSelection';
 import { getUpdatedFilters } from './getUpdatedFilters';
-import { CustomFieldsFilter } from '../../Generic/CustomFieldsFilter/CustomFieldsFilter';
 import { useCustomFieldFilters } from '../../Generic/CustomFieldsFilter/useCustomFieldFilters';
 import { matchesCustomFieldFilters } from '../../Generic/CustomFieldsFilter/matchesCustomFieldFilters';
 import { CustomFieldFilterValue } from '../../Generic/CustomFieldsFilter/types';
 import { useFeatureFlagEnabled } from 'posthog-js/react';
 import { forceCheck } from 'react-lazyload';
 import { VolunteerApprovalTableItem } from './VolunteerApprovalTableItem';
+import { VolunteerCustomFieldFiltersSidePanel } from './VolunteerCustomFieldFiltersSidePanel';
+import { useSidePanel } from '../../Hooks/useSidePanel';
 import { stickyHeaderTableSx } from '../../Utilities/stickyHeaderTableSx';
 
 function VolunteerApproval(props: { onOpen: () => void }) {
@@ -80,8 +79,11 @@ function VolunteerApproval(props: { onOpen: () => void }) {
   useEffect(onOpen);
   const appNavigate = useAppNavigate();
   const [uncheckedFamilies, setUncheckedFamilies] = useState<string[]>([]);
-  const [customFieldMenuAnchor, setCustomFieldMenuAnchor] =
-    useState<HTMLElement | null>(null);
+  const {
+    SidePanel: CustomFieldFiltersSidePanel,
+    openSidePanel: openCustomFieldFiltersSidePanel,
+    closeSidePanel: closeCustomFieldFiltersSidePanel,
+  } = useSidePanel();
 
   const policy = useRecoilValue(policyData);
 
@@ -578,9 +580,7 @@ function VolunteerApproval(props: { onOpen: () => void }) {
                     value=""
                     open={false}
                     variant="standard"
-                    onClick={(event) =>
-                      setCustomFieldMenuAnchor(event.currentTarget)
-                    }
+                    onClick={() => openCustomFieldFiltersSidePanel()}
                     sx={{
                       minWidth: { xs: '100%', sm: 0 },
                       maxWidth: '100%',
@@ -636,40 +636,15 @@ function VolunteerApproval(props: { onOpen: () => void }) {
               </Button>
             </ButtonGroup>
           </Stack>
-          <Popover
-            open={Boolean(customFieldMenuAnchor)}
-            anchorEl={customFieldMenuAnchor}
-            onClose={() => setCustomFieldMenuAnchor(null)}
-            anchorOrigin={{
-              vertical: 'bottom',
-              horizontal: 'left',
-            }}
-            transformOrigin={{
-              vertical: 'top',
-              horizontal: 'left',
-            }}
-          >
-            <Box
-              sx={{
-                p: 2,
-                width: { xs: 'min(90vw, 22rem)', sm: '22rem' },
-                maxHeight: '70vh',
-                overflowY: 'auto',
-              }}
-            >
-              <Typography variant="subtitle2" sx={{ marginBottom: 1 }}>
-                Custom field filters
-              </Typography>
-              <CustomFieldsFilter
-                customFields={policy.customFamilyFields || []}
-                optionsByField={customFieldFilterOptionsByField}
-                selectedValuesByField={customFieldFilters}
-                onFieldChange={changeCustomFieldFilter}
-                direction="column"
-                fullWidthSelects
-              />
-            </Box>
-          </Popover>
+          <CustomFieldFiltersSidePanel>
+            <VolunteerCustomFieldFiltersSidePanel
+              customFields={policy.customFamilyFields || []}
+              optionsByField={customFieldFilterOptionsByField}
+              selectedValuesByField={customFieldFilters}
+              onFieldChange={changeCustomFieldFilter}
+              onClose={closeCustomFieldFiltersSidePanel}
+            />
+          </CustomFieldFiltersSidePanel>
 
           {permissions(Permission.EditFamilyInfo) &&
             permissions(Permission.ActivateVolunteerFamily) && (
