@@ -12,10 +12,16 @@ import {
   ButtonGroup,
   Checkbox,
   IconButton,
+  FormControl,
+  InputBase,
+  MenuItem,
+  Select,
   Stack,
   ToggleButton,
   ToggleButtonGroup,
   Box,
+  Popover,
+  Typography,
 } from '@mui/material';
 import {
   CombinedFamilyInfo,
@@ -33,6 +39,7 @@ import React, { useEffect, useState } from 'react';
 import AddIcon from '@mui/icons-material/Add';
 import SmsIcon from '@mui/icons-material/Sms';
 import EmailIcon from '@mui/icons-material/Email';
+import FilterListIcon from '@mui/icons-material/FilterList';
 import { CreateVolunteerFamilyDialog } from '../CreateVolunteerFamilyDialog';
 import { Link, useLocation } from 'react-router-dom';
 import { SearchBar } from '../../Shell/SearchBar';
@@ -73,6 +80,8 @@ function VolunteerApproval(props: { onOpen: () => void }) {
   useEffect(onOpen);
   const appNavigate = useAppNavigate();
   const [uncheckedFamilies, setUncheckedFamilies] = useState<string[]>([]);
+  const [customFieldMenuAnchor, setCustomFieldMenuAnchor] =
+    useState<HTMLElement | null>(null);
 
   const policy = useRecoilValue(policyData);
 
@@ -141,6 +150,10 @@ function VolunteerApproval(props: { onOpen: () => void }) {
     },
   });
   const [filterText, setFilterText] = useState('');
+  const customFieldCount = (policy.customFamilyFields || []).length;
+  const activeCustomFieldFilterCount = Object.values(customFieldFilters).filter(
+    (selectedValues) => selectedValues.length > 0
+  ).length;
 
   //#region Family/Individual Filtering Code
   const selectedFamilyRoleKeys = roleFilters
@@ -516,7 +529,6 @@ function VolunteerApproval(props: { onOpen: () => void }) {
                 color="inherit"
                 aria-label="copy email addresses"
                 onClick={() => copyEmailAddresses()}
-                sx={{}}
               >
                 <EmailIcon />
               </IconButton>
@@ -533,7 +545,6 @@ function VolunteerApproval(props: { onOpen: () => void }) {
                   <SmsIcon sx={{ position: 'relative', top: 1 }} />
                 </IconButton>
               )}
-
             <Box
               sx={{
                 display: 'flex',
@@ -553,12 +564,47 @@ function VolunteerApproval(props: { onOpen: () => void }) {
                 options={statusFilters}
                 setSelected={changeStatusFilterSelection}
               />
-              <CustomFieldsFilter
-                customFields={policy.customFamilyFields || []}
-                optionsByField={customFieldFilterOptionsByField}
-                selectedValuesByField={customFieldFilters}
-                onFieldChange={changeCustomFieldFilter as any}
-              />
+              {customFieldCount > 0 && (
+                <FormControl
+                  sx={{
+                    position: 'relative',
+                    minWidth: { xs: '100%', sm: 0 },
+                    maxWidth: { xs: '100%', sm: '16rem' },
+                  }}
+                >
+                  <Select
+                    labelId="volunteerCustomFieldsFilter"
+                    displayEmpty
+                    value=""
+                    open={false}
+                    variant="standard"
+                    onClick={(event) =>
+                      setCustomFieldMenuAnchor(event.currentTarget)
+                    }
+                    sx={{
+                      minWidth: { xs: '100%', sm: 0 },
+                      maxWidth: '100%',
+                      '& .MuiSelect-iconOpen': { transform: 'none' },
+                      '& .MuiSelect-select': {
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                        whiteSpace: 'nowrap',
+                        cursor: 'pointer',
+                      },
+                    }}
+                    input={<InputBase />}
+                    IconComponent={FilterListIcon}
+                    SelectDisplayProps={{
+                      title: `Custom fields (${activeCustomFieldFilterCount}/${customFieldCount})`,
+                    }}
+                    renderValue={() =>
+                      `Custom fields (${activeCustomFieldFilterCount}/${customFieldCount})`
+                    }
+                  >
+                    <MenuItem value="" sx={{ display: 'none' }} />
+                  </Select>
+                </FormControl>
+              )}
             </Box>
             <ButtonGroup
               variant="text"
@@ -590,6 +636,40 @@ function VolunteerApproval(props: { onOpen: () => void }) {
               </Button>
             </ButtonGroup>
           </Stack>
+          <Popover
+            open={Boolean(customFieldMenuAnchor)}
+            anchorEl={customFieldMenuAnchor}
+            onClose={() => setCustomFieldMenuAnchor(null)}
+            anchorOrigin={{
+              vertical: 'bottom',
+              horizontal: 'left',
+            }}
+            transformOrigin={{
+              vertical: 'top',
+              horizontal: 'left',
+            }}
+          >
+            <Box
+              sx={{
+                p: 2,
+                width: { xs: 'min(90vw, 22rem)', sm: '22rem' },
+                maxHeight: '70vh',
+                overflowY: 'auto',
+              }}
+            >
+              <Typography variant="subtitle2" sx={{ marginBottom: 1 }}>
+                Custom field filters
+              </Typography>
+              <CustomFieldsFilter
+                customFields={policy.customFamilyFields || []}
+                optionsByField={customFieldFilterOptionsByField}
+                selectedValuesByField={customFieldFilters}
+                onFieldChange={changeCustomFieldFilter}
+                direction="column"
+                fullWidthSelects
+              />
+            </Box>
+          </Popover>
 
           {permissions(Permission.EditFamilyInfo) &&
             permissions(Permission.ActivateVolunteerFamily) && (
