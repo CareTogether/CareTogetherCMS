@@ -26,7 +26,12 @@ export function VolunteerCustomFieldFiltersSidePanel({
   onClose,
 }: Props) {
   return (
-    <Grid container spacing={2} maxWidth={500}>
+    <Grid
+      container
+      spacing={2}
+      maxWidth={500}
+      sx={{ paddingBottom: { xs: 10, sm: 4 } }}
+    >
       <Grid item xs={12}>
         <h3>Custom Field Filters</h3>
         <Typography>
