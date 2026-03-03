@@ -13,26 +13,14 @@ import {
   Tooltip,
   useMediaQuery,
   useTheme,
-  Box,
 } from '@mui/material';
-import AccessTimeIcon from '@mui/icons-material/AccessTime';
-import PendingOutlinedIcon from '@mui/icons-material/PendingOutlined';
-import PlayCircleFilledIcon from '@mui/icons-material/PlayCircleFilled';
-import CheckCircleOutlinedIcon from '@mui/icons-material/CheckCircleOutlined';
 import { partneringFamiliesData } from '../Model/V1CasesModel';
-import { format } from 'date-fns';
 import React, { useState } from 'react';
 import AddIcon from '@mui/icons-material/Add';
 import {
-  V1CaseCloseReason,
-  PartneringFamilyInfo,
-  Arrangement,
   ArrangementPhase,
   Permission,
-  CompletedCustomFieldInfo,
 } from '../GeneratedClient';
-import { FamilyName } from '../Families/FamilyName';
-import { ArrangementCard } from './Arrangements/ArrangementCard';
 import { CreatePartneringFamilyDialog } from './CreatePartneringFamilyDialog';
 import { useScrollMemory } from '../Hooks/useScrollMemory';
 import { useLocalStorage } from '../Hooks/useLocalStorage';
@@ -49,76 +37,14 @@ import UnfoldMoreIcon from '@mui/icons-material/UnfoldMore';
 import { useLoadable } from '../Hooks/useLoadable';
 import { ProgressBackdrop } from '../Shell/ProgressBackdrop';
 import { useAppNavigate } from '../Hooks/useAppNavigate';
-import PhoneIcon from '@mui/icons-material/Phone';
 import { CustomFieldsFilter } from '../Generic/CustomFieldsFilter/CustomFieldsFilter';
 import { useCustomFieldFilters } from '../Generic/CustomFieldsFilter/useCustomFieldFilters';
 import { matchesCustomFieldFilters } from '../Generic/CustomFieldsFilter/matchesCustomFieldFilters';
-import { TestFamilyBadge } from '../Families/TestFamilyBadge';
 import { useFeatureFlagEnabled } from 'posthog-js/react';
-
-const arrangementPhaseText = new Map<number, string>([
-  [ArrangementPhase.SettingUp, 'Setting Up'],
-  [ArrangementPhase.ReadyToStart, 'Ready To Start'],
-  [ArrangementPhase.Started, 'Started'],
-  [ArrangementPhase.Ended, 'Ended'],
-]);
-
-function allArrangements(partneringFamilyInfo: PartneringFamilyInfo) {
-  const closed = (partneringFamilyInfo.closedV1Cases ?? []).flatMap((v1Case) =>
-    (v1Case.arrangements ?? []).map((arrangement) => ({
-      v1CaseId: v1Case.id!,
-      arrangement,
-    }))
-  );
-
-  const openV1Case = partneringFamilyInfo.openV1Case;
-  const open = (openV1Case?.arrangements ?? []).map((arrangement) => ({
-    v1CaseId: openV1Case!.id!,
-    arrangement,
-  }));
-
-  return [...closed, ...open];
-}
-
-function matchingArrangements(
-  partneringFamilyInfo: PartneringFamilyInfo,
-  arrangementsFilter: 'All' | 'Intake' | 'Active' | 'Setup' | 'Active + Setup'
-) {
-  if (arrangementsFilter === 'Intake') {
-    return [];
-  }
-
-  if (arrangementsFilter === 'All') {
-    return allArrangements(partneringFamilyInfo);
-  }
-
-  const openV1Case = partneringFamilyInfo.openV1Case;
-  const openArrangements = openV1Case?.arrangements ?? [];
-
-  const matchesPhase = (arrangement: Arrangement) => {
-    if (arrangementsFilter === 'Active') {
-      return arrangement.phase === ArrangementPhase.Started;
-    }
-
-    if (arrangementsFilter === 'Setup') {
-      return (
-        arrangement.phase === ArrangementPhase.SettingUp ||
-        arrangement.phase === ArrangementPhase.ReadyToStart
-      );
-    }
-
-    return (
-      arrangement.phase === ArrangementPhase.Started ||
-      arrangement.phase === ArrangementPhase.SettingUp ||
-      arrangement.phase === ArrangementPhase.ReadyToStart
-    );
-  };
-
-  return openArrangements.filter(matchesPhase).map((arrangement) => ({
-    v1CaseId: openV1Case!.id!,
-    arrangement,
-  }));
-}
+import { forceCheck } from 'react-lazyload';
+import { PartneringFamilyTableItem } from './PartneringFamilies/PartneringFamilyTableItem';
+import { arrangementStatusSummary } from './PartneringFamilies/arrangementStatusSummary';
+import { ArrangementsFilter } from './PartneringFamilies/types';
 
 function PartneringFamilies() {
   const appNavigate = useAppNavigate();
@@ -170,96 +96,6 @@ function PartneringFamilies() {
     appNavigate.family(familyId);
   }
 
-  function arrangementStatusSummary(
-    partneringFamily: PartneringFamilyInfo,
-    phase: ArrangementPhase,
-    type: string
-  ) {
-    const phaseText = arrangementPhaseText.get(phase);
-
-    const statusCount = allArrangements(partneringFamily).filter(
-      (a) =>
-        a.arrangement.phase === phase && a.arrangement.arrangementType === type
-    ).length;
-
-    let statusCountDiv;
-
-    const arrangementZero = 'lightGrey';
-    const arrangementSettingUp = 'grey';
-    const arrangementReady = '#E3AE01';
-    const arrangementStarted = '#01ACFB';
-    const arrangementEnded = 'green';
-
-    if (statusCount > 0) {
-      statusCountDiv = (
-        <b
-          style={{
-            display: 'inline-block',
-            verticalAlign: 'middle',
-            color:
-              statusCount === 0
-                ? arrangementZero
-                : phase === ArrangementPhase.SettingUp
-                  ? arrangementSettingUp
-                  : phase === ArrangementPhase.ReadyToStart
-                    ? arrangementReady
-                    : phase === ArrangementPhase.Started
-                      ? arrangementStarted
-                      : arrangementEnded,
-          }}
-        >
-          {statusCount}
-        </b>
-      );
-    }
-
-    return (
-      <div style={{ width: 36 }}>
-        <Tooltip title={phaseText!}>
-          {phase === ArrangementPhase.SettingUp ? (
-            <PendingOutlinedIcon
-              sx={{
-                display: 'inline-block',
-                verticalAlign: 'middle',
-                marginRight: '3px',
-                color:
-                  statusCount === 0 ? arrangementZero : arrangementSettingUp,
-              }}
-            />
-          ) : phase === ArrangementPhase.ReadyToStart ? (
-            <AccessTimeIcon
-              sx={{
-                display: 'inline-block',
-                verticalAlign: 'middle',
-                marginRight: '3px',
-                color: statusCount === 0 ? arrangementZero : arrangementReady,
-              }}
-            />
-          ) : phase === ArrangementPhase.Started ? (
-            <PlayCircleFilledIcon
-              sx={{
-                display: 'inline-block',
-                verticalAlign: 'middle',
-                marginRight: '3px',
-                color: statusCount === 0 ? arrangementZero : arrangementStarted,
-              }}
-            />
-          ) : (
-            <CheckCircleOutlinedIcon
-              sx={{
-                display: 'inline-block',
-                verticalAlign: 'middle',
-                marginRight: '3px',
-                color: statusCount === 0 ? arrangementZero : arrangementEnded,
-              }}
-            />
-          )}
-        </Tooltip>
-        {statusCountDiv}
-      </div>
-    );
-  }
-
   const [
     createPartneringFamilyDialogOpen,
     setCreatePartneringFamilyDialogOpen,
@@ -278,9 +114,10 @@ function PartneringFamilies() {
     }
   };
 
-  const [arrangementsFilter, setArrangementsFilter] = useLocalStorage<
-    'All' | 'Intake' | 'Active' | 'Setup' | 'Active + Setup'
-  >('partnering-families-arrangementsFilter', 'All');
+  const [arrangementsFilter, setArrangementsFilter] = useLocalStorage<ArrangementsFilter>(
+    'partnering-families-arrangementsFilter',
+    'All'
+  );
   const filteredPartneringFamiliesWithActiveOrAllFilter =
     filteredPartneringFamilies
       .filter((family) =>
@@ -333,6 +170,10 @@ function PartneringFamilies() {
             return true;
         }
       });
+
+  React.useEffect(() => {
+    forceCheck();
+  }, [arrangementsFilter, filterText, selectedCustomFieldValuesByField]);
 
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
@@ -479,212 +320,22 @@ function PartneringFamilies() {
 
             <TableBody>
               {filteredPartneringFamiliesWithActiveOrAllFilter.map(
-                (partneringFamily) => {
-                  const primaryFamilyContactPersonId =
-                    partneringFamily.family?.primaryFamilyContactPersonId;
-                  const primaryContactPerson =
-                    partneringFamily.family?.adults?.find(
-                      (adult) =>
-                        adult.item1?.id === primaryFamilyContactPersonId
-                    )?.item1;
-                  const phoneNumber =
-                    primaryContactPerson?.phoneNumbers?.[0]?.number;
-                  const comments =
-                    partneringFamily.partneringFamilyInfo?.openV1Case
-                      ?.comments ?? '';
-
-                  const preview =
-                    comments.length > 500
-                      ? comments.slice(0, 500) + '...'
-                      : comments;
-
-                  return (
-                    <React.Fragment key={partneringFamily.family?.id}>
-                      <TableRow
-                        sx={{ backgroundColor: '#eef', cursor: 'pointer' }}
-                        onClick={() => openFamily(partneringFamily.family!.id!)}
-                      >
-                        <TableCell>
-                          <span
-                            style={{
-                              display: 'inline-flex',
-                              alignItems: 'center',
-                              gap: '10px',
-                            }}
-                          >
-                            <FamilyName family={partneringFamily} />
-                            {phoneNumber && (
-                              <>
-                                <PhoneIcon
-                                  sx={{
-                                    color: '#8B0000',
-                                    fontSize: 16,
-                                    marginLeft: '5px',
-                                  }}
-                                />
-                                <span style={{ color: 'black' }}>
-                                  {phoneNumber}
-                                </span>
-                              </>
-                            )}
-                            {updateTestFamilyFlagEnabled && (
-                              <TestFamilyBadge family={partneringFamily} />
-                            )}
-                          </span>
-                        </TableCell>
-                        <TableCell>
-                          {
-                            partneringFamily.partneringFamilyInfo?.openV1Case
-                              ? 'Open since ' +
-                                format(
-                                  partneringFamily.partneringFamilyInfo
-                                    .openV1Case.openedAtUtc!,
-                                  'MM/dd/yyyy'
-                                )
-                              : 'Closed - ' +
-                                V1CaseCloseReason[
-                                  partneringFamily.partneringFamilyInfo!
-                                    .closedV1Cases![
-                                    partneringFamily.partneringFamilyInfo!
-                                      .closedV1Cases!.length - 1
-                                  ]!.closeReason!
-                                ]
-                            //TODO: "Closed on " + format(partneringFamily.partneringFamilyInfo?.closedV1Cases?.[0]?.closedUtc) -- needs a new calculated property
-                          }
-                        </TableCell>
-                        {!expandedView ? (
-                          arrangementTypes?.map((arrangementType) => (
-                            <TableCell key={arrangementType}>
-                              <div
-                                style={{
-                                  display: 'flex',
-                                  rowGap: '5px',
-                                  columnGap: '8px',
-                                  flexWrap: 'wrap',
-                                  justifyContent: 'flex-start',
-                                  alignItems: 'center',
-                                }}
-                              >
-                                {arrangementStatusSummary(
-                                  partneringFamily.partneringFamilyInfo!,
-                                  ArrangementPhase.SettingUp,
-                                  arrangementType!
-                                )}
-                                <div>
-                                  {arrangementStatusSummary(
-                                    partneringFamily.partneringFamilyInfo!,
-                                    ArrangementPhase.ReadyToStart,
-                                    arrangementType!
-                                  )}
-                                </div>
-                                <div>
-                                  {arrangementStatusSummary(
-                                    partneringFamily.partneringFamilyInfo!,
-                                    ArrangementPhase.Started,
-                                    arrangementType!
-                                  )}
-                                </div>
-                                <div>
-                                  {arrangementStatusSummary(
-                                    partneringFamily.partneringFamilyInfo!,
-                                    ArrangementPhase.Ended,
-                                    arrangementType!
-                                  )}
-                                </div>
-                              </div>
-                            </TableCell>
-                          ))
-                        ) : (
-                          <></>
-                        )}
-                        {referralCustomFields.map((field) => {
-                          const completedFields =
-                            partneringFamily.partneringFamilyInfo?.openV1Case
-                              ?.completedCustomFields ?? [];
-
-                          const matchingField = completedFields.find(
-                            (customField: CompletedCustomFieldInfo) =>
-                              customField.customFieldName === field.name
-                          );
-
-                          const fieldValue = matchingField?.value;
-
-                          const displayValue =
-                            fieldValue === true
-                              ? 'Yes'
-                              : fieldValue === false
-                                ? 'No'
-                                : fieldValue === undefined ||
-                                    fieldValue === null
-                                  ? ''
-                                  : fieldValue.toString();
-
-                          return (
-                            <TableCell
-                              key={field.name}
-                              sx={{ textAlign: 'center' }}
-                            >
-                              {displayValue}
-                            </TableCell>
-                          );
-                        })}
-                      </TableRow>
-                      {expandedView ? (
-                        <TableRow
-                          onClick={() =>
-                            openFamily(partneringFamily.family!.id!)
-                          }
-                        >
-                          <TableCell sx={{ maxWidth: '400px', paddingLeft: 3 }}>
-                            <Box
-                              sx={{
-                                whiteSpace: 'pre-wrap',
-                                overflowWrap: 'break-word',
-                              }}
-                            >
-                              {preview}
-                            </Box>
-                          </TableCell>
-
-                          <TableCell>
-                            <Grid container spacing={2}>
-                              {matchingArrangements(
-                                partneringFamily.partneringFamilyInfo!,
-                                arrangementsFilter
-                              ).map((arrangementEntry) => (
-                                <Grid
-                                  item
-                                  key={arrangementEntry.arrangement.id}
-                                >
-                                  <div
-                                    style={{ cursor: 'pointer' }}
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      appNavigate.family(
-                                        partneringFamily.family!.id!,
-                                        arrangementEntry.v1CaseId,
-                                        arrangementEntry.arrangement.id
-                                      );
-                                    }}
-                                  >
-                                    <ArrangementCard
-                                      summaryOnly
-                                      partneringFamily={partneringFamily}
-                                      v1CaseId={arrangementEntry.v1CaseId}
-                                      arrangement={arrangementEntry.arrangement}
-                                    />
-                                  </div>
-                                </Grid>
-                              ))}
-                            </Grid>
-                          </TableCell>
-                        </TableRow>
-                      ) : (
-                        <></>
-                      )}
-                    </React.Fragment>
-                  );
-                }
+                (partneringFamily) => (
+                  <PartneringFamilyTableItem
+                    key={partneringFamily.family?.id}
+                    partneringFamily={partneringFamily}
+                    arrangementTypes={arrangementTypes}
+                    arrangementsFilter={arrangementsFilter}
+                    expandedView={expandedView}
+                    openArrangement={(familyId, v1CaseId, arrangementId) =>
+                      appNavigate.family(familyId, v1CaseId, arrangementId)
+                    }
+                    openFamily={openFamily}
+                    referralCustomFields={referralCustomFields}
+                    arrangementStatusSummary={arrangementStatusSummary}
+                    updateTestFamilyFlagEnabled={updateTestFamilyFlagEnabled}
+                  />
+                )
               )}
             </TableBody>
           </Table>

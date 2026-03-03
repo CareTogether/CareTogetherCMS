@@ -15,7 +15,6 @@ import {
   Stack,
   ToggleButton,
   ToggleButtonGroup,
-  Typography,
   Box,
 } from '@mui/material';
 import {
@@ -49,7 +48,6 @@ import { useLoadable } from '../../Hooks/useLoadable';
 import { ProgressBackdrop } from '../../Shell/ProgressBackdrop';
 import { selectedLocationContextState } from '../../Model/Data';
 import { useAppNavigate } from '../../Hooks/useAppNavigate';
-import { VolunteerRoleApprovalStatusChip } from '../VolunteerRoleApprovalStatusChip';
 import { useGlobalSnackBar } from '../../Hooks/useGlobalSnackBar';
 import { statusFiltersState } from './statusFiltersState';
 import { checkStatusEquivalence } from './checkStatusEquivalence';
@@ -65,9 +63,9 @@ import { CustomFieldsFilter } from '../../Generic/CustomFieldsFilter/CustomField
 import { useCustomFieldFilters } from '../../Generic/CustomFieldsFilter/useCustomFieldFilters';
 import { matchesCustomFieldFilters } from '../../Generic/CustomFieldsFilter/matchesCustomFieldFilters';
 import { CustomFieldFilterValue } from '../../Generic/CustomFieldsFilter/types';
-import { AgeText } from '../../../src/Families/AgeText';
-import { TestFamilyBadge } from '../../Families/TestFamilyBadge';
 import { useFeatureFlagEnabled } from 'posthog-js/react';
+import { forceCheck } from 'react-lazyload';
+import { VolunteerApprovalTableItem } from './VolunteerApprovalTableItem';
 
 function VolunteerApproval(props: { onOpen: () => void }) {
   const { onOpen } = props;
@@ -393,6 +391,10 @@ function VolunteerApproval(props: { onOpen: () => void }) {
       familyMatchesCustomFieldFilters(family)
   );
 
+  useEffect(() => {
+    forceCheck();
+  }, [customFieldFilters, filterText, roleFilters, statusFilters]);
+
   const selectedFamilies = filteredVolunteerFamilies.filter(
     (family) => !uncheckedFamilies.some((f) => f === family.family!.id!)
   );
@@ -635,299 +637,20 @@ function VolunteerApproval(props: { onOpen: () => void }) {
                 </TableRow>
               </TableHead>
               <TableBody>
-                {filteredVolunteerFamilies.map((volunteerFamily) => {
-                  return (
-                    <React.Fragment key={volunteerFamily.family?.id}>
-                      <TableRow
-                        sx={{ backgroundColor: '#eef', height: '39px' }}
-                        onClick={() => openFamily(volunteerFamily.family!.id!)}
-                      >
-                        {smsMode && (
-                          <TableCell key="-" sx={{ padding: 0, width: '36px' }}>
-                            <Checkbox
-                              size="small"
-                              checked={
-                                !uncheckedFamilies.some(
-                                  (x) => x === volunteerFamily.family!.id!
-                                )
-                              }
-                              onChange={(e) =>
-                                e.target.checked
-                                  ? setUncheckedFamilies(
-                                      uncheckedFamilies.filter(
-                                        (x) => x !== volunteerFamily.family!.id!
-                                      )
-                                    )
-                                  : setUncheckedFamilies(
-                                      uncheckedFamilies.concat(
-                                        volunteerFamily.family!.id!
-                                      )
-                                    )
-                              }
-                              onClick={(e) => e.stopPropagation()}
-                            />
-                          </TableCell>
-                        )}
-                        <TableCell
-                          key="1"
-                          colSpan={1}
-                          sx={{ whiteSpace: 'nowrap' }}
-                        >
-                          <span
-                            style={{
-                              display: 'inline-flex',
-                              alignItems: 'center',
-                              gap: 8,
-                            }}
-                          >
-                            <Typography sx={{ fontWeight: 600 }}>
-                              {familyLastName(volunteerFamily) + ' Family'}
-                            </Typography>
-                            {updateTestFamilyFlagEnabled && (
-                              <TestFamilyBadge family={volunteerFamily} />
-                            )}
-                          </span>
-                        </TableCell>
-                        <TableCell>
-                          {expandedView ? (
-                            roleFilters.map((roleFilter, index) => (
-                              <VolunteerRoleApprovalStatusChip
-                                key={index}
-                                sx={{ margin: '.125rem .25rem .125rem 0' }}
-                                roleName={roleFilter.key}
-                                status={
-                                  volunteerFamily.volunteerFamilyInfo
-                                    ?.familyRoleApprovals?.[roleFilter.key]
-                                    ?.effectiveRoleApprovalStatus
-                                }
-                              />
-                            ))
-                          ) : (
-                            <>
-                              <Grid
-                                container
-                                spacing={2}
-                                sx={{
-                                  height: '50%',
-                                  margin: 0,
-                                  flexGrow: 1,
-                                  justifyContent: 'flex-start',
-                                }}
-                              >
-                                <Grid
-                                  item
-                                  xs={1}
-                                  sx={{
-                                    minWidth: '100px',
-                                    marginLeft: '-1rem',
-                                    marginTop: '-.5rem',
-                                  }}
-                                >
-                                  <Typography
-                                    sx={{
-                                      margin: 0,
-                                      padding: 0,
-                                      minWidth: 'max-content',
-                                    }}
-                                  >
-                                    Family:
-                                  </Typography>
-                                </Grid>
-                                <Grid
-                                  item
-                                  xs={11}
-                                  sx={{
-                                    justifyContent: 'flex-start',
-                                    marginLeft: '-1rem',
-                                    marginTop: '-.5rem',
-                                  }}
-                                >
-                                  {roleFilters.map((roleFilter, index) => (
-                                    <VolunteerRoleApprovalStatusChip
-                                      key={index}
-                                      sx={{
-                                        margin: '.125rem .25rem .125rem 0',
-                                      }}
-                                      roleName={roleFilter.key}
-                                      status={
-                                        volunteerFamily.volunteerFamilyInfo
-                                          ?.familyRoleApprovals?.[
-                                          roleFilter.key
-                                        ]?.effectiveRoleApprovalStatus
-                                      }
-                                    />
-                                  ))}
-                                </Grid>
-                              </Grid>
-                              <Grid
-                                container
-                                spacing={2}
-                                sx={{
-                                  height: '50%',
-                                  margin: 0,
-                                  flexGrow: 1,
-                                  justifyContent: 'flex-start',
-                                }}
-                              >
-                                <Grid
-                                  item
-                                  xs={1}
-                                  sx={{
-                                    minWidth: '100px',
-                                    marginLeft: '-1rem',
-                                    marginTop: '-.5rem',
-                                  }}
-                                >
-                                  <Typography sx={{ margin: 0, padding: 0 }}>
-                                    Individual:
-                                  </Typography>
-                                </Grid>
-                                <Grid
-                                  item
-                                  xs={11}
-                                  sx={{
-                                    justifyContent: 'flex-start',
-                                    marginLeft: '-1rem',
-                                    marginTop: '-.5rem',
-                                  }}
-                                >
-                                  {volunteerFamily.family?.adults
-                                    ?.map((adult) => {
-                                      return Object.entries(
-                                        volunteerFamily.volunteerFamilyInfo
-                                          ?.individualVolunteers?.[
-                                          adult.item1!.id!
-                                        ].approvalStatusByRole || {}
-                                      ).map(([role, roleApprovalStatus]) => (
-                                        <VolunteerRoleApprovalStatusChip
-                                          key={role}
-                                          sx={{
-                                            margin: '.125rem .25rem .125rem 0',
-                                          }}
-                                          roleName={role}
-                                          status={
-                                            roleApprovalStatus.effectiveRoleApprovalStatus
-                                          }
-                                        />
-                                      ));
-                                    })
-                                    .reduce((prev, curr) => {
-                                      if (
-                                        prev.some((x) => x.key === curr[0].key)
-                                      ) {
-                                        return prev;
-                                      }
-                                      return prev.concat(curr);
-                                    }, [] as JSX.Element[])}
-                                </Grid>
-                              </Grid>
-                            </>
-                          )}
-                        </TableCell>
-                        {customFieldNames.map((customFieldName) => {
-                          const familyCustomField =
-                            volunteerFamily.family?.completedCustomFields?.find(
-                              (familyCustomField) =>
-                                familyCustomField?.customFieldName ===
-                                customFieldName
-                            );
-                          const familyCustomFieldValue =
-                            familyCustomField?.value;
-                          if (familyCustomFieldValue === null) {
-                            return (
-                              <TableCell key={customFieldName}></TableCell>
-                            );
-                          }
-                          if (familyCustomFieldValue === true) {
-                            return (
-                              <TableCell key={customFieldName}>Yes</TableCell>
-                            );
-                          }
-                          if (familyCustomFieldValue === false) {
-                            return (
-                              <TableCell key={customFieldName}>No</TableCell>
-                            );
-                          }
-                          return (
-                            <TableCell key={customFieldName}>
-                              {familyCustomFieldValue}
-                            </TableCell>
-                          );
-                        })}
-                      </TableRow>
-                      {expandedView &&
-                        volunteerFamily.family?.adults?.map(
-                          (adult) =>
-                            adult.item1 &&
-                            adult.item1.active && (
-                              <TableRow
-                                key={
-                                  volunteerFamily.family?.id +
-                                  ':' +
-                                  adult.item1.id
-                                }
-                                onClick={() =>
-                                  openFamily(volunteerFamily.family!.id!)
-                                }
-                              >
-                                {smsMode && <TableCell />}
-                                <TableCell>
-                                  {adult.item1.lastName},{' '}
-                                  {adult.item1.firstName}
-                                </TableCell>
-                                <TableCell>
-                                  {Object.entries(
-                                    volunteerFamily.volunteerFamilyInfo
-                                      ?.individualVolunteers?.[adult.item1!.id!]
-                                      .approvalStatusByRole || {}
-                                  ).map(([role, roleApprovalStatus]) => (
-                                    <VolunteerRoleApprovalStatusChip
-                                      key={role}
-                                      roleName={role}
-                                      status={
-                                        roleApprovalStatus.effectiveRoleApprovalStatus
-                                      }
-                                      sx={{
-                                        margin: '.125rem .25rem .125rem 0',
-                                      }}
-                                    />
-                                  ))}
-                                </TableCell>
-                                {customFieldNames.map((fieldName) => (
-                                  <TableCell key={fieldName}></TableCell>
-                                ))}
-                              </TableRow>
-                            )
-                        )}
-                      {expandedView &&
-                        volunteerFamily.family?.children?.map(
-                          (child) =>
-                            child &&
-                            child.active && (
-                              <TableRow
-                                key={
-                                  volunteerFamily.family?.id + ':' + child.id
-                                }
-                                onClick={() =>
-                                  openFamily(volunteerFamily.family!.id!)
-                                }
-                                sx={{ color: 'ddd', fontStyle: 'italic' }}
-                              >
-                                {smsMode && <TableCell />}
-                                <TableCell>
-                                  {child.lastName}, {child.firstName} (age{' '}
-                                  <AgeText age={child.age} />)
-                                </TableCell>
-                                <TableCell></TableCell>
-                                {customFieldNames.map((fieldName) => (
-                                  <TableCell key={fieldName}></TableCell>
-                                ))}
-                              </TableRow>
-                            )
-                        )}
-                    </React.Fragment>
-                  );
-                })}
+                {filteredVolunteerFamilies.map((volunteerFamily) => (
+                  <VolunteerApprovalTableItem
+                    key={volunteerFamily.family?.id}
+                    volunteerFamily={volunteerFamily}
+                    customFieldNames={customFieldNames}
+                    expandedView={expandedView}
+                    smsMode={smsMode}
+                    uncheckedFamilies={uncheckedFamilies}
+                    setUncheckedFamilies={setUncheckedFamilies}
+                    openFamily={openFamily}
+                    roleFilters={roleFilters}
+                    updateTestFamilyFlagEnabled={updateTestFamilyFlagEnabled}
+                  />
+                ))}
               </TableBody>
             </Table>
           </TableContainer>
