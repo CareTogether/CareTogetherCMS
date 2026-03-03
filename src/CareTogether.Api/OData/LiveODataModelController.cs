@@ -1739,7 +1739,7 @@ namespace CareTogether.Api.OData
             });
         }
 
-        private static IEnumerable<ChildLocationRecord> RenderChildLocationRecords(
+        private IEnumerable<ChildLocationRecord> RenderChildLocationRecords(
             Organization organization,
             CombinedFamilyInfo familyInfo,
             Family family,
@@ -1757,18 +1757,59 @@ namespace CareTogether.Api.OData
             {
                 return referralInfo.Arrangements.SelectMany(arrangement =>
                 {
-                    var arrangementRecord = arrangements.Single(arr => arr.Id == arrangement.Id);
+                    var matchingArrangements = arrangements
+                        .Where(arr => arr.Id == arrangement.Id)
+                        .ToArray();
+                    if (matchingArrangements.Length != 1)
+                    {
+                        logger.LogError(
+                            "Expected exactly one arrangement while rendering child location records. Found {MatchCount}. OrganizationId={OrganizationId}, LocationId={LocationId}, FamilyId={FamilyId}, ReferralId={ReferralId}, ArrangementId={ArrangementId}.",
+                            matchingArrangements.Length,
+                            organization.Id,
+                            family.Location.Id,
+                            family.Id,
+                            referralInfo.Id,
+                            arrangement.Id
+                        );
+                        throw new InvalidOperationException(
+                            $"Expected exactly one arrangement for child location record generation. ArrangementId={arrangement.Id}."
+                        );
+                    }
+
+                    var arrangementRecord = matchingArrangements.Single();
                     var arrangementPerson = people.SingleOrDefault(p =>
                         p.Id == arrangement.PartneringFamilyPersonId
                     );
                     return arrangement.ChildLocationHistory.Select(
                         (history, i) =>
                         {
-                            var receivingFamily = families.Single(f =>
-                                f.Id == history.ChildLocationFamilyId
-                                && f.OrganizationId == organization.Id
-                                && f.LocationId == family.Location.Id
-                            );
+                            var matchingFamilies = families
+                                .Where(f =>
+                                    f.Id == history.ChildLocationFamilyId
+                                    && f.OrganizationId == organization.Id
+                                    && f.LocationId == family.Location.Id
+                                )
+                                .ToArray();
+                            if (matchingFamilies.Length != 1)
+                            {
+                                logger.LogError(
+                                    "Expected exactly one receiving family while rendering child location records. Found {MatchCount}. OrganizationId={OrganizationId}, LocationId={LocationId}, FamilyId={FamilyId}, ReferralId={ReferralId}, ArrangementId={ArrangementId}, ChildLocationFamilyId={ChildLocationFamilyId}, ChildId={ChildId}, HistoryTimestampUtc={HistoryTimestampUtc}.",
+                                    matchingFamilies.Length,
+                                    organization.Id,
+                                    family.Location.Id,
+                                    family.Id,
+                                    referralInfo.Id,
+                                    arrangement.Id,
+                                    history.ChildLocationFamilyId,
+                                    arrangement.PartneringFamilyPersonId,
+                                    history.TimestampUtc
+                                );
+                                throw new InvalidOperationException(
+                                    $"Expected exactly one receiving family for child location record generation. ChildLocationFamilyId={history.ChildLocationFamilyId}."
+                                );
+                            }
+
+                            var receivingFamily = matchingFamilies.Single();
                             var nextLocation =
                                 arrangement.ChildLocationHistory.Count > i + 1
                                     ? arrangement.ChildLocationHistory[i + 1]
