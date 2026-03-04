@@ -24,7 +24,7 @@ import {
   CustomField,
   CustomFieldType,
 } from '../GeneratedClient';
-import { CreatePartneringFamilyDialog } from '../V1Cases/CreatePartneringFamilyDrawer';
+import { CreatePartneringFamilyDrawer } from '../V1Cases/CreatePartneringFamilyDrawer';
 import { partneringFamiliesData } from '../Model/V1CasesModel';
 import { useLoadable } from '../Hooks/useLoadable';
 import { EditReferralDrawer } from '../V1Referrals/EditReferralDrawer';
@@ -313,7 +313,7 @@ export function ReferralDetailsPage() {
       )}
 
       {openCreateFamily && (
-        <CreatePartneringFamilyDialog
+        <CreatePartneringFamilyDrawer
           onClose={async (familyId?: string) => {
             setOpenCreateFamily(false);
 
