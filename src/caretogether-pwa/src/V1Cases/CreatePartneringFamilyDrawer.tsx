@@ -39,7 +39,7 @@ import { useBackdrop } from '../Hooks/useBackdrop';
 import { subYears } from 'date-fns';
 import { AddressFormFields } from '../Families/AddressEditor';
 
-interface CreatePartneringFamilyDialogProps {
+interface CreatePartneringFamilyDrawerProps {
   onClose: (partneringFamilyId?: string) => void;
 }
 
@@ -47,9 +47,9 @@ function optional(arg: string) {
   return arg.length > 0 ? arg : null;
 }
 
-export function CreatePartneringFamilyDialog({
+export function CreatePartneringFamilyDrawer({
   onClose,
-}: CreatePartneringFamilyDialogProps) {
+}: CreatePartneringFamilyDrawerProps) {
   const [fields, setFields] = useState({
     v1CaseOpenedAtLocal: new Date(),
     firstName: '',

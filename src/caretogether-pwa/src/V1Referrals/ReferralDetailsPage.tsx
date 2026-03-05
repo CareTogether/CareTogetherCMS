@@ -29,7 +29,7 @@ import { MissingRequirementRow } from '../Requirements/MissingRequirementRow';
 import { CompletedRequirementRow } from '../Requirements/CompletedRequirementRow';
 import { ExemptedRequirementRow } from '../Requirements/ExemptedRequirementRow';
 import { V1ReferralContext } from '../Requirements/RequirementContext';
-import { CreatePartneringFamilyDialog } from '../V1Cases/CreatePartneringFamilyDrawer';
+import { CreatePartneringFamilyDrawer } from '../V1Cases/CreatePartneringFamilyDrawer';
 import { partneringFamiliesData } from '../Model/V1CasesModel';
 import { useLoadable } from '../Hooks/useLoadable';
 import { EditReferralDrawer } from '../V1Referrals/EditReferralDrawer';
@@ -373,7 +373,7 @@ export function ReferralDetailsPage() {
         </Grid>
       </Grid>
       {openCreateFamily && (
-        <CreatePartneringFamilyDialog
+        <CreatePartneringFamilyDrawer
           onClose={async (familyId?: string) => {
             setOpenCreateFamily(false);
 

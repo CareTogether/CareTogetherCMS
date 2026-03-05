@@ -33,7 +33,7 @@ import {
 } from '../GeneratedClient';
 import { FamilyName } from '../Families/FamilyName';
 import { ArrangementCard } from './Arrangements/ArrangementCard';
-import { CreatePartneringFamilyDialog } from './CreatePartneringFamilyDrawer';
+import { CreatePartneringFamilyDrawer } from './CreatePartneringFamilyDrawer';
 import { useScrollMemory } from '../Hooks/useScrollMemory';
 import { useLocalStorage } from '../Hooks/useLocalStorage';
 import { policyData } from '../Model/ConfigurationModel';
@@ -709,7 +709,7 @@ function PartneringFamilies() {
         </TableContainer>
 
         {createPartneringFamilyDialogOpen && (
-          <CreatePartneringFamilyDialog
+          <CreatePartneringFamilyDrawer
             onClose={(partneringFamilyId) => {
               setCreatePartneringFamilyDialogOpen(false);
               partneringFamilyId && openFamily(partneringFamilyId);
