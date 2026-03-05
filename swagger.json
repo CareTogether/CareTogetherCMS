@@ -4819,7 +4819,9 @@
           "createdAtUtc",
           "title",
           "status",
-          "completedCustomFields"
+          "completedCustomFields",
+          "completedRequirements",
+          "exemptedRequirements"
         ],
         "properties": {
           "referralId": {
@@ -4863,6 +4865,18 @@
             "type": "object",
             "additionalProperties": {
               "$ref": "#/components/schemas/CompletedCustomFieldInfo"
+            }
+          },
+          "completedRequirements": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CompletedRequirementInfo"
+            }
+          },
+          "exemptedRequirements": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ExemptedRequirementInfo"
             }
           }
         }
@@ -8027,8 +8041,12 @@
           "mapping": {
             "AcceptV1Referral": "#/components/schemas/AcceptV1Referral",
             "CloseV1Referral": "#/components/schemas/CloseV1Referral",
+            "CompleteReferralRequirement": "#/components/schemas/CompleteReferralRequirement2",
             "CreateV1Referral": "#/components/schemas/CreateV1Referral",
+            "ExemptReferralRequirement": "#/components/schemas/ExemptReferralRequirement2",
+            "MarkReferralRequirementIncomplete": "#/components/schemas/MarkReferralRequirementIncomplete2",
             "ReopenV1Referral": "#/components/schemas/ReopenV1Referral",
+            "UnexemptReferralRequirement": "#/components/schemas/UnexemptReferralRequirement2",
             "UpdateCustomV1ReferralField": "#/components/schemas/UpdateCustomV1ReferralField",
             "UpdateV1ReferralDetails": "#/components/schemas/UpdateV1ReferralDetails",
             "UpdateV1ReferralFamily": "#/components/schemas/UpdateV1ReferralFamily"
@@ -8094,6 +8112,45 @@
           }
         ]
       },
+      "CompleteReferralRequirement2": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/V1ReferralCommand"
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "completedRequirementId",
+              "requirementName",
+              "completedAtUtc"
+            ],
+            "properties": {
+              "completedRequirementId": {
+                "type": "string",
+                "format": "guid"
+              },
+              "requirementName": {
+                "type": "string"
+              },
+              "completedAtUtc": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "uploadedDocumentId": {
+                "type": "string",
+                "format": "guid",
+                "nullable": true
+              },
+              "noteId": {
+                "type": "string",
+                "format": "guid",
+                "nullable": true
+              }
+            }
+          }
+        ]
+      },
       "CreateV1Referral": {
         "allOf": [
           {
@@ -8127,6 +8184,58 @@
           }
         ]
       },
+      "ExemptReferralRequirement2": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/V1ReferralCommand"
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "requirementName",
+              "additionalComments"
+            ],
+            "properties": {
+              "requirementName": {
+                "type": "string"
+              },
+              "additionalComments": {
+                "type": "string"
+              },
+              "exemptionExpiresAtUtc": {
+                "type": "string",
+                "format": "date-time",
+                "nullable": true
+              }
+            }
+          }
+        ]
+      },
+      "MarkReferralRequirementIncomplete2": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/V1ReferralCommand"
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "completedRequirementId",
+              "requirementName"
+            ],
+            "properties": {
+              "completedRequirementId": {
+                "type": "string",
+                "format": "guid"
+              },
+              "requirementName": {
+                "type": "string"
+              }
+            }
+          }
+        ]
+      },
       "ReopenV1Referral": {
         "allOf": [
           {
@@ -8142,6 +8251,25 @@
               "reopenedAtUtc": {
                 "type": "string",
                 "format": "date-time"
+              }
+            }
+          }
+        ]
+      },
+      "UnexemptReferralRequirement2": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/V1ReferralCommand"
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "requirementName"
+            ],
+            "properties": {
+              "requirementName": {
+                "type": "string"
               }
             }
           }

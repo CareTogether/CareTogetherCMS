@@ -53,10 +53,7 @@ import { Masonry } from '@mui/lab';
 import { MissingRequirementRow } from '../Requirements/MissingRequirementRow';
 import { ExemptedRequirementRow } from '../Requirements/ExemptedRequirementRow';
 import { CompletedRequirementRow } from '../Requirements/CompletedRequirementRow';
-import {
-  V1CaseContext as V1CaseContext,
-  VolunteerFamilyContext,
-} from '../Requirements/RequirementContext';
+import { VolunteerFamilyContext } from '../Requirements/RequirementContext';
 import { ActivityTimeline } from '../Activities/ActivityTimeline';
 import { V1CaseComments } from '../V1Cases/V1CaseComments';
 import { PrimaryContactEditor } from './PrimaryContactEditor';
@@ -275,15 +272,6 @@ export function FamilyScreen() {
       removalReason: removalReason,
       removalAdditionalComments: removalAdditionalComments,
     });
-  }
-
-  let v1CaseRequirementContext: V1CaseContext | undefined;
-  if (selectedV1Case) {
-    v1CaseRequirementContext = {
-      kind: 'V1Case',
-      partneringFamilyId: familyId,
-      v1CaseId: selectedV1Case.id!,
-    };
   }
 
   const volunteerFamilyRequirementContext: VolunteerFamilyContext = {
@@ -770,52 +758,6 @@ export function FamilyScreen() {
           </Grid>
 
           <Grid container spacing={0}>
-            {permissions(Permission.ViewV1CaseProgress) && selectedV1Case && (
-              <>
-                <Grid item xs={12} sm={6} md={4} style={{ paddingRight: 20 }}>
-                  <Typography
-                    className="ph-unmask"
-                    variant="h3"
-                    style={{ marginBottom: 0 }}
-                  >
-                    Incomplete
-                  </Typography>
-                  {selectedV1Case?.missingRequirements?.map((missing, i) => (
-                    <MissingRequirementRow
-                      key={`${missing}:${i}`}
-                      requirement={missing}
-                      context={v1CaseRequirementContext!}
-                      v1CaseId={selectedV1Case.id}
-                    />
-                  ))}
-                </Grid>
-                <Grid item xs={12} sm={6} md={4} style={{ paddingRight: 20 }}>
-                  <Typography
-                    className="ph-unmask"
-                    variant="h3"
-                    style={{ marginBottom: 0 }}
-                  >
-                    Completed
-                  </Typography>
-                  {selectedV1Case?.completedRequirements?.map(
-                    (completed, i) => (
-                      <CompletedRequirementRow
-                        key={`${completed.completedRequirementId}:${i}`}
-                        requirement={completed}
-                        context={v1CaseRequirementContext!}
-                      />
-                    )
-                  )}
-                  {selectedV1Case?.exemptedRequirements?.map((exempted, i) => (
-                    <ExemptedRequirementRow
-                      key={`${exempted.requirementName}:${i}`}
-                      requirement={exempted}
-                      context={v1CaseRequirementContext!}
-                    />
-                  ))}
-                </Grid>
-              </>
-            )}
             {family.volunteerFamilyInfo && (
               <>
                 <Grid item xs={12}>

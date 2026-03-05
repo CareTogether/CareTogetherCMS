@@ -9,6 +9,11 @@ export interface V1CaseContext {
   v1CaseId: string;
 }
 
+export interface V1ReferralContext {
+  kind: 'V1Referral';
+  referralId: string;
+}
+
 export interface ArrangementContext {
   kind: 'Arrangement';
   partneringFamilyId: string;
@@ -45,6 +50,7 @@ export interface IndividualVolunteerContext {
 
 export type RequirementContext =
   | V1CaseContext
+  | V1ReferralContext
   | ArrangementContext
   | FamilyVolunteerAssignmentContext
   | IndividualVolunteerAssignmentContext

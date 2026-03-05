@@ -44,6 +44,7 @@ import { familyNameString } from '../Families/FamilyName';
 import { add, format, formatDuration, formatRelative, isValid } from 'date-fns';
 import { selectedLocationContextState } from '../Model/Data';
 import { ValidateDatePicker } from '../Generic/Forms/ValidateDatePicker';
+import { useV1ReferralsModel } from '../Model/V1ReferralsModel';
 
 type MissingRequirementDialogProps = {
   handle: DialogHandle;
@@ -64,6 +65,7 @@ export function MissingRequirementDialog({
   const directory = useDirectoryModel();
   const v1Cases = useV1CasesModel();
   const volunteers = useVolunteersModel();
+  const referrals = useV1ReferralsModel();
 
   const now = new Date();
 
@@ -94,7 +96,10 @@ export function MissingRequirementDialog({
     context.kind === 'Family Volunteer Assignment' ||
     context.kind === 'Individual Volunteer Assignment'
       ? context.partneringFamilyId
-      : context.volunteerFamilyId;
+      : context.kind === 'Volunteer Family' ||
+          context.kind === 'Individual Volunteer'
+        ? context.volunteerFamilyId
+        : '';
   const contextFamily = familyLookup(contextFamilyId);
 
   const personLookup = usePersonLookup().bind(null, contextFamilyId);
@@ -218,10 +223,9 @@ export function MissingRequirementDialog({
       );
     }
     switch (context.kind) {
-      case 'V1Case':
-        await v1Cases.completeV1CaseRequirement(
-          contextFamilyId,
-          context.v1CaseId,
+      case 'V1Referral':
+        await referrals.completeReferralRequirement(
+          context.referralId,
           requirementName,
           policy,
           completedAtLocal!,
@@ -293,10 +297,9 @@ export function MissingRequirementDialog({
 
   async function exempt() {
     switch (context.kind) {
-      case 'V1Case':
-        await v1Cases.exemptV1CaseRequirement(
-          contextFamilyId,
-          context.v1CaseId,
+      case 'V1Referral':
+        await referrals.exemptReferralRequirement(
+          context.referralId,
           requirementName,
           additionalComments,
           exemptionExpiresAtLocal
@@ -510,7 +513,7 @@ export function MissingRequirementDialog({
                       Upload new...
                     </MenuItem>
                     <Divider />
-                    {contextFamily!.uploadedDocuments?.map((document) => (
+                    {contextFamily?.uploadedDocuments?.map((document) => (
                       <MenuItem
                         key={document.uploadedDocumentId}
                         value={document.uploadedDocumentId}

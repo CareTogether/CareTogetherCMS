@@ -7704,6 +7704,8 @@ export class V1Referral implements IV1Referral {
     closedAtUtc?: Date | undefined;
     closeReason?: string | undefined;
     completedCustomFields!: { [key: string]: CompletedCustomFieldInfo; };
+    completedRequirements!: CompletedRequirementInfo[];
+    exemptedRequirements!: ExemptedRequirementInfo[];
 
     constructor(data?: IV1Referral) {
         if (data) {
@@ -7714,6 +7716,8 @@ export class V1Referral implements IV1Referral {
         }
         if (!data) {
             this.completedCustomFields = {};
+            this.completedRequirements = [];
+            this.exemptedRequirements = [];
         }
     }
 
@@ -7734,6 +7738,16 @@ export class V1Referral implements IV1Referral {
                     if (_data["completedCustomFields"].hasOwnProperty(key))
                         (<any>this.completedCustomFields)![key] = _data["completedCustomFields"][key] ? CompletedCustomFieldInfo.fromJS(_data["completedCustomFields"][key]) : new CompletedCustomFieldInfo();
                 }
+            }
+            if (Array.isArray(_data["completedRequirements"])) {
+                this.completedRequirements = [] as any;
+                for (let item of _data["completedRequirements"])
+                    this.completedRequirements!.push(CompletedRequirementInfo.fromJS(item));
+            }
+            if (Array.isArray(_data["exemptedRequirements"])) {
+                this.exemptedRequirements = [] as any;
+                for (let item of _data["exemptedRequirements"])
+                    this.exemptedRequirements!.push(ExemptedRequirementInfo.fromJS(item));
             }
         }
     }
@@ -7763,6 +7777,16 @@ export class V1Referral implements IV1Referral {
                     (<any>data["completedCustomFields"])[key] = this.completedCustomFields[key] ? this.completedCustomFields[key].toJSON() : <any>undefined;
             }
         }
+        if (Array.isArray(this.completedRequirements)) {
+            data["completedRequirements"] = [];
+            for (let item of this.completedRequirements)
+                data["completedRequirements"].push(item.toJSON());
+        }
+        if (Array.isArray(this.exemptedRequirements)) {
+            data["exemptedRequirements"] = [];
+            for (let item of this.exemptedRequirements)
+                data["exemptedRequirements"].push(item.toJSON());
+        }
         return data;
     }
 }
@@ -7778,6 +7802,8 @@ export interface IV1Referral {
     closedAtUtc?: Date | undefined;
     closeReason?: string | undefined;
     completedCustomFields: { [key: string]: CompletedCustomFieldInfo; };
+    completedRequirements: CompletedRequirementInfo[];
+    exemptedRequirements: ExemptedRequirementInfo[];
 }
 
 export enum V1ReferralStatus {
@@ -13124,13 +13150,33 @@ export abstract class V1ReferralCommand implements IV1ReferralCommand {
             result.init(data);
             return result;
         }
+        if (data["discriminator"] === "CompleteReferralRequirement") {
+            let result = new CompleteReferralRequirement2();
+            result.init(data);
+            return result;
+        }
         if (data["discriminator"] === "CreateV1Referral") {
             let result = new CreateV1Referral();
             result.init(data);
             return result;
         }
+        if (data["discriminator"] === "ExemptReferralRequirement") {
+            let result = new ExemptReferralRequirement2();
+            result.init(data);
+            return result;
+        }
+        if (data["discriminator"] === "MarkReferralRequirementIncomplete") {
+            let result = new MarkReferralRequirementIncomplete2();
+            result.init(data);
+            return result;
+        }
         if (data["discriminator"] === "ReopenV1Referral") {
             let result = new ReopenV1Referral();
+            result.init(data);
+            return result;
+        }
+        if (data["discriminator"] === "UnexemptReferralRequirement") {
+            let result = new UnexemptReferralRequirement2();
             result.init(data);
             return result;
         }
@@ -13236,6 +13282,56 @@ export interface ICloseV1Referral extends IV1ReferralCommand {
     closeReason: string;
 }
 
+export class CompleteReferralRequirement2 extends V1ReferralCommand implements ICompleteReferralRequirement2 {
+    completedRequirementId!: string;
+    requirementName!: string;
+    completedAtUtc!: Date;
+    uploadedDocumentId?: string | undefined;
+    noteId?: string | undefined;
+
+    constructor(data?: ICompleteReferralRequirement2) {
+        super(data);
+        this._discriminator = "CompleteReferralRequirement";
+    }
+
+    init(_data?: any) {
+        super.init(_data);
+        if (_data) {
+            this.completedRequirementId = _data["completedRequirementId"];
+            this.requirementName = _data["requirementName"];
+            this.completedAtUtc = _data["completedAtUtc"] ? new Date(_data["completedAtUtc"].toString()) : <any>undefined;
+            this.uploadedDocumentId = _data["uploadedDocumentId"];
+            this.noteId = _data["noteId"];
+        }
+    }
+
+    static fromJS(data: any): CompleteReferralRequirement2 {
+        data = typeof data === 'object' ? data : {};
+        let result = new CompleteReferralRequirement2();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["completedRequirementId"] = this.completedRequirementId;
+        data["requirementName"] = this.requirementName;
+        data["completedAtUtc"] = this.completedAtUtc ? this.completedAtUtc.toISOString() : <any>undefined;
+        data["uploadedDocumentId"] = this.uploadedDocumentId;
+        data["noteId"] = this.noteId;
+        super.toJSON(data);
+        return data;
+    }
+}
+
+export interface ICompleteReferralRequirement2 extends IV1ReferralCommand {
+    completedRequirementId: string;
+    requirementName: string;
+    completedAtUtc: Date;
+    uploadedDocumentId?: string | undefined;
+    noteId?: string | undefined;
+}
+
 export class CreateV1Referral extends V1ReferralCommand implements ICreateV1Referral {
     familyId?: string | undefined;
     createdAtUtc!: Date;
@@ -13282,6 +13378,86 @@ export interface ICreateV1Referral extends IV1ReferralCommand {
     comment?: string | undefined;
 }
 
+export class ExemptReferralRequirement2 extends V1ReferralCommand implements IExemptReferralRequirement2 {
+    requirementName!: string;
+    additionalComments!: string;
+    exemptionExpiresAtUtc?: Date | undefined;
+
+    constructor(data?: IExemptReferralRequirement2) {
+        super(data);
+        this._discriminator = "ExemptReferralRequirement";
+    }
+
+    init(_data?: any) {
+        super.init(_data);
+        if (_data) {
+            this.requirementName = _data["requirementName"];
+            this.additionalComments = _data["additionalComments"];
+            this.exemptionExpiresAtUtc = _data["exemptionExpiresAtUtc"] ? new Date(_data["exemptionExpiresAtUtc"].toString()) : <any>undefined;
+        }
+    }
+
+    static fromJS(data: any): ExemptReferralRequirement2 {
+        data = typeof data === 'object' ? data : {};
+        let result = new ExemptReferralRequirement2();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["requirementName"] = this.requirementName;
+        data["additionalComments"] = this.additionalComments;
+        data["exemptionExpiresAtUtc"] = this.exemptionExpiresAtUtc ? this.exemptionExpiresAtUtc.toISOString() : <any>undefined;
+        super.toJSON(data);
+        return data;
+    }
+}
+
+export interface IExemptReferralRequirement2 extends IV1ReferralCommand {
+    requirementName: string;
+    additionalComments: string;
+    exemptionExpiresAtUtc?: Date | undefined;
+}
+
+export class MarkReferralRequirementIncomplete2 extends V1ReferralCommand implements IMarkReferralRequirementIncomplete2 {
+    completedRequirementId!: string;
+    requirementName!: string;
+
+    constructor(data?: IMarkReferralRequirementIncomplete2) {
+        super(data);
+        this._discriminator = "MarkReferralRequirementIncomplete";
+    }
+
+    init(_data?: any) {
+        super.init(_data);
+        if (_data) {
+            this.completedRequirementId = _data["completedRequirementId"];
+            this.requirementName = _data["requirementName"];
+        }
+    }
+
+    static fromJS(data: any): MarkReferralRequirementIncomplete2 {
+        data = typeof data === 'object' ? data : {};
+        let result = new MarkReferralRequirementIncomplete2();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["completedRequirementId"] = this.completedRequirementId;
+        data["requirementName"] = this.requirementName;
+        super.toJSON(data);
+        return data;
+    }
+}
+
+export interface IMarkReferralRequirementIncomplete2 extends IV1ReferralCommand {
+    completedRequirementId: string;
+    requirementName: string;
+}
+
 export class ReopenV1Referral extends V1ReferralCommand implements IReopenV1Referral {
     reopenedAtUtc!: Date;
 
@@ -13314,6 +13490,40 @@ export class ReopenV1Referral extends V1ReferralCommand implements IReopenV1Refe
 
 export interface IReopenV1Referral extends IV1ReferralCommand {
     reopenedAtUtc: Date;
+}
+
+export class UnexemptReferralRequirement2 extends V1ReferralCommand implements IUnexemptReferralRequirement2 {
+    requirementName!: string;
+
+    constructor(data?: IUnexemptReferralRequirement2) {
+        super(data);
+        this._discriminator = "UnexemptReferralRequirement";
+    }
+
+    init(_data?: any) {
+        super.init(_data);
+        if (_data) {
+            this.requirementName = _data["requirementName"];
+        }
+    }
+
+    static fromJS(data: any): UnexemptReferralRequirement2 {
+        data = typeof data === 'object' ? data : {};
+        let result = new UnexemptReferralRequirement2();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["requirementName"] = this.requirementName;
+        super.toJSON(data);
+        return data;
+    }
+}
+
+export interface IUnexemptReferralRequirement2 extends IV1ReferralCommand {
+    requirementName: string;
 }
 
 export class UpdateCustomV1ReferralField extends V1ReferralCommand implements IUpdateCustomV1ReferralField {

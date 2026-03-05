@@ -139,10 +139,10 @@ namespace CareTogether.Engines.Authorization
                 command switch
                 {
                     CreateReferral => Permission.CreateV1Case,
-                    CompleteReferralRequirement => Permission.EditV1CaseRequirementCompletion,
-                    MarkReferralRequirementIncomplete => Permission.EditV1CaseRequirementCompletion,
-                    ExemptReferralRequirement => Permission.EditV1CaseRequirementExemption,
-                    UnexemptReferralRequirement => Permission.EditV1CaseRequirementExemption,
+                  CareTogether.Resources.V1Cases.CompleteReferralRequirement c => Permission.EditV1CaseRequirementCompletion,
+CareTogether.Resources.V1Cases.MarkReferralRequirementIncomplete c => Permission.EditV1CaseRequirementCompletion,
+CareTogether.Resources.V1Cases.ExemptReferralRequirement c => Permission.EditV1CaseRequirementExemption,
+CareTogether.Resources.V1Cases.UnexemptReferralRequirement c => Permission.EditV1CaseRequirementExemption,
                     UpdateCustomReferralField => Permission.EditV1Case,
                     UpdateReferralComments => Permission.EditV1Case,
                     CloseReferral => Permission.CloseV1Case,
@@ -247,6 +247,11 @@ public async Task<bool> AuthorizeV1ReferralCommandAsync(
 
             CloseV1Referral => Permission.CloseV1Referral,
             ReopenV1Referral => Permission.ReopenV1Referral,
+CareTogether.Resources.V1Referrals.CompleteReferralRequirement c => Permission.EditV1CaseRequirementCompletion,
+CareTogether.Resources.V1Referrals.MarkReferralRequirementIncomplete c => Permission.EditV1CaseRequirementCompletion,
+CareTogether.Resources.V1Referrals.ExemptReferralRequirement c => Permission.EditV1CaseRequirementExemption,
+CareTogether.Resources.V1Referrals.UnexemptReferralRequirement c => Permission.EditV1CaseRequirementExemption,
+
             _ => throw new NotImplementedException(
                 $"The command type '{command.GetType().FullName}' has not been implemented."
             ),

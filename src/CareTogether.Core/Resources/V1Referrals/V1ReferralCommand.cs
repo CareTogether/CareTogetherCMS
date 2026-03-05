@@ -56,4 +56,31 @@ public sealed record UpdateV1ReferralDetails(
         CustomFieldType CustomFieldType,
         object? Value
     ) : V1ReferralCommand(ReferralId);
+
+    public sealed record CompleteReferralRequirement(
+    Guid ReferralId,
+    Guid CompletedRequirementId,
+    string RequirementName,
+    DateTime CompletedAtUtc,
+    Guid? UploadedDocumentId,
+    Guid? NoteId
+) : V1ReferralCommand(ReferralId);
+
+public sealed record MarkReferralRequirementIncomplete(
+    Guid ReferralId,
+    Guid CompletedRequirementId,
+    string RequirementName
+) : V1ReferralCommand(ReferralId);
+
+public sealed record ExemptReferralRequirement(
+    Guid ReferralId,
+    string RequirementName,
+    string AdditionalComments,
+    DateTime? ExemptionExpiresAtUtc
+) : V1ReferralCommand(ReferralId);
+
+public sealed record UnexemptReferralRequirement(
+    Guid ReferralId,
+    string RequirementName
+) : V1ReferralCommand(ReferralId);
 }

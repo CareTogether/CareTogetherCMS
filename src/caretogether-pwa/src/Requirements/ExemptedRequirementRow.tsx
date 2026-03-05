@@ -33,7 +33,10 @@ export function ExemptedRequirementRow({
       context.kind === 'Family Volunteer Assignment' ||
       context.kind === 'Individual Volunteer Assignment'
       ? context.partneringFamilyId
-      : context.volunteerFamilyId
+      : context.kind === 'Volunteer Family' ||
+          context.kind === 'Individual Volunteer'
+        ? context.volunteerFamilyId
+        : ''
   );
 
   const dialogHandle = useDialogHandle();

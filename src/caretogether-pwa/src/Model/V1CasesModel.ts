@@ -3,7 +3,6 @@ import {
   V1CaseCommand,
   ArrangementsCommand,
   ActionRequirement,
-  CompleteReferralRequirement as CompleteV1CaseRequirement,
   CreateArrangement,
   CompleteArrangementRequirement,
   StartArrangements,
@@ -17,13 +16,10 @@ import {
   ChildLocationPlan,
   UpdateCustomReferralField as UpdateCustomV1CaseField,
   CustomField,
-  ExemptReferralRequirement as ExemptV1CaseRequirement,
-  UnexemptReferralRequirement as UnexemptV1CaseRequirement,
   ExemptArrangementRequirement,
   UnexemptArrangementRequirement,
   MissingArrangementRequirement,
   ExemptedRequirementInfo,
-  MarkReferralRequirementIncomplete as MarkV1CaseRequirementIncomplete,
   CompletedRequirementInfo,
   MarkArrangementRequirementIncomplete,
   CancelArrangementsSetup,
@@ -90,75 +86,6 @@ function useArrangementsCommandCallbackWithLocation<T extends unknown[]>(
 }
 
 export function useV1CasesModel() {
-  const completeV1CaseRequirement = useV1CaseCommandCallbackWithLocation(
-    async (
-      partneringFamilyId: string,
-      v1CaseId: string,
-      requirementName: string,
-      _requirement: ActionRequirement,
-      completedAtLocal: Date,
-      documentId: string | null,
-      noteId: string | null
-    ) => {
-      const command = commandFactory(CompleteV1CaseRequirement, {
-        familyId: partneringFamilyId,
-        referralId: v1CaseId,
-        completedRequirementId: crypto.randomUUID(),
-        requirementName: requirementName,
-        completedAtUtc: completedAtLocal,
-        uploadedDocumentId: documentId ?? undefined,
-        noteId: noteId ?? undefined,
-      });
-      return command;
-    }
-  );
-  const markV1CaseRequirementIncomplete = useV1CaseCommandCallbackWithLocation(
-    async (
-      partneringFamilyId: string,
-      referralId: string,
-      completedRequirement: CompletedRequirementInfo
-    ) => {
-      const command = commandFactory(MarkV1CaseRequirementIncomplete, {
-        familyId: partneringFamilyId,
-        referralId: referralId,
-        requirementName: completedRequirement.requirementName,
-        completedRequirementId: completedRequirement.completedRequirementId,
-      });
-      return command;
-    }
-  );
-  const exemptV1CaseRequirement = useV1CaseCommandCallbackWithLocation(
-    async (
-      partneringFamilyId: string,
-      v1CaseId: string,
-      requirementName: string,
-      additionalComments: string,
-      exemptionExpiresAtLocal: Date | null
-    ) => {
-      const command = commandFactory(ExemptV1CaseRequirement, {
-        familyId: partneringFamilyId,
-        referralId: v1CaseId,
-        requirementName: requirementName,
-        additionalComments: additionalComments,
-        exemptionExpiresAtUtc: exemptionExpiresAtLocal ?? undefined,
-      });
-      return command;
-    }
-  );
-  const unexemptV1CaseRequirement = useV1CaseCommandCallbackWithLocation(
-    async (
-      partneringFamilyId: string,
-      v1CaseId: string,
-      exemptedRequirement: ExemptedRequirementInfo
-    ) => {
-      const command = commandFactory(UnexemptV1CaseRequirement, {
-        familyId: partneringFamilyId,
-        referralId: v1CaseId,
-        requirementName: exemptedRequirement.requirementName,
-      });
-      return command;
-    }
-  );
   const updateCustomV1CaseField = useV1CaseCommandCallbackWithLocation(
     async (
       partneringFamilyId: string,
@@ -947,10 +874,6 @@ export function useV1CasesModel() {
   );
 
   return {
-    completeV1CaseRequirement,
-    markV1CaseRequirementIncomplete,
-    exemptV1CaseRequirement,
-    unexemptV1CaseRequirement,
     updateCustomV1CaseField,
     updateV1CaseComments,
     completeArrangementRequirement,

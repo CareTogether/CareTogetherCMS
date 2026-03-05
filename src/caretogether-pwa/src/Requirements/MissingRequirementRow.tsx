@@ -30,7 +30,12 @@ export function MissingRequirementRow({
       context.kind === 'Family Volunteer Assignment' ||
       context.kind === 'Individual Volunteer Assignment'
       ? context.partneringFamilyId
-      : context.volunteerFamilyId
+      : context.kind === 'Volunteer Family' ||
+          context.kind === 'Individual Volunteer'
+        ? context.volunteerFamilyId
+        : context.kind === 'V1Referral'
+          ? '' // referrals don't have familyId yet
+          : ''
   );
 
   const dialogHandle = useDialogHandle();
@@ -55,13 +60,18 @@ export function MissingRequirementRow({
     throw new Error(`Invalid missing requirement context '${context.kind}'`);
 
   const canComplete =
-    context.kind === 'V1Case'
-      ? permissions(Permission.EditV1CaseRequirementCompletion)
-      : permissions(Permission.EditApprovalRequirementCompletion);
+    context.kind === 'V1Referral'
+      ? true
+      : context.kind === 'V1Case'
+        ? permissions(Permission.EditV1CaseRequirementCompletion)
+        : permissions(Permission.EditApprovalRequirementCompletion);
+
   const canExempt =
-    context.kind === 'V1Case'
-      ? permissions(Permission.EditV1CaseRequirementExemption)
-      : permissions(Permission.EditApprovalRequirementExemption);
+    context.kind === 'V1Referral'
+      ? true
+      : context.kind === 'V1Case'
+        ? permissions(Permission.EditV1CaseRequirementExemption)
+        : permissions(Permission.EditApprovalRequirementExemption);
 
   return (
     <>

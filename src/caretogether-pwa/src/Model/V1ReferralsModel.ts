@@ -8,6 +8,13 @@ import {
   UpdateCustomV1ReferralField,
   CustomField,
   V1ReferralCommand,
+  CompleteReferralRequirement2,
+  MarkReferralRequirementIncomplete2,
+  ExemptReferralRequirement2,
+  UnexemptReferralRequirement2,
+  CompletedRequirementInfo,
+  ExemptedRequirementInfo,
+  ActionRequirement,
 } from '../GeneratedClient';
 import { useAtomicRecordsCommandCallback } from './DirectoryModel';
 import { commandFactory } from './CommandFactory';
@@ -121,6 +128,60 @@ export function useV1ReferralsModel() {
       })
   );
 
+  const completeReferralRequirement = useV1ReferralCommandCallback(
+    async (
+      referralId: string,
+      requirementName: string,
+      _requirement: ActionRequirement,
+      completedAtLocal: Date,
+      documentId: string | null,
+      noteId: string | null
+    ) =>
+      commandFactory(CompleteReferralRequirement2, {
+        referralId,
+        completedRequirementId: crypto.randomUUID(),
+        requirementName: requirementName,
+        completedAtUtc: completedAtLocal,
+        uploadedDocumentId: documentId ?? undefined,
+        noteId: noteId ?? undefined,
+      })
+  );
+
+  const markReferralRequirementIncomplete = useV1ReferralCommandCallback(
+    async (
+      referralId: string,
+      completedRequirement: CompletedRequirementInfo
+    ) =>
+      commandFactory(MarkReferralRequirementIncomplete2, {
+        referralId,
+        requirementName: completedRequirement.requirementName,
+        completedRequirementId: completedRequirement.completedRequirementId,
+      })
+  );
+
+  const exemptReferralRequirement = useV1ReferralCommandCallback(
+    async (
+      referralId: string,
+      requirementName: string,
+      additionalComments: string,
+      exemptionExpiresAtLocal: Date | null
+    ) =>
+      commandFactory(ExemptReferralRequirement2, {
+        referralId,
+        requirementName: requirementName,
+        additionalComments: additionalComments,
+        exemptionExpiresAtUtc: exemptionExpiresAtLocal ?? undefined,
+      })
+  );
+
+  const unexemptReferralRequirement = useV1ReferralCommandCallback(
+    async (referralId: string, exemptedRequirement: ExemptedRequirementInfo) =>
+      commandFactory(UnexemptReferralRequirement2, {
+        referralId,
+        requirementName: exemptedRequirement.requirementName,
+      })
+  );
+
   return {
     createReferral,
     updateCustomReferralField,
@@ -128,5 +189,9 @@ export function useV1ReferralsModel() {
     updateReferralFamily,
     closeReferral,
     reopenReferral,
+    completeReferralRequirement,
+    markReferralRequirementIncomplete,
+    exemptReferralRequirement,
+    unexemptReferralRequirement,
   };
 }

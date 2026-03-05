@@ -24,6 +24,11 @@ import {
   CustomField,
   CustomFieldType,
 } from '../GeneratedClient';
+
+import { MissingRequirementRow } from '../Requirements/MissingRequirementRow';
+import { CompletedRequirementRow } from '../Requirements/CompletedRequirementRow';
+import { ExemptedRequirementRow } from '../Requirements/ExemptedRequirementRow';
+import { V1ReferralContext } from '../Requirements/RequirementContext';
 import { CreatePartneringFamilyDialog } from '../V1Cases/CreatePartneringFamilyDrawer';
 import { partneringFamiliesData } from '../Model/V1CasesModel';
 import { useLoadable } from '../Hooks/useLoadable';
@@ -88,6 +93,15 @@ export function ReferralDetailsPage() {
     return <Typography sx={{ p: 3 }}>Invalid referral.</Typography>;
   }
 
+  let referralRequirementContext: V1ReferralContext | undefined;
+
+  if (referral) {
+    referralRequirementContext = {
+      kind: 'V1Referral',
+      referralId: referral.referralId,
+    };
+  }
+
   if (!referral) {
     return (
       <Box sx={{ p: 3, textAlign: 'center' }}>
@@ -114,6 +128,18 @@ export function ReferralDetailsPage() {
 
   const referralCustomFields: CustomField[] =
     policy.referralPolicy?.customFields ?? [];
+  const referralRequirements =
+    policy.referralPolicy?.intakeRequirements?.filter((req) => {
+      const completed = referral.completedRequirements?.some(
+        (c) => c.requirementName === req.actionName
+      );
+
+      const exempted = referral.exemptedRequirements?.some(
+        (e) => e.requirementName === req.actionName
+      );
+
+      return !completed && !exempted;
+    }) ?? [];
 
   async function handleSelectFamily(familyId: string) {
     if (!referral || working) return;
@@ -267,10 +293,6 @@ export function ReferralDetailsPage() {
 
       {referralCustomFields.length > 0 && (
         <Grid item xs={12} sx={{ mb: 2 }}>
-          <Typography fontWeight={600} sx={{ mb: 1 }}>
-            Referral Custom Fields
-          </Typography>
-
           {referralCustomFields.map((field) => {
             const value = referral.completedCustomFields?.[field.name]?.value;
 
@@ -311,7 +333,45 @@ export function ReferralDetailsPage() {
           </Box>
         </Grid>
       )}
+      <Divider sx={{ width: '100%', my: 3 }} />
 
+      <Grid container spacing={2}>
+        <Grid item xs={12} md={6}>
+          <Typography variant="h6" sx={{ mb: 1 }}>
+            Incomplete Requirements
+          </Typography>
+
+          {referralRequirements.map((requirement) => (
+            <MissingRequirementRow
+              key={requirement.actionName}
+              requirement={requirement}
+              context={referralRequirementContext!}
+            />
+          ))}
+        </Grid>
+
+        <Grid item xs={12} md={6}>
+          <Typography variant="h6" sx={{ mb: 1 }}>
+            Completed Requirements
+          </Typography>
+
+          {referral.completedRequirements?.map((completed, i) => (
+            <CompletedRequirementRow
+              key={`${completed.completedRequirementId}:${i}`}
+              requirement={completed}
+              context={referralRequirementContext!}
+            />
+          ))}
+
+          {referral.exemptedRequirements?.map((exempted, i) => (
+            <ExemptedRequirementRow
+              key={`${exempted.requirementName}:${i}`}
+              requirement={exempted}
+              context={referralRequirementContext!}
+            />
+          ))}
+        </Grid>
+      </Grid>
       {openCreateFamily && (
         <CreatePartneringFamilyDialog
           onClose={async (familyId?: string) => {
