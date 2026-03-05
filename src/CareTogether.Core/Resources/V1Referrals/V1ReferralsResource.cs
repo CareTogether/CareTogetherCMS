@@ -11,9 +11,7 @@ namespace CareTogether.Resources.V1Referrals
     {
         private readonly IEventLog<V1ReferralEvent> eventLog;
 
-        public V1ReferralsResource(
-            IEventLog<V1ReferralEvent> eventLog
-        )
+        public V1ReferralsResource(IEventLog<V1ReferralEvent> eventLog)
         {
             this.eventLog = eventLog;
         }
@@ -31,9 +29,7 @@ namespace CareTogether.Resources.V1Referrals
                 command.ReferralId
             );
 
-            var referral = events.Any()
-                ? V1Referral.Rehydrate(events)
-                : null;
+            var referral = events.Any() ? V1Referral.Rehydrate(events) : null;
 
             _ = V1Referral.ApplyCommand(referral, command);
 
@@ -44,12 +40,7 @@ namespace CareTogether.Resources.V1Referrals
                 actorUserId
             );
 
-            await eventLog.AppendEventAsync(
-                organizationId,
-                locationId,
-                domainEvent,
-                lastSequence
-            );
+            await eventLog.AppendEventAsync(organizationId, locationId, domainEvent, lastSequence);
         }
 
         public async Task<V1Referral?> GetReferralAsync(
@@ -58,15 +49,9 @@ namespace CareTogether.Resources.V1Referrals
             Guid referralId
         )
         {
-            var (events, _) = await LoadReferralEventsAsync(
-                organizationId,
-                locationId,
-                referralId
-            );
+            var (events, _) = await LoadReferralEventsAsync(organizationId, locationId, referralId);
 
-            return events.Any()
-                ? V1Referral.Rehydrate(events)
-                : null;
+            return events.Any() ? V1Referral.Rehydrate(events) : null;
         }
 
         public async Task<ImmutableList<V1Referral>> ListReferralsAsync(
@@ -76,10 +61,9 @@ namespace CareTogether.Resources.V1Referrals
         {
             var eventsByReferral = new Dictionary<Guid, List<V1ReferralEvent>>();
 
-            await foreach (var (domainEvent, _) in eventLog.GetAllEventsAsync(
-                organizationId,
-                locationId
-            ))
+            await foreach (
+                var (domainEvent, _) in eventLog.GetAllEventsAsync(organizationId, locationId)
+            )
             {
                 if (!eventsByReferral.TryGetValue(domainEvent.ReferralId, out var list))
                 {
@@ -90,25 +74,23 @@ namespace CareTogether.Resources.V1Referrals
                 list.Add(domainEvent);
             }
 
-            return eventsByReferral.Values
-                .Select(V1Referral.Rehydrate)
-                .ToImmutableList();
+            return eventsByReferral.Values.Select(V1Referral.Rehydrate).ToImmutableList();
         }
 
-        private async Task<(List<V1ReferralEvent> Events, long LastSequence)>
-            LoadReferralEventsAsync(
-                Guid organizationId,
-                Guid locationId,
-                Guid referralId
-            )
+        private async Task<(
+            List<V1ReferralEvent> Events,
+            long LastSequence
+        )> LoadReferralEventsAsync(Guid organizationId, Guid locationId, Guid referralId)
         {
             var events = new List<V1ReferralEvent>();
             long lastSequence = -1;
 
-            await foreach (var (domainEvent, sequence) in eventLog.GetAllEventsAsync(
-                organizationId,
-                locationId
-            ))
+            await foreach (
+                var (domainEvent, sequence) in eventLog.GetAllEventsAsync(
+                    organizationId,
+                    locationId
+                )
+            )
             {
                 if (domainEvent.ReferralId == referralId)
                 {

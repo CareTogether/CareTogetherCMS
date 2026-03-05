@@ -136,11 +136,11 @@ namespace CareTogether.Resources.V1Cases
                         MarkReferralRequirementIncomplete c => (
                             v1CaseEntry with
                             {
-                                CompletedRequirements =
-                                    v1CaseEntry.CompletedRequirements.RemoveAll(x =>
+                                CompletedRequirements = v1CaseEntry.CompletedRequirements.RemoveAll(
+                                    x =>
                                         x.RequirementName == c.RequirementName
                                         && x.CompletedRequirementId == c.CompletedRequirementId
-                                    ),
+                                ),
                             },
                             null
                         ),

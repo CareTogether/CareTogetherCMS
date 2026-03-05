@@ -134,9 +134,7 @@ namespace CareTogether.Engines.Authorization
             var userFamilyCommunities =
                 userFamily != null
                     ? communities
-                        .Where(community =>
-                            community.MemberFamilies.Contains(userFamily.Id)
-                        )
+                        .Where(community => community.MemberFamilies.Contains(userFamily.Id))
                         .Select(community => community.Id)
                         .ToImmutableList()
                     : ImmutableList<Guid>.Empty;

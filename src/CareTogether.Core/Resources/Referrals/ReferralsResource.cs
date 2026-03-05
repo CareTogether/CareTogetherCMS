@@ -1,9 +1,8 @@
 using System;
 using System.Collections.Immutable;
+using System.Linq;
 using System.Threading.Tasks;
 using CareTogether.Utilities.EventLog;
-using System.Linq;
-
 
 namespace CareTogether.Resources.V1Cases
 {
@@ -102,26 +101,20 @@ namespace CareTogether.Resources.V1Cases
         }
 
         public async Task<bool> FamilyHasOpenCaseAsync(
-    Guid organizationId,
-    Guid locationId,
-    Guid familyId
-)
-{
-    using (
-        var lockedModel = await tenantModels.ReadLockItemAsync(
-            (organizationId, locationId)
+            Guid organizationId,
+            Guid locationId,
+            Guid familyId
         )
-    )
-    {
-        return lockedModel.Value
-            .FindV1CaseEntries(c =>
-                c.FamilyId == familyId &&
-                c.CloseReason == null
+        {
+            using (
+                var lockedModel = await tenantModels.ReadLockItemAsync((organizationId, locationId))
             )
-            .Any();
-    }
-}
-
+            {
+                return lockedModel
+                    .Value.FindV1CaseEntries(c => c.FamilyId == familyId && c.CloseReason == null)
+                    .Any();
+            }
+        }
 
         public async Task<V1CaseEntry> GetV1CaseAsync(
             Guid organizationId,

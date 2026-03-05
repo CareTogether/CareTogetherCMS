@@ -2,8 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
-using CareTogether.Resources.V1Cases;
 using CareTogether.Resources.Policies;
+using CareTogether.Resources.V1Cases;
 
 namespace CareTogether.Resources.V1Referrals
 {
@@ -42,10 +42,7 @@ namespace CareTogether.Resources.V1Referrals
             return referral;
         }
 
-        public static V1Referral ApplyCommand(
-            V1Referral? referral,
-            V1ReferralCommand command
-        )
+        public static V1Referral ApplyCommand(V1Referral? referral, V1ReferralCommand command)
         {
             return command switch
             {
@@ -66,29 +63,26 @@ namespace CareTogether.Resources.V1Referrals
                     )
                     : throw new InvalidOperationException("Referral already exists."),
 
-                UpdateV1ReferralFamily c => EnsureExists(referral) with
-                {
-                    FamilyId = c.FamilyId
-                },
+                UpdateV1ReferralFamily c => EnsureExists(referral) with { FamilyId = c.FamilyId },
 
                 UpdateV1ReferralDetails c => EnsureOpen(referral!) with
                 {
                     Title = c.Title,
                     Comment = c.Comment,
-                    CreatedAtUtc = c.CreatedAtUtc
+                    CreatedAtUtc = c.CreatedAtUtc,
                 },
 
                 AcceptV1Referral c => EnsureOpen(referral!) with
                 {
                     Status = V1ReferralStatus.Accepted,
-                    AcceptedAtUtc = c.AcceptedAtUtc
+                    AcceptedAtUtc = c.AcceptedAtUtc,
                 },
 
                 CloseV1Referral c => EnsureOpen(referral!) with
                 {
                     Status = V1ReferralStatus.Closed,
                     ClosedAtUtc = c.ClosedAtUtc,
-                    CloseReason = c.CloseReason
+                    CloseReason = c.CloseReason,
                 },
 
                 ReopenV1Referral => EnsureExists(referral!) with
@@ -96,77 +90,73 @@ namespace CareTogether.Resources.V1Referrals
                     Status = V1ReferralStatus.Open,
                     AcceptedAtUtc = null,
                     ClosedAtUtc = null,
-                    CloseReason = null
+                    CloseReason = null,
                 },
 
                 UpdateCustomV1ReferralField c => EnsureOpen(referral!) with
                 {
-                    CompletedCustomFields =
-                        referral!.CompletedCustomFields.SetItem(
+                    CompletedCustomFields = referral!.CompletedCustomFields.SetItem(
+                        c.CustomFieldName,
+                        new CompletedCustomFieldInfo(
+                            Guid.Empty,
+                            DateTime.UtcNow,
+                            c.CompletedCustomFieldId,
                             c.CustomFieldName,
-                            new CompletedCustomFieldInfo(
-                                Guid.Empty,
-                                DateTime.UtcNow,
-                                c.CompletedCustomFieldId,
-                                c.CustomFieldName,
-                                c.CustomFieldType,
-                                c.Value
-                            )
+                            c.CustomFieldType,
+                            c.Value
                         )
+                    ),
                 },
 
                 CompleteReferralRequirement c => EnsureOpen(referral!) with
-{
-    CompletedRequirements =
-        referral!.CompletedRequirements.Add(
-            new CompletedRequirementInfo(
-                Guid.Empty,
-                DateTime.UtcNow,
-                c.CompletedRequirementId,
-                c.RequirementName,
-                c.CompletedAtUtc,
-                null,
-                c.UploadedDocumentId,
-                c.NoteId
-            )
-        )
-},
+                {
+                    CompletedRequirements = referral!.CompletedRequirements.Add(
+                        new CompletedRequirementInfo(
+                            Guid.Empty,
+                            DateTime.UtcNow,
+                            c.CompletedRequirementId,
+                            c.RequirementName,
+                            c.CompletedAtUtc,
+                            null,
+                            c.UploadedDocumentId,
+                            c.NoteId
+                        )
+                    ),
+                },
 
-MarkReferralRequirementIncomplete c => EnsureOpen(referral!) with
-{
-    CompletedRequirements =
-        referral!.CompletedRequirements
-            .Where(r => r.CompletedRequirementId != c.CompletedRequirementId)
-            .ToImmutableList()
-},
+                MarkReferralRequirementIncomplete c => EnsureOpen(referral!) with
+                {
+                    CompletedRequirements = referral!
+                        .CompletedRequirements.Where(r =>
+                            r.CompletedRequirementId != c.CompletedRequirementId
+                        )
+                        .ToImmutableList(),
+                },
 
-ExemptReferralRequirement c => EnsureOpen(referral!) with
-{
-    ExemptedRequirements =
-        referral!.ExemptedRequirements.Add(
-            new ExemptedRequirementInfo(
-                Guid.Empty,
-                DateTime.UtcNow,
-                c.RequirementName,
-                null,
-                c.AdditionalComments,
-                c.ExemptionExpiresAtUtc
-            )
-        )
-},
+                ExemptReferralRequirement c => EnsureOpen(referral!) with
+                {
+                    ExemptedRequirements = referral!.ExemptedRequirements.Add(
+                        new ExemptedRequirementInfo(
+                            Guid.Empty,
+                            DateTime.UtcNow,
+                            c.RequirementName,
+                            null,
+                            c.AdditionalComments,
+                            c.ExemptionExpiresAtUtc
+                        )
+                    ),
+                },
 
-UnexemptReferralRequirement c => EnsureOpen(referral!) with
-{
-    ExemptedRequirements =
-        referral!.ExemptedRequirements
-            .Where(r => r.RequirementName != c.RequirementName)
-            .ToImmutableList()
-},
-
+                UnexemptReferralRequirement c => EnsureOpen(referral!) with
+                {
+                    ExemptedRequirements = referral!
+                        .ExemptedRequirements.Where(r => r.RequirementName != c.RequirementName)
+                        .ToImmutableList(),
+                },
 
                 _ => throw new InvalidOperationException(
                     $"Unsupported referral command: {command.GetType().Name}"
-                )
+                ),
             };
         }
 

@@ -96,8 +96,7 @@ namespace CareTogether.Managers.Records
     public sealed record ReferralRecordsCommand(V1CaseCommand Command) : AtomicRecordsCommand();
 
     public sealed record V1ReferralRecordsCommand(V1ReferralCommand Command)
-    : AtomicRecordsCommand();
-
+        : AtomicRecordsCommand();
 
     public sealed record ArrangementRecordsCommand(ArrangementsCommand Command)
         : AtomicRecordsCommand();
@@ -117,7 +116,6 @@ namespace CareTogether.Managers.Records
 
     public sealed record ReferralRecordsAggregate(V1Referral Referral)
         : RecordsAggregate(Referral.ReferralId);
-
 
     public interface IRecordsManager
     {

@@ -4,6 +4,6 @@ namespace CareTogether.Resources.V1Referrals
     {
         Open,
         Accepted,
-        Closed
+        Closed,
     }
 }

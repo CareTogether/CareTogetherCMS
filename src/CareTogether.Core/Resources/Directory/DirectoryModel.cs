@@ -174,8 +174,7 @@ namespace CareTogether.Resources.Directory
                         CompletedCustomFieldInfo
                     >.Empty,
                     ImmutableList<Activity>.Empty,
-                        IsTestFamily: false
-
+                    IsTestFamily: false
                 ),
                 _ => families.TryGetValue(command.FamilyId, out var familyEntry)
                     ? command switch
@@ -281,7 +280,10 @@ namespace CareTogether.Resources.Directory
                                 )
                             ),
                         },
-                        UpdateTestFamilyFlag c => familyEntry with { IsTestFamily = c.IsTestFamily },
+                        UpdateTestFamilyFlag c => familyEntry with
+                        {
+                            IsTestFamily = c.IsTestFamily,
+                        },
 
                         _ => throw new NotImplementedException(
                             $"The command type '{command.GetType().FullName}' has not been implemented."

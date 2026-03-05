@@ -132,13 +132,22 @@ namespace CareTogether.Resources.Policies
                 locationConfiguration = locationConfiguration with { Id = Guid.NewGuid() };
 
             // Generate IDs for AccessLevels that don't have them
-            var updatedAccessLevels = locationConfiguration.AccessLevels?.Select(accessLevel =>
-                accessLevel.Id == default
-                    ? accessLevel with { Id = Guid.NewGuid() }
-                    : accessLevel
-            ).ToImmutableList() ?? ImmutableList<AccessLevel>.Empty;
+            var updatedAccessLevels =
+                locationConfiguration
+                    .AccessLevels?.Select(accessLevel =>
+                        accessLevel.Id == default
+                            ? accessLevel with
+                            {
+                                Id = Guid.NewGuid(),
+                            }
+                            : accessLevel
+                    )
+                    .ToImmutableList() ?? ImmutableList<AccessLevel>.Empty;
 
-            locationConfiguration = locationConfiguration with { AccessLevels = updatedAccessLevels };
+            locationConfiguration = locationConfiguration with
+            {
+                AccessLevels = updatedAccessLevels,
+            };
 
             var newConfig = config with
             {
@@ -233,14 +242,13 @@ namespace CareTogether.Resources.Policies
         }
 
         private static readonly ImmutableList<string> DefaultReferralCloseReasons =
-    ImmutableList.Create(
-        "Not appropriate",
-        "No capacity",
-        "No longer needed",
-        "Resourced",
-        "Need met"
-    );
-
+            ImmutableList.Create(
+                "Not appropriate",
+                "No capacity",
+                "No longer needed",
+                "Resourced",
+                "Need met"
+            );
 
         private OrganizationConfiguration Render(OrganizationConfiguration config) =>
             config with
@@ -262,9 +270,7 @@ namespace CareTogether.Resources.Policies
                         )
                     )
                 ),
-            ReferralCloseReasons =
-            config.ReferralCloseReasons
-            ?? DefaultReferralCloseReasons,
+                ReferralCloseReasons = config.ReferralCloseReasons ?? DefaultReferralCloseReasons,
             };
     }
 }

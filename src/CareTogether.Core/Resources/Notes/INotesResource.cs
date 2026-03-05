@@ -16,7 +16,7 @@ namespace CareTogether.Resources.Notes
         Guid? ApproverId,
         DateTime? ApprovedTimestampUtc,
         DateTime? BackdatedTimestampUtc,
-        string? AccessLevel 
+        string? AccessLevel
     );
 
     public enum NoteStatus

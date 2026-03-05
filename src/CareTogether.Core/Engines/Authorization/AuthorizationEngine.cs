@@ -28,7 +28,6 @@ namespace CareTogether.Engines.Authorization
 
         private readonly IV1ReferralsResource v1ReferralsResource;
 
-
         public AuthorizationEngine(
             IPoliciesResource policiesResource,
             IDirectoryResource directoryResource,
@@ -36,7 +35,6 @@ namespace CareTogether.Engines.Authorization
             INotesResource notesResource,
             IUserAccessCalculation userAccessCalculation,
             IV1ReferralsResource v1ReferralsResource
-
         )
         {
             this.policiesResource = policiesResource;
@@ -139,10 +137,14 @@ namespace CareTogether.Engines.Authorization
                 command switch
                 {
                     CreateReferral => Permission.CreateV1Case,
-                  CareTogether.Resources.V1Cases.CompleteReferralRequirement c => Permission.EditV1CaseRequirementCompletion,
-CareTogether.Resources.V1Cases.MarkReferralRequirementIncomplete c => Permission.EditV1CaseRequirementCompletion,
-CareTogether.Resources.V1Cases.ExemptReferralRequirement c => Permission.EditV1CaseRequirementExemption,
-CareTogether.Resources.V1Cases.UnexemptReferralRequirement c => Permission.EditV1CaseRequirementExemption,
+                    CareTogether.Resources.V1Cases.CompleteReferralRequirement c =>
+                        Permission.EditV1CaseRequirementCompletion,
+                    CareTogether.Resources.V1Cases.MarkReferralRequirementIncomplete c =>
+                        Permission.EditV1CaseRequirementCompletion,
+                    CareTogether.Resources.V1Cases.ExemptReferralRequirement c =>
+                        Permission.EditV1CaseRequirementExemption,
+                    CareTogether.Resources.V1Cases.UnexemptReferralRequirement c =>
+                        Permission.EditV1CaseRequirementExemption,
                     UpdateCustomReferralField => Permission.EditV1Case,
                     UpdateReferralComments => Permission.EditV1Case,
                     CloseReferral => Permission.CloseV1Case,
@@ -220,62 +222,65 @@ CareTogether.Resources.V1Cases.UnexemptReferralRequirement c => Permission.EditV
                 }
             );
         }
-public async Task<bool> AuthorizeV1ReferralCommandAsync(
-    Guid organizationId,
-    Guid locationId,
-    SessionUserContext userContext,
-    V1ReferralCommand command
-)
-{
-    var permissions = await userAccessCalculation.AuthorizeUserAccessAsync(
-        organizationId,
-        locationId,
-        userContext,
-        new GlobalAuthorizationContext()
-    );
 
-    return permissions.Contains(
-        command switch
+        public async Task<bool> AuthorizeV1ReferralCommandAsync(
+            Guid organizationId,
+            Guid locationId,
+            SessionUserContext userContext,
+            V1ReferralCommand command
+        )
         {
-            CreateV1Referral => Permission.CreateV1Referral,
+            var permissions = await userAccessCalculation.AuthorizeUserAccessAsync(
+                organizationId,
+                locationId,
+                userContext,
+                new GlobalAuthorizationContext()
+            );
 
-            UpdateV1ReferralFamily => Permission.EditV1Referral,
-            AcceptV1Referral => Permission.EditV1Referral,
+            return permissions.Contains(
+                command switch
+                {
+                    CreateV1Referral => Permission.CreateV1Referral,
 
-            UpdateV1ReferralDetails => Permission.EditV1Referral,
-            UpdateCustomV1ReferralField => Permission.EditV1Referral,
+                    UpdateV1ReferralFamily => Permission.EditV1Referral,
+                    AcceptV1Referral => Permission.EditV1Referral,
 
-            CloseV1Referral => Permission.CloseV1Referral,
-            ReopenV1Referral => Permission.ReopenV1Referral,
-CareTogether.Resources.V1Referrals.CompleteReferralRequirement c => Permission.EditV1CaseRequirementCompletion,
-CareTogether.Resources.V1Referrals.MarkReferralRequirementIncomplete c => Permission.EditV1CaseRequirementCompletion,
-CareTogether.Resources.V1Referrals.ExemptReferralRequirement c => Permission.EditV1CaseRequirementExemption,
-CareTogether.Resources.V1Referrals.UnexemptReferralRequirement c => Permission.EditV1CaseRequirementExemption,
+                    UpdateV1ReferralDetails => Permission.EditV1Referral,
+                    UpdateCustomV1ReferralField => Permission.EditV1Referral,
 
-            _ => throw new NotImplementedException(
-                $"The command type '{command.GetType().FullName}' has not been implemented."
-            ),
+                    CloseV1Referral => Permission.CloseV1Referral,
+                    ReopenV1Referral => Permission.ReopenV1Referral,
+                    CareTogether.Resources.V1Referrals.CompleteReferralRequirement c =>
+                        Permission.EditV1CaseRequirementCompletion,
+                    CareTogether.Resources.V1Referrals.MarkReferralRequirementIncomplete c =>
+                        Permission.EditV1CaseRequirementCompletion,
+                    CareTogether.Resources.V1Referrals.ExemptReferralRequirement c =>
+                        Permission.EditV1CaseRequirementExemption,
+                    CareTogether.Resources.V1Referrals.UnexemptReferralRequirement c =>
+                        Permission.EditV1CaseRequirementExemption,
+
+                    _ => throw new NotImplementedException(
+                        $"The command type '{command.GetType().FullName}' has not been implemented."
+                    ),
+                }
+            );
         }
-    );
-}
 
-public async Task<bool> AuthorizeV1ReferralReadAsync(
-    Guid organizationId,
-    Guid locationId,
-    SessionUserContext userContext
-)
-{
-    var permissions = await userAccessCalculation.AuthorizeUserAccessAsync(
-        organizationId,
-        locationId,
-        userContext,
-        new GlobalAuthorizationContext()
-    );
+        public async Task<bool> AuthorizeV1ReferralReadAsync(
+            Guid organizationId,
+            Guid locationId,
+            SessionUserContext userContext
+        )
+        {
+            var permissions = await userAccessCalculation.AuthorizeUserAccessAsync(
+                organizationId,
+                locationId,
+                userContext,
+                new GlobalAuthorizationContext()
+            );
 
-    return permissions.Contains(Permission.ViewV1Referral);
-}
-
-
+            return permissions.Contains(Permission.ViewV1Referral);
+        }
 
         public async Task<bool> AuthorizeNoteCommandAsync(
             Guid organizationId,
@@ -760,40 +765,40 @@ public async Task<bool> AuthorizeV1ReferralReadAsync(
             return family with
             {
                 PartneringFamilyInfo =
-                family.PartneringFamilyInfo == null
-                    ? null
-                    : DisclosePartneringFamilyInfo(
-                        family.PartneringFamilyInfo,
-                        userContext.UserFamily,
-                        contextPermissions
+                    family.PartneringFamilyInfo == null
+                        ? null
+                        : DisclosePartneringFamilyInfo(
+                            family.PartneringFamilyInfo,
+                            userContext.UserFamily,
+                            contextPermissions
                         ),
                 VolunteerFamilyInfo =
-                family.VolunteerFamilyInfo == null
-                    ? null
+                    family.VolunteerFamilyInfo == null
+                        ? null
                         : DiscloseVolunteerFamilyInfo(
                             family.VolunteerFamilyInfo,
                             contextPermissions
                         ),
                 Family = DiscloseFamily(family.Family, contextPermissions),
                 Notes = (
-                await family
-                    .Notes.Select(async note =>
-                        (
-                            note,
-                            canDisclose: await DiscloseNoteAsync(
+                    await family
+                        .Notes.Select(async note =>
+                            (
                                 note,
-                                organizationId,
-                                locationId,
-                                userContext.User.PersonId(organizationId, locationId),
-                                contextPermissions,
-                                userContext.User
+                                canDisclose: await DiscloseNoteAsync(
+                                    note,
+                                    organizationId,
+                                    locationId,
+                                    userContext.User.PersonId(organizationId, locationId),
+                                    contextPermissions,
+                                    userContext.User
+                                )
                             )
                         )
-                    )
-                    .WhenAll()
-            )
-                .Where(x => x.canDisclose)
-                .Select(x => x.note)
+                        .WhenAll()
+                )
+                    .Where(x => x.canDisclose)
+                    .Select(x => x.note)
                     .ToImmutableList(),
                 UploadedDocuments = family.UploadedDocuments, //TODO: Disclosure logic is needed here as well,
                 MissingCustomFields = contextPermissions.Contains(Permission.ViewFamilyCustomFields)

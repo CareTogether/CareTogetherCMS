@@ -1,6 +1,6 @@
 using System;
-using System.Threading.Tasks;
 using System.Collections.Immutable;
+using System.Threading.Tasks;
 
 namespace CareTogether.Resources.V1Referrals
 {
@@ -13,15 +13,8 @@ namespace CareTogether.Resources.V1Referrals
             Guid actorUserId
         );
 
-        Task<V1Referral?> GetReferralAsync(
-            Guid organizationId,
-            Guid locationId,
-            Guid referralId
-        );
+        Task<V1Referral?> GetReferralAsync(Guid organizationId, Guid locationId, Guid referralId);
 
-        Task<ImmutableList<V1Referral>> ListReferralsAsync(
-            Guid organizationId,
-            Guid locationId
-        );
+        Task<ImmutableList<V1Referral>> ListReferralsAsync(Guid organizationId, Guid locationId);
     }
 }
