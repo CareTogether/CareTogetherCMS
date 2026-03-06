@@ -17,10 +17,7 @@ import {
 import { partneringFamiliesData } from '../Model/V1CasesModel';
 import React, { useState } from 'react';
 import AddIcon from '@mui/icons-material/Add';
-import {
-  ArrangementPhase,
-  Permission,
-} from '../GeneratedClient';
+import { ArrangementPhase, Permission } from '../GeneratedClient';
 import { CreatePartneringFamilyDialog } from './CreatePartneringFamilyDialog';
 import { useScrollMemory } from '../Hooks/useScrollMemory';
 import { useLocalStorage } from '../Hooks/useLocalStorage';
@@ -45,6 +42,7 @@ import { forceCheck } from 'react-lazyload';
 import { PartneringFamilyTableItem } from './PartneringFamilies/PartneringFamilyTableItem';
 import { arrangementStatusSummary } from './PartneringFamilies/arrangementStatusSummary';
 import { ArrangementsFilter } from './PartneringFamilies/types';
+import { stickyHeaderTableSx } from '../Utilities/stickyHeaderTableSx';
 
 function PartneringFamilies() {
   const appNavigate = useAppNavigate();
@@ -114,10 +112,11 @@ function PartneringFamilies() {
     }
   };
 
-  const [arrangementsFilter, setArrangementsFilter] = useLocalStorage<ArrangementsFilter>(
-    'partnering-families-arrangementsFilter',
-    'All'
-  );
+  const [arrangementsFilter, setArrangementsFilter] =
+    useLocalStorage<ArrangementsFilter>(
+      'partnering-families-arrangementsFilter',
+      'All'
+    );
   const filteredPartneringFamiliesWithActiveOrAllFilter =
     filteredPartneringFamilies
       .filter((family) =>
@@ -281,22 +280,27 @@ function PartneringFamilies() {
           </ToggleButtonGroup>
         </Stack>
       </Grid>
-      <Grid item xs={12}>
+      <Grid item xs={12} className="cases-table">
         <TableContainer
-          sx={{ borderBottom: '1px solid rgba(224, 224, 224, 1)' }}
+          sx={{
+            borderBottom: '1px solid rgba(224, 224, 224, 1)',
+            overflow: 'visible',
+          }}
         >
-          <Table sx={{ minWidth: '700px' }} size="small">
+          <Table
+            stickyHeader
+            sx={{ ...stickyHeaderTableSx, minWidth: '700px' }}
+            size="small"
+          >
             <TableHead>
               <TableRow>
-                <TableCell sx={{ fontWeight: 600 }}>Client Family</TableCell>
-                <TableCell sx={{ fontWeight: 600 }}>Case Status</TableCell>
+                <TableCell>Client Family</TableCell>
+                <TableCell>Case Status</TableCell>
                 {referralCustomFields.map((field) => (
                   <TableCell
                     key={field.name}
                     sx={{
-                      fontWeight: 600,
                       textAlign: 'center',
-                      whiteSpace: 'nowrap',
                     }}
                   >
                     {field.name}
@@ -308,7 +312,6 @@ function PartneringFamilies() {
                     <TableCell
                       key={arrangementType}
                       sx={{
-                        fontWeight: 600,
                         textAlign: 'center',
                       }}
                     >
