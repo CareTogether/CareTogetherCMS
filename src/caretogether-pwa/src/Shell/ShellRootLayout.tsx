@@ -14,6 +14,13 @@ import React from 'react';
 import { ProgressBackdrop } from './ProgressBackdrop';
 import { useGlobalSnackBar } from '../Hooks/useGlobalSnackBar';
 
+const CHAT_WIDGET_SAFE_HEIGHT = 96;
+const MOBILE_BOTTOM_NAV_HEIGHT = 56;
+
+export const DESKTOP_BOTTOM_SAFE_AREA = CHAT_WIDGET_SAFE_HEIGHT;
+export const MOBILE_BOTTOM_SAFE_AREA =
+  CHAT_WIDGET_SAFE_HEIGHT + MOBILE_BOTTOM_NAV_HEIGHT;
+
 function ShellRootLayout({ children }: React.PropsWithChildren) {
   const theme = useTheme();
   const isDesktop = useMediaQuery(theme.breakpoints.up('md'));
@@ -24,8 +31,6 @@ function ShellRootLayout({ children }: React.PropsWithChildren) {
   );
 
   const drawerWidth = menuDrawerOpen ? 190 : 48;
-  const CHAT_WIDGET_SAFE_HEIGHT = 96;
-  const MOBILE_BOTTOM_NAV_HEIGHT = 56;
 
   const { message, resetSnackBar } = useGlobalSnackBar();
 
@@ -54,8 +59,8 @@ function ShellRootLayout({ children }: React.PropsWithChildren) {
           sx={{
             marginTop: { xs: 7, sm: 8, md: 6 },
             paddingBottom: {
-              xs: CHAT_WIDGET_SAFE_HEIGHT + MOBILE_BOTTOM_NAV_HEIGHT,
-              md: CHAT_WIDGET_SAFE_HEIGHT,
+              xs: `${MOBILE_BOTTOM_SAFE_AREA}px`,
+              md: `${DESKTOP_BOTTOM_SAFE_AREA}px`,
             },
             backgroundColor: '#fff',
           }}

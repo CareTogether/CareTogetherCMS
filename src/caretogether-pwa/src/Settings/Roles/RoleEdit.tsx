@@ -44,6 +44,10 @@ import { isRoleEditable } from './isRoleEditable';
 import { ContextualPermissionSetRowAutocomplete } from './ContextualPermissionSetRowWithAutocomplete';
 import { useFeatureFlagEnabled } from 'posthog-js/react';
 import { Breadcrumbs } from '../../Generic/Breadcrumbs';
+import {
+  DESKTOP_BOTTOM_SAFE_AREA,
+  MOBILE_BOTTOM_SAFE_AREA,
+} from '../../Shell/ShellRootLayout';
 
 export function RoleEdit({
   roleDefinition,
@@ -138,8 +142,11 @@ export function RoleEdit({
   return (
     <Stack
       className="ph-unmask"
-      paddingY={2}
-      height="calc(100vh - 48px)"
+      paddingTop={2}
+      height={{
+        xs: `calc(100vh - 48px - ${MOBILE_BOTTOM_SAFE_AREA}px)`,
+        md: `calc(100vh - 48px - ${DESKTOP_BOTTOM_SAFE_AREA}px)`,
+      }}
       spacing={0}
     >
       <Box>
@@ -331,7 +338,7 @@ export function RoleEdit({
         </MenuItem>
       </Menu>
 
-      <Box paddingY={2} borderTop={1} borderColor="divider">
+      <Box paddingTop={2} borderTop={1} borderColor="divider">
         <Stack direction="row" justifyContent="flex-end" alignItems="center">
           {dirty && (
             <Typography sx={{ fontStyle: 'italic' }} mr={2}>
