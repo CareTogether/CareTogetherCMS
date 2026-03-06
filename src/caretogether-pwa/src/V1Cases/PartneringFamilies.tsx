@@ -42,8 +42,7 @@ import { forceCheck } from 'react-lazyload';
 import { PartneringFamilyTableItem } from './PartneringFamilies/PartneringFamilyTableItem';
 import { arrangementStatusSummary } from './PartneringFamilies/arrangementStatusSummary';
 import { ArrangementsFilter } from './PartneringFamilies/types';
-
-import '../../../index.css';
+import { stickyHeaderTableSx } from '../Utilities/stickyHeaderTableSx';
 
 function PartneringFamilies() {
   const appNavigate = useAppNavigate();
@@ -288,18 +287,20 @@ function PartneringFamilies() {
             overflow: 'visible',
           }}
         >
-          <Table sx={{ minWidth: '700px' }} size="small">
+          <Table
+            stickyHeader
+            sx={{ ...stickyHeaderTableSx, minWidth: '700px' }}
+            size="small"
+          >
             <TableHead>
               <TableRow>
-                <TableCell sx={{ fontWeight: 600 }}>Client Family</TableCell>
-                <TableCell sx={{ fontWeight: 600 }}>Case Status</TableCell>
+                <TableCell>Client Family</TableCell>
+                <TableCell>Case Status</TableCell>
                 {referralCustomFields.map((field) => (
                   <TableCell
                     key={field.name}
                     sx={{
-                      fontWeight: 600,
                       textAlign: 'center',
-                      whiteSpace: 'nowrap',
                     }}
                   >
                     {field.name}
@@ -311,7 +312,6 @@ function PartneringFamilies() {
                     <TableCell
                       key={arrangementType}
                       sx={{
-                        fontWeight: 600,
                         textAlign: 'center',
                       }}
                     >

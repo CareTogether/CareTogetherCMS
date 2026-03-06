@@ -66,6 +66,7 @@ import { CustomFieldFilterValue } from '../../Generic/CustomFieldsFilter/types';
 import { useFeatureFlagEnabled } from 'posthog-js/react';
 import { forceCheck } from 'react-lazyload';
 import { VolunteerApprovalTableItem } from './VolunteerApprovalTableItem';
+import { stickyHeaderTableSx } from '../../Utilities/stickyHeaderTableSx';
 
 function VolunteerApproval(props: { onOpen: () => void }) {
   const { onOpen } = props;
@@ -603,8 +604,17 @@ function VolunteerApproval(props: { onOpen: () => void }) {
             )}
         </Grid>
         <Grid item xs={12}>
-          <TableContainer>
-            <Table sx={{ minWidth: '700px' }} size="small">
+          <TableContainer
+            sx={{
+              borderBottom: '1px solid rgba(224, 224, 224, 1)',
+              overflow: 'visible',
+            }}
+          >
+            <Table
+              stickyHeader
+              sx={{ ...stickyHeaderTableSx, minWidth: '700px' }}
+              size="small"
+            >
               <TableHead>
                 <TableRow sx={{ height: '40px' }}>
                   {smsMode && (

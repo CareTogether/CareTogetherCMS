@@ -38,6 +38,7 @@ import { useAppNavigate } from '../../Hooks/useAppNavigate';
 import { useFeatureFlagEnabled } from 'posthog-js/react';
 import { forceCheck } from 'react-lazyload';
 import { VolunteerProgressTableItem } from './VolunteerProgressTableItem';
+import { stickyHeaderTableSx } from '../../Utilities/stickyHeaderTableSx';
 
 function VolunteerProgress(props: { onOpen: () => void }) {
   const { onOpen } = props;
@@ -164,8 +165,17 @@ function VolunteerProgress(props: { onOpen: () => void }) {
           )}
       </Grid>
       <Grid item xs={12}>
-        <TableContainer>
-          <Table sx={{ minWidth: '700px' }} size="small">
+        <TableContainer
+          sx={{
+            borderBottom: '1px solid rgba(224, 224, 224, 1)',
+            overflow: 'visible',
+          }}
+        >
+          <Table
+            stickyHeader
+            sx={{ ...stickyHeaderTableSx, minWidth: '700px' }}
+            size="small"
+          >
             <TableHead>
               <TableRow>
                 {expandedView ? (
