@@ -11,7 +11,7 @@ import {
 import { useDirectoryModel } from '../Model/DirectoryModel';
 import { UpdateDialog } from '../Generic/UpdateDialog';
 import { Note } from '../GeneratedClient';
-import { DateTimePicker } from '@mui/x-date-pickers';
+import { ValidateDatePicker } from '../Generic/Forms/ValidateDatePicker';
 import { useRecoilValue } from 'recoil';
 import { locationConfigurationQuery } from '../Model/ConfigurationModel';
 
@@ -89,18 +89,18 @@ export function AddEditNoteDialog({
             />
           </Grid>
           <Grid item xs={12}>
-            <DateTimePicker
+            <ValidateDatePicker
               label="Backdate (optional - leave blank to use the current date & time)"
               value={backdatedTimestampLocal || null}
-              disableFuture
-              format="M/d/yyyy h:mm a"
-              onChange={(date: Date | null) =>
+              onChange={(date) =>
                 setFields({
                   ...fields,
                   backdatedTimestampLocal: date ?? undefined,
                 })
               }
-              slotProps={{ textField: { fullWidth: true } }}
+              includeTime
+              disableFuture
+              textFieldProps={{ fullWidth: true }}
             />
           </Grid>
           <Grid item xs={12}>

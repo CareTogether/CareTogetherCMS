@@ -2238,12 +2238,14 @@
         "x-enumNames": [
           "ChildHousing",
           "DaytimeChildCareOnly",
-          "NoChildInvolvement"
+          "NoChildInvolvement",
+          "ChildOrAdultInvolvement"
         ],
         "enum": [
           0,
           1,
-          2
+          2,
+          3
         ]
       },
       "ArrangementFunction": {
