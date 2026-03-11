@@ -272,6 +272,9 @@ export function FamilyScreen() {
   const updateTestFamilyFlagEnabled = useFeatureFlagEnabled(
     'updateTestFamilyFlag'
   );
+  const hideIntakeRequirementsAndCustomFields = useFeatureFlagEnabled(
+    'hideIntakeRequirementsAndCustomFields'
+  );
 
   useScreenTitle(family ? `${familyLastName(family)} Family` : '...');
   useScreenTitleComponent(family ? <TestFamilyBadge family={family} /> : null);
@@ -676,6 +679,7 @@ export function FamilyScreen() {
 
             <Grid item md={4}>
               {permissions(Permission.ViewV1CaseCustomFields) &&
+                hideIntakeRequirementsAndCustomFields &&
                 (
                   selectedV1Case?.completedCustomFields ||
                   ([] as Array<CompletedCustomFieldInfo | string>)
@@ -743,52 +747,56 @@ export function FamilyScreen() {
           </Grid>
 
           <Grid container spacing={0}>
-            {permissions(Permission.ViewV1CaseProgress) && selectedV1Case && (
-              <>
-                <Grid item xs={12} sm={6} md={4} style={{ paddingRight: 20 }}>
-                  <Typography
-                    className="ph-unmask"
-                    variant="h3"
-                    style={{ marginBottom: 0 }}
-                  >
-                    Incomplete
-                  </Typography>
-                  {selectedV1Case?.missingRequirements?.map((missing, i) => (
-                    <MissingRequirementRow
-                      key={`${missing}:${i}`}
-                      requirement={missing}
-                      context={v1CaseRequirementContext!}
-                      v1CaseId={selectedV1Case.id}
-                    />
-                  ))}
-                </Grid>
-                <Grid item xs={12} sm={6} md={4} style={{ paddingRight: 20 }}>
-                  <Typography
-                    className="ph-unmask"
-                    variant="h3"
-                    style={{ marginBottom: 0 }}
-                  >
-                    Completed
-                  </Typography>
-                  {selectedV1Case?.completedRequirements?.map(
-                    (completed, i) => (
-                      <CompletedRequirementRow
-                        key={`${completed.completedRequirementId}:${i}`}
-                        requirement={completed}
+            {permissions(Permission.ViewV1CaseProgress) &&
+              hideIntakeRequirementsAndCustomFields &&
+              selectedV1Case && (
+                <>
+                  <Grid item xs={12} sm={6} md={4} style={{ paddingRight: 20 }}>
+                    <Typography
+                      className="ph-unmask"
+                      variant="h3"
+                      style={{ marginBottom: 0 }}
+                    >
+                      Incomplete
+                    </Typography>
+                    {selectedV1Case?.missingRequirements?.map((missing, i) => (
+                      <MissingRequirementRow
+                        key={`${missing}:${i}`}
+                        requirement={missing}
                         context={v1CaseRequirementContext!}
+                        v1CaseId={selectedV1Case.id}
                       />
-                    )
-                  )}
-                  {selectedV1Case?.exemptedRequirements?.map((exempted, i) => (
-                    <ExemptedRequirementRow
-                      key={`${exempted.requirementName}:${i}`}
-                      requirement={exempted}
-                      context={v1CaseRequirementContext!}
-                    />
-                  ))}
-                </Grid>
-              </>
-            )}
+                    ))}
+                  </Grid>
+                  <Grid item xs={12} sm={6} md={4} style={{ paddingRight: 20 }}>
+                    <Typography
+                      className="ph-unmask"
+                      variant="h3"
+                      style={{ marginBottom: 0 }}
+                    >
+                      Completed
+                    </Typography>
+                    {selectedV1Case?.completedRequirements?.map(
+                      (completed, i) => (
+                        <CompletedRequirementRow
+                          key={`${completed.completedRequirementId}:${i}`}
+                          requirement={completed}
+                          context={v1CaseRequirementContext!}
+                        />
+                      )
+                    )}
+                    {selectedV1Case?.exemptedRequirements?.map(
+                      (exempted, i) => (
+                        <ExemptedRequirementRow
+                          key={`${exempted.requirementName}:${i}`}
+                          requirement={exempted}
+                          context={v1CaseRequirementContext!}
+                        />
+                      )
+                    )}
+                  </Grid>
+                </>
+              )}
             {family.volunteerFamilyInfo && (
               <>
                 <Grid item xs={12}>
