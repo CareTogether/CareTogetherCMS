@@ -24,19 +24,21 @@ export function MissingRequirementRow({
   v1CaseId,
 }: MissingRequirementRowProps) {
   const policy = useRecoilValue(policyData);
-  const permissions = useFamilyIdPermissions(
+  const familyIdForPermissions =
     context.kind === 'V1Case' ||
-      context.kind === 'Arrangement' ||
-      context.kind === 'Family Volunteer Assignment' ||
-      context.kind === 'Individual Volunteer Assignment'
+    context.kind === 'Arrangement' ||
+    context.kind === 'Family Volunteer Assignment' ||
+    context.kind === 'Individual Volunteer Assignment'
       ? context.partneringFamilyId
       : context.kind === 'Volunteer Family' ||
           context.kind === 'Individual Volunteer'
         ? context.volunteerFamilyId
-        : context.kind === 'V1Referral'
-          ? '' // referrals don't have familyId yet
-          : ''
-  );
+        : '';
+
+  const familyPermissions = useFamilyIdPermissions(familyIdForPermissions);
+
+  const permissions =
+    context.kind === 'V1Referral' ? () => true : familyPermissions;
 
   const dialogHandle = useDialogHandle();
 
@@ -60,18 +62,14 @@ export function MissingRequirementRow({
     throw new Error(`Invalid missing requirement context '${context.kind}'`);
 
   const canComplete =
-    context.kind === 'V1Referral'
-      ? true
-      : context.kind === 'V1Case'
-        ? permissions(Permission.EditV1CaseRequirementCompletion)
-        : permissions(Permission.EditApprovalRequirementCompletion);
+    context.kind === 'V1Case' || context.kind === 'V1Referral'
+      ? permissions(Permission.EditV1CaseRequirementCompletion)
+      : permissions(Permission.EditApprovalRequirementCompletion);
 
   const canExempt =
-    context.kind === 'V1Referral'
-      ? true
-      : context.kind === 'V1Case'
-        ? permissions(Permission.EditV1CaseRequirementExemption)
-        : permissions(Permission.EditApprovalRequirementExemption);
+    context.kind === 'V1Case' || context.kind === 'V1Referral'
+      ? permissions(Permission.EditV1CaseRequirementExemption)
+      : permissions(Permission.EditApprovalRequirementExemption);
 
   return (
     <>

@@ -98,6 +98,9 @@ namespace CareTogether.Managers.Records
     public sealed record V1ReferralRecordsCommand(V1ReferralCommand Command)
         : AtomicRecordsCommand();
 
+    public sealed record V1ReferralNoteRecordsCommand(V1ReferralNoteCommand Command)
+        : AtomicRecordsCommand();
+
     public sealed record ArrangementRecordsCommand(ArrangementsCommand Command)
         : AtomicRecordsCommand();
 
@@ -171,6 +174,29 @@ namespace CareTogether.Managers.Records
             ClaimsPrincipal user,
             Guid communityId,
             Guid documentId
+        );
+
+        Task<Uri> GetV1ReferralDocumentReadValetUrl(
+            Guid organizationId,
+            Guid locationId,
+            ClaimsPrincipal user,
+            Guid referralId,
+            Guid documentId
+        );
+
+        Task<Uri> GenerateV1ReferralDocumentUploadValetUrl(
+            Guid organizationId,
+            Guid locationId,
+            ClaimsPrincipal user,
+            Guid referralId,
+            Guid documentId
+        );
+
+        Task<ImmutableList<V1ReferralNoteEntry>> ListV1ReferralNotesAsync(
+            Guid organizationId,
+            Guid locationId,
+            ClaimsPrincipal user,
+            Guid referralId
         );
     }
 }

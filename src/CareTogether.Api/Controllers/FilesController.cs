@@ -95,5 +95,43 @@ namespace CareTogether.Api.Controllers
             );
             return Ok(new DocumentUploadInfo(documentId, valetUrl));
         }
+
+        [HttpGet("v1referral/{referralId:guid}/{documentId:guid}")]
+        public async Task<ActionResult<Uri>> GetV1ReferralDocumentReadValetUrl(
+            Guid organizationId,
+            Guid locationId,
+            Guid referralId,
+            Guid documentId
+        )
+        {
+            var valetUrl = await recordsManager.GetV1ReferralDocumentReadValetUrl(
+                organizationId,
+                locationId,
+                User,
+                referralId,
+                documentId
+            );
+            return Ok(valetUrl);
+        }
+
+        [HttpPost("upload/v1referral/{referralId:guid}/{documentId:guid}")]
+        public async Task<
+            ActionResult<DocumentUploadInfo>
+        > GenerateV1ReferralDocumentUploadValetUrl(
+            Guid organizationId,
+            Guid locationId,
+            Guid referralId,
+            Guid documentId
+        )
+        {
+            var valetUrl = await recordsManager.GenerateV1ReferralDocumentUploadValetUrl(
+                organizationId,
+                locationId,
+                User,
+                referralId,
+                documentId
+            );
+            return Ok(new DocumentUploadInfo(documentId, valetUrl));
+        }
     }
 }

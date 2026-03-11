@@ -15,6 +15,7 @@ import {
   CompletedRequirementInfo,
   ExemptedRequirementInfo,
   ActionRequirement,
+  UploadV1ReferralDocument,
 } from '../GeneratedClient';
 import { useAtomicRecordsCommandCallback } from './DirectoryModel';
 import { commandFactory } from './CommandFactory';
@@ -182,6 +183,24 @@ export function useV1ReferralsModel() {
       })
   );
 
+  const uploadReferralDocumentMetadata = useAtomicRecordsCommandCallback(
+    async (
+      referralId: string,
+      documentId: string,
+      uploadedFileName: string
+    ) => {
+      const command = new V1ReferralRecordsCommand();
+
+      command.command = commandFactory(UploadV1ReferralDocument, {
+        referralId,
+        uploadedDocumentId: documentId,
+        uploadedFileName,
+      });
+
+      return command;
+    }
+  );
+
   return {
     createReferral,
     updateCustomReferralField,
@@ -193,5 +212,6 @@ export function useV1ReferralsModel() {
     markReferralRequirementIncomplete,
     exemptReferralRequirement,
     unexemptReferralRequirement,
+    uploadReferralDocumentMetadata,
   };
 }

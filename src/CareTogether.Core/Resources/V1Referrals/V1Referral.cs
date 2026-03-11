@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
+using CareTogether.Resources.Directory;
 using CareTogether.Resources.Policies;
 using CareTogether.Resources.V1Cases;
 
@@ -19,7 +20,9 @@ namespace CareTogether.Resources.V1Referrals
         string? CloseReason,
         ImmutableDictionary<string, CompletedCustomFieldInfo> CompletedCustomFields,
         ImmutableList<CompletedRequirementInfo> CompletedRequirements,
-        ImmutableList<ExemptedRequirementInfo> ExemptedRequirements
+        ImmutableList<ExemptedRequirementInfo> ExemptedRequirements,
+        ImmutableList<UploadedDocumentInfo> UploadedDocuments,
+        ImmutableList<Guid> DeletedDocuments
     )
     {
         public static V1Referral Rehydrate(IEnumerable<V1ReferralEvent> events)
@@ -59,7 +62,9 @@ namespace CareTogether.Resources.V1Referrals
                         null,
                         ImmutableDictionary<string, CompletedCustomFieldInfo>.Empty,
                         ImmutableList<CompletedRequirementInfo>.Empty,
-                        ImmutableList<ExemptedRequirementInfo>.Empty
+                        ImmutableList<ExemptedRequirementInfo>.Empty,
+                        ImmutableList<UploadedDocumentInfo>.Empty,
+                        ImmutableList<Guid>.Empty
                     )
                     : throw new InvalidOperationException("Referral already exists."),
 
@@ -152,6 +157,26 @@ namespace CareTogether.Resources.V1Referrals
                     ExemptedRequirements = referral!
                         .ExemptedRequirements.Where(r => r.RequirementName != c.RequirementName)
                         .ToImmutableList(),
+                },
+
+                UploadV1ReferralDocument c => EnsureOpen(referral!) with
+                {
+                    UploadedDocuments = referral!.UploadedDocuments.Add(
+                        new UploadedDocumentInfo(
+                            Guid.Empty,
+                            DateTime.UtcNow,
+                            c.UploadedDocumentId,
+                            c.UploadedFileName
+                        )
+                    ),
+                },
+
+                DeleteUploadedV1ReferralDocument c => EnsureOpen(referral!) with
+                {
+                    UploadedDocuments = referral!.UploadedDocuments.RemoveAll(d =>
+                        d.UploadedDocumentId == c.UploadedDocumentId
+                    ),
+                    DeletedDocuments = referral!.DeletedDocuments.Add(c.UploadedDocumentId),
                 },
 
                 _ => throw new InvalidOperationException(

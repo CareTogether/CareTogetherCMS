@@ -66,4 +66,13 @@ namespace CareTogether.Resources.V1Referrals
 
     public sealed record UnexemptReferralRequirement(Guid ReferralId, string RequirementName)
         : V1ReferralCommand(ReferralId);
+
+    public sealed record UploadV1ReferralDocument(
+        Guid ReferralId,
+        Guid UploadedDocumentId,
+        string UploadedFileName
+    ) : V1ReferralCommand(ReferralId);
+
+    public sealed record DeleteUploadedV1ReferralDocument(Guid ReferralId, Guid UploadedDocumentId)
+        : V1ReferralCommand(ReferralId);
 }

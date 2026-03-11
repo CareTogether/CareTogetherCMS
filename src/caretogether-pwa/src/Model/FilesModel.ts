@@ -92,3 +92,50 @@ export async function downloadCommunityFile(
 
   window.location.href = downloadUrl;
 }
+
+export async function uploadV1ReferralFileToTenant(
+  organizationId: string,
+  locationId: string,
+  referralId: string,
+  formFile: File
+) {
+  const fileBuffer = await formFile.arrayBuffer();
+  const documentId = crypto.randomUUID();
+
+  const uploadInfo = await api.files.generateV1ReferralDocumentUploadValetUrl(
+    organizationId,
+    locationId,
+    referralId,
+    documentId
+  );
+
+  const blobClient = new BlockBlobClient(
+    uploadInfo.valetUrl as string,
+    new AnonymousCredential()
+  );
+
+  await blobClient.uploadData(fileBuffer, {
+    blobHTTPHeaders: {
+      blobContentType: 'application/octet-stream; charset=utf-8',
+      blobContentDisposition: `attachment; filename="${formFile.name}"`,
+    },
+  });
+
+  return uploadInfo.documentId as string;
+}
+
+export async function downloadV1ReferralFile(
+  organizationId: string,
+  locationId: string,
+  referralId: string,
+  documentId: string
+) {
+  const downloadUrl = await api.files.getV1ReferralDocumentReadValetUrl(
+    organizationId,
+    locationId,
+    referralId,
+    documentId
+  );
+
+  window.location.href = downloadUrl;
+}

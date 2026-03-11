@@ -17,7 +17,10 @@ import { useRecoilValue } from 'recoil';
 import { useFamilyLookup } from '../Model/DirectoryModel';
 import { familyNameString } from '../Families/FamilyName';
 import { useScreenTitle } from '../Shell/ShellScreenTitle';
-import { visibleReferralsQuery } from '../Model/Data';
+import {
+  visibleReferralsQuery,
+  selectedLocationContextState,
+} from '../Model/Data';
 import { useV1ReferralsModel } from '../Model/V1ReferralsModel';
 import {
   V1ReferralStatus,
@@ -37,6 +40,10 @@ import { policyData } from '../Model/ConfigurationModel';
 import { OpenNewV1CaseDialog } from '../V1Cases/OpenNewV1CaseDialog';
 import { useAppNavigate } from '../Hooks/useAppNavigate';
 import { CloseV1ReferralDrawer } from './CloseV1ReferralDrawer';
+import { downloadV1ReferralFile } from '../Model/FilesModel';
+
+import { AddEditV1ReferralNoteDialog } from './AddEditV1ReferralNoteDialog';
+import { ReferralTimeline } from './V1ReferralTimeline';
 
 function formatStatusWithDate(
   status: V1ReferralStatus,
@@ -76,6 +83,10 @@ export function ReferralDetailsPage() {
 
   const { reopenReferral, updateReferralFamily } = useV1ReferralsModel();
 
+  const { organizationId, locationId } = useRecoilValue(
+    selectedLocationContextState
+  );
+
   const [working, setWorking] = useState(false);
   const [openCreateFamily, setOpenCreateFamily] = useState(false);
   const [selectingFamily, setSelectingFamily] = useState(false);
@@ -83,6 +94,8 @@ export function ReferralDetailsPage() {
   const [openOpenCaseDialog, setOpenOpenCaseDialog] = useState(false);
   const [showAcceptedMessage, setShowAcceptedMessage] = useState(false);
   const [openCloseReferralDialog, setOpenCloseReferralDialog] = useState(false);
+
+  const [openAddNoteDialog, setOpenAddNoteDialog] = useState(false);
 
   const referral = useMemo(
     () => referrals.find((r) => r.referralId === referralId),
@@ -93,15 +106,6 @@ export function ReferralDetailsPage() {
     return <Typography sx={{ p: 3 }}>Invalid referral.</Typography>;
   }
 
-  let referralRequirementContext: V1ReferralContext | undefined;
-
-  if (referral) {
-    referralRequirementContext = {
-      kind: 'V1Referral',
-      referralId: referral.referralId,
-    };
-  }
-
   if (!referral) {
     return (
       <Box sx={{ p: 3, textAlign: 'center' }}>
@@ -109,6 +113,11 @@ export function ReferralDetailsPage() {
       </Box>
     );
   }
+
+  const referralRequirementContext: V1ReferralContext = {
+    kind: 'V1Referral',
+    referralId: referral.referralId,
+  };
 
   const family = referral.familyId
     ? familyLookup(referral.familyId)
@@ -163,7 +172,7 @@ export function ReferralDetailsPage() {
   }
 
   return (
-    <Grid container sx={{ p: 3 }}>
+    <Grid container sx={{ p: 3 }} spacing={0}>
       <Grid
         item
         xs={12}
@@ -245,140 +254,183 @@ export function ReferralDetailsPage() {
         </Box>
       </Grid>
 
-      <Grid item xs={12} sx={{ mb: 2 }}>
-        <Typography>
-          <strong>Status:</strong>{' '}
-          {formatStatusWithDate(
-            referral.status,
-            referral.createdAtUtc,
-            referral.acceptedAtUtc,
-            referral.closedAtUtc
-          )}
-        </Typography>
+      <Grid container spacing={0}>
+        <Grid item xs={12} md={4} sx={{ pr: { md: 2 }, mb: { xs: 3, md: 0 } }}>
+          <Typography variant="h6" sx={{ mb: 1 }}>
+            Timeline
+          </Typography>
+          <ReferralTimeline referral={referral} />
+        </Grid>
 
-        <Box sx={{ mt: 1 }}>
-          {family && (
+        <Grid item xs={12} md={8}>
+          <Grid item xs={12} sx={{ mb: 2 }}>
             <Typography>
-              <strong>Family:</strong>{' '}
-              <Button
-                variant="text"
-                sx={{ padding: 0, minWidth: 'auto', textTransform: 'none' }}
-                onClick={() => appNavigate.family(family.family.id)}
-              >
-                {familyNameString(family)}
-              </Button>
+              <strong>Status:</strong>{' '}
+              {formatStatusWithDate(
+                referral.status,
+                referral.createdAtUtc,
+                referral.acceptedAtUtc,
+                referral.closedAtUtc
+              )}
             </Typography>
-          )}
 
-          {selectingFamily && (
-            <Box sx={{ mt: 1, maxWidth: 400 }}>
-              <Autocomplete
-                options={familyOptions}
-                getOptionLabel={(opt) => opt.label}
-                onChange={(_, option) =>
-                  option && handleSelectFamily(option.id)
-                }
-                renderInput={(params) => (
-                  <TextField {...params} label="Select Family" />
-                )}
-              />
+            <Box sx={{ mt: 1 }}>
+              {family && (
+                <Typography>
+                  <strong>Family:</strong>{' '}
+                  <Button
+                    variant="text"
+                    sx={{ padding: 0, minWidth: 'auto', textTransform: 'none' }}
+                    onClick={() => appNavigate.family(family.family.id)}
+                  >
+                    {familyNameString(family)}
+                  </Button>
+                </Typography>
+              )}
+
+              {selectingFamily && (
+                <Box sx={{ mt: 1, maxWidth: 400 }}>
+                  <Autocomplete
+                    options={familyOptions}
+                    getOptionLabel={(opt) => opt.label}
+                    onChange={(_, option) =>
+                      option && handleSelectFamily(option.id)
+                    }
+                    renderInput={(params) => (
+                      <TextField {...params} label="Select Family" />
+                    )}
+                  />
+                </Box>
+              )}
+
+              {!family && !selectingFamily && <Typography>-</Typography>}
             </Box>
+          </Grid>
+
+          <Divider sx={{ width: '100%', mb: 2 }} />
+
+          {referralCustomFields.length > 0 && (
+            <Grid item xs={12} sx={{ mb: 2 }}>
+              {referralCustomFields.map((field) => {
+                const value =
+                  referral.completedCustomFields?.[field.name]?.value;
+
+                let displayValue: string = '—';
+                if (value !== null && value !== undefined && value !== '') {
+                  displayValue =
+                    field.type === CustomFieldType.Boolean
+                      ? value === true
+                        ? 'Yes'
+                        : 'No'
+                      : String(value);
+                }
+
+                return (
+                  <Typography key={field.name} variant="body2" sx={{ mb: 0.5 }}>
+                    <strong>{field.name}:</strong> {displayValue}
+                  </Typography>
+                );
+              })}
+            </Grid>
           )}
 
-          {!family && !selectingFamily && <Typography>-</Typography>}
-        </Box>
-      </Grid>
-
-      <Divider sx={{ width: '100%', mb: 2 }} />
-
-      {referralCustomFields.length > 0 && (
-        <Grid item xs={12} sx={{ mb: 2 }}>
-          {referralCustomFields.map((field) => {
-            const value = referral.completedCustomFields?.[field.name]?.value;
-
-            let displayValue: string = '—';
-
-            if (value !== null && value !== undefined && value !== '') {
-              if (field.type === CustomFieldType.Boolean) {
-                displayValue = value === true ? 'Yes' : 'No';
-              } else {
-                displayValue = String(value);
-              }
-            }
-
-            return (
-              <Typography key={field.name} variant="body2" sx={{ mb: 0.5 }}>
-                <strong>{field.name}:</strong> {displayValue}
+          {referral.comment && (
+            <Grid item xs={12}>
+              <Typography fontWeight={600} sx={{ mb: 1 }}>
+                Referral Comment
               </Typography>
-            );
-          })}
-        </Grid>
-      )}
 
-      {referral.comment && (
-        <Grid item xs={12}>
-          <Typography fontWeight={600} sx={{ mb: 1 }}>
-            Referral Comment
-          </Typography>
+              <Box
+                sx={{
+                  p: 2,
+                  borderRadius: 1,
+                  bgcolor: 'grey.100',
+                  whiteSpace: 'pre-wrap',
+                }}
+              >
+                {referral.comment}
+              </Box>
+            </Grid>
+          )}
 
-          <Box
-            sx={{
-              p: 2,
-              borderRadius: 1,
-              bgcolor: 'grey.100',
-              whiteSpace: 'pre-wrap',
-            }}
-          >
-            {referral.comment}
-          </Box>
-        </Grid>
-      )}
-      <Divider sx={{ width: '100%', my: 3 }} />
+          <Divider sx={{ width: '100%', my: 3 }} />
 
-      <Grid container spacing={2}>
-        <Grid item xs={12} md={6}>
-          <Typography variant="h6" sx={{ mb: 1 }}>
-            Incomplete Requirements
-          </Typography>
+          <Grid container spacing={2}>
+            <Grid item xs={12} md={6}>
+              <Typography variant="h6" sx={{ mb: 1 }}>
+                Incomplete Requirements
+              </Typography>
 
-          {referralRequirements.map((requirement) => (
-            <MissingRequirementRow
-              key={requirement.actionName}
-              requirement={requirement}
-              context={referralRequirementContext!}
-            />
-          ))}
-        </Grid>
+              {referralRequirements.map((requirement) => (
+                <MissingRequirementRow
+                  key={requirement.actionName}
+                  requirement={requirement}
+                  context={referralRequirementContext}
+                />
+              ))}
+            </Grid>
 
-        <Grid item xs={12} md={6}>
-          <Typography variant="h6" sx={{ mb: 1 }}>
-            Completed Requirements
-          </Typography>
+            <Grid item xs={12} md={6}>
+              <Typography variant="h6" sx={{ mb: 1 }}>
+                Completed Requirements
+              </Typography>
 
-          {referral.completedRequirements?.map((completed, i) => (
-            <CompletedRequirementRow
-              key={`${completed.completedRequirementId}:${i}`}
-              requirement={completed}
-              context={referralRequirementContext!}
-            />
-          ))}
+              {referral.completedRequirements?.map((completed, i) => (
+                <CompletedRequirementRow
+                  key={`${completed.completedRequirementId}:${i}`}
+                  requirement={completed}
+                  context={referralRequirementContext}
+                />
+              ))}
 
-          {referral.exemptedRequirements?.map((exempted, i) => (
-            <ExemptedRequirementRow
-              key={`${exempted.requirementName}:${i}`}
-              requirement={exempted}
-              context={referralRequirementContext!}
-            />
-          ))}
+              {referral.exemptedRequirements?.map((exempted, i) => (
+                <ExemptedRequirementRow
+                  key={`${exempted.requirementName}:${i}`}
+                  requirement={exempted}
+                  context={referralRequirementContext}
+                />
+              ))}
+            </Grid>
+
+            {(referral.uploadedDocuments?.length ?? 0) > 0 && (
+              <>
+                <Divider sx={{ width: '100%', my: 3 }} />
+                <Grid item xs={12}>
+                  <Typography fontWeight={600} sx={{ mb: 1 }}>
+                    Referral Documents
+                  </Typography>
+
+                  <Box component="ul" sx={{ pl: 3, m: 0 }}>
+                    {referral.uploadedDocuments!.map((doc) => (
+                      <Box
+                        component="li"
+                        key={doc.uploadedDocumentId}
+                        sx={{ cursor: 'pointer', mb: 0.5 }}
+                        onClick={() =>
+                          downloadV1ReferralFile(
+                            organizationId,
+                            locationId,
+                            referral.referralId,
+                            doc.uploadedDocumentId!
+                          )
+                        }
+                      >
+                        📃 {doc.uploadedFileName}
+                      </Box>
+                    ))}
+                  </Box>
+                </Grid>
+              </>
+            )}
+          </Grid>
         </Grid>
       </Grid>
+
       {openCreateFamily && (
         <CreatePartneringFamilyDrawer
           onClose={async (familyId?: string) => {
             setOpenCreateFamily(false);
-
             if (!familyId || !referral) return;
-
             await handleSelectFamily(familyId);
           }}
         />
@@ -402,6 +454,13 @@ export function ReferralDetailsPage() {
         <CloseV1ReferralDrawer
           referralId={referral.referralId}
           onClose={() => setOpenCloseReferralDialog(false)}
+        />
+      )}
+
+      {openAddNoteDialog && (
+        <AddEditV1ReferralNoteDialog
+          referralId={referral.referralId}
+          onClose={() => setOpenAddNoteDialog(false)}
         />
       )}
 
