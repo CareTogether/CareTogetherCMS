@@ -710,7 +710,7 @@ export function useDirectoryModel() {
       age: Age | null,
       ethnicity: string | null,
       isInHousehold: boolean,
-      relationshipToFamily: string,
+      relationshipToFamily: string | null,
       address: Address | null,
       phoneNumber: string | null,
       phoneType: PhoneNumberType,
@@ -737,7 +737,7 @@ export function useDirectoryModel() {
             FamilyAdultRelationshipInfo,
             {
               isInHousehold: isInHousehold,
-              relationshipToFamily: relationshipToFamily,
+              relationshipToFamily: relationshipToFamily ?? undefined,
             }
           ),
           address: address == null ? undefined : address,

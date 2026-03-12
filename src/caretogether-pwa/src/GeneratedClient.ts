@@ -5232,7 +5232,7 @@ export enum EmailAddressType {
 }
 
 export class FamilyAdultRelationshipInfo implements IFamilyAdultRelationshipInfo {
-    relationshipToFamily!: string;
+    relationshipToFamily?: string | undefined;
     isInHousehold!: boolean;
 
     constructor(data?: IFamilyAdultRelationshipInfo) {
@@ -5267,7 +5267,7 @@ export class FamilyAdultRelationshipInfo implements IFamilyAdultRelationshipInfo
 }
 
 export interface IFamilyAdultRelationshipInfo {
-    relationshipToFamily: string;
+    relationshipToFamily?: string | undefined;
     isInHousehold: boolean;
 }
 

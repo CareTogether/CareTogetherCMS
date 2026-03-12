@@ -44,7 +44,7 @@ namespace CareTogether.Resources.Directory
     );
 
     public sealed record FamilyAdultRelationshipInfo(
-        string RelationshipToFamily,
+        string? RelationshipToFamily,
         bool IsInHousehold
     );
 

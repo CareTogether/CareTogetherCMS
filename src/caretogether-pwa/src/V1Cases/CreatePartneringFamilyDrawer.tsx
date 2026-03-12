@@ -43,8 +43,8 @@ interface CreatePartneringFamilyDrawerProps {
   onClose: (partneringFamilyId?: string) => void;
 }
 
-function optional(arg: string) {
-  return arg.length > 0 ? arg : null;
+function optional(arg: string | null): string | null {
+  return arg && arg.length > 0 ? arg : null;
 }
 
 export function CreatePartneringFamilyDrawer({
@@ -95,37 +95,36 @@ export function CreatePartneringFamilyDrawer({
 
   const [referralDateError, setReferralDateError] = useState(false);
 
-  async function save() {
-    await withBackdrop(async () => {
-      if (firstName.length <= 0 || lastName.length <= 0) {
-        alert('First and last name are required. Try again.');
-      } else if (relationshipToFamily === '') {
-        //TODO: Actual validation!
-        alert('Family relationship was not selected. Try again.');
-      } else {
-        const age = dateOfBirth == null ? null : new ExactAge();
-        if (dateOfBirth != null) age!.dateOfBirth = dateOfBirth;
-        const familyId = crypto.randomUUID();
-        await directoryModel.createPartneringFamilyWithNewAdult(
-          familyId,
-          v1CaseOpenedAtLocal,
-          firstName,
-          lastName,
-          gender,
-          age?.toJSON(),
-          optional(ethnicity),
-          isInHousehold,
-          relationshipToFamily,
-          address == null
-            ? null
-            : new Address({ ...address, id: crypto.randomUUID() }),
-          optional(phoneNumber),
-          phoneType,
-          optional(emailAddress),
-          emailType,
-          notes == null ? undefined : notes,
-          concerns == null ? undefined : concerns
-        );
+async function save() {
+  await withBackdrop(async () => {
+    if (firstName.length <= 0 || lastName.length <= 0) {
+      alert('First and last name are required. Try again.');
+    } else {
+      const age = dateOfBirth == null ? null : new ExactAge();
+      if (dateOfBirth != null) age!.dateOfBirth = dateOfBirth;
+
+      const familyId = crypto.randomUUID();
+
+      await directoryModel.createPartneringFamilyWithNewAdult(
+        familyId,
+        v1CaseOpenedAtLocal,
+        firstName,
+        lastName,
+        gender,
+        age?.toJSON(),
+        optional(ethnicity),
+        isInHousehold,
+        optional(relationshipToFamily),
+        address == null
+          ? null
+          : new Address({ ...address, id: crypto.randomUUID() }),
+        optional(phoneNumber),
+        phoneType,
+        optional(emailAddress),
+        emailType,
+        notes == null ? undefined : notes,
+        concerns == null ? undefined : concerns
+      );
         //TODO: Error handling (start with a basic error dialog w/ request to share a screenshot, and App Insights logging)
         onClose(familyId);
       }
@@ -211,7 +210,7 @@ export function CreatePartneringFamilyDrawer({
               })
             }
             renderInput={(params) => (
-              <TextField {...params} label="Relationship to Family" required />
+              <TextField {...params} label="Relationship to Family"  />
             )}
           />
         </Grid>

@@ -3459,12 +3459,12 @@
         "type": "object",
         "additionalProperties": false,
         "required": [
-          "relationshipToFamily",
           "isInHousehold"
         ],
         "properties": {
           "relationshipToFamily": {
-            "type": "string"
+            "type": "string",
+            "nullable": true
           },
           "isInHousehold": {
             "type": "boolean"
