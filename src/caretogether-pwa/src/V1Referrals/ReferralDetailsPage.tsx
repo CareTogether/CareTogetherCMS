@@ -7,8 +7,6 @@ import {
   Divider,
   Grid,
   Typography,
-  Autocomplete,
-  TextField,
   Snackbar,
   Alert,
 } from '@mui/material';
@@ -44,6 +42,10 @@ import { downloadV1ReferralFile } from '../Model/FilesModel';
 
 import { AddEditV1ReferralNoteDialog } from './AddEditV1ReferralNoteDialog';
 import { ReferralTimeline } from './V1ReferralTimeline';
+import {
+  SelectReferralFamilyDrawer,
+  FamilyOption,
+} from './SelectReferralFamilyDrawer';
 
 function formatStatusWithDate(
   status: V1ReferralStatus,
@@ -89,13 +91,13 @@ export function ReferralDetailsPage() {
 
   const [working, setWorking] = useState(false);
   const [openCreateFamily, setOpenCreateFamily] = useState(false);
-  const [selectingFamily, setSelectingFamily] = useState(false);
   const [openEditReferral, setOpenEditReferral] = useState(false);
   const [openOpenCaseDialog, setOpenOpenCaseDialog] = useState(false);
   const [showAcceptedMessage, setShowAcceptedMessage] = useState(false);
   const [openCloseReferralDialog, setOpenCloseReferralDialog] = useState(false);
-
   const [openAddNoteDialog, setOpenAddNoteDialog] = useState(false);
+
+  const [openSelectFamilyDrawer, setOpenSelectFamilyDrawer] = useState(false);
 
   const referral = useMemo(
     () => referrals.find((r) => r.referralId === referralId),
@@ -129,10 +131,9 @@ export function ReferralDetailsPage() {
   const isClosed = referral.status === V1ReferralStatus.Closed;
   const canSelectFamily = isOpen && !referral.familyId;
 
-  const familyOptions = families.map((f) => ({
+  const familyOptions: FamilyOption[] = families.map((f) => ({
     id: f.family?.id ?? '',
     label: familyNameString(f),
-    family: f,
   }));
 
   const referralCustomFields: CustomField[] =
@@ -150,22 +151,22 @@ export function ReferralDetailsPage() {
       return !completed && !exempted;
     }) ?? [];
 
-  async function handleSelectFamily(familyId: string) {
-    if (!referral || working) return;
+  async function handleSaveSelectedFamily(
+    currentReferralId: string,
+    familyId: string
+  ) {
+    if (working) return;
 
     const selectedFamily = familyLookup(familyId);
     const hasOpenCase = !!selectedFamily?.partneringFamilyInfo?.openV1Case;
 
     try {
       setWorking(true);
+      await updateReferralFamily(currentReferralId, familyId);
 
-      await updateReferralFamily(referral.referralId, familyId);
+      if (hasOpenCase) setShowAcceptedMessage(true);
 
-      if (hasOpenCase) {
-        setShowAcceptedMessage(true);
-      }
-
-      setSelectingFamily(false);
+      setOpenSelectFamilyDrawer(false);
     } finally {
       setWorking(false);
     }
@@ -243,10 +244,10 @@ export function ReferralDetailsPage() {
             </Button>
           )}
 
-          {canSelectFamily && !selectingFamily && (
+          {canSelectFamily && (
             <Button
               variant="contained"
-              onClick={() => setSelectingFamily(true)}
+              onClick={() => setOpenSelectFamilyDrawer(true)}
             >
               Select Family
             </Button>
@@ -288,22 +289,7 @@ export function ReferralDetailsPage() {
                 </Typography>
               )}
 
-              {selectingFamily && (
-                <Box sx={{ mt: 1, maxWidth: 400 }}>
-                  <Autocomplete
-                    options={familyOptions}
-                    getOptionLabel={(opt) => opt.label}
-                    onChange={(_, option) =>
-                      option && handleSelectFamily(option.id)
-                    }
-                    renderInput={(params) => (
-                      <TextField {...params} label="Select Family" />
-                    )}
-                  />
-                </Box>
-              )}
-
-              {!family && !selectingFamily && <Typography>-</Typography>}
+              {!family && <Typography>-</Typography>}
             </Box>
           </Grid>
 
@@ -430,8 +416,8 @@ export function ReferralDetailsPage() {
         <CreatePartneringFamilyDrawer
           onClose={async (familyId?: string) => {
             setOpenCreateFamily(false);
-            if (!familyId || !referral) return;
-            await handleSelectFamily(familyId);
+            if (!familyId) return;
+            await handleSaveSelectedFamily(referral.referralId, familyId);
           }}
         />
       )}
@@ -463,6 +449,16 @@ export function ReferralDetailsPage() {
           onClose={() => setOpenAddNoteDialog(false)}
         />
       )}
+
+      <SelectReferralFamilyDrawer
+        open={openSelectFamilyDrawer}
+        working={working}
+        familyOptions={familyOptions}
+        onCancel={() => setOpenSelectFamilyDrawer(false)}
+        onSave={(familyId) =>
+          handleSaveSelectedFamily(referral.referralId, familyId)
+        }
+      />
 
       <Snackbar
         open={showAcceptedMessage}
