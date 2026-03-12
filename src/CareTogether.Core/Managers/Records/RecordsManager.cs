@@ -669,9 +669,6 @@ namespace CareTogether.Managers.Records
                             ImmutableList<CustodialRelationship>.Empty
                         )
                     );
-                    yield return new ReferralRecordsCommand(
-                        new CreateReferral(c.FamilyId, c.ReferralId, c.ReferralOpenedAtUtc)
-                    );
                     break;
                 }
                 default:

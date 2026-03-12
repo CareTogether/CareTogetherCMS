@@ -589,92 +589,92 @@ export function FamilyScreen() {
             {family && <AssignmentsSection family={family} />}
 
             <Grid item xs={12} md={4}>
-              {permissions(Permission.ViewV1CaseProgress) &&
-                family.partneringFamilyInfo && (
-                  <FormControl>
-                    <FormLabel
-                      id="demo-radio-buttons-group-label"
-                      sx={{
-                        color: '#000',
-                        fontSize: '1.17em',
-                        fontWeight: 'bold',
-                        marginBottom: 0,
-                      }}
+              {permissions(Permission.ViewV1CaseProgress) && (
+                <FormControl>
+                  <FormLabel
+                    id="demo-radio-buttons-group-label"
+                    sx={{
+                      color: '#000',
+                      fontSize: '1.17em',
+                      fontWeight: 'bold',
+                      marginBottom: 0,
+                    }}
+                  >
+                    <Box
+                      display="flex"
+                      justifyContent="space-between"
+                      alignItems="center"
+                      gap={2}
                     >
-                      <Box
-                        display="flex"
-                        justifyContent="space-between"
-                        alignItems="center"
-                        gap={2}
-                      >
-                        <Typography className="ph-unmask" variant="h3">
-                          Cases
-                        </Typography>
-                        {!family.partneringFamilyInfo?.openV1Case &&
-                          permissions(Permission.CreateV1Case) && (
-                            <Button
-                              className="ph-unmask"
-                              onClick={() => setOpenNewV1CaseDialogOpen(true)}
-                              variant="contained"
-                              size="small"
-                            >
-                              Open New Case
-                            </Button>
-                          )}
-                      </Box>
-                    </FormLabel>
+                      <Typography className="ph-unmask" variant="h3">
+                        Cases
+                      </Typography>
+                      {(!family.partneringFamilyInfo ||
+                        !family.partneringFamilyInfo.openV1Case) &&
+                        permissions(Permission.CreateV1Case) && (
+                          <Button
+                            className="ph-unmask"
+                            onClick={() => setOpenNewV1CaseDialogOpen(true)}
+                            variant="contained"
+                            size="small"
+                          >
+                            Open New Case
+                          </Button>
+                        )}
+                    </Box>
+                  </FormLabel>
 
-                    <RadioGroup
-                      aria-labelledby="demo-radio-buttons-group-label"
-                      value={selectedV1Case ? selectedV1Case.id : null}
-                      name="radio-buttons-group"
-                    >
-                      {allV1Cases.map((v1Case) => {
-                        const isSelected = selectedV1Case?.id === v1Case.id;
-                        const isOpenV1Case = !v1Case.closedAtUtc;
-                        const showCloseButton =
-                          isSelected &&
-                          isOpenV1Case &&
-                          canCloseV1Case &&
-                          v1Case.id ===
-                            family.partneringFamilyInfo?.openV1Case?.id;
+                  <RadioGroup
+                    aria-labelledby="demo-radio-buttons-group-label"
+                    value={selectedV1Case ? selectedV1Case.id : null}
+                    name="radio-buttons-group"
+                  >
+                    {allV1Cases.map((v1Case) => {
+                      const isSelected = selectedV1Case?.id === v1Case.id;
+                      const isOpenV1Case = !v1Case.closedAtUtc;
+                      const showCloseButton =
+                        isSelected &&
+                        isOpenV1Case &&
+                        canCloseV1Case &&
+                        v1Case.id ===
+                          family.partneringFamilyInfo?.openV1Case?.id;
 
-                        return (
-                          <FormControlLabel
-                            key={v1Case.id}
-                            value={v1Case.id}
-                            control={<Radio />}
-                            onChange={() => {
-                              if (v1Case.id) handleV1CaseChange(v1Case.id);
-                            }}
-                            label={
-                              <Box display="flex" alignItems="center" gap={1}>
-                                <Typography className="ph-unmask">
-                                  {v1Case.closedAtUtc
-                                    ? `Case Closed ${format(v1Case.closedAtUtc, 'M/d/yy')}`
-                                    : 'Open Case'}
-                                </Typography>
-                                {showCloseButton && (
-                                  <Button
-                                    className="ph-unmask"
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      setCloseV1CaseDialogOpen(true);
-                                    }}
-                                    variant="contained"
-                                    size="small"
-                                  >
-                                    Close Case
-                                  </Button>
-                                )}
-                              </Box>
-                            }
-                          />
-                        );
-                      })}
-                    </RadioGroup>
-                  </FormControl>
-                )}
+                      return (
+                        <FormControlLabel
+                          key={v1Case.id}
+                          value={v1Case.id}
+                          control={<Radio />}
+                          onChange={() => {
+                            if (v1Case.id) handleV1CaseChange(v1Case.id);
+                          }}
+                          label={
+                            <Box display="flex" alignItems="center" gap={1}>
+                              <Typography className="ph-unmask">
+                                {v1Case.closedAtUtc
+                                  ? `Case Closed ${format(v1Case.closedAtUtc, 'M/d/yy')}`
+                                  : 'Open Case'}
+                              </Typography>
+                              {showCloseButton && (
+                                <Button
+                                  className="ph-unmask"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setCloseV1CaseDialogOpen(true);
+                                  }}
+                                  variant="contained"
+                                  size="small"
+                                >
+                                  Close Case
+                                </Button>
+                              )}
+                            </Box>
+                          }
+                        />
+                      );
+                    })}
+                  </RadioGroup>
+                </FormControl>
+              )}
             </Grid>
 
             <Grid item md={4}>
