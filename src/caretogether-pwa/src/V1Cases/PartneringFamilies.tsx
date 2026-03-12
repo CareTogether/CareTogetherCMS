@@ -306,7 +306,7 @@ function PartneringFamilies() {
         if (countyFilter.length === 0) return true;
 
         const county = getFamilyCounty(family);
-        return county === '—'
+        return county === null
           ? countyFilter.includes(null)
           : countyFilter.includes(county);
       })
