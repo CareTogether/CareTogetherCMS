@@ -272,8 +272,8 @@ export function FamilyScreen() {
   const updateTestFamilyFlagEnabled = useFeatureFlagEnabled(
     'updateTestFamilyFlag'
   );
-  const hideIntakeRequirementsAndCustomFields = useFeatureFlagEnabled(
-    'hideIntakeRequirementsAndCustomFields'
+  const showIntakeRequirementsAndCustomFields = useFeatureFlagEnabled(
+    'showIntakeRequirementsAndCustomFields'
   );
 
   useScreenTitle(family ? `${familyLastName(family)} Family` : '...');
@@ -679,7 +679,7 @@ export function FamilyScreen() {
 
             <Grid item md={4}>
               {permissions(Permission.ViewV1CaseCustomFields) &&
-                hideIntakeRequirementsAndCustomFields &&
+                showIntakeRequirementsAndCustomFields &&
                 (
                   selectedV1Case?.completedCustomFields ||
                   ([] as Array<CompletedCustomFieldInfo | string>)
@@ -748,7 +748,7 @@ export function FamilyScreen() {
 
           <Grid container spacing={0}>
             {permissions(Permission.ViewV1CaseProgress) &&
-              hideIntakeRequirementsAndCustomFields &&
+              showIntakeRequirementsAndCustomFields &&
               selectedV1Case && (
                 <>
                   <Grid item xs={12} sm={6} md={4} style={{ paddingRight: 20 }}>
