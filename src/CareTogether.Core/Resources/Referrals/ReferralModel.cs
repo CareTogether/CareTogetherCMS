@@ -93,6 +93,7 @@ namespace CareTogether.Resources.V1Cases
                     new V1CaseEntry(
                         c.ReferralId,
                         c.FamilyId,
+                        LinkedV1ReferralId: c.LinkedV1ReferralId,
                         OpenedAtUtc: c.OpenedAtUtc,
                         ClosedAtUtc: null,
                         CloseReason: null,

@@ -13042,6 +13042,7 @@ export interface ICompleteReferralRequirement extends IV1CaseCommand {
 
 export class CreateReferral extends V1CaseCommand implements ICreateReferral {
     openedAtUtc!: Date;
+    linkedV1ReferralId?: string | undefined;
 
     constructor(data?: ICreateReferral) {
         super(data);
@@ -13052,6 +13053,7 @@ export class CreateReferral extends V1CaseCommand implements ICreateReferral {
         super.init(_data);
         if (_data) {
             this.openedAtUtc = _data["openedAtUtc"] ? new Date(_data["openedAtUtc"].toString()) : <any>undefined;
+            this.linkedV1ReferralId = _data["linkedV1ReferralId"];
         }
     }
 
@@ -13065,6 +13067,7 @@ export class CreateReferral extends V1CaseCommand implements ICreateReferral {
     toJSON(data?: any) {
         data = typeof data === 'object' ? data : {};
         data["openedAtUtc"] = this.openedAtUtc ? this.openedAtUtc.toISOString() : <any>undefined;
+        data["linkedV1ReferralId"] = this.linkedV1ReferralId;
         super.toJSON(data);
         return data;
     }
@@ -13072,6 +13075,7 @@ export class CreateReferral extends V1CaseCommand implements ICreateReferral {
 
 export interface ICreateReferral extends IV1CaseCommand {
     openedAtUtc: Date;
+    linkedV1ReferralId?: string | undefined;
 }
 
 export class ExemptReferralRequirement extends V1CaseCommand implements IExemptReferralRequirement {

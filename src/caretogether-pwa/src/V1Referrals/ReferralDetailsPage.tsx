@@ -432,6 +432,7 @@ export function ReferralDetailsPage() {
       {openOpenCaseDialog && referral.familyId && (
         <OpenNewV1CaseDialog
           partneringFamilyId={referral.familyId}
+          referralId={referral.referralId}
           onClose={() => setOpenOpenCaseDialog(false)}
         />
       )}

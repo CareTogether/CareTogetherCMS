@@ -29,6 +29,7 @@ import {
   Permission,
   V1Case,
   RoleRemovalReason,
+  V1ReferralStatus,
 } from '../GeneratedClient';
 import { useParams } from 'react-router';
 import AddCircleIcon from '@mui/icons-material/AddCircle';
@@ -88,6 +89,7 @@ import { useSyncV1CaseIdInURL } from '../Hooks/useSyncV1CaseIdInURL';
 import { ArrangementsSection } from '../V1Cases/Arrangements/ArrangementsSection/ArrangementsSection';
 import { useFeatureFlagEnabled } from 'posthog-js/react';
 import { TestFamilyBadge } from './TestFamilyBadge';
+import { visibleReferralsQuery } from '../Model/Data';
 
 export function FamilyScreen() {
   const familyIdMaybe = useParams<{ familyId: string }>();
@@ -149,6 +151,11 @@ export function FamilyScreen() {
     return [...openV1Cases, ...closedV1Cases];
   }, [openV1Cases, closedV1Cases]);
   const [closeV1CaseDialogOpen, setCloseV1CaseDialogOpen] = useState(false);
+  const referralsLoadable = useLoadable(visibleReferralsQuery);
+  const openReferralId =
+    referralsLoadable?.find(
+      (r) => r.familyId === familyId && r.status === V1ReferralStatus.Open
+    )?.referralId ?? undefined;
   const [openNewV1CaseDialogOpen, setOpenNewV1CaseDialogOpen] = useState(false);
   const [uploadDocumentDialogOpen, setUploadDocumentDialogOpen] =
     useState(false);
@@ -729,6 +736,7 @@ export function FamilyScreen() {
               {openNewV1CaseDialogOpen && (
                 <OpenNewV1CaseDialog
                   partneringFamilyId={family.family!.id!}
+                  referralId={openReferralId}
                   onClose={() => setOpenNewV1CaseDialogOpen(false)}
                 />
               )}

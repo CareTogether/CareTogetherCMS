@@ -56,10 +56,16 @@ import {
   EditArrangementEndTime,
   EditArrangementCancelledAt,
 } from '../GeneratedClient';
+import { api } from '../Api/Api';
 import { useAtomicRecordsCommandCallback } from './DirectoryModel';
 import { visibleFamiliesQuery } from './Data';
 import { convertUtcDateToLocalDate } from '../Utilities/dateUtils';
 import { commandFactory } from './CommandFactory';
+import {
+  visibleAggregatesState,
+  selectedLocationContextState,
+} from '../Model/Data';
+import { useSetRecoilState, useRecoilValue } from 'recoil';
 
 export const partneringFamiliesData = selector({
   key: 'partneringFamiliesData',
@@ -90,6 +96,10 @@ function useArrangementsCommandCallbackWithLocation<T extends unknown[]>(
 }
 
 export function useV1CasesModel() {
+  const setVisibleAggregates = useSetRecoilState(visibleAggregatesState);
+  const { organizationId, locationId } = useRecoilValue(
+    selectedLocationContextState
+  );
   const completeV1CaseRequirement = useV1CaseCommandCallbackWithLocation(
     async (
       partneringFamilyId: string,
@@ -935,16 +945,40 @@ export function useV1CasesModel() {
       return command;
     }
   );
-  const openV1Case = useV1CaseCommandCallbackWithLocation(
-    async (partneringFamilyId: string, openedAtLocal: Date) => {
+  const openV1CaseCommand = useV1CaseCommandCallbackWithLocation(
+    async (
+      partneringFamilyId: string,
+      openedAtLocal: Date,
+      linkedReferralId?: string
+    ) => {
       const command = commandFactory(CreateV1Case, {
         familyId: partneringFamilyId,
         referralId: crypto.randomUUID(),
         openedAtUtc: openedAtLocal,
       });
+
+      command.linkedV1ReferralId = linkedReferralId ?? undefined;
+
       return command;
     }
   );
+  const openV1Case = async (
+    partneringFamilyId: string,
+    openedAtLocal: Date,
+    linkedReferralId?: string
+  ) => {
+    await openV1CaseCommand(
+      partneringFamilyId,
+      openedAtLocal,
+      linkedReferralId
+    );
+
+    const updatedAggregates = await api.records.listVisibleAggregates(
+      organizationId,
+      locationId
+    );
+    setVisibleAggregates(updatedAggregates);
+  };
 
   return {
     completeV1CaseRequirement,

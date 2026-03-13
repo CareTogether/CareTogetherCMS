@@ -1162,7 +1162,7 @@ namespace CareTogether.TestData
                 new ReferralCommandExecuted(
                     adminId,
                     V1CasesMonth(5, 4, 10, 0),
-                    new CreateReferral(guid1, guid1, V1CasesMonth(5, 4, 10, 0))
+                    new CreateReferral(guid1, guid1, V1CasesMonth(5, 4, 10, 0), null)
                 ),
                 new ReferralCommandExecuted(
                     adminId,
@@ -1375,7 +1375,7 @@ namespace CareTogether.TestData
                 new ReferralCommandExecuted(
                     adminId,
                     StartOfCurrentMonth(),
-                    new CreateReferral(guid1, guid2, V1CasesMonth(1, 19, 30, 45))
+                    new CreateReferral(guid1, guid2, V1CasesMonth(1, 19, 30, 45), null)
                 ),
                 new ReferralCommandExecuted(
                     adminId,
@@ -1500,7 +1500,7 @@ namespace CareTogether.TestData
                 new ReferralCommandExecuted(
                     adminId,
                     V1CasesMonth(21, 20, 38, 0),
-                    new CreateReferral(guid5, guid3, V1CasesMonth(21, 20, 38, 0))
+                    new CreateReferral(guid5, guid3, V1CasesMonth(21, 20, 38, 0), null)
                 ),
                 // Fisher family
                 new ReferralCommandExecuted(
@@ -1509,7 +1509,8 @@ namespace CareTogether.TestData
                     new CreateReferral(
                         fisherFamilyGuid,
                         fisherFamilyV1Case1Guid,
-                        V1CasesMonth(1, 12, 0, 0)
+                        V1CasesMonth(1, 12, 0, 0),
+                        null
                     )
                 ),
                 new ArrangementsCommandExecuted(
@@ -2446,14 +2447,13 @@ namespace CareTogether.TestData
                         ),
                     ],
                     ["Community Organizer", "Community Co-Organizer"],
-
-                      ImmutableList.Create(
-        "Not appropriate",
-        "No capacity",
-        "No longer needed",
-        "Resourced",
-        "Need met"
-    )
+                    ImmutableList.Create(
+                        "Not appropriate",
+                        "No capacity",
+                        "No longer needed",
+                        "Resourced",
+                        "Need met"
+                    )
                 )
             );
 

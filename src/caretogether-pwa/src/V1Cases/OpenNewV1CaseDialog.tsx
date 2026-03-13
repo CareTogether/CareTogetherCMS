@@ -6,11 +6,13 @@ import { ValidateDatePicker } from '../Generic/Forms/ValidateDatePicker';
 
 interface OpenNewV1CaseDialogProps {
   partneringFamilyId: string;
+  referralId?: string;
   onClose: () => void;
 }
 
 export function OpenNewV1CaseDialog({
   partneringFamilyId,
+  referralId,
   onClose,
 }: OpenNewV1CaseDialogProps) {
   const v1CasesModel = useV1CasesModel();
@@ -22,7 +24,11 @@ export function OpenNewV1CaseDialog({
   const [dobError, setDobError] = useState(false);
 
   async function save() {
-    await v1CasesModel.openV1Case(partneringFamilyId, openedAtLocal);
+    await v1CasesModel.openV1Case(
+      partneringFamilyId,
+      openedAtLocal,
+      referralId
+    );
   }
 
   return (

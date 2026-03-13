@@ -295,6 +295,29 @@ namespace CareTogether.Managers.Records
                     );
                 }
             }
+            if (
+                command is ReferralRecordsCommand caseCommand
+                && caseCommand.Command is CreateReferral created
+                && created.LinkedV1ReferralId is Guid linkedReferralId
+            )
+            {
+                try
+                {
+                    await v1ReferralsResource.ExecuteV1ReferralCommandAsync(
+                        organizationId,
+                        locationId,
+                        new AcceptV1Referral(linkedReferralId, DateTime.UtcNow),
+                        user.UserId()
+                    );
+
+                    await v1ReferralsResource.GetReferralAsync(
+                        organizationId,
+                        locationId,
+                        linkedReferralId
+                    );
+                }
+                catch (Exception) { }
+            }
 
             return await RenderCommandResultAsync(organizationId, locationId, userContext, command);
         }
