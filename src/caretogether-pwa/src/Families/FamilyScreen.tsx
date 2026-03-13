@@ -90,6 +90,7 @@ import { ArrangementsSection } from '../V1Cases/Arrangements/ArrangementsSection
 import { useFeatureFlagEnabled } from 'posthog-js/react';
 import { TestFamilyBadge } from './TestFamilyBadge';
 import { visibleReferralsQuery } from '../Model/Data';
+import { useRecoilValue } from 'recoil';
 
 export function FamilyScreen() {
   const familyIdMaybe = useParams<{ familyId: string }>();
@@ -110,6 +111,29 @@ export function FamilyScreen() {
   const familyCommunityInfo = allCommunityInfo?.filter((c) =>
     c.community?.memberFamilies?.includes(familyId)
   );
+
+  const referrals = useRecoilValue(visibleReferralsQuery);
+
+  const familyReferrals = useMemo(() => {
+    return (referrals ?? []).filter((r) => r.familyId === familyId);
+  }, [referrals, familyId]);
+
+  const familyReferralsSorted = useMemo(() => {
+    return [...familyReferrals].sort((a, b) => {
+      const aDate =
+        a.status === V1ReferralStatus.Open ? a.createdAtUtc : a.closedAtUtc;
+      const bDate =
+        b.status === V1ReferralStatus.Open ? b.createdAtUtc : b.closedAtUtc;
+
+      if (a.status !== b.status) {
+        return a.status === V1ReferralStatus.Open ? -1 : 1;
+      }
+
+      const at = aDate ? aDate.getTime() : 0;
+      const bt = bDate ? bDate.getTime() : 0;
+      return bt - at;
+    });
+  }, [familyReferrals]);
 
   const appNavigate = useAppNavigate();
 
@@ -607,6 +631,52 @@ export function FamilyScreen() {
                       marginBottom: 0,
                     }}
                   >
+                    {familyReferralsSorted.length > 0 && (
+                      <Grid item xs={12}>
+                        <Typography
+                          className="ph-unmask"
+                          variant="h3"
+                          style={{ marginTop: 16, marginBottom: 8 }}
+                        >
+                          Referrals
+                        </Typography>
+
+                        {familyReferralsSorted.map((referral) => {
+                          const date =
+                            referral.status === V1ReferralStatus.Open
+                              ? referral.createdAtUtc
+                              : referral.closedAtUtc;
+
+                          return (
+                            <Box
+                              key={referral.referralId}
+                              onClick={() =>
+                                appNavigate.referral(referral.referralId)
+                              }
+                              sx={{
+                                cursor: 'pointer',
+                                py: 0.5,
+                                '&:hover': { textDecoration: 'underline' },
+                              }}
+                            >
+                              <Typography className="ph-unmask">
+                                {referral.title}{' '}
+                                <Typography
+                                  component="span"
+                                  color="text.secondary"
+                                >
+                                  ·{' '}
+                                  {referral.status === V1ReferralStatus.Open
+                                    ? 'Open'
+                                    : 'Closed'}{' '}
+                                  · {date ? format(date, 'M/d/yy') : ''}
+                                </Typography>
+                              </Typography>
+                            </Box>
+                          );
+                        })}
+                      </Grid>
+                    )}
                     <Box
                       display="flex"
                       justifyContent="space-between"
