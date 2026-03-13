@@ -70,7 +70,7 @@ namespace CareTogether.Resources.V1Referrals
 
                 UpdateV1ReferralFamily c => EnsureExists(referral) with { FamilyId = c.FamilyId },
 
-                UpdateV1ReferralDetails c => EnsureOpen(referral!) with
+                UpdateV1ReferralDetails c => EnsureNotClosed(referral!) with
                 {
                     Title = c.Title,
                     Comment = c.Comment,
@@ -82,14 +82,12 @@ namespace CareTogether.Resources.V1Referrals
                     Status = V1ReferralStatus.Accepted,
                     AcceptedAtUtc = c.AcceptedAtUtc,
                 },
-
                 CloseV1Referral c => EnsureOpen(referral!) with
                 {
                     Status = V1ReferralStatus.Closed,
                     ClosedAtUtc = c.ClosedAtUtc,
                     CloseReason = c.CloseReason,
                 },
-
                 ReopenV1Referral => EnsureExists(referral!) with
                 {
                     Status = V1ReferralStatus.Open,
@@ -98,7 +96,7 @@ namespace CareTogether.Resources.V1Referrals
                     CloseReason = null,
                 },
 
-                UpdateCustomV1ReferralField c => EnsureOpen(referral!) with
+                UpdateCustomV1ReferralField c => EnsureNotClosed(referral!) with
                 {
                     CompletedCustomFields = referral!.CompletedCustomFields.SetItem(
                         c.CustomFieldName,
@@ -113,7 +111,7 @@ namespace CareTogether.Resources.V1Referrals
                     ),
                 },
 
-                CompleteReferralRequirement c => EnsureOpen(referral!) with
+                CompleteReferralRequirement c => EnsureNotClosed(referral!) with
                 {
                     CompletedRequirements = referral!.CompletedRequirements.Add(
                         new CompletedRequirementInfo(
@@ -129,7 +127,7 @@ namespace CareTogether.Resources.V1Referrals
                     ),
                 },
 
-                MarkReferralRequirementIncomplete c => EnsureOpen(referral!) with
+                MarkReferralRequirementIncomplete c => EnsureNotClosed(referral!) with
                 {
                     CompletedRequirements = referral!
                         .CompletedRequirements.Where(r =>
@@ -138,7 +136,7 @@ namespace CareTogether.Resources.V1Referrals
                         .ToImmutableList(),
                 },
 
-                ExemptReferralRequirement c => EnsureOpen(referral!) with
+                ExemptReferralRequirement c => EnsureNotClosed(referral!) with
                 {
                     ExemptedRequirements = referral!.ExemptedRequirements.Add(
                         new ExemptedRequirementInfo(
@@ -152,14 +150,14 @@ namespace CareTogether.Resources.V1Referrals
                     ),
                 },
 
-                UnexemptReferralRequirement c => EnsureOpen(referral!) with
+                UnexemptReferralRequirement c => EnsureNotClosed(referral!) with
                 {
                     ExemptedRequirements = referral!
                         .ExemptedRequirements.Where(r => r.RequirementName != c.RequirementName)
                         .ToImmutableList(),
                 },
 
-                UploadV1ReferralDocument c => EnsureOpen(referral!) with
+                UploadV1ReferralDocument c => EnsureNotClosed(referral!) with
                 {
                     UploadedDocuments = referral!.UploadedDocuments.Add(
                         new UploadedDocumentInfo(
@@ -171,7 +169,7 @@ namespace CareTogether.Resources.V1Referrals
                     ),
                 },
 
-                DeleteUploadedV1ReferralDocument c => EnsureOpen(referral!) with
+                DeleteUploadedV1ReferralDocument c => EnsureNotClosed(referral!) with
                 {
                     UploadedDocuments = referral!.UploadedDocuments.RemoveAll(d =>
                         d.UploadedDocumentId == c.UploadedDocumentId
@@ -197,6 +195,14 @@ namespace CareTogether.Resources.V1Referrals
         {
             if (referral.Status != V1ReferralStatus.Open)
                 throw new InvalidOperationException("Referral is not open.");
+
+            return referral;
+        }
+
+        private static V1Referral EnsureNotClosed(V1Referral referral)
+        {
+            if (referral.Status == V1ReferralStatus.Closed)
+                throw new InvalidOperationException("Closed referrals cannot be edited.");
 
             return referral;
         }

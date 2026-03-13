@@ -191,7 +191,7 @@ export function ReferralDetailsPage() {
         </Box>
 
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 3 }}>
-          {isOpen && (
+          {!isClosed && (
             <Button
               variant="outlined"
               onClick={() => setOpenEditReferral(true)}
