@@ -137,6 +137,33 @@ export function FamilyScreen() {
     });
   }, [familyReferrals]);
 
+  function referralStatusLabel(status: V1ReferralStatus): string {
+    switch (status) {
+      case V1ReferralStatus.Open:
+        return 'Open';
+      case V1ReferralStatus.Accepted:
+        return 'Accepted';
+      case V1ReferralStatus.Closed:
+        return 'Closed';
+    }
+  }
+
+  function referralStatusDate(referral: {
+    status: V1ReferralStatus;
+    createdAtUtc?: Date;
+    acceptedAtUtc?: Date;
+    closedAtUtc?: Date;
+  }): Date | undefined {
+    switch (referral.status) {
+      case V1ReferralStatus.Open:
+        return referral.createdAtUtc;
+      case V1ReferralStatus.Accepted:
+        return referral.acceptedAtUtc ?? referral.createdAtUtc;
+      case V1ReferralStatus.Closed:
+        return referral.closedAtUtc ?? referral.createdAtUtc;
+    }
+  }
+
   const appNavigate = useAppNavigate();
 
   const familyLookup = useFamilyLookup();
@@ -660,10 +687,7 @@ export function FamilyScreen() {
                         </Typography>
 
                         {familyReferralsSorted.map((referral) => {
-                          const date =
-                            referral.status === V1ReferralStatus.Open
-                              ? referral.createdAtUtc
-                              : referral.closedAtUtc;
+                          const date = referralStatusDate(referral);
 
                           return (
                             <Box
@@ -683,11 +707,8 @@ export function FamilyScreen() {
                                   component="span"
                                   color="text.secondary"
                                 >
-                                  ·{' '}
-                                  {referral.status === V1ReferralStatus.Open
-                                    ? 'Open'
-                                    : 'Closed'}{' '}
-                                  · {date ? format(date, 'M/d/yy') : ''}
+                                  · {referralStatusLabel(referral.status)} ·{' '}
+                                  {date ? format(date, 'M/d/yy') : ''}
                                 </Typography>
                               </Typography>
                             </Box>
