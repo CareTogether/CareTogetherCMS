@@ -3,7 +3,6 @@ import {
   Button,
   Checkbox,
   Drawer,
-  Divider,
   FormControl,
   FormControlLabel,
   FormGroup,
@@ -93,38 +92,38 @@ export function CreatePartneringFamilyDrawer({
 
   const withBackdrop = useBackdrop();
 
-  const [referralDateError, setReferralDateError] = useState(false);
+  //   const [referralDateError, setReferralDateError] = useState(false);
 
-async function save() {
-  await withBackdrop(async () => {
-    if (firstName.length <= 0 || lastName.length <= 0) {
-      alert('First and last name are required. Try again.');
-    } else {
-      const age = dateOfBirth == null ? null : new ExactAge();
-      if (dateOfBirth != null) age!.dateOfBirth = dateOfBirth;
+  async function save() {
+    await withBackdrop(async () => {
+      if (firstName.length <= 0 || lastName.length <= 0) {
+        alert('First and last name are required. Try again.');
+      } else {
+        const age = dateOfBirth == null ? null : new ExactAge();
+        if (dateOfBirth != null) age!.dateOfBirth = dateOfBirth;
 
-      const familyId = crypto.randomUUID();
+        const familyId = crypto.randomUUID();
 
-      await directoryModel.createPartneringFamilyWithNewAdult(
-        familyId,
-        v1CaseOpenedAtLocal,
-        firstName,
-        lastName,
-        gender,
-        age?.toJSON(),
-        optional(ethnicity),
-        isInHousehold,
-        optional(relationshipToFamily),
-        address == null
-          ? null
-          : new Address({ ...address, id: crypto.randomUUID() }),
-        optional(phoneNumber),
-        phoneType,
-        optional(emailAddress),
-        emailType,
-        notes == null ? undefined : notes,
-        concerns == null ? undefined : concerns
-      );
+        await directoryModel.createPartneringFamilyWithNewAdult(
+          familyId,
+          v1CaseOpenedAtLocal,
+          firstName,
+          lastName,
+          gender,
+          age?.toJSON(),
+          optional(ethnicity),
+          isInHousehold,
+          optional(relationshipToFamily),
+          address == null
+            ? null
+            : new Address({ ...address, id: crypto.randomUUID() }),
+          optional(phoneNumber),
+          phoneType,
+          optional(emailAddress),
+          emailType,
+          notes == null ? undefined : notes,
+          concerns == null ? undefined : concerns
+        );
         //TODO: Error handling (start with a basic error dialog w/ request to share a screenshot, and App Insights logging)
         onClose(familyId);
       }
@@ -158,7 +157,7 @@ async function save() {
           </Typography>
         </Grid>
 
-        <Grid item xs={12}>
+        {/* <Grid item xs={12}>
           <ValidateDatePicker
             label="When was this Case opened?"
             value={v1CaseOpenedAtLocal}
@@ -169,7 +168,7 @@ async function save() {
             onErrorChange={setReferralDateError}
             textFieldProps={{ fullWidth: true, required: true }}
           />
-        </Grid>
+        </Grid> */}
 
         <Grid item xs={12} sm={6}>
           <TextField
@@ -210,7 +209,7 @@ async function save() {
               })
             }
             renderInput={(params) => (
-              <TextField {...params} label="Relationship to Family"  />
+              <TextField {...params} label="Relationship to Family" />
             )}
           />
         </Grid>
@@ -233,10 +232,6 @@ async function save() {
               label="In Household"
             />
           </FormGroup>
-        </Grid>
-
-        <Grid item xs={12}>
-          <Divider />
         </Grid>
 
         <Grid item xs={12}>
@@ -337,6 +332,7 @@ async function save() {
             size="small"
             value={notes ?? ''}
             onChange={(e) => setFields({ ...fields, notes: e.target.value })}
+            helperText="This note is associated with this family member."
           />
         </Grid>
 
@@ -354,7 +350,7 @@ async function save() {
             variant="contained"
             color="primary"
             onClick={save}
-            disabled={dobError || referralDateError}
+            disabled={dobError}
           >
             Create Family
           </Button>

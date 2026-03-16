@@ -66,6 +66,13 @@ export function SelectReferralFamilyDrawer({
             />
           </Grid>
 
+          <Grid item xs={12}>
+            <Typography variant="body2" color="text.secondary">
+              After selecting and saving a family, it cannot be edited or
+              removed from this referral.
+            </Typography>
+          </Grid>
+
           <Grid item xs={12} sx={{ textAlign: 'right' }}>
             <Button
               color="secondary"
