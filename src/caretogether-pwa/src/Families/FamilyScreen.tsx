@@ -44,7 +44,7 @@ import { AddChildDialog } from './AddChildDialog';
 import { AddEditNoteDialog } from '../Notes/AddEditNoteDialog';
 import { format } from 'date-fns';
 import { UploadFamilyDocumentsDialog } from './UploadFamilyDocumentsDialog';
-import { CloseV1CaseDialog } from '../V1Cases/CloseV1CaseDialog';
+import { ConfirmCloseV1CaseDialog } from '../V1Cases/ConfirmCloseV1CaseDialog';
 import { OpenNewV1CaseDialog } from '../V1Cases/OpenNewV1CaseDialog';
 import { FamilyDocuments } from './FamilyDocuments';
 import { useFamilyPermissions } from '../Model/SessionModel';
@@ -91,6 +91,8 @@ import { useFeatureFlagEnabled } from 'posthog-js/react';
 import { TestFamilyBadge } from './TestFamilyBadge';
 import { visibleReferralsQuery } from '../Model/Data';
 import { useRecoilValue } from 'recoil';
+import { useV1CasesModel } from '../Model/V1CasesModel';
+import { V1CaseCloseReason } from '../GeneratedClient';
 
 export function FamilyScreen() {
   const familyIdMaybe = useParams<{ familyId: string }>();
@@ -174,7 +176,8 @@ export function FamilyScreen() {
   const allV1Cases: V1Case[] = useMemo(() => {
     return [...openV1Cases, ...closedV1Cases];
   }, [openV1Cases, closedV1Cases]);
-  const [closeV1CaseDialogOpen, setCloseV1CaseDialogOpen] = useState(false);
+  const [confirmCloseOpen, setConfirmCloseOpen] = useState(false);
+  const v1CasesModel = useV1CasesModel();
   const referralsLoadable = useLoadable(visibleReferralsQuery);
   const openReferralId =
     referralsLoadable?.find(
@@ -197,6 +200,21 @@ export function FamilyScreen() {
     (v1Case) => v1Case.id === selectedV1CaseId
   );
 
+  async function closeCaseNow() {
+    if (!selectedV1Case?.id) return;
+
+    await withBackdrop(async () => {
+      const defaultReason = V1CaseCloseReason.NeedMet;
+      const closedAtLocal = new Date();
+
+      await v1CasesModel.closeV1Case(
+        familyId,
+        selectedV1Case.id,
+        defaultReason,
+        closedAtLocal
+      );
+    });
+  }
   useEffect(() => {
     if (
       v1CaseIdFromQuery &&
@@ -736,7 +754,7 @@ export function FamilyScreen() {
                                   className="ph-unmask"
                                   onClick={(e) => {
                                     e.stopPropagation();
-                                    setCloseV1CaseDialogOpen(true);
+                                    setConfirmCloseOpen(true);
                                   }}
                                   variant="contained"
                                   size="small"
@@ -794,15 +812,15 @@ export function FamilyScreen() {
             </Grid>
 
             <Grid item xs={6} md={4}>
-              {closeV1CaseDialogOpen &&
-                selectedV1Case?.id ===
-                  family.partneringFamilyInfo?.openV1Case?.id && (
-                  <CloseV1CaseDialog
-                    partneringFamilyId={family.family!.id!}
-                    v1CaseId={`${selectedV1Case!.id}`}
-                    onClose={() => setCloseV1CaseDialogOpen(false)}
-                  />
-                )}
+              {confirmCloseOpen && (
+                <ConfirmCloseV1CaseDialog
+                  onClose={() => setConfirmCloseOpen(false)}
+                  onConfirm={async () => {
+                    setConfirmCloseOpen(false);
+                    await closeCaseNow();
+                  }}
+                />
+              )}
               {openNewV1CaseDialogOpen && (
                 <OpenNewV1CaseDialog
                   partneringFamilyId={family.family!.id!}
