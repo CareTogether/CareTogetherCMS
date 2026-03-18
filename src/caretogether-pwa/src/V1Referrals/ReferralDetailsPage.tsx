@@ -11,6 +11,8 @@ import {
   Alert,
 } from '@mui/material';
 import { useRecoilValue } from 'recoil';
+import CloudUploadIcon from '@mui/icons-material/CloudUpload';
+import AddCircleIcon from '@mui/icons-material/AddCircle';
 
 import { useFamilyLookup } from '../Model/DirectoryModel';
 import { familyNameString } from '../Families/FamilyName';
@@ -46,6 +48,9 @@ import {
   SelectReferralFamilyDrawer,
   FamilyOption,
 } from './SelectReferralFamilyDrawer';
+
+import { FamilyDocuments } from '../Families/FamilyDocuments';
+import { UploadFamilyDocumentsDialog } from '../Families/UploadFamilyDocumentsDialog';
 
 function formatStatusWithDate(
   status: V1ReferralStatus,
@@ -96,8 +101,12 @@ export function ReferralDetailsPage() {
   const [showAcceptedMessage, setShowAcceptedMessage] = useState(false);
   const [openCloseReferralDialog, setOpenCloseReferralDialog] = useState(false);
   const [openAddNoteDialog, setOpenAddNoteDialog] = useState(false);
+  const [openUploadDocumentDialog, setOpenUploadDocumentDialog] =
+    useState(false);
 
   const [openSelectFamilyDrawer, setOpenSelectFamilyDrawer] = useState(false);
+
+  const [timelineKey, setTimelineKey] = useState(0);
 
   const referral = useMemo(
     () => referrals.find((r) => r.referralId === referralId),
@@ -125,6 +134,8 @@ export function ReferralDetailsPage() {
     ? familyLookup(referral.familyId)
     : undefined;
 
+  const canUploadFamilyDocs = !!family;
+
   const familyHasOpenCase = !!family?.partneringFamilyInfo?.openV1Case;
 
   const isOpen = referral.status === V1ReferralStatus.Open;
@@ -138,6 +149,7 @@ export function ReferralDetailsPage() {
 
   const referralCustomFields: CustomField[] =
     policy.referralPolicy?.customFields ?? [];
+
   const referralRequirements =
     policy.referralPolicy?.intakeRequirements?.filter((req) => {
       const completed = referral.completedRequirements?.some(
@@ -257,10 +269,30 @@ export function ReferralDetailsPage() {
 
       <Grid container spacing={0}>
         <Grid item xs={12} md={4} sx={{ pr: { md: 2 }, mb: { xs: 3, md: 0 } }}>
-          <Typography variant="h6" sx={{ mb: 1 }}>
-            Timeline
-          </Typography>
-          <ReferralTimeline referral={referral} />
+          <Box sx={{ display: 'flex', gap: 1, mb: 1, flexWrap: 'wrap' }}>
+            <Button
+              variant="contained"
+              size="small"
+              sx={{ margin: 1 }}
+              startIcon={<AddCircleIcon />}
+              onClick={() => setOpenAddNoteDialog(true)}
+            >
+              Note
+            </Button>
+
+            <Button
+              variant="contained"
+              size="small"
+              sx={{ margin: 1 }}
+              startIcon={<CloudUploadIcon />}
+              disabled={!canUploadFamilyDocs}
+              onClick={() => setOpenUploadDocumentDialog(true)}
+            >
+              Upload
+            </Button>
+          </Box>
+
+          <ReferralTimeline key={timelineKey} referral={referral} />
         </Grid>
 
         <Grid item xs={12} md={8}>
@@ -378,6 +410,16 @@ export function ReferralDetailsPage() {
               ))}
             </Grid>
 
+            <Divider sx={{ width: '100%', my: 3 }} />
+
+            <Grid item xs={12}>
+              <Typography fontWeight={600} sx={{ mb: 1 }}>
+                Documents
+              </Typography>
+
+              {family && <FamilyDocuments family={family} />}
+            </Grid>
+
             {(referral.uploadedDocuments?.length ?? 0) > 0 && (
               <>
                 <Divider sx={{ width: '100%', my: 3 }} />
@@ -447,7 +489,17 @@ export function ReferralDetailsPage() {
       {openAddNoteDialog && (
         <AddEditV1ReferralNoteDialog
           referralId={referral.referralId}
-          onClose={() => setOpenAddNoteDialog(false)}
+          onClose={(didSave?: boolean) => {
+            setOpenAddNoteDialog(false);
+            if (didSave) setTimelineKey((k) => k + 1);
+          }}
+        />
+      )}
+
+      {openUploadDocumentDialog && family && (
+        <UploadFamilyDocumentsDialog
+          family={family}
+          onClose={() => setOpenUploadDocumentDialog(false)}
         />
       )}
 

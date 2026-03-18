@@ -14,7 +14,7 @@ import { useV1ReferralNotesModel } from '../Model/V1ReferralNotesModel';
 type AddEditV1ReferralNoteDialogProps = {
   referralId: string;
   note?: V1ReferralNoteEntry;
-  onClose: () => void;
+  onClose: (didSave?: boolean) => void;
 };
 
 export function AddEditV1ReferralNoteDialog({
@@ -52,6 +52,8 @@ export function AddEditV1ReferralNoteDialog({
     setSaving(true);
     try {
       const noteId = isEdit ? note!.id : crypto.randomUUID();
+      const trimmedAccessLevel =
+        accessLevel.trim() === '' ? undefined : accessLevel.trim();
 
       if (isEdit) {
         await editDraftReferralNote(
@@ -59,7 +61,7 @@ export function AddEditV1ReferralNoteDialog({
           noteId,
           contents,
           undefined,
-          accessLevel.trim() === '' ? undefined : accessLevel.trim()
+          trimmedAccessLevel
         );
       } else {
         await createDraftReferralNote(
@@ -67,18 +69,18 @@ export function AddEditV1ReferralNoteDialog({
           noteId,
           contents,
           undefined,
-          accessLevel.trim() === '' ? undefined : accessLevel.trim()
+          trimmedAccessLevel
         );
       }
 
-      onClose();
+      onClose(true);
     } finally {
       setSaving(false);
     }
   }
 
   return (
-    <Dialog open onClose={onClose} fullWidth maxWidth="sm">
+    <Dialog open onClose={() => onClose()} fullWidth maxWidth="sm">
       <DialogTitle>{dialogTitle}</DialogTitle>
 
       <DialogContent>
@@ -109,7 +111,7 @@ export function AddEditV1ReferralNoteDialog({
       </DialogContent>
 
       <DialogActions>
-        <Button onClick={onClose} disabled={saving}>
+        <Button onClick={() => onClose()} disabled={saving}>
           Cancel
         </Button>
         <Button variant="contained" onClick={onSave} disabled={disabled}>
