@@ -36,6 +36,7 @@ import {
   UpdatePersonGender,
   UpdatePersonAge,
   UpdatePersonEthnicity,
+  Note,
   UpdateAdultRelationshipToFamily,
   CustodialRelationshipType,
   UpdateCustodialRelationshipType,
@@ -53,6 +54,7 @@ import {
   UndoCreateFamily,
   UpdateNoteAccessLevel,
   UpdateTestFamilyFlag,
+  Person,
 } from '../GeneratedClient';
 import { api } from '../Api/Api';
 import {
@@ -62,6 +64,20 @@ import {
   visibleFamiliesQuery,
 } from './Data';
 import { commandFactory } from './CommandFactory';
+
+const SYSTEM_GUID = 'ffffffff-ffff-ffff-ffff-ffffffffffff';
+
+const systemPerson = Person.fromJS({
+  id: SYSTEM_GUID,
+  active: true,
+  firstName: 'SYSTEM',
+  lastName: '',
+  addresses: [],
+  phoneNumbers: [],
+  emailAddresses: [],
+});
+
+const isSystemGuid = (id?: string) => id?.toLowerCase() === SYSTEM_GUID;
 
 export function usePersonLookup() {
   const visibleFamilies = useRecoilValue(visibleFamiliesQuery);
@@ -103,6 +119,10 @@ export function useUserLookup() {
   const visibleFamilies = useRecoilValue(visibleFamiliesQuery);
 
   return (userId?: string) => {
+    if (isSystemGuid(userId)) {
+      return systemPerson;
+    }
+
     const userFamily = visibleFamilies.filter((family) =>
       family.users?.find((user) => user.userId === userId)
     );
@@ -118,6 +138,32 @@ export function useUserLookup() {
     } else {
       return undefined;
     }
+  };
+}
+
+export function useNoteAuthorLookup() {
+  const personLookup = usePersonLookup();
+  const personAndFamilyLookup = usePersonAndFamilyLookup();
+  const userLookup = useUserLookup();
+
+  return (familyId?: string, note?: Note) => {
+    if (!note) return undefined;
+
+    if (note.authorPersonId) {
+      if (isSystemGuid(note.authorPersonId)) {
+        return systemPerson;
+      }
+
+      const sameFamilyAuthor = personLookup(familyId, note.authorPersonId);
+      if (sameFamilyAuthor) return sameFamilyAuthor;
+
+      const crossFamilyAuthor = personAndFamilyLookup(
+        note.authorPersonId
+      ).person;
+      if (crossFamilyAuthor) return crossFamilyAuthor;
+    }
+
+    return userLookup(note.authorUserId);
   };
 }
 
