@@ -33,7 +33,8 @@ namespace CareTogether.Resources.Notes
         Guid NoteId,
         string? DraftNoteContents,
         DateTime? BackdatedTimestampUtc,
-        string? AccessLevel = null
+        string? AccessLevel = null,
+        Guid? AuthorPersonId = null
     ) : NoteCommand(FamilyId, NoteId);
 
     public sealed record EditDraftNote(

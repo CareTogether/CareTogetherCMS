@@ -36,6 +36,7 @@ import {
   UpdatePersonGender,
   UpdatePersonAge,
   UpdatePersonEthnicity,
+  Note,
   UpdateAdultRelationshipToFamily,
   CustodialRelationshipType,
   UpdateCustodialRelationshipType,
@@ -118,6 +119,21 @@ export function useUserLookup() {
     } else {
       return undefined;
     }
+  };
+}
+
+export function useNoteAuthorLookup() {
+  const personLookup = usePersonLookup();
+  const userLookup = useUserLookup();
+
+  return (familyId?: string, note?: Note) => {
+    if (!note) return undefined;
+
+    if (note.authorPersonId) {
+      return personLookup(familyId, note.authorPersonId);
+    }
+
+    return userLookup(note.authorUserId);
   };
 }
 

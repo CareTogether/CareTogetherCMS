@@ -10,7 +10,7 @@ import {
 } from '@mui/material';
 import { useState } from 'react';
 import { Note, NoteStatus, Permission } from '../GeneratedClient';
-import { useUserLookup } from '../Model/DirectoryModel';
+import { useNoteAuthorLookup, useUserLookup } from '../Model/DirectoryModel';
 import { PersonName } from '../Families/PersonName';
 import DeleteForeverIcon from '@mui/icons-material/DeleteForever';
 import CheckIcon from '@mui/icons-material/Check';
@@ -31,6 +31,7 @@ type NoteCardProps = {
 
 export function NoteCard({ familyId, note }: NoteCardProps) {
   const userLookup = useUserLookup();
+  const noteAuthorLookup = useNoteAuthorLookup();
 
   const [showDiscardNoteDialog, setShowDiscardNoteDialog] = useState(false);
   const [showApproveNoteDialog, setShowApproveNoteDialog] = useState(false);
@@ -41,7 +42,7 @@ export function NoteCard({ familyId, note }: NoteCardProps) {
 
   const userId = useLoadable(accountInfoState)?.userId;
 
-  const isOwnNote = note?.authorId === userId;
+  const isOwnNote = note?.authorUserId === userId;
 
   const canEditOwnNote =
     isOwnNote && permissions(Permission.AddEditOwnDraftNotes);
@@ -107,7 +108,8 @@ export function NoteCard({ familyId, note }: NoteCardProps) {
           >
             <Typography variant="caption">
               <>
-                Author: <PersonName person={userLookup(note.authorId)} />
+                Author:{' '}
+                <PersonName person={noteAuthorLookup(familyId, note)} />
                 <br />
                 Created at:{' '}
                 {note.createdTimestampUtc
