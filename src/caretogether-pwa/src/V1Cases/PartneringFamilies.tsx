@@ -355,6 +355,14 @@ function PartneringFamilies() {
 
   const permissions = useAllPartneringFamiliesPermissions();
 
+  const referralsEnabled = useFeatureFlagEnabled('referrals');
+
+  const canCreateFamily =
+    permissions(Permission.EditFamilyInfo) &&
+    permissions(Permission.CreateV1Case);
+
+  const showAddFamilyButton = !referralsEnabled && canCreateFamily;
+
   useScreenTitle('Cases');
 
   return !partneringFamiliesLoadable || !arrangementTypes ? (
@@ -374,17 +382,20 @@ function PartneringFamilies() {
             gap: 1,
           }}
         >
-          {permissions(Permission.EditFamilyInfo) &&
-            permissions(Permission.CreateV1Case) && (
-              <Button
-                variant="contained"
-                startIcon={<AddIcon />}
-                onClick={() => setCreatePartneringFamilyDialogOpen(true)}
-                sx={{ marginRight: 'auto' }}
-              >
-                Add new client family
-              </Button>
-            )}
+          {canCreateFamily && (
+            <Button
+              variant="contained"
+              startIcon={<AddIcon />}
+              onClick={() => setCreatePartneringFamilyDialogOpen(true)}
+              sx={{
+                marginRight: 'auto',
+                visibility: showAddFamilyButton ? 'visible' : 'hidden',
+                pointerEvents: showAddFamilyButton ? 'auto' : 'none',
+              }}
+            >
+              Add new client family
+            </Button>
+          )}
 
           <ToggleButtonGroup
             value={arrangementsFilter}

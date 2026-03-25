@@ -42,6 +42,7 @@ type ReferralTimelineItem =
       userId?: string;
       label: string;
       noteId?: string | null;
+      noteText?: string | null;
     }
   | {
       kind: 'document';
@@ -143,6 +144,7 @@ export function ReferralTimeline({ referral }: ReferralTimelineProps) {
         timestamp: e.timestampUtc ?? referral.createdAtUtc,
         userId: e.userId,
         label: `Exempted requirement: ${e.requirementName}`,
+        noteText: e.additionalComments ?? null,
       });
     }
 
@@ -226,6 +228,15 @@ export function ReferralTimeline({ referral }: ReferralTimelineProps) {
               <Typography variant="body2" sx={{ mb: 0.5 }}>
                 {item.label}
               </Typography>
+
+              {item.kind === 'requirement' && item.noteText?.trim() && (
+                <Typography
+                  variant="body2"
+                  sx={{ fontStyle: 'italic', opacity: 0.85, mb: 0.5 }}
+                >
+                  {item.noteText.trim()}
+                </Typography>
+              )}
 
               {item.kind === 'note' && (
                 <V1ReferralNoteCard
