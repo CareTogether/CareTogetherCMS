@@ -8,7 +8,8 @@ namespace CareTogether.Resources.Notes
     public record NoteEntry(
         Guid Id,
         Guid FamilyId,
-        Guid AuthorId,
+        Guid? AuthorUserId,
+        Guid? AuthorPersonId,
         DateTime? CreatedTimestampUtc,
         DateTime LastEditTimestampUtc,
         NoteStatus Status,
