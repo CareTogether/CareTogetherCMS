@@ -146,15 +146,11 @@ export function useNoteAuthorLookup() {
 
   return (familyId: string, note?: Note) => {
     if (!note) return undefined;
+    if (!note.authorPersonId) return userLookup(note.authorUserId);
+    if (isSystemUserId(note.authorPersonId)) return systemPerson;
 
-    if (note.authorPersonId) {
-      if (isSystemUserId(note.authorPersonId)) {
-        return systemPerson;
-      }
-
-      const sameFamilyAuthor = personLookup(familyId, note.authorPersonId);
-      if (sameFamilyAuthor) return sameFamilyAuthor;
-    }
+    const sameFamilyAuthor = personLookup(familyId, note.authorPersonId);
+    if (sameFamilyAuthor) return sameFamilyAuthor;
 
     return userLookup(note.authorUserId);
   };
