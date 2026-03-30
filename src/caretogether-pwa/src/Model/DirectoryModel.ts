@@ -143,10 +143,9 @@ export function useUserLookup() {
 
 export function useNoteAuthorLookup() {
   const personLookup = usePersonLookup();
-  const personAndFamilyLookup = usePersonAndFamilyLookup();
   const userLookup = useUserLookup();
 
-  return (familyId?: string, note?: Note) => {
+  return (familyId: string, note?: Note) => {
     if (!note) return undefined;
 
     if (note.authorPersonId) {
@@ -156,11 +155,6 @@ export function useNoteAuthorLookup() {
 
       const sameFamilyAuthor = personLookup(familyId, note.authorPersonId);
       if (sameFamilyAuthor) return sameFamilyAuthor;
-
-      const crossFamilyAuthor = personAndFamilyLookup(
-        note.authorPersonId
-      ).person;
-      if (crossFamilyAuthor) return crossFamilyAuthor;
     }
 
     return userLookup(note.authorUserId);
