@@ -255,7 +255,7 @@ export function ActivityTimeline({
                     <Typography gutterBottom>
                       <strong>Author: </strong>
                       <PersonName
-                        person={noteAuthorLookup(family.family!.id!, note)}
+                        person={noteAuthorLookup(family.family.id, note)}
                       />{' '}
                       at{' '}
                       {note.createdTimestampUtc
@@ -398,7 +398,7 @@ export function ActivityTimeline({
                 <PersonName
                   person={
                     note
-                      ? noteAuthorLookup(family.family!.id!, note)
+                      ? noteAuthorLookup(family.family.id, note)
                       : userLookup(activity.userId)
                   }
                 />
