@@ -49,6 +49,7 @@ import { add, format, formatDuration, formatRelative, isValid } from 'date-fns';
 import { selectedLocationContextState } from '../Model/Data';
 import { ValidateDatePicker } from '../Generic/Forms/ValidateDatePicker';
 import { useV1ReferralsModel } from '../Model/V1ReferralsModel';
+import { useV1ReferralNotesModel } from '../Model/V1ReferralNotesModel';
 
 type MissingRequirementDialogProps = {
   handle: DialogHandle;
@@ -58,6 +59,7 @@ type MissingRequirementDialogProps = {
   v1CaseId?: string;
   canExempt: boolean;
 };
+
 export function MissingRequirementDialog({
   handle,
   requirement,
@@ -70,6 +72,7 @@ export function MissingRequirementDialog({
   const v1Cases = useV1CasesModel();
   const volunteers = useVolunteersModel();
   const referrals = useV1ReferralsModel();
+  const referralNotes = useV1ReferralNotesModel();
 
   const now = new Date();
 
@@ -95,24 +98,27 @@ export function MissingRequirementDialog({
 
   const familyLookup = useFamilyLookup();
 
-  const contextFamilyId =
+  const familyId: string | null =
     context.kind === 'V1Case' ||
     context.kind === 'Arrangement' ||
     context.kind === 'Family Volunteer Assignment' ||
     context.kind === 'Individual Volunteer Assignment'
       ? context.partneringFamilyId
-      : context.kind === 'Volunteer Family' ||
-          context.kind === 'Individual Volunteer'
-        ? context.volunteerFamilyId
-        : undefined;
+      : context.kind === 'V1Referral'
+        ? (context.partneringFamilyId ?? null)
+        : context.volunteerFamilyId;
 
-  const safeFamilyId = contextFamilyId ?? '';
+  const contextFamily = familyId ? familyLookup(familyId) : undefined;
 
-  const contextFamily = contextFamilyId
-    ? familyLookup(contextFamilyId)
+  const rawPersonLookup = usePersonLookup();
+  const personLookup = familyId
+    ? rawPersonLookup.bind(null, familyId)
     : undefined;
 
-  const personLookup = usePersonLookup().bind(null, contextFamilyId);
+  function requireFamilyId(): string {
+    if (!familyId) throw new Error('Missing familyId for this operation.');
+    return familyId;
+  }
 
   const referralsList = useRecoilValue(visibleReferralsQuery);
   const currentReferral =
@@ -124,10 +130,12 @@ export function MissingRequirementDialog({
     contextFamily?.partneringFamilyInfo?.openV1Case !== undefined
       ? [contextFamily.partneringFamilyInfo.openV1Case]
       : [];
+
   const closedV1Cases: V1Case[] =
     contextFamily?.partneringFamilyInfo?.closedV1Cases
       ?.slice()
       .sort((r1, r2) => (r1.closedAtUtc! > r2.closedAtUtc! ? -1 : 1)) || [];
+
   const allV1Cases: V1Case[] = [...openV1Cases, ...closedV1Cases];
   const selectedV1Case = v1CaseId
     ? allV1Cases.find((r) => r.id === v1CaseId)
@@ -171,6 +179,7 @@ export function MissingRequirementDialog({
           })
         )
       : [];
+
   const [applyToArrangements, setApplyToArrangements] = useState(
     context.kind === 'Arrangement'
       ? availableArrangements.filter(
@@ -178,6 +187,7 @@ export function MissingRequirementDialog({
         )
       : []
   );
+
   function toggleApplyToArrangement(
     arrangement: Arrangement,
     include: boolean
@@ -213,6 +223,30 @@ export function MissingRequirementDialog({
         ? requirement.actionName!
         : requirement;
 
+  type UploadV1ReferralFile_ReturnsDocumentId = (
+    orgId: string,
+    locId: string,
+    referralId: string,
+    file: File
+  ) => Promise<string>;
+
+  async function uploadReferralDocument(
+    referralId: string,
+    file: File
+  ): Promise<string> {
+    const returnedId = await (
+      uploadV1ReferralFileToTenant as unknown as UploadV1ReferralFile_ReturnsDocumentId
+    )(organizationId, locationId, referralId, file);
+
+    await referrals.uploadReferralDocumentMetadata(
+      referralId,
+      returnedId,
+      file.name
+    );
+
+    return returnedId;
+  }
+
   async function markComplete() {
     let document = documentId;
 
@@ -220,41 +254,54 @@ export function MissingRequirementDialog({
       if (!documentFile) throw new Error('No document file selected.');
 
       if (context.kind === 'V1Referral') {
-        document = await uploadV1ReferralFileToTenant(
-          organizationId,
-          locationId,
+        document = await uploadReferralDocument(
           context.referralId,
           documentFile
         );
-
-        await referrals.uploadReferralDocumentMetadata(
-          context.referralId,
-          document,
-          documentFile.name
-        );
       } else {
+        const fid = requireFamilyId();
+
         document = await uploadFamilyFileToTenant(
           organizationId,
           locationId,
-          safeFamilyId,
+          fid,
           documentFile
         );
 
-        await directory.uploadFamilyDocument(
-          safeFamilyId,
-          document,
-          documentFile.name
+        await directory.uploadFamilyDocument(fid, document, documentFile.name);
+      }
+    }
+
+    let noteId: string | null = null;
+
+    if (notes.trim() !== '') {
+      noteId = crypto.randomUUID();
+
+      if (context.kind === 'V1Referral' && !context.partneringFamilyId) {
+        await referralNotes.createDraftReferralNote(
+          context.referralId,
+          noteId,
+          notes,
+          completedAtLocal || undefined
+        );
+      } else {
+        const fid = requireFamilyId();
+
+        await directory.createDraftNote(
+          fid,
+          noteId,
+          notes,
+          completedAtLocal || undefined
         );
       }
     }
 
-    // TODO will implement real referral notes. For now, keep behavior stable.
-    const noteId: string | null = null;
-
     switch (context.kind) {
-      case 'V1Case':
+      case 'V1Case': {
+        const fid = requireFamilyId();
+
         await v1Cases.completeV1CaseRequirement(
-          safeFamilyId,
+          fid,
           context.v1CaseId,
           requirementName,
           policy,
@@ -263,6 +310,7 @@ export function MissingRequirementDialog({
           noteId
         );
         break;
+      }
 
       case 'V1Referral':
         await referrals.completeReferralRequirement(
@@ -275,9 +323,11 @@ export function MissingRequirementDialog({
         );
         break;
 
-      case 'Arrangement':
+      case 'Arrangement': {
+        const fid = requireFamilyId();
+
         await v1Cases.completeArrangementRequirement(
-          safeFamilyId,
+          fid,
           context.v1CaseId,
           applyToArrangements.map((arrangement) => arrangement.id!),
           requirementName,
@@ -287,10 +337,13 @@ export function MissingRequirementDialog({
           noteId
         );
         break;
+      }
 
-      case 'Family Volunteer Assignment':
+      case 'Family Volunteer Assignment': {
+        const fid = requireFamilyId();
+
         await v1Cases.completeVolunteerFamilyAssignmentRequirement(
-          safeFamilyId,
+          fid,
           context.v1CaseId,
           applyToArrangements.map((arrangement) => arrangement.id!),
           context.assignment,
@@ -301,10 +354,13 @@ export function MissingRequirementDialog({
           noteId
         );
         break;
+      }
 
-      case 'Individual Volunteer Assignment':
+      case 'Individual Volunteer Assignment': {
+        const fid = requireFamilyId();
+
         await v1Cases.completeIndividualVolunteerAssignmentRequirement(
-          safeFamilyId,
+          fid,
           context.v1CaseId,
           applyToArrangements.map((arrangement) => arrangement.id!),
           context.assignment,
@@ -315,10 +371,13 @@ export function MissingRequirementDialog({
           noteId
         );
         break;
+      }
 
-      case 'Volunteer Family':
+      case 'Volunteer Family': {
+        const fid = requireFamilyId();
+
         await volunteers.completeFamilyRequirement(
-          safeFamilyId,
+          fid,
           requirementName,
           policy,
           completedAtLocal!,
@@ -326,10 +385,13 @@ export function MissingRequirementDialog({
           noteId
         );
         break;
+      }
 
-      case 'Individual Volunteer':
+      case 'Individual Volunteer': {
+        const fid = requireFamilyId();
+
         await volunteers.completeIndividualRequirement(
-          safeFamilyId,
+          fid,
           context.personId,
           requirementName,
           policy,
@@ -338,20 +400,24 @@ export function MissingRequirementDialog({
           noteId
         );
         break;
+      }
     }
   }
 
   async function exempt() {
     switch (context.kind) {
-      case 'V1Case':
+      case 'V1Case': {
+        const fid = requireFamilyId();
+
         await v1Cases.exemptV1CaseRequirement(
-          safeFamilyId,
+          fid,
           context.v1CaseId,
           requirementName,
           additionalComments,
           exemptionExpiresAtLocal
         );
         break;
+      }
       case 'V1Referral':
         await referrals.exemptReferralRequirement(
           context.referralId,
@@ -360,9 +426,11 @@ export function MissingRequirementDialog({
           exemptionExpiresAtLocal
         );
         break;
-      case 'Arrangement':
+      case 'Arrangement': {
+        const fid = requireFamilyId();
+
         await v1Cases.exemptArrangementRequirement(
-          safeFamilyId,
+          fid,
           context.v1CaseId,
           applyToArrangements.map((arrangement) => arrangement.id!),
           requirement as MissingArrangementRequirement,
@@ -371,9 +439,12 @@ export function MissingRequirementDialog({
           exemptionExpiresAtLocal
         );
         break;
-      case 'Family Volunteer Assignment':
+      }
+      case 'Family Volunteer Assignment': {
+        const fid = requireFamilyId();
+
         await v1Cases.exemptVolunteerFamilyAssignmentRequirement(
-          safeFamilyId,
+          fid,
           context.v1CaseId,
           applyToArrangements.map((arrangement) => arrangement.id!),
           context.assignment,
@@ -383,9 +454,12 @@ export function MissingRequirementDialog({
           exemptionExpiresAtLocal
         );
         break;
-      case 'Individual Volunteer Assignment':
+      }
+      case 'Individual Volunteer Assignment': {
+        const fid = requireFamilyId();
+
         await v1Cases.exemptIndividualVolunteerAssignmentRequirement(
-          safeFamilyId,
+          fid,
           context.v1CaseId,
           applyToArrangements.map((arrangement) => arrangement.id!),
           context.assignment,
@@ -395,23 +469,30 @@ export function MissingRequirementDialog({
           exemptionExpiresAtLocal
         );
         break;
-      case 'Volunteer Family':
+      }
+      case 'Volunteer Family': {
+        const fid = requireFamilyId();
+
         await volunteers.exemptVolunteerFamilyRequirement(
-          safeFamilyId,
+          fid,
           requirementName,
           additionalComments,
           exemptionExpiresAtLocal
         );
         break;
-      case 'Individual Volunteer':
+      }
+      case 'Individual Volunteer': {
+        const fid = requireFamilyId();
+
         await volunteers.exemptVolunteerRequirement(
-          safeFamilyId,
+          fid,
           context.personId,
           requirementName,
           additionalComments,
           exemptionExpiresAtLocal
         );
         break;
+      }
     }
   }
 
@@ -482,14 +563,16 @@ export function MissingRequirementDialog({
                       label={
                         arrangement.arrangementType +
                         ' - ' +
-                        personNameString(
-                          personLookup(arrangement.partneringFamilyPersonId)
-                        ) +
+                        (personLookup
+                          ? personNameString(
+                              personLookup(arrangement.partneringFamilyPersonId)
+                            )
+                          : '') +
                         (context.kind === 'Family Volunteer Assignment'
                           ? ` (${familyNameString(familyLookup(context.assignment.familyId))})`
                           : '') +
                         (context.kind === 'Individual Volunteer Assignment'
-                          ? ` (${personNameString(personLookup(context.assignment.personId))})`
+                          ? ` (${personLookup ? personNameString(personLookup(context.assignment.personId)) : ''})`
                           : '') +
                         ` - ` +
                         (arrangement.phase === ArrangementPhase.Cancelled
@@ -643,7 +726,15 @@ export function MissingRequirementDialog({
                           />
                         }
                         label={
-                          `${arrangement.arrangementType} - ${personNameString(personLookup(arrangement.partneringFamilyPersonId))} - ` +
+                          `${arrangement.arrangementType} - ${
+                            personLookup
+                              ? personNameString(
+                                  personLookup(
+                                    arrangement.partneringFamilyPersonId
+                                  )
+                                )
+                              : ''
+                          } - ` +
                           (arrangement.phase === ArrangementPhase.Cancelled
                             ? `Cancelled ${formatRelative(arrangement.cancelledAtUtc!, now)}`
                             : arrangement.phase === ArrangementPhase.SettingUp

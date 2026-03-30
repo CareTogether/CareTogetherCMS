@@ -55,10 +55,13 @@ namespace CareTogether.Resources.V1Referrals
                 referralId
             );
 
-            if (
-                referral == null
-                || referral.UploadedDocuments.Any(doc => doc.UploadedDocumentId == documentId)
-            )
+            if (referral == null)
+                throw new Exception("The specified referral does not exist.");
+
+            if (referral.Status == V1ReferralStatus.Closed)
+                throw new Exception("Closed referrals cannot be edited.");
+
+            if (referral.UploadedDocuments.Any(doc => doc.UploadedDocumentId == documentId))
                 throw new Exception("The specified referral document already exists.");
 
             return await fileStore.GetValetCreateUrlAsync(organizationId, locationId, documentId);

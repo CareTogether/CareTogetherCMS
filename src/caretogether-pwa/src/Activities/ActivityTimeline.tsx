@@ -17,6 +17,7 @@ import {
   Note,
   ReferralOpened as V1CaseOpened,
   ReferralRequirementCompleted as V1CaseRequirementCompleted,
+  V1Referral,
 } from '../GeneratedClient';
 import PersonPinCircleIcon from '@mui/icons-material/PersonPinCircle';
 import EditIcon from '@mui/icons-material/Edit';
@@ -27,9 +28,11 @@ import { NoteCard } from '../Notes/NoteCard';
 import { useAccessLevelDialog } from '../Notes/AccessLevelDialog/useAccessLevelDialog';
 import { FormControl, InputLabel, Select, MenuItem } from '@mui/material';
 import { useState } from 'react';
+import { ReferralTimeline } from '../V1Referrals/V1ReferralTimeline';
 
 type ActivityTimelineProps = {
   family: CombinedFamilyInfo;
+  referrals: V1Referral[];
   printContentRef: React.RefObject<HTMLDivElement>;
 };
 
@@ -81,6 +84,7 @@ function embedNotesInActivities(notes: Note[], activities: Activity[]) {
 
 export function ActivityTimeline({
   family,
+  referrals,
   printContentRef,
 }: ActivityTimelineProps) {
   const userLookup = useUserLookup();
@@ -199,7 +203,6 @@ export function ActivityTimeline({
   const onlyActivitiesWithNotes = sortedActivitiesWithNotes.filter((item) =>
     Boolean(item.note)
   );
-
   return (
     <>
       <div ref={printContentRef}>
@@ -333,6 +336,32 @@ export function ActivityTimeline({
           })}
         </Stack>
       </div>
+
+      {referrals.length > 0 && (
+        <Box sx={{ mb: 3 }}>
+          <Typography
+            className="ph-unmask"
+            variant="h3"
+            style={{ marginTop: 0, marginBottom: 8 }}
+          >
+            Referrals Timeline
+          </Typography>
+
+          {referrals.map((referral) => (
+            <Box key={referral.referralId} sx={{ mb: 3 }}>
+              <Typography
+                className="ph-unmask"
+                variant="subtitle1"
+                sx={{ mb: 1 }}
+              >
+                {referral.title}
+              </Typography>
+
+              <ReferralTimeline referral={referral} />
+            </Box>
+          ))}
+        </Box>
+      )}
 
       <Timeline position="right" sx={{ padding: 0 }}>
         <Box sx={{ display: 'flex', justifyContent: 'flex-start', mb: 1 }}>

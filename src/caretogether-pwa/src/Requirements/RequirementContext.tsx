@@ -12,6 +12,7 @@ export interface V1CaseContext {
 export interface V1ReferralContext {
   kind: 'V1Referral';
   referralId: string;
+  partneringFamilyId?: string;
 }
 
 export interface ArrangementContext {

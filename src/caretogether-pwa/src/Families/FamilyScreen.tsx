@@ -579,7 +579,11 @@ export function FamilyScreen() {
       </Toolbar>
       <Grid container spacing={0}>
         <Grid item xs={12} md={4} spacing={0}>
-          <ActivityTimeline family={family} printContentRef={printContentRef} />
+          <ActivityTimeline
+            family={family}
+            referrals={familyReferrals}
+            printContentRef={printContentRef}
+          />
         </Grid>
         <Grid item md={8}>
           <Grid container spacing={2}>

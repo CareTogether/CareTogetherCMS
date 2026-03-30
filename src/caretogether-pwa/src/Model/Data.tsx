@@ -9,7 +9,12 @@ import {
 } from '../GeneratedClient';
 import { loggingEffect } from '../Utilities/loggingEffect';
 import { accountInfoState } from '../Authentication/Auth';
+import { useRecoilValue, useResetRecoilState } from 'recoil';
 
+export function useRefreshVisibleAggregates() {
+  const context = useRecoilValue(selectedLocationContextState);
+  return useResetRecoilState(visibleAggregatesForScopeData(context));
+}
 // This will be available to query (asynchronously) after the accountInfoState is set (i.e., post-authentication).
 export const userOrganizationAccessQuery = selector({
   key: 'userOrganizationAccessQuery',

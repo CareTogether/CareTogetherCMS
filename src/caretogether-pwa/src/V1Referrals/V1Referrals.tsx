@@ -77,11 +77,15 @@ export function V1Referrals() {
     };
   });
 
+  const normalizedFilterText = filterText.trim().toLowerCase();
+
   const filteredRows = rows.filter((r) => {
     const matchesText =
-      r.title.toLowerCase().includes(filterText.toLowerCase()) ||
-      (r.clientFamilyName?.toLowerCase().includes(filterText.toLowerCase()) ??
-        false);
+      normalizedFilterText === '' ||
+      r.title.toLowerCase().includes(normalizedFilterText) ||
+      (r.clientFamilyName?.toLowerCase().includes(normalizedFilterText) ??
+        false) ||
+      r.comments.toLowerCase().includes(normalizedFilterText);
 
     const matchesStatus = statusFilter === 'ALL' || r.status === statusFilter;
 

@@ -64,6 +64,13 @@ function getErrorMessage(e: unknown): string {
   return 'Unexpected error';
 }
 
+function resolveReferralNoteText(
+  note: V1ReferralNoteEntry | undefined
+): string | null {
+  const text = note?.contents ?? null;
+  return text && text.trim() ? text : null;
+}
+
 export function ReferralTimeline({ referral }: ReferralTimelineProps) {
   const userLookup = useUserLookup();
   const { listReferralNotes } = useV1ReferralNotesModel();
@@ -73,6 +80,12 @@ export function ReferralTimeline({ referral }: ReferralTimelineProps) {
   const [error, setError] = useState<string | null>(null);
 
   const requestIdRef = useRef(0);
+
+  const completedNoteKey = useMemo(() => {
+    return (referral.completedRequirements ?? [])
+      .map((r) => r.noteId ?? '')
+      .join('|');
+  }, [referral.completedRequirements]);
 
   useEffect(() => {
     const requestId = ++requestIdRef.current;
@@ -96,7 +109,15 @@ export function ReferralTimeline({ referral }: ReferralTimelineProps) {
         }
       }
     })();
-  }, [referral.referralId, listReferralNotes]);
+  }, [referral.referralId, completedNoteKey, listReferralNotes]);
+
+  const notesById = useMemo(() => {
+    const map = new Map<string, V1ReferralNoteEntry>();
+    for (const n of notes ?? []) {
+      if (n.id) map.set(n.id, n);
+    }
+    return map;
+  }, [notes]);
 
   const items: ReferralTimelineItem[] = useMemo(() => {
     const out: ReferralTimelineItem[] = [];
@@ -129,12 +150,18 @@ export function ReferralTimeline({ referral }: ReferralTimelineProps) {
     }
 
     for (const c of referral.completedRequirements ?? []) {
+      const noteId = c.noteId ?? null;
+      const noteText = noteId
+        ? resolveReferralNoteText(notesById.get(noteId))
+        : null;
+
       out.push({
         kind: 'requirement',
         timestamp: c.completedAtUtc ?? c.timestampUtc ?? referral.createdAtUtc,
         userId: c.userId,
         label: `Completed requirement: ${c.requirementName}`,
-        noteId: c.noteId ?? null,
+        noteId,
+        noteText,
       });
     }
 
@@ -144,7 +171,6 @@ export function ReferralTimeline({ referral }: ReferralTimelineProps) {
         timestamp: e.timestampUtc ?? referral.createdAtUtc,
         userId: e.userId,
         label: `Exempted requirement: ${e.requirementName}`,
-        noteText: e.additionalComments ?? null,
       });
     }
 
@@ -172,7 +198,7 @@ export function ReferralTimeline({ referral }: ReferralTimelineProps) {
 
     out.sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime());
     return out;
-  }, [referral, notes]);
+  }, [referral, notes, notesById]);
 
   return (
     <Box>
