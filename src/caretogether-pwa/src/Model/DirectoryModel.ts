@@ -64,11 +64,10 @@ import {
   visibleFamiliesQuery,
 } from './Data';
 import { commandFactory } from './CommandFactory';
-
-const SYSTEM_GUID = 'ffffffff-ffff-ffff-ffff-ffffffffffff';
+import { SYSTEM_USER_ID } from '../constants';
 
 const systemPerson = Person.fromJS({
-  id: SYSTEM_GUID,
+  id: SYSTEM_USER_ID,
   active: true,
   firstName: 'SYSTEM',
   lastName: '',
@@ -77,7 +76,7 @@ const systemPerson = Person.fromJS({
   emailAddresses: [],
 });
 
-const isSystemGuid = (id?: string) => id?.toLowerCase() === SYSTEM_GUID;
+const isSystemUserId = (id?: string) => id?.toLowerCase() === SYSTEM_USER_ID;
 
 export function usePersonLookup() {
   const visibleFamilies = useRecoilValue(visibleFamiliesQuery);
@@ -119,7 +118,7 @@ export function useUserLookup() {
   const visibleFamilies = useRecoilValue(visibleFamiliesQuery);
 
   return (userId?: string) => {
-    if (isSystemGuid(userId)) {
+    if (isSystemUserId(userId)) {
       return systemPerson;
     }
 
@@ -149,7 +148,7 @@ export function useNoteAuthorLookup() {
     if (!note) return undefined;
 
     if (note.authorPersonId) {
-      if (isSystemGuid(note.authorPersonId)) {
+      if (isSystemUserId(note.authorPersonId)) {
         return systemPerson;
       }
 
