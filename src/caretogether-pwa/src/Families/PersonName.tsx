@@ -7,7 +7,7 @@ type PersonNameProps = {
 // eslint-disable-next-line react-refresh/only-export-components
 export function personNameString(person?: Person) {
   return person
-    ? `${person.firstName} ${person.lastName}`
+    ? `${person.firstName} ${person.lastName}`.trim()
     : '⚠ DELETED PERSON';
 }
 
