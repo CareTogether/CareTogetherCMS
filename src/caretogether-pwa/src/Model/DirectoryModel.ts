@@ -141,18 +141,14 @@ export function useUserLookup() {
 }
 
 export function useNoteAuthorLookup() {
-  const personLookup = usePersonLookup();
+  const personAndFamilyLookup = usePersonAndFamilyLookup();
   const userLookup = useUserLookup();
 
-  return (familyId: string, note?: Note) => {
+  return (note?: Note) => {
     if (!note) return undefined;
     if (!note.authorPersonId) return userLookup(note.authorUserId);
     if (isSystemUserId(note.authorPersonId)) return systemPerson;
-
-    const sameFamilyAuthor = personLookup(familyId, note.authorPersonId);
-    if (sameFamilyAuthor) return sameFamilyAuthor;
-
-    return userLookup(note.authorUserId);
+    return personAndFamilyLookup(note.authorPersonId).person;
   };
 }
 

@@ -59,6 +59,7 @@ export function NoteCard({ familyId, note }: NoteCardProps) {
 
   return typeof note === 'undefined' ? null : (
     <Card sx={{ margin: 0 }} variant="outlined">
+      <pre>{JSON.stringify(note, null, 2)}</pre>
       <CardHeader
         sx={{ padding: 1 }}
         subheader={
@@ -108,8 +109,7 @@ export function NoteCard({ familyId, note }: NoteCardProps) {
           >
             <Typography variant="caption">
               <>
-                Author:{' '}
-                <PersonName person={noteAuthorLookup(familyId, note)} />
+                Author: <PersonName person={noteAuthorLookup(note)} />
                 <br />
                 Created at:{' '}
                 {note.createdTimestampUtc

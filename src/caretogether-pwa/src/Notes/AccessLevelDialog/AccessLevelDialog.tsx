@@ -89,7 +89,7 @@ export function AccessLevelDialog({
       <DialogContent>
         <Box mb={2}>
           <Typography variant="body2">
-            <PersonName person={noteAuthorLookup(familyId, note)} /> –{' '}
+            <PersonName person={noteAuthorLookup(note)} /> –{' '}
             {format(
               note.createdTimestampUtc ?? note.lastEditTimestampUtc,
               'MM/dd/yyyy hh:mm aa'

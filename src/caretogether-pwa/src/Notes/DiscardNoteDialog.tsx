@@ -30,7 +30,7 @@ export function DiscardNoteDialog({
       onSave={save}
     >
       <Typography variant="body2" component="p">
-        <PersonName person={noteAuthorLookup(familyId, note)} /> -&nbsp;
+        <PersonName person={noteAuthorLookup(note)} /> -&nbsp;
         {format(
           note.createdTimestampUtc ?? note.lastEditTimestampUtc,
           'MM/dd/yyyy hh:mm aa'
