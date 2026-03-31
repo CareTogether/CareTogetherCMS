@@ -12,6 +12,10 @@ import {
   ButtonGroup,
   Checkbox,
   IconButton,
+  FormControl,
+  InputBase,
+  MenuItem,
+  Select,
   Stack,
   ToggleButton,
   ToggleButtonGroup,
@@ -33,6 +37,7 @@ import React, { useEffect, useState } from 'react';
 import AddIcon from '@mui/icons-material/Add';
 import SmsIcon from '@mui/icons-material/Sms';
 import EmailIcon from '@mui/icons-material/Email';
+import FilterListIcon from '@mui/icons-material/FilterList';
 import { CreateVolunteerFamilyDialog } from '../CreateVolunteerFamilyDialog';
 import { Link, useLocation } from 'react-router-dom';
 import { SearchBar } from '../../Shell/SearchBar';
@@ -59,13 +64,14 @@ import { VolunteerFilter } from './VolunteerFilter';
 import { catchAllLabel } from './catchAllLabel';
 import { getOptionValueFromSelection } from './getOptionValueFromSelection';
 import { getUpdatedFilters } from './getUpdatedFilters';
-import { CustomFieldsFilter } from '../../Generic/CustomFieldsFilter/CustomFieldsFilter';
 import { useCustomFieldFilters } from '../../Generic/CustomFieldsFilter/useCustomFieldFilters';
 import { matchesCustomFieldFilters } from '../../Generic/CustomFieldsFilter/matchesCustomFieldFilters';
 import { CustomFieldFilterValue } from '../../Generic/CustomFieldsFilter/types';
 import { useFeatureFlagEnabled } from 'posthog-js/react';
 import { forceCheck } from 'react-lazyload';
 import { VolunteerApprovalTableItem } from './VolunteerApprovalTableItem';
+import { VolunteerCustomFieldFiltersSidePanel } from './VolunteerCustomFieldFiltersSidePanel';
+import { useSidePanel } from '../../Hooks/useSidePanel';
 import { stickyHeaderTableSx } from '../../Utilities/stickyHeaderTableSx';
 
 function VolunteerApproval(props: { onOpen: () => void }) {
@@ -73,6 +79,11 @@ function VolunteerApproval(props: { onOpen: () => void }) {
   useEffect(onOpen);
   const appNavigate = useAppNavigate();
   const [uncheckedFamilies, setUncheckedFamilies] = useState<string[]>([]);
+  const {
+    SidePanel: CustomFieldFiltersSidePanel,
+    openSidePanel: openCustomFieldFiltersSidePanel,
+    closeSidePanel: closeCustomFieldFiltersSidePanel,
+  } = useSidePanel();
 
   const policy = useRecoilValue(policyData);
 
@@ -141,6 +152,10 @@ function VolunteerApproval(props: { onOpen: () => void }) {
     },
   });
   const [filterText, setFilterText] = useState('');
+  const customFieldCount = (policy.customFamilyFields || []).length;
+  const activeCustomFieldFilterCount = Object.values(customFieldFilters).filter(
+    (selectedValues) => selectedValues.length > 0
+  ).length;
 
   //#region Family/Individual Filtering Code
   const selectedFamilyRoleKeys = roleFilters
@@ -489,82 +504,19 @@ function VolunteerApproval(props: { onOpen: () => void }) {
         }}
       >
         <Grid item xs={12}>
-          <Stack direction="row-reverse" sx={{ marginTop: 1 }}>
-            <ToggleButtonGroup
-              value={expandedView}
-              exclusive
-              onChange={handleExpandCollapse}
-              size={isMobile ? 'medium' : 'small'}
-              aria-label="row expansion"
-            >
-              <ToggleButton value={true} aria-label="expanded">
-                <UnfoldMoreIcon />
-              </ToggleButton>
-              <ToggleButton value={false} aria-label="collapsed">
-                <UnfoldLessIcon />
-              </ToggleButton>
-            </ToggleButtonGroup>
-            <SearchBar
-              value={filterText}
-              onChange={(value) => {
-                setUncheckedFamilies([]);
-                setFilterText(value);
-              }}
-            />
-            {permissions(Permission.SendBulkSms) && (
-              <IconButton
-                color="inherit"
-                aria-label="copy email addresses"
-                onClick={() => copyEmailAddresses()}
-                sx={{}}
-              >
-                <EmailIcon />
-              </IconButton>
-            )}
-            {permissions(Permission.SendBulkSms) &&
-              smsSourcePhoneNumbers &&
-              smsSourcePhoneNumbers.length > 0 && (
-                <IconButton
-                  color={smsMode ? 'secondary' : 'inherit'}
-                  aria-label="send bulk sms"
-                  onClick={() => setSmsMode(!smsMode)}
-                  sx={{ marginRight: 2 }}
-                >
-                  <SmsIcon sx={{ position: 'relative', top: 1 }} />
-                </IconButton>
-              )}
-
-            <Box
-              sx={{
-                display: 'flex',
-                flexDirection: 'row',
-                gap: '.75rem',
-                marginRight: '.75rem',
-                alignItems: 'center',
-              }}
-            >
-              <VolunteerFilter
-                label="Roles"
-                options={roleFilters}
-                setSelected={changeRoleFilterSelection}
-              />
-              <VolunteerFilter
-                label="Statuses"
-                options={statusFilters}
-                setSelected={changeStatusFilterSelection}
-              />
-              <CustomFieldsFilter
-                customFields={policy.customFamilyFields || []}
-                optionsByField={customFieldFilterOptionsByField}
-                selectedValuesByField={customFieldFilters}
-                onFieldChange={changeCustomFieldFilter as any}
-              />
-            </Box>
+          <Stack
+            direction={{ xs: 'column', md: 'row' }}
+            sx={{
+              marginTop: 1,
+              gap: 1.5,
+              alignItems: { xs: 'stretch', md: 'center' },
+            }}
+          >
             <ButtonGroup
               variant="text"
               color="inherit"
               aria-label="text inherit button group"
-              style={{ flexGrow: 1 }}
+              sx={{ width: { xs: '100%', md: 'auto' } }}
             >
               <Button
                 color={
@@ -574,6 +526,7 @@ function VolunteerApproval(props: { onOpen: () => void }) {
                 }
                 component={Link}
                 to={'../approval'}
+                sx={{ flex: { xs: 1, md: 'initial' } }}
               >
                 Approvals
               </Button>
@@ -585,11 +538,153 @@ function VolunteerApproval(props: { onOpen: () => void }) {
                 }
                 component={Link}
                 to={'../progress'}
+                sx={{ flex: { xs: 1, md: 'initial' } }}
               >
                 Progress
               </Button>
             </ButtonGroup>
+
+            <Stack
+              direction={{ xs: 'column', md: 'row' }}
+              sx={{
+                gap: 1,
+                width: { xs: '100%', md: 'auto' },
+                marginLeft: { md: 'auto' },
+                alignItems: { xs: 'stretch', md: 'center' },
+              }}
+            >
+              <Box
+                sx={{
+                  display: 'flex',
+                  flexWrap: 'wrap',
+                  gap: 1,
+                  alignItems: 'center',
+                  width: { xs: '100%', md: 'auto' },
+                }}
+              >
+                <VolunteerFilter
+                  label="Roles"
+                  options={roleFilters}
+                  setSelected={changeRoleFilterSelection}
+                />
+                <VolunteerFilter
+                  label="Statuses"
+                  options={statusFilters}
+                  setSelected={changeStatusFilterSelection}
+                />
+                {customFieldCount > 0 && (
+                  <FormControl
+                    sx={{
+                      position: 'relative',
+                      minWidth: { xs: '100%', sm: 0 },
+                      maxWidth: { xs: '100%', sm: '16rem' },
+                    }}
+                  >
+                    <Select
+                      labelId="volunteerCustomFieldsFilter"
+                      displayEmpty
+                      value=""
+                      open={false}
+                      variant="standard"
+                      onClick={() => openCustomFieldFiltersSidePanel()}
+                      sx={{
+                        minWidth: { xs: '100%', sm: 0 },
+                        maxWidth: '100%',
+                        '& .MuiSelect-iconOpen': { transform: 'none' },
+                        '& .MuiSelect-select': {
+                          overflow: 'hidden',
+                          textOverflow: 'ellipsis',
+                          whiteSpace: 'nowrap',
+                          cursor: 'pointer',
+                        },
+                      }}
+                      input={<InputBase />}
+                      IconComponent={FilterListIcon}
+                      SelectDisplayProps={{
+                        title: `Custom fields (${activeCustomFieldFilterCount}/${customFieldCount})`,
+                      }}
+                      renderValue={() =>
+                        `Custom fields (${activeCustomFieldFilterCount}/${customFieldCount})`
+                      }
+                    >
+                      <MenuItem value="" sx={{ display: 'none' }} />
+                    </Select>
+                  </FormControl>
+                )}
+              </Box>
+
+              <Stack
+                direction={{ xs: 'column', sm: 'row' }}
+                sx={{
+                  gap: 1,
+                  width: { xs: '100%', md: 'auto' },
+                  alignItems: { xs: 'stretch', sm: 'center' },
+                }}
+              >
+                <Box sx={{ width: { xs: '100%', sm: 'auto' } }}>
+                  <SearchBar
+                    value={filterText}
+                    onChange={(value) => {
+                      setUncheckedFamilies([]);
+                      setFilterText(value);
+                    }}
+                  />
+                </Box>
+                <Box
+                  sx={{
+                    display: 'flex',
+                    justifyContent: { xs: 'flex-end', sm: 'flex-start' },
+                    alignItems: 'center',
+                    gap: 1,
+                  }}
+                >
+                  {permissions(Permission.SendBulkSms) && (
+                    <IconButton
+                      color="inherit"
+                      aria-label="copy email addresses"
+                      onClick={() => copyEmailAddresses()}
+                    >
+                      <EmailIcon />
+                    </IconButton>
+                  )}
+                  {permissions(Permission.SendBulkSms) &&
+                    smsSourcePhoneNumbers &&
+                    smsSourcePhoneNumbers.length > 0 && (
+                      <IconButton
+                        color={smsMode ? 'secondary' : 'inherit'}
+                        aria-label="send bulk sms"
+                        onClick={() => setSmsMode(!smsMode)}
+                      >
+                        <SmsIcon sx={{ position: 'relative', top: 1 }} />
+                      </IconButton>
+                    )}
+                  <ToggleButtonGroup
+                    value={expandedView}
+                    exclusive
+                    onChange={handleExpandCollapse}
+                    size={isMobile ? 'medium' : 'small'}
+                    aria-label="row expansion"
+                  >
+                    <ToggleButton value={true} aria-label="expanded">
+                      <UnfoldMoreIcon />
+                    </ToggleButton>
+                    <ToggleButton value={false} aria-label="collapsed">
+                      <UnfoldLessIcon />
+                    </ToggleButton>
+                  </ToggleButtonGroup>
+                </Box>
+              </Stack>
+            </Stack>
           </Stack>
+          <CustomFieldFiltersSidePanel>
+            <VolunteerCustomFieldFiltersSidePanel
+              customFields={policy.customFamilyFields || []}
+              optionsByField={customFieldFilterOptionsByField}
+              selectedValuesByField={customFieldFilters}
+              onFieldChange={changeCustomFieldFilter}
+              onClose={closeCustomFieldFiltersSidePanel}
+            />
+          </CustomFieldFiltersSidePanel>
 
           {permissions(Permission.EditFamilyInfo) &&
             permissions(Permission.ActivateVolunteerFamily) && (
@@ -597,7 +692,11 @@ function VolunteerApproval(props: { onOpen: () => void }) {
                 variant="contained"
                 startIcon={<AddIcon />}
                 onClick={() => setCreateVolunteerFamilyDialogOpen(true)}
-                sx={{ marginRight: 'auto', marginY: 2 }}
+                sx={{
+                  marginRight: 'auto',
+                  marginY: 2,
+                  width: { xs: '100%', sm: 'auto' },
+                }}
               >
                 Add new volunteer family
               </Button>
