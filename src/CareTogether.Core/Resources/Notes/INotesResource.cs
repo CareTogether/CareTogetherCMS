@@ -8,8 +8,7 @@ namespace CareTogether.Resources.Notes
     public record NoteEntry(
         Guid Id,
         Guid FamilyId,
-        Guid? AuthorUserId,
-        Guid? AuthorPersonId,
+        Guid AuthorId,
         DateTime? CreatedTimestampUtc,
         DateTime LastEditTimestampUtc,
         NoteStatus Status,
@@ -34,8 +33,7 @@ namespace CareTogether.Resources.Notes
         Guid NoteId,
         string? DraftNoteContents,
         DateTime? BackdatedTimestampUtc,
-        string? AccessLevel = null,
-        Guid? AuthorPersonId = null
+        string? AccessLevel = null
     ) : NoteCommand(FamilyId, NoteId);
 
     public sealed record EditDraftNote(

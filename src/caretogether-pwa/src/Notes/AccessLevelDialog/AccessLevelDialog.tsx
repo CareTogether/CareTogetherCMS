@@ -16,10 +16,7 @@ import { PersonName } from '../../Families/PersonName';
 import { Note, NoteStatus } from '../../GeneratedClient';
 import { UpdateDialog } from '../../Generic/UpdateDialog';
 import { locationConfigurationQuery } from '../../Model/ConfigurationModel';
-import {
-  useDirectoryModel,
-  useNoteAuthorLookup,
-} from '../../Model/DirectoryModel';
+import { useDirectoryModel, useUserLookup } from '../../Model/DirectoryModel';
 
 interface EditNoteAccessLevelDialogProps {
   familyId: string;
@@ -34,7 +31,7 @@ export function AccessLevelDialog({
 }: EditNoteAccessLevelDialogProps) {
   const directoryModel = useDirectoryModel();
   const locationConfiguration = useRecoilValue(locationConfigurationQuery);
-  const noteAuthorLookup = useNoteAuthorLookup();
+  const userLookup = useUserLookup();
 
   const [accessLevel, setAccessLevel] = useState<string>(
     note.accessLevel ?? 'Everyone'
@@ -89,7 +86,7 @@ export function AccessLevelDialog({
       <DialogContent>
         <Box mb={2}>
           <Typography variant="body2">
-            <PersonName person={noteAuthorLookup(note)} /> –{' '}
+            <PersonName person={userLookup(note.authorId)} /> –{' '}
             {format(
               note.createdTimestampUtc ?? note.lastEditTimestampUtc,
               'MM/dd/yyyy hh:mm aa'
