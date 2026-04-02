@@ -76,14 +76,13 @@ namespace CareTogether.Resources.Notes
             var noteEntryToUpsert = command switch
             {
                 CreateDraftNote c => new NoteEntry(
-                    Id: c.NoteId,
-                    FamilyId: c.FamilyId,
-                    AuthorUserId: userId,
-                    AuthorPersonId: c.AuthorPersonId,
+                    c.NoteId,
+                    c.FamilyId,
+                    userId,
                     CreatedTimestampUtc: timestampUtc,
                     LastEditTimestampUtc: timestampUtc,
-                    Status: NoteStatus.Draft,
-                    Contents: c.DraftNoteContents,
+                    NoteStatus.Draft,
+                    c.DraftNoteContents,
                     ApproverId: null,
                     ApprovedTimestampUtc: null,
                     BackdatedTimestampUtc: c.BackdatedTimestampUtc,

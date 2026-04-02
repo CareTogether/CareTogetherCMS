@@ -20,11 +20,7 @@ import {
 } from '../GeneratedClient';
 import PersonPinCircleIcon from '@mui/icons-material/PersonPinCircle';
 import EditIcon from '@mui/icons-material/Edit';
-import {
-  useNoteAuthorLookup,
-  usePersonLookup,
-  useUserLookup,
-} from '../Model/DirectoryModel';
+import { usePersonLookup, useUserLookup } from '../Model/DirectoryModel';
 import { PersonName } from '../Families/PersonName';
 import { Box, Stack, Typography, Link } from '@mui/material';
 import { NoteCard } from '../Notes/NoteCard';
@@ -89,7 +85,6 @@ export function ActivityTimeline({
 }: ActivityTimelineProps) {
   const userLookup = useUserLookup();
   const personLookup = usePersonLookup();
-  const noteAuthorLookup = useNoteAuthorLookup();
 
   const activities = (
     family.partneringFamilyInfo?.history?.slice() || []
@@ -101,7 +96,7 @@ export function ActivityTimeline({
       ?.map(
         (note) =>
           ({
-            userId: note.authorUserId ?? '',
+            userId: note.authorId,
             activityTimestampUtc:
               note.backdatedTimestampUtc ??
               note.createdTimestampUtc ??
@@ -254,8 +249,7 @@ export function ActivityTimeline({
                   <>
                     <Typography gutterBottom>
                       <strong>Author: </strong>
-                      <PersonName person={noteAuthorLookup(note)} />{' '}
-                      at{' '}
+                      <PersonName person={userLookup(note.authorId)} /> at{' '}
                       {note.createdTimestampUtc
                         ? format(note.createdTimestampUtc, 'M/d/yy h:mm a')
                         : null}
@@ -393,13 +387,7 @@ export function ActivityTimeline({
                     ? format(activity.activityTimestampUtc, 'M/d/yy h:mm a')
                     : null}
                 </span>
-                <PersonName
-                  person={
-                    note
-                      ? noteAuthorLookup(note)
-                      : userLookup(activity.userId)
-                  }
-                />
+                <PersonName person={userLookup(activity.userId)} />
               </Box>
               {activity instanceof V1CaseRequirementCompleted ||
               activity instanceof ArrangementRequirementCompleted ? (

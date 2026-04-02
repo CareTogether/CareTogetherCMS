@@ -2238,14 +2238,12 @@
         "x-enumNames": [
           "ChildHousing",
           "DaytimeChildCareOnly",
-          "NoChildInvolvement",
-          "ChildOrAdultInvolvement"
+          "NoChildInvolvement"
         ],
         "enum": [
           0,
           1,
-          2,
-          3
+          2
         ]
       },
       "ArrangementFunction": {
@@ -4714,6 +4712,7 @@
         "additionalProperties": false,
         "required": [
           "id",
+          "authorId",
           "lastEditTimestampUtc",
           "status"
         ],
@@ -4722,15 +4721,9 @@
             "type": "string",
             "format": "guid"
           },
-          "authorUserId": {
+          "authorId": {
             "type": "string",
-            "format": "guid",
-            "nullable": true
-          },
-          "authorPersonId": {
-            "type": "string",
-            "format": "guid",
-            "nullable": true
+            "format": "guid"
           },
           "createdTimestampUtc": {
             "type": "string",
@@ -7172,11 +7165,6 @@
               },
               "accessLevel": {
                 "type": "string",
-                "nullable": true
-              },
-              "authorPersonId": {
-                "type": "string",
-                "format": "guid",
                 "nullable": true
               }
             }

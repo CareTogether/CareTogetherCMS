@@ -106,8 +106,7 @@ namespace CareTogether.Managers
             var renderedNotes = notes
                 .Select(note => new Note(
                     note.Id,
-                    note.AuthorUserId,
-                    note.AuthorPersonId,
+                    note.AuthorId,
                     note.CreatedTimestampUtc,
                     note.LastEditTimestampUtc,
                     note.ApprovedTimestampUtc,

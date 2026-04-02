@@ -1,5 +1,5 @@
 import { Divider, Typography } from '@mui/material';
-import { useDirectoryModel, useNoteAuthorLookup } from '../Model/DirectoryModel';
+import { useDirectoryModel, useUserLookup } from '../Model/DirectoryModel';
 import { UpdateDialog } from '../Generic/UpdateDialog';
 import { Note } from '../GeneratedClient';
 import { PersonName } from '../Families/PersonName';
@@ -17,7 +17,7 @@ export function ApproveNoteDialog({
   onClose,
 }: ApproveNoteDialogProps) {
   const directoryModel = useDirectoryModel();
-  const noteAuthorLookup = useNoteAuthorLookup();
+  const userLookup = useUserLookup();
 
   async function approve() {
     await directoryModel.approveNote(
@@ -36,7 +36,7 @@ export function ApproveNoteDialog({
       onSave={approve}
     >
       <Typography variant="body2" component="p">
-        <PersonName person={noteAuthorLookup(note)} /> -&nbsp;
+        <PersonName person={userLookup(note.authorId)} /> -&nbsp;
         {format(note.lastEditTimestampUtc, 'MM/dd/yyyy hh:mm aa')}
       </Typography>
       {note.backdatedTimestampUtc && (
