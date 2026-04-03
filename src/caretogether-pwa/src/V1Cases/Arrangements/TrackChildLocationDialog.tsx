@@ -30,7 +30,6 @@ import {
   ChildLocationHistoryEntry,
   ArrangementPhase,
 } from '../../GeneratedClient';
-import { DateTimePicker } from '@mui/x-date-pickers';
 
 import {
   Timeline,
@@ -59,6 +58,7 @@ import { policyData } from '../../Model/ConfigurationModel';
 import { format } from 'date-fns';
 import { a11yProps, TabPanel } from '../../Generic/TabPanel';
 import { isBackdropClick } from '../../Utilities/handleBackdropClick';
+import { ValidateDatePicker } from '../../Generic/Forms/ValidateDatePicker';
 
 interface ChildLocationTimelineProps {
   partneringFamily: CombinedFamilyInfo;
@@ -554,17 +554,13 @@ export function TrackChildLocationDialog({
                     </FormControl>
                   </Grid>
                   <Grid item xs={12}>
-                    <DateTimePicker
+                    <ValidateDatePicker
                       label="What time did this person receive the child?"
                       value={changeAtLocal}
+                      onChange={(date) => setChangeAtLocal(date)}
+                      includeTime
                       disableFuture
-                      format="M/d/yyyy h:mm a"
-                      onChange={(date: Date | null) =>
-                        date && setChangeAtLocal(date)
-                      }
-                      slotProps={{
-                        textField: { fullWidth: true, required: true },
-                      }}
+                      textFieldProps={{ required: true }}
                     />
                   </Grid>
                   <Grid item xs={12}>
@@ -672,15 +668,14 @@ export function TrackChildLocationDialog({
                     </FormControl>
                   </Grid>
                   <Grid item xs={12}>
-                    <DateTimePicker
+                    <ValidateDatePicker
                       label="What time will this person receive the child?"
                       value={changeAtLocal}
-                      format="M/d/yyyy h:mm a"
-                      onChange={(date: Date | null) =>
-                        date && setChangeAtLocal(date)
-                      }
-                      slotProps={{
-                        textField: { fullWidth: true, required: true },
+                      onChange={(date) => setChangeAtLocal(date)}
+                      includeTime
+                      textFieldProps={{
+                        fullWidth: true,
+                        required: true,
                       }}
                     />
                   </Grid>
