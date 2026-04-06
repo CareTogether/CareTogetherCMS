@@ -259,6 +259,9 @@ namespace CareTogether.Engines.Authorization
                     CareTogether.Resources.V1Referrals.UnexemptReferralRequirement c =>
                         Permission.EditV1CaseRequirementExemption,
 
+                    UploadV1ReferralDocument => Permission.EditV1Referral,
+                    DeleteUploadedV1ReferralDocument => Permission.EditV1Referral,
+
                     _ => throw new NotImplementedException(
                         $"The command type '{command.GetType().FullName}' has not been implemented."
                     ),

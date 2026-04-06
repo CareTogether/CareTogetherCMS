@@ -3843,6 +3843,11 @@
           "comments": {
             "type": "string",
             "nullable": true
+          },
+          "linkedV1ReferralId": {
+            "type": "string",
+            "format": "guid",
+            "nullable": true
           }
         }
       },

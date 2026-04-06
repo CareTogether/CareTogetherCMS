@@ -50,7 +50,7 @@ import {
 } from './SelectReferralFamilyDrawer';
 
 import { FamilyDocuments } from '../Families/FamilyDocuments';
-import { UploadFamilyDocumentsDialog } from '../Families/UploadFamilyDocumentsDialog';
+import { UploadV1ReferralDocumentsDialog } from './UploadV1ReferralDocumentsDialog';
 
 function formatStatusWithDate(
   status: V1ReferralStatus,
@@ -133,8 +133,6 @@ export function ReferralDetailsPage() {
   const family = referral.familyId
     ? familyLookup(referral.familyId)
     : undefined;
-
-  const canUploadFamilyDocs = !!family;
 
   const familyHasOpenCase = !!family?.partneringFamilyInfo?.openV1Case;
 
@@ -285,7 +283,7 @@ export function ReferralDetailsPage() {
               size="small"
               sx={{ margin: 1 }}
               startIcon={<CloudUploadIcon />}
-              disabled={!canUploadFamilyDocs}
+              disabled={isClosed}
               onClick={() => setOpenUploadDocumentDialog(true)}
             >
               Upload
@@ -496,10 +494,13 @@ export function ReferralDetailsPage() {
         />
       )}
 
-      {openUploadDocumentDialog && family && (
-        <UploadFamilyDocumentsDialog
-          family={family}
-          onClose={() => setOpenUploadDocumentDialog(false)}
+      {openUploadDocumentDialog && (
+        <UploadV1ReferralDocumentsDialog
+          referralId={referral.referralId}
+          onClose={(didUpload?: boolean) => {
+            setOpenUploadDocumentDialog(false);
+            if (didUpload) setTimelineKey((k) => k + 1);
+          }}
         />
       )}
 

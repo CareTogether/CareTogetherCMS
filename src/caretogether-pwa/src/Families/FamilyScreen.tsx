@@ -18,7 +18,6 @@ import {
   ListItemButton,
   ListItemIcon,
   FormControl,
-  FormLabel,
   RadioGroup,
   FormControlLabel,
   Radio,
@@ -120,23 +119,6 @@ export function FamilyScreen() {
     return (referrals ?? []).filter((r) => r.familyId === familyId);
   }, [referrals, familyId]);
 
-  const familyReferralsSorted = useMemo(() => {
-    return [...familyReferrals].sort((a, b) => {
-      const aDate =
-        a.status === V1ReferralStatus.Open ? a.createdAtUtc : a.closedAtUtc;
-      const bDate =
-        b.status === V1ReferralStatus.Open ? b.createdAtUtc : b.closedAtUtc;
-
-      if (a.status !== b.status) {
-        return a.status === V1ReferralStatus.Open ? -1 : 1;
-      }
-
-      const at = aDate ? aDate.getTime() : 0;
-      const bt = bDate ? bDate.getTime() : 0;
-      return bt - at;
-    });
-  }, [familyReferrals]);
-
   function referralStatusLabel(status: V1ReferralStatus): string {
     switch (status) {
       case V1ReferralStatus.Open:
@@ -226,6 +208,50 @@ export function FamilyScreen() {
   const selectedV1Case = allV1Cases.find(
     (v1Case) => v1Case.id === selectedV1CaseId
   );
+
+  const referralsForSelectedCase = useMemo(() => {
+    const linkedReferralIds = new Set(
+      allV1Cases
+        .map((c) => c.linkedV1ReferralId)
+        .filter((id): id is string => typeof id === 'string' && id.length > 0)
+    );
+
+    const unlinkedFamilyReferrals = familyReferrals.filter(
+      (r) => !linkedReferralIds.has(r.referralId)
+    );
+
+    const selectedLinkedId = selectedV1Case?.linkedV1ReferralId;
+    const selectedLinkedReferral = selectedLinkedId
+      ? familyReferrals.find((r) => r.referralId === selectedLinkedId)
+      : undefined;
+
+    const result: typeof familyReferrals = [];
+
+    if (selectedLinkedReferral) result.push(selectedLinkedReferral);
+
+    for (const r of unlinkedFamilyReferrals) {
+      if (!result.some((x) => x.referralId === r.referralId)) result.push(r);
+    }
+
+    return result;
+  }, [allV1Cases, familyReferrals, selectedV1Case?.linkedV1ReferralId]);
+
+  const familyReferralsSorted = useMemo(() => {
+    return [...referralsForSelectedCase].sort((a, b) => {
+      const aDate =
+        a.status === V1ReferralStatus.Open ? a.createdAtUtc : a.closedAtUtc;
+      const bDate =
+        b.status === V1ReferralStatus.Open ? b.createdAtUtc : b.closedAtUtc;
+
+      if (a.status !== b.status) {
+        return a.status === V1ReferralStatus.Open ? -1 : 1;
+      }
+
+      const at = aDate ? aDate.getTime() : 0;
+      const bt = bDate ? bDate.getTime() : 0;
+      return bt - at;
+    });
+  }, [referralsForSelectedCase]);
 
   async function closeCaseNow() {
     if (!selectedV1Case?.id) return;
@@ -348,6 +374,7 @@ export function FamilyScreen() {
   const updateTestFamilyFlagEnabled = useFeatureFlagEnabled(
     'updateTestFamilyFlag'
   );
+  const referralsEnabled = useFeatureFlagEnabled('referrals');
   const showIntakeRequirementsAndCustomFields = useFeatureFlagEnabled(
     'showIntakeRequirementsAndCustomFields'
   );
@@ -671,7 +698,7 @@ export function FamilyScreen() {
             <Grid item xs={12} md={4}>
               {permissions(Permission.ViewV1CaseProgress) && (
                 <FormControl>
-                  <FormLabel
+                  <Box
                     id="demo-radio-buttons-group-label"
                     sx={{
                       color: '#000',
@@ -729,8 +756,9 @@ export function FamilyScreen() {
                       <Typography className="ph-unmask" variant="h3">
                         Cases
                       </Typography>
-                      {(!family.partneringFamilyInfo ||
-                        !family.partneringFamilyInfo.openV1Case) &&
+                      {!referralsEnabled &&
+                        (!family.partneringFamilyInfo ||
+                          !family.partneringFamilyInfo.openV1Case) &&
                         permissions(Permission.CreateV1Case) && (
                           <Button
                             className="ph-unmask"
@@ -742,7 +770,7 @@ export function FamilyScreen() {
                           </Button>
                         )}
                     </Box>
-                  </FormLabel>
+                  </Box>
 
                   <RadioGroup
                     aria-labelledby="demo-radio-buttons-group-label"

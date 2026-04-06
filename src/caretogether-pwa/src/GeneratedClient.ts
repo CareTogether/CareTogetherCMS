@@ -5752,6 +5752,7 @@ export class V1Case implements IV1Case {
     missingCustomFields!: string[];
     arrangements!: Arrangement[];
     comments?: string | undefined;
+    linkedV1ReferralId?: string | undefined;
 
     constructor(data?: IV1Case) {
         if (data) {
@@ -5807,6 +5808,7 @@ export class V1Case implements IV1Case {
                     this.arrangements!.push(Arrangement.fromJS(item));
             }
             this.comments = _data["comments"];
+            this.linkedV1ReferralId = _data["linkedV1ReferralId"];
         }
     }
 
@@ -5854,6 +5856,7 @@ export class V1Case implements IV1Case {
                 data["arrangements"].push(item.toJSON());
         }
         data["comments"] = this.comments;
+        data["linkedV1ReferralId"] = this.linkedV1ReferralId;
         return data;
     }
 }
@@ -5870,6 +5873,7 @@ export interface IV1Case {
     missingCustomFields: string[];
     arrangements: Arrangement[];
     comments?: string | undefined;
+    linkedV1ReferralId?: string | undefined;
 }
 
 export enum V1CaseCloseReason {

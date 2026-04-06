@@ -240,7 +240,8 @@ namespace CareTogether.Managers
                             ToArrangement(a.Value, v1CaseStatus.IndividualArrangements[a.Key])
                         )
                         .ToImmutableList(),
-                    entry.Comments
+                    entry.Comments,
+                    entry.LinkedV1ReferralId
                 );
             }
 

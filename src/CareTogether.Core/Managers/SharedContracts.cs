@@ -42,7 +42,8 @@ namespace CareTogether.Managers
         ImmutableList<CompletedCustomFieldInfo> CompletedCustomFields,
         ImmutableList<string> MissingCustomFields,
         ImmutableList<Arrangement> Arrangements,
-        string? Comments
+        string? Comments,
+        Guid? LinkedV1ReferralId
     );
 
     public sealed record Arrangement(
