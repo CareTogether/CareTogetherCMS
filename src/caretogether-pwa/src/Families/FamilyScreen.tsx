@@ -860,40 +860,39 @@ export function FamilyScreen() {
                                       —
                                     </Typography>
                                   ) : (
-                                    linkedReferrals.map((ref) => {
-                                      const date = referralStatusDate(ref);
+                                    <Box
+                                      sx={{
+                                        display: 'flex',
+                                        flexWrap: 'wrap',
+                                        gap: 1,
+                                      }}
+                                    >
+                                      {linkedReferrals.map((ref) => {
+                                        const date = referralStatusDate(ref);
+                                        const metadata = [
+                                          referralStatusLabel(ref.status),
+                                          date ? format(date, 'M/d/yy') : null,
+                                        ]
+                                          .filter(Boolean)
+                                          .join(' · ');
 
-                                      return (
-                                        <Box
-                                          key={ref.referralId}
-                                          onClick={() =>
-                                            appNavigate.referral(ref.referralId)
-                                          }
-                                          sx={{
-                                            cursor: 'pointer',
-                                            py: 0.25,
-                                            '&:hover': {
-                                              textDecoration: 'underline',
-                                            },
-                                          }}
-                                        >
-                                          <Typography className="ph-unmask">
-                                            {ref.title}{' '}
-                                            <Typography
-                                              component="span"
-                                              color="text.secondary"
-                                            >
-                                              ·{' '}
-                                              {referralStatusLabel(ref.status)}{' '}
-                                              ·{' '}
-                                              {date
-                                                ? format(date, 'M/d/yy')
-                                                : ''}
-                                            </Typography>
-                                          </Typography>
-                                        </Box>
-                                      );
-                                    })
+                                        return (
+                                          <Chip
+                                            key={ref.referralId}
+                                            className="ph-unmask"
+                                            clickable
+                                            variant="outlined"
+                                            size="small"
+                                            label={`${ref.title} · ${metadata}`}
+                                            onClick={() =>
+                                              appNavigate.referral(
+                                                ref.referralId
+                                              )
+                                            }
+                                          />
+                                        );
+                                      })}
+                                    </Box>
                                   )}
                                 </TableCell>
                               </TableRow>
@@ -901,53 +900,51 @@ export function FamilyScreen() {
                           }
                         )}
 
-                        <TableRow>
-                          <TableCell
-                            sx={{
-                              width: '1%',
-                              whiteSpace: 'nowrap',
-                            }}
-                          >
-                            NOT LINKED TO A CASE
-                          </TableCell>
-                          <TableCell sx={{ width: '100%' }}>
-                            {caseReferralTable.unlinkedReferrals.length ===
-                            0 ? (
-                              <Typography color="text.secondary">—</Typography>
-                            ) : (
-                              caseReferralTable.unlinkedReferrals.map((ref) => {
-                                const date = referralStatusDate(ref);
+                        {caseReferralTable.unlinkedReferrals.length > 0 && (
+                          <TableRow>
+                            <TableCell
+                              sx={{
+                                width: '1%',
+                                whiteSpace: 'nowrap',
+                              }}
+                            >
+                              (not linked to a case)
+                            </TableCell>
+                            <TableCell sx={{ width: '100%' }}>
+                              <Box
+                                sx={{
+                                  display: 'flex',
+                                  flexWrap: 'wrap',
+                                  gap: 1,
+                                }}
+                              >
+                                {caseReferralTable.unlinkedReferrals.map(
+                                  (ref) => {
+                                    const date = referralStatusDate(ref);
+                                    const metadata = [
+                                      referralStatusLabel(ref.status),
+                                      date ? format(date, 'M/d/yy') : null,
+                                    ]
+                                      .filter(Boolean)
+                                      .join(' · ');
 
-                                return (
-                                  <Box
-                                    key={ref.referralId}
-                                    onClick={() =>
-                                      appNavigate.referral(ref.referralId)
-                                    }
-                                    sx={{
-                                      cursor: 'pointer',
-                                      py: 0.25,
-                                      '&:hover': {
-                                        textDecoration: 'underline',
-                                      },
-                                    }}
-                                  >
-                                    <Typography className="ph-unmask">
-                                      {ref.title}{' '}
-                                      <Typography
-                                        component="span"
-                                        color="text.secondary"
-                                      >
-                                        · {referralStatusLabel(ref.status)} ·{' '}
-                                        {date ? format(date, 'M/d/yy') : ''}
-                                      </Typography>
-                                    </Typography>
-                                  </Box>
-                                );
-                              })
-                            )}
-                          </TableCell>
-                        </TableRow>
+                                    return (
+                                      <Chip
+                                        key={ref.referralId}
+                                        clickable
+                                        size="small"
+                                        label={`${ref.title} · ${metadata}`}
+                                        onClick={() =>
+                                          appNavigate.referral(ref.referralId)
+                                        }
+                                      />
+                                    );
+                                  }
+                                )}
+                              </Box>
+                            </TableCell>
+                          </TableRow>
+                        )}
                       </TableBody>
                     </Table>
                   </TableContainer>
