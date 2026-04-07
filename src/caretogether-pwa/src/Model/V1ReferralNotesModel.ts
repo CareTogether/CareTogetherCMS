@@ -1,6 +1,5 @@
-import { useRecoilCallback } from 'recoil';
+import { useRecoilCallback, useSetRecoilState } from 'recoil';
 import {
-  V1ReferralNoteEntry,
   V1ReferralNoteRecordsCommand,
   V1ReferralNoteCommand,
   CreateV1ReferralDraftNote,
@@ -10,26 +9,11 @@ import {
   UpdateV1ReferralNoteAccessLevel,
 } from '../GeneratedClient';
 import { api } from '../Api/Api';
-import { selectedLocationContextState } from './Data';
+import { selectedLocationContextState, visibleAggregatesState } from './Data';
 import { commandFactory } from './CommandFactory';
 
 export function useV1ReferralNotesModel() {
-  const listReferralNotes = useRecoilCallback(
-    ({ snapshot }) =>
-      async (referralId: string): Promise<V1ReferralNoteEntry[]> => {
-        const { organizationId, locationId } = await snapshot.getPromise(
-          selectedLocationContextState
-        );
-
-        return api.v1ReferralNotes.listReferralNotes(
-          organizationId,
-          locationId,
-          referralId
-        );
-      },
-    []
-  );
-
+  const setVisibleAggregates = useSetRecoilState(visibleAggregatesState);
   const submitReferralNoteCommand = useRecoilCallback(
     ({ snapshot }) =>
       async (command: V1ReferralNoteCommand): Promise<void> => {
@@ -40,13 +24,15 @@ export function useV1ReferralNotesModel() {
         const wrapper = new V1ReferralNoteRecordsCommand();
         wrapper.command = command;
 
-        await api.records.submitAtomicRecordsCommand(
+        const updatedAggregates = await api.records.submitAtomicRecordsCommand(
           organizationId,
           locationId,
           wrapper
         );
+
+        setVisibleAggregates(updatedAggregates);
       },
-    []
+    [setVisibleAggregates]
   );
 
   const createDraftReferralNote = useRecoilCallback(
@@ -141,7 +127,6 @@ export function useV1ReferralNotesModel() {
   );
 
   return {
-    listReferralNotes,
     createDraftReferralNote,
     editDraftReferralNote,
     discardDraftReferralNote,

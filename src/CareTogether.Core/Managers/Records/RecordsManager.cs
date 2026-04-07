@@ -162,10 +162,19 @@ namespace CareTogether.Managers.Records
             );
 
             var renderedReferrals = canViewReferrals
-                ? referrals
-                    .Select(r => new ReferralRecordsAggregate(r))
-                    .Cast<RecordsAggregate>()
-                    .ToImmutableList()
+                ? (
+                    await referrals
+                        .Select(async referral =>
+                        {
+                            var renderedReferral = await RenderReferralAsync(
+                                organizationId,
+                                locationId,
+                                referral
+                            );
+                            return (RecordsAggregate)new ReferralRecordsAggregate(renderedReferral);
+                        })
+                        .WhenAll()
+                ).ToImmutableList()
                 : ImmutableList<RecordsAggregate>.Empty;
 
             var visibleCommunities = (
@@ -494,31 +503,6 @@ namespace CareTogether.Managers.Records
                 locationId,
                 referralId,
                 documentId
-            );
-        }
-
-        public async Task<ImmutableList<V1ReferralNoteEntry>> ListV1ReferralNotesAsync(
-            Guid organizationId,
-            Guid locationId,
-            ClaimsPrincipal user,
-            Guid referralId
-        )
-        {
-            var userContext = await CreateSessionUserContext(user, organizationId, locationId);
-
-            var canViewReferrals = await authorizationEngine.AuthorizeV1ReferralReadAsync(
-                organizationId,
-                locationId,
-                userContext
-            );
-
-            if (!canViewReferrals)
-                throw new Exception("The user is not authorized to view referral notes.");
-
-            return await v1ReferralNotesResource.ListReferralNotesAsync(
-                organizationId,
-                locationId,
-                referralId
             );
         }
 
@@ -881,29 +865,15 @@ namespace CareTogether.Managers.Records
                 if (referral == null)
                     throw new InvalidOperationException("Referral not found.");
 
-                var familyIds = GetFamilyIdsFromCommand(command);
-
-                var familyResults = await Task.WhenAll(
-                    familyIds.Select(familyId =>
-                        combinedFamilyInfoFormatter.RenderCombinedFamilyInfoAsync(
-                            organizationId,
-                            locationPolicy,
-                            locationId,
-                            familyId,
-                            null,
-                            userContext
-                        )
-                    )
+                var renderedReferral = await RenderReferralAsync(
+                    organizationId,
+                    locationId,
+                    referral
                 );
 
-                var familyAggregates = familyResults
-                    .OfType<CombinedFamilyInfo>() // Filters out null values
-                    .Select(result => new FamilyRecordsAggregate(result))
-                    .ToImmutableList<RecordsAggregate>();
-
-                return ImmutableList
-                    .Create<RecordsAggregate>(new ReferralRecordsAggregate(referral))
-                    .AddRange(familyAggregates);
+                return ImmutableList.Create<RecordsAggregate>(
+                    new ReferralRecordsAggregate(renderedReferral)
+                );
             }
 
             if (command is V1ReferralNoteRecordsCommand noteCommand)
@@ -919,11 +889,16 @@ namespace CareTogether.Managers.Records
                 if (referral == null)
                     throw new InvalidOperationException("Referral not found.");
 
+                var renderedReferral = await RenderReferralAsync(
+                    organizationId,
+                    locationId,
+                    referral
+                );
+
                 return ImmutableList.Create<RecordsAggregate>(
-                    new ReferralRecordsAggregate(referral)
+                    new ReferralRecordsAggregate(renderedReferral)
                 );
             }
-
             if (command is CommunityRecordsCommand c)
             {
                 var communityId = c.Command.CommunityId;
@@ -1016,6 +991,24 @@ namespace CareTogether.Managers.Records
                     $"The command type '{command.GetType().FullName}' has not been implemented."
                 ),
             };
+
+        private async Task<V1Referral> RenderReferralAsync(
+            Guid organizationId,
+            Guid locationId,
+            V1Referral referral
+        )
+        {
+            var notes = await v1ReferralNotesResource.ListReferralNotesAsync(
+                organizationId,
+                locationId,
+                referral.ReferralId
+            );
+
+            return referral with
+            {
+                Notes = notes,
+            };
+        }
 
         private async Task<bool> FamilyHasOpenCaseAsync(
             Guid organizationId,

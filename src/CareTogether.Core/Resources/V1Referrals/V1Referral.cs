@@ -22,7 +22,8 @@ namespace CareTogether.Resources.V1Referrals
         ImmutableList<CompletedRequirementInfo> CompletedRequirements,
         ImmutableList<ExemptedRequirementInfo> ExemptedRequirements,
         ImmutableList<UploadedDocumentInfo> UploadedDocuments,
-        ImmutableList<Guid> DeletedDocuments
+        ImmutableList<Guid> DeletedDocuments,
+        ImmutableList<V1ReferralNoteEntry> Notes
     )
     {
         public static V1Referral Rehydrate(IEnumerable<V1ReferralEvent> events)
@@ -64,7 +65,8 @@ namespace CareTogether.Resources.V1Referrals
                         ImmutableList<CompletedRequirementInfo>.Empty,
                         ImmutableList<ExemptedRequirementInfo>.Empty,
                         ImmutableList<UploadedDocumentInfo>.Empty,
-                        ImmutableList<Guid>.Empty
+                        ImmutableList<Guid>.Empty,
+                        ImmutableList<V1ReferralNoteEntry>.Empty
                     )
                     : throw new InvalidOperationException("Referral already exists."),
 

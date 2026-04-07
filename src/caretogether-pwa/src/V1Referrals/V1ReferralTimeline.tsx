@@ -7,12 +7,12 @@ import {
   TimelineConnector,
   TimelineContent,
 } from '@mui/lab';
-import { Box, CircularProgress, Typography } from '@mui/material';
+import { Box, Typography } from '@mui/material';
 import EditIcon from '@mui/icons-material/Edit';
 import CheckIcon from '@mui/icons-material/Check';
 import DescriptionIcon from '@mui/icons-material/Description';
 import { format } from 'date-fns';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useMemo } from 'react';
 
 import {
   V1Referral,
@@ -20,7 +20,6 @@ import {
   V1ReferralStatus,
 } from '../GeneratedClient';
 
-import { useV1ReferralNotesModel } from '../Model/V1ReferralNotesModel';
 import { useUserLookup } from '../Model/DirectoryModel';
 import { PersonName } from '../Families/PersonName';
 import { V1ReferralNoteCard } from '../V1Referrals/V1ReferralNoteCard';
@@ -58,12 +57,6 @@ type ReferralTimelineItem =
       note: V1ReferralNoteEntry;
     };
 
-function getErrorMessage(e: unknown): string {
-  if (e instanceof Error) return e.message;
-  if (typeof e === 'string') return e;
-  return 'Unexpected error';
-}
-
 function resolveReferralNoteText(
   note: V1ReferralNoteEntry | undefined
 ): string | null {
@@ -73,51 +66,14 @@ function resolveReferralNoteText(
 
 export function ReferralTimeline({ referral }: ReferralTimelineProps) {
   const userLookup = useUserLookup();
-  const { listReferralNotes } = useV1ReferralNotesModel();
-
-  const [notes, setNotes] = useState<V1ReferralNoteEntry[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  const requestIdRef = useRef(0);
-
-  const completedNoteKey = useMemo(() => {
-    return (referral.completedRequirements ?? [])
-      .map((r) => r.noteId ?? '')
-      .join('|');
-  }, [referral.completedRequirements]);
-
-  useEffect(() => {
-    const requestId = ++requestIdRef.current;
-
-    setLoading(true);
-    setError(null);
-
-    (async () => {
-      try {
-        const result = await listReferralNotes(referral.referralId);
-        if (requestId === requestIdRef.current) {
-          setNotes(result ?? []);
-        }
-      } catch (e: unknown) {
-        if (requestId === requestIdRef.current) {
-          setError(getErrorMessage(e));
-        }
-      } finally {
-        if (requestId === requestIdRef.current) {
-          setLoading(false);
-        }
-      }
-    })();
-  }, [referral.referralId, completedNoteKey, listReferralNotes]);
 
   const notesById = useMemo(() => {
     const map = new Map<string, V1ReferralNoteEntry>();
-    for (const n of notes ?? []) {
+    for (const n of referral.notes ?? []) {
       if (n.id) map.set(n.id, n);
     }
     return map;
-  }, [notes]);
+  }, [referral.notes]);
 
   const items: ReferralTimelineItem[] = useMemo(() => {
     const out: ReferralTimelineItem[] = [];
@@ -183,7 +139,7 @@ export function ReferralTimeline({ referral }: ReferralTimelineProps) {
       });
     }
 
-    for (const n of notes ?? []) {
+    for (const n of referral.notes ?? []) {
       out.push({
         kind: 'note',
         timestamp:
@@ -198,23 +154,10 @@ export function ReferralTimeline({ referral }: ReferralTimelineProps) {
 
     out.sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime());
     return out;
-  }, [referral, notes, notesById]);
+  }, [referral, notesById]);
 
   return (
     <Box>
-      {loading && notes.length === 0 && (
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
-          <CircularProgress size={18} />
-          <Typography variant="body2">Loading notes…</Typography>
-        </Box>
-      )}
-
-      {error && (
-        <Typography variant="body2" color="error" sx={{ mb: 1 }}>
-          {error}
-        </Typography>
-      )}
-
       <Timeline position="right" sx={{ p: 0 }}>
         {items.map((item, i) => (
           <TimelineItem key={`${item.kind}:${i}`}>

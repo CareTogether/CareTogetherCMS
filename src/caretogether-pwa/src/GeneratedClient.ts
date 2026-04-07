@@ -1152,67 +1152,6 @@ export class UsersClient {
     }
 }
 
-export class V1ReferralNotesClient {
-    private http: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> };
-    private baseUrl: string;
-    protected jsonParseReviver: ((key: string, value: any) => any) | undefined = undefined;
-
-    constructor(baseUrl?: string, http?: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> }) {
-        this.http = http ? http : window as any;
-        this.baseUrl = baseUrl ?? "";
-    }
-
-    listReferralNotes(organizationId: string, locationId: string, referralId: string): Promise<V1ReferralNoteEntry[]> {
-        let url_ = this.baseUrl + "/api/{organizationId}/{locationId}/v1referrals/{referralId}/notes";
-        if (organizationId === undefined || organizationId === null)
-            throw new Error("The parameter 'organizationId' must be defined.");
-        url_ = url_.replace("{organizationId}", encodeURIComponent("" + organizationId));
-        if (locationId === undefined || locationId === null)
-            throw new Error("The parameter 'locationId' must be defined.");
-        url_ = url_.replace("{locationId}", encodeURIComponent("" + locationId));
-        if (referralId === undefined || referralId === null)
-            throw new Error("The parameter 'referralId' must be defined.");
-        url_ = url_.replace("{referralId}", encodeURIComponent("" + referralId));
-        url_ = url_.replace(/[?&]$/, "");
-
-        let options_: RequestInit = {
-            method: "GET",
-            headers: {
-                "Accept": "application/json"
-            }
-        };
-
-        return this.http.fetch(url_, options_).then((_response: Response) => {
-            return this.processListReferralNotes(_response);
-        });
-    }
-
-    protected processListReferralNotes(response: Response): Promise<V1ReferralNoteEntry[]> {
-        const status = response.status;
-        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
-        if (status === 200) {
-            return response.text().then((_responseText) => {
-            let result200: any = null;
-            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
-            if (Array.isArray(resultData200)) {
-                result200 = [] as any;
-                for (let item of resultData200)
-                    result200!.push(V1ReferralNoteEntry.fromJS(item));
-            }
-            else {
-                result200 = <any>null;
-            }
-            return result200;
-            });
-        } else if (status !== 200 && status !== 204) {
-            return response.text().then((_responseText) => {
-            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
-            });
-        }
-        return Promise.resolve<V1ReferralNoteEntry[]>(null as any);
-    }
-}
-
 export class ValueTupleOfGuidAndSmsMessageResult implements IValueTupleOfGuidAndSmsMessageResult {
     item1!: string;
     item2!: SmsMessageResult;
@@ -7866,6 +7805,7 @@ export class V1Referral implements IV1Referral {
     exemptedRequirements!: ExemptedRequirementInfo[];
     uploadedDocuments!: UploadedDocumentInfo[];
     deletedDocuments!: string[];
+    notes!: V1ReferralNoteEntry[];
 
     constructor(data?: IV1Referral) {
         if (data) {
@@ -7880,6 +7820,7 @@ export class V1Referral implements IV1Referral {
             this.exemptedRequirements = [];
             this.uploadedDocuments = [];
             this.deletedDocuments = [];
+            this.notes = [];
         }
     }
 
@@ -7920,6 +7861,11 @@ export class V1Referral implements IV1Referral {
                 this.deletedDocuments = [] as any;
                 for (let item of _data["deletedDocuments"])
                     this.deletedDocuments!.push(item);
+            }
+            if (Array.isArray(_data["notes"])) {
+                this.notes = [] as any;
+                for (let item of _data["notes"])
+                    this.notes!.push(V1ReferralNoteEntry.fromJS(item));
             }
         }
     }
@@ -7969,6 +7915,11 @@ export class V1Referral implements IV1Referral {
             for (let item of this.deletedDocuments)
                 data["deletedDocuments"].push(item);
         }
+        if (Array.isArray(this.notes)) {
+            data["notes"] = [];
+            for (let item of this.notes)
+                data["notes"].push(item.toJSON());
+        }
         return data;
     }
 }
@@ -7988,12 +7939,94 @@ export interface IV1Referral {
     exemptedRequirements: ExemptedRequirementInfo[];
     uploadedDocuments: UploadedDocumentInfo[];
     deletedDocuments: string[];
+    notes: V1ReferralNoteEntry[];
 }
 
 export enum V1ReferralStatus {
     Open = 0,
     Accepted = 1,
     Closed = 2,
+}
+
+export class V1ReferralNoteEntry implements IV1ReferralNoteEntry {
+    id!: string;
+    referralId!: string;
+    authorId!: string;
+    createdTimestampUtc?: Date | undefined;
+    lastEditTimestampUtc!: Date;
+    status!: V1ReferralNoteStatus;
+    contents?: string | undefined;
+    approverId?: string | undefined;
+    approvedTimestampUtc?: Date | undefined;
+    backdatedTimestampUtc?: Date | undefined;
+    accessLevel?: string | undefined;
+
+    constructor(data?: IV1ReferralNoteEntry) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.id = _data["id"];
+            this.referralId = _data["referralId"];
+            this.authorId = _data["authorId"];
+            this.createdTimestampUtc = _data["createdTimestampUtc"] ? new Date(_data["createdTimestampUtc"].toString()) : <any>undefined;
+            this.lastEditTimestampUtc = _data["lastEditTimestampUtc"] ? new Date(_data["lastEditTimestampUtc"].toString()) : <any>undefined;
+            this.status = _data["status"];
+            this.contents = _data["contents"];
+            this.approverId = _data["approverId"];
+            this.approvedTimestampUtc = _data["approvedTimestampUtc"] ? new Date(_data["approvedTimestampUtc"].toString()) : <any>undefined;
+            this.backdatedTimestampUtc = _data["backdatedTimestampUtc"] ? new Date(_data["backdatedTimestampUtc"].toString()) : <any>undefined;
+            this.accessLevel = _data["accessLevel"];
+        }
+    }
+
+    static fromJS(data: any): V1ReferralNoteEntry {
+        data = typeof data === 'object' ? data : {};
+        let result = new V1ReferralNoteEntry();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["id"] = this.id;
+        data["referralId"] = this.referralId;
+        data["authorId"] = this.authorId;
+        data["createdTimestampUtc"] = this.createdTimestampUtc ? this.createdTimestampUtc.toISOString() : <any>undefined;
+        data["lastEditTimestampUtc"] = this.lastEditTimestampUtc ? this.lastEditTimestampUtc.toISOString() : <any>undefined;
+        data["status"] = this.status;
+        data["contents"] = this.contents;
+        data["approverId"] = this.approverId;
+        data["approvedTimestampUtc"] = this.approvedTimestampUtc ? this.approvedTimestampUtc.toISOString() : <any>undefined;
+        data["backdatedTimestampUtc"] = this.backdatedTimestampUtc ? this.backdatedTimestampUtc.toISOString() : <any>undefined;
+        data["accessLevel"] = this.accessLevel;
+        return data;
+    }
+}
+
+export interface IV1ReferralNoteEntry {
+    id: string;
+    referralId: string;
+    authorId: string;
+    createdTimestampUtc?: Date | undefined;
+    lastEditTimestampUtc: Date;
+    status: V1ReferralNoteStatus;
+    contents?: string | undefined;
+    approverId?: string | undefined;
+    approvedTimestampUtc?: Date | undefined;
+    backdatedTimestampUtc?: Date | undefined;
+    accessLevel?: string | undefined;
+}
+
+export enum V1ReferralNoteStatus {
+    Draft = 0,
+    Approved = 1,
 }
 
 export abstract class AtomicRecordsCommand implements IAtomicRecordsCommand {
@@ -15310,87 +15343,6 @@ export interface IAccountLocationAccess {
     locationId: string;
     personId: string;
     roles: string[];
-}
-
-export class V1ReferralNoteEntry implements IV1ReferralNoteEntry {
-    id!: string;
-    referralId!: string;
-    authorId!: string;
-    createdTimestampUtc?: Date | undefined;
-    lastEditTimestampUtc!: Date;
-    status!: V1ReferralNoteStatus;
-    contents?: string | undefined;
-    approverId?: string | undefined;
-    approvedTimestampUtc?: Date | undefined;
-    backdatedTimestampUtc?: Date | undefined;
-    accessLevel?: string | undefined;
-
-    constructor(data?: IV1ReferralNoteEntry) {
-        if (data) {
-            for (var property in data) {
-                if (data.hasOwnProperty(property))
-                    (<any>this)[property] = (<any>data)[property];
-            }
-        }
-    }
-
-    init(_data?: any) {
-        if (_data) {
-            this.id = _data["id"];
-            this.referralId = _data["referralId"];
-            this.authorId = _data["authorId"];
-            this.createdTimestampUtc = _data["createdTimestampUtc"] ? new Date(_data["createdTimestampUtc"].toString()) : <any>undefined;
-            this.lastEditTimestampUtc = _data["lastEditTimestampUtc"] ? new Date(_data["lastEditTimestampUtc"].toString()) : <any>undefined;
-            this.status = _data["status"];
-            this.contents = _data["contents"];
-            this.approverId = _data["approverId"];
-            this.approvedTimestampUtc = _data["approvedTimestampUtc"] ? new Date(_data["approvedTimestampUtc"].toString()) : <any>undefined;
-            this.backdatedTimestampUtc = _data["backdatedTimestampUtc"] ? new Date(_data["backdatedTimestampUtc"].toString()) : <any>undefined;
-            this.accessLevel = _data["accessLevel"];
-        }
-    }
-
-    static fromJS(data: any): V1ReferralNoteEntry {
-        data = typeof data === 'object' ? data : {};
-        let result = new V1ReferralNoteEntry();
-        result.init(data);
-        return result;
-    }
-
-    toJSON(data?: any) {
-        data = typeof data === 'object' ? data : {};
-        data["id"] = this.id;
-        data["referralId"] = this.referralId;
-        data["authorId"] = this.authorId;
-        data["createdTimestampUtc"] = this.createdTimestampUtc ? this.createdTimestampUtc.toISOString() : <any>undefined;
-        data["lastEditTimestampUtc"] = this.lastEditTimestampUtc ? this.lastEditTimestampUtc.toISOString() : <any>undefined;
-        data["status"] = this.status;
-        data["contents"] = this.contents;
-        data["approverId"] = this.approverId;
-        data["approvedTimestampUtc"] = this.approvedTimestampUtc ? this.approvedTimestampUtc.toISOString() : <any>undefined;
-        data["backdatedTimestampUtc"] = this.backdatedTimestampUtc ? this.backdatedTimestampUtc.toISOString() : <any>undefined;
-        data["accessLevel"] = this.accessLevel;
-        return data;
-    }
-}
-
-export interface IV1ReferralNoteEntry {
-    id: string;
-    referralId: string;
-    authorId: string;
-    createdTimestampUtc?: Date | undefined;
-    lastEditTimestampUtc: Date;
-    status: V1ReferralNoteStatus;
-    contents?: string | undefined;
-    approverId?: string | undefined;
-    approvedTimestampUtc?: Date | undefined;
-    backdatedTimestampUtc?: Date | undefined;
-    accessLevel?: string | undefined;
-}
-
-export enum V1ReferralNoteStatus {
-    Draft = 0,
-    Approved = 1,
 }
 
 function formatDate(d: Date) {

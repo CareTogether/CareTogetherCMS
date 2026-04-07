@@ -103,10 +103,7 @@ export function ReferralDetailsPage() {
   const [openAddNoteDialog, setOpenAddNoteDialog] = useState(false);
   const [openUploadDocumentDialog, setOpenUploadDocumentDialog] =
     useState(false);
-
   const [openSelectFamilyDrawer, setOpenSelectFamilyDrawer] = useState(false);
-
-  const [timelineKey, setTimelineKey] = useState(0);
 
   const referral = useMemo(
     () => referrals.find((r) => r.referralId === referralId),
@@ -290,7 +287,7 @@ export function ReferralDetailsPage() {
             </Button>
           </Box>
 
-          <ReferralTimeline key={timelineKey} referral={referral} />
+          <ReferralTimeline referral={referral} />
         </Grid>
 
         <Grid item xs={12} md={8}>
@@ -331,7 +328,7 @@ export function ReferralDetailsPage() {
                 const value =
                   referral.completedCustomFields?.[field.name]?.value;
 
-                let displayValue: string = '—';
+                let displayValue = '—';
                 if (value !== null && value !== undefined && value !== '') {
                   displayValue =
                     field.type === CustomFieldType.Boolean
@@ -427,7 +424,7 @@ export function ReferralDetailsPage() {
                   </Typography>
 
                   <Box component="ul" sx={{ pl: 3, m: 0 }}>
-                    {referral.uploadedDocuments!.map((doc) => (
+                    {referral.uploadedDocuments.map((doc) => (
                       <Box
                         component="li"
                         key={doc.uploadedDocumentId}
@@ -487,20 +484,14 @@ export function ReferralDetailsPage() {
       {openAddNoteDialog && (
         <AddEditV1ReferralNoteDialog
           referralId={referral.referralId}
-          onClose={(didSave?: boolean) => {
-            setOpenAddNoteDialog(false);
-            if (didSave) setTimelineKey((k) => k + 1);
-          }}
+          onClose={() => setOpenAddNoteDialog(false)}
         />
       )}
 
       {openUploadDocumentDialog && (
         <UploadV1ReferralDocumentsDialog
           referralId={referral.referralId}
-          onClose={(didUpload?: boolean) => {
-            setOpenUploadDocumentDialog(false);
-            if (didUpload) setTimelineKey((k) => k + 1);
-          }}
+          onClose={() => setOpenUploadDocumentDialog(false)}
         />
       )}
 

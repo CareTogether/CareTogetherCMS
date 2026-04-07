@@ -191,12 +191,5 @@ namespace CareTogether.Managers.Records
             Guid referralId,
             Guid documentId
         );
-
-        Task<ImmutableList<V1ReferralNoteEntry>> ListV1ReferralNotesAsync(
-            Guid organizationId,
-            Guid locationId,
-            ClaimsPrincipal user,
-            Guid referralId
-        );
     }
 }
