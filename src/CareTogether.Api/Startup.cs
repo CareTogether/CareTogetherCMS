@@ -310,6 +310,7 @@ namespace CareTogether.Api
                 new RecordsManager(
                     policiesResource,
                     authorizationEngine,
+                    policyEvaluationEngine,
                     userAccessCalculation,
                     directoryResource,
                     approvalsResource,

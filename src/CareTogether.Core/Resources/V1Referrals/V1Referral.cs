@@ -26,6 +26,9 @@ namespace CareTogether.Resources.V1Referrals
         ImmutableList<V1ReferralNoteEntry> Notes
     )
     {
+        public ImmutableList<RequirementDefinition> MissingIntakeRequirements { get; init; } =
+            ImmutableList<RequirementDefinition>.Empty;
+
         public static V1Referral Rehydrate(IEnumerable<V1ReferralEvent> events)
         {
             V1Referral? referral = null;

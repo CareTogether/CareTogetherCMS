@@ -5,6 +5,7 @@ using System.Linq;
 using System.Security.Claims;
 using System.Threading.Tasks;
 using CareTogether.Engines.Authorization;
+using CareTogether.Engines.PolicyEvaluation;
 using CareTogether.Resources.Approvals;
 using CareTogether.Resources.Communities;
 using CareTogether.Resources.Directory;
@@ -21,6 +22,7 @@ namespace CareTogether.Managers.Records
     {
         private readonly IPoliciesResource policiesResource;
         private readonly IAuthorizationEngine authorizationEngine;
+        private readonly IPolicyEvaluationEngine policyEvaluationEngine;
         private readonly IUserAccessCalculation userAccessCalculation;
         private readonly IDirectoryResource directoryResource;
         private readonly IApprovalsResource approvalsResource;
@@ -38,6 +40,7 @@ namespace CareTogether.Managers.Records
         public RecordsManager(
             IPoliciesResource policiesResource,
             IAuthorizationEngine authorizationEngine,
+            IPolicyEvaluationEngine policyEvaluationEngine,
             IUserAccessCalculation userAccessCalculation,
             IDirectoryResource directoryResource,
             IApprovalsResource approvalsResource,
@@ -52,6 +55,7 @@ namespace CareTogether.Managers.Records
         {
             this.policiesResource = policiesResource;
             this.authorizationEngine = authorizationEngine;
+            this.policyEvaluationEngine = policyEvaluationEngine;
             this.userAccessCalculation = userAccessCalculation;
             this.directoryResource = directoryResource;
             this.approvalsResource = approvalsResource;
@@ -866,14 +870,14 @@ namespace CareTogether.Managers.Records
                 var results = ImmutableList.CreateBuilder<RecordsAggregate>();
                 results.Add(new ReferralRecordsAggregate(renderedReferral));
 
-                if (referral.FamilyId.HasValue)
+                if (renderedReferral.FamilyId.HasValue)
                 {
                     var familyResult =
                         await combinedFamilyInfoFormatter.RenderCombinedFamilyInfoAsync(
                             organizationId,
                             locationPolicy,
                             locationId,
-                            referral.FamilyId.Value,
+                            renderedReferral.FamilyId.Value,
                             null,
                             userContext
                         );
@@ -1007,6 +1011,12 @@ namespace CareTogether.Managers.Records
             V1Referral referral
         )
         {
+            referral = await PopulateMissingReferralIntakeRequirementsAsync(
+                organizationId,
+                locationId,
+                referral
+            );
+
             var notes = await v1ReferralNotesResource.ListReferralNotesAsync(
                 organizationId,
                 locationId,
@@ -1054,6 +1064,25 @@ namespace CareTogether.Managers.Records
                 new LinkReferralToCase(referral.FamilyId.Value, openCase.Id, referral.ReferralId),
                 user.UserId()
             );
+        }
+
+        private async Task<V1Referral> PopulateMissingReferralIntakeRequirementsAsync(
+            Guid organizationId,
+            Guid locationId,
+            V1Referral referral
+        )
+        {
+            var missingIntakeRequirements =
+                await policyEvaluationEngine.CalculateMissingV1ReferralIntakeRequirementsAsync(
+                    organizationId,
+                    locationId,
+                    referral
+                );
+
+            return referral with
+            {
+                MissingIntakeRequirements = missingIntakeRequirements,
+            };
         }
     }
 }

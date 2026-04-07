@@ -7815,6 +7815,7 @@ export class V1Referral implements IV1Referral {
     uploadedDocuments!: UploadedDocumentInfo[];
     deletedDocuments!: string[];
     notes!: V1ReferralNoteEntry[];
+    missingIntakeRequirements!: RequirementDefinition[];
 
     constructor(data?: IV1Referral) {
         if (data) {
@@ -7830,6 +7831,7 @@ export class V1Referral implements IV1Referral {
             this.uploadedDocuments = [];
             this.deletedDocuments = [];
             this.notes = [];
+            this.missingIntakeRequirements = [];
         }
     }
 
@@ -7875,6 +7877,11 @@ export class V1Referral implements IV1Referral {
                 this.notes = [] as any;
                 for (let item of _data["notes"])
                     this.notes!.push(V1ReferralNoteEntry.fromJS(item));
+            }
+            if (Array.isArray(_data["missingIntakeRequirements"])) {
+                this.missingIntakeRequirements = [] as any;
+                for (let item of _data["missingIntakeRequirements"])
+                    this.missingIntakeRequirements!.push(RequirementDefinition.fromJS(item));
             }
         }
     }
@@ -7929,6 +7936,11 @@ export class V1Referral implements IV1Referral {
             for (let item of this.notes)
                 data["notes"].push(item.toJSON());
         }
+        if (Array.isArray(this.missingIntakeRequirements)) {
+            data["missingIntakeRequirements"] = [];
+            for (let item of this.missingIntakeRequirements)
+                data["missingIntakeRequirements"].push(item.toJSON());
+        }
         return data;
     }
 }
@@ -7949,6 +7961,7 @@ export interface IV1Referral {
     uploadedDocuments: UploadedDocumentInfo[];
     deletedDocuments: string[];
     notes: V1ReferralNoteEntry[];
+    missingIntakeRequirements: RequirementDefinition[];
 }
 
 export enum V1ReferralStatus {

@@ -4957,7 +4957,8 @@
           "exemptedRequirements",
           "uploadedDocuments",
           "deletedDocuments",
-          "notes"
+          "notes",
+          "missingIntakeRequirements"
         ],
         "properties": {
           "referralId": {
@@ -5032,6 +5033,12 @@
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/V1ReferralNoteEntry"
+            }
+          },
+          "missingIntakeRequirements": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RequirementDefinition"
             }
           }
         }

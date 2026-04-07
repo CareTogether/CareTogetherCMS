@@ -170,18 +170,7 @@ export function ReferralDetailsPage() {
   const referralCustomFields: CustomField[] =
     policy.referralPolicy?.customFields ?? [];
 
-  const referralRequirements =
-    policy.referralPolicy?.intakeRequirements?.filter((req) => {
-      const completed = currentReferral.completedRequirements?.some(
-        (c) => c.requirementName === req.actionName
-      );
-
-      const exempted = currentReferral.exemptedRequirements?.some(
-        (e) => e.requirementName === req.actionName
-      );
-
-      return !completed && !exempted;
-    }) ?? [];
+  const referralRequirements = referral.missingIntakeRequirements ?? [];
 
   function buildCaseOptionsForFamily(familyId: string) {
     const selectedFamily = familyLookup(familyId);
