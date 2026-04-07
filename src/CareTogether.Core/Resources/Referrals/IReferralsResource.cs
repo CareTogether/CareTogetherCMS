@@ -100,6 +100,9 @@ namespace CareTogether.Resources.V1Cases
         Guid? LinkedV1ReferralId
     ) : V1CaseCommand(FamilyId, ReferralId);
 
+    public sealed record ReopenReferral(Guid FamilyId, Guid ReferralId, DateTime ReopenedAtUtc)
+        : V1CaseCommand(FamilyId, ReferralId);
+
     public sealed record CompleteReferralRequirement(
         Guid FamilyId,
         Guid ReferralId,

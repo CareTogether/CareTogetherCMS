@@ -13,6 +13,7 @@ import {
   V1CaseCloseReason,
   CloseReferral as CloseV1Case,
   CreateReferral as CreateV1Case,
+  ReopenReferral as ReopenV1Case,
   TrackChildLocationChange,
   ChildLocationPlan,
   UpdateCustomReferralField as UpdateCustomV1CaseField,
@@ -945,6 +946,20 @@ export function useV1CasesModel() {
       return command;
     }
   );
+  const reopenV1Case = useV1CaseCommandCallbackWithLocation(
+    async (
+      partneringFamilyId: string,
+      v1CaseId: string,
+      reopenedAtLocal: Date
+    ) => {
+      const command = commandFactory(ReopenV1Case, {
+        familyId: partneringFamilyId,
+        referralId: v1CaseId,
+        reopenedAtUtc: reopenedAtLocal,
+      });
+      return command;
+    }
+  );
   const openV1CaseCommand = useV1CaseCommandCallbackWithLocation(
     async (
       partneringFamilyId: string,
@@ -1022,6 +1037,7 @@ export function useV1CasesModel() {
     updateArrangementComments,
     editArrangementReason,
     closeV1Case,
+    reopenV1Case,
     openV1Case,
   };
 }

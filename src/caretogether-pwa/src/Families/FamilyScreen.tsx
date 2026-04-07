@@ -180,8 +180,7 @@ export function FamilyScreen() {
       ? []
       : [...family.partneringFamilyInfo.closedV1Cases!].sort(
           (r1, r2) =>
-            (r1.closedAtUtc?.getUTCMilliseconds() ?? 0) -
-            (r2.closedAtUtc?.getUTCMilliseconds() ?? 0)
+            (r2.closedAtUtc?.getTime() ?? 0) - (r1.closedAtUtc?.getTime() ?? 0)
         );
   }, [family?.partneringFamilyInfo?.closedV1Cases]);
 
@@ -211,6 +210,15 @@ export function FamilyScreen() {
   const selectedV1Case = allV1Cases.find(
     (v1Case) => v1Case.id === selectedV1CaseId
   );
+
+  const hasOpenV1Case = openV1Cases.length > 0;
+  const latestClosedV1Case = closedV1Cases[0];
+
+  const canReopenSelectedV1Case =
+    !!selectedV1Case?.closedAtUtc &&
+    !hasOpenV1Case &&
+    selectedV1Case.id === latestClosedV1Case?.id &&
+    permissions(Permission.CloseV1Case);
 
   const caseReferralTable = useMemo(() => {
     const linkedReferralIds = new Set(
@@ -246,6 +254,19 @@ export function FamilyScreen() {
         selectedV1Case.id,
         defaultReason,
         closedAtLocal
+      );
+    });
+  }
+  async function reopenCaseNow() {
+    if (!selectedV1Case?.id) return;
+
+    await withBackdrop(async () => {
+      const reopenedAtLocal = new Date();
+
+      await v1CasesModel.reopenV1Case(
+        familyId,
+        selectedV1Case.id,
+        reopenedAtLocal
       );
     });
   }
@@ -803,6 +824,21 @@ export function FamilyScreen() {
                                         Close Case
                                       </Button>
                                     )}
+                                    {isSelected &&
+                                      !isOpenV1Case &&
+                                      canReopenSelectedV1Case && (
+                                        <Button
+                                          className="ph-unmask"
+                                          onClick={(e) => {
+                                            e.stopPropagation();
+                                            void reopenCaseNow();
+                                          }}
+                                          variant="contained"
+                                          size="small"
+                                        >
+                                          Reopen Case
+                                        </Button>
+                                      )}
                                   </Box>
                                 </TableCell>
 

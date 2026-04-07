@@ -12924,6 +12924,11 @@ export abstract class V1CaseCommand implements IV1CaseCommand {
             result.init(data);
             return result;
         }
+        if (data["discriminator"] === "ReopenReferral") {
+            let result = new ReopenReferral();
+            result.init(data);
+            return result;
+        }
         if (data["discriminator"] === "UnexemptReferralRequirement") {
             let result = new UnexemptReferralRequirement();
             result.init(data);
@@ -13160,6 +13165,40 @@ export class MarkReferralRequirementIncomplete extends V1CaseCommand implements 
 export interface IMarkReferralRequirementIncomplete extends IV1CaseCommand {
     completedRequirementId: string;
     requirementName: string;
+}
+
+export class ReopenReferral extends V1CaseCommand implements IReopenReferral {
+    reopenedAtUtc!: Date;
+
+    constructor(data?: IReopenReferral) {
+        super(data);
+        this._discriminator = "ReopenReferral";
+    }
+
+    init(_data?: any) {
+        super.init(_data);
+        if (_data) {
+            this.reopenedAtUtc = _data["reopenedAtUtc"] ? new Date(_data["reopenedAtUtc"].toString()) : <any>undefined;
+        }
+    }
+
+    static fromJS(data: any): ReopenReferral {
+        data = typeof data === 'object' ? data : {};
+        let result = new ReopenReferral();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["reopenedAtUtc"] = this.reopenedAtUtc ? this.reopenedAtUtc.toISOString() : <any>undefined;
+        super.toJSON(data);
+        return data;
+    }
+}
+
+export interface IReopenReferral extends IV1CaseCommand {
+    reopenedAtUtc: Date;
 }
 
 export class UnexemptReferralRequirement extends V1CaseCommand implements IUnexemptReferralRequirement {

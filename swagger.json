@@ -7988,6 +7988,7 @@
             "CreateReferral": "#/components/schemas/CreateReferral",
             "ExemptReferralRequirement": "#/components/schemas/ExemptReferralRequirement",
             "MarkReferralRequirementIncomplete": "#/components/schemas/MarkReferralRequirementIncomplete",
+            "ReopenReferral": "#/components/schemas/ReopenReferral",
             "UnexemptReferralRequirement": "#/components/schemas/UnexemptReferralRequirement",
             "UpdateCustomReferralField": "#/components/schemas/UpdateCustomReferralField",
             "UpdateReferralComments": "#/components/schemas/UpdateReferralComments"
@@ -8149,6 +8150,26 @@
               },
               "requirementName": {
                 "type": "string"
+              }
+            }
+          }
+        ]
+      },
+      "ReopenReferral": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/V1CaseCommand"
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "reopenedAtUtc"
+            ],
+            "properties": {
+              "reopenedAtUtc": {
+                "type": "string",
+                "format": "date-time"
               }
             }
           }

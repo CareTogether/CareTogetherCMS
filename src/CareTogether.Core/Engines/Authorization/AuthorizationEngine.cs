@@ -148,6 +148,7 @@ namespace CareTogether.Engines.Authorization
                     UpdateCustomReferralField => Permission.EditV1Case,
                     UpdateReferralComments => Permission.EditV1Case,
                     CloseReferral => Permission.CloseV1Case,
+                    ReopenReferral => Permission.CloseV1Case,
                     _ => throw new NotImplementedException(
                         $"The command type '{command.GetType().FullName}' has not been implemented."
                     ),

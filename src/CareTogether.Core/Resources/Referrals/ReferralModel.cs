@@ -202,6 +202,7 @@ namespace CareTogether.Resources.V1Cases
                             },
                             null
                         ),
+                        ReopenReferral c => (ReopenCase(v1CaseEntry, c), null),
                         _ => throw new NotImplementedException(
                             $"The command type '{command.GetType().FullName}' has not been implemented."
                         ),
@@ -866,6 +867,39 @@ namespace CareTogether.Resources.V1Cases
         }
 
         public V1CaseEntry GetV1CaseEntry(Guid v1CaseId) => v1Cases[v1CaseId];
+
+        private V1CaseEntry ReopenCase(V1CaseEntry v1CaseEntry, ReopenReferral command)
+        {
+            if (v1CaseEntry.CloseReason == null)
+                throw new InvalidOperationException("The case is already open.");
+
+            var familyCases = v1Cases.Values.Where(x => x.FamilyId == command.FamilyId).ToList();
+
+            var hasAnotherOpenCase = familyCases.Any(x =>
+                x.Id != command.ReferralId && x.CloseReason == null
+            );
+
+            if (hasAnotherOpenCase)
+                throw new InvalidOperationException(
+                    "A case cannot be reopened while another case is open for this family."
+                );
+
+            var latestClosedCase = familyCases
+                .Where(x => x.CloseReason != null && x.ClosedAtUtc != null)
+                .OrderByDescending(x => x.ClosedAtUtc)
+                .FirstOrDefault();
+
+            if (latestClosedCase?.Id != command.ReferralId)
+                throw new InvalidOperationException(
+                    "Only the most recently closed case can be reopened."
+                );
+
+            return v1CaseEntry with
+            {
+                CloseReason = null,
+                ClosedAtUtc = null,
+            };
+        }
 
         private void ReplayEvent(V1CaseEvent domainEvent, long sequenceNumber)
         {
