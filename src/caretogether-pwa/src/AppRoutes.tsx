@@ -1,6 +1,7 @@
 import React, { useEffect } from 'react';
 import { Dashboard } from './Dashboard/Dashboard';
 import {
+  Navigate,
   Routes,
   Route,
   useLocation,
@@ -109,6 +110,18 @@ function RouteError(): React.ReactElement {
   throw new Error(`The URL path '${window.location.href}' is invalid.`);
 }
 
+function CasesToClientsRedirect() {
+  const location = useLocation();
+  const targetPath = location.pathname.replace('/cases', '/clients');
+
+  return (
+    <Navigate
+      to={`${targetPath}${location.search}${location.hash}`}
+      replace
+    />
+  );
+}
+
 // function RouteDisplay(): React.ReactElement {
 //   throw new Error(`The URL path '${window.location.href}' is invalid.`);
 // }
@@ -166,7 +179,8 @@ function LocationContextWrapper() {
             path="families/:familyId"
             element={familyScreenV2 ? <FamilyScreenV2 /> : <FamilyScreen />}
           />
-          <Route path="cases/*" element={<V1Cases />} />
+          <Route path="clients/*" element={<V1Cases />} />
+          <Route path="cases/*" element={<CasesToClientsRedirect />} />
           <Route path="referrals/*" element={<V1Referrals />} />
           <Route path="volunteers/*" element={<Volunteers />} />
           <Route path="communities/*" element={<Communities />} />
@@ -197,7 +211,8 @@ export function AppRoutes() {
       />
       {/* The following routes are only kept for migration/fallback purposes. */}
       <Route path="/families/:familyId" element={<RouteMigrator />} />
-      <Route path="/cases/*" element={<RouteMigrator />} />
+      <Route path="/cases/*" element={<CasesToClientsRedirect />} />
+      <Route path="/clients/*" element={<RouteMigrator />} />
       <Route path="/volunteers/*" element={<RouteMigrator />} />
       <Route path="/communities/*" element={<RouteMigrator />} />
       <Route path="/settings/*" element={<RouteMigrator />} />

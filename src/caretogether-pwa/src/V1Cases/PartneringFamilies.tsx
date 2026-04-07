@@ -363,7 +363,7 @@ function PartneringFamilies() {
 
   const showAddFamilyButton = !referralsEnabled && canCreateFamily;
 
-  useScreenTitle('Cases');
+  useScreenTitle('Clients');
 
   return !partneringFamiliesLoadable || !arrangementTypes ? (
     <ProgressBackdrop>
