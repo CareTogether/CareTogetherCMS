@@ -290,6 +290,7 @@ namespace CareTogether.Api
                 authorizationEngine,
                 approvalsResource,
                 v1CasesResource,
+                v1ReferralsResource,
                 directoryResource,
                 notesResource,
                 policiesResource,
