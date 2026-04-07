@@ -818,9 +818,11 @@ export function FamilyScreen() {
                             return (
                               <TableRow key={v1Case.id} hover>
                                 <TableCell
+                                  onClick={() => handleV1CaseChange(v1Case.id)}
                                   sx={{
                                     width: '1%',
                                     whiteSpace: 'nowrap',
+                                    cursor: 'pointer',
                                   }}
                                 >
                                   <Box
