@@ -522,6 +522,23 @@ function PartneringFamilies() {
                   const comments =
                     partneringFamily.partneringFamilyInfo?.openV1Case
                       ?.comments ?? '';
+                  const openV1Case =
+                    partneringFamily.partneringFamilyInfo?.openV1Case;
+                  const closedV1Cases =
+                    partneringFamily.partneringFamilyInfo?.closedV1Cases ?? [];
+                  const latestClosedV1Case =
+                    closedV1Cases.length > 0
+                      ? closedV1Cases[closedV1Cases.length - 1]
+                      : null;
+                  const caseStatusText = openV1Case
+                    ? 'Open since ' +
+                      format(openV1Case.openedAtUtc!, 'MM/dd/yyyy')
+                    : latestClosedV1Case?.closeReason != null
+                      ? 'Closed - ' +
+                        V1CaseCloseReason[latestClosedV1Case.closeReason]
+                      : 'No case';
+
+                  //TODO: "Closed on " + format(partneringFamily.partneringFamilyInfo?.closedV1Cases?.[0]?.closedUtc) -- needs a new calculated property
 
                   const preview =
                     comments.length > 500
@@ -562,26 +579,7 @@ function PartneringFamilies() {
                             )}
                           </span>
                         </TableCell>
-                        <TableCell>
-                          {
-                            partneringFamily.partneringFamilyInfo?.openV1Case
-                              ? 'Open since ' +
-                                format(
-                                  partneringFamily.partneringFamilyInfo
-                                    .openV1Case.openedAtUtc!,
-                                  'MM/dd/yyyy'
-                                )
-                              : 'Closed - ' +
-                                V1CaseCloseReason[
-                                  partneringFamily.partneringFamilyInfo!
-                                    .closedV1Cases![
-                                    partneringFamily.partneringFamilyInfo!
-                                      .closedV1Cases!.length - 1
-                                  ]!.closeReason!
-                                ]
-                            //TODO: "Closed on " + format(partneringFamily.partneringFamilyInfo?.closedV1Cases?.[0]?.closedUtc) -- needs a new calculated property
-                          }
-                        </TableCell>
+                        <TableCell>{caseStatusText}</TableCell>
                         <TableCell>
                           {getFamilyCounty(partneringFamily)}
                         </TableCell>
