@@ -881,9 +881,29 @@ namespace CareTogether.Managers.Records
                 if (referral == null)
                     throw new InvalidOperationException("Referral not found.");
 
-                return ImmutableList.Create<RecordsAggregate>(
-                    new ReferralRecordsAggregate(referral)
+                var familyIds = GetFamilyIdsFromCommand(command);
+
+                var familyResults = await Task.WhenAll(
+                    familyIds.Select(familyId =>
+                        combinedFamilyInfoFormatter.RenderCombinedFamilyInfoAsync(
+                            organizationId,
+                            locationPolicy,
+                            locationId,
+                            familyId,
+                            null,
+                            userContext
+                        )
+                    )
                 );
+
+                var familyAggregates = familyResults
+                    .OfType<CombinedFamilyInfo>() // Filters out null values
+                    .Select(result => new FamilyRecordsAggregate(result))
+                    .ToImmutableList<RecordsAggregate>();
+
+                return ImmutableList
+                    .Create<RecordsAggregate>(new ReferralRecordsAggregate(referral))
+                    .AddRange(familyAggregates);
             }
 
             if (command is V1ReferralNoteRecordsCommand noteCommand)
@@ -957,7 +977,15 @@ namespace CareTogether.Managers.Records
                 FamilyApprovalRecordsCommand c => [c.Command.FamilyId],
                 IndividualApprovalRecordsCommand c => [c.Command.FamilyId],
                 ReferralRecordsCommand c => [c.Command.FamilyId],
-                V1ReferralRecordsCommand c => Array.Empty<Guid>(),
+                V1ReferralRecordsCommand c => c.Command switch
+                {
+                    UpdateV1ReferralFamily update => [update.FamilyId],
+                    CreateV1Referral create when create.FamilyId.HasValue =>
+                    [
+                        create.FamilyId.Value,
+                    ],
+                    _ => Array.Empty<Guid>(),
+                },
                 V1ReferralNoteRecordsCommand c => Array.Empty<Guid>(),
                 ArrangementRecordsCommand c => c.Command switch
                 {
