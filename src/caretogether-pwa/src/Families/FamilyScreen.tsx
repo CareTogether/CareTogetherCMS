@@ -17,11 +17,14 @@ import {
   Divider,
   ListItemButton,
   ListItemIcon,
-  FormControl,
-  RadioGroup,
-  FormControlLabel,
   Radio,
   Typography,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
 } from '@mui/material';
 import {
   CompletedCustomFieldInfo,
@@ -209,49 +212,27 @@ export function FamilyScreen() {
     (v1Case) => v1Case.id === selectedV1CaseId
   );
 
-  const referralsForSelectedCase = useMemo(() => {
+  const caseReferralTable = useMemo(() => {
     const linkedReferralIds = new Set(
       allV1Cases
         .map((c) => c.linkedV1ReferralId)
         .filter((id): id is string => typeof id === 'string' && id.length > 0)
     );
 
-    const unlinkedFamilyReferrals = familyReferrals.filter(
+    const unlinkedReferrals = familyReferrals.filter(
       (r) => !linkedReferralIds.has(r.referralId)
     );
 
-    const selectedLinkedId = selectedV1Case?.linkedV1ReferralId;
-    const selectedLinkedReferral = selectedLinkedId
-      ? familyReferrals.find((r) => r.referralId === selectedLinkedId)
-      : undefined;
-
-    const result: typeof familyReferrals = [];
-
-    if (selectedLinkedReferral) result.push(selectedLinkedReferral);
-
-    for (const r of unlinkedFamilyReferrals) {
-      if (!result.some((x) => x.referralId === r.referralId)) result.push(r);
-    }
-
-    return result;
-  }, [allV1Cases, familyReferrals, selectedV1Case?.linkedV1ReferralId]);
-
-  const familyReferralsSorted = useMemo(() => {
-    return [...referralsForSelectedCase].sort((a, b) => {
-      const aDate =
-        a.status === V1ReferralStatus.Open ? a.createdAtUtc : a.closedAtUtc;
-      const bDate =
-        b.status === V1ReferralStatus.Open ? b.createdAtUtc : b.closedAtUtc;
-
-      if (a.status !== b.status) {
-        return a.status === V1ReferralStatus.Open ? -1 : 1;
-      }
-
-      const at = aDate ? aDate.getTime() : 0;
-      const bt = bDate ? bDate.getTime() : 0;
-      return bt - at;
+    const caseRows = allV1Cases.map((v1Case) => {
+      const linkedId = v1Case.linkedV1ReferralId;
+      const linkedReferrals = linkedId
+        ? familyReferrals.filter((r) => r.referralId === linkedId)
+        : [];
+      return { v1Case, linkedReferrals };
     });
-  }, [referralsForSelectedCase]);
+
+    return { caseRows, unlinkedReferrals };
+  }, [allV1Cases, familyReferrals]);
 
   async function closeCaseNow() {
     if (!selectedV1Case?.id) return;
@@ -517,18 +498,14 @@ export function FamilyScreen() {
 
                     setFamilyMoreMenuAnchor(null);
 
-                    try {
-                      const isCurrentlyTest =
-                        family.family?.isTestFamily ?? false;
-                      await withBackdrop(async () => {
-                        await directoryModel.updateTestFamilyFlag(
-                          family.family.id,
-                          !isCurrentlyTest
-                        );
-                      });
-                    } catch (error) {
-                      console.error(error);
-                    }
+                    const isCurrentlyTest =
+                      family.family?.isTestFamily ?? false;
+                    await withBackdrop(async () => {
+                      await directoryModel.updateTestFamilyFlag(
+                        family.family.id,
+                        !isCurrentlyTest
+                      );
+                    });
                   }}
                 >
                   <ListItemText
@@ -650,6 +627,45 @@ export function FamilyScreen() {
                       customField={customField}
                     />
                   ))}
+
+              <Grid item xs={12} md={4}>
+                {permissions(Permission.ViewV1CaseCustomFields) &&
+                  showIntakeRequirementsAndCustomFields &&
+                  (
+                    selectedV1Case?.completedCustomFields ||
+                    ([] as Array<CompletedCustomFieldInfo | string>)
+                  )
+                    .concat(selectedV1Case?.missingCustomFields || [])
+                    .sort((a, b) =>
+                      (a instanceof CompletedCustomFieldInfo
+                        ? a.customFieldName!
+                        : a) <
+                      (b instanceof CompletedCustomFieldInfo
+                        ? b.customFieldName!
+                        : b)
+                        ? -1
+                        : (a instanceof CompletedCustomFieldInfo
+                              ? a.customFieldName!
+                              : a) >
+                            (b instanceof CompletedCustomFieldInfo
+                              ? b.customFieldName!
+                              : b)
+                          ? 1
+                          : 0
+                    )
+                    .map((customField) => (
+                      <V1CaseCustomField
+                        key={
+                          typeof customField === 'string'
+                            ? customField
+                            : customField.customFieldName
+                        }
+                        partneringFamilyId={familyId}
+                        v1CaseId={`${selectedV1Case!.id}`}
+                        customField={customField}
+                      />
+                    ))}
+              </Grid>
             </Grid>
 
             <Grid item xs={12}>
@@ -695,173 +711,197 @@ export function FamilyScreen() {
 
             {family && <AssignmentsSection family={family} />}
 
-            <Grid item xs={12} md={4}>
+            <Grid item xs={12} md={8}>
               {permissions(Permission.ViewV1CaseProgress) && (
-                <FormControl>
-                  <Box
-                    id="demo-radio-buttons-group-label"
+                <Box sx={{ mt: 2 }}>
+                  <Typography className="ph-unmask" variant="h3" sx={{ mb: 1 }}>
+                    Cases & Referrals
+                  </Typography>
+
+                  {!referralsEnabled &&
+                    (!family.partneringFamilyInfo ||
+                      !family.partneringFamilyInfo.openV1Case) &&
+                    permissions(Permission.CreateV1Case) && (
+                      <Button
+                        className="ph-unmask"
+                        onClick={() => setOpenNewV1CaseDialogOpen(true)}
+                        variant="contained"
+                        size="small"
+                        sx={{ mb: 1 }}
+                      >
+                        Open New Case
+                      </Button>
+                    )}
+
+                  <TableContainer
                     sx={{
-                      color: '#000',
-                      fontSize: '1.17em',
-                      fontWeight: 'bold',
-                      marginBottom: 0,
+                      width: '100%',
+                      border: '1px solid rgba(224,224,224,1)',
+                      borderRadius: 1,
                     }}
                   >
-                    {familyReferralsSorted.length > 0 && (
-                      <Grid item xs={12}>
-                        <Typography
-                          className="ph-unmask"
-                          variant="h3"
-                          style={{ marginTop: 16, marginBottom: 8 }}
-                        >
-                          Referrals
-                        </Typography>
+                    <Table size="small" sx={{ width: '100%' }}>
+                      <TableHead>
+                        <TableRow>
+                          <TableCell sx={{ fontWeight: 600, width: 260 }}>
+                            Case
+                          </TableCell>
+                          <TableCell sx={{ fontWeight: 600 }}>
+                            Linked Referrals
+                          </TableCell>
+                        </TableRow>
+                      </TableHead>
 
-                        {familyReferralsSorted.map((referral) => {
-                          const date = referralStatusDate(referral);
+                      <TableBody>
+                        {caseReferralTable.caseRows.map(
+                          ({ v1Case, linkedReferrals }) => {
+                            const isSelected = selectedV1Case?.id === v1Case.id;
+                            const isOpenV1Case = !v1Case.closedAtUtc;
 
-                          return (
-                            <Box
-                              key={referral.referralId}
-                              onClick={() =>
-                                appNavigate.referral(referral.referralId)
-                              }
-                              sx={{
-                                cursor: 'pointer',
-                                py: 0.5,
-                                '&:hover': { textDecoration: 'underline' },
-                              }}
-                            >
-                              <Typography className="ph-unmask">
-                                {referral.title}{' '}
-                                <Typography
-                                  component="span"
-                                  color="text.secondary"
-                                >
-                                  · {referralStatusLabel(referral.status)} ·{' '}
-                                  {date ? format(date, 'M/d/yy') : ''}
-                                </Typography>
-                              </Typography>
-                            </Box>
-                          );
-                        })}
-                      </Grid>
-                    )}
-                    <Box
-                      display="flex"
-                      justifyContent="space-between"
-                      alignItems="center"
-                      gap={2}
-                    >
-                      <Typography className="ph-unmask" variant="h3">
-                        Cases
-                      </Typography>
-                      {!referralsEnabled &&
-                        (!family.partneringFamilyInfo ||
-                          !family.partneringFamilyInfo.openV1Case) &&
-                        permissions(Permission.CreateV1Case) && (
-                          <Button
-                            className="ph-unmask"
-                            onClick={() => setOpenNewV1CaseDialogOpen(true)}
-                            variant="contained"
-                            size="small"
-                          >
-                            Open New Case
-                          </Button>
-                        )}
-                    </Box>
-                  </Box>
+                            const showCloseButton =
+                              isSelected &&
+                              isOpenV1Case &&
+                              canCloseV1Case &&
+                              v1Case.id ===
+                                family.partneringFamilyInfo?.openV1Case?.id;
 
-                  <RadioGroup
-                    aria-labelledby="demo-radio-buttons-group-label"
-                    value={selectedV1Case ? selectedV1Case.id : null}
-                    name="radio-buttons-group"
-                  >
-                    {allV1Cases.map((v1Case) => {
-                      const isSelected = selectedV1Case?.id === v1Case.id;
-                      const isOpenV1Case = !v1Case.closedAtUtc;
-                      const showCloseButton =
-                        isSelected &&
-                        isOpenV1Case &&
-                        canCloseV1Case &&
-                        v1Case.id ===
-                          family.partneringFamilyInfo?.openV1Case?.id;
+                            return (
+                              <TableRow key={v1Case.id} hover>
+                                <TableCell sx={{ verticalAlign: 'top' }}>
+                                  <Box
+                                    sx={{
+                                      display: 'flex',
+                                      alignItems: 'center',
+                                      gap: 1,
+                                    }}
+                                  >
+                                    <Radio
+                                      checked={isSelected}
+                                      onChange={() =>
+                                        handleV1CaseChange(v1Case.id)
+                                      }
+                                    />
+                                    <Typography className="ph-unmask">
+                                      {v1Case.closedAtUtc
+                                        ? `Case Closed ${format(
+                                            v1Case.closedAtUtc,
+                                            'M/d/yy'
+                                          )}`
+                                        : 'Open Case'}
+                                    </Typography>
 
-                      return (
-                        <FormControlLabel
-                          key={v1Case.id}
-                          value={v1Case.id}
-                          control={<Radio />}
-                          onChange={() => {
-                            if (v1Case.id) handleV1CaseChange(v1Case.id);
-                          }}
-                          label={
-                            <Box display="flex" alignItems="center" gap={1}>
-                              <Typography className="ph-unmask">
-                                {v1Case.closedAtUtc
-                                  ? `Case Closed ${format(v1Case.closedAtUtc, 'M/d/yy')}`
-                                  : 'Open Case'}
-                              </Typography>
-                              {showCloseButton && (
-                                <Button
-                                  className="ph-unmask"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    setConfirmCloseOpen(true);
-                                  }}
-                                  variant="contained"
-                                  size="small"
-                                >
-                                  Close Case
-                                </Button>
-                              )}
-                            </Box>
+                                    {showCloseButton && (
+                                      <Button
+                                        className="ph-unmask"
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          setConfirmCloseOpen(true);
+                                        }}
+                                        variant="contained"
+                                        size="small"
+                                      >
+                                        Close Case
+                                      </Button>
+                                    )}
+                                  </Box>
+                                </TableCell>
+
+                                <TableCell sx={{ verticalAlign: 'top' }}>
+                                  {linkedReferrals.length === 0 ? (
+                                    <Typography color="text.secondary">
+                                      —
+                                    </Typography>
+                                  ) : (
+                                    linkedReferrals.map((ref) => {
+                                      const date = referralStatusDate(ref);
+
+                                      return (
+                                        <Box
+                                          key={ref.referralId}
+                                          onClick={() =>
+                                            appNavigate.referral(ref.referralId)
+                                          }
+                                          sx={{
+                                            cursor: 'pointer',
+                                            py: 0.25,
+                                            '&:hover': {
+                                              textDecoration: 'underline',
+                                            },
+                                          }}
+                                        >
+                                          <Typography className="ph-unmask">
+                                            {ref.title}{' '}
+                                            <Typography
+                                              component="span"
+                                              color="text.secondary"
+                                            >
+                                              ·{' '}
+                                              {referralStatusLabel(ref.status)}{' '}
+                                              ·{' '}
+                                              {date
+                                                ? format(date, 'M/d/yy')
+                                                : ''}
+                                            </Typography>
+                                          </Typography>
+                                        </Box>
+                                      );
+                                    })
+                                  )}
+                                </TableCell>
+                              </TableRow>
+                            );
                           }
-                        />
-                      );
-                    })}
-                  </RadioGroup>
-                </FormControl>
-              )}
-            </Grid>
+                        )}
 
-            <Grid item md={4}>
-              {permissions(Permission.ViewV1CaseCustomFields) &&
-                showIntakeRequirementsAndCustomFields &&
-                (
-                  selectedV1Case?.completedCustomFields ||
-                  ([] as Array<CompletedCustomFieldInfo | string>)
-                )
-                  .concat(selectedV1Case?.missingCustomFields || [])
-                  .sort((a, b) =>
-                    (a instanceof CompletedCustomFieldInfo
-                      ? a.customFieldName!
-                      : a) <
-                    (b instanceof CompletedCustomFieldInfo
-                      ? b.customFieldName!
-                      : b)
-                      ? -1
-                      : (a instanceof CompletedCustomFieldInfo
-                            ? a.customFieldName!
-                            : a) >
-                          (b instanceof CompletedCustomFieldInfo
-                            ? b.customFieldName!
-                            : b)
-                        ? 1
-                        : 0
-                  )
-                  .map((customField) => (
-                    <V1CaseCustomField
-                      key={
-                        typeof customField === 'string'
-                          ? customField
-                          : customField.customFieldName
-                      }
-                      partneringFamilyId={familyId}
-                      v1CaseId={`${selectedV1Case!.id}`}
-                      customField={customField}
-                    />
-                  ))}
+                        <TableRow>
+                          <TableCell
+                            sx={{ fontWeight: 600, verticalAlign: 'top' }}
+                          >
+                            NOT LINKED TO A CASE
+                          </TableCell>
+                          <TableCell sx={{ verticalAlign: 'top' }}>
+                            {caseReferralTable.unlinkedReferrals.length ===
+                            0 ? (
+                              <Typography color="text.secondary">—</Typography>
+                            ) : (
+                              caseReferralTable.unlinkedReferrals.map((ref) => {
+                                const date = referralStatusDate(ref);
+
+                                return (
+                                  <Box
+                                    key={ref.referralId}
+                                    onClick={() =>
+                                      appNavigate.referral(ref.referralId)
+                                    }
+                                    sx={{
+                                      cursor: 'pointer',
+                                      py: 0.25,
+                                      '&:hover': {
+                                        textDecoration: 'underline',
+                                      },
+                                    }}
+                                  >
+                                    <Typography className="ph-unmask">
+                                      {ref.title}{' '}
+                                      <Typography
+                                        component="span"
+                                        color="text.secondary"
+                                      >
+                                        · {referralStatusLabel(ref.status)} ·{' '}
+                                        {date ? format(date, 'M/d/yy') : ''}
+                                      </Typography>
+                                    </Typography>
+                                  </Box>
+                                );
+                              })
+                            )}
+                          </TableCell>
+                        </TableRow>
+                      </TableBody>
+                    </Table>
+                  </TableContainer>
+                </Box>
+              )}
             </Grid>
 
             <Grid item xs={6} md={4}>
