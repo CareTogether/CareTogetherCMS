@@ -732,7 +732,7 @@ export function FamilyScreen() {
 
             {family && <AssignmentsSection family={family} />}
 
-            <Grid item xs={12} md={8}>
+            <Grid item xs={12}>
               {permissions(Permission.ViewV1CaseProgress) && (
                 <Box sx={{ mt: 2 }}>
                   <Typography className="ph-unmask" variant="h3" sx={{ mb: 1 }}>
@@ -764,10 +764,16 @@ export function FamilyScreen() {
                     <Table size="small" sx={{ width: '100%' }}>
                       <TableHead>
                         <TableRow>
-                          <TableCell sx={{ fontWeight: 600, width: 260 }}>
+                          <TableCell
+                            sx={{
+                              fontWeight: 600,
+                              width: '1%',
+                              whiteSpace: 'nowrap',
+                            }}
+                          >
                             Case
                           </TableCell>
-                          <TableCell sx={{ fontWeight: 600 }}>
+                          <TableCell sx={{ fontWeight: 600, width: '100%' }}>
                             Linked Referrals
                           </TableCell>
                         </TableRow>
@@ -777,6 +783,7 @@ export function FamilyScreen() {
                         {caseReferralTable.caseRows.map(
                           ({ v1Case, linkedReferrals }) => {
                             const isSelected = selectedV1Case?.id === v1Case.id;
+
                             const isOpenV1Case = !v1Case.closedAtUtc;
 
                             const showCloseButton =
@@ -788,7 +795,12 @@ export function FamilyScreen() {
 
                             return (
                               <TableRow key={v1Case.id} hover>
-                                <TableCell sx={{ verticalAlign: 'top' }}>
+                                <TableCell
+                                  sx={{
+                                    width: '1%',
+                                    whiteSpace: 'nowrap',
+                                  }}
+                                >
                                   <Box
                                     sx={{
                                       display: 'flex',
@@ -842,7 +854,7 @@ export function FamilyScreen() {
                                   </Box>
                                 </TableCell>
 
-                                <TableCell sx={{ verticalAlign: 'top' }}>
+                                <TableCell sx={{ width: '100%' }}>
                                   {linkedReferrals.length === 0 ? (
                                     <Typography color="text.secondary">
                                       —
@@ -891,11 +903,14 @@ export function FamilyScreen() {
 
                         <TableRow>
                           <TableCell
-                            sx={{ fontWeight: 600, verticalAlign: 'top' }}
+                            sx={{
+                              width: '1%',
+                              whiteSpace: 'nowrap',
+                            }}
                           >
                             NOT LINKED TO A CASE
                           </TableCell>
-                          <TableCell sx={{ verticalAlign: 'top' }}>
+                          <TableCell sx={{ width: '100%' }}>
                             {caseReferralTable.unlinkedReferrals.length ===
                             0 ? (
                               <Typography color="text.secondary">—</Typography>
