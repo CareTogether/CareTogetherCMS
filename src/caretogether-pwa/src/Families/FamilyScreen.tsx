@@ -905,9 +905,7 @@ export function FamilyScreen() {
                                         return (
                                           <Chip
                                             key={ref.referralId}
-                                            className="ph-unmask"
                                             clickable
-                                            variant="outlined"
                                             size="small"
                                             label={`${ref.title} · ${metadata}`}
                                             onClick={() =>
