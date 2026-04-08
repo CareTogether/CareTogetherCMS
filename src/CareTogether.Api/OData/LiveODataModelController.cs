@@ -50,7 +50,8 @@ namespace CareTogether.Api.OData
         string? PrimaryEmail,
         string? PrimaryPhoneNumber,
         Address? PrimaryAddress,
-        string? HomeChurch
+        string? HomeChurch,
+        VolunteerFamilyInfo? VolunteerFamilyInfo
     );
 
     public sealed record Person(
@@ -285,6 +286,25 @@ namespace CareTogether.Api.OData
         string RlsKey
     );
 
+    public sealed record FamilyRequirementStatus (
+        Guid OrganizationId,
+        Guid LocationId,
+        [property: Key] Guid FamilyId,
+        [property: Key] string RequirementName,
+        string Status,
+        DateTimeOffset? Date,
+        DateTimeOffset? ExpireDate
+    );
+
+    public sealed record IndividualRequirementStatus(
+        Guid OrganizationId,
+        Guid LocationId,
+        [property: Key] Guid PersonId,
+        [property: Key] string RequirementName,
+        string Status,
+        DateTimeOffset? Date
+    );
+
     public sealed record LiveModel(
         IEnumerable<Location> Locations,
         IEnumerable<LocationUserAccess> LocationUserAccess,
@@ -303,7 +323,9 @@ namespace CareTogether.Api.OData
         IEnumerable<IndividualFunctionAssignment> IndividualFunctionAssignments,
         IEnumerable<CommunityMemberFamily> CommunityMemberFamilies,
         IEnumerable<CommunityRoleAssignment> CommunityRoleAssignments,
-        IEnumerable<RoleApproval> RoleApprovals
+        IEnumerable<RoleApproval> RoleApprovals,
+        IEnumerable<FamilyRequirementStatus> FamilyRequirementStatuses,
+        IEnumerable<IndividualRequirementStatus> IndividualRequirementStatuses
     );
 
     [Route("api/odata/live")]
@@ -465,6 +487,22 @@ namespace CareTogether.Api.OData
             return liveModel.RoleApprovals;
         }
 
+        [HttpGet("FamilyRequirementStatuses")]
+        [EnableQuery]
+        public async Task<IEnumerable<FamilyRequirementStatus>> GetFamilyRequirementStatusesAsync()
+        {
+            var liveModel = await RenderLiveModelAsync();
+            return liveModel.FamilyRequirementStatuses;
+        }
+
+        [HttpGet("IndividualRequirementStatuses")]
+        [EnableQuery]
+        public async Task<IEnumerable<IndividualRequirementStatus>> GetIndividualRequirementStatusesAsync()
+        {
+            var liveModel = await RenderLiveModelAsync();
+            return liveModel.IndividualRequirementStatuses;
+        }
+
         private async Task<LiveModel> RenderLiveModelAsync()
         {
             //NOTE: For now, we only grant access to one organization at a time.
@@ -535,7 +573,9 @@ namespace CareTogether.Api.OData
                     Enumerable.Empty<IndividualFunctionAssignment>(),
                     Enumerable.Empty<CommunityMemberFamily>(),
                     Enumerable.Empty<CommunityRoleAssignment>(),
-                    Enumerable.Empty<RoleApproval>()
+                    Enumerable.Empty<RoleApproval>(),
+                    Enumerable.Empty<FamilyRequirementStatus>(),
+                    Enumerable.Empty<IndividualRequirementStatus>()
                 ),
                 (acc, model) =>
                     new LiveModel(
@@ -558,7 +598,9 @@ namespace CareTogether.Api.OData
                         ),
                         acc.CommunityMemberFamilies.Concat(model.CommunityMemberFamilies),
                         acc.CommunityRoleAssignments.Concat(model.CommunityRoleAssignments),
-                        acc.RoleApprovals.Concat(model.RoleApprovals)
+                        acc.RoleApprovals.Concat(model.RoleApprovals),
+                        acc.FamilyRequirementStatuses.Concat(model.FamilyRequirementStatuses),
+                        acc.IndividualRequirementStatuses.Concat(model.IndividualRequirementStatuses)
                     )
             );
 
@@ -875,6 +917,116 @@ namespace CareTogether.Api.OData
                 people
             );
 
+            var familyRequirementStatuses = new List<FamilyRequirementStatus>();
+            foreach (var family in families)
+            {
+                if (family.VolunteerFamilyInfo?.CompletedRequirements != null)
+                {
+                    foreach (var req in family.VolunteerFamilyInfo.CompletedRequirements)
+                    {
+                        familyRequirementStatuses.Add(new FamilyRequirementStatus(
+                            organization.Id,
+                            family.LocationId,
+                            family.Id, 
+                            req.RequirementName,
+                            "Complete", 
+                            req.CompletedAtUtc,
+                            req.ExpiresAtUtc
+                        ));
+                    }
+                }
+
+                if (family.VolunteerFamilyInfo?.ExemptedRequirements != null)
+                {
+                    foreach (var req in family.VolunteerFamilyInfo.ExemptedRequirements)
+                    {
+                        familyRequirementStatuses.Add(new FamilyRequirementStatus(
+                            organization.Id,
+                            family.LocationId,
+                            family.Id,
+                            req.RequirementName,
+                            "Exempted",
+                            req.DueDate,
+                            req.ExemptionExpiresAtUtc
+                        ));
+                    }
+                }
+
+                // 3. Missing Requirements: Pablo told me these are calculated on the flight
+                if (family.VolunteerFamilyInfo?.MissingRequirements != null)
+                {
+                    foreach (var missing in family.VolunteerFamilyInfo.MissingRequirements)
+                    {
+                        familyRequirementStatuses.Add(new FamilyRequirementStatus(
+                            organization.Id,
+                            family.LocationId,
+                            family.Id, 
+                            missing.ActionName, 
+                            "Pending", 
+                            null,
+                            null
+                        ));
+                    }
+                }
+            }
+
+            var individualRequirementStatuses = new List<IndividualRequirementStatus>();
+            foreach (var family in families)
+            {
+                if (family.VolunteerFamilyInfo?.IndividualVolunteers != null)
+                {
+                    foreach (var ivPair in family.VolunteerFamilyInfo.IndividualVolunteers)
+                    {
+                        var personId = ivPair.Key;
+                        var volunteerData = ivPair.Value;
+
+                        if (volunteerData.CompletedRequirements != null)
+                        {
+                            foreach (var req in volunteerData.CompletedRequirements)
+                            {
+                                individualRequirementStatuses.Add(new IndividualRequirementStatus(
+                                    organization.Id,
+                                    family.LocationId,
+                                    personId, 
+                                    req.RequirementName, "Complete", 
+                                    req.CompletedAtUtc
+                                ));
+                            }
+                        }
+
+                        if (volunteerData.MissingRequirements != null)
+                        {
+                            foreach (var missing in volunteerData.MissingRequirements)
+                            {
+                                individualRequirementStatuses.Add(new IndividualRequirementStatus(
+                                    organization.Id,
+                                    family.LocationId,
+                                    personId, 
+                                    missing.ActionName, 
+                                    "Pending", 
+                                    null
+                                ));
+                            }
+                        }
+
+                        if (volunteerData.ExemptedRequirements != null)
+                        {
+                            foreach (var exempt in volunteerData.ExemptedRequirements)
+                            {
+                                individualRequirementStatuses.Add(new IndividualRequirementStatus(
+                                    organization.Id,
+                                    family.LocationId,
+                                    personId,
+                                    exempt.RequirementName,
+                                    "Exempted",
+                                    exempt.ExemptionExpiresAtUtc
+                                ));
+                            }
+                        }
+                    }
+                }
+            }
+
             return new LiveModel(
                 locations,
                 locationUserAccess,
@@ -893,7 +1045,9 @@ namespace CareTogether.Api.OData
                 individualFunctionAssignments,
                 communityMemberFamilies,
                 communityRoleAssignments,
-                roleApprovals
+                roleApprovals,
+                familyRequirementStatuses,
+                individualRequirementStatuses
             );
         }
 
@@ -1480,7 +1634,8 @@ namespace CareTogether.Api.OData
                     bestEmail,
                     bestPhoneNumber,
                     bestAddress,
-                    homeChurch
+                    homeChurch,
+                    family.VolunteerFamilyInfo
                 )
             );
         }
