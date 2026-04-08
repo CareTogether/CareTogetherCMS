@@ -3725,7 +3725,8 @@
           "missingRequirements",
           "completedCustomFields",
           "missingCustomFields",
-          "arrangements"
+          "arrangements",
+          "linkedV1ReferralIds"
         ],
         "properties": {
           "id": {
@@ -3789,10 +3790,12 @@
             "type": "string",
             "nullable": true
           },
-          "linkedV1ReferralId": {
-            "type": "string",
-            "format": "guid",
-            "nullable": true
+          "linkedV1ReferralIds": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "guid"
+            }
           }
         }
       },
@@ -8011,6 +8014,7 @@
             "CompleteReferralRequirement": "#/components/schemas/CompleteReferralRequirement",
             "CreateReferral": "#/components/schemas/CreateReferral",
             "ExemptReferralRequirement": "#/components/schemas/ExemptReferralRequirement",
+            "LinkReferralToCase": "#/components/schemas/LinkReferralToCase",
             "MarkReferralRequirementIncomplete": "#/components/schemas/MarkReferralRequirementIncomplete",
             "ReopenReferral": "#/components/schemas/ReopenReferral",
             "UnexemptReferralRequirement": "#/components/schemas/UnexemptReferralRequirement",
@@ -8111,17 +8115,20 @@
             "type": "object",
             "additionalProperties": false,
             "required": [
-              "openedAtUtc"
+              "openedAtUtc",
+              "linkedV1ReferralIds"
             ],
             "properties": {
               "openedAtUtc": {
                 "type": "string",
                 "format": "date-time"
               },
-              "linkedV1ReferralId": {
-                "type": "string",
-                "format": "guid",
-                "nullable": true
+              "linkedV1ReferralIds": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "format": "guid"
+                }
               }
             }
           }
@@ -8150,6 +8157,26 @@
                 "type": "string",
                 "format": "date-time",
                 "nullable": true
+              }
+            }
+          }
+        ]
+      },
+      "LinkReferralToCase": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/V1CaseCommand"
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "linkedReferralId"
+            ],
+            "properties": {
+              "linkedReferralId": {
+                "type": "string",
+                "format": "guid"
               }
             }
           }

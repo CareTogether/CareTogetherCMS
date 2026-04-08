@@ -280,55 +280,69 @@ namespace CareTogether.Managers.Records
 
             if (!await AuthorizeCommandAsync(organizationId, locationId, userContext, command))
                 throw new Exception("The user is not authorized to perform this command.");
-
-            await ExecuteCommandAsync(organizationId, locationId, user, command);
-
-            if (
-                command is V1ReferralRecordsCommand referralCommand
-                && referralCommand.Command is UpdateV1ReferralFamily update
-            )
+            try
             {
-                var referral = await v1ReferralsResource.GetReferralAsync(
+                await ExecuteCommandAsync(organizationId, locationId, user, command);
+
+                if (
+                    command is V1ReferralRecordsCommand referralCommand
+                    && referralCommand.Command is UpdateV1ReferralFamily update
+                )
+                {
+                    var referral = await v1ReferralsResource.GetReferralAsync(
+                        organizationId,
+                        locationId,
+                        update.ReferralId
+                    );
+
+                    if (referral != null)
+                    {
+                        await AutoAcceptAndLinkReferralToOpenCaseAsync(
+                            organizationId,
+                            locationId,
+                            user,
+                            referral
+                        );
+                    }
+                }
+
+                if (
+                    command is ReferralRecordsCommand caseCommand
+                    && caseCommand.Command is CreateReferral created
+                )
+                {
+                    foreach (var linkedReferralId in created.LinkedV1ReferralIds)
+                    {
+                        try
+                        {
+                            await v1ReferralsResource.ExecuteV1ReferralCommandAsync(
+                                organizationId,
+                                locationId,
+                                new AcceptV1Referral(linkedReferralId, DateTime.UtcNow),
+                                user.UserId()
+                            );
+
+                            await v1ReferralsResource.GetReferralAsync(
+                                organizationId,
+                                locationId,
+                                linkedReferralId
+                            );
+                        }
+                        catch (Exception) { }
+                    }
+                }
+
+                return await RenderCommandResultAsync(
                     organizationId,
                     locationId,
-                    update.ReferralId
+                    userContext,
+                    command
                 );
-
-                if (referral != null)
-                {
-                    await AutoAcceptReferralIfFamilyHasOpenCaseAsync(
-                        organizationId,
-                        locationId,
-                        user,
-                        referral
-                    );
-                }
             }
-            if (
-                command is ReferralRecordsCommand caseCommand
-                && caseCommand.Command is CreateReferral created
-                && created.LinkedV1ReferralId is Guid linkedReferralId
-            )
+            catch
             {
-                try
-                {
-                    await v1ReferralsResource.ExecuteV1ReferralCommandAsync(
-                        organizationId,
-                        locationId,
-                        new AcceptV1Referral(linkedReferralId, DateTime.UtcNow),
-                        user.UserId()
-                    );
-
-                    await v1ReferralsResource.GetReferralAsync(
-                        organizationId,
-                        locationId,
-                        linkedReferralId
-                    );
-                }
-                catch (Exception) { }
+                throw;
             }
-
-            return await RenderCommandResultAsync(organizationId, locationId, userContext, command);
         }
 
         public async Task<Uri> GetFamilyDocumentReadValetUrl(
@@ -871,9 +885,26 @@ namespace CareTogether.Managers.Records
                     referral
                 );
 
-                return ImmutableList.Create<RecordsAggregate>(
-                    new ReferralRecordsAggregate(renderedReferral)
-                );
+                var results = ImmutableList.CreateBuilder<RecordsAggregate>();
+                results.Add(new ReferralRecordsAggregate(renderedReferral));
+
+                if (referral.FamilyId.HasValue)
+                {
+                    var familyResult =
+                        await combinedFamilyInfoFormatter.RenderCombinedFamilyInfoAsync(
+                            organizationId,
+                            locationPolicy,
+                            locationId,
+                            referral.FamilyId.Value,
+                            null,
+                            userContext
+                        );
+
+                    if (familyResult != null)
+                        results.Add(new FamilyRecordsAggregate(familyResult));
+                }
+
+                return results.ToImmutable();
             }
 
             if (command is V1ReferralNoteRecordsCommand noteCommand)
@@ -1010,45 +1041,39 @@ namespace CareTogether.Managers.Records
             };
         }
 
-        private async Task<bool> FamilyHasOpenCaseAsync(
-            Guid organizationId,
-            Guid locationId,
-            Guid familyId
-        )
-        {
-            return await v1CasesResource.FamilyHasOpenCaseAsync(
-                organizationId,
-                locationId,
-                familyId
-            );
-        }
-
-        private async Task AutoAcceptReferralIfFamilyHasOpenCaseAsync(
+        private async Task AutoAcceptAndLinkReferralToOpenCaseAsync(
             Guid organizationId,
             Guid locationId,
             ClaimsPrincipal user,
             V1Referral referral
         )
         {
-            if (referral.Status != V1ReferralStatus.Open)
-                return;
-
             if (referral.FamilyId == null)
                 return;
 
-            var hasOpenCase = await FamilyHasOpenCaseAsync(
+            var openCase = await v1CasesResource.GetOpenCaseForFamilyAsync(
                 organizationId,
                 locationId,
                 referral.FamilyId.Value
             );
 
-            if (!hasOpenCase)
+            if (openCase == null)
                 return;
 
-            await v1ReferralsResource.ExecuteV1ReferralCommandAsync(
+            if (referral.Status == V1ReferralStatus.Open)
+            {
+                await v1ReferralsResource.ExecuteV1ReferralCommandAsync(
+                    organizationId,
+                    locationId,
+                    new AcceptV1Referral(referral.ReferralId, DateTime.UtcNow),
+                    user.UserId()
+                );
+            }
+
+            await v1CasesResource.ExecuteV1CaseCommandAsync(
                 organizationId,
                 locationId,
-                new AcceptV1Referral(referral.ReferralId, DateTime.UtcNow),
+                new LinkReferralToCase(referral.FamilyId.Value, openCase.Id, referral.ReferralId),
                 user.UserId()
             );
         }

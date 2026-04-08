@@ -222,9 +222,7 @@ export function FamilyScreen() {
 
   const caseReferralTable = useMemo(() => {
     const linkedReferralIds = new Set(
-      allV1Cases
-        .map((c) => c.linkedV1ReferralId)
-        .filter((id): id is string => typeof id === 'string' && id.length > 0)
+      allV1Cases.flatMap((c) => c.linkedV1ReferralIds ?? [])
     );
 
     const unlinkedReferrals = familyReferrals.filter(
@@ -232,10 +230,11 @@ export function FamilyScreen() {
     );
 
     const caseRows = allV1Cases.map((v1Case) => {
-      const linkedId = v1Case.linkedV1ReferralId;
-      const linkedReferrals = linkedId
-        ? familyReferrals.filter((r) => r.referralId === linkedId)
-        : [];
+      const caseLinkedReferralIds = new Set(v1Case.linkedV1ReferralIds ?? []);
+      const linkedReferrals = familyReferrals.filter((r) =>
+        caseLinkedReferralIds.has(r.referralId)
+      );
+
       return { v1Case, linkedReferrals };
     });
 

@@ -43,7 +43,7 @@ namespace CareTogether.Managers
         ImmutableList<string> MissingCustomFields,
         ImmutableList<Arrangement> Arrangements,
         string? Comments,
-        Guid? LinkedV1ReferralId
+        ImmutableList<Guid> LinkedV1ReferralIds
     );
 
     public sealed record Arrangement(

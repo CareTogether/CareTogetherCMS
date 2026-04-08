@@ -258,7 +258,7 @@ namespace CareTogether.Managers
                         )
                         .ToImmutableList(),
                     entry.Comments,
-                    entry.LinkedV1ReferralId
+                    entry.LinkedV1ReferralIds
                 );
             }
 

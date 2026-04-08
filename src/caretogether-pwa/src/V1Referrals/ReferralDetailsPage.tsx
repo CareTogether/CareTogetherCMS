@@ -171,7 +171,9 @@ export function ReferralDetailsPage() {
       setWorking(true);
       await updateReferralFamily(currentReferralId, familyId);
 
-      if (hasOpenCase) setShowAcceptedMessage(true);
+      if (hasOpenCase) {
+        setShowAcceptedMessage(true);
+      }
 
       setOpenSelectFamilyDrawer(false);
     } finally {

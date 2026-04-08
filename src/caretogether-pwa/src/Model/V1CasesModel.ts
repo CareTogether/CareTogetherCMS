@@ -970,9 +970,8 @@ export function useV1CasesModel() {
         familyId: partneringFamilyId,
         referralId: crypto.randomUUID(),
         openedAtUtc: openedAtLocal,
+        linkedV1ReferralIds: linkedReferralId ? [linkedReferralId] : [],
       });
-
-      command.linkedV1ReferralId = linkedReferralId ?? undefined;
 
       return command;
     }

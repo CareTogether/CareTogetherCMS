@@ -93,7 +93,7 @@ namespace CareTogether.Resources.V1Cases
                     new V1CaseEntry(
                         c.ReferralId,
                         c.FamilyId,
-                        LinkedV1ReferralId: c.LinkedV1ReferralId,
+                        LinkedV1ReferralIds: c.LinkedV1ReferralIds ?? ImmutableList<Guid>.Empty,
                         OpenedAtUtc: c.OpenedAtUtc,
                         ClosedAtUtc: null,
                         CloseReason: null,
@@ -191,6 +191,19 @@ namespace CareTogether.Resources.V1Cases
                             v1CaseEntry with
                             {
                                 Comments = c.Comments,
+                            },
+                            null
+                        ),
+                        LinkReferralToCase c => (
+                            v1CaseEntry with
+                            {
+                                LinkedV1ReferralIds = (
+                                    v1CaseEntry.LinkedV1ReferralIds ?? ImmutableList<Guid>.Empty
+                                ).Contains(c.LinkedReferralId)
+                                    ? (v1CaseEntry.LinkedV1ReferralIds ?? ImmutableList<Guid>.Empty)
+                                    : (
+                                        v1CaseEntry.LinkedV1ReferralIds ?? ImmutableList<Guid>.Empty
+                                    ).Add(c.LinkedReferralId),
                             },
                             null
                         ),

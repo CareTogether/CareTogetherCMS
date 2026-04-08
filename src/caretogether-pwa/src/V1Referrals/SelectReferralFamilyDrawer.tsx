@@ -57,6 +57,7 @@ export function SelectReferralFamilyDrawer({
             <Autocomplete
               options={familyOptions}
               getOptionLabel={(opt) => opt.label}
+              isOptionEqualToValue={(option, value) => option.id === value.id}
               value={selected}
               onChange={(_, option) => setSelected(option)}
               disabled={working}

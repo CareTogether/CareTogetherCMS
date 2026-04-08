@@ -19,6 +19,12 @@ import {
 } from '../GeneratedClient';
 import { useAtomicRecordsCommandCallback } from './DirectoryModel';
 import { commandFactory } from './CommandFactory';
+import { api } from '../Api/Api';
+import {
+  selectedLocationContextState,
+  visibleAggregatesState,
+} from '../Model/Data';
+import { useRecoilValue, useSetRecoilState } from 'recoil';
 
 interface CreateReferralPayload {
   familyId: string | null;
@@ -47,6 +53,10 @@ function useV1ReferralCommandCallback<T extends unknown[]>(
 }
 
 export function useV1ReferralsModel() {
+  const setVisibleAggregates = useSetRecoilState(visibleAggregatesState);
+  const { organizationId, locationId } = useRecoilValue(
+    selectedLocationContextState
+  );
   const createReferral = useAtomicRecordsCommandCallback(
     async (referralId: string, payload: CreateReferralPayload) => {
       const command = new V1ReferralRecordsCommand();
@@ -83,7 +93,7 @@ export function useV1ReferralsModel() {
     }
   );
 
-  const updateReferralFamily = useAtomicRecordsCommandCallback(
+  const updateReferralFamilyCommand = useAtomicRecordsCommandCallback(
     async (referralId: string, familyId: string) => {
       const command = new V1ReferralRecordsCommand();
 
@@ -95,7 +105,16 @@ export function useV1ReferralsModel() {
       return command;
     }
   );
+  const updateReferralFamily = async (referralId: string, familyId: string) => {
+    await updateReferralFamilyCommand(referralId, familyId);
 
+    const updatedAggregates = await api.records.listVisibleAggregates(
+      organizationId,
+      locationId
+    );
+
+    setVisibleAggregates(updatedAggregates);
+  };
   const updateReferralDetails = useAtomicRecordsCommandCallback(
     async (referralId: string, payload: UpdateReferralDetailsPayload) => {
       const command = new V1ReferralRecordsCommand();
