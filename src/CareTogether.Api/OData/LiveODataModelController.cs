@@ -302,7 +302,8 @@ namespace CareTogether.Api.OData
         [property: Key] Guid PersonId,
         [property: Key] string RequirementName,
         string Status,
-        DateTimeOffset? Date
+        DateTimeOffset? Date,
+        DateTimeOffset? ExpireDate
     );
 
     public sealed record LiveModel(
@@ -988,8 +989,10 @@ namespace CareTogether.Api.OData
                                     organization.Id,
                                     family.LocationId,
                                     personId, 
-                                    req.RequirementName, "Complete", 
-                                    req.CompletedAtUtc
+                                    req.RequirementName, 
+                                    "Complete", 
+                                    req.CompletedAtUtc,
+                                    req.ExpiresAtUtc
                                 ));
                             }
                         }
@@ -1001,9 +1004,10 @@ namespace CareTogether.Api.OData
                                 individualRequirementStatuses.Add(new IndividualRequirementStatus(
                                     organization.Id,
                                     family.LocationId,
-                                    personId, 
-                                    missing.ActionName, 
+                                    personId,
+                                    missing.ActionName,
                                     "Pending", 
+                                    null,
                                     null
                                 ));
                             }
@@ -1019,6 +1023,7 @@ namespace CareTogether.Api.OData
                                     personId,
                                     exempt.RequirementName,
                                     "Exempted",
+                                    exempt.DueDate,
                                     exempt.ExemptionExpiresAtUtc
                                 ));
                             }
