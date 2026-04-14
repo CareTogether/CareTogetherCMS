@@ -32,6 +32,7 @@ import {
   V1Case,
   RoleRemovalReason,
   V1ReferralStatus,
+  V1CaseCloseReason,
 } from '../GeneratedClient';
 import { useParams } from 'react-router';
 import AddCircleIcon from '@mui/icons-material/AddCircle';
@@ -54,10 +55,7 @@ import { Masonry } from '@mui/lab';
 import { MissingRequirementRow } from '../Requirements/MissingRequirementRow';
 import { ExemptedRequirementRow } from '../Requirements/ExemptedRequirementRow';
 import { CompletedRequirementRow } from '../Requirements/CompletedRequirementRow';
-import {
-  V1CaseContext as V1CaseContext,
-  VolunteerFamilyContext,
-} from '../Requirements/RequirementContext';
+import { VolunteerFamilyContext } from '../Requirements/RequirementContext';
 import { ActivityTimeline } from '../Activities/ActivityTimeline';
 import { V1CaseComments } from '../V1Cases/V1CaseComments';
 import { V1CaseCustomField } from '../V1Cases/V1CaseCustomField';
@@ -94,7 +92,7 @@ import { TestFamilyBadge } from './TestFamilyBadge';
 import { visibleReferralsQuery } from '../Model/Data';
 import { useRecoilValue } from 'recoil';
 import { useV1CasesModel } from '../Model/V1CasesModel';
-import { V1CaseCloseReason } from '../GeneratedClient';
+import { policyData } from '../Model/ConfigurationModel';
 
 export function FamilyScreen() {
   const familyIdMaybe = useParams<{ familyId: string }>();
@@ -117,6 +115,8 @@ export function FamilyScreen() {
   );
 
   const referrals = useRecoilValue(visibleReferralsQuery);
+
+  const policy = useRecoilValue(policyData);
 
   const familyReferrals = useMemo(() => {
     return (referrals ?? []).filter((r) => r.familyId === familyId);
@@ -147,6 +147,29 @@ export function FamilyScreen() {
       case V1ReferralStatus.Closed:
         return referral.closedAtUtc ?? referral.createdAtUtc;
     }
+  }
+
+  function referralRequirementSummary(referral: {
+    completedRequirements?: Array<unknown>;
+    exemptedRequirements?: Array<unknown>;
+  }) {
+    const completedCount = referral.completedRequirements?.length ?? 0;
+    const exemptedCount = referral.exemptedRequirements?.length ?? 0;
+
+    const incompleteCount = Math.max(
+      0,
+      (policy.referralPolicy?.intakeRequirements?.length ?? 0) -
+        completedCount -
+        exemptedCount
+    );
+
+    return [
+      incompleteCount > 0 ? `${incompleteCount} incomplete` : null,
+      completedCount > 0 ? `${completedCount} completed` : null,
+      exemptedCount > 0 ? `${exemptedCount} exempted` : null,
+    ]
+      .filter(Boolean)
+      .join(' · ');
   }
 
   const appNavigate = useAppNavigate();
@@ -354,14 +377,14 @@ export function FamilyScreen() {
     });
   }
 
-  let v1CaseRequirementContext: V1CaseContext | undefined;
-  if (selectedV1Case) {
-    v1CaseRequirementContext = {
-      kind: 'V1Case',
-      partneringFamilyId: familyId,
-      v1CaseId: selectedV1Case.id!,
-    };
-  }
+  //   let v1CaseRequirementContext: V1CaseContext | undefined;
+  //   if (selectedV1Case) {
+  //     v1CaseRequirementContext = {
+  //       kind: 'V1Case',
+  //       partneringFamilyId: familyId,
+  //       v1CaseId: selectedV1Case.id!,
+  //     };
+  //   }
 
   const volunteerFamilyRequirementContext: VolunteerFamilyContext = {
     kind: 'Volunteer Family',
@@ -868,9 +891,13 @@ export function FamilyScreen() {
                                     >
                                       {linkedReferrals.map((ref) => {
                                         const date = referralStatusDate(ref);
+                                        const requirementSummary =
+                                          referralRequirementSummary(ref);
+
                                         const metadata = [
                                           referralStatusLabel(ref.status),
                                           date ? format(date, 'M/d/yy') : null,
+                                          requirementSummary || null,
                                         ]
                                           .filter(Boolean)
                                           .join(' · ');
@@ -920,9 +947,13 @@ export function FamilyScreen() {
                                 {caseReferralTable.unlinkedReferrals.map(
                                   (ref) => {
                                     const date = referralStatusDate(ref);
+                                    const requirementSummary =
+                                      referralRequirementSummary(ref);
+
                                     const metadata = [
                                       referralStatusLabel(ref.status),
                                       date ? format(date, 'M/d/yy') : null,
+                                      requirementSummary || null,
                                     ]
                                       .filter(Boolean)
                                       .join(' · ');
@@ -983,7 +1014,7 @@ export function FamilyScreen() {
           </Grid>
 
           <Grid container spacing={0}>
-            {permissions(Permission.ViewV1CaseProgress) &&
+            {/* {permissions(Permission.ViewV1CaseProgress) &&
               showIntakeRequirementsAndCustomFields &&
               selectedV1Case && (
                 <>
@@ -1032,7 +1063,7 @@ export function FamilyScreen() {
                     )}
                   </Grid>
                 </>
-              )}
+              )} */}
             {family.volunteerFamilyInfo && (
               <>
                 <Grid item xs={12}>

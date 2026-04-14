@@ -147,6 +147,7 @@ namespace CareTogether.Engines.Authorization
                         Permission.EditV1CaseRequirementExemption,
                     UpdateCustomReferralField => Permission.EditV1Case,
                     UpdateReferralComments => Permission.EditV1Case,
+                    LinkReferralToCase => Permission.EditV1Case,
                     CloseReferral => Permission.CloseV1Case,
                     ReopenReferral => Permission.CloseV1Case,
                     _ => throw new NotImplementedException(

@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import {
   Autocomplete,
   Button,
@@ -30,6 +30,12 @@ export function SelectReferralFamilyDrawer({
 }: SelectReferralFamilyDrawerProps) {
   const [selected, setSelected] = useState<FamilyOption | null>(null);
 
+  useEffect(() => {
+    if (!open) {
+      setSelected(null);
+    }
+  }, [open]);
+
   const canSave = useMemo(
     () => !!selected?.id && !working,
     [selected, working]
@@ -55,12 +61,14 @@ export function SelectReferralFamilyDrawer({
 
           <Grid item xs={12}>
             <Autocomplete
+              disablePortal
               options={familyOptions}
               getOptionLabel={(opt) => opt.label}
               isOptionEqualToValue={(option, value) => option.id === value.id}
               value={selected}
               onChange={(_, option) => setSelected(option)}
               disabled={working}
+              noOptionsText="No partnering families found"
               renderInput={(params) => (
                 <TextField {...params} label="Family" fullWidth />
               )}

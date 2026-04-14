@@ -27,8 +27,7 @@ import { Box, Stack, Typography, Link } from '@mui/material';
 import { NoteCard } from '../Notes/NoteCard';
 import { useAccessLevelDialog } from '../Notes/AccessLevelDialog/useAccessLevelDialog';
 import { FormControl, InputLabel, Select, MenuItem } from '@mui/material';
-import { useState } from 'react';
-import { ReferralTimeline } from '../V1Referrals/V1ReferralTimeline';
+import { useMemo, useState } from 'react';
 
 type ActivityTimelineProps = {
   family: CombinedFamilyInfo;
@@ -37,6 +36,35 @@ type ActivityTimelineProps = {
 };
 
 type ActivitySorting = 'activity' | 'created' | 'edited' | 'approved';
+
+type ReferralNoteEntry = NonNullable<V1Referral['notes']>[number];
+
+type MergedTimelineItem =
+  | {
+      kind: 'family-activity';
+      timestamp: Date;
+      userId?: string;
+      activity: Activity;
+      note?: Note;
+    }
+  | {
+      kind: 'referral';
+      timestamp: Date;
+      userId?: string;
+      label: string;
+      referralId: string;
+      referralTitle: string;
+      noteText?: string | null;
+    }
+  | {
+      kind: 'referral-note';
+      timestamp: Date;
+      userId?: string;
+      label: string;
+      referralId: string;
+      referralTitle: string;
+      referralNote: ReferralNoteEntry;
+    };
 
 const composeNoteType = (activity: Activity): string | null => {
   if (activity instanceof V1CaseRequirementCompleted) {
@@ -57,6 +85,13 @@ const composeNoteType = (activity: Activity): string | null => {
 
   return null;
 };
+
+function resolveReferralNoteText(
+  note: ReferralNoteEntry | undefined
+): string | null {
+  const text = note?.contents ?? null;
+  return text && text.trim() ? text : null;
+}
 
 function embedNotesInActivities(notes: Note[], activities: Activity[]) {
   // We only want to show each note once, on the most recent activity entry that is
@@ -196,8 +231,139 @@ export function ActivityTimeline({
       getDateValue(a.activity.activityTimestampUtc),
   };
 
-  const sortedActivitiesWithNotes = activitiesWithEmbeddedNotes.sort(
-    sortStrategies[sortBy]
+  const sortedActivitiesWithNotes = useMemo(
+    () => [...activitiesWithEmbeddedNotes].sort(sortStrategies[sortBy]),
+    [activitiesWithEmbeddedNotes, sortBy]
+  );
+
+  const familyTimelineItems = useMemo<MergedTimelineItem[]>(
+    () =>
+      sortedActivitiesWithNotes.map(({ activity, note }) => ({
+        kind: 'family-activity',
+        timestamp: activity.activityTimestampUtc ?? new Date(0),
+        userId: activity.userId,
+        activity,
+        note,
+      })),
+    [sortedActivitiesWithNotes]
+  );
+
+  const referralTimelineItems = useMemo<MergedTimelineItem[]>(() => {
+    return referrals.flatMap((referral) => {
+      const notesById = new Map<string, ReferralNoteEntry>(
+        (referral.notes ?? [])
+          .filter((note): note is ReferralNoteEntry => Boolean(note?.id))
+          .map((note) => [note.id, note])
+      );
+
+      const items: MergedTimelineItem[] = [];
+
+      items.push({
+        kind: 'referral',
+        timestamp: referral.createdAtUtc ?? new Date(0),
+        userId: undefined,
+        label: 'Referral opened',
+        referralId: referral.referralId,
+        referralTitle: referral.title,
+      });
+
+      if (referral.acceptedAtUtc) {
+        items.push({
+          kind: 'referral',
+          timestamp: referral.acceptedAtUtc,
+          userId: undefined,
+          label: 'Referral accepted',
+          referralId: referral.referralId,
+          referralTitle: referral.title,
+        });
+      }
+
+      if (referral.closedAtUtc) {
+        items.push({
+          kind: 'referral',
+          timestamp: referral.closedAtUtc,
+          userId: undefined,
+          label: referral.closeReason
+            ? `Referral closed: ${referral.closeReason}`
+            : 'Referral closed',
+          referralId: referral.referralId,
+          referralTitle: referral.title,
+        });
+      }
+
+      for (const completed of referral.completedRequirements ?? []) {
+        const noteId = completed.noteId ?? undefined;
+        const noteText = noteId
+          ? resolveReferralNoteText(notesById.get(noteId))
+          : null;
+
+        items.push({
+          kind: 'referral',
+          timestamp:
+            completed.completedAtUtc ??
+            completed.timestampUtc ??
+            referral.createdAtUtc ??
+            new Date(0),
+          userId: completed.userId,
+          label: `Completed requirement: ${completed.requirementName}`,
+          referralId: referral.referralId,
+          referralTitle: referral.title,
+          noteText,
+        });
+      }
+
+      for (const exempted of referral.exemptedRequirements ?? []) {
+        items.push({
+          kind: 'referral',
+          timestamp:
+            exempted.timestampUtc ?? referral.createdAtUtc ?? new Date(0),
+          userId: exempted.userId,
+          label: `Exempted requirement: ${exempted.requirementName}`,
+          referralId: referral.referralId,
+          referralTitle: referral.title,
+        });
+      }
+
+      for (const doc of referral.uploadedDocuments ?? []) {
+        items.push({
+          kind: 'referral',
+          timestamp: doc.timestampUtc ?? referral.createdAtUtc ?? new Date(0),
+          userId: doc.userId,
+          label: `Document uploaded: ${doc.uploadedFileName}`,
+          referralId: referral.referralId,
+          referralTitle: referral.title,
+        });
+      }
+
+      for (const note of referral.notes ?? []) {
+        const noteTimestamp =
+          note.backdatedTimestampUtc ??
+          note.createdTimestampUtc ??
+          note.lastEditTimestampUtc;
+
+        if (!noteTimestamp) continue;
+
+        items.push({
+          kind: 'referral-note',
+          timestamp: noteTimestamp,
+          userId: note.authorId,
+          label: note.status === 0 ? 'Draft note' : 'Approved note',
+          referralId: referral.referralId,
+          referralTitle: referral.title,
+          referralNote: note,
+        });
+      }
+
+      return items;
+    });
+  }, [referrals]);
+
+  const mergedTimelineItems = useMemo(
+    () =>
+      [...familyTimelineItems, ...referralTimelineItems].sort(
+        (a, b) => b.timestamp.getTime() - a.timestamp.getTime()
+      ),
+    [familyTimelineItems, referralTimelineItems]
   );
 
   const onlyActivitiesWithNotes = sortedActivitiesWithNotes.filter((item) =>
@@ -337,32 +503,6 @@ export function ActivityTimeline({
         </Stack>
       </div>
 
-      {referrals.length > 0 && (
-        <Box sx={{ mb: 3 }}>
-          <Typography
-            className="ph-unmask"
-            variant="h3"
-            style={{ marginTop: 0, marginBottom: 8 }}
-          >
-            Referrals Timeline
-          </Typography>
-
-          {referrals.map((referral) => (
-            <Box key={referral.referralId} sx={{ mb: 3 }}>
-              <Typography
-                className="ph-unmask"
-                variant="subtitle1"
-                sx={{ mb: 1 }}
-              >
-                {referral.title}
-              </Typography>
-
-              <ReferralTimeline referral={referral} />
-            </Box>
-          ))}
-        </Box>
-      )}
-
       <Timeline position="right" sx={{ padding: 0 }}>
         <Box sx={{ display: 'flex', justifyContent: 'flex-start', mb: 1 }}>
           <FormControl size="small" sx={{ minWidth: 160 }}>
@@ -380,101 +520,159 @@ export function ActivityTimeline({
           </FormControl>
         </Box>
 
-        {sortedActivitiesWithNotes?.map(({ activity, note }, i) => (
-          <TimelineItem key={i}>
-            <TimelineOppositeContent sx={{ display: 'none' }} />
-            <TimelineSeparator>
-              <TimelineDot
-                sx={{
-                  width: 36,
-                  height: 36,
-                  textAlign: 'center',
-                  display: 'block',
+        {mergedTimelineItems.map((item, i) => {
+          const activity =
+            item.kind === 'family-activity' ? item.activity : undefined;
+          const note = item.kind === 'family-activity' ? item.note : undefined;
+
+          return (
+            <TimelineItem key={`${item.kind}:${i}`}>
+              <TimelineOppositeContent sx={{ display: 'none' }} />
+              <TimelineSeparator>
+                <TimelineDot
+                  sx={{
+                    width: 36,
+                    height: 36,
+                    textAlign: 'center',
+                    display: 'block',
+                  }}
+                >
+                  {item.kind === 'family-activity' ? (
+                    activity instanceof V1CaseRequirementCompleted ||
+                    activity instanceof ArrangementRequirementCompleted ? (
+                      '✔'
+                    ) : activity instanceof ChildLocationChanged ? (
+                      <PersonPinCircleIcon fontSize="medium" />
+                    ) : (
+                      <EditIcon fontSize="small" />
+                    )
+                  ) : item.kind === 'referral' ? (
+                    <EditIcon fontSize="small" />
+                  ) : (
+                    <EditIcon fontSize="small" />
+                  )}
+                </TimelineDot>
+                {i < mergedTimelineItems.length - 1 && <TimelineConnector />}
+              </TimelineSeparator>
+              <TimelineContent
+                style={{
+                  width: 200,
+                  wordWrap: 'break-word',
+                  whiteSpace: 'pre-wrap',
                 }}
               >
-                {activity instanceof V1CaseRequirementCompleted ||
-                activity instanceof ArrangementRequirementCompleted ? (
-                  '✔'
-                ) : activity instanceof ChildLocationChanged ? (
-                  <PersonPinCircleIcon fontSize="medium" />
-                ) : (
-                  <EditIcon fontSize="small" />
-                )}
-              </TimelineDot>
-              {i < allActivitiesSorted.length - 1 && <TimelineConnector />}
-            </TimelineSeparator>
-            <TimelineContent
-              style={{
-                width: 200,
-                wordWrap: 'break-word',
-                whiteSpace: 'pre-wrap',
-              }}
-            >
-              <Box sx={{ color: 'text.disabled', margin: 0, padding: 0 }}>
-                <span className="ph-unmask" style={{ marginRight: 16 }}>
-                  {activity.activityTimestampUtc
-                    ? format(activity.activityTimestampUtc, 'M/d/yy h:mm a')
-                    : null}
-                </span>
-                <PersonName person={userLookup(activity.userId)} />
-              </Box>
-              {activity instanceof V1CaseRequirementCompleted ||
-              activity instanceof ArrangementRequirementCompleted ? (
-                activity.requirementName
-              ) : activity instanceof ChildLocationChanged ? (
-                <>
-                  <PersonName
-                    person={arrangementPartneringPerson(activity.arrangementId)}
-                  />
-                  <span> &rarr; </span>
-                  <PersonName
-                    person={personLookup(
-                      activity.childLocationFamilyId,
-                      activity.childLocationReceivingAdultId
-                    )}
-                  />
-                  <span> </span>(
-                  {activity.plan === ChildLocationPlan.DaytimeChildCare
-                    ? 'daytime'
-                    : activity.plan === ChildLocationPlan.OvernightHousing
-                      ? 'overnight'
-                      : 'parent'}
-                  )
-                </>
-              ) : activity instanceof V1CaseOpened ? (
-                'Case opened'
-              ) : null}
-              {activity.uploadedDocumentId && (
-                <Box sx={{ margin: 0, padding: 0 }}>
-                  📃{' '}
-                  {
-                    documentLookup(activity.uploadedDocumentId)
-                      ?.uploadedFileName
-                  }
+                <Box sx={{ color: 'text.disabled', margin: 0, padding: 0 }}>
+                  <span className="ph-unmask" style={{ marginRight: 16 }}>
+                    {format(item.timestamp, 'M/d/yy h:mm a')}
+                  </span>
+                  {item.userId ? (
+                    <PersonName person={userLookup(item.userId)} />
+                  ) : null}
                 </Box>
-              )}
 
-              <Typography>
-                Visible to{' '}
-                {note ? (
-                  <Link
-                    component="button"
-                    type="button"
-                    underline="hover"
-                    onClick={() => {
-                      open(note);
-                    }}
-                  >
-                    {note.accessLevel ?? 'Everyone'}
-                  </Link>
-                ) : (
-                  'Everyone'
+                {item.kind !== 'family-activity' && (
+                  <Typography variant="body2" sx={{ fontWeight: 600, mb: 0.5 }}>
+                    Referral: {item.referralTitle}
+                  </Typography>
                 )}
-              </Typography>
-              {note && <NoteCard familyId={family.family!.id!} note={note} />}
-            </TimelineContent>
-          </TimelineItem>
-        ))}
+
+                {item.kind === 'family-activity' ? (
+                  <>
+                    {activity instanceof V1CaseRequirementCompleted ||
+                    activity instanceof ArrangementRequirementCompleted ? (
+                      activity.requirementName
+                    ) : activity instanceof ChildLocationChanged ? (
+                      <>
+                        <PersonName
+                          person={arrangementPartneringPerson(
+                            activity.arrangementId
+                          )}
+                        />
+                        <span> &rarr; </span>
+                        <PersonName
+                          person={personLookup(
+                            activity.childLocationFamilyId,
+                            activity.childLocationReceivingAdultId
+                          )}
+                        />
+                        <span> </span>(
+                        {activity.plan === ChildLocationPlan.DaytimeChildCare
+                          ? 'daytime'
+                          : activity.plan === ChildLocationPlan.OvernightHousing
+                            ? 'overnight'
+                            : 'parent'}
+                        )
+                      </>
+                    ) : activity instanceof V1CaseOpened ? (
+                      'Case opened'
+                    ) : null}
+
+                    {activity?.uploadedDocumentId && (
+                      <Box sx={{ margin: 0, padding: 0 }}>
+                        📃{' '}
+                        {
+                          documentLookup(activity.uploadedDocumentId)
+                            ?.uploadedFileName
+                        }
+                      </Box>
+                    )}
+
+                    <Typography>
+                      Visible to{' '}
+                      {note ? (
+                        <Link
+                          component="button"
+                          type="button"
+                          underline="hover"
+                          onClick={() => {
+                            open(note);
+                          }}
+                        >
+                          {note.accessLevel ?? 'Everyone'}
+                        </Link>
+                      ) : (
+                        'Everyone'
+                      )}
+                    </Typography>
+                    {note && (
+                      <NoteCard familyId={family.family!.id!} note={note} />
+                    )}
+                  </>
+                ) : item.kind === 'referral' ? (
+                  <>
+                    <Typography variant="body2" sx={{ mb: 0.5 }}>
+                      {item.label}
+                    </Typography>
+                    {item.noteText?.trim() && (
+                      <Typography
+                        variant="body2"
+                        sx={{ fontStyle: 'italic', opacity: 0.85 }}
+                      >
+                        {item.noteText.trim()}
+                      </Typography>
+                    )}
+                  </>
+                ) : (
+                  <>
+                    <Typography variant="body2" sx={{ mb: 0.5 }}>
+                      {item.label}
+                    </Typography>
+                    <Box
+                      sx={{ p: 1, border: '1px solid', borderColor: 'divider' }}
+                    >
+                      <Typography variant="body2" sx={{ mb: 0.5 }}>
+                        {item.referralNote.contents}
+                      </Typography>
+                      <Typography variant="caption" color="text.secondary">
+                        Visible to {item.referralNote.accessLevel ?? 'Everyone'}
+                      </Typography>
+                    </Box>
+                  </>
+                )}
+              </TimelineContent>
+            </TimelineItem>
+          );
+        })}
 
         {noteAccessLevelDialog}
       </Timeline>

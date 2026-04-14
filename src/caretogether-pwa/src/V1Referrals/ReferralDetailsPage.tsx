@@ -33,7 +33,7 @@ import { CompletedRequirementRow } from '../Requirements/CompletedRequirementRow
 import { ExemptedRequirementRow } from '../Requirements/ExemptedRequirementRow';
 import { V1ReferralContext } from '../Requirements/RequirementContext';
 import { CreatePartneringFamilyDrawer } from '../V1Cases/CreatePartneringFamilyDrawer';
-import { partneringFamiliesData } from '../Model/V1CasesModel';
+import { partneringFamiliesData, useV1CasesModel } from '../Model/V1CasesModel';
 import { useLoadable } from '../Hooks/useLoadable';
 import { EditReferralDrawer } from '../V1Referrals/EditReferralDrawer';
 import { policyData } from '../Model/ConfigurationModel';
@@ -48,8 +48,6 @@ import {
   SelectReferralFamilyDrawer,
   FamilyOption,
 } from './SelectReferralFamilyDrawer';
-
-import { FamilyDocuments } from '../Families/FamilyDocuments';
 import { UploadV1ReferralDocumentsDialog } from './UploadV1ReferralDocumentsDialog';
 
 function formatStatusWithDate(
@@ -88,7 +86,9 @@ export function ReferralDetailsPage() {
   const policy = useRecoilValue(policyData);
   const appNavigate = useAppNavigate();
 
-  const { reopenReferral, updateReferralFamily } = useV1ReferralsModel();
+  const { reopenReferral, updateReferralFamily, acceptReferral } =
+    useV1ReferralsModel();
+  const { linkReferralToExistingCase } = useV1CasesModel();
 
   const { organizationId, locationId } = useRecoilValue(
     selectedLocationContextState
@@ -104,6 +104,11 @@ export function ReferralDetailsPage() {
   const [openUploadDocumentDialog, setOpenUploadDocumentDialog] =
     useState(false);
   const [openSelectFamilyDrawer, setOpenSelectFamilyDrawer] = useState(false);
+  const [openLinkCaseDialog, setOpenLinkCaseDialog] = useState(false);
+  const [selectedFamilyCaseOptions, setSelectedFamilyCaseOptions] = useState<
+    { id: string; label: string; isOpen: boolean }[]
+  >([]);
+  const [selectedCaseIdToLink, setSelectedCaseIdToLink] = useState<string>('');
 
   const referral = useMemo(
     () => referrals.find((r) => r.referralId === referralId),
@@ -122,63 +127,205 @@ export function ReferralDetailsPage() {
     );
   }
 
+  const currentReferral = referral;
+
   const referralRequirementContext: V1ReferralContext = {
     kind: 'V1Referral',
-    referralId: referral.referralId,
+    referralId: currentReferral.referralId,
   };
 
-  const family = referral.familyId
-    ? familyLookup(referral.familyId)
+  const family = currentReferral.familyId
+    ? familyLookup(currentReferral.familyId)
     : undefined;
 
   const familyHasOpenCase = !!family?.partneringFamilyInfo?.openV1Case;
 
-  const isOpen = referral.status === V1ReferralStatus.Open;
-  const isClosed = referral.status === V1ReferralStatus.Closed;
-  const canSelectFamily = isOpen && !referral.familyId;
+  const referralAlreadyLinkedToCase =
+    !!family?.partneringFamilyInfo?.openV1Case?.linkedV1ReferralIds?.includes(
+      currentReferral.referralId
+    ) ||
+    !!family?.partneringFamilyInfo?.closedV1Cases?.some((v1Case) =>
+      v1Case.linkedV1ReferralIds?.includes(currentReferral.referralId)
+    );
 
-  const familyOptions: FamilyOption[] = families.map((f) => ({
-    id: f.family?.id ?? '',
-    label: familyNameString(f),
-  }));
+  const familyHasAnyCase =
+    !!family?.partneringFamilyInfo?.openV1Case ||
+    (family?.partneringFamilyInfo?.closedV1Cases?.length ?? 0) > 0;
+
+  const isOpen = currentReferral.status === V1ReferralStatus.Open;
+  const isClosed = currentReferral.status === V1ReferralStatus.Closed;
+  const canSelectFamily = isOpen && !currentReferral.familyId;
+
+  const familyOptions: FamilyOption[] = families
+    .filter((f) => f.family?.id)
+    .map((f) => ({
+      id: f.family!.id,
+      label: familyNameString(f),
+    }));
 
   const referralCustomFields: CustomField[] =
     policy.referralPolicy?.customFields ?? [];
 
   const referralRequirements =
     policy.referralPolicy?.intakeRequirements?.filter((req) => {
-      const completed = referral.completedRequirements?.some(
+      const completed = currentReferral.completedRequirements?.some(
         (c) => c.requirementName === req.actionName
       );
 
-      const exempted = referral.exemptedRequirements?.some(
+      const exempted = currentReferral.exemptedRequirements?.some(
         (e) => e.requirementName === req.actionName
       );
 
       return !completed && !exempted;
     }) ?? [];
 
-  async function handleSaveSelectedFamily(
+  const selectedCaseOption = selectedFamilyCaseOptions.find(
+    (option) => option.id === selectedCaseIdToLink
+  );
+
+  async function handleSaveSelectedExistingFamily(
     currentReferralId: string,
     familyId: string
   ) {
     if (working) return;
 
     const selectedFamily = familyLookup(familyId);
-    const hasOpenCase = !!selectedFamily?.partneringFamilyInfo?.openV1Case;
+
+    const caseOptions = [
+      ...(selectedFamily?.partneringFamilyInfo?.openV1Case
+        ? [
+            {
+              id: selectedFamily.partneringFamilyInfo.openV1Case.id,
+              label: 'Open Case',
+              isOpen: true,
+            },
+          ]
+        : []),
+      ...(selectedFamily?.partneringFamilyInfo?.closedV1Cases?.map(
+        (v1Case) => ({
+          id: v1Case.id,
+          label: `Closed Case${
+            v1Case.closedAtUtc
+              ? ` (${new Intl.DateTimeFormat('en-US', {
+                  year: 'numeric',
+                  month: 'short',
+                  day: 'numeric',
+                }).format(v1Case.closedAtUtc)})`
+              : ''
+          }`,
+          isOpen: false,
+        })
+      ) ?? []),
+    ];
 
     try {
       setWorking(true);
       await updateReferralFamily(currentReferralId, familyId);
-
-      if (hasOpenCase) {
-        setShowAcceptedMessage(true);
-      }
-
       setOpenSelectFamilyDrawer(false);
+
+      if (caseOptions.length > 0 && !referralAlreadyLinkedToCase) {
+        setSelectedFamilyCaseOptions(caseOptions);
+        setSelectedCaseIdToLink(caseOptions[0].id);
+        setOpenLinkCaseDialog(true);
+      }
     } finally {
       setWorking(false);
     }
+  }
+
+  async function handleSaveNewFamily(
+    currentReferralId: string,
+    familyId: string
+  ) {
+    if (working) return;
+
+    try {
+      setWorking(true);
+      await updateReferralFamily(currentReferralId, familyId);
+      setOpenCreateFamily(false);
+    } finally {
+      setWorking(false);
+    }
+  }
+
+  async function handleLinkReferralToSelectedCase() {
+    if (!currentReferral.familyId || !selectedCaseIdToLink || working) return;
+
+    try {
+      setWorking(true);
+      await linkReferralToExistingCase(
+        currentReferral.familyId,
+        selectedCaseIdToLink,
+        currentReferral.referralId
+      );
+      setOpenLinkCaseDialog(false);
+      setSelectedFamilyCaseOptions([]);
+      setSelectedCaseIdToLink('');
+    } finally {
+      setWorking(false);
+    }
+  }
+
+  async function handleLinkAndAcceptReferralToSelectedCase() {
+    if (
+      !currentReferral.familyId ||
+      !selectedCaseIdToLink ||
+      !selectedCaseOption?.isOpen ||
+      working
+    ) {
+      return;
+    }
+
+    try {
+      setWorking(true);
+      await linkReferralToExistingCase(
+        currentReferral.familyId,
+        selectedCaseIdToLink,
+        currentReferral.referralId
+      );
+      await acceptReferral(currentReferral.referralId, new Date());
+      setOpenLinkCaseDialog(false);
+      setSelectedFamilyCaseOptions([]);
+      setSelectedCaseIdToLink('');
+      setShowAcceptedMessage(true);
+    } finally {
+      setWorking(false);
+    }
+  }
+
+  function handleOpenLinkExistingCaseDialog() {
+    if (!family || referralAlreadyLinkedToCase) return;
+
+    const caseOptions = [
+      ...(family.partneringFamilyInfo?.openV1Case
+        ? [
+            {
+              id: family.partneringFamilyInfo.openV1Case.id,
+              label: 'Open Case',
+              isOpen: true,
+            },
+          ]
+        : []),
+      ...(family.partneringFamilyInfo?.closedV1Cases?.map((v1Case) => ({
+        id: v1Case.id,
+        label: `Closed Case${
+          v1Case.closedAtUtc
+            ? ` (${new Intl.DateTimeFormat('en-US', {
+                year: 'numeric',
+                month: 'short',
+                day: 'numeric',
+              }).format(v1Case.closedAtUtc)})`
+            : ''
+        }`,
+        isOpen: false,
+      })) ?? []),
+    ];
+
+    if (caseOptions.length === 0) return;
+
+    setSelectedFamilyCaseOptions(caseOptions);
+    setSelectedCaseIdToLink(caseOptions[0].id);
+    setOpenLinkCaseDialog(true);
   }
 
   return (
@@ -195,7 +342,7 @@ export function ReferralDetailsPage() {
       >
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
           <Typography variant="h5" fontWeight={600}>
-            {referral.title}
+            {currentReferral.title}
           </Typography>
         </Box>
 
@@ -209,7 +356,7 @@ export function ReferralDetailsPage() {
             </Button>
           )}
 
-          {isOpen && !referral.familyId && (
+          {isOpen && (
             <Button
               variant="outlined"
               onClick={() => setOpenCloseReferralDialog(true)}
@@ -225,7 +372,7 @@ export function ReferralDetailsPage() {
               onClick={async () => {
                 setWorking(true);
                 try {
-                  await reopenReferral(referral.referralId);
+                  await reopenReferral(currentReferral.referralId);
                 } finally {
                   setWorking(false);
                 }
@@ -235,7 +382,7 @@ export function ReferralDetailsPage() {
             </Button>
           )}
 
-          {isOpen && referral.familyId && !familyHasOpenCase && (
+          {isOpen && currentReferral.familyId && !familyHasOpenCase && (
             <Button
               variant="contained"
               onClick={() => setOpenOpenCaseDialog(true)}
@@ -244,7 +391,18 @@ export function ReferralDetailsPage() {
             </Button>
           )}
 
-          {!isClosed && !referral.familyId && (
+          {!isClosed &&
+            currentReferral.familyId &&
+            familyHasAnyCase &&
+            !referralAlreadyLinkedToCase && (
+              <Button
+                variant="outlined"
+                onClick={handleOpenLinkExistingCaseDialog}
+              >
+                Link to Existing Case
+              </Button>
+            )}
+          {!isClosed && !currentReferral.familyId && (
             <Button
               variant="contained"
               onClick={() => setOpenCreateFamily(true)}
@@ -289,7 +447,7 @@ export function ReferralDetailsPage() {
             </Button>
           </Box>
 
-          <ReferralTimeline referral={referral} />
+          <ReferralTimeline referral={currentReferral} />
         </Grid>
 
         <Grid item xs={12} md={8}>
@@ -297,10 +455,10 @@ export function ReferralDetailsPage() {
             <Typography>
               <strong>Status:</strong>{' '}
               {formatStatusWithDate(
-                referral.status,
-                referral.createdAtUtc,
-                referral.acceptedAtUtc,
-                referral.closedAtUtc
+                currentReferral.status,
+                currentReferral.createdAtUtc,
+                currentReferral.acceptedAtUtc,
+                currentReferral.closedAtUtc
               )}
             </Typography>
 
@@ -328,7 +486,7 @@ export function ReferralDetailsPage() {
             <Grid item xs={12} sx={{ mb: 2 }}>
               {referralCustomFields.map((field) => {
                 const value =
-                  referral.completedCustomFields?.[field.name]?.value;
+                  currentReferral.completedCustomFields?.[field.name]?.value;
 
                 let displayValue = '—';
                 if (value !== null && value !== undefined && value !== '') {
@@ -349,7 +507,7 @@ export function ReferralDetailsPage() {
             </Grid>
           )}
 
-          {referral.comment && (
+          {currentReferral.comment && (
             <Grid item xs={12}>
               <Typography fontWeight={600} sx={{ mb: 1 }}>
                 Referral Comment
@@ -363,7 +521,7 @@ export function ReferralDetailsPage() {
                   whiteSpace: 'pre-wrap',
                 }}
               >
-                {referral.comment}
+                {currentReferral.comment}
               </Box>
             </Grid>
           )}
@@ -390,7 +548,7 @@ export function ReferralDetailsPage() {
                 Completed Requirements
               </Typography>
 
-              {referral.completedRequirements?.map((completed, i) => (
+              {currentReferral.completedRequirements?.map((completed, i) => (
                 <CompletedRequirementRow
                   key={`${completed.completedRequirementId}:${i}`}
                   requirement={completed}
@@ -398,7 +556,7 @@ export function ReferralDetailsPage() {
                 />
               ))}
 
-              {referral.exemptedRequirements?.map((exempted, i) => (
+              {currentReferral.exemptedRequirements?.map((exempted, i) => (
                 <ExemptedRequirementRow
                   key={`${exempted.requirementName}:${i}`}
                   requirement={exempted}
@@ -407,17 +565,7 @@ export function ReferralDetailsPage() {
               ))}
             </Grid>
 
-            <Divider sx={{ width: '100%', my: 3 }} />
-
-            <Grid item xs={12}>
-              <Typography fontWeight={600} sx={{ mb: 1 }}>
-                Documents
-              </Typography>
-
-              {family && <FamilyDocuments family={family} />}
-            </Grid>
-
-            {(referral.uploadedDocuments?.length ?? 0) > 0 && (
+            {(currentReferral.uploadedDocuments?.length ?? 0) > 0 && (
               <>
                 <Divider sx={{ width: '100%', my: 3 }} />
                 <Grid item xs={12}>
@@ -426,7 +574,7 @@ export function ReferralDetailsPage() {
                   </Typography>
 
                   <Box component="ul" sx={{ pl: 3, m: 0 }}>
-                    {referral.uploadedDocuments.map((doc) => (
+                    {currentReferral.uploadedDocuments.map((doc) => (
                       <Box
                         component="li"
                         key={doc.uploadedDocumentId}
@@ -435,7 +583,7 @@ export function ReferralDetailsPage() {
                           downloadV1ReferralFile(
                             organizationId,
                             locationId,
-                            referral.referralId,
+                            currentReferral.referralId,
                             doc.uploadedDocumentId!
                           )
                         }
@@ -456,43 +604,43 @@ export function ReferralDetailsPage() {
           onClose={async (familyId?: string) => {
             setOpenCreateFamily(false);
             if (!familyId) return;
-            await handleSaveSelectedFamily(referral.referralId, familyId);
+            await handleSaveNewFamily(currentReferral.referralId, familyId);
           }}
         />
       )}
 
       {openEditReferral && (
         <EditReferralDrawer
-          referral={referral}
+          referral={currentReferral}
           onClose={() => setOpenEditReferral(false)}
         />
       )}
 
-      {openOpenCaseDialog && referral.familyId && (
+      {openOpenCaseDialog && currentReferral.familyId && (
         <OpenNewV1CaseDialog
-          partneringFamilyId={referral.familyId}
-          referralId={referral.referralId}
+          partneringFamilyId={currentReferral.familyId}
+          referralId={currentReferral.referralId}
           onClose={() => setOpenOpenCaseDialog(false)}
         />
       )}
 
       {openCloseReferralDialog && (
         <CloseV1ReferralDrawer
-          referralId={referral.referralId}
+          referralId={currentReferral.referralId}
           onClose={() => setOpenCloseReferralDialog(false)}
         />
       )}
 
       {openAddNoteDialog && (
         <AddEditV1ReferralNoteDialog
-          referralId={referral.referralId}
+          referralId={currentReferral.referralId}
           onClose={() => setOpenAddNoteDialog(false)}
         />
       )}
 
       {openUploadDocumentDialog && (
         <UploadV1ReferralDocumentsDialog
-          referralId={referral.referralId}
+          referralId={currentReferral.referralId}
           onClose={() => setOpenUploadDocumentDialog(false)}
         />
       )}
@@ -503,9 +651,86 @@ export function ReferralDetailsPage() {
         familyOptions={familyOptions}
         onCancel={() => setOpenSelectFamilyDrawer(false)}
         onSave={(familyId) =>
-          handleSaveSelectedFamily(referral.referralId, familyId)
+          handleSaveSelectedExistingFamily(currentReferral.referralId, familyId)
         }
       />
+
+      {openLinkCaseDialog && (
+        <Box
+          sx={{
+            position: 'fixed',
+            inset: 0,
+            bgcolor: 'rgba(0,0,0,0.3)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 1400,
+          }}
+        >
+          <Box sx={{ bgcolor: 'background.paper', p: 3, minWidth: 420 }}>
+            <Typography variant="h6" sx={{ mb: 2 }}>
+              Link referral to an existing case?
+            </Typography>
+
+            <Typography variant="body2" sx={{ mb: 2 }}>
+              This family already has existing cases. Choose whether to link
+              this referral to one of them.
+            </Typography>
+
+            <Box
+              sx={{ display: 'flex', flexDirection: 'column', gap: 1.5, mb: 3 }}
+            >
+              {selectedFamilyCaseOptions.map((option) => (
+                <Button
+                  key={option.id}
+                  variant={
+                    selectedCaseIdToLink === option.id
+                      ? 'contained'
+                      : 'outlined'
+                  }
+                  onClick={() => setSelectedCaseIdToLink(option.id)}
+                  sx={{ justifyContent: 'flex-start' }}
+                >
+                  {option.label}
+                </Button>
+              ))}
+            </Box>
+
+            <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 1 }}>
+              <Button
+                color="secondary"
+                variant="contained"
+                onClick={() => {
+                  setOpenLinkCaseDialog(false);
+                  setSelectedFamilyCaseOptions([]);
+                  setSelectedCaseIdToLink('');
+                }}
+                disabled={working}
+              >
+                Not now
+              </Button>
+
+              <Button
+                variant="outlined"
+                onClick={handleLinkReferralToSelectedCase}
+                disabled={!selectedCaseIdToLink || working}
+              >
+                Link Only
+              </Button>
+
+              {selectedCaseOption?.isOpen && (
+                <Button
+                  variant="contained"
+                  onClick={handleLinkAndAcceptReferralToSelectedCase}
+                  disabled={!selectedCaseIdToLink || working}
+                >
+                  Link & Accept
+                </Button>
+              )}
+            </Box>
+          </Box>
+        </Box>
+      )}
 
       <Snackbar
         open={showAcceptedMessage}
@@ -514,12 +739,11 @@ export function ReferralDetailsPage() {
         anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
       >
         <Alert
-          severity="warning"
+          severity="success"
           variant="filled"
           onClose={() => setShowAcceptedMessage(false)}
         >
-          This referral has been accepted since the family already has an open
-          case.
+          Referral linked and accepted.
         </Alert>
       </Snackbar>
     </Grid>

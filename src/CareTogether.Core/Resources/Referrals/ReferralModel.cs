@@ -194,19 +194,7 @@ namespace CareTogether.Resources.V1Cases
                             },
                             null
                         ),
-                        LinkReferralToCase c => (
-                            v1CaseEntry with
-                            {
-                                LinkedV1ReferralIds = (
-                                    v1CaseEntry.LinkedV1ReferralIds ?? ImmutableList<Guid>.Empty
-                                ).Contains(c.LinkedReferralId)
-                                    ? (v1CaseEntry.LinkedV1ReferralIds ?? ImmutableList<Guid>.Empty)
-                                    : (
-                                        v1CaseEntry.LinkedV1ReferralIds ?? ImmutableList<Guid>.Empty
-                                    ).Add(c.LinkedReferralId),
-                            },
-                            null
-                        ),
+                        LinkReferralToCase c => (LinkReferralToCaseEntry(v1CaseEntry, c), null),
                         CloseReferral c => (
                             v1CaseEntry with
                             {
@@ -880,6 +868,30 @@ namespace CareTogether.Resources.V1Cases
         }
 
         public V1CaseEntry GetV1CaseEntry(Guid v1CaseId) => v1Cases[v1CaseId];
+
+        private V1CaseEntry LinkReferralToCaseEntry(
+            V1CaseEntry v1CaseEntry,
+            LinkReferralToCase command
+        )
+        {
+            var alreadyLinkedCase = v1Cases.Values.FirstOrDefault(existingCase =>
+                existingCase.LinkedV1ReferralIds.Contains(command.LinkedReferralId)
+            );
+
+            if (alreadyLinkedCase != null && alreadyLinkedCase.Id != command.ReferralId)
+                throw new InvalidOperationException(
+                    "This referral is already linked to another case."
+                );
+
+            return v1CaseEntry with
+            {
+                LinkedV1ReferralIds = v1CaseEntry.LinkedV1ReferralIds.Contains(
+                    command.LinkedReferralId
+                )
+                    ? v1CaseEntry.LinkedV1ReferralIds
+                    : v1CaseEntry.LinkedV1ReferralIds.Add(command.LinkedReferralId),
+            };
+        }
 
         private V1CaseEntry ReopenCase(V1CaseEntry v1CaseEntry, ReopenReferral command)
         {

@@ -284,27 +284,6 @@ namespace CareTogether.Managers.Records
             {
                 await ExecuteCommandAsync(organizationId, locationId, user, command);
 
-                if (
-                    command is V1ReferralRecordsCommand referralCommand
-                    && referralCommand.Command is UpdateV1ReferralFamily update
-                )
-                {
-                    var referral = await v1ReferralsResource.GetReferralAsync(
-                        organizationId,
-                        locationId,
-                        update.ReferralId
-                    );
-
-                    if (referral != null)
-                    {
-                        await AutoAcceptAndLinkReferralToOpenCaseAsync(
-                            organizationId,
-                            locationId,
-                            user,
-                            referral
-                        );
-                    }
-                }
 
                 if (
                     command is ReferralRecordsCommand caseCommand

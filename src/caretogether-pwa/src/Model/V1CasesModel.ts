@@ -56,6 +56,7 @@ import {
   EditArrangementRequestedAt,
   EditArrangementEndTime,
   EditArrangementCancelledAt,
+  LinkReferralToCase,
 } from '../GeneratedClient';
 import { api } from '../Api/Api';
 import { useAtomicRecordsCommandCallback } from './DirectoryModel';
@@ -930,6 +931,41 @@ export function useV1CasesModel() {
       return command;
     }
   );
+
+  const linkReferralToExistingCaseCommand =
+    useV1CaseCommandCallbackWithLocation(
+      async (
+        partneringFamilyId: string,
+        v1CaseId: string,
+        linkedReferralId: string
+      ) => {
+        const command = commandFactory(LinkReferralToCase, {
+          familyId: partneringFamilyId,
+          referralId: v1CaseId,
+          linkedReferralId,
+        });
+        return command;
+      }
+    );
+
+  const linkReferralToExistingCase = async (
+    partneringFamilyId: string,
+    v1CaseId: string,
+    linkedReferralId: string
+  ) => {
+    await linkReferralToExistingCaseCommand(
+      partneringFamilyId,
+      v1CaseId,
+      linkedReferralId
+    );
+
+    const updatedAggregates = await api.records.listVisibleAggregates(
+      organizationId,
+      locationId
+    );
+    setVisibleAggregates(updatedAggregates);
+  };
+
   const closeV1Case = useV1CaseCommandCallbackWithLocation(
     async (
       partneringFamilyId: string,
@@ -1038,5 +1074,6 @@ export function useV1CasesModel() {
     closeV1Case,
     reopenV1Case,
     openV1Case,
+    linkReferralToExistingCase,
   };
 }
