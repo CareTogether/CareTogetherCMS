@@ -1172,7 +1172,7 @@ export function FamilyScreen() {
                 >
                   Documents
                 </Typography>
-                <FamilyDocuments family={family} />
+                <FamilyDocuments family={family} referrals={familyReferrals} />
               </Grid>
             )}
           </Grid>

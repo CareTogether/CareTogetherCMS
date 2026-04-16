@@ -284,7 +284,6 @@ namespace CareTogether.Managers.Records
             {
                 await ExecuteCommandAsync(organizationId, locationId, user, command);
 
-
                 if (
                     command is ReferralRecordsCommand caseCommand
                     && caseCommand.Command is CreateReferral created
@@ -297,7 +296,7 @@ namespace CareTogether.Managers.Records
                             await v1ReferralsResource.ExecuteV1ReferralCommandAsync(
                                 organizationId,
                                 locationId,
-                                new AcceptV1Referral(linkedReferralId, DateTime.UtcNow),
+                                new AcceptV1Referral(linkedReferralId, created.OpenedAtUtc),
                                 user.UserId()
                             );
 
