@@ -36,6 +36,7 @@ import {
   UpdatePersonGender,
   UpdatePersonAge,
   UpdatePersonEthnicity,
+  Note,
   UpdateAdultRelationshipToFamily,
   CustodialRelationshipType,
   UpdateCustodialRelationshipType,
@@ -53,6 +54,7 @@ import {
   UndoCreateFamily,
   UpdateNoteAccessLevel,
   UpdateTestFamilyFlag,
+  Person,
 } from '../GeneratedClient';
 import { api } from '../Api/Api';
 import {
@@ -62,6 +64,19 @@ import {
   visibleFamiliesQuery,
 } from './Data';
 import { commandFactory } from './CommandFactory';
+import { SYSTEM_USER_ID } from '../constants';
+
+const systemPerson = Person.fromJS({
+  id: SYSTEM_USER_ID,
+  active: true,
+  firstName: 'SYSTEM',
+  lastName: '',
+  addresses: [],
+  phoneNumbers: [],
+  emailAddresses: [],
+});
+
+const isSystemUserId = (id?: string) => id?.toLowerCase() === SYSTEM_USER_ID;
 
 export function usePersonLookup() {
   const visibleFamilies = useRecoilValue(visibleFamiliesQuery);
@@ -103,6 +118,10 @@ export function useUserLookup() {
   const visibleFamilies = useRecoilValue(visibleFamiliesQuery);
 
   return (userId?: string) => {
+    if (isSystemUserId(userId)) {
+      return systemPerson;
+    }
+
     const userFamily = visibleFamilies.filter((family) =>
       family.users?.find((user) => user.userId === userId)
     );
@@ -118,6 +137,18 @@ export function useUserLookup() {
     } else {
       return undefined;
     }
+  };
+}
+
+export function useNoteAuthorLookup() {
+  const personAndFamilyLookup = usePersonAndFamilyLookup();
+  const userLookup = useUserLookup();
+
+  return (note?: Note) => {
+    if (!note) return undefined;
+    if (!note.authorPersonId) return userLookup(note.authorUserId);
+    if (isSystemUserId(note.authorPersonId)) return systemPerson;
+    return personAndFamilyLookup(note.authorPersonId).person;
   };
 }
 
