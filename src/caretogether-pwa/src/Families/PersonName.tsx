@@ -1,4 +1,5 @@
 import { Person } from '../GeneratedClient';
+import { SYSTEM_USER_ID } from '../constants';
 
 type PersonNameProps = {
   person?: Person;
@@ -12,5 +13,11 @@ export function personNameString(person?: Person) {
 }
 
 export function PersonName({ person }: PersonNameProps) {
-  return <span className="ct-person-name">{personNameString(person)}</span>;
+  const isDeleted = !person;
+  const isSystem = person?.id?.toLowerCase() === SYSTEM_USER_ID;
+  const className = ['ct-person-name', (isDeleted || isSystem) && 'ph-unmask']
+    .filter(Boolean)
+    .join(' ');
+
+  return <span className={className}>{personNameString(person)}</span>;
 }
