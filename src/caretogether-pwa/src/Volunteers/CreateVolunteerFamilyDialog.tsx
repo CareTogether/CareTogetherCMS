@@ -270,7 +270,6 @@ export function CreateVolunteerFamilyDialog({
                 textFieldProps={{
                   size: 'small',
                   fullWidth: true,
-                  required: true,
                 }}
               />
             </Grid>
