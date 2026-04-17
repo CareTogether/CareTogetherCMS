@@ -7569,6 +7569,9 @@ export class Note implements INote {
     backdatedTimestampUtc?: Date | undefined;
     accessLevel?: string | undefined;
     approverId?: string | undefined;
+    isPinned!: boolean;
+    pinnedAtUtc?: Date | undefined;
+    pinnedByUserId?: string | undefined;
 
     constructor(data?: INote) {
         if (data) {
@@ -7591,6 +7594,9 @@ export class Note implements INote {
             this.backdatedTimestampUtc = _data["backdatedTimestampUtc"] ? new Date(_data["backdatedTimestampUtc"].toString()) : <any>undefined;
             this.accessLevel = _data["accessLevel"];
             this.approverId = _data["approverId"];
+            this.isPinned = _data["isPinned"];
+            this.pinnedAtUtc = _data["pinnedAtUtc"] ? new Date(_data["pinnedAtUtc"].toString()) : <any>undefined;
+            this.pinnedByUserId = _data["pinnedByUserId"];
         }
     }
 
@@ -7613,6 +7619,9 @@ export class Note implements INote {
         data["backdatedTimestampUtc"] = this.backdatedTimestampUtc ? this.backdatedTimestampUtc.toISOString() : <any>undefined;
         data["accessLevel"] = this.accessLevel;
         data["approverId"] = this.approverId;
+        data["isPinned"] = this.isPinned;
+        data["pinnedAtUtc"] = this.pinnedAtUtc ? this.pinnedAtUtc.toISOString() : <any>undefined;
+        data["pinnedByUserId"] = this.pinnedByUserId;
         return data;
     }
 }
@@ -7628,6 +7637,9 @@ export interface INote {
     backdatedTimestampUtc?: Date | undefined;
     accessLevel?: string | undefined;
     approverId?: string | undefined;
+    isPinned: boolean;
+    pinnedAtUtc?: Date | undefined;
+    pinnedByUserId?: string | undefined;
 }
 
 export enum NoteStatus {
@@ -11520,6 +11532,16 @@ export abstract class NoteCommand implements INoteCommand {
             result.init(data);
             return result;
         }
+        if (data["discriminator"] === "PinNote") {
+            let result = new PinNote();
+            result.init(data);
+            return result;
+        }
+        if (data["discriminator"] === "UnpinNote") {
+            let result = new UnpinNote();
+            result.init(data);
+            return result;
+        }
         if (data["discriminator"] === "UpdateNoteAccessLevel") {
             let result = new UpdateNoteAccessLevel();
             result.init(data);
@@ -11694,6 +11716,62 @@ export interface IEditDraftNote extends INoteCommand {
     draftNoteContents?: string | undefined;
     backdatedTimestampUtc?: Date | undefined;
     accessLevel?: string | undefined;
+}
+
+export class PinNote extends NoteCommand implements IPinNote {
+
+    constructor(data?: IPinNote) {
+        super(data);
+        this._discriminator = "PinNote";
+    }
+
+    init(_data?: any) {
+        super.init(_data);
+    }
+
+    static fromJS(data: any): PinNote {
+        data = typeof data === 'object' ? data : {};
+        let result = new PinNote();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        super.toJSON(data);
+        return data;
+    }
+}
+
+export interface IPinNote extends INoteCommand {
+}
+
+export class UnpinNote extends NoteCommand implements IUnpinNote {
+
+    constructor(data?: IUnpinNote) {
+        super(data);
+        this._discriminator = "UnpinNote";
+    }
+
+    init(_data?: any) {
+        super.init(_data);
+    }
+
+    static fromJS(data: any): UnpinNote {
+        data = typeof data === 'object' ? data : {};
+        let result = new UnpinNote();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        super.toJSON(data);
+        return data;
+    }
+}
+
+export interface IUnpinNote extends INoteCommand {
 }
 
 export class UpdateNoteAccessLevel extends NoteCommand implements IUpdateNoteAccessLevel {

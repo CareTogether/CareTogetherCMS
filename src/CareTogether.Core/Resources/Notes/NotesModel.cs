@@ -86,7 +86,10 @@ namespace CareTogether.Resources.Notes
                     ApproverId: null,
                     ApprovedTimestampUtc: null,
                     BackdatedTimestampUtc: c.BackdatedTimestampUtc,
-                    AccessLevel: c.AccessLevel
+                    AccessLevel: c.AccessLevel,
+                    IsPinned: false,
+                    PinnedAtUtc: null,
+                    PinnedByUserId: null
                 ),
                 DiscardDraftNote c => null,
                 _ => notes.TryGetValue(command.NoteId, out var noteEntry)
@@ -120,6 +123,23 @@ namespace CareTogether.Resources.Notes
                         UpdateNoteAccessLevel _ => throw new InvalidOperationException(
                             "Just approved notes can change access levels"
                         ),
+                        PinNote _ when noteEntry.Status == NoteStatus.Approved => noteEntry with
+                        {
+                            IsPinned = true,
+                            PinnedAtUtc = timestampUtc,
+                            PinnedByUserId = userId,
+                            LastEditTimestampUtc = timestampUtc,
+                        },
+                        PinNote _ => throw new InvalidOperationException(
+                            "Only approved notes can be pinned"
+                        ),
+                        UnpinNote _ => noteEntry with
+                        {
+                            IsPinned = false,
+                            PinnedAtUtc = null,
+                            PinnedByUserId = null,
+                            LastEditTimestampUtc = timestampUtc,
+                        },
                         _ => throw new NotImplementedException(
                             $"The command type '{command.GetType().FullName}' has not been implemented."
                         ),

@@ -114,7 +114,10 @@ namespace CareTogether.Managers
                     note.Status,
                     note.BackdatedTimestampUtc,
                     note.AccessLevel,
-                    note.ApproverId
+                    note.ApproverId,
+                    note.IsPinned,
+                    note.PinnedAtUtc,
+                    note.PinnedByUserId
                 ))
                 .ToImmutableList();
 

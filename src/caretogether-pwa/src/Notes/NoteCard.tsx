@@ -7,14 +7,19 @@ import {
   Typography,
   Box,
   Collapse,
+  IconButton,
+  Tooltip,
 } from '@mui/material';
+import { alpha, useTheme } from '@mui/material/styles';
 import { useState } from 'react';
 import { Note, NoteStatus, Permission } from '../GeneratedClient';
-import { useUserLookup } from '../Model/DirectoryModel';
+import { useDirectoryModel, useUserLookup } from '../Model/DirectoryModel';
 import { PersonName } from '../Families/PersonName';
 import DeleteForeverIcon from '@mui/icons-material/DeleteForever';
 import CheckIcon from '@mui/icons-material/Check';
 import EditIcon from '@mui/icons-material/Edit';
+import PushPinIcon from '@mui/icons-material/PushPin';
+import PushPinOutlinedIcon from '@mui/icons-material/PushPinOutlined';
 import { AddEditNoteDialog } from './AddEditNoteDialog';
 import { ApproveNoteDialog } from './ApproveNoteDialog';
 import { DiscardNoteDialog } from './DiscardNoteDialog';
@@ -27,43 +32,120 @@ import { ChevronRight } from '@mui/icons-material';
 type NoteCardProps = {
   familyId: string;
   note?: Note;
+  showPinAction?: boolean;
+  isPinnedPresentation?: boolean;
 };
 
-export function NoteCard({ familyId, note }: NoteCardProps) {
+export function NoteCard({
+  familyId,
+  note,
+  showPinAction = false,
+  isPinnedPresentation = false,
+}: NoteCardProps) {
   const userLookup = useUserLookup();
+  const directoryModel = useDirectoryModel();
+  const theme = useTheme();
 
   const [showDiscardNoteDialog, setShowDiscardNoteDialog] = useState(false);
   const [showApproveNoteDialog, setShowApproveNoteDialog] = useState(false);
   const [showEditNoteDialog, setShowEditNoteDialog] = useState(false);
   const [showMoreDetails, setShowMoreDetails] = useState(false);
+  const [isSavingPin, setIsSavingPin] = useState(false);
 
   const permissions = useFamilyIdPermissions(familyId);
-
   const userId = useLoadable(accountInfoState)?.userId;
 
   const isOwnNote = note?.authorId === userId;
-
   const canEditOwnNote =
     isOwnNote && permissions(Permission.AddEditOwnDraftNotes);
-
   const canEditAnyNote = permissions(Permission.AddEditDraftNotes);
-
   const canEdit = canEditOwnNote || canEditAnyNote;
 
   const canDiscardOwnNote =
     isOwnNote && permissions(Permission.DiscardOwnDraftNotes);
   const canDiscardAnyNote = permissions(Permission.DiscardDraftNotes);
-
   const canDiscard = canDiscardOwnNote || canDiscardAnyNote;
 
-  return typeof note === 'undefined' ? null : (
-    <Card sx={{ margin: 0 }} variant="outlined">
+  const canPin = permissions(Permission.ApproveNotes);
+  const isPinned = note?.isPinned ?? false;
+
+  async function handleTogglePin(event: React.MouseEvent<HTMLButtonElement>) {
+    event.preventDefault();
+    event.stopPropagation();
+
+    if (!note || isSavingPin) return;
+
+    try {
+      setIsSavingPin(true);
+
+      if (isPinned) {
+        await directoryModel.unpinNote(familyId, note.id);
+      } else {
+        await directoryModel.pinNote(familyId, note.id);
+      }
+    } catch (error) {
+      console.error('Failed to toggle pinned state for note.', error);
+    } finally {
+      setIsSavingPin(false);
+    }
+  }
+
+  if (!note) return null;
+
+  return (
+    <Card
+      variant="outlined"
+      sx={{
+        margin: 0,
+        borderWidth: isPinnedPresentation ? 2 : 1,
+        borderColor: isPinnedPresentation
+          ? theme.palette.primary.main
+          : undefined,
+        backgroundColor: isPinnedPresentation
+          ? alpha(theme.palette.primary.main, 0.06)
+          : undefined,
+        boxShadow: isPinnedPresentation ? 2 : 0,
+      }}
+    >
       <CardHeader
-        sx={{ padding: 1 }}
+        sx={{ padding: 1, paddingBottom: 0 }}
+        action={
+          showPinAction && note.status === NoteStatus.Approved && canPin ? (
+            <Tooltip title={isPinned ? 'Unpin note' : 'Pin note'}>
+              <span>
+                <IconButton
+                  className="ph-unmask"
+                  onClick={handleTogglePin}
+                  size="small"
+                  aria-label={isPinned ? 'Unpin note' : 'Pin note'}
+                  disabled={isSavingPin}
+                >
+                  {isPinned ? (
+                    <PushPinIcon color="primary" />
+                  ) : (
+                    <PushPinOutlinedIcon />
+                  )}
+                </IconButton>
+              </span>
+            </Tooltip>
+          ) : undefined
+        }
         subheader={
           <>
-            {note.status === NoteStatus.Draft ? 'Draft note' : ''}
-            {note.status === NoteStatus.Approved ? 'Approved note' : ''} -{' '}
+            <Box
+              sx={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 1,
+                flexWrap: 'wrap',
+              }}
+            >
+              <span>
+                {note.status === NoteStatus.Draft ? 'Draft note' : ''}
+                {note.status === NoteStatus.Approved ? 'Approved note' : ''}
+              </span>
+            </Box>{' '}
+            -{' '}
             <span
               style={{
                 cursor: 'pointer',
@@ -71,7 +153,7 @@ export function NoteCard({ familyId, note }: NoteCardProps) {
                 display: 'inline-flex',
                 alignItems: 'center',
               }}
-              onClick={() => setShowMoreDetails(!showMoreDetails)}
+              onClick={() => setShowMoreDetails((current) => !current)}
             >
               {showMoreDetails ? 'hide details' : 'more details'}{' '}
               <ChevronRight
@@ -190,30 +272,29 @@ export function NoteCard({ familyId, note }: NoteCardProps) {
         )}
       </CardActions>
 
-      {(showDiscardNoteDialog && (
+      {showDiscardNoteDialog && (
         <DiscardNoteDialog
           familyId={familyId}
           note={note}
           onClose={() => setShowDiscardNoteDialog(false)}
         />
-      )) ||
-        null}
-      {(showApproveNoteDialog && (
+      )}
+
+      {showApproveNoteDialog && (
         <ApproveNoteDialog
           familyId={familyId}
           note={note}
           onClose={() => setShowApproveNoteDialog(false)}
         />
-      )) ||
-        null}
-      {(showEditNoteDialog && (
+      )}
+
+      {showEditNoteDialog && (
         <AddEditNoteDialog
           familyId={familyId}
           note={note}
           onClose={() => setShowEditNoteDialog(false)}
         />
-      )) ||
-        null}
+      )}
     </Card>
   );
 }

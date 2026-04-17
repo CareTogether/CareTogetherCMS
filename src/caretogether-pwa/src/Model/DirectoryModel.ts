@@ -52,6 +52,8 @@ import {
   ConvertChildToAdult,
   UndoCreateFamily,
   UpdateNoteAccessLevel,
+  PinNote,
+  UnpinNote,
   UpdateTestFamilyFlag,
 } from '../GeneratedClient';
 import { api } from '../Api/Api';
@@ -834,6 +836,26 @@ export function useDirectoryModel() {
     }
   );
 
+  const pinNote = useNoteCommandCallback(
+    async (familyId: string, noteId: string) => {
+      const command = commandFactory(PinNote, {
+        familyId,
+        noteId,
+      });
+      return command;
+    }
+  );
+
+  const unpinNote = useNoteCommandCallback(
+    async (familyId: string, noteId: string) => {
+      const command = commandFactory(UnpinNote, {
+        familyId,
+        noteId,
+      });
+      return command;
+    }
+  );
+
   return {
     undoCreateFamily,
     uploadFamilyDocument,
@@ -866,6 +888,8 @@ export function useDirectoryModel() {
     discardDraftNote,
     approveNote,
     updateNoteAccessLevel,
+    pinNote,
+    unpinNote,
     updateTestFamilyFlag,
   };
 }

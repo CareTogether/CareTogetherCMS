@@ -192,13 +192,70 @@ export function ActivityTimeline({
       getDateValue(a.activity.activityTimestampUtc),
   };
 
-  const sortedActivitiesWithNotes = activitiesWithEmbeddedNotes.sort(
+  const sortedActivitiesWithNotes = [...activitiesWithEmbeddedNotes].sort(
     sortStrategies[sortBy]
   );
 
-  const onlyActivitiesWithNotes = sortedActivitiesWithNotes.filter((item) =>
-    Boolean(item.note)
-  );
+  function renderVisibility(note?: Note) {
+    return (
+      <Typography>
+        Visible to{' '}
+        {note ? (
+          <Link
+            component="button"
+            type="button"
+            underline="hover"
+            onClick={() => {
+              open(note);
+            }}
+          >
+            {note.accessLevel ?? 'Everyone'}
+          </Link>
+        ) : (
+          'Everyone'
+        )}
+      </Typography>
+    );
+  }
+
+  function renderActivitySummary(activity: Activity) {
+    if (
+      activity instanceof V1CaseRequirementCompleted ||
+      activity instanceof ArrangementRequirementCompleted
+    ) {
+      return activity.requirementName;
+    }
+
+    if (activity instanceof ChildLocationChanged) {
+      return (
+        <>
+          <PersonName
+            person={arrangementPartneringPerson(activity.arrangementId)}
+          />
+          <span> &rarr; </span>
+          <PersonName
+            person={personLookup(
+              activity.childLocationFamilyId,
+              activity.childLocationReceivingAdultId
+            )}
+          />
+          <span> </span>(
+          {activity.plan === ChildLocationPlan.DaytimeChildCare
+            ? 'daytime'
+            : activity.plan === ChildLocationPlan.OvernightHousing
+              ? 'overnight'
+              : 'parent'}
+          )
+        </>
+      );
+    }
+
+    if (activity instanceof V1CaseOpened) {
+      return 'Case opened';
+    }
+
+    return null;
+  }
 
   return (
     <>
@@ -222,115 +279,121 @@ export function ActivityTimeline({
             },
           }}
         >
-          {onlyActivitiesWithNotes.map(({ activity, note }) => {
-            const arrangementId =
-              'arrangementId' in activity &&
-              typeof activity.arrangementId === 'string'
-                ? activity.arrangementId
-                : null;
+          {sortedActivitiesWithNotes
+            .filter(({ note }) => Boolean(note))
+            .map(({ activity, note }) => {
+              if (!note) return null;
 
-            const requirementName =
-              activity instanceof V1CaseRequirementCompleted ||
-              activity instanceof ArrangementRequirementCompleted
-                ? activity.requirementName
-                : null;
+              const arrangementId =
+                'arrangementId' in activity &&
+                typeof activity.arrangementId === 'string'
+                  ? activity.arrangementId
+                  : null;
 
-            const activityType = composeNoteType(activity);
+              const requirementName =
+                activity instanceof V1CaseRequirementCompleted ||
+                activity instanceof ArrangementRequirementCompleted
+                  ? activity.requirementName
+                  : null;
 
-            return (
-              <Box
-                key={activity.activityTimestampUtc?.toString()}
-                p={2}
-                border={1}
-                borderRadius={2}
-                sx={{ breakInside: 'avoid' }}
-              >
-                {note && (
-                  <>
+              const activityType = composeNoteType(activity);
+
+              return (
+                <Box
+                  key={activity.activityTimestampUtc?.toString()}
+                  p={2}
+                  border={note.isPinned ? 2 : 1}
+                  borderRadius={2}
+                  sx={{
+                    breakInside: 'avoid',
+                    borderColor: note.isPinned ? 'primary.main' : undefined,
+                    backgroundColor: note.isPinned
+                      ? 'rgba(25, 118, 210, 0.06)'
+                      : undefined,
+                  }}
+                >
+                  <Typography gutterBottom>
+                    <strong>Author: </strong>
+                    <PersonName person={userLookup(note.authorId)} /> at{' '}
+                    {note.createdTimestampUtc
+                      ? format(note.createdTimestampUtc, 'M/d/yy h:mm a')
+                      : null}
+                  </Typography>
+
+                  <Typography gutterBottom>
+                    <strong>Approver: </strong>
+                    {note.approverId ? (
+                      <>
+                        <PersonName person={userLookup(note.approverId)} /> at{' '}
+                        {note.approvedTimestampUtc
+                          ? format(note.approvedTimestampUtc, 'M/d/yy h:mm a')
+                          : null}
+                      </>
+                    ) : (
+                      'N/A'
+                    )}
+                  </Typography>
+
+                  {activityType && (
                     <Typography gutterBottom>
-                      <strong>Author: </strong>
-                      <PersonName person={userLookup(note.authorId)} /> at{' '}
-                      {note.createdTimestampUtc
-                        ? format(note.createdTimestampUtc, 'M/d/yy h:mm a')
-                        : null}
-                    </Typography>
+                      <strong>Activity type: </strong>
 
+                      {activityType}
+                    </Typography>
+                  )}
+
+                  {arrangementId && (
                     <Typography gutterBottom>
-                      <strong>Approver: </strong>
-                      {note.approverId ? (
-                        <>
-                          <PersonName person={userLookup(note.approverId)} /> at{' '}
-                          {note.approvedTimestampUtc
-                            ? format(note.approvedTimestampUtc, 'M/d/yy h:mm a')
-                            : null}
-                        </>
-                      ) : (
-                        'N/A'
-                      )}
+                      <strong>Partnering person: </strong>
+
+                      <PersonName
+                        person={arrangementPartneringPerson(arrangementId)}
+                      />
                     </Typography>
+                  )}
 
-                    {activityType && (
-                      <Typography gutterBottom>
-                        <strong>Activity type: </strong>
-
-                        {activityType}
-                      </Typography>
-                    )}
-
-                    {arrangementId && (
-                      <Typography gutterBottom>
-                        <strong>Partnering person: </strong>
-
-                        <PersonName
-                          person={arrangementPartneringPerson(arrangementId)}
-                        />
-                      </Typography>
-                    )}
-
-                    {requirementName && (
-                      <Typography gutterBottom>
-                        <strong>Requirement name: </strong> {requirementName}
-                      </Typography>
-                    )}
-
-                    {activity instanceof ChildLocationChanged && (
-                      <Typography gutterBottom>
-                        <strong>Location changed to: </strong>
-                        <PersonName
-                          person={personLookup(
-                            activity.childLocationFamilyId,
-                            activity.childLocationReceivingAdultId
-                          )}
-                        />{' '}
-                        (
-                        {activity.plan === ChildLocationPlan.DaytimeChildCare
-                          ? 'daytime'
-                          : activity.plan === ChildLocationPlan.OvernightHousing
-                            ? 'overnight'
-                            : 'parent'}
-                        )
-                      </Typography>
-                    )}
-
-                    {activity.uploadedDocumentId && (
-                      <Typography gutterBottom>
-                        <strong>Document: </strong>
-                        {
-                          documentLookup(activity.uploadedDocumentId)
-                            ?.uploadedFileName
-                        }
-                      </Typography>
-                    )}
-
+                  {requirementName && (
                     <Typography gutterBottom>
-                      <strong>Note: </strong>
-                      <em>{note.contents}</em>
+                      <strong>Requirement name: </strong> {requirementName}
                     </Typography>
-                  </>
-                )}
-              </Box>
-            );
-          })}
+                  )}
+
+                  {activity instanceof ChildLocationChanged && (
+                    <Typography gutterBottom>
+                      <strong>Location changed to: </strong>
+                      <PersonName
+                        person={personLookup(
+                          activity.childLocationFamilyId,
+                          activity.childLocationReceivingAdultId
+                        )}
+                      />{' '}
+                      (
+                      {activity.plan === ChildLocationPlan.DaytimeChildCare
+                        ? 'daytime'
+                        : activity.plan === ChildLocationPlan.OvernightHousing
+                          ? 'overnight'
+                          : 'parent'}
+                      )
+                    </Typography>
+                  )}
+
+                  {activity.uploadedDocumentId && (
+                    <Typography gutterBottom>
+                      <strong>Document: </strong>
+                      {
+                        documentLookup(activity.uploadedDocumentId)
+                          ?.uploadedFileName
+                      }
+                    </Typography>
+                  )}
+
+                  <Typography gutterBottom>
+                    <strong>Note: </strong>
+                    <em>{note.contents}</em>
+                  </Typography>
+                </Box>
+              );
+            })}
         </Stack>
       </div>
 
@@ -351,101 +414,89 @@ export function ActivityTimeline({
           </FormControl>
         </Box>
 
-        {sortedActivitiesWithNotes?.map(({ activity, note }, i) => (
-          <TimelineItem key={i}>
-            <TimelineOppositeContent sx={{ display: 'none' }} />
-            <TimelineSeparator>
-              <TimelineDot
-                sx={{
-                  width: 36,
-                  height: 36,
-                  textAlign: 'center',
-                  display: 'block',
+        {sortedActivitiesWithNotes.map(({ activity, note }, i) => {
+          const previousItem = i > 0 ? sortedActivitiesWithNotes[i - 1] : null;
+          const nextItem =
+            i < sortedActivitiesWithNotes.length - 1
+              ? sortedActivitiesWithNotes[i + 1]
+              : null;
+
+          const hideTopConnector =
+            note?.isPinned || previousItem?.note?.isPinned;
+          const hideBottomConnector =
+            note?.isPinned || nextItem?.note?.isPinned;
+
+          return (
+            <TimelineItem key={i}>
+              <TimelineOppositeContent sx={{ display: 'none' }} />
+              <TimelineSeparator>
+                {!hideTopConnector && i > 0 && (
+                  <TimelineConnector sx={{ visibility: 'hidden' }} />
+                )}
+                <TimelineDot
+                  sx={{
+                    width: 36,
+                    height: 36,
+                    textAlign: 'center',
+                    display: 'block',
+                  }}
+                >
+                  {activity instanceof V1CaseRequirementCompleted ||
+                  activity instanceof ArrangementRequirementCompleted ? (
+                    '✔'
+                  ) : activity instanceof ChildLocationChanged ? (
+                    <PersonPinCircleIcon fontSize="medium" />
+                  ) : (
+                    <EditIcon fontSize="small" />
+                  )}
+                </TimelineDot>
+                {!hideBottomConnector &&
+                  i < sortedActivitiesWithNotes.length - 1 && (
+                    <TimelineConnector />
+                  )}
+              </TimelineSeparator>
+              <TimelineContent
+                style={{
+                  width: 200,
+                  wordWrap: 'break-word',
+                  whiteSpace: 'pre-wrap',
                 }}
               >
-                {activity instanceof V1CaseRequirementCompleted ||
-                activity instanceof ArrangementRequirementCompleted ? (
-                  '✔'
-                ) : activity instanceof ChildLocationChanged ? (
-                  <PersonPinCircleIcon fontSize="medium" />
-                ) : (
-                  <EditIcon fontSize="small" />
-                )}
-              </TimelineDot>
-              {i < allActivitiesSorted.length - 1 && <TimelineConnector />}
-            </TimelineSeparator>
-            <TimelineContent
-              style={{
-                width: 200,
-                wordWrap: 'break-word',
-                whiteSpace: 'pre-wrap',
-              }}
-            >
-              <Box sx={{ color: 'text.disabled', margin: 0, padding: 0 }}>
-                <span className="ph-unmask" style={{ marginRight: 16 }}>
-                  {activity.activityTimestampUtc
-                    ? format(activity.activityTimestampUtc, 'M/d/yy h:mm a')
-                    : null}
-                </span>
-                <PersonName person={userLookup(activity.userId)} />
-              </Box>
-              {activity instanceof V1CaseRequirementCompleted ||
-              activity instanceof ArrangementRequirementCompleted ? (
-                activity.requirementName
-              ) : activity instanceof ChildLocationChanged ? (
-                <>
-                  <PersonName
-                    person={arrangementPartneringPerson(activity.arrangementId)}
-                  />
-                  <span> &rarr; </span>
-                  <PersonName
-                    person={personLookup(
-                      activity.childLocationFamilyId,
-                      activity.childLocationReceivingAdultId
-                    )}
-                  />
-                  <span> </span>(
-                  {activity.plan === ChildLocationPlan.DaytimeChildCare
-                    ? 'daytime'
-                    : activity.plan === ChildLocationPlan.OvernightHousing
-                      ? 'overnight'
-                      : 'parent'}
-                  )
-                </>
-              ) : activity instanceof V1CaseOpened ? (
-                'Case opened'
-              ) : null}
-              {activity.uploadedDocumentId && (
-                <Box sx={{ margin: 0, padding: 0 }}>
-                  📃{' '}
-                  {
-                    documentLookup(activity.uploadedDocumentId)
-                      ?.uploadedFileName
-                  }
+                <Box sx={{ color: 'text.disabled', margin: 0, padding: 0 }}>
+                  <span className="ph-unmask" style={{ marginRight: 16 }}>
+                    {activity.activityTimestampUtc
+                      ? format(activity.activityTimestampUtc, 'M/d/yy h:mm a')
+                      : null}
+                  </span>
+                  <PersonName person={userLookup(activity.userId)} />
                 </Box>
-              )}
 
-              <Typography>
-                Visible to{' '}
-                {note ? (
-                  <Link
-                    component="button"
-                    type="button"
-                    underline="hover"
-                    onClick={() => {
-                      open(note);
-                    }}
-                  >
-                    {note.accessLevel ?? 'Everyone'}
-                  </Link>
-                ) : (
-                  'Everyone'
+                {renderActivitySummary(activity)}
+
+                {activity.uploadedDocumentId && (
+                  <Box sx={{ margin: 0, padding: 0 }}>
+                    📃{' '}
+                    {
+                      documentLookup(activity.uploadedDocumentId)
+                        ?.uploadedFileName
+                    }
+                  </Box>
                 )}
-              </Typography>
-              {note && <NoteCard familyId={family.family!.id!} note={note} />}
-            </TimelineContent>
-          </TimelineItem>
-        ))}
+
+                {renderVisibility(note)}
+
+                {note && (
+                  <NoteCard
+                    familyId={family.family!.id!}
+                    note={note}
+                    showPinAction={true}
+                    isPinnedPresentation={note.isPinned}
+                  />
+                )}
+              </TimelineContent>
+            </TimelineItem>
+          );
+        })}
 
         {noteAccessLevelDialog}
       </Timeline>
