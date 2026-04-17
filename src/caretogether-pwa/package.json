@@ -26,7 +26,7 @@
     "date-fns": "^3.6.0",
     "dexie": "^3.2.7",
     "dexie-react-hooks": "^1.1.7",
-    "posthog-js": "^1.260.1",
+    "posthog-js": "^1.369.2",
     "powerbi-client-react": "^2.0.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
@@ -45,14 +45,14 @@
     "@types/react-lazyload": "^3.2.3",
     "@typescript-eslint/eslint-plugin": "^7.16.0",
     "@typescript-eslint/parser": "^7.16.0",
-    "@vitejs/plugin-react-swc": "^3.7.0",
+    "@vitejs/plugin-react-swc": "^4.3.0",
     "eslint": "^8.57.0",
     "eslint-config-prettier": "^9.1.0",
     "eslint-plugin-react-hooks": "^4.6.2",
     "eslint-plugin-react-refresh": "^0.4.8",
     "prettier": "3.3.3",
-    "typescript": "^5.5.3",
-    "vite": "^5.3.3"
+    "typescript": "^6.0.3",
+    "vite": "^8.0.8"
   },
   "scripts": {
     "dev": "vite",
