@@ -14,6 +14,7 @@ import { commandFactory } from './CommandFactory';
 
 export function useV1ReferralNotesModel() {
   const setVisibleAggregates = useSetRecoilState(visibleAggregatesState);
+
   const submitReferralNoteCommand = useRecoilCallback(
     ({ snapshot }) =>
       async (command: V1ReferralNoteCommand): Promise<void> => {
@@ -24,13 +25,18 @@ export function useV1ReferralNotesModel() {
         const wrapper = new V1ReferralNoteRecordsCommand();
         wrapper.command = command;
 
-        const updatedAggregates = await api.records.submitAtomicRecordsCommand(
+        await api.records.submitAtomicRecordsCommand(
           organizationId,
           locationId,
           wrapper
         );
 
-        setVisibleAggregates(updatedAggregates);
+        const allVisibleAggregates = await api.records.listVisibleAggregates(
+          organizationId,
+          locationId
+        );
+
+        setVisibleAggregates(allVisibleAggregates);
       },
     [setVisibleAggregates]
   );
