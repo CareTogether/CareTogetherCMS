@@ -235,7 +235,7 @@ namespace CareTogether.Engines.Authorization
                 command.NoteId
             );
 
-            var noteBelongsToUser = noteEntry?.AuthorId == userContext.User.UserId();
+            var noteBelongsToUser = noteEntry?.AuthorUserId == userContext.User.UserId();
 
             var allowedPerAccessLevel = await CheckAccessLevel(
                 noteEntry?.AccessLevel,
@@ -1162,11 +1162,17 @@ namespace CareTogether.Engines.Authorization
             ClaimsPrincipal user
         )
         {
-            var authorAccount = await accountsResource.TryGetUserAccountAsync(note.AuthorId);
-            var authorPersonId = authorAccount
-                ?.Organizations.SingleOrDefault(org => org.OrganizationId == organizationId)
-                ?.Locations.SingleOrDefault(loc => loc.LocationId == locationId)
-                ?.PersonId;
+            var authorPersonId = note.AuthorPersonId;
+            if (authorPersonId == null && note.AuthorUserId != null)
+            {
+                var authorAccount = await accountsResource.TryGetUserAccountAsync(
+                    note.AuthorUserId.Value
+                );
+                authorPersonId = authorAccount
+                    ?.Organizations.SingleOrDefault(org => org.OrganizationId == organizationId)
+                    ?.Locations.SingleOrDefault(loc => loc.LocationId == locationId)
+                    ?.PersonId;
+            }
 
             // If the user is the author, allow
             if (userPersonId != null && authorPersonId == userPersonId)

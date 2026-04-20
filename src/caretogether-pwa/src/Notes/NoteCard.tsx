@@ -13,7 +13,11 @@ import {
 import { alpha, useTheme } from '@mui/material/styles';
 import { useState } from 'react';
 import { Note, NoteStatus, Permission } from '../GeneratedClient';
-import { useDirectoryModel, useUserLookup } from '../Model/DirectoryModel';
+import {
+  useDirectoryModel,
+  useNoteAuthorLookup,
+  useUserLookup,
+} from '../Model/DirectoryModel';
 import { PersonName } from '../Families/PersonName';
 import DeleteForeverIcon from '@mui/icons-material/DeleteForever';
 import CheckIcon from '@mui/icons-material/Check';
@@ -43,6 +47,7 @@ export function NoteCard({
   isPinnedPresentation = false,
 }: NoteCardProps) {
   const userLookup = useUserLookup();
+  const noteAuthorLookup = useNoteAuthorLookup();
   const directoryModel = useDirectoryModel();
   const theme = useTheme();
 
@@ -55,7 +60,7 @@ export function NoteCard({
   const permissions = useFamilyIdPermissions(familyId);
   const userId = useLoadable(accountInfoState)?.userId;
 
-  const isOwnNote = note?.authorId === userId;
+  const isOwnNote = note?.authorUserId === userId;
   const canEditOwnNote =
     isOwnNote && permissions(Permission.AddEditOwnDraftNotes);
   const canEditAnyNote = permissions(Permission.AddEditDraftNotes);
@@ -189,7 +194,7 @@ export function NoteCard({
           >
             <Typography variant="caption">
               <>
-                Author: <PersonName person={userLookup(note.authorId)} />
+                Author: <PersonName person={noteAuthorLookup(note)} />
                 <br />
                 Created at:{' '}
                 {note.createdTimestampUtc

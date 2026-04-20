@@ -59,7 +59,8 @@ function RedeemPersonInvite() {
   useEffect(() => {
     if (
       inviteReviewInfo.state === 'hasError' ||
-      ('hasValue' && inviteReviewInfo.contents == null)
+      (inviteReviewInfo.state === 'hasValue' &&
+        inviteReviewInfo.contents == null)
     ) {
       // If the invite review info is available but the contents are null, then the invite
       // has already been redeemed.

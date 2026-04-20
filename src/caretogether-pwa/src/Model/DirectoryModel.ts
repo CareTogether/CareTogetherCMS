@@ -36,6 +36,7 @@ import {
   UpdatePersonGender,
   UpdatePersonAge,
   UpdatePersonEthnicity,
+  Note,
   UpdateAdultRelationshipToFamily,
   CustodialRelationshipType,
   UpdateCustodialRelationshipType,
@@ -55,6 +56,7 @@ import {
   PinNote,
   UnpinNote,
   UpdateTestFamilyFlag,
+  Person,
 } from '../GeneratedClient';
 import { api } from '../Api/Api';
 import {
@@ -64,6 +66,37 @@ import {
   visibleFamiliesQuery,
 } from './Data';
 import { commandFactory } from './CommandFactory';
+import { SYSTEM_USER_ID } from '../constants';
+import posthog from 'posthog-js';
+
+const systemPerson = Person.fromJS({
+  id: SYSTEM_USER_ID,
+  active: true,
+  firstName: 'SYSTEM',
+  lastName: '',
+  addresses: [],
+  phoneNumbers: [],
+  emailAddresses: [],
+});
+
+const isSystemUserId = (id?: string) => id?.toLowerCase() === SYSTEM_USER_ID;
+const noteAuthorLookupErrorsTracked = new Set<string>();
+
+function trackNoteAuthorLookupError(note: Note, reason: string) {
+  const eventKey = `${note.id ?? 'unknown'}:${reason}:${note.authorPersonId ?? 'none'}:${note.authorUserId ?? 'none'}`;
+  if (noteAuthorLookupErrorsTracked.has(eventKey)) {
+    return;
+  }
+
+  noteAuthorLookupErrorsTracked.add(eventKey);
+  posthog.captureException(new Error('Unable to resolve note author'), {
+    reason,
+    noteId: note.id,
+    noteStatus: note.status,
+    noteAuthorPersonId: note.authorPersonId,
+    noteAuthorUserId: note.authorUserId,
+  });
+}
 
 export function usePersonLookup() {
   const visibleFamilies = useRecoilValue(visibleFamiliesQuery);
@@ -105,6 +138,10 @@ export function useUserLookup() {
   const visibleFamilies = useRecoilValue(visibleFamiliesQuery);
 
   return (userId?: string) => {
+    if (isSystemUserId(userId)) {
+      return systemPerson;
+    }
+
     const userFamily = visibleFamilies.filter((family) =>
       family.users?.find((user) => user.userId === userId)
     );
@@ -120,6 +157,39 @@ export function useUserLookup() {
     } else {
       return undefined;
     }
+  };
+}
+
+export function useNoteAuthorLookup() {
+  const personAndFamilyLookup = usePersonAndFamilyLookup();
+  const userLookup = useUserLookup();
+
+  return (note?: Note) => {
+    if (!note) return undefined;
+    if (!note.authorPersonId) {
+      const userAuthor = userLookup(note.authorUserId);
+      if (!userAuthor) {
+        trackNoteAuthorLookupError(note, 'missing-author-with-user-id-only');
+      }
+      return userAuthor;
+    }
+
+    if (isSystemUserId(note.authorPersonId)) return systemPerson;
+
+    const personAuthor = personAndFamilyLookup(note.authorPersonId).person;
+    if (personAuthor) return personAuthor;
+
+    const userAuthor = userLookup(note.authorUserId);
+    if (userAuthor) {
+      trackNoteAuthorLookupError(
+        note,
+        'missing-author-person-fell-back-to-user-id'
+      );
+      return userAuthor;
+    }
+
+    trackNoteAuthorLookupError(note, 'missing-author-for-person-and-user-id');
+    return undefined;
   };
 }
 

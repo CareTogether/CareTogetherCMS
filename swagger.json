@@ -4714,7 +4714,6 @@
         "additionalProperties": false,
         "required": [
           "id",
-          "authorId",
           "lastEditTimestampUtc",
           "status",
           "isPinned"
@@ -4724,9 +4723,15 @@
             "type": "string",
             "format": "guid"
           },
-          "authorId": {
+          "authorUserId": {
             "type": "string",
-            "format": "guid"
+            "format": "guid",
+            "nullable": true
+          },
+          "authorPersonId": {
+            "type": "string",
+            "format": "guid",
+            "nullable": true
           },
           "createdTimestampUtc": {
             "type": "string",
@@ -7183,6 +7188,11 @@
               },
               "accessLevel": {
                 "type": "string",
+                "nullable": true
+              },
+              "authorPersonId": {
+                "type": "string",
+                "format": "guid",
                 "nullable": true
               }
             }

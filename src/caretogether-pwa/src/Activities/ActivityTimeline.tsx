@@ -20,7 +20,11 @@ import {
 } from '../GeneratedClient';
 import PersonPinCircleIcon from '@mui/icons-material/PersonPinCircle';
 import EditIcon from '@mui/icons-material/Edit';
-import { usePersonLookup, useUserLookup } from '../Model/DirectoryModel';
+import {
+  useNoteAuthorLookup,
+  usePersonLookup,
+  useUserLookup,
+} from '../Model/DirectoryModel';
 import { PersonName } from '../Families/PersonName';
 import { Box, Stack, Typography, Link } from '@mui/material';
 import { NoteCard } from '../Notes/NoteCard';
@@ -85,6 +89,7 @@ export function ActivityTimeline({
 }: ActivityTimelineProps) {
   const userLookup = useUserLookup();
   const personLookup = usePersonLookup();
+  const noteAuthorLookup = useNoteAuthorLookup();
 
   const activities = (
     family.partneringFamilyInfo?.history?.slice() || []
@@ -96,7 +101,7 @@ export function ActivityTimeline({
       ?.map(
         (note) =>
           ({
-            userId: note.authorId,
+            userId: note.authorUserId ?? '',
             activityTimestampUtc:
               note.backdatedTimestampUtc ??
               note.createdTimestampUtc ??
@@ -211,7 +216,7 @@ export function ActivityTimeline({
   const displayActivitiesWithNotes = [
     ...pinnedActivitiesWithNotes,
     ...unpinnedActivitiesWithNotes,
-  ];
+  ].filter((item) => Boolean(item.note));
 
   function renderVisibility(note?: Note) {
     return (
@@ -296,121 +301,119 @@ export function ActivityTimeline({
             },
           }}
         >
-          {displayActivitiesWithNotes
-            .filter(({ note }) => Boolean(note))
-            .map(({ activity, note }) => {
-              if (!note) return null;
+          {displayActivitiesWithNotes.map(({ activity, note }) => {
+            if (!note) return null;
 
-              const arrangementId =
-                'arrangementId' in activity &&
-                typeof activity.arrangementId === 'string'
-                  ? activity.arrangementId
-                  : null;
+            const arrangementId =
+              'arrangementId' in activity &&
+              typeof activity.arrangementId === 'string'
+                ? activity.arrangementId
+                : null;
 
-              const requirementName =
-                activity instanceof V1CaseRequirementCompleted ||
-                activity instanceof ArrangementRequirementCompleted
-                  ? activity.requirementName
-                  : null;
+            const requirementName =
+              activity instanceof V1CaseRequirementCompleted ||
+              activity instanceof ArrangementRequirementCompleted
+                ? activity.requirementName
+                : null;
 
-              const activityType = composeNoteType(activity);
+            const activityType = composeNoteType(activity);
 
-              return (
-                <Box
-                  key={activity.activityTimestampUtc?.toString()}
-                  p={2}
-                  border={note.isPinned ? 2 : 1}
-                  borderRadius={2}
-                  sx={{
-                    breakInside: 'avoid',
-                    borderColor: note.isPinned ? 'primary.main' : undefined,
-                    backgroundColor: note.isPinned
-                      ? 'rgba(25, 118, 210, 0.06)'
-                      : undefined,
-                  }}
-                >
+            return (
+              <Box
+                key={activity.activityTimestampUtc?.toString()}
+                p={2}
+                border={note.isPinned ? 2 : 1}
+                borderRadius={2}
+                sx={{
+                  breakInside: 'avoid',
+                  borderColor: note.isPinned ? 'primary.main' : undefined,
+                  backgroundColor: note.isPinned
+                    ? 'rgba(25, 118, 210, 0.06)'
+                    : undefined,
+                }}
+              >
+                <Typography gutterBottom>
+                  <strong>Author: </strong>
+                  <PersonName person={noteAuthorLookup(note)} /> at{' '}
+                  {note.createdTimestampUtc
+                    ? format(note.createdTimestampUtc, 'M/d/yy h:mm a')
+                    : null}
+                </Typography>
+
+                <Typography gutterBottom>
+                  <strong>Approver: </strong>
+                  {note.approverId ? (
+                    <>
+                      <PersonName person={userLookup(note.approverId)} /> at{' '}
+                      {note.approvedTimestampUtc
+                        ? format(note.approvedTimestampUtc, 'M/d/yy h:mm a')
+                        : null}
+                    </>
+                  ) : (
+                    'N/A'
+                  )}
+                </Typography>
+
+                {activityType && (
                   <Typography gutterBottom>
-                    <strong>Author: </strong>
-                    <PersonName person={userLookup(note.authorId)} /> at{' '}
-                    {note.createdTimestampUtc
-                      ? format(note.createdTimestampUtc, 'M/d/yy h:mm a')
-                      : null}
-                  </Typography>
+                    <strong>Activity type: </strong>
 
+                    {activityType}
+                  </Typography>
+                )}
+
+                {arrangementId && (
                   <Typography gutterBottom>
-                    <strong>Approver: </strong>
-                    {note.approverId ? (
-                      <>
-                        <PersonName person={userLookup(note.approverId)} /> at{' '}
-                        {note.approvedTimestampUtc
-                          ? format(note.approvedTimestampUtc, 'M/d/yy h:mm a')
-                          : null}
-                      </>
-                    ) : (
-                      'N/A'
-                    )}
+                    <strong>Partnering person: </strong>
+
+                    <PersonName
+                      person={arrangementPartneringPerson(arrangementId)}
+                    />
                   </Typography>
+                )}
 
-                  {activityType && (
-                    <Typography gutterBottom>
-                      <strong>Activity type: </strong>
-
-                      {activityType}
-                    </Typography>
-                  )}
-
-                  {arrangementId && (
-                    <Typography gutterBottom>
-                      <strong>Partnering person: </strong>
-
-                      <PersonName
-                        person={arrangementPartneringPerson(arrangementId)}
-                      />
-                    </Typography>
-                  )}
-
-                  {requirementName && (
-                    <Typography gutterBottom>
-                      <strong>Requirement name: </strong> {requirementName}
-                    </Typography>
-                  )}
-
-                  {activity instanceof ChildLocationChanged && (
-                    <Typography gutterBottom>
-                      <strong>Location changed to: </strong>
-                      <PersonName
-                        person={personLookup(
-                          activity.childLocationFamilyId,
-                          activity.childLocationReceivingAdultId
-                        )}
-                      />{' '}
-                      (
-                      {activity.plan === ChildLocationPlan.DaytimeChildCare
-                        ? 'daytime'
-                        : activity.plan === ChildLocationPlan.OvernightHousing
-                          ? 'overnight'
-                          : 'parent'}
-                      )
-                    </Typography>
-                  )}
-
-                  {activity.uploadedDocumentId && (
-                    <Typography gutterBottom>
-                      <strong>Document: </strong>
-                      {
-                        documentLookup(activity.uploadedDocumentId)
-                          ?.uploadedFileName
-                      }
-                    </Typography>
-                  )}
-
+                {requirementName && (
                   <Typography gutterBottom>
-                    <strong>Note: </strong>
-                    <em>{note.contents}</em>
+                    <strong>Requirement name: </strong> {requirementName}
                   </Typography>
-                </Box>
-              );
-            })}
+                )}
+
+                {activity instanceof ChildLocationChanged && (
+                  <Typography gutterBottom>
+                    <strong>Location changed to: </strong>
+                    <PersonName
+                      person={personLookup(
+                        activity.childLocationFamilyId,
+                        activity.childLocationReceivingAdultId
+                      )}
+                    />{' '}
+                    (
+                    {activity.plan === ChildLocationPlan.DaytimeChildCare
+                      ? 'daytime'
+                      : activity.plan === ChildLocationPlan.OvernightHousing
+                        ? 'overnight'
+                        : 'parent'}
+                    )
+                  </Typography>
+                )}
+
+                {activity.uploadedDocumentId && (
+                  <Typography gutterBottom>
+                    <strong>Document: </strong>
+                    {
+                      documentLookup(activity.uploadedDocumentId)
+                        ?.uploadedFileName
+                    }
+                  </Typography>
+                )}
+
+                <Typography gutterBottom>
+                  <strong>Note: </strong>
+                  <em>{note.contents}</em>
+                </Typography>
+              </Box>
+            );
+          })}
         </Stack>
       </div>
 
@@ -432,16 +435,18 @@ export function ActivityTimeline({
         </Box>
 
         {displayActivitiesWithNotes.map(({ activity, note }, i) => {
+          if (!note) return null;
+
           const nextItem =
             i < displayActivitiesWithNotes.length - 1
               ? displayActivitiesWithNotes[i + 1]
               : null;
 
           const hideBottomConnector =
-            Boolean(note?.isPinned) || Boolean(nextItem?.note?.isPinned);
+            note.isPinned || Boolean(nextItem?.note?.isPinned);
 
           return (
-            <TimelineItem key={i}>
+            <TimelineItem key={note.id}>
               <TimelineOppositeContent sx={{ display: 'none' }} />
               <TimelineSeparator>
                 <TimelineDot
@@ -496,14 +501,12 @@ export function ActivityTimeline({
 
                 {renderVisibility(note)}
 
-                {note && (
-                  <NoteCard
-                    familyId={family.family!.id!}
-                    note={note}
-                    showPinAction={true}
-                    isPinnedPresentation={note.isPinned}
-                  />
-                )}
+                <NoteCard
+                  familyId={family.family!.id!}
+                  note={note}
+                  showPinAction={true}
+                  isPinnedPresentation={note.isPinned}
+                />
               </TimelineContent>
             </TimelineItem>
           );
