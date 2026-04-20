@@ -196,6 +196,23 @@ export function ActivityTimeline({
     sortStrategies[sortBy]
   );
 
+  const pinnedActivitiesWithNotes = sortedActivitiesWithNotes
+    .filter((item) => item.note?.isPinned)
+    .sort(
+      (a, b) =>
+        getDateValue(b.note?.pinnedAtUtc ?? b.activity.activityTimestampUtc) -
+        getDateValue(a.note?.pinnedAtUtc ?? a.activity.activityTimestampUtc)
+    );
+
+  const unpinnedActivitiesWithNotes = sortedActivitiesWithNotes.filter(
+    (item) => !item.note?.isPinned
+  );
+
+  const displayActivitiesWithNotes = [
+    ...pinnedActivitiesWithNotes,
+    ...unpinnedActivitiesWithNotes,
+  ];
+
   function renderVisibility(note?: Note) {
     return (
       <Typography>
@@ -279,7 +296,7 @@ export function ActivityTimeline({
             },
           }}
         >
-          {sortedActivitiesWithNotes
+          {displayActivitiesWithNotes
             .filter(({ note }) => Boolean(note))
             .map(({ activity, note }) => {
               if (!note) return null;
@@ -414,25 +431,19 @@ export function ActivityTimeline({
           </FormControl>
         </Box>
 
-        {sortedActivitiesWithNotes.map(({ activity, note }, i) => {
-          const previousItem = i > 0 ? sortedActivitiesWithNotes[i - 1] : null;
+        {displayActivitiesWithNotes.map(({ activity, note }, i) => {
           const nextItem =
-            i < sortedActivitiesWithNotes.length - 1
-              ? sortedActivitiesWithNotes[i + 1]
+            i < displayActivitiesWithNotes.length - 1
+              ? displayActivitiesWithNotes[i + 1]
               : null;
 
-          const hideTopConnector =
-            note?.isPinned || previousItem?.note?.isPinned;
           const hideBottomConnector =
-            note?.isPinned || nextItem?.note?.isPinned;
+            Boolean(note?.isPinned) || Boolean(nextItem?.note?.isPinned);
 
           return (
             <TimelineItem key={i}>
               <TimelineOppositeContent sx={{ display: 'none' }} />
               <TimelineSeparator>
-                {!hideTopConnector && i > 0 && (
-                  <TimelineConnector sx={{ visibility: 'hidden' }} />
-                )}
                 <TimelineDot
                   sx={{
                     width: 36,
@@ -451,7 +462,7 @@ export function ActivityTimeline({
                   )}
                 </TimelineDot>
                 {!hideBottomConnector &&
-                  i < sortedActivitiesWithNotes.length - 1 && (
+                  i < displayActivitiesWithNotes.length - 1 && (
                     <TimelineConnector />
                   )}
               </TimelineSeparator>
