@@ -3,6 +3,7 @@ import {
   OrganizationConfiguration,
   RequirementStage,
   VolunteerFamilyRequirementScope,
+  EffectiveLocationPolicy,
 } from '../GeneratedClient';
 import { useLoadable } from '../Hooks/useLoadable';
 import { api } from '../Api/Api';
@@ -12,6 +13,12 @@ import { selectedLocationContextState } from './Data';
 export const organizationConfigurationEdited =
   atom<OrganizationConfiguration | null>({
     key: 'organizationConfigurationEdited',
+    default: null,
+  });
+
+export const effectiveLocationPolicyEdited =
+  atom<EffectiveLocationPolicy | null>({
+    key: 'effectiveLocationPolicyEdited',
     default: null,
   });
 
@@ -70,12 +77,13 @@ export const adultFamilyRelationshipsData = selector({
 export const policyData = selector({
   key: 'policyData',
   get: async ({ get }) => {
+    const edited = get(effectiveLocationPolicyEdited);
+    if (edited) return edited;
     const { organizationId, locationId } = get(selectedLocationContextState);
-    const dataResponse = await api.configuration.getEffectiveLocationPolicy(
+    return await api.configuration.getEffectiveLocationPolicy(
       organizationId,
       locationId
     );
-    return dataResponse;
   },
 });
 
