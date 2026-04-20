@@ -100,7 +100,11 @@ function VolunteerApprovalTableRows(props: VolunteerApprovalTableItemProps) {
     roleFilters,
     updateTestFamilyFlagEnabled,
   } = props;
-  const familyId = volunteerFamily.family?.id!;
+  if (!volunteerFamily.family?.id) {
+    return null;
+  }
+
+  const familyId = volunteerFamily.family.id;
   const activeAdults =
     volunteerFamily.family?.adults?.filter(
       (adult) => adult.item1 && adult.item1.active

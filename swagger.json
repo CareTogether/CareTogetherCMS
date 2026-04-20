@@ -4715,7 +4715,8 @@
         "required": [
           "id",
           "lastEditTimestampUtc",
-          "status"
+          "status",
+          "isPinned"
         ],
         "properties": {
           "id": {
@@ -4763,6 +4764,19 @@
             "nullable": true
           },
           "approverId": {
+            "type": "string",
+            "format": "guid",
+            "nullable": true
+          },
+          "isPinned": {
+            "type": "boolean"
+          },
+          "pinnedAtUtc": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "pinnedByUserId": {
             "type": "string",
             "format": "guid",
             "nullable": true
@@ -7100,6 +7114,8 @@
             "CreateDraftNote": "#/components/schemas/CreateDraftNote",
             "DiscardDraftNote": "#/components/schemas/DiscardDraftNote",
             "EditDraftNote": "#/components/schemas/EditDraftNote",
+            "PinNote": "#/components/schemas/PinNote",
+            "UnpinNote": "#/components/schemas/UnpinNote",
             "UpdateNoteAccessLevel": "#/components/schemas/UpdateNoteAccessLevel"
           }
         },
@@ -7217,6 +7233,28 @@
                 "nullable": true
               }
             }
+          }
+        ]
+      },
+      "PinNote": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/NoteCommand"
+          },
+          {
+            "type": "object",
+            "additionalProperties": false
+          }
+        ]
+      },
+      "UnpinNote": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/NoteCommand"
+          },
+          {
+            "type": "object",
+            "additionalProperties": false
           }
         ]
       },

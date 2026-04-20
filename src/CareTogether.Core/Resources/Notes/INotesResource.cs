@@ -17,7 +17,10 @@ namespace CareTogether.Resources.Notes
         Guid? ApproverId,
         DateTime? ApprovedTimestampUtc,
         DateTime? BackdatedTimestampUtc,
-        string? AccessLevel 
+        string? AccessLevel,
+        bool IsPinned,
+        DateTime? PinnedAtUtc,
+        Guid? PinnedByUserId
     );
 
     public enum NoteStatus
@@ -62,6 +65,10 @@ namespace CareTogether.Resources.Notes
         Guid NoteId,
         string? AccessLevel = null
     ) : NoteCommand(FamilyId, NoteId);
+
+    public sealed record PinNote(Guid FamilyId, Guid NoteId) : NoteCommand(FamilyId, NoteId);
+
+    public sealed record UnpinNote(Guid FamilyId, Guid NoteId) : NoteCommand(FamilyId, NoteId);
 
     /// <summary>
     /// The <see cref="INotesResource"/> models the lifecycle of record-keeping notes in CareTogether organizations,

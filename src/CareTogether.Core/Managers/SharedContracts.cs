@@ -79,7 +79,10 @@ namespace CareTogether.Managers
         NoteStatus Status,
         DateTime? BackdatedTimestampUtc,
         string? AccessLevel,
-        Guid? ApproverId
+        Guid? ApproverId,
+        bool IsPinned,
+        DateTime? PinnedAtUtc,
+        Guid? PinnedByUserId
     );
 
     public sealed record VolunteerFamilyInfo(
@@ -87,7 +90,10 @@ namespace CareTogether.Managers
         ImmutableList<Resources.CompletedRequirementInfo> CompletedRequirements,
         ImmutableList<Resources.ExemptedRequirementInfo> ExemptedRequirements,
         ImmutableList<string> AvailableApplications,
-        ImmutableList<(string ActionName, (string Version, string RoleName)[] Versions)> MissingRequirements,
+        ImmutableList<(
+            string ActionName,
+            (string Version, string RoleName)[] Versions
+        )> MissingRequirements,
         ImmutableList<RoleRemoval> RoleRemovals,
         ImmutableDictionary<Guid, VolunteerInfo> IndividualVolunteers,
         ImmutableList<Activity> History,
@@ -99,7 +105,10 @@ namespace CareTogether.Managers
         ImmutableList<Resources.CompletedRequirementInfo> CompletedRequirements,
         ImmutableList<Resources.ExemptedRequirementInfo> ExemptedRequirements,
         ImmutableList<string> AvailableApplications,
-        ImmutableList<(string ActionName, (string Version, string RoleName)[] Versions)> MissingRequirements,
+        ImmutableList<(
+            string ActionName,
+            (string Version, string RoleName)[] Versions
+        )> MissingRequirements,
         ImmutableList<RoleRemoval> RoleRemovals
     );
 
