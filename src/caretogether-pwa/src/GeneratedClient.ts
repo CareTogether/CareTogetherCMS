@@ -13118,13 +13118,9 @@ export interface ICompleteReferralRequirement extends IV1CaseCommand {
 
 export class CreateReferral extends V1CaseCommand implements ICreateReferral {
     openedAtUtc!: Date;
-    linkedV1ReferralIds!: string[];
 
     constructor(data?: ICreateReferral) {
         super(data);
-        if (!data) {
-            this.linkedV1ReferralIds = [];
-        }
         this._discriminator = "CreateReferral";
     }
 
@@ -13132,11 +13128,6 @@ export class CreateReferral extends V1CaseCommand implements ICreateReferral {
         super.init(_data);
         if (_data) {
             this.openedAtUtc = _data["openedAtUtc"] ? new Date(_data["openedAtUtc"].toString()) : <any>undefined;
-            if (Array.isArray(_data["linkedV1ReferralIds"])) {
-                this.linkedV1ReferralIds = [] as any;
-                for (let item of _data["linkedV1ReferralIds"])
-                    this.linkedV1ReferralIds!.push(item);
-            }
         }
     }
 
@@ -13150,11 +13141,6 @@ export class CreateReferral extends V1CaseCommand implements ICreateReferral {
     toJSON(data?: any) {
         data = typeof data === 'object' ? data : {};
         data["openedAtUtc"] = this.openedAtUtc ? this.openedAtUtc.toISOString() : <any>undefined;
-        if (Array.isArray(this.linkedV1ReferralIds)) {
-            data["linkedV1ReferralIds"] = [];
-            for (let item of this.linkedV1ReferralIds)
-                data["linkedV1ReferralIds"].push(item);
-        }
         super.toJSON(data);
         return data;
     }
@@ -13162,7 +13148,6 @@ export class CreateReferral extends V1CaseCommand implements ICreateReferral {
 
 export interface ICreateReferral extends IV1CaseCommand {
     openedAtUtc: Date;
-    linkedV1ReferralIds: string[];
 }
 
 export class ExemptReferralRequirement extends V1CaseCommand implements IExemptReferralRequirement {

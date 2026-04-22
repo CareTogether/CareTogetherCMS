@@ -93,7 +93,7 @@ namespace CareTogether.Resources.V1Cases
                     new V1CaseEntry(
                         c.ReferralId,
                         c.FamilyId,
-                        LinkedV1ReferralIds: c.LinkedV1ReferralIds ?? ImmutableList<Guid>.Empty,
+                        LinkedV1ReferralIds: ImmutableList<Guid>.Empty,
                         OpenedAtUtc: c.OpenedAtUtc,
                         ClosedAtUtc: null,
                         CloseReason: null,

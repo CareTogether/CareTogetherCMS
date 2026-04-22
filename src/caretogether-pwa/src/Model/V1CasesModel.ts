@@ -962,16 +962,11 @@ export function useV1CasesModel() {
     }
   );
   const openV1CaseCommand = useV1CaseCommandCallbackWithLocation(
-    async (
-      partneringFamilyId: string,
-      openedAtLocal: Date,
-      linkedReferralId?: string
-    ) => {
+    async (partneringFamilyId: string, openedAtLocal: Date) => {
       const command = commandFactory(CreateV1Case, {
         familyId: partneringFamilyId,
         referralId: crypto.randomUUID(),
         openedAtUtc: openedAtLocal,
-        linkedV1ReferralIds: linkedReferralId ? [linkedReferralId] : [],
       });
 
       return command;
@@ -979,14 +974,9 @@ export function useV1CasesModel() {
   );
   const openV1Case = async (
     partneringFamilyId: string,
-    openedAtLocal: Date,
-    linkedReferralId?: string
+    openedAtLocal: Date
   ) => {
-    await openV1CaseCommand(
-      partneringFamilyId,
-      openedAtLocal,
-      linkedReferralId
-    );
+    await openV1CaseCommand(partneringFamilyId, openedAtLocal);
 
     const updatedAggregates = await api.records.listVisibleAggregates(
       organizationId,

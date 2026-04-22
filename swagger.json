@@ -8125,20 +8125,12 @@
             "type": "object",
             "additionalProperties": false,
             "required": [
-              "openedAtUtc",
-              "linkedV1ReferralIds"
+              "openedAtUtc"
             ],
             "properties": {
               "openedAtUtc": {
                 "type": "string",
                 "format": "date-time"
-              },
-              "linkedV1ReferralIds": {
-                "type": "array",
-                "items": {
-                  "type": "string",
-                  "format": "guid"
-                }
               }
             }
           }

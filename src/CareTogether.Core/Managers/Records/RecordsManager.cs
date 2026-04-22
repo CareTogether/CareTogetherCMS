@@ -269,32 +269,6 @@ namespace CareTogether.Managers.Records
             {
                 await ExecuteCommandAsync(organizationId, locationId, user, command);
 
-                if (
-                    command is ReferralRecordsCommand caseCommand
-                    && caseCommand.Command is CreateReferral created
-                )
-                {
-                    foreach (var linkedReferralId in created.LinkedV1ReferralIds)
-                    {
-                        try
-                        {
-                            await v1ReferralsResource.ExecuteV1ReferralCommandAsync(
-                                organizationId,
-                                locationId,
-                                new AcceptV1Referral(linkedReferralId, created.OpenedAtUtc),
-                                user.UserId()
-                            );
-
-                            await v1ReferralsResource.GetReferralAsync(
-                                organizationId,
-                                locationId,
-                                linkedReferralId
-                            );
-                        }
-                        catch (Exception) { }
-                    }
-                }
-
                 return await RenderCommandResultAsync(
                     organizationId,
                     locationId,
@@ -668,12 +642,10 @@ namespace CareTogether.Managers.Records
                 case OpenCaseForReferralAndAcceptCommand c:
                 {
                     yield return new ReferralRecordsCommand(
-                        new CreateReferral(
-                            c.FamilyId,
-                            c.CaseId,
-                            c.OpenedAtUtc,
-                            ImmutableList<Guid>.Empty.Add(c.ReferralId)
-                        )
+                        new CreateReferral(c.FamilyId, c.CaseId, c.OpenedAtUtc)
+                    );
+                    yield return new ReferralRecordsCommand(
+                        new LinkReferralToCase(c.FamilyId, c.CaseId, c.ReferralId)
                     );
                     yield return new V1ReferralRecordsCommand(
                         new AcceptV1Referral(c.ReferralId, c.OpenedAtUtc)

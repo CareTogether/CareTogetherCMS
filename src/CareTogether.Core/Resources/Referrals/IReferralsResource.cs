@@ -93,12 +93,8 @@ namespace CareTogether.Resources.V1Cases
     [JsonHierarchyBase]
     public abstract partial record V1CaseCommand(Guid FamilyId, Guid ReferralId);
 
-    public sealed record CreateReferral(
-        Guid FamilyId,
-        Guid ReferralId,
-        DateTime OpenedAtUtc,
-        ImmutableList<Guid> LinkedV1ReferralIds
-    ) : V1CaseCommand(FamilyId, ReferralId);
+    public sealed record CreateReferral(Guid FamilyId, Guid ReferralId, DateTime OpenedAtUtc)
+        : V1CaseCommand(FamilyId, ReferralId);
 
     public sealed record ReopenReferral(Guid FamilyId, Guid ReferralId, DateTime ReopenedAtUtc)
         : V1CaseCommand(FamilyId, ReferralId);

@@ -35,7 +35,7 @@ export function OpenNewV1CaseDialog({
       return;
     }
 
-    await v1CasesModel.openV1Case(partneringFamilyId, openedAtLocal, referralId);
+    await v1CasesModel.openV1Case(partneringFamilyId, openedAtLocal);
   }
 
   return (
