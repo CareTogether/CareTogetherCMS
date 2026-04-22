@@ -24,9 +24,7 @@
                     "BROWSER": "none"
                 }
             },
-            "dependsOn": [
-                "npm install"
-            ],
+            "dependsOn": ["npm install"],
             "runOptions": {
                 "runOn": "folderOpen"
             },
@@ -65,8 +63,7 @@
             },
             "runOptions": {
                 "runOn": "folderOpen"
-            },
-            "problemMatcher": []
+            }
         },
         {
             "label": "build",
