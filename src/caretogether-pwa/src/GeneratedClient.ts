@@ -3264,6 +3264,7 @@ export enum ChildInvolvement {
     ChildHousing = 0,
     DaytimeChildCareOnly = 1,
     NoChildInvolvement = 2,
+    ChildOrAdultInvolvement = 3,
 }
 
 export class ArrangementFunction implements IArrangementFunction {
@@ -7694,7 +7695,8 @@ export interface IArrangementEntry {
 
 export class Note implements INote {
     id!: string;
-    authorId!: string;
+    authorUserId?: string | undefined;
+    authorPersonId?: string | undefined;
     createdTimestampUtc?: Date | undefined;
     lastEditTimestampUtc!: Date;
     approvedTimestampUtc?: Date | undefined;
@@ -7716,7 +7718,8 @@ export class Note implements INote {
     init(_data?: any) {
         if (_data) {
             this.id = _data["id"];
-            this.authorId = _data["authorId"];
+            this.authorUserId = _data["authorUserId"];
+            this.authorPersonId = _data["authorPersonId"];
             this.createdTimestampUtc = _data["createdTimestampUtc"] ? new Date(_data["createdTimestampUtc"].toString()) : <any>undefined;
             this.lastEditTimestampUtc = _data["lastEditTimestampUtc"] ? new Date(_data["lastEditTimestampUtc"].toString()) : <any>undefined;
             this.approvedTimestampUtc = _data["approvedTimestampUtc"] ? new Date(_data["approvedTimestampUtc"].toString()) : <any>undefined;
@@ -7738,7 +7741,8 @@ export class Note implements INote {
     toJSON(data?: any) {
         data = typeof data === 'object' ? data : {};
         data["id"] = this.id;
-        data["authorId"] = this.authorId;
+        data["authorUserId"] = this.authorUserId;
+        data["authorPersonId"] = this.authorPersonId;
         data["createdTimestampUtc"] = this.createdTimestampUtc ? this.createdTimestampUtc.toISOString() : <any>undefined;
         data["lastEditTimestampUtc"] = this.lastEditTimestampUtc ? this.lastEditTimestampUtc.toISOString() : <any>undefined;
         data["approvedTimestampUtc"] = this.approvedTimestampUtc ? this.approvedTimestampUtc.toISOString() : <any>undefined;
@@ -7753,7 +7757,8 @@ export class Note implements INote {
 
 export interface INote {
     id: string;
-    authorId: string;
+    authorUserId?: string | undefined;
+    authorPersonId?: string | undefined;
     createdTimestampUtc?: Date | undefined;
     lastEditTimestampUtc: Date;
     approvedTimestampUtc?: Date | undefined;
@@ -12021,6 +12026,7 @@ export class CreateDraftNote extends NoteCommand implements ICreateDraftNote {
     draftNoteContents?: string | undefined;
     backdatedTimestampUtc?: Date | undefined;
     accessLevel?: string | undefined;
+    authorPersonId?: string | undefined;
 
     constructor(data?: ICreateDraftNote) {
         super(data);
@@ -12033,6 +12039,7 @@ export class CreateDraftNote extends NoteCommand implements ICreateDraftNote {
             this.draftNoteContents = _data["draftNoteContents"];
             this.backdatedTimestampUtc = _data["backdatedTimestampUtc"] ? new Date(_data["backdatedTimestampUtc"].toString()) : <any>undefined;
             this.accessLevel = _data["accessLevel"];
+            this.authorPersonId = _data["authorPersonId"];
         }
     }
 
@@ -12048,6 +12055,7 @@ export class CreateDraftNote extends NoteCommand implements ICreateDraftNote {
         data["draftNoteContents"] = this.draftNoteContents;
         data["backdatedTimestampUtc"] = this.backdatedTimestampUtc ? this.backdatedTimestampUtc.toISOString() : <any>undefined;
         data["accessLevel"] = this.accessLevel;
+        data["authorPersonId"] = this.authorPersonId;
         super.toJSON(data);
         return data;
     }
@@ -12057,6 +12065,7 @@ export interface ICreateDraftNote extends INoteCommand {
     draftNoteContents?: string | undefined;
     backdatedTimestampUtc?: Date | undefined;
     accessLevel?: string | undefined;
+    authorPersonId?: string | undefined;
 }
 
 export class DiscardDraftNote extends NoteCommand implements IDiscardDraftNote {

@@ -276,6 +276,7 @@ export function AddChildDialog({ onClose }: AddChildDialogProps) {
                 openTo="year"
                 onErrorChange={setDobError}
                 textFieldProps={{
+                  required: true,
                   size: 'small',
                   fullWidth: true,
                 }}

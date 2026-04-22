@@ -71,7 +71,8 @@ namespace CareTogether.Managers
 
     public sealed record Note(
         Guid Id,
-        Guid AuthorId,
+        Guid? AuthorUserId,
+        Guid? AuthorPersonId,
         DateTime? CreatedTimestampUtc,
         DateTime LastEditTimestampUtc,
         DateTime? ApprovedTimestampUtc,

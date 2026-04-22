@@ -51,13 +51,18 @@ export function CreateArrangementDialog({
   )?.arrangementReasons;
   const isReasonRequired = arrangementReasons && arrangementReasons.length > 0;
 
-  // An arrangement is always either for one adult or one child in the partnering family.
+  const activeAdults = family
+    .family!.adults!.filter((adult) => adult.item1!.active)
+    .map((adult) => adult.item1!);
+  const children = family.family!.children!;
+
   const applicableFamilyMembers =
     arrangementPolicy.childInvolvement === ChildInvolvement.NoChildInvolvement
-      ? family
-          .family!.adults!.filter((adult) => adult.item1!.active)
-          .map((adult) => adult.item1!)
-      : family.family!.children!;
+      ? activeAdults
+      : arrangementPolicy.childInvolvement ===
+          ChildInvolvement.ChildOrAdultInvolvement
+        ? activeAdults.concat(children)
+        : children;
 
   const [fields, setFields] = useState({
     requestedAtLocal: null as Date | null,

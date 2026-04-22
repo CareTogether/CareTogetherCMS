@@ -12,10 +12,13 @@ import {
   ButtonGroup,
   Checkbox,
   IconButton,
+  FormControl,
+  InputBase,
+  MenuItem,
+  Select,
   Stack,
   ToggleButton,
   ToggleButtonGroup,
-  Typography,
   Box,
 } from '@mui/material';
 import {
@@ -34,6 +37,7 @@ import React, { useEffect, useState } from 'react';
 import AddIcon from '@mui/icons-material/Add';
 import SmsIcon from '@mui/icons-material/Sms';
 import EmailIcon from '@mui/icons-material/Email';
+import FilterListIcon from '@mui/icons-material/FilterList';
 import { CreateVolunteerFamilyDialog } from '../CreateVolunteerFamilyDialog';
 import { Link, useLocation } from 'react-router-dom';
 import { SearchBar } from '../../Shell/SearchBar';
@@ -49,7 +53,6 @@ import { useLoadable } from '../../Hooks/useLoadable';
 import { ProgressBackdrop } from '../../Shell/ProgressBackdrop';
 import { selectedLocationContextState } from '../../Model/Data';
 import { useAppNavigate } from '../../Hooks/useAppNavigate';
-import { VolunteerRoleApprovalStatusChip } from '../VolunteerRoleApprovalStatusChip';
 import { useGlobalSnackBar } from '../../Hooks/useGlobalSnackBar';
 import { statusFiltersState } from './statusFiltersState';
 import { checkStatusEquivalence } from './checkStatusEquivalence';
@@ -61,19 +64,26 @@ import { VolunteerFilter } from './VolunteerFilter';
 import { catchAllLabel } from './catchAllLabel';
 import { getOptionValueFromSelection } from './getOptionValueFromSelection';
 import { getUpdatedFilters } from './getUpdatedFilters';
-import { CustomFieldsFilter } from '../../Generic/CustomFieldsFilter/CustomFieldsFilter';
 import { useCustomFieldFilters } from '../../Generic/CustomFieldsFilter/useCustomFieldFilters';
 import { matchesCustomFieldFilters } from '../../Generic/CustomFieldsFilter/matchesCustomFieldFilters';
 import { CustomFieldFilterValue } from '../../Generic/CustomFieldsFilter/types';
-import { AgeText } from '../../../src/Families/AgeText';
-import { TestFamilyBadge } from '../../Families/TestFamilyBadge';
 import { useFeatureFlagEnabled } from 'posthog-js/react';
+import { forceCheck } from 'react-lazyload';
+import { VolunteerApprovalTableItem } from './VolunteerApprovalTableItem';
+import { VolunteerCustomFieldFiltersSidePanel } from './VolunteerCustomFieldFiltersSidePanel';
+import { useSidePanel } from '../../Hooks/useSidePanel';
+import { stickyHeaderTableSx } from '../../Utilities/stickyHeaderTableSx';
 
 function VolunteerApproval(props: { onOpen: () => void }) {
   const { onOpen } = props;
   useEffect(onOpen);
   const appNavigate = useAppNavigate();
   const [uncheckedFamilies, setUncheckedFamilies] = useState<string[]>([]);
+  const {
+    SidePanel: CustomFieldFiltersSidePanel,
+    openSidePanel: openCustomFieldFiltersSidePanel,
+    closeSidePanel: closeCustomFieldFiltersSidePanel,
+  } = useSidePanel();
 
   const policy = useRecoilValue(policyData);
 
@@ -142,6 +152,10 @@ function VolunteerApproval(props: { onOpen: () => void }) {
     },
   });
   const [filterText, setFilterText] = useState('');
+  const customFieldCount = (policy.customFamilyFields || []).length;
+  const activeCustomFieldFilterCount = Object.values(customFieldFilters).filter(
+    (selectedValues) => selectedValues.length > 0
+  ).length;
 
   //#region Family/Individual Filtering Code
   const selectedFamilyRoleKeys = roleFilters
@@ -393,6 +407,10 @@ function VolunteerApproval(props: { onOpen: () => void }) {
       familyMatchesCustomFieldFilters(family)
   );
 
+  useEffect(() => {
+    forceCheck();
+  }, [customFieldFilters, filterText, roleFilters, statusFilters]);
+
   const selectedFamilies = filteredVolunteerFamilies.filter(
     (family) => !uncheckedFamilies.some((f) => f === family.family!.id!)
   );
@@ -486,82 +504,19 @@ function VolunteerApproval(props: { onOpen: () => void }) {
         }}
       >
         <Grid item xs={12}>
-          <Stack direction="row-reverse" sx={{ marginTop: 1 }}>
-            <ToggleButtonGroup
-              value={expandedView}
-              exclusive
-              onChange={handleExpandCollapse}
-              size={isMobile ? 'medium' : 'small'}
-              aria-label="row expansion"
-            >
-              <ToggleButton value={true} aria-label="expanded">
-                <UnfoldMoreIcon />
-              </ToggleButton>
-              <ToggleButton value={false} aria-label="collapsed">
-                <UnfoldLessIcon />
-              </ToggleButton>
-            </ToggleButtonGroup>
-            <SearchBar
-              value={filterText}
-              onChange={(value) => {
-                setUncheckedFamilies([]);
-                setFilterText(value);
-              }}
-            />
-            {permissions(Permission.SendBulkSms) && (
-              <IconButton
-                color="inherit"
-                aria-label="copy email addresses"
-                onClick={() => copyEmailAddresses()}
-                sx={{}}
-              >
-                <EmailIcon />
-              </IconButton>
-            )}
-            {permissions(Permission.SendBulkSms) &&
-              smsSourcePhoneNumbers &&
-              smsSourcePhoneNumbers.length > 0 && (
-                <IconButton
-                  color={smsMode ? 'secondary' : 'inherit'}
-                  aria-label="send bulk sms"
-                  onClick={() => setSmsMode(!smsMode)}
-                  sx={{ marginRight: 2 }}
-                >
-                  <SmsIcon sx={{ position: 'relative', top: 1 }} />
-                </IconButton>
-              )}
-
-            <Box
-              sx={{
-                display: 'flex',
-                flexDirection: 'row',
-                gap: '.75rem',
-                marginRight: '.75rem',
-                alignItems: 'center',
-              }}
-            >
-              <VolunteerFilter
-                label="Roles"
-                options={roleFilters}
-                setSelected={changeRoleFilterSelection}
-              />
-              <VolunteerFilter
-                label="Statuses"
-                options={statusFilters}
-                setSelected={changeStatusFilterSelection}
-              />
-              <CustomFieldsFilter
-                customFields={policy.customFamilyFields || []}
-                optionsByField={customFieldFilterOptionsByField}
-                selectedValuesByField={customFieldFilters}
-                onFieldChange={changeCustomFieldFilter as any}
-              />
-            </Box>
+          <Stack
+            direction={{ xs: 'column', md: 'row' }}
+            sx={{
+              marginTop: 1,
+              gap: 1.5,
+              alignItems: { xs: 'stretch', md: 'center' },
+            }}
+          >
             <ButtonGroup
               variant="text"
               color="inherit"
               aria-label="text inherit button group"
-              style={{ flexGrow: 1 }}
+              sx={{ width: { xs: '100%', md: 'auto' } }}
             >
               <Button
                 color={
@@ -571,6 +526,7 @@ function VolunteerApproval(props: { onOpen: () => void }) {
                 }
                 component={Link}
                 to={'../approval'}
+                sx={{ flex: { xs: 1, md: 'initial' } }}
               >
                 Approvals
               </Button>
@@ -582,11 +538,153 @@ function VolunteerApproval(props: { onOpen: () => void }) {
                 }
                 component={Link}
                 to={'../progress'}
+                sx={{ flex: { xs: 1, md: 'initial' } }}
               >
                 Progress
               </Button>
             </ButtonGroup>
+
+            <Stack
+              direction={{ xs: 'column', md: 'row' }}
+              sx={{
+                gap: 1,
+                width: { xs: '100%', md: 'auto' },
+                marginLeft: { md: 'auto' },
+                alignItems: { xs: 'stretch', md: 'center' },
+              }}
+            >
+              <Box
+                sx={{
+                  display: 'flex',
+                  flexWrap: 'wrap',
+                  gap: 1,
+                  alignItems: 'center',
+                  width: { xs: '100%', md: 'auto' },
+                }}
+              >
+                <VolunteerFilter
+                  label="Roles"
+                  options={roleFilters}
+                  setSelected={changeRoleFilterSelection}
+                />
+                <VolunteerFilter
+                  label="Statuses"
+                  options={statusFilters}
+                  setSelected={changeStatusFilterSelection}
+                />
+                {customFieldCount > 0 && (
+                  <FormControl
+                    sx={{
+                      position: 'relative',
+                      minWidth: { xs: '100%', sm: 0 },
+                      maxWidth: { xs: '100%', sm: '16rem' },
+                    }}
+                  >
+                    <Select
+                      labelId="volunteerCustomFieldsFilter"
+                      displayEmpty
+                      value=""
+                      open={false}
+                      variant="standard"
+                      onClick={() => openCustomFieldFiltersSidePanel()}
+                      sx={{
+                        minWidth: { xs: '100%', sm: 0 },
+                        maxWidth: '100%',
+                        '& .MuiSelect-iconOpen': { transform: 'none' },
+                        '& .MuiSelect-select': {
+                          overflow: 'hidden',
+                          textOverflow: 'ellipsis',
+                          whiteSpace: 'nowrap',
+                          cursor: 'pointer',
+                        },
+                      }}
+                      input={<InputBase />}
+                      IconComponent={FilterListIcon}
+                      SelectDisplayProps={{
+                        title: `Custom fields (${activeCustomFieldFilterCount}/${customFieldCount})`,
+                      }}
+                      renderValue={() =>
+                        `Custom fields (${activeCustomFieldFilterCount}/${customFieldCount})`
+                      }
+                    >
+                      <MenuItem value="" sx={{ display: 'none' }} />
+                    </Select>
+                  </FormControl>
+                )}
+              </Box>
+
+              <Stack
+                direction={{ xs: 'column', sm: 'row' }}
+                sx={{
+                  gap: 1,
+                  width: { xs: '100%', md: 'auto' },
+                  alignItems: { xs: 'stretch', sm: 'center' },
+                }}
+              >
+                <Box sx={{ width: { xs: '100%', sm: 'auto' } }}>
+                  <SearchBar
+                    value={filterText}
+                    onChange={(value) => {
+                      setUncheckedFamilies([]);
+                      setFilterText(value);
+                    }}
+                  />
+                </Box>
+                <Box
+                  sx={{
+                    display: 'flex',
+                    justifyContent: { xs: 'flex-end', sm: 'flex-start' },
+                    alignItems: 'center',
+                    gap: 1,
+                  }}
+                >
+                  {permissions(Permission.SendBulkSms) && (
+                    <IconButton
+                      color="inherit"
+                      aria-label="copy email addresses"
+                      onClick={() => copyEmailAddresses()}
+                    >
+                      <EmailIcon />
+                    </IconButton>
+                  )}
+                  {permissions(Permission.SendBulkSms) &&
+                    smsSourcePhoneNumbers &&
+                    smsSourcePhoneNumbers.length > 0 && (
+                      <IconButton
+                        color={smsMode ? 'secondary' : 'inherit'}
+                        aria-label="send bulk sms"
+                        onClick={() => setSmsMode(!smsMode)}
+                      >
+                        <SmsIcon sx={{ position: 'relative', top: 1 }} />
+                      </IconButton>
+                    )}
+                  <ToggleButtonGroup
+                    value={expandedView}
+                    exclusive
+                    onChange={handleExpandCollapse}
+                    size={isMobile ? 'medium' : 'small'}
+                    aria-label="row expansion"
+                  >
+                    <ToggleButton value={true} aria-label="expanded">
+                      <UnfoldMoreIcon />
+                    </ToggleButton>
+                    <ToggleButton value={false} aria-label="collapsed">
+                      <UnfoldLessIcon />
+                    </ToggleButton>
+                  </ToggleButtonGroup>
+                </Box>
+              </Stack>
+            </Stack>
           </Stack>
+          <CustomFieldFiltersSidePanel>
+            <VolunteerCustomFieldFiltersSidePanel
+              customFields={policy.customFamilyFields || []}
+              optionsByField={customFieldFilterOptionsByField}
+              selectedValuesByField={customFieldFilters}
+              onFieldChange={changeCustomFieldFilter}
+              onClose={closeCustomFieldFiltersSidePanel}
+            />
+          </CustomFieldFiltersSidePanel>
 
           {permissions(Permission.EditFamilyInfo) &&
             permissions(Permission.ActivateVolunteerFamily) && (
@@ -594,15 +692,28 @@ function VolunteerApproval(props: { onOpen: () => void }) {
                 variant="contained"
                 startIcon={<AddIcon />}
                 onClick={() => setCreateVolunteerFamilyDialogOpen(true)}
-                sx={{ marginRight: 'auto', marginY: 2 }}
+                sx={{
+                  marginRight: 'auto',
+                  marginY: 2,
+                  width: { xs: '100%', sm: 'auto' },
+                }}
               >
                 Add new volunteer family
               </Button>
             )}
         </Grid>
         <Grid item xs={12}>
-          <TableContainer>
-            <Table sx={{ minWidth: '700px' }} size="small">
+          <TableContainer
+            sx={{
+              borderBottom: '1px solid rgba(224, 224, 224, 1)',
+              overflow: 'visible',
+            }}
+          >
+            <Table
+              stickyHeader
+              sx={{ ...stickyHeaderTableSx, minWidth: '700px' }}
+              size="small"
+            >
               <TableHead>
                 <TableRow sx={{ height: '40px' }}>
                   {smsMode && (
@@ -635,299 +746,20 @@ function VolunteerApproval(props: { onOpen: () => void }) {
                 </TableRow>
               </TableHead>
               <TableBody>
-                {filteredVolunteerFamilies.map((volunteerFamily) => {
-                  return (
-                    <React.Fragment key={volunteerFamily.family?.id}>
-                      <TableRow
-                        sx={{ backgroundColor: '#eef', height: '39px' }}
-                        onClick={() => openFamily(volunteerFamily.family!.id!)}
-                      >
-                        {smsMode && (
-                          <TableCell key="-" sx={{ padding: 0, width: '36px' }}>
-                            <Checkbox
-                              size="small"
-                              checked={
-                                !uncheckedFamilies.some(
-                                  (x) => x === volunteerFamily.family!.id!
-                                )
-                              }
-                              onChange={(e) =>
-                                e.target.checked
-                                  ? setUncheckedFamilies(
-                                      uncheckedFamilies.filter(
-                                        (x) => x !== volunteerFamily.family!.id!
-                                      )
-                                    )
-                                  : setUncheckedFamilies(
-                                      uncheckedFamilies.concat(
-                                        volunteerFamily.family!.id!
-                                      )
-                                    )
-                              }
-                              onClick={(e) => e.stopPropagation()}
-                            />
-                          </TableCell>
-                        )}
-                        <TableCell
-                          key="1"
-                          colSpan={1}
-                          sx={{ whiteSpace: 'nowrap' }}
-                        >
-                          <span
-                            style={{
-                              display: 'inline-flex',
-                              alignItems: 'center',
-                              gap: 8,
-                            }}
-                          >
-                            <Typography sx={{ fontWeight: 600 }}>
-                              {familyLastName(volunteerFamily) + ' Family'}
-                            </Typography>
-                            {updateTestFamilyFlagEnabled && (
-                              <TestFamilyBadge family={volunteerFamily} />
-                            )}
-                          </span>
-                        </TableCell>
-                        <TableCell>
-                          {expandedView ? (
-                            roleFilters.map((roleFilter, index) => (
-                              <VolunteerRoleApprovalStatusChip
-                                key={index}
-                                sx={{ margin: '.125rem .25rem .125rem 0' }}
-                                roleName={roleFilter.key}
-                                status={
-                                  volunteerFamily.volunteerFamilyInfo
-                                    ?.familyRoleApprovals?.[roleFilter.key]
-                                    ?.effectiveRoleApprovalStatus
-                                }
-                              />
-                            ))
-                          ) : (
-                            <>
-                              <Grid
-                                container
-                                spacing={2}
-                                sx={{
-                                  height: '50%',
-                                  margin: 0,
-                                  flexGrow: 1,
-                                  justifyContent: 'flex-start',
-                                }}
-                              >
-                                <Grid
-                                  item
-                                  xs={1}
-                                  sx={{
-                                    minWidth: '100px',
-                                    marginLeft: '-1rem',
-                                    marginTop: '-.5rem',
-                                  }}
-                                >
-                                  <Typography
-                                    sx={{
-                                      margin: 0,
-                                      padding: 0,
-                                      minWidth: 'max-content',
-                                    }}
-                                  >
-                                    Family:
-                                  </Typography>
-                                </Grid>
-                                <Grid
-                                  item
-                                  xs={11}
-                                  sx={{
-                                    justifyContent: 'flex-start',
-                                    marginLeft: '-1rem',
-                                    marginTop: '-.5rem',
-                                  }}
-                                >
-                                  {roleFilters.map((roleFilter, index) => (
-                                    <VolunteerRoleApprovalStatusChip
-                                      key={index}
-                                      sx={{
-                                        margin: '.125rem .25rem .125rem 0',
-                                      }}
-                                      roleName={roleFilter.key}
-                                      status={
-                                        volunteerFamily.volunteerFamilyInfo
-                                          ?.familyRoleApprovals?.[
-                                          roleFilter.key
-                                        ]?.effectiveRoleApprovalStatus
-                                      }
-                                    />
-                                  ))}
-                                </Grid>
-                              </Grid>
-                              <Grid
-                                container
-                                spacing={2}
-                                sx={{
-                                  height: '50%',
-                                  margin: 0,
-                                  flexGrow: 1,
-                                  justifyContent: 'flex-start',
-                                }}
-                              >
-                                <Grid
-                                  item
-                                  xs={1}
-                                  sx={{
-                                    minWidth: '100px',
-                                    marginLeft: '-1rem',
-                                    marginTop: '-.5rem',
-                                  }}
-                                >
-                                  <Typography sx={{ margin: 0, padding: 0 }}>
-                                    Individual:
-                                  </Typography>
-                                </Grid>
-                                <Grid
-                                  item
-                                  xs={11}
-                                  sx={{
-                                    justifyContent: 'flex-start',
-                                    marginLeft: '-1rem',
-                                    marginTop: '-.5rem',
-                                  }}
-                                >
-                                  {volunteerFamily.family?.adults
-                                    ?.map((adult) => {
-                                      return Object.entries(
-                                        volunteerFamily.volunteerFamilyInfo
-                                          ?.individualVolunteers?.[
-                                          adult.item1!.id!
-                                        ].approvalStatusByRole || {}
-                                      ).map(([role, roleApprovalStatus]) => (
-                                        <VolunteerRoleApprovalStatusChip
-                                          key={role}
-                                          sx={{
-                                            margin: '.125rem .25rem .125rem 0',
-                                          }}
-                                          roleName={role}
-                                          status={
-                                            roleApprovalStatus.effectiveRoleApprovalStatus
-                                          }
-                                        />
-                                      ));
-                                    })
-                                    .reduce((prev, curr) => {
-                                      if (
-                                        prev.some((x) => x.key === curr[0].key)
-                                      ) {
-                                        return prev;
-                                      }
-                                      return prev.concat(curr);
-                                    }, [] as JSX.Element[])}
-                                </Grid>
-                              </Grid>
-                            </>
-                          )}
-                        </TableCell>
-                        {customFieldNames.map((customFieldName) => {
-                          const familyCustomField =
-                            volunteerFamily.family?.completedCustomFields?.find(
-                              (familyCustomField) =>
-                                familyCustomField?.customFieldName ===
-                                customFieldName
-                            );
-                          const familyCustomFieldValue =
-                            familyCustomField?.value;
-                          if (familyCustomFieldValue === null) {
-                            return (
-                              <TableCell key={customFieldName}></TableCell>
-                            );
-                          }
-                          if (familyCustomFieldValue === true) {
-                            return (
-                              <TableCell key={customFieldName}>Yes</TableCell>
-                            );
-                          }
-                          if (familyCustomFieldValue === false) {
-                            return (
-                              <TableCell key={customFieldName}>No</TableCell>
-                            );
-                          }
-                          return (
-                            <TableCell key={customFieldName}>
-                              {familyCustomFieldValue}
-                            </TableCell>
-                          );
-                        })}
-                      </TableRow>
-                      {expandedView &&
-                        volunteerFamily.family?.adults?.map(
-                          (adult) =>
-                            adult.item1 &&
-                            adult.item1.active && (
-                              <TableRow
-                                key={
-                                  volunteerFamily.family?.id +
-                                  ':' +
-                                  adult.item1.id
-                                }
-                                onClick={() =>
-                                  openFamily(volunteerFamily.family!.id!)
-                                }
-                              >
-                                {smsMode && <TableCell />}
-                                <TableCell>
-                                  {adult.item1.lastName},{' '}
-                                  {adult.item1.firstName}
-                                </TableCell>
-                                <TableCell>
-                                  {Object.entries(
-                                    volunteerFamily.volunteerFamilyInfo
-                                      ?.individualVolunteers?.[adult.item1!.id!]
-                                      .approvalStatusByRole || {}
-                                  ).map(([role, roleApprovalStatus]) => (
-                                    <VolunteerRoleApprovalStatusChip
-                                      key={role}
-                                      roleName={role}
-                                      status={
-                                        roleApprovalStatus.effectiveRoleApprovalStatus
-                                      }
-                                      sx={{
-                                        margin: '.125rem .25rem .125rem 0',
-                                      }}
-                                    />
-                                  ))}
-                                </TableCell>
-                                {customFieldNames.map((fieldName) => (
-                                  <TableCell key={fieldName}></TableCell>
-                                ))}
-                              </TableRow>
-                            )
-                        )}
-                      {expandedView &&
-                        volunteerFamily.family?.children?.map(
-                          (child) =>
-                            child &&
-                            child.active && (
-                              <TableRow
-                                key={
-                                  volunteerFamily.family?.id + ':' + child.id
-                                }
-                                onClick={() =>
-                                  openFamily(volunteerFamily.family!.id!)
-                                }
-                                sx={{ color: 'ddd', fontStyle: 'italic' }}
-                              >
-                                {smsMode && <TableCell />}
-                                <TableCell>
-                                  {child.lastName}, {child.firstName} (age{' '}
-                                  <AgeText age={child.age} />)
-                                </TableCell>
-                                <TableCell></TableCell>
-                                {customFieldNames.map((fieldName) => (
-                                  <TableCell key={fieldName}></TableCell>
-                                ))}
-                              </TableRow>
-                            )
-                        )}
-                    </React.Fragment>
-                  );
-                })}
+                {filteredVolunteerFamilies.map((volunteerFamily) => (
+                  <VolunteerApprovalTableItem
+                    key={volunteerFamily.family?.id}
+                    volunteerFamily={volunteerFamily}
+                    customFieldNames={customFieldNames}
+                    expandedView={expandedView}
+                    smsMode={smsMode}
+                    uncheckedFamilies={uncheckedFamilies}
+                    setUncheckedFamilies={setUncheckedFamilies}
+                    openFamily={openFamily}
+                    roleFilters={roleFilters}
+                    updateTestFamilyFlagEnabled={updateTestFamilyFlagEnabled}
+                  />
+                ))}
               </TableBody>
             </Table>
           </TableContainer>

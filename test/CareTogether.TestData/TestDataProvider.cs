@@ -148,6 +148,8 @@ namespace CareTogether.TestData
         static readonly Guid noteIdB = Id('b');
         static readonly Guid noteIdC = Id('c');
         static readonly Guid noteIdD = Id('d');
+        static readonly Guid noteIdE = Id('e');
+        static readonly Guid noteIdF = SystemConstants.SystemUserId;
 
         // Fisher family
         static readonly Guid michaelFisherGuid = Guid.Parse("f6020665-6f2e-4c93-8673-8770f35f1609");
@@ -2132,6 +2134,45 @@ namespace CareTogether.TestData
                     volunteerId2,
                     V1CasesMonth(28, 19, 0, 0),
                     new CreateDraftNote(guid1, noteIdD, null, null, AccessLevel: "Staff Only")
+                ),
+                new NoteCommandExecuted(
+                    volunteerId2,
+                    V1CasesMonth(28, 19, 30, 0),
+                    new CreateDraftNote(
+                        guid1,
+                        noteIdE,
+                        null,
+                        null,
+                        AccessLevel: "Staff Only",
+                        AuthorPersonId: eldaBrambleswiftVolunteerGuid
+                    )
+                ),
+                new NoteCommandExecuted(
+                    adminId,
+                    V1CasesMonth(28, 19, 35, 0),
+                    new ApproveNote(
+                        guid1,
+                        noteIdE,
+                        "Author for this note is set via AuthorPersonId (person record), not AuthorUserId.",
+                        null,
+                        AccessLevel: "Staff Only"
+                    )
+                ),
+                new NoteCommandExecuted(
+                    SystemConstants.SystemUserId,
+                    V1CasesMonth(28, 21, 0, 0),
+                    new CreateDraftNote(guid1, noteIdF, null, null, AccessLevel: "Staff Only")
+                ),
+                new NoteCommandExecuted(
+                    SystemConstants.SystemUserId,
+                    V1CasesMonth(28, 21, 5, 0),
+                    new ApproveNote(
+                        guid1,
+                        noteIdF,
+                        "System-generated note example: author and approver are the all-f GUID system identity.",
+                        null,
+                        AccessLevel: "Staff Only"
+                    )
                 )
             );
         }
@@ -3086,6 +3127,54 @@ namespace CareTogether.TestData
                                 ),
                                 new MonitoringRequirement(
                                     new RequirementDefinition("Family Coach Supervision", true),
+                                    new DurationStagesRecurrencePolicy(
+                                        [new RecurrencePolicyStage(TimeSpan.FromDays(7), null)]
+                                    )
+                                ),
+                            ],
+                            RequiredCloseoutActions: []
+                        ),
+                        new ArrangementPolicy(
+                            "Mentoring",
+                            ChildInvolvement.ChildOrAdultInvolvement,
+                            ArrangementFunctions:
+                            [
+                                new ArrangementFunction(
+                                    "Family Friend",
+                                    FunctionRequirement.OneOrMore,
+                                    EligibleIndividualVolunteerRoles: null,
+                                    EligibleVolunteerFamilyRoles: null,
+                                    EligiblePeople: null,
+                                    Variants: []
+                                ),
+                                new ArrangementFunction(
+                                    "Family Coach",
+                                    FunctionRequirement.ExactlyOne,
+                                    EligibleIndividualVolunteerRoles: ["Family Coach"],
+                                    EligibleVolunteerFamilyRoles: [],
+                                    EligiblePeople: [],
+                                    Variants: []
+                                ),
+                                new ArrangementFunction(
+                                    "Staff Supervision",
+                                    FunctionRequirement.ExactlyOne,
+                                    EligibleIndividualVolunteerRoles: null,
+                                    EligibleVolunteerFamilyRoles: null,
+                                    EligiblePeople: null,
+                                    Variants: []
+                                ),
+                            ],
+                            RequiredSetupActionNames: [],
+                            RequiredMonitoringActions: [],
+                            RequiredCloseoutActionNames: [],
+                            RequiredSetupActions:
+                            [
+                                new RequirementDefinition("Advocacy Agreement", true),
+                            ],
+                            RequiredMonitoringActionsNew:
+                            [
+                                new MonitoringRequirement(
+                                    new RequirementDefinition("Family Coach Checkin", true),
                                     new DurationStagesRecurrencePolicy(
                                         [new RecurrencePolicyStage(TimeSpan.FromDays(7), null)]
                                     )

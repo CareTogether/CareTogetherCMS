@@ -212,6 +212,7 @@ namespace CareTogether.Resources.Policies
         ChildHousing,
         DaytimeChildCareOnly,
         NoChildInvolvement,
+        ChildOrAdultInvolvement,
     };
 
     // TODO: Remove after migration (see TODO in ReferralPolicy)

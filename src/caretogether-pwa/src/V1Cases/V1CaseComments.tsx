@@ -36,8 +36,9 @@ export function V1CaseComments({
   const closedV1Cases: V1Case[] =
     partneringFamily?.partneringFamilyInfo?.closedV1Cases === undefined
       ? []
-      : [...partneringFamily.partneringFamilyInfo.closedV1Cases!].sort(
-          (r1, r2) => r1.closedAtUtc!.getTime() - r2.closedAtUtc!.getTime()
+      : [...partneringFamily.partneringFamilyInfo.closedV1Cases].sort(
+          (r1, r2) =>
+            (r1.closedAtUtc?.getTime() ?? 0) - (r2.closedAtUtc?.getTime() ?? 0)
         );
 
   const allV1Cases = [...openV1Cases, ...closedV1Cases];
