@@ -175,7 +175,6 @@ export function FamilyDocuments({
                 <Chip
                   label={row.referralTitle}
                   size="small"
-                  variant="outlined"
                   sx={{
                     flexShrink: 0,
                     maxWidth: 180,
