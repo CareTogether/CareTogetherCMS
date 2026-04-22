@@ -30,6 +30,7 @@ import {
   CompletedCustomFieldInfo,
   Permission,
   V1Case,
+  V1Referral,
   RoleRemovalReason,
   V1ReferralStatus,
   V1CaseCloseReason,
@@ -92,7 +93,6 @@ import { TestFamilyBadge } from './TestFamilyBadge';
 import { visibleReferralsQuery } from '../Model/Data';
 import { useRecoilValue } from 'recoil';
 import { useV1CasesModel } from '../Model/V1CasesModel';
-import { policyData } from '../Model/ConfigurationModel';
 import { formatStatusWithDate } from '../V1Referrals/formatStatusWithDate';
 
 export function FamilyScreen() {
@@ -117,25 +117,17 @@ export function FamilyScreen() {
 
   const referrals = useRecoilValue(visibleReferralsQuery);
 
-  const policy = useRecoilValue(policyData);
-
   const familyReferrals = useMemo(() => {
     return (referrals ?? []).filter((r) => r.familyId === familyId);
   }, [referrals, familyId]);
 
-  function referralRequirementSummary(referral: {
-    completedRequirements?: Array<unknown>;
-    exemptedRequirements?: Array<unknown>;
-  }) {
+  function referralRequirementSummary(referral: V1Referral) {
+    const incompleteCount =
+      referral.missingIntakeRequirements?.filter(
+        (requirement) => requirement.isRequired
+      ).length ?? 0;
     const completedCount = referral.completedRequirements?.length ?? 0;
     const exemptedCount = referral.exemptedRequirements?.length ?? 0;
-
-    const incompleteCount = Math.max(
-      0,
-      (policy.referralPolicy?.intakeRequirements?.length ?? 0) -
-        completedCount -
-        exemptedCount
-    );
 
     return [
       incompleteCount > 0 ? `${incompleteCount} incomplete` : null,
