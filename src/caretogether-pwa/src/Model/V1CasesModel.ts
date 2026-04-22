@@ -57,16 +57,10 @@ import {
   EditArrangementEndTime,
   EditArrangementCancelledAt,
 } from '../GeneratedClient';
-import { api } from '../Api/Api';
 import { visibleFamiliesQuery } from './Data';
 import { convertUtcDateToLocalDate } from '../Utilities/dateUtils';
 import { commandFactory } from './CommandFactory';
-import {
-  visibleAggregatesState,
-  selectedLocationContextState,
-  useAtomicRecordsCommandCallback,
-} from '../Model/Data';
-import { useSetRecoilState, useRecoilValue } from 'recoil';
+import { useAtomicRecordsCommandCallback } from '../Model/Data';
 
 export const partneringFamiliesData = selector({
   key: 'partneringFamiliesData',
@@ -97,10 +91,6 @@ function useArrangementsCommandCallbackWithLocation<T extends unknown[]>(
 }
 
 export function useV1CasesModel() {
-  const setVisibleAggregates = useSetRecoilState(visibleAggregatesState);
-  const { organizationId, locationId } = useRecoilValue(
-    selectedLocationContextState
-  );
   const completeV1CaseRequirement = useV1CaseCommandCallbackWithLocation(
     async (
       partneringFamilyId: string,
@@ -977,12 +967,6 @@ export function useV1CasesModel() {
     openedAtLocal: Date
   ) => {
     await openV1CaseCommand(partneringFamilyId, openedAtLocal);
-
-    const updatedAggregates = await api.records.listVisibleAggregates(
-      organizationId,
-      locationId
-    );
-    setVisibleAggregates(updatedAggregates);
   };
 
   return {
