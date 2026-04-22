@@ -844,7 +844,10 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/RecordsAggregate"
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/RecordsAggregate"
+                  }
                 }
               }
             }
@@ -8853,7 +8856,9 @@
             "AddAdultToFamilyCommand": "#/components/schemas/AddAdultToFamilyCommand",
             "AddChildToFamilyCommand": "#/components/schemas/AddChildToFamilyCommand",
             "CreatePartneringFamilyWithNewAdultCommand": "#/components/schemas/CreatePartneringFamilyWithNewAdultCommand",
-            "CreateVolunteerFamilyWithNewAdultCommand": "#/components/schemas/CreateVolunteerFamilyWithNewAdultCommand"
+            "CreateVolunteerFamilyWithNewAdultCommand": "#/components/schemas/CreateVolunteerFamilyWithNewAdultCommand",
+            "LinkReferralToCaseAndAcceptCommand": "#/components/schemas/LinkReferralToCaseAndAcceptCommand",
+            "OpenCaseForReferralAndAcceptCommand": "#/components/schemas/OpenCaseForReferralAndAcceptCommand"
           }
         },
         "x-abstract": true,
@@ -9192,6 +9197,66 @@
                     "$ref": "#/components/schemas/EmailAddress"
                   }
                 ]
+              }
+            }
+          }
+        ]
+      },
+      "LinkReferralToCaseAndAcceptCommand": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/CompositeRecordsCommand"
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "caseId",
+              "referralId",
+              "acceptedAtUtc"
+            ],
+            "properties": {
+              "caseId": {
+                "type": "string",
+                "format": "guid"
+              },
+              "referralId": {
+                "type": "string",
+                "format": "guid"
+              },
+              "acceptedAtUtc": {
+                "type": "string",
+                "format": "date-time"
+              }
+            }
+          }
+        ]
+      },
+      "OpenCaseForReferralAndAcceptCommand": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/CompositeRecordsCommand"
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "caseId",
+              "referralId",
+              "openedAtUtc"
+            ],
+            "properties": {
+              "caseId": {
+                "type": "string",
+                "format": "guid"
+              },
+              "referralId": {
+                "type": "string",
+                "format": "guid"
+              },
+              "openedAtUtc": {
+                "type": "string",
+                "format": "date-time"
               }
             }
           }

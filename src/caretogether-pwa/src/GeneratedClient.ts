@@ -721,7 +721,7 @@ export class RecordsClient {
         return Promise.resolve<RecordsAggregate[]>(null as any);
     }
 
-    submitCompositeRecordsCommand(organizationId: string, locationId: string, command: CompositeRecordsCommand): Promise<RecordsAggregate> {
+    submitCompositeRecordsCommand(organizationId: string, locationId: string, command: CompositeRecordsCommand): Promise<RecordsAggregate[]> {
         let url_ = this.baseUrl + "/api/{organizationId}/{locationId}/Records/compositeRecordsCommand";
         if (organizationId === undefined || organizationId === null)
             throw new Error("The parameter 'organizationId' must be defined.");
@@ -747,14 +747,21 @@ export class RecordsClient {
         });
     }
 
-    protected processSubmitCompositeRecordsCommand(response: Response): Promise<RecordsAggregate> {
+    protected processSubmitCompositeRecordsCommand(response: Response): Promise<RecordsAggregate[]> {
         const status = response.status;
         let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
         if (status === 200) {
             return response.text().then((_responseText) => {
             let result200: any = null;
             let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
-            result200 = RecordsAggregate.fromJS(resultData200);
+            if (Array.isArray(resultData200)) {
+                result200 = [] as any;
+                for (let item of resultData200)
+                    result200!.push(RecordsAggregate.fromJS(item));
+            }
+            else {
+                result200 = <any>null;
+            }
             return result200;
             });
         } else if (status !== 200 && status !== 204) {
@@ -762,7 +769,7 @@ export class RecordsClient {
             return throwException("An unexpected server error occurred.", status, _responseText, _headers);
             });
         }
-        return Promise.resolve<RecordsAggregate>(null as any);
+        return Promise.resolve<RecordsAggregate[]>(null as any);
     }
 
     getEmbedInfo(organizationId: string, locationId: string): Promise<EmbedParams> {
@@ -14399,6 +14406,16 @@ export abstract class CompositeRecordsCommand implements ICompositeRecordsComman
             result.init(data);
             return result;
         }
+        if (data["discriminator"] === "LinkReferralToCaseAndAcceptCommand") {
+            let result = new LinkReferralToCaseAndAcceptCommand();
+            result.init(data);
+            return result;
+        }
+        if (data["discriminator"] === "OpenCaseForReferralAndAcceptCommand") {
+            let result = new OpenCaseForReferralAndAcceptCommand();
+            result.init(data);
+            return result;
+        }
         throw new Error("The abstract class 'CompositeRecordsCommand' cannot be instantiated.");
     }
 
@@ -14740,6 +14757,90 @@ export interface ICreateVolunteerFamilyWithNewAdultCommand extends ICompositeRec
     address?: Address | undefined;
     phoneNumber?: PhoneNumber | undefined;
     emailAddress?: EmailAddress | undefined;
+}
+
+export class LinkReferralToCaseAndAcceptCommand extends CompositeRecordsCommand implements ILinkReferralToCaseAndAcceptCommand {
+    caseId!: string;
+    referralId!: string;
+    acceptedAtUtc!: Date;
+
+    constructor(data?: ILinkReferralToCaseAndAcceptCommand) {
+        super(data);
+        this._discriminator = "LinkReferralToCaseAndAcceptCommand";
+    }
+
+    init(_data?: any) {
+        super.init(_data);
+        if (_data) {
+            this.caseId = _data["caseId"];
+            this.referralId = _data["referralId"];
+            this.acceptedAtUtc = _data["acceptedAtUtc"] ? new Date(_data["acceptedAtUtc"].toString()) : <any>undefined;
+        }
+    }
+
+    static fromJS(data: any): LinkReferralToCaseAndAcceptCommand {
+        data = typeof data === 'object' ? data : {};
+        let result = new LinkReferralToCaseAndAcceptCommand();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["caseId"] = this.caseId;
+        data["referralId"] = this.referralId;
+        data["acceptedAtUtc"] = this.acceptedAtUtc ? this.acceptedAtUtc.toISOString() : <any>undefined;
+        super.toJSON(data);
+        return data;
+    }
+}
+
+export interface ILinkReferralToCaseAndAcceptCommand extends ICompositeRecordsCommand {
+    caseId: string;
+    referralId: string;
+    acceptedAtUtc: Date;
+}
+
+export class OpenCaseForReferralAndAcceptCommand extends CompositeRecordsCommand implements IOpenCaseForReferralAndAcceptCommand {
+    caseId!: string;
+    referralId!: string;
+    openedAtUtc!: Date;
+
+    constructor(data?: IOpenCaseForReferralAndAcceptCommand) {
+        super(data);
+        this._discriminator = "OpenCaseForReferralAndAcceptCommand";
+    }
+
+    init(_data?: any) {
+        super.init(_data);
+        if (_data) {
+            this.caseId = _data["caseId"];
+            this.referralId = _data["referralId"];
+            this.openedAtUtc = _data["openedAtUtc"] ? new Date(_data["openedAtUtc"].toString()) : <any>undefined;
+        }
+    }
+
+    static fromJS(data: any): OpenCaseForReferralAndAcceptCommand {
+        data = typeof data === 'object' ? data : {};
+        let result = new OpenCaseForReferralAndAcceptCommand();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["caseId"] = this.caseId;
+        data["referralId"] = this.referralId;
+        data["openedAtUtc"] = this.openedAtUtc ? this.openedAtUtc.toISOString() : <any>undefined;
+        super.toJSON(data);
+        return data;
+    }
+}
+
+export interface IOpenCaseForReferralAndAcceptCommand extends ICompositeRecordsCommand {
+    caseId: string;
+    referralId: string;
+    openedAtUtc: Date;
 }
 
 export class EmbedParams implements IEmbedParams {

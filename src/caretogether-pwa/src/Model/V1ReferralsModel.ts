@@ -17,12 +17,15 @@ import {
   ActionRequirement,
   UploadV1ReferralDocument,
   AcceptV1Referral,
+  LinkReferralToCaseAndAcceptCommand,
+  OpenCaseForReferralAndAcceptCommand,
 } from '../GeneratedClient';
-import { useAtomicRecordsCommandCallback } from './DirectoryModel';
 import { commandFactory } from './CommandFactory';
 import { api } from '../Api/Api';
 import {
   selectedLocationContextState,
+  useAtomicRecordsCommandCallback,
+  useCompositeRecordsCommandCallback,
   visibleAggregatesState,
 } from '../Model/Data';
 import { useRecoilValue, useSetRecoilState } from 'recoil';
@@ -207,6 +210,57 @@ export function useV1ReferralsModel() {
     await refreshVisibleAggregates();
   };
 
+  const linkReferralToCaseAndAcceptCommand = useCompositeRecordsCommandCallback(
+    async (
+      familyId: string,
+      v1CaseId: string,
+      referralId: string,
+      acceptedAtLocal: Date
+    ) =>
+      commandFactory(LinkReferralToCaseAndAcceptCommand, {
+        familyId,
+        caseId: v1CaseId,
+        referralId,
+        acceptedAtUtc: acceptedAtLocal,
+      })
+  );
+
+  const linkReferralToCaseAndAccept = async (
+    familyId: string,
+    v1CaseId: string,
+    referralId: string,
+    acceptedAtLocal: Date
+  ) => {
+    await linkReferralToCaseAndAcceptCommand(
+      familyId,
+      v1CaseId,
+      referralId,
+      acceptedAtLocal
+    );
+  };
+
+  const openCaseForReferralAndAcceptCommand = useCompositeRecordsCommandCallback(
+    async (familyId: string, referralId: string, openedAtLocal: Date) =>
+      commandFactory(OpenCaseForReferralAndAcceptCommand, {
+        familyId,
+        caseId: crypto.randomUUID(),
+        referralId,
+        openedAtUtc: openedAtLocal,
+      })
+  );
+
+  const openCaseForReferralAndAccept = async (
+    familyId: string,
+    referralId: string,
+    openedAtLocal: Date
+  ) => {
+    await openCaseForReferralAndAcceptCommand(
+      familyId,
+      referralId,
+      openedAtLocal
+    );
+  };
+
   const completeReferralRequirementCommand = useV1ReferralCommandCallback(
     async (
       referralId: string,
@@ -353,6 +407,8 @@ export function useV1ReferralsModel() {
     closeReferral,
     reopenReferral,
     acceptReferral,
+    linkReferralToCaseAndAccept,
+    openCaseForReferralAndAccept,
     completeReferralRequirement,
     markReferralRequirementIncomplete,
     exemptReferralRequirement,

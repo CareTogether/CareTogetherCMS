@@ -6,6 +6,7 @@ import {
   CircularProgress,
   Divider,
   Grid,
+  Stack,
   Typography,
   Snackbar,
   Alert,
@@ -33,7 +34,7 @@ import { CompletedRequirementRow } from '../Requirements/CompletedRequirementRow
 import { ExemptedRequirementRow } from '../Requirements/ExemptedRequirementRow';
 import { V1ReferralContext } from '../Requirements/RequirementContext';
 import { CreatePartneringFamilyDrawer } from '../V1Cases/CreatePartneringFamilyDrawer';
-import { partneringFamiliesData, useV1CasesModel } from '../Model/V1CasesModel';
+import { partneringFamiliesData } from '../Model/V1CasesModel';
 import { useLoadable } from '../Hooks/useLoadable';
 import { EditReferralDrawer } from '../V1Referrals/EditReferralDrawer';
 import { policyData } from '../Model/ConfigurationModel';
@@ -60,14 +61,7 @@ function formatStatusWithDate(
   acceptedAt?: Date,
   closedAt?: Date
 ) {
-  const format = (date?: Date) =>
-    date
-      ? new Intl.DateTimeFormat('en-US', {
-          year: 'numeric',
-          month: 'short',
-          day: 'numeric',
-        }).format(date)
-      : '';
+  const format = (date?: Date) => formatDate(date) ?? '';
 
   if (status === V1ReferralStatus.Open) {
     return `Open since ${format(openedAt)}`;
@@ -80,6 +74,25 @@ function formatStatusWithDate(
   return `Closed on ${format(closedAt)}`;
 }
 
+function formatDate(date?: Date) {
+  return date
+    ? new Intl.DateTimeFormat('en-US', {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric',
+      }).format(date)
+    : undefined;
+}
+
+function formatCaseLabel(isOpenCase: boolean, closedAtUtc?: Date) {
+  if (isOpenCase) {
+    return 'Open Case';
+  }
+
+  const closedDate = formatDate(closedAtUtc);
+  return closedDate ? `Closed Case (${closedDate})` : 'Closed Case';
+}
+
 export function ReferralDetailsPage() {
   useScreenTitle('Referrals');
 
@@ -90,9 +103,8 @@ export function ReferralDetailsPage() {
   const policy = useRecoilValue(policyData);
   const appNavigate = useAppNavigate();
 
-  const { reopenReferral, updateReferralFamily, acceptReferral } =
+  const { reopenReferral, updateReferralFamily, linkReferralToCaseAndAccept } =
     useV1ReferralsModel();
-  const { linkReferralToExistingCase } = useV1CasesModel();
 
   const { organizationId, locationId } = useRecoilValue(
     selectedLocationContextState
@@ -142,15 +154,18 @@ export function ReferralDetailsPage() {
     ? familyLookup(currentReferral.familyId)
     : undefined;
 
+  const linkedV1Case =
+    family?.partneringFamilyInfo?.openV1Case?.linkedV1ReferralIds?.includes(
+      currentReferral.referralId
+    )
+      ? family.partneringFamilyInfo.openV1Case
+      : family?.partneringFamilyInfo?.closedV1Cases?.find((v1Case) =>
+          v1Case.linkedV1ReferralIds?.includes(currentReferral.referralId)
+        );
+
   const familyHasOpenCase = !!family?.partneringFamilyInfo?.openV1Case;
 
-  const referralAlreadyLinkedToCase =
-    !!family?.partneringFamilyInfo?.openV1Case?.linkedV1ReferralIds?.includes(
-      currentReferral.referralId
-    ) ||
-    !!family?.partneringFamilyInfo?.closedV1Cases?.some((v1Case) =>
-      v1Case.linkedV1ReferralIds?.includes(currentReferral.referralId)
-    );
+  const referralAlreadyLinkedToCase = !!linkedV1Case;
 
   const familyHasAnyCase =
     !!family?.partneringFamilyInfo?.openV1Case ||
@@ -172,6 +187,16 @@ export function ReferralDetailsPage() {
 
   const referralRequirements = referral.missingIntakeRequirements ?? [];
 
+  const detailLinkButtonSx = {
+    padding: 0,
+    minWidth: 'auto',
+    textTransform: 'none',
+    fontSize: 'inherit',
+    fontWeight: 'inherit',
+    lineHeight: 'inherit',
+    verticalAlign: 'baseline',
+  };
+
   function buildCaseOptionsForFamily(familyId: string) {
     const selectedFamily = familyLookup(familyId);
 
@@ -180,22 +205,14 @@ export function ReferralDetailsPage() {
         ? [
             {
               id: selectedFamily.partneringFamilyInfo.openV1Case.id,
-              label: 'Open Case',
+              label: formatCaseLabel(true),
             },
           ]
         : []),
       ...(selectedFamily?.partneringFamilyInfo?.closedV1Cases?.map(
         (v1Case) => ({
           id: v1Case.id,
-          label: `Closed Case${
-            v1Case.closedAtUtc
-              ? ` (${new Intl.DateTimeFormat('en-US', {
-                  year: 'numeric',
-                  month: 'short',
-                  day: 'numeric',
-                }).format(v1Case.closedAtUtc)})`
-              : ''
-          }`,
+          label: formatCaseLabel(false, v1Case.closedAtUtc),
         })
       ) ?? []),
     ];
@@ -250,12 +267,12 @@ export function ReferralDetailsPage() {
 
     try {
       setWorking(true);
-      await linkReferralToExistingCase(
+      await linkReferralToCaseAndAccept(
         currentReferral.familyId,
         selectedCaseIdToLink,
-        currentReferral.referralId
+        currentReferral.referralId,
+        new Date()
       );
-      await acceptReferral(currentReferral.referralId, new Date());
       resetLinkCaseDialogState();
       setShowAcceptedMessage(true);
     } finally {
@@ -399,32 +416,62 @@ export function ReferralDetailsPage() {
 
         <Grid item xs={12} md={8}>
           <Grid item xs={12} sx={{ mb: 2 }}>
-            <Typography>
-              <strong>Status:</strong>{' '}
-              {formatStatusWithDate(
-                currentReferral.status,
-                currentReferral.createdAtUtc,
-                currentReferral.acceptedAtUtc,
-                currentReferral.closedAtUtc
-              )}
-            </Typography>
+            <Stack spacing={0.5}>
+              <Typography>
+                <strong>Status:</strong>{' '}
+                {formatStatusWithDate(
+                  currentReferral.status,
+                  currentReferral.createdAtUtc,
+                  currentReferral.acceptedAtUtc,
+                  currentReferral.closedAtUtc
+                )}
+              </Typography>
 
-            <Box sx={{ mt: 1 }}>
-              {family && (
-                <Typography>
-                  <strong>Family:</strong>{' '}
-                  <Button
-                    variant="text"
-                    sx={{ padding: 0, minWidth: 'auto', textTransform: 'none' }}
-                    onClick={() => appNavigate.family(family.family.id)}
-                  >
-                    {familyNameString(family)}
-                  </Button>
-                </Typography>
-              )}
+              {family ? (
+                <>
+                  <Typography>
+                    <strong>Family:</strong>{' '}
+                    <Button
+                      variant="text"
+                      sx={detailLinkButtonSx}
+                      onClick={() => appNavigate.family(family.family.id)}
+                    >
+                      {familyNameString(family)}
+                    </Button>
+                  </Typography>
 
-              {!family && <Typography>-</Typography>}
-            </Box>
+                  <Typography>
+                    <strong>Case:</strong>{' '}
+                    {linkedV1Case ? (
+                      <Button
+                        variant="text"
+                        sx={detailLinkButtonSx}
+                        onClick={() =>
+                          appNavigate.family(family.family.id, linkedV1Case.id)
+                        }
+                      >
+                        {formatCaseLabel(
+                          linkedV1Case === family.partneringFamilyInfo?.openV1Case,
+                          linkedV1Case.closedAtUtc
+                        )}
+                      </Button>
+                    ) : (
+                      '—'
+                    )}
+                  </Typography>
+                </>
+              ) : (
+                <>
+                  <Typography>
+                    <strong>Family:</strong> —
+                  </Typography>
+
+                  <Typography>
+                    <strong>Case:</strong> —
+                  </Typography>
+                </>
+              )}
+            </Stack>
           </Grid>
 
           <Divider sx={{ width: '100%', mb: 2 }} />

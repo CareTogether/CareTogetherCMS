@@ -220,18 +220,13 @@ namespace CareTogether.Managers.Records
                 .ToImmutableList();
         }
 
-        public async Task<RecordsAggregate?> ExecuteCompositeRecordsCommand(
+        public async Task<ImmutableList<RecordsAggregate>> ExecuteCompositeRecordsCommand(
             Guid organizationId,
             Guid locationId,
             ClaimsPrincipal user,
             CompositeRecordsCommand command
         )
         {
-            var locationPolicy = await policiesResource.GetCurrentPolicy(
-                organizationId,
-                locationId
-            );
-
             var userContext = await CreateSessionUserContext(user, organizationId, locationId);
 
             var atomicCommands = GenerateAtomicCommandsForCompositeCommand(command)
@@ -251,26 +246,12 @@ namespace CareTogether.Managers.Records
             foreach (var atomicCommand in atomicCommands)
                 await ExecuteCommandAsync(organizationId, locationId, user, atomicCommand);
 
-            var userPersonId = user.PersonId(organizationId, locationId);
-            var userFamily =
-                userPersonId == null
-                    ? null
-                    : await directoryResource.FindPersonFamilyAsync(
-                        organizationId,
-                        locationId,
-                        userPersonId.Value
-                    );
-
-            var familyResult = await combinedFamilyInfoFormatter.RenderCombinedFamilyInfoAsync(
+            return await RenderCompositeCommandResultAsync(
                 organizationId,
-                locationPolicy,
                 locationId,
-                command.FamilyId,
-                null,
-                userContext
+                userContext,
+                atomicCommands
             );
-
-            return familyResult == null ? null : new FamilyRecordsAggregate(familyResult);
         }
 
         public async Task<ImmutableList<RecordsAggregate>> ExecuteAtomicRecordsCommandAsync(
@@ -674,6 +655,31 @@ namespace CareTogether.Managers.Records
                     );
                     break;
                 }
+                case LinkReferralToCaseAndAcceptCommand c:
+                {
+                    yield return new ReferralRecordsCommand(
+                        new LinkReferralToCase(c.FamilyId, c.CaseId, c.ReferralId)
+                    );
+                    yield return new V1ReferralRecordsCommand(
+                        new AcceptV1Referral(c.ReferralId, c.AcceptedAtUtc)
+                    );
+                    break;
+                }
+                case OpenCaseForReferralAndAcceptCommand c:
+                {
+                    yield return new ReferralRecordsCommand(
+                        new CreateReferral(
+                            c.FamilyId,
+                            c.CaseId,
+                            c.OpenedAtUtc,
+                            ImmutableList<Guid>.Empty.Add(c.ReferralId)
+                        )
+                    );
+                    yield return new V1ReferralRecordsCommand(
+                        new AcceptV1Referral(c.ReferralId, c.OpenedAtUtc)
+                    );
+                    break;
+                }
                 default:
                     throw new NotImplementedException(
                         $"The command type '{command.GetType().FullName}' has not been implemented."
@@ -955,6 +961,32 @@ namespace CareTogether.Managers.Records
                     .Select(result => new FamilyRecordsAggregate(result))
                     .ToImmutableList<RecordsAggregate>();
             }
+        }
+
+        private async Task<ImmutableList<RecordsAggregate>> RenderCompositeCommandResultAsync(
+            Guid organizationId,
+            Guid locationId,
+            SessionUserContext userContext,
+            ImmutableList<AtomicRecordsCommand> atomicCommands
+        )
+        {
+            var renderedAggregates = (
+                await Task.WhenAll(
+                    atomicCommands.Select(atomicCommand =>
+                        RenderCommandResultAsync(
+                            organizationId,
+                            locationId,
+                            userContext,
+                            atomicCommand
+                        )
+                    )
+                )
+            ).SelectMany(results => results);
+
+            return renderedAggregates
+                .GroupBy(aggregate => (aggregate.Id, AggregateType: aggregate.GetType()))
+                .Select(group => group.Last())
+                .ToImmutableList();
         }
 
         private Guid[] GetFamilyIdsFromCommand(AtomicRecordsCommand command) =>

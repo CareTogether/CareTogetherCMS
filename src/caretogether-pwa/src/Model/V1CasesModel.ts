@@ -56,16 +56,15 @@ import {
   EditArrangementRequestedAt,
   EditArrangementEndTime,
   EditArrangementCancelledAt,
-  LinkReferralToCase,
 } from '../GeneratedClient';
 import { api } from '../Api/Api';
-import { useAtomicRecordsCommandCallback } from './DirectoryModel';
 import { visibleFamiliesQuery } from './Data';
 import { convertUtcDateToLocalDate } from '../Utilities/dateUtils';
 import { commandFactory } from './CommandFactory';
 import {
   visibleAggregatesState,
   selectedLocationContextState,
+  useAtomicRecordsCommandCallback,
 } from '../Model/Data';
 import { useSetRecoilState, useRecoilValue } from 'recoil';
 
@@ -932,40 +931,6 @@ export function useV1CasesModel() {
     }
   );
 
-  const linkReferralToExistingCaseCommand =
-    useV1CaseCommandCallbackWithLocation(
-      async (
-        partneringFamilyId: string,
-        v1CaseId: string,
-        linkedReferralId: string
-      ) => {
-        const command = commandFactory(LinkReferralToCase, {
-          familyId: partneringFamilyId,
-          referralId: v1CaseId,
-          linkedReferralId,
-        });
-        return command;
-      }
-    );
-
-  const linkReferralToExistingCase = async (
-    partneringFamilyId: string,
-    v1CaseId: string,
-    linkedReferralId: string
-  ) => {
-    await linkReferralToExistingCaseCommand(
-      partneringFamilyId,
-      v1CaseId,
-      linkedReferralId
-    );
-
-    const updatedAggregates = await api.records.listVisibleAggregates(
-      organizationId,
-      locationId
-    );
-    setVisibleAggregates(updatedAggregates);
-  };
-
   const closeV1Case = useV1CaseCommandCallbackWithLocation(
     async (
       partneringFamilyId: string,
@@ -1074,6 +1039,5 @@ export function useV1CasesModel() {
     closeV1Case,
     reopenV1Case,
     openV1Case,
-    linkReferralToExistingCase,
   };
 }

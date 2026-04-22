@@ -1,8 +1,16 @@
-import { atom, atomFamily, selector, selectorFamily } from 'recoil';
+import {
+  atom,
+  atomFamily,
+  selector,
+  selectorFamily,
+  useRecoilCallback,
+} from 'recoil';
 import { useLoadable } from '../Hooks/useLoadable';
 import { api } from '../Api/Api';
 import {
+  AtomicRecordsCommand,
   CommunityRecordsAggregate,
+  CompositeRecordsCommand,
   FamilyRecordsAggregate,
   RecordsAggregate,
   ReferralRecordsAggregate,
@@ -125,6 +133,96 @@ export const visibleAggregatesState = selector({
     set(visibleAggregatesForScopeData(context), newValue);
   },
 });
+
+type AggregateLike = RecordsAggregate | null;
+
+function mergeVisibleAggregate(
+  current: RecordsAggregate[],
+  aggregateId: string,
+  updatedAggregate: AggregateLike
+) {
+  return updatedAggregate == null
+    ? current.filter((currentEntry) => currentEntry.id !== aggregateId)
+    : current.some(
+          (currentEntry) =>
+            currentEntry.id === updatedAggregate.id &&
+            currentEntry.constructor === updatedAggregate.constructor
+        )
+      ? current.map((currentEntry) =>
+          currentEntry.id === updatedAggregate.id &&
+          currentEntry.constructor === updatedAggregate.constructor
+            ? updatedAggregate
+            : currentEntry
+        )
+      : current.concat(updatedAggregate);
+}
+
+function upsertVisibleAggregates(
+  set: (
+    state: typeof visibleAggregatesState,
+    valueOrUpdater:
+      | RecordsAggregate[]
+      | ((current: RecordsAggregate[]) => RecordsAggregate[])
+  ) => void,
+  aggregateId: string,
+  updatedAggregates: AggregateLike[]
+) {
+  for (const updatedAggregate of updatedAggregates) {
+    set(visibleAggregatesState, (current: RecordsAggregate[]) =>
+      mergeVisibleAggregate(current, aggregateId, updatedAggregate)
+    );
+  }
+}
+
+export function useAtomicRecordsCommandCallback<
+  T extends unknown[],
+  U extends AtomicRecordsCommand,
+>(callback: (aggregateId: string, ...args: T) => Promise<U>) {
+  return useRecoilCallback(({ snapshot, set }) => {
+    const asyncCallback = async (aggregateId: string, ...args: T) => {
+      const { organizationId, locationId } = await snapshot.getPromise(
+        selectedLocationContextState
+      );
+
+      const command = await callback(aggregateId, ...args);
+
+      const updatedAggregates = await api.records.submitAtomicRecordsCommand(
+        organizationId,
+        locationId,
+        command
+      );
+
+      upsertVisibleAggregates(set, aggregateId, updatedAggregates);
+    };
+    return asyncCallback;
+  });
+}
+
+export function useCompositeRecordsCommandCallback<T extends unknown[]>(
+  callback: (
+    aggregateId: string,
+    ...args: T
+  ) => Promise<CompositeRecordsCommand>
+) {
+  return useRecoilCallback(({ snapshot, set }) => {
+    const asyncCallback = async (aggregateId: string, ...args: T) => {
+      const { organizationId, locationId } = await snapshot.getPromise(
+        selectedLocationContextState
+      );
+
+      const command = await callback(aggregateId, ...args);
+
+      const updatedAggregates = await api.records.submitCompositeRecordsCommand(
+        organizationId,
+        locationId,
+        command
+      );
+
+      upsertVisibleAggregates(set, aggregateId, updatedAggregates);
+    };
+    return asyncCallback;
+  });
+}
 
 // This hook can be used for convenience to determine if the current scope's records have been loaded.
 export function useDataLoaded() {

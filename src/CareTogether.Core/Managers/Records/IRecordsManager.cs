@@ -79,6 +79,20 @@ namespace CareTogether.Managers.Records
         string? Notes
     ) : CompositeRecordsCommand(FamilyId);
 
+    public sealed record LinkReferralToCaseAndAcceptCommand(
+        Guid FamilyId,
+        Guid CaseId,
+        Guid ReferralId,
+        DateTime AcceptedAtUtc
+    ) : CompositeRecordsCommand(FamilyId);
+
+    public sealed record OpenCaseForReferralAndAcceptCommand(
+        Guid FamilyId,
+        Guid CaseId,
+        Guid ReferralId,
+        DateTime OpenedAtUtc
+    ) : CompositeRecordsCommand(FamilyId);
+
     [JsonHierarchyBase]
     public abstract partial record AtomicRecordsCommand();
 
@@ -128,8 +142,7 @@ namespace CareTogether.Managers.Records
             Guid locationId
         );
 
-        //TODO: Support returning *multiple* aggregates to upsert
-        Task<RecordsAggregate?> ExecuteCompositeRecordsCommand(
+        Task<ImmutableList<RecordsAggregate>> ExecuteCompositeRecordsCommand(
             Guid organizationId,
             Guid locationId,
             ClaimsPrincipal user,
