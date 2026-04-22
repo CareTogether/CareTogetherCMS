@@ -54,25 +54,7 @@ import {
   LinkReferralToExistingCaseDialog,
   LinkReferralToExistingCaseOption,
 } from './LinkReferralToExistingCaseDialog';
-
-function formatStatusWithDate(
-  status: V1ReferralStatus,
-  openedAt?: Date,
-  acceptedAt?: Date,
-  closedAt?: Date
-) {
-  const format = (date?: Date) => formatDate(date) ?? '';
-
-  if (status === V1ReferralStatus.Open) {
-    return `Open since ${format(openedAt)}`;
-  }
-
-  if (status === V1ReferralStatus.Accepted) {
-    return `Accepted on ${format(acceptedAt)}`;
-  }
-
-  return `Closed on ${format(closedAt)}`;
-}
+import { formatStatusWithDate } from './formatStatusWithDate';
 
 function formatDate(date?: Date) {
   return date
@@ -451,7 +433,8 @@ export function ReferralDetailsPage() {
                         }
                       >
                         {formatCaseLabel(
-                          linkedV1Case === family.partneringFamilyInfo?.openV1Case,
+                          linkedV1Case ===
+                            family.partneringFamilyInfo?.openV1Case,
                           linkedV1Case.closedAtUtc
                         )}
                       </Button>

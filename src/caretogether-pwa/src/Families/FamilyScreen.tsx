@@ -93,6 +93,7 @@ import { visibleReferralsQuery } from '../Model/Data';
 import { useRecoilValue } from 'recoil';
 import { useV1CasesModel } from '../Model/V1CasesModel';
 import { policyData } from '../Model/ConfigurationModel';
+import { formatStatusWithDate } from '../V1Referrals/formatStatusWithDate';
 
 export function FamilyScreen() {
   const familyIdMaybe = useParams<{ familyId: string }>();
@@ -121,33 +122,6 @@ export function FamilyScreen() {
   const familyReferrals = useMemo(() => {
     return (referrals ?? []).filter((r) => r.familyId === familyId);
   }, [referrals, familyId]);
-
-  function referralStatusLabel(status: V1ReferralStatus): string {
-    switch (status) {
-      case V1ReferralStatus.Open:
-        return 'Open';
-      case V1ReferralStatus.Accepted:
-        return 'Accepted';
-      case V1ReferralStatus.Closed:
-        return 'Closed';
-    }
-  }
-
-  function referralStatusDate(referral: {
-    status: V1ReferralStatus;
-    createdAtUtc?: Date;
-    acceptedAtUtc?: Date;
-    closedAtUtc?: Date;
-  }): Date | undefined {
-    switch (referral.status) {
-      case V1ReferralStatus.Open:
-        return referral.createdAtUtc;
-      case V1ReferralStatus.Accepted:
-        return referral.acceptedAtUtc ?? referral.createdAtUtc;
-      case V1ReferralStatus.Closed:
-        return referral.closedAtUtc ?? referral.createdAtUtc;
-    }
-  }
 
   function referralRequirementSummary(referral: {
     completedRequirements?: Array<unknown>;
@@ -892,13 +866,16 @@ export function FamilyScreen() {
                                       }}
                                     >
                                       {linkedReferrals.map((ref) => {
-                                        const date = referralStatusDate(ref);
                                         const requirementSummary =
                                           referralRequirementSummary(ref);
 
                                         const metadata = [
-                                          referralStatusLabel(ref.status),
-                                          date ? format(date, 'M/d/yy') : null,
+                                          formatStatusWithDate(
+                                            ref.status,
+                                            ref.createdAtUtc,
+                                            ref.acceptedAtUtc,
+                                            ref.closedAtUtc
+                                          ),
                                           requirementSummary || null,
                                         ]
                                           .filter(Boolean)
@@ -946,13 +923,16 @@ export function FamilyScreen() {
                               >
                                 {caseReferralTable.unlinkedReferrals.map(
                                   (ref) => {
-                                    const date = referralStatusDate(ref);
                                     const requirementSummary =
                                       referralRequirementSummary(ref);
 
                                     const metadata = [
-                                      referralStatusLabel(ref.status),
-                                      date ? format(date, 'M/d/yy') : null,
+                                      formatStatusWithDate(
+                                        ref.status,
+                                        ref.createdAtUtc,
+                                        ref.acceptedAtUtc,
+                                        ref.closedAtUtc
+                                      ),
                                       requirementSummary || null,
                                     ]
                                       .filter(Boolean)
