@@ -56,7 +56,10 @@ import { Masonry } from '@mui/lab';
 import { MissingRequirementRow } from '../Requirements/MissingRequirementRow';
 import { ExemptedRequirementRow } from '../Requirements/ExemptedRequirementRow';
 import { CompletedRequirementRow } from '../Requirements/CompletedRequirementRow';
-import { VolunteerFamilyContext } from '../Requirements/RequirementContext';
+import {
+  V1CaseContext,
+  VolunteerFamilyContext,
+} from '../Requirements/RequirementContext';
 import { ActivityTimeline } from '../Activities/ActivityTimeline';
 import { V1CaseComments } from '../V1Cases/V1CaseComments';
 import { V1CaseCustomField } from '../V1Cases/V1CaseCustomField';
@@ -343,14 +346,13 @@ export function FamilyScreen() {
     });
   }
 
-  //   let v1CaseRequirementContext: V1CaseContext | undefined;
-  //   if (selectedV1Case) {
-  //     v1CaseRequirementContext = {
-  //       kind: 'V1Case',
-  //       partneringFamilyId: familyId,
-  //       v1CaseId: selectedV1Case.id!,
-  //     };
-  //   }
+  const v1CaseRequirementContext: V1CaseContext | undefined = selectedV1Case
+    ? {
+        kind: 'V1Case',
+        partneringFamilyId: familyId,
+        v1CaseId: selectedV1Case.id!,
+      }
+    : undefined;
 
   const volunteerFamilyRequirementContext: VolunteerFamilyContext = {
     kind: 'Volunteer Family',
@@ -365,9 +367,6 @@ export function FamilyScreen() {
     'updateTestFamilyFlag'
   );
   const referralsEnabled = useFeatureFlagEnabled('referrals');
-  const showIntakeRequirementsAndCustomFields = useFeatureFlagEnabled(
-    'showIntakeRequirementsAndCustomFields'
-  );
 
   useScreenTitle(family ? `${familyLastName(family)} Family` : '...');
   useScreenTitleComponent(family ? <TestFamilyBadge family={family} /> : null);
@@ -639,7 +638,7 @@ export function FamilyScreen() {
 
               <Grid item xs={12} md={4}>
                 {permissions(Permission.ViewV1CaseCustomFields) &&
-                  showIntakeRequirementsAndCustomFields &&
+                  !referralsEnabled &&
                   (
                     selectedV1Case?.completedCustomFields ||
                     ([] as Array<CompletedCustomFieldInfo | string>)
@@ -761,9 +760,11 @@ export function FamilyScreen() {
                           >
                             Case
                           </TableCell>
-                          <TableCell sx={{ fontWeight: 600, width: '100%' }}>
-                            Linked Referrals
-                          </TableCell>
+                          {referralsEnabled && (
+                            <TableCell sx={{ fontWeight: 600, width: '100%' }}>
+                              Linked Referrals
+                            </TableCell>
+                          )}
                         </TableRow>
                       </TableHead>
 
@@ -844,109 +845,112 @@ export function FamilyScreen() {
                                   </Box>
                                 </TableCell>
 
-                                <TableCell sx={{ width: '100%' }}>
-                                  {linkedReferrals.length === 0 ? (
-                                    <Typography color="text.secondary">
-                                      —
-                                    </Typography>
-                                  ) : (
-                                    <Box
-                                      sx={{
-                                        display: 'flex',
-                                        flexWrap: 'wrap',
-                                        gap: 1,
-                                      }}
-                                    >
-                                      {linkedReferrals.map((ref) => {
-                                        const requirementSummary =
-                                          referralRequirementSummary(ref);
+                                {referralsEnabled && (
+                                  <TableCell sx={{ width: '100%' }}>
+                                    {linkedReferrals.length === 0 ? (
+                                      <Typography color="text.secondary">
+                                        —
+                                      </Typography>
+                                    ) : (
+                                      <Box
+                                        sx={{
+                                          display: 'flex',
+                                          flexWrap: 'wrap',
+                                          gap: 1,
+                                        }}
+                                      >
+                                        {linkedReferrals.map((ref) => {
+                                          const requirementSummary =
+                                            referralRequirementSummary(ref);
 
-                                        const metadata = [
-                                          formatStatusWithDate(
-                                            ref.status,
-                                            ref.createdAtUtc,
-                                            ref.acceptedAtUtc,
-                                            ref.closedAtUtc
-                                          ),
-                                          requirementSummary || null,
-                                        ]
-                                          .filter(Boolean)
-                                          .join(' · ');
+                                          const metadata = [
+                                            formatStatusWithDate(
+                                              ref.status,
+                                              ref.createdAtUtc,
+                                              ref.acceptedAtUtc,
+                                              ref.closedAtUtc
+                                            ),
+                                            requirementSummary || null,
+                                          ]
+                                            .filter(Boolean)
+                                            .join(' · ');
 
-                                        return (
-                                          <Chip
-                                            key={ref.referralId}
-                                            clickable
-                                            size="small"
-                                            label={`${ref.title} · ${metadata}`}
-                                            onClick={() =>
-                                              appNavigate.referral(
-                                                ref.referralId
-                                              )
-                                            }
-                                          />
-                                        );
-                                      })}
-                                    </Box>
-                                  )}
-                                </TableCell>
+                                          return (
+                                            <Chip
+                                              key={ref.referralId}
+                                              clickable
+                                              size="small"
+                                              label={`${ref.title} · ${metadata}`}
+                                              onClick={() =>
+                                                appNavigate.referral(
+                                                  ref.referralId
+                                                )
+                                              }
+                                            />
+                                          );
+                                        })}
+                                      </Box>
+                                    )}
+                                  </TableCell>
+                                )}
                               </TableRow>
                             );
                           }
                         )}
 
-                        {caseReferralTable.unlinkedReferrals.length > 0 && (
-                          <TableRow>
-                            <TableCell
-                              sx={{
-                                width: '1%',
-                                whiteSpace: 'nowrap',
-                              }}
-                            >
-                              (not linked to a case)
-                            </TableCell>
-                            <TableCell sx={{ width: '100%' }}>
-                              <Box
+                        {!referralsEnabled &&
+                          caseReferralTable.unlinkedReferrals.length > 0 && (
+                            <TableRow>
+                              <TableCell
                                 sx={{
-                                  display: 'flex',
-                                  flexWrap: 'wrap',
-                                  gap: 1,
+                                  width: '1%',
+                                  whiteSpace: 'nowrap',
                                 }}
                               >
-                                {caseReferralTable.unlinkedReferrals.map(
-                                  (ref) => {
-                                    const requirementSummary =
-                                      referralRequirementSummary(ref);
+                                (not linked to a case)
+                              </TableCell>
+                              <TableCell sx={{ width: '100%' }}>
+                                <Box
+                                  sx={{
+                                    display: 'flex',
+                                    flexWrap: 'wrap',
+                                    gap: 1,
+                                  }}
+                                >
+                                  {caseReferralTable.unlinkedReferrals.map(
+                                    (ref) => {
+                                      const requirementSummary =
+                                        referralRequirementSummary(ref);
 
-                                    const metadata = [
-                                      formatStatusWithDate(
-                                        ref.status,
-                                        ref.createdAtUtc,
-                                        ref.acceptedAtUtc,
-                                        ref.closedAtUtc
-                                      ),
-                                      requirementSummary || null,
-                                    ]
-                                      .filter(Boolean)
-                                      .join(' · ');
+                                      const metadata = [
+                                        formatStatusWithDate(
+                                          ref.status,
+                                          ref.createdAtUtc,
+                                          ref.acceptedAtUtc,
+                                          ref.closedAtUtc
+                                        ),
+                                        requirementSummary || null,
+                                      ]
+                                        .filter(Boolean)
+                                        .join(' · ');
 
-                                    return (
-                                      <Chip
-                                        key={ref.referralId}
-                                        clickable
-                                        size="small"
-                                        label={`${ref.title} · ${metadata}`}
-                                        onClick={() =>
-                                          appNavigate.referral(ref.referralId)
-                                        }
-                                      />
-                                    );
-                                  }
-                                )}
-                              </Box>
-                            </TableCell>
-                          </TableRow>
-                        )}
+                                      return (
+                                        <Chip
+                                          key={ref.referralId}
+                                          clickable
+                                          size="small"
+                                          label={`${ref.title} · ${metadata}`}
+                                          onClick={() =>
+                                            appNavigate.referral(ref.referralId)
+                                          }
+                                        />
+                                      );
+                                    }
+                                  )}
+                                </Box>
+                              </TableCell>
+                            </TableRow>
+                          )}
                       </TableBody>
                     </Table>
                   </TableContainer>
@@ -986,9 +990,10 @@ export function FamilyScreen() {
           </Grid>
 
           <Grid container spacing={0}>
-            {/* {permissions(Permission.ViewV1CaseProgress) &&
-              showIntakeRequirementsAndCustomFields &&
-              selectedV1Case && (
+            {permissions(Permission.ViewV1CaseProgress) &&
+              !referralsEnabled &&
+              selectedV1Case &&
+              v1CaseRequirementContext && (
                 <>
                   <Grid item xs={12} sm={6} md={4} style={{ paddingRight: 20 }}>
                     <Typography
@@ -1002,7 +1007,7 @@ export function FamilyScreen() {
                       <MissingRequirementRow
                         key={`${missing}:${i}`}
                         requirement={missing}
-                        context={v1CaseRequirementContext!}
+                        context={v1CaseRequirementContext}
                         v1CaseId={selectedV1Case.id}
                       />
                     ))}
@@ -1020,7 +1025,7 @@ export function FamilyScreen() {
                         <CompletedRequirementRow
                           key={`${completed.completedRequirementId}:${i}`}
                           requirement={completed}
-                          context={v1CaseRequirementContext!}
+                          context={v1CaseRequirementContext}
                         />
                       )
                     )}
@@ -1029,13 +1034,13 @@ export function FamilyScreen() {
                         <ExemptedRequirementRow
                           key={`${exempted.requirementName}:${i}`}
                           requirement={exempted}
-                          context={v1CaseRequirementContext!}
+                          context={v1CaseRequirementContext}
                         />
                       )
                     )}
                   </Grid>
                 </>
-              )} */}
+              )}
             {family.volunteerFamilyInfo && (
               <>
                 <Grid item xs={12}>
