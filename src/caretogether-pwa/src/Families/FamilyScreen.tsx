@@ -1,5 +1,4 @@
 import { useReactToPrint } from 'react-to-print';
-
 import {
   Container,
   Toolbar,
@@ -36,10 +35,12 @@ import {
   V1CaseCloseReason,
 } from '../GeneratedClient';
 import { useParams } from 'react-router';
-import AddCircleIcon from '@mui/icons-material/AddCircle';
-import MoreVertIcon from '@mui/icons-material/MoreVert';
-import CloudUploadIcon from '@mui/icons-material/CloudUpload';
-import Diversity3Icon from '@mui/icons-material/Diversity3';
+import {
+  AddCircle as AddCircleIcon,
+  CloudUpload as CloudUploadIcon,
+  Diversity3 as Diversity3Icon,
+  MoreVert as MoreVertIcon,
+} from '@mui/icons-material';
 import { AdultCard } from './AdultCard';
 import { ChildCard } from './ChildCard';
 import { useEffect, useRef, useState } from 'react';

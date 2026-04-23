@@ -17,7 +17,7 @@ import { GenderEditor } from './GenderEditor';
 import { NotesEditor } from './NotesEditor';
 import { ConcernsEditor } from './ConcernsEditor';
 import { AgeEditor } from './AgeEditor';
-import DeleteForeverIcon from '@mui/icons-material/DeleteForever';
+import { DeleteForever as DeleteForeverIcon } from '@mui/icons-material';
 import { DeletePersonDialog } from './DeletePersonDialog';
 import { EthnicityEditor } from './EthnicityEditor';
 import { AdultFamilyRelationshipEditor } from './AdultFamilyRelationshipEditor';

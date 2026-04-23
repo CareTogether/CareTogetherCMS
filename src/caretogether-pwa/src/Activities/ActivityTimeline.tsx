@@ -19,8 +19,10 @@ import {
   ReferralRequirementCompleted as V1CaseRequirementCompleted,
   V1Referral,
 } from '../GeneratedClient';
-import PersonPinCircleIcon from '@mui/icons-material/PersonPinCircle';
-import EditIcon from '@mui/icons-material/Edit';
+import {
+  Edit as EditIcon,
+  PersonPinCircle as PersonPinCircleIcon,
+} from '@mui/icons-material';
 import {
   useNoteAuthorLookup,
   usePersonLookup,

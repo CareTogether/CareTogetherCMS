@@ -10,8 +10,10 @@ import {
   MenuItem,
   Divider,
 } from '@mui/material';
-import DeleteIcon from '@mui/icons-material/Delete';
-import AddIcon from '@mui/icons-material/Add';
+import {
+  Add as AddIcon,
+  Delete as DeleteIcon,
+} from '@mui/icons-material';
 import {
   ContextualPermissionSet,
   IContextualPermissionSet,

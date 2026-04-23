@@ -16,7 +16,10 @@ import {
   ListItemButtonProps,
   Tooltip,
 } from '@mui/material';
-import { ExpandLess, ExpandMore } from '@mui/icons-material';
+import {
+  ExpandLess,
+  ExpandMore,
+} from '@mui/icons-material';
 
 function TruncatedTooltip({
   children,

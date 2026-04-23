@@ -7,7 +7,7 @@ import {
   Select,
   SelectChangeEvent,
 } from '@mui/material';
-import FilterListIcon from '@mui/icons-material/FilterList';
+import { FilterList as FilterListIcon } from '@mui/icons-material';
 import { CustomFieldFilterOption, CustomFieldFilterValue } from './types';
 
 type Props = {

@@ -1,5 +1,15 @@
 import { useState } from 'react';
 import {
+  Dashboard as DashboardIcon,
+  Diversity3 as Diversity3Icon,
+  Inbox,
+  Menu as MenuIcon,
+  People as PeopleIcon,
+  PermPhoneMsg as PermPhoneMsgIcon,
+  Settings as SettingsIcon,
+  Support as SupportIcon,
+} from '@mui/icons-material';
+import {
   Badge,
   BottomNavigation,
   BottomNavigationAction,
@@ -9,13 +19,6 @@ import {
   Paper,
   useTheme,
 } from '@mui/material';
-import PeopleIcon from '@mui/icons-material/People';
-import PermPhoneMsgIcon from '@mui/icons-material/PermPhoneMsg';
-import Diversity3Icon from '@mui/icons-material/Diversity3';
-import DashboardIcon from '@mui/icons-material/Dashboard';
-import MenuIcon from '@mui/icons-material/Menu';
-import SettingsIcon from '@mui/icons-material/Settings';
-import SupportIcon from '@mui/icons-material/Support';
 import { Link, useLocation } from 'react-router-dom';
 import { ShellContextSwitcher } from './ShellContextSwitcher';
 import { selectedLocationContextState } from '../Model/Data';
@@ -26,7 +29,6 @@ import { useGlobalPermissions } from '../Model/SessionModel';
 import { Permission } from '../GeneratedClient';
 import { Stack } from '@mui/system';
 import { queueItemsCountQuery } from '../Model/QueueModel';
-import { Inbox } from '@mui/icons-material';
 
 export function ShellBottomNavigation() {
   const theme = useTheme();

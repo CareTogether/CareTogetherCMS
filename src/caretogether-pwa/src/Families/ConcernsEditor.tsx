@@ -3,7 +3,7 @@ import { Permission } from '../GeneratedClient';
 import { useDirectoryModel } from '../Model/DirectoryModel';
 import { useInlineEditor } from '../Hooks/useInlineEditor';
 import { PersonEditorProps } from './PersonEditorProps';
-import WarningIcon from '@mui/icons-material/Warning';
+import { Warning as WarningIcon } from '@mui/icons-material';
 import { useFamilyIdPermissions } from '../Model/SessionModel';
 
 export function ConcernsEditor({ familyId, person }: PersonEditorProps) {

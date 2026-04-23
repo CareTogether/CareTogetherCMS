@@ -10,7 +10,11 @@ import {
   RadioGroup,
   TextField,
 } from '@mui/material';
-import AddIcon from '@mui/icons-material/Add';
+import {
+  Add as AddIcon,
+  Favorite,
+  FavoriteBorder,
+} from '@mui/icons-material';
 import { useDirectoryModel } from '../Model/DirectoryModel';
 import { useInlineEditor } from '../Hooks/useInlineEditor';
 import { PersonEditorProps } from './PersonEditorProps';
@@ -20,7 +24,6 @@ import {
   PhoneNumberType,
   Permission,
 } from '../GeneratedClient';
-import { Favorite, FavoriteBorder } from '@mui/icons-material';
 import { useFamilyIdPermissions } from '../Model/SessionModel';
 
 type PhoneNumberEditorProps = PersonEditorProps & {

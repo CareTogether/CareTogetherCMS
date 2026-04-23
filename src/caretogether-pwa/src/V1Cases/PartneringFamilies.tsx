@@ -16,7 +16,11 @@ import {
 } from '@mui/material';
 import { partneringFamiliesData } from '../Model/V1CasesModel';
 import React, { useState } from 'react';
-import AddIcon from '@mui/icons-material/Add';
+import {
+  Add as AddIcon,
+  UnfoldLess as UnfoldLessIcon,
+  UnfoldMore as UnfoldMoreIcon,
+} from '@mui/icons-material';
 import { ArrangementPhase, Permission } from '../GeneratedClient';
 import { CreatePartneringFamilyDrawer } from './CreatePartneringFamilyDrawer';
 import { useScrollMemory } from '../Hooks/useScrollMemory';
@@ -29,8 +33,6 @@ import {
 } from '../Families/FamilyUtils';
 import { useAllPartneringFamiliesPermissions } from '../Model/SessionModel';
 import { useScreenTitle } from '../Shell/ShellScreenTitle';
-import UnfoldLessIcon from '@mui/icons-material/UnfoldLess';
-import UnfoldMoreIcon from '@mui/icons-material/UnfoldMore';
 import { useLoadable } from '../Hooks/useLoadable';
 import { ProgressBackdrop } from '../Shell/ProgressBackdrop';
 import { useAppNavigate } from '../Hooks/useAppNavigate';
