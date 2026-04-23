@@ -1,7 +1,6 @@
 import { Box, Grid, TableCell, TableRow } from '@mui/material';
 import { format } from 'date-fns';
 import { useState } from 'react';
-import LazyLoad from 'react-lazyload';
 import { Phone as PhoneIcon } from '@mui/icons-material';
 import {
   ArrangementPhase,
@@ -11,6 +10,7 @@ import {
 import { FamilyName } from '../../Families/FamilyName';
 import { TestFamilyBadge } from '../../Families/TestFamilyBadge';
 import { LazyLoadMountTrigger } from '../../Utilities/LazyLoadMountTrigger';
+import { LazyLoad } from '../../Utilities/reactLazyLoadInterop';
 import { ArrangementCard } from '../Arrangements/ArrangementCard';
 import { matchingArrangements } from './arrangementHelpers';
 import { PartneringFamilyTableItemProps } from './types';
