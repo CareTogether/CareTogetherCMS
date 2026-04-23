@@ -1033,43 +1033,6 @@ namespace CareTogether.Managers.Records
             };
         }
 
-        private async Task AutoAcceptAndLinkReferralToOpenCaseAsync(
-            Guid organizationId,
-            Guid locationId,
-            ClaimsPrincipal user,
-            V1Referral referral
-        )
-        {
-            if (referral.FamilyId == null)
-                return;
-
-            var openCase = await v1CasesResource.GetOpenCaseForFamilyAsync(
-                organizationId,
-                locationId,
-                referral.FamilyId.Value
-            );
-
-            if (openCase == null)
-                return;
-
-            if (referral.Status == V1ReferralStatus.Open)
-            {
-                await v1ReferralsResource.ExecuteV1ReferralCommandAsync(
-                    organizationId,
-                    locationId,
-                    new AcceptV1Referral(referral.ReferralId, DateTime.UtcNow),
-                    user.UserId()
-                );
-            }
-
-            await v1CasesResource.ExecuteV1CaseCommandAsync(
-                organizationId,
-                locationId,
-                new LinkReferralToCase(referral.FamilyId.Value, openCase.Id, referral.ReferralId),
-                user.UserId()
-            );
-        }
-
         private async Task<V1Referral> PopulateMissingReferralIntakeRequirementsAsync(
             Guid organizationId,
             Guid locationId,
