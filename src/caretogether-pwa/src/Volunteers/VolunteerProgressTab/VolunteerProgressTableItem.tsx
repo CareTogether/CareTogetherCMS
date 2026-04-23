@@ -1,10 +1,10 @@
 import { Box, TableCell, TableRow, Typography } from '@mui/material';
 import { CombinedFamilyInfo } from '../../GeneratedClient';
 import { useState } from 'react';
-import LazyLoad from 'react-lazyload';
 import { familyLastName } from '../../Families/FamilyUtils';
 import { TestFamilyBadge } from '../../Families/TestFamilyBadge';
 import { LazyLoadMountTrigger } from '../../Utilities/LazyLoadMountTrigger';
+import { LazyLoad } from '../../Utilities/reactLazyLoadInterop';
 
 type VolunteerProgressTableItemProps = {
   volunteerFamily: CombinedFamilyInfo;
