@@ -13,7 +13,7 @@ import {
   Permission,
 } from '../GeneratedClient';
 import { AgeText } from './AgeText';
-import EditIcon from '@mui/icons-material/Edit';
+import { Edit as EditIcon } from '@mui/icons-material';
 import { useDialogHandle } from '../Hooks/useDialogHandle';
 import { EditChildDialog } from './EditChildDialog';
 import { useFamilyPermissions } from '../Model/SessionModel';

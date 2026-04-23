@@ -26,7 +26,7 @@ import {
   CustodialRelationship,
 } from '../GeneratedClient';
 import { useDirectoryModel } from '../Model/DirectoryModel';
-import WarningIcon from '@mui/icons-material/Warning';
+import { Warning as WarningIcon } from '@mui/icons-material';
 import { ValidateDatePicker } from '../Generic/Forms/ValidateDatePicker';
 import { useRecoilValue } from 'recoil';
 import { ethnicitiesData } from '../Model/ConfigurationModel';

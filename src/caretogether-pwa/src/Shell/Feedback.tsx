@@ -1,5 +1,9 @@
 import React from 'react';
 import {
+  BugReport as BugReportIcon,
+  StarBorder as StarBorderIcon,
+} from '@mui/icons-material';
+import {
   Box,
   Popover,
   MenuList,
@@ -7,8 +11,6 @@ import {
   ListItemIcon,
   ListItemText,
 } from '@mui/material';
-import StarBorderIcon from '@mui/icons-material/StarBorder';
-import BugReportIcon from '@mui/icons-material/BugReport';
 import Button from '@mui/material/Button';
 import { Permission } from '../GeneratedClient';
 import { useGlobalPermissions } from '../Model/SessionModel';

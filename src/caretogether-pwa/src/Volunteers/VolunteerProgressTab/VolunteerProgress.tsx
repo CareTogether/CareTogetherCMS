@@ -18,7 +18,11 @@ import { volunteerFamiliesData } from '../../Model/VolunteersModel';
 import { allApprovalAndOnboardingRequirementsData } from '../../Model/ConfigurationModel';
 import React, { useEffect, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import AddIcon from '@mui/icons-material/Add';
+import {
+  Add as AddIcon,
+  UnfoldLess as UnfoldLessIcon,
+  UnfoldMore as UnfoldMoreIcon,
+} from '@mui/icons-material';
 import { CreateVolunteerFamilyDialog } from '../CreateVolunteerFamilyDialog';
 import { SearchBar } from '../../Shell/SearchBar';
 import { useLocalStorage } from '../../Hooks/useLocalStorage';
@@ -30,8 +34,6 @@ import {
 import { useAllVolunteerFamiliesPermissions } from '../../Model/SessionModel';
 import { Permission } from '../../GeneratedClient';
 import { useScreenTitle } from '../../Shell/ShellScreenTitle';
-import UnfoldLessIcon from '@mui/icons-material/UnfoldLess';
-import UnfoldMoreIcon from '@mui/icons-material/UnfoldMore';
 import { useLoadable } from '../../Hooks/useLoadable';
 import { ProgressBackdrop } from '../../Shell/ProgressBackdrop';
 import { useAppNavigate } from '../../Hooks/useAppNavigate';

@@ -34,10 +34,14 @@ import {
   policyData,
 } from '../../Model/ConfigurationModel';
 import React, { useEffect, useState } from 'react';
-import AddIcon from '@mui/icons-material/Add';
-import SmsIcon from '@mui/icons-material/Sms';
-import EmailIcon from '@mui/icons-material/Email';
-import FilterListIcon from '@mui/icons-material/FilterList';
+import {
+  Add as AddIcon,
+  Email as EmailIcon,
+  FilterList as FilterListIcon,
+  Sms as SmsIcon,
+  UnfoldLess as UnfoldLessIcon,
+  UnfoldMore as UnfoldMoreIcon,
+} from '@mui/icons-material';
 import { CreateVolunteerFamilyDialog } from '../CreateVolunteerFamilyDialog';
 import { Link, useLocation } from 'react-router-dom';
 import { SearchBar } from '../../Shell/SearchBar';
@@ -47,8 +51,6 @@ import { useAllVolunteerFamiliesPermissions } from '../../Model/SessionModel';
 import { BulkSmsSideSheet } from '../BulkSmsSideSheet';
 import { useWindowSize } from '../../Hooks/useWindowSize';
 import { useScreenTitle } from '../../Shell/ShellScreenTitle';
-import UnfoldLessIcon from '@mui/icons-material/UnfoldLess';
-import UnfoldMoreIcon from '@mui/icons-material/UnfoldMore';
 import { useLoadable } from '../../Hooks/useLoadable';
 import { ProgressBackdrop } from '../../Shell/ProgressBackdrop';
 import { selectedLocationContextState } from '../../Model/Data';

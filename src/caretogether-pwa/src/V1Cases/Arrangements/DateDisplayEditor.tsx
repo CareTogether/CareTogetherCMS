@@ -1,4 +1,4 @@
-import EditIcon from '@mui/icons-material/Edit';
+import { Edit as EditIcon } from '@mui/icons-material';
 import { format } from 'date-fns';
 import { IconButton, Typography } from '@mui/material';
 import { useState } from 'react';

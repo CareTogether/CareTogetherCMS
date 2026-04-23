@@ -1,13 +1,15 @@
 import { MouseEvent, useState } from 'react';
 import {
+  AccountCircle as AccountCircleIcon,
+  Logout as LogoutIcon,
+} from '@mui/icons-material';
+import {
   IconButton,
   ListItemIcon,
   ListItemText,
   Menu,
   MenuItem,
 } from '@mui/material';
-import AccountCircleIcon from '@mui/icons-material/AccountCircle';
-import LogoutIcon from '@mui/icons-material/Logout';
 import { logoutAsync } from '../Authentication/Auth';
 import { useScopedTrace } from '../Hooks/useScopedTrace';
 
