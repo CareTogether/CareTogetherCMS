@@ -70,7 +70,7 @@ import { useCustomFieldFilters } from '../../Generic/CustomFieldsFilter/useCusto
 import { matchesCustomFieldFilters } from '../../Generic/CustomFieldsFilter/matchesCustomFieldFilters';
 import { CustomFieldFilterValue } from '../../Generic/CustomFieldsFilter/types';
 import { useFeatureFlagEnabled } from 'posthog-js/react';
-import { forceCheck } from 'react-lazyload';
+import { forceCheck } from '../../Utilities/reactLazyLoadInterop';
 import { VolunteerApprovalTableItem } from './VolunteerApprovalTableItem';
 import { VolunteerCustomFieldFiltersSidePanel } from './VolunteerCustomFieldFiltersSidePanel';
 import { useSidePanel } from '../../Hooks/useSidePanel';

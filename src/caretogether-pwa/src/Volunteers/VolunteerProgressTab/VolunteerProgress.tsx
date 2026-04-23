@@ -38,7 +38,7 @@ import { useLoadable } from '../../Hooks/useLoadable';
 import { ProgressBackdrop } from '../../Shell/ProgressBackdrop';
 import { useAppNavigate } from '../../Hooks/useAppNavigate';
 import { useFeatureFlagEnabled } from 'posthog-js/react';
-import { forceCheck } from 'react-lazyload';
+import { forceCheck } from '../../Utilities/reactLazyLoadInterop';
 import { VolunteerProgressTableItem } from './VolunteerProgressTableItem';
 import { stickyHeaderTableSx } from '../../Utilities/stickyHeaderTableSx';
 
