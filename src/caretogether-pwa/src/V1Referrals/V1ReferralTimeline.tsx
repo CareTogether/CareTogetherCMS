@@ -1,4 +1,9 @@
 import {
+  Check as CheckIcon,
+  Description as DescriptionIcon,
+  Edit as EditIcon,
+} from '@mui/icons-material';
+import {
   Timeline,
   TimelineItem,
   TimelineOppositeContent,
@@ -8,9 +13,6 @@ import {
   TimelineContent,
 } from '@mui/lab';
 import { Box, Typography } from '@mui/material';
-import EditIcon from '@mui/icons-material/Edit';
-import CheckIcon from '@mui/icons-material/Check';
-import DescriptionIcon from '@mui/icons-material/Description';
 import { format } from 'date-fns';
 import { useMemo } from 'react';
 

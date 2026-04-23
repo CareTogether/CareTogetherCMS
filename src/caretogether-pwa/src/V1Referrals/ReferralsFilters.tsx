@@ -6,13 +6,15 @@ import {
   useMediaQuery,
   useTheme,
 } from '@mui/material';
-import AddIcon from '@mui/icons-material/Add';
-import UnfoldMoreIcon from '@mui/icons-material/UnfoldMore';
-import UnfoldLessIcon from '@mui/icons-material/UnfoldLess';
 import { MouseEvent } from 'react';
 import { SearchBar } from '../Shell/SearchBar';
 import { CombinedFamilyInfo } from '../GeneratedClient';
 import { CountyFilter } from '../V1Referrals/CountyFilter';
+import {
+  Add as AddIcon,
+  UnfoldLess as UnfoldLessIcon,
+  UnfoldMore as UnfoldMoreIcon,
+} from '@mui/icons-material';
 
 export type ReferralStatusFilter = 'ALL' | 'OPEN' | 'ACCEPTED' | 'CLOSED';
 

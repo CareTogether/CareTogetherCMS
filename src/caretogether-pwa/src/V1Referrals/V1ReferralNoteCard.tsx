@@ -9,10 +9,12 @@ import {
   Collapse,
 } from '@mui/material';
 import { useState } from 'react';
-import DeleteForeverIcon from '@mui/icons-material/DeleteForever';
-import CheckIcon from '@mui/icons-material/Check';
-import EditIcon from '@mui/icons-material/Edit';
-import { ChevronRight } from '@mui/icons-material';
+import {
+  Check as CheckIcon,
+  ChevronRight,
+  DeleteForever as DeleteForeverIcon,
+  Edit as EditIcon,
+} from '@mui/icons-material';
 import { format } from 'date-fns';
 
 import { V1ReferralNoteEntry, V1ReferralNoteStatus } from '../GeneratedClient';

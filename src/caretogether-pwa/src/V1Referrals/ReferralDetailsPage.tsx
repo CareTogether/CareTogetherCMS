@@ -12,8 +12,10 @@ import {
   Alert,
 } from '@mui/material';
 import { useRecoilValue } from 'recoil';
-import CloudUploadIcon from '@mui/icons-material/CloudUpload';
-import AddCircleIcon from '@mui/icons-material/AddCircle';
+import {
+  AddCircle as AddCircleIcon,
+  CloudUpload as CloudUploadIcon,
+} from '@mui/icons-material';
 
 import { useFamilyLookup } from '../Model/DirectoryModel';
 import { familyNameString } from '../Families/FamilyName';

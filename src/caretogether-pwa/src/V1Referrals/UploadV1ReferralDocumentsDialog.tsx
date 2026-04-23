@@ -8,7 +8,7 @@ import {
   DialogTitle,
   Typography,
 } from '@mui/material';
-import CloudUploadIcon from '@mui/icons-material/CloudUpload';
+import { CloudUpload as CloudUploadIcon } from '@mui/icons-material';
 import { useRecoilValue } from 'recoil';
 
 import { selectedLocationContextState } from '../Model/Data';
