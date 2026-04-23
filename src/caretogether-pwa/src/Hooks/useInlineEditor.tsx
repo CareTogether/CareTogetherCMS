@@ -1,7 +1,9 @@
 import { Button, IconButton } from '@mui/material';
-import EditIcon from '@mui/icons-material/Edit';
-import SaveIcon from '@mui/icons-material/Save';
-import UndoIcon from '@mui/icons-material/Undo';
+import {
+  Edit as EditIcon,
+  Save as SaveIcon,
+  Undo as UndoIcon,
+} from '@mui/icons-material';
 import { useState } from 'react';
 import { useBackdrop } from './useBackdrop';
 

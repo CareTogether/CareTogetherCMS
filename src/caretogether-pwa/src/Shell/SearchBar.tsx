@@ -1,5 +1,5 @@
+import { Search as SearchIcon } from '@mui/icons-material';
 import { alpha, InputBase, useTheme, Box } from '@mui/material';
-import SearchIcon from '@mui/icons-material/Search';
 
 interface SearchBarProps {
   value: string;

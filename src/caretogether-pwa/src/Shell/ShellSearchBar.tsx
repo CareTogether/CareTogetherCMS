@@ -1,5 +1,6 @@
 import { useRef } from 'react';
 import { flushSync } from 'react-dom';
+import { Search as SearchIcon } from '@mui/icons-material';
 import {
   Autocomplete,
   Container,
@@ -11,7 +12,6 @@ import {
   useMediaQuery,
   useTheme,
 } from '@mui/material';
-import SearchIcon from '@mui/icons-material/Search';
 import { useLoadable } from '../Hooks/useLoadable';
 import { familyNameString } from '../Families/FamilyName';
 import { CombinedFamilyInfo } from '../GeneratedClient';

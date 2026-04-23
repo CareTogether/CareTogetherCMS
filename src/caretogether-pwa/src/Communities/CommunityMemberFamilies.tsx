@@ -15,8 +15,10 @@ import {
 } from '../GeneratedClient';
 import { useCommunityCommand } from '../Model/DirectoryModel';
 import { useCommunityPermissions } from '../Model/SessionModel';
-import PeopleIcon from '@mui/icons-material/People';
-import GroupRemoveIcon from '@mui/icons-material/GroupRemove';
+import {
+  GroupRemove as GroupRemoveIcon,
+  People as PeopleIcon,
+} from '@mui/icons-material';
 import { useBackdrop } from '../Hooks/useBackdrop';
 import { useRecoilValue } from 'recoil';
 import { FamilyName, familyNameString } from '../Families/FamilyName';

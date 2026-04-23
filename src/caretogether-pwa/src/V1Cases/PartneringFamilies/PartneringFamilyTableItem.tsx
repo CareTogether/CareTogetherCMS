@@ -2,7 +2,7 @@ import { Box, Grid, TableCell, TableRow } from '@mui/material';
 import { format } from 'date-fns';
 import { useState } from 'react';
 import LazyLoad from 'react-lazyload';
-import PhoneIcon from '@mui/icons-material/Phone';
+import { Phone as PhoneIcon } from '@mui/icons-material';
 import { ArrangementPhase, CompletedCustomFieldInfo, V1CaseCloseReason } from '../../GeneratedClient';
 import { FamilyName } from '../../Families/FamilyName';
 import { TestFamilyBadge } from '../../Families/TestFamilyBadge';

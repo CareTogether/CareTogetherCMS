@@ -23,9 +23,11 @@ import {
   Permission,
 } from '../GeneratedClient';
 import { AgeText } from './AgeText';
-import MoreVertIcon from '@mui/icons-material/MoreVert';
-import EditIcon from '@mui/icons-material/Edit';
-import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import {
+  Edit as EditIcon,
+  ExpandMore as ExpandMoreIcon,
+  MoreVert as MoreVertIcon,
+} from '@mui/icons-material';
 import { ContactDisplay } from './ContactDisplay';
 import { IconRow } from '../Generic/IconRow';
 import { VolunteerRoleApprovalStatusChip } from '../Volunteers/VolunteerRoleApprovalStatusChip';

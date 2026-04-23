@@ -9,7 +9,7 @@ import {
   usePersonAndFamilyLookup,
 } from '../Model/DirectoryModel';
 import { useCommunityPermissions } from '../Model/SessionModel';
-import DeleteIcon from '@mui/icons-material/Delete';
+import { Delete as DeleteIcon } from '@mui/icons-material';
 import { useBackdrop } from '../Hooks/useBackdrop';
 import { personNameString } from '../Families/PersonName';
 

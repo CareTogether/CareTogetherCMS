@@ -1,6 +1,8 @@
 import { Card, CardContent, Typography, Box } from '@mui/material';
-import PersonPinCircleIcon from '@mui/icons-material/PersonPinCircle';
-import CalendarTodayIcon from '@mui/icons-material/CalendarToday';
+import {
+  CalendarToday as CalendarTodayIcon,
+  PersonPinCircle as PersonPinCircleIcon,
+} from '@mui/icons-material';
 import { ArrangementEntry, PartneringFamilyInfo } from '../GeneratedClient';
 import {
   usePersonAndFamilyLookup,

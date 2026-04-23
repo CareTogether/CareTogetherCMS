@@ -12,9 +12,12 @@ import { useState } from 'react';
 import { Note, NoteStatus, Permission } from '../GeneratedClient';
 import { useNoteAuthorLookup, useUserLookup } from '../Model/DirectoryModel';
 import { PersonName } from '../Families/PersonName';
-import DeleteForeverIcon from '@mui/icons-material/DeleteForever';
-import CheckIcon from '@mui/icons-material/Check';
-import EditIcon from '@mui/icons-material/Edit';
+import {
+  Check as CheckIcon,
+  ChevronRight,
+  DeleteForever as DeleteForeverIcon,
+  Edit as EditIcon,
+} from '@mui/icons-material';
 import { AddEditNoteDialog } from './AddEditNoteDialog';
 import { ApproveNoteDialog } from './ApproveNoteDialog';
 import { DiscardNoteDialog } from './DiscardNoteDialog';
@@ -22,7 +25,6 @@ import { useFamilyIdPermissions } from '../Model/SessionModel';
 import { useLoadable } from '../Hooks/useLoadable';
 import { accountInfoState } from '../Authentication/Auth';
 import { format } from 'date-fns';
-import { ChevronRight } from '@mui/icons-material';
 
 type NoteCardProps = {
   familyId: string;

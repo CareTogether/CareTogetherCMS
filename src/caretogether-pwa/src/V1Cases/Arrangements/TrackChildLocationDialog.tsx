@@ -31,7 +31,6 @@ import {
   ArrangementPhase,
 } from '../../GeneratedClient';
 import { DateTimePicker } from '@mui/x-date-pickers';
-
 import {
   Timeline,
   TimelineConnector,
@@ -41,11 +40,12 @@ import {
   TimelineOppositeContent,
   TimelineSeparator,
 } from '@mui/lab';
-
-import PersonPinCircleIcon from '@mui/icons-material/PersonPinCircle';
-import EventIcon from '@mui/icons-material/Event';
-import DeleteIcon from '@mui/icons-material/Delete';
-import InputIcon from '@mui/icons-material/Input';
+import {
+  Delete as DeleteIcon,
+  Event as EventIcon,
+  Input as InputIcon,
+  PersonPinCircle as PersonPinCircleIcon,
+} from '@mui/icons-material';
 import { useBackdrop } from '../../Hooks/useBackdrop';
 import {
   useDirectoryModel,
