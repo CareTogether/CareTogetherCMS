@@ -106,15 +106,14 @@ function SideNavigationMenu({ open }: SideNavigationMenuProps) {
               </Badge>
             }
           />
-          {permissions(Permission.AccessPartneringFamiliesScreen) &&
-            referralsEnabled && (
+          {permissions(Permission.ViewV1Referral) && referralsEnabled && (
               <ListItemLink
                 className="ph-unmask"
                 to={`${locationPrefix}/referrals`}
                 primary="Referrals"
                 icon={<PermPhoneMsgIcon />}
               />
-            )}
+          )}
 
           {permissions(Permission.AccessPartneringFamiliesScreen) && (
             <ListItemLink

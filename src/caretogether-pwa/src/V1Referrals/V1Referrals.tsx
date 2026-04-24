@@ -20,12 +20,13 @@ import { ReferralDetailsPage } from './ReferralDetailsPage';
 import { useFamilyLookup } from '../Model/DirectoryModel';
 import { familyNameString } from '../Families/FamilyName';
 import { visibleReferralsQuery } from '../Model/Data';
-import { V1ReferralStatus } from '../GeneratedClient';
+import { Permission, V1ReferralStatus } from '../GeneratedClient';
 import { getFamilyCounty } from '../Utilities/getFamilyCounty';
 import { ReferralStatusFilter } from './ReferralsFilters';
 import { useFeatureFlagEnabled, usePostHog } from 'posthog-js/react';
 import { useAppNavigate } from '../Hooks/useAppNavigate';
 import { ProgressBackdrop } from '../Shell/ProgressBackdrop';
+import { useGlobalPermissions } from '../Model/SessionModel';
 
 const REFERRALS_FEATURE_FLAG = 'referrals';
 
@@ -47,12 +48,19 @@ export function V1Referrals() {
   const referralsEnabled = useFeatureFlagEnabled(REFERRALS_FEATURE_FLAG);
   const featureFlagsLoaded = posthog.featureFlags.hasLoadedFlags;
   const appNavigate = useAppNavigate();
+  const permissions = useGlobalPermissions();
+
+  const canViewReferrals = permissions(Permission.ViewV1Referral);
 
   useEffect(() => {
-    if (featureFlagsLoaded && referralsEnabled !== true) {
+    if (!canViewReferrals || (featureFlagsLoaded && referralsEnabled !== true)) {
       appNavigate.dashboard();
     }
-  }, [featureFlagsLoaded, referralsEnabled, appNavigate]);
+  }, [canViewReferrals, featureFlagsLoaded, referralsEnabled, appNavigate]);
+
+  if (!canViewReferrals) {
+    return null;
+  }
 
   if (!featureFlagsLoaded) {
     return (
