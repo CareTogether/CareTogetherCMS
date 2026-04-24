@@ -17,6 +17,7 @@ export interface AppNavigate {
   locationEdit: (locationId: string, options?: AppNavigateOptions) => void;
   settingsRoles: () => void;
   settingsLocations: () => void;
+  referral: (referralId: string) => void;
 }
 
 type AppNavigateOptions = {
@@ -75,5 +76,6 @@ export function useAppNavigate(): AppNavigate {
       inContext(`settings/locations/${locationId}`, options),
     settingsRoles: () => inContext('settings/roles'),
     settingsLocations: () => inContext('settings/locations'),
+    referral: (referralId: string) => inContext(`referrals/${referralId}`),
   };
 }

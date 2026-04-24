@@ -8,6 +8,7 @@ using CareTogether.Resources.Communities;
 using CareTogether.Resources.Directory;
 using CareTogether.Resources.Notes;
 using CareTogether.Resources.V1Cases;
+using CareTogether.Resources.V1Referrals;
 using JsonPolymorph;
 
 namespace CareTogether.Managers.Records
@@ -78,6 +79,20 @@ namespace CareTogether.Managers.Records
         string? Notes
     ) : CompositeRecordsCommand(FamilyId);
 
+    public sealed record LinkReferralToCaseAndAcceptCommand(
+        Guid FamilyId,
+        Guid CaseId,
+        Guid ReferralId,
+        DateTime AcceptedAtUtc
+    ) : CompositeRecordsCommand(FamilyId);
+
+    public sealed record OpenCaseForReferralAndAcceptCommand(
+        Guid FamilyId,
+        Guid CaseId,
+        Guid ReferralId,
+        DateTime OpenedAtUtc
+    ) : CompositeRecordsCommand(FamilyId);
+
     [JsonHierarchyBase]
     public abstract partial record AtomicRecordsCommand();
 
@@ -93,6 +108,12 @@ namespace CareTogether.Managers.Records
         : AtomicRecordsCommand();
 
     public sealed record ReferralRecordsCommand(V1CaseCommand Command) : AtomicRecordsCommand();
+
+    public sealed record V1ReferralRecordsCommand(V1ReferralCommand Command)
+        : AtomicRecordsCommand();
+
+    public sealed record V1ReferralNoteRecordsCommand(V1ReferralNoteCommand Command)
+        : AtomicRecordsCommand();
 
     public sealed record ArrangementRecordsCommand(ArrangementsCommand Command)
         : AtomicRecordsCommand();
@@ -110,6 +131,9 @@ namespace CareTogether.Managers.Records
     public sealed record CommunityRecordsAggregate(CommunityInfo Community)
         : RecordsAggregate(Community.Community.Id);
 
+    public sealed record ReferralRecordsAggregate(V1Referral Referral)
+        : RecordsAggregate(Referral.ReferralId);
+
     public interface IRecordsManager
     {
         Task<ImmutableList<RecordsAggregate>> ListVisibleAggregatesAsync(
@@ -118,8 +142,7 @@ namespace CareTogether.Managers.Records
             Guid locationId
         );
 
-        //TODO: Support returning *multiple* aggregates to upsert
-        Task<RecordsAggregate?> ExecuteCompositeRecordsCommand(
+        Task<ImmutableList<RecordsAggregate>> ExecuteCompositeRecordsCommand(
             Guid organizationId,
             Guid locationId,
             ClaimsPrincipal user,
@@ -163,6 +186,22 @@ namespace CareTogether.Managers.Records
             Guid locationId,
             ClaimsPrincipal user,
             Guid communityId,
+            Guid documentId
+        );
+
+        Task<Uri> GetV1ReferralDocumentReadValetUrl(
+            Guid organizationId,
+            Guid locationId,
+            ClaimsPrincipal user,
+            Guid referralId,
+            Guid documentId
+        );
+
+        Task<Uri> GenerateV1ReferralDocumentUploadValetUrl(
+            Guid organizationId,
+            Guid locationId,
+            ClaimsPrincipal user,
+            Guid referralId,
             Guid documentId
         );
     }

@@ -7,6 +7,7 @@ import {
   PermPhoneMsg as PermPhoneMsgIcon,
   Settings as SettingsIcon,
   Support as SupportIcon,
+  Handshake as HandshakeIcon,
 } from '@mui/icons-material';
 import {
   Badge,
@@ -32,6 +33,7 @@ import { reportSubmenuItemsAtom } from '../Model/UI';
 import { ListItemLink } from './ListItemLink';
 import { useAppNavigate } from '../Hooks/useAppNavigate';
 import WhatsNew from './WhatsNew';
+import { useFeatureFlagEnabled } from 'posthog-js/react';
 
 interface SideNavigationMenuProps {
   open: boolean;
@@ -48,6 +50,8 @@ function SideNavigationMenu({ open }: SideNavigationMenuProps) {
   const queueItemsCount = useLoadable(queueItemsCountQuery);
 
   const reportSubmenuItems = useRecoilValue(reportSubmenuItemsAtom);
+
+  const referralsEnabled = useFeatureFlagEnabled('referrals');
 
   return (
     <List
@@ -102,12 +106,22 @@ function SideNavigationMenu({ open }: SideNavigationMenuProps) {
               </Badge>
             }
           />
+          {permissions(Permission.AccessPartneringFamiliesScreen) &&
+            referralsEnabled && (
+              <ListItemLink
+                className="ph-unmask"
+                to={`${locationPrefix}/referrals`}
+                primary="Referrals"
+                icon={<PermPhoneMsgIcon />}
+              />
+            )}
+
           {permissions(Permission.AccessPartneringFamiliesScreen) && (
             <ListItemLink
               className="ph-unmask"
-              to={`${locationPrefix}/cases`}
-              primary="Cases"
-              icon={<PermPhoneMsgIcon />}
+              to={`${locationPrefix}/clients`}
+              primary="Clients"
+              icon={<HandshakeIcon />}
             />
           )}
           {permissions(Permission.AccessVolunteersScreen) && (

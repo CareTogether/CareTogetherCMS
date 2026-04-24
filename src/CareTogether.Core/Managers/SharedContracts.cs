@@ -42,7 +42,8 @@ namespace CareTogether.Managers
         ImmutableList<CompletedCustomFieldInfo> CompletedCustomFields,
         ImmutableList<string> MissingCustomFields,
         ImmutableList<Arrangement> Arrangements,
-        string? Comments
+        string? Comments,
+        ImmutableList<Guid> LinkedV1ReferralIds
     );
 
     public sealed record Arrangement(
@@ -87,7 +88,10 @@ namespace CareTogether.Managers
         ImmutableList<Resources.CompletedRequirementInfo> CompletedRequirements,
         ImmutableList<Resources.ExemptedRequirementInfo> ExemptedRequirements,
         ImmutableList<string> AvailableApplications,
-        ImmutableList<(string ActionName, (string Version, string RoleName)[] Versions)> MissingRequirements,
+        ImmutableList<(
+            string ActionName,
+            (string Version, string RoleName)[] Versions
+        )> MissingRequirements,
         ImmutableList<RoleRemoval> RoleRemovals,
         ImmutableDictionary<Guid, VolunteerInfo> IndividualVolunteers,
         ImmutableList<Activity> History,
@@ -99,7 +103,10 @@ namespace CareTogether.Managers
         ImmutableList<Resources.CompletedRequirementInfo> CompletedRequirements,
         ImmutableList<Resources.ExemptedRequirementInfo> ExemptedRequirements,
         ImmutableList<string> AvailableApplications,
-        ImmutableList<(string ActionName, (string Version, string RoleName)[] Versions)> MissingRequirements,
+        ImmutableList<(
+            string ActionName,
+            (string Version, string RoleName)[] Versions
+        )> MissingRequirements,
         ImmutableList<RoleRemoval> RoleRemovals
     );
 

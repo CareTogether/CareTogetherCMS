@@ -2,7 +2,11 @@ import { Box, Grid, TableCell, TableRow } from '@mui/material';
 import { format } from 'date-fns';
 import { useState } from 'react';
 import { Phone as PhoneIcon } from '@mui/icons-material';
-import { ArrangementPhase, CompletedCustomFieldInfo, V1CaseCloseReason } from '../../GeneratedClient';
+import {
+  ArrangementPhase,
+  CompletedCustomFieldInfo,
+  V1CaseCloseReason,
+} from '../../GeneratedClient';
 import { FamilyName } from '../../Families/FamilyName';
 import { TestFamilyBadge } from '../../Families/TestFamilyBadge';
 import { LazyLoadMountTrigger } from '../../Utilities/LazyLoadMountTrigger';
@@ -10,6 +14,7 @@ import { LazyLoad } from '../../Utilities/reactLazyLoadInterop';
 import { ArrangementCard } from '../Arrangements/ArrangementCard';
 import { matchingArrangements } from './arrangementHelpers';
 import { PartneringFamilyTableItemProps } from './types';
+import { getFamilyCounty } from '../../Utilities/getFamilyCounty';
 
 function getPartneringFamilyRowGroupHeight(
   expandedView: boolean,
@@ -101,6 +106,16 @@ function PartneringFamilyTableRows(props: PartneringFamilyTableItemProps) {
     partneringFamily.partneringFamilyInfo!,
     arrangementsFilter
   );
+  const openV1Case = partneringFamily.partneringFamilyInfo?.openV1Case;
+  const closedV1Cases =
+    partneringFamily.partneringFamilyInfo?.closedV1Cases ?? [];
+  const latestClosedV1Case =
+    closedV1Cases.length > 0 ? closedV1Cases[closedV1Cases.length - 1] : null;
+  const caseStatusText = openV1Case
+    ? 'Open since ' + format(openV1Case.openedAtUtc!, 'MM/dd/yyyy')
+    : latestClosedV1Case?.closeReason != null
+      ? 'Closed - ' + V1CaseCloseReason[latestClosedV1Case.closeReason]
+      : 'No case';
 
   return (
     <>
@@ -134,21 +149,8 @@ function PartneringFamilyTableRows(props: PartneringFamilyTableItemProps) {
             )}
           </span>
         </TableCell>
-        <TableCell>
-          {partneringFamily.partneringFamilyInfo?.openV1Case
-            ? 'Open since ' +
-              format(
-                partneringFamily.partneringFamilyInfo.openV1Case.openedAtUtc!,
-                'MM/dd/yyyy'
-              )
-            : 'Closed - ' +
-              V1CaseCloseReason[
-                partneringFamily.partneringFamilyInfo!.closedV1Cases![
-                  partneringFamily.partneringFamilyInfo!.closedV1Cases!.length -
-                    1
-                ]!.closeReason!
-              ]}
-        </TableCell>
+        <TableCell>{caseStatusText}</TableCell>
+        <TableCell>{getFamilyCounty(partneringFamily)}</TableCell>
         {!expandedView ? (
           arrangementTypes.map((arrangementType) => (
             <TableCell key={arrangementType}>

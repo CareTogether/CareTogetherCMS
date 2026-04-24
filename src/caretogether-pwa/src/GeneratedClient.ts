@@ -518,6 +518,99 @@ export class FilesClient {
         }
         return Promise.resolve<DocumentUploadInfo>(null as any);
     }
+
+    getV1ReferralDocumentReadValetUrl(organizationId: string, locationId: string, referralId: string, documentId: string): Promise<string> {
+        let url_ = this.baseUrl + "/api/{organizationId}/{locationId}/Files/v1referral/{referralId}/{documentId}";
+        if (organizationId === undefined || organizationId === null)
+            throw new Error("The parameter 'organizationId' must be defined.");
+        url_ = url_.replace("{organizationId}", encodeURIComponent("" + organizationId));
+        if (locationId === undefined || locationId === null)
+            throw new Error("The parameter 'locationId' must be defined.");
+        url_ = url_.replace("{locationId}", encodeURIComponent("" + locationId));
+        if (referralId === undefined || referralId === null)
+            throw new Error("The parameter 'referralId' must be defined.");
+        url_ = url_.replace("{referralId}", encodeURIComponent("" + referralId));
+        if (documentId === undefined || documentId === null)
+            throw new Error("The parameter 'documentId' must be defined.");
+        url_ = url_.replace("{documentId}", encodeURIComponent("" + documentId));
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: RequestInit = {
+            method: "GET",
+            headers: {
+                "Accept": "application/json"
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processGetV1ReferralDocumentReadValetUrl(_response);
+        });
+    }
+
+    protected processGetV1ReferralDocumentReadValetUrl(response: Response): Promise<string> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+                result200 = resultData200 !== undefined ? resultData200 : <any>null;
+    
+            return result200;
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<string>(null as any);
+    }
+
+    generateV1ReferralDocumentUploadValetUrl(organizationId: string, locationId: string, referralId: string, documentId: string): Promise<DocumentUploadInfo> {
+        let url_ = this.baseUrl + "/api/{organizationId}/{locationId}/Files/upload/v1referral/{referralId}/{documentId}";
+        if (organizationId === undefined || organizationId === null)
+            throw new Error("The parameter 'organizationId' must be defined.");
+        url_ = url_.replace("{organizationId}", encodeURIComponent("" + organizationId));
+        if (locationId === undefined || locationId === null)
+            throw new Error("The parameter 'locationId' must be defined.");
+        url_ = url_.replace("{locationId}", encodeURIComponent("" + locationId));
+        if (referralId === undefined || referralId === null)
+            throw new Error("The parameter 'referralId' must be defined.");
+        url_ = url_.replace("{referralId}", encodeURIComponent("" + referralId));
+        if (documentId === undefined || documentId === null)
+            throw new Error("The parameter 'documentId' must be defined.");
+        url_ = url_.replace("{documentId}", encodeURIComponent("" + documentId));
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: RequestInit = {
+            method: "POST",
+            headers: {
+                "Accept": "application/json"
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processGenerateV1ReferralDocumentUploadValetUrl(_response);
+        });
+    }
+
+    protected processGenerateV1ReferralDocumentUploadValetUrl(response: Response): Promise<DocumentUploadInfo> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result200 = DocumentUploadInfo.fromJS(resultData200);
+            return result200;
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<DocumentUploadInfo>(null as any);
+    }
 }
 
 export class RecordsClient {
@@ -628,7 +721,7 @@ export class RecordsClient {
         return Promise.resolve<RecordsAggregate[]>(null as any);
     }
 
-    submitCompositeRecordsCommand(organizationId: string, locationId: string, command: CompositeRecordsCommand): Promise<RecordsAggregate> {
+    submitCompositeRecordsCommand(organizationId: string, locationId: string, command: CompositeRecordsCommand): Promise<RecordsAggregate[]> {
         let url_ = this.baseUrl + "/api/{organizationId}/{locationId}/Records/compositeRecordsCommand";
         if (organizationId === undefined || organizationId === null)
             throw new Error("The parameter 'organizationId' must be defined.");
@@ -654,14 +747,21 @@ export class RecordsClient {
         });
     }
 
-    protected processSubmitCompositeRecordsCommand(response: Response): Promise<RecordsAggregate> {
+    protected processSubmitCompositeRecordsCommand(response: Response): Promise<RecordsAggregate[]> {
         const status = response.status;
         let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
         if (status === 200) {
             return response.text().then((_responseText) => {
             let result200: any = null;
             let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
-            result200 = RecordsAggregate.fromJS(resultData200);
+            if (Array.isArray(resultData200)) {
+                result200 = [] as any;
+                for (let item of resultData200)
+                    result200!.push(RecordsAggregate.fromJS(item));
+            }
+            else {
+                result200 = <any>null;
+            }
             return result200;
             });
         } else if (status !== 200 && status !== 204) {
@@ -669,7 +769,7 @@ export class RecordsClient {
             return throwException("An unexpected server error occurred.", status, _responseText, _headers);
             });
         }
-        return Promise.resolve<RecordsAggregate>(null as any);
+        return Promise.resolve<RecordsAggregate[]>(null as any);
     }
 
     getEmbedInfo(organizationId: string, locationId: string): Promise<EmbedParams> {
@@ -1209,6 +1309,7 @@ export class OrganizationConfiguration implements IOrganizationConfiguration {
     locations!: LocationConfiguration[];
     roles!: RoleDefinition[];
     communityRoles!: string[];
+    referralCloseReasons?: string[] | undefined;
 
     constructor(data?: IOrganizationConfiguration) {
         if (data) {
@@ -1242,6 +1343,11 @@ export class OrganizationConfiguration implements IOrganizationConfiguration {
                 for (let item of _data["communityRoles"])
                     this.communityRoles!.push(item);
             }
+            if (Array.isArray(_data["referralCloseReasons"])) {
+                this.referralCloseReasons = [] as any;
+                for (let item of _data["referralCloseReasons"])
+                    this.referralCloseReasons!.push(item);
+            }
         }
     }
 
@@ -1270,6 +1376,11 @@ export class OrganizationConfiguration implements IOrganizationConfiguration {
             for (let item of this.communityRoles)
                 data["communityRoles"].push(item);
         }
+        if (Array.isArray(this.referralCloseReasons)) {
+            data["referralCloseReasons"] = [];
+            for (let item of this.referralCloseReasons)
+                data["referralCloseReasons"].push(item);
+        }
         return data;
     }
 }
@@ -1279,6 +1390,7 @@ export interface IOrganizationConfiguration {
     locations: LocationConfiguration[];
     roles: RoleDefinition[];
     communityRoles: string[];
+    referralCloseReasons?: string[] | undefined;
 }
 
 export class LocationConfiguration implements ILocationConfiguration {
@@ -2221,6 +2333,11 @@ export enum Permission {
     ViewApprovalProgress = 204,
     ViewApprovalHistory = 205,
     ActivateVolunteerFamily = 206,
+    CreateV1Referral = 260,
+    EditV1Referral = 261,
+    CloseV1Referral = 262,
+    ReopenV1Referral = 263,
+    ViewV1Referral = 264,
     CreateV1Case = 300,
     EditV1Case = 301,
     CloseV1Case = 302,
@@ -4048,6 +4165,11 @@ export abstract class RecordsAggregate implements IRecordsAggregate {
             result.init(data);
             return result;
         }
+        if (data["discriminator"] === "ReferralRecordsAggregate") {
+            let result = new ReferralRecordsAggregate();
+            result.init(data);
+            return result;
+        }
         throw new Error("The abstract class 'RecordsAggregate' cannot be instantiated.");
     }
 
@@ -5057,7 +5179,7 @@ export enum EmailAddressType {
 }
 
 export class FamilyAdultRelationshipInfo implements IFamilyAdultRelationshipInfo {
-    relationshipToFamily!: string;
+    relationshipToFamily?: string | undefined;
     isInHousehold!: boolean;
 
     constructor(data?: IFamilyAdultRelationshipInfo) {
@@ -5092,7 +5214,7 @@ export class FamilyAdultRelationshipInfo implements IFamilyAdultRelationshipInfo
 }
 
 export interface IFamilyAdultRelationshipInfo {
-    relationshipToFamily: string;
+    relationshipToFamily?: string | undefined;
     isInHousehold: boolean;
 }
 
@@ -5577,6 +5699,7 @@ export class V1Case implements IV1Case {
     missingCustomFields!: string[];
     arrangements!: Arrangement[];
     comments?: string | undefined;
+    linkedV1ReferralIds!: string[];
 
     constructor(data?: IV1Case) {
         if (data) {
@@ -5592,6 +5715,7 @@ export class V1Case implements IV1Case {
             this.completedCustomFields = [];
             this.missingCustomFields = [];
             this.arrangements = [];
+            this.linkedV1ReferralIds = [];
         }
     }
 
@@ -5632,6 +5756,11 @@ export class V1Case implements IV1Case {
                     this.arrangements!.push(Arrangement.fromJS(item));
             }
             this.comments = _data["comments"];
+            if (Array.isArray(_data["linkedV1ReferralIds"])) {
+                this.linkedV1ReferralIds = [] as any;
+                for (let item of _data["linkedV1ReferralIds"])
+                    this.linkedV1ReferralIds!.push(item);
+            }
         }
     }
 
@@ -5679,6 +5808,11 @@ export class V1Case implements IV1Case {
                 data["arrangements"].push(item.toJSON());
         }
         data["comments"] = this.comments;
+        if (Array.isArray(this.linkedV1ReferralIds)) {
+            data["linkedV1ReferralIds"] = [];
+            for (let item of this.linkedV1ReferralIds)
+                data["linkedV1ReferralIds"].push(item);
+        }
         return data;
     }
 }
@@ -5695,6 +5829,7 @@ export interface IV1Case {
     missingCustomFields: string[];
     arrangements: Arrangement[];
     comments?: string | undefined;
+    linkedV1ReferralIds: string[];
 }
 
 export enum V1CaseCloseReason {
@@ -7639,6 +7774,295 @@ export enum NoteStatus {
     Approved = 1,
 }
 
+export class ReferralRecordsAggregate extends RecordsAggregate implements IReferralRecordsAggregate {
+    referral!: V1Referral;
+
+    constructor(data?: IReferralRecordsAggregate) {
+        super(data);
+        if (!data) {
+            this.referral = new V1Referral();
+        }
+        this._discriminator = "ReferralRecordsAggregate";
+    }
+
+    init(_data?: any) {
+        super.init(_data);
+        if (_data) {
+            this.referral = _data["referral"] ? V1Referral.fromJS(_data["referral"]) : new V1Referral();
+        }
+    }
+
+    static fromJS(data: any): ReferralRecordsAggregate {
+        data = typeof data === 'object' ? data : {};
+        let result = new ReferralRecordsAggregate();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["referral"] = this.referral ? this.referral.toJSON() : <any>undefined;
+        super.toJSON(data);
+        return data;
+    }
+}
+
+export interface IReferralRecordsAggregate extends IRecordsAggregate {
+    referral: V1Referral;
+}
+
+export class V1Referral implements IV1Referral {
+    referralId!: string;
+    familyId?: string | undefined;
+    createdAtUtc!: Date;
+    title!: string;
+    status!: V1ReferralStatus;
+    comment?: string | undefined;
+    acceptedAtUtc?: Date | undefined;
+    closedAtUtc?: Date | undefined;
+    closeReason?: string | undefined;
+    completedCustomFields!: { [key: string]: CompletedCustomFieldInfo; };
+    completedRequirements!: CompletedRequirementInfo[];
+    exemptedRequirements!: ExemptedRequirementInfo[];
+    uploadedDocuments!: UploadedDocumentInfo[];
+    deletedDocuments!: string[];
+    notes!: V1ReferralNoteEntry[];
+    missingIntakeRequirements!: RequirementDefinition[];
+
+    constructor(data?: IV1Referral) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+        if (!data) {
+            this.completedCustomFields = {};
+            this.completedRequirements = [];
+            this.exemptedRequirements = [];
+            this.uploadedDocuments = [];
+            this.deletedDocuments = [];
+            this.notes = [];
+            this.missingIntakeRequirements = [];
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.referralId = _data["referralId"];
+            this.familyId = _data["familyId"];
+            this.createdAtUtc = _data["createdAtUtc"] ? new Date(_data["createdAtUtc"].toString()) : <any>undefined;
+            this.title = _data["title"];
+            this.status = _data["status"];
+            this.comment = _data["comment"];
+            this.acceptedAtUtc = _data["acceptedAtUtc"] ? new Date(_data["acceptedAtUtc"].toString()) : <any>undefined;
+            this.closedAtUtc = _data["closedAtUtc"] ? new Date(_data["closedAtUtc"].toString()) : <any>undefined;
+            this.closeReason = _data["closeReason"];
+            if (_data["completedCustomFields"]) {
+                this.completedCustomFields = {} as any;
+                for (let key in _data["completedCustomFields"]) {
+                    if (_data["completedCustomFields"].hasOwnProperty(key))
+                        (<any>this.completedCustomFields)![key] = _data["completedCustomFields"][key] ? CompletedCustomFieldInfo.fromJS(_data["completedCustomFields"][key]) : new CompletedCustomFieldInfo();
+                }
+            }
+            if (Array.isArray(_data["completedRequirements"])) {
+                this.completedRequirements = [] as any;
+                for (let item of _data["completedRequirements"])
+                    this.completedRequirements!.push(CompletedRequirementInfo.fromJS(item));
+            }
+            if (Array.isArray(_data["exemptedRequirements"])) {
+                this.exemptedRequirements = [] as any;
+                for (let item of _data["exemptedRequirements"])
+                    this.exemptedRequirements!.push(ExemptedRequirementInfo.fromJS(item));
+            }
+            if (Array.isArray(_data["uploadedDocuments"])) {
+                this.uploadedDocuments = [] as any;
+                for (let item of _data["uploadedDocuments"])
+                    this.uploadedDocuments!.push(UploadedDocumentInfo.fromJS(item));
+            }
+            if (Array.isArray(_data["deletedDocuments"])) {
+                this.deletedDocuments = [] as any;
+                for (let item of _data["deletedDocuments"])
+                    this.deletedDocuments!.push(item);
+            }
+            if (Array.isArray(_data["notes"])) {
+                this.notes = [] as any;
+                for (let item of _data["notes"])
+                    this.notes!.push(V1ReferralNoteEntry.fromJS(item));
+            }
+            if (Array.isArray(_data["missingIntakeRequirements"])) {
+                this.missingIntakeRequirements = [] as any;
+                for (let item of _data["missingIntakeRequirements"])
+                    this.missingIntakeRequirements!.push(RequirementDefinition.fromJS(item));
+            }
+        }
+    }
+
+    static fromJS(data: any): V1Referral {
+        data = typeof data === 'object' ? data : {};
+        let result = new V1Referral();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["referralId"] = this.referralId;
+        data["familyId"] = this.familyId;
+        data["createdAtUtc"] = this.createdAtUtc ? this.createdAtUtc.toISOString() : <any>undefined;
+        data["title"] = this.title;
+        data["status"] = this.status;
+        data["comment"] = this.comment;
+        data["acceptedAtUtc"] = this.acceptedAtUtc ? this.acceptedAtUtc.toISOString() : <any>undefined;
+        data["closedAtUtc"] = this.closedAtUtc ? this.closedAtUtc.toISOString() : <any>undefined;
+        data["closeReason"] = this.closeReason;
+        if (this.completedCustomFields) {
+            data["completedCustomFields"] = {};
+            for (let key in this.completedCustomFields) {
+                if (this.completedCustomFields.hasOwnProperty(key))
+                    (<any>data["completedCustomFields"])[key] = this.completedCustomFields[key] ? this.completedCustomFields[key].toJSON() : <any>undefined;
+            }
+        }
+        if (Array.isArray(this.completedRequirements)) {
+            data["completedRequirements"] = [];
+            for (let item of this.completedRequirements)
+                data["completedRequirements"].push(item.toJSON());
+        }
+        if (Array.isArray(this.exemptedRequirements)) {
+            data["exemptedRequirements"] = [];
+            for (let item of this.exemptedRequirements)
+                data["exemptedRequirements"].push(item.toJSON());
+        }
+        if (Array.isArray(this.uploadedDocuments)) {
+            data["uploadedDocuments"] = [];
+            for (let item of this.uploadedDocuments)
+                data["uploadedDocuments"].push(item.toJSON());
+        }
+        if (Array.isArray(this.deletedDocuments)) {
+            data["deletedDocuments"] = [];
+            for (let item of this.deletedDocuments)
+                data["deletedDocuments"].push(item);
+        }
+        if (Array.isArray(this.notes)) {
+            data["notes"] = [];
+            for (let item of this.notes)
+                data["notes"].push(item.toJSON());
+        }
+        if (Array.isArray(this.missingIntakeRequirements)) {
+            data["missingIntakeRequirements"] = [];
+            for (let item of this.missingIntakeRequirements)
+                data["missingIntakeRequirements"].push(item.toJSON());
+        }
+        return data;
+    }
+}
+
+export interface IV1Referral {
+    referralId: string;
+    familyId?: string | undefined;
+    createdAtUtc: Date;
+    title: string;
+    status: V1ReferralStatus;
+    comment?: string | undefined;
+    acceptedAtUtc?: Date | undefined;
+    closedAtUtc?: Date | undefined;
+    closeReason?: string | undefined;
+    completedCustomFields: { [key: string]: CompletedCustomFieldInfo; };
+    completedRequirements: CompletedRequirementInfo[];
+    exemptedRequirements: ExemptedRequirementInfo[];
+    uploadedDocuments: UploadedDocumentInfo[];
+    deletedDocuments: string[];
+    notes: V1ReferralNoteEntry[];
+    missingIntakeRequirements: RequirementDefinition[];
+}
+
+export enum V1ReferralStatus {
+    Open = 0,
+    Accepted = 1,
+    Closed = 2,
+}
+
+export class V1ReferralNoteEntry implements IV1ReferralNoteEntry {
+    id!: string;
+    referralId!: string;
+    authorId!: string;
+    createdTimestampUtc?: Date | undefined;
+    lastEditTimestampUtc!: Date;
+    status!: V1ReferralNoteStatus;
+    contents?: string | undefined;
+    approverId?: string | undefined;
+    approvedTimestampUtc?: Date | undefined;
+    backdatedTimestampUtc?: Date | undefined;
+    accessLevel?: string | undefined;
+
+    constructor(data?: IV1ReferralNoteEntry) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.id = _data["id"];
+            this.referralId = _data["referralId"];
+            this.authorId = _data["authorId"];
+            this.createdTimestampUtc = _data["createdTimestampUtc"] ? new Date(_data["createdTimestampUtc"].toString()) : <any>undefined;
+            this.lastEditTimestampUtc = _data["lastEditTimestampUtc"] ? new Date(_data["lastEditTimestampUtc"].toString()) : <any>undefined;
+            this.status = _data["status"];
+            this.contents = _data["contents"];
+            this.approverId = _data["approverId"];
+            this.approvedTimestampUtc = _data["approvedTimestampUtc"] ? new Date(_data["approvedTimestampUtc"].toString()) : <any>undefined;
+            this.backdatedTimestampUtc = _data["backdatedTimestampUtc"] ? new Date(_data["backdatedTimestampUtc"].toString()) : <any>undefined;
+            this.accessLevel = _data["accessLevel"];
+        }
+    }
+
+    static fromJS(data: any): V1ReferralNoteEntry {
+        data = typeof data === 'object' ? data : {};
+        let result = new V1ReferralNoteEntry();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["id"] = this.id;
+        data["referralId"] = this.referralId;
+        data["authorId"] = this.authorId;
+        data["createdTimestampUtc"] = this.createdTimestampUtc ? this.createdTimestampUtc.toISOString() : <any>undefined;
+        data["lastEditTimestampUtc"] = this.lastEditTimestampUtc ? this.lastEditTimestampUtc.toISOString() : <any>undefined;
+        data["status"] = this.status;
+        data["contents"] = this.contents;
+        data["approverId"] = this.approverId;
+        data["approvedTimestampUtc"] = this.approvedTimestampUtc ? this.approvedTimestampUtc.toISOString() : <any>undefined;
+        data["backdatedTimestampUtc"] = this.backdatedTimestampUtc ? this.backdatedTimestampUtc.toISOString() : <any>undefined;
+        data["accessLevel"] = this.accessLevel;
+        return data;
+    }
+}
+
+export interface IV1ReferralNoteEntry {
+    id: string;
+    referralId: string;
+    authorId: string;
+    createdTimestampUtc?: Date | undefined;
+    lastEditTimestampUtc: Date;
+    status: V1ReferralNoteStatus;
+    contents?: string | undefined;
+    approverId?: string | undefined;
+    approvedTimestampUtc?: Date | undefined;
+    backdatedTimestampUtc?: Date | undefined;
+    accessLevel?: string | undefined;
+}
+
+export enum V1ReferralNoteStatus {
+    Draft = 0,
+    Approved = 1,
+}
+
 export abstract class AtomicRecordsCommand implements IAtomicRecordsCommand {
 
     protected _discriminator: string;
@@ -7695,6 +8119,16 @@ export abstract class AtomicRecordsCommand implements IAtomicRecordsCommand {
         }
         if (data["discriminator"] === "ReferralRecordsCommand") {
             let result = new ReferralRecordsCommand();
+            result.init(data);
+            return result;
+        }
+        if (data["discriminator"] === "V1ReferralNoteRecordsCommand") {
+            let result = new V1ReferralNoteRecordsCommand();
+            result.init(data);
+            return result;
+        }
+        if (data["discriminator"] === "V1ReferralRecordsCommand") {
+            let result = new V1ReferralRecordsCommand();
             result.init(data);
             return result;
         }
@@ -12556,8 +12990,18 @@ export abstract class V1CaseCommand implements IV1CaseCommand {
             result.init(data);
             return result;
         }
+        if (data["discriminator"] === "LinkReferralToCase") {
+            let result = new LinkReferralToCase();
+            result.init(data);
+            return result;
+        }
         if (data["discriminator"] === "MarkReferralRequirementIncomplete") {
             let result = new MarkReferralRequirementIncomplete();
+            result.init(data);
+            return result;
+        }
+        if (data["discriminator"] === "ReopenReferral") {
+            let result = new ReopenReferral();
             result.init(data);
             return result;
         }
@@ -12757,6 +13201,40 @@ export interface IExemptReferralRequirement extends IV1CaseCommand {
     exemptionExpiresAtUtc?: Date | undefined;
 }
 
+export class LinkReferralToCase extends V1CaseCommand implements ILinkReferralToCase {
+    linkedReferralId!: string;
+
+    constructor(data?: ILinkReferralToCase) {
+        super(data);
+        this._discriminator = "LinkReferralToCase";
+    }
+
+    init(_data?: any) {
+        super.init(_data);
+        if (_data) {
+            this.linkedReferralId = _data["linkedReferralId"];
+        }
+    }
+
+    static fromJS(data: any): LinkReferralToCase {
+        data = typeof data === 'object' ? data : {};
+        let result = new LinkReferralToCase();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["linkedReferralId"] = this.linkedReferralId;
+        super.toJSON(data);
+        return data;
+    }
+}
+
+export interface ILinkReferralToCase extends IV1CaseCommand {
+    linkedReferralId: string;
+}
+
 export class MarkReferralRequirementIncomplete extends V1CaseCommand implements IMarkReferralRequirementIncomplete {
     completedRequirementId!: string;
     requirementName!: string;
@@ -12793,6 +13271,40 @@ export class MarkReferralRequirementIncomplete extends V1CaseCommand implements 
 export interface IMarkReferralRequirementIncomplete extends IV1CaseCommand {
     completedRequirementId: string;
     requirementName: string;
+}
+
+export class ReopenReferral extends V1CaseCommand implements IReopenReferral {
+    reopenedAtUtc!: Date;
+
+    constructor(data?: IReopenReferral) {
+        super(data);
+        this._discriminator = "ReopenReferral";
+    }
+
+    init(_data?: any) {
+        super.init(_data);
+        if (_data) {
+            this.reopenedAtUtc = _data["reopenedAtUtc"] ? new Date(_data["reopenedAtUtc"].toString()) : <any>undefined;
+        }
+    }
+
+    static fromJS(data: any): ReopenReferral {
+        data = typeof data === 'object' ? data : {};
+        let result = new ReopenReferral();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["reopenedAtUtc"] = this.reopenedAtUtc ? this.reopenedAtUtc.toISOString() : <any>undefined;
+        super.toJSON(data);
+        return data;
+    }
+}
+
+export interface IReopenReferral extends IV1CaseCommand {
+    reopenedAtUtc: Date;
 }
 
 export class UnexemptReferralRequirement extends V1CaseCommand implements IUnexemptReferralRequirement {
@@ -12909,6 +13421,942 @@ export interface IUpdateReferralComments extends IV1CaseCommand {
     comments?: string | undefined;
 }
 
+export class V1ReferralNoteRecordsCommand extends AtomicRecordsCommand implements IV1ReferralNoteRecordsCommand {
+    command!: V1ReferralNoteCommand;
+
+    constructor(data?: IV1ReferralNoteRecordsCommand) {
+        super(data);
+        this._discriminator = "V1ReferralNoteRecordsCommand";
+    }
+
+    init(_data?: any) {
+        super.init(_data);
+        if (_data) {
+            this.command = _data["command"] ? V1ReferralNoteCommand.fromJS(_data["command"]) : <any>undefined;
+        }
+    }
+
+    static fromJS(data: any): V1ReferralNoteRecordsCommand {
+        data = typeof data === 'object' ? data : {};
+        let result = new V1ReferralNoteRecordsCommand();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["command"] = this.command ? this.command.toJSON() : <any>undefined;
+        super.toJSON(data);
+        return data;
+    }
+}
+
+export interface IV1ReferralNoteRecordsCommand extends IAtomicRecordsCommand {
+    command: V1ReferralNoteCommand;
+}
+
+export abstract class V1ReferralNoteCommand implements IV1ReferralNoteCommand {
+    referralId!: string;
+    noteId!: string;
+
+    protected _discriminator: string;
+
+    constructor(data?: IV1ReferralNoteCommand) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+        this._discriminator = "V1ReferralNoteCommand";
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.referralId = _data["referralId"];
+            this.noteId = _data["noteId"];
+        }
+    }
+
+    static fromJS(data: any): V1ReferralNoteCommand {
+        data = typeof data === 'object' ? data : {};
+        if (data["discriminator"] === "ApproveV1ReferralNote") {
+            let result = new ApproveV1ReferralNote();
+            result.init(data);
+            return result;
+        }
+        if (data["discriminator"] === "CreateV1ReferralDraftNote") {
+            let result = new CreateV1ReferralDraftNote();
+            result.init(data);
+            return result;
+        }
+        if (data["discriminator"] === "DiscardV1ReferralDraftNote") {
+            let result = new DiscardV1ReferralDraftNote();
+            result.init(data);
+            return result;
+        }
+        if (data["discriminator"] === "EditV1ReferralDraftNote") {
+            let result = new EditV1ReferralDraftNote();
+            result.init(data);
+            return result;
+        }
+        if (data["discriminator"] === "UpdateV1ReferralNoteAccessLevel") {
+            let result = new UpdateV1ReferralNoteAccessLevel();
+            result.init(data);
+            return result;
+        }
+        throw new Error("The abstract class 'V1ReferralNoteCommand' cannot be instantiated.");
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["discriminator"] = this._discriminator;
+        data["referralId"] = this.referralId;
+        data["noteId"] = this.noteId;
+        return data;
+    }
+}
+
+export interface IV1ReferralNoteCommand {
+    referralId: string;
+    noteId: string;
+}
+
+export class ApproveV1ReferralNote extends V1ReferralNoteCommand implements IApproveV1ReferralNote {
+    finalizedNoteContents!: string;
+    backdatedTimestampUtc?: Date | undefined;
+    accessLevel?: string | undefined;
+
+    constructor(data?: IApproveV1ReferralNote) {
+        super(data);
+        this._discriminator = "ApproveV1ReferralNote";
+    }
+
+    init(_data?: any) {
+        super.init(_data);
+        if (_data) {
+            this.finalizedNoteContents = _data["finalizedNoteContents"];
+            this.backdatedTimestampUtc = _data["backdatedTimestampUtc"] ? new Date(_data["backdatedTimestampUtc"].toString()) : <any>undefined;
+            this.accessLevel = _data["accessLevel"];
+        }
+    }
+
+    static fromJS(data: any): ApproveV1ReferralNote {
+        data = typeof data === 'object' ? data : {};
+        let result = new ApproveV1ReferralNote();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["finalizedNoteContents"] = this.finalizedNoteContents;
+        data["backdatedTimestampUtc"] = this.backdatedTimestampUtc ? this.backdatedTimestampUtc.toISOString() : <any>undefined;
+        data["accessLevel"] = this.accessLevel;
+        super.toJSON(data);
+        return data;
+    }
+}
+
+export interface IApproveV1ReferralNote extends IV1ReferralNoteCommand {
+    finalizedNoteContents: string;
+    backdatedTimestampUtc?: Date | undefined;
+    accessLevel?: string | undefined;
+}
+
+export class CreateV1ReferralDraftNote extends V1ReferralNoteCommand implements ICreateV1ReferralDraftNote {
+    draftNoteContents?: string | undefined;
+    backdatedTimestampUtc?: Date | undefined;
+    accessLevel?: string | undefined;
+
+    constructor(data?: ICreateV1ReferralDraftNote) {
+        super(data);
+        this._discriminator = "CreateV1ReferralDraftNote";
+    }
+
+    init(_data?: any) {
+        super.init(_data);
+        if (_data) {
+            this.draftNoteContents = _data["draftNoteContents"];
+            this.backdatedTimestampUtc = _data["backdatedTimestampUtc"] ? new Date(_data["backdatedTimestampUtc"].toString()) : <any>undefined;
+            this.accessLevel = _data["accessLevel"];
+        }
+    }
+
+    static fromJS(data: any): CreateV1ReferralDraftNote {
+        data = typeof data === 'object' ? data : {};
+        let result = new CreateV1ReferralDraftNote();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["draftNoteContents"] = this.draftNoteContents;
+        data["backdatedTimestampUtc"] = this.backdatedTimestampUtc ? this.backdatedTimestampUtc.toISOString() : <any>undefined;
+        data["accessLevel"] = this.accessLevel;
+        super.toJSON(data);
+        return data;
+    }
+}
+
+export interface ICreateV1ReferralDraftNote extends IV1ReferralNoteCommand {
+    draftNoteContents?: string | undefined;
+    backdatedTimestampUtc?: Date | undefined;
+    accessLevel?: string | undefined;
+}
+
+export class DiscardV1ReferralDraftNote extends V1ReferralNoteCommand implements IDiscardV1ReferralDraftNote {
+
+    constructor(data?: IDiscardV1ReferralDraftNote) {
+        super(data);
+        this._discriminator = "DiscardV1ReferralDraftNote";
+    }
+
+    init(_data?: any) {
+        super.init(_data);
+    }
+
+    static fromJS(data: any): DiscardV1ReferralDraftNote {
+        data = typeof data === 'object' ? data : {};
+        let result = new DiscardV1ReferralDraftNote();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        super.toJSON(data);
+        return data;
+    }
+}
+
+export interface IDiscardV1ReferralDraftNote extends IV1ReferralNoteCommand {
+}
+
+export class EditV1ReferralDraftNote extends V1ReferralNoteCommand implements IEditV1ReferralDraftNote {
+    draftNoteContents?: string | undefined;
+    backdatedTimestampUtc?: Date | undefined;
+    accessLevel?: string | undefined;
+
+    constructor(data?: IEditV1ReferralDraftNote) {
+        super(data);
+        this._discriminator = "EditV1ReferralDraftNote";
+    }
+
+    init(_data?: any) {
+        super.init(_data);
+        if (_data) {
+            this.draftNoteContents = _data["draftNoteContents"];
+            this.backdatedTimestampUtc = _data["backdatedTimestampUtc"] ? new Date(_data["backdatedTimestampUtc"].toString()) : <any>undefined;
+            this.accessLevel = _data["accessLevel"];
+        }
+    }
+
+    static fromJS(data: any): EditV1ReferralDraftNote {
+        data = typeof data === 'object' ? data : {};
+        let result = new EditV1ReferralDraftNote();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["draftNoteContents"] = this.draftNoteContents;
+        data["backdatedTimestampUtc"] = this.backdatedTimestampUtc ? this.backdatedTimestampUtc.toISOString() : <any>undefined;
+        data["accessLevel"] = this.accessLevel;
+        super.toJSON(data);
+        return data;
+    }
+}
+
+export interface IEditV1ReferralDraftNote extends IV1ReferralNoteCommand {
+    draftNoteContents?: string | undefined;
+    backdatedTimestampUtc?: Date | undefined;
+    accessLevel?: string | undefined;
+}
+
+export class UpdateV1ReferralNoteAccessLevel extends V1ReferralNoteCommand implements IUpdateV1ReferralNoteAccessLevel {
+    accessLevel?: string | undefined;
+
+    constructor(data?: IUpdateV1ReferralNoteAccessLevel) {
+        super(data);
+        this._discriminator = "UpdateV1ReferralNoteAccessLevel";
+    }
+
+    init(_data?: any) {
+        super.init(_data);
+        if (_data) {
+            this.accessLevel = _data["accessLevel"];
+        }
+    }
+
+    static fromJS(data: any): UpdateV1ReferralNoteAccessLevel {
+        data = typeof data === 'object' ? data : {};
+        let result = new UpdateV1ReferralNoteAccessLevel();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["accessLevel"] = this.accessLevel;
+        super.toJSON(data);
+        return data;
+    }
+}
+
+export interface IUpdateV1ReferralNoteAccessLevel extends IV1ReferralNoteCommand {
+    accessLevel?: string | undefined;
+}
+
+export class V1ReferralRecordsCommand extends AtomicRecordsCommand implements IV1ReferralRecordsCommand {
+    command!: V1ReferralCommand;
+
+    constructor(data?: IV1ReferralRecordsCommand) {
+        super(data);
+        this._discriminator = "V1ReferralRecordsCommand";
+    }
+
+    init(_data?: any) {
+        super.init(_data);
+        if (_data) {
+            this.command = _data["command"] ? V1ReferralCommand.fromJS(_data["command"]) : <any>undefined;
+        }
+    }
+
+    static fromJS(data: any): V1ReferralRecordsCommand {
+        data = typeof data === 'object' ? data : {};
+        let result = new V1ReferralRecordsCommand();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["command"] = this.command ? this.command.toJSON() : <any>undefined;
+        super.toJSON(data);
+        return data;
+    }
+}
+
+export interface IV1ReferralRecordsCommand extends IAtomicRecordsCommand {
+    command: V1ReferralCommand;
+}
+
+export abstract class V1ReferralCommand implements IV1ReferralCommand {
+    referralId!: string;
+
+    protected _discriminator: string;
+
+    constructor(data?: IV1ReferralCommand) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+        this._discriminator = "V1ReferralCommand";
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.referralId = _data["referralId"];
+        }
+    }
+
+    static fromJS(data: any): V1ReferralCommand {
+        data = typeof data === 'object' ? data : {};
+        if (data["discriminator"] === "AcceptV1Referral") {
+            let result = new AcceptV1Referral();
+            result.init(data);
+            return result;
+        }
+        if (data["discriminator"] === "CloseV1Referral") {
+            let result = new CloseV1Referral();
+            result.init(data);
+            return result;
+        }
+        if (data["discriminator"] === "CompleteReferralRequirement") {
+            let result = new CompleteReferralRequirement2();
+            result.init(data);
+            return result;
+        }
+        if (data["discriminator"] === "CreateV1Referral") {
+            let result = new CreateV1Referral();
+            result.init(data);
+            return result;
+        }
+        if (data["discriminator"] === "DeleteUploadedV1ReferralDocument") {
+            let result = new DeleteUploadedV1ReferralDocument();
+            result.init(data);
+            return result;
+        }
+        if (data["discriminator"] === "ExemptReferralRequirement") {
+            let result = new ExemptReferralRequirement2();
+            result.init(data);
+            return result;
+        }
+        if (data["discriminator"] === "MarkReferralRequirementIncomplete") {
+            let result = new MarkReferralRequirementIncomplete2();
+            result.init(data);
+            return result;
+        }
+        if (data["discriminator"] === "ReopenV1Referral") {
+            let result = new ReopenV1Referral();
+            result.init(data);
+            return result;
+        }
+        if (data["discriminator"] === "UnexemptReferralRequirement") {
+            let result = new UnexemptReferralRequirement2();
+            result.init(data);
+            return result;
+        }
+        if (data["discriminator"] === "UpdateCustomV1ReferralField") {
+            let result = new UpdateCustomV1ReferralField();
+            result.init(data);
+            return result;
+        }
+        if (data["discriminator"] === "UpdateV1ReferralDetails") {
+            let result = new UpdateV1ReferralDetails();
+            result.init(data);
+            return result;
+        }
+        if (data["discriminator"] === "UpdateV1ReferralFamily") {
+            let result = new UpdateV1ReferralFamily();
+            result.init(data);
+            return result;
+        }
+        if (data["discriminator"] === "UploadV1ReferralDocument") {
+            let result = new UploadV1ReferralDocument();
+            result.init(data);
+            return result;
+        }
+        throw new Error("The abstract class 'V1ReferralCommand' cannot be instantiated.");
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["discriminator"] = this._discriminator;
+        data["referralId"] = this.referralId;
+        return data;
+    }
+}
+
+export interface IV1ReferralCommand {
+    referralId: string;
+}
+
+export class AcceptV1Referral extends V1ReferralCommand implements IAcceptV1Referral {
+    acceptedAtUtc!: Date;
+
+    constructor(data?: IAcceptV1Referral) {
+        super(data);
+        this._discriminator = "AcceptV1Referral";
+    }
+
+    init(_data?: any) {
+        super.init(_data);
+        if (_data) {
+            this.acceptedAtUtc = _data["acceptedAtUtc"] ? new Date(_data["acceptedAtUtc"].toString()) : <any>undefined;
+        }
+    }
+
+    static fromJS(data: any): AcceptV1Referral {
+        data = typeof data === 'object' ? data : {};
+        let result = new AcceptV1Referral();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["acceptedAtUtc"] = this.acceptedAtUtc ? this.acceptedAtUtc.toISOString() : <any>undefined;
+        super.toJSON(data);
+        return data;
+    }
+}
+
+export interface IAcceptV1Referral extends IV1ReferralCommand {
+    acceptedAtUtc: Date;
+}
+
+export class CloseV1Referral extends V1ReferralCommand implements ICloseV1Referral {
+    closedAtUtc!: Date;
+    closeReason!: string;
+
+    constructor(data?: ICloseV1Referral) {
+        super(data);
+        this._discriminator = "CloseV1Referral";
+    }
+
+    init(_data?: any) {
+        super.init(_data);
+        if (_data) {
+            this.closedAtUtc = _data["closedAtUtc"] ? new Date(_data["closedAtUtc"].toString()) : <any>undefined;
+            this.closeReason = _data["closeReason"];
+        }
+    }
+
+    static fromJS(data: any): CloseV1Referral {
+        data = typeof data === 'object' ? data : {};
+        let result = new CloseV1Referral();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["closedAtUtc"] = this.closedAtUtc ? this.closedAtUtc.toISOString() : <any>undefined;
+        data["closeReason"] = this.closeReason;
+        super.toJSON(data);
+        return data;
+    }
+}
+
+export interface ICloseV1Referral extends IV1ReferralCommand {
+    closedAtUtc: Date;
+    closeReason: string;
+}
+
+export class CompleteReferralRequirement2 extends V1ReferralCommand implements ICompleteReferralRequirement2 {
+    completedRequirementId!: string;
+    requirementName!: string;
+    completedAtUtc!: Date;
+    uploadedDocumentId?: string | undefined;
+    noteId?: string | undefined;
+
+    constructor(data?: ICompleteReferralRequirement2) {
+        super(data);
+        this._discriminator = "CompleteReferralRequirement";
+    }
+
+    init(_data?: any) {
+        super.init(_data);
+        if (_data) {
+            this.completedRequirementId = _data["completedRequirementId"];
+            this.requirementName = _data["requirementName"];
+            this.completedAtUtc = _data["completedAtUtc"] ? new Date(_data["completedAtUtc"].toString()) : <any>undefined;
+            this.uploadedDocumentId = _data["uploadedDocumentId"];
+            this.noteId = _data["noteId"];
+        }
+    }
+
+    static fromJS(data: any): CompleteReferralRequirement2 {
+        data = typeof data === 'object' ? data : {};
+        let result = new CompleteReferralRequirement2();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["completedRequirementId"] = this.completedRequirementId;
+        data["requirementName"] = this.requirementName;
+        data["completedAtUtc"] = this.completedAtUtc ? this.completedAtUtc.toISOString() : <any>undefined;
+        data["uploadedDocumentId"] = this.uploadedDocumentId;
+        data["noteId"] = this.noteId;
+        super.toJSON(data);
+        return data;
+    }
+}
+
+export interface ICompleteReferralRequirement2 extends IV1ReferralCommand {
+    completedRequirementId: string;
+    requirementName: string;
+    completedAtUtc: Date;
+    uploadedDocumentId?: string | undefined;
+    noteId?: string | undefined;
+}
+
+export class CreateV1Referral extends V1ReferralCommand implements ICreateV1Referral {
+    familyId?: string | undefined;
+    createdAtUtc!: Date;
+    title!: string;
+    comment?: string | undefined;
+
+    constructor(data?: ICreateV1Referral) {
+        super(data);
+        this._discriminator = "CreateV1Referral";
+    }
+
+    init(_data?: any) {
+        super.init(_data);
+        if (_data) {
+            this.familyId = _data["familyId"];
+            this.createdAtUtc = _data["createdAtUtc"] ? new Date(_data["createdAtUtc"].toString()) : <any>undefined;
+            this.title = _data["title"];
+            this.comment = _data["comment"];
+        }
+    }
+
+    static fromJS(data: any): CreateV1Referral {
+        data = typeof data === 'object' ? data : {};
+        let result = new CreateV1Referral();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["familyId"] = this.familyId;
+        data["createdAtUtc"] = this.createdAtUtc ? this.createdAtUtc.toISOString() : <any>undefined;
+        data["title"] = this.title;
+        data["comment"] = this.comment;
+        super.toJSON(data);
+        return data;
+    }
+}
+
+export interface ICreateV1Referral extends IV1ReferralCommand {
+    familyId?: string | undefined;
+    createdAtUtc: Date;
+    title: string;
+    comment?: string | undefined;
+}
+
+export class DeleteUploadedV1ReferralDocument extends V1ReferralCommand implements IDeleteUploadedV1ReferralDocument {
+    uploadedDocumentId!: string;
+
+    constructor(data?: IDeleteUploadedV1ReferralDocument) {
+        super(data);
+        this._discriminator = "DeleteUploadedV1ReferralDocument";
+    }
+
+    init(_data?: any) {
+        super.init(_data);
+        if (_data) {
+            this.uploadedDocumentId = _data["uploadedDocumentId"];
+        }
+    }
+
+    static fromJS(data: any): DeleteUploadedV1ReferralDocument {
+        data = typeof data === 'object' ? data : {};
+        let result = new DeleteUploadedV1ReferralDocument();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["uploadedDocumentId"] = this.uploadedDocumentId;
+        super.toJSON(data);
+        return data;
+    }
+}
+
+export interface IDeleteUploadedV1ReferralDocument extends IV1ReferralCommand {
+    uploadedDocumentId: string;
+}
+
+export class ExemptReferralRequirement2 extends V1ReferralCommand implements IExemptReferralRequirement2 {
+    requirementName!: string;
+    additionalComments!: string;
+    exemptionExpiresAtUtc?: Date | undefined;
+
+    constructor(data?: IExemptReferralRequirement2) {
+        super(data);
+        this._discriminator = "ExemptReferralRequirement";
+    }
+
+    init(_data?: any) {
+        super.init(_data);
+        if (_data) {
+            this.requirementName = _data["requirementName"];
+            this.additionalComments = _data["additionalComments"];
+            this.exemptionExpiresAtUtc = _data["exemptionExpiresAtUtc"] ? new Date(_data["exemptionExpiresAtUtc"].toString()) : <any>undefined;
+        }
+    }
+
+    static fromJS(data: any): ExemptReferralRequirement2 {
+        data = typeof data === 'object' ? data : {};
+        let result = new ExemptReferralRequirement2();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["requirementName"] = this.requirementName;
+        data["additionalComments"] = this.additionalComments;
+        data["exemptionExpiresAtUtc"] = this.exemptionExpiresAtUtc ? this.exemptionExpiresAtUtc.toISOString() : <any>undefined;
+        super.toJSON(data);
+        return data;
+    }
+}
+
+export interface IExemptReferralRequirement2 extends IV1ReferralCommand {
+    requirementName: string;
+    additionalComments: string;
+    exemptionExpiresAtUtc?: Date | undefined;
+}
+
+export class MarkReferralRequirementIncomplete2 extends V1ReferralCommand implements IMarkReferralRequirementIncomplete2 {
+    completedRequirementId!: string;
+    requirementName!: string;
+
+    constructor(data?: IMarkReferralRequirementIncomplete2) {
+        super(data);
+        this._discriminator = "MarkReferralRequirementIncomplete";
+    }
+
+    init(_data?: any) {
+        super.init(_data);
+        if (_data) {
+            this.completedRequirementId = _data["completedRequirementId"];
+            this.requirementName = _data["requirementName"];
+        }
+    }
+
+    static fromJS(data: any): MarkReferralRequirementIncomplete2 {
+        data = typeof data === 'object' ? data : {};
+        let result = new MarkReferralRequirementIncomplete2();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["completedRequirementId"] = this.completedRequirementId;
+        data["requirementName"] = this.requirementName;
+        super.toJSON(data);
+        return data;
+    }
+}
+
+export interface IMarkReferralRequirementIncomplete2 extends IV1ReferralCommand {
+    completedRequirementId: string;
+    requirementName: string;
+}
+
+export class ReopenV1Referral extends V1ReferralCommand implements IReopenV1Referral {
+    reopenedAtUtc!: Date;
+
+    constructor(data?: IReopenV1Referral) {
+        super(data);
+        this._discriminator = "ReopenV1Referral";
+    }
+
+    init(_data?: any) {
+        super.init(_data);
+        if (_data) {
+            this.reopenedAtUtc = _data["reopenedAtUtc"] ? new Date(_data["reopenedAtUtc"].toString()) : <any>undefined;
+        }
+    }
+
+    static fromJS(data: any): ReopenV1Referral {
+        data = typeof data === 'object' ? data : {};
+        let result = new ReopenV1Referral();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["reopenedAtUtc"] = this.reopenedAtUtc ? this.reopenedAtUtc.toISOString() : <any>undefined;
+        super.toJSON(data);
+        return data;
+    }
+}
+
+export interface IReopenV1Referral extends IV1ReferralCommand {
+    reopenedAtUtc: Date;
+}
+
+export class UnexemptReferralRequirement2 extends V1ReferralCommand implements IUnexemptReferralRequirement2 {
+    requirementName!: string;
+
+    constructor(data?: IUnexemptReferralRequirement2) {
+        super(data);
+        this._discriminator = "UnexemptReferralRequirement";
+    }
+
+    init(_data?: any) {
+        super.init(_data);
+        if (_data) {
+            this.requirementName = _data["requirementName"];
+        }
+    }
+
+    static fromJS(data: any): UnexemptReferralRequirement2 {
+        data = typeof data === 'object' ? data : {};
+        let result = new UnexemptReferralRequirement2();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["requirementName"] = this.requirementName;
+        super.toJSON(data);
+        return data;
+    }
+}
+
+export interface IUnexemptReferralRequirement2 extends IV1ReferralCommand {
+    requirementName: string;
+}
+
+export class UpdateCustomV1ReferralField extends V1ReferralCommand implements IUpdateCustomV1ReferralField {
+    completedCustomFieldId!: string;
+    customFieldName!: string;
+    customFieldType!: CustomFieldType;
+    value?: any | undefined;
+
+    constructor(data?: IUpdateCustomV1ReferralField) {
+        super(data);
+        this._discriminator = "UpdateCustomV1ReferralField";
+    }
+
+    init(_data?: any) {
+        super.init(_data);
+        if (_data) {
+            this.completedCustomFieldId = _data["completedCustomFieldId"];
+            this.customFieldName = _data["customFieldName"];
+            this.customFieldType = _data["customFieldType"];
+            this.value = _data["value"];
+        }
+    }
+
+    static fromJS(data: any): UpdateCustomV1ReferralField {
+        data = typeof data === 'object' ? data : {};
+        let result = new UpdateCustomV1ReferralField();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["completedCustomFieldId"] = this.completedCustomFieldId;
+        data["customFieldName"] = this.customFieldName;
+        data["customFieldType"] = this.customFieldType;
+        data["value"] = this.value;
+        super.toJSON(data);
+        return data;
+    }
+}
+
+export interface IUpdateCustomV1ReferralField extends IV1ReferralCommand {
+    completedCustomFieldId: string;
+    customFieldName: string;
+    customFieldType: CustomFieldType;
+    value?: any | undefined;
+}
+
+export class UpdateV1ReferralDetails extends V1ReferralCommand implements IUpdateV1ReferralDetails {
+    title!: string;
+    comment?: string | undefined;
+    createdAtUtc!: Date;
+
+    constructor(data?: IUpdateV1ReferralDetails) {
+        super(data);
+        this._discriminator = "UpdateV1ReferralDetails";
+    }
+
+    init(_data?: any) {
+        super.init(_data);
+        if (_data) {
+            this.title = _data["title"];
+            this.comment = _data["comment"];
+            this.createdAtUtc = _data["createdAtUtc"] ? new Date(_data["createdAtUtc"].toString()) : <any>undefined;
+        }
+    }
+
+    static fromJS(data: any): UpdateV1ReferralDetails {
+        data = typeof data === 'object' ? data : {};
+        let result = new UpdateV1ReferralDetails();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["title"] = this.title;
+        data["comment"] = this.comment;
+        data["createdAtUtc"] = this.createdAtUtc ? this.createdAtUtc.toISOString() : <any>undefined;
+        super.toJSON(data);
+        return data;
+    }
+}
+
+export interface IUpdateV1ReferralDetails extends IV1ReferralCommand {
+    title: string;
+    comment?: string | undefined;
+    createdAtUtc: Date;
+}
+
+export class UpdateV1ReferralFamily extends V1ReferralCommand implements IUpdateV1ReferralFamily {
+    familyId!: string;
+
+    constructor(data?: IUpdateV1ReferralFamily) {
+        super(data);
+        this._discriminator = "UpdateV1ReferralFamily";
+    }
+
+    init(_data?: any) {
+        super.init(_data);
+        if (_data) {
+            this.familyId = _data["familyId"];
+        }
+    }
+
+    static fromJS(data: any): UpdateV1ReferralFamily {
+        data = typeof data === 'object' ? data : {};
+        let result = new UpdateV1ReferralFamily();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["familyId"] = this.familyId;
+        super.toJSON(data);
+        return data;
+    }
+}
+
+export interface IUpdateV1ReferralFamily extends IV1ReferralCommand {
+    familyId: string;
+}
+
+export class UploadV1ReferralDocument extends V1ReferralCommand implements IUploadV1ReferralDocument {
+    uploadedDocumentId!: string;
+    uploadedFileName!: string;
+
+    constructor(data?: IUploadV1ReferralDocument) {
+        super(data);
+        this._discriminator = "UploadV1ReferralDocument";
+    }
+
+    init(_data?: any) {
+        super.init(_data);
+        if (_data) {
+            this.uploadedDocumentId = _data["uploadedDocumentId"];
+            this.uploadedFileName = _data["uploadedFileName"];
+        }
+    }
+
+    static fromJS(data: any): UploadV1ReferralDocument {
+        data = typeof data === 'object' ? data : {};
+        let result = new UploadV1ReferralDocument();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["uploadedDocumentId"] = this.uploadedDocumentId;
+        data["uploadedFileName"] = this.uploadedFileName;
+        super.toJSON(data);
+        return data;
+    }
+}
+
+export interface IUploadV1ReferralDocument extends IV1ReferralCommand {
+    uploadedDocumentId: string;
+    uploadedFileName: string;
+}
+
 export abstract class CompositeRecordsCommand implements ICompositeRecordsCommand {
     familyId!: string;
 
@@ -12949,6 +14397,16 @@ export abstract class CompositeRecordsCommand implements ICompositeRecordsComman
         }
         if (data["discriminator"] === "CreateVolunteerFamilyWithNewAdultCommand") {
             let result = new CreateVolunteerFamilyWithNewAdultCommand();
+            result.init(data);
+            return result;
+        }
+        if (data["discriminator"] === "LinkReferralToCaseAndAcceptCommand") {
+            let result = new LinkReferralToCaseAndAcceptCommand();
+            result.init(data);
+            return result;
+        }
+        if (data["discriminator"] === "OpenCaseForReferralAndAcceptCommand") {
+            let result = new OpenCaseForReferralAndAcceptCommand();
             result.init(data);
             return result;
         }
@@ -13293,6 +14751,90 @@ export interface ICreateVolunteerFamilyWithNewAdultCommand extends ICompositeRec
     address?: Address | undefined;
     phoneNumber?: PhoneNumber | undefined;
     emailAddress?: EmailAddress | undefined;
+}
+
+export class LinkReferralToCaseAndAcceptCommand extends CompositeRecordsCommand implements ILinkReferralToCaseAndAcceptCommand {
+    caseId!: string;
+    referralId!: string;
+    acceptedAtUtc!: Date;
+
+    constructor(data?: ILinkReferralToCaseAndAcceptCommand) {
+        super(data);
+        this._discriminator = "LinkReferralToCaseAndAcceptCommand";
+    }
+
+    init(_data?: any) {
+        super.init(_data);
+        if (_data) {
+            this.caseId = _data["caseId"];
+            this.referralId = _data["referralId"];
+            this.acceptedAtUtc = _data["acceptedAtUtc"] ? new Date(_data["acceptedAtUtc"].toString()) : <any>undefined;
+        }
+    }
+
+    static fromJS(data: any): LinkReferralToCaseAndAcceptCommand {
+        data = typeof data === 'object' ? data : {};
+        let result = new LinkReferralToCaseAndAcceptCommand();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["caseId"] = this.caseId;
+        data["referralId"] = this.referralId;
+        data["acceptedAtUtc"] = this.acceptedAtUtc ? this.acceptedAtUtc.toISOString() : <any>undefined;
+        super.toJSON(data);
+        return data;
+    }
+}
+
+export interface ILinkReferralToCaseAndAcceptCommand extends ICompositeRecordsCommand {
+    caseId: string;
+    referralId: string;
+    acceptedAtUtc: Date;
+}
+
+export class OpenCaseForReferralAndAcceptCommand extends CompositeRecordsCommand implements IOpenCaseForReferralAndAcceptCommand {
+    caseId!: string;
+    referralId!: string;
+    openedAtUtc!: Date;
+
+    constructor(data?: IOpenCaseForReferralAndAcceptCommand) {
+        super(data);
+        this._discriminator = "OpenCaseForReferralAndAcceptCommand";
+    }
+
+    init(_data?: any) {
+        super.init(_data);
+        if (_data) {
+            this.caseId = _data["caseId"];
+            this.referralId = _data["referralId"];
+            this.openedAtUtc = _data["openedAtUtc"] ? new Date(_data["openedAtUtc"].toString()) : <any>undefined;
+        }
+    }
+
+    static fromJS(data: any): OpenCaseForReferralAndAcceptCommand {
+        data = typeof data === 'object' ? data : {};
+        let result = new OpenCaseForReferralAndAcceptCommand();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["caseId"] = this.caseId;
+        data["referralId"] = this.referralId;
+        data["openedAtUtc"] = this.openedAtUtc ? this.openedAtUtc.toISOString() : <any>undefined;
+        super.toJSON(data);
+        return data;
+    }
+}
+
+export interface IOpenCaseForReferralAndAcceptCommand extends ICompositeRecordsCommand {
+    caseId: string;
+    referralId: string;
+    openedAtUtc: Date;
 }
 
 export class EmbedParams implements IEmbedParams {

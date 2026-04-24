@@ -93,6 +93,7 @@ namespace CareTogether.Resources.V1Cases
                     new V1CaseEntry(
                         c.ReferralId,
                         c.FamilyId,
+                        LinkedV1ReferralIds: ImmutableList<Guid>.Empty,
                         OpenedAtUtc: c.OpenedAtUtc,
                         ClosedAtUtc: null,
                         CloseReason: null,
@@ -136,11 +137,11 @@ namespace CareTogether.Resources.V1Cases
                         MarkReferralRequirementIncomplete c => (
                             v1CaseEntry with
                             {
-                                CompletedRequirements =
-                                    v1CaseEntry.CompletedRequirements.RemoveAll(x =>
+                                CompletedRequirements = v1CaseEntry.CompletedRequirements.RemoveAll(
+                                    x =>
                                         x.RequirementName == c.RequirementName
                                         && x.CompletedRequirementId == c.CompletedRequirementId
-                                    ),
+                                ),
                             },
                             null
                         ),
@@ -193,6 +194,7 @@ namespace CareTogether.Resources.V1Cases
                             },
                             null
                         ),
+                        LinkReferralToCase c => (LinkReferralToCaseEntry(v1CaseEntry, c), null),
                         CloseReferral c => (
                             v1CaseEntry with
                             {
@@ -201,6 +203,7 @@ namespace CareTogether.Resources.V1Cases
                             },
                             null
                         ),
+                        ReopenReferral c => (ReopenCase(v1CaseEntry, c), null),
                         _ => throw new NotImplementedException(
                             $"The command type '{command.GetType().FullName}' has not been implemented."
                         ),
@@ -865,6 +868,63 @@ namespace CareTogether.Resources.V1Cases
         }
 
         public V1CaseEntry GetV1CaseEntry(Guid v1CaseId) => v1Cases[v1CaseId];
+
+        private V1CaseEntry LinkReferralToCaseEntry(
+            V1CaseEntry v1CaseEntry,
+            LinkReferralToCase command
+        )
+        {
+            var alreadyLinkedCase = v1Cases.Values.FirstOrDefault(existingCase =>
+                existingCase.LinkedV1ReferralIds.Contains(command.LinkedReferralId)
+            );
+
+            if (alreadyLinkedCase != null && alreadyLinkedCase.Id != command.ReferralId)
+                throw new InvalidOperationException(
+                    "This referral is already linked to another case."
+                );
+
+            return v1CaseEntry with
+            {
+                LinkedV1ReferralIds = v1CaseEntry.LinkedV1ReferralIds.Contains(
+                    command.LinkedReferralId
+                )
+                    ? v1CaseEntry.LinkedV1ReferralIds
+                    : v1CaseEntry.LinkedV1ReferralIds.Add(command.LinkedReferralId),
+            };
+        }
+
+        private V1CaseEntry ReopenCase(V1CaseEntry v1CaseEntry, ReopenReferral command)
+        {
+            if (v1CaseEntry.CloseReason == null)
+                throw new InvalidOperationException("The case is already open.");
+
+            var familyCases = v1Cases.Values.Where(x => x.FamilyId == command.FamilyId).ToList();
+
+            var hasAnotherOpenCase = familyCases.Any(x =>
+                x.Id != command.ReferralId && x.CloseReason == null
+            );
+
+            if (hasAnotherOpenCase)
+                throw new InvalidOperationException(
+                    "A case cannot be reopened while another case is open for this family."
+                );
+
+            var latestClosedCase = familyCases
+                .Where(x => x.CloseReason != null && x.ClosedAtUtc != null)
+                .OrderByDescending(x => x.ClosedAtUtc)
+                .FirstOrDefault();
+
+            if (latestClosedCase?.Id != command.ReferralId)
+                throw new InvalidOperationException(
+                    "Only the most recently closed case can be reopened."
+                );
+
+            return v1CaseEntry with
+            {
+                CloseReason = null,
+                ClosedAtUtc = null,
+            };
+        }
 
         private void ReplayEvent(V1CaseEvent domainEvent, long sequenceNumber)
         {

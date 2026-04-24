@@ -27,7 +27,10 @@ export function MissingArrangementRequirementRow({
       context.kind === 'Family Volunteer Assignment' ||
       context.kind === 'Individual Volunteer Assignment'
       ? context.partneringFamilyId
-      : context.volunteerFamilyId
+      : context.kind === 'Volunteer Family' ||
+          context.kind === 'Individual Volunteer'
+        ? context.volunteerFamilyId
+        : ''
   );
 
   const dialogHandle = useDialogHandle();
@@ -136,7 +139,13 @@ export function MissingArrangementRequirementRow({
           requirement={requirement}
           context={context}
           policy={requirementPolicy}
-          v1CaseId={context.v1CaseId}
+          v1CaseId={
+            context.kind === 'Arrangement' ||
+            context.kind === 'Family Volunteer Assignment' ||
+            context.kind === 'Individual Volunteer Assignment'
+              ? context.v1CaseId
+              : undefined
+          }
           canExempt={canExempt}
         />
       )}

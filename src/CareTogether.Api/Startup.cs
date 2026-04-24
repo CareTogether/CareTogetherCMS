@@ -20,6 +20,7 @@ using CareTogether.Resources.Goals;
 using CareTogether.Resources.Notes;
 using CareTogether.Resources.Policies;
 using CareTogether.Resources.V1Cases;
+using CareTogether.Resources.V1Referrals;
 using CareTogether.Utilities.EventLog;
 using CareTogether.Utilities.FileStore;
 using CareTogether.Utilities.Identity;
@@ -138,6 +139,11 @@ namespace CareTogether.Api
                 immutableBlobServiceClient,
                 "ReferralsEventLog"
             );
+            var v1ReferralsEventLog = new AppendBlobEventLog<V1ReferralEvent>(
+                immutableBlobServiceClient,
+                "V1ReferralsEventLog"
+            );
+
             var approvalsEventLog = new AppendBlobEventLog<ApprovalEvent>(
                 immutableBlobServiceClient,
                 "ApprovalsEventLog"
@@ -145,6 +151,11 @@ namespace CareTogether.Api
             var notesEventLog = new AppendBlobEventLog<NotesEvent>(
                 immutableBlobServiceClient,
                 "NotesEventLog"
+            );
+
+            var v1ReferralNotesEventLog = new AppendBlobEventLog<V1ReferralNotesEvent>(
+                immutableBlobServiceClient,
+                "V1ReferralNotesEventLog"
             );
             var communitiesEventLog = new AppendBlobEventLog<CommunityCommandExecutedEvent>(
                 immutableBlobServiceClient,
@@ -157,6 +168,14 @@ namespace CareTogether.Api
                 new MemoryCache(defaultMemoryCacheOptions),
                 TimeSpan.FromMinutes(30)
             );
+
+            var v1ReferralDraftNotesStore = new JsonBlobObjectStore<string?>(
+                mutableBlobServiceClient,
+                "V1ReferralDraftNotes",
+                new MemoryCache(defaultMemoryCacheOptions),
+                TimeSpan.FromMinutes(30)
+            );
+
             var configurationStore = new JsonBlobObjectStore<OrganizationConfiguration>(
                 immutableBlobServiceClient,
                 "Configuration",
@@ -223,7 +242,17 @@ namespace CareTogether.Api
             );
             var accountsResource = new AccountsResource(accountsEventLog, personAccessEventLog);
             var v1CasesResource = new V1CasesResource(v1CasesEventLog);
+            var v1ReferralsResource = new V1ReferralsResource(v1ReferralsEventLog);
+            var v1ReferralDocumentsResource = new V1ReferralDocumentsResource(
+                v1ReferralsResource,
+                uploadsStore
+            );
+
             var notesResource = new NotesResource(notesEventLog, draftNotesStore);
+            var v1ReferralNotesResource = new V1ReferralNotesResource(
+                v1ReferralNotesEventLog,
+                v1ReferralDraftNotesStore
+            );
             var communitiesResource = new CommunitiesResource(communitiesEventLog, uploadsStore);
 
             //TODO: If we want to be strict about conventions, this should have a manager intermediary for authz.
@@ -231,6 +260,9 @@ namespace CareTogether.Api
             services.AddSingleton<IAccountsResource>(accountsResource);
             services.AddSingleton<IDirectoryResource>(directoryResource);
             services.AddSingleton<IApprovalsResource>(approvalsResource);
+            services.AddSingleton<IV1ReferralsResource>(v1ReferralsResource);
+            services.AddSingleton<IV1ReferralDocumentsResource>(v1ReferralDocumentsResource);
+            services.AddSingleton<IV1ReferralNotesResource>(v1ReferralNotesResource);
 
             var userAccessCalculation = new UserAccessCalculation(
                 policiesResource,
@@ -246,7 +278,8 @@ namespace CareTogether.Api
                 directoryResource,
                 accountsResource,
                 notesResource,
-                userAccessCalculation
+                userAccessCalculation,
+                v1ReferralsResource
             );
             services.AddSingleton<IAuthorizationEngine>(authorizationEngine); //TODO: Temporary workaround for UsersController
             var policyEvaluationEngine = new PolicyEvaluationEngine(policiesResource);
@@ -257,6 +290,7 @@ namespace CareTogether.Api
                 authorizationEngine,
                 approvalsResource,
                 v1CasesResource,
+                v1ReferralsResource,
                 directoryResource,
                 notesResource,
                 policiesResource,
@@ -276,10 +310,14 @@ namespace CareTogether.Api
                 new RecordsManager(
                     policiesResource,
                     authorizationEngine,
+                    policyEvaluationEngine,
                     userAccessCalculation,
                     directoryResource,
                     approvalsResource,
                     v1CasesResource,
+                    v1ReferralsResource,
+                    v1ReferralDocumentsResource,
+                    v1ReferralNotesResource,
                     notesResource,
                     communitiesResource,
                     combinedFamilyInfoFormatter
@@ -462,9 +500,7 @@ namespace CareTogether.Api
 
             services.AddOpenApiDocument(options =>
             {
-                options.DocumentProcessors.Add(
-                    new ExcludeODataEndpointsDocumentProcessor()
-                );
+                options.DocumentProcessors.Add(new ExcludeODataEndpointsDocumentProcessor());
                 options.SchemaSettings.SchemaProcessors.Add(
                     new MarkAsRequiredIfNonNullableSchemaProcessor()
                 );

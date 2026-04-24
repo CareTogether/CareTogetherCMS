@@ -571,6 +571,131 @@
         }
       }
     },
+    "/api/{organizationId}/{locationId}/Files/v1referral/{referralId}/{documentId}": {
+      "get": {
+        "tags": [
+          "Files"
+        ],
+        "operationId": "Files_GetV1ReferralDocumentReadValetUrl",
+        "parameters": [
+          {
+            "name": "organizationId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "guid"
+            },
+            "x-position": 1
+          },
+          {
+            "name": "locationId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "guid"
+            },
+            "x-position": 2
+          },
+          {
+            "name": "referralId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "guid"
+            },
+            "x-position": 3
+          },
+          {
+            "name": "documentId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "guid"
+            },
+            "x-position": 4
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string",
+                  "format": "uri"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/{organizationId}/{locationId}/Files/upload/v1referral/{referralId}/{documentId}": {
+      "post": {
+        "tags": [
+          "Files"
+        ],
+        "operationId": "Files_GenerateV1ReferralDocumentUploadValetUrl",
+        "parameters": [
+          {
+            "name": "organizationId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "guid"
+            },
+            "x-position": 1
+          },
+          {
+            "name": "locationId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "guid"
+            },
+            "x-position": 2
+          },
+          {
+            "name": "referralId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "guid"
+            },
+            "x-position": 3
+          },
+          {
+            "name": "documentId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "guid"
+            },
+            "x-position": 4
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DocumentUploadInfo"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/{organizationId}/{locationId}/Records": {
       "get": {
         "tags": [
@@ -719,7 +844,10 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/RecordsAggregate"
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/RecordsAggregate"
+                  }
                 }
               }
             }
@@ -1188,6 +1316,13 @@
             "items": {
               "type": "string"
             }
+          },
+          "referralCloseReasons": {
+            "type": "array",
+            "nullable": true,
+            "items": {
+              "type": "string"
+            }
           }
         }
       },
@@ -1652,6 +1787,11 @@
           "ViewApprovalProgress",
           "ViewApprovalHistory",
           "ActivateVolunteerFamily",
+          "CreateV1Referral",
+          "EditV1Referral",
+          "CloseV1Referral",
+          "ReopenV1Referral",
+          "ViewV1Referral",
           "CreateV1Case",
           "EditV1Case",
           "CloseV1Case",
@@ -1723,6 +1863,11 @@
           204,
           205,
           206,
+          260,
+          261,
+          262,
+          263,
+          264,
           300,
           301,
           302,
@@ -2660,7 +2805,8 @@
           "propertyName": "discriminator",
           "mapping": {
             "CommunityRecordsAggregate": "#/components/schemas/CommunityRecordsAggregate",
-            "FamilyRecordsAggregate": "#/components/schemas/FamilyRecordsAggregate"
+            "FamilyRecordsAggregate": "#/components/schemas/FamilyRecordsAggregate",
+            "ReferralRecordsAggregate": "#/components/schemas/ReferralRecordsAggregate"
           }
         },
         "x-abstract": true,
@@ -3263,12 +3409,12 @@
         "type": "object",
         "additionalProperties": false,
         "required": [
-          "relationshipToFamily",
           "isInHousehold"
         ],
         "properties": {
           "relationshipToFamily": {
-            "type": "string"
+            "type": "string",
+            "nullable": true
           },
           "isInHousehold": {
             "type": "boolean"
@@ -3584,7 +3730,8 @@
           "missingRequirements",
           "completedCustomFields",
           "missingCustomFields",
-          "arrangements"
+          "arrangements",
+          "linkedV1ReferralIds"
         ],
         "properties": {
           "id": {
@@ -3647,6 +3794,13 @@
           "comments": {
             "type": "string",
             "nullable": true
+          },
+          "linkedV1ReferralIds": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "guid"
+            }
           }
         }
       },
@@ -4781,6 +4935,210 @@
           1
         ]
       },
+      "ReferralRecordsAggregate": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/RecordsAggregate"
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "referral"
+            ],
+            "properties": {
+              "referral": {
+                "$ref": "#/components/schemas/V1Referral"
+              }
+            }
+          }
+        ]
+      },
+      "V1Referral": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "referralId",
+          "createdAtUtc",
+          "title",
+          "status",
+          "completedCustomFields",
+          "completedRequirements",
+          "exemptedRequirements",
+          "uploadedDocuments",
+          "deletedDocuments",
+          "notes",
+          "missingIntakeRequirements"
+        ],
+        "properties": {
+          "referralId": {
+            "type": "string",
+            "format": "guid"
+          },
+          "familyId": {
+            "type": "string",
+            "format": "guid",
+            "nullable": true
+          },
+          "createdAtUtc": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "title": {
+            "type": "string"
+          },
+          "status": {
+            "$ref": "#/components/schemas/V1ReferralStatus"
+          },
+          "comment": {
+            "type": "string",
+            "nullable": true
+          },
+          "acceptedAtUtc": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "closedAtUtc": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "closeReason": {
+            "type": "string",
+            "nullable": true
+          },
+          "completedCustomFields": {
+            "type": "object",
+            "additionalProperties": {
+              "$ref": "#/components/schemas/CompletedCustomFieldInfo"
+            }
+          },
+          "completedRequirements": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CompletedRequirementInfo"
+            }
+          },
+          "exemptedRequirements": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ExemptedRequirementInfo"
+            }
+          },
+          "uploadedDocuments": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/UploadedDocumentInfo"
+            }
+          },
+          "deletedDocuments": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "guid"
+            }
+          },
+          "notes": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/V1ReferralNoteEntry"
+            }
+          },
+          "missingIntakeRequirements": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RequirementDefinition"
+            }
+          }
+        }
+      },
+      "V1ReferralStatus": {
+        "type": "integer",
+        "description": "",
+        "x-enumNames": [
+          "Open",
+          "Accepted",
+          "Closed"
+        ],
+        "enum": [
+          0,
+          1,
+          2
+        ]
+      },
+      "V1ReferralNoteEntry": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "referralId",
+          "authorId",
+          "lastEditTimestampUtc",
+          "status"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "guid"
+          },
+          "referralId": {
+            "type": "string",
+            "format": "guid"
+          },
+          "authorId": {
+            "type": "string",
+            "format": "guid"
+          },
+          "createdTimestampUtc": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "lastEditTimestampUtc": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "status": {
+            "$ref": "#/components/schemas/V1ReferralNoteStatus"
+          },
+          "contents": {
+            "type": "string",
+            "nullable": true
+          },
+          "approverId": {
+            "type": "string",
+            "format": "guid",
+            "nullable": true
+          },
+          "approvedTimestampUtc": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "backdatedTimestampUtc": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "accessLevel": {
+            "type": "string",
+            "nullable": true
+          }
+        }
+      },
+      "V1ReferralNoteStatus": {
+        "type": "integer",
+        "description": "",
+        "x-enumNames": [
+          "Draft",
+          "Approved"
+        ],
+        "enum": [
+          0,
+          1
+        ]
+      },
       "AtomicRecordsCommand": {
         "type": "object",
         "discriminator": {
@@ -4793,7 +5151,9 @@
             "IndividualApprovalRecordsCommand": "#/components/schemas/IndividualApprovalRecordsCommand",
             "NoteRecordsCommand": "#/components/schemas/NoteRecordsCommand",
             "PersonRecordsCommand": "#/components/schemas/PersonRecordsCommand",
-            "ReferralRecordsCommand": "#/components/schemas/ReferralRecordsCommand"
+            "ReferralRecordsCommand": "#/components/schemas/ReferralRecordsCommand",
+            "V1ReferralNoteRecordsCommand": "#/components/schemas/V1ReferralNoteRecordsCommand",
+            "V1ReferralRecordsCommand": "#/components/schemas/V1ReferralRecordsCommand"
           }
         },
         "x-abstract": true,
@@ -7676,7 +8036,9 @@
             "CompleteReferralRequirement": "#/components/schemas/CompleteReferralRequirement",
             "CreateReferral": "#/components/schemas/CreateReferral",
             "ExemptReferralRequirement": "#/components/schemas/ExemptReferralRequirement",
+            "LinkReferralToCase": "#/components/schemas/LinkReferralToCase",
             "MarkReferralRequirementIncomplete": "#/components/schemas/MarkReferralRequirementIncomplete",
+            "ReopenReferral": "#/components/schemas/ReopenReferral",
             "UnexemptReferralRequirement": "#/components/schemas/UnexemptReferralRequirement",
             "UpdateCustomReferralField": "#/components/schemas/UpdateCustomReferralField",
             "UpdateReferralComments": "#/components/schemas/UpdateReferralComments"
@@ -7814,6 +8176,26 @@
           }
         ]
       },
+      "LinkReferralToCase": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/V1CaseCommand"
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "linkedReferralId"
+            ],
+            "properties": {
+              "linkedReferralId": {
+                "type": "string",
+                "format": "guid"
+              }
+            }
+          }
+        ]
+      },
       "MarkReferralRequirementIncomplete": {
         "allOf": [
           {
@@ -7833,6 +8215,26 @@
               },
               "requirementName": {
                 "type": "string"
+              }
+            }
+          }
+        ]
+      },
+      "ReopenReferral": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/V1CaseCommand"
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "reopenedAtUtc"
+            ],
+            "properties": {
+              "reopenedAtUtc": {
+                "type": "string",
+                "format": "date-time"
               }
             }
           }
@@ -7905,6 +8307,551 @@
           }
         ]
       },
+      "V1ReferralNoteRecordsCommand": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/AtomicRecordsCommand"
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "command"
+            ],
+            "properties": {
+              "command": {
+                "$ref": "#/components/schemas/V1ReferralNoteCommand"
+              }
+            }
+          }
+        ]
+      },
+      "V1ReferralNoteCommand": {
+        "type": "object",
+        "discriminator": {
+          "propertyName": "discriminator",
+          "mapping": {
+            "ApproveV1ReferralNote": "#/components/schemas/ApproveV1ReferralNote",
+            "CreateV1ReferralDraftNote": "#/components/schemas/CreateV1ReferralDraftNote",
+            "DiscardV1ReferralDraftNote": "#/components/schemas/DiscardV1ReferralDraftNote",
+            "EditV1ReferralDraftNote": "#/components/schemas/EditV1ReferralDraftNote",
+            "UpdateV1ReferralNoteAccessLevel": "#/components/schemas/UpdateV1ReferralNoteAccessLevel"
+          }
+        },
+        "x-abstract": true,
+        "additionalProperties": false,
+        "required": [
+          "discriminator",
+          "referralId",
+          "noteId"
+        ],
+        "properties": {
+          "referralId": {
+            "type": "string",
+            "format": "guid"
+          },
+          "noteId": {
+            "type": "string",
+            "format": "guid"
+          },
+          "discriminator": {
+            "type": "string"
+          }
+        }
+      },
+      "ApproveV1ReferralNote": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/V1ReferralNoteCommand"
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "finalizedNoteContents"
+            ],
+            "properties": {
+              "finalizedNoteContents": {
+                "type": "string"
+              },
+              "backdatedTimestampUtc": {
+                "type": "string",
+                "format": "date-time",
+                "nullable": true
+              },
+              "accessLevel": {
+                "type": "string",
+                "nullable": true
+              }
+            }
+          }
+        ]
+      },
+      "CreateV1ReferralDraftNote": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/V1ReferralNoteCommand"
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "draftNoteContents": {
+                "type": "string",
+                "nullable": true
+              },
+              "backdatedTimestampUtc": {
+                "type": "string",
+                "format": "date-time",
+                "nullable": true
+              },
+              "accessLevel": {
+                "type": "string",
+                "nullable": true
+              }
+            }
+          }
+        ]
+      },
+      "DiscardV1ReferralDraftNote": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/V1ReferralNoteCommand"
+          },
+          {
+            "type": "object",
+            "additionalProperties": false
+          }
+        ]
+      },
+      "EditV1ReferralDraftNote": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/V1ReferralNoteCommand"
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "draftNoteContents": {
+                "type": "string",
+                "nullable": true
+              },
+              "backdatedTimestampUtc": {
+                "type": "string",
+                "format": "date-time",
+                "nullable": true
+              },
+              "accessLevel": {
+                "type": "string",
+                "nullable": true
+              }
+            }
+          }
+        ]
+      },
+      "UpdateV1ReferralNoteAccessLevel": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/V1ReferralNoteCommand"
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "accessLevel": {
+                "type": "string",
+                "nullable": true
+              }
+            }
+          }
+        ]
+      },
+      "V1ReferralRecordsCommand": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/AtomicRecordsCommand"
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "command"
+            ],
+            "properties": {
+              "command": {
+                "$ref": "#/components/schemas/V1ReferralCommand"
+              }
+            }
+          }
+        ]
+      },
+      "V1ReferralCommand": {
+        "type": "object",
+        "discriminator": {
+          "propertyName": "discriminator",
+          "mapping": {
+            "AcceptV1Referral": "#/components/schemas/AcceptV1Referral",
+            "CloseV1Referral": "#/components/schemas/CloseV1Referral",
+            "CompleteReferralRequirement": "#/components/schemas/CompleteReferralRequirement2",
+            "CreateV1Referral": "#/components/schemas/CreateV1Referral",
+            "DeleteUploadedV1ReferralDocument": "#/components/schemas/DeleteUploadedV1ReferralDocument",
+            "ExemptReferralRequirement": "#/components/schemas/ExemptReferralRequirement2",
+            "MarkReferralRequirementIncomplete": "#/components/schemas/MarkReferralRequirementIncomplete2",
+            "ReopenV1Referral": "#/components/schemas/ReopenV1Referral",
+            "UnexemptReferralRequirement": "#/components/schemas/UnexemptReferralRequirement2",
+            "UpdateCustomV1ReferralField": "#/components/schemas/UpdateCustomV1ReferralField",
+            "UpdateV1ReferralDetails": "#/components/schemas/UpdateV1ReferralDetails",
+            "UpdateV1ReferralFamily": "#/components/schemas/UpdateV1ReferralFamily",
+            "UploadV1ReferralDocument": "#/components/schemas/UploadV1ReferralDocument"
+          }
+        },
+        "x-abstract": true,
+        "additionalProperties": false,
+        "required": [
+          "discriminator",
+          "referralId"
+        ],
+        "properties": {
+          "referralId": {
+            "type": "string",
+            "format": "guid"
+          },
+          "discriminator": {
+            "type": "string"
+          }
+        }
+      },
+      "AcceptV1Referral": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/V1ReferralCommand"
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "acceptedAtUtc"
+            ],
+            "properties": {
+              "acceptedAtUtc": {
+                "type": "string",
+                "format": "date-time"
+              }
+            }
+          }
+        ]
+      },
+      "CloseV1Referral": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/V1ReferralCommand"
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "closedAtUtc",
+              "closeReason"
+            ],
+            "properties": {
+              "closedAtUtc": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "closeReason": {
+                "type": "string"
+              }
+            }
+          }
+        ]
+      },
+      "CompleteReferralRequirement2": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/V1ReferralCommand"
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "completedRequirementId",
+              "requirementName",
+              "completedAtUtc"
+            ],
+            "properties": {
+              "completedRequirementId": {
+                "type": "string",
+                "format": "guid"
+              },
+              "requirementName": {
+                "type": "string"
+              },
+              "completedAtUtc": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "uploadedDocumentId": {
+                "type": "string",
+                "format": "guid",
+                "nullable": true
+              },
+              "noteId": {
+                "type": "string",
+                "format": "guid",
+                "nullable": true
+              }
+            }
+          }
+        ]
+      },
+      "CreateV1Referral": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/V1ReferralCommand"
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "createdAtUtc",
+              "title"
+            ],
+            "properties": {
+              "familyId": {
+                "type": "string",
+                "format": "guid",
+                "nullable": true
+              },
+              "createdAtUtc": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "title": {
+                "type": "string"
+              },
+              "comment": {
+                "type": "string",
+                "nullable": true
+              }
+            }
+          }
+        ]
+      },
+      "DeleteUploadedV1ReferralDocument": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/V1ReferralCommand"
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "uploadedDocumentId"
+            ],
+            "properties": {
+              "uploadedDocumentId": {
+                "type": "string",
+                "format": "guid"
+              }
+            }
+          }
+        ]
+      },
+      "ExemptReferralRequirement2": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/V1ReferralCommand"
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "requirementName",
+              "additionalComments"
+            ],
+            "properties": {
+              "requirementName": {
+                "type": "string"
+              },
+              "additionalComments": {
+                "type": "string"
+              },
+              "exemptionExpiresAtUtc": {
+                "type": "string",
+                "format": "date-time",
+                "nullable": true
+              }
+            }
+          }
+        ]
+      },
+      "MarkReferralRequirementIncomplete2": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/V1ReferralCommand"
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "completedRequirementId",
+              "requirementName"
+            ],
+            "properties": {
+              "completedRequirementId": {
+                "type": "string",
+                "format": "guid"
+              },
+              "requirementName": {
+                "type": "string"
+              }
+            }
+          }
+        ]
+      },
+      "ReopenV1Referral": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/V1ReferralCommand"
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "reopenedAtUtc"
+            ],
+            "properties": {
+              "reopenedAtUtc": {
+                "type": "string",
+                "format": "date-time"
+              }
+            }
+          }
+        ]
+      },
+      "UnexemptReferralRequirement2": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/V1ReferralCommand"
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "requirementName"
+            ],
+            "properties": {
+              "requirementName": {
+                "type": "string"
+              }
+            }
+          }
+        ]
+      },
+      "UpdateCustomV1ReferralField": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/V1ReferralCommand"
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "completedCustomFieldId",
+              "customFieldName",
+              "customFieldType"
+            ],
+            "properties": {
+              "completedCustomFieldId": {
+                "type": "string",
+                "format": "guid"
+              },
+              "customFieldName": {
+                "type": "string"
+              },
+              "customFieldType": {
+                "$ref": "#/components/schemas/CustomFieldType"
+              },
+              "value": {
+                "nullable": true
+              }
+            }
+          }
+        ]
+      },
+      "UpdateV1ReferralDetails": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/V1ReferralCommand"
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "title",
+              "createdAtUtc"
+            ],
+            "properties": {
+              "title": {
+                "type": "string"
+              },
+              "comment": {
+                "type": "string",
+                "nullable": true
+              },
+              "createdAtUtc": {
+                "type": "string",
+                "format": "date-time"
+              }
+            }
+          }
+        ]
+      },
+      "UpdateV1ReferralFamily": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/V1ReferralCommand"
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "familyId"
+            ],
+            "properties": {
+              "familyId": {
+                "type": "string",
+                "format": "guid"
+              }
+            }
+          }
+        ]
+      },
+      "UploadV1ReferralDocument": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/V1ReferralCommand"
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "uploadedDocumentId",
+              "uploadedFileName"
+            ],
+            "properties": {
+              "uploadedDocumentId": {
+                "type": "string",
+                "format": "guid"
+              },
+              "uploadedFileName": {
+                "type": "string"
+              }
+            }
+          }
+        ]
+      },
       "CompositeRecordsCommand": {
         "type": "object",
         "discriminator": {
@@ -7913,7 +8860,9 @@
             "AddAdultToFamilyCommand": "#/components/schemas/AddAdultToFamilyCommand",
             "AddChildToFamilyCommand": "#/components/schemas/AddChildToFamilyCommand",
             "CreatePartneringFamilyWithNewAdultCommand": "#/components/schemas/CreatePartneringFamilyWithNewAdultCommand",
-            "CreateVolunteerFamilyWithNewAdultCommand": "#/components/schemas/CreateVolunteerFamilyWithNewAdultCommand"
+            "CreateVolunteerFamilyWithNewAdultCommand": "#/components/schemas/CreateVolunteerFamilyWithNewAdultCommand",
+            "LinkReferralToCaseAndAcceptCommand": "#/components/schemas/LinkReferralToCaseAndAcceptCommand",
+            "OpenCaseForReferralAndAcceptCommand": "#/components/schemas/OpenCaseForReferralAndAcceptCommand"
           }
         },
         "x-abstract": true,
@@ -8252,6 +9201,66 @@
                     "$ref": "#/components/schemas/EmailAddress"
                   }
                 ]
+              }
+            }
+          }
+        ]
+      },
+      "LinkReferralToCaseAndAcceptCommand": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/CompositeRecordsCommand"
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "caseId",
+              "referralId",
+              "acceptedAtUtc"
+            ],
+            "properties": {
+              "caseId": {
+                "type": "string",
+                "format": "guid"
+              },
+              "referralId": {
+                "type": "string",
+                "format": "guid"
+              },
+              "acceptedAtUtc": {
+                "type": "string",
+                "format": "date-time"
+              }
+            }
+          }
+        ]
+      },
+      "OpenCaseForReferralAndAcceptCommand": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/CompositeRecordsCommand"
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "caseId",
+              "referralId",
+              "openedAtUtc"
+            ],
+            "properties": {
+              "caseId": {
+                "type": "string",
+                "format": "guid"
+              },
+              "referralId": {
+                "type": "string",
+                "format": "guid"
+              },
+              "openedAtUtc": {
+                "type": "string",
+                "format": "date-time"
               }
             }
           }

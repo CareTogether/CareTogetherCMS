@@ -9,6 +9,7 @@ using CareTogether.Resources.Approvals;
 using CareTogether.Resources.Directory;
 using CareTogether.Resources.Policies;
 using CareTogether.Resources.V1Cases;
+using CareTogether.Resources.V1Referrals;
 using Timelines;
 
 namespace CareTogether.Engines.PolicyEvaluation
@@ -511,6 +512,14 @@ namespace CareTogether.Engines.PolicyEvaluation
             Guid locationId,
             Family family,
             Resources.V1Cases.V1CaseEntry v1CaseEntry
+        );
+
+        Task<
+            ImmutableList<RequirementDefinition>
+        > CalculateMissingV1ReferralIntakeRequirementsAsync(
+            Guid organizationId,
+            Guid locationId,
+            V1Referral v1Referral
         );
     }
 }

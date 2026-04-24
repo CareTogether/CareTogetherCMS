@@ -5,6 +5,7 @@ import { useVolunteersModel } from '../Model/VolunteersModel';
 import { DialogHandle } from '../Hooks/useDialogHandle';
 import { UpdateDialog } from '../Generic/UpdateDialog';
 import { RequirementContext } from './RequirementContext';
+import { useV1ReferralsModel } from '../Model/V1ReferralsModel';
 
 type ExemptedRequirementDialogProps = {
   handle: DialogHandle;
@@ -18,6 +19,7 @@ export function ExemptedRequirementDialog({
 }: ExemptedRequirementDialogProps) {
   const v1Cases = useV1CasesModel();
   const volunteers = useVolunteersModel();
+  const referrals = useV1ReferralsModel();
 
   return (
     <UpdateDialog
@@ -28,10 +30,9 @@ export function ExemptedRequirementDialog({
       saveLabel="Yes, Remove Exemption"
       onSave={async () => {
         switch (context.kind) {
-          case 'V1Case':
-            await v1Cases.unexemptV1CaseRequirement(
-              context.partneringFamilyId,
-              context.v1CaseId,
+          case 'V1Referral':
+            await referrals.unexemptReferralRequirement(
+              context.referralId,
               requirement
             );
             break;
