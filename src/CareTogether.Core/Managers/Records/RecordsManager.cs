@@ -12,6 +12,7 @@ using CareTogether.Resources.Directory;
 using CareTogether.Resources.Notes;
 using CareTogether.Resources.Policies;
 using CareTogether.Resources.V1Cases;
+using CareTogether.Resources.V1ReferralNotes;
 using CareTogether.Resources.V1Referrals;
 using Nito.AsyncEx;
 using Nito.Disposables.Internals;
@@ -29,8 +30,6 @@ namespace CareTogether.Managers.Records
         private readonly IV1CasesResource v1CasesResource;
         private readonly IV1ReferralsResource v1ReferralsResource;
 
-        private readonly IV1ReferralDocumentsResource v1ReferralDocumentsResource;
-
         private readonly IV1ReferralNotesResource v1ReferralNotesResource;
 
         private readonly INotesResource notesResource;
@@ -46,7 +45,6 @@ namespace CareTogether.Managers.Records
             IApprovalsResource approvalsResource,
             IV1CasesResource v1CasesResource,
             IV1ReferralsResource v1ReferralsResource,
-            IV1ReferralDocumentsResource v1ReferralDocumentsResource,
             IV1ReferralNotesResource v1ReferralNotesResource,
             INotesResource notesResource,
             ICommunitiesResource communitiesResource,
@@ -61,7 +59,6 @@ namespace CareTogether.Managers.Records
             this.approvalsResource = approvalsResource;
             this.v1CasesResource = v1CasesResource;
             this.v1ReferralsResource = v1ReferralsResource;
-            this.v1ReferralDocumentsResource = v1ReferralDocumentsResource;
             this.v1ReferralNotesResource = v1ReferralNotesResource;
             this.notesResource = notesResource;
             this.communitiesResource = communitiesResource;
@@ -421,7 +418,7 @@ namespace CareTogether.Managers.Records
             if (!canViewReferrals)
                 throw new Exception("The user is not authorized to read referral documents.");
 
-            return await v1ReferralDocumentsResource.GetV1ReferralDocumentReadValetUrl(
+            return await v1ReferralsResource.GetV1ReferralDocumentReadValetUrl(
                 organizationId,
                 locationId,
                 referralId,
@@ -449,7 +446,7 @@ namespace CareTogether.Managers.Records
             if (!permissions.Contains(Permission.EditV1Referral))
                 throw new Exception("The user is not authorized to upload referral documents.");
 
-            return await v1ReferralDocumentsResource.GetV1ReferralDocumentUploadValetUrl(
+            return await v1ReferralsResource.GetV1ReferralDocumentUploadValetUrl(
                 organizationId,
                 locationId,
                 referralId,
