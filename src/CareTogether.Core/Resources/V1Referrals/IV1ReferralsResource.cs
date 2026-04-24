@@ -120,10 +120,7 @@ namespace CareTogether.Resources.V1Referrals
         Task<V1Referral?> GetReferralAsync(Guid organizationId, Guid locationId, Guid referralId);
 
         Task<ImmutableList<V1Referral>> ListReferralsAsync(Guid organizationId, Guid locationId);
-    }
 
-    public interface IV1ReferralDocumentsResource
-    {
         Task<Uri> GetV1ReferralDocumentReadValetUrl(
             Guid organizationId,
             Guid locationId,
@@ -138,5 +135,4 @@ namespace CareTogether.Resources.V1Referrals
             Guid documentId
         );
     }
-
 }

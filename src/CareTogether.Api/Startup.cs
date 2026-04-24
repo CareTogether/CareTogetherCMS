@@ -244,7 +244,6 @@ namespace CareTogether.Api
             var accountsResource = new AccountsResource(accountsEventLog, personAccessEventLog);
             var v1CasesResource = new V1CasesResource(v1CasesEventLog);
             var v1ReferralsResource = new V1ReferralsResource(v1ReferralsEventLog, uploadsStore);
-            IV1ReferralDocumentsResource v1ReferralDocumentsResource = v1ReferralsResource;
 
             var notesResource = new NotesResource(notesEventLog, draftNotesStore);
             var v1ReferralNotesResource = new V1ReferralNotesResource(
@@ -259,7 +258,6 @@ namespace CareTogether.Api
             services.AddSingleton<IDirectoryResource>(directoryResource);
             services.AddSingleton<IApprovalsResource>(approvalsResource);
             services.AddSingleton<IV1ReferralsResource>(v1ReferralsResource);
-            services.AddSingleton<IV1ReferralDocumentsResource>(v1ReferralDocumentsResource);
             services.AddSingleton<IV1ReferralNotesResource>(v1ReferralNotesResource);
 
             var userAccessCalculation = new UserAccessCalculation(
@@ -314,7 +312,6 @@ namespace CareTogether.Api
                     approvalsResource,
                     v1CasesResource,
                     v1ReferralsResource,
-                    v1ReferralDocumentsResource,
                     v1ReferralNotesResource,
                     notesResource,
                     communitiesResource,

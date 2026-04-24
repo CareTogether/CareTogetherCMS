@@ -7,7 +7,7 @@ using CareTogether.Utilities.FileStore;
 
 namespace CareTogether.Resources.V1Referrals
 {
-    public sealed class V1ReferralsResource : IV1ReferralsResource, IV1ReferralDocumentsResource
+    public sealed class V1ReferralsResource : IV1ReferralsResource
     {
         private readonly IEventLog<V1ReferralEvent> eventLog;
         private readonly IFileStore fileStore;
