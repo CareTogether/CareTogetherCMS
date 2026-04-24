@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
   Grid,
   Table,
@@ -23,9 +23,11 @@ import { visibleReferralsQuery } from '../Model/Data';
 import { V1ReferralStatus } from '../GeneratedClient';
 import { getFamilyCounty } from '../Utilities/getFamilyCounty';
 import { ReferralStatusFilter } from './ReferralsFilters';
-import { useFeatureFlagEnabled } from 'posthog-js/react';
+import { useFeatureFlagEnabled, usePostHog } from 'posthog-js/react';
 import { useAppNavigate } from '../Hooks/useAppNavigate';
-import { useEffect } from 'react';
+import { ProgressBackdrop } from '../Shell/ProgressBackdrop';
+
+const REFERRALS_FEATURE_FLAG = 'referrals';
 
 function statusToUi(status: V1ReferralStatus): 'OPEN' | 'ACCEPTED' | 'CLOSED' {
   switch (status) {
@@ -41,6 +43,33 @@ function statusToUi(status: V1ReferralStatus): 'OPEN' | 'ACCEPTED' | 'CLOSED' {
 export function V1Referrals() {
   useScreenTitle('Referrals');
 
+  const posthog = usePostHog();
+  const referralsEnabled = useFeatureFlagEnabled(REFERRALS_FEATURE_FLAG);
+  const featureFlagsLoaded = posthog.featureFlags.hasLoadedFlags;
+  const appNavigate = useAppNavigate();
+
+  useEffect(() => {
+    if (featureFlagsLoaded && referralsEnabled !== true) {
+      appNavigate.dashboard();
+    }
+  }, [featureFlagsLoaded, referralsEnabled, appNavigate]);
+
+  if (!featureFlagsLoaded) {
+    return (
+      <ProgressBackdrop opaque>
+        <p>Loading...</p>
+      </ProgressBackdrop>
+    );
+  }
+
+  if (referralsEnabled !== true) {
+    return null;
+  }
+
+  return <V1ReferralsContent />;
+}
+
+function V1ReferralsContent() {
   const referralsLoadable = useRecoilValueLoadable(visibleReferralsQuery);
   const familyLookup = useFamilyLookup();
 
@@ -49,14 +78,6 @@ export function V1Referrals() {
   const [expandedView, setExpandedView] = useState(true);
   const [openNewReferral, setOpenNewReferral] = useState(false);
   const [countyFilter, setCountyFilter] = useState<(string | null)[]>([]);
-
-  const referralsEnabled = useFeatureFlagEnabled('referrals');
-  const appNavigate = useAppNavigate();
-  useEffect(() => {
-    if (referralsEnabled === false) {
-      appNavigate.dashboard();
-    }
-  }, [referralsEnabled, appNavigate]);
 
   const referrals =
     referralsLoadable.state === 'hasValue' ? referralsLoadable.contents : [];

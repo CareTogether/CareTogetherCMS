@@ -134,9 +134,9 @@ export function FamilyScreen() {
     const exemptedCount = referral.exemptedRequirements?.length ?? 0;
 
     return [
-      incompleteCount > 0 ? `${incompleteCount} incomplete` : null,
-      completedCount > 0 ? `${completedCount} completed` : null,
-      exemptedCount > 0 ? `${exemptedCount} exempted` : null,
+      incompleteCount > 0 ? `❌ ${incompleteCount}` : null,
+      completedCount > 0 ? `✅ ${completedCount}` : null,
+      exemptedCount > 0 ? `🚫 ${exemptedCount}` : null,
     ]
       .filter(Boolean)
       .join(' · ');
