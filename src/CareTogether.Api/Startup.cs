@@ -242,17 +242,16 @@ namespace CareTogether.Api
             );
             var accountsResource = new AccountsResource(accountsEventLog, personAccessEventLog);
             var v1CasesResource = new V1CasesResource(v1CasesEventLog);
-            var v1ReferralsResource = new V1ReferralsResource(v1ReferralsEventLog);
-            var v1ReferralDocumentsResource = new V1ReferralDocumentsResource(
-                v1ReferralsResource,
+            var v1ReferralsResource = new V1ReferralsResource(
+                v1ReferralsEventLog,
+                v1ReferralNotesEventLog,
+                v1ReferralDraftNotesStore,
                 uploadsStore
             );
+            IV1ReferralDocumentsResource v1ReferralDocumentsResource = v1ReferralsResource;
+            IV1ReferralNotesResource v1ReferralNotesResource = v1ReferralsResource;
 
             var notesResource = new NotesResource(notesEventLog, draftNotesStore);
-            var v1ReferralNotesResource = new V1ReferralNotesResource(
-                v1ReferralNotesEventLog,
-                v1ReferralDraftNotesStore
-            );
             var communitiesResource = new CommunitiesResource(communitiesEventLog, uploadsStore);
 
             //TODO: If we want to be strict about conventions, this should have a manager intermediary for authz.
