@@ -3503,7 +3503,11 @@
             "ArrangementRequirementCompleted": "#/components/schemas/ArrangementRequirementCompleted",
             "ChildLocationChanged": "#/components/schemas/ChildLocationChanged",
             "ReferralOpened": "#/components/schemas/ReferralOpened",
-            "ReferralRequirementCompleted": "#/components/schemas/ReferralRequirementCompleted"
+            "ReferralRequirementCompleted": "#/components/schemas/ReferralRequirementCompleted",
+            "V1ReferralAccepted": "#/components/schemas/V1ReferralAccepted",
+            "V1ReferralClosed": "#/components/schemas/V1ReferralClosed",
+            "V1ReferralOpened": "#/components/schemas/V1ReferralOpened",
+            "V1ReferralRequirementCompleted": "#/components/schemas/V1ReferralRequirementCompleted"
           }
         },
         "x-abstract": true,
@@ -3645,6 +3649,94 @@
         ]
       },
       "ReferralRequirementCompleted": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/Activity"
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "requirementName",
+              "completedAtUtc"
+            ],
+            "properties": {
+              "requirementName": {
+                "type": "string"
+              },
+              "completedAtUtc": {
+                "type": "string",
+                "format": "date-time"
+              }
+            }
+          }
+        ]
+      },
+      "V1ReferralAccepted": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/Activity"
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "acceptedAtUtc"
+            ],
+            "properties": {
+              "acceptedAtUtc": {
+                "type": "string",
+                "format": "date-time"
+              }
+            }
+          }
+        ]
+      },
+      "V1ReferralClosed": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/Activity"
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "closedAtUtc",
+              "closeReason"
+            ],
+            "properties": {
+              "closedAtUtc": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "closeReason": {
+                "type": "string"
+              }
+            }
+          }
+        ]
+      },
+      "V1ReferralOpened": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/Activity"
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "openedAtUtc"
+            ],
+            "properties": {
+              "openedAtUtc": {
+                "type": "string",
+                "format": "date-time"
+              }
+            }
+          }
+        ]
+      },
+      "V1ReferralRequirementCompleted": {
         "allOf": [
           {
             "$ref": "#/components/schemas/Activity"
@@ -4971,6 +5063,7 @@
           "exemptedRequirements",
           "uploadedDocuments",
           "deletedDocuments",
+          "history",
           "notes",
           "missingIntakeRequirements"
         ],
@@ -5041,6 +5134,12 @@
             "items": {
               "type": "string",
               "format": "guid"
+            }
+          },
+          "history": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Activity"
             }
           },
           "notes": {

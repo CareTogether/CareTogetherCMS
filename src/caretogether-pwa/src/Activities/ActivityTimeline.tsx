@@ -34,6 +34,7 @@ import { NoteCard } from '../Notes/NoteCard';
 import { useAccessLevelDialog } from '../Notes/AccessLevelDialog/useAccessLevelDialog';
 import { FormControl, InputLabel, Select, MenuItem } from '@mui/material';
 import { useMemo, useState } from 'react';
+import { buildGroupedV1ReferralTimelineEntries } from '../V1Referrals/referralTimelineHelpers';
 
 type ActivityTimelineProps = {
   family: CombinedFamilyInfo;
@@ -60,7 +61,8 @@ type MergedTimelineItem =
       label: string;
       referralId: string;
       referralTitle: string;
-      noteText?: string | null;
+      documentName?: string | null;
+      note?: ReferralNoteEntry;
     }
   | {
       kind: 'referral-note';
@@ -91,13 +93,6 @@ const composeNoteType = (activity: Activity): string | null => {
 
   return null;
 };
-
-function resolveReferralNoteText(
-  note: ReferralNoteEntry | undefined
-): string | null {
-  const text = note?.contents ?? null;
-  return text && text.trim() ? text : null;
-}
 
 function embedNotesInActivities(notes: Note[], activities: Activity[]) {
   // We only want to show each note once, on the most recent activity entry that is
@@ -257,111 +252,33 @@ export function ActivityTimeline({
 
   const referralTimelineItems = useMemo<MergedTimelineItem[]>(() => {
     return referrals.flatMap((referral) => {
-      const notesById = new Map<string, ReferralNoteEntry>(
-        (referral.notes ?? [])
-          .filter((note): note is ReferralNoteEntry => Boolean(note?.id))
-          .map((note) => [note.id, note])
-      );
+      return buildGroupedV1ReferralTimelineEntries(referral).map((entry) => {
+        if (entry.kind === 'note') {
+          return {
+            kind: 'referral-note',
+            timestamp: entry.timestamp,
+            userId: entry.userId,
+            label: entry.label,
+            referralId: referral.referralId,
+            referralTitle: referral.title,
+            referralNote: entry.note,
+          };
+        }
 
-      const items: MergedTimelineItem[] = [];
-
-      items.push({
-        kind: 'referral',
-        timestamp: referral.createdAtUtc ?? new Date(0),
-        userId: undefined,
-        label: 'Referral opened',
-        referralId: referral.referralId,
-        referralTitle: referral.title,
+        return {
+          kind: 'referral',
+          timestamp: entry.timestamp,
+          userId: entry.userId,
+          label: entry.label,
+          referralId: referral.referralId,
+          referralTitle: referral.title,
+          documentName:
+            entry.kind === 'activity'
+              ? entry.document?.uploadedFileName
+              : undefined,
+          note: entry.kind === 'activity' ? entry.note : undefined,
+        };
       });
-
-      if (referral.acceptedAtUtc) {
-        items.push({
-          kind: 'referral',
-          timestamp: referral.acceptedAtUtc,
-          userId: undefined,
-          label: 'Referral accepted',
-          referralId: referral.referralId,
-          referralTitle: referral.title,
-        });
-      }
-
-      if (referral.closedAtUtc) {
-        items.push({
-          kind: 'referral',
-          timestamp: referral.closedAtUtc,
-          userId: undefined,
-          label: referral.closeReason
-            ? `Referral closed: ${referral.closeReason}`
-            : 'Referral closed',
-          referralId: referral.referralId,
-          referralTitle: referral.title,
-        });
-      }
-
-      for (const completed of referral.completedRequirements ?? []) {
-        const noteId = completed.noteId ?? undefined;
-        const noteText = noteId
-          ? resolveReferralNoteText(notesById.get(noteId))
-          : null;
-
-        items.push({
-          kind: 'referral',
-          timestamp:
-            completed.completedAtUtc ??
-            completed.timestampUtc ??
-            referral.createdAtUtc ??
-            new Date(0),
-          userId: completed.userId,
-          label: `Completed requirement: ${completed.requirementName}`,
-          referralId: referral.referralId,
-          referralTitle: referral.title,
-          noteText,
-        });
-      }
-
-      for (const exempted of referral.exemptedRequirements ?? []) {
-        items.push({
-          kind: 'referral',
-          timestamp:
-            exempted.timestampUtc ?? referral.createdAtUtc ?? new Date(0),
-          userId: exempted.userId,
-          label: `Exempted requirement: ${exempted.requirementName}`,
-          referralId: referral.referralId,
-          referralTitle: referral.title,
-        });
-      }
-
-      for (const doc of referral.uploadedDocuments ?? []) {
-        items.push({
-          kind: 'referral',
-          timestamp: doc.timestampUtc ?? referral.createdAtUtc ?? new Date(0),
-          userId: doc.userId,
-          label: `Document uploaded: ${doc.uploadedFileName}`,
-          referralId: referral.referralId,
-          referralTitle: referral.title,
-        });
-      }
-
-      for (const note of referral.notes ?? []) {
-        const noteTimestamp =
-          note.backdatedTimestampUtc ??
-          note.createdTimestampUtc ??
-          note.lastEditTimestampUtc;
-
-        if (!noteTimestamp) continue;
-
-        items.push({
-          kind: 'referral-note',
-          timestamp: noteTimestamp,
-          userId: note.authorId,
-          label: note.status === 0 ? 'Draft note' : 'Approved note',
-          referralId: referral.referralId,
-          referralTitle: referral.title,
-          referralNote: note,
-        });
-      }
-
-      return items;
     });
   }, [referrals]);
 
@@ -650,12 +567,17 @@ export function ActivityTimeline({
                     <Typography variant="body2" sx={{ mb: 0.5 }}>
                       {item.label}
                     </Typography>
-                    {item.noteText?.trim() && (
+                    {item.documentName && (
+                      <Typography variant="body2" sx={{ mb: 0.5 }}>
+                        Document: {item.documentName}
+                      </Typography>
+                    )}
+                    {item.note?.contents?.trim() && (
                       <Typography
                         variant="body2"
                         sx={{ fontStyle: 'italic', opacity: 0.85 }}
                       >
-                        {item.noteText.trim()}
+                        {item.note.contents.trim()}
                       </Typography>
                     )}
                   </>
