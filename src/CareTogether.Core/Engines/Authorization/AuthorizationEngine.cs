@@ -253,13 +253,13 @@ namespace CareTogether.Engines.Authorization
                     CloseV1Referral => Permission.CloseV1Referral,
                     ReopenV1Referral => Permission.ReopenV1Referral,
                     CareTogether.Resources.V1Referrals.CompleteReferralRequirement c =>
-                        Permission.EditV1CaseRequirementCompletion,
+                        Permission.EditV1ReferralRequirementCompletion,
                     CareTogether.Resources.V1Referrals.MarkReferralRequirementIncomplete c =>
-                        Permission.EditV1CaseRequirementCompletion,
+                        Permission.EditV1ReferralRequirementCompletion,
                     CareTogether.Resources.V1Referrals.ExemptReferralRequirement c =>
-                        Permission.EditV1CaseRequirementExemption,
+                        Permission.EditV1ReferralRequirementExemption,
                     CareTogether.Resources.V1Referrals.UnexemptReferralRequirement c =>
-                        Permission.EditV1CaseRequirementExemption,
+                        Permission.EditV1ReferralRequirementExemption,
 
                     UploadV1ReferralDocument => Permission.EditV1Referral,
                     DeleteUploadedV1ReferralDocument => Permission.EditV1Referral,

@@ -28,6 +28,7 @@ import { V1ReferralNoteCard } from '../V1Referrals/V1ReferralNoteCard';
 
 type ReferralTimelineProps = {
   referral: V1Referral;
+  canManageNotes: boolean;
 };
 
 type ReferralTimelineItem =
@@ -66,7 +67,10 @@ function resolveReferralNoteText(
   return text && text.trim() ? text : null;
 }
 
-export function ReferralTimeline({ referral }: ReferralTimelineProps) {
+export function ReferralTimeline({
+  referral,
+  canManageNotes,
+}: ReferralTimelineProps) {
   const userLookup = useUserLookup();
 
   const notesById = useMemo(() => {
@@ -213,9 +217,9 @@ export function ReferralTimeline({ referral }: ReferralTimelineProps) {
                 <V1ReferralNoteCard
                   referralId={referral.referralId}
                   note={item.note}
-                  canEdit
-                  canDiscard
-                  canApprove
+                  canEdit={canManageNotes}
+                  canDiscard={canManageNotes}
+                  canApprove={canManageNotes}
                 />
               )}
             </TimelineContent>

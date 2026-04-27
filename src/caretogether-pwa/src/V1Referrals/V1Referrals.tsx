@@ -19,7 +19,7 @@ import { AddNewReferralDrawer } from './AddNewReferralDrawer';
 import { ReferralDetailsPage } from './ReferralDetailsPage';
 import { useFamilyLookup } from '../Model/DirectoryModel';
 import { familyNameString } from '../Families/FamilyName';
-import { visibleReferralsQuery } from '../Model/Data';
+import { currentLocationQuery, visibleReferralsQuery } from '../Model/Data';
 import { Permission, V1ReferralStatus } from '../GeneratedClient';
 import { getFamilyCounty } from '../Utilities/getFamilyCounty';
 import { ReferralStatusFilter } from './ReferralsFilters';
@@ -49,25 +49,40 @@ export function V1Referrals() {
   const featureFlagsLoaded = posthog.featureFlags.hasLoadedFlags;
   const appNavigate = useAppNavigate();
   const permissions = useGlobalPermissions();
+  const currentLocationLoadable = useRecoilValueLoadable(currentLocationQuery);
 
+  const permissionsLoaded = currentLocationLoadable.state === 'hasValue';
   const canViewReferrals = permissions(Permission.ViewV1Referral);
 
   useEffect(() => {
-    if (!canViewReferrals || (featureFlagsLoaded && referralsEnabled !== true)) {
+    if (
+      permissionsLoaded &&
+      (!canViewReferrals || (featureFlagsLoaded && referralsEnabled !== true))
+    ) {
       appNavigate.dashboard();
     }
-  }, [canViewReferrals, featureFlagsLoaded, referralsEnabled, appNavigate]);
+  }, [
+    canViewReferrals,
+    featureFlagsLoaded,
+    permissionsLoaded,
+    referralsEnabled,
+    appNavigate,
+  ]);
 
-  if (!canViewReferrals) {
-    return null;
+  if (currentLocationLoadable.state === 'hasError') {
+    throw currentLocationLoadable.contents;
   }
 
-  if (!featureFlagsLoaded) {
+  if (!permissionsLoaded || !featureFlagsLoaded) {
     return (
       <ProgressBackdrop opaque>
         <p>Loading...</p>
       </ProgressBackdrop>
     );
+  }
+
+  if (!canViewReferrals) {
+    return null;
   }
 
   if (referralsEnabled !== true) {
@@ -80,6 +95,7 @@ export function V1Referrals() {
 function V1ReferralsContent() {
   const referralsLoadable = useRecoilValueLoadable(visibleReferralsQuery);
   const familyLookup = useFamilyLookup();
+  const permissions = useGlobalPermissions();
 
   const [filterText, setFilterText] = useState('');
   const [statusFilter, setStatusFilter] = useState<ReferralStatusFilter>('ALL');
@@ -140,6 +156,7 @@ function V1ReferralsContent() {
                 setFilterText={setFilterText}
                 expandedView={expandedView}
                 setExpandedView={setExpandedView}
+                canAddNewReferral={permissions(Permission.CreateV1Referral)}
                 onAddNewReferral={() => setOpenNewReferral(true)}
                 statusFilter={statusFilter}
                 setStatusFilter={setStatusFilter}

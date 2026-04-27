@@ -2338,6 +2338,8 @@ export enum Permission {
     CloseV1Referral = 262,
     ReopenV1Referral = 263,
     ViewV1Referral = 264,
+    EditV1ReferralRequirementCompletion = 265,
+    EditV1ReferralRequirementExemption = 266,
     CreateV1Case = 300,
     EditV1Case = 301,
     CloseV1Case = 302,
