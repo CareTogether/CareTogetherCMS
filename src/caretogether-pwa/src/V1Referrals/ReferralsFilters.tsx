@@ -25,6 +25,7 @@ interface ReferralsFiltersProps {
   expandedView: boolean;
   setExpandedView: (value: boolean) => void;
 
+  canAddNewReferral: boolean;
   onAddNewReferral: () => void;
 
   statusFilter: ReferralStatusFilter;
@@ -41,6 +42,7 @@ export function ReferralsFilters({
   setFilterText,
   expandedView,
   setExpandedView,
+  canAddNewReferral,
   onAddNewReferral,
   statusFilter,
   setStatusFilter,
@@ -62,21 +64,22 @@ export function ReferralsFilters({
 
   return (
     <Stack direction="row" sx={{ mt: 2, mb: 2 }}>
-      <Button
-        variant="contained"
-        startIcon={<AddIcon />}
-        sx={{ mr: 'auto' }}
-        onClick={onAddNewReferral}
-      >
-        Add new referral
-      </Button>
+      {canAddNewReferral && (
+        <Button
+          variant="contained"
+          startIcon={<AddIcon />}
+          onClick={onAddNewReferral}
+        >
+          Add new referral
+        </Button>
+      )}
 
       <ToggleButtonGroup
         value={statusFilter}
         exclusive
         onChange={(_, value) => value && setStatusFilter(value)}
         size={isMobile ? 'medium' : 'small'}
-        sx={{ ml: 2, mr: 2 }}
+        sx={{ ml: 'auto', mr: 2 }}
       >
         <ToggleButton value="ALL">ALL</ToggleButton>
         <ToggleButton value="OPEN">OPEN</ToggleButton>

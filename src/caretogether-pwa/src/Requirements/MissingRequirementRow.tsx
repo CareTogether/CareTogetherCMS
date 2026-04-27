@@ -1,7 +1,10 @@
 import { useRecoilValue } from 'recoil';
 import { Permission, RequirementDefinition } from '../GeneratedClient';
 import { policyData } from '../Model/ConfigurationModel';
-import { useFamilyIdPermissions } from '../Model/SessionModel';
+import {
+  useFamilyIdPermissions,
+  useGlobalPermissions,
+} from '../Model/SessionModel';
 import { useDialogHandle } from '../Hooks/useDialogHandle';
 import { IconRow } from '../Generic/IconRow';
 import { MissingRequirementDialog } from './MissingRequirementDialog';
@@ -36,9 +39,10 @@ export function MissingRequirementRow({
         : '';
 
   const familyPermissions = useFamilyIdPermissions(familyIdForPermissions);
+  const globalPermissions = useGlobalPermissions();
 
   const permissions =
-    context.kind === 'V1Referral' ? () => true : familyPermissions;
+    context.kind === 'V1Referral' ? globalPermissions : familyPermissions;
 
   const dialogHandle = useDialogHandle();
 
@@ -62,14 +66,18 @@ export function MissingRequirementRow({
     throw new Error(`Invalid missing requirement context '${context.kind}'`);
 
   const canComplete =
-    context.kind === 'V1Case' || context.kind === 'V1Referral'
-      ? permissions(Permission.EditV1CaseRequirementCompletion)
-      : permissions(Permission.EditApprovalRequirementCompletion);
+    context.kind === 'V1Referral'
+      ? permissions(Permission.EditV1ReferralRequirementCompletion)
+      : context.kind === 'V1Case'
+        ? permissions(Permission.EditV1CaseRequirementCompletion)
+        : permissions(Permission.EditApprovalRequirementCompletion);
 
   const canExempt =
-    context.kind === 'V1Case' || context.kind === 'V1Referral'
-      ? permissions(Permission.EditV1CaseRequirementExemption)
-      : permissions(Permission.EditApprovalRequirementExemption);
+    context.kind === 'V1Referral'
+      ? permissions(Permission.EditV1ReferralRequirementExemption)
+      : context.kind === 'V1Case'
+        ? permissions(Permission.EditV1CaseRequirementExemption)
+        : permissions(Permission.EditApprovalRequirementExemption);
 
   return (
     <>
@@ -127,6 +135,7 @@ export function MissingRequirementRow({
           context={context}
           policy={requirementPolicy}
           v1CaseId={v1CaseId}
+          canComplete={canComplete}
           canExempt={canExempt}
         />
       )}

@@ -19,13 +19,14 @@ import { AddNewReferralDrawer } from './AddNewReferralDrawer';
 import { ReferralDetailsPage } from './ReferralDetailsPage';
 import { useFamilyLookup } from '../Model/DirectoryModel';
 import { familyNameString } from '../Families/FamilyName';
-import { visibleReferralsQuery } from '../Model/Data';
-import { V1ReferralStatus } from '../GeneratedClient';
+import { currentLocationQuery, visibleReferralsQuery } from '../Model/Data';
+import { Permission, V1ReferralStatus } from '../GeneratedClient';
 import { getFamilyCounty } from '../Utilities/getFamilyCounty';
 import { ReferralStatusFilter } from './ReferralsFilters';
 import { useFeatureFlagEnabled, usePostHog } from 'posthog-js/react';
 import { useAppNavigate } from '../Hooks/useAppNavigate';
 import { ProgressBackdrop } from '../Shell/ProgressBackdrop';
+import { useGlobalPermissions } from '../Model/SessionModel';
 
 const REFERRALS_FEATURE_FLAG = 'referrals';
 
@@ -47,19 +48,41 @@ export function V1Referrals() {
   const referralsEnabled = useFeatureFlagEnabled(REFERRALS_FEATURE_FLAG);
   const featureFlagsLoaded = posthog.featureFlags.hasLoadedFlags;
   const appNavigate = useAppNavigate();
+  const permissions = useGlobalPermissions();
+  const currentLocationLoadable = useRecoilValueLoadable(currentLocationQuery);
+
+  const permissionsLoaded = currentLocationLoadable.state === 'hasValue';
+  const canViewReferrals = permissions(Permission.ViewV1Referral);
 
   useEffect(() => {
-    if (featureFlagsLoaded && referralsEnabled !== true) {
+    if (
+      permissionsLoaded &&
+      (!canViewReferrals || (featureFlagsLoaded && referralsEnabled !== true))
+    ) {
       appNavigate.dashboard();
     }
-  }, [featureFlagsLoaded, referralsEnabled, appNavigate]);
+  }, [
+    canViewReferrals,
+    featureFlagsLoaded,
+    permissionsLoaded,
+    referralsEnabled,
+    appNavigate,
+  ]);
 
-  if (!featureFlagsLoaded) {
+  if (currentLocationLoadable.state === 'hasError') {
+    throw currentLocationLoadable.contents;
+  }
+
+  if (!permissionsLoaded || !featureFlagsLoaded) {
     return (
       <ProgressBackdrop opaque>
         <p>Loading...</p>
       </ProgressBackdrop>
     );
+  }
+
+  if (!canViewReferrals) {
+    return null;
   }
 
   if (referralsEnabled !== true) {
@@ -72,6 +95,7 @@ export function V1Referrals() {
 function V1ReferralsContent() {
   const referralsLoadable = useRecoilValueLoadable(visibleReferralsQuery);
   const familyLookup = useFamilyLookup();
+  const permissions = useGlobalPermissions();
 
   const [filterText, setFilterText] = useState('');
   const [statusFilter, setStatusFilter] = useState<ReferralStatusFilter>('ALL');
@@ -132,6 +156,7 @@ function V1ReferralsContent() {
                 setFilterText={setFilterText}
                 expandedView={expandedView}
                 setExpandedView={setExpandedView}
+                canAddNewReferral={permissions(Permission.CreateV1Referral)}
                 onAddNewReferral={() => setOpenNewReferral(true)}
                 statusFilter={statusFilter}
                 setStatusFilter={setStatusFilter}

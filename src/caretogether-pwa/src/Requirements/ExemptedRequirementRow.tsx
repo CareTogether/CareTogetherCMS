@@ -6,7 +6,10 @@ import {
   usePersonLookup,
   useUserLookup,
 } from '../Model/DirectoryModel';
-import { useFamilyIdPermissions } from '../Model/SessionModel';
+import {
+  useFamilyIdPermissions,
+  useGlobalPermissions,
+} from '../Model/SessionModel';
 import { useDialogHandle } from '../Hooks/useDialogHandle';
 import { FamilyName } from '../Families/FamilyName';
 import { PersonName } from '../Families/PersonName';
@@ -38,17 +41,20 @@ export function ExemptedRequirementRow({
         ? context.volunteerFamilyId
         : ''
   );
+  const globalPermissions = useGlobalPermissions();
 
   const dialogHandle = useDialogHandle();
 
   const canExempt =
-    context.kind === 'V1Case'
-      ? permissions(Permission.EditV1CaseRequirementExemption)
-      : context.kind === 'Arrangement' ||
-          context.kind === 'Family Volunteer Assignment' ||
-          context.kind === 'Individual Volunteer Assignment'
-        ? permissions(Permission.EditArrangementRequirementExemption)
-        : permissions(Permission.EditApprovalRequirementExemption);
+    context.kind === 'V1Referral'
+      ? globalPermissions(Permission.EditV1ReferralRequirementExemption)
+      : context.kind === 'V1Case'
+        ? permissions(Permission.EditV1CaseRequirementExemption)
+        : context.kind === 'Arrangement' ||
+            context.kind === 'Family Volunteer Assignment' ||
+            context.kind === 'Individual Volunteer Assignment'
+          ? permissions(Permission.EditArrangementRequirementExemption)
+          : permissions(Permission.EditApprovalRequirementExemption);
 
   const familyLookup = useFamilyLookup();
   const personLookup = usePersonLookup();

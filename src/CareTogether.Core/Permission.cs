@@ -66,6 +66,8 @@
         CloseV1Referral = 262,
         ReopenV1Referral = 263,
         ViewV1Referral = 264,
+        EditV1ReferralRequirementCompletion = 265,
+        EditV1ReferralRequirementExemption = 266,
 
         // ---- V1Cases ---- //
 

@@ -146,6 +146,7 @@ export function MissingArrangementRequirementRow({
               ? context.v1CaseId
               : undefined
           }
+          canComplete={canComplete}
           canExempt={canExempt}
         />
       )}

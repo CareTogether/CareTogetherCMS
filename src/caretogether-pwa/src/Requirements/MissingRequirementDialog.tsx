@@ -57,6 +57,7 @@ type MissingRequirementDialogProps = {
   context: RequirementContext;
   policy: ActionRequirement;
   v1CaseId?: string;
+  canComplete: boolean;
   canExempt: boolean;
 };
 
@@ -66,6 +67,7 @@ export function MissingRequirementDialog({
   context,
   policy,
   v1CaseId,
+  canComplete,
   canExempt,
 }: MissingRequirementDialogProps) {
   const directory = useDirectoryModel();
@@ -80,7 +82,7 @@ export function MissingRequirementDialog({
     ? { days: parseInt(policy.validity.split('.')[0]) }
     : null;
 
-  const [tabValue, setTabValue] = useState(0);
+  const [tabValue, setTabValue] = useState(canComplete ? 0 : 1);
   const [documentFile, setDocumentFile] = useState<File | null>(null);
   const [documentId, setDocumentId] = useState<string>('');
   const [completedAtLocal, setCompletedAtLocal] = useState(null as Date | null);
@@ -204,6 +206,7 @@ export function MissingRequirementDialog({
   const enableSave = () =>
     tabValue === 0
       ? // mark complete
+        canComplete &&
         completedAtLocal != null &&
         !completedAtError &&
         ((documentId === UPLOAD_NEW && documentFile) ||
@@ -212,6 +215,7 @@ export function MissingRequirementDialog({
         (notes !== '' || policy.noteEntry !== NoteEntryRequirement.Required) &&
         (availableArrangements.length === 0) !== applyToArrangements.length > 0 // logical XOR
       : // grant exemption
+        canExempt &&
         (availableArrangements.length === 0) !==
           applyToArrangements.length > 0 && // logical XOR
         additionalComments !== '';
@@ -498,8 +502,10 @@ export function MissingRequirementDialog({
 
   async function save() {
     if (tabValue === 0) {
+      if (!canComplete) throw new Error('Missing permission to complete.');
       await markComplete();
     } else {
+      if (!canExempt) throw new Error('Missing permission to exempt.');
       await exempt();
     }
   }
@@ -519,191 +525,199 @@ export function MissingRequirementDialog({
         indicatorColor="secondary"
         variant="fullWidth"
       >
-        <Tab label="Mark Complete" {...a11yProps(0)} />
-        {canExempt && <Tab label="Grant Exemption" {...a11yProps(1)} />}
+        {canComplete && (
+          <Tab value={0} label="Mark Complete" {...a11yProps(0)} />
+        )}
+        {canExempt && (
+          <Tab value={1} label="Grant Exemption" {...a11yProps(1)} />
+        )}
       </Tabs>
-      <TabPanel value={tabValue} index={0}>
-        {policy.instructions && (
-          <DialogContentText style={{ whiteSpace: 'pre-wrap' }}>
-            {policy.instructions}
-          </DialogContentText>
-        )}
-        {policy.infoLink && (
-          <DialogContentText>
-            <Link
-              href={policy.infoLink}
-              target="_blank"
-              rel="noreferrer"
-              underline="hover"
-            >
-              {policy.infoLink}
-            </Link>
-          </DialogContentText>
-        )}
-        <br />
-        <Grid container spacing={2}>
-          {requirement instanceof MissingArrangementRequirement && (
-            <Grid item xs={12}>
-              <FormControl component="fieldset" variant="standard">
-                <FormLabel component="legend">Complete for</FormLabel>
-                <FormGroup>
-                  {availableArrangements.map((arrangement) => (
-                    <FormControlLabel
-                      key={arrangement.id}
-                      control={
-                        <Checkbox
-                          size="medium"
-                          checked={applyToArrangements.includes(arrangement)}
-                          onChange={(_, checked) =>
-                            toggleApplyToArrangement(arrangement, checked)
-                          }
-                          name={arrangement.id!}
-                        />
-                      }
-                      label={
-                        arrangement.arrangementType +
-                        ' - ' +
-                        (personLookup
-                          ? personNameString(
-                              personLookup(arrangement.partneringFamilyPersonId)
-                            )
-                          : '') +
-                        (context.kind === 'Family Volunteer Assignment'
-                          ? ` (${familyNameString(familyLookup(context.assignment.familyId))})`
-                          : '') +
-                        (context.kind === 'Individual Volunteer Assignment'
-                          ? ` (${personLookup ? personNameString(personLookup(context.assignment.personId)) : ''})`
-                          : '') +
-                        ` - ` +
-                        (arrangement.phase === ArrangementPhase.Cancelled
-                          ? `Cancelled ${formatRelative(arrangement.cancelledAtUtc!, now)}`
-                          : arrangement.phase === ArrangementPhase.SettingUp
-                            ? 'Setting up'
-                            : arrangement.phase ===
-                                ArrangementPhase.ReadyToStart
-                              ? 'Ready to start'
-                              : arrangement.phase === ArrangementPhase.Started
-                                ? `Started ${formatRelative(arrangement.startedAtUtc!, now)}`
-                                : `Ended ${formatRelative(arrangement.endedAtUtc!, now)}`)
-                      }
-                    />
-                  ))}
-                </FormGroup>
-              </FormControl>
-            </Grid>
+      {canComplete && (
+        <TabPanel value={tabValue} index={0}>
+          {policy.instructions && (
+            <DialogContentText style={{ whiteSpace: 'pre-wrap' }}>
+              {policy.instructions}
+            </DialogContentText>
           )}
-          <Grid item xs={12}>
-            {requirement instanceof MissingArrangementRequirement ? (
-              <ValidateDatePicker
-                label="When was this requirement completed?"
-                value={completedAtLocal}
-                disableFuture
-                maxDate={new Date()}
-                onChange={(date) => setCompletedAtLocal(date)}
-                onErrorChange={setCompletedAtError}
-                textFieldProps={{ fullWidth: true, required: true }}
-              />
-            ) : (
-              <ValidateDatePicker
-                label="When was this requirement completed?"
-                value={completedAtLocal}
-                disableFuture
-                onChange={(date) => setCompletedAtLocal(date)}
-                onErrorChange={setCompletedAtError}
-                textFieldProps={{ fullWidth: true, required: true }}
-              />
-            )}
-            {validityDuration &&
-              (completedAtLocal && isValid(completedAtLocal) ? (
-                <p>
-                  This will be valid until{' '}
-                  {format(
-                    add(completedAtLocal, validityDuration),
-                    'M/d/yyyy h:mm a'
-                  )}
-                </p>
-              ) : (
-                <p>Valid for {formatDuration(validityDuration)}</p>
-              ))}
-          </Grid>
-          {(policy.documentLink === DocumentLinkRequirement.Allowed ||
-            policy.documentLink === DocumentLinkRequirement.Required) && (
-            <>
-              <Grid item xs={12} sm={6}>
-                <FormControl
-                  fullWidth
-                  size="small"
-                  required={
-                    policy.documentLink === DocumentLinkRequirement.Required
-                  }
-                >
-                  <InputLabel id="document-label">Document</InputLabel>
-                  <Select
-                    labelId="document-label"
-                    id="document"
-                    value={documentId}
-                    onChange={(e) => setDocumentId(e.target.value as string)}
-                  >
-                    <MenuItem key="placeholder" value="">
-                      None
-                    </MenuItem>
-                    <MenuItem key={UPLOAD_NEW} value={UPLOAD_NEW}>
-                      Upload new...
-                    </MenuItem>
-                    <Divider />
-                    {(context.kind === 'V1Referral'
-                      ? currentReferral?.uploadedDocuments
-                      : contextFamily?.uploadedDocuments
-                    )?.map((document) => (
-                      <MenuItem
-                        key={document.uploadedDocumentId}
-                        value={document.uploadedDocumentId}
-                      >
-                        {document.uploadedFileName}
-                      </MenuItem>
+          {policy.infoLink && (
+            <DialogContentText>
+              <Link
+                href={policy.infoLink}
+                target="_blank"
+                rel="noreferrer"
+                underline="hover"
+              >
+                {policy.infoLink}
+              </Link>
+            </DialogContentText>
+          )}
+          <br />
+          <Grid container spacing={2}>
+            {requirement instanceof MissingArrangementRequirement && (
+              <Grid item xs={12}>
+                <FormControl component="fieldset" variant="standard">
+                  <FormLabel component="legend">Complete for</FormLabel>
+                  <FormGroup>
+                    {availableArrangements.map((arrangement) => (
+                      <FormControlLabel
+                        key={arrangement.id}
+                        control={
+                          <Checkbox
+                            size="medium"
+                            checked={applyToArrangements.includes(arrangement)}
+                            onChange={(_, checked) =>
+                              toggleApplyToArrangement(arrangement, checked)
+                            }
+                            name={arrangement.id!}
+                          />
+                        }
+                        label={
+                          arrangement.arrangementType +
+                          ' - ' +
+                          (personLookup
+                            ? personNameString(
+                                personLookup(
+                                  arrangement.partneringFamilyPersonId
+                                )
+                              )
+                            : '') +
+                          (context.kind === 'Family Volunteer Assignment'
+                            ? ` (${familyNameString(familyLookup(context.assignment.familyId))})`
+                            : '') +
+                          (context.kind === 'Individual Volunteer Assignment'
+                            ? ` (${personLookup ? personNameString(personLookup(context.assignment.personId)) : ''})`
+                            : '') +
+                          ` - ` +
+                          (arrangement.phase === ArrangementPhase.Cancelled
+                            ? `Cancelled ${formatRelative(arrangement.cancelledAtUtc!, now)}`
+                            : arrangement.phase === ArrangementPhase.SettingUp
+                              ? 'Setting up'
+                              : arrangement.phase ===
+                                  ArrangementPhase.ReadyToStart
+                                ? 'Ready to start'
+                                : arrangement.phase === ArrangementPhase.Started
+                                  ? `Started ${formatRelative(arrangement.startedAtUtc!, now)}`
+                                  : `Ended ${formatRelative(arrangement.endedAtUtc!, now)}`)
+                        }
+                      />
                     ))}
-                  </Select>
+                  </FormGroup>
                 </FormControl>
               </Grid>
-              <Grid item xs={12} sm={6}>
-                {documentId === UPLOAD_NEW && (
-                  <input
-                    accept="*/*"
-                    multiple={false}
-                    id="document-file"
-                    type="file"
-                    onChange={async (e) => {
-                      if (e.target.files && e.target.files.length > 0) {
-                        setDocumentFile(e.target.files[0]);
-                      } else {
-                        setDocumentFile(null);
-                      }
-                    }}
-                  />
-                )}
-              </Grid>
-            </>
-          )}
-          {(policy.noteEntry === NoteEntryRequirement.Allowed ||
-            policy.noteEntry === NoteEntryRequirement.Required) && (
+            )}
             <Grid item xs={12}>
-              <TextField
-                id="notes"
-                required={policy.noteEntry === NoteEntryRequirement.Required}
-                label="Notes"
-                placeholder="Space for any general notes"
-                multiline
-                fullWidth
-                variant="outlined"
-                minRows={6}
-                size="medium"
-                value={notes}
-                onChange={(e) => setNotes(e.target.value)}
-              />
+              {requirement instanceof MissingArrangementRequirement ? (
+                <ValidateDatePicker
+                  label="When was this requirement completed?"
+                  value={completedAtLocal}
+                  disableFuture
+                  maxDate={new Date()}
+                  onChange={(date) => setCompletedAtLocal(date)}
+                  onErrorChange={setCompletedAtError}
+                  textFieldProps={{ fullWidth: true, required: true }}
+                />
+              ) : (
+                <ValidateDatePicker
+                  label="When was this requirement completed?"
+                  value={completedAtLocal}
+                  disableFuture
+                  onChange={(date) => setCompletedAtLocal(date)}
+                  onErrorChange={setCompletedAtError}
+                  textFieldProps={{ fullWidth: true, required: true }}
+                />
+              )}
+              {validityDuration &&
+                (completedAtLocal && isValid(completedAtLocal) ? (
+                  <p>
+                    This will be valid until{' '}
+                    {format(
+                      add(completedAtLocal, validityDuration),
+                      'M/d/yyyy h:mm a'
+                    )}
+                  </p>
+                ) : (
+                  <p>Valid for {formatDuration(validityDuration)}</p>
+                ))}
             </Grid>
-          )}
-        </Grid>
-      </TabPanel>
+            {(policy.documentLink === DocumentLinkRequirement.Allowed ||
+              policy.documentLink === DocumentLinkRequirement.Required) && (
+              <>
+                <Grid item xs={12} sm={6}>
+                  <FormControl
+                    fullWidth
+                    size="small"
+                    required={
+                      policy.documentLink === DocumentLinkRequirement.Required
+                    }
+                  >
+                    <InputLabel id="document-label">Document</InputLabel>
+                    <Select
+                      labelId="document-label"
+                      id="document"
+                      value={documentId}
+                      onChange={(e) => setDocumentId(e.target.value as string)}
+                    >
+                      <MenuItem key="placeholder" value="">
+                        None
+                      </MenuItem>
+                      <MenuItem key={UPLOAD_NEW} value={UPLOAD_NEW}>
+                        Upload new...
+                      </MenuItem>
+                      <Divider />
+                      {(context.kind === 'V1Referral'
+                        ? currentReferral?.uploadedDocuments
+                        : contextFamily?.uploadedDocuments
+                      )?.map((document) => (
+                        <MenuItem
+                          key={document.uploadedDocumentId}
+                          value={document.uploadedDocumentId}
+                        >
+                          {document.uploadedFileName}
+                        </MenuItem>
+                      ))}
+                    </Select>
+                  </FormControl>
+                </Grid>
+                <Grid item xs={12} sm={6}>
+                  {documentId === UPLOAD_NEW && (
+                    <input
+                      accept="*/*"
+                      multiple={false}
+                      id="document-file"
+                      type="file"
+                      onChange={async (e) => {
+                        if (e.target.files && e.target.files.length > 0) {
+                          setDocumentFile(e.target.files[0]);
+                        } else {
+                          setDocumentFile(null);
+                        }
+                      }}
+                    />
+                  )}
+                </Grid>
+              </>
+            )}
+            {(policy.noteEntry === NoteEntryRequirement.Allowed ||
+              policy.noteEntry === NoteEntryRequirement.Required) && (
+              <Grid item xs={12}>
+                <TextField
+                  id="notes"
+                  required={policy.noteEntry === NoteEntryRequirement.Required}
+                  label="Notes"
+                  placeholder="Space for any general notes"
+                  multiline
+                  fullWidth
+                  variant="outlined"
+                  minRows={6}
+                  size="medium"
+                  value={notes}
+                  onChange={(e) => setNotes(e.target.value)}
+                />
+              </Grid>
+            )}
+          </Grid>
+        </TabPanel>
+      )}
       {canExempt && (
         <TabPanel value={tabValue} index={1}>
           <Grid container spacing={2}>
