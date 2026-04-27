@@ -5377,6 +5377,26 @@ export abstract class Activity implements IActivity {
             result.init(data);
             return result;
         }
+        if (data["discriminator"] === "V1ReferralAccepted") {
+            let result = new V1ReferralAccepted();
+            result.init(data);
+            return result;
+        }
+        if (data["discriminator"] === "V1ReferralClosed") {
+            let result = new V1ReferralClosed();
+            result.init(data);
+            return result;
+        }
+        if (data["discriminator"] === "V1ReferralOpened") {
+            let result = new V1ReferralOpened();
+            result.init(data);
+            return result;
+        }
+        if (data["discriminator"] === "V1ReferralRequirementCompleted") {
+            let result = new V1ReferralRequirementCompleted();
+            result.init(data);
+            return result;
+        }
         throw new Error("The abstract class 'Activity' cannot be instantiated.");
     }
 
@@ -5566,6 +5586,150 @@ export class ReferralRequirementCompleted extends Activity implements IReferralR
 }
 
 export interface IReferralRequirementCompleted extends IActivity {
+    requirementName: string;
+    completedAtUtc: Date;
+}
+
+export class V1ReferralAccepted extends Activity implements IV1ReferralAccepted {
+    acceptedAtUtc!: Date;
+
+    constructor(data?: IV1ReferralAccepted) {
+        super(data);
+        this._discriminator = "V1ReferralAccepted";
+    }
+
+    init(_data?: any) {
+        super.init(_data);
+        if (_data) {
+            this.acceptedAtUtc = _data["acceptedAtUtc"] ? new Date(_data["acceptedAtUtc"].toString()) : <any>undefined;
+        }
+    }
+
+    static fromJS(data: any): V1ReferralAccepted {
+        data = typeof data === 'object' ? data : {};
+        let result = new V1ReferralAccepted();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["acceptedAtUtc"] = this.acceptedAtUtc ? this.acceptedAtUtc.toISOString() : <any>undefined;
+        super.toJSON(data);
+        return data;
+    }
+}
+
+export interface IV1ReferralAccepted extends IActivity {
+    acceptedAtUtc: Date;
+}
+
+export class V1ReferralClosed extends Activity implements IV1ReferralClosed {
+    closedAtUtc!: Date;
+    closeReason!: string;
+
+    constructor(data?: IV1ReferralClosed) {
+        super(data);
+        this._discriminator = "V1ReferralClosed";
+    }
+
+    init(_data?: any) {
+        super.init(_data);
+        if (_data) {
+            this.closedAtUtc = _data["closedAtUtc"] ? new Date(_data["closedAtUtc"].toString()) : <any>undefined;
+            this.closeReason = _data["closeReason"];
+        }
+    }
+
+    static fromJS(data: any): V1ReferralClosed {
+        data = typeof data === 'object' ? data : {};
+        let result = new V1ReferralClosed();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["closedAtUtc"] = this.closedAtUtc ? this.closedAtUtc.toISOString() : <any>undefined;
+        data["closeReason"] = this.closeReason;
+        super.toJSON(data);
+        return data;
+    }
+}
+
+export interface IV1ReferralClosed extends IActivity {
+    closedAtUtc: Date;
+    closeReason: string;
+}
+
+export class V1ReferralOpened extends Activity implements IV1ReferralOpened {
+    openedAtUtc!: Date;
+
+    constructor(data?: IV1ReferralOpened) {
+        super(data);
+        this._discriminator = "V1ReferralOpened";
+    }
+
+    init(_data?: any) {
+        super.init(_data);
+        if (_data) {
+            this.openedAtUtc = _data["openedAtUtc"] ? new Date(_data["openedAtUtc"].toString()) : <any>undefined;
+        }
+    }
+
+    static fromJS(data: any): V1ReferralOpened {
+        data = typeof data === 'object' ? data : {};
+        let result = new V1ReferralOpened();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["openedAtUtc"] = this.openedAtUtc ? this.openedAtUtc.toISOString() : <any>undefined;
+        super.toJSON(data);
+        return data;
+    }
+}
+
+export interface IV1ReferralOpened extends IActivity {
+    openedAtUtc: Date;
+}
+
+export class V1ReferralRequirementCompleted extends Activity implements IV1ReferralRequirementCompleted {
+    requirementName!: string;
+    completedAtUtc!: Date;
+
+    constructor(data?: IV1ReferralRequirementCompleted) {
+        super(data);
+        this._discriminator = "V1ReferralRequirementCompleted";
+    }
+
+    init(_data?: any) {
+        super.init(_data);
+        if (_data) {
+            this.requirementName = _data["requirementName"];
+            this.completedAtUtc = _data["completedAtUtc"] ? new Date(_data["completedAtUtc"].toString()) : <any>undefined;
+        }
+    }
+
+    static fromJS(data: any): V1ReferralRequirementCompleted {
+        data = typeof data === 'object' ? data : {};
+        let result = new V1ReferralRequirementCompleted();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["requirementName"] = this.requirementName;
+        data["completedAtUtc"] = this.completedAtUtc ? this.completedAtUtc.toISOString() : <any>undefined;
+        super.toJSON(data);
+        return data;
+    }
+}
+
+export interface IV1ReferralRequirementCompleted extends IActivity {
     requirementName: string;
     completedAtUtc: Date;
 }
@@ -7828,6 +7992,7 @@ export class V1Referral implements IV1Referral {
     exemptedRequirements!: ExemptedRequirementInfo[];
     uploadedDocuments!: UploadedDocumentInfo[];
     deletedDocuments!: string[];
+    history!: Activity[];
     notes!: V1ReferralNoteEntry[];
     missingIntakeRequirements!: RequirementDefinition[];
 
@@ -7844,6 +8009,7 @@ export class V1Referral implements IV1Referral {
             this.exemptedRequirements = [];
             this.uploadedDocuments = [];
             this.deletedDocuments = [];
+            this.history = [];
             this.notes = [];
             this.missingIntakeRequirements = [];
         }
@@ -7886,6 +8052,11 @@ export class V1Referral implements IV1Referral {
                 this.deletedDocuments = [] as any;
                 for (let item of _data["deletedDocuments"])
                     this.deletedDocuments!.push(item);
+            }
+            if (Array.isArray(_data["history"])) {
+                this.history = [] as any;
+                for (let item of _data["history"])
+                    this.history!.push(Activity.fromJS(item));
             }
             if (Array.isArray(_data["notes"])) {
                 this.notes = [] as any;
@@ -7945,6 +8116,11 @@ export class V1Referral implements IV1Referral {
             for (let item of this.deletedDocuments)
                 data["deletedDocuments"].push(item);
         }
+        if (Array.isArray(this.history)) {
+            data["history"] = [];
+            for (let item of this.history)
+                data["history"].push(item.toJSON());
+        }
         if (Array.isArray(this.notes)) {
             data["notes"] = [];
             for (let item of this.notes)
@@ -7974,6 +8150,7 @@ export interface IV1Referral {
     exemptedRequirements: ExemptedRequirementInfo[];
     uploadedDocuments: UploadedDocumentInfo[];
     deletedDocuments: string[];
+    history: Activity[];
     notes: V1ReferralNoteEntry[];
     missingIntakeRequirements: RequirementDefinition[];
 }

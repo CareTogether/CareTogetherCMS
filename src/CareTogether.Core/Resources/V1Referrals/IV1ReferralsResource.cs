@@ -22,6 +22,7 @@ namespace CareTogether.Resources.V1Referrals
         ImmutableList<ExemptedRequirementInfo> ExemptedRequirements,
         ImmutableList<UploadedDocumentInfo> UploadedDocuments,
         ImmutableList<Guid> DeletedDocuments,
+        ImmutableList<Activity> History,
         ImmutableList<V1ReferralNoteEntry> Notes
     )
     {
