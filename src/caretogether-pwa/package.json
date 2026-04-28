@@ -40,8 +40,9 @@
     "zod": "^4.3.5"
   },
   "devDependencies": {
+    "@playwright/test": "^1.59.1",
     "@types/jest": "^29.5.12",
-    "@types/node": "^20.14.10",
+    "@types/node": "^20.19.39",
     "@types/react": "^18.3.3",
     "@types/react-dom": "^18.3.0",
     "@types/react-lazyload": "^3.2.3",
