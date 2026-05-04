@@ -5,7 +5,11 @@ type BrowserFailure = {
   message: string;
 };
 
-function collectBrowserFailures(page: Page): BrowserFailure[] {
+type FailureCollector = {
+  getFailures: () => BrowserFailure[];
+};
+
+function createFailureCollector(page: Page): FailureCollector {
   const failures: BrowserFailure[] = [];
 
   page.on('console', (msg) => {
@@ -30,29 +34,45 @@ function collectBrowserFailures(page: Page): BrowserFailure[] {
     failures.push({ type: 'pageerror', message: error.message });
   });
 
-  return failures;
+  return {
+    getFailures: () => failures,
+  };
+}
+
+async function openHome(page: Page): Promise<void> {
+  await page.goto('/');
+  await page.waitForLoadState('domcontentloaded');
+}
+
+async function expectNoFatalErrorUi(page: Page): Promise<void> {
+  await expect(page.locator('body')).toBeVisible();
+  await expect(
+    page.getByText(
+      /unexpected error|something went wrong|application error|monitor_window_timeout/i
+    )
+  ).toHaveCount(0);
+  await expect(page.getByText(/not found|404/i)).toHaveCount(0);
+}
+
+async function expectNoBrowserFailures(
+  collector: FailureCollector
+): Promise<void> {
+  expect(collector.getFailures()).toEqual([]);
 }
 
 test.describe('frontend smoke', () => {
-  test('dashboard loads without fatal frontend errors', async ({ page }) => {
-    const failures = collectBrowserFailures(page);
+  test('home route loads without fatal frontend errors', async ({ page }) => {
+    const collector = createFailureCollector(page);
 
-    await page.goto('/');
-    await page.waitForLoadState('domcontentloaded');
-
-    await expect(page.locator('body')).toBeVisible();
-    await expect(
-      page.getByText(/unexpected error|something went wrong|application error/i)
-    ).toHaveCount(0);
-
-    expect(failures).toEqual([]);
+    await openHome(page);
+    await expectNoFatalErrorUi(page);
+    await expectNoBrowserFailures(collector);
   });
 
-  test('side navigation renders core menu items', async ({ page }) => {
-    const failures = collectBrowserFailures(page);
+  test('side navigation shows core menu items', async ({ page }) => {
+    const collector = createFailureCollector(page);
 
-    await page.goto('/');
-    await page.waitForLoadState('domcontentloaded');
+    await openHome(page);
 
     const sideNavigation = page.getByRole('list', {
       name: /secondary navigation/i,
@@ -62,14 +82,14 @@ test.describe('frontend smoke', () => {
     await expect(sideNavigation.getByText('Dashboard')).toBeVisible();
     await expect(sideNavigation.getByText('Inbox')).toBeVisible();
 
-    expect(failures).toEqual([]);
+    await expectNoFatalErrorUi(page);
+    await expectNoBrowserFailures(collector);
   });
 
   test('dashboard reaches a usable state', async ({ page }) => {
-    const failures = collectBrowserFailures(page);
+    const collector = createFailureCollector(page);
 
-    await page.goto('/');
-    await page.waitForLoadState('domcontentloaded');
+    await openHome(page);
 
     await expect(
       page
@@ -77,8 +97,7 @@ test.describe('frontend smoke', () => {
         .or(page.getByText(/dashboard/i).first())
     ).toBeVisible();
 
-    await expect(page.getByText(/not found|404/i)).toHaveCount(0);
-
-    expect(failures).toEqual([]);
+    await expectNoFatalErrorUi(page);
+    await expectNoBrowserFailures(collector);
   });
 });

@@ -1,7 +1,6 @@
 import { defineConfig, devices } from '@playwright/test';
 
-const CLIENT_PORT = 4173;
-const BASE_URL = `http://127.0.0.1:${CLIENT_PORT}`;
+const BASE_URL = process.env.PLAYWRIGHT_BASE_URL ?? 'http://localhost:3000';
 const AUTH_FILE = 'playwright/.auth/admin.json';
 
 export default defineConfig({
@@ -16,12 +15,6 @@ export default defineConfig({
     trace: 'on-first-retry',
     screenshot: 'only-on-failure',
     video: 'retain-on-failure',
-  },
-  webServer: {
-    command: `npm run dev -- --host 127.0.0.1 --port ${CLIENT_PORT}`,
-    url: BASE_URL,
-    reuseExistingServer: true,
-    timeout: 120 * 1000,
   },
   projects: [
     {
