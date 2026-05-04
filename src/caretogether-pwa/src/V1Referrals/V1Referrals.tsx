@@ -106,21 +106,27 @@ function V1ReferralsContent() {
   const referrals =
     referralsLoadable.state === 'hasValue' ? referralsLoadable.contents : [];
 
-  const rows = referrals.map((r) => {
-    const family = r.familyId ? familyLookup(r.familyId) : null;
+  const rows = referrals
+    .map((r) => {
+      const family = r.familyId ? familyLookup(r.familyId) : null;
 
-    return {
-      id: r.referralId,
-      title: r.title,
-      status: statusToUi(r.status),
-      openedAtUtc: r.createdAtUtc,
-      acceptedAtUtc: r.acceptedAtUtc,
-      closedAtUtc: r.closedAtUtc,
-      clientFamilyName: family ? familyNameString(family) : null,
-      county: family ? getFamilyCounty(family) : null,
-      comments: r.comment ?? '',
-    };
-  });
+      return {
+        id: r.referralId,
+        title: r.title,
+        status: statusToUi(r.status),
+        openedAtUtc: r.createdAtUtc,
+        acceptedAtUtc: r.acceptedAtUtc,
+        closedAtUtc: r.closedAtUtc,
+        clientFamilyName: family ? familyNameString(family) : null,
+        county: family ? getFamilyCounty(family) : null,
+        comments: r.comment ?? '',
+      };
+    })
+    .sort((a, b) => {
+      const aTime = a.openedAtUtc?.getTime() ?? 0;
+      const bTime = b.openedAtUtc?.getTime() ?? 0;
+      return bTime - aTime;
+    });
 
   const normalizedFilterText = filterText.trim().toLowerCase();
 
