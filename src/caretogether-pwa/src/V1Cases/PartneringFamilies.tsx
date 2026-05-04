@@ -21,7 +21,11 @@ import {
   UnfoldLess as UnfoldLessIcon,
   UnfoldMore as UnfoldMoreIcon,
 } from '@mui/icons-material';
-import { ArrangementPhase, Permission } from '../GeneratedClient';
+import {
+  ArrangementPhase,
+  Permission,
+  V1ReferralStatus,
+} from '../GeneratedClient';
 import { CreatePartneringFamilyDrawer } from './CreatePartneringFamilyDrawer';
 import { useScrollMemory } from '../Hooks/useScrollMemory';
 import { useLocalStorage } from '../Hooks/useLocalStorage';
@@ -47,6 +51,15 @@ import { ArrangementsFilter } from './PartneringFamilies/types';
 import { stickyHeaderTableSx } from '../Utilities/stickyHeaderTableSx';
 import { getFamilyCounty } from '../Utilities/getFamilyCounty';
 import { CountyFilter } from '../V1Referrals/CountyFilter';
+import { visibleReferralsQuery } from '../Model/Data';
+
+function isSetupOrActiveArrangementPhase(phase: ArrangementPhase | undefined) {
+  return (
+    phase === ArrangementPhase.Started ||
+    phase === ArrangementPhase.SettingUp ||
+    phase === ArrangementPhase.ReadyToStart
+  );
+}
 
 function PartneringFamilies() {
   const appNavigate = useAppNavigate();
@@ -55,6 +68,11 @@ function PartneringFamilies() {
   const partneringFamiliesLoadable = useLoadable(partneringFamiliesData);
   const partneringFamilies = sortFamiliesByLastNameDesc(
     partneringFamiliesLoadable || []
+  );
+  const visibleReferralsLoadable = useLoadable(visibleReferralsQuery);
+  const visibleReferrals = React.useMemo(
+    () => visibleReferralsLoadable || [],
+    [visibleReferralsLoadable]
   );
 
   const arrangementTypes = useLoadable(
@@ -149,15 +167,28 @@ function PartneringFamilies() {
           : countyFilter.includes(county);
       })
       .filter((family) => {
+        const familyId = family.family?.id;
         const openCase = family.partneringFamilyInfo?.openV1Case;
         const arrangements = openCase?.arrangements ?? [];
+        const hasOpenReferralWithoutCase =
+          !openCase &&
+          visibleReferrals.some(
+            (referral) =>
+              referral.familyId === familyId &&
+              referral.status === V1ReferralStatus.Open
+          );
 
         switch (arrangementsFilter) {
           case 'All':
             return true;
 
           case 'Intake':
-            return !!openCase && arrangements.length === 0;
+            return (
+              (hasOpenReferralWithoutCase || !!openCase) &&
+              !arrangements.some((arrangement) =>
+                isSetupOrActiveArrangementPhase(arrangement.phase)
+              )
+            );
 
           case 'Active':
             return arrangements.some(
@@ -174,9 +205,7 @@ function PartneringFamilies() {
           case 'Active + Setup':
             return arrangements.some(
               (arrangement) =>
-                arrangement.phase === ArrangementPhase.Started ||
-                arrangement.phase === ArrangementPhase.SettingUp ||
-                arrangement.phase === ArrangementPhase.ReadyToStart
+                isSetupOrActiveArrangementPhase(arrangement.phase)
             );
 
           default:
@@ -186,7 +215,12 @@ function PartneringFamilies() {
 
   React.useEffect(() => {
     forceCheck();
-  }, [arrangementsFilter, filterText, selectedCustomFieldValuesByField]);
+  }, [
+    arrangementsFilter,
+    filterText,
+    selectedCustomFieldValuesByField,
+    visibleReferrals,
+  ]);
 
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
