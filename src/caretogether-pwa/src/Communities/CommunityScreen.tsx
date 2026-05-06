@@ -1,5 +1,6 @@
 import {
   Button,
+  Box,
   Container,
   Grid,
   Toolbar,
@@ -121,8 +122,31 @@ export function CommunityScreen() {
               <CommunityDocuments communityInfo={communityInfo} />
             </>
           )}
+          <Box
+            sx={{
+              marginTop: permissions(Permission.ViewCommunityDocumentMetadata)
+                ? 3
+                : 0,
+            }}
+          >
+            <Typography variant="h5">
+              Role Assignments
+              {permissions(Permission.EditCommunityRoleAssignments) && (
+                <Button
+                  onClick={addRoleAssignmentDrawer.openDrawer}
+                  variant="text"
+                  size={isDesktop ? 'small' : 'medium'}
+                  sx={{ marginLeft: 2 }}
+                  startIcon={<PersonAddAlt1 />}
+                >
+                  Add
+                </Button>
+              )}
+            </Typography>
+            <CommunityRoleAssignments communityInfo={communityInfo} />
+          </Box>
         </Grid>
-        <Grid item xs={12} sm={5}>
+        <Grid item xs={12}>
           <Typography variant="h5">
             Member Families
             {permissions(Permission.EditCommunityMemberFamilies) && (
@@ -138,24 +162,6 @@ export function CommunityScreen() {
             )}
           </Typography>
           <CommunityMemberFamilies communityInfo={communityInfo} />
-        </Grid>
-        <Grid item xs={0} sm={1}></Grid>
-        <Grid item xs={12} sm={6}>
-          <Typography variant="h5">
-            Role Assignments
-            {permissions(Permission.EditCommunityRoleAssignments) && (
-              <Button
-                onClick={addRoleAssignmentDrawer.openDrawer}
-                variant="text"
-                size={isDesktop ? 'small' : 'medium'}
-                sx={{ marginLeft: 2 }}
-                startIcon={<PersonAddAlt1 />}
-              >
-                Add
-              </Button>
-            )}
-          </Typography>
-          <CommunityRoleAssignments communityInfo={communityInfo} />
         </Grid>
       </Grid>
       {permissions(Permission.EditCommunity) &&
