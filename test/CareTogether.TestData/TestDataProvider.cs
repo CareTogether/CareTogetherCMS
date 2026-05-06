@@ -2341,7 +2341,7 @@ namespace CareTogether.TestData
                                     OrganizationRoles: [SystemConstants.ORGANIZATION_ADMINISTRATOR],
                                     ApprovalRoles: []
                                 ),
-                            ]
+                              ]
                         ),
                         new LocationConfiguration(
                             guid3,

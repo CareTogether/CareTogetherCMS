@@ -8,7 +8,10 @@ import {
 } from '@mui/material';
 import { useState, useEffect, useMemo } from 'react';
 import { useLoadable } from '../../Hooks/useLoadable';
-import { organizationConfigurationQuery } from '../../Model/ConfigurationModel';
+import {
+  organizationConfigurationQuery,
+  policyData,
+} from '../../Model/ConfigurationModel';
 import { ProgressBackdrop } from '../../Shell/ProgressBackdrop';
 import { useScreenTitle } from '../../Shell/ShellScreenTitle';
 import { useRecoilValue } from 'recoil';
@@ -42,6 +45,11 @@ export function LocationEdit() {
   const location = configuration?.locations?.find(
     (location) => location.id === editingLocationId
   );
+
+  const effectiveLocationPolicy = useRecoilValue(policyData);
+
+  // TODO: Use this to implement the other tabs
+  console.log({ effectiveLocationPolicy });
 
   useScreenTitle(`Editing ${location?.name} configuration`);
 
@@ -221,6 +229,12 @@ export function LocationEdit() {
                 data={basicData}
                 currentLocationDefinition={location}
               />
+            </Box>
+          )}
+
+          {activeTab === 'actions' && (
+            <Box key="actions">
+              <ActionDefinitions />
             </Box>
           )}
 
