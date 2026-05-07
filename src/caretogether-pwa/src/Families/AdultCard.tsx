@@ -66,8 +66,7 @@ export function AdultCard({ familyId, personId }: AdultCardProps) {
 
   const permissions = useFamilyPermissions(family);
 
-  const isVolunteer =
-    family.volunteerFamilyInfo?.individualVolunteers?.[personId] != null;
+  const isVolunteerFamily = family.volunteerFamilyInfo != null;
 
   const editDialogHandle = useDialogHandle();
 
@@ -469,7 +468,7 @@ export function AdultCard({ familyId, personId }: AdultCardProps) {
                 <ListItemText primary="Manage user..." />
               </MenuItem>
             )}
-            {isVolunteer && (
+            {isVolunteerFamily && (
               <MenuItem
                 onClick={() => {
                   setCompleteOtherOpen(true);

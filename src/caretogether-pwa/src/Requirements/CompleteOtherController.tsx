@@ -1,10 +1,12 @@
 import { useMemo, useState } from 'react';
 import { useRecoilValue } from 'recoil';
+import { Permission } from '../GeneratedClient';
 import { policyData } from '../Model/ConfigurationModel';
 import { IndividualVolunteerContext } from '../Requirements/RequirementContext';
 import { useDialogHandle } from '../Hooks/useDialogHandle';
 import { CompleteOtherDialog } from '../Requirements/CompleteOtherDialog';
 import { MissingRequirementDialog } from '../Requirements/MissingRequirementDialog';
+import { useFamilyIdPermissions } from '../Model/SessionModel';
 
 type CompleteOtherControllerProps = {
   familyId: string;
@@ -20,7 +22,10 @@ export function CompleteOtherController({
   onClose,
 }: CompleteOtherControllerProps) {
   const policy = useRecoilValue(policyData);
+  const permissions = useFamilyIdPermissions(familyId);
   const requirementDialogHandle = useDialogHandle();
+  const canComplete = permissions(Permission.EditApprovalRequirementCompletion);
+  const canExempt = permissions(Permission.EditApprovalRequirementExemption);
 
   const [selectedRequirement, setSelectedRequirement] = useState<string | null>(
     null
@@ -80,7 +85,8 @@ export function CompleteOtherController({
             requirement={selectedRequirement}
             context={context}
             policy={selectedPolicy}
-            canExempt={true}
+            canComplete={canComplete}
+            canExempt={canExempt}
           />
         )}
     </>
