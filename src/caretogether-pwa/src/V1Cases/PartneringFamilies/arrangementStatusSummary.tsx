@@ -1,7 +1,9 @@
-import AccessTimeIcon from '@mui/icons-material/AccessTime';
-import CheckCircleOutlinedIcon from '@mui/icons-material/CheckCircleOutlined';
-import PendingOutlinedIcon from '@mui/icons-material/PendingOutlined';
-import PlayCircleFilledIcon from '@mui/icons-material/PlayCircleFilled';
+import {
+  AccessTime as AccessTimeIcon,
+  CheckCircleOutlined as CheckCircleOutlinedIcon,
+  PendingOutlined as PendingOutlinedIcon,
+  PlayCircleFilled as PlayCircleFilledIcon,
+} from '@mui/icons-material';
 import { Tooltip } from '@mui/material';
 import { ArrangementPhase, PartneringFamilyInfo } from '../../GeneratedClient';
 import { allArrangements } from './arrangementHelpers';

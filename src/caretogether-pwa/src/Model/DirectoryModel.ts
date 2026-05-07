@@ -1,4 +1,4 @@
-import { useRecoilCallback, useRecoilValue } from 'recoil';
+import { useRecoilValue } from 'recoil';
 import {
   AddAdultToFamilyCommand,
   AddChildToFamilyCommand,
@@ -7,7 +7,6 @@ import {
   AddPersonPhoneNumber,
   Address,
   Age,
-  CompositeRecordsCommand,
   CreateVolunteerFamilyWithNewAdultCommand,
   CustodialRelationship,
   EmailAddress,
@@ -45,7 +44,6 @@ import {
   FamilyRecordsCommand,
   PersonRecordsCommand,
   NoteRecordsCommand,
-  AtomicRecordsCommand,
   CustomField,
   UpdateCustomFamilyField,
   CommunityCommand,
@@ -53,13 +51,14 @@ import {
   ConvertChildToAdult,
   UndoCreateFamily,
   UpdateNoteAccessLevel,
+  PinNote,
+  UnpinNote,
   UpdateTestFamilyFlag,
   Person,
 } from '../GeneratedClient';
-import { api } from '../Api/Api';
 import {
-  selectedLocationContextState,
-  visibleAggregatesState,
+  useAtomicRecordsCommandCallback,
+  useCompositeRecordsCommandCallback,
   visibleCommunitiesQuery,
   visibleFamiliesQuery,
 } from './Data';
@@ -211,83 +210,6 @@ export function useCommunityLookup() {
     );
     return community;
   };
-}
-
-export function useAtomicRecordsCommandCallback<
-  T extends unknown[],
-  U extends AtomicRecordsCommand,
->(callback: (aggregateId: string, ...args: T) => Promise<U>) {
-  return useRecoilCallback(({ snapshot, set }) => {
-    const asyncCallback = async (aggregateId: string, ...args: T) => {
-      const { organizationId, locationId } = await snapshot.getPromise(
-        selectedLocationContextState
-      );
-
-      const command = await callback(aggregateId, ...args);
-
-      const updatedAggregates = await api.records.submitAtomicRecordsCommand(
-        organizationId,
-        locationId,
-        command
-      );
-
-      for (const updatedAggregate of updatedAggregates) {
-        set(visibleAggregatesState, (current) =>
-          updatedAggregate == null
-            ? current.filter((currentEntry) => currentEntry.id !== aggregateId)
-            : current.some(
-                  (currentEntry) =>
-                    currentEntry.id === updatedAggregate.id &&
-                    currentEntry.constructor === updatedAggregate.constructor
-                )
-              ? current.map((currentEntry) =>
-                  currentEntry.id === updatedAggregate.id &&
-                  currentEntry.constructor === updatedAggregate.constructor
-                    ? updatedAggregate
-                    : currentEntry
-                )
-              : current.concat(updatedAggregate)
-        );
-      }
-    };
-    return asyncCallback;
-  });
-}
-
-function useCompositeRecordsCommandCallback<T extends unknown[]>(
-  callback: (
-    aggregateId: string,
-    ...args: T
-  ) => Promise<CompositeRecordsCommand>
-) {
-  return useRecoilCallback(({ snapshot, set }) => {
-    const asyncCallback = async (aggregateId: string, ...args: T) => {
-      const { organizationId, locationId } = await snapshot.getPromise(
-        selectedLocationContextState
-      );
-
-      const command = await callback(aggregateId, ...args);
-
-      const updatedAggregate = await api.records.submitCompositeRecordsCommand(
-        organizationId,
-        locationId,
-        command
-      );
-
-      set(visibleAggregatesState, (current) =>
-        updatedAggregate == null
-          ? current.filter((currentEntry) => currentEntry.id !== aggregateId)
-          : current.some((currentEntry) => currentEntry.id === aggregateId)
-            ? current.map((currentEntry) =>
-                currentEntry.id === aggregateId
-                  ? updatedAggregate
-                  : currentEntry
-              )
-            : current.concat(updatedAggregate)
-      );
-    };
-    return asyncCallback;
-  });
 }
 
 function useFamilyCommandCallback<T extends unknown[]>(
@@ -780,7 +702,7 @@ export function useDirectoryModel() {
       age: Age | null,
       ethnicity: string | null,
       isInHousehold: boolean,
-      relationshipToFamily: string,
+      relationshipToFamily: string | null,
       address: Address | null,
       phoneNumber: string | null,
       phoneType: PhoneNumberType,
@@ -807,7 +729,7 @@ export function useDirectoryModel() {
             FamilyAdultRelationshipInfo,
             {
               isInHousehold: isInHousehold,
-              relationshipToFamily: relationshipToFamily,
+              relationshipToFamily: relationshipToFamily ?? undefined,
             }
           ),
           address: address == null ? undefined : address,
@@ -904,6 +826,26 @@ export function useDirectoryModel() {
     }
   );
 
+  const pinNote = useNoteCommandCallback(
+    async (familyId: string, noteId: string) => {
+      const command = commandFactory(PinNote, {
+        familyId,
+        noteId,
+      });
+      return command;
+    }
+  );
+
+  const unpinNote = useNoteCommandCallback(
+    async (familyId: string, noteId: string) => {
+      const command = commandFactory(UnpinNote, {
+        familyId,
+        noteId,
+      });
+      return command;
+    }
+  );
+
   return {
     undoCreateFamily,
     uploadFamilyDocument,
@@ -936,6 +878,8 @@ export function useDirectoryModel() {
     discardDraftNote,
     approveNote,
     updateNoteAccessLevel,
+    pinNote,
+    unpinNote,
     updateTestFamilyFlag,
   };
 }

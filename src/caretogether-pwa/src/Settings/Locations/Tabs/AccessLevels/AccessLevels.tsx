@@ -1,3 +1,4 @@
+import { Search as SearchIcon } from '@mui/icons-material';
 import {
   TextField,
   Typography,
@@ -13,7 +14,6 @@ import {
   TableRow,
 } from '@mui/material';
 import { useState } from 'react';
-import SearchIcon from '@mui/icons-material/Search';
 import { useSidePanel } from '../../../../Hooks/useSidePanel';
 import { AccessLevelData, AddAccessLevel } from './AddAccessLevel';
 import {

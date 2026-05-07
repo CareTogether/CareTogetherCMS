@@ -1,21 +1,17 @@
 import { AnonymousCredential, BlockBlobClient } from '@azure/storage-blob';
 import { api } from '../Api/Api';
+import type { IDocumentUploadInfo } from '../GeneratedClient';
 
-export async function uploadFamilyFileToTenant(
-  organizationId: string,
-  locationId: string,
-  familyId: string,
-  formFile: File
+type GenerateUploadValetUrl = (documentId: string) => Promise<IDocumentUploadInfo>;
+type GetReadValetUrl = () => Promise<string>;
+
+async function uploadFileToTenant(
+  formFile: File,
+  generateUploadValetUrl: GenerateUploadValetUrl
 ) {
   const fileBuffer = await formFile.arrayBuffer();
   const documentId = crypto.randomUUID();
-
-  const uploadInfo = await api.files.generateFamilyDocumentUploadValetUrl(
-    organizationId,
-    locationId,
-    familyId,
-    documentId
-  );
+  const uploadInfo = await generateUploadValetUrl(documentId);
 
   const blobClient = new BlockBlobClient(
     uploadInfo.valetUrl as string,
@@ -29,6 +25,27 @@ export async function uploadFamilyFileToTenant(
   });
 
   return uploadInfo.documentId as string;
+}
+
+async function downloadFile(getReadValetUrl: GetReadValetUrl) {
+  const downloadUrl = await getReadValetUrl();
+  window.location.href = downloadUrl;
+}
+
+export async function uploadFamilyFileToTenant(
+  organizationId: string,
+  locationId: string,
+  familyId: string,
+  formFile: File
+) {
+  return uploadFileToTenant(formFile, documentId =>
+    api.files.generateFamilyDocumentUploadValetUrl(
+      organizationId,
+      locationId,
+      familyId,
+      documentId
+    )
+  );
 }
 
 export async function downloadFamilyFile(
@@ -37,14 +54,14 @@ export async function downloadFamilyFile(
   familyId: string,
   documentId: string
 ) {
-  const downloadUrl = await api.files.getFamilyDocumentReadValetUrl(
-    organizationId,
-    locationId,
-    familyId,
-    documentId
+  return downloadFile(() =>
+    api.files.getFamilyDocumentReadValetUrl(
+      organizationId,
+      locationId,
+      familyId,
+      documentId
+    )
   );
-
-  window.location.href = downloadUrl;
 }
 
 export async function uploadCommunityFileToTenant(
@@ -53,28 +70,14 @@ export async function uploadCommunityFileToTenant(
   communityId: string,
   formFile: File
 ) {
-  const fileBuffer = await formFile.arrayBuffer();
-  const documentId = crypto.randomUUID();
-
-  const uploadInfo = await api.files.generateCommunityDocumentUploadValetUrl(
-    organizationId,
-    locationId,
-    communityId,
-    documentId
+  return uploadFileToTenant(formFile, documentId =>
+    api.files.generateCommunityDocumentUploadValetUrl(
+      organizationId,
+      locationId,
+      communityId,
+      documentId
+    )
   );
-
-  const blobClient = new BlockBlobClient(
-    uploadInfo.valetUrl as string,
-    new AnonymousCredential()
-  );
-  await blobClient.uploadData(fileBuffer, {
-    blobHTTPHeaders: {
-      blobContentType: 'application/octet-stream; charset=utf-8',
-      blobContentDisposition: `attachment; filename="${formFile.name}"`,
-    },
-  });
-
-  return uploadInfo.documentId as string;
 }
 
 export async function downloadCommunityFile(
@@ -83,12 +86,44 @@ export async function downloadCommunityFile(
   communityId: string,
   documentId: string
 ) {
-  const downloadUrl = await api.files.getCommunityDocumentReadValetUrl(
-    organizationId,
-    locationId,
-    communityId,
-    documentId
+  return downloadFile(() =>
+    api.files.getCommunityDocumentReadValetUrl(
+      organizationId,
+      locationId,
+      communityId,
+      documentId
+    )
   );
+}
 
-  window.location.href = downloadUrl;
+export async function uploadV1ReferralFileToTenant(
+  organizationId: string,
+  locationId: string,
+  referralId: string,
+  formFile: File
+) {
+  return uploadFileToTenant(formFile, documentId =>
+    api.files.generateV1ReferralDocumentUploadValetUrl(
+      organizationId,
+      locationId,
+      referralId,
+      documentId
+    )
+  );
+}
+
+export async function downloadV1ReferralFile(
+  organizationId: string,
+  locationId: string,
+  referralId: string,
+  documentId: string
+) {
+  return downloadFile(() =>
+    api.files.getV1ReferralDocumentReadValetUrl(
+      organizationId,
+      locationId,
+      referralId,
+      documentId
+    )
+  );
 }

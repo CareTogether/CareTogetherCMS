@@ -1,5 +1,5 @@
 import { Typography } from '@mui/material';
-import CalendarTodayIcon from '@mui/icons-material/CalendarToday';
+import { CalendarToday as CalendarTodayIcon } from '@mui/icons-material';
 import { Permission, Age, ExactAge } from '../GeneratedClient';
 
 type Props = {
