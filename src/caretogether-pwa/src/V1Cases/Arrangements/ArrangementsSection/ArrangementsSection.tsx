@@ -1,5 +1,5 @@
 import { Masonry } from '@mui/lab';
-import AddCircleIcon from '@mui/icons-material/AddCircle';
+import { AddCircle as AddCircleIcon } from '@mui/icons-material';
 import { Grid, Typography, Button, useTheme } from '@mui/material';
 import { Box, useMediaQuery } from '@mui/system';
 import {

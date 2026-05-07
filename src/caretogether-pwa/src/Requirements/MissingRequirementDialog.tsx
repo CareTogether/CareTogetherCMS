@@ -32,7 +32,11 @@ import {
   useFamilyLookup,
   usePersonLookup,
 } from '../Model/DirectoryModel';
-import { uploadFamilyFileToTenant } from '../Model/FilesModel';
+import {
+  uploadFamilyFileToTenant,
+  uploadV1ReferralFileToTenant,
+} from '../Model/FilesModel';
+import { visibleReferralsQuery } from '../Model/Data';
 import { useV1CasesModel } from '../Model/V1CasesModel';
 import { useVolunteersModel } from '../Model/VolunteersModel';
 import { UpdateDialog } from '../Generic/UpdateDialog';
@@ -44,6 +48,8 @@ import { familyNameString } from '../Families/FamilyName';
 import { add, format, formatDuration, formatRelative, isValid } from 'date-fns';
 import { selectedLocationContextState } from '../Model/Data';
 import { ValidateDatePicker } from '../Generic/Forms/ValidateDatePicker';
+import { useV1ReferralsModel } from '../Model/V1ReferralsModel';
+import { useV1ReferralNotesModel } from '../Model/V1ReferralNotesModel';
 
 type MissingRequirementDialogProps = {
   handle: DialogHandle;
@@ -51,19 +57,24 @@ type MissingRequirementDialogProps = {
   context: RequirementContext;
   policy: ActionRequirement;
   v1CaseId?: string;
+  canComplete: boolean;
   canExempt: boolean;
 };
+
 export function MissingRequirementDialog({
   handle,
   requirement,
   context,
   policy,
   v1CaseId,
+  canComplete,
   canExempt,
 }: MissingRequirementDialogProps) {
   const directory = useDirectoryModel();
   const v1Cases = useV1CasesModel();
   const volunteers = useVolunteersModel();
+  const referrals = useV1ReferralsModel();
+  const referralNotes = useV1ReferralNotesModel();
 
   const now = new Date();
 
@@ -71,7 +82,7 @@ export function MissingRequirementDialog({
     ? { days: parseInt(policy.validity.split('.')[0]) }
     : null;
 
-  const [tabValue, setTabValue] = useState(0);
+  const [tabValue, setTabValue] = useState(canComplete ? 0 : 1);
   const [documentFile, setDocumentFile] = useState<File | null>(null);
   const [documentId, setDocumentId] = useState<string>('');
   const [completedAtLocal, setCompletedAtLocal] = useState(null as Date | null);
@@ -88,25 +99,45 @@ export function MissingRequirementDialog({
   const [exemptAll, setExemptAll] = useState(false);
 
   const familyLookup = useFamilyLookup();
-  const contextFamilyId =
+
+  const familyId: string | null =
     context.kind === 'V1Case' ||
     context.kind === 'Arrangement' ||
     context.kind === 'Family Volunteer Assignment' ||
     context.kind === 'Individual Volunteer Assignment'
       ? context.partneringFamilyId
-      : context.volunteerFamilyId;
-  const contextFamily = familyLookup(contextFamilyId);
+      : context.kind === 'V1Referral'
+        ? (context.partneringFamilyId ?? null)
+        : context.volunteerFamilyId;
 
-  const personLookup = usePersonLookup().bind(null, contextFamilyId);
+  const contextFamily = familyId ? familyLookup(familyId) : undefined;
+
+  const rawPersonLookup = usePersonLookup();
+  const personLookup = familyId
+    ? rawPersonLookup.bind(null, familyId)
+    : undefined;
+
+  function requireFamilyId(): string {
+    if (!familyId) throw new Error('Missing familyId for this operation.');
+    return familyId;
+  }
+
+  const referralsList = useRecoilValue(visibleReferralsQuery);
+  const currentReferral =
+    context.kind === 'V1Referral'
+      ? referralsList.find((r) => r.referralId === context.referralId)
+      : undefined;
 
   const openV1Cases: V1Case[] =
     contextFamily?.partneringFamilyInfo?.openV1Case !== undefined
       ? [contextFamily.partneringFamilyInfo.openV1Case]
       : [];
+
   const closedV1Cases: V1Case[] =
     contextFamily?.partneringFamilyInfo?.closedV1Cases
       ?.slice()
       .sort((r1, r2) => (r1.closedAtUtc! > r2.closedAtUtc! ? -1 : 1)) || [];
+
   const allV1Cases: V1Case[] = [...openV1Cases, ...closedV1Cases];
   const selectedV1Case = v1CaseId
     ? allV1Cases.find((r) => r.id === v1CaseId)
@@ -150,6 +181,7 @@ export function MissingRequirementDialog({
           })
         )
       : [];
+
   const [applyToArrangements, setApplyToArrangements] = useState(
     context.kind === 'Arrangement'
       ? availableArrangements.filter(
@@ -157,6 +189,7 @@ export function MissingRequirementDialog({
         )
       : []
   );
+
   function toggleApplyToArrangement(
     arrangement: Arrangement,
     include: boolean
@@ -173,6 +206,7 @@ export function MissingRequirementDialog({
   const enableSave = () =>
     tabValue === 0
       ? // mark complete
+        canComplete &&
         completedAtLocal != null &&
         !completedAtError &&
         ((documentId === UPLOAD_NEW && documentFile) ||
@@ -181,6 +215,7 @@ export function MissingRequirementDialog({
         (notes !== '' || policy.noteEntry !== NoteEntryRequirement.Required) &&
         (availableArrangements.length === 0) !== applyToArrangements.length > 0 // logical XOR
       : // grant exemption
+        canExempt &&
         (availableArrangements.length === 0) !==
           applyToArrangements.length > 0 && // logical XOR
         additionalComments !== '';
@@ -192,58 +227,127 @@ export function MissingRequirementDialog({
         ? requirement.actionName!
         : requirement;
 
+  type UploadV1ReferralFile_ReturnsDocumentId = (
+    orgId: string,
+    locId: string,
+    referralId: string,
+    file: File
+  ) => Promise<string>;
+
+  async function uploadReferralDocument(
+    referralId: string,
+    file: File
+  ): Promise<string> {
+    const returnedId = await (
+      uploadV1ReferralFileToTenant as unknown as UploadV1ReferralFile_ReturnsDocumentId
+    )(organizationId, locationId, referralId, file);
+
+    await referrals.uploadReferralDocumentMetadata(
+      referralId,
+      returnedId,
+      file.name
+    );
+
+    return returnedId;
+  }
+
   async function markComplete() {
     let document = documentId;
+
     if (documentId === UPLOAD_NEW) {
-      document = await uploadFamilyFileToTenant(
-        organizationId,
-        locationId,
-        contextFamilyId,
-        documentFile!
-      );
-      await directory.uploadFamilyDocument(
-        contextFamilyId,
-        document,
-        documentFile!.name
-      );
+      if (!documentFile) throw new Error('No document file selected.');
+
+      if (context.kind === 'V1Referral') {
+        document = await uploadReferralDocument(
+          context.referralId,
+          documentFile
+        );
+      } else {
+        const fid = requireFamilyId();
+
+        document = await uploadFamilyFileToTenant(
+          organizationId,
+          locationId,
+          fid,
+          documentFile
+        );
+
+        await directory.uploadFamilyDocument(fid, document, documentFile.name);
+      }
     }
-    let noteId: string | undefined = undefined;
-    if (notes !== '') {
+
+    let noteId: string | null = null;
+
+    if (notes.trim() !== '') {
       noteId = crypto.randomUUID();
-      await directory.createDraftNote(
-        contextFamilyId as string,
-        noteId,
-        notes,
-        completedAtLocal || undefined
-      );
+
+      if (context.kind === 'V1Referral' && !context.partneringFamilyId) {
+        await referralNotes.createDraftReferralNote(
+          context.referralId,
+          noteId,
+          notes,
+          completedAtLocal || undefined
+        );
+      } else {
+        const fid = requireFamilyId();
+
+        await directory.createDraftNote(
+          fid,
+          noteId,
+          notes,
+          completedAtLocal || undefined
+        );
+      }
     }
+
     switch (context.kind) {
-      case 'V1Case':
+      case 'V1Case': {
+        const fid = requireFamilyId();
+
         await v1Cases.completeV1CaseRequirement(
-          contextFamilyId,
+          fid,
           context.v1CaseId,
           requirementName,
           policy,
           completedAtLocal!,
           document === '' ? null : document,
-          noteId || null
+          noteId
         );
         break;
-      case 'Arrangement':
+      }
+
+      case 'V1Referral':
+        await referrals.completeReferralRequirement(
+          context.referralId,
+          requirementName,
+          policy,
+          completedAtLocal!,
+          document === '' ? null : document,
+          noteId
+        );
+        break;
+
+      case 'Arrangement': {
+        const fid = requireFamilyId();
+
         await v1Cases.completeArrangementRequirement(
-          contextFamilyId,
+          fid,
           context.v1CaseId,
           applyToArrangements.map((arrangement) => arrangement.id!),
           requirementName,
           policy,
           completedAtLocal!,
           document === '' ? null : document,
-          noteId || null
+          noteId
         );
         break;
-      case 'Family Volunteer Assignment':
+      }
+
+      case 'Family Volunteer Assignment': {
+        const fid = requireFamilyId();
+
         await v1Cases.completeVolunteerFamilyAssignmentRequirement(
-          contextFamilyId,
+          fid,
           context.v1CaseId,
           applyToArrangements.map((arrangement) => arrangement.id!),
           context.assignment,
@@ -251,12 +355,16 @@ export function MissingRequirementDialog({
           policy,
           completedAtLocal!,
           document === '' ? null : document,
-          noteId || null
+          noteId
         );
         break;
-      case 'Individual Volunteer Assignment':
+      }
+
+      case 'Individual Volunteer Assignment': {
+        const fid = requireFamilyId();
+
         await v1Cases.completeIndividualVolunteerAssignmentRequirement(
-          contextFamilyId,
+          fid,
           context.v1CaseId,
           applyToArrangements.map((arrangement) => arrangement.id!),
           context.assignment,
@@ -264,47 +372,69 @@ export function MissingRequirementDialog({
           policy,
           completedAtLocal!,
           document === '' ? null : document,
-          noteId || null
+          noteId
         );
         break;
-      case 'Volunteer Family':
+      }
+
+      case 'Volunteer Family': {
+        const fid = requireFamilyId();
+
         await volunteers.completeFamilyRequirement(
-          contextFamilyId,
+          fid,
           requirementName,
           policy,
           completedAtLocal!,
           document === '' ? null : document,
-          noteId || null
+          noteId
         );
         break;
-      case 'Individual Volunteer':
+      }
+
+      case 'Individual Volunteer': {
+        const fid = requireFamilyId();
+
         await volunteers.completeIndividualRequirement(
-          contextFamilyId,
+          fid,
           context.personId,
           requirementName,
           policy,
           completedAtLocal!,
           document === '' ? null : document,
-          noteId || null
+          noteId
         );
         break;
+      }
     }
   }
 
   async function exempt() {
     switch (context.kind) {
-      case 'V1Case':
+      case 'V1Case': {
+        const fid = requireFamilyId();
+
         await v1Cases.exemptV1CaseRequirement(
-          contextFamilyId,
+          fid,
           context.v1CaseId,
           requirementName,
           additionalComments,
           exemptionExpiresAtLocal
         );
         break;
-      case 'Arrangement':
+      }
+      case 'V1Referral':
+        await referrals.exemptReferralRequirement(
+          context.referralId,
+          requirementName,
+          additionalComments,
+          exemptionExpiresAtLocal
+        );
+        break;
+      case 'Arrangement': {
+        const fid = requireFamilyId();
+
         await v1Cases.exemptArrangementRequirement(
-          contextFamilyId,
+          fid,
           context.v1CaseId,
           applyToArrangements.map((arrangement) => arrangement.id!),
           requirement as MissingArrangementRequirement,
@@ -313,9 +443,12 @@ export function MissingRequirementDialog({
           exemptionExpiresAtLocal
         );
         break;
-      case 'Family Volunteer Assignment':
+      }
+      case 'Family Volunteer Assignment': {
+        const fid = requireFamilyId();
+
         await v1Cases.exemptVolunteerFamilyAssignmentRequirement(
-          contextFamilyId,
+          fid,
           context.v1CaseId,
           applyToArrangements.map((arrangement) => arrangement.id!),
           context.assignment,
@@ -325,9 +458,12 @@ export function MissingRequirementDialog({
           exemptionExpiresAtLocal
         );
         break;
-      case 'Individual Volunteer Assignment':
+      }
+      case 'Individual Volunteer Assignment': {
+        const fid = requireFamilyId();
+
         await v1Cases.exemptIndividualVolunteerAssignmentRequirement(
-          contextFamilyId,
+          fid,
           context.v1CaseId,
           applyToArrangements.map((arrangement) => arrangement.id!),
           context.assignment,
@@ -337,30 +473,39 @@ export function MissingRequirementDialog({
           exemptionExpiresAtLocal
         );
         break;
-      case 'Volunteer Family':
+      }
+      case 'Volunteer Family': {
+        const fid = requireFamilyId();
+
         await volunteers.exemptVolunteerFamilyRequirement(
-          contextFamilyId,
+          fid,
           requirementName,
           additionalComments,
           exemptionExpiresAtLocal
         );
         break;
-      case 'Individual Volunteer':
+      }
+      case 'Individual Volunteer': {
+        const fid = requireFamilyId();
+
         await volunteers.exemptVolunteerRequirement(
-          contextFamilyId,
+          fid,
           context.personId,
           requirementName,
           additionalComments,
           exemptionExpiresAtLocal
         );
         break;
+      }
     }
   }
 
   async function save() {
     if (tabValue === 0) {
+      if (!canComplete) throw new Error('Missing permission to complete.');
       await markComplete();
     } else {
+      if (!canExempt) throw new Error('Missing permission to exempt.');
       await exempt();
     }
   }
@@ -380,186 +525,199 @@ export function MissingRequirementDialog({
         indicatorColor="secondary"
         variant="fullWidth"
       >
-        <Tab label="Mark Complete" {...a11yProps(0)} />
-        {canExempt && <Tab label="Grant Exemption" {...a11yProps(1)} />}
+        {canComplete && (
+          <Tab value={0} label="Mark Complete" {...a11yProps(0)} />
+        )}
+        {canExempt && (
+          <Tab value={1} label="Grant Exemption" {...a11yProps(1)} />
+        )}
       </Tabs>
-      <TabPanel value={tabValue} index={0}>
-        {policy.instructions && (
-          <DialogContentText style={{ whiteSpace: 'pre-wrap' }}>
-            {policy.instructions}
-          </DialogContentText>
-        )}
-        {policy.infoLink && (
-          <DialogContentText>
-            <Link
-              href={policy.infoLink}
-              target="_blank"
-              rel="noreferrer"
-              underline="hover"
-            >
-              {policy.infoLink}
-            </Link>
-          </DialogContentText>
-        )}
-        <br />
-        <Grid container spacing={2}>
-          {requirement instanceof MissingArrangementRequirement && (
-            <Grid item xs={12}>
-              <FormControl component="fieldset" variant="standard">
-                <FormLabel component="legend">Complete for</FormLabel>
-                <FormGroup>
-                  {availableArrangements.map((arrangement) => (
-                    <FormControlLabel
-                      key={arrangement.id}
-                      control={
-                        <Checkbox
-                          size="medium"
-                          checked={applyToArrangements.includes(arrangement)}
-                          onChange={(_, checked) =>
-                            toggleApplyToArrangement(arrangement, checked)
-                          }
-                          name={arrangement.id!}
-                        />
-                      }
-                      label={
-                        arrangement.arrangementType +
-                        ' - ' +
-                        personNameString(
-                          personLookup(arrangement.partneringFamilyPersonId)
-                        ) +
-                        (context.kind === 'Family Volunteer Assignment'
-                          ? ` (${familyNameString(familyLookup(context.assignment.familyId))})`
-                          : '') +
-                        (context.kind === 'Individual Volunteer Assignment'
-                          ? ` (${personNameString(personLookup(context.assignment.personId))})`
-                          : '') +
-                        ` - ` +
-                        (arrangement.phase === ArrangementPhase.Cancelled
-                          ? `Cancelled ${formatRelative(arrangement.cancelledAtUtc!, now)}`
-                          : arrangement.phase === ArrangementPhase.SettingUp
-                            ? 'Setting up'
-                            : arrangement.phase ===
-                                ArrangementPhase.ReadyToStart
-                              ? 'Ready to start'
-                              : arrangement.phase === ArrangementPhase.Started
-                                ? `Started ${formatRelative(arrangement.startedAtUtc!, now)}`
-                                : `Ended ${formatRelative(arrangement.endedAtUtc!, now)}`)
-                      }
-                    />
-                  ))}
-                </FormGroup>
-              </FormControl>
-            </Grid>
+      {canComplete && (
+        <TabPanel value={tabValue} index={0}>
+          {policy.instructions && (
+            <DialogContentText style={{ whiteSpace: 'pre-wrap' }}>
+              {policy.instructions}
+            </DialogContentText>
           )}
-          <Grid item xs={12}>
-            {requirement instanceof MissingArrangementRequirement ? (
-              <ValidateDatePicker
-                label="When was this requirement completed?"
-                value={completedAtLocal}
-                disableFuture
-                maxDate={new Date()}
-                onChange={(date) => setCompletedAtLocal(date)}
-                onErrorChange={setCompletedAtError}
-                textFieldProps={{ fullWidth: true, required: true }}
-              />
-            ) : (
-              <ValidateDatePicker
-                label="When was this requirement completed?"
-                value={completedAtLocal}
-                disableFuture
-                onChange={(date) => setCompletedAtLocal(date)}
-                onErrorChange={setCompletedAtError}
-                textFieldProps={{ fullWidth: true, required: true }}
-              />
-            )}
-            {validityDuration &&
-              (completedAtLocal && isValid(completedAtLocal) ? (
-                <p>
-                  This will be valid until{' '}
-                  {format(
-                    add(completedAtLocal, validityDuration),
-                    'M/d/yyyy h:mm a'
-                  )}
-                </p>
-              ) : (
-                <p>Valid for {formatDuration(validityDuration)}</p>
-              ))}
-          </Grid>
-          {(policy.documentLink === DocumentLinkRequirement.Allowed ||
-            policy.documentLink === DocumentLinkRequirement.Required) && (
-            <>
-              <Grid item xs={12} sm={6}>
-                <FormControl
-                  fullWidth
-                  size="small"
-                  required={
-                    policy.documentLink === DocumentLinkRequirement.Required
-                  }
-                >
-                  <InputLabel id="document-label">Document</InputLabel>
-                  <Select
-                    labelId="document-label"
-                    id="document"
-                    value={documentId}
-                    onChange={(e) => setDocumentId(e.target.value as string)}
-                  >
-                    <MenuItem key="placeholder" value="">
-                      None
-                    </MenuItem>
-                    <MenuItem key={UPLOAD_NEW} value={UPLOAD_NEW}>
-                      Upload new...
-                    </MenuItem>
-                    <Divider />
-                    {contextFamily!.uploadedDocuments?.map((document) => (
-                      <MenuItem
-                        key={document.uploadedDocumentId}
-                        value={document.uploadedDocumentId}
-                      >
-                        {document.uploadedFileName}
-                      </MenuItem>
+          {policy.infoLink && (
+            <DialogContentText>
+              <Link
+                href={policy.infoLink}
+                target="_blank"
+                rel="noreferrer"
+                underline="hover"
+              >
+                {policy.infoLink}
+              </Link>
+            </DialogContentText>
+          )}
+          <br />
+          <Grid container spacing={2}>
+            {requirement instanceof MissingArrangementRequirement && (
+              <Grid item xs={12}>
+                <FormControl component="fieldset" variant="standard">
+                  <FormLabel component="legend">Complete for</FormLabel>
+                  <FormGroup>
+                    {availableArrangements.map((arrangement) => (
+                      <FormControlLabel
+                        key={arrangement.id}
+                        control={
+                          <Checkbox
+                            size="medium"
+                            checked={applyToArrangements.includes(arrangement)}
+                            onChange={(_, checked) =>
+                              toggleApplyToArrangement(arrangement, checked)
+                            }
+                            name={arrangement.id!}
+                          />
+                        }
+                        label={
+                          arrangement.arrangementType +
+                          ' - ' +
+                          (personLookup
+                            ? personNameString(
+                                personLookup(
+                                  arrangement.partneringFamilyPersonId
+                                )
+                              )
+                            : '') +
+                          (context.kind === 'Family Volunteer Assignment'
+                            ? ` (${familyNameString(familyLookup(context.assignment.familyId))})`
+                            : '') +
+                          (context.kind === 'Individual Volunteer Assignment'
+                            ? ` (${personLookup ? personNameString(personLookup(context.assignment.personId)) : ''})`
+                            : '') +
+                          ` - ` +
+                          (arrangement.phase === ArrangementPhase.Cancelled
+                            ? `Cancelled ${formatRelative(arrangement.cancelledAtUtc!, now)}`
+                            : arrangement.phase === ArrangementPhase.SettingUp
+                              ? 'Setting up'
+                              : arrangement.phase ===
+                                  ArrangementPhase.ReadyToStart
+                                ? 'Ready to start'
+                                : arrangement.phase === ArrangementPhase.Started
+                                  ? `Started ${formatRelative(arrangement.startedAtUtc!, now)}`
+                                  : `Ended ${formatRelative(arrangement.endedAtUtc!, now)}`)
+                        }
+                      />
                     ))}
-                  </Select>
+                  </FormGroup>
                 </FormControl>
               </Grid>
-              <Grid item xs={12} sm={6}>
-                {documentId === UPLOAD_NEW && (
-                  <input
-                    accept="*/*"
-                    multiple={false}
-                    id="document-file"
-                    type="file"
-                    onChange={async (e) => {
-                      if (e.target.files && e.target.files.length > 0) {
-                        setDocumentFile(e.target.files[0]);
-                      } else {
-                        setDocumentFile(null);
-                      }
-                    }}
-                  />
-                )}
-              </Grid>
-            </>
-          )}
-          {(policy.noteEntry === NoteEntryRequirement.Allowed ||
-            policy.noteEntry === NoteEntryRequirement.Required) && (
+            )}
             <Grid item xs={12}>
-              <TextField
-                id="notes"
-                required={policy.noteEntry === NoteEntryRequirement.Required}
-                label="Notes"
-                placeholder="Space for any general notes"
-                multiline
-                fullWidth
-                variant="outlined"
-                minRows={6}
-                size="medium"
-                value={notes}
-                onChange={(e) => setNotes(e.target.value)}
-              />
+              {requirement instanceof MissingArrangementRequirement ? (
+                <ValidateDatePicker
+                  label="When was this requirement completed?"
+                  value={completedAtLocal}
+                  disableFuture
+                  maxDate={new Date()}
+                  onChange={(date) => setCompletedAtLocal(date)}
+                  onErrorChange={setCompletedAtError}
+                  textFieldProps={{ fullWidth: true, required: true }}
+                />
+              ) : (
+                <ValidateDatePicker
+                  label="When was this requirement completed?"
+                  value={completedAtLocal}
+                  disableFuture
+                  onChange={(date) => setCompletedAtLocal(date)}
+                  onErrorChange={setCompletedAtError}
+                  textFieldProps={{ fullWidth: true, required: true }}
+                />
+              )}
+              {validityDuration &&
+                (completedAtLocal && isValid(completedAtLocal) ? (
+                  <p>
+                    This will be valid until{' '}
+                    {format(
+                      add(completedAtLocal, validityDuration),
+                      'M/d/yyyy h:mm a'
+                    )}
+                  </p>
+                ) : (
+                  <p>Valid for {formatDuration(validityDuration)}</p>
+                ))}
             </Grid>
-          )}
-        </Grid>
-      </TabPanel>
+            {(policy.documentLink === DocumentLinkRequirement.Allowed ||
+              policy.documentLink === DocumentLinkRequirement.Required) && (
+              <>
+                <Grid item xs={12} sm={6}>
+                  <FormControl
+                    fullWidth
+                    size="small"
+                    required={
+                      policy.documentLink === DocumentLinkRequirement.Required
+                    }
+                  >
+                    <InputLabel id="document-label">Document</InputLabel>
+                    <Select
+                      labelId="document-label"
+                      id="document"
+                      value={documentId}
+                      onChange={(e) => setDocumentId(e.target.value as string)}
+                    >
+                      <MenuItem key="placeholder" value="">
+                        None
+                      </MenuItem>
+                      <MenuItem key={UPLOAD_NEW} value={UPLOAD_NEW}>
+                        Upload new...
+                      </MenuItem>
+                      <Divider />
+                      {(context.kind === 'V1Referral'
+                        ? currentReferral?.uploadedDocuments
+                        : contextFamily?.uploadedDocuments
+                      )?.map((document) => (
+                        <MenuItem
+                          key={document.uploadedDocumentId}
+                          value={document.uploadedDocumentId}
+                        >
+                          {document.uploadedFileName}
+                        </MenuItem>
+                      ))}
+                    </Select>
+                  </FormControl>
+                </Grid>
+                <Grid item xs={12} sm={6}>
+                  {documentId === UPLOAD_NEW && (
+                    <input
+                      accept="*/*"
+                      multiple={false}
+                      id="document-file"
+                      type="file"
+                      onChange={async (e) => {
+                        if (e.target.files && e.target.files.length > 0) {
+                          setDocumentFile(e.target.files[0]);
+                        } else {
+                          setDocumentFile(null);
+                        }
+                      }}
+                    />
+                  )}
+                </Grid>
+              </>
+            )}
+            {(policy.noteEntry === NoteEntryRequirement.Allowed ||
+              policy.noteEntry === NoteEntryRequirement.Required) && (
+              <Grid item xs={12}>
+                <TextField
+                  id="notes"
+                  required={policy.noteEntry === NoteEntryRequirement.Required}
+                  label="Notes"
+                  placeholder="Space for any general notes"
+                  multiline
+                  fullWidth
+                  variant="outlined"
+                  minRows={6}
+                  size="medium"
+                  value={notes}
+                  onChange={(e) => setNotes(e.target.value)}
+                />
+              </Grid>
+            )}
+          </Grid>
+        </TabPanel>
+      )}
       {canExempt && (
         <TabPanel value={tabValue} index={1}>
           <Grid container spacing={2}>
@@ -582,7 +740,15 @@ export function MissingRequirementDialog({
                           />
                         }
                         label={
-                          `${arrangement.arrangementType} - ${personNameString(personLookup(arrangement.partneringFamilyPersonId))} - ` +
+                          `${arrangement.arrangementType} - ${
+                            personLookup
+                              ? personNameString(
+                                  personLookup(
+                                    arrangement.partneringFamilyPersonId
+                                  )
+                                )
+                              : ''
+                          } - ` +
                           (arrangement.phase === ArrangementPhase.Cancelled
                             ? `Cancelled ${formatRelative(arrangement.cancelledAtUtc!, now)}`
                             : arrangement.phase === ArrangementPhase.SettingUp

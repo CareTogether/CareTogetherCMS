@@ -10,7 +10,7 @@ import {
   TableContainer,
   Typography,
 } from '@mui/material';
-import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import { ExpandMore as ExpandMoreIcon } from '@mui/icons-material';
 import { Arrangement } from '../../GeneratedClient';
 import {
   CombinedFamilyInfo,

@@ -13,6 +13,7 @@ import {
   V1CaseCloseReason,
   CloseReferral as CloseV1Case,
   CreateReferral as CreateV1Case,
+  ReopenReferral as ReopenV1Case,
   TrackChildLocationChange,
   ChildLocationPlan,
   UpdateCustomReferralField as UpdateCustomV1CaseField,
@@ -56,10 +57,10 @@ import {
   EditArrangementEndTime,
   EditArrangementCancelledAt,
 } from '../GeneratedClient';
-import { useAtomicRecordsCommandCallback } from './DirectoryModel';
 import { visibleFamiliesQuery } from './Data';
 import { convertUtcDateToLocalDate } from '../Utilities/dateUtils';
 import { commandFactory } from './CommandFactory';
+import { useAtomicRecordsCommandCallback } from '../Model/Data';
 
 export const partneringFamiliesData = selector({
   key: 'partneringFamiliesData',
@@ -919,6 +920,7 @@ export function useV1CasesModel() {
       return command;
     }
   );
+
   const closeV1Case = useV1CaseCommandCallbackWithLocation(
     async (
       partneringFamilyId: string,
@@ -935,16 +937,37 @@ export function useV1CasesModel() {
       return command;
     }
   );
-  const openV1Case = useV1CaseCommandCallbackWithLocation(
+  const reopenV1Case = useV1CaseCommandCallbackWithLocation(
+    async (
+      partneringFamilyId: string,
+      v1CaseId: string,
+      reopenedAtLocal: Date
+    ) => {
+      const command = commandFactory(ReopenV1Case, {
+        familyId: partneringFamilyId,
+        referralId: v1CaseId,
+        reopenedAtUtc: reopenedAtLocal,
+      });
+      return command;
+    }
+  );
+  const openV1CaseCommand = useV1CaseCommandCallbackWithLocation(
     async (partneringFamilyId: string, openedAtLocal: Date) => {
       const command = commandFactory(CreateV1Case, {
         familyId: partneringFamilyId,
         referralId: crypto.randomUUID(),
         openedAtUtc: openedAtLocal,
       });
+
       return command;
     }
   );
+  const openV1Case = async (
+    partneringFamilyId: string,
+    openedAtLocal: Date
+  ) => {
+    await openV1CaseCommand(partneringFamilyId, openedAtLocal);
+  };
 
   return {
     completeV1CaseRequirement,
@@ -988,6 +1011,7 @@ export function useV1CasesModel() {
     updateArrangementComments,
     editArrangementReason,
     closeV1Case,
+    reopenV1Case,
     openV1Case,
   };
 }

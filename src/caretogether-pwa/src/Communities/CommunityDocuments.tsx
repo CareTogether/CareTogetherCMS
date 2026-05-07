@@ -16,8 +16,10 @@ import {
 } from '../GeneratedClient';
 import { useCommunityCommand, useUserLookup } from '../Model/DirectoryModel';
 import { useCommunityPermissions } from '../Model/SessionModel';
-import InsertDriveFileOutlinedIcon from '@mui/icons-material/InsertDriveFileOutlined';
-import DeleteIcon from '@mui/icons-material/Delete';
+import {
+  Delete as DeleteIcon,
+  InsertDriveFileOutlined as InsertDriveFileOutlinedIcon,
+} from '@mui/icons-material';
 import { format } from 'date-fns';
 import { useBackdrop } from '../Hooks/useBackdrop';
 import { downloadCommunityFile } from '../Model/FilesModel';

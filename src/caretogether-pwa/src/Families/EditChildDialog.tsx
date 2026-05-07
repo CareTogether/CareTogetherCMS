@@ -21,14 +21,16 @@ import { GenderEditor } from './GenderEditor';
 import { NotesEditor } from './NotesEditor';
 import { ConcernsEditor } from './ConcernsEditor';
 import { AgeEditor } from './AgeEditor';
-import DeleteForeverIcon from '@mui/icons-material/DeleteForever';
+import {
+  DeleteForever as DeleteForeverIcon,
+  EmojiPeople,
+} from '@mui/icons-material';
 import { DeletePersonDialog } from './DeletePersonDialog';
 import { EthnicityEditor } from './EthnicityEditor';
 import { ChildCustodyRelationshipEditor } from './ChildCustodyRelationshipEditor';
 import { useFamilyIdPermissions } from '../Model/SessionModel';
 import { isBackdropClick } from '../Utilities/handleBackdropClick';
 import { differenceInYears } from 'date-fns';
-import { EmojiPeople } from '@mui/icons-material';
 import { useDirectoryModel } from '../Model/DirectoryModel';
 import { personNameString } from './PersonName';
 import { useBackdrop } from '../Hooks/useBackdrop';

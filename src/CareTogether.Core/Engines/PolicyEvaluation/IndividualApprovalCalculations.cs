@@ -112,7 +112,10 @@ namespace CareTogether.Engines.PolicyEvaluation
         )
         {
             var whenMet = SharedCalculations.FindRequirementApprovals(
-                SharedCalculations.GetRequirementNameWithSynonyms(locationPolicy, requirement.ActionName),
+                SharedCalculations.GetRequirementNameWithSynonyms(
+                    locationPolicy,
+                    requirement.ActionName
+                ),
                 policyVersionSupersededAtUtc,
                 completedRequirements,
                 exemptedRequirements
