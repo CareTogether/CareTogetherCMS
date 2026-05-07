@@ -47,6 +47,7 @@ import { useDrawer } from '../Generic/ShellDrawer';
 import { ManageUserDrawer } from './ManageUserDrawer';
 import { format } from 'date-fns';
 import { DateOfBirth } from './DateOfBirth';
+import { CompleteOtherController } from '../Requirements/CompleteOtherController';
 import { WithComma } from '../Utilities/WithComma';
 import { ReadMoreText } from '../Generic/Forms/ReadMoreText';
 
@@ -65,9 +66,13 @@ export function AdultCard({ familyId, personId }: AdultCardProps) {
 
   const permissions = useFamilyPermissions(family);
 
+  const isVolunteerFamily = family.volunteerFamilyInfo != null;
+
   const editDialogHandle = useDialogHandle();
 
   const featureFlags = useFeatureFlags();
+
+  const [completeOtherOpen, setCompleteOtherOpen] = useState(false);
 
   const requirementContext: IndividualVolunteerContext = {
     kind: 'Individual Volunteer',
@@ -463,7 +468,25 @@ export function AdultCard({ familyId, personId }: AdultCardProps) {
                 <ListItemText primary="Manage user..." />
               </MenuItem>
             )}
+            {isVolunteerFamily && (
+              <MenuItem
+                onClick={() => {
+                  setCompleteOtherOpen(true);
+                  setAdultMoreMenuAnchor(null);
+                }}
+              >
+                <ListItemText primary="Complete other..." />
+              </MenuItem>
+            )}
           </Menu>
+
+          <CompleteOtherController
+            familyId={familyId}
+            personId={personId}
+            open={completeOtherOpen}
+            onClose={() => setCompleteOtherOpen(false)}
+          />
+
           {(removeRoleParameter && (
             <RemoveIndividualRoleDialog
               volunteerFamilyId={familyId}

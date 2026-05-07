@@ -561,6 +561,7 @@ export function FamilyScreen() {
             onClose={() => setAddNoteDialogOpen(false)}
           />
         )}
+
         {(removeRoleParameter && (
           <RemoveFamilyRoleDialog
             volunteerFamilyId={familyId}
