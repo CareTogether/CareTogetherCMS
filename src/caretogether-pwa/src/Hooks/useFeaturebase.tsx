@@ -1,4 +1,5 @@
 import { useEffect } from 'react';
+import { useMediaQuery, useTheme } from '@mui/material';
 import { atom, useSetRecoilState } from 'recoil';
 import { useLoadable } from './useLoadable';
 import { accountInfoState } from '../Authentication/Auth';
@@ -28,6 +29,9 @@ declare global {
 }
 
 export const useFeaturebase = () => {
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
+
   // Get user data from Recoil state
   const accountInfo = useLoadable(accountInfoState);
   const organizationConfiguration = useLoadable(organizationConfigurationQuery);
@@ -67,6 +71,7 @@ export const useFeaturebase = () => {
           userHash: userHash, // Add the generated userHash for identity verification
           theme: 'light',
           language: 'en',
+          ...(isMobile ? { verticalPadding: 70 } : {}),
           companies: [
             {
               id: locationContext?.organizationId,
@@ -114,6 +119,7 @@ export const useFeaturebase = () => {
     organizationConfiguration,
     locationConfiguration,
     locationContext,
+    isMobile,
     setChangelogUnreadCount,
   ]);
 

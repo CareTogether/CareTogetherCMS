@@ -23,9 +23,11 @@ import {
   Permission,
 } from '../GeneratedClient';
 import { AgeText } from './AgeText';
-import MoreVertIcon from '@mui/icons-material/MoreVert';
-import EditIcon from '@mui/icons-material/Edit';
-import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import {
+  Edit as EditIcon,
+  ExpandMore as ExpandMoreIcon,
+  MoreVert as MoreVertIcon,
+} from '@mui/icons-material';
 import { ContactDisplay } from './ContactDisplay';
 import { IconRow } from '../Generic/IconRow';
 import { VolunteerRoleApprovalStatusChip } from '../Volunteers/VolunteerRoleApprovalStatusChip';
@@ -46,6 +48,8 @@ import { ManageUserDrawer } from './ManageUserDrawer';
 import { format } from 'date-fns';
 import { DateOfBirth } from './DateOfBirth';
 import { CompleteOtherController } from '../Requirements/CompleteOtherController';
+import { WithComma } from '../Utilities/WithComma';
+import { ReadMoreText } from '../Generic/Forms/ReadMoreText';
 
 type AdultCardProps = {
   familyId: string;
@@ -163,11 +167,15 @@ export function AdultCard({ familyId, personId }: AdultCardProps) {
             sx={{ paddingBottom: 0 }}
             title={adult.item1.firstName + ' ' + adult.item1.lastName}
             subheader={
-              <>
-                Adult, <AgeText age={adult.item1.age} />{' '}
-                {adult.item1.gender ? ', ' + Gender[adult.item1.gender] : ''}{' '}
-                {adult.item1.ethnicity ? ', ' + adult.item1.ethnicity : ''}
-              </>
+              <WithComma
+                items={[
+                  'Adult',
+                  <AgeText age={adult.item1.age} />,
+                  adult.item1.gender !== undefined &&
+                    Gender[adult.item1.gender],
+                  adult.item1.ethnicity,
+                ].filter(Boolean)}
+              />
             }
             action={
               <>
@@ -274,7 +282,9 @@ export function AdultCard({ familyId, personId }: AdultCardProps) {
                 </IconRow>
               )}
               {adult.item1.notes && (
-                <IconRow icon="📝">{adult.item1.notes}</IconRow>
+                <IconRow icon="📝">
+                  <ReadMoreText text={adult.item1.notes} />
+                </IconRow>
               )}
             </Typography>
             <Typography variant="body2" component="div">

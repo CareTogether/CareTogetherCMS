@@ -1,7 +1,7 @@
 import { Navigate, Route, Routes, useMatch } from 'react-router-dom';
-import { VolunteerApproval } from './VolunteerApproval';
+import { VolunteerApproval } from './VolunteerApprovalTab/VolunteerApproval';
 //import { VolunteerApplications } from './VolunteerApplications';
-import { VolunteerProgress } from './VolunteerProgress';
+import { VolunteerProgress } from './VolunteerProgressTab/VolunteerProgress';
 import { useSessionStorage } from '../Hooks/useSessionStorage';
 
 function Volunteers() {

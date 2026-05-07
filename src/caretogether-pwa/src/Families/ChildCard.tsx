@@ -13,13 +13,14 @@ import {
   Permission,
 } from '../GeneratedClient';
 import { AgeText } from './AgeText';
-import EditIcon from '@mui/icons-material/Edit';
+import { Edit as EditIcon } from '@mui/icons-material';
 import { useDialogHandle } from '../Hooks/useDialogHandle';
 import { EditChildDialog } from './EditChildDialog';
 import { useFamilyPermissions } from '../Model/SessionModel';
 import { useFamilyLookup } from '../Model/DirectoryModel';
 import { differenceInYears } from 'date-fns';
 import { DateOfBirth } from './DateOfBirth';
+import { WithComma } from '../Utilities/WithComma';
 
 type ChildCardProps = {
   familyId: string;
@@ -48,11 +49,14 @@ export function ChildCard({ familyId, personId }: ChildCardProps) {
             sx={{ paddingBottom: 0 }}
             title={child.firstName + ' ' + child.lastName}
             subheader={
-              <>
-                Child, <AgeText age={child.age} />{' '}
-                {child.gender ? ', ' + Gender[child.gender] : ''}{' '}
-                {child.ethnicity ? ', ' + child.ethnicity : ''}
-              </>
+              <WithComma
+                items={[
+                  'Child',
+                  <AgeText age={child.age} />,
+                  child.gender && Gender[child.gender],
+                  child.ethnicity && child.ethnicity,
+                ].filter(Boolean)}
+              />
             }
             action={
               permissions(Permission.EditFamilyInfo) && (

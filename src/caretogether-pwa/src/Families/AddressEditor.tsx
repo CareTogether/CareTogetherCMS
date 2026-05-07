@@ -6,12 +6,15 @@ import {
   Grid,
   TextField,
 } from '@mui/material';
-import AddIcon from '@mui/icons-material/Add';
+import {
+  Add as AddIcon,
+  LocationSearching,
+  MyLocation,
+} from '@mui/icons-material';
 import { useDirectoryModel } from '../Model/DirectoryModel';
 import { useInlineEditor } from '../Hooks/useInlineEditor';
 import { PersonEditorProps } from './PersonEditorProps';
 import { Address, IAddress, Permission } from '../GeneratedClient';
-import { MyLocation, LocationSearching } from '@mui/icons-material';
 import { useFamilyIdPermissions } from '../Model/SessionModel';
 
 type AddressFormFieldsProps = {

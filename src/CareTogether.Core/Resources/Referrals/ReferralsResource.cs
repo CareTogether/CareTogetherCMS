@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Immutable;
+using System.Linq;
 using System.Threading.Tasks;
 using CareTogether.Utilities.EventLog;
 
@@ -96,20 +97,6 @@ namespace CareTogether.Resources.V1Cases
             )
             {
                 return lockedModel.Value.FindV1CaseEntries(_ => true);
-            }
-        }
-
-        public async Task<V1CaseEntry> GetV1CaseAsync(
-            Guid organizationId,
-            Guid locationId,
-            Guid v1CaseId
-        )
-        {
-            using (
-                var lockedModel = await tenantModels.ReadLockItemAsync((organizationId, locationId))
-            )
-            {
-                return lockedModel.Value.GetV1CaseEntry(v1CaseId);
             }
         }
     }

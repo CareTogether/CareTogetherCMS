@@ -28,7 +28,7 @@ namespace CareTogether.Engines.PolicyEvaluation
         )
         {
             var volunteerPolicy = locationPolicy.VolunteerPolicy;
-            
+
             var allAdultsIndividualApprovalStatus = family
                 .Adults.Select(adultFamilyEntry =>
                 {

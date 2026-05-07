@@ -1,5 +1,5 @@
+import { Campaign as CampaignIcon } from '@mui/icons-material';
 import { Badge } from '@mui/material';
-import CampaignIcon from '@mui/icons-material/Campaign';
 import { useGlobalPermissions } from '../Model/SessionModel';
 import { Permission } from '../GeneratedClient';
 import { ListItemLink } from './ListItemLink';

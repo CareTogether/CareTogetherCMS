@@ -19,7 +19,7 @@ jobs:
     - name: Set up Node.js
       uses: actions/setup-node@v3
       with:
-        node-version: '18.x'
+        node-version: '24.x'
         cache: 'npm'
         cache-dependency-path: src/caretogether-pwa
     - name: Install NPM packages

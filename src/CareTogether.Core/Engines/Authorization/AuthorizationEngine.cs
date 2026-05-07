@@ -13,6 +13,7 @@ using CareTogether.Resources.Directory;
 using CareTogether.Resources.Notes;
 using CareTogether.Resources.Policies;
 using CareTogether.Resources.V1Cases;
+using CareTogether.Resources.V1Referrals;
 using Nito.AsyncEx;
 
 namespace CareTogether.Engines.Authorization
@@ -25,12 +26,15 @@ namespace CareTogether.Engines.Authorization
         private readonly INotesResource notesResource;
         private readonly IUserAccessCalculation userAccessCalculation;
 
+        private readonly IV1ReferralsResource v1ReferralsResource;
+
         public AuthorizationEngine(
             IPoliciesResource policiesResource,
             IDirectoryResource directoryResource,
             IAccountsResource accountsResource,
             INotesResource notesResource,
-            IUserAccessCalculation userAccessCalculation
+            IUserAccessCalculation userAccessCalculation,
+            IV1ReferralsResource v1ReferralsResource
         )
         {
             this.policiesResource = policiesResource;
@@ -38,19 +42,20 @@ namespace CareTogether.Engines.Authorization
             this.accountsResource = accountsResource;
             this.notesResource = notesResource;
             this.userAccessCalculation = userAccessCalculation;
+            this.v1ReferralsResource = v1ReferralsResource;
         }
 
         public async Task<bool> AuthorizeFamilyCommandAsync(
             Guid organizationId,
             Guid locationId,
-            ClaimsPrincipal user,
+            SessionUserContext userContext,
             FamilyCommand command
         )
         {
             var permissions = await userAccessCalculation.AuthorizeUserAccessAsync(
                 organizationId,
                 locationId,
-                user,
+                userContext,
                 new FamilyAuthorizationContext(command.FamilyId)
             );
             return permissions.Contains(
@@ -80,7 +85,7 @@ namespace CareTogether.Engines.Authorization
         public async Task<bool> AuthorizePersonCommandAsync(
             Guid organizationId,
             Guid locationId,
-            ClaimsPrincipal user,
+            SessionUserContext userContext,
             Guid familyId,
             PersonCommand command
         )
@@ -88,7 +93,7 @@ namespace CareTogether.Engines.Authorization
             var permissions = await userAccessCalculation.AuthorizeUserAccessAsync(
                 organizationId,
                 locationId,
-                user,
+                userContext,
                 new FamilyAuthorizationContext(familyId)
             );
             return permissions.Contains(
@@ -118,28 +123,33 @@ namespace CareTogether.Engines.Authorization
         public async Task<bool> AuthorizeV1CaseCommandAsync(
             Guid organizationId,
             Guid locationId,
-            ClaimsPrincipal user,
+            SessionUserContext userContext,
             V1CaseCommand command
         )
         {
             var permissions = await userAccessCalculation.AuthorizeUserAccessAsync(
                 organizationId,
                 locationId,
-                user,
+                userContext,
                 new FamilyAuthorizationContext(command.FamilyId)
             );
             return permissions.Contains(
                 command switch
                 {
                     CreateReferral => Permission.CreateV1Case,
-                    CompleteReferralRequirement => Permission.EditV1CaseRequirementCompletion,
-                    MarkReferralRequirementIncomplete =>
+                    CareTogether.Resources.V1Cases.CompleteReferralRequirement c =>
                         Permission.EditV1CaseRequirementCompletion,
-                    ExemptReferralRequirement => Permission.EditV1CaseRequirementExemption,
-                    UnexemptReferralRequirement => Permission.EditV1CaseRequirementExemption,
+                    CareTogether.Resources.V1Cases.MarkReferralRequirementIncomplete c =>
+                        Permission.EditV1CaseRequirementCompletion,
+                    CareTogether.Resources.V1Cases.ExemptReferralRequirement c =>
+                        Permission.EditV1CaseRequirementExemption,
+                    CareTogether.Resources.V1Cases.UnexemptReferralRequirement c =>
+                        Permission.EditV1CaseRequirementExemption,
                     UpdateCustomReferralField => Permission.EditV1Case,
                     UpdateReferralComments => Permission.EditV1Case,
+                    LinkReferralToCase => Permission.EditV1Case,
                     CloseReferral => Permission.CloseV1Case,
+                    ReopenReferral => Permission.CloseV1Case,
                     _ => throw new NotImplementedException(
                         $"The command type '{command.GetType().FullName}' has not been implemented."
                     ),
@@ -150,14 +160,14 @@ namespace CareTogether.Engines.Authorization
         public async Task<bool> AuthorizeArrangementsCommandAsync(
             Guid organizationId,
             Guid locationId,
-            ClaimsPrincipal user,
+            SessionUserContext userContext,
             ArrangementsCommand command
         )
         {
             var permissions = await userAccessCalculation.AuthorizeUserAccessAsync(
                 organizationId,
                 locationId,
-                user,
+                userContext,
                 new FamilyAuthorizationContext(command.FamilyId)
             );
             return permissions.Contains(
@@ -215,17 +225,79 @@ namespace CareTogether.Engines.Authorization
             );
         }
 
+        public async Task<bool> AuthorizeV1ReferralCommandAsync(
+            Guid organizationId,
+            Guid locationId,
+            SessionUserContext userContext,
+            V1ReferralCommand command
+        )
+        {
+            var permissions = await userAccessCalculation.AuthorizeUserAccessAsync(
+                organizationId,
+                locationId,
+                userContext,
+                new GlobalAuthorizationContext()
+            );
+
+            return permissions.Contains(
+                command switch
+                {
+                    CreateV1Referral => Permission.CreateV1Referral,
+
+                    UpdateV1ReferralFamily => Permission.EditV1Referral,
+                    AcceptV1Referral => Permission.EditV1Referral,
+
+                    UpdateV1ReferralDetails => Permission.EditV1Referral,
+                    UpdateCustomV1ReferralField => Permission.EditV1Referral,
+
+                    CloseV1Referral => Permission.CloseV1Referral,
+                    ReopenV1Referral => Permission.ReopenV1Referral,
+                    CareTogether.Resources.V1Referrals.CompleteReferralRequirement c =>
+                        Permission.EditV1ReferralRequirementCompletion,
+                    CareTogether.Resources.V1Referrals.MarkReferralRequirementIncomplete c =>
+                        Permission.EditV1ReferralRequirementCompletion,
+                    CareTogether.Resources.V1Referrals.ExemptReferralRequirement c =>
+                        Permission.EditV1ReferralRequirementExemption,
+                    CareTogether.Resources.V1Referrals.UnexemptReferralRequirement c =>
+                        Permission.EditV1ReferralRequirementExemption,
+
+                    UploadV1ReferralDocument => Permission.EditV1Referral,
+                    DeleteUploadedV1ReferralDocument => Permission.EditV1Referral,
+
+                    _ => throw new NotImplementedException(
+                        $"The command type '{command.GetType().FullName}' has not been implemented."
+                    ),
+                }
+            );
+        }
+
+        public async Task<bool> AuthorizeV1ReferralReadAsync(
+            Guid organizationId,
+            Guid locationId,
+            SessionUserContext userContext
+        )
+        {
+            var permissions = await userAccessCalculation.AuthorizeUserAccessAsync(
+                organizationId,
+                locationId,
+                userContext,
+                new GlobalAuthorizationContext()
+            );
+
+            return permissions.Contains(Permission.ViewV1Referral);
+        }
+
         public async Task<bool> AuthorizeNoteCommandAsync(
             Guid organizationId,
             Guid locationId,
-            ClaimsPrincipal user,
+            SessionUserContext userContext,
             NoteCommand command
         )
         {
             var userPermissions = await userAccessCalculation.AuthorizeUserAccessAsync(
                 organizationId,
                 locationId,
-                user,
+                userContext,
                 new FamilyAuthorizationContext(command.FamilyId)
             );
 
@@ -236,11 +308,11 @@ namespace CareTogether.Engines.Authorization
                 command.NoteId
             );
 
-            var noteBelongsToUser = noteEntry?.AuthorId == user.UserId();
+            var noteBelongsToUser = noteEntry?.AuthorUserId == userContext.User.UserId();
 
             var allowedPerAccessLevel = await CheckAccessLevel(
                 noteEntry?.AccessLevel,
-                user,
+                userContext.User,
                 organizationId,
                 locationId
             );
@@ -508,13 +580,13 @@ namespace CareTogether.Engines.Authorization
         public async Task<bool> AuthorizeSendSmsAsync(
             Guid organizationId,
             Guid locationId,
-            ClaimsPrincipal user
+            SessionUserContext userContext
         )
         {
             var permissions = await userAccessCalculation.AuthorizeUserAccessAsync(
                 organizationId,
                 locationId,
-                user,
+                userContext,
                 new AllVolunteerFamiliesAuthorizationContext()
             ); //TODO: This could simplify down to 'Global'
             return permissions.Contains(Permission.SendBulkSms);
@@ -523,14 +595,14 @@ namespace CareTogether.Engines.Authorization
         public async Task<bool> AuthorizeVolunteerFamilyCommandAsync(
             Guid organizationId,
             Guid locationId,
-            ClaimsPrincipal user,
+            SessionUserContext userContext,
             VolunteerFamilyCommand command
         )
         {
             var permissions = await userAccessCalculation.AuthorizeUserAccessAsync(
                 organizationId,
                 locationId,
-                user,
+                userContext,
                 new FamilyAuthorizationContext(command.FamilyId)
             );
             return permissions.Contains(
@@ -557,14 +629,14 @@ namespace CareTogether.Engines.Authorization
         public async Task<bool> AuthorizeVolunteerCommandAsync(
             Guid organizationId,
             Guid locationId,
-            ClaimsPrincipal user,
+            SessionUserContext userContext,
             VolunteerCommand command
         )
         {
             var permissions = await userAccessCalculation.AuthorizeUserAccessAsync(
                 organizationId,
                 locationId,
-                user,
+                userContext,
                 new FamilyAuthorizationContext(command.FamilyId)
             );
             return permissions.Contains(
@@ -587,14 +659,14 @@ namespace CareTogether.Engines.Authorization
         public async Task<bool> AuthorizeCommunityCommandAsync(
             Guid organizationId,
             Guid locationId,
-            ClaimsPrincipal user,
+            SessionUserContext userContext,
             CommunityCommand command
         )
         {
             var permissions = await userAccessCalculation.AuthorizeUserAccessAsync(
                 organizationId,
                 locationId,
-                user,
+                userContext,
                 new CommunityAuthorizationContext(command.CommunityId)
             );
             return permissions.Contains(
@@ -619,14 +691,14 @@ namespace CareTogether.Engines.Authorization
         public async Task<bool> AuthorizePersonAccessCommandAsync(
             Guid organizationId,
             Guid locationId,
-            ClaimsPrincipal user,
+            SessionUserContext userContext,
             PersonAccessCommand command
         )
         {
             var permissions = await userAccessCalculation.AuthorizeUserAccessAsync(
                 organizationId,
                 locationId,
-                user,
+                userContext,
                 new GlobalAuthorizationContext()
             );
 
@@ -669,40 +741,30 @@ namespace CareTogether.Engines.Authorization
         public async Task<bool> AuthorizeGenerateUserInviteNonceAsync(
             Guid organizationId,
             Guid locationId,
-            ClaimsPrincipal user
+            SessionUserContext userContext
         )
         {
             var permissions = await userAccessCalculation.AuthorizeUserAccessAsync(
                 organizationId,
                 locationId,
-                user,
+                userContext,
                 new GlobalAuthorizationContext()
             );
             return permissions.Contains(Permission.InvitePersonUser);
         }
 
         public async Task<CombinedFamilyInfo> DiscloseFamilyAsync(
-            ClaimsPrincipal user,
+            SessionUserContext userContext,
             Guid organizationId,
             Guid locationId,
             CombinedFamilyInfo family
         )
         {
-            var userPersonId = user.PersonId(organizationId, locationId);
-            var userFamily =
-                userPersonId == null
-                    ? null
-                    : await directoryResource.FindPersonFamilyAsync(
-                        organizationId,
-                        locationId,
-                        userPersonId.Value
-                    );
-
             var contextPermissions = await userAccessCalculation.AuthorizeUserAccessAsync(
                 organizationId,
                 locationId,
-                user,
-                new FamilyAuthorizationContext(family.Family.Id)
+                userContext,
+                new FamilyAuthorizationContext(family.Family.Id, family.Family)
             );
 
             return family with
@@ -712,7 +774,7 @@ namespace CareTogether.Engines.Authorization
                         ? null
                         : DisclosePartneringFamilyInfo(
                             family.PartneringFamilyInfo,
-                            userFamily,
+                            userContext.UserFamily,
                             contextPermissions
                         ),
                 VolunteerFamilyInfo =
@@ -732,9 +794,9 @@ namespace CareTogether.Engines.Authorization
                                     note,
                                     organizationId,
                                     locationId,
-                                    userPersonId,
+                                    userContext.User.PersonId(organizationId, locationId),
                                     contextPermissions,
-                                    user
+                                    userContext.User
                                 )
                             )
                         )
@@ -752,7 +814,7 @@ namespace CareTogether.Engines.Authorization
         }
 
         public async Task<CommunityInfo> DiscloseCommunityAsync(
-            ClaimsPrincipal user,
+            SessionUserContext userContext,
             Guid organizationId,
             Guid locationId,
             CommunityInfo community
@@ -761,7 +823,7 @@ namespace CareTogether.Engines.Authorization
             var contextPermissions = await userAccessCalculation.AuthorizeUserAccessAsync(
                 organizationId,
                 locationId,
-                user,
+                userContext,
                 new CommunityAuthorizationContext(community.Community.Id)
             );
 
@@ -819,9 +881,7 @@ namespace CareTogether.Engines.Authorization
                 )
                     ? v1Case.CompletedCustomFields
                     : ImmutableList<CompletedCustomFieldInfo>.Empty,
-                MissingCustomFields = contextPermissions.Contains(
-                    Permission.ViewV1CaseCustomFields
-                )
+                MissingCustomFields = contextPermissions.Contains(Permission.ViewV1CaseCustomFields)
                     ? v1Case.MissingCustomFields
                     : ImmutableList<string>.Empty,
                 CompletedRequirements = contextPermissions.Contains(Permission.ViewV1CaseProgress)
@@ -854,9 +914,7 @@ namespace CareTogether.Engines.Authorization
                                 )
                                     ? arrangement.Comments
                                     : null,
-                                Reason = contextPermissions.Contains(
-                                    Permission.ViewV1CaseComments
-                                )
+                                Reason = contextPermissions.Contains(Permission.ViewV1CaseComments)
                                     ? arrangement.Reason
                                     : null,
                                 CompletedRequirements = contextPermissions.Contains(
@@ -1109,11 +1167,17 @@ namespace CareTogether.Engines.Authorization
             ClaimsPrincipal user
         )
         {
-            var authorAccount = await accountsResource.TryGetUserAccountAsync(note.AuthorId);
-            var authorPersonId = authorAccount
-                ?.Organizations.SingleOrDefault(org => org.OrganizationId == organizationId)
-                ?.Locations.SingleOrDefault(loc => loc.LocationId == locationId)
-                ?.PersonId;
+            var authorPersonId = note.AuthorPersonId;
+            if (authorPersonId == null && note.AuthorUserId != null)
+            {
+                var authorAccount = await accountsResource.TryGetUserAccountAsync(
+                    note.AuthorUserId.Value
+                );
+                authorPersonId = authorAccount
+                    ?.Organizations.SingleOrDefault(org => org.OrganizationId == organizationId)
+                    ?.Locations.SingleOrDefault(loc => loc.LocationId == locationId)
+                    ?.PersonId;
+            }
 
             // If the user is the author, allow
             if (userPersonId != null && authorPersonId == userPersonId)

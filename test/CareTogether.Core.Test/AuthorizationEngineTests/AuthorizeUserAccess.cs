@@ -306,49 +306,49 @@ namespace CareTogether.Core.Test.AuthorizationEngineTests
             var result0 = await userAccessCalculation!.AuthorizeUserAccessAsync(
                 guid1,
                 guid2,
-                user,
+                new SessionUserContext(user, null),
                 new FamilyAuthorizationContext(guid0)
             );
             var result1 = await userAccessCalculation!.AuthorizeUserAccessAsync(
                 guid1,
                 guid2,
-                user,
+                new SessionUserContext(user, null),
                 new FamilyAuthorizationContext(guid1)
             );
             var result2 = await userAccessCalculation!.AuthorizeUserAccessAsync(
                 guid1,
                 guid2,
-                user,
+                new SessionUserContext(user, null),
                 new FamilyAuthorizationContext(guid2)
             );
             var result3 = await userAccessCalculation!.AuthorizeUserAccessAsync(
                 guid1,
                 guid2,
-                user,
+                new SessionUserContext(user, null),
                 new FamilyAuthorizationContext(guid3)
             );
             var result4 = await userAccessCalculation!.AuthorizeUserAccessAsync(
                 guid1,
                 guid2,
-                user,
+                new SessionUserContext(user, null),
                 new FamilyAuthorizationContext(guid4)
             );
             var result5 = await userAccessCalculation!.AuthorizeUserAccessAsync(
                 guid1,
                 guid2,
-                user,
+                new SessionUserContext(user, null),
                 new FamilyAuthorizationContext(guid5)
             );
             var resultCommunity1 = await userAccessCalculation!.AuthorizeUserAccessAsync(
                 guid1,
                 guid2,
-                user,
+                new SessionUserContext(user, null),
                 new CommunityAuthorizationContext(guid1)
             );
             var resultCommunity2 = await userAccessCalculation!.AuthorizeUserAccessAsync(
                 guid1,
                 guid2,
-                user,
+                new SessionUserContext(user, null),
                 new CommunityAuthorizationContext(guid2)
             );
 

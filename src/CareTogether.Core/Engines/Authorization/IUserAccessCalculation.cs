@@ -10,7 +10,7 @@ namespace CareTogether.Engines.Authorization
         Task<ImmutableList<Permission>> AuthorizeUserAccessAsync(
             Guid organizationId,
             Guid locationId,
-            ClaimsPrincipal user,
+            SessionUserContext userContext,
             AuthorizationContext context
         );
     }

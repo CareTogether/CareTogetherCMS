@@ -30,7 +30,7 @@ import {
   Address,
 } from '../GeneratedClient';
 import { useDirectoryModel } from '../Model/DirectoryModel';
-import WarningIcon from '@mui/icons-material/Warning';
+import { Warning as WarningIcon } from '@mui/icons-material';
 import { useRecoilValue } from 'recoil';
 import {
   adultFamilyRelationshipsData,
@@ -270,7 +270,6 @@ export function CreateVolunteerFamilyDialog({
                 textFieldProps={{
                   size: 'small',
                   fullWidth: true,
-                  required: true,
                 }}
               />
             </Grid>

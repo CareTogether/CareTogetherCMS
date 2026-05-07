@@ -1,5 +1,5 @@
 import { IconButton } from '@mui/material';
-import DeleteIcon from '@mui/icons-material/Delete';
+import { Delete as DeleteIcon } from '@mui/icons-material';
 import { useDialogHandle } from '../../Hooks/useDialogHandle';
 import { DeleteRoleDialog } from './DeleteRoleDialog';
 

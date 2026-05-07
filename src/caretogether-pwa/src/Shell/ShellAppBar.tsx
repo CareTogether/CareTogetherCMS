@@ -1,5 +1,9 @@
 import { useState } from 'react';
 import {
+  Menu as MenuIcon,
+  MenuOpen,
+} from '@mui/icons-material';
+import {
   AppBar,
   Box,
   IconButton,
@@ -9,14 +13,12 @@ import {
   useMediaQuery,
   useTheme,
 } from '@mui/material';
-import MenuIcon from '@mui/icons-material/Menu';
 import { ShellContextSwitcher } from './ShellContextSwitcher';
 import {
   screenTitleComponentState,
   screenTitleState,
 } from './ShellScreenTitle';
 import { useRecoilValue } from 'recoil';
-import { MenuOpen } from '@mui/icons-material';
 import { ShellSearchBar } from './ShellSearchBar';
 import { ShellUserProfileMenu } from './ShellUserProfileMenu';
 

@@ -9,6 +9,7 @@ using CareTogether.Resources.Approvals;
 using CareTogether.Resources.Directory;
 using CareTogether.Resources.Policies;
 using CareTogether.Resources.V1Cases;
+using CareTogether.Resources.V1Referrals;
 using Timelines;
 
 namespace CareTogether.Engines.PolicyEvaluation
@@ -18,34 +19,6 @@ namespace CareTogether.Engines.PolicyEvaluation
         ImmutableDictionary<string, FamilyRoleApprovalStatus> FamilyRoleApprovals
     )
     {
-        private record RoleStatusPair(string RoleName, RoleApprovalStatus? Status);
-
-        private ImmutableDictionary<string, RoleApprovalStatus> RoleHighestStatuses =>
-            FamilyRoleApprovals
-                .Select(kvp => new RoleStatusPair(
-                    kvp.Key,
-                    PolicyEvaluationHelpers.GetMaxRoleStatus(kvp.Value.RoleVersionApprovals)
-                ))
-                .Concat(
-                    IndividualApprovals.SelectMany(ind =>
-                        ind.Value.ApprovalStatusByRole.Select(roleKvp => new RoleStatusPair(
-                            roleKvp.Key,
-                            PolicyEvaluationHelpers.GetMaxRoleStatus(
-                                roleKvp.Value.RoleVersionApprovals
-                            )
-                        ))
-                    )
-                )
-                .GroupBy(x => x.RoleName)
-                .ToImmutableDictionary(
-                    g => g.Key,
-                    g =>
-                        g.Select(x => x.Status ?? default)
-                            .Where(s => s != default)
-                            .DefaultIfEmpty()
-                            .Max()
-                );
-
         public ImmutableList<(
             string ActionName,
             (string Version, string RoleName)[] Versions
@@ -175,10 +148,13 @@ namespace CareTogether.Engines.PolicyEvaluation
                     ia.Value.ApprovalStatusByRole.SelectMany(kv =>
                     {
                         var roleName = kv.Key;
-                        var highestStatus = RoleHighestStatuses.GetValueOrDefault(roleName);
 
                         // If role has achieved Prospective or higher status, hide applications
-                        if (highestStatus >= RoleApprovalStatus.Prospective)
+                        var individualHighestStatus = PolicyEvaluationHelpers.GetMaxRoleStatus(
+                            kv.Value.RoleVersionApprovals
+                        );
+
+                        if (individualHighestStatus >= RoleApprovalStatus.Prospective)
                             return Enumerable.Empty<(Guid, string)>();
 
                         return kv
@@ -536,6 +512,14 @@ namespace CareTogether.Engines.PolicyEvaluation
             Guid locationId,
             Family family,
             Resources.V1Cases.V1CaseEntry v1CaseEntry
+        );
+
+        Task<
+            ImmutableList<RequirementDefinition>
+        > CalculateMissingV1ReferralIntakeRequirementsAsync(
+            Guid organizationId,
+            Guid locationId,
+            V1Referral v1Referral
         );
     }
 }

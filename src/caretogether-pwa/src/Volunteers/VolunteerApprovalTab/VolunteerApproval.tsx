@@ -1,0 +1,789 @@
+import {
+  Grid,
+  Table,
+  TableContainer,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableRow,
+  useMediaQuery,
+  useTheme,
+  Button,
+  ButtonGroup,
+  Checkbox,
+  IconButton,
+  FormControl,
+  InputBase,
+  MenuItem,
+  Select,
+  Stack,
+  ToggleButton,
+  ToggleButtonGroup,
+  Box,
+} from '@mui/material';
+import {
+  CombinedFamilyInfo,
+  EmailAddress,
+  Permission,
+  VolunteerInfo,
+} from '../../GeneratedClient';
+import { useRecoilState, useRecoilValue } from 'recoil';
+import { volunteerFamiliesData } from '../../Model/VolunteersModel';
+import {
+  organizationConfigurationQuery,
+  policyData,
+} from '../../Model/ConfigurationModel';
+import React, { useEffect, useState } from 'react';
+import {
+  Add as AddIcon,
+  Email as EmailIcon,
+  FilterList as FilterListIcon,
+  Sms as SmsIcon,
+  UnfoldLess as UnfoldLessIcon,
+  UnfoldMore as UnfoldMoreIcon,
+} from '@mui/icons-material';
+import { CreateVolunteerFamilyDialog } from '../CreateVolunteerFamilyDialog';
+import { Link, useLocation } from 'react-router-dom';
+import { SearchBar } from '../../Shell/SearchBar';
+import { useLocalStorage } from '../../Hooks/useLocalStorage';
+import { useScrollMemory } from '../../Hooks/useScrollMemory';
+import { useAllVolunteerFamiliesPermissions } from '../../Model/SessionModel';
+import { BulkSmsSideSheet } from '../BulkSmsSideSheet';
+import { useWindowSize } from '../../Hooks/useWindowSize';
+import { useScreenTitle } from '../../Shell/ShellScreenTitle';
+import { useLoadable } from '../../Hooks/useLoadable';
+import { ProgressBackdrop } from '../../Shell/ProgressBackdrop';
+import { selectedLocationContextState } from '../../Model/Data';
+import { useAppNavigate } from '../../Hooks/useAppNavigate';
+import { useGlobalSnackBar } from '../../Hooks/useGlobalSnackBar';
+import { statusFiltersState } from './statusFiltersState';
+import { checkStatusEquivalence } from './checkStatusEquivalence';
+import { familyLastName } from './familyLastName';
+import { simplify } from './simplify';
+import { filterType } from './filterType';
+import { roleFiltersState } from './roleFiltersState';
+import { VolunteerFilter } from './VolunteerFilter';
+import { catchAllLabel } from './catchAllLabel';
+import { getOptionValueFromSelection } from './getOptionValueFromSelection';
+import { getUpdatedFilters } from './getUpdatedFilters';
+import { useCustomFieldFilters } from '../../Generic/CustomFieldsFilter/useCustomFieldFilters';
+import { matchesCustomFieldFilters } from '../../Generic/CustomFieldsFilter/matchesCustomFieldFilters';
+import { CustomFieldFilterValue } from '../../Generic/CustomFieldsFilter/types';
+import { useFeatureFlagEnabled } from 'posthog-js/react';
+import { forceCheck } from '../../Utilities/reactLazyLoadInterop';
+import { VolunteerApprovalTableItem } from './VolunteerApprovalTableItem';
+import { VolunteerCustomFieldFiltersSidePanel } from './VolunteerCustomFieldFiltersSidePanel';
+import { useSidePanel } from '../../Hooks/useSidePanel';
+import { stickyHeaderTableSx } from '../../Utilities/stickyHeaderTableSx';
+
+function VolunteerApproval(props: { onOpen: () => void }) {
+  const { onOpen } = props;
+  useEffect(onOpen);
+  const appNavigate = useAppNavigate();
+  const [uncheckedFamilies, setUncheckedFamilies] = useState<string[]>([]);
+  const {
+    SidePanel: CustomFieldFiltersSidePanel,
+    openSidePanel: openCustomFieldFiltersSidePanel,
+    closeSidePanel: closeCustomFieldFiltersSidePanel,
+  } = useSidePanel();
+
+  const policy = useRecoilValue(policyData);
+
+  const customFieldNames =
+    policy.customFamilyFields?.map((field) => field.name) || [];
+
+  //#region Role/Status Selection Code
+  const [roleFilters, setRoleFilters] = useRecoilState(roleFiltersState);
+  const [statusFilters, setStatusFilters] = useRecoilState(statusFiltersState);
+
+  function changeRoleFilterSelection(selection: string | string[]) {
+    setUncheckedFamilies([]);
+    const filterOptionToUpdate = roleFilters.find(
+      (filter) => filter.value === getOptionValueFromSelection(selection)
+    );
+    setRoleFilters(getUpdatedFilters(roleFilters, filterOptionToUpdate!));
+  }
+
+  function changeStatusFilterSelection(selection: string | string[]) {
+    setUncheckedFamilies([]);
+    const filterOptionToUpdate = statusFilters.find(
+      (filter) => filter.value === getOptionValueFromSelection(selection)
+    );
+    setStatusFilters(getUpdatedFilters(statusFilters, filterOptionToUpdate!));
+  }
+
+  function changeCustomFieldFilter(
+    fieldName: string,
+    value: CustomFieldFilterValue[]
+  ) {
+    setUncheckedFamilies([]);
+    setCustomFieldFilter(fieldName, value);
+  }
+  //#endregion
+
+  // The array object returned by Recoil is read-only. We need to copy it before we can do an in-place sort.
+  const volunteerFamiliesLoadable = useLoadable(volunteerFamiliesData);
+  const volunteerFamilies = (volunteerFamiliesLoadable || [])
+    .map((x) => x)
+    .sort((a, b) =>
+      familyLastName(a) < familyLastName(b)
+        ? -1
+        : familyLastName(a) > familyLastName(b)
+          ? 1
+          : 0
+    );
+
+  const {
+    selectedValuesByField: customFieldFilters,
+    setSelectedValuesForField: setCustomFieldFilter,
+    optionsByField: customFieldFilterOptionsByField,
+  } = useCustomFieldFilters({
+    customFields: policy.customFamilyFields ?? [],
+    items: volunteerFamilies,
+    isBlank: (family, fieldName) => {
+      const field = family.family?.completedCustomFields?.find(
+        (customField) => customField.customFieldName === fieldName
+      );
+      return !field || field.value === undefined || field.value === null;
+    },
+    getValue: (family, fieldName) => {
+      const field = family.family?.completedCustomFields?.find(
+        (customField) => customField.customFieldName === fieldName
+      );
+      return field?.value;
+    },
+  });
+  const [filterText, setFilterText] = useState('');
+  const customFieldCount = (policy.customFamilyFields || []).length;
+  const activeCustomFieldFilterCount = Object.values(customFieldFilters).filter(
+    (selectedValues) => selectedValues.length > 0
+  ).length;
+
+  //#region Family/Individual Filtering Code
+  const selectedFamilyRoleKeys = roleFilters
+    .filter(
+      (filterOption) =>
+        filterOption.selected && filterOption.type !== filterType.Individual
+    )
+    .map((filterOption) => filterOption.key);
+  const selectedIndividualRoleKeys = roleFilters
+    .filter(
+      (filterOption) =>
+        filterOption.selected && filterOption.type !== filterType.Family
+    )
+    .map((filterOption) => filterOption.key);
+  const selectedStatusKeys = statusFilters
+    .filter((filterOption) => filterOption.selected)
+    .map((filterOption) => filterOption.value);
+
+  //#region Family-Specific Methods
+  function familyHasNoValidRoles(family: CombinedFamilyInfo) {
+    return roleFilters.every(
+      (filterOption) =>
+        !familyHasSpecificRoleInValidStatus(family, filterOption.key)
+    );
+  }
+
+  function familyHasNoValidStatuses(family: CombinedFamilyInfo) {
+    return statusFilters.every(
+      (filterOption) =>
+        family.volunteerFamilyInfo?.familyRoleApprovals?.[filterOption.key] ===
+        undefined
+    );
+  }
+
+  function familyHasSpecificRoleInValidStatus(
+    family: CombinedFamilyInfo,
+    roleName: string
+  ) {
+    return statusFilters
+      .filter((filterOption) => filterOption.key !== catchAllLabel)
+      .some((status) =>
+        checkStatusEquivalence(
+          status.value,
+          family.volunteerFamilyInfo?.familyRoleApprovals?.[roleName]
+            ?.currentStatus
+        )
+      );
+  }
+
+  function familyMeetsFilterCriteria(family: CombinedFamilyInfo) {
+    if (!selectedFamilyRoleKeys.length) {
+      if (!selectedStatusKeys.length) {
+        return selectedIndividualRoleKeys.length === 0;
+      }
+      return selectedStatusKeys.some((status) =>
+        status === catchAllLabel
+          ? familyHasNoValidStatuses(family)
+          : roleFilters.some((roleFilter) =>
+              checkStatusEquivalence(
+                status,
+                family.volunteerFamilyInfo?.familyRoleApprovals?.[
+                  roleFilter.key
+                ]?.currentStatus
+              )
+            )
+      );
+    }
+    return selectedFamilyRoleKeys.some((roleName) => {
+      const noValidRoles = familyHasNoValidRoles(family);
+      const familyHasRole =
+        roleName !== catchAllLabel
+          ? family.volunteerFamilyInfo?.familyRoleApprovals?.[roleName] !==
+            undefined
+          : noValidRoles;
+      if (!familyHasRole || (roleName === catchAllLabel && noValidRoles)) {
+        return familyHasRole;
+      }
+      if (selectedStatusKeys.length === 0) {
+        return (
+          familyHasSpecificRoleInValidStatus(family, roleName) ||
+          (roleName === catchAllLabel && familyHasRole)
+        );
+      }
+      return selectedStatusKeys.some((status) =>
+        checkStatusEquivalence(
+          status,
+          family.volunteerFamilyInfo?.familyRoleApprovals?.[roleName]
+            ?.currentStatus
+        )
+      );
+    });
+  }
+  //#endregion
+
+  //#region Family Member-Specific Methods
+  function getFamilyMembers(family: CombinedFamilyInfo) {
+    return (
+      (family.volunteerFamilyInfo?.individualVolunteers &&
+        Object.entries(family.volunteerFamilyInfo?.individualVolunteers)) ||
+      []
+    );
+  }
+
+  function familyMemberHasNoValidRoles(family: CombinedFamilyInfo) {
+    return (
+      getFamilyMembers(family).filter(([, volunteer]) =>
+        roleFilters.every((filterOption) => {
+          return !familyMemberHasSpecificRoleInValidStatus(
+            volunteer,
+            filterOption.key
+          );
+        })
+      ).length > 0
+    );
+  }
+
+  function familyMemberHasNoValidStatuses(volunteer: VolunteerInfo) {
+    return statusFilters.every((filterOption) =>
+      checkStatusEquivalence(
+        volunteer.approvalStatusByRole?.[filterOption.key].currentStatus,
+        null
+      )
+    );
+  }
+
+  function familyMemberHasSpecificRoleInValidStatus(
+    volunteer: VolunteerInfo,
+    roleName: string
+  ) {
+    return statusFilters
+      .filter((filterOption) => filterOption.key !== catchAllLabel)
+      .some((status) =>
+        checkStatusEquivalence(
+          status.value,
+          volunteer.approvalStatusByRole?.[roleName]?.currentStatus
+        )
+      );
+  }
+
+  function familyMemberHasARoleInSelectedStatus(
+    volunteer: VolunteerInfo,
+    status: string
+  ) {
+    return status === catchAllLabel
+      ? familyMemberHasNoValidStatuses(volunteer)
+      : roleFilters.some((roleFilter) =>
+          checkStatusEquivalence(
+            volunteer.approvalStatusByRole?.[roleFilter.key]?.currentStatus,
+            status
+          )
+        );
+  }
+
+  function familyMembersMeetFilterCriteria(family: CombinedFamilyInfo) {
+    const familyMembers = getFamilyMembers(family);
+    if (!selectedIndividualRoleKeys.length) {
+      if (!selectedStatusKeys.length) {
+        return !selectedFamilyRoleKeys.length;
+      }
+      return selectedStatusKeys.some(
+        (status) =>
+          familyMembers.filter(([, volunteer]) =>
+            familyMemberHasARoleInSelectedStatus(
+              volunteer,
+              status ? status : catchAllLabel
+            )
+          ).length > 0
+      );
+    }
+    return selectedIndividualRoleKeys.some((roleName) => {
+      return familyMembers.some(([, volunteer]) => {
+        const noValidRoles = familyMemberHasNoValidRoles(family);
+        const familyMembersHaveRole =
+          roleName !== catchAllLabel
+            ? familyMemberHasSpecificRoleInValidStatus(volunteer, roleName)
+            : noValidRoles;
+        if (roleName === catchAllLabel && noValidRoles) {
+          return familyMembersHaveRole;
+        }
+        if (!selectedStatusKeys.length) {
+          return familyMemberHasSpecificRoleInValidStatus(volunteer, roleName);
+        }
+        return selectedStatusKeys.some((status) =>
+          checkStatusEquivalence(
+            status,
+            volunteer.approvalStatusByRole?.[roleName]?.currentStatus
+          )
+        );
+      });
+    });
+  }
+  //#endregion
+
+  function familyOrFamilyMembersMeetFilterCriteria(family: CombinedFamilyInfo) {
+    const familyMeetsRoleCriteria = familyMeetsFilterCriteria(family);
+    const familyMembersMeetRoleCriteria =
+      familyMembersMeetFilterCriteria(family);
+    const familyRolesSelected = selectedFamilyRoleKeys.length > 0;
+    const individualRolesSelected = selectedIndividualRoleKeys.length > 0;
+    const statusesSelected = selectedStatusKeys.length > 0;
+    let result = true;
+    if (familyRolesSelected && individualRolesSelected) {
+      result = familyMeetsRoleCriteria || familyMembersMeetRoleCriteria;
+    } else if (familyRolesSelected) {
+      result = familyMeetsRoleCriteria;
+    } else if (individualRolesSelected) {
+      result = familyMembersMeetRoleCriteria;
+    } else if (statusesSelected) {
+      result = familyMeetsRoleCriteria || familyMembersMeetRoleCriteria;
+    }
+    return result;
+  }
+  //#endregion
+
+  function familyMatchesCustomFieldFilters(family: CombinedFamilyInfo) {
+    return matchesCustomFieldFilters({
+      item: family,
+      customFields: policy.customFamilyFields ?? [],
+      selectedValuesByField: customFieldFilters,
+      isBlank: (f, fieldName) => {
+        const field = f.family?.completedCustomFields?.find(
+          (customField) => customField.customFieldName === fieldName
+        );
+        return !field || field.value === undefined || field.value === null;
+      },
+      getValue: (f, fieldName) => {
+        const field = f.family?.completedCustomFields?.find(
+          (customField) => customField.customFieldName === fieldName
+        );
+        return field?.value;
+      },
+    });
+  }
+
+  const filteredVolunteerFamilies = volunteerFamilies.filter(
+    (family) =>
+      /* Filter by name */ (filterText.length === 0 ||
+        family.family?.adults?.some((adult) =>
+          simplify(
+            `${adult.item1?.firstName} ${adult.item1?.lastName}`
+          ).includes(filterText.toLowerCase())
+        ) ||
+        family.family?.children?.some((child) =>
+          simplify(`${child?.firstName} ${child?.lastName}`).includes(
+            filterText.toLowerCase()
+          )
+        )) &&
+      familyOrFamilyMembersMeetFilterCriteria(family) &&
+      familyMatchesCustomFieldFilters(family)
+  );
+
+  useEffect(() => {
+    forceCheck();
+  }, [customFieldFilters, filterText, roleFilters, statusFilters]);
+
+  const selectedFamilies = filteredVolunteerFamilies.filter(
+    (family) => !uncheckedFamilies.some((f) => f === family.family!.id!)
+  );
+
+  useScrollMemory();
+
+  function openFamily(familyId: string) {
+    appNavigate.family(familyId);
+  }
+  const [createVolunteerFamilyDialogOpen, setCreateVolunteerFamilyDialogOpen] =
+    useState(false);
+
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
+  const location = useLocation();
+
+  const updateTestFamilyFlagEnabled = useFeatureFlagEnabled(
+    'updateTestFamilyFlag'
+  );
+
+  const [expandedView, setExpandedView] = useLocalStorage(
+    'volunteer-approval-expanded',
+    true
+  );
+  const handleExpandCollapse = (
+    _event: React.MouseEvent<HTMLElement>,
+    newExpandedView: boolean | null
+  ) => {
+    if (newExpandedView !== null) {
+      setExpandedView(newExpandedView);
+    }
+  };
+
+  const { locationId } = useRecoilValue(selectedLocationContextState);
+  const organizationConfiguration = useRecoilValue(
+    organizationConfigurationQuery
+  );
+  const smsSourcePhoneNumbers = organizationConfiguration?.locations?.find(
+    (loc) => loc.id === locationId
+  )?.smsSourcePhoneNumbers;
+  const [smsMode, setSmsMode] = useState(false);
+
+  function getSelectedFamiliesContactEmails() {
+    return selectedFamilies
+      .map((family) => {
+        const primaryContactPerson = family.family?.adults?.find(
+          (adult) =>
+            adult.item1?.id === family.family?.primaryFamilyContactPersonId
+        );
+        const preferredEmailAddress =
+          primaryContactPerson?.item1?.emailAddresses?.find(
+            (email) =>
+              email.id === primaryContactPerson.item1?.preferredEmailAddressId
+          );
+        return preferredEmailAddress;
+      })
+      .filter((email) => typeof email !== 'undefined') as EmailAddress[];
+  }
+
+  const { setAndShowGlobalSnackBar } = useGlobalSnackBar();
+
+  function copyEmailAddresses() {
+    const emailAddresses = getSelectedFamiliesContactEmails();
+    navigator.clipboard.writeText(
+      emailAddresses.map((email) => email.address).join('; ')
+    );
+    setAndShowGlobalSnackBar(
+      `Found and copied ${getSelectedFamiliesContactEmails().length} email addresses for ${selectedFamilies.length} selected families to clipboard`
+    );
+  }
+
+  const windowSize = useWindowSize();
+
+  const permissions = useAllVolunteerFamiliesPermissions();
+
+  useScreenTitle('Volunteers');
+
+  return !volunteerFamiliesLoadable ? (
+    <ProgressBackdrop>
+      <p>Loading families...</p>
+    </ProgressBackdrop>
+  ) : (
+    <>
+      <Grid
+        container
+        sx={{
+          paddingRight: smsMode && !isMobile ? '400px' : null,
+          height:
+            smsMode && isMobile ? `${windowSize.height - 500 - 24}px` : null,
+          overflow: smsMode && isMobile ? 'scroll' : null,
+        }}
+      >
+        <Grid item xs={12}>
+          <Stack
+            direction={{ xs: 'column', md: 'row' }}
+            sx={{
+              marginTop: 1,
+              gap: 1.5,
+              alignItems: { xs: 'stretch', md: 'center' },
+            }}
+          >
+            <ButtonGroup
+              variant="text"
+              color="inherit"
+              aria-label="text inherit button group"
+              sx={{ width: { xs: '100%', md: 'auto' } }}
+            >
+              <Button
+                color={
+                  location.pathname.endsWith('/volunteers/approval')
+                    ? 'secondary'
+                    : 'inherit'
+                }
+                component={Link}
+                to={'../approval'}
+                sx={{ flex: { xs: 1, md: 'initial' } }}
+              >
+                Approvals
+              </Button>
+              <Button
+                color={
+                  location.pathname.endsWith('/volunteers/progress')
+                    ? 'secondary'
+                    : 'inherit'
+                }
+                component={Link}
+                to={'../progress'}
+                sx={{ flex: { xs: 1, md: 'initial' } }}
+              >
+                Progress
+              </Button>
+            </ButtonGroup>
+
+            <Stack
+              direction={{ xs: 'column', md: 'row' }}
+              sx={{
+                gap: 1,
+                width: { xs: '100%', md: 'auto' },
+                marginLeft: { md: 'auto' },
+                alignItems: { xs: 'stretch', md: 'center' },
+              }}
+            >
+              <Box
+                sx={{
+                  display: 'flex',
+                  flexWrap: 'wrap',
+                  gap: 1,
+                  alignItems: 'center',
+                  width: { xs: '100%', md: 'auto' },
+                }}
+              >
+                <VolunteerFilter
+                  label="Roles"
+                  options={roleFilters}
+                  setSelected={changeRoleFilterSelection}
+                />
+                <VolunteerFilter
+                  label="Statuses"
+                  options={statusFilters}
+                  setSelected={changeStatusFilterSelection}
+                />
+                {customFieldCount > 0 && (
+                  <FormControl
+                    sx={{
+                      position: 'relative',
+                      minWidth: { xs: '100%', sm: 0 },
+                      maxWidth: { xs: '100%', sm: '16rem' },
+                    }}
+                  >
+                    <Select
+                      labelId="volunteerCustomFieldsFilter"
+                      displayEmpty
+                      value=""
+                      open={false}
+                      variant="standard"
+                      onClick={() => openCustomFieldFiltersSidePanel()}
+                      sx={{
+                        minWidth: { xs: '100%', sm: 0 },
+                        maxWidth: '100%',
+                        '& .MuiSelect-iconOpen': { transform: 'none' },
+                        '& .MuiSelect-select': {
+                          overflow: 'hidden',
+                          textOverflow: 'ellipsis',
+                          whiteSpace: 'nowrap',
+                          cursor: 'pointer',
+                        },
+                      }}
+                      input={<InputBase />}
+                      IconComponent={FilterListIcon}
+                      SelectDisplayProps={{
+                        title: `Custom fields (${activeCustomFieldFilterCount}/${customFieldCount})`,
+                      }}
+                      renderValue={() =>
+                        `Custom fields (${activeCustomFieldFilterCount}/${customFieldCount})`
+                      }
+                    >
+                      <MenuItem value="" sx={{ display: 'none' }} />
+                    </Select>
+                  </FormControl>
+                )}
+              </Box>
+
+              <Stack
+                direction={{ xs: 'column', sm: 'row' }}
+                sx={{
+                  gap: 1,
+                  width: { xs: '100%', md: 'auto' },
+                  alignItems: { xs: 'stretch', sm: 'center' },
+                }}
+              >
+                <Box sx={{ width: { xs: '100%', sm: 'auto' } }}>
+                  <SearchBar
+                    value={filterText}
+                    onChange={(value) => {
+                      setUncheckedFamilies([]);
+                      setFilterText(value);
+                    }}
+                  />
+                </Box>
+                <Box
+                  sx={{
+                    display: 'flex',
+                    justifyContent: { xs: 'flex-end', sm: 'flex-start' },
+                    alignItems: 'center',
+                    gap: 1,
+                  }}
+                >
+                  {permissions(Permission.SendBulkSms) && (
+                    <IconButton
+                      color="inherit"
+                      aria-label="copy email addresses"
+                      onClick={() => copyEmailAddresses()}
+                    >
+                      <EmailIcon />
+                    </IconButton>
+                  )}
+                  {permissions(Permission.SendBulkSms) &&
+                    smsSourcePhoneNumbers &&
+                    smsSourcePhoneNumbers.length > 0 && (
+                      <IconButton
+                        color={smsMode ? 'secondary' : 'inherit'}
+                        aria-label="send bulk sms"
+                        onClick={() => setSmsMode(!smsMode)}
+                      >
+                        <SmsIcon sx={{ position: 'relative', top: 1 }} />
+                      </IconButton>
+                    )}
+                  <ToggleButtonGroup
+                    value={expandedView}
+                    exclusive
+                    onChange={handleExpandCollapse}
+                    size={isMobile ? 'medium' : 'small'}
+                    aria-label="row expansion"
+                  >
+                    <ToggleButton value={true} aria-label="expanded">
+                      <UnfoldMoreIcon />
+                    </ToggleButton>
+                    <ToggleButton value={false} aria-label="collapsed">
+                      <UnfoldLessIcon />
+                    </ToggleButton>
+                  </ToggleButtonGroup>
+                </Box>
+              </Stack>
+            </Stack>
+          </Stack>
+          <CustomFieldFiltersSidePanel>
+            <VolunteerCustomFieldFiltersSidePanel
+              customFields={policy.customFamilyFields || []}
+              optionsByField={customFieldFilterOptionsByField}
+              selectedValuesByField={customFieldFilters}
+              onFieldChange={changeCustomFieldFilter}
+              onClose={closeCustomFieldFiltersSidePanel}
+            />
+          </CustomFieldFiltersSidePanel>
+
+          {permissions(Permission.EditFamilyInfo) &&
+            permissions(Permission.ActivateVolunteerFamily) && (
+              <Button
+                variant="contained"
+                startIcon={<AddIcon />}
+                onClick={() => setCreateVolunteerFamilyDialogOpen(true)}
+                sx={{
+                  marginRight: 'auto',
+                  marginY: 2,
+                  width: { xs: '100%', sm: 'auto' },
+                }}
+              >
+                Add new volunteer family
+              </Button>
+            )}
+        </Grid>
+        <Grid item xs={12}>
+          <TableContainer
+            sx={{
+              borderBottom: '1px solid rgba(224, 224, 224, 1)',
+              overflow: 'visible',
+            }}
+          >
+            <Table
+              stickyHeader
+              sx={{ ...stickyHeaderTableSx, minWidth: '700px' }}
+              size="small"
+            >
+              <TableHead>
+                <TableRow sx={{ height: '40px' }}>
+                  {smsMode && (
+                    <TableCell sx={{ padding: 0, width: '36px' }}>
+                      <Checkbox
+                        size="small"
+                        checked={uncheckedFamilies.length === 0}
+                        onChange={(e) =>
+                          e.target.checked
+                            ? setUncheckedFamilies([])
+                            : setUncheckedFamilies(
+                                filteredVolunteerFamilies.map(
+                                  (f) => f.family!.id!
+                                )
+                              )
+                        }
+                      />
+                    </TableCell>
+                  )}
+                  {expandedView ? (
+                    <TableCell>Last Name, First Name</TableCell>
+                  ) : (
+                    <TableCell>Family</TableCell>
+                  )}
+                  <TableCell>Roles</TableCell>
+
+                  {customFieldNames.map((fieldName) => (
+                    <TableCell key={fieldName}>{fieldName}</TableCell>
+                  ))}
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {filteredVolunteerFamilies.map((volunteerFamily) => (
+                  <VolunteerApprovalTableItem
+                    key={volunteerFamily.family?.id}
+                    volunteerFamily={volunteerFamily}
+                    customFieldNames={customFieldNames}
+                    expandedView={expandedView}
+                    smsMode={smsMode}
+                    uncheckedFamilies={uncheckedFamilies}
+                    setUncheckedFamilies={setUncheckedFamilies}
+                    openFamily={openFamily}
+                    roleFilters={roleFilters}
+                    updateTestFamilyFlagEnabled={updateTestFamilyFlagEnabled}
+                  />
+                ))}
+              </TableBody>
+            </Table>
+          </TableContainer>
+
+          {createVolunteerFamilyDialogOpen && (
+            <CreateVolunteerFamilyDialog
+              onClose={(volunteerFamilyId) => {
+                setCreateVolunteerFamilyDialogOpen(false);
+                volunteerFamilyId && openFamily(volunteerFamilyId);
+              }}
+            />
+          )}
+        </Grid>
+      </Grid>
+      {smsMode && (
+        <BulkSmsSideSheet
+          selectedFamilies={selectedFamilies}
+          onClose={() => setSmsMode(false)}
+        />
+      )}
+    </>
+  );
+}
+
+export { VolunteerApproval };

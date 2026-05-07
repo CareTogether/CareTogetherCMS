@@ -8,6 +8,7 @@ using CareTogether.Resources.Approvals;
 using CareTogether.Resources.Directory;
 using CareTogether.Resources.Policies;
 using CareTogether.Resources.V1Cases;
+using CareTogether.Resources.V1Referrals;
 using CareTogether.Utilities.Dates;
 
 namespace CareTogether.Engines.PolicyEvaluation
@@ -250,6 +251,53 @@ namespace CareTogether.Engines.PolicyEvaluation
             );
 
             return v1CaseStatus;
+        }
+
+        public async Task<
+            ImmutableList<RequirementDefinition>
+        > CalculateMissingV1ReferralIntakeRequirementsAsync(
+            Guid organizationId,
+            Guid locationId,
+            V1Referral v1Referral
+        )
+        {
+            var policy = await policiesResource.GetCurrentPolicy(organizationId, locationId);
+            var config = await policiesResource.GetConfigurationAsync(organizationId);
+
+            var location = config.Locations.Find(item => item.Id == locationId);
+            TimeZoneInfo locationTimeZone =
+                location?.timeZone ?? TimeZoneInfo.FindSystemTimeZoneById("America/New_York");
+
+            var completedRequirements = v1Referral
+                .CompletedRequirements.Select(item =>
+                    ToCompletedRequirementsForCalculation(item, locationTimeZone)
+                )
+                .ToImmutableList();
+
+            var exemptedRequirements = v1Referral
+                .ExemptedRequirements.Select(item =>
+                    ToExemptedRequirementInfoForCalculation(item, locationTimeZone)
+                )
+                .ToImmutableList();
+
+            var today = Dates.ToDateOnlyInLocationTimeZone(DateTime.UtcNow, locationTimeZone);
+
+            return policy
+                .ReferralPolicy.IntakeRequirements_PRE_MIGRATION.Where(requirement =>
+                    !SharedCalculations
+                        .RequirementMetOrExempted(
+                            SharedCalculations.GetRequirementNameWithSynonyms(
+                                policy,
+                                requirement.ActionName
+                            ),
+                            policySupersededAt: null,
+                            today,
+                            completedRequirements,
+                            exemptedRequirements
+                        )
+                        .IsMetOrExempted
+                )
+                .ToImmutableList();
         }
     }
 }

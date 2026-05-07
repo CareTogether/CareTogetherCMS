@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Immutable;
 using System.Linq;
-using System.Security.Claims;
 using System.Threading.Tasks;
 using CareTogether.Engines.Authorization;
 using CareTogether.Engines.PolicyEvaluation;
@@ -12,6 +11,7 @@ using CareTogether.Resources.Directory;
 using CareTogether.Resources.Notes;
 using CareTogether.Resources.Policies;
 using CareTogether.Resources.V1Cases;
+using CareTogether.Resources.V1Referrals;
 using Nito.AsyncEx;
 
 namespace CareTogether.Managers
@@ -26,12 +26,14 @@ namespace CareTogether.Managers
         private readonly INotesResource notesResource;
         private readonly IPoliciesResource policiesResource;
         private readonly IAccountsResource accountsResource;
+        private readonly IV1ReferralsResource v1ReferralsResource;
 
         public CombinedFamilyInfoFormatter(
             IPolicyEvaluationEngine policyEvaluationEngine,
             IAuthorizationEngine authorizationEngine,
             IApprovalsResource approvalsResource,
             IV1CasesResource v1CasesResource,
+            IV1ReferralsResource v1ReferralsResource,
             IDirectoryResource directoryResource,
             INotesResource notesResource,
             IPoliciesResource policiesResource,
@@ -42,6 +44,7 @@ namespace CareTogether.Managers
             this.authorizationEngine = authorizationEngine;
             this.approvalsResource = approvalsResource;
             this.v1CasesResource = v1CasesResource;
+            this.v1ReferralsResource = v1ReferralsResource;
             this.directoryResource = directoryResource;
             this.notesResource = notesResource;
             this.policiesResource = policiesResource;
@@ -50,21 +53,17 @@ namespace CareTogether.Managers
 
         public async Task<CombinedFamilyInfo?> RenderCombinedFamilyInfoAsync(
             Guid organizationId,
+            EffectiveLocationPolicy locationPolicy,
             Guid locationId,
             Guid familyId,
-            ClaimsPrincipal user
+            Family? family,
+            SessionUserContext userContext
         )
         {
-            var locationPolicy = await policiesResource.GetCurrentPolicy(
-                organizationId,
-                locationId
-            );
+            family =
+                family
+                ?? await directoryResource.FindFamilyAsync(organizationId, locationId, familyId);
 
-            var family = await directoryResource.FindFamilyAsync(
-                organizationId,
-                locationId,
-                familyId
-            );
             if (family == null)
                 throw new InvalidOperationException("The specified family ID was not found.");
 
@@ -102,7 +101,6 @@ namespace CareTogether.Managers
                     locationPolicy,
                     family
                 );
-
             var notes = await notesResource.ListFamilyNotesAsync(
                 organizationId,
                 locationId,
@@ -111,7 +109,8 @@ namespace CareTogether.Managers
             var renderedNotes = notes
                 .Select(note => new Note(
                     note.Id,
-                    note.AuthorId,
+                    note.AuthorUserId,
+                    note.AuthorPersonId,
                     note.CreatedTimestampUtc,
                     note.LastEditTimestampUtc,
                     note.ApprovedTimestampUtc,
@@ -184,11 +183,12 @@ namespace CareTogether.Managers
             );
 
             var disclosedFamily = await authorizationEngine.DiscloseFamilyAsync(
-                user,
+                userContext,
                 organizationId,
                 locationId,
                 renderedFamily
             );
+
             return disclosedFamily;
         }
 
@@ -205,7 +205,20 @@ namespace CareTogether.Managers
                 .ToImmutableList();
 
             if (v1CaseEntries.Count == 0)
-                return null;
+            {
+                var hasLinkedReferral = (
+                    await v1ReferralsResource.ListReferralsAsync(organizationId, locationId)
+                ).Any(referral => referral.FamilyId == family.Id);
+
+                if (!hasLinkedReferral)
+                    return null;
+
+                return new PartneringFamilyInfo(
+                    null,
+                    ImmutableList<V1Case>.Empty,
+                    ImmutableList<Activity>.Empty
+                );
+            }
 
             var v1Cases = await v1CaseEntries.Select(r => ToV1CaseAsync(r)).WhenAll();
 
@@ -245,7 +258,8 @@ namespace CareTogether.Managers
                             ToArrangement(a.Value, v1CaseStatus.IndividualArrangements[a.Key])
                         )
                         .ToImmutableList(),
-                    entry.Comments
+                    entry.Comments,
+                    entry.LinkedV1ReferralIds
                 );
             }
 

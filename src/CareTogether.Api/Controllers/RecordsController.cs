@@ -75,7 +75,9 @@ namespace CareTogether.Api.Controllers
         }
 
         [HttpPost("compositeRecordsCommand")]
-        public async Task<ActionResult<RecordsAggregate?>> SubmitCompositeRecordsCommandAsync(
+        public async Task<
+            ActionResult<ImmutableList<RecordsAggregate>>
+        > SubmitCompositeRecordsCommandAsync(
             Guid organizationId,
             Guid locationId,
             [FromBody] CompositeRecordsCommand command

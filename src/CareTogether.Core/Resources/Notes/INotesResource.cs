@@ -8,7 +8,8 @@ namespace CareTogether.Resources.Notes
     public record NoteEntry(
         Guid Id,
         Guid FamilyId,
-        Guid AuthorId,
+        Guid? AuthorUserId,
+        Guid? AuthorPersonId,
         DateTime? CreatedTimestampUtc,
         DateTime LastEditTimestampUtc,
         NoteStatus Status,
@@ -16,7 +17,7 @@ namespace CareTogether.Resources.Notes
         Guid? ApproverId,
         DateTime? ApprovedTimestampUtc,
         DateTime? BackdatedTimestampUtc,
-        string? AccessLevel 
+        string? AccessLevel
     );
 
     public enum NoteStatus
@@ -33,7 +34,8 @@ namespace CareTogether.Resources.Notes
         Guid NoteId,
         string? DraftNoteContents,
         DateTime? BackdatedTimestampUtc,
-        string? AccessLevel = null
+        string? AccessLevel = null,
+        Guid? AuthorPersonId = null
     ) : NoteCommand(FamilyId, NoteId);
 
     public sealed record EditDraftNote(
