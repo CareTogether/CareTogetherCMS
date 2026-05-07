@@ -5,7 +5,10 @@ import {
   usePersonLookup,
   useUserLookup,
 } from '../Model/DirectoryModel';
-import { useFamilyIdPermissions } from '../Model/SessionModel';
+import {
+  useFamilyIdPermissions,
+  useGlobalPermissions,
+} from '../Model/SessionModel';
 import { useDialogHandle } from '../Hooks/useDialogHandle';
 import { FamilyName } from '../Families/FamilyName';
 import { PersonName } from '../Families/PersonName';
@@ -30,19 +33,25 @@ export function CompletedRequirementRow({
       context.kind === 'Family Volunteer Assignment' ||
       context.kind === 'Individual Volunteer Assignment'
       ? context.partneringFamilyId
-      : context.volunteerFamilyId
+      : context.kind === 'Volunteer Family' ||
+          context.kind === 'Individual Volunteer'
+        ? context.volunteerFamilyId
+        : ''
   );
+  const globalPermissions = useGlobalPermissions();
 
   const dialogHandle = useDialogHandle();
 
   const canMarkIncomplete =
-    context.kind === 'V1Case'
-      ? permissions(Permission.EditV1CaseRequirementCompletion)
-      : context.kind === 'Arrangement' ||
-          context.kind === 'Family Volunteer Assignment' ||
-          context.kind === 'Individual Volunteer Assignment'
-        ? permissions(Permission.EditArrangementRequirementCompletion)
-        : permissions(Permission.EditApprovalRequirementCompletion);
+    context.kind === 'V1Referral'
+      ? globalPermissions(Permission.EditV1ReferralRequirementCompletion)
+      : context.kind === 'V1Case'
+        ? permissions(Permission.EditV1CaseRequirementCompletion)
+        : context.kind === 'Arrangement' ||
+            context.kind === 'Family Volunteer Assignment' ||
+            context.kind === 'Individual Volunteer Assignment'
+          ? permissions(Permission.EditArrangementRequirementCompletion)
+          : permissions(Permission.EditApprovalRequirementCompletion);
 
   const familyLookup = useFamilyLookup();
   const personLookup = usePersonLookup();

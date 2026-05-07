@@ -1,7 +1,9 @@
 import { useState } from 'react';
 import { Typography, Button } from '@mui/material';
-import PersonPinCircleIcon from '@mui/icons-material/PersonPinCircle';
-import EventIcon from '@mui/icons-material/Event';
+import {
+  Event as EventIcon,
+  PersonPinCircle as PersonPinCircleIcon,
+} from '@mui/icons-material';
 import {
   CombinedFamilyInfo,
   Arrangement,

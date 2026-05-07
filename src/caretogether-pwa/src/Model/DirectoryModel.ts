@@ -1,4 +1,4 @@
-import { useRecoilCallback, useRecoilValue } from 'recoil';
+import { useRecoilValue } from 'recoil';
 import {
   AddAdultToFamilyCommand,
   AddChildToFamilyCommand,
@@ -7,7 +7,6 @@ import {
   AddPersonPhoneNumber,
   Address,
   Age,
-  CompositeRecordsCommand,
   CreateVolunteerFamilyWithNewAdultCommand,
   CustodialRelationship,
   EmailAddress,
@@ -36,6 +35,7 @@ import {
   UpdatePersonGender,
   UpdatePersonAge,
   UpdatePersonEthnicity,
+  Note,
   UpdateAdultRelationshipToFamily,
   CustodialRelationshipType,
   UpdateCustodialRelationshipType,
@@ -44,7 +44,6 @@ import {
   FamilyRecordsCommand,
   PersonRecordsCommand,
   NoteRecordsCommand,
-  AtomicRecordsCommand,
   CustomField,
   UpdateCustomFamilyField,
   CommunityCommand,
@@ -53,15 +52,46 @@ import {
   UndoCreateFamily,
   UpdateNoteAccessLevel,
   UpdateTestFamilyFlag,
+  Person,
 } from '../GeneratedClient';
-import { api } from '../Api/Api';
 import {
-  selectedLocationContextState,
-  visibleAggregatesState,
+  useAtomicRecordsCommandCallback,
+  useCompositeRecordsCommandCallback,
   visibleCommunitiesQuery,
   visibleFamiliesQuery,
 } from './Data';
 import { commandFactory } from './CommandFactory';
+import { SYSTEM_USER_ID } from '../constants';
+import posthog from 'posthog-js';
+
+const systemPerson = Person.fromJS({
+  id: SYSTEM_USER_ID,
+  active: true,
+  firstName: 'SYSTEM',
+  lastName: '',
+  addresses: [],
+  phoneNumbers: [],
+  emailAddresses: [],
+});
+
+const isSystemUserId = (id?: string) => id?.toLowerCase() === SYSTEM_USER_ID;
+const noteAuthorLookupErrorsTracked = new Set<string>();
+
+function trackNoteAuthorLookupError(note: Note, reason: string) {
+  const eventKey = `${note.id ?? 'unknown'}:${reason}:${note.authorPersonId ?? 'none'}:${note.authorUserId ?? 'none'}`;
+  if (noteAuthorLookupErrorsTracked.has(eventKey)) {
+    return;
+  }
+
+  noteAuthorLookupErrorsTracked.add(eventKey);
+  posthog.captureException(new Error('Unable to resolve note author'), {
+    reason,
+    noteId: note.id,
+    noteStatus: note.status,
+    noteAuthorPersonId: note.authorPersonId,
+    noteAuthorUserId: note.authorUserId,
+  });
+}
 
 export function usePersonLookup() {
   const visibleFamilies = useRecoilValue(visibleFamiliesQuery);
@@ -103,6 +133,10 @@ export function useUserLookup() {
   const visibleFamilies = useRecoilValue(visibleFamiliesQuery);
 
   return (userId?: string) => {
+    if (isSystemUserId(userId)) {
+      return systemPerson;
+    }
+
     const userFamily = visibleFamilies.filter((family) =>
       family.users?.find((user) => user.userId === userId)
     );
@@ -118,6 +152,39 @@ export function useUserLookup() {
     } else {
       return undefined;
     }
+  };
+}
+
+export function useNoteAuthorLookup() {
+  const personAndFamilyLookup = usePersonAndFamilyLookup();
+  const userLookup = useUserLookup();
+
+  return (note?: Note) => {
+    if (!note) return undefined;
+    if (!note.authorPersonId) {
+      const userAuthor = userLookup(note.authorUserId);
+      if (!userAuthor) {
+        trackNoteAuthorLookupError(note, 'missing-author-with-user-id-only');
+      }
+      return userAuthor;
+    }
+
+    if (isSystemUserId(note.authorPersonId)) return systemPerson;
+
+    const personAuthor = personAndFamilyLookup(note.authorPersonId).person;
+    if (personAuthor) return personAuthor;
+
+    const userAuthor = userLookup(note.authorUserId);
+    if (userAuthor) {
+      trackNoteAuthorLookupError(
+        note,
+        'missing-author-person-fell-back-to-user-id'
+      );
+      return userAuthor;
+    }
+
+    trackNoteAuthorLookupError(note, 'missing-author-for-person-and-user-id');
+    return undefined;
   };
 }
 
@@ -141,83 +208,6 @@ export function useCommunityLookup() {
     );
     return community;
   };
-}
-
-export function useAtomicRecordsCommandCallback<
-  T extends unknown[],
-  U extends AtomicRecordsCommand,
->(callback: (aggregateId: string, ...args: T) => Promise<U>) {
-  return useRecoilCallback(({ snapshot, set }) => {
-    const asyncCallback = async (aggregateId: string, ...args: T) => {
-      const { organizationId, locationId } = await snapshot.getPromise(
-        selectedLocationContextState
-      );
-
-      const command = await callback(aggregateId, ...args);
-
-      const updatedAggregates = await api.records.submitAtomicRecordsCommand(
-        organizationId,
-        locationId,
-        command
-      );
-
-      for (const updatedAggregate of updatedAggregates) {
-        set(visibleAggregatesState, (current) =>
-          updatedAggregate == null
-            ? current.filter((currentEntry) => currentEntry.id !== aggregateId)
-            : current.some(
-                  (currentEntry) =>
-                    currentEntry.id === updatedAggregate.id &&
-                    currentEntry.constructor === updatedAggregate.constructor
-                )
-              ? current.map((currentEntry) =>
-                  currentEntry.id === updatedAggregate.id &&
-                  currentEntry.constructor === updatedAggregate.constructor
-                    ? updatedAggregate
-                    : currentEntry
-                )
-              : current.concat(updatedAggregate)
-        );
-      }
-    };
-    return asyncCallback;
-  });
-}
-
-function useCompositeRecordsCommandCallback<T extends unknown[]>(
-  callback: (
-    aggregateId: string,
-    ...args: T
-  ) => Promise<CompositeRecordsCommand>
-) {
-  return useRecoilCallback(({ snapshot, set }) => {
-    const asyncCallback = async (aggregateId: string, ...args: T) => {
-      const { organizationId, locationId } = await snapshot.getPromise(
-        selectedLocationContextState
-      );
-
-      const command = await callback(aggregateId, ...args);
-
-      const updatedAggregate = await api.records.submitCompositeRecordsCommand(
-        organizationId,
-        locationId,
-        command
-      );
-
-      set(visibleAggregatesState, (current) =>
-        updatedAggregate == null
-          ? current.filter((currentEntry) => currentEntry.id !== aggregateId)
-          : current.some((currentEntry) => currentEntry.id === aggregateId)
-            ? current.map((currentEntry) =>
-                currentEntry.id === aggregateId
-                  ? updatedAggregate
-                  : currentEntry
-              )
-            : current.concat(updatedAggregate)
-      );
-    };
-    return asyncCallback;
-  });
 }
 
 function useFamilyCommandCallback<T extends unknown[]>(
@@ -710,7 +700,7 @@ export function useDirectoryModel() {
       age: Age | null,
       ethnicity: string | null,
       isInHousehold: boolean,
-      relationshipToFamily: string,
+      relationshipToFamily: string | null,
       address: Address | null,
       phoneNumber: string | null,
       phoneType: PhoneNumberType,
@@ -737,7 +727,7 @@ export function useDirectoryModel() {
             FamilyAdultRelationshipInfo,
             {
               isInHousehold: isInHousehold,
-              relationshipToFamily: relationshipToFamily,
+              relationshipToFamily: relationshipToFamily ?? undefined,
             }
           ),
           address: address == null ? undefined : address,

@@ -30,9 +30,9 @@ import { useRecoilCallback, useRecoilValue } from 'recoil';
 import { personNameString } from './PersonName';
 import {
   AccountCircle,
+  ContentCopy,
   NoAccounts,
   PersonAdd,
-  ContentCopy,
 } from '@mui/icons-material';
 import { organizationConfigurationQuery } from '../Model/ConfigurationModel';
 import { useState } from 'react';

@@ -16,6 +16,8 @@ using CareTogether.TestData;
 using CareTogether.Utilities.FileStore;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
+using CareTogether.Resources.V1Referrals;
+
 
 namespace CareTogether.Core.Test.AuthorizationEngineTests
 {
@@ -96,7 +98,11 @@ namespace CareTogether.Core.Test.AuthorizationEngineTests
             );
 
         private AuthorizationEngine? dut;
+        private NotesResource? notesResource;
         private Mock<IUserAccessCalculation>? mockUserAccessCalculation; // Change to interface
+
+        private Mock<IV1ReferralsResource>? mockV1ReferralsResource;
+
 
         private void MockUserAccessCalculation(params Permission[] permissions) =>
             mockUserAccessCalculation!
@@ -151,17 +157,19 @@ namespace CareTogether.Core.Test.AuthorizationEngineTests
             );
             var accountsResource = new AccountsResource(accountsEventLog, personAccessEventLog);
 
-            var notesResource = new NotesResource(notesEventLog, draftNotesStore);
+            notesResource = new NotesResource(notesEventLog, draftNotesStore);
 
             // Replace UserAccess with IUserAccess mock:
             mockUserAccessCalculation = new Mock<IUserAccessCalculation>();
+            mockV1ReferralsResource = new Mock<IV1ReferralsResource>();
 
             dut = new AuthorizationEngine(
                 policiesResource,
                 directoryResource,
                 accountsResource,
                 notesResource,
-                mockUserAccessCalculation.Object // Use the interface mock here
+                mockUserAccessCalculation.Object, // Use the interface mock here
+                mockV1ReferralsResource.Object
             );
         }
 
@@ -290,6 +298,101 @@ namespace CareTogether.Core.Test.AuthorizationEngineTests
             var response = await dut!.AuthorizeNoteCommandAsync(guid1, guid2, new SessionUserContext(user, null), command);
 
             Assert.IsTrue(response);
+        }
+
+        [TestMethod]
+        public async Task UserCanEditOwnDraftNoteWhenAuthorPersonIdDiffers()
+        {
+            var userId = Guid.Parse("e3aaef77-0e97-47a6-b788-a67c237c781e");
+            var user = PersonUserWithRoles(Id('4'), userId, "Volunteer");
+            var noteId = Guid.NewGuid();
+
+            await notesResource!.ExecuteNoteCommandAsync(
+                guid1,
+                guid2,
+                new CreateDraftNote(
+                    guid1,
+                    noteId,
+                    "Test Note",
+                    null,
+                    AuthorPersonId: Id('5')
+                ),
+                userId
+            );
+
+            MockUserAccessCalculation(
+                [Permission.AddEditOwnDraftNotes, Permission.DiscardOwnDraftNotes]
+            );
+
+            var response = await dut!.AuthorizeNoteCommandAsync(
+                guid1,
+                guid2,
+                new SessionUserContext(user, null),
+                new EditDraftNote(guid1, noteId, "Updated", null)
+            );
+
+            Assert.IsTrue(response);
+        }
+
+        [TestMethod]
+        public async Task DiscloseNoteAsyncUsesAuthorPersonIdWhenPresent()
+        {
+            var user = PersonUserWithRoles(Id('4'), guid0, "Volunteer");
+            var note = new CareTogether.Managers.Note(
+                Guid.NewGuid(),
+                AuthorUserId: Id('6'),
+                AuthorPersonId: Id('4'),
+                CreatedTimestampUtc: DateTime.UtcNow,
+                LastEditTimestampUtc: DateTime.UtcNow,
+                ApprovedTimestampUtc: null,
+                Contents: "Test",
+                Status: NoteStatus.Draft,
+                BackdatedTimestampUtc: null,
+                AccessLevel: "Staff Only",
+                ApproverId: null
+            );
+
+            var canDisclose = await dut!.DiscloseNoteAsync(
+                note,
+                guid1,
+                guid2,
+                userPersonId: Id('4'),
+                contextPermissions: ImmutableList<Permission>.Empty,
+                user: user
+            );
+
+            Assert.IsTrue(canDisclose);
+        }
+
+        [TestMethod]
+        public async Task DiscloseNoteAsyncFallsBackToAuthorUserIdWhenAuthorPersonIdMissing()
+        {
+            var userId = Guid.Parse("e3aaef77-0e97-47a6-b788-a67c237c781e");
+            var user = PersonUserWithRoles(Id('4'), userId, "Volunteer");
+            var note = new CareTogether.Managers.Note(
+                Guid.NewGuid(),
+                AuthorUserId: userId,
+                AuthorPersonId: null,
+                CreatedTimestampUtc: DateTime.UtcNow,
+                LastEditTimestampUtc: DateTime.UtcNow,
+                ApprovedTimestampUtc: null,
+                Contents: "Test",
+                Status: NoteStatus.Draft,
+                BackdatedTimestampUtc: null,
+                AccessLevel: "Staff Only",
+                ApproverId: null
+            );
+
+            var canDisclose = await dut!.DiscloseNoteAsync(
+                note,
+                guid1,
+                guid2,
+                userPersonId: Id('4'),
+                contextPermissions: ImmutableList<Permission>.Empty,
+                user: user
+            );
+
+            Assert.IsTrue(canDisclose);
         }
     }
 }
