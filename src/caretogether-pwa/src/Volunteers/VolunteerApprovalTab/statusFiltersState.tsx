@@ -1,5 +1,5 @@
 import { atom, selector } from 'recoil';
-import { catchAllLabel } from './catchAllLabel';
+import { notAppliedLabel } from './catchAllLabel';
 import { filterOption } from './filterOption';
 import { RoleApprovalStatus } from '../../GeneratedClient';
 
@@ -9,7 +9,7 @@ export const statusFiltersState = atom({
     key: 'statusFiltersState/Default',
     get: () => {
       const options = [
-        { key: catchAllLabel, value: 0 },
+        { key: notAppliedLabel, value: 0 },
         {
           key: RoleApprovalStatus[RoleApprovalStatus.Prospective],
           value: RoleApprovalStatus.Prospective,

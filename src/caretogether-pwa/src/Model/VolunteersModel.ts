@@ -21,8 +21,7 @@ import {
   FamilyApprovalRecordsCommand,
   IndividualApprovalRecordsCommand,
 } from '../GeneratedClient';
-import { useAtomicRecordsCommandCallback } from './DirectoryModel';
-import { visibleFamiliesQuery } from './Data';
+import { useAtomicRecordsCommandCallback, visibleFamiliesQuery } from './Data';
 import { commandFactory } from './CommandFactory';
 
 export const volunteerFamiliesData = selector({

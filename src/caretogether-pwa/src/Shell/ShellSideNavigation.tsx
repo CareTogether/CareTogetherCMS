@@ -1,4 +1,15 @@
 import {
+  Dashboard as DashboardIcon,
+  Diversity3 as Diversity3Icon,
+  Inbox,
+  Insights as InsightsIcon,
+  People as PeopleIcon,
+  PermPhoneMsg as PermPhoneMsgIcon,
+  Settings as SettingsIcon,
+  Support as SupportIcon,
+  Handshake as HandshakeIcon,
+} from '@mui/icons-material';
+import {
   Badge,
   Box,
   Divider,
@@ -8,13 +19,6 @@ import {
   Stack,
   useTheme,
 } from '@mui/material';
-import PermPhoneMsgIcon from '@mui/icons-material/PermPhoneMsg';
-import PeopleIcon from '@mui/icons-material/People';
-import SettingsIcon from '@mui/icons-material/Settings';
-import Diversity3Icon from '@mui/icons-material/Diversity3';
-import InsightsIcon from '@mui/icons-material/Insights';
-import DashboardIcon from '@mui/icons-material/Dashboard';
-import SupportIcon from '@mui/icons-material/Support';
 import { useFeatureFlags } from '../Model/ConfigurationModel';
 import { Copyright } from './Copyright';
 import { Version } from './Version';
@@ -22,7 +26,6 @@ import { useGlobalPermissions } from '../Model/SessionModel';
 import { Permission } from '../GeneratedClient';
 import { selectedLocationContextState } from '../Model/Data';
 import { useLoadable } from '../Hooks/useLoadable';
-import { Inbox } from '@mui/icons-material';
 import { queueItemsCountQuery } from '../Model/QueueModel';
 import Feedback from './Feedback';
 import { useRecoilValue } from 'recoil';
@@ -30,6 +33,7 @@ import { reportSubmenuItemsAtom } from '../Model/UI';
 import { ListItemLink } from './ListItemLink';
 import { useAppNavigate } from '../Hooks/useAppNavigate';
 import WhatsNew from './WhatsNew';
+import { useFeatureFlagEnabled } from 'posthog-js/react';
 
 interface SideNavigationMenuProps {
   open: boolean;
@@ -46,6 +50,8 @@ function SideNavigationMenu({ open }: SideNavigationMenuProps) {
   const queueItemsCount = useLoadable(queueItemsCountQuery);
 
   const reportSubmenuItems = useRecoilValue(reportSubmenuItemsAtom);
+
+  const referralsEnabled = useFeatureFlagEnabled('referrals');
 
   return (
     <List
@@ -100,12 +106,21 @@ function SideNavigationMenu({ open }: SideNavigationMenuProps) {
               </Badge>
             }
           />
+          {permissions(Permission.ViewV1Referral) && referralsEnabled && (
+              <ListItemLink
+                className="ph-unmask"
+                to={`${locationPrefix}/referrals`}
+                primary="Referrals"
+                icon={<PermPhoneMsgIcon />}
+              />
+          )}
+
           {permissions(Permission.AccessPartneringFamiliesScreen) && (
             <ListItemLink
               className="ph-unmask"
-              to={`${locationPrefix}/cases`}
-              primary="Cases"
-              icon={<PermPhoneMsgIcon />}
+              to={`${locationPrefix}/clients`}
+              primary="Clients"
+              icon={<HandshakeIcon />}
             />
           )}
           {permissions(Permission.AccessVolunteersScreen) && (

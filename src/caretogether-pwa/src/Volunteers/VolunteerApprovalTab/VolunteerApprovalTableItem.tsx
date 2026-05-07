@@ -8,12 +8,12 @@ import {
 } from '@mui/material';
 import { CombinedFamilyInfo } from '../../GeneratedClient';
 import React, { useState } from 'react';
-import LazyLoad from 'react-lazyload';
 import { AgeText } from '../../Families/AgeText';
 import { TestFamilyBadge } from '../../Families/TestFamilyBadge';
 import { VolunteerRoleApprovalStatusChip } from '../VolunteerRoleApprovalStatusChip';
 import { familyLastName } from './familyLastName';
 import { LazyLoadMountTrigger } from '../../Utilities/LazyLoadMountTrigger';
+import { LazyLoad } from '../../Utilities/reactLazyLoadInterop';
 
 type VolunteerApprovalTableItemProps = {
   volunteerFamily: CombinedFamilyInfo;

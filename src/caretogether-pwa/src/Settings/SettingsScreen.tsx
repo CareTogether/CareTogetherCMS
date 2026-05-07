@@ -9,8 +9,10 @@ import {
 import { ProgressBackdrop } from '../Shell/ProgressBackdrop';
 import { useScreenTitle } from '../Shell/ShellScreenTitle';
 import { useDataLoaded } from '../Model/Data';
-import AssignmentIndIcon from '@mui/icons-material/AssignmentInd';
-import LocationOnIcon from '@mui/icons-material/LocationOn';
+import {
+  AssignmentInd as AssignmentIndIcon,
+  LocationOn as LocationOnIcon,
+} from '@mui/icons-material';
 import { useAppNavigate } from '../Hooks/useAppNavigate';
 
 export function SettingsScreen() {

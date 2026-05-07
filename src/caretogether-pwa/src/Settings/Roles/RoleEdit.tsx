@@ -33,7 +33,7 @@ import {
 } from '../../GeneratedClient';
 import { organizationConfigurationEdited } from '../../Model/ConfigurationModel';
 import { useGlobalPermissions } from '../../Model/SessionModel';
-import AddIcon from '@mui/icons-material/Add';
+import { Add as AddIcon } from '@mui/icons-material';
 import { useBackdrop } from '../../Hooks/useBackdrop';
 import { useRecoilValue, useSetRecoilState } from 'recoil';
 import { ContextualPermissionSetRow } from './ContextualPermissionSetRow';

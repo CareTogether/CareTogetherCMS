@@ -17,9 +17,12 @@ import {
   Note,
   ReferralOpened as V1CaseOpened,
   ReferralRequirementCompleted as V1CaseRequirementCompleted,
+  V1Referral,
 } from '../GeneratedClient';
-import PersonPinCircleIcon from '@mui/icons-material/PersonPinCircle';
-import EditIcon from '@mui/icons-material/Edit';
+import {
+  Edit as EditIcon,
+  PersonPinCircle as PersonPinCircleIcon,
+} from '@mui/icons-material';
 import {
   useNoteAuthorLookup,
   usePersonLookup,
@@ -30,14 +33,46 @@ import { Box, Stack, Typography, Link } from '@mui/material';
 import { NoteCard } from '../Notes/NoteCard';
 import { useAccessLevelDialog } from '../Notes/AccessLevelDialog/useAccessLevelDialog';
 import { FormControl, InputLabel, Select, MenuItem } from '@mui/material';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
+import { buildGroupedV1ReferralTimelineEntries } from '../V1Referrals/referralTimelineHelpers';
 
 type ActivityTimelineProps = {
   family: CombinedFamilyInfo;
+  referrals: V1Referral[];
   printContentRef: React.RefObject<HTMLDivElement>;
 };
 
 type ActivitySorting = 'activity' | 'created' | 'edited' | 'approved';
+
+type ReferralNoteEntry = NonNullable<V1Referral['notes']>[number];
+
+type MergedTimelineItem =
+  | {
+      kind: 'family-activity';
+      timestamp: Date;
+      userId?: string;
+      activity: Activity;
+      note?: Note;
+    }
+  | {
+      kind: 'referral';
+      timestamp: Date;
+      userId?: string;
+      label: string;
+      referralId: string;
+      referralTitle: string;
+      documentName?: string | null;
+      note?: ReferralNoteEntry;
+    }
+  | {
+      kind: 'referral-note';
+      timestamp: Date;
+      userId?: string;
+      label: string;
+      referralId: string;
+      referralTitle: string;
+      referralNote: ReferralNoteEntry;
+    };
 
 const composeNoteType = (activity: Activity): string | null => {
   if (activity instanceof V1CaseRequirementCompleted) {
@@ -85,6 +120,7 @@ function embedNotesInActivities(notes: Note[], activities: Activity[]) {
 
 export function ActivityTimeline({
   family,
+  referrals,
   printContentRef,
 }: ActivityTimelineProps) {
   const userLookup = useUserLookup();
@@ -217,6 +253,63 @@ export function ActivityTimeline({
     ...pinnedActivitiesWithNotes,
     ...unpinnedActivitiesWithNotes,
   ].filter((item) => Boolean(item.note));
+
+  const pinnedFamilyTimelineItems: MergedTimelineItem[] =
+    pinnedActivitiesWithNotes.map(({ activity, note }) => ({
+      kind: 'family-activity',
+      timestamp: activity.activityTimestampUtc ?? new Date(0),
+      userId: activity.userId,
+      activity,
+      note,
+    }));
+
+  const unpinnedFamilyTimelineItems: MergedTimelineItem[] =
+    unpinnedActivitiesWithNotes.map(({ activity, note }) => ({
+      kind: 'family-activity',
+      timestamp: activity.activityTimestampUtc ?? new Date(0),
+      userId: activity.userId,
+      activity,
+      note,
+    }));
+
+  const referralTimelineItems = useMemo<MergedTimelineItem[]>(() => {
+    return referrals.flatMap((referral) => {
+      return buildGroupedV1ReferralTimelineEntries(referral).map((entry) => {
+        if (entry.kind === 'note') {
+          return {
+            kind: 'referral-note',
+            timestamp: entry.timestamp,
+            userId: entry.userId,
+            label: entry.label,
+            referralId: referral.referralId,
+            referralTitle: referral.title,
+            referralNote: entry.note,
+          };
+        }
+
+        return {
+          kind: 'referral',
+          timestamp: entry.timestamp,
+          userId: entry.userId,
+          label: entry.label,
+          referralId: referral.referralId,
+          referralTitle: referral.title,
+          documentName:
+            entry.kind === 'activity'
+              ? entry.document?.uploadedFileName
+              : undefined,
+          note: entry.kind === 'activity' ? entry.note : undefined,
+        };
+      });
+    });
+  }, [referrals]);
+
+  const mergedTimelineItems = [
+    ...pinnedFamilyTimelineItems,
+    ...[...unpinnedFamilyTimelineItems, ...referralTimelineItems].sort(
+      (a, b) => b.timestamp.getTime() - a.timestamp.getTime()
+    ),
+  ];
 
   function renderVisibility(note?: Note) {
     return (
@@ -434,19 +527,19 @@ export function ActivityTimeline({
           </FormControl>
         </Box>
 
-        {displayActivitiesWithNotes.map(({ activity, note }, i) => {
-          if (!note) return null;
-
+        {mergedTimelineItems.map((item, i) => {
           const nextItem =
-            i < displayActivitiesWithNotes.length - 1
-              ? displayActivitiesWithNotes[i + 1]
+            i < mergedTimelineItems.length - 1
+              ? mergedTimelineItems[i + 1]
               : null;
-
           const hideBottomConnector =
-            note.isPinned || Boolean(nextItem?.note?.isPinned);
+            item.kind === 'family-activity' && item.note?.isPinned
+              ? true
+              : nextItem?.kind === 'family-activity' &&
+                Boolean(nextItem.note?.isPinned);
 
           return (
-            <TimelineItem key={note.id}>
+            <TimelineItem key={`${item.kind}:${i}`}>
               <TimelineOppositeContent sx={{ display: 'none' }} />
               <TimelineSeparator>
                 <TimelineDot
@@ -457,19 +550,22 @@ export function ActivityTimeline({
                     display: 'block',
                   }}
                 >
-                  {activity instanceof V1CaseRequirementCompleted ||
-                  activity instanceof ArrangementRequirementCompleted ? (
-                    '✔'
-                  ) : activity instanceof ChildLocationChanged ? (
-                    <PersonPinCircleIcon fontSize="medium" />
+                  {item.kind === 'family-activity' ? (
+                    item.activity instanceof V1CaseRequirementCompleted ||
+                    item.activity instanceof ArrangementRequirementCompleted ? (
+                      '✔'
+                    ) : item.activity instanceof ChildLocationChanged ? (
+                      <PersonPinCircleIcon fontSize="medium" />
+                    ) : (
+                      <EditIcon fontSize="small" />
+                    )
                   ) : (
                     <EditIcon fontSize="small" />
                   )}
                 </TimelineDot>
-                {!hideBottomConnector &&
-                  i < displayActivitiesWithNotes.length - 1 && (
-                    <TimelineConnector />
-                  )}
+                {!hideBottomConnector && i < mergedTimelineItems.length - 1 && (
+                  <TimelineConnector />
+                )}
               </TimelineSeparator>
               <TimelineContent
                 style={{
@@ -480,33 +576,80 @@ export function ActivityTimeline({
               >
                 <Box sx={{ color: 'text.disabled', margin: 0, padding: 0 }}>
                   <span className="ph-unmask" style={{ marginRight: 16 }}>
-                    {activity.activityTimestampUtc
-                      ? format(activity.activityTimestampUtc, 'M/d/yy h:mm a')
-                      : null}
+                    {format(item.timestamp, 'M/d/yy h:mm a')}
                   </span>
-                  <PersonName person={userLookup(activity.userId)} />
+                  {item.userId ? (
+                    <PersonName person={userLookup(item.userId)} />
+                  ) : null}
                 </Box>
 
-                {renderActivitySummary(activity)}
-
-                {activity.uploadedDocumentId && (
-                  <Box sx={{ margin: 0, padding: 0 }}>
-                    📃{' '}
-                    {
-                      documentLookup(activity.uploadedDocumentId)
-                        ?.uploadedFileName
-                    }
-                  </Box>
+                {item.kind !== 'family-activity' && (
+                  <Typography variant="body2" sx={{ fontWeight: 600, mb: 0.5 }}>
+                    Referral: {item.referralTitle}
+                  </Typography>
                 )}
 
-                {renderVisibility(note)}
+                {item.kind === 'family-activity' ? (
+                  <>
+                    {renderActivitySummary(item.activity)}
 
-                <NoteCard
-                  familyId={family.family!.id!}
-                  note={note}
-                  showPinAction={true}
-                  isPinnedPresentation={note.isPinned}
-                />
+                    {item.activity.uploadedDocumentId && (
+                      <Box sx={{ margin: 0, padding: 0 }}>
+                        📃{' '}
+                        {
+                          documentLookup(item.activity.uploadedDocumentId)
+                            ?.uploadedFileName
+                        }
+                      </Box>
+                    )}
+
+                    {renderVisibility(item.note)}
+
+                    {item.note && (
+                      <NoteCard
+                        familyId={family.family!.id!}
+                        note={item.note}
+                        showPinAction={true}
+                        isPinnedPresentation={item.note.isPinned}
+                      />
+                    )}
+                  </>
+                ) : item.kind === 'referral' ? (
+                  <>
+                    <Typography variant="body2" sx={{ mb: 0.5 }}>
+                      {item.label}
+                    </Typography>
+                    {item.documentName && (
+                      <Typography variant="body2" sx={{ mb: 0.5 }}>
+                        Document: {item.documentName}
+                      </Typography>
+                    )}
+                    {item.note?.contents?.trim() && (
+                      <Typography
+                        variant="body2"
+                        sx={{ fontStyle: 'italic', opacity: 0.85 }}
+                      >
+                        {item.note.contents.trim()}
+                      </Typography>
+                    )}
+                  </>
+                ) : (
+                  <>
+                    <Typography variant="body2" sx={{ mb: 0.5 }}>
+                      {item.label}
+                    </Typography>
+                    <Box
+                      sx={{ p: 1, border: '1px solid', borderColor: 'divider' }}
+                    >
+                      <Typography variant="body2" sx={{ mb: 0.5 }}>
+                        {item.referralNote.contents}
+                      </Typography>
+                      <Typography variant="caption" color="text.secondary">
+                        Visible to {item.referralNote.accessLevel ?? 'Everyone'}
+                      </Typography>
+                    </Box>
+                  </>
+                )}
               </TimelineContent>
             </TimelineItem>
           );

@@ -13,6 +13,7 @@ using CareTogether.Resources.Directory;
 using CareTogether.Resources.Notes;
 using CareTogether.Resources.Policies;
 using CareTogether.Resources.V1Cases;
+using CareTogether.Resources.V1Referrals;
 using Nito.AsyncEx;
 
 namespace CareTogether.Engines.Authorization
@@ -25,12 +26,15 @@ namespace CareTogether.Engines.Authorization
         private readonly INotesResource notesResource;
         private readonly IUserAccessCalculation userAccessCalculation;
 
+        private readonly IV1ReferralsResource v1ReferralsResource;
+
         public AuthorizationEngine(
             IPoliciesResource policiesResource,
             IDirectoryResource directoryResource,
             IAccountsResource accountsResource,
             INotesResource notesResource,
-            IUserAccessCalculation userAccessCalculation
+            IUserAccessCalculation userAccessCalculation,
+            IV1ReferralsResource v1ReferralsResource
         )
         {
             this.policiesResource = policiesResource;
@@ -38,6 +42,7 @@ namespace CareTogether.Engines.Authorization
             this.accountsResource = accountsResource;
             this.notesResource = notesResource;
             this.userAccessCalculation = userAccessCalculation;
+            this.v1ReferralsResource = v1ReferralsResource;
         }
 
         public async Task<bool> AuthorizeFamilyCommandAsync(
@@ -132,13 +137,19 @@ namespace CareTogether.Engines.Authorization
                 command switch
                 {
                     CreateReferral => Permission.CreateV1Case,
-                    CompleteReferralRequirement => Permission.EditV1CaseRequirementCompletion,
-                    MarkReferralRequirementIncomplete => Permission.EditV1CaseRequirementCompletion,
-                    ExemptReferralRequirement => Permission.EditV1CaseRequirementExemption,
-                    UnexemptReferralRequirement => Permission.EditV1CaseRequirementExemption,
+                    CareTogether.Resources.V1Cases.CompleteReferralRequirement c =>
+                        Permission.EditV1CaseRequirementCompletion,
+                    CareTogether.Resources.V1Cases.MarkReferralRequirementIncomplete c =>
+                        Permission.EditV1CaseRequirementCompletion,
+                    CareTogether.Resources.V1Cases.ExemptReferralRequirement c =>
+                        Permission.EditV1CaseRequirementExemption,
+                    CareTogether.Resources.V1Cases.UnexemptReferralRequirement c =>
+                        Permission.EditV1CaseRequirementExemption,
                     UpdateCustomReferralField => Permission.EditV1Case,
                     UpdateReferralComments => Permission.EditV1Case,
+                    LinkReferralToCase => Permission.EditV1Case,
                     CloseReferral => Permission.CloseV1Case,
+                    ReopenReferral => Permission.CloseV1Case,
                     _ => throw new NotImplementedException(
                         $"The command type '{command.GetType().FullName}' has not been implemented."
                     ),
@@ -212,6 +223,68 @@ namespace CareTogether.Engines.Authorization
                     ),
                 }
             );
+        }
+
+        public async Task<bool> AuthorizeV1ReferralCommandAsync(
+            Guid organizationId,
+            Guid locationId,
+            SessionUserContext userContext,
+            V1ReferralCommand command
+        )
+        {
+            var permissions = await userAccessCalculation.AuthorizeUserAccessAsync(
+                organizationId,
+                locationId,
+                userContext,
+                new GlobalAuthorizationContext()
+            );
+
+            return permissions.Contains(
+                command switch
+                {
+                    CreateV1Referral => Permission.CreateV1Referral,
+
+                    UpdateV1ReferralFamily => Permission.EditV1Referral,
+                    AcceptV1Referral => Permission.EditV1Referral,
+
+                    UpdateV1ReferralDetails => Permission.EditV1Referral,
+                    UpdateCustomV1ReferralField => Permission.EditV1Referral,
+
+                    CloseV1Referral => Permission.CloseV1Referral,
+                    ReopenV1Referral => Permission.ReopenV1Referral,
+                    CareTogether.Resources.V1Referrals.CompleteReferralRequirement c =>
+                        Permission.EditV1ReferralRequirementCompletion,
+                    CareTogether.Resources.V1Referrals.MarkReferralRequirementIncomplete c =>
+                        Permission.EditV1ReferralRequirementCompletion,
+                    CareTogether.Resources.V1Referrals.ExemptReferralRequirement c =>
+                        Permission.EditV1ReferralRequirementExemption,
+                    CareTogether.Resources.V1Referrals.UnexemptReferralRequirement c =>
+                        Permission.EditV1ReferralRequirementExemption,
+
+                    UploadV1ReferralDocument => Permission.EditV1Referral,
+                    DeleteUploadedV1ReferralDocument => Permission.EditV1Referral,
+
+                    _ => throw new NotImplementedException(
+                        $"The command type '{command.GetType().FullName}' has not been implemented."
+                    ),
+                }
+            );
+        }
+
+        public async Task<bool> AuthorizeV1ReferralReadAsync(
+            Guid organizationId,
+            Guid locationId,
+            SessionUserContext userContext
+        )
+        {
+            var permissions = await userAccessCalculation.AuthorizeUserAccessAsync(
+                organizationId,
+                locationId,
+                userContext,
+                new GlobalAuthorizationContext()
+            );
+
+            return permissions.Contains(Permission.ViewV1Referral);
         }
 
         public async Task<bool> AuthorizeNoteCommandAsync(

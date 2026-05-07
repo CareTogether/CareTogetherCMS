@@ -3,7 +3,7 @@ import {
   Link as MuiLink,
   Typography,
 } from '@mui/material';
-import NavigateNextIcon from '@mui/icons-material/NavigateNext';
+import { NavigateNext as NavigateNextIcon } from '@mui/icons-material';
 import { Link } from 'react-router-dom';
 
 export interface BreadcrumbItem {

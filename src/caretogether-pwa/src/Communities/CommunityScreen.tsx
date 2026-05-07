@@ -13,12 +13,15 @@ import { useCommunityLookup } from '../Model/DirectoryModel';
 import { useCommunityPermissions } from '../Model/SessionModel';
 import { ProgressBackdrop } from '../Shell/ProgressBackdrop';
 import { useScreenTitle } from '../Shell/ShellScreenTitle';
-import CloudUploadIcon from '@mui/icons-material/CloudUpload';
-import EditIcon from '@mui/icons-material/Edit';
+import {
+  CloudUpload as CloudUploadIcon,
+  Edit as EditIcon,
+  GroupAdd,
+  PersonAddAlt1,
+} from '@mui/icons-material';
 import { AddEditCommunity } from './AddEditCommunity';
 import { CommunityDocumentUpload } from './CommunityDocumentUploadForm';
 import { CommunityDocuments } from './CommunityDocuments';
-import { GroupAdd, PersonAddAlt1 } from '@mui/icons-material';
 import { AddMemberFamiliesForm } from './AddMemberFamiliesForm';
 import { AddRoleAssignmentForm } from './AddRoleAssignmentForm';
 import { CommunityMemberFamilies } from './CommunityMemberFamilies';

@@ -9,6 +9,7 @@ namespace CareTogether.Resources.V1Cases
     public record V1CaseEntry(
         Guid Id,
         Guid FamilyId,
+        ImmutableList<Guid> LinkedV1ReferralIds,
         DateTime OpenedAtUtc,
         DateTime? ClosedAtUtc,
         V1CaseCloseReason? CloseReason,
@@ -93,6 +94,12 @@ namespace CareTogether.Resources.V1Cases
     public abstract partial record V1CaseCommand(Guid FamilyId, Guid ReferralId);
 
     public sealed record CreateReferral(Guid FamilyId, Guid ReferralId, DateTime OpenedAtUtc)
+        : V1CaseCommand(FamilyId, ReferralId);
+
+    public sealed record ReopenReferral(Guid FamilyId, Guid ReferralId, DateTime ReopenedAtUtc)
+        : V1CaseCommand(FamilyId, ReferralId);
+
+    public sealed record LinkReferralToCase(Guid FamilyId, Guid ReferralId, Guid LinkedReferralId)
         : V1CaseCommand(FamilyId, ReferralId);
 
     public sealed record CompleteReferralRequirement(
@@ -478,8 +485,6 @@ namespace CareTogether.Resources.V1Cases
     public interface IV1CasesResource
     {
         Task<ImmutableList<V1CaseEntry>> ListV1CasessAsync(Guid organizationId, Guid locationId);
-
-        Task<V1CaseEntry> GetV1CaseAsync(Guid organizationId, Guid locationId, Guid v1CaseId);
 
         Task<V1CaseEntry> ExecuteV1CaseCommandAsync(
             Guid organizationId,

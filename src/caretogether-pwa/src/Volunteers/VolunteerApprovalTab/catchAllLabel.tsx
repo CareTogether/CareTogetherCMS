@@ -1,1 +1,1 @@
-export const catchAllLabel = 'Not Applied';
+export const notAppliedLabel = 'Not Applied';

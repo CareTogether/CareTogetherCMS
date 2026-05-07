@@ -9,7 +9,7 @@ import {
   TextField,
   Typography,
 } from '@mui/material';
-import EditIcon from '@mui/icons-material/Edit';
+import { Edit as EditIcon } from '@mui/icons-material';
 import { useState } from 'react';
 import { CombinedFamilyInfo, Permission, V1Case } from '../GeneratedClient';
 import { useV1CasesModel } from '../Model/V1CasesModel';

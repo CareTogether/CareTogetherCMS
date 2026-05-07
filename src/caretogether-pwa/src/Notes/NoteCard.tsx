@@ -19,11 +19,14 @@ import {
   useUserLookup,
 } from '../Model/DirectoryModel';
 import { PersonName } from '../Families/PersonName';
-import DeleteForeverIcon from '@mui/icons-material/DeleteForever';
-import CheckIcon from '@mui/icons-material/Check';
-import EditIcon from '@mui/icons-material/Edit';
-import PushPinIcon from '@mui/icons-material/PushPin';
-import PushPinOutlinedIcon from '@mui/icons-material/PushPinOutlined';
+import {
+  Check as CheckIcon,
+  ChevronRight,
+  DeleteForever as DeleteForeverIcon,
+  Edit as EditIcon,
+  PushPin as PushPinIcon,
+  PushPinOutlined as PushPinOutlinedIcon,
+} from '@mui/icons-material';
 import { AddEditNoteDialog } from './AddEditNoteDialog';
 import { ApproveNoteDialog } from './ApproveNoteDialog';
 import { DiscardNoteDialog } from './DiscardNoteDialog';
@@ -31,7 +34,6 @@ import { useFamilyIdPermissions } from '../Model/SessionModel';
 import { useLoadable } from '../Hooks/useLoadable';
 import { accountInfoState } from '../Authentication/Auth';
 import { format } from 'date-fns';
-import { ChevronRight } from '@mui/icons-material';
 
 type NoteCardProps = {
   familyId: string;

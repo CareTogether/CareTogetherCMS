@@ -16,9 +16,13 @@ import {
 } from '@mui/material';
 import { partneringFamiliesData } from '../Model/V1CasesModel';
 import React, { useState } from 'react';
-import AddIcon from '@mui/icons-material/Add';
+import {
+  Add as AddIcon,
+  UnfoldLess as UnfoldLessIcon,
+  UnfoldMore as UnfoldMoreIcon,
+} from '@mui/icons-material';
 import { ArrangementPhase, Permission } from '../GeneratedClient';
-import { CreatePartneringFamilyDialog } from './CreatePartneringFamilyDialog';
+import { CreatePartneringFamilyDrawer } from './CreatePartneringFamilyDrawer';
 import { useScrollMemory } from '../Hooks/useScrollMemory';
 import { useLocalStorage } from '../Hooks/useLocalStorage';
 import { policyData } from '../Model/ConfigurationModel';
@@ -29,8 +33,6 @@ import {
 } from '../Families/FamilyUtils';
 import { useAllPartneringFamiliesPermissions } from '../Model/SessionModel';
 import { useScreenTitle } from '../Shell/ShellScreenTitle';
-import UnfoldLessIcon from '@mui/icons-material/UnfoldLess';
-import UnfoldMoreIcon from '@mui/icons-material/UnfoldMore';
 import { useLoadable } from '../Hooks/useLoadable';
 import { ProgressBackdrop } from '../Shell/ProgressBackdrop';
 import { useAppNavigate } from '../Hooks/useAppNavigate';
@@ -38,11 +40,13 @@ import { CustomFieldsFilter } from '../Generic/CustomFieldsFilter/CustomFieldsFi
 import { useCustomFieldFilters } from '../Generic/CustomFieldsFilter/useCustomFieldFilters';
 import { matchesCustomFieldFilters } from '../Generic/CustomFieldsFilter/matchesCustomFieldFilters';
 import { useFeatureFlagEnabled } from 'posthog-js/react';
-import { forceCheck } from 'react-lazyload';
+import { forceCheck } from '../Utilities/reactLazyLoadInterop';
 import { PartneringFamilyTableItem } from './PartneringFamilies/PartneringFamilyTableItem';
 import { arrangementStatusSummary } from './PartneringFamilies/arrangementStatusSummary';
 import { ArrangementsFilter } from './PartneringFamilies/types';
 import { stickyHeaderTableSx } from '../Utilities/stickyHeaderTableSx';
+import { getFamilyCounty } from '../Utilities/getFamilyCounty';
+import { CountyFilter } from '../V1Referrals/CountyFilter';
 
 function PartneringFamilies() {
   const appNavigate = useAppNavigate();
@@ -66,6 +70,8 @@ function PartneringFamilies() {
   }, [loadablePolicy]);
 
   const [filterText, setFilterText] = useState('');
+  const [countyFilter, setCountyFilter] = useState<(string | null)[]>([]);
+
   const filteredPartneringFamilies = filterFamiliesByText(
     partneringFamilies,
     filterText
@@ -135,6 +141,14 @@ function PartneringFamilies() {
         })
       )
       .filter((family) => {
+        if (countyFilter.length === 0) return true;
+
+        const county = getFamilyCounty(family);
+        return county === null
+          ? countyFilter.includes(null)
+          : countyFilter.includes(county);
+      })
+      .filter((family) => {
         const openCase = family.partneringFamilyInfo?.openV1Case;
         const arrangements = openCase?.arrangements ?? [];
 
@@ -183,7 +197,15 @@ function PartneringFamilies() {
 
   const permissions = useAllPartneringFamiliesPermissions();
 
-  useScreenTitle('Cases');
+  const referralsEnabled = useFeatureFlagEnabled('referrals');
+
+  const canCreateFamily =
+    permissions(Permission.EditFamilyInfo) &&
+    permissions(Permission.CreateV1Case);
+
+  const showAddFamilyButton = !referralsEnabled && canCreateFamily;
+
+  useScreenTitle('Clients');
 
   return !partneringFamiliesLoadable || !arrangementTypes ? (
     <ProgressBackdrop>
@@ -202,17 +224,20 @@ function PartneringFamilies() {
             gap: 1,
           }}
         >
-          {permissions(Permission.EditFamilyInfo) &&
-            permissions(Permission.CreateV1Case) && (
-              <Button
-                variant="contained"
-                startIcon={<AddIcon />}
-                onClick={() => setCreatePartneringFamilyDialogOpen(true)}
-                sx={{ marginRight: 'auto' }}
-              >
-                Add new client family
-              </Button>
-            )}
+          {canCreateFamily && (
+            <Button
+              variant="contained"
+              startIcon={<AddIcon />}
+              onClick={() => setCreatePartneringFamilyDialogOpen(true)}
+              sx={{
+                marginRight: 'auto',
+                visibility: showAddFamilyButton ? 'visible' : 'hidden',
+                pointerEvents: showAddFamilyButton ? 'auto' : 'none',
+              }}
+            >
+              Add new client family
+            </Button>
+          )}
 
           <ToggleButtonGroup
             value={arrangementsFilter}
@@ -262,6 +287,12 @@ function PartneringFamilies() {
             onFieldChange={setSelectedCustomFieldValuesForField}
           />
 
+          <CountyFilter
+            families={partneringFamilies}
+            value={countyFilter}
+            onChange={setCountyFilter}
+          />
+
           <SearchBar value={filterText} onChange={setFilterText} />
 
           <ToggleButtonGroup
@@ -296,6 +327,7 @@ function PartneringFamilies() {
               <TableRow>
                 <TableCell>Client Family</TableCell>
                 <TableCell>Case Status</TableCell>
+                <TableCell>County</TableCell>
                 {referralCustomFields.map((field) => (
                   <TableCell
                     key={field.name}
@@ -345,7 +377,7 @@ function PartneringFamilies() {
         </TableContainer>
 
         {createPartneringFamilyDialogOpen && (
-          <CreatePartneringFamilyDialog
+          <CreatePartneringFamilyDrawer
             onClose={(partneringFamilyId) => {
               setCreatePartneringFamilyDialogOpen(false);
               partneringFamilyId && openFamily(partneringFamilyId);

@@ -44,7 +44,7 @@ namespace CareTogether.Resources.Directory
     );
 
     public sealed record FamilyAdultRelationshipInfo(
-        string RelationshipToFamily,
+        string? RelationshipToFamily,
         bool IsInHousehold
     );
 
@@ -116,8 +116,6 @@ namespace CareTogether.Resources.Directory
 
     public sealed record UndoCreateFamily(Guid FamilyId) : FamilyCommand(FamilyId);
 
-
-
     public sealed record AddAdultToFamily(
         Guid FamilyId,
         Guid AdultPersonId,
@@ -173,7 +171,7 @@ namespace CareTogether.Resources.Directory
         : FamilyCommand(FamilyId);
 
     public sealed record UpdateTestFamilyFlag(Guid FamilyId, bool IsTestFamily)
-    : FamilyCommand(FamilyId);
+        : FamilyCommand(FamilyId);
 
     public sealed record UpdateCustomFamilyField(
         Guid FamilyId,
