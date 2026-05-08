@@ -10,6 +10,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "deploy", "deploy", "{B04053
 		.github\workflows\ci-pr-dotnet.yml = .github\workflows\ci-pr-dotnet.yml
 		.github\workflows\ci-pr-react.yml = .github\workflows\ci-pr-react.yml
 		.github\workflows\codeql-analysis.yml = .github\workflows\codeql-analysis.yml
+		.github\workflows\playwright.yml = .github\workflows\playwright.yml
 	EndProjectSection
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CareTogether.Api", "src\CareTogether.Api\CareTogether.Api.csproj", "{67F0E369-C927-4278-A7D0-DDFBE029003F}"

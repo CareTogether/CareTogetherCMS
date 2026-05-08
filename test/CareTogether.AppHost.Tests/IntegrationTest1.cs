@@ -56,17 +56,22 @@ public class IntegrationTest1
             Directory.Exists(frontendPath),
             $"Frontend path does not exist: {frontendPath}"
         );
+        var isWindows = OperatingSystem.IsWindows();
         var startInfo = new ProcessStartInfo
         {
-            FileName = "cmd.exe",
+            FileName = isWindows ? "cmd.exe" : "npx",
             WorkingDirectory = frontendPath,
             RedirectStandardOutput = true,
             RedirectStandardError = true,
             UseShellExecute = false,
         };
 
-        startInfo.ArgumentList.Add("/c");
-        startInfo.ArgumentList.Add("npx");
+        if (isWindows)
+        {
+            startInfo.ArgumentList.Add("/c");
+            startInfo.ArgumentList.Add("npx");
+        }
+
         startInfo.ArgumentList.Add("playwright");
         startInfo.ArgumentList.Add("test");
         startInfo.ArgumentList.Add("--project=setup");
