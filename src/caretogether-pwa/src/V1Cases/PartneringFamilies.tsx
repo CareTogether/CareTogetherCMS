@@ -183,12 +183,10 @@ function PartneringFamilies() {
             return true;
 
           case 'Intake':
-            return (
-              (hasOpenReferralWithoutCase || !!openCase) &&
-              !arrangements.some((arrangement) =>
-                isSetupOrActiveArrangementPhase(arrangement.phase)
-              )
-            );
+            if (hasOpenReferralWithoutCase) return true;
+            if (!openCase) return false;
+
+            return arrangements.length === 0;
 
           case 'Active':
             return arrangements.some(
