@@ -162,6 +162,7 @@ export function CreateArrangementDialog({
                   </InputLabel>
                   <Select
                     labelId="arrangement-reason-label"
+                    label="Reason for Request"
                     id="arrangement-reason"
                     value={reason || ''}
                     onChange={(e) =>

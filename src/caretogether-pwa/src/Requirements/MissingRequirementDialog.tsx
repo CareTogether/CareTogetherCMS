@@ -653,6 +653,7 @@ export function MissingRequirementDialog({
                     <InputLabel id="document-label">Document</InputLabel>
                     <Select
                       labelId="document-label"
+                      label="Document"
                       id="document"
                       value={documentId}
                       onChange={(e) => setDocumentId(e.target.value as string)}
