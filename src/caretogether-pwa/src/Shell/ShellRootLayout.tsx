@@ -13,13 +13,7 @@ import { useFeaturebase } from '../Hooks/useFeaturebase';
 import React from 'react';
 import { ProgressBackdrop } from './ProgressBackdrop';
 import { useGlobalSnackBar } from '../Hooks/useGlobalSnackBar';
-
-const CHAT_WIDGET_SAFE_HEIGHT = 96;
-const MOBILE_BOTTOM_NAV_HEIGHT = 56;
-
-export const DESKTOP_BOTTOM_SAFE_AREA = CHAT_WIDGET_SAFE_HEIGHT;
-export const MOBILE_BOTTOM_SAFE_AREA =
-  CHAT_WIDGET_SAFE_HEIGHT + MOBILE_BOTTOM_NAV_HEIGHT;
+import { DESKTOP_BOTTOM_SAFE_AREA, MOBILE_BOTTOM_SAFE_AREA } from './safeAreas';
 
 function ShellRootLayout({ children }: React.PropsWithChildren) {
   const theme = useTheme();
