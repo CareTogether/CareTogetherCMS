@@ -34,6 +34,7 @@ import { Support } from './Support';
 import { Reports } from './Reports/Reports';
 import { V1Referrals } from './V1Referrals/V1Referrals';
 import {
+  firstAccessibleLocation,
   hasLocationAccess,
   LAST_VISITED_LOCATION,
   preferredAccessibleLocation,
@@ -215,10 +216,6 @@ function LocationContextWrapper() {
     locationId: string;
   }>();
   const userOrganizationAccess = useLoadable(userOrganizationAccessQuery);
-  const [lastVisitedLocation] = useLocalStorage<LocationContext | null>(
-    LAST_VISITED_LOCATION,
-    null
-  );
 
   const requestedLocationContext = useMemo(
     () =>
@@ -231,12 +228,9 @@ function LocationContextWrapper() {
   const fallbackLocationContext = useMemo(
     () =>
       userOrganizationAccess
-        ? preferredAccessibleLocation(
-            userOrganizationAccess,
-            lastVisitedLocation
-          )
+        ? firstAccessibleLocation(userOrganizationAccess)
         : null,
-    [userOrganizationAccess, lastVisitedLocation]
+    [userOrganizationAccess]
   );
 
   if (userOrganizationAccess == null) {
