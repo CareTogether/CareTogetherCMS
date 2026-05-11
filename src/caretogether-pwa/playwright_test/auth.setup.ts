@@ -3,6 +3,8 @@ import fs from 'node:fs';
 import path from 'node:path';
 
 const AUTH_FILE = path.resolve('playwright/.auth/admin.json');
+const ATLANTIS_ROUTE =
+  '/org/11111111-1111-1111-1111-111111111111/22222222-2222-2222-2222-222222222222/';
 
 const adminEmail = process.env.CT_ADMIN_EMAIL;
 const adminPassword = process.env.CT_ADMIN_PASSWORD;
@@ -53,7 +55,7 @@ test('login as administrator', async ({ page, baseURL }) => {
     /something went wrong|failed to fetch/i
   );
 
-  await page.goto('/');
+  await page.goto(ATLANTIS_ROUTE);
   await page.waitForLoadState('domcontentloaded');
 
   console.log('Current URL:', page.url());
