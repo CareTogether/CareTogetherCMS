@@ -40,6 +40,7 @@ import {
 } from './Access/accessRouteHelpers';
 import { NoOrganizationAccessScreen } from './Access/NoOrganizationAccessScreen';
 import { RootRoute } from './Access/RootRoute';
+import { LocationAccessScreen } from './Access/LocationAccessScreen';
 
 function RouteMigrator() {
   const trace = useScopedTrace('RouteMigrator');
@@ -214,6 +215,7 @@ function LocationContextWrapper() {
     organizationId: string;
     locationId: string;
   }>();
+  const routeLocation = useLocation();
   const userOrganizationAccess = useLoadable(userOrganizationAccessQuery);
   const [lastVisitedLocation] = useLocalStorage<LocationContext | null>(
     LAST_VISITED_LOCATION,
@@ -239,6 +241,21 @@ function LocationContextWrapper() {
     [userOrganizationAccess, lastVisitedLocation]
   );
 
+  // Preserve the page path after /org/:organizationId/:locationId when redirecting to another accessible location.
+  const requestedLocationPathSuffix = useMemo(() => {
+    const pathAfterLocation = routeLocation.pathname.split('/').slice(4);
+    return pathAfterLocation.length > 0
+      ? `/${pathAfterLocation.join('/')}`
+      : '/';
+  }, [routeLocation.pathname]);
+
+  function toLocationPath(locationContext: LocationContext) {
+    return (
+      `/org/${locationContext.organizationId}/${locationContext.locationId}` +
+      `${requestedLocationPathSuffix}${routeLocation.search}${routeLocation.hash}`
+    );
+  }
+
   if (userOrganizationAccess == null) {
     return (
       <ProgressBackdrop opaque>
@@ -256,9 +273,10 @@ function LocationContextWrapper() {
     }
 
     return (
-      <Navigate
-        to={`/org/${fallbackLocationContext.organizationId}/${fallbackLocationContext.locationId}/`}
-        replace
+      <LocationAccessScreen
+        userOrganizationAccess={userOrganizationAccess}
+        requestedLocationContext={requestedLocationContext}
+        toLocationPath={toLocationPath}
       />
     );
   }
