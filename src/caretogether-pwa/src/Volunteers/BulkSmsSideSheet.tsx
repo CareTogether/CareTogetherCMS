@@ -131,6 +131,7 @@ export function BulkSmsSideSheet({
         <InputLabel id="sourcenumber-label">Source number</InputLabel>
         <Select
           labelId="sourcenumber-label"
+          label="Source number"
           id="sourcenumber"
           value={selectedSourceNumber}
           onChange={(e) => setSelectedSourceNumber(e.target.value as string)}

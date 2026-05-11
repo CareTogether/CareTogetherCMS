@@ -475,6 +475,7 @@ export function TrackChildLocationDialog({
                       </InputLabel>
                       <Select
                         labelId="assignee-label"
+                        label="Receiving Adult"
                         id="assignee"
                         value={selectedAssigneeKey}
                         onChange={(e) =>
@@ -589,6 +590,7 @@ export function TrackChildLocationDialog({
                       </InputLabel>
                       <Select
                         labelId="assignee-label"
+                        label="Planned Receiving Adult"
                         id="assignee"
                         value={selectedAssigneeKey}
                         onChange={(e) =>
