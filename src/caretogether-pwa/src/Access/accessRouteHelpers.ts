@@ -35,7 +35,7 @@ export function hasLocationAccess(
   );
 }
 
-function firstAccessibleLocation(
+export function firstAccessibleLocation(
   userOrganizationAccess: UserAccess
 ): LocationContext | null {
   const [firstLocation] = accessibleLocationContexts(userOrganizationAccess);

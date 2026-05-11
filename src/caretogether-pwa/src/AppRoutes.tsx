@@ -34,13 +34,13 @@ import { Support } from './Support';
 import { Reports } from './Reports/Reports';
 import { V1Referrals } from './V1Referrals/V1Referrals';
 import {
+  firstAccessibleLocation,
   hasLocationAccess,
   LAST_VISITED_LOCATION,
   preferredAccessibleLocation,
 } from './Access/accessRouteHelpers';
 import { NoOrganizationAccessScreen } from './Access/NoOrganizationAccessScreen';
 import { RootRoute } from './Access/RootRoute';
-import { LocationAccessScreen } from './Access/LocationAccessScreen';
 
 function RouteMigrator() {
   const trace = useScopedTrace('RouteMigrator');
@@ -215,12 +215,7 @@ function LocationContextWrapper() {
     organizationId: string;
     locationId: string;
   }>();
-  const routeLocation = useLocation();
   const userOrganizationAccess = useLoadable(userOrganizationAccessQuery);
-  const [lastVisitedLocation] = useLocalStorage<LocationContext | null>(
-    LAST_VISITED_LOCATION,
-    null
-  );
 
   const requestedLocationContext = useMemo(
     () =>
@@ -233,28 +228,10 @@ function LocationContextWrapper() {
   const fallbackLocationContext = useMemo(
     () =>
       userOrganizationAccess
-        ? preferredAccessibleLocation(
-            userOrganizationAccess,
-            lastVisitedLocation
-          )
+        ? firstAccessibleLocation(userOrganizationAccess)
         : null,
-    [userOrganizationAccess, lastVisitedLocation]
+    [userOrganizationAccess]
   );
-
-  // Preserve the page path after /org/:organizationId/:locationId when redirecting to another accessible location.
-  const requestedLocationPathSuffix = useMemo(() => {
-    const pathAfterLocation = routeLocation.pathname.split('/').slice(4);
-    return pathAfterLocation.length > 0
-      ? `/${pathAfterLocation.join('/')}`
-      : '/';
-  }, [routeLocation.pathname]);
-
-  function toLocationPath(locationContext: LocationContext) {
-    return (
-      `/org/${locationContext.organizationId}/${locationContext.locationId}` +
-      `${requestedLocationPathSuffix}${routeLocation.search}${routeLocation.hash}`
-    );
-  }
 
   if (userOrganizationAccess == null) {
     return (
@@ -273,10 +250,9 @@ function LocationContextWrapper() {
     }
 
     return (
-      <LocationAccessScreen
-        userOrganizationAccess={userOrganizationAccess}
-        requestedLocationContext={requestedLocationContext}
-        toLocationPath={toLocationPath}
+      <Navigate
+        to={`/org/${fallbackLocationContext.organizationId}/${fallbackLocationContext.locationId}/`}
+        replace
       />
     );
   }
