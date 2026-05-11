@@ -80,7 +80,10 @@ namespace CareTogether.Managers
         NoteStatus Status,
         DateTime? BackdatedTimestampUtc,
         string? AccessLevel,
-        Guid? ApproverId
+        Guid? ApproverId,
+        bool IsPinned,
+        DateTime? PinnedAtUtc,
+        Guid? PinnedByUserId
     );
 
     public sealed record VolunteerFamilyInfo(

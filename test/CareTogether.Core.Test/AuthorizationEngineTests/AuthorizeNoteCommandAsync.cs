@@ -349,7 +349,10 @@ namespace CareTogether.Core.Test.AuthorizationEngineTests
                 Status: NoteStatus.Draft,
                 BackdatedTimestampUtc: null,
                 AccessLevel: "Staff Only",
-                ApproverId: null
+                ApproverId: null,
+                IsPinned: false,
+                PinnedAtUtc: null,
+                PinnedByUserId: null
             );
 
             var canDisclose = await dut!.DiscloseNoteAsync(
@@ -380,7 +383,10 @@ namespace CareTogether.Core.Test.AuthorizationEngineTests
                 Status: NoteStatus.Draft,
                 BackdatedTimestampUtc: null,
                 AccessLevel: "Staff Only",
-                ApproverId: null
+                ApproverId: null,
+                IsPinned: false,
+                PinnedAtUtc: null,
+                PinnedByUserId: null
             );
 
             var canDisclose = await dut!.DiscloseNoteAsync(

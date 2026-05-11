@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useMemo } from 'react';
 import { Dashboard } from './Dashboard/Dashboard';
 import {
   Navigate,
@@ -33,8 +33,13 @@ import { usePostHogGroups } from './Utilities/Instrumentation/usePostHogGroups';
 import { Support } from './Support';
 import { Reports } from './Reports/Reports';
 import { V1Referrals } from './V1Referrals/V1Referrals';
-
-const LAST_VISITED_LOCATION = 'lastVisitedLocation';
+import {
+  hasLocationAccess,
+  LAST_VISITED_LOCATION,
+  preferredAccessibleLocation,
+} from './Access/accessRouteHelpers';
+import { NoOrganizationAccessScreen } from './Access/NoOrganizationAccessScreen';
+import { RootRoute } from './Access/RootRoute';
 
 function RouteMigrator() {
   const trace = useScopedTrace('RouteMigrator');
@@ -61,39 +66,44 @@ function RouteMigrator() {
   );
   trace(`lastVisitedLocation contents: ${JSON.stringify(lastVisitedLocation)}`);
 
+  const migrationTargetContext = useMemo(
+    () =>
+      userOrganizationAccess
+        ? preferredAccessibleLocation(
+            userOrganizationAccess,
+            lastVisitedLocation
+          )
+        : null,
+    [userOrganizationAccess, lastVisitedLocation]
+  );
+
   useEffect(() => {
     if (userOrganizationAccess == null) {
       return;
     }
 
-    let migrationTargetContext: LocationContext | null = null;
-
-    if (lastVisitedLocation) {
-      migrationTargetContext = lastVisitedLocation;
-    } else {
-      const firstOrganization = userOrganizationAccess?.organizations?.at(0);
-      const firstLocation = firstOrganization?.locations?.at(0);
-      trace(`firstLocation ID: ${JSON.stringify(firstLocation?.locationId)}`);
-      migrationTargetContext =
-        firstOrganization && firstLocation
-          ? {
-              organizationId: firstOrganization.organizationId!,
-              locationId: firstLocation.locationId!,
-            }
-          : null;
-    }
-
-    if (migrationTargetContext != null) {
-      //TODO: Only do this if the old path is a valid/migrate-able path to begin with.
-      const target =
-        `/org/${migrationTargetContext.organizationId}/${migrationTargetContext.locationId}${location.pathname}` +
-        `${location.search}${location.hash}`;
-      trace(`Attempting to migrate route to: ${target}`);
-      navigate(target);
-    } else {
+    if (migrationTargetContext == null) {
       trace('Could not migrate route.');
+      return;
     }
-  }, [trace, navigate, location, userOrganizationAccess, lastVisitedLocation]);
+
+    //TODO: Only do this if the old path is a valid/migrate-able path to begin with.
+    const target =
+      `/org/${migrationTargetContext.organizationId}/${migrationTargetContext.locationId}${location.pathname}` +
+      `${location.search}${location.hash}`;
+    trace(`Attempting to migrate route to: ${target}`);
+    navigate(target);
+  }, [
+    trace,
+    navigate,
+    location,
+    userOrganizationAccess,
+    migrationTargetContext,
+  ]);
+
+  if (userOrganizationAccess != null && migrationTargetContext == null) {
+    return <NoOrganizationAccessScreen />;
+  }
 
   return (
     <ProgressBackdrop opaque>
@@ -115,10 +125,7 @@ function CasesToClientsRedirect() {
   const targetPath = location.pathname.replace('/cases', '/clients');
 
   return (
-    <Navigate
-      to={`${targetPath}${location.search}${location.hash}`}
-      replace
-    />
+    <Navigate to={`${targetPath}${location.search}${location.hash}`} replace />
   );
 }
 
@@ -126,12 +133,16 @@ function CasesToClientsRedirect() {
 //   throw new Error(`The URL path '${window.location.href}' is invalid.`);
 // }
 
-function LocationContextWrapper() {
+type AuthorizedLocationContextWrapperProps = {
+  organizationId: string;
+  locationId: string;
+};
+
+function AuthorizedLocationContextWrapper({
+  organizationId,
+  locationId,
+}: AuthorizedLocationContextWrapperProps) {
   const trace = useScopedTrace('LocationContext');
-  const { organizationId, locationId } = useParams<{
-    organizationId: string;
-    locationId: string;
-  }>();
 
   const [selectedLocationContext, setSelectedLocationContext] =
     useRecoilStateLoadable(selectedLocationContextState);
@@ -198,6 +209,68 @@ function LocationContextWrapper() {
   );
 }
 
+function LocationContextWrapper() {
+  const { organizationId, locationId } = useParams<{
+    organizationId: string;
+    locationId: string;
+  }>();
+  const userOrganizationAccess = useLoadable(userOrganizationAccessQuery);
+  const [lastVisitedLocation] = useLocalStorage<LocationContext | null>(
+    LAST_VISITED_LOCATION,
+    null
+  );
+
+  const requestedLocationContext = useMemo(
+    () =>
+      organizationId && locationId
+        ? { organizationId: organizationId, locationId: locationId }
+        : null,
+    [organizationId, locationId]
+  );
+
+  const fallbackLocationContext = useMemo(
+    () =>
+      userOrganizationAccess
+        ? preferredAccessibleLocation(
+            userOrganizationAccess,
+            lastVisitedLocation
+          )
+        : null,
+    [userOrganizationAccess, lastVisitedLocation]
+  );
+
+  if (userOrganizationAccess == null) {
+    return (
+      <ProgressBackdrop opaque>
+        <p>Loading access...</p>
+      </ProgressBackdrop>
+    );
+  }
+
+  if (
+    requestedLocationContext == null ||
+    !hasLocationAccess(userOrganizationAccess, requestedLocationContext)
+  ) {
+    if (fallbackLocationContext == null) {
+      return <NoOrganizationAccessScreen />;
+    }
+
+    return (
+      <Navigate
+        to={`/org/${fallbackLocationContext.organizationId}/${fallbackLocationContext.locationId}/`}
+        replace
+      />
+    );
+  }
+
+  return (
+    <AuthorizedLocationContextWrapper
+      organizationId={requestedLocationContext.organizationId}
+      locationId={requestedLocationContext.locationId}
+    />
+  );
+}
+
 export function AppRoutes() {
   return (
     <Routes>
@@ -217,7 +290,7 @@ export function AppRoutes() {
       <Route path="/communities/*" element={<RouteMigrator />} />
       <Route path="/settings/*" element={<RouteMigrator />} />
       <Route path="/support/*" element={<RouteMigrator />} />
-      <Route path="/" element={<RouteMigrator />} />
+      <Route path="/" element={<RootRoute />} />
       <Route path="*" element={<RouteError />} />
     </Routes>
   );

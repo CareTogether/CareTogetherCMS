@@ -349,6 +349,18 @@ namespace CareTogether.Engines.Authorization
                     userPermissions,
                     allowedPerAccessLevel
                 ),
+                PinNote => CheckPinNotePermission(
+                    noteEntry,
+                    noteBelongsToUser,
+                    userPermissions,
+                    allowedPerAccessLevel
+                ),
+                UnpinNote => CheckUnpinNotePermission(
+                    noteEntry,
+                    noteBelongsToUser,
+                    userPermissions,
+                    allowedPerAccessLevel
+                ),
                 _ => throw new NotImplementedException(
                     $"The command type '{command.GetType().FullName}' has not been implemented."
                 ),
@@ -516,6 +528,62 @@ namespace CareTogether.Engines.Authorization
             if (!hasPermission)
             {
                 return (false, "User does not have permission to update the note access level.");
+            }
+
+            return (true, string.Empty);
+        }
+
+        private (bool, string) CheckPinNotePermission(
+            NoteEntry? noteEntry,
+            bool noteBelongsToUser,
+            ImmutableList<Permission> userPermissions,
+            bool allowedPerAccessLevel
+        )
+        {
+            var noteExists = CheckIfNoteExists(noteEntry);
+            if (!noteExists.Item1)
+            {
+                return noteExists;
+            }
+
+            if (noteEntry?.Status != NoteStatus.Approved)
+            {
+                return (false, "Cannot pin a note that is not Approved.");
+            }
+
+            var hasPermission = userPermissions.Contains(Permission.ApproveNotes);
+
+            if (!hasPermission)
+            {
+                return (false, "User does not have permission to pin notes.");
+            }
+
+            return (true, string.Empty);
+        }
+
+        private (bool, string) CheckUnpinNotePermission(
+            NoteEntry? noteEntry,
+            bool noteBelongsToUser,
+            ImmutableList<Permission> userPermissions,
+            bool allowedPerAccessLevel
+        )
+        {
+            var noteExists = CheckIfNoteExists(noteEntry);
+            if (!noteExists.Item1)
+            {
+                return noteExists;
+            }
+
+            if (noteEntry?.Status != NoteStatus.Approved)
+            {
+                return (false, "Cannot unpin a note that is not Approved.");
+            }
+
+            var hasPermission = userPermissions.Contains(Permission.ApproveNotes);
+
+            if (!hasPermission)
+            {
+                return (false, "User does not have permission to unpin notes.");
             }
 
             return (true, string.Empty);

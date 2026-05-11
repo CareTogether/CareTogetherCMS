@@ -233,22 +233,44 @@ export function ActivityTimeline({
       getDateValue(a.activity.activityTimestampUtc),
   };
 
-  const sortedActivitiesWithNotes = useMemo(
-    () => [...activitiesWithEmbeddedNotes].sort(sortStrategies[sortBy]),
-    [activitiesWithEmbeddedNotes, sortBy]
+  const sortedActivitiesWithNotes = [...activitiesWithEmbeddedNotes].sort(
+    sortStrategies[sortBy]
   );
 
-  const familyTimelineItems = useMemo<MergedTimelineItem[]>(
-    () =>
-      sortedActivitiesWithNotes.map(({ activity, note }) => ({
-        kind: 'family-activity',
-        timestamp: activity.activityTimestampUtc ?? new Date(0),
-        userId: activity.userId,
-        activity,
-        note,
-      })),
-    [sortedActivitiesWithNotes]
+  const pinnedActivitiesWithNotes = sortedActivitiesWithNotes
+    .filter((item) => item.note?.isPinned)
+    .sort(
+      (a, b) =>
+        getDateValue(b.note?.pinnedAtUtc ?? b.activity.activityTimestampUtc) -
+        getDateValue(a.note?.pinnedAtUtc ?? a.activity.activityTimestampUtc)
+    );
+
+  const unpinnedActivitiesWithNotes = sortedActivitiesWithNotes.filter(
+    (item) => !item.note?.isPinned
   );
+
+  const displayActivitiesWithNotes = [
+    ...pinnedActivitiesWithNotes,
+    ...unpinnedActivitiesWithNotes,
+  ].filter((item) => Boolean(item.note));
+
+  const pinnedFamilyTimelineItems: MergedTimelineItem[] =
+    pinnedActivitiesWithNotes.map(({ activity, note }) => ({
+      kind: 'family-activity',
+      timestamp: activity.activityTimestampUtc ?? new Date(0),
+      userId: activity.userId,
+      activity,
+      note,
+    }));
+
+  const unpinnedFamilyTimelineItems: MergedTimelineItem[] =
+    unpinnedActivitiesWithNotes.map(({ activity, note }) => ({
+      kind: 'family-activity',
+      timestamp: activity.activityTimestampUtc ?? new Date(0),
+      userId: activity.userId,
+      activity,
+      note,
+    }));
 
   const referralTimelineItems = useMemo<MergedTimelineItem[]>(() => {
     return referrals.flatMap((referral) => {
@@ -282,17 +304,74 @@ export function ActivityTimeline({
     });
   }, [referrals]);
 
-  const mergedTimelineItems = useMemo(
-    () =>
-      [...familyTimelineItems, ...referralTimelineItems].sort(
-        (a, b) => b.timestamp.getTime() - a.timestamp.getTime()
-      ),
-    [familyTimelineItems, referralTimelineItems]
-  );
+  const mergedTimelineItems = [
+    ...pinnedFamilyTimelineItems,
+    ...[...unpinnedFamilyTimelineItems, ...referralTimelineItems].sort(
+      (a, b) => b.timestamp.getTime() - a.timestamp.getTime()
+    ),
+  ];
 
-  const onlyActivitiesWithNotes = sortedActivitiesWithNotes.filter((item) =>
-    Boolean(item.note)
-  );
+  function renderVisibility(note?: Note) {
+    return (
+      <Typography>
+        Visible to{' '}
+        {note ? (
+          <Link
+            component="button"
+            type="button"
+            underline="hover"
+            onClick={() => {
+              open(note);
+            }}
+          >
+            {note.accessLevel ?? 'Everyone'}
+          </Link>
+        ) : (
+          'Everyone'
+        )}
+      </Typography>
+    );
+  }
+
+  function renderActivitySummary(activity: Activity) {
+    if (
+      activity instanceof V1CaseRequirementCompleted ||
+      activity instanceof ArrangementRequirementCompleted
+    ) {
+      return activity.requirementName;
+    }
+
+    if (activity instanceof ChildLocationChanged) {
+      return (
+        <>
+          <PersonName
+            person={arrangementPartneringPerson(activity.arrangementId)}
+          />
+          <span> &rarr; </span>
+          <PersonName
+            person={personLookup(
+              activity.childLocationFamilyId,
+              activity.childLocationReceivingAdultId
+            )}
+          />
+          <span> </span>(
+          {activity.plan === ChildLocationPlan.DaytimeChildCare
+            ? 'daytime'
+            : activity.plan === ChildLocationPlan.OvernightHousing
+              ? 'overnight'
+              : 'parent'}
+          )
+        </>
+      );
+    }
+
+    if (activity instanceof V1CaseOpened) {
+      return 'Case opened';
+    }
+
+    return null;
+  }
+
   return (
     <>
       <div ref={printContentRef}>
@@ -315,7 +394,9 @@ export function ActivityTimeline({
             },
           }}
         >
-          {onlyActivitiesWithNotes.map(({ activity, note }) => {
+          {displayActivitiesWithNotes.map(({ activity, note }) => {
+            if (!note) return null;
+
             const arrangementId =
               'arrangementId' in activity &&
               typeof activity.arrangementId === 'string'
@@ -334,93 +415,95 @@ export function ActivityTimeline({
               <Box
                 key={activity.activityTimestampUtc?.toString()}
                 p={2}
-                border={1}
+                border={note.isPinned ? 2 : 1}
                 borderRadius={2}
-                sx={{ breakInside: 'avoid' }}
+                sx={{
+                  breakInside: 'avoid',
+                  borderColor: note.isPinned ? 'primary.main' : undefined,
+                  backgroundColor: note.isPinned
+                    ? 'rgba(25, 118, 210, 0.06)'
+                    : undefined,
+                }}
               >
-                {note && (
-                  <>
-                    <Typography gutterBottom>
-                      <strong>Author: </strong>
-                      <PersonName person={noteAuthorLookup(note)} /> at{' '}
-                      {note.createdTimestampUtc
-                        ? format(note.createdTimestampUtc, 'M/d/yy h:mm a')
+                <Typography gutterBottom>
+                  <strong>Author: </strong>
+                  <PersonName person={noteAuthorLookup(note)} /> at{' '}
+                  {note.createdTimestampUtc
+                    ? format(note.createdTimestampUtc, 'M/d/yy h:mm a')
+                    : null}
+                </Typography>
+
+                <Typography gutterBottom>
+                  <strong>Approver: </strong>
+                  {note.approverId ? (
+                    <>
+                      <PersonName person={userLookup(note.approverId)} /> at{' '}
+                      {note.approvedTimestampUtc
+                        ? format(note.approvedTimestampUtc, 'M/d/yy h:mm a')
                         : null}
-                    </Typography>
+                    </>
+                  ) : (
+                    'N/A'
+                  )}
+                </Typography>
 
-                    <Typography gutterBottom>
-                      <strong>Approver: </strong>
-                      {note.approverId ? (
-                        <>
-                          <PersonName person={userLookup(note.approverId)} /> at{' '}
-                          {note.approvedTimestampUtc
-                            ? format(note.approvedTimestampUtc, 'M/d/yy h:mm a')
-                            : null}
-                        </>
-                      ) : (
-                        'N/A'
-                      )}
-                    </Typography>
+                {activityType && (
+                  <Typography gutterBottom>
+                    <strong>Activity type: </strong>
 
-                    {activityType && (
-                      <Typography gutterBottom>
-                        <strong>Activity type: </strong>
-
-                        {activityType}
-                      </Typography>
-                    )}
-
-                    {arrangementId && (
-                      <Typography gutterBottom>
-                        <strong>Partnering person: </strong>
-
-                        <PersonName
-                          person={arrangementPartneringPerson(arrangementId)}
-                        />
-                      </Typography>
-                    )}
-
-                    {requirementName && (
-                      <Typography gutterBottom>
-                        <strong>Requirement name: </strong> {requirementName}
-                      </Typography>
-                    )}
-
-                    {activity instanceof ChildLocationChanged && (
-                      <Typography gutterBottom>
-                        <strong>Location changed to: </strong>
-                        <PersonName
-                          person={personLookup(
-                            activity.childLocationFamilyId,
-                            activity.childLocationReceivingAdultId
-                          )}
-                        />{' '}
-                        (
-                        {activity.plan === ChildLocationPlan.DaytimeChildCare
-                          ? 'daytime'
-                          : activity.plan === ChildLocationPlan.OvernightHousing
-                            ? 'overnight'
-                            : 'parent'}
-                        )
-                      </Typography>
-                    )}
-
-                    {activity.uploadedDocumentId && (
-                      <Typography gutterBottom>
-                        <strong>Document: </strong>
-                        {
-                          documentLookup(activity.uploadedDocumentId)
-                            ?.uploadedFileName
-                        }
-                      </Typography>
-                    )}
-
-                    <Typography gutterBottom>
-                      <strong>Note: </strong>
-                      <em>{note.contents}</em>
-                    </Typography>
-                  </>
+                    {activityType}
+                  </Typography>
                 )}
+
+                {arrangementId && (
+                  <Typography gutterBottom>
+                    <strong>Partnering person: </strong>
+
+                    <PersonName
+                      person={arrangementPartneringPerson(arrangementId)}
+                    />
+                  </Typography>
+                )}
+
+                {requirementName && (
+                  <Typography gutterBottom>
+                    <strong>Requirement name: </strong> {requirementName}
+                  </Typography>
+                )}
+
+                {activity instanceof ChildLocationChanged && (
+                  <Typography gutterBottom>
+                    <strong>Location changed to: </strong>
+                    <PersonName
+                      person={personLookup(
+                        activity.childLocationFamilyId,
+                        activity.childLocationReceivingAdultId
+                      )}
+                    />{' '}
+                    (
+                    {activity.plan === ChildLocationPlan.DaytimeChildCare
+                      ? 'daytime'
+                      : activity.plan === ChildLocationPlan.OvernightHousing
+                        ? 'overnight'
+                        : 'parent'}
+                    )
+                  </Typography>
+                )}
+
+                {activity.uploadedDocumentId && (
+                  <Typography gutterBottom>
+                    <strong>Document: </strong>
+                    {
+                      documentLookup(activity.uploadedDocumentId)
+                        ?.uploadedFileName
+                    }
+                  </Typography>
+                )}
+
+                <Typography gutterBottom>
+                  <strong>Note: </strong>
+                  <em>{note.contents}</em>
+                </Typography>
               </Box>
             );
           })}
@@ -445,9 +528,15 @@ export function ActivityTimeline({
         </Box>
 
         {mergedTimelineItems.map((item, i) => {
-          const activity =
-            item.kind === 'family-activity' ? item.activity : undefined;
-          const note = item.kind === 'family-activity' ? item.note : undefined;
+          const nextItem =
+            i < mergedTimelineItems.length - 1
+              ? mergedTimelineItems[i + 1]
+              : null;
+          const hideBottomConnector =
+            item.kind === 'family-activity' && item.note?.isPinned
+              ? true
+              : nextItem?.kind === 'family-activity' &&
+                Boolean(nextItem.note?.isPinned);
 
           return (
             <TimelineItem key={`${item.kind}:${i}`}>
@@ -462,21 +551,21 @@ export function ActivityTimeline({
                   }}
                 >
                   {item.kind === 'family-activity' ? (
-                    activity instanceof V1CaseRequirementCompleted ||
-                    activity instanceof ArrangementRequirementCompleted ? (
+                    item.activity instanceof V1CaseRequirementCompleted ||
+                    item.activity instanceof ArrangementRequirementCompleted ? (
                       '✔'
-                    ) : activity instanceof ChildLocationChanged ? (
+                    ) : item.activity instanceof ChildLocationChanged ? (
                       <PersonPinCircleIcon fontSize="medium" />
                     ) : (
                       <EditIcon fontSize="small" />
                     )
-                  ) : item.kind === 'referral' ? (
-                    <EditIcon fontSize="small" />
                   ) : (
                     <EditIcon fontSize="small" />
                   )}
                 </TimelineDot>
-                {i < mergedTimelineItems.length - 1 && <TimelineConnector />}
+                {!hideBottomConnector && i < mergedTimelineItems.length - 1 && (
+                  <TimelineConnector />
+                )}
               </TimelineSeparator>
               <TimelineContent
                 style={{
@@ -502,64 +591,27 @@ export function ActivityTimeline({
 
                 {item.kind === 'family-activity' ? (
                   <>
-                    {activity instanceof V1CaseRequirementCompleted ||
-                    activity instanceof ArrangementRequirementCompleted ? (
-                      activity.requirementName
-                    ) : activity instanceof ChildLocationChanged ? (
-                      <>
-                        <PersonName
-                          person={arrangementPartneringPerson(
-                            activity.arrangementId
-                          )}
-                        />
-                        <span> &rarr; </span>
-                        <PersonName
-                          person={personLookup(
-                            activity.childLocationFamilyId,
-                            activity.childLocationReceivingAdultId
-                          )}
-                        />
-                        <span> </span>(
-                        {activity.plan === ChildLocationPlan.DaytimeChildCare
-                          ? 'daytime'
-                          : activity.plan === ChildLocationPlan.OvernightHousing
-                            ? 'overnight'
-                            : 'parent'}
-                        )
-                      </>
-                    ) : activity instanceof V1CaseOpened ? (
-                      'Case opened'
-                    ) : null}
+                    {renderActivitySummary(item.activity)}
 
-                    {activity?.uploadedDocumentId && (
+                    {item.activity.uploadedDocumentId && (
                       <Box sx={{ margin: 0, padding: 0 }}>
                         📃{' '}
                         {
-                          documentLookup(activity.uploadedDocumentId)
+                          documentLookup(item.activity.uploadedDocumentId)
                             ?.uploadedFileName
                         }
                       </Box>
                     )}
 
-                    <Typography>
-                      Visible to{' '}
-                      {note ? (
-                        <Link
-                          component="button"
-                          type="button"
-                          underline="hover"
-                          onClick={() => {
-                            open(note);
-                          }}
-                        >
-                          {note.accessLevel ?? 'Everyone'}
-                        </Link>
-                      ) : (
-                        'Everyone'
-                      )}
-                    </Typography>
-                    {note && (
-                      <NoteCard familyId={family.family!.id!} note={note} />
+                    {renderVisibility(item.note)}
+
+                    {item.note && (
+                      <NoteCard
+                        familyId={family.family!.id!}
+                        note={item.note}
+                        showPinAction={true}
+                        isPinnedPresentation={item.note.isPinned}
+                      />
                     )}
                   </>
                 ) : item.kind === 'referral' ? (
