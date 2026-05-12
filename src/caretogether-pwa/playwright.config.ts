@@ -23,9 +23,6 @@ export default defineConfig({
       use: {
         ...devices['Desktop Chrome'],
         video: 'off',
-        launchOptions: {
-          executablePath: '/usr/bin/chromium',
-        },
       },
     },
     {
@@ -33,9 +30,6 @@ export default defineConfig({
       use: {
         ...devices['Desktop Chrome'],
         storageState: AUTH_FILE,
-        launchOptions: {
-          executablePath: '/usr/bin/chromium',
-        },
       },
       dependencies: ['setup'],
     },

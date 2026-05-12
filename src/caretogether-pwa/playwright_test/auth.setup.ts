@@ -39,17 +39,24 @@ test('login as administrator', async ({ page, baseURL }) => {
     name: /secondary navigation/i,
   });
 
-  const emailField = page
-    .getByPlaceholder(/email address/i)
+  const usernameField = page
+    .locator('#username')
+    .or(page.locator('input[name="username"]'))
+    .or(page.getByPlaceholder(/email address/i))
     .or(page.locator('input[type="email"]'))
     .or(page.locator('input[name*="email" i]'))
-    .or(page.locator('input[id*="email" i]'));
+    .or(page.locator('input[id*="email" i]'))
+    .or(page.locator('input[name*="user" i]'))
+    .or(page.locator('input[id*="user" i]'));
 
   const passwordField = page
     .getByPlaceholder(/password/i)
     .or(page.locator('input[type="password"]'));
 
-  const b2cSignInButton = page.getByRole('button', { name: /^sign in$/i });
+  const signInButton = page
+    .getByRole('button', { name: /^sign in$/i })
+    .or(page.locator('input[type="submit"]'))
+    .or(page.locator('#kc-login'));
 
   const temporaryError = page.getByText(
     /something went wrong|failed to fetch/i
@@ -72,12 +79,13 @@ test('login as administrator', async ({ page, baseURL }) => {
 
         if (
           url.includes('b2clogin.com') ||
-          (await emailField
+          url.includes('/realms/caretogether-local/') ||
+          (await usernameField
             .first()
             .isVisible()
             .catch(() => false))
         ) {
-          return 'b2c';
+          return 'identity-provider';
         }
 
         if (
@@ -101,27 +109,28 @@ test('login as administrator', async ({ page, baseURL }) => {
         intervals: [1000, 2000, 5000],
       }
     )
-    .toMatch(/authenticated|b2c/);
+    .toMatch(/authenticated|identity-provider/);
 
   console.log('URL after auth state wait:', page.url());
   console.log('Title after auth state wait:', await page.title());
 
-  const onB2cPage =
+  const onIdentityProviderPage =
     page.url().includes('b2clogin.com') ||
-    (await emailField
+    page.url().includes('/realms/caretogether-local/') ||
+    (await usernameField
       .first()
       .isVisible()
       .catch(() => false));
 
-  if (onB2cPage) {
-    await expect(emailField.first()).toBeVisible({ timeout: 60_000 });
-    await emailField.first().fill(adminEmail);
+  if (onIdentityProviderPage) {
+    await expect(usernameField.first()).toBeVisible({ timeout: 60_000 });
+    await usernameField.first().fill(adminEmail);
 
     await expect(passwordField.first()).toBeVisible({ timeout: 60_000 });
     await passwordField.first().fill(adminPassword);
 
-    await expect(b2cSignInButton).toBeVisible({ timeout: 60_000 });
-    await b2cSignInButton.click();
+    await expect(signInButton.first()).toBeVisible({ timeout: 60_000 });
+    await signInButton.first().click();
 
     await expect
       .poll(
@@ -140,7 +149,10 @@ test('login as administrator', async ({ page, baseURL }) => {
               .first()
               .textContent()
               .catch(() => '');
-            console.log('Temporary error text after B2C sign-in:', errorText);
+            console.log(
+              'Temporary error text after identity provider sign-in:',
+              errorText
+            );
             return 'temporary-error';
           }
 

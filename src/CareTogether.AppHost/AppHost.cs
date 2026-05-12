@@ -17,6 +17,10 @@ var web = builder
     .WaitFor(keycloak);
 
 web.WithEnvironment("VITE_APP_API_HOST", api.GetEndpoint("http"));
+web.WithEnvironment("VITE_APP_AUTH_PROVIDER", "keycloak");
+web.WithEnvironment("VITE_APP_AUTH_CLIENT_ID", "caretogether-pwa");
+web.WithEnvironment("VITE_APP_AUTH_AUTHORITY", "http://localhost:8080/realms/caretogether-local");
+web.WithEnvironment("VITE_APP_AUTH_SCOPES", "openid profile email");
 web.WithEnvironment("VITE_APP_AUTH_REDIRECT_URI", web.GetEndpoint("http"));
 
 builder.Build().Run();
