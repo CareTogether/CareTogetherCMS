@@ -7897,7 +7897,7 @@ export class Note implements INote {
             this.accessLevel = _data["accessLevel"];
             this.approverId = _data["approverId"];
             this.isPinned = _data["isPinned"];
-            this.pinnedAtUtc = _data["pinnedAtUtc"] ? new Date(_data["pinnedAtUtc"].toString()) : <any>undefined;
+            this.pinnedAtUtc = _data["pinnedAtUtc"] ? new Date(_data["pinnedAtUtc"].toString()) : undefined as any;
             this.pinnedByUserId = _data["pinnedByUserId"];
         }
     }
@@ -7923,7 +7923,7 @@ export class Note implements INote {
         data["accessLevel"] = this.accessLevel;
         data["approverId"] = this.approverId;
         data["isPinned"] = this.isPinned;
-        data["pinnedAtUtc"] = this.pinnedAtUtc ? this.pinnedAtUtc.toISOString() : <any>undefined;
+        data["pinnedAtUtc"] = this.pinnedAtUtc ? this.pinnedAtUtc.toISOString() : undefined as any;
         data["pinnedByUserId"] = this.pinnedByUserId;
         return data;
     }
@@ -12345,18 +12345,18 @@ export class PinNote extends NoteCommand implements IPinNote {
         this._discriminator = "PinNote";
     }
 
-    init(_data?: any) {
+    override init(_data?: any) {
         super.init(_data);
     }
 
-    static fromJS(data: any): PinNote {
+    static override fromJS(data: any): PinNote {
         data = typeof data === 'object' ? data : {};
         let result = new PinNote();
         result.init(data);
         return result;
     }
 
-    toJSON(data?: any) {
+    override toJSON(data?: any) {
         data = typeof data === 'object' ? data : {};
         super.toJSON(data);
         return data;
@@ -12373,18 +12373,18 @@ export class UnpinNote extends NoteCommand implements IUnpinNote {
         this._discriminator = "UnpinNote";
     }
 
-    init(_data?: any) {
+    override init(_data?: any) {
         super.init(_data);
     }
 
-    static fromJS(data: any): UnpinNote {
+    static override fromJS(data: any): UnpinNote {
         data = typeof data === 'object' ? data : {};
         let result = new UnpinNote();
         result.init(data);
         return result;
     }
 
-    toJSON(data?: any) {
+    override toJSON(data?: any) {
         data = typeof data === 'object' ? data : {};
         super.toJSON(data);
         return data;

@@ -5,6 +5,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="Aspire.Hosting.Keycloak" Version="13.3.0-preview.1.26256.5" />
     <PackageReference Include="Aspire.Hosting.JavaScript" Version="13.2.4" />
   </ItemGroup>
 
