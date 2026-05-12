@@ -12,6 +12,7 @@ using CareTogether.Resources.Goals;
 using CareTogether.Resources.Notes;
 using CareTogether.Resources.Policies;
 using CareTogether.Resources.V1Cases;
+using CareTogether.Resources.V1Referrals;
 using CareTogether.TestData;
 using CareTogether.Utilities.FileStore;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -60,6 +61,7 @@ namespace CareTogether.Core.Test.AuthorizationEngineTests
             var directoryEventLog = new MemoryEventLog<DirectoryEvent>();
             var goalsEventLog = new MemoryEventLog<GoalCommandExecutedEvent>();
             var v1CasesEventLog = new MemoryEventLog<V1CaseEvent>();
+            var v1ReferralsEventLog = new MemoryEventLog<V1ReferralEvent>();
             var approvalsEventLog = new MemoryEventLog<ApprovalEvent>();
             var notesEventLog = new MemoryEventLog<NotesEvent>();
             var communitiesEventLog = new MemoryEventLog<CommunityCommandExecutedEvent>();
@@ -92,6 +94,10 @@ namespace CareTogether.Core.Test.AuthorizationEngineTests
                 personAccessEventLog
             );
             var v1CasesResource = new V1CasesResource(v1CasesEventLog);
+            var v1ReferralsResource = new V1ReferralsResource(
+                v1ReferralsEventLog,
+                Mock.Of<IFileStore>()
+            );
             var approvalsResource = new ApprovalsResource(approvalsEventLog);
             var communitiesResource = new CommunitiesResource(
                 communitiesEventLog,
@@ -102,6 +108,7 @@ namespace CareTogether.Core.Test.AuthorizationEngineTests
                 policiesResource,
                 directoryResource,
                 v1CasesResource,
+                v1ReferralsResource,
                 approvalsResource,
                 communitiesResource
             );

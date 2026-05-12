@@ -59,6 +59,20 @@ namespace CareTogether.Resources.V1Cases
         Guid? NoteId
     ) : Activity(UserId, AuditTimestampUtc, ChangedAtUtc, null, NoteId);
 
+    public sealed record V1CaseStaffAssigned(
+        Guid UserId,
+        DateTime AuditTimestampUtc,
+        Guid PersonId,
+        string AssignmentRole
+    ) : Activity(UserId, AuditTimestampUtc, AuditTimestampUtc, null, null);
+
+    public sealed record V1CaseStaffUnassigned(
+        Guid UserId,
+        DateTime AuditTimestampUtc,
+        Guid PersonId,
+        string AssignmentRole
+    ) : Activity(UserId, AuditTimestampUtc, AuditTimestampUtc, null, null);
+
     public sealed class V1CaseModel
     {
         private ImmutableDictionary<Guid, V1CaseEntry> v1Cases = ImmutableDictionary<
@@ -101,6 +115,7 @@ namespace CareTogether.Resources.V1Cases
                         ImmutableList<ExemptedRequirementInfo>.Empty,
                         ImmutableDictionary<string, CompletedCustomFieldInfo>.Empty,
                         ImmutableDictionary<Guid, ArrangementEntry>.Empty,
+                        ImmutableList<StaffAssignment>.Empty,
                         ImmutableList<Activity>.Empty,
                         Comments: null
                     ),
@@ -195,6 +210,13 @@ namespace CareTogether.Resources.V1Cases
                             null
                         ),
                         LinkReferralToCase c => (LinkReferralToCaseEntry(v1CaseEntry, c), null),
+                        AssignStaffToV1Case c => AssignStaff(v1CaseEntry, c, userId, timestampUtc),
+                        UnassignStaffFromV1Case c => UnassignStaff(
+                            v1CaseEntry,
+                            c,
+                            userId,
+                            timestampUtc
+                        ),
                         CloseReferral c => (
                             v1CaseEntry with
                             {
@@ -859,6 +881,74 @@ namespace CareTogether.Resources.V1Cases
                     LastKnownSequenceNumber++;
                     v1Cases = v1Cases.SetItem(v1CaseEntryToUpsert.Id, v1CaseEntryToUpsert);
                 }
+            );
+        }
+
+        private static (V1CaseEntry V1CaseEntry, Activity? Activity) AssignStaff(
+            V1CaseEntry v1CaseEntry,
+            AssignStaffToV1Case command,
+            Guid userId,
+            DateTime timestampUtc
+        )
+        {
+            if (
+                v1CaseEntry.StaffAssignments.Any(assignment =>
+                    assignment.PersonId == command.PersonId
+                    && assignment.AssignmentRole == command.AssignmentRole
+                )
+            )
+                return (v1CaseEntry, null);
+
+            return (
+                v1CaseEntry with
+                {
+                    StaffAssignments = v1CaseEntry.StaffAssignments.Add(
+                        new StaffAssignment(
+                            command.PersonId,
+                            command.AssignmentRole,
+                            timestampUtc,
+                            userId
+                        )
+                    ),
+                },
+                new V1CaseStaffAssigned(
+                    userId,
+                    timestampUtc,
+                    command.PersonId,
+                    command.AssignmentRole
+                )
+            );
+        }
+
+        private static (V1CaseEntry V1CaseEntry, Activity? Activity) UnassignStaff(
+            V1CaseEntry v1CaseEntry,
+            UnassignStaffFromV1Case command,
+            Guid userId,
+            DateTime timestampUtc
+        )
+        {
+            if (
+                !v1CaseEntry.StaffAssignments.Any(assignment =>
+                    assignment.PersonId == command.PersonId
+                    && assignment.AssignmentRole == command.AssignmentRole
+                )
+            )
+                return (v1CaseEntry, null);
+
+            return (
+                v1CaseEntry with
+                {
+                    StaffAssignments = v1CaseEntry.StaffAssignments.RemoveAll(assignment =>
+                        assignment.PersonId == command.PersonId
+                        && assignment.AssignmentRole == command.AssignmentRole
+                    ),
+                },
+                new V1CaseStaffUnassigned(
+                    userId,
+                    timestampUtc,
+                    command.PersonId,
+                    command.AssignmentRole
+                )
             );
         }
 

@@ -261,6 +261,7 @@ namespace CareTogether.Managers
                             ToArrangement(a.Value, v1CaseStatus.IndividualArrangements[a.Key])
                         )
                         .ToImmutableList(),
+                    entry.StaffAssignments,
                     entry.Comments,
                     entry.LinkedV1ReferralIds
                 );

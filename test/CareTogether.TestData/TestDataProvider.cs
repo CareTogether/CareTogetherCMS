@@ -3207,7 +3207,21 @@ namespace CareTogether.TestData
                         new RequirementDefinition("Intake Coordinator Screening Call", true),
                         new RequirementDefinition("Intake Form", true),
                     ]
-                ),
+                )
+                {
+                    StaffAssignmentPolicies =
+                    [
+                        new StaffAssignmentPolicy(
+                            "Case Manager",
+                            new StaffAssignmentEligibility(
+                                EligibleLocationRoles: [SystemConstants.ORGANIZATION_ADMINISTRATOR],
+                                EligibleIndividualVolunteerRoles: [],
+                                EligibleVolunteerFamilyRoles: [],
+                                EligiblePeople: []
+                            )
+                        ),
+                    ],
+                },
                 new VolunteerPolicy(
                     new Dictionary<string, VolunteerRolePolicy>
                     {
@@ -3374,7 +3388,22 @@ namespace CareTogether.TestData
                         ),
                     }.ToImmutableDictionary()
                 )
-            );
+            )
+            {
+                V1ReferralPolicy = new V1ReferralPolicy(
+                    [
+                        new StaffAssignmentPolicy(
+                            "Intake Coordinator",
+                            new StaffAssignmentEligibility(
+                                EligibleLocationRoles: [SystemConstants.ORGANIZATION_ADMINISTRATOR],
+                                EligibleIndividualVolunteerRoles: [],
+                                EligibleVolunteerFamilyRoles: [],
+                                EligiblePeople: []
+                            )
+                        ),
+                    ]
+                ),
+            };
 
             await policiesStore.UpsertAsync(guid1, guid2, "policy", policy);
             await policiesStore.UpsertAsync(guid1, guid3, "policy", policy);
