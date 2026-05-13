@@ -937,6 +937,9 @@ namespace CareTogether.Engines.Authorization
                     )
                     .ToImmutableList(),
                 History = contextPermissions.Contains(Permission.ViewV1CaseHistory)
+                    // Existing history activities are authorized by ViewV1CaseHistory as a list.
+                    // Staff assignment activities reveal separately-permissioned staff assignment data,
+                    // so hide them from users who cannot view assignments to avoid assignee inference.
                     ? partneringFamilyInfo
                         .History.Where(activity =>
                             contextPermissions.Contains(Permission.ViewV1CaseStaffAssignments)
