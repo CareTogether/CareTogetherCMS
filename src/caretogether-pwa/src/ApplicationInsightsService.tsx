@@ -33,6 +33,8 @@ const appInsights = new ApplicationInsights({
     // ['*.auth0.com'] to exclude correlation headers from requests sent to the
     // Auth0 identity provider.
     correlationHeaderExcludedDomains: [
+      'localhost',
+      '127.0.0.1',
       '*.featurebase.app',
       'do.featurebase.app',
       'featurebase.app',

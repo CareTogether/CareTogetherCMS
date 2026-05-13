@@ -56,13 +56,43 @@ function displayableError(error: Error | unknown) {
   //"Something went wrong during sign-in. Try clearing your browser cache and cookies, and report this as a bug if the issue persists."
 }
 
+const keycloakAuthEnabled =
+  import.meta.env.VITE_APP_AUTH_PROVIDER?.toLowerCase() === 'keycloak';
+
 function withDefaultScopes(scopes: string[]) {
+  const defaultScopes = keycloakAuthEnabled
+    ? ['openid', 'profile', 'email']
+    : ['openid', 'profile', 'offline_access', 'email'];
+
   // Add the default OpenID Connect scopes and then deduplicate the resulting entries.
-  return [
-    ...new Set(scopes.concat(['openid', 'profile', 'offline_access', 'email'])),
-  ];
+  return [...new Set(scopes.concat(defaultScopes))];
 }
-const scopes = withDefaultScopes([import.meta.env.VITE_APP_AUTH_SCOPES]);
+
+function parseScopes(scopes: string | undefined) {
+  if (!scopes) {
+    return [];
+  }
+
+  return scopes.split(/\s+/).filter((scope) => scope.length > 0);
+}
+
+const scopes = withDefaultScopes(parseScopes(import.meta.env.VITE_APP_AUTH_SCOPES));
+const keycloakTokenStorageKey = 'caretogether.keycloak.tokens';
+const keycloakPkceStorageKey = 'caretogether.keycloak.pkce';
+const keycloakClockSkewMs = 60_000;
+
+type KeycloakTokens = {
+  accessToken: string;
+  idToken?: string;
+  refreshToken?: string;
+  expiresAt: number;
+};
+
+type KeycloakPkceState = {
+  codeVerifier: string;
+  state: string;
+  returnUrl: string;
+};
 
 type AccountInfo = {
   userId: string;
@@ -70,7 +100,251 @@ type AccountInfo = {
   name?: string;
 };
 
+function keycloakEndpoint(path: string) {
+  return `${import.meta.env.VITE_APP_AUTH_AUTHORITY}/protocol/openid-connect/${path}`;
+}
+
+function encodeBase64Url(bytes: ArrayBuffer) {
+  const binary = String.fromCharCode(...new Uint8Array(bytes));
+  return btoa(binary)
+    .replace(/\+/g, '-')
+    .replace(/\//g, '_')
+    .replace(/=+$/g, '');
+}
+
+function decodeBase64UrlJson<T>(value: string): T {
+  const base64 = value.replace(/-/g, '+').replace(/_/g, '/');
+  const padded = base64.padEnd(Math.ceil(base64.length / 4) * 4, '=');
+  const json = decodeURIComponent(
+    atob(padded)
+      .split('')
+      .map((character) =>
+        `%${character.charCodeAt(0).toString(16).padStart(2, '0')}`
+      )
+      .join('')
+  );
+
+  return JSON.parse(json) as T;
+}
+
+function decodeJwtClaims(token: string): Record<string, unknown> {
+  const [, claims] = token.split('.');
+  if (!claims) {
+    throw new Error('The token is not a valid JWT.');
+  }
+
+  return decodeBase64UrlJson<Record<string, unknown>>(claims);
+}
+
+function readStoredKeycloakTokens(): KeycloakTokens | null {
+  const storedTokens = localStorage.getItem(keycloakTokenStorageKey);
+  if (!storedTokens) {
+    return null;
+  }
+
+  try {
+    return JSON.parse(storedTokens) as KeycloakTokens;
+  } catch {
+    localStorage.removeItem(keycloakTokenStorageKey);
+    return null;
+  }
+}
+
+function storeKeycloakTokens(response: {
+  access_token: string;
+  id_token?: string;
+  refresh_token?: string;
+  expires_in?: number;
+}) {
+  const tokens: KeycloakTokens = {
+    accessToken: response.access_token,
+    idToken: response.id_token,
+    refreshToken: response.refresh_token,
+    expiresAt: Date.now() + (response.expires_in ?? 300) * 1000,
+  };
+
+  localStorage.setItem(keycloakTokenStorageKey, JSON.stringify(tokens));
+  return tokens;
+}
+
+function keycloakTokensAreCurrent(tokens: KeycloakTokens) {
+  return tokens.expiresAt - keycloakClockSkewMs > Date.now();
+}
+
+function keycloakAccountFromTokens(tokens: KeycloakTokens): AccountInfo {
+  const claims = decodeJwtClaims(tokens.idToken ?? tokens.accessToken);
+  const userIdClaim =
+    claims[
+      'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier'
+    ] ??
+    claims.caretogether_user_id ??
+    claims.sub;
+
+  if (typeof userIdClaim !== 'string') {
+    throw new Error('The Keycloak token does not include a valid user ID claim.');
+  }
+
+  return {
+    userId: userIdClaim,
+    email: typeof claims.email === 'string' ? claims.email : undefined,
+    name: typeof claims.name === 'string' ? claims.name : undefined,
+  };
+}
+
+async function createCodeChallenge(codeVerifier: string) {
+  const digest = await crypto.subtle.digest(
+    'SHA-256',
+    new TextEncoder().encode(codeVerifier)
+  );
+
+  return encodeBase64Url(digest);
+}
+
+function createRandomBase64Url(byteLength: number) {
+  const bytes = new Uint8Array(byteLength);
+  crypto.getRandomValues(bytes);
+  return encodeBase64Url(bytes.buffer);
+}
+
+async function redirectToKeycloakLoginAsync(): Promise<never> {
+  const codeVerifier = createRandomBase64Url(64);
+  const state = createRandomBase64Url(32);
+  const codeChallenge = await createCodeChallenge(codeVerifier);
+  const returnUrl = `${window.location.pathname}${window.location.search}${window.location.hash}`;
+  const pkceState: KeycloakPkceState = {
+    codeVerifier,
+    state,
+    returnUrl,
+  };
+
+  sessionStorage.setItem(keycloakPkceStorageKey, JSON.stringify(pkceState));
+
+  const authorizationUrl = new URL(keycloakEndpoint('auth'));
+  authorizationUrl.searchParams.set(
+    'client_id',
+    import.meta.env.VITE_APP_AUTH_CLIENT_ID
+  );
+  authorizationUrl.searchParams.set(
+    'redirect_uri',
+    import.meta.env.VITE_APP_AUTH_REDIRECT_URI
+  );
+  authorizationUrl.searchParams.set('response_type', 'code');
+  authorizationUrl.searchParams.set('scope', scopes.join(' '));
+  authorizationUrl.searchParams.set('state', state);
+  authorizationUrl.searchParams.set('code_challenge', codeChallenge);
+  authorizationUrl.searchParams.set('code_challenge_method', 'S256');
+
+  setTimeout(() => {
+    window.location.assign(authorizationUrl.toString());
+  }, 0);
+
+  return await new Promise<never>(() => {});
+}
+
+function readKeycloakPkceState(): KeycloakPkceState {
+  const storedState = sessionStorage.getItem(keycloakPkceStorageKey);
+  if (!storedState) {
+    throw new Error('Missing Keycloak sign-in state.');
+  }
+
+  return JSON.parse(storedState) as KeycloakPkceState;
+}
+
+async function exchangeKeycloakCodeAsync(code: string, codeVerifier: string) {
+  const response = await fetch(keycloakEndpoint('token'), {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/x-www-form-urlencoded',
+    },
+    body: new URLSearchParams({
+      client_id: import.meta.env.VITE_APP_AUTH_CLIENT_ID,
+      code,
+      code_verifier: codeVerifier,
+      grant_type: 'authorization_code',
+      redirect_uri: import.meta.env.VITE_APP_AUTH_REDIRECT_URI,
+    }),
+  });
+
+  if (!response.ok) {
+    throw new Error(`Keycloak token exchange failed with ${response.status}.`);
+  }
+
+  return storeKeycloakTokens(await response.json());
+}
+
+async function handleKeycloakRedirectAsync(): Promise<AccountInfo | null> {
+  const query = new URLSearchParams(window.location.search);
+  const code = query.get('code');
+  const state = query.get('state');
+  if (!code || !state) {
+    return null;
+  }
+
+  const pkceState = readKeycloakPkceState();
+  if (pkceState.state !== state) {
+    throw new Error('The Keycloak sign-in state did not match.');
+  }
+
+  const tokens = await exchangeKeycloakCodeAsync(code, pkceState.codeVerifier);
+  sessionStorage.removeItem(keycloakPkceStorageKey);
+  window.history.replaceState({}, document.title, pkceState.returnUrl || '/');
+
+  return keycloakAccountFromTokens(tokens);
+}
+
+async function refreshKeycloakTokensAsync(tokens: KeycloakTokens) {
+  if (!tokens.refreshToken) {
+    return null;
+  }
+
+  const response = await fetch(keycloakEndpoint('token'), {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/x-www-form-urlencoded',
+    },
+    body: new URLSearchParams({
+      client_id: import.meta.env.VITE_APP_AUTH_CLIENT_ID,
+      grant_type: 'refresh_token',
+      refresh_token: tokens.refreshToken,
+    }),
+  });
+
+  if (!response.ok) {
+    localStorage.removeItem(keycloakTokenStorageKey);
+    return null;
+  }
+
+  return storeKeycloakTokens(await response.json());
+}
+
+async function loginAndSetActiveKeycloakAccountAsync(): Promise<AccountInfo> {
+  trace(`Login`, `Checking for a Keycloak redirect response...`);
+  const redirectedAccount = await handleKeycloakRedirectAsync();
+  if (redirectedAccount) {
+    return redirectedAccount;
+  }
+
+  const storedTokens = readStoredKeycloakTokens();
+  if (storedTokens && keycloakTokensAreCurrent(storedTokens)) {
+    return keycloakAccountFromTokens(storedTokens);
+  }
+
+  if (storedTokens) {
+    const refreshedTokens = await refreshKeycloakTokensAsync(storedTokens);
+    if (refreshedTokens) {
+      return keycloakAccountFromTokens(refreshedTokens);
+    }
+  }
+
+  await redirectToKeycloakLoginAsync();
+  throw new Error('Redirecting to Keycloak for sign-in.');
+}
+
 async function loginAndSetActiveAccountAsync(): Promise<AccountInfo> {
+  if (keycloakAuthEnabled) {
+    return await loginAndSetActiveKeycloakAccountAsync();
+  }
+
   // The ultimate objective of this function is to obtain an AuthenticationResult from Azure AD via MSAL.js
   // and return the local account ID of the authenticated account.
   let result: AuthenticationResult | null = null;
@@ -217,6 +491,20 @@ export const accountInfoState = atom<AccountInfo>({
 });
 
 export async function tryAcquireAccessToken(): Promise<string | null> {
+  if (keycloakAuthEnabled) {
+    const storedTokens = readStoredKeycloakTokens();
+    if (!storedTokens) {
+      return null;
+    }
+
+    if (keycloakTokensAreCurrent(storedTokens)) {
+      return storedTokens.accessToken;
+    }
+
+    const refreshedTokens = await refreshKeycloakTokensAsync(storedTokens);
+    return refreshedTokens?.accessToken ?? null;
+  }
+
   // This function attempts to return a current access token for the authenticated account using MSAL.js and,
   // if it can't due to required interaction, informs the caller by returning null.
   // https://github.com/AzureAD/microsoft-authentication-library-for-js/blob/dev/lib/msal-browser/docs/acquire-token.md
@@ -263,6 +551,24 @@ export async function tryAcquireAccessToken(): Promise<string | null> {
 }
 
 export async function logoutAsync(): Promise<void> {
+  if (keycloakAuthEnabled) {
+    const storedTokens = readStoredKeycloakTokens();
+    localStorage.removeItem(keycloakTokenStorageKey);
+
+    const logoutUrl = new URL(keycloakEndpoint('logout'));
+    logoutUrl.searchParams.set(
+      'post_logout_redirect_uri',
+      import.meta.env.VITE_APP_AUTH_REDIRECT_URI
+    );
+
+    if (storedTokens?.idToken) {
+      logoutUrl.searchParams.set('id_token_hint', storedTokens.idToken);
+    }
+
+    window.location.assign(logoutUrl.toString());
+    return;
+  }
+
   trace(`Logout`, `Signing out the active account...`);
 
   await globalMsalInstance.logoutRedirect({
