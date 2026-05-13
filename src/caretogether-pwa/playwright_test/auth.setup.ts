@@ -1,15 +1,93 @@
-import { test, expect } from '@playwright/test';
+import { test, expect, APIRequestContext, Page } from '@playwright/test';
 import fs from 'node:fs';
 import path from 'node:path';
 
 const AUTH_FILE = path.resolve('playwright/.auth/admin.json');
 const ATLANTIS_ROUTE =
   '/org/11111111-1111-1111-1111-111111111111/22222222-2222-2222-2222-222222222222/';
+const KEYCLOAK_TOKEN_STORAGE_KEY = 'caretogether.keycloak.tokens';
+const KEYCLOAK_PKCE_STORAGE_KEY = 'caretogether.keycloak.pkce';
 
 const adminEmail = process.env.CT_ADMIN_EMAIL;
 const adminPassword = process.env.CT_ADMIN_PASSWORD;
 
-test('login as administrator', async ({ page, baseURL }) => {
+type KeycloakPkceState = {
+  codeVerifier: string;
+  state: string;
+};
+
+async function completeLocalKeycloakSignInAsync(
+  request: APIRequestContext,
+  page: Page,
+  baseURL: string,
+  keycloakSignInUrl: string
+) {
+  await page.waitForURL(
+    (url) => url.toString().startsWith(baseURL) && url.searchParams.has('code'),
+    { timeout: 60_000 }
+  );
+
+  const callbackUrl = new URL(page.url());
+  const code = callbackUrl.searchParams.get('code');
+  const state = callbackUrl.searchParams.get('state');
+  if (!code || !state) {
+    throw new Error(`Missing Keycloak callback code or state: ${callbackUrl}`);
+  }
+
+  const storedPkceState = await page.evaluate((storageKey) => {
+    return sessionStorage.getItem(storageKey);
+  }, KEYCLOAK_PKCE_STORAGE_KEY);
+  if (!storedPkceState) {
+    throw new Error('Missing Keycloak PKCE state in session storage.');
+  }
+
+  const pkceState = JSON.parse(storedPkceState) as KeycloakPkceState;
+  if (pkceState.state !== state) {
+    throw new Error('The Keycloak callback state did not match the PKCE state.');
+  }
+
+  const authorizationUrl = new URL(keycloakSignInUrl);
+  const tokenUrl = `${authorizationUrl.origin}/realms/caretogether-local/protocol/openid-connect/token`;
+  const redirectUri = authorizationUrl.searchParams.get('redirect_uri');
+  if (!redirectUri) {
+    throw new Error('Missing Keycloak redirect URI.');
+  }
+
+  const tokenResponse = await request.post(tokenUrl, {
+    form: {
+      client_id: 'caretogether-pwa',
+      code,
+      code_verifier: pkceState.codeVerifier,
+      grant_type: 'authorization_code',
+      redirect_uri: redirectUri,
+    },
+  });
+
+  if (!tokenResponse.ok()) {
+    throw new Error(
+      `Keycloak token exchange failed with ${tokenResponse.status()}: ${await tokenResponse.text()}`
+    );
+  }
+
+  const tokenPayload = await tokenResponse.json();
+  const storedTokens = {
+    accessToken: tokenPayload.access_token,
+    idToken: tokenPayload.id_token,
+    refreshToken: tokenPayload.refresh_token,
+    expiresAt: Date.now() + (tokenPayload.expires_in ?? 300) * 1000,
+  };
+
+  await page.addInitScript(
+    ([storageKey, storageValue]) => {
+      localStorage.setItem(storageKey, storageValue);
+    },
+    [KEYCLOAK_TOKEN_STORAGE_KEY, JSON.stringify(storedTokens)]
+  );
+
+  await page.goto(ATLANTIS_ROUTE);
+}
+
+test('login as administrator', async ({ page, baseURL, request }) => {
   test.setTimeout(420_000);
 
   if (!adminEmail || !adminPassword) {
@@ -19,19 +97,6 @@ test('login as administrator', async ({ page, baseURL }) => {
   if (!baseURL) {
     throw new Error('Missing Playwright baseURL');
   }
-
-  const consoleErrors: string[] = [];
-  const pageErrors: string[] = [];
-
-  page.on('console', (msg) => {
-    if (msg.type() === 'error') {
-      consoleErrors.push(msg.text());
-    }
-  });
-
-  page.on('pageerror', (error) => {
-    pageErrors.push(error.message);
-  });
 
   fs.mkdirSync(path.dirname(AUTH_FILE), { recursive: true });
 
@@ -65,8 +130,11 @@ test('login as administrator', async ({ page, baseURL }) => {
   await page.goto(ATLANTIS_ROUTE);
   await page.waitForLoadState('domcontentloaded');
 
-  console.log('Current URL:', page.url());
-  console.log('Page title:', await page.title());
+  await page
+    .waitForURL(/b2clogin\.com|\/realms\/caretogether-local\//, {
+      timeout: 30_000,
+    })
+    .catch(() => {});
 
   await expect
     .poll(
@@ -94,11 +162,6 @@ test('login as administrator', async ({ page, baseURL }) => {
             .isVisible()
             .catch(() => false)
         ) {
-          const errorText = await temporaryError
-            .first()
-            .textContent()
-            .catch(() => '');
-          console.log('Temporary error text:', errorText);
           return 'temporary-error';
         }
 
@@ -111,9 +174,6 @@ test('login as administrator', async ({ page, baseURL }) => {
     )
     .toMatch(/authenticated|identity-provider/);
 
-  console.log('URL after auth state wait:', page.url());
-  console.log('Title after auth state wait:', await page.title());
-
   const onIdentityProviderPage =
     page.url().includes('b2clogin.com') ||
     page.url().includes('/realms/caretogether-local/') ||
@@ -121,6 +181,9 @@ test('login as administrator', async ({ page, baseURL }) => {
       .first()
       .isVisible()
       .catch(() => false));
+  const keycloakSignInUrl = page.url().includes('/realms/caretogether-local/')
+    ? page.url()
+    : null;
 
   if (onIdentityProviderPage) {
     await expect(usernameField.first()).toBeVisible({ timeout: 60_000 });
@@ -130,40 +193,53 @@ test('login as administrator', async ({ page, baseURL }) => {
     await passwordField.first().fill(adminPassword);
 
     await expect(signInButton.first()).toBeVisible({ timeout: 60_000 });
+    if (keycloakSignInUrl) {
+      await page.route(
+        '**/realms/caretogether-local/protocol/openid-connect/token',
+        async (route) => {
+          await route.abort('blockedbyclient');
+        }
+      );
+    }
+
     await signInButton.first().click();
 
-    await expect
-      .poll(
-        async () => {
-          if (await sideNavigation.isVisible().catch(() => false)) {
-            return 'authenticated';
-          }
+    if (keycloakSignInUrl) {
+      await completeLocalKeycloakSignInAsync(
+        request,
+        page,
+        baseURL,
+        keycloakSignInUrl
+      );
+      await page.unroute(
+        '**/realms/caretogether-local/protocol/openid-connect/token'
+      );
+    } else {
+      await expect
+        .poll(
+          async () => {
+            if (await sideNavigation.isVisible().catch(() => false)) {
+              return 'authenticated';
+            }
 
-          if (
-            await temporaryError
-              .first()
-              .isVisible()
-              .catch(() => false)
-          ) {
-            const errorText = await temporaryError
-              .first()
-              .textContent()
-              .catch(() => '');
-            console.log(
-              'Temporary error text after identity provider sign-in:',
-              errorText
-            );
-            return 'temporary-error';
-          }
+            if (
+              await temporaryError
+                .first()
+                .isVisible()
+                .catch(() => false)
+            ) {
+              return 'temporary-error';
+            }
 
-          return 'loading';
-        },
-        {
-          timeout: 240_000,
-          intervals: [1000, 2000, 5000],
-        }
-      )
-      .toBe('authenticated');
+            return 'loading';
+          },
+          {
+            timeout: 240_000,
+            intervals: [1000, 2000, 5000],
+          }
+        )
+        .toBe('authenticated');
+    }
   }
 
   if (
@@ -176,14 +252,6 @@ test('login as administrator', async ({ page, baseURL }) => {
   }
 
   await expect(sideNavigation).toBeVisible({ timeout: 240_000 });
-
-  if (consoleErrors.length > 0) {
-    console.log('Console errors:', consoleErrors);
-  }
-
-  if (pageErrors.length > 0) {
-    console.log('Page errors:', pageErrors);
-  }
 
   await page.context().storageState({ path: AUTH_FILE });
 });

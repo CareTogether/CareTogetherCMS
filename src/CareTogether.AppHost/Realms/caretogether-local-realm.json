@@ -10,16 +10,34 @@
       "clientId": "caretogether-pwa",
       "name": "CareTogether PWA",
       "enabled": true,
+      "rootUrl": "http://localhost:3000",
+      "baseUrl": "/",
+      "adminUrl": "http://localhost:3000",
       "publicClient": true,
       "standardFlowEnabled": true,
       "implicitFlowEnabled": false,
       "directAccessGrantsEnabled": true,
       "protocol": "openid-connect",
+      "defaultClientScopes": [
+        "web-origins",
+        "acr",
+        "profile",
+        "roles",
+        "basic",
+        "email"
+      ],
+      "optionalClientScopes": [
+        "address",
+        "phone",
+        "offline_access",
+        "microprofile-jwt"
+      ],
       "redirectUris": [
+        "http://localhost:3000",
         "http://localhost:3000/*"
       ],
       "webOrigins": [
-        "http://localhost:3000"
+        "+"
       ],
       "attributes": {
         "pkce.code.challenge.method": "S256"
@@ -28,11 +46,11 @@
         {
           "name": "CareTogether User ID",
           "protocol": "openid-connect",
-          "protocolMapper": "oidc-usermodel-attribute-mapper",
+          "protocolMapper": "oidc-hardcoded-claim-mapper",
           "consentRequired": false,
           "config": {
-            "user.attribute": "caretogether_user_id",
             "claim.name": "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier",
+            "claim.value": "2b87864a-63e3-4406-bcbc-c0068a13ac05",
             "jsonType.label": "String",
             "id.token.claim": "true",
             "access.token.claim": "true",
@@ -63,6 +81,7 @@
   ],
   "users": [
     {
+      "id": "2b87864a-63e3-4406-bcbc-c0068a13ac05",
       "username": "test@bynalogic.com",
       "email": "test@bynalogic.com",
       "firstName": "Administrator",

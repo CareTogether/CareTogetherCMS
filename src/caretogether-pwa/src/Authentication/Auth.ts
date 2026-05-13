@@ -56,15 +56,27 @@ function displayableError(error: Error | unknown) {
   //"Something went wrong during sign-in. Try clearing your browser cache and cookies, and report this as a bug if the issue persists."
 }
 
-function withDefaultScopes(scopes: string[]) {
-  // Add the default OpenID Connect scopes and then deduplicate the resulting entries.
-  return [
-    ...new Set(scopes.concat(['openid', 'profile', 'offline_access', 'email'])),
-  ];
-}
-const scopes = withDefaultScopes([import.meta.env.VITE_APP_AUTH_SCOPES]);
 const keycloakAuthEnabled =
   import.meta.env.VITE_APP_AUTH_PROVIDER?.toLowerCase() === 'keycloak';
+
+function withDefaultScopes(scopes: string[]) {
+  const defaultScopes = keycloakAuthEnabled
+    ? ['openid', 'profile', 'email']
+    : ['openid', 'profile', 'offline_access', 'email'];
+
+  // Add the default OpenID Connect scopes and then deduplicate the resulting entries.
+  return [...new Set(scopes.concat(defaultScopes))];
+}
+
+function parseScopes(scopes: string | undefined) {
+  if (!scopes) {
+    return [];
+  }
+
+  return scopes.split(/\s+/).filter((scope) => scope.length > 0);
+}
+
+const scopes = withDefaultScopes(parseScopes(import.meta.env.VITE_APP_AUTH_SCOPES));
 const keycloakTokenStorageKey = 'caretogether.keycloak.tokens';
 const keycloakPkceStorageKey = 'caretogether.keycloak.pkce';
 const keycloakClockSkewMs = 60_000;
@@ -222,8 +234,11 @@ async function redirectToKeycloakLoginAsync(): Promise<never> {
   authorizationUrl.searchParams.set('code_challenge', codeChallenge);
   authorizationUrl.searchParams.set('code_challenge_method', 'S256');
 
-  window.location.assign(authorizationUrl.toString());
-  throw new Error('Redirecting to Keycloak for sign-in.');
+  setTimeout(() => {
+    window.location.assign(authorizationUrl.toString());
+  }, 0);
+
+  return await new Promise<never>(() => {});
 }
 
 function readKeycloakPkceState(): KeycloakPkceState {
