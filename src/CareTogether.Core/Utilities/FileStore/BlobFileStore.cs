@@ -42,7 +42,7 @@ namespace CareTogether.Utilities.FileStore
                 $"{locationId}/{fileCategory}/{documentSubpath}"
             );
             var sasUri = objectBlob.GenerateSasUri(
-                BlobSasPermissions.Create,
+                BlobSasPermissions.Create | BlobSasPermissions.Write,
                 DateTimeOffset.UtcNow.AddMinutes(15)
             );
             return Task.FromResult(sasUri);

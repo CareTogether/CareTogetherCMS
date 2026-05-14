@@ -82,7 +82,7 @@ public class DateRangeTest
     [TestMethod]
     public void DateRangeConstructorForbidsStartAfterEnd()
     {
-        Assert.ThrowsException<ArgumentException>(() => new DateRange(D(2), D(1)));
+        Assert.ThrowsExactly<ArgumentException>(() => new DateRange(D(2), D(1)));
     }
 
     [DataRow(1, 1, 1, true)]
@@ -273,7 +273,7 @@ public class DateRangeTest
     [TestMethod]
     public void TaggedDateRangeConstructorForbidsStartAfterEnd()
     {
-        Assert.ThrowsException<ArgumentException>(() => new DateRange<char>(D(2), D(1), 'A'));
+        Assert.ThrowsExactly<ArgumentException>(() => new DateRange<char>(D(2), D(1), 'A'));
     }
 
     [DataRow(1, 1, 1, true)]
