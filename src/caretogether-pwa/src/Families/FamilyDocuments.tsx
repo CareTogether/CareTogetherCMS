@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { Menu, MenuItem, Chip, Box } from '@mui/material';
+import { Menu, MenuItem, Box } from '@mui/material';
 import { format } from 'date-fns';
 import { useRecoilValue } from 'recoil';
 import {
@@ -159,33 +159,45 @@ export function FamilyDocuments({
               }}
             >
               <Box
-                component="span"
                 sx={{
+                  display: 'flex',
+                  alignItems: 'baseline',
+                  gap: 0.75,
                   flex: 1,
                   minWidth: 0,
-                  overflow: 'hidden',
-                  textOverflow: 'ellipsis',
-                  whiteSpace: 'nowrap',
                 }}
               >
-                📃 {row.uploadedFileName}
-              </Box>
-
-              {row.kind === 'referral' && (
-                <Chip
-                  label={row.referralTitle}
-                  size="small"
+                <Box
+                  component="span"
                   sx={{
-                    flexShrink: 0,
-                    maxWidth: 180,
-                    '& .MuiChip-label': {
+                    flex: '0 1 auto',
+                    minWidth: 0,
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                    whiteSpace: 'nowrap',
+                  }}
+                >
+                  📃 {row.uploadedFileName}
+                </Box>
+
+                {row.kind === 'referral' && (
+                  <Box
+                    component="span"
+                    sx={{
+                      flex: '1 100 0',
+                      minWidth: 0,
+                      maxWidth: 240,
                       overflow: 'hidden',
                       textOverflow: 'ellipsis',
                       whiteSpace: 'nowrap',
-                    },
-                  }}
-                />
-              )}
+                      color: 'text.secondary',
+                      fontSize: '0.875rem',
+                    }}
+                  >
+                    Referral: {row.referralTitle}
+                  </Box>
+                )}
+              </Box>
 
               {row.timestampUtc && (
                 <Box
