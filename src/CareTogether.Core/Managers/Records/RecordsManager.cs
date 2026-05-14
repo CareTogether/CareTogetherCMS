@@ -233,49 +233,34 @@ namespace CareTogether.Managers.Records
         {
             var userContext = await CreateSessionUserContext(user, organizationId, locationId);
 
-            var atomicCommands = GenerateAtomicCommandsForCompositeCommand(command)
-                .ToImmutableList();
+            var commandPlan = await GenerateCompositeCommandPlanAsync(
+                organizationId,
+                locationId,
+                command
+            );
 
-            foreach (var atomicCommand in atomicCommands)
+            foreach (var userCommand in commandPlan.UserCommands)
                 if (
                     !await AuthorizeCommandAsync(
                         organizationId,
                         locationId,
                         userContext,
-                        atomicCommand
+                        userCommand
                     )
                 )
                     throw new Exception("The user is not authorized to perform this command.");
 
-            foreach (var atomicCommand in atomicCommands)
-                await ExecuteCommandAsync(organizationId, locationId, user, atomicCommand);
+            foreach (var userCommand in commandPlan.UserCommands)
+                await ValidateCommandAsync(organizationId, locationId, userCommand);
 
-            var copiedStaffAssignmentCommands =
-                await GenerateReferralStaffAssignmentCopyCommandsAsync(
-                    organizationId,
-                    locationId,
-                    command
-                );
-
-            foreach (var copiedStaffAssignmentCommand in copiedStaffAssignmentCommands)
-                await v1CasesResource.ExecuteV1CaseCommandAsync(
-                    organizationId,
-                    locationId,
-                    copiedStaffAssignmentCommand,
-                    user.UserId()
-                );
+            foreach (var plannedCommand in commandPlan.AllCommands)
+                await ExecuteCommandAsync(organizationId, locationId, user, plannedCommand);
 
             return await RenderCompositeCommandResultAsync(
                 organizationId,
                 locationId,
                 userContext,
-                atomicCommands
-                    .Concat(
-                        copiedStaffAssignmentCommands.Select(command =>
-                            (AtomicRecordsCommand)new ReferralRecordsCommand(command)
-                        )
-                    )
-                    .ToImmutableList()
+                commandPlan.AllCommands
             );
         }
 
@@ -292,6 +277,7 @@ namespace CareTogether.Managers.Records
                 throw new Exception("The user is not authorized to perform this command.");
             try
             {
+                await ValidateCommandAsync(organizationId, locationId, command);
                 await ExecuteCommandAsync(organizationId, locationId, user, command);
 
                 return await RenderCommandResultAsync(
@@ -480,6 +466,31 @@ namespace CareTogether.Managers.Records
                 referralId,
                 documentId
             );
+        }
+
+        private sealed record CompositeCommandPlan(
+            ImmutableList<AtomicRecordsCommand> UserCommands,
+            ImmutableList<AtomicRecordsCommand> DerivedCommands
+        )
+        {
+            public ImmutableList<AtomicRecordsCommand> AllCommands =>
+                UserCommands.Concat(DerivedCommands).ToImmutableList();
+        }
+
+        private async Task<CompositeCommandPlan> GenerateCompositeCommandPlanAsync(
+            Guid organizationId,
+            Guid locationId,
+            CompositeRecordsCommand command
+        )
+        {
+            var userCommands = GenerateAtomicCommandsForCompositeCommand(command).ToImmutableList();
+            var derivedCommands = await GenerateDerivedAtomicCommandsForCompositeCommandAsync(
+                organizationId,
+                locationId,
+                command
+            );
+
+            return new CompositeCommandPlan(userCommands, derivedCommands);
         }
 
         private IEnumerable<AtomicRecordsCommand> GenerateAtomicCommandsForCompositeCommand(
@@ -684,6 +695,24 @@ namespace CareTogether.Managers.Records
             }
         }
 
+        private async Task<ImmutableList<AtomicRecordsCommand>> GenerateDerivedAtomicCommandsForCompositeCommandAsync(
+            Guid organizationId,
+            Guid locationId,
+            CompositeRecordsCommand command
+        )
+        {
+            var copiedStaffAssignmentCommands =
+                await GenerateReferralStaffAssignmentCopyCommandsAsync(
+                    organizationId,
+                    locationId,
+                    command
+                );
+
+            return copiedStaffAssignmentCommands
+                .Select(command => (AtomicRecordsCommand)new ReferralRecordsCommand(command))
+                .ToImmutableList();
+        }
+
         private async Task<ImmutableList<V1CaseCommand>> GenerateReferralStaffAssignmentCopyCommandsAsync(
             Guid organizationId,
             Guid locationId,
@@ -860,7 +889,6 @@ namespace CareTogether.Managers.Records
                     );
                     return;
                 case ReferralRecordsCommand c:
-                    await ValidateStaffAssignmentCommandAsync(organizationId, locationId, c.Command);
                     await v1CasesResource.ExecuteV1CaseCommandAsync(
                         organizationId,
                         locationId,
@@ -869,7 +897,6 @@ namespace CareTogether.Managers.Records
                     );
                     return;
                 case V1ReferralRecordsCommand c:
-                    await ValidateStaffAssignmentCommandAsync(organizationId, locationId, c.Command);
                     await v1ReferralsResource.ExecuteV1ReferralCommandAsync(
                         organizationId,
                         locationId,
@@ -915,6 +942,26 @@ namespace CareTogether.Managers.Records
                     );
             }
         }
+
+        private Task ValidateCommandAsync(
+            Guid organizationId,
+            Guid locationId,
+            AtomicRecordsCommand command
+        ) =>
+            command switch
+            {
+                ReferralRecordsCommand c => ValidateStaffAssignmentCommandAsync(
+                    organizationId,
+                    locationId,
+                    c.Command
+                ),
+                V1ReferralRecordsCommand c => ValidateStaffAssignmentCommandAsync(
+                    organizationId,
+                    locationId,
+                    c.Command
+                ),
+                _ => Task.CompletedTask,
+            };
 
         private async Task ValidateStaffAssignmentCommandAsync(
             Guid organizationId,
