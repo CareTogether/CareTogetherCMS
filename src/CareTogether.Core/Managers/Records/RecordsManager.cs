@@ -1077,31 +1077,14 @@ namespace CareTogether.Managers.Records
             if (volunteerFamily == null)
                 return false;
 
-            var locationPolicy = await policiesResource.GetCurrentPolicy(
-                organizationId,
-                locationId
-            );
-            var combinedApprovals =
-                await policyEvaluationEngine.CalculateCombinedFamilyApprovalsAsync(
+            var approvalCalculation =
+                await policyEvaluationEngine.CalculateVolunteerFamilyApprovalsAsync(
                     organizationId,
                     locationId,
                     family,
-                    volunteerFamily.CompletedRequirements,
-                    volunteerFamily.ExemptedRequirements,
-                    volunteerFamily.RoleRemovals,
-                    volunteerFamily.IndividualEntries.ToImmutableDictionary(
-                        entry => entry.Key,
-                        entry => entry.Value.CompletedRequirements
-                    ),
-                    volunteerFamily.IndividualEntries.ToImmutableDictionary(
-                        entry => entry.Key,
-                        entry => entry.Value.ExemptedRequirements
-                    ),
-                    volunteerFamily.IndividualEntries.ToImmutableDictionary(
-                        entry => entry.Key,
-                        entry => entry.Value.RoleRemovals
-                    )
+                    volunteerFamily
                 );
+            var combinedApprovals = approvalCalculation.ApprovalStatus;
 
             var hasEligibleIndividualRole =
                 combinedApprovals.IndividualApprovals.TryGetValue(

@@ -389,6 +389,12 @@ namespace CareTogether.Engines.PolicyEvaluation
         }
     }
 
+    public sealed record VolunteerFamilyApprovalCalculationResult(
+        FamilyApprovalStatus ApprovalStatus,
+        ImmutableList<Resources.CompletedRequirementInfo> CompletedFamilyRequirementsWithExpiration,
+        ImmutableDictionary<Guid, ImmutableList<Resources.CompletedRequirementInfo>> CompletedIndividualRequirementsWithExpiration
+    );
+
     public sealed record FamilyRoleVersionApprovalStatus(
         string RoleName,
         string Version,
@@ -488,7 +494,7 @@ namespace CareTogether.Engines.PolicyEvaluation
 
     public interface IPolicyEvaluationEngine
     {
-        //TODO: Merge this with the CombinedFamilyInfoFormatter logic
+        // Prefer CalculateVolunteerFamilyApprovalsAsync when starting from a VolunteerFamilyEntry.
         Task<FamilyApprovalStatus> CalculateCombinedFamilyApprovalsAsync(
             Guid organizationId,
             Guid locationId,
@@ -505,6 +511,13 @@ namespace CareTogether.Engines.PolicyEvaluation
                 ImmutableList<Resources.ExemptedRequirementInfo>
             > exemptedIndividualRequirements,
             ImmutableDictionary<Guid, ImmutableList<RoleRemoval>> individualRoleRemovals
+        );
+
+        Task<VolunteerFamilyApprovalCalculationResult> CalculateVolunteerFamilyApprovalsAsync(
+            Guid organizationId,
+            Guid locationId,
+            Family family,
+            VolunteerFamilyEntry volunteerFamily
         );
 
         Task<V1CaseStatus> CalculateV1CaseStatusAsync(
