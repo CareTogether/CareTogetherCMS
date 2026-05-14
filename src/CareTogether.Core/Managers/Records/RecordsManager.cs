@@ -952,28 +952,27 @@ namespace CareTogether.Managers.Records
         ) =>
             command switch
             {
-                ReferralRecordsCommand c => ValidateStaffAssignmentCommandAsync(
-                    organizationId,
-                    locationId,
-                    c.Command
-                ),
-                V1ReferralRecordsCommand c => ValidateStaffAssignmentCommandAsync(
-                    organizationId,
-                    locationId,
-                    c.Command
-                ),
+                ReferralRecordsCommand { Command: AssignStaffToV1Case assignStaff } =>
+                    ValidateStaffAssignmentCommandAsync(
+                        organizationId,
+                        locationId,
+                        assignStaff
+                    ),
+                V1ReferralRecordsCommand { Command: AssignStaffToV1Referral assignStaff } =>
+                    ValidateStaffAssignmentCommandAsync(
+                        organizationId,
+                        locationId,
+                        assignStaff
+                    ),
                 _ => Task.CompletedTask,
             };
 
         private async Task ValidateStaffAssignmentCommandAsync(
             Guid organizationId,
             Guid locationId,
-            V1ReferralCommand command
+            AssignStaffToV1Referral assignStaff
         )
         {
-            if (command is not AssignStaffToV1Referral assignStaff)
-                return;
-
             var locationPolicy = await policiesResource.GetCurrentPolicy(
                 organizationId,
                 locationId
@@ -1004,12 +1003,9 @@ namespace CareTogether.Managers.Records
         private async Task ValidateStaffAssignmentCommandAsync(
             Guid organizationId,
             Guid locationId,
-            V1CaseCommand command
+            AssignStaffToV1Case assignStaff
         )
         {
-            if (command is not AssignStaffToV1Case assignStaff)
-                return;
-
             var locationPolicy = await policiesResource.GetCurrentPolicy(
                 organizationId,
                 locationId
