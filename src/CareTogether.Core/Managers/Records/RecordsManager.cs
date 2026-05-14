@@ -239,6 +239,8 @@ namespace CareTogether.Managers.Records
                 command
             );
 
+            // User commands are the requested workflow steps and must pass authorization.
+            // Derived commands are workflow side effects covered by the authorized user commands.
             foreach (var userCommand in commandPlan.UserCommands)
                 if (
                     !await AuthorizeCommandAsync(
