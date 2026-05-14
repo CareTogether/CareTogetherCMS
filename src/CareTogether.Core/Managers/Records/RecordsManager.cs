@@ -703,14 +703,28 @@ namespace CareTogether.Managers.Records
             CompositeRecordsCommand command
         )
         {
-            var copiedStaffAssignmentCommands =
-                await GenerateReferralStaffAssignmentCopyCommandsAsync(
-                    organizationId,
-                    locationId,
-                    command
-                );
+            var derivedV1CaseCommands = command switch
+            {
+                LinkReferralToCaseAndAcceptCommand c =>
+                    await GenerateReferralStaffAssignmentCopyCommandsAsync(
+                        organizationId,
+                        locationId,
+                        c.FamilyId,
+                        c.CaseId,
+                        c.ReferralId
+                    ),
+                OpenCaseForReferralAndAcceptCommand c =>
+                    await GenerateReferralStaffAssignmentCopyCommandsAsync(
+                        organizationId,
+                        locationId,
+                        c.FamilyId,
+                        c.CaseId,
+                        c.ReferralId
+                    ),
+                _ => ImmutableList<V1CaseCommand>.Empty,
+            };
 
-            return copiedStaffAssignmentCommands
+            return derivedV1CaseCommands
                 .Select(command => (AtomicRecordsCommand)new ReferralRecordsCommand(command))
                 .ToImmutableList();
         }
@@ -718,31 +732,15 @@ namespace CareTogether.Managers.Records
         private async Task<ImmutableList<V1CaseCommand>> GenerateReferralStaffAssignmentCopyCommandsAsync(
             Guid organizationId,
             Guid locationId,
-            CompositeRecordsCommand command
+            Guid familyId,
+            Guid caseId,
+            Guid referralId
         )
         {
-            var copyTarget = command switch
-            {
-                LinkReferralToCaseAndAcceptCommand c => (
-                    c.FamilyId,
-                    c.CaseId,
-                    c.ReferralId
-                ),
-                OpenCaseForReferralAndAcceptCommand c => (
-                    c.FamilyId,
-                    c.CaseId,
-                    c.ReferralId
-                ),
-                _ => ((Guid FamilyId, Guid CaseId, Guid ReferralId)?)null,
-            };
-
-            if (copyTarget == null)
-                return ImmutableList<V1CaseCommand>.Empty;
-
             var referral = await v1ReferralsResource.GetReferralAsync(
                 organizationId,
                 locationId,
-                copyTarget.Value.ReferralId
+                referralId
             );
             if (referral == null)
                 return ImmutableList<V1CaseCommand>.Empty;
@@ -761,8 +759,8 @@ namespace CareTogether.Managers.Records
                 )
                 .Select(assignment =>
                     (V1CaseCommand)new AssignStaffToV1Case(
-                        copyTarget.Value.FamilyId,
-                        copyTarget.Value.CaseId,
+                        familyId,
+                        caseId,
                         assignment.PersonId,
                         assignment.AssignmentRole
                     )
