@@ -8,7 +8,7 @@ public class IntegrationTest1
     private static readonly TimeSpan DefaultTimeout = TimeSpan.FromMinutes(10);
 
     [Fact]
-    public async Task PlaywrightSetupLoginPassesAgainstAspireWeb()
+    public async Task PlaywrightReferralWorkflowPassesAgainstAspireWeb()
     {
         var cancellationToken = CancellationToken.None;
 
@@ -74,7 +74,8 @@ public class IntegrationTest1
 
         startInfo.ArgumentList.Add("playwright");
         startInfo.ArgumentList.Add("test");
-        startInfo.ArgumentList.Add("--project=setup");
+        startInfo.ArgumentList.Add("playwright_test/referral-workflow.spec.ts");
+        startInfo.ArgumentList.Add("--project=chromium");
 
         startInfo.Environment["PLAYWRIGHT_BASE_URL"] = baseUrl!;
         startInfo.Environment["CT_ADMIN_EMAIL"] = "test@bynalogic.com";
