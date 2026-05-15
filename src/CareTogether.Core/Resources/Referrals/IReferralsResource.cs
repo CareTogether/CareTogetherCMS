@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Immutable;
 using System.Threading.Tasks;
+using CareTogether.Resources;
 using CareTogether.Resources.Policies;
 using JsonPolymorph;
 
@@ -17,6 +18,7 @@ namespace CareTogether.Resources.V1Cases
         ImmutableList<ExemptedRequirementInfo> ExemptedRequirements,
         ImmutableDictionary<string, CompletedCustomFieldInfo> CompletedCustomFields,
         ImmutableDictionary<Guid, ArrangementEntry> Arrangements,
+        ImmutableList<StaffAssignment> StaffAssignments,
         ImmutableList<Activity> History,
         string? Comments
     );
@@ -144,6 +146,20 @@ namespace CareTogether.Resources.V1Cases
 
     public sealed record UpdateReferralComments(Guid FamilyId, Guid ReferralId, string? Comments)
         : V1CaseCommand(FamilyId, ReferralId);
+
+    public sealed record AssignStaffToV1Case(
+        Guid FamilyId,
+        Guid ReferralId,
+        Guid PersonId,
+        string AssignmentRole
+    ) : V1CaseCommand(FamilyId, ReferralId);
+
+    public sealed record UnassignStaffFromV1Case(
+        Guid FamilyId,
+        Guid ReferralId,
+        Guid PersonId,
+        string AssignmentRole
+    ) : V1CaseCommand(FamilyId, ReferralId);
 
     public sealed record CloseReferral(
         Guid FamilyId,

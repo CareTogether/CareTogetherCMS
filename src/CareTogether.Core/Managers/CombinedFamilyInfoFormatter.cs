@@ -98,7 +98,6 @@ namespace CareTogether.Managers
                 await RenderVolunteerFamilyInfoAsync(
                     organizationId,
                     locationId,
-                    locationPolicy,
                     family
                 );
             var notes = await notesResource.ListFamilyNotesAsync(
@@ -261,6 +260,7 @@ namespace CareTogether.Managers
                             ToArrangement(a.Value, v1CaseStatus.IndividualArrangements[a.Key])
                         )
                         .ToImmutableList(),
+                    entry.StaffAssignments,
                     entry.Comments,
                     entry.LinkedV1ReferralIds
                 );
@@ -300,7 +300,6 @@ namespace CareTogether.Managers
         )> RenderVolunteerFamilyInfoAsync(
             Guid organizationId,
             Guid locationId,
-            EffectiveLocationPolicy locationPolicy,
             Family family
         )
         {
@@ -313,43 +312,14 @@ namespace CareTogether.Managers
             if (entry == null)
                 return (null, ImmutableList<UploadedDocumentInfo>.Empty);
 
-            var completedIndividualRequirements = entry.IndividualEntries.ToImmutableDictionary(
-                x => x.Key,
-                x => x.Value.CompletedRequirements
-            );
-            var exemptedIndividualRequirements = entry.IndividualEntries.ToImmutableDictionary(
-                x => x.Key,
-                x => x.Value.ExemptedRequirements
-            );
-            var removedIndividualRoles = entry.IndividualEntries.ToImmutableDictionary(
-                x => x.Key,
-                x => x.Value.RoleRemovals
-            );
-
-            // Apply default action expiration policies to completed requirements before running approval calculations.
-            var applyValidity = (Resources.CompletedRequirementInfo completed) =>
-                ApplyValidityPolicyToCompletedRequirement(locationPolicy, completed);
-            var completedFamilyRequirementsWithExpiration = entry
-                .CompletedRequirements.Select(applyValidity)
-                .ToImmutableList();
-            var completedIndividualRequirementsWithExpiration =
-                completedIndividualRequirements.ToImmutableDictionary(
-                    entry => entry.Key,
-                    entry => entry.Value.Select(applyValidity).ToImmutableList()
-                );
-
-            var combinedFamilyApprovals =
-                await policyEvaluationEngine.CalculateCombinedFamilyApprovalsAsync(
+            var approvalCalculation =
+                await policyEvaluationEngine.CalculateVolunteerFamilyApprovalsAsync(
                     organizationId,
                     locationId,
                     family,
-                    completedFamilyRequirementsWithExpiration,
-                    entry.ExemptedRequirements,
-                    entry.RoleRemovals,
-                    completedIndividualRequirementsWithExpiration,
-                    exemptedIndividualRequirements,
-                    removedIndividualRoles
+                    entry
                 );
+            var combinedFamilyApprovals = approvalCalculation.ApprovalStatus;
 
             var v1CaseEntries = (
                 await v1CasesResource.ListV1CasessAsync(organizationId, locationId)
@@ -374,7 +344,7 @@ namespace CareTogether.Managers
 
             var volunteerFamilyInfo = new VolunteerFamilyInfo(
                 combinedFamilyApprovals.FamilyRoleApprovals,
-                completedFamilyRequirementsWithExpiration,
+                approvalCalculation.CompletedFamilyRequirementsWithExpiration,
                 entry.ExemptedRequirements,
                 combinedFamilyApprovals.CurrentAvailableFamilyApplications,
                 combinedFamilyApprovals.CurrentMissingFamilyRequirements,
@@ -384,7 +354,7 @@ namespace CareTogether.Managers
                     x =>
                     {
                         entry.IndividualEntries.TryGetValue(x.Key, out var individualEntry);
-                        completedIndividualRequirementsWithExpiration.TryGetValue(
+                        approvalCalculation.CompletedIndividualRequirementsWithExpiration.TryGetValue(
                             x.Key,
                             out var completedRequirements
                         );
@@ -415,24 +385,6 @@ namespace CareTogether.Managers
             );
 
             return (volunteerFamilyInfo, entry.UploadedDocuments);
-        }
-
-        internal static Resources.CompletedRequirementInfo ApplyValidityPolicyToCompletedRequirement(
-            EffectiveLocationPolicy policy,
-            Resources.CompletedRequirementInfo completed
-        )
-        {
-            return policy.ActionDefinitions.TryGetValue(
-                completed.RequirementName,
-                out var actionDefinition
-            )
-                ? completed with
-                {
-                    ExpiresAtUtc = actionDefinition.Validity.HasValue
-                        ? completed.CompletedAtUtc + actionDefinition.Validity
-                        : null,
-                }
-                : completed;
         }
     }
 }

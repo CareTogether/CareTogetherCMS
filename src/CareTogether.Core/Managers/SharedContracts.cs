@@ -9,6 +9,7 @@ using CareTogether.Resources.Directory;
 using CareTogether.Resources.Notes;
 using CareTogether.Resources.Policies;
 using CareTogether.Resources.V1Cases;
+using CareTogether.Resources.V1Referrals;
 
 namespace CareTogether.Managers
 {
@@ -31,6 +32,11 @@ namespace CareTogether.Managers
         ImmutableList<Activity> History
     );
 
+    public sealed record V1ReferralInfo(
+        V1Referral Referral,
+        ImmutableList<Permission> UserPermissions
+    );
+
     public sealed record V1Case(
         Guid Id,
         DateTime OpenedAtUtc,
@@ -42,6 +48,7 @@ namespace CareTogether.Managers
         ImmutableList<CompletedCustomFieldInfo> CompletedCustomFields,
         ImmutableList<string> MissingCustomFields,
         ImmutableList<Arrangement> Arrangements,
+        ImmutableList<StaffAssignment> StaffAssignments,
         string? Comments,
         ImmutableList<Guid> LinkedV1ReferralIds
     );

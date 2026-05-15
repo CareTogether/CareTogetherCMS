@@ -31,6 +31,13 @@ namespace CareTogether.Resources
         string UploadedFileName
     );
 
+    public sealed record StaffAssignment(
+        Guid PersonId,
+        string AssignmentRole,
+        DateTime AssignedAtUtc,
+        Guid AssignedByUserId
+    );
+
     public sealed record CompletedCustomFieldInfo(
         Guid UserId,
         DateTime TimestampUtc,
