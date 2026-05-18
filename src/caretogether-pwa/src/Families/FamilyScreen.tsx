@@ -100,6 +100,7 @@ import { useV1CasesModel } from '../Model/V1CasesModel';
 import { formatStatusWithDate } from '../V1Referrals/formatStatusWithDate';
 import { policyData } from '../Model/ConfigurationModel';
 import { StaffAssignmentsSection } from '../StaffAssignments/StaffAssignmentsSection';
+import { STAFF_ASSIGNMENTS_FEATURE_FLAG } from '../StaffAssignments/staffAssignmentsFeatureFlag';
 
 export function FamilyScreen() {
   const familyIdMaybe = useParams<{ familyId: string }>();
@@ -371,6 +372,9 @@ export function FamilyScreen() {
     'updateTestFamilyFlag'
   );
   const referralsEnabled = useFeatureFlagEnabled('referrals');
+  const staffAssignmentsEnabled = useFeatureFlagEnabled(
+    STAFF_ASSIGNMENTS_FEATURE_FLAG
+  );
 
   useScreenTitle(family ? `${familyLastName(family)} Family` : '...');
   useScreenTitleComponent(family ? <TestFamilyBadge family={family} /> : null);
@@ -993,7 +997,8 @@ export function FamilyScreen() {
               )}
             </Grid>
 
-            {permissions(Permission.ViewV1CaseStaffAssignments) &&
+            {staffAssignmentsEnabled &&
+              permissions(Permission.ViewV1CaseStaffAssignments) &&
               selectedV1Case && (
                 <Grid item md={12} sx={{ mt: 2 }}>
                   <StaffAssignmentsSection

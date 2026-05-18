@@ -64,6 +64,8 @@ import {
   useGlobalPermissions,
 } from '../Model/SessionModel';
 import { StaffAssignmentsSection } from '../StaffAssignments/StaffAssignmentsSection';
+import { useFeatureFlagEnabled } from 'posthog-js/react';
+import { STAFF_ASSIGNMENTS_FEATURE_FLAG } from '../StaffAssignments/staffAssignmentsFeatureFlag';
 
 function formatDate(date?: Date) {
   return date
@@ -94,6 +96,9 @@ export function ReferralDetailsPage() {
   const policy = useRecoilValue(policyData);
   const appNavigate = useAppNavigate();
   const globalPermissions = useGlobalPermissions();
+  const staffAssignmentsEnabled = useFeatureFlagEnabled(
+    STAFF_ASSIGNMENTS_FEATURE_FLAG
+  );
   const allPartneringFamiliesPermissions =
     useAllPartneringFamiliesPermissions();
 
@@ -557,7 +562,7 @@ export function ReferralDetailsPage() {
             </Grid>
           )}
 
-          {canViewStaffAssignments && (
+          {staffAssignmentsEnabled && canViewStaffAssignments && (
             <Grid item xs={12} sx={{ mt: 2 }}>
               <StaffAssignmentsSection
                 assignments={currentReferral.staffAssignments ?? []}
