@@ -1143,7 +1143,7 @@ export function FamilyScreen() {
               </>
             )}
             {permissions(Permission.ViewFamilyDocumentMetadata) && (
-              <Grid item xs={12} sm={6} md={4}>
+              <Grid item xs={12} lg={8} xl={5} mb={2}>
                 <Typography
                   className="ph-unmask"
                   variant="h3"
