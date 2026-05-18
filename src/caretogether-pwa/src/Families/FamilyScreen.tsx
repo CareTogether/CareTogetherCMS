@@ -98,6 +98,8 @@ import { visibleReferralsQuery } from '../Model/Data';
 import { useRecoilValue } from 'recoil';
 import { useV1CasesModel } from '../Model/V1CasesModel';
 import { formatStatusWithDate } from '../V1Referrals/formatStatusWithDate';
+import { policyData } from '../Model/ConfigurationModel';
+import { StaffAssignmentsSection } from '../StaffAssignments/StaffAssignmentsSection';
 
 export function FamilyScreen() {
   const familyIdMaybe = useParams<{ familyId: string }>();
@@ -146,6 +148,7 @@ export function FamilyScreen() {
 
   const familyLookup = useFamilyLookup();
   const family = familyLookup(familyId);
+  const policy = useRecoilValue(policyData);
 
   const directoryModel = useDirectoryModel();
 
@@ -989,6 +992,35 @@ export function FamilyScreen() {
                 </Grid>
               )}
             </Grid>
+
+            {permissions(Permission.ViewV1CaseStaffAssignments) &&
+              selectedV1Case && (
+                <Grid item md={12} sx={{ mt: 2 }}>
+                  <StaffAssignmentsSection
+                    assignments={selectedV1Case.staffAssignments ?? []}
+                    policies={
+                      policy.referralPolicy?.staffAssignmentPolicies ?? []
+                    }
+                    canEdit={permissions(Permission.EditV1CaseStaffAssignments)}
+                    onAssign={(personId, assignmentRole) =>
+                      v1CasesModel.assignStaffToV1Case(
+                        familyId,
+                        selectedV1Case.id,
+                        personId,
+                        assignmentRole
+                      )
+                    }
+                    onUnassign={(personId, assignmentRole) =>
+                      v1CasesModel.unassignStaffFromV1Case(
+                        familyId,
+                        selectedV1Case.id,
+                        personId,
+                        assignmentRole
+                      )
+                    }
+                  />
+                </Grid>
+              )}
           </Grid>
 
           <Grid container spacing={0}>

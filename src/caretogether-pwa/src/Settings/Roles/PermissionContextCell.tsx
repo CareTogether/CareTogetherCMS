@@ -12,6 +12,8 @@ import {
   AllVolunteerFamiliesPermissionContext,
   AssignedFunctionsInReferralCoAssigneeFamiliesPermissionContext as AssignedFunctionsInV1CaseCoAssigneeFamiliesPermissionContext,
   AssignedFunctionsInReferralPartneringFamilyPermissionContext as AssignedFunctionsInV1CasePartneringFamilyPermissionContext,
+  AssignedStaffInV1CasePermissionContext,
+  AssignedStaffInV1ReferralPermissionContext,
   CommunityCoMemberFamiliesAssignedFunctionsInReferralCoAssignedFamiliesPermissionContext as CommunityCoMemberFamiliesAssignedFunctionsInV1CaseCoAssignedFamiliesPermissionContext,
   CommunityCoMemberFamiliesAssignedFunctionsInReferralPartneringFamilyPermissionContext as CommunityCoMemberFamiliesAssignedFunctionsInV1CasePartneringFamilyPermissionContext,
   CommunityCoMemberFamiliesPermissionContext,
@@ -24,6 +26,7 @@ import {
 import { useLoadable } from '../../Hooks/useLoadable';
 import {
   allFunctionsInPolicyQuery,
+  allStaffAssignmentRolesInPolicyQuery,
   organizationConfigurationQuery,
 } from '../../Model/ConfigurationModel';
 
@@ -82,6 +85,186 @@ function V1CaseOpenSelector({
           label={context.whenReferralIsOpen ? 'Open Case' : 'Closed Case'}
           sx={{ marginLeft: 3 }}
         />
+      )}
+    </FormGroup>
+  );
+}
+
+function AssignedStaffV1CaseOpenSelector({
+  context,
+  factory,
+  onUpdate,
+}: ContextSelectorProps<AssignedStaffInV1CasePermissionContext>) {
+  const hasValue =
+    typeof context.whenCaseIsOpen !== 'undefined' &&
+    context.whenCaseIsOpen !== null;
+
+  return (
+    <FormGroup>
+      <FormControlLabel
+        control={
+          <Switch
+            size="small"
+            checked={hasValue}
+            onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
+              const newContext = factory();
+              newContext.whenCaseIsOpen = event.target.checked
+                ? true
+                : undefined;
+              onUpdate(newContext);
+            }}
+          />
+        }
+        label={hasValue ? 'Only matching Case status:' : 'Any Case status'}
+      />
+      {hasValue && (
+        <FormControlLabel
+          control={
+            <Checkbox
+              size="small"
+              checked={context.whenCaseIsOpen || false}
+              onChange={(event) => {
+                const newContext = factory();
+                newContext.whenCaseIsOpen = event.target.checked ? true : false;
+                onUpdate(newContext);
+              }}
+            />
+          }
+          label={context.whenCaseIsOpen ? 'Open Case' : 'Closed Case'}
+          sx={{ marginLeft: 3 }}
+        />
+      )}
+    </FormGroup>
+  );
+}
+
+function AssignedStaffV1ReferralOpenSelector({
+  context,
+  factory,
+  onUpdate,
+}: ContextSelectorProps<AssignedStaffInV1ReferralPermissionContext>) {
+  const hasValue =
+    typeof context.whenReferralIsOpen !== 'undefined' &&
+    context.whenReferralIsOpen !== null;
+
+  return (
+    <FormGroup>
+      <FormControlLabel
+        control={
+          <Switch
+            size="small"
+            checked={hasValue}
+            onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
+              const newContext = factory();
+              newContext.whenReferralIsOpen = event.target.checked
+                ? true
+                : undefined;
+              onUpdate(newContext);
+            }}
+          />
+        }
+        label={
+          hasValue ? 'Only matching Referral status:' : 'Any Referral status'
+        }
+      />
+      {hasValue && (
+        <FormControlLabel
+          control={
+            <Checkbox
+              size="small"
+              checked={context.whenReferralIsOpen || false}
+              onChange={(event) => {
+                const newContext = factory();
+                newContext.whenReferralIsOpen = event.target.checked
+                  ? true
+                  : false;
+                onUpdate(newContext);
+              }}
+            />
+          }
+          label={
+            context.whenReferralIsOpen ? 'Open Referral' : 'Closed Referral'
+          }
+          sx={{ marginLeft: 3 }}
+        />
+      )}
+    </FormGroup>
+  );
+}
+
+function AssignmentRoleSelector({
+  context,
+  factory,
+  onUpdate,
+}: ContextSelectorProps<
+  | AssignedStaffInV1CasePermissionContext
+  | AssignedStaffInV1ReferralPermissionContext
+>) {
+  const allStaffAssignmentRoles = useLoadable(
+    allStaffAssignmentRolesInPolicyQuery
+  );
+  const hasValue =
+    typeof context.whenAssignmentRoleIsIn !== 'undefined' &&
+    context.whenAssignmentRoleIsIn !== null;
+
+  return (
+    <FormGroup>
+      {allStaffAssignmentRoles === null ? (
+        <Skeleton />
+      ) : (
+        <>
+          <FormControlLabel
+            control={
+              <Switch
+                size="small"
+                checked={hasValue}
+                onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
+                  const newContext = factory();
+                  newContext.whenAssignmentRoleIsIn = event.target.checked
+                    ? allStaffAssignmentRoles
+                    : undefined;
+                  onUpdate(newContext);
+                }}
+              />
+            }
+            label={
+              hasValue ? 'Only when assignment role is:' : 'Any assignment role'
+            }
+          />
+          {hasValue && (
+            <FormGroup>
+              {allStaffAssignmentRoles.map((assignmentRole) => (
+                <FormControlLabel
+                  key={assignmentRole}
+                  control={
+                    <Checkbox
+                      size="small"
+                      checked={context.whenAssignmentRoleIsIn?.includes(
+                        assignmentRole
+                      )}
+                      onChange={(_, checked) => {
+                        const newContext = factory();
+                        if (checked) {
+                          newContext.whenAssignmentRoleIsIn?.push(
+                            assignmentRole
+                          );
+                        } else {
+                          newContext.whenAssignmentRoleIsIn =
+                            newContext.whenAssignmentRoleIsIn?.filter(
+                              (x) => x !== assignmentRole
+                            );
+                        }
+                        onUpdate(newContext);
+                      }}
+                    />
+                  }
+                  label={assignmentRole}
+                  sx={{ marginLeft: 3 }}
+                />
+              ))}
+            </FormGroup>
+          )}
+        </>
       )}
     </FormGroup>
   );
@@ -333,19 +516,25 @@ export function PermissionContextCell({
               : context instanceof
                   AssignedFunctionsInV1CaseCoAssigneeFamiliesPermissionContext
                 ? 'Assigned Functions in Case - Co-Assigned Families'
-                : context instanceof OwnV1CaseAssigneeFamiliesPermissionContext
-                  ? 'Own Case - Assigned Families'
-                  : context instanceof CommunityMemberPermissionContext
-                    ? 'Community Member - Community'
+                : context instanceof AssignedStaffInV1CasePermissionContext
+                  ? 'Assigned Staff in Case'
+                  : context instanceof
+                      AssignedStaffInV1ReferralPermissionContext
+                    ? 'Assigned Staff in Referral'
                     : context instanceof
-                        CommunityCoMemberFamiliesPermissionContext
-                      ? 'Community Member - Co-Member Families'
-                      : context instanceof
-                          CommunityCoMemberFamiliesAssignedFunctionsInV1CasePartneringFamilyPermissionContext
-                        ? 'Community Member - Co-Member Families - Assigned Functions in Case - Partnering Family'
-                        : CommunityCoMemberFamiliesAssignedFunctionsInV1CaseCoAssignedFamiliesPermissionContext
-                          ? 'Community Member - Co-Member Families - Assigned Functions in Case - Co-Assigned Families'
-                          : JSON.stringify(context);
+                        OwnV1CaseAssigneeFamiliesPermissionContext
+                      ? 'Own Case - Assigned Families'
+                      : context instanceof CommunityMemberPermissionContext
+                        ? 'Community Member - Community'
+                        : context instanceof
+                            CommunityCoMemberFamiliesPermissionContext
+                          ? 'Community Member - Co-Member Families'
+                          : context instanceof
+                              CommunityCoMemberFamiliesAssignedFunctionsInV1CasePartneringFamilyPermissionContext
+                            ? 'Community Member - Co-Member Families - Assigned Functions in Case - Partnering Family'
+                            : CommunityCoMemberFamiliesAssignedFunctionsInV1CaseCoAssignedFamiliesPermissionContext
+                              ? 'Community Member - Co-Member Families - Assigned Functions in Case - Co-Assigned Families'
+                              : JSON.stringify(context);
 
   function assignedFunctionsInV1CasePartneringFamilyPermissionContextFactory(
     context: AssignedFunctionsInV1CasePartneringFamilyPermissionContext
@@ -374,6 +563,24 @@ export function PermissionContextCell({
     const result = new OwnV1CaseAssigneeFamiliesPermissionContext();
     result.whenReferralIsOpen = context.whenReferralIsOpen;
     result.whenAssigneeFunctionIsIn = context.whenAssigneeFunctionIsIn?.slice();
+    return result;
+  }
+
+  function assignedStaffInV1CasePermissionContextFactory(
+    context: AssignedStaffInV1CasePermissionContext
+  ) {
+    const result = new AssignedStaffInV1CasePermissionContext();
+    result.whenCaseIsOpen = context.whenCaseIsOpen;
+    result.whenAssignmentRoleIsIn = context.whenAssignmentRoleIsIn?.slice();
+    return result;
+  }
+
+  function assignedStaffInV1ReferralPermissionContextFactory(
+    context: AssignedStaffInV1ReferralPermissionContext
+  ) {
+    const result = new AssignedStaffInV1ReferralPermissionContext();
+    result.whenReferralIsOpen = context.whenReferralIsOpen;
+    result.whenAssignmentRoleIsIn = context.whenAssignmentRoleIsIn?.slice();
     return result;
   }
 
@@ -484,6 +691,42 @@ export function PermissionContextCell({
               onUpdate={onUpdate}
               factory={() =>
                 ownV1CaseAssigneeFamiliesPermissionContextFactory(context)
+              }
+            />
+          </>
+        )}
+        {context instanceof AssignedStaffInV1CasePermissionContext && (
+          <>
+            <AssignedStaffV1CaseOpenSelector
+              context={context}
+              onUpdate={onUpdate}
+              factory={() =>
+                assignedStaffInV1CasePermissionContextFactory(context)
+              }
+            />
+            <AssignmentRoleSelector
+              context={context}
+              onUpdate={onUpdate}
+              factory={() =>
+                assignedStaffInV1CasePermissionContextFactory(context)
+              }
+            />
+          </>
+        )}
+        {context instanceof AssignedStaffInV1ReferralPermissionContext && (
+          <>
+            <AssignedStaffV1ReferralOpenSelector
+              context={context}
+              onUpdate={onUpdate}
+              factory={() =>
+                assignedStaffInV1ReferralPermissionContextFactory(context)
+              }
+            />
+            <AssignmentRoleSelector
+              context={context}
+              onUpdate={onUpdate}
+              factory={() =>
+                assignedStaffInV1ReferralPermissionContextFactory(context)
               }
             />
           </>

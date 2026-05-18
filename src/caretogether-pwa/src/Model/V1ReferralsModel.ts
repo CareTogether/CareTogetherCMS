@@ -19,6 +19,8 @@ import {
   AcceptV1Referral,
   LinkReferralToCaseAndAcceptCommand,
   OpenCaseForReferralAndAcceptCommand,
+  AssignStaffToV1Referral,
+  UnassignStaffFromV1Referral,
 } from '../GeneratedClient';
 import { commandFactory } from './CommandFactory';
 import { api } from '../Api/Api';
@@ -239,15 +241,16 @@ export function useV1ReferralsModel() {
     );
   };
 
-  const openCaseForReferralAndAcceptCommand = useCompositeRecordsCommandCallback(
-    async (familyId: string, referralId: string, openedAtLocal: Date) =>
-      commandFactory(OpenCaseForReferralAndAcceptCommand, {
-        familyId,
-        caseId: crypto.randomUUID(),
-        referralId,
-        openedAtUtc: openedAtLocal,
-      })
-  );
+  const openCaseForReferralAndAcceptCommand =
+    useCompositeRecordsCommandCallback(
+      async (familyId: string, referralId: string, openedAtLocal: Date) =>
+        commandFactory(OpenCaseForReferralAndAcceptCommand, {
+          familyId,
+          caseId: crypto.randomUUID(),
+          referralId,
+          openedAtUtc: openedAtLocal,
+        })
+    );
 
   const openCaseForReferralAndAccept = async (
     familyId: string,
@@ -399,6 +402,46 @@ export function useV1ReferralsModel() {
     await refreshVisibleAggregates();
   };
 
+  const assignStaffToReferralCommand = useV1ReferralCommandCallback(
+    async (referralId: string, personId: string, assignmentRole: string) =>
+      commandFactory(AssignStaffToV1Referral, {
+        referralId,
+        personId,
+        assignmentRole,
+      })
+  );
+
+  const assignStaffToReferral = async (
+    referralId: string,
+    personId: string,
+    assignmentRole: string
+  ) => {
+    await assignStaffToReferralCommand(referralId, personId, assignmentRole);
+    await refreshVisibleAggregates();
+  };
+
+  const unassignStaffFromReferralCommand = useV1ReferralCommandCallback(
+    async (referralId: string, personId: string, assignmentRole: string) =>
+      commandFactory(UnassignStaffFromV1Referral, {
+        referralId,
+        personId,
+        assignmentRole,
+      })
+  );
+
+  const unassignStaffFromReferral = async (
+    referralId: string,
+    personId: string,
+    assignmentRole: string
+  ) => {
+    await unassignStaffFromReferralCommand(
+      referralId,
+      personId,
+      assignmentRole
+    );
+    await refreshVisibleAggregates();
+  };
+
   return {
     createReferral,
     updateCustomReferralField,
@@ -414,5 +457,7 @@ export function useV1ReferralsModel() {
     exemptReferralRequirement,
     unexemptReferralRequirement,
     uploadReferralDocumentMetadata,
+    assignStaffToReferral,
+    unassignStaffFromReferral,
   };
 }

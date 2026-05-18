@@ -1,0 +1,475 @@
+import { Fragment, useMemo, useState } from 'react';
+import { useRecoilValue } from 'recoil';
+import {
+  Autocomplete,
+  Box,
+  Button,
+  Drawer,
+  Stack,
+  TextField,
+  Typography,
+} from '@mui/material';
+import {
+  CombinedFamilyInfo,
+  Person,
+  RoleApprovalStatus,
+  StaffAssignment,
+  StaffAssignmentPolicy,
+  VolunteerInfo,
+} from '../GeneratedClient';
+import { visibleFamiliesQuery } from '../Model/Data';
+import { familyNameString } from '../Families/FamilyName';
+import { personNameString } from '../Families/PersonName';
+import { useBackdrop } from '../Hooks/useBackdrop';
+import { useAppNavigate } from '../Hooks/useAppNavigate';
+
+type StaffAssignmentCandidate = {
+  personId: string;
+  familyId?: string;
+  familyName: string;
+  label: string;
+};
+
+type PersonDirectoryEntry = {
+  person: Person;
+  familyId: string;
+  familyName: string;
+};
+
+type StaffAssignmentsSectionProps = {
+  title?: string;
+  assignments: StaffAssignment[];
+  policies: StaffAssignmentPolicy[];
+  canEdit: boolean;
+  onAssign: (personId: string, assignmentRole: string) => Promise<void>;
+  onUnassign: (personId: string, assignmentRole: string) => Promise<void>;
+};
+
+function isApprovedOrOnboarded(status?: RoleApprovalStatus) {
+  return (
+    status === RoleApprovalStatus.Approved ||
+    status === RoleApprovalStatus.Onboarded
+  );
+}
+
+function hasActiveRoleRemoval(
+  volunteerInfo: VolunteerInfo | undefined,
+  role: string
+) {
+  return volunteerInfo?.roleRemovals?.some(
+    (removal) =>
+      removal.roleName === role &&
+      (removal.effectiveUntil == null || removal.effectiveUntil > new Date())
+  );
+}
+
+function containsAny(values: string[] | undefined, expected: string[]) {
+  return expected.some((value) => values?.includes(value));
+}
+
+function policyAllowsCandidate(
+  candidate: StaffAssignmentCandidate,
+  family: CombinedFamilyInfo,
+  policy: StaffAssignmentPolicy
+) {
+  const eligibility = policy.eligibility;
+  const volunteerInfo =
+    family.volunteerFamilyInfo?.individualVolunteers?.[candidate.personId];
+  const userInfo = family.users?.find(
+    (user) => user.personId === candidate.personId
+  );
+
+  if (eligibility?.eligiblePeople?.includes(candidate.personId)) return true;
+
+  if (
+    containsAny(
+      userInfo?.locationRoles,
+      eligibility?.eligibleLocationRoles ?? []
+    )
+  ) {
+    return true;
+  }
+
+  if (
+    eligibility?.eligibleIndividualVolunteerRoles?.some(
+      (role) =>
+        isApprovedOrOnboarded(
+          volunteerInfo?.approvalStatusByRole?.[role]?.currentStatus
+        ) && !hasActiveRoleRemoval(volunteerInfo, role)
+    )
+  ) {
+    return true;
+  }
+
+  return eligibility?.eligibleVolunteerFamilyRoles?.some(
+    (role) =>
+      isApprovedOrOnboarded(
+        family.volunteerFamilyInfo?.familyRoleApprovals?.[role]?.currentStatus
+      ) && !hasActiveRoleRemoval(volunteerInfo, role)
+  );
+}
+
+function uniqueValues(values: string[]) {
+  return Array.from(new Set(values.filter(Boolean)));
+}
+
+function buildCandidatesByRole(
+  families: CombinedFamilyInfo[],
+  policies: StaffAssignmentPolicy[]
+) {
+  const candidatesByRole = new Map<string, StaffAssignmentCandidate[]>();
+
+  for (const policy of policies) {
+    const candidatesByPersonId = new Map<string, StaffAssignmentCandidate>();
+
+    for (const family of families) {
+      for (const adult of family.family?.adults ?? []) {
+        const person = adult.item1;
+        const familyId = family.family?.id;
+        if (!person?.id || !person.active || !familyId) continue;
+
+        const familyName = familyNameString(family);
+        const candidate = {
+          personId: person.id,
+          person,
+          familyId,
+          familyName,
+          label: `${personNameString(person)} (${familyName})`,
+        };
+
+        if (!policyAllowsCandidate(candidate, family, policy)) continue;
+
+        candidatesByPersonId.set(candidate.personId, candidate);
+      }
+    }
+
+    candidatesByRole.set(
+      policy.assignmentRole,
+      Array.from(candidatesByPersonId.values()).sort((a, b) =>
+        a.label.localeCompare(b.label)
+      )
+    );
+  }
+
+  return candidatesByRole;
+}
+
+function buildPeopleById(families: CombinedFamilyInfo[]) {
+  const peopleById = new Map<string, PersonDirectoryEntry>();
+
+  for (const family of families) {
+    const familyId = family.family?.id;
+    if (!familyId) continue;
+
+    const familyName = familyNameString(family);
+    for (const adult of family.family?.adults ?? []) {
+      const person = adult.item1;
+      if (person?.id) {
+        peopleById.set(person.id, {
+          person,
+          familyId,
+          familyName,
+        });
+      }
+    }
+  }
+
+  return peopleById;
+}
+
+function sortAssignmentsByPersonName(
+  assignments: StaffAssignment[],
+  peopleById: Map<string, PersonDirectoryEntry>
+) {
+  return [...assignments].sort((a, b) =>
+    personNameString(peopleById.get(a.personId)?.person).localeCompare(
+      personNameString(peopleById.get(b.personId)?.person)
+    )
+  );
+}
+
+function buildDraftAssignments(
+  assignments: StaffAssignment[],
+  roles: string[],
+  peopleById: Map<string, PersonDirectoryEntry>
+) {
+  return Object.fromEntries(
+    roles.map((role) => [
+      role,
+      sortAssignmentsByPersonName(
+        assignments.filter((assignment) => assignment.assignmentRole === role),
+        peopleById
+      )[0]?.personId ?? null,
+    ])
+  );
+}
+
+function assignmentCandidateForPerson(
+  personId: string,
+  peopleById: Map<string, PersonDirectoryEntry>
+): StaffAssignmentCandidate {
+  const personEntry = peopleById.get(personId);
+  const name = personNameString(personEntry?.person);
+
+  return {
+    personId,
+    familyId: personEntry?.familyId,
+    familyName: personEntry?.familyName ?? '',
+    label: personEntry?.familyName
+      ? `${name} (${personEntry.familyName})`
+      : name,
+  };
+}
+
+export function StaffAssignmentsSection({
+  title = 'Staff Assignments',
+  assignments,
+  policies,
+  canEdit,
+  onAssign,
+  onUnassign,
+}: StaffAssignmentsSectionProps) {
+  const families = useRecoilValue(visibleFamiliesQuery);
+  const appNavigate = useAppNavigate();
+  const withBackdrop = useBackdrop();
+  const [drawerOpen, setDrawerOpen] = useState(false);
+  const [draftAssignments, setDraftAssignments] = useState<
+    Record<string, string | null>
+  >({});
+  const [isSaving, setIsSaving] = useState(false);
+
+  const policyRoles = useMemo(
+    () =>
+      uniqueValues(
+        policies.map((policy) => policy.assignmentRole).filter(Boolean)
+      ),
+    [policies]
+  );
+  const roles = useMemo(() => {
+    const configuredRoles = new Set(policyRoles);
+    const unconfiguredAssignedRoles = uniqueValues(
+      assignments
+        .map((assignment) => assignment.assignmentRole)
+        .filter((role) => role && !configuredRoles.has(role))
+    ).sort((a, b) => a.localeCompare(b));
+
+    return policyRoles.concat(unconfiguredAssignedRoles);
+  }, [assignments, policyRoles]);
+
+  const candidatesByRole = useMemo(
+    () => buildCandidatesByRole(families, policies),
+    [families, policies]
+  );
+  const peopleById = useMemo(() => buildPeopleById(families), [families]);
+
+  function openDrawer() {
+    setDraftAssignments(buildDraftAssignments(assignments, roles, peopleById));
+    setDrawerOpen(true);
+  }
+
+  function closeDrawer() {
+    setDrawerOpen(false);
+    setDraftAssignments({});
+  }
+
+  function getOptionsForRole(assignmentRole: string) {
+    const options = candidatesByRole.get(assignmentRole) ?? [];
+    const selectedPersonId = draftAssignments[assignmentRole];
+    if (
+      !selectedPersonId ||
+      options.some((option) => option.personId === selectedPersonId)
+    ) {
+      return options;
+    }
+
+    return options.concat(
+      assignmentCandidateForPerson(selectedPersonId, peopleById)
+    );
+  }
+
+  async function saveAssignments() {
+    setIsSaving(true);
+    try {
+      await withBackdrop(async () => {
+        for (const assignmentRole of roles) {
+          const selectedPersonId = draftAssignments[assignmentRole] ?? null;
+          const currentAssignments = assignments.filter(
+            (assignment) => assignment.assignmentRole === assignmentRole
+          );
+
+          for (const assignment of currentAssignments) {
+            if (assignment.personId === selectedPersonId) continue;
+
+            await onUnassign(assignment.personId, assignmentRole);
+          }
+
+          const isAlreadyAssigned =
+            selectedPersonId !== null &&
+            currentAssignments.some(
+              (assignment) => assignment.personId === selectedPersonId
+            );
+
+          if (selectedPersonId !== null && !isAlreadyAssigned) {
+            await onAssign(selectedPersonId, assignmentRole);
+          }
+        }
+      });
+      closeDrawer();
+    } finally {
+      setIsSaving(false);
+    }
+  }
+
+  return (
+    <Box className="ph-unmask" sx={{ width: '100%' }}>
+      <Stack direction="row" alignItems="center" spacing={2} sx={{ mb: 1 }}>
+        <Typography variant="h3">{title}</Typography>
+        {canEdit && (
+          <Button variant="outlined" size="small" onClick={openDrawer}>
+            Edit assignments
+          </Button>
+        )}
+      </Stack>
+
+      {roles.length === 0 ? (
+        <Typography variant="body2" color="text.secondary">
+          No staff assignment roles configured.
+        </Typography>
+      ) : (
+        <Stack spacing={0.5}>
+          {roles.map((assignmentRole) => {
+            const assignedStaff = sortAssignmentsByPersonName(
+              assignments.filter(
+                (assignment) => assignment.assignmentRole === assignmentRole
+              ),
+              peopleById
+            );
+
+            return (
+              <Typography key={assignmentRole}>
+                <strong>{assignmentRole}:</strong>{' '}
+                {assignedStaff.length === 0
+                  ? '—'
+                  : assignedStaff.map((assignment, index) => {
+                      const personEntry = peopleById.get(assignment.personId);
+                      const name = personNameString(personEntry?.person);
+
+                      return (
+                        <Fragment
+                          key={`${assignment.assignmentRole}:${assignment.personId}`}
+                        >
+                          {index > 0 && ', '}
+                          {personEntry ? (
+                            <Button
+                              variant="text"
+                              sx={{
+                                p: 0,
+                                minWidth: 'auto',
+                                textTransform: 'none',
+                                fontSize: 'inherit',
+                                fontWeight: 'inherit',
+                                lineHeight: 'inherit',
+                                verticalAlign: 'baseline',
+                              }}
+                              onClick={() =>
+                                appNavigate.family(personEntry.familyId)
+                              }
+                            >
+                              {name}
+                            </Button>
+                          ) : (
+                            name
+                          )}
+                        </Fragment>
+                      );
+                    })}
+              </Typography>
+            );
+          })}
+        </Stack>
+      )}
+
+      <Drawer
+        anchor="right"
+        open={drawerOpen}
+        onClose={isSaving ? undefined : closeDrawer}
+        PaperProps={{
+          sx: {
+            width: 500,
+            p: 3,
+            top: 45,
+          },
+        }}
+      >
+        <Stack spacing={2}>
+          <Typography variant="h6">Edit Staff Assignments</Typography>
+
+          {roles.map((assignmentRole) => {
+            const options = getOptionsForRole(assignmentRole);
+            const selectedPersonId = draftAssignments[assignmentRole] ?? null;
+            const selectedCandidate =
+              options.find((option) => option.personId === selectedPersonId) ??
+              null;
+
+            return (
+              <Box key={assignmentRole}>
+                <Typography variant="subtitle1" sx={{ fontWeight: 600, mb: 1 }}>
+                  {assignmentRole}
+                </Typography>
+
+                <Autocomplete
+                  disablePortal
+                  value={selectedCandidate}
+                  options={options}
+                  getOptionLabel={(option) => option.label}
+                  isOptionEqualToValue={(option, value) =>
+                    option.personId === value.personId
+                  }
+                  disabled={isSaving}
+                  noOptionsText="No eligible people available"
+                  onChange={(_, candidate) => {
+                    setDraftAssignments((current) => ({
+                      ...current,
+                      [assignmentRole]: candidate?.personId ?? null,
+                    }));
+                  }}
+                  renderInput={(params) => (
+                    <TextField
+                      {...params}
+                      fullWidth
+                      label={
+                        options.length === 0
+                          ? 'No eligible people available'
+                          : 'Assigned person'
+                      }
+                    />
+                  )}
+                />
+              </Box>
+            );
+          })}
+
+          <Stack direction="row" justifyContent="flex-end" spacing={2}>
+            <Button
+              color="secondary"
+              variant="contained"
+              disabled={isSaving}
+              onClick={closeDrawer}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="contained"
+              disabled={isSaving}
+              onClick={() => {
+                void saveAssignments();
+              }}
+            >
+              Save
+            </Button>
+          </Stack>
+        </Stack>
+      </Drawer>
+    </Box>
+  );
+}
