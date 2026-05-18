@@ -1,6 +1,11 @@
 import {
   Button,
+  FormControl,
   Grid,
+  InputLabel,
+  MenuItem,
+  Select,
+  SelectChangeEvent,
   Stack,
   Table,
   TableBody,
@@ -23,7 +28,9 @@ import {
 } from '@mui/icons-material';
 import {
   ArrangementPhase,
+  CombinedFamilyInfo,
   Permission,
+  V1Referral,
   V1ReferralStatus,
 } from '../GeneratedClient';
 import { CreatePartneringFamilyDrawer } from './CreatePartneringFamilyDrawer';
@@ -33,7 +40,7 @@ import { policyData } from '../Model/ConfigurationModel';
 import { SearchBar } from '../Shell/SearchBar';
 import {
   filterFamiliesByText,
-  sortFamiliesByLastNameDesc,
+  familyLastName,
 } from '../Families/FamilyUtils';
 import { useAllPartneringFamiliesPermissions } from '../Model/SessionModel';
 import { useScreenTitle } from '../Shell/ShellScreenTitle';
@@ -53,6 +60,131 @@ import { getFamilyCounty } from '../Utilities/getFamilyCounty';
 import { CountyFilter } from '../V1Referrals/CountyFilter';
 import { visibleReferralsQuery } from '../Model/Data';
 
+const PARTNERING_FAMILIES_SORT_STORAGE_KEY = 'partnering-families-sortMode';
+
+type PartneringFamiliesSortMode = 'familyName' | 'dateOpened';
+
+function isPartneringFamiliesSortMode(
+  value: unknown
+): value is PartneringFamiliesSortMode {
+  return value === 'familyName' || value === 'dateOpened';
+}
+
+function safeDateTime(value: Date | string | null | undefined) {
+  if (!value) {
+    return null;
+  }
+
+  const time = new Date(value).getTime();
+
+  return Number.isNaN(time) ? null : time;
+}
+
+function compareByFamilyName(
+  firstFamily: CombinedFamilyInfo,
+  secondFamily: CombinedFamilyInfo
+) {
+  const firstLastName = familyLastName(firstFamily);
+  const secondLastName = familyLastName(secondFamily);
+
+  if (firstLastName < secondLastName) {
+    return -1;
+  }
+
+  if (firstLastName > secondLastName) {
+    return 1;
+  }
+
+  return (firstFamily.family?.id ?? '').localeCompare(
+    secondFamily.family?.id ?? ''
+  );
+}
+
+function openReferralByFamilyId(referrals: V1Referral[]) {
+  return referrals.reduce((referralByFamilyId, referral) => {
+    if (referral.status !== V1ReferralStatus.Open || !referral.familyId) {
+      return referralByFamilyId;
+    }
+
+    const currentReferral = referralByFamilyId.get(referral.familyId);
+    const currentReferralTime = safeDateTime(currentReferral?.createdAtUtc);
+    const referralTime = safeDateTime(referral.createdAtUtc);
+
+    if (currentReferral && (referralTime ?? 0) <= (currentReferralTime ?? 0)) {
+      return referralByFamilyId;
+    }
+
+    referralByFamilyId.set(referral.familyId, referral);
+    return referralByFamilyId;
+  }, new Map<string, V1Referral>());
+}
+
+function getOpenedAtTime(
+  family: CombinedFamilyInfo,
+  openReferralByFamily: Map<string, V1Referral>
+) {
+  const caseOpenedAt = safeDateTime(
+    family.partneringFamilyInfo?.openV1Case?.openedAtUtc
+  );
+
+  if (caseOpenedAt !== null) {
+    return caseOpenedAt;
+  }
+
+  const familyId = family.family?.id;
+
+  if (!familyId) {
+    return null;
+  }
+
+  return safeDateTime(openReferralByFamily.get(familyId)?.createdAtUtc);
+}
+
+function compareByDateOpened(
+  firstFamily: CombinedFamilyInfo,
+  secondFamily: CombinedFamilyInfo,
+  openReferralByFamily: Map<string, V1Referral>
+) {
+  const firstOpenedAt = getOpenedAtTime(firstFamily, openReferralByFamily);
+  const secondOpenedAt = getOpenedAtTime(secondFamily, openReferralByFamily);
+
+  if (firstOpenedAt === null && secondOpenedAt === null) {
+    return compareByFamilyName(firstFamily, secondFamily);
+  }
+
+  if (firstOpenedAt === null) {
+    return 1;
+  }
+
+  if (secondOpenedAt === null) {
+    return -1;
+  }
+
+  if (firstOpenedAt === secondOpenedAt) {
+    return compareByFamilyName(firstFamily, secondFamily);
+  }
+
+  return secondOpenedAt - firstOpenedAt;
+}
+
+function sortPartneringFamilies(
+  families: CombinedFamilyInfo[],
+  sortMode: PartneringFamiliesSortMode,
+  openReferralByFamily: Map<string, V1Referral>
+) {
+  return families.map((family) => family).sort((firstFamily, secondFamily) => {
+    if (sortMode === 'dateOpened') {
+      return compareByDateOpened(
+        firstFamily,
+        secondFamily,
+        openReferralByFamily
+      );
+    }
+
+    return compareByFamilyName(firstFamily, secondFamily);
+  });
+}
+
 function isSetupOrActiveArrangementPhase(phase: ArrangementPhase | undefined) {
   return (
     phase === ArrangementPhase.Started ||
@@ -64,15 +196,19 @@ function isSetupOrActiveArrangementPhase(phase: ArrangementPhase | undefined) {
 function PartneringFamilies() {
   const appNavigate = useAppNavigate();
 
-  // The array object returned by Recoil is read-only. We need to copy it before we can do an in-place sort.
   const partneringFamiliesLoadable = useLoadable(partneringFamiliesData);
-  const partneringFamilies = sortFamiliesByLastNameDesc(
-    partneringFamiliesLoadable || []
+  const partneringFamilies = React.useMemo(
+    () => partneringFamiliesLoadable || [],
+    [partneringFamiliesLoadable]
   );
   const visibleReferralsLoadable = useLoadable(visibleReferralsQuery);
   const visibleReferrals = React.useMemo(
     () => visibleReferralsLoadable || [],
     [visibleReferralsLoadable]
+  );
+  const openReferralByFamily = React.useMemo(
+    () => openReferralByFamilyId(visibleReferrals),
+    [visibleReferrals]
   );
 
   const arrangementTypes = useLoadable(
@@ -89,10 +225,22 @@ function PartneringFamilies() {
 
   const [filterText, setFilterText] = useState('');
   const [countyFilter, setCountyFilter] = useState<(string | null)[]>([]);
+  const [storedSortMode, setStoredSortMode] =
+    useLocalStorage<PartneringFamiliesSortMode>(
+      PARTNERING_FAMILIES_SORT_STORAGE_KEY,
+      'familyName'
+    );
+  const sortMode = isPartneringFamiliesSortMode(storedSortMode)
+    ? storedSortMode
+    : 'familyName';
 
-  const filteredPartneringFamilies = filterFamiliesByText(
-    partneringFamilies,
-    filterText
+  function setSortMode(value: PartneringFamiliesSortMode) {
+    setStoredSortMode(value);
+  }
+
+  const filteredPartneringFamilies = React.useMemo(
+    () => filterFamiliesByText(partneringFamilies, filterText),
+    [filterText, partneringFamilies]
   );
 
   const {
@@ -141,75 +289,87 @@ function PartneringFamilies() {
       'partnering-families-arrangementsFilter',
       'All'
     );
-  const filteredPartneringFamiliesWithActiveOrAllFilter =
-    filteredPartneringFamilies
-      .filter((family) =>
-        matchesCustomFieldFilters({
-          item: family,
-          customFields: referralCustomFields,
-          selectedValuesByField: selectedCustomFieldValuesByField,
-          isBlank: (f, fieldName) =>
-            f.partneringFamilyInfo?.openV1Case?.missingCustomFields?.includes(
-              fieldName
-            ) ?? false,
-          getValue: (f, fieldName) =>
-            f.partneringFamilyInfo?.openV1Case?.completedCustomFields?.find(
-              (x) => x.customFieldName === fieldName
-            )?.value,
-        })
-      )
-      .filter((family) => {
-        if (countyFilter.length === 0) return true;
+  const sortedPartneringFamilies = React.useMemo(
+    () =>
+      sortPartneringFamilies(
+        filteredPartneringFamilies
+          .filter((family) =>
+            matchesCustomFieldFilters({
+              item: family,
+              customFields: referralCustomFields,
+              selectedValuesByField: selectedCustomFieldValuesByField,
+              isBlank: (f, fieldName) =>
+                f.partneringFamilyInfo?.openV1Case?.missingCustomFields?.includes(
+                  fieldName
+                ) ?? false,
+              getValue: (f, fieldName) =>
+                f.partneringFamilyInfo?.openV1Case?.completedCustomFields?.find(
+                  (x) => x.customFieldName === fieldName
+                )?.value,
+            })
+          )
+          .filter((family) => {
+            if (countyFilter.length === 0) return true;
 
-        const county = getFamilyCounty(family);
-        return county === null
-          ? countyFilter.includes(null)
-          : countyFilter.includes(county);
-      })
-      .filter((family) => {
-        const familyId = family.family?.id;
-        const openCase = family.partneringFamilyInfo?.openV1Case;
-        const arrangements = openCase?.arrangements ?? [];
-        const hasOpenReferralWithoutCase =
-          !openCase &&
-          visibleReferrals.some(
-            (referral) =>
-              referral.familyId === familyId &&
-              referral.status === V1ReferralStatus.Open
-          );
+            const county = getFamilyCounty(family);
+            return county === null
+              ? countyFilter.includes(null)
+              : countyFilter.includes(county);
+          })
+          .filter((family) => {
+            const familyId = family.family?.id;
+            const openCase = family.partneringFamilyInfo?.openV1Case;
+            const arrangements = openCase?.arrangements ?? [];
+            const hasOpenReferralWithoutCase =
+              !openCase &&
+              !!familyId &&
+              openReferralByFamily.has(familyId);
 
-        switch (arrangementsFilter) {
-          case 'All':
-            return true;
+            switch (arrangementsFilter) {
+              case 'All':
+                return true;
 
-          case 'Intake':
-            if (hasOpenReferralWithoutCase) return true;
-            if (!openCase) return false;
+              case 'Intake':
+                if (hasOpenReferralWithoutCase) return true;
+                if (!openCase) return false;
 
-            return arrangements.length === 0;
+                return arrangements.length === 0;
 
-          case 'Active':
-            return arrangements.some(
-              (arrangement) => arrangement.phase === ArrangementPhase.Started
-            );
+              case 'Active':
+                return arrangements.some(
+                  (arrangement) =>
+                    arrangement.phase === ArrangementPhase.Started
+                );
 
-          case 'Setup':
-            return arrangements.some(
-              (arrangement) =>
-                arrangement.phase === ArrangementPhase.SettingUp ||
-                arrangement.phase === ArrangementPhase.ReadyToStart
-            );
+              case 'Setup':
+                return arrangements.some(
+                  (arrangement) =>
+                    arrangement.phase === ArrangementPhase.SettingUp ||
+                    arrangement.phase === ArrangementPhase.ReadyToStart
+                );
 
-          case 'Active + Setup':
-            return arrangements.some(
-              (arrangement) =>
-                isSetupOrActiveArrangementPhase(arrangement.phase)
-            );
+              case 'Active + Setup':
+                return arrangements.some((arrangement) =>
+                  isSetupOrActiveArrangementPhase(arrangement.phase)
+                );
 
-          default:
-            return true;
-        }
-      });
+              default:
+                return true;
+            }
+          }),
+        sortMode,
+        openReferralByFamily
+      ),
+    [
+      arrangementsFilter,
+      countyFilter,
+      filteredPartneringFamilies,
+      openReferralByFamily,
+      referralCustomFields,
+      selectedCustomFieldValuesByField,
+      sortMode,
+    ]
+  );
 
   React.useEffect(() => {
     forceCheck();
@@ -217,7 +377,8 @@ function PartneringFamilies() {
     arrangementsFilter,
     filterText,
     selectedCustomFieldValuesByField,
-    visibleReferrals,
+    sortMode,
+    openReferralByFamily,
   ]);
 
   const theme = useTheme();
@@ -325,6 +486,21 @@ function PartneringFamilies() {
             onChange={setCountyFilter}
           />
 
+          <FormControl size="small" sx={{ minWidth: 140 }}>
+            <InputLabel id="partnering-families-sort-label">Sort by</InputLabel>
+            <Select
+              labelId="partnering-families-sort-label"
+              value={sortMode}
+              label="Sort by"
+              onChange={(event: SelectChangeEvent) =>
+                setSortMode(event.target.value as PartneringFamiliesSortMode)
+              }
+            >
+              <MenuItem value="familyName">Family name</MenuItem>
+              <MenuItem value="dateOpened">Date opened</MenuItem>
+            </Select>
+          </FormControl>
+
           <SearchBar value={filterText} onChange={setFilterText} />
 
           <ToggleButtonGroup
@@ -386,24 +562,22 @@ function PartneringFamilies() {
             </TableHead>
 
             <TableBody>
-              {filteredPartneringFamiliesWithActiveOrAllFilter.map(
-                (partneringFamily) => (
-                  <PartneringFamilyTableItem
-                    key={partneringFamily.family?.id}
-                    partneringFamily={partneringFamily}
-                    arrangementTypes={arrangementTypes}
-                    arrangementsFilter={arrangementsFilter}
-                    expandedView={expandedView}
-                    openArrangement={(familyId, v1CaseId, arrangementId) =>
-                      appNavigate.family(familyId, v1CaseId, arrangementId)
-                    }
-                    openFamily={openFamily}
-                    referralCustomFields={referralCustomFields}
-                    arrangementStatusSummary={arrangementStatusSummary}
-                    updateTestFamilyFlagEnabled={updateTestFamilyFlagEnabled}
-                  />
-                )
-              )}
+              {sortedPartneringFamilies.map((partneringFamily) => (
+                <PartneringFamilyTableItem
+                  key={partneringFamily.family?.id}
+                  partneringFamily={partneringFamily}
+                  arrangementTypes={arrangementTypes}
+                  arrangementsFilter={arrangementsFilter}
+                  expandedView={expandedView}
+                  openArrangement={(familyId, v1CaseId, arrangementId) =>
+                    appNavigate.family(familyId, v1CaseId, arrangementId)
+                  }
+                  openFamily={openFamily}
+                  referralCustomFields={referralCustomFields}
+                  arrangementStatusSummary={arrangementStatusSummary}
+                  updateTestFamilyFlagEnabled={updateTestFamilyFlagEnabled}
+                />
+              ))}
             </TableBody>
           </Table>
         </TableContainer>
@@ -412,7 +586,12 @@ function PartneringFamilies() {
           <CreatePartneringFamilyDrawer
             onClose={(partneringFamilyId) => {
               setCreatePartneringFamilyDialogOpen(false);
-              partneringFamilyId && openFamily(partneringFamilyId);
+
+              if (!partneringFamilyId) {
+                return;
+              }
+
+              openFamily(partneringFamilyId);
             }}
           />
         )}
