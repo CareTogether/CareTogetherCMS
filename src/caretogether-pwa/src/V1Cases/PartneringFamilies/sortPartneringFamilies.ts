@@ -5,12 +5,25 @@ import {
 } from '../../GeneratedClient';
 import { familyLastName } from '../../Families/FamilyUtils';
 
-export type PartneringFamiliesSortMode = 'familyName' | 'dateOpened';
+export type PartneringFamiliesSortMode =
+  | 'lastNameAsc'
+  | 'lastNameDesc'
+  | 'dateOpenedDesc'
+  | 'dateOpenedAsc';
 
-export function isPartneringFamiliesSortMode(
+export function normalizePartneringFamiliesSortMode(
   value: unknown
-): value is PartneringFamiliesSortMode {
-  return value === 'familyName' || value === 'dateOpened';
+): PartneringFamiliesSortMode {
+  if (
+    value === 'lastNameAsc' ||
+    value === 'lastNameDesc' ||
+    value === 'dateOpenedDesc' ||
+    value === 'dateOpenedAsc'
+  ) {
+    return value;
+  }
+
+  return 'lastNameAsc';
 }
 
 function safeDateTime(value: Date | string | null | undefined) {
@@ -83,7 +96,7 @@ function getOpenedAtTime(
   return safeDateTime(openReferralByFamily.get(familyId)?.createdAtUtc);
 }
 
-function compareByDateOpened(
+function compareByDateOpenedDesc(
   firstFamily: CombinedFamilyInfo,
   secondFamily: CombinedFamilyInfo,
   openReferralByFamily: Map<string, V1Referral>
@@ -110,18 +123,42 @@ function compareByDateOpened(
   return secondOpenedAt - firstOpenedAt;
 }
 
+function compareByDateOpenedAsc(
+  firstFamily: CombinedFamilyInfo,
+  secondFamily: CombinedFamilyInfo,
+  openReferralByFamily: Map<string, V1Referral>
+) {
+  return compareByDateOpenedDesc(
+    secondFamily,
+    firstFamily,
+    openReferralByFamily
+  );
+}
+
 export function sortPartneringFamilies(
   families: CombinedFamilyInfo[],
   sortMode: PartneringFamiliesSortMode,
   openReferralByFamily: Map<string, V1Referral>
 ) {
   return families.map((family) => family).sort((firstFamily, secondFamily) => {
-    if (sortMode === 'dateOpened') {
-      return compareByDateOpened(
+    if (sortMode === 'dateOpenedDesc') {
+      return compareByDateOpenedDesc(
         firstFamily,
         secondFamily,
         openReferralByFamily
       );
+    }
+
+    if (sortMode === 'dateOpenedAsc') {
+      return compareByDateOpenedAsc(
+        firstFamily,
+        secondFamily,
+        openReferralByFamily
+      );
+    }
+
+    if (sortMode === 'lastNameDesc') {
+      return compareByFamilyName(secondFamily, firstFamily);
     }
 
     return compareByFamilyName(firstFamily, secondFamily);

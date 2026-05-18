@@ -2,6 +2,7 @@ import {
   Button,
   FormControl,
   Grid,
+  InputBase,
   InputLabel,
   MenuItem,
   Select,
@@ -23,13 +24,11 @@ import { partneringFamiliesData } from '../Model/V1CasesModel';
 import React, { useState } from 'react';
 import {
   Add as AddIcon,
+  FilterList as FilterListIcon,
   UnfoldLess as UnfoldLessIcon,
   UnfoldMore as UnfoldMoreIcon,
 } from '@mui/icons-material';
-import {
-  ArrangementPhase,
-  Permission,
-} from '../GeneratedClient';
+import { ArrangementPhase, Permission } from '../GeneratedClient';
 import { CreatePartneringFamilyDrawer } from './CreatePartneringFamilyDrawer';
 import { useScrollMemory } from '../Hooks/useScrollMemory';
 import { useLocalStorage } from '../Hooks/useLocalStorage';
@@ -41,7 +40,6 @@ import { useScreenTitle } from '../Shell/ShellScreenTitle';
 import { useLoadable } from '../Hooks/useLoadable';
 import { ProgressBackdrop } from '../Shell/ProgressBackdrop';
 import { useAppNavigate } from '../Hooks/useAppNavigate';
-import { CustomFieldsFilter } from '../Generic/CustomFieldsFilter/CustomFieldsFilter';
 import { useCustomFieldFilters } from '../Generic/CustomFieldsFilter/useCustomFieldFilters';
 import { matchesCustomFieldFilters } from '../Generic/CustomFieldsFilter/matchesCustomFieldFilters';
 import { useFeatureFlagEnabled } from 'posthog-js/react';
@@ -54,11 +52,13 @@ import { getFamilyCounty } from '../Utilities/getFamilyCounty';
 import { CountyFilter } from '../V1Referrals/CountyFilter';
 import { visibleReferralsQuery } from '../Model/Data';
 import {
-  isPartneringFamiliesSortMode,
+  normalizePartneringFamiliesSortMode,
   openReferralByFamilyId,
   PartneringFamiliesSortMode,
   sortPartneringFamilies,
 } from './PartneringFamilies/sortPartneringFamilies';
+import { useSidePanel } from '../Hooks/useSidePanel';
+import { PartneringFamilyCustomFieldFiltersSidePanel } from './PartneringFamilies/PartneringFamilyCustomFieldFiltersSidePanel';
 
 const PARTNERING_FAMILIES_SORT_STORAGE_KEY = 'partnering-families-sortMode';
 
@@ -72,6 +72,11 @@ function isSetupOrActiveArrangementPhase(phase: ArrangementPhase | undefined) {
 
 function PartneringFamilies() {
   const appNavigate = useAppNavigate();
+  const {
+    SidePanel: CustomFieldFiltersSidePanel,
+    openSidePanel: openCustomFieldFiltersSidePanel,
+    closeSidePanel: closeCustomFieldFiltersSidePanel,
+  } = useSidePanel();
 
   const partneringFamiliesLoadable = useLoadable(partneringFamiliesData);
   const partneringFamilies = React.useMemo(
@@ -99,17 +104,16 @@ function PartneringFamilies() {
   const referralCustomFields = React.useMemo(() => {
     return loadablePolicy?.referralPolicy?.customFields || [];
   }, [loadablePolicy]);
+  const customFieldCount = referralCustomFields.length;
 
   const [filterText, setFilterText] = useState('');
   const [countyFilter, setCountyFilter] = useState<(string | null)[]>([]);
   const [storedSortMode, setStoredSortMode] =
     useLocalStorage<PartneringFamiliesSortMode>(
       PARTNERING_FAMILIES_SORT_STORAGE_KEY,
-      'familyName'
+      'lastNameAsc'
     );
-  const sortMode = isPartneringFamiliesSortMode(storedSortMode)
-    ? storedSortMode
-    : 'familyName';
+  const sortMode = normalizePartneringFamiliesSortMode(storedSortMode);
 
   function setSortMode(value: PartneringFamiliesSortMode) {
     setStoredSortMode(value);
@@ -136,6 +140,9 @@ function PartneringFamilies() {
         (f) => f.customFieldName === fieldName
       )?.value,
   });
+  const activeCustomFieldFilterCount = Object.values(
+    selectedCustomFieldValuesByField
+  ).filter((selectedValues) => selectedValues.length > 0).length;
 
   useScrollMemory();
 
@@ -198,9 +205,7 @@ function PartneringFamilies() {
             const openCase = family.partneringFamilyInfo?.openV1Case;
             const arrangements = openCase?.arrangements ?? [];
             const hasOpenReferralWithoutCase =
-              !openCase &&
-              !!familyId &&
-              openReferralByFamily.has(familyId);
+              !openCase && !!familyId && openReferralByFamily.has(familyId);
 
             switch (arrangementsFilter) {
               case 'All':
@@ -267,13 +272,12 @@ function PartneringFamilies() {
 
   const permissions = useAllPartneringFamiliesPermissions();
 
-  const referralsEnabled = useFeatureFlagEnabled('referrals');
-
   const canCreateFamily =
     permissions(Permission.EditFamilyInfo) &&
     permissions(Permission.CreateV1Case);
 
-  const showAddFamilyButton = !referralsEnabled && canCreateFamily;
+  // const showAddFamilyButton = !referralsEnabled && canCreateFamily;
+  const showAddFamilyButton = true;
 
   useScreenTitle('Clients');
 
@@ -308,7 +312,6 @@ function PartneringFamilies() {
               Add new client family
             </Button>
           )}
-
           <ToggleButtonGroup
             value={arrangementsFilter}
             exclusive
@@ -349,37 +352,52 @@ function PartneringFamilies() {
               </ToggleButton>
             </Tooltip>
           </ToggleButtonGroup>
-
-          <CustomFieldsFilter
-            customFields={referralCustomFields}
-            optionsByField={customFieldFilterOptionsByField}
-            selectedValuesByField={selectedCustomFieldValuesByField}
-            onFieldChange={setSelectedCustomFieldValuesForField}
-          />
-
           <CountyFilter
             families={partneringFamilies}
             value={countyFilter}
             onChange={setCountyFilter}
           />
-
-          <FormControl size="small" sx={{ minWidth: 140 }}>
-            <InputLabel id="partnering-families-sort-label">Sort by</InputLabel>
-            <Select
-              labelId="partnering-families-sort-label"
-              value={sortMode}
-              label="Sort by"
-              onChange={(event: SelectChangeEvent) =>
-                setSortMode(event.target.value as PartneringFamiliesSortMode)
-              }
+          {customFieldCount > 0 && (
+            <FormControl
+              sx={{
+                position: 'relative',
+                minWidth: { xs: '100%', sm: 0 },
+                maxWidth: { xs: '100%', sm: '16rem' },
+              }}
             >
-              <MenuItem value="familyName">Family name</MenuItem>
-              <MenuItem value="dateOpened">Date opened</MenuItem>
-            </Select>
-          </FormControl>
+              <Select
+                labelId="partneringFamilyCustomFieldsFilter"
+                displayEmpty
+                value=""
+                open={false}
+                variant="standard"
+                onClick={() => openCustomFieldFiltersSidePanel()}
+                sx={{
+                  minWidth: { xs: '100%', sm: 0 },
+                  maxWidth: '100%',
+                  '& .MuiSelect-iconOpen': { transform: 'none' },
+                  '& .MuiSelect-select': {
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                    whiteSpace: 'nowrap',
+                    cursor: 'pointer',
+                  },
+                }}
+                input={<InputBase />}
+                IconComponent={FilterListIcon}
+                SelectDisplayProps={{
+                  title: `Custom fields (${activeCustomFieldFilterCount}/${customFieldCount})`,
+                }}
+                renderValue={() =>
+                  `Custom fields (${activeCustomFieldFilterCount}/${customFieldCount})`
+                }
+              >
+                <MenuItem value="" sx={{ display: 'none' }} />
+              </Select>
+            </FormControl>
+          )}
 
           <SearchBar value={filterText} onChange={setFilterText} />
-
           <ToggleButtonGroup
             value={expandedView}
             exclusive
@@ -395,6 +413,37 @@ function PartneringFamilies() {
             </ToggleButton>
           </ToggleButtonGroup>
         </Stack>
+
+        <Stack my={2} direction="row" justifyContent="flex-end">
+          <FormControl size="small" sx={{ minWidth: 140 }}>
+            <InputLabel id="partnering-families-sort-label">Sort by</InputLabel>
+            <Select
+              labelId="partnering-families-sort-label"
+              value={sortMode}
+              label="Sort by"
+              onChange={(event: SelectChangeEvent) =>
+                setSortMode(event.target.value as PartneringFamiliesSortMode)
+              }
+            >
+              <MenuItem value="lastNameAsc">Last name (ascending)</MenuItem>
+              <MenuItem value="lastNameDesc">Last name (descending)</MenuItem>
+              <MenuItem value="dateOpenedDesc">
+                Date opened (descending)
+              </MenuItem>
+              <MenuItem value="dateOpenedAsc">Date opened (ascending)</MenuItem>
+            </Select>
+          </FormControl>
+        </Stack>
+
+        <CustomFieldFiltersSidePanel>
+          <PartneringFamilyCustomFieldFiltersSidePanel
+            customFields={referralCustomFields}
+            optionsByField={customFieldFilterOptionsByField}
+            selectedValuesByField={selectedCustomFieldValuesByField}
+            onFieldChange={setSelectedCustomFieldValuesForField}
+            onClose={closeCustomFieldFiltersSidePanel}
+          />
+        </CustomFieldFiltersSidePanel>
       </Grid>
       <Grid item xs={12} className="cases-table">
         <TableContainer
