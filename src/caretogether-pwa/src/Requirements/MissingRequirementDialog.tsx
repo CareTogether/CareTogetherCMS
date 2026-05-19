@@ -135,7 +135,7 @@ export function MissingRequirementDialog({
       ? [contextFamily.partneringFamilyInfo.openV1Case]
       : [];
 
-  const selectedRoleName = policyVersions?.[0]?.roleName;
+  const selectedRoleName = policyVersions?.[0]?.roleName ?? null;
 
   const closedV1Cases: V1Case[] =
     contextFamily?.partneringFamilyInfo?.closedV1Cases
