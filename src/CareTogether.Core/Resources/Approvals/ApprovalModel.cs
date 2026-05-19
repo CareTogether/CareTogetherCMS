@@ -79,7 +79,8 @@ namespace CareTogether.Resources.Approvals
                             c.CompletedAtUtc,
                             ExpiresAtUtc: null,
                             c.UploadedDocumentId,
-                            c.NoteId
+                            c.NoteId,
+                            c.RoleName
                         )
                     ),
                 },
@@ -100,7 +101,8 @@ namespace CareTogether.Resources.Approvals
                             c.RequirementName,
                             DueDate: null,
                             c.AdditionalComments,
-                            c.ExemptionExpiresAtUtc
+                            c.ExemptionExpiresAtUtc,
+                            c.RoleName
                         )
                     ),
                 },
@@ -223,7 +225,8 @@ namespace CareTogether.Resources.Approvals
                             c.CompletedAtUtc,
                             ExpiresAtUtc: null,
                             c.UploadedDocumentId,
-                            c.NoteId
+                            c.NoteId,
+                            c.RoleName
                         )
                     ),
                 },
@@ -243,10 +246,12 @@ namespace CareTogether.Resources.Approvals
                             c.RequirementName,
                             DueDate: null,
                             c.AdditionalComments,
-                            c.ExemptionExpiresAtUtc
+                            c.ExemptionExpiresAtUtc,
+                            c.RoleName
                         )
                     ),
                 },
+
                 UnexemptVolunteerRequirement c => volunteerEntry with
                 {
                     ExemptedRequirements = volunteerEntry.ExemptedRequirements.RemoveAll(x =>
