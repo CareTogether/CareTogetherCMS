@@ -293,7 +293,8 @@ namespace CareTogether.Api.OData
         [property: Key] string RequirementName,
         string Status,
         DateTimeOffset? Date,
-        DateTimeOffset? ExpireDate
+        DateTimeOffset? ExpireDate,
+        string? Role
     );
 
     public sealed record IndividualRequirementStatus(
@@ -303,7 +304,8 @@ namespace CareTogether.Api.OData
         [property: Key] string RequirementName,
         string Status,
         DateTimeOffset? Date,
-        DateTimeOffset? ExpireDate
+        DateTimeOffset? ExpireDate,
+        string? Role
     );
 
     public sealed record LiveModel(
@@ -932,7 +934,8 @@ namespace CareTogether.Api.OData
                             req.RequirementName,
                             "Complete", 
                             req.CompletedAtUtc,
-                            req.ExpiresAtUtc
+                            req.ExpiresAtUtc,
+                            req.RoleName
                         ));
                     }
                 }
@@ -948,7 +951,8 @@ namespace CareTogether.Api.OData
                             req.RequirementName,
                             "Exempted",
                             req.DueDate,
-                            req.ExemptionExpiresAtUtc
+                            req.ExemptionExpiresAtUtc,
+                            req.RoleName
                         ));
                     }
                 }
@@ -965,7 +969,8 @@ namespace CareTogether.Api.OData
                             missing.ActionName, 
                             "Pending", 
                             null,
-                            null
+                            null,
+                            missing.Versions.FirstOrDefault().RoleName
                         ));
                     }
                 }
@@ -992,7 +997,8 @@ namespace CareTogether.Api.OData
                                     req.RequirementName, 
                                     "Complete", 
                                     req.CompletedAtUtc,
-                                    req.ExpiresAtUtc
+                                    req.ExpiresAtUtc,
+                                    req.RoleName
                                 ));
                             }
                         }
@@ -1008,7 +1014,8 @@ namespace CareTogether.Api.OData
                                     missing.ActionName,
                                     "Pending", 
                                     null,
-                                    null
+                                    null,
+                                    missing.Versions.FirstOrDefault().RoleName
                                 ));
                             }
                         }
@@ -1024,7 +1031,8 @@ namespace CareTogether.Api.OData
                                     exempt.RequirementName,
                                     "Exempted",
                                     exempt.DueDate,
-                                    exempt.ExemptionExpiresAtUtc
+                                    exempt.ExemptionExpiresAtUtc,
+                                    exempt.RoleName
                                 ));
                             }
                         }

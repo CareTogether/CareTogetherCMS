@@ -56,6 +56,7 @@ type MissingRequirementDialogProps = {
   requirement: MissingArrangementRequirement | RequirementDefinition | string;
   context: RequirementContext;
   policy: ActionRequirement;
+  policyVersions?: { version: string; roleName: string }[];
   v1CaseId?: string;
   canComplete: boolean;
   canExempt: boolean;
@@ -66,6 +67,7 @@ export function MissingRequirementDialog({
   requirement,
   context,
   policy,
+  policyVersions,
   v1CaseId,
   canComplete,
   canExempt,
@@ -132,6 +134,8 @@ export function MissingRequirementDialog({
     contextFamily?.partneringFamilyInfo?.openV1Case !== undefined
       ? [contextFamily.partneringFamilyInfo.openV1Case]
       : [];
+
+  const selectedRoleName = policyVersions?.[0]?.roleName ?? null;
 
   const closedV1Cases: V1Case[] =
     contextFamily?.partneringFamilyInfo?.closedV1Cases
@@ -386,7 +390,8 @@ export function MissingRequirementDialog({
           policy,
           completedAtLocal!,
           document === '' ? null : document,
-          noteId
+          noteId,
+          selectedRoleName
         );
         break;
       }
@@ -401,7 +406,8 @@ export function MissingRequirementDialog({
           policy,
           completedAtLocal!,
           document === '' ? null : document,
-          noteId
+          noteId,
+          selectedRoleName
         );
         break;
       }
@@ -481,7 +487,8 @@ export function MissingRequirementDialog({
           fid,
           requirementName,
           additionalComments,
-          exemptionExpiresAtLocal
+          exemptionExpiresAtLocal,
+          selectedRoleName
         );
         break;
       }
@@ -493,7 +500,8 @@ export function MissingRequirementDialog({
           context.personId,
           requirementName,
           additionalComments,
-          exemptionExpiresAtLocal
+          exemptionExpiresAtLocal,
+          selectedRoleName
         );
         break;
       }
