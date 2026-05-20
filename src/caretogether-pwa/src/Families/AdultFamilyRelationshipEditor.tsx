@@ -55,6 +55,7 @@ export function AdultFamilyRelationshipEditor({
               </InputLabel>
               <Select
                 labelId="family-relationship-label"
+                label="Relationship to Family"
                 id="family-relationship"
                 value={editor.value?.relationshipToFamily}
                 onChange={(e) =>

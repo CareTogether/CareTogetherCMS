@@ -46,11 +46,12 @@ export function ArrangementReason({
           Reason:&nbsp;
           {editor.editing ? (
             <FormControl required fullWidth size="small">
-              <InputLabel id="arrangement-reason">
+              <InputLabel id="arrangement-reason-label">
                 Reason for Request
               </InputLabel>
               <Select
                 labelId="arrangement-reason-label"
+                label="Reason for Request"
                 id="arrangement-reason"
                 value={editor.value || ''}
                 onChange={(e) => editor.setValue(e.target.value)}

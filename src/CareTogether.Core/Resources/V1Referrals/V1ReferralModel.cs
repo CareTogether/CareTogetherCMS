@@ -46,6 +46,20 @@ namespace CareTogether.Resources.V1Referrals
         Guid? NoteId
     ) : Activity(UserId, AuditTimestampUtc, CompletedAtUtc, UploadedDocumentId, NoteId);
 
+    public sealed record V1ReferralStaffAssigned(
+        Guid UserId,
+        DateTime AuditTimestampUtc,
+        Guid PersonId,
+        string AssignmentRole
+    ) : Activity(UserId, AuditTimestampUtc, AuditTimestampUtc, null, null);
+
+    public sealed record V1ReferralStaffUnassigned(
+        Guid UserId,
+        DateTime AuditTimestampUtc,
+        Guid PersonId,
+        string AssignmentRole
+    ) : Activity(UserId, AuditTimestampUtc, AuditTimestampUtc, null, null);
+
     public sealed class V1ReferralModel
     {
         private ImmutableDictionary<Guid, V1Referral> referrals = ImmutableDictionary<
@@ -129,6 +143,7 @@ namespace CareTogether.Resources.V1Referrals
                             ExemptedRequirements: ImmutableList<ExemptedRequirementInfo>.Empty,
                             UploadedDocuments: ImmutableList<UploadedDocumentInfo>.Empty,
                             DeletedDocuments: ImmutableList<Guid>.Empty,
+                            StaffAssignments: ImmutableList<StaffAssignment>.Empty,
                             History: ImmutableList<Activity>.Empty,
                             Notes: ImmutableList<V1ReferralNoteEntry>.Empty
                         ),
@@ -287,10 +302,90 @@ namespace CareTogether.Resources.V1Referrals
                     },
                     null
                 ),
+                AssignStaffToV1Referral c => AssignStaff(
+                    EnsureExists(referral),
+                    c,
+                    actorUserId,
+                    occurredAtUtc
+                ),
+                UnassignStaffFromV1Referral c => UnassignStaff(
+                    EnsureExists(referral),
+                    c,
+                    actorUserId,
+                    occurredAtUtc
+                ),
                 _ => throw new NotImplementedException(
                     $"The command type '{command.GetType().FullName}' has not been implemented."
                 ),
             };
+        }
+
+        private static (V1Referral Referral, Activity? Activity) AssignStaff(
+            V1Referral referral,
+            AssignStaffToV1Referral command,
+            Guid actorUserId,
+            DateTime occurredAtUtc
+        )
+        {
+            if (
+                referral.StaffAssignments.Any(assignment =>
+                    assignment.PersonId == command.PersonId
+                    && assignment.AssignmentRole == command.AssignmentRole
+                )
+            )
+                return (referral, null);
+
+            return (
+                referral with
+                {
+                    StaffAssignments = referral.StaffAssignments.Add(
+                        new StaffAssignment(
+                            command.PersonId,
+                            command.AssignmentRole,
+                            occurredAtUtc,
+                            actorUserId
+                        )
+                    ),
+                },
+                new V1ReferralStaffAssigned(
+                    actorUserId,
+                    occurredAtUtc,
+                    command.PersonId,
+                    command.AssignmentRole
+                )
+            );
+        }
+
+        private static (V1Referral Referral, Activity? Activity) UnassignStaff(
+            V1Referral referral,
+            UnassignStaffFromV1Referral command,
+            Guid actorUserId,
+            DateTime occurredAtUtc
+        )
+        {
+            if (
+                !referral.StaffAssignments.Any(assignment =>
+                    assignment.PersonId == command.PersonId
+                    && assignment.AssignmentRole == command.AssignmentRole
+                )
+            )
+                return (referral, null);
+
+            return (
+                referral with
+                {
+                    StaffAssignments = referral.StaffAssignments.RemoveAll(assignment =>
+                        assignment.PersonId == command.PersonId
+                        && assignment.AssignmentRole == command.AssignmentRole
+                    ),
+                },
+                new V1ReferralStaffUnassigned(
+                    actorUserId,
+                    occurredAtUtc,
+                    command.PersonId,
+                    command.AssignmentRole
+                )
+            );
         }
 
         private static V1Referral AddActivity(V1Referral referral, Activity? activity) =>

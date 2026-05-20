@@ -5,6 +5,7 @@ import {
   DialogActions,
   Button,
   Autocomplete,
+  Box,
   TextField,
 } from '@mui/material';
 import { useState, useMemo } from 'react';
@@ -54,16 +55,18 @@ export function CompleteOtherDialog({
     <Dialog open={open} onClose={onClose} fullWidth maxWidth="sm">
       <DialogTitle>Complete other...</DialogTitle>
 
-      <DialogContent sx={{ mt: 2 }}>
-        <Autocomplete
-          options={allActionNames}
-          getOptionLabel={(opt) => opt}
-          value={selectedRequirement}
-          onChange={(_, value) => setSelectedRequirement(value)}
-          renderInput={(params) => (
-            <TextField {...params} label="Search any action" fullWidth />
-          )}
-        />
+      <DialogContent>
+        <Box sx={{ pt: 2 }}>
+          <Autocomplete
+            options={allActionNames}
+            getOptionLabel={(opt) => opt}
+            value={selectedRequirement}
+            onChange={(_, value) => setSelectedRequirement(value)}
+            renderInput={(params) => (
+              <TextField {...params} label="Search any action" fullWidth />
+            )}
+          />
+        </Box>
       </DialogContent>
 
       <DialogActions>

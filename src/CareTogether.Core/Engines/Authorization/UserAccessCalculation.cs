@@ -7,6 +7,7 @@ using CareTogether.Resources.Communities;
 using CareTogether.Resources.Directory;
 using CareTogether.Resources.Policies;
 using CareTogether.Resources.V1Cases;
+using CareTogether.Resources.V1Referrals;
 
 namespace CareTogether.Engines.Authorization
 {
@@ -15,6 +16,7 @@ namespace CareTogether.Engines.Authorization
         private readonly IPoliciesResource policiesResource;
         private readonly IDirectoryResource directoryResource;
         private readonly IV1CasesResource v1CasesResource;
+        private readonly IV1ReferralsResource v1ReferralsResource;
         private readonly IApprovalsResource approvalsResource;
         private readonly ICommunitiesResource communitiesResource;
 
@@ -22,6 +24,7 @@ namespace CareTogether.Engines.Authorization
             IPoliciesResource policiesResource,
             IDirectoryResource directoryResource,
             IV1CasesResource v1CasesResource,
+            IV1ReferralsResource v1ReferralsResource,
             IApprovalsResource approvalsResource,
             ICommunitiesResource communitiesResource
         )
@@ -29,6 +32,7 @@ namespace CareTogether.Engines.Authorization
             this.policiesResource = policiesResource;
             this.directoryResource = directoryResource;
             this.v1CasesResource = v1CasesResource;
+            this.v1ReferralsResource = v1ReferralsResource;
             this.approvalsResource = approvalsResource;
             this.communitiesResource = communitiesResource;
         }
@@ -100,6 +104,16 @@ namespace CareTogether.Engines.Authorization
             var targetFamilyV1Cases = v1Cases
                 .Where(v1Case => v1Case.FamilyId == targetFamily?.Id)
                 .ToImmutableList();
+            var v1ReferralAuthorizationContext =
+                context is V1ReferralAuthorizationContext vrac ? vrac : null;
+            var targetV1Referral =
+                v1ReferralAuthorizationContext == null
+                    ? null
+                    : await v1ReferralsResource.GetReferralAsync(
+                        organizationId,
+                        locationId,
+                        v1ReferralAuthorizationContext.ReferralId
+                    );
             var assignedV1Cases = v1Cases
                 .Where(v1Case =>
                     v1Case.Arrangements.Any(arrangement =>
@@ -176,6 +190,8 @@ namespace CareTogether.Engines.Authorization
                         targetFamilyV1Cases,
                         assignedV1Cases,
                         targetFamilyAssignments,
+                        targetV1Referral,
+                        userPersonId,
                         userFamilyCommunities,
                         targetFamilyCommunities,
                         userCommunityRoleAssignments,
@@ -200,6 +216,8 @@ namespace CareTogether.Engines.Authorization
             ImmutableList<Resources.V1Cases.V1CaseEntry> targetFamilyV1Cases,
             ImmutableList<Resources.V1Cases.V1CaseEntry> assignedV1Cases,
             ImmutableList<Resources.V1Cases.V1CaseEntry> targetFamilyAssignedV1Cases,
+            Resources.V1Referrals.V1Referral? targetV1Referral,
+            Guid? userPersonId,
             ImmutableList<Guid> userFamilyCommunities,
             ImmutableList<Guid> targetFamilyCommunities,
             ImmutableList<(Guid Id, string CommunityRole)> userCommunityRoleAssignments,
@@ -316,6 +334,38 @@ namespace CareTogether.Engines.Authorization
                                     c.WhenAssigneeFunctionIsIn == null
                                     || c.WhenAssigneeFunctionIsIn.Contains(iva.ArrangementFunction)
                                 )
+                            )
+                        )
+                    ),
+                AssignedStaffInV1ReferralPermissionContext c => context
+                    is V1ReferralAuthorizationContext
+                    && targetV1Referral != null
+                    && userPersonId.HasValue
+                    && (
+                        c.WhenReferralIsOpen == null
+                        || c.WhenReferralIsOpen
+                            == (targetV1Referral.Status == V1ReferralStatus.Open)
+                    )
+                    && targetV1Referral.StaffAssignments.Any(assignment =>
+                        assignment.PersonId == userPersonId.Value
+                        && (
+                            c.WhenAssignmentRoleIsIn == null
+                            || c.WhenAssignmentRoleIsIn.Contains(assignment.AssignmentRole)
+                        )
+                    ),
+                AssignedStaffInV1CasePermissionContext c => context
+                    is FamilyAuthorizationContext
+                    && userPersonId.HasValue
+                    && targetFamilyV1Cases.Any(v1Case =>
+                        (
+                            c.WhenCaseIsOpen == null
+                            || c.WhenCaseIsOpen == (v1Case.ClosedAtUtc == null)
+                        )
+                        && v1Case.StaffAssignments.Any(assignment =>
+                            assignment.PersonId == userPersonId.Value
+                            && (
+                                c.WhenAssignmentRoleIsIn == null
+                                || c.WhenAssignmentRoleIsIn.Contains(assignment.AssignmentRole)
                             )
                         )
                     ),

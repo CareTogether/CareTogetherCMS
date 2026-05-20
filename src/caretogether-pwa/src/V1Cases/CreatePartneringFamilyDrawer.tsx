@@ -280,8 +280,10 @@ export function CreatePartneringFamilyDrawer({
 
         <Grid item xs={12} sm={6}>
           <FormControl fullWidth size="small">
-            <InputLabel>Ethnicity</InputLabel>
+            <InputLabel id="ethnicity-label">Ethnicity</InputLabel>
             <Select
+              labelId="ethnicity-label"
+              label="Ethnicity"
               value={ethnicity}
               onChange={(e) =>
                 setFields({ ...fields, ethnicity: e.target.value as string })

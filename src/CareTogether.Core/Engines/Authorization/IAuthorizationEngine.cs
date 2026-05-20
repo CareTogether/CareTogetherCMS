@@ -26,6 +26,8 @@ namespace CareTogether.Engines.Authorization
     public sealed record FamilyAuthorizationContext(Guid FamilyId, Family? Family = null)
         : AuthorizationContext;
 
+    public sealed record V1ReferralAuthorizationContext(Guid ReferralId) : AuthorizationContext;
+
     public sealed record CommunityAuthorizationContext(Guid CommunityId) : AuthorizationContext;
 
     public sealed record SessionUserContext(ClaimsPrincipal User, Family? UserFamily);

@@ -80,6 +80,16 @@ namespace CareTogether.Core.Test.AuthorizationEngineTests
                     ReferralId,
                     "Intake Form"
                 ),
+                nameof(AssignStaffToV1Referral) => new AssignStaffToV1Referral(
+                    ReferralId,
+                    Guid.NewGuid(),
+                    "Intake Coordinator"
+                ),
+                nameof(UnassignStaffFromV1Referral) => new UnassignStaffFromV1Referral(
+                    ReferralId,
+                    Guid.NewGuid(),
+                    "Intake Coordinator"
+                ),
                 _ => throw new ArgumentOutOfRangeException(nameof(commandName), commandName, null),
             };
 
@@ -143,6 +153,25 @@ namespace CareTogether.Core.Test.AuthorizationEngineTests
             );
 
             Assert.IsFalse(response);
+        }
+
+        [DataTestMethod]
+        [DataRow(nameof(AssignStaffToV1Referral))]
+        [DataRow(nameof(UnassignStaffFromV1Referral))]
+        public async Task ReferralStaffAssignmentCommandsRequireReferralStaffAssignmentEditPermission(
+            string commandName
+        )
+        {
+            var dut = CreateAuthorizationEngine(Permission.EditV1ReferralStaffAssignments);
+
+            var response = await dut.AuthorizeV1ReferralCommandAsync(
+                OrganizationId,
+                LocationId,
+                UserContext(),
+                CommandFor(commandName)
+            );
+
+            Assert.IsTrue(response);
         }
     }
 }

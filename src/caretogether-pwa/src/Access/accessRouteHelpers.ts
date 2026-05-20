@@ -3,6 +3,23 @@ import type { UserAccess } from '../GeneratedClient';
 
 export const LAST_VISITED_LOCATION = 'lastVisitedLocation';
 
+export function accessibleLocationContexts(
+  userOrganizationAccess: UserAccess
+): LocationContext[] {
+  return (
+    userOrganizationAccess.organizations?.flatMap((organization) =>
+      organization.organizationId
+        ? organization.locations
+            ?.filter((location) => location.locationId)
+            .map((location) => ({
+              organizationId: organization.organizationId,
+              locationId: location.locationId,
+            })) ?? []
+        : []
+    ) ?? []
+  );
+}
+
 export function hasLocationAccess(
   userOrganizationAccess: UserAccess,
   locationContext: LocationContext
@@ -18,26 +35,16 @@ export function hasLocationAccess(
   );
 }
 
-function firstAccessibleLocation(
+export function firstAccessibleLocation(
   userOrganizationAccess: UserAccess
 ): LocationContext | null {
-  const firstOrganization = userOrganizationAccess.organizations?.find(
-    (organization) =>
-      organization.organizationId &&
-      organization.locations?.some((location) => location.locationId)
-  );
-  const firstLocation = firstOrganization?.locations?.find(
-    (location) => location.locationId
-  );
+  const [firstLocation] = accessibleLocationContexts(userOrganizationAccess);
 
-  if (!firstOrganization?.organizationId || !firstLocation?.locationId) {
+  if (!firstLocation) {
     return null;
   }
 
-  return {
-    organizationId: firstOrganization.organizationId,
-    locationId: firstLocation.locationId,
-  };
+  return firstLocation;
 }
 
 export function preferredAccessibleLocation(

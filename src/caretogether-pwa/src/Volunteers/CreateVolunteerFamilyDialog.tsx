@@ -182,6 +182,7 @@ export function CreateVolunteerFamilyDialog({
                 </InputLabel>
                 <Select
                   labelId="family-relationship-label"
+                  label="Relationship to Family"
                   id="family-relationship"
                   value={relationshipToFamily}
                   onChange={(e) =>
@@ -278,6 +279,7 @@ export function CreateVolunteerFamilyDialog({
                 <InputLabel id="ethnicity-label">Ethnicity</InputLabel>
                 <Select
                   labelId="ethnicity-label"
+                  label="Ethnicity"
                   id="ethnicity"
                   value={ethnicity}
                   onChange={(e) =>

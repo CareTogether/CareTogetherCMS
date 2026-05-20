@@ -236,7 +236,7 @@ function PartneringFamilyTableRows(props: PartneringFamilyTableItemProps) {
             </Box>
           </TableCell>
 
-          <TableCell>
+          <TableCell colSpan={2 + referralCustomFields.length}>
             <Grid container spacing={2}>
               {arrangementEntries.map((arrangementEntry) => (
                 <Grid item key={arrangementEntry.arrangement.id}>

@@ -54,6 +54,68 @@ namespace CareTogether.Engines.PolicyEvaluation
             );
         }
 
+        public async Task<VolunteerFamilyApprovalCalculationResult> CalculateVolunteerFamilyApprovalsAsync(
+            Guid organizationId,
+            Guid locationId,
+            Family family,
+            VolunteerFamilyEntry volunteerFamily
+        )
+        {
+            var policy = await policiesResource.GetCurrentPolicy(organizationId, locationId);
+
+            var applyValidity = (Resources.CompletedRequirementInfo completed) =>
+                ApplyValidityPolicyToCompletedRequirement(policy, completed);
+            var completedFamilyRequirementsWithExpiration = volunteerFamily
+                .CompletedRequirements.Select(applyValidity)
+                .ToImmutableList();
+            var completedIndividualRequirementsWithExpiration = volunteerFamily
+                .IndividualEntries.ToImmutableDictionary(
+                    entry => entry.Key,
+                    entry => entry.Value.CompletedRequirements.Select(applyValidity).ToImmutableList()
+                );
+
+            var approvalStatus = ApprovalCalculations.CalculateCombinedFamilyApprovals(
+                policy,
+                family,
+                completedFamilyRequirementsWithExpiration,
+                volunteerFamily.ExemptedRequirements,
+                volunteerFamily.RoleRemovals,
+                completedIndividualRequirementsWithExpiration,
+                volunteerFamily.IndividualEntries.ToImmutableDictionary(
+                    entry => entry.Key,
+                    entry => entry.Value.ExemptedRequirements
+                ),
+                volunteerFamily.IndividualEntries.ToImmutableDictionary(
+                    entry => entry.Key,
+                    entry => entry.Value.RoleRemovals
+                )
+            );
+
+            return new VolunteerFamilyApprovalCalculationResult(
+                approvalStatus,
+                completedFamilyRequirementsWithExpiration,
+                completedIndividualRequirementsWithExpiration
+            );
+        }
+
+        private static Resources.CompletedRequirementInfo ApplyValidityPolicyToCompletedRequirement(
+            EffectiveLocationPolicy policy,
+            Resources.CompletedRequirementInfo completed
+        )
+        {
+            return policy.ActionDefinitions.TryGetValue(
+                completed.RequirementName,
+                out var actionDefinition
+            )
+                ? completed with
+                {
+                    ExpiresAtUtc = actionDefinition.Validity.HasValue
+                        ? completed.CompletedAtUtc + actionDefinition.Validity
+                        : null,
+                }
+                : completed;
+        }
+
         internal CompletedRequirementInfo ToCompletedRequirementsForCalculation(
             Resources.CompletedRequirementInfo entry,
             TimeZoneInfo locationTimeZone

@@ -68,6 +68,16 @@ namespace CareTogether.Resources.Policies
         ImmutableList<string>? WhenAssigneeFunctionIsIn
     ) : PermissionContext();
 
+    public sealed record AssignedStaffInV1ReferralPermissionContext(
+        bool? WhenReferralIsOpen,
+        ImmutableList<string>? WhenAssignmentRoleIsIn
+    ) : PermissionContext();
+
+    public sealed record AssignedStaffInV1CasePermissionContext(
+        bool? WhenCaseIsOpen,
+        ImmutableList<string>? WhenAssignmentRoleIsIn
+    ) : PermissionContext();
+
     public sealed record CommunityMemberPermissionContext(
         ImmutableList<string>? WhenOwnCommunityRoleIsIn
     ) : PermissionContext();
@@ -99,7 +109,11 @@ namespace CareTogether.Resources.Policies
         ImmutableList<CustomField> CustomFamilyFields,
         V1CasePolicy ReferralPolicy,
         VolunteerPolicy VolunteerPolicy
-    );
+    )
+    {
+        public V1ReferralPolicy V1ReferralPolicy { get; init; } =
+            new(ImmutableList<StaffAssignmentPolicy>.Empty);
+    };
 
     public enum DocumentLinkRequirement
     {
@@ -145,6 +159,9 @@ namespace CareTogether.Resources.Policies
         ImmutableList<RequirementDefinition>? IntakeRequirements = null
     )
     {
+        public ImmutableList<StaffAssignmentPolicy> StaffAssignmentPolicies { get; init; } =
+            ImmutableList<StaffAssignmentPolicy>.Empty;
+
         public ImmutableList<RequirementDefinition> IntakeRequirements_PRE_MIGRATION =
             RequiredIntakeActionNames
                 .Select(requirementName => new RequirementDefinition(requirementName, true))
@@ -152,7 +169,21 @@ namespace CareTogether.Resources.Policies
                 .ToImmutableList();
     };
 
-    //TODO: Include referral close reasons
+    public sealed record V1ReferralPolicy(
+        ImmutableList<StaffAssignmentPolicy> StaffAssignmentPolicies
+    );
+
+    public sealed record StaffAssignmentPolicy(
+        string AssignmentRole,
+        StaffAssignmentEligibility Eligibility
+    );
+
+    public sealed record StaffAssignmentEligibility(
+        ImmutableList<string> EligibleLocationRoles,
+        ImmutableList<string> EligibleIndividualVolunteerRoles,
+        ImmutableList<string> EligibleVolunteerFamilyRoles,
+        ImmutableList<Guid> EligiblePeople
+    );
 
     public sealed record CustomField(
         string Name,

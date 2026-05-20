@@ -287,6 +287,7 @@ export function AddChildDialog({ onClose }: AddChildDialogProps) {
                 <InputLabel id="ethnicity-label">Ethnicity</InputLabel>
                 <Select
                   labelId="ethnicity-label"
+                  label="Ethnicity"
                   id="ethnicity"
                   value={ethnicity}
                   onChange={(e) =>
