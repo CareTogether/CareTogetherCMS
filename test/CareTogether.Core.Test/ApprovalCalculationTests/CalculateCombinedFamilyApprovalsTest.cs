@@ -311,7 +311,7 @@ namespace CareTogether.Core.Test.ApprovalCalculationTests
             );
 
             var expectedFamilyLevelMissingRequirements =
-                !expectedFamilyLevelMissingRequirementsString.IsNullOrEmpty()
+                !string.IsNullOrEmpty(expectedFamilyLevelMissingRequirementsString)
                     ? expectedFamilyLevelMissingRequirementsString?.Split(',')
                     : null;
             if (expectedFamilyLevelMissingRequirements?.Count() > 0)
@@ -329,7 +329,7 @@ namespace CareTogether.Core.Test.ApprovalCalculationTests
             }
 
             var expectedIndividualLevelMissingRequirements =
-                !expectedIndividualLevelMissingRequirementsString.IsNullOrEmpty()
+                !string.IsNullOrEmpty(expectedIndividualLevelMissingRequirementsString)
                     ? expectedIndividualLevelMissingRequirementsString?.Split(',')
                     : null;
             if (expectedIndividualLevelMissingRequirements?.Count() > 0)
