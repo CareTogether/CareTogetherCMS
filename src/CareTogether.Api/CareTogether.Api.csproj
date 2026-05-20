@@ -39,8 +39,8 @@
   </PropertyGroup>
 
   <Target Name="NSwag" AfterTargets="PostBuildEvent" Condition="'$(Configuration)' == 'Debug'">
-    <Exec WorkingDirectory="$(ProjectDir)" Command="$(NSwagExe_Net80) aspnetcore2openapi /NoBuild:true /Project:$(ProjectDir) /output:$(ProjectDir)..\..\swagger.json" EnvironmentVariables="ASPNETCORE_ENVIRONMENT=Development;OpenApiGen=true" />
-    <Exec WorkingDirectory="$(ProjectDir)" Command="$(NSwagExe_Net80) openapi2tsclient /Input:$(ProjectDir)..\..\swagger.json /output:$(ProjectDir)..\caretogether-pwa\src\GeneratedClient.ts" />
+    <Exec WorkingDirectory="$(ProjectDir)" Command="$(NSwagExe_Net100) aspnetcore2openapi /NoBuild:true /Project:$(ProjectDir) /output:$(ProjectDir)..\..\swagger.json" EnvironmentVariables="ASPNETCORE_ENVIRONMENT=Development;OpenApiGen=true" />
+    <Exec WorkingDirectory="$(ProjectDir)" Command="$(NSwagExe_Net100) openapi2tsclient /Input:$(ProjectDir)..\..\swagger.json /output:$(ProjectDir)..\caretogether-pwa\src\GeneratedClient.ts" />
   </Target>
 
 </Project>
