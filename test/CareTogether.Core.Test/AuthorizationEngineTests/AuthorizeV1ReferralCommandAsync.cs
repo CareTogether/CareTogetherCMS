@@ -26,7 +26,9 @@ namespace CareTogether.Core.Test.AuthorizationEngineTests
             "33333333-3333-3333-3333-333333333333"
         );
 
-        private static AuthorizationEngine CreateAuthorizationEngine(params Permission[] permissions)
+        private static AuthorizationEngine CreateAuthorizationEngine(
+            params Permission[] permissions
+        )
         {
             var userAccessCalculation = new Mock<IUserAccessCalculation>();
             userAccessCalculation
@@ -64,12 +66,11 @@ namespace CareTogether.Core.Test.AuthorizationEngineTests
                     null,
                     null
                 ),
-                nameof(MarkReferralRequirementIncomplete) =>
-                    new MarkReferralRequirementIncomplete(
-                        ReferralId,
-                        Guid.NewGuid(),
-                        "Intake Form"
-                    ),
+                nameof(MarkReferralRequirementIncomplete) => new MarkReferralRequirementIncomplete(
+                    ReferralId,
+                    Guid.NewGuid(),
+                    "Intake Form"
+                ),
                 nameof(ExemptReferralRequirement) => new ExemptReferralRequirement(
                     ReferralId,
                     "Intake Form",
@@ -125,19 +126,13 @@ namespace CareTogether.Core.Test.AuthorizationEngineTests
         }
 
         [DataTestMethod]
-        [DataRow(
-            nameof(CompleteReferralRequirement),
-            Permission.EditV1CaseRequirementCompletion
-        )]
+        [DataRow(nameof(CompleteReferralRequirement), Permission.EditV1CaseRequirementCompletion)]
         [DataRow(
             nameof(MarkReferralRequirementIncomplete),
             Permission.EditV1CaseRequirementCompletion
         )]
         [DataRow(nameof(ExemptReferralRequirement), Permission.EditV1CaseRequirementExemption)]
-        [DataRow(
-            nameof(UnexemptReferralRequirement),
-            Permission.EditV1CaseRequirementExemption
-        )]
+        [DataRow(nameof(UnexemptReferralRequirement), Permission.EditV1CaseRequirementExemption)]
         public async Task ReferralRequirementCommandsDoNotUseV1CaseRequirementPermissions(
             string commandName,
             Permission permission

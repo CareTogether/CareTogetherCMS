@@ -146,7 +146,6 @@ namespace CareTogether.Resources.V1Cases
 
     public sealed record UpdateReferralComments(Guid FamilyId, Guid ReferralId, string? Comments)
         : V1CaseCommand(FamilyId, ReferralId);
-
 }
 
 namespace CareTogether.Resources.V1Cases.V1CaseCommands

@@ -702,7 +702,9 @@ namespace CareTogether.Managers.Records
             }
         }
 
-        private async Task<ImmutableList<AtomicRecordsCommand>> GenerateDerivedAtomicCommandsForCompositeCommandAsync(
+        private async Task<
+            ImmutableList<AtomicRecordsCommand>
+        > GenerateDerivedAtomicCommandsForCompositeCommandAsync(
             Guid organizationId,
             Guid locationId,
             CompositeRecordsCommand command
@@ -734,7 +736,9 @@ namespace CareTogether.Managers.Records
                 .ToImmutableList();
         }
 
-        private async Task<ImmutableList<V1CaseCommand>> GenerateReferralVolunteerAssignmentCopyCommandsAsync(
+        private async Task<
+            ImmutableList<V1CaseCommand>
+        > GenerateReferralVolunteerAssignmentCopyCommandsAsync(
             Guid organizationId,
             Guid locationId,
             Guid familyId,
@@ -763,12 +767,13 @@ namespace CareTogether.Managers.Records
                     caseVolunteerAssignmentRoles.Contains(assignment.AssignmentRole)
                 )
                 .Select(assignment =>
-                    (V1CaseCommand)new V1CaseAssignIndividualVolunteer(
-                        familyId,
-                        caseId,
-                        assignment.PersonId,
-                        assignment.AssignmentRole
-                    )
+                    (V1CaseCommand)
+                        new V1CaseAssignIndividualVolunteer(
+                            familyId,
+                            caseId,
+                            assignment.PersonId,
+                            assignment.AssignmentRole
+                        )
                 )
                 .ToImmutableList();
         }
@@ -955,18 +960,22 @@ namespace CareTogether.Managers.Records
         ) =>
             command switch
             {
-                ReferralRecordsCommand { Command: V1CaseAssignIndividualVolunteer assignIndividualVolunteer } =>
-                    ValidateIndividualVolunteerAssignmentCommandAsync(
-                        organizationId,
-                        locationId,
-                        assignIndividualVolunteer
-                    ),
-                V1ReferralRecordsCommand { Command: V1ReferralAssignIndividualVolunteer assignIndividualVolunteer } =>
-                    ValidateIndividualVolunteerAssignmentCommandAsync(
-                        organizationId,
-                        locationId,
-                        assignIndividualVolunteer
-                    ),
+                ReferralRecordsCommand
+                {
+                    Command: V1CaseAssignIndividualVolunteer assignIndividualVolunteer
+                } => ValidateIndividualVolunteerAssignmentCommandAsync(
+                    organizationId,
+                    locationId,
+                    assignIndividualVolunteer
+                ),
+                V1ReferralRecordsCommand
+                {
+                    Command: V1ReferralAssignIndividualVolunteer assignIndividualVolunteer
+                } => ValidateIndividualVolunteerAssignmentCommandAsync(
+                    organizationId,
+                    locationId,
+                    assignIndividualVolunteer
+                ),
                 _ => Task.CompletedTask,
             };
 
@@ -980,9 +989,9 @@ namespace CareTogether.Managers.Records
                 organizationId,
                 locationId
             );
-            var assignmentPolicy = locationPolicy
-                .V1ReferralPolicy.VolunteerAssignmentPolicies.SingleOrDefault(policy =>
-                    policy.AssignmentRole == assignIndividualVolunteer.AssignmentRole
+            var assignmentPolicy =
+                locationPolicy.V1ReferralPolicy.VolunteerAssignmentPolicies.SingleOrDefault(
+                    policy => policy.AssignmentRole == assignIndividualVolunteer.AssignmentRole
                 );
 
             if (assignmentPolicy == null)
@@ -1013,8 +1022,8 @@ namespace CareTogether.Managers.Records
                 organizationId,
                 locationId
             );
-            var assignmentPolicy = locationPolicy
-                .ReferralPolicy.VolunteerAssignmentPolicies.SingleOrDefault(policy =>
+            var assignmentPolicy =
+                locationPolicy.ReferralPolicy.VolunteerAssignmentPolicies.SingleOrDefault(policy =>
                     policy.AssignmentRole == assignIndividualVolunteer.AssignmentRole
                 );
 
@@ -1043,8 +1052,9 @@ namespace CareTogether.Managers.Records
             VolunteerAssignmentEligibility eligibility
         )
         {
-            var person = (await directoryResource.ListPeopleAsync(organizationId, locationId))
-                .SingleOrDefault(person => person.Id == personId);
+            var person = (
+                await directoryResource.ListPeopleAsync(organizationId, locationId)
+            ).SingleOrDefault(person => person.Id == personId);
 
             if (person == null || !person.Active)
                 return false;
@@ -1348,8 +1358,9 @@ namespace CareTogether.Managers.Records
                     ? referral.History
                     : referral
                         .History.Where(activity =>
-                            activity is not V1ReferralIndividualVolunteerAssigned
-                                and not V1ReferralIndividualVolunteerUnassigned
+                            activity
+                                is not V1ReferralIndividualVolunteerAssigned
+                                    and not V1ReferralIndividualVolunteerUnassigned
                         )
                         .ToImmutableList(),
             };

@@ -374,9 +374,10 @@ namespace CareTogether.Resources.V1Referrals
             return (
                 referral with
                 {
-                    AssignedIndividualVolunteers = referral.AssignedIndividualVolunteers.RemoveAll(assignment =>
-                        assignment.PersonId == command.PersonId
-                        && assignment.AssignmentRole == command.AssignmentRole
+                    AssignedIndividualVolunteers = referral.AssignedIndividualVolunteers.RemoveAll(
+                        assignment =>
+                            assignment.PersonId == command.PersonId
+                            && assignment.AssignmentRole == command.AssignmentRole
                     ),
                 },
                 new V1ReferralIndividualVolunteerUnassigned(

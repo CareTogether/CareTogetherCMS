@@ -945,10 +945,11 @@ namespace CareTogether.Resources.V1Cases
             return (
                 v1CaseEntry with
                 {
-                    AssignedIndividualVolunteers = v1CaseEntry.AssignedIndividualVolunteers.RemoveAll(assignment =>
-                        assignment.PersonId == command.PersonId
-                        && assignment.AssignmentRole == command.AssignmentRole
-                    ),
+                    AssignedIndividualVolunteers =
+                        v1CaseEntry.AssignedIndividualVolunteers.RemoveAll(assignment =>
+                            assignment.PersonId == command.PersonId
+                            && assignment.AssignmentRole == command.AssignmentRole
+                        ),
                 },
                 new V1CaseIndividualVolunteerUnassigned(
                     userId,

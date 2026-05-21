@@ -13,18 +13,10 @@ namespace CareTogether.Core.Test
     [TestClass]
     public sealed class VolunteerAssignmentResourceTests
     {
-        private static readonly Guid UserId = Guid.Parse(
-            "11111111-1111-1111-1111-111111111111"
-        );
-        private static readonly Guid FamilyId = Guid.Parse(
-            "22222222-2222-2222-2222-222222222222"
-        );
-        private static readonly Guid RecordId = Guid.Parse(
-            "33333333-3333-3333-3333-333333333333"
-        );
-        private static readonly Guid PersonId = Guid.Parse(
-            "44444444-4444-4444-4444-444444444444"
-        );
+        private static readonly Guid UserId = Guid.Parse("11111111-1111-1111-1111-111111111111");
+        private static readonly Guid FamilyId = Guid.Parse("22222222-2222-2222-2222-222222222222");
+        private static readonly Guid RecordId = Guid.Parse("33333333-3333-3333-3333-333333333333");
+        private static readonly Guid PersonId = Guid.Parse("44444444-4444-4444-4444-444444444444");
 
         [TestMethod]
         public void V1ReferralAssignedIndividualVolunteersAreActiveStateAndIdempotent()
@@ -167,7 +159,10 @@ namespace CareTogether.Core.Test
 
             v1Case = model.GetV1CaseEntry(RecordId);
             Assert.AreEqual(0, v1Case.AssignedIndividualVolunteers.Count);
-            Assert.AreEqual(1, v1Case.History.OfType<V1CaseIndividualVolunteerUnassigned>().Count());
+            Assert.AreEqual(
+                1,
+                v1Case.History.OfType<V1CaseIndividualVolunteerUnassigned>().Count()
+            );
         }
 
         private static void Commit<TEvent, TState>(
@@ -184,8 +179,12 @@ namespace CareTogether.Core.Test
         ) => result.OnCommit();
 
         private static void Commit<TState>(
-            (ReferralCommandExecuted Event, long SequenceNumber, TState V1CaseEntry, Action OnCommit)
-                result
+            (
+                ReferralCommandExecuted Event,
+                long SequenceNumber,
+                TState V1CaseEntry,
+                Action OnCommit
+            ) result
         ) => result.OnCommit();
     }
 }

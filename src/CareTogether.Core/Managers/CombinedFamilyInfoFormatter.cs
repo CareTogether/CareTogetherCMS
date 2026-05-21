@@ -95,11 +95,7 @@ namespace CareTogether.Managers
             );
 
             var (volunteerFamilyInfo, uploadedApprovalDocuments) =
-                await RenderVolunteerFamilyInfoAsync(
-                    organizationId,
-                    locationId,
-                    family
-                );
+                await RenderVolunteerFamilyInfoAsync(organizationId, locationId, family);
             var notes = await notesResource.ListFamilyNotesAsync(
                 organizationId,
                 locationId,
@@ -297,11 +293,7 @@ namespace CareTogether.Managers
         private async Task<(
             VolunteerFamilyInfo?,
             ImmutableList<UploadedDocumentInfo>
-        )> RenderVolunteerFamilyInfoAsync(
-            Guid organizationId,
-            Guid locationId,
-            Family family
-        )
+        )> RenderVolunteerFamilyInfoAsync(Guid organizationId, Guid locationId, Family family)
         {
             var entry = await approvalsResource.TryGetVolunteerFamilyAsync(
                 organizationId,

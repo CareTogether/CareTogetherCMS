@@ -14,15 +14,11 @@ namespace CareTogether.Core.Test.AuthorizationEngineTests
     [TestClass]
     public sealed class VolunteerAssignmentPermissionContextTests
     {
-        private static readonly Guid PersonId = Guid.Parse(
-            "11111111-1111-1111-1111-111111111111"
-        );
+        private static readonly Guid PersonId = Guid.Parse("11111111-1111-1111-1111-111111111111");
         private static readonly Guid ReferralId = Guid.Parse(
             "22222222-2222-2222-2222-222222222222"
         );
-        private static readonly Guid FamilyId = Guid.Parse(
-            "33333333-3333-3333-3333-333333333333"
-        );
+        private static readonly Guid FamilyId = Guid.Parse("33333333-3333-3333-3333-333333333333");
 
         [TestMethod]
         public void AssignedVolunteerInV1ReferralMatchesOpenReferralAndRole()
@@ -131,17 +127,19 @@ namespace CareTogether.Core.Test.AuthorizationEngineTests
                 AcceptedAtUtc: null,
                 ClosedAtUtc: null,
                 CloseReason: null,
-                CompletedCustomFields: ImmutableDictionary<
-                    string,
-                    CompletedCustomFieldInfo
-                >.Empty,
+                CompletedCustomFields: ImmutableDictionary<string, CompletedCustomFieldInfo>.Empty,
                 CompletedRequirements: [],
                 ExemptedRequirements: [],
                 UploadedDocuments: [],
                 DeletedDocuments: [],
                 AssignedIndividualVolunteers:
                 [
-                    new AssignedIndividualVolunteer(PersonId, "Intake Coordinator", DateTime.UtcNow, PersonId),
+                    new AssignedIndividualVolunteer(
+                        PersonId,
+                        "Intake Coordinator",
+                        DateTime.UtcNow,
+                        PersonId
+                    ),
                 ],
                 History: [],
                 Notes: []
@@ -161,7 +159,12 @@ namespace CareTogether.Core.Test.AuthorizationEngineTests
                 Arrangements: ImmutableDictionary<Guid, ArrangementEntry>.Empty,
                 AssignedIndividualVolunteers:
                 [
-                    new AssignedIndividualVolunteer(PersonId, "Case Manager", DateTime.UtcNow, PersonId),
+                    new AssignedIndividualVolunteer(
+                        PersonId,
+                        "Case Manager",
+                        DateTime.UtcNow,
+                        PersonId
+                    ),
                 ],
                 History: [],
                 Comments: null

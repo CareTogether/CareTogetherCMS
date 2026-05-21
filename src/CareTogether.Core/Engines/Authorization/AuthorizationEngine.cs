@@ -153,10 +153,8 @@ namespace CareTogether.Engines.Authorization
                         Permission.EditV1CaseRequirementExemption,
                     UpdateCustomReferralField => Permission.EditV1Case,
                     UpdateReferralComments => Permission.EditV1Case,
-                    V1CaseAssignIndividualVolunteer =>
-                        Permission.EditV1CaseVolunteerAssignments,
-                    V1CaseUnassignIndividualVolunteer =>
-                        Permission.EditV1CaseVolunteerAssignments,
+                    V1CaseAssignIndividualVolunteer => Permission.EditV1CaseVolunteerAssignments,
+                    V1CaseUnassignIndividualVolunteer => Permission.EditV1CaseVolunteerAssignments,
                     LinkReferralToCase => Permission.EditV1Case,
                     CloseReferral => Permission.CloseV1Case,
                     ReopenReferral => Permission.CloseV1Case,
@@ -953,8 +951,9 @@ namespace CareTogether.Engines.Authorization
                     ? partneringFamilyInfo
                         .History.Where(activity =>
                             contextPermissions.Contains(Permission.ViewV1CaseVolunteerAssignments)
-                            || activity is not V1CaseIndividualVolunteerAssigned
-                                and not V1CaseIndividualVolunteerUnassigned
+                            || activity
+                                is not V1CaseIndividualVolunteerAssigned
+                                    and not V1CaseIndividualVolunteerUnassigned
                         )
                         .ToImmutableList()
                     : ImmutableList<Activity>.Empty,

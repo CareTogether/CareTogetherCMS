@@ -104,8 +104,9 @@ namespace CareTogether.Engines.Authorization
             var targetFamilyV1Cases = v1Cases
                 .Where(v1Case => v1Case.FamilyId == targetFamily?.Id)
                 .ToImmutableList();
-            var v1ReferralAuthorizationContext =
-                context is V1ReferralAuthorizationContext vrac ? vrac : null;
+            var v1ReferralAuthorizationContext = context is V1ReferralAuthorizationContext vrac
+                ? vrac
+                : null;
             var targetV1Referral =
                 v1ReferralAuthorizationContext == null
                     ? null
