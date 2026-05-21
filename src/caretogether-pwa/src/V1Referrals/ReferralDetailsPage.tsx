@@ -21,7 +21,7 @@ import { useFamilyLookup } from '../Model/DirectoryModel';
 import { familyNameString } from '../Families/FamilyName';
 import { useScreenTitle } from '../Shell/ShellScreenTitle';
 import {
-  visibleReferralInfosQuery,
+  visibleReferralsQuery,
   selectedLocationContextState,
 } from '../Model/Data';
 import { useV1ReferralsModel } from '../Model/V1ReferralsModel';
@@ -90,7 +90,7 @@ export function ReferralDetailsPage() {
   useScreenTitle('Referrals');
 
   const { referralId } = useParams<{ referralId: string }>();
-  const referralInfos = useRecoilValue(visibleReferralInfosQuery);
+  const referralInfos = useRecoilValue(visibleReferralsQuery);
   const familyLookup = useFamilyLookup();
   const families = useLoadable(partneringFamiliesData) || [];
   const policy = useRecoilValue(policyData);

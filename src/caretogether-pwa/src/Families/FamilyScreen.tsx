@@ -122,11 +122,13 @@ export function FamilyScreen() {
     c.community?.memberFamilies?.includes(familyId)
   );
 
-  const referrals = useRecoilValue(visibleReferralsQuery);
+  const referralInfos = useRecoilValue(visibleReferralsQuery);
 
   const familyReferrals = useMemo(() => {
-    return (referrals ?? []).filter((r) => r.familyId === familyId);
-  }, [referrals, familyId]);
+    return (referralInfos ?? [])
+      .map((referralInfo) => referralInfo.referral)
+      .filter((r) => r.familyId === familyId);
+  }, [referralInfos, familyId]);
 
   function referralRequirementSummary(referral: V1Referral) {
     const incompleteCount =
@@ -186,11 +188,13 @@ export function FamilyScreen() {
   }, [openV1Cases, closedV1Cases]);
   const [confirmCloseOpen, setConfirmCloseOpen] = useState(false);
   const v1CasesModel = useV1CasesModel();
-  const referralsLoadable = useLoadable(visibleReferralsQuery);
+  const referralInfosLoadable = useLoadable(visibleReferralsQuery);
   const openReferralId =
-    referralsLoadable?.find(
-      (r) => r.familyId === familyId && r.status === V1ReferralStatus.Open
-    )?.referralId ?? undefined;
+    referralInfosLoadable
+      ?.map((referralInfo) => referralInfo.referral)
+      .find(
+        (r) => r.familyId === familyId && r.status === V1ReferralStatus.Open
+      )?.referralId ?? undefined;
   const [openNewV1CaseDialogOpen, setOpenNewV1CaseDialogOpen] = useState(false);
   const [uploadDocumentDialogOpen, setUploadDocumentDialogOpen] =
     useState(false);

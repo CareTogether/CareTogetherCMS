@@ -256,20 +256,6 @@ export const visibleReferralsQuery = selector({
 
     return visibleAggregates
       .filter((aggregate) => aggregate instanceof ReferralRecordsAggregate)
-      .map(
-        (aggregate) =>
-          (aggregate as ReferralRecordsAggregate).referral!.referral!
-      );
-  },
-});
-
-export const visibleReferralInfosQuery = selector({
-  key: 'visibleReferralInfosQuery',
-  get: ({ get }) => {
-    const visibleAggregates = get(visibleAggregatesState);
-
-    return visibleAggregates
-      .filter((aggregate) => aggregate instanceof ReferralRecordsAggregate)
       .map((aggregate) => (aggregate as ReferralRecordsAggregate).referral);
   },
 });

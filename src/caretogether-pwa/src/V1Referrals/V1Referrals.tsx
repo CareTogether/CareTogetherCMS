@@ -104,7 +104,9 @@ function V1ReferralsContent() {
   const [countyFilter, setCountyFilter] = useState<(string | null)[]>([]);
 
   const referrals =
-    referralsLoadable.state === 'hasValue' ? referralsLoadable.contents : [];
+    referralsLoadable.state === 'hasValue'
+      ? referralsLoadable.contents.map((referralInfo) => referralInfo.referral)
+      : [];
 
   const rows = referrals
     .map((r) => {
