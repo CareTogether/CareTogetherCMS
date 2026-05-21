@@ -18,8 +18,8 @@ import {
   AllVolunteerFamiliesPermissionContext,
   AssignedFunctionsInReferralCoAssigneeFamiliesPermissionContext as AssignedFunctionsInV1CaseCoAssigneeFamiliesPermissionContext,
   AssignedFunctionsInReferralPartneringFamilyPermissionContext as AssignedFunctionsInV1CasePartneringFamilyPermissionContext,
-  AssignedStaffInV1CasePermissionContext,
-  AssignedStaffInV1ReferralPermissionContext,
+  AssignedVolunteerInV1CasePermissionContext,
+  AssignedVolunteerInV1ReferralPermissionContext,
   CommunityCoMemberFamiliesPermissionContext,
   CommunityMemberPermissionContext,
   ContextualPermissionSet,
@@ -299,7 +299,7 @@ export function RoleEdit({
         <MenuItem
           dense
           onClick={() =>
-            addPermissionSet(() => new AssignedStaffInV1CasePermissionContext())
+            addPermissionSet(() => new AssignedVolunteerInV1CasePermissionContext())
           }
         >
           Assigned Staff in Case
@@ -308,7 +308,7 @@ export function RoleEdit({
           dense
           onClick={() =>
             addPermissionSet(
-              () => new AssignedStaffInV1ReferralPermissionContext()
+              () => new AssignedVolunteerInV1ReferralPermissionContext()
             )
           }
         >

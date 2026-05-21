@@ -12,7 +12,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 namespace CareTogether.Core.Test.AuthorizationEngineTests
 {
     [TestClass]
-    public sealed class StaffAssignmentPermissionContextTests
+    public sealed class VolunteerAssignmentPermissionContextTests
     {
         private static readonly Guid PersonId = Guid.Parse(
             "11111111-1111-1111-1111-111111111111"
@@ -25,10 +25,10 @@ namespace CareTogether.Core.Test.AuthorizationEngineTests
         );
 
         [TestMethod]
-        public void AssignedStaffInV1ReferralMatchesOpenReferralAndRole()
+        public void AssignedVolunteerInV1ReferralMatchesOpenReferralAndRole()
         {
             var permissionSet = new ContextualPermissionSet(
-                new AssignedStaffInV1ReferralPermissionContext(
+                new AssignedVolunteerInV1ReferralPermissionContext(
                     WhenReferralIsOpen: true,
                     WhenAssignmentRoleIsIn: ["Intake Coordinator"]
                 ),
@@ -57,10 +57,10 @@ namespace CareTogether.Core.Test.AuthorizationEngineTests
         }
 
         [TestMethod]
-        public void AssignedStaffInV1ReferralOpenFilterRequiresExactlyOpenStatus()
+        public void AssignedVolunteerInV1ReferralOpenFilterRequiresExactlyOpenStatus()
         {
             var permissionSet = new ContextualPermissionSet(
-                new AssignedStaffInV1ReferralPermissionContext(
+                new AssignedVolunteerInV1ReferralPermissionContext(
                     WhenReferralIsOpen: true,
                     WhenAssignmentRoleIsIn: null
                 ),
@@ -89,10 +89,10 @@ namespace CareTogether.Core.Test.AuthorizationEngineTests
         }
 
         [TestMethod]
-        public void AssignedStaffInV1CaseMatchesOpenCaseAndRoleThroughFamilyContext()
+        public void AssignedVolunteerInV1CaseMatchesOpenCaseAndRoleThroughFamilyContext()
         {
             var permissionSet = new ContextualPermissionSet(
-                new AssignedStaffInV1CasePermissionContext(
+                new AssignedVolunteerInV1CasePermissionContext(
                     WhenCaseIsOpen: true,
                     WhenAssignmentRoleIsIn: ["Case Manager"]
                 ),
@@ -139,9 +139,9 @@ namespace CareTogether.Core.Test.AuthorizationEngineTests
                 ExemptedRequirements: [],
                 UploadedDocuments: [],
                 DeletedDocuments: [],
-                StaffAssignments:
+                AssignedIndividualVolunteers:
                 [
-                    new StaffAssignment(PersonId, "Intake Coordinator", DateTime.UtcNow, PersonId),
+                    new AssignedIndividualVolunteer(PersonId, "Intake Coordinator", DateTime.UtcNow, PersonId),
                 ],
                 History: [],
                 Notes: []
@@ -159,9 +159,9 @@ namespace CareTogether.Core.Test.AuthorizationEngineTests
                 ExemptedRequirements: [],
                 CompletedCustomFields: ImmutableDictionary<string, CompletedCustomFieldInfo>.Empty,
                 Arrangements: ImmutableDictionary<Guid, ArrangementEntry>.Empty,
-                StaffAssignments:
+                AssignedIndividualVolunteers:
                 [
-                    new StaffAssignment(PersonId, "Case Manager", DateTime.UtcNow, PersonId),
+                    new AssignedIndividualVolunteer(PersonId, "Case Manager", DateTime.UtcNow, PersonId),
                 ],
                 History: [],
                 Comments: null

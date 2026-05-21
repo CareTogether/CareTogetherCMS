@@ -13,8 +13,8 @@ import {
   CombinedFamilyInfo,
   Person,
   RoleApprovalStatus,
-  StaffAssignment,
-  StaffAssignmentPolicy,
+  AssignedIndividualVolunteer,
+  VolunteerAssignmentPolicy,
 } from '../GeneratedClient';
 import { visibleFamiliesQuery } from '../Model/Data';
 import { familyNameString } from '../Families/FamilyName';
@@ -22,12 +22,12 @@ import { personNameString } from '../Families/PersonName';
 import { useBackdrop } from '../Hooks/useBackdrop';
 import { useAppNavigate } from '../Hooks/useAppNavigate';
 
-type StaffAssignmentCandidate = {
+type VolunteerAssignmentCandidate = {
   personId: string;
   familyId?: string;
   familyName: string;
   label: string;
-  candidateType: StaffAssignmentCandidateType;
+  candidateType: VolunteerAssignmentCandidateType;
 };
 
 type PersonDirectoryEntry = {
@@ -36,12 +36,12 @@ type PersonDirectoryEntry = {
   familyName: string;
 };
 
-type StaffAssignmentCandidateType = 'Individuals' | 'Families';
+type VolunteerAssignmentCandidateType = 'Individuals' | 'Families';
 
-type StaffAssignmentsSectionProps = {
+type VolunteerAssignmentsSectionProps = {
   title?: string;
-  assignments: StaffAssignment[];
-  policies: StaffAssignmentPolicy[];
+  assignments: AssignedIndividualVolunteer[];
+  policies: VolunteerAssignmentPolicy[];
   canEdit: boolean;
   onAssign: (personId: string, assignmentRole: string) => Promise<void>;
   onUnassign: (personId: string, assignmentRole: string) => Promise<void>;
@@ -59,10 +59,10 @@ function containsAny(values: string[] | undefined, expected: string[]) {
 }
 
 function candidateTypeForPolicy(
-  candidate: StaffAssignmentCandidate,
+  candidate: VolunteerAssignmentCandidate,
   family: CombinedFamilyInfo,
-  policy: StaffAssignmentPolicy
-): StaffAssignmentCandidateType | null {
+  policy: VolunteerAssignmentPolicy
+): VolunteerAssignmentCandidateType | null {
   const eligibility = policy.eligibility;
   const volunteerInfo =
     family.volunteerFamilyInfo?.individualVolunteers?.[candidate.personId];
@@ -106,13 +106,13 @@ function candidateTypeForPolicy(
   return null;
 }
 
-function candidateTypeSortValue(candidateType: StaffAssignmentCandidateType) {
+function candidateTypeSortValue(candidateType: VolunteerAssignmentCandidateType) {
   return ['Individuals', 'Families'].indexOf(candidateType);
 }
 
 function sortCandidates(
-  candidates: StaffAssignmentCandidate[]
-): StaffAssignmentCandidate[] {
+  candidates: VolunteerAssignmentCandidate[]
+): VolunteerAssignmentCandidate[] {
   return candidates.sort(
     (a, b) =>
       candidateTypeSortValue(a.candidateType) -
@@ -122,8 +122,8 @@ function sortCandidates(
 }
 
 function sortCandidatesForAutocomplete(
-  candidates: StaffAssignmentCandidate[]
-): StaffAssignmentCandidate[] {
+  candidates: VolunteerAssignmentCandidate[]
+): VolunteerAssignmentCandidate[] {
   return [...candidates].sort(
     (a, b) =>
       candidateTypeSortValue(a.candidateType) -
@@ -132,18 +132,18 @@ function sortCandidatesForAutocomplete(
   );
 }
 
-function staffAssignmentCandidate(
+function volunteerAssignmentCandidate(
   person: Person,
   family: CombinedFamilyInfo,
   familyId: string,
-  policy: StaffAssignmentPolicy
-): StaffAssignmentCandidate | null {
+  policy: VolunteerAssignmentPolicy
+): VolunteerAssignmentCandidate | null {
   const baseCandidate = {
     personId: person.id!,
     familyId,
     familyName: familyNameString(family),
     label: personNameString(person),
-    candidateType: 'Individuals' as StaffAssignmentCandidateType,
+    candidateType: 'Individuals' as VolunteerAssignmentCandidateType,
   };
   const candidateType = candidateTypeForPolicy(baseCandidate, family, policy);
   if (candidateType == null) return null;
@@ -160,12 +160,12 @@ function uniqueValues(values: string[]) {
 
 function buildCandidatesByRole(
   families: CombinedFamilyInfo[],
-  policies: StaffAssignmentPolicy[]
+  policies: VolunteerAssignmentPolicy[]
 ) {
-  const candidatesByRole = new Map<string, StaffAssignmentCandidate[]>();
+  const candidatesByRole = new Map<string, VolunteerAssignmentCandidate[]>();
 
   for (const policy of policies) {
-    const candidatesByPersonId = new Map<string, StaffAssignmentCandidate>();
+    const candidatesByPersonId = new Map<string, VolunteerAssignmentCandidate>();
 
     for (const family of families) {
       for (const adult of family.family?.adults ?? []) {
@@ -173,7 +173,7 @@ function buildCandidatesByRole(
         const familyId = family.family?.id;
         if (!person?.id || !person.active || !familyId) continue;
 
-        const candidate = staffAssignmentCandidate(
+        const candidate = volunteerAssignmentCandidate(
           person,
           family,
           familyId,
@@ -218,7 +218,7 @@ function buildPeopleById(families: CombinedFamilyInfo[]) {
 }
 
 function sortAssignmentsByPersonName(
-  assignments: StaffAssignment[],
+  assignments: AssignedIndividualVolunteer[],
   peopleById: Map<string, PersonDirectoryEntry>
 ) {
   return [...assignments].sort((a, b) =>
@@ -229,7 +229,7 @@ function sortAssignmentsByPersonName(
 }
 
 function buildDraftAssignments(
-  assignments: StaffAssignment[],
+  assignments: AssignedIndividualVolunteer[],
   roles: string[],
   peopleById: Map<string, PersonDirectoryEntry>
 ) {
@@ -247,7 +247,7 @@ function buildDraftAssignments(
 function assignmentCandidateForPerson(
   personId: string,
   peopleById: Map<string, PersonDirectoryEntry>
-): StaffAssignmentCandidate {
+): VolunteerAssignmentCandidate {
   const personEntry = peopleById.get(personId);
 
   return {
@@ -259,14 +259,14 @@ function assignmentCandidateForPerson(
   };
 }
 
-export function StaffAssignmentsSection({
-  title = 'Staff Assignments',
+export function VolunteerAssignmentsSection({
+  title = 'Volunteer Assignments',
   assignments,
   policies,
   canEdit,
   onAssign,
   onUnassign,
-}: StaffAssignmentsSectionProps) {
+}: VolunteerAssignmentsSectionProps) {
   const families = useRecoilValue(visibleFamiliesQuery);
   const appNavigate = useAppNavigate();
   const withBackdrop = useBackdrop();
@@ -371,12 +371,12 @@ export function StaffAssignmentsSection({
 
       {roles.length === 0 ? (
         <Typography variant="body2" color="text.secondary">
-          No staff assignment roles configured.
+          No volunteer assignment roles configured.
         </Typography>
       ) : (
         <Stack spacing={0.5}>
           {roles.map((assignmentRole) => {
-            const assignedStaff = sortAssignmentsByPersonName(
+            const assignedVolunteers = sortAssignmentsByPersonName(
               assignments.filter(
                 (assignment) => assignment.assignmentRole === assignmentRole
               ),
@@ -386,9 +386,9 @@ export function StaffAssignmentsSection({
             return (
               <Typography key={assignmentRole}>
                 <strong>{assignmentRole}:</strong>{' '}
-                {assignedStaff.length === 0
+                {assignedVolunteers.length === 0
                   ? '—'
-                  : assignedStaff.map((assignment, index) => {
+                  : assignedVolunteers.map((assignment, index) => {
                       const personEntry = peopleById.get(assignment.personId);
                       const name = personNameString(personEntry?.person);
 
@@ -440,7 +440,7 @@ export function StaffAssignmentsSection({
         }}
       >
         <Stack spacing={2}>
-          <Typography variant="h6">Edit Staff Assignments</Typography>
+          <Typography variant="h6">Edit Volunteer Assignments</Typography>
 
           {roles.map((assignmentRole) => {
             const options = getOptionsForRole(assignmentRole);

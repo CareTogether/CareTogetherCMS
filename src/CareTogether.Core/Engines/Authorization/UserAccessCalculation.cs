@@ -337,7 +337,7 @@ namespace CareTogether.Engines.Authorization
                             )
                         )
                     ),
-                AssignedStaffInV1ReferralPermissionContext c => context
+                AssignedVolunteerInV1ReferralPermissionContext c => context
                     is V1ReferralAuthorizationContext
                     && targetV1Referral != null
                     && userPersonId.HasValue
@@ -346,14 +346,14 @@ namespace CareTogether.Engines.Authorization
                         || c.WhenReferralIsOpen
                             == (targetV1Referral.Status == V1ReferralStatus.Open)
                     )
-                    && targetV1Referral.StaffAssignments.Any(assignment =>
+                    && targetV1Referral.AssignedIndividualVolunteers.Any(assignment =>
                         assignment.PersonId == userPersonId.Value
                         && (
                             c.WhenAssignmentRoleIsIn == null
                             || c.WhenAssignmentRoleIsIn.Contains(assignment.AssignmentRole)
                         )
                     ),
-                AssignedStaffInV1CasePermissionContext c => context
+                AssignedVolunteerInV1CasePermissionContext c => context
                     is FamilyAuthorizationContext
                     && userPersonId.HasValue
                     && targetFamilyV1Cases.Any(v1Case =>
@@ -361,7 +361,7 @@ namespace CareTogether.Engines.Authorization
                             c.WhenCaseIsOpen == null
                             || c.WhenCaseIsOpen == (v1Case.ClosedAtUtc == null)
                         )
-                        && v1Case.StaffAssignments.Any(assignment =>
+                        && v1Case.AssignedIndividualVolunteers.Any(assignment =>
                             assignment.PersonId == userPersonId.Value
                             && (
                                 c.WhenAssignmentRoleIsIn == null

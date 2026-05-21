@@ -59,14 +59,14 @@ namespace CareTogether.Resources.V1Cases
         Guid? NoteId
     ) : Activity(UserId, AuditTimestampUtc, ChangedAtUtc, null, NoteId);
 
-    public sealed record V1CaseStaffAssigned(
+    public sealed record V1CaseIndividualVolunteerAssigned(
         Guid UserId,
         DateTime AuditTimestampUtc,
         Guid PersonId,
         string AssignmentRole
     ) : Activity(UserId, AuditTimestampUtc, AuditTimestampUtc, null, null);
 
-    public sealed record V1CaseStaffUnassigned(
+    public sealed record V1CaseIndividualVolunteerUnassigned(
         Guid UserId,
         DateTime AuditTimestampUtc,
         Guid PersonId,
@@ -115,7 +115,7 @@ namespace CareTogether.Resources.V1Cases
                         ImmutableList<ExemptedRequirementInfo>.Empty,
                         ImmutableDictionary<string, CompletedCustomFieldInfo>.Empty,
                         ImmutableDictionary<Guid, ArrangementEntry>.Empty,
-                        ImmutableList<StaffAssignment>.Empty,
+                        ImmutableList<AssignedIndividualVolunteer>.Empty,
                         ImmutableList<Activity>.Empty,
                         Comments: null
                     ),
@@ -210,8 +210,13 @@ namespace CareTogether.Resources.V1Cases
                             null
                         ),
                         LinkReferralToCase c => (LinkReferralToCaseEntry(v1CaseEntry, c), null),
-                        AssignStaffToV1Case c => AssignStaff(v1CaseEntry, c, userId, timestampUtc),
-                        UnassignStaffFromV1Case c => UnassignStaff(
+                        AssignIndividualVolunteerToV1Case c => AssignIndividualVolunteer(
+                            v1CaseEntry,
+                            c,
+                            userId,
+                            timestampUtc
+                        ),
+                        UnassignIndividualVolunteerFromV1Case c => UnassignIndividualVolunteer(
                             v1CaseEntry,
                             c,
                             userId,
@@ -884,15 +889,15 @@ namespace CareTogether.Resources.V1Cases
             );
         }
 
-        private static (V1CaseEntry V1CaseEntry, Activity? Activity) AssignStaff(
+        private static (V1CaseEntry V1CaseEntry, Activity? Activity) AssignIndividualVolunteer(
             V1CaseEntry v1CaseEntry,
-            AssignStaffToV1Case command,
+            AssignIndividualVolunteerToV1Case command,
             Guid userId,
             DateTime timestampUtc
         )
         {
             if (
-                v1CaseEntry.StaffAssignments.Any(assignment =>
+                v1CaseEntry.AssignedIndividualVolunteers.Any(assignment =>
                     assignment.PersonId == command.PersonId
                     && assignment.AssignmentRole == command.AssignmentRole
                 )
@@ -902,8 +907,8 @@ namespace CareTogether.Resources.V1Cases
             return (
                 v1CaseEntry with
                 {
-                    StaffAssignments = v1CaseEntry.StaffAssignments.Add(
-                        new StaffAssignment(
+                    AssignedIndividualVolunteers = v1CaseEntry.AssignedIndividualVolunteers.Add(
+                        new AssignedIndividualVolunteer(
                             command.PersonId,
                             command.AssignmentRole,
                             timestampUtc,
@@ -911,7 +916,7 @@ namespace CareTogether.Resources.V1Cases
                         )
                     ),
                 },
-                new V1CaseStaffAssigned(
+                new V1CaseIndividualVolunteerAssigned(
                     userId,
                     timestampUtc,
                     command.PersonId,
@@ -920,15 +925,15 @@ namespace CareTogether.Resources.V1Cases
             );
         }
 
-        private static (V1CaseEntry V1CaseEntry, Activity? Activity) UnassignStaff(
+        private static (V1CaseEntry V1CaseEntry, Activity? Activity) UnassignIndividualVolunteer(
             V1CaseEntry v1CaseEntry,
-            UnassignStaffFromV1Case command,
+            UnassignIndividualVolunteerFromV1Case command,
             Guid userId,
             DateTime timestampUtc
         )
         {
             if (
-                !v1CaseEntry.StaffAssignments.Any(assignment =>
+                !v1CaseEntry.AssignedIndividualVolunteers.Any(assignment =>
                     assignment.PersonId == command.PersonId
                     && assignment.AssignmentRole == command.AssignmentRole
                 )
@@ -938,12 +943,12 @@ namespace CareTogether.Resources.V1Cases
             return (
                 v1CaseEntry with
                 {
-                    StaffAssignments = v1CaseEntry.StaffAssignments.RemoveAll(assignment =>
+                    AssignedIndividualVolunteers = v1CaseEntry.AssignedIndividualVolunteers.RemoveAll(assignment =>
                         assignment.PersonId == command.PersonId
                         && assignment.AssignmentRole == command.AssignmentRole
                     ),
                 },
-                new V1CaseStaffUnassigned(
+                new V1CaseIndividualVolunteerUnassigned(
                     userId,
                     timestampUtc,
                     command.PersonId,

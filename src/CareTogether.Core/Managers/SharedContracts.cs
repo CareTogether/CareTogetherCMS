@@ -48,7 +48,7 @@ namespace CareTogether.Managers
         ImmutableList<CompletedCustomFieldInfo> CompletedCustomFields,
         ImmutableList<string> MissingCustomFields,
         ImmutableList<Arrangement> Arrangements,
-        ImmutableList<StaffAssignment> StaffAssignments,
+        ImmutableList<AssignedIndividualVolunteer> AssignedIndividualVolunteers,
         string? Comments,
         ImmutableList<Guid> LinkedV1ReferralIds
     );

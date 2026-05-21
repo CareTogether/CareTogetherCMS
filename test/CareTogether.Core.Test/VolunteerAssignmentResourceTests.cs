@@ -7,7 +7,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 namespace CareTogether.Core.Test
 {
     [TestClass]
-    public sealed class StaffAssignmentResourceTests
+    public sealed class VolunteerAssignmentResourceTests
     {
         private static readonly Guid UserId = Guid.Parse(
             "11111111-1111-1111-1111-111111111111"
@@ -23,7 +23,7 @@ namespace CareTogether.Core.Test
         );
 
         [TestMethod]
-        public void V1ReferralStaffAssignmentsAreActiveStateAndIdempotent()
+        public void V1ReferralAssignedIndividualVolunteersAreActiveStateAndIdempotent()
         {
             var model = new V1ReferralModel();
             Commit(
@@ -36,51 +36,51 @@ namespace CareTogether.Core.Test
 
             Commit(
                 model.ExecuteReferralCommand(
-                    new AssignStaffToV1Referral(RecordId, PersonId, "Intake Coordinator"),
+                    new AssignIndividualVolunteerToV1Referral(RecordId, PersonId, "Intake Coordinator"),
                     UserId,
                     DateTime.UtcNow
                 )
             );
             Commit(
                 model.ExecuteReferralCommand(
-                    new AssignStaffToV1Referral(RecordId, PersonId, "Intake Coordinator"),
+                    new AssignIndividualVolunteerToV1Referral(RecordId, PersonId, "Intake Coordinator"),
                     UserId,
                     DateTime.UtcNow
                 )
             );
 
             var referral = model.GetReferral(RecordId)!;
-            Assert.AreEqual(1, referral.StaffAssignments.Count);
+            Assert.AreEqual(1, referral.AssignedIndividualVolunteers.Count);
             Assert.AreEqual(
                 1,
-                referral.History.OfType<V1ReferralStaffAssigned>().Count()
+                referral.History.OfType<V1ReferralIndividualVolunteerAssigned>().Count()
             );
 
             Commit(
                 model.ExecuteReferralCommand(
-                    new UnassignStaffFromV1Referral(RecordId, PersonId, "Intake Coordinator"),
+                    new UnassignIndividualVolunteerFromV1Referral(RecordId, PersonId, "Intake Coordinator"),
                     UserId,
                     DateTime.UtcNow
                 )
             );
             Commit(
                 model.ExecuteReferralCommand(
-                    new UnassignStaffFromV1Referral(RecordId, PersonId, "Intake Coordinator"),
+                    new UnassignIndividualVolunteerFromV1Referral(RecordId, PersonId, "Intake Coordinator"),
                     UserId,
                     DateTime.UtcNow
                 )
             );
 
             referral = model.GetReferral(RecordId)!;
-            Assert.AreEqual(0, referral.StaffAssignments.Count);
+            Assert.AreEqual(0, referral.AssignedIndividualVolunteers.Count);
             Assert.AreEqual(
                 1,
-                referral.History.OfType<V1ReferralStaffUnassigned>().Count()
+                referral.History.OfType<V1ReferralIndividualVolunteerUnassigned>().Count()
             );
         }
 
         [TestMethod]
-        public void V1CaseStaffAssignmentsAreActiveStateAndIdempotent()
+        public void V1CaseAssignedIndividualVolunteersAreActiveStateAndIdempotent()
         {
             var model = new V1CaseModel();
             Commit(
@@ -93,41 +93,41 @@ namespace CareTogether.Core.Test
 
             Commit(
                 model.ExecuteV1CaseCommand(
-                    new AssignStaffToV1Case(FamilyId, RecordId, PersonId, "Case Manager"),
+                    new AssignIndividualVolunteerToV1Case(FamilyId, RecordId, PersonId, "Case Manager"),
                     UserId,
                     DateTime.UtcNow
                 )
             );
             Commit(
                 model.ExecuteV1CaseCommand(
-                    new AssignStaffToV1Case(FamilyId, RecordId, PersonId, "Case Manager"),
+                    new AssignIndividualVolunteerToV1Case(FamilyId, RecordId, PersonId, "Case Manager"),
                     UserId,
                     DateTime.UtcNow
                 )
             );
 
             var v1Case = model.GetV1CaseEntry(RecordId);
-            Assert.AreEqual(1, v1Case.StaffAssignments.Count);
-            Assert.AreEqual(1, v1Case.History.OfType<V1CaseStaffAssigned>().Count());
+            Assert.AreEqual(1, v1Case.AssignedIndividualVolunteers.Count);
+            Assert.AreEqual(1, v1Case.History.OfType<V1CaseIndividualVolunteerAssigned>().Count());
 
             Commit(
                 model.ExecuteV1CaseCommand(
-                    new UnassignStaffFromV1Case(FamilyId, RecordId, PersonId, "Case Manager"),
+                    new UnassignIndividualVolunteerFromV1Case(FamilyId, RecordId, PersonId, "Case Manager"),
                     UserId,
                     DateTime.UtcNow
                 )
             );
             Commit(
                 model.ExecuteV1CaseCommand(
-                    new UnassignStaffFromV1Case(FamilyId, RecordId, PersonId, "Case Manager"),
+                    new UnassignIndividualVolunteerFromV1Case(FamilyId, RecordId, PersonId, "Case Manager"),
                     UserId,
                     DateTime.UtcNow
                 )
             );
 
             v1Case = model.GetV1CaseEntry(RecordId);
-            Assert.AreEqual(0, v1Case.StaffAssignments.Count);
-            Assert.AreEqual(1, v1Case.History.OfType<V1CaseStaffUnassigned>().Count());
+            Assert.AreEqual(0, v1Case.AssignedIndividualVolunteers.Count);
+            Assert.AreEqual(1, v1Case.History.OfType<V1CaseIndividualVolunteerUnassigned>().Count());
         }
 
         private static void Commit<TEvent, TState>(

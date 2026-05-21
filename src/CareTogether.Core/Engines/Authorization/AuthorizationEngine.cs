@@ -147,8 +147,8 @@ namespace CareTogether.Engines.Authorization
                         Permission.EditV1CaseRequirementExemption,
                     UpdateCustomReferralField => Permission.EditV1Case,
                     UpdateReferralComments => Permission.EditV1Case,
-                    AssignStaffToV1Case => Permission.EditV1CaseStaffAssignments,
-                    UnassignStaffFromV1Case => Permission.EditV1CaseStaffAssignments,
+                    AssignIndividualVolunteerToV1Case => Permission.EditV1CaseVolunteerAssignments,
+                    UnassignIndividualVolunteerFromV1Case => Permission.EditV1CaseVolunteerAssignments,
                     LinkReferralToCase => Permission.EditV1Case,
                     CloseReferral => Permission.CloseV1Case,
                     ReopenReferral => Permission.CloseV1Case,
@@ -267,8 +267,8 @@ namespace CareTogether.Engines.Authorization
 
                     UploadV1ReferralDocument => Permission.EditV1Referral,
                     DeleteUploadedV1ReferralDocument => Permission.EditV1Referral,
-                    AssignStaffToV1Referral => Permission.EditV1ReferralStaffAssignments,
-                    UnassignStaffFromV1Referral => Permission.EditV1ReferralStaffAssignments,
+                    AssignIndividualVolunteerToV1Referral => Permission.EditV1ReferralVolunteerAssignments,
+                    UnassignIndividualVolunteerFromV1Referral => Permission.EditV1ReferralVolunteerAssignments,
 
                     _ => throw new NotImplementedException(
                         $"The command type '{command.GetType().FullName}' has not been implemented."
@@ -942,9 +942,9 @@ namespace CareTogether.Engines.Authorization
                     // so hide them from users who cannot view assignments to avoid assignee inference.
                     ? partneringFamilyInfo
                         .History.Where(activity =>
-                            contextPermissions.Contains(Permission.ViewV1CaseStaffAssignments)
-                            || activity is not V1CaseStaffAssigned
-                                and not V1CaseStaffUnassigned
+                            contextPermissions.Contains(Permission.ViewV1CaseVolunteerAssignments)
+                            || activity is not V1CaseIndividualVolunteerAssigned
+                                and not V1CaseIndividualVolunteerUnassigned
                         )
                         .ToImmutableList()
                     : ImmutableList<Activity>.Empty,
@@ -973,11 +973,11 @@ namespace CareTogether.Engines.Authorization
                 ExemptedRequirements = contextPermissions.Contains(Permission.ViewV1CaseProgress)
                     ? v1Case.ExemptedRequirements
                     : ImmutableList<Resources.ExemptedRequirementInfo>.Empty,
-                StaffAssignments = contextPermissions.Contains(
-                    Permission.ViewV1CaseStaffAssignments
+                AssignedIndividualVolunteers = contextPermissions.Contains(
+                    Permission.ViewV1CaseVolunteerAssignments
                 )
-                    ? v1Case.StaffAssignments
-                    : ImmutableList<StaffAssignment>.Empty,
+                    ? v1Case.AssignedIndividualVolunteers
+                    : ImmutableList<AssignedIndividualVolunteer>.Empty,
                 MissingRequirements = contextPermissions.Contains(Permission.ViewV1CaseProgress)
                     ? v1Case.MissingRequirements
                     : ImmutableList<RequirementDefinition>.Empty,

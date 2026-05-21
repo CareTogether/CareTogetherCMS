@@ -80,12 +80,12 @@ namespace CareTogether.Core.Test.AuthorizationEngineTests
                     ReferralId,
                     "Intake Form"
                 ),
-                nameof(AssignStaffToV1Referral) => new AssignStaffToV1Referral(
+                nameof(AssignIndividualVolunteerToV1Referral) => new AssignIndividualVolunteerToV1Referral(
                     ReferralId,
                     Guid.NewGuid(),
                     "Intake Coordinator"
                 ),
-                nameof(UnassignStaffFromV1Referral) => new UnassignStaffFromV1Referral(
+                nameof(UnassignIndividualVolunteerFromV1Referral) => new UnassignIndividualVolunteerFromV1Referral(
                     ReferralId,
                     Guid.NewGuid(),
                     "Intake Coordinator"
@@ -156,13 +156,13 @@ namespace CareTogether.Core.Test.AuthorizationEngineTests
         }
 
         [DataTestMethod]
-        [DataRow(nameof(AssignStaffToV1Referral))]
-        [DataRow(nameof(UnassignStaffFromV1Referral))]
-        public async Task ReferralStaffAssignmentCommandsRequireReferralStaffAssignmentEditPermission(
+        [DataRow(nameof(AssignIndividualVolunteerToV1Referral))]
+        [DataRow(nameof(UnassignIndividualVolunteerFromV1Referral))]
+        public async Task ReferralVolunteerAssignmentCommandsRequireReferralVolunteerAssignmentEditPermission(
             string commandName
         )
         {
-            var dut = CreateAuthorizationEngine(Permission.EditV1ReferralStaffAssignments);
+            var dut = CreateAuthorizationEngine(Permission.EditV1ReferralVolunteerAssignments);
 
             var response = await dut.AuthorizeV1ReferralCommandAsync(
                 OrganizationId,

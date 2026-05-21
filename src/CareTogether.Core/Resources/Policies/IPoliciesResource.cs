@@ -68,12 +68,12 @@ namespace CareTogether.Resources.Policies
         ImmutableList<string>? WhenAssigneeFunctionIsIn
     ) : PermissionContext();
 
-    public sealed record AssignedStaffInV1ReferralPermissionContext(
+    public sealed record AssignedVolunteerInV1ReferralPermissionContext(
         bool? WhenReferralIsOpen,
         ImmutableList<string>? WhenAssignmentRoleIsIn
     ) : PermissionContext();
 
-    public sealed record AssignedStaffInV1CasePermissionContext(
+    public sealed record AssignedVolunteerInV1CasePermissionContext(
         bool? WhenCaseIsOpen,
         ImmutableList<string>? WhenAssignmentRoleIsIn
     ) : PermissionContext();
@@ -112,7 +112,7 @@ namespace CareTogether.Resources.Policies
     )
     {
         public V1ReferralPolicy V1ReferralPolicy { get; init; } =
-            new(ImmutableList<StaffAssignmentPolicy>.Empty);
+            new(ImmutableList<VolunteerAssignmentPolicy>.Empty);
     };
 
     public enum DocumentLinkRequirement
@@ -159,8 +159,8 @@ namespace CareTogether.Resources.Policies
         ImmutableList<RequirementDefinition>? IntakeRequirements = null
     )
     {
-        public ImmutableList<StaffAssignmentPolicy> StaffAssignmentPolicies { get; init; } =
-            ImmutableList<StaffAssignmentPolicy>.Empty;
+        public ImmutableList<VolunteerAssignmentPolicy> VolunteerAssignmentPolicies { get; init; } =
+            ImmutableList<VolunteerAssignmentPolicy>.Empty;
 
         public ImmutableList<RequirementDefinition> IntakeRequirements_PRE_MIGRATION =
             RequiredIntakeActionNames
@@ -170,15 +170,15 @@ namespace CareTogether.Resources.Policies
     };
 
     public sealed record V1ReferralPolicy(
-        ImmutableList<StaffAssignmentPolicy> StaffAssignmentPolicies
+        ImmutableList<VolunteerAssignmentPolicy> VolunteerAssignmentPolicies
     );
 
-    public sealed record StaffAssignmentPolicy(
+    public sealed record VolunteerAssignmentPolicy(
         string AssignmentRole,
-        StaffAssignmentEligibility Eligibility
+        VolunteerAssignmentEligibility Eligibility
     );
 
-    public sealed record StaffAssignmentEligibility(
+    public sealed record VolunteerAssignmentEligibility(
         ImmutableList<string> EligibleLocationRoles,
         ImmutableList<string> EligibleIndividualVolunteerRoles,
         ImmutableList<string> EligibleVolunteerFamilyRoles,

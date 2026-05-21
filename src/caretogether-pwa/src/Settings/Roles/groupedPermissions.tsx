@@ -60,8 +60,8 @@ const groupedPermissionsWithoutOther = {
     Permission.ViewV1Referral,
     Permission.EditV1ReferralRequirementCompletion,
     Permission.EditV1ReferralRequirementExemption,
-    Permission.ViewV1ReferralStaffAssignments,
-    Permission.EditV1ReferralStaffAssignments,
+    Permission.ViewV1ReferralVolunteerAssignments,
+    Permission.EditV1ReferralVolunteerAssignments,
   ],
   V1Cases: [
     Permission.CreateV1Case,
@@ -73,8 +73,8 @@ const groupedPermissionsWithoutOther = {
     Permission.EditV1CaseRequirementCompletion,
     Permission.EditV1CaseRequirementExemption,
     Permission.ViewV1CaseHistory,
-    Permission.ViewV1CaseStaffAssignments,
-    Permission.EditV1CaseStaffAssignments,
+    Permission.ViewV1CaseVolunteerAssignments,
+    Permission.EditV1CaseVolunteerAssignments,
   ],
   Arrangements: [
     Permission.CreateArrangement,

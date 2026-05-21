@@ -63,9 +63,9 @@ import {
   useFamilyPermissions,
   useGlobalPermissions,
 } from '../Model/SessionModel';
-import { StaffAssignmentsSection } from '../StaffAssignments/StaffAssignmentsSection';
+import { VolunteerAssignmentsSection } from '../VolunteerAssignments/VolunteerAssignmentsSection';
 import { useFeatureFlagEnabled } from 'posthog-js/react';
-import { STAFF_ASSIGNMENTS_FEATURE_FLAG } from '../featureFlags';
+import { VOLUNTEER_ASSIGNMENTS_FEATURE_FLAG } from '../featureFlags';
 
 function formatDate(date?: Date) {
   return date
@@ -96,8 +96,8 @@ export function ReferralDetailsPage() {
   const policy = useRecoilValue(policyData);
   const appNavigate = useAppNavigate();
   const globalPermissions = useGlobalPermissions();
-  const staffAssignmentsEnabled = useFeatureFlagEnabled(
-    STAFF_ASSIGNMENTS_FEATURE_FLAG
+  const volunteerAssignmentsEnabled = useFeatureFlagEnabled(
+    VOLUNTEER_ASSIGNMENTS_FEATURE_FLAG
   );
   const allPartneringFamiliesPermissions =
     useAllPartneringFamiliesPermissions();
@@ -106,8 +106,8 @@ export function ReferralDetailsPage() {
     reopenReferral,
     updateReferralFamily,
     linkReferralToCaseAndAccept,
-    assignStaffToReferral,
-    unassignStaffFromReferral,
+    assignIndividualVolunteerToReferral,
+    unassignIndividualVolunteerFromReferral,
   } = useV1ReferralsModel();
 
   const { organizationId, locationId } = useRecoilValue(
@@ -182,13 +182,13 @@ export function ReferralDetailsPage() {
   const canEditReferral = globalPermissions(Permission.EditV1Referral);
   const canCloseReferral = globalPermissions(Permission.CloseV1Referral);
   const canReopenReferral = globalPermissions(Permission.ReopenV1Referral);
-  const canViewStaffAssignments =
+  const canViewVolunteerAssignments =
     referralInfo?.userPermissions?.includes(
-      Permission.ViewV1ReferralStaffAssignments
+      Permission.ViewV1ReferralVolunteerAssignments
     ) ?? false;
-  const canEditStaffAssignments =
+  const canEditVolunteerAssignments =
     referralInfo?.userPermissions?.includes(
-      Permission.EditV1ReferralStaffAssignments
+      Permission.EditV1ReferralVolunteerAssignments
     ) ?? false;
   const canCreateClientFamily =
     !isClosed &&
@@ -562,23 +562,23 @@ export function ReferralDetailsPage() {
             </Grid>
           )}
 
-          {staffAssignmentsEnabled && canViewStaffAssignments && (
+          {volunteerAssignmentsEnabled && canViewVolunteerAssignments && (
             <Grid item xs={12} sx={{ mt: 2 }}>
-              <StaffAssignmentsSection
-                assignments={currentReferral.staffAssignments ?? []}
+              <VolunteerAssignmentsSection
+                assignments={currentReferral.assignedIndividualVolunteers ?? []}
                 policies={
-                  policy.v1ReferralPolicy?.staffAssignmentPolicies ?? []
+                  policy.v1ReferralPolicy?.volunteerAssignmentPolicies ?? []
                 }
-                canEdit={canEditStaffAssignments}
+                canEdit={canEditVolunteerAssignments}
                 onAssign={(personId, assignmentRole) =>
-                  assignStaffToReferral(
+                  assignIndividualVolunteerToReferral(
                     currentReferral.referralId,
                     personId,
                     assignmentRole
                   )
                 }
                 onUnassign={(personId, assignmentRole) =>
-                  unassignStaffFromReferral(
+                  unassignIndividualVolunteerFromReferral(
                     currentReferral.referralId,
                     personId,
                     assignmentRole

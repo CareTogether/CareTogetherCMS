@@ -1815,13 +1815,13 @@ export abstract class PermissionContext implements IPermissionContext {
             result.init(data);
             return result;
         }
-        if (data["discriminator"] === "AssignedStaffInV1CasePermissionContext") {
-            let result = new AssignedStaffInV1CasePermissionContext();
+        if (data["discriminator"] === "AssignedVolunteerInV1CasePermissionContext") {
+            let result = new AssignedVolunteerInV1CasePermissionContext();
             result.init(data);
             return result;
         }
-        if (data["discriminator"] === "AssignedStaffInV1ReferralPermissionContext") {
-            let result = new AssignedStaffInV1ReferralPermissionContext();
+        if (data["discriminator"] === "AssignedVolunteerInV1ReferralPermissionContext") {
+            let result = new AssignedVolunteerInV1ReferralPermissionContext();
             result.init(data);
             return result;
         }
@@ -2033,13 +2033,13 @@ export interface IAssignedFunctionsInReferralPartneringFamilyPermissionContext e
     whenOwnFunctionIsIn?: string[] | undefined;
 }
 
-export class AssignedStaffInV1CasePermissionContext extends PermissionContext implements IAssignedStaffInV1CasePermissionContext {
+export class AssignedVolunteerInV1CasePermissionContext extends PermissionContext implements IAssignedVolunteerInV1CasePermissionContext {
     whenCaseIsOpen?: boolean | undefined;
     whenAssignmentRoleIsIn?: string[] | undefined;
 
-    constructor(data?: IAssignedStaffInV1CasePermissionContext) {
+    constructor(data?: IAssignedVolunteerInV1CasePermissionContext) {
         super(data);
-        this._discriminator = "AssignedStaffInV1CasePermissionContext";
+        this._discriminator = "AssignedVolunteerInV1CasePermissionContext";
     }
 
     init(_data?: any) {
@@ -2054,9 +2054,9 @@ export class AssignedStaffInV1CasePermissionContext extends PermissionContext im
         }
     }
 
-    static fromJS(data: any): AssignedStaffInV1CasePermissionContext {
+    static fromJS(data: any): AssignedVolunteerInV1CasePermissionContext {
         data = typeof data === 'object' ? data : {};
-        let result = new AssignedStaffInV1CasePermissionContext();
+        let result = new AssignedVolunteerInV1CasePermissionContext();
         result.init(data);
         return result;
     }
@@ -2074,18 +2074,18 @@ export class AssignedStaffInV1CasePermissionContext extends PermissionContext im
     }
 }
 
-export interface IAssignedStaffInV1CasePermissionContext extends IPermissionContext {
+export interface IAssignedVolunteerInV1CasePermissionContext extends IPermissionContext {
     whenCaseIsOpen?: boolean | undefined;
     whenAssignmentRoleIsIn?: string[] | undefined;
 }
 
-export class AssignedStaffInV1ReferralPermissionContext extends PermissionContext implements IAssignedStaffInV1ReferralPermissionContext {
+export class AssignedVolunteerInV1ReferralPermissionContext extends PermissionContext implements IAssignedVolunteerInV1ReferralPermissionContext {
     whenReferralIsOpen?: boolean | undefined;
     whenAssignmentRoleIsIn?: string[] | undefined;
 
-    constructor(data?: IAssignedStaffInV1ReferralPermissionContext) {
+    constructor(data?: IAssignedVolunteerInV1ReferralPermissionContext) {
         super(data);
-        this._discriminator = "AssignedStaffInV1ReferralPermissionContext";
+        this._discriminator = "AssignedVolunteerInV1ReferralPermissionContext";
     }
 
     init(_data?: any) {
@@ -2100,9 +2100,9 @@ export class AssignedStaffInV1ReferralPermissionContext extends PermissionContex
         }
     }
 
-    static fromJS(data: any): AssignedStaffInV1ReferralPermissionContext {
+    static fromJS(data: any): AssignedVolunteerInV1ReferralPermissionContext {
         data = typeof data === 'object' ? data : {};
-        let result = new AssignedStaffInV1ReferralPermissionContext();
+        let result = new AssignedVolunteerInV1ReferralPermissionContext();
         result.init(data);
         return result;
     }
@@ -2120,7 +2120,7 @@ export class AssignedStaffInV1ReferralPermissionContext extends PermissionContex
     }
 }
 
-export interface IAssignedStaffInV1ReferralPermissionContext extends IPermissionContext {
+export interface IAssignedVolunteerInV1ReferralPermissionContext extends IPermissionContext {
     whenReferralIsOpen?: boolean | undefined;
     whenAssignmentRoleIsIn?: string[] | undefined;
 }
@@ -2442,8 +2442,8 @@ export enum Permission {
     ViewV1Referral = 264,
     EditV1ReferralRequirementCompletion = 265,
     EditV1ReferralRequirementExemption = 266,
-    ViewV1ReferralStaffAssignments = 267,
-    EditV1ReferralStaffAssignments = 268,
+    ViewV1ReferralVolunteerAssignments = 267,
+    EditV1ReferralVolunteerAssignments = 268,
     CreateV1Case = 300,
     EditV1Case = 301,
     CloseV1Case = 302,
@@ -2453,8 +2453,8 @@ export enum Permission {
     EditV1CaseRequirementCompletion = 306,
     EditV1CaseRequirementExemption = 307,
     ViewV1CaseHistory = 308,
-    ViewV1CaseStaffAssignments = 309,
-    EditV1CaseStaffAssignments = 310,
+    ViewV1CaseVolunteerAssignments = 309,
+    EditV1CaseVolunteerAssignments = 310,
     CreateArrangement = 350,
     EditArrangement = 351,
     ViewAssignments = 352,
@@ -2756,7 +2756,7 @@ export class V1CasePolicy implements IV1CasePolicy {
     arrangementPolicies!: ArrangementPolicy[];
     functionPolicies?: FunctionPolicy[] | undefined;
     intakeRequirements?: RequirementDefinition[] | undefined;
-    staffAssignmentPolicies!: StaffAssignmentPolicy[];
+    volunteerAssignmentPolicies!: VolunteerAssignmentPolicy[];
 
     constructor(data?: IV1CasePolicy) {
         if (data) {
@@ -2770,7 +2770,7 @@ export class V1CasePolicy implements IV1CasePolicy {
             this.requiredIntakeActionNames = [];
             this.customFields = [];
             this.arrangementPolicies = [];
-            this.staffAssignmentPolicies = [];
+            this.volunteerAssignmentPolicies = [];
         }
     }
 
@@ -2806,10 +2806,10 @@ export class V1CasePolicy implements IV1CasePolicy {
                 for (let item of _data["intakeRequirements"])
                     this.intakeRequirements!.push(RequirementDefinition.fromJS(item));
             }
-            if (Array.isArray(_data["staffAssignmentPolicies"])) {
-                this.staffAssignmentPolicies = [] as any;
-                for (let item of _data["staffAssignmentPolicies"])
-                    this.staffAssignmentPolicies!.push(StaffAssignmentPolicy.fromJS(item));
+            if (Array.isArray(_data["volunteerAssignmentPolicies"])) {
+                this.volunteerAssignmentPolicies = [] as any;
+                for (let item of _data["volunteerAssignmentPolicies"])
+                    this.volunteerAssignmentPolicies!.push(VolunteerAssignmentPolicy.fromJS(item));
             }
         }
     }
@@ -2853,10 +2853,10 @@ export class V1CasePolicy implements IV1CasePolicy {
             for (let item of this.intakeRequirements)
                 data["intakeRequirements"].push(item.toJSON());
         }
-        if (Array.isArray(this.staffAssignmentPolicies)) {
-            data["staffAssignmentPolicies"] = [];
-            for (let item of this.staffAssignmentPolicies)
-                data["staffAssignmentPolicies"].push(item.toJSON());
+        if (Array.isArray(this.volunteerAssignmentPolicies)) {
+            data["volunteerAssignmentPolicies"] = [];
+            for (let item of this.volunteerAssignmentPolicies)
+                data["volunteerAssignmentPolicies"].push(item.toJSON());
         }
         return data;
     }
@@ -2869,7 +2869,7 @@ export interface IV1CasePolicy {
     arrangementPolicies: ArrangementPolicy[];
     functionPolicies?: FunctionPolicy[] | undefined;
     intakeRequirements?: RequirementDefinition[] | undefined;
-    staffAssignmentPolicies: StaffAssignmentPolicy[];
+    volunteerAssignmentPolicies: VolunteerAssignmentPolicy[];
 }
 
 export class RequirementDefinition implements IRequirementDefinition {
@@ -3798,11 +3798,11 @@ export interface IFunctionEligibility {
     eligiblePeople: string[];
 }
 
-export class StaffAssignmentPolicy implements IStaffAssignmentPolicy {
+export class VolunteerAssignmentPolicy implements IVolunteerAssignmentPolicy {
     assignmentRole!: string;
-    eligibility!: StaffAssignmentEligibility;
+    eligibility!: VolunteerAssignmentEligibility;
 
-    constructor(data?: IStaffAssignmentPolicy) {
+    constructor(data?: IVolunteerAssignmentPolicy) {
         if (data) {
             for (var property in data) {
                 if (data.hasOwnProperty(property))
@@ -3810,20 +3810,20 @@ export class StaffAssignmentPolicy implements IStaffAssignmentPolicy {
             }
         }
         if (!data) {
-            this.eligibility = new StaffAssignmentEligibility();
+            this.eligibility = new VolunteerAssignmentEligibility();
         }
     }
 
     init(_data?: any) {
         if (_data) {
             this.assignmentRole = _data["assignmentRole"];
-            this.eligibility = _data["eligibility"] ? StaffAssignmentEligibility.fromJS(_data["eligibility"]) : new StaffAssignmentEligibility();
+            this.eligibility = _data["eligibility"] ? VolunteerAssignmentEligibility.fromJS(_data["eligibility"]) : new VolunteerAssignmentEligibility();
         }
     }
 
-    static fromJS(data: any): StaffAssignmentPolicy {
+    static fromJS(data: any): VolunteerAssignmentPolicy {
         data = typeof data === 'object' ? data : {};
-        let result = new StaffAssignmentPolicy();
+        let result = new VolunteerAssignmentPolicy();
         result.init(data);
         return result;
     }
@@ -3836,18 +3836,18 @@ export class StaffAssignmentPolicy implements IStaffAssignmentPolicy {
     }
 }
 
-export interface IStaffAssignmentPolicy {
+export interface IVolunteerAssignmentPolicy {
     assignmentRole: string;
-    eligibility: StaffAssignmentEligibility;
+    eligibility: VolunteerAssignmentEligibility;
 }
 
-export class StaffAssignmentEligibility implements IStaffAssignmentEligibility {
+export class VolunteerAssignmentEligibility implements IVolunteerAssignmentEligibility {
     eligibleLocationRoles!: string[];
     eligibleIndividualVolunteerRoles!: string[];
     eligibleVolunteerFamilyRoles!: string[];
     eligiblePeople!: string[];
 
-    constructor(data?: IStaffAssignmentEligibility) {
+    constructor(data?: IVolunteerAssignmentEligibility) {
         if (data) {
             for (var property in data) {
                 if (data.hasOwnProperty(property))
@@ -3887,9 +3887,9 @@ export class StaffAssignmentEligibility implements IStaffAssignmentEligibility {
         }
     }
 
-    static fromJS(data: any): StaffAssignmentEligibility {
+    static fromJS(data: any): VolunteerAssignmentEligibility {
         data = typeof data === 'object' ? data : {};
-        let result = new StaffAssignmentEligibility();
+        let result = new VolunteerAssignmentEligibility();
         result.init(data);
         return result;
     }
@@ -3920,7 +3920,7 @@ export class StaffAssignmentEligibility implements IStaffAssignmentEligibility {
     }
 }
 
-export interface IStaffAssignmentEligibility {
+export interface IVolunteerAssignmentEligibility {
     eligibleLocationRoles: string[];
     eligibleIndividualVolunteerRoles: string[];
     eligibleVolunteerFamilyRoles: string[];
@@ -4304,7 +4304,7 @@ export enum VolunteerFamilyRequirementScope {
 }
 
 export class V1ReferralPolicy implements IV1ReferralPolicy {
-    staffAssignmentPolicies!: StaffAssignmentPolicy[];
+    volunteerAssignmentPolicies!: VolunteerAssignmentPolicy[];
 
     constructor(data?: IV1ReferralPolicy) {
         if (data) {
@@ -4314,16 +4314,16 @@ export class V1ReferralPolicy implements IV1ReferralPolicy {
             }
         }
         if (!data) {
-            this.staffAssignmentPolicies = [];
+            this.volunteerAssignmentPolicies = [];
         }
     }
 
     init(_data?: any) {
         if (_data) {
-            if (Array.isArray(_data["staffAssignmentPolicies"])) {
-                this.staffAssignmentPolicies = [] as any;
-                for (let item of _data["staffAssignmentPolicies"])
-                    this.staffAssignmentPolicies!.push(StaffAssignmentPolicy.fromJS(item));
+            if (Array.isArray(_data["volunteerAssignmentPolicies"])) {
+                this.volunteerAssignmentPolicies = [] as any;
+                for (let item of _data["volunteerAssignmentPolicies"])
+                    this.volunteerAssignmentPolicies!.push(VolunteerAssignmentPolicy.fromJS(item));
             }
         }
     }
@@ -4337,17 +4337,17 @@ export class V1ReferralPolicy implements IV1ReferralPolicy {
 
     toJSON(data?: any) {
         data = typeof data === 'object' ? data : {};
-        if (Array.isArray(this.staffAssignmentPolicies)) {
-            data["staffAssignmentPolicies"] = [];
-            for (let item of this.staffAssignmentPolicies)
-                data["staffAssignmentPolicies"].push(item.toJSON());
+        if (Array.isArray(this.volunteerAssignmentPolicies)) {
+            data["volunteerAssignmentPolicies"] = [];
+            for (let item of this.volunteerAssignmentPolicies)
+                data["volunteerAssignmentPolicies"].push(item.toJSON());
         }
         return data;
     }
 }
 
 export interface IV1ReferralPolicy {
-    staffAssignmentPolicies: StaffAssignmentPolicy[];
+    volunteerAssignmentPolicies: VolunteerAssignmentPolicy[];
 }
 
 export class CurrentFeatureFlags implements ICurrentFeatureFlags {
@@ -5677,13 +5677,13 @@ export abstract class Activity implements IActivity {
             result.init(data);
             return result;
         }
-        if (data["discriminator"] === "V1CaseStaffAssigned") {
-            let result = new V1CaseStaffAssigned();
+        if (data["discriminator"] === "V1CaseIndividualVolunteerAssigned") {
+            let result = new V1CaseIndividualVolunteerAssigned();
             result.init(data);
             return result;
         }
-        if (data["discriminator"] === "V1CaseStaffUnassigned") {
-            let result = new V1CaseStaffUnassigned();
+        if (data["discriminator"] === "V1CaseIndividualVolunteerUnassigned") {
+            let result = new V1CaseIndividualVolunteerUnassigned();
             result.init(data);
             return result;
         }
@@ -5697,6 +5697,16 @@ export abstract class Activity implements IActivity {
             result.init(data);
             return result;
         }
+        if (data["discriminator"] === "V1ReferralIndividualVolunteerAssigned") {
+            let result = new V1ReferralIndividualVolunteerAssigned();
+            result.init(data);
+            return result;
+        }
+        if (data["discriminator"] === "V1ReferralIndividualVolunteerUnassigned") {
+            let result = new V1ReferralIndividualVolunteerUnassigned();
+            result.init(data);
+            return result;
+        }
         if (data["discriminator"] === "V1ReferralOpened") {
             let result = new V1ReferralOpened();
             result.init(data);
@@ -5704,16 +5714,6 @@ export abstract class Activity implements IActivity {
         }
         if (data["discriminator"] === "V1ReferralRequirementCompleted") {
             let result = new V1ReferralRequirementCompleted();
-            result.init(data);
-            return result;
-        }
-        if (data["discriminator"] === "V1ReferralStaffAssigned") {
-            let result = new V1ReferralStaffAssigned();
-            result.init(data);
-            return result;
-        }
-        if (data["discriminator"] === "V1ReferralStaffUnassigned") {
-            let result = new V1ReferralStaffUnassigned();
             result.init(data);
             return result;
         }
@@ -5910,13 +5910,13 @@ export interface IReferralRequirementCompleted extends IActivity {
     completedAtUtc: Date;
 }
 
-export class V1CaseStaffAssigned extends Activity implements IV1CaseStaffAssigned {
+export class V1CaseIndividualVolunteerAssigned extends Activity implements IV1CaseIndividualVolunteerAssigned {
     personId!: string;
     assignmentRole!: string;
 
-    constructor(data?: IV1CaseStaffAssigned) {
+    constructor(data?: IV1CaseIndividualVolunteerAssigned) {
         super(data);
-        this._discriminator = "V1CaseStaffAssigned";
+        this._discriminator = "V1CaseIndividualVolunteerAssigned";
     }
 
     init(_data?: any) {
@@ -5927,9 +5927,9 @@ export class V1CaseStaffAssigned extends Activity implements IV1CaseStaffAssigne
         }
     }
 
-    static fromJS(data: any): V1CaseStaffAssigned {
+    static fromJS(data: any): V1CaseIndividualVolunteerAssigned {
         data = typeof data === 'object' ? data : {};
-        let result = new V1CaseStaffAssigned();
+        let result = new V1CaseIndividualVolunteerAssigned();
         result.init(data);
         return result;
     }
@@ -5943,18 +5943,18 @@ export class V1CaseStaffAssigned extends Activity implements IV1CaseStaffAssigne
     }
 }
 
-export interface IV1CaseStaffAssigned extends IActivity {
+export interface IV1CaseIndividualVolunteerAssigned extends IActivity {
     personId: string;
     assignmentRole: string;
 }
 
-export class V1CaseStaffUnassigned extends Activity implements IV1CaseStaffUnassigned {
+export class V1CaseIndividualVolunteerUnassigned extends Activity implements IV1CaseIndividualVolunteerUnassigned {
     personId!: string;
     assignmentRole!: string;
 
-    constructor(data?: IV1CaseStaffUnassigned) {
+    constructor(data?: IV1CaseIndividualVolunteerUnassigned) {
         super(data);
-        this._discriminator = "V1CaseStaffUnassigned";
+        this._discriminator = "V1CaseIndividualVolunteerUnassigned";
     }
 
     init(_data?: any) {
@@ -5965,9 +5965,9 @@ export class V1CaseStaffUnassigned extends Activity implements IV1CaseStaffUnass
         }
     }
 
-    static fromJS(data: any): V1CaseStaffUnassigned {
+    static fromJS(data: any): V1CaseIndividualVolunteerUnassigned {
         data = typeof data === 'object' ? data : {};
-        let result = new V1CaseStaffUnassigned();
+        let result = new V1CaseIndividualVolunteerUnassigned();
         result.init(data);
         return result;
     }
@@ -5981,7 +5981,7 @@ export class V1CaseStaffUnassigned extends Activity implements IV1CaseStaffUnass
     }
 }
 
-export interface IV1CaseStaffUnassigned extends IActivity {
+export interface IV1CaseIndividualVolunteerUnassigned extends IActivity {
     personId: string;
     assignmentRole: string;
 }
@@ -6058,6 +6058,82 @@ export interface IV1ReferralClosed extends IActivity {
     closeReason: string;
 }
 
+export class V1ReferralIndividualVolunteerAssigned extends Activity implements IV1ReferralIndividualVolunteerAssigned {
+    personId!: string;
+    assignmentRole!: string;
+
+    constructor(data?: IV1ReferralIndividualVolunteerAssigned) {
+        super(data);
+        this._discriminator = "V1ReferralIndividualVolunteerAssigned";
+    }
+
+    init(_data?: any) {
+        super.init(_data);
+        if (_data) {
+            this.personId = _data["personId"];
+            this.assignmentRole = _data["assignmentRole"];
+        }
+    }
+
+    static fromJS(data: any): V1ReferralIndividualVolunteerAssigned {
+        data = typeof data === 'object' ? data : {};
+        let result = new V1ReferralIndividualVolunteerAssigned();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["personId"] = this.personId;
+        data["assignmentRole"] = this.assignmentRole;
+        super.toJSON(data);
+        return data;
+    }
+}
+
+export interface IV1ReferralIndividualVolunteerAssigned extends IActivity {
+    personId: string;
+    assignmentRole: string;
+}
+
+export class V1ReferralIndividualVolunteerUnassigned extends Activity implements IV1ReferralIndividualVolunteerUnassigned {
+    personId!: string;
+    assignmentRole!: string;
+
+    constructor(data?: IV1ReferralIndividualVolunteerUnassigned) {
+        super(data);
+        this._discriminator = "V1ReferralIndividualVolunteerUnassigned";
+    }
+
+    init(_data?: any) {
+        super.init(_data);
+        if (_data) {
+            this.personId = _data["personId"];
+            this.assignmentRole = _data["assignmentRole"];
+        }
+    }
+
+    static fromJS(data: any): V1ReferralIndividualVolunteerUnassigned {
+        data = typeof data === 'object' ? data : {};
+        let result = new V1ReferralIndividualVolunteerUnassigned();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["personId"] = this.personId;
+        data["assignmentRole"] = this.assignmentRole;
+        super.toJSON(data);
+        return data;
+    }
+}
+
+export interface IV1ReferralIndividualVolunteerUnassigned extends IActivity {
+    personId: string;
+    assignmentRole: string;
+}
+
 export class V1ReferralOpened extends Activity implements IV1ReferralOpened {
     openedAtUtc!: Date;
 
@@ -6128,82 +6204,6 @@ export class V1ReferralRequirementCompleted extends Activity implements IV1Refer
 export interface IV1ReferralRequirementCompleted extends IActivity {
     requirementName: string;
     completedAtUtc: Date;
-}
-
-export class V1ReferralStaffAssigned extends Activity implements IV1ReferralStaffAssigned {
-    personId!: string;
-    assignmentRole!: string;
-
-    constructor(data?: IV1ReferralStaffAssigned) {
-        super(data);
-        this._discriminator = "V1ReferralStaffAssigned";
-    }
-
-    init(_data?: any) {
-        super.init(_data);
-        if (_data) {
-            this.personId = _data["personId"];
-            this.assignmentRole = _data["assignmentRole"];
-        }
-    }
-
-    static fromJS(data: any): V1ReferralStaffAssigned {
-        data = typeof data === 'object' ? data : {};
-        let result = new V1ReferralStaffAssigned();
-        result.init(data);
-        return result;
-    }
-
-    toJSON(data?: any) {
-        data = typeof data === 'object' ? data : {};
-        data["personId"] = this.personId;
-        data["assignmentRole"] = this.assignmentRole;
-        super.toJSON(data);
-        return data;
-    }
-}
-
-export interface IV1ReferralStaffAssigned extends IActivity {
-    personId: string;
-    assignmentRole: string;
-}
-
-export class V1ReferralStaffUnassigned extends Activity implements IV1ReferralStaffUnassigned {
-    personId!: string;
-    assignmentRole!: string;
-
-    constructor(data?: IV1ReferralStaffUnassigned) {
-        super(data);
-        this._discriminator = "V1ReferralStaffUnassigned";
-    }
-
-    init(_data?: any) {
-        super.init(_data);
-        if (_data) {
-            this.personId = _data["personId"];
-            this.assignmentRole = _data["assignmentRole"];
-        }
-    }
-
-    static fromJS(data: any): V1ReferralStaffUnassigned {
-        data = typeof data === 'object' ? data : {};
-        let result = new V1ReferralStaffUnassigned();
-        result.init(data);
-        return result;
-    }
-
-    toJSON(data?: any) {
-        data = typeof data === 'object' ? data : {};
-        data["personId"] = this.personId;
-        data["assignmentRole"] = this.assignmentRole;
-        super.toJSON(data);
-        return data;
-    }
-}
-
-export interface IV1ReferralStaffUnassigned extends IActivity {
-    personId: string;
-    assignmentRole: string;
 }
 
 export class UserInfo implements IUserInfo {
@@ -6336,7 +6336,7 @@ export class V1Case implements IV1Case {
     completedCustomFields!: CompletedCustomFieldInfo[];
     missingCustomFields!: string[];
     arrangements!: Arrangement[];
-    staffAssignments!: StaffAssignment[];
+    assignedIndividualVolunteers!: AssignedIndividualVolunteer[];
     comments?: string | undefined;
     linkedV1ReferralIds!: string[];
 
@@ -6354,7 +6354,7 @@ export class V1Case implements IV1Case {
             this.completedCustomFields = [];
             this.missingCustomFields = [];
             this.arrangements = [];
-            this.staffAssignments = [];
+            this.assignedIndividualVolunteers = [];
             this.linkedV1ReferralIds = [];
         }
     }
@@ -6395,10 +6395,10 @@ export class V1Case implements IV1Case {
                 for (let item of _data["arrangements"])
                     this.arrangements!.push(Arrangement.fromJS(item));
             }
-            if (Array.isArray(_data["staffAssignments"])) {
-                this.staffAssignments = [] as any;
-                for (let item of _data["staffAssignments"])
-                    this.staffAssignments!.push(StaffAssignment.fromJS(item));
+            if (Array.isArray(_data["assignedIndividualVolunteers"])) {
+                this.assignedIndividualVolunteers = [] as any;
+                for (let item of _data["assignedIndividualVolunteers"])
+                    this.assignedIndividualVolunteers!.push(AssignedIndividualVolunteer.fromJS(item));
             }
             this.comments = _data["comments"];
             if (Array.isArray(_data["linkedV1ReferralIds"])) {
@@ -6452,10 +6452,10 @@ export class V1Case implements IV1Case {
             for (let item of this.arrangements)
                 data["arrangements"].push(item.toJSON());
         }
-        if (Array.isArray(this.staffAssignments)) {
-            data["staffAssignments"] = [];
-            for (let item of this.staffAssignments)
-                data["staffAssignments"].push(item.toJSON());
+        if (Array.isArray(this.assignedIndividualVolunteers)) {
+            data["assignedIndividualVolunteers"] = [];
+            for (let item of this.assignedIndividualVolunteers)
+                data["assignedIndividualVolunteers"].push(item.toJSON());
         }
         data["comments"] = this.comments;
         if (Array.isArray(this.linkedV1ReferralIds)) {
@@ -6478,7 +6478,7 @@ export interface IV1Case {
     completedCustomFields: CompletedCustomFieldInfo[];
     missingCustomFields: string[];
     arrangements: Arrangement[];
-    staffAssignments: StaffAssignment[];
+    assignedIndividualVolunteers: AssignedIndividualVolunteer[];
     comments?: string | undefined;
     linkedV1ReferralIds: string[];
 }
@@ -7072,13 +7072,13 @@ export interface IChildLocationHistoryEntry {
     noteId?: string | undefined;
 }
 
-export class StaffAssignment implements IStaffAssignment {
+export class AssignedIndividualVolunteer implements IAssignedIndividualVolunteer {
     personId!: string;
     assignmentRole!: string;
     assignedAtUtc!: Date;
     assignedByUserId!: string;
 
-    constructor(data?: IStaffAssignment) {
+    constructor(data?: IAssignedIndividualVolunteer) {
         if (data) {
             for (var property in data) {
                 if (data.hasOwnProperty(property))
@@ -7096,9 +7096,9 @@ export class StaffAssignment implements IStaffAssignment {
         }
     }
 
-    static fromJS(data: any): StaffAssignment {
+    static fromJS(data: any): AssignedIndividualVolunteer {
         data = typeof data === 'object' ? data : {};
-        let result = new StaffAssignment();
+        let result = new AssignedIndividualVolunteer();
         result.init(data);
         return result;
     }
@@ -7113,7 +7113,7 @@ export class StaffAssignment implements IStaffAssignment {
     }
 }
 
-export interface IStaffAssignment {
+export interface IAssignedIndividualVolunteer {
     personId: string;
     assignmentRole: string;
     assignedAtUtc: Date;
@@ -8589,7 +8589,7 @@ export class V1Referral implements IV1Referral {
     exemptedRequirements!: ExemptedRequirementInfo[];
     uploadedDocuments!: UploadedDocumentInfo[];
     deletedDocuments!: string[];
-    staffAssignments!: StaffAssignment[];
+    assignedIndividualVolunteers!: AssignedIndividualVolunteer[];
     history!: Activity[];
     notes!: V1ReferralNoteEntry[];
     missingIntakeRequirements!: RequirementDefinition[];
@@ -8607,7 +8607,7 @@ export class V1Referral implements IV1Referral {
             this.exemptedRequirements = [];
             this.uploadedDocuments = [];
             this.deletedDocuments = [];
-            this.staffAssignments = [];
+            this.assignedIndividualVolunteers = [];
             this.history = [];
             this.notes = [];
             this.missingIntakeRequirements = [];
@@ -8652,10 +8652,10 @@ export class V1Referral implements IV1Referral {
                 for (let item of _data["deletedDocuments"])
                     this.deletedDocuments!.push(item);
             }
-            if (Array.isArray(_data["staffAssignments"])) {
-                this.staffAssignments = [] as any;
-                for (let item of _data["staffAssignments"])
-                    this.staffAssignments!.push(StaffAssignment.fromJS(item));
+            if (Array.isArray(_data["assignedIndividualVolunteers"])) {
+                this.assignedIndividualVolunteers = [] as any;
+                for (let item of _data["assignedIndividualVolunteers"])
+                    this.assignedIndividualVolunteers!.push(AssignedIndividualVolunteer.fromJS(item));
             }
             if (Array.isArray(_data["history"])) {
                 this.history = [] as any;
@@ -8720,10 +8720,10 @@ export class V1Referral implements IV1Referral {
             for (let item of this.deletedDocuments)
                 data["deletedDocuments"].push(item);
         }
-        if (Array.isArray(this.staffAssignments)) {
-            data["staffAssignments"] = [];
-            for (let item of this.staffAssignments)
-                data["staffAssignments"].push(item.toJSON());
+        if (Array.isArray(this.assignedIndividualVolunteers)) {
+            data["assignedIndividualVolunteers"] = [];
+            for (let item of this.assignedIndividualVolunteers)
+                data["assignedIndividualVolunteers"].push(item.toJSON());
         }
         if (Array.isArray(this.history)) {
             data["history"] = [];
@@ -8759,7 +8759,7 @@ export interface IV1Referral {
     exemptedRequirements: ExemptedRequirementInfo[];
     uploadedDocuments: UploadedDocumentInfo[];
     deletedDocuments: string[];
-    staffAssignments: StaffAssignment[];
+    assignedIndividualVolunteers: AssignedIndividualVolunteer[];
     history: Activity[];
     notes: V1ReferralNoteEntry[];
     missingIntakeRequirements: RequirementDefinition[];
@@ -13825,8 +13825,8 @@ export abstract class V1CaseCommand implements IV1CaseCommand {
 
     static fromJS(data: any): V1CaseCommand {
         data = typeof data === 'object' ? data : {};
-        if (data["discriminator"] === "AssignStaffToV1Case") {
-            let result = new AssignStaffToV1Case();
+        if (data["discriminator"] === "AssignIndividualVolunteerToV1Case") {
+            let result = new AssignIndividualVolunteerToV1Case();
             result.init(data);
             return result;
         }
@@ -13865,8 +13865,8 @@ export abstract class V1CaseCommand implements IV1CaseCommand {
             result.init(data);
             return result;
         }
-        if (data["discriminator"] === "UnassignStaffFromV1Case") {
-            let result = new UnassignStaffFromV1Case();
+        if (data["discriminator"] === "UnassignIndividualVolunteerFromV1Case") {
+            let result = new UnassignIndividualVolunteerFromV1Case();
             result.init(data);
             return result;
         }
@@ -13902,13 +13902,13 @@ export interface IV1CaseCommand {
     referralId: string;
 }
 
-export class AssignStaffToV1Case extends V1CaseCommand implements IAssignStaffToV1Case {
+export class AssignIndividualVolunteerToV1Case extends V1CaseCommand implements IAssignIndividualVolunteerToV1Case {
     personId!: string;
     assignmentRole!: string;
 
-    constructor(data?: IAssignStaffToV1Case) {
+    constructor(data?: IAssignIndividualVolunteerToV1Case) {
         super(data);
-        this._discriminator = "AssignStaffToV1Case";
+        this._discriminator = "AssignIndividualVolunteerToV1Case";
     }
 
     init(_data?: any) {
@@ -13919,9 +13919,9 @@ export class AssignStaffToV1Case extends V1CaseCommand implements IAssignStaffTo
         }
     }
 
-    static fromJS(data: any): AssignStaffToV1Case {
+    static fromJS(data: any): AssignIndividualVolunteerToV1Case {
         data = typeof data === 'object' ? data : {};
-        let result = new AssignStaffToV1Case();
+        let result = new AssignIndividualVolunteerToV1Case();
         result.init(data);
         return result;
     }
@@ -13935,7 +13935,7 @@ export class AssignStaffToV1Case extends V1CaseCommand implements IAssignStaffTo
     }
 }
 
-export interface IAssignStaffToV1Case extends IV1CaseCommand {
+export interface IAssignIndividualVolunteerToV1Case extends IV1CaseCommand {
     personId: string;
     assignmentRole: string;
 }
@@ -14210,13 +14210,13 @@ export interface IReopenReferral extends IV1CaseCommand {
     reopenedAtUtc: Date;
 }
 
-export class UnassignStaffFromV1Case extends V1CaseCommand implements IUnassignStaffFromV1Case {
+export class UnassignIndividualVolunteerFromV1Case extends V1CaseCommand implements IUnassignIndividualVolunteerFromV1Case {
     personId!: string;
     assignmentRole!: string;
 
-    constructor(data?: IUnassignStaffFromV1Case) {
+    constructor(data?: IUnassignIndividualVolunteerFromV1Case) {
         super(data);
-        this._discriminator = "UnassignStaffFromV1Case";
+        this._discriminator = "UnassignIndividualVolunteerFromV1Case";
     }
 
     init(_data?: any) {
@@ -14227,9 +14227,9 @@ export class UnassignStaffFromV1Case extends V1CaseCommand implements IUnassignS
         }
     }
 
-    static fromJS(data: any): UnassignStaffFromV1Case {
+    static fromJS(data: any): UnassignIndividualVolunteerFromV1Case {
         data = typeof data === 'object' ? data : {};
-        let result = new UnassignStaffFromV1Case();
+        let result = new UnassignIndividualVolunteerFromV1Case();
         result.init(data);
         return result;
     }
@@ -14243,7 +14243,7 @@ export class UnassignStaffFromV1Case extends V1CaseCommand implements IUnassignS
     }
 }
 
-export interface IUnassignStaffFromV1Case extends IV1CaseCommand {
+export interface IUnassignIndividualVolunteerFromV1Case extends IV1CaseCommand {
     personId: string;
     assignmentRole: string;
 }
@@ -14713,8 +14713,8 @@ export abstract class V1ReferralCommand implements IV1ReferralCommand {
             result.init(data);
             return result;
         }
-        if (data["discriminator"] === "AssignStaffToV1Referral") {
-            let result = new AssignStaffToV1Referral();
+        if (data["discriminator"] === "AssignIndividualVolunteerToV1Referral") {
+            let result = new AssignIndividualVolunteerToV1Referral();
             result.init(data);
             return result;
         }
@@ -14753,8 +14753,8 @@ export abstract class V1ReferralCommand implements IV1ReferralCommand {
             result.init(data);
             return result;
         }
-        if (data["discriminator"] === "UnassignStaffFromV1Referral") {
-            let result = new UnassignStaffFromV1Referral();
+        if (data["discriminator"] === "UnassignIndividualVolunteerFromV1Referral") {
+            let result = new UnassignIndividualVolunteerFromV1Referral();
             result.init(data);
             return result;
         }
@@ -14832,13 +14832,13 @@ export interface IAcceptV1Referral extends IV1ReferralCommand {
     acceptedAtUtc: Date;
 }
 
-export class AssignStaffToV1Referral extends V1ReferralCommand implements IAssignStaffToV1Referral {
+export class AssignIndividualVolunteerToV1Referral extends V1ReferralCommand implements IAssignIndividualVolunteerToV1Referral {
     personId!: string;
     assignmentRole!: string;
 
-    constructor(data?: IAssignStaffToV1Referral) {
+    constructor(data?: IAssignIndividualVolunteerToV1Referral) {
         super(data);
-        this._discriminator = "AssignStaffToV1Referral";
+        this._discriminator = "AssignIndividualVolunteerToV1Referral";
     }
 
     init(_data?: any) {
@@ -14849,9 +14849,9 @@ export class AssignStaffToV1Referral extends V1ReferralCommand implements IAssig
         }
     }
 
-    static fromJS(data: any): AssignStaffToV1Referral {
+    static fromJS(data: any): AssignIndividualVolunteerToV1Referral {
         data = typeof data === 'object' ? data : {};
-        let result = new AssignStaffToV1Referral();
+        let result = new AssignIndividualVolunteerToV1Referral();
         result.init(data);
         return result;
     }
@@ -14865,7 +14865,7 @@ export class AssignStaffToV1Referral extends V1ReferralCommand implements IAssig
     }
 }
 
-export interface IAssignStaffToV1Referral extends IV1ReferralCommand {
+export interface IAssignIndividualVolunteerToV1Referral extends IV1ReferralCommand {
     personId: string;
     assignmentRole: string;
 }
@@ -15152,13 +15152,13 @@ export interface IReopenV1Referral extends IV1ReferralCommand {
     reopenedAtUtc: Date;
 }
 
-export class UnassignStaffFromV1Referral extends V1ReferralCommand implements IUnassignStaffFromV1Referral {
+export class UnassignIndividualVolunteerFromV1Referral extends V1ReferralCommand implements IUnassignIndividualVolunteerFromV1Referral {
     personId!: string;
     assignmentRole!: string;
 
-    constructor(data?: IUnassignStaffFromV1Referral) {
+    constructor(data?: IUnassignIndividualVolunteerFromV1Referral) {
         super(data);
-        this._discriminator = "UnassignStaffFromV1Referral";
+        this._discriminator = "UnassignIndividualVolunteerFromV1Referral";
     }
 
     init(_data?: any) {
@@ -15169,9 +15169,9 @@ export class UnassignStaffFromV1Referral extends V1ReferralCommand implements IU
         }
     }
 
-    static fromJS(data: any): UnassignStaffFromV1Referral {
+    static fromJS(data: any): UnassignIndividualVolunteerFromV1Referral {
         data = typeof data === 'object' ? data : {};
-        let result = new UnassignStaffFromV1Referral();
+        let result = new UnassignIndividualVolunteerFromV1Referral();
         result.init(data);
         return result;
     }
@@ -15185,7 +15185,7 @@ export class UnassignStaffFromV1Referral extends V1ReferralCommand implements IU
     }
 }
 
-export interface IUnassignStaffFromV1Referral extends IV1ReferralCommand {
+export interface IUnassignIndividualVolunteerFromV1Referral extends IV1ReferralCommand {
     personId: string;
     assignmentRole: string;
 }

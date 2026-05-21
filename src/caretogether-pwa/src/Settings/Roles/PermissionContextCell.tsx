@@ -12,8 +12,8 @@ import {
   AllVolunteerFamiliesPermissionContext,
   AssignedFunctionsInReferralCoAssigneeFamiliesPermissionContext as AssignedFunctionsInV1CaseCoAssigneeFamiliesPermissionContext,
   AssignedFunctionsInReferralPartneringFamilyPermissionContext as AssignedFunctionsInV1CasePartneringFamilyPermissionContext,
-  AssignedStaffInV1CasePermissionContext,
-  AssignedStaffInV1ReferralPermissionContext,
+  AssignedVolunteerInV1CasePermissionContext,
+  AssignedVolunteerInV1ReferralPermissionContext,
   CommunityCoMemberFamiliesAssignedFunctionsInReferralCoAssignedFamiliesPermissionContext as CommunityCoMemberFamiliesAssignedFunctionsInV1CaseCoAssignedFamiliesPermissionContext,
   CommunityCoMemberFamiliesAssignedFunctionsInReferralPartneringFamilyPermissionContext as CommunityCoMemberFamiliesAssignedFunctionsInV1CasePartneringFamilyPermissionContext,
   CommunityCoMemberFamiliesPermissionContext,
@@ -26,7 +26,7 @@ import {
 import { useLoadable } from '../../Hooks/useLoadable';
 import {
   allFunctionsInPolicyQuery,
-  allStaffAssignmentRolesInPolicyQuery,
+  allVolunteerAssignmentRolesInPolicyQuery,
   organizationConfigurationQuery,
 } from '../../Model/ConfigurationModel';
 
@@ -90,11 +90,11 @@ function V1CaseOpenSelector({
   );
 }
 
-function AssignedStaffV1CaseOpenSelector({
+function AssignedVolunteerV1CaseOpenSelector({
   context,
   factory,
   onUpdate,
-}: ContextSelectorProps<AssignedStaffInV1CasePermissionContext>) {
+}: ContextSelectorProps<AssignedVolunteerInV1CasePermissionContext>) {
   const hasValue =
     typeof context.whenCaseIsOpen !== 'undefined' &&
     context.whenCaseIsOpen !== null;
@@ -138,11 +138,11 @@ function AssignedStaffV1CaseOpenSelector({
   );
 }
 
-function AssignedStaffV1ReferralOpenSelector({
+function AssignedVolunteerV1ReferralOpenSelector({
   context,
   factory,
   onUpdate,
-}: ContextSelectorProps<AssignedStaffInV1ReferralPermissionContext>) {
+}: ContextSelectorProps<AssignedVolunteerInV1ReferralPermissionContext>) {
   const hasValue =
     typeof context.whenReferralIsOpen !== 'undefined' &&
     context.whenReferralIsOpen !== null;
@@ -197,11 +197,11 @@ function AssignmentRoleSelector({
   factory,
   onUpdate,
 }: ContextSelectorProps<
-  | AssignedStaffInV1CasePermissionContext
-  | AssignedStaffInV1ReferralPermissionContext
+  | AssignedVolunteerInV1CasePermissionContext
+  | AssignedVolunteerInV1ReferralPermissionContext
 >) {
-  const allStaffAssignmentRoles = useLoadable(
-    allStaffAssignmentRolesInPolicyQuery
+  const allVolunteerAssignmentRoles = useLoadable(
+    allVolunteerAssignmentRolesInPolicyQuery
   );
   const hasValue =
     typeof context.whenAssignmentRoleIsIn !== 'undefined' &&
@@ -209,7 +209,7 @@ function AssignmentRoleSelector({
 
   return (
     <FormGroup>
-      {allStaffAssignmentRoles === null ? (
+      {allVolunteerAssignmentRoles === null ? (
         <Skeleton />
       ) : (
         <>
@@ -221,7 +221,7 @@ function AssignmentRoleSelector({
                 onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
                   const newContext = factory();
                   newContext.whenAssignmentRoleIsIn = event.target.checked
-                    ? allStaffAssignmentRoles
+                    ? allVolunteerAssignmentRoles
                     : undefined;
                   onUpdate(newContext);
                 }}
@@ -233,7 +233,7 @@ function AssignmentRoleSelector({
           />
           {hasValue && (
             <FormGroup>
-              {allStaffAssignmentRoles.map((assignmentRole) => (
+              {allVolunteerAssignmentRoles.map((assignmentRole) => (
                 <FormControlLabel
                   key={assignmentRole}
                   control={
@@ -516,10 +516,10 @@ export function PermissionContextCell({
               : context instanceof
                   AssignedFunctionsInV1CaseCoAssigneeFamiliesPermissionContext
                 ? 'Assigned Functions in Case - Co-Assigned Families'
-                : context instanceof AssignedStaffInV1CasePermissionContext
+                : context instanceof AssignedVolunteerInV1CasePermissionContext
                   ? 'Assigned Staff in Case'
                   : context instanceof
-                      AssignedStaffInV1ReferralPermissionContext
+                      AssignedVolunteerInV1ReferralPermissionContext
                     ? 'Assigned Staff in Referral'
                     : context instanceof
                         OwnV1CaseAssigneeFamiliesPermissionContext
@@ -566,19 +566,19 @@ export function PermissionContextCell({
     return result;
   }
 
-  function assignedStaffInV1CasePermissionContextFactory(
-    context: AssignedStaffInV1CasePermissionContext
+  function assignedVolunteerInV1CasePermissionContextFactory(
+    context: AssignedVolunteerInV1CasePermissionContext
   ) {
-    const result = new AssignedStaffInV1CasePermissionContext();
+    const result = new AssignedVolunteerInV1CasePermissionContext();
     result.whenCaseIsOpen = context.whenCaseIsOpen;
     result.whenAssignmentRoleIsIn = context.whenAssignmentRoleIsIn?.slice();
     return result;
   }
 
-  function assignedStaffInV1ReferralPermissionContextFactory(
-    context: AssignedStaffInV1ReferralPermissionContext
+  function assignedVolunteerInV1ReferralPermissionContextFactory(
+    context: AssignedVolunteerInV1ReferralPermissionContext
   ) {
-    const result = new AssignedStaffInV1ReferralPermissionContext();
+    const result = new AssignedVolunteerInV1ReferralPermissionContext();
     result.whenReferralIsOpen = context.whenReferralIsOpen;
     result.whenAssignmentRoleIsIn = context.whenAssignmentRoleIsIn?.slice();
     return result;
@@ -695,38 +695,38 @@ export function PermissionContextCell({
             />
           </>
         )}
-        {context instanceof AssignedStaffInV1CasePermissionContext && (
+        {context instanceof AssignedVolunteerInV1CasePermissionContext && (
           <>
-            <AssignedStaffV1CaseOpenSelector
+            <AssignedVolunteerV1CaseOpenSelector
               context={context}
               onUpdate={onUpdate}
               factory={() =>
-                assignedStaffInV1CasePermissionContextFactory(context)
+                assignedVolunteerInV1CasePermissionContextFactory(context)
               }
             />
             <AssignmentRoleSelector
               context={context}
               onUpdate={onUpdate}
               factory={() =>
-                assignedStaffInV1CasePermissionContextFactory(context)
+                assignedVolunteerInV1CasePermissionContextFactory(context)
               }
             />
           </>
         )}
-        {context instanceof AssignedStaffInV1ReferralPermissionContext && (
+        {context instanceof AssignedVolunteerInV1ReferralPermissionContext && (
           <>
-            <AssignedStaffV1ReferralOpenSelector
+            <AssignedVolunteerV1ReferralOpenSelector
               context={context}
               onUpdate={onUpdate}
               factory={() =>
-                assignedStaffInV1ReferralPermissionContextFactory(context)
+                assignedVolunteerInV1ReferralPermissionContextFactory(context)
               }
             />
             <AssignmentRoleSelector
               context={context}
               onUpdate={onUpdate}
               factory={() =>
-                assignedStaffInV1ReferralPermissionContextFactory(context)
+                assignedVolunteerInV1ReferralPermissionContextFactory(context)
               }
             />
           </>

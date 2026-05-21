@@ -56,8 +56,8 @@ import {
   EditArrangementRequestedAt,
   EditArrangementEndTime,
   EditArrangementCancelledAt,
-  AssignStaffToV1Case,
-  UnassignStaffFromV1Case,
+  AssignIndividualVolunteerToV1Case,
+  UnassignIndividualVolunteerFromV1Case,
 } from '../GeneratedClient';
 import { visibleFamiliesQuery } from './Data';
 import { convertUtcDateToLocalDate } from '../Utilities/dateUtils';
@@ -971,34 +971,35 @@ export function useV1CasesModel() {
     await openV1CaseCommand(partneringFamilyId, openedAtLocal);
   };
 
-  const assignStaffToV1Case = useV1CaseCommandCallbackWithLocation(
+  const assignIndividualVolunteerToV1Case = useV1CaseCommandCallbackWithLocation(
     async (
       partneringFamilyId: string,
       v1CaseId: string,
       personId: string,
       assignmentRole: string
     ) =>
-      commandFactory(AssignStaffToV1Case, {
+      commandFactory(AssignIndividualVolunteerToV1Case, {
         familyId: partneringFamilyId,
         referralId: v1CaseId,
         personId,
         assignmentRole,
       })
   );
-  const unassignStaffFromV1Case = useV1CaseCommandCallbackWithLocation(
-    async (
-      partneringFamilyId: string,
-      v1CaseId: string,
-      personId: string,
-      assignmentRole: string
-    ) =>
-      commandFactory(UnassignStaffFromV1Case, {
-        familyId: partneringFamilyId,
-        referralId: v1CaseId,
-        personId,
-        assignmentRole,
-      })
-  );
+  const unassignIndividualVolunteerFromV1Case =
+    useV1CaseCommandCallbackWithLocation(
+      async (
+        partneringFamilyId: string,
+        v1CaseId: string,
+        personId: string,
+        assignmentRole: string
+      ) =>
+        commandFactory(UnassignIndividualVolunteerFromV1Case, {
+          familyId: partneringFamilyId,
+          referralId: v1CaseId,
+          personId,
+          assignmentRole,
+        })
+    );
 
   return {
     completeV1CaseRequirement,
@@ -1044,7 +1045,7 @@ export function useV1CasesModel() {
     closeV1Case,
     reopenV1Case,
     openV1Case,
-    assignStaffToV1Case,
-    unassignStaffFromV1Case,
+    assignIndividualVolunteerToV1Case,
+    unassignIndividualVolunteerFromV1Case,
   };
 }
