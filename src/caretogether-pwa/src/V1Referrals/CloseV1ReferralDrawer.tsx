@@ -20,6 +20,28 @@ interface CloseV1ReferralDrawerProps {
   onClose: () => void;
 }
 
+function isSameLocalDate(left: Date, right: Date) {
+  return (
+    left.getFullYear() === right.getFullYear() &&
+    left.getMonth() === right.getMonth() &&
+    left.getDate() === right.getDate()
+  );
+}
+
+function withCurrentLocalTimeIfToday(date: Date, now = new Date()) {
+  if (!isSameLocalDate(date, now)) return date;
+
+  const dateWithCurrentTime = new Date(date);
+  dateWithCurrentTime.setHours(
+    now.getHours(),
+    now.getMinutes(),
+    now.getSeconds(),
+    now.getMilliseconds()
+  );
+
+  return dateWithCurrentTime;
+}
+
 export function CloseV1ReferralDrawer({
   referralId,
   onClose,
@@ -41,7 +63,11 @@ export function CloseV1ReferralDrawer({
   const canSave = reason !== null && closedAtLocal !== null && !dateError;
 
   async function save() {
-    await closeReferral(referralId, reason!, closedAtLocal!);
+    await closeReferral(
+      referralId,
+      reason!,
+      withCurrentLocalTimeIfToday(closedAtLocal!)
+    );
     onClose();
   }
 
