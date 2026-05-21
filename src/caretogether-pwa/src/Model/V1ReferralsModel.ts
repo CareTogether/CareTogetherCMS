@@ -402,7 +402,7 @@ export function useV1ReferralsModel() {
     await refreshVisibleAggregates();
   };
 
-  const assignStaffToReferralCommand = useV1ReferralCommandCallback(
+  const assignStaffToReferral = useV1ReferralCommandCallback(
     async (referralId: string, personId: string, assignmentRole: string) =>
       commandFactory(AssignStaffToV1Referral, {
         referralId,
@@ -411,16 +411,7 @@ export function useV1ReferralsModel() {
       })
   );
 
-  const assignStaffToReferral = async (
-    referralId: string,
-    personId: string,
-    assignmentRole: string
-  ) => {
-    await assignStaffToReferralCommand(referralId, personId, assignmentRole);
-    await refreshVisibleAggregates();
-  };
-
-  const unassignStaffFromReferralCommand = useV1ReferralCommandCallback(
+  const unassignStaffFromReferral = useV1ReferralCommandCallback(
     async (referralId: string, personId: string, assignmentRole: string) =>
       commandFactory(UnassignStaffFromV1Referral, {
         referralId,
@@ -428,19 +419,6 @@ export function useV1ReferralsModel() {
         assignmentRole,
       })
   );
-
-  const unassignStaffFromReferral = async (
-    referralId: string,
-    personId: string,
-    assignmentRole: string
-  ) => {
-    await unassignStaffFromReferralCommand(
-      referralId,
-      personId,
-      assignmentRole
-    );
-    await refreshVisibleAggregates();
-  };
 
   return {
     createReferral,
