@@ -15,6 +15,12 @@ using CareTogether.Resources.Policies;
 using CareTogether.Resources.V1Cases;
 using CareTogether.Resources.V1Referrals;
 using Nito.AsyncEx;
+using ArrangementAssignIndividualVolunteer = CareTogether.Resources.V1Cases.AssignIndividualVolunteer;
+using ArrangementUnassignIndividualVolunteer = CareTogether.Resources.V1Cases.UnassignIndividualVolunteer;
+using V1CaseAssignIndividualVolunteer = CareTogether.Resources.V1Cases.V1CaseCommands.AssignIndividualVolunteer;
+using V1CaseUnassignIndividualVolunteer = CareTogether.Resources.V1Cases.V1CaseCommands.UnassignIndividualVolunteer;
+using V1ReferralAssignIndividualVolunteer = CareTogether.Resources.V1Referrals.AssignIndividualVolunteer;
+using V1ReferralUnassignIndividualVolunteer = CareTogether.Resources.V1Referrals.UnassignIndividualVolunteer;
 
 namespace CareTogether.Engines.Authorization
 {
@@ -147,8 +153,10 @@ namespace CareTogether.Engines.Authorization
                         Permission.EditV1CaseRequirementExemption,
                     UpdateCustomReferralField => Permission.EditV1Case,
                     UpdateReferralComments => Permission.EditV1Case,
-                    AssignIndividualVolunteerToV1Case => Permission.EditV1CaseVolunteerAssignments,
-                    UnassignIndividualVolunteerFromV1Case => Permission.EditV1CaseVolunteerAssignments,
+                    V1CaseAssignIndividualVolunteer =>
+                        Permission.EditV1CaseVolunteerAssignments,
+                    V1CaseUnassignIndividualVolunteer =>
+                        Permission.EditV1CaseVolunteerAssignments,
                     LinkReferralToCase => Permission.EditV1Case,
                     CloseReferral => Permission.CloseV1Case,
                     ReopenReferral => Permission.CloseV1Case,
@@ -176,9 +184,9 @@ namespace CareTogether.Engines.Authorization
                 command switch
                 {
                     CreateArrangement => Permission.CreateArrangement,
-                    AssignIndividualVolunteer => Permission.EditAssignments,
+                    ArrangementAssignIndividualVolunteer => Permission.EditAssignments,
                     AssignVolunteerFamily => Permission.EditAssignments,
-                    UnassignIndividualVolunteer => Permission.EditAssignments,
+                    ArrangementUnassignIndividualVolunteer => Permission.EditAssignments,
                     UnassignVolunteerFamily => Permission.EditAssignments,
                     PlanArrangementStart => Permission.EditArrangement,
                     StartArrangements => Permission.EditArrangement,
@@ -267,8 +275,10 @@ namespace CareTogether.Engines.Authorization
 
                     UploadV1ReferralDocument => Permission.EditV1Referral,
                     DeleteUploadedV1ReferralDocument => Permission.EditV1Referral,
-                    AssignIndividualVolunteerToV1Referral => Permission.EditV1ReferralVolunteerAssignments,
-                    UnassignIndividualVolunteerFromV1Referral => Permission.EditV1ReferralVolunteerAssignments,
+                    V1ReferralAssignIndividualVolunteer =>
+                        Permission.EditV1ReferralVolunteerAssignments,
+                    V1ReferralUnassignIndividualVolunteer =>
+                        Permission.EditV1ReferralVolunteerAssignments,
 
                     _ => throw new NotImplementedException(
                         $"The command type '{command.GetType().FullName}' has not been implemented."

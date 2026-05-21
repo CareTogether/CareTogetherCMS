@@ -19,8 +19,8 @@ import {
   AcceptV1Referral,
   LinkReferralToCaseAndAcceptCommand,
   OpenCaseForReferralAndAcceptCommand,
-  AssignIndividualVolunteerToV1Referral,
-  UnassignIndividualVolunteerFromV1Referral,
+  AssignIndividualVolunteer3 as AssignIndividualVolunteer,
+  UnassignIndividualVolunteer3 as UnassignIndividualVolunteer,
 } from '../GeneratedClient';
 import { commandFactory } from './CommandFactory';
 import { api } from '../Api/Api';
@@ -404,7 +404,7 @@ export function useV1ReferralsModel() {
 
   const assignIndividualVolunteerToReferral = useV1ReferralCommandCallback(
     async (referralId: string, personId: string, assignmentRole: string) =>
-      commandFactory(AssignIndividualVolunteerToV1Referral, {
+      commandFactory(AssignIndividualVolunteer, {
         referralId,
         personId,
         assignmentRole,
@@ -413,7 +413,7 @@ export function useV1ReferralsModel() {
 
   const unassignIndividualVolunteerFromReferral = useV1ReferralCommandCallback(
     async (referralId: string, personId: string, assignmentRole: string) =>
-      commandFactory(UnassignIndividualVolunteerFromV1Referral, {
+      commandFactory(UnassignIndividualVolunteer, {
         referralId,
         personId,
         assignmentRole,

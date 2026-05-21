@@ -3,6 +3,10 @@ using System.Linq;
 using CareTogether.Resources.V1Cases;
 using CareTogether.Resources.V1Referrals;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using V1CaseAssignIndividualVolunteer = CareTogether.Resources.V1Cases.V1CaseCommands.AssignIndividualVolunteer;
+using V1CaseUnassignIndividualVolunteer = CareTogether.Resources.V1Cases.V1CaseCommands.UnassignIndividualVolunteer;
+using V1ReferralAssignIndividualVolunteer = CareTogether.Resources.V1Referrals.AssignIndividualVolunteer;
+using V1ReferralUnassignIndividualVolunteer = CareTogether.Resources.V1Referrals.UnassignIndividualVolunteer;
 
 namespace CareTogether.Core.Test
 {
@@ -36,14 +40,22 @@ namespace CareTogether.Core.Test
 
             Commit(
                 model.ExecuteReferralCommand(
-                    new AssignIndividualVolunteerToV1Referral(RecordId, PersonId, "Intake Coordinator"),
+                    new V1ReferralAssignIndividualVolunteer(
+                        RecordId,
+                        PersonId,
+                        "Intake Coordinator"
+                    ),
                     UserId,
                     DateTime.UtcNow
                 )
             );
             Commit(
                 model.ExecuteReferralCommand(
-                    new AssignIndividualVolunteerToV1Referral(RecordId, PersonId, "Intake Coordinator"),
+                    new V1ReferralAssignIndividualVolunteer(
+                        RecordId,
+                        PersonId,
+                        "Intake Coordinator"
+                    ),
                     UserId,
                     DateTime.UtcNow
                 )
@@ -58,14 +70,22 @@ namespace CareTogether.Core.Test
 
             Commit(
                 model.ExecuteReferralCommand(
-                    new UnassignIndividualVolunteerFromV1Referral(RecordId, PersonId, "Intake Coordinator"),
+                    new V1ReferralUnassignIndividualVolunteer(
+                        RecordId,
+                        PersonId,
+                        "Intake Coordinator"
+                    ),
                     UserId,
                     DateTime.UtcNow
                 )
             );
             Commit(
                 model.ExecuteReferralCommand(
-                    new UnassignIndividualVolunteerFromV1Referral(RecordId, PersonId, "Intake Coordinator"),
+                    new V1ReferralUnassignIndividualVolunteer(
+                        RecordId,
+                        PersonId,
+                        "Intake Coordinator"
+                    ),
                     UserId,
                     DateTime.UtcNow
                 )
@@ -93,14 +113,24 @@ namespace CareTogether.Core.Test
 
             Commit(
                 model.ExecuteV1CaseCommand(
-                    new AssignIndividualVolunteerToV1Case(FamilyId, RecordId, PersonId, "Case Manager"),
+                    new V1CaseAssignIndividualVolunteer(
+                        FamilyId,
+                        RecordId,
+                        PersonId,
+                        "Case Manager"
+                    ),
                     UserId,
                     DateTime.UtcNow
                 )
             );
             Commit(
                 model.ExecuteV1CaseCommand(
-                    new AssignIndividualVolunteerToV1Case(FamilyId, RecordId, PersonId, "Case Manager"),
+                    new V1CaseAssignIndividualVolunteer(
+                        FamilyId,
+                        RecordId,
+                        PersonId,
+                        "Case Manager"
+                    ),
                     UserId,
                     DateTime.UtcNow
                 )
@@ -112,14 +142,24 @@ namespace CareTogether.Core.Test
 
             Commit(
                 model.ExecuteV1CaseCommand(
-                    new UnassignIndividualVolunteerFromV1Case(FamilyId, RecordId, PersonId, "Case Manager"),
+                    new V1CaseUnassignIndividualVolunteer(
+                        FamilyId,
+                        RecordId,
+                        PersonId,
+                        "Case Manager"
+                    ),
                     UserId,
                     DateTime.UtcNow
                 )
             );
             Commit(
                 model.ExecuteV1CaseCommand(
-                    new UnassignIndividualVolunteerFromV1Case(FamilyId, RecordId, PersonId, "Case Manager"),
+                    new V1CaseUnassignIndividualVolunteer(
+                        FamilyId,
+                        RecordId,
+                        PersonId,
+                        "Case Manager"
+                    ),
                     UserId,
                     DateTime.UtcNow
                 )

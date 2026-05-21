@@ -4,6 +4,8 @@ using System.Collections.Immutable;
 using System.Linq;
 using System.Threading.Tasks;
 using JsonPolymorph;
+using V1CaseAssignIndividualVolunteer = CareTogether.Resources.V1Cases.V1CaseCommands.AssignIndividualVolunteer;
+using V1CaseUnassignIndividualVolunteer = CareTogether.Resources.V1Cases.V1CaseCommands.UnassignIndividualVolunteer;
 
 namespace CareTogether.Resources.V1Cases
 {
@@ -210,13 +212,13 @@ namespace CareTogether.Resources.V1Cases
                             null
                         ),
                         LinkReferralToCase c => (LinkReferralToCaseEntry(v1CaseEntry, c), null),
-                        AssignIndividualVolunteerToV1Case c => AssignIndividualVolunteer(
+                        V1CaseAssignIndividualVolunteer c => AssignIndividualVolunteer(
                             v1CaseEntry,
                             c,
                             userId,
                             timestampUtc
                         ),
-                        UnassignIndividualVolunteerFromV1Case c => UnassignIndividualVolunteer(
+                        V1CaseUnassignIndividualVolunteer c => UnassignIndividualVolunteer(
                             v1CaseEntry,
                             c,
                             userId,
@@ -891,7 +893,7 @@ namespace CareTogether.Resources.V1Cases
 
         private static (V1CaseEntry V1CaseEntry, Activity? Activity) AssignIndividualVolunteer(
             V1CaseEntry v1CaseEntry,
-            AssignIndividualVolunteerToV1Case command,
+            V1CaseAssignIndividualVolunteer command,
             Guid userId,
             DateTime timestampUtc
         )
@@ -927,7 +929,7 @@ namespace CareTogether.Resources.V1Cases
 
         private static (V1CaseEntry V1CaseEntry, Activity? Activity) UnassignIndividualVolunteer(
             V1CaseEntry v1CaseEntry,
-            UnassignIndividualVolunteerFromV1Case command,
+            V1CaseUnassignIndividualVolunteer command,
             Guid userId,
             DateTime timestampUtc
         )

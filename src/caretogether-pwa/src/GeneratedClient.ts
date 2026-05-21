@@ -13825,11 +13825,6 @@ export abstract class V1CaseCommand implements IV1CaseCommand {
 
     static fromJS(data: any): V1CaseCommand {
         data = typeof data === 'object' ? data : {};
-        if (data["discriminator"] === "AssignIndividualVolunteerToV1Case") {
-            let result = new AssignIndividualVolunteerToV1Case();
-            result.init(data);
-            return result;
-        }
         if (data["discriminator"] === "CloseReferral") {
             let result = new CloseReferral();
             result.init(data);
@@ -13865,11 +13860,6 @@ export abstract class V1CaseCommand implements IV1CaseCommand {
             result.init(data);
             return result;
         }
-        if (data["discriminator"] === "UnassignIndividualVolunteerFromV1Case") {
-            let result = new UnassignIndividualVolunteerFromV1Case();
-            result.init(data);
-            return result;
-        }
         if (data["discriminator"] === "UnexemptReferralRequirement") {
             let result = new UnexemptReferralRequirement();
             result.init(data);
@@ -13882,6 +13872,16 @@ export abstract class V1CaseCommand implements IV1CaseCommand {
         }
         if (data["discriminator"] === "UpdateReferralComments") {
             let result = new UpdateReferralComments();
+            result.init(data);
+            return result;
+        }
+        if (data["discriminator"] === "AssignIndividualVolunteer") {
+            let result = new AssignIndividualVolunteer2();
+            result.init(data);
+            return result;
+        }
+        if (data["discriminator"] === "UnassignIndividualVolunteer") {
+            let result = new UnassignIndividualVolunteer2();
             result.init(data);
             return result;
         }
@@ -13900,44 +13900,6 @@ export abstract class V1CaseCommand implements IV1CaseCommand {
 export interface IV1CaseCommand {
     familyId: string;
     referralId: string;
-}
-
-export class AssignIndividualVolunteerToV1Case extends V1CaseCommand implements IAssignIndividualVolunteerToV1Case {
-    personId!: string;
-    assignmentRole!: string;
-
-    constructor(data?: IAssignIndividualVolunteerToV1Case) {
-        super(data);
-        this._discriminator = "AssignIndividualVolunteerToV1Case";
-    }
-
-    init(_data?: any) {
-        super.init(_data);
-        if (_data) {
-            this.personId = _data["personId"];
-            this.assignmentRole = _data["assignmentRole"];
-        }
-    }
-
-    static fromJS(data: any): AssignIndividualVolunteerToV1Case {
-        data = typeof data === 'object' ? data : {};
-        let result = new AssignIndividualVolunteerToV1Case();
-        result.init(data);
-        return result;
-    }
-
-    toJSON(data?: any) {
-        data = typeof data === 'object' ? data : {};
-        data["personId"] = this.personId;
-        data["assignmentRole"] = this.assignmentRole;
-        super.toJSON(data);
-        return data;
-    }
-}
-
-export interface IAssignIndividualVolunteerToV1Case extends IV1CaseCommand {
-    personId: string;
-    assignmentRole: string;
 }
 
 export class CloseReferral extends V1CaseCommand implements ICloseReferral {
@@ -14210,44 +14172,6 @@ export interface IReopenReferral extends IV1CaseCommand {
     reopenedAtUtc: Date;
 }
 
-export class UnassignIndividualVolunteerFromV1Case extends V1CaseCommand implements IUnassignIndividualVolunteerFromV1Case {
-    personId!: string;
-    assignmentRole!: string;
-
-    constructor(data?: IUnassignIndividualVolunteerFromV1Case) {
-        super(data);
-        this._discriminator = "UnassignIndividualVolunteerFromV1Case";
-    }
-
-    init(_data?: any) {
-        super.init(_data);
-        if (_data) {
-            this.personId = _data["personId"];
-            this.assignmentRole = _data["assignmentRole"];
-        }
-    }
-
-    static fromJS(data: any): UnassignIndividualVolunteerFromV1Case {
-        data = typeof data === 'object' ? data : {};
-        let result = new UnassignIndividualVolunteerFromV1Case();
-        result.init(data);
-        return result;
-    }
-
-    toJSON(data?: any) {
-        data = typeof data === 'object' ? data : {};
-        data["personId"] = this.personId;
-        data["assignmentRole"] = this.assignmentRole;
-        super.toJSON(data);
-        return data;
-    }
-}
-
-export interface IUnassignIndividualVolunteerFromV1Case extends IV1CaseCommand {
-    personId: string;
-    assignmentRole: string;
-}
-
 export class UnexemptReferralRequirement extends V1CaseCommand implements IUnexemptReferralRequirement {
     requirementName!: string;
 
@@ -14360,6 +14284,82 @@ export class UpdateReferralComments extends V1CaseCommand implements IUpdateRefe
 
 export interface IUpdateReferralComments extends IV1CaseCommand {
     comments?: string | undefined;
+}
+
+export class AssignIndividualVolunteer2 extends V1CaseCommand implements IAssignIndividualVolunteer2 {
+    personId!: string;
+    assignmentRole!: string;
+
+    constructor(data?: IAssignIndividualVolunteer2) {
+        super(data);
+        this._discriminator = "AssignIndividualVolunteer";
+    }
+
+    init(_data?: any) {
+        super.init(_data);
+        if (_data) {
+            this.personId = _data["personId"];
+            this.assignmentRole = _data["assignmentRole"];
+        }
+    }
+
+    static fromJS(data: any): AssignIndividualVolunteer2 {
+        data = typeof data === 'object' ? data : {};
+        let result = new AssignIndividualVolunteer2();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["personId"] = this.personId;
+        data["assignmentRole"] = this.assignmentRole;
+        super.toJSON(data);
+        return data;
+    }
+}
+
+export interface IAssignIndividualVolunteer2 extends IV1CaseCommand {
+    personId: string;
+    assignmentRole: string;
+}
+
+export class UnassignIndividualVolunteer2 extends V1CaseCommand implements IUnassignIndividualVolunteer2 {
+    personId!: string;
+    assignmentRole!: string;
+
+    constructor(data?: IUnassignIndividualVolunteer2) {
+        super(data);
+        this._discriminator = "UnassignIndividualVolunteer";
+    }
+
+    init(_data?: any) {
+        super.init(_data);
+        if (_data) {
+            this.personId = _data["personId"];
+            this.assignmentRole = _data["assignmentRole"];
+        }
+    }
+
+    static fromJS(data: any): UnassignIndividualVolunteer2 {
+        data = typeof data === 'object' ? data : {};
+        let result = new UnassignIndividualVolunteer2();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["personId"] = this.personId;
+        data["assignmentRole"] = this.assignmentRole;
+        super.toJSON(data);
+        return data;
+    }
+}
+
+export interface IUnassignIndividualVolunteer2 extends IV1CaseCommand {
+    personId: string;
+    assignmentRole: string;
 }
 
 export class V1ReferralNoteRecordsCommand extends AtomicRecordsCommand implements IV1ReferralNoteRecordsCommand {
@@ -14713,8 +14713,8 @@ export abstract class V1ReferralCommand implements IV1ReferralCommand {
             result.init(data);
             return result;
         }
-        if (data["discriminator"] === "AssignIndividualVolunteerToV1Referral") {
-            let result = new AssignIndividualVolunteerToV1Referral();
+        if (data["discriminator"] === "AssignIndividualVolunteer") {
+            let result = new AssignIndividualVolunteer3();
             result.init(data);
             return result;
         }
@@ -14753,8 +14753,8 @@ export abstract class V1ReferralCommand implements IV1ReferralCommand {
             result.init(data);
             return result;
         }
-        if (data["discriminator"] === "UnassignIndividualVolunteerFromV1Referral") {
-            let result = new UnassignIndividualVolunteerFromV1Referral();
+        if (data["discriminator"] === "UnassignIndividualVolunteer") {
+            let result = new UnassignIndividualVolunteer3();
             result.init(data);
             return result;
         }
@@ -14832,13 +14832,13 @@ export interface IAcceptV1Referral extends IV1ReferralCommand {
     acceptedAtUtc: Date;
 }
 
-export class AssignIndividualVolunteerToV1Referral extends V1ReferralCommand implements IAssignIndividualVolunteerToV1Referral {
+export class AssignIndividualVolunteer3 extends V1ReferralCommand implements IAssignIndividualVolunteer3 {
     personId!: string;
     assignmentRole!: string;
 
-    constructor(data?: IAssignIndividualVolunteerToV1Referral) {
+    constructor(data?: IAssignIndividualVolunteer3) {
         super(data);
-        this._discriminator = "AssignIndividualVolunteerToV1Referral";
+        this._discriminator = "AssignIndividualVolunteer";
     }
 
     init(_data?: any) {
@@ -14849,9 +14849,9 @@ export class AssignIndividualVolunteerToV1Referral extends V1ReferralCommand imp
         }
     }
 
-    static fromJS(data: any): AssignIndividualVolunteerToV1Referral {
+    static fromJS(data: any): AssignIndividualVolunteer3 {
         data = typeof data === 'object' ? data : {};
-        let result = new AssignIndividualVolunteerToV1Referral();
+        let result = new AssignIndividualVolunteer3();
         result.init(data);
         return result;
     }
@@ -14865,7 +14865,7 @@ export class AssignIndividualVolunteerToV1Referral extends V1ReferralCommand imp
     }
 }
 
-export interface IAssignIndividualVolunteerToV1Referral extends IV1ReferralCommand {
+export interface IAssignIndividualVolunteer3 extends IV1ReferralCommand {
     personId: string;
     assignmentRole: string;
 }
@@ -15152,13 +15152,13 @@ export interface IReopenV1Referral extends IV1ReferralCommand {
     reopenedAtUtc: Date;
 }
 
-export class UnassignIndividualVolunteerFromV1Referral extends V1ReferralCommand implements IUnassignIndividualVolunteerFromV1Referral {
+export class UnassignIndividualVolunteer3 extends V1ReferralCommand implements IUnassignIndividualVolunteer3 {
     personId!: string;
     assignmentRole!: string;
 
-    constructor(data?: IUnassignIndividualVolunteerFromV1Referral) {
+    constructor(data?: IUnassignIndividualVolunteer3) {
         super(data);
-        this._discriminator = "UnassignIndividualVolunteerFromV1Referral";
+        this._discriminator = "UnassignIndividualVolunteer";
     }
 
     init(_data?: any) {
@@ -15169,9 +15169,9 @@ export class UnassignIndividualVolunteerFromV1Referral extends V1ReferralCommand
         }
     }
 
-    static fromJS(data: any): UnassignIndividualVolunteerFromV1Referral {
+    static fromJS(data: any): UnassignIndividualVolunteer3 {
         data = typeof data === 'object' ? data : {};
-        let result = new UnassignIndividualVolunteerFromV1Referral();
+        let result = new UnassignIndividualVolunteer3();
         result.init(data);
         return result;
     }
@@ -15185,7 +15185,7 @@ export class UnassignIndividualVolunteerFromV1Referral extends V1ReferralCommand
     }
 }
 
-export interface IUnassignIndividualVolunteerFromV1Referral extends IV1ReferralCommand {
+export interface IUnassignIndividualVolunteer3 extends IV1ReferralCommand {
     personId: string;
     assignmentRole: string;
 }

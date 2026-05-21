@@ -302,13 +302,13 @@ namespace CareTogether.Resources.V1Referrals
                     },
                     null
                 ),
-                AssignIndividualVolunteerToV1Referral c => AssignIndividualVolunteer(
+                AssignIndividualVolunteer c => AssignIndividualVolunteer(
                     EnsureExists(referral),
                     c,
                     actorUserId,
                     occurredAtUtc
                 ),
-                UnassignIndividualVolunteerFromV1Referral c => UnassignIndividualVolunteer(
+                UnassignIndividualVolunteer c => UnassignIndividualVolunteer(
                     EnsureExists(referral),
                     c,
                     actorUserId,
@@ -322,7 +322,7 @@ namespace CareTogether.Resources.V1Referrals
 
         private static (V1Referral Referral, Activity? Activity) AssignIndividualVolunteer(
             V1Referral referral,
-            AssignIndividualVolunteerToV1Referral command,
+            AssignIndividualVolunteer command,
             Guid actorUserId,
             DateTime occurredAtUtc
         )
@@ -358,7 +358,7 @@ namespace CareTogether.Resources.V1Referrals
 
         private static (V1Referral Referral, Activity? Activity) UnassignIndividualVolunteer(
             V1Referral referral,
-            UnassignIndividualVolunteerFromV1Referral command,
+            UnassignIndividualVolunteer command,
             Guid actorUserId,
             DateTime occurredAtUtc
         )

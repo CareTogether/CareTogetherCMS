@@ -111,13 +111,13 @@ namespace CareTogether.Resources.V1Referrals
     public sealed record DeleteUploadedV1ReferralDocument(Guid ReferralId, Guid UploadedDocumentId)
         : V1ReferralCommand(ReferralId);
 
-    public sealed record AssignIndividualVolunteerToV1Referral(
+    public sealed record AssignIndividualVolunteer(
         Guid ReferralId,
         Guid PersonId,
         string AssignmentRole
     ) : V1ReferralCommand(ReferralId);
 
-    public sealed record UnassignIndividualVolunteerFromV1Referral(
+    public sealed record UnassignIndividualVolunteer(
         Guid ReferralId,
         Guid PersonId,
         string AssignmentRole

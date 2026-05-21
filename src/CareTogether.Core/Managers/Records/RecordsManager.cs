@@ -18,6 +18,11 @@ using CareTogether.Resources.V1ReferralNotes;
 using CareTogether.Resources.V1Referrals;
 using Nito.AsyncEx;
 using Nito.Disposables.Internals;
+using ArrangementAssignIndividualVolunteer = CareTogether.Resources.V1Cases.AssignIndividualVolunteer;
+using ArrangementUnassignIndividualVolunteer = CareTogether.Resources.V1Cases.UnassignIndividualVolunteer;
+using V1CaseAssignIndividualVolunteer = CareTogether.Resources.V1Cases.V1CaseCommands.AssignIndividualVolunteer;
+using V1CaseUnassignIndividualVolunteer = CareTogether.Resources.V1Cases.V1CaseCommands.UnassignIndividualVolunteer;
+using V1ReferralAssignIndividualVolunteer = CareTogether.Resources.V1Referrals.AssignIndividualVolunteer;
 
 namespace CareTogether.Managers.Records
 {
@@ -758,7 +763,7 @@ namespace CareTogether.Managers.Records
                     caseVolunteerAssignmentRoles.Contains(assignment.AssignmentRole)
                 )
                 .Select(assignment =>
-                    (V1CaseCommand)new AssignIndividualVolunteerToV1Case(
+                    (V1CaseCommand)new V1CaseAssignIndividualVolunteer(
                         familyId,
                         caseId,
                         assignment.PersonId,
@@ -950,13 +955,13 @@ namespace CareTogether.Managers.Records
         ) =>
             command switch
             {
-                ReferralRecordsCommand { Command: AssignIndividualVolunteerToV1Case assignIndividualVolunteer } =>
+                ReferralRecordsCommand { Command: V1CaseAssignIndividualVolunteer assignIndividualVolunteer } =>
                     ValidateIndividualVolunteerAssignmentCommandAsync(
                         organizationId,
                         locationId,
                         assignIndividualVolunteer
                     ),
-                V1ReferralRecordsCommand { Command: AssignIndividualVolunteerToV1Referral assignIndividualVolunteer } =>
+                V1ReferralRecordsCommand { Command: V1ReferralAssignIndividualVolunteer assignIndividualVolunteer } =>
                     ValidateIndividualVolunteerAssignmentCommandAsync(
                         organizationId,
                         locationId,
@@ -968,7 +973,7 @@ namespace CareTogether.Managers.Records
         private async Task ValidateIndividualVolunteerAssignmentCommandAsync(
             Guid organizationId,
             Guid locationId,
-            AssignIndividualVolunteerToV1Referral assignIndividualVolunteer
+            V1ReferralAssignIndividualVolunteer assignIndividualVolunteer
         )
         {
             var locationPolicy = await policiesResource.GetCurrentPolicy(
@@ -1001,7 +1006,7 @@ namespace CareTogether.Managers.Records
         private async Task ValidateIndividualVolunteerAssignmentCommandAsync(
             Guid organizationId,
             Guid locationId,
-            AssignIndividualVolunteerToV1Case assignIndividualVolunteer
+            V1CaseAssignIndividualVolunteer assignIndividualVolunteer
         )
         {
             var locationPolicy = await policiesResource.GetCurrentPolicy(
@@ -1285,12 +1290,12 @@ namespace CareTogether.Managers.Records
                         actualCommand.FamilyId,
                         actualCommand.VolunteerFamilyId,
                     ],
-                    AssignIndividualVolunteer actualCommand =>
+                    ArrangementAssignIndividualVolunteer actualCommand =>
                     [
                         actualCommand.FamilyId,
                         actualCommand.VolunteerFamilyId,
                     ],
-                    UnassignIndividualVolunteer actualCommand =>
+                    ArrangementUnassignIndividualVolunteer actualCommand =>
                     [
                         actualCommand.FamilyId,
                         actualCommand.VolunteerFamilyId,

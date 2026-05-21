@@ -56,8 +56,8 @@ import {
   EditArrangementRequestedAt,
   EditArrangementEndTime,
   EditArrangementCancelledAt,
-  AssignIndividualVolunteerToV1Case,
-  UnassignIndividualVolunteerFromV1Case,
+  AssignIndividualVolunteer2 as AssignCaseIndividualVolunteer,
+  UnassignIndividualVolunteer2 as UnassignCaseIndividualVolunteer,
 } from '../GeneratedClient';
 import { visibleFamiliesQuery } from './Data';
 import { convertUtcDateToLocalDate } from '../Utilities/dateUtils';
@@ -978,7 +978,7 @@ export function useV1CasesModel() {
       personId: string,
       assignmentRole: string
     ) =>
-      commandFactory(AssignIndividualVolunteerToV1Case, {
+      commandFactory(AssignCaseIndividualVolunteer, {
         familyId: partneringFamilyId,
         referralId: v1CaseId,
         personId,
@@ -993,7 +993,7 @@ export function useV1CasesModel() {
         personId: string,
         assignmentRole: string
       ) =>
-        commandFactory(UnassignIndividualVolunteerFromV1Case, {
+        commandFactory(UnassignCaseIndividualVolunteer, {
           familyId: partneringFamilyId,
           referralId: v1CaseId,
           personId,

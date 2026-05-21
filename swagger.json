@@ -8470,7 +8470,6 @@
         "discriminator": {
           "propertyName": "discriminator",
           "mapping": {
-            "AssignIndividualVolunteerToV1Case": "#/components/schemas/AssignIndividualVolunteerToV1Case",
             "CloseReferral": "#/components/schemas/CloseReferral",
             "CompleteReferralRequirement": "#/components/schemas/CompleteReferralRequirement",
             "CreateReferral": "#/components/schemas/CreateReferral",
@@ -8478,10 +8477,11 @@
             "LinkReferralToCase": "#/components/schemas/LinkReferralToCase",
             "MarkReferralRequirementIncomplete": "#/components/schemas/MarkReferralRequirementIncomplete",
             "ReopenReferral": "#/components/schemas/ReopenReferral",
-            "UnassignIndividualVolunteerFromV1Case": "#/components/schemas/UnassignIndividualVolunteerFromV1Case",
             "UnexemptReferralRequirement": "#/components/schemas/UnexemptReferralRequirement",
             "UpdateCustomReferralField": "#/components/schemas/UpdateCustomReferralField",
-            "UpdateReferralComments": "#/components/schemas/UpdateReferralComments"
+            "UpdateReferralComments": "#/components/schemas/UpdateReferralComments",
+            "AssignIndividualVolunteer": "#/components/schemas/AssignIndividualVolunteer2",
+            "UnassignIndividualVolunteer": "#/components/schemas/UnassignIndividualVolunteer2"
           }
         },
         "x-abstract": true,
@@ -8504,30 +8504,6 @@
             "type": "string"
           }
         }
-      },
-      "AssignIndividualVolunteerToV1Case": {
-        "allOf": [
-          {
-            "$ref": "#/components/schemas/V1CaseCommand"
-          },
-          {
-            "type": "object",
-            "additionalProperties": false,
-            "required": [
-              "personId",
-              "assignmentRole"
-            ],
-            "properties": {
-              "personId": {
-                "type": "string",
-                "format": "guid"
-              },
-              "assignmentRole": {
-                "type": "string"
-              }
-            }
-          }
-        ]
       },
       "CloseReferral": {
         "allOf": [
@@ -8704,30 +8680,6 @@
           }
         ]
       },
-      "UnassignIndividualVolunteerFromV1Case": {
-        "allOf": [
-          {
-            "$ref": "#/components/schemas/V1CaseCommand"
-          },
-          {
-            "type": "object",
-            "additionalProperties": false,
-            "required": [
-              "personId",
-              "assignmentRole"
-            ],
-            "properties": {
-              "personId": {
-                "type": "string",
-                "format": "guid"
-              },
-              "assignmentRole": {
-                "type": "string"
-              }
-            }
-          }
-        ]
-      },
       "UnexemptReferralRequirement": {
         "allOf": [
           {
@@ -8790,6 +8742,54 @@
               "comments": {
                 "type": "string",
                 "nullable": true
+              }
+            }
+          }
+        ]
+      },
+      "AssignIndividualVolunteer2": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/V1CaseCommand"
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "personId",
+              "assignmentRole"
+            ],
+            "properties": {
+              "personId": {
+                "type": "string",
+                "format": "guid"
+              },
+              "assignmentRole": {
+                "type": "string"
+              }
+            }
+          }
+        ]
+      },
+      "UnassignIndividualVolunteer2": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/V1CaseCommand"
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "personId",
+              "assignmentRole"
+            ],
+            "properties": {
+              "personId": {
+                "type": "string",
+                "format": "guid"
+              },
+              "assignmentRole": {
+                "type": "string"
               }
             }
           }
@@ -8980,7 +8980,7 @@
           "propertyName": "discriminator",
           "mapping": {
             "AcceptV1Referral": "#/components/schemas/AcceptV1Referral",
-            "AssignIndividualVolunteerToV1Referral": "#/components/schemas/AssignIndividualVolunteerToV1Referral",
+            "AssignIndividualVolunteer": "#/components/schemas/AssignIndividualVolunteer3",
             "CloseV1Referral": "#/components/schemas/CloseV1Referral",
             "CompleteReferralRequirement": "#/components/schemas/CompleteReferralRequirement2",
             "CreateV1Referral": "#/components/schemas/CreateV1Referral",
@@ -8988,7 +8988,7 @@
             "ExemptReferralRequirement": "#/components/schemas/ExemptReferralRequirement2",
             "MarkReferralRequirementIncomplete": "#/components/schemas/MarkReferralRequirementIncomplete2",
             "ReopenV1Referral": "#/components/schemas/ReopenV1Referral",
-            "UnassignIndividualVolunteerFromV1Referral": "#/components/schemas/UnassignIndividualVolunteerFromV1Referral",
+            "UnassignIndividualVolunteer": "#/components/schemas/UnassignIndividualVolunteer3",
             "UnexemptReferralRequirement": "#/components/schemas/UnexemptReferralRequirement2",
             "UpdateCustomV1ReferralField": "#/components/schemas/UpdateCustomV1ReferralField",
             "UpdateV1ReferralDetails": "#/components/schemas/UpdateV1ReferralDetails",
@@ -9032,7 +9032,7 @@
           }
         ]
       },
-      "AssignIndividualVolunteerToV1Referral": {
+      "AssignIndividualVolunteer3": {
         "allOf": [
           {
             "$ref": "#/components/schemas/V1ReferralCommand"
@@ -9244,7 +9244,7 @@
           }
         ]
       },
-      "UnassignIndividualVolunteerFromV1Referral": {
+      "UnassignIndividualVolunteer3": {
         "allOf": [
           {
             "$ref": "#/components/schemas/V1ReferralCommand"
