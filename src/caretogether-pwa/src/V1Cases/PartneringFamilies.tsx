@@ -35,6 +35,7 @@ import { useLocalStorage } from '../Hooks/useLocalStorage';
 import { policyData } from '../Model/ConfigurationModel';
 import { SearchBar } from '../Shell/SearchBar';
 import { filterFamiliesByText } from '../Families/FamilyUtils';
+import { usePersonAndFamilyLookup } from '../Model/DirectoryModel';
 import { useAllPartneringFamiliesPermissions } from '../Model/SessionModel';
 import { useScreenTitle } from '../Shell/ShellScreenTitle';
 import { useLoadable } from '../Hooks/useLoadable';
@@ -59,6 +60,13 @@ import {
 } from './PartneringFamilies/sortPartneringFamilies';
 import { useSidePanel } from '../Hooks/useSidePanel';
 import { PartneringFamilyCustomFieldFiltersSidePanel } from './PartneringFamilies/PartneringFamilyCustomFieldFiltersSidePanel';
+import { VOLUNTEER_ASSIGNMENTS_FEATURE_FLAG } from '../featureFlags';
+import {
+  AssignmentFilterSelectionsByRole,
+  assignmentRolesForColumns,
+  matchesAssignmentFilters,
+} from '../VolunteerAssignments/assignmentRoleColumns';
+import { AssignmentRoleFilters } from '../VolunteerAssignments/AssignmentRoleFilters';
 
 const PARTNERING_FAMILIES_SORT_STORAGE_KEY = 'partnering-families-sortMode';
 
@@ -72,6 +80,7 @@ function isSetupOrActiveArrangementPhase(phase: ArrangementPhase | undefined) {
 
 function PartneringFamilies() {
   const appNavigate = useAppNavigate();
+  const personAndFamilyLookup = usePersonAndFamilyLookup();
   const {
     SidePanel: CustomFieldFiltersSidePanel,
     openSidePanel: openCustomFieldFiltersSidePanel,
@@ -146,6 +155,28 @@ function PartneringFamilies() {
   const activeCustomFieldFilterCount = Object.values(
     selectedCustomFieldValuesByField
   ).filter((selectedValues) => selectedValues.length > 0).length;
+  const [assignmentFilters, setAssignmentFilters] =
+    useState<AssignmentFilterSelectionsByRole>({});
+
+  const permissions = useAllPartneringFamiliesPermissions();
+  const volunteerAssignmentsEnabled = useFeatureFlagEnabled(
+    VOLUNTEER_ASSIGNMENTS_FEATURE_FLAG
+  );
+  const canViewVolunteerAssignments =
+    volunteerAssignmentsEnabled === true &&
+    permissions(Permission.ViewV1CaseVolunteerAssignments);
+  const assignmentRoles = canViewVolunteerAssignments
+    ? assignmentRolesForColumns(
+        loadablePolicy?.referralPolicy?.volunteerAssignmentPolicies?.map(
+          (assignmentPolicy) => assignmentPolicy.assignmentRole
+        ) ?? [],
+        partneringFamilies.flatMap(
+          (family) =>
+            family.partneringFamilyInfo?.openV1Case
+              ?.assignedIndividualVolunteers ?? []
+        )
+      )
+    : [];
 
   useScrollMemory();
 
@@ -204,6 +235,15 @@ function PartneringFamilies() {
               : countyFilter.includes(county);
           })
           .filter((family) => {
+            if (!canViewVolunteerAssignments) return true;
+
+            return matchesAssignmentFilters(
+              family.partneringFamilyInfo?.openV1Case
+                ?.assignedIndividualVolunteers ?? [],
+              assignmentFilters
+            );
+          })
+          .filter((family) => {
             const familyId = family.family?.id;
             const openCase = family.partneringFamilyInfo?.openV1Case;
             const arrangements = openCase?.arrangements ?? [];
@@ -246,7 +286,9 @@ function PartneringFamilies() {
         openReferralByFamily
       ),
     [
+      assignmentFilters,
       arrangementsFilter,
+      canViewVolunteerAssignments,
       countyFilter,
       filteredPartneringFamilies,
       openReferralByFamily,
@@ -259,6 +301,7 @@ function PartneringFamilies() {
   React.useEffect(() => {
     forceCheck();
   }, [
+    assignmentFilters,
     arrangementsFilter,
     filterText,
     selectedCustomFieldValuesByField,
@@ -272,8 +315,6 @@ function PartneringFamilies() {
   const updateTestFamilyFlagEnabled = useFeatureFlagEnabled(
     'updateTestFamilyFlag'
   );
-
-  const permissions = useAllPartneringFamiliesPermissions();
 
   const canCreateFamily =
     permissions(Permission.EditFamilyInfo) &&
@@ -359,6 +400,22 @@ function PartneringFamilies() {
             families={partneringFamilies}
             value={countyFilter}
             onChange={setCountyFilter}
+          />
+          <AssignmentRoleFilters
+            assignmentRoles={assignmentRoles}
+            assignments={partneringFamilies.flatMap(
+              (family) =>
+                family.partneringFamilyInfo?.openV1Case
+                  ?.assignedIndividualVolunteers ?? []
+            )}
+            selectedValuesByRole={assignmentFilters}
+            onChange={(assignmentRole, selectedValues) =>
+              setAssignmentFilters((current) => ({
+                ...current,
+                [assignmentRole]: selectedValues,
+              }))
+            }
+            personLookup={(personId) => personAndFamilyLookup(personId).person}
           />
           {customFieldCount > 0 && (
             <FormControl
@@ -465,6 +522,9 @@ function PartneringFamilies() {
                 <TableCell>Client Family</TableCell>
                 <TableCell>Case Status</TableCell>
                 <TableCell>County</TableCell>
+                {assignmentRoles.map((assignmentRole) => (
+                  <TableCell key={assignmentRole}>{assignmentRole}</TableCell>
+                ))}
                 {referralCustomFields.map((field) => (
                   <TableCell
                     key={field.name}
@@ -502,6 +562,10 @@ function PartneringFamilies() {
                     appNavigate.family(familyId, v1CaseId, arrangementId)
                   }
                   openFamily={openFamily}
+                  assignmentRoles={assignmentRoles}
+                  assignmentPersonLookup={(personId) =>
+                    personAndFamilyLookup(personId).person
+                  }
                   referralCustomFields={referralCustomFields}
                   arrangementStatusSummary={arrangementStatusSummary}
                   updateTestFamilyFlagEnabled={updateTestFamilyFlagEnabled}
