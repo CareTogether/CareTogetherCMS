@@ -1168,7 +1168,7 @@ export function FamilyScreen() {
               <Typography
                 className="ph-unmask"
                 variant="h3"
-                style={{ marginBottom: 0 }}
+                sx={{ mb: 1 }}
               >
                 Family Members
               </Typography>
