@@ -15,7 +15,6 @@ import {
   RoleApprovalStatus,
   StaffAssignment,
   StaffAssignmentPolicy,
-  VolunteerInfo,
 } from '../GeneratedClient';
 import { visibleFamiliesQuery } from '../Model/Data';
 import { familyNameString } from '../Families/FamilyName';
@@ -52,17 +51,6 @@ function isApprovedOrOnboarded(status?: RoleApprovalStatus) {
   );
 }
 
-function hasActiveRoleRemoval(
-  volunteerInfo: VolunteerInfo | undefined,
-  role: string
-) {
-  return volunteerInfo?.roleRemovals?.some(
-    (removal) =>
-      removal.roleName === role &&
-      (removal.effectiveUntil == null || removal.effectiveUntil > new Date())
-  );
-}
-
 function containsAny(values: string[] | undefined, expected: string[]) {
   return expected.some((value) => values?.includes(value));
 }
@@ -95,7 +83,7 @@ function policyAllowsCandidate(
       (role) =>
         isApprovedOrOnboarded(
           volunteerInfo?.approvalStatusByRole?.[role]?.currentStatus
-        ) && !hasActiveRoleRemoval(volunteerInfo, role)
+        )
     )
   ) {
     return true;
@@ -105,7 +93,7 @@ function policyAllowsCandidate(
     (role) =>
       isApprovedOrOnboarded(
         family.volunteerFamilyInfo?.familyRoleApprovals?.[role]?.currentStatus
-      ) && !hasActiveRoleRemoval(volunteerInfo, role)
+      )
   );
 }
 
