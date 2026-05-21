@@ -27,6 +27,7 @@ type StaffAssignmentCandidate = {
   familyId?: string;
   familyName: string;
   label: string;
+  candidateType: StaffAssignmentCandidateType;
 };
 
 type PersonDirectoryEntry = {
@@ -34,6 +35,8 @@ type PersonDirectoryEntry = {
   familyId: string;
   familyName: string;
 };
+
+type StaffAssignmentCandidateType = 'Individuals' | 'Families';
 
 type StaffAssignmentsSectionProps = {
   title?: string;
@@ -55,11 +58,11 @@ function containsAny(values: string[] | undefined, expected: string[]) {
   return expected.some((value) => values?.includes(value));
 }
 
-function policyAllowsCandidate(
+function candidateTypeForPolicy(
   candidate: StaffAssignmentCandidate,
   family: CombinedFamilyInfo,
   policy: StaffAssignmentPolicy
-) {
+): StaffAssignmentCandidateType | null {
   const eligibility = policy.eligibility;
   const volunteerInfo =
     family.volunteerFamilyInfo?.individualVolunteers?.[candidate.personId];
@@ -67,7 +70,9 @@ function policyAllowsCandidate(
     (user) => user.personId === candidate.personId
   );
 
-  if (eligibility?.eligiblePeople?.includes(candidate.personId)) return true;
+  if (eligibility?.eligiblePeople?.includes(candidate.personId)) {
+    return 'Individuals';
+  }
 
   if (
     containsAny(
@@ -75,26 +80,78 @@ function policyAllowsCandidate(
       eligibility?.eligibleLocationRoles ?? []
     )
   ) {
-    return true;
+    return 'Individuals';
   }
 
   if (
-    eligibility?.eligibleIndividualVolunteerRoles?.some(
-      (role) =>
-        isApprovedOrOnboarded(
-          volunteerInfo?.approvalStatusByRole?.[role]?.currentStatus
-        )
+    eligibility?.eligibleIndividualVolunteerRoles?.some((role) =>
+      isApprovedOrOnboarded(
+        volunteerInfo?.approvalStatusByRole?.[role]?.currentStatus
+      )
     )
   ) {
-    return true;
+    return 'Individuals';
   }
 
-  return eligibility?.eligibleVolunteerFamilyRoles?.some(
-    (role) =>
+  if (
+    eligibility?.eligibleVolunteerFamilyRoles?.some((role) =>
       isApprovedOrOnboarded(
         family.volunteerFamilyInfo?.familyRoleApprovals?.[role]?.currentStatus
       )
+    )
+  ) {
+    return 'Individuals';
+  }
+
+  return null;
+}
+
+function candidateTypeSortValue(candidateType: StaffAssignmentCandidateType) {
+  return ['Individuals', 'Families'].indexOf(candidateType);
+}
+
+function sortCandidates(
+  candidates: StaffAssignmentCandidate[]
+): StaffAssignmentCandidate[] {
+  return candidates.sort(
+    (a, b) =>
+      candidateTypeSortValue(a.candidateType) -
+        candidateTypeSortValue(b.candidateType) ||
+      a.label.localeCompare(b.label)
   );
+}
+
+function sortCandidatesForAutocomplete(
+  candidates: StaffAssignmentCandidate[]
+): StaffAssignmentCandidate[] {
+  return [...candidates].sort(
+    (a, b) =>
+      candidateTypeSortValue(a.candidateType) -
+        candidateTypeSortValue(b.candidateType) ||
+      a.label.localeCompare(b.label)
+  );
+}
+
+function staffAssignmentCandidate(
+  person: Person,
+  family: CombinedFamilyInfo,
+  familyId: string,
+  policy: StaffAssignmentPolicy
+): StaffAssignmentCandidate | null {
+  const baseCandidate = {
+    personId: person.id!,
+    familyId,
+    familyName: familyNameString(family),
+    label: personNameString(person),
+    candidateType: 'Individuals' as StaffAssignmentCandidateType,
+  };
+  const candidateType = candidateTypeForPolicy(baseCandidate, family, policy);
+  if (candidateType == null) return null;
+
+  return {
+    ...baseCandidate,
+    candidateType,
+  };
 }
 
 function uniqueValues(values: string[]) {
@@ -116,16 +173,13 @@ function buildCandidatesByRole(
         const familyId = family.family?.id;
         if (!person?.id || !person.active || !familyId) continue;
 
-        const familyName = familyNameString(family);
-        const candidate = {
-          personId: person.id,
+        const candidate = staffAssignmentCandidate(
           person,
+          family,
           familyId,
-          familyName,
-          label: `${personNameString(person)} (${familyName})`,
-        };
-
-        if (!policyAllowsCandidate(candidate, family, policy)) continue;
+          policy
+        );
+        if (candidate == null) continue;
 
         candidatesByPersonId.set(candidate.personId, candidate);
       }
@@ -133,9 +187,7 @@ function buildCandidatesByRole(
 
     candidatesByRole.set(
       policy.assignmentRole,
-      Array.from(candidatesByPersonId.values()).sort((a, b) =>
-        a.label.localeCompare(b.label)
-      )
+      sortCandidates(Array.from(candidatesByPersonId.values()))
     );
   }
 
@@ -197,15 +249,13 @@ function assignmentCandidateForPerson(
   peopleById: Map<string, PersonDirectoryEntry>
 ): StaffAssignmentCandidate {
   const personEntry = peopleById.get(personId);
-  const name = personNameString(personEntry?.person);
 
   return {
     personId,
     familyId: personEntry?.familyId,
     familyName: personEntry?.familyName ?? '',
-    label: personEntry?.familyName
-      ? `${name} (${personEntry.familyName})`
-      : name,
+    label: personNameString(personEntry?.person),
+    candidateType: 'Individuals',
   };
 }
 
@@ -267,11 +317,11 @@ export function StaffAssignmentsSection({
       !selectedPersonId ||
       options.some((option) => option.personId === selectedPersonId)
     ) {
-      return options;
+      return sortCandidatesForAutocomplete(options);
     }
 
-    return options.concat(
-      assignmentCandidateForPerson(selectedPersonId, peopleById)
+    return sortCandidatesForAutocomplete(
+      options.concat(assignmentCandidateForPerson(selectedPersonId, peopleById))
     );
   }
 
@@ -413,6 +463,7 @@ export function StaffAssignmentsSection({
                   isOptionEqualToValue={(option, value) =>
                     option.personId === value.personId
                   }
+                  groupBy={(option) => option.candidateType}
                   disabled={isSaving}
                   noOptionsText="No eligible people available"
                   onChange={(_, candidate) => {

@@ -3396,7 +3396,16 @@ namespace CareTogether.TestData
                             "Intake Coordinator",
                             new StaffAssignmentEligibility(
                                 EligibleLocationRoles: [SystemConstants.ORGANIZATION_ADMINISTRATOR],
-                                EligibleIndividualVolunteerRoles: [],
+                                EligibleIndividualVolunteerRoles: ["Family Coach"],
+                                EligibleVolunteerFamilyRoles: [],
+                                EligiblePeople: []
+                            )
+                        ),
+                        new StaffAssignmentPolicy(
+                            "Intake Supervisor",
+                            new StaffAssignmentEligibility(
+                                EligibleLocationRoles: [SystemConstants.ORGANIZATION_ADMINISTRATOR],
+                                EligibleIndividualVolunteerRoles: ["Family Coach"],
                                 EligibleVolunteerFamilyRoles: [],
                                 EligiblePeople: []
                             )
