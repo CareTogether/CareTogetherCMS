@@ -2,11 +2,7 @@ import { Box, Grid, TableCell, TableRow } from '@mui/material';
 import { format } from 'date-fns';
 import { useState } from 'react';
 import { Phone as PhoneIcon } from '@mui/icons-material';
-import {
-  ArrangementPhase,
-  CompletedCustomFieldInfo,
-  V1CaseCloseReason,
-} from '../../GeneratedClient';
+import { ArrangementPhase, CompletedCustomFieldInfo } from '../../GeneratedClient';
 import { FamilyName } from '../../Families/FamilyName';
 import { TestFamilyBadge } from '../../Families/TestFamilyBadge';
 import { LazyLoadMountTrigger } from '../../Utilities/LazyLoadMountTrigger';
@@ -114,7 +110,7 @@ function PartneringFamilyTableRows(props: PartneringFamilyTableItemProps) {
   const caseStatusText = openV1Case
     ? 'Open since ' + format(openV1Case.openedAtUtc!, 'MM/dd/yyyy')
     : latestClosedV1Case?.closeReason != null
-      ? 'Closed - ' + V1CaseCloseReason[latestClosedV1Case.closeReason]
+      ? 'Closed - ' + latestClosedV1Case.closeReason
       : 'No case';
 
   return (

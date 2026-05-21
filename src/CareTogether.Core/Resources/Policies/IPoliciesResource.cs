@@ -11,7 +11,8 @@ namespace CareTogether.Resources.Policies
         ImmutableList<LocationConfiguration> Locations,
         ImmutableList<RoleDefinition> Roles,
         ImmutableList<string> CommunityRoles,
-        ImmutableList<string>? ReferralCloseReasons
+        ImmutableList<string>? ReferralCloseReasons,
+        ImmutableList<string>? CaseCloseReasons
     );
 
     public sealed record LocationConfiguration(
@@ -407,6 +408,12 @@ namespace CareTogether.Resources.Policies
         )> UpsertLocationDefinitionAsync(
             Guid organizationId,
             LocationConfiguration locationConfiguration
+        );
+
+        Task<OrganizationConfiguration> UpdateOrganizationCloseReasonsAsync(
+            Guid organizationId,
+            ImmutableList<string>? referralCloseReasons,
+            ImmutableList<string>? caseCloseReasons
         );
 
         Task<EffectiveLocationPolicy> UpsertEffectiveLocationPolicyAsync(

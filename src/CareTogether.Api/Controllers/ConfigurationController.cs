@@ -24,7 +24,9 @@ namespace CareTogether.Api.Controllers
 
     public sealed record PutLocationPayload(
         LocationConfiguration locationConfiguration,
-        Guid? copyPoliciesFromLocationId
+        Guid? copyPoliciesFromLocationId,
+        ImmutableList<string>? referralCloseReasons,
+        ImmutableList<string>? caseCloseReasons
     );
 
     [ApiController]
@@ -317,7 +319,19 @@ namespace CareTogether.Api.Controllers
                     newLocationConfiguration
                 );
 
-                return Ok(updatedLocation.OrganizationConfiguration);
+                var updatedConfiguration =
+                    newLocationPayload.referralCloseReasons != null
+                    || newLocationPayload.caseCloseReasons != null
+                        ? await policiesResource.UpdateOrganizationCloseReasonsAsync(
+                            organizationId,
+                            newLocationPayload.referralCloseReasons
+                                ?? updatedLocation.OrganizationConfiguration.ReferralCloseReasons,
+                            newLocationPayload.caseCloseReasons
+                                ?? updatedLocation.OrganizationConfiguration.CaseCloseReasons
+                        )
+                        : updatedLocation.OrganizationConfiguration;
+
+                return Ok(updatedConfiguration);
             }
 
             if (copyPoliciesFromLocationId == Guid.Empty)

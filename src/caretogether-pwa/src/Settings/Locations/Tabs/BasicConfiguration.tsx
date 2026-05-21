@@ -18,6 +18,7 @@ export type ConfigurationData = {
   ethnicities: string[];
   adultFamilyRelationships: string[];
   arrangementReasons: string[];
+  caseCloseReasons: string[];
   referralCloseReasons: string[];
 };
 
@@ -26,6 +27,7 @@ export type AvailableOptions = {
   ethnicities: string[];
   adultFamilyRelationships: string[];
   arrangementReasons: string[];
+  caseCloseReasons: string[];
   referralCloseReasons: string[];
 };
 
@@ -53,7 +55,7 @@ export default function BasicConfiguration({
 
   const onSubmit: SubmitHandler<ConfigurationData> = async (data) => {
     withBackdrop(async () => {
-      const { referralCloseReasons, ...locationData } = data;
+      const { caseCloseReasons, referralCloseReasons, ...locationData } = data;
 
       const updatedOrgConfig = await api.configuration.putLocationDefinition(
         organizationId,
@@ -62,15 +64,12 @@ export default function BasicConfiguration({
             ...currentLocationDefinition,
             ...locationData,
           }),
-        })
-      );
-
-      storeEdits(
-        new OrganizationConfiguration({
-          ...updatedOrgConfig,
+          caseCloseReasons,
           referralCloseReasons,
         })
       );
+
+      storeEdits(new OrganizationConfiguration(updatedOrgConfig));
     });
   };
 
@@ -165,6 +164,27 @@ export default function BasicConfiguration({
         <CTAutocomplete
           name="arrangementReasons"
           label="Arrangement reasons"
+          freeSolo
+          control={control}
+          helperText='Start typing and press "Enter" to add a new item'
+          minTypingAreaWidth={120}
+        />
+
+        <Typography variant="h6">Case close reasons</Typography>
+
+        <Typography variant="body2">
+          Here you can customize the list of reasons for closing cases.
+          <br />
+          These options will be available when closing a case across the
+          organization.
+          <br />
+          You can add new ones or remove ones you don’t need anymore, it won’t
+          change any existing records.
+        </Typography>
+
+        <CTAutocomplete
+          name="caseCloseReasons"
+          label="Case close reasons"
           freeSolo
           control={control}
           helperText='Start typing and press "Enter" to add a new item'

@@ -1323,6 +1323,13 @@
             "items": {
               "type": "string"
             }
+          },
+          "caseCloseReasons": {
+            "type": "array",
+            "nullable": true,
+            "items": {
+              "type": "string"
+            }
           }
         }
       },
@@ -1976,6 +1983,20 @@
             "type": "string",
             "format": "guid",
             "nullable": true
+          },
+          "referralCloseReasons": {
+            "type": "array",
+            "nullable": true,
+            "items": {
+              "type": "string"
+            }
+          },
+          "caseCloseReasons": {
+            "type": "array",
+            "nullable": true,
+            "items": {
+              "type": "string"
+            }
           }
         }
       },
@@ -4082,12 +4103,8 @@
             "nullable": true
           },
           "closeReason": {
-            "nullable": true,
-            "oneOf": [
-              {
-                "$ref": "#/components/schemas/V1CaseCloseReason"
-              }
-            ]
+            "type": "string",
+            "nullable": true
           },
           "completedRequirements": {
             "type": "array",
@@ -4143,24 +4160,6 @@
             }
           }
         }
-      },
-      "V1CaseCloseReason": {
-        "type": "integer",
-        "description": "",
-        "x-enumNames": [
-          "NotAppropriate",
-          "NoCapacity",
-          "NoLongerNeeded",
-          "Resourced",
-          "NeedMet"
-        ],
-        "enum": [
-          0,
-          1,
-          2,
-          3,
-          4
-        ]
       },
       "CompletedRequirementInfo": {
         "type": "object",
@@ -8472,6 +8471,7 @@
           "mapping": {
             "AssignStaffToV1Case": "#/components/schemas/AssignStaffToV1Case",
             "CloseReferral": "#/components/schemas/CloseReferral",
+            "CloseReferralWithReason": "#/components/schemas/CloseReferralWithReason",
             "CompleteReferralRequirement": "#/components/schemas/CompleteReferralRequirement",
             "CreateReferral": "#/components/schemas/CreateReferral",
             "ExemptReferralRequirement": "#/components/schemas/ExemptReferralRequirement",
@@ -8544,6 +8544,48 @@
             "properties": {
               "closeReason": {
                 "$ref": "#/components/schemas/V1CaseCloseReason"
+              },
+              "closedAtUtc": {
+                "type": "string",
+                "format": "date-time"
+              }
+            }
+          }
+        ]
+      },
+      "V1CaseCloseReason": {
+        "type": "integer",
+        "description": "",
+        "x-enumNames": [
+          "NotAppropriate",
+          "NoCapacity",
+          "NoLongerNeeded",
+          "Resourced",
+          "NeedMet"
+        ],
+        "enum": [
+          0,
+          1,
+          2,
+          3,
+          4
+        ]
+      },
+      "CloseReferralWithReason": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/V1CaseCommand"
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "closeReason",
+              "closedAtUtc"
+            ],
+            "properties": {
+              "closeReason": {
+                "type": "string"
               },
               "closedAtUtc": {
                 "type": "string",

@@ -2493,6 +2493,13 @@ namespace CareTogether.TestData
                         "No longer needed",
                         "Resourced",
                         "Need met"
+                    ),
+                    ImmutableList.Create(
+                        "Not appropriate",
+                        "No capacity",
+                        "No longer needed",
+                        "Resourced",
+                        "Need met"
                     )
                 )
             );

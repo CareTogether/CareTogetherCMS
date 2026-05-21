@@ -151,6 +151,7 @@ namespace CareTogether.Engines.Authorization
                     UnassignStaffFromV1Case => Permission.EditV1CaseStaffAssignments,
                     LinkReferralToCase => Permission.EditV1Case,
                     CloseReferral => Permission.CloseV1Case,
+                    CloseReferralWithReason => Permission.CloseV1Case,
                     ReopenReferral => Permission.CloseV1Case,
                     _ => throw new NotImplementedException(
                         $"The command type '{command.GetType().FullName}' has not been implemented."
@@ -943,8 +944,7 @@ namespace CareTogether.Engines.Authorization
                     ? partneringFamilyInfo
                         .History.Where(activity =>
                             contextPermissions.Contains(Permission.ViewV1CaseStaffAssignments)
-                            || activity is not V1CaseStaffAssigned
-                                and not V1CaseStaffUnassigned
+                            || activity is not V1CaseStaffAssigned and not V1CaseStaffUnassigned
                         )
                         .ToImmutableList()
                     : ImmutableList<Activity>.Empty,

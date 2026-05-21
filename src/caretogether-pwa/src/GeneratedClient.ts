@@ -1310,6 +1310,7 @@ export class OrganizationConfiguration implements IOrganizationConfiguration {
     roles!: RoleDefinition[];
     communityRoles!: string[];
     referralCloseReasons?: string[] | undefined;
+    caseCloseReasons?: string[] | undefined;
 
     constructor(data?: IOrganizationConfiguration) {
         if (data) {
@@ -1348,6 +1349,11 @@ export class OrganizationConfiguration implements IOrganizationConfiguration {
                 for (let item of _data["referralCloseReasons"])
                     this.referralCloseReasons!.push(item);
             }
+            if (Array.isArray(_data["caseCloseReasons"])) {
+                this.caseCloseReasons = [] as any;
+                for (let item of _data["caseCloseReasons"])
+                    this.caseCloseReasons!.push(item);
+            }
         }
     }
 
@@ -1381,6 +1387,11 @@ export class OrganizationConfiguration implements IOrganizationConfiguration {
             for (let item of this.referralCloseReasons)
                 data["referralCloseReasons"].push(item);
         }
+        if (Array.isArray(this.caseCloseReasons)) {
+            data["caseCloseReasons"] = [];
+            for (let item of this.caseCloseReasons)
+                data["caseCloseReasons"].push(item);
+        }
         return data;
     }
 }
@@ -1391,6 +1402,7 @@ export interface IOrganizationConfiguration {
     roles: RoleDefinition[];
     communityRoles: string[];
     referralCloseReasons?: string[] | undefined;
+    caseCloseReasons?: string[] | undefined;
 }
 
 export class LocationConfiguration implements ILocationConfiguration {
@@ -2481,6 +2493,8 @@ export enum Permission {
 export class PutLocationPayload implements IPutLocationPayload {
     locationConfiguration!: LocationConfiguration;
     copyPoliciesFromLocationId?: string | undefined;
+    referralCloseReasons?: string[] | undefined;
+    caseCloseReasons?: string[] | undefined;
 
     constructor(data?: IPutLocationPayload) {
         if (data) {
@@ -2498,6 +2512,16 @@ export class PutLocationPayload implements IPutLocationPayload {
         if (_data) {
             this.locationConfiguration = _data["locationConfiguration"] ? LocationConfiguration.fromJS(_data["locationConfiguration"]) : new LocationConfiguration();
             this.copyPoliciesFromLocationId = _data["copyPoliciesFromLocationId"];
+            if (Array.isArray(_data["referralCloseReasons"])) {
+                this.referralCloseReasons = [] as any;
+                for (let item of _data["referralCloseReasons"])
+                    this.referralCloseReasons!.push(item);
+            }
+            if (Array.isArray(_data["caseCloseReasons"])) {
+                this.caseCloseReasons = [] as any;
+                for (let item of _data["caseCloseReasons"])
+                    this.caseCloseReasons!.push(item);
+            }
         }
     }
 
@@ -2512,6 +2536,16 @@ export class PutLocationPayload implements IPutLocationPayload {
         data = typeof data === 'object' ? data : {};
         data["locationConfiguration"] = this.locationConfiguration ? this.locationConfiguration.toJSON() : <any>undefined;
         data["copyPoliciesFromLocationId"] = this.copyPoliciesFromLocationId;
+        if (Array.isArray(this.referralCloseReasons)) {
+            data["referralCloseReasons"] = [];
+            for (let item of this.referralCloseReasons)
+                data["referralCloseReasons"].push(item);
+        }
+        if (Array.isArray(this.caseCloseReasons)) {
+            data["caseCloseReasons"] = [];
+            for (let item of this.caseCloseReasons)
+                data["caseCloseReasons"].push(item);
+        }
         return data;
     }
 }
@@ -2519,6 +2553,8 @@ export class PutLocationPayload implements IPutLocationPayload {
 export interface IPutLocationPayload {
     locationConfiguration: LocationConfiguration;
     copyPoliciesFromLocationId?: string | undefined;
+    referralCloseReasons?: string[] | undefined;
+    caseCloseReasons?: string[] | undefined;
 }
 
 export class EffectiveLocationPolicy implements IEffectiveLocationPolicy {
@@ -6329,7 +6365,7 @@ export class V1Case implements IV1Case {
     id!: string;
     openedAtUtc!: Date;
     closedAtUtc?: Date | undefined;
-    closeReason?: V1CaseCloseReason | undefined;
+    closeReason?: string | undefined;
     completedRequirements!: CompletedRequirementInfo[];
     exemptedRequirements!: ExemptedRequirementInfo[];
     missingRequirements!: RequirementDefinition[];
@@ -6471,7 +6507,7 @@ export interface IV1Case {
     id: string;
     openedAtUtc: Date;
     closedAtUtc?: Date | undefined;
-    closeReason?: V1CaseCloseReason | undefined;
+    closeReason?: string | undefined;
     completedRequirements: CompletedRequirementInfo[];
     exemptedRequirements: ExemptedRequirementInfo[];
     missingRequirements: RequirementDefinition[];
@@ -6481,14 +6517,6 @@ export interface IV1Case {
     staffAssignments: StaffAssignment[];
     comments?: string | undefined;
     linkedV1ReferralIds: string[];
-}
-
-export enum V1CaseCloseReason {
-    NotAppropriate = 0,
-    NoCapacity = 1,
-    NoLongerNeeded = 2,
-    Resourced = 3,
-    NeedMet = 4,
 }
 
 export class CompletedRequirementInfo implements ICompletedRequirementInfo {
@@ -13835,6 +13863,11 @@ export abstract class V1CaseCommand implements IV1CaseCommand {
             result.init(data);
             return result;
         }
+        if (data["discriminator"] === "CloseReferralWithReason") {
+            let result = new CloseReferralWithReason();
+            result.init(data);
+            return result;
+        }
         if (data["discriminator"] === "CompleteReferralRequirement") {
             let result = new CompleteReferralRequirement();
             result.init(data);
@@ -13975,6 +14008,52 @@ export class CloseReferral extends V1CaseCommand implements ICloseReferral {
 
 export interface ICloseReferral extends IV1CaseCommand {
     closeReason: V1CaseCloseReason;
+    closedAtUtc: Date;
+}
+
+export enum V1CaseCloseReason {
+    NotAppropriate = 0,
+    NoCapacity = 1,
+    NoLongerNeeded = 2,
+    Resourced = 3,
+    NeedMet = 4,
+}
+
+export class CloseReferralWithReason extends V1CaseCommand implements ICloseReferralWithReason {
+    closeReason!: string;
+    closedAtUtc!: Date;
+
+    constructor(data?: ICloseReferralWithReason) {
+        super(data);
+        this._discriminator = "CloseReferralWithReason";
+    }
+
+    init(_data?: any) {
+        super.init(_data);
+        if (_data) {
+            this.closeReason = _data["closeReason"];
+            this.closedAtUtc = _data["closedAtUtc"] ? new Date(_data["closedAtUtc"].toString()) : <any>undefined;
+        }
+    }
+
+    static fromJS(data: any): CloseReferralWithReason {
+        data = typeof data === 'object' ? data : {};
+        let result = new CloseReferralWithReason();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["closeReason"] = this.closeReason;
+        data["closedAtUtc"] = this.closedAtUtc ? this.closedAtUtc.toISOString() : <any>undefined;
+        super.toJSON(data);
+        return data;
+    }
+}
+
+export interface ICloseReferralWithReason extends IV1CaseCommand {
+    closeReason: string;
     closedAtUtc: Date;
 }
 
