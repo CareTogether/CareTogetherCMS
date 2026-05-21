@@ -65,7 +65,7 @@ import {
 } from '../Model/SessionModel';
 import { StaffAssignmentsSection } from '../StaffAssignments/StaffAssignmentsSection';
 import { useFeatureFlagEnabled } from 'posthog-js/react';
-import { STAFF_ASSIGNMENTS_FEATURE_FLAG } from '../StaffAssignments/staffAssignmentsFeatureFlag';
+import { STAFF_ASSIGNMENTS_FEATURE_FLAG } from '../featureFlags';
 
 function formatDate(date?: Date) {
   return date

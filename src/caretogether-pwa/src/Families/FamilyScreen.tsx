@@ -100,7 +100,7 @@ import { useV1CasesModel } from '../Model/V1CasesModel';
 import { formatStatusWithDate } from '../V1Referrals/formatStatusWithDate';
 import { policyData } from '../Model/ConfigurationModel';
 import { StaffAssignmentsSection } from '../StaffAssignments/StaffAssignmentsSection';
-import { STAFF_ASSIGNMENTS_FEATURE_FLAG } from '../StaffAssignments/staffAssignmentsFeatureFlag';
+import { STAFF_ASSIGNMENTS_FEATURE_FLAG } from '../featureFlags';
 
 export function FamilyScreen() {
   const familyIdMaybe = useParams<{ familyId: string }>();
