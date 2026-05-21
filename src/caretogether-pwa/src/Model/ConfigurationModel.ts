@@ -233,6 +233,18 @@ export const allFunctionsInPolicyQuery = selector({
   },
 });
 
+export const allVolunteerAssignmentRolesInPolicyQuery = selector({
+  key: 'allVolunteerAssignmentRolesInPolicyQuery',
+  get: ({ get }) => {
+    const policy = get(policyData);
+    const allVolunteerAssignmentRoles = [
+      ...(policy.referralPolicy?.volunteerAssignmentPolicies ?? []),
+      ...(policy.v1ReferralPolicy?.volunteerAssignmentPolicies ?? []),
+    ].map((volunteerAssignmentPolicy) => volunteerAssignmentPolicy.assignmentRole);
+    return Array.from(new Set(allVolunteerAssignmentRoles)).filter(Boolean);
+  },
+});
+
 const featureFlagQuery = selector({
   key: 'featureFlagQuery',
   get: async ({ get }) => {

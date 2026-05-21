@@ -18,7 +18,7 @@ namespace CareTogether.Resources.V1Cases
         ImmutableList<ExemptedRequirementInfo> ExemptedRequirements,
         ImmutableDictionary<string, CompletedCustomFieldInfo> CompletedCustomFields,
         ImmutableDictionary<Guid, ArrangementEntry> Arrangements,
-        ImmutableList<StaffAssignment> StaffAssignments,
+        ImmutableList<AssignedIndividualVolunteer> AssignedIndividualVolunteers,
         ImmutableList<Activity> History,
         string? Comments
     );
@@ -146,21 +146,27 @@ namespace CareTogether.Resources.V1Cases
 
     public sealed record UpdateReferralComments(Guid FamilyId, Guid ReferralId, string? Comments)
         : V1CaseCommand(FamilyId, ReferralId);
+}
 
-    public sealed record AssignStaffToV1Case(
+namespace CareTogether.Resources.V1Cases.V1CaseCommands
+{
+    public sealed record AssignIndividualVolunteer(
         Guid FamilyId,
         Guid ReferralId,
         Guid PersonId,
         string AssignmentRole
     ) : V1CaseCommand(FamilyId, ReferralId);
 
-    public sealed record UnassignStaffFromV1Case(
+    public sealed record UnassignIndividualVolunteer(
         Guid FamilyId,
         Guid ReferralId,
         Guid PersonId,
         string AssignmentRole
     ) : V1CaseCommand(FamilyId, ReferralId);
+}
 
+namespace CareTogether.Resources.V1Cases
+{
     public sealed record CloseReferral(
         Guid FamilyId,
         Guid ReferralId,

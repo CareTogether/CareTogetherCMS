@@ -85,7 +85,10 @@ function PartneringFamilies() {
   );
   const visibleReferralsLoadable = useLoadable(visibleReferralsQuery);
   const visibleReferrals = React.useMemo(
-    () => visibleReferralsLoadable || [],
+    () =>
+      (visibleReferralsLoadable || []).map(
+        (referralInfo) => referralInfo.referral
+      ),
     [visibleReferralsLoadable]
   );
   const openReferralByFamily = React.useMemo(

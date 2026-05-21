@@ -98,6 +98,9 @@ import { visibleReferralsQuery } from '../Model/Data';
 import { useRecoilValue } from 'recoil';
 import { useV1CasesModel } from '../Model/V1CasesModel';
 import { formatStatusWithDate } from '../V1Referrals/formatStatusWithDate';
+import { policyData } from '../Model/ConfigurationModel';
+import { VolunteerAssignmentsSection } from '../VolunteerAssignments/VolunteerAssignmentsSection';
+import { VOLUNTEER_ASSIGNMENTS_FEATURE_FLAG } from '../featureFlags';
 
 export function FamilyScreen() {
   const familyIdMaybe = useParams<{ familyId: string }>();
@@ -119,11 +122,13 @@ export function FamilyScreen() {
     c.community?.memberFamilies?.includes(familyId)
   );
 
-  const referrals = useRecoilValue(visibleReferralsQuery);
+  const referralInfos = useRecoilValue(visibleReferralsQuery);
 
   const familyReferrals = useMemo(() => {
-    return (referrals ?? []).filter((r) => r.familyId === familyId);
-  }, [referrals, familyId]);
+    return (referralInfos ?? [])
+      .map((referralInfo) => referralInfo.referral)
+      .filter((r) => r.familyId === familyId);
+  }, [referralInfos, familyId]);
 
   function referralRequirementSummary(referral: V1Referral) {
     const incompleteCount =
@@ -146,6 +151,7 @@ export function FamilyScreen() {
 
   const familyLookup = useFamilyLookup();
   const family = familyLookup(familyId);
+  const policy = useRecoilValue(policyData);
 
   const directoryModel = useDirectoryModel();
 
@@ -182,11 +188,13 @@ export function FamilyScreen() {
   }, [openV1Cases, closedV1Cases]);
   const [confirmCloseOpen, setConfirmCloseOpen] = useState(false);
   const v1CasesModel = useV1CasesModel();
-  const referralsLoadable = useLoadable(visibleReferralsQuery);
+  const referralInfosLoadable = useLoadable(visibleReferralsQuery);
   const openReferralId =
-    referralsLoadable?.find(
-      (r) => r.familyId === familyId && r.status === V1ReferralStatus.Open
-    )?.referralId ?? undefined;
+    referralInfosLoadable
+      ?.map((referralInfo) => referralInfo.referral)
+      .find(
+        (r) => r.familyId === familyId && r.status === V1ReferralStatus.Open
+      )?.referralId ?? undefined;
   const [openNewV1CaseDialogOpen, setOpenNewV1CaseDialogOpen] = useState(false);
   const [uploadDocumentDialogOpen, setUploadDocumentDialogOpen] =
     useState(false);
@@ -368,6 +376,9 @@ export function FamilyScreen() {
     'updateTestFamilyFlag'
   );
   const referralsEnabled = useFeatureFlagEnabled('referrals');
+  const volunteerAssignmentsEnabled = useFeatureFlagEnabled(
+    VOLUNTEER_ASSIGNMENTS_FEATURE_FLAG
+  );
 
   useScreenTitle(family ? `${familyLastName(family)} Family` : '...');
   useScreenTitleComponent(family ? <TestFamilyBadge family={family} /> : null);
@@ -989,6 +1000,36 @@ export function FamilyScreen() {
                 </Grid>
               )}
             </Grid>
+
+            {volunteerAssignmentsEnabled &&
+              permissions(Permission.ViewV1CaseVolunteerAssignments) &&
+              selectedV1Case && (
+                <Grid item md={12} sx={{ mt: 2 }}>
+                  <VolunteerAssignmentsSection
+                    assignments={selectedV1Case.assignedIndividualVolunteers ?? []}
+                    policies={
+                      policy.referralPolicy?.volunteerAssignmentPolicies ?? []
+                    }
+                    canEdit={permissions(Permission.EditV1CaseVolunteerAssignments)}
+                    onAssign={(personId, assignmentRole) =>
+                      v1CasesModel.assignIndividualVolunteerToV1Case(
+                        familyId,
+                        selectedV1Case.id,
+                        personId,
+                        assignmentRole
+                      )
+                    }
+                    onUnassign={(personId, assignmentRole) =>
+                      v1CasesModel.unassignIndividualVolunteerFromV1Case(
+                        familyId,
+                        selectedV1Case.id,
+                        personId,
+                        assignmentRole
+                      )
+                    }
+                  />
+                </Grid>
+              )}
           </Grid>
 
           <Grid container spacing={0}>
