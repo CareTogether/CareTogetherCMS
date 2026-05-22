@@ -299,10 +299,12 @@ export function RoleEdit({
         <MenuItem
           dense
           onClick={() =>
-            addPermissionSet(() => new AssignedVolunteerInV1CasePermissionContext())
+            addPermissionSet(
+              () => new AssignedVolunteerInV1CasePermissionContext()
+            )
           }
         >
-          Assigned Staff in Case
+          Assigned Volunteer in Case
         </MenuItem>
         <MenuItem
           dense
@@ -312,7 +314,7 @@ export function RoleEdit({
             )
           }
         >
-          Assigned Staff in Referral
+          Assigned Volunteer in Referral
         </MenuItem>
         <MenuItem
           dense

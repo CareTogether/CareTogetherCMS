@@ -517,10 +517,10 @@ export function PermissionContextCell({
                   AssignedFunctionsInV1CaseCoAssigneeFamiliesPermissionContext
                 ? 'Assigned Functions in Case - Co-Assigned Families'
                 : context instanceof AssignedVolunteerInV1CasePermissionContext
-                  ? 'Assigned Staff in Case'
+                  ? 'Assigned Volunteer in Case'
                   : context instanceof
                       AssignedVolunteerInV1ReferralPermissionContext
-                    ? 'Assigned Staff in Referral'
+                    ? 'Assigned Volunteer in Referral'
                     : context instanceof
                         OwnV1CaseAssigneeFamiliesPermissionContext
                       ? 'Own Case - Assigned Families'
