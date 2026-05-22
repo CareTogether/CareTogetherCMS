@@ -221,10 +221,17 @@ function V1ReferralsContent() {
                 setStatusFilter={setStatusFilter}
                 countyFilter={countyFilter}
                 setCountyFilter={setCountyFilter}
-                assignmentRoles={assignmentRoles}
-                assignmentsForAssignmentFilter={referrals.flatMap(
-                  (referral) => referral.assignedIndividualVolunteers ?? []
-                )}
+                assignmentRoles={
+                  canViewVolunteerAssignments ? assignmentRoles : []
+                }
+                assignmentsForAssignmentFilter={
+                  canViewVolunteerAssignments
+                    ? referrals.flatMap(
+                        (referral) =>
+                          referral.assignedIndividualVolunteers ?? []
+                      )
+                    : []
+                }
                 assignmentFilters={assignmentFilters}
                 setAssignmentFilter={(assignmentRole, selectedValues) =>
                   setAssignmentFilters((current) => ({
@@ -253,11 +260,12 @@ function V1ReferralsContent() {
                       <TableCell>Status</TableCell>
                       <TableCell>Client Family</TableCell>
                       <TableCell>County</TableCell>
-                      {assignmentRoles.map((assignmentRole) => (
-                        <TableCell key={assignmentRole}>
-                          {assignmentRole}
-                        </TableCell>
-                      ))}
+                      {canViewVolunteerAssignments &&
+                        assignmentRoles.map((assignmentRole) => (
+                          <TableCell key={assignmentRole}>
+                            {assignmentRole}
+                          </TableCell>
+                        ))}
                     </TableRow>
                   </TableHead>
 
@@ -266,7 +274,9 @@ function V1ReferralsContent() {
                       <ReferralRow
                         key={ref.id}
                         referral={ref}
-                        assignmentRoles={assignmentRoles}
+                        assignmentRoles={
+                          canViewVolunteerAssignments ? assignmentRoles : []
+                        }
                         expanded={expandedView}
                       />
                     ))}

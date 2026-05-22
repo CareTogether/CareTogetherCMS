@@ -401,22 +401,26 @@ function PartneringFamilies() {
             value={countyFilter}
             onChange={setCountyFilter}
           />
-          <AssignmentRoleFilters
-            assignmentRoles={assignmentRoles}
-            assignments={partneringFamilies.flatMap(
-              (family) =>
-                family.partneringFamilyInfo?.openV1Case
-                  ?.assignedIndividualVolunteers ?? []
-            )}
-            selectedValuesByRole={assignmentFilters}
-            onChange={(assignmentRole, selectedValues) =>
-              setAssignmentFilters((current) => ({
-                ...current,
-                [assignmentRole]: selectedValues,
-              }))
-            }
-            personLookup={(personId) => personAndFamilyLookup(personId).person}
-          />
+          {canViewVolunteerAssignments && (
+            <AssignmentRoleFilters
+              assignmentRoles={assignmentRoles}
+              assignments={partneringFamilies.flatMap(
+                (family) =>
+                  family.partneringFamilyInfo?.openV1Case
+                    ?.assignedIndividualVolunteers ?? []
+              )}
+              selectedValuesByRole={assignmentFilters}
+              onChange={(assignmentRole, selectedValues) =>
+                setAssignmentFilters((current) => ({
+                  ...current,
+                  [assignmentRole]: selectedValues,
+                }))
+              }
+              personLookup={(personId) =>
+                personAndFamilyLookup(personId).person
+              }
+            />
+          )}
           {customFieldCount > 0 && (
             <FormControl
               sx={{
@@ -522,9 +526,10 @@ function PartneringFamilies() {
                 <TableCell>Client Family</TableCell>
                 <TableCell>Case Status</TableCell>
                 <TableCell>County</TableCell>
-                {assignmentRoles.map((assignmentRole) => (
-                  <TableCell key={assignmentRole}>{assignmentRole}</TableCell>
-                ))}
+                {canViewVolunteerAssignments &&
+                  assignmentRoles.map((assignmentRole) => (
+                    <TableCell key={assignmentRole}>{assignmentRole}</TableCell>
+                  ))}
                 {referralCustomFields.map((field) => (
                   <TableCell
                     key={field.name}
@@ -562,7 +567,9 @@ function PartneringFamilies() {
                     appNavigate.family(familyId, v1CaseId, arrangementId)
                   }
                   openFamily={openFamily}
-                  assignmentRoles={assignmentRoles}
+                  assignmentRoles={
+                    canViewVolunteerAssignments ? assignmentRoles : []
+                  }
                   assignmentPersonLookup={(personId) =>
                     personAndFamilyLookup(personId).person
                   }
