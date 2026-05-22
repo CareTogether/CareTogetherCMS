@@ -8,13 +8,19 @@ import {
 } from '@mui/material';
 import { MouseEvent } from 'react';
 import { SearchBar } from '../Shell/SearchBar';
-import { CombinedFamilyInfo } from '../GeneratedClient';
+import {
+  AssignedIndividualVolunteer,
+  CombinedFamilyInfo,
+  Person,
+} from '../GeneratedClient';
 import { CountyFilter } from '../V1Referrals/CountyFilter';
 import {
   Add as AddIcon,
   UnfoldLess as UnfoldLessIcon,
   UnfoldMore as UnfoldMoreIcon,
 } from '@mui/icons-material';
+import { AssignmentRoleFilters } from '../VolunteerAssignments/AssignmentRoleFilters';
+import { AssignmentFilterSelectionsByRole } from '../VolunteerAssignments/assignmentRoleColumns';
 
 export type ReferralStatusFilter = 'ALL' | 'OPEN' | 'ACCEPTED' | 'CLOSED';
 
@@ -35,6 +41,15 @@ interface ReferralsFiltersProps {
   setCountyFilter: (value: (string | null)[]) => void;
 
   familiesForCountyFilter: CombinedFamilyInfo[];
+
+  assignmentRoles: string[];
+  assignmentsForAssignmentFilter: AssignedIndividualVolunteer[];
+  assignmentFilters: AssignmentFilterSelectionsByRole;
+  setAssignmentFilter: (
+    assignmentRole: string,
+    selectedValues: (string | null)[]
+  ) => void;
+  assignmentPersonLookup: (personId: string) => Person | undefined;
 }
 
 export function ReferralsFilters({
@@ -49,6 +64,11 @@ export function ReferralsFilters({
   countyFilter,
   setCountyFilter,
   familiesForCountyFilter,
+  assignmentRoles,
+  assignmentsForAssignmentFilter,
+  assignmentFilters,
+  setAssignmentFilter,
+  assignmentPersonLookup,
 }: ReferralsFiltersProps) {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
@@ -63,7 +83,10 @@ export function ReferralsFilters({
   };
 
   return (
-    <Stack direction="row" sx={{ mt: 2, mb: 2 }}>
+    <Stack
+      direction="row"
+      sx={{ mt: 2, mb: 2, flexWrap: 'wrap', alignItems: 'center', gap: 1 }}
+    >
       {canAddNewReferral && (
         <Button
           variant="contained"
@@ -79,7 +102,7 @@ export function ReferralsFilters({
         exclusive
         onChange={(_, value) => value && setStatusFilter(value)}
         size={isMobile ? 'medium' : 'small'}
-        sx={{ ml: 'auto', mr: 2 }}
+        sx={{ ml: 'auto' }}
       >
         <ToggleButton value="ALL">ALL</ToggleButton>
         <ToggleButton value="OPEN">OPEN</ToggleButton>
@@ -91,6 +114,14 @@ export function ReferralsFilters({
         families={familiesForCountyFilter}
         value={countyFilter}
         onChange={setCountyFilter}
+      />
+
+      <AssignmentRoleFilters
+        assignmentRoles={assignmentRoles}
+        assignments={assignmentsForAssignmentFilter}
+        selectedValuesByRole={assignmentFilters}
+        onChange={setAssignmentFilter}
+        personLookup={assignmentPersonLookup}
       />
 
       <SearchBar value={filterText} onChange={setFilterText} />

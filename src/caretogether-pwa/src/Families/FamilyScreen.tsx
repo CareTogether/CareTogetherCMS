@@ -1000,36 +1000,6 @@ export function FamilyScreen() {
                 </Grid>
               )}
             </Grid>
-
-            {volunteerAssignmentsEnabled &&
-              permissions(Permission.ViewV1CaseVolunteerAssignments) &&
-              selectedV1Case && (
-                <Grid item md={12} sx={{ mt: 2 }}>
-                  <VolunteerAssignmentsSection
-                    assignments={selectedV1Case.assignedIndividualVolunteers ?? []}
-                    policies={
-                      policy.referralPolicy?.volunteerAssignmentPolicies ?? []
-                    }
-                    canEdit={permissions(Permission.EditV1CaseVolunteerAssignments)}
-                    onAssign={(personId, assignmentRole) =>
-                      v1CasesModel.assignIndividualVolunteerToV1Case(
-                        familyId,
-                        selectedV1Case.id,
-                        personId,
-                        assignmentRole
-                      )
-                    }
-                    onUnassign={(personId, assignmentRole) =>
-                      v1CasesModel.unassignIndividualVolunteerFromV1Case(
-                        familyId,
-                        selectedV1Case.id,
-                        personId,
-                        assignmentRole
-                      )
-                    }
-                  />
-                </Grid>
-              )}
           </Grid>
 
           <Grid container spacing={0}>
@@ -1183,6 +1153,41 @@ export function FamilyScreen() {
                 </Grid>
               </>
             )}
+
+            {volunteerAssignmentsEnabled &&
+              permissions(Permission.ViewV1CaseVolunteerAssignments) &&
+              selectedV1Case && (
+                <Grid item xs={12} md={6} sx={{ mb: 2 }}>
+                  <VolunteerAssignmentsSection
+                    assignments={
+                      selectedV1Case.assignedIndividualVolunteers ?? []
+                    }
+                    policies={
+                      policy.referralPolicy?.volunteerAssignmentPolicies ?? []
+                    }
+                    canEdit={permissions(
+                      Permission.EditV1CaseVolunteerAssignments
+                    )}
+                    onAssign={(personId, assignmentRole) =>
+                      v1CasesModel.assignIndividualVolunteerToV1Case(
+                        familyId,
+                        selectedV1Case.id,
+                        personId,
+                        assignmentRole
+                      )
+                    }
+                    onUnassign={(personId, assignmentRole) =>
+                      v1CasesModel.unassignIndividualVolunteerFromV1Case(
+                        familyId,
+                        selectedV1Case.id,
+                        personId,
+                        assignmentRole
+                      )
+                    }
+                  />
+                </Grid>
+              )}
+
             {permissions(Permission.ViewFamilyDocumentMetadata) && (
               <Grid item xs={12} lg={8} xl={5} mb={2}>
                 <Typography
