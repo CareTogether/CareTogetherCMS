@@ -153,11 +153,11 @@ namespace CareTogether.Core.Test.AuthorizationEngineTests
         [DataTestMethod]
         [DataRow(nameof(AssignIndividualVolunteer))]
         [DataRow(nameof(UnassignIndividualVolunteer))]
-        public async Task ReferralVolunteerAssignmentCommandsRequireReferralVolunteerAssignmentEditPermission(
+        public async Task ReferralFunctionAssignmentCommandsRequireReferralFunctionAssignmentEditPermission(
             string commandName
         )
         {
-            var dut = CreateAuthorizationEngine(Permission.EditV1ReferralVolunteerAssignments);
+            var dut = CreateAuthorizationEngine(Permission.EditV1ReferralFunctionAssignments);
 
             var response = await dut.AuthorizeV1ReferralCommandAsync(
                 OrganizationId,

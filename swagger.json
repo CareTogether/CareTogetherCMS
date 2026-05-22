@@ -1844,8 +1844,8 @@
           "ViewV1Referral",
           "EditV1ReferralRequirementCompletion",
           "EditV1ReferralRequirementExemption",
-          "ViewV1ReferralVolunteerAssignments",
-          "EditV1ReferralVolunteerAssignments",
+          "ViewV1ReferralFunctionAssignments",
+          "EditV1ReferralFunctionAssignments",
           "CreateV1Case",
           "EditV1Case",
           "CloseV1Case",
@@ -1855,8 +1855,8 @@
           "EditV1CaseRequirementCompletion",
           "EditV1CaseRequirementExemption",
           "ViewV1CaseHistory",
-          "ViewV1CaseVolunteerAssignments",
-          "EditV1CaseVolunteerAssignments",
+          "ViewV1CaseFunctionAssignments",
+          "EditV1CaseFunctionAssignments",
           "CreateArrangement",
           "EditArrangement",
           "ViewAssignments",
@@ -2147,7 +2147,7 @@
           "requiredIntakeActionNames",
           "customFields",
           "arrangementPolicies",
-          "volunteerAssignmentPolicies"
+          "functionAssignmentPolicies"
         ],
         "properties": {
           "intakeRequirements_PRE_MIGRATION": {
@@ -2188,10 +2188,10 @@
               "$ref": "#/components/schemas/RequirementDefinition"
             }
           },
-          "volunteerAssignmentPolicies": {
+          "functionAssignmentPolicies": {
             "type": "array",
             "items": {
-              "$ref": "#/components/schemas/VolunteerAssignmentPolicy"
+              "$ref": "#/components/schemas/FunctionAssignmentPolicy"
             }
           }
         }
@@ -2662,7 +2662,7 @@
           }
         }
       },
-      "VolunteerAssignmentPolicy": {
+      "FunctionAssignmentPolicy": {
         "type": "object",
         "additionalProperties": false,
         "required": [
@@ -2674,11 +2674,11 @@
             "type": "string"
           },
           "eligibility": {
-            "$ref": "#/components/schemas/VolunteerAssignmentEligibility"
+            "$ref": "#/components/schemas/FunctionAssignmentEligibility"
           }
         }
       },
-      "VolunteerAssignmentEligibility": {
+      "FunctionAssignmentEligibility": {
         "type": "object",
         "additionalProperties": false,
         "required": [
@@ -2891,13 +2891,13 @@
         "type": "object",
         "additionalProperties": false,
         "required": [
-          "volunteerAssignmentPolicies"
+          "functionAssignmentPolicies"
         ],
         "properties": {
-          "volunteerAssignmentPolicies": {
+          "functionAssignmentPolicies": {
             "type": "array",
             "items": {
-              "$ref": "#/components/schemas/VolunteerAssignmentPolicy"
+              "$ref": "#/components/schemas/FunctionAssignmentPolicy"
             }
           }
         }

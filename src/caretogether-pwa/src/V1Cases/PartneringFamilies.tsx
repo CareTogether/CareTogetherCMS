@@ -60,13 +60,13 @@ import {
 } from './PartneringFamilies/sortPartneringFamilies';
 import { useSidePanel } from '../Hooks/useSidePanel';
 import { PartneringFamilyCustomFieldFiltersSidePanel } from './PartneringFamilies/PartneringFamilyCustomFieldFiltersSidePanel';
-import { VOLUNTEER_ASSIGNMENTS_FEATURE_FLAG } from '../featureFlags';
+import { FUNCTION_ASSIGNMENTS_FEATURE_FLAG } from '../featureFlags';
 import {
   AssignmentFilterSelectionsByRole,
   assignmentRolesForColumns,
   matchesAssignmentFilters,
-} from '../VolunteerAssignments/assignmentRoleColumns';
-import { AssignmentRoleFilters } from '../VolunteerAssignments/AssignmentRoleFilters';
+} from '../FunctionAssignments/assignmentRoleColumns';
+import { AssignmentRoleFilters } from '../FunctionAssignments/AssignmentRoleFilters';
 
 const PARTNERING_FAMILIES_SORT_STORAGE_KEY = 'partnering-families-sortMode';
 
@@ -159,15 +159,15 @@ function PartneringFamilies() {
     useState<AssignmentFilterSelectionsByRole>({});
 
   const permissions = useAllPartneringFamiliesPermissions();
-  const volunteerAssignmentsEnabled = useFeatureFlagEnabled(
-    VOLUNTEER_ASSIGNMENTS_FEATURE_FLAG
+  const functionAssignmentsEnabled = useFeatureFlagEnabled(
+    FUNCTION_ASSIGNMENTS_FEATURE_FLAG
   );
-  const canViewVolunteerAssignments =
-    volunteerAssignmentsEnabled === true &&
-    permissions(Permission.ViewV1CaseVolunteerAssignments);
-  const assignmentRoles = canViewVolunteerAssignments
+  const canViewFunctionAssignments =
+    functionAssignmentsEnabled === true &&
+    permissions(Permission.ViewV1CaseFunctionAssignments);
+  const assignmentRoles = canViewFunctionAssignments
     ? assignmentRolesForColumns(
-        loadablePolicy?.referralPolicy?.volunteerAssignmentPolicies?.map(
+        loadablePolicy?.referralPolicy?.functionAssignmentPolicies?.map(
           (assignmentPolicy) => assignmentPolicy.assignmentRole
         ) ?? [],
         partneringFamilies.flatMap(
@@ -235,7 +235,7 @@ function PartneringFamilies() {
               : countyFilter.includes(county);
           })
           .filter((family) => {
-            if (!canViewVolunteerAssignments) return true;
+            if (!canViewFunctionAssignments) return true;
 
             return matchesAssignmentFilters(
               family.partneringFamilyInfo?.openV1Case
@@ -288,7 +288,7 @@ function PartneringFamilies() {
     [
       assignmentFilters,
       arrangementsFilter,
-      canViewVolunteerAssignments,
+      canViewFunctionAssignments,
       countyFilter,
       filteredPartneringFamilies,
       openReferralByFamily,
@@ -402,7 +402,7 @@ function PartneringFamilies() {
             value={countyFilter}
             onChange={setCountyFilter}
           />
-          {canViewVolunteerAssignments && (
+          {canViewFunctionAssignments && (
             <AssignmentRoleFilters
               assignmentRoles={assignmentRoles}
               assignments={partneringFamilies.flatMap(
@@ -527,7 +527,7 @@ function PartneringFamilies() {
                 <TableCell>Client Family</TableCell>
                 <TableCell>Case Status</TableCell>
                 <TableCell>County</TableCell>
-                {canViewVolunteerAssignments &&
+                {canViewFunctionAssignments &&
                   assignmentRoles.map((assignmentRole) => (
                     <TableCell key={assignmentRole}>{assignmentRole}</TableCell>
                   ))}
@@ -569,7 +569,7 @@ function PartneringFamilies() {
                   }
                   openFamily={openFamily}
                   assignmentRoles={
-                    canViewVolunteerAssignments ? assignmentRoles : []
+                    canViewFunctionAssignments ? assignmentRoles : []
                   }
                   assignmentPersonLookup={(personId) =>
                     personAndFamilyLookup(personId).person

@@ -758,13 +758,13 @@ namespace CareTogether.Managers.Records
                 organizationId,
                 locationId
             );
-            var caseVolunteerAssignmentRoles = locationPolicy
-                .ReferralPolicy.VolunteerAssignmentPolicies.Select(policy => policy.AssignmentRole)
+            var caseFunctionAssignmentRoles = locationPolicy
+                .ReferralPolicy.FunctionAssignmentPolicies.Select(policy => policy.AssignmentRole)
                 .ToImmutableHashSet();
 
             return referral
                 .AssignedIndividualVolunteers.Where(assignment =>
-                    caseVolunteerAssignmentRoles.Contains(assignment.AssignmentRole)
+                    caseFunctionAssignmentRoles.Contains(assignment.AssignmentRole)
                 )
                 .Select(assignment =>
                     (V1CaseCommand)
@@ -990,7 +990,7 @@ namespace CareTogether.Managers.Records
                 locationId
             );
             var assignmentPolicy =
-                locationPolicy.V1ReferralPolicy.VolunteerAssignmentPolicies.SingleOrDefault(
+                locationPolicy.V1ReferralPolicy.FunctionAssignmentPolicies.SingleOrDefault(
                     policy => policy.AssignmentRole == assignIndividualVolunteer.AssignmentRole
                 );
 
@@ -1023,7 +1023,7 @@ namespace CareTogether.Managers.Records
                 locationId
             );
             var assignmentPolicy =
-                locationPolicy.ReferralPolicy.VolunteerAssignmentPolicies.SingleOrDefault(policy =>
+                locationPolicy.ReferralPolicy.FunctionAssignmentPolicies.SingleOrDefault(policy =>
                     policy.AssignmentRole == assignIndividualVolunteer.AssignmentRole
                 );
 
@@ -1049,7 +1049,7 @@ namespace CareTogether.Managers.Records
             Guid organizationId,
             Guid locationId,
             Guid personId,
-            VolunteerAssignmentEligibility eligibility
+            FunctionAssignmentEligibility eligibility
         )
         {
             var person = (
@@ -1344,17 +1344,17 @@ namespace CareTogether.Managers.Records
                 new V1ReferralAuthorizationContext(referral.ReferralId)
             );
 
-            var canViewVolunteerAssignments = permissions.Contains(
-                Permission.ViewV1ReferralVolunteerAssignments
+            var canViewFunctionAssignments = permissions.Contains(
+                Permission.ViewV1ReferralFunctionAssignments
             );
 
             var disclosedReferral = referral with
             {
                 Notes = notes,
-                AssignedIndividualVolunteers = canViewVolunteerAssignments
+                AssignedIndividualVolunteers = canViewFunctionAssignments
                     ? referral.AssignedIndividualVolunteers
                     : ImmutableList<AssignedIndividualVolunteer>.Empty,
-                History = canViewVolunteerAssignments
+                History = canViewFunctionAssignments
                     ? referral.History
                     : referral
                         .History.Where(activity =>

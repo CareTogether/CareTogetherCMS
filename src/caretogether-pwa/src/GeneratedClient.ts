@@ -2442,8 +2442,8 @@ export enum Permission {
     ViewV1Referral = 264,
     EditV1ReferralRequirementCompletion = 265,
     EditV1ReferralRequirementExemption = 266,
-    ViewV1ReferralVolunteerAssignments = 267,
-    EditV1ReferralVolunteerAssignments = 268,
+    ViewV1ReferralFunctionAssignments = 267,
+    EditV1ReferralFunctionAssignments = 268,
     CreateV1Case = 300,
     EditV1Case = 301,
     CloseV1Case = 302,
@@ -2453,8 +2453,8 @@ export enum Permission {
     EditV1CaseRequirementCompletion = 306,
     EditV1CaseRequirementExemption = 307,
     ViewV1CaseHistory = 308,
-    ViewV1CaseVolunteerAssignments = 309,
-    EditV1CaseVolunteerAssignments = 310,
+    ViewV1CaseFunctionAssignments = 309,
+    EditV1CaseFunctionAssignments = 310,
     CreateArrangement = 350,
     EditArrangement = 351,
     ViewAssignments = 352,
@@ -2756,7 +2756,7 @@ export class V1CasePolicy implements IV1CasePolicy {
     arrangementPolicies!: ArrangementPolicy[];
     functionPolicies?: FunctionPolicy[] | undefined;
     intakeRequirements?: RequirementDefinition[] | undefined;
-    volunteerAssignmentPolicies!: VolunteerAssignmentPolicy[];
+    functionAssignmentPolicies!: FunctionAssignmentPolicy[];
 
     constructor(data?: IV1CasePolicy) {
         if (data) {
@@ -2770,7 +2770,7 @@ export class V1CasePolicy implements IV1CasePolicy {
             this.requiredIntakeActionNames = [];
             this.customFields = [];
             this.arrangementPolicies = [];
-            this.volunteerAssignmentPolicies = [];
+            this.functionAssignmentPolicies = [];
         }
     }
 
@@ -2806,10 +2806,10 @@ export class V1CasePolicy implements IV1CasePolicy {
                 for (let item of _data["intakeRequirements"])
                     this.intakeRequirements!.push(RequirementDefinition.fromJS(item));
             }
-            if (Array.isArray(_data["volunteerAssignmentPolicies"])) {
-                this.volunteerAssignmentPolicies = [] as any;
-                for (let item of _data["volunteerAssignmentPolicies"])
-                    this.volunteerAssignmentPolicies!.push(VolunteerAssignmentPolicy.fromJS(item));
+            if (Array.isArray(_data["functionAssignmentPolicies"])) {
+                this.functionAssignmentPolicies = [] as any;
+                for (let item of _data["functionAssignmentPolicies"])
+                    this.functionAssignmentPolicies!.push(FunctionAssignmentPolicy.fromJS(item));
             }
         }
     }
@@ -2853,10 +2853,10 @@ export class V1CasePolicy implements IV1CasePolicy {
             for (let item of this.intakeRequirements)
                 data["intakeRequirements"].push(item.toJSON());
         }
-        if (Array.isArray(this.volunteerAssignmentPolicies)) {
-            data["volunteerAssignmentPolicies"] = [];
-            for (let item of this.volunteerAssignmentPolicies)
-                data["volunteerAssignmentPolicies"].push(item.toJSON());
+        if (Array.isArray(this.functionAssignmentPolicies)) {
+            data["functionAssignmentPolicies"] = [];
+            for (let item of this.functionAssignmentPolicies)
+                data["functionAssignmentPolicies"].push(item.toJSON());
         }
         return data;
     }
@@ -2869,7 +2869,7 @@ export interface IV1CasePolicy {
     arrangementPolicies: ArrangementPolicy[];
     functionPolicies?: FunctionPolicy[] | undefined;
     intakeRequirements?: RequirementDefinition[] | undefined;
-    volunteerAssignmentPolicies: VolunteerAssignmentPolicy[];
+    functionAssignmentPolicies: FunctionAssignmentPolicy[];
 }
 
 export class RequirementDefinition implements IRequirementDefinition {
@@ -3798,11 +3798,11 @@ export interface IFunctionEligibility {
     eligiblePeople: string[];
 }
 
-export class VolunteerAssignmentPolicy implements IVolunteerAssignmentPolicy {
+export class FunctionAssignmentPolicy implements IFunctionAssignmentPolicy {
     assignmentRole!: string;
-    eligibility!: VolunteerAssignmentEligibility;
+    eligibility!: FunctionAssignmentEligibility;
 
-    constructor(data?: IVolunteerAssignmentPolicy) {
+    constructor(data?: IFunctionAssignmentPolicy) {
         if (data) {
             for (var property in data) {
                 if (data.hasOwnProperty(property))
@@ -3810,20 +3810,20 @@ export class VolunteerAssignmentPolicy implements IVolunteerAssignmentPolicy {
             }
         }
         if (!data) {
-            this.eligibility = new VolunteerAssignmentEligibility();
+            this.eligibility = new FunctionAssignmentEligibility();
         }
     }
 
     init(_data?: any) {
         if (_data) {
             this.assignmentRole = _data["assignmentRole"];
-            this.eligibility = _data["eligibility"] ? VolunteerAssignmentEligibility.fromJS(_data["eligibility"]) : new VolunteerAssignmentEligibility();
+            this.eligibility = _data["eligibility"] ? FunctionAssignmentEligibility.fromJS(_data["eligibility"]) : new FunctionAssignmentEligibility();
         }
     }
 
-    static fromJS(data: any): VolunteerAssignmentPolicy {
+    static fromJS(data: any): FunctionAssignmentPolicy {
         data = typeof data === 'object' ? data : {};
-        let result = new VolunteerAssignmentPolicy();
+        let result = new FunctionAssignmentPolicy();
         result.init(data);
         return result;
     }
@@ -3836,18 +3836,18 @@ export class VolunteerAssignmentPolicy implements IVolunteerAssignmentPolicy {
     }
 }
 
-export interface IVolunteerAssignmentPolicy {
+export interface IFunctionAssignmentPolicy {
     assignmentRole: string;
-    eligibility: VolunteerAssignmentEligibility;
+    eligibility: FunctionAssignmentEligibility;
 }
 
-export class VolunteerAssignmentEligibility implements IVolunteerAssignmentEligibility {
+export class FunctionAssignmentEligibility implements IFunctionAssignmentEligibility {
     eligibleLocationRoles!: string[];
     eligibleIndividualVolunteerRoles!: string[];
     eligibleVolunteerFamilyRoles!: string[];
     eligiblePeople!: string[];
 
-    constructor(data?: IVolunteerAssignmentEligibility) {
+    constructor(data?: IFunctionAssignmentEligibility) {
         if (data) {
             for (var property in data) {
                 if (data.hasOwnProperty(property))
@@ -3887,9 +3887,9 @@ export class VolunteerAssignmentEligibility implements IVolunteerAssignmentEligi
         }
     }
 
-    static fromJS(data: any): VolunteerAssignmentEligibility {
+    static fromJS(data: any): FunctionAssignmentEligibility {
         data = typeof data === 'object' ? data : {};
-        let result = new VolunteerAssignmentEligibility();
+        let result = new FunctionAssignmentEligibility();
         result.init(data);
         return result;
     }
@@ -3920,7 +3920,7 @@ export class VolunteerAssignmentEligibility implements IVolunteerAssignmentEligi
     }
 }
 
-export interface IVolunteerAssignmentEligibility {
+export interface IFunctionAssignmentEligibility {
     eligibleLocationRoles: string[];
     eligibleIndividualVolunteerRoles: string[];
     eligibleVolunteerFamilyRoles: string[];
@@ -4304,7 +4304,7 @@ export enum VolunteerFamilyRequirementScope {
 }
 
 export class V1ReferralPolicy implements IV1ReferralPolicy {
-    volunteerAssignmentPolicies!: VolunteerAssignmentPolicy[];
+    functionAssignmentPolicies!: FunctionAssignmentPolicy[];
 
     constructor(data?: IV1ReferralPolicy) {
         if (data) {
@@ -4314,16 +4314,16 @@ export class V1ReferralPolicy implements IV1ReferralPolicy {
             }
         }
         if (!data) {
-            this.volunteerAssignmentPolicies = [];
+            this.functionAssignmentPolicies = [];
         }
     }
 
     init(_data?: any) {
         if (_data) {
-            if (Array.isArray(_data["volunteerAssignmentPolicies"])) {
-                this.volunteerAssignmentPolicies = [] as any;
-                for (let item of _data["volunteerAssignmentPolicies"])
-                    this.volunteerAssignmentPolicies!.push(VolunteerAssignmentPolicy.fromJS(item));
+            if (Array.isArray(_data["functionAssignmentPolicies"])) {
+                this.functionAssignmentPolicies = [] as any;
+                for (let item of _data["functionAssignmentPolicies"])
+                    this.functionAssignmentPolicies!.push(FunctionAssignmentPolicy.fromJS(item));
             }
         }
     }
@@ -4337,17 +4337,17 @@ export class V1ReferralPolicy implements IV1ReferralPolicy {
 
     toJSON(data?: any) {
         data = typeof data === 'object' ? data : {};
-        if (Array.isArray(this.volunteerAssignmentPolicies)) {
-            data["volunteerAssignmentPolicies"] = [];
-            for (let item of this.volunteerAssignmentPolicies)
-                data["volunteerAssignmentPolicies"].push(item.toJSON());
+        if (Array.isArray(this.functionAssignmentPolicies)) {
+            data["functionAssignmentPolicies"] = [];
+            for (let item of this.functionAssignmentPolicies)
+                data["functionAssignmentPolicies"].push(item.toJSON());
         }
         return data;
     }
 }
 
 export interface IV1ReferralPolicy {
-    volunteerAssignmentPolicies: VolunteerAssignmentPolicy[];
+    functionAssignmentPolicies: FunctionAssignmentPolicy[];
 }
 
 export class CurrentFeatureFlags implements ICurrentFeatureFlags {

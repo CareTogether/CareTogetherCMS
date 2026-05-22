@@ -63,9 +63,9 @@ import {
   useFamilyPermissions,
   useGlobalPermissions,
 } from '../Model/SessionModel';
-import { VolunteerAssignmentsSection } from '../VolunteerAssignments/VolunteerAssignmentsSection';
+import { FunctionAssignmentsSection } from '../FunctionAssignments/FunctionAssignmentsSection';
 import { useFeatureFlagEnabled } from 'posthog-js/react';
-import { VOLUNTEER_ASSIGNMENTS_FEATURE_FLAG } from '../featureFlags';
+import { FUNCTION_ASSIGNMENTS_FEATURE_FLAG } from '../featureFlags';
 
 function formatDate(date?: Date) {
   return date
@@ -96,8 +96,8 @@ export function ReferralDetailsPage() {
   const policy = useRecoilValue(policyData);
   const appNavigate = useAppNavigate();
   const globalPermissions = useGlobalPermissions();
-  const volunteerAssignmentsEnabled = useFeatureFlagEnabled(
-    VOLUNTEER_ASSIGNMENTS_FEATURE_FLAG
+  const functionAssignmentsEnabled = useFeatureFlagEnabled(
+    FUNCTION_ASSIGNMENTS_FEATURE_FLAG
   );
   const allPartneringFamiliesPermissions =
     useAllPartneringFamiliesPermissions();
@@ -182,13 +182,13 @@ export function ReferralDetailsPage() {
   const canEditReferral = globalPermissions(Permission.EditV1Referral);
   const canCloseReferral = globalPermissions(Permission.CloseV1Referral);
   const canReopenReferral = globalPermissions(Permission.ReopenV1Referral);
-  const canViewVolunteerAssignments =
+  const canViewFunctionAssignments =
     referralInfo?.userPermissions?.includes(
-      Permission.ViewV1ReferralVolunteerAssignments
+      Permission.ViewV1ReferralFunctionAssignments
     ) ?? false;
-  const canEditVolunteerAssignments =
+  const canEditFunctionAssignments =
     referralInfo?.userPermissions?.includes(
-      Permission.EditV1ReferralVolunteerAssignments
+      Permission.EditV1ReferralFunctionAssignments
     ) ?? false;
   const canCreateClientFamily =
     !isClosed &&
@@ -562,14 +562,14 @@ export function ReferralDetailsPage() {
             </Grid>
           )}
 
-          {volunteerAssignmentsEnabled && canViewVolunteerAssignments && (
+          {functionAssignmentsEnabled && canViewFunctionAssignments && (
             <Grid item xs={12} sx={{ mt: 2 }}>
-              <VolunteerAssignmentsSection
+              <FunctionAssignmentsSection
                 assignments={currentReferral.assignedIndividualVolunteers ?? []}
                 policies={
-                  policy.v1ReferralPolicy?.volunteerAssignmentPolicies ?? []
+                  policy.v1ReferralPolicy?.functionAssignmentPolicies ?? []
                 }
-                canEdit={canEditVolunteerAssignments}
+                canEdit={canEditFunctionAssignments}
                 onAssign={(personId, assignmentRole) =>
                   assignIndividualVolunteerToReferral(
                     currentReferral.referralId,

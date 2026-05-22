@@ -3209,11 +3209,11 @@ namespace CareTogether.TestData
                     ]
                 )
                 {
-                    VolunteerAssignmentPolicies =
+                    FunctionAssignmentPolicies =
                     [
-                        new VolunteerAssignmentPolicy(
+                        new FunctionAssignmentPolicy(
                             "Case Manager",
-                            new VolunteerAssignmentEligibility(
+                            new FunctionAssignmentEligibility(
                                 EligibleLocationRoles: [SystemConstants.ORGANIZATION_ADMINISTRATOR],
                                 EligibleIndividualVolunteerRoles: [],
                                 EligibleVolunteerFamilyRoles: [],
@@ -3392,18 +3392,18 @@ namespace CareTogether.TestData
             {
                 V1ReferralPolicy = new V1ReferralPolicy(
                     [
-                        new VolunteerAssignmentPolicy(
+                        new FunctionAssignmentPolicy(
                             "Intake Coordinator",
-                            new VolunteerAssignmentEligibility(
+                            new FunctionAssignmentEligibility(
                                 EligibleLocationRoles: [SystemConstants.ORGANIZATION_ADMINISTRATOR],
                                 EligibleIndividualVolunteerRoles: ["Family Coach"],
                                 EligibleVolunteerFamilyRoles: [],
                                 EligiblePeople: []
                             )
                         ),
-                        new VolunteerAssignmentPolicy(
+                        new FunctionAssignmentPolicy(
                             "Intake Supervisor",
-                            new VolunteerAssignmentEligibility(
+                            new FunctionAssignmentEligibility(
                                 EligibleLocationRoles: [SystemConstants.ORGANIZATION_ADMINISTRATOR],
                                 EligibleIndividualVolunteerRoles: ["Family Coach"],
                                 EligibleVolunteerFamilyRoles: [],

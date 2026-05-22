@@ -1,1 +1,1 @@
-export const VOLUNTEER_ASSIGNMENTS_FEATURE_FLAG = 'volunteer-assignments';
+export const FUNCTION_ASSIGNMENTS_FEATURE_FLAG = 'volunteer-assignments';

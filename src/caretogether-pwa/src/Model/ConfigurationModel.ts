@@ -233,15 +233,15 @@ export const allFunctionsInPolicyQuery = selector({
   },
 });
 
-export const allVolunteerAssignmentRolesInPolicyQuery = selector({
-  key: 'allVolunteerAssignmentRolesInPolicyQuery',
+export const allFunctionAssignmentRolesInPolicyQuery = selector({
+  key: 'allFunctionAssignmentRolesInPolicyQuery',
   get: ({ get }) => {
     const policy = get(policyData);
-    const allVolunteerAssignmentRoles = [
-      ...(policy.referralPolicy?.volunteerAssignmentPolicies ?? []),
-      ...(policy.v1ReferralPolicy?.volunteerAssignmentPolicies ?? []),
+    const allFunctionAssignmentRoles = [
+      ...(policy.referralPolicy?.functionAssignmentPolicies ?? []),
+      ...(policy.v1ReferralPolicy?.functionAssignmentPolicies ?? []),
     ].map((volunteerAssignmentPolicy) => volunteerAssignmentPolicy.assignmentRole);
-    return Array.from(new Set(allVolunteerAssignmentRoles)).filter(Boolean);
+    return Array.from(new Set(allFunctionAssignmentRoles)).filter(Boolean);
   },
 });
 
