@@ -28,18 +28,38 @@ function isSameLocalDate(left: Date, right: Date) {
   );
 }
 
-function withCurrentLocalTimeIfToday(date: Date, now = new Date()) {
-  if (!isSameLocalDate(date, now)) return date;
+function isSameLocalTime(left: Date, right: Date) {
+  return (
+    left.getHours() === right.getHours() &&
+    left.getMinutes() === right.getMinutes() &&
+    left.getSeconds() === right.getSeconds() &&
+    left.getMilliseconds() === right.getMilliseconds()
+  );
+}
 
-  const dateWithCurrentTime = new Date(date);
-  dateWithCurrentTime.setHours(
-    now.getHours(),
-    now.getMinutes(),
-    now.getSeconds(),
-    now.getMilliseconds()
+function withLocalTime(date: Date, time: Date) {
+  const dateWithTime = new Date(date);
+  dateWithTime.setHours(
+    time.getHours(),
+    time.getMinutes(),
+    time.getSeconds(),
+    time.getMilliseconds()
   );
 
-  return dateWithCurrentTime;
+  return dateWithTime;
+}
+
+function atStartOfLocalDay(date: Date) {
+  const dateAtStartOfDay = new Date(date);
+  dateAtStartOfDay.setHours(0, 0, 0, 0);
+
+  return dateAtStartOfDay;
+}
+
+function defaultCloseDateTimeForDate(date: Date, now = new Date()) {
+  return isSameLocalDate(date, now)
+    ? withLocalTime(date, now)
+    : atStartOfLocalDay(date);
 }
 
 export function CloseV1ReferralDrawer({
@@ -54,20 +74,52 @@ export function CloseV1ReferralDrawer({
     closedAtLocal: Date | null;
   }>({
     reason: null,
-    closedAtLocal: null,
+    closedAtLocal: new Date(),
   });
+  const [timeWasEdited, setTimeWasEdited] = useState(false);
 
   const [dateError, setDateError] = useState(false);
   const { reason, closedAtLocal } = fields;
 
   const canSave = reason !== null && closedAtLocal !== null && !dateError;
 
+  function updateClosedAtLocal(date: Date | null) {
+    if (date === null) {
+      setFields({ ...fields, closedAtLocal: null });
+      setTimeWasEdited(false);
+      return;
+    }
+
+    if (!closedAtLocal) {
+      setFields({
+        ...fields,
+        closedAtLocal: defaultCloseDateTimeForDate(date),
+      });
+      return;
+    }
+
+    const dateChanged = !isSameLocalDate(date, closedAtLocal);
+    const timeChanged = !isSameLocalTime(date, closedAtLocal);
+
+    if (!dateChanged && timeChanged) {
+      setTimeWasEdited(true);
+      setFields({ ...fields, closedAtLocal: date });
+      return;
+    }
+
+    if (dateChanged && !timeWasEdited) {
+      setFields({
+        ...fields,
+        closedAtLocal: defaultCloseDateTimeForDate(date),
+      });
+      return;
+    }
+
+    setFields({ ...fields, closedAtLocal: date });
+  }
+
   async function save() {
-    await closeReferral(
-      referralId,
-      reason!,
-      withCurrentLocalTimeIfToday(closedAtLocal!)
-    );
+    await closeReferral(referralId, reason!, closedAtLocal!);
     onClose();
   }
 
@@ -112,9 +164,10 @@ export function CloseV1ReferralDrawer({
             <ValidateDatePicker
               label="When was this Referral closed?"
               value={closedAtLocal}
-              onChange={(date) => setFields({ ...fields, closedAtLocal: date })}
+              onChange={updateClosedAtLocal}
               onErrorChange={setDateError}
               disableFuture
+              includeTime
               textFieldProps={{ fullWidth: true, required: true }}
             />
           </Grid>
