@@ -900,7 +900,7 @@ export function FamilyScreen() {
                           }
                         )}
 
-                        {!referralsEnabled &&
+                        {referralsEnabled &&
                           caseReferralTable.unlinkedReferrals.length > 0 && (
                             <TableRow>
                               <TableCell
