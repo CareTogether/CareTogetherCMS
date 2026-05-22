@@ -357,6 +357,7 @@ function PartneringFamilies() {
             </Button>
           )}
           <ToggleButtonGroup
+            sx={{ marginLeft: 'auto' }}
             value={arrangementsFilter}
             exclusive
             onChange={(_, value) => setArrangementsFilter(value)}
