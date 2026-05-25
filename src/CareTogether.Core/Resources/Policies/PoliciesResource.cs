@@ -160,21 +160,27 @@ namespace CareTogether.Resources.Policies
             return (Render(newConfig), locationConfiguration);
         }
 
-        public async Task<OrganizationConfiguration> UpdateOrganizationCloseReasonsAsync(
+        public async Task<OrganizationConfiguration> UpsertOrganizationConfigurationAsync(
             Guid organizationId,
-            ImmutableList<string>? referralCloseReasons,
-            ImmutableList<string>? caseCloseReasons
+            OrganizationConfiguration organizationConfiguration
         )
         {
-            var config = await configurationStore.GetAsync(organizationId, Guid.Empty, CONFIG);
-            var newConfig = config with
+            var storedConfiguration = organizationConfiguration with
             {
-                ReferralCloseReasons = referralCloseReasons,
-                CaseCloseReasons = caseCloseReasons,
+                Roles = organizationConfiguration
+                    .Roles.Where(role =>
+                        role.RoleName != SystemConstants.ORGANIZATION_ADMINISTRATOR
+                    )
+                    .ToImmutableList(),
             };
 
-            await configurationStore.UpsertAsync(organizationId, Guid.Empty, CONFIG, newConfig);
-            return Render(newConfig);
+            await configurationStore.UpsertAsync(
+                organizationId,
+                Guid.Empty,
+                CONFIG,
+                storedConfiguration
+            );
+            return Render(storedConfiguration);
         }
 
         public async Task<EffectiveLocationPolicy> UpsertEffectiveLocationPolicyAsync(

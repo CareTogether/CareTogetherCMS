@@ -422,6 +422,22 @@ namespace CareTogether.Api.Controllers
             return Ok(result);
         }
 
+        [HttpPut("/api/{organizationId:guid}/[controller]/organization")]
+        public async Task<ActionResult<OrganizationConfiguration>> PutOrganizationConfiguration(
+            Guid organizationId,
+            [FromBody] OrganizationConfiguration organizationConfiguration
+        )
+        {
+            if (!User.IsInRole(SystemConstants.ORGANIZATION_ADMINISTRATOR))
+                return Forbid();
+
+            var result = await policiesResource.UpsertOrganizationConfigurationAsync(
+                organizationId,
+                organizationConfiguration
+            );
+            return Ok(result);
+        }
+
         [HttpGet("/api/{organizationId:guid}/{locationId:guid}/[controller]/policy")]
         public async Task<ActionResult<EffectiveLocationPolicy>> GetEffectiveLocationPolicy(
             Guid organizationId,
@@ -444,44 +460,6 @@ namespace CareTogether.Api.Controllers
                     nameof(FeatureFlags.FamilyScreenPageVersionSwitch)
                 )
             );
-            return Ok(result);
-        }
-    }
-
-    public sealed record PutOrganizationConfigurationPayload(
-        ImmutableList<string>? ReferralCloseReasons,
-        ImmutableList<string>? CaseCloseReasons
-    );
-
-    [ApiController]
-    [Authorize(
-        Policies.ForbidAnonymous,
-        AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme
-    )]
-    public class OrganizationConfigurationController : ControllerBase
-    {
-        private readonly IPoliciesResource policiesResource;
-
-        public OrganizationConfigurationController(IPoliciesResource policiesResource)
-        {
-            this.policiesResource = policiesResource;
-        }
-
-        [HttpPut("/api/{organizationId:guid}/[controller]")]
-        public async Task<ActionResult<OrganizationConfiguration>> PutOrganizationConfiguration(
-            Guid organizationId,
-            [FromBody] PutOrganizationConfigurationPayload payload
-        )
-        {
-            if (!User.IsInRole(SystemConstants.ORGANIZATION_ADMINISTRATOR))
-                return Forbid();
-
-            var result = await policiesResource.UpdateOrganizationCloseReasonsAsync(
-                organizationId,
-                payload.ReferralCloseReasons,
-                payload.CaseCloseReasons
-            );
-
             return Ok(result);
         }
     }

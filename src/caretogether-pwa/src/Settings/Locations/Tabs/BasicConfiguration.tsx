@@ -6,11 +6,12 @@ import { useRecoilValue, useSetRecoilState } from 'recoil';
 import { selectedLocationContextState } from '../../../Model/Data';
 import {
   LocationConfiguration,
-  PutLocationPayload,
   OrganizationConfiguration,
-  PutOrganizationConfigurationPayload,
 } from '../../../GeneratedClient';
-import { organizationConfigurationEdited } from '../../../Model/ConfigurationModel';
+import {
+  organizationConfigurationEdited,
+  organizationConfigurationQuery,
+} from '../../../Model/ConfigurationModel';
 import { useBackdrop } from '../../../Hooks/useBackdrop';
 
 export type ConfigurationData = {
@@ -51,31 +52,34 @@ export default function BasicConfiguration({
   });
 
   const { organizationId } = useRecoilValue(selectedLocationContextState);
+  const organizationConfiguration = useRecoilValue(organizationConfigurationQuery);
   const storeEdits = useSetRecoilState(organizationConfigurationEdited);
   const withBackdrop = useBackdrop();
 
   const onSubmit: SubmitHandler<ConfigurationData> = async (data) => {
     withBackdrop(async () => {
+      if (!organizationConfiguration) return;
+
       const { caseCloseReasons, referralCloseReasons, ...locationData } = data;
 
-      await api.configuration.putLocationDefinition(
+      const updatedLocationConfiguration = new LocationConfiguration({
+        ...currentLocationDefinition,
+        ...locationData,
+      });
+
+      const updatedOrgConfig = await api.configuration.putOrganizationConfiguration(
         organizationId,
-        new PutLocationPayload({
-          locationConfiguration: new LocationConfiguration({
-            ...currentLocationDefinition,
-            ...locationData,
-          }),
+        new OrganizationConfiguration({
+          ...organizationConfiguration,
+          locations: organizationConfiguration.locations?.map((location) =>
+            location.id === currentLocationDefinition.id
+              ? updatedLocationConfiguration
+              : location
+          ),
+          caseCloseReasons,
+          referralCloseReasons,
         })
       );
-
-      const updatedOrgConfig =
-        await api.organizationConfiguration.putOrganizationConfiguration(
-          organizationId,
-          new PutOrganizationConfigurationPayload({
-            caseCloseReasons,
-            referralCloseReasons,
-          })
-        );
 
       storeEdits(new OrganizationConfiguration(updatedOrgConfig));
     });
