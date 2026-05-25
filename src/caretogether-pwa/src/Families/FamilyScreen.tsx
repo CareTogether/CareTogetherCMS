@@ -39,6 +39,7 @@ import {
   AddCircle as AddCircleIcon,
   CloudUpload as CloudUploadIcon,
   Diversity3 as Diversity3Icon,
+  Edit as EditIcon,
   MoreVert as MoreVertIcon,
 } from '@mui/icons-material';
 import { AdultCard } from './AdultCard';
@@ -72,6 +73,7 @@ import {
 import {
   useCommunityLookup,
   useFamilyLookup,
+  usePersonAndFamilyLookup,
   useDirectoryModel,
 } from '../Model/DirectoryModel';
 import { RemoveFamilyRoleDialog } from '../Volunteers/RemoveFamilyRoleDialog';
@@ -99,8 +101,12 @@ import { useRecoilValue } from 'recoil';
 import { useV1CasesModel } from '../Model/V1CasesModel';
 import { formatStatusWithDate } from '../V1Referrals/formatStatusWithDate';
 import { policyData } from '../Model/ConfigurationModel';
-import { FunctionAssignmentsSection } from '../FunctionAssignments/FunctionAssignmentsSection';
 import { FUNCTION_ASSIGNMENTS_FEATURE_FLAG } from '../featureFlags';
+import { FunctionAssignmentsEditorDrawer } from '../FunctionAssignments/FunctionAssignmentsSection';
+import {
+  assignmentNamesForRole,
+  assignmentRolesForColumns,
+} from '../FunctionAssignments/assignmentRoleColumns';
 
 export function FamilyScreen() {
   const familyIdMaybe = useParams<{ familyId: string }>();
@@ -150,6 +156,7 @@ export function FamilyScreen() {
   const appNavigate = useAppNavigate();
 
   const familyLookup = useFamilyLookup();
+  const personAndFamilyLookup = usePersonAndFamilyLookup();
   const family = familyLookup(familyId);
   const policy = useRecoilValue(policyData);
 
@@ -207,9 +214,16 @@ export function FamilyScreen() {
   const [selectedV1CaseId, setSelectedV1CaseId] = useState<string | undefined>(
     v1CaseIdFromQuery || firstV1CaseId
   );
+  const [
+    functionAssignmentsEditorV1CaseId,
+    setFunctionAssignmentsEditorV1CaseId,
+  ] = useState<string | undefined>();
 
   const selectedV1Case = allV1Cases.find(
     (v1Case) => v1Case.id === selectedV1CaseId
+  );
+  const functionAssignmentsEditorV1Case = allV1Cases.find(
+    (v1Case) => v1Case.id === functionAssignmentsEditorV1CaseId
   );
 
   const hasOpenV1Case = openV1Cases.length > 0;
@@ -379,6 +393,26 @@ export function FamilyScreen() {
   const functionAssignmentsEnabled = useFeatureFlagEnabled(
     FUNCTION_ASSIGNMENTS_FEATURE_FLAG
   );
+  const canViewFunctionAssignments =
+    functionAssignmentsEnabled === true &&
+    permissions(Permission.ViewV1CaseFunctionAssignments);
+  const canEditFunctionAssignments =
+    canViewFunctionAssignments &&
+    permissions(Permission.EditV1CaseFunctionAssignments);
+  const functionAssignmentRoles = useMemo(() => {
+    if (!canViewFunctionAssignments) return [];
+
+    return assignmentRolesForColumns(
+      policy.referralPolicy?.functionAssignmentPolicies?.map(
+        (assignmentPolicy) => assignmentPolicy.assignmentRole
+      ) ?? [],
+      allV1Cases.flatMap((v1Case) => v1Case.assignedIndividualVolunteers ?? [])
+    );
+  }, [
+    allV1Cases,
+    canViewFunctionAssignments,
+    policy.referralPolicy?.functionAssignmentPolicies,
+  ]);
 
   useScreenTitle(family ? `${familyLastName(family)} Family` : '...');
   useScreenTitleComponent(family ? <TestFamilyBadge family={family} /> : null);
@@ -773,6 +807,17 @@ export function FamilyScreen() {
                           >
                             Case
                           </TableCell>
+                          {functionAssignmentRoles.map((assignmentRole) => (
+                            <TableCell
+                              key={assignmentRole}
+                              sx={{
+                                fontWeight: 600,
+                                whiteSpace: 'nowrap',
+                              }}
+                            >
+                              {assignmentRole}
+                            </TableCell>
+                          ))}
                           {referralsEnabled && (
                             <TableCell sx={{ fontWeight: 600, width: '100%' }}>
                               Linked Referrals
@@ -858,6 +903,57 @@ export function FamilyScreen() {
                                   </Box>
                                 </TableCell>
 
+                                {functionAssignmentRoles.map(
+                                  (assignmentRole) => {
+                                    const assignmentNames =
+                                      assignmentNamesForRole(
+                                        v1Case.assignedIndividualVolunteers ??
+                                          [],
+                                        assignmentRole,
+                                        (personId) =>
+                                          personAndFamilyLookup(personId).person
+                                      );
+
+                                    return (
+                                      <TableCell
+                                        key={assignmentRole}
+                                        sx={{ whiteSpace: 'nowrap' }}
+                                      >
+                                        <Box
+                                          sx={{
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            gap: 0.5,
+                                          }}
+                                        >
+                                          {assignmentNames || (
+                                            <Typography color="text.secondary">
+                                              —
+                                            </Typography>
+                                          )}
+                                          {canEditFunctionAssignments && (
+                                            <IconButton
+                                              aria-label={`Edit ${assignmentRole} assignment`}
+                                              size="small"
+                                              onClick={(e) => {
+                                                e.stopPropagation();
+                                                setFunctionAssignmentsEditorV1CaseId(
+                                                  v1Case.id
+                                                );
+                                              }}
+                                            >
+                                              <EditIcon
+                                                color="primary"
+                                                fontSize="small"
+                                              />
+                                            </IconButton>
+                                          )}
+                                        </Box>
+                                      </TableCell>
+                                    );
+                                  }
+                                )}
+
                                 {referralsEnabled && (
                                   <TableCell sx={{ width: '100%' }}>
                                     {linkedReferrals.length === 0 ? (
@@ -922,6 +1018,13 @@ export function FamilyScreen() {
                               >
                                 (not linked to a case)
                               </TableCell>
+                              {functionAssignmentRoles.map((assignmentRole) => (
+                                <TableCell key={assignmentRole}>
+                                  <Typography color="text.secondary">
+                                    —
+                                  </Typography>
+                                </TableCell>
+                              ))}
                               <TableCell sx={{ width: '100%' }}>
                                 <Box
                                   sx={{
@@ -967,6 +1070,37 @@ export function FamilyScreen() {
                       </TableBody>
                     </Table>
                   </TableContainer>
+                  {functionAssignmentsEditorV1Case && (
+                    <FunctionAssignmentsEditorDrawer
+                      open
+                      assignments={
+                        functionAssignmentsEditorV1Case.assignedIndividualVolunteers ??
+                        []
+                      }
+                      policies={
+                        policy.referralPolicy?.functionAssignmentPolicies ?? []
+                      }
+                      onClose={() =>
+                        setFunctionAssignmentsEditorV1CaseId(undefined)
+                      }
+                      onAssign={(personId, assignmentRole) =>
+                        v1CasesModel.assignIndividualVolunteerToV1Case(
+                          familyId,
+                          functionAssignmentsEditorV1Case.id,
+                          personId,
+                          assignmentRole
+                        )
+                      }
+                      onUnassign={(personId, assignmentRole) =>
+                        v1CasesModel.unassignIndividualVolunteerFromV1Case(
+                          familyId,
+                          functionAssignmentsEditorV1Case.id,
+                          personId,
+                          assignmentRole
+                        )
+                      }
+                    />
+                  )}
                 </Box>
               )}
             </Grid>
@@ -1154,40 +1288,6 @@ export function FamilyScreen() {
               </>
             )}
 
-            {functionAssignmentsEnabled &&
-              permissions(Permission.ViewV1CaseFunctionAssignments) &&
-              selectedV1Case && (
-                <Grid item xs={12} md={6} sx={{ mb: 2 }}>
-                  <FunctionAssignmentsSection
-                    assignments={
-                      selectedV1Case.assignedIndividualVolunteers ?? []
-                    }
-                    policies={
-                      policy.referralPolicy?.functionAssignmentPolicies ?? []
-                    }
-                    canEdit={permissions(
-                      Permission.EditV1CaseFunctionAssignments
-                    )}
-                    onAssign={(personId, assignmentRole) =>
-                      v1CasesModel.assignIndividualVolunteerToV1Case(
-                        familyId,
-                        selectedV1Case.id,
-                        personId,
-                        assignmentRole
-                      )
-                    }
-                    onUnassign={(personId, assignmentRole) =>
-                      v1CasesModel.unassignIndividualVolunteerFromV1Case(
-                        familyId,
-                        selectedV1Case.id,
-                        personId,
-                        assignmentRole
-                      )
-                    }
-                  />
-                </Grid>
-              )}
-
             {permissions(Permission.ViewFamilyDocumentMetadata) && (
               <Grid item xs={12} lg={8} xl={5} mb={2}>
                 <Typography
@@ -1211,11 +1311,7 @@ export function FamilyScreen() {
             )}
 
             <Grid item xs={12}>
-              <Typography
-                className="ph-unmask"
-                variant="h3"
-                sx={{ mb: 1 }}
-              >
+              <Typography className="ph-unmask" variant="h3" sx={{ mb: 1 }}>
                 Family Members
               </Typography>
               <Masonry

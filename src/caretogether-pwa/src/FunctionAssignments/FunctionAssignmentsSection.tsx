@@ -1,4 +1,4 @@
-import { Fragment, useMemo, useState } from 'react';
+import { Fragment, useEffect, useMemo, useState } from 'react';
 import { useRecoilValue } from 'recoil';
 import {
   Autocomplete,
@@ -43,6 +43,15 @@ type FunctionAssignmentsSectionProps = {
   assignments: AssignedIndividualVolunteer[];
   policies: FunctionAssignmentPolicy[];
   canEdit: boolean;
+  onAssign: (personId: string, assignmentRole: string) => Promise<void>;
+  onUnassign: (personId: string, assignmentRole: string) => Promise<void>;
+};
+
+type FunctionAssignmentsEditorDrawerProps = {
+  open: boolean;
+  assignments: AssignedIndividualVolunteer[];
+  policies: FunctionAssignmentPolicy[];
+  onClose: () => void;
   onAssign: (personId: string, assignmentRole: string) => Promise<void>;
   onUnassign: (personId: string, assignmentRole: string) => Promise<void>;
 };
@@ -106,7 +115,9 @@ function candidateTypeForPolicy(
   return null;
 }
 
-function candidateTypeSortValue(candidateType: FunctionAssignmentCandidateType) {
+function candidateTypeSortValue(
+  candidateType: FunctionAssignmentCandidateType
+) {
   return ['Individuals', 'Families'].indexOf(candidateType);
 }
 
@@ -259,55 +270,61 @@ function assignmentCandidateForPerson(
   };
 }
 
-export function FunctionAssignmentsSection({
-  title = 'Function Assignments',
+function functionAssignmentRoles(
+  assignments: AssignedIndividualVolunteer[],
+  policies: FunctionAssignmentPolicy[]
+) {
+  const policyRoles = uniqueValues(
+    policies.map((policy) => policy.assignmentRole).filter(Boolean)
+  );
+  const configuredRoles = new Set(policyRoles);
+  const unconfiguredAssignedRoles = uniqueValues(
+    assignments
+      .map((assignment) => assignment.assignmentRole)
+      .filter((role) => role && !configuredRoles.has(role))
+  ).sort((a, b) => a.localeCompare(b));
+
+  return policyRoles.concat(unconfiguredAssignedRoles);
+}
+
+export function FunctionAssignmentsEditorDrawer({
+  open,
   assignments,
   policies,
-  canEdit,
+  onClose,
   onAssign,
   onUnassign,
-}: FunctionAssignmentsSectionProps) {
+}: FunctionAssignmentsEditorDrawerProps) {
   const families = useRecoilValue(visibleFamiliesQuery);
-  const appNavigate = useAppNavigate();
   const withBackdrop = useBackdrop();
-  const [drawerOpen, setDrawerOpen] = useState(false);
   const [draftAssignments, setDraftAssignments] = useState<
     Record<string, string | null>
   >({});
   const [isSaving, setIsSaving] = useState(false);
 
-  const policyRoles = useMemo(
-    () =>
-      uniqueValues(
-        policies.map((policy) => policy.assignmentRole).filter(Boolean)
-      ),
-    [policies]
+  const roles = useMemo(
+    () => functionAssignmentRoles(assignments, policies),
+    [assignments, policies]
   );
-  const roles = useMemo(() => {
-    const configuredRoles = new Set(policyRoles);
-    const unconfiguredAssignedRoles = uniqueValues(
-      assignments
-        .map((assignment) => assignment.assignmentRole)
-        .filter((role) => role && !configuredRoles.has(role))
-    ).sort((a, b) => a.localeCompare(b));
-
-    return policyRoles.concat(unconfiguredAssignedRoles);
-  }, [assignments, policyRoles]);
-
   const candidatesByRole = useMemo(
     () => buildCandidatesByRole(families, policies),
     [families, policies]
   );
   const peopleById = useMemo(() => buildPeopleById(families), [families]);
 
-  function openDrawer() {
+  useEffect(() => {
+    if (!open) {
+      setDraftAssignments({});
+      return;
+    }
+
     setDraftAssignments(buildDraftAssignments(assignments, roles, peopleById));
-    setDrawerOpen(true);
-  }
+  }, [assignments, open, peopleById, roles]);
 
   function closeDrawer() {
-    setDrawerOpen(false);
-    setDraftAssignments({});
+    if (isSaving) return;
+
+    onClose();
   }
 
   function getOptionsForRole(assignmentRole: string) {
@@ -352,10 +369,121 @@ export function FunctionAssignmentsSection({
           }
         }
       });
-      closeDrawer();
+      onClose();
     } finally {
       setIsSaving(false);
     }
+  }
+
+  return (
+    <Drawer
+      anchor="right"
+      open={open}
+      onClose={closeDrawer}
+      PaperProps={{
+        sx: {
+          width: 500,
+          p: 3,
+          top: 45,
+        },
+      }}
+    >
+      <Stack spacing={2}>
+        <Typography variant="h6">Edit Function Assignments</Typography>
+
+        {roles.map((assignmentRole) => {
+          const options = getOptionsForRole(assignmentRole);
+          const selectedPersonId = draftAssignments[assignmentRole] ?? null;
+          const selectedCandidate =
+            options.find((option) => option.personId === selectedPersonId) ??
+            null;
+
+          return (
+            <Box key={assignmentRole}>
+              <Typography variant="subtitle1" sx={{ fontWeight: 600, mb: 1 }}>
+                {assignmentRole}
+              </Typography>
+
+              <Autocomplete
+                disablePortal
+                value={selectedCandidate}
+                options={options}
+                getOptionLabel={(option) => option.label}
+                isOptionEqualToValue={(option, value) =>
+                  option.personId === value.personId
+                }
+                groupBy={(option) => option.candidateType}
+                disabled={isSaving}
+                noOptionsText="No eligible people available"
+                onChange={(_, candidate) => {
+                  setDraftAssignments((current) => ({
+                    ...current,
+                    [assignmentRole]: candidate?.personId ?? null,
+                  }));
+                }}
+                renderInput={(params) => (
+                  <TextField
+                    {...params}
+                    fullWidth
+                    label={
+                      options.length === 0
+                        ? 'No eligible people available'
+                        : 'Assigned person'
+                    }
+                  />
+                )}
+              />
+            </Box>
+          );
+        })}
+
+        <Stack direction="row" justifyContent="flex-end" spacing={2}>
+          <Button
+            color="secondary"
+            variant="contained"
+            disabled={isSaving}
+            onClick={closeDrawer}
+          >
+            Cancel
+          </Button>
+          <Button
+            variant="contained"
+            disabled={isSaving}
+            onClick={() => {
+              void saveAssignments();
+            }}
+          >
+            Save
+          </Button>
+        </Stack>
+      </Stack>
+    </Drawer>
+  );
+}
+
+export function FunctionAssignmentsSection({
+  title = 'Function Assignments',
+  assignments,
+  policies,
+  canEdit,
+  onAssign,
+  onUnassign,
+}: FunctionAssignmentsSectionProps) {
+  const families = useRecoilValue(visibleFamiliesQuery);
+  const appNavigate = useAppNavigate();
+  const [drawerOpen, setDrawerOpen] = useState(false);
+  const roles = useMemo(
+    () => functionAssignmentRoles(assignments, policies),
+    [assignments, policies]
+  );
+  const peopleById = useMemo(() => buildPeopleById(families), [families]);
+
+  function openDrawer() {
+    setDrawerOpen(true);
+  }
+
+  function closeDrawer() {
+    setDrawerOpen(false);
   }
 
   return (
@@ -427,88 +555,14 @@ export function FunctionAssignmentsSection({
         </Stack>
       )}
 
-      <Drawer
-        anchor="right"
+      <FunctionAssignmentsEditorDrawer
         open={drawerOpen}
-        onClose={isSaving ? undefined : closeDrawer}
-        PaperProps={{
-          sx: {
-            width: 500,
-            p: 3,
-            top: 45,
-          },
-        }}
-      >
-        <Stack spacing={2}>
-          <Typography variant="h6">Edit Function Assignments</Typography>
-
-          {roles.map((assignmentRole) => {
-            const options = getOptionsForRole(assignmentRole);
-            const selectedPersonId = draftAssignments[assignmentRole] ?? null;
-            const selectedCandidate =
-              options.find((option) => option.personId === selectedPersonId) ??
-              null;
-
-            return (
-              <Box key={assignmentRole}>
-                <Typography variant="subtitle1" sx={{ fontWeight: 600, mb: 1 }}>
-                  {assignmentRole}
-                </Typography>
-
-                <Autocomplete
-                  disablePortal
-                  value={selectedCandidate}
-                  options={options}
-                  getOptionLabel={(option) => option.label}
-                  isOptionEqualToValue={(option, value) =>
-                    option.personId === value.personId
-                  }
-                  groupBy={(option) => option.candidateType}
-                  disabled={isSaving}
-                  noOptionsText="No eligible people available"
-                  onChange={(_, candidate) => {
-                    setDraftAssignments((current) => ({
-                      ...current,
-                      [assignmentRole]: candidate?.personId ?? null,
-                    }));
-                  }}
-                  renderInput={(params) => (
-                    <TextField
-                      {...params}
-                      fullWidth
-                      label={
-                        options.length === 0
-                          ? 'No eligible people available'
-                          : 'Assigned person'
-                      }
-                    />
-                  )}
-                />
-              </Box>
-            );
-          })}
-
-          <Stack direction="row" justifyContent="flex-end" spacing={2}>
-            <Button
-              color="secondary"
-              variant="contained"
-              disabled={isSaving}
-              onClick={closeDrawer}
-            >
-              Cancel
-            </Button>
-            <Button
-              variant="contained"
-              disabled={isSaving}
-              onClick={() => {
-                void saveAssignments();
-              }}
-            >
-              Save
-            </Button>
-          </Stack>
-        </Stack>
-      </Drawer>
+        assignments={assignments}
+        policies={policies}
+        onClose={closeDrawer}
+        onAssign={onAssign}
+        onUnassign={onUnassign}
+      />
     </Box>
   );
 }
