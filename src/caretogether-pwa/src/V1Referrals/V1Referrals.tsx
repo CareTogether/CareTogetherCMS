@@ -32,13 +32,13 @@ import { ProgressBackdrop } from '../Shell/ProgressBackdrop';
 import { useGlobalPermissions } from '../Model/SessionModel';
 import { policyData } from '../Model/ConfigurationModel';
 import { useLoadable } from '../Hooks/useLoadable';
-import { VOLUNTEER_ASSIGNMENTS_FEATURE_FLAG } from '../featureFlags';
+import { FUNCTION_ASSIGNMENTS_FEATURE_FLAG } from '../featureFlags';
 import {
   AssignmentFilterSelectionsByRole,
   assignmentNamesForRole,
   assignmentRolesForColumns,
   matchesAssignmentFilters,
-} from '../VolunteerAssignments/assignmentRoleColumns';
+} from '../FunctionAssignments/assignmentRoleColumns';
 
 const REFERRALS_FEATURE_FLAG = 'referrals';
 
@@ -110,8 +110,8 @@ function V1ReferralsContent() {
   const personAndFamilyLookup = usePersonAndFamilyLookup();
   const permissions = useGlobalPermissions();
   const policy = useLoadable(policyData);
-  const volunteerAssignmentsEnabled = useFeatureFlagEnabled(
-    VOLUNTEER_ASSIGNMENTS_FEATURE_FLAG
+  const functionAssignmentsEnabled = useFeatureFlagEnabled(
+    FUNCTION_ASSIGNMENTS_FEATURE_FLAG
   );
 
   const [filterText, setFilterText] = useState('');
@@ -126,12 +126,12 @@ function V1ReferralsContent() {
     referralsLoadable.state === 'hasValue'
       ? referralsLoadable.contents.map((referralInfo) => referralInfo.referral)
       : [];
-  const canViewVolunteerAssignments =
-    volunteerAssignmentsEnabled === true &&
-    permissions(Permission.ViewV1ReferralVolunteerAssignments);
-  const assignmentRoles = canViewVolunteerAssignments
+  const canViewFunctionAssignments =
+    functionAssignmentsEnabled === true &&
+    permissions(Permission.ViewV1ReferralFunctionAssignments);
+  const assignmentRoles = canViewFunctionAssignments
     ? assignmentRolesForColumns(
-        policy?.v1ReferralPolicy?.volunteerAssignmentPolicies?.map(
+        policy?.v1ReferralPolicy?.functionAssignmentPolicies?.map(
           (assignmentPolicy) => assignmentPolicy.assignmentRole
         ) ?? [],
         referrals.flatMap(
@@ -156,7 +156,7 @@ function V1ReferralsContent() {
         county: family ? getFamilyCounty(family) : null,
         comments: r.comment ?? '',
         matchesAssignmentFilters:
-          !canViewVolunteerAssignments ||
+          !canViewFunctionAssignments ||
           matchesAssignmentFilters(assignments, assignmentFilters),
         assignmentNamesByRole: Object.fromEntries(
           assignmentRoles.map((assignmentRole) => [
@@ -222,10 +222,10 @@ function V1ReferralsContent() {
                 countyFilter={countyFilter}
                 setCountyFilter={setCountyFilter}
                 assignmentRoles={
-                  canViewVolunteerAssignments ? assignmentRoles : []
+                  canViewFunctionAssignments ? assignmentRoles : []
                 }
                 assignmentsForAssignmentFilter={
-                  canViewVolunteerAssignments
+                  canViewFunctionAssignments
                     ? referrals.flatMap(
                         (referral) =>
                           referral.assignedIndividualVolunteers ?? []
@@ -260,7 +260,7 @@ function V1ReferralsContent() {
                       <TableCell>Status</TableCell>
                       <TableCell>Client Family</TableCell>
                       <TableCell>County</TableCell>
-                      {canViewVolunteerAssignments &&
+                      {canViewFunctionAssignments &&
                         assignmentRoles.map((assignmentRole) => (
                           <TableCell key={assignmentRole}>
                             {assignmentRole}
@@ -275,7 +275,7 @@ function V1ReferralsContent() {
                         key={ref.id}
                         referral={ref}
                         assignmentRoles={
-                          canViewVolunteerAssignments ? assignmentRoles : []
+                          canViewFunctionAssignments ? assignmentRoles : []
                         }
                         expanded={expandedView}
                       />

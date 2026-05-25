@@ -14,7 +14,7 @@ import {
   Person,
   RoleApprovalStatus,
   AssignedIndividualVolunteer,
-  VolunteerAssignmentPolicy,
+  FunctionAssignmentPolicy,
 } from '../GeneratedClient';
 import { visibleFamiliesQuery } from '../Model/Data';
 import { familyNameString } from '../Families/FamilyName';
@@ -22,12 +22,12 @@ import { personNameString } from '../Families/PersonName';
 import { useBackdrop } from '../Hooks/useBackdrop';
 import { useAppNavigate } from '../Hooks/useAppNavigate';
 
-type VolunteerAssignmentCandidate = {
+type FunctionAssignmentCandidate = {
   personId: string;
   familyId?: string;
   familyName: string;
   label: string;
-  candidateType: VolunteerAssignmentCandidateType;
+  candidateType: FunctionAssignmentCandidateType;
 };
 
 type PersonDirectoryEntry = {
@@ -36,12 +36,12 @@ type PersonDirectoryEntry = {
   familyName: string;
 };
 
-type VolunteerAssignmentCandidateType = 'Individuals' | 'Families';
+type FunctionAssignmentCandidateType = 'Individuals' | 'Families';
 
-type VolunteerAssignmentsSectionProps = {
+type FunctionAssignmentsSectionProps = {
   title?: string;
   assignments: AssignedIndividualVolunteer[];
-  policies: VolunteerAssignmentPolicy[];
+  policies: FunctionAssignmentPolicy[];
   canEdit: boolean;
   onAssign: (personId: string, assignmentRole: string) => Promise<void>;
   onUnassign: (personId: string, assignmentRole: string) => Promise<void>;
@@ -59,10 +59,10 @@ function containsAny(values: string[] | undefined, expected: string[]) {
 }
 
 function candidateTypeForPolicy(
-  candidate: VolunteerAssignmentCandidate,
+  candidate: FunctionAssignmentCandidate,
   family: CombinedFamilyInfo,
-  policy: VolunteerAssignmentPolicy
-): VolunteerAssignmentCandidateType | null {
+  policy: FunctionAssignmentPolicy
+): FunctionAssignmentCandidateType | null {
   const eligibility = policy.eligibility;
   const volunteerInfo =
     family.volunteerFamilyInfo?.individualVolunteers?.[candidate.personId];
@@ -106,13 +106,13 @@ function candidateTypeForPolicy(
   return null;
 }
 
-function candidateTypeSortValue(candidateType: VolunteerAssignmentCandidateType) {
+function candidateTypeSortValue(candidateType: FunctionAssignmentCandidateType) {
   return ['Individuals', 'Families'].indexOf(candidateType);
 }
 
 function sortCandidates(
-  candidates: VolunteerAssignmentCandidate[]
-): VolunteerAssignmentCandidate[] {
+  candidates: FunctionAssignmentCandidate[]
+): FunctionAssignmentCandidate[] {
   return candidates.sort(
     (a, b) =>
       candidateTypeSortValue(a.candidateType) -
@@ -122,8 +122,8 @@ function sortCandidates(
 }
 
 function sortCandidatesForAutocomplete(
-  candidates: VolunteerAssignmentCandidate[]
-): VolunteerAssignmentCandidate[] {
+  candidates: FunctionAssignmentCandidate[]
+): FunctionAssignmentCandidate[] {
   return [...candidates].sort(
     (a, b) =>
       candidateTypeSortValue(a.candidateType) -
@@ -132,18 +132,18 @@ function sortCandidatesForAutocomplete(
   );
 }
 
-function volunteerAssignmentCandidate(
+function functionAssignmentCandidate(
   person: Person,
   family: CombinedFamilyInfo,
   familyId: string,
-  policy: VolunteerAssignmentPolicy
-): VolunteerAssignmentCandidate | null {
+  policy: FunctionAssignmentPolicy
+): FunctionAssignmentCandidate | null {
   const baseCandidate = {
     personId: person.id!,
     familyId,
     familyName: familyNameString(family),
     label: personNameString(person),
-    candidateType: 'Individuals' as VolunteerAssignmentCandidateType,
+    candidateType: 'Individuals' as FunctionAssignmentCandidateType,
   };
   const candidateType = candidateTypeForPolicy(baseCandidate, family, policy);
   if (candidateType == null) return null;
@@ -160,12 +160,12 @@ function uniqueValues(values: string[]) {
 
 function buildCandidatesByRole(
   families: CombinedFamilyInfo[],
-  policies: VolunteerAssignmentPolicy[]
+  policies: FunctionAssignmentPolicy[]
 ) {
-  const candidatesByRole = new Map<string, VolunteerAssignmentCandidate[]>();
+  const candidatesByRole = new Map<string, FunctionAssignmentCandidate[]>();
 
   for (const policy of policies) {
-    const candidatesByPersonId = new Map<string, VolunteerAssignmentCandidate>();
+    const candidatesByPersonId = new Map<string, FunctionAssignmentCandidate>();
 
     for (const family of families) {
       for (const adult of family.family?.adults ?? []) {
@@ -173,7 +173,7 @@ function buildCandidatesByRole(
         const familyId = family.family?.id;
         if (!person?.id || !person.active || !familyId) continue;
 
-        const candidate = volunteerAssignmentCandidate(
+        const candidate = functionAssignmentCandidate(
           person,
           family,
           familyId,
@@ -247,7 +247,7 @@ function buildDraftAssignments(
 function assignmentCandidateForPerson(
   personId: string,
   peopleById: Map<string, PersonDirectoryEntry>
-): VolunteerAssignmentCandidate {
+): FunctionAssignmentCandidate {
   const personEntry = peopleById.get(personId);
 
   return {
@@ -259,14 +259,14 @@ function assignmentCandidateForPerson(
   };
 }
 
-export function VolunteerAssignmentsSection({
-  title = 'Volunteer Assignments',
+export function FunctionAssignmentsSection({
+  title = 'Function Assignments',
   assignments,
   policies,
   canEdit,
   onAssign,
   onUnassign,
-}: VolunteerAssignmentsSectionProps) {
+}: FunctionAssignmentsSectionProps) {
   const families = useRecoilValue(visibleFamiliesQuery);
   const appNavigate = useAppNavigate();
   const withBackdrop = useBackdrop();
@@ -371,7 +371,7 @@ export function VolunteerAssignmentsSection({
 
       {roles.length === 0 ? (
         <Typography variant="body2" color="text.secondary">
-          No volunteer assignment roles configured.
+          No function assignment roles configured.
         </Typography>
       ) : (
         <Stack spacing={0.5}>
@@ -440,7 +440,7 @@ export function VolunteerAssignmentsSection({
         }}
       >
         <Stack spacing={2}>
-          <Typography variant="h6">Edit Volunteer Assignments</Typography>
+          <Typography variant="h6">Edit Function Assignments</Typography>
 
           {roles.map((assignmentRole) => {
             const options = getOptionsForRole(assignmentRole);

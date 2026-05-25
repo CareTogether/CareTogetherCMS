@@ -15,7 +15,7 @@ import { ArrangementCard } from '../Arrangements/ArrangementCard';
 import { matchingArrangements } from './arrangementHelpers';
 import { PartneringFamilyTableItemProps } from './types';
 import { getFamilyCounty } from '../../Utilities/getFamilyCounty';
-import { assignmentNamesForRole } from '../../VolunteerAssignments/assignmentRoleColumns';
+import { assignmentNamesForRole } from '../../FunctionAssignments/assignmentRoleColumns';
 
 function getPartneringFamilyRowGroupHeight(
   expandedView: boolean,

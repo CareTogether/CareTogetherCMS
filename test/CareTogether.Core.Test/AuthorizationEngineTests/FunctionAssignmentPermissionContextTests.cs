@@ -12,7 +12,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 namespace CareTogether.Core.Test.AuthorizationEngineTests
 {
     [TestClass]
-    public sealed class VolunteerAssignmentPermissionContextTests
+    public sealed class FunctionAssignmentPermissionContextTests
     {
         private static readonly Guid PersonId = Guid.Parse("11111111-1111-1111-1111-111111111111");
         private static readonly Guid ReferralId = Guid.Parse(

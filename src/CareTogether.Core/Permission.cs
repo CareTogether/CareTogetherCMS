@@ -68,8 +68,8 @@
         ViewV1Referral = 264,
         EditV1ReferralRequirementCompletion = 265,
         EditV1ReferralRequirementExemption = 266,
-        ViewV1ReferralVolunteerAssignments = 267,
-        EditV1ReferralVolunteerAssignments = 268,
+        ViewV1ReferralFunctionAssignments = 267,
+        EditV1ReferralFunctionAssignments = 268,
 
         // ---- V1Cases ---- //
 
@@ -82,8 +82,8 @@
         EditV1CaseRequirementCompletion = 306, // Requires UploadFamilyDocuments
         EditV1CaseRequirementExemption = 307,
         ViewV1CaseHistory = 308,
-        ViewV1CaseVolunteerAssignments = 309,
-        EditV1CaseVolunteerAssignments = 310,
+        ViewV1CaseFunctionAssignments = 309,
+        EditV1CaseFunctionAssignments = 310,
 
         CreateArrangement = 350,
         EditArrangement = 351,

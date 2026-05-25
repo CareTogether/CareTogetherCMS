@@ -99,8 +99,8 @@ import { useRecoilValue } from 'recoil';
 import { useV1CasesModel } from '../Model/V1CasesModel';
 import { formatStatusWithDate } from '../V1Referrals/formatStatusWithDate';
 import { policyData } from '../Model/ConfigurationModel';
-import { VolunteerAssignmentsSection } from '../VolunteerAssignments/VolunteerAssignmentsSection';
-import { VOLUNTEER_ASSIGNMENTS_FEATURE_FLAG } from '../featureFlags';
+import { FunctionAssignmentsSection } from '../FunctionAssignments/FunctionAssignmentsSection';
+import { FUNCTION_ASSIGNMENTS_FEATURE_FLAG } from '../featureFlags';
 
 export function FamilyScreen() {
   const familyIdMaybe = useParams<{ familyId: string }>();
@@ -376,8 +376,8 @@ export function FamilyScreen() {
     'updateTestFamilyFlag'
   );
   const referralsEnabled = useFeatureFlagEnabled('referrals');
-  const volunteerAssignmentsEnabled = useFeatureFlagEnabled(
-    VOLUNTEER_ASSIGNMENTS_FEATURE_FLAG
+  const functionAssignmentsEnabled = useFeatureFlagEnabled(
+    FUNCTION_ASSIGNMENTS_FEATURE_FLAG
   );
 
   useScreenTitle(family ? `${familyLastName(family)} Family` : '...');
@@ -1154,19 +1154,19 @@ export function FamilyScreen() {
               </>
             )}
 
-            {volunteerAssignmentsEnabled &&
-              permissions(Permission.ViewV1CaseVolunteerAssignments) &&
+            {functionAssignmentsEnabled &&
+              permissions(Permission.ViewV1CaseFunctionAssignments) &&
               selectedV1Case && (
                 <Grid item xs={12} md={6} sx={{ mb: 2 }}>
-                  <VolunteerAssignmentsSection
+                  <FunctionAssignmentsSection
                     assignments={
                       selectedV1Case.assignedIndividualVolunteers ?? []
                     }
                     policies={
-                      policy.referralPolicy?.volunteerAssignmentPolicies ?? []
+                      policy.referralPolicy?.functionAssignmentPolicies ?? []
                     }
                     canEdit={permissions(
-                      Permission.EditV1CaseVolunteerAssignments
+                      Permission.EditV1CaseFunctionAssignments
                     )}
                     onAssign={(personId, assignmentRole) =>
                       v1CasesModel.assignIndividualVolunteerToV1Case(

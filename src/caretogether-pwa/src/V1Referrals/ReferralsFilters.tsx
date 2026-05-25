@@ -19,8 +19,8 @@ import {
   UnfoldLess as UnfoldLessIcon,
   UnfoldMore as UnfoldMoreIcon,
 } from '@mui/icons-material';
-import { AssignmentRoleFilters } from '../VolunteerAssignments/AssignmentRoleFilters';
-import { AssignmentFilterSelectionsByRole } from '../VolunteerAssignments/assignmentRoleColumns';
+import { AssignmentRoleFilters } from '../FunctionAssignments/AssignmentRoleFilters';
+import { AssignmentFilterSelectionsByRole } from '../FunctionAssignments/assignmentRoleColumns';
 
 export type ReferralStatusFilter = 'ALL' | 'OPEN' | 'ACCEPTED' | 'CLOSED';
 

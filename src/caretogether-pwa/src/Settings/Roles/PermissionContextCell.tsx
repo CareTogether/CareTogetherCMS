@@ -26,7 +26,7 @@ import {
 import { useLoadable } from '../../Hooks/useLoadable';
 import {
   allFunctionsInPolicyQuery,
-  allVolunteerAssignmentRolesInPolicyQuery,
+  allFunctionAssignmentRolesInPolicyQuery,
   organizationConfigurationQuery,
 } from '../../Model/ConfigurationModel';
 
@@ -200,8 +200,8 @@ function AssignmentRoleSelector({
   | AssignedVolunteerInV1CasePermissionContext
   | AssignedVolunteerInV1ReferralPermissionContext
 >) {
-  const allVolunteerAssignmentRoles = useLoadable(
-    allVolunteerAssignmentRolesInPolicyQuery
+  const allFunctionAssignmentRoles = useLoadable(
+    allFunctionAssignmentRolesInPolicyQuery
   );
   const hasValue =
     typeof context.whenAssignmentRoleIsIn !== 'undefined' &&
@@ -209,7 +209,7 @@ function AssignmentRoleSelector({
 
   return (
     <FormGroup>
-      {allVolunteerAssignmentRoles === null ? (
+      {allFunctionAssignmentRoles === null ? (
         <Skeleton />
       ) : (
         <>
@@ -221,7 +221,7 @@ function AssignmentRoleSelector({
                 onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
                   const newContext = factory();
                   newContext.whenAssignmentRoleIsIn = event.target.checked
-                    ? allVolunteerAssignmentRoles
+                    ? allFunctionAssignmentRoles
                     : undefined;
                   onUpdate(newContext);
                 }}
@@ -233,7 +233,7 @@ function AssignmentRoleSelector({
           />
           {hasValue && (
             <FormGroup>
-              {allVolunteerAssignmentRoles.map((assignmentRole) => (
+              {allFunctionAssignmentRoles.map((assignmentRole) => (
                 <FormControlLabel
                   key={assignmentRole}
                   control={

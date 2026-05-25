@@ -112,7 +112,7 @@ namespace CareTogether.Resources.Policies
     )
     {
         public V1ReferralPolicy V1ReferralPolicy { get; init; } =
-            new(ImmutableList<VolunteerAssignmentPolicy>.Empty);
+            new(ImmutableList<FunctionAssignmentPolicy>.Empty);
     };
 
     public enum DocumentLinkRequirement
@@ -159,8 +159,8 @@ namespace CareTogether.Resources.Policies
         ImmutableList<RequirementDefinition>? IntakeRequirements = null
     )
     {
-        public ImmutableList<VolunteerAssignmentPolicy> VolunteerAssignmentPolicies { get; init; } =
-            ImmutableList<VolunteerAssignmentPolicy>.Empty;
+        public ImmutableList<FunctionAssignmentPolicy> FunctionAssignmentPolicies { get; init; } =
+            ImmutableList<FunctionAssignmentPolicy>.Empty;
 
         public ImmutableList<RequirementDefinition> IntakeRequirements_PRE_MIGRATION =
             RequiredIntakeActionNames
@@ -170,15 +170,15 @@ namespace CareTogether.Resources.Policies
     };
 
     public sealed record V1ReferralPolicy(
-        ImmutableList<VolunteerAssignmentPolicy> VolunteerAssignmentPolicies
+        ImmutableList<FunctionAssignmentPolicy> FunctionAssignmentPolicies
     );
 
-    public sealed record VolunteerAssignmentPolicy(
+    public sealed record FunctionAssignmentPolicy(
         string AssignmentRole,
-        VolunteerAssignmentEligibility Eligibility
+        FunctionAssignmentEligibility Eligibility
     );
 
-    public sealed record VolunteerAssignmentEligibility(
+    public sealed record FunctionAssignmentEligibility(
         ImmutableList<string> EligibleLocationRoles,
         ImmutableList<string> EligibleIndividualVolunteerRoles,
         ImmutableList<string> EligibleVolunteerFamilyRoles,
