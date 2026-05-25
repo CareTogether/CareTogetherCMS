@@ -298,7 +298,7 @@ namespace CareTogether.Api.Controllers
             return (createFamilyResult, newReferencePersonId);
         }
 
-        [HttpPut("/api/{organizationId:guid}/[controller]")]
+        [HttpPut("/api/{organizationId:guid}/[controller]/location")]
         public async Task<ActionResult<OrganizationConfiguration>> PutLocationDefinition(
             Guid organizationId,
             [FromBody] PutLocationPayload newLocationPayload
