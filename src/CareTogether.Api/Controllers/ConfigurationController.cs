@@ -24,9 +24,7 @@ namespace CareTogether.Api.Controllers
 
     public sealed record PutLocationPayload(
         LocationConfiguration locationConfiguration,
-        Guid? copyPoliciesFromLocationId,
-        ImmutableList<string>? referralCloseReasons,
-        ImmutableList<string>? caseCloseReasons
+        Guid? copyPoliciesFromLocationId
     );
 
     [ApiController]
@@ -319,19 +317,7 @@ namespace CareTogether.Api.Controllers
                     newLocationConfiguration
                 );
 
-                var updatedConfiguration =
-                    newLocationPayload.referralCloseReasons != null
-                    || newLocationPayload.caseCloseReasons != null
-                        ? await policiesResource.UpdateOrganizationCloseReasonsAsync(
-                            organizationId,
-                            newLocationPayload.referralCloseReasons
-                                ?? updatedLocation.OrganizationConfiguration.ReferralCloseReasons,
-                            newLocationPayload.caseCloseReasons
-                                ?? updatedLocation.OrganizationConfiguration.CaseCloseReasons
-                        )
-                        : updatedLocation.OrganizationConfiguration;
-
-                return Ok(updatedConfiguration);
+                return Ok(updatedLocation.OrganizationConfiguration);
             }
 
             if (copyPoliciesFromLocationId == Guid.Empty)
@@ -458,6 +444,44 @@ namespace CareTogether.Api.Controllers
                     nameof(FeatureFlags.FamilyScreenPageVersionSwitch)
                 )
             );
+            return Ok(result);
+        }
+    }
+
+    public sealed record PutOrganizationConfigurationPayload(
+        ImmutableList<string>? ReferralCloseReasons,
+        ImmutableList<string>? CaseCloseReasons
+    );
+
+    [ApiController]
+    [Authorize(
+        Policies.ForbidAnonymous,
+        AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme
+    )]
+    public class OrganizationConfigurationController : ControllerBase
+    {
+        private readonly IPoliciesResource policiesResource;
+
+        public OrganizationConfigurationController(IPoliciesResource policiesResource)
+        {
+            this.policiesResource = policiesResource;
+        }
+
+        [HttpPut("/api/{organizationId:guid}/[controller]")]
+        public async Task<ActionResult<OrganizationConfiguration>> PutOrganizationConfiguration(
+            Guid organizationId,
+            [FromBody] PutOrganizationConfigurationPayload payload
+        )
+        {
+            if (!User.IsInRole(SystemConstants.ORGANIZATION_ADMINISTRATOR))
+                return Forbid();
+
+            var result = await policiesResource.UpdateOrganizationCloseReasonsAsync(
+                organizationId,
+                payload.ReferralCloseReasons,
+                payload.CaseCloseReasons
+            );
+
             return Ok(result);
         }
     }

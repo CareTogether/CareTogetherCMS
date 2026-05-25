@@ -321,6 +321,50 @@
         }
       }
     },
+    "/api/{organizationId}/OrganizationConfiguration": {
+      "put": {
+        "tags": [
+          "OrganizationConfiguration"
+        ],
+        "operationId": "OrganizationConfiguration_PutOrganizationConfiguration",
+        "parameters": [
+          {
+            "name": "organizationId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "guid"
+            },
+            "x-position": 1
+          }
+        ],
+        "requestBody": {
+          "x-name": "payload",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PutOrganizationConfigurationPayload"
+              }
+            }
+          },
+          "required": true,
+          "x-position": 2
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OrganizationConfiguration"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/{organizationId}/{locationId}/Files/family/{familyId}/{documentId}": {
       "get": {
         "tags": [
@@ -1983,20 +2027,6 @@
             "type": "string",
             "format": "guid",
             "nullable": true
-          },
-          "referralCloseReasons": {
-            "type": "array",
-            "nullable": true,
-            "items": {
-              "type": "string"
-            }
-          },
-          "caseCloseReasons": {
-            "type": "array",
-            "nullable": true,
-            "items": {
-              "type": "string"
-            }
           }
         }
       },
@@ -2940,6 +2970,26 @@
           },
           "familyScreenPageVersionSwitch": {
             "type": "boolean"
+          }
+        }
+      },
+      "PutOrganizationConfigurationPayload": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "referralCloseReasons": {
+            "type": "array",
+            "nullable": true,
+            "items": {
+              "type": "string"
+            }
+          },
+          "caseCloseReasons": {
+            "type": "array",
+            "nullable": true,
+            "items": {
+              "type": "string"
+            }
           }
         }
       },

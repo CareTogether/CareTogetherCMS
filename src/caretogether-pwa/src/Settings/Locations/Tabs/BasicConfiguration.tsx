@@ -8,6 +8,7 @@ import {
   LocationConfiguration,
   PutLocationPayload,
   OrganizationConfiguration,
+  PutOrganizationConfigurationPayload,
 } from '../../../GeneratedClient';
 import { organizationConfigurationEdited } from '../../../Model/ConfigurationModel';
 import { useBackdrop } from '../../../Hooks/useBackdrop';
@@ -57,17 +58,24 @@ export default function BasicConfiguration({
     withBackdrop(async () => {
       const { caseCloseReasons, referralCloseReasons, ...locationData } = data;
 
-      const updatedOrgConfig = await api.configuration.putLocationDefinition(
+      await api.configuration.putLocationDefinition(
         organizationId,
         new PutLocationPayload({
           locationConfiguration: new LocationConfiguration({
             ...currentLocationDefinition,
             ...locationData,
           }),
-          caseCloseReasons,
-          referralCloseReasons,
         })
       );
+
+      const updatedOrgConfig =
+        await api.organizationConfiguration.putOrganizationConfiguration(
+          organizationId,
+          new PutOrganizationConfigurationPayload({
+            caseCloseReasons,
+            referralCloseReasons,
+          })
+        );
 
       storeEdits(new OrganizationConfiguration(updatedOrgConfig));
     });
