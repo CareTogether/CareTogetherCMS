@@ -1,8 +1,8 @@
+import Grid from '@mui/material/GridLegacy';
 import {
   Autocomplete,
   Button,
   FormControl,
-  Grid,
   TextField,
 } from '@mui/material';
 import { AddCommunityMemberFamily, Community } from '../GeneratedClient';

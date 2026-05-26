@@ -208,15 +208,19 @@ export function ShellSideNavigation({ open, width }: ShellSideNavigationProps) {
         flexShrink: 0,
         whiteSpace: 'nowrap',
         overflowX: 'hidden',
-        '& .MuiDrawer-paper': {
-          width: width, // Force fixed width
-          minWidth: width, // Prevent shrinking
-          maxWidth: width, // Prevent expanding
-          backgroundColor: theme.palette.primary.dark,
-          color: theme.palette.primary.contrastText,
-          overflowX: 'hidden',
-          display: 'flex',
-          flexDirection: 'column',
+      }}
+      slotProps={{
+        paper: {
+          sx: {
+            width: width, // Force fixed width
+            minWidth: width, // Prevent shrinking
+            maxWidth: width, // Prevent expanding
+            backgroundColor: theme.palette.primary.dark,
+            color: theme.palette.primary.contrastText,
+            overflowX: 'hidden',
+            display: 'flex',
+            flexDirection: 'column',
+          },
         },
       }}
     >

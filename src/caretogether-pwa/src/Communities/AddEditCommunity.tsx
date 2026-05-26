@@ -1,4 +1,5 @@
-import { Button, Grid, TextField } from '@mui/material';
+import { Button, TextField } from '@mui/material';
+import Grid from '@mui/material/Grid';
 import {
   Community,
   CreateCommunity,
@@ -69,10 +70,10 @@ export function AddEditCommunity({
 
   return (
     <Grid container spacing={2} maxWidth={500}>
-      <Grid item xs={12}>
+      <Grid size={12}>
         <h3>{community ? 'Edit Community' : 'Add New Community'}</h3>
       </Grid>
-      <Grid item xs={12}>
+      <Grid size={12}>
         <TextField
           type="text"
           fullWidth
@@ -84,7 +85,7 @@ export function AddEditCommunity({
           onChange={(e) => setName(e.target.value)}
         />
       </Grid>
-      <Grid item xs={12}>
+      <Grid size={12}>
         <TextField
           type="text"
           fullWidth
@@ -96,7 +97,7 @@ export function AddEditCommunity({
           onChange={(e) => setDescription(e.target.value)}
         />
       </Grid>
-      <Grid item xs={12} sx={{ textAlign: 'right' }}>
+      <Grid size={12} sx={{ textAlign: 'right' }}>
         <Button
           color="secondary"
           variant="contained"

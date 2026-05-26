@@ -1,4 +1,6 @@
-import { useState } from 'react';
+import Grid from '@mui/material/GridLegacy';
+import {
+  useState } from 'react';
 import {
   Button,
   Dialog,
@@ -9,7 +11,6 @@ import {
   FormControl,
   FormControlLabel,
   FormLabel,
-  Grid,
   IconButton,
   InputLabel,
   MenuItem,

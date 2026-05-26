@@ -1,4 +1,5 @@
-import { Button, Grid, Typography } from '@mui/material';
+import Grid from '@mui/material/GridLegacy';
+import { Button, Typography } from '@mui/material';
 import { CustomField } from '../../GeneratedClient';
 import { CustomFieldsFilter } from '../../Generic/CustomFieldsFilter/CustomFieldsFilter';
 import {

@@ -1,7 +1,7 @@
+import Grid from '@mui/material/GridLegacy';
 import {
   Box,
   Checkbox,
-  Grid,
   TableCell,
   TableRow,
   Typography,

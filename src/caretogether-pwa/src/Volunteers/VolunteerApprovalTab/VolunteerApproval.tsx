@@ -1,5 +1,5 @@
+import Grid from '@mui/material/GridLegacy';
 import {
-  Grid,
   Table,
   TableContainer,
   TableBody,

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
+import Grid from '@mui/material/GridLegacy';
 import {
-  Grid,
   Table,
   TableBody,
   TableCell,
@@ -206,7 +206,7 @@ function V1ReferralsContent() {
               anchor="right"
               open={openNewReferral}
               onClose={() => setOpenNewReferral(false)}
-              PaperProps={{ sx: { width: 500, p: 3 } }}
+              slotProps={{ paper: { sx: { width: 500, p: 3 } } }}
             >
               <AddNewReferralDrawer onClose={() => setOpenNewReferral(false)} />
             </Drawer>

@@ -1,4 +1,5 @@
-import { Button, Grid, List, ListItem, ListItemText } from '@mui/material';
+import { Button, List, ListItem, ListItemText } from '@mui/material';
+import Grid from '@mui/material/Grid';
 import { Community, UploadCommunityDocument } from '../GeneratedClient';
 import { useCommunityCommand } from '../Model/DirectoryModel';
 import { uploadCommunityFileToTenant } from '../Model/FilesModel';
@@ -68,13 +69,13 @@ export function CommunityDocumentUpload({
 
   return (
     <Grid container spacing={2} maxWidth={500}>
-      <Grid item xs={12}>
+      <Grid size={12}>
         <h3>Upload Community Documents</h3>
       </Grid>
-      <Grid item xs={12}>
+      <Grid size={12}>
         <p>Select one or more documents to upload for this community.</p>
       </Grid>
-      <Grid item xs={12}>
+      <Grid size={12}>
         <input
           accept="*/*"
           multiple={true}
@@ -85,7 +86,7 @@ export function CommunityDocumentUpload({
           }}
         />
       </Grid>
-      <Grid item xs={12}>
+      <Grid size={12}>
         <List dense disablePadding>
           {documentFiles &&
             Array.from(documentFiles).map((documentFile, i) => (
@@ -98,7 +99,7 @@ export function CommunityDocumentUpload({
             ))}
         </List>
       </Grid>
-      <Grid item xs={12} sx={{ textAlign: 'right' }}>
+      <Grid size={12} sx={{ textAlign: 'right' }}>
         <Button
           color="secondary"
           variant="contained"

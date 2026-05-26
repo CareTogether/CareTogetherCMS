@@ -1,3 +1,4 @@
+import Grid from '@mui/material/GridLegacy';
 import {
   Button,
   Checkbox,
@@ -5,7 +6,6 @@ import {
   FormControl,
   FormControlLabel,
   FormLabel,
-  Grid,
   Radio,
   RadioGroup,
   TextField,

@@ -114,9 +114,13 @@ export function ShellBottomNavigation() {
       <Drawer
         sx={{
           zIndex: theme.zIndex.drawer + 2,
-          '& .MuiDrawer-paper': {
+        }}
+        slotProps={{
+          paper: {
+            sx: {
             padding: 2,
             width: 200,
+            },
           },
         }}
         open={drawerOpen}

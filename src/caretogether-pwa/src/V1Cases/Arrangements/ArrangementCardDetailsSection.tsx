@@ -1,10 +1,10 @@
+import Grid from '@mui/material/GridLegacy';
 import {
   Accordion,
   AccordionDetails,
   AccordionSummary,
   Badge,
   Divider,
-  Grid,
   Table,
   TableBody,
   TableContainer,

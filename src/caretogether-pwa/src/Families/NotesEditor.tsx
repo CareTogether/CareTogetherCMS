@@ -1,4 +1,5 @@
-import { Grid, TextField } from '@mui/material';
+import Grid from '@mui/material/GridLegacy';
+import { TextField } from '@mui/material';
 import { Permission } from '../GeneratedClient';
 import { useDirectoryModel } from '../Model/DirectoryModel';
 import { useFamilyIdPermissions } from '../Model/SessionModel';

@@ -1,4 +1,5 @@
-import { Grid, TextField } from '@mui/material';
+import Grid from '@mui/material/GridLegacy';
+import { TextField } from '@mui/material';
 import { useState } from 'react';
 import { useParams } from 'react-router';
 import { Arrangement, Person } from '../../GeneratedClient';
