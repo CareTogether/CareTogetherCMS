@@ -1,6 +1,5 @@
 import { Navigate, Route, Routes, useMatch } from 'react-router-dom';
 import { VolunteerApproval } from './VolunteerApprovalTab/VolunteerApproval';
-//import { VolunteerApplications } from './VolunteerApplications';
 import { VolunteerProgress } from './VolunteerProgressTab/VolunteerProgress';
 import { useSessionStorage } from '../Hooks/useSessionStorage';
 
@@ -29,7 +28,6 @@ function Volunteers() {
           />
         }
       />
-      {/* <Route path="applications" element={<VolunteerApplications />} /> */}
       <Route
         path="progress"
         element={
