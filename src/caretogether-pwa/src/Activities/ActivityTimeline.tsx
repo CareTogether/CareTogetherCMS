@@ -94,6 +94,20 @@ const composeNoteType = (activity: Activity): string | null => {
   return null;
 };
 
+const shouldShowTimelineTime = (item: MergedTimelineItem) => {
+  if (item.kind !== 'family-activity') return false;
+
+  return item.activity instanceof ChildLocationChanged;
+};
+
+const formatTimelineTimestamp = (item: MergedTimelineItem) => {
+  if (shouldShowTimelineTime(item)) {
+    return format(item.timestamp, 'M/d/yy h:mm a');
+  }
+
+  return format(item.timestamp, 'M/d/yy');
+};
+
 function embedNotesInActivities(notes: Note[], activities: Activity[]) {
   // We only want to show each note once, on the most recent activity entry that is
   // linked to that particular note. The following stateful code works by pulling from the
@@ -576,7 +590,7 @@ export function ActivityTimeline({
               >
                 <Box sx={{ color: 'text.disabled', margin: 0, padding: 0 }}>
                   <span className="ph-unmask" style={{ marginRight: 16 }}>
-                    {format(item.timestamp, 'M/d/yy h:mm a')}
+                    {formatTimelineTimestamp(item)}
                   </span>
                   {item.userId ? (
                     <PersonName person={userLookup(item.userId)} />
