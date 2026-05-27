@@ -108,6 +108,31 @@ import {
   assignmentRolesForColumns,
 } from '../FunctionAssignments/assignmentRoleColumns';
 
+type CustomFieldRenderInfo = CompletedCustomFieldInfo | string;
+
+function customFieldName(customField: CustomFieldRenderInfo) {
+  return customField instanceof CompletedCustomFieldInfo
+    ? customField.customFieldName!
+    : customField;
+}
+
+function orderCustomFieldsByPolicy(
+  customFields: CustomFieldRenderInfo[],
+  policyFieldNames: string[]
+) {
+  const customFieldsByName = new Map(
+    customFields.map((customField) => [
+      customFieldName(customField),
+      customField,
+    ])
+  );
+
+  return policyFieldNames.flatMap((fieldName) => {
+    const customField = customFieldsByName.get(fieldName);
+    return customField === undefined ? [] : [customField];
+  });
+}
+
 export function FamilyScreen() {
   const familyIdMaybe = useParams<{ familyId: string }>();
   const familyId = familyIdMaybe.familyId as string;
@@ -651,37 +676,22 @@ export function FamilyScreen() {
             </Grid>
             <Grid item md={8}>
               {permissions(Permission.ViewFamilyCustomFields) &&
-                Array<CompletedCustomFieldInfo | string>()
-                  .concat(family.family!.completedCustomFields)
-                  .concat(family.missingCustomFields || [])
-                  .sort((a, b) =>
-                    (a instanceof CompletedCustomFieldInfo
-                      ? a.customFieldName!
-                      : a) <
-                    (b instanceof CompletedCustomFieldInfo
-                      ? b.customFieldName!
-                      : b)
-                      ? -1
-                      : (a instanceof CompletedCustomFieldInfo
-                            ? a.customFieldName!
-                            : a) >
-                          (b instanceof CompletedCustomFieldInfo
-                            ? b.customFieldName!
-                            : b)
-                        ? 1
-                        : 0
-                  )
-                  .map((customField) => (
-                    <FamilyCustomField
-                      key={
-                        typeof customField === 'string'
-                          ? customField
-                          : customField.customFieldName
-                      }
-                      familyId={familyId}
-                      customField={customField}
-                    />
-                  ))}
+                orderCustomFieldsByPolicy(
+                  Array<CustomFieldRenderInfo>()
+                    .concat(family.family!.completedCustomFields)
+                    .concat(family.missingCustomFields || []),
+                  policy.customFamilyFields?.map((field) => field.name) ?? []
+                ).map((customField) => (
+                  <FamilyCustomField
+                    key={
+                      typeof customField === 'string'
+                        ? customField
+                        : customField.customFieldName
+                    }
+                    familyId={familyId}
+                    customField={customField}
+                  />
+                ))}
 
               <Grid item xs={12} md={4}>
                 {permissions(Permission.ViewV1CaseCustomFields) &&
