@@ -274,7 +274,7 @@ function VolunteerApprovalTableRows(props: VolunteerApprovalTableItemProps) {
                         return prev;
                       }
                       return prev.concat(curr);
-                    }, [] as JSX.Element[])}
+                    }, [] as React.ReactElement[])}
                 </Grid>
               </Grid>
             </>
