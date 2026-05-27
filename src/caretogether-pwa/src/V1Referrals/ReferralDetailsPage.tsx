@@ -1,4 +1,4 @@
-import Grid from '@mui/material/GridLegacy';
+import Grid from '../Generic/GridLegacyCompat';
 import {
   useMemo,
   useState } from 'react';
@@ -325,7 +325,7 @@ export function ReferralDetailsPage() {
         }}
       >
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-          <Typography variant="h5" fontWeight={600}>
+          <Typography variant="h5" sx={{ fontWeight: 600 }}>
             {currentReferral.title}
           </Typography>
         </Box>
@@ -527,7 +527,7 @@ export function ReferralDetailsPage() {
 
           {currentReferral.comment && (
             <Grid item xs={12}>
-              <Typography fontWeight={600} sx={{ mb: 1 }}>
+              <Typography sx={{ fontWeight: 600, mb: 1 }}>
                 Referral Comment
               </Typography>
 
@@ -587,7 +587,7 @@ export function ReferralDetailsPage() {
               <>
                 <Divider sx={{ width: '100%', my: 3 }} />
                 <Grid item xs={12}>
-                  <Typography fontWeight={600} sx={{ mb: 1 }}>
+                  <Typography sx={{ fontWeight: 600, mb: 1 }}>
                     Referral Documents
                   </Typography>
 

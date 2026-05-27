@@ -1,4 +1,4 @@
-import Grid from '@mui/material/GridLegacy';
+import Grid from '@mui/material/Grid';
 import {
   useState } from 'react';
 import {
@@ -55,13 +55,13 @@ export function CloseV1ReferralDrawer({
     >
       <form noValidate>
         <Grid container spacing={2}>
-          <Grid item xs={12}>
+          <Grid size={12}>
             <Typography variant="h6">
               Why is this Referral being closed?
             </Typography>
           </Grid>
 
-          <Grid item xs={12}>
+          <Grid size={12}>
             <FormControl component="fieldset">
               <FormLabel>Reason for Closing:</FormLabel>
 
@@ -83,7 +83,7 @@ export function CloseV1ReferralDrawer({
             </FormControl>
           </Grid>
 
-          <Grid item xs={12}>
+          <Grid size={12}>
             <ValidateDatePicker
               label="When was this Referral closed?"
               value={closedAtLocal}
@@ -94,7 +94,7 @@ export function CloseV1ReferralDrawer({
             />
           </Grid>
 
-          <Grid item xs={12} sx={{ textAlign: 'right' }}>
+          <Grid size={12} sx={{ textAlign: 'right' }}>
             <Button
               color="secondary"
               variant="contained"

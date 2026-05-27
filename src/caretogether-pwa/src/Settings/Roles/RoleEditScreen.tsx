@@ -23,7 +23,7 @@ export function RoleEditScreen() {
 
   if (!selectedRole) {
     return (
-      <Typography className="ph-unmask" align="center" mt={10}>
+      <Typography className="ph-unmask" align="center" sx={{ mt: 10 }}>
         Role not found.
       </Typography>
     );

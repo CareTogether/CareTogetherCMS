@@ -126,7 +126,7 @@ export function ShellBottomNavigation() {
         open={drawerOpen}
         onClose={() => setDrawerOpen(false)}
       >
-        <Stack padding={1} spacing={1}>
+        <Stack spacing={1} sx={{ p: 1 }}>
           <ShellContextSwitcher />
           {flags && (
             <List

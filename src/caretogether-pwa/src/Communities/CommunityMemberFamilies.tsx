@@ -374,16 +374,20 @@ export function CommunityMemberFamilies({
                 >
                   <Stack
                     direction="row"
-                    alignItems="center"
-                    justifyContent="space-between"
-                    gap={1}
+                    sx={{
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      gap: 1,
+                    }}
                   >
                     <Stack
                       direction="row"
-                      alignItems="center"
-                      flexWrap="wrap"
-                      gap={0.75}
-                      sx={{ minWidth: 0 }}
+                      sx={{
+                        alignItems: 'center',
+                        flexWrap: 'wrap',
+                        gap: 0.75,
+                        minWidth: 0,
+                      }}
                     >
                       <Button
                         variant="text"
@@ -434,9 +438,11 @@ export function CommunityMemberFamilies({
                       <Stack spacing={0.5}>
                         <Stack
                           direction="row"
-                          alignItems="center"
-                          flexWrap="wrap"
-                          gap={0.75}
+                          sx={{
+                            alignItems: 'center',
+                            flexWrap: 'wrap',
+                            gap: 0.75,
+                          }}
                         >
                           <PersonName person={person} />
                           {family.family?.primaryFamilyContactPersonId ===
@@ -454,7 +460,10 @@ export function CommunityMemberFamilies({
                             />
                           )}
                         </Stack>
-                        <Stack direction="row" flexWrap="wrap" gap={0.5}>
+                        <Stack
+                          direction="row"
+                          sx={{ flexWrap: 'wrap', gap: 0.5 }}
+                        >
                           {renderAdultApprovals(family, person)}
                         </Stack>
                       </Stack>

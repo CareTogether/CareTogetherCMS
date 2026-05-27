@@ -1,4 +1,4 @@
-import Grid from '@mui/material/GridLegacy';
+import Grid from '../../Generic/GridLegacyCompat';
 import { Box, TableCell, TableRow } from '@mui/material';
 import { format } from 'date-fns';
 import { useState } from 'react';

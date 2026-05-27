@@ -63,7 +63,7 @@ function SideNavigationMenu({ open }: SideNavigationMenuProps) {
     >
       {flags === null ? (
         <>
-          <Stack padding={1} spacing={1}>
+          <Stack spacing={1} sx={{ p: 1 }}>
             <Stack direction="row">
               <Skeleton variant="circular" width={30} height={30} />
               {open && (
@@ -243,8 +243,11 @@ export function ShellSideNavigation({ open, width }: ShellSideNavigationProps) {
             borderTop: `1px solid ${theme.palette.divider}`,
           }}
         >
-          <Stack className="ph-unmask" alignItems="center" sx={{ py: 2 }}>
-            <Box mb={2}>
+          <Stack
+            className="ph-unmask"
+            sx={{ alignItems: 'center', py: 2 }}
+          >
+            <Box sx={{ mb: 2 }}>
               <Feedback />
             </Box>
             <Version />

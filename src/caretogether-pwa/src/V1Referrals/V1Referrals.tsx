@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import Grid from '@mui/material/GridLegacy';
+import Grid from '../Generic/GridLegacyCompat';
 import {
   Table,
   TableBody,

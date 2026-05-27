@@ -1,4 +1,4 @@
-import Grid from '@mui/material/GridLegacy';
+import Grid from '@mui/material/Grid';
 import {
   FormControl,
   FormControlLabel,
@@ -24,7 +24,7 @@ export function GenderEditor({ familyId, person }: PersonEditorProps) {
     <Grid container spacing={2}>
       {editor.editing ? (
         <>
-          <Grid item xs={12}>
+          <Grid size={12}>
             <FormControl required component="fieldset">
               <FormLabel component="legend">Gender:</FormLabel>
               <RadioGroup
@@ -54,13 +54,13 @@ export function GenderEditor({ familyId, person }: PersonEditorProps) {
               </RadioGroup>
             </FormControl>
           </Grid>
-          <Grid item xs={12}>
+          <Grid size={12}>
             {editor.cancelButton}
             {editor.saveButton}
           </Grid>
         </>
       ) : (
-        <Grid item xs={12}>
+        <Grid size={12}>
           Gender:{' '}
           {person.gender !== null && typeof person.gender !== 'undefined'
             ? person.gender === Gender.Male

@@ -1,4 +1,4 @@
-import Grid from '@mui/material/GridLegacy';
+import Grid from '../Generic/GridLegacyCompat';
 import {
   useReactToPrint } from 'react-to-print';
 import {
@@ -54,7 +54,7 @@ import { ConfirmCloseV1CaseDialog } from '../V1Cases/ConfirmCloseV1CaseDialog';
 import { OpenNewV1CaseDialog } from '../V1Cases/OpenNewV1CaseDialog';
 import { FamilyDocuments } from './FamilyDocuments';
 import { useFamilyPermissions } from '../Model/SessionModel';
-import { Masonry } from '@mui/lab';
+import { AppMasonry } from '../Generic/AppMasonry';
 import { MissingRequirementRow } from '../Requirements/MissingRequirementRow';
 import { ExemptedRequirementRow } from '../Requirements/ExemptedRequirementRow';
 import { CompletedRequirementRow } from '../Requirements/CompletedRequirementRow';
@@ -382,7 +382,7 @@ export function FamilyScreen() {
 
   if (!family) {
     return (
-      <Box mt={10} textAlign="center">
+      <Box sx={{ mt: 10, textAlign: 'center' }}>
         <Typography>
           Oops! You can’t view this family. It may be restricted or unavailable.
         </Typography>
@@ -1175,7 +1175,7 @@ export function FamilyScreen() {
               >
                 Family Members
               </Typography>
-              <Masonry
+              <AppMasonry
                 columns={isDesktop ? (isWideScreen ? 3 : 2) : 1}
                 spacing={2}
               >
@@ -1202,7 +1202,7 @@ export function FamilyScreen() {
                       />
                     )
                 )}
-              </Masonry>
+              </AppMasonry>
             </Grid>
           </Grid>
         </Grid>

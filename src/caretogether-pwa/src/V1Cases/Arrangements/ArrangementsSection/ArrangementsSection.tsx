@@ -1,6 +1,6 @@
-import { Masonry } from '@mui/lab';
+import { AppMasonry } from '../../../Generic/AppMasonry';
 import { AddCircle as AddCircleIcon } from '@mui/icons-material';
-import Grid from '@mui/material/GridLegacy';
+import Grid from '../../../Generic/GridLegacyCompat';
 import { Typography, Button, useTheme } from '@mui/material';
 import { Box, useMediaQuery } from '@mui/system';
 import {
@@ -71,12 +71,14 @@ export function ArrangementsSection({
           }}
         >
           <Box
-            display="flex"
-            alignItems="center"
-            justifyContent="space-between"
-            flexWrap="wrap"
-            gap={2}
-            mb={2}
+            sx={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              flexWrap: 'wrap',
+              gap: 2,
+              mb: 2,
+            }}
           >
             <Typography
               className="ph-unmask"
@@ -132,7 +134,7 @@ export function ArrangementsSection({
           </Box>
         )}
       </div>
-      <Masonry columns={isDesktop ? (isWideScreen ? 3 : 2) : 1} spacing={2}>
+      <AppMasonry columns={isDesktop ? (isWideScreen ? 3 : 2) : 1} spacing={2}>
         {filteredArrangements.map((arrangement) => (
           <div
             key={arrangement.id}
@@ -149,7 +151,7 @@ export function ArrangementsSection({
             />
           </div>
         ))}
-      </Masonry>
+      </AppMasonry>
 
       {createArrangementDialogParameter && (
         <CreateArrangementDialog

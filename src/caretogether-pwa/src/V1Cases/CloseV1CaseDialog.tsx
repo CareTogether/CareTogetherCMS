@@ -1,4 +1,4 @@
-import Grid from '@mui/material/GridLegacy';
+import Grid from '@mui/material/Grid';
 import {
   useState } from 'react';
 import {
@@ -52,7 +52,7 @@ export function CloseV1CaseDialog({
     >
       <form noValidate autoComplete="off">
         <Grid container spacing={2}>
-          <Grid item xs={12}>
+          <Grid size={12}>
             <FormControl component="fieldset">
               <FormLabel component="legend">Reason for Closing:</FormLabel>
               <RadioGroup
@@ -97,7 +97,7 @@ export function CloseV1CaseDialog({
               </RadioGroup>
             </FormControl>
           </Grid>
-          <Grid item xs={12}>
+          <Grid size={12}>
             <ValidateDatePicker
               label="When was this Case closed?"
               value={closedAtLocal}

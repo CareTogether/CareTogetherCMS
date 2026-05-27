@@ -80,8 +80,8 @@ export default function BasicConfiguration({
         Basic configuration
       </Typography>
 
-      <Stack direction="column" spacing={3} alignItems="stretch">
-        <Stack direction="row" spacing={2} alignItems="flex-start">
+      <Stack direction="column" spacing={3} sx={{ alignItems: 'stretch' }}>
+        <Stack direction="row" spacing={2} sx={{ alignItems: 'flex-start' }}>
           <Controller
             name="name"
             control={control}
@@ -192,7 +192,7 @@ export default function BasicConfiguration({
           minTypingAreaWidth={120}
         />
 
-        <Stack direction="row" spacing={2} justifyContent="flex-start">
+        <Stack direction="row" spacing={2} sx={{ justifyContent: 'flex-start' }}>
           <Button
             variant="contained"
             color="secondary"
