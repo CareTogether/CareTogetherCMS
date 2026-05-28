@@ -117,7 +117,7 @@ function VolunteerApprovalTableRows(props: VolunteerApprovalTableItemProps) {
   return (
     <>
       <TableRow
-        sx={{ backgroundColor: '#eef', height: '39px' }}
+        sx={{ backgroundColor: '#eef', height: '39px', cursor: 'pointer' }}
         onClick={() => openFamily(familyId)}
       >
         {smsMode && (
@@ -306,6 +306,7 @@ function VolunteerApprovalTableRows(props: VolunteerApprovalTableItemProps) {
         activeAdults.map((adult) => (
           <TableRow
             key={`${familyId}:${adult.item1!.id}`}
+            sx={{ cursor: 'pointer' }}
             onClick={() => openFamily(familyId)}
           >
             {smsMode && <TableCell />}
@@ -336,7 +337,7 @@ function VolunteerApprovalTableRows(props: VolunteerApprovalTableItemProps) {
           <TableRow
             key={`${familyId}:${child.id}`}
             onClick={() => openFamily(familyId)}
-            sx={{ color: 'ddd', fontStyle: 'italic' }}
+            sx={{ color: 'ddd', fontStyle: 'italic', cursor: 'pointer' }}
           >
             {smsMode && <TableCell />}
             <TableCell>

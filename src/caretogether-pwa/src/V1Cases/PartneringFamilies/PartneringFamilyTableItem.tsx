@@ -240,7 +240,7 @@ function PartneringFamilyTableRows(props: PartneringFamilyTableItemProps) {
         )}
       </TableRow>
       {expandedView ? (
-        <TableRow onClick={() => openFamily(familyId)}>
+        <TableRow sx={{ cursor: 'pointer' }} onClick={() => openFamily(familyId)}>
           <TableCell sx={{ maxWidth: '400px', paddingLeft: 3 }}>
             <Box
               sx={{
