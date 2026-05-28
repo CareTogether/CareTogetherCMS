@@ -47,8 +47,8 @@ export function ReferralTimeline({
   }
 
   return (
-    <Box>
-      <AppTimeline position="right" sx={{ p: 0 }}>
+    <Box sx={{ width: '100%', minWidth: 0 }}>
+      <AppTimeline position="right" sx={{ p: 0, width: '100%' }}>
         {items.map((item, i) => (
           <AppTimelineItem key={`${item.kind}:${i}`}>
             <AppTimelineOppositeContent sx={{ display: 'none' }} />
@@ -73,7 +73,11 @@ export function ReferralTimeline({
             </AppTimelineSeparator>
 
             <AppTimelineContent
-              sx={{ wordWrap: 'break-word', whiteSpace: 'pre-wrap' }}
+              sx={{
+                minWidth: 0,
+                wordWrap: 'break-word',
+                whiteSpace: 'pre-wrap',
+              }}
             >
               <Box sx={{ color: 'text.disabled', mb: 0.5 }}>
                 <span style={{ marginRight: 16 }}>

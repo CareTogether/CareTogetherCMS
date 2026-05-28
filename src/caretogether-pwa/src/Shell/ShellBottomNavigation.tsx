@@ -118,8 +118,8 @@ export function ShellBottomNavigation() {
         slotProps={{
           paper: {
             sx: {
-            padding: 2,
-            width: 200,
+              padding: 2,
+              width: 200,
             },
           },
         }}

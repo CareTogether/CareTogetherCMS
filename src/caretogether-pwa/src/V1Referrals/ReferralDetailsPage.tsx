@@ -403,7 +403,7 @@ export function ReferralDetailsPage() {
         </Box>
       </Grid>
 
-      <Grid container spacing={0}>
+      <Grid item xs={12} container spacing={0}>
         <Grid item xs={12} md={4} sx={{ pr: { md: 2 }, mb: { xs: 3, md: 0 } }}>
           <Box sx={{ display: 'flex', gap: 1, mb: 1, flexWrap: 'wrap' }}>
             {canEditReferral && (
