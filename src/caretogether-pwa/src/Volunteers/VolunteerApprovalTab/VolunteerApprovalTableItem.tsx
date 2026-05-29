@@ -53,12 +53,8 @@ function renderCustomFieldValue(value: unknown): React.ReactNode {
   if (Array.isArray(value)) {
     return (
       <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: '.25rem' }}>
-        {value.map((item, index) => (
-          <Chip
-            key={`${String(item)}-${index}`}
-            size="small"
-            label={String(item)}
-          />
+        {value.map((item) => (
+          <Chip key={String(item)} size="small" label={String(item)} />
         ))}
       </Box>
     );
