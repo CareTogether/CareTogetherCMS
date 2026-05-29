@@ -701,6 +701,7 @@ namespace CareTogether.Engines.Authorization
                     UploadVolunteerFamilyDocument => Permission.UploadFamilyDocuments,
                     RemoveVolunteerFamilyRole => Permission.EditVolunteerRoleParticipation,
                     ResetVolunteerFamilyRole => Permission.EditVolunteerRoleParticipation,
+                    UpdateCustomVolunteerFamilyField => Permission.EditFamilyInfo,
                     _ => throw new NotImplementedException(
                         $"The command type '{command.GetType().FullName}' has not been implemented."
                     ),
