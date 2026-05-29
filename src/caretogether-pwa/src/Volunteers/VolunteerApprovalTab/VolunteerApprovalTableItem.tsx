@@ -1,6 +1,7 @@
 import {
   Box,
   Checkbox,
+  Chip,
   Grid,
   TableCell,
   TableRow,
@@ -37,6 +38,28 @@ function getRowGroupHeight(
   }
 
   return 39 + (activeAdultsCount + activeChildrenCount) * 33;
+}
+
+function renderCustomFieldValue(value: unknown): React.ReactNode {
+  if (value === null || typeof(value) === 'undefined') {
+    return "";
+  }
+  if (value === true) {
+    return 'Yes';
+  }
+  if (value === false) {
+    return 'No';
+  }
+  if (Array.isArray(value)) {
+    return (
+      <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: '.25rem' }}>
+        {value.map((item) => (
+          <Chip key={String(item)} size="small" label={String(item)} />
+        ))}
+      </Box>
+    );
+  }
+  return String(value);
 }
 
 function VolunteerApprovalPlaceholderRow(
@@ -286,18 +309,9 @@ function VolunteerApprovalTableRows(props: VolunteerApprovalTableItemProps) {
               (value) => value?.customFieldName === customFieldName
             );
           const familyCustomFieldValue = familyCustomField?.value;
-          if (familyCustomFieldValue === null) {
-            return <TableCell key={customFieldName}></TableCell>;
-          }
-          if (familyCustomFieldValue === true) {
-            return <TableCell key={customFieldName}>Yes</TableCell>;
-          }
-          if (familyCustomFieldValue === false) {
-            return <TableCell key={customFieldName}>No</TableCell>;
-          }
           return (
             <TableCell key={customFieldName}>
-              {familyCustomFieldValue}
+              {renderCustomFieldValue(familyCustomFieldValue)}
             </TableCell>
           );
         })}
