@@ -285,8 +285,12 @@ function VolunteerApprovalTableRows(props: VolunteerApprovalTableItemProps) {
             volunteerFamily.family?.completedCustomFields?.find(
               (value) => value?.customFieldName === customFieldName
             );
-          const familyCustomFieldValue = familyCustomField?.value;
-          if (familyCustomFieldValue === null) {
+          const volunteerFamilyCustomField =
+            volunteerFamily.volunteerFamilyInfo?.completedCustomFields?.find(
+              (value) => value?.customFieldName === customFieldName
+            );
+          const familyCustomFieldValue = familyCustomField?.value ?? volunteerFamilyCustomField?.value;
+          if (familyCustomFieldValue === null || familyCustomFieldValue === undefined) {
             return <TableCell key={customFieldName}></TableCell>;
           }
           if (familyCustomFieldValue === true) {

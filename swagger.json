@@ -2736,6 +2736,13 @@
             "additionalProperties": {
               "$ref": "#/components/schemas/VolunteerFamilyRolePolicy"
             }
+          },
+          "customFields": {
+            "type": "array",
+            "nullable": true,
+            "items": {
+              "$ref": "#/components/schemas/CustomField"
+            }
           }
         }
       },
@@ -4631,6 +4638,20 @@
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/ArrangementEntry"
+            }
+          },
+          "completedCustomFields": {
+            "type": "array",
+            "nullable": true,
+            "items": {
+              "$ref": "#/components/schemas/CompletedCustomFieldInfo"
+            }
+          },
+          "missingCustomFields": {
+            "type": "array",
+            "nullable": true,
+            "items": {
+              "type": "string"
             }
           }
         }
@@ -6973,6 +6994,7 @@
             "RemoveVolunteerFamilyRole": "#/components/schemas/RemoveVolunteerFamilyRole",
             "ResetVolunteerFamilyRole": "#/components/schemas/ResetVolunteerFamilyRole",
             "UnexemptVolunteerFamilyRequirement": "#/components/schemas/UnexemptVolunteerFamilyRequirement",
+            "UpdateCustomVolunteerFamilyField": "#/components/schemas/UpdateCustomVolunteerFamilyField",
             "UploadVolunteerFamilyDocument": "#/components/schemas/UploadVolunteerFamilyDocument"
           }
         },
@@ -7174,6 +7196,37 @@
             "properties": {
               "requirementName": {
                 "type": "string"
+              }
+            }
+          }
+        ]
+      },
+      "UpdateCustomVolunteerFamilyField": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/VolunteerFamilyCommand"
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "completedCustomFieldId",
+              "customFieldName",
+              "customFieldType"
+            ],
+            "properties": {
+              "completedCustomFieldId": {
+                "type": "string",
+                "format": "guid"
+              },
+              "customFieldName": {
+                "type": "string"
+              },
+              "customFieldType": {
+                "$ref": "#/components/schemas/CustomFieldType"
+              },
+              "value": {
+                "nullable": true
               }
             }
           }

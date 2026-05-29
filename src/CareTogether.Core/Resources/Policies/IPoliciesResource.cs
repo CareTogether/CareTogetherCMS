@@ -335,7 +335,8 @@ namespace CareTogether.Resources.Policies
 
     public sealed record VolunteerPolicy(
         ImmutableDictionary<string, VolunteerRolePolicy> VolunteerRoles,
-        ImmutableDictionary<string, VolunteerFamilyRolePolicy> VolunteerFamilyRoles
+        ImmutableDictionary<string, VolunteerFamilyRolePolicy> VolunteerFamilyRoles,
+        ImmutableList<CustomField>? CustomFields = null
     );
 
     public sealed record VolunteerRolePolicy(
