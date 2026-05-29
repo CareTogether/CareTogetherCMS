@@ -13,6 +13,7 @@ import {
   CustomFieldValidation,
 } from '../GeneratedClient';
 import { useInlineEditor } from '../Hooks/useInlineEditor';
+import { sortByPolicyOrder } from './sortByPolicyOrder';
 
 type CustomFieldEditorProps = {
   customFieldPolicy: CustomField;
@@ -71,9 +72,13 @@ export function CustomFieldEditor({
             <Autocomplete
               multiple
               options={customFieldPolicy.validValues || []}
-              value={Array.isArray(editor.value) ? editor.value : []}
+              value={sortByPolicyOrder(
+                Array.isArray(editor.value) ? editor.value : [],
+                customFieldPolicy.validValues || []
+              )}
               onChange={(_event, newValue: string[]) => {
-                editor.setValue(newValue.length > 0 ? newValue : null);
+                const sorted = sortByPolicyOrder(newValue, customFieldPolicy.validValues || []);
+                editor.setValue(sorted.length > 0 ? sorted : null);
               }}
               freeSolo={customFieldPolicy.validation === CustomFieldValidation.SuggestOnly}
               renderInput={(params) => <TextField {...params} />}
@@ -108,7 +113,12 @@ export function CustomFieldEditor({
             'No'
           )
         ) : type === CustomFieldType.StringArray ? (
-          Array.isArray(savedValue) ? savedValue.join(', ') : savedValue
+          Array.isArray(savedValue)
+            ? sortByPolicyOrder(
+                savedValue.map(String),
+                customFieldPolicy.validValues ?? []
+              ).join(', ')
+            : savedValue
         ) : (
           savedValue
         )}
