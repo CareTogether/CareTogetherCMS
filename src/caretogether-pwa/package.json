@@ -6,9 +6,9 @@
   "dependencies": {
     "@azure/msal-browser": "^3.19.0",
     "@azure/storage-blob": "^12.23.0",
-    "@date-io/date-fns": "^3.0.0",
-    "@emotion/react": "^11.11.4",
-    "@emotion/styled": "^11.11.5",
+    "@date-io/date-fns": "3.2.1",
+    "@emotion/react": "11.14.0",
+    "@emotion/styled": "11.14.1",
     "@fullcalendar/core": "^6.1.15",
     "@fullcalendar/daygrid": "^6.1.15",
     "@fullcalendar/list": "^6.1.15",
@@ -16,15 +16,15 @@
     "@hookform/resolvers": "^5.2.2",
     "@microsoft/applicationinsights-react-js": "^17.3.0",
     "@microsoft/applicationinsights-web": "^3.3.0",
-    "@mui/icons-material": "^5.16.1",
-    "@mui/lab": "5.0.0-alpha.172",
-    "@mui/material": "^5.16.1",
-    "@mui/system": "^5.16.1",
-    "@mui/x-date-pickers": "^6.20.2",
+    "@mui/icons-material": "6.5.0",
+    "@mui/lab": "6.0.1-beta.36",
+    "@mui/material": "6.5.0",
+    "@mui/system": "6.5.0",
+    "@mui/x-date-pickers": "7.29.4",
     "@testing-library/jest-dom": "^6.4.6",
     "@testing-library/react": "^14.3.1",
     "@testing-library/user-event": "^14.5.2",
-    "date-fns": "^3.6.0",
+    "date-fns": "3.6.0",
     "dexie": "^3.2.7",
     "dexie-react-hooks": "^1.1.7",
     "posthog-js": "^1.369.2",
@@ -32,6 +32,7 @@
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "react-hook-form": "^7.58.1",
+    "react-is": "18.3.1",
     "react-lazyload": "^3.2.1",
     "react-router-dom": "^6.24.1",
     "react-to-print": "^3.0.5",
@@ -76,5 +77,8 @@
       "last 1 firefox version",
       "last 1 safari version"
     ]
+  },
+  "overrides": {
+    "react-is": "18.3.1"
   }
 }
