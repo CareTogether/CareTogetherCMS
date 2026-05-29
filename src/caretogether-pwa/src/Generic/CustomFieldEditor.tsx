@@ -13,6 +13,7 @@ import {
   CustomFieldValidation,
 } from '../GeneratedClient';
 import { useInlineEditor } from '../Hooks/useInlineEditor';
+import { sortByPolicyOrder } from './sortByPolicyOrder';
 
 type CustomFieldEditorProps = {
   customFieldPolicy: CustomField;
@@ -71,9 +72,13 @@ export function CustomFieldEditor({
             <Autocomplete
               multiple
               options={customFieldPolicy.validValues || []}
-              value={Array.isArray(editor.value) ? editor.value : []}
+              value={sortByPolicyOrder(
+                Array.isArray(editor.value) ? editor.value : [],
+                customFieldPolicy.validValues || []
+              )}
               onChange={(_event, newValue: string[]) => {
-                editor.setValue(newValue.length > 0 ? newValue : null);
+                const sorted = sortByPolicyOrder(newValue, customFieldPolicy.validValues || []);
+                editor.setValue(sorted.length > 0 ? sorted : null);
               }}
               freeSolo={customFieldPolicy.validation === CustomFieldValidation.SuggestOnly}
               renderInput={(params) => <TextField {...params} />}
@@ -109,17 +114,10 @@ export function CustomFieldEditor({
           )
         ) : type === CustomFieldType.StringArray ? (
           Array.isArray(savedValue)
-            ? [...savedValue]
-                .sort((a, b) => {
-                  const validValues = customFieldPolicy.validValues ?? [];
-                  const aIndex = validValues.indexOf(String(a));
-                  const bIndex = validValues.indexOf(String(b));
-                  if (aIndex === -1 && bIndex === -1) return 0;
-                  if (aIndex === -1) return 1;
-                  if (bIndex === -1) return -1;
-                  return aIndex - bIndex;
-                })
-                .join(', ')
+            ? sortByPolicyOrder(
+                savedValue.map(String),
+                customFieldPolicy.validValues ?? []
+              ).join(', ')
             : savedValue
         ) : (
           savedValue

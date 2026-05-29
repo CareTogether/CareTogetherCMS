@@ -10,6 +10,7 @@ import {
   CustomFieldType,
   CustomFieldValidation,
 } from '../GeneratedClient';
+import { sortByPolicyOrder } from './sortByPolicyOrder';
 
 type CustomFieldValue = string | boolean | number | string[] | null | undefined;
 
@@ -50,13 +51,14 @@ export function CustomFieldInput({
 
   if (type === CustomFieldType.StringArray) {
     const arrayValue = Array.isArray(value) ? value : [];
+    const validValues = customFieldPolicy.validValues || [];
     return (
       <Autocomplete
         multiple
-        options={customFieldPolicy.validValues || []}
-        value={arrayValue}
+        options={validValues}
+        value={sortByPolicyOrder(arrayValue, validValues)}
         onChange={(_, newValue) =>
-          onChange(newValue.length ? newValue : null)
+          onChange(newValue.length ? sortByPolicyOrder(newValue, validValues) : null)
         }
         freeSolo={customFieldPolicy.validation === CustomFieldValidation.SuggestOnly}
         renderInput={(params) => <TextField {...params} />}
