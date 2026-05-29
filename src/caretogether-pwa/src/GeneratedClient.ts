@@ -2926,6 +2926,7 @@ export class ArrangementPolicy implements IArrangementPolicy {
     requiredSetupActions?: RequirementDefinition[] | undefined;
     requiredMonitoringActionsNew?: MonitoringRequirement[] | undefined;
     requiredCloseoutActions?: RequirementDefinition[] | undefined;
+    supersededAtUtc?: Date | undefined;
 
     constructor(data?: IArrangementPolicy) {
         if (data) {
@@ -2999,6 +3000,7 @@ export class ArrangementPolicy implements IArrangementPolicy {
                 for (let item of _data["requiredCloseoutActions"])
                     this.requiredCloseoutActions!.push(RequirementDefinition.fromJS(item));
             }
+            this.supersededAtUtc = _data["supersededAtUtc"] ? new Date(_data["supersededAtUtc"].toString()) : <any>undefined;
         }
     }
 
@@ -3063,6 +3065,7 @@ export class ArrangementPolicy implements IArrangementPolicy {
             for (let item of this.requiredCloseoutActions)
                 data["requiredCloseoutActions"].push(item.toJSON());
         }
+        data["supersededAtUtc"] = this.supersededAtUtc ? this.supersededAtUtc.toISOString() : <any>undefined;
         return data;
     }
 }
@@ -3080,6 +3083,7 @@ export interface IArrangementPolicy {
     requiredSetupActions?: RequirementDefinition[] | undefined;
     requiredMonitoringActionsNew?: MonitoringRequirement[] | undefined;
     requiredCloseoutActions?: RequirementDefinition[] | undefined;
+    supersededAtUtc?: Date | undefined;
 }
 
 export class MonitoringRequirement implements IMonitoringRequirement {
