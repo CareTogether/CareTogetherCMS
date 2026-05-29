@@ -67,7 +67,7 @@ export function useCustomFieldFilters<TItem>({
           });
 
         const values = Array.from(
-          new Set<CustomFieldFilterValue>([null, ...observedValues])
+          new Set<CustomFieldFilterValue>([null, ...observedValues, ...(field.validValues ?? [])])
         );
 
         const mappedOptions: CustomFieldFilterOption[] = values.map((v) => {
