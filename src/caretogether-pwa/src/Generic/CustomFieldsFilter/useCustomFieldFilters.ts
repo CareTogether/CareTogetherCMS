@@ -79,6 +79,10 @@ export function useCustomFieldFilters<TItem>({
           };
         });
 
+        const optionsByKey = new Map<string, CustomFieldFilterOption>(
+          mappedOptions.map((o) => [o.key, o])
+        );
+
         const options: CustomFieldFilterOption[] =
           field.type === CustomFieldType.StringArray &&
           field.validValues &&
@@ -90,7 +94,7 @@ export function useCustomFieldFilters<TItem>({
                     .filter((o) => o.value !== null)
                     .map((o) => o.key),
                   field.validValues
-                ).map((key) => mappedOptions.find((o) => o.key === key)!),
+                ).map((key) => optionsByKey.get(key)!),
               ]
             : mappedOptions.sort((a, b) => {
                 if (a.value === null) return -1;
