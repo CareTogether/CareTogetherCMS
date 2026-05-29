@@ -1521,8 +1521,8 @@
             "AllVolunteerFamiliesPermissionContext": "#/components/schemas/AllVolunteerFamiliesPermissionContext",
             "AssignedFunctionsInReferralCoAssigneeFamiliesPermissionContext": "#/components/schemas/AssignedFunctionsInReferralCoAssigneeFamiliesPermissionContext",
             "AssignedFunctionsInReferralPartneringFamilyPermissionContext": "#/components/schemas/AssignedFunctionsInReferralPartneringFamilyPermissionContext",
-            "AssignedStaffInV1CasePermissionContext": "#/components/schemas/AssignedStaffInV1CasePermissionContext",
-            "AssignedStaffInV1ReferralPermissionContext": "#/components/schemas/AssignedStaffInV1ReferralPermissionContext",
+            "AssignedVolunteerInV1CasePermissionContext": "#/components/schemas/AssignedVolunteerInV1CasePermissionContext",
+            "AssignedVolunteerInV1ReferralPermissionContext": "#/components/schemas/AssignedVolunteerInV1ReferralPermissionContext",
             "CommunityCoMemberFamiliesAssignedFunctionsInReferralCoAssignedFamiliesPermissionContext": "#/components/schemas/CommunityCoMemberFamiliesAssignedFunctionsInReferralCoAssignedFamiliesPermissionContext",
             "CommunityCoMemberFamiliesAssignedFunctionsInReferralPartneringFamilyPermissionContext": "#/components/schemas/CommunityCoMemberFamiliesAssignedFunctionsInReferralPartneringFamilyPermissionContext",
             "CommunityCoMemberFamiliesPermissionContext": "#/components/schemas/CommunityCoMemberFamiliesPermissionContext",
@@ -1620,7 +1620,7 @@
           }
         ]
       },
-      "AssignedStaffInV1CasePermissionContext": {
+      "AssignedVolunteerInV1CasePermissionContext": {
         "allOf": [
           {
             "$ref": "#/components/schemas/PermissionContext"
@@ -1644,7 +1644,7 @@
           }
         ]
       },
-      "AssignedStaffInV1ReferralPermissionContext": {
+      "AssignedVolunteerInV1ReferralPermissionContext": {
         "allOf": [
           {
             "$ref": "#/components/schemas/PermissionContext"
@@ -1844,8 +1844,8 @@
           "ViewV1Referral",
           "EditV1ReferralRequirementCompletion",
           "EditV1ReferralRequirementExemption",
-          "ViewV1ReferralStaffAssignments",
-          "EditV1ReferralStaffAssignments",
+          "ViewV1ReferralFunctionAssignments",
+          "EditV1ReferralFunctionAssignments",
           "CreateV1Case",
           "EditV1Case",
           "CloseV1Case",
@@ -1855,8 +1855,8 @@
           "EditV1CaseRequirementCompletion",
           "EditV1CaseRequirementExemption",
           "ViewV1CaseHistory",
-          "ViewV1CaseStaffAssignments",
-          "EditV1CaseStaffAssignments",
+          "ViewV1CaseFunctionAssignments",
+          "EditV1CaseFunctionAssignments",
           "CreateArrangement",
           "EditArrangement",
           "ViewAssignments",
@@ -2122,11 +2122,13 @@
         "description": "",
         "x-enumNames": [
           "Boolean",
-          "String"
+          "String",
+          "StringArray"
         ],
         "enum": [
           0,
-          1
+          1,
+          2
         ]
       },
       "CustomFieldValidation": {
@@ -2147,7 +2149,7 @@
           "requiredIntakeActionNames",
           "customFields",
           "arrangementPolicies",
-          "staffAssignmentPolicies"
+          "functionAssignmentPolicies"
         ],
         "properties": {
           "intakeRequirements_PRE_MIGRATION": {
@@ -2188,10 +2190,10 @@
               "$ref": "#/components/schemas/RequirementDefinition"
             }
           },
-          "staffAssignmentPolicies": {
+          "functionAssignmentPolicies": {
             "type": "array",
             "items": {
-              "$ref": "#/components/schemas/StaffAssignmentPolicy"
+              "$ref": "#/components/schemas/FunctionAssignmentPolicy"
             }
           }
         }
@@ -2295,6 +2297,11 @@
             "items": {
               "$ref": "#/components/schemas/RequirementDefinition"
             }
+          },
+          "supersededAtUtc": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
           }
         }
       },
@@ -2662,7 +2669,7 @@
           }
         }
       },
-      "StaffAssignmentPolicy": {
+      "FunctionAssignmentPolicy": {
         "type": "object",
         "additionalProperties": false,
         "required": [
@@ -2674,11 +2681,11 @@
             "type": "string"
           },
           "eligibility": {
-            "$ref": "#/components/schemas/StaffAssignmentEligibility"
+            "$ref": "#/components/schemas/FunctionAssignmentEligibility"
           }
         }
       },
-      "StaffAssignmentEligibility": {
+      "FunctionAssignmentEligibility": {
         "type": "object",
         "additionalProperties": false,
         "required": [
@@ -2733,6 +2740,13 @@
             "type": "object",
             "additionalProperties": {
               "$ref": "#/components/schemas/VolunteerFamilyRolePolicy"
+            }
+          },
+          "customFields": {
+            "type": "array",
+            "nullable": true,
+            "items": {
+              "$ref": "#/components/schemas/CustomField"
             }
           }
         }
@@ -2891,13 +2905,13 @@
         "type": "object",
         "additionalProperties": false,
         "required": [
-          "staffAssignmentPolicies"
+          "functionAssignmentPolicies"
         ],
         "properties": {
-          "staffAssignmentPolicies": {
+          "functionAssignmentPolicies": {
             "type": "array",
             "items": {
-              "$ref": "#/components/schemas/StaffAssignmentPolicy"
+              "$ref": "#/components/schemas/FunctionAssignmentPolicy"
             }
           }
         }
@@ -3641,14 +3655,14 @@
             "ChildLocationChanged": "#/components/schemas/ChildLocationChanged",
             "ReferralOpened": "#/components/schemas/ReferralOpened",
             "ReferralRequirementCompleted": "#/components/schemas/ReferralRequirementCompleted",
-            "V1CaseStaffAssigned": "#/components/schemas/V1CaseStaffAssigned",
-            "V1CaseStaffUnassigned": "#/components/schemas/V1CaseStaffUnassigned",
+            "V1CaseIndividualVolunteerAssigned": "#/components/schemas/V1CaseIndividualVolunteerAssigned",
+            "V1CaseIndividualVolunteerUnassigned": "#/components/schemas/V1CaseIndividualVolunteerUnassigned",
             "V1ReferralAccepted": "#/components/schemas/V1ReferralAccepted",
             "V1ReferralClosed": "#/components/schemas/V1ReferralClosed",
+            "V1ReferralIndividualVolunteerAssigned": "#/components/schemas/V1ReferralIndividualVolunteerAssigned",
+            "V1ReferralIndividualVolunteerUnassigned": "#/components/schemas/V1ReferralIndividualVolunteerUnassigned",
             "V1ReferralOpened": "#/components/schemas/V1ReferralOpened",
-            "V1ReferralRequirementCompleted": "#/components/schemas/V1ReferralRequirementCompleted",
-            "V1ReferralStaffAssigned": "#/components/schemas/V1ReferralStaffAssigned",
-            "V1ReferralStaffUnassigned": "#/components/schemas/V1ReferralStaffUnassigned"
+            "V1ReferralRequirementCompleted": "#/components/schemas/V1ReferralRequirementCompleted"
           }
         },
         "x-abstract": true,
@@ -3813,7 +3827,7 @@
           }
         ]
       },
-      "V1CaseStaffAssigned": {
+      "V1CaseIndividualVolunteerAssigned": {
         "allOf": [
           {
             "$ref": "#/components/schemas/Activity"
@@ -3837,7 +3851,7 @@
           }
         ]
       },
-      "V1CaseStaffUnassigned": {
+      "V1CaseIndividualVolunteerUnassigned": {
         "allOf": [
           {
             "$ref": "#/components/schemas/Activity"
@@ -3905,6 +3919,54 @@
           }
         ]
       },
+      "V1ReferralIndividualVolunteerAssigned": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/Activity"
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "personId",
+              "assignmentRole"
+            ],
+            "properties": {
+              "personId": {
+                "type": "string",
+                "format": "guid"
+              },
+              "assignmentRole": {
+                "type": "string"
+              }
+            }
+          }
+        ]
+      },
+      "V1ReferralIndividualVolunteerUnassigned": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/Activity"
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "personId",
+              "assignmentRole"
+            ],
+            "properties": {
+              "personId": {
+                "type": "string",
+                "format": "guid"
+              },
+              "assignmentRole": {
+                "type": "string"
+              }
+            }
+          }
+        ]
+      },
       "V1ReferralOpened": {
         "allOf": [
           {
@@ -3944,54 +4006,6 @@
               "completedAtUtc": {
                 "type": "string",
                 "format": "date-time"
-              }
-            }
-          }
-        ]
-      },
-      "V1ReferralStaffAssigned": {
-        "allOf": [
-          {
-            "$ref": "#/components/schemas/Activity"
-          },
-          {
-            "type": "object",
-            "additionalProperties": false,
-            "required": [
-              "personId",
-              "assignmentRole"
-            ],
-            "properties": {
-              "personId": {
-                "type": "string",
-                "format": "guid"
-              },
-              "assignmentRole": {
-                "type": "string"
-              }
-            }
-          }
-        ]
-      },
-      "V1ReferralStaffUnassigned": {
-        "allOf": [
-          {
-            "$ref": "#/components/schemas/Activity"
-          },
-          {
-            "type": "object",
-            "additionalProperties": false,
-            "required": [
-              "personId",
-              "assignmentRole"
-            ],
-            "properties": {
-              "personId": {
-                "type": "string",
-                "format": "guid"
-              },
-              "assignmentRole": {
-                "type": "string"
               }
             }
           }
@@ -4064,7 +4078,7 @@
           "completedCustomFields",
           "missingCustomFields",
           "arrangements",
-          "staffAssignments",
+          "assignedIndividualVolunteers",
           "linkedV1ReferralIds"
         ],
         "properties": {
@@ -4125,10 +4139,10 @@
               "$ref": "#/components/schemas/Arrangement"
             }
           },
-          "staffAssignments": {
+          "assignedIndividualVolunteers": {
             "type": "array",
             "items": {
-              "$ref": "#/components/schemas/StaffAssignment"
+              "$ref": "#/components/schemas/AssignedIndividualVolunteer"
             }
           },
           "comments": {
@@ -4535,7 +4549,7 @@
           }
         }
       },
-      "StaffAssignment": {
+      "AssignedIndividualVolunteer": {
         "type": "object",
         "additionalProperties": false,
         "required": [
@@ -4629,6 +4643,20 @@
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/ArrangementEntry"
+            }
+          },
+          "completedCustomFields": {
+            "type": "array",
+            "nullable": true,
+            "items": {
+              "$ref": "#/components/schemas/CompletedCustomFieldInfo"
+            }
+          },
+          "missingCustomFields": {
+            "type": "array",
+            "nullable": true,
+            "items": {
+              "type": "string"
             }
           }
         }
@@ -5367,7 +5395,7 @@
           "exemptedRequirements",
           "uploadedDocuments",
           "deletedDocuments",
-          "staffAssignments",
+          "assignedIndividualVolunteers",
           "history",
           "notes",
           "missingIntakeRequirements"
@@ -5441,10 +5469,10 @@
               "format": "guid"
             }
           },
-          "staffAssignments": {
+          "assignedIndividualVolunteers": {
             "type": "array",
             "items": {
-              "$ref": "#/components/schemas/StaffAssignment"
+              "$ref": "#/components/schemas/AssignedIndividualVolunteer"
             }
           },
           "history": {
@@ -6971,6 +6999,7 @@
             "RemoveVolunteerFamilyRole": "#/components/schemas/RemoveVolunteerFamilyRole",
             "ResetVolunteerFamilyRole": "#/components/schemas/ResetVolunteerFamilyRole",
             "UnexemptVolunteerFamilyRequirement": "#/components/schemas/UnexemptVolunteerFamilyRequirement",
+            "UpdateCustomVolunteerFamilyField": "#/components/schemas/UpdateCustomVolunteerFamilyField",
             "UploadVolunteerFamilyDocument": "#/components/schemas/UploadVolunteerFamilyDocument"
           }
         },
@@ -7172,6 +7201,37 @@
             "properties": {
               "requirementName": {
                 "type": "string"
+              }
+            }
+          }
+        ]
+      },
+      "UpdateCustomVolunteerFamilyField": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/VolunteerFamilyCommand"
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "completedCustomFieldId",
+              "customFieldName",
+              "customFieldType"
+            ],
+            "properties": {
+              "completedCustomFieldId": {
+                "type": "string",
+                "format": "guid"
+              },
+              "customFieldName": {
+                "type": "string"
+              },
+              "customFieldType": {
+                "$ref": "#/components/schemas/CustomFieldType"
+              },
+              "value": {
+                "nullable": true
               }
             }
           }
@@ -8470,7 +8530,6 @@
         "discriminator": {
           "propertyName": "discriminator",
           "mapping": {
-            "AssignStaffToV1Case": "#/components/schemas/AssignStaffToV1Case",
             "CloseReferral": "#/components/schemas/CloseReferral",
             "CompleteReferralRequirement": "#/components/schemas/CompleteReferralRequirement",
             "CreateReferral": "#/components/schemas/CreateReferral",
@@ -8478,10 +8537,11 @@
             "LinkReferralToCase": "#/components/schemas/LinkReferralToCase",
             "MarkReferralRequirementIncomplete": "#/components/schemas/MarkReferralRequirementIncomplete",
             "ReopenReferral": "#/components/schemas/ReopenReferral",
-            "UnassignStaffFromV1Case": "#/components/schemas/UnassignStaffFromV1Case",
             "UnexemptReferralRequirement": "#/components/schemas/UnexemptReferralRequirement",
             "UpdateCustomReferralField": "#/components/schemas/UpdateCustomReferralField",
-            "UpdateReferralComments": "#/components/schemas/UpdateReferralComments"
+            "UpdateReferralComments": "#/components/schemas/UpdateReferralComments",
+            "AssignIndividualVolunteer": "#/components/schemas/AssignIndividualVolunteer2",
+            "UnassignIndividualVolunteer": "#/components/schemas/UnassignIndividualVolunteer2"
           }
         },
         "x-abstract": true,
@@ -8504,30 +8564,6 @@
             "type": "string"
           }
         }
-      },
-      "AssignStaffToV1Case": {
-        "allOf": [
-          {
-            "$ref": "#/components/schemas/V1CaseCommand"
-          },
-          {
-            "type": "object",
-            "additionalProperties": false,
-            "required": [
-              "personId",
-              "assignmentRole"
-            ],
-            "properties": {
-              "personId": {
-                "type": "string",
-                "format": "guid"
-              },
-              "assignmentRole": {
-                "type": "string"
-              }
-            }
-          }
-        ]
       },
       "CloseReferral": {
         "allOf": [
@@ -8704,30 +8740,6 @@
           }
         ]
       },
-      "UnassignStaffFromV1Case": {
-        "allOf": [
-          {
-            "$ref": "#/components/schemas/V1CaseCommand"
-          },
-          {
-            "type": "object",
-            "additionalProperties": false,
-            "required": [
-              "personId",
-              "assignmentRole"
-            ],
-            "properties": {
-              "personId": {
-                "type": "string",
-                "format": "guid"
-              },
-              "assignmentRole": {
-                "type": "string"
-              }
-            }
-          }
-        ]
-      },
       "UnexemptReferralRequirement": {
         "allOf": [
           {
@@ -8790,6 +8802,54 @@
               "comments": {
                 "type": "string",
                 "nullable": true
+              }
+            }
+          }
+        ]
+      },
+      "AssignIndividualVolunteer2": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/V1CaseCommand"
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "personId",
+              "assignmentRole"
+            ],
+            "properties": {
+              "personId": {
+                "type": "string",
+                "format": "guid"
+              },
+              "assignmentRole": {
+                "type": "string"
+              }
+            }
+          }
+        ]
+      },
+      "UnassignIndividualVolunteer2": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/V1CaseCommand"
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "personId",
+              "assignmentRole"
+            ],
+            "properties": {
+              "personId": {
+                "type": "string",
+                "format": "guid"
+              },
+              "assignmentRole": {
+                "type": "string"
               }
             }
           }
@@ -8980,7 +9040,7 @@
           "propertyName": "discriminator",
           "mapping": {
             "AcceptV1Referral": "#/components/schemas/AcceptV1Referral",
-            "AssignStaffToV1Referral": "#/components/schemas/AssignStaffToV1Referral",
+            "AssignIndividualVolunteer": "#/components/schemas/AssignIndividualVolunteer3",
             "CloseV1Referral": "#/components/schemas/CloseV1Referral",
             "CompleteReferralRequirement": "#/components/schemas/CompleteReferralRequirement2",
             "CreateV1Referral": "#/components/schemas/CreateV1Referral",
@@ -8988,7 +9048,7 @@
             "ExemptReferralRequirement": "#/components/schemas/ExemptReferralRequirement2",
             "MarkReferralRequirementIncomplete": "#/components/schemas/MarkReferralRequirementIncomplete2",
             "ReopenV1Referral": "#/components/schemas/ReopenV1Referral",
-            "UnassignStaffFromV1Referral": "#/components/schemas/UnassignStaffFromV1Referral",
+            "UnassignIndividualVolunteer": "#/components/schemas/UnassignIndividualVolunteer3",
             "UnexemptReferralRequirement": "#/components/schemas/UnexemptReferralRequirement2",
             "UpdateCustomV1ReferralField": "#/components/schemas/UpdateCustomV1ReferralField",
             "UpdateV1ReferralDetails": "#/components/schemas/UpdateV1ReferralDetails",
@@ -9032,7 +9092,7 @@
           }
         ]
       },
-      "AssignStaffToV1Referral": {
+      "AssignIndividualVolunteer3": {
         "allOf": [
           {
             "$ref": "#/components/schemas/V1ReferralCommand"
@@ -9244,7 +9304,7 @@
           }
         ]
       },
-      "UnassignStaffFromV1Referral": {
+      "UnassignIndividualVolunteer3": {
         "allOf": [
           {
             "$ref": "#/components/schemas/V1ReferralCommand"

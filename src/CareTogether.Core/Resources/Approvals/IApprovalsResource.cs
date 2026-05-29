@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Immutable;
 using System.Threading.Tasks;
+using CareTogether.Resources.Policies;
 using JsonPolymorph;
 
 namespace CareTogether.Resources.Approvals
@@ -14,7 +15,8 @@ namespace CareTogether.Resources.Approvals
         ImmutableList<UploadedDocumentInfo> UploadedDocuments,
         ImmutableList<RoleRemoval> RoleRemovals,
         ImmutableDictionary<Guid, VolunteerEntry> IndividualEntries,
-        ImmutableList<Activity> History
+        ImmutableList<Activity> History,
+        ImmutableDictionary<string, CompletedCustomFieldInfo>? CompletedCustomFields = null
     );
 
     public record RoleRemoval(
@@ -92,6 +94,14 @@ namespace CareTogether.Resources.Approvals
         string RoleName,
         DateOnly? ForRemovalEffectiveSince,
         DateOnly? EffectiveThrough
+    ) : VolunteerFamilyCommand(FamilyId);
+
+    public sealed record UpdateCustomVolunteerFamilyField(
+        Guid FamilyId,
+        Guid CompletedCustomFieldId,
+        string CustomFieldName,
+        CustomFieldType CustomFieldType,
+        object? Value
     ) : VolunteerFamilyCommand(FamilyId);
 
     [JsonHierarchyBase]

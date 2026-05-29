@@ -48,7 +48,7 @@ namespace CareTogether.Managers
         ImmutableList<CompletedCustomFieldInfo> CompletedCustomFields,
         ImmutableList<string> MissingCustomFields,
         ImmutableList<Arrangement> Arrangements,
-        ImmutableList<StaffAssignment> StaffAssignments,
+        ImmutableList<AssignedIndividualVolunteer> AssignedIndividualVolunteers,
         string? Comments,
         ImmutableList<Guid> LinkedV1ReferralIds
     );
@@ -105,7 +105,9 @@ namespace CareTogether.Managers
         ImmutableList<RoleRemoval> RoleRemovals,
         ImmutableDictionary<Guid, VolunteerInfo> IndividualVolunteers,
         ImmutableList<Activity> History,
-        ImmutableList<Resources.V1Cases.ArrangementEntry> Assignments
+        ImmutableList<Resources.V1Cases.ArrangementEntry> Assignments,
+        ImmutableList<Resources.CompletedCustomFieldInfo>? CompletedCustomFields = null,
+        ImmutableList<string>? MissingCustomFields = null
     );
 
     public sealed record VolunteerInfo(

@@ -79,8 +79,8 @@ namespace CareTogether.Managers
                 Children = family.Children.Where(child => child.Active).ToImmutableList(),
             };
 
-            var missingCustomFamilyFields = locationPolicy
-                .CustomFamilyFields?.Where(customField =>
+            var missingCustomFamilyFields = (locationPolicy.CustomFamilyFields ?? [])
+                .Where(customField =>
                     !family.CompletedCustomFields?.Any(completed =>
                         completed.CustomFieldName == customField.Name
                     ) ?? false
@@ -95,11 +95,7 @@ namespace CareTogether.Managers
             );
 
             var (volunteerFamilyInfo, uploadedApprovalDocuments) =
-                await RenderVolunteerFamilyInfoAsync(
-                    organizationId,
-                    locationId,
-                    family
-                );
+                await RenderVolunteerFamilyInfoAsync(organizationId, locationId, locationPolicy, family);
             var notes = await notesResource.ListFamilyNotesAsync(
                 organizationId,
                 locationId,
@@ -260,7 +256,7 @@ namespace CareTogether.Managers
                             ToArrangement(a.Value, v1CaseStatus.IndividualArrangements[a.Key])
                         )
                         .ToImmutableList(),
-                    entry.StaffAssignments,
+                    entry.AssignedIndividualVolunteers,
                     entry.Comments,
                     entry.LinkedV1ReferralIds
                 );
@@ -297,11 +293,7 @@ namespace CareTogether.Managers
         private async Task<(
             VolunteerFamilyInfo?,
             ImmutableList<UploadedDocumentInfo>
-        )> RenderVolunteerFamilyInfoAsync(
-            Guid organizationId,
-            Guid locationId,
-            Family family
-        )
+        )> RenderVolunteerFamilyInfoAsync(Guid organizationId, Guid locationId, EffectiveLocationPolicy locationPolicy, Family family)
         {
             var entry = await approvalsResource.TryGetVolunteerFamilyAsync(
                 organizationId,
@@ -340,6 +332,20 @@ namespace CareTogether.Managers
                     return hasFamilyAssignments || hasIndividualAssignments;
                 })
                 .Select(arrangementEntry => arrangementEntry.Value)
+                .ToImmutableList();
+
+            var completedCustomFields = (entry.CompletedCustomFields ?? ImmutableDictionary<string, CompletedCustomFieldInfo>.Empty)
+                .Values
+                .ToImmutableList();
+
+            var volunteerCustomFields = locationPolicy.VolunteerPolicy?.CustomFields ?? ImmutableList<CustomField>.Empty;
+            var missingCustomFields = volunteerCustomFields
+                .Where(customField =>
+                    !completedCustomFields.Any(completed =>
+                        completed.CustomFieldName == customField.Name
+                    )
+                )
+                .Select(customField => customField.Name)
                 .ToImmutableList();
 
             var volunteerFamilyInfo = new VolunteerFamilyInfo(
@@ -381,7 +387,9 @@ namespace CareTogether.Managers
                     }
                 ),
                 entry.History,
-                assignments
+                assignments,
+                completedCustomFields,
+                missingCustomFields
             );
 
             return (volunteerFamilyInfo, entry.UploadedDocuments);
