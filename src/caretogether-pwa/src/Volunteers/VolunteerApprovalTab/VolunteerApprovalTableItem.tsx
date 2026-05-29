@@ -42,7 +42,7 @@ function getRowGroupHeight(
 
 function renderCustomFieldValue(value: unknown): React.ReactNode {
   if (value === null) {
-    return null;
+    return "";
   }
   if (value === true) {
     return 'Yes';
