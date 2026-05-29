@@ -327,7 +327,7 @@ function VolunteerApprovalTableRows(props: VolunteerApprovalTableItemProps) {
           const familyCustomFieldValue = familyCustomField?.value;
           return (
             <TableCell key={customFieldName}>
-              {renderCustomFieldValue(familyCustomFieldValue, fieldPolicy?.validValues ?? undefined)}
+              {renderCustomFieldValue(familyCustomFieldValue, fieldPolicy?.validValues)}
             </TableCell>
           );
         })}
