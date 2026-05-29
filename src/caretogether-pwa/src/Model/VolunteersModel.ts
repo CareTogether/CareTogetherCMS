@@ -3,6 +3,7 @@ import {
   ActionRequirement,
   CompleteVolunteerFamilyRequirement,
   CompleteVolunteerRequirement,
+  CustomField,
   VolunteerCommand,
   VolunteerFamilyCommand,
   RoleRemovalReason,
@@ -20,6 +21,7 @@ import {
   ExemptedRequirementInfo,
   FamilyApprovalRecordsCommand,
   IndividualApprovalRecordsCommand,
+  UpdateCustomVolunteerFamilyField,
 } from '../GeneratedClient';
 import { useAtomicRecordsCommandCallback, visibleFamiliesQuery } from './Data';
 import { commandFactory } from './CommandFactory';
@@ -268,6 +270,24 @@ export function useVolunteersModel() {
     }
   );
 
+  const updateCustomVolunteerFamilyField =
+    useVolunteerFamilyCommandCallbackWithLocation(
+      async (
+        volunteerFamilyId,
+        customField: CustomField,
+        value: boolean | string | null
+      ) => {
+        const command = commandFactory(UpdateCustomVolunteerFamilyField, {
+          familyId: volunteerFamilyId,
+          completedCustomFieldId: crypto.randomUUID(),
+          customFieldName: customField.name,
+          customFieldType: customField.type,
+          value: value,
+        });
+        return command;
+      }
+    );
+
   return {
     completeFamilyRequirement,
     markFamilyRequirementIncomplete,
@@ -281,5 +301,6 @@ export function useVolunteersModel() {
     unexemptVolunteerRequirement,
     removeIndividualRole,
     resetIndividualRole,
+    updateCustomVolunteerFamilyField,
   };
 }

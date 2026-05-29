@@ -80,6 +80,7 @@ import { RemoveFamilyRoleDialog } from '../Volunteers/RemoveFamilyRoleDialog';
 import { ResetFamilyRoleDialog } from '../Volunteers/ResetFamilyRoleDialog';
 import { VolunteerRoleApprovalStatusChip } from '../Volunteers/VolunteerRoleApprovalStatusChip';
 import { FamilyCustomField } from './FamilyCustomField';
+import { VolunteerFamilyCustomField } from '../Volunteers/VolunteerFamilyCustomField';
 import { isBackdropClick } from '../Utilities/handleBackdropClick';
 import { DeleteFamilyDialog } from './DeleteFamilyDialog';
 import { useDialogHandle } from '../Hooks/useDialogHandle';
@@ -705,6 +706,24 @@ export function FamilyScreen() {
                   policy.customFamilyFields?.map((field) => field.name) ?? []
                 ).map((customField) => (
                   <FamilyCustomField
+                    key={
+                      typeof customField === 'string'
+                        ? customField
+                        : customField.customFieldName
+                    }
+                    familyId={familyId}
+                    customField={customField}
+                  />
+                ))}
+              {permissions(Permission.ViewFamilyCustomFields) &&
+                family.volunteerFamilyInfo &&
+                orderCustomFieldsByPolicy(
+                  Array<CustomFieldRenderInfo>()
+                    .concat(family.volunteerFamilyInfo.completedCustomFields || [])
+                    .concat(family.volunteerFamilyInfo.missingCustomFields || []),
+                  policy.volunteerPolicy?.customFields?.map((field) => field.name) ?? []
+                ).map((customField) => (
+                  <VolunteerFamilyCustomField
                     key={
                       typeof customField === 'string'
                         ? customField

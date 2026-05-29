@@ -308,7 +308,11 @@ function VolunteerApprovalTableRows(props: VolunteerApprovalTableItemProps) {
             volunteerFamily.family?.completedCustomFields?.find(
               (value) => value?.customFieldName === customFieldName
             );
-          const familyCustomFieldValue = familyCustomField?.value;
+          const volunteerFamilyCustomField =
+            volunteerFamily.volunteerFamilyInfo?.completedCustomFields?.find(
+              (value) => value?.customFieldName === customFieldName
+            );
+          const familyCustomFieldValue = familyCustomField?.value ?? volunteerFamilyCustomField?.value;
           return (
             <TableCell key={customFieldName}>
               {renderCustomFieldValue(familyCustomFieldValue)}
