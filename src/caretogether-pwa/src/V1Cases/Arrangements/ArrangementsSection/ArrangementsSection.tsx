@@ -119,7 +119,7 @@ export function ArrangementsSection({
                 ?.filter(
                   (arrangementPolicy) =>
                     !arrangementPolicy.supersededAtUtc ||
-                    arrangementPolicy.supersededAtUtc > new Date()
+                    new Date(arrangementPolicy.supersededAtUtc) > new Date()
                 )
                 .map(
                 (arrangementPolicy) => (
