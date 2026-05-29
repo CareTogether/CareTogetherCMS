@@ -98,6 +98,7 @@ import { useFeatureFlagEnabled } from 'posthog-js/react';
 import { TestFamilyBadge } from './TestFamilyBadge';
 import { visibleReferralsQuery } from '../Model/Data';
 import { useRecoilValue } from 'recoil';
+import { FamilyCompleteOtherController } from '../Requirements/FamilyCompleteOtherController';
 import { useV1CasesModel } from '../Model/V1CasesModel';
 import { formatStatusWithDate } from '../V1Referrals/formatStatusWithDate';
 import { policyData } from '../Model/ConfigurationModel';
@@ -353,6 +354,8 @@ export function FamilyScreen() {
   const [familyMoreMenuAnchor, setFamilyMoreMenuAnchor] =
     useState<Element | null>(null);
 
+  const [familyCompleteOtherOpen, setFamilyCompleteOtherOpen] = useState(false);
+
   const participatingFamilyRoles = Object.entries(
     family?.volunteerFamilyInfo?.familyRoleApprovals || {}
   ).filter(
@@ -522,7 +525,9 @@ export function FamilyScreen() {
           (participatingFamilyRoles.length > 0 ||
             (family.volunteerFamilyInfo?.roleRemovals &&
               family.volunteerFamilyInfo.roleRemovals.length > 0))) ||
-          permissions(Permission.EditFamilyInfo)) && (
+          permissions(Permission.EditFamilyInfo) ||
+          (family.volunteerFamilyInfo != null &&
+            permissions(Permission.EditApprovalRequirementCompletion))) && (
           <IconButton
             onClick={(event) => setFamilyMoreMenuAnchor(event.currentTarget)}
             size="large"
@@ -568,6 +573,18 @@ export function FamilyScreen() {
               <ListItemText primary="Print notes" />
             </MenuItem>
 
+            {family.volunteerFamilyInfo != null &&
+              permissions(Permission.EditApprovalRequirementCompletion) && (
+                <MenuItem
+                  onClick={() => {
+                    setFamilyCompleteOtherOpen(true);
+                    setFamilyMoreMenuAnchor(null);
+                  }}
+                >
+                  <ListItemText primary="Complete other..." />
+                </MenuItem>
+              )}
+
             {permissions(Permission.EditFamilyInfo) &&
               updateTestFamilyFlagEnabled && (
                 <MenuItem
@@ -605,6 +622,11 @@ export function FamilyScreen() {
             )}
           </MenuList>
         </Menu>
+        <FamilyCompleteOtherController
+          familyId={familyId}
+          open={familyCompleteOtherOpen}
+          onClose={() => setFamilyCompleteOtherOpen(false)}
+        />
         {uploadDocumentDialogOpen && (
           <UploadFamilyDocumentsDialog
             family={family}
