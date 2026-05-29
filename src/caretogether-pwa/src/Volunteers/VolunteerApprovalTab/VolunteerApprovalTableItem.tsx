@@ -17,6 +17,7 @@ import { VolunteerRoleApprovalStatusChip } from '../VolunteerRoleApprovalStatusC
 import { familyLastName } from './familyLastName';
 import { LazyLoadMountTrigger } from '../../Utilities/LazyLoadMountTrigger';
 import { LazyLoad } from '../../Utilities/reactLazyLoadInterop';
+import { sortByPolicyOrder } from '../../Generic/sortByPolicyOrder';
 
 type VolunteerApprovalTableItemProps = {
   volunteerFamily: CombinedFamilyInfo;
@@ -54,14 +55,7 @@ function renderCustomFieldValue(value: unknown, validValues?: string[]): React.R
   }
   if (Array.isArray(value)) {
     const sortedValue = validValues && validValues.length > 0
-      ? [...value].sort((a, b) => {
-          const aIndex = validValues.indexOf(String(a));
-          const bIndex = validValues.indexOf(String(b));
-          if (aIndex === -1 && bIndex === -1) return 0;
-          if (aIndex === -1) return 1;
-          if (bIndex === -1) return -1;
-          return aIndex - bIndex;
-        })
+      ? sortByPolicyOrder(value.map(String), validValues)
       : value;
     return (
       <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: '.25rem' }}>
