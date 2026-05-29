@@ -11,7 +11,7 @@ import {
   CustomFieldValidation,
 } from '../GeneratedClient';
 
-type CustomFieldValue = string | boolean | number | null | undefined;
+type CustomFieldValue = string | boolean | number | string[] | null | undefined;
 
 type CustomFieldInputProps = {
   customFieldPolicy: CustomField;
@@ -45,6 +45,22 @@ export function CustomFieldInput({
         <FormControlLabel value="no" control={<Radio />} label="No" />
         <FormControlLabel value="" control={<Radio />} label="(blank)" />
       </RadioGroup>
+    );
+  }
+
+  if (type === CustomFieldType.StringArray) {
+    const arrayValue = Array.isArray(value) ? value : [];
+    return (
+      <Autocomplete
+        multiple
+        options={customFieldPolicy.validValues || []}
+        value={arrayValue}
+        onChange={(_, newValue) =>
+          onChange(newValue.length ? newValue : null)
+        }
+        freeSolo={customFieldPolicy.validation === CustomFieldValidation.SuggestOnly}
+        renderInput={(params) => <TextField {...params} />}
+      />
     );
   }
 

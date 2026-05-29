@@ -57,6 +57,11 @@ export function useCustomFieldFilters<TItem>({
 
             if (raw === undefined || raw === null || raw === '') return [];
 
+            if (field.type === CustomFieldType.StringArray) {
+              if (Array.isArray(raw)) return raw as string[];
+              return [];
+            }
+
             return [raw.toString()];
           });
 

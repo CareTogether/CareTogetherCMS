@@ -196,6 +196,7 @@ namespace CareTogether.Resources.Policies
     {
         Boolean,
         String,
+        StringArray,
     }
 
     public enum CustomFieldValidation

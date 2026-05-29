@@ -79,8 +79,8 @@ namespace CareTogether.Managers
                 Children = family.Children.Where(child => child.Active).ToImmutableList(),
             };
 
-            var missingCustomFamilyFields = locationPolicy
-                .CustomFamilyFields?.Where(customField =>
+            var missingCustomFamilyFields = (locationPolicy.CustomFamilyFields ?? [])
+                .Where(customField =>
                     !family.CompletedCustomFields?.Any(completed =>
                         completed.CustomFieldName == customField.Name
                     ) ?? false

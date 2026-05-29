@@ -67,6 +67,17 @@ export function CustomFieldEditor({
                 />
               </RadioGroup>
             </>
+          ) : type === CustomFieldType.StringArray ? (
+            <Autocomplete
+              multiple
+              options={customFieldPolicy.validValues || []}
+              value={Array.isArray(editor.value) ? editor.value : []}
+              onChange={(_event, newValue: string[]) => {
+                editor.setValue(newValue.length > 0 ? newValue : null);
+              }}
+              freeSolo={customFieldPolicy.validation === CustomFieldValidation.SuggestOnly}
+              renderInput={(params) => <TextField {...params} />}
+            />
           ) : customFieldPolicy.validation ===
             CustomFieldValidation.SuggestOnly ? (
             <Autocomplete
@@ -96,6 +107,8 @@ export function CustomFieldEditor({
           ) : (
             'No'
           )
+        ) : type === CustomFieldType.StringArray ? (
+          Array.isArray(savedValue) ? savedValue.join(', ') : savedValue
         ) : (
           savedValue
         )}
