@@ -70,9 +70,7 @@ export function CustomFieldEditor({
           ) : type === CustomFieldType.StringArray ? (
             <Autocomplete
               multiple
-              options={(customFieldPolicy.validValues || [])
-                .slice()
-                .sort((a, b) => -b.localeCompare(a))}
+              options={customFieldPolicy.validValues || []}
               value={Array.isArray(editor.value) ? editor.value : []}
               onChange={(_event, newValue: string[]) => {
                 editor.setValue(newValue.length > 0 ? newValue : null);

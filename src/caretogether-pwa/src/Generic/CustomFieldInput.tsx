@@ -53,9 +53,7 @@ export function CustomFieldInput({
     return (
       <Autocomplete
         multiple
-        options={(customFieldPolicy.validValues || [])
-          .slice()
-          .sort((a, b) => -b.localeCompare(a))}
+        options={customFieldPolicy.validValues || []}
         value={arrayValue}
         onChange={(_, newValue) =>
           onChange(newValue.length ? newValue : null)
