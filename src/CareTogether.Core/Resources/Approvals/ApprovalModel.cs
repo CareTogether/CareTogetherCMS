@@ -157,6 +157,21 @@ namespace CareTogether.Resources.Approvals
                             x.RoleName == c.RoleName && x.EffectiveUntil <= x.EffectiveSince
                         ),
                 },
+                UpdateCustomVolunteerFamilyField c => volunteerFamilyEntry with
+                {
+                    CompletedCustomFields = (volunteerFamilyEntry.CompletedCustomFields
+                        ?? ImmutableDictionary<string, CompletedCustomFieldInfo>.Empty).SetItem(
+                        c.CustomFieldName,
+                        new CompletedCustomFieldInfo(
+                            userId,
+                            timestampUtc,
+                            c.CompletedCustomFieldId,
+                            c.CustomFieldName,
+                            c.CustomFieldType,
+                            c.Value
+                        )
+                    ),
+                },
                 _ => throw new NotImplementedException(
                     $"The command type '{command.GetType().FullName}' has not been implemented."
                 ),

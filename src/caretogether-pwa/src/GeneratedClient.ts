@@ -3931,6 +3931,7 @@ export interface IFunctionAssignmentEligibility {
 export class VolunteerPolicy implements IVolunteerPolicy {
     volunteerRoles!: { [key: string]: VolunteerRolePolicy; };
     volunteerFamilyRoles!: { [key: string]: VolunteerFamilyRolePolicy; };
+    customFields?: CustomField[] | undefined;
 
     constructor(data?: IVolunteerPolicy) {
         if (data) {
@@ -3961,6 +3962,11 @@ export class VolunteerPolicy implements IVolunteerPolicy {
                         (<any>this.volunteerFamilyRoles)![key] = _data["volunteerFamilyRoles"][key] ? VolunteerFamilyRolePolicy.fromJS(_data["volunteerFamilyRoles"][key]) : new VolunteerFamilyRolePolicy();
                 }
             }
+            if (Array.isArray(_data["customFields"])) {
+                this.customFields = [] as any;
+                for (let item of _data["customFields"])
+                    this.customFields!.push(CustomField.fromJS(item));
+            }
         }
     }
 
@@ -3987,6 +3993,11 @@ export class VolunteerPolicy implements IVolunteerPolicy {
                     (<any>data["volunteerFamilyRoles"])[key] = this.volunteerFamilyRoles[key] ? this.volunteerFamilyRoles[key].toJSON() : <any>undefined;
             }
         }
+        if (Array.isArray(this.customFields)) {
+            data["customFields"] = [];
+            for (let item of this.customFields)
+                data["customFields"].push(item.toJSON());
+        }
         return data;
     }
 }
@@ -3994,6 +4005,7 @@ export class VolunteerPolicy implements IVolunteerPolicy {
 export interface IVolunteerPolicy {
     volunteerRoles: { [key: string]: VolunteerRolePolicy; };
     volunteerFamilyRoles: { [key: string]: VolunteerFamilyRolePolicy; };
+    customFields?: CustomField[] | undefined;
 }
 
 export class VolunteerRolePolicy implements IVolunteerRolePolicy {
@@ -7131,6 +7143,8 @@ export class VolunteerFamilyInfo implements IVolunteerFamilyInfo {
     individualVolunteers!: { [key: string]: VolunteerInfo; };
     history!: Activity[];
     assignments!: ArrangementEntry[];
+    completedCustomFields?: CompletedCustomFieldInfo[] | undefined;
+    missingCustomFields?: string[] | undefined;
 
     constructor(data?: IVolunteerFamilyInfo) {
         if (data) {
@@ -7203,6 +7217,16 @@ export class VolunteerFamilyInfo implements IVolunteerFamilyInfo {
                 for (let item of _data["assignments"])
                     this.assignments!.push(ArrangementEntry.fromJS(item));
             }
+            if (Array.isArray(_data["completedCustomFields"])) {
+                this.completedCustomFields = [] as any;
+                for (let item of _data["completedCustomFields"])
+                    this.completedCustomFields!.push(CompletedCustomFieldInfo.fromJS(item));
+            }
+            if (Array.isArray(_data["missingCustomFields"])) {
+                this.missingCustomFields = [] as any;
+                for (let item of _data["missingCustomFields"])
+                    this.missingCustomFields!.push(item);
+            }
         }
     }
 
@@ -7264,6 +7288,16 @@ export class VolunteerFamilyInfo implements IVolunteerFamilyInfo {
             for (let item of this.assignments)
                 data["assignments"].push(item.toJSON());
         }
+        if (Array.isArray(this.completedCustomFields)) {
+            data["completedCustomFields"] = [];
+            for (let item of this.completedCustomFields)
+                data["completedCustomFields"].push(item.toJSON());
+        }
+        if (Array.isArray(this.missingCustomFields)) {
+            data["missingCustomFields"] = [];
+            for (let item of this.missingCustomFields)
+                data["missingCustomFields"].push(item);
+        }
         return data;
     }
 }
@@ -7278,6 +7312,8 @@ export interface IVolunteerFamilyInfo {
     individualVolunteers: { [key: string]: VolunteerInfo; };
     history: Activity[];
     assignments: ArrangementEntry[];
+    completedCustomFields?: CompletedCustomFieldInfo[] | undefined;
+    missingCustomFields?: string[] | undefined;
 }
 
 export class FamilyRoleApprovalStatus implements IFamilyRoleApprovalStatus {
@@ -11205,6 +11241,11 @@ export abstract class VolunteerFamilyCommand implements IVolunteerFamilyCommand 
             result.init(data);
             return result;
         }
+        if (data["discriminator"] === "UpdateCustomVolunteerFamilyField") {
+            let result = new UpdateCustomVolunteerFamilyField();
+            result.init(data);
+            return result;
+        }
         if (data["discriminator"] === "UploadVolunteerFamilyDocument") {
             let result = new UploadVolunteerFamilyDocument();
             result.init(data);
@@ -11507,6 +11548,52 @@ export class UnexemptVolunteerFamilyRequirement extends VolunteerFamilyCommand i
 
 export interface IUnexemptVolunteerFamilyRequirement extends IVolunteerFamilyCommand {
     requirementName: string;
+}
+
+export class UpdateCustomVolunteerFamilyField extends VolunteerFamilyCommand implements IUpdateCustomVolunteerFamilyField {
+    completedCustomFieldId!: string;
+    customFieldName!: string;
+    customFieldType!: CustomFieldType;
+    value?: any | undefined;
+
+    constructor(data?: IUpdateCustomVolunteerFamilyField) {
+        super(data);
+        this._discriminator = "UpdateCustomVolunteerFamilyField";
+    }
+
+    init(_data?: any) {
+        super.init(_data);
+        if (_data) {
+            this.completedCustomFieldId = _data["completedCustomFieldId"];
+            this.customFieldName = _data["customFieldName"];
+            this.customFieldType = _data["customFieldType"];
+            this.value = _data["value"];
+        }
+    }
+
+    static fromJS(data: any): UpdateCustomVolunteerFamilyField {
+        data = typeof data === 'object' ? data : {};
+        let result = new UpdateCustomVolunteerFamilyField();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["completedCustomFieldId"] = this.completedCustomFieldId;
+        data["customFieldName"] = this.customFieldName;
+        data["customFieldType"] = this.customFieldType;
+        data["value"] = this.value;
+        super.toJSON(data);
+        return data;
+    }
+}
+
+export interface IUpdateCustomVolunteerFamilyField extends IVolunteerFamilyCommand {
+    completedCustomFieldId: string;
+    customFieldName: string;
+    customFieldType: CustomFieldType;
+    value?: any | undefined;
 }
 
 export class UploadVolunteerFamilyDocument extends VolunteerFamilyCommand implements IUploadVolunteerFamilyDocument {

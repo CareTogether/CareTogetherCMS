@@ -2764,14 +2764,12 @@ namespace CareTogether.TestData
                     ),
                 }.ToImmutableDictionary(),
                 [
-                    new("Has Pool", CustomFieldType.Boolean, null, null),
                     new(
                         "Home Church",
                         CustomFieldType.String,
                         CustomFieldValidation.SuggestOnly,
                         ["Mega Church", "Mini Church"]
                     ),
-                    new("Hosting Age Preference", CustomFieldType.StringArray, CustomFieldValidation.SuggestOnly, ["0-1", "2-5", "6-10", "11-15", "16-18"]),
                 ],
                 new V1CasePolicy(
                     ["Request for Help Form", "Fill intake form"],
@@ -3387,7 +3385,11 @@ namespace CareTogether.TestData
                                 ),
                             ]
                         ),
-                    }.ToImmutableDictionary()
+                    }.ToImmutableDictionary(),
+                    [
+                        new CustomField("Has Pool", CustomFieldType.Boolean, null, null),
+                        new CustomField("Hosting Age Preference", CustomFieldType.StringArray, CustomFieldValidation.SuggestOnly, ["0-1", "2-5", "6-10", "11-15", "16-18"]),
+                    ]
                 )
             )
             {
