@@ -115,7 +115,11 @@ export function ArrangementsSection({
             }}
           >
             {v1Case &&
-              policy.referralPolicy?.arrangementPolicies?.map(
+              policy.referralPolicy?.arrangementPolicies
+                ?.filter(
+                  (arrangementPolicy) => !arrangementPolicy.supersededAtUtc
+                )
+                .map(
                 (arrangementPolicy) => (
                   <Box key={arrangementPolicy.arrangementType}>
                     <Button

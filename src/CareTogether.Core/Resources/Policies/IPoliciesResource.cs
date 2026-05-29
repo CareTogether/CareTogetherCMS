@@ -214,7 +214,8 @@ namespace CareTogether.Resources.Policies
         // TODO: See TODO in ReferralPolicy
         ImmutableList<RequirementDefinition>? RequiredSetupActions = null,
         ImmutableList<MonitoringRequirement>? RequiredMonitoringActionsNew = null, // TODO: Rename to RequiredMonitoringActions after migration (see TODO in ReferralPolicy)
-        ImmutableList<RequirementDefinition>? RequiredCloseoutActions = null
+        ImmutableList<RequirementDefinition>? RequiredCloseoutActions = null,
+        DateTime? SupersededAtUtc = null
     )
     {
         public ImmutableList<RequirementDefinition> RequiredSetupActions_PRE_MIGRATION =
