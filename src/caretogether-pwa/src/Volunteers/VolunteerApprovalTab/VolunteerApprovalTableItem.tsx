@@ -54,7 +54,7 @@ function renderCustomFieldValue(value: unknown): React.ReactNode {
     return (
       <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: '.25rem' }}>
         {value.map((item, index) => (
-          <Chip key={`${item}-${index}`} size="small" label={String(item)} />
+          <Chip key={index} size="small" label={String(item)} />
         ))}
       </Box>
     );
