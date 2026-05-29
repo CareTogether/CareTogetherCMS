@@ -117,7 +117,9 @@ export function ArrangementsSection({
             {v1Case &&
               policy.referralPolicy?.arrangementPolicies
                 ?.filter(
-                  (arrangementPolicy) => !arrangementPolicy.supersededAtUtc
+                  (arrangementPolicy) =>
+                    !arrangementPolicy.supersededAtUtc ||
+                    arrangementPolicy.supersededAtUtc > new Date()
                 )
                 .map(
                 (arrangementPolicy) => (
