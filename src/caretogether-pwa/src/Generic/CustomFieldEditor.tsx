@@ -108,7 +108,19 @@ export function CustomFieldEditor({
             'No'
           )
         ) : type === CustomFieldType.StringArray ? (
-          Array.isArray(savedValue) ? savedValue.join(', ') : savedValue
+          Array.isArray(savedValue)
+            ? [...savedValue]
+                .sort((a, b) => {
+                  const validValues = customFieldPolicy.validValues ?? [];
+                  const aIndex = validValues.indexOf(String(a));
+                  const bIndex = validValues.indexOf(String(b));
+                  if (aIndex === -1 && bIndex === -1) return 0;
+                  if (aIndex === -1) return 1;
+                  if (bIndex === -1) return -1;
+                  return aIndex - bIndex;
+                })
+                .join(', ')
+            : savedValue
         ) : (
           savedValue
         )}
