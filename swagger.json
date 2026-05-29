@@ -2297,6 +2297,11 @@
             "items": {
               "$ref": "#/components/schemas/RequirementDefinition"
             }
+          },
+          "supersededAtUtc": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
           }
         }
       },
