@@ -2743,6 +2743,7 @@ export interface ICustomField {
 export enum CustomFieldType {
     Boolean = 0,
     String = 1,
+    StringArray = 2,
 }
 
 export enum CustomFieldValidation {
