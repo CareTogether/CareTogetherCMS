@@ -259,11 +259,11 @@
           }
         ],
         "requestBody": {
-          "x-name": "organizationConfiguration",
+          "x-name": "payload",
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/OrganizationConfiguration"
+                "$ref": "#/components/schemas/PutOrganizationConfigurationPayload"
               }
             }
           },
@@ -2029,6 +2029,26 @@
             "type": "string",
             "format": "guid",
             "nullable": true
+          }
+        }
+      },
+      "PutOrganizationConfigurationPayload": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "referralCloseReasons": {
+            "type": "array",
+            "nullable": true,
+            "items": {
+              "type": "string"
+            }
+          },
+          "caseCloseReasons": {
+            "type": "array",
+            "nullable": true,
+            "items": {
+              "type": "string"
+            }
           }
         }
       },

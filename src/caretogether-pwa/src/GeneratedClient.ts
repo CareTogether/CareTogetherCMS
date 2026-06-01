@@ -242,14 +242,14 @@ export class ConfigurationClient {
         return Promise.resolve<OrganizationConfiguration>(null as any);
     }
 
-    putOrganizationConfiguration(organizationId: string, organizationConfiguration: OrganizationConfiguration): Promise<OrganizationConfiguration> {
+    putOrganizationConfiguration(organizationId: string, payload: PutOrganizationConfigurationPayload): Promise<OrganizationConfiguration> {
         let url_ = this.baseUrl + "/api/{organizationId}/Configuration/organization";
         if (organizationId === undefined || organizationId === null)
             throw new Error("The parameter 'organizationId' must be defined.");
         url_ = url_.replace("{organizationId}", encodeURIComponent("" + organizationId));
         url_ = url_.replace(/[?&]$/, "");
 
-        const content_ = JSON.stringify(organizationConfiguration);
+        const content_ = JSON.stringify(payload);
 
         let options_: RequestInit = {
             body: content_,
@@ -2572,6 +2572,62 @@ export class PutLocationPayload implements IPutLocationPayload {
 export interface IPutLocationPayload {
     locationConfiguration: LocationConfiguration;
     copyPoliciesFromLocationId?: string | undefined;
+}
+
+export class PutOrganizationConfigurationPayload implements IPutOrganizationConfigurationPayload {
+    referralCloseReasons?: string[] | undefined;
+    caseCloseReasons?: string[] | undefined;
+
+    constructor(data?: IPutOrganizationConfigurationPayload) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            if (Array.isArray(_data["referralCloseReasons"])) {
+                this.referralCloseReasons = [] as any;
+                for (let item of _data["referralCloseReasons"])
+                    this.referralCloseReasons!.push(item);
+            }
+            if (Array.isArray(_data["caseCloseReasons"])) {
+                this.caseCloseReasons = [] as any;
+                for (let item of _data["caseCloseReasons"])
+                    this.caseCloseReasons!.push(item);
+            }
+        }
+    }
+
+    static fromJS(data: any): PutOrganizationConfigurationPayload {
+        data = typeof data === 'object' ? data : {};
+        let result = new PutOrganizationConfigurationPayload();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        if (Array.isArray(this.referralCloseReasons)) {
+            data["referralCloseReasons"] = [];
+            for (let item of this.referralCloseReasons)
+                data["referralCloseReasons"].push(item);
+        }
+        if (Array.isArray(this.caseCloseReasons)) {
+            data["caseCloseReasons"] = [];
+            for (let item of this.caseCloseReasons)
+                data["caseCloseReasons"].push(item);
+        }
+        return data;
+    }
+}
+
+export interface IPutOrganizationConfigurationPayload {
+    referralCloseReasons?: string[] | undefined;
+    caseCloseReasons?: string[] | undefined;
 }
 
 export class EffectiveLocationPolicy implements IEffectiveLocationPolicy {

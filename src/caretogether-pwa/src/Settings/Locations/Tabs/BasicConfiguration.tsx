@@ -6,11 +6,11 @@ import { useRecoilValue, useSetRecoilState } from 'recoil';
 import { selectedLocationContextState } from '../../../Model/Data';
 import {
   LocationConfiguration,
-  OrganizationConfiguration,
+  PutOrganizationConfigurationPayload,
+  PutLocationPayload,
 } from '../../../GeneratedClient';
 import {
   organizationConfigurationEdited,
-  organizationConfigurationQuery,
 } from '../../../Model/ConfigurationModel';
 import { useBackdrop } from '../../../Hooks/useBackdrop';
 
@@ -45,43 +45,57 @@ export default function BasicConfiguration({
   const {
     control,
     handleSubmit,
-    formState: { errors, isDirty },
+    formState: { dirtyFields, errors, isDirty },
     reset,
   } = useForm({
     defaultValues: data,
   });
 
   const { organizationId } = useRecoilValue(selectedLocationContextState);
-  const organizationConfiguration = useRecoilValue(organizationConfigurationQuery);
   const storeEdits = useSetRecoilState(organizationConfigurationEdited);
   const withBackdrop = useBackdrop();
 
   const onSubmit: SubmitHandler<ConfigurationData> = async (data) => {
     withBackdrop(async () => {
-      if (!organizationConfiguration) return;
-
       const { caseCloseReasons, referralCloseReasons, ...locationData } = data;
-
-      const updatedLocationConfiguration = new LocationConfiguration({
-        ...currentLocationDefinition,
-        ...locationData,
-      });
-
-      const updatedOrgConfig = await api.configuration.putOrganizationConfiguration(
-        organizationId,
-        new OrganizationConfiguration({
-          ...organizationConfiguration,
-          locations: organizationConfiguration.locations?.map((location) =>
-            location.id === currentLocationDefinition.id
-              ? updatedLocationConfiguration
-              : location
-          ),
-          caseCloseReasons,
-          referralCloseReasons,
-        })
+      const locationFieldsDirty = Boolean(
+        dirtyFields.name ||
+          dirtyFields.ethnicities ||
+          dirtyFields.adultFamilyRelationships ||
+          dirtyFields.arrangementReasons
       );
+      const organizationFieldsDirty = Boolean(
+        dirtyFields.caseCloseReasons || dirtyFields.referralCloseReasons
+      );
+      let updatedOrgConfig = null;
 
-      storeEdits(new OrganizationConfiguration(updatedOrgConfig));
+      if (locationFieldsDirty) {
+        const updatedLocationConfiguration = new LocationConfiguration({
+          ...currentLocationDefinition,
+          ...locationData,
+        });
+
+        updatedOrgConfig = await api.configuration.putLocationDefinition(
+          organizationId,
+          new PutLocationPayload({
+            locationConfiguration: updatedLocationConfiguration,
+          })
+        );
+      }
+
+      if (organizationFieldsDirty) {
+        updatedOrgConfig = await api.configuration.putOrganizationConfiguration(
+          organizationId,
+          new PutOrganizationConfigurationPayload({
+            caseCloseReasons,
+            referralCloseReasons,
+          })
+        );
+      }
+
+      if (updatedOrgConfig) {
+        storeEdits(updatedOrgConfig);
+      }
     });
   };
 

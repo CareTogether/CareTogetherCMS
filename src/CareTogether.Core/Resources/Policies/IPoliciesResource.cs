@@ -415,7 +415,8 @@ namespace CareTogether.Resources.Policies
 
         Task<OrganizationConfiguration> UpsertOrganizationConfigurationAsync(
             Guid organizationId,
-            OrganizationConfiguration organizationConfiguration
+            ImmutableList<string>? referralCloseReasons,
+            ImmutableList<string>? caseCloseReasons
         );
 
         Task<EffectiveLocationPolicy> UpsertEffectiveLocationPolicyAsync(

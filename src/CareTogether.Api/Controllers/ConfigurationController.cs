@@ -27,6 +27,11 @@ namespace CareTogether.Api.Controllers
         Guid? copyPoliciesFromLocationId
     );
 
+    public sealed record PutOrganizationConfigurationPayload(
+        ImmutableList<string>? referralCloseReasons,
+        ImmutableList<string>? caseCloseReasons
+    );
+
     [ApiController]
     [Authorize(
         Policies.ForbidAnonymous,
@@ -410,6 +415,23 @@ namespace CareTogether.Api.Controllers
             return Ok(result.OrganizationConfiguration);
         }
 
+        [HttpPut("/api/{organizationId:guid}/[controller]/organization")]
+        public async Task<ActionResult<OrganizationConfiguration>> PutOrganizationConfiguration(
+            Guid organizationId,
+            [FromBody] PutOrganizationConfigurationPayload payload
+        )
+        {
+            if (!User.IsInRole(SystemConstants.ORGANIZATION_ADMINISTRATOR))
+                return Forbid();
+
+            var result = await policiesResource.UpsertOrganizationConfigurationAsync(
+                organizationId,
+                payload.referralCloseReasons,
+                payload.caseCloseReasons
+            );
+            return Ok(result);
+        }
+
         [HttpDelete("/api/{organizationId:guid}/[controller]/roles/{roleName}")]
         public async Task<ActionResult<OrganizationConfiguration>> DeleteRoleDefinition(
             Guid organizationId,
@@ -419,22 +441,6 @@ namespace CareTogether.Api.Controllers
             if (!User.IsInRole(SystemConstants.ORGANIZATION_ADMINISTRATOR))
                 return Forbid();
             var result = await policiesResource.DeleteRoleDefinitionAsync(organizationId, roleName);
-            return Ok(result);
-        }
-
-        [HttpPut("/api/{organizationId:guid}/[controller]/organization")]
-        public async Task<ActionResult<OrganizationConfiguration>> PutOrganizationConfiguration(
-            Guid organizationId,
-            [FromBody] OrganizationConfiguration organizationConfiguration
-        )
-        {
-            if (!User.IsInRole(SystemConstants.ORGANIZATION_ADMINISTRATOR))
-                return Forbid();
-
-            var result = await policiesResource.UpsertOrganizationConfigurationAsync(
-                organizationId,
-                organizationConfiguration
-            );
             return Ok(result);
         }
 

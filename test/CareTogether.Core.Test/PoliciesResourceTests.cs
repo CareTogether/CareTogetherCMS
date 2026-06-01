@@ -12,9 +12,24 @@ namespace CareTogether.Core.Test
     public class PoliciesResourceTests
     {
         [TestMethod]
-        public async Task UpsertOrganizationConfigurationAsync_DoesNotPersistRenderedOrganizationAdministratorRole()
+        public async Task ConfigurationUpdates_MergeLocationAndOrganizationFieldsSeparately()
         {
             var organizationId = Guid.NewGuid();
+            var locationId = Guid.NewGuid();
+            var location = new LocationConfiguration(
+                locationId,
+                "Original Location",
+                ImmutableList.Create("Original ethnicity"),
+                ImmutableList.Create("Original relationship"),
+                ImmutableList.Create("Original arrangement reason"),
+                ImmutableList<SourcePhoneNumberConfiguration>.Empty,
+                ImmutableList<AccessLevel>.Empty
+            );
+            var role = new RoleDefinition(
+                "Case Manager",
+                null,
+                ImmutableList<ContextualPermissionSet>.Empty
+            );
             var configurationStore = new MemoryObjectStore<OrganizationConfiguration>();
             var policiesResource = new PoliciesResource(
                 configurationStore,
@@ -29,27 +44,39 @@ namespace CareTogether.Core.Test
                 "config",
                 new OrganizationConfiguration(
                     "Test Organization",
-                    ImmutableList<LocationConfiguration>.Empty,
-                    ImmutableList<RoleDefinition>.Empty,
+                    ImmutableList.Create(location),
+                    ImmutableList.Create(role),
                     ImmutableList<string>.Empty,
-                    null,
-                    null
+                    ImmutableList.Create("Existing referral close reason"),
+                    ImmutableList.Create("Existing case close reason")
                 )
             );
 
             var renderedConfiguration = await policiesResource.GetConfigurationAsync(
                 organizationId
             );
-            var updatedConfiguration = renderedConfiguration with
+            var renderedLocation = renderedConfiguration.Locations.Single();
+            var updatedLocation = renderedLocation with
             {
-                ReferralCloseReasons = ImmutableList.Create("Referral complete"),
-                CaseCloseReasons = ImmutableList.Create("Case complete"),
+                Name = "Updated Location",
             };
 
-            var result = await policiesResource.UpsertOrganizationConfigurationAsync(
+            var result = await policiesResource.UpsertLocationDefinitionAsync(
                 organizationId,
-                updatedConfiguration
+                updatedLocation
             );
+            var storedLocationConfiguration = await configurationStore.GetAsync(
+                organizationId,
+                Guid.Empty,
+                "config"
+            );
+
+            var updatedOrganizationConfiguration =
+                await policiesResource.UpsertOrganizationConfigurationAsync(
+                    organizationId,
+                    ImmutableList.Create("Referral complete"),
+                    ImmutableList.Create("Case complete")
+                );
             var storedConfiguration = await configurationStore.GetAsync(
                 organizationId,
                 Guid.Empty,
@@ -67,7 +94,13 @@ namespace CareTogether.Core.Test
             );
             Assert.AreEqual(
                 1,
-                result.Roles.Count(role =>
+                result.OrganizationConfiguration.Roles.Count(role =>
+                    role.RoleName == SystemConstants.ORGANIZATION_ADMINISTRATOR
+                )
+            );
+            Assert.AreEqual(
+                1,
+                updatedOrganizationConfiguration.Roles.Count(role =>
                     role.RoleName == SystemConstants.ORGANIZATION_ADMINISTRATOR
                 )
             );
@@ -77,6 +110,19 @@ namespace CareTogether.Core.Test
                     role.RoleName == SystemConstants.ORGANIZATION_ADMINISTRATOR
                 )
             );
+            AssertEx.SequenceIs(
+                storedLocationConfiguration.ReferralCloseReasons!,
+                "Existing referral close reason"
+            );
+            AssertEx.SequenceIs(
+                storedLocationConfiguration.CaseCloseReasons!,
+                "Existing case close reason"
+            );
+            AssertEx.SequenceIs(
+                storedConfiguration.Roles.Select(role => role.RoleName).ToImmutableList(),
+                "Case Manager"
+            );
+            Assert.AreEqual("Updated Location", storedConfiguration.Locations.Single().Name);
             AssertEx.SequenceIs(storedConfiguration.ReferralCloseReasons!, "Referral complete");
             AssertEx.SequenceIs(storedConfiguration.CaseCloseReasons!, "Case complete");
         }
