@@ -55,6 +55,8 @@ import {
   EditArrangementRequestedAt,
   EditArrangementEndTime,
   EditArrangementCancelledAt,
+  AssignIndividualVolunteer2 as AssignCaseIndividualVolunteer,
+  UnassignIndividualVolunteer2 as UnassignCaseIndividualVolunteer,
 } from '../GeneratedClient';
 import { visibleFamiliesQuery } from './Data';
 import { convertUtcDateToLocalDate } from '../Utilities/dateUtils';
@@ -968,6 +970,36 @@ export function useV1CasesModel() {
     await openV1CaseCommand(partneringFamilyId, openedAtLocal);
   };
 
+  const assignIndividualVolunteerToV1Case = useV1CaseCommandCallbackWithLocation(
+    async (
+      partneringFamilyId: string,
+      v1CaseId: string,
+      personId: string,
+      assignmentRole: string
+    ) =>
+      commandFactory(AssignCaseIndividualVolunteer, {
+        familyId: partneringFamilyId,
+        referralId: v1CaseId,
+        personId,
+        assignmentRole,
+      })
+  );
+  const unassignIndividualVolunteerFromV1Case =
+    useV1CaseCommandCallbackWithLocation(
+      async (
+        partneringFamilyId: string,
+        v1CaseId: string,
+        personId: string,
+        assignmentRole: string
+      ) =>
+        commandFactory(UnassignCaseIndividualVolunteer, {
+          familyId: partneringFamilyId,
+          referralId: v1CaseId,
+          personId,
+          assignmentRole,
+        })
+    );
+
   return {
     completeV1CaseRequirement,
     markV1CaseRequirementIncomplete,
@@ -1012,5 +1044,7 @@ export function useV1CasesModel() {
     closeV1Case,
     reopenV1Case,
     openV1Case,
+    assignIndividualVolunteerToV1Case,
+    unassignIndividualVolunteerFromV1Case,
   };
 }

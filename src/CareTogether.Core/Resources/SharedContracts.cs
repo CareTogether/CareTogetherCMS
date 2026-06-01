@@ -31,7 +31,7 @@ namespace CareTogether.Resources
         string UploadedFileName
     );
 
-    public sealed record StaffAssignment(
+    public sealed record AssignedIndividualVolunteer(
         Guid PersonId,
         string AssignmentRole,
         DateTime AssignedAtUtc,

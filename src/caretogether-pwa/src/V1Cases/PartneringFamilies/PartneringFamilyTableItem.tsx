@@ -2,7 +2,10 @@ import { Box, Grid, TableCell, TableRow } from '@mui/material';
 import { format } from 'date-fns';
 import { useState } from 'react';
 import { Phone as PhoneIcon } from '@mui/icons-material';
-import { ArrangementPhase, CompletedCustomFieldInfo } from '../../GeneratedClient';
+import {
+  ArrangementPhase,
+  CompletedCustomFieldInfo,
+} from '../../GeneratedClient';
 import { FamilyName } from '../../Families/FamilyName';
 import { TestFamilyBadge } from '../../Families/TestFamilyBadge';
 import { LazyLoadMountTrigger } from '../../Utilities/LazyLoadMountTrigger';
@@ -11,6 +14,7 @@ import { ArrangementCard } from '../Arrangements/ArrangementCard';
 import { matchingArrangements } from './arrangementHelpers';
 import { PartneringFamilyTableItemProps } from './types';
 import { getFamilyCounty } from '../../Utilities/getFamilyCounty';
+import { assignmentNamesForRole } from '../../FunctionAssignments/assignmentRoleColumns';
 
 function getPartneringFamilyRowGroupHeight(
   expandedView: boolean,
@@ -28,6 +32,7 @@ function PartneringFamilyPlaceholderRow(
     PartneringFamilyTableItemProps,
     | 'arrangementTypes'
     | 'arrangementsFilter'
+    | 'assignmentRoles'
     | 'expandedView'
     | 'partneringFamily'
     | 'referralCustomFields'
@@ -38,6 +43,7 @@ function PartneringFamilyPlaceholderRow(
   const {
     arrangementTypes,
     arrangementsFilter,
+    assignmentRoles,
     expandedView,
     partneringFamily,
     referralCustomFields,
@@ -53,6 +59,7 @@ function PartneringFamilyPlaceholderRow(
   );
   const columnCount =
     3 +
+    assignmentRoles.length +
     referralCustomFields.length +
     (expandedView ? 0 : arrangementTypes.length);
 
@@ -83,6 +90,8 @@ function PartneringFamilyTableRows(props: PartneringFamilyTableItemProps) {
     expandedView,
     openArrangement,
     openFamily,
+    assignmentRoles,
+    assignmentPersonLookup,
     referralCustomFields,
     arrangementStatusSummary,
     updateTestFamilyFlagEnabled,
@@ -103,6 +112,7 @@ function PartneringFamilyTableRows(props: PartneringFamilyTableItemProps) {
     arrangementsFilter
   );
   const openV1Case = partneringFamily.partneringFamilyInfo?.openV1Case;
+  const assignments = openV1Case?.assignedIndividualVolunteers ?? [];
   const closedV1Cases =
     partneringFamily.partneringFamilyInfo?.closedV1Cases ?? [];
   const latestClosedV1Case =
@@ -154,6 +164,41 @@ function PartneringFamilyTableRows(props: PartneringFamilyTableItemProps) {
         </TableCell>
         <TableCell>{caseStatusText}</TableCell>
         <TableCell>{getFamilyCounty(partneringFamily)}</TableCell>
+        {assignmentRoles.map((assignmentRole) => (
+          <TableCell key={assignmentRole}>
+            {assignmentNamesForRole(
+              assignments,
+              assignmentRole,
+              assignmentPersonLookup
+            )}
+          </TableCell>
+        ))}
+        {referralCustomFields.map((field) => {
+          const completedFields =
+            partneringFamily.partneringFamilyInfo?.openV1Case
+              ?.completedCustomFields ?? [];
+
+          const matchingField = completedFields.find(
+            (customField: CompletedCustomFieldInfo) =>
+              customField.customFieldName === field.name
+          );
+
+          const fieldValue = matchingField?.value;
+          const displayValue =
+            fieldValue === true
+              ? 'Yes'
+              : fieldValue === false
+                ? 'No'
+                : fieldValue === undefined || fieldValue === null
+                  ? ''
+                  : fieldValue.toString();
+
+          return (
+            <TableCell key={field.name} sx={{ textAlign: 'center' }}>
+              {displayValue}
+            </TableCell>
+          );
+        })}
         {!expandedView ? (
           arrangementTypes.map((arrangementType) => (
             <TableCell key={arrangementType}>
@@ -199,35 +244,12 @@ function PartneringFamilyTableRows(props: PartneringFamilyTableItemProps) {
         ) : (
           <></>
         )}
-        {referralCustomFields.map((field) => {
-          const completedFields =
-            partneringFamily.partneringFamilyInfo?.openV1Case
-              ?.completedCustomFields ?? [];
-
-          const matchingField = completedFields.find(
-            (customField: CompletedCustomFieldInfo) =>
-              customField.customFieldName === field.name
-          );
-
-          const fieldValue = matchingField?.value;
-          const displayValue =
-            fieldValue === true
-              ? 'Yes'
-              : fieldValue === false
-                ? 'No'
-                : fieldValue === undefined || fieldValue === null
-                  ? ''
-                  : fieldValue.toString();
-
-          return (
-            <TableCell key={field.name} sx={{ textAlign: 'center' }}>
-              {displayValue}
-            </TableCell>
-          );
-        })}
       </TableRow>
       {expandedView ? (
-        <TableRow onClick={() => openFamily(familyId)}>
+        <TableRow
+          sx={{ cursor: 'pointer' }}
+          onClick={() => openFamily(familyId)}
+        >
           <TableCell sx={{ maxWidth: '400px', paddingLeft: 3 }}>
             <Box
               sx={{
@@ -239,7 +261,9 @@ function PartneringFamilyTableRows(props: PartneringFamilyTableItemProps) {
             </Box>
           </TableCell>
 
-          <TableCell colSpan={2 + referralCustomFields.length}>
+          <TableCell
+            colSpan={2 + assignmentRoles.length + referralCustomFields.length}
+          >
             <Grid container spacing={2}>
               {arrangementEntries.map((arrangementEntry) => (
                 <Grid item key={arrangementEntry.arrangement.id}>

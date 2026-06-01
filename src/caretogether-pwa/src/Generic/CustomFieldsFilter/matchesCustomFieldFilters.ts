@@ -38,6 +38,11 @@ export function matchesCustomFieldFilters<TItem>({
       return false;
     }
 
+    if (field.type === CustomFieldType.StringArray) {
+      if (!Array.isArray(raw) || raw.length === 0) return false;
+      return selectedValues.some((sv) => raw.includes(sv));
+    }
+
     if (raw === undefined || raw === null || raw === '') return false;
 
     return selectedValues.includes(raw.toString());

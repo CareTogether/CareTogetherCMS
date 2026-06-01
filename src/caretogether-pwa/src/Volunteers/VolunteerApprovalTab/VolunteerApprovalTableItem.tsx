@@ -1,6 +1,7 @@
 import {
   Box,
   Checkbox,
+  Chip,
   Grid,
   TableCell,
   TableRow,
@@ -8,12 +9,15 @@ import {
 } from '@mui/material';
 import { CombinedFamilyInfo } from '../../GeneratedClient';
 import React, { useState } from 'react';
+import { useRecoilValue } from 'recoil';
+import { policyData } from '../../Model/ConfigurationModel';
 import { AgeText } from '../../Families/AgeText';
 import { TestFamilyBadge } from '../../Families/TestFamilyBadge';
 import { VolunteerRoleApprovalStatusChip } from '../VolunteerRoleApprovalStatusChip';
 import { familyLastName } from './familyLastName';
 import { LazyLoadMountTrigger } from '../../Utilities/LazyLoadMountTrigger';
 import { LazyLoad } from '../../Utilities/reactLazyLoadInterop';
+import { sortByPolicyOrder } from '../../Generic/sortByPolicyOrder';
 
 type VolunteerApprovalTableItemProps = {
   volunteerFamily: CombinedFamilyInfo;
@@ -37,6 +41,31 @@ function getRowGroupHeight(
   }
 
   return 39 + (activeAdultsCount + activeChildrenCount) * 33;
+}
+
+function renderCustomFieldValue(value: unknown, validValues?: string[]): React.ReactNode {
+  if (value === null || typeof(value) === 'undefined') {
+    return "";
+  }
+  if (value === true) {
+    return 'Yes';
+  }
+  if (value === false) {
+    return 'No';
+  }
+  if (Array.isArray(value)) {
+    const sortedValue = validValues && validValues.length > 0
+      ? sortByPolicyOrder(value.map(String), validValues)
+      : value;
+    return (
+      <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: '.25rem' }}>
+        {sortedValue.map((item) => (
+          <Chip key={String(item)} size="small" label={String(item)} />
+        ))}
+      </Box>
+    );
+  }
+  return String(value);
 }
 
 function VolunteerApprovalPlaceholderRow(
@@ -100,6 +129,7 @@ function VolunteerApprovalTableRows(props: VolunteerApprovalTableItemProps) {
     roleFilters,
     updateTestFamilyFlagEnabled,
   } = props;
+  const policy = useRecoilValue(policyData);
   if (!volunteerFamily.family?.id) {
     return null;
   }
@@ -117,7 +147,7 @@ function VolunteerApprovalTableRows(props: VolunteerApprovalTableItemProps) {
   return (
     <>
       <TableRow
-        sx={{ backgroundColor: '#eef', height: '39px' }}
+        sx={{ backgroundColor: '#eef', height: '39px', cursor: 'pointer' }}
         onClick={() => openFamily(familyId)}
       >
         {smsMode && (
@@ -281,23 +311,21 @@ function VolunteerApprovalTableRows(props: VolunteerApprovalTableItemProps) {
           )}
         </TableCell>
         {customFieldNames.map((customFieldName) => {
+          const fieldPolicy = policy.customFamilyFields?.find(
+            (f) => f.name === customFieldName
+          );
           const familyCustomField =
             volunteerFamily.family?.completedCustomFields?.find(
               (value) => value?.customFieldName === customFieldName
             );
-          const familyCustomFieldValue = familyCustomField?.value;
-          if (familyCustomFieldValue === null) {
-            return <TableCell key={customFieldName}></TableCell>;
-          }
-          if (familyCustomFieldValue === true) {
-            return <TableCell key={customFieldName}>Yes</TableCell>;
-          }
-          if (familyCustomFieldValue === false) {
-            return <TableCell key={customFieldName}>No</TableCell>;
-          }
+          const volunteerFamilyCustomField =
+            volunteerFamily.volunteerFamilyInfo?.completedCustomFields?.find(
+              (value) => value?.customFieldName === customFieldName
+            );
+          const familyCustomFieldValue = familyCustomField?.value ?? volunteerFamilyCustomField?.value;
           return (
             <TableCell key={customFieldName}>
-              {familyCustomFieldValue}
+              {renderCustomFieldValue(familyCustomFieldValue, fieldPolicy?.validValues)}
             </TableCell>
           );
         })}
@@ -306,6 +334,7 @@ function VolunteerApprovalTableRows(props: VolunteerApprovalTableItemProps) {
         activeAdults.map((adult) => (
           <TableRow
             key={`${familyId}:${adult.item1!.id}`}
+            sx={{ cursor: 'pointer' }}
             onClick={() => openFamily(familyId)}
           >
             {smsMode && <TableCell />}
@@ -336,7 +365,7 @@ function VolunteerApprovalTableRows(props: VolunteerApprovalTableItemProps) {
           <TableRow
             key={`${familyId}:${child.id}`}
             onClick={() => openFamily(familyId)}
-            sx={{ color: 'ddd', fontStyle: 'italic' }}
+            sx={{ color: 'ddd', fontStyle: 'italic', cursor: 'pointer' }}
           >
             {smsMode && <TableCell />}
             <TableCell>

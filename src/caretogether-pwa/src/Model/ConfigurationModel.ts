@@ -242,6 +242,18 @@ export const allFunctionsInPolicyQuery = selector({
   },
 });
 
+export const allFunctionAssignmentRolesInPolicyQuery = selector({
+  key: 'allFunctionAssignmentRolesInPolicyQuery',
+  get: ({ get }) => {
+    const policy = get(policyData);
+    const allFunctionAssignmentRoles = [
+      ...(policy.referralPolicy?.functionAssignmentPolicies ?? []),
+      ...(policy.v1ReferralPolicy?.functionAssignmentPolicies ?? []),
+    ].map((volunteerAssignmentPolicy) => volunteerAssignmentPolicy.assignmentRole);
+    return Array.from(new Set(allFunctionAssignmentRoles)).filter(Boolean);
+  },
+});
+
 const featureFlagQuery = selector({
   key: 'featureFlagQuery',
   get: async ({ get }) => {

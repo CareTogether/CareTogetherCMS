@@ -1,8 +1,8 @@
 # See documentation for this file at:
 # https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners
 
-# Default owner for everything in the repo:
-*                    @PabloDinella
+# Default owners for everything in the repo:
+*                    @PabloDinella @LarsKemmann
 
 # Modifications to GitHub settings and the license require founder review:
 /.github/            @LarsKemmann

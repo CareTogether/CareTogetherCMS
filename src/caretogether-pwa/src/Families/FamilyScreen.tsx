@@ -38,6 +38,7 @@ import {
   AddCircle as AddCircleIcon,
   CloudUpload as CloudUploadIcon,
   Diversity3 as Diversity3Icon,
+  Edit as EditIcon,
   MoreVert as MoreVertIcon,
 } from '@mui/icons-material';
 import { AdultCard } from './AdultCard';
@@ -71,12 +72,14 @@ import {
 import {
   useCommunityLookup,
   useFamilyLookup,
+  usePersonAndFamilyLookup,
   useDirectoryModel,
 } from '../Model/DirectoryModel';
 import { RemoveFamilyRoleDialog } from '../Volunteers/RemoveFamilyRoleDialog';
 import { ResetFamilyRoleDialog } from '../Volunteers/ResetFamilyRoleDialog';
 import { VolunteerRoleApprovalStatusChip } from '../Volunteers/VolunteerRoleApprovalStatusChip';
 import { FamilyCustomField } from './FamilyCustomField';
+import { VolunteerFamilyCustomField } from '../Volunteers/VolunteerFamilyCustomField';
 import { isBackdropClick } from '../Utilities/handleBackdropClick';
 import { DeleteFamilyDialog } from './DeleteFamilyDialog';
 import { useDialogHandle } from '../Hooks/useDialogHandle';
@@ -95,8 +98,41 @@ import { useFeatureFlagEnabled } from 'posthog-js/react';
 import { TestFamilyBadge } from './TestFamilyBadge';
 import { visibleReferralsQuery } from '../Model/Data';
 import { useRecoilValue } from 'recoil';
+import { FamilyCompleteOtherController } from '../Requirements/FamilyCompleteOtherController';
 import { useV1CasesModel } from '../Model/V1CasesModel';
 import { formatStatusWithDate } from '../V1Referrals/formatStatusWithDate';
+import { policyData } from '../Model/ConfigurationModel';
+import { FUNCTION_ASSIGNMENTS_FEATURE_FLAG } from '../featureFlags';
+import { FunctionAssignmentsEditorDrawer } from '../FunctionAssignments/FunctionAssignmentsSection';
+import {
+  assignmentNamesForRole,
+  assignmentRolesForColumns,
+} from '../FunctionAssignments/assignmentRoleColumns';
+
+type CustomFieldRenderInfo = CompletedCustomFieldInfo | string;
+
+function customFieldName(customField: CustomFieldRenderInfo) {
+  return customField instanceof CompletedCustomFieldInfo
+    ? customField.customFieldName!
+    : customField;
+}
+
+function orderCustomFieldsByPolicy(
+  customFields: CustomFieldRenderInfo[],
+  policyFieldNames: string[]
+) {
+  const customFieldsByName = new Map(
+    customFields.map((customField) => [
+      customFieldName(customField),
+      customField,
+    ])
+  );
+
+  return policyFieldNames.flatMap((fieldName) => {
+    const customField = customFieldsByName.get(fieldName);
+    return customField === undefined ? [] : [customField];
+  });
+}
 
 export function FamilyScreen() {
   const familyIdMaybe = useParams<{ familyId: string }>();
@@ -118,11 +154,13 @@ export function FamilyScreen() {
     c.community?.memberFamilies?.includes(familyId)
   );
 
-  const referrals = useRecoilValue(visibleReferralsQuery);
+  const referralInfos = useRecoilValue(visibleReferralsQuery);
 
   const familyReferrals = useMemo(() => {
-    return (referrals ?? []).filter((r) => r.familyId === familyId);
-  }, [referrals, familyId]);
+    return (referralInfos ?? [])
+      .map((referralInfo) => referralInfo.referral)
+      .filter((r) => r.familyId === familyId);
+  }, [referralInfos, familyId]);
 
   function referralRequirementSummary(referral: V1Referral) {
     const incompleteCount =
@@ -144,7 +182,9 @@ export function FamilyScreen() {
   const appNavigate = useAppNavigate();
 
   const familyLookup = useFamilyLookup();
+  const personAndFamilyLookup = usePersonAndFamilyLookup();
   const family = familyLookup(familyId);
+  const policy = useRecoilValue(policyData);
 
   const directoryModel = useDirectoryModel();
 
@@ -181,11 +221,13 @@ export function FamilyScreen() {
   }, [openV1Cases, closedV1Cases]);
   const [closeCaseDrawerOpen, setCloseCaseDrawerOpen] = useState(false);
   const v1CasesModel = useV1CasesModel();
-  const referralsLoadable = useLoadable(visibleReferralsQuery);
+  const referralInfosLoadable = useLoadable(visibleReferralsQuery);
   const openReferralId =
-    referralsLoadable?.find(
-      (r) => r.familyId === familyId && r.status === V1ReferralStatus.Open
-    )?.referralId ?? undefined;
+    referralInfosLoadable
+      ?.map((referralInfo) => referralInfo.referral)
+      .find(
+        (r) => r.familyId === familyId && r.status === V1ReferralStatus.Open
+      )?.referralId ?? undefined;
   const [openNewV1CaseDialogOpen, setOpenNewV1CaseDialogOpen] = useState(false);
   const [uploadDocumentDialogOpen, setUploadDocumentDialogOpen] =
     useState(false);
@@ -198,9 +240,16 @@ export function FamilyScreen() {
   const [selectedV1CaseId, setSelectedV1CaseId] = useState<string | undefined>(
     v1CaseIdFromQuery || firstV1CaseId
   );
+  const [
+    functionAssignmentsEditorV1CaseId,
+    setFunctionAssignmentsEditorV1CaseId,
+  ] = useState<string | undefined>();
 
   const selectedV1Case = allV1Cases.find(
     (v1Case) => v1Case.id === selectedV1CaseId
+  );
+  const functionAssignmentsEditorV1Case = allV1Cases.find(
+    (v1Case) => v1Case.id === functionAssignmentsEditorV1CaseId
   );
 
   const hasOpenV1Case = openV1Cases.length > 0;
@@ -290,6 +339,8 @@ export function FamilyScreen() {
   const [familyMoreMenuAnchor, setFamilyMoreMenuAnchor] =
     useState<Element | null>(null);
 
+  const [familyCompleteOtherOpen, setFamilyCompleteOtherOpen] = useState(false);
+
   const participatingFamilyRoles = Object.entries(
     family?.volunteerFamilyInfo?.familyRoleApprovals || {}
   ).filter(
@@ -352,6 +403,29 @@ export function FamilyScreen() {
     'updateTestFamilyFlag'
   );
   const referralsEnabled = useFeatureFlagEnabled('referrals');
+  const functionAssignmentsEnabled = useFeatureFlagEnabled(
+    FUNCTION_ASSIGNMENTS_FEATURE_FLAG
+  );
+  const canViewFunctionAssignments =
+    functionAssignmentsEnabled === true &&
+    permissions(Permission.ViewV1CaseFunctionAssignments);
+  const canEditFunctionAssignments =
+    canViewFunctionAssignments &&
+    permissions(Permission.EditV1CaseFunctionAssignments);
+  const functionAssignmentRoles = useMemo(() => {
+    if (!canViewFunctionAssignments) return [];
+
+    return assignmentRolesForColumns(
+      policy.referralPolicy?.functionAssignmentPolicies?.map(
+        (assignmentPolicy) => assignmentPolicy.assignmentRole
+      ) ?? [],
+      allV1Cases.flatMap((v1Case) => v1Case.assignedIndividualVolunteers ?? [])
+    );
+  }, [
+    allV1Cases,
+    canViewFunctionAssignments,
+    policy.referralPolicy?.functionAssignmentPolicies,
+  ]);
 
   useScreenTitle(family ? `${familyLastName(family)} Family` : '...');
   useScreenTitleComponent(family ? <TestFamilyBadge family={family} /> : null);
@@ -436,7 +510,9 @@ export function FamilyScreen() {
           (participatingFamilyRoles.length > 0 ||
             (family.volunteerFamilyInfo?.roleRemovals &&
               family.volunteerFamilyInfo.roleRemovals.length > 0))) ||
-          permissions(Permission.EditFamilyInfo)) && (
+          permissions(Permission.EditFamilyInfo) ||
+          (family.volunteerFamilyInfo != null &&
+            permissions(Permission.EditApprovalRequirementCompletion))) && (
           <IconButton
             onClick={(event) => setFamilyMoreMenuAnchor(event.currentTarget)}
             size="large"
@@ -482,6 +558,18 @@ export function FamilyScreen() {
               <ListItemText primary="Print notes" />
             </MenuItem>
 
+            {family.volunteerFamilyInfo != null &&
+              permissions(Permission.EditApprovalRequirementCompletion) && (
+                <MenuItem
+                  onClick={() => {
+                    setFamilyCompleteOtherOpen(true);
+                    setFamilyMoreMenuAnchor(null);
+                  }}
+                >
+                  <ListItemText primary="Complete other..." />
+                </MenuItem>
+              )}
+
             {permissions(Permission.EditFamilyInfo) &&
               updateTestFamilyFlagEnabled && (
                 <MenuItem
@@ -519,6 +607,11 @@ export function FamilyScreen() {
             )}
           </MenuList>
         </Menu>
+        <FamilyCompleteOtherController
+          familyId={familyId}
+          open={familyCompleteOtherOpen}
+          onClose={() => setFamilyCompleteOtherOpen(false)}
+        />
         {uploadDocumentDialogOpen && (
           <UploadFamilyDocumentsDialog
             family={family}
@@ -590,37 +683,40 @@ export function FamilyScreen() {
             </Grid>
             <Grid item md={8}>
               {permissions(Permission.ViewFamilyCustomFields) &&
-                Array<CompletedCustomFieldInfo | string>()
-                  .concat(family.family!.completedCustomFields)
-                  .concat(family.missingCustomFields || [])
-                  .sort((a, b) =>
-                    (a instanceof CompletedCustomFieldInfo
-                      ? a.customFieldName!
-                      : a) <
-                    (b instanceof CompletedCustomFieldInfo
-                      ? b.customFieldName!
-                      : b)
-                      ? -1
-                      : (a instanceof CompletedCustomFieldInfo
-                            ? a.customFieldName!
-                            : a) >
-                          (b instanceof CompletedCustomFieldInfo
-                            ? b.customFieldName!
-                            : b)
-                        ? 1
-                        : 0
-                  )
-                  .map((customField) => (
-                    <FamilyCustomField
-                      key={
-                        typeof customField === 'string'
-                          ? customField
-                          : customField.customFieldName
-                      }
-                      familyId={familyId}
-                      customField={customField}
-                    />
-                  ))}
+                orderCustomFieldsByPolicy(
+                  Array<CustomFieldRenderInfo>()
+                    .concat(family.family!.completedCustomFields)
+                    .concat(family.missingCustomFields || []),
+                  policy.customFamilyFields?.map((field) => field.name) ?? []
+                ).map((customField) => (
+                  <FamilyCustomField
+                    key={
+                      typeof customField === 'string'
+                        ? customField
+                        : customField.customFieldName
+                    }
+                    familyId={familyId}
+                    customField={customField}
+                  />
+                ))}
+              {permissions(Permission.ViewFamilyCustomFields) &&
+                family.volunteerFamilyInfo &&
+                orderCustomFieldsByPolicy(
+                  Array<CustomFieldRenderInfo>()
+                    .concat(family.volunteerFamilyInfo.completedCustomFields || [])
+                    .concat(family.volunteerFamilyInfo.missingCustomFields || []),
+                  policy.volunteerPolicy?.customFields?.map((field) => field.name) ?? []
+                ).map((customField) => (
+                  <VolunteerFamilyCustomField
+                    key={
+                      typeof customField === 'string'
+                        ? customField
+                        : customField.customFieldName
+                    }
+                    familyId={familyId}
+                    customField={customField}
+                  />
+                ))}
 
               <Grid item xs={12} md={4}>
                 {permissions(Permission.ViewV1CaseCustomFields) &&
@@ -746,6 +842,17 @@ export function FamilyScreen() {
                           >
                             Case
                           </TableCell>
+                          {functionAssignmentRoles.map((assignmentRole) => (
+                            <TableCell
+                              key={assignmentRole}
+                              sx={{
+                                fontWeight: 600,
+                                whiteSpace: 'nowrap',
+                              }}
+                            >
+                              {assignmentRole}
+                            </TableCell>
+                          ))}
                           {referralsEnabled && (
                             <TableCell sx={{ fontWeight: 600, width: '100%' }}>
                               Linked Referrals
@@ -844,6 +951,57 @@ export function FamilyScreen() {
                                   </Box>
                                 </TableCell>
 
+                                {functionAssignmentRoles.map(
+                                  (assignmentRole) => {
+                                    const assignmentNames =
+                                      assignmentNamesForRole(
+                                        v1Case.assignedIndividualVolunteers ??
+                                          [],
+                                        assignmentRole,
+                                        (personId) =>
+                                          personAndFamilyLookup(personId).person
+                                      );
+
+                                    return (
+                                      <TableCell
+                                        key={assignmentRole}
+                                        sx={{ whiteSpace: 'nowrap' }}
+                                      >
+                                        <Box
+                                          sx={{
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            gap: 0.5,
+                                          }}
+                                        >
+                                          {assignmentNames || (
+                                            <Typography color="text.secondary">
+                                              —
+                                            </Typography>
+                                          )}
+                                          {canEditFunctionAssignments && (
+                                            <IconButton
+                                              aria-label={`Edit ${assignmentRole} assignment`}
+                                              size="small"
+                                              onClick={(e) => {
+                                                e.stopPropagation();
+                                                setFunctionAssignmentsEditorV1CaseId(
+                                                  v1Case.id
+                                                );
+                                              }}
+                                            >
+                                              <EditIcon
+                                                color="primary"
+                                                fontSize="small"
+                                              />
+                                            </IconButton>
+                                          )}
+                                        </Box>
+                                      </TableCell>
+                                    );
+                                  }
+                                )}
+
                                 {referralsEnabled && (
                                   <TableCell sx={{ width: '100%' }}>
                                     {linkedReferrals.length === 0 ? (
@@ -897,7 +1055,7 @@ export function FamilyScreen() {
                           }
                         )}
 
-                        {!referralsEnabled &&
+                        {referralsEnabled &&
                           caseReferralTable.unlinkedReferrals.length > 0 && (
                             <TableRow>
                               <TableCell
@@ -908,6 +1066,13 @@ export function FamilyScreen() {
                               >
                                 (not linked to a case)
                               </TableCell>
+                              {functionAssignmentRoles.map((assignmentRole) => (
+                                <TableCell key={assignmentRole}>
+                                  <Typography color="text.secondary">
+                                    —
+                                  </Typography>
+                                </TableCell>
+                              ))}
                               <TableCell sx={{ width: '100%' }}>
                                 <Box
                                   sx={{
@@ -953,6 +1118,37 @@ export function FamilyScreen() {
                       </TableBody>
                     </Table>
                   </TableContainer>
+                  {functionAssignmentsEditorV1Case && (
+                    <FunctionAssignmentsEditorDrawer
+                      open
+                      assignments={
+                        functionAssignmentsEditorV1Case.assignedIndividualVolunteers ??
+                        []
+                      }
+                      policies={
+                        policy.referralPolicy?.functionAssignmentPolicies ?? []
+                      }
+                      onClose={() =>
+                        setFunctionAssignmentsEditorV1CaseId(undefined)
+                      }
+                      onAssign={(personId, assignmentRole) =>
+                        v1CasesModel.assignIndividualVolunteerToV1Case(
+                          familyId,
+                          functionAssignmentsEditorV1Case.id,
+                          personId,
+                          assignmentRole
+                        )
+                      }
+                      onUnassign={(personId, assignmentRole) =>
+                        v1CasesModel.unassignIndividualVolunteerFromV1Case(
+                          familyId,
+                          functionAssignmentsEditorV1Case.id,
+                          personId,
+                          assignmentRole
+                        )
+                      }
+                    />
+                  )}
                 </Box>
               )}
             </Grid>
@@ -1137,6 +1333,7 @@ export function FamilyScreen() {
                 </Grid>
               </>
             )}
+
             {permissions(Permission.ViewFamilyDocumentMetadata) && (
               <Grid item xs={12} lg={8} xl={5} mb={2}>
                 <Typography
@@ -1160,11 +1357,7 @@ export function FamilyScreen() {
             )}
 
             <Grid item xs={12}>
-              <Typography
-                className="ph-unmask"
-                variant="h3"
-                style={{ marginBottom: 0 }}
-              >
+              <Typography className="ph-unmask" variant="h3" sx={{ mb: 1 }}>
                 Family Members
               </Typography>
               <Masonry
