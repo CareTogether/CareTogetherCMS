@@ -13,6 +13,7 @@ import {
   FormGroup,
   FormLabel,
   Grid,
+  Autocomplete,
   InputAdornment,
   InputLabel,
   MenuItem,
@@ -98,9 +99,6 @@ export function CreateVolunteerFamilyDialog({
     await withBackdrop(async () => {
       if (firstName.length <= 0 || lastName.length <= 0) {
         alert('First and last name are required. Try again.');
-      } else if (relationshipToFamily === '') {
-        //TODO: Actual validation!
-        alert('Family relationship was not selected. Try again.');
       } else {
         const age = dateOfBirth == null ? null : new ExactAge();
         if (dateOfBirth != null) age!.dateOfBirth = dateOfBirth;
@@ -113,7 +111,7 @@ export function CreateVolunteerFamilyDialog({
           age,
           optional(ethnicity),
           isInHousehold,
-          relationshipToFamily,
+          optional(relationshipToFamily),
           address == null
             ? null
             : new Address({ ...address, id: crypto.randomUUID() }),
@@ -176,32 +174,25 @@ export function CreateVolunteerFamilyDialog({
               />
             </Grid>
             <Grid item xs={12} sm={6}>
-              <FormControl required fullWidth size="small">
-                <InputLabel id="family-relationship-label">
-                  Relationship to Family
-                </InputLabel>
-                <Select
-                  labelId="family-relationship-label"
-                  label="Relationship to Family"
-                  id="family-relationship"
-                  value={relationshipToFamily}
-                  onChange={(e) =>
-                    setFields({
-                      ...fields,
-                      relationshipToFamily: e.target.value as string,
-                    })
-                  }
-                >
-                  <MenuItem key="placeholder" value="" disabled>
-                    Select a relationship type
-                  </MenuItem>
-                  {relationshipTypes.map((relationshipType) => (
-                    <MenuItem key={relationshipType} value={relationshipType}>
-                      {relationshipType}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
+              <Autocomplete
+                freeSolo
+                fullWidth
+                size="small"
+                options={relationshipTypes}
+                value={relationshipToFamily}
+                onChange={(_, value) =>
+                  setFields({
+                    ...fields,
+                    relationshipToFamily: value ?? '',
+                  })
+                }
+                onInputChange={(_, value) =>
+                  setFields({ ...fields, relationshipToFamily: value })
+                }
+                renderInput={(params) => (
+                  <TextField {...params} label="Relationship to Family" />
+                )}
+              />
             </Grid>
             <Grid item xs={12} sm={6}>
               <FormGroup row>
