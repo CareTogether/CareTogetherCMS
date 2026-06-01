@@ -1,12 +1,10 @@
 import {
+  Autocomplete,
   Checkbox,
-  FormControl,
   FormControlLabel,
   FormGroup,
   Grid,
-  InputLabel,
-  MenuItem,
-  Select,
+  TextField,
 } from '@mui/material';
 import { useDirectoryModel } from '../Model/DirectoryModel';
 import { useInlineEditor } from '../Hooks/useInlineEditor';
@@ -26,12 +24,17 @@ export function AdultFamilyRelationshipEditor({
 }: AdultFamilyRelationshipEditorProps) {
   const relationshipTypes = useRecoilValue(adultFamilyRelationshipsData);
   const directoryModel = useDirectoryModel();
+  const relationshipToFamilyDisplay =
+    relationship.relationshipToFamily || 'Not specified';
 
   const editor = useInlineEditor(
     async ({ isInHousehold, relationshipToFamily }) => {
       const valueToSave = new FamilyAdultRelationshipInfo();
       valueToSave.isInHousehold = isInHousehold;
-      valueToSave.relationshipToFamily = relationshipToFamily;
+      valueToSave.relationshipToFamily =
+        relationshipToFamily && relationshipToFamily.length > 0
+          ? relationshipToFamily
+          : undefined;
       await directoryModel.updateAdultRelationshipToFamily(
         familyId!,
         person.id!,
@@ -40,7 +43,7 @@ export function AdultFamilyRelationshipEditor({
     },
     {
       isInHousehold: relationship.isInHousehold,
-      relationshipToFamily: relationship.relationshipToFamily,
+      relationshipToFamily: relationship.relationshipToFamily ?? '',
     }
   );
 
@@ -49,32 +52,28 @@ export function AdultFamilyRelationshipEditor({
       {editor.editing ? (
         <>
           <Grid item xs={12} sm={6}>
-            <FormControl required fullWidth size="small">
-              <InputLabel id="family-relationship-label">
-                Relationship to Family
-              </InputLabel>
-              <Select
-                labelId="family-relationship-label"
-                label="Relationship to Family"
-                id="family-relationship"
-                value={editor.value?.relationshipToFamily}
-                onChange={(e) =>
-                  editor.setValue({
-                    isInHousehold: editor.value!.isInHousehold,
-                    relationshipToFamily: e.target.value as string,
-                  })
-                }
-              >
-                <MenuItem key="placeholder" value="" disabled>
-                  Select a relationship type
-                </MenuItem>
-                {relationshipTypes.map((relationshipType) => (
-                  <MenuItem key={relationshipType} value={relationshipType}>
-                    {relationshipType}
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
+            <Autocomplete
+              freeSolo
+              fullWidth
+              size="small"
+              options={relationshipTypes}
+              value={editor.value?.relationshipToFamily ?? ''}
+              onChange={(_, value) =>
+                editor.setValue({
+                  isInHousehold: editor.value!.isInHousehold,
+                  relationshipToFamily: value ?? '',
+                })
+              }
+              onInputChange={(_, value) =>
+                editor.setValue({
+                  isInHousehold: editor.value!.isInHousehold,
+                  relationshipToFamily: value,
+                })
+              }
+              renderInput={(params) => (
+                <TextField {...params} label="Relationship to Family" />
+              )}
+            />
           </Grid>
           <Grid item xs={12} sm={6}>
             <FormGroup row>
@@ -105,7 +104,7 @@ export function AdultFamilyRelationshipEditor({
         </>
       ) : (
         <Grid item xs={12}>
-          Relationship type: {relationship.relationshipToFamily},{' '}
+          Relationship type: {relationshipToFamilyDisplay},{' '}
           {relationship.isInHousehold ? 'household member' : 'not in household'}
           {editor.editButton}
         </Grid>

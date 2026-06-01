@@ -196,17 +196,19 @@ export function CreatePartneringFamilyDrawer({
 
         <Grid item xs={12} sm={6}>
           <Autocomplete
+            freeSolo
             fullWidth
             size="small"
             options={relationshipTypes}
-            value={
-              relationshipTypes.find((r) => r === relationshipToFamily) ?? null
-            }
+            value={relationshipToFamily}
             onChange={(_, value) =>
               setFields({
                 ...fields,
                 relationshipToFamily: value ?? '',
               })
+            }
+            onInputChange={(_, value) =>
+              setFields({ ...fields, relationshipToFamily: value })
             }
             renderInput={(params) => (
               <TextField {...params} label="Relationship to Family" />
