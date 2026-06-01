@@ -1,12 +1,10 @@
 import { useState } from 'react';
 import {
+  Box,
   Button,
   Checkbox,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
   Divider,
+  Drawer,
   FormControl,
   FormControlLabel,
   FormGroup,
@@ -19,6 +17,7 @@ import {
   RadioGroup,
   Select,
   TextField,
+  Typography,
 } from '@mui/material';
 import {
   ExactAge,
@@ -44,7 +43,7 @@ import { visibleFamiliesQuery } from '../Model/Data';
 import { AddressFormFields } from './AddressEditor';
 import { familyLastName } from './FamilyUtils';
 
-interface AddAdultDialogProps {
+interface AddAdultDrawerProps {
   onClose: (event: object | undefined, reason: string) => void;
 }
 
@@ -52,7 +51,7 @@ function optional(arg: string) {
   return arg.length > 0 ? arg : null;
 }
 
-export function AddAdultDialog({ onClose }: AddAdultDialogProps) {
+export function AddAdultDrawer({ onClose }: AddAdultDrawerProps) {
   const { familyId } = useParams<{ familyId: string }>();
   const visibleFamilies = useRecoilValue(visibleFamiliesQuery);
   const family = visibleFamilies.find(
@@ -135,19 +134,23 @@ export function AddAdultDialog({ onClose }: AddAdultDialogProps) {
   }
 
   return (
-    <Dialog
-      open={true}
+    <Drawer
+      anchor="right"
+      open
       onClose={onClose}
-      scroll="body"
-      aria-labelledby="add-adult-title"
+      PaperProps={{
+        sx: {
+          width: { xs: '100%', sm: 600 },
+          top: 45,
+          height: 'calc(100% - 45px)',
+          display: 'flex',
+        },
+      }}
     >
-      <DialogTitle id="add-adult-title">
-        Add Adult to {familyLastName(family)}
-      </DialogTitle>
-      <DialogContent>
-        {/* <DialogContentText>
-          Provide the basic information needed for this adult.
-        </DialogContentText> */}
+      <Box sx={{ flex: 1, minHeight: 0, overflowY: 'auto', p: 3 }}>
+        <Typography id="add-adult-title" variant="h6" sx={{ mb: 2 }}>
+          Add Adult to {familyLastName(family)}
+        </Typography>
         <form noValidate autoComplete="off">
           <Grid container spacing={2}>
             <Grid item xs={12} sm={6}>
@@ -443,8 +446,19 @@ export function AddAdultDialog({ onClose }: AddAdultDialogProps) {
             </Grid>
           </Grid>
         </form>
-      </DialogContent>
-      <DialogActions sx={{ marginBottom: 4 }}>
+      </Box>
+      <Box
+        sx={{
+          borderTop: 1,
+          borderColor: 'divider',
+          display: 'flex',
+          gap: 1,
+          justifyContent: 'flex-end',
+          p: 2,
+          pb: 'calc(16px + env(safe-area-inset-bottom))',
+          backgroundColor: 'background.paper',
+        }}
+      >
         <Button onClick={() => onClose(undefined, 'cancel')} color="secondary">
           Cancel
         </Button>
@@ -456,7 +470,9 @@ export function AddAdultDialog({ onClose }: AddAdultDialogProps) {
         >
           Add to Family
         </Button>
-      </DialogActions>
-    </Dialog>
+      </Box>
+    </Drawer>
   );
 }
+
+export { AddAdultDrawer as AddAdultDialog };
