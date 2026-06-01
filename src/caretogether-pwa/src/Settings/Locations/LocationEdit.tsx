@@ -8,7 +8,10 @@ import {
 } from '@mui/material';
 import { useState, useEffect, useMemo } from 'react';
 import { useLoadable } from '../../Hooks/useLoadable';
-import { organizationConfigurationQuery } from '../../Model/ConfigurationModel';
+import {
+  organizationConfigurationQuery,
+  policyData,
+} from '../../Model/ConfigurationModel';
 import { ProgressBackdrop } from '../../Shell/ProgressBackdrop';
 import { useScreenTitle } from '../../Shell/ShellScreenTitle';
 import { useRecoilValue } from 'recoil';
@@ -16,19 +19,21 @@ import { selectedLocationContextState, useDataLoaded } from '../../Model/Data';
 import { useParams } from 'react-router-dom';
 import { Box } from '@mui/system';
 import BasicConfiguration from './Tabs/BasicConfiguration';
-import ActionDefinitions from './Tabs/ActionDefinitions';
-import ApprovalPolicies from './Tabs/ApprovalPolicies';
 import SettingsTabMenu from './SettingsTabMenu';
 import {
   ChevronLeft as ChevronLeftIcon,
   ChevronRight as ChevronRightIcon,
 } from '@mui/icons-material';
-import { useFeatureFlagEnabled } from 'posthog-js/react';
 import { useUserIsOrganizationAdministrator } from '../../Model/SessionModel';
 import { useAppNavigate } from '../../Hooks/useAppNavigate';
 import AccessLevels from './Tabs/AccessLevels/AccessLevels';
 import { Breadcrumbs } from '../../Generic/Breadcrumbs';
 import { useSearchParams } from 'react-router-dom';
+import {
+  PolicyConfiguration,
+  SmsSourcePhoneNumbers,
+} from './Tabs/PolicyConfiguration';
+import { EffectiveLocationPolicy } from '../../GeneratedClient';
 
 export function LocationEdit() {
   const { locationId, editingLocationId } = useParams<{
@@ -57,8 +62,14 @@ export function LocationEdit() {
       setIsSidebarCollapsed(false);
     }
   }, [isMobile]);
-  const actionTabEnabled = useFeatureFlagEnabled('actionDefinitionsTab');
-  const approvalTabEnabled = useFeatureFlagEnabled('approvalPoliciesTab');
+  const policy = useLoadable(policyData);
+  const [policyDraft, setPolicyDraft] =
+    useState<EffectiveLocationPolicy | null>(null);
+
+  useEffect(() => {
+    if (!policy) return;
+    setPolicyDraft(policy);
+  }, [policy]);
 
   const tabs = useMemo(
     () => [
@@ -69,16 +80,40 @@ export function LocationEdit() {
         shouldShow: true,
       },
       {
-        id: 'actions' as const,
-        label: 'Action Definitions',
-        component: ActionDefinitions,
-        shouldShow: actionTabEnabled,
+        id: 'smsSourcePhoneNumbers' as const,
+        label: 'SmsSourcePhoneNumbers',
+        component: SmsSourcePhoneNumbers,
+        shouldShow: true,
       },
       {
-        id: 'approvalPolicies' as const,
-        label: 'Approval Policies',
-        component: ApprovalPolicies,
-        shouldShow: approvalTabEnabled,
+        id: 'actionDefinitions' as const,
+        label: 'ActionDefinitions',
+        component: PolicyConfiguration,
+        shouldShow: true,
+      },
+      {
+        id: 'customFamilyFields' as const,
+        label: 'CustomFamilyFields',
+        component: PolicyConfiguration,
+        shouldShow: true,
+      },
+      {
+        id: 'casePolicy' as const,
+        label: 'CasePolicy',
+        component: PolicyConfiguration,
+        shouldShow: true,
+      },
+      {
+        id: 'v1ReferralPolicy' as const,
+        label: 'V1ReferralPolicy',
+        component: PolicyConfiguration,
+        shouldShow: true,
+      },
+      {
+        id: 'volunteerPolicy' as const,
+        label: 'VolunteerPolicy',
+        component: PolicyConfiguration,
+        shouldShow: true,
       },
       {
         id: 'accessLevels' as const,
@@ -87,7 +122,7 @@ export function LocationEdit() {
         shouldShow: true,
       },
     ],
-    [actionTabEnabled, approvalTabEnabled]
+    []
   );
 
   // This result in a type like: 'basic' | 'actions' | 'policies'
@@ -153,6 +188,7 @@ export function LocationEdit() {
     arrangementReasons: location.arrangementReasons || [],
     referralCloseReasons: configuration?.referralCloseReasons || [],
   };
+  const locationRoles = configuration?.roles?.map((role) => role.roleName) ?? [];
 
   return (
     <Stack
@@ -227,6 +263,72 @@ export function LocationEdit() {
           {activeTab === 'accessLevels' && (
             <Box key="accessLevels">
               <AccessLevels locationConfiguration={location} />
+            </Box>
+          )}
+
+          {activeTab === 'smsSourcePhoneNumbers' && (
+            <Box key="smsSourcePhoneNumbers">
+              <SmsSourcePhoneNumbers locationConfiguration={location} />
+            </Box>
+          )}
+
+          {policyDraft && activeTab === 'actionDefinitions' && (
+            <Box key="actionDefinitions">
+              <PolicyConfiguration
+                policy={policyDraft}
+                locationConfiguration={location}
+                locationRoles={locationRoles}
+                onPolicyChange={setPolicyDraft}
+                section="actionDefinitions"
+              />
+            </Box>
+          )}
+
+          {policyDraft && activeTab === 'customFamilyFields' && (
+            <Box key="customFamilyFields">
+              <PolicyConfiguration
+                policy={policyDraft}
+                locationConfiguration={location}
+                locationRoles={locationRoles}
+                onPolicyChange={setPolicyDraft}
+                section="customFamilyFields"
+              />
+            </Box>
+          )}
+
+          {policyDraft && activeTab === 'casePolicy' && (
+            <Box key="casePolicy">
+              <PolicyConfiguration
+                policy={policyDraft}
+                locationConfiguration={location}
+                locationRoles={locationRoles}
+                onPolicyChange={setPolicyDraft}
+                section="casePolicy"
+              />
+            </Box>
+          )}
+
+          {policyDraft && activeTab === 'v1ReferralPolicy' && (
+            <Box key="v1ReferralPolicy">
+              <PolicyConfiguration
+                policy={policyDraft}
+                locationConfiguration={location}
+                locationRoles={locationRoles}
+                onPolicyChange={setPolicyDraft}
+                section="v1ReferralPolicy"
+              />
+            </Box>
+          )}
+
+          {policyDraft && activeTab === 'volunteerPolicy' && (
+            <Box key="volunteerPolicy">
+              <PolicyConfiguration
+                policy={policyDraft}
+                locationConfiguration={location}
+                locationRoles={locationRoles}
+                onPolicyChange={setPolicyDraft}
+                section="volunteerPolicy"
+              />
             </Box>
           )}
         </Box>

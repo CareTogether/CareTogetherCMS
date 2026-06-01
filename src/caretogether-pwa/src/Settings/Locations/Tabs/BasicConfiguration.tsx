@@ -113,6 +113,18 @@ export default function BasicConfiguration({
               </MenuItem>
             ))}
           </TextField> */}
+
+          <TextField
+            label="Time zone"
+            value={currentLocationDefinition.timeZone?.id ?? ''}
+            helperText={
+              currentLocationDefinition.timeZone
+                ? currentLocationDefinition.timeZone.displayName
+                : 'Not configured'
+            }
+            size="small"
+            disabled
+          />
         </Stack>
         <Typography variant="h6">Ethnicities</Typography>
         <Typography variant="body2">
