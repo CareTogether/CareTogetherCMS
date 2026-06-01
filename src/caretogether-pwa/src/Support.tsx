@@ -1,3 +1,4 @@
+import Grid from '@mui/material/GridLegacy';
 import {
   Box,
   Button,
@@ -5,7 +6,6 @@ import {
   CardActions,
   CardContent,
   Container,
-  Grid,
   Typography,
 } from '@mui/material';
 import {

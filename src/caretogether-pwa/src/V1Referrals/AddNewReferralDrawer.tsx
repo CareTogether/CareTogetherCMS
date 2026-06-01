@@ -1,4 +1,5 @@
-import { Button, Drawer, Grid, TextField, Typography } from '@mui/material';
+import Grid from '@mui/material/GridLegacy';
+import { Button, Drawer, TextField, Typography } from '@mui/material';
 import { Controller, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useRecoilValue } from 'recoil';
@@ -69,11 +70,13 @@ export function AddNewReferralDrawer({ onClose }: AddNewReferralDrawerProps) {
       anchor="right"
       open
       onClose={onClose}
-      PaperProps={{
-        sx: {
-          width: 500,
-          p: 3,
-          top: 45,
+      slotProps={{
+        paper: {
+          sx: {
+            width: 500,
+            p: 3,
+            top: 45,
+          },
         },
       }}
     >

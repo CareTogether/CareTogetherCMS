@@ -1,4 +1,4 @@
-import { Grid } from '@mui/material';
+import Grid from '@mui/material/GridLegacy';
 import { useDirectoryModel } from '../Model/DirectoryModel';
 import { useInlineEditor } from '../Hooks/useInlineEditor';
 import { PersonEditorProps } from './PersonEditorProps';

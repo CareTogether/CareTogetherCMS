@@ -1,8 +1,9 @@
-import { useReactToPrint } from 'react-to-print';
+import Grid from '@mui/material/GridLegacy';
+import {
+  useReactToPrint } from 'react-to-print';
 import {
   Container,
   Toolbar,
-  Grid,
   Button,
   useMediaQuery,
   useTheme,
@@ -790,8 +791,10 @@ export function FamilyScreen() {
                     <ListItemText
                       sx={{ alignSelf: 'baseline' }}
                       primary={communityInfo.community?.name}
-                      primaryTypographyProps={{
-                        color: theme.palette.primary.main,
+                      slotProps={{
+                        primary: {
+                          color: theme.palette.primary.main,
+                        },
                       }}
                     ></ListItemText>
                   </ListItemButton>

@@ -1,9 +1,9 @@
+import Grid from '@mui/material/GridLegacy';
 import {
   Button,
   Checkbox,
   Divider,
   FormControlLabel,
-  Grid,
   TextField,
 } from '@mui/material';
 import {

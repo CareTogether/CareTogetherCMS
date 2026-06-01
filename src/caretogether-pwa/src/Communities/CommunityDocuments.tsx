@@ -113,7 +113,9 @@ export function CommunityDocuments({ communityInfo }: CommunityDocumentsProps) {
               </ListItemIcon>
               <ListItemText
                 primary={doc.document.uploadedFileName}
-                primaryTypographyProps={{ color: theme.palette.primary.main }}
+                slotProps={{
+                  primary: { color: theme.palette.primary.main },
+                }}
                 secondary={`${format(doc.document.timestampUtc!, 'PPp')} — ${personNameString(doc.uploader)}`}
               ></ListItemText>
             </ListItemButton>

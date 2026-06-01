@@ -1,3 +1,4 @@
+import Grid from '@mui/material/GridLegacy';
 import {
   Checkbox,
   DialogContentText,
@@ -6,7 +7,6 @@ import {
   FormControlLabel,
   FormGroup,
   FormLabel,
-  Grid,
   InputLabel,
   Link,
   MenuItem,

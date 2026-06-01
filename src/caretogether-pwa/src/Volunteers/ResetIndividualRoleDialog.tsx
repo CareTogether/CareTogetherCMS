@@ -1,7 +1,7 @@
 import { Person, RoleRemovalReason } from '../GeneratedClient';
 import { useVolunteersModel } from '../Model/VolunteersModel';
 import { UpdateDialog } from '../Generic/UpdateDialog';
-import { Grid } from '@mui/material';
+import Grid from '@mui/material/GridLegacy';
 import { ValidateDatePicker } from '../Generic/Forms/ValidateDatePicker';
 import { useState } from 'react';
 
