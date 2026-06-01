@@ -52,7 +52,7 @@ function PartneringFamilyPlaceholderRow(
     arrangementCount
   );
   const columnCount =
-    2 +
+    3 +
     referralCustomFields.length +
     (expandedView ? 0 : arrangementTypes.length);
 
@@ -109,9 +109,16 @@ function PartneringFamilyTableRows(props: PartneringFamilyTableItemProps) {
     closedV1Cases.length > 0 ? closedV1Cases[closedV1Cases.length - 1] : null;
   const caseStatusText = openV1Case
     ? 'Open since ' + format(openV1Case.openedAtUtc!, 'MM/dd/yyyy')
-    : latestClosedV1Case?.closeReason != null
-      ? 'Closed - ' + latestClosedV1Case.closeReason
-      : 'No case';
+    : latestClosedV1Case?.closedAtUtc
+      ? [
+          'Closed ' + format(latestClosedV1Case.closedAtUtc, 'MM/dd/yyyy'),
+          latestClosedV1Case.closeReason,
+        ]
+          .filter(Boolean)
+          .join(' - ')
+      : latestClosedV1Case != null
+        ? 'Closed'
+        : 'No case';
 
   return (
     <>

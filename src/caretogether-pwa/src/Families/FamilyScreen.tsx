@@ -760,6 +760,10 @@ export function FamilyScreen() {
                             const isSelected = selectedV1Case?.id === v1Case.id;
 
                             const isOpenV1Case = !v1Case.closedAtUtc;
+                            const caseCloseReasonText =
+                              !isOpenV1Case && v1Case.closeReason
+                                ? v1Case.closeReason
+                                : undefined;
 
                             const showCloseButton =
                               isSelected &&
@@ -799,6 +803,15 @@ export function FamilyScreen() {
                                           )}`
                                         : 'Open Case'}
                                     </Typography>
+
+                                    {caseCloseReasonText && (
+                                      <Typography
+                                        className="ph-unmask"
+                                        color="text.secondary"
+                                      >
+                                        {caseCloseReasonText}
+                                      </Typography>
+                                    )}
 
                                     {showCloseButton && (
                                       <Button
