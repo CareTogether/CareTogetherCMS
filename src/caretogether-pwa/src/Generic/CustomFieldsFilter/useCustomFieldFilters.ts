@@ -1,5 +1,6 @@
 import React from 'react';
 import { CustomField, CustomFieldType } from '../../GeneratedClient';
+import { sortByPolicyOrder } from '../sortByPolicyOrder';
 import {
   CustomFieldFilterOption,
   CustomFieldFilterSelectionsByField,
@@ -57,27 +58,49 @@ export function useCustomFieldFilters<TItem>({
 
             if (raw === undefined || raw === null || raw === '') return [];
 
+            if (field.type === CustomFieldType.StringArray) {
+              if (Array.isArray(raw)) return raw as string[];
+              return [];
+            }
+
             return [raw.toString()];
           });
 
         const values = Array.from(
-          new Set<CustomFieldFilterValue>([null, ...observedValues])
+          new Set<CustomFieldFilterValue>([null, ...observedValues, ...(field.validValues ?? [])])
         );
 
-        const options: CustomFieldFilterOption[] = values
-          .map((v) => {
-            const key = v === null ? '(blank)' : v.toString();
-            return {
-              key,
-              value: v,
-              selected: selectedSet.has(v),
-            };
-          })
-          .sort((a, b) => {
-            if (a.value === null) return -1;
-            if (b.value === null) return 1;
-            return a.key.localeCompare(b.key);
-          });
+        const mappedOptions: CustomFieldFilterOption[] = values.map((v) => {
+          const key = v === null ? '(blank)' : v.toString();
+          return {
+            key,
+            value: v,
+            selected: selectedSet.has(v),
+          };
+        });
+
+        const optionsByKey = new Map<string, CustomFieldFilterOption>(
+          mappedOptions.map((o) => [o.key, o])
+        );
+
+        const options: CustomFieldFilterOption[] =
+          field.type === CustomFieldType.StringArray &&
+          field.validValues &&
+          field.validValues.length > 0
+            ? [
+                ...mappedOptions.filter((o) => o.value === null),
+                ...sortByPolicyOrder(
+                  mappedOptions
+                    .filter((o) => o.value !== null)
+                    .map((o) => o.key),
+                  field.validValues
+                ).map((key) => optionsByKey.get(key)!),
+              ]
+            : mappedOptions.sort((a, b) => {
+                if (a.value === null) return -1;
+                if (b.value === null) return 1;
+                return a.key.localeCompare(b.key);
+              });
 
         return [field.name, options] as const;
       })
