@@ -1,11 +1,13 @@
-import { useMemo, useState } from 'react';
+import Grid from '@mui/material/GridLegacy';
+import {
+  useMemo,
+  useState } from 'react';
 import { useParams } from 'react-router-dom';
 import {
   Box,
   Button,
   CircularProgress,
   Divider,
-  Grid,
   Stack,
   Typography,
   Snackbar,

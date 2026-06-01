@@ -2,7 +2,7 @@ import { RoleRemovalReason } from '../GeneratedClient';
 import { useVolunteersModel } from '../Model/VolunteersModel';
 import { UpdateDialog } from '../Generic/UpdateDialog';
 import { useState } from 'react';
-import { Grid } from '@mui/material';
+import Grid from '@mui/material/GridLegacy';
 import { ValidateDatePicker } from '../Generic/Forms/ValidateDatePicker';
 
 interface ResetFamilyRoleDialogProps {

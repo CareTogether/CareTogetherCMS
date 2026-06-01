@@ -1,11 +1,12 @@
-import { useState } from 'react';
+import Grid from '@mui/material/GridLegacy';
+import {
+  useState } from 'react';
 import {
   Button,
   Drawer,
   FormControl,
   FormControlLabel,
   FormLabel,
-  Grid,
   Radio,
   RadioGroup,
   Typography,
@@ -50,7 +51,7 @@ export function CloseV1ReferralDrawer({
       anchor="right"
       open
       onClose={onClose}
-      PaperProps={{ sx: { width: 500, p: 3, top: 45 } }}
+      slotProps={{ paper: { sx: { width: 500, p: 3, top: 45 } } }}
     >
       <form noValidate>
         <Grid container spacing={2}>
