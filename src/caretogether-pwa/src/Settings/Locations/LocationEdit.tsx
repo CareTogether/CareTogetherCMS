@@ -8,13 +8,14 @@ import {
 } from '@mui/material';
 import { useState, useEffect, useMemo } from 'react';
 import { useLoadable } from '../../Hooks/useLoadable';
+import { useBackdrop } from '../../Hooks/useBackdrop';
 import {
   organizationConfigurationQuery,
   policyData,
 } from '../../Model/ConfigurationModel';
 import { ProgressBackdrop } from '../../Shell/ProgressBackdrop';
 import { useScreenTitle } from '../../Shell/ShellScreenTitle';
-import { useRecoilValue } from 'recoil';
+import { useRecoilRefresher_UNSTABLE, useRecoilValue } from 'recoil';
 import { selectedLocationContextState, useDataLoaded } from '../../Model/Data';
 import { useParams } from 'react-router-dom';
 import { Box } from '@mui/system';
@@ -34,6 +35,11 @@ import {
   SmsSourcePhoneNumbers,
 } from './Tabs/PolicyConfiguration';
 import { EffectiveLocationPolicy } from '../../GeneratedClient';
+import { api } from '../../Api/Api';
+import {
+  DESKTOP_BOTTOM_SAFE_AREA,
+  MOBILE_BOTTOM_SAFE_AREA,
+} from '../../Shell/ShellRootLayout';
 
 export function LocationEdit() {
   const { locationId, editingLocationId } = useParams<{
@@ -43,6 +49,7 @@ export function LocationEdit() {
 
   const configuration = useLoadable(organizationConfigurationQuery);
   const { organizationId } = useRecoilValue(selectedLocationContextState);
+  const targetLocationId = editingLocationId ?? locationId;
 
   const location = configuration?.locations?.find(
     (location) => location.id === editingLocationId
@@ -65,10 +72,13 @@ export function LocationEdit() {
   const policy = useLoadable(policyData);
   const [policyDraft, setPolicyDraft] =
     useState<EffectiveLocationPolicy | null>(null);
+  const [savedPolicy, setSavedPolicy] =
+    useState<EffectiveLocationPolicy | null>(null);
 
   useEffect(() => {
     if (!policy) return;
     setPolicyDraft(policy);
+    setSavedPolicy(policy);
   }, [policy]);
 
   const tabs = useMemo(
@@ -81,37 +91,37 @@ export function LocationEdit() {
       },
       {
         id: 'smsSourcePhoneNumbers' as const,
-        label: 'SmsSourcePhoneNumbers',
+        label: 'SMS Source Phone Numbers',
         component: SmsSourcePhoneNumbers,
         shouldShow: true,
       },
       {
         id: 'actionDefinitions' as const,
-        label: 'ActionDefinitions',
+        label: 'Action Definitions',
         component: PolicyConfiguration,
         shouldShow: true,
       },
       {
         id: 'customFamilyFields' as const,
-        label: 'CustomFamilyFields',
+        label: 'Custom Family Fields',
         component: PolicyConfiguration,
         shouldShow: true,
       },
       {
         id: 'casePolicy' as const,
-        label: 'CasePolicy',
+        label: 'Case Policies',
         component: PolicyConfiguration,
         shouldShow: true,
       },
       {
         id: 'v1ReferralPolicy' as const,
-        label: 'V1ReferralPolicy',
+        label: 'Referral Policies',
         component: PolicyConfiguration,
         shouldShow: true,
       },
       {
         id: 'volunteerPolicy' as const,
-        label: 'VolunteerPolicy',
+        label: 'Volunteer Policies',
         component: PolicyConfiguration,
         shouldShow: true,
       },
@@ -151,6 +161,40 @@ export function LocationEdit() {
   const canEdit = useUserIsOrganizationAdministrator();
 
   const appNavigate = useAppNavigate();
+  const withBackdrop = useBackdrop();
+  const refreshPolicy = useRecoilRefresher_UNSTABLE(policyData);
+
+  const policyTabIds = [
+    'actionDefinitions',
+    'customFamilyFields',
+    'casePolicy',
+    'v1ReferralPolicy',
+    'volunteerPolicy',
+  ] as const;
+  const isPolicyTabActive = policyTabIds.some((tabId) => tabId === activeTab);
+  const policyDirty =
+    policyDraft !== null &&
+    savedPolicy !== null &&
+    JSON.stringify(policyDraft) !== JSON.stringify(savedPolicy);
+
+  function cancelPolicyChanges() {
+    setPolicyDraft(savedPolicy);
+  }
+
+  function savePolicyChanges() {
+    if (!policyDraft || !targetLocationId) return;
+
+    withBackdrop(async () => {
+      const saved = await api.configuration.putEffectiveLocationPolicy(
+        organizationId,
+        targetLocationId,
+        policyDraft
+      );
+      setPolicyDraft(saved);
+      setSavedPolicy(saved);
+      refreshPolicy();
+    });
+  }
 
   if (!dataLoaded) {
     return (
@@ -194,7 +238,14 @@ export function LocationEdit() {
     <Stack
       className="ph-unmask"
       spacing={0}
-      sx={{ height: '100%', minHeight: '100vh', pt: 2 }}
+      sx={{
+        height: {
+          xs: `calc(100vh - 48px - ${MOBILE_BOTTOM_SAFE_AREA}px)`,
+          md: `calc(100vh - 48px - ${DESKTOP_BOTTOM_SAFE_AREA}px)`,
+        },
+        minHeight: 0,
+        pt: 2,
+      }}
     >
       <Box>
         <Breadcrumbs
@@ -249,7 +300,7 @@ export function LocationEdit() {
           )}
         </Box>
 
-        <Box flex={1} paddingLeft={4} paddingTop={2}>
+        <Box flex={1} paddingLeft={4} paddingTop={2} sx={{ overflow: 'auto' }}>
           {/* Render the active tab component */}
           {activeTab === 'basic' && (
             <Box key="basic">
@@ -333,6 +384,36 @@ export function LocationEdit() {
           )}
         </Box>
       </Box>
+
+      {isPolicyTabActive && (
+        <Box paddingTop={2} borderTop={1} borderColor="divider">
+          <Stack direction="row" justifyContent="flex-end" alignItems="center">
+            {policyDirty && (
+              <Typography sx={{ fontStyle: 'italic' }} mr={2}>
+                There are pending policy changes to be saved
+              </Typography>
+            )}
+
+            <Button
+              color="secondary"
+              variant="contained"
+              sx={{ marginRight: 2 }}
+              disabled={!policyDirty}
+              onClick={cancelPolicyChanges}
+            >
+              Cancel
+            </Button>
+            <Button
+              color="primary"
+              variant="contained"
+              disabled={!policyDirty}
+              onClick={savePolicyChanges}
+            >
+              Save
+            </Button>
+          </Stack>
+        </Box>
+      )}
     </Stack>
   );
 }

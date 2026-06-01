@@ -1,8 +1,7 @@
 import {
   Add as AddIcon,
-  ContentCopy as ContentCopyIcon,
+  ControlPointDuplicate as DuplicateIcon,
   Edit as EditIcon,
-  FileDownload as FileDownloadIcon,
 } from '@mui/icons-material';
 import {
   Accordion,
@@ -571,13 +570,10 @@ function MockActions({ copy = true }: { copy?: boolean }) {
         Edit
       </Button>
       {copy && (
-        <Button size="small" variant="outlined" startIcon={<ContentCopyIcon />} disabled>
-          Copy
+        <Button size="small" variant="outlined" startIcon={<DuplicateIcon />} disabled>
+          Duplicate
         </Button>
       )}
-      <Button size="small" variant="outlined" startIcon={<FileDownloadIcon />} disabled>
-        Import
-      </Button>
     </Stack>
   );
 }
@@ -595,13 +591,10 @@ function EditableActions({
         Add
       </Button>
       {copy && (
-        <Button size="small" variant="outlined" startIcon={<ContentCopyIcon />} disabled>
-          Copy
+        <Button size="small" variant="outlined" startIcon={<DuplicateIcon />} disabled>
+          Duplicate
         </Button>
       )}
-      <Button size="small" variant="outlined" startIcon={<FileDownloadIcon />} disabled>
-        Import
-      </Button>
     </Stack>
   );
 }
@@ -756,15 +749,15 @@ function EligibilitySummary({
 
   return (
     <Stack spacing={0.5}>
-      {locationRoles && <Typography variant="body2">LocationRoles: {listText(locationRoles)}</Typography>}
+      {locationRoles && <Typography variant="body2">Location Roles: {listText(locationRoles)}</Typography>}
       <Typography variant="body2">
-        IndividualVolunteerRoles: {listText(eligibility.eligibleIndividualVolunteerRoles)}
+        Individual Volunteer Roles: {listText(eligibility.eligibleIndividualVolunteerRoles)}
       </Typography>
       <Typography variant="body2">
-        VolunteerFamilyRoles: {listText(eligibility.eligibleVolunteerFamilyRoles)}
+        Volunteer Family Roles: {listText(eligibility.eligibleVolunteerFamilyRoles)}
       </Typography>
       <Typography variant="body2">
-        EligiblePeople: {summarizeCount(eligibility.eligiblePeople?.length ?? 0, 'person', 'people')}
+        Eligible People: {summarizeCount(eligibility.eligiblePeople?.length ?? 0, 'person', 'people')}
       </Typography>
     </Stack>
   );
@@ -786,7 +779,7 @@ function FunctionAssignmentPoliciesTable({
       <Table size="small">
         <TableHead>
           <TableRow>
-            <TableCell>AssignmentRole</TableCell>
+            <TableCell>Assignment Role</TableCell>
             <TableCell>Eligibility</TableCell>
           </TableRow>
         </TableHead>
@@ -864,8 +857,8 @@ function RequirementsTable({
       <Table size="small">
         <TableHead>
           <TableRow>
-            <TableCell>ActionName</TableCell>
-            <TableCell>IsRequired</TableCell>
+            <TableCell>Action Name</TableCell>
+            <TableCell>Required</TableCell>
           </TableRow>
         </TableHead>
         <TableBody>
@@ -880,7 +873,7 @@ function RequirementsTable({
                 onClick={() => onEdit?.(requirement)}
               >
                 <TableCell>{requirement.actionName}</TableCell>
-                <TableCell>{requirement.isRequired ? 'true' : 'false'}</TableCell>
+                <TableCell>{requirement.isRequired ? 'Yes' : 'No'}</TableCell>
               </TableRow>
             ))
           )}
@@ -902,8 +895,8 @@ function MonitoringRequirementsTable({
       <Table size="small">
         <TableHead>
           <TableRow>
-            <TableCell>ActionName</TableCell>
-            <TableCell>IsRequired</TableCell>
+            <TableCell>Action Name</TableCell>
+            <TableCell>Required</TableCell>
             <TableCell>Recurrence</TableCell>
           </TableRow>
         </TableHead>
@@ -914,7 +907,7 @@ function MonitoringRequirementsTable({
             rows.map((requirement, index) => (
               <TableRow key={`${requirement.action?.actionName}-${index}`}>
                 <TableCell>{requirement.action?.actionName}</TableCell>
-                <TableCell>{requirement.action?.isRequired ? 'true' : 'false'}</TableCell>
+                <TableCell>{requirement.action?.isRequired ? 'Yes' : 'No'}</TableCell>
                 <TableCell>
                   <RecurrenceSummary recurrence={requirement.recurrence} />
                 </TableCell>
@@ -1002,10 +995,10 @@ function ActionDefinitionSidePanel({
           fullWidth
           required
           autoFocus
-          label="ActionName"
+          label="Action Name"
           value={draft.actionName}
           error={duplicateName}
-          helperText={duplicateName ? 'ActionName must be unique.' : undefined}
+          helperText={duplicateName ? 'Action name must be unique.' : undefined}
           onChange={(event) =>
             setDraft((current) => ({ ...current, actionName: event.target.value }))
           }
@@ -1016,7 +1009,7 @@ function ActionDefinitionSidePanel({
         <TextField
           fullWidth
           select
-          label="DocumentLink"
+          label="Document Link"
           value={draft.documentLink}
           onChange={(event) =>
             setDraft((current) => ({
@@ -1037,7 +1030,7 @@ function ActionDefinitionSidePanel({
         <TextField
           fullWidth
           select
-          label="NoteEntry"
+          label="Note Entry"
           value={draft.noteEntry}
           onChange={(event) =>
             setDraft((current) => ({
@@ -1159,12 +1152,12 @@ function ActionDefinitionSidePanel({
       <Grid item xs={12}>
         <TextField
           fullWidth
-          label="AlternateNames"
+          label="Alternate Names"
           value={draft.alternateNames}
           error={duplicateAlternateName}
           helperText={
             duplicateAlternateName
-              ? 'AlternateNames cannot collide with canonical action names.'
+              ? 'Alternate names cannot collide with canonical action names.'
               : 'Comma-separated aliases.'
           }
           onChange={(event) =>
@@ -1303,7 +1296,7 @@ function CustomFieldSidePanel({
           <Grid item xs={12}>
             <TextField
               fullWidth
-              label="ValidValues"
+              label="Valid Values"
               value={draft.validValues}
               helperText="Comma-separated values."
               onChange={(event) =>
@@ -1385,14 +1378,14 @@ function RequirementSidePanel({
           fullWidth
           required
           select
-          label="ActionName"
+          label="Action Name"
           value={draft.actionName}
           error={duplicateName || unknownActionName}
           helperText={
             duplicateName
-              ? 'ActionName is already referenced in this list.'
+              ? 'Action name is already referenced in this list.'
               : unknownActionName
-                ? 'ActionName must exist in ActionDefinitions.'
+                ? 'Action name must exist in Action Definitions.'
                 : undefined
           }
           onChange={(event) =>
@@ -1420,7 +1413,7 @@ function RequirementSidePanel({
               }
             />
           }
-          label="IsRequired"
+          label="Required"
         />
       </Grid>
 
@@ -1566,13 +1559,13 @@ function FunctionAssignmentPolicySidePanel({
       <Grid item xs={12}>
         <TextField
           fullWidth
-          label="EligibleIndividualVolunteerRoles"
+          label="Eligible Individual Volunteer Roles"
           value={draft.eligibleIndividualVolunteerRoles}
           error={unknownVolunteerRoles.length > 0}
           helperText={
             unknownVolunteerRoles.length > 0
               ? `Unknown roles: ${unknownVolunteerRoles.join(', ')}`
-              : 'Comma-separated VolunteerPolicy.VolunteerRoles keys.'
+              : 'Comma-separated role keys from Volunteer Policies > Volunteer Roles.'
           }
           onChange={(event) =>
             setDraft((current) => ({
@@ -1586,13 +1579,13 @@ function FunctionAssignmentPolicySidePanel({
       <Grid item xs={12}>
         <TextField
           fullWidth
-          label="EligibleVolunteerFamilyRoles"
+          label="Eligible Volunteer Family Roles"
           value={draft.eligibleVolunteerFamilyRoles}
           error={unknownVolunteerFamilyRoles.length > 0}
           helperText={
             unknownVolunteerFamilyRoles.length > 0
               ? `Unknown roles: ${unknownVolunteerFamilyRoles.join(', ')}`
-              : 'Comma-separated VolunteerPolicy.VolunteerFamilyRoles keys.'
+              : 'Comma-separated role keys from Volunteer Policies > Volunteer Family Roles.'
           }
           onChange={(event) =>
             setDraft((current) => ({
@@ -1606,7 +1599,7 @@ function FunctionAssignmentPolicySidePanel({
       <Grid item xs={12}>
         <TextField
           fullWidth
-          label="EligiblePeople"
+          label="Eligible People"
           value={draft.eligiblePeople}
           helperText="Comma-separated person IDs for this mocked editor."
           onChange={(event) =>
@@ -1705,7 +1698,7 @@ function FunctionPolicySidePanel({
     >
       <Grid item xs={12}>
         <Typography variant="h6">
-          {policy ? 'Edit FunctionPolicy' : 'Add FunctionPolicy'}
+          {policy ? 'Edit Function Policy' : 'Add Function Policy'}
         </Typography>
       </Grid>
 
@@ -1713,10 +1706,10 @@ function FunctionPolicySidePanel({
         <TextField
           fullWidth
           required
-          label="FunctionName"
+          label="Function Name"
           value={draft.functionName}
           error={duplicateName}
-          helperText={duplicateName ? 'FunctionName must be unique.' : undefined}
+          helperText={duplicateName ? 'Function name must be unique.' : undefined}
           onChange={(event) =>
             setDraft((current) => ({ ...current, functionName: event.target.value }))
           }
@@ -1726,13 +1719,13 @@ function FunctionPolicySidePanel({
       <Grid item xs={12}>
         <TextField
           fullWidth
-          label="EligibleIndividualVolunteerRoles"
+          label="Eligible Individual Volunteer Roles"
           value={draft.eligibleIndividualVolunteerRoles}
           error={unknownVolunteerRoles.length > 0}
           helperText={
             unknownVolunteerRoles.length > 0
               ? `Unknown roles: ${unknownVolunteerRoles.join(', ')}`
-              : 'Comma-separated VolunteerPolicy.VolunteerRoles keys.'
+              : 'Comma-separated role keys from Volunteer Policies > Volunteer Roles.'
           }
           onChange={(event) =>
             setDraft((current) => ({
@@ -1746,13 +1739,13 @@ function FunctionPolicySidePanel({
       <Grid item xs={12}>
         <TextField
           fullWidth
-          label="EligibleVolunteerFamilyRoles"
+          label="Eligible Volunteer Family Roles"
           value={draft.eligibleVolunteerFamilyRoles}
           error={unknownVolunteerFamilyRoles.length > 0}
           helperText={
             unknownVolunteerFamilyRoles.length > 0
               ? `Unknown roles: ${unknownVolunteerFamilyRoles.join(', ')}`
-              : 'Comma-separated VolunteerPolicy.VolunteerFamilyRoles keys.'
+              : 'Comma-separated role keys from Volunteer Policies > Volunteer Family Roles.'
           }
           onChange={(event) =>
             setDraft((current) => ({
@@ -1766,7 +1759,7 @@ function FunctionPolicySidePanel({
       <Grid item xs={12}>
         <TextField
           fullWidth
-          label="EligiblePeople"
+          label="Eligible People"
           value={draft.eligiblePeople}
           helperText="Comma-separated person IDs for this mocked editor."
           onChange={(event) =>
@@ -2105,10 +2098,10 @@ function VolunteerRolePolicyVersionSidePanel({
           error={unknownActions.length > 0}
           helperText={
             unknownActions.length > 0
-              ? `Unknown ActionDefinitions: ${unknownActions.join(', ')}`
+              ? `Unknown Action Definitions: ${unknownActions.join(', ')}`
               : family
-                ? 'One per line: Stage|ActionName|Scope'
-                : 'One per line: Stage|ActionName'
+                ? 'One per line: Stage|Action Name|Scope'
+                : 'One per line: Stage|Action Name'
           }
           onChange={(event) =>
             setDraft((current) => ({
@@ -2162,7 +2155,7 @@ function ActionDefinitionsTab({
   return (
     <Box>
       <SectionHeader
-        title="ActionDefinitions"
+        title="Action Definitions"
         actions={<EditableActions onAdd={openAddAction} />}
       >
         <SummaryRow>
@@ -2180,11 +2173,11 @@ function ActionDefinitionsTab({
         <Table size="small">
           <TableHead>
             <TableRow>
-              <TableCell>ActionName</TableCell>
-              <TableCell>DocumentLink</TableCell>
-              <TableCell>NoteEntry</TableCell>
+              <TableCell>Action Name</TableCell>
+              <TableCell>Document Link</TableCell>
+              <TableCell>Note Entry</TableCell>
               <TableCell>Validity</TableCell>
-              <TableCell>AlternateNames</TableCell>
+              <TableCell>Alternate Names</TableCell>
               <TableCell>Usage</TableCell>
             </TableRow>
           </TableHead>
@@ -2250,7 +2243,7 @@ function CustomFieldsTable({
             <TableCell>Name</TableCell>
             <TableCell>Type</TableCell>
             <TableCell>Validation</TableCell>
-            <TableCell>ValidValues</TableCell>
+            <TableCell>Valid Values</TableCell>
           </TableRow>
         </TableHead>
         <TableBody>
@@ -2316,7 +2309,7 @@ function CustomFamilyFieldsTab({
   return (
     <Box>
       <SectionHeader
-        title="CustomFamilyFields"
+        title="Custom Family Fields"
         actions={<EditableActions onAdd={openAddCustomField} />}
       >
         <SummaryRow>
@@ -2334,7 +2327,7 @@ function CustomFamilyFieldsTab({
       <CustomFieldPanel>
         <CustomFieldSidePanel
           key={workingField?.name ?? 'new-custom-family-field'}
-          title={workingField ? 'Edit CustomFamilyField' : 'Add CustomFamilyField'}
+          title={workingField ? 'Edit Custom Family Field' : 'Add Custom Family Field'}
           field={workingField}
           existingNames={fields.map((field) => field.name)}
           onClose={closeSidePanel}
@@ -2357,7 +2350,7 @@ function ArrangementFunctionSummary({ arrangementFunction }: { arrangementFuncti
         {arrangementFunction.functionName} · {enumName(FunctionRequirement, arrangementFunction.requirement)}
       </Typography>
       <Typography variant="body2" color="text.secondary">
-        {inheritsEligibility ? 'Inherited Eligibility' : 'Override eligibility'} ·{' '}
+        {inheritsEligibility ? 'Inherited eligibility' : 'Override eligibility'} ·{' '}
         {summarizeCount(arrangementFunction.variants?.length ?? 0, 'variant')}
       </Typography>
     </Stack>
@@ -2384,7 +2377,7 @@ function ArrangementPolicyDetails({ arrangement }: { arrangement: ArrangementPol
 
       <Accordion variant="outlined">
         <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-          <Typography>RequiredSetupActions</Typography>
+          <Typography>Required Setup Actions</Typography>
         </AccordionSummary>
         <AccordionDetails>
           <RequirementsTable requirements={setupActions} emptyLabel="No setup requirements configured." />
@@ -2393,7 +2386,7 @@ function ArrangementPolicyDetails({ arrangement }: { arrangement: ArrangementPol
 
       <Accordion variant="outlined">
         <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-          <Typography>RequiredMonitoringActions</Typography>
+          <Typography>Required Monitoring Actions</Typography>
         </AccordionSummary>
         <AccordionDetails>
           <MonitoringRequirementsTable requirements={monitoringActions} />
@@ -2402,7 +2395,7 @@ function ArrangementPolicyDetails({ arrangement }: { arrangement: ArrangementPol
 
       <Accordion variant="outlined">
         <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-          <Typography>RequiredCloseoutActions</Typography>
+          <Typography>Required Closeout Actions</Typography>
         </AccordionSummary>
         <AccordionDetails>
           <RequirementsTable requirements={closeoutActions} emptyLabel="No closeout requirements configured." />
@@ -2418,7 +2411,7 @@ function ArrangementPolicyDetails({ arrangement }: { arrangement: ArrangementPol
             <Table size="small">
               <TableHead>
                 <TableRow>
-                  <TableCell>FunctionName</TableCell>
+                  <TableCell>Function Name</TableCell>
                   <TableCell>Eligibility</TableCell>
                   <TableCell>Variants</TableCell>
                 </TableRow>
@@ -2525,7 +2518,7 @@ function CasePolicyTab({
 
   return (
     <Box>
-      <SectionHeader title="CasePolicy" actions={<MockActions />}>
+      <SectionHeader title="Case Policies" actions={<MockActions />}>
         <SummaryRow>
           <SummaryChip label={summarizeCount(intakeRequirements?.length ?? 0, 'intake requirement')} />
           <SummaryChip label={summarizeCount(casePolicy?.customFields?.length ?? 0, 'custom field')} />
@@ -2543,7 +2536,7 @@ function CasePolicyTab({
       <Stack spacing={2}>
         <Accordion defaultExpanded variant="outlined">
           <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-            <Typography>IntakeRequirements</Typography>
+            <Typography>Intake Requirements</Typography>
           </AccordionSummary>
           <AccordionDetails>
             <Stack spacing={2}>
@@ -2567,7 +2560,7 @@ function CasePolicyTab({
 
         <Accordion variant="outlined">
           <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-            <Typography>CustomFields</Typography>
+            <Typography>Custom Fields</Typography>
           </AccordionSummary>
           <AccordionDetails>
             <Stack spacing={2}>
@@ -2590,7 +2583,7 @@ function CasePolicyTab({
 
         <Accordion variant="outlined">
           <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-            <Typography>FunctionAssignmentPolicies</Typography>
+            <Typography>Function Assignment Policies</Typography>
           </AccordionSummary>
           <AccordionDetails>
             <Stack spacing={2}>
@@ -2614,7 +2607,7 @@ function CasePolicyTab({
 
         <Accordion variant="outlined">
           <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-            <Typography>FunctionPolicies</Typography>
+            <Typography>Function Policies</Typography>
           </AccordionSummary>
           <AccordionDetails>
             <Stack spacing={2}>
@@ -2628,7 +2621,7 @@ function CasePolicyTab({
               <Table size="small">
                 <TableHead>
                   <TableRow>
-                    <TableCell>FunctionName</TableCell>
+                    <TableCell>Function Name</TableCell>
                     <TableCell>Eligibility</TableCell>
                   </TableRow>
                 </TableHead>
@@ -2662,7 +2655,7 @@ function CasePolicyTab({
 
         <Accordion variant="outlined">
           <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-            <Typography>ArrangementPolicies</Typography>
+            <Typography>Arrangement Policies</Typography>
           </AccordionSummary>
           <AccordionDetails>
             <Stack spacing={2}>
@@ -2721,8 +2714,8 @@ function CasePolicyTab({
           key={workingRequirement?.actionName ?? 'new-case-intake-requirement'}
           title={
             workingRequirement
-              ? 'Edit CasePolicy.IntakeRequirement'
-              : 'Add CasePolicy.IntakeRequirement'
+              ? 'Edit Case Policies Intake Requirement'
+              : 'Add Case Policies Intake Requirement'
           }
           requirement={workingRequirement}
           actionNames={actionNames}
@@ -2745,7 +2738,7 @@ function CasePolicyTab({
       <CustomFieldPanel>
         <CustomFieldSidePanel
           key={workingCustomField?.name ?? 'new-case-custom-field'}
-          title={workingCustomField ? 'Edit CasePolicy.CustomField' : 'Add CasePolicy.CustomField'}
+          title={workingCustomField ? 'Edit Case Policies Custom Field' : 'Add Case Policies Custom Field'}
           field={workingCustomField}
           existingNames={casePolicy?.customFields?.map((field) => field.name) ?? []}
           onClose={closeCustomFieldPanel}
@@ -2763,8 +2756,8 @@ function CasePolicyTab({
           key={workingFunctionAssignmentPolicy?.assignmentRole ?? 'new-case-assignment-policy'}
           title={
             workingFunctionAssignmentPolicy
-              ? 'Edit CasePolicy.FunctionAssignmentPolicy'
-              : 'Add CasePolicy.FunctionAssignmentPolicy'
+              ? 'Edit Case Policies Function Assignment Policy'
+              : 'Add Case Policies Function Assignment Policy'
           }
           policy={workingFunctionAssignmentPolicy}
           existingAssignmentRoles={
@@ -2859,7 +2852,7 @@ function V1ReferralPolicyTab({
   return (
     <Box>
       <SectionHeader
-        title="V1ReferralPolicy"
+        title="Referral Policies"
         actions={
           <EditableActions
             onAdd={() => {
@@ -2892,8 +2885,8 @@ function V1ReferralPolicyTab({
           key={workingFunctionAssignmentPolicy?.assignmentRole ?? 'new-referral-assignment-policy'}
           title={
             workingFunctionAssignmentPolicy
-              ? 'Edit V1ReferralPolicy.FunctionAssignmentPolicy'
-              : 'Add V1ReferralPolicy.FunctionAssignmentPolicy'
+              ? 'Edit Referral Policies Function Assignment Policy'
+              : 'Add Referral Policies Function Assignment Policy'
           }
           policy={workingFunctionAssignmentPolicy}
           existingAssignmentRoles={functionAssignmentPolicies.map(
@@ -2952,7 +2945,7 @@ function RolePolicyVersionsTable({
       <Table size="small">
         <TableHead>
           <TableRow>
-            <TableCell>{family ? 'VolunteerFamilyRoleType' : 'VolunteerRoleType'}</TableCell>
+            <TableCell>{family ? 'Volunteer Family Role Type' : 'Volunteer Role Type'}</TableCell>
             <TableCell>Version</TableCell>
             <TableCell>Status</TableCell>
             <TableCell>Requirements</TableCell>
@@ -3071,7 +3064,7 @@ function VolunteerPolicyTab({
 
   return (
     <Box>
-      <SectionHeader title="VolunteerPolicy" actions={<MockActions />}>
+      <SectionHeader title="Volunteer Policies" actions={<MockActions />}>
         <SummaryRow>
           <SummaryChip
             label={summarizeCount(
@@ -3094,7 +3087,7 @@ function VolunteerPolicyTab({
       <Stack spacing={2}>
         <Accordion defaultExpanded variant="outlined">
           <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-            <Typography>VolunteerRoles</Typography>
+            <Typography>Volunteer Roles</Typography>
           </AccordionSummary>
           <AccordionDetails>
             <Stack spacing={2}>
@@ -3120,7 +3113,7 @@ function VolunteerPolicyTab({
 
         <Accordion variant="outlined">
           <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-            <Typography>VolunteerFamilyRoles</Typography>
+            <Typography>Volunteer Family Roles</Typography>
           </AccordionSummary>
           <AccordionDetails>
             <Stack spacing={2}>
@@ -3147,7 +3140,7 @@ function VolunteerPolicyTab({
 
         <Accordion variant="outlined">
           <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-            <Typography>CustomFields</Typography>
+            <Typography>Custom Fields</Typography>
           </AccordionSummary>
           <AccordionDetails>
             <Stack spacing={2}>
@@ -3174,8 +3167,8 @@ function VolunteerPolicyTab({
           key={workingField?.name ?? 'new-volunteer-custom-field'}
           title={
             workingField
-              ? 'Edit VolunteerPolicy.CustomField'
-              : 'Add VolunteerPolicy.CustomField'
+              ? 'Edit Volunteer Policies Custom Field'
+              : 'Add Volunteer Policies Custom Field'
           }
           field={workingField}
           existingNames={customFields.map((field) => field.name)}
@@ -3197,8 +3190,8 @@ function VolunteerPolicyTab({
           key={`${workingVolunteerRoleVersion?.roleName ?? 'new-volunteer-role'}-${workingVolunteerRoleVersion?.version?.version ?? 'version'}`}
           title={
             workingVolunteerRoleVersion
-              ? 'Edit VolunteerPolicy.VolunteerRolePolicyVersion'
-              : 'Add VolunteerPolicy.VolunteerRolePolicyVersion'
+              ? 'Edit Volunteer Policies Role Version'
+              : 'Add Volunteer Policies Role Version'
           }
           roleName={workingVolunteerRoleVersion?.roleName}
           version={workingVolunteerRoleVersion?.version}
@@ -3236,8 +3229,8 @@ function VolunteerPolicyTab({
           key={`${workingVolunteerFamilyRoleVersion?.roleName ?? 'new-volunteer-family-role'}-${workingVolunteerFamilyRoleVersion?.version?.version ?? 'version'}`}
           title={
             workingVolunteerFamilyRoleVersion
-              ? 'Edit VolunteerPolicy.VolunteerFamilyRolePolicyVersion'
-              : 'Add VolunteerPolicy.VolunteerFamilyRolePolicyVersion'
+              ? 'Edit Volunteer Policies Family Role Version'
+              : 'Add Volunteer Policies Family Role Version'
           }
           roleName={workingVolunteerFamilyRoleVersion?.roleName}
           version={workingVolunteerFamilyRoleVersion?.version}
@@ -3280,7 +3273,7 @@ export function SmsSourcePhoneNumbers({
 
   return (
     <Box>
-      <SectionHeader title="SmsSourcePhoneNumbers" actions={<MockActions copy={false} />}>
+      <SectionHeader title="SMS Source Phone Numbers" actions={<MockActions copy={false} />}>
         <SummaryRow>
           <SummaryChip label={summarizeCount(rows.length, 'source phone number')} />
         </SummaryRow>
@@ -3290,7 +3283,7 @@ export function SmsSourcePhoneNumbers({
         <Table size="small">
           <TableHead>
             <TableRow>
-              <TableCell>SourcePhoneNumber</TableCell>
+              <TableCell>Source Phone Number</TableCell>
               <TableCell>Description</TableCell>
             </TableRow>
           </TableHead>
@@ -3324,7 +3317,7 @@ export function PolicyConfiguration({
       <Stack direction="row" spacing={1} useFlexGap flexWrap="wrap">
         <SummaryChip label={`Location: ${locationConfiguration.name}`} />
         <SummaryChip
-          label={`TimeZone: ${locationConfiguration.timeZone?.id ?? 'Not configured'}`}
+          label={`Time Zone: ${locationConfiguration.timeZone?.id ?? 'Not configured'}`}
         />
       </Stack>
       <Divider />
