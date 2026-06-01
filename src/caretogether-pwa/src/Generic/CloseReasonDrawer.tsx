@@ -5,7 +5,7 @@ import {
   FormControl,
   FormControlLabel,
   FormLabel,
-  Grid,
+  GridLegacy,
   Radio,
   RadioGroup,
   Typography,
@@ -49,12 +49,12 @@ export function CloseReasonDrawer({
       PaperProps={{ sx: { width: 500, p: 3, top: 45 } }}
     >
       <form noValidate>
-        <Grid container spacing={2}>
-          <Grid item xs={12}>
+        <GridLegacy container spacing={2}>
+          <GridLegacy item xs={12}>
             <Typography variant="h6">{title}</Typography>
-          </Grid>
+          </GridLegacy>
 
-          <Grid item xs={12}>
+          <GridLegacy item xs={12}>
             <FormControl component="fieldset">
               <FormLabel component="legend">Reason for Closing:</FormLabel>
               <RadioGroup
@@ -73,9 +73,9 @@ export function CloseReasonDrawer({
                 ))}
               </RadioGroup>
             </FormControl>
-          </Grid>
+          </GridLegacy>
 
-          <Grid item xs={12}>
+          <GridLegacy item xs={12}>
             <ValidateDatePicker
               label={dateLabel}
               value={closedAtLocal}
@@ -84,9 +84,9 @@ export function CloseReasonDrawer({
               disableFuture
               textFieldProps={{ fullWidth: true, required: true }}
             />
-          </Grid>
+          </GridLegacy>
 
-          <Grid item xs={12} sx={{ textAlign: 'right' }}>
+          <GridLegacy item xs={12} sx={{ textAlign: 'right' }}>
             <Button
               color="secondary"
               variant="contained"
@@ -104,8 +104,8 @@ export function CloseReasonDrawer({
             >
               {saveLabel}
             </Button>
-          </Grid>
-        </Grid>
+          </GridLegacy>
+        </GridLegacy>
       </form>
     </Drawer>
   );
