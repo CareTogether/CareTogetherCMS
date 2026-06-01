@@ -23,7 +23,7 @@ import {
   UnfoldLess as UnfoldLessIcon,
   UnfoldMore as UnfoldMoreIcon,
 } from '@mui/icons-material';
-import { CreateVolunteerFamilyDialog } from '../CreateVolunteerFamilyDialog';
+import { CreateVolunteerFamilyDrawer } from '../CreateVolunteerFamilyDrawer';
 import { SearchBar } from '../../Shell/SearchBar';
 import { useLocalStorage } from '../../Hooks/useLocalStorage';
 import { useScrollMemory } from '../../Hooks/useScrollMemory';
@@ -72,7 +72,7 @@ function VolunteerProgress(props: { onOpen: () => void }) {
   function openFamily(familyId: string) {
     appNavigate.family(familyId);
   }
-  const [createVolunteerFamilyDialogOpen, setCreateVolunteerFamilyDialogOpen] =
+  const [createVolunteerFamilyDrawerOpen, setCreateVolunteerFamilyDrawerOpen] =
     useState(false);
 
   const theme = useTheme();
@@ -159,7 +159,7 @@ function VolunteerProgress(props: { onOpen: () => void }) {
             <Button
               variant="contained"
               startIcon={<AddIcon />}
-              onClick={() => setCreateVolunteerFamilyDialogOpen(true)}
+              onClick={() => setCreateVolunteerFamilyDrawerOpen(true)}
               sx={{ marginRight: 'auto', marginY: 2 }}
             >
               Add new volunteer family
@@ -209,11 +209,12 @@ function VolunteerProgress(props: { onOpen: () => void }) {
           </Table>
         </TableContainer>
 
-        {createVolunteerFamilyDialogOpen && (
-          <CreateVolunteerFamilyDialog
+        {createVolunteerFamilyDrawerOpen && (
+          <CreateVolunteerFamilyDrawer
             onClose={(volunteerFamilyId) => {
-              setCreateVolunteerFamilyDialogOpen(false);
-              volunteerFamilyId && openFamily(volunteerFamilyId);
+              setCreateVolunteerFamilyDrawerOpen(false);
+              if (!volunteerFamilyId) return;
+              openFamily(volunteerFamilyId);
             }}
           />
         )}

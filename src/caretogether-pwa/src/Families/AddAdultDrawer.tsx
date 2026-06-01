@@ -1,13 +1,10 @@
 import { useState } from 'react';
 import {
+  Box,
   Button,
   Checkbox,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogContentText,
-  DialogTitle,
   Divider,
+  Drawer,
   FormControl,
   FormControlLabel,
   FormGroup,
@@ -20,39 +17,47 @@ import {
   RadioGroup,
   Select,
   TextField,
+  Typography,
 } from '@mui/material';
 import {
   ExactAge,
   Gender,
-  PhoneNumberType,
   EmailAddressType,
+  PhoneNumberType,
+  CombinedFamilyInfo,
   IAddress,
   Address,
 } from '../GeneratedClient';
 import { useDirectoryModel } from '../Model/DirectoryModel';
 import { Warning as WarningIcon } from '@mui/icons-material';
+import { ValidateDatePicker } from '../Generic/Forms/ValidateDatePicker';
 import { useRecoilValue } from 'recoil';
 import {
   adultFamilyRelationshipsData,
   ethnicitiesData,
 } from '../Model/ConfigurationModel';
+import { useParams } from 'react-router-dom';
 import { useBackdrop } from '../Hooks/useBackdrop';
 import { subYears } from 'date-fns';
-import { AddressFormFields } from '../Families/AddressEditor';
-import { isBackdropClick } from '../Utilities/handleBackdropClick';
-import { ValidateDatePicker } from '../Generic/Forms/ValidateDatePicker';
+import { visibleFamiliesQuery } from '../Model/Data';
+import { AddressFormFields } from './AddressEditor';
+import { familyLastName } from './FamilyUtils';
 
-interface CreateVolunteerFamilyDialogProps {
-  onClose: (volunteerFamilyId?: string) => void;
+interface AddAdultDrawerProps {
+  onClose: (event: object | undefined, reason: string) => void;
 }
 
 function optional(arg: string) {
   return arg.length > 0 ? arg : null;
 }
 
-export function CreateVolunteerFamilyDialog({
-  onClose,
-}: CreateVolunteerFamilyDialogProps) {
+export function AddAdultDrawer({ onClose }: AddAdultDrawerProps) {
+  const { familyId } = useParams<{ familyId: string }>();
+  const visibleFamilies = useRecoilValue(visibleFamiliesQuery);
+  const family = visibleFamilies.find(
+    (x) => x.family?.id === familyId
+  ) as CombinedFamilyInfo;
+
   const [fields, setFields] = useState({
     firstName: '',
     lastName: '',
@@ -89,12 +94,11 @@ export function CreateVolunteerFamilyDialog({
 
   const relationshipTypes = useRecoilValue(adultFamilyRelationshipsData);
   const ethnicities = useRecoilValue(ethnicitiesData);
-
   const [dobError, setDobError] = useState(false);
 
   const withBackdrop = useBackdrop();
 
-  async function save() {
+  async function addAdult() {
     await withBackdrop(async () => {
       if (firstName.length <= 0 || lastName.length <= 0) {
         alert('First and last name are required. Try again.');
@@ -104,9 +108,8 @@ export function CreateVolunteerFamilyDialog({
       } else {
         const age = dateOfBirth == null ? null : new ExactAge();
         if (dateOfBirth != null) age!.dateOfBirth = dateOfBirth;
-        const familyId = crypto.randomUUID();
-        await directoryModel.createVolunteerFamilyWithNewAdult(
-          familyId,
+        await directoryModel.addAdult(
+          family.family!.id!,
           firstName,
           lastName,
           gender,
@@ -125,28 +128,29 @@ export function CreateVolunteerFamilyDialog({
           concerns == null ? undefined : concerns
         );
         //TODO: Error handling (start with a basic error dialog w/ request to share a screenshot, and App Insights logging)
-        onClose(familyId);
+        onClose({}, ``);
       }
     });
   }
 
   return (
-    <Dialog
-      open={true}
-      onClose={(_, reason: string) =>
-        !isBackdropClick(reason) ? onClose() : {}
-      }
-      scroll="body"
-      aria-labelledby="create-family-title"
+    <Drawer
+      anchor="right"
+      open
+      onClose={onClose}
+      PaperProps={{
+        sx: {
+          width: { xs: '100%', sm: 600 },
+          top: 45,
+          height: 'calc(100% - 45px)',
+          display: 'flex',
+        },
+      }}
     >
-      <DialogTitle id="create-family-title">
-        Create Volunteer Family - First Adult
-      </DialogTitle>
-      <DialogContent>
-        <DialogContentText>
-          Provide the basic information needed for the first adult in the
-          family.
-        </DialogContentText>
+      <Box sx={{ flex: 1, minHeight: 0, overflowY: 'auto', p: 3 }}>
+        <Typography id="add-adult-title" variant="h6" sx={{ mb: 2 }}>
+          Add Adult to {familyLastName(family)}
+        </Typography>
         <form noValidate autoComplete="off">
           <Grid container spacing={2}>
             <Grid item xs={12} sm={6}>
@@ -264,13 +268,13 @@ export function CreateVolunteerFamilyDialog({
               <ValidateDatePicker
                 label="Date of birth"
                 value={dateOfBirth}
+                onChange={(date) => setFields({ ...fields, dateOfBirth: date })}
                 maxDate={subYears(new Date(), 18)}
                 openTo="year"
-                onChange={(date) => setFields({ ...fields, dateOfBirth: date })}
+                disableFuture
                 onErrorChange={setDobError}
                 textFieldProps={{
                   size: 'small',
-                  fullWidth: true,
                 }}
               />
             </Grid>
@@ -442,20 +446,33 @@ export function CreateVolunteerFamilyDialog({
             </Grid>
           </Grid>
         </form>
-      </DialogContent>
-      <DialogActions sx={{ marginBottom: 4 }}>
-        <Button onClick={() => onClose()} color="secondary">
+      </Box>
+      <Box
+        sx={{
+          borderTop: 1,
+          borderColor: 'divider',
+          display: 'flex',
+          gap: 1,
+          justifyContent: 'flex-end',
+          p: 2,
+          pb: 'calc(16px + env(safe-area-inset-bottom))',
+          backgroundColor: 'background.paper',
+        }}
+      >
+        <Button onClick={() => onClose(undefined, 'cancel')} color="secondary">
           Cancel
         </Button>
         <Button
-          onClick={save}
+          onClick={addAdult}
+          disabled={dobError}
           variant="contained"
           color="primary"
-          disabled={dobError}
         >
-          Create Family
+          Add to Family
         </Button>
-      </DialogActions>
-    </Dialog>
+      </Box>
+    </Drawer>
   );
 }
+
+export { AddAdultDrawer as AddAdultDialog };

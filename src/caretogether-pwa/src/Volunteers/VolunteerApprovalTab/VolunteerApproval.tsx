@@ -42,7 +42,7 @@ import {
   UnfoldLess as UnfoldLessIcon,
   UnfoldMore as UnfoldMoreIcon,
 } from '@mui/icons-material';
-import { CreateVolunteerFamilyDialog } from '../CreateVolunteerFamilyDialog';
+import { CreateVolunteerFamilyDrawer } from '../CreateVolunteerFamilyDrawer';
 import { Link, useLocation } from 'react-router-dom';
 import { SearchBar } from '../../Shell/SearchBar';
 import { useLocalStorage } from '../../Hooks/useLocalStorage';
@@ -89,10 +89,11 @@ function VolunteerApproval(props: { onOpen: () => void }) {
 
   const policy = useRecoilValue(policyData);
 
-  const customFieldNames =
-    (policy.customFamilyFields?.map((field) => field.name) || []).concat(
-      policy.volunteerPolicy?.customFields?.map((field) => field.name) || []
-    );
+  const customFieldNames = (
+    policy.customFamilyFields?.map((field) => field.name) || []
+  ).concat(
+    policy.volunteerPolicy?.customFields?.map((field) => field.name) || []
+  );
 
   //#region Role/Status Selection Code
   const [roleFilters, setRoleFilters] = useRecoilState(roleFiltersState);
@@ -140,31 +141,47 @@ function VolunteerApproval(props: { onOpen: () => void }) {
     setSelectedValuesForField: setCustomFieldFilter,
     optionsByField: customFieldFilterOptionsByField,
   } = useCustomFieldFilters({
-    customFields: (policy.customFamilyFields ?? []).concat(policy.volunteerPolicy?.customFields ?? []),
+    customFields: (policy.customFamilyFields ?? []).concat(
+      policy.volunteerPolicy?.customFields ?? []
+    ),
     items: volunteerFamilies,
     isBlank: (family, fieldName) => {
       const familyField = family.family?.completedCustomFields?.find(
         (customField) => customField.customFieldName === fieldName
       );
-      if (familyField && familyField.value !== undefined && familyField.value !== null) return false;
-      const volunteerField = family.volunteerFamilyInfo?.completedCustomFields?.find(
-        (customField) => customField.customFieldName === fieldName
+      if (
+        familyField &&
+        familyField.value !== undefined &&
+        familyField.value !== null
+      )
+        return false;
+      const volunteerField =
+        family.volunteerFamilyInfo?.completedCustomFields?.find(
+          (customField) => customField.customFieldName === fieldName
+        );
+      return (
+        !volunteerField ||
+        volunteerField.value === undefined ||
+        volunteerField.value === null
       );
-      return !volunteerField || volunteerField.value === undefined || volunteerField.value === null;
     },
     getValue: (family, fieldName) => {
       const familyField = family.family?.completedCustomFields?.find(
         (customField) => customField.customFieldName === fieldName
       );
-      if (familyField?.value !== undefined && familyField?.value !== null) return familyField.value;
-      const volunteerField = family.volunteerFamilyInfo?.completedCustomFields?.find(
-        (customField) => customField.customFieldName === fieldName
-      );
+      if (familyField?.value !== undefined && familyField?.value !== null)
+        return familyField.value;
+      const volunteerField =
+        family.volunteerFamilyInfo?.completedCustomFields?.find(
+          (customField) => customField.customFieldName === fieldName
+        );
       return volunteerField?.value;
     },
   });
   const [filterText, setFilterText] = useState('');
-  const customFieldCount = (policy.customFamilyFields || []).length + (policy.volunteerPolicy?.customFields || []).length;
+  const customFieldCount =
+    (policy.customFamilyFields || []).length +
+    (policy.volunteerPolicy?.customFields || []).length;
   const activeCustomFieldFilterCount = Object.values(customFieldFilters).filter(
     (selectedValues) => selectedValues.length > 0
   ).length;
@@ -384,26 +401,40 @@ function VolunteerApproval(props: { onOpen: () => void }) {
   function familyMatchesCustomFieldFilters(family: CombinedFamilyInfo) {
     return matchesCustomFieldFilters({
       item: family,
-      customFields: (policy.customFamilyFields ?? []).concat(policy.volunteerPolicy?.customFields ?? []),
+      customFields: (policy.customFamilyFields ?? []).concat(
+        policy.volunteerPolicy?.customFields ?? []
+      ),
       selectedValuesByField: customFieldFilters,
       isBlank: (f, fieldName) => {
         const familyField = f.family?.completedCustomFields?.find(
           (customField) => customField.customFieldName === fieldName
         );
-        if (familyField && familyField.value !== undefined && familyField.value !== null) return false;
-        const volunteerField = f.volunteerFamilyInfo?.completedCustomFields?.find(
-          (customField) => customField.customFieldName === fieldName
+        if (
+          familyField &&
+          familyField.value !== undefined &&
+          familyField.value !== null
+        )
+          return false;
+        const volunteerField =
+          f.volunteerFamilyInfo?.completedCustomFields?.find(
+            (customField) => customField.customFieldName === fieldName
+          );
+        return (
+          !volunteerField ||
+          volunteerField.value === undefined ||
+          volunteerField.value === null
         );
-        return !volunteerField || volunteerField.value === undefined || volunteerField.value === null;
       },
       getValue: (f, fieldName) => {
         const familyField = f.family?.completedCustomFields?.find(
           (customField) => customField.customFieldName === fieldName
         );
-        if (familyField?.value !== undefined && familyField?.value !== null) return familyField.value;
-        const volunteerField = f.volunteerFamilyInfo?.completedCustomFields?.find(
-          (customField) => customField.customFieldName === fieldName
-        );
+        if (familyField?.value !== undefined && familyField?.value !== null)
+          return familyField.value;
+        const volunteerField =
+          f.volunteerFamilyInfo?.completedCustomFields?.find(
+            (customField) => customField.customFieldName === fieldName
+          );
         return volunteerField?.value;
       },
     });
@@ -439,7 +470,7 @@ function VolunteerApproval(props: { onOpen: () => void }) {
   function openFamily(familyId: string) {
     appNavigate.family(familyId);
   }
-  const [createVolunteerFamilyDialogOpen, setCreateVolunteerFamilyDialogOpen] =
+  const [createVolunteerFamilyDrawerOpen, setCreateVolunteerFamilyDrawerOpen] =
     useState(false);
 
   const theme = useTheme();
@@ -697,7 +728,9 @@ function VolunteerApproval(props: { onOpen: () => void }) {
           </Stack>
           <CustomFieldFiltersSidePanel>
             <VolunteerCustomFieldFiltersSidePanel
-              customFields={(policy.customFamilyFields || []).concat(policy.volunteerPolicy?.customFields || [])}
+              customFields={(policy.customFamilyFields || []).concat(
+                policy.volunteerPolicy?.customFields || []
+              )}
               optionsByField={customFieldFilterOptionsByField}
               selectedValuesByField={customFieldFilters}
               onFieldChange={changeCustomFieldFilter}
@@ -710,7 +743,7 @@ function VolunteerApproval(props: { onOpen: () => void }) {
               <Button
                 variant="contained"
                 startIcon={<AddIcon />}
-                onClick={() => setCreateVolunteerFamilyDialogOpen(true)}
+                onClick={() => setCreateVolunteerFamilyDrawerOpen(true)}
                 sx={{
                   marginRight: 'auto',
                   marginY: 2,
@@ -783,11 +816,12 @@ function VolunteerApproval(props: { onOpen: () => void }) {
             </Table>
           </TableContainer>
 
-          {createVolunteerFamilyDialogOpen && (
-            <CreateVolunteerFamilyDialog
+          {createVolunteerFamilyDrawerOpen && (
+            <CreateVolunteerFamilyDrawer
               onClose={(volunteerFamilyId) => {
-                setCreateVolunteerFamilyDialogOpen(false);
-                volunteerFamilyId && openFamily(volunteerFamilyId);
+                setCreateVolunteerFamilyDrawerOpen(false);
+                if (!volunteerFamilyId) return;
+                openFamily(volunteerFamilyId);
               }}
             />
           )}
