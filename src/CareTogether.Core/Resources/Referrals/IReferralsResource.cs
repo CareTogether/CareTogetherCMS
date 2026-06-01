@@ -13,7 +13,7 @@ namespace CareTogether.Resources.V1Cases
         ImmutableList<Guid> LinkedV1ReferralIds,
         DateTime OpenedAtUtc,
         DateTime? ClosedAtUtc,
-        V1CaseCloseReason? CloseReason,
+        string? CloseReason,
         ImmutableList<CompletedRequirementInfo> CompletedRequirements,
         ImmutableList<ExemptedRequirementInfo> ExemptedRequirements,
         ImmutableDictionary<string, CompletedCustomFieldInfo> CompletedCustomFields,
@@ -171,6 +171,13 @@ namespace CareTogether.Resources.V1Cases
         Guid FamilyId,
         Guid ReferralId,
         V1CaseCloseReason CloseReason,
+        DateTime ClosedAtUtc
+    ) : V1CaseCommand(FamilyId, ReferralId);
+
+    public sealed record CloseReferralWithReason(
+        Guid FamilyId,
+        Guid ReferralId,
+        string CloseReason,
         DateTime ClosedAtUtc
     ) : V1CaseCommand(FamilyId, ReferralId);
 

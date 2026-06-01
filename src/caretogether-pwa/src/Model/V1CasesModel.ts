@@ -10,8 +10,7 @@ import {
   EndArrangements,
   AssignVolunteerFamily,
   AssignIndividualVolunteer,
-  V1CaseCloseReason,
-  CloseReferral as CloseV1Case,
+  CloseReferralWithReason as CloseV1Case,
   CreateReferral as CreateV1Case,
   ReopenReferral as ReopenV1Case,
   TrackChildLocationChange,
@@ -927,7 +926,7 @@ export function useV1CasesModel() {
     async (
       partneringFamilyId: string,
       v1CaseId: string,
-      reason: V1CaseCloseReason,
+      reason: string,
       closedAtLocal: Date
     ) => {
       const command = commandFactory(CloseV1Case, {

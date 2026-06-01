@@ -227,6 +227,14 @@ namespace CareTogether.Resources.V1Cases
                         CloseReferral c => (
                             v1CaseEntry with
                             {
+                                CloseReason = FormatV1CaseCloseReason(c.CloseReason),
+                                ClosedAtUtc = c.ClosedAtUtc,
+                            },
+                            null
+                        ),
+                        CloseReferralWithReason c => (
+                            v1CaseEntry with
+                            {
                                 CloseReason = c.CloseReason,
                                 ClosedAtUtc = c.ClosedAtUtc,
                             },
@@ -966,6 +974,17 @@ namespace CareTogether.Resources.V1Cases
         }
 
         public V1CaseEntry GetV1CaseEntry(Guid v1CaseId) => v1Cases[v1CaseId];
+
+        private static string FormatV1CaseCloseReason(V1CaseCloseReason closeReason) =>
+            closeReason switch
+            {
+                V1CaseCloseReason.NotAppropriate => "Not appropriate",
+                V1CaseCloseReason.NoCapacity => "No capacity",
+                V1CaseCloseReason.NoLongerNeeded => "No longer needed",
+                V1CaseCloseReason.Resourced => "Resourced",
+                V1CaseCloseReason.NeedMet => "Need met",
+                _ => closeReason.ToString(),
+            };
 
         private V1CaseEntry LinkReferralToCaseEntry(
             V1CaseEntry v1CaseEntry,

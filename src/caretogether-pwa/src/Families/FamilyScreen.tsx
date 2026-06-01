@@ -33,7 +33,6 @@ import {
   V1Referral,
   RoleRemovalReason,
   V1ReferralStatus,
-  V1CaseCloseReason,
 } from '../GeneratedClient';
 import { useParams } from 'react-router';
 import {
@@ -51,7 +50,7 @@ import { AddChildDialog } from './AddChildDialog';
 import { AddEditNoteDialog } from '../Notes/AddEditNoteDialog';
 import { format } from 'date-fns';
 import { UploadFamilyDocumentsDialog } from './UploadFamilyDocumentsDialog';
-import { ConfirmCloseV1CaseDialog } from '../V1Cases/ConfirmCloseV1CaseDialog';
+import { CloseV1CaseDrawer } from '../V1Cases/CloseV1CaseDrawer';
 import { OpenNewV1CaseDialog } from '../V1Cases/OpenNewV1CaseDialog';
 import { FamilyDocuments } from './FamilyDocuments';
 import { useFamilyPermissions } from '../Model/SessionModel';
@@ -221,7 +220,7 @@ export function FamilyScreen() {
   const allV1Cases: V1Case[] = useMemo(() => {
     return [...openV1Cases, ...closedV1Cases];
   }, [openV1Cases, closedV1Cases]);
-  const [confirmCloseOpen, setConfirmCloseOpen] = useState(false);
+  const [closeCaseDrawerOpen, setCloseCaseDrawerOpen] = useState(false);
   const v1CasesModel = useV1CasesModel();
   const referralInfosLoadable = useLoadable(visibleReferralsQuery);
   const openReferralId =
@@ -284,21 +283,6 @@ export function FamilyScreen() {
     return { caseRows, unlinkedReferrals };
   }, [allV1Cases, familyReferrals]);
 
-  async function closeCaseNow() {
-    if (!selectedV1Case?.id) return;
-
-    await withBackdrop(async () => {
-      const defaultReason = V1CaseCloseReason.NeedMet;
-      const closedAtLocal = new Date();
-
-      await v1CasesModel.closeV1Case(
-        familyId,
-        selectedV1Case.id,
-        defaultReason,
-        closedAtLocal
-      );
-    });
-  }
   async function reopenCaseNow() {
     if (!selectedV1Case?.id) return;
 
@@ -886,6 +870,10 @@ export function FamilyScreen() {
                             const isSelected = selectedV1Case?.id === v1Case.id;
 
                             const isOpenV1Case = !v1Case.closedAtUtc;
+                            const caseCloseReasonText =
+                              !isOpenV1Case && v1Case.closeReason
+                                ? v1Case.closeReason
+                                : undefined;
 
                             const showCloseButton =
                               isSelected &&
@@ -926,12 +914,21 @@ export function FamilyScreen() {
                                         : 'Open Case'}
                                     </Typography>
 
+                                    {caseCloseReasonText && (
+                                      <Typography
+                                        className="ph-unmask"
+                                        color="text.secondary"
+                                      >
+                                        {caseCloseReasonText}
+                                      </Typography>
+                                    )}
+
                                     {showCloseButton && (
                                       <Button
                                         className="ph-unmask"
                                         onClick={(e) => {
                                           e.stopPropagation();
-                                          setConfirmCloseOpen(true);
+                                          setCloseCaseDrawerOpen(true);
                                         }}
                                         variant="contained"
                                         size="small"
@@ -1160,13 +1157,11 @@ export function FamilyScreen() {
             </Grid>
 
             <Grid item xs={6} md={4}>
-              {confirmCloseOpen && (
-                <ConfirmCloseV1CaseDialog
-                  onClose={() => setConfirmCloseOpen(false)}
-                  onConfirm={async () => {
-                    setConfirmCloseOpen(false);
-                    await closeCaseNow();
-                  }}
+              {closeCaseDrawerOpen && selectedV1Case?.id && (
+                <CloseV1CaseDrawer
+                  partneringFamilyId={familyId}
+                  v1CaseId={selectedV1Case.id}
+                  onClose={() => setCloseCaseDrawerOpen(false)}
                 />
               )}
               {openNewV1CaseDialogOpen && (
