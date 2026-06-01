@@ -32,7 +32,6 @@ import { Breadcrumbs } from '../../Generic/Breadcrumbs';
 import { useSearchParams } from 'react-router-dom';
 import {
   PolicyConfiguration,
-  SmsSourcePhoneNumbers,
 } from './Tabs/PolicyConfiguration';
 import { EffectiveLocationPolicy } from '../../GeneratedClient';
 import { api } from '../../Api/Api';
@@ -87,12 +86,6 @@ export function LocationEdit() {
         id: 'basic' as const,
         label: 'Basic Configuration',
         component: BasicConfiguration,
-        shouldShow: true,
-      },
-      {
-        id: 'smsSourcePhoneNumbers' as const,
-        label: 'SMS Source Phone Numbers',
-        component: SmsSourcePhoneNumbers,
         shouldShow: true,
       },
       {
@@ -314,12 +307,6 @@ export function LocationEdit() {
           {activeTab === 'accessLevels' && (
             <Box key="accessLevels">
               <AccessLevels locationConfiguration={location} />
-            </Box>
-          )}
-
-          {activeTab === 'smsSourcePhoneNumbers' && (
-            <Box key="smsSourcePhoneNumbers">
-              <SmsSourcePhoneNumbers locationConfiguration={location} />
             </Box>
           )}
 
