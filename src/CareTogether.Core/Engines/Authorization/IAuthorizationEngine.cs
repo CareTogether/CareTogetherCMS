@@ -123,6 +123,12 @@ namespace CareTogether.Engines.Authorization
             SessionUserContext user
         );
 
+        Task<bool> AuthorizeLocationPolicyEditAsync(
+            Guid organizationId,
+            Guid locationId,
+            SessionUserContext user
+        );
+
         Task<CombinedFamilyInfo> DiscloseFamilyAsync(
             SessionUserContext user,
             Guid organizationId,

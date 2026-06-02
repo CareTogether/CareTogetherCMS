@@ -439,7 +439,14 @@ namespace CareTogether.Api.Controllers
             [FromBody] EffectiveLocationPolicy policy
         )
         {
-            if (!User.IsInRole(SystemConstants.ORGANIZATION_ADMINISTRATOR))
+            var userContext = new SessionUserContext(User, null);
+            if (
+                !await authorizationEngine.AuthorizeLocationPolicyEditAsync(
+                    organizationId,
+                    locationId,
+                    userContext
+                )
+            )
                 return Forbid();
 
             try
