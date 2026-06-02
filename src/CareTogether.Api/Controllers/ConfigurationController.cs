@@ -442,12 +442,19 @@ namespace CareTogether.Api.Controllers
             if (!User.IsInRole(SystemConstants.ORGANIZATION_ADMINISTRATOR))
                 return Forbid();
 
-            var result = await policiesResource.UpsertEffectiveLocationPolicyAsync(
-                organizationId,
-                locationId,
-                policy
-            );
-            return Ok(result);
+            try
+            {
+                var result = await policiesResource.UpsertEffectiveLocationPolicyAsync(
+                    organizationId,
+                    locationId,
+                    policy
+                );
+                return Ok(result);
+            }
+            catch (PolicyValidationException ex)
+            {
+                return BadRequest(new { errors = ex.Errors });
+            }
         }
 
         [HttpGet("/api/{organizationId:guid}/{locationId:guid}/[controller]/flags")]
