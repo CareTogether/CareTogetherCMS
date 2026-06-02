@@ -1,4 +1,5 @@
 import {
+  Alert,
   Stack,
   Typography,
   useTheme,
@@ -25,7 +26,7 @@ import {
   ChevronLeft as ChevronLeftIcon,
   ChevronRight as ChevronRightIcon,
 } from '@mui/icons-material';
-import { useUserIsOrganizationAdministrator } from '../../Model/SessionModel';
+import { useGlobalPermissions } from '../../Model/SessionModel';
 import { useAppNavigate } from '../../Hooks/useAppNavigate';
 import AccessLevels from './Tabs/AccessLevels/AccessLevels';
 import { Breadcrumbs } from '../../Generic/Breadcrumbs';
@@ -33,7 +34,11 @@ import { useSearchParams } from 'react-router-dom';
 import {
   PolicyConfiguration,
 } from './Tabs/PolicyConfiguration';
-import { EffectiveLocationPolicy } from '../../GeneratedClient';
+import {
+  ApiException,
+  EffectiveLocationPolicy,
+  Permission,
+} from '../../GeneratedClient';
 import { api } from '../../Api/Api';
 import {
   DESKTOP_BOTTOM_SAFE_AREA,
@@ -73,6 +78,7 @@ export function LocationEdit() {
     useState<EffectiveLocationPolicy | null>(null);
   const [savedPolicy, setSavedPolicy] =
     useState<EffectiveLocationPolicy | null>(null);
+  const [policySaveErrors, setPolicySaveErrors] = useState<string[]>([]);
 
   useEffect(() => {
     if (!policy) return;
@@ -151,7 +157,8 @@ export function LocationEdit() {
 
   const dataLoaded = useDataLoaded();
 
-  const canEdit = useUserIsOrganizationAdministrator();
+  const permissions = useGlobalPermissions();
+  const canAccessSettings = permissions(Permission.AccessSettingsScreen);
 
   const appNavigate = useAppNavigate();
   const withBackdrop = useBackdrop();
@@ -172,21 +179,32 @@ export function LocationEdit() {
 
   function cancelPolicyChanges() {
     setPolicyDraft(savedPolicy);
+    setPolicySaveErrors([]);
   }
 
   function savePolicyChanges() {
     if (!policyDraft || !targetLocationId) return;
 
     withBackdrop(async () => {
-      const saved = await api.configuration.putEffectiveLocationPolicy(
-        organizationId,
-        targetLocationId,
-        policyDraft
-      );
-      setPolicyDraft(saved);
-      setSavedPolicy(saved);
-      refreshPolicy();
+      try {
+        setPolicySaveErrors([]);
+        const saved = await api.configuration.putEffectiveLocationPolicy(
+          organizationId,
+          targetLocationId,
+          policyDraft
+        );
+        setPolicyDraft(saved);
+        setSavedPolicy(saved);
+        refreshPolicy();
+      } catch (error) {
+        setPolicySaveErrors(getPolicySaveErrors(error));
+      }
     });
+  }
+
+  function setPolicyDraftAndClearSaveErrors(nextPolicy: EffectiveLocationPolicy) {
+    setPolicyDraft(nextPolicy);
+    setPolicySaveErrors([]);
   }
 
   if (!dataLoaded) {
@@ -197,7 +215,7 @@ export function LocationEdit() {
     );
   }
 
-  if (!canEdit || !location) {
+  if (!canAccessSettings || !location) {
     return (
       <Box className="ph-unmask" mt={10} textAlign="center">
         <Typography>
@@ -316,7 +334,7 @@ export function LocationEdit() {
                 policy={policyDraft}
                 locationConfiguration={location}
                 locationRoles={locationRoles}
-                onPolicyChange={setPolicyDraft}
+                onPolicyChange={setPolicyDraftAndClearSaveErrors}
                 section="actionDefinitions"
               />
             </Box>
@@ -328,7 +346,7 @@ export function LocationEdit() {
                 policy={policyDraft}
                 locationConfiguration={location}
                 locationRoles={locationRoles}
-                onPolicyChange={setPolicyDraft}
+                onPolicyChange={setPolicyDraftAndClearSaveErrors}
                 section="customFamilyFields"
               />
             </Box>
@@ -340,7 +358,7 @@ export function LocationEdit() {
                 policy={policyDraft}
                 locationConfiguration={location}
                 locationRoles={locationRoles}
-                onPolicyChange={setPolicyDraft}
+                onPolicyChange={setPolicyDraftAndClearSaveErrors}
                 section="casePolicy"
               />
             </Box>
@@ -352,7 +370,7 @@ export function LocationEdit() {
                 policy={policyDraft}
                 locationConfiguration={location}
                 locationRoles={locationRoles}
-                onPolicyChange={setPolicyDraft}
+                onPolicyChange={setPolicyDraftAndClearSaveErrors}
                 section="v1ReferralPolicy"
               />
             </Box>
@@ -364,7 +382,7 @@ export function LocationEdit() {
                 policy={policyDraft}
                 locationConfiguration={location}
                 locationRoles={locationRoles}
-                onPolicyChange={setPolicyDraft}
+                onPolicyChange={setPolicyDraftAndClearSaveErrors}
                 section="volunteerPolicy"
               />
             </Box>
@@ -374,33 +392,73 @@ export function LocationEdit() {
 
       {isPolicyTabActive && (
         <Box paddingTop={2} borderTop={1} borderColor="divider">
-          <Stack direction="row" justifyContent="flex-end" alignItems="center">
-            {policyDirty && (
-              <Typography sx={{ fontStyle: 'italic' }} mr={2}>
-                There are pending policy changes to be saved
-              </Typography>
+          <Stack spacing={1.5}>
+            {policySaveErrors.length > 0 && (
+              <Alert severity="error">
+                <Stack spacing={0.5}>
+                  {policySaveErrors.map((error) => (
+                    <Typography key={error} variant="body2">
+                      {error}
+                    </Typography>
+                  ))}
+                </Stack>
+              </Alert>
             )}
 
-            <Button
-              color="secondary"
-              variant="contained"
-              sx={{ marginRight: 2 }}
-              disabled={!policyDirty}
-              onClick={cancelPolicyChanges}
-            >
-              Cancel
-            </Button>
-            <Button
-              color="primary"
-              variant="contained"
-              disabled={!policyDirty}
-              onClick={savePolicyChanges}
-            >
-              Save
-            </Button>
+            <Stack direction="row" justifyContent="flex-end" alignItems="center">
+              {policyDirty && (
+                <Typography sx={{ fontStyle: 'italic' }} mr={2}>
+                  There are pending policy changes to be saved
+                </Typography>
+              )}
+
+              <Button
+                color="secondary"
+                variant="contained"
+                sx={{ marginRight: 2 }}
+                disabled={!policyDirty}
+                onClick={cancelPolicyChanges}
+              >
+                Cancel
+              </Button>
+              <Button
+                color="primary"
+                variant="contained"
+                disabled={!policyDirty}
+                onClick={savePolicyChanges}
+              >
+                Save
+              </Button>
+            </Stack>
           </Stack>
         </Box>
       )}
     </Stack>
   );
+}
+
+function getPolicySaveErrors(error: unknown) {
+  if (!(error instanceof ApiException)) {
+    return [error instanceof Error ? error.message : 'Policy changes could not be saved.'];
+  }
+
+  if (error.status === 403) {
+    return ['You do not have permission to save policy changes.'];
+  }
+
+  const parsedErrors = parseValidationErrors(error.response);
+  if (parsedErrors.length > 0) return parsedErrors;
+
+  return [error.response || error.message || 'Policy changes could not be saved.'];
+}
+
+function parseValidationErrors(response: string) {
+  try {
+    const parsed = JSON.parse(response) as { errors?: unknown };
+    return Array.isArray(parsed.errors)
+      ? parsed.errors.filter((error): error is string => typeof error === 'string')
+      : [];
+  } catch {
+    return [];
+  }
 }

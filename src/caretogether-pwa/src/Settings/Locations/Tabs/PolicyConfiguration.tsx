@@ -1171,7 +1171,7 @@ function ActionDefinitionSidePanel({
           Cancel
         </Button>
         <Button type="submit" variant="contained" disabled={!canSave}>
-          Save Draft
+          Save
         </Button>
       </Grid>
     </Grid>
@@ -1312,7 +1312,7 @@ function CustomFieldSidePanel({
           Cancel
         </Button>
         <Button type="submit" variant="contained" disabled={!canSave}>
-          Save Draft
+          Save
         </Button>
       </Grid>
     </Grid>
@@ -1422,7 +1422,7 @@ function RequirementSidePanel({
           Cancel
         </Button>
         <Button type="submit" variant="contained" disabled={!canSave}>
-          Save Draft
+          Save
         </Button>
       </Grid>
     </Grid>
@@ -1621,7 +1621,7 @@ function FunctionAssignmentPolicySidePanel({
           Cancel
         </Button>
         <Button type="submit" variant="contained" disabled={!canSave}>
-          Save Draft
+          Save
         </Button>
       </Grid>
     </Grid>
@@ -1773,7 +1773,7 @@ function FunctionPolicySidePanel({
           Cancel
         </Button>
         <Button type="submit" variant="contained" disabled={!canSave}>
-          Save Draft
+          Save
         </Button>
       </Grid>
     </Grid>
@@ -1925,7 +1925,7 @@ function ArrangementPolicySidePanel({
           Cancel
         </Button>
         <Button type="submit" variant="contained" disabled={!canSave}>
-          Save Draft
+          Save
         </Button>
       </Grid>
     </Grid>
@@ -2117,7 +2117,7 @@ function VolunteerRolePolicyVersionSidePanel({
           Cancel
         </Button>
         <Button type="submit" variant="contained" disabled={!canSave}>
-          Save Draft
+          Save
         </Button>
       </Grid>
     </Grid>

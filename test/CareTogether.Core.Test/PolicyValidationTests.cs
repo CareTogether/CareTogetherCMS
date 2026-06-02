@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using System;
 using CareTogether.Resources.Policies;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -85,6 +86,33 @@ namespace CareTogether.Core.Test
             StringAssert.Contains(
                 string.Join("\n", errors),
                 "Custom Family Fields contains duplicate name 'church'."
+            );
+        }
+
+        [TestMethod]
+        public void EmptyEligiblePersonIdsAreSanitizedBeforeValidation()
+        {
+            var policy = ValidPolicy() with
+            {
+                ReferralPolicy = ValidPolicy().ReferralPolicy with
+                {
+                    FunctionPolicies =
+                    [
+                        new FunctionPolicy(
+                            "Staff Supervision",
+                            new FunctionEligibility([], [], [Guid.Empty])
+                        ),
+                    ],
+                },
+            };
+
+            var sanitized = EffectiveLocationPolicySanitizer.Sanitize(policy);
+            var errors = EffectiveLocationPolicyValidator.Validate(sanitized, Configuration);
+
+            Assert.AreEqual(0, errors.Count);
+            Assert.AreEqual(
+                0,
+                sanitized.ReferralPolicy.FunctionPolicies![0].Eligibility.EligiblePeople.Count
             );
         }
 
