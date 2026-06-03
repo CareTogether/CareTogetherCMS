@@ -9,6 +9,11 @@ import {
   Autocomplete,
   Box,
   Button,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogContentText,
+  DialogTitle,
   FormControlLabel,
   Grid,
   IconButton,
@@ -708,19 +713,51 @@ function DuplicateRowAction({
   label: string;
   onClick: () => void;
 }) {
+  const [confirming, setConfirming] = useState(false);
+
+  function closeDialog() {
+    setConfirming(false);
+  }
+
+  function confirmDuplicate() {
+    onClick();
+    closeDialog();
+  }
+
   return (
-    <Tooltip title="Duplicate">
-      <IconButton
-        size="small"
-        aria-label={`Duplicate ${label}`}
-        onClick={(event) => {
-          event.stopPropagation();
-          onClick();
-        }}
+    <>
+      <Tooltip title="Duplicate">
+        <IconButton
+          size="small"
+          aria-label={`Duplicate ${label}`}
+          onClick={(event) => {
+            event.stopPropagation();
+            setConfirming(true);
+          }}
+        >
+          <DuplicateIcon fontSize="small" />
+        </IconButton>
+      </Tooltip>
+
+      <Dialog
+        open={confirming}
+        onClose={closeDialog}
+        onClick={(event) => event.stopPropagation()}
       >
-        <DuplicateIcon fontSize="small" />
-      </IconButton>
-    </Tooltip>
+        <DialogTitle>Duplicate {label}?</DialogTitle>
+        <DialogContent>
+          <DialogContentText>
+            Are you sure you want to duplicate {label}?
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={closeDialog}>No</Button>
+          <Button variant="contained" onClick={confirmDuplicate}>
+            Yes
+          </Button>
+        </DialogActions>
+      </Dialog>
+    </>
   );
 }
 
