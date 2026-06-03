@@ -35,6 +35,7 @@ namespace CareTogether.Resources.Policies
         )
         {
             var actionNames = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            var canonicalActionNames = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
             var actionDefinitions =
                 policy.ActionDefinitions ?? ImmutableDictionary<string, ActionRequirement>.Empty;
 
@@ -46,10 +47,12 @@ namespace CareTogether.Resources.Policies
                     continue;
                 }
 
-                if (!actionNames.Add(actionName.Trim()))
+                if (!canonicalActionNames.Add(actionName.Trim()))
                     errors.Add(
                         $"Action Definitions contains duplicate action name '{actionName}'."
                     );
+
+                actionNames.Add(actionName.Trim());
 
                 foreach (var alternateName in action?.AlternateNames ?? ImmutableList<string>.Empty)
                 {
@@ -59,13 +62,6 @@ namespace CareTogether.Resources.Policies
                             $"Action Definition '{actionName}' cannot contain a blank alternate name."
                         );
                         continue;
-                    }
-
-                    if (actionDefinitions.ContainsKey(alternateName.Trim()))
-                    {
-                        errors.Add(
-                            $"Action Definition '{actionName}' has alternate name '{alternateName}' that conflicts with an action name."
-                        );
                     }
 
                     actionNames.Add(alternateName.Trim());

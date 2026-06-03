@@ -171,7 +171,8 @@ const enumLabelOverrides = new Map<object, Record<string, string>>([
     {
       OncePerFamily: 'Once per Family',
       AllAdultsInTheFamily: 'All Adults in the Family',
-      AllParticipatingAdultsInTheFamily: 'All Participating Adults in the Family',
+      AllParticipatingAdultsInTheFamily:
+        'All Participating Adults in the Family',
     },
   ],
 ]);
@@ -187,20 +188,29 @@ function enumName<T extends object>(enumType: T, value: unknown) {
   const rawName = String(
     (enumType as Record<string, string | number>)[String(value)] ?? value
   );
-  return enumLabelOverrides.get(enumType)?.[rawName] ?? humanizeIdentifier(rawName);
+  return (
+    enumLabelOverrides.get(enumType)?.[rawName] ?? humanizeIdentifier(rawName)
+  );
 }
 
 function enumOptions<T extends object>(enumType: T) {
   return Object.entries(enumType)
     .filter(([, value]) => typeof value === 'number')
-    .map(([, value]) => ({ label: enumName(enumType, value), value: value as number }));
+    .map(([, value]) => ({
+      label: enumName(enumType, value),
+      value: value as number,
+    }));
 }
 
 function formatDate(value?: Date) {
   return value ? value.toLocaleString() : 'Current';
 }
 
-function summarizeCount(count: number, singular: string, plural = `${singular}s`) {
+function summarizeCount(
+  count: number,
+  singular: string,
+  plural = `${singular}s`
+) {
   return `${count} ${count === 1 ? singular : plural}`;
 }
 
@@ -228,10 +238,9 @@ function validityUnitLabel(unit: ValidityUnit) {
   return 'year';
 }
 
-function normalizeValidityDays(days: number): Pick<
-  ActionDefinitionDraft,
-  'validityAmount' | 'validityUnit'
-> {
+function normalizeValidityDays(
+  days: number
+): Pick<ActionDefinitionDraft, 'validityAmount' | 'validityUnit'> {
   if (days >= 365 && days % 365 === 0) {
     return { validityAmount: String(days / 365), validityUnit: 'years' };
   }
@@ -243,12 +252,18 @@ function normalizeValidityDays(days: number): Pick<
   return { validityAmount: String(days), validityUnit: 'days' };
 }
 
-function parseValidity(value?: string): Pick<
+function parseValidity(
+  value?: string
+): Pick<
   ActionDefinitionDraft,
   'validityEnabled' | 'validityAmount' | 'validityUnit'
 > {
   if (!value) {
-    return { validityEnabled: false, validityAmount: '30', validityUnit: 'days' };
+    return {
+      validityEnabled: false,
+      validityAmount: '30',
+      validityUnit: 'days',
+    };
   }
 
   const dayMatch = value.match(/^(\d+)\./);
@@ -261,7 +276,11 @@ function parseValidity(value?: string): Pick<
 
   const timeMatch = value.match(/^(\d+):(\d+):/);
   if (!timeMatch) {
-    return { validityEnabled: true, validityAmount: '30', validityUnit: 'days' };
+    return {
+      validityEnabled: true,
+      validityAmount: '30',
+      validityUnit: 'days',
+    };
   }
 
   return {
@@ -302,7 +321,10 @@ function formatValidity(value?: string) {
     const { validityAmount, validityUnit } = normalizeValidityDays(
       Number(dayMatch[1])
     );
-    return summarizeCount(Number(validityAmount), validityUnitLabel(validityUnit));
+    return summarizeCount(
+      Number(validityAmount),
+      validityUnitLabel(validityUnit)
+    );
   }
 
   const timeMatch = value.match(/^(\d+):(\d+):/);
@@ -315,7 +337,10 @@ function formatValidity(value?: string) {
   return summarizeCount(Math.max(minutes, 1), 'minute');
 }
 
-function actionToDraft(actionName = '', action?: ActionRequirement): ActionDefinitionDraft {
+function actionToDraft(
+  actionName = '',
+  action?: ActionRequirement
+): ActionDefinitionDraft {
   const validity = parseValidity(action?.validity);
 
   return {
@@ -342,7 +367,9 @@ function customFieldToDraft(field?: CustomField): CustomFieldDraft {
   };
 }
 
-function requirementToDraft(requirement?: RequirementDefinition): RequirementDraft {
+function requirementToDraft(
+  requirement?: RequirementDefinition
+): RequirementDraft {
   return {
     actionName: requirement?.actionName ?? '',
     isRequired: requirement?.isRequired ?? true,
@@ -354,7 +381,8 @@ function functionAssignmentPolicyToDraft(
 ): FunctionAssignmentPolicyDraft {
   return {
     assignmentRole: policy?.assignmentRole ?? '',
-    eligibleLocationRoles: policy?.eligibility?.eligibleLocationRoles?.join(', ') ?? '',
+    eligibleLocationRoles:
+      policy?.eligibility?.eligibleLocationRoles?.join(', ') ?? '',
     eligibleIndividualVolunteerRoles:
       policy?.eligibility?.eligibleIndividualVolunteerRoles?.join(', ') ?? '',
     eligibleVolunteerFamilyRoles:
@@ -374,10 +402,13 @@ function functionPolicyToDraft(policy?: FunctionPolicy): FunctionPolicyDraft {
   };
 }
 
-function arrangementPolicyToDraft(policy?: ArrangementPolicy): ArrangementPolicyDraft {
+function arrangementPolicyToDraft(
+  policy?: ArrangementPolicy
+): ArrangementPolicyDraft {
   return {
     arrangementType: policy?.arrangementType ?? '',
-    childInvolvement: policy?.childInvolvement ?? ChildInvolvement.NoChildInvolvement,
+    childInvolvement:
+      policy?.childInvolvement ?? ChildInvolvement.NoChildInvolvement,
     superseded: Boolean(policy?.supersededAtUtc),
     supersededAtUtc: policy?.supersededAtUtc
       ? policy.supersededAtUtc.toISOString().slice(0, 16)
@@ -394,7 +425,10 @@ function volunteerRolePolicyVersionToDraft(
   family: boolean
 ): VolunteerRolePolicyVersionDraft {
   const requirements = family
-    ? ((version as VolunteerFamilyRolePolicyVersion | undefined)?.requirements ?? [])
+    ? (
+        (version as VolunteerFamilyRolePolicyVersion | undefined)
+          ?.requirements ?? []
+      )
         .map(
           (requirement) =>
             `${enumName(RequirementStage, requirement.stage)}|${requirement.actionName}|${enumName(
@@ -525,7 +559,9 @@ function nextCopyName(baseName: string, existingNames: string[]) {
 
 function parseRequirementStage(value: string): RequirementStage {
   if (value in RequirementStage) {
-    return RequirementStage[value as keyof typeof RequirementStage] as RequirementStage;
+    return RequirementStage[
+      value as keyof typeof RequirementStage
+    ] as RequirementStage;
   }
 
   const numericValue = Number(value);
@@ -534,7 +570,9 @@ function parseRequirementStage(value: string): RequirementStage {
     : RequirementStage.Application;
 }
 
-function parseVolunteerFamilyRequirementScope(value: string): VolunteerFamilyRequirementScope {
+function parseVolunteerFamilyRequirementScope(
+  value: string
+): VolunteerFamilyRequirementScope {
   if (value in VolunteerFamilyRequirementScope) {
     return VolunteerFamilyRequirementScope[
       value as keyof typeof VolunteerFamilyRequirementScope
@@ -568,7 +606,9 @@ function parseVolunteerFamilyRequirements(value: string) {
     .map((line) => line.trim())
     .filter(Boolean)
     .map((line) => {
-      const [stage, actionName, scope] = line.split('|').map((part) => part.trim());
+      const [stage, actionName, scope] = line
+        .split('|')
+        .map((part) => part.trim());
       return new VolunteerFamilyApprovalRequirement({
         stage: parseRequirementStage(stage),
         actionName,
@@ -628,7 +668,9 @@ function upsertVolunteerFamilyRolePolicyVersion(
   roleName: string,
   version: VolunteerFamilyRolePolicyVersion
 ) {
-  const volunteerFamilyRoles = { ...(volunteerPolicy?.volunteerFamilyRoles ?? {}) };
+  const volunteerFamilyRoles = {
+    ...(volunteerPolicy?.volunteerFamilyRoles ?? {}),
+  };
   if (previousRoleName && previousRoleName !== roleName) {
     const previousRole = volunteerFamilyRoles[previousRoleName];
     if (previousRole) {
@@ -699,7 +741,9 @@ function removeVolunteerFamilyRolePolicyVersion(
   roleName: string,
   versionName: string
 ) {
-  const volunteerFamilyRoles = { ...(volunteerPolicy?.volunteerFamilyRoles ?? {}) };
+  const volunteerFamilyRoles = {
+    ...(volunteerPolicy?.volunteerFamilyRoles ?? {}),
+  };
   const rolePolicy = volunteerFamilyRoles[roleName];
 
   if (rolePolicy) {
@@ -728,14 +772,15 @@ function ValuesText({ values }: { values?: string[] }) {
   return <Typography variant="body2">{listText(values)}</Typography>;
 }
 
-function EditableActions({
-  onAdd,
-}: {
-  onAdd: () => void;
-}) {
+function EditableActions({ onAdd }: { onAdd: () => void }) {
   return (
     <Stack direction="row" spacing={1} useFlexGap flexWrap="wrap">
-      <Button size="small" variant="contained" startIcon={<AddIcon />} onClick={onAdd}>
+      <Button
+        size="small"
+        variant="contained"
+        startIcon={<AddIcon />}
+        onClick={onAdd}
+      >
         Add
       </Button>
     </Stack>
@@ -881,7 +926,11 @@ function DeleteRowAction({
 function getRequirementUsage(policy: EffectiveLocationPolicy) {
   const references = new Map<string, NamedPolicyReference[]>();
 
-  const addReference = (actionName: string | undefined, area: string, owner: string) => {
+  const addReference = (
+    actionName: string | undefined,
+    area: string,
+    owner: string
+  ) => {
     if (!actionName) return;
     references.set(actionName, [
       ...(references.get(actionName) ?? []),
@@ -890,14 +939,22 @@ function getRequirementUsage(policy: EffectiveLocationPolicy) {
   };
 
   policy.referralPolicy?.intakeRequirements?.forEach((requirement) =>
-    addReference(requirement.actionName, 'CasePolicy.IntakeRequirements', 'CasePolicy')
+    addReference(
+      requirement.actionName,
+      'CasePolicy.IntakeRequirements',
+      'CasePolicy'
+    )
   );
 
   policy.referralPolicy?.arrangementPolicies?.forEach((arrangement) => {
     const owner = arrangement.arrangementType;
 
     arrangement.requiredSetupActions?.forEach((requirement) =>
-      addReference(requirement.actionName, 'CasePolicy.ArrangementPolicies.RequiredSetupActions', owner)
+      addReference(
+        requirement.actionName,
+        'CasePolicy.ArrangementPolicies.RequiredSetupActions',
+        owner
+      )
     );
     arrangement.requiredMonitoringActionsNew?.forEach((requirement) =>
       addReference(
@@ -907,14 +964,22 @@ function getRequirementUsage(policy: EffectiveLocationPolicy) {
       )
     );
     arrangement.requiredCloseoutActions?.forEach((requirement) =>
-      addReference(requirement.actionName, 'CasePolicy.ArrangementPolicies.RequiredCloseoutActions', owner)
+      addReference(
+        requirement.actionName,
+        'CasePolicy.ArrangementPolicies.RequiredCloseoutActions',
+        owner
+      )
     );
 
     arrangement.arrangementFunctions?.forEach((arrangementFunction) => {
       arrangementFunction.variants?.forEach((variant) => {
         const variantOwner = `${owner} / ${arrangementFunction.functionName} / ${variant.variantName}`;
         variant.requiredSetupActions?.forEach((requirement) =>
-          addReference(requirement.actionName, 'CasePolicy.ArrangementFunctionVariant.RequiredSetupActions', variantOwner)
+          addReference(
+            requirement.actionName,
+            'CasePolicy.ArrangementFunctionVariant.RequiredSetupActions',
+            variantOwner
+          )
         );
         variant.requiredMonitoringActionsNew?.forEach((requirement) =>
           addReference(
@@ -924,7 +989,11 @@ function getRequirementUsage(policy: EffectiveLocationPolicy) {
           )
         );
         variant.requiredCloseoutActions?.forEach((requirement) =>
-          addReference(requirement.actionName, 'CasePolicy.ArrangementFunctionVariant.RequiredCloseoutActions', variantOwner)
+          addReference(
+            requirement.actionName,
+            'CasePolicy.ArrangementFunctionVariant.RequiredCloseoutActions',
+            variantOwner
+          )
         );
       });
     });
@@ -969,19 +1038,32 @@ function EligibilitySummary({
   if (!eligibility) return <Typography variant="body2">-</Typography>;
 
   const locationRoles =
-    'eligibleLocationRoles' in eligibility ? eligibility.eligibleLocationRoles : undefined;
+    'eligibleLocationRoles' in eligibility
+      ? eligibility.eligibleLocationRoles
+      : undefined;
 
   return (
     <Stack spacing={0.5}>
-      {locationRoles && <Typography variant="body2">Location Roles: {listText(locationRoles)}</Typography>}
+      {locationRoles && (
+        <Typography variant="body2">
+          Location Roles: {listText(locationRoles)}
+        </Typography>
+      )}
       <Typography variant="body2">
-        Individual Volunteer Roles: {listText(eligibility.eligibleIndividualVolunteerRoles)}
+        Individual Volunteer Roles:{' '}
+        {listText(eligibility.eligibleIndividualVolunteerRoles)}
       </Typography>
       <Typography variant="body2">
-        Volunteer Family Roles: {listText(eligibility.eligibleVolunteerFamilyRoles)}
+        Volunteer Family Roles:{' '}
+        {listText(eligibility.eligibleVolunteerFamilyRoles)}
       </Typography>
       <Typography variant="body2">
-        Eligible People: {summarizeCount(eligibility.eligiblePeople?.length ?? 0, 'person', 'people')}
+        Eligible People:{' '}
+        {summarizeCount(
+          eligibility.eligiblePeople?.length ?? 0,
+          'person',
+          'people'
+        )}
       </Typography>
     </Stack>
   );
@@ -1030,7 +1112,11 @@ function FunctionAssignmentPoliciesTable({
                 </TableCell>
                 {hasActions && (
                   <TableCell align="right">
-                    <Stack direction="row" justifyContent="flex-end" spacing={0.5}>
+                    <Stack
+                      direction="row"
+                      justifyContent="flex-end"
+                      spacing={0.5}
+                    >
                       {onDuplicate && (
                         <DuplicateRowAction
                           label={policy.assignmentRole}
@@ -1068,7 +1154,10 @@ function RecurrenceSummary({ recurrence }: { recurrence?: RecurrencePolicy }) {
         <Typography variant="body2" color="text.secondary">
           {data.stages
             .map(
-              (stage: { delay?: string; maxOccurrences?: number }, index: number) =>
+              (
+                stage: { delay?: string; maxOccurrences?: number },
+                index: number
+              ) =>
                 `${index + 1}: ${stage.delay ?? 'no delay'}, ${
                   typeof stage.maxOccurrences === 'undefined'
                     ? 'unlimited'
@@ -1130,7 +1219,11 @@ function RequirementsTable({
                 <TableCell>{requirement.isRequired ? 'Yes' : 'No'}</TableCell>
                 {hasActions && (
                   <TableCell align="right">
-                    <Stack direction="row" justifyContent="flex-end" spacing={0.5}>
+                    <Stack
+                      direction="row"
+                      justifyContent="flex-end"
+                      spacing={0.5}
+                    >
                       {onDuplicate && (
                         <DuplicateRowAction
                           label={requirement.actionName}
@@ -1174,12 +1267,17 @@ function MonitoringRequirementsTable({
         </TableHead>
         <TableBody>
           {rows.length === 0 ? (
-            <EmptyRow colSpan={3} label="No monitoring requirements configured." />
+            <EmptyRow
+              colSpan={3}
+              label="No monitoring requirements configured."
+            />
           ) : (
             rows.map((requirement, index) => (
               <TableRow key={`${requirement.action?.actionName}-${index}`}>
                 <TableCell>{requirement.action?.actionName}</TableCell>
-                <TableCell>{requirement.action?.isRequired ? 'Yes' : 'No'}</TableCell>
+                <TableCell>
+                  {requirement.action?.isRequired ? 'Yes' : 'No'}
+                </TableCell>
                 <TableCell>
                   <RecurrenceSummary recurrence={requirement.recurrence} />
                 </TableCell>
@@ -1203,7 +1301,11 @@ function ActionDefinitionSidePanel({
   action?: ActionRequirement;
   existingActionNames: string[];
   onClose: () => void;
-  onSave: (previousName: string | undefined, actionName: string, action: ActionRequirement) => void;
+  onSave: (
+    previousName: string | undefined,
+    actionName: string,
+    action: ActionRequirement
+  ) => void;
 }) {
   const [draft, setDraft] = useState<ActionDefinitionDraft>(() =>
     actionToDraft(actionName, action)
@@ -1215,17 +1317,12 @@ function ActionDefinitionSidePanel({
     trimmedName !== actionName &&
     existingActionNames.includes(trimmedName);
   const alternateNames = splitCommaSeparated(draft.alternateNames);
-  const duplicateAlternateName = alternateNames.some(
-    (alternateName) =>
-      alternateName === trimmedName ||
-      (alternateName !== actionName && existingActionNames.includes(alternateName))
-  );
   const validityAmountIsValid =
-    !draft.validityEnabled || typeof parseValidityAmount(draft.validityAmount) !== 'undefined';
+    !draft.validityEnabled ||
+    typeof parseValidityAmount(draft.validityAmount) !== 'undefined';
   const canSave =
     trimmedName.length > 0 &&
     !duplicateName &&
-    !duplicateAlternateName &&
     validityAmountIsValid;
 
   function save() {
@@ -1278,7 +1375,10 @@ function ActionDefinitionSidePanel({
           error={duplicateName}
           helperText={duplicateName ? 'Action name must be unique.' : undefined}
           onChange={(event) =>
-            setDraft((current) => ({ ...current, actionName: event.target.value }))
+            setDraft((current) => ({
+              ...current,
+              actionName: event.target.value,
+            }))
           }
         />
       </Grid>
@@ -1292,7 +1392,9 @@ function ActionDefinitionSidePanel({
           onChange={(event) =>
             setDraft((current) => ({
               ...current,
-              documentLink: Number(event.target.value) as DocumentLinkRequirement,
+              documentLink: Number(
+                event.target.value
+              ) as DocumentLinkRequirement,
             }))
           }
         >
@@ -1333,7 +1435,10 @@ function ActionDefinitionSidePanel({
           label="Instructions"
           value={draft.instructions}
           onChange={(event) =>
-            setDraft((current) => ({ ...current, instructions: event.target.value }))
+            setDraft((current) => ({
+              ...current,
+              instructions: event.target.value,
+            }))
           }
         />
       </Grid>
@@ -1344,7 +1449,10 @@ function ActionDefinitionSidePanel({
           label="Info Link"
           value={draft.infoLink}
           onChange={(event) =>
-            setDraft((current) => ({ ...current, infoLink: event.target.value }))
+            setDraft((current) => ({
+              ...current,
+              infoLink: event.target.value,
+            }))
           }
         />
       </Grid>
@@ -1375,7 +1483,9 @@ function ActionDefinitionSidePanel({
               value={draft.validityAmount}
               error={!validityAmountIsValid}
               helperText={
-                validityAmountIsValid ? undefined : 'Enter a positive whole number.'
+                validityAmountIsValid
+                  ? undefined
+                  : 'Enter a positive whole number.'
               }
               inputProps={{ inputMode: 'numeric' }}
               onChange={(event) =>
@@ -1396,7 +1506,8 @@ function ActionDefinitionSidePanel({
               onChange={(event) =>
                 setDraft((current) => ({
                   ...current,
-                  validityUnit: event.target.value as ActionDefinitionDraft['validityUnit'],
+                  validityUnit: event.target
+                    .value as ActionDefinitionDraft['validityUnit'],
                 }))
               }
             >
@@ -1413,20 +1524,23 @@ function ActionDefinitionSidePanel({
           fullWidth
           label="Alternate Names"
           value={draft.alternateNames}
-          error={duplicateAlternateName}
-          helperText={
-            duplicateAlternateName
-              ? 'Alternate names cannot collide with canonical action names.'
-              : 'Comma-separated aliases.'
-          }
+          helperText="Comma-separated aliases."
           onChange={(event) =>
-            setDraft((current) => ({ ...current, alternateNames: event.target.value }))
+            setDraft((current) => ({
+              ...current,
+              alternateNames: event.target.value,
+            }))
           }
         />
       </Grid>
 
       <Grid item xs={12} sx={{ textAlign: 'right' }}>
-        <Button variant="contained" color="secondary" sx={{ mr: 2 }} onClick={onClose}>
+        <Button
+          variant="contained"
+          color="secondary"
+          sx={{ mr: 2 }}
+          onClick={onClose}
+        >
           Cancel
         </Button>
         <Button type="submit" variant="contained" disabled={!canSave}>
@@ -1450,10 +1564,14 @@ function CustomFieldSidePanel({
   onClose: () => void;
   onSave: (previousName: string | undefined, field: CustomField) => void;
 }) {
-  const [draft, setDraft] = useState<CustomFieldDraft>(() => customFieldToDraft(field));
+  const [draft, setDraft] = useState<CustomFieldDraft>(() =>
+    customFieldToDraft(field)
+  );
   const trimmedName = draft.name.trim();
   const duplicateName =
-    trimmedName.length > 0 && trimmedName !== field?.name && existingNames.includes(trimmedName);
+    trimmedName.length > 0 &&
+    trimmedName !== field?.name &&
+    existingNames.includes(trimmedName);
   const validValues = splitCommaSeparated(draft.validValues);
   const canSave = trimmedName.length > 0 && !duplicateName;
 
@@ -1465,7 +1583,9 @@ function CustomFieldSidePanel({
       new CustomField({
         name: trimmedName,
         type: draft.type,
-        validation: draft.validationEnabled ? CustomFieldValidation.SuggestOnly : undefined,
+        validation: draft.validationEnabled
+          ? CustomFieldValidation.SuggestOnly
+          : undefined,
         validValues:
           draft.type === CustomFieldType.Boolean || validValues.length === 0
             ? undefined
@@ -1559,7 +1679,10 @@ function CustomFieldSidePanel({
               value={draft.validValues}
               helperText="Comma-separated values."
               onChange={(event) =>
-                setDraft((current) => ({ ...current, validValues: event.target.value }))
+                setDraft((current) => ({
+                  ...current,
+                  validValues: event.target.value,
+                }))
               }
             />
           </Grid>
@@ -1567,7 +1690,12 @@ function CustomFieldSidePanel({
       )}
 
       <Grid item xs={12} sx={{ textAlign: 'right' }}>
-        <Button variant="contained" color="secondary" sx={{ mr: 2 }} onClick={onClose}>
+        <Button
+          variant="contained"
+          color="secondary"
+          sx={{ mr: 2 }}
+          onClick={onClose}
+        >
           Cancel
         </Button>
         <Button type="submit" variant="contained" disabled={!canSave}>
@@ -1591,7 +1719,10 @@ function RequirementSidePanel({
   actionNames: string[];
   existingActionNames: string[];
   onClose: () => void;
-  onSave: (previousName: string | undefined, requirement: RequirementDefinition) => void;
+  onSave: (
+    previousName: string | undefined,
+    requirement: RequirementDefinition
+  ) => void;
 }) {
   const [draft, setDraft] = useState<RequirementDraft>(() =>
     requirementToDraft(requirement)
@@ -1676,7 +1807,12 @@ function RequirementSidePanel({
       </Grid>
 
       <Grid item xs={12} sx={{ textAlign: 'right' }}>
-        <Button variant="contained" color="secondary" sx={{ mr: 2 }} onClick={onClose}>
+        <Button
+          variant="contained"
+          color="secondary"
+          sx={{ mr: 2 }}
+          onClick={onClose}
+        >
           Cancel
         </Button>
         <Button type="submit" variant="contained" disabled={!canSave}>
@@ -1704,7 +1840,10 @@ function FunctionAssignmentPolicySidePanel({
   volunteerRoles: string[];
   volunteerFamilyRoles: string[];
   onClose: () => void;
-  onSave: (previousRole: string | undefined, policy: FunctionAssignmentPolicy) => void;
+  onSave: (
+    previousRole: string | undefined,
+    policy: FunctionAssignmentPolicy
+  ) => void;
 }) {
   const [draft, setDraft] = useState<FunctionAssignmentPolicyDraft>(() =>
     functionAssignmentPolicyToDraft(policy)
@@ -1714,7 +1853,9 @@ function FunctionAssignmentPolicySidePanel({
     trimmedRole.length > 0 &&
     trimmedRole !== policy?.assignmentRole &&
     existingAssignmentRoles.includes(trimmedRole);
-  const eligibleLocationRoles = splitCommaSeparated(draft.eligibleLocationRoles);
+  const eligibleLocationRoles = splitCommaSeparated(
+    draft.eligibleLocationRoles
+  );
   const eligibleIndividualVolunteerRoles = splitCommaSeparated(
     draft.eligibleIndividualVolunteerRoles
   );
@@ -1784,7 +1925,9 @@ function FunctionAssignmentPolicySidePanel({
           label="Assignment Role"
           value={draft.assignmentRole}
           error={duplicateRole}
-          helperText={duplicateRole ? 'Assignment role must be unique.' : undefined}
+          helperText={
+            duplicateRole ? 'Assignment role must be unique.' : undefined
+          }
           onChange={(event) =>
             setDraft((current) => ({
               ...current,
@@ -1861,7 +2004,10 @@ function FunctionAssignmentPolicySidePanel({
           value={draft.eligiblePeople}
           helperText="Comma-separated person IDs."
           onChange={(event) =>
-            setDraft((current) => ({ ...current, eligiblePeople: event.target.value }))
+            setDraft((current) => ({
+              ...current,
+              eligiblePeople: event.target.value,
+            }))
           }
         />
       </Grid>
@@ -1875,7 +2021,12 @@ function FunctionAssignmentPolicySidePanel({
       )}
 
       <Grid item xs={12} sx={{ textAlign: 'right' }}>
-        <Button variant="contained" color="secondary" sx={{ mr: 2 }} onClick={onClose}>
+        <Button
+          variant="contained"
+          color="secondary"
+          sx={{ mr: 2 }}
+          onClick={onClose}
+        >
           Cancel
         </Button>
         <Button type="submit" variant="contained" disabled={!canSave}>
@@ -1967,9 +2118,14 @@ function FunctionPolicySidePanel({
           label="Function Name"
           value={draft.functionName}
           error={duplicateName}
-          helperText={duplicateName ? 'Function name must be unique.' : undefined}
+          helperText={
+            duplicateName ? 'Function name must be unique.' : undefined
+          }
           onChange={(event) =>
-            setDraft((current) => ({ ...current, functionName: event.target.value }))
+            setDraft((current) => ({
+              ...current,
+              functionName: event.target.value,
+            }))
           }
         />
       </Grid>
@@ -2021,13 +2177,21 @@ function FunctionPolicySidePanel({
           value={draft.eligiblePeople}
           helperText="Comma-separated person IDs."
           onChange={(event) =>
-            setDraft((current) => ({ ...current, eligiblePeople: event.target.value }))
+            setDraft((current) => ({
+              ...current,
+              eligiblePeople: event.target.value,
+            }))
           }
         />
       </Grid>
 
       <Grid item xs={12} sx={{ textAlign: 'right' }}>
-        <Button variant="contained" color="secondary" sx={{ mr: 2 }} onClick={onClose}>
+        <Button
+          variant="contained"
+          color="secondary"
+          sx={{ mr: 2 }}
+          onClick={onClose}
+        >
           Cancel
         </Button>
         <Button type="submit" variant="contained" disabled={!canSave}>
@@ -2047,7 +2211,10 @@ function ArrangementPolicySidePanel({
   arrangement?: ArrangementPolicy;
   existingArrangementTypes: string[];
   onClose: () => void;
-  onSave: (previousType: string | undefined, arrangement: ArrangementPolicy) => void;
+  onSave: (
+    previousType: string | undefined,
+    arrangement: ArrangementPolicy
+  ) => void;
 }) {
   const [draft, setDraft] = useState<ArrangementPolicyDraft>(() =>
     arrangementPolicyToDraft(arrangement)
@@ -2076,9 +2243,11 @@ function ArrangementPolicySidePanel({
         arrangementFunctions: arrangement?.arrangementFunctions ?? [],
         requiredSetupActionNames: arrangement?.requiredSetupActionNames ?? [],
         requiredMonitoringActions: arrangement?.requiredMonitoringActions ?? [],
-        requiredCloseoutActionNames: arrangement?.requiredCloseoutActionNames ?? [],
+        requiredCloseoutActionNames:
+          arrangement?.requiredCloseoutActionNames ?? [],
         requiredSetupActions: arrangement?.requiredSetupActions ?? [],
-        requiredMonitoringActionsNew: arrangement?.requiredMonitoringActionsNew ?? [],
+        requiredMonitoringActionsNew:
+          arrangement?.requiredMonitoringActionsNew ?? [],
         requiredCloseoutActions: arrangement?.requiredCloseoutActions ?? [],
         supersededAtUtc:
           draft.superseded && draft.supersededAtUtc
@@ -2112,7 +2281,9 @@ function ArrangementPolicySidePanel({
           label="Arrangement Type"
           value={draft.arrangementType}
           error={duplicateType}
-          helperText={duplicateType ? 'Arrangement type must be unique.' : undefined}
+          helperText={
+            duplicateType ? 'Arrangement type must be unique.' : undefined
+          }
           onChange={(event) =>
             setDraft((current) => ({
               ...current,
@@ -2179,7 +2350,12 @@ function ArrangementPolicySidePanel({
       )}
 
       <Grid item xs={12} sx={{ textAlign: 'right' }}>
-        <Button variant="contained" color="secondary" sx={{ mr: 2 }} onClick={onClose}>
+        <Button
+          variant="contained"
+          color="secondary"
+          sx={{ mr: 2 }}
+          onClick={onClose}
+        >
           Cancel
         </Button>
         <Button type="submit" variant="contained" disabled={!canSave}>
@@ -2224,7 +2400,9 @@ function VolunteerRolePolicyVersionSidePanel({
   const requirements = family
     ? parseVolunteerFamilyRequirements(draft.requirements)
     : parseVolunteerRequirements(draft.requirements);
-  const referencedActions = requirements.map((requirement) => requirement.actionName);
+  const referencedActions = requirements.map(
+    (requirement) => requirement.actionName
+  );
   const unknownActions = referencedActions.filter(
     (actionName) => !actionNames.includes(actionName)
   );
@@ -2292,7 +2470,10 @@ function VolunteerRolePolicyVersionSidePanel({
               : 'A new role policy will be created.'
           }
           onChange={(event) =>
-            setDraft((current) => ({ ...current, roleName: event.target.value }))
+            setDraft((current) => ({
+              ...current,
+              roleName: event.target.value,
+            }))
           }
         />
       </Grid>
@@ -2304,7 +2485,11 @@ function VolunteerRolePolicyVersionSidePanel({
           label="Version"
           value={draft.version}
           error={duplicateVersion}
-          helperText={duplicateVersion ? 'Version must be unique for this role.' : undefined}
+          helperText={
+            duplicateVersion
+              ? 'Version must be unique for this role.'
+              : undefined
+          }
           onChange={(event) =>
             setDraft((current) => ({ ...current, version: event.target.value }))
           }
@@ -2371,7 +2556,12 @@ function VolunteerRolePolicyVersionSidePanel({
       </Grid>
 
       <Grid item xs={12} sx={{ textAlign: 'right' }}>
-        <Button variant="contained" color="secondary" sx={{ mr: 2 }} onClick={onClose}>
+        <Button
+          variant="contained"
+          color="secondary"
+          sx={{ mr: 2 }}
+          onClick={onClose}
+        >
           Cancel
         </Button>
         <Button type="submit" variant="contained" disabled={!canSave}>
@@ -2413,7 +2603,9 @@ function ActionDefinitionsTab({
   function deleteAction(actionName: string) {
     const actionDefinitions = { ...(policy.actionDefinitions ?? {}) };
     delete actionDefinitions[actionName];
-    onPolicyChange(new EffectiveLocationPolicy({ ...policy, actionDefinitions }));
+    onPolicyChange(
+      new EffectiveLocationPolicy({ ...policy, actionDefinitions })
+    );
   }
 
   return (
@@ -2448,8 +2640,12 @@ function ActionDefinitionsTab({
                   onClick={() => openEditAction(actionName, action)}
                 >
                   <TableCell>{actionName}</TableCell>
-                  <TableCell>{enumName(DocumentLinkRequirement, action.documentLink)}</TableCell>
-                  <TableCell>{enumName(NoteEntryRequirement, action.noteEntry)}</TableCell>
+                  <TableCell>
+                    {enumName(DocumentLinkRequirement, action.documentLink)}
+                  </TableCell>
+                  <TableCell>
+                    {enumName(NoteEntryRequirement, action.noteEntry)}
+                  </TableCell>
                   <TableCell>{formatValidity(action.validity)}</TableCell>
                   <TableCell>
                     <ValuesText values={action.alternateNames} />
@@ -2477,7 +2673,12 @@ function ActionDefinitionsTab({
           onClose={closeSidePanel}
           onSave={(previousName, actionName, action) => {
             onPolicyChange(
-              clonePolicyWithActionDefinition(policy, previousName, actionName, action)
+              clonePolicyWithActionDefinition(
+                policy,
+                previousName,
+                actionName,
+                action
+              )
             );
             closeSidePanel();
           }}
@@ -2515,7 +2716,10 @@ function CustomFieldsTable({
         </TableHead>
         <TableBody>
           {rows.length === 0 ? (
-            <EmptyRow colSpan={hasActions ? 5 : 4} label="No custom fields configured." />
+            <EmptyRow
+              colSpan={hasActions ? 5 : 4}
+              label="No custom fields configured."
+            />
           ) : (
             rows.map((field) => (
               <TableRow
@@ -2536,7 +2740,11 @@ function CustomFieldsTable({
                 </TableCell>
                 {hasActions && (
                   <TableCell align="right">
-                    <Stack direction="row" justifyContent="flex-end" spacing={0.5}>
+                    <Stack
+                      direction="row"
+                      justifyContent="flex-end"
+                      spacing={0.5}
+                    >
                       {onDuplicate && (
                         <DuplicateRowAction
                           label={field.name}
@@ -2586,7 +2794,10 @@ function CustomFamilyFieldsTab({
       undefined,
       new CustomField({
         ...field,
-        name: nextCopyName(field.name, fields.map((item) => item.name)),
+        name: nextCopyName(
+          field.name,
+          fields.map((item) => item.name)
+        ),
       })
     );
   }
@@ -2603,7 +2814,10 @@ function CustomFamilyFieldsTab({
 
   function deleteCustomField(field: CustomField) {
     onPolicyChange(
-      clonePolicyWithCustomFamilyFields(policy, removeCustomField(fields, field.name))
+      clonePolicyWithCustomFamilyFields(
+        policy,
+        removeCustomField(fields, field.name)
+      )
     );
   }
 
@@ -2626,7 +2840,11 @@ function CustomFamilyFieldsTab({
       <CustomFieldPanel>
         <CustomFieldSidePanel
           key={workingField?.name ?? 'new-custom-family-field'}
-          title={workingField ? 'Edit Custom Family Field' : 'Add Custom Family Field'}
+          title={
+            workingField
+              ? 'Edit Custom Family Field'
+              : 'Add Custom Family Field'
+          }
           field={workingField}
           existingNames={fields.map((field) => field.name)}
           onClose={closeSidePanel}
@@ -2637,31 +2855,45 @@ function CustomFamilyFieldsTab({
   );
 }
 
-function ArrangementFunctionSummary({ arrangementFunction }: { arrangementFunction: ArrangementFunction }) {
+function ArrangementFunctionSummary({
+  arrangementFunction,
+}: {
+  arrangementFunction: ArrangementFunction;
+}) {
   const inheritsEligibility =
-    typeof arrangementFunction.eligibleIndividualVolunteerRoles === 'undefined' &&
+    typeof arrangementFunction.eligibleIndividualVolunteerRoles ===
+      'undefined' &&
     typeof arrangementFunction.eligibleVolunteerFamilyRoles === 'undefined' &&
     typeof arrangementFunction.eligiblePeople === 'undefined';
 
   return (
     <Stack spacing={0.5}>
       <Typography variant="body2">
-        {arrangementFunction.functionName} - {enumName(FunctionRequirement, arrangementFunction.requirement)}
+        {arrangementFunction.functionName} -{' '}
+        {enumName(FunctionRequirement, arrangementFunction.requirement)}
       </Typography>
       <Typography variant="body2" color="text.secondary">
-        {inheritsEligibility ? 'Inherited eligibility' : 'Override eligibility'} -{' '}
-        {summarizeCount(arrangementFunction.variants?.length ?? 0, 'variant')}
+        {inheritsEligibility ? 'Inherited eligibility' : 'Override eligibility'}{' '}
+        - {summarizeCount(arrangementFunction.variants?.length ?? 0, 'variant')}
       </Typography>
     </Stack>
   );
 }
 
-function ArrangementPolicyDetails({ arrangement }: { arrangement: ArrangementPolicy }) {
-  const setupActions = arrangement.requiredSetupActions ?? arrangement.requiredSetupActions_PRE_MIGRATION;
+function ArrangementPolicyDetails({
+  arrangement,
+}: {
+  arrangement: ArrangementPolicy;
+}) {
+  const setupActions =
+    arrangement.requiredSetupActions ??
+    arrangement.requiredSetupActions_PRE_MIGRATION;
   const monitoringActions =
-    arrangement.requiredMonitoringActionsNew ?? arrangement.requiredMonitoringActions_PRE_MIGRATION;
+    arrangement.requiredMonitoringActionsNew ??
+    arrangement.requiredMonitoringActions_PRE_MIGRATION;
   const closeoutActions =
-    arrangement.requiredCloseoutActions ?? arrangement.requiredCloseoutActionNames_PRE_MIGRATION;
+    arrangement.requiredCloseoutActions ??
+    arrangement.requiredCloseoutActionNames_PRE_MIGRATION;
 
   return (
     <Stack spacing={2}>
@@ -2670,7 +2902,10 @@ function ArrangementPolicyDetails({ arrangement }: { arrangement: ArrangementPol
           <Typography>Required Setup Actions</Typography>
         </AccordionSummary>
         <AccordionDetails>
-          <RequirementsTable requirements={setupActions} emptyLabel="No setup requirements configured." />
+          <RequirementsTable
+            requirements={setupActions}
+            emptyLabel="No setup requirements configured."
+          />
         </AccordionDetails>
       </Accordion>
 
@@ -2688,7 +2923,10 @@ function ArrangementPolicyDetails({ arrangement }: { arrangement: ArrangementPol
           <Typography>Required Closeout Actions</Typography>
         </AccordionSummary>
         <AccordionDetails>
-          <RequirementsTable requirements={closeoutActions} emptyLabel="No closeout requirements configured." />
+          <RequirementsTable
+            requirements={closeoutActions}
+            emptyLabel="No closeout requirements configured."
+          />
         </AccordionDetails>
       </Accordion>
 
@@ -2708,28 +2946,39 @@ function ArrangementPolicyDetails({ arrangement }: { arrangement: ArrangementPol
               </TableHead>
               <TableBody>
                 {(arrangement.arrangementFunctions ?? []).length === 0 ? (
-                  <EmptyRow colSpan={3} label="No arrangement functions configured." />
+                  <EmptyRow
+                    colSpan={3}
+                    label="No arrangement functions configured."
+                  />
                 ) : (
-                  arrangement.arrangementFunctions.map((arrangementFunction) => (
-                    <TableRow key={arrangementFunction.functionName}>
-                      <TableCell>
-                        <ArrangementFunctionSummary arrangementFunction={arrangementFunction} />
-                      </TableCell>
-                      <TableCell>
-                        <ValuesText
-                          values={[
-                            ...(arrangementFunction.eligibleIndividualVolunteerRoles ?? []),
-                            ...(arrangementFunction.eligibleVolunteerFamilyRoles ?? []),
-                          ]}
-                        />
-                      </TableCell>
-                      <TableCell>
-                        <ValuesText
-                          values={arrangementFunction.variants?.map((variant) => variant.variantName)}
-                        />
-                      </TableCell>
-                    </TableRow>
-                  ))
+                  arrangement.arrangementFunctions.map(
+                    (arrangementFunction) => (
+                      <TableRow key={arrangementFunction.functionName}>
+                        <TableCell>
+                          <ArrangementFunctionSummary
+                            arrangementFunction={arrangementFunction}
+                          />
+                        </TableCell>
+                        <TableCell>
+                          <ValuesText
+                            values={[
+                              ...(arrangementFunction.eligibleIndividualVolunteerRoles ??
+                                []),
+                              ...(arrangementFunction.eligibleVolunteerFamilyRoles ??
+                                []),
+                            ]}
+                          />
+                        </TableCell>
+                        <TableCell>
+                          <ValuesText
+                            values={arrangementFunction.variants?.map(
+                              (variant) => variant.variantName
+                            )}
+                          />
+                        </TableCell>
+                      </TableRow>
+                    )
+                  )
                 )}
               </TableBody>
             </Table>
@@ -2751,7 +3000,9 @@ function CasePolicyTab({
 }) {
   const casePolicy = policy.referralPolicy;
   const arrangementPolicies = casePolicy?.arrangementPolicies ?? [];
-  const volunteerRoles = Object.keys(policy.volunteerPolicy?.volunteerRoles ?? {});
+  const volunteerRoles = Object.keys(
+    policy.volunteerPolicy?.volunteerRoles ?? {}
+  );
   const volunteerFamilyRoles = Object.keys(
     policy.volunteerPolicy?.volunteerFamilyRoles ?? {}
   );
@@ -2772,10 +3023,12 @@ function CasePolicyTab({
   } = useSidePanel();
   const [workingFunctionAssignmentPolicy, setWorkingFunctionAssignmentPolicy] =
     useState<FunctionAssignmentPolicy | undefined>();
-  const [workingFunctionPolicy, setWorkingFunctionPolicy] =
-    useState<FunctionPolicy | undefined>();
-  const [workingArrangementPolicy, setWorkingArrangementPolicy] =
-    useState<ArrangementPolicy | undefined>();
+  const [workingFunctionPolicy, setWorkingFunctionPolicy] = useState<
+    FunctionPolicy | undefined
+  >();
+  const [workingArrangementPolicy, setWorkingArrangementPolicy] = useState<
+    ArrangementPolicy | undefined
+  >();
 
   function updateCasePolicy(update: Partial<V1CasePolicy>) {
     onPolicyChange(
@@ -2789,23 +3042,32 @@ function CasePolicyTab({
     );
   }
 
-  function duplicateCaseFunctionAssignmentPolicy(assignmentPolicy: FunctionAssignmentPolicy) {
+  function duplicateCaseFunctionAssignmentPolicy(
+    assignmentPolicy: FunctionAssignmentPolicy
+  ) {
     const existingRoles =
-      casePolicy?.functionAssignmentPolicies?.map((item) => item.assignmentRole) ?? [];
+      casePolicy?.functionAssignmentPolicies?.map(
+        (item) => item.assignmentRole
+      ) ?? [];
     updateCasePolicy({
       functionAssignmentPolicies: upsertByName(
         casePolicy?.functionAssignmentPolicies ?? [],
         undefined,
         new FunctionAssignmentPolicy({
           ...assignmentPolicy,
-          assignmentRole: nextCopyName(assignmentPolicy.assignmentRole, existingRoles),
+          assignmentRole: nextCopyName(
+            assignmentPolicy.assignmentRole,
+            existingRoles
+          ),
         }),
         (item) => item.assignmentRole
       ),
     });
   }
 
-  function deleteCaseFunctionAssignmentPolicy(assignmentPolicy: FunctionAssignmentPolicy) {
+  function deleteCaseFunctionAssignmentPolicy(
+    assignmentPolicy: FunctionAssignmentPolicy
+  ) {
     updateCasePolicy({
       functionAssignmentPolicies: removeByName(
         casePolicy?.functionAssignmentPolicies,
@@ -2824,7 +3086,10 @@ function CasePolicyTab({
         undefined,
         new FunctionPolicy({
           ...functionPolicy,
-          functionName: nextCopyName(functionPolicy.functionName, existingFunctionNames),
+          functionName: nextCopyName(
+            functionPolicy.functionName,
+            existingFunctionNames
+          ),
         }),
         (item) => item.functionName
       ),
@@ -2911,51 +3176,64 @@ function CasePolicyTab({
                   openFunctionPolicyPanel();
                 }}
               />
-            <TableContainer>
-              <Table size="small">
-                <TableHead>
-                  <TableRow>
-                    <TableCell>Function Name</TableCell>
-                    <TableCell>Eligibility</TableCell>
-                    <TableCell align="right">Actions</TableCell>
-                  </TableRow>
-                </TableHead>
-                <TableBody>
-                  {(casePolicy?.functionPolicies ?? []).length === 0 ? (
-                    <EmptyRow colSpan={3} label="No function policies configured." />
-                  ) : (
-                    casePolicy?.functionPolicies?.map((functionPolicy) => (
-                      <TableRow
-                        key={functionPolicy.functionName}
-                        hover
-                        sx={{ cursor: 'pointer' }}
-                        onClick={() => {
-                          setWorkingFunctionPolicy(functionPolicy);
-                          openFunctionPolicyPanel();
-                        }}
-                      >
-                        <TableCell>{functionPolicy.functionName}</TableCell>
-                        <TableCell>
-                          <EligibilitySummary eligibility={functionPolicy.eligibility} />
-                        </TableCell>
-                        <TableCell align="right">
-                          <Stack direction="row" justifyContent="flex-end" spacing={0.5}>
-                            <DuplicateRowAction
-                              label={functionPolicy.functionName}
-                              onClick={() => duplicateCaseFunctionPolicy(functionPolicy)}
+              <TableContainer>
+                <Table size="small">
+                  <TableHead>
+                    <TableRow>
+                      <TableCell>Function Name</TableCell>
+                      <TableCell>Eligibility</TableCell>
+                      <TableCell align="right">Actions</TableCell>
+                    </TableRow>
+                  </TableHead>
+                  <TableBody>
+                    {(casePolicy?.functionPolicies ?? []).length === 0 ? (
+                      <EmptyRow
+                        colSpan={3}
+                        label="No function policies configured."
+                      />
+                    ) : (
+                      casePolicy?.functionPolicies?.map((functionPolicy) => (
+                        <TableRow
+                          key={functionPolicy.functionName}
+                          hover
+                          sx={{ cursor: 'pointer' }}
+                          onClick={() => {
+                            setWorkingFunctionPolicy(functionPolicy);
+                            openFunctionPolicyPanel();
+                          }}
+                        >
+                          <TableCell>{functionPolicy.functionName}</TableCell>
+                          <TableCell>
+                            <EligibilitySummary
+                              eligibility={functionPolicy.eligibility}
                             />
-                            <DeleteRowAction
-                              label={functionPolicy.functionName}
-                              onClick={() => deleteCaseFunctionPolicy(functionPolicy)}
-                            />
-                          </Stack>
-                        </TableCell>
-                      </TableRow>
-                    ))
-                  )}
-                </TableBody>
-              </Table>
-            </TableContainer>
+                          </TableCell>
+                          <TableCell align="right">
+                            <Stack
+                              direction="row"
+                              justifyContent="flex-end"
+                              spacing={0.5}
+                            >
+                              <DuplicateRowAction
+                                label={functionPolicy.functionName}
+                                onClick={() =>
+                                  duplicateCaseFunctionPolicy(functionPolicy)
+                                }
+                              />
+                              <DeleteRowAction
+                                label={functionPolicy.functionName}
+                                onClick={() =>
+                                  deleteCaseFunctionPolicy(functionPolicy)
+                                }
+                              />
+                            </Stack>
+                          </TableCell>
+                        </TableRow>
+                      ))
+                    )}
+                  </TableBody>
+                </Table>
+              </TableContainer>
             </Stack>
           </AccordionDetails>
         </Accordion>
@@ -2978,7 +3256,10 @@ function CasePolicyTab({
                 </Typography>
               ) : (
                 arrangementPolicies.map((arrangement) => (
-                  <Accordion key={arrangement.arrangementType} variant="outlined">
+                  <Accordion
+                    key={arrangement.arrangementType}
+                    variant="outlined"
+                  >
                     <AccordionSummary expandIcon={<ExpandMoreIcon />}>
                       <Stack
                         direction={{ xs: 'column', sm: 'row' }}
@@ -2987,7 +3268,9 @@ function CasePolicyTab({
                       >
                         <Typography>{arrangement.arrangementType}</Typography>
                         <Typography variant="body2" color="text.secondary">
-                          {arrangement.supersededAtUtc ? 'Superseded' : 'Current'}
+                          {arrangement.supersededAtUtc
+                            ? 'Superseded'
+                            : 'Current'}
                         </Typography>
                         <Button
                           size="small"
@@ -3002,7 +3285,9 @@ function CasePolicyTab({
                         </Button>
                         <DuplicateRowAction
                           label={arrangement.arrangementType}
-                          onClick={() => duplicateArrangementPolicy(arrangement)}
+                          onClick={() =>
+                            duplicateArrangementPolicy(arrangement)
+                          }
                         />
                         <DeleteRowAction
                           label={arrangement.arrangementType}
@@ -3023,7 +3308,10 @@ function CasePolicyTab({
 
       <FunctionAssignmentPanel>
         <FunctionAssignmentPolicySidePanel
-          key={workingFunctionAssignmentPolicy?.assignmentRole ?? 'new-case-assignment-policy'}
+          key={
+            workingFunctionAssignmentPolicy?.assignmentRole ??
+            'new-case-assignment-policy'
+          }
           title={
             workingFunctionAssignmentPolicy
               ? 'Edit Case Policies Function Assignment Policy'
@@ -3031,7 +3319,9 @@ function CasePolicyTab({
           }
           policy={workingFunctionAssignmentPolicy}
           existingAssignmentRoles={
-            casePolicy?.functionAssignmentPolicies?.map((item) => item.assignmentRole) ?? []
+            casePolicy?.functionAssignmentPolicies?.map(
+              (item) => item.assignmentRole
+            ) ?? []
           }
           locationRoles={locationRoles}
           volunteerRoles={volunteerRoles}
@@ -3055,7 +3345,9 @@ function CasePolicyTab({
         <FunctionPolicySidePanel
           key={workingFunctionPolicy?.functionName ?? 'new-function-policy'}
           policy={workingFunctionPolicy}
-          existingFunctionNames={casePolicy?.functionPolicies?.map((item) => item.functionName) ?? []}
+          existingFunctionNames={
+            casePolicy?.functionPolicies?.map((item) => item.functionName) ?? []
+          }
           volunteerRoles={volunteerRoles}
           volunteerFamilyRoles={volunteerFamilyRoles}
           onClose={closeFunctionPolicyPanel}
@@ -3075,9 +3367,14 @@ function CasePolicyTab({
 
       <ArrangementPolicyPanel>
         <ArrangementPolicySidePanel
-          key={workingArrangementPolicy?.arrangementType ?? 'new-arrangement-policy'}
+          key={
+            workingArrangementPolicy?.arrangementType ??
+            'new-arrangement-policy'
+          }
           arrangement={workingArrangementPolicy}
-          existingArrangementTypes={arrangementPolicies.map((item) => item.arrangementType)}
+          existingArrangementTypes={arrangementPolicies.map(
+            (item) => item.arrangementType
+          )}
           onClose={closeArrangementPolicyPanel}
           onSave={(previousType, arrangement) => {
             updateCasePolicy({
@@ -3107,9 +3404,12 @@ function V1ReferralPolicyTab({
 }) {
   const casePolicy = policy.referralPolicy;
   const intakeRequirements =
-    casePolicy?.intakeRequirements ?? casePolicy?.intakeRequirements_PRE_MIGRATION;
+    casePolicy?.intakeRequirements ??
+    casePolicy?.intakeRequirements_PRE_MIGRATION;
   const actionNames = Object.keys(policy.actionDefinitions ?? {});
-  const volunteerRoles = Object.keys(policy.volunteerPolicy?.volunteerRoles ?? {});
+  const volunteerRoles = Object.keys(
+    policy.volunteerPolicy?.volunteerRoles ?? {}
+  );
   const volunteerFamilyRoles = Object.keys(
     policy.volunteerPolicy?.volunteerFamilyRoles ?? {}
   );
@@ -3128,10 +3428,12 @@ function V1ReferralPolicyTab({
     openSidePanel: openFunctionAssignmentPanel,
     closeSidePanel: closeFunctionAssignmentPanel,
   } = useSidePanel();
-  const [workingRequirement, setWorkingRequirement] =
-    useState<RequirementDefinition | undefined>();
-  const [workingCustomField, setWorkingCustomField] =
-    useState<CustomField | undefined>();
+  const [workingRequirement, setWorkingRequirement] = useState<
+    RequirementDefinition | undefined
+  >();
+  const [workingCustomField, setWorkingCustomField] = useState<
+    CustomField | undefined
+  >();
   const [workingFunctionAssignmentPolicy, setWorkingFunctionAssignmentPolicy] =
     useState<FunctionAssignmentPolicy | undefined>();
   const functionAssignmentPolicies =
@@ -3184,7 +3486,9 @@ function V1ReferralPolicyTab({
   function duplicateReferralFunctionAssignmentPolicy(
     assignmentPolicy: FunctionAssignmentPolicy
   ) {
-    const existingRoles = functionAssignmentPolicies.map((item) => item.assignmentRole);
+    const existingRoles = functionAssignmentPolicies.map(
+      (item) => item.assignmentRole
+    );
     onPolicyChange(
       clonePolicyWithV1ReferralPolicy(
         policy,
@@ -3195,7 +3499,10 @@ function V1ReferralPolicyTab({
             undefined,
             new FunctionAssignmentPolicy({
               ...assignmentPolicy,
-              assignmentRole: nextCopyName(assignmentPolicy.assignmentRole, existingRoles),
+              assignmentRole: nextCopyName(
+                assignmentPolicy.assignmentRole,
+                existingRoles
+              ),
             }),
             (item) => item.assignmentRole
           ),
@@ -3306,7 +3613,9 @@ function V1ReferralPolicyTab({
 
       <RequirementPanel>
         <RequirementSidePanel
-          key={workingRequirement?.actionName ?? 'new-referral-intake-requirement'}
+          key={
+            workingRequirement?.actionName ?? 'new-referral-intake-requirement'
+          }
           title={
             workingRequirement
               ? 'Edit Referral Policies Intake Requirement'
@@ -3314,7 +3623,10 @@ function V1ReferralPolicyTab({
           }
           requirement={workingRequirement}
           actionNames={actionNames}
-          existingActionNames={intakeRequirements?.map((requirement) => requirement.actionName) ?? []}
+          existingActionNames={
+            intakeRequirements?.map((requirement) => requirement.actionName) ??
+            []
+          }
           onClose={closeRequirementPanel}
           onSave={(previousName, requirement) => {
             updateCasePolicy({
@@ -3333,13 +3645,23 @@ function V1ReferralPolicyTab({
       <CustomFieldPanel>
         <CustomFieldSidePanel
           key={workingCustomField?.name ?? 'new-referral-custom-field'}
-          title={workingCustomField ? 'Edit Referral Policies Custom Field' : 'Add Referral Policies Custom Field'}
+          title={
+            workingCustomField
+              ? 'Edit Referral Policies Custom Field'
+              : 'Add Referral Policies Custom Field'
+          }
           field={workingCustomField}
-          existingNames={casePolicy?.customFields?.map((field) => field.name) ?? []}
+          existingNames={
+            casePolicy?.customFields?.map((field) => field.name) ?? []
+          }
           onClose={closeCustomFieldPanel}
           onSave={(previousName, field) => {
             updateCasePolicy({
-              customFields: upsertCustomField(casePolicy?.customFields, previousName, field),
+              customFields: upsertCustomField(
+                casePolicy?.customFields,
+                previousName,
+                field
+              ),
             });
             closeCustomFieldPanel();
           }}
@@ -3348,7 +3670,10 @@ function V1ReferralPolicyTab({
 
       <FunctionAssignmentPanel>
         <FunctionAssignmentPolicySidePanel
-          key={workingFunctionAssignmentPolicy?.assignmentRole ?? 'new-referral-assignment-policy'}
+          key={
+            workingFunctionAssignmentPolicy?.assignmentRole ??
+            'new-referral-assignment-policy'
+          }
           title={
             workingFunctionAssignmentPolicy
               ? 'Edit Referral Policies Function Assignment Policy'
@@ -3397,7 +3722,9 @@ function RolePolicyVersionsTable({
     version: string;
     supersededAtUtc?: Date;
     requirements: ReactNode;
-    policyVersion: VolunteerRolePolicyVersion | VolunteerFamilyRolePolicyVersion;
+    policyVersion:
+      | VolunteerRolePolicyVersion
+      | VolunteerFamilyRolePolicyVersion;
   }[];
   family?: boolean;
   onEdit?: (row: {
@@ -3405,21 +3732,27 @@ function RolePolicyVersionsTable({
     version: string;
     supersededAtUtc?: Date;
     requirements: ReactNode;
-    policyVersion: VolunteerRolePolicyVersion | VolunteerFamilyRolePolicyVersion;
+    policyVersion:
+      | VolunteerRolePolicyVersion
+      | VolunteerFamilyRolePolicyVersion;
   }) => void;
   onDuplicate?: (row: {
     roleName: string;
     version: string;
     supersededAtUtc?: Date;
     requirements: ReactNode;
-    policyVersion: VolunteerRolePolicyVersion | VolunteerFamilyRolePolicyVersion;
+    policyVersion:
+      | VolunteerRolePolicyVersion
+      | VolunteerFamilyRolePolicyVersion;
   }) => void;
   onDelete?: (row: {
     roleName: string;
     version: string;
     supersededAtUtc?: Date;
     requirements: ReactNode;
-    policyVersion: VolunteerRolePolicyVersion | VolunteerFamilyRolePolicyVersion;
+    policyVersion:
+      | VolunteerRolePolicyVersion
+      | VolunteerFamilyRolePolicyVersion;
   }) => void;
 }) {
   const hasActions = Boolean(onDuplicate || onDelete);
@@ -3429,7 +3762,9 @@ function RolePolicyVersionsTable({
       <Table size="small">
         <TableHead>
           <TableRow>
-            <TableCell>{family ? 'Volunteer Family Role Type' : 'Volunteer Role Type'}</TableCell>
+            <TableCell>
+              {family ? 'Volunteer Family Role Type' : 'Volunteer Role Type'}
+            </TableCell>
             <TableCell>Version</TableCell>
             <TableCell>Status</TableCell>
             <TableCell>Requirements</TableCell>
@@ -3438,7 +3773,10 @@ function RolePolicyVersionsTable({
         </TableHead>
         <TableBody>
           {rows.length === 0 ? (
-            <EmptyRow colSpan={hasActions ? 5 : 4} label="No role policies configured." />
+            <EmptyRow
+              colSpan={hasActions ? 5 : 4}
+              label="No role policies configured."
+            />
           ) : (
             rows.map((row) => (
               <TableRow
@@ -3453,7 +3791,11 @@ function RolePolicyVersionsTable({
                 <TableCell>{row.requirements}</TableCell>
                 {hasActions && (
                   <TableCell align="right">
-                    <Stack direction="row" justifyContent="flex-end" spacing={0.5}>
+                    <Stack
+                      direction="row"
+                      justifyContent="flex-end"
+                      spacing={0.5}
+                    >
                       {onDuplicate && (
                         <DuplicateRowAction
                           label={`${row.roleName} ${row.version}`}
@@ -3504,15 +3846,21 @@ function VolunteerPolicyTab({
     closeSidePanel: closeVolunteerFamilyRolePanel,
   } = useSidePanel();
   const [workingField, setWorkingField] = useState<CustomField | undefined>();
-  const [workingVolunteerRoleVersion, setWorkingVolunteerRoleVersion] = useState<
-    { roleName?: string; version?: VolunteerRolePolicyVersion } | undefined
-  >();
-  const [workingVolunteerFamilyRoleVersion, setWorkingVolunteerFamilyRoleVersion] =
+  const [workingVolunteerRoleVersion, setWorkingVolunteerRoleVersion] =
     useState<
-      { roleName?: string; version?: VolunteerFamilyRolePolicyVersion } | undefined
+      { roleName?: string; version?: VolunteerRolePolicyVersion } | undefined
     >();
+  const [
+    workingVolunteerFamilyRoleVersion,
+    setWorkingVolunteerFamilyRoleVersion,
+  ] = useState<
+    | { roleName?: string; version?: VolunteerFamilyRolePolicyVersion }
+    | undefined
+  >();
 
-  const individualRows = Object.entries(volunteerPolicy?.volunteerRoles ?? {}).flatMap(
+  const individualRows = Object.entries(
+    volunteerPolicy?.volunteerRoles ?? {}
+  ).flatMap(
     ([roleName, rolePolicy]) =>
       rolePolicy.policyVersions?.map((version) => ({
         roleName,
@@ -3527,7 +3875,8 @@ function VolunteerPolicyTab({
                   key={`${requirement.stage}-${requirement.actionName}`}
                   variant="body2"
                 >
-                  {enumName(RequirementStage, requirement.stage)} - {requirement.actionName}
+                  {enumName(RequirementStage, requirement.stage)} -{' '}
+                  {requirement.actionName}
                 </Typography>
               ))
             ) : (
@@ -3538,7 +3887,9 @@ function VolunteerPolicyTab({
       })) ?? []
   );
 
-  const familyRows = Object.entries(volunteerPolicy?.volunteerFamilyRoles ?? {}).flatMap(
+  const familyRows = Object.entries(
+    volunteerPolicy?.volunteerFamilyRoles ?? {}
+  ).flatMap(
     ([roleName, rolePolicy]) =>
       rolePolicy.policyVersions?.map((version) => ({
         roleName,
@@ -3553,7 +3904,8 @@ function VolunteerPolicyTab({
                   key={`${requirement.stage}-${requirement.actionName}-${requirement.scope}`}
                   variant="body2"
                 >
-                  {enumName(RequirementStage, requirement.stage)} - {requirement.actionName} -{' '}
+                  {enumName(RequirementStage, requirement.stage)} -{' '}
+                  {requirement.actionName} -{' '}
                   {enumName(VolunteerFamilyRequirementScope, requirement.scope)}
                 </Typography>
               ))
@@ -3574,7 +3926,10 @@ function VolunteerPolicyTab({
           undefined,
           new CustomField({
             ...field,
-            name: nextCopyName(field.name, customFields.map((item) => item.name)),
+            name: nextCopyName(
+              field.name,
+              customFields.map((item) => item.name)
+            ),
           })
         )
       )
@@ -3593,7 +3948,9 @@ function VolunteerPolicyTab({
   function duplicateVolunteerRoleVersion(row: {
     roleName: string;
     version: string;
-    policyVersion: VolunteerRolePolicyVersion | VolunteerFamilyRolePolicyVersion;
+    policyVersion:
+      | VolunteerRolePolicyVersion
+      | VolunteerFamilyRolePolicyVersion;
   }) {
     const existingVersions =
       volunteerPolicy?.volunteerRoles?.[row.roleName]?.policyVersions?.map(
@@ -3619,12 +3976,14 @@ function VolunteerPolicyTab({
   function duplicateVolunteerFamilyRoleVersion(row: {
     roleName: string;
     version: string;
-    policyVersion: VolunteerRolePolicyVersion | VolunteerFamilyRolePolicyVersion;
+    policyVersion:
+      | VolunteerRolePolicyVersion
+      | VolunteerFamilyRolePolicyVersion;
   }) {
     const existingVersions =
-      volunteerPolicy?.volunteerFamilyRoles?.[row.roleName]?.policyVersions?.map(
-        (version) => version.version
-      ) ?? [];
+      volunteerPolicy?.volunteerFamilyRoles?.[
+        row.roleName
+      ]?.policyVersions?.map((version) => version.version) ?? [];
     onPolicyChange(
       clonePolicyWithVolunteerPolicy(
         policy,
@@ -3649,7 +4008,11 @@ function VolunteerPolicyTab({
     onPolicyChange(
       clonePolicyWithVolunteerPolicy(
         policy,
-        removeVolunteerRolePolicyVersion(volunteerPolicy, row.roleName, row.version)
+        removeVolunteerRolePolicyVersion(
+          volunteerPolicy,
+          row.roleName,
+          row.version
+        )
       )
     );
   }
@@ -3721,7 +4084,8 @@ function VolunteerPolicyTab({
                 onEdit={(row) => {
                   setWorkingVolunteerFamilyRoleVersion({
                     roleName: row.roleName,
-                    version: row.policyVersion as VolunteerFamilyRolePolicyVersion,
+                    version:
+                      row.policyVersion as VolunteerFamilyRolePolicyVersion,
                   });
                   openVolunteerFamilyRolePanel();
                 }}
@@ -3794,9 +4158,9 @@ function VolunteerPolicyTab({
           existingRoleNames={Object.keys(volunteerPolicy?.volunteerRoles ?? {})}
           existingVersionsForRole={
             workingVolunteerRoleVersion?.roleName
-              ? volunteerPolicy?.volunteerRoles?.[
+              ? (volunteerPolicy?.volunteerRoles?.[
                   workingVolunteerRoleVersion.roleName
-                ]?.policyVersions?.map((version) => version.version) ?? []
+                ]?.policyVersions?.map((version) => version.version) ?? [])
               : []
           }
           family={false}
@@ -3830,12 +4194,14 @@ function VolunteerPolicyTab({
           }
           roleName={workingVolunteerFamilyRoleVersion?.roleName}
           version={workingVolunteerFamilyRoleVersion?.version}
-          existingRoleNames={Object.keys(volunteerPolicy?.volunteerFamilyRoles ?? {})}
+          existingRoleNames={Object.keys(
+            volunteerPolicy?.volunteerFamilyRoles ?? {}
+          )}
           existingVersionsForRole={
             workingVolunteerFamilyRoleVersion?.roleName
-              ? volunteerPolicy?.volunteerFamilyRoles?.[
+              ? (volunteerPolicy?.volunteerFamilyRoles?.[
                   workingVolunteerFamilyRoleVersion.roleName
-                ]?.policyVersions?.map((version) => version.version) ?? []
+                ]?.policyVersions?.map((version) => version.version) ?? [])
               : []
           }
           family
@@ -3883,7 +4249,10 @@ export function SmsSourcePhoneNumbers({
           </TableHead>
           <TableBody>
             {rows.length === 0 ? (
-              <EmptyRow colSpan={2} label="No SMS source phone numbers configured." />
+              <EmptyRow
+                colSpan={2}
+                label="No SMS source phone numbers configured."
+              />
             ) : (
               rows.map((row) => (
                 <TableRow key={row.sourcePhoneNumber}>
@@ -3911,7 +4280,10 @@ export function PolicyConfiguration({
         <ActionDefinitionsTab policy={policy} onPolicyChange={onPolicyChange} />
       )}
       {section === 'customFamilyFields' && (
-        <CustomFamilyFieldsTab policy={policy} onPolicyChange={onPolicyChange} />
+        <CustomFamilyFieldsTab
+          policy={policy}
+          onPolicyChange={onPolicyChange}
+        />
       )}
       {section === 'casePolicy' && (
         <CasePolicyTab

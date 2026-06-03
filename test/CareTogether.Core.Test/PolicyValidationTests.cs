@@ -1,6 +1,6 @@
+using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
-using System;
 using CareTogether.Resources.Policies;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -87,6 +87,32 @@ namespace CareTogether.Core.Test
                 string.Join("\n", errors),
                 "Custom Family Fields contains duplicate name 'church'."
             );
+        }
+
+        [TestMethod]
+        public void AlternateNamesCanMatchActionDefinitionNames()
+        {
+            var policy = ValidPolicy() with
+            {
+                ActionDefinitions = ValidPolicy()
+                    .ActionDefinitions.Add(
+                        "Medical POA",
+                        new ActionRequirement(
+                            DocumentLinkRequirement.None,
+                            NoteEntryRequirement.None,
+                            null,
+                            null,
+                            null,
+                            null,
+                            null,
+                            ["Background Check"]
+                        )
+                    ),
+            };
+
+            var errors = EffectiveLocationPolicyValidator.Validate(policy, Configuration);
+
+            Assert.AreEqual(0, errors.Count);
         }
 
         [TestMethod]
