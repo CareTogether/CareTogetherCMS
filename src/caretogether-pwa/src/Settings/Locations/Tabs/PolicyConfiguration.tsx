@@ -33,11 +33,13 @@ import {
 } from '@mui/material';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import { ReactNode, useMemo, useState } from 'react';
+import { useRecoilValue } from 'recoil';
 import {
   ActionRequirement,
   ArrangementFunction,
   ArrangementPolicy,
   ChildInvolvement,
+  CombinedFamilyInfo,
   CustomField,
   CustomFieldType,
   CustomFieldValidation,
@@ -45,12 +47,12 @@ import {
   EffectiveLocationPolicy,
   FunctionAssignmentEligibility,
   FunctionAssignmentPolicy,
-  FunctionEligibility,
-  FunctionPolicy,
   FunctionRequirement,
   LocationConfiguration,
   MonitoringRequirement,
   NoteEntryRequirement,
+  OneTimeRecurrencePolicy,
+  Person,
   RecurrencePolicy,
   RequirementDefinition,
   RequirementStage,
@@ -66,6 +68,8 @@ import {
   VolunteerRolePolicyVersion,
 } from '../../../GeneratedClient';
 import { useSidePanel } from '../../../Hooks/useSidePanel';
+import { visibleFamiliesQuery } from '../../../Model/Data';
+import { personNameString } from '../../../Families/PersonName';
 
 type PolicyConfigurationProps = {
   policy: EffectiveLocationPolicy;
@@ -99,7 +103,7 @@ type CustomFieldDraft = {
   name: string;
   type: CustomFieldType;
   validationEnabled: boolean;
-  validValues: string;
+  validValues: string[];
 };
 
 type RequirementDraft = {
@@ -107,19 +111,26 @@ type RequirementDraft = {
   isRequired: boolean;
 };
 
-type FunctionAssignmentPolicyDraft = {
-  assignmentRole: string;
-  eligibleLocationRoles: string;
-  eligibleIndividualVolunteerRoles: string;
-  eligibleVolunteerFamilyRoles: string;
-  eligiblePeople: string;
+type MonitoringRequirementDraft = RequirementDraft & {
+  delayEnabled: boolean;
+  delayAmount: string;
+  delayUnit: ValidityUnit;
 };
 
-type FunctionPolicyDraft = {
+type FunctionAssignmentPolicyDraft = {
+  assignmentRole: string;
+  eligibleLocationRoles: string[];
+  eligibleIndividualVolunteerRoles: string[];
+  eligibleVolunteerFamilyRoles: string[];
+  eligiblePeople: string[];
+};
+
+type ArrangementFunctionDraft = {
   functionName: string;
-  eligibleIndividualVolunteerRoles: string;
-  eligibleVolunteerFamilyRoles: string;
-  eligiblePeople: string;
+  requirement: FunctionRequirement;
+  eligibleIndividualVolunteerRoles: string[];
+  eligibleVolunteerFamilyRoles: string[];
+  eligiblePeople: string[];
 };
 
 type ArrangementPolicyDraft = {
@@ -142,13 +153,19 @@ type NamedPolicyReference = {
   owner: string;
 };
 
+type PersonOption = {
+  id: string;
+  label: string;
+  person: Person;
+};
+
 const enumLabelOverrides = new Map<object, Record<string, string>>([
   [
     CustomFieldType,
     {
       String: 'Text',
       Boolean: 'Yes/No',
-      StringArray: 'Suggestions',
+      StringArray: 'Selection',
     },
   ],
   [
@@ -219,11 +236,19 @@ function listText(items?: string[]) {
   return items.join(', ');
 }
 
-function splitCommaSeparated(value: string) {
-  return value
-    .split(',')
-    .map((item) => item.trim())
-    .filter(Boolean);
+function personOptionsFromFamilies(families: CombinedFamilyInfo[]) {
+  return families
+    .flatMap((family) => [
+      ...(family.family?.adults ?? []).map((adult) => adult.item1),
+      ...(family.family?.children ?? []),
+    ])
+    .filter((person): person is Person => Boolean(person?.id))
+    .map((person) => ({
+      id: person.id!,
+      label: personNameString(person),
+      person,
+    }))
+    .sort((first, second) => first.label.localeCompare(second.label));
 }
 
 function normalizeStringList(values: string[]) {
@@ -373,7 +398,7 @@ function customFieldToDraft(field?: CustomField): CustomFieldDraft {
     name: field?.name ?? '',
     type: field?.type ?? CustomFieldType.String,
     validationEnabled: typeof field?.validation !== 'undefined',
-    validValues: field?.validValues?.join(', ') ?? '',
+    validValues: field?.validValues ?? [],
   };
 }
 
@@ -386,29 +411,45 @@ function requirementToDraft(
   };
 }
 
+function monitoringRequirementToDraft(
+  requirement?: MonitoringRequirement
+): MonitoringRequirementDraft {
+  const delay = parseValidity(requirement?.recurrence?.toJSON().delay);
+
+  return {
+    ...requirementToDraft(requirement?.action),
+    delayEnabled: delay.validityEnabled,
+    delayAmount: delay.validityAmount,
+    delayUnit: delay.validityUnit,
+  };
+}
+
 function functionAssignmentPolicyToDraft(
   policy?: FunctionAssignmentPolicy
 ): FunctionAssignmentPolicyDraft {
   return {
     assignmentRole: policy?.assignmentRole ?? '',
-    eligibleLocationRoles:
-      policy?.eligibility?.eligibleLocationRoles?.join(', ') ?? '',
+    eligibleLocationRoles: policy?.eligibility?.eligibleLocationRoles ?? [],
     eligibleIndividualVolunteerRoles:
-      policy?.eligibility?.eligibleIndividualVolunteerRoles?.join(', ') ?? '',
+      policy?.eligibility?.eligibleIndividualVolunteerRoles ?? [],
     eligibleVolunteerFamilyRoles:
-      policy?.eligibility?.eligibleVolunteerFamilyRoles?.join(', ') ?? '',
-    eligiblePeople: policy?.eligibility?.eligiblePeople?.join(', ') ?? '',
+      policy?.eligibility?.eligibleVolunteerFamilyRoles ?? [],
+    eligiblePeople: policy?.eligibility?.eligiblePeople ?? [],
   };
 }
 
-function functionPolicyToDraft(policy?: FunctionPolicy): FunctionPolicyDraft {
+function arrangementFunctionToDraft(
+  arrangementFunction?: ArrangementFunction
+): ArrangementFunctionDraft {
   return {
-    functionName: policy?.functionName ?? '',
+    functionName: arrangementFunction?.functionName ?? '',
+    requirement:
+      arrangementFunction?.requirement ?? FunctionRequirement.ZeroOrMore,
     eligibleIndividualVolunteerRoles:
-      policy?.eligibility?.eligibleIndividualVolunteerRoles?.join(', ') ?? '',
+      arrangementFunction?.eligibleIndividualVolunteerRoles ?? [],
     eligibleVolunteerFamilyRoles:
-      policy?.eligibility?.eligibleVolunteerFamilyRoles?.join(', ') ?? '',
-    eligiblePeople: policy?.eligibility?.eligiblePeople?.join(', ') ?? '',
+      arrangementFunction?.eligibleVolunteerFamilyRoles ?? [],
+    eligiblePeople: arrangementFunction?.eligiblePeople ?? [],
   };
 }
 
@@ -1043,22 +1084,15 @@ function getRequirementUsage(policy: EffectiveLocationPolicy) {
 function EligibilitySummary({
   eligibility,
 }: {
-  eligibility?: FunctionEligibility | FunctionAssignmentEligibility;
+  eligibility?: FunctionAssignmentEligibility;
 }) {
   if (!eligibility) return <Typography variant="body2">-</Typography>;
 
-  const locationRoles =
-    'eligibleLocationRoles' in eligibility
-      ? eligibility.eligibleLocationRoles
-      : undefined;
-
   return (
     <Stack spacing={0.5}>
-      {locationRoles && (
-        <Typography variant="body2">
-          Location Roles: {listText(locationRoles)}
-        </Typography>
-      )}
+      <Typography variant="body2">
+        Location Roles: {listText(eligibility.eligibleLocationRoles)}
+      </Typography>
       <Typography variant="body2">
         Individual Volunteer Roles:{' '}
         {listText(eligibility.eligibleIndividualVolunteerRoles)}
@@ -1100,7 +1134,7 @@ function FunctionAssignmentPoliciesTable({
       <Table size="small">
         <TableHead>
           <TableRow>
-            <TableCell>Assignment Role</TableCell>
+            <TableCell>Function</TableCell>
             <TableCell>Eligibility</TableCell>
             {hasActions && <TableCell align="right">Actions</TableCell>}
           </TableRow>
@@ -1260,10 +1294,17 @@ function RequirementsTable({
 
 function MonitoringRequirementsTable({
   requirements,
+  onEdit,
+  onDuplicate,
+  onDelete,
 }: {
   requirements?: MonitoringRequirement[];
+  onEdit?: (requirement: MonitoringRequirement) => void;
+  onDuplicate?: (requirement: MonitoringRequirement) => void;
+  onDelete?: (requirement: MonitoringRequirement) => void;
 }) {
   const rows = requirements ?? [];
+  const hasActions = Boolean(onDuplicate || onDelete);
 
   return (
     <TableContainer>
@@ -1273,17 +1314,23 @@ function MonitoringRequirementsTable({
             <TableCell>Action Name</TableCell>
             <TableCell>Required</TableCell>
             <TableCell>Recurrence</TableCell>
+            {hasActions && <TableCell align="right">Actions</TableCell>}
           </TableRow>
         </TableHead>
         <TableBody>
           {rows.length === 0 ? (
             <EmptyRow
-              colSpan={3}
+              colSpan={hasActions ? 4 : 3}
               label="No monitoring requirements configured."
             />
           ) : (
             rows.map((requirement, index) => (
-              <TableRow key={`${requirement.action?.actionName}-${index}`}>
+              <TableRow
+                key={`${requirement.action?.actionName}-${index}`}
+                hover={Boolean(onEdit)}
+                sx={onEdit ? { cursor: 'pointer' } : undefined}
+                onClick={() => onEdit?.(requirement)}
+              >
                 <TableCell>{requirement.action?.actionName}</TableCell>
                 <TableCell>
                   {requirement.action?.isRequired ? 'Yes' : 'No'}
@@ -1291,6 +1338,28 @@ function MonitoringRequirementsTable({
                 <TableCell>
                   <RecurrenceSummary recurrence={requirement.recurrence} />
                 </TableCell>
+                {hasActions && (
+                  <TableCell align="right">
+                    <Stack
+                      direction="row"
+                      justifyContent="flex-end"
+                      spacing={0.5}
+                    >
+                      {onDuplicate && (
+                        <DuplicateRowAction
+                          label={requirement.action?.actionName ?? 'action'}
+                          onClick={() => onDuplicate(requirement)}
+                        />
+                      )}
+                      {onDelete && (
+                        <DeleteRowAction
+                          label={requirement.action?.actionName ?? 'action'}
+                          onClick={() => onDelete(requirement)}
+                        />
+                      )}
+                    </Stack>
+                  </TableCell>
+                )}
               </TableRow>
             ))
           )}
@@ -1590,7 +1659,7 @@ function CustomFieldSidePanel({
     trimmedName.length > 0 &&
     trimmedName !== field?.name &&
     existingNames.includes(trimmedName);
-  const validValues = splitCommaSeparated(draft.validValues);
+  const validValues = normalizeStringList(draft.validValues);
   const canSave = trimmedName.length > 0 && !duplicateName;
 
   function save() {
@@ -1658,7 +1727,7 @@ function CustomFieldSidePanel({
                   : current.validationEnabled,
               validValues:
                 Number(event.target.value) === CustomFieldType.Boolean
-                  ? ''
+                  ? []
                   : current.validValues,
             }))
           }
@@ -1691,17 +1760,25 @@ function CustomFieldSidePanel({
           </Grid>
 
           <Grid item xs={12}>
-            <TextField
+            <Autocomplete
               fullWidth
-              label="Valid Values"
+              multiple
+              freeSolo
+              options={[]}
               value={draft.validValues}
-              helperText="Comma-separated values."
-              onChange={(event) =>
+              onChange={(_, values) =>
                 setDraft((current) => ({
                   ...current,
-                  validValues: event.target.value,
+                  validValues: normalizeStringList(values),
                 }))
               }
+              renderInput={(params) => (
+                <TextField
+                  {...params}
+                  label="Valid Values"
+                  helperText='Start typing and press "Enter" to add a new item.'
+                />
+              )}
             />
           </Grid>
         </>
@@ -1841,6 +1918,392 @@ function RequirementSidePanel({
   );
 }
 
+function MonitoringRequirementSidePanel({
+  title,
+  requirement,
+  actionNames,
+  existingActionNames,
+  onClose,
+  onSave,
+}: {
+  title: string;
+  requirement?: MonitoringRequirement;
+  actionNames: string[];
+  existingActionNames: string[];
+  onClose: () => void;
+  onSave: (
+    previousName: string | undefined,
+    requirement: MonitoringRequirement
+  ) => void;
+}) {
+  const [draft, setDraft] = useState<MonitoringRequirementDraft>(() =>
+    monitoringRequirementToDraft(requirement)
+  );
+  const trimmedActionName = draft.actionName.trim();
+  const previousName = requirement?.action?.actionName;
+  const duplicateName =
+    trimmedActionName.length > 0 &&
+    trimmedActionName !== previousName &&
+    existingActionNames.includes(trimmedActionName);
+  const unknownActionName =
+    trimmedActionName.length > 0 && !actionNames.includes(trimmedActionName);
+  const delayAmountIsValid =
+    !draft.delayEnabled ||
+    typeof parseValidityAmount(draft.delayAmount) !== 'undefined';
+  const canSave =
+    trimmedActionName.length > 0 &&
+    !duplicateName &&
+    !unknownActionName &&
+    delayAmountIsValid;
+
+  function save() {
+    if (!canSave) return;
+
+    onSave(
+      previousName,
+      new MonitoringRequirement({
+        action: new RequirementDefinition({
+          actionName: trimmedActionName,
+          isRequired: draft.isRequired,
+        }),
+        recurrence: new OneTimeRecurrencePolicy({
+          delay: toTimeSpanString(
+            draft.delayEnabled,
+            draft.delayAmount,
+            draft.delayUnit
+          ),
+        }),
+      })
+    );
+  }
+
+  return (
+    <Grid
+      container
+      spacing={2}
+      maxWidth={520}
+      component="form"
+      onSubmit={(event) => {
+        event.preventDefault();
+        save();
+      }}
+    >
+      <Grid item xs={12}>
+        <Typography variant="h6">{title}</Typography>
+      </Grid>
+
+      <Grid item xs={12}>
+        <Autocomplete
+          fullWidth
+          options={actionNames}
+          value={draft.actionName || null}
+          onChange={(_, value) =>
+            setDraft((current) => ({ ...current, actionName: value ?? '' }))
+          }
+          renderInput={(params) => (
+            <TextField
+              {...params}
+              required
+              label="Action Name"
+              error={duplicateName || unknownActionName}
+              helperText={
+                duplicateName
+                  ? 'Action name is already referenced in this list.'
+                  : unknownActionName
+                    ? 'Action name must exist in Action Definitions.'
+                    : undefined
+              }
+            />
+          )}
+        />
+      </Grid>
+
+      <Grid item xs={12}>
+        <FormControlLabel
+          control={
+            <Switch
+              checked={draft.isRequired}
+              onChange={(event) =>
+                setDraft((current) => ({
+                  ...current,
+                  isRequired: event.target.checked,
+                }))
+              }
+            />
+          }
+          label="Required"
+        />
+      </Grid>
+
+      <Grid item xs={12}>
+        <FormControlLabel
+          control={
+            <Switch
+              checked={draft.delayEnabled}
+              onChange={(event) =>
+                setDraft((current) => ({
+                  ...current,
+                  delayEnabled: event.target.checked,
+                }))
+              }
+            />
+          }
+          label="Recurrence Delay"
+        />
+      </Grid>
+
+      {draft.delayEnabled && (
+        <>
+          <Grid item xs={6}>
+            <TextField
+              fullWidth
+              label="Repeat After"
+              value={draft.delayAmount}
+              error={!delayAmountIsValid}
+              helperText={
+                delayAmountIsValid
+                  ? undefined
+                  : 'Enter a positive whole number.'
+              }
+              inputProps={{ inputMode: 'numeric' }}
+              onChange={(event) =>
+                setDraft((current) => ({
+                  ...current,
+                  delayAmount: event.target.value,
+                }))
+              }
+            />
+          </Grid>
+
+          <Grid item xs={6}>
+            <TextField
+              fullWidth
+              select
+              label="Time Period"
+              value={draft.delayUnit}
+              onChange={(event) =>
+                setDraft((current) => ({
+                  ...current,
+                  delayUnit: event.target.value as ValidityUnit,
+                }))
+              }
+            >
+              <MenuItem value="days">Days</MenuItem>
+              <MenuItem value="months">Months</MenuItem>
+              <MenuItem value="years">Years</MenuItem>
+            </TextField>
+          </Grid>
+        </>
+      )}
+
+      <Grid item xs={12} sx={{ textAlign: 'right' }}>
+        <Button
+          variant="contained"
+          color="secondary"
+          sx={{ mr: 2 }}
+          onClick={onClose}
+        >
+          Cancel
+        </Button>
+        <Button type="submit" variant="contained" disabled={!canSave}>
+          Save
+        </Button>
+      </Grid>
+    </Grid>
+  );
+}
+
+function ArrangementFunctionSidePanel({
+  arrangementFunction,
+  existingFunctionNames,
+  volunteerRoles,
+  volunteerFamilyRoles,
+  personOptions,
+  onClose,
+  onSave,
+}: {
+  arrangementFunction?: ArrangementFunction;
+  existingFunctionNames: string[];
+  volunteerRoles: string[];
+  volunteerFamilyRoles: string[];
+  personOptions: PersonOption[];
+  onClose: () => void;
+  onSave: (
+    previousName: string | undefined,
+    arrangementFunction: ArrangementFunction
+  ) => void;
+}) {
+  const [draft, setDraft] = useState<ArrangementFunctionDraft>(() =>
+    arrangementFunctionToDraft(arrangementFunction)
+  );
+  const trimmedName = draft.functionName.trim();
+  const duplicateName =
+    trimmedName.length > 0 &&
+    trimmedName !== arrangementFunction?.functionName &&
+    existingFunctionNames.includes(trimmedName);
+  const eligibleIndividualVolunteerRoles = normalizeStringList(
+    draft.eligibleIndividualVolunteerRoles
+  );
+  const eligibleVolunteerFamilyRoles = normalizeStringList(
+    draft.eligibleVolunteerFamilyRoles
+  );
+  const eligiblePeople = normalizeStringList(draft.eligiblePeople);
+  const selectedPeople = personOptions.filter((person) =>
+    eligiblePeople.includes(person.id)
+  );
+  const canSave = trimmedName.length > 0 && !duplicateName;
+
+  function save() {
+    if (!canSave) return;
+
+    onSave(
+      arrangementFunction?.functionName,
+      new ArrangementFunction({
+        functionName: trimmedName,
+        requirement: draft.requirement,
+        eligibleIndividualVolunteerRoles:
+          eligibleIndividualVolunteerRoles.length > 0
+            ? eligibleIndividualVolunteerRoles
+            : undefined,
+        eligibleVolunteerFamilyRoles:
+          eligibleVolunteerFamilyRoles.length > 0
+            ? eligibleVolunteerFamilyRoles
+            : undefined,
+        eligiblePeople: eligiblePeople.length > 0 ? eligiblePeople : undefined,
+        variants: arrangementFunction?.variants ?? [],
+      })
+    );
+  }
+
+  return (
+    <Grid
+      container
+      spacing={2}
+      maxWidth={560}
+      component="form"
+      onSubmit={(event) => {
+        event.preventDefault();
+        save();
+      }}
+    >
+      <Grid item xs={12}>
+        <Typography variant="h6">
+          {arrangementFunction ? 'Edit Arrangement Function' : 'Add Arrangement Function'}
+        </Typography>
+      </Grid>
+
+      <Grid item xs={12}>
+        <TextField
+          fullWidth
+          required
+          autoFocus
+          label="Function"
+          value={draft.functionName}
+          error={duplicateName}
+          helperText={duplicateName ? 'Function must be unique.' : undefined}
+          onChange={(event) =>
+            setDraft((current) => ({
+              ...current,
+              functionName: event.target.value,
+            }))
+          }
+        />
+      </Grid>
+
+      <Grid item xs={12}>
+        <TextField
+          fullWidth
+          select
+          label="Requirement"
+          value={draft.requirement}
+          onChange={(event) =>
+            setDraft((current) => ({
+              ...current,
+              requirement: Number(event.target.value) as FunctionRequirement,
+            }))
+          }
+        >
+          {enumOptions(FunctionRequirement).map((option) => (
+            <MenuItem key={option.label} value={option.value}>
+              {option.label}
+            </MenuItem>
+          ))}
+        </TextField>
+      </Grid>
+
+      <Grid item xs={12}>
+        <Autocomplete
+          fullWidth
+          multiple
+          options={volunteerRoles}
+          value={draft.eligibleIndividualVolunteerRoles}
+          onChange={(_, values) =>
+            setDraft((current) => ({
+              ...current,
+              eligibleIndividualVolunteerRoles: values,
+            }))
+          }
+          renderInput={(params) => (
+            <TextField {...params} label="Eligible Individual Volunteer Roles" />
+          )}
+        />
+      </Grid>
+
+      <Grid item xs={12}>
+        <Autocomplete
+          fullWidth
+          multiple
+          options={volunteerFamilyRoles}
+          value={draft.eligibleVolunteerFamilyRoles}
+          onChange={(_, values) =>
+            setDraft((current) => ({
+              ...current,
+              eligibleVolunteerFamilyRoles: values,
+            }))
+          }
+          renderInput={(params) => (
+            <TextField {...params} label="Eligible Volunteer Family Roles" />
+          )}
+        />
+      </Grid>
+
+      <Grid item xs={12}>
+        <Autocomplete
+          fullWidth
+          multiple
+          options={personOptions}
+          value={selectedPeople}
+          getOptionLabel={(option) => option.label}
+          isOptionEqualToValue={(option, value) => option.id === value.id}
+          onChange={(_, values) =>
+            setDraft((current) => ({
+              ...current,
+              eligiblePeople: values.map((value) => value.id),
+            }))
+          }
+          renderInput={(params) => (
+            <TextField {...params} label="Eligible People" />
+          )}
+        />
+      </Grid>
+
+      <Grid item xs={12} sx={{ textAlign: 'right' }}>
+        <Button
+          variant="contained"
+          color="secondary"
+          sx={{ mr: 2 }}
+          onClick={onClose}
+        >
+          Cancel
+        </Button>
+        <Button type="submit" variant="contained" disabled={!canSave}>
+          Save
+        </Button>
+      </Grid>
+    </Grid>
+  );
+}
+
 function FunctionAssignmentPolicySidePanel({
   title,
   policy,
@@ -1848,6 +2311,7 @@ function FunctionAssignmentPolicySidePanel({
   locationRoles,
   volunteerRoles,
   volunteerFamilyRoles,
+  personOptions,
   onClose,
   onSave,
 }: {
@@ -1857,6 +2321,7 @@ function FunctionAssignmentPolicySidePanel({
   locationRoles: string[];
   volunteerRoles: string[];
   volunteerFamilyRoles: string[];
+  personOptions: PersonOption[];
   onClose: () => void;
   onSave: (
     previousRole: string | undefined,
@@ -1871,24 +2336,16 @@ function FunctionAssignmentPolicySidePanel({
     trimmedRole.length > 0 &&
     trimmedRole !== policy?.assignmentRole &&
     existingAssignmentRoles.includes(trimmedRole);
-  const eligibleLocationRoles = splitCommaSeparated(
-    draft.eligibleLocationRoles
-  );
-  const eligibleIndividualVolunteerRoles = splitCommaSeparated(
+  const eligibleLocationRoles = normalizeStringList(draft.eligibleLocationRoles);
+  const eligibleIndividualVolunteerRoles = normalizeStringList(
     draft.eligibleIndividualVolunteerRoles
   );
-  const eligibleVolunteerFamilyRoles = splitCommaSeparated(
+  const eligibleVolunteerFamilyRoles = normalizeStringList(
     draft.eligibleVolunteerFamilyRoles
   );
-  const eligiblePeople = splitCommaSeparated(draft.eligiblePeople);
-  const unknownLocationRoles = eligibleLocationRoles.filter(
-    (role) => !locationRoles.includes(role)
-  );
-  const unknownVolunteerRoles = eligibleIndividualVolunteerRoles.filter(
-    (role) => !volunteerRoles.includes(role)
-  );
-  const unknownVolunteerFamilyRoles = eligibleVolunteerFamilyRoles.filter(
-    (role) => !volunteerFamilyRoles.includes(role)
+  const eligiblePeople = normalizeStringList(draft.eligiblePeople);
+  const selectedPeople = personOptions.filter((person) =>
+    eligiblePeople.includes(person.id)
   );
   const hasEligibility =
     eligibleLocationRoles.length +
@@ -1899,10 +2356,7 @@ function FunctionAssignmentPolicySidePanel({
   const canSave =
     trimmedRole.length > 0 &&
     !duplicateRole &&
-    hasEligibility &&
-    unknownLocationRoles.length === 0 &&
-    unknownVolunteerRoles.length === 0 &&
-    unknownVolunteerFamilyRoles.length === 0;
+    hasEligibility;
 
   function save() {
     if (!canSave) return;
@@ -1940,12 +2394,10 @@ function FunctionAssignmentPolicySidePanel({
         <TextField
           fullWidth
           required
-          label="Assignment Role"
+          label="Function"
           value={draft.assignmentRole}
           error={duplicateRole}
-          helperText={
-            duplicateRole ? 'Assignment role must be unique.' : undefined
-          }
+          helperText={duplicateRole ? 'Function must be unique.' : undefined}
           onChange={(event) =>
             setDraft((current) => ({
               ...current,
@@ -1956,77 +2408,76 @@ function FunctionAssignmentPolicySidePanel({
       </Grid>
 
       <Grid item xs={12}>
-        <TextField
+        <Autocomplete
           fullWidth
-          label="Eligible Location Roles"
+          multiple
+          options={locationRoles}
           value={draft.eligibleLocationRoles}
-          error={unknownLocationRoles.length > 0}
-          helperText={
-            unknownLocationRoles.length > 0
-              ? `Unknown roles: ${unknownLocationRoles.join(', ')}`
-              : 'Comma-separated configured organization role names.'
-          }
-          onChange={(event) =>
+          onChange={(_, values) =>
             setDraft((current) => ({
               ...current,
-              eligibleLocationRoles: event.target.value,
+              eligibleLocationRoles: values,
             }))
           }
+          renderInput={(params) => (
+            <TextField {...params} label="Eligible Location Roles" />
+          )}
         />
       </Grid>
 
       <Grid item xs={12}>
-        <TextField
+        <Autocomplete
           fullWidth
-          label="Eligible Individual Volunteer Roles"
+          multiple
+          options={volunteerRoles}
           value={draft.eligibleIndividualVolunteerRoles}
-          error={unknownVolunteerRoles.length > 0}
-          helperText={
-            unknownVolunteerRoles.length > 0
-              ? `Unknown roles: ${unknownVolunteerRoles.join(', ')}`
-              : 'Comma-separated volunteer role names from Volunteer Policies > Volunteer Roles.'
-          }
-          onChange={(event) =>
+          onChange={(_, values) =>
             setDraft((current) => ({
               ...current,
-              eligibleIndividualVolunteerRoles: event.target.value,
+              eligibleIndividualVolunteerRoles: values,
             }))
           }
+          renderInput={(params) => (
+            <TextField {...params} label="Eligible Individual Volunteer Roles" />
+          )}
         />
       </Grid>
 
       <Grid item xs={12}>
-        <TextField
+        <Autocomplete
           fullWidth
-          label="Eligible Volunteer Family Roles"
+          multiple
+          options={volunteerFamilyRoles}
           value={draft.eligibleVolunteerFamilyRoles}
-          error={unknownVolunteerFamilyRoles.length > 0}
-          helperText={
-            unknownVolunteerFamilyRoles.length > 0
-              ? `Unknown roles: ${unknownVolunteerFamilyRoles.join(', ')}`
-              : 'Comma-separated family role names from Volunteer Policies > Volunteer Family Roles.'
-          }
-          onChange={(event) =>
+          onChange={(_, values) =>
             setDraft((current) => ({
               ...current,
-              eligibleVolunteerFamilyRoles: event.target.value,
+              eligibleVolunteerFamilyRoles: values,
             }))
           }
+          renderInput={(params) => (
+            <TextField {...params} label="Eligible Volunteer Family Roles" />
+          )}
         />
       </Grid>
 
       <Grid item xs={12}>
-        <TextField
+        <Autocomplete
           fullWidth
-          label="Eligible People"
-          value={draft.eligiblePeople}
-          helperText="Comma-separated person IDs."
-          onChange={(event) =>
+          multiple
+          options={personOptions}
+          value={selectedPeople}
+          getOptionLabel={(option) => option.label}
+          isOptionEqualToValue={(option, value) => option.id === value.id}
+          onChange={(_, values) =>
             setDraft((current) => ({
               ...current,
-              eligiblePeople: event.target.value,
+              eligiblePeople: values.map((value) => value.id),
             }))
           }
+          renderInput={(params) => (
+            <TextField {...params} label="Eligible People" />
+          )}
         />
       </Grid>
 
@@ -2037,171 +2488,6 @@ function FunctionAssignmentPolicySidePanel({
           </Typography>
         </Grid>
       )}
-
-      <Grid item xs={12} sx={{ textAlign: 'right' }}>
-        <Button
-          variant="contained"
-          color="secondary"
-          sx={{ mr: 2 }}
-          onClick={onClose}
-        >
-          Cancel
-        </Button>
-        <Button type="submit" variant="contained" disabled={!canSave}>
-          Save
-        </Button>
-      </Grid>
-    </Grid>
-  );
-}
-
-function FunctionPolicySidePanel({
-  policy,
-  existingFunctionNames,
-  volunteerRoles,
-  volunteerFamilyRoles,
-  onClose,
-  onSave,
-}: {
-  policy?: FunctionPolicy;
-  existingFunctionNames: string[];
-  volunteerRoles: string[];
-  volunteerFamilyRoles: string[];
-  onClose: () => void;
-  onSave: (previousName: string | undefined, policy: FunctionPolicy) => void;
-}) {
-  const [draft, setDraft] = useState<FunctionPolicyDraft>(() =>
-    functionPolicyToDraft(policy)
-  );
-  const trimmedName = draft.functionName.trim();
-  const duplicateName =
-    trimmedName.length > 0 &&
-    trimmedName !== policy?.functionName &&
-    existingFunctionNames.includes(trimmedName);
-  const eligibleIndividualVolunteerRoles = splitCommaSeparated(
-    draft.eligibleIndividualVolunteerRoles
-  );
-  const eligibleVolunteerFamilyRoles = splitCommaSeparated(
-    draft.eligibleVolunteerFamilyRoles
-  );
-  const eligiblePeople = splitCommaSeparated(draft.eligiblePeople);
-  const unknownVolunteerRoles = eligibleIndividualVolunteerRoles.filter(
-    (role) => !volunteerRoles.includes(role)
-  );
-  const unknownVolunteerFamilyRoles = eligibleVolunteerFamilyRoles.filter(
-    (role) => !volunteerFamilyRoles.includes(role)
-  );
-  const canSave =
-    trimmedName.length > 0 &&
-    !duplicateName &&
-    unknownVolunteerRoles.length === 0 &&
-    unknownVolunteerFamilyRoles.length === 0;
-
-  function save() {
-    if (!canSave) return;
-    onSave(
-      policy?.functionName,
-      new FunctionPolicy({
-        functionName: trimmedName,
-        eligibility: new FunctionEligibility({
-          eligibleIndividualVolunteerRoles,
-          eligibleVolunteerFamilyRoles,
-          eligiblePeople,
-        }),
-      })
-    );
-  }
-
-  return (
-    <Grid
-      container
-      spacing={2}
-      maxWidth={560}
-      component="form"
-      onSubmit={(event) => {
-        event.preventDefault();
-        save();
-      }}
-    >
-      <Grid item xs={12}>
-        <Typography variant="h6">
-          {policy ? 'Edit Function Policy' : 'Add Function Policy'}
-        </Typography>
-      </Grid>
-
-      <Grid item xs={12}>
-        <TextField
-          fullWidth
-          required
-          label="Function Name"
-          value={draft.functionName}
-          error={duplicateName}
-          helperText={
-            duplicateName ? 'Function name must be unique.' : undefined
-          }
-          onChange={(event) =>
-            setDraft((current) => ({
-              ...current,
-              functionName: event.target.value,
-            }))
-          }
-        />
-      </Grid>
-
-      <Grid item xs={12}>
-        <TextField
-          fullWidth
-          label="Eligible Individual Volunteer Roles"
-          value={draft.eligibleIndividualVolunteerRoles}
-          error={unknownVolunteerRoles.length > 0}
-          helperText={
-            unknownVolunteerRoles.length > 0
-              ? `Unknown roles: ${unknownVolunteerRoles.join(', ')}`
-              : 'Comma-separated volunteer role names from Volunteer Policies > Volunteer Roles.'
-          }
-          onChange={(event) =>
-            setDraft((current) => ({
-              ...current,
-              eligibleIndividualVolunteerRoles: event.target.value,
-            }))
-          }
-        />
-      </Grid>
-
-      <Grid item xs={12}>
-        <TextField
-          fullWidth
-          label="Eligible Volunteer Family Roles"
-          value={draft.eligibleVolunteerFamilyRoles}
-          error={unknownVolunteerFamilyRoles.length > 0}
-          helperText={
-            unknownVolunteerFamilyRoles.length > 0
-              ? `Unknown roles: ${unknownVolunteerFamilyRoles.join(', ')}`
-              : 'Comma-separated family role names from Volunteer Policies > Volunteer Family Roles.'
-          }
-          onChange={(event) =>
-            setDraft((current) => ({
-              ...current,
-              eligibleVolunteerFamilyRoles: event.target.value,
-            }))
-          }
-        />
-      </Grid>
-
-      <Grid item xs={12}>
-        <TextField
-          fullWidth
-          label="Eligible People"
-          value={draft.eligiblePeople}
-          helperText="Comma-separated person IDs."
-          onChange={(event) =>
-            setDraft((current) => ({
-              ...current,
-              eligiblePeople: event.target.value,
-            }))
-          }
-        />
-      </Grid>
 
       <Grid item xs={12} sx={{ textAlign: 'right' }}>
         <Button
@@ -2902,11 +3188,56 @@ function ArrangementFunctionSummary({
   );
 }
 
+function monitoringRequirementName(requirement: MonitoringRequirement) {
+  return requirement.action?.actionName ?? '';
+}
+
 function ArrangementPolicyDetails({
   arrangement,
+  actionNames,
+  volunteerRoles,
+  volunteerFamilyRoles,
+  personOptions,
+  onArrangementChange,
 }: {
   arrangement: ArrangementPolicy;
+  actionNames: string[];
+  volunteerRoles: string[];
+  volunteerFamilyRoles: string[];
+  personOptions: PersonOption[];
+  onArrangementChange: (arrangement: ArrangementPolicy) => void;
 }) {
+  const {
+    SidePanel: SetupRequirementPanel,
+    openSidePanel: openSetupRequirementPanel,
+    closeSidePanel: closeSetupRequirementPanel,
+  } = useSidePanel();
+  const {
+    SidePanel: MonitoringRequirementPanel,
+    openSidePanel: openMonitoringRequirementPanel,
+    closeSidePanel: closeMonitoringRequirementPanel,
+  } = useSidePanel();
+  const {
+    SidePanel: CloseoutRequirementPanel,
+    openSidePanel: openCloseoutRequirementPanel,
+    closeSidePanel: closeCloseoutRequirementPanel,
+  } = useSidePanel();
+  const {
+    SidePanel: ArrangementFunctionPanel,
+    openSidePanel: openArrangementFunctionPanel,
+    closeSidePanel: closeArrangementFunctionPanel,
+  } = useSidePanel();
+  const [workingSetupRequirement, setWorkingSetupRequirement] = useState<
+    RequirementDefinition | undefined
+  >();
+  const [workingMonitoringRequirement, setWorkingMonitoringRequirement] =
+    useState<MonitoringRequirement | undefined>();
+  const [workingCloseoutRequirement, setWorkingCloseoutRequirement] = useState<
+    RequirementDefinition | undefined
+  >();
+  const [workingArrangementFunction, setWorkingArrangementFunction] = useState<
+    ArrangementFunction | undefined
+  >();
   const setupActions =
     arrangement.requiredSetupActions ??
     arrangement.requiredSetupActions_PRE_MIGRATION;
@@ -2916,6 +3247,69 @@ function ArrangementPolicyDetails({
   const closeoutActions =
     arrangement.requiredCloseoutActions ??
     arrangement.requiredCloseoutActionNames_PRE_MIGRATION;
+  const arrangementFunctions = arrangement.arrangementFunctions ?? [];
+
+  function updateArrangement(update: Partial<ArrangementPolicy>) {
+    onArrangementChange(new ArrangementPolicy({ ...arrangement, ...update }));
+  }
+
+  function duplicateRequirement(
+    requirements: RequirementDefinition[],
+    requirement: RequirementDefinition
+  ) {
+    return upsertByName(
+      requirements,
+      undefined,
+      new RequirementDefinition({
+        ...requirement,
+        actionName: nextCopyName(
+          requirement.actionName,
+          requirements.map((item) => item.actionName)
+        ),
+      }),
+      (item) => item.actionName
+    );
+  }
+
+  function duplicateMonitoringRequirement(
+    requirements: MonitoringRequirement[],
+    requirement: MonitoringRequirement
+  ) {
+    return upsertByName(
+      requirements,
+      undefined,
+      new MonitoringRequirement({
+        ...requirement,
+        action: new RequirementDefinition({
+          ...requirement.action,
+          actionName: nextCopyName(
+            monitoringRequirementName(requirement),
+            requirements.map(monitoringRequirementName)
+          ),
+        }),
+      }),
+      monitoringRequirementName
+    );
+  }
+
+  function duplicateArrangementFunction(
+    arrangementFunction: ArrangementFunction
+  ) {
+    updateArrangement({
+      arrangementFunctions: upsertByName(
+        arrangementFunctions,
+        undefined,
+        new ArrangementFunction({
+          ...arrangementFunction,
+          functionName: nextCopyName(
+            arrangementFunction.functionName,
+            arrangementFunctions.map((item) => item.functionName)
+          ),
+        }),
+        (item) => item.functionName
+      ),
+    });
+  }
 
   return (
     <Stack spacing={2}>
@@ -2924,10 +3318,39 @@ function ArrangementPolicyDetails({
           <Typography>Required Setup Actions</Typography>
         </AccordionSummary>
         <AccordionDetails>
-          <RequirementsTable
-            requirements={setupActions}
-            emptyLabel="No setup requirements configured."
-          />
+          <Stack spacing={2}>
+            <EditableActions
+              onAdd={() => {
+                setWorkingSetupRequirement(undefined);
+                openSetupRequirementPanel();
+              }}
+            />
+            <RequirementsTable
+              requirements={setupActions}
+              emptyLabel="No setup requirements configured."
+              onEdit={(requirement) => {
+                setWorkingSetupRequirement(requirement);
+                openSetupRequirementPanel();
+              }}
+              onDuplicate={(requirement) =>
+                updateArrangement({
+                  requiredSetupActions: duplicateRequirement(
+                    setupActions,
+                    requirement
+                  ),
+                })
+              }
+              onDelete={(requirement) =>
+                updateArrangement({
+                  requiredSetupActions: removeByName(
+                    setupActions,
+                    requirement.actionName,
+                    (item) => item.actionName
+                  ),
+                })
+              }
+            />
+          </Stack>
         </AccordionDetails>
       </Accordion>
 
@@ -2936,7 +3359,39 @@ function ArrangementPolicyDetails({
           <Typography>Required Monitoring Actions</Typography>
         </AccordionSummary>
         <AccordionDetails>
-          <MonitoringRequirementsTable requirements={monitoringActions} />
+          <Stack spacing={2}>
+            <EditableActions
+              onAdd={() => {
+                setWorkingMonitoringRequirement(undefined);
+                openMonitoringRequirementPanel();
+              }}
+            />
+            <MonitoringRequirementsTable
+              requirements={monitoringActions}
+              onEdit={(requirement) => {
+                setWorkingMonitoringRequirement(requirement);
+                openMonitoringRequirementPanel();
+              }}
+              onDuplicate={(requirement) =>
+                updateArrangement({
+                  requiredMonitoringActionsNew:
+                    duplicateMonitoringRequirement(
+                      monitoringActions,
+                      requirement
+                    ),
+                })
+              }
+              onDelete={(requirement) =>
+                updateArrangement({
+                  requiredMonitoringActionsNew: removeByName(
+                    monitoringActions,
+                    monitoringRequirementName(requirement),
+                    monitoringRequirementName
+                  ),
+                })
+              }
+            />
+          </Stack>
         </AccordionDetails>
       </Accordion>
 
@@ -2945,10 +3400,39 @@ function ArrangementPolicyDetails({
           <Typography>Required Closeout Actions</Typography>
         </AccordionSummary>
         <AccordionDetails>
-          <RequirementsTable
-            requirements={closeoutActions}
-            emptyLabel="No closeout requirements configured."
-          />
+          <Stack spacing={2}>
+            <EditableActions
+              onAdd={() => {
+                setWorkingCloseoutRequirement(undefined);
+                openCloseoutRequirementPanel();
+              }}
+            />
+            <RequirementsTable
+              requirements={closeoutActions}
+              emptyLabel="No closeout requirements configured."
+              onEdit={(requirement) => {
+                setWorkingCloseoutRequirement(requirement);
+                openCloseoutRequirementPanel();
+              }}
+              onDuplicate={(requirement) =>
+                updateArrangement({
+                  requiredCloseoutActions: duplicateRequirement(
+                    closeoutActions,
+                    requirement
+                  ),
+                })
+              }
+              onDelete={(requirement) =>
+                updateArrangement({
+                  requiredCloseoutActions: removeByName(
+                    closeoutActions,
+                    requirement.actionName,
+                    (item) => item.actionName
+                  ),
+                })
+              }
+            />
+          </Stack>
         </AccordionDetails>
       </Accordion>
 
@@ -2957,25 +3441,40 @@ function ArrangementPolicyDetails({
           <Typography>Arrangement Functions</Typography>
         </AccordionSummary>
         <AccordionDetails>
-          <TableContainer>
-            <Table size="small">
-              <TableHead>
-                <TableRow>
-                  <TableCell>Function Name</TableCell>
-                  <TableCell>Eligibility</TableCell>
-                  <TableCell>Variants</TableCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {(arrangement.arrangementFunctions ?? []).length === 0 ? (
-                  <EmptyRow
-                    colSpan={3}
-                    label="No arrangement functions configured."
-                  />
-                ) : (
-                  arrangement.arrangementFunctions.map(
-                    (arrangementFunction) => (
-                      <TableRow key={arrangementFunction.functionName}>
+          <Stack spacing={2}>
+            <EditableActions
+              onAdd={() => {
+                setWorkingArrangementFunction(undefined);
+                openArrangementFunctionPanel();
+              }}
+            />
+            <TableContainer>
+              <Table size="small">
+                <TableHead>
+                  <TableRow>
+                    <TableCell>Function</TableCell>
+                    <TableCell>Eligibility</TableCell>
+                    <TableCell>Variants</TableCell>
+                    <TableCell align="right">Actions</TableCell>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {arrangementFunctions.length === 0 ? (
+                    <EmptyRow
+                      colSpan={4}
+                      label="No arrangement functions configured."
+                    />
+                  ) : (
+                    arrangementFunctions.map((arrangementFunction) => (
+                      <TableRow
+                        key={arrangementFunction.functionName}
+                        hover
+                        sx={{ cursor: 'pointer' }}
+                        onClick={() => {
+                          setWorkingArrangementFunction(arrangementFunction);
+                          openArrangementFunctionPanel();
+                        }}
+                      >
                         <TableCell>
                           <ArrangementFunctionSummary
                             arrangementFunction={arrangementFunction}
@@ -2998,15 +3497,154 @@ function ArrangementPolicyDetails({
                             )}
                           />
                         </TableCell>
+                        <TableCell align="right">
+                          <Stack
+                            direction="row"
+                            justifyContent="flex-end"
+                            spacing={0.5}
+                          >
+                            <DuplicateRowAction
+                              label={arrangementFunction.functionName}
+                              onClick={() =>
+                                duplicateArrangementFunction(
+                                  arrangementFunction
+                                )
+                              }
+                            />
+                            <DeleteRowAction
+                              label={arrangementFunction.functionName}
+                              onClick={() =>
+                                updateArrangement({
+                                  arrangementFunctions: removeByName(
+                                    arrangementFunctions,
+                                    arrangementFunction.functionName,
+                                    (item) => item.functionName
+                                  ),
+                                })
+                              }
+                            />
+                          </Stack>
+                        </TableCell>
                       </TableRow>
-                    )
-                  )
-                )}
-              </TableBody>
-            </Table>
-          </TableContainer>
+                    ))
+                  )}
+                </TableBody>
+              </Table>
+            </TableContainer>
+          </Stack>
         </AccordionDetails>
       </Accordion>
+
+      <SetupRequirementPanel>
+        <RequirementSidePanel
+          key={workingSetupRequirement?.actionName ?? 'new-setup-requirement'}
+          title={
+            workingSetupRequirement
+              ? 'Edit Required Setup Action'
+              : 'Add Required Setup Action'
+          }
+          requirement={workingSetupRequirement}
+          actionNames={actionNames}
+          existingActionNames={setupActions.map((item) => item.actionName)}
+          onClose={closeSetupRequirementPanel}
+          onSave={(previousName, requirement) => {
+            updateArrangement({
+              requiredSetupActions: upsertByName(
+                setupActions,
+                previousName,
+                requirement,
+                (item) => item.actionName
+              ),
+            });
+            closeSetupRequirementPanel();
+          }}
+        />
+      </SetupRequirementPanel>
+
+      <MonitoringRequirementPanel>
+        <MonitoringRequirementSidePanel
+          key={
+            workingMonitoringRequirement?.action?.actionName ??
+            'new-monitoring-requirement'
+          }
+          title={
+            workingMonitoringRequirement
+              ? 'Edit Required Monitoring Action'
+              : 'Add Required Monitoring Action'
+          }
+          requirement={workingMonitoringRequirement}
+          actionNames={actionNames}
+          existingActionNames={monitoringActions.map(monitoringRequirementName)}
+          onClose={closeMonitoringRequirementPanel}
+          onSave={(previousName, requirement) => {
+            updateArrangement({
+              requiredMonitoringActionsNew: upsertByName(
+                monitoringActions,
+                previousName,
+                requirement,
+                monitoringRequirementName
+              ),
+            });
+            closeMonitoringRequirementPanel();
+          }}
+        />
+      </MonitoringRequirementPanel>
+
+      <CloseoutRequirementPanel>
+        <RequirementSidePanel
+          key={
+            workingCloseoutRequirement?.actionName ?? 'new-closeout-requirement'
+          }
+          title={
+            workingCloseoutRequirement
+              ? 'Edit Required Closeout Action'
+              : 'Add Required Closeout Action'
+          }
+          requirement={workingCloseoutRequirement}
+          actionNames={actionNames}
+          existingActionNames={closeoutActions.map((item) => item.actionName)}
+          onClose={closeCloseoutRequirementPanel}
+          onSave={(previousName, requirement) => {
+            updateArrangement({
+              requiredCloseoutActions: upsertByName(
+                closeoutActions,
+                previousName,
+                requirement,
+                (item) => item.actionName
+              ),
+            });
+            closeCloseoutRequirementPanel();
+          }}
+        />
+      </CloseoutRequirementPanel>
+
+      <ArrangementFunctionPanel>
+        <ArrangementFunctionSidePanel
+          key={
+            workingArrangementFunction?.functionName ??
+            'new-arrangement-function'
+          }
+          arrangementFunction={workingArrangementFunction}
+          existingFunctionNames={arrangementFunctions.map(
+            (item) => item.functionName
+          )}
+          volunteerRoles={volunteerRoles}
+          volunteerFamilyRoles={volunteerFamilyRoles}
+          personOptions={personOptions}
+          onClose={closeArrangementFunctionPanel}
+          onSave={(previousName, arrangementFunction) => {
+            updateArrangement({
+              arrangementFunctions: upsertByName(
+                arrangementFunctions,
+                previousName,
+                arrangementFunction,
+                (item) => item.functionName
+              ),
+            });
+            closeArrangementFunctionPanel();
+          }}
+        />
+      </ArrangementFunctionPanel>
     </Stack>
   );
 }
@@ -3022,21 +3660,22 @@ function CasePolicyTab({
 }) {
   const casePolicy = policy.referralPolicy;
   const arrangementPolicies = casePolicy?.arrangementPolicies ?? [];
+  const actionNames = Object.keys(policy.actionDefinitions ?? {});
   const volunteerRoles = Object.keys(
     policy.volunteerPolicy?.volunteerRoles ?? {}
   );
   const volunteerFamilyRoles = Object.keys(
     policy.volunteerPolicy?.volunteerFamilyRoles ?? {}
   );
+  const visibleFamilies = useRecoilValue(visibleFamiliesQuery);
+  const personOptions = useMemo(
+    () => personOptionsFromFamilies(visibleFamilies),
+    [visibleFamilies]
+  );
   const {
     SidePanel: FunctionAssignmentPanel,
     openSidePanel: openFunctionAssignmentPanel,
     closeSidePanel: closeFunctionAssignmentPanel,
-  } = useSidePanel();
-  const {
-    SidePanel: FunctionPolicyPanel,
-    openSidePanel: openFunctionPolicyPanel,
-    closeSidePanel: closeFunctionPolicyPanel,
   } = useSidePanel();
   const {
     SidePanel: ArrangementPolicyPanel,
@@ -3045,9 +3684,6 @@ function CasePolicyTab({
   } = useSidePanel();
   const [workingFunctionAssignmentPolicy, setWorkingFunctionAssignmentPolicy] =
     useState<FunctionAssignmentPolicy | undefined>();
-  const [workingFunctionPolicy, setWorkingFunctionPolicy] = useState<
-    FunctionPolicy | undefined
-  >();
   const [workingArrangementPolicy, setWorkingArrangementPolicy] = useState<
     ArrangementPolicy | undefined
   >();
@@ -3099,35 +3735,6 @@ function CasePolicyTab({
     });
   }
 
-  function duplicateCaseFunctionPolicy(functionPolicy: FunctionPolicy) {
-    const existingFunctionNames =
-      casePolicy?.functionPolicies?.map((item) => item.functionName) ?? [];
-    updateCasePolicy({
-      functionPolicies: upsertByName(
-        casePolicy?.functionPolicies ?? [],
-        undefined,
-        new FunctionPolicy({
-          ...functionPolicy,
-          functionName: nextCopyName(
-            functionPolicy.functionName,
-            existingFunctionNames
-          ),
-        }),
-        (item) => item.functionName
-      ),
-    });
-  }
-
-  function deleteCaseFunctionPolicy(functionPolicy: FunctionPolicy) {
-    updateCasePolicy({
-      functionPolicies: removeByName(
-        casePolicy?.functionPolicies,
-        functionPolicy.functionName,
-        (item) => item.functionName
-      ),
-    });
-  }
-
   function duplicateArrangementPolicy(arrangement: ArrangementPolicy) {
     updateCasePolicy({
       arrangementPolicies: upsertByName(
@@ -3162,7 +3769,7 @@ function CasePolicyTab({
       <Stack spacing={2}>
         <Accordion defaultExpanded variant="outlined">
           <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-            <Typography>Function Assignment Policies</Typography>
+            <Typography>Functions</Typography>
           </AccordionSummary>
           <AccordionDetails>
             <Stack spacing={2}>
@@ -3185,84 +3792,9 @@ function CasePolicyTab({
             </Stack>
           </AccordionDetails>
         </Accordion>
-
         <Accordion variant="outlined">
           <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-            <Typography>Function Policies</Typography>
-          </AccordionSummary>
-          <AccordionDetails>
-            <Stack spacing={2}>
-              <EditableActions
-                onAdd={() => {
-                  setWorkingFunctionPolicy(undefined);
-                  openFunctionPolicyPanel();
-                }}
-              />
-              <TableContainer>
-                <Table size="small">
-                  <TableHead>
-                    <TableRow>
-                      <TableCell>Function Name</TableCell>
-                      <TableCell>Eligibility</TableCell>
-                      <TableCell align="right">Actions</TableCell>
-                    </TableRow>
-                  </TableHead>
-                  <TableBody>
-                    {(casePolicy?.functionPolicies ?? []).length === 0 ? (
-                      <EmptyRow
-                        colSpan={3}
-                        label="No function policies configured."
-                      />
-                    ) : (
-                      casePolicy?.functionPolicies?.map((functionPolicy) => (
-                        <TableRow
-                          key={functionPolicy.functionName}
-                          hover
-                          sx={{ cursor: 'pointer' }}
-                          onClick={() => {
-                            setWorkingFunctionPolicy(functionPolicy);
-                            openFunctionPolicyPanel();
-                          }}
-                        >
-                          <TableCell>{functionPolicy.functionName}</TableCell>
-                          <TableCell>
-                            <EligibilitySummary
-                              eligibility={functionPolicy.eligibility}
-                            />
-                          </TableCell>
-                          <TableCell align="right">
-                            <Stack
-                              direction="row"
-                              justifyContent="flex-end"
-                              spacing={0.5}
-                            >
-                              <DuplicateRowAction
-                                label={functionPolicy.functionName}
-                                onClick={() =>
-                                  duplicateCaseFunctionPolicy(functionPolicy)
-                                }
-                              />
-                              <DeleteRowAction
-                                label={functionPolicy.functionName}
-                                onClick={() =>
-                                  deleteCaseFunctionPolicy(functionPolicy)
-                                }
-                              />
-                            </Stack>
-                          </TableCell>
-                        </TableRow>
-                      ))
-                    )}
-                  </TableBody>
-                </Table>
-              </TableContainer>
-            </Stack>
-          </AccordionDetails>
-        </Accordion>
-
-        <Accordion variant="outlined">
-          <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-            <Typography>Arrangement Policies</Typography>
+            <Typography>Arrangements</Typography>
           </AccordionSummary>
           <AccordionDetails>
             <Stack spacing={2}>
@@ -3318,7 +3850,23 @@ function CasePolicyTab({
                       </Stack>
                     </AccordionSummary>
                     <AccordionDetails>
-                      <ArrangementPolicyDetails arrangement={arrangement} />
+                      <ArrangementPolicyDetails
+                        arrangement={arrangement}
+                        actionNames={actionNames}
+                        volunteerRoles={volunteerRoles}
+                        volunteerFamilyRoles={volunteerFamilyRoles}
+                        personOptions={personOptions}
+                        onArrangementChange={(updatedArrangement) =>
+                          updateCasePolicy({
+                            arrangementPolicies: upsertByName(
+                              arrangementPolicies,
+                              arrangement.arrangementType,
+                              updatedArrangement,
+                              (item) => item.arrangementType
+                            ),
+                          })
+                        }
+                      />
                     </AccordionDetails>
                   </Accordion>
                 ))
@@ -3348,6 +3896,7 @@ function CasePolicyTab({
           locationRoles={locationRoles}
           volunteerRoles={volunteerRoles}
           volunteerFamilyRoles={volunteerFamilyRoles}
+          personOptions={personOptions}
           onClose={closeFunctionAssignmentPanel}
           onSave={(previousRole, assignmentPolicy) => {
             updateCasePolicy({
@@ -3362,30 +3911,6 @@ function CasePolicyTab({
           }}
         />
       </FunctionAssignmentPanel>
-
-      <FunctionPolicyPanel>
-        <FunctionPolicySidePanel
-          key={workingFunctionPolicy?.functionName ?? 'new-function-policy'}
-          policy={workingFunctionPolicy}
-          existingFunctionNames={
-            casePolicy?.functionPolicies?.map((item) => item.functionName) ?? []
-          }
-          volunteerRoles={volunteerRoles}
-          volunteerFamilyRoles={volunteerFamilyRoles}
-          onClose={closeFunctionPolicyPanel}
-          onSave={(previousName, functionPolicy) => {
-            updateCasePolicy({
-              functionPolicies: upsertByName(
-                casePolicy?.functionPolicies ?? [],
-                previousName,
-                functionPolicy,
-                (item) => item.functionName
-              ),
-            });
-            closeFunctionPolicyPanel();
-          }}
-        />
-      </FunctionPolicyPanel>
 
       <ArrangementPolicyPanel>
         <ArrangementPolicySidePanel
@@ -3434,6 +3959,11 @@ function V1ReferralPolicyTab({
   );
   const volunteerFamilyRoles = Object.keys(
     policy.volunteerPolicy?.volunteerFamilyRoles ?? {}
+  );
+  const visibleFamilies = useRecoilValue(visibleFamiliesQuery);
+  const personOptions = useMemo(
+    () => personOptionsFromFamilies(visibleFamilies),
+    [visibleFamilies]
   );
   const {
     SidePanel: RequirementPanel,
@@ -3608,7 +4138,7 @@ function V1ReferralPolicyTab({
 
         <Accordion variant="outlined">
           <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-            <Typography>Function Assignment Policies</Typography>
+            <Typography>Functions</Typography>
           </AccordionSummary>
           <AccordionDetails>
             <Stack spacing={2}>
@@ -3708,6 +4238,7 @@ function V1ReferralPolicyTab({
           locationRoles={locationRoles}
           volunteerRoles={volunteerRoles}
           volunteerFamilyRoles={volunteerFamilyRoles}
+          personOptions={personOptions}
           onClose={closeFunctionAssignmentPanel}
           onSave={(previousRole, assignmentPolicy) => {
             onPolicyChange(
