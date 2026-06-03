@@ -44,6 +44,8 @@ import {
   DESKTOP_BOTTOM_SAFE_AREA,
   MOBILE_BOTTOM_SAFE_AREA,
 } from '../../Shell/ShellRootLayout';
+import { useFeatureFlagEnabled, usePostHog } from 'posthog-js/react';
+import { POLICY_SELF_SERVICE_FEATURE_FLAG } from '../../featureFlags';
 
 export function LocationEdit() {
   const { locationId, editingLocationId } = useParams<{
@@ -74,6 +76,11 @@ export function LocationEdit() {
     }
   }, [isMobile]);
   const policy = useLoadable(policyData);
+  const posthog = usePostHog();
+  const showPolicySelfService = useFeatureFlagEnabled(
+    POLICY_SELF_SERVICE_FEATURE_FLAG
+  );
+  const featureFlagsLoaded = posthog.featureFlags.hasLoadedFlags;
   const [policyDraft, setPolicyDraft] =
     useState<EffectiveLocationPolicy | null>(null);
   const [policySaveErrors, setPolicySaveErrors] = useState<string[]>([]);
@@ -95,31 +102,31 @@ export function LocationEdit() {
         id: 'actionDefinitions' as const,
         label: 'Action Definitions',
         component: PolicyConfiguration,
-        shouldShow: true,
+        shouldShow: showPolicySelfService === true,
       },
       {
         id: 'customFamilyFields' as const,
         label: 'Custom Family Fields',
         component: PolicyConfiguration,
-        shouldShow: true,
+        shouldShow: showPolicySelfService === true,
       },
       {
         id: 'casePolicy' as const,
         label: 'Case Policies',
         component: PolicyConfiguration,
-        shouldShow: true,
+        shouldShow: showPolicySelfService === true,
       },
       {
         id: 'v1ReferralPolicy' as const,
         label: 'Referral Policies',
         component: PolicyConfiguration,
-        shouldShow: true,
+        shouldShow: showPolicySelfService === true,
       },
       {
         id: 'volunteerPolicy' as const,
         label: 'Volunteer Policies',
         component: PolicyConfiguration,
-        shouldShow: true,
+        shouldShow: showPolicySelfService === true,
       },
       {
         id: 'accessLevels' as const,
@@ -128,7 +135,7 @@ export function LocationEdit() {
         shouldShow: true,
       },
     ],
-    []
+    [showPolicySelfService]
   );
 
   // This result in a type like: 'basic' | 'actions' | 'policies'
@@ -141,16 +148,22 @@ export function LocationEdit() {
   const [searchParams, setSearchParams] = useSearchParams();
 
   const urlTab = searchParams.get('tab');
+  const availableTabs = useMemo(
+    () => tabs.filter((tab) => tab.shouldShow),
+    [tabs]
+  );
 
   useEffect(() => {
-    const match = tabs.find((tab) => tab.id === urlTab);
+    if (!featureFlagsLoaded) return;
+
+    const match = availableTabs.find((tab) => tab.id === urlTab);
     if (!match) {
       setSearchParams({ tab: 'basic' });
       return;
     }
 
     setActiveTab(urlTab as LocationTabId);
-  }, [urlTab, tabs, setSearchParams]);
+  }, [urlTab, availableTabs, featureFlagsLoaded, setSearchParams]);
 
   const dataLoaded = useDataLoaded();
 
@@ -188,7 +201,7 @@ export function LocationEdit() {
     });
   }
 
-  if (!dataLoaded) {
+  if (!dataLoaded || !featureFlagsLoaded) {
     return (
       <ProgressBackdrop>
         <p className="ph-unmask">Loading location configuration...</p>
@@ -213,9 +226,6 @@ export function LocationEdit() {
       </Box>
     );
   }
-
-  // Filter available tabs based on feature flags
-  const availableTabs = tabs.filter((tab) => tab.shouldShow);
 
   const basicData = {
     name: location?.name || '',
@@ -321,7 +331,7 @@ export function LocationEdit() {
             </Box>
           )}
 
-          {policyDraft && activeTab === 'actionDefinitions' && (
+          {showPolicySelfService === true && policyDraft && activeTab === 'actionDefinitions' && (
             <Box key="actionDefinitions">
               <PolicyConfiguration
                 policy={policyDraft}
@@ -332,7 +342,7 @@ export function LocationEdit() {
             </Box>
           )}
 
-          {policyDraft && activeTab === 'customFamilyFields' && (
+          {showPolicySelfService === true && policyDraft && activeTab === 'customFamilyFields' && (
             <Box key="customFamilyFields">
               <PolicyConfiguration
                 policy={policyDraft}
@@ -343,7 +353,7 @@ export function LocationEdit() {
             </Box>
           )}
 
-          {policyDraft && activeTab === 'casePolicy' && (
+          {showPolicySelfService === true && policyDraft && activeTab === 'casePolicy' && (
             <Box key="casePolicy">
               <PolicyConfiguration
                 policy={policyDraft}
@@ -354,7 +364,7 @@ export function LocationEdit() {
             </Box>
           )}
 
-          {policyDraft && activeTab === 'v1ReferralPolicy' && (
+          {showPolicySelfService === true && policyDraft && activeTab === 'v1ReferralPolicy' && (
             <Box key="v1ReferralPolicy">
               <PolicyConfiguration
                 policy={policyDraft}
@@ -365,7 +375,7 @@ export function LocationEdit() {
             </Box>
           )}
 
-          {policyDraft && activeTab === 'volunteerPolicy' && (
+          {showPolicySelfService === true && policyDraft && activeTab === 'volunteerPolicy' && (
             <Box key="volunteerPolicy">
               <PolicyConfiguration
                 policy={policyDraft}
