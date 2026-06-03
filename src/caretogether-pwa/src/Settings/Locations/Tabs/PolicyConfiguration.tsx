@@ -1,6 +1,7 @@
 import {
   Add as AddIcon,
   ControlPointDuplicate as DuplicateIcon,
+  Delete as DeleteIcon,
 } from '@mui/icons-material';
 import {
   Accordion,
@@ -486,6 +487,10 @@ function upsertCustomField(
   ];
 }
 
+function removeCustomField(fields: CustomField[] | undefined, name: string) {
+  return (fields ?? []).filter((field) => field.name !== name);
+}
+
 function upsertByName<T>(
   items: T[] | undefined,
   previousName: string | undefined,
@@ -496,6 +501,14 @@ function upsertByName<T>(
     ...(items ?? []).filter((existing) => getName(existing) !== previousName),
     item,
   ];
+}
+
+function removeByName<T>(
+  items: T[] | undefined,
+  name: string,
+  getName: (item: T) => string
+) {
+  return (items ?? []).filter((item) => getName(item) !== name);
 }
 
 function nextCopyName(baseName: string, existingNames: string[]) {
@@ -651,6 +664,66 @@ function upsertVolunteerFamilyRolePolicyVersion(
   });
 }
 
+function removeVolunteerRolePolicyVersion(
+  volunteerPolicy: VolunteerPolicy | undefined,
+  roleName: string,
+  versionName: string
+) {
+  const volunteerRoles = { ...(volunteerPolicy?.volunteerRoles ?? {}) };
+  const rolePolicy = volunteerRoles[roleName];
+
+  if (rolePolicy) {
+    const remainingVersions = rolePolicy.policyVersions.filter(
+      (version) => version.version !== versionName
+    );
+
+    if (remainingVersions.length === 0) {
+      delete volunteerRoles[roleName];
+    } else {
+      volunteerRoles[roleName] = new VolunteerRolePolicy({
+        ...rolePolicy,
+        policyVersions: remainingVersions,
+      });
+    }
+  }
+
+  return new VolunteerPolicy({
+    ...volunteerPolicy,
+    volunteerRoles,
+    volunteerFamilyRoles: volunteerPolicy?.volunteerFamilyRoles ?? {},
+  });
+}
+
+function removeVolunteerFamilyRolePolicyVersion(
+  volunteerPolicy: VolunteerPolicy | undefined,
+  roleName: string,
+  versionName: string
+) {
+  const volunteerFamilyRoles = { ...(volunteerPolicy?.volunteerFamilyRoles ?? {}) };
+  const rolePolicy = volunteerFamilyRoles[roleName];
+
+  if (rolePolicy) {
+    const remainingVersions = rolePolicy.policyVersions.filter(
+      (version) => version.version !== versionName
+    );
+
+    if (remainingVersions.length === 0) {
+      delete volunteerFamilyRoles[roleName];
+    } else {
+      volunteerFamilyRoles[roleName] = new VolunteerFamilyRolePolicy({
+        ...rolePolicy,
+        policyVersions: remainingVersions,
+      });
+    }
+  }
+
+  return new VolunteerPolicy({
+    ...volunteerPolicy,
+    volunteerRoles: volunteerPolicy?.volunteerRoles ?? {},
+    volunteerFamilyRoles,
+  });
+}
+
 function ValuesText({ values }: { values?: string[] }) {
   return <Typography variant="body2">{listText(values)}</Typography>;
 }
@@ -706,11 +779,19 @@ function EmptyRow({ colSpan, label }: { colSpan: number; label: string }) {
   );
 }
 
-function DuplicateRowAction({
+function ConfirmedRowAction({
   label,
+  action,
+  icon,
+  title,
+  message,
   onClick,
 }: {
   label: string;
+  action: string;
+  icon: ReactNode;
+  title: string;
+  message: string;
   onClick: () => void;
 }) {
   const [confirming, setConfirming] = useState(false);
@@ -726,16 +807,16 @@ function DuplicateRowAction({
 
   return (
     <>
-      <Tooltip title="Duplicate">
+      <Tooltip title={action}>
         <IconButton
           size="small"
-          aria-label={`Duplicate ${label}`}
+          aria-label={`${action} ${label}`}
           onClick={(event) => {
             event.stopPropagation();
             setConfirming(true);
           }}
         >
-          <DuplicateIcon fontSize="small" />
+          {icon}
         </IconButton>
       </Tooltip>
 
@@ -744,11 +825,9 @@ function DuplicateRowAction({
         onClose={closeDialog}
         onClick={(event) => event.stopPropagation()}
       >
-        <DialogTitle>Duplicate {label}?</DialogTitle>
+        <DialogTitle>{title}</DialogTitle>
         <DialogContent>
-          <DialogContentText>
-            Are you sure you want to duplicate {label}?
-          </DialogContentText>
+          <DialogContentText>{message}</DialogContentText>
         </DialogContent>
         <DialogActions>
           <Button onClick={closeDialog}>No</Button>
@@ -758,6 +837,44 @@ function DuplicateRowAction({
         </DialogActions>
       </Dialog>
     </>
+  );
+}
+
+function DuplicateRowAction({
+  label,
+  onClick,
+}: {
+  label: string;
+  onClick: () => void;
+}) {
+  return (
+    <ConfirmedRowAction
+      label={label}
+      action="Duplicate"
+      icon={<DuplicateIcon fontSize="small" />}
+      title={`Duplicate ${label}?`}
+      message={`Are you sure you want to duplicate ${label}?`}
+      onClick={onClick}
+    />
+  );
+}
+
+function DeleteRowAction({
+  label,
+  onClick,
+}: {
+  label: string;
+  onClick: () => void;
+}) {
+  return (
+    <ConfirmedRowAction
+      label={label}
+      action="Delete"
+      icon={<DeleteIcon fontSize="small" />}
+      title={`Delete ${label}?`}
+      message={`Are you sure you want to delete ${label}?`}
+      onClick={onClick}
+    />
   );
 }
 
@@ -875,14 +992,16 @@ function FunctionAssignmentPoliciesTable({
   emptyLabel,
   onEdit,
   onDuplicate,
+  onDelete,
 }: {
   policies?: FunctionAssignmentPolicy[];
   emptyLabel: string;
   onEdit?: (policy: FunctionAssignmentPolicy) => void;
   onDuplicate?: (policy: FunctionAssignmentPolicy) => void;
+  onDelete?: (policy: FunctionAssignmentPolicy) => void;
 }) {
   const rows = policies ?? [];
-  const hasActions = Boolean(onDuplicate);
+  const hasActions = Boolean(onDuplicate || onDelete);
 
   return (
     <TableContainer>
@@ -911,10 +1030,20 @@ function FunctionAssignmentPoliciesTable({
                 </TableCell>
                 {hasActions && (
                   <TableCell align="right">
-                    <DuplicateRowAction
-                      label={policy.assignmentRole}
-                      onClick={() => onDuplicate?.(policy)}
-                    />
+                    <Stack direction="row" justifyContent="flex-end" spacing={0.5}>
+                      {onDuplicate && (
+                        <DuplicateRowAction
+                          label={policy.assignmentRole}
+                          onClick={() => onDuplicate(policy)}
+                        />
+                      )}
+                      {onDelete && (
+                        <DeleteRowAction
+                          label={policy.assignmentRole}
+                          onClick={() => onDelete(policy)}
+                        />
+                      )}
+                    </Stack>
                   </TableCell>
                 )}
               </TableRow>
@@ -965,14 +1094,16 @@ function RequirementsTable({
   emptyLabel,
   onEdit,
   onDuplicate,
+  onDelete,
 }: {
   requirements?: RequirementDefinition[];
   emptyLabel: string;
   onEdit?: (requirement: RequirementDefinition) => void;
   onDuplicate?: (requirement: RequirementDefinition) => void;
+  onDelete?: (requirement: RequirementDefinition) => void;
 }) {
   const rows = requirements ?? [];
-  const hasActions = Boolean(onDuplicate);
+  const hasActions = Boolean(onDuplicate || onDelete);
 
   return (
     <TableContainer>
@@ -999,10 +1130,20 @@ function RequirementsTable({
                 <TableCell>{requirement.isRequired ? 'Yes' : 'No'}</TableCell>
                 {hasActions && (
                   <TableCell align="right">
-                    <DuplicateRowAction
-                      label={requirement.actionName}
-                      onClick={() => onDuplicate?.(requirement)}
-                    />
+                    <Stack direction="row" justifyContent="flex-end" spacing={0.5}>
+                      {onDuplicate && (
+                        <DuplicateRowAction
+                          label={requirement.actionName}
+                          onClick={() => onDuplicate(requirement)}
+                        />
+                      )}
+                      {onDelete && (
+                        <DeleteRowAction
+                          label={requirement.actionName}
+                          onClick={() => onDelete(requirement)}
+                        />
+                      )}
+                    </Stack>
                   </TableCell>
                 )}
               </TableRow>
@@ -2269,6 +2410,12 @@ function ActionDefinitionsTab({
     openSidePanel();
   }
 
+  function deleteAction(actionName: string) {
+    const actionDefinitions = { ...(policy.actionDefinitions ?? {}) };
+    delete actionDefinitions[actionName];
+    onPolicyChange(new EffectiveLocationPolicy({ ...policy, actionDefinitions }));
+  }
+
   return (
     <Box>
       <SectionHeader
@@ -2286,11 +2433,12 @@ function ActionDefinitionsTab({
               <TableCell>Validity</TableCell>
               <TableCell>Alternate Names</TableCell>
               <TableCell>Usage</TableCell>
+              <TableCell align="right">Actions</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
             {rows.length === 0 ? (
-              <EmptyRow colSpan={6} label="No action definitions configured." />
+              <EmptyRow colSpan={7} label="No action definitions configured." />
             ) : (
               rows.map(([actionName, action]) => (
                 <TableRow
@@ -2307,6 +2455,12 @@ function ActionDefinitionsTab({
                     <ValuesText values={action.alternateNames} />
                   </TableCell>
                   <TableCell>{usage.get(actionName)?.length ?? 0}</TableCell>
+                  <TableCell align="right">
+                    <DeleteRowAction
+                      label={actionName}
+                      onClick={() => deleteAction(actionName)}
+                    />
+                  </TableCell>
                 </TableRow>
               ))
             )}
@@ -2337,13 +2491,15 @@ function CustomFieldsTable({
   fields,
   onEdit,
   onDuplicate,
+  onDelete,
 }: {
   fields?: CustomField[];
   onEdit?: (field: CustomField) => void;
   onDuplicate?: (field: CustomField) => void;
+  onDelete?: (field: CustomField) => void;
 }) {
   const rows = fields ?? [];
-  const hasActions = Boolean(onDuplicate);
+  const hasActions = Boolean(onDuplicate || onDelete);
 
   return (
     <TableContainer>
@@ -2380,10 +2536,20 @@ function CustomFieldsTable({
                 </TableCell>
                 {hasActions && (
                   <TableCell align="right">
-                    <DuplicateRowAction
-                      label={field.name}
-                      onClick={() => onDuplicate?.(field)}
-                    />
+                    <Stack direction="row" justifyContent="flex-end" spacing={0.5}>
+                      {onDuplicate && (
+                        <DuplicateRowAction
+                          label={field.name}
+                          onClick={() => onDuplicate(field)}
+                        />
+                      )}
+                      {onDelete && (
+                        <DeleteRowAction
+                          label={field.name}
+                          onClick={() => onDelete(field)}
+                        />
+                      )}
+                    </Stack>
                   </TableCell>
                 )}
               </TableRow>
@@ -2435,6 +2601,12 @@ function CustomFamilyFieldsTab({
     closeSidePanel();
   }
 
+  function deleteCustomField(field: CustomField) {
+    onPolicyChange(
+      clonePolicyWithCustomFamilyFields(policy, removeCustomField(fields, field.name))
+    );
+  }
+
   return (
     <Box>
       <SectionHeader
@@ -2448,6 +2620,7 @@ function CustomFamilyFieldsTab({
           openSidePanel();
         }}
         onDuplicate={duplicateCustomField}
+        onDelete={deleteCustomField}
       />
 
       <CustomFieldPanel>
@@ -2632,6 +2805,16 @@ function CasePolicyTab({
     });
   }
 
+  function deleteCaseFunctionAssignmentPolicy(assignmentPolicy: FunctionAssignmentPolicy) {
+    updateCasePolicy({
+      functionAssignmentPolicies: removeByName(
+        casePolicy?.functionAssignmentPolicies,
+        assignmentPolicy.assignmentRole,
+        (item) => item.assignmentRole
+      ),
+    });
+  }
+
   function duplicateCaseFunctionPolicy(functionPolicy: FunctionPolicy) {
     const existingFunctionNames =
       casePolicy?.functionPolicies?.map((item) => item.functionName) ?? [];
@@ -2643,6 +2826,16 @@ function CasePolicyTab({
           ...functionPolicy,
           functionName: nextCopyName(functionPolicy.functionName, existingFunctionNames),
         }),
+        (item) => item.functionName
+      ),
+    });
+  }
+
+  function deleteCaseFunctionPolicy(functionPolicy: FunctionPolicy) {
+    updateCasePolicy({
+      functionPolicies: removeByName(
+        casePolicy?.functionPolicies,
+        functionPolicy.functionName,
         (item) => item.functionName
       ),
     });
@@ -2660,6 +2853,16 @@ function CasePolicyTab({
             arrangementPolicies.map((item) => item.arrangementType)
           ),
         }),
+        (item) => item.arrangementType
+      ),
+    });
+  }
+
+  function deleteArrangementPolicy(arrangement: ArrangementPolicy) {
+    updateCasePolicy({
+      arrangementPolicies: removeByName(
+        arrangementPolicies,
+        arrangement.arrangementType,
         (item) => item.arrangementType
       ),
     });
@@ -2690,6 +2893,7 @@ function CasePolicyTab({
                   openFunctionAssignmentPanel();
                 }}
                 onDuplicate={duplicateCaseFunctionAssignmentPolicy}
+                onDelete={deleteCaseFunctionAssignmentPolicy}
               />
             </Stack>
           </AccordionDetails>
@@ -2735,10 +2939,16 @@ function CasePolicyTab({
                           <EligibilitySummary eligibility={functionPolicy.eligibility} />
                         </TableCell>
                         <TableCell align="right">
-                          <DuplicateRowAction
-                            label={functionPolicy.functionName}
-                            onClick={() => duplicateCaseFunctionPolicy(functionPolicy)}
-                          />
+                          <Stack direction="row" justifyContent="flex-end" spacing={0.5}>
+                            <DuplicateRowAction
+                              label={functionPolicy.functionName}
+                              onClick={() => duplicateCaseFunctionPolicy(functionPolicy)}
+                            />
+                            <DeleteRowAction
+                              label={functionPolicy.functionName}
+                              onClick={() => deleteCaseFunctionPolicy(functionPolicy)}
+                            />
+                          </Stack>
                         </TableCell>
                       </TableRow>
                     ))
@@ -2793,6 +3003,10 @@ function CasePolicyTab({
                         <DuplicateRowAction
                           label={arrangement.arrangementType}
                           onClick={() => duplicateArrangementPolicy(arrangement)}
+                        />
+                        <DeleteRowAction
+                          label={arrangement.arrangementType}
+                          onClick={() => deleteArrangementPolicy(arrangement)}
                         />
                       </Stack>
                     </AccordionSummary>
@@ -2951,6 +3165,22 @@ function V1ReferralPolicyTab({
     });
   }
 
+  function deleteReferralIntakeRequirement(requirement: RequirementDefinition) {
+    updateCasePolicy({
+      intakeRequirements: removeByName(
+        casePolicy?.intakeRequirements,
+        requirement.actionName,
+        (item) => item.actionName
+      ),
+    });
+  }
+
+  function deleteReferralCustomField(field: CustomField) {
+    updateCasePolicy({
+      customFields: removeCustomField(casePolicy?.customFields, field.name),
+    });
+  }
+
   function duplicateReferralFunctionAssignmentPolicy(
     assignmentPolicy: FunctionAssignmentPolicy
   ) {
@@ -2967,6 +3197,24 @@ function V1ReferralPolicyTab({
               ...assignmentPolicy,
               assignmentRole: nextCopyName(assignmentPolicy.assignmentRole, existingRoles),
             }),
+            (item) => item.assignmentRole
+          ),
+        })
+      )
+    );
+  }
+
+  function deleteReferralFunctionAssignmentPolicy(
+    assignmentPolicy: FunctionAssignmentPolicy
+  ) {
+    onPolicyChange(
+      clonePolicyWithV1ReferralPolicy(
+        policy,
+        new V1ReferralPolicy({
+          ...policy.v1ReferralPolicy,
+          functionAssignmentPolicies: removeByName(
+            functionAssignmentPolicies,
+            assignmentPolicy.assignmentRole,
             (item) => item.assignmentRole
           ),
         })
@@ -2998,6 +3246,7 @@ function V1ReferralPolicyTab({
                   setWorkingRequirement(requirement);
                   openRequirementPanel();
                 }}
+                onDelete={deleteReferralIntakeRequirement}
               />
             </Stack>
           </AccordionDetails>
@@ -3022,6 +3271,7 @@ function V1ReferralPolicyTab({
                   openCustomFieldPanel();
                 }}
                 onDuplicate={duplicateReferralCustomField}
+                onDelete={deleteReferralCustomField}
               />
             </Stack>
           </AccordionDetails>
@@ -3047,6 +3297,7 @@ function V1ReferralPolicyTab({
                   openFunctionAssignmentPanel();
                 }}
                 onDuplicate={duplicateReferralFunctionAssignmentPolicy}
+                onDelete={deleteReferralFunctionAssignmentPolicy}
               />
             </Stack>
           </AccordionDetails>
@@ -3139,6 +3390,7 @@ function RolePolicyVersionsTable({
   family,
   onEdit,
   onDuplicate,
+  onDelete,
 }: {
   rows: {
     roleName: string;
@@ -3162,8 +3414,15 @@ function RolePolicyVersionsTable({
     requirements: ReactNode;
     policyVersion: VolunteerRolePolicyVersion | VolunteerFamilyRolePolicyVersion;
   }) => void;
+  onDelete?: (row: {
+    roleName: string;
+    version: string;
+    supersededAtUtc?: Date;
+    requirements: ReactNode;
+    policyVersion: VolunteerRolePolicyVersion | VolunteerFamilyRolePolicyVersion;
+  }) => void;
 }) {
-  const hasActions = Boolean(onDuplicate);
+  const hasActions = Boolean(onDuplicate || onDelete);
 
   return (
     <TableContainer>
@@ -3194,10 +3453,20 @@ function RolePolicyVersionsTable({
                 <TableCell>{row.requirements}</TableCell>
                 {hasActions && (
                   <TableCell align="right">
-                    <DuplicateRowAction
-                      label={`${row.roleName} ${row.version}`}
-                      onClick={() => onDuplicate?.(row)}
-                    />
+                    <Stack direction="row" justifyContent="flex-end" spacing={0.5}>
+                      {onDuplicate && (
+                        <DuplicateRowAction
+                          label={`${row.roleName} ${row.version}`}
+                          onClick={() => onDuplicate(row)}
+                        />
+                      )}
+                      {onDelete && (
+                        <DeleteRowAction
+                          label={`${row.roleName} ${row.version}`}
+                          onClick={() => onDelete(row)}
+                        />
+                      )}
+                    </Stack>
                   </TableCell>
                 )}
               </TableRow>
@@ -3312,6 +3581,15 @@ function VolunteerPolicyTab({
     );
   }
 
+  function deleteVolunteerCustomField(field: CustomField) {
+    onPolicyChange(
+      clonePolicyWithVolunteerCustomFields(
+        policy,
+        removeCustomField(customFields, field.name)
+      )
+    );
+  }
+
   function duplicateVolunteerRoleVersion(row: {
     roleName: string;
     version: string;
@@ -3364,6 +3642,34 @@ function VolunteerPolicyTab({
     );
   }
 
+  function deleteVolunteerRoleVersion(row: {
+    roleName: string;
+    version: string;
+  }) {
+    onPolicyChange(
+      clonePolicyWithVolunteerPolicy(
+        policy,
+        removeVolunteerRolePolicyVersion(volunteerPolicy, row.roleName, row.version)
+      )
+    );
+  }
+
+  function deleteVolunteerFamilyRoleVersion(row: {
+    roleName: string;
+    version: string;
+  }) {
+    onPolicyChange(
+      clonePolicyWithVolunteerPolicy(
+        policy,
+        removeVolunteerFamilyRolePolicyVersion(
+          volunteerPolicy,
+          row.roleName,
+          row.version
+        )
+      )
+    );
+  }
+
   return (
     <Box>
       <SectionHeader title="Volunteer Policies" />
@@ -3391,6 +3697,7 @@ function VolunteerPolicyTab({
                   openVolunteerRolePanel();
                 }}
                 onDuplicate={duplicateVolunteerRoleVersion}
+                onDelete={deleteVolunteerRoleVersion}
               />
             </Stack>
           </AccordionDetails>
@@ -3419,6 +3726,7 @@ function VolunteerPolicyTab({
                   openVolunteerFamilyRolePanel();
                 }}
                 onDuplicate={duplicateVolunteerFamilyRoleVersion}
+                onDelete={deleteVolunteerFamilyRoleVersion}
               />
             </Stack>
           </AccordionDetails>
@@ -3443,6 +3751,7 @@ function VolunteerPolicyTab({
                   openSidePanel();
                 }}
                 onDuplicate={duplicateVolunteerCustomField}
+                onDelete={deleteVolunteerCustomField}
               />
             </Stack>
           </AccordionDetails>
