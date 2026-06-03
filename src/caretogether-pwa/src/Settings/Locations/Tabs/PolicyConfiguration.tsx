@@ -6,6 +6,7 @@ import {
   Accordion,
   AccordionDetails,
   AccordionSummary,
+  Autocomplete,
   Box,
   Button,
   FormControlLabel,
@@ -140,8 +141,8 @@ const enumLabelOverrides = new Map<object, Record<string, string>>([
     CustomFieldType,
     {
       String: 'Text',
-      Boolean: 'Yes or No',
-      StringArray: 'Text List',
+      Boolean: 'Yes/No',
+      StringArray: 'Suggestions',
     },
   ],
   [
@@ -1229,28 +1230,6 @@ function ActionDefinitionSidePanel({
         </>
       )}
 
-      <Grid item xs={12} sm={6}>
-        <TextField
-          fullWidth
-          label="Who Can View"
-          value={draft.canView}
-          onChange={(event) =>
-            setDraft((current) => ({ ...current, canView: event.target.value }))
-          }
-        />
-      </Grid>
-
-      <Grid item xs={12} sm={6}>
-        <TextField
-          fullWidth
-          label="Who Can Edit"
-          value={draft.canEdit}
-          onChange={(event) =>
-            setDraft((current) => ({ ...current, canEdit: event.target.value }))
-          }
-        />
-      </Grid>
-
       <Grid item xs={12}>
         <TextField
           fullWidth
@@ -1476,30 +1455,29 @@ function RequirementSidePanel({
       </Grid>
 
       <Grid item xs={12}>
-        <TextField
+        <Autocomplete
           fullWidth
-          required
-          select
-          label="Action Name"
-          value={draft.actionName}
-          error={duplicateName || unknownActionName}
-          helperText={
-            duplicateName
-              ? 'Action name is already referenced in this list.'
-              : unknownActionName
-                ? 'Action name must exist in Action Definitions.'
-                : undefined
+          options={actionNames}
+          value={draft.actionName || null}
+          onChange={(_, value) =>
+            setDraft((current) => ({ ...current, actionName: value ?? '' }))
           }
-          onChange={(event) =>
-            setDraft((current) => ({ ...current, actionName: event.target.value }))
-          }
-        >
-          {actionNames.map((actionName) => (
-            <MenuItem key={actionName} value={actionName}>
-              {actionName}
-            </MenuItem>
-          ))}
-        </TextField>
+          renderInput={(params) => (
+            <TextField
+              {...params}
+              required
+              label="Action Name"
+              error={duplicateName || unknownActionName}
+              helperText={
+                duplicateName
+                  ? 'Action name is already referenced in this list.'
+                  : unknownActionName
+                    ? 'Action name must exist in Action Definitions.'
+                    : undefined
+              }
+            />
+          )}
+        />
       </Grid>
 
       <Grid item xs={12}>
@@ -2562,24 +2540,11 @@ function CasePolicyTab({
   onPolicyChange: (policy: EffectiveLocationPolicy) => void;
 }) {
   const casePolicy = policy.referralPolicy;
-  const intakeRequirements =
-    casePolicy?.intakeRequirements ?? casePolicy?.intakeRequirements_PRE_MIGRATION;
   const arrangementPolicies = casePolicy?.arrangementPolicies ?? [];
-  const actionNames = Object.keys(policy.actionDefinitions ?? {});
   const volunteerRoles = Object.keys(policy.volunteerPolicy?.volunteerRoles ?? {});
   const volunteerFamilyRoles = Object.keys(
     policy.volunteerPolicy?.volunteerFamilyRoles ?? {}
   );
-  const {
-    SidePanel: RequirementPanel,
-    openSidePanel: openRequirementPanel,
-    closeSidePanel: closeRequirementPanel,
-  } = useSidePanel();
-  const {
-    SidePanel: CustomFieldPanel,
-    openSidePanel: openCustomFieldPanel,
-    closeSidePanel: closeCustomFieldPanel,
-  } = useSidePanel();
   const {
     SidePanel: FunctionAssignmentPanel,
     openSidePanel: openFunctionAssignmentPanel,
@@ -2595,10 +2560,6 @@ function CasePolicyTab({
     openSidePanel: openArrangementPolicyPanel,
     closeSidePanel: closeArrangementPolicyPanel,
   } = useSidePanel();
-  const [workingRequirement, setWorkingRequirement] =
-    useState<RequirementDefinition | undefined>();
-  const [workingCustomField, setWorkingCustomField] =
-    useState<CustomField | undefined>();
   const [workingFunctionAssignmentPolicy, setWorkingFunctionAssignmentPolicy] =
     useState<FunctionAssignmentPolicy | undefined>();
   const [workingFunctionPolicy, setWorkingFunctionPolicy] =
@@ -2616,22 +2577,6 @@ function CasePolicyTab({
         })
       )
     );
-  }
-
-  function duplicateCaseCustomField(field: CustomField) {
-    updateCasePolicy({
-      customFields: upsertCustomField(
-        casePolicy?.customFields,
-        undefined,
-        new CustomField({
-          ...field,
-          name: nextCopyName(
-            field.name,
-            casePolicy?.customFields?.map((item) => item.name) ?? []
-          ),
-        })
-      ),
-    });
   }
 
   function duplicateCaseFunctionAssignmentPolicy(assignmentPolicy: FunctionAssignmentPolicy) {
@@ -2689,54 +2634,6 @@ function CasePolicyTab({
 
       <Stack spacing={2}>
         <Accordion defaultExpanded variant="outlined">
-          <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-            <Typography>Intake Requirements</Typography>
-          </AccordionSummary>
-          <AccordionDetails>
-            <Stack spacing={2}>
-              <EditableActions
-                onAdd={() => {
-                  setWorkingRequirement(undefined);
-                  openRequirementPanel();
-                }}
-              />
-              <RequirementsTable
-                requirements={intakeRequirements}
-                emptyLabel="No intake requirements configured."
-                onEdit={(requirement) => {
-                  setWorkingRequirement(requirement);
-                  openRequirementPanel();
-                }}
-              />
-            </Stack>
-          </AccordionDetails>
-        </Accordion>
-
-        <Accordion variant="outlined">
-          <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-            <Typography>Custom Fields</Typography>
-          </AccordionSummary>
-          <AccordionDetails>
-            <Stack spacing={2}>
-              <EditableActions
-                onAdd={() => {
-                  setWorkingCustomField(undefined);
-                  openCustomFieldPanel();
-                }}
-              />
-              <CustomFieldsTable
-                fields={casePolicy?.customFields}
-                onEdit={(field) => {
-                  setWorkingCustomField(field);
-                  openCustomFieldPanel();
-                }}
-                onDuplicate={duplicateCaseCustomField}
-              />
-            </Stack>
-          </AccordionDetails>
-        </Accordion>
-
-        <Accordion variant="outlined">
           <AccordionSummary expandIcon={<ExpandMoreIcon />}>
             <Typography>Function Assignment Policies</Typography>
           </AccordionSummary>
@@ -2873,48 +2770,6 @@ function CasePolicyTab({
         </Accordion>
       </Stack>
 
-      <RequirementPanel>
-        <RequirementSidePanel
-          key={workingRequirement?.actionName ?? 'new-case-intake-requirement'}
-          title={
-            workingRequirement
-              ? 'Edit Case Policies Intake Requirement'
-              : 'Add Case Policies Intake Requirement'
-          }
-          requirement={workingRequirement}
-          actionNames={actionNames}
-          existingActionNames={intakeRequirements?.map((requirement) => requirement.actionName) ?? []}
-          onClose={closeRequirementPanel}
-          onSave={(previousName, requirement) => {
-            updateCasePolicy({
-              intakeRequirements: upsertByName(
-                casePolicy?.intakeRequirements ?? [],
-                previousName,
-                requirement,
-                (item) => item.actionName
-              ),
-            });
-            closeRequirementPanel();
-          }}
-        />
-      </RequirementPanel>
-
-      <CustomFieldPanel>
-        <CustomFieldSidePanel
-          key={workingCustomField?.name ?? 'new-case-custom-field'}
-          title={workingCustomField ? 'Edit Case Policies Custom Field' : 'Add Case Policies Custom Field'}
-          field={workingCustomField}
-          existingNames={casePolicy?.customFields?.map((field) => field.name) ?? []}
-          onClose={closeCustomFieldPanel}
-          onSave={(previousName, field) => {
-            updateCasePolicy({
-              customFields: upsertCustomField(casePolicy?.customFields, previousName, field),
-            });
-            closeCustomFieldPanel();
-          }}
-        />
-      </CustomFieldPanel>
-
       <FunctionAssignmentPanel>
         <FunctionAssignmentPolicySidePanel
           key={workingFunctionAssignmentPolicy?.assignmentRole ?? 'new-case-assignment-policy'}
@@ -2999,19 +2854,65 @@ function V1ReferralPolicyTab({
   locationRoles: string[];
   onPolicyChange: (policy: EffectiveLocationPolicy) => void;
 }) {
+  const casePolicy = policy.referralPolicy;
+  const intakeRequirements =
+    casePolicy?.intakeRequirements ?? casePolicy?.intakeRequirements_PRE_MIGRATION;
+  const actionNames = Object.keys(policy.actionDefinitions ?? {});
   const volunteerRoles = Object.keys(policy.volunteerPolicy?.volunteerRoles ?? {});
   const volunteerFamilyRoles = Object.keys(
     policy.volunteerPolicy?.volunteerFamilyRoles ?? {}
   );
   const {
-    SidePanel: FunctionAssignmentPanel,
-    openSidePanel,
-    closeSidePanel,
+    SidePanel: RequirementPanel,
+    openSidePanel: openRequirementPanel,
+    closeSidePanel: closeRequirementPanel,
   } = useSidePanel();
+  const {
+    SidePanel: CustomFieldPanel,
+    openSidePanel: openCustomFieldPanel,
+    closeSidePanel: closeCustomFieldPanel,
+  } = useSidePanel();
+  const {
+    SidePanel: FunctionAssignmentPanel,
+    openSidePanel: openFunctionAssignmentPanel,
+    closeSidePanel: closeFunctionAssignmentPanel,
+  } = useSidePanel();
+  const [workingRequirement, setWorkingRequirement] =
+    useState<RequirementDefinition | undefined>();
+  const [workingCustomField, setWorkingCustomField] =
+    useState<CustomField | undefined>();
   const [workingFunctionAssignmentPolicy, setWorkingFunctionAssignmentPolicy] =
     useState<FunctionAssignmentPolicy | undefined>();
   const functionAssignmentPolicies =
     policy.v1ReferralPolicy?.functionAssignmentPolicies ?? [];
+
+  function updateCasePolicy(update: Partial<V1CasePolicy>) {
+    onPolicyChange(
+      clonePolicyWithCasePolicy(
+        policy,
+        new V1CasePolicy({
+          ...casePolicy,
+          ...update,
+        })
+      )
+    );
+  }
+
+  function duplicateReferralCustomField(field: CustomField) {
+    updateCasePolicy({
+      customFields: upsertCustomField(
+        casePolicy?.customFields,
+        undefined,
+        new CustomField({
+          ...field,
+          name: nextCopyName(
+            field.name,
+            casePolicy?.customFields?.map((item) => item.name) ?? []
+          ),
+        })
+      ),
+    });
+  }
 
   function duplicateReferralFunctionAssignmentPolicy(
     assignmentPolicy: FunctionAssignmentPolicy
@@ -3038,26 +2939,124 @@ function V1ReferralPolicyTab({
 
   return (
     <Box>
-      <SectionHeader
-        title="Referral Policies"
-        actions={
-          <EditableActions
-            onAdd={() => {
-              setWorkingFunctionAssignmentPolicy(undefined);
-              openSidePanel();
-            }}
-          />
-        }
-      />
-      <FunctionAssignmentPoliciesTable
-        policies={functionAssignmentPolicies}
-        emptyLabel="No referral function assignment policies configured."
-        onEdit={(assignmentPolicy) => {
-          setWorkingFunctionAssignmentPolicy(assignmentPolicy);
-          openSidePanel();
-        }}
-        onDuplicate={duplicateReferralFunctionAssignmentPolicy}
-      />
+      <SectionHeader title="Referral Policies" />
+
+      <Stack spacing={2}>
+        <Accordion defaultExpanded variant="outlined">
+          <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+            <Typography>Intake Requirements</Typography>
+          </AccordionSummary>
+          <AccordionDetails>
+            <Stack spacing={2}>
+              <EditableActions
+                onAdd={() => {
+                  setWorkingRequirement(undefined);
+                  openRequirementPanel();
+                }}
+              />
+              <RequirementsTable
+                requirements={intakeRequirements}
+                emptyLabel="No intake requirements configured."
+                onEdit={(requirement) => {
+                  setWorkingRequirement(requirement);
+                  openRequirementPanel();
+                }}
+              />
+            </Stack>
+          </AccordionDetails>
+        </Accordion>
+
+        <Accordion variant="outlined">
+          <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+            <Typography>Custom Fields</Typography>
+          </AccordionSummary>
+          <AccordionDetails>
+            <Stack spacing={2}>
+              <EditableActions
+                onAdd={() => {
+                  setWorkingCustomField(undefined);
+                  openCustomFieldPanel();
+                }}
+              />
+              <CustomFieldsTable
+                fields={casePolicy?.customFields}
+                onEdit={(field) => {
+                  setWorkingCustomField(field);
+                  openCustomFieldPanel();
+                }}
+                onDuplicate={duplicateReferralCustomField}
+              />
+            </Stack>
+          </AccordionDetails>
+        </Accordion>
+
+        <Accordion variant="outlined">
+          <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+            <Typography>Function Assignment Policies</Typography>
+          </AccordionSummary>
+          <AccordionDetails>
+            <Stack spacing={2}>
+              <EditableActions
+                onAdd={() => {
+                  setWorkingFunctionAssignmentPolicy(undefined);
+                  openFunctionAssignmentPanel();
+                }}
+              />
+              <FunctionAssignmentPoliciesTable
+                policies={functionAssignmentPolicies}
+                emptyLabel="No referral function assignment policies configured."
+                onEdit={(assignmentPolicy) => {
+                  setWorkingFunctionAssignmentPolicy(assignmentPolicy);
+                  openFunctionAssignmentPanel();
+                }}
+                onDuplicate={duplicateReferralFunctionAssignmentPolicy}
+              />
+            </Stack>
+          </AccordionDetails>
+        </Accordion>
+      </Stack>
+
+      <RequirementPanel>
+        <RequirementSidePanel
+          key={workingRequirement?.actionName ?? 'new-referral-intake-requirement'}
+          title={
+            workingRequirement
+              ? 'Edit Referral Policies Intake Requirement'
+              : 'Add Referral Policies Intake Requirement'
+          }
+          requirement={workingRequirement}
+          actionNames={actionNames}
+          existingActionNames={intakeRequirements?.map((requirement) => requirement.actionName) ?? []}
+          onClose={closeRequirementPanel}
+          onSave={(previousName, requirement) => {
+            updateCasePolicy({
+              intakeRequirements: upsertByName(
+                casePolicy?.intakeRequirements ?? [],
+                previousName,
+                requirement,
+                (item) => item.actionName
+              ),
+            });
+            closeRequirementPanel();
+          }}
+        />
+      </RequirementPanel>
+
+      <CustomFieldPanel>
+        <CustomFieldSidePanel
+          key={workingCustomField?.name ?? 'new-referral-custom-field'}
+          title={workingCustomField ? 'Edit Referral Policies Custom Field' : 'Add Referral Policies Custom Field'}
+          field={workingCustomField}
+          existingNames={casePolicy?.customFields?.map((field) => field.name) ?? []}
+          onClose={closeCustomFieldPanel}
+          onSave={(previousName, field) => {
+            updateCasePolicy({
+              customFields: upsertCustomField(casePolicy?.customFields, previousName, field),
+            });
+            closeCustomFieldPanel();
+          }}
+        />
+      </CustomFieldPanel>
 
       <FunctionAssignmentPanel>
         <FunctionAssignmentPolicySidePanel
@@ -3074,7 +3073,7 @@ function V1ReferralPolicyTab({
           locationRoles={locationRoles}
           volunteerRoles={volunteerRoles}
           volunteerFamilyRoles={volunteerFamilyRoles}
-          onClose={closeSidePanel}
+          onClose={closeFunctionAssignmentPanel}
           onSave={(previousRole, assignmentPolicy) => {
             onPolicyChange(
               clonePolicyWithV1ReferralPolicy(
@@ -3090,7 +3089,7 @@ function V1ReferralPolicyTab({
                 })
               )
             );
-            closeSidePanel();
+            closeFunctionAssignmentPanel();
           }}
         />
       </FunctionAssignmentPanel>
