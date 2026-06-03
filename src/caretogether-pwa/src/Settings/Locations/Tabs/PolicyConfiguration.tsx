@@ -90,7 +90,7 @@ type ActionDefinitionDraft = {
   validityUnit: ValidityUnit;
   canView: string;
   canEdit: string;
-  alternateNames: string;
+  alternateNames: string[];
 };
 
 type ValidityUnit = 'days' | 'months' | 'years';
@@ -226,6 +226,16 @@ function splitCommaSeparated(value: string) {
     .filter(Boolean);
 }
 
+function normalizeStringList(values: string[]) {
+  return Array.from(
+    new Set(
+      values
+        .map((value) => value.trim())
+        .filter(Boolean)
+    )
+  );
+}
+
 const validityUnitDayMultipliers: Record<ValidityUnit, number> = {
   days: 1,
   months: 30,
@@ -354,7 +364,7 @@ function actionToDraft(
     validityUnit: validity.validityUnit,
     canView: action?.canView ?? '',
     canEdit: action?.canEdit ?? '',
-    alternateNames: action?.alternateNames?.join(', ') ?? '',
+    alternateNames: action?.alternateNames ?? [],
   };
 }
 
@@ -1316,7 +1326,7 @@ function ActionDefinitionSidePanel({
     trimmedName.length > 0 &&
     trimmedName !== actionName &&
     existingActionNames.includes(trimmedName);
-  const alternateNames = splitCommaSeparated(draft.alternateNames);
+  const alternateNames = normalizeStringList(draft.alternateNames);
   const validityAmountIsValid =
     !draft.validityEnabled ||
     typeof parseValidityAmount(draft.validityAmount) !== 'undefined';
@@ -1387,7 +1397,7 @@ function ActionDefinitionSidePanel({
         <TextField
           fullWidth
           select
-          label="Document Link"
+          label="Document"
           value={draft.documentLink}
           onChange={(event) =>
             setDraft((current) => ({
@@ -1410,7 +1420,7 @@ function ActionDefinitionSidePanel({
         <TextField
           fullWidth
           select
-          label="Note Entry"
+          label="Note"
           value={draft.noteEntry}
           onChange={(event) =>
             setDraft((current) => ({
@@ -1446,7 +1456,7 @@ function ActionDefinitionSidePanel({
       <Grid item xs={12}>
         <TextField
           fullWidth
-          label="Info Link"
+          label="URL"
           value={draft.infoLink}
           onChange={(event) =>
             setDraft((current) => ({
@@ -1520,17 +1530,25 @@ function ActionDefinitionSidePanel({
       )}
 
       <Grid item xs={12}>
-        <TextField
+        <Autocomplete
           fullWidth
-          label="Alternate Names"
+          multiple
+          freeSolo
+          options={existingActionNames}
           value={draft.alternateNames}
-          helperText="Comma-separated aliases."
-          onChange={(event) =>
+          onChange={(_, values) =>
             setDraft((current) => ({
               ...current,
-              alternateNames: event.target.value,
+              alternateNames: normalizeStringList(values),
             }))
           }
+          renderInput={(params) => (
+            <TextField
+              {...params}
+              label="Alternate Names"
+              helperText="Type a name and press Enter to add it."
+            />
+          )}
         />
       </Grid>
 
@@ -2620,8 +2638,10 @@ function ActionDefinitionsTab({
           <TableHead>
             <TableRow>
               <TableCell>Action Name</TableCell>
-              <TableCell>Document Link</TableCell>
-              <TableCell>Note Entry</TableCell>
+              <TableCell>Document</TableCell>
+              <TableCell>Note</TableCell>
+              <TableCell>Instructions</TableCell>
+              <TableCell>URL</TableCell>
               <TableCell>Validity</TableCell>
               <TableCell>Alternate Names</TableCell>
               <TableCell>Usage</TableCell>
@@ -2630,7 +2650,7 @@ function ActionDefinitionsTab({
           </TableHead>
           <TableBody>
             {rows.length === 0 ? (
-              <EmptyRow colSpan={7} label="No action definitions configured." />
+              <EmptyRow colSpan={9} label="No action definitions configured." />
             ) : (
               rows.map(([actionName, action]) => (
                 <TableRow
@@ -2646,6 +2666,8 @@ function ActionDefinitionsTab({
                   <TableCell>
                     {enumName(NoteEntryRequirement, action.noteEntry)}
                   </TableCell>
+                  <TableCell>{action.instructions ?? '-'}</TableCell>
+                  <TableCell>{action.infoLink ?? '-'}</TableCell>
                   <TableCell>{formatValidity(action.validity)}</TableCell>
                   <TableCell>
                     <ValuesText values={action.alternateNames} />
