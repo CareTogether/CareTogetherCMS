@@ -76,14 +76,11 @@ export function LocationEdit() {
   const policy = useLoadable(policyData);
   const [policyDraft, setPolicyDraft] =
     useState<EffectiveLocationPolicy | null>(null);
-  const [savedPolicy, setSavedPolicy] =
-    useState<EffectiveLocationPolicy | null>(null);
   const [policySaveErrors, setPolicySaveErrors] = useState<string[]>([]);
 
   useEffect(() => {
     if (!policy) return;
     setPolicyDraft(policy);
-    setSavedPolicy(policy);
   }, [policy]);
 
   const tabs = useMemo(
@@ -172,18 +169,8 @@ export function LocationEdit() {
     'volunteerPolicy',
   ] as const;
   const isPolicyTabActive = policyTabIds.some((tabId) => tabId === activeTab);
-  const policyDirty =
-    policyDraft !== null &&
-    savedPolicy !== null &&
-    JSON.stringify(policyDraft) !== JSON.stringify(savedPolicy);
-
-  function cancelPolicyChanges() {
-    setPolicyDraft(savedPolicy);
-    setPolicySaveErrors([]);
-  }
-
-  function savePolicyChanges() {
-    if (!policyDraft || !targetLocationId) return;
+  function savePolicy(nextPolicy: EffectiveLocationPolicy) {
+    if (!targetLocationId) return;
 
     withBackdrop(async () => {
       try {
@@ -191,20 +178,14 @@ export function LocationEdit() {
         const saved = await api.configuration.putEffectiveLocationPolicy(
           organizationId,
           targetLocationId,
-          policyDraft
+          nextPolicy
         );
         setPolicyDraft(saved);
-        setSavedPolicy(saved);
         refreshPolicy();
       } catch (error) {
         setPolicySaveErrors(getPolicySaveErrors(error));
       }
     });
-  }
-
-  function setPolicyDraftAndClearSaveErrors(nextPolicy: EffectiveLocationPolicy) {
-    setPolicyDraft(nextPolicy);
-    setPolicySaveErrors([]);
   }
 
   if (!dataLoaded) {
@@ -312,6 +293,18 @@ export function LocationEdit() {
         </Box>
 
         <Box flex={1} paddingLeft={4} paddingTop={2} sx={{ overflow: 'auto' }}>
+          {isPolicyTabActive && policySaveErrors.length > 0 && (
+            <Alert severity="error" sx={{ mb: 2 }}>
+              <Stack spacing={0.5}>
+                {policySaveErrors.map((error) => (
+                  <Typography key={error} variant="body2">
+                    {error}
+                  </Typography>
+                ))}
+              </Stack>
+            </Alert>
+          )}
+
           {/* Render the active tab component */}
           {activeTab === 'basic' && (
             <Box key="basic">
@@ -332,9 +325,8 @@ export function LocationEdit() {
             <Box key="actionDefinitions">
               <PolicyConfiguration
                 policy={policyDraft}
-                locationConfiguration={location}
                 locationRoles={locationRoles}
-                onPolicyChange={setPolicyDraftAndClearSaveErrors}
+                onPolicyChange={savePolicy}
                 section="actionDefinitions"
               />
             </Box>
@@ -344,9 +336,8 @@ export function LocationEdit() {
             <Box key="customFamilyFields">
               <PolicyConfiguration
                 policy={policyDraft}
-                locationConfiguration={location}
                 locationRoles={locationRoles}
-                onPolicyChange={setPolicyDraftAndClearSaveErrors}
+                onPolicyChange={savePolicy}
                 section="customFamilyFields"
               />
             </Box>
@@ -356,9 +347,8 @@ export function LocationEdit() {
             <Box key="casePolicy">
               <PolicyConfiguration
                 policy={policyDraft}
-                locationConfiguration={location}
                 locationRoles={locationRoles}
-                onPolicyChange={setPolicyDraftAndClearSaveErrors}
+                onPolicyChange={savePolicy}
                 section="casePolicy"
               />
             </Box>
@@ -368,9 +358,8 @@ export function LocationEdit() {
             <Box key="v1ReferralPolicy">
               <PolicyConfiguration
                 policy={policyDraft}
-                locationConfiguration={location}
                 locationRoles={locationRoles}
-                onPolicyChange={setPolicyDraftAndClearSaveErrors}
+                onPolicyChange={savePolicy}
                 section="v1ReferralPolicy"
               />
             </Box>
@@ -380,59 +369,14 @@ export function LocationEdit() {
             <Box key="volunteerPolicy">
               <PolicyConfiguration
                 policy={policyDraft}
-                locationConfiguration={location}
                 locationRoles={locationRoles}
-                onPolicyChange={setPolicyDraftAndClearSaveErrors}
+                onPolicyChange={savePolicy}
                 section="volunteerPolicy"
               />
             </Box>
           )}
         </Box>
       </Box>
-
-      {isPolicyTabActive && (
-        <Box paddingTop={2} borderTop={1} borderColor="divider">
-          <Stack spacing={1.5}>
-            {policySaveErrors.length > 0 && (
-              <Alert severity="error">
-                <Stack spacing={0.5}>
-                  {policySaveErrors.map((error) => (
-                    <Typography key={error} variant="body2">
-                      {error}
-                    </Typography>
-                  ))}
-                </Stack>
-              </Alert>
-            )}
-
-            <Stack direction="row" justifyContent="flex-end" alignItems="center">
-              {policyDirty && (
-                <Typography sx={{ fontStyle: 'italic' }} mr={2}>
-                  There are pending policy changes to be saved
-                </Typography>
-              )}
-
-              <Button
-                color="secondary"
-                variant="contained"
-                sx={{ marginRight: 2 }}
-                disabled={!policyDirty}
-                onClick={cancelPolicyChanges}
-              >
-                Cancel
-              </Button>
-              <Button
-                color="primary"
-                variant="contained"
-                disabled={!policyDirty}
-                onClick={savePolicyChanges}
-              >
-                Save
-              </Button>
-            </Stack>
-          </Stack>
-        </Box>
-      )}
     </Stack>
   );
 }

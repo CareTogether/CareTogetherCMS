@@ -1,7 +1,6 @@
 import {
   Add as AddIcon,
   ControlPointDuplicate as DuplicateIcon,
-  Edit as EditIcon,
 } from '@mui/icons-material';
 import {
   Accordion,
@@ -9,10 +8,9 @@ import {
   AccordionSummary,
   Box,
   Button,
-  Chip,
-  Divider,
   FormControlLabel,
   Grid,
+  IconButton,
   MenuItem,
   Switch,
   Stack,
@@ -23,6 +21,7 @@ import {
   TableHead,
   TableRow,
   TextField,
+  Tooltip,
   Typography,
 } from '@mui/material';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
@@ -63,7 +62,6 @@ import { useSidePanel } from '../../../Hooks/useSidePanel';
 
 type PolicyConfigurationProps = {
   policy: EffectiveLocationPolicy;
-  locationConfiguration: LocationConfiguration;
   locationRoles: string[];
   onPolicyChange: (policy: EffectiveLocationPolicy) => void;
   section:
@@ -81,12 +79,14 @@ type ActionDefinitionDraft = {
   instructions: string;
   infoLink: string;
   validityEnabled: boolean;
-  validityAmount: number;
-  validityUnit: 'days' | 'hours' | 'minutes';
+  validityAmount: string;
+  validityUnit: ValidityUnit;
   canView: string;
   canEdit: string;
   alternateNames: string;
 };
+
+type ValidityUnit = 'days' | 'months' | 'years';
 
 type CustomFieldDraft = {
   name: string;
@@ -130,24 +130,63 @@ type VolunteerRolePolicyVersionDraft = {
   requirements: string;
 };
 
-type SmsSourcePhoneNumbersProps = {
-  locationConfiguration: LocationConfiguration;
-};
-
 type NamedPolicyReference = {
   area: string;
   owner: string;
 };
 
+const enumLabelOverrides = new Map<object, Record<string, string>>([
+  [
+    CustomFieldType,
+    {
+      String: 'Text',
+      Boolean: 'Yes or No',
+      StringArray: 'Text List',
+    },
+  ],
+  [
+    CustomFieldValidation,
+    {
+      SuggestOnly: 'Suggestions Only',
+    },
+  ],
+  [
+    ChildInvolvement,
+    {
+      ChildHousing: 'Child Housing',
+      DaytimeChildCareOnly: 'Daytime Child Care Only',
+      NoChildInvolvement: 'No Child Involvement',
+      ChildOrAdultInvolvement: 'Child or Adult Involvement',
+    },
+  ],
+  [
+    VolunteerFamilyRequirementScope,
+    {
+      OncePerFamily: 'Once per Family',
+      AllAdultsInTheFamily: 'All Adults in the Family',
+      AllParticipatingAdultsInTheFamily: 'All Participating Adults in the Family',
+    },
+  ],
+]);
+
+function humanizeIdentifier(value: string) {
+  return value
+    .replace(/([a-z0-9])([A-Z])/g, '$1 $2')
+    .replace(/([A-Z]+)([A-Z][a-z])/g, '$1 $2');
+}
+
 function enumName<T extends object>(enumType: T, value: unknown) {
   if (value === null || typeof value === 'undefined') return '-';
-  return String((enumType as Record<string, string | number>)[String(value)] ?? value);
+  const rawName = String(
+    (enumType as Record<string, string | number>)[String(value)] ?? value
+  );
+  return enumLabelOverrides.get(enumType)?.[rawName] ?? humanizeIdentifier(rawName);
 }
 
 function enumOptions<T extends object>(enumType: T) {
   return Object.entries(enumType)
     .filter(([, value]) => typeof value === 'number')
-    .map(([label, value]) => ({ label, value: value as number }));
+    .map(([, value]) => ({ label: enumName(enumType, value), value: value as number }));
 }
 
 function formatDate(value?: Date) {
@@ -170,57 +209,103 @@ function splitCommaSeparated(value: string) {
     .filter(Boolean);
 }
 
+const validityUnitDayMultipliers: Record<ValidityUnit, number> = {
+  days: 1,
+  months: 30,
+  years: 365,
+};
+
+function validityUnitLabel(unit: ValidityUnit) {
+  if (unit === 'days') return 'day';
+  if (unit === 'months') return 'month';
+  return 'year';
+}
+
+function normalizeValidityDays(days: number): Pick<
+  ActionDefinitionDraft,
+  'validityAmount' | 'validityUnit'
+> {
+  if (days >= 365 && days % 365 === 0) {
+    return { validityAmount: String(days / 365), validityUnit: 'years' };
+  }
+
+  if (days >= 30 && days % 30 === 0) {
+    return { validityAmount: String(days / 30), validityUnit: 'months' };
+  }
+
+  return { validityAmount: String(days), validityUnit: 'days' };
+}
+
 function parseValidity(value?: string): Pick<
   ActionDefinitionDraft,
   'validityEnabled' | 'validityAmount' | 'validityUnit'
 > {
   if (!value) {
-    return { validityEnabled: false, validityAmount: 30, validityUnit: 'days' };
+    return { validityEnabled: false, validityAmount: '30', validityUnit: 'days' };
   }
 
   const dayMatch = value.match(/^(\d+)\./);
   if (dayMatch) {
     return {
       validityEnabled: true,
-      validityAmount: Number(dayMatch[1]),
-      validityUnit: 'days',
+      ...normalizeValidityDays(Number(dayMatch[1])),
     };
   }
 
   const timeMatch = value.match(/^(\d+):(\d+):/);
   if (!timeMatch) {
-    return { validityEnabled: true, validityAmount: 30, validityUnit: 'days' };
-  }
-
-  const hours = Number(timeMatch[1]);
-  const minutes = Number(timeMatch[2]);
-
-  if (hours > 0) {
-    return {
-      validityEnabled: true,
-      validityAmount: hours,
-      validityUnit: 'hours',
-    };
+    return { validityEnabled: true, validityAmount: '30', validityUnit: 'days' };
   }
 
   return {
     validityEnabled: true,
-    validityAmount: Math.max(minutes, 1),
-    validityUnit: 'minutes',
+    validityAmount: '1',
+    validityUnit: 'days',
   };
+}
+
+function parseValidityAmount(value: string) {
+  const amount = Number(value);
+  if (!Number.isFinite(amount) || amount <= 0 || !Number.isInteger(amount)) {
+    return undefined;
+  }
+
+  return amount;
 }
 
 function toTimeSpanString(
   enabled: boolean,
-  amount: number,
+  amount: string,
   unit: ActionDefinitionDraft['validityUnit']
 ) {
   if (!enabled) return undefined;
-  const safeAmount = Math.max(Math.floor(amount), 1);
+  const safeAmount = parseValidityAmount(amount);
+  if (!safeAmount) return undefined;
 
-  if (unit === 'days') return `${safeAmount}.00:00:00`;
-  if (unit === 'hours') return `${safeAmount}:00:00`;
-  return `00:${String(safeAmount).padStart(2, '0')}:00`;
+  const days = safeAmount * validityUnitDayMultipliers[unit];
+
+  return `${days}.00:00:00`;
+}
+
+function formatValidity(value?: string) {
+  if (!value) return '-';
+
+  const dayMatch = value.match(/^(\d+)\./);
+  if (dayMatch) {
+    const { validityAmount, validityUnit } = normalizeValidityDays(
+      Number(dayMatch[1])
+    );
+    return summarizeCount(Number(validityAmount), validityUnitLabel(validityUnit));
+  }
+
+  const timeMatch = value.match(/^(\d+):(\d+):/);
+  if (!timeMatch) return value;
+
+  const hours = Number(timeMatch[1]);
+  const minutes = Number(timeMatch[2]);
+
+  if (hours > 0) return summarizeCount(hours, 'hour');
+  return summarizeCount(Math.max(minutes, 1), 'minute');
 }
 
 function actionToDraft(actionName = '', action?: ActionRequirement): ActionDefinitionDraft {
@@ -407,6 +492,18 @@ function upsertByName<T>(
   ];
 }
 
+function nextCopyName(baseName: string, existingNames: string[]) {
+  const copyName = `${baseName} Copy`;
+  if (!existingNames.includes(copyName)) return copyName;
+
+  let copyNumber = 2;
+  while (existingNames.includes(`${copyName} ${copyNumber}`)) {
+    copyNumber += 1;
+  }
+
+  return `${copyName} ${copyNumber}`;
+}
+
 function parseRequirementStage(value: string): RequirementStage {
   if (value in RequirementStage) {
     return RequirementStage[value as keyof typeof RequirementStage] as RequirementStage;
@@ -548,53 +645,20 @@ function upsertVolunteerFamilyRolePolicyVersion(
   });
 }
 
-function Chips({ values }: { values?: string[] }) {
-  if (!values || values.length === 0) return <Typography variant="body2">-</Typography>;
-
-  return (
-    <Stack direction="row" spacing={0.5} useFlexGap flexWrap="wrap">
-      {values.map((value) => (
-        <Chip key={value} label={value} size="small" variant="outlined" />
-      ))}
-    </Stack>
-  );
-}
-
-function MockActions({ copy = true }: { copy?: boolean }) {
-  return (
-    <Stack direction="row" spacing={1} useFlexGap flexWrap="wrap">
-      <Button size="small" variant="contained" startIcon={<AddIcon />} disabled>
-        Add
-      </Button>
-      <Button size="small" variant="outlined" startIcon={<EditIcon />} disabled>
-        Edit
-      </Button>
-      {copy && (
-        <Button size="small" variant="outlined" startIcon={<DuplicateIcon />} disabled>
-          Duplicate
-        </Button>
-      )}
-    </Stack>
-  );
+function ValuesText({ values }: { values?: string[] }) {
+  return <Typography variant="body2">{listText(values)}</Typography>;
 }
 
 function EditableActions({
   onAdd,
-  copy = true,
 }: {
   onAdd: () => void;
-  copy?: boolean;
 }) {
   return (
     <Stack direction="row" spacing={1} useFlexGap flexWrap="wrap">
       <Button size="small" variant="contained" startIcon={<AddIcon />} onClick={onAdd}>
         Add
       </Button>
-      {copy && (
-        <Button size="small" variant="outlined" startIcon={<DuplicateIcon />} disabled>
-          Duplicate
-        </Button>
-      )}
     </Stack>
   );
 }
@@ -636,22 +700,27 @@ function EmptyRow({ colSpan, label }: { colSpan: number; label: string }) {
   );
 }
 
-function SummaryRow({ children }: { children: ReactNode }) {
+function DuplicateRowAction({
+  label,
+  onClick,
+}: {
+  label: string;
+  onClick: () => void;
+}) {
   return (
-    <Stack
-      direction="row"
-      spacing={1}
-      useFlexGap
-      flexWrap="wrap"
-      sx={{ mb: 2 }}
-    >
-      {children}
-    </Stack>
+    <Tooltip title="Duplicate">
+      <IconButton
+        size="small"
+        aria-label={`Duplicate ${label}`}
+        onClick={(event) => {
+          event.stopPropagation();
+          onClick();
+        }}
+      >
+        <DuplicateIcon fontSize="small" />
+      </IconButton>
+    </Tooltip>
   );
-}
-
-function SummaryChip({ label }: { label: string }) {
-  return <Chip label={label} size="small" color="default" variant="outlined" />;
 }
 
 function getRequirementUsage(policy: EffectiveLocationPolicy) {
@@ -767,12 +836,15 @@ function FunctionAssignmentPoliciesTable({
   policies,
   emptyLabel,
   onEdit,
+  onDuplicate,
 }: {
   policies?: FunctionAssignmentPolicy[];
   emptyLabel: string;
   onEdit?: (policy: FunctionAssignmentPolicy) => void;
+  onDuplicate?: (policy: FunctionAssignmentPolicy) => void;
 }) {
   const rows = policies ?? [];
+  const hasActions = Boolean(onDuplicate);
 
   return (
     <TableContainer>
@@ -781,11 +853,12 @@ function FunctionAssignmentPoliciesTable({
           <TableRow>
             <TableCell>Assignment Role</TableCell>
             <TableCell>Eligibility</TableCell>
+            {hasActions && <TableCell align="right">Actions</TableCell>}
           </TableRow>
         </TableHead>
         <TableBody>
           {rows.length === 0 ? (
-            <EmptyRow colSpan={2} label={emptyLabel} />
+            <EmptyRow colSpan={hasActions ? 3 : 2} label={emptyLabel} />
           ) : (
             rows.map((policy) => (
               <TableRow
@@ -798,6 +871,14 @@ function FunctionAssignmentPoliciesTable({
                 <TableCell>
                   <EligibilitySummary eligibility={policy.eligibility} />
                 </TableCell>
+                {hasActions && (
+                  <TableCell align="right">
+                    <DuplicateRowAction
+                      label={policy.assignmentRole}
+                      onClick={() => onDuplicate?.(policy)}
+                    />
+                  </TableCell>
+                )}
               </TableRow>
             ))
           )}
@@ -845,12 +926,15 @@ function RequirementsTable({
   requirements,
   emptyLabel,
   onEdit,
+  onDuplicate,
 }: {
   requirements?: RequirementDefinition[];
   emptyLabel: string;
   onEdit?: (requirement: RequirementDefinition) => void;
+  onDuplicate?: (requirement: RequirementDefinition) => void;
 }) {
   const rows = requirements ?? [];
+  const hasActions = Boolean(onDuplicate);
 
   return (
     <TableContainer>
@@ -859,11 +943,12 @@ function RequirementsTable({
           <TableRow>
             <TableCell>Action Name</TableCell>
             <TableCell>Required</TableCell>
+            {hasActions && <TableCell align="right">Actions</TableCell>}
           </TableRow>
         </TableHead>
         <TableBody>
           {rows.length === 0 ? (
-            <EmptyRow colSpan={2} label={emptyLabel} />
+            <EmptyRow colSpan={hasActions ? 3 : 2} label={emptyLabel} />
           ) : (
             rows.map((requirement) => (
               <TableRow
@@ -874,6 +959,14 @@ function RequirementsTable({
               >
                 <TableCell>{requirement.actionName}</TableCell>
                 <TableCell>{requirement.isRequired ? 'Yes' : 'No'}</TableCell>
+                {hasActions && (
+                  <TableCell align="right">
+                    <DuplicateRowAction
+                      label={requirement.actionName}
+                      onClick={() => onDuplicate?.(requirement)}
+                    />
+                  </TableCell>
+                )}
               </TableRow>
             ))
           )}
@@ -948,7 +1041,13 @@ function ActionDefinitionSidePanel({
       alternateName === trimmedName ||
       (alternateName !== actionName && existingActionNames.includes(alternateName))
   );
-  const canSave = trimmedName.length > 0 && !duplicateName && !duplicateAlternateName;
+  const validityAmountIsValid =
+    !draft.validityEnabled || typeof parseValidityAmount(draft.validityAmount) !== 'undefined';
+  const canSave =
+    trimmedName.length > 0 &&
+    !duplicateName &&
+    !duplicateAlternateName &&
+    validityAmountIsValid;
 
   function save() {
     if (!canSave) return;
@@ -986,7 +1085,7 @@ function ActionDefinitionSidePanel({
     >
       <Grid item xs={12}>
         <Typography variant="h6">
-          {actionName ? 'Edit ActionDefinition' : 'Add ActionDefinition'}
+          {actionName ? 'Edit Action Definition' : 'Add Action Definition'}
         </Typography>
       </Grid>
 
@@ -1019,9 +1118,9 @@ function ActionDefinitionSidePanel({
           }
         >
           {enumOptions(DocumentLinkRequirement).map((option) => (
-            <option key={option.label} value={option.value}>
+            <MenuItem key={option.label} value={option.value}>
               {option.label}
-            </option>
+            </MenuItem>
           ))}
         </TextField>
       </Grid>
@@ -1040,9 +1139,9 @@ function ActionDefinitionSidePanel({
           }
         >
           {enumOptions(NoteEntryRequirement).map((option) => (
-            <option key={option.label} value={option.value}>
+            <MenuItem key={option.label} value={option.value}>
               {option.label}
-            </option>
+            </MenuItem>
           ))}
         </TextField>
       </Grid>
@@ -1063,7 +1162,7 @@ function ActionDefinitionSidePanel({
       <Grid item xs={12}>
         <TextField
           fullWidth
-          label="InfoLink"
+          label="Info Link"
           value={draft.infoLink}
           onChange={(event) =>
             setDraft((current) => ({ ...current, infoLink: event.target.value }))
@@ -1093,14 +1192,17 @@ function ActionDefinitionSidePanel({
           <Grid item xs={6}>
             <TextField
               fullWidth
-              type="number"
-              label="Amount"
+              label="Valid For"
               value={draft.validityAmount}
-              inputProps={{ min: 1 }}
+              error={!validityAmountIsValid}
+              helperText={
+                validityAmountIsValid ? undefined : 'Enter a positive whole number.'
+              }
+              inputProps={{ inputMode: 'numeric' }}
               onChange={(event) =>
                 setDraft((current) => ({
                   ...current,
-                  validityAmount: Number(event.target.value),
+                  validityAmount: event.target.value,
                 }))
               }
             />
@@ -1110,7 +1212,7 @@ function ActionDefinitionSidePanel({
             <TextField
               fullWidth
               select
-              label="Unit"
+              label="Time Period"
               value={draft.validityUnit}
               onChange={(event) =>
                 setDraft((current) => ({
@@ -1119,9 +1221,9 @@ function ActionDefinitionSidePanel({
                 }))
               }
             >
-              <option value="days">Days</option>
-              <option value="hours">Hours</option>
-              <option value="minutes">Minutes</option>
+              <MenuItem value="days">Days</MenuItem>
+              <MenuItem value="months">Months</MenuItem>
+              <MenuItem value="years">Years</MenuItem>
             </TextField>
           </Grid>
         </>
@@ -1130,7 +1232,7 @@ function ActionDefinitionSidePanel({
       <Grid item xs={12} sm={6}>
         <TextField
           fullWidth
-          label="CanView"
+          label="Who Can View"
           value={draft.canView}
           onChange={(event) =>
             setDraft((current) => ({ ...current, canView: event.target.value }))
@@ -1141,7 +1243,7 @@ function ActionDefinitionSidePanel({
       <Grid item xs={12} sm={6}>
         <TextField
           fullWidth
-          label="CanEdit"
+          label="Who Can Edit"
           value={draft.canEdit}
           onChange={(event) =>
             setDraft((current) => ({ ...current, canEdit: event.target.value }))
@@ -1267,9 +1369,9 @@ function CustomFieldSidePanel({
           }
         >
           {enumOptions(CustomFieldType).map((option) => (
-            <option key={option.label} value={option.value}>
+            <MenuItem key={option.label} value={option.value}>
               {option.label}
-            </option>
+            </MenuItem>
           ))}
         </TextField>
       </Grid>
@@ -1289,7 +1391,7 @@ function CustomFieldSidePanel({
                   }
                 />
               }
-              label="SuggestOnly"
+              label="Suggestions Only"
             />
           </Grid>
 
@@ -1523,10 +1625,10 @@ function FunctionAssignmentPolicySidePanel({
         <TextField
           fullWidth
           required
-          label="AssignmentRole"
+          label="Assignment Role"
           value={draft.assignmentRole}
           error={duplicateRole}
-          helperText={duplicateRole ? 'AssignmentRole must be unique.' : undefined}
+          helperText={duplicateRole ? 'Assignment role must be unique.' : undefined}
           onChange={(event) =>
             setDraft((current) => ({
               ...current,
@@ -1539,7 +1641,7 @@ function FunctionAssignmentPolicySidePanel({
       <Grid item xs={12}>
         <TextField
           fullWidth
-          label="EligibleLocationRoles"
+          label="Eligible Location Roles"
           value={draft.eligibleLocationRoles}
           error={unknownLocationRoles.length > 0}
           helperText={
@@ -1565,7 +1667,7 @@ function FunctionAssignmentPolicySidePanel({
           helperText={
             unknownVolunteerRoles.length > 0
               ? `Unknown roles: ${unknownVolunteerRoles.join(', ')}`
-              : 'Comma-separated role keys from Volunteer Policies > Volunteer Roles.'
+              : 'Comma-separated volunteer role names from Volunteer Policies > Volunteer Roles.'
           }
           onChange={(event) =>
             setDraft((current) => ({
@@ -1585,7 +1687,7 @@ function FunctionAssignmentPolicySidePanel({
           helperText={
             unknownVolunteerFamilyRoles.length > 0
               ? `Unknown roles: ${unknownVolunteerFamilyRoles.join(', ')}`
-              : 'Comma-separated role keys from Volunteer Policies > Volunteer Family Roles.'
+              : 'Comma-separated family role names from Volunteer Policies > Volunteer Family Roles.'
           }
           onChange={(event) =>
             setDraft((current) => ({
@@ -1601,7 +1703,7 @@ function FunctionAssignmentPolicySidePanel({
           fullWidth
           label="Eligible People"
           value={draft.eligiblePeople}
-          helperText="Comma-separated person IDs for this mocked editor."
+          helperText="Comma-separated person IDs."
           onChange={(event) =>
             setDraft((current) => ({ ...current, eligiblePeople: event.target.value }))
           }
@@ -1725,7 +1827,7 @@ function FunctionPolicySidePanel({
           helperText={
             unknownVolunteerRoles.length > 0
               ? `Unknown roles: ${unknownVolunteerRoles.join(', ')}`
-              : 'Comma-separated role keys from Volunteer Policies > Volunteer Roles.'
+              : 'Comma-separated volunteer role names from Volunteer Policies > Volunteer Roles.'
           }
           onChange={(event) =>
             setDraft((current) => ({
@@ -1745,7 +1847,7 @@ function FunctionPolicySidePanel({
           helperText={
             unknownVolunteerFamilyRoles.length > 0
               ? `Unknown roles: ${unknownVolunteerFamilyRoles.join(', ')}`
-              : 'Comma-separated role keys from Volunteer Policies > Volunteer Family Roles.'
+              : 'Comma-separated family role names from Volunteer Policies > Volunteer Family Roles.'
           }
           onChange={(event) =>
             setDraft((current) => ({
@@ -1761,7 +1863,7 @@ function FunctionPolicySidePanel({
           fullWidth
           label="Eligible People"
           value={draft.eligiblePeople}
-          helperText="Comma-separated person IDs for this mocked editor."
+          helperText="Comma-separated person IDs."
           onChange={(event) =>
             setDraft((current) => ({ ...current, eligiblePeople: event.target.value }))
           }
@@ -1843,7 +1945,7 @@ function ArrangementPolicySidePanel({
     >
       <Grid item xs={12}>
         <Typography variant="h6">
-          {arrangement ? 'Edit ArrangementPolicy' : 'Add ArrangementPolicy'}
+          {arrangement ? 'Edit Arrangement Policy' : 'Add Arrangement Policy'}
         </Typography>
       </Grid>
 
@@ -1851,10 +1953,10 @@ function ArrangementPolicySidePanel({
         <TextField
           fullWidth
           required
-          label="ArrangementType"
+          label="Arrangement Type"
           value={draft.arrangementType}
           error={duplicateType}
-          helperText={duplicateType ? 'ArrangementType must be unique.' : undefined}
+          helperText={duplicateType ? 'Arrangement type must be unique.' : undefined}
           onChange={(event) =>
             setDraft((current) => ({
               ...current,
@@ -1868,7 +1970,7 @@ function ArrangementPolicySidePanel({
         <TextField
           fullWidth
           select
-          label="ChildInvolvement"
+          label="Child Involvement"
           value={draft.childInvolvement}
           onChange={(event) =>
             setDraft((current) => ({
@@ -1898,7 +2000,7 @@ function ArrangementPolicySidePanel({
               }
             />
           }
-          label="SupersededAtUtc"
+          label="Superseded"
         />
       </Grid>
 
@@ -1907,7 +2009,7 @@ function ArrangementPolicySidePanel({
           <TextField
             fullWidth
             type="datetime-local"
-            label="SupersededAtUtc"
+            label="Superseded Date"
             value={draft.supersededAtUtc}
             InputLabelProps={{ shrink: true }}
             onChange={(event) =>
@@ -2026,12 +2128,12 @@ function VolunteerRolePolicyVersionSidePanel({
         <TextField
           fullWidth
           required
-          label={family ? 'VolunteerFamilyRoleType' : 'VolunteerRoleType'}
+          label={family ? 'Volunteer Family Role Type' : 'Volunteer Role Type'}
           value={draft.roleName}
           helperText={
             existingRoleNames.includes(trimmedRoleName)
-              ? 'Editing an existing role policy key.'
-              : 'A new role policy key will be created in the draft.'
+              ? 'Editing an existing role policy.'
+              : 'A new role policy will be created.'
           }
           onChange={(event) =>
             setDraft((current) => ({ ...current, roleName: event.target.value }))
@@ -2066,7 +2168,7 @@ function VolunteerRolePolicyVersionSidePanel({
               }
             />
           }
-          label="SupersededAtUtc"
+          label="Superseded"
         />
       </Grid>
 
@@ -2075,7 +2177,7 @@ function VolunteerRolePolicyVersionSidePanel({
           <TextField
             fullWidth
             type="datetime-local"
-            label="SupersededAtUtc"
+            label="Superseded Date"
             value={draft.supersededAtUtc}
             InputLabelProps={{ shrink: true }}
             onChange={(event) =>
@@ -2100,8 +2202,8 @@ function VolunteerRolePolicyVersionSidePanel({
             unknownActions.length > 0
               ? `Unknown Action Definitions: ${unknownActions.join(', ')}`
               : family
-                ? 'One per line: Stage|Action Name|Scope'
-                : 'One per line: Stage|Action Name'
+                ? 'One per line: Stage | Action Name | Scope'
+                : 'One per line: Stage | Action Name'
           }
           onChange={(event) =>
             setDraft((current) => ({
@@ -2157,17 +2259,7 @@ function ActionDefinitionsTab({
       <SectionHeader
         title="Action Definitions"
         actions={<EditableActions onAdd={openAddAction} />}
-      >
-        <SummaryRow>
-          <SummaryChip label={summarizeCount(rows.length, 'action definition')} />
-          <SummaryChip
-            label={summarizeCount(
-              rows.filter(([actionName]) => (usage.get(actionName)?.length ?? 0) > 0).length,
-              'referenced action'
-            )}
-          />
-        </SummaryRow>
-      </SectionHeader>
+      />
 
       <TableContainer>
         <Table size="small">
@@ -2195,9 +2287,9 @@ function ActionDefinitionsTab({
                   <TableCell>{actionName}</TableCell>
                   <TableCell>{enumName(DocumentLinkRequirement, action.documentLink)}</TableCell>
                   <TableCell>{enumName(NoteEntryRequirement, action.noteEntry)}</TableCell>
-                  <TableCell>{action.validity ?? '-'}</TableCell>
+                  <TableCell>{formatValidity(action.validity)}</TableCell>
                   <TableCell>
-                    <Chips values={action.alternateNames} />
+                    <ValuesText values={action.alternateNames} />
                   </TableCell>
                   <TableCell>{usage.get(actionName)?.length ?? 0}</TableCell>
                 </TableRow>
@@ -2229,11 +2321,14 @@ function ActionDefinitionsTab({
 function CustomFieldsTable({
   fields,
   onEdit,
+  onDuplicate,
 }: {
   fields?: CustomField[];
   onEdit?: (field: CustomField) => void;
+  onDuplicate?: (field: CustomField) => void;
 }) {
   const rows = fields ?? [];
+  const hasActions = Boolean(onDuplicate);
 
   return (
     <TableContainer>
@@ -2244,11 +2339,12 @@ function CustomFieldsTable({
             <TableCell>Type</TableCell>
             <TableCell>Validation</TableCell>
             <TableCell>Valid Values</TableCell>
+            {hasActions && <TableCell align="right">Actions</TableCell>}
           </TableRow>
         </TableHead>
         <TableBody>
           {rows.length === 0 ? (
-            <EmptyRow colSpan={4} label="No custom fields configured." />
+            <EmptyRow colSpan={hasActions ? 5 : 4} label="No custom fields configured." />
           ) : (
             rows.map((field) => (
               <TableRow
@@ -2265,8 +2361,16 @@ function CustomFieldsTable({
                     : enumName(CustomFieldValidation, field.validation)}
                 </TableCell>
                 <TableCell>
-                  <Chips values={field.validValues} />
+                  <ValuesText values={field.validValues} />
                 </TableCell>
+                {hasActions && (
+                  <TableCell align="right">
+                    <DuplicateRowAction
+                      label={field.name}
+                      onClick={() => onDuplicate?.(field)}
+                    />
+                  </TableCell>
+                )}
               </TableRow>
             ))
           )}
@@ -2296,6 +2400,16 @@ function CustomFamilyFieldsTab({
     openSidePanel();
   }
 
+  function duplicateCustomField(field: CustomField) {
+    saveField(
+      undefined,
+      new CustomField({
+        ...field,
+        name: nextCopyName(field.name, fields.map((item) => item.name)),
+      })
+    );
+  }
+
   function saveField(previousName: string | undefined, field: CustomField) {
     onPolicyChange(
       clonePolicyWithCustomFamilyFields(
@@ -2311,17 +2425,14 @@ function CustomFamilyFieldsTab({
       <SectionHeader
         title="Custom Family Fields"
         actions={<EditableActions onAdd={openAddCustomField} />}
-      >
-        <SummaryRow>
-          <SummaryChip label={summarizeCount(policy.customFamilyFields?.length ?? 0, 'custom field')} />
-        </SummaryRow>
-      </SectionHeader>
+      />
       <CustomFieldsTable
         fields={fields}
         onEdit={(field) => {
           setWorkingField(field);
           openSidePanel();
         }}
+        onDuplicate={duplicateCustomField}
       />
 
       <CustomFieldPanel>
@@ -2347,10 +2458,10 @@ function ArrangementFunctionSummary({ arrangementFunction }: { arrangementFuncti
   return (
     <Stack spacing={0.5}>
       <Typography variant="body2">
-        {arrangementFunction.functionName} · {enumName(FunctionRequirement, arrangementFunction.requirement)}
+        {arrangementFunction.functionName} - {enumName(FunctionRequirement, arrangementFunction.requirement)}
       </Typography>
       <Typography variant="body2" color="text.secondary">
-        {inheritsEligibility ? 'Inherited eligibility' : 'Override eligibility'} ·{' '}
+        {inheritsEligibility ? 'Inherited eligibility' : 'Override eligibility'} -{' '}
         {summarizeCount(arrangementFunction.variants?.length ?? 0, 'variant')}
       </Typography>
     </Stack>
@@ -2366,15 +2477,6 @@ function ArrangementPolicyDetails({ arrangement }: { arrangement: ArrangementPol
 
   return (
     <Stack spacing={2}>
-      <SummaryRow>
-        <SummaryChip label={enumName(ChildInvolvement, arrangement.childInvolvement)} />
-        <SummaryChip label={formatDate(arrangement.supersededAtUtc)} />
-        <SummaryChip label={summarizeCount(setupActions.length, 'setup requirement')} />
-        <SummaryChip label={summarizeCount(monitoringActions.length, 'monitoring requirement')} />
-        <SummaryChip label={summarizeCount(closeoutActions.length, 'closeout requirement')} />
-        <SummaryChip label={summarizeCount(arrangement.arrangementFunctions?.length ?? 0, 'function')} />
-      </SummaryRow>
-
       <Accordion variant="outlined">
         <AccordionSummary expandIcon={<ExpandMoreIcon />}>
           <Typography>Required Setup Actions</Typography>
@@ -2404,7 +2506,7 @@ function ArrangementPolicyDetails({ arrangement }: { arrangement: ArrangementPol
 
       <Accordion variant="outlined">
         <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-          <Typography>ArrangementFunctions</Typography>
+          <Typography>Arrangement Functions</Typography>
         </AccordionSummary>
         <AccordionDetails>
           <TableContainer>
@@ -2426,7 +2528,7 @@ function ArrangementPolicyDetails({ arrangement }: { arrangement: ArrangementPol
                         <ArrangementFunctionSummary arrangementFunction={arrangementFunction} />
                       </TableCell>
                       <TableCell>
-                        <Chips
+                        <ValuesText
                           values={[
                             ...(arrangementFunction.eligibleIndividualVolunteerRoles ?? []),
                             ...(arrangementFunction.eligibleVolunteerFamilyRoles ?? []),
@@ -2434,7 +2536,7 @@ function ArrangementPolicyDetails({ arrangement }: { arrangement: ArrangementPol
                         />
                       </TableCell>
                       <TableCell>
-                        <Chips
+                        <ValuesText
                           values={arrangementFunction.variants?.map((variant) => variant.variantName)}
                         />
                       </TableCell>
@@ -2516,22 +2618,74 @@ function CasePolicyTab({
     );
   }
 
+  function duplicateCaseCustomField(field: CustomField) {
+    updateCasePolicy({
+      customFields: upsertCustomField(
+        casePolicy?.customFields,
+        undefined,
+        new CustomField({
+          ...field,
+          name: nextCopyName(
+            field.name,
+            casePolicy?.customFields?.map((item) => item.name) ?? []
+          ),
+        })
+      ),
+    });
+  }
+
+  function duplicateCaseFunctionAssignmentPolicy(assignmentPolicy: FunctionAssignmentPolicy) {
+    const existingRoles =
+      casePolicy?.functionAssignmentPolicies?.map((item) => item.assignmentRole) ?? [];
+    updateCasePolicy({
+      functionAssignmentPolicies: upsertByName(
+        casePolicy?.functionAssignmentPolicies ?? [],
+        undefined,
+        new FunctionAssignmentPolicy({
+          ...assignmentPolicy,
+          assignmentRole: nextCopyName(assignmentPolicy.assignmentRole, existingRoles),
+        }),
+        (item) => item.assignmentRole
+      ),
+    });
+  }
+
+  function duplicateCaseFunctionPolicy(functionPolicy: FunctionPolicy) {
+    const existingFunctionNames =
+      casePolicy?.functionPolicies?.map((item) => item.functionName) ?? [];
+    updateCasePolicy({
+      functionPolicies: upsertByName(
+        casePolicy?.functionPolicies ?? [],
+        undefined,
+        new FunctionPolicy({
+          ...functionPolicy,
+          functionName: nextCopyName(functionPolicy.functionName, existingFunctionNames),
+        }),
+        (item) => item.functionName
+      ),
+    });
+  }
+
+  function duplicateArrangementPolicy(arrangement: ArrangementPolicy) {
+    updateCasePolicy({
+      arrangementPolicies: upsertByName(
+        arrangementPolicies,
+        undefined,
+        new ArrangementPolicy({
+          ...arrangement,
+          arrangementType: nextCopyName(
+            arrangement.arrangementType,
+            arrangementPolicies.map((item) => item.arrangementType)
+          ),
+        }),
+        (item) => item.arrangementType
+      ),
+    });
+  }
+
   return (
     <Box>
-      <SectionHeader title="Case Policies" actions={<MockActions />}>
-        <SummaryRow>
-          <SummaryChip label={summarizeCount(intakeRequirements?.length ?? 0, 'intake requirement')} />
-          <SummaryChip label={summarizeCount(casePolicy?.customFields?.length ?? 0, 'custom field')} />
-          <SummaryChip label={summarizeCount(arrangementPolicies.length, 'arrangement policy')} />
-          <SummaryChip label={summarizeCount(casePolicy?.functionPolicies?.length ?? 0, 'function policy')} />
-          <SummaryChip
-            label={summarizeCount(
-              casePolicy?.functionAssignmentPolicies?.length ?? 0,
-              'function assignment policy'
-            )}
-          />
-        </SummaryRow>
-      </SectionHeader>
+      <SectionHeader title="Case Policies" />
 
       <Stack spacing={2}>
         <Accordion defaultExpanded variant="outlined">
@@ -2576,6 +2730,7 @@ function CasePolicyTab({
                   setWorkingCustomField(field);
                   openCustomFieldPanel();
                 }}
+                onDuplicate={duplicateCaseCustomField}
               />
             </Stack>
           </AccordionDetails>
@@ -2600,6 +2755,7 @@ function CasePolicyTab({
                   setWorkingFunctionAssignmentPolicy(assignmentPolicy);
                   openFunctionAssignmentPanel();
                 }}
+                onDuplicate={duplicateCaseFunctionAssignmentPolicy}
               />
             </Stack>
           </AccordionDetails>
@@ -2623,11 +2779,12 @@ function CasePolicyTab({
                   <TableRow>
                     <TableCell>Function Name</TableCell>
                     <TableCell>Eligibility</TableCell>
+                    <TableCell align="right">Actions</TableCell>
                   </TableRow>
                 </TableHead>
                 <TableBody>
                   {(casePolicy?.functionPolicies ?? []).length === 0 ? (
-                    <EmptyRow colSpan={2} label="No function policies configured." />
+                    <EmptyRow colSpan={3} label="No function policies configured." />
                   ) : (
                     casePolicy?.functionPolicies?.map((functionPolicy) => (
                       <TableRow
@@ -2642,6 +2799,12 @@ function CasePolicyTab({
                         <TableCell>{functionPolicy.functionName}</TableCell>
                         <TableCell>
                           <EligibilitySummary eligibility={functionPolicy.eligibility} />
+                        </TableCell>
+                        <TableCell align="right">
+                          <DuplicateRowAction
+                            label={functionPolicy.functionName}
+                            onClick={() => duplicateCaseFunctionPolicy(functionPolicy)}
+                          />
                         </TableCell>
                       </TableRow>
                     ))
@@ -2679,12 +2842,9 @@ function CasePolicyTab({
                         alignItems={{ xs: 'flex-start', sm: 'center' }}
                       >
                         <Typography>{arrangement.arrangementType}</Typography>
-                        <Chip
-                          size="small"
-                          label={arrangement.supersededAtUtc ? 'Superseded' : 'Current'}
-                          color={arrangement.supersededAtUtc ? 'default' : 'success'}
-                          variant="outlined"
-                        />
+                        <Typography variant="body2" color="text.secondary">
+                          {arrangement.supersededAtUtc ? 'Superseded' : 'Current'}
+                        </Typography>
                         <Button
                           size="small"
                           variant="outlined"
@@ -2696,6 +2856,10 @@ function CasePolicyTab({
                         >
                           Edit
                         </Button>
+                        <DuplicateRowAction
+                          label={arrangement.arrangementType}
+                          onClick={() => duplicateArrangementPolicy(arrangement)}
+                        />
                       </Stack>
                     </AccordionSummary>
                     <AccordionDetails>
@@ -2849,6 +3013,29 @@ function V1ReferralPolicyTab({
   const functionAssignmentPolicies =
     policy.v1ReferralPolicy?.functionAssignmentPolicies ?? [];
 
+  function duplicateReferralFunctionAssignmentPolicy(
+    assignmentPolicy: FunctionAssignmentPolicy
+  ) {
+    const existingRoles = functionAssignmentPolicies.map((item) => item.assignmentRole);
+    onPolicyChange(
+      clonePolicyWithV1ReferralPolicy(
+        policy,
+        new V1ReferralPolicy({
+          ...policy.v1ReferralPolicy,
+          functionAssignmentPolicies: upsertByName(
+            functionAssignmentPolicies,
+            undefined,
+            new FunctionAssignmentPolicy({
+              ...assignmentPolicy,
+              assignmentRole: nextCopyName(assignmentPolicy.assignmentRole, existingRoles),
+            }),
+            (item) => item.assignmentRole
+          ),
+        })
+      )
+    );
+  }
+
   return (
     <Box>
       <SectionHeader
@@ -2861,16 +3048,7 @@ function V1ReferralPolicyTab({
             }}
           />
         }
-      >
-        <SummaryRow>
-          <SummaryChip
-            label={summarizeCount(
-              functionAssignmentPolicies.length,
-              'function assignment policy'
-            )}
-          />
-        </SummaryRow>
-      </SectionHeader>
+      />
       <FunctionAssignmentPoliciesTable
         policies={functionAssignmentPolicies}
         emptyLabel="No referral function assignment policies configured."
@@ -2878,6 +3056,7 @@ function V1ReferralPolicyTab({
           setWorkingFunctionAssignmentPolicy(assignmentPolicy);
           openSidePanel();
         }}
+        onDuplicate={duplicateReferralFunctionAssignmentPolicy}
       />
 
       <FunctionAssignmentPanel>
@@ -2923,6 +3102,7 @@ function RolePolicyVersionsTable({
   rows,
   family,
   onEdit,
+  onDuplicate,
 }: {
   rows: {
     roleName: string;
@@ -2939,7 +3119,16 @@ function RolePolicyVersionsTable({
     requirements: ReactNode;
     policyVersion: VolunteerRolePolicyVersion | VolunteerFamilyRolePolicyVersion;
   }) => void;
+  onDuplicate?: (row: {
+    roleName: string;
+    version: string;
+    supersededAtUtc?: Date;
+    requirements: ReactNode;
+    policyVersion: VolunteerRolePolicyVersion | VolunteerFamilyRolePolicyVersion;
+  }) => void;
 }) {
+  const hasActions = Boolean(onDuplicate);
+
   return (
     <TableContainer>
       <Table size="small">
@@ -2949,11 +3138,12 @@ function RolePolicyVersionsTable({
             <TableCell>Version</TableCell>
             <TableCell>Status</TableCell>
             <TableCell>Requirements</TableCell>
+            {hasActions && <TableCell align="right">Actions</TableCell>}
           </TableRow>
         </TableHead>
         <TableBody>
           {rows.length === 0 ? (
-            <EmptyRow colSpan={4} label="No role policies configured." />
+            <EmptyRow colSpan={hasActions ? 5 : 4} label="No role policies configured." />
           ) : (
             rows.map((row) => (
               <TableRow
@@ -2966,6 +3156,14 @@ function RolePolicyVersionsTable({
                 <TableCell>{row.version}</TableCell>
                 <TableCell>{formatDate(row.supersededAtUtc)}</TableCell>
                 <TableCell>{row.requirements}</TableCell>
+                {hasActions && (
+                  <TableCell align="right">
+                    <DuplicateRowAction
+                      label={`${row.roleName} ${row.version}`}
+                      onClick={() => onDuplicate?.(row)}
+                    />
+                  </TableCell>
+                )}
               </TableRow>
             ))
           )}
@@ -3024,7 +3222,7 @@ function VolunteerPolicyTab({
                   key={`${requirement.stage}-${requirement.actionName}`}
                   variant="body2"
                 >
-                  {enumName(RequirementStage, requirement.stage)} · {requirement.actionName}
+                  {enumName(RequirementStage, requirement.stage)} - {requirement.actionName}
                 </Typography>
               ))
             ) : (
@@ -3050,7 +3248,7 @@ function VolunteerPolicyTab({
                   key={`${requirement.stage}-${requirement.actionName}-${requirement.scope}`}
                   variant="body2"
                 >
-                  {enumName(RequirementStage, requirement.stage)} · {requirement.actionName} ·{' '}
+                  {enumName(RequirementStage, requirement.stage)} - {requirement.actionName} -{' '}
                   {enumName(VolunteerFamilyRequirementScope, requirement.scope)}
                 </Typography>
               ))
@@ -3062,27 +3260,77 @@ function VolunteerPolicyTab({
       })) ?? []
   );
 
+  function duplicateVolunteerCustomField(field: CustomField) {
+    onPolicyChange(
+      clonePolicyWithVolunteerCustomFields(
+        policy,
+        upsertCustomField(
+          customFields,
+          undefined,
+          new CustomField({
+            ...field,
+            name: nextCopyName(field.name, customFields.map((item) => item.name)),
+          })
+        )
+      )
+    );
+  }
+
+  function duplicateVolunteerRoleVersion(row: {
+    roleName: string;
+    version: string;
+    policyVersion: VolunteerRolePolicyVersion | VolunteerFamilyRolePolicyVersion;
+  }) {
+    const existingVersions =
+      volunteerPolicy?.volunteerRoles?.[row.roleName]?.policyVersions?.map(
+        (version) => version.version
+      ) ?? [];
+    onPolicyChange(
+      clonePolicyWithVolunteerPolicy(
+        policy,
+        upsertVolunteerRolePolicyVersion(
+          volunteerPolicy,
+          undefined,
+          undefined,
+          row.roleName,
+          new VolunteerRolePolicyVersion({
+            ...(row.policyVersion as VolunteerRolePolicyVersion),
+            version: nextCopyName(row.version, existingVersions),
+          })
+        )
+      )
+    );
+  }
+
+  function duplicateVolunteerFamilyRoleVersion(row: {
+    roleName: string;
+    version: string;
+    policyVersion: VolunteerRolePolicyVersion | VolunteerFamilyRolePolicyVersion;
+  }) {
+    const existingVersions =
+      volunteerPolicy?.volunteerFamilyRoles?.[row.roleName]?.policyVersions?.map(
+        (version) => version.version
+      ) ?? [];
+    onPolicyChange(
+      clonePolicyWithVolunteerPolicy(
+        policy,
+        upsertVolunteerFamilyRolePolicyVersion(
+          volunteerPolicy,
+          undefined,
+          undefined,
+          row.roleName,
+          new VolunteerFamilyRolePolicyVersion({
+            ...(row.policyVersion as VolunteerFamilyRolePolicyVersion),
+            version: nextCopyName(row.version, existingVersions),
+          })
+        )
+      )
+    );
+  }
+
   return (
     <Box>
-      <SectionHeader title="Volunteer Policies" actions={<MockActions />}>
-        <SummaryRow>
-          <SummaryChip
-            label={summarizeCount(
-              Object.keys(volunteerPolicy?.volunteerRoles ?? {}).length,
-              'volunteer role'
-            )}
-          />
-          <SummaryChip
-            label={summarizeCount(
-              Object.keys(volunteerPolicy?.volunteerFamilyRoles ?? {}).length,
-              'volunteer family role'
-            )}
-          />
-          <SummaryChip
-            label={summarizeCount(volunteerPolicy?.customFields?.length ?? 0, 'custom field')}
-          />
-        </SummaryRow>
-      </SectionHeader>
+      <SectionHeader title="Volunteer Policies" />
 
       <Stack spacing={2}>
         <Accordion defaultExpanded variant="outlined">
@@ -3106,6 +3354,7 @@ function VolunteerPolicyTab({
                   });
                   openVolunteerRolePanel();
                 }}
+                onDuplicate={duplicateVolunteerRoleVersion}
               />
             </Stack>
           </AccordionDetails>
@@ -3133,6 +3382,7 @@ function VolunteerPolicyTab({
                   });
                   openVolunteerFamilyRolePanel();
                 }}
+                onDuplicate={duplicateVolunteerFamilyRoleVersion}
               />
             </Stack>
           </AccordionDetails>
@@ -3156,6 +3406,7 @@ function VolunteerPolicyTab({
                   setWorkingField(field);
                   openSidePanel();
                 }}
+                onDuplicate={duplicateVolunteerCustomField}
               />
             </Stack>
           </AccordionDetails>
@@ -3268,16 +3519,14 @@ function VolunteerPolicyTab({
 
 export function SmsSourcePhoneNumbers({
   locationConfiguration,
-}: SmsSourcePhoneNumbersProps) {
+}: {
+  locationConfiguration: LocationConfiguration;
+}) {
   const rows = locationConfiguration.smsSourcePhoneNumbers ?? [];
 
   return (
     <Box>
-      <SectionHeader title="SMS Source Phone Numbers" actions={<MockActions copy={false} />}>
-        <SummaryRow>
-          <SummaryChip label={summarizeCount(rows.length, 'source phone number')} />
-        </SummaryRow>
-      </SectionHeader>
+      <SectionHeader title="SMS Source Phone Numbers" />
 
       <TableContainer>
         <Table size="small">
@@ -3307,21 +3556,12 @@ export function SmsSourcePhoneNumbers({
 
 export function PolicyConfiguration({
   policy,
-  locationConfiguration,
   locationRoles,
   onPolicyChange,
   section,
 }: PolicyConfigurationProps) {
   return (
     <Stack spacing={2} sx={{ maxWidth: 1200, pb: 4 }}>
-      <Stack direction="row" spacing={1} useFlexGap flexWrap="wrap">
-        <SummaryChip label={`Location: ${locationConfiguration.name}`} />
-        <SummaryChip
-          label={`Time Zone: ${locationConfiguration.timeZone?.id ?? 'Not configured'}`}
-        />
-      </Stack>
-      <Divider />
-
       {section === 'actionDefinitions' && (
         <ActionDefinitionsTab policy={policy} onPolicyChange={onPolicyChange} />
       )}
