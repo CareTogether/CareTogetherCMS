@@ -450,21 +450,6 @@ namespace CareTogether.Api.Controllers
             Guid locationId
         )
         {
-            string roleName
-        )
-        {
-            if (!User.IsInRole(SystemConstants.ORGANIZATION_ADMINISTRATOR))
-                return Forbid();
-            var result = await policiesResource.DeleteRoleDefinitionAsync(organizationId, roleName);
-            return Ok(result);
-        }
-
-        [HttpGet("/api/{organizationId:guid}/{locationId:guid}/[controller]/policy")]
-        public async Task<ActionResult<EffectiveLocationPolicy>> GetEffectiveLocationPolicy(
-            Guid organizationId,
-            Guid locationId
-        )
-        {
             var result = await policiesResource.GetCurrentPolicy(organizationId, locationId);
             return Ok(result);
         }

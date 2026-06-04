@@ -10,7 +10,7 @@ namespace CareTogether.Core.Test
     public sealed class PolicyValidationTests
     {
         private static readonly OrganizationConfiguration Configuration =
-            new("Test Org", [], [new RoleDefinition("Case Manager", false, [])], [], null);
+            new("Test Org", [], [new RoleDefinition("Case Manager", false, [])], [], null, null);
 
         [TestMethod]
         public void ValidPolicyHasNoErrors()
