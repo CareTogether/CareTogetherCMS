@@ -157,6 +157,7 @@ namespace CareTogether.Engines.Authorization
                     V1CaseUnassignIndividualVolunteer => Permission.EditV1CaseFunctionAssignments,
                     LinkReferralToCase => Permission.EditV1Case,
                     CloseReferral => Permission.CloseV1Case,
+                    CloseReferralWithReason => Permission.CloseV1Case,
                     ReopenReferral => Permission.CloseV1Case,
                     _ => throw new NotImplementedException(
                         $"The command type '{command.GetType().FullName}' has not been implemented."

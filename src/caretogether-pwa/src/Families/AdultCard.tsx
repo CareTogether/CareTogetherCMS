@@ -1,3 +1,4 @@
+import Grid from '@mui/material/GridLegacy';
 import {
   Card,
   CardHeader,
@@ -12,7 +13,6 @@ import {
   AccordionSummary,
   AccordionDetails,
   Badge,
-  Grid,
   Tooltip,
 } from '@mui/material';
 import { useState } from 'react';

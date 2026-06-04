@@ -1,4 +1,5 @@
-import { Grid, Typography } from '@mui/material';
+import Grid from '@mui/material/GridLegacy';
+import { Typography } from '@mui/material';
 import { Controller, Control, FieldValues, Path } from 'react-hook-form';
 import { CustomField } from '../GeneratedClient';
 import { CustomFieldInput } from '../Generic/CustomFieldInput';

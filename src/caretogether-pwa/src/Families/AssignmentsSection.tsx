@@ -1,4 +1,5 @@
-import { Grid, Typography, Button } from '@mui/material';
+import Grid from '@mui/material/GridLegacy';
+import { Typography, Button } from '@mui/material';
 import { CombinedFamilyInfo } from '../GeneratedClient';
 import { AssignmentCard } from '../Families/AssignmentCard';
 import { useState } from 'react';

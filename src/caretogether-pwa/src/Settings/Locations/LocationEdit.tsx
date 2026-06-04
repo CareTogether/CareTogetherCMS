@@ -232,6 +232,7 @@ export function LocationEdit() {
     ethnicities: location.ethnicities || [],
     adultFamilyRelationships: location.adultFamilyRelationships || [],
     arrangementReasons: location.arrangementReasons || [],
+    caseCloseReasons: configuration?.caseCloseReasons || [],
     referralCloseReasons: configuration?.referralCloseReasons || [],
   };
   const locationRoles = configuration?.roles?.map((role) => role.roleName) ?? [];

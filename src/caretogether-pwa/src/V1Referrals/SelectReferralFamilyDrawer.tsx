@@ -1,9 +1,12 @@
-import { useEffect, useMemo, useState } from 'react';
+import Grid from '@mui/material/GridLegacy';
+import {
+  useEffect,
+  useMemo,
+  useState } from 'react';
 import {
   Autocomplete,
   Button,
   Drawer,
-  Grid,
   TextField,
   Typography,
 } from '@mui/material';
@@ -46,7 +49,7 @@ export function SelectReferralFamilyDrawer({
       anchor="right"
       open={open}
       onClose={onCancel}
-      PaperProps={{ sx: { width: 500, p: 3, top: 45 } }}
+      slotProps={{ paper: { sx: { width: 500, p: 3, top: 45 } } }}
     >
       <form
         onSubmit={(e) => {

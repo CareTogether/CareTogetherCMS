@@ -1,9 +1,9 @@
+import Grid from '@mui/material/GridLegacy';
 import {
   Box,
   Card,
   CardActionArea,
   CardContent,
-  Grid,
   Typography,
 } from '@mui/material';
 import { ProgressBackdrop } from '../Shell/ProgressBackdrop';

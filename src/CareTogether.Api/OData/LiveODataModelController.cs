@@ -163,7 +163,7 @@ namespace CareTogether.Api.OData
         DateOnly Opened,
         DateOnly? Closed,
         string? ReferralSource,
-        V1CaseCloseReason? CloseReason,
+        string? CloseReason,
         string? PrimaryReasonForReferral
     );
 
@@ -286,7 +286,7 @@ namespace CareTogether.Api.OData
         string RlsKey
     );
 
-    public sealed record FamilyRequirementStatus (
+    public sealed record FamilyRequirementStatus(
         Guid OrganizationId,
         Guid LocationId,
         [property: Key] Guid FamilyId,
@@ -498,7 +498,9 @@ namespace CareTogether.Api.OData
 
         [HttpGet("IndividualRequirementStatuses")]
         [EnableQuery]
-        public async Task<IEnumerable<IndividualRequirementStatus>> GetIndividualRequirementStatusesAsync()
+        public async Task<
+            IEnumerable<IndividualRequirementStatus>
+        > GetIndividualRequirementStatusesAsync()
         {
             var liveModel = await RenderLiveModelAsync();
             return liveModel.IndividualRequirementStatuses;
@@ -601,7 +603,9 @@ namespace CareTogether.Api.OData
                         acc.CommunityRoleAssignments.Concat(model.CommunityRoleAssignments),
                         acc.RoleApprovals.Concat(model.RoleApprovals),
                         acc.FamilyRequirementStatuses.Concat(model.FamilyRequirementStatuses),
-                        acc.IndividualRequirementStatuses.Concat(model.IndividualRequirementStatuses)
+                        acc.IndividualRequirementStatuses.Concat(
+                            model.IndividualRequirementStatuses
+                        )
                     )
             );
 
@@ -685,7 +689,9 @@ namespace CareTogether.Api.OData
                 .ToArrayAsync();
 
             var familiesByLocation = visibleAggregatesByLocation
-                .Where(zipResult => zipResult.Item2 is FamilyRecordsAggregate fra && !fra.Family.Family.IsTestFamily)
+                .Where(zipResult =>
+                    zipResult.Item2 is FamilyRecordsAggregate fra && !fra.Family.Family.IsTestFamily
+                )
                 .Select(zipResult => (zipResult.Item1, (FamilyRecordsAggregate)zipResult.Item2))
                 .Select(zipResult =>
                     (
@@ -925,15 +931,17 @@ namespace CareTogether.Api.OData
                 {
                     foreach (var req in family.VolunteerFamilyInfo.CompletedRequirements)
                     {
-                        familyRequirementStatuses.Add(new FamilyRequirementStatus(
-                            organization.Id,
-                            family.LocationId,
-                            family.Id, 
-                            req.RequirementName,
-                            "Complete", 
-                            req.CompletedAtUtc,
-                            req.ExpiresAtUtc
-                        ));
+                        familyRequirementStatuses.Add(
+                            new FamilyRequirementStatus(
+                                organization.Id,
+                                family.LocationId,
+                                family.Id,
+                                req.RequirementName,
+                                "Complete",
+                                req.CompletedAtUtc,
+                                req.ExpiresAtUtc
+                            )
+                        );
                     }
                 }
 
@@ -941,15 +949,17 @@ namespace CareTogether.Api.OData
                 {
                     foreach (var req in family.VolunteerFamilyInfo.ExemptedRequirements)
                     {
-                        familyRequirementStatuses.Add(new FamilyRequirementStatus(
-                            organization.Id,
-                            family.LocationId,
-                            family.Id,
-                            req.RequirementName,
-                            "Exempted",
-                            req.DueDate,
-                            req.ExemptionExpiresAtUtc
-                        ));
+                        familyRequirementStatuses.Add(
+                            new FamilyRequirementStatus(
+                                organization.Id,
+                                family.LocationId,
+                                family.Id,
+                                req.RequirementName,
+                                "Exempted",
+                                req.DueDate,
+                                req.ExemptionExpiresAtUtc
+                            )
+                        );
                     }
                 }
 
@@ -958,15 +968,17 @@ namespace CareTogether.Api.OData
                 {
                     foreach (var missing in family.VolunteerFamilyInfo.MissingRequirements)
                     {
-                        familyRequirementStatuses.Add(new FamilyRequirementStatus(
-                            organization.Id,
-                            family.LocationId,
-                            family.Id, 
-                            missing.ActionName, 
-                            "Pending", 
-                            null,
-                            null
-                        ));
+                        familyRequirementStatuses.Add(
+                            new FamilyRequirementStatus(
+                                organization.Id,
+                                family.LocationId,
+                                family.Id,
+                                missing.ActionName,
+                                "Pending",
+                                null,
+                                null
+                            )
+                        );
                     }
                 }
             }
@@ -985,15 +997,17 @@ namespace CareTogether.Api.OData
                         {
                             foreach (var req in volunteerData.CompletedRequirements)
                             {
-                                individualRequirementStatuses.Add(new IndividualRequirementStatus(
-                                    organization.Id,
-                                    family.LocationId,
-                                    personId, 
-                                    req.RequirementName, 
-                                    "Complete", 
-                                    req.CompletedAtUtc,
-                                    req.ExpiresAtUtc
-                                ));
+                                individualRequirementStatuses.Add(
+                                    new IndividualRequirementStatus(
+                                        organization.Id,
+                                        family.LocationId,
+                                        personId,
+                                        req.RequirementName,
+                                        "Complete",
+                                        req.CompletedAtUtc,
+                                        req.ExpiresAtUtc
+                                    )
+                                );
                             }
                         }
 
@@ -1001,15 +1015,17 @@ namespace CareTogether.Api.OData
                         {
                             foreach (var missing in volunteerData.MissingRequirements)
                             {
-                                individualRequirementStatuses.Add(new IndividualRequirementStatus(
-                                    organization.Id,
-                                    family.LocationId,
-                                    personId,
-                                    missing.ActionName,
-                                    "Pending", 
-                                    null,
-                                    null
-                                ));
+                                individualRequirementStatuses.Add(
+                                    new IndividualRequirementStatus(
+                                        organization.Id,
+                                        family.LocationId,
+                                        personId,
+                                        missing.ActionName,
+                                        "Pending",
+                                        null,
+                                        null
+                                    )
+                                );
                             }
                         }
 
@@ -1017,15 +1033,17 @@ namespace CareTogether.Api.OData
                         {
                             foreach (var exempt in volunteerData.ExemptedRequirements)
                             {
-                                individualRequirementStatuses.Add(new IndividualRequirementStatus(
-                                    organization.Id,
-                                    family.LocationId,
-                                    personId,
-                                    exempt.RequirementName,
-                                    "Exempted",
-                                    exempt.DueDate,
-                                    exempt.ExemptionExpiresAtUtc
-                                ));
+                                individualRequirementStatuses.Add(
+                                    new IndividualRequirementStatus(
+                                        organization.Id,
+                                        family.LocationId,
+                                        personId,
+                                        exempt.RequirementName,
+                                        "Exempted",
+                                        exempt.DueDate,
+                                        exempt.ExemptionExpiresAtUtc
+                                    )
+                                );
                             }
                         }
                     }

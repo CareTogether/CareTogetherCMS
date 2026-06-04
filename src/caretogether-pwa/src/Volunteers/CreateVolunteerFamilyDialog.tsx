@@ -1,4 +1,6 @@
-import { useState } from 'react';
+import Grid from '@mui/material/GridLegacy';
+import {
+  useState } from 'react';
 import {
   Button,
   Checkbox,
@@ -12,7 +14,6 @@ import {
   FormControlLabel,
   FormGroup,
   FormLabel,
-  Grid,
   InputAdornment,
   InputLabel,
   MenuItem,
@@ -410,12 +411,14 @@ export function CreateVolunteerFamilyDialog({
                 minRows={2}
                 maxRows={5}
                 size="small"
-                InputProps={{
-                  startAdornment: (
-                    <InputAdornment position="start">
-                      <WarningIcon />
-                    </InputAdornment>
-                  ),
+                slotProps={{
+                  input: {
+                    startAdornment: (
+                      <InputAdornment position="start">
+                        <WarningIcon />
+                      </InputAdornment>
+                    ),
+                  },
                 }}
                 value={concerns == null ? '' : concerns}
                 onChange={(e) =>

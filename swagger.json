@@ -102,48 +102,6 @@
             }
           }
         }
-      },
-      "put": {
-        "tags": [
-          "Configuration"
-        ],
-        "operationId": "Configuration_PutLocationDefinition",
-        "parameters": [
-          {
-            "name": "organizationId",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "guid"
-            },
-            "x-position": 1
-          }
-        ],
-        "requestBody": {
-          "x-name": "newLocationPayload",
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/PutLocationPayload"
-              }
-            }
-          },
-          "required": true,
-          "x-position": 2
-        },
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/OrganizationConfiguration"
-                }
-              }
-            }
-          }
-        }
       }
     },
     "/api/{organizationId}/Configuration/roles/{roleName}": {
@@ -224,6 +182,94 @@
             "x-position": 2
           }
         ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OrganizationConfiguration"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/{organizationId}/Configuration/location": {
+      "put": {
+        "tags": [
+          "Configuration"
+        ],
+        "operationId": "Configuration_PutLocationDefinition",
+        "parameters": [
+          {
+            "name": "organizationId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "guid"
+            },
+            "x-position": 1
+          }
+        ],
+        "requestBody": {
+          "x-name": "newLocationPayload",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PutLocationPayload"
+              }
+            }
+          },
+          "required": true,
+          "x-position": 2
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OrganizationConfiguration"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/{organizationId}/Configuration/organization": {
+      "put": {
+        "tags": [
+          "Configuration"
+        ],
+        "operationId": "Configuration_PutOrganizationConfiguration",
+        "parameters": [
+          {
+            "name": "organizationId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "guid"
+            },
+            "x-position": 1
+          }
+        ],
+        "requestBody": {
+          "x-name": "payload",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PutOrganizationConfigurationPayload"
+              }
+            }
+          },
+          "required": true,
+          "x-position": 2
+        },
         "responses": {
           "200": {
             "description": "",
@@ -1375,6 +1421,13 @@
             "items": {
               "type": "string"
             }
+          },
+          "caseCloseReasons": {
+            "type": "array",
+            "nullable": true,
+            "items": {
+              "type": "string"
+            }
           }
         }
       },
@@ -2028,6 +2081,26 @@
             "type": "string",
             "format": "guid",
             "nullable": true
+          }
+        }
+      },
+      "PutOrganizationConfigurationPayload": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "referralCloseReasons": {
+            "type": "array",
+            "nullable": true,
+            "items": {
+              "type": "string"
+            }
+          },
+          "caseCloseReasons": {
+            "type": "array",
+            "nullable": true,
+            "items": {
+              "type": "string"
+            }
           }
         }
       },
@@ -4148,12 +4221,8 @@
             "nullable": true
           },
           "closeReason": {
-            "nullable": true,
-            "oneOf": [
-              {
-                "$ref": "#/components/schemas/V1CaseCloseReason"
-              }
-            ]
+            "type": "string",
+            "nullable": true
           },
           "completedRequirements": {
             "type": "array",
@@ -4209,24 +4278,6 @@
             }
           }
         }
-      },
-      "V1CaseCloseReason": {
-        "type": "integer",
-        "description": "",
-        "x-enumNames": [
-          "NotAppropriate",
-          "NoCapacity",
-          "NoLongerNeeded",
-          "Resourced",
-          "NeedMet"
-        ],
-        "enum": [
-          0,
-          1,
-          2,
-          3,
-          4
-        ]
       },
       "CompletedRequirementInfo": {
         "type": "object",
@@ -8583,6 +8634,7 @@
           "propertyName": "discriminator",
           "mapping": {
             "CloseReferral": "#/components/schemas/CloseReferral",
+            "CloseReferralWithReason": "#/components/schemas/CloseReferralWithReason",
             "CompleteReferralRequirement": "#/components/schemas/CompleteReferralRequirement",
             "CreateReferral": "#/components/schemas/CreateReferral",
             "ExemptReferralRequirement": "#/components/schemas/ExemptReferralRequirement",
@@ -8632,6 +8684,48 @@
             "properties": {
               "closeReason": {
                 "$ref": "#/components/schemas/V1CaseCloseReason"
+              },
+              "closedAtUtc": {
+                "type": "string",
+                "format": "date-time"
+              }
+            }
+          }
+        ]
+      },
+      "V1CaseCloseReason": {
+        "type": "integer",
+        "description": "",
+        "x-enumNames": [
+          "NotAppropriate",
+          "NoCapacity",
+          "NoLongerNeeded",
+          "Resourced",
+          "NeedMet"
+        ],
+        "enum": [
+          0,
+          1,
+          2,
+          3,
+          4
+        ]
+      },
+      "CloseReferralWithReason": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/V1CaseCommand"
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "closeReason",
+              "closedAtUtc"
+            ],
+            "properties": {
+              "closeReason": {
+                "type": "string"
               },
               "closedAtUtc": {
                 "type": "string",

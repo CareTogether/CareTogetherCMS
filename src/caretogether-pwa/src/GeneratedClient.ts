@@ -117,47 +117,6 @@ export class ConfigurationClient {
         return Promise.resolve<OrganizationConfiguration>(null as any);
     }
 
-    putLocationDefinition(organizationId: string, newLocationPayload: PutLocationPayload): Promise<OrganizationConfiguration> {
-        let url_ = this.baseUrl + "/api/{organizationId}/Configuration";
-        if (organizationId === undefined || organizationId === null)
-            throw new Error("The parameter 'organizationId' must be defined.");
-        url_ = url_.replace("{organizationId}", encodeURIComponent("" + organizationId));
-        url_ = url_.replace(/[?&]$/, "");
-
-        const content_ = JSON.stringify(newLocationPayload);
-
-        let options_: RequestInit = {
-            body: content_,
-            method: "PUT",
-            headers: {
-                "Content-Type": "application/json",
-                "Accept": "application/json"
-            }
-        };
-
-        return this.http.fetch(url_, options_).then((_response: Response) => {
-            return this.processPutLocationDefinition(_response);
-        });
-    }
-
-    protected processPutLocationDefinition(response: Response): Promise<OrganizationConfiguration> {
-        const status = response.status;
-        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
-        if (status === 200) {
-            return response.text().then((_responseText) => {
-            let result200: any = null;
-            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
-            result200 = OrganizationConfiguration.fromJS(resultData200);
-            return result200;
-            });
-        } else if (status !== 200 && status !== 204) {
-            return response.text().then((_responseText) => {
-            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
-            });
-        }
-        return Promise.resolve<OrganizationConfiguration>(null as any);
-    }
-
     putRoleDefinition(organizationId: string, roleName: string, role: RoleDefinition): Promise<OrganizationConfiguration> {
         let url_ = this.baseUrl + "/api/{organizationId}/Configuration/roles/{roleName}";
         if (organizationId === undefined || organizationId === null)
@@ -225,6 +184,88 @@ export class ConfigurationClient {
     }
 
     protected processDeleteRoleDefinition(response: Response): Promise<OrganizationConfiguration> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result200 = OrganizationConfiguration.fromJS(resultData200);
+            return result200;
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<OrganizationConfiguration>(null as any);
+    }
+
+    putLocationDefinition(organizationId: string, newLocationPayload: PutLocationPayload): Promise<OrganizationConfiguration> {
+        let url_ = this.baseUrl + "/api/{organizationId}/Configuration/location";
+        if (organizationId === undefined || organizationId === null)
+            throw new Error("The parameter 'organizationId' must be defined.");
+        url_ = url_.replace("{organizationId}", encodeURIComponent("" + organizationId));
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(newLocationPayload);
+
+        let options_: RequestInit = {
+            body: content_,
+            method: "PUT",
+            headers: {
+                "Content-Type": "application/json",
+                "Accept": "application/json"
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processPutLocationDefinition(_response);
+        });
+    }
+
+    protected processPutLocationDefinition(response: Response): Promise<OrganizationConfiguration> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result200 = OrganizationConfiguration.fromJS(resultData200);
+            return result200;
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<OrganizationConfiguration>(null as any);
+    }
+
+    putOrganizationConfiguration(organizationId: string, payload: PutOrganizationConfigurationPayload): Promise<OrganizationConfiguration> {
+        let url_ = this.baseUrl + "/api/{organizationId}/Configuration/organization";
+        if (organizationId === undefined || organizationId === null)
+            throw new Error("The parameter 'organizationId' must be defined.");
+        url_ = url_.replace("{organizationId}", encodeURIComponent("" + organizationId));
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(payload);
+
+        let options_: RequestInit = {
+            body: content_,
+            method: "PUT",
+            headers: {
+                "Content-Type": "application/json",
+                "Accept": "application/json"
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processPutOrganizationConfiguration(_response);
+        });
+    }
+
+    protected processPutOrganizationConfiguration(response: Response): Promise<OrganizationConfiguration> {
         const status = response.status;
         let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
         if (status === 200) {
@@ -1354,6 +1395,7 @@ export class OrganizationConfiguration implements IOrganizationConfiguration {
     roles!: RoleDefinition[];
     communityRoles!: string[];
     referralCloseReasons?: string[] | undefined;
+    caseCloseReasons?: string[] | undefined;
 
     constructor(data?: IOrganizationConfiguration) {
         if (data) {
@@ -1392,6 +1434,11 @@ export class OrganizationConfiguration implements IOrganizationConfiguration {
                 for (let item of _data["referralCloseReasons"])
                     this.referralCloseReasons!.push(item);
             }
+            if (Array.isArray(_data["caseCloseReasons"])) {
+                this.caseCloseReasons = [] as any;
+                for (let item of _data["caseCloseReasons"])
+                    this.caseCloseReasons!.push(item);
+            }
         }
     }
 
@@ -1425,6 +1472,11 @@ export class OrganizationConfiguration implements IOrganizationConfiguration {
             for (let item of this.referralCloseReasons)
                 data["referralCloseReasons"].push(item);
         }
+        if (Array.isArray(this.caseCloseReasons)) {
+            data["caseCloseReasons"] = [];
+            for (let item of this.caseCloseReasons)
+                data["caseCloseReasons"].push(item);
+        }
         return data;
     }
 }
@@ -1435,6 +1487,7 @@ export interface IOrganizationConfiguration {
     roles: RoleDefinition[];
     communityRoles: string[];
     referralCloseReasons?: string[] | undefined;
+    caseCloseReasons?: string[] | undefined;
 }
 
 export class LocationConfiguration implements ILocationConfiguration {
@@ -2563,6 +2616,62 @@ export class PutLocationPayload implements IPutLocationPayload {
 export interface IPutLocationPayload {
     locationConfiguration: LocationConfiguration;
     copyPoliciesFromLocationId?: string | undefined;
+}
+
+export class PutOrganizationConfigurationPayload implements IPutOrganizationConfigurationPayload {
+    referralCloseReasons?: string[] | undefined;
+    caseCloseReasons?: string[] | undefined;
+
+    constructor(data?: IPutOrganizationConfigurationPayload) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            if (Array.isArray(_data["referralCloseReasons"])) {
+                this.referralCloseReasons = [] as any;
+                for (let item of _data["referralCloseReasons"])
+                    this.referralCloseReasons!.push(item);
+            }
+            if (Array.isArray(_data["caseCloseReasons"])) {
+                this.caseCloseReasons = [] as any;
+                for (let item of _data["caseCloseReasons"])
+                    this.caseCloseReasons!.push(item);
+            }
+        }
+    }
+
+    static fromJS(data: any): PutOrganizationConfigurationPayload {
+        data = typeof data === 'object' ? data : {};
+        let result = new PutOrganizationConfigurationPayload();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        if (Array.isArray(this.referralCloseReasons)) {
+            data["referralCloseReasons"] = [];
+            for (let item of this.referralCloseReasons)
+                data["referralCloseReasons"].push(item);
+        }
+        if (Array.isArray(this.caseCloseReasons)) {
+            data["caseCloseReasons"] = [];
+            for (let item of this.caseCloseReasons)
+                data["caseCloseReasons"].push(item);
+        }
+        return data;
+    }
+}
+
+export interface IPutOrganizationConfigurationPayload {
+    referralCloseReasons?: string[] | undefined;
+    caseCloseReasons?: string[] | undefined;
 }
 
 export class EffectiveLocationPolicy implements IEffectiveLocationPolicy {
@@ -6390,7 +6499,7 @@ export class V1Case implements IV1Case {
     id!: string;
     openedAtUtc!: Date;
     closedAtUtc?: Date | undefined;
-    closeReason?: V1CaseCloseReason | undefined;
+    closeReason?: string | undefined;
     completedRequirements!: CompletedRequirementInfo[];
     exemptedRequirements!: ExemptedRequirementInfo[];
     missingRequirements!: RequirementDefinition[];
@@ -6532,7 +6641,7 @@ export interface IV1Case {
     id: string;
     openedAtUtc: Date;
     closedAtUtc?: Date | undefined;
-    closeReason?: V1CaseCloseReason | undefined;
+    closeReason?: string | undefined;
     completedRequirements: CompletedRequirementInfo[];
     exemptedRequirements: ExemptedRequirementInfo[];
     missingRequirements: RequirementDefinition[];
@@ -6542,14 +6651,6 @@ export interface IV1Case {
     assignedIndividualVolunteers: AssignedIndividualVolunteer[];
     comments?: string | undefined;
     linkedV1ReferralIds: string[];
-}
-
-export enum V1CaseCloseReason {
-    NotAppropriate = 0,
-    NoCapacity = 1,
-    NoLongerNeeded = 2,
-    Resourced = 3,
-    NeedMet = 4,
 }
 
 export class CompletedRequirementInfo implements ICompletedRequirementInfo {
@@ -13966,6 +14067,11 @@ export abstract class V1CaseCommand implements IV1CaseCommand {
             result.init(data);
             return result;
         }
+        if (data["discriminator"] === "CloseReferralWithReason") {
+            let result = new CloseReferralWithReason();
+            result.init(data);
+            return result;
+        }
         if (data["discriminator"] === "CompleteReferralRequirement") {
             let result = new CompleteReferralRequirement();
             result.init(data);
@@ -14073,6 +14179,52 @@ export class CloseReferral extends V1CaseCommand implements ICloseReferral {
 
 export interface ICloseReferral extends IV1CaseCommand {
     closeReason: V1CaseCloseReason;
+    closedAtUtc: Date;
+}
+
+export enum V1CaseCloseReason {
+    NotAppropriate = 0,
+    NoCapacity = 1,
+    NoLongerNeeded = 2,
+    Resourced = 3,
+    NeedMet = 4,
+}
+
+export class CloseReferralWithReason extends V1CaseCommand implements ICloseReferralWithReason {
+    closeReason!: string;
+    closedAtUtc!: Date;
+
+    constructor(data?: ICloseReferralWithReason) {
+        super(data);
+        this._discriminator = "CloseReferralWithReason";
+    }
+
+    init(_data?: any) {
+        super.init(_data);
+        if (_data) {
+            this.closeReason = _data["closeReason"];
+            this.closedAtUtc = _data["closedAtUtc"] ? new Date(_data["closedAtUtc"].toString()) : <any>undefined;
+        }
+    }
+
+    static fromJS(data: any): CloseReferralWithReason {
+        data = typeof data === 'object' ? data : {};
+        let result = new CloseReferralWithReason();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["closeReason"] = this.closeReason;
+        data["closedAtUtc"] = this.closedAtUtc ? this.closedAtUtc.toISOString() : <any>undefined;
+        super.toJSON(data);
+        return data;
+    }
+}
+
+export interface ICloseReferralWithReason extends IV1CaseCommand {
+    closeReason: string;
     closedAtUtc: Date;
 }
 

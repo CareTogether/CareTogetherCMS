@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Immutable;
 using System.Linq;
 using System.Threading.Tasks;
@@ -25,6 +25,11 @@ namespace CareTogether.Api.Controllers
     public sealed record PutLocationPayload(
         LocationConfiguration locationConfiguration,
         Guid? copyPoliciesFromLocationId
+    );
+
+    public sealed record PutOrganizationConfigurationPayload(
+        ImmutableList<string>? referralCloseReasons,
+        ImmutableList<string>? caseCloseReasons
     );
 
     [ApiController]
@@ -298,7 +303,7 @@ namespace CareTogether.Api.Controllers
             return (createFamilyResult, newReferencePersonId);
         }
 
-        [HttpPut("/api/{organizationId:guid}/[controller]")]
+        [HttpPut("/api/{organizationId:guid}/[controller]/location")]
         public async Task<ActionResult<OrganizationConfiguration>> PutLocationDefinition(
             Guid organizationId,
             [FromBody] PutLocationPayload newLocationPayload
@@ -410,9 +415,41 @@ namespace CareTogether.Api.Controllers
             return Ok(result.OrganizationConfiguration);
         }
 
+        [HttpPut("/api/{organizationId:guid}/[controller]/organization")]
+        public async Task<ActionResult<OrganizationConfiguration>> PutOrganizationConfiguration(
+            Guid organizationId,
+            [FromBody] PutOrganizationConfigurationPayload payload
+        )
+        {
+            if (!User.IsInRole(SystemConstants.ORGANIZATION_ADMINISTRATOR))
+                return Forbid();
+
+            var result = await policiesResource.UpsertOrganizationConfigurationAsync(
+                organizationId,
+                payload.referralCloseReasons,
+                payload.caseCloseReasons
+            );
+            return Ok(result);
+        }
+
         [HttpDelete("/api/{organizationId:guid}/[controller]/roles/{roleName}")]
         public async Task<ActionResult<OrganizationConfiguration>> DeleteRoleDefinition(
             Guid organizationId,
+            string roleName
+        )
+        {
+            if (!User.IsInRole(SystemConstants.ORGANIZATION_ADMINISTRATOR))
+                return Forbid();
+            var result = await policiesResource.DeleteRoleDefinitionAsync(organizationId, roleName);
+            return Ok(result);
+        }
+
+        [HttpGet("/api/{organizationId:guid}/{locationId:guid}/[controller]/policy")]
+        public async Task<ActionResult<EffectiveLocationPolicy>> GetEffectiveLocationPolicy(
+            Guid organizationId,
+            Guid locationId
+        )
+        {
             string roleName
         )
         {

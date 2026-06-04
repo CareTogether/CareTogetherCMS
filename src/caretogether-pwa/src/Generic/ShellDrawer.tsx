@@ -12,10 +12,12 @@ export function useDrawer() {
         anchor="right"
         open={open}
         onClose={() => setOpen(false)}
-        sx={{
-          '.MuiDrawer-paper': {
-            padding: 2,
-            paddingTop: { xs: 7, sm: 8, md: 6 },
+        slotProps={{
+          paper: {
+            sx: {
+              padding: 2,
+              paddingTop: { xs: 7, sm: 8, md: 6 },
+            },
           },
         }}
       >

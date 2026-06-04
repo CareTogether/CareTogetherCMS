@@ -1,11 +1,11 @@
-import { Box, Grid, TableCell, TableRow } from '@mui/material';
+import Grid from '@mui/material/GridLegacy';
+import { Box, TableCell, TableRow } from '@mui/material';
 import { format } from 'date-fns';
 import { useState } from 'react';
 import { Phone as PhoneIcon } from '@mui/icons-material';
 import {
   ArrangementPhase,
   CompletedCustomFieldInfo,
-  V1CaseCloseReason,
 } from '../../GeneratedClient';
 import { FamilyName } from '../../Families/FamilyName';
 import { TestFamilyBadge } from '../../Families/TestFamilyBadge';
@@ -120,9 +120,16 @@ function PartneringFamilyTableRows(props: PartneringFamilyTableItemProps) {
     closedV1Cases.length > 0 ? closedV1Cases[closedV1Cases.length - 1] : null;
   const caseStatusText = openV1Case
     ? 'Open since ' + format(openV1Case.openedAtUtc!, 'MM/dd/yyyy')
-    : latestClosedV1Case?.closeReason != null
-      ? 'Closed - ' + V1CaseCloseReason[latestClosedV1Case.closeReason]
-      : 'No case';
+    : latestClosedV1Case?.closedAtUtc
+      ? [
+          'Closed ' + format(latestClosedV1Case.closedAtUtc, 'MM/dd/yyyy'),
+          latestClosedV1Case.closeReason,
+        ]
+          .filter(Boolean)
+          .join(' - ')
+      : latestClosedV1Case != null
+        ? 'Closed'
+        : 'No case';
 
   return (
     <>
@@ -240,7 +247,10 @@ function PartneringFamilyTableRows(props: PartneringFamilyTableItemProps) {
         )}
       </TableRow>
       {expandedView ? (
-        <TableRow sx={{ cursor: 'pointer' }} onClick={() => openFamily(familyId)}>
+        <TableRow
+          sx={{ cursor: 'pointer' }}
+          onClick={() => openFamily(familyId)}
+        >
           <TableCell sx={{ maxWidth: '400px', paddingLeft: 3 }}>
             <Box
               sx={{

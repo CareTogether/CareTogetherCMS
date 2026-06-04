@@ -6,10 +6,12 @@ import { useRecoilValue, useSetRecoilState } from 'recoil';
 import { selectedLocationContextState } from '../../../Model/Data';
 import {
   LocationConfiguration,
+  PutOrganizationConfigurationPayload,
   PutLocationPayload,
-  OrganizationConfiguration,
 } from '../../../GeneratedClient';
-import { organizationConfigurationEdited } from '../../../Model/ConfigurationModel';
+import {
+  organizationConfigurationEdited,
+} from '../../../Model/ConfigurationModel';
 import { useBackdrop } from '../../../Hooks/useBackdrop';
 
 export type ConfigurationData = {
@@ -18,6 +20,7 @@ export type ConfigurationData = {
   ethnicities: string[];
   adultFamilyRelationships: string[];
   arrangementReasons: string[];
+  caseCloseReasons: string[];
   referralCloseReasons: string[];
 };
 
@@ -26,6 +29,7 @@ export type AvailableOptions = {
   ethnicities: string[];
   adultFamilyRelationships: string[];
   arrangementReasons: string[];
+  caseCloseReasons: string[];
   referralCloseReasons: string[];
 };
 
@@ -41,7 +45,7 @@ export default function BasicConfiguration({
   const {
     control,
     handleSubmit,
-    formState: { errors, isDirty },
+    formState: { dirtyFields, errors, isDirty },
     reset,
   } = useForm({
     defaultValues: data,
@@ -53,24 +57,45 @@ export default function BasicConfiguration({
 
   const onSubmit: SubmitHandler<ConfigurationData> = async (data) => {
     withBackdrop(async () => {
-      const { referralCloseReasons, ...locationData } = data;
-
-      const updatedOrgConfig = await api.configuration.putLocationDefinition(
-        organizationId,
-        new PutLocationPayload({
-          locationConfiguration: new LocationConfiguration({
-            ...currentLocationDefinition,
-            ...locationData,
-          }),
-        })
+      const { caseCloseReasons, referralCloseReasons, ...locationData } = data;
+      const locationFieldsDirty = Boolean(
+        dirtyFields.name ||
+          dirtyFields.ethnicities ||
+          dirtyFields.adultFamilyRelationships ||
+          dirtyFields.arrangementReasons
       );
-
-      storeEdits(
-        new OrganizationConfiguration({
-          ...updatedOrgConfig,
-          referralCloseReasons,
-        })
+      const organizationFieldsDirty = Boolean(
+        dirtyFields.caseCloseReasons || dirtyFields.referralCloseReasons
       );
+      let updatedOrgConfig = null;
+
+      if (locationFieldsDirty) {
+        const updatedLocationConfiguration = new LocationConfiguration({
+          ...currentLocationDefinition,
+          ...locationData,
+        });
+
+        updatedOrgConfig = await api.configuration.putLocationDefinition(
+          organizationId,
+          new PutLocationPayload({
+            locationConfiguration: updatedLocationConfiguration,
+          })
+        );
+      }
+
+      if (organizationFieldsDirty) {
+        updatedOrgConfig = await api.configuration.putOrganizationConfiguration(
+          organizationId,
+          new PutOrganizationConfigurationPayload({
+            caseCloseReasons,
+            referralCloseReasons,
+          })
+        );
+      }
+
+      if (updatedOrgConfig) {
+        storeEdits(updatedOrgConfig);
+      }
     });
   };
 
@@ -177,6 +202,27 @@ export default function BasicConfiguration({
         <CTAutocomplete
           name="arrangementReasons"
           label="Arrangement reasons"
+          freeSolo
+          control={control}
+          helperText='Start typing and press "Enter" to add a new item'
+          minTypingAreaWidth={120}
+        />
+
+        <Typography variant="h6">Case close reasons</Typography>
+
+        <Typography variant="body2">
+          Here you can customize the list of reasons for closing cases.
+          <br />
+          These options will be available when closing a case across the
+          organization.
+          <br />
+          You can add new ones or remove ones you don’t need anymore, it won’t
+          change any existing records.
+        </Typography>
+
+        <CTAutocomplete
+          name="caseCloseReasons"
+          label="Case close reasons"
           freeSolo
           control={control}
           helperText='Start typing and press "Enter" to add a new item'
