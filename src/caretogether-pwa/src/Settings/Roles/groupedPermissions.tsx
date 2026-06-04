@@ -26,6 +26,7 @@ const groupedPermissionsWithoutOther = {
   FamilyAndPersonInfo: [
     Permission.ViewFamilyCustomFields,
     Permission.ViewFamilyHistory,
+    Permission.ViewFamilyChildren,
     Permission.ViewPersonConcerns,
     Permission.ViewPersonNotes,
     Permission.ViewPersonContactInfo,

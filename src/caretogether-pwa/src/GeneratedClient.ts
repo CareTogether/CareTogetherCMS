@@ -2474,6 +2474,7 @@ export enum Permission {
     EditPersonNotes = 157,
     EditPersonContactInfo = 158,
     ViewPersonDateOfBirth = 159,
+    ViewFamilyChildren = 160,
     AddEditDraftNotes = 180,
     DiscardDraftNotes = 181,
     ApproveNotes = 182,
