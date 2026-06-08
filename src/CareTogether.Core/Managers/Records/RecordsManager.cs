@@ -133,6 +133,12 @@ namespace CareTogether.Managers.Records
                 referrals,
                 communities
             );
+            var renderingSnapshot = await combinedFamilyInfoFormatter.CreateRenderingSnapshotAsync(
+                organizationId,
+                locationId,
+                locationPolicy,
+                referrals
+            );
 
             // The following permissions should not be construed as granting access to an actual aggregate.
             //TODO: More of this logic should be handled by the AuthorizationEngine.
@@ -171,7 +177,8 @@ namespace CareTogether.Managers.Records
                                 familyAccess.family.Id,
                                 familyAccess.family,
                                 userContext,
-                                familyAccess.permissions.ToImmutableList()
+                                familyAccess.permissions.ToImmutableList(),
+                                renderingSnapshot
                             );
                         if (renderedFamily == null)
                             return null;
@@ -212,20 +219,22 @@ namespace CareTogether.Managers.Records
                         );
                         return (
                             community,
+                            permissions,
                             hasPermissions: permissions.Except(irrelevantPermissions).Any()
                         );
                     })
-            ).Where(x => x.hasPermissions).Select(x => x.community).ToImmutableList();
+            ).Where(x => x.hasPermissions).ToImmutableList();
 
             var renderedCommunities = await visibleCommunities
-                .Select(async community =>
+                .Select(async communityAccess =>
                 {
                     //TODO: Rendering actions (e.g., permissions - which can be on a base aggregate type along with ID!)
                     var renderedCommunity = await authorizationEngine.DiscloseCommunityAsync(
                         userContext,
                         organizationId,
                         locationId,
-                        new CommunityInfo(community, ImmutableList<Permission>.Empty)
+                        new CommunityInfo(communityAccess.community, ImmutableList<Permission>.Empty),
+                        communityAccess.permissions
                     );
                     return new CommunityRecordsAggregate(renderedCommunity);
                 })

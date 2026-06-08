@@ -144,5 +144,13 @@ namespace CareTogether.Engines.Authorization
             Guid locationId,
             CommunityInfo community
         );
+
+        Task<CommunityInfo> DiscloseCommunityAsync(
+            SessionUserContext user,
+            Guid organizationId,
+            Guid locationId,
+            CommunityInfo community,
+            ImmutableList<Permission> contextPermissions
+        );
     }
 }

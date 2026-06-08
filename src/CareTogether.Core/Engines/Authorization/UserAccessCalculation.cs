@@ -119,7 +119,6 @@ namespace CareTogether.Engines.Authorization
                         locationId,
                         userPersonId.Value
                     );
-            var v1CasesTask = v1CasesResource.ListV1CasessAsync(organizationId, locationId);
             var communitiesTask =
                 communities == null
                     ? communitiesResource.ListLocationCommunitiesAsync(
@@ -134,7 +133,6 @@ namespace CareTogether.Engines.Authorization
             var configTask = policiesResource.GetConfigurationAsync(organizationId);
 
             var userFamily = await userFamilyTask;
-            var v1Cases = await v1CasesTask;
             var locationCommunities = (await communitiesTask).ToImmutableList();
             var knownVolunteerFamilyIds = (await volunteerFamilyIdsTask).ToImmutableHashSet();
             var config = await configTask;
@@ -151,6 +149,14 @@ namespace CareTogether.Engines.Authorization
                         )
                         .SelectMany(role => role.PermissionSets)
                         .ToImmutableList();
+            var familiesById = BuildFamiliesById(families, userFamily);
+            var v1CaseIndexes = await LoadV1CaseIndexesAsync(
+                organizationId,
+                locationId,
+                volunteerFamilyIds == null,
+                familiesById.Keys,
+                knownVolunteerFamilyIds.Union(familiesById.Keys)
+            );
 
             return new UserAccessCalculationSnapshot(
                 organizationId,
@@ -158,13 +164,9 @@ namespace CareTogether.Engines.Authorization
                 userContext,
                 userPersonId,
                 userFamily,
-                BuildFamiliesById(families, userFamily),
-                v1Cases.GroupBy(v1Case => v1Case.FamilyId)
-                    .ToImmutableDictionary(
-                        group => group.Key,
-                        group => group.ToImmutableList()
-                    ),
-                BuildV1CasesAssignedToVolunteerFamilyId(v1Cases),
+                familiesById,
+                v1CaseIndexes.V1CasesByFamilyId,
+                v1CaseIndexes.V1CasesAssignedToVolunteerFamilyId,
                 (referrals ?? [])
                     .ToImmutableDictionary(referral => referral.ReferralId, referral => referral),
                 knownVolunteerFamilyIds,
@@ -286,6 +288,68 @@ namespace CareTogether.Engines.Authorization
                 result = result.SetItem(family.Id, family);
 
             return userFamily == null ? result : result.SetItem(userFamily.Id, userFamily);
+        }
+
+        private async Task<(
+            ImmutableDictionary<Guid, ImmutableList<Resources.V1Cases.V1CaseEntry>> V1CasesByFamilyId,
+            ImmutableDictionary<Guid, ImmutableList<Resources.V1Cases.V1CaseEntry>> V1CasesAssignedToVolunteerFamilyId
+        )> LoadV1CaseIndexesAsync(
+            Guid organizationId,
+            Guid locationId,
+            bool loadAllV1Cases,
+            IEnumerable<Guid> familyIds,
+            IEnumerable<Guid> assignedVolunteerFamilyIds
+        )
+        {
+            var familyIdSet = familyIds.ToImmutableHashSet();
+            var assignedVolunteerFamilyIdSet = assignedVolunteerFamilyIds.ToImmutableHashSet();
+
+            if (loadAllV1Cases)
+            {
+                var v1Cases = await v1CasesResource.ListV1CasessAsync(organizationId, locationId);
+                return (
+                    v1Cases.GroupBy(v1Case => v1Case.FamilyId)
+                        .ToImmutableDictionary(
+                            group => group.Key,
+                            group => group.ToImmutableList()
+                        ),
+                    BuildV1CasesAssignedToVolunteerFamilyId(v1Cases)
+                );
+            }
+
+            var v1CasesByFamilyTasks = familyIdSet
+                .Select(async familyId =>
+                    (
+                        familyId,
+                        v1Cases: await v1CasesResource.ListV1CasesForFamilyAsync(
+                            organizationId,
+                            locationId,
+                            familyId
+                        )
+                    )
+                )
+                .ToArray();
+            var assignedV1CasesByVolunteerFamilyTasks = assignedVolunteerFamilyIdSet
+                .Select(async volunteerFamilyId =>
+                    (
+                        volunteerFamilyId,
+                        v1Cases: await v1CasesResource.ListV1CasesAssignedToVolunteerFamilyAsync(
+                            organizationId,
+                            locationId,
+                            volunteerFamilyId
+                        )
+                    )
+                )
+                .ToArray();
+
+            return (
+                (await Task.WhenAll(v1CasesByFamilyTasks))
+                    .Where(x => !x.v1Cases.IsEmpty)
+                    .ToImmutableDictionary(x => x.familyId, x => x.v1Cases),
+                (await Task.WhenAll(assignedV1CasesByVolunteerFamilyTasks))
+                    .Where(x => !x.v1Cases.IsEmpty)
+                    .ToImmutableDictionary(x => x.volunteerFamilyId, x => x.v1Cases)
+            );
         }
 
         private async Task<Guid[]> ListVolunteerFamilyIdsAsync(

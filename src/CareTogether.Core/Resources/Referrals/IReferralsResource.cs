@@ -515,6 +515,18 @@ namespace CareTogether.Resources.V1Cases
     {
         Task<ImmutableList<V1CaseEntry>> ListV1CasessAsync(Guid organizationId, Guid locationId);
 
+        Task<ImmutableList<V1CaseEntry>> ListV1CasesForFamilyAsync(
+            Guid organizationId,
+            Guid locationId,
+            Guid familyId
+        );
+
+        Task<ImmutableList<V1CaseEntry>> ListV1CasesAssignedToVolunteerFamilyAsync(
+            Guid organizationId,
+            Guid locationId,
+            Guid volunteerFamilyId
+        );
+
         Task<V1CaseEntry> ExecuteV1CaseCommandAsync(
             Guid organizationId,
             Guid locationId,
