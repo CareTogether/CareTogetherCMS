@@ -851,6 +851,23 @@ namespace CareTogether.Engines.Authorization
                 new FamilyAuthorizationContext(family.Family.Id, family.Family)
             );
 
+            return await DiscloseFamilyAsync(
+                userContext,
+                organizationId,
+                locationId,
+                family,
+                contextPermissions
+            );
+        }
+
+        public async Task<CombinedFamilyInfo> DiscloseFamilyAsync(
+            SessionUserContext userContext,
+            Guid organizationId,
+            Guid locationId,
+            CombinedFamilyInfo family,
+            ImmutableList<Permission> contextPermissions
+        )
+        {
             return family with
             {
                 PartneringFamilyInfo =

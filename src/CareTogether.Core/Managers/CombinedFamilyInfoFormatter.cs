@@ -57,7 +57,8 @@ namespace CareTogether.Managers
             Guid locationId,
             Guid familyId,
             Family? family,
-            SessionUserContext userContext
+            SessionUserContext userContext,
+            ImmutableList<Permission>? contextPermissions = null
         )
         {
             family =
@@ -180,12 +181,21 @@ namespace CareTogether.Managers
                 ImmutableList<Permission>.Empty
             );
 
-            var disclosedFamily = await authorizationEngine.DiscloseFamilyAsync(
-                userContext,
-                organizationId,
-                locationId,
-                renderedFamily
-            );
+            var disclosedFamily =
+                contextPermissions == null
+                    ? await authorizationEngine.DiscloseFamilyAsync(
+                        userContext,
+                        organizationId,
+                        locationId,
+                        renderedFamily
+                    )
+                    : await authorizationEngine.DiscloseFamilyAsync(
+                        userContext,
+                        organizationId,
+                        locationId,
+                        renderedFamily,
+                        contextPermissions
+                    );
 
             return disclosedFamily;
         }

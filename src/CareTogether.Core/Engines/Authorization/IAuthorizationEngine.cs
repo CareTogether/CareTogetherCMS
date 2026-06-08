@@ -130,6 +130,14 @@ namespace CareTogether.Engines.Authorization
             CombinedFamilyInfo family
         );
 
+        Task<CombinedFamilyInfo> DiscloseFamilyAsync(
+            SessionUserContext user,
+            Guid organizationId,
+            Guid locationId,
+            CombinedFamilyInfo family,
+            ImmutableList<Permission> contextPermissions
+        );
+
         Task<CommunityInfo> DiscloseCommunityAsync(
             SessionUserContext user,
             Guid organizationId,
