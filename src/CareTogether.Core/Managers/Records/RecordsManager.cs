@@ -433,7 +433,8 @@ namespace CareTogether.Managers.Records
             var canViewReferrals = await authorizationEngine.AuthorizeV1ReferralReadAsync(
                 organizationId,
                 locationId,
-                userContext
+                userContext,
+                referralId
             );
 
             if (!canViewReferrals)

@@ -289,14 +289,15 @@ namespace CareTogether.Engines.Authorization
         public async Task<bool> AuthorizeV1ReferralReadAsync(
             Guid organizationId,
             Guid locationId,
-            SessionUserContext userContext
+            SessionUserContext userContext,
+            Guid referralId
         )
         {
             var permissions = await userAccessCalculation.AuthorizeUserAccessAsync(
                 organizationId,
                 locationId,
                 userContext,
-                new GlobalAuthorizationContext()
+                new V1ReferralAuthorizationContext(referralId)
             );
 
             return permissions.Contains(Permission.ViewV1Referral);

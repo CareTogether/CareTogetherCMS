@@ -24,7 +24,10 @@ import { Copyright } from './Copyright';
 import { Version } from './Version';
 import { useGlobalPermissions } from '../Model/SessionModel';
 import { Permission } from '../GeneratedClient';
-import { selectedLocationContextState } from '../Model/Data';
+import {
+  selectedLocationContextState,
+  visibleReferralsQuery,
+} from '../Model/Data';
 import { useLoadable } from '../Hooks/useLoadable';
 import { queueItemsCountQuery } from '../Model/QueueModel';
 import Feedback from './Feedback';
@@ -52,6 +55,10 @@ function SideNavigationMenu({ open }: SideNavigationMenuProps) {
   const reportSubmenuItems = useRecoilValue(reportSubmenuItemsAtom);
 
   const referralsEnabled = useFeatureFlagEnabled('referrals');
+  const visibleReferrals = useLoadable(visibleReferralsQuery);
+  const canViewReferrals =
+    permissions(Permission.ViewV1Referral) ||
+    (visibleReferrals?.length ?? 0) > 0;
 
   return (
     <List
@@ -106,13 +113,13 @@ function SideNavigationMenu({ open }: SideNavigationMenuProps) {
               </Badge>
             }
           />
-          {permissions(Permission.ViewV1Referral) && referralsEnabled && (
-              <ListItemLink
-                className="ph-unmask"
-                to={`${locationPrefix}/referrals`}
-                primary="Referrals"
-                icon={<PermPhoneMsgIcon />}
-              />
+          {canViewReferrals && referralsEnabled && (
+            <ListItemLink
+              className="ph-unmask"
+              to={`${locationPrefix}/referrals`}
+              primary="Referrals"
+              icon={<PermPhoneMsgIcon />}
+            />
           )}
 
           {permissions(Permission.AccessPartneringFamiliesScreen) && (
