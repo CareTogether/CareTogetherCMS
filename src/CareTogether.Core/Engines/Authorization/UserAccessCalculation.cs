@@ -45,14 +45,7 @@ namespace CareTogether.Engines.Authorization
             AuthorizationContext context
         )
         {
-            // If the caller is using an API key, give full access.
-            if (
-                userContext.User.Identity?.AuthenticationType == "API Key"
-                && (
-                    userContext.User.HasClaim(Claims.OrganizationId, organizationId.ToString())
-                    || userContext.User.HasClaim(Claims.Global, true.ToString())
-                )
-            )
+            if (HasApiKeyFullAccess(userContext, organizationId))
                 return Enum.GetValues<Permission>().ToImmutableList();
 
             // The user must have access to this organization and location.
@@ -188,15 +181,7 @@ namespace CareTogether.Engines.Authorization
             AuthorizationContext context
         )
         {
-            if (
-                snapshot.UserContext.User.Identity?.AuthenticationType == "API Key"
-                && (
-                    snapshot.UserContext.User.HasClaim(
-                        Claims.OrganizationId,
-                        snapshot.OrganizationId.ToString()
-                    ) || snapshot.UserContext.User.HasClaim(Claims.Global, true.ToString())
-                )
-            )
+            if (HasApiKeyFullAccess(snapshot.UserContext, snapshot.OrganizationId))
                 return Enum.GetValues<Permission>().ToImmutableList();
 
             var userLocalIdentity = snapshot.UserContext.User.LocationIdentity(
@@ -280,6 +265,15 @@ namespace CareTogether.Engines.Authorization
                 .SelectMany(permissionSet => permissionSet.Permissions)
                 .Distinct()
                 .ToImmutableList();
+        }
+
+        private static bool HasApiKeyFullAccess(SessionUserContext userContext, Guid organizationId)
+        {
+            if (userContext.User.Identity?.AuthenticationType != "API Key")
+                return false;
+
+            return userContext.User.HasClaim(Claims.OrganizationId, organizationId.ToString())
+                || userContext.User.HasClaim(Claims.Global, true.ToString());
         }
 
         private static ImmutableDictionary<Guid, Family> BuildFamiliesById(
