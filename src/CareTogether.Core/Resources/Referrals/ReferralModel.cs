@@ -83,8 +83,13 @@ namespace CareTogether.Resources.V1Cases
         >.Empty;
         private ImmutableDictionary<Guid, ImmutableSortedSet<Guid>> v1CaseIdsByFamilyId =
             ImmutableDictionary<Guid, ImmutableSortedSet<Guid>>.Empty;
-        private ImmutableDictionary<Guid, ImmutableSortedSet<Guid>> v1CaseIdsByAssignedVolunteerFamilyId =
-            ImmutableDictionary<Guid, ImmutableSortedSet<Guid>>.Empty;
+        private ImmutableDictionary<
+            Guid,
+            ImmutableSortedSet<Guid>
+        > v1CaseIdsByAssignedVolunteerFamilyId = ImmutableDictionary<
+            Guid,
+            ImmutableSortedSet<Guid>
+        >.Empty;
 
         public long LastKnownSequenceNumber { get; private set; } = -1;
 
@@ -273,23 +278,16 @@ namespace CareTogether.Resources.V1Cases
                         History =
                             v1CaseEntryToUpsert.Item2 == null
                                 ? v1CaseEntryToUpsert.Item1.History
-                                : v1CaseEntryToUpsert.Item1.History.Add(
-                                    v1CaseEntryToUpsert.Item2
-                                ),
+                                : v1CaseEntryToUpsert.Item1.History.Add(v1CaseEntryToUpsert.Item2),
                     };
-                    v1Cases = v1Cases.SetItem(
-                        updatedV1CaseEntry.Id,
-                        updatedV1CaseEntry
-                    );
-                    (
-                        v1CaseIdsByFamilyId,
-                        v1CaseIdsByAssignedVolunteerFamilyId
-                    ) = UpdateV1CaseIndexes(
-                        v1CaseIdsByFamilyId,
-                        v1CaseIdsByAssignedVolunteerFamilyId,
-                        existingV1CaseEntry,
-                        updatedV1CaseEntry
-                    );
+                    v1Cases = v1Cases.SetItem(updatedV1CaseEntry.Id, updatedV1CaseEntry);
+                    (v1CaseIdsByFamilyId, v1CaseIdsByAssignedVolunteerFamilyId) =
+                        UpdateV1CaseIndexes(
+                            v1CaseIdsByFamilyId,
+                            v1CaseIdsByAssignedVolunteerFamilyId,
+                            existingV1CaseEntry,
+                            updatedV1CaseEntry
+                        );
                 }
             );
         }
@@ -911,15 +909,13 @@ namespace CareTogether.Resources.V1Cases
                     LastKnownSequenceNumber++;
                     v1Cases.TryGetValue(v1CaseEntryToUpsert.Id, out var existingV1CaseEntry);
                     v1Cases = v1Cases.SetItem(v1CaseEntryToUpsert.Id, v1CaseEntryToUpsert);
-                    (
-                        v1CaseIdsByFamilyId,
-                        v1CaseIdsByAssignedVolunteerFamilyId
-                    ) = UpdateV1CaseIndexes(
-                        v1CaseIdsByFamilyId,
-                        v1CaseIdsByAssignedVolunteerFamilyId,
-                        existingV1CaseEntry,
-                        v1CaseEntryToUpsert
-                    );
+                    (v1CaseIdsByFamilyId, v1CaseIdsByAssignedVolunteerFamilyId) =
+                        UpdateV1CaseIndexes(
+                            v1CaseIdsByFamilyId,
+                            v1CaseIdsByAssignedVolunteerFamilyId,
+                            existingV1CaseEntry,
+                            v1CaseEntryToUpsert
+                        );
                 }
             );
         }
@@ -1090,7 +1086,10 @@ namespace CareTogether.Resources.V1Cases
             ImmutableDictionary<Guid, ImmutableSortedSet<Guid>> V1CaseIdsByAssignedVolunteerFamilyId
         ) UpdateV1CaseIndexes(
             ImmutableDictionary<Guid, ImmutableSortedSet<Guid>> v1CaseIdsByFamilyId,
-            ImmutableDictionary<Guid, ImmutableSortedSet<Guid>> v1CaseIdsByAssignedVolunteerFamilyId,
+            ImmutableDictionary<
+                Guid,
+                ImmutableSortedSet<Guid>
+            > v1CaseIdsByAssignedVolunteerFamilyId,
             V1CaseEntry? previousEntry,
             V1CaseEntry nextEntry
         )
@@ -1106,7 +1105,9 @@ namespace CareTogether.Resources.V1Cases
                     previousEntry.Id
                 );
 
-                foreach (var assignedVolunteerFamilyId in GetAssignedVolunteerFamilyIds(previousEntry))
+                foreach (
+                    var assignedVolunteerFamilyId in GetAssignedVolunteerFamilyIds(previousEntry)
+                )
                 {
                     updatedV1CaseIdsByAssignedVolunteerFamilyId = RemoveIndexedV1CaseId(
                         updatedV1CaseIdsByAssignedVolunteerFamilyId,
@@ -1131,10 +1132,7 @@ namespace CareTogether.Resources.V1Cases
                 );
             }
 
-            return (
-                updatedV1CaseIdsByFamilyId,
-                updatedV1CaseIdsByAssignedVolunteerFamilyId
-            );
+            return (updatedV1CaseIdsByFamilyId, updatedV1CaseIdsByAssignedVolunteerFamilyId);
         }
 
         private static ImmutableHashSet<Guid> GetAssignedVolunteerFamilyIds(V1CaseEntry entry) =>

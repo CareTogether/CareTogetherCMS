@@ -438,7 +438,10 @@ namespace CareTogether.Resources.V1Referrals
             return existingReferral;
         }
 
-        private static ImmutableDictionary<Guid, ImmutableSortedSet<Guid>> UpdateFamilyReferralIndex(
+        private static ImmutableDictionary<
+            Guid,
+            ImmutableSortedSet<Guid>
+        > UpdateFamilyReferralIndex(
             ImmutableDictionary<Guid, ImmutableSortedSet<Guid>> index,
             V1Referral? previousReferral,
             V1Referral nextReferral

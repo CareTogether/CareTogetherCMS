@@ -89,27 +89,21 @@ namespace CareTogether.Managers
 
             return new(
                 locationPolicy,
-                notes.GroupBy(note => note.FamilyId)
-                    .ToImmutableDictionary(
-                        group => group.Key,
-                        group => group.ToImmutableList()
-                    ),
-                v1Cases.GroupBy(v1Case => v1Case.FamilyId)
-                    .ToImmutableDictionary(
-                        group => group.Key,
-                        group => group.ToImmutableList()
-                    ),
+                notes
+                    .GroupBy(note => note.FamilyId)
+                    .ToImmutableDictionary(group => group.Key, group => group.ToImmutableList()),
+                v1Cases
+                    .GroupBy(v1Case => v1Case.FamilyId)
+                    .ToImmutableDictionary(group => group.Key, group => group.ToImmutableList()),
                 BuildAssignedV1CasesByVolunteerFamilyId(v1Cases),
                 volunteerFamilies.ToImmutableDictionary(
                     volunteerFamily => volunteerFamily.FamilyId,
                     volunteerFamily => volunteerFamily
                 ),
-                locationReferrals.Where(referral => referral.FamilyId.HasValue)
+                locationReferrals
+                    .Where(referral => referral.FamilyId.HasValue)
                     .GroupBy(referral => referral.FamilyId!.Value)
-                    .ToImmutableDictionary(
-                        group => group.Key,
-                        group => group.ToImmutableList()
-                    )
+                    .ToImmutableDictionary(group => group.Key, group => group.ToImmutableList())
             );
         }
 
@@ -169,11 +163,7 @@ namespace CareTogether.Managers
                 );
             var notes =
                 renderingSnapshot?.NotesByFamilyId.GetValueOrEmptyList(familyId)
-                ?? await notesResource.ListFamilyNotesAsync(
-                    organizationId,
-                    locationId,
-                    familyId
-                );
+                ?? await notesResource.ListFamilyNotesAsync(organizationId, locationId, familyId);
             var renderedNotes = notes
                 .Select(note => new Note(
                     note.Id,
@@ -417,9 +407,7 @@ namespace CareTogether.Managers
             var combinedFamilyApprovals = approvalCalculation.ApprovalStatus;
 
             var v1CaseEntries =
-                renderingSnapshot?.AssignedV1CasesByVolunteerFamilyId.GetValueOrEmptyList(
-                    family.Id
-                )
+                renderingSnapshot?.AssignedV1CasesByVolunteerFamilyId.GetValueOrEmptyList(family.Id)
                 ?? await v1CasesResource.ListV1CasesAssignedToVolunteerFamilyAsync(
                     organizationId,
                     locationId,
@@ -443,11 +431,13 @@ namespace CareTogether.Managers
                 .Select(arrangementEntry => arrangementEntry.Value)
                 .ToImmutableList();
 
-            var completedCustomFields = (entry.CompletedCustomFields ?? ImmutableDictionary<string, CompletedCustomFieldInfo>.Empty)
-                .Values
-                .ToImmutableList();
+            var completedCustomFields = (
+                entry.CompletedCustomFields
+                ?? ImmutableDictionary<string, CompletedCustomFieldInfo>.Empty
+            ).Values.ToImmutableList();
 
-            var volunteerCustomFields = locationPolicy.VolunteerPolicy?.CustomFields ?? ImmutableList<CustomField>.Empty;
+            var volunteerCustomFields =
+                locationPolicy.VolunteerPolicy?.CustomFields ?? ImmutableList<CustomField>.Empty;
             var missingCustomFields = volunteerCustomFields
                 .Where(customField =>
                     !completedCustomFields.Any(completed =>
@@ -511,20 +501,19 @@ namespace CareTogether.Managers
             IEnumerable<Resources.V1Cases.V1CaseEntry> v1Cases
         )
         {
-            var assignmentsByFamilyId = new Dictionary<
-                Guid,
-                List<Resources.V1Cases.V1CaseEntry>
-            >();
+            var assignmentsByFamilyId = new Dictionary<Guid, List<Resources.V1Cases.V1CaseEntry>>();
 
             foreach (var v1Case in v1Cases)
             {
                 var assignedFamilyIds = v1Case
                     .Arrangements.SelectMany(arrangement =>
                         arrangement
-                            .Value.FamilyVolunteerAssignments.Select(assignment => assignment.FamilyId)
+                            .Value.FamilyVolunteerAssignments.Select(assignment =>
+                                assignment.FamilyId
+                            )
                             .Concat(
-                                arrangement.Value.IndividualVolunteerAssignments.Select(assignment =>
-                                    assignment.FamilyId
+                                arrangement.Value.IndividualVolunteerAssignments.Select(
+                                    assignment => assignment.FamilyId
                                 )
                             )
                     )

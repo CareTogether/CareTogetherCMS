@@ -18,7 +18,10 @@ namespace CareTogether.Engines.Authorization
         Family? UserFamily,
         ImmutableDictionary<Guid, Family> FamiliesById,
         ImmutableDictionary<Guid, ImmutableList<Resources.V1Cases.V1CaseEntry>> V1CasesByFamilyId,
-        ImmutableDictionary<Guid, ImmutableList<Resources.V1Cases.V1CaseEntry>> V1CasesAssignedToVolunteerFamilyId,
+        ImmutableDictionary<
+            Guid,
+            ImmutableList<Resources.V1Cases.V1CaseEntry>
+        > V1CasesAssignedToVolunteerFamilyId,
         ImmutableDictionary<Guid, V1Referral> V1ReferralsById,
         ImmutableHashSet<Guid> VolunteerFamilyIds,
         ImmutableList<Community> Communities,

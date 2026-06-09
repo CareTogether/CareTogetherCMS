@@ -102,25 +102,14 @@ namespace CareTogether.Managers.Records
         {
             var userContext = await CreateSessionUserContext(user, organizationId, locationId);
             var familiesTask = directoryResource.ListFamiliesAsync(organizationId, locationId);
-            var locationPolicyTask = policiesResource.GetCurrentPolicy(
-                organizationId,
-                locationId
-            );
+            var locationPolicyTask = policiesResource.GetCurrentPolicy(organizationId, locationId);
             var communitiesTask = communitiesResource.ListLocationCommunitiesAsync(
                 organizationId,
                 locationId
             );
-            var referralsTask = v1ReferralsResource.ListReferralsAsync(
-                organizationId,
-                locationId
-            );
+            var referralsTask = v1ReferralsResource.ListReferralsAsync(organizationId, locationId);
 
-            await Task.WhenAll(
-                familiesTask,
-                locationPolicyTask,
-                communitiesTask,
-                referralsTask
-            );
+            await Task.WhenAll(familiesTask, locationPolicyTask, communitiesTask, referralsTask);
             var families = await familiesTask;
             var locationPolicy = await locationPolicyTask;
             var communities = await communitiesTask;
@@ -150,19 +139,18 @@ namespace CareTogether.Managers.Records
             );
 
             var visibleFamilies = (
-                families
-                    .Select(family =>
-                    {
-                        var permissions = userAccessCalculation.AuthorizeUserAccess(
-                            authorizationSnapshot,
-                            new FamilyAuthorizationContext(family.Id, family)
-                        );
-                        return (
-                            family,
-                            permissions,
-                            hasPermissions: permissions.Except(irrelevantPermissions).Any()
-                        );
-                    })
+                families.Select(family =>
+                {
+                    var permissions = userAccessCalculation.AuthorizeUserAccess(
+                        authorizationSnapshot,
+                        new FamilyAuthorizationContext(family.Id, family)
+                    );
+                    return (
+                        family,
+                        permissions,
+                        hasPermissions: permissions.Except(irrelevantPermissions).Any()
+                    );
+                })
             ).Where(x => x.hasPermissions).ToImmutableList();
 
             var renderedFamilies = (
@@ -210,19 +198,18 @@ namespace CareTogether.Managers.Records
             ).WhereNotNull().ToImmutableList();
 
             var visibleCommunities = (
-                communities
-                    .Select(community =>
-                    {
-                        var permissions = userAccessCalculation.AuthorizeUserAccess(
-                            authorizationSnapshot,
-                            new CommunityAuthorizationContext(community.Id)
-                        );
-                        return (
-                            community,
-                            permissions,
-                            hasPermissions: permissions.Except(irrelevantPermissions).Any()
-                        );
-                    })
+                communities.Select(community =>
+                {
+                    var permissions = userAccessCalculation.AuthorizeUserAccess(
+                        authorizationSnapshot,
+                        new CommunityAuthorizationContext(community.Id)
+                    );
+                    return (
+                        community,
+                        permissions,
+                        hasPermissions: permissions.Except(irrelevantPermissions).Any()
+                    );
+                })
             ).Where(x => x.hasPermissions).ToImmutableList();
 
             var renderedCommunities = await visibleCommunities
@@ -233,7 +220,10 @@ namespace CareTogether.Managers.Records
                         userContext,
                         organizationId,
                         locationId,
-                        new CommunityInfo(communityAccess.community, ImmutableList<Permission>.Empty),
+                        new CommunityInfo(
+                            communityAccess.community,
+                            ImmutableList<Permission>.Empty
+                        ),
                         communityAccess.permissions
                     );
                     return new CommunityRecordsAggregate(renderedCommunity);
@@ -1008,8 +998,8 @@ namespace CareTogether.Managers.Records
                 locationId
             );
             var assignmentPolicy =
-                locationPolicy.V1ReferralPolicy.FunctionAssignmentPolicies.SingleOrDefault(
-                    policy => policy.AssignmentRole == assignIndividualVolunteer.AssignmentRole
+                locationPolicy.V1ReferralPolicy.FunctionAssignmentPolicies.SingleOrDefault(policy =>
+                    policy.AssignmentRole == assignIndividualVolunteer.AssignmentRole
                 );
 
             if (assignmentPolicy == null)
