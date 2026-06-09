@@ -64,6 +64,7 @@ npm run type-check
 npx playwright test --list
 Pop-Location
 dotnet test test/CareTogether.AppHost.Tests/CareTogether.AppHost.Tests.csproj
+
 ```
 
 If the AppHost Playwright test fails before the browser opens, first check Docker and Azurite. The test performs preflight checks for both and should fail with a direct message when either local dependency is unavailable.
