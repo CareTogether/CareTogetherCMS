@@ -44,6 +44,7 @@ import { CustomFieldsFilter } from '../Generic/CustomFieldsFilter/CustomFieldsFi
 import { useCustomFieldFilters } from '../Generic/CustomFieldsFilter/useCustomFieldFilters';
 import { matchesCustomFieldFilters } from '../Generic/CustomFieldsFilter/matchesCustomFieldFilters';
 import { useFeatureFlagEnabled } from 'posthog-js/react';
+import { useFeatureFlagEnabledWithLocalOverride } from '../Utilities/Instrumentation/useFeatureFlagWithLocalOverride';
 import { forceCheck } from '../Utilities/reactLazyLoadInterop';
 import { PartneringFamilyTableItem } from './PartneringFamilies/PartneringFamilyTableItem';
 import { arrangementStatusSummary } from './PartneringFamilies/arrangementStatusSummary';
@@ -229,7 +230,7 @@ function PartneringFamilies() {
 
   const permissions = useAllPartneringFamiliesPermissions();
 
-  const referralsEnabled = useFeatureFlagEnabled('referrals');
+  const referralsEnabled = useFeatureFlagEnabledWithLocalOverride('referrals');
 
   const canCreateFamily =
     permissions(Permission.EditFamilyInfo) &&
@@ -412,7 +413,10 @@ function PartneringFamilies() {
           <CreatePartneringFamilyDrawer
             onClose={(partneringFamilyId) => {
               setCreatePartneringFamilyDialogOpen(false);
-              partneringFamilyId && openFamily(partneringFamilyId);
+
+              if (!partneringFamilyId) return;
+
+              openFamily(partneringFamilyId);
             }}
           />
         )}

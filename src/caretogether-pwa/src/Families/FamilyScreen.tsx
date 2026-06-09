@@ -98,6 +98,7 @@ import { visibleReferralsQuery } from '../Model/Data';
 import { useRecoilValue } from 'recoil';
 import { useV1CasesModel } from '../Model/V1CasesModel';
 import { formatStatusWithDate } from '../V1Referrals/formatStatusWithDate';
+import { useFeatureFlagEnabledWithLocalOverride } from '../Utilities/Instrumentation/useFeatureFlagWithLocalOverride';
 
 export function FamilyScreen() {
   const familyIdMaybe = useParams<{ familyId: string }>();
@@ -367,7 +368,7 @@ export function FamilyScreen() {
   const updateTestFamilyFlagEnabled = useFeatureFlagEnabled(
     'updateTestFamilyFlag'
   );
-  const referralsEnabled = useFeatureFlagEnabled('referrals');
+  const referralsEnabled = useFeatureFlagEnabledWithLocalOverride('referrals');
 
   useScreenTitle(family ? `${familyLastName(family)} Family` : '...');
   useScreenTitleComponent(family ? <TestFamilyBadge family={family} /> : null);

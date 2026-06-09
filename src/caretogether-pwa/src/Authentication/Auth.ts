@@ -26,6 +26,9 @@ const config = {
 
 export const globalMsalInstance: IPublicClientApplication =
   new PublicClientApplication(config);
+const postHogEnabled = Boolean(
+  import.meta.env.VITE_APP_PUBLIC_POSTHOG_KEY?.trim()
+);
 
 function trace(scope: string, message: string) {
   console.debug(`[${scope}] ${message}`);
@@ -39,12 +42,13 @@ function trace(scope: string, message: string) {
     },
   });
 
-  // Send trace to PostHog
-  posthog.capture('auth_trace', {
-    scope: scope,
-    message: message,
-    auth_flow: 'msal_authentication',
-  });
+  if (postHogEnabled) {
+    posthog.capture('auth_trace', {
+      scope: scope,
+      message: message,
+      auth_flow: 'msal_authentication',
+    });
+  }
 }
 
 function renderMsalError(error: unknown) {
@@ -76,7 +80,9 @@ function parseScopes(scopes: string | undefined) {
   return scopes.split(/\s+/).filter((scope) => scope.length > 0);
 }
 
-const scopes = withDefaultScopes(parseScopes(import.meta.env.VITE_APP_AUTH_SCOPES));
+const scopes = withDefaultScopes(
+  parseScopes(import.meta.env.VITE_APP_AUTH_SCOPES)
+);
 const keycloakTokenStorageKey = 'caretogether.keycloak.tokens';
 const keycloakPkceStorageKey = 'caretogether.keycloak.pkce';
 const keycloakClockSkewMs = 60_000;
@@ -118,8 +124,9 @@ function decodeBase64UrlJson<T>(value: string): T {
   const json = decodeURIComponent(
     atob(padded)
       .split('')
-      .map((character) =>
-        `%${character.charCodeAt(0).toString(16).padStart(2, '0')}`
+      .map(
+        (character) =>
+          `%${character.charCodeAt(0).toString(16).padStart(2, '0')}`
       )
       .join('')
   );
@@ -181,7 +188,9 @@ function keycloakAccountFromTokens(tokens: KeycloakTokens): AccountInfo {
     claims.sub;
 
   if (typeof userIdClaim !== 'string') {
-    throw new Error('The Keycloak token does not include a valid user ID claim.');
+    throw new Error(
+      'The Keycloak token does not include a valid user ID claim.'
+    );
   }
 
   return {
@@ -470,18 +479,20 @@ async function loginAndSetActiveAccountAsync(): Promise<AccountInfo> {
   }
 }
 
-let accountInfoStateInitialized = false;
+let accountInfoStateInitializationPromise: Promise<AccountInfo> | null = null;
 const initializeAccountInfoStateAsync: AtomEffect<AccountInfo> = (params) => {
   trace(`InitializeAccountInfoStateAsync`, params.node.key);
-  if (!accountInfoStateInitialized) {
-    accountInfoStateInitialized = true;
-    params.setSelf(loginAndSetActiveAccountAsync());
+
+  if (!accountInfoStateInitializationPromise) {
+    accountInfoStateInitializationPromise = loginAndSetActiveAccountAsync();
   } else {
     trace(
       `InitializeAccountInfoStateAsync`,
-      `Initialization has already started; skipping this atom effect invocation.`
+      `Initialization has already started; reusing the existing auth promise.`
     );
   }
+
+  params.setSelf(accountInfoStateInitializationPromise);
 };
 
 // This will be set by AuthenticationWrapper once the user has authenticated and the default account is set.

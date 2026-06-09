@@ -43,7 +43,9 @@ async function completeLocalKeycloakSignInAsync(
 
   const pkceState = JSON.parse(storedPkceState) as KeycloakPkceState;
   if (pkceState.state !== state) {
-    throw new Error('The Keycloak callback state did not match the PKCE state.');
+    throw new Error(
+      'The Keycloak callback state did not match the PKCE state.'
+    );
   }
 
   const authorizationUrl = new URL(keycloakSignInUrl);
@@ -98,6 +100,20 @@ test('login as administrator', async ({ page, baseURL, request }) => {
     throw new Error('Missing Playwright baseURL');
   }
 
+  const browserFailures: string[] = [];
+
+  page.on('console', (msg) => {
+    if (msg.type() !== 'error') {
+      return;
+    }
+
+    browserFailures.push(`console: ${msg.text()}`);
+  });
+
+  page.on('pageerror', (error) => {
+    browserFailures.push(`pageerror: ${error.message}`);
+  });
+
   fs.mkdirSync(path.dirname(AUTH_FILE), { recursive: true });
 
   const sideNavigation = page.getByRole('list', {
@@ -143,6 +159,10 @@ test('login as administrator', async ({ page, baseURL, request }) => {
 
         if (await sideNavigation.isVisible().catch(() => false)) {
           return 'authenticated';
+        }
+
+        if (browserFailures.length > 0) {
+          return `browser-error: ${browserFailures.join(' | ')}`;
         }
 
         if (
@@ -220,6 +240,10 @@ test('login as administrator', async ({ page, baseURL, request }) => {
           async () => {
             if (await sideNavigation.isVisible().catch(() => false)) {
               return 'authenticated';
+            }
+
+            if (browserFailures.length > 0) {
+              return `browser-error: ${browserFailures.join(' | ')}`;
             }
 
             if (
