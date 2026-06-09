@@ -60,26 +60,30 @@ namespace CareTogether.Engines.Authorization
             if (userLocalIdentity == null)
                 return ImmutableList<Permission>.Empty;
 
-            var familyContext = context as FamilyAuthorizationContext;
+            var familyContext =
+                context is FamilyAuthorizationContext
+                    ? context as FamilyAuthorizationContext
+                    : null;
+
             var targetFamily =
-                familyContext?.Family
-                ?? (
-                    familyContext == null
-                        ? null
-                        : await directoryResource.FindFamilyAsync(
+                familyContext == null
+                    ? null
+                    : familyContext.Family
+                        ?? await directoryResource.FindFamilyAsync(
                             organizationId,
                             locationId,
                             familyContext.FamilyId
-                        )
-                );
-            var targetV1Referral =
-                context is V1ReferralAuthorizationContext referralContext
-                    ? await v1ReferralsResource.GetReferralAsync(
-                        organizationId,
-                        locationId,
-                        referralContext.ReferralId
-                    )
-                    : null;
+                        );
+
+            var targetV1Referral = context is V1ReferralAuthorizationContext referralContext
+                ? await v1ReferralsResource.GetReferralAsync(
+                    organizationId,
+                    locationId,
+                    referralContext.ReferralId
+                )
+                : null;
+
+            // Look up the target family's volunteer info to determine if they are a volunteer family.
             var targetVolunteerFamily =
                 familyContext == null
                     ? null
@@ -88,13 +92,16 @@ namespace CareTogether.Engines.Authorization
                         locationId,
                         familyContext.FamilyId
                     );
+
             var snapshot = await CreateSnapshotAsync(
                 organizationId,
                 locationId,
                 userContext,
                 targetFamily == null ? null : [targetFamily],
                 targetV1Referral == null ? null : [targetV1Referral],
-                volunteerFamilyIds: targetVolunteerFamily == null ? [] : [targetVolunteerFamily.FamilyId]
+                volunteerFamilyIds: targetVolunteerFamily == null
+                    ? []
+                    : [targetVolunteerFamily.FamilyId]
             );
 
             return AuthorizeUserAccess(snapshot, context);
@@ -121,10 +128,7 @@ namespace CareTogether.Engines.Authorization
                     );
             var communitiesTask =
                 communities == null
-                    ? communitiesResource.ListLocationCommunitiesAsync(
-                        organizationId,
-                        locationId
-                    )
+                    ? communitiesResource.ListLocationCommunitiesAsync(organizationId, locationId)
                     : Task.FromResult(communities.ToImmutableList());
             var volunteerFamilyIdsTask =
                 volunteerFamilyIds == null
@@ -167,8 +171,10 @@ namespace CareTogether.Engines.Authorization
                 familiesById,
                 v1CaseIndexes.V1CasesByFamilyId,
                 v1CaseIndexes.V1CasesAssignedToVolunteerFamilyId,
-                (referrals ?? [])
-                    .ToImmutableDictionary(referral => referral.ReferralId, referral => referral),
+                (referrals ?? []).ToImmutableDictionary(
+                    referral => referral.ReferralId,
+                    referral => referral
+                ),
                 knownVolunteerFamilyIds,
                 locationCommunities,
                 BuildCommunityIdsByFamilyId(locationCommunities),
@@ -188,8 +194,7 @@ namespace CareTogether.Engines.Authorization
                     snapshot.UserContext.User.HasClaim(
                         Claims.OrganizationId,
                         snapshot.OrganizationId.ToString()
-                    )
-                    || snapshot.UserContext.User.HasClaim(Claims.Global, true.ToString())
+                    ) || snapshot.UserContext.User.HasClaim(Claims.Global, true.ToString())
                 )
             )
                 return Enum.GetValues<Permission>().ToImmutableList();
@@ -249,8 +254,8 @@ namespace CareTogether.Engines.Authorization
                 targetFamily == null
                     ? ImmutableList<Guid>.Empty
                     : snapshot.CommunityIdsByFamilyId.GetValueOrEmptyList(targetFamily.Id);
-            var applicablePermissionSets = snapshot.UserPermissionSets
-                .Where(permissionSet =>
+            var applicablePermissionSets = snapshot
+                .UserPermissionSets.Where(permissionSet =>
                     IsPermissionSetApplicable(
                         permissionSet,
                         context,
@@ -291,8 +296,14 @@ namespace CareTogether.Engines.Authorization
         }
 
         private async Task<(
-            ImmutableDictionary<Guid, ImmutableList<Resources.V1Cases.V1CaseEntry>> V1CasesByFamilyId,
-            ImmutableDictionary<Guid, ImmutableList<Resources.V1Cases.V1CaseEntry>> V1CasesAssignedToVolunteerFamilyId
+            ImmutableDictionary<
+                Guid,
+                ImmutableList<Resources.V1Cases.V1CaseEntry>
+            > V1CasesByFamilyId,
+            ImmutableDictionary<
+                Guid,
+                ImmutableList<Resources.V1Cases.V1CaseEntry>
+            > V1CasesAssignedToVolunteerFamilyId
         )> LoadV1CaseIndexesAsync(
             Guid organizationId,
             Guid locationId,
@@ -308,7 +319,8 @@ namespace CareTogether.Engines.Authorization
             {
                 var v1Cases = await v1CasesResource.ListV1CasessAsync(organizationId, locationId);
                 return (
-                    v1Cases.GroupBy(v1Case => v1Case.FamilyId)
+                    v1Cases
+                        .GroupBy(v1Case => v1Case.FamilyId)
                         .ToImmutableDictionary(
                             group => group.Key,
                             group => group.ToImmutableList()
@@ -352,21 +364,19 @@ namespace CareTogether.Engines.Authorization
             );
         }
 
-        private async Task<Guid[]> ListVolunteerFamilyIdsAsync(
-            Guid organizationId,
-            Guid locationId
-        )
+        private async Task<Guid[]> ListVolunteerFamilyIdsAsync(Guid organizationId, Guid locationId)
         {
             var volunteerFamilies = await approvalsResource.ListVolunteerFamiliesAsync(
                 organizationId,
                 locationId
             );
-            return volunteerFamilies
-                .Select(volunteerFamily => volunteerFamily.FamilyId)
-                .ToArray();
+            return volunteerFamilies.Select(volunteerFamily => volunteerFamily.FamilyId).ToArray();
         }
 
-        private static ImmutableDictionary<Guid, ImmutableList<Resources.V1Cases.V1CaseEntry>> BuildV1CasesAssignedToVolunteerFamilyId(
+        private static ImmutableDictionary<
+            Guid,
+            ImmutableList<Resources.V1Cases.V1CaseEntry>
+        > BuildV1CasesAssignedToVolunteerFamilyId(
             IEnumerable<Resources.V1Cases.V1CaseEntry> v1Cases
         )
         {
@@ -377,10 +387,12 @@ namespace CareTogether.Engines.Authorization
                 var assignedFamilyIds = v1Case
                     .Arrangements.SelectMany(arrangement =>
                         arrangement
-                            .Value.FamilyVolunteerAssignments.Select(assignment => assignment.FamilyId)
+                            .Value.FamilyVolunteerAssignments.Select(assignment =>
+                                assignment.FamilyId
+                            )
                             .Concat(
-                                arrangement.Value.IndividualVolunteerAssignments.Select(assignment =>
-                                    assignment.FamilyId
+                                arrangement.Value.IndividualVolunteerAssignments.Select(
+                                    assignment => assignment.FamilyId
                                 )
                             )
                     )
@@ -430,10 +442,10 @@ namespace CareTogether.Engines.Authorization
             );
         }
 
-        private static ImmutableList<(Guid Id, string CommunityRole)> BuildUserCommunityRoleAssignments(
-            IEnumerable<Community> communities,
-            Guid? userPersonId
-        )
+        private static ImmutableList<(
+            Guid Id,
+            string CommunityRole
+        )> BuildUserCommunityRoleAssignments(IEnumerable<Community> communities, Guid? userPersonId)
         {
             if (userPersonId == null)
                 return [];
