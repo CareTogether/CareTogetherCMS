@@ -119,7 +119,20 @@ namespace CareTogether.Resources.Notes
                 var lockedModel = await tenantModels.ReadLockItemAsync((organizationId, locationId))
             )
             {
-                return lockedModel.Value.FindNoteEntries(note => note.FamilyId == familyId);
+                return lockedModel.Value.GetFamilyNoteEntries(familyId);
+            }
+        }
+
+        public async Task<ImmutableList<NoteEntry>> ListNotesAsync(
+            Guid organizationId,
+            Guid locationId
+        )
+        {
+            using (
+                var lockedModel = await tenantModels.ReadLockItemAsync((organizationId, locationId))
+            )
+            {
+                return lockedModel.Value.FindNoteEntries(_ => true);
             }
         }
     }

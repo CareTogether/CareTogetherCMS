@@ -851,6 +851,23 @@ namespace CareTogether.Engines.Authorization
                 new FamilyAuthorizationContext(family.Family.Id, family.Family)
             );
 
+            return await DiscloseFamilyAsync(
+                userContext,
+                organizationId,
+                locationId,
+                family,
+                contextPermissions
+            );
+        }
+
+        public async Task<CombinedFamilyInfo> DiscloseFamilyAsync(
+            SessionUserContext userContext,
+            Guid organizationId,
+            Guid locationId,
+            CombinedFamilyInfo family,
+            ImmutableList<Permission> contextPermissions
+        )
+        {
             return family with
             {
                 PartneringFamilyInfo =
@@ -911,18 +928,37 @@ namespace CareTogether.Engines.Authorization
                 new CommunityAuthorizationContext(community.Community.Id)
             );
 
-            return community with
-            {
-                Community = community.Community with
+            return await DiscloseCommunityAsync(
+                userContext,
+                organizationId,
+                locationId,
+                community,
+                contextPermissions
+            );
+        }
+
+        public Task<CommunityInfo> DiscloseCommunityAsync(
+            SessionUserContext userContext,
+            Guid organizationId,
+            Guid locationId,
+            CommunityInfo community,
+            ImmutableList<Permission> contextPermissions
+        )
+        {
+            return Task.FromResult(
+                community with
                 {
-                    UploadedDocuments = contextPermissions.Contains(
-                        Permission.ViewCommunityDocumentMetadata
-                    )
-                        ? community.Community.UploadedDocuments
-                        : ImmutableList<UploadedDocumentInfo>.Empty,
-                },
-                UserPermissions = contextPermissions,
-            };
+                    Community = community.Community with
+                    {
+                        UploadedDocuments = contextPermissions.Contains(
+                            Permission.ViewCommunityDocumentMetadata
+                        )
+                            ? community.Community.UploadedDocuments
+                            : ImmutableList<UploadedDocumentInfo>.Empty,
+                    },
+                    UserPermissions = contextPermissions,
+                }
+            );
         }
 
         internal PartneringFamilyInfo DisclosePartneringFamilyInfo(
