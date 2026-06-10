@@ -1,7 +1,5 @@
-import Grid from '@mui/material/GridLegacy';
 import {
   Table,
-  TableContainer,
   TableBody,
   TableCell,
   TableHead,
@@ -47,7 +45,10 @@ import { Link, useLocation } from 'react-router-dom';
 import { SearchBar } from '../../Shell/SearchBar';
 import { useLocalStorage } from '../../Hooks/useLocalStorage';
 import { useScrollMemory } from '../../Hooks/useScrollMemory';
-import { useAllVolunteerFamiliesPermissions } from '../../Model/SessionModel';
+import {
+  useAllVolunteerFamiliesPermissions,
+  useGlobalPermissions,
+} from '../../Model/SessionModel';
 import { BulkSmsSideSheet } from '../BulkSmsSideSheet';
 import { useWindowSize } from '../../Hooks/useWindowSize';
 import { useScreenTitle } from '../../Shell/ShellScreenTitle';
@@ -74,12 +75,15 @@ import { forceCheck } from '../../Utilities/reactLazyLoadInterop';
 import { VolunteerApprovalTableItem } from './VolunteerApprovalTableItem';
 import { VolunteerCustomFieldFiltersSidePanel } from './VolunteerCustomFieldFiltersSidePanel';
 import { useSidePanel } from '../../Hooks/useSidePanel';
-import { stickyHeaderTableSx } from '../../Utilities/stickyHeaderTableSx';
+import { containedStickyHeaderTableSx } from '../../Utilities/stickyHeaderTableSx';
+import { WideTableContainer } from '../../Utilities/WideTableContainer';
+import { wideTablePageSx } from '../../Utilities/wideTablePageSx';
 
 function VolunteerApproval(props: { onOpen: () => void }) {
   const { onOpen } = props;
   useEffect(onOpen);
   const appNavigate = useAppNavigate();
+  const globalPermissions = useGlobalPermissions();
   const [uncheckedFamilies, setUncheckedFamilies] = useState<string[]>([]);
   const {
     SidePanel: CustomFieldFiltersSidePanel,
@@ -504,6 +508,10 @@ function VolunteerApproval(props: { onOpen: () => void }) {
   const windowSize = useWindowSize();
 
   const permissions = useAllVolunteerFamiliesPermissions();
+  const tableColumnCount = 2 + customFieldNames.length + (smsMode ? 1 : 0);
+  const tableMinWidth = Math.max(700, tableColumnCount * 160);
+  const hasFeaturebaseChat = globalPermissions(Permission.AccessSupportScreen);
+  const tablePageSx = wideTablePageSx(hasFeaturebaseChat);
 
   useScreenTitle('Volunteers');
 
@@ -513,16 +521,17 @@ function VolunteerApproval(props: { onOpen: () => void }) {
     </ProgressBackdrop>
   ) : (
     <>
-      <Grid
-        container
+      <Box
         sx={{
-          paddingRight: smsMode && !isMobile ? '400px' : null,
+          ...tablePageSx,
+          ...(smsMode && !isMobile ? { paddingRight: '400px' } : {}),
           height:
-            smsMode && isMobile ? `${windowSize.height - 500 - 24}px` : null,
-          overflow: smsMode && isMobile ? 'scroll' : null,
+            smsMode && isMobile
+              ? `${windowSize.height - 500 - 24}px`
+              : tablePageSx.height,
         }}
       >
-        <Grid item xs={12}>
+        <Box sx={{ flex: '0 0 auto' }}>
           <Stack
             direction={{ xs: 'column', md: 'row' }}
             sx={{
@@ -720,17 +729,22 @@ function VolunteerApproval(props: { onOpen: () => void }) {
                 Add new volunteer family
               </Button>
             )}
-        </Grid>
-        <Grid item xs={12}>
-          <TableContainer
-            sx={{
-              borderBottom: '1px solid rgba(224, 224, 224, 1)',
-              overflow: 'visible',
-            }}
-          >
+        </Box>
+        <Box
+          sx={{
+            display: 'flex',
+            flex: 1,
+            flexDirection: 'column',
+            minHeight: 0,
+          }}
+        >
+          <WideTableContainer>
             <Table
               stickyHeader
-              sx={{ ...stickyHeaderTableSx, minWidth: '700px' }}
+              sx={{
+                ...containedStickyHeaderTableSx,
+                minWidth: tableMinWidth,
+              }}
               size="small"
             >
               <TableHead>
@@ -781,18 +795,23 @@ function VolunteerApproval(props: { onOpen: () => void }) {
                 ))}
               </TableBody>
             </Table>
-          </TableContainer>
+          </WideTableContainer>
 
           {createVolunteerFamilyDialogOpen && (
             <CreateVolunteerFamilyDialog
               onClose={(volunteerFamilyId) => {
                 setCreateVolunteerFamilyDialogOpen(false);
-                volunteerFamilyId && openFamily(volunteerFamilyId);
+
+                if (!volunteerFamilyId) {
+                  return;
+                }
+
+                openFamily(volunteerFamilyId);
               }}
             />
           )}
-        </Grid>
-      </Grid>
+        </Box>
+      </Box>
       {smsMode && (
         <BulkSmsSideSheet
           selectedFamilies={selectedFamilies}

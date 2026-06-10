@@ -106,6 +106,7 @@ function VolunteerApprovalPlaceholderRow(
       >
         <LazyLoad
           once
+          overflow
           height={height}
           offset={300}
           placeholder={<Box sx={{ minHeight: `${height}px` }} />}
