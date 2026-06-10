@@ -12,8 +12,10 @@ import {
   IconButton,
   FormControl,
   InputBase,
+  InputLabel,
   MenuItem,
   Select,
+  SelectChangeEvent,
   Stack,
   ToggleButton,
   ToggleButtonGroup,
@@ -59,7 +61,6 @@ import { useAppNavigate } from '../../Hooks/useAppNavigate';
 import { useGlobalSnackBar } from '../../Hooks/useGlobalSnackBar';
 import { statusFiltersState } from './statusFiltersState';
 import { checkStatusEquivalence } from './checkStatusEquivalence';
-import { familyLastName } from './familyLastName';
 import { simplify } from './simplify';
 import { filterType } from './filterType';
 import { roleFiltersState } from './roleFiltersState';
@@ -78,6 +79,13 @@ import { useSidePanel } from '../../Hooks/useSidePanel';
 import { containedStickyHeaderTableSx } from '../../Utilities/stickyHeaderTableSx';
 import { WideTableContainer } from '../../Utilities/WideTableContainer';
 import { wideTablePageSx } from '../../Utilities/wideTablePageSx';
+import {
+  FamilyNameSortMode,
+  normalizeFamilyNameSortMode,
+  sortFamiliesByName,
+} from '../../Families/FamilyUtils';
+
+const VOLUNTEER_APPROVAL_SORT_STORAGE_KEY = 'volunteer-approval-sortMode';
 
 function VolunteerApproval(props: { onOpen: () => void }) {
   const { onOpen } = props;
@@ -129,15 +137,21 @@ function VolunteerApproval(props: { onOpen: () => void }) {
 
   // The array object returned by Recoil is read-only. We need to copy it before we can do an in-place sort.
   const volunteerFamiliesLoadable = useLoadable(volunteerFamiliesData);
-  const volunteerFamilies = (volunteerFamiliesLoadable || [])
-    .map((x) => x)
-    .sort((a, b) =>
-      familyLastName(a) < familyLastName(b)
-        ? -1
-        : familyLastName(a) > familyLastName(b)
-          ? 1
-          : 0
+  const [storedSortMode, setStoredSortMode] =
+    useLocalStorage<FamilyNameSortMode>(
+      VOLUNTEER_APPROVAL_SORT_STORAGE_KEY,
+      'lastNameAsc'
     );
+  const sortMode = normalizeFamilyNameSortMode(storedSortMode);
+
+  function setSortMode(value: FamilyNameSortMode) {
+    setStoredSortMode(value);
+  }
+
+  const volunteerFamilies = sortFamiliesByName(
+    volunteerFamiliesLoadable || [],
+    sortMode
+  );
 
   const {
     selectedValuesByField: customFieldFilters,
@@ -432,7 +446,7 @@ function VolunteerApproval(props: { onOpen: () => void }) {
 
   useEffect(() => {
     forceCheck();
-  }, [customFieldFilters, filterText, roleFilters, statusFilters]);
+  }, [customFieldFilters, filterText, roleFilters, sortMode, statusFilters]);
 
   const selectedFamilies = filteredVolunteerFamilies.filter(
     (family) => !uncheckedFamilies.some((f) => f === family.family!.id!)
@@ -704,6 +718,53 @@ function VolunteerApproval(props: { onOpen: () => void }) {
               </Stack>
             </Stack>
           </Stack>
+          <Stack
+            my={2}
+            direction="row"
+            justifyContent="flex-end"
+            alignItems="center"
+            sx={{ gap: 1, flexWrap: 'wrap' }}
+          >
+            {permissions(Permission.EditFamilyInfo) &&
+              permissions(Permission.ActivateVolunteerFamily) && (
+                <Button
+                  variant="contained"
+                  startIcon={<AddIcon />}
+                  onClick={() => setCreateVolunteerFamilyDialogOpen(true)}
+                  sx={{
+                    marginRight: 'auto',
+                    width: { xs: '100%', sm: 'auto' },
+                  }}
+                >
+                  Add new volunteer family
+                </Button>
+              )}
+            <FormControl
+              size="small"
+              sx={{ minWidth: 180, width: { xs: '100%', sm: 'auto' } }}
+            >
+              <InputLabel id="volunteer-approval-sort-label">
+                Sort by
+              </InputLabel>
+              <Select
+                labelId="volunteer-approval-sort-label"
+                value={sortMode}
+                label="Sort by"
+                onChange={(event: SelectChangeEvent) =>
+                  setSortMode(event.target.value as FamilyNameSortMode)
+                }
+              >
+                <MenuItem value="lastNameAsc">Last name (ascending)</MenuItem>
+                <MenuItem value="lastNameDesc">Last name (descending)</MenuItem>
+                <MenuItem value="firstNameAsc">
+                  First name (ascending)
+                </MenuItem>
+                <MenuItem value="firstNameDesc">
+                  First name (descending)
+                </MenuItem>
+              </Select>
+            </FormControl>
+          </Stack>
           <CustomFieldFiltersSidePanel>
             <VolunteerCustomFieldFiltersSidePanel
               customFields={(policy.customFamilyFields || []).concat(policy.volunteerPolicy?.customFields || [])}
@@ -714,21 +775,6 @@ function VolunteerApproval(props: { onOpen: () => void }) {
             />
           </CustomFieldFiltersSidePanel>
 
-          {permissions(Permission.EditFamilyInfo) &&
-            permissions(Permission.ActivateVolunteerFamily) && (
-              <Button
-                variant="contained"
-                startIcon={<AddIcon />}
-                onClick={() => setCreateVolunteerFamilyDialogOpen(true)}
-                sx={{
-                  marginRight: 'auto',
-                  marginY: 2,
-                  width: { xs: '100%', sm: 'auto' },
-                }}
-              >
-                Add new volunteer family
-              </Button>
-            )}
         </Box>
         <Box
           sx={{
