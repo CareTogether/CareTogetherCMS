@@ -1,12 +1,11 @@
 import { useEffect, useState } from 'react';
-import Grid from '@mui/material/GridLegacy';
 import {
+  Box,
   Table,
   TableBody,
   TableCell,
   TableHead,
   TableRow,
-  TableContainer,
   Drawer,
 } from '@mui/material';
 import { Routes, Route } from 'react-router-dom';
@@ -39,6 +38,9 @@ import {
   assignmentRolesForColumns,
   matchesAssignmentFilters,
 } from '../FunctionAssignments/assignmentRoleColumns';
+import { containedStickyHeaderTableSx } from '../Utilities/stickyHeaderTableSx';
+import { WideTableContainer } from '../Utilities/WideTableContainer';
+import { wideTablePageSx } from '../Utilities/wideTablePageSx';
 
 const REFERRALS_FEATURE_FLAG = 'referrals';
 
@@ -139,6 +141,9 @@ function V1ReferralsContent() {
         )
       )
     : [];
+  const tableColumnCount = 4 + assignmentRoles.length;
+  const tableMinWidth = Math.max(700, tableColumnCount * 160);
+  const hasFeaturebaseChat = permissions(Permission.AccessSupportScreen);
 
   const rows = referrals
     .map((r) => {
@@ -208,8 +213,8 @@ function V1ReferralsContent() {
       <Route
         path=""
         element={
-          <Grid container>
-            <Grid item xs={12}>
+          <Box sx={wideTablePageSx(hasFeaturebaseChat)}>
+            <Box sx={{ flex: '0 0 auto' }}>
               <ReferralsFilters
                 filterText={filterText}
                 setFilterText={setFilterText}
@@ -249,11 +254,25 @@ function V1ReferralsContent() {
                       family != null
                   )}
               />
-            </Grid>
+            </Box>
 
-            <Grid item xs={12}>
-              <TableContainer>
-                <Table size="small">
+            <Box
+              sx={{
+                display: 'flex',
+                flex: 1,
+                flexDirection: 'column',
+                minHeight: 0,
+              }}
+            >
+              <WideTableContainer>
+                <Table
+                  stickyHeader
+                  size="small"
+                  sx={{
+                    ...containedStickyHeaderTableSx,
+                    minWidth: tableMinWidth,
+                  }}
+                >
                   <TableHead>
                     <TableRow>
                       <TableCell>Referral Title</TableCell>
@@ -282,8 +301,8 @@ function V1ReferralsContent() {
                     ))}
                   </TableBody>
                 </Table>
-              </TableContainer>
-            </Grid>
+              </WideTableContainer>
+            </Box>
 
             <Drawer
               anchor="right"
@@ -293,7 +312,7 @@ function V1ReferralsContent() {
             >
               <AddNewReferralDrawer onClose={() => setOpenNewReferral(false)} />
             </Drawer>
-          </Grid>
+          </Box>
         }
       />
 
