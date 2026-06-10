@@ -47,7 +47,7 @@ import { Breadcrumbs } from '../../Generic/Breadcrumbs';
 import {
   DESKTOP_BOTTOM_SAFE_AREA,
   MOBILE_BOTTOM_SAFE_AREA,
-} from '../../Shell/ShellRootLayout';
+} from '../../Shell/shellLayoutConstants';
 
 export function RoleEdit({
   roleDefinition,

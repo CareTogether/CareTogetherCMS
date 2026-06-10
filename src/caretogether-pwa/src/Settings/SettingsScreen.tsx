@@ -31,9 +31,9 @@ export function SettingsScreen() {
   return (
     <Box
       className="ph-unmask"
-      sx={{ paddingTop: 4, display: 'flex', justifyContent: 'center' }}
+      sx={{ paddingTop: 4, display: 'flex', justifyContent: 'flex-start' }}
     >
-      <Grid container spacing={3}>
+      <Grid container spacing={3} sx={{ width: '100%' }}>
         <Grid size={{ xs: 12, sm: 6, md: 4 }}>
           <Card variant="outlined">
             <CardActionArea onClick={() => appNavigate.settingsRoles()}>

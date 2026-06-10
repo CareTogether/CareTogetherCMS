@@ -34,6 +34,7 @@ import { ListItemLink } from './ListItemLink';
 import { useAppNavigate } from '../Hooks/useAppNavigate';
 import WhatsNew from './WhatsNew';
 import { useFeatureFlagEnabled } from 'posthog-js/react';
+import { SHELL_DRAWER_TOP_OFFSET } from './shellLayoutConstants';
 
 interface SideNavigationMenuProps {
   open: boolean;
@@ -215,6 +216,7 @@ export function ShellSideNavigation({ open, width }: ShellSideNavigationProps) {
             width: width, // Force fixed width
             minWidth: width, // Prevent shrinking
             maxWidth: width, // Prevent expanding
+            boxSizing: 'border-box',
             backgroundColor: theme.palette.primary.dark,
             color: theme.palette.primary.contrastText,
             overflowX: 'hidden',
@@ -224,7 +226,7 @@ export function ShellSideNavigation({ open, width }: ShellSideNavigationProps) {
         },
       }}
     >
-      <Box sx={{ paddingTop: { xs: 7, sm: 8, md: 6 } }}>
+      <Box sx={{ height: SHELL_DRAWER_TOP_OFFSET, flexShrink: 0 }}>
         {/* Spacer for top app bar */}
       </Box>
       <Box
