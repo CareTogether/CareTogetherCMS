@@ -504,6 +504,10 @@ function PartneringFamilies() {
             >
               <MenuItem value="lastNameAsc">Last name (ascending)</MenuItem>
               <MenuItem value="lastNameDesc">Last name (descending)</MenuItem>
+              <MenuItem value="firstNameAsc">First name (ascending)</MenuItem>
+              <MenuItem value="firstNameDesc">
+                First name (descending)
+              </MenuItem>
               <MenuItem value="dateOpenedDesc">
                 Date opened (descending)
               </MenuItem>
