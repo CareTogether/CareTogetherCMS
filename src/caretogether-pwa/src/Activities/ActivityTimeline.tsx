@@ -39,7 +39,7 @@ import { buildGroupedV1ReferralTimelineEntries } from '../V1Referrals/referralTi
 type ActivityTimelineProps = {
   family: CombinedFamilyInfo;
   referrals: V1Referral[];
-  printContentRef: React.RefObject<HTMLDivElement>;
+  printContentRef: React.RefObject<HTMLDivElement | null>;
 };
 
 type ActivitySorting = 'activity' | 'created' | 'edited' | 'approved';
