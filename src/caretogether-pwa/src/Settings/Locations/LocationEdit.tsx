@@ -1,4 +1,5 @@
 import {
+  Alert,
   Stack,
   Typography,
   useTheme,
@@ -8,27 +9,43 @@ import {
 } from '@mui/material';
 import { useState, useEffect, useMemo } from 'react';
 import { useLoadable } from '../../Hooks/useLoadable';
-import { organizationConfigurationQuery } from '../../Model/ConfigurationModel';
+import { useBackdrop } from '../../Hooks/useBackdrop';
+import {
+  organizationConfigurationQuery,
+  policyData,
+} from '../../Model/ConfigurationModel';
 import { ProgressBackdrop } from '../../Shell/ProgressBackdrop';
 import { useScreenTitle } from '../../Shell/ShellScreenTitle';
-import { useRecoilValue } from 'recoil';
+import { useRecoilRefresher_UNSTABLE, useRecoilValue } from 'recoil';
 import { selectedLocationContextState, useDataLoaded } from '../../Model/Data';
 import { useParams } from 'react-router-dom';
 import { Box } from '@mui/system';
 import BasicConfiguration from './Tabs/BasicConfiguration';
-import ActionDefinitions from './Tabs/ActionDefinitions';
-import ApprovalPolicies from './Tabs/ApprovalPolicies';
 import SettingsTabMenu from './SettingsTabMenu';
 import {
   ChevronLeft as ChevronLeftIcon,
   ChevronRight as ChevronRightIcon,
 } from '@mui/icons-material';
-import { useFeatureFlagEnabled } from 'posthog-js/react';
-import { useUserIsOrganizationAdministrator } from '../../Model/SessionModel';
+import { useGlobalPermissions } from '../../Model/SessionModel';
 import { useAppNavigate } from '../../Hooks/useAppNavigate';
 import AccessLevels from './Tabs/AccessLevels/AccessLevels';
 import { Breadcrumbs } from '../../Generic/Breadcrumbs';
 import { useSearchParams } from 'react-router-dom';
+import {
+  PolicyConfiguration,
+} from './Tabs/PolicyConfiguration';
+import {
+  ApiException,
+  EffectiveLocationPolicy,
+  Permission,
+} from '../../GeneratedClient';
+import { api } from '../../Api/Api';
+import {
+  DESKTOP_BOTTOM_SAFE_AREA,
+  MOBILE_BOTTOM_SAFE_AREA,
+} from '../../Shell/ShellRootLayout';
+import { useFeatureFlagEnabled, usePostHog } from 'posthog-js/react';
+import { POLICY_SELF_SERVICE_FEATURE_FLAG } from '../../featureFlags';
 
 export function LocationEdit() {
   const { locationId, editingLocationId } = useParams<{
@@ -38,6 +55,7 @@ export function LocationEdit() {
 
   const configuration = useLoadable(organizationConfigurationQuery);
   const { organizationId } = useRecoilValue(selectedLocationContextState);
+  const targetLocationId = editingLocationId ?? locationId;
 
   const location = configuration?.locations?.find(
     (location) => location.id === editingLocationId
@@ -57,8 +75,20 @@ export function LocationEdit() {
       setIsSidebarCollapsed(false);
     }
   }, [isMobile]);
-  const actionTabEnabled = useFeatureFlagEnabled('actionDefinitionsTab');
-  const approvalTabEnabled = useFeatureFlagEnabled('approvalPoliciesTab');
+  const policy = useLoadable(policyData);
+  const posthog = usePostHog();
+  const showPolicySelfService = useFeatureFlagEnabled(
+    POLICY_SELF_SERVICE_FEATURE_FLAG
+  );
+  const featureFlagsLoaded = posthog.featureFlags.hasLoadedFlags;
+  const [policyDraft, setPolicyDraft] =
+    useState<EffectiveLocationPolicy | null>(null);
+  const [policySaveErrors, setPolicySaveErrors] = useState<string[]>([]);
+
+  useEffect(() => {
+    if (!policy) return;
+    setPolicyDraft(policy);
+  }, [policy]);
 
   const tabs = useMemo(
     () => [
@@ -69,16 +99,34 @@ export function LocationEdit() {
         shouldShow: true,
       },
       {
-        id: 'actions' as const,
+        id: 'actionDefinitions' as const,
         label: 'Action Definitions',
-        component: ActionDefinitions,
-        shouldShow: actionTabEnabled,
+        component: PolicyConfiguration,
+        shouldShow: showPolicySelfService === true,
       },
       {
-        id: 'approvalPolicies' as const,
-        label: 'Approval Policies',
-        component: ApprovalPolicies,
-        shouldShow: approvalTabEnabled,
+        id: 'customFamilyFields' as const,
+        label: 'Custom Family Fields',
+        component: PolicyConfiguration,
+        shouldShow: showPolicySelfService === true,
+      },
+      {
+        id: 'casePolicy' as const,
+        label: 'Case Policies',
+        component: PolicyConfiguration,
+        shouldShow: showPolicySelfService === true,
+      },
+      {
+        id: 'v1ReferralPolicy' as const,
+        label: 'Referral Policies',
+        component: PolicyConfiguration,
+        shouldShow: showPolicySelfService === true,
+      },
+      {
+        id: 'volunteerPolicy' as const,
+        label: 'Volunteer Policies',
+        component: PolicyConfiguration,
+        shouldShow: showPolicySelfService === true,
       },
       {
         id: 'accessLevels' as const,
@@ -87,7 +135,7 @@ export function LocationEdit() {
         shouldShow: true,
       },
     ],
-    [actionTabEnabled, approvalTabEnabled]
+    [showPolicySelfService]
   );
 
   // This result in a type like: 'basic' | 'actions' | 'policies'
@@ -100,24 +148,60 @@ export function LocationEdit() {
   const [searchParams, setSearchParams] = useSearchParams();
 
   const urlTab = searchParams.get('tab');
+  const availableTabs = useMemo(
+    () => tabs.filter((tab) => tab.shouldShow),
+    [tabs]
+  );
 
   useEffect(() => {
-    const match = tabs.find((tab) => tab.id === urlTab);
+    if (!featureFlagsLoaded) return;
+
+    const match = availableTabs.find((tab) => tab.id === urlTab);
     if (!match) {
       setSearchParams({ tab: 'basic' });
       return;
     }
 
     setActiveTab(urlTab as LocationTabId);
-  }, [urlTab, tabs, setSearchParams]);
+  }, [urlTab, availableTabs, featureFlagsLoaded, setSearchParams]);
 
   const dataLoaded = useDataLoaded();
 
-  const canEdit = useUserIsOrganizationAdministrator();
+  const permissions = useGlobalPermissions();
+  const canAccessSettings = permissions(Permission.AccessSettingsScreen);
 
   const appNavigate = useAppNavigate();
+  const withBackdrop = useBackdrop();
+  const refreshPolicy = useRecoilRefresher_UNSTABLE(policyData);
 
-  if (!dataLoaded) {
+  const policyTabIds = [
+    'actionDefinitions',
+    'customFamilyFields',
+    'casePolicy',
+    'v1ReferralPolicy',
+    'volunteerPolicy',
+  ] as const;
+  const isPolicyTabActive = policyTabIds.some((tabId) => tabId === activeTab);
+  function savePolicy(nextPolicy: EffectiveLocationPolicy) {
+    if (!targetLocationId) return;
+
+    withBackdrop(async () => {
+      try {
+        setPolicySaveErrors([]);
+        const saved = await api.configuration.putEffectiveLocationPolicy(
+          organizationId,
+          targetLocationId,
+          nextPolicy
+        );
+        setPolicyDraft(saved);
+        refreshPolicy();
+      } catch (error) {
+        setPolicySaveErrors(getPolicySaveErrors(error));
+      }
+    });
+  }
+
+  if (!dataLoaded || !featureFlagsLoaded) {
     return (
       <ProgressBackdrop>
         <p className="ph-unmask">Loading location configuration...</p>
@@ -125,7 +209,7 @@ export function LocationEdit() {
     );
   }
 
-  if (!canEdit || !location) {
+  if (!canAccessSettings || !location) {
     return (
       <Box className="ph-unmask" mt={10} textAlign="center">
         <Typography>
@@ -143,9 +227,6 @@ export function LocationEdit() {
     );
   }
 
-  // Filter available tabs based on feature flags
-  const availableTabs = tabs.filter((tab) => tab.shouldShow);
-
   const basicData = {
     name: location?.name || '',
     ethnicities: location.ethnicities || [],
@@ -154,12 +235,20 @@ export function LocationEdit() {
     caseCloseReasons: configuration?.caseCloseReasons || [],
     referralCloseReasons: configuration?.referralCloseReasons || [],
   };
+  const locationRoles = configuration?.roles?.map((role) => role.roleName) ?? [];
 
   return (
     <Stack
       className="ph-unmask"
       spacing={0}
-      sx={{ height: '100%', minHeight: '100vh', pt: 2 }}
+      sx={{
+        height: {
+          xs: `calc(100vh - 48px - ${MOBILE_BOTTOM_SAFE_AREA}px)`,
+          md: `calc(100vh - 48px - ${DESKTOP_BOTTOM_SAFE_AREA}px)`,
+        },
+        minHeight: 0,
+        pt: 2,
+      }}
     >
       <Box>
         <Breadcrumbs
@@ -214,7 +303,19 @@ export function LocationEdit() {
           )}
         </Box>
 
-        <Box flex={1} paddingLeft={4} paddingTop={2}>
+        <Box flex={1} paddingLeft={4} paddingTop={2} sx={{ overflow: 'auto' }}>
+          {isPolicyTabActive && policySaveErrors.length > 0 && (
+            <Alert severity="error" sx={{ mb: 2 }}>
+              <Stack spacing={0.5}>
+                {policySaveErrors.map((error) => (
+                  <Typography key={error} variant="body2">
+                    {error}
+                  </Typography>
+                ))}
+              </Stack>
+            </Alert>
+          )}
+
           {/* Render the active tab component */}
           {activeTab === 'basic' && (
             <Box key="basic">
@@ -230,8 +331,89 @@ export function LocationEdit() {
               <AccessLevels locationConfiguration={location} />
             </Box>
           )}
+
+          {showPolicySelfService === true && policyDraft && activeTab === 'actionDefinitions' && (
+            <Box key="actionDefinitions">
+              <PolicyConfiguration
+                policy={policyDraft}
+                locationRoles={locationRoles}
+                onPolicyChange={savePolicy}
+                section="actionDefinitions"
+              />
+            </Box>
+          )}
+
+          {showPolicySelfService === true && policyDraft && activeTab === 'customFamilyFields' && (
+            <Box key="customFamilyFields">
+              <PolicyConfiguration
+                policy={policyDraft}
+                locationRoles={locationRoles}
+                onPolicyChange={savePolicy}
+                section="customFamilyFields"
+              />
+            </Box>
+          )}
+
+          {showPolicySelfService === true && policyDraft && activeTab === 'casePolicy' && (
+            <Box key="casePolicy">
+              <PolicyConfiguration
+                policy={policyDraft}
+                locationRoles={locationRoles}
+                onPolicyChange={savePolicy}
+                section="casePolicy"
+              />
+            </Box>
+          )}
+
+          {showPolicySelfService === true && policyDraft && activeTab === 'v1ReferralPolicy' && (
+            <Box key="v1ReferralPolicy">
+              <PolicyConfiguration
+                policy={policyDraft}
+                locationRoles={locationRoles}
+                onPolicyChange={savePolicy}
+                section="v1ReferralPolicy"
+              />
+            </Box>
+          )}
+
+          {showPolicySelfService === true && policyDraft && activeTab === 'volunteerPolicy' && (
+            <Box key="volunteerPolicy">
+              <PolicyConfiguration
+                policy={policyDraft}
+                locationRoles={locationRoles}
+                onPolicyChange={savePolicy}
+                section="volunteerPolicy"
+              />
+            </Box>
+          )}
         </Box>
       </Box>
     </Stack>
   );
+}
+
+function getPolicySaveErrors(error: unknown) {
+  if (!(error instanceof ApiException)) {
+    return [error instanceof Error ? error.message : 'Policy changes could not be saved.'];
+  }
+
+  if (error.status === 403) {
+    return ['You do not have permission to save policy changes.'];
+  }
+
+  const parsedErrors = parseValidationErrors(error.response);
+  if (parsedErrors.length > 0) return parsedErrors;
+
+  return [error.response || error.message || 'Policy changes could not be saved.'];
+}
+
+function parseValidationErrors(response: string) {
+  try {
+    const parsed = JSON.parse(response) as { errors?: unknown };
+    return Array.isArray(parsed.errors)
+      ? parsed.errors.filter((error): error is string => typeof error === 'string')
+      : [];
+  } catch {
+    return [];
+  }
 }

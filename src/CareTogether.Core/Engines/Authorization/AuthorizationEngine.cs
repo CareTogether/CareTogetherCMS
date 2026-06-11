@@ -302,6 +302,22 @@ namespace CareTogether.Engines.Authorization
             return permissions.Contains(Permission.ViewV1Referral);
         }
 
+        public async Task<bool> AuthorizeLocationPolicyEditAsync(
+            Guid organizationId,
+            Guid locationId,
+            SessionUserContext userContext
+        )
+        {
+            var permissions = await userAccessCalculation.AuthorizeUserAccessAsync(
+                organizationId,
+                locationId,
+                userContext,
+                new GlobalAuthorizationContext()
+            );
+
+            return permissions.Contains(Permission.AccessSettingsScreen);
+        }
+
         public async Task<bool> AuthorizeNoteCommandAsync(
             Guid organizationId,
             Guid locationId,

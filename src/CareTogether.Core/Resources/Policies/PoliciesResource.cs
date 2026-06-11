@@ -182,14 +182,24 @@ namespace CareTogether.Resources.Policies
             EffectiveLocationPolicy effectiveLocationPolicy
         )
         {
+            var sanitizedPolicy = EffectiveLocationPolicySanitizer.Sanitize(effectiveLocationPolicy);
+            var config = await configurationStore.GetAsync(organizationId, Guid.Empty, CONFIG);
+            var validationErrors = EffectiveLocationPolicyValidator.Validate(
+                sanitizedPolicy,
+                config
+            );
+
+            if (validationErrors.Count > 0)
+                throw new PolicyValidationException(validationErrors);
+
             await locationPoliciesStore.UpsertAsync(
                 organizationId,
                 locationId,
                 "policy",
-                effectiveLocationPolicy
+                sanitizedPolicy
             );
 
-            return effectiveLocationPolicy;
+            return sanitizedPolicy;
         }
 
         public async Task<EffectiveLocationPolicy> GetCurrentPolicy(
