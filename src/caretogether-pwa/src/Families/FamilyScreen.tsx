@@ -482,7 +482,8 @@ export function FamilyScreen() {
             Adult
           </Button>
         )}
-        {permissions(Permission.EditFamilyInfo) && (
+        {permissions(Permission.EditFamilyInfo) &&
+          permissions(Permission.ViewFamilyChildren) && (
           <Button
             className="ph-unmask"
             onClick={() => setAddChildDialogOpen(true)}
@@ -1380,16 +1381,17 @@ export function FamilyScreen() {
                       />
                     )
                 )}
-                {family.family?.children?.map(
-                  (child) =>
-                    child.active && (
-                      <ChildCard
-                        key={child.id!}
-                        familyId={familyId}
-                        personId={child.id!}
-                      />
-                    )
-                )}
+                {permissions(Permission.ViewFamilyChildren) &&
+                  family.family?.children?.map(
+                    (child) =>
+                      child.active && (
+                        <ChildCard
+                          key={child.id!}
+                          familyId={familyId}
+                          personId={child.id!}
+                        />
+                      )
+                  )}
               </Masonry>
             </Grid>
           </Grid>
