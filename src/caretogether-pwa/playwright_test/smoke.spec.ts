@@ -1,48 +1,11 @@
-import { test, expect, Page } from '@playwright/test';
-
-type BrowserFailure = {
-  type: 'console' | 'pageerror';
-  message: string;
-};
-
-type FailureCollector = {
-  getFailures: () => BrowserFailure[];
-};
-
-function createFailureCollector(page: Page): FailureCollector {
-  const failures: BrowserFailure[] = [];
-
-  page.on('console', (msg) => {
-    if (msg.type() !== 'error') {
-      return;
-    }
-
-    const message = msg.text();
-
-    if (
-      /favicon|Failed to load resource: the server responded with a status of 404/i.test(
-        message
-      )
-    ) {
-      return;
-    }
-
-    failures.push({ type: 'console', message });
-  });
-
-  page.on('pageerror', (error) => {
-    failures.push({ type: 'pageerror', message: error.message });
-  });
-
-  return {
-    getFailures: () => failures,
-  };
-}
-
-async function openHome(page: Page): Promise<void> {
-  await page.goto('/');
-  await page.waitForLoadState('domcontentloaded');
-}
+import type { Page } from '@playwright/test';
+import { expect, test } from './support/fixtures';
+import {
+  BrowserFailureCollector,
+  createBrowserFailureCollector,
+  isKnownNonFatalSmokeConsoleMessage,
+} from './support/browserFailures';
+import { openHome, sideNavigation } from './support/navigation';
 
 async function expectNoFatalErrorUi(page: Page): Promise<void> {
   await expect(page.locator('body')).toBeVisible();
@@ -55,14 +18,16 @@ async function expectNoFatalErrorUi(page: Page): Promise<void> {
 }
 
 async function expectNoBrowserFailures(
-  collector: FailureCollector
+  collector: BrowserFailureCollector
 ): Promise<void> {
   expect(collector.getFailures()).toEqual([]);
 }
 
-test.describe('frontend smoke', () => {
+test.describe('frontend smoke @smoke @pr', () => {
   test('home route loads without fatal frontend errors', async ({ page }) => {
-    const collector = createFailureCollector(page);
+    const collector = createBrowserFailureCollector(page, {
+      ignoreConsoleMessage: isKnownNonFatalSmokeConsoleMessage,
+    });
 
     await openHome(page);
     await expectNoFatalErrorUi(page);
@@ -70,24 +35,26 @@ test.describe('frontend smoke', () => {
   });
 
   test('side navigation shows core menu items', async ({ page }) => {
-    const collector = createFailureCollector(page);
+    const collector = createBrowserFailureCollector(page, {
+      ignoreConsoleMessage: isKnownNonFatalSmokeConsoleMessage,
+    });
 
     await openHome(page);
 
-    const sideNavigation = page.getByRole('list', {
-      name: /secondary navigation/i,
-    });
+    const navigation = sideNavigation(page);
 
-    await expect(sideNavigation).toBeVisible();
-    await expect(sideNavigation.getByText('Dashboard')).toBeVisible();
-    await expect(sideNavigation.getByText('Inbox')).toBeVisible();
+    await expect(navigation).toBeVisible();
+    await expect(navigation.getByText('Dashboard')).toBeVisible();
+    await expect(navigation.getByText('Inbox')).toBeVisible();
 
     await expectNoFatalErrorUi(page);
     await expectNoBrowserFailures(collector);
   });
 
   test('dashboard reaches a usable state', async ({ page }) => {
-    const collector = createFailureCollector(page);
+    const collector = createBrowserFailureCollector(page, {
+      ignoreConsoleMessage: isKnownNonFatalSmokeConsoleMessage,
+    });
 
     await openHome(page);
 

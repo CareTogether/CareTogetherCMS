@@ -1,7 +1,7 @@
 import { defineConfig, devices } from '@playwright/test';
+import { AUTH_FILE } from './playwright_test/support/constants';
 
 const BASE_URL = process.env.PLAYWRIGHT_BASE_URL ?? 'http://localhost:3000';
-const AUTH_FILE = 'playwright/.auth/admin.json';
 
 export default defineConfig({
   testDir: './playwright_test',
