@@ -683,83 +683,6 @@ export function FamilyScreen() {
               <PrimaryContactEditor family={family} />
             </Grid>
             <Grid item md={8}>
-              {permissions(Permission.ViewFamilyCustomFields) &&
-                orderCustomFieldsByPolicy(
-                  Array<CustomFieldRenderInfo>()
-                    .concat(family.family!.completedCustomFields)
-                    .concat(family.missingCustomFields || []),
-                  policy.customFamilyFields?.map((field) => field.name) ?? []
-                ).map((customField) => (
-                  <FamilyCustomField
-                    key={
-                      typeof customField === 'string'
-                        ? customField
-                        : customField.customFieldName
-                    }
-                    familyId={familyId}
-                    customField={customField}
-                  />
-                ))}
-              {permissions(Permission.ViewFamilyCustomFields) &&
-                family.volunteerFamilyInfo &&
-                orderCustomFieldsByPolicy(
-                  Array<CustomFieldRenderInfo>()
-                    .concat(family.volunteerFamilyInfo.completedCustomFields || [])
-                    .concat(family.volunteerFamilyInfo.missingCustomFields || []),
-                  policy.volunteerPolicy?.customFields?.map((field) => field.name) ?? []
-                ).map((customField) => (
-                  <VolunteerFamilyCustomField
-                    key={
-                      typeof customField === 'string'
-                        ? customField
-                        : customField.customFieldName
-                    }
-                    familyId={familyId}
-                    customField={customField}
-                  />
-                ))}
-
-              <Grid item xs={12} md={4}>
-                {permissions(Permission.ViewV1CaseCustomFields) &&
-                  !referralsEnabled &&
-                  (
-                    selectedV1Case?.completedCustomFields ||
-                    ([] as Array<CompletedCustomFieldInfo | string>)
-                  )
-                    .concat(selectedV1Case?.missingCustomFields || [])
-                    .sort((a, b) =>
-                      (a instanceof CompletedCustomFieldInfo
-                        ? a.customFieldName!
-                        : a) <
-                      (b instanceof CompletedCustomFieldInfo
-                        ? b.customFieldName!
-                        : b)
-                        ? -1
-                        : (a instanceof CompletedCustomFieldInfo
-                              ? a.customFieldName!
-                              : a) >
-                            (b instanceof CompletedCustomFieldInfo
-                              ? b.customFieldName!
-                              : b)
-                          ? 1
-                          : 0
-                    )
-                    .map((customField) => (
-                      <V1CaseCustomField
-                        key={
-                          typeof customField === 'string'
-                            ? customField
-                            : customField.customFieldName
-                        }
-                        partneringFamilyId={familyId}
-                        v1CaseId={`${selectedV1Case!.id}`}
-                        customField={customField}
-                      />
-                    ))}
-              </Grid>
-            </Grid>
-
-            <Grid item xs={12}>
               <Typography
                 className="ph-unmask"
                 variant="h3"
@@ -800,6 +723,115 @@ export function FamilyScreen() {
                   </ListItemButton>
                 );
               })}
+            </Grid>
+
+            <Grid item xs={12}>
+              <Typography className="ph-unmask" variant="h3" sx={{ mb: 1 }}>
+                Family Members
+              </Typography>
+              <Masonry
+                columns={isDesktop ? (isWideScreen ? 3 : 2) : 1}
+                spacing={2}
+              >
+                {family.family?.adults?.map(
+                  (adult) =>
+                    adult.item1 &&
+                    adult.item1.id &&
+                    adult.item1.active &&
+                    adult.item2 && (
+                      <AdultCard
+                        key={adult.item1.id}
+                        familyId={familyId}
+                        personId={adult.item1.id}
+                      />
+                    )
+                )}
+                {family.family?.children?.map(
+                  (child) =>
+                    child.active && (
+                      <ChildCard
+                        key={child.id!}
+                        familyId={familyId}
+                        personId={child.id!}
+                      />
+                    )
+                )}
+              </Masonry>
+            </Grid>
+
+            <Grid item xs={12}>
+              {permissions(Permission.ViewFamilyCustomFields) &&
+                orderCustomFieldsByPolicy(
+                  Array<CustomFieldRenderInfo>()
+                    .concat(family.family!.completedCustomFields)
+                    .concat(family.missingCustomFields || []),
+                  policy.customFamilyFields?.map((field) => field.name) ?? []
+                ).map((customField) => (
+                  <FamilyCustomField
+                    key={
+                      typeof customField === 'string'
+                        ? customField
+                        : customField.customFieldName
+                    }
+                    familyId={familyId}
+                    customField={customField}
+                  />
+                ))}
+              {permissions(Permission.ViewFamilyCustomFields) &&
+                family.volunteerFamilyInfo &&
+                orderCustomFieldsByPolicy(
+                  Array<CustomFieldRenderInfo>()
+                    .concat(family.volunteerFamilyInfo.completedCustomFields || [])
+                    .concat(family.volunteerFamilyInfo.missingCustomFields || []),
+                  policy.volunteerPolicy?.customFields?.map((field) => field.name) ?? []
+                ).map((customField) => (
+                  <VolunteerFamilyCustomField
+                    key={
+                      typeof customField === 'string'
+                        ? customField
+                        : customField.customFieldName
+                    }
+                    familyId={familyId}
+                    customField={customField}
+                  />
+                ))}
+
+              {permissions(Permission.ViewV1CaseCustomFields) &&
+                !referralsEnabled &&
+                (
+                  selectedV1Case?.completedCustomFields ||
+                  ([] as Array<CompletedCustomFieldInfo | string>)
+                )
+                  .concat(selectedV1Case?.missingCustomFields || [])
+                  .sort((a, b) =>
+                    (a instanceof CompletedCustomFieldInfo
+                      ? a.customFieldName!
+                      : a) <
+                    (b instanceof CompletedCustomFieldInfo
+                      ? b.customFieldName!
+                      : b)
+                      ? -1
+                      : (a instanceof CompletedCustomFieldInfo
+                            ? a.customFieldName!
+                            : a) >
+                          (b instanceof CompletedCustomFieldInfo
+                            ? b.customFieldName!
+                            : b)
+                        ? 1
+                        : 0
+                  )
+                  .map((customField) => (
+                    <V1CaseCustomField
+                      key={
+                        typeof customField === 'string'
+                          ? customField
+                          : customField.customFieldName
+                      }
+                      partneringFamilyId={familyId}
+                      v1CaseId={`${selectedV1Case!.id}`}
+                      customField={customField}
+                    />
+                  ))}
             </Grid>
 
             {family && <AssignmentsSection family={family} />}
@@ -1358,40 +1390,6 @@ export function FamilyScreen() {
                 permissions={permissions}
               />
             )}
-
-            <Grid item xs={12}>
-              <Typography className="ph-unmask" variant="h3" sx={{ mb: 1 }}>
-                Family Members
-              </Typography>
-              <Masonry
-                columns={isDesktop ? (isWideScreen ? 3 : 2) : 1}
-                spacing={2}
-              >
-                {family.family?.adults?.map(
-                  (adult) =>
-                    adult.item1 &&
-                    adult.item1.id &&
-                    adult.item1.active &&
-                    adult.item2 && (
-                      <AdultCard
-                        key={adult.item1.id}
-                        familyId={familyId}
-                        personId={adult.item1.id}
-                      />
-                    )
-                )}
-                {family.family?.children?.map(
-                  (child) =>
-                    child.active && (
-                      <ChildCard
-                        key={child.id!}
-                        familyId={familyId}
-                        personId={child.id!}
-                      />
-                    )
-                )}
-              </Masonry>
-            </Grid>
           </Grid>
         </Grid>
       </Grid>
