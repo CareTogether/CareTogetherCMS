@@ -1,5 +1,5 @@
 import Grid from '@mui/material/GridLegacy';
-import { Typography } from '@mui/material';
+import { Box, Typography } from '@mui/material';
 import FullCalendar from '@fullcalendar/react';
 import dayGridPlugin from '@fullcalendar/daygrid';
 import listPlugin from '@fullcalendar/list';
@@ -25,6 +25,11 @@ import { useAppNavigate } from '../Hooks/useAppNavigate';
 // }
 
 const DASHBOARD_CALENDAR_VIEW_KEY = 'dashboardCalendarView';
+const DEFAULT_EVENT_COLOR = '#3788d8';
+const PLANNED_DURATION_COLOR = 'lightblue';
+const PAST_DUE_REQUIREMENT_COLOR = 'red';
+const ACTUAL_CHILDCARE_AWAY_FROM_PARENT_COLOR = '#a52a2a';
+const PLANNED_CHILDCARE_AWAY_FROM_PARENT_COLOR = '#e58a8a';
 
 function familyPerson(family: CombinedFamilyInfo, personId: string) {
   const familyPeople = (family.family?.adults || [])
@@ -62,7 +67,7 @@ export function DashboardCalendar() {
         end:
           arrangement.plannedEndUtc &&
           format(arrangement.plannedEndUtc, 'yyyy-MM-dd'),
-        backgroundColor: 'lightblue',
+        backgroundColor: PLANNED_DURATION_COLOR,
         extendedProps: { familyId, v1CaseId, arrangementId: arrangement.id },
       }) as EventInput
   );
@@ -132,7 +137,7 @@ export function DashboardCalendar() {
           title: `❌ ${personNameString(person)} - ${missing.action?.actionName}`,
           date:
             missing.pastDueSince && format(missing.pastDueSince, 'yyyy-MM-dd'),
-          color: 'red',
+          color: PAST_DUE_REQUIREMENT_COLOR,
           extendedProps: {
             familyId,
             v1CaseId,
@@ -167,7 +172,9 @@ export function DashboardCalendar() {
             title: `🤝🏻 ${personNameString(person)} - ${familyNameString(locationFamily)}`,
             start: entry.timestampUtc,
             backgroundColor:
-              entry.plan === ChildLocationPlan.WithParent ? 'green' : '#a52a2a',
+              entry.plan === ChildLocationPlan.WithParent
+                ? 'green'
+                : ACTUAL_CHILDCARE_AWAY_FROM_PARENT_COLOR,
             end: nextEntry?.timestampUtc,
             extendedProps: {
               familyId,
@@ -178,7 +185,8 @@ export function DashboardCalendar() {
         }
       );
       return durationEntries.filter(
-        (entry) => entry.backgroundColor === '#a52a2a'
+        (entry) =>
+          entry.backgroundColor === ACTUAL_CHILDCARE_AWAY_FROM_PARENT_COLOR
       );
     }
   );
@@ -195,7 +203,7 @@ export function DashboardCalendar() {
             backgroundColor:
               entry.plan === ChildLocationPlan.WithParent
                 ? 'lightgreen'
-                : '#e58a8a',
+                : PLANNED_CHILDCARE_AWAY_FROM_PARENT_COLOR,
             end: nextEntry?.timestampUtc,
             extendedProps: {
               familyId,
@@ -206,7 +214,8 @@ export function DashboardCalendar() {
         }
       );
       return durationEntries.filter(
-        (entry) => entry.backgroundColor === '#e58a8a'
+        (entry) =>
+          entry.backgroundColor === PLANNED_CHILDCARE_AWAY_FROM_PARENT_COLOR
       );
     }
   );
@@ -267,6 +276,75 @@ export function DashboardCalendar() {
       : []
   );
 
+  const calendarLegendItems = [
+    {
+      key: 'planned-duration',
+      filter: CalendarFilters.ArrangementPlannedDuration,
+      color: PLANNED_DURATION_COLOR,
+      markerLabel: 'Light blue',
+      label: 'Planned duration',
+      description: 'planned start-to-end arrangement range',
+    },
+    {
+      key: 'actual-start',
+      filter: CalendarFilters.ArrangementActualStartEndDates,
+      color: DEFAULT_EVENT_COLOR,
+      markerLabel: 'Blue + ▶',
+      label: 'Actual start',
+      description: 'arrangement started on this date',
+    },
+    {
+      key: 'actual-end',
+      filter: CalendarFilters.ArrangementActualStartEndDates,
+      color: DEFAULT_EVENT_COLOR,
+      markerLabel: 'Blue + ⏹',
+      label: 'Actual end',
+      description: 'arrangement ended on this date',
+    },
+    {
+      key: 'completed-requirement',
+      filter: CalendarFilters.ArrangementCompletedRequirements,
+      color: DEFAULT_EVENT_COLOR,
+      markerLabel: 'Blue + ✅',
+      label: 'Completed requirement',
+      description: 'requirement completed on this date',
+    },
+    {
+      key: 'past-due-requirement',
+      filter: CalendarFilters.ArrangementPastDueRequirements,
+      color: PAST_DUE_REQUIREMENT_COLOR,
+      markerLabel: 'Red + ❌',
+      label: 'Past-due requirement',
+      description: 'requirement has been past due since this date',
+    },
+    {
+      key: 'upcoming-requirement',
+      filter: CalendarFilters.ArrangementUpcomingRequirements,
+      color: DEFAULT_EVENT_COLOR,
+      markerLabel: 'Blue + 📅',
+      label: 'Upcoming requirement',
+      description: 'requirement is due on this date',
+    },
+    {
+      key: 'planned-childcare',
+      filter: CalendarFilters.ArrangementPlannedChildcare,
+      color: PLANNED_CHILDCARE_AWAY_FROM_PARENT_COLOR,
+      markerLabel: 'Rose + ✋🏻',
+      label: 'Planned childcare',
+      description:
+        'planned child location away from parent with the listed family',
+    },
+    {
+      key: 'actual-childcare',
+      filter: CalendarFilters.ArrangementActualChildcare,
+      color: ACTUAL_CHILDCARE_AWAY_FROM_PARENT_COLOR,
+      markerLabel: 'Brown + 🤝🏻',
+      label: 'Actual childcare',
+      description:
+        'recorded child location away from parent with the listed family',
+    },
+  ].filter((legendItem) => isSelected(legendItem.filter));
+
   return (
     <Grid container>
       <Grid item xs={12} sx={{ textAlign: 'right', marginBottom: 1 }}>
@@ -280,6 +358,84 @@ export function DashboardCalendar() {
           handleFilterChange={handleFilterChange}
         />
       </Grid>
+      {calendarLegendItems.length > 0 && (
+        <Grid item xs={12} sx={{ marginBottom: 1 }}>
+          <Box
+            aria-label="Calendar legend"
+            sx={{
+              borderColor: 'divider',
+              borderTop: 1,
+              borderBottom: 1,
+              paddingY: 1,
+            }}
+          >
+            <Typography
+              variant="body2"
+              sx={{ fontWeight: 600, marginBottom: 0.75 }}
+            >
+              Legend:
+            </Typography>
+            <Box
+              sx={{
+                display: 'grid',
+                gap: 1,
+                gridTemplateColumns: {
+                  xs: '1fr',
+                  sm: 'repeat(2, minmax(0, 1fr))',
+                  lg: 'repeat(4, minmax(0, 1fr))',
+                },
+              }}
+            >
+              {calendarLegendItems.map((legendItem) => (
+                <Box
+                  key={legendItem.key}
+                  sx={{
+                    alignItems: 'flex-start',
+                    display: 'flex',
+                    gap: 0.75,
+                    minWidth: 0,
+                  }}
+                >
+                  <Box
+                    aria-hidden="true"
+                    component="span"
+                    sx={{
+                      backgroundColor: legendItem.color,
+                      border:
+                        legendItem.color === PLANNED_DURATION_COLOR
+                          ? '1px solid #7aa8b8'
+                          : '1px solid transparent',
+                      borderRadius: '2px',
+                      display: 'inline-block',
+                      flex: '0 0 auto',
+                      height: 12,
+                      marginTop: 0.5,
+                      width: 12,
+                    }}
+                  />
+                  <Box sx={{ minWidth: 0 }}>
+                    <Typography
+                      component="span"
+                      variant="body2"
+                      sx={{ display: 'block', fontWeight: 600 }}
+                    >
+                      {legendItem.markerLabel}: {legendItem.label}
+                    </Typography>
+                    <Typography
+                      color="text.secondary"
+                      component="span"
+                      variant="body2"
+                      sx={{ display: 'block' }}
+                    >
+                      {legendItem.description}
+                    </Typography>
+                  </Box>
+                </Box>
+              ))}
+            </Box>
+          </Box>
+        </Grid>
+      )}
       <Grid
         item
         xs={12}
