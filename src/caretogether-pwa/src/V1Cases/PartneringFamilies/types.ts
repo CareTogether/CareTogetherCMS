@@ -1,4 +1,10 @@
-import { ArrangementPhase, CombinedFamilyInfo, CustomField, PartneringFamilyInfo } from '../../GeneratedClient';
+import {
+  ArrangementPhase,
+  CombinedFamilyInfo,
+  CustomField,
+  PartneringFamilyInfo,
+  Person,
+} from '../../GeneratedClient';
 import { ReactNode } from 'react';
 
 type ArrangementsFilter =
@@ -19,6 +25,8 @@ type PartneringFamilyTableItemProps = {
     arrangementId: string
   ) => void;
   openFamily: (familyId: string) => void;
+  assignmentRoles: string[];
+  assignmentPersonLookup: (personId: string) => Person | undefined;
   referralCustomFields: CustomField[];
   arrangementStatusSummary: (
     partneringFamilyInfo: PartneringFamilyInfo,

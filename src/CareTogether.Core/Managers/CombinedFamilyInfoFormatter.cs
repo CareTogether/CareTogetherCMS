@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
 using System.Threading.Tasks;
@@ -16,6 +17,18 @@ using Nito.AsyncEx;
 
 namespace CareTogether.Managers
 {
+    public sealed record CombinedFamilyRenderingSnapshot(
+        EffectiveLocationPolicy LocationPolicy,
+        ImmutableDictionary<Guid, ImmutableList<NoteEntry>> NotesByFamilyId,
+        ImmutableDictionary<Guid, ImmutableList<Resources.V1Cases.V1CaseEntry>> V1CasesByFamilyId,
+        ImmutableDictionary<
+            Guid,
+            ImmutableList<Resources.V1Cases.V1CaseEntry>
+        > AssignedV1CasesByVolunteerFamilyId,
+        ImmutableDictionary<Guid, VolunteerFamilyEntry> VolunteerFamiliesByFamilyId,
+        ImmutableDictionary<Guid, ImmutableList<V1Referral>> ReferralsByFamilyId
+    );
+
     public class CombinedFamilyInfoFormatter
     {
         private readonly IPolicyEvaluationEngine policyEvaluationEngine;
@@ -51,13 +64,58 @@ namespace CareTogether.Managers
             this.accountsResource = accountsResource;
         }
 
+        public async Task<CombinedFamilyRenderingSnapshot> CreateRenderingSnapshotAsync(
+            Guid organizationId,
+            Guid locationId,
+            EffectiveLocationPolicy locationPolicy,
+            IEnumerable<V1Referral>? referrals = null
+        )
+        {
+            var notesTask = notesResource.ListNotesAsync(organizationId, locationId);
+            var v1CasesTask = v1CasesResource.ListV1CasessAsync(organizationId, locationId);
+            var volunteerFamiliesTask = approvalsResource.ListVolunteerFamiliesAsync(
+                organizationId,
+                locationId
+            );
+            var referralsTask =
+                referrals == null
+                    ? v1ReferralsResource.ListReferralsAsync(organizationId, locationId)
+                    : Task.FromResult(referrals.ToImmutableList());
+
+            var notes = await notesTask;
+            var v1Cases = await v1CasesTask;
+            var volunteerFamilies = await volunteerFamiliesTask;
+            var locationReferrals = await referralsTask;
+
+            return new(
+                locationPolicy,
+                notes
+                    .GroupBy(note => note.FamilyId)
+                    .ToImmutableDictionary(group => group.Key, group => group.ToImmutableList()),
+                v1Cases
+                    .GroupBy(v1Case => v1Case.FamilyId)
+                    .ToImmutableDictionary(group => group.Key, group => group.ToImmutableList()),
+                BuildAssignedV1CasesByVolunteerFamilyId(v1Cases),
+                volunteerFamilies.ToImmutableDictionary(
+                    volunteerFamily => volunteerFamily.FamilyId,
+                    volunteerFamily => volunteerFamily
+                ),
+                locationReferrals
+                    .Where(referral => referral.FamilyId.HasValue)
+                    .GroupBy(referral => referral.FamilyId!.Value)
+                    .ToImmutableDictionary(group => group.Key, group => group.ToImmutableList())
+            );
+        }
+
         public async Task<CombinedFamilyInfo?> RenderCombinedFamilyInfoAsync(
             Guid organizationId,
             EffectiveLocationPolicy locationPolicy,
             Guid locationId,
             Guid familyId,
             Family? family,
-            SessionUserContext userContext
+            SessionUserContext userContext,
+            ImmutableList<Permission>? contextPermissions = null,
+            CombinedFamilyRenderingSnapshot? renderingSnapshot = null
         )
         {
             family =
@@ -79,8 +137,8 @@ namespace CareTogether.Managers
                 Children = family.Children.Where(child => child.Active).ToImmutableList(),
             };
 
-            var missingCustomFamilyFields = locationPolicy
-                .CustomFamilyFields?.Where(customField =>
+            var missingCustomFamilyFields = (locationPolicy.CustomFamilyFields ?? [])
+                .Where(customField =>
                     !family.CompletedCustomFields?.Any(completed =>
                         completed.CustomFieldName == customField.Name
                     ) ?? false
@@ -91,20 +149,21 @@ namespace CareTogether.Managers
             var partneringFamilyInfo = await RenderPartneringFamilyInfoAsync(
                 organizationId,
                 locationId,
-                family
+                family,
+                renderingSnapshot
             );
 
             var (volunteerFamilyInfo, uploadedApprovalDocuments) =
                 await RenderVolunteerFamilyInfoAsync(
                     organizationId,
                     locationId,
-                    family
+                    renderingSnapshot?.LocationPolicy ?? locationPolicy,
+                    family,
+                    renderingSnapshot
                 );
-            var notes = await notesResource.ListFamilyNotesAsync(
-                organizationId,
-                locationId,
-                familyId
-            );
+            var notes =
+                renderingSnapshot?.NotesByFamilyId.GetValueOrEmptyList(familyId)
+                ?? await notesResource.ListFamilyNotesAsync(organizationId, locationId, familyId);
             var renderedNotes = notes
                 .Select(note => new Note(
                     note.Id,
@@ -184,12 +243,21 @@ namespace CareTogether.Managers
                 ImmutableList<Permission>.Empty
             );
 
-            var disclosedFamily = await authorizationEngine.DiscloseFamilyAsync(
-                userContext,
-                organizationId,
-                locationId,
-                renderedFamily
-            );
+            var disclosedFamily =
+                contextPermissions == null
+                    ? await authorizationEngine.DiscloseFamilyAsync(
+                        userContext,
+                        organizationId,
+                        locationId,
+                        renderedFamily
+                    )
+                    : await authorizationEngine.DiscloseFamilyAsync(
+                        userContext,
+                        organizationId,
+                        locationId,
+                        renderedFamily,
+                        contextPermissions
+                    );
 
             return disclosedFamily;
         }
@@ -197,20 +265,29 @@ namespace CareTogether.Managers
         private async Task<PartneringFamilyInfo?> RenderPartneringFamilyInfoAsync(
             Guid organizationId,
             Guid locationId,
-            Family family
+            Family family,
+            CombinedFamilyRenderingSnapshot? renderingSnapshot
         )
         {
-            var v1CaseEntries = (
-                await v1CasesResource.ListV1CasessAsync(organizationId, locationId)
-            )
-                .Where(r => r.FamilyId == family.Id)
-                .ToImmutableList();
+            var v1CaseEntries =
+                renderingSnapshot?.V1CasesByFamilyId.GetValueOrEmptyList(family.Id)
+                ?? await v1CasesResource.ListV1CasesForFamilyAsync(
+                    organizationId,
+                    locationId,
+                    family.Id
+                );
 
             if (v1CaseEntries.Count == 0)
             {
-                var hasLinkedReferral = (
-                    await v1ReferralsResource.ListReferralsAsync(organizationId, locationId)
-                ).Any(referral => referral.FamilyId == family.Id);
+                var hasLinkedReferral =
+                    renderingSnapshot?.ReferralsByFamilyId.GetValueOrEmptyList(family.Id).Any()
+                    ?? (
+                        await v1ReferralsResource.ListReferralsForFamilyAsync(
+                            organizationId,
+                            locationId,
+                            family.Id
+                        )
+                    ).Any();
 
                 if (!hasLinkedReferral)
                     return null;
@@ -260,7 +337,7 @@ namespace CareTogether.Managers
                             ToArrangement(a.Value, v1CaseStatus.IndividualArrangements[a.Key])
                         )
                         .ToImmutableList(),
-                    entry.StaffAssignments,
+                    entry.AssignedIndividualVolunteers,
                     entry.Comments,
                     entry.LinkedV1ReferralIds
                 );
@@ -300,14 +377,22 @@ namespace CareTogether.Managers
         )> RenderVolunteerFamilyInfoAsync(
             Guid organizationId,
             Guid locationId,
-            Family family
+            EffectiveLocationPolicy locationPolicy,
+            Family family,
+            CombinedFamilyRenderingSnapshot? renderingSnapshot
         )
         {
-            var entry = await approvalsResource.TryGetVolunteerFamilyAsync(
-                organizationId,
-                locationId,
-                family.Id
-            );
+            var entry =
+                renderingSnapshot?.VolunteerFamiliesByFamilyId.TryGetValue(
+                    family.Id,
+                    out var snapshotEntry
+                ) == true
+                    ? snapshotEntry
+                    : await approvalsResource.TryGetVolunteerFamilyAsync(
+                        organizationId,
+                        locationId,
+                        family.Id
+                    );
 
             if (entry == null)
                 return (null, ImmutableList<UploadedDocumentInfo>.Empty);
@@ -321,9 +406,13 @@ namespace CareTogether.Managers
                 );
             var combinedFamilyApprovals = approvalCalculation.ApprovalStatus;
 
-            var v1CaseEntries = (
-                await v1CasesResource.ListV1CasessAsync(organizationId, locationId)
-            ).ToImmutableList();
+            var v1CaseEntries =
+                renderingSnapshot?.AssignedV1CasesByVolunteerFamilyId.GetValueOrEmptyList(family.Id)
+                ?? await v1CasesResource.ListV1CasesAssignedToVolunteerFamilyAsync(
+                    organizationId,
+                    locationId,
+                    family.Id
+                );
 
             var assignments = v1CaseEntries
                 .SelectMany(entry => entry.Arrangements)
@@ -340,6 +429,22 @@ namespace CareTogether.Managers
                     return hasFamilyAssignments || hasIndividualAssignments;
                 })
                 .Select(arrangementEntry => arrangementEntry.Value)
+                .ToImmutableList();
+
+            var completedCustomFields = (
+                entry.CompletedCustomFields
+                ?? ImmutableDictionary<string, CompletedCustomFieldInfo>.Empty
+            ).Values.ToImmutableList();
+
+            var volunteerCustomFields =
+                locationPolicy.VolunteerPolicy?.CustomFields ?? ImmutableList<CustomField>.Empty;
+            var missingCustomFields = volunteerCustomFields
+                .Where(customField =>
+                    !completedCustomFields.Any(completed =>
+                        completed.CustomFieldName == customField.Name
+                    )
+                )
+                .Select(customField => customField.Name)
                 .ToImmutableList();
 
             var volunteerFamilyInfo = new VolunteerFamilyInfo(
@@ -381,10 +486,55 @@ namespace CareTogether.Managers
                     }
                 ),
                 entry.History,
-                assignments
+                assignments,
+                completedCustomFields,
+                missingCustomFields
             );
 
             return (volunteerFamilyInfo, entry.UploadedDocuments);
+        }
+
+        private static ImmutableDictionary<
+            Guid,
+            ImmutableList<Resources.V1Cases.V1CaseEntry>
+        > BuildAssignedV1CasesByVolunteerFamilyId(
+            IEnumerable<Resources.V1Cases.V1CaseEntry> v1Cases
+        )
+        {
+            var assignmentsByFamilyId = new Dictionary<Guid, List<Resources.V1Cases.V1CaseEntry>>();
+
+            foreach (var v1Case in v1Cases)
+            {
+                var assignedFamilyIds = v1Case
+                    .Arrangements.SelectMany(arrangement =>
+                        arrangement
+                            .Value.FamilyVolunteerAssignments.Select(assignment =>
+                                assignment.FamilyId
+                            )
+                            .Concat(
+                                arrangement.Value.IndividualVolunteerAssignments.Select(
+                                    assignment => assignment.FamilyId
+                                )
+                            )
+                    )
+                    .ToHashSet();
+
+                foreach (var assignedFamilyId in assignedFamilyIds)
+                {
+                    if (!assignmentsByFamilyId.TryGetValue(assignedFamilyId, out var assignedCases))
+                    {
+                        assignedCases = [];
+                        assignmentsByFamilyId.Add(assignedFamilyId, assignedCases);
+                    }
+
+                    assignedCases.Add(v1Case);
+                }
+            }
+
+            return assignmentsByFamilyId.ToImmutableDictionary(
+                x => x.Key,
+                x => x.Value.ToImmutableList()
+            );
         }
     }
 }

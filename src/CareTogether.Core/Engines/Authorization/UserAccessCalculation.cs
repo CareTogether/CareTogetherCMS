@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
 using System.Threading.Tasks;
@@ -44,14 +45,7 @@ namespace CareTogether.Engines.Authorization
             AuthorizationContext context
         )
         {
-            // If the caller is using an API key, give full access.
-            if (
-                userContext.User.Identity?.AuthenticationType == "API Key"
-                && (
-                    userContext.User.HasClaim(Claims.OrganizationId, organizationId.ToString())
-                    || userContext.User.HasClaim(Claims.Global, true.ToString())
-                )
-            )
+            if (HasApiKeyFullAccess(userContext, organizationId))
                 return Enum.GetValues<Permission>().ToImmutableList();
 
             // The user must have access to this organization and location.
@@ -59,131 +53,198 @@ namespace CareTogether.Engines.Authorization
             if (userLocalIdentity == null)
                 return ImmutableList<Permission>.Empty;
 
-            // Look up the user's family, which will be referenced several times.
-            var userPersonId = userContext.User.PersonId(organizationId, locationId);
-            var userFamily =
-                userContext.UserFamily
-                ?? (
-                    userPersonId == null
-                        ? null
-                        : await directoryResource.FindPersonFamilyAsync(
+            var familyContext =
+                context is FamilyAuthorizationContext
+                    ? context as FamilyAuthorizationContext
+                    : null;
+
+            var targetFamily =
+                familyContext == null
+                    ? null
+                    : familyContext.Family
+                        ?? await directoryResource.FindFamilyAsync(
                             organizationId,
                             locationId,
-                            userPersonId.Value
-                        )
-                );
+                            familyContext.FamilyId
+                        );
 
-            // If in a family authorization context, look up the target family, which will be referenced several times.
-            var familyAuthorizationContext = context is FamilyAuthorizationContext fac ? fac : null;
-            var familyId = familyAuthorizationContext?.FamilyId;
-            var targetFamily =
-                familyAuthorizationContext?.Family != null ? familyAuthorizationContext?.Family
-                : familyId.HasValue
-                    ? await directoryResource.FindFamilyAsync(
-                        organizationId,
-                        locationId,
-                        familyId.Value
-                    )
+            var targetV1Referral = context is V1ReferralAuthorizationContext referralContext
+                ? await v1ReferralsResource.GetReferralAsync(
+                    organizationId,
+                    locationId,
+                    referralContext.ReferralId
+                )
                 : null;
 
             // Look up the target family's volunteer info to determine if they are a volunteer family.
-            var targetFamilyIsVolunteerFamily =
-                familyId.HasValue
-                && await approvalsResource.TryGetVolunteerFamilyAsync(
-                    organizationId,
-                    locationId,
-                    familyId.Value
-                ) != null;
-
-            // Look up the v1 cases info for both the user's family and the target family.
-            //TODO: This could be optimized to find only the user family's v1 cases or the target family's v1 cases.
-            var v1Cases = await v1CasesResource.ListV1CasessAsync(organizationId, locationId);
-            var userFamilyV1Cases = v1Cases
-                .Where(v1Case => v1Case.FamilyId == userFamily?.Id)
-                .ToImmutableList();
-            var targetFamilyV1Cases = v1Cases
-                .Where(v1Case => v1Case.FamilyId == targetFamily?.Id)
-                .ToImmutableList();
-            var v1ReferralAuthorizationContext =
-                context is V1ReferralAuthorizationContext vrac ? vrac : null;
-            var targetV1Referral =
-                v1ReferralAuthorizationContext == null
+            var targetVolunteerFamily =
+                familyContext == null
                     ? null
-                    : await v1ReferralsResource.GetReferralAsync(
+                    : await approvalsResource.TryGetVolunteerFamilyAsync(
                         organizationId,
                         locationId,
-                        v1ReferralAuthorizationContext.ReferralId
+                        familyContext.FamilyId
                     );
-            var assignedV1Cases = v1Cases
-                .Where(v1Case =>
-                    v1Case.Arrangements.Any(arrangement =>
-                        arrangement.Value.FamilyVolunteerAssignments.Exists(assignment =>
-                            assignment.FamilyId == userFamily?.Id
-                        )
-                        || arrangement.Value.IndividualVolunteerAssignments.Exists(assignment =>
-                            assignment.FamilyId == userFamily?.Id
-                        )
-                    )
-                )
-                .ToImmutableList();
 
-            var targetFamilyAssignments = v1Cases
-                .Where(v1Case =>
-                    v1Case.Arrangements.Any(arrangement =>
-                        arrangement.Value.FamilyVolunteerAssignments.Exists(assignment =>
-                            assignment.FamilyId == targetFamily?.Id
-                        )
-                        || arrangement.Value.IndividualVolunteerAssignments.Exists(assignment =>
-                            assignment.FamilyId == targetFamily?.Id
-                        )
-                    )
-                )
-                .ToImmutableList();
-
-            // Look up the user's family's and target family's community memberships
-            var communities = await communitiesResource.ListLocationCommunitiesAsync(
+            var snapshot = await CreateSnapshotAsync(
                 organizationId,
-                locationId
+                locationId,
+                userContext,
+                targetFamily == null ? null : [targetFamily],
+                targetV1Referral == null ? null : [targetV1Referral],
+                volunteerFamilyIds: targetVolunteerFamily == null
+                    ? []
+                    : [targetVolunteerFamily.FamilyId]
             );
-            var userFamilyCommunities =
-                userFamily != null
-                    ? communities
-                        .Where(community => community.MemberFamilies.Contains(userFamily.Id))
-                        .Select(community => community.Id)
-                        .ToImmutableList()
-                    : ImmutableList<Guid>.Empty;
-            var targetFamilyCommunities =
-                targetFamily != null
-                    ? communities
-                        .Where(community => community.MemberFamilies.Contains(targetFamily.Id))
-                        .Select(community => community.Id)
-                        .ToImmutableList()
-                    : ImmutableList<Guid>.Empty;
-            var userCommunityRoleAssignments = communities
-                .SelectMany(community =>
-                    community
-                        .CommunityRoleAssignments.Where(assignment =>
-                            assignment.PersonId == userPersonId
-                        )
-                        .Select(assignment => (community.Id, assignment.CommunityRole))
-                )
-                .ToImmutableList();
 
-            // We need to evaluate each of the user's roles to determine which permission sets
-            // apply to the user's current context.
-            var config = await policiesResource.GetConfigurationAsync(organizationId);
-            var userPermissionSets = config
-                .Roles.Where(role =>
-                    userLocalIdentity.HasClaim(userLocalIdentity.RoleClaimType, role.RoleName)
+            return AuthorizeUserAccess(snapshot, context);
+        }
+
+        public async Task<UserAccessCalculationSnapshot> CreateSnapshotAsync(
+            Guid organizationId,
+            Guid locationId,
+            SessionUserContext userContext,
+            IEnumerable<Family>? families = null,
+            IEnumerable<V1Referral>? referrals = null,
+            IEnumerable<Community>? communities = null,
+            IEnumerable<Guid>? volunteerFamilyIds = null
+        )
+        {
+            var userPersonId = userContext.User.PersonId(organizationId, locationId);
+            var userFamilyTask =
+                userContext.UserFamily != null || userPersonId == null
+                    ? Task.FromResult(userContext.UserFamily)
+                    : directoryResource.FindPersonFamilyAsync(
+                        organizationId,
+                        locationId,
+                        userPersonId.Value
+                    );
+            var communitiesTask =
+                communities == null
+                    ? communitiesResource.ListLocationCommunitiesAsync(organizationId, locationId)
+                    : Task.FromResult(communities.ToImmutableList());
+            var volunteerFamilyIdsTask =
+                volunteerFamilyIds == null
+                    ? ListVolunteerFamilyIdsAsync(organizationId, locationId)
+                    : Task.FromResult(volunteerFamilyIds.ToArray());
+            var configTask = policiesResource.GetConfigurationAsync(organizationId);
+
+            var userFamily = await userFamilyTask;
+            var locationCommunities = (await communitiesTask).ToImmutableList();
+            var knownVolunteerFamilyIds = (await volunteerFamilyIdsTask).ToImmutableHashSet();
+            var config = await configTask;
+            var userLocalIdentity = userContext.User.LocationIdentity(organizationId, locationId);
+            var userPermissionSets =
+                userLocalIdentity == null
+                    ? ImmutableList<ContextualPermissionSet>.Empty
+                    : config
+                        .Roles.Where(role =>
+                            userLocalIdentity.HasClaim(
+                                userLocalIdentity.RoleClaimType,
+                                role.RoleName
+                            )
+                        )
+                        .SelectMany(role => role.PermissionSets)
+                        .ToImmutableList();
+            var familiesById = BuildFamiliesById(families, userFamily);
+            var v1CaseIndexes = await LoadV1CaseIndexesAsync(
+                organizationId,
+                locationId,
+                volunteerFamilyIds == null,
+                familiesById.Keys,
+                knownVolunteerFamilyIds.Union(familiesById.Keys)
+            );
+
+            return new UserAccessCalculationSnapshot(
+                organizationId,
+                locationId,
+                userContext,
+                userPersonId,
+                userFamily,
+                familiesById,
+                v1CaseIndexes.V1CasesByFamilyId,
+                v1CaseIndexes.V1CasesAssignedToVolunteerFamilyId,
+                (referrals ?? []).ToImmutableDictionary(
+                    referral => referral.ReferralId,
+                    referral => referral
+                ),
+                knownVolunteerFamilyIds,
+                locationCommunities,
+                BuildCommunityIdsByFamilyId(locationCommunities),
+                BuildUserCommunityRoleAssignments(locationCommunities, userPersonId),
+                userPermissionSets
+            );
+        }
+
+        public ImmutableList<Permission> AuthorizeUserAccess(
+            UserAccessCalculationSnapshot snapshot,
+            AuthorizationContext context
+        )
+        {
+            if (HasApiKeyFullAccess(snapshot.UserContext, snapshot.OrganizationId))
+                return Enum.GetValues<Permission>().ToImmutableList();
+
+            var userLocalIdentity = snapshot.UserContext.User.LocationIdentity(
+                snapshot.OrganizationId,
+                snapshot.LocationId
+            );
+            if (userLocalIdentity == null)
+                return ImmutableList<Permission>.Empty;
+
+            var familyAuthorizationContext = context as FamilyAuthorizationContext;
+            var familyId = familyAuthorizationContext?.FamilyId;
+            var targetFamily =
+                familyAuthorizationContext?.Family
+                ?? (
+                    familyId.HasValue
+                    && snapshot.FamiliesById.TryGetValue(familyId.Value, out var family)
+                        ? family
+                        : null
+                );
+            var targetFamilyIsVolunteerFamily =
+                familyId.HasValue && snapshot.VolunteerFamilyIds.Contains(familyId.Value);
+            var userFamilyV1Cases =
+                snapshot.UserFamily == null
+                    ? ImmutableList<Resources.V1Cases.V1CaseEntry>.Empty
+                    : snapshot.V1CasesByFamilyId.GetValueOrEmptyList(snapshot.UserFamily.Id);
+            var targetFamilyV1Cases =
+                targetFamily == null
+                    ? ImmutableList<Resources.V1Cases.V1CaseEntry>.Empty
+                    : snapshot.V1CasesByFamilyId.GetValueOrEmptyList(targetFamily.Id);
+            var targetV1Referral =
+                context is V1ReferralAuthorizationContext referralContext
+                && snapshot.V1ReferralsById.TryGetValue(
+                    referralContext.ReferralId,
+                    out var referral
                 )
-                .SelectMany(role => role.PermissionSets)
-                .ToImmutableList();
-            var applicablePermissionSets = userPermissionSets
-                .Where(permissionSet =>
+                    ? referral
+                    : null;
+            var assignedV1Cases =
+                snapshot.UserFamily == null
+                    ? ImmutableList<Resources.V1Cases.V1CaseEntry>.Empty
+                    : snapshot.V1CasesAssignedToVolunteerFamilyId.GetValueOrEmptyList(
+                        snapshot.UserFamily.Id
+                    );
+            var targetFamilyAssignments =
+                targetFamily == null
+                    ? ImmutableList<Resources.V1Cases.V1CaseEntry>.Empty
+                    : snapshot.V1CasesAssignedToVolunteerFamilyId.GetValueOrEmptyList(
+                        targetFamily.Id
+                    );
+            var userFamilyCommunities =
+                snapshot.UserFamily == null
+                    ? ImmutableList<Guid>.Empty
+                    : snapshot.CommunityIdsByFamilyId.GetValueOrEmptyList(snapshot.UserFamily.Id);
+            var targetFamilyCommunities =
+                targetFamily == null
+                    ? ImmutableList<Guid>.Empty
+                    : snapshot.CommunityIdsByFamilyId.GetValueOrEmptyList(targetFamily.Id);
+            var applicablePermissionSets = snapshot
+                .UserPermissionSets.Where(permissionSet =>
                     IsPermissionSetApplicable(
                         permissionSet,
                         context,
-                        userFamily,
+                        snapshot.UserFamily,
                         targetFamily,
                         targetFamilyIsVolunteerFamily,
                         userFamilyV1Cases,
@@ -191,11 +252,11 @@ namespace CareTogether.Engines.Authorization
                         assignedV1Cases,
                         targetFamilyAssignments,
                         targetV1Referral,
-                        userPersonId,
+                        snapshot.UserPersonId,
                         userFamilyCommunities,
                         targetFamilyCommunities,
-                        userCommunityRoleAssignments,
-                        communities
+                        snapshot.UserCommunityRoleAssignments,
+                        snapshot.Communities
                     )
                 )
                 .ToImmutableList();
@@ -203,6 +264,194 @@ namespace CareTogether.Engines.Authorization
             return applicablePermissionSets
                 .SelectMany(permissionSet => permissionSet.Permissions)
                 .Distinct()
+                .ToImmutableList();
+        }
+
+        private static bool HasApiKeyFullAccess(SessionUserContext userContext, Guid organizationId)
+        {
+            if (userContext.User.Identity?.AuthenticationType != "API Key")
+                return false;
+
+            return userContext.User.HasClaim(Claims.OrganizationId, organizationId.ToString())
+                || userContext.User.HasClaim(Claims.Global, true.ToString());
+        }
+
+        private static ImmutableDictionary<Guid, Family> BuildFamiliesById(
+            IEnumerable<Family>? families,
+            Family? userFamily
+        )
+        {
+            var result = ImmutableDictionary<Guid, Family>.Empty;
+
+            foreach (var family in families ?? [])
+                result = result.SetItem(family.Id, family);
+
+            return userFamily == null ? result : result.SetItem(userFamily.Id, userFamily);
+        }
+
+        private async Task<(
+            ImmutableDictionary<
+                Guid,
+                ImmutableList<Resources.V1Cases.V1CaseEntry>
+            > V1CasesByFamilyId,
+            ImmutableDictionary<
+                Guid,
+                ImmutableList<Resources.V1Cases.V1CaseEntry>
+            > V1CasesAssignedToVolunteerFamilyId
+        )> LoadV1CaseIndexesAsync(
+            Guid organizationId,
+            Guid locationId,
+            bool loadAllV1Cases,
+            IEnumerable<Guid> familyIds,
+            IEnumerable<Guid> assignedVolunteerFamilyIds
+        )
+        {
+            var familyIdSet = familyIds.ToImmutableHashSet();
+            var assignedVolunteerFamilyIdSet = assignedVolunteerFamilyIds.ToImmutableHashSet();
+
+            if (loadAllV1Cases)
+            {
+                var v1Cases = await v1CasesResource.ListV1CasessAsync(organizationId, locationId);
+                return (
+                    v1Cases
+                        .GroupBy(v1Case => v1Case.FamilyId)
+                        .ToImmutableDictionary(
+                            group => group.Key,
+                            group => group.ToImmutableList()
+                        ),
+                    BuildV1CasesAssignedToVolunteerFamilyId(v1Cases)
+                );
+            }
+
+            var v1CasesByFamilyTasks = familyIdSet
+                .Select(async familyId =>
+                    (
+                        familyId,
+                        v1Cases: await v1CasesResource.ListV1CasesForFamilyAsync(
+                            organizationId,
+                            locationId,
+                            familyId
+                        )
+                    )
+                )
+                .ToArray();
+            var assignedV1CasesByVolunteerFamilyTasks = assignedVolunteerFamilyIdSet
+                .Select(async volunteerFamilyId =>
+                    (
+                        volunteerFamilyId,
+                        v1Cases: await v1CasesResource.ListV1CasesAssignedToVolunteerFamilyAsync(
+                            organizationId,
+                            locationId,
+                            volunteerFamilyId
+                        )
+                    )
+                )
+                .ToArray();
+
+            return (
+                (await Task.WhenAll(v1CasesByFamilyTasks))
+                    .Where(x => !x.v1Cases.IsEmpty)
+                    .ToImmutableDictionary(x => x.familyId, x => x.v1Cases),
+                (await Task.WhenAll(assignedV1CasesByVolunteerFamilyTasks))
+                    .Where(x => !x.v1Cases.IsEmpty)
+                    .ToImmutableDictionary(x => x.volunteerFamilyId, x => x.v1Cases)
+            );
+        }
+
+        private async Task<Guid[]> ListVolunteerFamilyIdsAsync(Guid organizationId, Guid locationId)
+        {
+            var volunteerFamilies = await approvalsResource.ListVolunteerFamiliesAsync(
+                organizationId,
+                locationId
+            );
+            return volunteerFamilies.Select(volunteerFamily => volunteerFamily.FamilyId).ToArray();
+        }
+
+        private static ImmutableDictionary<
+            Guid,
+            ImmutableList<Resources.V1Cases.V1CaseEntry>
+        > BuildV1CasesAssignedToVolunteerFamilyId(
+            IEnumerable<Resources.V1Cases.V1CaseEntry> v1Cases
+        )
+        {
+            var assignmentsByFamilyId = new Dictionary<Guid, List<Resources.V1Cases.V1CaseEntry>>();
+
+            foreach (var v1Case in v1Cases)
+            {
+                var assignedFamilyIds = v1Case
+                    .Arrangements.SelectMany(arrangement =>
+                        arrangement
+                            .Value.FamilyVolunteerAssignments.Select(assignment =>
+                                assignment.FamilyId
+                            )
+                            .Concat(
+                                arrangement.Value.IndividualVolunteerAssignments.Select(
+                                    assignment => assignment.FamilyId
+                                )
+                            )
+                    )
+                    .ToHashSet();
+
+                foreach (var assignedFamilyId in assignedFamilyIds)
+                {
+                    if (!assignmentsByFamilyId.TryGetValue(assignedFamilyId, out var assignedCases))
+                    {
+                        assignedCases = [];
+                        assignmentsByFamilyId.Add(assignedFamilyId, assignedCases);
+                    }
+
+                    assignedCases.Add(v1Case);
+                }
+            }
+
+            return assignmentsByFamilyId.ToImmutableDictionary(
+                x => x.Key,
+                x => x.Value.ToImmutableList()
+            );
+        }
+
+        private static ImmutableDictionary<Guid, ImmutableList<Guid>> BuildCommunityIdsByFamilyId(
+            IEnumerable<Community> communities
+        )
+        {
+            var communityIdsByFamilyId = new Dictionary<Guid, List<Guid>>();
+
+            foreach (var community in communities)
+            {
+                foreach (var familyId in community.MemberFamilies)
+                {
+                    if (!communityIdsByFamilyId.TryGetValue(familyId, out var communityIds))
+                    {
+                        communityIds = [];
+                        communityIdsByFamilyId.Add(familyId, communityIds);
+                    }
+
+                    communityIds.Add(community.Id);
+                }
+            }
+
+            return communityIdsByFamilyId.ToImmutableDictionary(
+                x => x.Key,
+                x => x.Value.ToImmutableList()
+            );
+        }
+
+        private static ImmutableList<(
+            Guid Id,
+            string CommunityRole
+        )> BuildUserCommunityRoleAssignments(IEnumerable<Community> communities, Guid? userPersonId)
+        {
+            if (userPersonId == null)
+                return [];
+
+            return communities
+                .SelectMany(community =>
+                    community
+                        .CommunityRoleAssignments.Where(assignment =>
+                            assignment.PersonId == userPersonId
+                        )
+                        .Select(assignment => (community.Id, assignment.CommunityRole))
+                )
                 .ToImmutableList();
         }
 
@@ -337,7 +586,7 @@ namespace CareTogether.Engines.Authorization
                             )
                         )
                     ),
-                AssignedStaffInV1ReferralPermissionContext c => context
+                AssignedVolunteerInV1ReferralPermissionContext c => context
                     is V1ReferralAuthorizationContext
                     && targetV1Referral != null
                     && userPersonId.HasValue
@@ -346,14 +595,14 @@ namespace CareTogether.Engines.Authorization
                         || c.WhenReferralIsOpen
                             == (targetV1Referral.Status == V1ReferralStatus.Open)
                     )
-                    && targetV1Referral.StaffAssignments.Any(assignment =>
+                    && targetV1Referral.AssignedIndividualVolunteers.Any(assignment =>
                         assignment.PersonId == userPersonId.Value
                         && (
                             c.WhenAssignmentRoleIsIn == null
                             || c.WhenAssignmentRoleIsIn.Contains(assignment.AssignmentRole)
                         )
                     ),
-                AssignedStaffInV1CasePermissionContext c => context
+                AssignedVolunteerInV1CasePermissionContext c => context
                     is FamilyAuthorizationContext
                     && userPersonId.HasValue
                     && targetFamilyV1Cases.Any(v1Case =>
@@ -361,7 +610,7 @@ namespace CareTogether.Engines.Authorization
                             c.WhenCaseIsOpen == null
                             || c.WhenCaseIsOpen == (v1Case.ClosedAtUtc == null)
                         )
-                        && v1Case.StaffAssignments.Any(assignment =>
+                        && v1Case.AssignedIndividualVolunteers.Any(assignment =>
                             assignment.PersonId == userPersonId.Value
                             && (
                                 c.WhenAssignmentRoleIsIn == null

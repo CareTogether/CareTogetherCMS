@@ -18,6 +18,8 @@ import {
   AllVolunteerFamiliesPermissionContext,
   AssignedFunctionsInReferralCoAssigneeFamiliesPermissionContext as AssignedFunctionsInV1CaseCoAssigneeFamiliesPermissionContext,
   AssignedFunctionsInReferralPartneringFamilyPermissionContext as AssignedFunctionsInV1CasePartneringFamilyPermissionContext,
+  AssignedVolunteerInV1CasePermissionContext,
+  AssignedVolunteerInV1ReferralPermissionContext,
   CommunityCoMemberFamiliesPermissionContext,
   CommunityMemberPermissionContext,
   ContextualPermissionSet,
@@ -295,6 +297,26 @@ export function RoleEdit({
           }
         >
           Own Case - Assigned Families
+        </MenuItem>
+        <MenuItem
+          dense
+          onClick={() =>
+            addPermissionSet(
+              () => new AssignedVolunteerInV1CasePermissionContext()
+            )
+          }
+        >
+          Assigned Volunteer in Case
+        </MenuItem>
+        <MenuItem
+          dense
+          onClick={() =>
+            addPermissionSet(
+              () => new AssignedVolunteerInV1ReferralPermissionContext()
+            )
+          }
+        >
+          Assigned Volunteer in Referral
         </MenuItem>
         <MenuItem
           dense

@@ -23,7 +23,7 @@ namespace CareTogether.Resources.V1Referrals
         ImmutableList<ExemptedRequirementInfo> ExemptedRequirements,
         ImmutableList<UploadedDocumentInfo> UploadedDocuments,
         ImmutableList<Guid> DeletedDocuments,
-        ImmutableList<StaffAssignment> StaffAssignments,
+        ImmutableList<AssignedIndividualVolunteer> AssignedIndividualVolunteers,
         ImmutableList<Activity> History,
         ImmutableList<V1ReferralNoteEntry> Notes
     )
@@ -111,13 +111,13 @@ namespace CareTogether.Resources.V1Referrals
     public sealed record DeleteUploadedV1ReferralDocument(Guid ReferralId, Guid UploadedDocumentId)
         : V1ReferralCommand(ReferralId);
 
-    public sealed record AssignStaffToV1Referral(
+    public sealed record AssignIndividualVolunteer(
         Guid ReferralId,
         Guid PersonId,
         string AssignmentRole
     ) : V1ReferralCommand(ReferralId);
 
-    public sealed record UnassignStaffFromV1Referral(
+    public sealed record UnassignIndividualVolunteer(
         Guid ReferralId,
         Guid PersonId,
         string AssignmentRole
@@ -135,6 +135,12 @@ namespace CareTogether.Resources.V1Referrals
         Task<V1Referral?> GetReferralAsync(Guid organizationId, Guid locationId, Guid referralId);
 
         Task<ImmutableList<V1Referral>> ListReferralsAsync(Guid organizationId, Guid locationId);
+
+        Task<ImmutableList<V1Referral>> ListReferralsForFamilyAsync(
+            Guid organizationId,
+            Guid locationId,
+            Guid familyId
+        );
 
         Task<Uri> GetV1ReferralDocumentReadValetUrl(
             Guid organizationId,

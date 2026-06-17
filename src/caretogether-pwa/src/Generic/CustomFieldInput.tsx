@@ -10,8 +10,9 @@ import {
   CustomFieldType,
   CustomFieldValidation,
 } from '../GeneratedClient';
+import { sortByPolicyOrder } from './sortByPolicyOrder';
 
-type CustomFieldValue = string | boolean | number | null | undefined;
+type CustomFieldValue = string | boolean | number | string[] | null | undefined;
 
 type CustomFieldInputProps = {
   customFieldPolicy: CustomField;
@@ -45,6 +46,23 @@ export function CustomFieldInput({
         <FormControlLabel value="no" control={<Radio />} label="No" />
         <FormControlLabel value="" control={<Radio />} label="(blank)" />
       </RadioGroup>
+    );
+  }
+
+  if (type === CustomFieldType.StringArray) {
+    const arrayValue = Array.isArray(value) ? value : [];
+    const validValues = customFieldPolicy.validValues || [];
+    return (
+      <Autocomplete
+        multiple
+        options={validValues}
+        value={sortByPolicyOrder(arrayValue, validValues)}
+        onChange={(_, newValue) =>
+          onChange(newValue.length ? sortByPolicyOrder(newValue, validValues) : null)
+        }
+        freeSolo={customFieldPolicy.validation === CustomFieldValidation.SuggestOnly}
+        renderInput={(params) => <TextField {...params} />}
+      />
     );
   }
 

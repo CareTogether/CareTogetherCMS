@@ -53,21 +53,24 @@ export function ArrangementsSection({
   useScrollToArrangement(arrangementRefs);
 
   return (
-    <Grid item xs={12}>
-      <div
-        style={{
-          display: `flex`,
-          justifyContent: `space-between`,
-          maxWidth: `100%`,
-          flexWrap: `wrap`,
+    <Grid item xs={12} sx={{ mb: 3 }}>
+      <Box
+        sx={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'flex-start',
+          maxWidth: '100%',
+          flexWrap: 'wrap',
+          gap: 2,
+          mb: 2,
         }}
       >
-        <div
-          style={{
-            display: `flex`,
-            justifyContent: `flex-start`,
-            maxWidth: `100%`,
-            flexWrap: `wrap`,
+        <Box
+          sx={{
+            display: 'flex',
+            justifyContent: 'flex-start',
+            maxWidth: '100%',
+            flexWrap: 'wrap',
           }}
         >
           <Box
@@ -101,19 +104,27 @@ export function ArrangementsSection({
               <ToggleButton value="Cancelled">Cancelled</ToggleButton>
             </ToggleButtonGroup>
           </Box>
-        </div>
+        </Box>
         {permissions(Permission.CreateArrangement) && (
           <Box
             sx={{
               textAlign: 'center',
-              display: `flex`,
-              flexDirection: `row`,
-              maxWidth: `100%`,
-              flexWrap: `wrap`,
+              display: 'flex',
+              flexDirection: 'row',
+              justifyContent: 'flex-end',
+              maxWidth: '100%',
+              flexWrap: 'wrap',
+              gap: 1,
             }}
           >
             {v1Case &&
-              policy.referralPolicy?.arrangementPolicies?.map(
+              policy.referralPolicy?.arrangementPolicies
+                ?.filter(
+                  (arrangementPolicy) =>
+                    !arrangementPolicy.supersededAtUtc ||
+                    new Date(arrangementPolicy.supersededAtUtc) > new Date()
+                )
+                .map(
                 (arrangementPolicy) => (
                   <Box key={arrangementPolicy.arrangementType}>
                     <Button
@@ -123,7 +134,6 @@ export function ArrangementsSection({
                       }
                       variant="contained"
                       size="small"
-                      sx={{ margin: 1 }}
                       startIcon={<AddCircleIcon />}
                     >
                       {arrangementPolicy.arrangementType}
@@ -133,25 +143,30 @@ export function ArrangementsSection({
               )}
           </Box>
         )}
-      </div>
-      <AppMasonry columns={isDesktop ? (isWideScreen ? 3 : 2) : 1} spacing={2}>
-        {filteredArrangements.map((arrangement) => (
-          <div
-            key={arrangement.id}
-            ref={(el) => {
-              if (arrangement.id) {
-                arrangementRefs.current[arrangement.id] = el;
-              }
-            }}
-          >
-            <ArrangementCard
-              partneringFamily={family}
-              v1CaseId={v1Case.id!}
-              arrangement={arrangement}
-            />
-          </div>
-        ))}
-      </AppMasonry>
+      </Box>
+      {filteredArrangements.length > 0 && (
+        <AppMasonry
+          columns={isDesktop ? (isWideScreen ? 3 : 2) : 1}
+          spacing={2}
+        >
+          {filteredArrangements.map((arrangement) => (
+            <div
+              key={arrangement.id}
+              ref={(el) => {
+                if (arrangement.id) {
+                  arrangementRefs.current[arrangement.id] = el;
+                }
+              }}
+            >
+              <ArrangementCard
+                partneringFamily={family}
+                v1CaseId={v1Case.id!}
+                arrangement={arrangement}
+              />
+            </div>
+          ))}
+        </AppMasonry>
+      )}
 
       {createArrangementDialogParameter && (
         <CreateArrangementDialog

@@ -1,12 +1,11 @@
 import { useEffect, useState } from 'react';
-import Grid from '../Generic/GridLegacyCompat';
 import {
+  Box,
   Table,
   TableBody,
   TableCell,
   TableHead,
   TableRow,
-  TableContainer,
   Drawer,
 } from '@mui/material';
 import { Routes, Route } from 'react-router-dom';
@@ -17,7 +16,10 @@ import { ReferralRow } from './ReferralRow';
 import { ReferralsFilters } from './ReferralsFilters';
 import { AddNewReferralDrawer } from './AddNewReferralDrawer';
 import { ReferralDetailsPage } from './ReferralDetailsPage';
-import { useFamilyLookup } from '../Model/DirectoryModel';
+import {
+  useFamilyLookup,
+  usePersonAndFamilyLookup,
+} from '../Model/DirectoryModel';
 import { familyNameString } from '../Families/FamilyName';
 import { currentLocationQuery, visibleReferralsQuery } from '../Model/Data';
 import { Permission, V1ReferralStatus } from '../GeneratedClient';
@@ -27,6 +29,18 @@ import { useFeatureFlagEnabled, usePostHog } from 'posthog-js/react';
 import { useAppNavigate } from '../Hooks/useAppNavigate';
 import { ProgressBackdrop } from '../Shell/ProgressBackdrop';
 import { useGlobalPermissions } from '../Model/SessionModel';
+import { policyData } from '../Model/ConfigurationModel';
+import { useLoadable } from '../Hooks/useLoadable';
+import { FUNCTION_ASSIGNMENTS_FEATURE_FLAG } from '../featureFlags';
+import {
+  AssignmentFilterSelectionsByRole,
+  assignmentNamesForRole,
+  assignmentRolesForColumns,
+  matchesAssignmentFilters,
+} from '../FunctionAssignments/assignmentRoleColumns';
+import { containedStickyHeaderTableSx } from '../Utilities/stickyHeaderTableSx';
+import { WideTableContainer } from '../Utilities/WideTableContainer';
+import { wideTablePageSx } from '../Utilities/wideTablePageSx';
 
 const REFERRALS_FEATURE_FLAG = 'referrals';
 
@@ -95,20 +109,46 @@ export function V1Referrals() {
 function V1ReferralsContent() {
   const referralsLoadable = useRecoilValueLoadable(visibleReferralsQuery);
   const familyLookup = useFamilyLookup();
+  const personAndFamilyLookup = usePersonAndFamilyLookup();
   const permissions = useGlobalPermissions();
+  const policy = useLoadable(policyData);
+  const functionAssignmentsEnabled = useFeatureFlagEnabled(
+    FUNCTION_ASSIGNMENTS_FEATURE_FLAG
+  );
 
   const [filterText, setFilterText] = useState('');
   const [statusFilter, setStatusFilter] = useState<ReferralStatusFilter>('ALL');
   const [expandedView, setExpandedView] = useState(true);
   const [openNewReferral, setOpenNewReferral] = useState(false);
   const [countyFilter, setCountyFilter] = useState<(string | null)[]>([]);
+  const [assignmentFilters, setAssignmentFilters] =
+    useState<AssignmentFilterSelectionsByRole>({});
 
   const referrals =
-    referralsLoadable.state === 'hasValue' ? referralsLoadable.contents : [];
+    referralsLoadable.state === 'hasValue'
+      ? referralsLoadable.contents.map((referralInfo) => referralInfo.referral)
+      : [];
+  const canViewFunctionAssignments =
+    functionAssignmentsEnabled === true &&
+    permissions(Permission.ViewV1ReferralFunctionAssignments);
+  const assignmentRoles = canViewFunctionAssignments
+    ? assignmentRolesForColumns(
+        policy?.v1ReferralPolicy?.functionAssignmentPolicies?.map(
+          (assignmentPolicy) => assignmentPolicy.assignmentRole
+        ) ?? [],
+        referrals.flatMap(
+          (referral) => referral.assignedIndividualVolunteers ?? []
+        )
+      )
+    : [];
+  const tableColumnCount = 4 + assignmentRoles.length;
+  const tableMinWidth = Math.max(700, tableColumnCount * 160);
+  const hasFeaturebaseChat = permissions(Permission.AccessSupportScreen);
 
   const rows = referrals
     .map((r) => {
       const family = r.familyId ? familyLookup(r.familyId) : null;
+      const assignments = r.assignedIndividualVolunteers ?? [];
 
       return {
         id: r.referralId,
@@ -120,6 +160,19 @@ function V1ReferralsContent() {
         clientFamilyName: family ? familyNameString(family) : null,
         county: family ? getFamilyCounty(family) : null,
         comments: r.comment ?? '',
+        matchesAssignmentFilters:
+          !canViewFunctionAssignments ||
+          matchesAssignmentFilters(assignments, assignmentFilters),
+        assignmentNamesByRole: Object.fromEntries(
+          assignmentRoles.map((assignmentRole) => [
+            assignmentRole,
+            assignmentNamesForRole(
+              assignments,
+              assignmentRole,
+              (personId) => personAndFamilyLookup(personId).person
+            ),
+          ])
+        ),
       };
     })
     .sort((a, b) => {
@@ -147,7 +200,12 @@ function V1ReferralsContent() {
           ? countyFilter.includes(null)
           : countyFilter.includes(r.county);
 
-    return matchesText && matchesStatus && matchesCounty;
+    return (
+      matchesText &&
+      matchesStatus &&
+      matchesCounty &&
+      r.matchesAssignmentFilters
+    );
   });
 
   return (
@@ -155,8 +213,8 @@ function V1ReferralsContent() {
       <Route
         path=""
         element={
-          <Grid container>
-            <Grid item xs={12}>
+          <Box sx={wideTablePageSx(hasFeaturebaseChat)}>
+            <Box sx={{ flex: '0 0 auto' }}>
               <ReferralsFilters
                 filterText={filterText}
                 setFilterText={setFilterText}
@@ -168,6 +226,27 @@ function V1ReferralsContent() {
                 setStatusFilter={setStatusFilter}
                 countyFilter={countyFilter}
                 setCountyFilter={setCountyFilter}
+                assignmentRoles={
+                  canViewFunctionAssignments ? assignmentRoles : []
+                }
+                assignmentsForAssignmentFilter={
+                  canViewFunctionAssignments
+                    ? referrals.flatMap(
+                        (referral) =>
+                          referral.assignedIndividualVolunteers ?? []
+                      )
+                    : []
+                }
+                assignmentFilters={assignmentFilters}
+                setAssignmentFilter={(assignmentRole, selectedValues) =>
+                  setAssignmentFilters((current) => ({
+                    ...current,
+                    [assignmentRole]: selectedValues,
+                  }))
+                }
+                assignmentPersonLookup={(personId) =>
+                  personAndFamilyLookup(personId).person
+                }
                 familiesForCountyFilter={referrals
                   .map((r) => (r.familyId ? familyLookup(r.familyId) : null))
                   .filter(
@@ -175,17 +254,37 @@ function V1ReferralsContent() {
                       family != null
                   )}
               />
-            </Grid>
+            </Box>
 
-            <Grid item xs={12}>
-              <TableContainer>
-                <Table size="small">
+            <Box
+              sx={{
+                display: 'flex',
+                flex: 1,
+                flexDirection: 'column',
+                minHeight: 0,
+              }}
+            >
+              <WideTableContainer>
+                <Table
+                  stickyHeader
+                  size="small"
+                  sx={{
+                    ...containedStickyHeaderTableSx,
+                    minWidth: tableMinWidth,
+                  }}
+                >
                   <TableHead>
                     <TableRow>
                       <TableCell>Referral Title</TableCell>
                       <TableCell>Status</TableCell>
                       <TableCell>Client Family</TableCell>
                       <TableCell>County</TableCell>
+                      {canViewFunctionAssignments &&
+                        assignmentRoles.map((assignmentRole) => (
+                          <TableCell key={assignmentRole}>
+                            {assignmentRole}
+                          </TableCell>
+                        ))}
                     </TableRow>
                   </TableHead>
 
@@ -194,13 +293,16 @@ function V1ReferralsContent() {
                       <ReferralRow
                         key={ref.id}
                         referral={ref}
+                        assignmentRoles={
+                          canViewFunctionAssignments ? assignmentRoles : []
+                        }
                         expanded={expandedView}
                       />
                     ))}
                   </TableBody>
                 </Table>
-              </TableContainer>
-            </Grid>
+              </WideTableContainer>
+            </Box>
 
             <Drawer
               anchor="right"
@@ -210,7 +312,7 @@ function V1ReferralsContent() {
             >
               <AddNewReferralDrawer onClose={() => setOpenNewReferral(false)} />
             </Drawer>
-          </Grid>
+          </Box>
         }
       />
 

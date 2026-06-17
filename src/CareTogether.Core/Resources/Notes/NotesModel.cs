@@ -24,6 +24,8 @@ namespace CareTogether.Resources.Notes
             Guid,
             NoteEntry
         >.Empty;
+        private ImmutableDictionary<Guid, ImmutableSortedSet<Guid>> noteIdsByFamilyId =
+            ImmutableDictionary<Guid, ImmutableSortedSet<Guid>>.Empty;
 
         public long LastKnownSequenceNumber { get; private set; } = -1;
 
@@ -157,10 +159,16 @@ namespace CareTogether.Resources.Notes
                 OnCommit: () =>
                 {
                     LastKnownSequenceNumber++;
+                    notes.TryGetValue(command.NoteId, out var existingNoteEntry);
                     notes =
                         noteEntryToUpsert == null
                             ? notes.Remove(command.NoteId)
                             : notes.SetItem(command.NoteId, noteEntryToUpsert);
+                    noteIdsByFamilyId = UpdateFamilyNoteIndex(
+                        noteIdsByFamilyId,
+                        existingNoteEntry,
+                        noteEntryToUpsert
+                    );
                 }
             );
         }
@@ -170,7 +178,60 @@ namespace CareTogether.Resources.Notes
             return notes.Values.Where(predicate).ToImmutableList();
         }
 
+        public ImmutableList<NoteEntry> GetFamilyNoteEntries(Guid familyId)
+        {
+            return noteIdsByFamilyId.TryGetValue(familyId, out var noteIds)
+                ? noteIds.Select(noteId => notes[noteId]).ToImmutableList()
+                : ImmutableList<NoteEntry>.Empty;
+        }
+
         public NoteEntry GetNoteEntry(Guid noteId) => notes[noteId];
+
+        private static ImmutableDictionary<Guid, ImmutableSortedSet<Guid>> UpdateFamilyNoteIndex(
+            ImmutableDictionary<Guid, ImmutableSortedSet<Guid>> index,
+            NoteEntry? previousEntry,
+            NoteEntry? nextEntry
+        )
+        {
+            var result = index;
+
+            if (previousEntry != null)
+                result = RemoveFamilyNoteId(result, previousEntry.FamilyId, previousEntry.Id);
+
+            if (nextEntry != null)
+                result = AddFamilyNoteId(result, nextEntry.FamilyId, nextEntry.Id);
+
+            return result;
+        }
+
+        private static ImmutableDictionary<Guid, ImmutableSortedSet<Guid>> AddFamilyNoteId(
+            ImmutableDictionary<Guid, ImmutableSortedSet<Guid>> index,
+            Guid familyId,
+            Guid noteId
+        )
+        {
+            return index.SetItem(
+                familyId,
+                index.TryGetValue(familyId, out var existingNoteIds)
+                    ? existingNoteIds.Add(noteId)
+                    : ImmutableSortedSet.Create(noteId)
+            );
+        }
+
+        private static ImmutableDictionary<Guid, ImmutableSortedSet<Guid>> RemoveFamilyNoteId(
+            ImmutableDictionary<Guid, ImmutableSortedSet<Guid>> index,
+            Guid familyId,
+            Guid noteId
+        )
+        {
+            if (!index.TryGetValue(familyId, out var existingNoteIds))
+                return index;
+
+            var updatedNoteIds = existingNoteIds.Remove(noteId);
+            return updatedNoteIds.IsEmpty
+                ? index.Remove(familyId)
+                : index.SetItem(familyId, updatedNoteIds);
+        }
 
         private void ReplayEvent(NotesEvent domainEvent, long sequenceNumber)
         {
