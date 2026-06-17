@@ -679,10 +679,7 @@ export function FamilyScreen() {
         </Grid>
         <Grid item md={8}>
           <Grid container spacing={2}>
-            <Grid item md={4}>
-              <PrimaryContactEditor family={family} />
-            </Grid>
-            <Grid item md={12}>
+            <Grid item md={8}>
               <Typography
                 className="ph-unmask"
                 variant="h3"
@@ -723,6 +720,9 @@ export function FamilyScreen() {
                   </ListItemButton>
                 );
               })}
+            </Grid>
+            <Grid item md={4}>
+              <PrimaryContactEditor family={family} />
             </Grid>
 
             <Grid item xs={12}>
