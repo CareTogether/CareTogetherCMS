@@ -22,18 +22,17 @@
     "@mui/system": "7.3.11",
     "@mui/x-date-pickers": "7.29.4",
     "@testing-library/jest-dom": "^6.4.6",
-    "@testing-library/react": "^14.3.1",
+    "@testing-library/react": "16.3.2",
     "@testing-library/user-event": "^14.5.2",
     "date-fns": "3.6.0",
     "dexie": "^3.2.7",
     "dexie-react-hooks": "^1.1.7",
     "posthog-js": "^1.369.2",
     "powerbi-client-react": "^2.0.0",
-    "react": "^18.3.1",
-    "react-dom": "^18.3.1",
+    "react": "19.2.6",
+    "react-dom": "19.2.6",
     "react-hook-form": "^7.58.1",
-    "react-is": "18.3.1",
-    "react-lazyload": "^3.2.1",
+    "react-is": "19.2.6",
     "react-router-dom": "^6.24.1",
     "react-to-print": "^3.0.5",
     "recoil": "^0.7.7",
@@ -45,9 +44,8 @@
     "@eslint/js": "^9.0.0",
     "@types/jest": "^29.5.12",
     "@types/node": "^20.14.10",
-    "@types/react": "^18.3.3",
-    "@types/react-dom": "^18.3.0",
-    "@types/react-lazyload": "^3.2.3",
+    "@types/react": "19.2.15",
+    "@types/react-dom": "19.2.3",
     "@typescript-eslint/eslint-plugin": "^8.0.0",
     "@typescript-eslint/parser": "^8.0.0",
     "@vitejs/plugin-react-swc": "^4.3.0",
@@ -79,6 +77,6 @@
     ]
   },
   "overrides": {
-    "react-is": "18.3.1"
+    "react-is": "19.2.6"
   }
 }

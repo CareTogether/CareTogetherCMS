@@ -1,4 +1,5 @@
 import React from 'react';
+import './Utilities/react19RecoilCompat';
 import ReactDOM from 'react-dom/client';
 import { AppInsightsContext } from '@microsoft/applicationinsights-react-js';
 import { aiReactPlugin } from './ApplicationInsightsService';
