@@ -682,7 +682,7 @@ export function FamilyScreen() {
             <Grid item md={4}>
               <PrimaryContactEditor family={family} />
             </Grid>
-            <Grid item md={8}>
+            <Grid item md={12}>
               <Typography
                 className="ph-unmask"
                 variant="h3"
