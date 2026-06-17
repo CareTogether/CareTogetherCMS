@@ -78,8 +78,10 @@ public class IntegrationTest1
 
         startInfo.ArgumentList.Add("playwright");
         startInfo.ArgumentList.Add("test");
-        startInfo.ArgumentList.Add("playwright_test/referral-workflow.spec.ts");
         startInfo.ArgumentList.Add("--project=chromium");
+        startInfo.ArgumentList.Add("--workers=1");
+        startInfo.ArgumentList.Add("--grep");
+        startInfo.ArgumentList.Add("@pr");
 
         startInfo.Environment["PLAYWRIGHT_BASE_URL"] = baseUrl!;
         startInfo.Environment["CT_ADMIN_EMAIL"] = "test@bynalogic.com";

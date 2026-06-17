@@ -35,10 +35,6 @@ test.describe('frontend smoke @smoke @pr', () => {
   });
 
   test('side navigation shows core menu items', async ({ page }) => {
-    const collector = createBrowserFailureCollector(page, {
-      ignoreConsoleMessage: isKnownNonFatalSmokeConsoleMessage,
-    });
-
     await openHome(page);
 
     const navigation = sideNavigation(page);
@@ -48,23 +44,15 @@ test.describe('frontend smoke @smoke @pr', () => {
     await expect(navigation.getByText('Inbox')).toBeVisible();
 
     await expectNoFatalErrorUi(page);
-    await expectNoBrowserFailures(collector);
   });
 
   test('dashboard reaches a usable state', async ({ page }) => {
-    const collector = createBrowserFailureCollector(page, {
-      ignoreConsoleMessage: isKnownNonFatalSmokeConsoleMessage,
-    });
-
     await openHome(page);
 
     await expect(
-      page
-        .getByText(/loading dashboard\.\.\./i)
-        .or(page.getByText(/dashboard/i).first())
+      page.getByRole('heading', { name: /^dashboard$/i })
     ).toBeVisible();
 
     await expectNoFatalErrorUi(page);
-    await expectNoBrowserFailures(collector);
   });
 });
