@@ -2,6 +2,7 @@ import { MouseEvent, useMemo, useState } from 'react';
 import Grid from '../Generic/GridLegacyCompat';
 import { Typography } from '@mui/material';
 import { EventCalendar } from '@mui/x-scheduler/event-calendar';
+import type { EventCalendarPreferences } from '@mui/x-scheduler/models';
 import { partneringFamiliesData } from '../Model/V1CasesModel';
 import { useLoadable } from '../Hooks/useLoadable';
 import { useFamilyLookup } from '../Model/DirectoryModel';
@@ -19,10 +20,11 @@ const DASHBOARD_CALENDAR_VIEW_KEY = 'dashboardCalendarView';
 type CalendarView = 'day' | 'week' | 'month' | 'agenda';
 
 const calendarViews: CalendarView[] = ['month', 'agenda'];
-const calendarPreferences = {
+const calendarPreferences: Partial<EventCalendarPreferences> = {
   showWeekends: true,
   showEmptyDaysInAgenda: false,
   isSidePanelOpen: false,
+  weekStartsOn: 1,
 };
 
 function getSavedInitialView(): CalendarView {
