@@ -1,4 +1,4 @@
-import Grid from '@mui/material/GridLegacy';
+import Grid from '../Generic/GridLegacyCompat';
 import { Typography } from '@mui/material';
 import FullCalendarBase from '@fullcalendar/react';
 import dayGridPlugin from '@fullcalendar/daygrid';

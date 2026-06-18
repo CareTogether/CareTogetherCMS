@@ -1,4 +1,4 @@
-import Grid from '@mui/material/GridLegacy';
+import Grid from '@mui/material/Grid';
 import {
   Autocomplete,
   Button,
@@ -88,11 +88,11 @@ export function AddMemberFamiliesForm({
     );
 
   return (
-    <Grid container spacing={2} maxWidth={500}>
-      <Grid item xs={12}>
+    <Grid container spacing={2} sx={{ maxWidth: 500 }}>
+      <Grid size={12}>
         <h3>Add Member Families</h3>
       </Grid>
-      <Grid item xs={12}>
+      <Grid size={12}>
         <FormControl required fullWidth size="small" sx={{ marginTop: 1 }}>
           <Autocomplete
             multiple
@@ -113,7 +113,7 @@ export function AddMemberFamiliesForm({
           />
         </FormControl>
       </Grid>
-      <Grid item xs={12} sx={{ textAlign: 'right' }}>
+      <Grid size={12} sx={{ textAlign: 'right' }}>
         <Button
           color="secondary"
           variant="contained"

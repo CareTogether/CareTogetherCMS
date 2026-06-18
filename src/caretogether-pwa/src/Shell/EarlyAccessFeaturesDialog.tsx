@@ -159,9 +159,11 @@ export function EarlyAccessFeaturesDialog({
               <Box key={featureEnrollmentKey(feature)}>
                 <Stack
                   direction="row"
-                  justifyContent="space-between"
-                  alignItems="flex-start"
-                  gap={2}
+                  sx={{
+                    alignItems: 'flex-start',
+                    gap: 2,
+                    justifyContent: 'space-between',
+                  }}
                 >
                   <Box>
                     <Typography variant="subtitle1">{feature.name}</Typography>

@@ -262,6 +262,7 @@ namespace CareTogether.Resources.Approvals
                         )
                     ),
                 },
+
                 UnexemptVolunteerRequirement c => volunteerEntry with
                 {
                     ExemptedRequirements = volunteerEntry.ExemptedRequirements.RemoveAll(x =>

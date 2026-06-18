@@ -1,4 +1,4 @@
-import Grid from '@mui/material/GridLegacy';
+import Grid from '../Generic/GridLegacyCompat';
 import { useReactToPrint } from 'react-to-print';
 import {
   Container,
@@ -705,7 +705,7 @@ export function FamilyScreenV2() {
 
   if (!family) {
     return (
-      <Box mt={10} textAlign="center">
+      <Box sx={{ mt: 10, textAlign: 'center' }}>
         <Typography>
           Oops! You can’t view this family. It may be restricted or unavailable.
         </Typography>

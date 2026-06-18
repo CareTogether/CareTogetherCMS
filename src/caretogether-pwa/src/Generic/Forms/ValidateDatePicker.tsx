@@ -18,8 +18,8 @@ type BaseProps = {
 };
 
 type ValidateDatePickerProps = BaseProps &
-  Omit<DatePickerProps<Date>, 'value' | 'onChange'> &
-  Omit<DateTimePickerProps<Date>, 'value' | 'onChange'>;
+  Omit<DatePickerProps, 'value' | 'onChange'> &
+  Omit<DateTimePickerProps, 'value' | 'onChange'>;
 
 export function ValidateDatePicker({
   value,
@@ -64,8 +64,8 @@ export function ValidateDatePicker({
   };
 
   return includeTime ? (
-    <DateTimePicker {...commonProps} />
+    <DateTimePicker {...(commonProps as DateTimePickerProps)} />
   ) : (
-    <DatePicker {...commonProps} />
+    <DatePicker {...(commonProps as DatePickerProps)} />
   );
 }

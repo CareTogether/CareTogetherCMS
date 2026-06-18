@@ -108,7 +108,7 @@ export function ApproveV1ReferralNoteDialog({
                 type="datetime-local"
                 value={backdatedLocal}
                 onChange={(e) => setBackdatedLocal(e.target.value)}
-                InputLabelProps={{ shrink: true }}
+                slotProps={{ inputLabel: { shrink: true } }}
                 fullWidth
                 helperText="This will be sent to the server as a Date."
               />

@@ -1,4 +1,4 @@
-import Grid from '@mui/material/GridLegacy';
+import Grid from '../Generic/GridLegacyCompat';
 import { Typography, Button } from '@mui/material';
 import { CombinedFamilyInfo } from '../GeneratedClient';
 import { AssignmentCard } from '../Families/AssignmentCard';

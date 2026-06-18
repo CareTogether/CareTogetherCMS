@@ -4271,6 +4271,13 @@
             "type": "string",
             "format": "guid",
             "nullable": true
+          },
+          "roleNames": {
+            "type": "array",
+            "nullable": true,
+            "items": {
+              "type": "string"
+            }
           }
         }
       },
@@ -4307,6 +4314,13 @@
             "type": "string",
             "format": "date-time",
             "nullable": true
+          },
+          "roleNames": {
+            "type": "array",
+            "nullable": true,
+            "items": {
+              "type": "string"
+            }
           }
         }
       },

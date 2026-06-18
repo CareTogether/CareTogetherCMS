@@ -4,14 +4,14 @@ import {
   Edit as EditIcon,
 } from '@mui/icons-material';
 import {
-  Timeline,
-  TimelineItem,
-  TimelineOppositeContent,
-  TimelineSeparator,
-  TimelineDot,
-  TimelineConnector,
-  TimelineContent,
-} from '@mui/lab';
+  AppTimeline,
+  AppTimelineConnector,
+  AppTimelineContent,
+  AppTimelineDot,
+  AppTimelineItem,
+  AppTimelineOppositeContent,
+  AppTimelineSeparator,
+} from '../Generic/AppTimeline';
 import { Box, Typography } from '@mui/material';
 import { format } from 'date-fns';
 import { useMemo } from 'react';
@@ -47,13 +47,13 @@ export function ReferralTimeline({
   }
 
   return (
-    <Box>
-      <Timeline position="right" sx={{ p: 0 }}>
+    <Box sx={{ width: '100%', minWidth: 0 }}>
+      <AppTimeline position="right" sx={{ p: 0, width: '100%' }}>
         {items.map((item, i) => (
-          <TimelineItem key={`${item.kind}:${i}`}>
-            <TimelineOppositeContent sx={{ display: 'none' }} />
-            <TimelineSeparator>
-              <TimelineDot
+          <AppTimelineItem key={`${item.kind}:${i}`}>
+            <AppTimelineOppositeContent sx={{ display: 'none' }} />
+            <AppTimelineSeparator>
+              <AppTimelineDot
                 sx={{
                   width: 36,
                   height: 36,
@@ -68,12 +68,16 @@ export function ReferralTimeline({
                 ) : (
                   <EditIcon fontSize="small" />
                 )}
-              </TimelineDot>
-              {i < items.length - 1 && <TimelineConnector />}
-            </TimelineSeparator>
+              </AppTimelineDot>
+              {i < items.length - 1 && <AppTimelineConnector />}
+            </AppTimelineSeparator>
 
-            <TimelineContent
-              sx={{ wordWrap: 'break-word', whiteSpace: 'pre-wrap' }}
+            <AppTimelineContent
+              sx={{
+                minWidth: 0,
+                wordWrap: 'break-word',
+                whiteSpace: 'pre-wrap',
+              }}
             >
               <Box sx={{ color: 'text.disabled', mb: 0.5 }}>
                 <span style={{ marginRight: 16 }}>
@@ -113,10 +117,10 @@ export function ReferralTimeline({
                   canApprove={canManageNotes}
                 />
               )}
-            </TimelineContent>
-          </TimelineItem>
+            </AppTimelineContent>
+          </AppTimelineItem>
         ))}
-      </Timeline>
+      </AppTimeline>
     </Box>
   );
 }

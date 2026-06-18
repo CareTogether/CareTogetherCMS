@@ -380,11 +380,13 @@ export function FunctionAssignmentsEditorDrawer({
       anchor="right"
       open={open}
       onClose={closeDrawer}
-      PaperProps={{
-        sx: {
-          width: 500,
-          p: 3,
-          top: 45,
+      slotProps={{
+        paper: {
+          sx: {
+            width: 500,
+            p: 3,
+            top: 45,
+          },
         },
       }}
     >
@@ -437,7 +439,11 @@ export function FunctionAssignmentsEditorDrawer({
           );
         })}
 
-        <Stack direction="row" justifyContent="flex-end" spacing={2}>
+        <Stack
+          direction="row"
+          spacing={2}
+          sx={{ justifyContent: 'flex-end' }}
+        >
           <Button
             color="secondary"
             variant="contained"
@@ -488,7 +494,11 @@ export function FunctionAssignmentsSection({
 
   return (
     <Box className="ph-unmask" sx={{ width: '100%' }}>
-      <Stack direction="row" alignItems="center" spacing={2} sx={{ mb: 1 }}>
+      <Stack
+        direction="row"
+        spacing={2}
+        sx={{ alignItems: 'center', mb: 1 }}
+      >
         <Typography variant="h3">{title}</Typography>
         {canEdit && (
           <Button variant="outlined" size="small" onClick={openDrawer}>
