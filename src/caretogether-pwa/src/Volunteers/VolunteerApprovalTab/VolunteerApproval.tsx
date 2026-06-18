@@ -719,11 +719,14 @@ function VolunteerApproval(props: { onOpen: () => void }) {
             </Stack>
           </Stack>
           <Stack
-            my={2}
             direction="row"
-            justifyContent="flex-end"
-            alignItems="center"
-            sx={{ gap: 1, flexWrap: 'wrap' }}
+            sx={{
+              alignItems: 'center',
+              flexWrap: 'wrap',
+              gap: 1,
+              justifyContent: 'flex-end',
+              my: 2,
+            }}
           >
             {permissions(Permission.EditFamilyInfo) &&
               permissions(Permission.ActivateVolunteerFamily) && (

@@ -1,4 +1,4 @@
-import Grid from '@mui/material/GridLegacy';
+import Grid from '@mui/material/Grid';
 import {
   Button,
   Checkbox,
@@ -97,11 +97,11 @@ export function PhoneNumberEditor({
     <Grid container rowSpacing={0} columnSpacing={2}>
       {editor.editing ? (
         <>
-          <Grid item xs={12}>
+          <Grid size={12}>
             <Divider />
             <br />
           </Grid>
-          <Grid item xs={12} sm={6}>
+          <Grid size={{ xs: 12, sm: 6 }}>
             <TextField
               id="phone-number"
               label="Phone Number"
@@ -114,7 +114,7 @@ export function PhoneNumberEditor({
               }
             />
           </Grid>
-          <Grid item xs={12} sm={6}>
+          <Grid size={{ xs: 12, sm: 6 }}>
             <FormControl component="fieldset">
               <FormLabel component="legend">Phone Type:</FormLabel>
               <RadioGroup
@@ -149,7 +149,7 @@ export function PhoneNumberEditor({
               </RadioGroup>
             </FormControl>
           </Grid>
-          <Grid item xs={12} sm={6}>
+          <Grid size={{ xs: 12, sm: 6 }}>
             <FormControlLabel
               control={
                 <Checkbox
@@ -167,17 +167,17 @@ export function PhoneNumberEditor({
               label="Is Preferred Phone Number"
             />
           </Grid>
-          <Grid item xs={12} sm={6}>
+          <Grid size={{ xs: 12, sm: 6 }}>
             {editor.cancelButton}
             {editor.saveButton}
           </Grid>
-          <Grid item xs={12}>
+          <Grid size={12}>
             <Divider />
             <br />
           </Grid>
         </>
       ) : (
-        <Grid item xs={12}>
+        <Grid size={12}>
           {add ? (
             <Button
               onClick={handleAdd}

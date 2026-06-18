@@ -71,7 +71,7 @@ export function CommunityRoleAssignments({
   }
 
   return (
-    <List sx={{ '& .MuiListItemIcon-root': { minWidth: 36 } }}>
+    <List>
       {assignments.map((assignment) => (
         <ListItem
           key={`${assignment.personId}-${assignment.communityRole}`}

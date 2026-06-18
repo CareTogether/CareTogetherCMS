@@ -1,5 +1,4 @@
 import React, { useEffect, useMemo } from 'react';
-import { Dashboard } from './Dashboard/Dashboard';
 import {
   Navigate,
   Routes,
@@ -8,12 +7,6 @@ import {
   useNavigate,
   useParams,
 } from 'react-router-dom';
-import { V1Cases } from './V1Cases/V1Cases';
-import { Volunteers } from './Volunteers/Volunteers';
-import { Settings } from './Settings/SettingsRoutes';
-import { FamilyScreen } from './Families/FamilyScreen';
-import { Communities } from './Communities/Communities';
-import { UserProfile } from './UserProfile/UserProfile';
 import { useRecoilStateLoadable, useRecoilValue } from 'recoil';
 import {
   LocationContext,
@@ -25,14 +18,9 @@ import { ProgressBackdrop } from './Shell/ProgressBackdrop';
 import { useScopedTrace } from './Hooks/useScopedTrace';
 import { useLoadable } from './Hooks/useLoadable';
 import { useLocalStorage } from './Hooks/useLocalStorage';
-import { InboxScreen } from './Inbox/InboxScreen';
-import { FamilyScreenV2 } from './Families/FamilyScreenV2';
 import { familyScreenV2State } from './Families/familyScreenV2State';
 import { usePostHogIdentify } from './Utilities/Instrumentation/usePostHogIdentify';
 import { usePostHogGroups } from './Utilities/Instrumentation/usePostHogGroups';
-import { Support } from './Support';
-import { Reports } from './Reports/Reports';
-import { V1Referrals } from './V1Referrals/V1Referrals';
 import {
   firstAccessibleLocation,
   hasLocationAccess,
@@ -41,6 +29,18 @@ import {
 } from './Access/accessRouteHelpers';
 import { NoOrganizationAccessScreen } from './Access/NoOrganizationAccessScreen';
 import { RootRoute } from './Access/RootRoute';
+import { Dashboard } from './Dashboard/Dashboard';
+import { InboxScreen } from './Inbox/InboxScreen';
+import { FamilyScreen } from './Families/FamilyScreen';
+import { FamilyScreenV2 } from './Families/FamilyScreenV2';
+import { V1Cases } from './V1Cases/V1Cases';
+import { V1Referrals } from './V1Referrals/V1Referrals';
+import { Volunteers } from './Volunteers/Volunteers';
+import { Communities } from './Communities/Communities';
+import { Reports } from './Reports/Reports';
+import { Settings } from './Settings/SettingsRoutes';
+import { Support } from './Support';
+import { UserProfile } from './UserProfile/UserProfile';
 
 function RouteMigrator() {
   const trace = useScopedTrace('RouteMigrator');
@@ -274,7 +274,11 @@ export function AppRoutes() {
       />
       <Route
         path="/me/*"
-        /*TODO: This needs a shell!*/ element={<UserProfile />}
+        element={
+          <ShellRootLayout>
+            <UserProfile />
+          </ShellRootLayout>
+        }
       />
       {/* The following routes are only kept for migration/fallback purposes. */}
       <Route path="/families/:familyId" element={<RouteMigrator />} />

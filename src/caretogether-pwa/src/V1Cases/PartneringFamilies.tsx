@@ -491,7 +491,7 @@ function PartneringFamilies() {
           </ToggleButtonGroup>
         </Stack>
 
-        <Stack my={2} direction="row" justifyContent="flex-end">
+        <Stack direction="row" sx={{ my: 2, justifyContent: 'flex-end' }}>
           <FormControl size="small" sx={{ minWidth: 140 }}>
             <InputLabel id="partnering-families-sort-label">Sort by</InputLabel>
             <Select
