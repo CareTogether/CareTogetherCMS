@@ -1,4 +1,5 @@
-import { Grid, TextField } from '@mui/material';
+import Grid from '@mui/material/GridLegacy';
+import { TextField } from '@mui/material';
 import { useDirectoryModel } from '../Model/DirectoryModel';
 import { useInlineEditor } from '../Hooks/useInlineEditor';
 import { PersonName } from './PersonName';

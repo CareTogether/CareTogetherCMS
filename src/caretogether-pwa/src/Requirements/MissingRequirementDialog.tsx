@@ -1,3 +1,4 @@
+import Grid from '@mui/material/GridLegacy';
 import {
   Checkbox,
   DialogContentText,
@@ -6,7 +7,6 @@ import {
   FormControlLabel,
   FormGroup,
   FormLabel,
-  Grid,
   InputLabel,
   Link,
   MenuItem,
@@ -122,10 +122,13 @@ export function MissingRequirementDialog({
     return familyId;
   }
 
-  const referralsList = useRecoilValue(visibleReferralsQuery);
+  const referralInfos = useRecoilValue(visibleReferralsQuery);
   const currentReferral =
     context.kind === 'V1Referral'
-      ? referralsList.find((r) => r.referralId === context.referralId)
+      ? referralInfos.find(
+          (referralInfo) =>
+            referralInfo.referral.referralId === context.referralId
+        )?.referral
       : undefined;
 
   const openV1Cases: V1Case[] =

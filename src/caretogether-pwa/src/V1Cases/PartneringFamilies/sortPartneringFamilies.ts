@@ -8,6 +8,8 @@ import { familyLastName } from '../../Families/FamilyUtils';
 export type PartneringFamiliesSortMode =
   | 'lastNameAsc'
   | 'lastNameDesc'
+  | 'firstNameAsc'
+  | 'firstNameDesc'
   | 'dateOpenedDesc'
   | 'dateOpenedAsc';
 
@@ -17,6 +19,8 @@ export function normalizePartneringFamiliesSortMode(
   if (
     value === 'lastNameAsc' ||
     value === 'lastNameDesc' ||
+    value === 'firstNameAsc' ||
+    value === 'firstNameDesc' ||
     value === 'dateOpenedDesc' ||
     value === 'dateOpenedAsc'
   ) {
@@ -54,6 +58,32 @@ function compareByFamilyName(
   return (firstFamily.family?.id ?? '').localeCompare(
     secondFamily.family?.id ?? ''
   );
+}
+
+function familyFirstName(family: CombinedFamilyInfo) {
+  return (
+    family.family!.adults?.filter(
+      (adult) => family.family!.primaryFamilyContactPersonId === adult.item1?.id
+    )[0]?.item1?.firstName || 'MISSING PRIMARY CONTACT'
+  );
+}
+
+function compareByFamilyFirstName(
+  firstFamily: CombinedFamilyInfo,
+  secondFamily: CombinedFamilyInfo
+) {
+  const firstFirstName = familyFirstName(firstFamily);
+  const secondFirstName = familyFirstName(secondFamily);
+
+  if (firstFirstName < secondFirstName) {
+    return -1;
+  }
+
+  if (firstFirstName > secondFirstName) {
+    return 1;
+  }
+
+  return compareByFamilyName(firstFamily, secondFamily);
 }
 
 export function openReferralByFamilyId(referrals: V1Referral[]) {
@@ -159,6 +189,14 @@ export function sortPartneringFamilies(
 
     if (sortMode === 'lastNameDesc') {
       return compareByFamilyName(secondFamily, firstFamily);
+    }
+
+    if (sortMode === 'firstNameDesc') {
+      return compareByFamilyFirstName(secondFamily, firstFamily);
+    }
+
+    if (sortMode === 'firstNameAsc') {
+      return compareByFamilyFirstName(firstFamily, secondFamily);
     }
 
     return compareByFamilyName(firstFamily, secondFamily);

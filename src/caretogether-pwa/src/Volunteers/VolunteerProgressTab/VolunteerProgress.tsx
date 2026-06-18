@@ -1,5 +1,5 @@
+import Grid from '@mui/material/GridLegacy';
 import {
-  Grid,
   Table,
   TableContainer,
   TableBody,
@@ -8,6 +8,11 @@ import {
   TableRow,
   Button,
   ButtonGroup,
+  FormControl,
+  InputLabel,
+  MenuItem,
+  Select,
+  SelectChangeEvent,
   useMediaQuery,
   useTheme,
   Stack,
@@ -28,8 +33,10 @@ import { SearchBar } from '../../Shell/SearchBar';
 import { useLocalStorage } from '../../Hooks/useLocalStorage';
 import { useScrollMemory } from '../../Hooks/useScrollMemory';
 import {
+  FamilyNameSortMode,
   filterFamiliesByText,
-  sortFamiliesByLastNameDesc,
+  normalizeFamilyNameSortMode,
+  sortFamiliesByName,
 } from '../../Families/FamilyUtils';
 import { useAllVolunteerFamiliesPermissions } from '../../Model/SessionModel';
 import { Permission } from '../../GeneratedClient';
@@ -42,6 +49,8 @@ import { forceCheck } from '../../Utilities/reactLazyLoadInterop';
 import { VolunteerProgressTableItem } from './VolunteerProgressTableItem';
 import { stickyHeaderTableSx } from '../../Utilities/stickyHeaderTableSx';
 
+const VOLUNTEER_PROGRESS_SORT_STORAGE_KEY = 'volunteer-progress-sortMode';
+
 function VolunteerProgress(props: { onOpen: () => void }) {
   const { onOpen } = props;
   useEffect(onOpen);
@@ -50,8 +59,20 @@ function VolunteerProgress(props: { onOpen: () => void }) {
 
   // The array object returned by Recoil is read-only. We need to copy it before we can do an in-place sort.
   const volunteerFamiliesLoadable = useLoadable(volunteerFamiliesData);
-  const volunteerFamilies = sortFamiliesByLastNameDesc(
-    volunteerFamiliesLoadable || []
+  const [storedSortMode, setStoredSortMode] =
+    useLocalStorage<FamilyNameSortMode>(
+      VOLUNTEER_PROGRESS_SORT_STORAGE_KEY,
+      'lastNameAsc'
+    );
+  const sortMode = normalizeFamilyNameSortMode(storedSortMode);
+
+  function setSortMode(value: FamilyNameSortMode) {
+    setStoredSortMode(value);
+  }
+
+  const volunteerFamilies = sortFamiliesByName(
+    volunteerFamiliesLoadable || [],
+    sortMode
   );
   const allApprovalAndOnboardingRequirements = useLoadable(
     allApprovalAndOnboardingRequirementsData
@@ -65,7 +86,7 @@ function VolunteerProgress(props: { onOpen: () => void }) {
 
   useEffect(() => {
     forceCheck();
-  }, [filterText]);
+  }, [filterText, sortMode]);
 
   useScrollMemory();
 
@@ -153,18 +174,44 @@ function VolunteerProgress(props: { onOpen: () => void }) {
             </Button>
           </ButtonGroup>
         </Stack>
-
-        {permissions(Permission.EditFamilyInfo) &&
-          permissions(Permission.ActivateVolunteerFamily) && (
-            <Button
-              variant="contained"
-              startIcon={<AddIcon />}
-              onClick={() => setCreateVolunteerFamilyDialogOpen(true)}
-              sx={{ marginRight: 'auto', marginY: 2 }}
+        <Stack
+          my={2}
+          direction="row"
+          justifyContent="flex-end"
+          alignItems="center"
+          sx={{ gap: 1, flexWrap: 'wrap' }}
+        >
+          {permissions(Permission.EditFamilyInfo) &&
+            permissions(Permission.ActivateVolunteerFamily) && (
+              <Button
+                variant="contained"
+                startIcon={<AddIcon />}
+                onClick={() => setCreateVolunteerFamilyDialogOpen(true)}
+                sx={{ marginRight: 'auto', width: { xs: '100%', sm: 'auto' } }}
+              >
+                Add new volunteer family
+              </Button>
+            )}
+          <FormControl
+            size="small"
+            sx={{ minWidth: 180, width: { xs: '100%', sm: 'auto' } }}
+          >
+            <InputLabel id="volunteer-progress-sort-label">Sort by</InputLabel>
+            <Select
+              labelId="volunteer-progress-sort-label"
+              value={sortMode}
+              label="Sort by"
+              onChange={(event: SelectChangeEvent) =>
+                setSortMode(event.target.value as FamilyNameSortMode)
+              }
             >
-              Add new volunteer family
-            </Button>
-          )}
+              <MenuItem value="lastNameAsc">Last name (ascending)</MenuItem>
+              <MenuItem value="lastNameDesc">Last name (descending)</MenuItem>
+              <MenuItem value="firstNameAsc">First name (ascending)</MenuItem>
+              <MenuItem value="firstNameDesc">First name (descending)</MenuItem>
+            </Select>
+          </FormControl>
+        </Stack>
       </Grid>
       <Grid item xs={12}>
         <TableContainer
@@ -213,7 +260,12 @@ function VolunteerProgress(props: { onOpen: () => void }) {
           <CreateVolunteerFamilyDialog
             onClose={(volunteerFamilyId) => {
               setCreateVolunteerFamilyDialogOpen(false);
-              volunteerFamilyId && openFamily(volunteerFamilyId);
+
+              if (!volunteerFamilyId) {
+                return;
+              }
+
+              openFamily(volunteerFamilyId);
             }}
           />
         )}

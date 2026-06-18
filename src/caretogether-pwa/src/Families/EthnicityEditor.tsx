@@ -1,4 +1,5 @@
-import { FormControl, Grid, InputLabel, MenuItem, Select } from '@mui/material';
+import Grid from '@mui/material/GridLegacy';
+import { FormControl, InputLabel, MenuItem, Select } from '@mui/material';
 import { useDirectoryModel } from '../Model/DirectoryModel';
 import { useInlineEditor } from '../Hooks/useInlineEditor';
 import { PersonEditorProps } from './PersonEditorProps';

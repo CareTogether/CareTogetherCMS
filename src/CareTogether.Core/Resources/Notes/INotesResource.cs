@@ -76,6 +76,8 @@ namespace CareTogether.Resources.Notes
     /// </summary>
     public interface INotesResource
     {
+        Task<ImmutableList<NoteEntry>> ListNotesAsync(Guid organizationId, Guid locationId);
+
         Task<ImmutableList<NoteEntry>> ListFamilyNotesAsync(
             Guid organizationId,
             Guid locationId,

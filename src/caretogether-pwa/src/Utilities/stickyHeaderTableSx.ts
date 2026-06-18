@@ -14,3 +14,11 @@ export const stickyHeaderTableSx = {
     py: { xs: 1, sm: 1.5 },
   },
 };
+
+export const containedStickyHeaderTableSx = {
+  ...stickyHeaderTableSx,
+  '& .MuiTableCell-stickyHeader': {
+    ...stickyHeaderTableSx['& .MuiTableCell-stickyHeader'],
+    top: 0,
+  },
+};

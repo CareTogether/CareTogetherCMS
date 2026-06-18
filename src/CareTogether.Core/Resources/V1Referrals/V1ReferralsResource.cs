@@ -86,6 +86,20 @@ namespace CareTogether.Resources.V1Referrals
             }
         }
 
+        public async Task<ImmutableList<V1Referral>> ListReferralsForFamilyAsync(
+            Guid organizationId,
+            Guid locationId,
+            Guid familyId
+        )
+        {
+            using (
+                var lockedModel = await tenantModels.ReadLockItemAsync((organizationId, locationId))
+            )
+            {
+                return lockedModel.Value.GetFamilyReferrals(familyId);
+            }
+        }
+
         public async Task<Uri> GetV1ReferralDocumentReadValetUrl(
             Guid organizationId,
             Guid locationId,

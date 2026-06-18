@@ -99,5 +99,35 @@ namespace CareTogether.Resources.V1Cases
                 return lockedModel.Value.FindV1CaseEntries(_ => true);
             }
         }
+
+        public async Task<ImmutableList<V1CaseEntry>> ListV1CasesForFamilyAsync(
+            Guid organizationId,
+            Guid locationId,
+            Guid familyId
+        )
+        {
+            using (
+                var lockedModel = await tenantModels.ReadLockItemAsync((organizationId, locationId))
+            )
+            {
+                return lockedModel.Value.GetV1CaseEntriesForFamily(familyId);
+            }
+        }
+
+        public async Task<ImmutableList<V1CaseEntry>> ListV1CasesAssignedToVolunteerFamilyAsync(
+            Guid organizationId,
+            Guid locationId,
+            Guid volunteerFamilyId
+        )
+        {
+            using (
+                var lockedModel = await tenantModels.ReadLockItemAsync((organizationId, locationId))
+            )
+            {
+                return lockedModel.Value.GetV1CaseEntriesAssignedToVolunteerFamily(
+                    volunteerFamilyId
+                );
+            }
+        }
     }
 }

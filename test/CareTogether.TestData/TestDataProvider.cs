@@ -2493,6 +2493,13 @@ namespace CareTogether.TestData
                         "No longer needed",
                         "Resourced",
                         "Need met"
+                    ),
+                    ImmutableList.Create(
+                        "Not appropriate",
+                        "No capacity",
+                        "No longer needed",
+                        "Resourced",
+                        "Need met"
                     )
                 )
             );
@@ -2764,7 +2771,6 @@ namespace CareTogether.TestData
                     ),
                 }.ToImmutableDictionary(),
                 [
-                    new("Has Pool", CustomFieldType.Boolean, null, null),
                     new(
                         "Home Church",
                         CustomFieldType.String,
@@ -3209,11 +3215,11 @@ namespace CareTogether.TestData
                     ]
                 )
                 {
-                    StaffAssignmentPolicies =
+                    FunctionAssignmentPolicies =
                     [
-                        new StaffAssignmentPolicy(
+                        new FunctionAssignmentPolicy(
                             "Case Manager",
-                            new StaffAssignmentEligibility(
+                            new FunctionAssignmentEligibility(
                                 EligibleLocationRoles: [SystemConstants.ORGANIZATION_ADMINISTRATOR],
                                 EligibleIndividualVolunteerRoles: [],
                                 EligibleVolunteerFamilyRoles: [],
@@ -3386,17 +3392,30 @@ namespace CareTogether.TestData
                                 ),
                             ]
                         ),
-                    }.ToImmutableDictionary()
+                    }.ToImmutableDictionary(),
+                    [
+                        new CustomField("Has Pool", CustomFieldType.Boolean, null, null),
+                        new CustomField("Hosting Age Preference", CustomFieldType.StringArray, CustomFieldValidation.SuggestOnly, ["0-1", "2-5", "6-10", "11-15", "16-18"]),
+                    ]
                 )
             )
             {
                 V1ReferralPolicy = new V1ReferralPolicy(
                     [
-                        new StaffAssignmentPolicy(
+                        new FunctionAssignmentPolicy(
                             "Intake Coordinator",
-                            new StaffAssignmentEligibility(
+                            new FunctionAssignmentEligibility(
                                 EligibleLocationRoles: [SystemConstants.ORGANIZATION_ADMINISTRATOR],
-                                EligibleIndividualVolunteerRoles: [],
+                                EligibleIndividualVolunteerRoles: ["Family Coach"],
+                                EligibleVolunteerFamilyRoles: [],
+                                EligiblePeople: []
+                            )
+                        ),
+                        new FunctionAssignmentPolicy(
+                            "Intake Supervisor",
+                            new FunctionAssignmentEligibility(
+                                EligibleLocationRoles: [SystemConstants.ORGANIZATION_ADMINISTRATOR],
+                                EligibleIndividualVolunteerRoles: ["Family Coach"],
                                 EligibleVolunteerFamilyRoles: [],
                                 EligiblePeople: []
                             )

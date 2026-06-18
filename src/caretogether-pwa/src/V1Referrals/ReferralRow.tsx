@@ -11,10 +11,12 @@ export interface ReferralRowModel {
   clientFamilyName: string | null;
   county: string | null;
   comments?: string;
+  assignmentNamesByRole: Record<string, string>;
 }
 
 interface ReferralRowProps {
   referral: ReferralRowModel;
+  assignmentRoles: string[];
   expanded: boolean;
 }
 
@@ -23,7 +25,11 @@ function formatDate(date?: Date) {
   return date.toLocaleDateString();
 }
 
-export function ReferralRow({ referral, expanded }: ReferralRowProps) {
+export function ReferralRow({
+  referral,
+  assignmentRoles,
+  expanded,
+}: ReferralRowProps) {
   const appNavigate = useAppNavigate();
 
   const comments = referral.comments ?? '';
@@ -65,6 +71,11 @@ export function ReferralRow({ referral, expanded }: ReferralRowProps) {
         <TableCell>{referral.clientFamilyName ?? ''}</TableCell>
 
         <TableCell>{referral.county ?? ''}</TableCell>
+        {assignmentRoles.map((assignmentRole) => (
+          <TableCell key={assignmentRole}>
+            {referral.assignmentNamesByRole[assignmentRole] ?? ''}
+          </TableCell>
+        ))}
       </TableRow>
 
       {expanded && comments && (
@@ -72,7 +83,7 @@ export function ReferralRow({ referral, expanded }: ReferralRowProps) {
           sx={{ cursor: 'pointer' }}
           onClick={() => appNavigate.referral(referral.id)}
         >
-          <TableCell colSpan={4} sx={{ pl: 3 }}>
+          <TableCell colSpan={4 + assignmentRoles.length} sx={{ pl: 3 }}>
             <Box sx={{ whiteSpace: 'pre-wrap', overflowWrap: 'break-word' }}>
               {preview}
             </Box>

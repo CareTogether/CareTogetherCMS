@@ -1,8 +1,8 @@
+import Grid from '@mui/material/GridLegacy';
 import {
   FormControl,
   FormControlLabel,
   FormLabel,
-  Grid,
   Radio,
   RadioGroup,
 } from '@mui/material';

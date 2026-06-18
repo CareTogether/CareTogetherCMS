@@ -1,4 +1,5 @@
-import { Grid, Typography } from '@mui/material';
+import Grid from '@mui/material/GridLegacy';
+import { Typography } from '@mui/material';
 import FullCalendar from '@fullcalendar/react';
 import dayGridPlugin from '@fullcalendar/daygrid';
 import listPlugin from '@fullcalendar/list';

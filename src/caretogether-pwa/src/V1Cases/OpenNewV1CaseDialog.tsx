@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Grid } from '@mui/material';
+import Grid from '@mui/material/GridLegacy';
 import { UpdateDialog } from '../Generic/UpdateDialog';
 import { useV1CasesModel } from '../Model/V1CasesModel';
 import { ValidateDatePicker } from '../Generic/Forms/ValidateDatePicker';

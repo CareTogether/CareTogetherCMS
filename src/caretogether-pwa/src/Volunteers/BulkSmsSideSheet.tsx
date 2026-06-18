@@ -111,11 +111,13 @@ export function BulkSmsSideSheet({
       variant="persistent"
       anchor={isMobile ? 'bottom' : 'right'}
       open
-      PaperProps={{
-        sx: {
-          padding: isMobile ? 1 : 2,
-          width: isMobile ? null : 400,
-          height: isMobile ? 500 : null,
+      slotProps={{
+        paper: {
+          sx: {
+            padding: isMobile ? 1 : 2,
+            width: isMobile ? null : 400,
+            height: isMobile ? 500 : null,
+          },
         },
       }}
     >
