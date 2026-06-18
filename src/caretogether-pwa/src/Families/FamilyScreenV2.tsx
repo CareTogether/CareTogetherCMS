@@ -26,6 +26,7 @@ import {
   TableRow,
   Tab,
   Tabs,
+  Tooltip,
 } from '@mui/material';
 import {
   CompletedCustomFieldInfo,
@@ -44,10 +45,13 @@ import {
 import { useParams } from 'react-router';
 import {
   AddCircle as AddCircleIcon,
+  Check as CheckIcon,
   CloudUpload as CloudUploadIcon,
+  ContentCopy as ContentCopyIcon,
   Diversity3 as Diversity3Icon,
   Edit as EditIcon,
   Email as EmailIcon,
+  Home as HomeIcon,
   MoreVert as MoreVertIcon,
   PersonPinCircle as PersonPinCircleIcon,
   Phone as PhoneIcon,
@@ -122,6 +126,7 @@ import {
 } from '../FunctionAssignments/assignmentRoleColumns';
 import { PersonName } from './PersonName';
 import { buildGroupedV1ReferralTimelineEntries } from '../V1Referrals/referralTimelineHelpers';
+import { useGlobalSnackBar } from '../Hooks/useGlobalSnackBar';
 
 type CustomFieldRenderInfo = CompletedCustomFieldInfo | string;
 type ReferralNoteEntry = NonNullable<V1Referral['notes']>[number];
@@ -211,6 +216,48 @@ function recentActivityIcon(activity: Activity): RecentOverviewTimelineItem['ico
   return 'edit';
 }
 
+type ContactInfoCopyButtonProps = {
+  value: string;
+  label: string;
+  onCopied: (message: string) => void;
+};
+
+function ContactInfoCopyButton({
+  value,
+  label,
+  onCopied,
+}: ContactInfoCopyButtonProps) {
+  const [copied, setCopied] = useState(false);
+
+  async function handleCopy() {
+    try {
+      await navigator.clipboard.writeText(value);
+      setCopied(true);
+      onCopied(`${label} copied`);
+      setTimeout(() => setCopied(false), 1500);
+    } catch {
+      onCopied(`Unable to copy ${label.toLowerCase()}`);
+    }
+  }
+
+  return (
+    <Tooltip title={copied ? 'Copied' : `Copy ${label.toLowerCase()}`}>
+      <IconButton
+        size="small"
+        aria-label={`copy ${label.toLowerCase()}`}
+        onClick={() => void handleCopy()}
+        sx={{ p: 0.25 }}
+      >
+        {copied ? (
+          <CheckIcon color="success" fontSize="small" />
+        ) : (
+          <ContentCopyIcon fontSize="small" />
+        )}
+      </IconButton>
+    </Tooltip>
+  );
+}
+
 export function FamilyScreenV2() {
   const familyIdMaybe = useParams<{ familyId: string }>();
   const familyId = familyIdMaybe.familyId as string;
@@ -265,6 +312,7 @@ export function FamilyScreenV2() {
   const directoryModel = useDirectoryModel();
 
   const withBackdrop = useBackdrop();
+  const { setAndShowGlobalSnackBar } = useGlobalSnackBar();
 
   const permissions = useFamilyPermissions(family);
 
@@ -511,6 +559,26 @@ export function FamilyScreenV2() {
     setSelectedV1CaseId(v1CaseId);
   }
 
+  function openUploadDocumentDialog() {
+    setFamilyMoreMenuAnchor(null);
+    setUploadDocumentDialogOpen(true);
+  }
+
+  function openAddAdultDialog() {
+    setFamilyMoreMenuAnchor(null);
+    setAddAdultDialogOpen(true);
+  }
+
+  function openAddChildDialog() {
+    setFamilyMoreMenuAnchor(null);
+    setAddChildDialogOpen(true);
+  }
+
+  function openAddNoteDialog() {
+    setFamilyMoreMenuAnchor(null);
+    setAddNoteDialogOpen(true);
+  }
+
   const printContentRef = useRef<HTMLDivElement>(null);
   const reactToPrintFn = useReactToPrint({ contentRef: printContentRef });
   const isVolunteerFamily = family?.volunteerFamilyInfo != null;
@@ -527,6 +595,20 @@ export function FamilyScreenV2() {
       (emailAddress) =>
         emailAddress.id === primaryContactPerson.preferredEmailAddressId
     ) ?? primaryContactPerson?.emailAddresses?.[0];
+  const primaryAddress = primaryContactPerson?.addresses?.find(
+    (address) => address.id === primaryContactPerson.currentAddressId
+  );
+  const primaryAddressText = primaryAddress
+    ? [
+        primaryAddress.line1,
+        primaryAddress.line2,
+        [primaryAddress.city, primaryAddress.state, primaryAddress.postalCode]
+          .filter(Boolean)
+          .join(', '),
+      ]
+        .filter(Boolean)
+        .join(' ')
+    : undefined;
   const arrangementOrAssignmentsTabLabel = isVolunteerFamily
     ? 'Assignments'
     : 'Arrangements';
@@ -544,6 +626,7 @@ export function FamilyScreenV2() {
       );
   }, [family?.notes]);
   const recentOverviewTimelineItems = useMemo(() => {
+    const now = new Date();
     const sevenDaysAgo = new Date();
     sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
 
@@ -607,7 +690,10 @@ export function FamilyScreenV2() {
       );
 
     return [...familyActivities, ...familyNotes, ...referralActivities]
-      .filter((item) => getDateValue(item.timestamp) >= sevenDaysAgo.getTime())
+      .filter((item) => {
+        const timestamp = getDateValue(item.timestamp);
+        return timestamp >= sevenDaysAgo.getTime() && timestamp <= now.getTime();
+      })
       .sort((a, b) => getDateValue(b.timestamp) - getDateValue(a.timestamp))
       .slice(0, 6);
   }, [
@@ -633,6 +719,27 @@ export function FamilyScreenV2() {
       </Box>
     );
   }
+
+  const canUploadDocuments = permissions(Permission.UploadFamilyDocuments);
+  const canEditFamilyInfo = permissions(Permission.EditFamilyInfo);
+  const canAddNotes =
+    permissions(Permission.AddEditDraftNotes) ||
+    permissions(Permission.AddEditOwnDraftNotes);
+  const hasVolunteerRoleActions =
+    permissions(Permission.EditVolunteerRoleParticipation) &&
+    (participatingFamilyRoles.length > 0 ||
+      (family.volunteerFamilyInfo?.roleRemovals &&
+        family.volunteerFamilyInfo.roleRemovals.length > 0));
+  const hasMoreMenuActions =
+    hasVolunteerRoleActions ||
+    canEditFamilyInfo ||
+    (family.volunteerFamilyInfo != null &&
+      permissions(Permission.EditApprovalRequirementCompletion));
+  const hasFamilyActions =
+    canUploadDocuments ||
+    canEditFamilyInfo ||
+    canAddNotes ||
+    hasMoreMenuActions;
 
   return (
     <Container maxWidth={false} sx={{ paddingLeft: '12px' }}>
@@ -672,6 +779,11 @@ export function FamilyScreenV2() {
                 <Typography variant="body2">
                   {primaryEmailAddress.address}
                 </Typography>
+                <ContactInfoCopyButton
+                  value={primaryEmailAddress.address}
+                  label="Email"
+                  onCopied={setAndShowGlobalSnackBar}
+                />
               </Box>
             )}
             {primaryPhoneNumber?.number && (
@@ -681,6 +793,25 @@ export function FamilyScreenV2() {
               >
                 <PhoneIcon fontSize="small" color="action" />
                 <Typography variant="body2">{primaryPhoneNumber.number}</Typography>
+                <ContactInfoCopyButton
+                  value={primaryPhoneNumber.number}
+                  label="Phone number"
+                  onCopied={setAndShowGlobalSnackBar}
+                />
+              </Box>
+            )}
+            {primaryAddressText && (
+              <Box
+                className="ph-unmask"
+                sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}
+              >
+                <HomeIcon fontSize="small" color="action" />
+                <Typography variant="body2">{primaryAddressText}</Typography>
+                <ContactInfoCopyButton
+                  value={primaryAddressText}
+                  label="Address"
+                  onCopied={setAndShowGlobalSnackBar}
+                />
               </Box>
             )}
           </Box>
@@ -694,7 +825,7 @@ export function FamilyScreenV2() {
             gap: 1,
           }}
         >
-          {permissions(Permission.UploadFamilyDocuments) && (
+          {isDesktop && canUploadDocuments && (
             <Button
               className="ph-unmask"
               onClick={() => setUploadDocumentDialogOpen(true)}
@@ -705,7 +836,7 @@ export function FamilyScreenV2() {
               Upload
             </Button>
           )}
-          {permissions(Permission.EditFamilyInfo) && (
+          {isDesktop && canEditFamilyInfo && (
             <Button
               className="ph-unmask"
               onClick={() => setAddAdultDialogOpen(true)}
@@ -716,7 +847,7 @@ export function FamilyScreenV2() {
               Adult
             </Button>
           )}
-          {permissions(Permission.EditFamilyInfo) && (
+          {isDesktop && canEditFamilyInfo && (
             <Button
               className="ph-unmask"
               onClick={() => setAddChildDialogOpen(true)}
@@ -727,8 +858,7 @@ export function FamilyScreenV2() {
               Child
             </Button>
           )}
-          {(permissions(Permission.AddEditDraftNotes) ||
-            permissions(Permission.AddEditOwnDraftNotes)) && (
+          {isDesktop && canAddNotes && (
             <Button
               className="ph-unmask"
               onClick={() => setAddNoteDialogOpen(true)}
@@ -739,18 +869,30 @@ export function FamilyScreenV2() {
               Note
             </Button>
           )}
-          {((permissions(Permission.EditVolunteerRoleParticipation) &&
-            (participatingFamilyRoles.length > 0 ||
-              (family.volunteerFamilyInfo?.roleRemovals &&
-                family.volunteerFamilyInfo.roleRemovals.length > 0))) ||
-            permissions(Permission.EditFamilyInfo) ||
-            (family.volunteerFamilyInfo != null &&
-              permissions(Permission.EditApprovalRequirementCompletion))) && (
+          {isDesktop && hasMoreMenuActions && (
             <IconButton
               onClick={(event) => setFamilyMoreMenuAnchor(event.currentTarget)}
               size="small"
             >
               <MoreVertIcon />
+            </IconButton>
+          )}
+          {!isDesktop && hasFamilyActions && (
+            <IconButton
+              className="ph-unmask"
+              aria-label="family actions"
+              onClick={(event) => setFamilyMoreMenuAnchor(event.currentTarget)}
+              size="small"
+              sx={{
+                border: 1,
+                borderColor: 'primary.main',
+                borderRadius: 1,
+                color: 'primary.main',
+                width: 36,
+                height: 36,
+              }}
+            >
+              <MoreVertIcon fontSize="small" />
             </IconButton>
           )}
         </Box>
@@ -762,6 +904,43 @@ export function FamilyScreenV2() {
           onClose={() => setFamilyMoreMenuAnchor(null)}
         >
           <MenuList dense={isDesktop}>
+            {!isDesktop && canUploadDocuments && (
+              <MenuItem onClick={openUploadDocumentDialog}>
+                <ListItemIcon>
+                  <CloudUploadIcon fontSize="small" />
+                </ListItemIcon>
+                <ListItemText className="ph-unmask" primary="Upload" />
+              </MenuItem>
+            )}
+            {!isDesktop && canEditFamilyInfo && (
+              <MenuItem onClick={openAddAdultDialog}>
+                <ListItemIcon>
+                  <AddCircleIcon fontSize="small" />
+                </ListItemIcon>
+                <ListItemText className="ph-unmask" primary="Adult" />
+              </MenuItem>
+            )}
+            {!isDesktop && canEditFamilyInfo && (
+              <MenuItem onClick={openAddChildDialog}>
+                <ListItemIcon>
+                  <AddCircleIcon fontSize="small" />
+                </ListItemIcon>
+                <ListItemText className="ph-unmask" primary="Child" />
+              </MenuItem>
+            )}
+            {!isDesktop && canAddNotes && (
+              <MenuItem onClick={openAddNoteDialog}>
+                <ListItemIcon>
+                  <AddCircleIcon fontSize="small" />
+                </ListItemIcon>
+                <ListItemText className="ph-unmask" primary="Note" />
+              </MenuItem>
+            )}
+            {!isDesktop &&
+              (canUploadDocuments || canEditFamilyInfo || canAddNotes) &&
+              hasMoreMenuActions && (
+                <Divider />
+              )}
             {permissions(Permission.EditVolunteerRoleParticipation) &&
               participatingFamilyRoles.flatMap(([role]) => (
                 <MenuItem key={role} onClick={() => selectRemoveRole(role)}>
@@ -1744,7 +1923,7 @@ export function FamilyScreenV2() {
               }}
             >
               <Typography variant="h3" className="ph-unmask" sx={{ m: 0 }}>
-                Recent Activity
+                Recent Activity: Last 7 days
               </Typography>
               <Button size="small" onClick={() => setSelectedTab(3)}>
                 View All
