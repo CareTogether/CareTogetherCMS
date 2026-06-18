@@ -1,6 +1,6 @@
 import Grid from '@mui/material/GridLegacy';
 import { Typography } from '@mui/material';
-import FullCalendar from '@fullcalendar/react';
+import FullCalendarBase from '@fullcalendar/react';
 import dayGridPlugin from '@fullcalendar/daygrid';
 import listPlugin from '@fullcalendar/list';
 import { format } from 'date-fns';
@@ -25,6 +25,42 @@ import { useAppNavigate } from '../Hooks/useAppNavigate';
 // }
 
 const DASHBOARD_CALENDAR_VIEW_KEY = 'dashboardCalendarView';
+const DEFAULT_DASHBOARD_CALENDAR_VIEW = 'dayGridMonth';
+
+function normalizeDashboardCalendarView(savedView: string | null) {
+  switch (savedView) {
+    case 'dayGridMonth':
+    case 'listWeek':
+      return savedView;
+    case 'month':
+      return 'dayGridMonth';
+    default:
+      return DEFAULT_DASHBOARD_CALENDAR_VIEW;
+  }
+}
+
+type FullCalendarRuntimeInternals = {
+  calendar?: {
+    destroy?: () => void;
+    updateSize?: () => void;
+  };
+  isUnmounting: boolean;
+  cancelResize: () => void;
+};
+
+class FullCalendar extends FullCalendarBase {
+  componentWillUnmount() {
+    const instance = this as unknown as FullCalendarRuntimeInternals;
+    instance.isUnmounting = true;
+    instance.cancelResize();
+    instance.calendar?.destroy?.();
+  }
+
+  doResize() {
+    const instance = this as unknown as FullCalendarRuntimeInternals;
+    instance.calendar?.updateSize?.();
+  }
+}
 
 function familyPerson(family: CombinedFamilyInfo, personId: string) {
   const familyPeople = (family.family?.adults || [])
@@ -36,8 +72,9 @@ function familyPerson(family: CombinedFamilyInfo, personId: string) {
 export function DashboardCalendar() {
   const familyLookup = useFamilyLookup();
   const partneringFamilies = useLoadable(partneringFamiliesData);
-  const savedInitialView =
-    localStorage.getItem(DASHBOARD_CALENDAR_VIEW_KEY) || 'dayGridMonth';
+  const savedInitialView = normalizeDashboardCalendarView(
+    localStorage.getItem(DASHBOARD_CALENDAR_VIEW_KEY)
+  );
 
   const allArrangements = (partneringFamilies || []).flatMap((family) =>
     (family.partneringFamilyInfo?.closedV1Cases || [])

@@ -88,7 +88,6 @@ import { familyLastName } from './FamilyUtils';
 import { useLoadable } from '../Hooks/useLoadable';
 import { visibleCommunitiesQuery } from '../Model/Data';
 import { useAppNavigate } from '../Hooks/useAppNavigate';
-import FamilyScreenPageVersionSwitch from './FamilyScreenPageVersionSwitch';
 import posthog from 'posthog-js';
 import { AssignmentsSection } from '../Families/AssignmentsSection';
 import { useMemo } from 'react';
@@ -667,7 +666,6 @@ export function FamilyScreen() {
             familyId={familyId}
           />
         )}
-        <FamilyScreenPageVersionSwitch />
       </Toolbar>
       <Grid container spacing={0}>
         <Grid item xs={12} md={4} spacing={0}>

@@ -11,10 +11,9 @@ import {
 import { V1Cases } from './V1Cases/V1Cases';
 import { Volunteers } from './Volunteers/Volunteers';
 import { Settings } from './Settings/SettingsRoutes';
-import { FamilyScreen } from './Families/FamilyScreen';
 import { Communities } from './Communities/Communities';
 import { UserProfile } from './UserProfile/UserProfile';
-import { useRecoilStateLoadable, useRecoilValue } from 'recoil';
+import { useRecoilStateLoadable } from 'recoil';
 import {
   LocationContext,
   selectedLocationContextState,
@@ -26,8 +25,7 @@ import { useScopedTrace } from './Hooks/useScopedTrace';
 import { useLoadable } from './Hooks/useLoadable';
 import { useLocalStorage } from './Hooks/useLocalStorage';
 import { InboxScreen } from './Inbox/InboxScreen';
-import { FamilyScreenV2 } from './Families/FamilyScreenV2';
-import { familyScreenV2State } from './Families/familyScreenV2State';
+import { FamilyScreenRoute } from './Families/FamilyScreenRoute';
 import { usePostHogIdentify } from './Utilities/Instrumentation/usePostHogIdentify';
 import { usePostHogGroups } from './Utilities/Instrumentation/usePostHogGroups';
 import { Support } from './Support';
@@ -152,8 +150,6 @@ function AuthorizedLocationContextWrapper({
     null
   );
 
-  const familyScreenV2 = useRecoilValue(familyScreenV2State);
-
   // We only need to change this on first load or when the location context actually changes.
   useEffect(() => {
     trace(`organizationId: '${organizationId}' -- locationId: '${locationId}'`);
@@ -189,7 +185,7 @@ function AuthorizedLocationContextWrapper({
           <Route path="inbox/*" element={<InboxScreen />} />
           <Route
             path="families/:familyId"
-            element={familyScreenV2 ? <FamilyScreenV2 /> : <FamilyScreen />}
+            element={<FamilyScreenRoute />}
           />
           <Route path="clients/*" element={<V1Cases />} />
           <Route path="cases/*" element={<CasesToClientsRedirect />} />
