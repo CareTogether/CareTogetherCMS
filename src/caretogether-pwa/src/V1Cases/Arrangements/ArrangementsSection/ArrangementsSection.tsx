@@ -22,12 +22,14 @@ type ArrangementSectionProps = {
   v1Case: V1Case;
   family: CombinedFamilyInfo;
   permissions: (permission: Permission) => boolean;
+  hideTitle?: boolean;
 };
 
 export function ArrangementsSection({
   v1Case,
   family,
   permissions,
+  hideTitle = false,
 }: ArrangementSectionProps) {
   const [selectedFilters, setSelectedFilters] = useState<string[]>([
     'Active',
@@ -81,13 +83,15 @@ export function ArrangementsSection({
             gap={2}
             mb={2}
           >
-            <Typography
-              className="ph-unmask"
-              variant="h3"
-              sx={{ m: 0, display: 'flex', alignItems: 'center' }}
-            >
-              Arrangements
-            </Typography>
+            {!hideTitle && (
+              <Typography
+                className="ph-unmask"
+                variant="h3"
+                sx={{ m: 0, display: 'flex', alignItems: 'center' }}
+              >
+                Arrangements
+              </Typography>
+            )}
 
             <ToggleButtonGroup
               value={selectedFilters}
