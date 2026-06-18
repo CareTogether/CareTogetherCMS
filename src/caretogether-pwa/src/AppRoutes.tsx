@@ -29,67 +29,18 @@ import {
 } from './Access/accessRouteHelpers';
 import { NoOrganizationAccessScreen } from './Access/NoOrganizationAccessScreen';
 import { RootRoute } from './Access/RootRoute';
-
-const Dashboard = React.lazy(() =>
-  import('./Dashboard/Dashboard').then((module) => ({
-    default: module.Dashboard,
-  }))
-);
-const InboxScreen = React.lazy(() =>
-  import('./Inbox/InboxScreen').then((module) => ({
-    default: module.InboxScreen,
-  }))
-);
-const FamilyScreen = React.lazy(() =>
-  import('./Families/FamilyScreen').then((module) => ({
-    default: module.FamilyScreen,
-  }))
-);
-const FamilyScreenV2 = React.lazy(() =>
-  import('./Families/FamilyScreenV2').then((module) => ({
-    default: module.FamilyScreenV2,
-  }))
-);
-const V1Cases = React.lazy(() =>
-  import('./V1Cases/V1Cases').then((module) => ({
-    default: module.V1Cases,
-  }))
-);
-const V1Referrals = React.lazy(() =>
-  import('./V1Referrals/V1Referrals').then((module) => ({
-    default: module.V1Referrals,
-  }))
-);
-const Volunteers = React.lazy(() =>
-  import('./Volunteers/Volunteers').then((module) => ({
-    default: module.Volunteers,
-  }))
-);
-const Communities = React.lazy(() =>
-  import('./Communities/Communities').then((module) => ({
-    default: module.Communities,
-  }))
-);
-const Reports = React.lazy(() =>
-  import('./Reports/Reports').then((module) => ({
-    default: module.Reports,
-  }))
-);
-const Settings = React.lazy(() =>
-  import('./Settings/SettingsRoutes').then((module) => ({
-    default: module.Settings,
-  }))
-);
-const Support = React.lazy(() =>
-  import('./Support').then((module) => ({
-    default: module.Support,
-  }))
-);
-const UserProfile = React.lazy(() =>
-  import('./UserProfile/UserProfile').then((module) => ({
-    default: module.UserProfile,
-  }))
-);
+import { Dashboard } from './Dashboard/Dashboard';
+import { InboxScreen } from './Inbox/InboxScreen';
+import { FamilyScreen } from './Families/FamilyScreen';
+import { FamilyScreenV2 } from './Families/FamilyScreenV2';
+import { V1Cases } from './V1Cases/V1Cases';
+import { V1Referrals } from './V1Referrals/V1Referrals';
+import { Volunteers } from './Volunteers/Volunteers';
+import { Communities } from './Communities/Communities';
+import { Reports } from './Reports/Reports';
+import { Settings } from './Settings/SettingsRoutes';
+import { Support } from './Support';
+import { UserProfile } from './UserProfile/UserProfile';
 
 function RouteMigrator() {
   const trace = useScopedTrace('RouteMigrator');
@@ -233,31 +184,23 @@ function AuthorizedLocationContextWrapper({
       selectedLocationContext.contents.organizationId === organizationId &&
       selectedLocationContext.contents.locationId === locationId ? (
       <ShellRootLayout>
-        <React.Suspense
-          fallback={
-            <ProgressBackdrop opaque>
-              <p>Loading page...</p>
-            </ProgressBackdrop>
-          }
-        >
-          <Routes>
-            <Route index element={<Dashboard />} />
-            <Route path="inbox/*" element={<InboxScreen />} />
-            <Route
-              path="families/:familyId"
-              element={familyScreenV2 ? <FamilyScreenV2 /> : <FamilyScreen />}
-            />
-            <Route path="clients/*" element={<V1Cases />} />
-            <Route path="cases/*" element={<CasesToClientsRedirect />} />
-            <Route path="referrals/*" element={<V1Referrals />} />
-            <Route path="volunteers/*" element={<Volunteers />} />
-            <Route path="communities/*" element={<Communities />} />
-            <Route path="reports/*" element={<Reports />} />
-            <Route path="settings/*" element={<Settings />} />
-            <Route path="support/*" element={<Support />} />
-            <Route path="*" element={<RouteError />} />
-          </Routes>
-        </React.Suspense>
+        <Routes>
+          <Route index element={<Dashboard />} />
+          <Route path="inbox/*" element={<InboxScreen />} />
+          <Route
+            path="families/:familyId"
+            element={familyScreenV2 ? <FamilyScreenV2 /> : <FamilyScreen />}
+          />
+          <Route path="clients/*" element={<V1Cases />} />
+          <Route path="cases/*" element={<CasesToClientsRedirect />} />
+          <Route path="referrals/*" element={<V1Referrals />} />
+          <Route path="volunteers/*" element={<Volunteers />} />
+          <Route path="communities/*" element={<Communities />} />
+          <Route path="reports/*" element={<Reports />} />
+          <Route path="settings/*" element={<Settings />} />
+          <Route path="support/*" element={<Support />} />
+          <Route path="*" element={<RouteError />} />
+        </Routes>
       </ShellRootLayout>
     ) : (
       <ProgressBackdrop opaque>
@@ -331,16 +274,10 @@ export function AppRoutes() {
       />
       <Route
         path="/me/*"
-        /*TODO: This needs a shell!*/ element={
-          <React.Suspense
-            fallback={
-              <ProgressBackdrop opaque>
-                <p>Loading profile...</p>
-              </ProgressBackdrop>
-            }
-          >
+        element={
+          <ShellRootLayout>
             <UserProfile />
-          </React.Suspense>
+          </ShellRootLayout>
         }
       />
       {/* The following routes are only kept for migration/fallback purposes. */}
