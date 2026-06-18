@@ -91,10 +91,97 @@ namespace CareTogether.Engines.PolicyEvaluation
                 )
             );
 
+            var completedFamilyRequirements = completedFamilyRequirementsWithExpiration
+                .Select(requirement =>
+                    requirement with
+                    {
+                        RoleNames = RequirementRoleAttribution.GetFamilyRequirementRoleNames(
+                            policy,
+                            approvalStatus.FamilyRoleApprovals,
+                            requirement.RequirementName
+                        ),
+                    }
+                )
+                .ToImmutableList();
+
+            var exemptedFamilyRequirements = volunteerFamily
+                .ExemptedRequirements.Select(requirement =>
+                    requirement with
+                    {
+                        RoleNames = RequirementRoleAttribution.GetFamilyRequirementRoleNames(
+                            policy,
+                            approvalStatus.FamilyRoleApprovals,
+                            requirement.RequirementName
+                        ),
+                    }
+                )
+                .ToImmutableList();
+
+            var completedIndividualRequirements = completedIndividualRequirementsWithExpiration
+                .ToImmutableDictionary(
+                    entry => entry.Key,
+                    entry =>
+                        entry
+                            .Value.Select(requirement =>
+                                requirement with
+                                {
+                                    RoleNames =
+                                        GetIndividualRequirementRoleNames(
+                                            policy,
+                                            approvalStatus,
+                                            entry.Key,
+                                            requirement.RequirementName
+                                        ),
+                                }
+                            )
+                            .ToImmutableList()
+                );
+
+            var exemptedIndividualRequirements = volunteerFamily
+                .IndividualEntries.ToImmutableDictionary(
+                    entry => entry.Key,
+                    entry =>
+                        entry
+                            .Value.ExemptedRequirements.Select(requirement =>
+                                requirement with
+                                {
+                                    RoleNames =
+                                        GetIndividualRequirementRoleNames(
+                                            policy,
+                                            approvalStatus,
+                                            entry.Key,
+                                            requirement.RequirementName
+                                        ),
+                                }
+                            )
+                            .ToImmutableList()
+                );
+
             return new VolunteerFamilyApprovalCalculationResult(
                 approvalStatus,
-                completedFamilyRequirementsWithExpiration,
-                completedIndividualRequirementsWithExpiration
+                completedFamilyRequirements,
+                exemptedFamilyRequirements,
+                completedIndividualRequirements,
+                exemptedIndividualRequirements
+            );
+        }
+
+        private static ImmutableList<string> GetIndividualRequirementRoleNames(
+            EffectiveLocationPolicy policy,
+            FamilyApprovalStatus approvalStatus,
+            Guid personId,
+            string requirementName
+        )
+        {
+            approvalStatus.IndividualApprovals.TryGetValue(personId, out var individualApproval);
+
+            return RequirementRoleAttribution.GetIndividualRequirementRoleNames(
+                policy,
+                approvalStatus.FamilyRoleApprovals,
+                individualApproval?.ApprovalStatusByRole
+                    ?? ImmutableDictionary<string, IndividualRoleApprovalStatus>.Empty,
+                personId,
+                requirementName
             );
         }
 
