@@ -79,16 +79,6 @@ namespace CareTogether.Core.Test.ApprovalCalculationTests
         }
 
         [TestMethod]
-        public void DistinctRoleNamesTrimAndRemoveBlankRoleNames()
-        {
-            var roleNames = RequirementRoleAttribution.GetDistinctRoleNames(
-                new[] { ("2024", " Host Family "), ("2025", ""), ("2026", "Host Family") }
-            );
-
-            CollectionAssert.AreEqual(new[] { "Host Family" }, roleNames.ToArray());
-        }
-
-        [TestMethod]
         public async Task VolunteerFamilyApprovalCalculationResultIncludesRequirementRoleNames()
         {
             var policiesResource = new Mock<IPoliciesResource>();

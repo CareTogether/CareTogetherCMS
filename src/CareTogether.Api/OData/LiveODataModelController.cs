@@ -988,9 +988,10 @@ namespace CareTogether.Api.OData
                     {
                         familyRequirementStatuses.AddRange(
                             IncludeNullRoleWhenEmpty(
-                                    RequirementRoleAttribution.GetDistinctRoleNames(
-                                        missing.Versions
-                                    )
+                                    missing
+                                        .Versions.Select(version => version.RoleName)
+                                        .Distinct()
+                                        .ToImmutableList()
                                 )
                                 .Select(roleName => new FamilyRequirementStatus(
                                     organization.Id,
@@ -1045,9 +1046,10 @@ namespace CareTogether.Api.OData
                             {
                                 individualRequirementStatuses.AddRange(
                                     IncludeNullRoleWhenEmpty(
-                                            RequirementRoleAttribution.GetDistinctRoleNames(
-                                                missing.Versions
-                                            )
+                                            missing
+                                                .Versions.Select(version => version.RoleName)
+                                                .Distinct()
+                                                .ToImmutableList()
                                         )
                                         .Select(roleName => new IndividualRequirementStatus(
                                             organization.Id,
