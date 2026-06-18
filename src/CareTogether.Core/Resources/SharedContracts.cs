@@ -12,8 +12,7 @@ namespace CareTogether.Resources
         DateTime CompletedAtUtc,
         DateTime? ExpiresAtUtc,
         Guid? UploadedDocumentId,
-        Guid? NoteId,
-        string? RoleName = null
+        Guid? NoteId
     );
 
     public sealed record ExemptedRequirementInfo(
@@ -22,8 +21,7 @@ namespace CareTogether.Resources
         string RequirementName,
         DateTime? DueDate,
         string AdditionalComments,
-        DateTime? ExemptionExpiresAtUtc,
-        string? RoleName = null
+        DateTime? ExemptionExpiresAtUtc
     );
 
     public sealed record UploadedDocumentInfo(

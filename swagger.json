@@ -4206,10 +4206,6 @@
             "type": "string",
             "format": "guid",
             "nullable": true
-          },
-          "roleName": {
-            "type": "string",
-            "nullable": true
           }
         }
       },
@@ -4245,10 +4241,6 @@
           "exemptionExpiresAtUtc": {
             "type": "string",
             "format": "date-time",
-            "nullable": true
-          },
-          "roleName": {
-            "type": "string",
             "nullable": true
           }
         }
@@ -7043,10 +7035,6 @@
                 "type": "string",
                 "format": "guid",
                 "nullable": true
-              },
-              "roleName": {
-                "type": "string",
-                "nullable": true
               }
             }
           }
@@ -7074,10 +7062,6 @@
               "exemptionExpiresAtUtc": {
                 "type": "string",
                 "format": "date-time",
-                "nullable": true
-              },
-              "roleName": {
-                "type": "string",
                 "nullable": true
               }
             }
@@ -7720,10 +7704,6 @@
                 "type": "string",
                 "format": "guid",
                 "nullable": true
-              },
-              "roleName": {
-                "type": "string",
-                "nullable": true
               }
             }
           }
@@ -7751,10 +7731,6 @@
               "exemptionExpiresAtUtc": {
                 "type": "string",
                 "format": "date-time",
-                "nullable": true
-              },
-              "roleName": {
-                "type": "string",
                 "nullable": true
               }
             }

@@ -134,7 +134,6 @@ export function MissingRequirementRow({
           requirement={requirement}
           context={context}
           policy={requirementPolicy}
-          policyVersions={policyVersions}
           v1CaseId={v1CaseId}
           canComplete={canComplete}
           canExempt={canExempt}

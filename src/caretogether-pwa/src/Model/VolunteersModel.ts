@@ -61,8 +61,7 @@ export function useVolunteersModel() {
         _requirement: ActionRequirement,
         completedAtLocal: Date,
         documentId: string | null,
-        noteId: string | null,
-        roleName: string | null
+        noteId: string | null
       ) => {
         const command = commandFactory(CompleteVolunteerFamilyRequirement, {
           familyId: volunteerFamilyId,
@@ -71,7 +70,6 @@ export function useVolunteersModel() {
           completedAtUtc: completedAtLocal,
           uploadedDocumentId: documentId ?? undefined,
           noteId: noteId ?? undefined,
-          roleName: roleName ?? undefined,
         });
         return command;
       }
@@ -99,15 +97,13 @@ export function useVolunteersModel() {
         volunteerFamilyId,
         requirementName: string,
         additionalComments: string,
-        exemptionExpiresAtLocal: Date | null,
-        roleName: string | null
+        exemptionExpiresAtLocal: Date | null
       ) => {
         const command = commandFactory(ExemptVolunteerFamilyRequirement, {
           familyId: volunteerFamilyId,
           requirementName: requirementName,
           additionalComments: additionalComments,
           exemptionExpiresAtUtc: exemptionExpiresAtLocal ?? undefined,
-          roleName: roleName ?? undefined,
         });
         return command;
       }
@@ -169,8 +165,7 @@ export function useVolunteersModel() {
       _requirement: ActionRequirement,
       completedAtLocal: Date,
       documentId: string | null,
-      noteId: string | null,
-      roleName: string | null
+      noteId: string | null
     ) => {
       const command = commandFactory(CompleteVolunteerRequirement, {
         familyId: volunteerFamilyId,
@@ -180,7 +175,6 @@ export function useVolunteersModel() {
         completedAtUtc: completedAtLocal,
         uploadedDocumentId: documentId ?? undefined,
         noteId: noteId ?? undefined,
-        roleName: roleName ?? undefined,
       });
       return command;
     }
@@ -207,8 +201,7 @@ export function useVolunteersModel() {
       personId: string,
       requirementName: string,
       additionalComments: string,
-      exemptionExpiresAtLocal: Date | null,
-      roleName: string | null
+      exemptionExpiresAtLocal: Date | null
     ) => {
       const command = commandFactory(ExemptVolunteerRequirement, {
         familyId: volunteerFamilyId,
@@ -216,7 +209,6 @@ export function useVolunteersModel() {
         requirementName: requirementName,
         additionalComments: additionalComments,
         exemptionExpiresAtUtc: exemptionExpiresAtLocal ?? undefined,
-        roleName: roleName ?? undefined,
       });
       return command;
     }

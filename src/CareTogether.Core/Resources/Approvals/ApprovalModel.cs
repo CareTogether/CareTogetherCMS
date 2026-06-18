@@ -79,8 +79,7 @@ namespace CareTogether.Resources.Approvals
                             c.CompletedAtUtc,
                             ExpiresAtUtc: null,
                             c.UploadedDocumentId,
-                            c.NoteId,
-                            c.RoleName
+                            c.NoteId
                         )
                     ),
                 },
@@ -101,8 +100,7 @@ namespace CareTogether.Resources.Approvals
                             c.RequirementName,
                             DueDate: null,
                             c.AdditionalComments,
-                            c.ExemptionExpiresAtUtc,
-                            c.RoleName
+                            c.ExemptionExpiresAtUtc
                         )
                     ),
                 },
@@ -225,8 +223,7 @@ namespace CareTogether.Resources.Approvals
                             c.CompletedAtUtc,
                             ExpiresAtUtc: null,
                             c.UploadedDocumentId,
-                            c.NoteId,
-                            c.RoleName
+                            c.NoteId
                         )
                     ),
                 },
@@ -246,8 +243,7 @@ namespace CareTogether.Resources.Approvals
                             c.RequirementName,
                             DueDate: null,
                             c.AdditionalComments,
-                            c.ExemptionExpiresAtUtc,
-                            c.RoleName
+                            c.ExemptionExpiresAtUtc
                         )
                     ),
                 },

@@ -6500,7 +6500,6 @@ export class CompletedRequirementInfo implements ICompletedRequirementInfo {
     expiresAtUtc?: Date | undefined;
     uploadedDocumentId?: string | undefined;
     noteId?: string | undefined;
-    roleName?: string | undefined;
 
     constructor(data?: ICompletedRequirementInfo) {
         if (data) {
@@ -6521,7 +6520,6 @@ export class CompletedRequirementInfo implements ICompletedRequirementInfo {
             this.expiresAtUtc = _data["expiresAtUtc"] ? new Date(_data["expiresAtUtc"].toString()) : <any>undefined;
             this.uploadedDocumentId = _data["uploadedDocumentId"];
             this.noteId = _data["noteId"];
-            this.roleName = _data["roleName"];
         }
     }
 
@@ -6542,7 +6540,6 @@ export class CompletedRequirementInfo implements ICompletedRequirementInfo {
         data["expiresAtUtc"] = this.expiresAtUtc ? this.expiresAtUtc.toISOString() : <any>undefined;
         data["uploadedDocumentId"] = this.uploadedDocumentId;
         data["noteId"] = this.noteId;
-        data["roleName"] = this.roleName;
         return data;
     }
 }
@@ -6556,7 +6553,6 @@ export interface ICompletedRequirementInfo {
     expiresAtUtc?: Date | undefined;
     uploadedDocumentId?: string | undefined;
     noteId?: string | undefined;
-    roleName?: string | undefined;
 }
 
 export class ExemptedRequirementInfo implements IExemptedRequirementInfo {
@@ -6566,7 +6562,6 @@ export class ExemptedRequirementInfo implements IExemptedRequirementInfo {
     dueDate?: Date | undefined;
     additionalComments!: string;
     exemptionExpiresAtUtc?: Date | undefined;
-    roleName?: string | undefined;
 
     constructor(data?: IExemptedRequirementInfo) {
         if (data) {
@@ -6585,7 +6580,6 @@ export class ExemptedRequirementInfo implements IExemptedRequirementInfo {
             this.dueDate = _data["dueDate"] ? new Date(_data["dueDate"].toString()) : <any>undefined;
             this.additionalComments = _data["additionalComments"];
             this.exemptionExpiresAtUtc = _data["exemptionExpiresAtUtc"] ? new Date(_data["exemptionExpiresAtUtc"].toString()) : <any>undefined;
-            this.roleName = _data["roleName"];
         }
     }
 
@@ -6604,7 +6598,6 @@ export class ExemptedRequirementInfo implements IExemptedRequirementInfo {
         data["dueDate"] = this.dueDate ? this.dueDate.toISOString() : <any>undefined;
         data["additionalComments"] = this.additionalComments;
         data["exemptionExpiresAtUtc"] = this.exemptionExpiresAtUtc ? this.exemptionExpiresAtUtc.toISOString() : <any>undefined;
-        data["roleName"] = this.roleName;
         return data;
     }
 }
@@ -6616,7 +6609,6 @@ export interface IExemptedRequirementInfo {
     dueDate?: Date | undefined;
     additionalComments: string;
     exemptionExpiresAtUtc?: Date | undefined;
-    roleName?: string | undefined;
 }
 
 export class Arrangement implements IArrangement {
@@ -11266,7 +11258,6 @@ export class CompleteVolunteerFamilyRequirement extends VolunteerFamilyCommand i
     completedAtUtc!: Date;
     uploadedDocumentId?: string | undefined;
     noteId?: string | undefined;
-    roleName?: string | undefined;
 
     constructor(data?: ICompleteVolunteerFamilyRequirement) {
         super(data);
@@ -11281,7 +11272,6 @@ export class CompleteVolunteerFamilyRequirement extends VolunteerFamilyCommand i
             this.completedAtUtc = _data["completedAtUtc"] ? new Date(_data["completedAtUtc"].toString()) : <any>undefined;
             this.uploadedDocumentId = _data["uploadedDocumentId"];
             this.noteId = _data["noteId"];
-            this.roleName = _data["roleName"];
         }
     }
 
@@ -11299,7 +11289,6 @@ export class CompleteVolunteerFamilyRequirement extends VolunteerFamilyCommand i
         data["completedAtUtc"] = this.completedAtUtc ? this.completedAtUtc.toISOString() : <any>undefined;
         data["uploadedDocumentId"] = this.uploadedDocumentId;
         data["noteId"] = this.noteId;
-        data["roleName"] = this.roleName;
         super.toJSON(data);
         return data;
     }
@@ -11311,14 +11300,12 @@ export interface ICompleteVolunteerFamilyRequirement extends IVolunteerFamilyCom
     completedAtUtc: Date;
     uploadedDocumentId?: string | undefined;
     noteId?: string | undefined;
-    roleName?: string | undefined;
 }
 
 export class ExemptVolunteerFamilyRequirement extends VolunteerFamilyCommand implements IExemptVolunteerFamilyRequirement {
     requirementName!: string;
     additionalComments!: string;
     exemptionExpiresAtUtc?: Date | undefined;
-    roleName?: string | undefined;
 
     constructor(data?: IExemptVolunteerFamilyRequirement) {
         super(data);
@@ -11331,7 +11318,6 @@ export class ExemptVolunteerFamilyRequirement extends VolunteerFamilyCommand imp
             this.requirementName = _data["requirementName"];
             this.additionalComments = _data["additionalComments"];
             this.exemptionExpiresAtUtc = _data["exemptionExpiresAtUtc"] ? new Date(_data["exemptionExpiresAtUtc"].toString()) : <any>undefined;
-            this.roleName = _data["roleName"];
         }
     }
 
@@ -11347,7 +11333,6 @@ export class ExemptVolunteerFamilyRequirement extends VolunteerFamilyCommand imp
         data["requirementName"] = this.requirementName;
         data["additionalComments"] = this.additionalComments;
         data["exemptionExpiresAtUtc"] = this.exemptionExpiresAtUtc ? this.exemptionExpiresAtUtc.toISOString() : <any>undefined;
-        data["roleName"] = this.roleName;
         super.toJSON(data);
         return data;
     }
@@ -11357,7 +11342,6 @@ export interface IExemptVolunteerFamilyRequirement extends IVolunteerFamilyComma
     requirementName: string;
     additionalComments: string;
     exemptionExpiresAtUtc?: Date | undefined;
-    roleName?: string | undefined;
 }
 
 export class MarkVolunteerFamilyRequirementIncomplete extends VolunteerFamilyCommand implements IMarkVolunteerFamilyRequirementIncomplete {
@@ -12434,7 +12418,6 @@ export class CompleteVolunteerRequirement extends VolunteerCommand implements IC
     completedAtUtc!: Date;
     uploadedDocumentId?: string | undefined;
     noteId?: string | undefined;
-    roleName?: string | undefined;
 
     constructor(data?: ICompleteVolunteerRequirement) {
         super(data);
@@ -12449,7 +12432,6 @@ export class CompleteVolunteerRequirement extends VolunteerCommand implements IC
             this.completedAtUtc = _data["completedAtUtc"] ? new Date(_data["completedAtUtc"].toString()) : <any>undefined;
             this.uploadedDocumentId = _data["uploadedDocumentId"];
             this.noteId = _data["noteId"];
-            this.roleName = _data["roleName"];
         }
     }
 
@@ -12467,7 +12449,6 @@ export class CompleteVolunteerRequirement extends VolunteerCommand implements IC
         data["completedAtUtc"] = this.completedAtUtc ? this.completedAtUtc.toISOString() : <any>undefined;
         data["uploadedDocumentId"] = this.uploadedDocumentId;
         data["noteId"] = this.noteId;
-        data["roleName"] = this.roleName;
         super.toJSON(data);
         return data;
     }
@@ -12479,14 +12460,12 @@ export interface ICompleteVolunteerRequirement extends IVolunteerCommand {
     completedAtUtc: Date;
     uploadedDocumentId?: string | undefined;
     noteId?: string | undefined;
-    roleName?: string | undefined;
 }
 
 export class ExemptVolunteerRequirement extends VolunteerCommand implements IExemptVolunteerRequirement {
     requirementName!: string;
     additionalComments!: string;
     exemptionExpiresAtUtc?: Date | undefined;
-    roleName?: string | undefined;
 
     constructor(data?: IExemptVolunteerRequirement) {
         super(data);
@@ -12499,7 +12478,6 @@ export class ExemptVolunteerRequirement extends VolunteerCommand implements IExe
             this.requirementName = _data["requirementName"];
             this.additionalComments = _data["additionalComments"];
             this.exemptionExpiresAtUtc = _data["exemptionExpiresAtUtc"] ? new Date(_data["exemptionExpiresAtUtc"].toString()) : <any>undefined;
-            this.roleName = _data["roleName"];
         }
     }
 
@@ -12515,7 +12493,6 @@ export class ExemptVolunteerRequirement extends VolunteerCommand implements IExe
         data["requirementName"] = this.requirementName;
         data["additionalComments"] = this.additionalComments;
         data["exemptionExpiresAtUtc"] = this.exemptionExpiresAtUtc ? this.exemptionExpiresAtUtc.toISOString() : <any>undefined;
-        data["roleName"] = this.roleName;
         super.toJSON(data);
         return data;
     }
@@ -12525,7 +12502,6 @@ export interface IExemptVolunteerRequirement extends IVolunteerCommand {
     requirementName: string;
     additionalComments: string;
     exemptionExpiresAtUtc?: Date | undefined;
-    roleName?: string | undefined;
 }
 
 export class MarkVolunteerRequirementIncomplete extends VolunteerCommand implements IMarkVolunteerRequirementIncomplete {

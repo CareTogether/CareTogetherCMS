@@ -53,8 +53,7 @@ namespace CareTogether.Resources.Approvals
         string RequirementName,
         DateTime CompletedAtUtc,
         Guid? UploadedDocumentId,
-        Guid? NoteId,
-        string? RoleName = null
+        Guid? NoteId
     ) : VolunteerFamilyCommand(FamilyId);
 
     public sealed record MarkVolunteerFamilyRequirementIncomplete(
@@ -67,8 +66,7 @@ namespace CareTogether.Resources.Approvals
         Guid FamilyId,
         string RequirementName,
         string AdditionalComments,
-        DateTime? ExemptionExpiresAtUtc,
-        string? RoleName = null
+        DateTime? ExemptionExpiresAtUtc
     ) : VolunteerFamilyCommand(FamilyId);
 
     public sealed record UnexemptVolunteerFamilyRequirement(Guid FamilyId, string RequirementName)
@@ -106,8 +104,7 @@ namespace CareTogether.Resources.Approvals
         string RequirementName,
         DateTime CompletedAtUtc,
         Guid? UploadedDocumentId,
-        Guid? NoteId,
-        string? RoleName = null
+        Guid? NoteId
     ) : VolunteerCommand(FamilyId, PersonId);
 
     public sealed record MarkVolunteerRequirementIncomplete(
@@ -122,8 +119,7 @@ namespace CareTogether.Resources.Approvals
         Guid PersonId,
         string RequirementName,
         string AdditionalComments,
-        DateTime? ExemptionExpiresAtUtc,
-        string? RoleName = null
+        DateTime? ExemptionExpiresAtUtc
     ) : VolunteerCommand(FamilyId, PersonId);
 
     public sealed record UnexemptVolunteerRequirement(
