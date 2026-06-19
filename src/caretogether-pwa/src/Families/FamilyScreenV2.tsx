@@ -160,6 +160,11 @@ type RecentOverviewTimelineItem = {
   referralId?: string;
   icon: 'check' | 'edit' | 'location';
 };
+type FamilyScreenTab = {
+  label: string;
+  desktopLabel: React.ReactNode;
+  mobileLabel: string;
+};
 
 function customFieldName(customField: CustomFieldRenderInfo) {
   return customField instanceof CompletedCustomFieldInfo
@@ -643,11 +648,106 @@ export function FamilyScreenV2() {
   const arrangementOrAssignmentsTabLabel = isVolunteerFamily
     ? 'Assignments'
     : 'Arrangements';
-  const familyScreenTabs = [
-    'Overview',
-    arrangementOrAssignmentsTabLabel,
-    'Documents',
-    'Timeline & Notes',
+  const arrangementsCount = selectedV1Case?.arrangements?.length ?? 0;
+  const assignmentsCount = family?.volunteerFamilyInfo?.assignments?.length ?? 0;
+  const documentsCount =
+    (family?.uploadedDocuments?.length ?? 0) +
+    familyReferrals.reduce(
+      (count, referral) => count + (referral.uploadedDocuments?.length ?? 0),
+      0
+    );
+  const familyNotesCount = family?.notes?.length ?? 0;
+  const referralNotesCount = familyReferrals.reduce(
+    (count, referral) => count + (referral.notes?.length ?? 0),
+    0
+  );
+  const notesCount = familyNotesCount + referralNotesCount;
+  const unapprovedNotesCount =
+    (family?.notes?.filter((note) => note.status === NoteStatus.Draft).length ??
+      0) +
+    familyReferrals.reduce(
+      (count, referral) =>
+        count +
+        (referral.notes?.filter(
+          (note) => note.status === V1ReferralNoteStatus.Draft
+        ).length ?? 0),
+      0
+    );
+
+  function tabLabel(label: string, count?: number, unapprovedCount?: number) {
+    return (
+      <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75 }}>
+        <span>{label}</span>
+        {count !== undefined && (
+          <Chip
+            size="small"
+            variant="outlined"
+            label={count}
+            sx={{ height: 20, '& .MuiChip-label': { px: 0.75 } }}
+          />
+        )}
+        {unapprovedCount !== undefined && unapprovedCount > 0 && (
+          <Chip
+            size="small"
+            color="warning"
+            label={`${unapprovedCount} Awaiting Review`}
+            sx={{ height: 20, '& .MuiChip-label': { px: 0.75 } }}
+          />
+        )}
+      </Box>
+    );
+  }
+
+  function mobileTabLabel(
+    label: string,
+    count?: number,
+    unapprovedCount?: number
+  ) {
+    const details = [
+      count !== undefined ? `${count}` : null,
+      unapprovedCount !== undefined && unapprovedCount > 0
+        ? `${unapprovedCount} Awaiting Review`
+        : null,
+    ].filter(Boolean);
+
+    return details.length === 0 ? label : `${label} (${details.join(', ')})`;
+  }
+
+  const familyScreenTabs: FamilyScreenTab[] = [
+    {
+      label: 'Overview',
+      desktopLabel: 'Overview',
+      mobileLabel: 'Overview',
+    },
+    {
+      label: arrangementOrAssignmentsTabLabel,
+      desktopLabel: tabLabel(
+        arrangementOrAssignmentsTabLabel,
+        isVolunteerFamily ? assignmentsCount : arrangementsCount
+      ),
+      mobileLabel: mobileTabLabel(
+        arrangementOrAssignmentsTabLabel,
+        isVolunteerFamily ? assignmentsCount : arrangementsCount
+      ),
+    },
+    {
+      label: 'Documents',
+      desktopLabel: tabLabel('Documents', documentsCount),
+      mobileLabel: mobileTabLabel('Documents', documentsCount),
+    },
+    {
+      label: 'Timeline & Notes',
+      desktopLabel: tabLabel(
+        'Timeline & Notes',
+        notesCount,
+        unapprovedNotesCount
+      ),
+      mobileLabel: mobileTabLabel(
+        'Timeline & Notes',
+        notesCount,
+        unapprovedNotesCount
+      ),
+    },
   ];
   const showOverview = selectedTab === 0;
   const showArrangementsOrAssignments = selectedTab === 1;
@@ -1358,8 +1458,8 @@ export function FamilyScreenV2() {
             onChange={(_, nextTab) => setSelectedTab(nextTab)}
             aria-label="Family screen sections"
           >
-            {familyScreenTabs.map((tabLabel) => (
-              <Tab key={tabLabel} label={tabLabel} />
+            {familyScreenTabs.map((tab) => (
+              <Tab key={tab.label} label={tab.desktopLabel} />
             ))}
           </Tabs>
         </Box>
@@ -1373,9 +1473,9 @@ export function FamilyScreenV2() {
             label="Section"
             onChange={handleSelectedTabChange}
           >
-            {familyScreenTabs.map((tabLabel, index) => (
-              <MenuItem key={tabLabel} value={String(index)}>
-                {tabLabel}
+            {familyScreenTabs.map((tab, index) => (
+              <MenuItem key={tab.label} value={String(index)}>
+                {tab.mobileLabel}
               </MenuItem>
             ))}
           </Select>
