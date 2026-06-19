@@ -50,6 +50,7 @@ import {
   ContentCopy as ContentCopyIcon,
   Diversity3 as Diversity3Icon,
   Edit as EditIcon,
+  Notes as NotesIcon,
   Email as EmailIcon,
   Home as HomeIcon,
   MoreVert as MoreVertIcon,
@@ -1960,7 +1961,7 @@ export function FamilyScreenV2() {
                       ) : item.icon === 'location' ? (
                         <PersonPinCircleIcon fontSize="small" />
                       ) : (
-                        <EditIcon fontSize="small" />
+                        <NotesIcon fontSize="small" />
                       )}
                     </Box>
                     <Box sx={{ minWidth: 0 }}>
