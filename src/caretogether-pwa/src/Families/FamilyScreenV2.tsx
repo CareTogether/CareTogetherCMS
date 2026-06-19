@@ -105,7 +105,7 @@ import { useLoadable } from '../Hooks/useLoadable';
 import { visibleCommunitiesQuery } from '../Model/Data';
 import { useAppNavigate } from '../Hooks/useAppNavigate';
 import posthog from 'posthog-js';
-import { AssignmentsSection } from '../Families/AssignmentsSection';
+import { AssignmentsSection } from '../Families/AssignmentsSectionV2';
 import { useMemo } from 'react';
 import { useBackdrop } from '../Hooks/useBackdrop';
 import { useSyncV1CaseIdInURL } from '../Hooks/useSyncV1CaseIdInURL';

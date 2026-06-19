@@ -8,9 +8,13 @@ const MAX_INITIAL_ASSIGNMENT_ITEMS = 9;
 
 interface AssignmentsSectionProps {
   family: CombinedFamilyInfo;
+  hideTitle?: boolean;
 }
 
-export function AssignmentsSection({ family }: AssignmentsSectionProps) {
+export function AssignmentsSection({
+  family,
+  hideTitle = false,
+}: AssignmentsSectionProps) {
   const [showAll, setShowAll] = useState(false);
   const assignments = [...(family.volunteerFamilyInfo?.assignments ?? [])].sort(
     (a, b) => {
@@ -28,9 +32,11 @@ export function AssignmentsSection({ family }: AssignmentsSectionProps) {
 
   return (
     <Grid item xs={12}>
-      <Typography variant="h3" sx={{ marginBottom: 2 }}>
-        Assignments
-      </Typography>
+      {!hideTitle && (
+        <Typography variant="h3" sx={{ marginBottom: 2 }}>
+          Assignments
+        </Typography>
+      )}
       <Grid container spacing={2}>
         {visibleAssignments.map((assignment, index) => (
           <Grid item xs={12} sm={6} md={4} key={index}>
