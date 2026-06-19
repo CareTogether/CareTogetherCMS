@@ -27,7 +27,11 @@ import {
   Tab,
   Tabs,
   Tooltip,
+  FormControl,
+  InputLabel,
+  Select,
 } from '@mui/material';
+import { SelectChangeEvent } from '@mui/material/Select';
 import {
   CompletedCustomFieldInfo,
   Permission,
@@ -614,10 +618,20 @@ export function FamilyScreenV2() {
   const arrangementOrAssignmentsTabLabel = isVolunteerFamily
     ? 'Assignments'
     : 'Arrangements';
+  const familyScreenTabs = [
+    'Overview',
+    arrangementOrAssignmentsTabLabel,
+    'Documents',
+    'Timeline & Notes',
+  ];
   const showOverview = selectedTab === 0;
   const showArrangementsOrAssignments = selectedTab === 1;
   const showDocuments = selectedTab === 2;
   const showTimelineAndNotes = selectedTab === 3;
+
+  function handleSelectedTabChange(event: SelectChangeEvent) {
+    setSelectedTab(Number(event.target.value));
+  }
   const pinnedNotes = useMemo(() => {
     return (family?.notes ?? [])
       .filter((note) => note.isPinned)
@@ -757,9 +771,38 @@ export function FamilyScreenV2() {
         }}
       >
         <Box sx={{ flex: '1 1 320px', minWidth: 0 }}>
-          <Typography className="ph-unmask" variant="h4" sx={{ mb: 0.5 }}>
-            {familyLastName(family)} Family
-          </Typography>
+          <Box
+            sx={{
+              display: 'flex',
+              alignItems: 'flex-start',
+              justifyContent: 'space-between',
+              gap: 1,
+              mb: 0.5,
+            }}
+          >
+            <Typography className="ph-unmask" variant="h4">
+              {familyLastName(family)} Family
+            </Typography>
+            {!isDesktop && hasFamilyActions && (
+              <IconButton
+                className="ph-unmask"
+                aria-label="family actions"
+                onClick={(event) => setFamilyMoreMenuAnchor(event.currentTarget)}
+                size="small"
+                sx={{
+                  border: 1,
+                  borderColor: 'primary.main',
+                  borderRadius: 1,
+                  color: 'primary.main',
+                  flex: '0 0 auto',
+                  width: 36,
+                  height: 36,
+                }}
+              >
+                <MoreVertIcon fontSize="small" />
+              </IconButton>
+            )}
+          </Box>
           <Box
             sx={{
               display: 'flex',
@@ -877,24 +920,6 @@ export function FamilyScreenV2() {
               size="small"
             >
               <MoreVertIcon />
-            </IconButton>
-          )}
-          {!isDesktop && hasFamilyActions && (
-            <IconButton
-              className="ph-unmask"
-              aria-label="family actions"
-              onClick={(event) => setFamilyMoreMenuAnchor(event.currentTarget)}
-              size="small"
-              sx={{
-                border: 1,
-                borderColor: 'primary.main',
-                borderRadius: 1,
-                color: 'primary.main',
-                width: 36,
-                height: 36,
-              }}
-            >
-              <MoreVertIcon fontSize="small" />
             </IconButton>
           )}
         </Box>
@@ -1123,18 +1148,36 @@ export function FamilyScreenV2() {
           </Box>
         </Box>
       )}
-      <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 2 }}>
-        <Tabs
-          value={selectedTab}
-          onChange={(_, nextTab) => setSelectedTab(nextTab)}
-          aria-label="Family screen sections"
-        >
-          <Tab label="Overview" />
-          <Tab label={arrangementOrAssignmentsTabLabel} />
-          <Tab label="Documents" />
-          <Tab label="Timeline & Notes" />
-        </Tabs>
-      </Box>
+      {isDesktop ? (
+        <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 2 }}>
+          <Tabs
+            value={selectedTab}
+            onChange={(_, nextTab) => setSelectedTab(nextTab)}
+            aria-label="Family screen sections"
+          >
+            {familyScreenTabs.map((tabLabel) => (
+              <Tab key={tabLabel} label={tabLabel} />
+            ))}
+          </Tabs>
+        </Box>
+      ) : (
+        <FormControl fullWidth size="small" sx={{ mb: 2 }}>
+          <InputLabel id="family-screen-section-label">Section</InputLabel>
+          <Select
+            labelId="family-screen-section-label"
+            id="family-screen-section-select"
+            value={String(selectedTab)}
+            label="Section"
+            onChange={handleSelectedTabChange}
+          >
+            {familyScreenTabs.map((tabLabel, index) => (
+              <MenuItem key={tabLabel} value={String(index)}>
+                {tabLabel}
+              </MenuItem>
+            ))}
+          </Select>
+        </FormControl>
+      )}
       <Grid container spacing={0}>
         <Grid
           item
