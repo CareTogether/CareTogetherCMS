@@ -128,6 +128,7 @@ import {
 import { PersonName } from './PersonName';
 import { buildGroupedV1ReferralTimelineEntries } from '../V1Referrals/referralTimelineHelpers';
 import { useGlobalSnackBar } from '../Hooks/useGlobalSnackBar';
+import { ClampTypography } from '../Generic/ClampTypography';
 
 type CustomFieldRenderInfo = CompletedCustomFieldInfo | string;
 type ReferralNoteEntry = NonNullable<V1Referral['notes']>[number];
@@ -1989,19 +1990,13 @@ export function FamilyScreenV2() {
                         {item.title}
                       </Typography>
                       {item.subtitle && (
-                        <Typography
+                        <ClampTypography
                           className="ph-unmask"
                           variant="body2"
                           color="text.secondary"
-                          sx={{
-                            display: '-webkit-box',
-                            WebkitBoxOrient: 'vertical',
-                            WebkitLineClamp: 3,
-                            overflow: 'hidden',
-                          }}
                         >
                           {item.subtitle}
-                        </Typography>
+                        </ClampTypography>
                       )}
                     </Box>
                   </Box>
