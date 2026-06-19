@@ -126,12 +126,23 @@ export function NoteCardV2({
                   size="small"
                   aria-label={isPinned ? 'Unpin note' : 'Pin note'}
                   disabled={isSavingPin}
+                  sx={{
+                    cursor: isSavingPin ? undefined : 'pointer',
+                    color: isPinned ? 'text.primary' : 'text.secondary',
+                    '& .MuiSvgIcon-root': {
+                      transform: isPinned ? 'rotate(0deg)' : 'rotate(-45deg)',
+                      transition:
+                        'transform 160ms ease-in-out, color 160ms ease-in-out',
+                    },
+                    '&:hover': {
+                      color: 'text.primary',
+                    },
+                    '&:hover .MuiSvgIcon-root': {
+                      transform: isPinned ? 'rotate(0deg)' : 'rotate(-8deg)',
+                    },
+                  }}
                 >
-                  {isPinned ? (
-                    <PushPinIcon color="primary" />
-                  ) : (
-                    <PushPinOutlinedIcon />
-                  )}
+                  {isPinned ? <PushPinIcon /> : <PushPinOutlinedIcon />}
                 </IconButton>
               </span>
             </Tooltip>
