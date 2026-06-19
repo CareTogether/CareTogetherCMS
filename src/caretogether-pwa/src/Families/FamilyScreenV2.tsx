@@ -109,7 +109,7 @@ import { AssignmentsSection } from '../Families/AssignmentsSectionV2';
 import { useMemo } from 'react';
 import { useBackdrop } from '../Hooks/useBackdrop';
 import { useSyncV1CaseIdInURL } from '../Hooks/useSyncV1CaseIdInURL';
-import { ArrangementsSection } from '../V1Cases/Arrangements/ArrangementsSection/ArrangementsSection';
+import { ArrangementsSection } from '../V1Cases/Arrangements/ArrangementsSection/ArrangementsSectionV2';
 import { useFeatureFlagEnabled } from 'posthog-js/react';
 import { TestFamilyBadge } from './TestFamilyBadge';
 import { visibleReferralsQuery } from '../Model/Data';
