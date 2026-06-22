@@ -38,7 +38,6 @@ import { useScrollToArrangement } from './useScrollToArrangement';
 import { WideTableContainer } from '../../../Utilities/WideTableContainer';
 import { containedStickyHeaderTableSx } from '../../../Utilities/stickyHeaderTableSx';
 import { ArrangementPhaseSummary } from '../ArrangementPhaseSummary';
-import { ArrangementPlannedDuration } from '../ArrangementPlannedDuration';
 import { ArrangementCardDetailsSection } from '../ArrangementCardDetailsSection';
 import { useRequirementContextData } from '../useRequirementContextData';
 import { PersonName } from '../../../Families/PersonName';
@@ -90,6 +89,50 @@ function usesChildLocation(arrangementPolicy?: ArrangementPolicy) {
   return (
     arrangementPolicy?.childInvolvement === ChildInvolvement.ChildHousing ||
     arrangementPolicy?.childInvolvement === ChildInvolvement.DaytimeChildCareOnly
+  );
+}
+
+function formatArrangementDate(date?: Date) {
+  return date ? format(date, 'M/d/yyyy') : '-';
+}
+
+function ArrangementDurationSummary({
+  arrangement,
+}: {
+  arrangement: Arrangement;
+}) {
+  const startLabel = arrangement.startedAtUtc ? 'Started' : 'Planned start';
+  const startDate = arrangement.startedAtUtc ?? arrangement.plannedStartUtc;
+  const endLabel = arrangement.endedAtUtc ? 'Ended' : 'Planned end';
+  const endDate = arrangement.endedAtUtc ?? arrangement.plannedEndUtc;
+
+  return (
+    <Stack className="ph-unmask" spacing={0.5}>
+      <Box>
+        <Typography
+          component="span"
+          variant="caption"
+          color="text.secondary"
+        >
+          {startLabel}:&nbsp;
+        </Typography>
+        <Typography component="span" variant="body2">
+          {formatArrangementDate(startDate)}
+        </Typography>
+      </Box>
+      <Box>
+        <Typography
+          component="span"
+          variant="caption"
+          color="text.secondary"
+        >
+          {endLabel}:&nbsp;
+        </Typography>
+        <Typography component="span" variant="body2">
+          {formatArrangementDate(endDate)}
+        </Typography>
+      </Box>
+    </Stack>
   );
 }
 
@@ -352,12 +395,7 @@ function ArrangementTableRow({
           />
         </TableCell>
         <TableCell>
-          <ArrangementPlannedDuration
-            partneringFamily={family}
-            v1CaseId={v1CaseId}
-            arrangement={arrangement}
-            summaryOnly
-          />
+          <ArrangementDurationSummary arrangement={arrangement} />
         </TableCell>
         <TableCell className="ph-unmask">
           {usesChildLocation(arrangementPolicy) ? (
