@@ -11,14 +11,20 @@ import { FamilyScreenV2 } from './FamilyScreenV2';
 
 export function FamilyScreenRoute() {
   const posthog = usePostHog();
-  const rolloutEnabled = useFeatureFlagEnabled(
-    FAMILY_SCREEN_V2_FEATURE_FLAG
+  const rolloutEnabled = useFeatureFlagEnabled(FAMILY_SCREEN_V2_FEATURE_FLAG);
+  const earlyAccessFlagEnabled = useFeatureFlagEnabled(
+    FAMILY_SCREEN_V2_EARLY_ACCESS_FEATURE_FLAG
   );
-  const featureFlagsLoaded = posthog.featureFlags.hasLoadedFlags;
+  const [featureFlagsLoaded, setFeatureFlagsLoaded] = useState(
+    () => posthog.featureFlags.hasLoadedFlags
+  );
   const [earlyAccessEnrollment, setEarlyAccessEnrollment] = useState<
     boolean | undefined
   >(() =>
-    getEarlyAccessEnrollment(posthog, FAMILY_SCREEN_V2_EARLY_ACCESS_FEATURE_FLAG)
+    getEarlyAccessEnrollment(
+      posthog,
+      FAMILY_SCREEN_V2_EARLY_ACCESS_FEATURE_FLAG
+    )
   );
 
   useEffect(() => {
@@ -31,9 +37,13 @@ export function FamilyScreenRoute() {
       );
     }
 
+    setFeatureFlagsLoaded(posthog.featureFlags.hasLoadedFlags);
     updateEarlyAccessEnrollment();
 
-    return posthog.onFeatureFlags(updateEarlyAccessEnrollment);
+    return posthog.onFeatureFlags(() => {
+      setFeatureFlagsLoaded(true);
+      updateEarlyAccessEnrollment();
+    });
   }, [posthog]);
 
   if (!featureFlagsLoaded) {
@@ -44,11 +54,9 @@ export function FamilyScreenRoute() {
     );
   }
 
-  const showFamilyScreenV2 = earlyAccessEnrollment ?? (rolloutEnabled === true);
+  const showFamilyScreenV2 =
+    earlyAccessEnrollment ??
+    (earlyAccessFlagEnabled === true || rolloutEnabled === true);
 
-  return showFamilyScreenV2 ? (
-    <FamilyScreenV2 />
-  ) : (
-    <FamilyScreen />
-  );
+  return showFamilyScreenV2 ? <FamilyScreenV2 /> : <FamilyScreen />;
 }
