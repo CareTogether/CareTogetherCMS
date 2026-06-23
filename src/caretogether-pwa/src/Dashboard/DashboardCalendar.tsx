@@ -1,6 +1,6 @@
 import { MouseEvent, useMemo, useState } from 'react';
 import Grid from '../Generic/GridLegacyCompat';
-import { Typography } from '@mui/material';
+import { GlobalStyles, Typography } from '@mui/material';
 import { EventCalendar } from '@mui/x-scheduler/event-calendar';
 import type { EventCalendarPreferences } from '@mui/x-scheduler/models';
 import { partneringFamiliesData } from '../Model/V1CasesModel';
@@ -16,7 +16,6 @@ import {
 } from './dashboardCalendarEvents';
 
 const DASHBOARD_CALENDAR_VIEW_KEY = 'dashboardCalendarView';
-const DEFAULT_DASHBOARD_CALENDAR_VIEW = 'dayGridMonth';
 
 type CalendarView = 'day' | 'week' | 'month' | 'agenda';
 
@@ -296,9 +295,15 @@ export function DashboardCalendar() {
           '.dashboard-calendar-event--light-green': {
             backgroundColor: '#c9efc9',
             color: '#123f19',
-          },
+          }
         }}
       >
+        <GlobalStyles
+          styles={{
+            '.MuiEventCalendar-eventDialog': {
+              display: 'none',
+            },
+          }} />
         <EventCalendar<DashboardCalendarEvent, object>
           events={filteredEvents}
           view={view}
