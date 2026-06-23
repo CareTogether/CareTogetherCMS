@@ -16,6 +16,7 @@ import {
 } from './dashboardCalendarEvents';
 
 const DASHBOARD_CALENDAR_VIEW_KEY = 'dashboardCalendarView';
+const DEFAULT_DASHBOARD_CALENDAR_VIEW = 'dayGridMonth';
 
 type CalendarView = 'day' | 'week' | 'month' | 'agenda';
 

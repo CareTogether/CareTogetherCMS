@@ -38,10 +38,12 @@ const childrenOver18Query = selector<ChildOver18[]>({
   key: 'childrenOver18Query',
   get: ({ get }) => {
     const visibleFamilies = get(visibleFamiliesQuery);
-    return visibleFamilies?.flatMap(
-      (family) =>
-        family.family?.children
-          ?.filter(
+    return visibleFamilies
+      ?.filter((family) => family.volunteerFamilyInfo)
+      .flatMap((family) => {
+        const children = family.family?.children ?? [];
+        return children
+          .filter(
             (child) =>
               child.age &&
               differenceInYears(
@@ -49,8 +51,8 @@ const childrenOver18Query = selector<ChildOver18[]>({
                 (child.age as ExactAge).dateOfBirth!
               ) > 18
           )
-          .map((child) => ({ type: 'ChildOver18', family, child })) || []
-    );
+          .map((child) => ({ type: 'ChildOver18', family, child }));
+      });
   },
 });
 

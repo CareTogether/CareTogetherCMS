@@ -11,7 +11,8 @@ namespace CareTogether.Resources.Policies
         ImmutableList<LocationConfiguration> Locations,
         ImmutableList<RoleDefinition> Roles,
         ImmutableList<string> CommunityRoles,
-        ImmutableList<string>? ReferralCloseReasons
+        ImmutableList<string>? ReferralCloseReasons,
+        ImmutableList<string>? CaseCloseReasons
     );
 
     public sealed record LocationConfiguration(
@@ -68,12 +69,12 @@ namespace CareTogether.Resources.Policies
         ImmutableList<string>? WhenAssigneeFunctionIsIn
     ) : PermissionContext();
 
-    public sealed record AssignedStaffInV1ReferralPermissionContext(
+    public sealed record AssignedVolunteerInV1ReferralPermissionContext(
         bool? WhenReferralIsOpen,
         ImmutableList<string>? WhenAssignmentRoleIsIn
     ) : PermissionContext();
 
-    public sealed record AssignedStaffInV1CasePermissionContext(
+    public sealed record AssignedVolunteerInV1CasePermissionContext(
         bool? WhenCaseIsOpen,
         ImmutableList<string>? WhenAssignmentRoleIsIn
     ) : PermissionContext();
@@ -112,7 +113,7 @@ namespace CareTogether.Resources.Policies
     )
     {
         public V1ReferralPolicy V1ReferralPolicy { get; init; } =
-            new(ImmutableList<StaffAssignmentPolicy>.Empty);
+            new(ImmutableList<FunctionAssignmentPolicy>.Empty);
     };
 
     public enum DocumentLinkRequirement
@@ -159,8 +160,8 @@ namespace CareTogether.Resources.Policies
         ImmutableList<RequirementDefinition>? IntakeRequirements = null
     )
     {
-        public ImmutableList<StaffAssignmentPolicy> StaffAssignmentPolicies { get; init; } =
-            ImmutableList<StaffAssignmentPolicy>.Empty;
+        public ImmutableList<FunctionAssignmentPolicy> FunctionAssignmentPolicies { get; init; } =
+            ImmutableList<FunctionAssignmentPolicy>.Empty;
 
         public ImmutableList<RequirementDefinition> IntakeRequirements_PRE_MIGRATION =
             RequiredIntakeActionNames
@@ -170,15 +171,15 @@ namespace CareTogether.Resources.Policies
     };
 
     public sealed record V1ReferralPolicy(
-        ImmutableList<StaffAssignmentPolicy> StaffAssignmentPolicies
+        ImmutableList<FunctionAssignmentPolicy> FunctionAssignmentPolicies
     );
 
-    public sealed record StaffAssignmentPolicy(
+    public sealed record FunctionAssignmentPolicy(
         string AssignmentRole,
-        StaffAssignmentEligibility Eligibility
+        FunctionAssignmentEligibility Eligibility
     );
 
-    public sealed record StaffAssignmentEligibility(
+    public sealed record FunctionAssignmentEligibility(
         ImmutableList<string> EligibleLocationRoles,
         ImmutableList<string> EligibleIndividualVolunteerRoles,
         ImmutableList<string> EligibleVolunteerFamilyRoles,
@@ -196,6 +197,7 @@ namespace CareTogether.Resources.Policies
     {
         Boolean,
         String,
+        StringArray,
     }
 
     public enum CustomFieldValidation
@@ -213,7 +215,8 @@ namespace CareTogether.Resources.Policies
         // TODO: See TODO in ReferralPolicy
         ImmutableList<RequirementDefinition>? RequiredSetupActions = null,
         ImmutableList<MonitoringRequirement>? RequiredMonitoringActionsNew = null, // TODO: Rename to RequiredMonitoringActions after migration (see TODO in ReferralPolicy)
-        ImmutableList<RequirementDefinition>? RequiredCloseoutActions = null
+        ImmutableList<RequirementDefinition>? RequiredCloseoutActions = null,
+        DateTime? SupersededAtUtc = null
     )
     {
         public ImmutableList<RequirementDefinition> RequiredSetupActions_PRE_MIGRATION =
@@ -334,7 +337,8 @@ namespace CareTogether.Resources.Policies
 
     public sealed record VolunteerPolicy(
         ImmutableDictionary<string, VolunteerRolePolicy> VolunteerRoles,
-        ImmutableDictionary<string, VolunteerFamilyRolePolicy> VolunteerFamilyRoles
+        ImmutableDictionary<string, VolunteerFamilyRolePolicy> VolunteerFamilyRoles,
+        ImmutableList<CustomField>? CustomFields = null
     );
 
     public sealed record VolunteerRolePolicy(
@@ -407,6 +411,12 @@ namespace CareTogether.Resources.Policies
         )> UpsertLocationDefinitionAsync(
             Guid organizationId,
             LocationConfiguration locationConfiguration
+        );
+
+        Task<OrganizationConfiguration> UpsertOrganizationConfigurationAsync(
+            Guid organizationId,
+            ImmutableList<string>? referralCloseReasons,
+            ImmutableList<string>? caseCloseReasons
         );
 
         Task<EffectiveLocationPolicy> UpsertEffectiveLocationPolicyAsync(

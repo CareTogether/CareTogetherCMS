@@ -69,6 +69,7 @@ namespace CareTogether.Core.Test
                         ),
                         ImmutableList<RoleDefinition>.Empty,
                         ImmutableList<string>.Empty,
+                        ImmutableList<string>.Empty,
                         ImmutableList<string>.Empty
                     )
                 );
