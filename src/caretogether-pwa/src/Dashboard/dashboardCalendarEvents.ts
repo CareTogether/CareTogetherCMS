@@ -7,6 +7,8 @@ import { ChildLocationPlan, CombinedFamilyInfo } from '../GeneratedClient';
 import { personNameString } from '../Families/PersonName';
 import { familyNameString } from '../Families/FamilyName';
 
+const CHILDCARE_AWAY_FROM_PARENT_COLOR = '#e58a8a';
+
 export enum CalendarFilters {
   ArrangementPlannedDuration = 'Arrangement - Planned Duration',
   ArrangementActualStartEndDates = 'Arrangement - Actual Start & End Dates',
@@ -67,7 +69,7 @@ function getSchedulerColor(
 ): SchedulerEventColor | undefined {
   const color = event.color || event.backgroundColor;
 
-  if (color === 'red' || color === '#a52a2a' || color === '#e58a8a') {
+  if (color === 'red' || color === CHILDCARE_AWAY_FROM_PARENT_COLOR) {
     return 'red';
   }
 
@@ -91,13 +93,11 @@ function getEventClassName(
   const colorClass =
     color === 'lightblue'
       ? 'dashboard-calendar-event--light-blue'
-      : color === '#a52a2a'
-        ? 'dashboard-calendar-event--brown'
-        : color === '#e58a8a'
-          ? 'dashboard-calendar-event--soft-red'
-          : color === 'lightgreen'
-            ? 'dashboard-calendar-event--light-green'
-            : '';
+      : color === CHILDCARE_AWAY_FROM_PARENT_COLOR
+        ? 'dashboard-calendar-event--soft-red'
+        : color === 'lightgreen'
+          ? 'dashboard-calendar-event--light-green'
+          : '';
 
   return [
     'dashboard-calendar-event',
@@ -269,7 +269,9 @@ export function buildDashboardCalendarEventGroups(
             title: `🤝🏻 ${personNameString(person)} - ${familyNameString(locationFamily)}`,
             start: entry.timestampUtc,
             backgroundColor:
-              entry.plan === ChildLocationPlan.WithParent ? 'green' : '#a52a2a',
+              entry.plan === ChildLocationPlan.WithParent
+                ? 'green'
+                : CHILDCARE_AWAY_FROM_PARENT_COLOR,
             end: nextEntry?.timestampUtc,
             extendedProps: {
               familyId,
@@ -280,7 +282,7 @@ export function buildDashboardCalendarEventGroups(
         }
       );
       return durationEntries.filter(
-        (entry) => entry.backgroundColor === '#a52a2a'
+        (entry) => entry.backgroundColor === CHILDCARE_AWAY_FROM_PARENT_COLOR
       );
     }
   );
@@ -297,7 +299,7 @@ export function buildDashboardCalendarEventGroups(
             backgroundColor:
               entry.plan === ChildLocationPlan.WithParent
                 ? 'lightgreen'
-                : '#e58a8a',
+                : CHILDCARE_AWAY_FROM_PARENT_COLOR,
             end: nextEntry?.timestampUtc,
             extendedProps: {
               familyId,
@@ -308,7 +310,7 @@ export function buildDashboardCalendarEventGroups(
         }
       );
       return durationEntries.filter(
-        (entry) => entry.backgroundColor === '#e58a8a'
+        (entry) => entry.backgroundColor === CHILDCARE_AWAY_FROM_PARENT_COLOR
       );
     }
   );

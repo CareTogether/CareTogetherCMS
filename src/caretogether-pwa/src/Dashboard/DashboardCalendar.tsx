@@ -16,11 +16,28 @@ import {
 } from './dashboardCalendarEvents';
 
 const DASHBOARD_CALENDAR_VIEW_KEY = 'dashboardCalendarView';
-const DEFAULT_EVENT_COLOR = '#3788d8';
-const PLANNED_DURATION_COLOR = 'lightblue';
-const PAST_DUE_REQUIREMENT_COLOR = 'red';
-const ACTUAL_CHILDCARE_AWAY_FROM_PARENT_COLOR = '#a52a2a';
-const PLANNED_CHILDCARE_AWAY_FROM_PARENT_COLOR = '#e58a8a';
+const DASHBOARD_CALENDAR_EVENT_COLORS = {
+  teal: {
+    backgroundColor: '#80cbc4',
+    color: '#00473b',
+  },
+  lightBlue: {
+    backgroundColor: '#90caf9',
+    color: '#0B3A84',
+  },
+  red: {
+    backgroundColor: '#ffa3a3',
+    color: '#770000',
+  },
+  softRed: {
+    backgroundColor: '#f3aaaa',
+    color: '#4d0f0f',
+  },
+  lightGreen: {
+    backgroundColor: '#c9efc9',
+    color: '#123f19',
+  },
+} as const;
 
 type CalendarView = 'day' | 'week' | 'month' | 'agenda';
 
@@ -98,56 +115,55 @@ export function DashboardCalendar() {
     {
       key: 'planned-duration',
       filter: CalendarFilters.ArrangementPlannedDuration,
-      color: PLANNED_DURATION_COLOR,
-      markerLabel: 'Light blue',
+      eventColor: DASHBOARD_CALENDAR_EVENT_COLORS.lightBlue,
       label: 'Planned duration',
       description: 'planned start-to-end arrangement range',
     },
     {
       key: 'actual-start',
       filter: CalendarFilters.ArrangementActualStartEndDates,
-      color: DEFAULT_EVENT_COLOR,
-      markerLabel: 'Blue + ▶',
+      eventColor: DASHBOARD_CALENDAR_EVENT_COLORS.teal,
+      icon: '▶',
       label: 'Actual start',
       description: 'arrangement started on this date',
     },
     {
       key: 'actual-end',
       filter: CalendarFilters.ArrangementActualStartEndDates,
-      color: DEFAULT_EVENT_COLOR,
-      markerLabel: 'Blue + ⏹',
+      eventColor: DASHBOARD_CALENDAR_EVENT_COLORS.teal,
+      icon: '⏹',
       label: 'Actual end',
       description: 'arrangement ended on this date',
     },
     {
       key: 'completed-requirement',
       filter: CalendarFilters.ArrangementCompletedRequirements,
-      color: DEFAULT_EVENT_COLOR,
-      markerLabel: 'Blue + ✅',
+      eventColor: DASHBOARD_CALENDAR_EVENT_COLORS.teal,
+      icon: '✅',
       label: 'Completed requirement',
       description: 'requirement completed on this date',
     },
     {
       key: 'past-due-requirement',
       filter: CalendarFilters.ArrangementPastDueRequirements,
-      color: PAST_DUE_REQUIREMENT_COLOR,
-      markerLabel: 'Red + ❌',
+      eventColor: DASHBOARD_CALENDAR_EVENT_COLORS.red,
+      icon: '❌',
       label: 'Past-due requirement',
       description: 'requirement has been past due since this date',
     },
     {
       key: 'upcoming-requirement',
       filter: CalendarFilters.ArrangementUpcomingRequirements,
-      color: DEFAULT_EVENT_COLOR,
-      markerLabel: 'Blue + 📅',
+      eventColor: DASHBOARD_CALENDAR_EVENT_COLORS.teal,
+      icon: '📅',
       label: 'Upcoming requirement',
       description: 'requirement is due on this date',
     },
     {
       key: 'planned-childcare',
       filter: CalendarFilters.ArrangementPlannedChildcare,
-      color: PLANNED_CHILDCARE_AWAY_FROM_PARENT_COLOR,
-      markerLabel: 'Rose + ✋🏻',
+      eventColor: DASHBOARD_CALENDAR_EVENT_COLORS.softRed,
+      icon: '✋🏻',
       label: 'Planned childcare',
       description:
         'planned child location away from parent with the listed family',
@@ -155,8 +171,8 @@ export function DashboardCalendar() {
     {
       key: 'actual-childcare',
       filter: CalendarFilters.ArrangementActualChildcare,
-      color: ACTUAL_CHILDCARE_AWAY_FROM_PARENT_COLOR,
-      markerLabel: 'Brown + 🤝🏻',
+      eventColor: DASHBOARD_CALENDAR_EVENT_COLORS.softRed,
+      icon: '🤝🏻',
       label: 'Actual childcare',
       description:
         'recorded child location away from parent with the listed family',
@@ -213,84 +229,6 @@ export function DashboardCalendar() {
           handleFilterChange={handleFilterChange}
         />
       </Grid>
-      {calendarLegendItems.length > 0 && (
-        <Grid item xs={12} sx={{ marginBottom: 1 }}>
-          <Box
-            aria-label="Calendar legend"
-            sx={{
-              borderColor: 'divider',
-              borderTop: 1,
-              borderBottom: 1,
-              paddingY: 1,
-            }}
-          >
-            <Typography
-              variant="body2"
-              sx={{ fontWeight: 600, marginBottom: 0.75 }}
-            >
-              Legend:
-            </Typography>
-            <Box
-              sx={{
-                display: 'grid',
-                gap: 1,
-                gridTemplateColumns: {
-                  xs: '1fr',
-                  sm: 'repeat(2, minmax(0, 1fr))',
-                  lg: 'repeat(4, minmax(0, 1fr))',
-                },
-              }}
-            >
-              {calendarLegendItems.map((legendItem) => (
-                <Box
-                  key={legendItem.key}
-                  sx={{
-                    alignItems: 'flex-start',
-                    display: 'flex',
-                    gap: 0.75,
-                    minWidth: 0,
-                  }}
-                >
-                  <Box
-                    aria-hidden="true"
-                    component="span"
-                    sx={{
-                      backgroundColor: legendItem.color,
-                      border:
-                        legendItem.color === PLANNED_DURATION_COLOR
-                          ? '1px solid #7aa8b8'
-                          : '1px solid transparent',
-                      borderRadius: '2px',
-                      display: 'inline-block',
-                      flex: '0 0 auto',
-                      height: 12,
-                      marginTop: 0.5,
-                      width: 12,
-                    }}
-                  />
-                  <Box sx={{ minWidth: 0 }}>
-                    <Typography
-                      component="span"
-                      variant="body2"
-                      sx={{ display: 'block', fontWeight: 600 }}
-                    >
-                      {legendItem.markerLabel}: {legendItem.label}
-                    </Typography>
-                    <Typography
-                      color="text.secondary"
-                      component="span"
-                      variant="body2"
-                      sx={{ display: 'block' }}
-                    >
-                      {legendItem.description}
-                    </Typography>
-                  </Box>
-                </Box>
-              ))}
-            </Box>
-          </Box>
-        </Grid>
-      )}
       <Grid
         item
         xs={12}
@@ -434,20 +372,13 @@ export function DashboardCalendar() {
             transform: 'translateY(-1px)',
           },
           '.dashboard-calendar-event--light-blue': {
-            backgroundColor: '#c7e8f6',
-            color: '#063746',
-          },
-          '.dashboard-calendar-event--brown': {
-            backgroundColor: '#a52a2a',
-            color: 'common.white',
+            ...DASHBOARD_CALENDAR_EVENT_COLORS.lightBlue,
           },
           '.dashboard-calendar-event--soft-red': {
-            backgroundColor: '#f3aaaa',
-            color: '#4d0f0f',
+            ...DASHBOARD_CALENDAR_EVENT_COLORS.softRed,
           },
           '.dashboard-calendar-event--light-green': {
-            backgroundColor: '#c9efc9',
-            color: '#123f19',
+            ...DASHBOARD_CALENDAR_EVENT_COLORS.lightGreen,
           },
         }}
       >
@@ -479,6 +410,102 @@ export function DashboardCalendar() {
           areEventsResizable={false}
         />
       </Grid>
+      {calendarLegendItems.length > 0 && (
+        <Grid item xs={12} sx={{ marginTop: 1 }}>
+          <Box
+            aria-label="Calendar legend"
+            sx={{
+              paddingY: 1,
+            }}
+          >
+            <Typography
+              variant="body2"
+              sx={{ fontWeight: 600, marginBottom: 0.75 }}
+            >
+              Legend
+            </Typography>
+            <Box
+              sx={{
+                display: 'grid',
+                gap: 1,
+                gridTemplateColumns: {
+                  xs: '1fr',
+                  sm: 'repeat(2, minmax(0, 1fr))',
+                  lg: 'repeat(4, minmax(0, 1fr))',
+                },
+              }}
+            >
+              {calendarLegendItems.map((legendItem) => (
+                <Box
+                  key={legendItem.key}
+                  sx={{
+                    minWidth: 0,
+                  }}
+                >
+                  <Box
+                    component="span"
+                    sx={{
+                      ...legendItem.eventColor,
+                      border: '1px solid transparent',
+                      borderRadius: 0.75,
+                      boxShadow: '0 1px 2px rgba(0, 0, 0, 0.16)',
+                      alignItems: 'center',
+                      boxSizing: 'border-box',
+                      display: 'inline-flex',
+                      fontSize: '0.76rem',
+                      fontWeight: 700,
+                      gap: 0.4,
+                      height: 24,
+                      lineHeight: 1.2,
+                      maxWidth: '100%',
+                      overflow: 'hidden',
+                      px: 0.75,
+                      textOverflow: 'ellipsis',
+                      whiteSpace: 'nowrap',
+                    }}
+                  >
+                    {legendItem.icon && (
+                      <Box
+                        aria-hidden="true"
+                        component="span"
+                        sx={{
+                          alignItems: 'center',
+                          display: 'inline-flex',
+                          flex: '0 0 auto',
+                          height: '100%',
+                          lineHeight: 1,
+                        }}
+                      >
+                        {legendItem.icon}
+                      </Box>
+                    )}
+                    <Box
+                      component="span"
+                      sx={{
+                        minWidth: 0,
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                      }}
+                    >
+                      {legendItem.label}
+                    </Box>
+                  </Box>
+                  <Box sx={{ minWidth: 0 }}>
+                    <Typography
+                      color="text.secondary"
+                      component="span"
+                      variant="body2"
+                      sx={{ display: 'block', marginTop: 0.5 }}
+                    >
+                      {legendItem.description}
+                    </Typography>
+                  </Box>
+                </Box>
+              ))}
+            </Box>
+          </Box>
+        </Grid>
+      )}
     </Grid>
   );
 }
