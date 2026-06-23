@@ -1,28 +1,19 @@
-import Grid from '@mui/material/GridLegacy';
-import { Box, Typography } from '@mui/material';
-import FullCalendar from '@fullcalendar/react';
-import dayGridPlugin from '@fullcalendar/daygrid';
-import listPlugin from '@fullcalendar/list';
-import { format } from 'date-fns';
-import { EventInput, EventSourceInput } from '@fullcalendar/core/index.js';
+import { MouseEvent, useMemo, useState } from 'react';
+import Grid from '../Generic/GridLegacyCompat';
+import { Box, GlobalStyles, Typography } from '@mui/material';
+import { EventCalendar } from '@mui/x-scheduler/event-calendar';
+import type { EventCalendarPreferences } from '@mui/x-scheduler/models';
 import { partneringFamiliesData } from '../Model/V1CasesModel';
 import { useLoadable } from '../Hooks/useLoadable';
-import { ChildLocationPlan, CombinedFamilyInfo } from '../GeneratedClient';
-import { personNameString } from '../Families/PersonName';
 import { useFamilyLookup } from '../Model/DirectoryModel';
-import { familyNameString } from '../Families/FamilyName';
 import { useFilterMenu } from '../Generic/useFilterMenu';
 import { FilterMenu } from '../Generic/FilterMenu';
 import { useAppNavigate } from '../Hooks/useAppNavigate';
-
-// function renderEventContent(eventInfo: any) {
-//   return (
-//     <>
-//       <b>{eventInfo.timeText}</b>
-//       <i>{eventInfo.event.title}</i>
-//     </>
-//   )
-// }
+import {
+  buildDashboardCalendarEventGroups,
+  CalendarFilters,
+  DashboardCalendarEvent,
+} from './dashboardCalendarEvents';
 
 const DASHBOARD_CALENDAR_VIEW_KEY = 'dashboardCalendarView';
 const DEFAULT_EVENT_COLOR = '#3788d8';
@@ -31,204 +22,53 @@ const PAST_DUE_REQUIREMENT_COLOR = 'red';
 const ACTUAL_CHILDCARE_AWAY_FROM_PARENT_COLOR = '#a52a2a';
 const PLANNED_CHILDCARE_AWAY_FROM_PARENT_COLOR = '#e58a8a';
 
-function familyPerson(family: CombinedFamilyInfo, personId: string) {
-  const familyPeople = (family.family?.adults || [])
-    .map((adult) => adult.item1!)
-    .concat(family.family?.children || []);
-  return familyPeople.find((person) => person.id === personId)!;
+type CalendarView = 'day' | 'week' | 'month' | 'agenda';
+
+const calendarViews: CalendarView[] = ['month', 'agenda'];
+const calendarPreferences: Partial<EventCalendarPreferences> = {
+  showWeekends: true,
+  showEmptyDaysInAgenda: false,
+  isSidePanelOpen: false,
+  weekStartsOn: 1,
+};
+
+function getSavedInitialView(): CalendarView {
+  const savedView = localStorage.getItem(DASHBOARD_CALENDAR_VIEW_KEY);
+
+  if (savedView === 'listWeek') {
+    return 'agenda';
+  }
+
+  if (savedView === 'month' || savedView === 'agenda') {
+    return savedView;
+  }
+
+  return 'month';
+}
+
+function getDashboardCalendarEventId(element: Element | null) {
+  const eventElement = element?.closest('.dashboard-calendar-event');
+  const eventIdClass = Array.from(eventElement?.classList || []).find((name) =>
+    name.startsWith('dashboard-calendar-event-id-')
+  );
+
+  return eventIdClass?.replace('dashboard-calendar-event-id-', '');
 }
 
 export function DashboardCalendar() {
   const familyLookup = useFamilyLookup();
   const partneringFamilies = useLoadable(partneringFamiliesData);
-  const savedInitialView =
-    localStorage.getItem(DASHBOARD_CALENDAR_VIEW_KEY) || 'dayGridMonth';
+  const appNavigate = useAppNavigate();
+  const [view, setView] = useState<CalendarView>(getSavedInitialView);
 
-  const allArrangements = (partneringFamilies || []).flatMap((family) =>
-    (family.partneringFamilyInfo?.closedV1Cases || [])
-      .concat(family.partneringFamilyInfo?.openV1Case || [])
-      .flatMap((v1Case) =>
-        (v1Case.arrangements || []).map((arrangement) => ({
-          arrangement,
-          person: familyPerson(family, arrangement.partneringFamilyPersonId!),
-          familyId: family.family?.id,
-          v1CaseId: v1Case.id,
-        }))
-      )
+  const eventGroups = useMemo(
+    () =>
+      buildDashboardCalendarEventGroups(
+        partneringFamilies || undefined,
+        familyLookup
+      ),
+    [familyLookup, partneringFamilies]
   );
-
-  const arrangementPlannedDurations = allArrangements.map(
-    ({ arrangement, person, familyId, v1CaseId }) =>
-      ({
-        title: `${personNameString(person)} - ${arrangement.arrangementType}`,
-        start:
-          arrangement.plannedStartUtc &&
-          format(arrangement.plannedStartUtc, 'yyyy-MM-dd'),
-        end:
-          arrangement.plannedEndUtc &&
-          format(arrangement.plannedEndUtc, 'yyyy-MM-dd'),
-        backgroundColor: PLANNED_DURATION_COLOR,
-        extendedProps: { familyId, v1CaseId, arrangementId: arrangement.id },
-      }) as EventInput
-  );
-
-  const arrangementActualStarts = allArrangements
-    .filter(({ arrangement }) => arrangement.startedAtUtc)
-    .map(
-      ({ arrangement, person, familyId, v1CaseId }) =>
-        ({
-          title: `▶ ${personNameString(person)} - ${arrangement.arrangementType}`,
-          date: arrangement.startedAtUtc,
-          extendedProps: {
-            familyId,
-            v1CaseId,
-            arrangementId: arrangement.id,
-          },
-        }) as EventInput
-    );
-
-  const arrangementActualEnds = allArrangements
-    .filter(({ arrangement }) => arrangement.endedAtUtc)
-    .map(
-      ({ arrangement, person, familyId, v1CaseId }) =>
-        ({
-          title: `⏹ ${personNameString(person)} - ${arrangement.arrangementType}`,
-          date: arrangement.endedAtUtc,
-          extendedProps: {
-            familyId,
-            v1CaseId,
-            arrangementId: arrangement.id,
-          },
-        }) as EventInput
-    );
-
-  const arrangementCompletedRequirements = allArrangements.flatMap(
-    ({ arrangement, person, familyId, v1CaseId }) =>
-      arrangement.completedRequirements?.map(
-        (completed) =>
-          ({
-            title: `✅ ${personNameString(person)} - ${completed.requirementName}`,
-            date: completed.completedAtUtc,
-            extendedProps: {
-              familyId,
-              v1CaseId: v1CaseId,
-              arrangementId: arrangement.id,
-            },
-          }) as EventInput
-      )
-  );
-
-  const allArrangementMissingRequirements = allArrangements.flatMap(
-    ({ arrangement, person, familyId, v1CaseId: v1CaseId }) =>
-      (arrangement.missingRequirements || []).map((missing) => ({
-        person,
-        missing,
-        familyId,
-        v1CaseId,
-        arrangementId: arrangement.id,
-      }))
-  );
-
-  const arrangementPastDueRequirements = allArrangementMissingRequirements
-    .filter(({ missing }) => missing.pastDueSince)
-    .map(
-      ({ person, missing, familyId, v1CaseId, arrangementId }) =>
-        ({
-          title: `❌ ${personNameString(person)} - ${missing.action?.actionName}`,
-          date:
-            missing.pastDueSince && format(missing.pastDueSince, 'yyyy-MM-dd'),
-          color: PAST_DUE_REQUIREMENT_COLOR,
-          extendedProps: {
-            familyId,
-            v1CaseId,
-            arrangementId,
-          },
-        }) as EventInput
-    );
-
-  const arrangementUpcomingRequirements = allArrangementMissingRequirements
-    .filter(({ missing }) => missing.dueBy)
-    .map(
-      ({ person, missing, familyId, v1CaseId, arrangementId }) =>
-        ({
-          title: `📅 ${personNameString(person)} - ${missing.action?.actionName}`,
-          date: missing.dueBy && format(missing.dueBy, 'yyyy-MM-dd'),
-          extendedProps: {
-            familyId,
-            v1CaseId,
-            arrangementId,
-          },
-        }) as EventInput
-    );
-
-  const arrangementActualChildcare = allArrangements.flatMap(
-    ({ arrangement, person, familyId, v1CaseId }) => {
-      const durationEntries = (arrangement.childLocationHistory || []).map(
-        (entry, index, history) => {
-          const nextEntry =
-            index < history.length - 1 ? history[index + 1] : null;
-          const locationFamily = familyLookup(entry.childLocationFamilyId);
-          return {
-            title: `🤝🏻 ${personNameString(person)} - ${familyNameString(locationFamily)}`,
-            start: entry.timestampUtc,
-            backgroundColor:
-              entry.plan === ChildLocationPlan.WithParent
-                ? 'green'
-                : ACTUAL_CHILDCARE_AWAY_FROM_PARENT_COLOR,
-            end: nextEntry?.timestampUtc,
-            extendedProps: {
-              familyId,
-              v1CaseId,
-              arrangementId: arrangement.id,
-            },
-          } as EventInput;
-        }
-      );
-      return durationEntries.filter(
-        (entry) =>
-          entry.backgroundColor === ACTUAL_CHILDCARE_AWAY_FROM_PARENT_COLOR
-      );
-    }
-  );
-
-  const arrangementPlannedChildcare = allArrangements.flatMap(
-    ({ arrangement, person, familyId, v1CaseId }) => {
-      const durationEntries = (arrangement.childLocationPlan || []).map(
-        (entry, index, plan) => {
-          const nextEntry = index < plan.length - 1 ? plan[index + 1] : null;
-          const locationFamily = familyLookup(entry.childLocationFamilyId);
-          return {
-            title: `✋🏻 ${personNameString(person)} - ${familyNameString(locationFamily)}`,
-            start: entry.timestampUtc,
-            backgroundColor:
-              entry.plan === ChildLocationPlan.WithParent
-                ? 'lightgreen'
-                : PLANNED_CHILDCARE_AWAY_FROM_PARENT_COLOR,
-            end: nextEntry?.timestampUtc,
-            extendedProps: {
-              familyId,
-              v1CaseId,
-              arrangementId: arrangement.id,
-            },
-          } as EventInput;
-        }
-      );
-      return durationEntries.filter(
-        (entry) =>
-          entry.backgroundColor === PLANNED_CHILDCARE_AWAY_FROM_PARENT_COLOR
-      );
-    }
-  );
-
-  enum CalendarFilters {
-    ArrangementPlannedDuration = 'Arrangement - Planned Duration',
-    ArrangementActualStartEndDates = 'Arrangement - Actual Start & End Dates',
-    ArrangementCompletedRequirements = 'Arrangement - Completed Requirements',
-    ArrangementPastDueRequirements = 'Arrangement - Past-Due Requirements',
-    ArrangementUpcomingRequirements = 'Arrangement - Upcoming Requirements',
-    ArrangementPlannedChildcare = 'Arrangement - Planned Childcare',
-    ArrangementActualChildcare = 'Arrangement - Actual Childcare',
-  }
 
   const { filterOptions, handleFilterChange } = useFilterMenu(
     Object.values(CalendarFilters),
@@ -243,8 +83,6 @@ export function DashboardCalendar() {
     ]
   );
 
-  const appNavigate = useAppNavigate();
-
   function isSelected(option: string) {
     return (
       filterOptions.find((filterOption) => filterOption.key === option)
@@ -252,28 +90,8 @@ export function DashboardCalendar() {
     );
   }
 
-  const filteredEvents: EventSourceInput = ([] as EventInput[]).concat(
-    isSelected(CalendarFilters.ArrangementPlannedDuration)
-      ? arrangementPlannedDurations
-      : [],
-    isSelected(CalendarFilters.ArrangementActualStartEndDates)
-      ? arrangementActualStarts.concat(arrangementActualEnds)
-      : [],
-    isSelected(CalendarFilters.ArrangementCompletedRequirements)
-      ? arrangementCompletedRequirements
-      : [],
-    isSelected(CalendarFilters.ArrangementPastDueRequirements)
-      ? arrangementPastDueRequirements
-      : [],
-    isSelected(CalendarFilters.ArrangementUpcomingRequirements)
-      ? arrangementUpcomingRequirements
-      : [],
-    isSelected(CalendarFilters.ArrangementActualChildcare)
-      ? arrangementActualChildcare
-      : [],
-    isSelected(CalendarFilters.ArrangementPlannedChildcare)
-      ? arrangementPlannedChildcare
-      : []
+  const filteredEvents = Object.values(CalendarFilters).flatMap((filter) =>
+    isSelected(filter) ? eventGroups[filter] : []
   );
 
   const calendarLegendItems = [
@@ -344,6 +162,43 @@ export function DashboardCalendar() {
         'recorded child location away from parent with the listed family',
     },
   ].filter((legendItem) => isSelected(legendItem.filter));
+  const eventsById = useMemo(
+    () =>
+      filteredEvents.reduce<Record<string, DashboardCalendarEvent>>(
+        (lookup, event) => ({
+          ...lookup,
+          [String(event.id)]: event,
+        }),
+        {}
+      ),
+    [filteredEvents]
+  );
+
+  function navigateToCalendarEvent(event: DashboardCalendarEvent | undefined) {
+    if (!event) {
+      return;
+    }
+
+    const { familyId, v1CaseId, arrangementId } = event;
+
+    if (familyId && v1CaseId && arrangementId) {
+      appNavigate.family(familyId, v1CaseId, arrangementId);
+      return;
+    }
+
+    if (familyId) {
+      appNavigate.family(familyId);
+    }
+  }
+
+  function handleCalendarClick(event: MouseEvent<HTMLDivElement>) {
+    const calendarEventId = getDashboardCalendarEventId(
+      event.target as Element
+    );
+    navigateToCalendarEvent(
+      calendarEventId ? eventsById[calendarEventId] : undefined
+    );
+  }
 
   return (
     <Grid container>
@@ -439,39 +294,189 @@ export function DashboardCalendar() {
       <Grid
         item
         xs={12}
+        onClickCapture={handleCalendarClick}
         sx={{
-          '.calendar-event': {
+          width: '100%',
+          minWidth: 0,
+          '.MuiEventCalendar-root': {
+            width: '100%',
+            minHeight: {
+              xs: 520,
+              md: 'calc(100vh - 210px)',
+            },
+          },
+          '.MuiEventCalendar-sidePanel, .MuiEventCalendar-sidePanelCollapse, .MuiEventCalendar-sidePanelDivider, .MuiEventCalendar-headerToolbarSidePanelToggle':
+            {
+              display: 'none',
+            },
+          '.MuiEventCalendar-mainPanel, .MuiEventCalendar-content': {
+            width: '100%',
+            maxWidth: '100%',
+            minWidth: 0,
+          },
+          '.MuiEventCalendar-headerToolbar': {
+            alignItems: 'center',
+            gap: 1,
+            px: 0,
+            mb: 1.5,
+          },
+          '.MuiEventCalendar-headerToolbarLabel': {
+            fontSize: { xs: '1.1rem', md: '1.35rem' },
+            fontWeight: 700,
+          },
+          '.MuiEventCalendar-viewSwitcherButton, .MuiEventCalendar-headerToolbarTodayButton':
+            {
+              fontWeight: 700,
+              letterSpacing: 0,
+            },
+          '.MuiEventCalendar-monthView': {
+            width: '100%',
+          },
+          '.MuiEventCalendar-monthViewGrid': {
+            minHeight: {
+              xs: 480,
+              md: 'calc(100vh - 280px)',
+            },
+          },
+          '.MuiEventCalendar-monthViewCell': {
+            verticalAlign: 'top',
+          },
+          '.MuiEventCalendar-monthViewCellEvents': {
+            px: 0,
+            pb: 0.75,
+            gap: 0.65,
+          },
+          '.MuiEventCalendar-dayGridEvent': {
+            justifySelf: 'stretch',
+            alignSelf: 'stretch',
+            boxSizing: 'border-box',
+            minWidth: 0,
+          },
+          '.MuiEventCalendar-dayGridEventCardWrapper': {
+            width: '100%',
+            maxWidth: '100%',
+            minWidth: 0,
+            gap: 0.5,
+          },
+          '.MuiEventCalendar-dayGridEventCardContent': {
+            width: '100%',
+            minWidth: 0,
+            height: 'auto',
+            lineHeight: 1.2,
+          },
+          '.MuiEventCalendar-dayGridEventCardContent, .MuiEventCalendar-eventItemCardContent':
+            {
+              alignItems: 'flex-start',
+              px: 0,
+              py: 0,
+              minHeight: 0,
+            },
+          '.MuiEventCalendar-dayGridEventTitle, .MuiEventCalendar-eventItemTitle':
+            {
+              fontSize: '0.76rem',
+              fontWeight: 700,
+              lineHeight: 1.2,
+              letterSpacing: 0,
+            },
+          '.MuiEventCalendar-dayGridEventLinesClamp': {
+            display: 'block',
+            width: '100%',
+            minWidth: 0,
+            whiteSpace: 'nowrap',
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
+            wordBreak: 'normal',
+            overflowWrap: 'normal',
+          },
+          '.MuiEventCalendar-eventColorIndicator': {
+            display: 'none',
+          },
+          '.MuiEventCalendar-agendaView': {
+            width: '100%',
+            borderRadius: 1,
+          },
+          '.MuiEventCalendar-agendaViewRow': {
+            minHeight: 54,
+          },
+          '.MuiEventCalendar-agendaViewDayHeaderCell': {
+            width: { xs: 96, md: 160 },
+          },
+          '.MuiEventCalendar-agendaViewEventsList': {
+            py: 0.75,
+            gap: 0.75,
+          },
+          '.MuiEventCalendar-agendaViewEventListItem': {
+            maxWidth: '100%',
+          },
+          '.MuiEventCalendar-eventItemCardWrapper': {
+            width: '100%',
+            maxWidth: { xs: '100%', md: 760 },
+          },
+          '.MuiEventCalendar-eventItemLinesClamp': {
+            WebkitLineClamp: 3,
+            WebkitBoxOrient: 'vertical',
+            whiteSpace: 'normal',
+            overflow: 'hidden',
+          },
+          '.dashboard-calendar-event': {
             cursor: 'pointer',
-            transition: 'background-color 0.2s ease-in-out',
-            '&:hover': { backgroundColor: 'rgba(0, 0, 0, 0.1) !important' },
+            borderRadius: 0.75,
+            boxShadow: '0 1px 2px rgba(0, 0, 0, 0.16)',
+            minHeight: 24,
+            px: 0.75,
+            py: 0.25,
+            transition:
+              'background-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out, transform 0.2s ease-in-out',
+          },
+          '.dashboard-calendar-event:hover': {
+            filter: 'brightness(0.94)',
+            boxShadow: '0 2px 6px rgba(0, 0, 0, 0.22)',
+            transform: 'translateY(-1px)',
+          },
+          '.dashboard-calendar-event--light-blue': {
+            backgroundColor: '#c7e8f6',
+            color: '#063746',
+          },
+          '.dashboard-calendar-event--brown': {
+            backgroundColor: '#a52a2a',
+            color: 'common.white',
+          },
+          '.dashboard-calendar-event--soft-red': {
+            backgroundColor: '#f3aaaa',
+            color: '#4d0f0f',
+          },
+          '.dashboard-calendar-event--light-green': {
+            backgroundColor: '#c9efc9',
+            color: '#123f19',
           },
         }}
       >
-        <FullCalendar /* https://fullcalendar.io/docs/react */
-          plugins={[dayGridPlugin, listPlugin]}
-          initialView={savedInitialView}
-          headerToolbar={{
-            left: 'prevYear,prev,today,next,nextYear',
-            center: 'title',
-            right: 'dayGridMonth,listWeek',
+        <GlobalStyles
+          styles={{
+            '.MuiEventCalendar-eventDialog': {
+              display: 'none',
+            },
           }}
-          weekends={true}
-          //expandRows={true}
+        />
+        <EventCalendar<DashboardCalendarEvent, object>
           events={filteredEvents}
-          //eventContent={renderEventContent}
-          eventClassNames={() => 'calendar-event'}
-          datesSet={(arg) => {
-            localStorage.setItem(DASHBOARD_CALENDAR_VIEW_KEY, arg.view.type);
+          view={view}
+          views={calendarViews}
+          onViewChange={(nextView) => {
+            localStorage.setItem(DASHBOARD_CALENDAR_VIEW_KEY, nextView);
+            setView(nextView);
           }}
-          eventClick={(info) => {
-            const { familyId, v1CaseId, arrangementId } =
-              info.event.extendedProps;
-            if (familyId && v1CaseId && arrangementId) {
-              appNavigate.family(familyId, v1CaseId, arrangementId);
-            } else if (familyId) {
-              appNavigate.family(familyId);
-            }
+          preferences={calendarPreferences}
+          localeText={{
+            agenda: 'Agenda',
+            month: 'Month',
+            today: 'Today',
+            allDay: 'All day',
           }}
+          preferencesMenuConfig={false}
+          readOnly
+          areEventsDraggable={false}
+          areEventsResizable={false}
         />
       </Grid>
     </Grid>

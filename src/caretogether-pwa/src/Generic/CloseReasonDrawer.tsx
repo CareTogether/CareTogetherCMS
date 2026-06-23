@@ -5,11 +5,11 @@ import {
   FormControl,
   FormControlLabel,
   FormLabel,
-  GridLegacy,
   Radio,
   RadioGroup,
   Typography,
 } from '@mui/material';
+import Grid from './GridLegacyCompat';
 import { ValidateDatePicker } from './Forms/ValidateDatePicker';
 
 type CloseReasonDrawerProps = {
@@ -46,15 +46,15 @@ export function CloseReasonDrawer({
       anchor="right"
       open
       onClose={onClose}
-      PaperProps={{ sx: { width: 500, p: 3, top: 45 } }}
+      slotProps={{ paper: { sx: { width: 500, p: 3, top: 45 } } }}
     >
       <form noValidate>
-        <GridLegacy container spacing={2}>
-          <GridLegacy item xs={12}>
+        <Grid container spacing={2}>
+          <Grid item xs={12}>
             <Typography variant="h6">{title}</Typography>
-          </GridLegacy>
+          </Grid>
 
-          <GridLegacy item xs={12}>
+          <Grid item xs={12}>
             <FormControl component="fieldset">
               <FormLabel component="legend">Reason for Closing:</FormLabel>
               <RadioGroup
@@ -73,9 +73,9 @@ export function CloseReasonDrawer({
                 ))}
               </RadioGroup>
             </FormControl>
-          </GridLegacy>
+          </Grid>
 
-          <GridLegacy item xs={12}>
+          <Grid item xs={12}>
             <ValidateDatePicker
               label={dateLabel}
               value={closedAtLocal}
@@ -84,9 +84,9 @@ export function CloseReasonDrawer({
               disableFuture
               textFieldProps={{ fullWidth: true, required: true }}
             />
-          </GridLegacy>
+          </Grid>
 
-          <GridLegacy item xs={12} sx={{ textAlign: 'right' }}>
+          <Grid item xs={12} sx={{ textAlign: 'right' }}>
             <Button
               color="secondary"
               variant="contained"
@@ -104,8 +104,8 @@ export function CloseReasonDrawer({
             >
               {saveLabel}
             </Button>
-          </GridLegacy>
-        </GridLegacy>
+          </Grid>
+        </Grid>
       </form>
     </Drawer>
   );

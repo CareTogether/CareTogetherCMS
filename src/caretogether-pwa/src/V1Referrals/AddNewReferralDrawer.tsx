@@ -1,4 +1,4 @@
-import Grid from '@mui/material/GridLegacy';
+import Grid from '@mui/material/Grid';
 import { Button, Drawer, TextField, Typography } from '@mui/material';
 import { Controller, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -82,11 +82,11 @@ export function AddNewReferralDrawer({ onClose }: AddNewReferralDrawerProps) {
     >
       <form onSubmit={handleSubmit(onSubmit)}>
         <Grid container spacing={2}>
-          <Grid item xs={12}>
+          <Grid size={12}>
             <Typography variant="h6">Open New Referral</Typography>
           </Grid>
 
-          <Grid item xs={12}>
+          <Grid size={12}>
             <Controller
               name="openedAtLocal"
               control={control}
@@ -107,7 +107,7 @@ export function AddNewReferralDrawer({ onClose }: AddNewReferralDrawerProps) {
             />
           </Grid>
 
-          <Grid item xs={12}>
+          <Grid size={12}>
             <Controller
               name="title"
               control={control}
@@ -129,7 +129,7 @@ export function AddNewReferralDrawer({ onClose }: AddNewReferralDrawerProps) {
             namePrefix="customFields"
           />
 
-          <Grid item xs={12}>
+          <Grid size={12}>
             <Controller
               name="comment"
               control={control}
@@ -150,7 +150,7 @@ export function AddNewReferralDrawer({ onClose }: AddNewReferralDrawerProps) {
             </Typography>
           </Grid>
 
-          <Grid item xs={12} sx={{ textAlign: 'right' }}>
+          <Grid size={12} sx={{ textAlign: 'right' }}>
             <Button
               color="secondary"
               variant="contained"

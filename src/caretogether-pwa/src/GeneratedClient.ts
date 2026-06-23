@@ -6618,6 +6618,7 @@ export class CompletedRequirementInfo implements ICompletedRequirementInfo {
     expiresAtUtc?: Date | undefined;
     uploadedDocumentId?: string | undefined;
     noteId?: string | undefined;
+    roleNames?: string[] | undefined;
 
     constructor(data?: ICompletedRequirementInfo) {
         if (data) {
@@ -6638,6 +6639,11 @@ export class CompletedRequirementInfo implements ICompletedRequirementInfo {
             this.expiresAtUtc = _data["expiresAtUtc"] ? new Date(_data["expiresAtUtc"].toString()) : <any>undefined;
             this.uploadedDocumentId = _data["uploadedDocumentId"];
             this.noteId = _data["noteId"];
+            if (Array.isArray(_data["roleNames"])) {
+                this.roleNames = [] as any;
+                for (let item of _data["roleNames"])
+                    this.roleNames!.push(item);
+            }
         }
     }
 
@@ -6658,6 +6664,11 @@ export class CompletedRequirementInfo implements ICompletedRequirementInfo {
         data["expiresAtUtc"] = this.expiresAtUtc ? this.expiresAtUtc.toISOString() : <any>undefined;
         data["uploadedDocumentId"] = this.uploadedDocumentId;
         data["noteId"] = this.noteId;
+        if (Array.isArray(this.roleNames)) {
+            data["roleNames"] = [];
+            for (let item of this.roleNames)
+                data["roleNames"].push(item);
+        }
         return data;
     }
 }
@@ -6671,6 +6682,7 @@ export interface ICompletedRequirementInfo {
     expiresAtUtc?: Date | undefined;
     uploadedDocumentId?: string | undefined;
     noteId?: string | undefined;
+    roleNames?: string[] | undefined;
 }
 
 export class ExemptedRequirementInfo implements IExemptedRequirementInfo {
@@ -6680,6 +6692,7 @@ export class ExemptedRequirementInfo implements IExemptedRequirementInfo {
     dueDate?: Date | undefined;
     additionalComments!: string;
     exemptionExpiresAtUtc?: Date | undefined;
+    roleNames?: string[] | undefined;
 
     constructor(data?: IExemptedRequirementInfo) {
         if (data) {
@@ -6698,6 +6711,11 @@ export class ExemptedRequirementInfo implements IExemptedRequirementInfo {
             this.dueDate = _data["dueDate"] ? new Date(_data["dueDate"].toString()) : <any>undefined;
             this.additionalComments = _data["additionalComments"];
             this.exemptionExpiresAtUtc = _data["exemptionExpiresAtUtc"] ? new Date(_data["exemptionExpiresAtUtc"].toString()) : <any>undefined;
+            if (Array.isArray(_data["roleNames"])) {
+                this.roleNames = [] as any;
+                for (let item of _data["roleNames"])
+                    this.roleNames!.push(item);
+            }
         }
     }
 
@@ -6716,6 +6734,11 @@ export class ExemptedRequirementInfo implements IExemptedRequirementInfo {
         data["dueDate"] = this.dueDate ? this.dueDate.toISOString() : <any>undefined;
         data["additionalComments"] = this.additionalComments;
         data["exemptionExpiresAtUtc"] = this.exemptionExpiresAtUtc ? this.exemptionExpiresAtUtc.toISOString() : <any>undefined;
+        if (Array.isArray(this.roleNames)) {
+            data["roleNames"] = [];
+            for (let item of this.roleNames)
+                data["roleNames"].push(item);
+        }
         return data;
     }
 }
@@ -6727,6 +6750,7 @@ export interface IExemptedRequirementInfo {
     dueDate?: Date | undefined;
     additionalComments: string;
     exemptionExpiresAtUtc?: Date | undefined;
+    roleNames?: string[] | undefined;
 }
 
 export class Arrangement implements IArrangement {

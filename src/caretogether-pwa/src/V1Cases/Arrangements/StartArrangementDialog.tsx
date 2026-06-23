@@ -1,4 +1,4 @@
-import Grid from '@mui/material/GridLegacy';
+import Grid from '@mui/material/Grid';
 import { ValidateDatePicker } from '../../Generic/Forms/ValidateDatePicker';
 import { useState } from 'react';
 import { useParams } from 'react-router';
@@ -53,7 +53,7 @@ export function StartArrangementDialog({
       enableSave={() => startedAtLocal !== null && !dobError}
     >
       <Grid container spacing={2}>
-        <Grid item xs={12}>
+        <Grid size={12}>
           <ValidateDatePicker
             label="When was this arrangement started?"
             value={startedAtLocal}

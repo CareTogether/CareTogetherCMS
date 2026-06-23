@@ -5,6 +5,7 @@ type LazyLoadProps = {
   height?: number;
   offset?: number;
   once?: boolean;
+  overflow?: boolean;
   placeholder?: ReactNode;
 };
 
@@ -27,6 +28,7 @@ function LazyLoad({
   height = 0,
   offset = 0,
   once = false,
+  overflow: _overflow = false,
   placeholder,
 }: LazyLoadProps) {
   const rootRef = useRef<HTMLDivElement>(null);
@@ -75,7 +77,9 @@ function LazyLoad({
 
   return (
     <div ref={rootRef}>
-      {hasRendered ? children : (placeholder ?? <div style={{ minHeight: height }} />)}
+      {hasRendered
+        ? children
+        : (placeholder ?? <div style={{ minHeight: height }} />)}
     </div>
   );
 }

@@ -1,4 +1,4 @@
-import Grid from '@mui/material/GridLegacy';
+import Grid from '@mui/material/Grid';
 import {
   Button,
   Box,
@@ -83,7 +83,7 @@ export function CommunityScreen() {
           </Button>} */}
       </Toolbar>
       <Grid container spacing={2} sx={{ marginTop: 0 }}>
-        <Grid item xs={12} sm={6}>
+        <Grid size={{ xs: 12, sm: 6 }}>
           <Typography variant="h5">
             Description
             {permissions(Permission.EditCommunity) && (
@@ -102,7 +102,7 @@ export function CommunityScreen() {
             {community.description}
           </p>
         </Grid>
-        <Grid item xs={12} sm={6}>
+        <Grid size={{ xs: 12, sm: 6 }}>
           {permissions(Permission.ViewCommunityDocumentMetadata) && (
             <>
               <Typography variant="h5">
@@ -146,7 +146,7 @@ export function CommunityScreen() {
             <CommunityRoleAssignments communityInfo={communityInfo} />
           </Box>
         </Grid>
-        <Grid item xs={12}>
+        <Grid size={12}>
           <Typography variant="h5">
             Member Families
             {permissions(Permission.EditCommunityMemberFamilies) && (

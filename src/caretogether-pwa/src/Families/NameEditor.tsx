@@ -1,4 +1,4 @@
-import Grid from '@mui/material/GridLegacy';
+import Grid from '@mui/material/Grid';
 import { TextField } from '@mui/material';
 import { useDirectoryModel } from '../Model/DirectoryModel';
 import { useInlineEditor } from '../Hooks/useInlineEditor';
@@ -29,7 +29,7 @@ export function NameEditor({ familyId, person }: PersonEditorProps) {
     <Grid container spacing={2}>
       {editor.editing ? (
         <>
-          <Grid item xs={12} sm={6}>
+          <Grid size={{ xs: 12, sm: 6 }}>
             <TextField
               required
               id="first-name"
@@ -45,7 +45,7 @@ export function NameEditor({ familyId, person }: PersonEditorProps) {
               }
             />
           </Grid>
-          <Grid item xs={12} sm={6}>
+          <Grid size={{ xs: 12, sm: 6 }}>
             <TextField
               required
               id="last-name"
@@ -61,13 +61,13 @@ export function NameEditor({ familyId, person }: PersonEditorProps) {
               }
             />
           </Grid>
-          <Grid item xs={12}>
+          <Grid size={12}>
             {editor.cancelButton}
             {editor.saveButton}
           </Grid>
         </>
       ) : (
-        <Grid item xs={12}>
+        <Grid size={12}>
           Name: <PersonName person={person} />
           {editor.editButton}
         </Grid>

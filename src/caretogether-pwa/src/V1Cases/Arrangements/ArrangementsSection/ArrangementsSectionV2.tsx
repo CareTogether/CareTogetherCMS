@@ -1,0 +1,184 @@
+import { AppMasonry } from '../../../Generic/AppMasonry';
+import { AddCircle as AddCircleIcon } from '@mui/icons-material';
+import Grid from '../../../Generic/GridLegacyCompat';
+import { Typography, Button, useTheme } from '@mui/material';
+import { Box, useMediaQuery } from '@mui/system';
+import {
+  ArrangementPolicy,
+  CombinedFamilyInfo,
+  Permission,
+  V1Case,
+} from '../../../GeneratedClient';
+import { ArrangementCard } from '../ArrangementCard';
+import { ToggleButton, ToggleButtonGroup } from '@mui/material';
+import { CreateArrangementDialog } from '../CreateArrangementDialog';
+import { useRef, useState } from 'react';
+import { useRecoilValue } from 'recoil';
+import { policyData } from '../../../Model/ConfigurationModel';
+import { getFilteredArrangements } from './getFilteredArrangements';
+import { useScrollToArrangement } from './useScrollToArrangement';
+
+type ArrangementSectionProps = {
+  v1Case: V1Case;
+  family: CombinedFamilyInfo;
+  permissions: (permission: Permission) => boolean;
+  hideTitle?: boolean;
+};
+
+export function ArrangementsSection({
+  v1Case,
+  family,
+  permissions,
+  hideTitle = false,
+}: ArrangementSectionProps) {
+  const [selectedFilters, setSelectedFilters] = useState<string[]>([
+    'Active',
+    'Ended',
+    'Cancelled',
+  ]);
+
+  const policy = useRecoilValue(policyData);
+
+  const theme = useTheme();
+  const isDesktop = useMediaQuery(theme.breakpoints.up('sm'));
+  const isWideScreen = useMediaQuery(theme.breakpoints.up('xl'));
+
+  const [
+    createArrangementDialogParameter,
+    setCreateArrangementDialogParameter,
+  ] = useState<ArrangementPolicy | null>(null);
+
+  const filteredArrangements = getFilteredArrangements(v1Case, selectedFilters);
+
+  const arrangementRefs = useRef<Record<string, HTMLDivElement | null>>({});
+
+  useScrollToArrangement(arrangementRefs);
+
+  return (
+    <Grid item xs={12} sx={{ mb: 3 }}>
+      <Box
+        sx={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'flex-start',
+          maxWidth: '100%',
+          flexWrap: 'wrap',
+          gap: 2,
+          mb: 2,
+        }}
+      >
+        <Box
+          sx={{
+            display: 'flex',
+            justifyContent: 'flex-start',
+            maxWidth: '100%',
+            flexWrap: 'wrap',
+          }}
+        >
+          <Box
+            sx={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              flexWrap: 'wrap',
+              gap: 2,
+              mb: 2,
+            }}
+          >
+            {!hideTitle && (
+              <Typography
+                className="ph-unmask"
+                variant="h3"
+                sx={{ m: 0, display: 'flex', alignItems: 'center' }}
+              >
+                Arrangements
+              </Typography>
+            )}
+
+            <ToggleButtonGroup
+              value={selectedFilters}
+              onChange={(_e, newFilters) => {
+                if (newFilters.length > 0) setSelectedFilters(newFilters);
+              }}
+              aria-label="Arrangement Status Filter"
+              size="small"
+            >
+              <ToggleButton value="Active">Active</ToggleButton>
+              <ToggleButton value="Ended">Ended</ToggleButton>
+              <ToggleButton value="Cancelled">Cancelled</ToggleButton>
+            </ToggleButtonGroup>
+          </Box>
+        </Box>
+        {permissions(Permission.CreateArrangement) && (
+          <Box
+            sx={{
+              textAlign: 'center',
+              display: 'flex',
+              flexDirection: 'row',
+              justifyContent: 'flex-end',
+              maxWidth: '100%',
+              flexWrap: 'wrap',
+              gap: 1,
+            }}
+          >
+            {v1Case &&
+              policy.referralPolicy?.arrangementPolicies
+                ?.filter(
+                  (arrangementPolicy) =>
+                    !arrangementPolicy.supersededAtUtc ||
+                    new Date(arrangementPolicy.supersededAtUtc) > new Date()
+                )
+                .map(
+                (arrangementPolicy) => (
+                  <Box key={arrangementPolicy.arrangementType}>
+                    <Button
+                      className="ph-unmask"
+                      onClick={() =>
+                        setCreateArrangementDialogParameter(arrangementPolicy)
+                      }
+                      variant="contained"
+                      size="small"
+                      startIcon={<AddCircleIcon />}
+                    >
+                      {arrangementPolicy.arrangementType}
+                    </Button>
+                  </Box>
+                )
+              )}
+          </Box>
+        )}
+      </Box>
+      {filteredArrangements.length > 0 && (
+        <AppMasonry
+          columns={isDesktop ? (isWideScreen ? 3 : 2) : 1}
+          spacing={2}
+        >
+          {filteredArrangements.map((arrangement) => (
+            <div
+              key={arrangement.id}
+              ref={(el) => {
+                if (arrangement.id) {
+                  arrangementRefs.current[arrangement.id] = el;
+                }
+              }}
+            >
+              <ArrangementCard
+                partneringFamily={family}
+                v1CaseId={v1Case.id!}
+                arrangement={arrangement}
+              />
+            </div>
+          ))}
+        </AppMasonry>
+      )}
+
+      {createArrangementDialogParameter && (
+        <CreateArrangementDialog
+          v1CaseId={`${v1Case!.id}`}
+          arrangementPolicy={createArrangementDialogParameter}
+          onClose={() => setCreateArrangementDialogParameter(null)}
+        />
+      )}
+    </Grid>
+  );
+}

@@ -1,4 +1,4 @@
-import Grid from '@mui/material/GridLegacy';
+import Grid from '../../Generic/GridLegacyCompat';
 import { Box, TableCell, TableRow } from '@mui/material';
 import { format } from 'date-fns';
 import { useState } from 'react';
@@ -72,7 +72,6 @@ function PartneringFamilyPlaceholderRow(
       >
         <LazyLoad
           once
-          overflow
           height={height}
           offset={300}
           placeholder={<Box sx={{ minHeight: `${height}px` }} />}

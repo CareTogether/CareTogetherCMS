@@ -118,15 +118,15 @@ export function ShellBottomNavigation() {
         slotProps={{
           paper: {
             sx: {
-            padding: 2,
-            width: 200,
+              padding: 2,
+              width: 200,
             },
           },
         }}
         open={drawerOpen}
         onClose={() => setDrawerOpen(false)}
       >
-        <Stack padding={1} spacing={1}>
+        <Stack spacing={1} sx={{ p: 1 }}>
           <ShellContextSwitcher />
           {flags && (
             <List

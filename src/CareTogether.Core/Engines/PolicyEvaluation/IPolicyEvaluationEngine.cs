@@ -391,8 +391,10 @@ namespace CareTogether.Engines.PolicyEvaluation
 
     public sealed record VolunteerFamilyApprovalCalculationResult(
         FamilyApprovalStatus ApprovalStatus,
-        ImmutableList<Resources.CompletedRequirementInfo> CompletedFamilyRequirementsWithExpiration,
-        ImmutableDictionary<Guid, ImmutableList<Resources.CompletedRequirementInfo>> CompletedIndividualRequirementsWithExpiration
+        ImmutableList<Resources.CompletedRequirementInfo> CompletedFamilyRequirements,
+        ImmutableList<Resources.ExemptedRequirementInfo> ExemptedFamilyRequirements,
+        ImmutableDictionary<Guid, ImmutableList<Resources.CompletedRequirementInfo>> CompletedIndividualRequirements,
+        ImmutableDictionary<Guid, ImmutableList<Resources.ExemptedRequirementInfo>> ExemptedIndividualRequirements
     );
 
     public sealed record FamilyRoleVersionApprovalStatus(

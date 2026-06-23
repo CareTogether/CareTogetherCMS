@@ -1,4 +1,4 @@
-import Grid from '@mui/material/GridLegacy';
+import Grid from '@mui/material/Grid';
 import { Button, TextField, Typography } from '@mui/material';
 import { useBackdrop } from '../../Hooks/useBackdrop';
 import { api } from '../../Api/Api';
@@ -114,11 +114,11 @@ export function AddLocation({ onClose }: DrawerProps) {
       className="ph-unmask"
       container
       spacing={2}
-      maxWidth={500}
+      sx={{ maxWidth: 500 }}
       component="form"
       onSubmit={handleSubmit(onSubmit)}
     >
-      <Grid item xs={12}>
+      <Grid size={12}>
         <h3>Add New Location</h3>
 
         <Typography gutterBottom>
@@ -132,7 +132,7 @@ export function AddLocation({ onClose }: DrawerProps) {
           location.
         </Typography>
       </Grid>
-      <Grid item xs={12}>
+      <Grid size={12}>
         <Controller
           name="locationName"
           control={control}
@@ -152,7 +152,7 @@ export function AddLocation({ onClose }: DrawerProps) {
           )}
         />
       </Grid>
-      <Grid item xs={12}>
+      <Grid size={12}>
         <Controller
           name="copyPoliciesFromLocationId"
           control={control}
@@ -180,7 +180,7 @@ export function AddLocation({ onClose }: DrawerProps) {
         />
       </Grid>
       {/* TODO: Implement timezone */}
-      {/* <Grid item xs={12}>
+      {/* <Grid size={12}>
         <Controller
           name="timeZone"
           control={control}
@@ -204,7 +204,7 @@ export function AddLocation({ onClose }: DrawerProps) {
           )}
         />
       </Grid> */}
-      <Grid item xs={12} sx={{ textAlign: 'right' }}>
+      <Grid size={12} sx={{ textAlign: 'right' }}>
         {errorMessage && (
           <>
             <Typography color="error">

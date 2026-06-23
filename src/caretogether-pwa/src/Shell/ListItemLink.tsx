@@ -119,22 +119,36 @@ export function ListItemLink(props: ListItemLinkCollapsibleProps) {
             selected={selected}
             sx={{
               paddingLeft,
+              minHeight: 48,
               flexGrow: 1,
               color,
+              alignItems: 'center',
             }}
             {...buttonProps}
           >
-            {icon ? <ListItemIcon sx={{ color }}>{icon}</ListItemIcon> : null}
+            {icon ? (
+              <ListItemIcon
+                sx={{
+                  color,
+                  minWidth: 40,
+                  mr: 1,
+                  justifyContent: 'center',
+                  flexShrink: 0,
+                }}
+              >
+                {icon}
+              </ListItemIcon>
+            ) : null}
 
             <TruncatedTooltip title={primary}>
               <ListItemText
                 primary={primary}
                 sx={{
-                  marginLeft: -2,
                   color,
                   // Ensure the text container allows truncation
                   minWidth: 0,
                   flex: 1,
+                  my: 0,
                   '& .MuiListItemText-primary': {
                     whiteSpace: 'nowrap',
                     overflow: 'hidden',
