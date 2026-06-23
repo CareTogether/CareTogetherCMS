@@ -12,9 +12,6 @@ import { FamilyScreenV2 } from './FamilyScreenV2';
 export function FamilyScreenRoute() {
   const posthog = usePostHog();
   const rolloutEnabled = useFeatureFlagEnabled(FAMILY_SCREEN_V2_FEATURE_FLAG);
-  const earlyAccessFlagEnabled = useFeatureFlagEnabled(
-    FAMILY_SCREEN_V2_EARLY_ACCESS_FEATURE_FLAG
-  );
   const [featureFlagsLoaded, setFeatureFlagsLoaded] = useState(
     () => posthog.featureFlags.hasLoadedFlags
   );
@@ -55,8 +52,7 @@ export function FamilyScreenRoute() {
   }
 
   const showFamilyScreenV2 =
-    earlyAccessEnrollment ??
-    (earlyAccessFlagEnabled === true || rolloutEnabled === true);
+    earlyAccessEnrollment ?? (rolloutEnabled === true);
 
   return showFamilyScreenV2 ? <FamilyScreenV2 /> : <FamilyScreen />;
 }
