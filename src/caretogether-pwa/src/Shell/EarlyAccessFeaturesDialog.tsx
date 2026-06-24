@@ -14,34 +14,21 @@ import {
   Typography,
 } from '@mui/material';
 import type { EarlyAccessFeature } from 'posthog-js';
-import { usePostHog } from 'posthog-js/react';
 import {
-  FAMILY_SCREEN_V2_EARLY_ACCESS_FEATURE_NAME,
-  FAMILY_SCREEN_V2_ENROLLMENT_CHANGED_EVENT,
-  POSTHOG_STORED_PERSON_PROPERTIES_KEY,
+  useActiveFeatureFlags,
+  useFeatureFlagEnabled,
+  usePostHog,
+} from 'posthog-js/react';
+import {
+  FAMILY_SCREEN_V2_EARLY_ACCESS_FEATURE_FLAG,
+  FAMILY_SCREEN_V2_FEATURE_FLAG,
 } from '../featureFlags';
+import { getEarlyAccessEnrollment } from '../Utilities/Instrumentation/earlyAccessEnrollment';
 
 type EarlyAccessFeaturesDialogProps = {
   open: boolean;
   onClose: () => void;
 };
-
-type EnrollmentByFlagKey = Record<string, boolean>;
-
-function earlyAccessEnrollmentProperty(flagKey: string) {
-  return `$feature_enrollment/${flagKey}`;
-}
-
-function getEarlyAccessEnrollment(
-  posthog: ReturnType<typeof usePostHog>,
-  flagKey: string
-) {
-  const personProperties = posthog.get_property(
-    POSTHOG_STORED_PERSON_PROPERTIES_KEY
-  ) as Record<string, unknown> | undefined;
-
-  return personProperties?.[earlyAccessEnrollmentProperty(flagKey)] === true;
-}
 
 function featureEnrollmentKey(feature: EarlyAccessFeature) {
   return feature.flagKey ?? feature.name;
@@ -52,12 +39,34 @@ export function EarlyAccessFeaturesDialog({
   onClose,
 }: EarlyAccessFeaturesDialogProps) {
   const posthog = usePostHog();
+  const activeFeatureFlags = useActiveFeatureFlags();
+  const familyScreenV2RolloutEnabled = useFeatureFlagEnabled(
+    FAMILY_SCREEN_V2_FEATURE_FLAG
+  );
   const [features, setFeatures] = useState<EarlyAccessFeature[]>([]);
-  const [enrollmentByFlagKey, setEnrollmentByFlagKey] =
-    useState<EnrollmentByFlagKey>({});
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [updatingFlagKey, setUpdatingFlagKey] = useState<string | null>(null);
+  const [familyScreenV2Enrollment, setFamilyScreenV2Enrollment] = useState<
+    boolean | undefined
+  >(() =>
+    getEarlyAccessEnrollment(posthog, FAMILY_SCREEN_V2_EARLY_ACCESS_FEATURE_FLAG)
+  );
+
+  useEffect(() => {
+    function updateFamilyScreenV2Enrollment() {
+      setFamilyScreenV2Enrollment(
+        getEarlyAccessEnrollment(
+          posthog,
+          FAMILY_SCREEN_V2_EARLY_ACCESS_FEATURE_FLAG
+        )
+      );
+    }
+
+    updateFamilyScreenV2Enrollment();
+
+    return posthog.onFeatureFlags(updateFamilyScreenV2Enrollment);
+  }, [posthog]);
 
   useEffect(() => {
     if (!open) {
@@ -76,22 +85,6 @@ export function EarlyAccessFeaturesDialog({
         }
 
         setFeatures(earlyAccessFeatures);
-        setEnrollmentByFlagKey(
-          Object.fromEntries(
-            earlyAccessFeatures.flatMap((feature) => {
-              if (!feature.flagKey) {
-                return [];
-              }
-
-              return [
-                [
-                  feature.flagKey,
-                  getEarlyAccessEnrollment(posthog, feature.flagKey),
-                ],
-              ];
-            })
-          )
-        );
         setLoading(false);
       }, true);
     } catch (loadError) {
@@ -118,25 +111,30 @@ export function EarlyAccessFeaturesDialog({
         checked,
         feature.stage
       );
-      if (feature.name === FAMILY_SCREEN_V2_EARLY_ACCESS_FEATURE_NAME) {
-        window.dispatchEvent(
-          new CustomEvent(FAMILY_SCREEN_V2_ENROLLMENT_CHANGED_EVENT, {
-            detail: {
-              flagKey: feature.flagKey,
-              isEnrolled: checked,
-            },
-          })
-        );
+      if (feature.flagKey === FAMILY_SCREEN_V2_EARLY_ACCESS_FEATURE_FLAG) {
+        setFamilyScreenV2Enrollment(checked);
       }
-      setEnrollmentByFlagKey((current) => ({
-        ...current,
-        [feature.flagKey!]: checked,
-      }));
     } catch (updateError) {
       setError(`Unable to update beta feature enrollment. ${updateError}`);
     } finally {
       setUpdatingFlagKey(null);
     }
+  }
+
+  function featureIsEnabled(feature: EarlyAccessFeature) {
+    if (!feature.flagKey) {
+      return false;
+    }
+
+    if (feature.flagKey !== FAMILY_SCREEN_V2_EARLY_ACCESS_FEATURE_FLAG) {
+      return activeFeatureFlags.includes(feature.flagKey);
+    }
+
+    return (
+      familyScreenV2Enrollment ??
+      (familyScreenV2RolloutEnabled === true ||
+        activeFeatureFlags.includes(feature.flagKey))
+    );
   }
 
   return (
@@ -183,11 +181,7 @@ export function EarlyAccessFeaturesDialog({
                     labelPlacement="start"
                     control={
                       <Switch
-                        checked={
-                          feature.flagKey
-                            ? enrollmentByFlagKey[feature.flagKey] === true
-                            : false
-                        }
+                        checked={featureIsEnabled(feature)}
                         disabled={
                           !feature.flagKey ||
                           updatingFlagKey === feature.flagKey
