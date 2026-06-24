@@ -34,14 +34,6 @@ const DASHBOARD_CALENDAR_EVENT_COLORS = {
     backgroundColor: '#ffa3a3',
     color: '#770000',
   },
-  softRed: {
-    backgroundColor: '#f3aaaa',
-    color: '#4d0f0f',
-  },
-  lightGreen: {
-    backgroundColor: '#c9efc9',
-    color: '#123f19',
-  },
 } as const;
 
 type CalendarView = 'day' | 'week' | 'month' | 'agenda';
@@ -100,7 +92,7 @@ const calendarEventTypeFilters: CalendarEventTypeFilter[] = [
   {
     key: 'upcoming-requirement',
     filter: CalendarFilters.ArrangementUpcomingRequirements,
-    eventColor: DASHBOARD_CALENDAR_EVENT_COLORS.teal,
+    eventColor: DASHBOARD_CALENDAR_EVENT_COLORS.lightBlue,
     icon: '📅',
     label: 'Upcoming requirement',
     description: 'requirement is due on this date',
@@ -108,7 +100,7 @@ const calendarEventTypeFilters: CalendarEventTypeFilter[] = [
   {
     key: 'planned-childcare',
     filter: CalendarFilters.ArrangementPlannedChildcare,
-    eventColor: DASHBOARD_CALENDAR_EVENT_COLORS.softRed,
+    eventColor: DASHBOARD_CALENDAR_EVENT_COLORS.lightBlue,
     icon: '✋🏻',
     label: 'Planned childcare',
     description:
@@ -117,7 +109,7 @@ const calendarEventTypeFilters: CalendarEventTypeFilter[] = [
   {
     key: 'actual-childcare',
     filter: CalendarFilters.ArrangementActualChildcare,
-    eventColor: DASHBOARD_CALENDAR_EVENT_COLORS.softRed,
+    eventColor: DASHBOARD_CALENDAR_EVENT_COLORS.teal,
     icon: '🤝🏻',
     label: 'Actual childcare',
     description:
@@ -128,7 +120,7 @@ const calendarEventTypeFilters: CalendarEventTypeFilter[] = [
 const calendarViews: CalendarView[] = ['month', 'agenda'];
 const calendarPreferences: Partial<EventCalendarPreferences> = {
   showWeekends: true,
-  showEmptyDaysInAgenda: false,
+  showEmptyDaysInAgenda: true,
   isSidePanelOpen: false,
   weekStartsOn: 1,
 };
@@ -217,6 +209,7 @@ export function DashboardCalendar() {
       )
     )
   );
+
   const eventsById = useMemo(
     () =>
       filteredEvents.reduce<Record<string, DashboardCalendarEvent>>(
@@ -548,11 +541,11 @@ export function DashboardCalendar() {
           '.dashboard-calendar-event--light-blue': {
             ...DASHBOARD_CALENDAR_EVENT_COLORS.lightBlue,
           },
-          '.dashboard-calendar-event--soft-red': {
-            ...DASHBOARD_CALENDAR_EVENT_COLORS.softRed,
+          '.dashboard-calendar-event--teal': {
+            ...DASHBOARD_CALENDAR_EVENT_COLORS.teal,
           },
-          '.dashboard-calendar-event--light-green': {
-            ...DASHBOARD_CALENDAR_EVENT_COLORS.lightGreen,
+          '.dashboard-calendar-event--red': {
+            ...DASHBOARD_CALENDAR_EVENT_COLORS.red,
           },
         }}
       >
@@ -563,7 +556,7 @@ export function DashboardCalendar() {
             },
           }}
         />
-        <EventCalendar<DashboardCalendarEvent, object>
+        <EventCalendar
           events={filteredEvents}
           view={view}
           views={calendarViews}

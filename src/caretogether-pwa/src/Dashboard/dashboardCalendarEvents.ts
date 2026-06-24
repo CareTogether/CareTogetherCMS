@@ -3,11 +3,21 @@ import type {
   SchedulerEvent,
   SchedulerEventColor,
 } from '@mui/x-scheduler/models';
-import { ChildLocationPlan, CombinedFamilyInfo } from '../GeneratedClient';
+import { ChildLocationPlan } from '../GeneratedClient';
+import type {
+  Arrangement,
+  CombinedFamilyInfo,
+  Person,
+  V1Case,
+} from '../GeneratedClient';
 import { personNameString } from '../Families/PersonName';
 import { familyNameString } from '../Families/FamilyName';
 
-const CHILDCARE_AWAY_FROM_PARENT_COLOR = '#e58a8a';
+const DASHBOARD_CALENDAR_LEGACY_EVENT_COLORS = {
+  lightBlue: 'lightblue',
+  red: 'red',
+  teal: 'teal',
+} as const;
 
 export enum CalendarFilters {
   ArrangementPlannedDuration = 'Arrangement - Planned Duration',
@@ -41,15 +51,56 @@ type LegacyDashboardCalendarEvent = {
 
 type CalendarEventGroups = Record<CalendarFilters, DashboardCalendarEvent[]>;
 
+type DashboardCalendarArrangement = {
+  arrangement: Arrangement;
+  person: Person;
+  familyId?: string;
+  v1CaseId: string;
+};
+
 function getSchedulerEventId(filter: CalendarFilters, index: number) {
   return `${filter}-${index}`.replace(/[^a-zA-Z0-9_-]/g, '-');
 }
 
-function familyPerson(family: CombinedFamilyInfo, personId: string) {
+function isDefined<T>(value: T | null | undefined): value is T {
+  return value !== null && value !== undefined;
+}
+
+function familyPerson(
+  family: CombinedFamilyInfo,
+  personId: string | undefined
+) {
+  if (!personId) {
+    return undefined;
+  }
+
   const familyPeople = (family.family?.adults || [])
-    .map((adult) => adult.item1!)
+    .map((adult) => adult.item1)
+    .filter(isDefined)
     .concat(family.family?.children || []);
-  return familyPeople.find((person) => person.id === personId)!;
+  return familyPeople.find((person) => person.id === personId);
+}
+
+function getDashboardCalendarArrangements(
+  family: CombinedFamilyInfo,
+  v1Case: V1Case
+): DashboardCalendarArrangement[] {
+  return (v1Case.arrangements || []).flatMap((arrangement) => {
+    const person = familyPerson(family, arrangement.partneringFamilyPersonId);
+
+    if (!person) {
+      return [];
+    }
+
+    return [
+      {
+        arrangement,
+        person,
+        familyId: family.family?.id,
+        v1CaseId: v1Case.id,
+      },
+    ];
+  });
 }
 
 function toSchedulerDate(value: Date | string | undefined) {
@@ -69,16 +120,16 @@ function getSchedulerColor(
 ): SchedulerEventColor | undefined {
   const color = event.color || event.backgroundColor;
 
-  if (color === 'red' || color === CHILDCARE_AWAY_FROM_PARENT_COLOR) {
+  if (color === DASHBOARD_CALENDAR_LEGACY_EVENT_COLORS.red) {
     return 'red';
   }
 
-  if (color === 'green' || color === 'lightgreen') {
-    return 'green';
+  if (color === DASHBOARD_CALENDAR_LEGACY_EVENT_COLORS.lightBlue) {
+    return 'blue';
   }
 
-  if (color === 'lightblue') {
-    return 'blue';
+  if (color === DASHBOARD_CALENDAR_LEGACY_EVENT_COLORS.teal) {
+    return 'teal';
   }
 
   return undefined;
@@ -91,12 +142,12 @@ function getEventClassName(
 ) {
   const color = event.color || event.backgroundColor;
   const colorClass =
-    color === 'lightblue'
+    color === DASHBOARD_CALENDAR_LEGACY_EVENT_COLORS.lightBlue
       ? 'dashboard-calendar-event--light-blue'
-      : color === CHILDCARE_AWAY_FROM_PARENT_COLOR
-        ? 'dashboard-calendar-event--soft-red'
-        : color === 'lightgreen'
-          ? 'dashboard-calendar-event--light-green'
+      : color === DASHBOARD_CALENDAR_LEGACY_EVENT_COLORS.teal
+        ? 'dashboard-calendar-event--teal'
+        : color === DASHBOARD_CALENDAR_LEGACY_EVENT_COLORS.red
+          ? 'dashboard-calendar-event--red'
           : '';
 
   return [
@@ -144,79 +195,86 @@ export function buildDashboardCalendarEventGroups(
   const allArrangements = (partneringFamilies || []).flatMap((family) =>
     (family.partneringFamilyInfo?.closedV1Cases || [])
       .concat(family.partneringFamilyInfo?.openV1Case || [])
-      .flatMap((v1Case) =>
-        (v1Case.arrangements || []).map((arrangement) => ({
-          arrangement,
-          person: familyPerson(family, arrangement.partneringFamilyPersonId!),
-          familyId: family.family?.id,
-          v1CaseId: v1Case.id,
-        }))
-      )
+      .flatMap((v1Case) => getDashboardCalendarArrangements(family, v1Case))
   );
 
   const arrangementPlannedDurations = allArrangements.map(
-    ({ arrangement, person, familyId, v1CaseId }) =>
-      ({
-        title: `${personNameString(person)} - ${arrangement.arrangementType}`,
-        start:
-          arrangement.plannedStartUtc &&
-          format(arrangement.plannedStartUtc, 'yyyy-MM-dd'),
-        end:
-          arrangement.plannedEndUtc &&
-          format(arrangement.plannedEndUtc, 'yyyy-MM-dd'),
-        backgroundColor: 'lightblue',
-        extendedProps: { familyId, v1CaseId, arrangementId: arrangement.id },
-      }) as LegacyDashboardCalendarEvent
+    ({
+      arrangement,
+      person,
+      familyId,
+      v1CaseId,
+    }): LegacyDashboardCalendarEvent => ({
+      title: `${personNameString(person)} - ${arrangement.arrangementType}`,
+      start:
+        arrangement.plannedStartUtc &&
+        format(arrangement.plannedStartUtc, 'yyyy-MM-dd'),
+      end:
+        arrangement.plannedEndUtc &&
+        format(arrangement.plannedEndUtc, 'yyyy-MM-dd'),
+      backgroundColor: DASHBOARD_CALENDAR_LEGACY_EVENT_COLORS.lightBlue,
+      extendedProps: { familyId, v1CaseId, arrangementId: arrangement.id },
+    })
   );
 
   const arrangementActualStarts = allArrangements
     .filter(({ arrangement }) => arrangement.startedAtUtc)
     .map(
-      ({ arrangement, person, familyId, v1CaseId }) =>
-        ({
-          title: `▶ ${personNameString(person)} - ${arrangement.arrangementType}`,
-          date: arrangement.startedAtUtc,
-          extendedProps: {
-            familyId,
-            v1CaseId,
-            arrangementId: arrangement.id,
-          },
-        }) as LegacyDashboardCalendarEvent
+      ({
+        arrangement,
+        person,
+        familyId,
+        v1CaseId,
+      }): LegacyDashboardCalendarEvent => ({
+        title: `▶ ${personNameString(person)} - ${arrangement.arrangementType}`,
+        date: arrangement.startedAtUtc,
+        backgroundColor: DASHBOARD_CALENDAR_LEGACY_EVENT_COLORS.teal,
+        extendedProps: {
+          familyId,
+          v1CaseId,
+          arrangementId: arrangement.id,
+        },
+      })
     );
 
   const arrangementActualEnds = allArrangements
     .filter(({ arrangement }) => arrangement.endedAtUtc)
     .map(
-      ({ arrangement, person, familyId, v1CaseId }) =>
-        ({
-          title: `⏹ ${personNameString(person)} - ${arrangement.arrangementType}`,
-          date: arrangement.endedAtUtc,
-          extendedProps: {
-            familyId,
-            v1CaseId,
-            arrangementId: arrangement.id,
-          },
-        }) as LegacyDashboardCalendarEvent
+      ({
+        arrangement,
+        person,
+        familyId,
+        v1CaseId,
+      }): LegacyDashboardCalendarEvent => ({
+        title: `⏹ ${personNameString(person)} - ${arrangement.arrangementType}`,
+        date: arrangement.endedAtUtc,
+        backgroundColor: DASHBOARD_CALENDAR_LEGACY_EVENT_COLORS.teal,
+        extendedProps: {
+          familyId,
+          v1CaseId,
+          arrangementId: arrangement.id,
+        },
+      })
     );
 
   const arrangementCompletedRequirements = allArrangements.flatMap(
     ({ arrangement, person, familyId, v1CaseId }) =>
       arrangement.completedRequirements?.map(
-        (completed) =>
-          ({
-            title: `✅ ${personNameString(person)} - ${completed.requirementName}`,
-            date: completed.completedAtUtc,
-            extendedProps: {
-              familyId,
-              v1CaseId: v1CaseId,
-              arrangementId: arrangement.id,
-            },
-          }) as LegacyDashboardCalendarEvent
+        (completed): LegacyDashboardCalendarEvent => ({
+          title: `✅ ${personNameString(person)} - ${completed.requirementName}`,
+          date: completed.completedAtUtc,
+          backgroundColor: DASHBOARD_CALENDAR_LEGACY_EVENT_COLORS.teal,
+          extendedProps: {
+            familyId,
+            v1CaseId,
+            arrangementId: arrangement.id,
+          },
+        })
       ) || []
   );
 
   const allArrangementMissingRequirements = allArrangements.flatMap(
-    ({ arrangement, person, familyId, v1CaseId: v1CaseId }) =>
+    ({ arrangement, person, familyId, v1CaseId }) =>
       (arrangement.missingRequirements || []).map((missing) => ({
         person,
         missing,
@@ -229,33 +287,44 @@ export function buildDashboardCalendarEventGroups(
   const arrangementPastDueRequirements = allArrangementMissingRequirements
     .filter(({ missing }) => missing.pastDueSince)
     .map(
-      ({ person, missing, familyId, v1CaseId, arrangementId }) =>
-        ({
-          title: `❌ ${personNameString(person)} - ${missing.action?.actionName}`,
-          date:
-            missing.pastDueSince && format(missing.pastDueSince, 'yyyy-MM-dd'),
-          color: 'red',
-          extendedProps: {
-            familyId,
-            v1CaseId,
-            arrangementId,
-          },
-        }) as LegacyDashboardCalendarEvent
+      ({
+        person,
+        missing,
+        familyId,
+        v1CaseId,
+        arrangementId,
+      }): LegacyDashboardCalendarEvent => ({
+        title: `❌ ${personNameString(person)} - ${missing.action?.actionName}`,
+        date:
+          missing.pastDueSince && format(missing.pastDueSince, 'yyyy-MM-dd'),
+        color: DASHBOARD_CALENDAR_LEGACY_EVENT_COLORS.red,
+        extendedProps: {
+          familyId,
+          v1CaseId,
+          arrangementId,
+        },
+      })
     );
 
   const arrangementUpcomingRequirements = allArrangementMissingRequirements
     .filter(({ missing }) => missing.dueBy)
     .map(
-      ({ person, missing, familyId, v1CaseId, arrangementId }) =>
-        ({
-          title: `📅 ${personNameString(person)} - ${missing.action?.actionName}`,
-          date: missing.dueBy && format(missing.dueBy, 'yyyy-MM-dd'),
-          extendedProps: {
-            familyId,
-            v1CaseId,
-            arrangementId,
-          },
-        }) as LegacyDashboardCalendarEvent
+      ({
+        person,
+        missing,
+        familyId,
+        v1CaseId,
+        arrangementId,
+      }): LegacyDashboardCalendarEvent => ({
+        title: `📅 ${personNameString(person)} - ${missing.action?.actionName}`,
+        date: missing.dueBy && format(missing.dueBy, 'yyyy-MM-dd'),
+        backgroundColor: DASHBOARD_CALENDAR_LEGACY_EVENT_COLORS.lightBlue,
+        extendedProps: {
+          familyId,
+          v1CaseId,
+          arrangementId,
+        },
+      })
     );
 
   const arrangementActualChildcare = allArrangements.flatMap(
@@ -270,19 +339,20 @@ export function buildDashboardCalendarEventGroups(
             start: entry.timestampUtc,
             backgroundColor:
               entry.plan === ChildLocationPlan.WithParent
-                ? 'green'
-                : CHILDCARE_AWAY_FROM_PARENT_COLOR,
+                ? undefined
+                : DASHBOARD_CALENDAR_LEGACY_EVENT_COLORS.teal,
             end: nextEntry?.timestampUtc,
             extendedProps: {
               familyId,
               v1CaseId,
               arrangementId: arrangement.id,
             },
-          } as LegacyDashboardCalendarEvent;
+          };
         }
       );
       return durationEntries.filter(
-        (entry) => entry.backgroundColor === CHILDCARE_AWAY_FROM_PARENT_COLOR
+        (entry) =>
+          entry.backgroundColor === DASHBOARD_CALENDAR_LEGACY_EVENT_COLORS.teal
       );
     }
   );
@@ -298,19 +368,21 @@ export function buildDashboardCalendarEventGroups(
             start: entry.timestampUtc,
             backgroundColor:
               entry.plan === ChildLocationPlan.WithParent
-                ? 'lightgreen'
-                : CHILDCARE_AWAY_FROM_PARENT_COLOR,
+                ? undefined
+                : DASHBOARD_CALENDAR_LEGACY_EVENT_COLORS.lightBlue,
             end: nextEntry?.timestampUtc,
             extendedProps: {
               familyId,
               v1CaseId,
               arrangementId: arrangement.id,
             },
-          } as LegacyDashboardCalendarEvent;
+          };
         }
       );
       return durationEntries.filter(
-        (entry) => entry.backgroundColor === CHILDCARE_AWAY_FROM_PARENT_COLOR
+        (entry) =>
+          entry.backgroundColor ===
+          DASHBOARD_CALENDAR_LEGACY_EVENT_COLORS.lightBlue
       );
     }
   );
