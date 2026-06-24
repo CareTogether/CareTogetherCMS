@@ -1,13 +1,18 @@
 import { MouseEvent, useMemo, useState } from 'react';
 import Grid from '../Generic/GridLegacyCompat';
-import { GlobalStyles, Typography } from '@mui/material';
+import {
+  Box,
+  GlobalStyles,
+  IconButton,
+  Tooltip,
+  Typography,
+} from '@mui/material';
+import { InfoOutlined as InfoOutlinedIcon } from '@mui/icons-material';
 import { EventCalendar } from '@mui/x-scheduler/event-calendar';
 import type { EventCalendarPreferences } from '@mui/x-scheduler/models';
 import { partneringFamiliesData } from '../Model/V1CasesModel';
 import { useLoadable } from '../Hooks/useLoadable';
 import { useFamilyLookup } from '../Model/DirectoryModel';
-import { useFilterMenu } from '../Generic/useFilterMenu';
-import { FilterMenu } from '../Generic/FilterMenu';
 import { useAppNavigate } from '../Hooks/useAppNavigate';
 import {
   buildDashboardCalendarEventGroups,
@@ -16,13 +21,106 @@ import {
 } from './dashboardCalendarEvents';
 
 const DASHBOARD_CALENDAR_VIEW_KEY = 'dashboardCalendarView';
+const DASHBOARD_CALENDAR_EVENT_COLORS = {
+  teal: {
+    backgroundColor: '#80cbc4',
+    color: '#00473b',
+  },
+  lightBlue: {
+    backgroundColor: '#90caf9',
+    color: '#0B3A84',
+  },
+  red: {
+    backgroundColor: '#ffa3a3',
+    color: '#770000',
+  },
+} as const;
 
 type CalendarView = 'day' | 'week' | 'month' | 'agenda';
+type CalendarEventTypeFilter = {
+  key: string;
+  filter: CalendarFilters;
+  eventColor: {
+    backgroundColor: string;
+    color: string;
+  };
+  icon?: string;
+  label: string;
+  description: string;
+};
+
+const calendarEventTypeFilters: CalendarEventTypeFilter[] = [
+  {
+    key: 'planned-duration',
+    filter: CalendarFilters.ArrangementPlannedDuration,
+    eventColor: DASHBOARD_CALENDAR_EVENT_COLORS.lightBlue,
+    label: 'Planned duration',
+    description: 'planned start-to-end arrangement range',
+  },
+  {
+    key: 'actual-start',
+    filter: CalendarFilters.ArrangementActualStartEndDates,
+    eventColor: DASHBOARD_CALENDAR_EVENT_COLORS.teal,
+    icon: '▶',
+    label: 'Actual start',
+    description: 'arrangement started on this date',
+  },
+  {
+    key: 'actual-end',
+    filter: CalendarFilters.ArrangementActualStartEndDates,
+    eventColor: DASHBOARD_CALENDAR_EVENT_COLORS.teal,
+    icon: '⏹',
+    label: 'Actual end',
+    description: 'arrangement ended on this date',
+  },
+  {
+    key: 'completed-requirement',
+    filter: CalendarFilters.ArrangementCompletedRequirements,
+    eventColor: DASHBOARD_CALENDAR_EVENT_COLORS.teal,
+    icon: '✅',
+    label: 'Completed requirement',
+    description: 'requirement completed on this date',
+  },
+  {
+    key: 'past-due-requirement',
+    filter: CalendarFilters.ArrangementPastDueRequirements,
+    eventColor: DASHBOARD_CALENDAR_EVENT_COLORS.red,
+    icon: '❌',
+    label: 'Past-due requirement',
+    description: 'requirement has been past due since this date',
+  },
+  {
+    key: 'upcoming-requirement',
+    filter: CalendarFilters.ArrangementUpcomingRequirements,
+    eventColor: DASHBOARD_CALENDAR_EVENT_COLORS.lightBlue,
+    icon: '📅',
+    label: 'Upcoming requirement',
+    description: 'requirement is due on this date',
+  },
+  {
+    key: 'planned-childcare',
+    filter: CalendarFilters.ArrangementPlannedChildcare,
+    eventColor: DASHBOARD_CALENDAR_EVENT_COLORS.lightBlue,
+    icon: '✋🏻',
+    label: 'Planned childcare',
+    description:
+      'planned child location away from parent with the listed family',
+  },
+  {
+    key: 'actual-childcare',
+    filter: CalendarFilters.ArrangementActualChildcare,
+    eventColor: DASHBOARD_CALENDAR_EVENT_COLORS.teal,
+    icon: '🤝🏻',
+    label: 'Actual childcare',
+    description:
+      'recorded child location away from parent with the listed family',
+  },
+];
 
 const calendarViews: CalendarView[] = ['month', 'agenda'];
 const calendarPreferences: Partial<EventCalendarPreferences> = {
   showWeekends: true,
-  showEmptyDaysInAgenda: false,
+  showEmptyDaysInAgenda: true,
   isSidePanelOpen: false,
   weekStartsOn: 1,
 };
@@ -50,11 +148,50 @@ function getDashboardCalendarEventId(element: Element | null) {
   return eventIdClass?.replace('dashboard-calendar-event-id-', '');
 }
 
+function getDashboardCalendarEventTypeFilterKey(
+  filter: CalendarFilters,
+  event: DashboardCalendarEvent
+) {
+  if (filter === CalendarFilters.ArrangementPlannedDuration) {
+    return 'planned-duration';
+  }
+
+  if (filter === CalendarFilters.ArrangementActualStartEndDates) {
+    if (event.title.startsWith('⏹')) {
+      return 'actual-end';
+    }
+
+    return 'actual-start';
+  }
+
+  if (filter === CalendarFilters.ArrangementCompletedRequirements) {
+    return 'completed-requirement';
+  }
+
+  if (filter === CalendarFilters.ArrangementPastDueRequirements) {
+    return 'past-due-requirement';
+  }
+
+  if (filter === CalendarFilters.ArrangementUpcomingRequirements) {
+    return 'upcoming-requirement';
+  }
+
+  if (filter === CalendarFilters.ArrangementPlannedChildcare) {
+    return 'planned-childcare';
+  }
+
+  return 'actual-childcare';
+}
+
 export function DashboardCalendar() {
   const familyLookup = useFamilyLookup();
   const partneringFamilies = useLoadable(partneringFamiliesData);
   const appNavigate = useAppNavigate();
   const [view, setView] = useState<CalendarView>(getSavedInitialView);
+  const [selectedEventTypeFilterKeys, setSelectedEventTypeFilterKeys] =
+    useState<Set<string>>(
+      () => new Set(calendarEventTypeFilters.map((filter) => filter.key))
+    );
 
   const eventGroups = useMemo(
     () =>
@@ -65,28 +202,12 @@ export function DashboardCalendar() {
     [familyLookup, partneringFamilies]
   );
 
-  const { filterOptions, handleFilterChange } = useFilterMenu(
-    Object.values(CalendarFilters),
-    [
-      CalendarFilters.ArrangementPlannedDuration,
-      CalendarFilters.ArrangementActualStartEndDates,
-      CalendarFilters.ArrangementCompletedRequirements,
-      CalendarFilters.ArrangementPastDueRequirements,
-      CalendarFilters.ArrangementUpcomingRequirements,
-      CalendarFilters.ArrangementPlannedChildcare,
-      CalendarFilters.ArrangementActualChildcare,
-    ]
-  );
-
-  function isSelected(option: string) {
-    return (
-      filterOptions.find((filterOption) => filterOption.key === option)
-        ?.selected || false
-    );
-  }
-
   const filteredEvents = Object.values(CalendarFilters).flatMap((filter) =>
-    isSelected(filter) ? eventGroups[filter] : []
+    eventGroups[filter].filter((event) =>
+      selectedEventTypeFilterKeys.has(
+        getDashboardCalendarEventTypeFilterKey(filter, event)
+      )
+    )
   );
 
   const eventsById = useMemo(
@@ -119,24 +240,161 @@ export function DashboardCalendar() {
   }
 
   function handleCalendarClick(event: MouseEvent<HTMLDivElement>) {
-    const calendarEventId = getDashboardCalendarEventId(event.target as Element);
+    const calendarEventId = getDashboardCalendarEventId(
+      event.target as Element
+    );
     navigateToCalendarEvent(
       calendarEventId ? eventsById[calendarEventId] : undefined
     );
   }
 
+  function isEventTypeFilterSelected(eventTypeFilter: CalendarEventTypeFilter) {
+    return selectedEventTypeFilterKeys.has(eventTypeFilter.key);
+  }
+
+  function handleEventTypeFilterToggle(
+    eventTypeFilter: CalendarEventTypeFilter
+  ) {
+    setSelectedEventTypeFilterKeys((currentSelectedKeys) => {
+      const nextSelectedKeys = new Set(currentSelectedKeys);
+
+      if (nextSelectedKeys.has(eventTypeFilter.key)) {
+        nextSelectedKeys.delete(eventTypeFilter.key);
+        return nextSelectedKeys;
+      }
+
+      nextSelectedKeys.add(eventTypeFilter.key);
+      return nextSelectedKeys;
+    });
+  }
+
   return (
     <Grid container>
-      <Grid item xs={12} sx={{ textAlign: 'right', marginBottom: 1 }}>
-        <Typography variant="body1" sx={{ display: 'inline' }}>
-          Filter events:{' '}
-        </Typography>
-        <FilterMenu
-          singularLabel={`Event`}
-          pluralLabel={`Events`}
-          filterOptions={filterOptions}
-          handleFilterChange={handleFilterChange}
-        />
+      <Grid item xs={12} sx={{ marginBottom: 1 }}>
+        <Box
+          aria-label="Filter event types"
+          sx={{
+            maxWidth: '100%',
+            paddingY: 1,
+            width: 'fit-content',
+          }}
+        >
+          <Typography
+            variant="body2"
+            sx={{ fontWeight: 600, marginBottom: 0.75 }}
+          >
+            Filter event types
+          </Typography>
+          <Box
+            sx={{
+              alignItems: 'center',
+              display: 'flex',
+              flexWrap: 'wrap',
+              gap: 1,
+              maxWidth: '100%',
+            }}
+          >
+            {calendarEventTypeFilters.map((eventTypeFilter) => {
+              const selected = isEventTypeFilterSelected(eventTypeFilter);
+
+              return (
+                <Box
+                  key={eventTypeFilter.key}
+                  sx={{
+                    alignItems: 'center',
+                    display: 'flex',
+                    gap: 0.25,
+                    minWidth: 0,
+                  }}
+                >
+                  <Box
+                    aria-pressed={selected}
+                    component="button"
+                    onClick={() => handleEventTypeFilterToggle(eventTypeFilter)}
+                    type="button"
+                    sx={{
+                      ...eventTypeFilter.eventColor,
+                      alignItems: 'center',
+                      border: '1px solid transparent',
+                      borderRadius: 0.75,
+                      boxShadow: selected
+                        ? '0 1px 2px rgba(0, 0, 0, 0.16)'
+                        : 'none',
+                      boxSizing: 'border-box',
+                      cursor: 'pointer',
+                      display: 'inline-flex',
+                      font: 'inherit',
+                      fontSize: '0.76rem',
+                      fontWeight: 700,
+                      gap: 0.4,
+                      height: 24,
+                      lineHeight: 1.2,
+                      maxWidth: '100%',
+                      opacity: selected ? 1 : 0.42,
+                      overflow: 'hidden',
+                      px: 0.75,
+                      textOverflow: 'ellipsis',
+                      transition:
+                        'opacity 0.2s ease-in-out, box-shadow 0.2s ease-in-out, filter 0.2s ease-in-out',
+                      whiteSpace: 'nowrap',
+                      '&:hover': {
+                        filter: selected ? 'brightness(0.94)' : 'none',
+                      },
+                      '&:focus-visible': {
+                        outline: '2px solid #1976d2',
+                        outlineOffset: 2,
+                      },
+                    }}
+                  >
+                    {eventTypeFilter.icon && (
+                      <Box
+                        aria-hidden="true"
+                        component="span"
+                        sx={{
+                          alignItems: 'center',
+                          display: 'inline-flex',
+                          flex: '0 0 auto',
+                          height: '100%',
+                          lineHeight: 1,
+                        }}
+                      >
+                        {eventTypeFilter.icon}
+                      </Box>
+                    )}
+                    <Box
+                      component="span"
+                      sx={{
+                        minWidth: 0,
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                      }}
+                    >
+                      {eventTypeFilter.label}
+                    </Box>
+                  </Box>
+                  <Tooltip
+                    arrow
+                    enterTouchDelay={0}
+                    title={eventTypeFilter.description}
+                  >
+                    <IconButton
+                      aria-label={`${eventTypeFilter.label} details`}
+                      size="small"
+                      sx={{
+                        color: 'text.secondary',
+                        flex: '0 0 auto',
+                        height: 24,
+                        width: 24,
+                      }}
+                    >
+                      <InfoOutlinedIcon fontSize="inherit" />
+                    </IconButton>
+                  </Tooltip>
+                </Box>
+              );
+            })}
+          </Box>
+        </Box>
       </Grid>
       <Grid
         item
@@ -281,21 +539,14 @@ export function DashboardCalendar() {
             transform: 'translateY(-1px)',
           },
           '.dashboard-calendar-event--light-blue': {
-            backgroundColor: '#c7e8f6',
-            color: '#063746',
+            ...DASHBOARD_CALENDAR_EVENT_COLORS.lightBlue,
           },
-          '.dashboard-calendar-event--brown': {
-            backgroundColor: '#a52a2a',
-            color: 'common.white',
+          '.dashboard-calendar-event--teal': {
+            ...DASHBOARD_CALENDAR_EVENT_COLORS.teal,
           },
-          '.dashboard-calendar-event--soft-red': {
-            backgroundColor: '#f3aaaa',
-            color: '#4d0f0f',
+          '.dashboard-calendar-event--red': {
+            ...DASHBOARD_CALENDAR_EVENT_COLORS.red,
           },
-          '.dashboard-calendar-event--light-green': {
-            backgroundColor: '#c9efc9',
-            color: '#123f19',
-          }
         }}
       >
         <GlobalStyles
@@ -303,8 +554,9 @@ export function DashboardCalendar() {
             '.MuiEventCalendar-eventDialog': {
               display: 'none',
             },
-          }} />
-        <EventCalendar<DashboardCalendarEvent, object>
+          }}
+        />
+        <EventCalendar
           events={filteredEvents}
           view={view}
           views={calendarViews}
