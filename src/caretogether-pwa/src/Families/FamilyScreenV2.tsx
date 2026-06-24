@@ -27,7 +27,11 @@ import {
   Tab,
   Tabs,
   Tooltip,
+  FormControl,
+  InputLabel,
+  Select,
 } from '@mui/material';
+import { SelectChangeEvent } from '@mui/material/Select';
 import {
   CompletedCustomFieldInfo,
   Permission,
@@ -37,6 +41,8 @@ import {
   V1ReferralStatus,
   Activity,
   Note,
+  NoteStatus,
+  V1ReferralNoteStatus,
   ArrangementRequirementCompleted,
   ChildLocationChanged,
   ReferralOpened as V1CaseOpened,
@@ -48,6 +54,7 @@ import {
   Check as CheckIcon,
   CloudUpload as CloudUploadIcon,
   ContentCopy as ContentCopyIcon,
+  DeleteForever as DeleteForeverIcon,
   Diversity3 as Diversity3Icon,
   Edit as EditIcon,
   Notes as NotesIcon,
@@ -63,12 +70,17 @@ import { useEffect, useRef, useState } from 'react';
 import { AddAdultDialog } from './AddAdultDialog';
 import { AddChildDialog } from './AddChildDialog';
 import { AddEditNoteDialog } from '../Notes/AddEditNoteDialog';
+import { ApproveNoteDialog } from '../Notes/ApproveNoteDialog';
+import { DiscardNoteDialog } from '../Notes/DiscardNoteDialog';
 import { format } from 'date-fns';
 import { UploadFamilyDocumentsDialog } from './UploadFamilyDocumentsDialog';
 import { CloseV1CaseDrawer } from '../V1Cases/CloseV1CaseDrawer';
 import { OpenNewV1CaseDialog } from '../V1Cases/OpenNewV1CaseDialog';
 import { FamilyDocuments } from './FamilyDocuments';
-import { useFamilyPermissions } from '../Model/SessionModel';
+import {
+  useFamilyPermissions,
+  useGlobalPermissions,
+} from '../Model/SessionModel';
 import { Masonry } from '@mui/lab';
 import { MissingRequirementRow } from '../Requirements/MissingRequirementRow';
 import { ExemptedRequirementRow } from '../Requirements/ExemptedRequirementRow';
@@ -77,7 +89,7 @@ import {
   V1CaseContext,
   VolunteerFamilyContext,
 } from '../Requirements/RequirementContext';
-import { ActivityTimeline } from '../Activities/ActivityTimeline';
+import { ActivityTimelineV2 } from '../Activities/ActivityTimelineV2';
 import { V1CaseComments } from '../V1Cases/V1CaseComments';
 import { V1CaseCustomField } from '../V1Cases/V1CaseCustomField';
 import { PrimaryContactEditor } from './PrimaryContactEditor';
@@ -129,9 +141,14 @@ import { PersonName } from './PersonName';
 import { buildGroupedV1ReferralTimelineEntries } from '../V1Referrals/referralTimelineHelpers';
 import { useGlobalSnackBar } from '../Hooks/useGlobalSnackBar';
 import { ClampTypography } from '../Generic/ClampTypography';
+import { accountInfoState } from '../Authentication/Auth';
+import { AddEditV1ReferralNoteDialog } from '../V1Referrals/AddEditV1ReferralNoteDialog';
+import { ApproveV1ReferralNoteDialog } from '../V1Referrals/ApproveV1ReferralNoteDialog';
+import { DiscardV1ReferralNoteDialog } from '../V1Referrals/DiscardV1ReferralNoteDialog';
 
 type CustomFieldRenderInfo = CompletedCustomFieldInfo | string;
 type ReferralNoteEntry = NonNullable<V1Referral['notes']>[number];
+type RecentNoteAction = 'edit' | 'approve' | 'delete';
 type RecentOverviewTimelineItem = {
   id: string;
   timestamp: Date;
@@ -140,7 +157,13 @@ type RecentOverviewTimelineItem = {
   userId?: string;
   note?: Note;
   referralNote?: ReferralNoteEntry;
+  referralId?: string;
   icon: 'check' | 'edit' | 'location';
+};
+type FamilyScreenTab = {
+  label: string;
+  desktopLabel: React.ReactNode;
+  mobileLabel: string;
 };
 
 function customFieldName(customField: CustomFieldRenderInfo) {
@@ -310,6 +333,7 @@ export function FamilyScreenV2() {
   const userLookup = useUserLookup();
   const family = familyLookup(familyId);
   const policy = useRecoilValue(policyData);
+  const currentUserId = useLoadable(accountInfoState)?.userId;
 
   const directoryModel = useDirectoryModel();
 
@@ -317,6 +341,7 @@ export function FamilyScreenV2() {
   const { setAndShowGlobalSnackBar } = useGlobalSnackBar();
 
   const permissions = useFamilyPermissions(family);
+  const globalPermissions = useGlobalPermissions();
 
   const canCloseV1Case =
     family?.partneringFamilyInfo?.openV1Case &&
@@ -360,6 +385,15 @@ export function FamilyScreenV2() {
   const [addAdultDialogOpen, setAddAdultDialogOpen] = useState(false);
   const [addChildDialogOpen, setAddChildDialogOpen] = useState(false);
   const [addNoteDialogOpen, setAddNoteDialogOpen] = useState(false);
+  const [recentFamilyNoteAction, setRecentFamilyNoteAction] = useState<{
+    action: RecentNoteAction;
+    note: Note;
+  } | null>(null);
+  const [recentReferralNoteAction, setRecentReferralNoteAction] = useState<{
+    action: RecentNoteAction;
+    referralId: string;
+    note: ReferralNoteEntry;
+  } | null>(null);
   const [selectedTab, setSelectedTab] = useState(0);
 
   const firstV1CaseId = allV1Cases.length > 0 ? allV1Cases[0].id : undefined;
@@ -614,10 +648,115 @@ export function FamilyScreenV2() {
   const arrangementOrAssignmentsTabLabel = isVolunteerFamily
     ? 'Assignments'
     : 'Arrangements';
+  const arrangementsCount = selectedV1Case?.arrangements?.length ?? 0;
+  const assignmentsCount = family?.volunteerFamilyInfo?.assignments?.length ?? 0;
+  const documentsCount =
+    (family?.uploadedDocuments?.length ?? 0) +
+    familyReferrals.reduce(
+      (count, referral) => count + (referral.uploadedDocuments?.length ?? 0),
+      0
+    );
+  const familyNotesCount = family?.notes?.length ?? 0;
+  const referralNotesCount = familyReferrals.reduce(
+    (count, referral) => count + (referral.notes?.length ?? 0),
+    0
+  );
+  const notesCount = familyNotesCount + referralNotesCount;
+  const unapprovedNotesCount =
+    (family?.notes?.filter((note) => note.status === NoteStatus.Draft).length ??
+      0) +
+    familyReferrals.reduce(
+      (count, referral) =>
+        count +
+        (referral.notes?.filter(
+          (note) => note.status === V1ReferralNoteStatus.Draft
+        ).length ?? 0),
+      0
+    );
+
+  function tabLabel(label: string, count?: number, unapprovedCount?: number) {
+    return (
+      <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75 }}>
+        <span>{label}</span>
+        {count !== undefined && (
+          <Chip
+            size="small"
+            variant="outlined"
+            label={count}
+            sx={{ height: 20, '& .MuiChip-label': { px: 0.75 } }}
+          />
+        )}
+        {unapprovedCount !== undefined && unapprovedCount > 0 && (
+          <Chip
+            size="small"
+            color="warning"
+            label={`${unapprovedCount} Awaiting Review`}
+            sx={{ height: 20, '& .MuiChip-label': { px: 0.75 } }}
+          />
+        )}
+      </Box>
+    );
+  }
+
+  function mobileTabLabel(
+    label: string,
+    count?: number,
+    unapprovedCount?: number
+  ) {
+    const details = [
+      count !== undefined ? `${count}` : null,
+      unapprovedCount !== undefined && unapprovedCount > 0
+        ? `${unapprovedCount} Awaiting Review`
+        : null,
+    ].filter(Boolean);
+
+    return details.length === 0 ? label : `${label} (${details.join(', ')})`;
+  }
+
+  const familyScreenTabs: FamilyScreenTab[] = [
+    {
+      label: 'Overview',
+      desktopLabel: 'Overview',
+      mobileLabel: 'Overview',
+    },
+    {
+      label: arrangementOrAssignmentsTabLabel,
+      desktopLabel: tabLabel(
+        arrangementOrAssignmentsTabLabel,
+        isVolunteerFamily ? assignmentsCount : arrangementsCount
+      ),
+      mobileLabel: mobileTabLabel(
+        arrangementOrAssignmentsTabLabel,
+        isVolunteerFamily ? assignmentsCount : arrangementsCount
+      ),
+    },
+    {
+      label: 'Documents',
+      desktopLabel: tabLabel('Documents', documentsCount),
+      mobileLabel: mobileTabLabel('Documents', documentsCount),
+    },
+    {
+      label: 'Timeline & Notes',
+      desktopLabel: tabLabel(
+        'Timeline & Notes',
+        notesCount,
+        unapprovedNotesCount
+      ),
+      mobileLabel: mobileTabLabel(
+        'Timeline & Notes',
+        notesCount,
+        unapprovedNotesCount
+      ),
+    },
+  ];
   const showOverview = selectedTab === 0;
   const showArrangementsOrAssignments = selectedTab === 1;
   const showDocuments = selectedTab === 2;
   const showTimelineAndNotes = selectedTab === 3;
+
+  function handleSelectedTabChange(event: SelectChangeEvent) {
+    setSelectedTab(Number(event.target.value));
+  }
   const pinnedNotes = useMemo(() => {
     return (family?.notes ?? [])
       .filter((note) => note.isPinned)
@@ -687,6 +826,7 @@ export function FamilyScreenV2() {
               : `Referral: ${referral.title}`,
           userId: entry.userId,
           referralNote: entry.kind === 'note' ? entry.note : undefined,
+          referralId: referral.referralId,
           icon: 'edit',
         }))
       );
@@ -727,6 +867,141 @@ export function FamilyScreenV2() {
   const canAddNotes =
     permissions(Permission.AddEditDraftNotes) ||
     permissions(Permission.AddEditOwnDraftNotes);
+  const canManageReferralNotes = globalPermissions(Permission.EditV1Referral);
+
+  function getRecentFamilyNotePermissions(note: Note) {
+    const isOwnNote = note.authorUserId === currentUserId;
+
+    return {
+      canEdit:
+        note.status === NoteStatus.Draft &&
+        ((isOwnNote && permissions(Permission.AddEditOwnDraftNotes)) ||
+          permissions(Permission.AddEditDraftNotes)),
+      canDelete:
+        note.status === NoteStatus.Draft &&
+        ((isOwnNote && permissions(Permission.DiscardOwnDraftNotes)) ||
+          permissions(Permission.DiscardDraftNotes)),
+      canApprove:
+        note.status === NoteStatus.Draft && permissions(Permission.ApproveNotes),
+    };
+  }
+
+  function renderRecentNoteActions(item: RecentOverviewTimelineItem) {
+    if (item.note) {
+      const { canDelete, canEdit, canApprove } =
+        getRecentFamilyNotePermissions(item.note);
+
+      if (!canDelete && !canEdit && !canApprove) return null;
+
+      return (
+        <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap', mt: 1 }}>
+          {canDelete && (
+            <Button
+              className="ph-unmask"
+              size="small"
+              color="error"
+              startIcon={<DeleteForeverIcon />}
+              onClick={() =>
+                setRecentFamilyNoteAction({
+                  action: 'delete',
+                  note: item.note!,
+                })
+              }
+            >
+              Delete
+            </Button>
+          )}
+          {canEdit && (
+            <Button
+              className="ph-unmask"
+              size="small"
+              startIcon={<EditIcon />}
+              onClick={() =>
+                setRecentFamilyNoteAction({
+                  action: 'edit',
+                  note: item.note!,
+                })
+              }
+            >
+              Edit
+            </Button>
+          )}
+          {canApprove && (
+            <Button
+              className="ph-unmask"
+              size="small"
+              startIcon={<CheckIcon />}
+              onClick={() =>
+                setRecentFamilyNoteAction({
+                  action: 'approve',
+                  note: item.note!,
+                })
+              }
+            >
+              Approve
+            </Button>
+          )}
+        </Box>
+      );
+    }
+
+    if (
+      item.referralNote?.status !== V1ReferralNoteStatus.Draft ||
+      !item.referralId ||
+      !canManageReferralNotes
+    ) {
+      return null;
+    }
+
+    return (
+      <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap', mt: 1 }}>
+        <Button
+          className="ph-unmask"
+          size="small"
+          color="error"
+          startIcon={<DeleteForeverIcon />}
+          onClick={() =>
+            setRecentReferralNoteAction({
+              action: 'delete',
+              referralId: item.referralId!,
+              note: item.referralNote!,
+            })
+          }
+        >
+          Delete
+        </Button>
+        <Button
+          className="ph-unmask"
+          size="small"
+          startIcon={<EditIcon />}
+          onClick={() =>
+            setRecentReferralNoteAction({
+              action: 'edit',
+              referralId: item.referralId!,
+              note: item.referralNote!,
+            })
+          }
+        >
+          Edit
+        </Button>
+        <Button
+          className="ph-unmask"
+          size="small"
+          startIcon={<CheckIcon />}
+          onClick={() =>
+            setRecentReferralNoteAction({
+              action: 'approve',
+              referralId: item.referralId!,
+              note: item.referralNote!,
+            })
+          }
+        >
+          Approve
+        </Button>
+      </Box>
+    );
+  }
+
   const hasVolunteerRoleActions =
     permissions(Permission.EditVolunteerRoleParticipation) &&
     (participatingFamilyRoles.length > 0 ||
@@ -757,9 +1032,38 @@ export function FamilyScreenV2() {
         }}
       >
         <Box sx={{ flex: '1 1 320px', minWidth: 0 }}>
-          <Typography className="ph-unmask" variant="h4" sx={{ mb: 0.5 }}>
-            {familyLastName(family)} Family
-          </Typography>
+          <Box
+            sx={{
+              display: 'flex',
+              alignItems: 'flex-start',
+              justifyContent: 'space-between',
+              gap: 1,
+              mb: 0.5,
+            }}
+          >
+            <Typography className="ph-unmask" variant="h4">
+              {familyLastName(family)} Family
+            </Typography>
+            {!isDesktop && hasFamilyActions && (
+              <IconButton
+                className="ph-unmask"
+                aria-label="family actions"
+                onClick={(event) => setFamilyMoreMenuAnchor(event.currentTarget)}
+                size="small"
+                sx={{
+                  border: 1,
+                  borderColor: 'primary.main',
+                  borderRadius: 1,
+                  color: 'primary.main',
+                  flex: '0 0 auto',
+                  width: 36,
+                  height: 36,
+                }}
+              >
+                <MoreVertIcon fontSize="small" />
+              </IconButton>
+            )}
+          </Box>
           <Box
             sx={{
               display: 'flex',
@@ -877,24 +1181,6 @@ export function FamilyScreenV2() {
               size="small"
             >
               <MoreVertIcon />
-            </IconButton>
-          )}
-          {!isDesktop && hasFamilyActions && (
-            <IconButton
-              className="ph-unmask"
-              aria-label="family actions"
-              onClick={(event) => setFamilyMoreMenuAnchor(event.currentTarget)}
-              size="small"
-              sx={{
-                border: 1,
-                borderColor: 'primary.main',
-                borderRadius: 1,
-                color: 'primary.main',
-                width: 36,
-                height: 36,
-              }}
-            >
-              <MoreVertIcon fontSize="small" />
             </IconButton>
           )}
         </Box>
@@ -1053,6 +1339,48 @@ export function FamilyScreenV2() {
             onClose={() => setAddNoteDialogOpen(false)}
           />
         )}
+        {recentFamilyNoteAction?.action === 'edit' && (
+          <AddEditNoteDialog
+            familyId={family.family!.id!}
+            note={recentFamilyNoteAction.note}
+            onClose={() => setRecentFamilyNoteAction(null)}
+          />
+        )}
+        {recentFamilyNoteAction?.action === 'approve' && (
+          <ApproveNoteDialog
+            familyId={family.family!.id!}
+            note={recentFamilyNoteAction.note}
+            onClose={() => setRecentFamilyNoteAction(null)}
+          />
+        )}
+        {recentFamilyNoteAction?.action === 'delete' && (
+          <DiscardNoteDialog
+            familyId={family.family!.id!}
+            note={recentFamilyNoteAction.note}
+            onClose={() => setRecentFamilyNoteAction(null)}
+          />
+        )}
+        {recentReferralNoteAction?.action === 'edit' && (
+          <AddEditV1ReferralNoteDialog
+            referralId={recentReferralNoteAction.referralId}
+            note={recentReferralNoteAction.note}
+            onClose={() => setRecentReferralNoteAction(null)}
+          />
+        )}
+        {recentReferralNoteAction?.action === 'approve' && (
+          <ApproveV1ReferralNoteDialog
+            referralId={recentReferralNoteAction.referralId}
+            note={recentReferralNoteAction.note}
+            onClose={() => setRecentReferralNoteAction(null)}
+          />
+        )}
+        {recentReferralNoteAction?.action === 'delete' && (
+          <DiscardV1ReferralNoteDialog
+            referralId={recentReferralNoteAction.referralId}
+            note={recentReferralNoteAction.note}
+            onClose={() => setRecentReferralNoteAction(null)}
+          />
+        )}
 
         {(removeRoleParameter && (
           <RemoveFamilyRoleDialog
@@ -1123,18 +1451,36 @@ export function FamilyScreenV2() {
           </Box>
         </Box>
       )}
-      <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 2 }}>
-        <Tabs
-          value={selectedTab}
-          onChange={(_, nextTab) => setSelectedTab(nextTab)}
-          aria-label="Family screen sections"
-        >
-          <Tab label="Overview" />
-          <Tab label={arrangementOrAssignmentsTabLabel} />
-          <Tab label="Documents" />
-          <Tab label="Timeline & Notes" />
-        </Tabs>
-      </Box>
+      {isDesktop ? (
+        <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 2 }}>
+          <Tabs
+            value={selectedTab}
+            onChange={(_, nextTab) => setSelectedTab(nextTab)}
+            aria-label="Family screen sections"
+          >
+            {familyScreenTabs.map((tab) => (
+              <Tab key={tab.label} label={tab.desktopLabel} />
+            ))}
+          </Tabs>
+        </Box>
+      ) : (
+        <FormControl fullWidth size="small" sx={{ mb: 2 }}>
+          <InputLabel id="family-screen-section-label">Section</InputLabel>
+          <Select
+            labelId="family-screen-section-label"
+            id="family-screen-section-select"
+            value={String(selectedTab)}
+            label="Section"
+            onChange={handleSelectedTabChange}
+          >
+            {familyScreenTabs.map((tab, index) => (
+              <MenuItem key={tab.label} value={String(index)}>
+                {tab.mobileLabel}
+              </MenuItem>
+            ))}
+          </Select>
+        </FormControl>
+      )}
       <Grid container spacing={0}>
         <Grid
           item
@@ -1142,7 +1488,7 @@ export function FamilyScreenV2() {
           spacing={0}
           sx={{ display: showTimelineAndNotes ? undefined : 'none' }}
         >
-          <ActivityTimeline
+          <ActivityTimelineV2
             family={family}
             referrals={familyReferrals}
             printContentRef={printContentRef}
@@ -1998,6 +2344,7 @@ export function FamilyScreenV2() {
                           {item.subtitle}
                         </ClampTypography>
                       )}
+                      {renderRecentNoteActions(item)}
                     </Box>
                   </Box>
                 ))}
