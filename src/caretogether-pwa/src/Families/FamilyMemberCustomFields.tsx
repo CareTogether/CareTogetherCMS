@@ -5,6 +5,11 @@ import { useDirectoryModel } from '../Model/DirectoryModel';
 
 type CustomFieldRenderInfo = CompletedCustomFieldInfo | string;
 
+type CustomFieldSection = {
+  groupingKey?: string;
+  customFields: CustomFieldRenderInfo[];
+};
+
 type FamilyMemberCustomFieldsProps = {
   familyId: string;
   personId: string;
@@ -35,6 +40,36 @@ function orderCustomFieldsByPolicy(
   });
 }
 
+function groupCustomFieldsByPolicy(
+  customFields: CustomFieldRenderInfo[],
+  customFieldPolicies: CustomField[]
+) {
+  const policiesByName = new Map(
+    customFieldPolicies.map((customFieldPolicy) => [
+      customFieldPolicy.name,
+      customFieldPolicy,
+    ])
+  );
+
+  return customFields.reduce<CustomFieldSection[]>((sections, customField) => {
+    const groupingKey =
+      policiesByName.get(customFieldName(customField))?.groupingKey ??
+      undefined;
+    if (sections.some((section) => section.groupingKey === groupingKey)) {
+      return sections.map((section) =>
+        section.groupingKey === groupingKey
+          ? {
+              ...section,
+              customFields: section.customFields.concat(customField),
+            }
+          : section
+      );
+    }
+
+    return sections.concat({ groupingKey, customFields: [customField] });
+  }, []);
+}
+
 export function FamilyMemberCustomFields({
   familyId,
   personId,
@@ -59,17 +94,35 @@ export function FamilyMemberCustomFields({
     return null;
   }
 
+  const customFieldSections = groupCustomFieldsByPolicy(
+    customFields,
+    customFieldPolicies
+  );
+
   return (
     <Box sx={{ mt: 1.5 }}>
       <Divider sx={{ mb: 1 }} />
-      {customFields.map((customField) => (
-        <FamilyMemberCustomField
-          key={customFieldName(customField)}
-          familyId={familyId}
-          personId={personId}
-          customFieldPolicies={customFieldPolicies}
-          customField={customField}
-        />
+      {customFieldSections.map((section, sectionIndex) => (
+        <Box key={section.groupingKey ?? `ungrouped-${sectionIndex}`}>
+          {section.groupingKey && (
+            <Typography
+              variant="caption"
+              color="text.secondary"
+              sx={{ display: 'block', mt: 1, mb: 0.25 }}
+            >
+              {section.groupingKey}
+            </Typography>
+          )}
+          {section.customFields.map((customField) => (
+            <FamilyMemberCustomField
+              key={customFieldName(customField)}
+              familyId={familyId}
+              personId={personId}
+              customFieldPolicies={customFieldPolicies}
+              customField={customField}
+            />
+          ))}
+        </Box>
       ))}
     </Box>
   );

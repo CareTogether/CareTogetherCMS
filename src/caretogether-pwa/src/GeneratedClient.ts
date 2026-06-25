@@ -2802,6 +2802,7 @@ export class CustomField implements ICustomField {
     type!: CustomFieldType;
     validation?: CustomFieldValidation | undefined;
     validValues?: string[] | undefined;
+    groupingKey?: string | undefined;
 
     constructor(data?: ICustomField) {
         if (data) {
@@ -2822,6 +2823,7 @@ export class CustomField implements ICustomField {
                 for (let item of _data["validValues"])
                     this.validValues!.push(item);
             }
+            this.groupingKey = _data["groupingKey"];
         }
     }
 
@@ -2842,6 +2844,7 @@ export class CustomField implements ICustomField {
             for (let item of this.validValues)
                 data["validValues"].push(item);
         }
+        data["groupingKey"] = this.groupingKey;
         return data;
     }
 }
@@ -2851,6 +2854,7 @@ export interface ICustomField {
     type: CustomFieldType;
     validation?: CustomFieldValidation | undefined;
     validValues?: string[] | undefined;
+    groupingKey?: string | undefined;
 }
 
 export enum CustomFieldType {

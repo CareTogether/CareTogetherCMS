@@ -211,7 +211,8 @@ namespace CareTogether.Resources.Policies
         string Name,
         CustomFieldType Type,
         CustomFieldValidation? Validation,
-        ImmutableList<string>? ValidValues
+        ImmutableList<string>? ValidValues,
+        string? GroupingKey
     );
 
     public enum CustomFieldType

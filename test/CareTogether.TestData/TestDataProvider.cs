@@ -2775,7 +2775,8 @@ namespace CareTogether.TestData
                         "Home Church",
                         CustomFieldType.String,
                         CustomFieldValidation.SuggestOnly,
-                        ["Mega Church", "Mini Church"]
+                        ["Mega Church", "Mini Church"],
+                        null
                     ),
                 ],
                 new V1CasePolicy(
@@ -2785,9 +2786,10 @@ namespace CareTogether.TestData
                             "Referral Source",
                             CustomFieldType.String,
                             CustomFieldValidation.SuggestOnly,
-                            ["Shangri-La", "El Dorado", "Asgard"]
+                            ["Shangri-La", "El Dorado", "Asgard"],
+                            null
                         ),
-                        new CustomField("Protective Order", CustomFieldType.Boolean, null, null),
+                        new CustomField("Protective Order", CustomFieldType.Boolean, null, null, null),
                     ],
                     [
                         new ArrangementPolicy(
@@ -3394,12 +3396,13 @@ namespace CareTogether.TestData
                         ),
                     }.ToImmutableDictionary(),
                     [
-                        new CustomField("Has Pool", CustomFieldType.Boolean, null, null),
+                        new CustomField("Has Pool", CustomFieldType.Boolean, null, null, null),
                         new CustomField(
                             "Hosting Age Preference",
                             CustomFieldType.StringArray,
                             CustomFieldValidation.SuggestOnly,
-                            ["0-1", "2-5", "6-10", "11-15", "16-18"]
+                            ["0-1", "2-5", "6-10", "11-15", "16-18"],
+                            null
                         ),
                     ]
                 )
@@ -3413,7 +3416,8 @@ namespace CareTogether.TestData
                                 "Preferred Contact Window",
                                 CustomFieldType.String,
                                 CustomFieldValidation.SuggestOnly,
-                                ["Morning", "Afternoon", "Evening"]
+                                ["Morning", "Afternoon", "Evening"],
+                                "Contact"
                             ),
                         ],
                         Child:
@@ -3422,9 +3426,10 @@ namespace CareTogether.TestData
                                 "School",
                                 CustomFieldType.String,
                                 CustomFieldValidation.SuggestOnly,
-                                ["Lincoln Elementary", "Roosevelt Middle", "Central High"]
+                                ["Lincoln Elementary", "Roosevelt Middle", "Central High"],
+                                "Education"
                             ),
-                            new CustomField("Has IEP", CustomFieldType.Boolean, null, null),
+                            new CustomField("Has IEP", CustomFieldType.Boolean, null, null, "Education"),
                         ]
                     ),
                     VolunteerFamily: new FamilyMemberCustomFields(
@@ -3434,12 +3439,13 @@ namespace CareTogether.TestData
                                 "Serving Availability",
                                 CustomFieldType.StringArray,
                                 CustomFieldValidation.SuggestOnly,
-                                ["Weekdays", "Weekends", "Evenings", "Overnight"]
+                                ["Weekdays", "Weekends", "Evenings", "Overnight"],
+                                "Availability"
                             ),
                         ],
                         Child:
                         [
-                            new CustomField("Childcare Notes", CustomFieldType.String, null, null),
+                            new CustomField("Childcare Notes", CustomFieldType.String, null, null, "Care"),
                         ]
                     )
                 ),
