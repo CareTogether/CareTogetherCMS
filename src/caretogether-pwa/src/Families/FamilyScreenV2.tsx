@@ -66,7 +66,7 @@ import {
 } from '@mui/icons-material';
 import { AdultCard } from './AdultCard';
 import { ChildCard } from './ChildCard';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { AddAdultDialog } from './AddAdultDialog';
 import { AddChildDialog } from './AddChildDialog';
 import { AddEditNoteDialog } from '../Notes/AddEditNoteDialog';
@@ -86,8 +86,8 @@ import { MissingRequirementRow } from '../Requirements/MissingRequirementRow';
 import { ExemptedRequirementRow } from '../Requirements/ExemptedRequirementRow';
 import { CompletedRequirementRow } from '../Requirements/CompletedRequirementRow';
 import {
+  IndividualVolunteerContext,
   V1CaseContext,
-  VolunteerFamilyContext,
 } from '../Requirements/RequirementContext';
 import { ActivityTimelineV2 } from '../Activities/ActivityTimelineV2';
 import { V1CaseComments } from '../V1Cases/V1CaseComments';
@@ -107,7 +107,6 @@ import {
 } from '../Model/DirectoryModel';
 import { RemoveFamilyRoleDialog } from '../Volunteers/RemoveFamilyRoleDialog';
 import { ResetFamilyRoleDialog } from '../Volunteers/ResetFamilyRoleDialog';
-import { VolunteerRoleApprovalStatusChip } from '../Volunteers/VolunteerRoleApprovalStatusChip';
 import { FamilyCustomField } from './FamilyCustomField';
 import { VolunteerFamilyCustomField } from '../Volunteers/VolunteerFamilyCustomField';
 import { isBackdropClick } from '../Utilities/handleBackdropClick';
@@ -119,7 +118,6 @@ import { visibleCommunitiesQuery } from '../Model/Data';
 import { useAppNavigate } from '../Hooks/useAppNavigate';
 import posthog from 'posthog-js';
 import { AssignmentsSection } from '../Families/AssignmentsSectionV2';
-import { useMemo } from 'react';
 import { useBackdrop } from '../Hooks/useBackdrop';
 import { useSyncV1CaseIdInURL } from '../Hooks/useSyncV1CaseIdInURL';
 import { ArrangementsSection } from '../V1Cases/Arrangements/ArrangementsSection/ArrangementsSectionV2';
@@ -141,6 +139,10 @@ import { PersonName } from './PersonName';
 import { buildGroupedV1ReferralTimelineEntries } from '../V1Referrals/referralTimelineHelpers';
 import { useGlobalSnackBar } from '../Hooks/useGlobalSnackBar';
 import { ClampTypography } from '../Generic/ClampTypography';
+import { ApprovalLedgerSection } from './ApprovalLedgerSection';
+import { buildApprovalLedgerRows } from './approvalLedgerViewModel';
+import { RoleApprovalStatusBadges } from './RoleApprovalStatusBadges';
+import { hasQualifyingRoleApprovals } from './roleApprovalStatusBadgeUtils';
 import { accountInfoState } from '../Authentication/Auth';
 import { AddEditV1ReferralNoteDialog } from '../V1Referrals/AddEditV1ReferralNoteDialog';
 import { ApproveV1ReferralNoteDialog } from '../V1Referrals/ApproveV1ReferralNoteDialog';
@@ -160,7 +162,14 @@ type RecentOverviewTimelineItem = {
   referralId?: string;
   icon: 'check' | 'edit' | 'location';
 };
+type FamilyScreenTabValue =
+  | 'overview'
+  | 'approvals'
+  | 'arrangementsOrAssignments'
+  | 'documents'
+  | 'timelineAndNotes';
 type FamilyScreenTab = {
+  value: FamilyScreenTabValue;
   label: string;
   desktopLabel: React.ReactNode;
   mobileLabel: string;
@@ -394,7 +403,8 @@ export function FamilyScreenV2() {
     referralId: string;
     note: ReferralNoteEntry;
   } | null>(null);
-  const [selectedTab, setSelectedTab] = useState(0);
+  const [selectedTab, setSelectedTab] =
+    useState<FamilyScreenTabValue>('overview');
 
   const firstV1CaseId = allV1Cases.length > 0 ? allV1Cases[0].id : undefined;
 
@@ -551,11 +561,6 @@ export function FamilyScreenV2() {
       }
     : undefined;
 
-  const volunteerFamilyRequirementContext: VolunteerFamilyContext = {
-    kind: 'Volunteer Family',
-    volunteerFamilyId: familyId,
-  };
-
   const theme = useTheme();
   const isDesktop = useMediaQuery(theme.breakpoints.up('sm'));
   const isWideScreen = useMediaQuery(theme.breakpoints.up('xl'));
@@ -672,7 +677,117 @@ export function FamilyScreenV2() {
           (note) => note.status === V1ReferralNoteStatus.Draft
         ).length ?? 0),
       0
+  );
+  const volunteerFamilyInfo = family?.volunteerFamilyInfo;
+  const approvalLedgerRows = useMemo(() => {
+    const activeAdultIds = new Set(
+      (family?.family?.adults ?? []).flatMap((adult) =>
+        adult.item1?.id && adult.item1.active ? [adult.item1.id] : []
+      )
     );
+    const adultApprovalSources = Object.entries(
+      volunteerFamilyInfo?.individualVolunteers ?? {}
+    )
+      .filter(([personId]) => activeAdultIds.has(personId))
+      .map(([personId, volunteerInfo]) => {
+        const adult = family?.family?.adults?.find(
+          (familyAdult) => familyAdult.item1?.id === personId
+        );
+        const person = adult?.item1;
+
+        const label =
+          [person?.firstName, person?.lastName].filter(Boolean).join(' ') ||
+          'Adult';
+        const context: IndividualVolunteerContext = {
+          kind: 'Individual Volunteer',
+          volunteerFamilyId: familyId,
+          personId,
+        };
+
+        return {
+          id: personId,
+          label,
+          context,
+          subject: {
+            scope: 'person' as const,
+            id: personId,
+            label,
+          },
+          approvalStatusByRole: volunteerInfo.approvalStatusByRole ?? {},
+          roleRemovals: volunteerInfo.roleRemovals ?? [],
+          completedRequirements: volunteerInfo.completedRequirements ?? [],
+          exemptedRequirements: volunteerInfo.exemptedRequirements ?? [],
+          missingRequirements: volunteerInfo.missingRequirements ?? [],
+          availableApplications: volunteerInfo.availableApplications ?? [],
+        };
+      });
+
+    return buildApprovalLedgerRows({
+      family: {
+        context: {
+          kind: 'Volunteer Family',
+          volunteerFamilyId: familyId,
+        },
+        completedRequirements: volunteerFamilyInfo?.completedRequirements ?? [],
+        exemptedRequirements: volunteerFamilyInfo?.exemptedRequirements ?? [],
+        missingRequirements: volunteerFamilyInfo?.missingRequirements ?? [],
+        availableApplications: volunteerFamilyInfo?.availableApplications ?? [],
+        familyRoleApprovals: volunteerFamilyInfo?.familyRoleApprovals ?? {},
+        roleRemovals: volunteerFamilyInfo?.roleRemovals ?? [],
+      },
+      individuals: adultApprovalSources,
+    });
+  }, [
+    family?.family?.adults,
+    familyId,
+    volunteerFamilyInfo?.availableApplications,
+    volunteerFamilyInfo?.completedRequirements,
+    volunteerFamilyInfo?.exemptedRequirements,
+    volunteerFamilyInfo?.familyRoleApprovals,
+    volunteerFamilyInfo?.individualVolunteers,
+    volunteerFamilyInfo?.missingRequirements,
+    volunteerFamilyInfo?.roleRemovals,
+  ]);
+  const adultsWithApprovalBadges = [
+    ...new Map(
+      (family?.family?.adults ?? [])
+        .filter(
+          (adult) =>
+            adult.item1?.id &&
+            adult.item1.active &&
+            hasQualifyingRoleApprovals(
+              volunteerFamilyInfo?.individualVolunteers?.[adult.item1.id]
+                ?.approvalStatusByRole,
+              volunteerFamilyInfo?.individualVolunteers?.[adult.item1.id]
+                ?.roleRemovals
+            )
+        )
+        .map((adult) => [adult.item1!.id!, adult])
+    ).values(),
+  ];
+  const showFamilyApprovalBadges = hasQualifyingRoleApprovals(
+    volunteerFamilyInfo?.familyRoleApprovals,
+    volunteerFamilyInfo?.roleRemovals
+  );
+  const showAdultApprovalBadges = adultsWithApprovalBadges.length > 0;
+  const approvalAttentionCounts = useMemo(
+    () =>
+      approvalLedgerRows.reduce(
+        (counts, row) => {
+          if (row.status === 'missing') {
+            return { ...counts, missing: counts.missing + 1 };
+          }
+
+          if (row.status === 'expired') {
+            return { ...counts, expired: counts.expired + 1 };
+          }
+
+          return counts;
+        },
+        { missing: 0, expired: 0 }
+      ),
+    [approvalLedgerRows]
+  );
 
   function tabLabel(label: string, count?: number, unapprovedCount?: number) {
     return (
@@ -698,6 +813,68 @@ export function FamilyScreenV2() {
     );
   }
 
+  function approvalTabLabel(label: string) {
+    return (
+      <Box
+        sx={{
+          display: 'inline-flex',
+          alignItems: 'center',
+          gap: 0.75,
+          flexWrap: 'nowrap',
+          whiteSpace: 'nowrap',
+          width: 'max-content',
+        }}
+      >
+        <Box component="span" sx={{ flexShrink: 0 }}>
+          {label}
+        </Box>
+        {approvalAttentionCounts.missing > 0 && (
+          <Tooltip title={`${approvalAttentionCounts.missing} missing`}>
+            <Chip
+              size="small"
+              color="error"
+              label={approvalAttentionCounts.missing}
+              aria-label={`${approvalAttentionCounts.missing} missing approvals`}
+              sx={{
+                height: 20,
+                flexShrink: 0,
+                '& .MuiChip-label': { px: 0.75 },
+              }}
+            />
+          </Tooltip>
+        )}
+        {approvalAttentionCounts.expired > 0 && (
+          <Tooltip title={`${approvalAttentionCounts.expired} expired`}>
+            <Chip
+              size="small"
+              color="warning"
+              label={approvalAttentionCounts.expired}
+              aria-label={`${approvalAttentionCounts.expired} expired approvals`}
+              sx={{
+                height: 20,
+                flexShrink: 0,
+                '& .MuiChip-label': { px: 0.75 },
+              }}
+            />
+          </Tooltip>
+        )}
+      </Box>
+    );
+  }
+
+  function approvalMobileTabLabel(label: string) {
+    const details = [
+      approvalAttentionCounts.missing > 0
+        ? `${approvalAttentionCounts.missing} missing`
+        : null,
+      approvalAttentionCounts.expired > 0
+        ? `${approvalAttentionCounts.expired} expired`
+        : null,
+    ].filter(Boolean);
+
+    return details.length === 0 ? label : `${label} (${details.join(', ')})`;
+  }
+
   function mobileTabLabel(
     label: string,
     count?: number,
@@ -715,11 +892,23 @@ export function FamilyScreenV2() {
 
   const familyScreenTabs: FamilyScreenTab[] = [
     {
+      value: 'overview',
       label: 'Overview',
       desktopLabel: 'Overview',
       mobileLabel: 'Overview',
     },
+    ...(isVolunteerFamily
+      ? [
+          {
+            value: 'approvals' as const,
+            label: 'Approvals',
+            desktopLabel: approvalTabLabel('Approvals'),
+            mobileLabel: approvalMobileTabLabel('Approvals'),
+          },
+        ]
+      : []),
     {
+      value: 'arrangementsOrAssignments',
       label: arrangementOrAssignmentsTabLabel,
       desktopLabel: tabLabel(
         arrangementOrAssignmentsTabLabel,
@@ -731,11 +920,13 @@ export function FamilyScreenV2() {
       ),
     },
     {
+      value: 'documents',
       label: 'Documents',
       desktopLabel: tabLabel('Documents', documentsCount),
       mobileLabel: mobileTabLabel('Documents', documentsCount),
     },
     {
+      value: 'timelineAndNotes',
       label: 'Timeline & Notes',
       desktopLabel: tabLabel(
         'Timeline & Notes',
@@ -749,13 +940,23 @@ export function FamilyScreenV2() {
       ),
     },
   ];
-  const showOverview = selectedTab === 0;
-  const showArrangementsOrAssignments = selectedTab === 1;
-  const showDocuments = selectedTab === 2;
-  const showTimelineAndNotes = selectedTab === 3;
+  const showOverview = selectedTab === 'overview';
+  const showApprovals = selectedTab === 'approvals' && isVolunteerFamily;
+  const showArrangementsOrAssignments =
+    selectedTab === 'arrangementsOrAssignments';
+  const showDocuments = selectedTab === 'documents';
+  const showTimelineAndNotes = selectedTab === 'timelineAndNotes';
 
-  function handleSelectedTabChange(event: SelectChangeEvent) {
-    setSelectedTab(Number(event.target.value));
+  useEffect(() => {
+    if (selectedTab === 'approvals' && !isVolunteerFamily) {
+      setSelectedTab('overview');
+    }
+  }, [isVolunteerFamily, selectedTab]);
+
+  function handleSelectedTabChange(
+    event: SelectChangeEvent<FamilyScreenTabValue>
+  ) {
+    setSelectedTab(event.target.value as FamilyScreenTabValue);
   }
   const pinnedNotes = useMemo(() => {
     return (family?.notes ?? [])
@@ -1041,9 +1242,25 @@ export function FamilyScreenV2() {
               mb: 0.5,
             }}
           >
-            <Typography className="ph-unmask" variant="h4">
-              {familyLastName(family)} Family
-            </Typography>
+            <Box
+              sx={{
+                display: 'flex',
+                alignItems: 'center',
+                flexWrap: 'wrap',
+                gap: 1,
+                minWidth: 0,
+              }}
+            >
+              <Typography className="ph-unmask" variant="h4">
+                {familyLastName(family)} Family
+              </Typography>
+              {showFamilyApprovalBadges && (
+                <RoleApprovalStatusBadges
+                  roleApprovals={volunteerFamilyInfo?.familyRoleApprovals}
+                  roleRemovals={volunteerFamilyInfo?.roleRemovals}
+                />
+              )}
+            </Box>
             {!isDesktop && hasFamilyActions && (
               <IconButton
                 className="ph-unmask"
@@ -1410,6 +1627,46 @@ export function FamilyScreenV2() {
           />
         )}
       </Toolbar>
+      {showAdultApprovalBadges && (
+        <Box
+          sx={{
+            display: 'flex',
+            flexDirection: 'column',
+            gap: 0.75,
+            mb: 2,
+          }}
+        >
+          {adultsWithApprovalBadges.map((adult) => {
+            const person = adult.item1!;
+            const volunteerInfo =
+              volunteerFamilyInfo?.individualVolunteers?.[person.id!];
+
+            return (
+              <Box
+                key={person.id}
+                sx={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  flexWrap: 'wrap',
+                  gap: 1,
+                }}
+              >
+                <Typography
+                  className="ph-unmask"
+                  variant="body2"
+                  sx={{ fontWeight: 600 }}
+                >
+                  {person.firstName} {person.lastName}
+                </Typography>
+                <RoleApprovalStatusBadges
+                  roleApprovals={volunteerInfo?.approvalStatusByRole}
+                  roleRemovals={volunteerInfo?.roleRemovals}
+                />
+              </Box>
+            );
+          })}
+        </Box>
+      )}
       {pinnedNotes.length > 0 && (
         <Box
           sx={{
@@ -1459,7 +1716,7 @@ export function FamilyScreenV2() {
             aria-label="Family screen sections"
           >
             {familyScreenTabs.map((tab) => (
-              <Tab key={tab.label} label={tab.desktopLabel} />
+              <Tab key={tab.value} value={tab.value} label={tab.desktopLabel} />
             ))}
           </Tabs>
         </Box>
@@ -1469,12 +1726,12 @@ export function FamilyScreenV2() {
           <Select
             labelId="family-screen-section-label"
             id="family-screen-section-select"
-            value={String(selectedTab)}
+            value={selectedTab}
             label="Section"
             onChange={handleSelectedTabChange}
           >
-            {familyScreenTabs.map((tab, index) => (
-              <MenuItem key={tab.label} value={String(index)}>
+            {familyScreenTabs.map((tab) => (
+              <MenuItem key={tab.value} value={tab.value}>
                 {tab.mobileLabel}
               </MenuItem>
             ))}
@@ -1947,102 +2204,10 @@ export function FamilyScreenV2() {
                   </Grid>
                 </>
               )}
-            {showOverview && family.volunteerFamilyInfo && (
+            {showApprovals && family.volunteerFamilyInfo && (
               <>
                 <Grid item xs={12}>
-                  <Box
-                    sx={{
-                      '& > div:first-of-type': {
-                        marginLeft: 0,
-                      },
-                      '& > *': {
-                        margin: theme.spacing(0.5),
-                      },
-                    }}
-                  >
-                    {Object.entries(
-                      family.volunteerFamilyInfo?.familyRoleApprovals || {}
-                    ).flatMap(([role, roleApprovalStatus]) => (
-                      <VolunteerRoleApprovalStatusChip
-                        key={role}
-                        roleName={role}
-                        status={roleApprovalStatus.effectiveRoleApprovalStatus}
-                      />
-                    ))}
-                    {(family.volunteerFamilyInfo?.roleRemovals || []).map(
-                      (removedRole) => (
-                        <Chip
-                          key={removedRole.roleName}
-                          size="small"
-                          label={`${removedRole.roleName} - ${
-                            RoleRemovalReason[removedRole.reason!]
-                          } - ${removedRole.additionalComments}${
-                            removedRole.effectiveSince
-                              ? ' - effective ' +
-                                format(removedRole.effectiveSince, 'M/d/yy')
-                              : ''
-                          }${
-                            removedRole.effectiveUntil
-                              ? ' - through ' +
-                                format(removedRole.effectiveUntil, 'M/d/yy')
-                              : ''
-                          }`}
-                        />
-                      )
-                    )}
-                  </Box>
-                </Grid>
-                <Grid item xs={12} sm={6} md={4} style={{ paddingRight: 20 }}>
-                  <Typography className="ph-unmask" variant="h3">
-                    Incomplete
-                  </Typography>
-                  {family.volunteerFamilyInfo?.missingRequirements?.map(
-                    (missing, i) => (
-                      <MissingRequirementRow
-                        key={`${missing}:${i}`}
-                        requirement={missing.item1 || ''}
-                        policyVersions={missing.item2?.map((v) => ({
-                          version: v.item1 ?? '',
-                          roleName: v.item2 ?? '',
-                        }))}
-                        context={volunteerFamilyRequirementContext}
-                      />
-                    )
-                  )}
-                  <Divider />
-                  {family.volunteerFamilyInfo?.availableApplications?.map(
-                    (application, i) => (
-                      <MissingRequirementRow
-                        key={`${application}:${i}`}
-                        requirement={application}
-                        context={volunteerFamilyRequirementContext}
-                        isAvailableApplication={true}
-                      />
-                    )
-                  )}
-                </Grid>
-                <Grid item xs={12} sm={6} md={4} style={{ paddingRight: 20 }}>
-                  <Typography className="ph-unmask" variant="h3">
-                    Completed
-                  </Typography>
-                  {family.volunteerFamilyInfo?.completedRequirements?.map(
-                    (completed, i) => (
-                      <CompletedRequirementRow
-                        key={`${completed.completedRequirementId}:${i}`}
-                        requirement={completed}
-                        context={volunteerFamilyRequirementContext}
-                      />
-                    )
-                  )}
-                  {family.volunteerFamilyInfo?.exemptedRequirements?.map(
-                    (exempted, i) => (
-                      <ExemptedRequirementRow
-                        key={`${exempted.requirementName}:${i}`}
-                        requirement={exempted}
-                        context={volunteerFamilyRequirementContext}
-                      />
-                    )
-                  )}
+                  <ApprovalLedgerSection rows={approvalLedgerRows} />
                 </Grid>
               </>
             )}
@@ -2091,6 +2256,7 @@ export function FamilyScreenV2() {
                         key={adult.item1.id}
                         familyId={familyId}
                         personId={adult.item1.id}
+                        showApprovalContent={false}
                       />
                     )
                 )}
@@ -2273,7 +2439,10 @@ export function FamilyScreenV2() {
               <Typography variant="h3" className="ph-unmask" sx={{ m: 0 }}>
                 Recent Activity: Last 7 days
               </Typography>
-              <Button size="small" onClick={() => setSelectedTab(3)}>
+              <Button
+                size="small"
+                onClick={() => setSelectedTab('timelineAndNotes')}
+              >
                 View All
               </Button>
             </Box>
