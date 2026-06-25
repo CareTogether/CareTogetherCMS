@@ -108,7 +108,8 @@ namespace CareTogether.Utilities.EventLog
                 var blob in tenantContainer.GetBlobsAsync(
                     BlobTraits.None,
                     BlobStates.None,
-                    $"{locationId}/{logType}"
+                    $"{locationId}/{logType}",
+                    default
                 )
             )
             {
