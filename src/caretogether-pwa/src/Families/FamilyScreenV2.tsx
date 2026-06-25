@@ -1,103 +1,2358 @@
-import { Container, Box, Tabs, Tab } from '@mui/material';
-import { useParams } from 'react-router';
-import { useState } from 'react';
-import { useScreenTitle } from '../Shell/ShellScreenTitle';
-import { ProgressBackdrop } from '../Shell/ProgressBackdrop';
-import { useFamilyLookup } from '../Model/DirectoryModel';
-import { familyLastName } from './FamilyUtils';
-import FamilyScreenPageVersionSwitch from './FamilyScreenPageVersionSwitch';
+import Grid from '../Generic/GridLegacyCompat';
+import { useReactToPrint } from 'react-to-print';
 import {
-  DescriptionOutlined as DescriptionOutlinedIcon,
-  HomeOutlined as HomeOutlinedIcon,
+  Container,
+  Toolbar,
+  Button,
+  useMediaQuery,
+  useTheme,
+  Box,
+  IconButton,
+  ListItemText,
+  Menu,
+  MenuItem,
+  MenuList,
+  Chip,
+  Divider,
+  ListItemButton,
+  ListItemIcon,
+  Radio,
+  Typography,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Tab,
+  Tabs,
+  Tooltip,
+  FormControl,
+  InputLabel,
+  Select,
+} from '@mui/material';
+import { SelectChangeEvent } from '@mui/material/Select';
+import {
+  CompletedCustomFieldInfo,
+  Permission,
+  V1Case,
+  V1Referral,
+  RoleRemovalReason,
+  V1ReferralStatus,
+  Activity,
+  Note,
+  NoteStatus,
+  V1ReferralNoteStatus,
+  ArrangementRequirementCompleted,
+  ChildLocationChanged,
+  ReferralOpened as V1CaseOpened,
+  ReferralRequirementCompleted as V1CaseRequirementCompleted,
+} from '../GeneratedClient';
+import { useParams } from 'react-router';
+import {
+  AddCircle as AddCircleIcon,
+  Check as CheckIcon,
+  CloudUpload as CloudUploadIcon,
+  ContentCopy as ContentCopyIcon,
+  DeleteForever as DeleteForeverIcon,
+  Diversity3 as Diversity3Icon,
+  Edit as EditIcon,
   Notes as NotesIcon,
-  TaskAltOutlined as TaskAltOutlinedIcon,
+  Email as EmailIcon,
+  Home as HomeIcon,
+  MoreVert as MoreVertIcon,
+  PersonPinCircle as PersonPinCircleIcon,
+  Phone as PhoneIcon,
 } from '@mui/icons-material';
+import { AdultCard } from './AdultCard';
+import { ChildCard } from './ChildCard';
+import { useEffect, useRef, useState } from 'react';
+import { AddAdultDialog } from './AddAdultDialog';
+import { AddChildDialog } from './AddChildDialog';
+import { AddEditNoteDialog } from '../Notes/AddEditNoteDialog';
+import { ApproveNoteDialog } from '../Notes/ApproveNoteDialog';
+import { DiscardNoteDialog } from '../Notes/DiscardNoteDialog';
+import { format } from 'date-fns';
+import { UploadFamilyDocumentsDialog } from './UploadFamilyDocumentsDialog';
+import { CloseV1CaseDrawer } from '../V1Cases/CloseV1CaseDrawer';
+import { OpenNewV1CaseDialog } from '../V1Cases/OpenNewV1CaseDialog';
+import { FamilyDocuments } from './FamilyDocuments';
+import {
+  useFamilyPermissions,
+  useGlobalPermissions,
+} from '../Model/SessionModel';
+import { Masonry } from '@mui/lab';
+import { MissingRequirementRow } from '../Requirements/MissingRequirementRow';
+import { ExemptedRequirementRow } from '../Requirements/ExemptedRequirementRow';
+import { CompletedRequirementRow } from '../Requirements/CompletedRequirementRow';
+import {
+  V1CaseContext,
+  VolunteerFamilyContext,
+} from '../Requirements/RequirementContext';
+import { ActivityTimelineV2 } from '../Activities/ActivityTimelineV2';
+import { V1CaseComments } from '../V1Cases/V1CaseComments';
+import { V1CaseCustomField } from '../V1Cases/V1CaseCustomField';
+import { PrimaryContactEditor } from './PrimaryContactEditor';
+import {
+  useScreenTitleComponent,
+  useScreenTitle,
+} from '../Shell/ShellScreenTitle';
+import {
+  useCommunityLookup,
+  useFamilyLookup,
+  useNoteAuthorLookup,
+  usePersonAndFamilyLookup,
+  useUserLookup,
+  useDirectoryModel,
+} from '../Model/DirectoryModel';
+import { RemoveFamilyRoleDialog } from '../Volunteers/RemoveFamilyRoleDialog';
+import { ResetFamilyRoleDialog } from '../Volunteers/ResetFamilyRoleDialog';
+import { VolunteerRoleApprovalStatusChip } from '../Volunteers/VolunteerRoleApprovalStatusChip';
+import { FamilyCustomField } from './FamilyCustomField';
+import { VolunteerFamilyCustomField } from '../Volunteers/VolunteerFamilyCustomField';
+import { isBackdropClick } from '../Utilities/handleBackdropClick';
+import { DeleteFamilyDialog } from './DeleteFamilyDialog';
+import { useDialogHandle } from '../Hooks/useDialogHandle';
+import { familyLastName } from './FamilyUtils';
+import { useLoadable } from '../Hooks/useLoadable';
+import { visibleCommunitiesQuery } from '../Model/Data';
+import { useAppNavigate } from '../Hooks/useAppNavigate';
+import posthog from 'posthog-js';
+import { AssignmentsSection } from '../Families/AssignmentsSectionV2';
+import { useMemo } from 'react';
+import { useBackdrop } from '../Hooks/useBackdrop';
+import { useSyncV1CaseIdInURL } from '../Hooks/useSyncV1CaseIdInURL';
+import { ArrangementsSection } from '../V1Cases/Arrangements/ArrangementsSection/ArrangementsSectionV2';
+import { useFeatureFlagEnabled } from 'posthog-js/react';
+import { TestFamilyBadge } from './TestFamilyBadge';
+import { visibleReferralsQuery } from '../Model/Data';
+import { useRecoilValue } from 'recoil';
+import { FamilyCompleteOtherController } from '../Requirements/FamilyCompleteOtherController';
+import { useV1CasesModel } from '../Model/V1CasesModel';
+import { formatStatusWithDate } from '../V1Referrals/formatStatusWithDate';
+import { policyData } from '../Model/ConfigurationModel';
+import { FUNCTION_ASSIGNMENTS_FEATURE_FLAG } from '../featureFlags';
+import { FunctionAssignmentsEditorDrawer } from '../FunctionAssignments/FunctionAssignmentsSection';
+import {
+  assignmentNamesForRole,
+  assignmentRolesForColumns,
+} from '../FunctionAssignments/assignmentRoleColumns';
+import { PersonName } from './PersonName';
+import { buildGroupedV1ReferralTimelineEntries } from '../V1Referrals/referralTimelineHelpers';
+import { useGlobalSnackBar } from '../Hooks/useGlobalSnackBar';
+import { ClampTypography } from '../Generic/ClampTypography';
+import { accountInfoState } from '../Authentication/Auth';
+import { AddEditV1ReferralNoteDialog } from '../V1Referrals/AddEditV1ReferralNoteDialog';
+import { ApproveV1ReferralNoteDialog } from '../V1Referrals/ApproveV1ReferralNoteDialog';
+import { DiscardV1ReferralNoteDialog } from '../V1Referrals/DiscardV1ReferralNoteDialog';
 
-interface TabPanelProps {
-  children?: React.ReactNode;
-  index: number;
-  value: number;
+type CustomFieldRenderInfo = CompletedCustomFieldInfo | string;
+type ReferralNoteEntry = NonNullable<V1Referral['notes']>[number];
+type RecentNoteAction = 'edit' | 'approve' | 'delete';
+type RecentOverviewTimelineItem = {
+  id: string;
+  timestamp: Date;
+  title: string;
+  subtitle?: string;
+  userId?: string;
+  note?: Note;
+  referralNote?: ReferralNoteEntry;
+  referralId?: string;
+  icon: 'check' | 'edit' | 'location';
+};
+type FamilyScreenTab = {
+  label: string;
+  desktopLabel: React.ReactNode;
+  mobileLabel: string;
+};
+
+function customFieldName(customField: CustomFieldRenderInfo) {
+  return customField instanceof CompletedCustomFieldInfo
+    ? customField.customFieldName!
+    : customField;
 }
 
-function CustomTabPanel(props: TabPanelProps) {
-  const { children, value, index, ...other } = props;
+function orderCustomFieldsByPolicy(
+  customFields: CustomFieldRenderInfo[],
+  policyFieldNames: string[]
+) {
+  const customFieldsByName = new Map(
+    customFields.map((customField) => [
+      customFieldName(customField),
+      customField,
+    ])
+  );
 
+  return policyFieldNames.flatMap((fieldName) => {
+    const customField = customFieldsByName.get(fieldName);
+    return customField === undefined ? [] : [customField];
+  });
+}
+
+function getDateValue(value?: Date | string | null): number {
+  if (!value) return 0;
+  if (value instanceof Date) return value.getTime();
+  return new Date(value).getTime();
+}
+
+function getNoteTimestamp(note: Note | ReferralNoteEntry) {
   return (
-    <div
-      role="tabpanel"
-      hidden={value !== index}
-      id={`simple-tabpanel-${index}`}
-      aria-labelledby={`simple-tab-${index}`}
-      {...other}
-    >
-      {value === index && <Box pt={2}>{children}</Box>}
-    </div>
+    note.backdatedTimestampUtc ??
+    note.createdTimestampUtc ??
+    note.lastEditTimestampUtc
   );
 }
 
-function a11yProps(index: number) {
-  return {
-    id: `simple-tab-${index}`,
-    'aria-controls': `simple-tabpanel-${index}`,
-  };
+function recentActivityTitle(activity: Activity) {
+  if (
+    activity instanceof V1CaseRequirementCompleted ||
+    activity instanceof ArrangementRequirementCompleted
+  ) {
+    return activity.requirementName || 'Requirement completed';
+  }
+
+  if (activity instanceof ChildLocationChanged) {
+    return 'Child location changed';
+  }
+
+  if (activity instanceof V1CaseOpened) {
+    return 'Case opened';
+  }
+
+  if (activity.uploadedDocumentId) {
+    return 'Document uploaded';
+  }
+
+  return 'Family activity';
+}
+
+function recentActivityIcon(activity: Activity): RecentOverviewTimelineItem['icon'] {
+  if (
+    activity instanceof V1CaseRequirementCompleted ||
+    activity instanceof ArrangementRequirementCompleted
+  ) {
+    return 'check';
+  }
+
+  if (activity instanceof ChildLocationChanged) {
+    return 'location';
+  }
+
+  return 'edit';
+}
+
+type ContactInfoCopyButtonProps = {
+  value: string;
+  label: string;
+  onCopied: (message: string) => void;
+};
+
+function ContactInfoCopyButton({
+  value,
+  label,
+  onCopied,
+}: ContactInfoCopyButtonProps) {
+  const [copied, setCopied] = useState(false);
+
+  async function handleCopy() {
+    try {
+      await navigator.clipboard.writeText(value);
+      setCopied(true);
+      onCopied(`${label} copied`);
+      setTimeout(() => setCopied(false), 1500);
+    } catch {
+      onCopied(`Unable to copy ${label.toLowerCase()}`);
+    }
+  }
+
+  return (
+    <Tooltip title={copied ? 'Copied' : `Copy ${label.toLowerCase()}`}>
+      <IconButton
+        size="small"
+        aria-label={`copy ${label.toLowerCase()}`}
+        onClick={() => void handleCopy()}
+        sx={{ p: 0.25 }}
+      >
+        {copied ? (
+          <CheckIcon color="success" fontSize="small" />
+        ) : (
+          <ContentCopyIcon fontSize="small" />
+        )}
+      </IconButton>
+    </Tooltip>
+  );
 }
 
 export function FamilyScreenV2() {
   const familyIdMaybe = useParams<{ familyId: string }>();
   const familyId = familyIdMaybe.familyId as string;
 
+  const searchParams = new URLSearchParams(location.search);
+  const v1CaseIdFromQuery = searchParams.get('v1CaseId') ?? undefined;
+
+  const communitiesLoadable = useLoadable(visibleCommunitiesQuery);
+  const allCommunities = (communitiesLoadable || [])
+    .map((x) => x.community!)
+    .sort((a, b) => (a.name! < b.name! ? -1 : a.name! > b.name! ? 1 : 0));
+  const communityLookup = useCommunityLookup();
+  const allCommunityInfo = allCommunities.map((c) => communityLookup(c.id)!);
+  const familyCommunityInfo = allCommunityInfo?.filter((c) =>
+    c.community?.memberFamilies?.includes(familyId)
+  );
+
+  const referralInfos = useRecoilValue(visibleReferralsQuery);
+
+  const familyReferrals = useMemo(() => {
+    return (referralInfos ?? [])
+      .map((referralInfo) => referralInfo.referral)
+      .filter((r) => r.familyId === familyId);
+  }, [referralInfos, familyId]);
+
+  function referralRequirementSummary(referral: V1Referral) {
+    const incompleteCount =
+      referral.missingIntakeRequirements?.filter(
+        (requirement) => requirement.isRequired
+      ).length ?? 0;
+    const completedCount = referral.completedRequirements?.length ?? 0;
+    const exemptedCount = referral.exemptedRequirements?.length ?? 0;
+
+    return [
+      incompleteCount > 0 ? `❌ ${incompleteCount}` : null,
+      completedCount > 0 ? `✅ ${completedCount}` : null,
+      exemptedCount > 0 ? `🚫 ${exemptedCount}` : null,
+    ]
+      .filter(Boolean)
+      .join(' · ');
+  }
+
+  const appNavigate = useAppNavigate();
+
   const familyLookup = useFamilyLookup();
-  const family = familyLookup(familyId)!;
+  const noteAuthorLookup = useNoteAuthorLookup();
+  const personAndFamilyLookup = usePersonAndFamilyLookup();
+  const userLookup = useUserLookup();
+  const family = familyLookup(familyId);
+  const policy = useRecoilValue(policyData);
+  const currentUserId = useLoadable(accountInfoState)?.userId;
 
-  // const policy = useRecoilValue(policyData);
+  const directoryModel = useDirectoryModel();
 
-  // const permissions = useFamilyPermissions(family);
+  const withBackdrop = useBackdrop();
+  const { setAndShowGlobalSnackBar } = useGlobalSnackBar();
 
-  // const theme = useTheme();
-  // const isDesktop = useMediaQuery(theme.breakpoints.up('sm'));
-  // const isWideScreen = useMediaQuery(theme.breakpoints.up('xl'));
+  const permissions = useFamilyPermissions(family);
+  const globalPermissions = useGlobalPermissions();
+
+  const canCloseV1Case =
+    family?.partneringFamilyInfo?.openV1Case &&
+    !family.partneringFamilyInfo.openV1Case.closeReason &&
+    !family.partneringFamilyInfo.openV1Case.arrangements?.some(
+      (arrangement) => !arrangement.endedAtUtc && !arrangement.cancelledAtUtc
+    ) &&
+    permissions(Permission.CloseV1Case);
+
+  const deleteFamilyDialogHandle = useDialogHandle();
+  const openV1Cases: V1Case[] = useMemo(() => {
+    return family?.partneringFamilyInfo?.openV1Case !== undefined
+      ? [family.partneringFamilyInfo.openV1Case]
+      : [];
+  }, [family?.partneringFamilyInfo?.openV1Case]);
+
+  const closedV1Cases: V1Case[] = useMemo(() => {
+    return family?.partneringFamilyInfo?.closedV1Cases === undefined
+      ? []
+      : [...family.partneringFamilyInfo.closedV1Cases!].sort(
+          (r1, r2) =>
+            (r2.closedAtUtc?.getTime() ?? 0) - (r1.closedAtUtc?.getTime() ?? 0)
+        );
+  }, [family?.partneringFamilyInfo?.closedV1Cases]);
+
+  const allV1Cases: V1Case[] = useMemo(() => {
+    return [...openV1Cases, ...closedV1Cases];
+  }, [openV1Cases, closedV1Cases]);
+  const [closeCaseDrawerOpen, setCloseCaseDrawerOpen] = useState(false);
+  const v1CasesModel = useV1CasesModel();
+  const referralInfosLoadable = useLoadable(visibleReferralsQuery);
+  const openReferralId =
+    referralInfosLoadable
+      ?.map((referralInfo) => referralInfo.referral)
+      .find(
+        (r) => r.familyId === familyId && r.status === V1ReferralStatus.Open
+      )?.referralId ?? undefined;
+  const [openNewV1CaseDialogOpen, setOpenNewV1CaseDialogOpen] = useState(false);
+  const [uploadDocumentDialogOpen, setUploadDocumentDialogOpen] =
+    useState(false);
+  const [addAdultDialogOpen, setAddAdultDialogOpen] = useState(false);
+  const [addChildDialogOpen, setAddChildDialogOpen] = useState(false);
+  const [addNoteDialogOpen, setAddNoteDialogOpen] = useState(false);
+  const [recentFamilyNoteAction, setRecentFamilyNoteAction] = useState<{
+    action: RecentNoteAction;
+    note: Note;
+  } | null>(null);
+  const [recentReferralNoteAction, setRecentReferralNoteAction] = useState<{
+    action: RecentNoteAction;
+    referralId: string;
+    note: ReferralNoteEntry;
+  } | null>(null);
+  const [selectedTab, setSelectedTab] = useState(0);
+
+  const firstV1CaseId = allV1Cases.length > 0 ? allV1Cases[0].id : undefined;
+
+  const [selectedV1CaseId, setSelectedV1CaseId] = useState<string | undefined>(
+    v1CaseIdFromQuery || firstV1CaseId
+  );
+  const [
+    functionAssignmentsEditorV1CaseId,
+    setFunctionAssignmentsEditorV1CaseId,
+  ] = useState<string | undefined>();
+
+  const selectedV1Case = allV1Cases.find(
+    (v1Case) => v1Case.id === selectedV1CaseId
+  );
+  const functionAssignmentsEditorV1Case = allV1Cases.find(
+    (v1Case) => v1Case.id === functionAssignmentsEditorV1CaseId
+  );
+
+  const hasOpenV1Case = openV1Cases.length > 0;
+  const latestClosedV1Case = closedV1Cases[0];
+
+  const canReopenSelectedV1Case =
+    !!selectedV1Case?.closedAtUtc &&
+    !hasOpenV1Case &&
+    selectedV1Case.id === latestClosedV1Case?.id &&
+    permissions(Permission.CloseV1Case);
+
+  const caseReferralTable = useMemo(() => {
+    const linkedReferralIds = new Set(
+      allV1Cases.flatMap((c) => c.linkedV1ReferralIds ?? [])
+    );
+
+    const unlinkedReferrals = familyReferrals.filter(
+      (r) => !linkedReferralIds.has(r.referralId)
+    );
+
+    const caseRows = allV1Cases.map((v1Case) => {
+      const caseLinkedReferralIds = new Set(v1Case.linkedV1ReferralIds ?? []);
+      const linkedReferrals = familyReferrals.filter((r) =>
+        caseLinkedReferralIds.has(r.referralId)
+      );
+
+      return { v1Case, linkedReferrals };
+    });
+
+    return { caseRows, unlinkedReferrals };
+  }, [allV1Cases, familyReferrals]);
+
+  async function reopenCaseNow() {
+    if (!selectedV1Case?.id) return;
+
+    await withBackdrop(async () => {
+      const reopenedAtLocal = new Date();
+
+      await v1CasesModel.reopenV1Case(
+        familyId,
+        selectedV1Case.id,
+        reopenedAtLocal
+      );
+    });
+  }
+  useEffect(() => {
+    if (
+      v1CaseIdFromQuery &&
+      allV1Cases.some((ref) => ref.id === v1CaseIdFromQuery)
+    ) {
+      setSelectedV1CaseId(v1CaseIdFromQuery);
+    }
+  }, [v1CaseIdFromQuery, allV1Cases]);
+
+  // If user navigates to a different family without leaving current page (i.e. not unmounting this component),
+  // we want to auto-select the first v1Case
+  useEffect(() => {
+    if (!selectedV1Case) {
+      posthog.capture('auto selected first v1Case');
+
+      if (firstV1CaseId) {
+        setSelectedV1CaseId(firstV1CaseId);
+      }
+    }
+  }, [firstV1CaseId, selectedV1Case]);
+
+  useSyncV1CaseIdInURL({
+    familyId,
+    v1CaseIdFromQuery,
+    selectedV1CaseId,
+  });
+
+  useEffect(() => {
+    const searchParams = new URLSearchParams(window.location.search);
+    const hasArrangementId = searchParams.has('arrangementId');
+
+    if (hasArrangementId) {
+      appNavigate.family(
+        familyId,
+        searchParams.get('v1CaseId') ?? undefined,
+        undefined,
+        { replace: true }
+      );
+    }
+  }, [familyId, appNavigate]);
+
+  const [familyMoreMenuAnchor, setFamilyMoreMenuAnchor] =
+    useState<Element | null>(null);
+
+  const [familyCompleteOtherOpen, setFamilyCompleteOtherOpen] = useState(false);
+
+  const participatingFamilyRoles = Object.entries(
+    family?.volunteerFamilyInfo?.familyRoleApprovals || {}
+  ).filter(
+    ([role, status]) =>
+      status.currentStatus != null &&
+      !family?.volunteerFamilyInfo?.roleRemovals?.find(
+        (x) =>
+          x.roleName === role &&
+          (x.effectiveUntil == null || x.effectiveUntil > new Date())
+      )
+  );
+
+  const [removeRoleParameter, setRemoveRoleParameter] = useState<{
+    volunteerFamilyId: string;
+    role: string;
+  } | null>(null);
+  function selectRemoveRole(role: string) {
+    setFamilyMoreMenuAnchor(null);
+    setRemoveRoleParameter({ volunteerFamilyId: familyId, role: role });
+  }
+
+  const [resetRoleParameter, setResetRoleParameter] = useState<{
+    volunteerFamilyId: string;
+    role: string;
+    removalReason: RoleRemovalReason;
+    removalAdditionalComments: string;
+  } | null>(null);
+  function selectResetRole(
+    role: string,
+    removalReason: RoleRemovalReason,
+    removalAdditionalComments: string
+  ) {
+    setFamilyMoreMenuAnchor(null);
+    setResetRoleParameter({
+      volunteerFamilyId: familyId,
+      role: role,
+      removalReason: removalReason,
+      removalAdditionalComments: removalAdditionalComments,
+    });
+  }
+
+  const v1CaseRequirementContext: V1CaseContext | undefined = selectedV1Case
+    ? {
+        kind: 'V1Case',
+        partneringFamilyId: familyId,
+        v1CaseId: selectedV1Case.id!,
+      }
+    : undefined;
+
+  const volunteerFamilyRequirementContext: VolunteerFamilyContext = {
+    kind: 'Volunteer Family',
+    volunteerFamilyId: familyId,
+  };
+
+  const theme = useTheme();
+  const isDesktop = useMediaQuery(theme.breakpoints.up('sm'));
+  const isWideScreen = useMediaQuery(theme.breakpoints.up('xl'));
+
+  const updateTestFamilyFlagEnabled = useFeatureFlagEnabled(
+    'updateTestFamilyFlag'
+  );
+  const referralsEnabled = useFeatureFlagEnabled('referrals');
+  const functionAssignmentsEnabled = useFeatureFlagEnabled(
+    FUNCTION_ASSIGNMENTS_FEATURE_FLAG
+  );
+  const canViewFunctionAssignments =
+    functionAssignmentsEnabled === true &&
+    permissions(Permission.ViewV1CaseFunctionAssignments);
+  const canEditFunctionAssignments =
+    canViewFunctionAssignments &&
+    permissions(Permission.EditV1CaseFunctionAssignments);
+  const functionAssignmentRoles = useMemo(() => {
+    if (!canViewFunctionAssignments) return [];
+
+    return assignmentRolesForColumns(
+      policy.referralPolicy?.functionAssignmentPolicies?.map(
+        (assignmentPolicy) => assignmentPolicy.assignmentRole
+      ) ?? [],
+      allV1Cases.flatMap((v1Case) => v1Case.assignedIndividualVolunteers ?? [])
+    );
+  }, [
+    allV1Cases,
+    canViewFunctionAssignments,
+    policy.referralPolicy?.functionAssignmentPolicies,
+  ]);
 
   useScreenTitle(family ? `${familyLastName(family)} Family` : '...');
+  useScreenTitleComponent(family ? <TestFamilyBadge family={family} /> : null);
 
-  // const appNavigate = useAppNavigate();
+  function handleV1CaseChange(v1CaseId: string) {
+    setSelectedV1CaseId(v1CaseId);
+  }
 
-  const [currentTab, setCurrentTab] = useState(0);
+  function openUploadDocumentDialog() {
+    setFamilyMoreMenuAnchor(null);
+    setUploadDocumentDialogOpen(true);
+  }
 
-  return !family ? (
-    <ProgressBackdrop>
-      <p>Loading family...</p>
-    </ProgressBackdrop>
-  ) : (
-    <Container maxWidth={false} sx={{ paddingLeft: '12px', paddingTop: 3 }}>
-      <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
-        <Tabs
-          value={currentTab}
-          onChange={(_, newTab) => setCurrentTab(newTab)}
-          aria-label="Family Screen Tabs"
-        >
-          <Tab icon={<HomeOutlinedIcon />} label="Overview" {...a11yProps(0)} />
-          <Tab icon={<NotesIcon />} label="Notes" {...a11yProps(1)} />
-          <Tab
-            icon={<DescriptionOutlinedIcon />}
-            label="Documents"
-            {...a11yProps(2)}
+  function openAddAdultDialog() {
+    setFamilyMoreMenuAnchor(null);
+    setAddAdultDialogOpen(true);
+  }
+
+  function openAddChildDialog() {
+    setFamilyMoreMenuAnchor(null);
+    setAddChildDialogOpen(true);
+  }
+
+  function openAddNoteDialog() {
+    setFamilyMoreMenuAnchor(null);
+    setAddNoteDialogOpen(true);
+  }
+
+  const printContentRef = useRef<HTMLDivElement>(null);
+  const reactToPrintFn = useReactToPrint({ contentRef: printContentRef });
+  const isVolunteerFamily = family?.volunteerFamilyInfo != null;
+  const primaryContactPerson = family?.family?.adults?.find(
+    (adult) => adult.item1?.id === family.family?.primaryFamilyContactPersonId
+  )?.item1;
+  const primaryPhoneNumber =
+    primaryContactPerson?.phoneNumbers?.find(
+      (phoneNumber) =>
+        phoneNumber.id === primaryContactPerson.preferredPhoneNumberId
+    ) ?? primaryContactPerson?.phoneNumbers?.[0];
+  const primaryEmailAddress =
+    primaryContactPerson?.emailAddresses?.find(
+      (emailAddress) =>
+        emailAddress.id === primaryContactPerson.preferredEmailAddressId
+    ) ?? primaryContactPerson?.emailAddresses?.[0];
+  const primaryAddress = primaryContactPerson?.addresses?.find(
+    (address) => address.id === primaryContactPerson.currentAddressId
+  );
+  const primaryAddressText = primaryAddress
+    ? [
+        primaryAddress.line1,
+        primaryAddress.line2,
+        [primaryAddress.city, primaryAddress.state, primaryAddress.postalCode]
+          .filter(Boolean)
+          .join(', '),
+      ]
+        .filter(Boolean)
+        .join(' ')
+    : undefined;
+  const arrangementOrAssignmentsTabLabel = isVolunteerFamily
+    ? 'Assignments'
+    : 'Arrangements';
+  const arrangementsCount = selectedV1Case?.arrangements?.length ?? 0;
+  const assignmentsCount = family?.volunteerFamilyInfo?.assignments?.length ?? 0;
+  const documentsCount =
+    (family?.uploadedDocuments?.length ?? 0) +
+    familyReferrals.reduce(
+      (count, referral) => count + (referral.uploadedDocuments?.length ?? 0),
+      0
+    );
+  const familyNotesCount = family?.notes?.length ?? 0;
+  const referralNotesCount = familyReferrals.reduce(
+    (count, referral) => count + (referral.notes?.length ?? 0),
+    0
+  );
+  const notesCount = familyNotesCount + referralNotesCount;
+  const unapprovedNotesCount =
+    (family?.notes?.filter((note) => note.status === NoteStatus.Draft).length ??
+      0) +
+    familyReferrals.reduce(
+      (count, referral) =>
+        count +
+        (referral.notes?.filter(
+          (note) => note.status === V1ReferralNoteStatus.Draft
+        ).length ?? 0),
+      0
+    );
+
+  function tabLabel(label: string, count?: number, unapprovedCount?: number) {
+    return (
+      <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75 }}>
+        <span>{label}</span>
+        {count !== undefined && (
+          <Chip
+            size="small"
+            variant="outlined"
+            label={count}
+            sx={{ height: 20, '& .MuiChip-label': { px: 0.75 } }}
           />
-          <Tab icon={<TaskAltOutlinedIcon />} label="Tasks" {...a11yProps(3)} />
-          <FamilyScreenPageVersionSwitch />
-        </Tabs>
+        )}
+        {unapprovedCount !== undefined && unapprovedCount > 0 && (
+          <Chip
+            size="small"
+            color="warning"
+            label={`${unapprovedCount} Awaiting Review`}
+            sx={{ height: 20, '& .MuiChip-label': { px: 0.75 } }}
+          />
+        )}
       </Box>
-      <CustomTabPanel value={currentTab} index={0}>
-        Item Zero
-      </CustomTabPanel>
-      <CustomTabPanel value={currentTab} index={1}>
-        Item One
-      </CustomTabPanel>
-      <CustomTabPanel value={currentTab} index={2}>
-        Item Two
-      </CustomTabPanel>
-      <CustomTabPanel value={currentTab} index={3}>
-        Item Three
-      </CustomTabPanel>
+    );
+  }
+
+  function mobileTabLabel(
+    label: string,
+    count?: number,
+    unapprovedCount?: number
+  ) {
+    const details = [
+      count !== undefined ? `${count}` : null,
+      unapprovedCount !== undefined && unapprovedCount > 0
+        ? `${unapprovedCount} Awaiting Review`
+        : null,
+    ].filter(Boolean);
+
+    return details.length === 0 ? label : `${label} (${details.join(', ')})`;
+  }
+
+  const familyScreenTabs: FamilyScreenTab[] = [
+    {
+      label: 'Overview',
+      desktopLabel: 'Overview',
+      mobileLabel: 'Overview',
+    },
+    {
+      label: arrangementOrAssignmentsTabLabel,
+      desktopLabel: tabLabel(
+        arrangementOrAssignmentsTabLabel,
+        isVolunteerFamily ? assignmentsCount : arrangementsCount
+      ),
+      mobileLabel: mobileTabLabel(
+        arrangementOrAssignmentsTabLabel,
+        isVolunteerFamily ? assignmentsCount : arrangementsCount
+      ),
+    },
+    {
+      label: 'Documents',
+      desktopLabel: tabLabel('Documents', documentsCount),
+      mobileLabel: mobileTabLabel('Documents', documentsCount),
+    },
+    {
+      label: 'Timeline & Notes',
+      desktopLabel: tabLabel(
+        'Timeline & Notes',
+        notesCount,
+        unapprovedNotesCount
+      ),
+      mobileLabel: mobileTabLabel(
+        'Timeline & Notes',
+        notesCount,
+        unapprovedNotesCount
+      ),
+    },
+  ];
+  const showOverview = selectedTab === 0;
+  const showArrangementsOrAssignments = selectedTab === 1;
+  const showDocuments = selectedTab === 2;
+  const showTimelineAndNotes = selectedTab === 3;
+
+  function handleSelectedTabChange(event: SelectChangeEvent) {
+    setSelectedTab(Number(event.target.value));
+  }
+  const pinnedNotes = useMemo(() => {
+    return (family?.notes ?? [])
+      .filter((note) => note.isPinned)
+      .sort(
+        (a, b) =>
+          getDateValue(b.pinnedAtUtc ?? getNoteTimestamp(b)) -
+          getDateValue(a.pinnedAtUtc ?? getNoteTimestamp(a))
+      );
+  }, [family?.notes]);
+  const recentOverviewTimelineItems = useMemo(() => {
+    const now = new Date();
+    const sevenDaysAgo = new Date();
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+
+    const familyActivityRecords = [
+      ...(family?.partneringFamilyInfo?.history ?? []),
+      ...(family?.volunteerFamilyInfo?.history ?? []),
+    ];
+    const familyNotesById = new Map(
+      (family?.notes ?? []).map((note) => [note.id, note])
+    );
+    const linkedFamilyNoteIds = new Set(
+      familyActivityRecords.flatMap((activity) =>
+        activity.noteId ? [activity.noteId] : []
+      )
+    );
+
+    const familyActivities: RecentOverviewTimelineItem[] =
+      familyActivityRecords.map((activity) => {
+        const linkedNote = activity.noteId
+          ? familyNotesById.get(activity.noteId)
+          : undefined;
+
+        return {
+          id: `activity:${activity.auditTimestampUtc?.toISOString()}`,
+          timestamp: activity.activityTimestampUtc,
+          title: recentActivityTitle(activity),
+          subtitle: linkedNote?.contents?.trim(),
+          userId: activity.userId,
+          note: linkedNote,
+          icon: recentActivityIcon(activity),
+        };
+      });
+
+    const familyNotes: RecentOverviewTimelineItem[] =
+      family?.notes
+        ?.filter((note) => !linkedFamilyNoteIds.has(note.id))
+        .map((note) => ({
+          id: `note:${note.id}`,
+          timestamp: getNoteTimestamp(note),
+          title: 'Family note',
+          subtitle: note.contents?.trim(),
+          userId: note.authorUserId,
+          note,
+          icon: 'edit',
+        })) ?? [];
+
+    const referralActivities: RecentOverviewTimelineItem[] =
+      familyReferrals.flatMap((referral) =>
+        buildGroupedV1ReferralTimelineEntries(referral).map((entry) => ({
+          id: `referral-${entry.kind}:${referral.referralId}:${entry.timestamp.toISOString()}`,
+          timestamp: entry.timestamp,
+          title: entry.label,
+          subtitle:
+            entry.kind === 'note'
+              ? entry.note.contents?.trim()
+              : `Referral: ${referral.title}`,
+          userId: entry.userId,
+          referralNote: entry.kind === 'note' ? entry.note : undefined,
+          referralId: referral.referralId,
+          icon: 'edit',
+        }))
+      );
+
+    return [...familyActivities, ...familyNotes, ...referralActivities]
+      .filter((item) => {
+        const timestamp = getDateValue(item.timestamp);
+        return timestamp >= sevenDaysAgo.getTime() && timestamp <= now.getTime();
+      })
+      .sort((a, b) => getDateValue(b.timestamp) - getDateValue(a.timestamp))
+      .slice(0, 6);
+  }, [
+    family?.notes,
+    family?.partneringFamilyInfo?.history,
+    family?.volunteerFamilyInfo?.history,
+    familyReferrals,
+  ]);
+
+  if (!family) {
+    return (
+      <Box sx={{ mt: 10, textAlign: 'center' }}>
+        <Typography>
+          Oops! You can’t view this family. It may be restricted or unavailable.
+        </Typography>
+        <Button
+          variant="contained"
+          sx={{ mt: 2 }}
+          onClick={() => appNavigate.dashboard()}
+        >
+          Home
+        </Button>
+      </Box>
+    );
+  }
+
+  const canUploadDocuments = permissions(Permission.UploadFamilyDocuments);
+  const canEditFamilyInfo = permissions(Permission.EditFamilyInfo);
+  const canAddNotes =
+    permissions(Permission.AddEditDraftNotes) ||
+    permissions(Permission.AddEditOwnDraftNotes);
+  const canManageReferralNotes = globalPermissions(Permission.EditV1Referral);
+
+  function getRecentFamilyNotePermissions(note: Note) {
+    const isOwnNote = note.authorUserId === currentUserId;
+
+    return {
+      canEdit:
+        note.status === NoteStatus.Draft &&
+        ((isOwnNote && permissions(Permission.AddEditOwnDraftNotes)) ||
+          permissions(Permission.AddEditDraftNotes)),
+      canDelete:
+        note.status === NoteStatus.Draft &&
+        ((isOwnNote && permissions(Permission.DiscardOwnDraftNotes)) ||
+          permissions(Permission.DiscardDraftNotes)),
+      canApprove:
+        note.status === NoteStatus.Draft && permissions(Permission.ApproveNotes),
+    };
+  }
+
+  function renderRecentNoteActions(item: RecentOverviewTimelineItem) {
+    if (item.note) {
+      const { canDelete, canEdit, canApprove } =
+        getRecentFamilyNotePermissions(item.note);
+
+      if (!canDelete && !canEdit && !canApprove) return null;
+
+      return (
+        <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap', mt: 1 }}>
+          {canDelete && (
+            <Button
+              className="ph-unmask"
+              size="small"
+              color="error"
+              startIcon={<DeleteForeverIcon />}
+              onClick={() =>
+                setRecentFamilyNoteAction({
+                  action: 'delete',
+                  note: item.note!,
+                })
+              }
+            >
+              Delete
+            </Button>
+          )}
+          {canEdit && (
+            <Button
+              className="ph-unmask"
+              size="small"
+              startIcon={<EditIcon />}
+              onClick={() =>
+                setRecentFamilyNoteAction({
+                  action: 'edit',
+                  note: item.note!,
+                })
+              }
+            >
+              Edit
+            </Button>
+          )}
+          {canApprove && (
+            <Button
+              className="ph-unmask"
+              size="small"
+              startIcon={<CheckIcon />}
+              onClick={() =>
+                setRecentFamilyNoteAction({
+                  action: 'approve',
+                  note: item.note!,
+                })
+              }
+            >
+              Approve
+            </Button>
+          )}
+        </Box>
+      );
+    }
+
+    if (
+      item.referralNote?.status !== V1ReferralNoteStatus.Draft ||
+      !item.referralId ||
+      !canManageReferralNotes
+    ) {
+      return null;
+    }
+
+    return (
+      <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap', mt: 1 }}>
+        <Button
+          className="ph-unmask"
+          size="small"
+          color="error"
+          startIcon={<DeleteForeverIcon />}
+          onClick={() =>
+            setRecentReferralNoteAction({
+              action: 'delete',
+              referralId: item.referralId!,
+              note: item.referralNote!,
+            })
+          }
+        >
+          Delete
+        </Button>
+        <Button
+          className="ph-unmask"
+          size="small"
+          startIcon={<EditIcon />}
+          onClick={() =>
+            setRecentReferralNoteAction({
+              action: 'edit',
+              referralId: item.referralId!,
+              note: item.referralNote!,
+            })
+          }
+        >
+          Edit
+        </Button>
+        <Button
+          className="ph-unmask"
+          size="small"
+          startIcon={<CheckIcon />}
+          onClick={() =>
+            setRecentReferralNoteAction({
+              action: 'approve',
+              referralId: item.referralId!,
+              note: item.referralNote!,
+            })
+          }
+        >
+          Approve
+        </Button>
+      </Box>
+    );
+  }
+
+  const hasVolunteerRoleActions =
+    permissions(Permission.EditVolunteerRoleParticipation) &&
+    (participatingFamilyRoles.length > 0 ||
+      (family.volunteerFamilyInfo?.roleRemovals &&
+        family.volunteerFamilyInfo.roleRemovals.length > 0));
+  const hasMoreMenuActions =
+    hasVolunteerRoleActions ||
+    canEditFamilyInfo ||
+    (family.volunteerFamilyInfo != null &&
+      permissions(Permission.EditApprovalRequirementCompletion));
+  const hasFamilyActions =
+    canUploadDocuments ||
+    canEditFamilyInfo ||
+    canAddNotes ||
+    hasMoreMenuActions;
+
+  return (
+    <Container maxWidth={false} sx={{ paddingLeft: '12px' }}>
+      <Toolbar
+        variant="dense"
+        disableGutters={true}
+        sx={{
+          alignItems: 'flex-start',
+          justifyContent: 'space-between',
+          flexWrap: 'wrap',
+          gap: 2,
+          py: 1,
+        }}
+      >
+        <Box sx={{ flex: '1 1 320px', minWidth: 0 }}>
+          <Box
+            sx={{
+              display: 'flex',
+              alignItems: 'flex-start',
+              justifyContent: 'space-between',
+              gap: 1,
+              mb: 0.5,
+            }}
+          >
+            <Typography className="ph-unmask" variant="h4">
+              {familyLastName(family)} Family
+            </Typography>
+            {!isDesktop && hasFamilyActions && (
+              <IconButton
+                className="ph-unmask"
+                aria-label="family actions"
+                onClick={(event) => setFamilyMoreMenuAnchor(event.currentTarget)}
+                size="small"
+                sx={{
+                  border: 1,
+                  borderColor: 'primary.main',
+                  borderRadius: 1,
+                  color: 'primary.main',
+                  flex: '0 0 auto',
+                  width: 36,
+                  height: 36,
+                }}
+              >
+                <MoreVertIcon fontSize="small" />
+              </IconButton>
+            )}
+          </Box>
+          <Box
+            sx={{
+              display: 'flex',
+              flexWrap: 'wrap',
+              alignItems: 'center',
+              columnGap: 2,
+              rowGap: 0.5,
+            }}
+          >
+            <Box className="ph-unmask">
+              <PrimaryContactEditor family={family} />
+            </Box>
+            {primaryEmailAddress?.address && (
+              <Box
+                className="ph-unmask"
+                sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}
+              >
+                <EmailIcon fontSize="small" color="action" />
+                <Typography variant="body2">
+                  {primaryEmailAddress.address}
+                </Typography>
+                <ContactInfoCopyButton
+                  value={primaryEmailAddress.address}
+                  label="Email"
+                  onCopied={setAndShowGlobalSnackBar}
+                />
+              </Box>
+            )}
+            {primaryPhoneNumber?.number && (
+              <Box
+                className="ph-unmask"
+                sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}
+              >
+                <PhoneIcon fontSize="small" color="action" />
+                <Typography variant="body2">{primaryPhoneNumber.number}</Typography>
+                <ContactInfoCopyButton
+                  value={primaryPhoneNumber.number}
+                  label="Phone number"
+                  onCopied={setAndShowGlobalSnackBar}
+                />
+              </Box>
+            )}
+            {primaryAddressText && (
+              <Box
+                className="ph-unmask"
+                sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}
+              >
+                <HomeIcon fontSize="small" color="action" />
+                <Typography variant="body2">{primaryAddressText}</Typography>
+                <ContactInfoCopyButton
+                  value={primaryAddressText}
+                  label="Address"
+                  onCopied={setAndShowGlobalSnackBar}
+                />
+              </Box>
+            )}
+          </Box>
+        </Box>
+        <Box
+          sx={{
+            display: 'flex',
+            flex: '0 1 auto',
+            flexWrap: 'wrap',
+            justifyContent: 'flex-end',
+            gap: 1,
+          }}
+        >
+          {isDesktop && canUploadDocuments && (
+            <Button
+              className="ph-unmask"
+              onClick={() => setUploadDocumentDialogOpen(true)}
+              variant="contained"
+              size="small"
+              startIcon={<CloudUploadIcon />}
+            >
+              Upload
+            </Button>
+          )}
+          {isDesktop && canEditFamilyInfo && (
+            <Button
+              className="ph-unmask"
+              onClick={() => setAddAdultDialogOpen(true)}
+              variant="contained"
+              size="small"
+              startIcon={<AddCircleIcon />}
+            >
+              Adult
+            </Button>
+          )}
+          {isDesktop && canEditFamilyInfo && (
+            <Button
+              className="ph-unmask"
+              onClick={() => setAddChildDialogOpen(true)}
+              variant="contained"
+              size="small"
+              startIcon={<AddCircleIcon />}
+            >
+              Child
+            </Button>
+          )}
+          {isDesktop && canAddNotes && (
+            <Button
+              className="ph-unmask"
+              onClick={() => setAddNoteDialogOpen(true)}
+              variant="contained"
+              size="small"
+              startIcon={<AddCircleIcon />}
+            >
+              Note
+            </Button>
+          )}
+          {isDesktop && hasMoreMenuActions && (
+            <IconButton
+              onClick={(event) => setFamilyMoreMenuAnchor(event.currentTarget)}
+              size="small"
+            >
+              <MoreVertIcon />
+            </IconButton>
+          )}
+        </Box>
+        <Menu
+          id="family-more-menu"
+          anchorEl={familyMoreMenuAnchor}
+          keepMounted
+          open={Boolean(familyMoreMenuAnchor)}
+          onClose={() => setFamilyMoreMenuAnchor(null)}
+        >
+          <MenuList dense={isDesktop}>
+            {!isDesktop && canUploadDocuments && (
+              <MenuItem onClick={openUploadDocumentDialog}>
+                <ListItemIcon>
+                  <CloudUploadIcon fontSize="small" />
+                </ListItemIcon>
+                <ListItemText className="ph-unmask" primary="Upload" />
+              </MenuItem>
+            )}
+            {!isDesktop && canEditFamilyInfo && (
+              <MenuItem onClick={openAddAdultDialog}>
+                <ListItemIcon>
+                  <AddCircleIcon fontSize="small" />
+                </ListItemIcon>
+                <ListItemText className="ph-unmask" primary="Adult" />
+              </MenuItem>
+            )}
+            {!isDesktop && canEditFamilyInfo && (
+              <MenuItem onClick={openAddChildDialog}>
+                <ListItemIcon>
+                  <AddCircleIcon fontSize="small" />
+                </ListItemIcon>
+                <ListItemText className="ph-unmask" primary="Child" />
+              </MenuItem>
+            )}
+            {!isDesktop && canAddNotes && (
+              <MenuItem onClick={openAddNoteDialog}>
+                <ListItemIcon>
+                  <AddCircleIcon fontSize="small" />
+                </ListItemIcon>
+                <ListItemText className="ph-unmask" primary="Note" />
+              </MenuItem>
+            )}
+            {!isDesktop &&
+              (canUploadDocuments || canEditFamilyInfo || canAddNotes) &&
+              hasMoreMenuActions && (
+                <Divider />
+              )}
+            {permissions(Permission.EditVolunteerRoleParticipation) &&
+              participatingFamilyRoles.flatMap(([role]) => (
+                <MenuItem key={role} onClick={() => selectRemoveRole(role)}>
+                  <ListItemText primary={`Remove from ${role} role`} />
+                </MenuItem>
+              ))}
+            {permissions(Permission.EditVolunteerRoleParticipation) &&
+              (family.volunteerFamilyInfo?.roleRemovals || [])
+                .filter((removedRole) => !removedRole.effectiveUntil)
+                .map((removedRole) => (
+                  <MenuItem
+                    key={removedRole.roleName}
+                    onClick={() =>
+                      selectResetRole(
+                        removedRole.roleName!,
+                        removedRole.reason!,
+                        removedRole.additionalComments!
+                      )
+                    }
+                  >
+                    <ListItemText
+                      primary={`Reset ${removedRole.roleName} participation`}
+                    />
+                  </MenuItem>
+                ))}
+
+            <MenuItem onClick={() => reactToPrintFn()}>
+              <ListItemText primary="Print notes" />
+            </MenuItem>
+
+            {family.volunteerFamilyInfo != null &&
+              permissions(Permission.EditApprovalRequirementCompletion) && (
+                <MenuItem
+                  onClick={() => {
+                    setFamilyCompleteOtherOpen(true);
+                    setFamilyMoreMenuAnchor(null);
+                  }}
+                >
+                  <ListItemText primary="Complete other..." />
+                </MenuItem>
+              )}
+
+            {permissions(Permission.EditFamilyInfo) &&
+              updateTestFamilyFlagEnabled && (
+                <MenuItem
+                  onClick={async (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+
+                    setFamilyMoreMenuAnchor(null);
+
+                    const isCurrentlyTest =
+                      family.family?.isTestFamily ?? false;
+                    await withBackdrop(async () => {
+                      await directoryModel.updateTestFamilyFlag(
+                        family.family.id,
+                        !isCurrentlyTest
+                      );
+                    });
+                  }}
+                >
+                  <ListItemText
+                    className="ph-unmask"
+                    primary={
+                      family.family?.isTestFamily
+                        ? 'Unmark as test family'
+                        : 'Mark as test family'
+                    }
+                  />
+                </MenuItem>
+              )}
+
+            {permissions(Permission.EditFamilyInfo) && (
+              <MenuItem onClick={deleteFamilyDialogHandle.openDialog}>
+                <ListItemText className="ph-unmask" primary="Delete family" />
+              </MenuItem>
+            )}
+          </MenuList>
+        </Menu>
+        <FamilyCompleteOtherController
+          familyId={familyId}
+          open={familyCompleteOtherOpen}
+          onClose={() => setFamilyCompleteOtherOpen(false)}
+        />
+        {uploadDocumentDialogOpen && (
+          <UploadFamilyDocumentsDialog
+            family={family}
+            onClose={() => setUploadDocumentDialogOpen(false)}
+          />
+        )}
+        {addAdultDialogOpen && (
+          <AddAdultDialog
+            onClose={(_event: object | undefined, reason: string) =>
+              !isBackdropClick(reason) ? setAddAdultDialogOpen(false) : {}
+            }
+          ></AddAdultDialog>
+        )}
+        {addChildDialogOpen && (
+          <AddChildDialog
+            onClose={(_event: object | undefined, reason: string) =>
+              !isBackdropClick(reason) ? setAddChildDialogOpen(false) : {}
+            }
+          />
+        )}
+        {addNoteDialogOpen && (
+          <AddEditNoteDialog
+            familyId={family.family!.id!}
+            onClose={() => setAddNoteDialogOpen(false)}
+          />
+        )}
+        {recentFamilyNoteAction?.action === 'edit' && (
+          <AddEditNoteDialog
+            familyId={family.family!.id!}
+            note={recentFamilyNoteAction.note}
+            onClose={() => setRecentFamilyNoteAction(null)}
+          />
+        )}
+        {recentFamilyNoteAction?.action === 'approve' && (
+          <ApproveNoteDialog
+            familyId={family.family!.id!}
+            note={recentFamilyNoteAction.note}
+            onClose={() => setRecentFamilyNoteAction(null)}
+          />
+        )}
+        {recentFamilyNoteAction?.action === 'delete' && (
+          <DiscardNoteDialog
+            familyId={family.family!.id!}
+            note={recentFamilyNoteAction.note}
+            onClose={() => setRecentFamilyNoteAction(null)}
+          />
+        )}
+        {recentReferralNoteAction?.action === 'edit' && (
+          <AddEditV1ReferralNoteDialog
+            referralId={recentReferralNoteAction.referralId}
+            note={recentReferralNoteAction.note}
+            onClose={() => setRecentReferralNoteAction(null)}
+          />
+        )}
+        {recentReferralNoteAction?.action === 'approve' && (
+          <ApproveV1ReferralNoteDialog
+            referralId={recentReferralNoteAction.referralId}
+            note={recentReferralNoteAction.note}
+            onClose={() => setRecentReferralNoteAction(null)}
+          />
+        )}
+        {recentReferralNoteAction?.action === 'delete' && (
+          <DiscardV1ReferralNoteDialog
+            referralId={recentReferralNoteAction.referralId}
+            note={recentReferralNoteAction.note}
+            onClose={() => setRecentReferralNoteAction(null)}
+          />
+        )}
+
+        {(removeRoleParameter && (
+          <RemoveFamilyRoleDialog
+            volunteerFamilyId={familyId}
+            role={removeRoleParameter.role}
+            onClose={() => setRemoveRoleParameter(null)}
+          />
+        )) ||
+          null}
+        {(resetRoleParameter && (
+          <ResetFamilyRoleDialog
+            volunteerFamilyId={familyId}
+            role={resetRoleParameter.role}
+            removalReason={resetRoleParameter.removalReason}
+            removalAdditionalComments={
+              resetRoleParameter.removalAdditionalComments
+            }
+            onClose={() => setResetRoleParameter(null)}
+          />
+        )) ||
+          null}
+        {deleteFamilyDialogHandle.open && (
+          <DeleteFamilyDialog
+            key={deleteFamilyDialogHandle.key}
+            handle={deleteFamilyDialogHandle}
+            familyId={familyId}
+          />
+        )}
+      </Toolbar>
+      {pinnedNotes.length > 0 && (
+        <Box
+          sx={{
+            border: 1,
+            borderColor: 'primary.light',
+            borderRadius: 1,
+            bgcolor: 'rgba(25, 118, 210, 0.06)',
+            p: 2,
+            mb: 2,
+          }}
+        >
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
+            {pinnedNotes.map((note) => (
+              <Box
+                key={note.id}
+                sx={{
+                  border: 1,
+                  borderColor: 'divider',
+                  borderRadius: 1,
+                  bgcolor: 'background.paper',
+                  p: 1.5,
+                }}
+              >
+                <Typography
+                  className="ph-unmask"
+                  variant="caption"
+                  color="text.secondary"
+                >
+                  <PersonName person={noteAuthorLookup(note)} />
+                  {note.createdTimestampUtc
+                    ? ` · ${format(note.createdTimestampUtc, 'M/d/yy h:mm a')}`
+                    : ''}
+                </Typography>
+                <Typography className="ph-unmask" variant="body2">
+                  {note.contents}
+                </Typography>
+              </Box>
+            ))}
+          </Box>
+        </Box>
+      )}
+      {isDesktop ? (
+        <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 2 }}>
+          <Tabs
+            value={selectedTab}
+            onChange={(_, nextTab) => setSelectedTab(nextTab)}
+            aria-label="Family screen sections"
+          >
+            {familyScreenTabs.map((tab) => (
+              <Tab key={tab.label} label={tab.desktopLabel} />
+            ))}
+          </Tabs>
+        </Box>
+      ) : (
+        <FormControl fullWidth size="small" sx={{ mb: 2 }}>
+          <InputLabel id="family-screen-section-label">Section</InputLabel>
+          <Select
+            labelId="family-screen-section-label"
+            id="family-screen-section-select"
+            value={String(selectedTab)}
+            label="Section"
+            onChange={handleSelectedTabChange}
+          >
+            {familyScreenTabs.map((tab, index) => (
+              <MenuItem key={tab.label} value={String(index)}>
+                {tab.mobileLabel}
+              </MenuItem>
+            ))}
+          </Select>
+        </FormControl>
+      )}
+      <Grid container spacing={0}>
+        <Grid
+          item
+          xs={12}
+          spacing={0}
+          sx={{ display: showTimelineAndNotes ? undefined : 'none' }}
+        >
+          <ActivityTimelineV2
+            family={family}
+            referrals={familyReferrals}
+            printContentRef={printContentRef}
+          />
+        </Grid>
+        <Grid
+          item
+          xs={12}
+          lg={showOverview ? 8 : 12}
+          sx={{ display: 'flex', flexDirection: 'column' }}
+        >
+          <Grid container spacing={2}>
+            {showArrangementsOrAssignments && isVolunteerFamily && family && (
+              <AssignmentsSection family={family} hideTitle />
+            )}
+
+            <Grid
+              item
+              xs={12}
+              sx={{ display: showOverview ? undefined : 'none' }}
+            >
+              {permissions(Permission.ViewV1CaseProgress) && (
+                <Box sx={{ mt: 2 }}>
+                  <Typography className="ph-unmask" variant="h3" sx={{ mb: 1 }}>
+                    Cases & Referrals
+                  </Typography>
+
+                  {!referralsEnabled &&
+                    (!family.partneringFamilyInfo ||
+                      !family.partneringFamilyInfo.openV1Case) &&
+                    permissions(Permission.CreateV1Case) && (
+                      <Button
+                        className="ph-unmask"
+                        onClick={() => setOpenNewV1CaseDialogOpen(true)}
+                        variant="contained"
+                        size="small"
+                        sx={{ mb: 1 }}
+                      >
+                        Open New Case
+                      </Button>
+                    )}
+
+                  <TableContainer
+                    sx={{
+                      width: '100%',
+                      border: '1px solid rgba(224,224,224,1)',
+                      borderRadius: 1,
+                    }}
+                  >
+                    <Table size="small" sx={{ width: '100%' }}>
+                      <TableHead>
+                        <TableRow>
+                          <TableCell
+                            sx={{
+                              fontWeight: 600,
+                              width: '1%',
+                              whiteSpace: 'nowrap',
+                            }}
+                          >
+                            Case
+                          </TableCell>
+                          {functionAssignmentRoles.map((assignmentRole) => (
+                            <TableCell
+                              key={assignmentRole}
+                              sx={{
+                                fontWeight: 600,
+                                whiteSpace: 'nowrap',
+                              }}
+                            >
+                              {assignmentRole}
+                            </TableCell>
+                          ))}
+                          {referralsEnabled && (
+                            <TableCell sx={{ fontWeight: 600, width: '100%' }}>
+                              Linked Referrals
+                            </TableCell>
+                          )}
+                        </TableRow>
+                      </TableHead>
+
+                      <TableBody>
+                        {caseReferralTable.caseRows.map(
+                          ({ v1Case, linkedReferrals }) => {
+                            const isSelected = selectedV1Case?.id === v1Case.id;
+
+                            const isOpenV1Case = !v1Case.closedAtUtc;
+                            const caseCloseReasonText =
+                              !isOpenV1Case && v1Case.closeReason
+                                ? v1Case.closeReason
+                                : undefined;
+
+                            const showCloseButton =
+                              isSelected &&
+                              isOpenV1Case &&
+                              canCloseV1Case &&
+                              v1Case.id ===
+                                family.partneringFamilyInfo?.openV1Case?.id;
+
+                            return (
+                              <TableRow key={v1Case.id} hover>
+                                <TableCell
+                                  onClick={() => handleV1CaseChange(v1Case.id)}
+                                  sx={{
+                                    width: '1%',
+                                    whiteSpace: 'nowrap',
+                                    cursor: 'pointer',
+                                  }}
+                                >
+                                  <Box
+                                    sx={{
+                                      display: 'flex',
+                                      alignItems: 'center',
+                                      gap: 1,
+                                    }}
+                                  >
+                                    <Radio
+                                      checked={isSelected}
+                                      onChange={() =>
+                                        handleV1CaseChange(v1Case.id)
+                                      }
+                                    />
+                                    <Typography className="ph-unmask">
+                                      {v1Case.closedAtUtc
+                                        ? `Case Closed ${format(
+                                            v1Case.closedAtUtc,
+                                            'M/d/yy'
+                                          )}`
+                                        : 'Open Case'}
+                                    </Typography>
+
+                                    {caseCloseReasonText && (
+                                      <Typography
+                                        className="ph-unmask"
+                                        color="text.secondary"
+                                      >
+                                        {caseCloseReasonText}
+                                      </Typography>
+                                    )}
+
+                                    {showCloseButton && (
+                                      <Button
+                                        className="ph-unmask"
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          setCloseCaseDrawerOpen(true);
+                                        }}
+                                        variant="contained"
+                                        size="small"
+                                      >
+                                        Close Case
+                                      </Button>
+                                    )}
+                                    {isSelected &&
+                                      !isOpenV1Case &&
+                                      canReopenSelectedV1Case && (
+                                        <Button
+                                          className="ph-unmask"
+                                          onClick={(e) => {
+                                            e.stopPropagation();
+                                            void reopenCaseNow();
+                                          }}
+                                          variant="contained"
+                                          size="small"
+                                        >
+                                          Reopen Case
+                                        </Button>
+                                      )}
+                                  </Box>
+                                </TableCell>
+
+                                {functionAssignmentRoles.map(
+                                  (assignmentRole) => {
+                                    const assignmentNames =
+                                      assignmentNamesForRole(
+                                        v1Case.assignedIndividualVolunteers ??
+                                          [],
+                                        assignmentRole,
+                                        (personId) =>
+                                          personAndFamilyLookup(personId).person
+                                      );
+
+                                    return (
+                                      <TableCell
+                                        key={assignmentRole}
+                                        sx={{ whiteSpace: 'nowrap' }}
+                                      >
+                                        <Box
+                                          sx={{
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            gap: 0.5,
+                                          }}
+                                        >
+                                          {assignmentNames || (
+                                            <Typography color="text.secondary">
+                                              —
+                                            </Typography>
+                                          )}
+                                          {canEditFunctionAssignments && (
+                                            <IconButton
+                                              aria-label={`Edit ${assignmentRole} assignment`}
+                                              size="small"
+                                              onClick={(e) => {
+                                                e.stopPropagation();
+                                                setFunctionAssignmentsEditorV1CaseId(
+                                                  v1Case.id
+                                                );
+                                              }}
+                                            >
+                                              <EditIcon
+                                                color="primary"
+                                                fontSize="small"
+                                              />
+                                            </IconButton>
+                                          )}
+                                        </Box>
+                                      </TableCell>
+                                    );
+                                  }
+                                )}
+
+                                {referralsEnabled && (
+                                  <TableCell sx={{ width: '100%' }}>
+                                    {linkedReferrals.length === 0 ? (
+                                      <Typography color="text.secondary">
+                                        —
+                                      </Typography>
+                                    ) : (
+                                      <Box
+                                        sx={{
+                                          display: 'flex',
+                                          flexWrap: 'wrap',
+                                          gap: 1,
+                                        }}
+                                      >
+                                        {linkedReferrals.map((ref) => {
+                                          const requirementSummary =
+                                            referralRequirementSummary(ref);
+
+                                          const metadata = [
+                                            formatStatusWithDate(
+                                              ref.status,
+                                              ref.createdAtUtc,
+                                              ref.acceptedAtUtc,
+                                              ref.closedAtUtc
+                                            ),
+                                            requirementSummary || null,
+                                          ]
+                                            .filter(Boolean)
+                                            .join(' · ');
+
+                                          return (
+                                            <Chip
+                                              key={ref.referralId}
+                                              clickable
+                                              size="small"
+                                              label={`${ref.title} · ${metadata}`}
+                                              onClick={() =>
+                                                appNavigate.referral(
+                                                  ref.referralId
+                                                )
+                                              }
+                                            />
+                                          );
+                                        })}
+                                      </Box>
+                                    )}
+                                  </TableCell>
+                                )}
+                              </TableRow>
+                            );
+                          }
+                        )}
+
+                        {referralsEnabled &&
+                          caseReferralTable.unlinkedReferrals.length > 0 && (
+                            <TableRow>
+                              <TableCell
+                                sx={{
+                                  width: '1%',
+                                  whiteSpace: 'nowrap',
+                                }}
+                              >
+                                (not linked to a case)
+                              </TableCell>
+                              {functionAssignmentRoles.map((assignmentRole) => (
+                                <TableCell key={assignmentRole}>
+                                  <Typography color="text.secondary">
+                                    —
+                                  </Typography>
+                                </TableCell>
+                              ))}
+                              <TableCell sx={{ width: '100%' }}>
+                                <Box
+                                  sx={{
+                                    display: 'flex',
+                                    flexWrap: 'wrap',
+                                    gap: 1,
+                                  }}
+                                >
+                                  {caseReferralTable.unlinkedReferrals.map(
+                                    (ref) => {
+                                      const requirementSummary =
+                                        referralRequirementSummary(ref);
+
+                                      const metadata = [
+                                        formatStatusWithDate(
+                                          ref.status,
+                                          ref.createdAtUtc,
+                                          ref.acceptedAtUtc,
+                                          ref.closedAtUtc
+                                        ),
+                                        requirementSummary || null,
+                                      ]
+                                        .filter(Boolean)
+                                        .join(' · ');
+
+                                      return (
+                                        <Chip
+                                          key={ref.referralId}
+                                          clickable
+                                          size="small"
+                                          label={`${ref.title} · ${metadata}`}
+                                          onClick={() =>
+                                            appNavigate.referral(ref.referralId)
+                                          }
+                                        />
+                                      );
+                                    }
+                                  )}
+                                </Box>
+                              </TableCell>
+                            </TableRow>
+                          )}
+                      </TableBody>
+                    </Table>
+                  </TableContainer>
+                  {functionAssignmentsEditorV1Case && (
+                    <FunctionAssignmentsEditorDrawer
+                      open
+                      assignments={
+                        functionAssignmentsEditorV1Case.assignedIndividualVolunteers ??
+                        []
+                      }
+                      policies={
+                        policy.referralPolicy?.functionAssignmentPolicies ?? []
+                      }
+                      onClose={() =>
+                        setFunctionAssignmentsEditorV1CaseId(undefined)
+                      }
+                      onAssign={(personId, assignmentRole) =>
+                        v1CasesModel.assignIndividualVolunteerToV1Case(
+                          familyId,
+                          functionAssignmentsEditorV1Case.id,
+                          personId,
+                          assignmentRole
+                        )
+                      }
+                      onUnassign={(personId, assignmentRole) =>
+                        v1CasesModel.unassignIndividualVolunteerFromV1Case(
+                          familyId,
+                          functionAssignmentsEditorV1Case.id,
+                          personId,
+                          assignmentRole
+                        )
+                      }
+                    />
+                  )}
+                </Box>
+              )}
+            </Grid>
+
+            <Grid item xs={6} md={4}>
+              {closeCaseDrawerOpen && selectedV1Case?.id && (
+                <CloseV1CaseDrawer
+                  partneringFamilyId={familyId}
+                  v1CaseId={selectedV1Case.id}
+                  onClose={() => setCloseCaseDrawerOpen(false)}
+                />
+              )}
+              {openNewV1CaseDialogOpen && (
+                <OpenNewV1CaseDialog
+                  partneringFamilyId={family.family!.id!}
+                  referralId={openReferralId}
+                  onClose={() => setOpenNewV1CaseDialogOpen(false)}
+                />
+              )}
+            </Grid>
+
+            <Grid
+              item
+              md={12}
+              sx={{ display: showTimelineAndNotes ? undefined : 'none' }}
+            >
+              {permissions(Permission.ViewV1CaseComments) && selectedV1Case && (
+                <Grid container spacing={0}>
+                  <V1CaseComments
+                    partneringFamily={family}
+                    v1CaseId={selectedV1Case.id!}
+                  />
+                </Grid>
+              )}
+            </Grid>
+          </Grid>
+
+          <Grid container spacing={0} sx={{ order: 2 }}>
+            {showOverview &&
+              permissions(Permission.ViewV1CaseProgress) &&
+              !referralsEnabled &&
+              selectedV1Case &&
+              v1CaseRequirementContext && (
+                <>
+                  <Grid item xs={12} sm={6} md={4} style={{ paddingRight: 20 }}>
+                    <Typography
+                      className="ph-unmask"
+                      variant="h3"
+                      style={{ marginBottom: 0 }}
+                    >
+                      Incomplete
+                    </Typography>
+                    {selectedV1Case?.missingRequirements?.map((missing, i) => (
+                      <MissingRequirementRow
+                        key={`${missing}:${i}`}
+                        requirement={missing}
+                        context={v1CaseRequirementContext}
+                        v1CaseId={selectedV1Case.id}
+                      />
+                    ))}
+                  </Grid>
+                  <Grid item xs={12} sm={6} md={4} style={{ paddingRight: 20 }}>
+                    <Typography
+                      className="ph-unmask"
+                      variant="h3"
+                      style={{ marginBottom: 0 }}
+                    >
+                      Completed
+                    </Typography>
+                    {selectedV1Case?.completedRequirements?.map(
+                      (completed, i) => (
+                        <CompletedRequirementRow
+                          key={`${completed.completedRequirementId}:${i}`}
+                          requirement={completed}
+                          context={v1CaseRequirementContext}
+                        />
+                      )
+                    )}
+                    {selectedV1Case?.exemptedRequirements?.map(
+                      (exempted, i) => (
+                        <ExemptedRequirementRow
+                          key={`${exempted.requirementName}:${i}`}
+                          requirement={exempted}
+                          context={v1CaseRequirementContext}
+                        />
+                      )
+                    )}
+                  </Grid>
+                </>
+              )}
+            {showOverview && family.volunteerFamilyInfo && (
+              <>
+                <Grid item xs={12}>
+                  <Box
+                    sx={{
+                      '& > div:first-of-type': {
+                        marginLeft: 0,
+                      },
+                      '& > *': {
+                        margin: theme.spacing(0.5),
+                      },
+                    }}
+                  >
+                    {Object.entries(
+                      family.volunteerFamilyInfo?.familyRoleApprovals || {}
+                    ).flatMap(([role, roleApprovalStatus]) => (
+                      <VolunteerRoleApprovalStatusChip
+                        key={role}
+                        roleName={role}
+                        status={roleApprovalStatus.effectiveRoleApprovalStatus}
+                      />
+                    ))}
+                    {(family.volunteerFamilyInfo?.roleRemovals || []).map(
+                      (removedRole) => (
+                        <Chip
+                          key={removedRole.roleName}
+                          size="small"
+                          label={`${removedRole.roleName} - ${
+                            RoleRemovalReason[removedRole.reason!]
+                          } - ${removedRole.additionalComments}${
+                            removedRole.effectiveSince
+                              ? ' - effective ' +
+                                format(removedRole.effectiveSince, 'M/d/yy')
+                              : ''
+                          }${
+                            removedRole.effectiveUntil
+                              ? ' - through ' +
+                                format(removedRole.effectiveUntil, 'M/d/yy')
+                              : ''
+                          }`}
+                        />
+                      )
+                    )}
+                  </Box>
+                </Grid>
+                <Grid item xs={12} sm={6} md={4} style={{ paddingRight: 20 }}>
+                  <Typography className="ph-unmask" variant="h3">
+                    Incomplete
+                  </Typography>
+                  {family.volunteerFamilyInfo?.missingRequirements?.map(
+                    (missing, i) => (
+                      <MissingRequirementRow
+                        key={`${missing}:${i}`}
+                        requirement={missing.item1 || ''}
+                        policyVersions={missing.item2?.map((v) => ({
+                          version: v.item1 ?? '',
+                          roleName: v.item2 ?? '',
+                        }))}
+                        context={volunteerFamilyRequirementContext}
+                      />
+                    )
+                  )}
+                  <Divider />
+                  {family.volunteerFamilyInfo?.availableApplications?.map(
+                    (application, i) => (
+                      <MissingRequirementRow
+                        key={`${application}:${i}`}
+                        requirement={application}
+                        context={volunteerFamilyRequirementContext}
+                        isAvailableApplication={true}
+                      />
+                    )
+                  )}
+                </Grid>
+                <Grid item xs={12} sm={6} md={4} style={{ paddingRight: 20 }}>
+                  <Typography className="ph-unmask" variant="h3">
+                    Completed
+                  </Typography>
+                  {family.volunteerFamilyInfo?.completedRequirements?.map(
+                    (completed, i) => (
+                      <CompletedRequirementRow
+                        key={`${completed.completedRequirementId}:${i}`}
+                        requirement={completed}
+                        context={volunteerFamilyRequirementContext}
+                      />
+                    )
+                  )}
+                  {family.volunteerFamilyInfo?.exemptedRequirements?.map(
+                    (exempted, i) => (
+                      <ExemptedRequirementRow
+                        key={`${exempted.requirementName}:${i}`}
+                        requirement={exempted}
+                        context={volunteerFamilyRequirementContext}
+                      />
+                    )
+                  )}
+                </Grid>
+              </>
+            )}
+
+            {showDocuments &&
+              permissions(Permission.ViewFamilyDocumentMetadata) && (
+                <Grid item xs={12} lg={8} xl={5} mb={2}>
+                  <FamilyDocuments
+                    family={family}
+                    referrals={familyReferrals}
+                  />
+                </Grid>
+              )}
+          </Grid>
+          <Grid container spacing={0} sx={{ order: 1 }}>
+            {showArrangementsOrAssignments &&
+              !isVolunteerFamily &&
+              selectedV1Case && (
+                <ArrangementsSection
+                  v1Case={selectedV1Case}
+                  family={family}
+                  permissions={permissions}
+                  hideTitle
+                />
+              )}
+
+            <Grid
+              item
+              xs={12}
+              sx={{ display: showOverview ? undefined : 'none' }}
+            >
+              <Typography className="ph-unmask" variant="h3" sx={{ mb: 1 }}>
+                Family Members
+              </Typography>
+              <Masonry
+                columns={isDesktop ? (isWideScreen ? 3 : 2) : 1}
+                spacing={2}
+              >
+                {family.family?.adults?.map(
+                  (adult) =>
+                    adult.item1 &&
+                    adult.item1.id &&
+                    adult.item1.active &&
+                    adult.item2 && (
+                      <AdultCard
+                        key={adult.item1.id}
+                        familyId={familyId}
+                        personId={adult.item1.id}
+                      />
+                    )
+                )}
+                {family.family?.children?.map(
+                  (child) =>
+                    child.active && (
+                      <ChildCard
+                        key={child.id!}
+                        familyId={familyId}
+                        personId={child.id!}
+                      />
+                    )
+                )}
+              </Masonry>
+            </Grid>
+            <Grid
+              item
+              xs={12}
+              sx={{ display: showOverview ? undefined : 'none' }}
+            >
+              {permissions(Permission.ViewFamilyCustomFields) &&
+                orderCustomFieldsByPolicy(
+                  Array<CustomFieldRenderInfo>()
+                    .concat(family.family!.completedCustomFields)
+                    .concat(family.missingCustomFields || []),
+                  policy.customFamilyFields?.map((field) => field.name) ?? []
+                ).map((customField) => (
+                  <FamilyCustomField
+                    key={
+                      typeof customField === 'string'
+                        ? customField
+                        : customField.customFieldName
+                    }
+                    familyId={familyId}
+                    customField={customField}
+                  />
+                ))}
+              {permissions(Permission.ViewFamilyCustomFields) &&
+                family.volunteerFamilyInfo &&
+                orderCustomFieldsByPolicy(
+                  Array<CustomFieldRenderInfo>()
+                    .concat(
+                      family.volunteerFamilyInfo.completedCustomFields || []
+                    )
+                    .concat(
+                      family.volunteerFamilyInfo.missingCustomFields || []
+                    ),
+                  policy.volunteerPolicy?.customFields?.map(
+                    (field) => field.name
+                  ) ?? []
+                ).map((customField) => (
+                  <VolunteerFamilyCustomField
+                    key={
+                      typeof customField === 'string'
+                        ? customField
+                        : customField.customFieldName
+                    }
+                    familyId={familyId}
+                    customField={customField}
+                  />
+                ))}
+
+              <Grid item xs={12} md={4}>
+                {permissions(Permission.ViewV1CaseCustomFields) &&
+                  !referralsEnabled &&
+                  (
+                    selectedV1Case?.completedCustomFields ||
+                    ([] as Array<CompletedCustomFieldInfo | string>)
+                  )
+                    .concat(selectedV1Case?.missingCustomFields || [])
+                    .sort((a, b) =>
+                      (a instanceof CompletedCustomFieldInfo
+                        ? a.customFieldName!
+                        : a) <
+                      (b instanceof CompletedCustomFieldInfo
+                        ? b.customFieldName!
+                        : b)
+                        ? -1
+                        : (a instanceof CompletedCustomFieldInfo
+                              ? a.customFieldName!
+                              : a) >
+                            (b instanceof CompletedCustomFieldInfo
+                              ? b.customFieldName!
+                              : b)
+                          ? 1
+                          : 0
+                    )
+                    .map((customField) => (
+                      <V1CaseCustomField
+                        key={
+                          typeof customField === 'string'
+                            ? customField
+                            : customField.customFieldName
+                        }
+                        partneringFamilyId={familyId}
+                        v1CaseId={`${selectedV1Case!.id}`}
+                        customField={customField}
+                      />
+                    ))}
+              </Grid>
+            </Grid>
+          </Grid>
+        </Grid>
+        <Grid
+          item
+          xs={12}
+          lg={4}
+          sx={{ display: showOverview ? undefined : 'none' }}
+        >
+          <Box
+            sx={{
+              border: 1,
+              borderColor: 'divider',
+              borderRadius: 1,
+              p: 2,
+              ml: { lg: 2 },
+              mb: 2,
+              bgcolor: 'background.paper',
+            }}
+          >
+            <Typography className="ph-unmask" variant="h3" sx={{ mb: 1 }}>
+              Communities
+            </Typography>
+            {familyCommunityInfo.length === 0 ? (
+              <Typography color="text.secondary" variant="body2">
+                No communities.
+              </Typography>
+            ) : (
+              familyCommunityInfo.map((communityInfo) => (
+                <ListItemButton
+                  key={communityInfo.community?.id}
+                  sx={{
+                    padding: '.5rem',
+                    border: '1px solid #e0e0e0',
+                    borderRadius: '5px',
+                  }}
+                  onClick={() =>
+                    communityInfo.community?.id
+                      ? appNavigate.community(communityInfo.community.id)
+                      : {}
+                  }
+                >
+                  <ListItemIcon
+                    sx={{ alignSelf: 'center', justifyContent: 'center' }}
+                  >
+                    <Diversity3Icon color="primary" />
+                  </ListItemIcon>
+                  <ListItemText
+                    sx={{ alignSelf: 'baseline' }}
+                    primary={communityInfo.community?.name}
+                    slotProps={{
+                      primary: {
+                        color: theme.palette.primary.main,
+                      },
+                    }}
+                  />
+                </ListItemButton>
+              ))
+            )}
+          </Box>
+          <Box
+            sx={{
+              border: 1,
+              borderColor: 'divider',
+              borderRadius: 1,
+              p: 2,
+              ml: { lg: 2 },
+              mt: { xs: 2, lg: 0 },
+              bgcolor: 'background.paper',
+            }}
+          >
+            <Box
+              sx={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                mb: 2,
+              }}
+            >
+              <Typography variant="h3" className="ph-unmask" sx={{ m: 0 }}>
+                Recent Activity: Last 7 days
+              </Typography>
+              <Button size="small" onClick={() => setSelectedTab(3)}>
+                View All
+              </Button>
+            </Box>
+
+            {recentOverviewTimelineItems.length === 0 ? (
+              <Typography color="text.secondary" variant="body2">
+                No recent activity in the last 7 days.
+              </Typography>
+            ) : (
+              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                {recentOverviewTimelineItems.map((item) => (
+                  <Box
+                    key={item.id}
+                    sx={{
+                      display: 'grid',
+                      gridTemplateColumns: '32px 1fr',
+                      columnGap: 1.5,
+                    }}
+                  >
+                    <Box
+                      sx={{
+                        width: 32,
+                        height: 32,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        color: 'text.secondary',
+                      }}
+                    >
+                      {item.icon === 'check' ? (
+                        '✔'
+                      ) : item.icon === 'location' ? (
+                        <PersonPinCircleIcon fontSize="small" />
+                      ) : (
+                        <NotesIcon fontSize="small" />
+                      )}
+                    </Box>
+                    <Box sx={{ minWidth: 0 }}>
+                      <Typography
+                        className="ph-unmask"
+                        variant="caption"
+                        color="text.secondary"
+                      >
+                        {format(item.timestamp, 'MMM d, h:mm a')}
+                      </Typography>
+                      <Typography className="ph-unmask" variant="body2">
+                        {item.userId ? (
+                          <PersonName person={userLookup(item.userId)} />
+                        ) : item.note ? (
+                          <PersonName person={noteAuthorLookup(item.note)} />
+                        ) : (
+                          item.title
+                        )}
+                      </Typography>
+                      <Typography
+                        className="ph-unmask"
+                        variant="body2"
+                        sx={{ fontWeight: 600 }}
+                      >
+                        {item.title}
+                      </Typography>
+                      {item.subtitle && (
+                        <ClampTypography
+                          className="ph-unmask"
+                          variant="body2"
+                          color="text.secondary"
+                        >
+                          {item.subtitle}
+                        </ClampTypography>
+                      )}
+                      {renderRecentNoteActions(item)}
+                    </Box>
+                  </Box>
+                ))}
+              </Box>
+            )}
+          </Box>
+        </Grid>
+      </Grid>
     </Container>
   );
 }

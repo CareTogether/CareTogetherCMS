@@ -1,3 +1,4 @@
+import Grid from '@mui/material/Grid';
 import {
   Box,
   Button,
@@ -5,7 +6,6 @@ import {
   CardActions,
   CardContent,
   Container,
-  Grid,
   Typography,
 } from '@mui/material';
 import {
@@ -29,7 +29,7 @@ export function Support() {
 
   return (
     <Container maxWidth="lg" sx={{ py: 6 }}>
-      <Box textAlign="center" mb={6}>
+      <Box sx={{ textAlign: 'center', mb: 6 }}>
         <Typography
           variant="h3"
           component="h1"
@@ -49,7 +49,7 @@ export function Support() {
       </Box>
 
       <Grid container spacing={4} sx={{ mb: 6 }}>
-        <Grid item xs={12} md={6}>
+        <Grid size={{ xs: 12, md: 6 }}>
           <Card
             variant="outlined"
             sx={{
@@ -63,12 +63,12 @@ export function Support() {
               <Typography variant="h5" component="h2" gutterBottom>
                 Chat Support
               </Typography>
-              <Typography variant="body1" color="text.secondary" paragraph>
+              <Typography variant="body1" color="text.secondary" sx={{ mb: 2 }}>
                 Get asynchronous help through our chat support. Perfect for
                 quick questions, troubleshooting, and general support.
               </Typography>
 
-              <Typography variant="body1" color="text.secondary" paragraph>
+              <Typography variant="body1" color="text.secondary" sx={{ mb: 2 }}>
                 <strong>Our typical response time is 2-3 business days.</strong>
               </Typography>
             </CardContent>
@@ -90,7 +90,7 @@ export function Support() {
           </Card>
         </Grid>
 
-        <Grid item xs={12} md={6}>
+        <Grid size={{ xs: 12, md: 6 }}>
           <Card
             variant="outlined"
             sx={{
@@ -106,7 +106,7 @@ export function Support() {
               <Typography variant="h5" component="h2" gutterBottom>
                 Schedule a Call
               </Typography>
-              <Typography variant="body1" color="text.secondary" paragraph>
+              <Typography variant="body1" color="text.secondary" sx={{ mb: 2 }}>
                 Book a one-on-one call with our support team for in-depth
                 assistance and personalized guidance.
               </Typography>

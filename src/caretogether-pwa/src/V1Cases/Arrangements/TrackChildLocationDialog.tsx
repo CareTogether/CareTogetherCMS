@@ -1,4 +1,6 @@
-import { useState } from 'react';
+import Grid from '../../Generic/GridLegacyCompat';
+import {
+  useState } from 'react';
 import {
   Button,
   Dialog,
@@ -9,7 +11,6 @@ import {
   FormControl,
   FormControlLabel,
   FormLabel,
-  Grid,
   IconButton,
   InputLabel,
   MenuItem,
@@ -31,14 +32,14 @@ import {
   ArrangementPhase,
 } from '../../GeneratedClient';
 import {
-  Timeline,
-  TimelineConnector,
-  TimelineContent,
-  TimelineDot,
-  TimelineItem,
-  TimelineOppositeContent,
-  TimelineSeparator,
-} from '@mui/lab';
+  AppTimeline,
+  AppTimelineConnector,
+  AppTimelineContent,
+  AppTimelineDot,
+  AppTimelineItem,
+  AppTimelineOppositeContent,
+  AppTimelineSeparator,
+} from '../../Generic/AppTimeline';
 import {
   Delete as DeleteIcon,
   Event as EventIcon,
@@ -137,10 +138,10 @@ function ChildLocationTimeline({
   const now = new Date();
 
   return (
-    <Timeline position="right">
+    <AppTimeline position="right">
       {allEntries.map((entry, i) => (
-        <TimelineItem key={i}>
-          <TimelineOppositeContent>
+        <AppTimelineItem key={i}>
+          <AppTimelineOppositeContent>
             <span
               style={{
                 fontWeight: entry === currentLocationEntry ? 'bold' : 'normal',
@@ -168,9 +169,9 @@ function ChildLocationTimeline({
             >
               <DeleteIcon />
             </IconButton>
-          </TimelineOppositeContent>
-          <TimelineSeparator>
-            <TimelineDot
+          </AppTimelineOppositeContent>
+          <AppTimelineSeparator>
+            <AppTimelineDot
               color={
                 entry === currentLocationEntry
                   ? 'primary'
@@ -187,10 +188,10 @@ function ChildLocationTimeline({
               ) : (
                 <EventIcon fontSize="small" />
               )}
-            </TimelineDot>
-            <TimelineConnector sx={{ opacity: entry.noteId ? 1.0 : 0.5 }} />
-          </TimelineSeparator>
-          <TimelineContent>
+            </AppTimelineDot>
+            <AppTimelineConnector sx={{ opacity: entry.noteId ? 1.0 : 0.5 }} />
+          </AppTimelineSeparator>
+          <AppTimelineContent>
             <span
               style={{
                 fontWeight: entry === currentLocationEntry ? 'bold' : 'normal',
@@ -211,10 +212,10 @@ function ChildLocationTimeline({
                   ? 'overnight housing'
                   : 'with parent'}
             </span>
-          </TimelineContent>
-        </TimelineItem>
+          </AppTimelineContent>
+        </AppTimelineItem>
       ))}
-    </Timeline>
+    </AppTimeline>
   );
 }
 

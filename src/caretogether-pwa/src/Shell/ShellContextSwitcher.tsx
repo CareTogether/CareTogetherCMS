@@ -96,10 +96,12 @@ export function ShellContextSwitcher() {
                 },
             }}
             MenuProps={{
-              MenuListProps: {
-                sx: {
-                  backgroundColor: theme.palette.primary.light,
-                  color: theme.palette.primary.contrastText,
+              slotProps: {
+                list: {
+                  sx: {
+                    backgroundColor: theme.palette.primary.light,
+                    color: theme.palette.primary.contrastText,
+                  },
                 },
               },
             }}

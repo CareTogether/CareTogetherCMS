@@ -47,8 +47,10 @@ export function ArrangementCard({
         sx={{
           paddingTop: 0.5,
           paddingBottom: 0,
-          '& .MuiCardHeader-title': {
-            fontSize: '16px',
+        }}
+        slotProps={{
+          title: {
+            sx: { fontSize: '16px' },
           },
         }}
         title={

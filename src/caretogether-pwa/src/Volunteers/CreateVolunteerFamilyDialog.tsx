@@ -1,4 +1,6 @@
-import { useState } from 'react';
+import Grid from '@mui/material/Grid';
+import {
+  useState } from 'react';
 import {
   Button,
   Checkbox,
@@ -12,7 +14,6 @@ import {
   FormControlLabel,
   FormGroup,
   FormLabel,
-  Grid,
   InputAdornment,
   InputLabel,
   MenuItem,
@@ -149,7 +150,7 @@ export function CreateVolunteerFamilyDialog({
         </DialogContentText>
         <form noValidate autoComplete="off">
           <Grid container spacing={2}>
-            <Grid item xs={12} sm={6}>
+            <Grid size={{ xs: 12, sm: 6 }}>
               <TextField
                 required
                 id="first-name"
@@ -162,7 +163,7 @@ export function CreateVolunteerFamilyDialog({
                 }
               />
             </Grid>
-            <Grid item xs={12} sm={6}>
+            <Grid size={{ xs: 12, sm: 6 }}>
               <TextField
                 required
                 id="last-name"
@@ -175,7 +176,7 @@ export function CreateVolunteerFamilyDialog({
                 }
               />
             </Grid>
-            <Grid item xs={12} sm={6}>
+            <Grid size={{ xs: 12, sm: 6 }}>
               <FormControl required fullWidth size="small">
                 <InputLabel id="family-relationship-label">
                   Relationship to Family
@@ -203,7 +204,7 @@ export function CreateVolunteerFamilyDialog({
                 </Select>
               </FormControl>
             </Grid>
-            <Grid item xs={12} sm={6}>
+            <Grid size={{ xs: 12, sm: 6 }}>
               <FormGroup row>
                 <FormControlLabel
                   control={
@@ -224,10 +225,10 @@ export function CreateVolunteerFamilyDialog({
                 />
               </FormGroup>
             </Grid>
-            <Grid item xs={12}>
+            <Grid size={12}>
               <Divider />
             </Grid>
-            <Grid item xs={12}>
+            <Grid size={12}>
               <FormControl component="fieldset">
                 <FormLabel component="legend">Gender:</FormLabel>
                 <RadioGroup
@@ -260,7 +261,7 @@ export function CreateVolunteerFamilyDialog({
                 </RadioGroup>
               </FormControl>
             </Grid>
-            <Grid item xs={12} sm={6}>
+            <Grid size={{ xs: 12, sm: 6 }}>
               <ValidateDatePicker
                 label="Date of birth"
                 value={dateOfBirth}
@@ -274,7 +275,7 @@ export function CreateVolunteerFamilyDialog({
                 }}
               />
             </Grid>
-            <Grid item xs={12} sm={6}>
+            <Grid size={{ xs: 12, sm: 6 }}>
               <FormControl fullWidth size="small">
                 <InputLabel id="ethnicity-label">Ethnicity</InputLabel>
                 <Select
@@ -300,8 +301,8 @@ export function CreateVolunteerFamilyDialog({
                 </Select>
               </FormControl>
             </Grid>
-            <Grid item xs={12}></Grid>
-            <Grid item xs={12} sm={6}>
+            <Grid size={12}></Grid>
+            <Grid size={{ xs: 12, sm: 6 }}>
               <TextField
                 id="phone-number"
                 label="Phone Number"
@@ -314,7 +315,7 @@ export function CreateVolunteerFamilyDialog({
                 }
               />
             </Grid>
-            <Grid item xs={12} sm={6}>
+            <Grid size={{ xs: 12, sm: 6 }}>
               <FormControl component="fieldset">
                 <RadioGroup
                   aria-label="phoneType"
@@ -350,7 +351,7 @@ export function CreateVolunteerFamilyDialog({
                 </RadioGroup>
               </FormControl>
             </Grid>
-            <Grid item xs={12} sm={6}>
+            <Grid size={{ xs: 12, sm: 6 }}>
               <TextField
                 id="email-address"
                 label="Email Address"
@@ -363,7 +364,7 @@ export function CreateVolunteerFamilyDialog({
                 }
               />
             </Grid>
-            <Grid item xs={12} sm={6}>
+            <Grid size={{ xs: 12, sm: 6 }}>
               <FormControl component="fieldset">
                 <RadioGroup
                   aria-label="emailType"
@@ -393,13 +394,13 @@ export function CreateVolunteerFamilyDialog({
                 </RadioGroup>
               </FormControl>
             </Grid>
-            <Grid item xs={12}></Grid>
+            <Grid size={12}></Grid>
             <AddressFormFields
               address={address}
               onEdit={(value) => setFields({ ...fields, address: value })}
             />
-            <Grid item xs={12}></Grid>
-            <Grid item xs={12}>
+            <Grid size={12}></Grid>
+            <Grid size={12}>
               <TextField
                 id="concerns"
                 label="Concerns"
@@ -410,12 +411,14 @@ export function CreateVolunteerFamilyDialog({
                 minRows={2}
                 maxRows={5}
                 size="small"
-                InputProps={{
-                  startAdornment: (
-                    <InputAdornment position="start">
-                      <WarningIcon />
-                    </InputAdornment>
-                  ),
+                slotProps={{
+                  input: {
+                    startAdornment: (
+                      <InputAdornment position="start">
+                        <WarningIcon />
+                      </InputAdornment>
+                    ),
+                  },
                 }}
                 value={concerns == null ? '' : concerns}
                 onChange={(e) =>
@@ -423,7 +426,7 @@ export function CreateVolunteerFamilyDialog({
                 }
               />
             </Grid>
-            <Grid item xs={12}>
+            <Grid size={12}>
               <TextField
                 id="notes"
                 label="Notes"

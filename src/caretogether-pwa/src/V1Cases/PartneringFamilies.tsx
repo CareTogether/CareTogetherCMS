@@ -1,7 +1,7 @@
 import {
+  Box,
   Button,
   FormControl,
-  Grid,
   InputBase,
   InputLabel,
   MenuItem,
@@ -11,7 +11,6 @@ import {
   Table,
   TableBody,
   TableCell,
-  TableContainer,
   TableHead,
   TableRow,
   ToggleButton,
@@ -35,7 +34,11 @@ import { useLocalStorage } from '../Hooks/useLocalStorage';
 import { policyData } from '../Model/ConfigurationModel';
 import { SearchBar } from '../Shell/SearchBar';
 import { filterFamiliesByText } from '../Families/FamilyUtils';
-import { useAllPartneringFamiliesPermissions } from '../Model/SessionModel';
+import { usePersonAndFamilyLookup } from '../Model/DirectoryModel';
+import {
+  useAllPartneringFamiliesPermissions,
+  useGlobalPermissions,
+} from '../Model/SessionModel';
 import { useScreenTitle } from '../Shell/ShellScreenTitle';
 import { useLoadable } from '../Hooks/useLoadable';
 import { ProgressBackdrop } from '../Shell/ProgressBackdrop';
@@ -47,7 +50,9 @@ import { forceCheck } from '../Utilities/reactLazyLoadInterop';
 import { PartneringFamilyTableItem } from './PartneringFamilies/PartneringFamilyTableItem';
 import { arrangementStatusSummary } from './PartneringFamilies/arrangementStatusSummary';
 import { ArrangementsFilter } from './PartneringFamilies/types';
-import { stickyHeaderTableSx } from '../Utilities/stickyHeaderTableSx';
+import { containedStickyHeaderTableSx } from '../Utilities/stickyHeaderTableSx';
+import { WideTableContainer } from '../Utilities/WideTableContainer';
+import { wideTablePageSx } from '../Utilities/wideTablePageSx';
 import { getFamilyCounty } from '../Utilities/getFamilyCounty';
 import { CountyFilter } from '../V1Referrals/CountyFilter';
 import { visibleReferralsQuery } from '../Model/Data';
@@ -59,6 +64,13 @@ import {
 } from './PartneringFamilies/sortPartneringFamilies';
 import { useSidePanel } from '../Hooks/useSidePanel';
 import { PartneringFamilyCustomFieldFiltersSidePanel } from './PartneringFamilies/PartneringFamilyCustomFieldFiltersSidePanel';
+import { FUNCTION_ASSIGNMENTS_FEATURE_FLAG } from '../featureFlags';
+import {
+  AssignmentFilterSelectionsByRole,
+  assignmentRolesForColumns,
+  matchesAssignmentFilters,
+} from '../FunctionAssignments/assignmentRoleColumns';
+import { AssignmentRoleFilters } from '../FunctionAssignments/AssignmentRoleFilters';
 
 const PARTNERING_FAMILIES_SORT_STORAGE_KEY = 'partnering-families-sortMode';
 
@@ -72,6 +84,8 @@ function isSetupOrActiveArrangementPhase(phase: ArrangementPhase | undefined) {
 
 function PartneringFamilies() {
   const appNavigate = useAppNavigate();
+  const personAndFamilyLookup = usePersonAndFamilyLookup();
+  const globalPermissions = useGlobalPermissions();
   const {
     SidePanel: CustomFieldFiltersSidePanel,
     openSidePanel: openCustomFieldFiltersSidePanel,
@@ -85,7 +99,10 @@ function PartneringFamilies() {
   );
   const visibleReferralsLoadable = useLoadable(visibleReferralsQuery);
   const visibleReferrals = React.useMemo(
-    () => visibleReferralsLoadable || [],
+    () =>
+      (visibleReferralsLoadable || []).map(
+        (referralInfo) => referralInfo.referral
+      ),
     [visibleReferralsLoadable]
   );
   const openReferralByFamily = React.useMemo(
@@ -143,6 +160,28 @@ function PartneringFamilies() {
   const activeCustomFieldFilterCount = Object.values(
     selectedCustomFieldValuesByField
   ).filter((selectedValues) => selectedValues.length > 0).length;
+  const [assignmentFilters, setAssignmentFilters] =
+    useState<AssignmentFilterSelectionsByRole>({});
+
+  const permissions = useAllPartneringFamiliesPermissions();
+  const functionAssignmentsEnabled = useFeatureFlagEnabled(
+    FUNCTION_ASSIGNMENTS_FEATURE_FLAG
+  );
+  const canViewFunctionAssignments =
+    functionAssignmentsEnabled === true &&
+    permissions(Permission.ViewV1CaseFunctionAssignments);
+  const assignmentRoles = canViewFunctionAssignments
+    ? assignmentRolesForColumns(
+        loadablePolicy?.referralPolicy?.functionAssignmentPolicies?.map(
+          (assignmentPolicy) => assignmentPolicy.assignmentRole
+        ) ?? [],
+        partneringFamilies.flatMap(
+          (family) =>
+            family.partneringFamilyInfo?.openV1Case
+              ?.assignedIndividualVolunteers ?? []
+        )
+      )
+    : [];
 
   useScrollMemory();
 
@@ -201,6 +240,15 @@ function PartneringFamilies() {
               : countyFilter.includes(county);
           })
           .filter((family) => {
+            if (!canViewFunctionAssignments) return true;
+
+            return matchesAssignmentFilters(
+              family.partneringFamilyInfo?.openV1Case
+                ?.assignedIndividualVolunteers ?? [],
+              assignmentFilters
+            );
+          })
+          .filter((family) => {
             const familyId = family.family?.id;
             const openCase = family.partneringFamilyInfo?.openV1Case;
             const arrangements = openCase?.arrangements ?? [];
@@ -243,7 +291,9 @@ function PartneringFamilies() {
         openReferralByFamily
       ),
     [
+      assignmentFilters,
       arrangementsFilter,
+      canViewFunctionAssignments,
       countyFilter,
       filteredPartneringFamilies,
       openReferralByFamily,
@@ -256,6 +306,7 @@ function PartneringFamilies() {
   React.useEffect(() => {
     forceCheck();
   }, [
+    assignmentFilters,
     arrangementsFilter,
     filterText,
     selectedCustomFieldValuesByField,
@@ -270,11 +321,16 @@ function PartneringFamilies() {
     'updateTestFamilyFlag'
   );
 
-  const permissions = useAllPartneringFamiliesPermissions();
-
   const canCreateFamily =
     permissions(Permission.EditFamilyInfo) &&
     permissions(Permission.CreateV1Case);
+  const tableColumnCount =
+    3 +
+    assignmentRoles.length +
+    referralCustomFields.length +
+    (expandedView ? 0 : (arrangementTypes?.length ?? 0));
+  const tableMinWidth = Math.max(700, tableColumnCount * 160);
+  const hasFeaturebaseChat = globalPermissions(Permission.AccessSupportScreen);
 
   // const showAddFamilyButton = !referralsEnabled && canCreateFamily;
   const showAddFamilyButton = true;
@@ -286,8 +342,8 @@ function PartneringFamilies() {
       <p>Loading families...</p>
     </ProgressBackdrop>
   ) : (
-    <Grid container>
-      <Grid item xs={12}>
+    <Box sx={wideTablePageSx(hasFeaturebaseChat)}>
+      <Box sx={{ flex: '0 0 auto' }}>
         <Stack
           direction="row"
           sx={{
@@ -313,6 +369,7 @@ function PartneringFamilies() {
             </Button>
           )}
           <ToggleButtonGroup
+            sx={{ marginLeft: 'auto' }}
             value={arrangementsFilter}
             exclusive
             onChange={(_, value) => setArrangementsFilter(value)}
@@ -357,6 +414,26 @@ function PartneringFamilies() {
             value={countyFilter}
             onChange={setCountyFilter}
           />
+          {canViewFunctionAssignments && (
+            <AssignmentRoleFilters
+              assignmentRoles={assignmentRoles}
+              assignments={partneringFamilies.flatMap(
+                (family) =>
+                  family.partneringFamilyInfo?.openV1Case
+                    ?.assignedIndividualVolunteers ?? []
+              )}
+              selectedValuesByRole={assignmentFilters}
+              onChange={(assignmentRole, selectedValues) =>
+                setAssignmentFilters((current) => ({
+                  ...current,
+                  [assignmentRole]: selectedValues,
+                }))
+              }
+              personLookup={(personId) =>
+                personAndFamilyLookup(personId).person
+              }
+            />
+          )}
           {customFieldCount > 0 && (
             <FormControl
               sx={{
@@ -414,7 +491,7 @@ function PartneringFamilies() {
           </ToggleButtonGroup>
         </Stack>
 
-        <Stack my={2} direction="row" justifyContent="flex-end">
+        <Stack direction="row" sx={{ my: 2, justifyContent: 'flex-end' }}>
           <FormControl size="small" sx={{ minWidth: 140 }}>
             <InputLabel id="partnering-families-sort-label">Sort by</InputLabel>
             <Select
@@ -427,6 +504,10 @@ function PartneringFamilies() {
             >
               <MenuItem value="lastNameAsc">Last name (ascending)</MenuItem>
               <MenuItem value="lastNameDesc">Last name (descending)</MenuItem>
+              <MenuItem value="firstNameAsc">First name (ascending)</MenuItem>
+              <MenuItem value="firstNameDesc">
+                First name (descending)
+              </MenuItem>
               <MenuItem value="dateOpenedDesc">
                 Date opened (descending)
               </MenuItem>
@@ -444,17 +525,18 @@ function PartneringFamilies() {
             onClose={closeCustomFieldFiltersSidePanel}
           />
         </CustomFieldFiltersSidePanel>
-      </Grid>
-      <Grid item xs={12} className="cases-table">
-        <TableContainer
-          sx={{
-            borderBottom: '1px solid rgba(224, 224, 224, 1)',
-            overflow: 'visible',
-          }}
-        >
+      </Box>
+      <Box
+        className="cases-table"
+        sx={{ display: 'flex', flex: 1, flexDirection: 'column', minHeight: 0 }}
+      >
+        <WideTableContainer>
           <Table
             stickyHeader
-            sx={{ ...stickyHeaderTableSx, minWidth: '700px' }}
+            sx={{
+              ...containedStickyHeaderTableSx,
+              minWidth: tableMinWidth,
+            }}
             size="small"
           >
             <TableHead>
@@ -462,6 +544,10 @@ function PartneringFamilies() {
                 <TableCell>Client Family</TableCell>
                 <TableCell>Case Status</TableCell>
                 <TableCell>County</TableCell>
+                {canViewFunctionAssignments &&
+                  assignmentRoles.map((assignmentRole) => (
+                    <TableCell key={assignmentRole}>{assignmentRole}</TableCell>
+                  ))}
                 {referralCustomFields.map((field) => (
                   <TableCell
                     key={field.name}
@@ -499,6 +585,12 @@ function PartneringFamilies() {
                     appNavigate.family(familyId, v1CaseId, arrangementId)
                   }
                   openFamily={openFamily}
+                  assignmentRoles={
+                    canViewFunctionAssignments ? assignmentRoles : []
+                  }
+                  assignmentPersonLookup={(personId) =>
+                    personAndFamilyLookup(personId).person
+                  }
                   referralCustomFields={referralCustomFields}
                   arrangementStatusSummary={arrangementStatusSummary}
                   updateTestFamilyFlagEnabled={updateTestFamilyFlagEnabled}
@@ -506,7 +598,7 @@ function PartneringFamilies() {
               ))}
             </TableBody>
           </Table>
-        </TableContainer>
+        </WideTableContainer>
 
         {createPartneringFamilyDialogOpen && (
           <CreatePartneringFamilyDrawer
@@ -521,8 +613,8 @@ function PartneringFamilies() {
             }}
           />
         )}
-      </Grid>
-    </Grid>
+      </Box>
+    </Box>
   );
 }
 

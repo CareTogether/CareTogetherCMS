@@ -103,10 +103,12 @@ export function CommunitiesList() {
           anchor="right"
           open={addDrawerOpen}
           onClose={() => setAddDrawerOpen(false)}
-          sx={{
-            '.MuiDrawer-paper': {
-              padding: 2,
-              paddingTop: { xs: 7, sm: 8, md: 6 },
+          slotProps={{
+            paper: {
+              sx: {
+                padding: 2,
+                paddingTop: { xs: 7, sm: 8, md: 6 },
+              },
             },
           }}
         >

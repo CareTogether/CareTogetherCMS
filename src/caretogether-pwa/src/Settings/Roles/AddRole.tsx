@@ -1,6 +1,6 @@
+import Grid from '@mui/material/Grid';
 import {
   Button,
-  Grid,
   TextField,
   Checkbox,
   FormControlLabel,
@@ -53,7 +53,7 @@ export function AddRole({ onClose }: AddEditRoleDrawerProps) {
       className="ph-unmask"
       container
       spacing={2}
-      maxWidth={500}
+      sx={{ maxWidth: 500 }}
       component="form" // This allows easier editing & submitting via the keyboard
       onSubmit={(event) => {
         // Avoids a page reload
@@ -61,11 +61,11 @@ export function AddRole({ onClose }: AddEditRoleDrawerProps) {
         save();
       }}
     >
-      <Grid item xs={12}>
+      <Grid size={12}>
         <h3>Add New Role</h3>
       </Grid>
 
-      <Grid item xs={12}>
+      <Grid size={12}>
         <TextField
           type="text"
           fullWidth
@@ -79,7 +79,7 @@ export function AddRole({ onClose }: AddEditRoleDrawerProps) {
         />
       </Grid>
 
-      <Grid item xs={12}>
+      <Grid size={12}>
         <FormControl>
           <FormControlLabel
             control={
@@ -100,7 +100,7 @@ export function AddRole({ onClose }: AddEditRoleDrawerProps) {
         </FormControl>
       </Grid>
 
-      <Grid item xs={12} sx={{ textAlign: 'right' }}>
+      <Grid size={12} sx={{ textAlign: 'right' }}>
         <Button
           color="secondary"
           variant="contained"

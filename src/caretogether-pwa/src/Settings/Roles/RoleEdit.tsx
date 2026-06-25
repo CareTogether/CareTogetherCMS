@@ -18,6 +18,8 @@ import {
   AllVolunteerFamiliesPermissionContext,
   AssignedFunctionsInReferralCoAssigneeFamiliesPermissionContext as AssignedFunctionsInV1CaseCoAssigneeFamiliesPermissionContext,
   AssignedFunctionsInReferralPartneringFamilyPermissionContext as AssignedFunctionsInV1CasePartneringFamilyPermissionContext,
+  AssignedVolunteerInV1CasePermissionContext,
+  AssignedVolunteerInV1ReferralPermissionContext,
   CommunityCoMemberFamiliesPermissionContext,
   CommunityMemberPermissionContext,
   ContextualPermissionSet,
@@ -47,7 +49,7 @@ import { Breadcrumbs } from '../../Generic/Breadcrumbs';
 import {
   DESKTOP_BOTTOM_SAFE_AREA,
   MOBILE_BOTTOM_SAFE_AREA,
-} from '../../Shell/ShellRootLayout';
+} from '../../Shell/shellLayoutConstants';
 
 export function RoleEdit({
   roleDefinition,
@@ -142,10 +144,12 @@ export function RoleEdit({
   return (
     <Stack
       className="ph-unmask"
-      paddingTop={2}
-      height={{
-        xs: `calc(100vh - 48px - ${MOBILE_BOTTOM_SAFE_AREA}px)`,
-        md: `calc(100vh - 48px - ${DESKTOP_BOTTOM_SAFE_AREA}px)`,
+      sx={{
+        paddingTop: 2,
+        height: {
+          xs: `calc(100vh - 48px - ${MOBILE_BOTTOM_SAFE_AREA}px)`,
+          md: `calc(100vh - 48px - ${DESKTOP_BOTTOM_SAFE_AREA}px)`,
+        },
       }}
       spacing={0}
     >
@@ -297,6 +301,26 @@ export function RoleEdit({
         <MenuItem
           dense
           onClick={() =>
+            addPermissionSet(
+              () => new AssignedVolunteerInV1CasePermissionContext()
+            )
+          }
+        >
+          Assigned Volunteer in Case
+        </MenuItem>
+        <MenuItem
+          dense
+          onClick={() =>
+            addPermissionSet(
+              () => new AssignedVolunteerInV1ReferralPermissionContext()
+            )
+          }
+        >
+          Assigned Volunteer in Referral
+        </MenuItem>
+        <MenuItem
+          dense
+          onClick={() =>
             addPermissionSet(() => new CommunityMemberPermissionContext())
           }
         >
@@ -338,10 +362,13 @@ export function RoleEdit({
         </MenuItem>
       </Menu>
 
-      <Box paddingTop={2} borderTop={1} borderColor="divider">
-        <Stack direction="row" justifyContent="flex-end" alignItems="center">
+      <Box sx={{ paddingTop: 2, borderTop: 1, borderColor: 'divider' }}>
+        <Stack
+          direction="row"
+          sx={{ justifyContent: 'flex-end', alignItems: 'center' }}
+        >
           {dirty && (
-            <Typography sx={{ fontStyle: 'italic' }} mr={2}>
+            <Typography sx={{ fontStyle: 'italic', mr: 2 }}>
               There are pending changes to be saved
             </Typography>
           )}

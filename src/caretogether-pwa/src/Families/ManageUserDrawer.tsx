@@ -1,5 +1,5 @@
+import Grid from '@mui/material/Grid';
 import {
-  Grid,
   Button,
   Icon,
   useTheme,
@@ -170,11 +170,11 @@ export function ManageUserDrawer({
   }
 
   return (
-    <Grid container spacing={2} maxWidth={500}>
-      <Grid item xs={12}>
+    <Grid container spacing={2} sx={{ maxWidth: 500 }}>
+      <Grid size={12}>
         <h3>Manage User: {personNameString(adult)}</h3>
       </Grid>
-      <Grid item xs={12}>
+      <Grid size={12}>
         {user?.userId ? (
           <p style={{ color: theme.palette.info.main }}>
             <Icon color="info" sx={{ verticalAlign: 'sub', marginRight: 1 }}>
@@ -257,12 +257,9 @@ export function ManageUserDrawer({
         )}
         <Divider />
       </Grid>
-      <Grid item xs={12}>
+      <Grid size={12}>
         <Typography variant="h6">Assigned Roles</Typography>
-        <List
-          sx={{ '& .MuiListItemIcon-root': { minWidth: 36 } }}
-          dense={isDesktop}
-        >
+        <List dense={isDesktop}>
           {configuration?.roles?.map((role, i) => (
             <ListItem key={role.roleName} disablePadding>
               <ListItemButton
@@ -276,14 +273,16 @@ export function ManageUserDrawer({
                 }
                 onClick={toggleRoleSelection(role.roleName!)}
               >
-                <ListItemIcon>
+                <ListItemIcon sx={{ minWidth: 36 }}>
                   <Checkbox
                     edge="start"
                     size={isDesktop ? 'small' : 'medium'}
                     checked={selectedRoles.indexOf(role.roleName!) !== -1}
                     tabIndex={-1}
                     disableRipple
-                    inputProps={{ 'aria-labelledby': `checkbox-role-${i}` }}
+                    slotProps={{
+                      input: { 'aria-labelledby': `checkbox-role-${i}` },
+                    }}
                   />
                 </ListItemIcon>
                 <ListItemText
@@ -298,7 +297,7 @@ export function ManageUserDrawer({
           ))}
         </List>
       </Grid>
-      <Grid item xs={12} sx={{ textAlign: 'right' }}>
+      <Grid size={12} sx={{ textAlign: 'right' }}>
         <Button
           color="secondary"
           variant="text"

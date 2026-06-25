@@ -46,14 +46,14 @@ namespace CareTogether.Resources.V1Referrals
         Guid? NoteId
     ) : Activity(UserId, AuditTimestampUtc, CompletedAtUtc, UploadedDocumentId, NoteId);
 
-    public sealed record V1ReferralStaffAssigned(
+    public sealed record V1ReferralIndividualVolunteerAssigned(
         Guid UserId,
         DateTime AuditTimestampUtc,
         Guid PersonId,
         string AssignmentRole
     ) : Activity(UserId, AuditTimestampUtc, AuditTimestampUtc, null, null);
 
-    public sealed record V1ReferralStaffUnassigned(
+    public sealed record V1ReferralIndividualVolunteerUnassigned(
         Guid UserId,
         DateTime AuditTimestampUtc,
         Guid PersonId,
@@ -66,6 +66,8 @@ namespace CareTogether.Resources.V1Referrals
             Guid,
             V1Referral
         >.Empty;
+        private ImmutableDictionary<Guid, ImmutableSortedSet<Guid>> referralIdsByFamilyId =
+            ImmutableDictionary<Guid, ImmutableSortedSet<Guid>>.Empty;
 
         public long LastKnownSequenceNumber { get; private set; } = -1;
 
@@ -102,7 +104,13 @@ namespace CareTogether.Resources.V1Referrals
                 OnCommit: () =>
                 {
                     LastKnownSequenceNumber++;
+                    referrals.TryGetValue(updatedReferral.ReferralId, out var existingReferral);
                     referrals = referrals.SetItem(updatedReferral.ReferralId, updatedReferral);
+                    referralIdsByFamilyId = UpdateFamilyReferralIndex(
+                        referralIdsByFamilyId,
+                        existingReferral,
+                        updatedReferral
+                    );
                 }
             );
         }
@@ -112,6 +120,13 @@ namespace CareTogether.Resources.V1Referrals
 
         public ImmutableList<V1Referral> FindReferrals(Func<V1Referral, bool> predicate) =>
             referrals.Values.Where(predicate).ToImmutableList();
+
+        public ImmutableList<V1Referral> GetFamilyReferrals(Guid familyId)
+        {
+            return referralIdsByFamilyId.TryGetValue(familyId, out var referralIds)
+                ? referralIds.Select(referralId => referrals[referralId]).ToImmutableList()
+                : ImmutableList<V1Referral>.Empty;
+        }
 
         private (V1Referral Referral, Activity? Activity) ExecuteCommand(
             V1ReferralCommand command,
@@ -143,7 +158,7 @@ namespace CareTogether.Resources.V1Referrals
                             ExemptedRequirements: ImmutableList<ExemptedRequirementInfo>.Empty,
                             UploadedDocuments: ImmutableList<UploadedDocumentInfo>.Empty,
                             DeletedDocuments: ImmutableList<Guid>.Empty,
-                            StaffAssignments: ImmutableList<StaffAssignment>.Empty,
+                            AssignedIndividualVolunteers: ImmutableList<AssignedIndividualVolunteer>.Empty,
                             History: ImmutableList<Activity>.Empty,
                             Notes: ImmutableList<V1ReferralNoteEntry>.Empty
                         ),
@@ -302,13 +317,13 @@ namespace CareTogether.Resources.V1Referrals
                     },
                     null
                 ),
-                AssignStaffToV1Referral c => AssignStaff(
+                AssignIndividualVolunteer c => AssignIndividualVolunteer(
                     EnsureExists(referral),
                     c,
                     actorUserId,
                     occurredAtUtc
                 ),
-                UnassignStaffFromV1Referral c => UnassignStaff(
+                UnassignIndividualVolunteer c => UnassignIndividualVolunteer(
                     EnsureExists(referral),
                     c,
                     actorUserId,
@@ -320,15 +335,15 @@ namespace CareTogether.Resources.V1Referrals
             };
         }
 
-        private static (V1Referral Referral, Activity? Activity) AssignStaff(
+        private static (V1Referral Referral, Activity? Activity) AssignIndividualVolunteer(
             V1Referral referral,
-            AssignStaffToV1Referral command,
+            AssignIndividualVolunteer command,
             Guid actorUserId,
             DateTime occurredAtUtc
         )
         {
             if (
-                referral.StaffAssignments.Any(assignment =>
+                referral.AssignedIndividualVolunteers.Any(assignment =>
                     assignment.PersonId == command.PersonId
                     && assignment.AssignmentRole == command.AssignmentRole
                 )
@@ -338,8 +353,8 @@ namespace CareTogether.Resources.V1Referrals
             return (
                 referral with
                 {
-                    StaffAssignments = referral.StaffAssignments.Add(
-                        new StaffAssignment(
+                    AssignedIndividualVolunteers = referral.AssignedIndividualVolunteers.Add(
+                        new AssignedIndividualVolunteer(
                             command.PersonId,
                             command.AssignmentRole,
                             occurredAtUtc,
@@ -347,7 +362,7 @@ namespace CareTogether.Resources.V1Referrals
                         )
                     ),
                 },
-                new V1ReferralStaffAssigned(
+                new V1ReferralIndividualVolunteerAssigned(
                     actorUserId,
                     occurredAtUtc,
                     command.PersonId,
@@ -356,15 +371,15 @@ namespace CareTogether.Resources.V1Referrals
             );
         }
 
-        private static (V1Referral Referral, Activity? Activity) UnassignStaff(
+        private static (V1Referral Referral, Activity? Activity) UnassignIndividualVolunteer(
             V1Referral referral,
-            UnassignStaffFromV1Referral command,
+            UnassignIndividualVolunteer command,
             Guid actorUserId,
             DateTime occurredAtUtc
         )
         {
             if (
-                !referral.StaffAssignments.Any(assignment =>
+                !referral.AssignedIndividualVolunteers.Any(assignment =>
                     assignment.PersonId == command.PersonId
                     && assignment.AssignmentRole == command.AssignmentRole
                 )
@@ -374,12 +389,13 @@ namespace CareTogether.Resources.V1Referrals
             return (
                 referral with
                 {
-                    StaffAssignments = referral.StaffAssignments.RemoveAll(assignment =>
-                        assignment.PersonId == command.PersonId
-                        && assignment.AssignmentRole == command.AssignmentRole
+                    AssignedIndividualVolunteers = referral.AssignedIndividualVolunteers.RemoveAll(
+                        assignment =>
+                            assignment.PersonId == command.PersonId
+                            && assignment.AssignmentRole == command.AssignmentRole
                     ),
                 },
-                new V1ReferralStaffUnassigned(
+                new V1ReferralIndividualVolunteerUnassigned(
                     actorUserId,
                     occurredAtUtc,
                     command.PersonId,
@@ -420,6 +436,61 @@ namespace CareTogether.Resources.V1Referrals
                 throw new InvalidOperationException("Closed referrals cannot be edited.");
 
             return existingReferral;
+        }
+
+        private static ImmutableDictionary<
+            Guid,
+            ImmutableSortedSet<Guid>
+        > UpdateFamilyReferralIndex(
+            ImmutableDictionary<Guid, ImmutableSortedSet<Guid>> index,
+            V1Referral? previousReferral,
+            V1Referral nextReferral
+        )
+        {
+            var result = index;
+
+            if (previousReferral != null)
+            {
+                if (previousReferral.FamilyId != null)
+                    result = RemoveFamilyReferralId(
+                        result,
+                        previousReferral.FamilyId.Value,
+                        previousReferral.ReferralId
+                    );
+            }
+
+            return nextReferral.FamilyId == null
+                ? result
+                : AddFamilyReferralId(result, nextReferral.FamilyId.Value, nextReferral.ReferralId);
+        }
+
+        private static ImmutableDictionary<Guid, ImmutableSortedSet<Guid>> AddFamilyReferralId(
+            ImmutableDictionary<Guid, ImmutableSortedSet<Guid>> index,
+            Guid familyId,
+            Guid referralId
+        )
+        {
+            return index.SetItem(
+                familyId,
+                index.TryGetValue(familyId, out var existingReferralIds)
+                    ? existingReferralIds.Add(referralId)
+                    : ImmutableSortedSet.Create(referralId)
+            );
+        }
+
+        private static ImmutableDictionary<Guid, ImmutableSortedSet<Guid>> RemoveFamilyReferralId(
+            ImmutableDictionary<Guid, ImmutableSortedSet<Guid>> index,
+            Guid familyId,
+            Guid referralId
+        )
+        {
+            if (!index.TryGetValue(familyId, out var existingReferralIds))
+                return index;
+
+            var updatedReferralIds = existingReferralIds.Remove(referralId);
+            return updatedReferralIds.IsEmpty
+                ? index.Remove(familyId)
+                : index.SetItem(familyId, updatedReferralIds);
         }
 
         private void ReplayEvent(V1ReferralEvent domainEvent, long sequenceNumber)

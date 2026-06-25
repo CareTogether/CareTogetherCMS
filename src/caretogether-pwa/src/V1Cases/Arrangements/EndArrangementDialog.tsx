@@ -1,4 +1,4 @@
-import { Grid } from '@mui/material';
+import Grid from '@mui/material/Grid';
 import { ValidateDatePicker } from '../../Generic/Forms/ValidateDatePicker';
 import { useState } from 'react';
 import { useParams } from 'react-router';
@@ -65,7 +65,7 @@ export function EndArrangementDialog({
       enableSave={() => endedAtLocal !== null && !dobError}
     >
       <Grid container spacing={2}>
-        <Grid item xs={12}>
+        <Grid size={12}>
           <ValidateDatePicker
             label="When was this arrangement ended?"
             value={endedAtLocal}

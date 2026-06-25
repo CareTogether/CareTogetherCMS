@@ -1,11 +1,13 @@
-import { useMemo, useState } from 'react';
+import Grid from '../Generic/GridLegacyCompat';
+import {
+  useMemo,
+  useState } from 'react';
 import { useParams } from 'react-router-dom';
 import {
   Box,
   Button,
   CircularProgress,
   Divider,
-  Grid,
   Stack,
   Typography,
   Snackbar,
@@ -63,6 +65,9 @@ import {
   useFamilyPermissions,
   useGlobalPermissions,
 } from '../Model/SessionModel';
+import { FunctionAssignmentsSection } from '../FunctionAssignments/FunctionAssignmentsSection';
+import { useFeatureFlagEnabled } from 'posthog-js/react';
+import { FUNCTION_ASSIGNMENTS_FEATURE_FLAG } from '../featureFlags';
 
 function formatDate(date?: Date) {
   return date
@@ -87,17 +92,25 @@ export function ReferralDetailsPage() {
   useScreenTitle('Referrals');
 
   const { referralId } = useParams<{ referralId: string }>();
-  const referrals = useRecoilValue(visibleReferralsQuery);
+  const referralInfos = useRecoilValue(visibleReferralsQuery);
   const familyLookup = useFamilyLookup();
   const families = useLoadable(partneringFamiliesData) || [];
   const policy = useRecoilValue(policyData);
   const appNavigate = useAppNavigate();
   const globalPermissions = useGlobalPermissions();
+  const functionAssignmentsEnabled = useFeatureFlagEnabled(
+    FUNCTION_ASSIGNMENTS_FEATURE_FLAG
+  );
   const allPartneringFamiliesPermissions =
     useAllPartneringFamiliesPermissions();
 
-  const { reopenReferral, updateReferralFamily, linkReferralToCaseAndAccept } =
-    useV1ReferralsModel();
+  const {
+    reopenReferral,
+    updateReferralFamily,
+    linkReferralToCaseAndAccept,
+    assignIndividualVolunteerToReferral,
+    unassignIndividualVolunteerFromReferral,
+  } = useV1ReferralsModel();
 
   const { organizationId, locationId } = useRecoilValue(
     selectedLocationContextState
@@ -119,10 +132,11 @@ export function ReferralDetailsPage() {
   >([]);
   const [selectedCaseIdToLink, setSelectedCaseIdToLink] = useState<string>('');
 
-  const referral = useMemo(
-    () => referrals.find((r) => r.referralId === referralId),
-    [referrals, referralId]
+  const referralInfo = useMemo(
+    () => referralInfos.find((r) => r.referral?.referralId === referralId),
+    [referralInfos, referralId]
   );
+  const referral = referralInfo?.referral;
 
   const family = referral?.familyId
     ? familyLookup(referral.familyId)
@@ -170,6 +184,14 @@ export function ReferralDetailsPage() {
   const canEditReferral = globalPermissions(Permission.EditV1Referral);
   const canCloseReferral = globalPermissions(Permission.CloseV1Referral);
   const canReopenReferral = globalPermissions(Permission.ReopenV1Referral);
+  const canViewFunctionAssignments =
+    referralInfo?.userPermissions?.includes(
+      Permission.ViewV1ReferralFunctionAssignments
+    ) ?? false;
+  const canEditFunctionAssignments =
+    referralInfo?.userPermissions?.includes(
+      Permission.EditV1ReferralFunctionAssignments
+    ) ?? false;
   const canCreateClientFamily =
     !isClosed &&
     !currentReferral.familyId &&
@@ -323,7 +345,7 @@ export function ReferralDetailsPage() {
         }}
       >
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-          <Typography variant="h5" fontWeight={600}>
+          <Typography variant="h5" sx={{ fontWeight: 600 }}>
             {currentReferral.title}
           </Typography>
         </Box>
@@ -401,7 +423,7 @@ export function ReferralDetailsPage() {
         </Box>
       </Grid>
 
-      <Grid container spacing={0}>
+      <Grid item xs={12} container spacing={0}>
         <Grid item xs={12} md={4} sx={{ pr: { md: 2 }, mb: { xs: 3, md: 0 } }}>
           <Box sx={{ display: 'flex', gap: 1, mb: 1, flexWrap: 'wrap' }}>
             {canEditReferral && (
@@ -525,7 +547,7 @@ export function ReferralDetailsPage() {
 
           {currentReferral.comment && (
             <Grid item xs={12}>
-              <Typography fontWeight={600} sx={{ mb: 1 }}>
+              <Typography sx={{ fontWeight: 600, mb: 1 }}>
                 Referral Comment
               </Typography>
 
@@ -539,6 +561,32 @@ export function ReferralDetailsPage() {
               >
                 {currentReferral.comment}
               </Box>
+            </Grid>
+          )}
+
+          {functionAssignmentsEnabled && canViewFunctionAssignments && (
+            <Grid item xs={12} sx={{ mt: 2 }}>
+              <FunctionAssignmentsSection
+                assignments={currentReferral.assignedIndividualVolunteers ?? []}
+                policies={
+                  policy.v1ReferralPolicy?.functionAssignmentPolicies ?? []
+                }
+                canEdit={canEditFunctionAssignments}
+                onAssign={(personId, assignmentRole) =>
+                  assignIndividualVolunteerToReferral(
+                    currentReferral.referralId,
+                    personId,
+                    assignmentRole
+                  )
+                }
+                onUnassign={(personId, assignmentRole) =>
+                  unassignIndividualVolunteerFromReferral(
+                    currentReferral.referralId,
+                    personId,
+                    assignmentRole
+                  )
+                }
+              />
             </Grid>
           )}
 
@@ -585,7 +633,7 @@ export function ReferralDetailsPage() {
               <>
                 <Divider sx={{ width: '100%', my: 3 }} />
                 <Grid item xs={12}>
-                  <Typography fontWeight={600} sx={{ mb: 1 }}>
+                  <Typography sx={{ fontWeight: 600, mb: 1 }}>
                     Referral Documents
                   </Typography>
 

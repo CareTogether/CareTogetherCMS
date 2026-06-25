@@ -1,4 +1,5 @@
-import { Grid, TextField } from '@mui/material';
+import Grid from '@mui/material/Grid';
+import { TextField } from '@mui/material';
 import { Permission } from '../GeneratedClient';
 import { useDirectoryModel } from '../Model/DirectoryModel';
 import { useFamilyIdPermissions } from '../Model/SessionModel';
@@ -24,7 +25,7 @@ export function NotesEditor({ familyId, person }: PersonEditorProps) {
     <Grid container spacing={2}>
       {editor.editing ? (
         <>
-          <Grid item xs={12}>
+          <Grid size={12}>
             <TextField
               id="notes"
               label="Notes"
@@ -39,13 +40,13 @@ export function NotesEditor({ familyId, person }: PersonEditorProps) {
               onChange={(e) => editor.setValue(e.target.value)}
             />
           </Grid>
-          <Grid item xs={12}>
+          <Grid size={12}>
             {editor.cancelButton}
             {editor.saveButton}
           </Grid>
         </>
       ) : (
-        <Grid item xs={12}>
+        <Grid size={12}>
           Notes: {person.notes}
           {permissions(Permission.EditPersonNotes) && editor.editButton}
         </Grid>
