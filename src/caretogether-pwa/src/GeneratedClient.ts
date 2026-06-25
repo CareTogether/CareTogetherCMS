@@ -2635,6 +2635,7 @@ export class EffectiveLocationPolicy implements IEffectiveLocationPolicy {
     customFamilyFields!: CustomField[];
     referralPolicy!: V1CasePolicy;
     volunteerPolicy!: VolunteerPolicy;
+    customFields!: FamilyMemberCustomFieldPolicy;
     v1ReferralPolicy!: V1ReferralPolicy;
 
     constructor(data?: IEffectiveLocationPolicy) {
@@ -2649,6 +2650,7 @@ export class EffectiveLocationPolicy implements IEffectiveLocationPolicy {
             this.customFamilyFields = [];
             this.referralPolicy = new V1CasePolicy();
             this.volunteerPolicy = new VolunteerPolicy();
+            this.customFields = new FamilyMemberCustomFieldPolicy();
             this.v1ReferralPolicy = new V1ReferralPolicy();
         }
     }
@@ -2669,6 +2671,7 @@ export class EffectiveLocationPolicy implements IEffectiveLocationPolicy {
             }
             this.referralPolicy = _data["referralPolicy"] ? V1CasePolicy.fromJS(_data["referralPolicy"]) : new V1CasePolicy();
             this.volunteerPolicy = _data["volunteerPolicy"] ? VolunteerPolicy.fromJS(_data["volunteerPolicy"]) : new VolunteerPolicy();
+            this.customFields = _data["customFields"] ? FamilyMemberCustomFieldPolicy.fromJS(_data["customFields"]) : new FamilyMemberCustomFieldPolicy();
             this.v1ReferralPolicy = _data["v1ReferralPolicy"] ? V1ReferralPolicy.fromJS(_data["v1ReferralPolicy"]) : new V1ReferralPolicy();
         }
     }
@@ -2696,6 +2699,7 @@ export class EffectiveLocationPolicy implements IEffectiveLocationPolicy {
         }
         data["referralPolicy"] = this.referralPolicy ? this.referralPolicy.toJSON() : <any>undefined;
         data["volunteerPolicy"] = this.volunteerPolicy ? this.volunteerPolicy.toJSON() : <any>undefined;
+        data["customFields"] = this.customFields ? this.customFields.toJSON() : <any>undefined;
         data["v1ReferralPolicy"] = this.v1ReferralPolicy ? this.v1ReferralPolicy.toJSON() : <any>undefined;
         return data;
     }
@@ -2706,6 +2710,7 @@ export interface IEffectiveLocationPolicy {
     customFamilyFields: CustomField[];
     referralPolicy: V1CasePolicy;
     volunteerPolicy: VolunteerPolicy;
+    customFields: FamilyMemberCustomFieldPolicy;
     v1ReferralPolicy: V1ReferralPolicy;
 }
 
@@ -4429,6 +4434,110 @@ export enum VolunteerFamilyRequirementScope {
     AllParticipatingAdultsInTheFamily = 2,
 }
 
+export class FamilyMemberCustomFieldPolicy implements IFamilyMemberCustomFieldPolicy {
+    partneringFamily!: FamilyMemberCustomFields;
+    volunteerFamily!: FamilyMemberCustomFields;
+
+    constructor(data?: IFamilyMemberCustomFieldPolicy) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+        if (!data) {
+            this.partneringFamily = new FamilyMemberCustomFields();
+            this.volunteerFamily = new FamilyMemberCustomFields();
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.partneringFamily = _data["partneringFamily"] ? FamilyMemberCustomFields.fromJS(_data["partneringFamily"]) : new FamilyMemberCustomFields();
+            this.volunteerFamily = _data["volunteerFamily"] ? FamilyMemberCustomFields.fromJS(_data["volunteerFamily"]) : new FamilyMemberCustomFields();
+        }
+    }
+
+    static fromJS(data: any): FamilyMemberCustomFieldPolicy {
+        data = typeof data === 'object' ? data : {};
+        let result = new FamilyMemberCustomFieldPolicy();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["partneringFamily"] = this.partneringFamily ? this.partneringFamily.toJSON() : <any>undefined;
+        data["volunteerFamily"] = this.volunteerFamily ? this.volunteerFamily.toJSON() : <any>undefined;
+        return data;
+    }
+}
+
+export interface IFamilyMemberCustomFieldPolicy {
+    partneringFamily: FamilyMemberCustomFields;
+    volunteerFamily: FamilyMemberCustomFields;
+}
+
+export class FamilyMemberCustomFields implements IFamilyMemberCustomFields {
+    adult!: CustomField[];
+    child!: CustomField[];
+
+    constructor(data?: IFamilyMemberCustomFields) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+        if (!data) {
+            this.adult = [];
+            this.child = [];
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            if (Array.isArray(_data["adult"])) {
+                this.adult = [] as any;
+                for (let item of _data["adult"])
+                    this.adult!.push(CustomField.fromJS(item));
+            }
+            if (Array.isArray(_data["child"])) {
+                this.child = [] as any;
+                for (let item of _data["child"])
+                    this.child!.push(CustomField.fromJS(item));
+            }
+        }
+    }
+
+    static fromJS(data: any): FamilyMemberCustomFields {
+        data = typeof data === 'object' ? data : {};
+        let result = new FamilyMemberCustomFields();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        if (Array.isArray(this.adult)) {
+            data["adult"] = [];
+            for (let item of this.adult)
+                data["adult"].push(item.toJSON());
+        }
+        if (Array.isArray(this.child)) {
+            data["child"] = [];
+            for (let item of this.child)
+                data["child"].push(item.toJSON());
+        }
+        return data;
+    }
+}
+
+export interface IFamilyMemberCustomFields {
+    adult: CustomField[];
+    child: CustomField[];
+}
+
 export class V1ReferralPolicy implements IV1ReferralPolicy {
     functionAssignmentPolicies!: FunctionAssignmentPolicy[];
 
@@ -5221,6 +5330,7 @@ export class Person implements IPerson {
     preferredEmailAddressId?: string | undefined;
     concerns?: string | undefined;
     notes?: string | undefined;
+    completedCustomFields!: CompletedCustomFieldInfo[];
 
     constructor(data?: IPerson) {
         if (data) {
@@ -5233,6 +5343,7 @@ export class Person implements IPerson {
             this.addresses = [];
             this.phoneNumbers = [];
             this.emailAddresses = [];
+            this.completedCustomFields = [];
         }
     }
 
@@ -5265,6 +5376,11 @@ export class Person implements IPerson {
             this.preferredEmailAddressId = _data["preferredEmailAddressId"];
             this.concerns = _data["concerns"];
             this.notes = _data["notes"];
+            if (Array.isArray(_data["completedCustomFields"])) {
+                this.completedCustomFields = [] as any;
+                for (let item of _data["completedCustomFields"])
+                    this.completedCustomFields!.push(CompletedCustomFieldInfo.fromJS(item));
+            }
         }
     }
 
@@ -5304,6 +5420,11 @@ export class Person implements IPerson {
         data["preferredEmailAddressId"] = this.preferredEmailAddressId;
         data["concerns"] = this.concerns;
         data["notes"] = this.notes;
+        if (Array.isArray(this.completedCustomFields)) {
+            data["completedCustomFields"] = [];
+            for (let item of this.completedCustomFields)
+                data["completedCustomFields"].push(item.toJSON());
+        }
         return data;
     }
 }
@@ -5324,6 +5445,7 @@ export interface IPerson {
     preferredEmailAddressId?: string | undefined;
     concerns?: string | undefined;
     notes?: string | undefined;
+    completedCustomFields: CompletedCustomFieldInfo[];
 }
 
 export enum Gender {
@@ -5606,6 +5728,62 @@ export enum EmailAddressType {
     Work = 1,
 }
 
+export class CompletedCustomFieldInfo implements ICompletedCustomFieldInfo {
+    userId!: string;
+    timestampUtc!: Date;
+    completedCustomFieldId!: string;
+    customFieldName!: string;
+    customFieldType!: CustomFieldType;
+    value?: any | undefined;
+
+    constructor(data?: ICompletedCustomFieldInfo) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.userId = _data["userId"];
+            this.timestampUtc = _data["timestampUtc"] ? new Date(_data["timestampUtc"].toString()) : <any>undefined;
+            this.completedCustomFieldId = _data["completedCustomFieldId"];
+            this.customFieldName = _data["customFieldName"];
+            this.customFieldType = _data["customFieldType"];
+            this.value = _data["value"];
+        }
+    }
+
+    static fromJS(data: any): CompletedCustomFieldInfo {
+        data = typeof data === 'object' ? data : {};
+        let result = new CompletedCustomFieldInfo();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["userId"] = this.userId;
+        data["timestampUtc"] = this.timestampUtc ? this.timestampUtc.toISOString() : <any>undefined;
+        data["completedCustomFieldId"] = this.completedCustomFieldId;
+        data["customFieldName"] = this.customFieldName;
+        data["customFieldType"] = this.customFieldType;
+        data["value"] = this.value;
+        return data;
+    }
+}
+
+export interface ICompletedCustomFieldInfo {
+    userId: string;
+    timestampUtc: Date;
+    completedCustomFieldId: string;
+    customFieldName: string;
+    customFieldType: CustomFieldType;
+    value?: any | undefined;
+}
+
 export class FamilyAdultRelationshipInfo implements IFamilyAdultRelationshipInfo {
     relationshipToFamily?: string | undefined;
     isInHousehold!: boolean;
@@ -5694,62 +5872,6 @@ export enum CustodialRelationshipType {
     ParentWithCustody = 0,
     ParentWithCourtAppointedCustody = 1,
     LegalGuardian = 2,
-}
-
-export class CompletedCustomFieldInfo implements ICompletedCustomFieldInfo {
-    userId!: string;
-    timestampUtc!: Date;
-    completedCustomFieldId!: string;
-    customFieldName!: string;
-    customFieldType!: CustomFieldType;
-    value?: any | undefined;
-
-    constructor(data?: ICompletedCustomFieldInfo) {
-        if (data) {
-            for (var property in data) {
-                if (data.hasOwnProperty(property))
-                    (<any>this)[property] = (<any>data)[property];
-            }
-        }
-    }
-
-    init(_data?: any) {
-        if (_data) {
-            this.userId = _data["userId"];
-            this.timestampUtc = _data["timestampUtc"] ? new Date(_data["timestampUtc"].toString()) : <any>undefined;
-            this.completedCustomFieldId = _data["completedCustomFieldId"];
-            this.customFieldName = _data["customFieldName"];
-            this.customFieldType = _data["customFieldType"];
-            this.value = _data["value"];
-        }
-    }
-
-    static fromJS(data: any): CompletedCustomFieldInfo {
-        data = typeof data === 'object' ? data : {};
-        let result = new CompletedCustomFieldInfo();
-        result.init(data);
-        return result;
-    }
-
-    toJSON(data?: any) {
-        data = typeof data === 'object' ? data : {};
-        data["userId"] = this.userId;
-        data["timestampUtc"] = this.timestampUtc ? this.timestampUtc.toISOString() : <any>undefined;
-        data["completedCustomFieldId"] = this.completedCustomFieldId;
-        data["customFieldName"] = this.customFieldName;
-        data["customFieldType"] = this.customFieldType;
-        data["value"] = this.value;
-        return data;
-    }
-}
-
-export interface ICompletedCustomFieldInfo {
-    userId: string;
-    timestampUtc: Date;
-    completedCustomFieldId: string;
-    customFieldName: string;
-    customFieldType: CustomFieldType;
-    value?: any | undefined;
 }
 
 export abstract class Activity implements IActivity {
@@ -13330,6 +13452,11 @@ export abstract class PersonCommand implements IPersonCommand {
             result.init(data);
             return result;
         }
+        if (data["discriminator"] === "UpdateCustomFamilyMemberField") {
+            let result = new UpdateCustomFamilyMemberField();
+            result.init(data);
+            return result;
+        }
         if (data["discriminator"] === "UpdatePersonAddress") {
             let result = new UpdatePersonAddress();
             result.init(data);
@@ -13650,6 +13777,52 @@ export class UndoCreatePerson extends PersonCommand implements IUndoCreatePerson
 }
 
 export interface IUndoCreatePerson extends IPersonCommand {
+}
+
+export class UpdateCustomFamilyMemberField extends PersonCommand implements IUpdateCustomFamilyMemberField {
+    completedCustomFieldId!: string;
+    customFieldName!: string;
+    customFieldType!: CustomFieldType;
+    value?: any | undefined;
+
+    constructor(data?: IUpdateCustomFamilyMemberField) {
+        super(data);
+        this._discriminator = "UpdateCustomFamilyMemberField";
+    }
+
+    init(_data?: any) {
+        super.init(_data);
+        if (_data) {
+            this.completedCustomFieldId = _data["completedCustomFieldId"];
+            this.customFieldName = _data["customFieldName"];
+            this.customFieldType = _data["customFieldType"];
+            this.value = _data["value"];
+        }
+    }
+
+    static fromJS(data: any): UpdateCustomFamilyMemberField {
+        data = typeof data === 'object' ? data : {};
+        let result = new UpdateCustomFamilyMemberField();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["completedCustomFieldId"] = this.completedCustomFieldId;
+        data["customFieldName"] = this.customFieldName;
+        data["customFieldType"] = this.customFieldType;
+        data["value"] = this.value;
+        super.toJSON(data);
+        return data;
+    }
+}
+
+export interface IUpdateCustomFamilyMemberField extends IPersonCommand {
+    completedCustomFieldId: string;
+    customFieldName: string;
+    customFieldType: CustomFieldType;
+    value?: any | undefined;
 }
 
 export class UpdatePersonAddress extends PersonCommand implements IUpdatePersonAddress {

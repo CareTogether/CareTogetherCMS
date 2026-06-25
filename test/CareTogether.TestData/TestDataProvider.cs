@@ -3395,11 +3395,54 @@ namespace CareTogether.TestData
                     }.ToImmutableDictionary(),
                     [
                         new CustomField("Has Pool", CustomFieldType.Boolean, null, null),
-                        new CustomField("Hosting Age Preference", CustomFieldType.StringArray, CustomFieldValidation.SuggestOnly, ["0-1", "2-5", "6-10", "11-15", "16-18"]),
+                        new CustomField(
+                            "Hosting Age Preference",
+                            CustomFieldType.StringArray,
+                            CustomFieldValidation.SuggestOnly,
+                            ["0-1", "2-5", "6-10", "11-15", "16-18"]
+                        ),
                     ]
                 )
             )
             {
+                CustomFields = new FamilyMemberCustomFieldPolicy(
+                    PartneringFamily: new FamilyMemberCustomFields(
+                        Adult:
+                        [
+                            new CustomField(
+                                "Preferred Contact Window",
+                                CustomFieldType.String,
+                                CustomFieldValidation.SuggestOnly,
+                                ["Morning", "Afternoon", "Evening"]
+                            ),
+                        ],
+                        Child:
+                        [
+                            new CustomField(
+                                "School",
+                                CustomFieldType.String,
+                                CustomFieldValidation.SuggestOnly,
+                                ["Lincoln Elementary", "Roosevelt Middle", "Central High"]
+                            ),
+                            new CustomField("Has IEP", CustomFieldType.Boolean, null, null),
+                        ]
+                    ),
+                    VolunteerFamily: new FamilyMemberCustomFields(
+                        Adult:
+                        [
+                            new CustomField(
+                                "Serving Availability",
+                                CustomFieldType.StringArray,
+                                CustomFieldValidation.SuggestOnly,
+                                ["Weekdays", "Weekends", "Evenings", "Overnight"]
+                            ),
+                        ],
+                        Child:
+                        [
+                            new CustomField("Childcare Notes", CustomFieldType.String, null, null),
+                        ]
+                    )
+                ),
                 V1ReferralPolicy = new V1ReferralPolicy(
                     [
                         new FunctionAssignmentPolicy(
