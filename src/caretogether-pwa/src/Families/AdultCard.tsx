@@ -59,9 +59,14 @@ import { combineCustomFieldPolicies } from './familyMemberCustomFieldPolicies';
 type AdultCardProps = {
   familyId: string;
   personId: string;
+  showCustomFields?: boolean;
 };
 
-export function AdultCard({ familyId, personId }: AdultCardProps) {
+export function AdultCard({
+  familyId,
+  personId,
+  showCustomFields = false,
+}: AdultCardProps) {
   const familyLookup = useFamilyLookup();
   const family = familyLookup(familyId)!;
 
@@ -306,7 +311,8 @@ export function AdultCard({ familyId, personId }: AdultCardProps) {
             <Typography variant="body2" component="div">
               <ContactDisplay person={adult.item1} />
             </Typography>
-            {familyMemberCustomFieldsEnabled &&
+            {showCustomFields &&
+              familyMemberCustomFieldsEnabled &&
               permissions(Permission.ViewFamilyCustomFields) && (
                 <FamilyMemberCustomFields
                   familyId={familyId}

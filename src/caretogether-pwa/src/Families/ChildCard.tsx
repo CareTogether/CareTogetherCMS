@@ -31,9 +31,14 @@ import { combineCustomFieldPolicies } from './familyMemberCustomFieldPolicies';
 type ChildCardProps = {
   familyId: string;
   personId: string;
+  showCustomFields?: boolean;
 };
 
-export function ChildCard({ familyId, personId }: ChildCardProps) {
+export function ChildCard({
+  familyId,
+  personId,
+  showCustomFields = false,
+}: ChildCardProps) {
   const familyLookup = useFamilyLookup();
   const family = familyLookup(familyId)!;
 
@@ -140,7 +145,8 @@ export function ChildCard({ familyId, personId }: ChildCardProps) {
                 })}
               </ul>
             </Typography>
-            {familyMemberCustomFieldsEnabled &&
+            {showCustomFields &&
+              familyMemberCustomFieldsEnabled &&
               permissions(Permission.ViewFamilyCustomFields) && (
                 <FamilyMemberCustomFields
                   familyId={familyId}
