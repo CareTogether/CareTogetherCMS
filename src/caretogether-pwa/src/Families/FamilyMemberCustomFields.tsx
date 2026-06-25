@@ -62,13 +62,6 @@ export function FamilyMemberCustomFields({
   return (
     <Box sx={{ mt: 1.5 }}>
       <Divider sx={{ mb: 1 }} />
-      <Typography
-        variant="subtitle2"
-        color="text.secondary"
-        sx={{ mb: 0.5 }}
-      >
-        Custom fields
-      </Typography>
       {customFields.map((customField) => (
         <FamilyMemberCustomField
           key={customFieldName(customField)}
