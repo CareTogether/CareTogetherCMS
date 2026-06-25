@@ -16,12 +16,7 @@ import {
   ApprovalLedgerRow,
   ApprovalLedgerStatus,
 } from './approvalLedgerViewModel';
-import { ApprovalWorkflowMissingSectionV2 } from './ApprovalWorkflowMissingSectionV2';
-import { Permission } from '../GeneratedClient';
-import { useFamilyIdPermissions } from '../Model/SessionModel';
-import type { ApprovalLedgerOccurrence } from './approvalLedgerViewModel';
-import { ApprovalWorkflowConfirmationSectionV2 } from './ApprovalWorkflowConfirmationSectionV2';
-import { useApprovalWorkflowActionsV2 } from './hooks/useApprovalWorkflowActionsV2';
+import { ApprovalRequirementWorkflowV2 } from './ApprovalRequirementWorkflowV2';
 
 type ApprovalDetailsDrawerV2Props = {
   row: ApprovalLedgerRow | null;
@@ -127,17 +122,6 @@ function DrawerSection({
   );
 }
 
-function familyIdFromOccurrence(occurrence: ApprovalLedgerOccurrence | undefined) {
-  if (
-    occurrence?.context.kind === 'Volunteer Family' ||
-    occurrence?.context.kind === 'Individual Volunteer'
-  ) {
-    return occurrence.context.volunteerFamilyId;
-  }
-
-  return '';
-}
-
 function actionableMissingOccurrence(row: ApprovalLedgerRow | null) {
   return row?.occurrences.find(
     (occurrence) =>
@@ -161,15 +145,7 @@ export function ApprovalDetailsDrawerV2({
   const userLookup = useUserLookup();
   const workflowOccurrence = actionableMissingOccurrence(row);
   const confirmationOccurrence = actionableConfirmationOccurrence(row);
-  const approvalWorkflowActions = useApprovalWorkflowActionsV2(
-    confirmationOccurrence,
-    onClose
-  );
-  const permissions = useFamilyIdPermissions(
-    familyIdFromOccurrence(workflowOccurrence)
-  );
-  const canComplete = permissions(Permission.EditApprovalRequirementCompletion);
-  const canExempt = permissions(Permission.EditApprovalRequirementExemption);
+  const selectedOccurrence = workflowOccurrence ?? confirmationOccurrence;
   const completedOrExemptedOn = formatDate(row?.completedOrExemptedOn);
   const validUntil = formatDate(row?.validUntil);
   const showSummary =
@@ -275,39 +251,10 @@ export function ApprovalDetailsDrawerV2({
           <Divider />
 
           <DrawerSection title="Workflow">
-            {workflowOccurrence ? (
-              <ApprovalWorkflowMissingSectionV2
-                occurrence={workflowOccurrence}
-                context={workflowOccurrence.context}
-                canComplete={canComplete}
-                canExempt={canExempt}
-                onSuccess={onClose}
-              />
-            ) : confirmationOccurrence?.status === 'completed' ? (
-              <ApprovalWorkflowConfirmationSectionV2
-                title="Mark Incomplete"
-                description="This will move the requirement back to missing so it can be completed again."
-                warningText="This action changes the approval status immediately."
-                buttonLabel="Mark Incomplete"
-                disabled={!approvalWorkflowActions.canMarkIncomplete}
-                loading={approvalWorkflowActions.loading}
-                onConfirm={approvalWorkflowActions.markIncomplete}
-              />
-            ) : confirmationOccurrence?.status === 'exempted' ? (
-              <ApprovalWorkflowConfirmationSectionV2
-                title="Remove Exemption"
-                description="This will remove the exemption and make this requirement needed again."
-                warningText="This action changes the approval status immediately."
-                buttonLabel="Remove Exemption"
-                disabled={!approvalWorkflowActions.canRemoveExemption}
-                loading={approvalWorkflowActions.loading}
-                onConfirm={approvalWorkflowActions.removeExemption}
-              />
-            ) : (
-              <Typography color="text.secondary" variant="body2">
-                Workflow actions will appear here.
-              </Typography>
-            )}
+            <ApprovalRequirementWorkflowV2
+              occurrence={selectedOccurrence}
+              onSuccess={onClose}
+            />
           </DrawerSection>
 
           <Divider />

@@ -141,8 +141,12 @@ import { useGlobalSnackBar } from '../Hooks/useGlobalSnackBar';
 import { ClampTypography } from '../Generic/ClampTypography';
 import { ApprovalLedgerSection } from './ApprovalLedgerSection';
 import { buildApprovalLedgerRows } from './approvalLedgerViewModel';
-import { RoleApprovalStatusBadges } from './RoleApprovalStatusBadges';
-import { hasQualifyingRoleApprovals } from './roleApprovalStatusBadgeUtils';
+import {
+  buildRemovedRoleSummaries,
+  buildRoleSummaryCards,
+} from './roleSummaryViewModel';
+import { RoleSummaryCardsSection } from './RoleSummaryCardsSection';
+import { RoleDetailsDrawerV2 } from './RoleDetailsDrawerV2';
 import { accountInfoState } from '../Authentication/Auth';
 import { AddEditV1ReferralNoteDialog } from '../V1Referrals/AddEditV1ReferralNoteDialog';
 import { ApproveV1ReferralNoteDialog } from '../V1Referrals/ApproveV1ReferralNoteDialog';
@@ -405,6 +409,12 @@ export function FamilyScreenV2() {
   } | null>(null);
   const [selectedTab, setSelectedTab] =
     useState<FamilyScreenTabValue>('overview');
+  const [selectedRoleSummaryCardId, setSelectedRoleSummaryCardId] = useState<
+    string | null
+  >(null);
+  const [selectedRemovedRoleId, setSelectedRemovedRoleId] = useState<
+    string | null
+  >(null);
 
   const firstV1CaseId = allV1Cases.length > 0 ? allV1Cases[0].id : undefined;
 
@@ -679,7 +689,7 @@ export function FamilyScreenV2() {
       0
   );
   const volunteerFamilyInfo = family?.volunteerFamilyInfo;
-  const approvalLedgerRows = useMemo(() => {
+  const activeAdultApprovalSources = useMemo(() => {
     const activeAdultIds = new Set(
       (family?.family?.adults ?? []).flatMap((adult) =>
         adult.item1?.id && adult.item1.active ? [adult.item1.id] : []
@@ -717,11 +727,15 @@ export function FamilyScreenV2() {
           roleRemovals: volunteerInfo.roleRemovals ?? [],
           completedRequirements: volunteerInfo.completedRequirements ?? [],
           exemptedRequirements: volunteerInfo.exemptedRequirements ?? [],
-          missingRequirements: volunteerInfo.missingRequirements ?? [],
-          availableApplications: volunteerInfo.availableApplications ?? [],
-        };
-      });
+            missingRequirements: volunteerInfo.missingRequirements ?? [],
+            availableApplications: volunteerInfo.availableApplications ?? [],
+          };
+        });
 
+    return adultApprovalSources;
+  }, [family?.family?.adults, familyId, volunteerFamilyInfo?.individualVolunteers]);
+
+  const approvalLedgerRows = useMemo(() => {
     return buildApprovalLedgerRows({
       family: {
         context: {
@@ -735,41 +749,75 @@ export function FamilyScreenV2() {
         familyRoleApprovals: volunteerFamilyInfo?.familyRoleApprovals ?? {},
         roleRemovals: volunteerFamilyInfo?.roleRemovals ?? [],
       },
-      individuals: adultApprovalSources,
+      individuals: activeAdultApprovalSources,
     });
   }, [
-    family?.family?.adults,
+    activeAdultApprovalSources,
     familyId,
     volunteerFamilyInfo?.availableApplications,
     volunteerFamilyInfo?.completedRequirements,
     volunteerFamilyInfo?.exemptedRequirements,
     volunteerFamilyInfo?.familyRoleApprovals,
-    volunteerFamilyInfo?.individualVolunteers,
     volunteerFamilyInfo?.missingRequirements,
     volunteerFamilyInfo?.roleRemovals,
   ]);
-  const adultsWithApprovalBadges = [
-    ...new Map(
-      (family?.family?.adults ?? [])
-        .filter(
-          (adult) =>
-            adult.item1?.id &&
-            adult.item1.active &&
-            hasQualifyingRoleApprovals(
-              volunteerFamilyInfo?.individualVolunteers?.[adult.item1.id]
-                ?.approvalStatusByRole,
-              volunteerFamilyInfo?.individualVolunteers?.[adult.item1.id]
-                ?.roleRemovals
-            )
-        )
-        .map((adult) => [adult.item1!.id!, adult])
-    ).values(),
-  ];
-  const showFamilyApprovalBadges = hasQualifyingRoleApprovals(
-    volunteerFamilyInfo?.familyRoleApprovals,
-    volunteerFamilyInfo?.roleRemovals
+  const roleSummaryCards = useMemo(
+    () =>
+      buildRoleSummaryCards({
+        family: {
+          context: {
+            kind: 'Volunteer Family',
+            volunteerFamilyId: familyId,
+          },
+          completedRequirements: volunteerFamilyInfo?.completedRequirements ?? [],
+          exemptedRequirements: volunteerFamilyInfo?.exemptedRequirements ?? [],
+          missingRequirements: volunteerFamilyInfo?.missingRequirements ?? [],
+          availableApplications: volunteerFamilyInfo?.availableApplications ?? [],
+          familyRoleApprovals: volunteerFamilyInfo?.familyRoleApprovals ?? {},
+          roleRemovals: volunteerFamilyInfo?.roleRemovals ?? [],
+        },
+        individuals: activeAdultApprovalSources,
+        approvalLedgerRows,
+      }),
+    [
+      activeAdultApprovalSources,
+      approvalLedgerRows,
+      familyId,
+      volunteerFamilyInfo?.availableApplications,
+      volunteerFamilyInfo?.completedRequirements,
+      volunteerFamilyInfo?.exemptedRequirements,
+      volunteerFamilyInfo?.familyRoleApprovals,
+      volunteerFamilyInfo?.missingRequirements,
+      volunteerFamilyInfo?.roleRemovals,
+    ]
   );
-  const showAdultApprovalBadges = adultsWithApprovalBadges.length > 0;
+  const selectedRoleSummaryCard = useMemo(
+    () =>
+      roleSummaryCards.find((card) => card.id === selectedRoleSummaryCardId) ??
+      null,
+    [roleSummaryCards, selectedRoleSummaryCardId]
+  );
+  const removedRoleSummaries = useMemo(
+    () =>
+      buildRemovedRoleSummaries({
+        family: {
+          context: {
+            kind: 'Volunteer Family',
+            volunteerFamilyId: familyId,
+          },
+          roleRemovals: volunteerFamilyInfo?.roleRemovals ?? [],
+        },
+        individuals: activeAdultApprovalSources,
+      }),
+    [activeAdultApprovalSources, familyId, volunteerFamilyInfo?.roleRemovals]
+  );
+  const selectedRemovedRole = useMemo(
+    () =>
+      removedRoleSummaries.find(
+        (removedRole) => removedRole.id === selectedRemovedRoleId
+      ) ?? null,
+    [removedRoleSummaries, selectedRemovedRoleId]
+  );
   const approvalAttentionCounts = useMemo(
     () =>
       approvalLedgerRows.reduce(
@@ -1254,12 +1302,6 @@ export function FamilyScreenV2() {
               <Typography className="ph-unmask" variant="h4">
                 {familyLastName(family)} Family
               </Typography>
-              {showFamilyApprovalBadges && (
-                <RoleApprovalStatusBadges
-                  roleApprovals={volunteerFamilyInfo?.familyRoleApprovals}
-                  roleRemovals={volunteerFamilyInfo?.roleRemovals}
-                />
-              )}
             </Box>
             {!isDesktop && hasFamilyActions && (
               <IconButton
@@ -1627,46 +1669,27 @@ export function FamilyScreenV2() {
           />
         )}
       </Toolbar>
-      {showAdultApprovalBadges && (
-        <Box
-          sx={{
-            display: 'flex',
-            flexDirection: 'column',
-            gap: 0.75,
-            mb: 2,
-          }}
-        >
-          {adultsWithApprovalBadges.map((adult) => {
-            const person = adult.item1!;
-            const volunteerInfo =
-              volunteerFamilyInfo?.individualVolunteers?.[person.id!];
-
-            return (
-              <Box
-                key={person.id}
-                sx={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  flexWrap: 'wrap',
-                  gap: 1,
-                }}
-              >
-                <Typography
-                  className="ph-unmask"
-                  variant="body2"
-                  sx={{ fontWeight: 600 }}
-                >
-                  {person.firstName} {person.lastName}
-                </Typography>
-                <RoleApprovalStatusBadges
-                  roleApprovals={volunteerInfo?.approvalStatusByRole}
-                  roleRemovals={volunteerInfo?.roleRemovals}
-                />
-              </Box>
-            );
-          })}
-        </Box>
-      )}
+      <RoleSummaryCardsSection
+        cards={roleSummaryCards}
+        removedRoles={removedRoleSummaries}
+        onCardClick={(card) => {
+          setSelectedRemovedRoleId(null);
+          setSelectedRoleSummaryCardId(card.id);
+        }}
+        onRemovedRoleClick={(removedRole) => {
+          setSelectedRoleSummaryCardId(null);
+          setSelectedRemovedRoleId(removedRole.id);
+        }}
+      />
+      <RoleDetailsDrawerV2
+        card={selectedRoleSummaryCard}
+        removedRole={selectedRemovedRole}
+        open={selectedRoleSummaryCard !== null || selectedRemovedRole !== null}
+        onClose={() => {
+          setSelectedRoleSummaryCardId(null);
+          setSelectedRemovedRoleId(null);
+        }}
+      />
       {pinnedNotes.length > 0 && (
         <Box
           sx={{
