@@ -1,4 +1,5 @@
-import { Box, Divider, Typography } from '@mui/material';
+import { useState } from 'react';
+import { Box, Divider, Tab, Tabs } from '@mui/material';
 import { CompletedCustomFieldInfo, CustomField } from '../GeneratedClient';
 import { CustomFieldEditor } from '../Generic/CustomFieldEditor';
 import { useDirectoryModel } from '../Model/DirectoryModel';
@@ -76,6 +77,7 @@ export function FamilyMemberCustomFields({
   customFieldPolicies,
   completedCustomFields = [],
 }: FamilyMemberCustomFieldsProps) {
+  const [selectedSectionIndex, setSelectedSectionIndex] = useState(0);
   const completedFieldNames = new Set(
     completedCustomFields.map((field) => field.customFieldName)
   );
@@ -98,33 +100,89 @@ export function FamilyMemberCustomFields({
     customFields,
     customFieldPolicies
   );
+  const shouldRenderTabs = customFieldSections.length > 1;
+  const selectedTab =
+    selectedSectionIndex < customFieldSections.length ? selectedSectionIndex : 0;
 
   return (
     <Box sx={{ mt: 1.5 }}>
       <Divider sx={{ mb: 1 }} />
-      {customFieldSections.map((section, sectionIndex) => (
-        <Box key={section.groupingKey ?? `ungrouped-${sectionIndex}`}>
-          {section.groupingKey && (
-            <Typography
-              variant="caption"
-              color="text.secondary"
-              sx={{ display: 'block', mt: 1, mb: 0.25 }}
+      {shouldRenderTabs ? (
+        <>
+          <Tabs
+            value={selectedTab}
+            onChange={(_, nextTab) => setSelectedSectionIndex(nextTab)}
+            variant="scrollable"
+            scrollButtons="auto"
+            aria-label="Custom field groups"
+            sx={{ minHeight: 36, mb: 0.5 }}
+          >
+            {customFieldSections.map((section, sectionIndex) => (
+              <Tab
+                key={section.groupingKey ?? `ungrouped-${sectionIndex}`}
+                label={section.groupingKey ?? 'Other'}
+                id={`family-member-custom-fields-tab-${personId}-${sectionIndex}`}
+                aria-controls={`family-member-custom-fields-tabpanel-${personId}-${sectionIndex}`}
+                sx={{ minHeight: 36 }}
+              />
+            ))}
+          </Tabs>
+          {customFieldSections.map((section, sectionIndex) => (
+            <Box
+              key={section.groupingKey ?? `ungrouped-panel-${sectionIndex}`}
+              role="tabpanel"
+              hidden={selectedTab !== sectionIndex}
+              id={`family-member-custom-fields-tabpanel-${personId}-${sectionIndex}`}
+              aria-labelledby={`family-member-custom-fields-tab-${personId}-${sectionIndex}`}
             >
-              {section.groupingKey}
-            </Typography>
-          )}
-          {section.customFields.map((customField) => (
-            <FamilyMemberCustomField
-              key={customFieldName(customField)}
-              familyId={familyId}
-              personId={personId}
-              customFieldPolicies={customFieldPolicies}
-              customField={customField}
-            />
+              {selectedTab === sectionIndex && (
+                <FamilyMemberCustomFieldList
+                  familyId={familyId}
+                  personId={personId}
+                  customFieldPolicies={customFieldPolicies}
+                  customFields={section.customFields}
+                />
+              )}
+            </Box>
           ))}
-        </Box>
-      ))}
+        </>
+      ) : (
+        <FamilyMemberCustomFieldList
+          familyId={familyId}
+          personId={personId}
+          customFieldPolicies={customFieldPolicies}
+          customFields={customFields}
+        />
+      )}
     </Box>
+  );
+}
+
+type FamilyMemberCustomFieldListProps = {
+  familyId: string;
+  personId: string;
+  customFieldPolicies: CustomField[];
+  customFields: CustomFieldRenderInfo[];
+};
+
+function FamilyMemberCustomFieldList({
+  familyId,
+  personId,
+  customFieldPolicies,
+  customFields,
+}: FamilyMemberCustomFieldListProps) {
+  return (
+    <>
+      {customFields.map((customField) => (
+        <FamilyMemberCustomField
+          key={customFieldName(customField)}
+          familyId={familyId}
+          personId={personId}
+          customFieldPolicies={customFieldPolicies}
+          customField={customField}
+        />
+      ))}
+    </>
   );
 }
 
