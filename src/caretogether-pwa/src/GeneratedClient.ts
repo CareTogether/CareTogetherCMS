@@ -122,7 +122,7 @@ export class ConfigurationClient {
             throw new globalThis.Error("The parameter 'organizationId' must be defined.");
         url_ = url_.replace("{organizationId}", encodeURIComponent("" + organizationId));
         if (roleName === undefined || roleName === null)
-            throw new Error("The parameter 'roleName' must be defined.");
+            throw new globalThis.Error("The parameter 'roleName' must be defined.");
         url_ = url_.replace("{roleName}", encodeURIComponent("" + roleName));
         url_ = url_.replace(/[?&]$/, "");
 
@@ -203,7 +203,7 @@ export class ConfigurationClient {
     putLocationDefinition(organizationId: string, newLocationPayload: PutLocationPayload): Promise<OrganizationConfiguration> {
         let url_ = this.baseUrl + "/api/{organizationId}/Configuration/location";
         if (organizationId === undefined || organizationId === null)
-            throw new Error("The parameter 'organizationId' must be defined.");
+            throw new globalThis.Error("The parameter 'organizationId' must be defined.");
         url_ = url_.replace("{organizationId}", encodeURIComponent("" + organizationId));
         url_ = url_.replace(/[?&]$/, "");
 
@@ -246,9 +246,6 @@ export class ConfigurationClient {
         if (organizationId === undefined || organizationId === null)
             throw new globalThis.Error("The parameter 'organizationId' must be defined.");
         url_ = url_.replace("{organizationId}", encodeURIComponent("" + organizationId));
-        if (roleName === undefined || roleName === null)
-            throw new globalThis.Error("The parameter 'roleName' must be defined.");
-        url_ = url_.replace("{roleName}", encodeURIComponent("" + roleName));
         url_ = url_.replace(/[?&]$/, "");
 
         const content_ = JSON.stringify(payload);
@@ -2109,7 +2106,7 @@ export class AssignedVolunteerInV1CasePermissionContext extends PermissionContex
         }
     }
 
-    static override fromJS(data: any): AssignedStaffInV1CasePermissionContext {
+    static override fromJS(data: any): AssignedVolunteerInV1CasePermissionContext {
         data = typeof data === 'object' ? data : {};
         let result = new AssignedVolunteerInV1CasePermissionContext();
         result.init(data);
@@ -2155,7 +2152,7 @@ export class AssignedVolunteerInV1ReferralPermissionContext extends PermissionCo
         }
     }
 
-    static override fromJS(data: any): AssignedStaffInV1ReferralPermissionContext {
+    static override fromJS(data: any): AssignedVolunteerInV1ReferralPermissionContext {
         data = typeof data === 'object' ? data : {};
         let result = new AssignedVolunteerInV1ReferralPermissionContext();
         result.init(data);
@@ -2584,7 +2581,7 @@ export class PutOrganizationConfigurationPayload implements IPutOrganizationConf
         if (data) {
             for (var property in data) {
                 if (data.hasOwnProperty(property))
-                    (<any>this)[property] = (<any>data)[property];
+                    (this as any)[property] = (data as any)[property];
             }
         }
     }
@@ -2965,10 +2962,10 @@ export class V1CasePolicy implements IV1CasePolicy {
             for (let item of this.intakeRequirements)
                 data["intakeRequirements"].push(item ? item.toJSON() : undefined as any);
         }
-        if (Array.isArray(this.staffAssignmentPolicies)) {
-            data["staffAssignmentPolicies"] = [];
-            for (let item of this.staffAssignmentPolicies)
-                data["staffAssignmentPolicies"].push(item ? item.toJSON() : undefined as any);
+        if (Array.isArray(this.functionAssignmentPolicies)) {
+            data["functionAssignmentPolicies"] = [];
+            for (let item of this.functionAssignmentPolicies)
+                data["functionAssignmentPolicies"].push(item ? item.toJSON() : undefined as any);
         }
         return data;
     }
@@ -3111,7 +3108,7 @@ export class ArrangementPolicy implements IArrangementPolicy {
                 for (let item of _data["requiredCloseoutActions"])
                     this.requiredCloseoutActions!.push(RequirementDefinition.fromJS(item));
             }
-            this.supersededAtUtc = _data["supersededAtUtc"] ? new Date(_data["supersededAtUtc"].toString()) : <any>undefined;
+            this.supersededAtUtc = _data["supersededAtUtc"] ? new Date(_data["supersededAtUtc"].toString()) : undefined as any;
         }
     }
 
@@ -3176,7 +3173,7 @@ export class ArrangementPolicy implements IArrangementPolicy {
             for (let item of this.requiredCloseoutActions)
                 data["requiredCloseoutActions"].push(item ? item.toJSON() : undefined as any);
         }
-        data["supersededAtUtc"] = this.supersededAtUtc ? this.supersededAtUtc.toISOString() : <any>undefined;
+        data["supersededAtUtc"] = this.supersededAtUtc ? this.supersededAtUtc.toISOString() : undefined as any;
         return data;
     }
 }
@@ -4111,7 +4108,7 @@ export class VolunteerPolicy implements IVolunteerPolicy {
         if (Array.isArray(this.customFields)) {
             data["customFields"] = [];
             for (let item of this.customFields)
-                data["customFields"].push(item.toJSON());
+                data["customFields"].push(item ? item.toJSON() : undefined as any);
         }
         return data;
     }
@@ -4465,10 +4462,10 @@ export class V1ReferralPolicy implements IV1ReferralPolicy {
 
     toJSON(data?: any) {
         data = typeof data === 'object' ? data : {};
-        if (Array.isArray(this.staffAssignmentPolicies)) {
-            data["staffAssignmentPolicies"] = [];
-            for (let item of this.staffAssignmentPolicies)
-                data["staffAssignmentPolicies"].push(item ? item.toJSON() : undefined as any);
+        if (Array.isArray(this.functionAssignmentPolicies)) {
+            data["functionAssignmentPolicies"] = [];
+            for (let item of this.functionAssignmentPolicies)
+                data["functionAssignmentPolicies"].push(item ? item.toJSON() : undefined as any);
         }
         return data;
     }
@@ -6055,7 +6052,7 @@ export class V1CaseIndividualVolunteerAssigned extends Activity implements IV1Ca
         }
     }
 
-    static override fromJS(data: any): V1CaseStaffAssigned {
+    static override fromJS(data: any): V1CaseIndividualVolunteerAssigned {
         data = typeof data === 'object' ? data : {};
         let result = new V1CaseIndividualVolunteerAssigned();
         result.init(data);
@@ -6093,7 +6090,7 @@ export class V1CaseIndividualVolunteerUnassigned extends Activity implements IV1
         }
     }
 
-    static override fromJS(data: any): V1CaseStaffUnassigned {
+    static override fromJS(data: any): V1CaseIndividualVolunteerUnassigned {
         data = typeof data === 'object' ? data : {};
         let result = new V1CaseIndividualVolunteerUnassigned();
         result.init(data);
@@ -6198,11 +6195,12 @@ export class V1ReferralIndividualVolunteerAssigned extends Activity implements I
     override init(_data?: any) {
         super.init(_data);
         if (_data) {
-            this.openedAtUtc = _data["openedAtUtc"] ? new Date(_data["openedAtUtc"].toString()) : undefined as any;
+            this.personId = _data["personId"];
+            this.assignmentRole = _data["assignmentRole"];
         }
     }
 
-    static override fromJS(data: any): V1ReferralOpened {
+    static override fromJS(data: any): V1ReferralIndividualVolunteerAssigned {
         data = typeof data === 'object' ? data : {};
         let result = new V1ReferralIndividualVolunteerAssigned();
         result.init(data);
@@ -6211,7 +6209,8 @@ export class V1ReferralIndividualVolunteerAssigned extends Activity implements I
 
     override toJSON(data?: any) {
         data = typeof data === 'object' ? data : {};
-        data["openedAtUtc"] = this.openedAtUtc ? this.openedAtUtc.toISOString() : undefined as any;
+        data["personId"] = this.personId;
+        data["assignmentRole"] = this.assignmentRole;
         super.toJSON(data);
         return data;
     }
@@ -6234,12 +6233,12 @@ export class V1ReferralIndividualVolunteerUnassigned extends Activity implements
     override init(_data?: any) {
         super.init(_data);
         if (_data) {
-            this.requirementName = _data["requirementName"];
-            this.completedAtUtc = _data["completedAtUtc"] ? new Date(_data["completedAtUtc"].toString()) : undefined as any;
+            this.personId = _data["personId"];
+            this.assignmentRole = _data["assignmentRole"];
         }
     }
 
-    static override fromJS(data: any): V1ReferralRequirementCompleted {
+    static override fromJS(data: any): V1ReferralIndividualVolunteerUnassigned {
         data = typeof data === 'object' ? data : {};
         let result = new V1ReferralIndividualVolunteerUnassigned();
         result.init(data);
@@ -6248,8 +6247,8 @@ export class V1ReferralIndividualVolunteerUnassigned extends Activity implements
 
     override toJSON(data?: any) {
         data = typeof data === 'object' ? data : {};
-        data["requirementName"] = this.requirementName;
-        data["completedAtUtc"] = this.completedAtUtc ? this.completedAtUtc.toISOString() : undefined as any;
+        data["personId"] = this.personId;
+        data["assignmentRole"] = this.assignmentRole;
         super.toJSON(data);
         return data;
     }
@@ -6271,11 +6270,11 @@ export class V1ReferralOpened extends Activity implements IV1ReferralOpened {
     override init(_data?: any) {
         super.init(_data);
         if (_data) {
-            this.openedAtUtc = _data["openedAtUtc"] ? new Date(_data["openedAtUtc"].toString()) : <any>undefined;
+            this.openedAtUtc = _data["openedAtUtc"] ? new Date(_data["openedAtUtc"].toString()) : undefined as any;
         }
     }
 
-    static override fromJS(data: any): V1ReferralStaffAssigned {
+    static override fromJS(data: any): V1ReferralOpened {
         data = typeof data === 'object' ? data : {};
         let result = new V1ReferralOpened();
         result.init(data);
@@ -6284,7 +6283,7 @@ export class V1ReferralOpened extends Activity implements IV1ReferralOpened {
 
     override toJSON(data?: any) {
         data = typeof data === 'object' ? data : {};
-        data["openedAtUtc"] = this.openedAtUtc ? this.openedAtUtc.toISOString() : <any>undefined;
+        data["openedAtUtc"] = this.openedAtUtc ? this.openedAtUtc.toISOString() : undefined as any;
         super.toJSON(data);
         return data;
     }
@@ -6307,11 +6306,11 @@ export class V1ReferralRequirementCompleted extends Activity implements IV1Refer
         super.init(_data);
         if (_data) {
             this.requirementName = _data["requirementName"];
-            this.completedAtUtc = _data["completedAtUtc"] ? new Date(_data["completedAtUtc"].toString()) : <any>undefined;
+            this.completedAtUtc = _data["completedAtUtc"] ? new Date(_data["completedAtUtc"].toString()) : undefined as any;
         }
     }
 
-    static override fromJS(data: any): V1ReferralStaffUnassigned {
+    static override fromJS(data: any): V1ReferralRequirementCompleted {
         data = typeof data === 'object' ? data : {};
         let result = new V1ReferralRequirementCompleted();
         result.init(data);
@@ -6321,7 +6320,7 @@ export class V1ReferralRequirementCompleted extends Activity implements IV1Refer
     override toJSON(data?: any) {
         data = typeof data === 'object' ? data : {};
         data["requirementName"] = this.requirementName;
-        data["completedAtUtc"] = this.completedAtUtc ? this.completedAtUtc.toISOString() : <any>undefined;
+        data["completedAtUtc"] = this.completedAtUtc ? this.completedAtUtc.toISOString() : undefined as any;
         super.toJSON(data);
         return data;
     }
@@ -6578,10 +6577,10 @@ export class V1Case implements IV1Case {
             for (let item of this.arrangements)
                 data["arrangements"].push(item ? item.toJSON() : undefined as any);
         }
-        if (Array.isArray(this.staffAssignments)) {
-            data["staffAssignments"] = [];
-            for (let item of this.staffAssignments)
-                data["staffAssignments"].push(item ? item.toJSON() : undefined as any);
+        if (Array.isArray(this.assignedIndividualVolunteers)) {
+            data["assignedIndividualVolunteers"] = [];
+            for (let item of this.assignedIndividualVolunteers)
+                data["assignedIndividualVolunteers"].push(item ? item.toJSON() : undefined as any);
         }
         data["comments"] = this.comments;
         if (Array.isArray(this.linkedV1ReferralIds)) {
@@ -6711,6 +6710,11 @@ export class ExemptedRequirementInfo implements IExemptedRequirementInfo {
             this.dueDate = _data["dueDate"] ? new Date(_data["dueDate"].toString()) : undefined as any;
             this.additionalComments = _data["additionalComments"];
             this.exemptionExpiresAtUtc = _data["exemptionExpiresAtUtc"] ? new Date(_data["exemptionExpiresAtUtc"].toString()) : undefined as any;
+            if (Array.isArray(_data["roleNames"])) {
+                this.roleNames = [] as any;
+                for (let item of _data["roleNames"])
+                    this.roleNames!.push(item);
+            }
         }
     }
 
@@ -6729,6 +6733,11 @@ export class ExemptedRequirementInfo implements IExemptedRequirementInfo {
         data["dueDate"] = this.dueDate ? this.dueDate.toISOString() : undefined as any;
         data["additionalComments"] = this.additionalComments;
         data["exemptionExpiresAtUtc"] = this.exemptionExpiresAtUtc ? this.exemptionExpiresAtUtc.toISOString() : undefined as any;
+        if (Array.isArray(this.roleNames)) {
+            data["roleNames"] = [];
+            for (let item of this.roleNames)
+                data["roleNames"].push(item);
+        }
         return data;
     }
 }
@@ -7410,7 +7419,7 @@ export class VolunteerFamilyInfo implements IVolunteerFamilyInfo {
         if (Array.isArray(this.completedCustomFields)) {
             data["completedCustomFields"] = [];
             for (let item of this.completedCustomFields)
-                data["completedCustomFields"].push(item.toJSON());
+                data["completedCustomFields"].push(item ? item.toJSON() : undefined as any);
         }
         if (Array.isArray(this.missingCustomFields)) {
             data["missingCustomFields"] = [];
@@ -8876,10 +8885,10 @@ export class V1Referral implements IV1Referral {
             for (let item of this.deletedDocuments)
                 data["deletedDocuments"].push(item);
         }
-        if (Array.isArray(this.staffAssignments)) {
-            data["staffAssignments"] = [];
-            for (let item of this.staffAssignments)
-                data["staffAssignments"].push(item ? item.toJSON() : undefined as any);
+        if (Array.isArray(this.assignedIndividualVolunteers)) {
+            data["assignedIndividualVolunteers"] = [];
+            for (let item of this.assignedIndividualVolunteers)
+                data["assignedIndividualVolunteers"].push(item ? item.toJSON() : undefined as any);
         }
         if (Array.isArray(this.history)) {
             data["history"] = [];
@@ -11680,7 +11689,7 @@ export class UpdateCustomVolunteerFamilyField extends VolunteerFamilyCommand imp
         this._discriminator = "UpdateCustomVolunteerFamilyField";
     }
 
-    init(_data?: any) {
+    override init(_data?: any) {
         super.init(_data);
         if (_data) {
             this.completedCustomFieldId = _data["completedCustomFieldId"];
@@ -11690,14 +11699,14 @@ export class UpdateCustomVolunteerFamilyField extends VolunteerFamilyCommand imp
         }
     }
 
-    static fromJS(data: any): UpdateCustomVolunteerFamilyField {
+    static override fromJS(data: any): UpdateCustomVolunteerFamilyField {
         data = typeof data === 'object' ? data : {};
         let result = new UpdateCustomVolunteerFamilyField();
         result.init(data);
         return result;
     }
 
-    toJSON(data?: any) {
+    override toJSON(data?: any) {
         data = typeof data === 'object' ? data : {};
         data["completedCustomFieldId"] = this.completedCustomFieldId;
         data["customFieldName"] = this.customFieldName;
@@ -14127,11 +14136,11 @@ export class CloseReferral extends V1CaseCommand implements ICloseReferral {
         super.init(_data);
         if (_data) {
             this.closeReason = _data["closeReason"];
-            this.closedAtUtc = _data["closedAtUtc"] ? new Date(_data["closedAtUtc"].toString()) : <any>undefined;
+            this.closedAtUtc = _data["closedAtUtc"] ? new Date(_data["closedAtUtc"].toString()) : undefined as any;
         }
     }
 
-    static override fromJS(data: any): AssignStaffToV1Case {
+    static override fromJS(data: any): CloseReferral {
         data = typeof data === 'object' ? data : {};
         let result = new CloseReferral();
         result.init(data);
@@ -14141,7 +14150,7 @@ export class CloseReferral extends V1CaseCommand implements ICloseReferral {
     override toJSON(data?: any) {
         data = typeof data === 'object' ? data : {};
         data["closeReason"] = this.closeReason;
-        data["closedAtUtc"] = this.closedAtUtc ? this.closedAtUtc.toISOString() : <any>undefined;
+        data["closedAtUtc"] = this.closedAtUtc ? this.closedAtUtc.toISOString() : undefined as any;
         super.toJSON(data);
         return data;
     }
@@ -14177,7 +14186,7 @@ export class CloseReferralWithReason extends V1CaseCommand implements ICloseRefe
         }
     }
 
-    static override fromJS(data: any): CloseReferral {
+    static override fromJS(data: any): CloseReferralWithReason {
         data = typeof data === 'object' ? data : {};
         let result = new CloseReferralWithReason();
         result.init(data);
@@ -14430,44 +14439,6 @@ export interface IReopenReferral extends IV1CaseCommand {
     reopenedAtUtc: Date;
 }
 
-export class UnassignStaffFromV1Case extends V1CaseCommand implements IUnassignStaffFromV1Case {
-    personId!: string;
-    assignmentRole!: string;
-
-    constructor(data?: IUnassignStaffFromV1Case) {
-        super(data);
-        this._discriminator = "UnassignStaffFromV1Case";
-    }
-
-    override init(_data?: any) {
-        super.init(_data);
-        if (_data) {
-            this.personId = _data["personId"];
-            this.assignmentRole = _data["assignmentRole"];
-        }
-    }
-
-    static override fromJS(data: any): UnassignStaffFromV1Case {
-        data = typeof data === 'object' ? data : {};
-        let result = new UnassignStaffFromV1Case();
-        result.init(data);
-        return result;
-    }
-
-    override toJSON(data?: any) {
-        data = typeof data === 'object' ? data : {};
-        data["personId"] = this.personId;
-        data["assignmentRole"] = this.assignmentRole;
-        super.toJSON(data);
-        return data;
-    }
-}
-
-export interface IUnassignStaffFromV1Case extends IV1CaseCommand {
-    personId: string;
-    assignmentRole: string;
-}
-
 export class UnexemptReferralRequirement extends V1CaseCommand implements IUnexemptReferralRequirement {
     requirementName!: string;
 
@@ -14591,7 +14562,7 @@ export class AssignIndividualVolunteer2 extends V1CaseCommand implements IAssign
         this._discriminator = "AssignIndividualVolunteer";
     }
 
-    init(_data?: any) {
+    override init(_data?: any) {
         super.init(_data);
         if (_data) {
             this.personId = _data["personId"];
@@ -14599,14 +14570,14 @@ export class AssignIndividualVolunteer2 extends V1CaseCommand implements IAssign
         }
     }
 
-    static fromJS(data: any): AssignIndividualVolunteer2 {
+    static override fromJS(data: any): AssignIndividualVolunteer2 {
         data = typeof data === 'object' ? data : {};
         let result = new AssignIndividualVolunteer2();
         result.init(data);
         return result;
     }
 
-    toJSON(data?: any) {
+    override toJSON(data?: any) {
         data = typeof data === 'object' ? data : {};
         data["personId"] = this.personId;
         data["assignmentRole"] = this.assignmentRole;
@@ -14629,7 +14600,7 @@ export class UnassignIndividualVolunteer2 extends V1CaseCommand implements IUnas
         this._discriminator = "UnassignIndividualVolunteer";
     }
 
-    init(_data?: any) {
+    override init(_data?: any) {
         super.init(_data);
         if (_data) {
             this.personId = _data["personId"];
@@ -14637,14 +14608,14 @@ export class UnassignIndividualVolunteer2 extends V1CaseCommand implements IUnas
         }
     }
 
-    static fromJS(data: any): UnassignIndividualVolunteer2 {
+    static override fromJS(data: any): UnassignIndividualVolunteer2 {
         data = typeof data === 'object' ? data : {};
         let result = new UnassignIndividualVolunteer2();
         result.init(data);
         return result;
     }
 
-    toJSON(data?: any) {
+    override toJSON(data?: any) {
         data = typeof data === 'object' ? data : {};
         data["personId"] = this.personId;
         data["assignmentRole"] = this.assignmentRole;
@@ -15145,7 +15116,7 @@ export class AssignIndividualVolunteer3 extends V1ReferralCommand implements IAs
         }
     }
 
-    static override fromJS(data: any): AssignStaffToV1Referral {
+    static override fromJS(data: any): AssignIndividualVolunteer3 {
         data = typeof data === 'object' ? data : {};
         let result = new AssignIndividualVolunteer3();
         result.init(data);
@@ -15465,7 +15436,7 @@ export class UnassignIndividualVolunteer3 extends V1ReferralCommand implements I
         }
     }
 
-    static override fromJS(data: any): UnassignStaffFromV1Referral {
+    static override fromJS(data: any): UnassignIndividualVolunteer3 {
         data = typeof data === 'object' ? data : {};
         let result = new UnassignIndividualVolunteer3();
         result.init(data);
