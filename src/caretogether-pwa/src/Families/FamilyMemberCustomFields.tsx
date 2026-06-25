@@ -1,9 +1,15 @@
-import { Box, Divider, Typography } from '@mui/material';
+import { useState } from 'react';
+import { Box, Divider, Tab, Tabs } from '@mui/material';
 import { CompletedCustomFieldInfo, CustomField } from '../GeneratedClient';
 import { CustomFieldEditor } from '../Generic/CustomFieldEditor';
 import { useDirectoryModel } from '../Model/DirectoryModel';
 
 type CustomFieldRenderInfo = CompletedCustomFieldInfo | string;
+
+type CustomFieldSection = {
+  groupingKey?: string;
+  customFields: CustomFieldRenderInfo[];
+};
 
 type FamilyMemberCustomFieldsProps = {
   familyId: string;
@@ -12,8 +18,14 @@ type FamilyMemberCustomFieldsProps = {
   completedCustomFields?: CompletedCustomFieldInfo[];
 };
 
+function isCompletedCustomField(
+  customField: CustomFieldRenderInfo
+): customField is CompletedCustomFieldInfo {
+  return typeof customField !== 'string';
+}
+
 function customFieldName(customField: CustomFieldRenderInfo) {
-  return customField instanceof CompletedCustomFieldInfo
+  return isCompletedCustomField(customField)
     ? customField.customFieldName!
     : customField;
 }
@@ -35,12 +47,43 @@ function orderCustomFieldsByPolicy(
   });
 }
 
+function groupCustomFieldsByPolicy(
+  customFields: CustomFieldRenderInfo[],
+  customFieldPolicies: CustomField[]
+) {
+  const policiesByName = new Map(
+    customFieldPolicies.map((customFieldPolicy) => [
+      customFieldPolicy.name,
+      customFieldPolicy,
+    ])
+  );
+
+  return customFields.reduce<CustomFieldSection[]>((sections, customField) => {
+    const groupingKey =
+      policiesByName.get(customFieldName(customField))?.groupingKey ??
+      undefined;
+    if (sections.some((section) => section.groupingKey === groupingKey)) {
+      return sections.map((section) =>
+        section.groupingKey === groupingKey
+          ? {
+              ...section,
+              customFields: section.customFields.concat(customField),
+            }
+          : section
+      );
+    }
+
+    return sections.concat({ groupingKey, customFields: [customField] });
+  }, []);
+}
+
 export function FamilyMemberCustomFields({
   familyId,
   personId,
   customFieldPolicies,
   completedCustomFields = [],
 }: FamilyMemberCustomFieldsProps) {
+  const [selectedSectionIndex, setSelectedSectionIndex] = useState(0);
   const completedFieldNames = new Set(
     completedCustomFields.map((field) => field.customFieldName)
   );
@@ -59,16 +102,85 @@ export function FamilyMemberCustomFields({
     return null;
   }
 
+  const customFieldSections = groupCustomFieldsByPolicy(
+    customFields,
+    customFieldPolicies
+  );
+  const selectedTab =
+    selectedSectionIndex < customFieldSections.length
+      ? selectedSectionIndex
+      : 0;
+
+  console.log(customFieldSections, selectedTab, selectedSectionIndex);
+
   return (
-    <Box sx={{ mt: 1.5 }}>
+    <Box sx={{ clear: 'both', mt: 1.5 }}>
       <Divider sx={{ mb: 1 }} />
-      <Typography
-        variant="subtitle2"
-        color="text.secondary"
-        sx={{ mb: 0.5 }}
+      <Tabs
+        value={selectedTab}
+        onChange={(_, nextTab) => setSelectedSectionIndex(nextTab)}
+        variant="scrollable"
+        scrollButtons="auto"
+        aria-label="Custom field groups"
+        sx={{
+          minHeight: 28,
+          mb: 0.5,
+          '& .MuiTabs-indicator': { height: 2 },
+        }}
       >
-        Custom fields
-      </Typography>
+        {customFieldSections.map((section, sectionIndex) => (
+          <Tab
+            key={section.groupingKey ?? `ungrouped-${sectionIndex}`}
+            label={section.groupingKey ?? 'Other'}
+            id={`family-member-custom-fields-tab-${personId}-${sectionIndex}`}
+            aria-controls={`family-member-custom-fields-tabpanel-${personId}-${sectionIndex}`}
+            sx={{
+              minHeight: 28,
+              px: 1,
+              py: 0,
+              fontSize: '0.75rem',
+              textTransform: 'none',
+            }}
+          />
+        ))}
+      </Tabs>
+      {customFieldSections.map((section, sectionIndex) => (
+        <Box
+          key={section.groupingKey ?? `ungrouped-panel-${sectionIndex}`}
+          role="tabpanel"
+          hidden={selectedTab !== sectionIndex}
+          id={`family-member-custom-fields-tabpanel-${personId}-${sectionIndex}`}
+          aria-labelledby={`family-member-custom-fields-tab-${personId}-${sectionIndex}`}
+        >
+          {selectedTab === sectionIndex && (
+            <FamilyMemberCustomFieldList
+              familyId={familyId}
+              personId={personId}
+              customFieldPolicies={customFieldPolicies}
+              customFields={section.customFields}
+            />
+          )}
+        </Box>
+      ))}
+    </Box>
+  );
+}
+
+type FamilyMemberCustomFieldListProps = {
+  familyId: string;
+  personId: string;
+  customFieldPolicies: CustomField[];
+  customFields: CustomFieldRenderInfo[];
+};
+
+function FamilyMemberCustomFieldList({
+  familyId,
+  personId,
+  customFieldPolicies,
+  customFields,
+}: FamilyMemberCustomFieldListProps) {
+  return (
+    <>
       {customFields.map((customField) => (
         <FamilyMemberCustomField
           key={customFieldName(customField)}
@@ -78,7 +190,7 @@ export function FamilyMemberCustomFields({
           customField={customField}
         />
       ))}
-    </Box>
+    </>
   );
 }
 
@@ -96,8 +208,9 @@ function FamilyMemberCustomField({
   customField,
 }: FamilyMemberCustomFieldProps) {
   const directoryModel = useDirectoryModel();
-  const savedCustomField =
-    customField instanceof CompletedCustomFieldInfo ? customField : null;
+  const savedCustomField = isCompletedCustomField(customField)
+    ? customField
+    : null;
   const customFieldPolicy = customFieldPolicies.find((cf) =>
     savedCustomField
       ? cf.name === savedCustomField.customFieldName

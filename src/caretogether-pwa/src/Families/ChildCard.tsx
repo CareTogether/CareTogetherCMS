@@ -123,22 +123,31 @@ export function ChildCard({
                       family.family?.adults?.filter(
                         (x) => x.item1?.id === relationship.personId
                       )[0]?.item1?.firstName ?? '(adult not found)';
+                    const relationshipLabel =
+                      relationship.type ===
+                      CustodialRelationshipType.LegalGuardian
+                        ? 'legal guardian'
+                        : relationship.type ===
+                            CustodialRelationshipType.ParentWithCustody
+                          ? 'parent with custody'
+                          : relationship.type ===
+                              CustodialRelationshipType.ParentWithCourtAppointedCustody
+                            ? 'parent with court-appointed sole custody'
+                            : null;
 
                     return (
-                      <li key={relationship.personId} style={{ marginTop: 4 }}>
-                        {adult}
-                        :&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-                        <span style={{ float: 'right' }}>
-                          {relationship.type ===
-                          CustodialRelationshipType.LegalGuardian
-                            ? 'legal guardian'
-                            : relationship.type ===
-                                CustodialRelationshipType.ParentWithCustody
-                              ? 'parent with custody'
-                              : relationship.type ===
-                                  CustodialRelationshipType.ParentWithCourtAppointedCustody
-                                ? 'parent with court-appointed sole custody'
-                                : null}
+                      <li
+                        key={relationship.personId}
+                        style={{
+                          display: 'flex',
+                          gap: 8,
+                          justifyContent: 'space-between',
+                          marginTop: 4,
+                        }}
+                      >
+                        <span>{adult}:</span>
+                        <span style={{ textAlign: 'right' }}>
+                          {relationshipLabel}
                         </span>
                       </li>
                     );
