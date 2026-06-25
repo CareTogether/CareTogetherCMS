@@ -16,6 +16,7 @@ import {
   Tooltip,
 } from '@mui/material';
 import { useState } from 'react';
+import { useRecoilValue } from 'recoil';
 import {
   Gender,
   Person,
@@ -42,7 +43,7 @@ import { useDialogHandle } from '../Hooks/useDialogHandle';
 import { EditAdultDialog } from './EditAdultDialog';
 import { useCollapsed } from '../Hooks/useCollapsed';
 import { useFamilyLookup } from '../Model/DirectoryModel';
-import { useFeatureFlags } from '../Model/ConfigurationModel';
+import { policyData, useFeatureFlags } from '../Model/ConfigurationModel';
 import { useDrawer } from '../Generic/ShellDrawer';
 import { ManageUserDrawer } from './ManageUserDrawer';
 import { format } from 'date-fns';
@@ -50,13 +51,22 @@ import { DateOfBirth } from './DateOfBirth';
 import { CompleteOtherController } from '../Requirements/CompleteOtherController';
 import { WithComma } from '../Utilities/WithComma';
 import { ReadMoreText } from '../Generic/Forms/ReadMoreText';
+import { useFeatureFlagEnabled } from 'posthog-js/react';
+import { FAMILY_MEMBER_CUSTOM_FIELDS_FEATURE_FLAG } from '../featureFlags';
+import { FamilyMemberCustomFields } from './FamilyMemberCustomFields';
+import { combineCustomFieldPolicies } from './familyMemberCustomFieldPolicies';
 
 type AdultCardProps = {
   familyId: string;
   personId: string;
+  showCustomFields?: boolean;
 };
 
-export function AdultCard({ familyId, personId }: AdultCardProps) {
+export function AdultCard({
+  familyId,
+  personId,
+  showCustomFields = false,
+}: AdultCardProps) {
   const familyLookup = useFamilyLookup();
   const family = familyLookup(familyId)!;
 
@@ -71,6 +81,18 @@ export function AdultCard({ familyId, personId }: AdultCardProps) {
   const editDialogHandle = useDialogHandle();
 
   const featureFlags = useFeatureFlags();
+  const policy = useRecoilValue(policyData);
+  const familyMemberCustomFieldsEnabled = useFeatureFlagEnabled(
+    FAMILY_MEMBER_CUSTOM_FIELDS_FEATURE_FLAG
+  );
+  const customFieldPolicies = combineCustomFieldPolicies(
+    family.partneringFamilyInfo != null
+      ? (policy.customFields?.partneringFamily?.adult ?? [])
+      : [],
+    family.volunteerFamilyInfo != null
+      ? (policy.customFields?.volunteerFamily?.adult ?? [])
+      : []
+  );
 
   const [completeOtherOpen, setCompleteOtherOpen] = useState(false);
 
@@ -289,6 +311,16 @@ export function AdultCard({ familyId, personId }: AdultCardProps) {
             <Typography variant="body2" component="div">
               <ContactDisplay person={adult.item1} />
             </Typography>
+            {showCustomFields &&
+              familyMemberCustomFieldsEnabled &&
+              permissions(Permission.ViewFamilyCustomFields) && (
+                <FamilyMemberCustomFields
+                  familyId={familyId}
+                  personId={personId}
+                  customFieldPolicies={customFieldPolicies}
+                  completedCustomFields={adult.item1.completedCustomFields}
+                />
+              )}
             <Accordion
               expanded={!collapsed}
               onChange={(_event, isExpanded) => setCollapsed(!isExpanded)}
@@ -461,7 +493,9 @@ export function AdultCard({ familyId, personId }: AdultCardProps) {
               permissions(Permission.EditPersonUserProtectedRoles)) && (
               <MenuItem
                 onClick={() => {
-                  adultMoreMenuAnchor?.adult && manageUserDrawer.openDrawer();
+                  if (adultMoreMenuAnchor?.adult) {
+                    manageUserDrawer.openDrawer();
+                  }
                   setAdultMoreMenuAnchor(null); //TODO: Is this why we had needed the null check on the previous line?
                 }}
               >

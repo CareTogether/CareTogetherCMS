@@ -5,6 +5,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using CareTogether.Resources;
 using CareTogether.Resources.Directory;
+using CareTogether.Resources.Policies;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace CareTogether.Core.Test
@@ -146,6 +147,52 @@ namespace CareTogether.Core.Test
             Assert.AreEqual("Jane", people[1].FirstName);
             Assert.AreEqual("Doe", people[1].LastName);
             Assert.AreEqual(new ExactAge(new DateTime(1979, 7, 1)), people[1].Age);
+        }
+
+        [TestMethod]
+        public void ExecutePersonCommandStoresCustomFamilyMemberField()
+        {
+            var dut = DirectoryModel.InitializeAsync(EventSequence()).Result;
+            var (_, _, _, createPersonCommit) = dut.ExecutePersonCommand(
+                new CreatePerson(
+                    guid1,
+                    "John",
+                    "Doe",
+                    Gender.Male,
+                    new ExactAge(new DateTime(1980, 7, 1)),
+                    "Ethnic",
+                    ImmutableList<Address>.Empty,
+                    null,
+                    ImmutableList<PhoneNumber>.Empty,
+                    null,
+                    ImmutableList<EmailAddress>.Empty,
+                    null,
+                    null,
+                    null
+                ),
+                guid0,
+                new DateTime(2021, 7, 1)
+            );
+            createPersonCommit();
+
+            var (_, _, person, updateCustomFieldCommit) = dut.ExecutePersonCommand(
+                new UpdateCustomFamilyMemberField(
+                    guid1,
+                    guid2,
+                    "School",
+                    CustomFieldType.String,
+                    "Lincoln Elementary"
+                ),
+                guid0,
+                new DateTime(2021, 7, 2)
+            );
+            updateCustomFieldCommit();
+
+            var completedCustomField = person.CompletedCustomFields.Single();
+            Assert.AreEqual(guid2, completedCustomField.CompletedCustomFieldId);
+            Assert.AreEqual("School", completedCustomField.CustomFieldName);
+            Assert.AreEqual(CustomFieldType.String, completedCustomField.CustomFieldType);
+            Assert.AreEqual("Lincoln Elementary", completedCustomField.Value);
         }
 
         [TestMethod]

@@ -41,7 +41,11 @@ namespace CareTogether.Resources.Directory
         Guid? PreferredEmailAddressId,
         string? Concerns,
         string? Notes
-    );
+    )
+    {
+        public ImmutableList<CompletedCustomFieldInfo> CompletedCustomFields { get; init; } =
+            ImmutableList<CompletedCustomFieldInfo>.Empty;
+    }
 
     public sealed record FamilyAdultRelationshipInfo(
         string? RelationshipToFamily,
@@ -246,6 +250,14 @@ namespace CareTogether.Resources.Directory
         Guid PersonId,
         EmailAddress EmailAddress,
         bool IsPreferredEmailAddress
+    ) : PersonCommand(PersonId);
+
+    public sealed record UpdateCustomFamilyMemberField(
+        Guid PersonId,
+        Guid CompletedCustomFieldId,
+        string CustomFieldName,
+        CustomFieldType CustomFieldType,
+        object? Value
     ) : PersonCommand(PersonId);
 
     /// <summary>
