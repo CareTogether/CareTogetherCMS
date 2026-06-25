@@ -116,7 +116,12 @@ namespace CareTogether.Utilities.ObjectStore
             var tenantContainer = await CreateContainerIfNotExists(organizationId);
 
             await foreach (
-                var blob in tenantContainer.GetBlobsAsync(prefix: $"{locationId}/{objectType}/")
+                var blob in tenantContainer.GetBlobsAsync(
+                    BlobTraits.None,
+                    BlobStates.None,
+                    $"{locationId}/{objectType}/",
+                    default
+                )
             )
             {
                 var objectId = blob

@@ -256,9 +256,6 @@ export const visibleReferralsQuery = selector({
 
     return visibleAggregates
       .filter((aggregate) => aggregate instanceof ReferralRecordsAggregate)
-      .map(
-        (aggregate) =>
-          (aggregate as ReferralRecordsAggregate).referral!.referral!
-      );
+      .map((aggregate) => (aggregate as ReferralRecordsAggregate).referral);
   },
 });

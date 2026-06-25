@@ -1,10 +1,10 @@
+import Grid from '../../Generic/GridLegacyCompat';
 import {
   Accordion,
   AccordionDetails,
   AccordionSummary,
   Badge,
   Divider,
-  Grid,
   Table,
   TableBody,
   TableContainer,

@@ -84,7 +84,7 @@ export function CommunityDocuments({ communityInfo }: CommunityDocumentsProps) {
   const theme = useTheme();
 
   return (
-    <List sx={{ '& .MuiListItemIcon-root': { minWidth: 36 } }}>
+    <List>
       {documents.map((doc) => (
         <ListItem
           key={doc.document.uploadedDocumentId}
@@ -108,18 +108,20 @@ export function CommunityDocuments({ communityInfo }: CommunityDocumentsProps) {
               sx={{ paddingTop: 0, paddingBottom: 0 }}
               onClick={() => downloadDocument(doc.document)}
             >
-              <ListItemIcon>
+              <ListItemIcon sx={{ minWidth: 36 }}>
                 <InsertDriveFileOutlinedIcon color="primary" />
               </ListItemIcon>
               <ListItemText
                 primary={doc.document.uploadedFileName}
-                primaryTypographyProps={{ color: theme.palette.primary.main }}
+                slotProps={{
+                  primary: { color: theme.palette.primary.main },
+                }}
                 secondary={`${format(doc.document.timestampUtc!, 'PPp')} — ${personNameString(doc.uploader)}`}
               ></ListItemText>
             </ListItemButton>
           ) : (
             <>
-              <ListItemIcon>
+              <ListItemIcon sx={{ minWidth: 36 }}>
                 <InsertDriveFileOutlinedIcon />
               </ListItemIcon>
               <ListItemText

@@ -35,7 +35,7 @@ export function ReportsScreen() {
 
   if (error) {
     return (
-      <Typography align="center" mt={10}>
+      <Typography align="center" sx={{ mt: 10 }}>
         Error loading report. Please try again later.
       </Typography>
     );

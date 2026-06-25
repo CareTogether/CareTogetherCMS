@@ -1,9 +1,10 @@
-import { useState } from 'react';
+import Grid from '@mui/material/Grid';
+import {
+  useState } from 'react';
 import {
   FormControl,
   FormControlLabel,
   FormLabel,
-  Grid,
   Radio,
   RadioGroup,
   TextField,
@@ -57,7 +58,7 @@ export function RemoveFamilyRoleDialog({
     >
       <form noValidate autoComplete="off">
         <Grid container spacing={2}>
-          <Grid item xs={12}>
+          <Grid size={12}>
             <FormControl component="fieldset">
               <FormLabel component="legend">Reason for Removal:</FormLabel>
               <RadioGroup
@@ -93,7 +94,7 @@ export function RemoveFamilyRoleDialog({
               </RadioGroup>
             </FormControl>
           </Grid>
-          <Grid item xs={12}>
+          <Grid size={12}>
             <TextField
               id="additional-comments"
               label="Additional Comments"
@@ -110,7 +111,7 @@ export function RemoveFamilyRoleDialog({
               }
             />
           </Grid>
-          <Grid item xs={12}>
+          <Grid size={12}>
             <ValidateDatePicker
               label="Effective Since (optional - leave blank to use the current date)"
               value={effectiveSince}

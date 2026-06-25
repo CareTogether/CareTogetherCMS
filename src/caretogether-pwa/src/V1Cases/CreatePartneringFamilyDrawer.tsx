@@ -1,4 +1,6 @@
-import { useState } from 'react';
+import Grid from '../Generic/GridLegacyCompat';
+import {
+  useState } from 'react';
 import {
   Button,
   Checkbox,
@@ -7,7 +9,6 @@ import {
   FormControlLabel,
   FormGroup,
   FormLabel,
-  Grid,
   InputAdornment,
   InputLabel,
   MenuItem,
@@ -135,11 +136,13 @@ export function CreatePartneringFamilyDrawer({
       anchor="right"
       open
       onClose={() => onClose()}
-      PaperProps={{
-        sx: {
-          width: 600,
-          p: 3,
-          top: 45,
+      slotProps={{
+        paper: {
+          sx: {
+            width: 600,
+            p: 3,
+            top: 45,
+          },
         },
       }}
     >
@@ -313,12 +316,14 @@ export function CreatePartneringFamilyDrawer({
             fullWidth
             minRows={2}
             size="small"
-            InputProps={{
-              startAdornment: (
-                <InputAdornment position="start">
-                  <WarningIcon />
-                </InputAdornment>
-              ),
+            slotProps={{
+              input: {
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <WarningIcon />
+                  </InputAdornment>
+                ),
+              },
             }}
             value={concerns ?? ''}
             onChange={(e) => setFields({ ...fields, concerns: e.target.value })}

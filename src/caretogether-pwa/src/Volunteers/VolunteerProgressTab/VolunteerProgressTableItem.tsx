@@ -80,7 +80,7 @@ function VolunteerProgressTableRows(props: VolunteerProgressTableItemProps) {
   return (
     <>
       <TableRow
-        sx={{ backgroundColor: '#eef' }}
+        sx={{ backgroundColor: '#eef', cursor: 'pointer' }}
         onClick={() => openFamily(familyId)}
       >
         <TableCell key="1" sx={{ whiteSpace: 'nowrap' }}>
@@ -154,7 +154,7 @@ function VolunteerProgressTableRows(props: VolunteerProgressTableItemProps) {
           }
 
           return (
-            <TableRow key={adultInfo.id} onClick={() => openFamily(familyId)}>
+            <TableRow key={adultInfo.id} sx={{ cursor: 'pointer' }} onClick={() => openFamily(familyId)}>
               <TableCell>
                 {adultInfo.lastName}, {adultInfo.firstName}
               </TableCell>

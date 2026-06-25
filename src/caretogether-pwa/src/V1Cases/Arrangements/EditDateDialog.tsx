@@ -1,4 +1,4 @@
-import { Grid } from '@mui/material';
+import Grid from '@mui/material/Grid';
 import { ValidateDatePicker } from '../../Generic/Forms/ValidateDatePicker';
 import { useState } from 'react';
 import { UpdateDialog } from '../../Generic/UpdateDialog';
@@ -36,7 +36,7 @@ export function EditDateDialog({
       enableSave={() => dateLocal != null && !dobError}
     >
       <Grid container spacing={2}>
-        <Grid item xs={12}>
+        <Grid size={12}>
           <ValidateDatePicker
             label={label}
             value={dateLocal}

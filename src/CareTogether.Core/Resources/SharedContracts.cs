@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Immutable;
 using CareTogether.Resources.Policies;
 using JsonPolymorph;
 
@@ -12,7 +13,8 @@ namespace CareTogether.Resources
         DateTime CompletedAtUtc,
         DateTime? ExpiresAtUtc,
         Guid? UploadedDocumentId,
-        Guid? NoteId
+        Guid? NoteId,
+        ImmutableList<string>? RoleNames = null
     );
 
     public sealed record ExemptedRequirementInfo(
@@ -21,7 +23,8 @@ namespace CareTogether.Resources
         string RequirementName,
         DateTime? DueDate,
         string AdditionalComments,
-        DateTime? ExemptionExpiresAtUtc
+        DateTime? ExemptionExpiresAtUtc,
+        ImmutableList<string>? RoleNames = null
     );
 
     public sealed record UploadedDocumentInfo(
@@ -31,7 +34,7 @@ namespace CareTogether.Resources
         string UploadedFileName
     );
 
-    public sealed record StaffAssignment(
+    public sealed record AssignedIndividualVolunteer(
         Guid PersonId,
         string AssignmentRole,
         DateTime AssignedAtUtc,

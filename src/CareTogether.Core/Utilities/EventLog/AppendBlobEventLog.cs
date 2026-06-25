@@ -108,7 +108,8 @@ namespace CareTogether.Utilities.EventLog
                 var blob in tenantContainer.GetBlobsAsync(
                     BlobTraits.None,
                     BlobStates.None,
-                    $"{locationId}/{logType}"
+                    $"{locationId}/{logType}",
+                    default
                 )
             )
             {
@@ -119,28 +120,24 @@ namespace CareTogether.Utilities.EventLog
 
                 var appendBlob = tenantContainer.GetAppendBlobClient(blob.Name);
 
-                var eventStream = await appendBlob.OpenReadAsync();
+                using var eventStream = await appendBlob.OpenReadAsync();
+                using var reader = new StreamReader(eventStream);
 
-                var eventString = new StreamReader(eventStream).ReadToEnd();
+                string? line;
 
-                using (var reader = new StringReader(eventString))
+                while ((line = await reader.ReadLineAsync()) != null)
                 {
-                    string? line;
+                    eventSequenceNumber++;
 
-                    while ((line = reader.ReadLine()) != null)
-                    {
-                        eventSequenceNumber++;
+                    var item = JsonConvert.DeserializeObject<T>(line);
 
-                        var item = JsonConvert.DeserializeObject<T>(line);
-
-                        yield return item == null
-                            ? throw new InvalidOperationException(
-                                $"Unexpected null object deserialized in organization {organizationId}, location {locationId}, "
-                                    + $"log type {logType}, blob '{blob.Name}', event sequence # {eventSequenceNumber}. "
-                                    + $"Expected type: {typeof(T).FullName}"
-                            )
-                            : (item, eventSequenceNumber);
-                    }
+                    yield return item == null
+                        ? throw new InvalidOperationException(
+                            $"Unexpected null object deserialized in organization {organizationId}, location {locationId}, "
+                                + $"log type {logType}, blob '{blob.Name}', event sequence # {eventSequenceNumber}. "
+                                + $"Expected type: {typeof(T).FullName}"
+                        )
+                        : (item, eventSequenceNumber);
                 }
             }
         }

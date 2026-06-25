@@ -19,6 +19,8 @@ import {
   AcceptV1Referral,
   LinkReferralToCaseAndAcceptCommand,
   OpenCaseForReferralAndAcceptCommand,
+  AssignIndividualVolunteer3 as AssignIndividualVolunteer,
+  UnassignIndividualVolunteer3 as UnassignIndividualVolunteer,
 } from '../GeneratedClient';
 import { commandFactory } from './CommandFactory';
 import { api } from '../Api/Api';
@@ -239,15 +241,16 @@ export function useV1ReferralsModel() {
     );
   };
 
-  const openCaseForReferralAndAcceptCommand = useCompositeRecordsCommandCallback(
-    async (familyId: string, referralId: string, openedAtLocal: Date) =>
-      commandFactory(OpenCaseForReferralAndAcceptCommand, {
-        familyId,
-        caseId: crypto.randomUUID(),
-        referralId,
-        openedAtUtc: openedAtLocal,
-      })
-  );
+  const openCaseForReferralAndAcceptCommand =
+    useCompositeRecordsCommandCallback(
+      async (familyId: string, referralId: string, openedAtLocal: Date) =>
+        commandFactory(OpenCaseForReferralAndAcceptCommand, {
+          familyId,
+          caseId: crypto.randomUUID(),
+          referralId,
+          openedAtUtc: openedAtLocal,
+        })
+    );
 
   const openCaseForReferralAndAccept = async (
     familyId: string,
@@ -399,6 +402,24 @@ export function useV1ReferralsModel() {
     await refreshVisibleAggregates();
   };
 
+  const assignIndividualVolunteerToReferral = useV1ReferralCommandCallback(
+    async (referralId: string, personId: string, assignmentRole: string) =>
+      commandFactory(AssignIndividualVolunteer, {
+        referralId,
+        personId,
+        assignmentRole,
+      })
+  );
+
+  const unassignIndividualVolunteerFromReferral = useV1ReferralCommandCallback(
+    async (referralId: string, personId: string, assignmentRole: string) =>
+      commandFactory(UnassignIndividualVolunteer, {
+        referralId,
+        personId,
+        assignmentRole,
+      })
+  );
+
   return {
     createReferral,
     updateCustomReferralField,
@@ -414,5 +435,7 @@ export function useV1ReferralsModel() {
     exemptReferralRequirement,
     unexemptReferralRequirement,
     uploadReferralDocumentMetadata,
+    assignIndividualVolunteerToReferral,
+    unassignIndividualVolunteerFromReferral,
   };
 }

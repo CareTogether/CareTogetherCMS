@@ -1,9 +1,9 @@
+import Grid from '@mui/material/Grid';
 import {
   Button,
   Checkbox,
   Divider,
   FormControlLabel,
-  Grid,
   TextField,
 } from '@mui/material';
 import {
@@ -48,7 +48,7 @@ export function AddressFormFields({ address, onEdit }: AddressFormFieldsProps) {
 
   return (
     <>
-      <Grid item xs={12}>
+      <Grid size={12}>
         <TextField
           id="address-line1"
           label="Address Line 1"
@@ -58,7 +58,7 @@ export function AddressFormFields({ address, onEdit }: AddressFormFieldsProps) {
           onChange={(e) => onEditField({ ...address, line1: e.target.value })}
         />
       </Grid>
-      <Grid item xs={12}>
+      <Grid size={12}>
         <TextField
           id="address-line2"
           label="Address Line 2"
@@ -68,7 +68,7 @@ export function AddressFormFields({ address, onEdit }: AddressFormFieldsProps) {
           onChange={(e) => onEditField({ ...address, line2: e.target.value })}
         />
       </Grid>
-      <Grid item xs={12} sm={6}>
+      <Grid size={{ xs: 12, sm: 6 }}>
         <TextField
           id="address-city"
           label="City"
@@ -78,7 +78,7 @@ export function AddressFormFields({ address, onEdit }: AddressFormFieldsProps) {
           onChange={(e) => onEditField({ ...address, city: e.target.value })}
         />
       </Grid>
-      <Grid item xs={12} sm={6}>
+      <Grid size={{ xs: 12, sm: 6 }}>
         <TextField
           id="address-county"
           label="County"
@@ -88,7 +88,7 @@ export function AddressFormFields({ address, onEdit }: AddressFormFieldsProps) {
           onChange={(e) => onEditField({ ...address, county: e.target.value })}
         />
       </Grid>
-      <Grid item xs={12} sm={2}>
+      <Grid size={{ xs: 12, sm: 2 }}>
         <TextField
           id="address-state"
           label="State"
@@ -98,7 +98,7 @@ export function AddressFormFields({ address, onEdit }: AddressFormFieldsProps) {
           onChange={(e) => onEditField({ ...address, state: e.target.value })}
         />
       </Grid>
-      <Grid item xs={12} sm={4}>
+      <Grid size={{ xs: 12, sm: 4 }}>
         <TextField
           id="address-postalcode"
           label="ZIP/Postal Code"
@@ -186,7 +186,7 @@ export function AddressEditor({
     <Grid container rowSpacing={2} columnSpacing={2}>
       {editor.editing ? (
         <>
-          <Grid item xs={12}>
+          <Grid size={12}>
             <Divider />
             <br />
           </Grid>
@@ -194,7 +194,7 @@ export function AddressEditor({
             address={editor.value!.address}
             onEdit={onEditAddressFields}
           />
-          <Grid item xs={12} sm={6}>
+          <Grid size={{ xs: 12, sm: 6 }}>
             <FormControlLabel
               control={
                 <Checkbox
@@ -212,17 +212,17 @@ export function AddressEditor({
               label="Is Current Address"
             />
           </Grid>
-          <Grid item xs={12} sm={6}>
+          <Grid size={{ xs: 12, sm: 6 }}>
             {editor.cancelButton}
             {editor.saveButton}
           </Grid>
-          <Grid item xs={12}>
+          <Grid size={12}>
             <Divider />
             <br />
           </Grid>
         </>
       ) : (
-        <Grid item xs={12}>
+        <Grid size={12}>
           {add ? (
             <Button
               onClick={handleAdd}

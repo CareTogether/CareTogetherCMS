@@ -310,11 +310,10 @@ namespace CareTogether.Core.Test.ApprovalCalculationTests
                 "Should contain approval for second adult"
             );
 
-            var expectedFamilyLevelMissingRequirements = !string.IsNullOrEmpty(
-                expectedFamilyLevelMissingRequirementsString
-            )
-                ? expectedFamilyLevelMissingRequirementsString?.Split(',')
-                : null;
+            var expectedFamilyLevelMissingRequirements =
+                !string.IsNullOrEmpty(expectedFamilyLevelMissingRequirementsString)
+                    ? expectedFamilyLevelMissingRequirementsString?.Split(',')
+                    : null;
             if (expectedFamilyLevelMissingRequirements?.Count() > 0)
             {
                 var actualFamilyMissingRequirements = result
@@ -329,11 +328,10 @@ namespace CareTogether.Core.Test.ApprovalCalculationTests
                 );
             }
 
-            var expectedIndividualLevelMissingRequirements = !string.IsNullOrEmpty(
-                expectedIndividualLevelMissingRequirementsString
-            )
-                ? expectedIndividualLevelMissingRequirementsString?.Split(',')
-                : null;
+            var expectedIndividualLevelMissingRequirements =
+                !string.IsNullOrEmpty(expectedIndividualLevelMissingRequirementsString)
+                    ? expectedIndividualLevelMissingRequirementsString?.Split(',')
+                    : null;
             if (expectedIndividualLevelMissingRequirements?.Count() > 0)
             {
                 var actualIndividualMissingRequirements = result

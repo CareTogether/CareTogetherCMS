@@ -1,4 +1,4 @@
-import { Grid } from '@mui/material';
+import Grid from '@mui/material/Grid';
 import { useState } from 'react';
 import { useParams } from 'react-router';
 import { Arrangement, Person } from '../../GeneratedClient';
@@ -53,7 +53,7 @@ export function CancelArrangementDialog({
       enableSave={() => cancelledAtLocal != null && !dobError}
     >
       <Grid container spacing={0}>
-        <Grid item xs={12}>
+        <Grid size={12}>
           <ValidateDatePicker
             label="When was this arrangement cancelled?"
             value={cancelledAtLocal}

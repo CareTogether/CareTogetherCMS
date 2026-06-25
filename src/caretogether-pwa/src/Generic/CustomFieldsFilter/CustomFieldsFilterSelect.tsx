@@ -65,7 +65,7 @@ export function CustomFieldsFilterSelect({
         width: fullWidth ? '100%' : 'auto',
       }}
     >
-      <Select
+      <Select<string[]>
         labelId={`customField${label}Filter`}
         displayEmpty
         sx={{

@@ -1,9 +1,9 @@
+import Grid from '@mui/material/Grid';
 import {
   Box,
   Card,
   CardActionArea,
   CardContent,
-  Grid,
   Typography,
 } from '@mui/material';
 import { ProgressBackdrop } from '../Shell/ProgressBackdrop';
@@ -31,10 +31,10 @@ export function SettingsScreen() {
   return (
     <Box
       className="ph-unmask"
-      sx={{ paddingTop: 4, display: 'flex', justifyContent: 'center' }}
+      sx={{ paddingTop: 4, display: 'flex', justifyContent: 'flex-start' }}
     >
-      <Grid container spacing={3}>
-        <Grid item xs={12} sm={6} md={4}>
+      <Grid container spacing={3} sx={{ width: '100%' }}>
+        <Grid size={{ xs: 12, sm: 6, md: 4 }}>
           <Card variant="outlined">
             <CardActionArea onClick={() => appNavigate.settingsRoles()}>
               <CardContent sx={{ textAlign: 'center' }}>
@@ -52,7 +52,7 @@ export function SettingsScreen() {
           </Card>
         </Grid>
 
-        <Grid item xs={12} sm={6} md={4}>
+        <Grid size={{ xs: 12, sm: 6, md: 4 }}>
           <Card variant="outlined">
             <CardActionArea onClick={() => appNavigate.settingsLocations()}>
               <CardContent sx={{ textAlign: 'center' }}>

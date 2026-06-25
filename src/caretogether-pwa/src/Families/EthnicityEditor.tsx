@@ -1,4 +1,5 @@
-import { FormControl, Grid, InputLabel, MenuItem, Select } from '@mui/material';
+import Grid from '@mui/material/Grid';
+import { FormControl, InputLabel, MenuItem, Select } from '@mui/material';
 import { useDirectoryModel } from '../Model/DirectoryModel';
 import { useInlineEditor } from '../Hooks/useInlineEditor';
 import { PersonEditorProps } from './PersonEditorProps';
@@ -23,7 +24,7 @@ export function EthnicityEditor({ familyId, person }: PersonEditorProps) {
     <Grid container spacing={2}>
       {editor.editing ? (
         <>
-          <Grid item xs={12}>
+          <Grid size={12}>
             <FormControl required fullWidth size="small">
               <InputLabel id="ethnicity-label">Ethnicity</InputLabel>
               <Select
@@ -44,13 +45,13 @@ export function EthnicityEditor({ familyId, person }: PersonEditorProps) {
               </Select>
             </FormControl>
           </Grid>
-          <Grid item xs={12}>
+          <Grid size={12}>
             {editor.cancelButton}
             {editor.saveButton}
           </Grid>
         </>
       ) : (
-        <Grid item xs={12}>
+        <Grid size={12}>
           Ethnicity: {person.ethnicity}
           {editor.editButton}
         </Grid>

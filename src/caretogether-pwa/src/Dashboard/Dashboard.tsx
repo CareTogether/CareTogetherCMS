@@ -30,7 +30,7 @@ function Dashboard() {
   ) : (
     <Container maxWidth={false} sx={{ paddingLeft: '12px' }}>
       <Stack direction="column">
-        <Stack direction="row" justifyContent="space-between">
+        <Stack direction="row" sx={{ justifyContent: 'space-between' }}>
           <Typography variant="h5" sx={{ marginTop: 3 }}>
             <strong>{locationConfiguration.contents?.name}</strong> (
             {organizationConfiguration.contents?.organizationName})

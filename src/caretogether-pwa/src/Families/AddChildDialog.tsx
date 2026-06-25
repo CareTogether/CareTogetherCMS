@@ -1,4 +1,6 @@
-import { useState } from 'react';
+import Grid from '@mui/material/Grid';
+import {
+  useState } from 'react';
 import {
   Button,
   Dialog,
@@ -9,7 +11,6 @@ import {
   FormControl,
   FormControlLabel,
   FormLabel,
-  Grid,
   InputAdornment,
   InputLabel,
   MenuItem,
@@ -129,7 +130,7 @@ export function AddChildDialog({ onClose }: AddChildDialogProps) {
         </DialogContentText> */}
         <form noValidate autoComplete="off">
           <Grid container spacing={2}>
-            <Grid item xs={12} sm={6}>
+            <Grid size={{ xs: 12, sm: 6 }}>
               <TextField
                 required
                 id="first-name"
@@ -142,7 +143,7 @@ export function AddChildDialog({ onClose }: AddChildDialogProps) {
                 }
               />
             </Grid>
-            <Grid item xs={12} sm={6}>
+            <Grid size={{ xs: 12, sm: 6 }}>
               <TextField
                 required
                 id="last-name"
@@ -155,7 +156,7 @@ export function AddChildDialog({ onClose }: AddChildDialogProps) {
                 }
               />
             </Grid>
-            <Grid item xs={12}>
+            <Grid size={12}>
               <table>
                 <thead>
                   <tr>
@@ -230,10 +231,10 @@ export function AddChildDialog({ onClose }: AddChildDialogProps) {
                 </tbody>
               </table>
             </Grid>
-            <Grid item xs={12}>
+            <Grid size={12}>
               <Divider />
             </Grid>
-            <Grid item xs={12}>
+            <Grid size={12}>
               <FormControl component="fieldset">
                 <FormLabel component="legend">Gender:</FormLabel>
                 <RadioGroup
@@ -266,7 +267,7 @@ export function AddChildDialog({ onClose }: AddChildDialogProps) {
                 </RadioGroup>
               </FormControl>
             </Grid>
-            <Grid item xs={12} sm={6}>
+            <Grid size={{ xs: 12, sm: 6 }}>
               <ValidateDatePicker
                 label="Date of birth"
                 value={dateOfBirth}
@@ -282,7 +283,7 @@ export function AddChildDialog({ onClose }: AddChildDialogProps) {
                 }}
               />
             </Grid>
-            <Grid item xs={12} sm={6}>
+            <Grid size={{ xs: 12, sm: 6 }}>
               <FormControl fullWidth size="small">
                 <InputLabel id="ethnicity-label">Ethnicity</InputLabel>
                 <Select
@@ -308,8 +309,8 @@ export function AddChildDialog({ onClose }: AddChildDialogProps) {
                 </Select>
               </FormControl>
             </Grid>
-            <Grid item xs={12}></Grid>
-            <Grid item xs={12}>
+            <Grid size={12}></Grid>
+            <Grid size={12}>
               <TextField
                 id="concerns"
                 label="Concerns"
@@ -320,12 +321,14 @@ export function AddChildDialog({ onClose }: AddChildDialogProps) {
                 minRows={2}
                 maxRows={5}
                 size="small"
-                InputProps={{
-                  startAdornment: (
-                    <InputAdornment position="start">
-                      <WarningIcon />
-                    </InputAdornment>
-                  ),
+                slotProps={{
+                  input: {
+                    startAdornment: (
+                      <InputAdornment position="start">
+                        <WarningIcon />
+                      </InputAdornment>
+                    ),
+                  },
                 }}
                 value={concerns == null ? '' : concerns}
                 onChange={(e) =>
@@ -333,7 +336,7 @@ export function AddChildDialog({ onClose }: AddChildDialogProps) {
                 }
               />
             </Grid>
-            <Grid item xs={12}>
+            <Grid size={12}>
               <TextField
                 id="notes"
                 label="Notes"

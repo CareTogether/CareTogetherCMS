@@ -1,8 +1,9 @@
-import { useState } from 'react';
+import Grid from '@mui/material/Grid';
+import {
+  useState } from 'react';
 import {
   FormControl,
   FormHelperText,
-  Grid,
   InputLabel,
   MenuItem,
   Select,
@@ -71,7 +72,7 @@ export function AddEditNoteDialog({
     >
       <form noValidate autoComplete="off">
         <Grid container spacing={2}>
-          <Grid item xs={12}>
+          <Grid size={12}>
             <TextField
               id="notes"
               label="Notes"
@@ -88,7 +89,7 @@ export function AddEditNoteDialog({
               }
             />
           </Grid>
-          <Grid item xs={12}>
+          <Grid size={12}>
             <ValidateDatePicker
               label="Backdate (optional - leave blank to use the current date & time)"
               value={backdatedTimestampLocal || null}
@@ -103,7 +104,7 @@ export function AddEditNoteDialog({
               textFieldProps={{ fullWidth: true }}
             />
           </Grid>
-          <Grid item xs={12}>
+          <Grid size={12}>
             <FormControl fullWidth>
               <InputLabel id="access-level-label">Access Level</InputLabel>
               <Select
