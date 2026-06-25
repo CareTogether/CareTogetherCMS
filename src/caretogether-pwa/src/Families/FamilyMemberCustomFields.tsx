@@ -18,8 +18,14 @@ type FamilyMemberCustomFieldsProps = {
   completedCustomFields?: CompletedCustomFieldInfo[];
 };
 
+function isCompletedCustomField(
+  customField: CustomFieldRenderInfo
+): customField is CompletedCustomFieldInfo {
+  return typeof customField !== 'string';
+}
+
 function customFieldName(customField: CustomFieldRenderInfo) {
-  return customField instanceof CompletedCustomFieldInfo
+  return isCompletedCustomField(customField)
     ? customField.customFieldName!
     : customField;
 }
@@ -100,60 +106,62 @@ export function FamilyMemberCustomFields({
     customFields,
     customFieldPolicies
   );
-  const shouldRenderTabs = customFieldSections.length > 1;
   const selectedTab =
-    selectedSectionIndex < customFieldSections.length ? selectedSectionIndex : 0;
+    selectedSectionIndex < customFieldSections.length
+      ? selectedSectionIndex
+      : 0;
+
+  console.log(customFieldSections, selectedTab, selectedSectionIndex);
 
   return (
-    <Box sx={{ mt: 1.5 }}>
+    <Box sx={{ clear: 'both', mt: 1.5 }}>
       <Divider sx={{ mb: 1 }} />
-      {shouldRenderTabs ? (
-        <>
-          <Tabs
-            value={selectedTab}
-            onChange={(_, nextTab) => setSelectedSectionIndex(nextTab)}
-            variant="scrollable"
-            scrollButtons="auto"
-            aria-label="Custom field groups"
-            sx={{ minHeight: 36, mb: 0.5 }}
-          >
-            {customFieldSections.map((section, sectionIndex) => (
-              <Tab
-                key={section.groupingKey ?? `ungrouped-${sectionIndex}`}
-                label={section.groupingKey ?? 'Other'}
-                id={`family-member-custom-fields-tab-${personId}-${sectionIndex}`}
-                aria-controls={`family-member-custom-fields-tabpanel-${personId}-${sectionIndex}`}
-                sx={{ minHeight: 36 }}
-              />
-            ))}
-          </Tabs>
-          {customFieldSections.map((section, sectionIndex) => (
-            <Box
-              key={section.groupingKey ?? `ungrouped-panel-${sectionIndex}`}
-              role="tabpanel"
-              hidden={selectedTab !== sectionIndex}
-              id={`family-member-custom-fields-tabpanel-${personId}-${sectionIndex}`}
-              aria-labelledby={`family-member-custom-fields-tab-${personId}-${sectionIndex}`}
-            >
-              {selectedTab === sectionIndex && (
-                <FamilyMemberCustomFieldList
-                  familyId={familyId}
-                  personId={personId}
-                  customFieldPolicies={customFieldPolicies}
-                  customFields={section.customFields}
-                />
-              )}
-            </Box>
-          ))}
-        </>
-      ) : (
-        <FamilyMemberCustomFieldList
-          familyId={familyId}
-          personId={personId}
-          customFieldPolicies={customFieldPolicies}
-          customFields={customFields}
-        />
-      )}
+      <Tabs
+        value={selectedTab}
+        onChange={(_, nextTab) => setSelectedSectionIndex(nextTab)}
+        variant="scrollable"
+        scrollButtons="auto"
+        aria-label="Custom field groups"
+        sx={{
+          minHeight: 28,
+          mb: 0.5,
+          '& .MuiTabs-indicator': { height: 2 },
+        }}
+      >
+        {customFieldSections.map((section, sectionIndex) => (
+          <Tab
+            key={section.groupingKey ?? `ungrouped-${sectionIndex}`}
+            label={section.groupingKey ?? 'Other'}
+            id={`family-member-custom-fields-tab-${personId}-${sectionIndex}`}
+            aria-controls={`family-member-custom-fields-tabpanel-${personId}-${sectionIndex}`}
+            sx={{
+              minHeight: 28,
+              px: 1,
+              py: 0,
+              fontSize: '0.75rem',
+              textTransform: 'none',
+            }}
+          />
+        ))}
+      </Tabs>
+      {customFieldSections.map((section, sectionIndex) => (
+        <Box
+          key={section.groupingKey ?? `ungrouped-panel-${sectionIndex}`}
+          role="tabpanel"
+          hidden={selectedTab !== sectionIndex}
+          id={`family-member-custom-fields-tabpanel-${personId}-${sectionIndex}`}
+          aria-labelledby={`family-member-custom-fields-tab-${personId}-${sectionIndex}`}
+        >
+          {selectedTab === sectionIndex && (
+            <FamilyMemberCustomFieldList
+              familyId={familyId}
+              personId={personId}
+              customFieldPolicies={customFieldPolicies}
+              customFields={section.customFields}
+            />
+          )}
+        </Box>
+      ))}
     </Box>
   );
 }
@@ -200,8 +208,9 @@ function FamilyMemberCustomField({
   customField,
 }: FamilyMemberCustomFieldProps) {
   const directoryModel = useDirectoryModel();
-  const savedCustomField =
-    customField instanceof CompletedCustomFieldInfo ? customField : null;
+  const savedCustomField = isCompletedCustomField(customField)
+    ? customField
+    : null;
   const customFieldPolicy = customFieldPolicies.find((cf) =>
     savedCustomField
       ? cf.name === savedCustomField.customFieldName

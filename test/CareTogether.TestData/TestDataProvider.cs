@@ -3419,6 +3419,34 @@ namespace CareTogether.TestData
                                 ["Morning", "Afternoon", "Evening"],
                                 "Contact"
                             ),
+                            new CustomField(
+                                "Preferred Contact Method",
+                                CustomFieldType.String,
+                                CustomFieldValidation.SuggestOnly,
+                                ["Phone", "Text", "Email"],
+                                "Contact"
+                            ),
+                            new CustomField(
+                                "Best Language",
+                                CustomFieldType.String,
+                                CustomFieldValidation.SuggestOnly,
+                                ["English", "Spanish", "Portuguese", "Other"],
+                                "Contact"
+                            ),
+                            new CustomField(
+                                "Transportation Access",
+                                CustomFieldType.String,
+                                CustomFieldValidation.SuggestOnly,
+                                ["Has reliable transportation", "Needs rides", "Public transit only"],
+                                "Logistics"
+                            ),
+                            new CustomField(
+                                "Court Date",
+                                CustomFieldType.String,
+                                null,
+                                null,
+                                "Case Details"
+                            ),
                         ],
                         Child:
                         [
@@ -3430,6 +3458,27 @@ namespace CareTogether.TestData
                                 "Education"
                             ),
                             new CustomField("Has IEP", CustomFieldType.Boolean, null, null, "Education"),
+                            new CustomField(
+                                "Grade Level",
+                                CustomFieldType.String,
+                                CustomFieldValidation.SuggestOnly,
+                                ["Pre-K", "Kindergarten", "1st", "2nd", "3rd", "4th", "5th", "6th", "7th", "8th", "High School"],
+                                "Education"
+                            ),
+                            new CustomField(
+                                "Medical Notes",
+                                CustomFieldType.String,
+                                null,
+                                null,
+                                "Health"
+                            ),
+                            new CustomField(
+                                "Dietary Restrictions",
+                                CustomFieldType.StringArray,
+                                CustomFieldValidation.SuggestOnly,
+                                ["Dairy-free", "Gluten-free", "Nut allergy", "Vegetarian"],
+                                "Health"
+                            ),
                         ]
                     ),
                     VolunteerFamily: new FamilyMemberCustomFields(
@@ -3442,10 +3491,52 @@ namespace CareTogether.TestData
                                 ["Weekdays", "Weekends", "Evenings", "Overnight"],
                                 "Availability"
                             ),
+                            new CustomField(
+                                "Unavailable Dates",
+                                CustomFieldType.String,
+                                null,
+                                null,
+                                "Availability"
+                            ),
+                            new CustomField(
+                                "Training Track",
+                                CustomFieldType.String,
+                                CustomFieldValidation.SuggestOnly,
+                                ["Host Family", "Family Coach", "Resource Friend"],
+                                "Training"
+                            ),
+                            new CustomField(
+                                "CPR Certified",
+                                CustomFieldType.Boolean,
+                                null,
+                                null,
+                                "Training"
+                            ),
+                            new CustomField(
+                                "Pet Allergies in Home",
+                                CustomFieldType.StringArray,
+                                CustomFieldValidation.SuggestOnly,
+                                ["Cats", "Dogs", "Birds", "No known allergies"],
+                                "Household"
+                            ),
                         ],
                         Child:
                         [
                             new CustomField("Childcare Notes", CustomFieldType.String, null, null, "Care"),
+                            new CustomField(
+                                "Comfort Around Guests",
+                                CustomFieldType.String,
+                                CustomFieldValidation.SuggestOnly,
+                                ["Very comfortable", "Needs preparation", "Prefers quiet spaces"],
+                                "Care"
+                            ),
+                            new CustomField(
+                                "School Schedule Notes",
+                                CustomFieldType.String,
+                                null,
+                                null,
+                                "Schedule"
+                            ),
                         ]
                     )
                 ),
