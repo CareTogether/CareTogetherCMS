@@ -1,4 +1,13 @@
 import { MouseEvent, useMemo, useState } from 'react';
+import {
+  addDays,
+  endOfDay,
+  endOfMonth,
+  endOfWeek,
+  startOfDay,
+  startOfMonth,
+  startOfWeek,
+} from 'date-fns';
 import Grid from '../Generic/GridLegacyCompat';
 import {
   Box,
@@ -21,6 +30,7 @@ import {
 } from './dashboardCalendarEvents';
 
 const DASHBOARD_CALENDAR_VIEW_KEY = 'dashboardCalendarView';
+const DASHBOARD_CALENDAR_AGENDA_DAYS = 12;
 const DASHBOARD_CALENDAR_EVENT_COLORS = {
   teal: {
     backgroundColor: '#80cbc4',
@@ -139,6 +149,27 @@ function getSavedInitialView(): CalendarView {
   return 'month';
 }
 
+function getVisibleDateRange(view: CalendarView, visibleDate: Date) {
+  if (view === 'agenda') {
+    return {
+      start: startOfDay(visibleDate),
+      end: endOfDay(addDays(visibleDate, DASHBOARD_CALENDAR_AGENDA_DAYS - 1)),
+    };
+  }
+
+  if (view === 'month') {
+    return {
+      start: startOfWeek(startOfMonth(visibleDate), { weekStartsOn: 1 }),
+      end: endOfWeek(endOfMonth(visibleDate), { weekStartsOn: 1 }),
+    };
+  }
+
+  return {
+    start: startOfDay(visibleDate),
+    end: endOfDay(visibleDate),
+  };
+}
+
 function getDashboardCalendarEventId(element: Element | null) {
   const eventElement = element?.closest('.dashboard-calendar-event');
   const eventIdClass = Array.from(eventElement?.classList || []).find((name) =>
@@ -188,39 +219,48 @@ export function DashboardCalendar() {
   const partneringFamilies = useLoadable(partneringFamiliesData);
   const appNavigate = useAppNavigate();
   const [view, setView] = useState<CalendarView>(getSavedInitialView);
+  const [visibleDate, setVisibleDate] = useState(() => startOfDay(new Date()));
   const [selectedEventTypeFilterKeys, setSelectedEventTypeFilterKeys] =
     useState<Set<string>>(
       () => new Set(calendarEventTypeFilters.map((filter) => filter.key))
     );
 
+  const visibleDateRange = useMemo(
+    () => getVisibleDateRange(view, visibleDate),
+    [view, visibleDate]
+  );
+
   const eventGroups = useMemo(
     () =>
       buildDashboardCalendarEventGroups(
         partneringFamilies || undefined,
-        familyLookup
+        familyLookup,
+        visibleDateRange
       ),
-    [familyLookup, partneringFamilies]
+    [familyLookup, partneringFamilies, visibleDateRange]
   );
 
-  const filteredEvents = Object.values(CalendarFilters).flatMap((filter) =>
-    eventGroups[filter].filter((event) =>
-      selectedEventTypeFilterKeys.has(
-        getDashboardCalendarEventTypeFilterKey(filter, event)
-      )
-    )
-  );
-
-  const eventsById = useMemo(
+  const filteredEvents = useMemo(
     () =>
-      filteredEvents.reduce<Record<string, DashboardCalendarEvent>>(
-        (lookup, event) => ({
-          ...lookup,
-          [String(event.id)]: event,
-        }),
-        {}
+      Object.values(CalendarFilters).flatMap((filter) =>
+        eventGroups[filter].filter((event) =>
+          selectedEventTypeFilterKeys.has(
+            getDashboardCalendarEventTypeFilterKey(filter, event)
+          )
+        )
       ),
-    [filteredEvents]
+    [eventGroups, selectedEventTypeFilterKeys]
   );
+
+  const eventsById = useMemo(() => {
+    const lookup: Record<string, DashboardCalendarEvent> = {};
+
+    filteredEvents.forEach((event) => {
+      lookup[String(event.id)] = event;
+    });
+
+    return lookup;
+  }, [filteredEvents]);
 
   function navigateToCalendarEvent(event: DashboardCalendarEvent | undefined) {
     if (!event) {
@@ -558,8 +598,12 @@ export function DashboardCalendar() {
         />
         <EventCalendar
           events={filteredEvents}
+          visibleDate={visibleDate}
           view={view}
           views={calendarViews}
+          onVisibleDateChange={(nextVisibleDate) => {
+            setVisibleDate(startOfDay(nextVisibleDate));
+          }}
           onViewChange={(nextView) => {
             localStorage.setItem(DASHBOARD_CALENDAR_VIEW_KEY, nextView);
             setView(nextView);

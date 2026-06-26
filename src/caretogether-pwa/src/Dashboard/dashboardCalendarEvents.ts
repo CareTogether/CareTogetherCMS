@@ -1,4 +1,4 @@
-import { format } from 'date-fns';
+import { format, isValid, parseISO } from 'date-fns';
 import type {
   SchedulerEvent,
   SchedulerEventColor,
@@ -51,6 +51,11 @@ type LegacyDashboardCalendarEvent = {
 
 type CalendarEventGroups = Record<CalendarFilters, DashboardCalendarEvent[]>;
 
+export type DashboardCalendarDateRange = {
+  start: Date;
+  end: Date;
+};
+
 type DashboardCalendarArrangement = {
   arrangement: Arrangement;
   person: Person;
@@ -64,6 +69,44 @@ function getSchedulerEventId(filter: CalendarFilters, index: number) {
 
 function isDefined<T>(value: T | null | undefined): value is T {
   return value !== null && value !== undefined;
+}
+
+function toCalendarDate(value: Date | string | undefined) {
+  if (!value) {
+    return undefined;
+  }
+
+  if (value instanceof Date) {
+    return value;
+  }
+
+  const date = parseISO(value);
+
+  if (isValid(date)) {
+    return date;
+  }
+
+  return new Date(value);
+}
+
+function dateRangeOverlaps(
+  startValue: Date | string | undefined,
+  endValue: Date | string | undefined,
+  range: DashboardCalendarDateRange
+) {
+  const start = toCalendarDate(startValue);
+
+  if (!start || !isValid(start)) {
+    return false;
+  }
+
+  const end = toCalendarDate(endValue) || start;
+
+  if (!isValid(end)) {
+    return false;
+  }
+
+  return start <= range.end && end >= range.start;
 }
 
 function familyPerson(
@@ -190,7 +233,8 @@ function toSchedulerEvents(
 
 export function buildDashboardCalendarEventGroups(
   partneringFamilies: CombinedFamilyInfo[] | undefined,
-  familyLookup: (familyId: string | undefined) => CombinedFamilyInfo | undefined
+  familyLookup: (familyId: string | undefined) => CombinedFamilyInfo | undefined,
+  visibleDateRange: DashboardCalendarDateRange
 ): CalendarEventGroups {
   const allArrangements = (partneringFamilies || []).flatMap((family) =>
     (family.partneringFamilyInfo?.closedV1Cases || [])
@@ -198,27 +242,41 @@ export function buildDashboardCalendarEventGroups(
       .flatMap((v1Case) => getDashboardCalendarArrangements(family, v1Case))
   );
 
-  const arrangementPlannedDurations = allArrangements.map(
-    ({
-      arrangement,
-      person,
-      familyId,
-      v1CaseId,
-    }): LegacyDashboardCalendarEvent => ({
-      title: `${personNameString(person)} - ${arrangement.arrangementType}`,
-      start:
-        arrangement.plannedStartUtc &&
-        format(arrangement.plannedStartUtc, 'yyyy-MM-dd'),
-      end:
-        arrangement.plannedEndUtc &&
-        format(arrangement.plannedEndUtc, 'yyyy-MM-dd'),
-      backgroundColor: DASHBOARD_CALENDAR_LEGACY_EVENT_COLORS.lightBlue,
-      extendedProps: { familyId, v1CaseId, arrangementId: arrangement.id },
-    })
-  );
+  const arrangementPlannedDurations = allArrangements
+    .filter(({ arrangement }) =>
+      dateRangeOverlaps(
+        arrangement.plannedStartUtc,
+        arrangement.plannedEndUtc,
+        visibleDateRange
+      )
+    )
+    .map(
+      ({
+        arrangement,
+        person,
+        familyId,
+        v1CaseId,
+      }): LegacyDashboardCalendarEvent => ({
+        title: `${personNameString(person)} - ${arrangement.arrangementType}`,
+        start:
+          arrangement.plannedStartUtc &&
+          format(arrangement.plannedStartUtc, 'yyyy-MM-dd'),
+        end:
+          arrangement.plannedEndUtc &&
+          format(arrangement.plannedEndUtc, 'yyyy-MM-dd'),
+        backgroundColor: DASHBOARD_CALENDAR_LEGACY_EVENT_COLORS.lightBlue,
+        extendedProps: { familyId, v1CaseId, arrangementId: arrangement.id },
+      })
+    );
 
   const arrangementActualStarts = allArrangements
-    .filter(({ arrangement }) => arrangement.startedAtUtc)
+    .filter(({ arrangement }) =>
+      dateRangeOverlaps(
+        arrangement.startedAtUtc,
+        undefined,
+        visibleDateRange
+      )
+    )
     .map(
       ({
         arrangement,
@@ -238,7 +296,9 @@ export function buildDashboardCalendarEventGroups(
     );
 
   const arrangementActualEnds = allArrangements
-    .filter(({ arrangement }) => arrangement.endedAtUtc)
+    .filter(({ arrangement }) =>
+      dateRangeOverlaps(arrangement.endedAtUtc, undefined, visibleDateRange)
+    )
     .map(
       ({
         arrangement,
@@ -259,18 +319,26 @@ export function buildDashboardCalendarEventGroups(
 
   const arrangementCompletedRequirements = allArrangements.flatMap(
     ({ arrangement, person, familyId, v1CaseId }) =>
-      arrangement.completedRequirements?.map(
-        (completed): LegacyDashboardCalendarEvent => ({
-          title: `✅ ${personNameString(person)} - ${completed.requirementName}`,
-          date: completed.completedAtUtc,
-          backgroundColor: DASHBOARD_CALENDAR_LEGACY_EVENT_COLORS.teal,
-          extendedProps: {
-            familyId,
-            v1CaseId,
-            arrangementId: arrangement.id,
-          },
-        })
-      ) || []
+      arrangement.completedRequirements
+        ?.filter((completed) =>
+          dateRangeOverlaps(
+            completed.completedAtUtc,
+            undefined,
+            visibleDateRange
+          )
+        )
+        .map(
+          (completed): LegacyDashboardCalendarEvent => ({
+            title: `✅ ${personNameString(person)} - ${completed.requirementName}`,
+            date: completed.completedAtUtc,
+            backgroundColor: DASHBOARD_CALENDAR_LEGACY_EVENT_COLORS.teal,
+            extendedProps: {
+              familyId,
+              v1CaseId,
+              arrangementId: arrangement.id,
+            },
+          })
+        ) || []
   );
 
   const allArrangementMissingRequirements = allArrangements.flatMap(
@@ -285,7 +353,9 @@ export function buildDashboardCalendarEventGroups(
   );
 
   const arrangementPastDueRequirements = allArrangementMissingRequirements
-    .filter(({ missing }) => missing.pastDueSince)
+    .filter(({ missing }) =>
+      dateRangeOverlaps(missing.pastDueSince, undefined, visibleDateRange)
+    )
     .map(
       ({
         person,
@@ -307,7 +377,9 @@ export function buildDashboardCalendarEventGroups(
     );
 
   const arrangementUpcomingRequirements = allArrangementMissingRequirements
-    .filter(({ missing }) => missing.dueBy)
+    .filter(({ missing }) =>
+      dateRangeOverlaps(missing.dueBy, undefined, visibleDateRange)
+    )
     .map(
       ({
         person,
@@ -329,25 +401,39 @@ export function buildDashboardCalendarEventGroups(
 
   const arrangementActualChildcare = allArrangements.flatMap(
     ({ arrangement, person, familyId, v1CaseId }) => {
-      const durationEntries = (arrangement.childLocationHistory || []).map(
+      const durationEntries = (arrangement.childLocationHistory || []).flatMap(
         (entry, index, history) => {
           const nextEntry =
             index < history.length - 1 ? history[index + 1] : null;
+
+          if (
+            !dateRangeOverlaps(
+              entry.timestampUtc,
+              nextEntry?.timestampUtc,
+              visibleDateRange
+            )
+          ) {
+            return [];
+          }
+
           const locationFamily = familyLookup(entry.childLocationFamilyId);
-          return {
-            title: `🤝🏻 ${personNameString(person)} - ${familyNameString(locationFamily)}`,
-            start: entry.timestampUtc,
-            backgroundColor:
-              entry.plan === ChildLocationPlan.WithParent
-                ? undefined
-                : DASHBOARD_CALENDAR_LEGACY_EVENT_COLORS.teal,
-            end: nextEntry?.timestampUtc,
-            extendedProps: {
-              familyId,
-              v1CaseId,
-              arrangementId: arrangement.id,
+
+          return [
+            {
+              title: `🤝🏻 ${personNameString(person)} - ${familyNameString(locationFamily)}`,
+              start: entry.timestampUtc,
+              backgroundColor:
+                entry.plan === ChildLocationPlan.WithParent
+                  ? undefined
+                  : DASHBOARD_CALENDAR_LEGACY_EVENT_COLORS.teal,
+              end: nextEntry?.timestampUtc,
+              extendedProps: {
+                familyId,
+                v1CaseId,
+                arrangementId: arrangement.id,
+              },
             },
-          };
+          ];
         }
       );
       return durationEntries.filter(
@@ -359,24 +445,38 @@ export function buildDashboardCalendarEventGroups(
 
   const arrangementPlannedChildcare = allArrangements.flatMap(
     ({ arrangement, person, familyId, v1CaseId }) => {
-      const durationEntries = (arrangement.childLocationPlan || []).map(
+      const durationEntries = (arrangement.childLocationPlan || []).flatMap(
         (entry, index, plan) => {
           const nextEntry = index < plan.length - 1 ? plan[index + 1] : null;
+
+          if (
+            !dateRangeOverlaps(
+              entry.timestampUtc,
+              nextEntry?.timestampUtc,
+              visibleDateRange
+            )
+          ) {
+            return [];
+          }
+
           const locationFamily = familyLookup(entry.childLocationFamilyId);
-          return {
-            title: `✋🏻 ${personNameString(person)} - ${familyNameString(locationFamily)}`,
-            start: entry.timestampUtc,
-            backgroundColor:
-              entry.plan === ChildLocationPlan.WithParent
-                ? undefined
-                : DASHBOARD_CALENDAR_LEGACY_EVENT_COLORS.lightBlue,
-            end: nextEntry?.timestampUtc,
-            extendedProps: {
-              familyId,
-              v1CaseId,
-              arrangementId: arrangement.id,
+
+          return [
+            {
+              title: `✋🏻 ${personNameString(person)} - ${familyNameString(locationFamily)}`,
+              start: entry.timestampUtc,
+              backgroundColor:
+                entry.plan === ChildLocationPlan.WithParent
+                  ? undefined
+                  : DASHBOARD_CALENDAR_LEGACY_EVENT_COLORS.lightBlue,
+              end: nextEntry?.timestampUtc,
+              extendedProps: {
+                familyId,
+                v1CaseId,
+                arrangementId: arrangement.id,
+              },
             },
-          };
+          ];
         }
       );
       return durationEntries.filter(
