@@ -293,8 +293,7 @@ namespace CareTogether.Api.OData
         [property: Key] string RequirementName,
         [property: Key] string Status,
         DateTimeOffset? Date,
-        DateTimeOffset? ExpireDate,
-        [property: Key] string? Role
+        DateTimeOffset? ExpireDate
     );
 
     public sealed record IndividualRequirementStatus(
@@ -304,8 +303,7 @@ namespace CareTogether.Api.OData
         [property: Key] string RequirementName,
         [property: Key] string Status,
         DateTimeOffset? Date,
-        DateTimeOffset? ExpireDate,
-        [property: Key] string? Role
+        DateTimeOffset? ExpireDate
     );
 
     public sealed record LiveModel(
@@ -613,10 +611,6 @@ namespace CareTogether.Api.OData
 
             return result!; // If this is actually null, then we are already throwing an exception anyways.
         }
-
-        private static IEnumerable<string?> IncludeNullRoleWhenEmpty(
-            ImmutableList<string> roleNames
-        ) => roleNames.Count > 0 ? roleNames : new string?[] { null };
 
         private async Task<LiveModel> RenderLiveModelInternalAsync(
             Guid organizationId,
@@ -945,18 +939,16 @@ namespace CareTogether.Api.OData
                 {
                     foreach (var req in volunteerFamilyInfo.CompletedRequirements)
                     {
-                        familyRequirementStatuses.AddRange(
-                            IncludeNullRoleWhenEmpty(req.RoleNames ?? [])
-                                .Select(roleName => new FamilyRequirementStatus(
-                                    organization.Id,
-                                    family.LocationId,
-                                    family.Id,
-                                    req.RequirementName,
-                                    "Complete",
-                                    req.CompletedAtUtc,
-                                    req.ExpiresAtUtc,
-                                    roleName
-                                ))
+                        familyRequirementStatuses.Add(
+                            new FamilyRequirementStatus(
+                                organization.Id,
+                                family.LocationId,
+                                family.Id,
+                                req.RequirementName,
+                                "Complete",
+                                req.CompletedAtUtc,
+                                req.ExpiresAtUtc
+                            )
                         );
                     }
                 }
@@ -965,18 +957,16 @@ namespace CareTogether.Api.OData
                 {
                     foreach (var req in volunteerFamilyInfo.ExemptedRequirements)
                     {
-                        familyRequirementStatuses.AddRange(
-                            IncludeNullRoleWhenEmpty(req.RoleNames ?? [])
-                                .Select(roleName => new FamilyRequirementStatus(
-                                    organization.Id,
-                                    family.LocationId,
-                                    family.Id,
-                                    req.RequirementName,
-                                    "Exempted",
-                                    req.DueDate,
-                                    req.ExemptionExpiresAtUtc,
-                                    roleName
-                                ))
+                        familyRequirementStatuses.Add(
+                            new FamilyRequirementStatus(
+                                organization.Id,
+                                family.LocationId,
+                                family.Id,
+                                req.RequirementName,
+                                "Exempted",
+                                req.DueDate,
+                                req.ExemptionExpiresAtUtc
+                            )
                         );
                     }
                 }
@@ -986,23 +976,16 @@ namespace CareTogether.Api.OData
                 {
                     foreach (var missing in volunteerFamilyInfo.MissingRequirements)
                     {
-                        familyRequirementStatuses.AddRange(
-                            IncludeNullRoleWhenEmpty(
-                                    missing
-                                        .Versions.Select(version => version.RoleName)
-                                        .Distinct()
-                                        .ToImmutableList()
-                                )
-                                .Select(roleName => new FamilyRequirementStatus(
-                                    organization.Id,
-                                    family.LocationId,
-                                    family.Id,
-                                    missing.ActionName,
-                                    "Pending",
-                                    null,
-                                    null,
-                                    roleName
-                                ))
+                        familyRequirementStatuses.Add(
+                            new FamilyRequirementStatus(
+                                organization.Id,
+                                family.LocationId,
+                                family.Id,
+                                missing.ActionName,
+                                "Pending",
+                                null,
+                                null
+                            )
                         );
                     }
                 }
@@ -1024,18 +1007,16 @@ namespace CareTogether.Api.OData
                         {
                             foreach (var req in volunteerData.CompletedRequirements)
                             {
-                                individualRequirementStatuses.AddRange(
-                                    IncludeNullRoleWhenEmpty(req.RoleNames ?? [])
-                                        .Select(roleName => new IndividualRequirementStatus(
-                                            organization.Id,
-                                            family.LocationId,
-                                            personId,
-                                            req.RequirementName,
-                                            "Complete",
-                                            req.CompletedAtUtc,
-                                            req.ExpiresAtUtc,
-                                            roleName
-                                        ))
+                                individualRequirementStatuses.Add(
+                                    new IndividualRequirementStatus(
+                                        organization.Id,
+                                        family.LocationId,
+                                        personId,
+                                        req.RequirementName,
+                                        "Complete",
+                                        req.CompletedAtUtc,
+                                        req.ExpiresAtUtc
+                                    )
                                 );
                             }
                         }
@@ -1044,23 +1025,16 @@ namespace CareTogether.Api.OData
                         {
                             foreach (var missing in volunteerData.MissingRequirements)
                             {
-                                individualRequirementStatuses.AddRange(
-                                    IncludeNullRoleWhenEmpty(
-                                            missing
-                                                .Versions.Select(version => version.RoleName)
-                                                .Distinct()
-                                                .ToImmutableList()
-                                        )
-                                        .Select(roleName => new IndividualRequirementStatus(
-                                            organization.Id,
-                                            family.LocationId,
-                                            personId,
-                                            missing.ActionName,
-                                            "Pending",
-                                            null,
-                                            null,
-                                            roleName
-                                        ))
+                                individualRequirementStatuses.Add(
+                                    new IndividualRequirementStatus(
+                                        organization.Id,
+                                        family.LocationId,
+                                        personId,
+                                        missing.ActionName,
+                                        "Pending",
+                                        null,
+                                        null
+                                    )
                                 );
                             }
                         }
@@ -1069,18 +1043,16 @@ namespace CareTogether.Api.OData
                         {
                             foreach (var exempt in volunteerData.ExemptedRequirements)
                             {
-                                individualRequirementStatuses.AddRange(
-                                    IncludeNullRoleWhenEmpty(exempt.RoleNames ?? [])
-                                        .Select(roleName => new IndividualRequirementStatus(
-                                            organization.Id,
-                                            family.LocationId,
-                                            personId,
-                                            exempt.RequirementName,
-                                            "Exempted",
-                                            exempt.DueDate,
-                                            exempt.ExemptionExpiresAtUtc,
-                                            roleName
-                                        ))
+                                individualRequirementStatuses.Add(
+                                    new IndividualRequirementStatus(
+                                        organization.Id,
+                                        family.LocationId,
+                                        personId,
+                                        exempt.RequirementName,
+                                        "Exempted",
+                                        exempt.DueDate,
+                                        exempt.ExemptionExpiresAtUtc
+                                    )
                                 );
                             }
                         }

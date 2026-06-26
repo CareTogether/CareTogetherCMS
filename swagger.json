@@ -1,5 +1,5 @@
 {
-  "x-generator": "NSwag v14.0.8.0 (NJsonSchema v11.0.1.0 (Newtonsoft.Json v13.0.0.0))",
+  "x-generator": "NSwag v14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))",
   "openapi": "3.0.0",
   "info": {
     "title": "CareTogether CMS API",
@@ -2060,6 +2060,7 @@
           "customFamilyFields",
           "referralPolicy",
           "volunteerPolicy",
+          "customFields",
           "v1ReferralPolicy"
         ],
         "properties": {
@@ -2080,6 +2081,9 @@
           },
           "volunteerPolicy": {
             "$ref": "#/components/schemas/VolunteerPolicy"
+          },
+          "customFields": {
+            "$ref": "#/components/schemas/FamilyMemberCustomFieldPolicy"
           },
           "v1ReferralPolicy": {
             "$ref": "#/components/schemas/V1ReferralPolicy"
@@ -2187,6 +2191,10 @@
             "items": {
               "type": "string"
             }
+          },
+          "groupingKey": {
+            "type": "string",
+            "nullable": true
           }
         }
       },
@@ -2974,6 +2982,44 @@
           2
         ]
       },
+      "FamilyMemberCustomFieldPolicy": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "partneringFamily",
+          "volunteerFamily"
+        ],
+        "properties": {
+          "partneringFamily": {
+            "$ref": "#/components/schemas/FamilyMemberCustomFields"
+          },
+          "volunteerFamily": {
+            "$ref": "#/components/schemas/FamilyMemberCustomFields"
+          }
+        }
+      },
+      "FamilyMemberCustomFields": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "adult",
+          "child"
+        ],
+        "properties": {
+          "adult": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CustomField"
+            }
+          },
+          "child": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CustomField"
+            }
+          }
+        }
+      },
       "V1ReferralPolicy": {
         "type": "object",
         "additionalProperties": false,
@@ -3368,7 +3414,8 @@
           "lastName",
           "addresses",
           "phoneNumbers",
-          "emailAddresses"
+          "emailAddresses",
+          "completedCustomFields"
         ],
         "properties": {
           "id": {
@@ -3444,6 +3491,12 @@
           "notes": {
             "type": "string",
             "nullable": true
+          },
+          "completedCustomFields": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CompletedCustomFieldInfo"
+            }
           }
         }
       },
@@ -3633,6 +3686,40 @@
           1
         ]
       },
+      "CompletedCustomFieldInfo": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "userId",
+          "timestampUtc",
+          "completedCustomFieldId",
+          "customFieldName",
+          "customFieldType"
+        ],
+        "properties": {
+          "userId": {
+            "type": "string",
+            "format": "guid"
+          },
+          "timestampUtc": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "completedCustomFieldId": {
+            "type": "string",
+            "format": "guid"
+          },
+          "customFieldName": {
+            "type": "string"
+          },
+          "customFieldType": {
+            "$ref": "#/components/schemas/CustomFieldType"
+          },
+          "value": {
+            "nullable": true
+          }
+        }
+      },
       "FamilyAdultRelationshipInfo": {
         "type": "object",
         "additionalProperties": false,
@@ -3684,40 +3771,6 @@
           1,
           2
         ]
-      },
-      "CompletedCustomFieldInfo": {
-        "type": "object",
-        "additionalProperties": false,
-        "required": [
-          "userId",
-          "timestampUtc",
-          "completedCustomFieldId",
-          "customFieldName",
-          "customFieldType"
-        ],
-        "properties": {
-          "userId": {
-            "type": "string",
-            "format": "guid"
-          },
-          "timestampUtc": {
-            "type": "string",
-            "format": "date-time"
-          },
-          "completedCustomFieldId": {
-            "type": "string",
-            "format": "guid"
-          },
-          "customFieldName": {
-            "type": "string"
-          },
-          "customFieldType": {
-            "$ref": "#/components/schemas/CustomFieldType"
-          },
-          "value": {
-            "nullable": true
-          }
-        }
       },
       "Activity": {
         "type": "object",
@@ -8194,6 +8247,7 @@
             "AddPersonPhoneNumber": "#/components/schemas/AddPersonPhoneNumber",
             "CreatePerson": "#/components/schemas/CreatePerson",
             "UndoCreatePerson": "#/components/schemas/UndoCreatePerson",
+            "UpdateCustomFamilyMemberField": "#/components/schemas/UpdateCustomFamilyMemberField",
             "UpdatePersonAddress": "#/components/schemas/UpdatePersonAddress",
             "UpdatePersonAge": "#/components/schemas/UpdatePersonAge",
             "UpdatePersonConcerns": "#/components/schemas/UpdatePersonConcerns",
@@ -8385,6 +8439,37 @@
           {
             "type": "object",
             "additionalProperties": false
+          }
+        ]
+      },
+      "UpdateCustomFamilyMemberField": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/PersonCommand"
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "completedCustomFieldId",
+              "customFieldName",
+              "customFieldType"
+            ],
+            "properties": {
+              "completedCustomFieldId": {
+                "type": "string",
+                "format": "guid"
+              },
+              "customFieldName": {
+                "type": "string"
+              },
+              "customFieldType": {
+                "$ref": "#/components/schemas/CustomFieldType"
+              },
+              "value": {
+                "nullable": true
+              }
+            }
           }
         ]
       },

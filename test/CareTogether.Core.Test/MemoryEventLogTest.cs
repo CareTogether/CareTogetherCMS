@@ -49,7 +49,7 @@ namespace CareTogether.Core.Test
         {
             var dut = new MemoryEventLog<int>();
 
-            await Assert.ThrowsExceptionAsync<InvalidOperationException>(
+            await Assert.ThrowsExactlyAsync<InvalidOperationException>(
                 () => dut.AppendEventAsync(guid1, guid2, 42, 2)
             );
             var getResult = await dut.GetAllEventsAsync(guid1, guid2).ToListAsync();
@@ -94,7 +94,7 @@ namespace CareTogether.Core.Test
             var dut = new MemoryEventLog<int>();
 
             await dut.AppendEventAsync(guid1, guid2, 41, 1);
-            await Assert.ThrowsExceptionAsync<InvalidOperationException>(
+            await Assert.ThrowsExactlyAsync<InvalidOperationException>(
                 () => dut.AppendEventAsync(guid1, guid2, 42, 3)
             );
             await dut.AppendEventAsync(guid1, guid2, 43, 2);

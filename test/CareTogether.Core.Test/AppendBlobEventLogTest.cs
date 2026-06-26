@@ -19,7 +19,8 @@ namespace CareTogether.Core.Test
     public class AppendBlobEventLogTest
     {
         private static readonly BlobServiceClient testingClient = new BlobServiceClient(
-            "UseDevelopmentStorage=true"
+            "UseDevelopmentStorage=true",
+            new BlobClientOptions(BlobClientOptions.ServiceVersion.V2021_10_04)
         );
 
         private static Guid Id(char x) =>

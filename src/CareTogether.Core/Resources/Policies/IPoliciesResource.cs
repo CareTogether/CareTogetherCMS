@@ -112,9 +112,30 @@ namespace CareTogether.Resources.Policies
         VolunteerPolicy VolunteerPolicy
     )
     {
+        public FamilyMemberCustomFieldPolicy CustomFields { get; init; } =
+            FamilyMemberCustomFieldPolicy.Empty;
+
         public V1ReferralPolicy V1ReferralPolicy { get; init; } =
             new(ImmutableList<FunctionAssignmentPolicy>.Empty);
     };
+
+    public sealed record FamilyMemberCustomFieldPolicy(
+        FamilyMemberCustomFields PartneringFamily,
+        FamilyMemberCustomFields VolunteerFamily
+    )
+    {
+        public static FamilyMemberCustomFieldPolicy Empty { get; } =
+            new(FamilyMemberCustomFields.Empty, FamilyMemberCustomFields.Empty);
+    }
+
+    public sealed record FamilyMemberCustomFields(
+        ImmutableList<CustomField> Adult,
+        ImmutableList<CustomField> Child
+    )
+    {
+        public static FamilyMemberCustomFields Empty { get; } =
+            new(ImmutableList<CustomField>.Empty, ImmutableList<CustomField>.Empty);
+    }
 
     public enum DocumentLinkRequirement
     {
@@ -190,7 +211,8 @@ namespace CareTogether.Resources.Policies
         string Name,
         CustomFieldType Type,
         CustomFieldValidation? Validation,
-        ImmutableList<string>? ValidValues
+        ImmutableList<string>? ValidValues,
+        string? GroupingKey
     );
 
     public enum CustomFieldType

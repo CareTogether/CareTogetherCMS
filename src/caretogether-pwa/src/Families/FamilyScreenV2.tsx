@@ -2279,6 +2279,7 @@ export function FamilyScreenV2() {
                         key={adult.item1.id}
                         familyId={familyId}
                         personId={adult.item1.id}
+                        showCustomFields
                         showApprovalContent={false}
                       />
                     )
@@ -2290,6 +2291,7 @@ export function FamilyScreenV2() {
                         key={child.id!}
                         familyId={familyId}
                         personId={child.id!}
+                        showCustomFields
                       />
                     )
                 )}
