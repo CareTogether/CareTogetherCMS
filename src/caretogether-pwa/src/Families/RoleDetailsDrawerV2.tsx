@@ -91,25 +91,25 @@ function formatDate(date?: Date) {
   return date ? formatUtcDateOnly(date) : undefined;
 }
 
-function SummaryMetric({ label, value }: { label: string; value: number }) {
-  return (
-    <Box
-      sx={{
-        border: 1,
-        borderColor: 'divider',
-        borderRadius: 1,
-        p: 1,
-      }}
-    >
-      <Typography color="text.secondary" variant="caption">
-        {label}
-      </Typography>
-      <Typography className="ph-unmask" variant="h6">
-        {value}
-      </Typography>
-    </Box>
-  );
-}
+// function SummaryMetric({ label, value }: { label: string; value: number }) {
+//   return (
+//     <Box
+//       sx={{
+//         border: 1,
+//         borderColor: 'divider',
+//         borderRadius: 1,
+//         p: 1,
+//       }}
+//     >
+//       <Typography color="text.secondary" variant="caption">
+//         {label}
+//       </Typography>
+//       <Typography className="ph-unmask" variant="h6">
+//         {value}
+//       </Typography>
+//     </Box>
+//   );
+// }
 
 function RoleActionContainer({
   children,
@@ -183,7 +183,7 @@ function RequirementSummaryRow({
       sx={{
         border: 1,
         borderColor: 'divider',
-        borderRadius: 1,
+        borderRadius: 1
       }}
     >
       <ButtonBase
@@ -324,6 +324,11 @@ export function RoleDetailsDrawerV2({
     setExpandedRoleAction(null);
   }, [card?.id, open, removedRole?.id]);
 
+  const requirements = card?.requirements.sort((a, b) =>
+    b.status.localeCompare(a.status)
+    //TODO: Then sort by completed/exempted-on date (descending) within the same status
+  ) ?? [];
+
   return (
     <Drawer
       anchor="right"
@@ -409,10 +414,9 @@ export function RoleDetailsDrawerV2({
 
           {card && (
             <>
-              <Divider />
-
+              <Typography variant="subtitle2">Requirements</Typography>
+              
               <Stack spacing={1}>
-                <Typography variant="subtitle2">Progress</Typography>
                 <LinearProgress
                   aria-label={`${card.completionPercentage}% complete`}
                   variant="determinate"
@@ -420,11 +424,8 @@ export function RoleDetailsDrawerV2({
                   sx={{ height: 6, borderRadius: 999 }}
                 />
               </Stack>
-
-              <Divider />
-
+{/* 
               <Stack spacing={1}>
-                <Typography variant="subtitle2">Summary</Typography>
                 <Box
                   sx={{
                     display: 'grid',
@@ -436,35 +437,32 @@ export function RoleDetailsDrawerV2({
                   }}
                 >
                   <SummaryMetric
-                    label="Completed requirements"
+                    label="Completed"
                     value={card.completedCount}
                   />
                   <SummaryMetric
-                    label="Missing requirements"
+                    label="Missing"
                     value={card.missingCount}
                   />
                   <SummaryMetric
-                    label="Expired requirements"
+                    label="Expired"
                     value={card.expiredCount}
                   />
                   <SummaryMetric
-                    label="Exempted requirements"
+                    label="Exempted"
                     value={card.exemptedCount}
                   />
                 </Box>
-              </Stack>
-
-              <Divider />
+              </Stack> */}
 
               <Stack spacing={1}>
-                <Typography variant="subtitle2">Requirements</Typography>
-                {card.requirements.length === 0 ? (
+                {requirements.length === 0 ? (
                   <Typography color="text.secondary" variant="body2">
                     No requirements for this role.
                   </Typography>
                 ) : (
                   <Stack spacing={1}>
-                    {card.requirements.map((requirement) => (
+                    {requirements.map((requirement) => (
                       <RequirementSummaryRow
                         key={requirement.id}
                         expanded={selectedRequirementId === requirement.id}
@@ -515,6 +513,7 @@ export function RoleDetailsDrawerV2({
               )}
               {card && (
                 <>
+                  {/* Make this a button, at the top of the drawer, and use the modal dialog from V1 instead of an expanding section. You can use a superseding drawer instead. :) */}
                   <RoleActionContainer
                     disabled={!canRemoveRole}
                     expanded={expandedRoleAction === 'remove'}
@@ -535,6 +534,7 @@ export function RoleDetailsDrawerV2({
                       />
                     )}
                   </RoleActionContainer>
+                  {/* TODO: Remove the 'Complete other' action from here -- it doesn't work at a role-specific level. */}
                   <RoleActionContainer
                     expanded={expandedRoleAction === 'launcher'}
                     label="Complete Other"
