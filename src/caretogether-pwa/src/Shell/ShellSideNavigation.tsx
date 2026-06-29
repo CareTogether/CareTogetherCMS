@@ -53,6 +53,7 @@ function SideNavigationMenu({ open }: SideNavigationMenuProps) {
   const reportSubmenuItems = useRecoilValue(reportSubmenuItemsAtom);
 
   const referralsEnabled = useFeatureFlagEnabled('referrals');
+  const collapsed = !open;
 
   return (
     <List
@@ -96,6 +97,7 @@ function SideNavigationMenu({ open }: SideNavigationMenuProps) {
             to={`${locationPrefix}`}
             primary="Dashboard"
             icon={<DashboardIcon />}
+            collapsed={collapsed}
           />
           <ListItemLink
             className="ph-unmask"
@@ -106,14 +108,16 @@ function SideNavigationMenu({ open }: SideNavigationMenuProps) {
                 <Inbox />
               </Badge>
             }
+            collapsed={collapsed}
           />
           {permissions(Permission.ViewV1Referral) && referralsEnabled && (
-              <ListItemLink
-                className="ph-unmask"
-                to={`${locationPrefix}/referrals`}
-                primary="Referrals"
-                icon={<PermPhoneMsgIcon />}
-              />
+            <ListItemLink
+              className="ph-unmask"
+              to={`${locationPrefix}/referrals`}
+              primary="Referrals"
+              icon={<PermPhoneMsgIcon />}
+              collapsed={collapsed}
+            />
           )}
 
           {permissions(Permission.AccessPartneringFamiliesScreen) && (
@@ -122,6 +126,7 @@ function SideNavigationMenu({ open }: SideNavigationMenuProps) {
               to={`${locationPrefix}/clients`}
               primary="Clients"
               icon={<HandshakeIcon />}
+              collapsed={collapsed}
             />
           )}
           {permissions(Permission.AccessVolunteersScreen) && (
@@ -130,6 +135,7 @@ function SideNavigationMenu({ open }: SideNavigationMenuProps) {
               to={`${locationPrefix}/volunteers`}
               primary="Volunteers"
               icon={<PeopleIcon />}
+              collapsed={collapsed}
             />
           )}
           {permissions(Permission.AccessCommunitiesScreen) && (
@@ -138,6 +144,7 @@ function SideNavigationMenu({ open }: SideNavigationMenuProps) {
               to={`${locationPrefix}/communities`}
               primary="Communities"
               icon={<Diversity3Icon />}
+              collapsed={collapsed}
             />
           )}
 
@@ -149,6 +156,7 @@ function SideNavigationMenu({ open }: SideNavigationMenuProps) {
               icon={<InsightsIcon />}
               subitems={reportSubmenuItems}
               defaultOpen
+              collapsed={collapsed}
             />
           )}
 
@@ -161,6 +169,7 @@ function SideNavigationMenu({ open }: SideNavigationMenuProps) {
               to={`${locationPrefix}/settings`}
               primary="Settings"
               icon={<SettingsIcon sx={{ color: '#fff8' }} />}
+              collapsed={collapsed}
               {...(open && {
                 subitems: [
                   {
@@ -184,9 +193,10 @@ function SideNavigationMenu({ open }: SideNavigationMenuProps) {
               to={`${locationPrefix}/support`}
               primary="Support"
               icon={<SupportIcon />}
+              collapsed={collapsed}
             />
           )}
-          <WhatsNew />
+          <WhatsNew collapsed={collapsed} />
         </>
       )}
     </List>
