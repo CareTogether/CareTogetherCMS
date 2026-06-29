@@ -9,10 +9,13 @@ import {
 import { alpha, Theme } from '@mui/material/styles';
 import { format } from 'date-fns';
 import { RoleApprovalStatus } from '../GeneratedClient';
-import type { RoleSummaryCard } from './roleSummaryViewModel';
+import type {
+  RemovedRoleSummary,
+  RoleSummaryCard,
+} from './roleSummaryViewModel';
 
 type RoleSummaryCardV2Props = {
-  card: RoleSummaryCard;
+  card: RoleSummaryCard | RemovedRoleSummary;
   onClick?: () => void;
 };
 
@@ -47,39 +50,67 @@ function statusSx(status: RoleApprovalStatus) {
   };
 }
 
+function isRemovedRoleSummary(
+  card: RoleSummaryCard | RemovedRoleSummary
+): card is RemovedRoleSummary {
+  return !('status' in card);
+}
+
 function statusLabel(card: RoleSummaryCard) {
   const label = RoleApprovalStatus[card.status];
 
   return card.effectiveDate
-    ? `${label} • ${format(card.effectiveDate, 'MMM d')}`
+    ? `${label} • ${format(card.effectiveDate, 'MMM d, yyyy')}`
     : label;
 }
 
+function removedStatusLabel(card: RemovedRoleSummary) {
+  return card.roleRemoval.effectiveSince
+    ? `Removed • ${format(card.roleRemoval.effectiveSince, 'MMM d, yyyy')}`
+    : 'Removed';
+}
+
 export function RoleSummaryCardV2({ card, onClick }: RoleSummaryCardV2Props) {
+  const removed = isRemovedRoleSummary(card);
   const content = (
     <Stack spacing={1}>
       <Stack spacing={0.25}>
-        <Typography className="ph-unmask" color="text.secondary" variant="caption">
+        <Typography
+          className="ph-unmask"
+          color="text.secondary"
+          variant="caption"
+        >
           {card.subject.label}
         </Typography>
         <Typography
           className="ph-unmask"
+          color={removed ? 'text.secondary' : 'text.primary'}
           variant="body2"
           sx={{ fontWeight: 600 }}
         >
           {card.roleName}
         </Typography>
         <Typography color="text.secondary" variant="caption">
-          {statusLabel(card)}
+          {removed ? removedStatusLabel(card) : statusLabel(card)}
         </Typography>
       </Stack>
 
-      <LinearProgress
-        aria-label={`${card.completionPercentage}% complete`}
-        variant="determinate"
-        value={card.completionPercentage}
-        sx={{ height: 5, borderRadius: 999 }}
-      />
+      {removed ? (
+        <Box
+          sx={{
+            height: 5,
+            borderRadius: 999,
+            bgcolor: 'action.disabledBackground',
+          }}
+        />
+      ) : (
+        <LinearProgress
+          aria-label={`${card.completionPercentage}% complete`}
+          variant="determinate"
+          value={card.completionPercentage}
+          sx={{ height: 5, borderRadius: 999 }}
+        />
+      )}
     </Stack>
   );
 
@@ -95,7 +126,12 @@ export function RoleSummaryCardV2({ card, onClick }: RoleSummaryCardV2Props) {
               duration: theme.transitions.duration.shortest,
             }),
         },
-        statusSx(card.status),
+        removed
+          ? {
+              bgcolor: 'action.hover',
+              borderColor: 'divider',
+            }
+          : statusSx(card.status),
         onClick
           ? {
               '&:hover': {

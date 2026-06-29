@@ -1,11 +1,14 @@
-import { Autocomplete, Box, TextField } from '@mui/material';
+import { Autocomplete, Box, Button, TextField } from '@mui/material';
 import { useMemo, useState } from 'react';
 import { useRecoilValue } from 'recoil';
 import { policyData } from '../Model/ConfigurationModel';
 import type { RequirementContext } from '../Requirements/RequirementContext';
 import type { ApprovalLedgerSubject } from './approvalLedgerViewModel';
-import { ApprovalRequirementWorkflowV2 } from './ApprovalRequirementWorkflowV2';
 import { createSyntheticApprovalOccurrence } from './approvalOccurrenceFactory';
+import {
+  RequirementManagementDrawerV2,
+  type RequirementManagementMode,
+} from './RequirementManagementDrawerV2';
 
 type ApprovalWorkflowLauncherV2Props = {
   subject: ApprovalLedgerSubject;
@@ -22,6 +25,8 @@ export function ApprovalWorkflowLauncherV2({
   const [selectedRequirement, setSelectedRequirement] = useState<string | null>(
     null
   );
+  const [managementMode, setManagementMode] =
+    useState<RequirementManagementMode | null>(null);
   const actionNames = useMemo(() => {
     const names = Object.entries(policy.actionDefinitions).flatMap(
       ([actionName, actionDefinition]) => [
@@ -46,7 +51,10 @@ export function ApprovalWorkflowLauncherV2({
         options={actionNames}
         getOptionLabel={(option) => option}
         value={selectedRequirement}
-        onChange={(_, value) => setSelectedRequirement(value)}
+        onChange={(_, value) => {
+          setSelectedRequirement(value);
+          setManagementMode(null);
+        }}
         renderInput={(params) => (
           <TextField
             {...params}
@@ -56,9 +64,31 @@ export function ApprovalWorkflowLauncherV2({
           />
         )}
       />
-      <ApprovalRequirementWorkflowV2
+      {occurrence && (
+        <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+          <Button
+            variant="contained"
+            onClick={() => setManagementMode('complete')}
+          >
+            Complete
+          </Button>
+          <Button
+            variant="contained"
+            onClick={() => setManagementMode('grantExemption')}
+          >
+            Exempt
+          </Button>
+        </Box>
+      )}
+      <RequirementManagementDrawerV2
+        mode={managementMode}
         occurrence={occurrence}
-        onSuccess={onSuccess}
+        open={Boolean(managementMode && occurrence)}
+        onClose={() => setManagementMode(null)}
+        onSuccess={() => {
+          setManagementMode(null);
+          onSuccess?.();
+        }}
       />
     </Box>
   );

@@ -58,8 +58,9 @@ export function ApprovalRequirementWorkflowV2({
       <ApprovalWorkflowConfirmationSectionV2
         title="Mark Incomplete"
         description="This will move the requirement back to missing so it can be completed again."
-        warningText="This action changes the approval status immediately."
         buttonLabel="Mark Incomplete"
+        confirmationTitle="Mark requirement incomplete?"
+        confirmationDescription="This will remove the completed status and move this requirement back to missing so it can be completed again."
         disabled={!approvalWorkflowActions.canMarkIncomplete}
         loading={approvalWorkflowActions.loading}
         onConfirm={approvalWorkflowActions.markIncomplete}
@@ -72,8 +73,9 @@ export function ApprovalRequirementWorkflowV2({
       <ApprovalWorkflowConfirmationSectionV2
         title="Remove Exemption"
         description="This will remove the exemption and make this requirement needed again."
-        warningText="This action changes the approval status immediately."
         buttonLabel="Remove Exemption"
+        confirmationTitle="Remove this exemption?"
+        confirmationDescription="This will remove the exemption and make this requirement needed again for approval."
         disabled={!approvalWorkflowActions.canRemoveExemption}
         loading={approvalWorkflowActions.loading}
         onConfirm={approvalWorkflowActions.removeExemption}

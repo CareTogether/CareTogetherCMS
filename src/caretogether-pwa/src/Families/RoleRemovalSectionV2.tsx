@@ -1,6 +1,10 @@
 import {
-  Box,
   Button,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogContentText,
+  DialogTitle,
   FormControl,
   FormControlLabel,
   FormLabel,
@@ -8,7 +12,6 @@ import {
   RadioGroup,
   Stack,
   TextField,
-  Typography,
 } from '@mui/material';
 import { useState } from 'react';
 import { useRecoilValue } from 'recoil';
@@ -37,9 +40,13 @@ export function RoleRemovalSectionV2({
   const policy = useRecoilValue(policyData);
   const [reason, setReason] = useState(RoleRemovalReason.Inactive);
   const [additionalComments, setAdditionalComments] = useState('');
+  const [confirmOpen, setConfirmOpen] = useState(false);
   const [saving, setSaving] = useState(false);
   const isFamilyRole =
     person === undefined || policy.volunteerPolicy?.volunteerFamilyRoles?.[role];
+  const participantName = person
+    ? `${person.firstName} ${person.lastName}`
+    : 'this family';
 
   async function removeRole() {
     setSaving(true);
@@ -68,6 +75,7 @@ export function RoleRemovalSectionV2({
 
         onSuccess();
       });
+      setConfirmOpen(false);
     } finally {
       setSaving(false);
     }
@@ -75,13 +83,6 @@ export function RoleRemovalSectionV2({
 
   return (
     <Stack spacing={1.5}>
-      <Typography color="text.secondary" variant="body2">
-        Remove this role participation from{' '}
-        <Box component="span" className="ph-unmask">
-          {person ? `${person.firstName} ${person.lastName}` : 'this family'}
-        </Box>
-        .
-      </Typography>
       <FormControl component="fieldset">
         <FormLabel component="legend">Removal reason</FormLabel>
         <RadioGroup
@@ -134,12 +135,35 @@ export function RoleRemovalSectionV2({
           aria-busy={saving}
           color="error"
           disabled={saving}
-          onClick={() => void removeRole()}
+          onClick={() => setConfirmOpen(true)}
           variant="contained"
         >
           {saving ? 'Removing...' : 'Remove Role'}
         </Button>
       </Stack>
+      <Dialog open={confirmOpen} onClose={() => setConfirmOpen(false)}>
+        <DialogTitle>Remove this role?</DialogTitle>
+        <DialogContent>
+          <DialogContentText>
+            This will remove the {role} role from {participantName}. The role
+            will no longer count as active participation.
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button disabled={saving} onClick={() => setConfirmOpen(false)}>
+            Cancel
+          </Button>
+          <Button
+            aria-busy={saving}
+            color="error"
+            disabled={saving}
+            onClick={() => void removeRole()}
+            variant="contained"
+          >
+            {saving ? 'Removing...' : 'Remove Role'}
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Stack>
   );
 }

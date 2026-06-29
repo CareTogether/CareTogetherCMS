@@ -1,12 +1,4 @@
-import {
-  Box,
-  List,
-  ListItemButton,
-  ListItemText,
-  Stack,
-  Typography,
-} from '@mui/material';
-import { formatUtcDateOnly } from '../Utilities/dateUtils';
+import { Box, Stack } from '@mui/material';
 import { RoleSummaryCardV2 } from './RoleSummaryCardV2';
 import type {
   RemovedRoleSummary,
@@ -32,74 +24,41 @@ export function RoleSummaryCardsSection({
 
   return (
     <Box sx={{ mb: 2 }}>
-      {cards.length > 0 && (
-        <Box
+      <Box
+        sx={{
+          overflowX: 'auto',
+          pb: 0.5,
+        }}
+      >
+        <Stack
+          direction="row"
+          spacing={1}
           sx={{
-            overflowX: 'auto',
-            pb: 0.5,
+            width: 'max-content',
+            minWidth: '100%',
+            flexWrap: 'nowrap',
           }}
         >
-          <Stack
-            direction="row"
-            spacing={1}
-            sx={{
-              width: 'max-content',
-              minWidth: '100%',
-              flexWrap: 'nowrap',
-            }}
-          >
-            {cards.map((card) => (
-              <RoleSummaryCardV2
-                key={card.id}
-                card={card}
-                onClick={onCardClick ? () => onCardClick(card) : undefined}
-              />
-            ))}
-          </Stack>
-        </Box>
-      )}
-
-      {removedRoles.length > 0 && (
-        <Box sx={{ mt: cards.length > 0 ? 1.5 : 0 }}>
-          <Typography variant="subtitle2" sx={{ mb: 0.5 }}>
-            Recently Removed
-          </Typography>
-          <List disablePadding>
-            {removedRoles.map((removedRole) => (
-              <ListItemButton
-                key={removedRole.id}
-                onClick={
-                  onRemovedRoleClick
-                    ? () => onRemovedRoleClick(removedRole)
-                    : undefined
-                }
-                sx={{
-                  border: 1,
-                  borderColor: 'divider',
-                  borderRadius: 1,
-                  mb: 0.75,
-                }}
-              >
-                <ListItemText
-                  className="ph-unmask"
-                  primary={`${removedRole.subject.label} · ${removedRole.roleName}`}
-                  secondary={
-                    removedRole.roleRemoval.effectiveSince
-                      ? `Removed ${formatUtcDateOnly(
-                          removedRole.roleRemoval.effectiveSince
-                        )}`
-                      : 'Removed'
-                  }
-                  slotProps={{
-                    primary: { variant: 'body2' },
-                    secondary: { variant: 'caption' },
-                  }}
-                />
-              </ListItemButton>
-            ))}
-          </List>
-        </Box>
-      )}
+          {cards.map((card) => (
+            <RoleSummaryCardV2
+              key={card.id}
+              card={card}
+              onClick={onCardClick ? () => onCardClick(card) : undefined}
+            />
+          ))}
+          {removedRoles.map((removedRole) => (
+            <RoleSummaryCardV2
+              key={removedRole.id}
+              card={removedRole}
+              onClick={
+                onRemovedRoleClick
+                  ? () => onRemovedRoleClick(removedRole)
+                  : undefined
+              }
+            />
+          ))}
+        </Stack>
+      </Box>
     </Box>
   );
 }

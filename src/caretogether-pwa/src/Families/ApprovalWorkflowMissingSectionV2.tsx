@@ -40,6 +40,7 @@ type ApprovalWorkflowMissingSectionV2Props = {
   context: RequirementContext;
   canComplete: boolean;
   canExempt: boolean;
+  mode?: 'both' | 'complete' | 'grantExemption';
   onSuccess?: () => void;
 };
 
@@ -91,6 +92,7 @@ export function ApprovalWorkflowMissingSectionV2({
   context,
   canComplete,
   canExempt,
+  mode = 'both',
   onSuccess,
 }: ApprovalWorkflowMissingSectionV2Props) {
   const directory = useDirectoryModel();
@@ -171,6 +173,8 @@ export function ApprovalWorkflowMissingSectionV2({
     canExempt &&
     additionalComments.trim() !== '' &&
     !exemptionExpiresAtError;
+  const showCompletion = mode === 'both' || mode === 'complete';
+  const showExemption = mode === 'both' || mode === 'grantExemption';
 
   async function resolveDocumentId() {
     if (documentId !== UPLOAD_NEW) {
@@ -285,139 +289,150 @@ export function ApprovalWorkflowMissingSectionV2({
 
   return (
     <Stack spacing={2}>
-      <Stack spacing={1.5}>
-        <Typography variant="subtitle2">Complete Requirement</Typography>
-        {requirementPolicy.instructions && (
-          <Typography sx={{ whiteSpace: 'pre-wrap' }} variant="body2">
-            {requirementPolicy.instructions}
-          </Typography>
-        )}
-        {requirementPolicy.infoLink && (
-          <Link
-            href={requirementPolicy.infoLink}
-            target="_blank"
-            rel="noreferrer"
-            underline="hover"
-            variant="body2"
-          >
-            {requirementPolicy.infoLink}
-          </Link>
-        )}
-        <ValidateDatePicker
-          label="Completion Date"
-          value={completedAtLocal}
-          disableFuture
-          onChange={(date) => setCompletedAtLocal(date)}
-          onErrorChange={setCompletedAtError}
-          textFieldProps={{ fullWidth: true, required: true, size: 'small' }}
-        />
-        {validityDuration &&
-          (completedAtLocal && isValid(completedAtLocal) ? (
-            <Typography color="text.secondary" variant="caption">
-              This will be valid until{' '}
-              {format(add(completedAtLocal, validityDuration), 'M/d/yyyy h:mm a')}
+      {showCompletion && (
+        <Stack spacing={1.5}>
+          {mode === 'both' && (
+            <Typography variant="subtitle2">Complete</Typography>
+          )}
+          {requirementPolicy.instructions && (
+            <Typography sx={{ whiteSpace: 'pre-wrap' }} variant="body2">
+              {requirementPolicy.instructions}
             </Typography>
-          ) : (
-            <Typography color="text.secondary" variant="caption">
-              Valid for {formatDuration(validityDuration)}
-            </Typography>
-          ))}
-        {documentAllowed && (
-          <Stack spacing={1}>
-            <FormControl fullWidth required={documentRequired} size="small">
-              <InputLabel id="approval-workflow-document-label">
-                Documents
-              </InputLabel>
-              <Select
-                labelId="approval-workflow-document-label"
-                label="Documents"
-                value={documentId}
-                onChange={(event) => setDocumentId(event.target.value)}
-              >
-                <MenuItem value="">None</MenuItem>
-                <MenuItem value={UPLOAD_NEW}>Upload new...</MenuItem>
-                <Divider />
-                {family?.uploadedDocuments?.map((document) => (
-                  <MenuItem
-                    key={document.uploadedDocumentId}
-                    value={document.uploadedDocumentId}
-                  >
-                    {document.uploadedFileName}
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-            {documentId === UPLOAD_NEW && (
-              <Box>
-                <input
-                  accept="*/*"
-                  type="file"
-                  onChange={(event) =>
-                    setDocumentFile(event.target.files?.[0] ?? null)
-                  }
-                />
-              </Box>
-            )}
-          </Stack>
-        )}
-        {notesAllowed && (
+          )}
+          {requirementPolicy.infoLink && (
+            <Link
+              href={requirementPolicy.infoLink}
+              target="_blank"
+              rel="noreferrer"
+              underline="hover"
+              variant="body2"
+            >
+              {requirementPolicy.infoLink}
+            </Link>
+          )}
+          <ValidateDatePicker
+            label="Completion Date"
+            value={completedAtLocal}
+            disableFuture
+            onChange={(date) => setCompletedAtLocal(date)}
+            onErrorChange={setCompletedAtError}
+            textFieldProps={{ fullWidth: true, required: true, size: 'small' }}
+          />
+          {validityDuration &&
+            (completedAtLocal && isValid(completedAtLocal) ? (
+              <Typography color="text.secondary" variant="caption">
+                This will be valid until{' '}
+                {format(
+                  add(completedAtLocal, validityDuration),
+                  'M/d/yyyy h:mm a'
+                )}
+              </Typography>
+            ) : (
+              <Typography color="text.secondary" variant="caption">
+                Valid for {formatDuration(validityDuration)}
+              </Typography>
+            ))}
+          {documentAllowed && (
+            <Stack spacing={1}>
+              <FormControl fullWidth required={documentRequired} size="small">
+                <InputLabel id="approval-workflow-document-label">
+                  Documents
+                </InputLabel>
+                <Select
+                  labelId="approval-workflow-document-label"
+                  label="Documents"
+                  value={documentId}
+                  onChange={(event) => setDocumentId(event.target.value)}
+                >
+                  <MenuItem value="">None</MenuItem>
+                  <MenuItem value={UPLOAD_NEW}>Upload new...</MenuItem>
+                  <Divider />
+                  {family?.uploadedDocuments?.map((document) => (
+                    <MenuItem
+                      key={document.uploadedDocumentId}
+                      value={document.uploadedDocumentId}
+                    >
+                      {document.uploadedFileName}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+              {documentId === UPLOAD_NEW && (
+                <Box>
+                  <input
+                    accept="*/*"
+                    type="file"
+                    onChange={(event) =>
+                      setDocumentFile(event.target.files?.[0] ?? null)
+                    }
+                  />
+                </Box>
+              )}
+            </Stack>
+          )}
+          {notesAllowed && (
+            <TextField
+              fullWidth
+              label="Notes"
+              multiline
+              minRows={3}
+              placeholder="Space for any general notes"
+              required={notesRequired}
+              size="small"
+              value={notes}
+              onChange={(event) => setNotes(event.target.value)}
+            />
+          )}
+          <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
+            <Button
+              aria-busy={isCompleting}
+              disabled={!canSaveCompletion}
+              onClick={completeRequirement}
+              variant="contained"
+            >
+              {isCompleting ? 'Saving...' : 'Complete'}
+            </Button>
+          </Box>
+        </Stack>
+      )}
+
+      {showCompletion && showExemption && <Divider />}
+
+      {showExemption && (
+        <Stack spacing={1.5}>
+          {mode === 'both' && (
+            <Typography variant="subtitle2">Exempt</Typography>
+          )}
           <TextField
             fullWidth
-            label="Notes"
+            label="Reason"
             multiline
-            minRows={3}
-            placeholder="Space for any general notes"
-            required={notesRequired}
+            minRows={2}
+            placeholder="Explain why this requirement will be exempted"
+            required
             size="small"
-            value={notes}
-            onChange={(event) => setNotes(event.target.value)}
+            value={additionalComments}
+            onChange={(event) => setAdditionalComments(event.target.value)}
           />
-        )}
-        <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
-          <Button
-            aria-busy={isCompleting}
-            disabled={!canSaveCompletion}
-            onClick={completeRequirement}
-            variant="contained"
-          >
-            {isCompleting ? 'Saving...' : 'Complete Requirement'}
-          </Button>
-        </Box>
-      </Stack>
-
-      <Divider />
-
-      <Stack spacing={1.5}>
-        <Typography variant="subtitle2">Grant Exemption</Typography>
-        <TextField
-          fullWidth
-          label="Reason"
-          multiline
-          minRows={2}
-          placeholder="Explain why this requirement will be exempted"
-          required
-          size="small"
-          value={additionalComments}
-          onChange={(event) => setAdditionalComments(event.target.value)}
-        />
-        <ValidateDatePicker
-          label="Expiration Date"
-          value={exemptionExpiresAtLocal}
-          onChange={(date) => setExemptionExpiresAtLocal(date)}
-          onErrorChange={setExemptionExpiresAtError}
-          textFieldProps={{ fullWidth: true, size: 'small' }}
-        />
-        <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
-          <Button
-            aria-busy={isExempting}
-            disabled={!canSaveExemption}
-            onClick={grantExemption}
-            variant="contained"
-          >
-            {isExempting ? 'Saving...' : 'Grant Exemption'}
-          </Button>
-        </Box>
-      </Stack>
+          <ValidateDatePicker
+            label="Expiration Date"
+            value={exemptionExpiresAtLocal}
+            onChange={(date) => setExemptionExpiresAtLocal(date)}
+            onErrorChange={setExemptionExpiresAtError}
+            textFieldProps={{ fullWidth: true, size: 'small' }}
+          />
+          <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
+            <Button
+              aria-busy={isExempting}
+              disabled={!canSaveExemption}
+              onClick={grantExemption}
+              variant="contained"
+            >
+              {isExempting ? 'Saving...' : 'Exempt'}
+            </Button>
+          </Box>
+        </Stack>
+      )}
     </Stack>
   );
 }

@@ -1,30 +1,36 @@
 import CloseIcon from '@mui/icons-material/Close';
 import {
   Box,
+  Button,
   ButtonBase,
   Chip,
-  Collapse,
-  Divider,
   Drawer,
   IconButton,
   LinearProgress,
-  List,
-  ListItemButton,
-  ListItemText,
   Stack,
   Typography,
 } from '@mui/material';
-import type { ReactNode } from 'react';
 import { useEffect, useState } from 'react';
-import { Permission, Person, RoleApprovalStatus } from '../GeneratedClient';
+import {
+  CombinedFamilyInfo,
+  Permission,
+  Person,
+  RoleApprovalStatus,
+  RoleRemoval,
+  RoleRemovalReason,
+} from '../GeneratedClient';
 import { useFamilyLookup } from '../Model/DirectoryModel';
 import { useFamilyIdPermissions } from '../Model/SessionModel';
 import { formatUtcDateOnly } from '../Utilities/dateUtils';
-import { ApprovalRequirementWorkflowV2 } from './ApprovalRequirementWorkflowV2';
-import { ApprovalWorkflowLauncherV2 } from './ApprovalWorkflowLauncherV2';
-import type { ApprovalLedgerStatus } from './approvalLedgerViewModel';
-import { RoleRemovalSectionV2 } from './RoleRemovalSectionV2';
-import { RoleResetSectionV2 } from './RoleResetSectionV2';
+import type {
+  ApprovalLedgerRow,
+  ApprovalLedgerStatus,
+} from './approvalLedgerViewModel';
+import { ApprovalDetailsDrawerV2 } from './ApprovalDetailsDrawerV2';
+import {
+  RoleManagementDrawerV2,
+  type RoleManagementMode,
+} from './RoleManagementDrawerV2';
 import type {
   RemovedRoleSummary,
   RoleSummaryCard,
@@ -38,7 +44,19 @@ type RoleDetailsDrawerV2Props = {
   onClose: () => void;
 };
 
-type ExpandedRoleAction = 'reset' | 'remove' | 'launcher' | null;
+type ParticipantState = 'active' | 'inactive' | 'optedOut' | 'denied';
+type RoleParticipant = {
+  id: string;
+  label: string;
+  state: ParticipantState;
+};
+
+const participantStateLabels: Record<ParticipantState, string> = {
+  active: 'Active',
+  inactive: 'Inactive',
+  optedOut: 'Opted Out',
+  denied: 'Denied',
+};
 
 function statusLabel(status: RoleApprovalStatus) {
   return RoleApprovalStatus[status];
@@ -91,40 +109,181 @@ function formatDate(date?: Date) {
   return date ? formatUtcDateOnly(date) : undefined;
 }
 
-// function SummaryMetric({ label, value }: { label: string; value: number }) {
-//   return (
-//     <Box
-//       sx={{
-//         border: 1,
-//         borderColor: 'divider',
-//         borderRadius: 1,
-//         p: 1,
-//       }}
-//     >
-//       <Typography color="text.secondary" variant="caption">
-//         {label}
-//       </Typography>
-//       <Typography className="ph-unmask" variant="h6">
-//         {value}
-//       </Typography>
-//     </Box>
-//   );
-// }
+function roleKey(role: string | undefined) {
+  return (role ?? '').trim().replace(/\s+/g, ' ').toLocaleLowerCase();
+}
 
-function RoleActionContainer({
-  children,
-  disabled,
-  expanded,
-  label,
-  onToggle,
+function activeRoleRemoval(
+  roleRemovals: RoleRemoval[] | undefined,
+  roleName: string
+) {
+  const now = new Date();
+  const key = roleKey(roleName);
+
+  return roleRemovals
+    ?.filter(
+      (removal) =>
+        roleKey(removal.roleName) === key &&
+        (!removal.effectiveUntil || removal.effectiveUntil > now)
+    )
+    .sort(
+      (a, b) =>
+        (b.effectiveSince?.getTime() ?? 0) - (a.effectiveSince?.getTime() ?? 0)
+    )[0];
+}
+
+function stateFromRoleRemoval(removal: RoleRemoval): ParticipantState {
+  switch (removal.reason) {
+    case RoleRemovalReason.OptOut:
+      return 'optedOut';
+    case RoleRemovalReason.Denied:
+      return 'denied';
+    case RoleRemovalReason.Inactive:
+    default:
+      return 'inactive';
+  }
+}
+
+function participantStatusColor(state: ParticipantState) {
+  switch (state) {
+    case 'active':
+      return 'success';
+    case 'optedOut':
+      return 'warning';
+    case 'denied':
+      return 'error';
+    case 'inactive':
+    default:
+      return 'default';
+  }
+}
+
+function roleApprovalIsActive(
+  approval: { currentStatus?: RoleApprovalStatus } | undefined
+) {
+  return approval?.currentStatus !== undefined;
+}
+
+function personLabel(person: Person | undefined) {
+  return [person?.firstName, person?.lastName].filter(Boolean).join(' ') || 'Adult';
+}
+
+function buildRoleParticipants(
+  family: CombinedFamilyInfo | undefined,
+  roleName: string
+) {
+  const volunteerInfo = family?.volunteerFamilyInfo;
+
+  if (!volunteerInfo) {
+    return [];
+  }
+
+  const participants: RoleParticipant[] = [];
+  const familyRemoval = activeRoleRemoval(volunteerInfo.roleRemovals, roleName);
+  const familyApproval = volunteerInfo.familyRoleApprovals?.[roleName];
+
+  if (familyRemoval) {
+    participants.push({
+      id: 'family',
+      label: 'Family',
+      state: stateFromRoleRemoval(familyRemoval),
+    });
+  } else if (roleApprovalIsActive(familyApproval)) {
+    participants.push({
+      id: 'family',
+      label: 'Family',
+      state: 'active',
+    });
+  }
+
+  Object.entries(volunteerInfo.individualVolunteers ?? {}).forEach(
+    ([personId, individualVolunteer]) => {
+      const removal = activeRoleRemoval(
+        individualVolunteer.roleRemovals,
+        roleName
+      );
+      const approval = individualVolunteer.approvalStatusByRole?.[roleName];
+
+      if (!removal && !roleApprovalIsActive(approval)) {
+        return;
+      }
+
+      const person = family.family?.adults?.find(
+        (adult) => adult.item1?.id === personId
+      )?.item1;
+
+      participants.push({
+        id: personId,
+        label: personLabel(person),
+        state: removal ? stateFromRoleRemoval(removal) : 'active',
+      });
+    }
+  );
+
+  return participants.sort((a, b) => a.label.localeCompare(b.label));
+}
+
+function ParticipantsSection({
+  participants,
 }: {
-  children: ReactNode;
-  disabled?: boolean;
-  expanded: boolean;
-  label: string;
-  onToggle: () => void;
+  participants: RoleParticipant[];
 }) {
-  const isExpanded = !disabled && expanded;
+  if (participants.length === 0) {
+    return null;
+  }
+
+  return (
+    <Stack spacing={1}>
+      <Typography variant="subtitle2">Participants</Typography>
+      {participants.map((participant) => (
+        <Box
+          key={participant.id}
+          sx={{
+            alignItems: 'center',
+            display: 'flex',
+            gap: 1,
+            justifyContent: 'space-between',
+          }}
+        >
+          <Typography className="ph-unmask" variant="body2">
+            {participant.label}
+          </Typography>
+          <Chip
+            color={participantStatusColor(participant.state)}
+            label={participantStateLabels[participant.state]}
+            size="small"
+          />
+        </Box>
+      ))}
+    </Stack>
+  );
+}
+
+function RoleActionButton({
+  disabled,
+  label,
+  onClick,
+}: {
+  disabled?: boolean;
+  label: string;
+  onClick: () => void;
+}) {
+  return (
+    <Button disabled={disabled} onClick={onClick} variant="contained">
+      {label}
+    </Button>
+  );
+}
+
+function RequirementSummaryRow({
+  onClick,
+  requirement,
+}: {
+  onClick: () => void;
+  requirement: RoleSummaryRequirement;
+}) {
+  const completedOrExemptedOn = formatDate(requirement.completedOrExemptedOn);
+  const validUntil = formatDate(requirement.validUntil);
 
   return (
     <Box
@@ -132,63 +291,10 @@ function RoleActionContainer({
         border: 1,
         borderColor: 'divider',
         borderRadius: 1,
-        mb: 1,
-      }}
-    >
-      <ListItemButton
-        aria-expanded={isExpanded}
-        disabled={disabled}
-        onClick={onToggle}
-      >
-        <ListItemText
-          primary={label}
-          slotProps={{
-            primary: { variant: 'body2' },
-          }}
-        />
-      </ListItemButton>
-      <Collapse in={isExpanded} unmountOnExit>
-        <Box
-          sx={{
-            borderTop: 1,
-            borderColor: 'divider',
-            bgcolor: 'background.default',
-            p: 1.5,
-          }}
-        >
-          {children}
-        </Box>
-      </Collapse>
-    </Box>
-  );
-}
-
-function RequirementSummaryRow({
-  expanded,
-  onSuccess,
-  onToggle,
-  requirement,
-}: {
-  expanded: boolean;
-  onSuccess: () => void;
-  onToggle: () => void;
-  requirement: RoleSummaryRequirement;
-}) {
-  const completedOrExemptedOn = formatDate(requirement.completedOrExemptedOn);
-  const validUntil = formatDate(requirement.validUntil);
-  const occurrence = requirement.occurrences[0];
-
-  return (
-    <Box
-      sx={{
-        border: 1,
-        borderColor: 'divider',
-        borderRadius: 1
       }}
     >
       <ButtonBase
-        aria-expanded={expanded}
-        onClick={onToggle}
+        onClick={onClick}
         sx={{
           borderRadius: 1,
           display: 'block',
@@ -232,21 +338,6 @@ function RequirementSummaryRow({
           </Stack>
         </Box>
       </ButtonBase>
-      <Collapse in={expanded} unmountOnExit>
-        <Box
-          sx={{
-            borderTop: 1,
-            borderColor: 'divider',
-            bgcolor: 'background.default',
-            p: 1.5,
-          }}
-        >
-          <ApprovalRequirementWorkflowV2
-            occurrence={occurrence}
-            onSuccess={onSuccess}
-          />
-        </Box>
-      </Collapse>
     </Box>
   );
 }
@@ -288,12 +379,11 @@ export function RoleDetailsDrawerV2({
   onClose,
 }: RoleDetailsDrawerV2Props) {
   const familyLookup = useFamilyLookup();
-  const [selectedRequirementId, setSelectedRequirementId] = useState<
-    string | null
-  >(null);
-  const [expandedRoleAction, setExpandedRoleAction] =
-    useState<ExpandedRoleAction>(null);
-  const role = card ?? removedRole;
+  const [selectedRequirementRow, setSelectedRequirementRow] =
+    useState<ApprovalLedgerRow | null>(null);
+  const [selectedRoleAction, setSelectedRoleAction] =
+    useState<RoleManagementMode | null>(null);
+  const role = card ?? removedRole ?? null;
   const familyId = familyIdFromContext(role?.context);
   const family = familyLookup(familyId);
   const permissions = useFamilyIdPermissions(familyId);
@@ -309,253 +399,184 @@ export function RoleDetailsDrawerV2({
     canEditRoleParticipation &&
     card !== null &&
     (card.subject.scope === 'family' || person !== undefined);
-  const canResetRole =
-    canEditRoleParticipation &&
-    role?.roleRemoval !== undefined &&
-    !role.roleRemoval.effectiveUntil &&
-    (role.subject.scope === 'family' || person !== undefined);
   const effectiveDate = card ? formattedEffectiveDate(card) : undefined;
   const removedDate = removedRole?.roleRemoval.effectiveSince
     ? formatUtcDateOnly(removedRole.roleRemoval.effectiveSince)
     : undefined;
+  const participants = role ? buildRoleParticipants(family, role.roleName) : [];
 
   useEffect(() => {
-    setSelectedRequirementId(null);
-    setExpandedRoleAction(null);
+    setSelectedRequirementRow(null);
+    setSelectedRoleAction(null);
   }, [card?.id, open, removedRole?.id]);
 
-  const requirements = card?.requirements.sort((a, b) =>
+  const requirements = [...(card?.requirements ?? [])].sort((a, b) =>
     b.status.localeCompare(a.status)
-    //TODO: Then sort by completed/exempted-on date (descending) within the same status
-  ) ?? [];
+  );
 
   return (
-    <Drawer
-      anchor="right"
-      aria-labelledby="role-details-title"
-      open={open}
-      onClose={onClose}
-      slotProps={{
-        paper: {
-          sx: {
-            width: { xs: '100%', sm: 500, md: 560 },
-            p: 2,
-            pt: { xs: 7, sm: 8, md: 6 },
+    <>
+      <Drawer
+        anchor="right"
+        aria-labelledby="role-details-title"
+        open={open}
+        onClose={onClose}
+        slotProps={{
+          paper: {
+            sx: {
+              width: { xs: '100%', sm: 500, md: 560 },
+              p: 2,
+              pt: { xs: 7, sm: 8, md: 6 },
+            },
           },
-        },
-      }}
-    >
-      {role && (
-        <Stack spacing={2}>
-          <Box
-            sx={{
-              display: 'flex',
-              alignItems: 'flex-start',
-              justifyContent: 'space-between',
-              gap: 1,
-            }}
-          >
-            <Box sx={{ minWidth: 0 }}>
-              <Typography
-                color="text.secondary"
-                sx={{ textTransform: 'uppercase' }}
-                variant="caption"
-              >
-                Role Details
-              </Typography>
-              <Typography
-                id="role-details-title"
-                className="ph-unmask"
-                variant="h5"
-              >
-                {role.roleName}
-              </Typography>
-              <Typography
-                className="ph-unmask"
-                color="text.secondary"
-                variant="body2"
-              >
-                {role.subject.label}
-              </Typography>
-              {card ? (
-                <Stack direction="row" spacing={1} sx={{ mt: 1 }}>
-                  <Chip
-                    color={roleStatusColor(card.status)}
-                    label={statusLabel(card.status)}
-                    size="small"
-                  />
-                  {effectiveDate && (
-                    <Chip
-                      className="ph-unmask"
-                      label={effectiveDate}
-                      size="small"
-                      variant="outlined"
-                    />
-                  )}
-                </Stack>
-              ) : (
-                <Stack direction="row" spacing={1} sx={{ mt: 1 }}>
-                  <Chip color="default" label="Removed" size="small" />
-                  {removedDate && (
-                    <Chip
-                      className="ph-unmask"
-                      label={removedDate}
-                      size="small"
-                      variant="outlined"
-                    />
-                  )}
-                </Stack>
-              )}
-            </Box>
-            <IconButton aria-label="close role details" onClick={onClose}>
-              <CloseIcon />
-            </IconButton>
-          </Box>
-
-          {card && (
-            <>
-              <Typography variant="subtitle2">Requirements</Typography>
-              
-              <Stack spacing={1}>
-                <LinearProgress
-                  aria-label={`${card.completionPercentage}% complete`}
-                  variant="determinate"
-                  value={card.completionPercentage}
-                  sx={{ height: 6, borderRadius: 999 }}
-                />
-              </Stack>
-{/* 
-              <Stack spacing={1}>
-                <Box
-                  sx={{
-                    display: 'grid',
-                    gridTemplateColumns: {
-                      xs: 'repeat(2, minmax(0, 1fr))',
-                      sm: 'repeat(4, minmax(0, 1fr))',
-                    },
-                    gap: 1,
-                  }}
+        }}
+      >
+        {role && (
+          <Stack spacing={2}>
+            <Box
+              sx={{
+                display: 'flex',
+                alignItems: 'flex-start',
+                justifyContent: 'space-between',
+                gap: 1,
+              }}
+            >
+              <Box sx={{ minWidth: 0 }}>
+                <Typography
+                  color="text.secondary"
+                  sx={{ textTransform: 'uppercase' }}
+                  variant="caption"
                 >
-                  <SummaryMetric
-                    label="Completed"
-                    value={card.completedCount}
-                  />
-                  <SummaryMetric
-                    label="Missing"
-                    value={card.missingCount}
-                  />
-                  <SummaryMetric
-                    label="Expired"
-                    value={card.expiredCount}
-                  />
-                  <SummaryMetric
-                    label="Exempted"
-                    value={card.exemptedCount}
-                  />
-                </Box>
-              </Stack> */}
-
-              <Stack spacing={1}>
-                {requirements.length === 0 ? (
-                  <Typography color="text.secondary" variant="body2">
-                    No requirements for this role.
-                  </Typography>
-                ) : (
-                  <Stack spacing={1}>
-                    {requirements.map((requirement) => (
-                      <RequirementSummaryRow
-                        key={requirement.id}
-                        expanded={selectedRequirementId === requirement.id}
-                        onSuccess={() => setSelectedRequirementId(null)}
-                        onToggle={() =>
-                          setSelectedRequirementId((currentRequirementId) =>
-                            currentRequirementId === requirement.id
-                              ? null
-                              : requirement.id
-                          )
-                        }
-                        requirement={requirement}
-                      />
-                    ))}
-                  </Stack>
-                )}
-              </Stack>
-            </>
-          )}
-
-          <Divider />
-
-          <Stack spacing={1}>
-            <Typography variant="subtitle2">Role Actions</Typography>
-            <List disablePadding>
-              {(canResetRole || removedRole) && (
-                <RoleActionContainer
-                  disabled={!canResetRole}
-                  expanded={expandedRoleAction === 'reset'}
-                  label="Reset Participation"
-                  onToggle={() =>
-                    setExpandedRoleAction((currentAction) =>
-                      currentAction === 'reset' ? null : 'reset'
-                    )
-                  }
+                  Role Details
+                </Typography>
+                <Typography
+                  id="role-details-title"
+                  className="ph-unmask"
+                  variant="h5"
                 >
-                  {canResetRole && role.roleRemoval && (
-                    <RoleResetSectionV2
-                      volunteerFamilyId={familyId}
-                      person={person}
-                      role={role.roleName}
-                      roleRemoval={role.roleRemoval}
-                      onCancel={() => setExpandedRoleAction(null)}
-                      onSuccess={() => setExpandedRoleAction(null)}
+                  {role.roleName}
+                </Typography>
+                <Typography
+                  className="ph-unmask"
+                  color="text.secondary"
+                  variant="body2"
+                >
+                  {role.subject.label}
+                </Typography>
+                {card ? (
+                  <Stack direction="row" spacing={1} sx={{ mt: 1 }}>
+                    <Chip
+                      color={roleStatusColor(card.status)}
+                      label={statusLabel(card.status)}
+                      size="small"
                     />
-                  )}
-                </RoleActionContainer>
-              )}
-              {card && (
-                <>
-                  {/* Make this a button, at the top of the drawer, and use the modal dialog from V1 instead of an expanding section. You can use a superseding drawer instead. :) */}
-                  <RoleActionContainer
-                    disabled={!canRemoveRole}
-                    expanded={expandedRoleAction === 'remove'}
-                    label="Remove Role"
-                    onToggle={() =>
-                      setExpandedRoleAction((currentAction) =>
-                        currentAction === 'remove' ? null : 'remove'
-                      )
-                    }
-                  >
-                    {canRemoveRole && (
-                      <RoleRemovalSectionV2
-                        volunteerFamilyId={familyId}
-                        person={person}
-                        role={card.roleName}
-                        onCancel={() => setExpandedRoleAction(null)}
-                        onSuccess={() => setExpandedRoleAction(null)}
+                    {effectiveDate && (
+                      <Chip
+                        className="ph-unmask"
+                        label={effectiveDate}
+                        size="small"
+                        variant="outlined"
                       />
                     )}
-                  </RoleActionContainer>
-                  {/* TODO: Remove the 'Complete other' action from here -- it doesn't work at a role-specific level. */}
-                  <RoleActionContainer
-                    expanded={expandedRoleAction === 'launcher'}
+                  </Stack>
+                ) : (
+                  <Stack direction="row" spacing={1} sx={{ mt: 1 }}>
+                    <Chip color="default" label="Removed" size="small" />
+                    {removedDate && (
+                      <Chip
+                        className="ph-unmask"
+                        label={removedDate}
+                        size="small"
+                        variant="outlined"
+                      />
+                    )}
+                  </Stack>
+                )}
+              </Box>
+              <IconButton aria-label="close role details" onClick={onClose}>
+                <CloseIcon />
+              </IconButton>
+            </Box>
+
+            <ParticipantsSection participants={participants} />
+
+            {card && (
+              <>
+                <Typography variant="subtitle2">Requirements</Typography>
+
+                <Stack spacing={1}>
+                  <LinearProgress
+                    aria-label={`${card.completionPercentage}% complete`}
+                    variant="determinate"
+                    value={card.completionPercentage}
+                    sx={{ height: 6, borderRadius: 999 }}
+                  />
+                </Stack>
+
+                <Stack spacing={1}>
+                  {requirements.length === 0 ? (
+                    <Typography color="text.secondary" variant="body2">
+                      No requirements for this role.
+                    </Typography>
+                  ) : (
+                    <Stack spacing={1}>
+                      {requirements.map((requirement) => (
+                        <RequirementSummaryRow
+                          key={requirement.id}
+                          onClick={() =>
+                            setSelectedRequirementRow(requirement.ledgerRow)
+                          }
+                          requirement={requirement}
+                        />
+                      ))}
+                    </Stack>
+                  )}
+                </Stack>
+              </>
+            )}
+
+            <Stack
+              direction="row"
+              spacing={1}
+              sx={{ flexWrap: 'wrap', gap: 1 }}
+            >
+              {card && (
+                <>
+                  <RoleActionButton
+                    disabled={!canRemoveRole}
+                    label="Remove Role"
+                    onClick={() => setSelectedRoleAction('remove')}
+                  />
+                  <RoleActionButton
                     label="Complete Other"
-                    onToggle={() =>
-                      setExpandedRoleAction((currentAction) =>
-                        currentAction === 'launcher' ? null : 'launcher'
-                      )
-                    }
-                  >
-                    <ApprovalWorkflowLauncherV2
-                      subject={card.subject}
-                      context={card.context}
-                      onSuccess={() => setExpandedRoleAction(null)}
-                    />
-                  </RoleActionContainer>
+                    onClick={() => setSelectedRoleAction('completeOther')}
+                  />
                 </>
               )}
-            </List>
+              {removedRole && (
+                <RoleActionButton
+                  disabled={!canEditRoleParticipation}
+                  label="Reset Participation"
+                  onClick={() => setSelectedRoleAction('resetParticipation')}
+                />
+              )}
+            </Stack>
           </Stack>
-        </Stack>
-      )}
-    </Drawer>
+        )}
+      </Drawer>
+      <ApprovalDetailsDrawerV2
+        row={selectedRequirementRow}
+        open={selectedRequirementRow !== null}
+        onClose={() => setSelectedRequirementRow(null)}
+      />
+      <RoleManagementDrawerV2
+        mode={selectedRoleAction}
+        person={person}
+        role={role}
+        volunteerFamilyId={familyId}
+        open={selectedRoleAction !== null}
+        onClose={() => setSelectedRoleAction(null)}
+      />
+    </>
   );
 }

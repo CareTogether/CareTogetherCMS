@@ -1,22 +1,31 @@
 import CloseIcon from '@mui/icons-material/Close';
 import {
   Box,
+  Button,
   Chip,
-  Divider,
   Drawer,
   IconButton,
   Stack,
   Typography,
 } from '@mui/material';
 import { formatUtcDateOnly } from '../Utilities/dateUtils';
-import { useUserLookup } from '../Model/DirectoryModel';
+import {
+  useFamilyLookup,
+  useNoteAuthorLookup,
+  useUserLookup,
+} from '../Model/DirectoryModel';
 import { PersonName } from './PersonName';
-import type { ReactNode } from 'react';
+import { useState, type ReactNode } from 'react';
+import { Note, Permission, UploadedDocumentInfo } from '../GeneratedClient';
+import { useFamilyPermissions } from '../Model/SessionModel';
 import {
   ApprovalLedgerRow,
   ApprovalLedgerStatus,
 } from './approvalLedgerViewModel';
-import { ApprovalRequirementWorkflowV2 } from './ApprovalRequirementWorkflowV2';
+import {
+  RequirementManagementDrawerV2,
+  type RequirementManagementMode,
+} from './RequirementManagementDrawerV2';
 
 type ApprovalDetailsDrawerV2Props = {
   row: ApprovalLedgerRow | null;
@@ -54,10 +63,6 @@ function formatDate(date?: Date) {
   return date ? formatUtcDateOnly(date) : undefined;
 }
 
-function countLabel(count: number, singular: string, plural: string) {
-  return `${count} ${count === 1 ? singular : plural}`;
-}
-
 function DetailField({
   label,
   children,
@@ -70,24 +75,170 @@ function DetailField({
       <Typography color="text.secondary" variant="caption">
         {label}
       </Typography>
-      <Typography className="ph-unmask" variant="body2">
+      <Typography
+        className="ph-unmask"
+        variant="body2"
+        sx={{ fontWeight: 600 }}
+      >
         {children}
       </Typography>
     </Box>
   );
 }
 
-function ChipList({
-  emptyLabel,
-  labels,
+function familyIdFromRow(row: ApprovalLedgerRow | null) {
+  const context = row?.occurrences[0]?.context;
+
+  if (
+    context?.kind === 'Volunteer Family' ||
+    context?.kind === 'Individual Volunteer'
+  ) {
+    return context.volunteerFamilyId;
+  }
+
+  return undefined;
+}
+
+function DocumentList({
+  canReadDocuments,
+  documents,
+  userLookup,
 }: {
-  emptyLabel: string;
-  labels: string[];
+  canReadDocuments: boolean;
+  documents: UploadedDocumentInfo[];
+  userLookup: ReturnType<typeof useUserLookup>;
 }) {
-  if (labels.length === 0) {
+  if (!canReadDocuments) {
     return (
       <Typography color="text.secondary" variant="body2">
-        {emptyLabel}
+        You do not have permission to view documents.
+      </Typography>
+    );
+  }
+
+  if (documents.length === 0) {
+    return (
+      <Typography color="text.secondary" variant="body2">
+        No documents.
+      </Typography>
+    );
+  }
+
+  return (
+    <Stack component="ul" spacing={1} sx={{ m: 0, p: 0, listStyle: 'none' }}>
+      {documents.map((document) => (
+        <Box
+          component="li"
+          key={document.uploadedDocumentId}
+          sx={{
+            border: 1,
+            borderColor: 'divider',
+            borderRadius: 1,
+            p: 1,
+          }}
+        >
+          <Typography className="ph-unmask" variant="body2">
+            {document.uploadedFileName}
+          </Typography>
+          <Typography color="text.secondary" variant="caption">
+            Uploaded by <PersonName person={userLookup(document.userId)} />
+            {document.timestampUtc
+              ? ` on ${formatUtcDateOnly(document.timestampUtc)}`
+              : ''}
+          </Typography>
+        </Box>
+      ))}
+    </Stack>
+  );
+}
+
+function NoteList({
+  noteAuthorLookup,
+  notes,
+  textNotes,
+}: {
+  noteAuthorLookup: ReturnType<typeof useNoteAuthorLookup>;
+  notes: Note[];
+  textNotes: string[];
+}) {
+  if (notes.length === 0 && textNotes.length === 0) {
+    return (
+      <Typography color="text.secondary" variant="body2">
+        No notes.
+      </Typography>
+    );
+  }
+
+  return (
+    <Stack component="ul" spacing={1} sx={{ m: 0, p: 0, listStyle: 'none' }}>
+      {notes.map((note) => {
+        const date = note.backdatedTimestampUtc ?? note.createdTimestampUtc;
+
+        return (
+          <Box
+            component="li"
+            key={note.id}
+            sx={{
+              border: 1,
+              borderColor: 'divider',
+              borderRadius: 1,
+              p: 1,
+            }}
+          >
+            <Typography className="ph-unmask" variant="body2">
+              {note.contents}
+            </Typography>
+            <Typography color="text.secondary" variant="caption">
+              <PersonName person={noteAuthorLookup(note)} />
+              {date ? ` on ${formatUtcDateOnly(date)}` : ''}
+            </Typography>
+          </Box>
+        );
+      })}
+      {textNotes.map((note, index) => (
+        <Box
+          component="li"
+          key={`${note}:${index}`}
+          sx={{
+            border: 1,
+            borderColor: 'divider',
+            borderRadius: 1,
+            p: 1,
+          }}
+        >
+          <Typography className="ph-unmask" variant="body2">
+            {note}
+          </Typography>
+        </Box>
+      ))}
+    </Stack>
+  );
+}
+
+function DrawerSection({
+  children,
+  title,
+}: {
+  children: ReactNode;
+  title: string;
+}) {
+  return (
+    <Stack spacing={1}>
+      <Typography variant="subtitle2">{title}</Typography>
+      {children}
+    </Stack>
+  );
+}
+
+function RoleChipList({ labels }: { labels: string[] }) {
+  if (labels.length === 0) {
+    return (
+      <Typography
+        className="ph-unmask"
+        variant="body2"
+        sx={{ fontWeight: 600 }}
+      >
+        None
       </Typography>
     );
   }
@@ -107,19 +258,8 @@ function ChipList({
   );
 }
 
-function DrawerSection({
-  children,
-  title,
-}: {
-  children: ReactNode;
-  title: string;
-}) {
-  return (
-    <Stack spacing={1}>
-      <Typography variant="subtitle2">{title}</Typography>
-      {children}
-    </Stack>
-  );
+function labelsText(labels: string[], emptyLabel: string) {
+  return labels.length === 0 ? emptyLabel : labels.join(', ');
 }
 
 function actionableMissingOccurrence(row: ApprovalLedgerRow | null) {
@@ -130,104 +270,104 @@ function actionableMissingOccurrence(row: ApprovalLedgerRow | null) {
   );
 }
 
-function actionableConfirmationOccurrence(row: ApprovalLedgerRow | null) {
-  return row?.occurrences.find(
-    (occurrence) =>
-      occurrence.status === 'completed' || occurrence.status === 'exempted'
-  );
-}
-
 export function ApprovalDetailsDrawerV2({
   row,
   open,
   onClose,
 }: ApprovalDetailsDrawerV2Props) {
+  const [selectedManagementMode, setSelectedManagementMode] =
+    useState<RequirementManagementMode | null>(null);
   const userLookup = useUserLookup();
+  const noteAuthorLookup = useNoteAuthorLookup();
+  const familyLookup = useFamilyLookup();
+  const family = familyLookup(familyIdFromRow(row));
+  const permissions = useFamilyPermissions(family);
   const workflowOccurrence = actionableMissingOccurrence(row);
-  const confirmationOccurrence = actionableConfirmationOccurrence(row);
-  const selectedOccurrence = workflowOccurrence ?? confirmationOccurrence;
   const completedOrExemptedOn = formatDate(row?.completedOrExemptedOn);
   const validUntil = formatDate(row?.validUntil);
-  const showSummary =
+  const hasMetadata =
     Boolean(row?.completedOrExemptedByUserId) ||
     Boolean(completedOrExemptedOn) ||
     Boolean(validUntil);
-  const evidenceItems = row
-    ? [
-        countLabel(row.linkedDocumentIds.length, 'document', 'documents'),
-        countLabel(row.noteIds.length + row.notes.length, 'note', 'notes'),
-      ]
-    : [];
+  const documents =
+    family?.uploadedDocuments?.filter((document) =>
+      row?.linkedDocumentIds.includes(document.uploadedDocumentId)
+    ) ?? [];
+  const notes =
+    family?.notes?.filter((note) => row?.noteIds.includes(note.id)) ?? [];
+  const canReadDocuments = permissions(Permission.ReadFamilyDocuments);
 
   return (
-    <Drawer
-      anchor="right"
-      aria-labelledby="approval-details-title"
-      open={open}
-      onClose={onClose}
-      slotProps={{
-        paper: {
-          sx: {
-            width: { xs: '100%', sm: 500, md: 560 },
-            p: 2,
-            pt: { xs: 7, sm: 8, md: 6 },
+    <>
+      <Drawer
+        anchor="right"
+        aria-labelledby="approval-details-title"
+        open={open}
+        onClose={onClose}
+        slotProps={{
+          paper: {
+            sx: {
+              width: { xs: '100%', sm: 500, md: 560 },
+              p: 2,
+              pt: { xs: 7, sm: 8, md: 6 },
+            },
           },
-        },
-      }}
-    >
-      {row && (
-        <Stack spacing={2}>
-          <Box
-            sx={{
-              display: 'flex',
-              alignItems: 'flex-start',
-              justifyContent: 'space-between',
-              gap: 1,
-            }}
-          >
-            <Box sx={{ minWidth: 0 }}>
-              <Typography
-                color="text.secondary"
-                sx={{ textTransform: 'uppercase' }}
-                variant="caption"
-              >
-                Approval Details
-              </Typography>
-              <Typography
-                id="approval-details-title"
-                className="ph-unmask"
-                variant="h5"
-              >
-                {row.requirementName}
-              </Typography>
-              <Chip
-                color={statusColor(row.status)}
-                label={statusLabels[row.status]}
-                size="small"
-                sx={{ mt: 1 }}
-              />
+        }}
+      >
+        {row && (
+          <Stack spacing={2}>
+            <Box
+              sx={{
+                display: 'flex',
+                alignItems: 'flex-start',
+                justifyContent: 'space-between',
+                gap: 1,
+              }}
+            >
+              <Box sx={{ minWidth: 0 }}>
+                <Typography
+                  color="text.secondary"
+                  sx={{ textTransform: 'uppercase' }}
+                  variant="caption"
+                >
+                  Requirement
+                </Typography>
+                <Typography
+                  id="approval-details-title"
+                  className="ph-unmask"
+                  variant="h5"
+                >
+                  {row.requirementName}
+                </Typography>
+                <Chip
+                  color={statusColor(row.status)}
+                  label={statusLabels[row.status]}
+                  size="small"
+                  sx={{ mt: 1 }}
+                />
+              </Box>
+              <IconButton aria-label="close approval details" onClick={onClose}>
+                <CloseIcon />
+              </IconButton>
             </Box>
-            <IconButton aria-label="close approval details" onClick={onClose}>
-              <CloseIcon />
-            </IconButton>
-          </Box>
 
-          <DrawerSection title="Applies To">
-            <ChipList
-              emptyLabel="No subject"
-              labels={row.appliesTo.map((subject) => subject.label)}
-            />
-          </DrawerSection>
+            <Stack spacing={1.25}>
+              <DetailField label="Applies To">
+                {labelsText(
+                  row.appliesTo.map((subject) => subject.label),
+                  'No subject'
+                )}
+              </DetailField>
 
-          <DrawerSection title="Needed For Roles">
-            <ChipList emptyLabel="None" labels={row.neededForRoleLabels} />
-          </DrawerSection>
+              <Box>
+                <Typography color="text.secondary" variant="caption">
+                  Needed For Roles
+                </Typography>
+                <RoleChipList labels={row.neededForRoleLabels} />
+              </Box>
 
-          {showSummary && (
-            <>
-              <Divider />
-              <DrawerSection title="Summary">
-                <Stack spacing={1}>
+              {hasMetadata && (
+                <>
                   {row.completedOrExemptedByUserId && (
                     <DetailField label="Completed/Exempted By">
                       <PersonName
@@ -243,31 +383,61 @@ export function ApprovalDetailsDrawerV2({
                   {validUntil && (
                     <DetailField label="Valid Until">{validUntil}</DetailField>
                   )}
-                </Stack>
-              </DrawerSection>
-            </>
-          )}
-
-          <Divider />
-
-          <DrawerSection title="Workflow">
-            <ApprovalRequirementWorkflowV2
-              occurrence={selectedOccurrence}
-              onSuccess={onClose}
-            />
-          </DrawerSection>
-
-          <Divider />
-
-          <DrawerSection title="Evidence">
-            <Stack spacing={0.5}>
-              <DetailField label="Documents">{evidenceItems[0]}</DetailField>
-              <DetailField label="Notes">{evidenceItems[1]}</DetailField>
+                </>
+              )}
             </Stack>
-          </DrawerSection>
 
-        </Stack>
-      )}
-    </Drawer>
+            {workflowOccurrence && (
+              <Stack
+                direction="row"
+                spacing={1}
+                sx={{ flexWrap: 'wrap', gap: 1 }}
+              >
+                <Button
+                  disabled={
+                    !permissions(Permission.EditApprovalRequirementCompletion)
+                  }
+                  onClick={() => setSelectedManagementMode('complete')}
+                  variant="contained"
+                >
+                  Complete
+                </Button>
+                <Button
+                  disabled={
+                    !permissions(Permission.EditApprovalRequirementExemption)
+                  }
+                  onClick={() => setSelectedManagementMode('grantExemption')}
+                  variant="contained"
+                >
+                  Exempt
+                </Button>
+              </Stack>
+            )}
+
+            <DrawerSection title="Documents">
+              <DocumentList
+                canReadDocuments={canReadDocuments}
+                documents={documents}
+                userLookup={userLookup}
+              />
+            </DrawerSection>
+
+            <DrawerSection title="Notes">
+              <NoteList
+                noteAuthorLookup={noteAuthorLookup}
+                notes={notes}
+                textNotes={row.notes}
+              />
+            </DrawerSection>
+          </Stack>
+        )}
+      </Drawer>
+      <RequirementManagementDrawerV2
+        mode={selectedManagementMode}
+        occurrence={workflowOccurrence}
+        open={selectedManagementMode !== null}
+        onClose={() => setSelectedManagementMode(null)}
+      />
+    </>
   );
 }

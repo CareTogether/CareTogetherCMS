@@ -1,4 +1,13 @@
-import { Box, Button, Stack, Typography } from '@mui/material';
+import {
+  Button,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogContentText,
+  DialogTitle,
+  Stack,
+  Typography,
+} from '@mui/material';
 import { useState } from 'react';
 import { Person, RoleRemoval, RoleRemovalReason } from '../GeneratedClient';
 import { useBackdrop } from '../Hooks/useBackdrop';
@@ -23,7 +32,11 @@ export function RoleResetSectionV2({
 }: RoleResetSectionV2Props) {
   const volunteers = useVolunteersModel();
   const withBackdrop = useBackdrop();
+  const [confirmOpen, setConfirmOpen] = useState(false);
   const [saving, setSaving] = useState(false);
+  const participantName = person
+    ? `${person.firstName} ${person.lastName}`
+    : 'this family';
 
   async function resetParticipation() {
     setSaving(true);
@@ -43,6 +56,7 @@ export function RoleResetSectionV2({
 
         onSuccess();
       });
+      setConfirmOpen(false);
     } finally {
       setSaving(false);
     }
@@ -50,13 +64,6 @@ export function RoleResetSectionV2({
 
   return (
     <Stack spacing={1.5}>
-      <Typography color="text.secondary" variant="body2">
-        Reset participation for{' '}
-        <Box component="span" className="ph-unmask">
-          {person ? `${person.firstName} ${person.lastName}` : 'this family'}
-        </Box>{' '}
-        in the {role} role.
-      </Typography>
       <Typography color="text.secondary" variant="body2">
         Current removal reason: {RoleRemovalReason[roleRemoval.reason!]}
         {roleRemoval.additionalComments
@@ -69,13 +76,37 @@ export function RoleResetSectionV2({
         </Button>
         <Button
           aria-busy={saving}
+          color="error"
           disabled={saving}
-          onClick={() => void resetParticipation()}
+          onClick={() => setConfirmOpen(true)}
           variant="contained"
         >
           {saving ? 'Resetting...' : 'Reset Participation'}
         </Button>
       </Stack>
+      <Dialog open={confirmOpen} onClose={() => setConfirmOpen(false)}>
+        <DialogTitle>Reset participation?</DialogTitle>
+        <DialogContent>
+          <DialogContentText>
+            This will restore the {role} role for {participantName} and remove
+            the current participation removal.
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button disabled={saving} onClick={() => setConfirmOpen(false)}>
+            Cancel
+          </Button>
+          <Button
+            aria-busy={saving}
+            color="error"
+            disabled={saving}
+            onClick={() => void resetParticipation()}
+            variant="contained"
+          >
+            {saving ? 'Resetting...' : 'Reset Participation'}
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Stack>
   );
 }
