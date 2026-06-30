@@ -78,7 +78,7 @@ export function RoleSummaryCardV2({ card, onClick }: RoleSummaryCardV2Props) {
         <Typography
           className="ph-unmask"
           color="text.secondary"
-          variant="caption"
+          variant="body2"
         >
           {card.subject.label}
         </Typography>
