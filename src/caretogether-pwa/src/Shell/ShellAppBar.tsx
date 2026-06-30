@@ -65,14 +65,21 @@ export function ShellAppBar({
           <Box sx={{ display: 'flex', alignItems: 'center' }}>
             {menuDrawerOpen ? (
               <Box
-                sx={{ width: drawerWidth, flexShrink: 0, position: 'relative' }}
+                sx={{
+                  width: drawerWidth,
+                  flexShrink: 0,
+                  display: 'flex',
+                  alignItems: 'flex-start',
+                }}
               >
-                <ShellContextSwitcher />
+                <Box sx={{ flex: 1, minWidth: 0, overflow: 'hidden' }}>
+                  <ShellContextSwitcher contained />
+                </Box>
                 <IconButton
                   size={isDesktop ? 'medium' : 'large'}
                   color="inherit"
                   aria-label="close drawer"
-                  sx={{ float: 'right' }}
+                  sx={{ flexShrink: 0 }}
                   onClick={() => setMenuDrawerOpen(!menuDrawerOpen)}
                 >
                   <MenuOpen />
