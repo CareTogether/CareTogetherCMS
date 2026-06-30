@@ -73,6 +73,23 @@ import {
 import { AssignmentRoleFilters } from '../FunctionAssignments/AssignmentRoleFilters';
 
 const PARTNERING_FAMILIES_SORT_STORAGE_KEY = 'partnering-families-sortMode';
+const ARRANGEMENTS_FILTER_STORAGE_KEY = 'partnering-families-arrangementsFilter';
+
+function normalizeArrangementsFilter(
+  value: ArrangementsFilter | null | undefined
+): ArrangementsFilter {
+  switch (value) {
+    case 'All':
+    case 'Intake':
+    case 'Active':
+    case 'Setup':
+    case 'Active + Setup':
+      return value;
+
+    default:
+      return 'All';
+  }
+}
 
 function isSetupOrActiveArrangementPhase(phase: ArrangementPhase | undefined) {
   return (
@@ -207,11 +224,23 @@ function PartneringFamilies() {
     }
   };
 
-  const [arrangementsFilter, setArrangementsFilter] =
-    useLocalStorage<ArrangementsFilter>(
-      'partnering-families-arrangementsFilter',
+  const [storedArrangementsFilter, setStoredArrangementsFilter] =
+    useLocalStorage<ArrangementsFilter | null>(
+      ARRANGEMENTS_FILTER_STORAGE_KEY,
       'All'
     );
+  const arrangementsFilter = normalizeArrangementsFilter(
+    storedArrangementsFilter
+  );
+
+  function setArrangementsFilter(value: ArrangementsFilter | null) {
+    if (value === null) {
+      return;
+    }
+
+    setStoredArrangementsFilter(value);
+  }
+
   const sortedPartneringFamilies = React.useMemo(
     () =>
       sortPartneringFamilies(
