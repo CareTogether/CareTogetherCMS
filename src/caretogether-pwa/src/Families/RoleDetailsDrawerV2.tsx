@@ -168,33 +168,29 @@ function personLabel(person: Person | undefined) {
   return [person?.firstName, person?.lastName].filter(Boolean).join(' ') || 'Adult';
 }
 
+function adultPerson(
+  family: CombinedFamilyInfo | undefined,
+  personId: string | undefined
+) {
+  return family?.family?.adults?.find((adult) => adult.item1?.id === personId)?.item1;
+}
+
 function buildRoleParticipants(
   family: CombinedFamilyInfo | undefined,
-  roleName: string
+  role: RoleSummaryCard | RemovedRoleSummary
 ) {
   const volunteerInfo = family?.volunteerFamilyInfo;
+  const roleName = role.roleName;
 
   if (!volunteerInfo) {
     return [];
   }
 
-  const participants: RoleParticipant[] = [];
-  const familyRemoval = activeRoleRemoval(volunteerInfo.roleRemovals, roleName);
-  const familyApproval = volunteerInfo.familyRoleApprovals?.[roleName];
-
-  if (familyRemoval) {
-    participants.push({
-      id: 'family',
-      label: 'Family',
-      state: stateFromRoleRemoval(familyRemoval),
-    });
-  } else if (roleApprovalIsActive(familyApproval)) {
-    participants.push({
-      id: 'family',
-      label: 'Family',
-      state: 'active',
-    });
+  if (role.subject.scope === 'person') {
+    return [];
   }
+
+  const participants: RoleParticipant[] = [];
 
   Object.entries(volunteerInfo.individualVolunteers ?? {}).forEach(
     ([personId, individualVolunteer]) => {
@@ -202,15 +198,14 @@ function buildRoleParticipants(
         individualVolunteer.roleRemovals,
         roleName
       );
-      const approval = individualVolunteer.approvalStatusByRole?.[roleName];
+      const person = adultPerson(family, personId);
+      const participatesInFamilyRole =
+        person?.active &&
+        roleApprovalIsActive(volunteerInfo.familyRoleApprovals?.[roleName]);
 
-      if (!removal && !roleApprovalIsActive(approval)) {
+      if (!removal && !participatesInFamilyRole) {
         return;
       }
-
-      const person = family.family?.adults?.find(
-        (adult) => adult.item1?.id === personId
-      )?.item1;
 
       participants.push({
         id: personId,
@@ -403,7 +398,36 @@ export function RoleDetailsDrawerV2({
   const removedDate = removedRole?.roleRemoval.effectiveSince
     ? formatUtcDateOnly(removedRole.roleRemoval.effectiveSince)
     : undefined;
-  const participants = role ? buildRoleParticipants(family, role.roleName) : [];
+  const participants = role ? buildRoleParticipants(family, role) : [];
+  const headerActions = (() => {
+    if (card) {
+      return (
+        <Stack direction="row" spacing={1} sx={{ flexWrap: 'wrap', gap: 1 }}>
+          <RoleActionButton
+            disabled={!canRemoveRole}
+            label="Remove Role"
+            onClick={() => setSelectedRoleAction('remove')}
+          />
+          <RoleActionButton
+            label="Complete Other"
+            onClick={() => setSelectedRoleAction('completeOther')}
+          />
+        </Stack>
+      );
+    }
+
+    if (removedRole) {
+      return (
+        <RoleActionButton
+          disabled={!canEditRoleParticipation}
+          label="Reset Participation"
+          onClick={() => setSelectedRoleAction('resetParticipation')}
+        />
+      );
+    }
+
+    return null;
+  })();
 
   useEffect(() => {
     setSelectedRequirementRow(null);
@@ -441,7 +465,7 @@ export function RoleDetailsDrawerV2({
                 gap: 1,
               }}
             >
-              <Box sx={{ minWidth: 0 }}>
+              <Box sx={{ minWidth: 0, flex: 1 }}>
                 <Typography
                   color="text.secondary"
                   sx={{ textTransform: 'uppercase' }}
@@ -463,35 +487,47 @@ export function RoleDetailsDrawerV2({
                 >
                   {role.subject.label}
                 </Typography>
-                {card ? (
-                  <Stack direction="row" spacing={1} sx={{ mt: 1 }}>
-                    <Chip
-                      color={roleStatusColor(card.status)}
-                      label={statusLabel(card.status)}
-                      size="small"
-                    />
-                    {effectiveDate && (
+                <Box
+                  sx={{
+                    alignItems: 'center',
+                    display: 'flex',
+                    flexWrap: 'wrap',
+                    gap: 1,
+                    justifyContent: 'space-between',
+                    mt: 1,
+                  }}
+                >
+                  {card ? (
+                    <Stack direction="row" spacing={1}>
                       <Chip
-                        className="ph-unmask"
-                        label={effectiveDate}
+                        color={roleStatusColor(card.status)}
+                        label={statusLabel(card.status)}
                         size="small"
-                        variant="outlined"
                       />
-                    )}
-                  </Stack>
-                ) : (
-                  <Stack direction="row" spacing={1} sx={{ mt: 1 }}>
-                    <Chip color="default" label="Removed" size="small" />
-                    {removedDate && (
-                      <Chip
-                        className="ph-unmask"
-                        label={removedDate}
-                        size="small"
-                        variant="outlined"
-                      />
-                    )}
-                  </Stack>
-                )}
+                      {effectiveDate && (
+                        <Chip
+                          className="ph-unmask"
+                          label={effectiveDate}
+                          size="small"
+                          variant="outlined"
+                        />
+                      )}
+                    </Stack>
+                  ) : (
+                    <Stack direction="row" spacing={1}>
+                      <Chip color="default" label="Removed" size="small" />
+                      {removedDate && (
+                        <Chip
+                          className="ph-unmask"
+                          label={removedDate}
+                          size="small"
+                          variant="outlined"
+                        />
+                      )}
+                    </Stack>
+                  )}
+                  {headerActions}
+                </Box>
               </Box>
               <IconButton aria-label="close role details" onClick={onClose}>
                 <CloseIcon />
@@ -535,32 +571,6 @@ export function RoleDetailsDrawerV2({
               </>
             )}
 
-            <Stack
-              direction="row"
-              spacing={1}
-              sx={{ flexWrap: 'wrap', gap: 1 }}
-            >
-              {card && (
-                <>
-                  <RoleActionButton
-                    disabled={!canRemoveRole}
-                    label="Remove Role"
-                    onClick={() => setSelectedRoleAction('remove')}
-                  />
-                  <RoleActionButton
-                    label="Complete Other"
-                    onClick={() => setSelectedRoleAction('completeOther')}
-                  />
-                </>
-              )}
-              {removedRole && (
-                <RoleActionButton
-                  disabled={!canEditRoleParticipation}
-                  label="Reset Participation"
-                  onClick={() => setSelectedRoleAction('resetParticipation')}
-                />
-              )}
-            </Stack>
           </Stack>
         )}
       </Drawer>

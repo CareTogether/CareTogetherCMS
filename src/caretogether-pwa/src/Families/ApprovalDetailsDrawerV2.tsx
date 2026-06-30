@@ -262,11 +262,13 @@ function labelsText(labels: string[], emptyLabel: string) {
   return labels.length === 0 ? emptyLabel : labels.join(', ');
 }
 
-function actionableMissingOccurrence(row: ApprovalLedgerRow | null) {
+function actionableOccurrence(row: ApprovalLedgerRow | null) {
   return row?.occurrences.find(
     (occurrence) =>
       occurrence.status === 'missing' ||
-      occurrence.status === 'availableApplication'
+      occurrence.status === 'availableApplication' ||
+      occurrence.status === 'completed' ||
+      occurrence.status === 'exempted'
   );
 }
 
@@ -282,7 +284,7 @@ export function ApprovalDetailsDrawerV2({
   const familyLookup = useFamilyLookup();
   const family = familyLookup(familyIdFromRow(row));
   const permissions = useFamilyPermissions(family);
-  const workflowOccurrence = actionableMissingOccurrence(row);
+  const workflowOccurrence = actionableOccurrence(row);
   const completedOrExemptedOn = formatDate(row?.completedOrExemptedOn);
   const validUntil = formatDate(row?.validUntil);
   const hasMetadata =
@@ -296,6 +298,61 @@ export function ApprovalDetailsDrawerV2({
   const notes =
     family?.notes?.filter((note) => row?.noteIds.includes(note.id)) ?? [];
   const canReadDocuments = permissions(Permission.ReadFamilyDocuments);
+  const headerActions = (() => {
+    if (!workflowOccurrence) {
+      return null;
+    }
+
+    if (
+      workflowOccurrence.status === 'missing' ||
+      workflowOccurrence.status === 'availableApplication'
+    ) {
+      return (
+        <Stack direction="row" spacing={1} sx={{ flexWrap: 'wrap', gap: 1 }}>
+          <Button
+            disabled={
+              !permissions(Permission.EditApprovalRequirementCompletion)
+            }
+            onClick={() => setSelectedManagementMode('complete')}
+            variant="contained"
+          >
+            Complete
+          </Button>
+          <Button
+            disabled={!permissions(Permission.EditApprovalRequirementExemption)}
+            onClick={() => setSelectedManagementMode('grantExemption')}
+            variant="contained"
+          >
+            Exempt
+          </Button>
+        </Stack>
+      );
+    }
+
+    if (workflowOccurrence.status === 'completed') {
+      return (
+        <Button
+          color="error"
+          disabled={!permissions(Permission.EditApprovalRequirementCompletion)}
+          onClick={() => setSelectedManagementMode('markIncomplete')}
+          variant="contained"
+        >
+          Mark Incomplete
+        </Button>
+      );
+    }
+
+    return (
+      <Button
+        color="error"
+        disabled={!permissions(Permission.EditApprovalRequirementExemption)}
+        onClick={() => setSelectedManagementMode('removeExemption')}
+        variant="contained"
+      >
+        Remove Exemption
+      </Button>
+    );
+  })();
 
   return (
     <>
@@ -324,7 +381,7 @@ export function ApprovalDetailsDrawerV2({
                 gap: 1,
               }}
             >
-              <Box sx={{ minWidth: 0 }}>
+              <Box sx={{ minWidth: 0, flex: 1 }}>
                 <Typography
                   color="text.secondary"
                   sx={{ textTransform: 'uppercase' }}
@@ -339,12 +396,23 @@ export function ApprovalDetailsDrawerV2({
                 >
                   {row.requirementName}
                 </Typography>
-                <Chip
-                  color={statusColor(row.status)}
-                  label={statusLabels[row.status]}
-                  size="small"
-                  sx={{ mt: 1 }}
-                />
+                <Box
+                  sx={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    gap: 1,
+                    mt: 1,
+                    flexWrap: 'wrap',
+                  }}
+                >
+                  <Chip
+                    color={statusColor(row.status)}
+                    label={statusLabels[row.status]}
+                    size="small"
+                  />
+                  {headerActions}
+                </Box>
               </Box>
               <IconButton aria-label="close approval details" onClick={onClose}>
                 <CloseIcon />
@@ -386,33 +454,6 @@ export function ApprovalDetailsDrawerV2({
                 </>
               )}
             </Stack>
-
-            {workflowOccurrence && (
-              <Stack
-                direction="row"
-                spacing={1}
-                sx={{ flexWrap: 'wrap', gap: 1 }}
-              >
-                <Button
-                  disabled={
-                    !permissions(Permission.EditApprovalRequirementCompletion)
-                  }
-                  onClick={() => setSelectedManagementMode('complete')}
-                  variant="contained"
-                >
-                  Complete
-                </Button>
-                <Button
-                  disabled={
-                    !permissions(Permission.EditApprovalRequirementExemption)
-                  }
-                  onClick={() => setSelectedManagementMode('grantExemption')}
-                  variant="contained"
-                >
-                  Exempt
-                </Button>
-              </Stack>
-            )}
 
             <DrawerSection title="Documents">
               <DocumentList

@@ -139,6 +139,19 @@ function matchingRoleRemoval(
   );
 }
 
+function roleExistsInApprovalMap(
+  roleApprovals:
+    | Record<string, FamilyRoleApprovalStatus | IndividualRoleApprovalStatus>
+    | undefined,
+  role: string
+) {
+  const normalizedRole = roleKey(role);
+
+  return Object.keys(roleApprovals ?? {}).some(
+    (roleName) => roleKey(roleName) === normalizedRole
+  );
+}
+
 function roleNamesFromMissingRequirement(
   requirement: ValueTupleOfStringAndValueTuple_2Of
 ) {
@@ -391,16 +404,23 @@ function buildCardsForSubject<T extends FamilyRoleApprovalStatus | IndividualRol
 
 function buildRemovedRolesForSubject({
   context,
+  includeRoleRemoval,
   roleRemovals,
   subject,
 }: {
   context: RequirementContext;
+  includeRoleRemoval?: (roleRemoval: RoleRemoval) => boolean;
   roleRemovals: RoleRemoval[] | undefined;
   subject: RoleSummarySubject;
 }) {
   return (
     roleRemovals
-      ?.filter((roleRemoval) => roleRemoval.roleName && !roleRemoval.effectiveUntil)
+      ?.filter(
+        (roleRemoval) =>
+          roleRemoval.roleName &&
+          !roleRemoval.effectiveUntil &&
+          (includeRoleRemoval?.(roleRemoval) ?? true)
+      )
       .map(
         (roleRemoval): RemovedRoleSummary => ({
           id: removedRoleSummaryId(subject, roleRemoval.roleName!, roleRemoval),
@@ -470,6 +490,11 @@ export function buildRemovedRoleSummaries(input: BuildRoleSummaryCardsInput) {
     input.individuals?.flatMap((individual) =>
       buildRemovedRolesForSubject({
         context: individual.context,
+        includeRoleRemoval: (roleRemoval) =>
+          roleExistsInApprovalMap(
+            individual.approvalStatusByRole,
+            roleRemoval.roleName ?? ''
+          ),
         roleRemovals: individual.roleRemovals,
         subject: individual.subject,
       })

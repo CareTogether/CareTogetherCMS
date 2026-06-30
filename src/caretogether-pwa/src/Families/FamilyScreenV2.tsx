@@ -436,8 +436,8 @@ export function FamilyScreenV2() {
   const [selectedRemovedRoleId, setSelectedRemovedRoleId] = useState<
     string | null
   >(null);
-  const [selectedTab, setSelectedTab] = useState(
-    arrangementIdFromNavigation ? 1 : 0
+  const [selectedTab, setSelectedTab] = useState<FamilyScreenTabValue>(
+    arrangementIdFromNavigation ? 'arrangementsOrAssignments' : 'overview'
   );
   const [arrangementIdToScrollTo, setArrangementIdToScrollTo] = useState(
     arrangementIdFromNavigation
@@ -515,7 +515,7 @@ export function FamilyScreenV2() {
   useEffect(() => {
     if (!arrangementIdFromNavigation) return;
 
-    setSelectedTab(1);
+    setSelectedTab('arrangementsOrAssignments');
     setArrangementIdToScrollTo(arrangementIdFromNavigation);
   }, [arrangementIdFromNavigation]);
 
