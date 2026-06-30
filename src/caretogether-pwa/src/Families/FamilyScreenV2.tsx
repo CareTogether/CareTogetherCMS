@@ -26,7 +26,6 @@ import {
   TableRow,
   Tab,
   Tabs,
-  Tooltip,
   FormControl,
   InputLabel,
   Select,
@@ -53,7 +52,6 @@ import {
   AddCircle as AddCircleIcon,
   Check as CheckIcon,
   CloudUpload as CloudUploadIcon,
-  ContentCopy as ContentCopyIcon,
   DeleteForever as DeleteForeverIcon,
   Diversity3 as Diversity3Icon,
   Edit as EditIcon,
@@ -64,8 +62,6 @@ import {
   PersonPinCircle as PersonPinCircleIcon,
   Phone as PhoneIcon,
 } from '@mui/icons-material';
-import { AdultCard } from './AdultCard';
-import { ChildCard } from './ChildCard';
 import { useEffect, useRef, useState } from 'react';
 import { AddAdultDialog } from './AddAdultDialog';
 import { AddChildDialog } from './AddChildDialog';
@@ -81,7 +77,6 @@ import {
   useFamilyPermissions,
   useGlobalPermissions,
 } from '../Model/SessionModel';
-import { Masonry } from '@mui/lab';
 import { MissingRequirementRow } from '../Requirements/MissingRequirementRow';
 import { ExemptedRequirementRow } from '../Requirements/ExemptedRequirementRow';
 import { CompletedRequirementRow } from '../Requirements/CompletedRequirementRow';
@@ -145,6 +140,10 @@ import { accountInfoState } from '../Authentication/Auth';
 import { AddEditV1ReferralNoteDialog } from '../V1Referrals/AddEditV1ReferralNoteDialog';
 import { ApproveV1ReferralNoteDialog } from '../V1Referrals/ApproveV1ReferralNoteDialog';
 import { DiscardV1ReferralNoteDialog } from '../V1Referrals/DiscardV1ReferralNoteDialog';
+import { ContactInfoCopyButton } from './ContactInfoCopyButton';
+import { FamilyMemberDrawerV2 } from './FamilyMemberDrawerV2';
+import { FamilyMembersTableV2 } from './FamilyMembersTableV2';
+import { buildFamilyMemberRows } from './familyMemberViewModel';
 
 type CustomFieldRenderInfo = CompletedCustomFieldInfo | string;
 type ReferralNoteEntry = NonNullable<V1Referral['notes']>[number];
@@ -241,48 +240,6 @@ function recentActivityIcon(activity: Activity): RecentOverviewTimelineItem['ico
   return 'edit';
 }
 
-type ContactInfoCopyButtonProps = {
-  value: string;
-  label: string;
-  onCopied: (message: string) => void;
-};
-
-function ContactInfoCopyButton({
-  value,
-  label,
-  onCopied,
-}: ContactInfoCopyButtonProps) {
-  const [copied, setCopied] = useState(false);
-
-  async function handleCopy() {
-    try {
-      await navigator.clipboard.writeText(value);
-      setCopied(true);
-      onCopied(`${label} copied`);
-      setTimeout(() => setCopied(false), 1500);
-    } catch {
-      onCopied(`Unable to copy ${label.toLowerCase()}`);
-    }
-  }
-
-  return (
-    <Tooltip title={copied ? 'Copied' : `Copy ${label.toLowerCase()}`}>
-      <IconButton
-        size="small"
-        aria-label={`copy ${label.toLowerCase()}`}
-        onClick={() => void handleCopy()}
-        sx={{ p: 0.25 }}
-      >
-        {copied ? (
-          <CheckIcon color="success" fontSize="small" />
-        ) : (
-          <ContentCopyIcon fontSize="small" />
-        )}
-      </IconButton>
-    </Tooltip>
-  );
-}
-
 export function FamilyScreenV2() {
   const familyIdMaybe = useParams<{ familyId: string }>();
   const familyId = familyIdMaybe.familyId as string;
@@ -342,6 +299,25 @@ export function FamilyScreenV2() {
 
   const permissions = useFamilyPermissions(family);
   const globalPermissions = useGlobalPermissions();
+  const familyMemberRows = useMemo(
+    () =>
+      family
+        ? buildFamilyMemberRows({
+            family,
+            permissions,
+          })
+        : [],
+    [family, permissions]
+  );
+  const [selectedFamilyMemberId, setSelectedFamilyMemberId] = useState<
+    string | null
+  >(null);
+  const selectedFamilyMemberRow = useMemo(
+    () =>
+      familyMemberRows.find((row) => row.id === selectedFamilyMemberId) ??
+      null,
+    [familyMemberRows, selectedFamilyMemberId]
+  );
 
   const canCloseV1Case =
     family?.partneringFamilyInfo?.openV1Case &&
@@ -558,7 +534,6 @@ export function FamilyScreenV2() {
 
   const theme = useTheme();
   const isDesktop = useMediaQuery(theme.breakpoints.up('sm'));
-  const isWideScreen = useMediaQuery(theme.breakpoints.up('xl'));
 
   const updateTestFamilyFlagEnabled = useFeatureFlagEnabled(
     'updateTestFamilyFlag'
@@ -2077,36 +2052,20 @@ export function FamilyScreenV2() {
               <Typography className="ph-unmask" variant="h3" sx={{ mb: 1 }}>
                 Family Members
               </Typography>
-              <Masonry
-                columns={isDesktop ? (isWideScreen ? 3 : 2) : 1}
-                spacing={2}
-              >
-                {family.family?.adults?.map(
-                  (adult) =>
-                    adult.item1 &&
-                    adult.item1.id &&
-                    adult.item1.active &&
-                    adult.item2 && (
-                      <AdultCard
-                        key={adult.item1.id}
-                        familyId={familyId}
-                        personId={adult.item1.id}
-                        showCustomFields
-                      />
-                    )
-                )}
-                {family.family?.children?.map(
-                  (child) =>
-                    child.active && (
-                      <ChildCard
-                        key={child.id!}
-                        familyId={familyId}
-                        personId={child.id!}
-                        showCustomFields
-                      />
-                    )
-                )}
-              </Masonry>
+              <FamilyMembersTableV2
+                rows={familyMemberRows}
+                onCopied={setAndShowGlobalSnackBar}
+                onRowClick={(row) => setSelectedFamilyMemberId(row.id)}
+              />
+              {family && (
+                <FamilyMemberDrawerV2
+                  familyId={familyId}
+                  family={family}
+                  row={selectedFamilyMemberRow}
+                  open={selectedFamilyMemberRow !== null}
+                  onClose={() => setSelectedFamilyMemberId(null)}
+                />
+              )}
             </Grid>
             <Grid
               item
