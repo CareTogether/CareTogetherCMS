@@ -81,7 +81,7 @@ export function ReferralTimeline({
             >
               <Box sx={{ color: 'text.disabled', mb: 0.5 }}>
                 <span style={{ marginRight: 16 }}>
-                  {format(item.timestamp, 'M/d/yy h:mm a')}
+                  {format(item.timestamp, 'M/d/yy')}
                 </span>
                 {item.userId ? (
                   <PersonName person={userLookup(item.userId)} />

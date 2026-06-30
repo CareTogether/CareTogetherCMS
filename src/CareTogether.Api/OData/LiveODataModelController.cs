@@ -14,6 +14,7 @@ using CareTogether.Resources.Accounts;
 using CareTogether.Resources.Directory;
 using CareTogether.Resources.Policies;
 using CareTogether.Resources.V1Cases;
+using CareTogether.Resources.V1Referrals;
 using LazyCache;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -152,8 +153,8 @@ namespace CareTogether.Api.OData
         [property: Key] string Name
     );
 
-    public sealed record Referral(
-        [property: Key] Guid Id,
+    public sealed record Case(
+        [property: Key] Guid CaseId,
         [property: ForeignKey("OrganizationId")] Organization Organization,
         [property: Key] Guid OrganizationId,
         [property: ForeignKey("LocationId")] Location Location,
@@ -167,6 +168,21 @@ namespace CareTogether.Api.OData
         string? PrimaryReasonForReferral
     );
 
+    public sealed record Referral(
+        [property: Key] Guid ReferralId,
+        [property: Key] Guid OrganizationId,
+        [property: Key] Guid LocationId,
+        Guid? FamilyId,
+        Guid? CaseId,
+        DateTime CreatedAtUtc,
+        string Title,
+        V1ReferralStatus Status,
+        string? Comment,
+        DateTime? AcceptedAtUtc,
+        DateTime? ClosedAtUtc,
+        string? CloseReason
+    );
+
     public sealed record Arrangement(
         [property: Key] Guid Id,
         [property: ForeignKey("OrganizationId")] Organization Organization,
@@ -175,8 +191,8 @@ namespace CareTogether.Api.OData
         [property: Key] Guid LocationId,
         [property: ForeignKey("TypeName")] ArrangementType Type,
         string TypeName,
-        [property: ForeignKey("ReferralId")] Referral Referral,
-        Guid ReferralId,
+        [property: ForeignKey("CaseId")] Case Case,
+        Guid CaseId,
         [property: ForeignKey("PersonId")] Person? Person,
         Guid? PersonId,
         DateOnly Requested,
@@ -316,6 +332,7 @@ namespace CareTogether.Api.OData
         IEnumerable<FamilyRoleApproval> FamilyRoleApprovals,
         IEnumerable<IndividualRoleApproval> IndividualRoleApprovals,
         IEnumerable<FamilyRoleRemovedIndividual> FamilyRoleRemovedIndividuals,
+        IEnumerable<Case> Cases,
         IEnumerable<Referral> Referrals,
         IEnumerable<Arrangement> Arrangements,
         IEnumerable<ArrangementType> ArrangementTypes,
@@ -416,7 +433,14 @@ namespace CareTogether.Api.OData
             return liveModel.FamilyRoleRemovedIndividuals;
         }
 
-        [HttpGet("Referral")]
+        [HttpGet("Cases")]
+        public async Task<IEnumerable<Case>> GetCasesAsync()
+        {
+            var liveModel = await RenderLiveModelAsync();
+            return liveModel.Cases;
+        }
+
+        [HttpGet("Referrals")]
         public async Task<IEnumerable<Referral>> GetReferralsAsync()
         {
             var liveModel = await RenderLiveModelAsync();
@@ -568,6 +592,7 @@ namespace CareTogether.Api.OData
                     Enumerable.Empty<FamilyRoleApproval>(),
                     Enumerable.Empty<IndividualRoleApproval>(),
                     Enumerable.Empty<FamilyRoleRemovedIndividual>(),
+                    Enumerable.Empty<Case>(),
                     Enumerable.Empty<Referral>(),
                     Enumerable.Empty<Arrangement>(),
                     Enumerable.Empty<ArrangementType>(),
@@ -591,6 +616,7 @@ namespace CareTogether.Api.OData
                         acc.FamilyRoleApprovals.Concat(model.FamilyRoleApprovals),
                         acc.IndividualRoleApprovals.Concat(model.IndividualRoleApprovals),
                         acc.FamilyRoleRemovedIndividuals.Concat(model.FamilyRoleRemovedIndividuals),
+                        acc.Cases.Concat(model.Cases),
                         acc.Referrals.Concat(model.Referrals),
                         acc.Arrangements.Concat(model.Arrangements),
                         acc.ArrangementTypes.Concat(model.ArrangementTypes),
@@ -726,6 +752,16 @@ namespace CareTogether.Api.OData
                 )
                 .ToArray();
 
+            var referralsByLocation = visibleAggregatesByLocation
+                .Where(zipResult => zipResult.Item2 is ReferralRecordsAggregate)
+                .Select(zipResult =>
+                    (
+                        zipResult.Item1.location,
+                        ((ReferralRecordsAggregate)zipResult.Item2).Referral.Referral
+                    )
+                )
+                .ToArray();
+
             var familiesWithInfo = familiesByLocation
                 .Select(x => RenderFamily(organization, x.Item1, x.Item2.Family))
                 .ToArray();
@@ -835,8 +871,36 @@ namespace CareTogether.Api.OData
                 )
                 .ToArray();
 
-            var referrals = familiesWithInfo
-                .SelectMany(x => RenderReferrals(organization, x.Item1, x.Item2))
+            var cases = familiesWithInfo
+                .SelectMany(x => RenderCases(organization, x.Item1, x.Item2))
+                .ToArray();
+
+            var caseIdsByReferralId = familiesWithInfo
+                .SelectMany(x =>
+                    (x.Item1.PartneringFamilyInfo?.ClosedV1Cases ?? []).AddRange(
+                        x.Item1.PartneringFamilyInfo?.OpenV1Case == null
+                            ? []
+                            : [x.Item1.PartneringFamilyInfo.OpenV1Case]
+                    )
+                )
+                .SelectMany(v1Case =>
+                    v1Case.LinkedV1ReferralIds.Select(referralId =>
+                        (ReferralId: referralId, CaseId: v1Case.Id)
+                    )
+                )
+                .ToDictionary(link => link.ReferralId, link => link.CaseId);
+
+            var referrals = referralsByLocation
+                .Select(item =>
+                    RenderReferral(
+                        item.location,
+                        item.Referral,
+                        caseIdsByReferralId.TryGetValue(item.Referral.ReferralId, out var caseId)
+                            ? caseId
+                            : null,
+                        anonymize
+                    )
+                )
                 .ToArray();
 
             var arrangementTypes = locationPolicies
@@ -865,7 +929,7 @@ namespace CareTogether.Api.OData
                         x.Item1,
                         x.Item2,
                         people,
-                        referrals,
+                        cases,
                         arrangementTypes
                     )
                 )
@@ -1070,6 +1134,7 @@ namespace CareTogether.Api.OData
                 familyRoleApprovals,
                 individualRoleApprovals,
                 familyRoleRemovedIndividuals,
+                cases,
                 referrals,
                 arrangements,
                 arrangementTypes,
@@ -1996,7 +2061,7 @@ namespace CareTogether.Api.OData
                 ) ?? [];
         }
 
-        private static IEnumerable<Referral> RenderReferrals(
+        private static IEnumerable<Case> RenderCases(
             Organization organization,
             CombinedFamilyInfo familyInfo,
             Family family
@@ -2007,7 +2072,7 @@ namespace CareTogether.Api.OData
                     ? []
                     : new[] { familyInfo.PartneringFamilyInfo.OpenV1Case }
             );
-            return allReferralsInfo.Select(referralInfo => new Referral(
+            return allReferralsInfo.Select(referralInfo => new Case(
                 referralInfo.Id,
                 organization,
                 organization.Id,
@@ -2034,12 +2099,35 @@ namespace CareTogether.Api.OData
             ));
         }
 
+        private static Referral RenderReferral(
+            Location location,
+            V1Referral referral,
+            Guid? caseId,
+            bool anonymize
+        ) =>
+            new(
+                referral.ReferralId,
+                location.OrganizationId,
+                location.Id,
+                referral.FamilyId,
+                caseId,
+                referral.CreatedAtUtc,
+                anonymize ? $"anon_{referral.Title.Length}" : referral.Title,
+                referral.Status,
+                anonymize && referral.Comment != null
+                    ? $"anon_{referral.Comment.Length}"
+                    : referral.Comment,
+                referral.AcceptedAtUtc,
+                referral.ClosedAtUtc,
+                referral.CloseReason
+            );
+
         private static IEnumerable<Arrangement> RenderArrangements(
             Organization organization,
             CombinedFamilyInfo familyInfo,
             Family family,
             Person[] people,
-            Referral[] referrals,
+            Case[] cases,
             ArrangementType[] arrangementTypes
         )
         {
@@ -2050,7 +2138,7 @@ namespace CareTogether.Api.OData
             );
             return allReferralsInfo.SelectMany(referralInfo =>
             {
-                var referral = referrals.Single(r => r.Id == referralInfo.Id);
+                var caseRecord = cases.Single(c => c.CaseId == referralInfo.Id);
                 return referralInfo.Arrangements.Select(arrangement =>
                 {
                     var arrangementPerson = people.SingleOrDefault(p =>
@@ -2071,8 +2159,8 @@ namespace CareTogether.Api.OData
                             && type.LocationId == family.Location.Id
                         ),
                         arrangement.ArrangementType,
-                        referral,
-                        referral.Id,
+                        caseRecord,
+                        caseRecord.CaseId,
                         arrangementPerson,
                         arrangement.PartneringFamilyPersonId,
                         DateOnly.FromDateTime(arrangement.RequestedAtUtc),

@@ -18,7 +18,13 @@ import {
   selectedLocationContextState,
 } from '../Model/Data';
 
-export function ShellContextSwitcher() {
+interface ShellContextSwitcherProps {
+  contained?: boolean;
+}
+
+export function ShellContextSwitcher({
+  contained = false,
+}: ShellContextSwitcherProps) {
   const organizationConfiguration = useLoadable(organizationConfigurationQuery);
   const locationConfiguration = useLoadable(locationConfigurationQuery);
   const selectedLocationContext = useLoadable(selectedLocationContextState);
@@ -45,7 +51,13 @@ export function ShellContextSwitcher() {
   }
 
   return (
-    <Stack sx={{ position: 'absolute' }}>
+    <Stack
+      sx={{
+        position: contained ? 'static' : 'absolute',
+        minWidth: 0,
+        width: contained ? '100%' : undefined,
+      }}
+    >
       {organizationConfiguration ? (
         <Typography
           className="ph-unmask"
@@ -76,6 +88,8 @@ export function ShellContextSwitcher() {
               marginLeft: 0.5,
               marginTop: isDesktop ? -1 : 0,
               height: isDesktop ? 24 : 56,
+              minWidth: 0,
+              maxWidth: '100%',
               '& .MuiInputBase-input': {
                 backgroundColor: theme.palette.primary.main,
                 color: theme.palette.primary.contrastText,
@@ -83,6 +97,9 @@ export function ShellContextSwitcher() {
                 paddingBottom: isDesktop ? 0 : 2,
                 paddingLeft: isDesktop ? 0.5 : 2,
                 paddingRight: isDesktop ? 0.5 : 2,
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+                whiteSpace: 'nowrap',
               },
               '.MuiSelect-iconOutlined': {
                 color: theme.palette.primary.contrastText,
