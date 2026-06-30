@@ -1485,6 +1485,20 @@ export function FamilyScreenV2() {
         <Grid
           item
           xs={12}
+          sx={{ display: showTimelineAndNotes ? undefined : 'none' }}
+        >
+          {permissions(Permission.ViewV1CaseComments) && selectedV1Case && (
+            <Grid container spacing={0}>
+              <V1CaseComments
+                partneringFamily={family}
+                v1CaseId={selectedV1Case.id!}
+              />
+            </Grid>
+          )}
+        </Grid>
+        <Grid
+          item
+          xs={12}
           spacing={0}
           sx={{ display: showTimelineAndNotes ? undefined : 'none' }}
         >
@@ -1878,20 +1892,6 @@ export function FamilyScreenV2() {
               )}
             </Grid>
 
-            <Grid
-              item
-              md={12}
-              sx={{ display: showTimelineAndNotes ? undefined : 'none' }}
-            >
-              {permissions(Permission.ViewV1CaseComments) && selectedV1Case && (
-                <Grid container spacing={0}>
-                  <V1CaseComments
-                    partneringFamily={family}
-                    v1CaseId={selectedV1Case.id!}
-                  />
-                </Grid>
-              )}
-            </Grid>
           </Grid>
 
           <Grid container spacing={0} sx={{ order: 2 }}>

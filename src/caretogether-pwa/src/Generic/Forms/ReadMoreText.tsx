@@ -13,6 +13,11 @@ export const ReadMoreText = memo(function ReadMoreText({
   const [expanded, setExpanded] = useState(false);
   const [isOverflowing, setIsOverflowing] = useState(false);
   const textRef = useRef<HTMLDivElement>(null);
+  const textSx = {
+    whiteSpace: 'pre-wrap',
+    overflowWrap: 'break-word',
+    lineHeight: 1.45,
+  };
 
   useEffect(() => {
     // Check if content is overflowing by temporarily rendering without clamp
@@ -28,18 +33,20 @@ export const ReadMoreText = memo(function ReadMoreText({
   return (
     <Box>
       <Box sx={{ position: 'relative' }}>
-        <Collapse in={expanded} collapsedSize={`${limit * 1.45 * 1.5}em`}>
+        {isOverflowing ? (
+          <Collapse in={expanded} collapsedSize={`${limit * 1.45}em`}>
+            <Typography ref={textRef} sx={textSx}>
+              {text}
+            </Typography>
+          </Collapse>
+        ) : (
           <Typography
             ref={textRef}
-            sx={{
-              whiteSpace: 'pre-wrap',
-              overflowWrap: 'break-word',
-              lineHeight: 1.45,
-            }}
+            sx={textSx}
           >
             {text}
           </Typography>
-        </Collapse>
+        )}
         {!expanded && isOverflowing && (
           <Box
             sx={{
