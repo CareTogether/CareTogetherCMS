@@ -225,7 +225,9 @@ function recentActivityTitle(activity: Activity) {
   return 'Family activity';
 }
 
-function recentActivityIcon(activity: Activity): RecentOverviewTimelineItem['icon'] {
+function recentActivityIcon(
+  activity: Activity
+): RecentOverviewTimelineItem['icon'] {
   if (
     activity instanceof V1CaseRequirementCompleted ||
     activity instanceof ArrangementRequirementCompleted
@@ -314,8 +316,7 @@ export function FamilyScreenV2() {
   >(null);
   const selectedFamilyMemberRow = useMemo(
     () =>
-      familyMemberRows.find((row) => row.id === selectedFamilyMemberId) ??
-      null,
+      familyMemberRows.find((row) => row.id === selectedFamilyMemberId) ?? null,
     [familyMemberRows, selectedFamilyMemberId]
   );
 
@@ -441,8 +442,6 @@ export function FamilyScreenV2() {
     }
   }, [v1CaseIdFromQuery, allV1Cases]);
 
-  // If user navigates to a different family without leaving current page (i.e. not unmounting this component),
-  // we want to auto-select the first v1Case
   useEffect(() => {
     if (!selectedV1Case) {
       posthog.capture('auto selected first v1Case');
@@ -624,7 +623,8 @@ export function FamilyScreenV2() {
     ? 'Assignments'
     : 'Arrangements';
   const arrangementsCount = selectedV1Case?.arrangements?.length ?? 0;
-  const assignmentsCount = family?.volunteerFamilyInfo?.assignments?.length ?? 0;
+  const assignmentsCount =
+    family?.volunteerFamilyInfo?.assignments?.length ?? 0;
   const documentsCount =
     (family?.uploadedDocuments?.length ?? 0) +
     familyReferrals.reduce(
@@ -809,7 +809,9 @@ export function FamilyScreenV2() {
     return [...familyActivities, ...familyNotes, ...referralActivities]
       .filter((item) => {
         const timestamp = getDateValue(item.timestamp);
-        return timestamp >= sevenDaysAgo.getTime() && timestamp <= now.getTime();
+        return (
+          timestamp >= sevenDaysAgo.getTime() && timestamp <= now.getTime()
+        );
       })
       .sort((a, b) => getDateValue(b.timestamp) - getDateValue(a.timestamp))
       .slice(0, 6);
@@ -857,14 +859,16 @@ export function FamilyScreenV2() {
         ((isOwnNote && permissions(Permission.DiscardOwnDraftNotes)) ||
           permissions(Permission.DiscardDraftNotes)),
       canApprove:
-        note.status === NoteStatus.Draft && permissions(Permission.ApproveNotes),
+        note.status === NoteStatus.Draft &&
+        permissions(Permission.ApproveNotes),
     };
   }
 
   function renderRecentNoteActions(item: RecentOverviewTimelineItem) {
     if (item.note) {
-      const { canDelete, canEdit, canApprove } =
-        getRecentFamilyNotePermissions(item.note);
+      const { canDelete, canEdit, canApprove } = getRecentFamilyNotePermissions(
+        item.note
+      );
 
       if (!canDelete && !canEdit && !canApprove) return null;
 
@@ -1023,7 +1027,9 @@ export function FamilyScreenV2() {
               <IconButton
                 className="ph-unmask"
                 aria-label="family actions"
-                onClick={(event) => setFamilyMoreMenuAnchor(event.currentTarget)}
+                onClick={(event) =>
+                  setFamilyMoreMenuAnchor(event.currentTarget)
+                }
                 size="small"
                 sx={{
                   border: 1,
@@ -1073,7 +1079,9 @@ export function FamilyScreenV2() {
                 sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}
               >
                 <PhoneIcon fontSize="small" color="action" />
-                <Typography variant="body2">{primaryPhoneNumber.number}</Typography>
+                <Typography variant="body2">
+                  {primaryPhoneNumber.number}
+                </Typography>
                 <ContactInfoCopyButton
                   value={primaryPhoneNumber.number}
                   label="Phone number"
@@ -1201,9 +1209,7 @@ export function FamilyScreenV2() {
             )}
             {!isDesktop &&
               (canUploadDocuments || canEditFamilyInfo || canAddNotes) &&
-              hasMoreMenuActions && (
-                <Divider />
-              )}
+              hasMoreMenuActions && <Divider />}
             {permissions(Permission.EditVolunteerRoleParticipation) &&
               participatingFamilyRoles.flatMap(([role]) => (
                 <MenuItem key={role} onClick={() => selectRemoveRole(role)}>
