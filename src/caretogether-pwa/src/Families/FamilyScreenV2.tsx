@@ -90,7 +90,7 @@ import {
   VolunteerFamilyContext,
 } from '../Requirements/RequirementContext';
 import { ActivityTimelineV2 } from '../Activities/ActivityTimelineV2';
-import { V1CaseComments } from '../V1Cases/V1CaseComments';
+import { V1CaseCommentsV2 } from '../V1Cases/V1CaseCommentsV2';
 import { V1CaseCustomField } from '../V1Cases/V1CaseCustomField';
 import { PrimaryContactEditor } from './PrimaryContactEditor';
 import {
@@ -1489,7 +1489,7 @@ export function FamilyScreenV2() {
         >
           {permissions(Permission.ViewV1CaseComments) && selectedV1Case && (
             <Grid container spacing={0}>
-              <V1CaseComments
+              <V1CaseCommentsV2
                 partneringFamily={family}
                 v1CaseId={selectedV1Case.id!}
               />

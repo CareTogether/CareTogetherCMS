@@ -1,24 +1,27 @@
 import { useState, memo, useRef, useEffect } from 'react';
-import { Box, Button, Typography, Collapse } from '@mui/material';
+import { Box, Button, Collapse, Typography } from '@mui/material';
 
-type ReadMoreTextProps = {
+type ReadMoreTextV2Props = {
   text: string;
   limit?: number;
 };
 
-export const ReadMoreText = memo(function ReadMoreText({
+export const ReadMoreTextV2 = memo(function ReadMoreTextV2({
   text,
   limit = 5,
-}: ReadMoreTextProps) {
+}: ReadMoreTextV2Props) {
   const [expanded, setExpanded] = useState(false);
   const [isOverflowing, setIsOverflowing] = useState(false);
   const textRef = useRef<HTMLDivElement>(null);
+  const textSx = {
+    whiteSpace: 'pre-wrap',
+    overflowWrap: 'break-word',
+    lineHeight: 1.45,
+  };
 
   useEffect(() => {
-    // Check if content is overflowing by temporarily rendering without clamp
     if (textRef.current && !expanded) {
       const element = textRef.current;
-      // Check if content would overflow with the line clamp
       const lineHeight = parseFloat(getComputedStyle(element).lineHeight);
       const maxHeight = lineHeight * limit;
       setIsOverflowing(element.scrollHeight > maxHeight);
@@ -28,18 +31,17 @@ export const ReadMoreText = memo(function ReadMoreText({
   return (
     <Box>
       <Box sx={{ position: 'relative' }}>
-        <Collapse in={expanded} collapsedSize={`${limit * 1.45 * 1.5}em`}>
-          <Typography
-            ref={textRef}
-            sx={{
-              whiteSpace: 'pre-wrap',
-              overflowWrap: 'break-word',
-              lineHeight: 1.45,
-            }}
-          >
+        {isOverflowing ? (
+          <Collapse in={expanded} collapsedSize={`${limit * 1.45}em`}>
+            <Typography ref={textRef} sx={textSx}>
+              {text}
+            </Typography>
+          </Collapse>
+        ) : (
+          <Typography ref={textRef} sx={textSx}>
             {text}
           </Typography>
-        </Collapse>
+        )}
         {!expanded && isOverflowing && (
           <Box
             sx={{
@@ -48,7 +50,8 @@ export const ReadMoreText = memo(function ReadMoreText({
               left: 0,
               right: 0,
               height: '3em',
-              background: 'linear-gradient(to bottom, transparent, white)',
+              background: (theme) =>
+                `linear-gradient(to bottom, transparent, ${theme.palette.background.paper})`,
               pointerEvents: 'none',
             }}
           />
