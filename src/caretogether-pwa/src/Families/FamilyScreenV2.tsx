@@ -226,7 +226,9 @@ function recentActivityTitle(activity: Activity) {
   return 'Family activity';
 }
 
-function recentActivityIcon(activity: Activity): RecentOverviewTimelineItem['icon'] {
+function recentActivityIcon(
+  activity: Activity
+): RecentOverviewTimelineItem['icon'] {
   if (
     activity instanceof V1CaseRequirementCompleted ||
     activity instanceof ArrangementRequirementCompleted
@@ -649,7 +651,8 @@ export function FamilyScreenV2() {
     ? 'Assignments'
     : 'Arrangements';
   const arrangementsCount = selectedV1Case?.arrangements?.length ?? 0;
-  const assignmentsCount = family?.volunteerFamilyInfo?.assignments?.length ?? 0;
+  const assignmentsCount =
+    family?.volunteerFamilyInfo?.assignments?.length ?? 0;
   const documentsCount =
     (family?.uploadedDocuments?.length ?? 0) +
     familyReferrals.reduce(
@@ -834,7 +837,9 @@ export function FamilyScreenV2() {
     return [...familyActivities, ...familyNotes, ...referralActivities]
       .filter((item) => {
         const timestamp = getDateValue(item.timestamp);
-        return timestamp >= sevenDaysAgo.getTime() && timestamp <= now.getTime();
+        return (
+          timestamp >= sevenDaysAgo.getTime() && timestamp <= now.getTime()
+        );
       })
       .sort((a, b) => getDateValue(b.timestamp) - getDateValue(a.timestamp))
       .slice(0, 6);
@@ -882,14 +887,16 @@ export function FamilyScreenV2() {
         ((isOwnNote && permissions(Permission.DiscardOwnDraftNotes)) ||
           permissions(Permission.DiscardDraftNotes)),
       canApprove:
-        note.status === NoteStatus.Draft && permissions(Permission.ApproveNotes),
+        note.status === NoteStatus.Draft &&
+        permissions(Permission.ApproveNotes),
     };
   }
 
   function renderRecentNoteActions(item: RecentOverviewTimelineItem) {
     if (item.note) {
-      const { canDelete, canEdit, canApprove } =
-        getRecentFamilyNotePermissions(item.note);
+      const { canDelete, canEdit, canApprove } = getRecentFamilyNotePermissions(
+        item.note
+      );
 
       if (!canDelete && !canEdit && !canApprove) return null;
 
@@ -1048,7 +1055,9 @@ export function FamilyScreenV2() {
               <IconButton
                 className="ph-unmask"
                 aria-label="family actions"
-                onClick={(event) => setFamilyMoreMenuAnchor(event.currentTarget)}
+                onClick={(event) =>
+                  setFamilyMoreMenuAnchor(event.currentTarget)
+                }
                 size="small"
                 sx={{
                   border: 1,
@@ -1098,7 +1107,9 @@ export function FamilyScreenV2() {
                 sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}
               >
                 <PhoneIcon fontSize="small" color="action" />
-                <Typography variant="body2">{primaryPhoneNumber.number}</Typography>
+                <Typography variant="body2">
+                  {primaryPhoneNumber.number}
+                </Typography>
                 <ContactInfoCopyButton
                   value={primaryPhoneNumber.number}
                   label="Phone number"
@@ -1226,9 +1237,7 @@ export function FamilyScreenV2() {
             )}
             {!isDesktop &&
               (canUploadDocuments || canEditFamilyInfo || canAddNotes) &&
-              hasMoreMenuActions && (
-                <Divider />
-              )}
+              hasMoreMenuActions && <Divider />}
             {permissions(Permission.EditVolunteerRoleParticipation) &&
               participatingFamilyRoles.flatMap(([role]) => (
                 <MenuItem key={role} onClick={() => selectRemoveRole(role)}>
@@ -1572,7 +1581,8 @@ export function FamilyScreenV2() {
                               const assignmentNames = assignmentNamesForRole(
                                 v1Case.assignedIndividualVolunteers ?? [],
                                 assignmentRole,
-                                (personId) => personAndFamilyLookup(personId).person
+                                (personId) =>
+                                  personAndFamilyLookup(personId).person
                               );
 
                               return (
@@ -1689,34 +1699,36 @@ export function FamilyScreenV2() {
                                 gap: 1,
                               }}
                             >
-                              {caseReferralTable.unlinkedReferrals.map((ref) => {
-                                const requirementSummary =
-                                  referralRequirementSummary(ref);
+                              {caseReferralTable.unlinkedReferrals.map(
+                                (ref) => {
+                                  const requirementSummary =
+                                    referralRequirementSummary(ref);
 
-                                const metadata = [
-                                  formatStatusWithDate(
-                                    ref.status,
-                                    ref.createdAtUtc,
-                                    ref.acceptedAtUtc,
-                                    ref.closedAtUtc
-                                  ),
-                                  requirementSummary || null,
-                                ]
-                                  .filter(Boolean)
-                                  .join(' · ');
+                                  const metadata = [
+                                    formatStatusWithDate(
+                                      ref.status,
+                                      ref.createdAtUtc,
+                                      ref.acceptedAtUtc,
+                                      ref.closedAtUtc
+                                    ),
+                                    requirementSummary || null,
+                                  ]
+                                    .filter(Boolean)
+                                    .join(' · ');
 
-                                return (
-                                  <Chip
-                                    key={ref.referralId}
-                                    clickable
-                                    size="small"
-                                    label={`${ref.title} · ${metadata}`}
-                                    onClick={() =>
-                                      appNavigate.referral(ref.referralId)
-                                    }
-                                  />
-                                );
-                              })}
+                                  return (
+                                    <Chip
+                                      key={ref.referralId}
+                                      clickable
+                                      size="small"
+                                      label={`${ref.title} · ${metadata}`}
+                                      onClick={() =>
+                                        appNavigate.referral(ref.referralId)
+                                      }
+                                    />
+                                  );
+                                }
+                              )}
                             </Box>
                           </TableCell>
                         </TableRow>
@@ -1731,7 +1743,9 @@ export function FamilyScreenV2() {
                     functionAssignmentsEditorV1Case.assignedIndividualVolunteers ??
                     []
                   }
-                  policies={policy.referralPolicy?.functionAssignmentPolicies ?? []}
+                  policies={
+                    policy.referralPolicy?.functionAssignmentPolicies ?? []
+                  }
                   onClose={() =>
                     setFunctionAssignmentsEditorV1CaseId(undefined)
                   }
@@ -1886,7 +1900,6 @@ export function FamilyScreenV2() {
             {showArrangementsOrAssignments && isVolunteerFamily && family && (
               <AssignmentsSection family={family} hideTitle />
             )}
-
           </Grid>
 
           <Grid container spacing={0} sx={{ order: 2 }}>
