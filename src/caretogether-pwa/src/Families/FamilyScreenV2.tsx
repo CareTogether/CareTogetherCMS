@@ -63,6 +63,7 @@ import {
   MoreVert as MoreVertIcon,
   PersonPinCircle as PersonPinCircleIcon,
   Phone as PhoneIcon,
+  Print as PrintIcon,
 } from '@mui/icons-material';
 import { AdultCard } from './AdultCard';
 import { ChildCard } from './ChildCard';
@@ -131,7 +132,10 @@ import { FamilyCompleteOtherController } from '../Requirements/FamilyCompleteOth
 import { useV1CasesModel } from '../Model/V1CasesModel';
 import { formatStatusWithDate } from '../V1Referrals/formatStatusWithDate';
 import { policyData } from '../Model/ConfigurationModel';
-import { FUNCTION_ASSIGNMENTS_FEATURE_FLAG } from '../featureFlags';
+import {
+  FAMILY_MEMBER_PRINT_INFORMATION_FEATURE_FLAG,
+  FUNCTION_ASSIGNMENTS_FEATURE_FLAG,
+} from '../featureFlags';
 import { FunctionAssignmentsEditorDrawer } from '../FunctionAssignments/FunctionAssignmentsSection';
 import {
   assignmentNamesForRole,
@@ -146,6 +150,13 @@ import { AddEditV1ReferralNoteDialog } from '../V1Referrals/AddEditV1ReferralNot
 import { ApproveV1ReferralNoteDialog } from '../V1Referrals/ApproveV1ReferralNoteDialog';
 import { DiscardV1ReferralNoteDialog } from '../V1Referrals/DiscardV1ReferralNoteDialog';
 import { useLocation } from 'react-router-dom';
+import { combineCustomFieldPolicies } from './familyMemberCustomFieldPolicies';
+import {
+  buildPrintableCustomFieldSections,
+  personFullName,
+  type PrintableFamilyMember,
+} from './FamilyMemberPrintData';
+import { FamilyMemberPrintDocument } from './FamilyMemberPrintDocument';
 
 type CustomFieldRenderInfo = CompletedCustomFieldInfo | string;
 type ReferralNoteEntry = NonNullable<V1Referral['notes']>[number];
@@ -236,7 +247,9 @@ function recentActivityTitle(activity: Activity) {
   return 'Family activity';
 }
 
-function recentActivityIcon(activity: Activity): RecentOverviewTimelineItem['icon'] {
+function recentActivityIcon(
+  activity: Activity
+): RecentOverviewTimelineItem['icon'] {
   if (
     activity instanceof V1CaseRequirementCompleted ||
     activity instanceof ArrangementRequirementCompleted
@@ -300,10 +313,7 @@ export function FamilyScreenV2() {
   const location = useLocation();
   const searchParams = new URLSearchParams(location.search);
   const v1CaseIdFromQuery = searchParams.get('v1CaseId') ?? undefined;
-  const v1CaseIdFromState = stringFromLocationState(
-    location.state,
-    'v1CaseId'
-  );
+  const v1CaseIdFromState = stringFromLocationState(location.state, 'v1CaseId');
   const v1CaseIdFromNavigation = v1CaseIdFromQuery ?? v1CaseIdFromState;
   const arrangementIdFromQuery = searchParams.get('arrangementId') ?? undefined;
   const arrangementIdFromState = stringFromLocationState(
@@ -610,6 +620,9 @@ export function FamilyScreenV2() {
   const functionAssignmentsEnabled = useFeatureFlagEnabled(
     FUNCTION_ASSIGNMENTS_FEATURE_FLAG
   );
+  const familyMemberPrintInformationEnabled =
+    useFeatureFlagEnabled(FAMILY_MEMBER_PRINT_INFORMATION_FEATURE_FLAG) ===
+    true;
   const canViewFunctionAssignments =
     functionAssignmentsEnabled === true &&
     permissions(Permission.ViewV1CaseFunctionAssignments);
@@ -660,7 +673,99 @@ export function FamilyScreenV2() {
 
   const printContentRef = useRef<HTMLDivElement>(null);
   const reactToPrintFn = useReactToPrint({ contentRef: printContentRef });
+  const familyMemberPrintContentRef = useRef<HTMLDivElement>(null);
+  const [familyMemberToPrint, setFamilyMemberToPrint] =
+    useState<PrintableFamilyMember | null>(null);
+  const [familyMemberPrintRequested, setFamilyMemberPrintRequested] =
+    useState(false);
+  const printFamilyMemberFn = useReactToPrint({
+    contentRef: familyMemberPrintContentRef,
+    documentTitle: () =>
+      familyMemberToPrint
+        ? `${personFullName(familyMemberToPrint.person)} information`
+        : 'Family member information',
+    preserveAfterPrint: true,
+  });
   const isVolunteerFamily = family?.volunteerFamilyInfo != null;
+  const activeAdults = useMemo<PrintableFamilyMember[]>(() => {
+    return (family?.family?.adults ?? []).flatMap((adult) =>
+      adult.item1?.id && adult.item1.active && adult.item2
+        ? [
+            {
+              kind: 'adult' as const,
+              person: adult.item1,
+              relationshipToFamily: adult.item2,
+            },
+          ]
+        : []
+    );
+  }, [family?.family?.adults]);
+  const activeChildren = useMemo<PrintableFamilyMember[]>(() => {
+    return (family?.family?.children ?? []).flatMap((child) =>
+      child.id && child.active
+        ? [
+            {
+              kind: 'child' as const,
+              person: child,
+            },
+          ]
+        : []
+    );
+  }, [family?.family?.children]);
+  const printableFamilyMembers = useMemo(
+    () => activeAdults.concat(activeChildren),
+    [activeAdults, activeChildren]
+  );
+  const adultCustomFieldPolicies = useMemo(
+    () =>
+      combineCustomFieldPolicies(
+        family?.partneringFamilyInfo != null
+          ? (policy.customFields?.partneringFamily?.adult ?? [])
+          : [],
+        family?.volunteerFamilyInfo != null
+          ? (policy.customFields?.volunteerFamily?.adult ?? [])
+          : []
+      ),
+    [
+      family?.partneringFamilyInfo,
+      family?.volunteerFamilyInfo,
+      policy.customFields?.partneringFamily?.adult,
+      policy.customFields?.volunteerFamily?.adult,
+    ]
+  );
+  const childCustomFieldPolicies = useMemo(
+    () =>
+      combineCustomFieldPolicies(
+        family?.partneringFamilyInfo != null
+          ? (policy.customFields?.partneringFamily?.child ?? [])
+          : [],
+        family?.volunteerFamilyInfo != null
+          ? (policy.customFields?.volunteerFamily?.child ?? [])
+          : []
+      ),
+    [
+      family?.partneringFamilyInfo,
+      family?.volunteerFamilyInfo,
+      policy.customFields?.partneringFamily?.child,
+      policy.customFields?.volunteerFamily?.child,
+    ]
+  );
+  const familyMemberPrintCustomFieldSections = useMemo(() => {
+    if (!familyMemberToPrint) return [];
+    if (!permissions(Permission.ViewFamilyCustomFields)) return [];
+
+    return buildPrintableCustomFieldSections(
+      familyMemberToPrint.person.completedCustomFields,
+      familyMemberToPrint.kind === 'adult'
+        ? adultCustomFieldPolicies
+        : childCustomFieldPolicies
+    );
+  }, [
+    adultCustomFieldPolicies,
+    childCustomFieldPolicies,
+    familyMemberToPrint,
+    permissions,
+  ]);
   const primaryContactPerson = family?.family?.adults?.find(
     (adult) => adult.item1?.id === family.family?.primaryFamilyContactPersonId
   )?.item1;
@@ -692,7 +797,8 @@ export function FamilyScreenV2() {
     ? 'Assignments'
     : 'Arrangements';
   const arrangementsCount = selectedV1Case?.arrangements?.length ?? 0;
-  const assignmentsCount = family?.volunteerFamilyInfo?.assignments?.length ?? 0;
+  const assignmentsCount =
+    family?.volunteerFamilyInfo?.assignments?.length ?? 0;
   const documentsCount =
     (family?.uploadedDocuments?.length ?? 0) +
     familyReferrals.reduce(
@@ -716,6 +822,23 @@ export function FamilyScreenV2() {
         ).length ?? 0),
       0
     );
+
+  useEffect(() => {
+    if (!familyMemberPrintRequested || !familyMemberToPrint) return;
+
+    const frame = requestAnimationFrame(() => {
+      printFamilyMemberFn();
+      setFamilyMemberPrintRequested(false);
+    });
+
+    return () => cancelAnimationFrame(frame);
+  }, [familyMemberPrintRequested, familyMemberToPrint, printFamilyMemberFn]);
+
+  function printFamilyMemberInformation(member: PrintableFamilyMember) {
+    setFamilyMoreMenuAnchor(null);
+    setFamilyMemberToPrint(member);
+    setFamilyMemberPrintRequested(true);
+  }
 
   function tabLabel(label: string, count?: number, unapprovedCount?: number) {
     return (
@@ -877,7 +1000,9 @@ export function FamilyScreenV2() {
     return [...familyActivities, ...familyNotes, ...referralActivities]
       .filter((item) => {
         const timestamp = getDateValue(item.timestamp);
-        return timestamp >= sevenDaysAgo.getTime() && timestamp <= now.getTime();
+        return (
+          timestamp >= sevenDaysAgo.getTime() && timestamp <= now.getTime()
+        );
       })
       .sort((a, b) => getDateValue(b.timestamp) - getDateValue(a.timestamp))
       .slice(0, 6);
@@ -925,14 +1050,16 @@ export function FamilyScreenV2() {
         ((isOwnNote && permissions(Permission.DiscardOwnDraftNotes)) ||
           permissions(Permission.DiscardDraftNotes)),
       canApprove:
-        note.status === NoteStatus.Draft && permissions(Permission.ApproveNotes),
+        note.status === NoteStatus.Draft &&
+        permissions(Permission.ApproveNotes),
     };
   }
 
   function renderRecentNoteActions(item: RecentOverviewTimelineItem) {
     if (item.note) {
-      const { canDelete, canEdit, canApprove } =
-        getRecentFamilyNotePermissions(item.note);
+      const { canDelete, canEdit, canApprove } = getRecentFamilyNotePermissions(
+        item.note
+      );
 
       if (!canDelete && !canEdit && !canApprove) return null;
 
@@ -1050,8 +1177,11 @@ export function FamilyScreenV2() {
     (participatingFamilyRoles.length > 0 ||
       (family.volunteerFamilyInfo?.roleRemovals &&
         family.volunteerFamilyInfo.roleRemovals.length > 0));
+  const hasPrintActions =
+    familyMemberPrintInformationEnabled && printableFamilyMembers.length > 0;
   const hasMoreMenuActions =
     hasVolunteerRoleActions ||
+    hasPrintActions ||
     canEditFamilyInfo ||
     (family.volunteerFamilyInfo != null &&
       permissions(Permission.EditApprovalRequirementCompletion));
@@ -1063,6 +1193,30 @@ export function FamilyScreenV2() {
 
   return (
     <Container maxWidth={false} sx={{ paddingLeft: '12px' }}>
+      {familyMemberPrintInformationEnabled && (
+        <Box
+          sx={{
+            position: 'absolute',
+            top: 0,
+            left: '-10000px',
+            width: '8.5in',
+            backgroundColor: '#fff',
+          }}
+        >
+          <div ref={familyMemberPrintContentRef}>
+            <FamilyMemberPrintDocument
+              member={familyMemberToPrint}
+              canViewDateOfBirth={permissions(Permission.ViewPersonDateOfBirth)}
+              familyAdults={activeAdults.map((member) => member.person)}
+              familyChildren={activeChildren.map((member) => member.person)}
+              custodialRelationships={
+                family.family?.custodialRelationships ?? []
+              }
+              customFieldSections={familyMemberPrintCustomFieldSections}
+            />
+          </div>
+        </Box>
+      )}
       <Toolbar
         variant="dense"
         disableGutters={true}
@@ -1091,7 +1245,9 @@ export function FamilyScreenV2() {
               <IconButton
                 className="ph-unmask"
                 aria-label="family actions"
-                onClick={(event) => setFamilyMoreMenuAnchor(event.currentTarget)}
+                onClick={(event) =>
+                  setFamilyMoreMenuAnchor(event.currentTarget)
+                }
                 size="small"
                 sx={{
                   border: 1,
@@ -1141,7 +1297,9 @@ export function FamilyScreenV2() {
                 sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}
               >
                 <PhoneIcon fontSize="small" color="action" />
-                <Typography variant="body2">{primaryPhoneNumber.number}</Typography>
+                <Typography variant="body2">
+                  {primaryPhoneNumber.number}
+                </Typography>
                 <ContactInfoCopyButton
                   value={primaryPhoneNumber.number}
                   label="Phone number"
@@ -1269,9 +1427,7 @@ export function FamilyScreenV2() {
             )}
             {!isDesktop &&
               (canUploadDocuments || canEditFamilyInfo || canAddNotes) &&
-              hasMoreMenuActions && (
-                <Divider />
-              )}
+              hasMoreMenuActions && <Divider />}
             {permissions(Permission.EditVolunteerRoleParticipation) &&
               participatingFamilyRoles.flatMap(([role]) => (
                 <MenuItem key={role} onClick={() => selectRemoveRole(role)}>
@@ -1301,6 +1457,22 @@ export function FamilyScreenV2() {
             <MenuItem onClick={() => reactToPrintFn()}>
               <ListItemText primary="Print notes" />
             </MenuItem>
+
+            {familyMemberPrintInformationEnabled &&
+              printableFamilyMembers.map((member) => (
+                <MenuItem
+                  key={`${member.kind}:${member.person.id}`}
+                  onClick={() => printFamilyMemberInformation(member)}
+                >
+                  <ListItemIcon>
+                    <PrintIcon fontSize="small" />
+                  </ListItemIcon>
+                  <ListItemText
+                    className="ph-unmask"
+                    primary={`Print ${personFullName(member.person)} information`}
+                  />
+                </MenuItem>
+              ))}
 
             {family.volunteerFamilyInfo != null &&
               permissions(Permission.EditApprovalRequirementCompletion) && (
