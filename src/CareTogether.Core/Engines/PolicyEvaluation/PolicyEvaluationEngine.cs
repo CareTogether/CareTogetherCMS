@@ -337,7 +337,8 @@ namespace CareTogether.Engines.PolicyEvaluation
                 exemptedRequirements,
                 individualVolunteerAssignments,
                 familyVolunteerAssignments,
-                ChildLocationHistory
+                ChildLocationHistory,
+                entry.ArrangementPolicyVersion
             );
         }
 

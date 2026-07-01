@@ -367,7 +367,8 @@ namespace CareTogether.Managers
                     entry.ChildLocationHistory,
                     entry.ChildLocationPlan,
                     entry.Comments,
-                    entry.Reason
+                    entry.Reason,
+                    entry.ArrangementPolicyVersion
                 );
         }
 

@@ -52,6 +52,10 @@ import { CancelArrangementDialog } from '../CancelArrangementDialog';
 import { ReopenArrangementDialog } from '../ReopenArrangementDialog';
 import { DeleteArrangementDialog } from '../DeleteArrangementDialog';
 import { format } from 'date-fns';
+import {
+  isArrangementPolicyAvailable,
+  resolveArrangementPolicy,
+} from '../arrangementPolicyVersions';
 
 type ArrangementSectionProps = {
   v1Case: V1Case;
@@ -367,7 +371,16 @@ function ArrangementTableRow({
           </IconButton>
         </TableCell>
         <TableCell className="ph-unmask">
-          {arrangement.arrangementType || '-'}
+          <Stack spacing={0.25}>
+            <Typography variant="body2">
+              {arrangement.arrangementType || '-'}
+            </Typography>
+            {arrangement.arrangementPolicyVersion && (
+              <Typography variant="caption" color="text.secondary">
+                {arrangement.arrangementPolicyVersion}
+              </Typography>
+            )}
+          </Stack>
         </TableCell>
         <TableCell>
           <Stack spacing={0.75}>
@@ -525,10 +538,8 @@ export function ArrangementsSection({
           >
             {v1Case &&
               policy.referralPolicy?.arrangementPolicies
-                ?.filter(
-                  (arrangementPolicy) =>
-                    !arrangementPolicy.supersededAtUtc ||
-                    new Date(arrangementPolicy.supersededAtUtc) > new Date()
+                ?.filter((arrangementPolicy) =>
+                  isArrangementPolicyAvailable(arrangementPolicy)
                 )
                 .map((arrangementPolicy) => (
                   <Box key={arrangementPolicy.arrangementType}>
@@ -569,10 +580,10 @@ export function ArrangementsSection({
             </TableHead>
             <TableBody>
               {filteredArrangements.map((arrangement) => {
-                const arrangementPolicy =
-                  policy.referralPolicy?.arrangementPolicies?.find(
-                    (a) => a.arrangementType === arrangement.arrangementType
-                  );
+                const arrangementPolicy = resolveArrangementPolicy(
+                  policy.referralPolicy?.arrangementPolicies,
+                  arrangement
+                );
 
                 return (
                   <ArrangementTableRow
