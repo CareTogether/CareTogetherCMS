@@ -701,6 +701,7 @@ export function FamilyScreenV2() {
     preserveAfterPrint: true,
   });
   const isVolunteerFamily = family?.volunteerFamilyInfo != null;
+  const isPartneringFamily = family?.partneringFamilyInfo != null;
   const activeAdults = useMemo<PrintableFamilyMember[]>(() => {
     return (family?.family?.adults ?? []).flatMap((adult) =>
       adult.item1?.id && adult.item1.active && adult.item2
@@ -1904,19 +1905,20 @@ export function FamilyScreenV2() {
           setSelectedRemovedRoleId(null);
         }}
       />
-      <Grid container spacing={2} sx={{ mb: 2 }}>
-        {permissions(Permission.ViewV1CaseProgress) && (
-          <Grid item xs={12} lg={7}>
-            <Box
-              sx={{
-                border: 1,
-                borderColor: 'divider',
-                borderRadius: 1,
-                bgcolor: 'background.paper',
-                p: 2,
-                height: '100%',
-              }}
-            >
+      {isPartneringFamily && (
+        <Grid container spacing={2} sx={{ mb: 2 }}>
+          {permissions(Permission.ViewV1CaseProgress) && (
+            <Grid item xs={12} lg={7}>
+              <Box
+                sx={{
+                  border: 1,
+                  borderColor: 'divider',
+                  borderRadius: 1,
+                  bgcolor: 'background.paper',
+                  p: 2,
+                  height: '100%',
+                }}
+              >
               <Typography className="ph-unmask" variant="h3" sx={{ mb: 1 }}>
                 Cases & Referrals
               </Typography>
@@ -2266,30 +2268,31 @@ export function FamilyScreenV2() {
                   onClose={() => setOpenNewV1CaseDialogOpen(false)}
                 />
               )}
-            </Box>
-          </Grid>
-        )}
+              </Box>
+            </Grid>
+          )}
 
-        {permissions(Permission.ViewV1CaseComments) && selectedV1Case && (
-          <Grid item xs={12} lg={5}>
-            <Box
-              sx={{
-                border: 1,
-                borderColor: 'divider',
-                borderRadius: 1,
-                bgcolor: 'background.paper',
-                p: 2,
-                height: '100%',
-              }}
-            >
-              <V1CaseCommentsV2
-                partneringFamily={family}
-                v1CaseId={selectedV1Case.id!}
-              />
-            </Box>
-          </Grid>
-        )}
-      </Grid>
+          {permissions(Permission.ViewV1CaseComments) && selectedV1Case && (
+            <Grid item xs={12} lg={5}>
+              <Box
+                sx={{
+                  border: 1,
+                  borderColor: 'divider',
+                  borderRadius: 1,
+                  bgcolor: 'background.paper',
+                  p: 2,
+                  height: '100%',
+                }}
+              >
+                <V1CaseCommentsV2
+                  partneringFamily={family}
+                  v1CaseId={selectedV1Case.id!}
+                />
+              </Box>
+            </Grid>
+          )}
+        </Grid>
+      )}
 
       {pinnedNotes.length > 0 && (
         <Box
