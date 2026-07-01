@@ -63,10 +63,11 @@ import {
   MoreVert as MoreVertIcon,
   PersonPinCircle as PersonPinCircleIcon,
   Phone as PhoneIcon,
+  Print as PrintIcon,
 } from '@mui/icons-material';
 import { AdultCard } from './AdultCard';
 import { ChildCard } from './ChildCard';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { AddAdultDialog } from './AddAdultDialog';
 import { AddChildDialog } from './AddChildDialog';
 import { AddEditNoteDialog } from '../Notes/AddEditNoteDialog';
@@ -86,8 +87,8 @@ import { MissingRequirementRow } from '../Requirements/MissingRequirementRow';
 import { ExemptedRequirementRow } from '../Requirements/ExemptedRequirementRow';
 import { CompletedRequirementRow } from '../Requirements/CompletedRequirementRow';
 import {
+  IndividualVolunteerContext,
   V1CaseContext,
-  VolunteerFamilyContext,
 } from '../Requirements/RequirementContext';
 import { ActivityTimelineV2 } from '../Activities/ActivityTimelineV2';
 import { V1CaseCommentsV2 } from '../V1Cases/V1CaseCommentsV2';
@@ -107,7 +108,6 @@ import {
 } from '../Model/DirectoryModel';
 import { RemoveFamilyRoleDialog } from '../Volunteers/RemoveFamilyRoleDialog';
 import { ResetFamilyRoleDialog } from '../Volunteers/ResetFamilyRoleDialog';
-import { VolunteerRoleApprovalStatusChip } from '../Volunteers/VolunteerRoleApprovalStatusChip';
 import { FamilyCustomField } from './FamilyCustomField';
 import { VolunteerFamilyCustomField } from '../Volunteers/VolunteerFamilyCustomField';
 import { isBackdropClick } from '../Utilities/handleBackdropClick';
@@ -119,7 +119,6 @@ import { visibleCommunitiesQuery } from '../Model/Data';
 import { useAppNavigate } from '../Hooks/useAppNavigate';
 import posthog from 'posthog-js';
 import { AssignmentsSection } from '../Families/AssignmentsSectionV2';
-import { useMemo } from 'react';
 import { useBackdrop } from '../Hooks/useBackdrop';
 import { useSyncV1CaseIdInURL } from '../Hooks/useSyncV1CaseIdInURL';
 import { ArrangementsSection } from '../V1Cases/Arrangements/ArrangementsSection/ArrangementsSectionV2';
@@ -131,7 +130,10 @@ import { FamilyCompleteOtherController } from '../Requirements/FamilyCompleteOth
 import { useV1CasesModel } from '../Model/V1CasesModel';
 import { formatStatusWithDate } from '../V1Referrals/formatStatusWithDate';
 import { policyData } from '../Model/ConfigurationModel';
-import { FUNCTION_ASSIGNMENTS_FEATURE_FLAG } from '../featureFlags';
+import {
+  FAMILY_MEMBER_PRINT_INFORMATION_FEATURE_FLAG,
+  FUNCTION_ASSIGNMENTS_FEATURE_FLAG,
+} from '../featureFlags';
 import { FunctionAssignmentsEditorDrawer } from '../FunctionAssignments/FunctionAssignmentsSection';
 import {
   assignmentNamesForRole,
@@ -141,10 +143,26 @@ import { PersonName } from './PersonName';
 import { buildGroupedV1ReferralTimelineEntries } from '../V1Referrals/referralTimelineHelpers';
 import { useGlobalSnackBar } from '../Hooks/useGlobalSnackBar';
 import { ClampTypography } from '../Generic/ClampTypography';
+import { ApprovalLedgerSection } from './ApprovalLedgerSection';
+import { buildApprovalLedgerRows } from './approvalLedgerViewModel';
+import {
+  buildRemovedRoleSummaries,
+  buildRoleSummaryCards,
+} from './roleSummaryViewModel';
+import { RoleSummaryCardsSection } from './RoleSummaryCardsSection';
+import { RoleDetailsDrawerV2 } from './RoleDetailsDrawerV2';
 import { accountInfoState } from '../Authentication/Auth';
 import { AddEditV1ReferralNoteDialog } from '../V1Referrals/AddEditV1ReferralNoteDialog';
 import { ApproveV1ReferralNoteDialog } from '../V1Referrals/ApproveV1ReferralNoteDialog';
 import { DiscardV1ReferralNoteDialog } from '../V1Referrals/DiscardV1ReferralNoteDialog';
+import { useLocation } from 'react-router-dom';
+import { combineCustomFieldPolicies } from './familyMemberCustomFieldPolicies';
+import {
+  buildPrintableCustomFieldSections,
+  personFullName,
+  type PrintableFamilyMember,
+} from './FamilyMemberPrintData';
+import { FamilyMemberPrintDocument } from './FamilyMemberPrintDocument';
 
 type CustomFieldRenderInfo = CompletedCustomFieldInfo | string;
 type ReferralNoteEntry = NonNullable<V1Referral['notes']>[number];
@@ -160,11 +178,27 @@ type RecentOverviewTimelineItem = {
   referralId?: string;
   icon: 'check' | 'edit' | 'location';
 };
+type FamilyScreenTabValue =
+  | 'overview'
+  | 'approvals'
+  | 'arrangementsOrAssignments'
+  | 'documents'
+  | 'timelineAndNotes';
 type FamilyScreenTab = {
+  value: FamilyScreenTabValue;
   label: string;
   desktopLabel: React.ReactNode;
   mobileLabel: string;
 };
+
+function stringFromLocationState(state: unknown, key: string) {
+  if (!state || typeof state !== 'object' || !(key in state)) {
+    return undefined;
+  }
+
+  const value = (state as Record<string, unknown>)[key];
+  return typeof value === 'string' ? value : undefined;
+}
 
 function customFieldName(customField: CustomFieldRenderInfo) {
   return customField instanceof CompletedCustomFieldInfo
@@ -289,8 +323,18 @@ export function FamilyScreenV2() {
   const familyIdMaybe = useParams<{ familyId: string }>();
   const familyId = familyIdMaybe.familyId as string;
 
+  const location = useLocation();
   const searchParams = new URLSearchParams(location.search);
   const v1CaseIdFromQuery = searchParams.get('v1CaseId') ?? undefined;
+  const v1CaseIdFromState = stringFromLocationState(location.state, 'v1CaseId');
+  const v1CaseIdFromNavigation = v1CaseIdFromQuery ?? v1CaseIdFromState;
+  const arrangementIdFromQuery = searchParams.get('arrangementId') ?? undefined;
+  const arrangementIdFromState = stringFromLocationState(
+    location.state,
+    'arrangementId'
+  );
+  const arrangementIdFromNavigation =
+    arrangementIdFromQuery ?? arrangementIdFromState;
 
   const communitiesLoadable = useLoadable(visibleCommunitiesQuery);
   const allCommunities = (communitiesLoadable || [])
@@ -396,12 +440,23 @@ export function FamilyScreenV2() {
     referralId: string;
     note: ReferralNoteEntry;
   } | null>(null);
-  const [selectedTab, setSelectedTab] = useState(0);
+  const [selectedRoleSummaryCardId, setSelectedRoleSummaryCardId] = useState<
+    string | null
+  >(null);
+  const [selectedRemovedRoleId, setSelectedRemovedRoleId] = useState<
+    string | null
+  >(null);
+  const [selectedTab, setSelectedTab] = useState<FamilyScreenTabValue>(
+    arrangementIdFromNavigation ? 'arrangementsOrAssignments' : 'overview'
+  );
+  const [arrangementIdToScrollTo, setArrangementIdToScrollTo] = useState(
+    arrangementIdFromNavigation
+  );
 
   const firstV1CaseId = allV1Cases.length > 0 ? allV1Cases[0].id : undefined;
 
   const [selectedV1CaseId, setSelectedV1CaseId] = useState<string | undefined>(
-    v1CaseIdFromQuery || firstV1CaseId
+    v1CaseIdFromNavigation || firstV1CaseId
   );
   const [
     functionAssignmentsEditorV1CaseId,
@@ -460,12 +515,33 @@ export function FamilyScreenV2() {
   }
   useEffect(() => {
     if (
-      v1CaseIdFromQuery &&
-      allV1Cases.some((ref) => ref.id === v1CaseIdFromQuery)
+      v1CaseIdFromNavigation &&
+      allV1Cases.some((ref) => ref.id === v1CaseIdFromNavigation)
     ) {
-      setSelectedV1CaseId(v1CaseIdFromQuery);
+      setSelectedV1CaseId(v1CaseIdFromNavigation);
     }
-  }, [v1CaseIdFromQuery, allV1Cases]);
+  }, [v1CaseIdFromNavigation, allV1Cases]);
+
+  useEffect(() => {
+    if (!arrangementIdFromNavigation) return;
+
+    setSelectedTab('arrangementsOrAssignments');
+    setArrangementIdToScrollTo(arrangementIdFromNavigation);
+  }, [arrangementIdFromNavigation]);
+
+  useEffect(() => {
+    if (!arrangementIdFromNavigation || v1CaseIdFromNavigation) return;
+
+    const v1CaseForArrangement = allV1Cases.find((v1Case) =>
+      v1Case.arrangements?.some(
+        (arrangement) => arrangement.id === arrangementIdFromNavigation
+      )
+    );
+
+    if (v1CaseForArrangement?.id) {
+      setSelectedV1CaseId(v1CaseForArrangement.id);
+    }
+  }, [arrangementIdFromNavigation, allV1Cases, v1CaseIdFromNavigation]);
 
   // If user navigates to a different family without leaving current page (i.e. not unmounting this component),
   // we want to auto-select the first v1Case
@@ -486,18 +562,12 @@ export function FamilyScreenV2() {
   });
 
   useEffect(() => {
-    const searchParams = new URLSearchParams(window.location.search);
-    const hasArrangementId = searchParams.has('arrangementId');
+    if (!arrangementIdFromQuery) return;
 
-    if (hasArrangementId) {
-      appNavigate.family(
-        familyId,
-        searchParams.get('v1CaseId') ?? undefined,
-        undefined,
-        { replace: true }
-      );
-    }
-  }, [familyId, appNavigate]);
+    appNavigate.family(familyId, v1CaseIdFromQuery, undefined, {
+      replace: true,
+    });
+  }, [arrangementIdFromQuery, familyId, v1CaseIdFromQuery, appNavigate]);
 
   const [familyMoreMenuAnchor, setFamilyMoreMenuAnchor] =
     useState<Element | null>(null);
@@ -553,11 +623,6 @@ export function FamilyScreenV2() {
       }
     : undefined;
 
-  const volunteerFamilyRequirementContext: VolunteerFamilyContext = {
-    kind: 'Volunteer Family',
-    volunteerFamilyId: familyId,
-  };
-
   const theme = useTheme();
   const isDesktop = useMediaQuery(theme.breakpoints.up('sm'));
   const isWideScreen = useMediaQuery(theme.breakpoints.up('xl'));
@@ -569,6 +634,9 @@ export function FamilyScreenV2() {
   const functionAssignmentsEnabled = useFeatureFlagEnabled(
     FUNCTION_ASSIGNMENTS_FEATURE_FLAG
   );
+  const familyMemberPrintInformationEnabled =
+    useFeatureFlagEnabled(FAMILY_MEMBER_PRINT_INFORMATION_FEATURE_FLAG) ===
+    true;
   const canViewFunctionAssignments =
     functionAssignmentsEnabled === true &&
     permissions(Permission.ViewV1CaseFunctionAssignments);
@@ -619,7 +687,99 @@ export function FamilyScreenV2() {
 
   const printContentRef = useRef<HTMLDivElement>(null);
   const reactToPrintFn = useReactToPrint({ contentRef: printContentRef });
+  const familyMemberPrintContentRef = useRef<HTMLDivElement>(null);
+  const [familyMemberToPrint, setFamilyMemberToPrint] =
+    useState<PrintableFamilyMember | null>(null);
+  const [familyMemberPrintRequested, setFamilyMemberPrintRequested] =
+    useState(false);
+  const printFamilyMemberFn = useReactToPrint({
+    contentRef: familyMemberPrintContentRef,
+    documentTitle: () =>
+      familyMemberToPrint
+        ? `${personFullName(familyMemberToPrint.person)} information`
+        : 'Family member information',
+    preserveAfterPrint: true,
+  });
   const isVolunteerFamily = family?.volunteerFamilyInfo != null;
+  const activeAdults = useMemo<PrintableFamilyMember[]>(() => {
+    return (family?.family?.adults ?? []).flatMap((adult) =>
+      adult.item1?.id && adult.item1.active && adult.item2
+        ? [
+            {
+              kind: 'adult' as const,
+              person: adult.item1,
+              relationshipToFamily: adult.item2,
+            },
+          ]
+        : []
+    );
+  }, [family?.family?.adults]);
+  const activeChildren = useMemo<PrintableFamilyMember[]>(() => {
+    return (family?.family?.children ?? []).flatMap((child) =>
+      child.id && child.active
+        ? [
+            {
+              kind: 'child' as const,
+              person: child,
+            },
+          ]
+        : []
+    );
+  }, [family?.family?.children]);
+  const printableFamilyMembers = useMemo(
+    () => activeAdults.concat(activeChildren),
+    [activeAdults, activeChildren]
+  );
+  const adultCustomFieldPolicies = useMemo(
+    () =>
+      combineCustomFieldPolicies(
+        family?.partneringFamilyInfo != null
+          ? (policy.customFields?.partneringFamily?.adult ?? [])
+          : [],
+        family?.volunteerFamilyInfo != null
+          ? (policy.customFields?.volunteerFamily?.adult ?? [])
+          : []
+      ),
+    [
+      family?.partneringFamilyInfo,
+      family?.volunteerFamilyInfo,
+      policy.customFields?.partneringFamily?.adult,
+      policy.customFields?.volunteerFamily?.adult,
+    ]
+  );
+  const childCustomFieldPolicies = useMemo(
+    () =>
+      combineCustomFieldPolicies(
+        family?.partneringFamilyInfo != null
+          ? (policy.customFields?.partneringFamily?.child ?? [])
+          : [],
+        family?.volunteerFamilyInfo != null
+          ? (policy.customFields?.volunteerFamily?.child ?? [])
+          : []
+      ),
+    [
+      family?.partneringFamilyInfo,
+      family?.volunteerFamilyInfo,
+      policy.customFields?.partneringFamily?.child,
+      policy.customFields?.volunteerFamily?.child,
+    ]
+  );
+  const familyMemberPrintCustomFieldSections = useMemo(() => {
+    if (!familyMemberToPrint) return [];
+    if (!permissions(Permission.ViewFamilyCustomFields)) return [];
+
+    return buildPrintableCustomFieldSections(
+      familyMemberToPrint.person.completedCustomFields,
+      familyMemberToPrint.kind === 'adult'
+        ? adultCustomFieldPolicies
+        : childCustomFieldPolicies
+    );
+  }, [
+    adultCustomFieldPolicies,
+    childCustomFieldPolicies,
+    familyMemberToPrint,
+    permissions,
+  ]);
   const primaryContactPerson = family?.family?.adults?.find(
     (adult) => adult.item1?.id === family.family?.primaryFamilyContactPersonId
   )?.item1;
@@ -675,7 +835,172 @@ export function FamilyScreenV2() {
           (note) => note.status === V1ReferralNoteStatus.Draft
         ).length ?? 0),
       0
+  );
+  const volunteerFamilyInfo = family?.volunteerFamilyInfo;
+  const activeAdultApprovalSources = useMemo(() => {
+    const activeAdultIds = new Set(
+      (family?.family?.adults ?? []).flatMap((adult) =>
+        adult.item1?.id && adult.item1.active ? [adult.item1.id] : []
+      )
     );
+    const adultApprovalSources = Object.entries(
+      volunteerFamilyInfo?.individualVolunteers ?? {}
+    )
+      .filter(([personId]) => activeAdultIds.has(personId))
+      .map(([personId, volunteerInfo]) => {
+        const adult = family?.family?.adults?.find(
+          (familyAdult) => familyAdult.item1?.id === personId
+        );
+        const person = adult?.item1;
+
+        const label =
+          [person?.firstName, person?.lastName].filter(Boolean).join(' ') ||
+          'Adult';
+        const context: IndividualVolunteerContext = {
+          kind: 'Individual Volunteer',
+          volunteerFamilyId: familyId,
+          personId,
+        };
+
+        return {
+          id: personId,
+          label,
+          context,
+          subject: {
+            scope: 'person' as const,
+            id: personId,
+            label,
+          },
+          approvalStatusByRole: volunteerInfo.approvalStatusByRole ?? {},
+          roleRemovals: volunteerInfo.roleRemovals ?? [],
+          completedRequirements: volunteerInfo.completedRequirements ?? [],
+          exemptedRequirements: volunteerInfo.exemptedRequirements ?? [],
+            missingRequirements: volunteerInfo.missingRequirements ?? [],
+            availableApplications: volunteerInfo.availableApplications ?? [],
+          };
+        });
+
+    return adultApprovalSources;
+  }, [family?.family?.adults, familyId, volunteerFamilyInfo?.individualVolunteers]);
+
+  const approvalLedgerRows = useMemo(() => {
+    return buildApprovalLedgerRows({
+      family: {
+        context: {
+          kind: 'Volunteer Family',
+          volunteerFamilyId: familyId,
+        },
+        completedRequirements: volunteerFamilyInfo?.completedRequirements ?? [],
+        exemptedRequirements: volunteerFamilyInfo?.exemptedRequirements ?? [],
+        missingRequirements: volunteerFamilyInfo?.missingRequirements ?? [],
+        availableApplications: volunteerFamilyInfo?.availableApplications ?? [],
+        familyRoleApprovals: volunteerFamilyInfo?.familyRoleApprovals ?? {},
+        roleRemovals: volunteerFamilyInfo?.roleRemovals ?? [],
+      },
+      individuals: activeAdultApprovalSources,
+    });
+  }, [
+    activeAdultApprovalSources,
+    familyId,
+    volunteerFamilyInfo?.availableApplications,
+    volunteerFamilyInfo?.completedRequirements,
+    volunteerFamilyInfo?.exemptedRequirements,
+    volunteerFamilyInfo?.familyRoleApprovals,
+    volunteerFamilyInfo?.missingRequirements,
+    volunteerFamilyInfo?.roleRemovals,
+  ]);
+  const roleSummaryCards = useMemo(
+    () =>
+      buildRoleSummaryCards({
+        family: {
+          context: {
+            kind: 'Volunteer Family',
+            volunteerFamilyId: familyId,
+          },
+          completedRequirements: volunteerFamilyInfo?.completedRequirements ?? [],
+          exemptedRequirements: volunteerFamilyInfo?.exemptedRequirements ?? [],
+          missingRequirements: volunteerFamilyInfo?.missingRequirements ?? [],
+          availableApplications: volunteerFamilyInfo?.availableApplications ?? [],
+          familyRoleApprovals: volunteerFamilyInfo?.familyRoleApprovals ?? {},
+          roleRemovals: volunteerFamilyInfo?.roleRemovals ?? [],
+        },
+        individuals: activeAdultApprovalSources,
+        approvalLedgerRows,
+      }),
+    [
+      activeAdultApprovalSources,
+      approvalLedgerRows,
+      familyId,
+      volunteerFamilyInfo?.availableApplications,
+      volunteerFamilyInfo?.completedRequirements,
+      volunteerFamilyInfo?.exemptedRequirements,
+      volunteerFamilyInfo?.familyRoleApprovals,
+      volunteerFamilyInfo?.missingRequirements,
+      volunteerFamilyInfo?.roleRemovals,
+    ]
+  );
+  const selectedRoleSummaryCard = useMemo(
+    () =>
+      roleSummaryCards.find((card) => card.id === selectedRoleSummaryCardId) ??
+      null,
+    [roleSummaryCards, selectedRoleSummaryCardId]
+  );
+  const removedRoleSummaries = useMemo(
+    () =>
+      buildRemovedRoleSummaries({
+        family: {
+          context: {
+            kind: 'Volunteer Family',
+            volunteerFamilyId: familyId,
+          },
+          roleRemovals: volunteerFamilyInfo?.roleRemovals ?? [],
+        },
+        individuals: activeAdultApprovalSources,
+      }),
+    [activeAdultApprovalSources, familyId, volunteerFamilyInfo?.roleRemovals]
+  );
+  const selectedRemovedRole = useMemo(
+    () =>
+      removedRoleSummaries.find(
+        (removedRole) => removedRole.id === selectedRemovedRoleId
+      ) ?? null,
+    [removedRoleSummaries, selectedRemovedRoleId]
+  );
+  const approvalAttentionCounts = useMemo(
+    () =>
+      approvalLedgerRows.reduce(
+        (counts, row) => {
+          if (row.status === 'missing') {
+            return { ...counts, missing: counts.missing + 1 };
+          }
+
+          if (row.status === 'expired') {
+            return { ...counts, expired: counts.expired + 1 };
+          }
+
+          return counts;
+        },
+        { missing: 0, expired: 0 }
+      ),
+    [approvalLedgerRows]
+  );
+
+  useEffect(() => {
+    if (!familyMemberPrintRequested || !familyMemberToPrint) return;
+
+    const frame = requestAnimationFrame(() => {
+      printFamilyMemberFn();
+      setFamilyMemberPrintRequested(false);
+    });
+
+    return () => cancelAnimationFrame(frame);
+  }, [familyMemberPrintRequested, familyMemberToPrint, printFamilyMemberFn]);
+
+  function printFamilyMemberInformation(member: PrintableFamilyMember) {
+    setFamilyMoreMenuAnchor(null);
+    setFamilyMemberToPrint(member);
+    setFamilyMemberPrintRequested(true);
+  }
 
   function tabLabel(label: string, count?: number, unapprovedCount?: number) {
     return (
@@ -701,6 +1026,68 @@ export function FamilyScreenV2() {
     );
   }
 
+  function approvalTabLabel(label: string) {
+    return (
+      <Box
+        sx={{
+          display: 'inline-flex',
+          alignItems: 'center',
+          gap: 0.75,
+          flexWrap: 'nowrap',
+          whiteSpace: 'nowrap',
+          width: 'max-content',
+        }}
+      >
+        <Box component="span" sx={{ flexShrink: 0 }}>
+          {label}
+        </Box>
+        {approvalAttentionCounts.missing > 0 && (
+          <Tooltip title={`${approvalAttentionCounts.missing} missing`}>
+            <Chip
+              size="small"
+              color="error"
+              label={approvalAttentionCounts.missing}
+              aria-label={`${approvalAttentionCounts.missing} missing approvals`}
+              sx={{
+                height: 20,
+                flexShrink: 0,
+                '& .MuiChip-label': { px: 0.75 },
+              }}
+            />
+          </Tooltip>
+        )}
+        {approvalAttentionCounts.expired > 0 && (
+          <Tooltip title={`${approvalAttentionCounts.expired} expired`}>
+            <Chip
+              size="small"
+              color="warning"
+              label={approvalAttentionCounts.expired}
+              aria-label={`${approvalAttentionCounts.expired} expired approvals`}
+              sx={{
+                height: 20,
+                flexShrink: 0,
+                '& .MuiChip-label': { px: 0.75 },
+              }}
+            />
+          </Tooltip>
+        )}
+      </Box>
+    );
+  }
+
+  function approvalMobileTabLabel(label: string) {
+    const details = [
+      approvalAttentionCounts.missing > 0
+        ? `${approvalAttentionCounts.missing} missing`
+        : null,
+      approvalAttentionCounts.expired > 0
+        ? `${approvalAttentionCounts.expired} expired`
+        : null,
+    ].filter(Boolean);
+
+    return details.length === 0 ? label : `${label} (${details.join(', ')})`;
+  }
+
   function mobileTabLabel(
     label: string,
     count?: number,
@@ -718,11 +1105,23 @@ export function FamilyScreenV2() {
 
   const familyScreenTabs: FamilyScreenTab[] = [
     {
+      value: 'overview',
       label: 'Overview',
       desktopLabel: 'Overview',
       mobileLabel: 'Overview',
     },
+    ...(isVolunteerFamily
+      ? [
+          {
+            value: 'approvals' as const,
+            label: 'Approvals',
+            desktopLabel: approvalTabLabel('Approvals'),
+            mobileLabel: approvalMobileTabLabel('Approvals'),
+          },
+        ]
+      : []),
     {
+      value: 'arrangementsOrAssignments',
       label: arrangementOrAssignmentsTabLabel,
       desktopLabel: tabLabel(
         arrangementOrAssignmentsTabLabel,
@@ -734,11 +1133,13 @@ export function FamilyScreenV2() {
       ),
     },
     {
+      value: 'documents',
       label: 'Documents',
       desktopLabel: tabLabel('Documents', documentsCount),
       mobileLabel: mobileTabLabel('Documents', documentsCount),
     },
     {
+      value: 'timelineAndNotes',
       label: 'Timeline & Notes',
       desktopLabel: tabLabel(
         'Timeline & Notes',
@@ -752,13 +1153,23 @@ export function FamilyScreenV2() {
       ),
     },
   ];
-  const showOverview = selectedTab === 0;
-  const showArrangementsOrAssignments = selectedTab === 1;
-  const showDocuments = selectedTab === 2;
-  const showTimelineAndNotes = selectedTab === 3;
+  const showOverview = selectedTab === 'overview';
+  const showApprovals = selectedTab === 'approvals' && isVolunteerFamily;
+  const showArrangementsOrAssignments =
+    selectedTab === 'arrangementsOrAssignments';
+  const showDocuments = selectedTab === 'documents';
+  const showTimelineAndNotes = selectedTab === 'timelineAndNotes';
 
-  function handleSelectedTabChange(event: SelectChangeEvent) {
-    setSelectedTab(Number(event.target.value));
+  useEffect(() => {
+    if (selectedTab === 'approvals' && !isVolunteerFamily) {
+      setSelectedTab('overview');
+    }
+  }, [isVolunteerFamily, selectedTab]);
+
+  function handleSelectedTabChange(
+    event: SelectChangeEvent<FamilyScreenTabValue>
+  ) {
+    setSelectedTab(event.target.value as FamilyScreenTabValue);
   }
   const pinnedNotes = useMemo(() => {
     return (family?.notes ?? [])
@@ -1014,8 +1425,11 @@ export function FamilyScreenV2() {
     (participatingFamilyRoles.length > 0 ||
       (family.volunteerFamilyInfo?.roleRemovals &&
         family.volunteerFamilyInfo.roleRemovals.length > 0));
+  const hasPrintActions =
+    familyMemberPrintInformationEnabled && printableFamilyMembers.length > 0;
   const hasMoreMenuActions =
     hasVolunteerRoleActions ||
+    hasPrintActions ||
     canEditFamilyInfo ||
     (family.volunteerFamilyInfo != null &&
       permissions(Permission.EditApprovalRequirementCompletion));
@@ -1027,6 +1441,30 @@ export function FamilyScreenV2() {
 
   return (
     <Container maxWidth={false} sx={{ paddingLeft: '12px' }}>
+      {familyMemberPrintInformationEnabled && (
+        <Box
+          sx={{
+            position: 'absolute',
+            top: 0,
+            left: '-10000px',
+            width: '8.5in',
+            backgroundColor: '#fff',
+          }}
+        >
+          <div ref={familyMemberPrintContentRef}>
+            <FamilyMemberPrintDocument
+              member={familyMemberToPrint}
+              canViewDateOfBirth={permissions(Permission.ViewPersonDateOfBirth)}
+              familyAdults={activeAdults.map((member) => member.person)}
+              familyChildren={activeChildren.map((member) => member.person)}
+              custodialRelationships={
+                family.family?.custodialRelationships ?? []
+              }
+              customFieldSections={familyMemberPrintCustomFieldSections}
+            />
+          </div>
+        </Box>
+      )}
       <Toolbar
         variant="dense"
         disableGutters={true}
@@ -1048,9 +1486,19 @@ export function FamilyScreenV2() {
               mb: 0.5,
             }}
           >
-            <Typography className="ph-unmask" variant="h4">
-              {familyLastName(family)} Family
-            </Typography>
+            <Box
+              sx={{
+                display: 'flex',
+                alignItems: 'center',
+                flexWrap: 'wrap',
+                gap: 1,
+                minWidth: 0,
+              }}
+            >
+              <Typography className="ph-unmask" variant="h4">
+                {familyLastName(family)} Family
+              </Typography>
+            </Box>
             {!isDesktop && hasFamilyActions && (
               <IconButton
                 className="ph-unmask"
@@ -1268,6 +1716,22 @@ export function FamilyScreenV2() {
               <ListItemText primary="Print notes" />
             </MenuItem>
 
+            {familyMemberPrintInformationEnabled &&
+              printableFamilyMembers.map((member) => (
+                <MenuItem
+                  key={`${member.kind}:${member.person.id}`}
+                  onClick={() => printFamilyMemberInformation(member)}
+                >
+                  <ListItemIcon>
+                    <PrintIcon fontSize="small" />
+                  </ListItemIcon>
+                  <ListItemText
+                    className="ph-unmask"
+                    primary={`Print ${personFullName(member.person)} information`}
+                  />
+                </MenuItem>
+              ))}
+
             {family.volunteerFamilyInfo != null &&
               permissions(Permission.EditApprovalRequirementCompletion) && (
                 <MenuItem
@@ -1419,6 +1883,27 @@ export function FamilyScreenV2() {
           />
         )}
       </Toolbar>
+      <RoleSummaryCardsSection
+        cards={roleSummaryCards}
+        removedRoles={removedRoleSummaries}
+        onCardClick={(card) => {
+          setSelectedRemovedRoleId(null);
+          setSelectedRoleSummaryCardId(card.id);
+        }}
+        onRemovedRoleClick={(removedRole) => {
+          setSelectedRoleSummaryCardId(null);
+          setSelectedRemovedRoleId(removedRole.id);
+        }}
+      />
+      <RoleDetailsDrawerV2
+        card={selectedRoleSummaryCard}
+        removedRole={selectedRemovedRole}
+        open={selectedRoleSummaryCard !== null || selectedRemovedRole !== null}
+        onClose={() => {
+          setSelectedRoleSummaryCardId(null);
+          setSelectedRemovedRoleId(null);
+        }}
+      />
       <Grid container spacing={2} sx={{ mb: 2 }}>
         {permissions(Permission.ViewV1CaseProgress) && (
           <Grid item xs={12} lg={7}>
@@ -1855,7 +2340,7 @@ export function FamilyScreenV2() {
             aria-label="Family screen sections"
           >
             {familyScreenTabs.map((tab) => (
-              <Tab key={tab.label} label={tab.desktopLabel} />
+              <Tab key={tab.value} value={tab.value} label={tab.desktopLabel} />
             ))}
           </Tabs>
         </Box>
@@ -1865,12 +2350,12 @@ export function FamilyScreenV2() {
           <Select
             labelId="family-screen-section-label"
             id="family-screen-section-select"
-            value={String(selectedTab)}
+            value={selectedTab}
             label="Section"
             onChange={handleSelectedTabChange}
           >
-            {familyScreenTabs.map((tab, index) => (
-              <MenuItem key={tab.label} value={String(index)}>
+            {familyScreenTabs.map((tab) => (
+              <MenuItem key={tab.value} value={tab.value}>
                 {tab.mobileLabel}
               </MenuItem>
             ))}
@@ -1955,102 +2440,10 @@ export function FamilyScreenV2() {
                   </Grid>
                 </>
               )}
-            {showOverview && family.volunteerFamilyInfo && (
+            {showApprovals && family.volunteerFamilyInfo && (
               <>
                 <Grid item xs={12}>
-                  <Box
-                    sx={{
-                      '& > div:first-of-type': {
-                        marginLeft: 0,
-                      },
-                      '& > *': {
-                        margin: theme.spacing(0.5),
-                      },
-                    }}
-                  >
-                    {Object.entries(
-                      family.volunteerFamilyInfo?.familyRoleApprovals || {}
-                    ).flatMap(([role, roleApprovalStatus]) => (
-                      <VolunteerRoleApprovalStatusChip
-                        key={role}
-                        roleName={role}
-                        status={roleApprovalStatus.effectiveRoleApprovalStatus}
-                      />
-                    ))}
-                    {(family.volunteerFamilyInfo?.roleRemovals || []).map(
-                      (removedRole) => (
-                        <Chip
-                          key={removedRole.roleName}
-                          size="small"
-                          label={`${removedRole.roleName} - ${
-                            RoleRemovalReason[removedRole.reason!]
-                          } - ${removedRole.additionalComments}${
-                            removedRole.effectiveSince
-                              ? ' - effective ' +
-                                format(removedRole.effectiveSince, 'M/d/yy')
-                              : ''
-                          }${
-                            removedRole.effectiveUntil
-                              ? ' - through ' +
-                                format(removedRole.effectiveUntil, 'M/d/yy')
-                              : ''
-                          }`}
-                        />
-                      )
-                    )}
-                  </Box>
-                </Grid>
-                <Grid item xs={12} sm={6} md={4} style={{ paddingRight: 20 }}>
-                  <Typography className="ph-unmask" variant="h3">
-                    Incomplete
-                  </Typography>
-                  {family.volunteerFamilyInfo?.missingRequirements?.map(
-                    (missing, i) => (
-                      <MissingRequirementRow
-                        key={`${missing}:${i}`}
-                        requirement={missing.item1 || ''}
-                        policyVersions={missing.item2?.map((v) => ({
-                          version: v.item1 ?? '',
-                          roleName: v.item2 ?? '',
-                        }))}
-                        context={volunteerFamilyRequirementContext}
-                      />
-                    )
-                  )}
-                  <Divider />
-                  {family.volunteerFamilyInfo?.availableApplications?.map(
-                    (application, i) => (
-                      <MissingRequirementRow
-                        key={`${application}:${i}`}
-                        requirement={application}
-                        context={volunteerFamilyRequirementContext}
-                        isAvailableApplication={true}
-                      />
-                    )
-                  )}
-                </Grid>
-                <Grid item xs={12} sm={6} md={4} style={{ paddingRight: 20 }}>
-                  <Typography className="ph-unmask" variant="h3">
-                    Completed
-                  </Typography>
-                  {family.volunteerFamilyInfo?.completedRequirements?.map(
-                    (completed, i) => (
-                      <CompletedRequirementRow
-                        key={`${completed.completedRequirementId}:${i}`}
-                        requirement={completed}
-                        context={volunteerFamilyRequirementContext}
-                      />
-                    )
-                  )}
-                  {family.volunteerFamilyInfo?.exemptedRequirements?.map(
-                    (exempted, i) => (
-                      <ExemptedRequirementRow
-                        key={`${exempted.requirementName}:${i}`}
-                        requirement={exempted}
-                        context={volunteerFamilyRequirementContext}
-                      />
-                    )
-                  )}
+                  <ApprovalLedgerSection rows={approvalLedgerRows} />
                 </Grid>
               </>
             )}
@@ -2074,6 +2467,7 @@ export function FamilyScreenV2() {
                   family={family}
                   permissions={permissions}
                   hideTitle
+                  scrollToArrangementId={arrangementIdToScrollTo}
                 />
               )}
 
@@ -2100,6 +2494,7 @@ export function FamilyScreenV2() {
                         familyId={familyId}
                         personId={adult.item1.id}
                         showCustomFields
+                        showApprovalContent={false}
                       />
                     )
                 )}
@@ -2283,7 +2678,10 @@ export function FamilyScreenV2() {
               <Typography variant="h3" className="ph-unmask" sx={{ m: 0 }}>
                 Recent Activity: Last 7 days
               </Typography>
-              <Button size="small" onClick={() => setSelectedTab(3)}>
+              <Button
+                size="small"
+                onClick={() => setSelectedTab('timelineAndNotes')}
+              >
                 View All
               </Button>
             </Box>

@@ -6,7 +6,11 @@ import { ListItemLink } from './ListItemLink';
 import { useRecoilValue } from 'recoil';
 import { changelogUnreadCountState } from '../Hooks/useFeaturebase';
 
-export default function WhatsNew() {
+interface WhatsNewProps {
+  collapsed?: boolean;
+}
+
+export default function WhatsNew({ collapsed }: WhatsNewProps) {
   const permissions = useGlobalPermissions();
   const hasAccess = permissions(Permission.AccessSupportScreen);
 
@@ -18,6 +22,7 @@ export default function WhatsNew() {
     <ListItemLink
       className="ph-unmask"
       primary="What's New"
+      collapsed={collapsed}
       icon={
         <Badge badgeContent={unreadCount} color="secondary">
           <CampaignIcon />

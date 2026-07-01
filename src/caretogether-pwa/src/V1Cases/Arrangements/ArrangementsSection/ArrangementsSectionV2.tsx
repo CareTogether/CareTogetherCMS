@@ -58,6 +58,7 @@ type ArrangementSectionProps = {
   family: CombinedFamilyInfo;
   permissions: (permission: Permission) => boolean;
   hideTitle?: boolean;
+  scrollToArrangementId?: string;
 };
 
 type ArrangementTableRowProps = {
@@ -436,6 +437,7 @@ export function ArrangementsSection({
   family,
   permissions,
   hideTitle = false,
+  scrollToArrangementId,
 }: ArrangementSectionProps) {
   const [selectedFilters, setSelectedFilters] = useState<string[]>([
     'Active',
@@ -452,7 +454,7 @@ export function ArrangementsSection({
   const filteredArrangements = getFilteredArrangements(v1Case, selectedFilters);
   const arrangementRefs = useRef<Record<string, HTMLDivElement | null>>({});
 
-  useScrollToArrangement(arrangementRefs);
+  useScrollToArrangement(arrangementRefs, scrollToArrangementId);
 
   return (
     <Grid item xs={12} sx={{ mb: 3 }}>
