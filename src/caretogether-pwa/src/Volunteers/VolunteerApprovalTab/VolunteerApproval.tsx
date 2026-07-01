@@ -33,7 +33,7 @@ import {
   organizationConfigurationQuery,
   policyData,
 } from '../../Model/ConfigurationModel';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import {
   Add as AddIcon,
   Email as EmailIcon,
@@ -101,10 +101,11 @@ function VolunteerApproval(props: { onOpen: () => void }) {
 
   const policy = useRecoilValue(policyData);
 
-  const customFieldNames =
-    (policy.customFamilyFields?.map((field) => field.name) || []).concat(
-      policy.volunteerPolicy?.customFields?.map((field) => field.name) || []
-    );
+  const customFieldNames = (
+    policy.customFamilyFields?.map((field) => field.name) || []
+  ).concat(
+    policy.volunteerPolicy?.customFields?.map((field) => field.name) || []
+  );
 
   //#region Role/Status Selection Code
   const [roleFilters, setRoleFilters] = useRecoilState(roleFiltersState);
@@ -124,6 +125,27 @@ function VolunteerApproval(props: { onOpen: () => void }) {
       (filter) => filter.value === getOptionValueFromSelection(selection)
     );
     setStatusFilters(getUpdatedFilters(statusFilters, filterOptionToUpdate!));
+  }
+
+  function changeUnassignedArrangementTypeFilterSelection(
+    selection: string | string[]
+  ) {
+    setUncheckedFamilies([]);
+    const filterOptionToUpdate = unassignedArrangementTypeFilters.find(
+      (filter) => filter.value === getOptionValueFromSelection(selection)
+    );
+
+    if (!filterOptionToUpdate) {
+      return;
+    }
+
+    setSelectedUnassignedArrangementTypes((selectedTypes) =>
+      selectedTypes.includes(filterOptionToUpdate.key)
+        ? selectedTypes.filter(
+            (selectedType) => selectedType !== filterOptionToUpdate.key
+          )
+        : selectedTypes.concat(filterOptionToUpdate.key)
+    );
   }
 
   function changeCustomFieldFilter(
@@ -158,34 +180,86 @@ function VolunteerApproval(props: { onOpen: () => void }) {
     setSelectedValuesForField: setCustomFieldFilter,
     optionsByField: customFieldFilterOptionsByField,
   } = useCustomFieldFilters({
-    customFields: (policy.customFamilyFields ?? []).concat(policy.volunteerPolicy?.customFields ?? []),
+    customFields: (policy.customFamilyFields ?? []).concat(
+      policy.volunteerPolicy?.customFields ?? []
+    ),
     items: volunteerFamilies,
     isBlank: (family, fieldName) => {
       const familyField = family.family?.completedCustomFields?.find(
         (customField) => customField.customFieldName === fieldName
       );
-      if (familyField && familyField.value !== undefined && familyField.value !== null) return false;
-      const volunteerField = family.volunteerFamilyInfo?.completedCustomFields?.find(
-        (customField) => customField.customFieldName === fieldName
+      if (
+        familyField &&
+        familyField.value !== undefined &&
+        familyField.value !== null
+      )
+        return false;
+      const volunteerField =
+        family.volunteerFamilyInfo?.completedCustomFields?.find(
+          (customField) => customField.customFieldName === fieldName
+        );
+      return (
+        !volunteerField ||
+        volunteerField.value === undefined ||
+        volunteerField.value === null
       );
-      return !volunteerField || volunteerField.value === undefined || volunteerField.value === null;
     },
     getValue: (family, fieldName) => {
       const familyField = family.family?.completedCustomFields?.find(
         (customField) => customField.customFieldName === fieldName
       );
-      if (familyField?.value !== undefined && familyField?.value !== null) return familyField.value;
-      const volunteerField = family.volunteerFamilyInfo?.completedCustomFields?.find(
-        (customField) => customField.customFieldName === fieldName
-      );
+      if (familyField?.value !== undefined && familyField?.value !== null)
+        return familyField.value;
+      const volunteerField =
+        family.volunteerFamilyInfo?.completedCustomFields?.find(
+          (customField) => customField.customFieldName === fieldName
+        );
       return volunteerField?.value;
     },
   });
   const [filterText, setFilterText] = useState('');
-  const customFieldCount = (policy.customFamilyFields || []).length + (policy.volunteerPolicy?.customFields || []).length;
+  const arrangementTypes = useMemo(
+    () =>
+      Array.from(
+        new Set(
+          (policy.referralPolicy?.arrangementPolicies ?? [])
+            .map((arrangementPolicy) => arrangementPolicy.arrangementType)
+            .filter(
+              (arrangementType): arrangementType is string => !!arrangementType
+            )
+        )
+      ),
+    [policy.referralPolicy?.arrangementPolicies]
+  );
+  const [
+    selectedUnassignedArrangementTypes,
+    setSelectedUnassignedArrangementTypes,
+  ] = useState<string[]>([]);
+  const unassignedArrangementTypeFilters = arrangementTypes.map(
+    (arrangementType, index) => ({
+      key: arrangementType,
+      value: index.toString(),
+      selected: selectedUnassignedArrangementTypes.includes(arrangementType),
+    })
+  );
+  const customFieldCount =
+    (policy.customFamilyFields || []).length +
+    (policy.volunteerPolicy?.customFields || []).length;
   const activeCustomFieldFilterCount = Object.values(customFieldFilters).filter(
     (selectedValues) => selectedValues.length > 0
   ).length;
+
+  useEffect(() => {
+    setSelectedUnassignedArrangementTypes((selectedTypes) => {
+      const validSelectedTypes = selectedTypes.filter((selectedType) =>
+        arrangementTypes.includes(selectedType)
+      );
+
+      return validSelectedTypes.length === selectedTypes.length
+        ? selectedTypes
+        : validSelectedTypes;
+    });
+  }, [arrangementTypes]);
 
   //#region Family/Individual Filtering Code
   const selectedFamilyRoleKeys = roleFilters
@@ -402,29 +476,59 @@ function VolunteerApproval(props: { onOpen: () => void }) {
   function familyMatchesCustomFieldFilters(family: CombinedFamilyInfo) {
     return matchesCustomFieldFilters({
       item: family,
-      customFields: (policy.customFamilyFields ?? []).concat(policy.volunteerPolicy?.customFields ?? []),
+      customFields: (policy.customFamilyFields ?? []).concat(
+        policy.volunteerPolicy?.customFields ?? []
+      ),
       selectedValuesByField: customFieldFilters,
       isBlank: (f, fieldName) => {
         const familyField = f.family?.completedCustomFields?.find(
           (customField) => customField.customFieldName === fieldName
         );
-        if (familyField && familyField.value !== undefined && familyField.value !== null) return false;
-        const volunteerField = f.volunteerFamilyInfo?.completedCustomFields?.find(
-          (customField) => customField.customFieldName === fieldName
+        if (
+          familyField &&
+          familyField.value !== undefined &&
+          familyField.value !== null
+        )
+          return false;
+        const volunteerField =
+          f.volunteerFamilyInfo?.completedCustomFields?.find(
+            (customField) => customField.customFieldName === fieldName
+          );
+        return (
+          !volunteerField ||
+          volunteerField.value === undefined ||
+          volunteerField.value === null
         );
-        return !volunteerField || volunteerField.value === undefined || volunteerField.value === null;
       },
       getValue: (f, fieldName) => {
         const familyField = f.family?.completedCustomFields?.find(
           (customField) => customField.customFieldName === fieldName
         );
-        if (familyField?.value !== undefined && familyField?.value !== null) return familyField.value;
-        const volunteerField = f.volunteerFamilyInfo?.completedCustomFields?.find(
-          (customField) => customField.customFieldName === fieldName
-        );
+        if (familyField?.value !== undefined && familyField?.value !== null)
+          return familyField.value;
+        const volunteerField =
+          f.volunteerFamilyInfo?.completedCustomFields?.find(
+            (customField) => customField.customFieldName === fieldName
+          );
         return volunteerField?.value;
       },
     });
+  }
+
+  function familyHasNoAssignmentsForSelectedArrangementTypes(
+    family: CombinedFamilyInfo
+  ) {
+    if (selectedUnassignedArrangementTypes.length === 0) {
+      return true;
+    }
+
+    const assignments = family.volunteerFamilyInfo?.assignments ?? [];
+    return selectedUnassignedArrangementTypes.every(
+      (arrangementType) =>
+        !assignments.some(
+          (assignment) => assignment.arrangementType === arrangementType
+        )
+    );
   }
 
   const filteredVolunteerFamilies = volunteerFamilies.filter(
@@ -441,12 +545,20 @@ function VolunteerApproval(props: { onOpen: () => void }) {
           )
         )) &&
       familyOrFamilyMembersMeetFilterCriteria(family) &&
+      familyHasNoAssignmentsForSelectedArrangementTypes(family) &&
       familyMatchesCustomFieldFilters(family)
   );
 
   useEffect(() => {
     forceCheck();
-  }, [customFieldFilters, filterText, roleFilters, sortMode, statusFilters]);
+  }, [
+    customFieldFilters,
+    filterText,
+    roleFilters,
+    selectedUnassignedArrangementTypes,
+    sortMode,
+    statusFilters,
+  ]);
 
   const selectedFamilies = filteredVolunteerFamilies.filter(
     (family) => !uncheckedFamilies.some((f) => f === family.family!.id!)
@@ -614,6 +726,13 @@ function VolunteerApproval(props: { onOpen: () => void }) {
                   options={statusFilters}
                   setSelected={changeStatusFilterSelection}
                 />
+                {unassignedArrangementTypeFilters.length > 0 && (
+                  <VolunteerFilter
+                    label="No Assignments"
+                    options={unassignedArrangementTypeFilters}
+                    setSelected={changeUnassignedArrangementTypeFilterSelection}
+                  />
+                )}
                 {customFieldCount > 0 && (
                   <FormControl
                     sx={{
@@ -759,9 +878,7 @@ function VolunteerApproval(props: { onOpen: () => void }) {
               >
                 <MenuItem value="lastNameAsc">Last name (ascending)</MenuItem>
                 <MenuItem value="lastNameDesc">Last name (descending)</MenuItem>
-                <MenuItem value="firstNameAsc">
-                  First name (ascending)
-                </MenuItem>
+                <MenuItem value="firstNameAsc">First name (ascending)</MenuItem>
                 <MenuItem value="firstNameDesc">
                   First name (descending)
                 </MenuItem>
@@ -770,14 +887,15 @@ function VolunteerApproval(props: { onOpen: () => void }) {
           </Stack>
           <CustomFieldFiltersSidePanel>
             <VolunteerCustomFieldFiltersSidePanel
-              customFields={(policy.customFamilyFields || []).concat(policy.volunteerPolicy?.customFields || [])}
+              customFields={(policy.customFamilyFields || []).concat(
+                policy.volunteerPolicy?.customFields || []
+              )}
               optionsByField={customFieldFilterOptionsByField}
               selectedValuesByField={customFieldFilters}
               onFieldChange={changeCustomFieldFilter}
               onClose={closeCustomFieldFiltersSidePanel}
             />
           </CustomFieldFiltersSidePanel>
-
         </Box>
         <Box
           sx={{
