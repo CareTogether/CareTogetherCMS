@@ -47,6 +47,18 @@ import {
   ChildLocationChanged,
   ReferralOpened as V1CaseOpened,
   ReferralRequirementCompleted as V1CaseRequirementCompleted,
+  Age,
+  AgeInYears,
+  CustodialRelationship,
+  CustodialRelationshipType,
+  CustomField,
+  CustomFieldType,
+  EmailAddressType,
+  ExactAge,
+  FamilyAdultRelationshipInfo,
+  Gender,
+  Person,
+  PhoneNumberType,
 } from '../GeneratedClient';
 import { useParams } from 'react-router';
 import {
@@ -63,6 +75,7 @@ import {
   MoreVert as MoreVertIcon,
   PersonPinCircle as PersonPinCircleIcon,
   Phone as PhoneIcon,
+  Print as PrintIcon,
 } from '@mui/icons-material';
 import { AdultCard } from './AdultCard';
 import { ChildCard } from './ChildCard';
@@ -72,7 +85,7 @@ import { AddChildDialog } from './AddChildDialog';
 import { AddEditNoteDialog } from '../Notes/AddEditNoteDialog';
 import { ApproveNoteDialog } from '../Notes/ApproveNoteDialog';
 import { DiscardNoteDialog } from '../Notes/DiscardNoteDialog';
-import { format } from 'date-fns';
+import { differenceInYears, format } from 'date-fns';
 import { UploadFamilyDocumentsDialog } from './UploadFamilyDocumentsDialog';
 import { CloseV1CaseDrawer } from '../V1Cases/CloseV1CaseDrawer';
 import { OpenNewV1CaseDialog } from '../V1Cases/OpenNewV1CaseDialog';
@@ -131,7 +144,10 @@ import { FamilyCompleteOtherController } from '../Requirements/FamilyCompleteOth
 import { useV1CasesModel } from '../Model/V1CasesModel';
 import { formatStatusWithDate } from '../V1Referrals/formatStatusWithDate';
 import { policyData } from '../Model/ConfigurationModel';
-import { FUNCTION_ASSIGNMENTS_FEATURE_FLAG } from '../featureFlags';
+import {
+  FAMILY_MEMBER_PRINT_INFORMATION_FEATURE_FLAG,
+  FUNCTION_ASSIGNMENTS_FEATURE_FLAG,
+} from '../featureFlags';
 import { FunctionAssignmentsEditorDrawer } from '../FunctionAssignments/FunctionAssignmentsSection';
 import {
   assignmentNamesForRole,
@@ -146,6 +162,8 @@ import { AddEditV1ReferralNoteDialog } from '../V1Referrals/AddEditV1ReferralNot
 import { ApproveV1ReferralNoteDialog } from '../V1Referrals/ApproveV1ReferralNoteDialog';
 import { DiscardV1ReferralNoteDialog } from '../V1Referrals/DiscardV1ReferralNoteDialog';
 import { useLocation } from 'react-router-dom';
+import { combineCustomFieldPolicies } from './familyMemberCustomFieldPolicies';
+import { sortByPolicyOrder } from '../Generic/sortByPolicyOrder';
 
 type CustomFieldRenderInfo = CompletedCustomFieldInfo | string;
 type ReferralNoteEntry = NonNullable<V1Referral['notes']>[number];
@@ -165,6 +183,20 @@ type FamilyScreenTab = {
   label: string;
   desktopLabel: React.ReactNode;
   mobileLabel: string;
+};
+type PrintableFamilyMember = {
+  kind: 'adult' | 'child';
+  person: Person;
+  relationshipToFamily?: FamilyAdultRelationshipInfo;
+};
+type PrintableCustomField = {
+  name: string;
+  groupingKey?: string;
+  value: string;
+};
+type PrintableCustomFieldSection = {
+  groupingKey?: string;
+  customFields: PrintableCustomField[];
 };
 
 function stringFromLocationState(state: unknown, key: string) {
@@ -197,6 +229,189 @@ function orderCustomFieldsByPolicy(
     const customField = customFieldsByName.get(fieldName);
     return customField === undefined ? [] : [customField];
   });
+}
+
+function personFullName(person: Person) {
+  return [person.firstName, person.lastName].filter(Boolean).join(' ');
+}
+
+function formatDateOfBirth(age?: Age) {
+  if (!(age instanceof ExactAge) || !age.dateOfBirth) return undefined;
+
+  return new Intl.DateTimeFormat('en-US', {
+    timeZone: 'UTC',
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+  }).format(new Date(age.dateOfBirth));
+}
+
+function formatAge(age?: Age) {
+  if (age instanceof ExactAge && age.dateOfBirth) {
+    return `${differenceInYears(new Date(), new Date(age.dateOfBirth))}`;
+  }
+
+  if (age instanceof AgeInYears && age.years && age.asOf) {
+    return `${age.years + differenceInYears(new Date(), age.asOf)}`;
+  }
+
+  return undefined;
+}
+
+function formatAddress(person: Person) {
+  const address =
+    person.addresses?.find((a) => a.id === person.currentAddressId) ??
+    person.addresses?.[0];
+
+  if (!address) return undefined;
+
+  return [
+    address.line1,
+    address.line2,
+    [address.city, address.state, address.postalCode]
+      .filter(Boolean)
+      .join(', '),
+    address.county ? `${address.county} County` : undefined,
+  ]
+    .filter(Boolean)
+    .join(' ');
+}
+
+function formatPhoneNumbers(person: Person) {
+  return (person.phoneNumbers ?? [])
+    .filter((phoneNumber) => phoneNumber.number)
+    .map((phoneNumber) => {
+      const type =
+        phoneNumber.type === undefined
+          ? undefined
+          : PhoneNumberType[phoneNumber.type];
+      const preferred =
+        phoneNumber.id && phoneNumber.id === person.preferredPhoneNumberId;
+      return [
+        type ? `${type}:` : undefined,
+        phoneNumber.number,
+        preferred ? '(preferred)' : undefined,
+      ]
+        .filter(Boolean)
+        .join(' ');
+    });
+}
+
+function formatEmailAddresses(person: Person) {
+  return (person.emailAddresses ?? [])
+    .filter((emailAddress) => emailAddress.address)
+    .map((emailAddress) => {
+      const type =
+        emailAddress.type === undefined
+          ? undefined
+          : EmailAddressType[emailAddress.type];
+      const preferred =
+        emailAddress.id && emailAddress.id === person.preferredEmailAddressId;
+      return [
+        type ? `${type}:` : undefined,
+        emailAddress.address,
+        preferred ? '(preferred)' : undefined,
+      ]
+        .filter(Boolean)
+        .join(' ');
+    });
+}
+
+function formatCustomFieldValue(
+  completedCustomField: CompletedCustomFieldInfo | undefined,
+  customFieldPolicy: CustomField | undefined
+) {
+  const value = completedCustomField?.value;
+  if (value === undefined || value === null || value === '') return '';
+
+  const fieldType =
+    customFieldPolicy?.type ?? completedCustomField?.customFieldType;
+
+  if (fieldType === CustomFieldType.Boolean) {
+    return value ? 'Yes' : 'No';
+  }
+
+  if (fieldType === CustomFieldType.StringArray) {
+    return Array.isArray(value)
+      ? sortByPolicyOrder(
+          value.map(String),
+          customFieldPolicy?.validValues ?? []
+        ).join(', ')
+      : String(value);
+  }
+
+  if (Array.isArray(value)) {
+    return value.map(String).join(', ');
+  }
+
+  return typeof value === 'object' ? JSON.stringify(value) : String(value);
+}
+
+function buildPrintableCustomFieldSections(
+  completedCustomFields: CompletedCustomFieldInfo[] | undefined,
+  customFieldPolicies: CustomField[]
+): PrintableCustomFieldSection[] {
+  const completedFieldsByName = new Map(
+    (completedCustomFields ?? []).map((completedCustomField) => [
+      completedCustomField.customFieldName,
+      completedCustomField,
+    ])
+  );
+  const policyNames = new Set(customFieldPolicies.map((field) => field.name));
+
+  const policyFields = customFieldPolicies.map((customFieldPolicy) => ({
+    name: customFieldPolicy.name,
+    groupingKey: customFieldPolicy.groupingKey,
+    value: formatCustomFieldValue(
+      completedFieldsByName.get(customFieldPolicy.name),
+      customFieldPolicy
+    ),
+  }));
+  const extraCompletedFields = (completedCustomFields ?? [])
+    .filter(
+      (completedCustomField) =>
+        !policyNames.has(completedCustomField.customFieldName)
+    )
+    .sort((a, b) => a.customFieldName.localeCompare(b.customFieldName))
+    .map((completedCustomField) => ({
+      name: completedCustomField.customFieldName,
+      groupingKey: undefined,
+      value: formatCustomFieldValue(completedCustomField, undefined),
+    }));
+
+  return policyFields
+    .concat(extraCompletedFields)
+    .reduce<PrintableCustomFieldSection[]>((sections, customField) => {
+      const existingSection = sections.find(
+        (section) => section.groupingKey === customField.groupingKey
+      );
+
+      if (existingSection) {
+        existingSection.customFields.push(customField);
+        return sections;
+      }
+
+      return sections.concat({
+        groupingKey: customField.groupingKey,
+        customFields: [customField],
+      });
+    }, []);
+}
+
+function custodialRelationshipLabel(type?: CustodialRelationshipType) {
+  if (type === CustodialRelationshipType.LegalGuardian) {
+    return 'Legal guardian';
+  }
+
+  if (type === CustodialRelationshipType.ParentWithCustody) {
+    return 'Parent with custody';
+  }
+
+  if (type === CustodialRelationshipType.ParentWithCourtAppointedCustody) {
+    return 'Parent with court-appointed sole custody';
+  }
+
+  return undefined;
 }
 
 function getDateValue(value?: Date | string | null): number {
@@ -236,7 +451,9 @@ function recentActivityTitle(activity: Activity) {
   return 'Family activity';
 }
 
-function recentActivityIcon(activity: Activity): RecentOverviewTimelineItem['icon'] {
+function recentActivityIcon(
+  activity: Activity
+): RecentOverviewTimelineItem['icon'] {
   if (
     activity instanceof V1CaseRequirementCompleted ||
     activity instanceof ArrangementRequirementCompleted
@@ -293,6 +510,287 @@ function ContactInfoCopyButton({
   );
 }
 
+type FamilyMemberPrintDocumentProps = {
+  member: PrintableFamilyMember | null;
+  canViewDateOfBirth: boolean;
+  familyAdults: Person[];
+  familyChildren: Person[];
+  custodialRelationships: CustodialRelationship[];
+  customFieldSections: PrintableCustomFieldSection[];
+};
+
+function PrintableInfoRow({
+  label,
+  value,
+}: {
+  label: string;
+  value?: React.ReactNode;
+}) {
+  if (
+    value === undefined ||
+    value === null ||
+    (typeof value === 'string' && value.length === 0)
+  ) {
+    return null;
+  }
+
+  return (
+    <div className="print-info-row">
+      <dt>{label}</dt>
+      <dd>{value}</dd>
+    </div>
+  );
+}
+
+function PrintableList({ items }: { items: string[] }) {
+  if (items.length === 0) return null;
+
+  return (
+    <ul className="print-list">
+      {items.map((item, index) => (
+        <li key={`${item}:${index}`}>{item}</li>
+      ))}
+    </ul>
+  );
+}
+
+function FamilyMemberPrintDocument({
+  member,
+  canViewDateOfBirth,
+  familyAdults,
+  familyChildren,
+  custodialRelationships,
+  customFieldSections,
+}: FamilyMemberPrintDocumentProps) {
+  if (!member) {
+    return <div />;
+  }
+
+  const { person } = member;
+  const gender =
+    person.gender === undefined ? undefined : Gender[person.gender];
+  const childRelationships = familyChildren.map((child) => {
+    const relationship = custodialRelationships.find(
+      (r) => r.childId === child.id && r.personId === person.id
+    );
+    const relationshipText = custodialRelationshipLabel(relationship?.type);
+    return `${personFullName(child)}${canViewDateOfBirth && formatDateOfBirth(child.age) ? `, DOB ${formatDateOfBirth(child.age)}` : ''}${relationshipText ? ` - ${relationshipText}` : ''}`;
+  });
+  const adultRelationships = custodialRelationships
+    .filter((relationship) => relationship.childId === person.id)
+    .map((relationship) => {
+      const adult = familyAdults.find((a) => a.id === relationship.personId);
+      if (!adult) return undefined;
+
+      const relationshipText = custodialRelationshipLabel(relationship.type);
+      const contact =
+        formatPhoneNumbers(adult)[0] ?? formatEmailAddresses(adult)[0];
+      return [personFullName(adult), relationshipText, contact]
+        .filter(Boolean)
+        .join(' - ');
+    })
+    .filter((value): value is string => value !== undefined);
+  const title =
+    member.kind === 'adult' ? 'Parent Information' : 'Child Information';
+
+  return (
+    <article className="family-member-print-document ph-unmask">
+      <style>
+        {`
+          .family-member-print-document {
+            box-sizing: border-box;
+            width: 7.5in;
+            min-height: 10in;
+            padding: 0.35in;
+            color: #111;
+            font-family: Arial, Helvetica, sans-serif;
+            font-size: 11pt;
+            line-height: 1.35;
+            background: #fff;
+          }
+
+          .family-member-print-document * {
+            box-sizing: border-box;
+          }
+
+          .family-member-print-document h1 {
+            margin: 0 0 0.08in;
+            font-size: 20pt;
+            font-weight: 700;
+            letter-spacing: 0;
+          }
+
+          .family-member-print-document h2 {
+            margin: 0.2in 0 0.08in;
+            padding-bottom: 0.04in;
+            border-bottom: 1px solid #222;
+            font-size: 12pt;
+            font-weight: 700;
+            letter-spacing: 0;
+            text-transform: uppercase;
+          }
+
+          .family-member-print-document dl {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0.06in 0.22in;
+            margin: 0;
+          }
+
+          .print-info-row {
+            break-inside: avoid;
+          }
+
+          .print-info-row dt {
+            margin: 0;
+            font-size: 8.5pt;
+            font-weight: 700;
+            text-transform: uppercase;
+          }
+
+          .print-info-row dd {
+            min-height: 0.2in;
+            margin: 0;
+            padding-bottom: 0.03in;
+            border-bottom: 1px solid #aaa;
+            white-space: pre-wrap;
+          }
+
+          .family-member-print-document .full-width {
+            grid-column: 1 / -1;
+          }
+
+          .print-list {
+            margin: 0;
+            padding-left: 0.18in;
+          }
+
+          .custom-field-table {
+            width: 100%;
+            border-collapse: collapse;
+          }
+
+          .custom-field-table th,
+          .custom-field-table td {
+            padding: 0.04in 0.06in;
+            border: 1px solid #999;
+            text-align: left;
+            vertical-align: top;
+          }
+
+          .custom-field-table th {
+            width: 35%;
+            font-weight: 700;
+            background: #f3f3f3;
+          }
+
+          @page {
+            margin: 0.5in;
+          }
+        `}
+      </style>
+
+      <header>
+        <h1>{title}</h1>
+        <div>{personFullName(person)}</div>
+        <div>Printed {format(new Date(), 'M/d/yyyy')}</div>
+      </header>
+
+      <section>
+        <h2>Personal Details</h2>
+        <dl>
+          <PrintableInfoRow label="First name" value={person.firstName} />
+          <PrintableInfoRow label="Last name" value={person.lastName} />
+          <PrintableInfoRow
+            label="Date of birth"
+            value={
+              canViewDateOfBirth ? formatDateOfBirth(person.age) : undefined
+            }
+          />
+          <PrintableInfoRow label="Age" value={formatAge(person.age)} />
+          <PrintableInfoRow label="Gender" value={gender} />
+          <PrintableInfoRow label="Ethnicity" value={person.ethnicity} />
+          {member.kind === 'adult' && (
+            <>
+              <PrintableInfoRow
+                label="Relationship to family"
+                value={member.relationshipToFamily?.relationshipToFamily}
+              />
+              <PrintableInfoRow
+                label="Household"
+                value={
+                  member.relationshipToFamily?.isInHousehold
+                    ? 'In household'
+                    : 'Not in household'
+                }
+              />
+            </>
+          )}
+        </dl>
+      </section>
+
+      <section>
+        <h2>Contact</h2>
+        <dl>
+          <PrintableInfoRow label="Address" value={formatAddress(person)} />
+          <PrintableInfoRow
+            label="Phone numbers"
+            value={<PrintableList items={formatPhoneNumbers(person)} />}
+          />
+          <PrintableInfoRow
+            label="Email addresses"
+            value={<PrintableList items={formatEmailAddresses(person)} />}
+          />
+        </dl>
+      </section>
+
+      <section>
+        <h2>
+          {member.kind === 'adult' ? 'Children' : 'Parents and Guardians'}
+        </h2>
+        <dl>
+          <PrintableInfoRow
+            label={member.kind === 'adult' ? 'Children' : 'Adults'}
+            value={
+              <PrintableList
+                items={
+                  member.kind === 'adult'
+                    ? childRelationships
+                    : adultRelationships
+                }
+              />
+            }
+          />
+        </dl>
+      </section>
+
+      <section>
+        <h2>Notes and Concerns</h2>
+        <dl>
+          <PrintableInfoRow label="Concerns" value={person.concerns} />
+          <PrintableInfoRow label="Notes" value={person.notes} />
+        </dl>
+      </section>
+
+      {customFieldSections.map((section, sectionIndex) => (
+        <section key={section.groupingKey ?? `custom-fields-${sectionIndex}`}>
+          <h2>{section.groupingKey ?? 'Custom Fields'}</h2>
+          <table className="custom-field-table">
+            <tbody>
+              {section.customFields.map((customField) => (
+                <tr key={customField.name}>
+                  <th>{customField.name}</th>
+                  <td>{customField.value}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </section>
+      ))}
+    </article>
+  );
+}
+
 export function FamilyScreenV2() {
   const familyIdMaybe = useParams<{ familyId: string }>();
   const familyId = familyIdMaybe.familyId as string;
@@ -300,10 +798,7 @@ export function FamilyScreenV2() {
   const location = useLocation();
   const searchParams = new URLSearchParams(location.search);
   const v1CaseIdFromQuery = searchParams.get('v1CaseId') ?? undefined;
-  const v1CaseIdFromState = stringFromLocationState(
-    location.state,
-    'v1CaseId'
-  );
+  const v1CaseIdFromState = stringFromLocationState(location.state, 'v1CaseId');
   const v1CaseIdFromNavigation = v1CaseIdFromQuery ?? v1CaseIdFromState;
   const arrangementIdFromQuery = searchParams.get('arrangementId') ?? undefined;
   const arrangementIdFromState = stringFromLocationState(
@@ -610,6 +1105,9 @@ export function FamilyScreenV2() {
   const functionAssignmentsEnabled = useFeatureFlagEnabled(
     FUNCTION_ASSIGNMENTS_FEATURE_FLAG
   );
+  const familyMemberPrintInformationEnabled =
+    useFeatureFlagEnabled(FAMILY_MEMBER_PRINT_INFORMATION_FEATURE_FLAG) ===
+    true;
   const canViewFunctionAssignments =
     functionAssignmentsEnabled === true &&
     permissions(Permission.ViewV1CaseFunctionAssignments);
@@ -660,7 +1158,99 @@ export function FamilyScreenV2() {
 
   const printContentRef = useRef<HTMLDivElement>(null);
   const reactToPrintFn = useReactToPrint({ contentRef: printContentRef });
+  const familyMemberPrintContentRef = useRef<HTMLDivElement>(null);
+  const [familyMemberToPrint, setFamilyMemberToPrint] =
+    useState<PrintableFamilyMember | null>(null);
+  const [familyMemberPrintRequested, setFamilyMemberPrintRequested] =
+    useState(false);
+  const printFamilyMemberFn = useReactToPrint({
+    contentRef: familyMemberPrintContentRef,
+    documentTitle: () =>
+      familyMemberToPrint
+        ? `${personFullName(familyMemberToPrint.person)} information`
+        : 'Family member information',
+    preserveAfterPrint: true,
+  });
   const isVolunteerFamily = family?.volunteerFamilyInfo != null;
+  const activeAdults = useMemo<PrintableFamilyMember[]>(() => {
+    return (family?.family?.adults ?? []).flatMap((adult) =>
+      adult.item1?.id && adult.item1.active && adult.item2
+        ? [
+            {
+              kind: 'adult' as const,
+              person: adult.item1,
+              relationshipToFamily: adult.item2,
+            },
+          ]
+        : []
+    );
+  }, [family?.family?.adults]);
+  const activeChildren = useMemo<PrintableFamilyMember[]>(() => {
+    return (family?.family?.children ?? []).flatMap((child) =>
+      child.id && child.active
+        ? [
+            {
+              kind: 'child' as const,
+              person: child,
+            },
+          ]
+        : []
+    );
+  }, [family?.family?.children]);
+  const printableFamilyMembers = useMemo(
+    () => activeAdults.concat(activeChildren),
+    [activeAdults, activeChildren]
+  );
+  const adultCustomFieldPolicies = useMemo(
+    () =>
+      combineCustomFieldPolicies(
+        family?.partneringFamilyInfo != null
+          ? (policy.customFields?.partneringFamily?.adult ?? [])
+          : [],
+        family?.volunteerFamilyInfo != null
+          ? (policy.customFields?.volunteerFamily?.adult ?? [])
+          : []
+      ),
+    [
+      family?.partneringFamilyInfo,
+      family?.volunteerFamilyInfo,
+      policy.customFields?.partneringFamily?.adult,
+      policy.customFields?.volunteerFamily?.adult,
+    ]
+  );
+  const childCustomFieldPolicies = useMemo(
+    () =>
+      combineCustomFieldPolicies(
+        family?.partneringFamilyInfo != null
+          ? (policy.customFields?.partneringFamily?.child ?? [])
+          : [],
+        family?.volunteerFamilyInfo != null
+          ? (policy.customFields?.volunteerFamily?.child ?? [])
+          : []
+      ),
+    [
+      family?.partneringFamilyInfo,
+      family?.volunteerFamilyInfo,
+      policy.customFields?.partneringFamily?.child,
+      policy.customFields?.volunteerFamily?.child,
+    ]
+  );
+  const familyMemberPrintCustomFieldSections = useMemo(() => {
+    if (!familyMemberToPrint) return [];
+    if (!permissions(Permission.ViewFamilyCustomFields)) return [];
+
+    return buildPrintableCustomFieldSections(
+      familyMemberToPrint.person.completedCustomFields,
+      familyMemberToPrint.kind === 'adult'
+        ? adultCustomFieldPolicies
+        : childCustomFieldPolicies
+    );
+  }, [
+    adultCustomFieldPolicies,
+    childCustomFieldPolicies,
+    familyMemberToPrint,
+    permissions,
+  ]);
   const primaryContactPerson = family?.family?.adults?.find(
     (adult) => adult.item1?.id === family.family?.primaryFamilyContactPersonId
   )?.item1;
@@ -692,7 +1282,8 @@ export function FamilyScreenV2() {
     ? 'Assignments'
     : 'Arrangements';
   const arrangementsCount = selectedV1Case?.arrangements?.length ?? 0;
-  const assignmentsCount = family?.volunteerFamilyInfo?.assignments?.length ?? 0;
+  const assignmentsCount =
+    family?.volunteerFamilyInfo?.assignments?.length ?? 0;
   const documentsCount =
     (family?.uploadedDocuments?.length ?? 0) +
     familyReferrals.reduce(
@@ -716,6 +1307,23 @@ export function FamilyScreenV2() {
         ).length ?? 0),
       0
     );
+
+  useEffect(() => {
+    if (!familyMemberPrintRequested || !familyMemberToPrint) return;
+
+    const frame = requestAnimationFrame(() => {
+      printFamilyMemberFn();
+      setFamilyMemberPrintRequested(false);
+    });
+
+    return () => cancelAnimationFrame(frame);
+  }, [familyMemberPrintRequested, familyMemberToPrint, printFamilyMemberFn]);
+
+  function printFamilyMemberInformation(member: PrintableFamilyMember) {
+    setFamilyMoreMenuAnchor(null);
+    setFamilyMemberToPrint(member);
+    setFamilyMemberPrintRequested(true);
+  }
 
   function tabLabel(label: string, count?: number, unapprovedCount?: number) {
     return (
@@ -877,7 +1485,9 @@ export function FamilyScreenV2() {
     return [...familyActivities, ...familyNotes, ...referralActivities]
       .filter((item) => {
         const timestamp = getDateValue(item.timestamp);
-        return timestamp >= sevenDaysAgo.getTime() && timestamp <= now.getTime();
+        return (
+          timestamp >= sevenDaysAgo.getTime() && timestamp <= now.getTime()
+        );
       })
       .sort((a, b) => getDateValue(b.timestamp) - getDateValue(a.timestamp))
       .slice(0, 6);
@@ -925,14 +1535,16 @@ export function FamilyScreenV2() {
         ((isOwnNote && permissions(Permission.DiscardOwnDraftNotes)) ||
           permissions(Permission.DiscardDraftNotes)),
       canApprove:
-        note.status === NoteStatus.Draft && permissions(Permission.ApproveNotes),
+        note.status === NoteStatus.Draft &&
+        permissions(Permission.ApproveNotes),
     };
   }
 
   function renderRecentNoteActions(item: RecentOverviewTimelineItem) {
     if (item.note) {
-      const { canDelete, canEdit, canApprove } =
-        getRecentFamilyNotePermissions(item.note);
+      const { canDelete, canEdit, canApprove } = getRecentFamilyNotePermissions(
+        item.note
+      );
 
       if (!canDelete && !canEdit && !canApprove) return null;
 
@@ -1050,8 +1662,11 @@ export function FamilyScreenV2() {
     (participatingFamilyRoles.length > 0 ||
       (family.volunteerFamilyInfo?.roleRemovals &&
         family.volunteerFamilyInfo.roleRemovals.length > 0));
+  const hasPrintActions =
+    familyMemberPrintInformationEnabled && printableFamilyMembers.length > 0;
   const hasMoreMenuActions =
     hasVolunteerRoleActions ||
+    hasPrintActions ||
     canEditFamilyInfo ||
     (family.volunteerFamilyInfo != null &&
       permissions(Permission.EditApprovalRequirementCompletion));
@@ -1063,6 +1678,30 @@ export function FamilyScreenV2() {
 
   return (
     <Container maxWidth={false} sx={{ paddingLeft: '12px' }}>
+      {familyMemberPrintInformationEnabled && (
+        <Box
+          sx={{
+            position: 'absolute',
+            top: 0,
+            left: '-10000px',
+            width: '8.5in',
+            backgroundColor: '#fff',
+          }}
+        >
+          <div ref={familyMemberPrintContentRef}>
+            <FamilyMemberPrintDocument
+              member={familyMemberToPrint}
+              canViewDateOfBirth={permissions(Permission.ViewPersonDateOfBirth)}
+              familyAdults={activeAdults.map((member) => member.person)}
+              familyChildren={activeChildren.map((member) => member.person)}
+              custodialRelationships={
+                family.family?.custodialRelationships ?? []
+              }
+              customFieldSections={familyMemberPrintCustomFieldSections}
+            />
+          </div>
+        </Box>
+      )}
       <Toolbar
         variant="dense"
         disableGutters={true}
@@ -1091,7 +1730,9 @@ export function FamilyScreenV2() {
               <IconButton
                 className="ph-unmask"
                 aria-label="family actions"
-                onClick={(event) => setFamilyMoreMenuAnchor(event.currentTarget)}
+                onClick={(event) =>
+                  setFamilyMoreMenuAnchor(event.currentTarget)
+                }
                 size="small"
                 sx={{
                   border: 1,
@@ -1141,7 +1782,9 @@ export function FamilyScreenV2() {
                 sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}
               >
                 <PhoneIcon fontSize="small" color="action" />
-                <Typography variant="body2">{primaryPhoneNumber.number}</Typography>
+                <Typography variant="body2">
+                  {primaryPhoneNumber.number}
+                </Typography>
                 <ContactInfoCopyButton
                   value={primaryPhoneNumber.number}
                   label="Phone number"
@@ -1269,9 +1912,7 @@ export function FamilyScreenV2() {
             )}
             {!isDesktop &&
               (canUploadDocuments || canEditFamilyInfo || canAddNotes) &&
-              hasMoreMenuActions && (
-                <Divider />
-              )}
+              hasMoreMenuActions && <Divider />}
             {permissions(Permission.EditVolunteerRoleParticipation) &&
               participatingFamilyRoles.flatMap(([role]) => (
                 <MenuItem key={role} onClick={() => selectRemoveRole(role)}>
@@ -1301,6 +1942,22 @@ export function FamilyScreenV2() {
             <MenuItem onClick={() => reactToPrintFn()}>
               <ListItemText primary="Print notes" />
             </MenuItem>
+
+            {familyMemberPrintInformationEnabled &&
+              printableFamilyMembers.map((member) => (
+                <MenuItem
+                  key={`${member.kind}:${member.person.id}`}
+                  onClick={() => printFamilyMemberInformation(member)}
+                >
+                  <ListItemIcon>
+                    <PrintIcon fontSize="small" />
+                  </ListItemIcon>
+                  <ListItemText
+                    className="ph-unmask"
+                    primary={`Print ${personFullName(member.person)} information`}
+                  />
+                </MenuItem>
+              ))}
 
             {family.volunteerFamilyInfo != null &&
               permissions(Permission.EditApprovalRequirementCompletion) && (
