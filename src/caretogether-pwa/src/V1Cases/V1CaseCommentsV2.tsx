@@ -6,7 +6,6 @@ import {
   DialogContent,
   DialogTitle,
   IconButton,
-  Paper,
   TextField,
   Typography,
 } from '@mui/material';
