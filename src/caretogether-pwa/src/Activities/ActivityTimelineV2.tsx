@@ -503,7 +503,10 @@ export function ActivityTimelineV2({
         </Stack>
       </div>
 
-      <AppTimeline position="right" sx={{ padding: 0 }}>
+      <AppTimeline position="right" sx={{ m: 0, p: 0 }}>
+        <Typography className="ph-unmask" variant="h3" sx={{ mb: 1 }}>
+          Timeline
+        </Typography>
         <Box sx={{ display: 'flex', justifyContent: 'flex-start', mb: 1 }}>
           <FormControl size="small" sx={{ minWidth: 160 }}>
             <InputLabel>Sort by</InputLabel>
