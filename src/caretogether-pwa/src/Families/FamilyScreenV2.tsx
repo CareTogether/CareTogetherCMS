@@ -614,10 +614,22 @@ function FamilyMemberPrintDocument({
           }
 
           .family-member-print-document h1 {
-            margin: 0 0 0.08in;
-            font-size: 20pt;
+            margin: 0 0 0.04in;
+            font-size: 26pt;
             font-weight: 700;
             letter-spacing: 0;
+          }
+
+          .print-document-type {
+            margin-bottom: 0.02in;
+            font-size: 11pt;
+            font-weight: 700;
+            letter-spacing: 0;
+            text-transform: uppercase;
+          }
+
+          .print-date {
+            font-size: 9pt;
           }
 
           .family-member-print-document h2 {
@@ -691,9 +703,11 @@ function FamilyMemberPrintDocument({
       </style>
 
       <header>
-        <h1>{title}</h1>
-        <div>{personFullName(person)}</div>
-        <div>Printed {format(new Date(), 'M/d/yyyy')}</div>
+        <div className="print-document-type">{title}</div>
+        <h1>{personFullName(person)}</h1>
+        <div className="print-date">
+          Printed {format(new Date(), 'M/d/yyyy')}
+        </div>
       </header>
 
       <section>
