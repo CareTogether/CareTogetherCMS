@@ -75,6 +75,7 @@ import { useFeatureFlagEnabled } from 'posthog-js/react';
 import { forceCheck } from '../../Utilities/reactLazyLoadInterop';
 import { VolunteerApprovalTableItem } from './VolunteerApprovalTableItem';
 import { VolunteerCustomFieldFiltersSidePanel } from './VolunteerCustomFieldFiltersSidePanel';
+import { VolunteerAssignmentFiltersSidePanel } from './VolunteerAssignmentFiltersSidePanel';
 import { useSidePanel } from '../../Hooks/useSidePanel';
 import { containedStickyHeaderTableSx } from '../../Utilities/stickyHeaderTableSx';
 import { WideTableContainer } from '../../Utilities/WideTableContainer';
@@ -84,6 +85,11 @@ import {
   normalizeFamilyNameSortMode,
   sortFamiliesByName,
 } from '../../Families/FamilyUtils';
+import {
+  AssignmentFilterSelectionsByArrangementType,
+  AssignmentFilterValue,
+  matchesAssignmentFilters,
+} from './assignmentFilters';
 
 const VOLUNTEER_APPROVAL_SORT_STORAGE_KEY = 'volunteer-approval-sortMode';
 
@@ -97,6 +103,11 @@ function VolunteerApproval(props: { onOpen: () => void }) {
     SidePanel: CustomFieldFiltersSidePanel,
     openSidePanel: openCustomFieldFiltersSidePanel,
     closeSidePanel: closeCustomFieldFiltersSidePanel,
+  } = useSidePanel();
+  const {
+    SidePanel: AssignmentFiltersSidePanel,
+    openSidePanel: openAssignmentFiltersSidePanel,
+    closeSidePanel: closeAssignmentFiltersSidePanel,
   } = useSidePanel();
 
   const policy = useRecoilValue(policyData);
@@ -127,33 +138,23 @@ function VolunteerApproval(props: { onOpen: () => void }) {
     setStatusFilters(getUpdatedFilters(statusFilters, filterOptionToUpdate!));
   }
 
-  function changeUnassignedArrangementTypeFilterSelection(
-    selection: string | string[]
-  ) {
-    setUncheckedFamilies([]);
-    const filterOptionToUpdate = unassignedArrangementTypeFilters.find(
-      (filter) => filter.value === getOptionValueFromSelection(selection)
-    );
-
-    if (!filterOptionToUpdate) {
-      return;
-    }
-
-    setSelectedUnassignedArrangementTypes((selectedTypes) =>
-      selectedTypes.includes(filterOptionToUpdate.key)
-        ? selectedTypes.filter(
-            (selectedType) => selectedType !== filterOptionToUpdate.key
-          )
-        : selectedTypes.concat(filterOptionToUpdate.key)
-    );
-  }
-
   function changeCustomFieldFilter(
     fieldName: string,
     value: CustomFieldFilterValue[]
   ) {
     setUncheckedFamilies([]);
     setCustomFieldFilter(fieldName, value);
+  }
+
+  function changeAssignmentFilter(
+    arrangementType: string,
+    selectedValues: AssignmentFilterValue[]
+  ) {
+    setUncheckedFamilies([]);
+    setAssignmentFilters((previous) => ({
+      ...previous,
+      [arrangementType]: selectedValues,
+    }));
   }
   //#endregion
 
@@ -231,17 +232,11 @@ function VolunteerApproval(props: { onOpen: () => void }) {
       ),
     [policy.referralPolicy?.arrangementPolicies]
   );
-  const [
-    selectedUnassignedArrangementTypes,
-    setSelectedUnassignedArrangementTypes,
-  ] = useState<string[]>([]);
-  const unassignedArrangementTypeFilters = arrangementTypes.map(
-    (arrangementType, index) => ({
-      key: arrangementType,
-      value: index.toString(),
-      selected: selectedUnassignedArrangementTypes.includes(arrangementType),
-    })
-  );
+  const [assignmentFilters, setAssignmentFilters] =
+    useState<AssignmentFilterSelectionsByArrangementType>({});
+  const activeAssignmentFilterCount = Object.values(assignmentFilters).filter(
+    (selectedValues) => selectedValues.length > 0
+  ).length;
   const customFieldCount =
     (policy.customFamilyFields || []).length +
     (policy.volunteerPolicy?.customFields || []).length;
@@ -250,14 +245,17 @@ function VolunteerApproval(props: { onOpen: () => void }) {
   ).length;
 
   useEffect(() => {
-    setSelectedUnassignedArrangementTypes((selectedTypes) => {
-      const validSelectedTypes = selectedTypes.filter((selectedType) =>
-        arrangementTypes.includes(selectedType)
+    setAssignmentFilters((currentFilters) => {
+      const validFilters = Object.fromEntries(
+        Object.entries(currentFilters).filter(([arrangementType]) =>
+          arrangementTypes.includes(arrangementType)
+        )
       );
 
-      return validSelectedTypes.length === selectedTypes.length
-        ? selectedTypes
-        : validSelectedTypes;
+      return Object.keys(validFilters).length ===
+        Object.keys(currentFilters).length
+        ? currentFilters
+        : validFilters;
     });
   }, [arrangementTypes]);
 
@@ -515,22 +513,6 @@ function VolunteerApproval(props: { onOpen: () => void }) {
     });
   }
 
-  function familyHasNoAssignmentsForSelectedArrangementTypes(
-    family: CombinedFamilyInfo
-  ) {
-    if (selectedUnassignedArrangementTypes.length === 0) {
-      return true;
-    }
-
-    const assignments = family.volunteerFamilyInfo?.assignments ?? [];
-    return selectedUnassignedArrangementTypes.every(
-      (arrangementType) =>
-        !assignments.some(
-          (assignment) => assignment.arrangementType === arrangementType
-        )
-    );
-  }
-
   const filteredVolunteerFamilies = volunteerFamilies.filter(
     (family) =>
       /* Filter by name */ (filterText.length === 0 ||
@@ -545,7 +527,7 @@ function VolunteerApproval(props: { onOpen: () => void }) {
           )
         )) &&
       familyOrFamilyMembersMeetFilterCriteria(family) &&
-      familyHasNoAssignmentsForSelectedArrangementTypes(family) &&
+      matchesAssignmentFilters(family, assignmentFilters) &&
       familyMatchesCustomFieldFilters(family)
   );
 
@@ -554,8 +536,8 @@ function VolunteerApproval(props: { onOpen: () => void }) {
   }, [
     customFieldFilters,
     filterText,
+    assignmentFilters,
     roleFilters,
-    selectedUnassignedArrangementTypes,
     sortMode,
     statusFilters,
   ]);
@@ -726,12 +708,44 @@ function VolunteerApproval(props: { onOpen: () => void }) {
                   options={statusFilters}
                   setSelected={changeStatusFilterSelection}
                 />
-                {unassignedArrangementTypeFilters.length > 0 && (
-                  <VolunteerFilter
-                    label="No Assignments"
-                    options={unassignedArrangementTypeFilters}
-                    setSelected={changeUnassignedArrangementTypeFilterSelection}
-                  />
+                {arrangementTypes.length > 0 && (
+                  <FormControl
+                    sx={{
+                      position: 'relative',
+                      minWidth: { xs: '100%', sm: 0 },
+                      maxWidth: { xs: '100%', sm: '16rem' },
+                    }}
+                  >
+                    <Select
+                      labelId="volunteerAssignmentsFilter"
+                      displayEmpty
+                      value=""
+                      open={false}
+                      variant="standard"
+                      onClick={() => openAssignmentFiltersSidePanel()}
+                      sx={{
+                        minWidth: { xs: '100%', sm: 0 },
+                        maxWidth: '100%',
+                        '& .MuiSelect-iconOpen': { transform: 'none' },
+                        '& .MuiSelect-select': {
+                          overflow: 'hidden',
+                          textOverflow: 'ellipsis',
+                          whiteSpace: 'nowrap',
+                          cursor: 'pointer',
+                        },
+                      }}
+                      input={<InputBase />}
+                      IconComponent={FilterListIcon}
+                      SelectDisplayProps={{
+                        title: `Assignments (${activeAssignmentFilterCount}/${arrangementTypes.length})`,
+                      }}
+                      renderValue={() =>
+                        `Assignments (${activeAssignmentFilterCount}/${arrangementTypes.length})`
+                      }
+                    >
+                      <MenuItem value="" sx={{ display: 'none' }} />
+                    </Select>
+                  </FormControl>
                 )}
                 {customFieldCount > 0 && (
                   <FormControl
@@ -896,6 +910,14 @@ function VolunteerApproval(props: { onOpen: () => void }) {
               onClose={closeCustomFieldFiltersSidePanel}
             />
           </CustomFieldFiltersSidePanel>
+          <AssignmentFiltersSidePanel>
+            <VolunteerAssignmentFiltersSidePanel
+              arrangementTypes={arrangementTypes}
+              selectedValuesByArrangementType={assignmentFilters}
+              onArrangementTypeChange={changeAssignmentFilter}
+              onClose={closeAssignmentFiltersSidePanel}
+            />
+          </AssignmentFiltersSidePanel>
         </Box>
         <Box
           sx={{
