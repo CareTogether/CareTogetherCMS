@@ -62,7 +62,7 @@ export function V1CaseCommentsV2({
     <Box sx={{ width: '100%', mb: 3 }}>
       <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
         <Typography className="ph-unmask" variant="h3">
-          Comments
+          Case Comments
         </Typography>
 
         {permissions(Permission.EditV1Case) && (
@@ -78,29 +78,20 @@ export function V1CaseCommentsV2({
         )}
       </Box>
 
-      <Paper
-        variant="outlined"
+      <Box
         sx={{
-          width: 'fit-content',
-          maxWidth: '100%',
-          p: 2,
+          whiteSpace: 'pre-wrap',
+          overflowWrap: 'break-word',
+          lineHeight: 1.5,
+          fontSize: '0.95rem',
         }}
       >
-        <Box
-          sx={{
-            whiteSpace: 'pre-wrap',
-            overflowWrap: 'break-word',
-            lineHeight: 1.5,
-            fontSize: '0.95rem',
-          }}
-        >
-          {comment ? (
-            <ReadMoreText text={comment} />
-          ) : (
-            <Typography color="text.secondary">No comments yet.</Typography>
-          )}
-        </Box>
-      </Paper>
+        {comment ? (
+          <ReadMoreText text={comment} />
+        ) : (
+          <Typography color="text.secondary">No comments yet.</Typography>
+        )}
+      </Box>
       <Dialog
         open={open}
         onClose={() => setOpen(false)}
