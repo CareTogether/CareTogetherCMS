@@ -39,8 +39,7 @@ const childrenOver18Query = selector<ChildOver18[]>({
   get: ({ get }) => {
     const visibleFamilies = get(visibleFamiliesQuery);
     return visibleFamilies
-      ?.filter((family) => family.volunteerFamilyInfo)
-      .flatMap((family) => {
+      ?.flatMap((family) => {
         const children = family.family?.children ?? [];
         return children
           .filter(
@@ -49,7 +48,7 @@ const childrenOver18Query = selector<ChildOver18[]>({
               differenceInYears(
                 new Date(),
                 (child.age as ExactAge).dateOfBirth!
-              ) > 18
+              ) >= 18
           )
           .map((child) => ({ type: 'ChildOver18', family, child }));
       });
