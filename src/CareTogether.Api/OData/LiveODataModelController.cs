@@ -199,7 +199,8 @@ namespace CareTogether.Api.OData
         DateTime? StartedUtc,
         DateTime? EndedUtc,
         ArrangementPhase Phase,
-        string? Reason
+        string? Reason,
+        string? PolicyVersion
     );
 
     public sealed record ArrangementType(
@@ -2167,7 +2168,8 @@ namespace CareTogether.Api.OData
                         arrangement.StartedAtUtc,
                         arrangement.EndedAtUtc,
                         arrangement.Phase,
-                        arrangement.Reason
+                        arrangement.Reason,
+                        arrangement.ArrangementPolicyVersion
                     );
                 });
             });

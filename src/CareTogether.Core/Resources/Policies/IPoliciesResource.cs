@@ -238,7 +238,44 @@ namespace CareTogether.Resources.Policies
         ImmutableList<RequirementDefinition>? RequiredSetupActions = null,
         ImmutableList<MonitoringRequirement>? RequiredMonitoringActionsNew = null, // TODO: Rename to RequiredMonitoringActions after migration (see TODO in ReferralPolicy)
         ImmutableList<RequirementDefinition>? RequiredCloseoutActions = null,
-        DateTime? SupersededAtUtc = null
+        DateTime? SupersededAtUtc = null,
+        ImmutableList<ArrangementPolicyVersion>? PolicyVersions = null
+    )
+    {
+        public ImmutableList<RequirementDefinition> RequiredSetupActions_PRE_MIGRATION =
+            RequiredSetupActionNames
+                .Select(requirementName => new RequirementDefinition(requirementName, true))
+                .Concat(RequiredSetupActions ?? ImmutableList<RequirementDefinition>.Empty)
+                .ToImmutableList();
+
+        public ImmutableList<MonitoringRequirement> RequiredMonitoringActions_PRE_MIGRATION =
+            RequiredMonitoringActions
+                .Select(requirement => new MonitoringRequirement(
+                    new RequirementDefinition(requirement.ActionName, true),
+                    requirement.Recurrence
+                ))
+                .Concat(RequiredMonitoringActionsNew ?? ImmutableList<MonitoringRequirement>.Empty)
+                .ToImmutableList();
+
+        public ImmutableList<RequirementDefinition> RequiredCloseoutActionNames_PRE_MIGRATION =
+            RequiredCloseoutActionNames
+                .Select(requirementName => new RequirementDefinition(requirementName, true))
+                .Concat(RequiredCloseoutActions ?? ImmutableList<RequirementDefinition>.Empty)
+                .ToImmutableList();
+    };
+
+    public sealed record ArrangementPolicyVersion(
+        string Version,
+        DateTime? SupersededAtUtc,
+        ChildInvolvement ChildInvolvement,
+        ImmutableList<ArrangementFunction> ArrangementFunctions,
+        ImmutableList<string> RequiredSetupActionNames,
+        ImmutableList<MonitoringRequirementOld> RequiredMonitoringActions,
+        ImmutableList<string> RequiredCloseoutActionNames,
+        // TODO: See TODO in ReferralPolicy
+        ImmutableList<RequirementDefinition>? RequiredSetupActions = null,
+        ImmutableList<MonitoringRequirement>? RequiredMonitoringActionsNew = null, // TODO: Rename to RequiredMonitoringActions after migration (see TODO in ReferralPolicy)
+        ImmutableList<RequirementDefinition>? RequiredCloseoutActions = null
     )
     {
         public ImmutableList<RequirementDefinition> RequiredSetupActions_PRE_MIGRATION =

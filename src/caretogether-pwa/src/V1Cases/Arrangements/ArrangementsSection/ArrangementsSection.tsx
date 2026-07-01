@@ -17,6 +17,7 @@ import { useRecoilValue } from 'recoil';
 import { policyData } from '../../../Model/ConfigurationModel';
 import { getFilteredArrangements } from './getFilteredArrangements';
 import { useScrollToArrangement } from './useScrollToArrangement';
+import { isArrangementPolicyAvailable } from '../arrangementPolicyVersions';
 
 type ArrangementSectionProps = {
   v1Case: V1Case;
@@ -119,10 +120,8 @@ export function ArrangementsSection({
           >
             {v1Case &&
               policy.referralPolicy?.arrangementPolicies
-                ?.filter(
-                  (arrangementPolicy) =>
-                    !arrangementPolicy.supersededAtUtc ||
-                    new Date(arrangementPolicy.supersededAtUtc) > new Date()
+                ?.filter((arrangementPolicy) =>
+                  isArrangementPolicyAvailable(arrangementPolicy)
                 )
                 .map(
                 (arrangementPolicy) => (
