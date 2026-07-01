@@ -40,6 +40,7 @@ export type RoleSummaryRequirement = {
   status: ApprovalLedgerStatus;
   requirementName: string;
   completedOrExemptedOn?: Date;
+  subject: RoleSummarySubject;
   validUntil?: Date;
   ledgerRow: ApprovalLedgerRow;
   occurrences: ApprovalLedgerOccurrence[];
@@ -314,6 +315,7 @@ function roleSummaryRequirements({
           validUntil: row.validUntil,
           ledgerRow: row,
           occurrences: row.occurrences,
+          subject: subject
         })
       )
       .sort((a, b) => {

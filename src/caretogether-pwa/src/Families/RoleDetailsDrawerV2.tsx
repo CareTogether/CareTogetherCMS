@@ -10,7 +10,7 @@ import {
   Stack,
   Typography,
 } from '@mui/material';
-import { useEffect, useState } from 'react';
+import { Fragment, useEffect, useState } from 'react';
 import {
   CombinedFamilyInfo,
   Permission,
@@ -215,7 +215,7 @@ function buildRoleParticipants(
     }
   );
 
-  return participants.sort((a, b) => a.label.localeCompare(b.label));
+  return participants; // Maintain the standard order of family members
 }
 
 function ParticipantsSection({
@@ -301,35 +301,56 @@ function RequirementSummaryRow({
           <Stack
             direction={{ xs: 'column', sm: 'row' }}
             spacing={1}
-            sx={{ alignItems: { xs: 'flex-start', sm: 'center' } }}
+            sx={{ alignItems: { xs: 'flex-start', sm: 'flex-start' } }}
           >
-            <Chip
-              color={requirementStatusColor(requirement.status)}
-              label={requirementStatusLabels[requirement.status]}
-              size="small"
-              sx={{ flex: '0 0 auto' }}
-            />
-            <Box sx={{ minWidth: 0, flex: 1 }}>
+            <Stack
+              direction={{ xs: 'row', sm: 'column' }}
+              spacing={0.5}
+              sx={{ alignItems: { xs: 'center', sm: 'center' }, width: 80 }}
+            >
+              <Chip
+                color={requirementStatusColor(requirement.status)}
+                label={requirementStatusLabels[requirement.status]}
+                size="small"
+                sx={{ flex: '0 0 auto' }}
+              />
+              <Typography
+                variant="caption"
+              >
+                {completedOrExemptedOn}
+              </Typography>
+            </Stack>
+            <Stack
+              direction="column"
+              spacing={1}
+              sx={{ alignItems: { xs: 'flex-start', sm: 'flex-start' } }}
+            >
               <Typography
                 className="ph-unmask"
                 variant="body2"
                 sx={{ fontWeight: 600 }}
               >
                 {requirement.requirementName}
+                {requirement.occurrences.flatMap(occurrence => occurrence.policyVersions).filter(version => version).map(version =>
+                  <Fragment key={`${version?.roleName}-${version?.version}`}>
+                    &nbsp;
+                    <Chip color='default' variant='outlined' size='small'
+                      label={`${version?.version}`}
+                      />
+                  </Fragment>
+                )}
               </Typography>
               {(completedOrExemptedOn || validUntil) && (
                 <Typography color="text.secondary" variant="caption">
                   {[
-                    completedOrExemptedOn
-                      ? `Completed/Exempted ${completedOrExemptedOn}`
-                      : null,
+                    requirement.subject.label ?? null,
                     validUntil ? `Valid until ${validUntil}` : null,
                   ]
                     .filter(Boolean)
                     .join(' · ')}
                 </Typography>
               )}
-            </Box>
+            </Stack>
           </Stack>
         </Box>
       </ButtonBase>

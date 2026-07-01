@@ -55,6 +55,7 @@ const statusFilterOptions: { value: StatusFilter; label: string }[] = [
 function statusColor(status: ApprovalLedgerStatus) {
   switch (status) {
     case 'expired':
+      return 'warning';
     case 'missing':
       return 'error';
     case 'expiring':

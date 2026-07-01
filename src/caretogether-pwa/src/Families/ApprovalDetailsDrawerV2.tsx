@@ -45,6 +45,7 @@ const statusLabels: Record<ApprovalLedgerStatus, string> = {
 function statusColor(status: ApprovalLedgerStatus) {
   switch (status) {
     case 'expired':
+      return 'warning';
     case 'missing':
       return 'error';
     case 'expiring':
@@ -437,19 +438,19 @@ export function ApprovalDetailsDrawerV2({
               {hasMetadata && (
                 <>
                   {row.completedOrExemptedByUserId && (
-                    <DetailField label="Completed/Exempted By">
+                    <DetailField label={row.status === 'completed' ? 'Completed By' : 'Exempted By'}>
                       <PersonName
                         person={userLookup(row.completedOrExemptedByUserId)}
                       />
                     </DetailField>
                   )}
                   {completedOrExemptedOn && (
-                    <DetailField label="Completed/Exempted On">
+                    <DetailField label={row.status === 'completed' ? 'Completed On' : 'Exempted On'}>
                       {completedOrExemptedOn}
                     </DetailField>
                   )}
                   {validUntil && (
-                    <DetailField label="Valid Until">{validUntil}</DetailField>
+                    <DetailField label={row.status === 'completed' ? 'Valid Until' : 'Exempted Until'}>{validUntil}</DetailField>
                   )}
                 </>
               )}
