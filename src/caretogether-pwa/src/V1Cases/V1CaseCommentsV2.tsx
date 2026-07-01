@@ -15,7 +15,7 @@ import { useState } from 'react';
 import { CombinedFamilyInfo, Permission, V1Case } from '../GeneratedClient';
 import { useV1CasesModel } from '../Model/V1CasesModel';
 import { useFamilyPermissions } from '../Model/SessionModel';
-import { ReadMoreTextV2 } from '../Generic/Forms/ReadMoreTextV2';
+import { ReadMoreText } from '../Generic/Forms/ReadMoreText';
 
 type V1CaseCommentsV2Props = {
   partneringFamily: CombinedFamilyInfo;
@@ -95,7 +95,7 @@ export function V1CaseCommentsV2({
           }}
         >
           {comment ? (
-            <ReadMoreTextV2 text={comment} />
+            <ReadMoreText text={comment} />
           ) : (
             <Typography color="text.secondary">No comments yet.</Typography>
           )}
