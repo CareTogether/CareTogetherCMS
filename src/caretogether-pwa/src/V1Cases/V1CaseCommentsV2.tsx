@@ -10,7 +10,7 @@ import {
   Typography,
 } from '@mui/material';
 import { Edit as EditIcon } from '@mui/icons-material';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { CombinedFamilyInfo, Permission, V1Case } from '../GeneratedClient';
 import { useV1CasesModel } from '../Model/V1CasesModel';
 import { useFamilyPermissions } from '../Model/SessionModel';
@@ -44,11 +44,15 @@ export function V1CaseCommentsV2({
         );
 
   const allV1Cases = [...openV1Cases, ...closedV1Cases];
+  const selectedCaseComment =
+    allV1Cases.find((item) => item.id === v1CaseId)?.comments ?? '';
 
   const [open, setOpen] = useState(false);
-  const [comment, setComment] = useState(
-    allV1Cases.find((item) => item.id === v1CaseId)?.comments ?? ''
-  );
+  const [comment, setComment] = useState(selectedCaseComment);
+
+  useEffect(() => {
+    setComment(selectedCaseComment);
+  }, [selectedCaseComment]);
 
   async function handleSave() {
     await v1CasesModel.updateV1CaseComments(
@@ -75,7 +79,7 @@ export function V1CaseCommentsV2({
           color={compact ? 'text.secondary' : undefined}
           sx={compact ? { fontWeight: 600 } : undefined}
         >
-          Comments
+          Case Comment
         </Typography>
 
         {permissions(Permission.EditV1Case) && (
@@ -102,7 +106,7 @@ export function V1CaseCommentsV2({
         {comment ? (
           <ReadMoreText text={comment} />
         ) : (
-          <Typography color="text.secondary">No comments yet.</Typography>
+          <Typography color="text.secondary">No case comment yet.</Typography>
         )}
       </Box>
       <Dialog
@@ -111,12 +115,12 @@ export function V1CaseCommentsV2({
         maxWidth="md"
         fullWidth
       >
-        <DialogTitle>Edit Case Comments</DialogTitle>
+        <DialogTitle>Edit Case Comment</DialogTitle>
 
         <DialogContent>
           <TextField
             id="v1case-comments"
-            helperText="Case comments are visible to everyone."
+            helperText="Case comment is visible to everyone."
             placeholder="Space for any general notes about the Case, upcoming plans, etc."
             multiline
             fullWidth
