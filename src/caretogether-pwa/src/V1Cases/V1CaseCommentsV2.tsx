@@ -19,11 +19,13 @@ import { ReadMoreText } from '../Generic/Forms/ReadMoreText';
 type V1CaseCommentsV2Props = {
   partneringFamily: CombinedFamilyInfo;
   v1CaseId: string;
+  compact?: boolean;
 };
 
 export function V1CaseCommentsV2({
   partneringFamily,
   v1CaseId,
+  compact = false,
 }: V1CaseCommentsV2Props) {
   const v1CasesModel = useV1CasesModel();
   const permissions = useFamilyPermissions(partneringFamily);
@@ -58,10 +60,22 @@ export function V1CaseCommentsV2({
   }
 
   return (
-    <Box sx={{ width: '100%', mb: 3 }}>
-      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
-        <Typography className="ph-unmask" variant="h3">
-          Case Comments
+    <Box sx={{ width: '100%', mb: compact ? 0 : 3 }}>
+      <Box
+        sx={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: 1,
+          mb: compact ? 0.5 : 1,
+        }}
+      >
+        <Typography
+          className="ph-unmask"
+          variant={compact ? 'caption' : 'h3'}
+          color={compact ? 'text.secondary' : undefined}
+          sx={compact ? { fontWeight: 600 } : undefined}
+        >
+          Comments
         </Typography>
 
         {permissions(Permission.EditV1Case) && (
@@ -81,8 +95,8 @@ export function V1CaseCommentsV2({
         sx={{
           whiteSpace: 'pre-wrap',
           overflowWrap: 'break-word',
-          lineHeight: 1.5,
-          fontSize: '0.95rem',
+          lineHeight: compact ? 1.45 : 1.5,
+          fontSize: compact ? '0.875rem' : '0.95rem',
         }}
       >
         {comment ? (

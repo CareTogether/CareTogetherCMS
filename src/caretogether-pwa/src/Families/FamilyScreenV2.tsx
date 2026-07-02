@@ -16,14 +16,7 @@ import {
   Divider,
   ListItemButton,
   ListItemIcon,
-  Radio,
   Typography,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
   Tab,
   Tabs,
   Tooltip,
@@ -102,7 +95,6 @@ import {
   useCommunityLookup,
   useFamilyLookup,
   useNoteAuthorLookup,
-  usePersonAndFamilyLookup,
   useUserLookup,
   useDirectoryModel,
 } from '../Model/DirectoryModel';
@@ -130,15 +122,7 @@ import { FamilyCompleteOtherController } from '../Requirements/FamilyCompleteOth
 import { useV1CasesModel } from '../Model/V1CasesModel';
 import { formatStatusWithDate } from '../V1Referrals/formatStatusWithDate';
 import { policyData } from '../Model/ConfigurationModel';
-import {
-  FAMILY_MEMBER_PRINT_INFORMATION_FEATURE_FLAG,
-  FUNCTION_ASSIGNMENTS_FEATURE_FLAG,
-} from '../featureFlags';
-import { FunctionAssignmentsEditorDrawer } from '../FunctionAssignments/FunctionAssignmentsSection';
-import {
-  assignmentNamesForRole,
-  assignmentRolesForColumns,
-} from '../FunctionAssignments/assignmentRoleColumns';
+import { FAMILY_MEMBER_PRINT_INFORMATION_FEATURE_FLAG } from '../featureFlags';
 import { PersonName } from './PersonName';
 import { buildGroupedV1ReferralTimelineEntries } from '../V1Referrals/referralTimelineHelpers';
 import { useGlobalSnackBar } from '../Hooks/useGlobalSnackBar';
@@ -180,6 +164,7 @@ type RecentOverviewTimelineItem = {
 };
 type FamilyScreenTabValue =
   | 'overview'
+  | 'caseHistory'
   | 'approvals'
   | 'arrangementsOrAssignments'
   | 'documents'
@@ -354,28 +339,10 @@ export function FamilyScreenV2() {
       .filter((r) => r.familyId === familyId);
   }, [referralInfos, familyId]);
 
-  function referralRequirementSummary(referral: V1Referral) {
-    const incompleteCount =
-      referral.missingIntakeRequirements?.filter(
-        (requirement) => requirement.isRequired
-      ).length ?? 0;
-    const completedCount = referral.completedRequirements?.length ?? 0;
-    const exemptedCount = referral.exemptedRequirements?.length ?? 0;
-
-    return [
-      incompleteCount > 0 ? `❌ ${incompleteCount}` : null,
-      completedCount > 0 ? `✅ ${completedCount}` : null,
-      exemptedCount > 0 ? `🚫 ${exemptedCount}` : null,
-    ]
-      .filter(Boolean)
-      .join(' · ');
-  }
-
   const appNavigate = useAppNavigate();
 
   const familyLookup = useFamilyLookup();
   const noteAuthorLookup = useNoteAuthorLookup();
-  const personAndFamilyLookup = usePersonAndFamilyLookup();
   const userLookup = useUserLookup();
   const family = familyLookup(familyId);
   const policy = useRecoilValue(policyData);
@@ -458,16 +425,8 @@ export function FamilyScreenV2() {
   const [selectedV1CaseId, setSelectedV1CaseId] = useState<string | undefined>(
     v1CaseIdFromNavigation || firstV1CaseId
   );
-  const [
-    functionAssignmentsEditorV1CaseId,
-    setFunctionAssignmentsEditorV1CaseId,
-  ] = useState<string | undefined>();
-
   const selectedV1Case = allV1Cases.find(
     (v1Case) => v1Case.id === selectedV1CaseId
-  );
-  const functionAssignmentsEditorV1Case = allV1Cases.find(
-    (v1Case) => v1Case.id === functionAssignmentsEditorV1CaseId
   );
 
   const hasOpenV1Case = openV1Cases.length > 0;
@@ -499,6 +458,19 @@ export function FamilyScreenV2() {
 
     return { caseRows, unlinkedReferrals };
   }, [allV1Cases, familyReferrals]);
+
+  const currentReferral = useMemo(() => {
+    const selectedCaseRow = caseReferralTable.caseRows.find(
+      ({ v1Case }) => v1Case.id === selectedV1Case?.id
+    );
+
+    return (
+      selectedCaseRow?.linkedReferrals[0] ??
+      familyReferrals.find(
+        (referral) => referral.status === V1ReferralStatus.Open
+      )
+    );
+  }, [caseReferralTable.caseRows, familyReferrals, selectedV1Case?.id]);
 
   async function reopenCaseNow() {
     if (!selectedV1Case?.id) return;
@@ -631,39 +603,12 @@ export function FamilyScreenV2() {
     'updateTestFamilyFlag'
   );
   const referralsEnabled = useFeatureFlagEnabled('referrals');
-  const functionAssignmentsEnabled = useFeatureFlagEnabled(
-    FUNCTION_ASSIGNMENTS_FEATURE_FLAG
-  );
   const familyMemberPrintInformationEnabled =
     useFeatureFlagEnabled(FAMILY_MEMBER_PRINT_INFORMATION_FEATURE_FLAG) ===
     true;
-  const canViewFunctionAssignments =
-    functionAssignmentsEnabled === true &&
-    permissions(Permission.ViewV1CaseFunctionAssignments);
-  const canEditFunctionAssignments =
-    canViewFunctionAssignments &&
-    permissions(Permission.EditV1CaseFunctionAssignments);
-  const functionAssignmentRoles = useMemo(() => {
-    if (!canViewFunctionAssignments) return [];
-
-    return assignmentRolesForColumns(
-      policy.referralPolicy?.functionAssignmentPolicies?.map(
-        (assignmentPolicy) => assignmentPolicy.assignmentRole
-      ) ?? [],
-      allV1Cases.flatMap((v1Case) => v1Case.assignedIndividualVolunteers ?? [])
-    );
-  }, [
-    allV1Cases,
-    canViewFunctionAssignments,
-    policy.referralPolicy?.functionAssignmentPolicies,
-  ]);
 
   useScreenTitle(family ? `${familyLastName(family)} Family` : '...');
   useScreenTitleComponent(family ? <TestFamilyBadge family={family} /> : null);
-
-  function handleV1CaseChange(v1CaseId: string) {
-    setSelectedV1CaseId(v1CaseId);
-  }
 
   function openUploadDocumentDialog() {
     setFamilyMoreMenuAnchor(null);
@@ -811,6 +756,7 @@ export function FamilyScreenV2() {
   const arrangementOrAssignmentsTabLabel = isVolunteerFamily
     ? 'Assignments'
     : 'Arrangements';
+  const caseHistoryCount = allV1Cases.length;
   const arrangementsCount = selectedV1Case?.arrangements?.length ?? 0;
   const assignmentsCount =
     family?.volunteerFamilyInfo?.assignments?.length ?? 0;
@@ -836,7 +782,7 @@ export function FamilyScreenV2() {
           (note) => note.status === V1ReferralNoteStatus.Draft
         ).length ?? 0),
       0
-  );
+    );
   const volunteerFamilyInfo = family?.volunteerFamilyInfo;
   const activeAdultApprovalSources = useMemo(() => {
     const activeAdultIds = new Set(
@@ -876,13 +822,17 @@ export function FamilyScreenV2() {
           roleRemovals: volunteerInfo.roleRemovals ?? [],
           completedRequirements: volunteerInfo.completedRequirements ?? [],
           exemptedRequirements: volunteerInfo.exemptedRequirements ?? [],
-            missingRequirements: volunteerInfo.missingRequirements ?? [],
-            availableApplications: volunteerInfo.availableApplications ?? [],
-          };
-        });
+          missingRequirements: volunteerInfo.missingRequirements ?? [],
+          availableApplications: volunteerInfo.availableApplications ?? [],
+        };
+      });
 
     return adultApprovalSources;
-  }, [family?.family?.adults, familyId, volunteerFamilyInfo?.individualVolunteers]);
+  }, [
+    family?.family?.adults,
+    familyId,
+    volunteerFamilyInfo?.individualVolunteers,
+  ]);
 
   const approvalLedgerRows = useMemo(() => {
     return buildApprovalLedgerRows({
@@ -918,10 +868,12 @@ export function FamilyScreenV2() {
             kind: 'Volunteer Family',
             volunteerFamilyId: familyId,
           },
-          completedRequirements: volunteerFamilyInfo?.completedRequirements ?? [],
+          completedRequirements:
+            volunteerFamilyInfo?.completedRequirements ?? [],
           exemptedRequirements: volunteerFamilyInfo?.exemptedRequirements ?? [],
           missingRequirements: volunteerFamilyInfo?.missingRequirements ?? [],
-          availableApplications: volunteerFamilyInfo?.availableApplications ?? [],
+          availableApplications:
+            volunteerFamilyInfo?.availableApplications ?? [],
           familyRoleApprovals: volunteerFamilyInfo?.familyRoleApprovals ?? {},
           roleRemovals: volunteerFamilyInfo?.roleRemovals ?? [],
         },
@@ -1153,8 +1105,19 @@ export function FamilyScreenV2() {
         unapprovedNotesCount
       ),
     },
+    ...(isPartneringFamily
+      ? [
+          {
+            value: 'caseHistory' as const,
+            label: 'Case History',
+            desktopLabel: tabLabel('Case History', caseHistoryCount),
+            mobileLabel: mobileTabLabel('Case History', caseHistoryCount),
+          },
+        ]
+      : []),
   ];
   const showOverview = selectedTab === 'overview';
+  const showCaseHistory = selectedTab === 'caseHistory' && isPartneringFamily;
   const showApprovals = selectedTab === 'approvals' && isVolunteerFamily;
   const showArrangementsOrAssignments =
     selectedTab === 'arrangementsOrAssignments';
@@ -1165,7 +1128,10 @@ export function FamilyScreenV2() {
     if (selectedTab === 'approvals' && !isVolunteerFamily) {
       setSelectedTab('overview');
     }
-  }, [isVolunteerFamily, selectedTab]);
+    if (selectedTab === 'caseHistory' && !isPartneringFamily) {
+      setSelectedTab('overview');
+    }
+  }, [isPartneringFamily, isVolunteerFamily, selectedTab]);
 
   function handleSelectedTabChange(
     event: SelectChangeEvent<FamilyScreenTabValue>
@@ -1912,371 +1878,250 @@ export function FamilyScreenV2() {
             borderColor: 'divider',
             borderRadius: 1,
             bgcolor: 'background.paper',
-            p: 2,
-            height: '100%',
+            px: 2,
+            py: 1.5,
+            mb: 1.5,
           }}
         >
-          <Grid container spacing={2} sx={{ mb: 2 }}>
-            {permissions(Permission.ViewV1CaseProgress) && (
-              <Grid item xs={12} lg={7}>
-
-                {!referralsEnabled &&
-                  (!family.partneringFamilyInfo ||
-                    !family.partneringFamilyInfo.openV1Case) &&
-                  permissions(Permission.CreateV1Case) && (
-                    <Button
-                      className="ph-unmask"
-                      onClick={() => setOpenNewV1CaseDialogOpen(true)}
-                      variant="contained"
-                      size="small"
-                      sx={{ mb: 1 }}
-                    >
-                      Open New Case
-                    </Button>
-                  )}
-
-                <TableContainer
+          <Box
+            sx={{
+              display: 'flex',
+              alignItems: 'flex-start',
+              flexDirection: { xs: 'column', lg: 'row' },
+              gap: 2,
+            }}
+          >
+            <Box
+              sx={{
+                width: { xs: '100%', lg: 'fit-content' },
+                maxWidth: '100%',
+                flexShrink: 0,
+              }}
+            >
+              {selectedV1Case ? (
+                <Box
                   sx={{
-                    width: '100%',
-                    border: '1px solid rgba(224,224,224,1)',
-                    borderRadius: 1,
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: currentReferral ? 1.25 : 0,
+                    alignItems: 'start',
                   }}
                 >
-                  <Table size="small" sx={{ width: '100%' }}>
-                    <TableHead>
-                      <TableRow>
-                        <TableCell
-                          sx={{
-                            fontWeight: 600,
-                            width: '1%',
-                            whiteSpace: 'nowrap',
-                          }}
-                        >
-                          Case
-                        </TableCell>
-                        {functionAssignmentRoles.map((assignmentRole) => (
-                          <TableCell
-                            key={assignmentRole}
-                            sx={{
-                              fontWeight: 600,
-                              whiteSpace: 'nowrap',
-                            }}
-                          >
-                            {assignmentRole}
-                          </TableCell>
-                        ))}
-                        {referralsEnabled && (
-                          <TableCell sx={{ fontWeight: 600, width: '100%' }}>
-                            Linked Referrals
-                          </TableCell>
-                        )}
-                      </TableRow>
-                    </TableHead>
-
-                    <TableBody>
-                      {caseReferralTable.caseRows.map(
-                        ({ v1Case, linkedReferrals }) => {
-                          const isSelected = selectedV1Case?.id === v1Case.id;
-
-                          const isOpenV1Case = !v1Case.closedAtUtc;
-                          const caseCloseReasonText =
-                            !isOpenV1Case && v1Case.closeReason
-                              ? v1Case.closeReason
-                              : undefined;
-
-                          const showCloseButton =
-                            isSelected &&
-                            isOpenV1Case &&
-                            canCloseV1Case &&
-                            v1Case.id ===
-                              family.partneringFamilyInfo?.openV1Case?.id;
-
-                          return (
-                            <TableRow key={v1Case.id} hover>
-                              <TableCell
-                                onClick={() => handleV1CaseChange(v1Case.id)}
-                                sx={{
-                                  width: '1%',
-                                  whiteSpace: 'nowrap',
-                                  cursor: 'pointer',
-                                }}
-                              >
-                                <Box
-                                  sx={{
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    gap: 1,
-                                  }}
-                                >
-                                  <Radio
-                                    checked={isSelected}
-                                    onChange={() => handleV1CaseChange(v1Case.id)}
-                                  />
-                                  <Typography className="ph-unmask">
-                                    {v1Case.closedAtUtc
-                                      ? `Case Closed ${format(
-                                          v1Case.closedAtUtc,
-                                          'M/d/yy'
-                                        )}`
-                                      : 'Open Case'}
-                                  </Typography>
-
-                                  {caseCloseReasonText && (
-                                    <Typography
-                                      className="ph-unmask"
-                                      color="text.secondary"
-                                    >
-                                      {caseCloseReasonText}
-                                    </Typography>
-                                  )}
-
-                                  {showCloseButton && (
-                                    <Button
-                                      className="ph-unmask"
-                                      onClick={(e) => {
-                                        e.stopPropagation();
-                                        setCloseCaseDrawerOpen(true);
-                                      }}
-                                      variant="contained"
-                                      size="small"
-                                    >
-                                      Close Case
-                                    </Button>
-                                  )}
-                                  {isSelected &&
-                                    !isOpenV1Case &&
-                                    canReopenSelectedV1Case && (
-                                      <Button
-                                        className="ph-unmask"
-                                        onClick={(e) => {
-                                          e.stopPropagation();
-                                          void reopenCaseNow();
-                                        }}
-                                        variant="contained"
-                                        size="small"
-                                      >
-                                        Reopen Case
-                                      </Button>
-                                    )}
-                                </Box>
-                              </TableCell>
-
-                              {functionAssignmentRoles.map((assignmentRole) => {
-                                const assignmentNames = assignmentNamesForRole(
-                                  v1Case.assignedIndividualVolunteers ?? [],
-                                  assignmentRole,
-                                  (personId) =>
-                                    personAndFamilyLookup(personId).person
-                                );
-
-                                return (
-                                  <TableCell
-                                    key={assignmentRole}
-                                    sx={{ whiteSpace: 'nowrap' }}
-                                  >
-                                    <Box
-                                      sx={{
-                                        display: 'flex',
-                                        alignItems: 'center',
-                                        gap: 0.5,
-                                      }}
-                                    >
-                                      {assignmentNames || (
-                                        <Typography color="text.secondary">
-                                          —
-                                        </Typography>
-                                      )}
-                                      {canEditFunctionAssignments && (
-                                        <IconButton
-                                          aria-label={`Edit ${assignmentRole} assignment`}
-                                          size="small"
-                                          onClick={(e) => {
-                                            e.stopPropagation();
-                                            setFunctionAssignmentsEditorV1CaseId(
-                                              v1Case.id
-                                            );
-                                          }}
-                                        >
-                                          <EditIcon
-                                            color="primary"
-                                            fontSize="small"
-                                          />
-                                        </IconButton>
-                                      )}
-                                    </Box>
-                                  </TableCell>
-                                );
-                              })}
-
-                              {referralsEnabled && (
-                                <TableCell sx={{ width: '100%' }}>
-                                  {linkedReferrals.length === 0 ? (
-                                    <Typography color="text.secondary">
-                                      —
-                                    </Typography>
-                                  ) : (
-                                    <Box
-                                      sx={{
-                                        display: 'flex',
-                                        flexWrap: 'wrap',
-                                        gap: 1,
-                                      }}
-                                    >
-                                      {linkedReferrals.map((ref) => {
-                                        const requirementSummary =
-                                          referralRequirementSummary(ref);
-
-                                        const metadata = [
-                                          formatStatusWithDate(
-                                            ref.status,
-                                            ref.createdAtUtc,
-                                            ref.acceptedAtUtc,
-                                            ref.closedAtUtc
-                                          ),
-                                          requirementSummary || null,
-                                        ]
-                                          .filter(Boolean)
-                                          .join(' · ');
-
-                                        return (
-                                          <Chip
-                                            key={ref.referralId}
-                                            clickable
-                                            size="small"
-                                            label={`${ref.title} · ${metadata}`}
-                                            onClick={() =>
-                                              appNavigate.referral(ref.referralId)
-                                            }
-                                          />
-                                        );
-                                      })}
-                                    </Box>
-                                  )}
-                                </TableCell>
-                              )}
-                            </TableRow>
-                          );
+                  <Box>
+                    <Typography
+                      variant="caption"
+                      color="text.secondary"
+                      sx={{ display: 'block', fontWeight: 600, mb: 0.25 }}
+                    >
+                      Current Case
+                    </Typography>
+                    <Box
+                      sx={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 1,
+                        flexWrap: 'wrap',
+                        mb: 0.5,
+                      }}
+                    >
+                      <Typography
+                        className="ph-unmask"
+                        variant="h3"
+                        sx={{ m: 0 }}
+                      >
+                        {selectedV1Case.closedAtUtc
+                          ? 'Closed Case'
+                          : 'Open Case'}
+                      </Typography>
+                      <Chip
+                        size="small"
+                        color={
+                          selectedV1Case.closedAtUtc ? 'default' : 'success'
                         }
+                        label={selectedV1Case.closedAtUtc ? 'Closed' : 'Open'}
+                      />
+                      {!selectedV1Case.closedAtUtc && canCloseV1Case && (
+                        <Button
+                          className="ph-unmask"
+                          onClick={() => setCloseCaseDrawerOpen(true)}
+                          variant="contained"
+                          size="small"
+                        >
+                          Close Case
+                        </Button>
                       )}
-
-                      {referralsEnabled &&
-                        caseReferralTable.unlinkedReferrals.length > 0 && (
-                          <TableRow>
-                            <TableCell
-                              sx={{
-                                width: '1%',
-                                whiteSpace: 'nowrap',
-                              }}
-                            >
-                              (not linked to a case)
-                            </TableCell>
-                            {functionAssignmentRoles.map((assignmentRole) => (
-                              <TableCell key={assignmentRole}>
-                                <Typography color="text.secondary">—</Typography>
-                              </TableCell>
-                            ))}
-                            <TableCell sx={{ width: '100%' }}>
-                              <Box
-                                sx={{
-                                  display: 'flex',
-                                  flexWrap: 'wrap',
-                                  gap: 1,
-                                }}
-                              >
-                                {caseReferralTable.unlinkedReferrals.map(
-                                  (ref) => {
-                                    const requirementSummary =
-                                      referralRequirementSummary(ref);
-
-                                    const metadata = [
-                                      formatStatusWithDate(
-                                        ref.status,
-                                        ref.createdAtUtc,
-                                        ref.acceptedAtUtc,
-                                        ref.closedAtUtc
-                                      ),
-                                      requirementSummary || null,
-                                    ]
-                                      .filter(Boolean)
-                                      .join(' · ');
-
-                                    return (
-                                      <Chip
-                                        key={ref.referralId}
-                                        clickable
-                                        size="small"
-                                        label={`${ref.title} · ${metadata}`}
-                                        onClick={() =>
-                                          appNavigate.referral(ref.referralId)
-                                        }
-                                      />
-                                    );
-                                  }
-                                )}
-                              </Box>
-                            </TableCell>
-                          </TableRow>
-                        )}
-                    </TableBody>
-                  </Table>
-                </TableContainer>
-                {functionAssignmentsEditorV1Case && (
-                  <FunctionAssignmentsEditorDrawer
-                    open
-                    assignments={
-                      functionAssignmentsEditorV1Case.assignedIndividualVolunteers ??
-                      []
-                    }
-                    policies={
-                      policy.referralPolicy?.functionAssignmentPolicies ?? []
-                    }
-                    onClose={() =>
-                      setFunctionAssignmentsEditorV1CaseId(undefined)
-                    }
-                    onAssign={(personId, assignmentRole) =>
-                      v1CasesModel.assignIndividualVolunteerToV1Case(
-                        familyId,
-                        functionAssignmentsEditorV1Case.id,
-                        personId,
-                        assignmentRole
-                      )
-                    }
-                    onUnassign={(personId, assignmentRole) =>
-                      v1CasesModel.unassignIndividualVolunteerFromV1Case(
-                        familyId,
-                        functionAssignmentsEditorV1Case.id,
-                        personId,
-                        assignmentRole
-                      )
-                    }
-                  />
-                )}
-                {closeCaseDrawerOpen && selectedV1Case?.id && (
-                  <CloseV1CaseDrawer
-                    partneringFamilyId={familyId}
-                    v1CaseId={selectedV1Case.id}
-                    onClose={() => setCloseCaseDrawerOpen(false)}
-                  />
-                )}
-                {openNewV1CaseDialogOpen && (
-                  <OpenNewV1CaseDialog
-                    partneringFamilyId={family.family!.id!}
-                    referralId={openReferralId}
-                    onClose={() => setOpenNewV1CaseDialogOpen(false)}
-                  />
-                )}
-              </Grid>
-            )}
+                      {selectedV1Case.closedAtUtc && canReopenSelectedV1Case && (
+                        <Button
+                          className="ph-unmask"
+                          onClick={() => void reopenCaseNow()}
+                          variant="contained"
+                          size="small"
+                        >
+                          Reopen Case
+                        </Button>
+                      )}
+                    </Box>
+                    <Box
+                      sx={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 1,
+                        flexWrap: 'wrap',
+                      }}
+                    >
+                      <Typography
+                        className="ph-unmask"
+                        variant="body2"
+                        color="text.secondary"
+                      >
+                        Opened {format(selectedV1Case.openedAtUtc, 'M/d/yy')}
+                      </Typography>
+                      {selectedV1Case.closedAtUtc && (
+                        <Typography
+                          className="ph-unmask"
+                          variant="body2"
+                          color="text.secondary"
+                        >
+                          Closed {format(selectedV1Case.closedAtUtc, 'M/d/yy')}
+                        </Typography>
+                      )}
+                      {selectedV1Case.closeReason && (
+                        <Typography
+                          className="ph-unmask"
+                          variant="body2"
+                          color="text.secondary"
+                        >
+                          {selectedV1Case.closeReason}
+                        </Typography>
+                      )}
+                    </Box>
+                  </Box>
+                  {currentReferral && (
+                    <Box
+                      sx={{
+                        pl: { xs: 0, md: 1.5 },
+                      }}
+                    >
+                      <Typography
+                        variant="caption"
+                        color="text.secondary"
+                        sx={{ display: 'block', mb: 0.25 }}
+                      >
+                        Linked Referral
+                      </Typography>
+                      <Box
+                        sx={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: 1,
+                          flexWrap: 'wrap',
+                        }}
+                      >
+                        <Typography
+                          className="ph-unmask"
+                          variant="body2"
+                          sx={{ fontWeight: 600 }}
+                        >
+                          {currentReferral.title}
+                        </Typography>
+                        <Chip
+                          className="ph-unmask"
+                          size="small"
+                          label={formatStatusWithDate(
+                            currentReferral.status,
+                            currentReferral.createdAtUtc,
+                            currentReferral.acceptedAtUtc,
+                            currentReferral.closedAtUtc
+                          )}
+                        />
+                        <Typography
+                          className="ph-unmask"
+                          variant="caption"
+                          color="text.secondary"
+                        >
+                          Received{' '}
+                          {format(currentReferral.createdAtUtc, 'M/d/yy')}
+                        </Typography>
+                        <Button
+                          className="ph-unmask"
+                          onClick={() =>
+                            appNavigate.referral(currentReferral.referralId)
+                          }
+                          variant="text"
+                          size="small"
+                        >
+                          View Referral
+                        </Button>
+                      </Box>
+                    </Box>
+                  )}
+                </Box>
+              ) : (
+                <>
+                  <Typography
+                    variant="caption"
+                    color="text.secondary"
+                    sx={{ display: 'block', fontWeight: 600, mb: 0.25 }}
+                  >
+                    Current Case
+                  </Typography>
+                  <Typography className="ph-unmask" variant="h3">
+                    No current case
+                  </Typography>
+                  {!referralsEnabled &&
+                    permissions(Permission.CreateV1Case) && (
+                      <Button
+                        className="ph-unmask"
+                        onClick={() => setOpenNewV1CaseDialogOpen(true)}
+                        variant="contained"
+                        size="small"
+                        sx={{ mt: 1 }}
+                      >
+                        Open New Case
+                      </Button>
+                    )}
+                </>
+              )}
+              {closeCaseDrawerOpen && selectedV1Case?.id && (
+                <CloseV1CaseDrawer
+                  partneringFamilyId={familyId}
+                  v1CaseId={selectedV1Case.id}
+                  onClose={() => setCloseCaseDrawerOpen(false)}
+                />
+              )}
+              {openNewV1CaseDialogOpen && (
+                <OpenNewV1CaseDialog
+                  partneringFamilyId={family.family!.id!}
+                  referralId={openReferralId}
+                  onClose={() => setOpenNewV1CaseDialogOpen(false)}
+                />
+              )}
+            </Box>
 
             {permissions(Permission.ViewV1CaseComments) && selectedV1Case && (
-              <Grid item xs={12} lg={5}>
-                <V1CaseCommentsV2
-                  partneringFamily={family}
-                  v1CaseId={selectedV1Case.id!}
-                />
-              </Grid>
+              <Box
+                sx={{
+                  width: { xs: '100%', lg: 'auto' },
+                  flexGrow: 1,
+                  alignSelf: 'flex-start',
+                }}
+              >
+                <Box
+                  sx={{
+                    bgcolor: 'action.hover',
+                    borderRadius: 1,
+                    p: 1.25,
+                  }}
+                >
+                  <V1CaseCommentsV2
+                    compact
+                    partneringFamily={family}
+                    v1CaseId={selectedV1Case.id!}
+                  />
+                </Box>
+              </Box>
             )}
-          </Grid>
+          </Box>
         </Box>
       )}
 
@@ -2287,11 +2132,11 @@ export function FamilyScreenV2() {
             borderColor: 'primary.light',
             borderRadius: 1,
             bgcolor: 'rgba(25, 118, 210, 0.06)',
-            p: 2,
-            mb: 2,
+            p: 1.5,
+            mb: 1.5,
           }}
         >
-          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
             {pinnedNotes.map((note) => (
               <Box
                 key={note.id}
@@ -2300,7 +2145,7 @@ export function FamilyScreenV2() {
                   borderColor: 'divider',
                   borderRadius: 1,
                   bgcolor: 'background.paper',
-                  p: 1.5,
+                  p: 1.25,
                 }}
               >
                 <Typography
@@ -2322,7 +2167,7 @@ export function FamilyScreenV2() {
         </Box>
       )}
       {isDesktop ? (
-        <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 2 }}>
+        <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 1.5 }}>
           <Tabs
             value={selectedTab}
             onChange={(_, nextTab) => setSelectedTab(nextTab)}
@@ -2334,7 +2179,7 @@ export function FamilyScreenV2() {
           </Tabs>
         </Box>
       ) : (
-        <FormControl fullWidth size="small" sx={{ mb: 2 }}>
+        <FormControl fullWidth size="small" sx={{ mb: 1.5 }}>
           <InputLabel id="family-screen-section-label">Section</InputLabel>
           <Select
             labelId="family-screen-section-label"
@@ -2429,6 +2274,174 @@ export function FamilyScreenV2() {
                   </Grid>
                 </>
               )}
+            {showCaseHistory && (
+              <Grid item xs={12}>
+                <Box
+                  sx={{
+                    border: 1,
+                    borderColor: 'divider',
+                    borderRadius: 1,
+                    bgcolor: 'background.paper',
+                    p: 2,
+                    mb: 2,
+                  }}
+                >
+                  <Typography className="ph-unmask" variant="h3" sx={{ mb: 2 }}>
+                    Case History
+                  </Typography>
+                  <Box
+                    sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}
+                  >
+                    {caseReferralTable.caseRows.length === 0 ? (
+                      <Typography color="text.secondary" variant="body2">
+                        No cases yet.
+                      </Typography>
+                    ) : (
+                      caseReferralTable.caseRows.map(
+                        ({ v1Case, linkedReferrals }) => {
+                          const isSelected = selectedV1Case?.id === v1Case.id;
+                          const caseStatus = v1Case.closedAtUtc
+                            ? 'Closed'
+                            : 'Open';
+
+                          return (
+                            <ListItemButton
+                              key={v1Case.id}
+                              selected={isSelected}
+                              onClick={() => setSelectedV1CaseId(v1Case.id)}
+                              sx={{
+                                alignItems: 'flex-start',
+                                border: 1,
+                                borderColor: isSelected
+                                  ? 'primary.main'
+                                  : 'divider',
+                                borderRadius: 1,
+                                gap: 2,
+                              }}
+                            >
+                              <Box sx={{ flexGrow: 1, minWidth: 0 }}>
+                                <Box
+                                  sx={{
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: 1,
+                                    flexWrap: 'wrap',
+                                    mb: 0.5,
+                                  }}
+                                >
+                                  <Typography
+                                    className="ph-unmask"
+                                    variant="body2"
+                                    sx={{ fontWeight: 600 }}
+                                  >
+                                    {v1Case.closedAtUtc
+                                      ? 'Closed Case'
+                                      : 'Open Case'}
+                                  </Typography>
+                                  <Chip
+                                    size="small"
+                                    color={
+                                      v1Case.closedAtUtc ? 'default' : 'success'
+                                    }
+                                    label={caseStatus}
+                                  />
+                                </Box>
+                                <Typography
+                                  className="ph-unmask"
+                                  variant="caption"
+                                  color="text.secondary"
+                                >
+                                  Opened {format(v1Case.openedAtUtc, 'M/d/yy')}
+                                  {v1Case.closedAtUtc
+                                    ? ` · Closed ${format(
+                                        v1Case.closedAtUtc,
+                                        'M/d/yy'
+                                      )}`
+                                    : ''}
+                                  {v1Case.closeReason
+                                    ? ` · ${v1Case.closeReason}`
+                                    : ''}
+                                </Typography>
+                                {linkedReferrals.length > 0 && (
+                                  <Box
+                                    sx={{
+                                      display: 'flex',
+                                      flexWrap: 'wrap',
+                                      gap: 1,
+                                      mt: 1,
+                                    }}
+                                  >
+                                    {linkedReferrals.map((referral) => (
+                                      <Chip
+                                        key={referral.referralId}
+                                        clickable
+                                        size="small"
+                                        label={`${referral.title} · ${formatStatusWithDate(
+                                          referral.status,
+                                          referral.createdAtUtc,
+                                          referral.acceptedAtUtc,
+                                          referral.closedAtUtc
+                                        )}`}
+                                        onClick={(event) => {
+                                          event.stopPropagation();
+                                          appNavigate.referral(
+                                            referral.referralId
+                                          );
+                                        }}
+                                      />
+                                    ))}
+                                  </Box>
+                                )}
+                              </Box>
+                            </ListItemButton>
+                          );
+                        }
+                      )
+                    )}
+
+                    {referralsEnabled &&
+                      caseReferralTable.unlinkedReferrals.length > 0 && (
+                        <Box sx={{ mt: 1 }}>
+                          <Typography
+                            variant="caption"
+                            color="text.secondary"
+                            sx={{ display: 'block', mb: 1 }}
+                          >
+                            Referrals not linked to a case
+                          </Typography>
+                          <Box
+                            sx={{
+                              display: 'flex',
+                              flexWrap: 'wrap',
+                              gap: 1,
+                            }}
+                          >
+                            {caseReferralTable.unlinkedReferrals.map(
+                              (referral) => (
+                                <Chip
+                                  key={referral.referralId}
+                                  clickable
+                                  size="small"
+                                  label={`${referral.title} · ${formatStatusWithDate(
+                                    referral.status,
+                                    referral.createdAtUtc,
+                                    referral.acceptedAtUtc,
+                                    referral.closedAtUtc
+                                  )}`}
+                                  onClick={() =>
+                                    appNavigate.referral(referral.referralId)
+                                  }
+                                />
+                              )
+                            )}
+                          </Box>
+                        </Box>
+                      )}
+                  </Box>
+                </Box>
+              </Grid>
+            )}
+
             {showApprovals && family.volunteerFamilyInfo && (
               <>
                 <Grid item xs={12}>
