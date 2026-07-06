@@ -1,5 +1,6 @@
 import {
   AddCircle as AddCircleIcon,
+  ChevronRight as ChevronRightIcon,
   Warning as WarningIcon,
 } from '@mui/icons-material';
 import {
@@ -113,9 +114,10 @@ function tooltipTitle(fullText?: string) {
 
 function buildColumns({
   onArrangementClick,
+  onRowClick,
 }: Pick<
   FamilyMembersDataGridV2Props,
-  'onArrangementClick'
+  'onArrangementClick' | 'onRowClick'
 >): GridColDef<FamilyMemberRowV2>[] {
   return [
     {
@@ -322,6 +324,25 @@ function buildColumns({
         );
       },
     },
+    {
+      field: 'openDetails',
+      headerName: '',
+      width: 44,
+      sortable: false,
+      filterable: false,
+      disableColumnMenu: true,
+      renderCell: () =>
+        onRowClick ? (
+          <ChevronRightIcon
+            fontSize="small"
+            sx={{
+              color: 'text.secondary',
+              opacity: 0,
+              transition: 'opacity 120ms ease-in-out',
+            }}
+          />
+        ) : null,
+    },
   ];
 }
 
@@ -387,7 +408,7 @@ export function FamilyMembersDataGridV2({
   canAddChild = true,
 }: FamilyMembersDataGridV2Props) {
   const theme = useTheme();
-  const columns = buildColumns({ onArrangementClick });
+  const columns = buildColumns({ onArrangementClick, onRowClick });
   const pageSize = 10;
   const paginationNeeded = rows.length > pageSize;
   const gridHeight = paginationNeeded ? pageSize * 56 + 112 : undefined;
@@ -421,15 +442,40 @@ export function FamilyMembersDataGridV2({
           '& .MuiDataGrid-row': {
             cursor: onRowClick ? 'pointer' : undefined,
             minHeight: 56,
-            transition: theme.transitions.create('background-color', {
-              duration: theme.transitions.duration.shortest,
-            }),
+            transition: theme.transitions.create(
+              ['background-color', 'box-shadow'],
+              {
+                duration: theme.transitions.duration.shortest,
+              }
+            ),
+            '&:focus, &:focus-within': {
+              backgroundColor: theme.palette.action.focus,
+              boxShadow: `inset 3px 0 0 ${theme.palette.primary.main}`,
+              outline: 'none',
+            },
+            '&:focus .MuiDataGrid-cell, &:focus-within .MuiDataGrid-cell': {
+              backgroundColor: theme.palette.action.focus,
+            },
+            '&:focus .MuiSvgIcon-root, &:focus-within .MuiSvgIcon-root': {
+              opacity: 1,
+            },
             '&:hover': {
               backgroundColor: theme.palette.action.hover,
             },
             '&:hover .MuiDataGrid-cell': {
               backgroundColor: theme.palette.action.hover,
             },
+            '&:hover .MuiSvgIcon-root': {
+              opacity: 1,
+            },
+          },
+          '& .MuiDataGrid-cell': {
+            alignItems: 'center',
+            cursor: onRowClick ? 'inherit' : undefined,
+            display: 'flex',
+            transition: theme.transitions.create('background-color', {
+              duration: theme.transitions.duration.shortest,
+            }),
           },
           '& .MuiDataGrid-root': {
             border: 0,
@@ -438,14 +484,13 @@ export function FamilyMembersDataGridV2({
             backgroundColor: theme.palette.action.hover,
             borderBottomColor: theme.palette.divider,
           },
-          '& .MuiDataGrid-cell': {
-            alignItems: 'center',
-            cursor: onRowClick ? 'inherit' : undefined,
-            display: 'flex',
-          },
           '& .MuiDataGrid-cell:focus, & .MuiDataGrid-cell:focus-within': {
             outline: 'none',
           },
+          '& .MuiDataGrid-columnHeader:focus, & .MuiDataGrid-columnHeader:focus-within':
+            {
+              outline: 'none',
+            },
         }}
       >
         <DataGrid
