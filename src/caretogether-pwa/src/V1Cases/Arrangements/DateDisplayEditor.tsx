@@ -9,6 +9,7 @@ interface DateDisplayEditorProps {
   disablePast?: boolean;
   disableFuture?: boolean;
   label: string;
+  hideDisplayLabel?: boolean;
   canEdit: boolean;
   availableInCurrentPhase: boolean;
   unavailableTooltip?: string;
@@ -20,6 +21,7 @@ export function DateDisplayEditor({
   disablePast = false,
   disableFuture = true,
   label,
+  hideDisplayLabel = false,
   canEdit,
   availableInCurrentPhase,
   unavailableTooltip,
@@ -38,7 +40,11 @@ export function DateDisplayEditor({
       }}
     >
       <Typography sx={{ opacity: !availableInCurrentPhase ? 0.5 : 1 }}>
-        {label}:<br />
+        {!hideDisplayLabel && (
+          <>
+            {label}:<br />
+          </>
+        )}
         {initialValue ? format(initialValue, 'M/d/yyyy') : '-'}
       </Typography>
 

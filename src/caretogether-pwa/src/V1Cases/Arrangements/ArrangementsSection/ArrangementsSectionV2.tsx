@@ -1,15 +1,9 @@
-import {
-  AddCircle as AddCircleIcon,
-  ExpandLess,
-  ExpandMore,
-} from '@mui/icons-material';
+import { AddCircle as AddCircleIcon } from '@mui/icons-material';
 import Grid from '../../../Generic/GridLegacyCompat';
 import {
   Box,
   Button,
   Chip,
-  Collapse,
-  IconButton,
   Stack,
   Table,
   TableBody,
@@ -22,19 +16,15 @@ import {
 } from '@mui/material';
 import {
   Arrangement,
-  ArrangementFunction,
   ArrangementPhase,
   ArrangementPolicy,
   ChildInvolvement,
   CombinedFamilyInfo,
-  FamilyVolunteerAssignment,
-  FunctionRequirement,
-  IndividualVolunteerAssignment,
   Permission,
   V1Case,
 } from '../../../GeneratedClient';
 import { CreateArrangementDialog } from '../CreateArrangementDialog';
-import { Fragment, useEffect, useMemo, useRef, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import { useRecoilValue } from 'recoil';
 import { policyData } from '../../../Model/ConfigurationModel';
 import { getFilteredArrangements } from './getFilteredArrangements';
@@ -48,25 +38,12 @@ import {
   useFamilyLookup,
   usePersonLookup,
 } from '../../../Model/DirectoryModel';
-import { StartArrangementDialog } from '../StartArrangementDialog';
-import { EndArrangementDialog } from '../EndArrangementDialog';
-import { CancelArrangementDialog } from '../CancelArrangementDialog';
-import { ReopenArrangementDialog } from '../ReopenArrangementDialog';
-import { DeleteArrangementDialog } from '../DeleteArrangementDialog';
 import { format } from 'date-fns';
 import {
   ArrangementRowV2,
   buildArrangementRowsV2,
 } from '../arrangementViewModel';
 import { ArrangementDetailsDrawerV2 } from '../ArrangementDetailsDrawerV2';
-import { useRequirementContextData } from '../useRequirementContextData';
-import { MissingArrangementRequirementRow } from '../../../Requirements/MissingArrangementRequirementRow';
-import { CompletedRequirementRow } from '../../../Requirements/CompletedRequirementRow';
-import { ExemptedRequirementRow } from '../../../Requirements/ExemptedRequirementRow';
-import { AssignArrangementFunctionDialog } from '../AssignArrangementFunctionDialog';
-import { UnassignArrangementFunctionDialog } from '../UnassignArrangementFunctionDialog';
-import { useDialogHandle } from '../../../Hooks/useDialogHandle';
-import { useFamilyIdPermissions } from '../../../Model/SessionModel';
 
 type ArrangementSectionProps = {
   v1Case: V1Case;
@@ -81,12 +58,8 @@ type ArrangementTableRowProps = {
   arrangementRow: ArrangementRowV2;
   arrangementPolicy?: ArrangementPolicy;
   family: CombinedFamilyInfo;
-  permissions: (permission: Permission) => boolean;
   rowRef: (element: HTMLTableRowElement | null) => void;
-  v1CaseId: string;
-  expanded: boolean;
   onOpenDetails: (row: ArrangementRowV2) => void;
-  onToggleExpanded: () => void;
 };
 
 function arrangementPhaseLabel(phase?: ArrangementPhase) {
@@ -230,387 +203,13 @@ function ArrangementLocationSummary({
   );
 }
 
-function ArrangementActions({
-  arrangement,
-  permissions,
-  v1CaseId,
-}: {
-  arrangement: Arrangement;
-  permissions: (permission: Permission) => boolean;
-  v1CaseId: string;
-}) {
-  const [showStartArrangementDialog, setShowStartArrangementDialog] =
-    useState(false);
-  const [showEndArrangementDialog, setShowEndArrangementDialog] =
-    useState(false);
-  const [showCancelArrangementDialog, setShowCancelArrangementDialog] =
-    useState(false);
-  const [showReopenArrangementDialog, setShowReopenArrangementDialog] =
-    useState(false);
-  const [showDeleteArrangementDialog, setShowDeleteArrangementDialog] =
-    useState(false);
-
-  const canEdit = permissions(Permission.EditArrangement);
-  const canDelete = permissions(Permission.DeleteArrangement);
-
-  return (
-    <>
-      <Stack
-        direction="row"
-        spacing={1}
-        sx={{ justifyContent: 'flex-end' }}
-        onClick={(event) => event.stopPropagation()}
-      >
-        {arrangement.phase === ArrangementPhase.SettingUp && canEdit && (
-          <Button
-            variant="outlined"
-            size="small"
-            onClick={() => setShowCancelArrangementDialog(true)}
-          >
-            Cancel
-          </Button>
-        )}
-        {arrangement.phase === ArrangementPhase.ReadyToStart && canEdit && (
-          <>
-            <Button
-              variant="outlined"
-              size="small"
-              onClick={() => setShowCancelArrangementDialog(true)}
-            >
-              Cancel
-            </Button>
-            <Button
-              variant="contained"
-              size="small"
-              onClick={() => setShowStartArrangementDialog(true)}
-            >
-              Start
-            </Button>
-          </>
-        )}
-        {arrangement.phase === ArrangementPhase.Started && canEdit && (
-          <Button
-            variant="outlined"
-            size="small"
-            onClick={() => setShowEndArrangementDialog(true)}
-          >
-            End
-          </Button>
-        )}
-        {arrangement.phase === ArrangementPhase.Ended && canEdit && (
-          <Button
-            variant="outlined"
-            size="small"
-            onClick={() => setShowReopenArrangementDialog(true)}
-          >
-            Reopen
-          </Button>
-        )}
-        {canDelete && (
-          <Button
-            variant="outlined"
-            size="small"
-            color="warning"
-            onClick={() => setShowDeleteArrangementDialog(true)}
-          >
-            Delete
-          </Button>
-        )}
-      </Stack>
-      {showStartArrangementDialog && (
-        <StartArrangementDialog
-          v1CaseId={v1CaseId}
-          arrangement={arrangement}
-          onClose={() => setShowStartArrangementDialog(false)}
-        />
-      )}
-      {showEndArrangementDialog && (
-        <EndArrangementDialog
-          v1CaseId={v1CaseId}
-          arrangement={arrangement}
-          onClose={() => setShowEndArrangementDialog(false)}
-        />
-      )}
-      {showCancelArrangementDialog && (
-        <CancelArrangementDialog
-          v1CaseId={v1CaseId}
-          arrangement={arrangement}
-          onClose={() => setShowCancelArrangementDialog(false)}
-        />
-      )}
-      {showReopenArrangementDialog && (
-        <ReopenArrangementDialog
-          v1CaseId={v1CaseId}
-          arrangement={arrangement}
-          onClose={() => setShowReopenArrangementDialog(false)}
-        />
-      )}
-      {showDeleteArrangementDialog && (
-        <DeleteArrangementDialog
-          v1CaseId={v1CaseId}
-          arrangement={arrangement}
-          onClose={() => setShowDeleteArrangementDialog(false)}
-        />
-      )}
-    </>
-  );
-}
-
-function ArrangementRequirementsChecklist({
-  row,
-}: {
-  row: ArrangementRowV2;
-}) {
-  const {
-    completedRequirementsWithContext,
-    exemptedRequirementsWithContext,
-    mergedArray,
-  } = useRequirementContextData(
-    row.source,
-    row.arrangementPolicy,
-    row.partneringFamily,
-    row.v1Case.id!
-  );
-  const hasRequirements =
-    mergedArray.length > 0 ||
-    completedRequirementsWithContext.length > 0 ||
-    exemptedRequirementsWithContext.length > 0;
-
-  if (!hasRequirements) {
-    return (
-      <Typography color="text.secondary" variant="body2">
-        No arrangement requirements.
-      </Typography>
-    );
-  }
-
-  return (
-    <Typography className="ph-unmask" variant="body2" component="div">
-      {completedRequirementsWithContext.map(({ completed, context }, index) => (
-        <CompletedRequirementRow
-          key={`${completed.requirementName}:${index}`}
-          context={context}
-          requirement={completed}
-        />
-      ))}
-      {exemptedRequirementsWithContext.map(({ context, exempted }, index) => (
-        <ExemptedRequirementRow
-          key={`${exempted.requirementName}:${index}`}
-          context={context}
-          requirement={exempted}
-        />
-      ))}
-      {mergedArray.map(({ context, missing }, index) => (
-        <MissingArrangementRequirementRow
-          key={`${missing.action?.actionName}:${index}`}
-          context={context}
-          requirement={missing}
-        />
-      ))}
-    </Typography>
-  );
-}
-
-function ArrangementFunctionsChecklist({ row }: { row: ArrangementRowV2 }) {
-  const arrangementFunctions = row.arrangementPolicy?.arrangementFunctions ?? [];
-
-  if (arrangementFunctions.length === 0) {
-    return (
-      <Typography color="text.secondary" variant="body2">
-        No functions configured.
-      </Typography>
-    );
-  }
-
-  return (
-    <Stack spacing={0}>
-      {arrangementFunctions.map((functionPolicy) => (
-        <ArrangementFunctionAssignmentList
-          key={functionPolicy.functionName}
-          row={row}
-          functionPolicy={functionPolicy}
-        />
-      ))}
-    </Stack>
-  );
-}
-
-function ArrangementFunctionAssignmentList({
-  row,
-  functionPolicy,
-}: {
-  row: ArrangementRowV2;
-  functionPolicy: ArrangementFunction;
-}) {
-  const assignments = [
-    ...(row.source.familyVolunteerAssignments ?? []),
-    ...(row.source.individualVolunteerAssignments ?? []),
-  ].filter(
-    (assignment) =>
-      assignment.arrangementFunction === functionPolicy.functionName
-  ) as Array<FamilyVolunteerAssignment | IndividualVolunteerAssignment>;
-
-  if (assignments.length === 0) {
-    return (
-      <ArrangementFunctionAssignmentRow
-        row={row}
-        functionPolicy={functionPolicy}
-      />
-    );
-  }
-
-  return (
-    <>
-      {assignments.map((assignment) => (
-        <ArrangementFunctionAssignmentRow
-          key={JSON.stringify(assignment)}
-          row={row}
-          functionPolicy={functionPolicy}
-          assignment={assignment}
-        />
-      ))}
-    </>
-  );
-}
-
-function ArrangementFunctionAssignmentRow({
-  row,
-  functionPolicy,
-  assignment,
-}: {
-  row: ArrangementRowV2;
-  functionPolicy: ArrangementFunction;
-  assignment?: FamilyVolunteerAssignment | IndividualVolunteerAssignment;
-}) {
-  const addAssignmentDialogHandle = useDialogHandle();
-  const removeAssignmentDialogHandle = useDialogHandle();
-  const partneringFamilyId = row.partneringFamily.family!.id!;
-  const permissions = useFamilyIdPermissions(partneringFamilyId);
-  const canEditAssignments = permissions(Permission.EditAssignments);
-  const isAssigned = assignment !== undefined;
-  const missingRequiredAssignment =
-    !isAssigned &&
-    functionPolicy.requirement !== FunctionRequirement.ZeroOrMore;
-  const openAssignmentWorkflow = () => {
-    if (!canEditAssignments) return;
-
-    if (assignment) {
-      removeAssignmentDialogHandle.openDialog();
-      return;
-    }
-
-    addAssignmentDialogHandle.openDialog();
-  };
-
-  return (
-    <>
-      <Box
-        className="ph-unmask"
-        onClick={(event) => {
-          event.stopPropagation();
-          openAssignmentWorkflow();
-        }}
-        sx={{
-          borderBottom: 1,
-          borderColor: 'divider',
-          cursor: canEditAssignments ? 'pointer' : 'default',
-          display: 'grid',
-          gap: { xs: 0.25, sm: 2 },
-          gridTemplateColumns: { xs: '1fr', sm: '220px minmax(0, 1fr)' },
-          px: 0.5,
-          py: 0.75,
-          '&:hover': canEditAssignments
-            ? { backgroundColor: 'action.hover' }
-            : undefined,
-          '&:last-of-type': { borderBottom: 0 },
-        }}
-      >
-        <Typography variant="body2" sx={{ fontWeight: 600 }}>
-          {functionPolicy.functionName}
-        </Typography>
-        <Box>
-          {assignment ? (
-            <AssignmentLabel assignment={assignment} />
-          ) : (
-            <Typography
-              color={missingRequiredAssignment ? 'error.main' : 'text.secondary'}
-              variant="body2"
-            >
-              Not assigned
-            </Typography>
-          )}
-          {assignment?.arrangementFunctionVariant && (
-            <Typography
-              color="text.secondary"
-              variant="caption"
-              sx={{ display: 'block' }}
-            >
-              {assignment.arrangementFunctionVariant}
-            </Typography>
-          )}
-        </Box>
-      </Box>
-
-      {row.arrangementPolicy && addAssignmentDialogHandle.open && (
-        <AssignArrangementFunctionDialog
-          handle={addAssignmentDialogHandle}
-          v1CaseId={row.v1Case.id!}
-          arrangement={row.source}
-          arrangementPolicy={row.arrangementPolicy}
-          arrangementFunction={functionPolicy}
-        />
-      )}
-      {row.arrangementPolicy && assignment && removeAssignmentDialogHandle.open && (
-        <UnassignArrangementFunctionDialog
-          handle={removeAssignmentDialogHandle}
-          partneringFamilyId={partneringFamilyId}
-          v1CaseId={row.v1Case.id!}
-          arrangement={row.source}
-          arrangementPolicy={row.arrangementPolicy}
-          arrangementFunction={functionPolicy}
-          assignment={assignment}
-        />
-      )}
-    </>
-  );
-}
-
-function AssignmentLabel({
-  assignment,
-}: {
-  assignment: FamilyVolunteerAssignment | IndividualVolunteerAssignment;
-}) {
-  const familyLookup = useFamilyLookup();
-  const personLookup = usePersonLookup();
-
-  if (assignment instanceof IndividualVolunteerAssignment) {
-    return (
-      <Typography variant="body2" component="div">
-        <PersonName
-          person={personLookup(assignment.familyId, assignment.personId)}
-        />
-      </Typography>
-    );
-  }
-
-  return (
-    <Typography variant="body2" component="div">
-      <FamilyName family={familyLookup(assignment.familyId)} />
-    </Typography>
-  );
-}
-
 function ArrangementTableRow({
   arrangement,
   arrangementRow,
   arrangementPolicy,
-  expanded,
   family,
   onOpenDetails,
-  onToggleExpanded,
-  permissions,
   rowRef,
-  v1CaseId,
 }: ArrangementTableRowProps) {
   const personLookup = usePersonLookup();
 
@@ -618,21 +217,15 @@ function ArrangementTableRow({
     <TableRow
       hover
       ref={rowRef}
-      onClick={onToggleExpanded}
-      sx={{ cursor: 'pointer' }}
+      onClick={() => onOpenDetails(arrangementRow)}
+      sx={{
+        cursor: 'pointer',
+        transition: (theme) =>
+          theme.transitions.create('background-color', {
+            duration: theme.transitions.duration.shortest,
+          }),
+      }}
     >
-      <TableCell padding="checkbox">
-        <IconButton
-          aria-label={
-            expanded
-              ? 'hide arrangement requirements'
-              : 'show arrangement requirements'
-          }
-          size="small"
-        >
-          {expanded ? <ExpandLess /> : <ExpandMore />}
-        </IconButton>
-      </TableCell>
       <TableCell className="ph-unmask">
         {arrangement.arrangementType || '-'}
       </TableCell>
@@ -675,25 +268,6 @@ function ArrangementTableRow({
           '-'
         )}
       </TableCell>
-      <TableCell align="right">
-        <Stack direction="row" spacing={1} sx={{ justifyContent: 'flex-end' }}>
-          <Button
-            onClick={(event) => {
-              event.stopPropagation();
-              onOpenDetails(arrangementRow);
-            }}
-            size="small"
-            variant="contained"
-          >
-            Edit
-          </Button>
-          <ArrangementActions
-            arrangement={arrangement}
-            permissions={permissions}
-            v1CaseId={v1CaseId}
-          />
-        </Stack>
-      </TableCell>
     </TableRow>
   );
 }
@@ -713,9 +287,6 @@ export function ArrangementsSection({
   const [selectedArrangementRowId, setSelectedArrangementRowId] = useState<
     string | null
   >(null);
-  const [expandedArrangementIds, setExpandedArrangementIds] = useState<
-    string[]
-  >([]);
 
   const policy = useRecoilValue(policyData);
   const personLookup = usePersonLookup();
@@ -758,24 +329,6 @@ export function ArrangementsSection({
   const arrangementRefs = useRef<Record<string, HTMLDivElement | null>>({});
 
   useScrollToArrangement(arrangementRefs, scrollToArrangementId);
-
-  useEffect(() => {
-    if (!scrollToArrangementId) return;
-
-    setExpandedArrangementIds((currentIds) =>
-      currentIds.includes(scrollToArrangementId)
-        ? currentIds
-        : [...currentIds, scrollToArrangementId]
-    );
-  }, [scrollToArrangementId]);
-
-  const toggleExpandedArrangement = (arrangementId: string) => {
-    setExpandedArrangementIds((currentIds) =>
-      currentIds.includes(arrangementId)
-        ? currentIds.filter((id) => id !== arrangementId)
-        : [...currentIds, arrangementId]
-    );
-  };
 
   return (
     <Grid item xs={12} sx={{ mb: 3 }}>
@@ -879,14 +432,12 @@ export function ArrangementsSection({
           >
             <TableHead>
               <TableRow>
-                <TableCell />
                 <TableCell>Type</TableCell>
                 <TableCell>Case</TableCell>
                 <TableCell>Status</TableCell>
                 <TableCell>Child / Person</TableCell>
                 <TableCell>Duration</TableCell>
                 <TableCell>Location</TableCell>
-                <TableCell align="right">Actions</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
@@ -894,79 +445,20 @@ export function ArrangementsSection({
                 const arrangement = arrangementRow.source;
                 const arrangementPolicy = arrangementRow.arrangementPolicy;
                 const arrangementId = arrangement.id!;
-                const expanded = expandedArrangementIds.includes(arrangementId);
 
                 return (
-                  <Fragment key={arrangementId}>
-                    <ArrangementTableRow
-                      arrangement={arrangement}
-                      arrangementRow={arrangementRow}
-                      arrangementPolicy={arrangementPolicy}
-                      expanded={expanded}
-                      family={family}
-                      permissions={permissions}
-                      v1CaseId={v1Case.id!}
-                      onOpenDetails={(row) =>
-                        setSelectedArrangementRowId(row.id)
-                      }
-                      onToggleExpanded={() =>
-                        toggleExpandedArrangement(arrangementId)
-                      }
-                      rowRef={(el) => {
-                        arrangementRefs.current[arrangementId] =
-                          el as unknown as HTMLDivElement | null;
-                      }}
-                    />
-                    <TableRow>
-                      <TableCell
-                        colSpan={8}
-                        sx={{ borderBottom: expanded ? undefined : 0, p: 0 }}
-                      >
-                        <Collapse in={expanded} timeout="auto" unmountOnExit>
-                          <Box sx={{ px: { xs: 1.5, sm: 2 }, py: 1.5 }}>
-                            <Stack spacing={1.5}>
-                              <Box>
-                                <Typography
-                                  color="text.secondary"
-                                  variant="caption"
-                                  sx={{
-                                    display: 'block',
-                                    fontWeight: 700,
-                                    letterSpacing: 0.3,
-                                    mb: 0.5,
-                                    textTransform: 'uppercase',
-                                  }}
-                                >
-                                  Assignments
-                                </Typography>
-                                <ArrangementFunctionsChecklist
-                                  row={arrangementRow}
-                                />
-                              </Box>
-                              <Box>
-                                <Typography
-                                  color="text.secondary"
-                                  variant="caption"
-                                  sx={{
-                                    display: 'block',
-                                    fontWeight: 700,
-                                    letterSpacing: 0.3,
-                                    mb: 0.5,
-                                    textTransform: 'uppercase',
-                                  }}
-                                >
-                                  Requirements
-                                </Typography>
-                                <ArrangementRequirementsChecklist
-                                  row={arrangementRow}
-                                />
-                              </Box>
-                            </Stack>
-                          </Box>
-                        </Collapse>
-                      </TableCell>
-                    </TableRow>
-                  </Fragment>
+                  <ArrangementTableRow
+                    key={arrangementId}
+                    arrangement={arrangement}
+                    arrangementRow={arrangementRow}
+                    arrangementPolicy={arrangementPolicy}
+                    family={family}
+                    onOpenDetails={(row) => setSelectedArrangementRowId(row.id)}
+                    rowRef={(el) => {
+                      arrangementRefs.current[arrangementId] =
+                        el as unknown as HTMLDivElement | null;
+                    }}
+                  />
                 );
               })}
             </TableBody>
