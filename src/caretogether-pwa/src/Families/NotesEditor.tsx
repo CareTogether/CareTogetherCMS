@@ -6,7 +6,15 @@ import { useFamilyIdPermissions } from '../Model/SessionModel';
 import { useInlineEditor } from '../Hooks/useInlineEditor';
 import { PersonEditorProps } from './PersonEditorProps';
 
-export function NotesEditor({ familyId, person }: PersonEditorProps) {
+type NotesEditorProps = PersonEditorProps & {
+  label?: string;
+};
+
+export function NotesEditor({
+  familyId,
+  label = 'Notes',
+  person,
+}: NotesEditorProps) {
   const directoryModel = useDirectoryModel();
 
   const editor = useInlineEditor(
@@ -28,8 +36,8 @@ export function NotesEditor({ familyId, person }: PersonEditorProps) {
           <Grid size={12}>
             <TextField
               id="notes"
-              label="Notes"
-              placeholder="Space for any general notes"
+              label={label}
+              placeholder={`Space for any general ${label.toLocaleLowerCase()}`}
               multiline
               fullWidth
               variant="outlined"
@@ -47,7 +55,7 @@ export function NotesEditor({ familyId, person }: PersonEditorProps) {
         </>
       ) : (
         <Grid size={12}>
-          Notes: {person.notes}
+          {label}: {person.notes}
           {permissions(Permission.EditPersonNotes) && editor.editButton}
         </Grid>
       )}

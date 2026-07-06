@@ -34,7 +34,7 @@ import {
   V1Case,
 } from '../../../GeneratedClient';
 import { CreateArrangementDialog } from '../CreateArrangementDialog';
-import { Fragment, useMemo, useRef, useState } from 'react';
+import { Fragment, useEffect, useMemo, useRef, useState } from 'react';
 import { useRecoilValue } from 'recoil';
 import { policyData } from '../../../Model/ConfigurationModel';
 import { getFilteredArrangements } from './getFilteredArrangements';
@@ -491,12 +491,6 @@ function ArrangementFunctionAssignmentRow({
   const missingRequiredAssignment =
     !isAssigned &&
     functionPolicy.requirement !== FunctionRequirement.ZeroOrMore;
-  const isMissingVariant =
-    isAssigned &&
-    functionPolicy.variants &&
-    functionPolicy.variants.length > 0 &&
-    !assignment.arrangementFunctionVariant;
-
   const openAssignmentWorkflow = () => {
     if (!canEditAssignments) return;
 
@@ -552,16 +546,6 @@ function ArrangementFunctionAssignmentRow({
               sx={{ display: 'block' }}
             >
               {assignment.arrangementFunctionVariant}
-            </Typography>
-          )}
-          {isMissingVariant && (
-            <Typography
-              color="error.main"
-              variant="caption"
-              sx={{ display: 'block' }}
-            >
-              This assignment is missing a variant. Requirements for this
-              assignment will not be calculated.
             </Typography>
           )}
         </Box>
@@ -774,6 +758,16 @@ export function ArrangementsSection({
   const arrangementRefs = useRef<Record<string, HTMLDivElement | null>>({});
 
   useScrollToArrangement(arrangementRefs, scrollToArrangementId);
+
+  useEffect(() => {
+    if (!scrollToArrangementId) return;
+
+    setExpandedArrangementIds((currentIds) =>
+      currentIds.includes(scrollToArrangementId)
+        ? currentIds
+        : [...currentIds, scrollToArrangementId]
+    );
+  }, [scrollToArrangementId]);
 
   const toggleExpandedArrangement = (arrangementId: string) => {
     setExpandedArrangementIds((currentIds) =>

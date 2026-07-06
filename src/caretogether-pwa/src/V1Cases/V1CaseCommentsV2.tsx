@@ -106,7 +106,7 @@ export function V1CaseCommentsV2({
         {comment ? (
           <ReadMoreText text={comment} />
         ) : (
-          <Typography color="text.secondary">No case comment yet.</Typography>
+          <Typography color="text.secondary">No case comments yet.</Typography>
         )}
       </Box>
       <Dialog

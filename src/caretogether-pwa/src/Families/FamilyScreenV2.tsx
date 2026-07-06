@@ -23,6 +23,7 @@ import {
   FormControl,
   InputLabel,
   Select,
+  Stack,
 } from '@mui/material';
 import { SelectChangeEvent } from '@mui/material/Select';
 import {
@@ -58,8 +59,6 @@ import {
   Phone as PhoneIcon,
   Print as PrintIcon,
 } from '@mui/icons-material';
-import { AdultCard } from './AdultCard';
-import { ChildCard } from './ChildCard';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { AddAdultDialog } from './AddAdultDialog';
 import { AddChildDialog } from './AddChildDialog';
@@ -75,7 +74,6 @@ import {
   useFamilyPermissions,
   useGlobalPermissions,
 } from '../Model/SessionModel';
-import { Masonry } from '@mui/lab';
 import { MissingRequirementRow } from '../Requirements/MissingRequirementRow';
 import { ExemptedRequirementRow } from '../Requirements/ExemptedRequirementRow';
 import { CompletedRequirementRow } from '../Requirements/CompletedRequirementRow';
@@ -147,6 +145,12 @@ import {
   type PrintableFamilyMember,
 } from './FamilyMemberPrintData';
 import { FamilyMemberPrintDocument } from './FamilyMemberPrintDocument';
+import { FamilyMembersDataGridV2 } from './FamilyMembersDataGridV2';
+import { FamilyMemberDrawerV2 } from './FamilyMemberDrawerV2';
+import {
+  buildFamilyMemberRowsV2,
+  FamilyMemberRowV2,
+} from './familyMemberViewModel';
 
 type CustomFieldRenderInfo = CompletedCustomFieldInfo | string;
 type ReferralNoteEntry = NonNullable<V1Referral['notes']>[number];
@@ -397,6 +401,8 @@ export function FamilyScreenV2() {
     useState(false);
   const [addAdultDialogOpen, setAddAdultDialogOpen] = useState(false);
   const [addChildDialogOpen, setAddChildDialogOpen] = useState(false);
+  const [selectedFamilyMemberRow, setSelectedFamilyMemberRow] =
+    useState<FamilyMemberRowV2 | null>(null);
   const [addNoteDialogOpen, setAddNoteDialogOpen] = useState(false);
   const [recentFamilyNoteAction, setRecentFamilyNoteAction] = useState<{
     action: RecentNoteAction;
@@ -597,7 +603,6 @@ export function FamilyScreenV2() {
 
   const theme = useTheme();
   const isDesktop = useMediaQuery(theme.breakpoints.up('sm'));
-  const isWideScreen = useMediaQuery(theme.breakpoints.up('xl'));
 
   const updateTestFamilyFlagEnabled = useFeatureFlagEnabled(
     'updateTestFamilyFlag'
@@ -623,6 +628,19 @@ export function FamilyScreenV2() {
   function openAddChildDialog() {
     setFamilyMoreMenuAnchor(null);
     setAddChildDialogOpen(true);
+  }
+
+  function openFamilyMemberDrawer(row: FamilyMemberRowV2) {
+    setSelectedFamilyMemberRow(row);
+  }
+
+  function openArrangementFromFamilyMember(
+    arrangementId: string,
+    v1CaseId: string
+  ) {
+    setSelectedV1CaseId(v1CaseId);
+    setSelectedTab('arrangementsOrAssignments');
+    setArrangementIdToScrollTo(arrangementId);
   }
 
   function openAddNoteDialog() {
@@ -672,6 +690,17 @@ export function FamilyScreenV2() {
         : []
     );
   }, [family?.family?.children]);
+  const familyMemberRows = useMemo(
+    () =>
+      family
+        ? buildFamilyMemberRowsV2({
+            family,
+            permissions,
+            v1Cases: allV1Cases,
+          })
+        : [],
+    [allV1Cases, family, permissions]
+  );
   const printableFamilyMembers = useMemo(
     () => activeAdults.concat(activeChildren),
     [activeAdults, activeChildren]
@@ -1773,6 +1802,12 @@ export function FamilyScreenV2() {
             }
           />
         )}
+        <FamilyMemberDrawerV2
+          family={family}
+          row={selectedFamilyMemberRow}
+          open={selectedFamilyMemberRow !== null}
+          onClose={() => setSelectedFamilyMemberRow(null)}
+        />
         {addNoteDialogOpen && (
           <AddEditNoteDialog
             familyId={family.family!.id!}
@@ -1874,98 +1909,110 @@ export function FamilyScreenV2() {
       {isPartneringFamily && (
         <Box
           sx={{
-            border: 1,
-            borderColor: 'divider',
+            borderLeft: 4,
+            borderColor: selectedV1Case?.closedAtUtc
+              ? 'divider'
+              : 'primary.main',
             borderRadius: 1,
             bgcolor: 'background.paper',
-            px: 2,
+            boxShadow: 1,
+            px: { xs: 1.5, sm: 2 },
             py: 1.5,
             mb: 1.5,
           }}
         >
           <Box
             sx={{
-              display: 'flex',
-              alignItems: 'flex-start',
-              flexDirection: { xs: 'column', lg: 'row' },
-              gap: 2,
+              display: 'grid',
+              gap: { xs: 1.25, md: 2 },
+              gridTemplateColumns: { xs: '1fr', md: 'minmax(280px, 2fr) 3fr' },
+              alignItems: 'start',
             }}
           >
-            <Box
-              sx={{
-                width: { xs: '100%', lg: 'fit-content' },
-                maxWidth: '100%',
-                flexShrink: 0,
-              }}
-            >
+            <Box sx={{ minWidth: 0 }}>
               {selectedV1Case ? (
-                <Box
-                  sx={{
-                    display: 'flex',
-                    flexDirection: 'column',
-                    gap: currentReferral ? 1.25 : 0,
-                    alignItems: 'start',
-                  }}
-                >
+                <Stack spacing={1}>
                   <Box>
                     <Typography
                       variant="caption"
                       color="text.secondary"
-                      sx={{ display: 'block', fontWeight: 600, mb: 0.25 }}
+                      sx={{
+                        display: 'block',
+                        fontWeight: 700,
+                        letterSpacing: 0.4,
+                        textTransform: 'uppercase',
+                      }}
                     >
                       Current Case
                     </Typography>
                     <Box
                       sx={{
                         display: 'flex',
-                        alignItems: 'center',
-                        gap: 1,
+                        alignItems: 'flex-start',
+                        justifyContent: 'space-between',
+                        gap: 1.5,
                         flexWrap: 'wrap',
                         mb: 0.5,
                       }}
                     >
-                      <Typography
-                        className="ph-unmask"
-                        variant="h3"
-                        sx={{ m: 0 }}
+                      <Box
+                        sx={{
+                          alignItems: 'center',
+                          display: 'flex',
+                          flexWrap: 'wrap',
+                          gap: 1,
+                          minWidth: 0,
+                        }}
                       >
-                        {selectedV1Case.closedAtUtc
-                          ? 'Closed Case'
-                          : 'Open Case'}
-                      </Typography>
-                      <Chip
-                        size="small"
-                        color={
-                          selectedV1Case.closedAtUtc ? 'default' : 'success'
-                        }
-                        label={selectedV1Case.closedAtUtc ? 'Closed' : 'Open'}
-                      />
-                      {!selectedV1Case.closedAtUtc && canCloseV1Case && (
-                        <Button
+                        <Typography
                           className="ph-unmask"
-                          onClick={() => setCloseCaseDrawerOpen(true)}
-                          variant="contained"
-                          size="small"
+                          color="text.secondary"
+                          variant="subtitle1"
+                          sx={{ fontWeight: 600, m: 0 }}
                         >
-                          Close Case
-                        </Button>
-                      )}
-                      {selectedV1Case.closedAtUtc && canReopenSelectedV1Case && (
-                        <Button
-                          className="ph-unmask"
-                          onClick={() => void reopenCaseNow()}
-                          variant="contained"
+                          {selectedV1Case.closedAtUtc
+                            ? 'Closed Case'
+                            : 'Open Case'}
+                        </Typography>
+                        <Chip
                           size="small"
-                        >
-                          Reopen Case
-                        </Button>
-                      )}
+                          color={
+                            selectedV1Case.closedAtUtc ? 'default' : 'success'
+                          }
+                          label={
+                            selectedV1Case.closedAtUtc ? 'Closed' : 'Open'
+                          }
+                        />
+                      </Box>
+                      <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+                        {!selectedV1Case.closedAtUtc && canCloseV1Case && (
+                          <Button
+                            className="ph-unmask"
+                            onClick={() => setCloseCaseDrawerOpen(true)}
+                            variant="contained"
+                            size="small"
+                          >
+                            Close Case
+                          </Button>
+                        )}
+                        {selectedV1Case.closedAtUtc &&
+                          canReopenSelectedV1Case && (
+                            <Button
+                              className="ph-unmask"
+                              onClick={() => void reopenCaseNow()}
+                              variant="contained"
+                              size="small"
+                            >
+                              Reopen Case
+                            </Button>
+                          )}
+                      </Box>
                     </Box>
                     <Box
                       sx={{
                         display: 'flex',
                         alignItems: 'center',
-                        gap: 1,
+                        gap: 1.25,
                         flexWrap: 'wrap',
                       }}
                     >
@@ -1999,13 +2046,23 @@ export function FamilyScreenV2() {
                   {currentReferral && (
                     <Box
                       sx={{
-                        pl: { xs: 0, md: 1.5 },
+                        borderLeft: 2,
+                        borderColor: 'divider',
+                        ml: { xs: 0, sm: 0.5 },
+                        pl: 1.5,
+                        py: 0.25,
                       }}
                     >
                       <Typography
                         variant="caption"
                         color="text.secondary"
-                        sx={{ display: 'block', mb: 0.25 }}
+                        sx={{
+                          display: 'block',
+                          fontWeight: 600,
+                          letterSpacing: 0.3,
+                          mb: 0.25,
+                          textTransform: 'uppercase',
+                        }}
                       >
                         Linked Referral
                       </Typography>
@@ -2013,7 +2070,7 @@ export function FamilyScreenV2() {
                         sx={{
                           display: 'flex',
                           alignItems: 'center',
-                          gap: 1,
+                          gap: 1.25,
                           flexWrap: 'wrap',
                         }}
                       >
@@ -2027,21 +2084,29 @@ export function FamilyScreenV2() {
                         <Chip
                           className="ph-unmask"
                           size="small"
-                          label={formatStatusWithDate(
-                            currentReferral.status,
-                            currentReferral.createdAtUtc,
-                            currentReferral.acceptedAtUtc,
-                            currentReferral.closedAtUtc
-                          )}
+                          label={
+                            currentReferral.acceptedAtUtc
+                              ? `Accepted \u2022 ${format(
+                                  currentReferral.acceptedAtUtc,
+                                  'MMM d, yyyy'
+                                )}`
+                              : formatStatusWithDate(
+                                  currentReferral.status,
+                                  currentReferral.createdAtUtc,
+                                  currentReferral.acceptedAtUtc,
+                                  currentReferral.closedAtUtc
+                                )
+                          }
                         />
-                        <Typography
+                        <Chip
                           className="ph-unmask"
-                          variant="caption"
-                          color="text.secondary"
-                        >
-                          Received{' '}
-                          {format(currentReferral.createdAtUtc, 'M/d/yy')}
-                        </Typography>
+                          size="small"
+                          variant="outlined"
+                          label={`Received \u2022 ${format(
+                            currentReferral.createdAtUtc,
+                            'MMM d, yyyy'
+                          )}`}
+                        />
                         <Button
                           className="ph-unmask"
                           onClick={() =>
@@ -2055,13 +2120,19 @@ export function FamilyScreenV2() {
                       </Box>
                     </Box>
                   )}
-                </Box>
+                </Stack>
               ) : (
-                <>
+                <Box>
                   <Typography
                     variant="caption"
                     color="text.secondary"
-                    sx={{ display: 'block', fontWeight: 600, mb: 0.25 }}
+                    sx={{
+                      display: 'block',
+                      fontWeight: 700,
+                      letterSpacing: 0.4,
+                      mb: 0.25,
+                      textTransform: 'uppercase',
+                    }}
                   >
                     Current Case
                   </Typography>
@@ -2080,7 +2151,7 @@ export function FamilyScreenV2() {
                         Open New Case
                       </Button>
                     )}
-                </>
+                </Box>
               )}
               {closeCaseDrawerOpen && selectedV1Case?.id && (
                 <CloseV1CaseDrawer
@@ -2101,24 +2172,15 @@ export function FamilyScreenV2() {
             {permissions(Permission.ViewV1CaseComments) && selectedV1Case && (
               <Box
                 sx={{
-                  width: { xs: '100%', lg: 'auto' },
-                  flexGrow: 1,
-                  alignSelf: 'flex-start',
+                  minWidth: 0,
+                  pt: { xs: 0.25, md: 0 },
                 }}
               >
-                <Box
-                  sx={{
-                    bgcolor: 'action.hover',
-                    borderRadius: 1,
-                    p: 1.25,
-                  }}
-                >
-                  <V1CaseCommentsV2
-                    compact
-                    partneringFamily={family}
-                    v1CaseId={selectedV1Case.id!}
-                  />
-                </Box>
+                <V1CaseCommentsV2
+                  compact
+                  partneringFamily={family}
+                  v1CaseId={selectedV1Case.id!}
+                />
               </Box>
             )}
           </Box>
@@ -2478,40 +2540,15 @@ export function FamilyScreenV2() {
               xs={12}
               sx={{ display: showOverview ? undefined : 'none' }}
             >
-              <Typography className="ph-unmask" variant="h3" sx={{ mb: 1 }}>
-                Family Members
-              </Typography>
-              <Masonry
-                columns={isDesktop ? (isWideScreen ? 3 : 2) : 1}
-                spacing={2}
-              >
-                {family.family?.adults?.map(
-                  (adult) =>
-                    adult.item1 &&
-                    adult.item1.id &&
-                    adult.item1.active &&
-                    adult.item2 && (
-                      <AdultCard
-                        key={adult.item1.id}
-                        familyId={familyId}
-                        personId={adult.item1.id}
-                        showCustomFields
-                        showApprovalContent={false}
-                      />
-                    )
-                )}
-                {family.family?.children?.map(
-                  (child) =>
-                    child.active && (
-                      <ChildCard
-                        key={child.id!}
-                        familyId={familyId}
-                        personId={child.id!}
-                        showCustomFields
-                      />
-                    )
-                )}
-              </Masonry>
+              <FamilyMembersDataGridV2
+                rows={familyMemberRows}
+                onAddAdult={openAddAdultDialog}
+                onAddChild={openAddChildDialog}
+                onArrangementClick={openArrangementFromFamilyMember}
+                onRowClick={openFamilyMemberDrawer}
+                canAddAdult={canEditFamilyInfo}
+                canAddChild={canEditFamilyInfo}
+              />
             </Grid>
             <Grid
               item
