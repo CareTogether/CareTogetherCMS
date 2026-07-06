@@ -923,14 +923,44 @@ export function ArrangementsSection({
                         sx={{ borderBottom: expanded ? undefined : 0, p: 0 }}
                       >
                         <Collapse in={expanded} timeout="auto" unmountOnExit>
-                          <Box sx={{ p: 2 }}>
-                            <Stack spacing={1}>
-                              <ArrangementFunctionsChecklist
-                                row={arrangementRow}
-                              />
-                              <ArrangementRequirementsChecklist
-                                row={arrangementRow}
-                              />
+                          <Box sx={{ px: { xs: 1.5, sm: 2 }, py: 1.5 }}>
+                            <Stack spacing={1.5}>
+                              <Box>
+                                <Typography
+                                  color="text.secondary"
+                                  variant="caption"
+                                  sx={{
+                                    display: 'block',
+                                    fontWeight: 700,
+                                    letterSpacing: 0.3,
+                                    mb: 0.5,
+                                    textTransform: 'uppercase',
+                                  }}
+                                >
+                                  Assignments
+                                </Typography>
+                                <ArrangementFunctionsChecklist
+                                  row={arrangementRow}
+                                />
+                              </Box>
+                              <Box>
+                                <Typography
+                                  color="text.secondary"
+                                  variant="caption"
+                                  sx={{
+                                    display: 'block',
+                                    fontWeight: 700,
+                                    letterSpacing: 0.3,
+                                    mb: 0.5,
+                                    textTransform: 'uppercase',
+                                  }}
+                                >
+                                  Requirements
+                                </Typography>
+                                <ArrangementRequirementsChecklist
+                                  row={arrangementRow}
+                                />
+                              </Box>
                             </Stack>
                           </Box>
                         </Collapse>

@@ -156,19 +156,9 @@ function DateFields({ row }: { row: ArrangementRowV2 }) {
 function SummaryFields({ row }: { row: ArrangementRowV2 }) {
   return (
     <Stack spacing={1.15}>
-      <DetailField label="Arrangement">{row.arrangementType}</DetailField>
-      <Box>
-        <Typography color="text.secondary" variant="caption">
-          Status
-        </Typography>
-        <Box sx={{ mt: 0.25 }}>
-          <Chip label={row.statusLabel} size="small" />
-        </Box>
-      </Box>
       <DetailField label="Case">{row.caseLabel}</DetailField>
       <DetailField label="Child / Person">{row.childOrPersonLabel}</DetailField>
       <DetailField label="Family">{row.familyLabel}</DetailField>
-      <DetailField label="Arrangement Type">{row.arrangementType}</DetailField>
     </Stack>
   );
 }
