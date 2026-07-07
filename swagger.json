@@ -5005,6 +5005,11 @@
           "version": {
             "type": "string"
           },
+          "supersededAtUtc": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
           "status": {
             "nullable": true,
             "oneOf": [
@@ -5331,6 +5336,11 @@
           },
           "version": {
             "type": "string"
+          },
+          "supersededAtUtc": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
           },
           "status": {
             "nullable": true,
