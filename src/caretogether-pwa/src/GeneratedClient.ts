@@ -7956,6 +7956,7 @@ export enum RoleApprovalStatus {
 export class FamilyRoleVersionApprovalStatus implements IFamilyRoleVersionApprovalStatus {
     roleName!: string;
     version!: string;
+    supersededAtUtc?: Date | undefined;
     status?: DateOnlyTimelineOfRoleApprovalStatus | undefined;
     requirements!: FamilyRoleRequirementCompletionStatus[];
 
@@ -7975,6 +7976,7 @@ export class FamilyRoleVersionApprovalStatus implements IFamilyRoleVersionApprov
         if (_data) {
             this.roleName = _data["roleName"];
             this.version = _data["version"];
+            this.supersededAtUtc = _data["supersededAtUtc"] ? new Date(_data["supersededAtUtc"].toString()) : undefined as any;
             this.status = _data["status"] ? DateOnlyTimelineOfRoleApprovalStatus.fromJS(_data["status"]) : undefined as any;
             if (Array.isArray(_data["requirements"])) {
                 this.requirements = [] as any;
@@ -7995,6 +7997,7 @@ export class FamilyRoleVersionApprovalStatus implements IFamilyRoleVersionApprov
         data = typeof data === 'object' ? data : {};
         data["roleName"] = this.roleName;
         data["version"] = this.version;
+        data["supersededAtUtc"] = this.supersededAtUtc ? this.supersededAtUtc.toISOString() : undefined as any;
         data["status"] = this.status ? this.status.toJSON() : undefined as any;
         if (Array.isArray(this.requirements)) {
             data["requirements"] = [];
@@ -8008,6 +8011,7 @@ export class FamilyRoleVersionApprovalStatus implements IFamilyRoleVersionApprov
 export interface IFamilyRoleVersionApprovalStatus {
     roleName: string;
     version: string;
+    supersededAtUtc?: Date | undefined;
     status?: DateOnlyTimelineOfRoleApprovalStatus | undefined;
     requirements: FamilyRoleRequirementCompletionStatus[];
 }
@@ -8612,6 +8616,7 @@ export interface IIndividualRoleApprovalStatus {
 export class IndividualRoleVersionApprovalStatus implements IIndividualRoleVersionApprovalStatus {
     roleName!: string;
     version!: string;
+    supersededAtUtc?: Date | undefined;
     status?: DateOnlyTimelineOfRoleApprovalStatus | undefined;
     requirements!: IndividualRoleRequirementCompletionStatus[];
 
@@ -8631,6 +8636,7 @@ export class IndividualRoleVersionApprovalStatus implements IIndividualRoleVersi
         if (_data) {
             this.roleName = _data["roleName"];
             this.version = _data["version"];
+            this.supersededAtUtc = _data["supersededAtUtc"] ? new Date(_data["supersededAtUtc"].toString()) : undefined as any;
             this.status = _data["status"] ? DateOnlyTimelineOfRoleApprovalStatus.fromJS(_data["status"]) : undefined as any;
             if (Array.isArray(_data["requirements"])) {
                 this.requirements = [] as any;
@@ -8651,6 +8657,7 @@ export class IndividualRoleVersionApprovalStatus implements IIndividualRoleVersi
         data = typeof data === 'object' ? data : {};
         data["roleName"] = this.roleName;
         data["version"] = this.version;
+        data["supersededAtUtc"] = this.supersededAtUtc ? this.supersededAtUtc.toISOString() : undefined as any;
         data["status"] = this.status ? this.status.toJSON() : undefined as any;
         if (Array.isArray(this.requirements)) {
             data["requirements"] = [];
@@ -8664,6 +8671,7 @@ export class IndividualRoleVersionApprovalStatus implements IIndividualRoleVersi
 export interface IIndividualRoleVersionApprovalStatus {
     roleName: string;
     version: string;
+    supersededAtUtc?: Date | undefined;
     status?: DateOnlyTimelineOfRoleApprovalStatus | undefined;
     requirements: IndividualRoleRequirementCompletionStatus[];
 }

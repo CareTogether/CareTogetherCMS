@@ -280,8 +280,9 @@ namespace CareTogether.Core.Test.ApprovalCalculationTests
                     new FamilyRoleVersionApprovalStatus(
                         roleName,
                         Version: "2024",
+                        SupersededAtUtc: null,
                         Status: null,
-                        ImmutableList.Create(
+                        Requirements: ImmutableList.Create(
                             new FamilyRoleRequirementCompletionStatus(
                                 requirementName,
                                 RequirementStage.Approval,
@@ -306,8 +307,9 @@ namespace CareTogether.Core.Test.ApprovalCalculationTests
                     new IndividualRoleVersionApprovalStatus(
                         roleName,
                         Version: "2024",
+                        SupersededAtUtc: null,
                         Status: null,
-                        ImmutableList.Create(
+                        Requirements: ImmutableList.Create(
                             new IndividualRoleRequirementCompletionStatus(
                                 requirementName,
                                 RequirementStage.Approval,
