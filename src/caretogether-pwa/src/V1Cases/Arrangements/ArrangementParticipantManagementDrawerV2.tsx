@@ -455,6 +455,13 @@ function ArrangementAssignmentDetailDrawerV2({
     canEditAssignments &&
     fields.assigneeKey.length > 0 &&
     (!requiresVariant || fields.variant !== null);
+  const usesProgressiveReplacement =
+    arrangementFunction.requirement === FunctionRequirement.ExactlyOne &&
+    functionSummary.assignments.length > 0;
+  const showAssignmentForm = !usesProgressiveReplacement;
+  const currentAssignmentActionLabel = assignmentActionLabel(functionSummary);
+  const showNoEligibleCandidates =
+    showAssignmentForm && candidateAssignees.length === 0 && canEditAssignments;
 
   const assign = async () => {
     if (!selectedAssignee) return;
@@ -577,66 +584,65 @@ function ArrangementAssignmentDetailDrawerV2({
           </IconButton>
         </Box>
 
-        <Stack spacing={1.25}>
-          <Typography variant="subtitle2">
-            {assignmentActionLabel(functionSummary)}
-          </Typography>
-          {requiresVariant && (
-            <FormControl required>
-              <FormLabel id="assignment-variant">Variant</FormLabel>
-              <RadioGroup
-                aria-labelledby="assignment-variant"
-                value={fields.variant}
-                onChange={(event) =>
-                  setFields({
-                    ...fields,
-                    variant: (event.target as HTMLInputElement).value,
-                  })
-                }
-              >
-                {arrangementFunction.variants!.map((variant) => (
-                  <FormControlLabel
-                    key={variant.variantName}
-                    value={variant.variantName}
-                    control={<Radio />}
-                    label={variant.variantName!}
-                  />
-                ))}
-              </RadioGroup>
-            </FormControl>
-          )}
-          <Autocomplete
-            id="assignee"
-            clearOnEscape
-            onChange={(_event, newValue: AssigneeOption | null) => {
-              setFields({
-                ...fields,
-                assigneeKey: newValue?.key ?? '',
-              });
-            }}
-            options={candidateAssignees.sort(
-              (a, b) => -b.candidateType.localeCompare(a.candidateType)
+        {showAssignmentForm && (
+          <Stack spacing={1.25}>
+            <Typography variant="subtitle2">
+              {currentAssignmentActionLabel}
+            </Typography>
+            {requiresVariant && (
+              <FormControl required>
+                <FormLabel id="assignment-variant">Variant</FormLabel>
+                <RadioGroup
+                  aria-labelledby="assignment-variant"
+                  value={fields.variant}
+                  onChange={(event) =>
+                    setFields({
+                      ...fields,
+                      variant: (event.target as HTMLInputElement).value,
+                    })
+                  }
+                >
+                  {arrangementFunction.variants!.map((variant) => (
+                    <FormControlLabel
+                      key={variant.variantName}
+                      value={variant.variantName}
+                      control={<Radio />}
+                      label={variant.variantName!}
+                    />
+                  ))}
+                </RadioGroup>
+              </FormControl>
             )}
-            isOptionEqualToValue={(option, value) => option.key === value.key}
-            groupBy={(option) => option.candidateType}
-            getOptionLabel={(option) => option.displayName}
-            renderInput={(params) => (
-              <TextField
-                required
-                {...params}
-                label="Select a family or individual to assign"
-              />
-            )}
-          />
-          <Button
-            disabled={!canAssign}
-            onClick={assign}
-            variant="contained"
-            sx={{ alignSelf: 'flex-start' }}
-          >
-            {assignmentActionLabel(functionSummary)}
-          </Button>
-        </Stack>
+            <Autocomplete
+              id="assignee"
+              clearOnEscape
+              onChange={(_event, newValue: AssigneeOption | null) => {
+                setFields({
+                  ...fields,
+                  assigneeKey: newValue?.key ?? '',
+                });
+              }}
+              options={candidateAssignees.sort(
+                (a, b) => -b.candidateType.localeCompare(a.candidateType)
+              )}
+              isOptionEqualToValue={(option, value) => option.key === value.key}
+              groupBy={(option) => option.candidateType}
+              getOptionLabel={(option) => option.displayName}
+              renderInput={(params) => (
+                <TextField
+                  required
+                  {...params}
+                  label="Select a family or individual to assign"
+                />
+              )}
+            />
+            <Stack direction="row" spacing={1} sx={{ alignItems: 'center' }}>
+              <Button disabled={!canAssign} onClick={assign} variant="contained">
+                {currentAssignmentActionLabel}
+              </Button>
+            </Stack>
+          </Stack>
+        )}
 
         <Stack spacing={1}>
           <Typography variant="subtitle2">Current Assignments</Typography>
@@ -732,7 +738,7 @@ function ArrangementAssignmentDetailDrawerV2({
           </Typography>
         )}
 
-        {candidateAssignees.length === 0 && canEditAssignments && (
+        {showNoEligibleCandidates && (
           <Typography color="text.secondary" variant="body2">
             No eligible candidates are available for this function.
           </Typography>
