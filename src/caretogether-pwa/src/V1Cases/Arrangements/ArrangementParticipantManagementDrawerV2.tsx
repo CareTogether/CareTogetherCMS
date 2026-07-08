@@ -26,23 +26,23 @@ import {
   Person,
   Permission,
   RoleApprovalStatus,
-  ValueTupleOfPersonAndFamilyAdultRelationshipInfo,
 } from '../../GeneratedClient';
-import { FamilyName } from '../../Families/FamilyName';
-import { PersonName } from '../../Families/PersonName';
 import { useBackdrop } from '../../Hooks/useBackdrop';
 import { visibleFamiliesQuery } from '../../Model/Data';
-import {
-  useFamilyLookup,
-  usePersonAndFamilyLookup,
-  usePersonLookup,
-} from '../../Model/DirectoryModel';
+import { usePersonAndFamilyLookup } from '../../Model/DirectoryModel';
 import { useFamilyIdPermissions } from '../../Model/SessionModel';
 import { useV1CasesModel } from '../../Model/V1CasesModel';
 import type {
   ArrangementFunctionSummaryV2,
   ArrangementRowV2,
 } from './arrangementViewModel';
+import { AssignmentLabel } from './ArrangementAssignmentPresentationV2';
+import {
+  assignmentActionLabel,
+  assignmentMetadataChips,
+  assignmentSummary,
+  getFamilyName,
+} from './arrangementAssignmentPresentationHelpersV2';
 
 type ArrangementParticipantManagementDrawerV2Props = {
   functionSummary: ArrangementFunctionSummaryV2 | null;
@@ -66,74 +66,6 @@ type AssigneeOption = {
   key: string;
   personId: string | null;
 };
-
-function AssignmentLabel({
-  assignment,
-}: {
-  assignment: FamilyVolunteerAssignment | IndividualVolunteerAssignment;
-}) {
-  const familyLookup = useFamilyLookup();
-  const personLookup = usePersonLookup();
-
-  if (assignment instanceof IndividualVolunteerAssignment) {
-    return (
-      <PersonName
-        person={personLookup(assignment.familyId, assignment.personId)}
-      />
-    );
-  }
-
-  return <FamilyName family={familyLookup(assignment.familyId)} />;
-}
-
-function getFamilyName(
-  person: ValueTupleOfPersonAndFamilyAdultRelationshipInfo | undefined
-) {
-  return person
-    ? `${person.item1!.firstName} ${person.item1!.lastName} Family`
-    : 'Missing primary contact Family';
-}
-
-function assignmentSummary(summary: ArrangementFunctionSummaryV2) {
-  if (summary.assignmentLabels.length === 0) {
-    return 'Not assigned';
-  }
-
-  return summary.assignmentLabels.join(', ');
-}
-
-function assignmentMetadataChips(summary: ArrangementFunctionSummaryV2) {
-  if (summary.functionPolicy.requirement === FunctionRequirement.ExactlyOne) {
-    return [
-      { label: 'Required', variant: 'filled' as const },
-      { label: 'Exactly one', variant: 'outlined' as const },
-    ];
-  }
-
-  if (summary.functionPolicy.requirement === FunctionRequirement.OneOrMore) {
-    return [
-      { label: 'Required', variant: 'filled' as const },
-      { label: 'One or more', variant: 'outlined' as const },
-    ];
-  }
-
-  return [
-    { label: 'Optional', variant: 'outlined' as const },
-    { label: 'Zero or more', variant: 'outlined' as const },
-  ];
-}
-
-function assignmentActionLabel(summary: ArrangementFunctionSummaryV2) {
-  if (summary.assignments.length === 0) {
-    return 'Assign';
-  }
-
-  if (summary.functionPolicy.requirement === FunctionRequirement.ExactlyOne) {
-    return 'Change Assignment';
-  }
-
-  return 'Add Assignment';
-}
 
 export function ArrangementParticipantManagementDrawerV2({
   functionSummary,

@@ -149,12 +149,22 @@ function buildColumns({
       headerName: 'Age',
       width: 90,
       valueGetter: (_value, row) => displayValue(row.ageLabel),
+      renderCell: ({ row }) => (
+        <Typography className="ph-unmask" variant="body2">
+          {displayValue(row.ageLabel)}
+        </Typography>
+      ),
     },
     {
       field: 'genderLabel',
       headerName: 'Gender',
       width: 120,
       valueGetter: (_value, row) => displayValue(row.genderLabel),
+      renderCell: ({ row }) => (
+        <Typography className="ph-unmask" variant="body2">
+          {displayValue(row.genderLabel)}
+        </Typography>
+      ),
     },
     {
       field: 'primaryContactSummary',
@@ -467,20 +477,17 @@ export function FamilyMembersDataGridV2({
               boxShadow: `inset 3px 0 0 ${theme.palette.primary.main}`,
               outline: 'none',
             },
-            '&:focus .MuiDataGrid-cell, &:focus-within .MuiDataGrid-cell': {
-              backgroundColor: theme.palette.action.focus,
-            },
             '&:focus .MuiSvgIcon-root, &:focus-within .MuiSvgIcon-root': {
               opacity: 1,
             },
             '&:hover': {
               backgroundColor: theme.palette.action.hover,
             },
-            '&:hover .MuiDataGrid-cell': {
-              backgroundColor: theme.palette.action.hover,
-            },
             '&:hover .MuiSvgIcon-root': {
               opacity: 1,
+            },
+            '&.Mui-selected, &.Mui-selected:hover': {
+              backgroundColor: 'transparent',
             },
           },
           '& .MuiDataGrid-cell': {
@@ -497,6 +504,10 @@ export function FamilyMembersDataGridV2({
           '& .MuiDataGrid-columnHeaders': {
             backgroundColor: theme.palette.action.hover,
             borderBottomColor: theme.palette.divider,
+          },
+          '& .MuiDataGrid-cell:hover, & .MuiDataGrid-cell.Mui-selected': {
+            backgroundColor: 'transparent',
+            boxShadow: 'none',
           },
           '& .MuiDataGrid-cell:focus, & .MuiDataGrid-cell:focus-within': {
             backgroundColor: 'transparent',

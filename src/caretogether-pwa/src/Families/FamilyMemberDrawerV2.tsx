@@ -14,7 +14,7 @@ import {
   Typography,
 } from '@mui/material';
 import { differenceInYears } from 'date-fns';
-import { useState, type ReactNode } from 'react';
+import { useState } from 'react';
 import { useRecoilValue } from 'recoil';
 import {
   CombinedFamilyInfo,
@@ -55,6 +55,11 @@ import { personNameString } from './PersonName';
 import { PhoneNumberEditor } from './PhoneNumberEditor';
 import { ManageUserDrawer } from './ManageUserDrawer';
 import { combineCustomFieldPolicies } from './familyMemberCustomFieldPolicies';
+import {
+  FamilyMemberDrawerDetailFieldV2,
+  FamilyMemberDrawerEmptyStateV2,
+  FamilyMemberDrawerSectionV2,
+} from './FamilyMemberDrawerPresentationV2';
 
 type FamilyMemberDrawerV2Props = {
   family: CombinedFamilyInfo;
@@ -63,69 +68,9 @@ type FamilyMemberDrawerV2Props = {
   onClose: () => void;
 };
 
-function DrawerSection({
-  children,
-  description,
-  title,
-}: {
-  children: ReactNode;
-  description?: string;
-  title: string;
-}) {
-  return (
-    <Stack
-      spacing={1}
-      sx={{
-        border: 1,
-        borderColor: 'divider',
-        borderRadius: 1,
-        p: 1.5,
-      }}
-    >
-      <Box>
-        <Typography variant="subtitle2">{title}</Typography>
-        {description && (
-          <Typography color="text.secondary" variant="caption">
-            {description}
-          </Typography>
-        )}
-      </Box>
-      {children}
-    </Stack>
-  );
-}
-
-function EmptyState({ children }: { children: ReactNode }) {
-  return (
-    <Typography color="text.secondary" variant="body2">
-      {children}
-    </Typography>
-  );
-}
-
-function DetailField({
-  children,
-  label,
-}: {
-  children: ReactNode;
-  label: string;
-}) {
-  return (
-    <Box>
-      <Typography color="text.secondary" variant="caption">
-        {label}
-      </Typography>
-      <Typography
-        className="ph-unmask"
-        component="div"
-        variant="body2"
-        sx={{ fontWeight: 600 }}
-      >
-        {children || '-'}
-      </Typography>
-    </Box>
-  );
-}
+const DrawerSection = FamilyMemberDrawerSectionV2;
+const EmptyState = FamilyMemberDrawerEmptyStateV2;
+const DetailField = FamilyMemberDrawerDetailFieldV2;
 
 function isExactAge(age: unknown): age is ExactAge {
   return age instanceof ExactAge && age.dateOfBirth !== undefined;

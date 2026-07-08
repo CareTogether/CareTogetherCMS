@@ -1,24 +1,19 @@
-import CloseIcon from '@mui/icons-material/Close';
 import {
   Box,
   Button,
-  Chip,
   Drawer,
-  IconButton,
   Stack,
   Tooltip,
   Typography,
 } from '@mui/material';
 import { type ReactNode, useState } from 'react';
 import {
-  ArrangementPhase,
   CompletedRequirementInfo,
   ExemptedRequirementInfo,
   FunctionRequirement,
   MissingArrangementRequirement,
   Permission,
 } from '../../GeneratedClient';
-import { useBackdrop } from '../../Hooks/useBackdrop';
 import { WorkspaceSectionV2 } from '../../Generic/WorkspaceSectionV2';
 import { FamilyName } from '../../Families/FamilyName';
 import { PersonName } from '../../Families/PersonName';
@@ -28,19 +23,18 @@ import {
   useUserLookup,
 } from '../../Model/DirectoryModel';
 import { useFamilyIdPermissions } from '../../Model/SessionModel';
-import { useV1CasesModel } from '../../Model/V1CasesModel';
-import { ArrangementComments } from './ArrangementComments';
 import { ArrangementParticipantManagementDrawerV2 } from './ArrangementParticipantManagementDrawerV2';
 import {
   ArrangementRequirementManagementDrawerV2,
   ArrangementRequirementWorkflowV2,
 } from './ArrangementRequirementManagementDrawerV2';
-import { ArrangementReason } from './ArrangementReason';
+import { ArrangementOverviewSectionV2 } from './ArrangementOverviewSectionV2';
+import { ArrangementTimelineSectionV2 } from './ArrangementTimelineSectionV2';
+import { ArrangementWorkspaceHeaderV2 } from './ArrangementWorkspaceHeaderV2';
 import {
   ArrangementFunctionSummaryV2,
   ArrangementRowV2,
 } from './arrangementViewModel';
-import { DateDisplayEditor } from './DateDisplayEditor';
 import { format } from 'date-fns';
 import { useRequirementContextData } from './useRequirementContextData';
 import {
@@ -58,402 +52,13 @@ type ArrangementDetailsDrawerV2Props = {
   onClose: () => void;
 };
 
-function DetailField({
-  label,
-  children,
-}: {
-  label: string;
-  children: ReactNode;
-}) {
-  return (
-    <Box>
-      <Typography color="text.secondary" variant="caption">
-        {label}
-      </Typography>
-      <Typography
-        className="ph-unmask"
-        variant="body2"
-        sx={{ fontWeight: 600 }}
-      >
-        {children || '-'}
-      </Typography>
-    </Box>
-  );
-}
-
-type DateCommand = (
-  aggregateId: string,
-  v1CaseId: string,
-  arrangementId: string,
-  date: Date
-) => Promise<void>;
-
 const EXPIRING_REQUIREMENT_DAYS = 30;
-
-function TimelineHeaderCell({ children }: { children: ReactNode }) {
-  return (
-    <Typography
-      color="text.secondary"
-      variant="caption"
-      sx={{ fontWeight: 600 }}
-    >
-      {children}
-    </Typography>
-  );
-}
-
-function TimelineRowLabel({ children }: { children: ReactNode }) {
-  return (
-    <Box
-      sx={{
-        alignSelf: 'stretch',
-        borderTop: 1,
-        borderColor: 'divider',
-        display: 'flex',
-        alignItems: 'center',
-        py: 0.75,
-      }}
-    >
-      <Typography variant="body2" sx={{ fontWeight: 600 }}>
-        {children}
-      </Typography>
-    </Box>
-  );
-}
-
-function TimelineValueCell({ children }: { children?: ReactNode }) {
-  return (
-    <Box
-      sx={{
-        alignSelf: 'stretch',
-        borderTop: 1,
-        borderColor: 'divider',
-        display: 'flex',
-        alignItems: 'center',
-        minWidth: 0,
-        py: 0.75,
-        '& > div': {
-          minWidth: 0,
-        },
-        '& .MuiTypography-root': {
-          fontSize: '0.875rem',
-          lineHeight: 1.35,
-        },
-      }}
-    >
-      {children ?? (
-        <Typography color="text.disabled" variant="body2">
-          -
-        </Typography>
-      )}
-    </Box>
-  );
-}
-
-function ArrangementTimelineSectionV2({ row }: { row: ArrangementRowV2 }) {
-  const arrangement = row.source;
-  const partneringFamilyId = row.partneringFamily.family!.id!;
-  const v1CaseId = row.v1Case.id!;
-  const permissions = useFamilyIdPermissions(partneringFamilyId);
-  const v1CasesModel = useV1CasesModel();
-  const withBackdrop = useBackdrop();
-  const canEdit = permissions(Permission.EditArrangement);
-
-  const onDateChange = async (callback: DateCommand, newDate: Date) => {
-    await withBackdrop(async () => {
-      await callback(partneringFamilyId, v1CaseId, arrangement.id!, newDate);
-    });
-  };
-
-  return (
-    <Box
-      className="ph-unmask"
-      sx={{
-        display: 'grid',
-        gridTemplateColumns: {
-          xs: '84px minmax(0, 1fr) minmax(0, 1fr)',
-          sm: '112px minmax(0, 1fr) minmax(0, 1fr)',
-        },
-        columnGap: { xs: 1, sm: 1.5 },
-        alignItems: 'stretch',
-      }}
-    >
-      <Box />
-      <TimelineHeaderCell>Planned</TimelineHeaderCell>
-      <TimelineHeaderCell>Actual</TimelineHeaderCell>
-
-      <TimelineRowLabel>Requested</TimelineRowLabel>
-      <TimelineValueCell />
-      <TimelineValueCell>
-        <DateDisplayEditor
-          label="Requested"
-          hideDisplayLabel
-          initialValue={arrangement.requestedAtUtc}
-          canEdit={canEdit}
-          availableInCurrentPhase
-          onChange={(newDate) =>
-            onDateChange(v1CasesModel.editArrangementRequestedAt, newDate)
-          }
-        />
-      </TimelineValueCell>
-
-      <TimelineRowLabel>Start</TimelineRowLabel>
-      <TimelineValueCell>
-        <DateDisplayEditor
-          label="Planned start"
-          hideDisplayLabel
-          initialValue={arrangement.plannedStartUtc}
-          disableFuture={false}
-          canEdit={canEdit}
-          availableInCurrentPhase
-          onChange={(newDate) =>
-            onDateChange(v1CasesModel.planArrangementStart, newDate)
-          }
-        />
-      </TimelineValueCell>
-      <TimelineValueCell>
-        <DateDisplayEditor
-          label="Started"
-          hideDisplayLabel
-          initialValue={arrangement.startedAtUtc}
-          canEdit={canEdit}
-          availableInCurrentPhase={
-            (arrangement.phase || 0) >= ArrangementPhase.Started
-          }
-          unavailableTooltip="Only available when the arrangement is started"
-          onChange={(newDate) =>
-            onDateChange(v1CasesModel.editArrangementStartTime, newDate)
-          }
-        />
-      </TimelineValueCell>
-
-      <TimelineRowLabel>End</TimelineRowLabel>
-      <TimelineValueCell>
-        <DateDisplayEditor
-          label="Planned end"
-          hideDisplayLabel
-          initialValue={arrangement.plannedEndUtc}
-          disableFuture={false}
-          canEdit={canEdit}
-          availableInCurrentPhase
-          onChange={(newDate) =>
-            onDateChange(v1CasesModel.planArrangementEnd, newDate)
-          }
-        />
-      </TimelineValueCell>
-      <TimelineValueCell>
-        <DateDisplayEditor
-          label="Ended"
-          hideDisplayLabel
-          initialValue={arrangement.endedAtUtc}
-          canEdit={canEdit}
-          availableInCurrentPhase={arrangement.phase === ArrangementPhase.Ended}
-          unavailableTooltip="Only available when the arrangement is ended"
-          onChange={(newDate) =>
-            onDateChange(v1CasesModel.editArrangementEndTime, newDate)
-          }
-        />
-      </TimelineValueCell>
-
-      <TimelineRowLabel>Cancelled</TimelineRowLabel>
-      <TimelineValueCell />
-      <TimelineValueCell>
-        <DateDisplayEditor
-          label="Cancelled"
-          hideDisplayLabel
-          initialValue={arrangement.cancelledAtUtc}
-          canEdit={canEdit}
-          availableInCurrentPhase={
-            arrangement.phase === ArrangementPhase.Cancelled
-          }
-          unavailableTooltip="Only available when the arrangement is cancelled"
-          onChange={(newDate) =>
-            onDateChange(v1CasesModel.editArrangementCancelledAt, newDate)
-          }
-        />
-      </TimelineValueCell>
-    </Box>
-  );
-}
-
-function ArrangementOverviewSectionV2({ row }: { row: ArrangementRowV2 }) {
-  return (
-    <Stack spacing={1.25}>
-      <DetailField label="Case">{row.caseLabel}</DetailField>
-      <DetailField label="Child / Person">{row.childOrPersonLabel}</DetailField>
-      <DetailField label="Family">{row.familyLabel}</DetailField>
-      <Box>
-        <Typography color="text.secondary" variant="caption">
-          Arrangement Reason
-        </Typography>
-        <Typography
-          className="ph-unmask"
-          component="div"
-          variant="body2"
-          sx={{ fontWeight: 600 }}
-        >
-        <ArrangementReason
-          arrangement={row.source}
-          hideLabel
-          partneringFamily={row.partneringFamily}
-          v1CaseId={row.v1Case.id!}
-        />
-        </Typography>
-      </Box>
-      <Box>
-        <Typography color="text.secondary" variant="caption">
-          Arrangement Comments
-        </Typography>
-        <Typography
-          className="ph-unmask"
-          component="div"
-          variant="body2"
-          sx={{ fontWeight: 600 }}
-        >
-        <ArrangementComments
-          arrangement={row.source}
-          partneringFamily={row.partneringFamily}
-          v1CaseId={row.v1Case.id!}
-        />
-        </Typography>
-      </Box>
-    </Stack>
-  );
-}
 
 function EmptyText({ children }: { children: ReactNode }) {
   return (
     <Typography color="text.secondary" variant="body2">
       {children}
     </Typography>
-  );
-}
-
-function ArrangementWorkspaceHeaderV2({
-  onClose,
-  onManage,
-  row,
-}: {
-  onClose: () => void;
-  onManage: (mode: ArrangementManagementMode) => void;
-  row: ArrangementRowV2;
-}) {
-  const arrangement = row.source;
-  const permissions = useFamilyIdPermissions(row.partneringFamily.family!.id!);
-  const canEdit = permissions(Permission.EditArrangement);
-  const canDelete = permissions(Permission.DeleteArrangement);
-
-  return (
-    <Box
-      sx={{
-        display: 'flex',
-        alignItems: 'flex-start',
-        justifyContent: 'space-between',
-        gap: 1,
-      }}
-    >
-      <Box sx={{ minWidth: 0, flex: 1 }}>
-        <Typography
-          color="text.secondary"
-          sx={{ textTransform: 'uppercase' }}
-          variant="caption"
-        >
-          Arrangement
-        </Typography>
-        <Typography
-          id="arrangement-details-title"
-          className="ph-unmask"
-          variant="h5"
-        >
-          {row.arrangementType}
-        </Typography>
-        <Box
-          sx={{
-            alignItems: { xs: 'flex-start', sm: 'center' },
-            display: 'flex',
-            flexDirection: { xs: 'column', sm: 'row' },
-            gap: 1,
-            justifyContent: 'space-between',
-            mt: 1,
-          }}
-        >
-          <Stack
-            direction="row"
-            spacing={1}
-            sx={{ alignItems: 'center', flexWrap: 'wrap' }}
-          >
-            <Chip label={row.statusLabel} size="small" />
-            <Typography
-              className="ph-unmask"
-              color="text.secondary"
-              variant="body2"
-            >
-              {row.childOrPersonLabel}
-            </Typography>
-          </Stack>
-          <Stack direction="row" spacing={1} sx={{ flexWrap: 'wrap' }}>
-            {arrangement.phase === ArrangementPhase.SettingUp && canEdit && (
-              <Button
-                variant="outlined"
-                size="small"
-                onClick={() => onManage('cancel')}
-              >
-                Cancel
-              </Button>
-            )}
-            {arrangement.phase === ArrangementPhase.ReadyToStart && canEdit && (
-              <>
-                <Button
-                  variant="outlined"
-                  size="small"
-                  onClick={() => onManage('cancel')}
-                >
-                  Cancel
-                </Button>
-                <Button
-                  variant="contained"
-                  size="small"
-                  onClick={() => onManage('start')}
-                >
-                  Start
-                </Button>
-              </>
-            )}
-            {arrangement.phase === ArrangementPhase.Started && canEdit && (
-              <Button
-                variant="outlined"
-                size="small"
-                onClick={() => onManage('end')}
-              >
-                End
-              </Button>
-            )}
-            {arrangement.phase === ArrangementPhase.Ended && canEdit && (
-              <Button
-                variant="outlined"
-                size="small"
-                onClick={() => onManage('reopen')}
-              >
-                Reopen
-              </Button>
-            )}
-            {canDelete && (
-              <Button
-                variant="outlined"
-                size="small"
-                color="warning"
-                onClick={() => onManage('delete')}
-              >
-                Delete
-              </Button>
-            )}
-          </Stack>
-        </Box>
-      </Box>
-      <IconButton aria-label="close arrangement details" onClick={onClose}>
-        <CloseIcon />
-      </IconButton>
-    </Box>
   );
 }
 
