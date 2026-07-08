@@ -1,5 +1,6 @@
 import { Box, Stack, Typography } from '@mui/material';
 import { type ReactNode } from 'react';
+import { v2Typography } from './v2Typography';
 
 export function FamilyMemberDrawerSectionV2({
   children,
@@ -60,8 +61,7 @@ export function FamilyMemberDrawerDetailFieldV2({
       <Typography
         className="ph-unmask"
         component="div"
-        variant="body2"
-        sx={{ fontWeight: 600 }}
+        {...v2Typography.primaryValue}
       >
         {children || '-'}
       </Typography>

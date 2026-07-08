@@ -14,6 +14,7 @@ import {
   ChildInvolvement,
   FunctionRequirement,
 } from '../../GeneratedClient';
+import { v2Typography } from '../../Families/v2Typography';
 import type { ArrangementRowV2 } from './arrangementViewModel';
 
 type ArrangementsDataGridV2Props = {
@@ -60,7 +61,7 @@ function ArrangementDurationSummary({
         <Typography component="span" variant="caption" color="text.secondary">
           {startLabel}:&nbsp;
         </Typography>
-        <Typography component="span" variant="body2">
+        <Typography component="span" {...v2Typography.browserCell}>
           {formatArrangementDate(startDate)}
         </Typography>
       </Box>
@@ -68,7 +69,7 @@ function ArrangementDurationSummary({
         <Typography component="span" variant="caption" color="text.secondary">
           {endLabel}:&nbsp;
         </Typography>
-        <Typography component="span" variant="body2">
+        <Typography component="span" {...v2Typography.browserCell}>
           {formatArrangementDate(endDate)}
         </Typography>
       </Box>
@@ -79,7 +80,7 @@ function ArrangementDurationSummary({
 function ArrangementLocationSummary({ row }: { row: ArrangementRowV2 }) {
   if (!usesChildLocation(row.arrangementPolicy)) {
     return (
-      <Typography color="text.secondary" variant="body2">
+      <Typography color="text.secondary" {...v2Typography.browserCell}>
         -
       </Typography>
     );
@@ -91,7 +92,7 @@ function ArrangementLocationSummary({ row }: { row: ArrangementRowV2 }) {
         <Typography variant="caption" color="text.secondary">
           Current Location
         </Typography>
-        <Typography variant="body2">
+        <Typography {...v2Typography.browserCell}>
           {row.currentLocationLabel || <strong>Location unspecified</strong>}
         </Typography>
       </Box>
@@ -100,7 +101,9 @@ function ArrangementLocationSummary({ row }: { row: ArrangementRowV2 }) {
           <Typography variant="caption" color="text.secondary">
             Next Planned Location
           </Typography>
-          <Typography variant="body2">{row.nextPlannedLocationLabel}</Typography>
+          <Typography {...v2Typography.browserCell}>
+            {row.nextPlannedLocationLabel}
+          </Typography>
         </Box>
       )}
     </Stack>
@@ -127,7 +130,7 @@ function AssignmentHealthSummary({ row }: { row: ArrangementRowV2 }) {
 
   if (requiredCount === 0) {
     return (
-      <Typography color="text.secondary" variant="body2">
+      <Typography color="text.secondary" {...v2Typography.browserCell}>
         Optional only
       </Typography>
     );
@@ -137,7 +140,9 @@ function AssignmentHealthSummary({ row }: { row: ArrangementRowV2 }) {
     return (
       <Stack direction="row" spacing={0.75} sx={{ alignItems: 'center' }}>
         <CheckCircleIcon color="success" fontSize="small" />
-        <Typography variant="body2">All required assigned</Typography>
+        <Typography {...v2Typography.browserCell}>
+          All required assigned
+        </Typography>
       </Stack>
     );
   }
@@ -150,7 +155,7 @@ function AssignmentHealthSummary({ row }: { row: ArrangementRowV2 }) {
     <Stack spacing={0.35} className="ph-unmask">
       <Stack direction="row" spacing={0.75} sx={{ alignItems: 'center' }}>
         <WarningIcon color="warning" fontSize="small" />
-        <Typography variant="body2" sx={{ fontWeight: 600 }}>
+        <Typography {...v2Typography.primaryValue}>
           {missingRequiredSummaries.length} required missing
         </Typography>
       </Stack>
@@ -182,7 +187,7 @@ function buildColumns(): GridColDef<ArrangementRowV2>[] {
       flex: 0.85,
       renderCell: ({ row }) => (
         <Stack className="ph-unmask" spacing={0.25} sx={{ minWidth: 0 }}>
-          <Typography variant="body2" sx={{ fontWeight: 600 }} noWrap>
+          <Typography {...v2Typography.primaryValue} noWrap>
             {row.arrangementType}
           </Typography>
           {row.source.arrangementPolicyVersion && (
@@ -200,7 +205,7 @@ function buildColumns(): GridColDef<ArrangementRowV2>[] {
       flex: 0.8,
       valueGetter: (_value, row) => displayValue(row.caseLabel),
       renderCell: ({ row }) => (
-        <Typography className="ph-unmask" variant="body2" noWrap>
+        <Typography className="ph-unmask" {...v2Typography.browserCell} noWrap>
           {displayValue(row.caseLabel)}
         </Typography>
       ),
@@ -233,7 +238,7 @@ function buildColumns(): GridColDef<ArrangementRowV2>[] {
       flex: 1,
       valueGetter: (_value, row) => displayValue(row.childOrPersonLabel),
       renderCell: ({ row }) => (
-        <Typography className="ph-unmask" variant="body2" noWrap>
+        <Typography className="ph-unmask" {...v2Typography.browserCell} noWrap>
           {displayValue(row.childOrPersonLabel)}
         </Typography>
       ),

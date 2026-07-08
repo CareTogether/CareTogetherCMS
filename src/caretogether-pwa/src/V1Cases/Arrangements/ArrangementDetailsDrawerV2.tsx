@@ -17,6 +17,7 @@ import {
 import { WorkspaceSectionV2 } from '../../Generic/WorkspaceSectionV2';
 import { FamilyName } from '../../Families/FamilyName';
 import { PersonName } from '../../Families/PersonName';
+import { v2Typography } from '../../Families/v2Typography';
 import {
   useFamilyLookup,
   usePersonLookup,
@@ -104,7 +105,7 @@ function ArrangementAssignmentsSectionV2({
           ))}
         </Stack>
       ) : (
-        <Typography className="ph-unmask" variant="body2">
+        <Typography className="ph-unmask" {...v2Typography.browserCell}>
           ✓ All required assignments complete
         </Typography>
       )}
@@ -129,10 +130,13 @@ function AssignmentIssueRowV2({
 }) {
   return (
     <Stack direction="row" spacing={1} sx={{ alignItems: 'baseline' }}>
-      <Typography variant="body2" sx={{ width: 20, textAlign: 'center' }}>
+      <Typography
+        {...v2Typography.browserCell}
+        sx={{ width: 20, textAlign: 'center' }}
+      >
         {icon}
       </Typography>
-      <Typography className="ph-unmask" variant="body2">
+      <Typography className="ph-unmask" {...v2Typography.browserCell}>
         {label}
       </Typography>
     </Stack>

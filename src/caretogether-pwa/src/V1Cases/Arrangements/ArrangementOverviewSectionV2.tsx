@@ -1,5 +1,6 @@
 import { Box, Stack, Typography } from '@mui/material';
 import { type ReactNode } from 'react';
+import { v2Typography } from '../../Families/v2Typography';
 import { ArrangementRowV2 } from './arrangementViewModel';
 import { ArrangementComments } from './ArrangementComments';
 import { ArrangementReason } from './ArrangementReason';
@@ -18,8 +19,7 @@ function DetailField({
       </Typography>
       <Typography
         className="ph-unmask"
-        variant="body2"
-        sx={{ fontWeight: 600 }}
+        {...v2Typography.primaryValue}
       >
         {children || '-'}
       </Typography>
@@ -44,8 +44,7 @@ export function ArrangementOverviewSectionV2({
         <Typography
           className="ph-unmask"
           component="div"
-          variant="body2"
-          sx={{ fontWeight: 600 }}
+          {...v2Typography.primaryValue}
         >
           <ArrangementReason
             arrangement={row.source}
@@ -62,8 +61,7 @@ export function ArrangementOverviewSectionV2({
         <Typography
           className="ph-unmask"
           component="div"
-          variant="body2"
-          sx={{ fontWeight: 600 }}
+          {...v2Typography.primaryValue}
         >
           <ArrangementComments
             arrangement={row.source}

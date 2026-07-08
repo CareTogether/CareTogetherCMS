@@ -151,6 +151,7 @@ import {
   buildFamilyMemberRowsV2,
   FamilyMemberRowV2,
 } from './familyMemberViewModel';
+import { v2Typography } from './v2Typography';
 
 type CustomFieldRenderInfo = CompletedCustomFieldInfo | string;
 type ReferralNoteEntry = NonNullable<V1Referral['notes']>[number];
@@ -1535,7 +1536,7 @@ export function FamilyScreenV2() {
                 sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}
               >
                 <EmailIcon fontSize="small" color="action" />
-                <Typography variant="body2">
+                <Typography {...v2Typography.browserCell}>
                   {primaryEmailAddress.address}
                 </Typography>
                 <ContactInfoCopyButton
@@ -1551,7 +1552,7 @@ export function FamilyScreenV2() {
                 sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}
               >
                 <PhoneIcon fontSize="small" color="action" />
-                <Typography variant="body2">
+                <Typography {...v2Typography.browserCell}>
                   {primaryPhoneNumber.number}
                 </Typography>
                 <ContactInfoCopyButton
@@ -1567,7 +1568,9 @@ export function FamilyScreenV2() {
                 sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}
               >
                 <HomeIcon fontSize="small" color="action" />
-                <Typography variant="body2">{primaryAddressText}</Typography>
+                <Typography {...v2Typography.browserCell}>
+                  {primaryAddressText}
+                </Typography>
                 <ContactInfoCopyButton
                   value={primaryAddressText}
                   label="Address"
@@ -2076,8 +2079,7 @@ export function FamilyScreenV2() {
                       >
                         <Typography
                           className="ph-unmask"
-                          variant="body2"
-                          sx={{ fontWeight: 600 }}
+                          {...v2Typography.primaryValue}
                         >
                           {currentReferral.title}
                         </Typography>

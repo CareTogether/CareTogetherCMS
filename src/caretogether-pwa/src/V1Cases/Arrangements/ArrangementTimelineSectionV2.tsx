@@ -1,6 +1,7 @@
 import { Box, Typography } from '@mui/material';
 import { type ReactNode } from 'react';
 import { ArrangementPhase, Permission } from '../../GeneratedClient';
+import { v2Typography } from '../../Families/v2Typography';
 import { useBackdrop } from '../../Hooks/useBackdrop';
 import { useFamilyIdPermissions } from '../../Model/SessionModel';
 import { useV1CasesModel } from '../../Model/V1CasesModel';
@@ -38,7 +39,7 @@ function TimelineRowLabel({ children }: { children: ReactNode }) {
         py: 0.75,
       }}
     >
-      <Typography variant="body2" sx={{ fontWeight: 600 }}>
+      <Typography {...v2Typography.primaryValue}>
         {children}
       </Typography>
     </Box>
@@ -60,13 +61,13 @@ function TimelineValueCell({ children }: { children?: ReactNode }) {
           minWidth: 0,
         },
         '& .MuiTypography-root': {
-          fontSize: '0.875rem',
+          fontSize: '1rem',
           lineHeight: 1.35,
         },
       }}
     >
       {children ?? (
-        <Typography color="text.disabled" variant="body2">
+        <Typography color="text.disabled" {...v2Typography.browserCell}>
           -
         </Typography>
       )}

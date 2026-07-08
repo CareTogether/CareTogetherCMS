@@ -8,6 +8,7 @@ import {
 } from '../../GeneratedClient';
 import { FamilyName } from '../../Families/FamilyName';
 import { PersonName } from '../../Families/PersonName';
+import { v2Typography } from '../../Families/v2Typography';
 import {
   useFamilyLookup,
   usePersonLookup,
@@ -33,8 +34,7 @@ function DetailField({
       <Typography
         className="ph-unmask"
         component="div"
-        variant="body2"
-        sx={{ fontWeight: 600 }}
+        {...v2Typography.primaryValue}
       >
         {children}
       </Typography>

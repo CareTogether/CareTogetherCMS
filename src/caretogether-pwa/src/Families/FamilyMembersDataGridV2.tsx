@@ -17,8 +17,8 @@ import {
   GridColDef,
   GridToolbarContainer,
 } from '@mui/x-data-grid';
-import { useRef } from 'react';
 import { FamilyMemberRowV2 } from './familyMemberViewModel';
+import { v2Typography } from './v2Typography';
 
 type FamilyMembersDataGridV2Props = {
   rows: FamilyMemberRowV2[];
@@ -130,8 +130,7 @@ function buildColumns({
         <Stack sx={{ height: '100%', justifyContent: 'center', minWidth: 0 }}>
           <Typography
             className="ph-unmask"
-            variant="body2"
-            sx={{ fontWeight: 600 }}
+            {...v2Typography.primaryValue}
             noWrap
           >
             {row.displayName}
@@ -150,7 +149,7 @@ function buildColumns({
       width: 90,
       valueGetter: (_value, row) => displayValue(row.ageLabel),
       renderCell: ({ row }) => (
-        <Typography className="ph-unmask" variant="body2">
+        <Typography className="ph-unmask" {...v2Typography.browserCell}>
           {displayValue(row.ageLabel)}
         </Typography>
       ),
@@ -161,7 +160,7 @@ function buildColumns({
       width: 120,
       valueGetter: (_value, row) => displayValue(row.genderLabel),
       renderCell: ({ row }) => (
-        <Typography className="ph-unmask" variant="body2">
+        <Typography className="ph-unmask" {...v2Typography.browserCell}>
           {displayValue(row.genderLabel)}
         </Typography>
       ),
@@ -177,7 +176,7 @@ function buildColumns({
           <Typography
             className="ph-unmask"
             color={row.primaryPhone ? 'text.primary' : 'text.secondary'}
-            variant="body2"
+            {...v2Typography.browserCell}
             noWrap
           >
             {row.primaryPhone || '-'}
@@ -204,7 +203,7 @@ function buildColumns({
       renderCell: ({ row }) => {
         if (row.activeArrangements.length === 0) {
           return (
-            <Typography color="text.secondary" variant="body2">
+            <Typography color="text.secondary" {...v2Typography.browserCell}>
               {'\u2014'}
             </Typography>
           );
@@ -284,10 +283,9 @@ function buildColumns({
             <Typography
               className="ph-unmask"
               color={summary.fullText ? 'text.primary' : 'text.secondary'}
-              variant="body2"
+              {...v2Typography.browserCell}
               noWrap
               sx={{
-                fontWeight: summary.fullText ? 600 : undefined,
                 minWidth: 0,
               }}
             >
@@ -321,7 +319,7 @@ function buildColumns({
               {summary.fullText && <WarningIcon fontSize="small" />}
               <Typography
                 className="ph-unmask"
-                variant="body2"
+                {...v2Typography.browserCell}
                 noWrap
                 sx={{
                   fontWeight: summary.fullText ? 600 : undefined,
@@ -419,22 +417,10 @@ export function FamilyMembersDataGridV2({
   canAddChild = true,
 }: FamilyMembersDataGridV2Props) {
   const theme = useTheme();
-  const gridContainerRef = useRef<HTMLDivElement | null>(null);
   const columns = buildColumns({ onArrangementClick, onRowClick });
   const pageSize = 10;
   const paginationNeeded = rows.length > pageSize;
   const gridHeight = paginationNeeded ? pageSize * 56 + 112 : undefined;
-
-  const clearGridFocus = () => {
-    const activeElement = document.activeElement;
-
-    if (
-      activeElement instanceof HTMLElement &&
-      gridContainerRef.current?.contains(activeElement)
-    ) {
-      activeElement.blur();
-    }
-  };
 
   if (rows.length === 0) {
     return (
@@ -454,7 +440,6 @@ export function FamilyMembersDataGridV2({
     <Stack spacing={1}>
       <Typography variant="h6">Family Members</Typography>
       <Box
-        ref={gridContainerRef}
         sx={{
           height: gridHeight,
           width: '100%',
@@ -472,31 +457,20 @@ export function FamilyMembersDataGridV2({
                 duration: theme.transitions.duration.shortest,
               }
             ),
-            '&:focus, &:focus-within': {
-              backgroundColor: theme.palette.action.focus,
-              boxShadow: `inset 3px 0 0 ${theme.palette.primary.main}`,
-              outline: 'none',
-            },
-            '&:focus .MuiSvgIcon-root, &:focus-within .MuiSvgIcon-root': {
-              opacity: 1,
-            },
             '&:hover': {
+              backgroundColor: theme.palette.action.hover,
+            },
+            '&:hover .MuiDataGrid-cell': {
               backgroundColor: theme.palette.action.hover,
             },
             '&:hover .MuiSvgIcon-root': {
               opacity: 1,
-            },
-            '&.Mui-selected, &.Mui-selected:hover': {
-              backgroundColor: 'transparent',
             },
           },
           '& .MuiDataGrid-cell': {
             alignItems: 'center',
             cursor: onRowClick ? 'inherit' : undefined,
             display: 'flex',
-            transition: theme.transitions.create('background-color', {
-              duration: theme.transitions.duration.shortest,
-            }),
           },
           '& .MuiDataGrid-root': {
             border: 0,
@@ -505,19 +479,11 @@ export function FamilyMembersDataGridV2({
             backgroundColor: theme.palette.action.hover,
             borderBottomColor: theme.palette.divider,
           },
-          '& .MuiDataGrid-cell:hover, & .MuiDataGrid-cell.Mui-selected': {
-            backgroundColor: 'transparent',
-            boxShadow: 'none',
-          },
           '& .MuiDataGrid-cell:focus, & .MuiDataGrid-cell:focus-within': {
-            backgroundColor: 'transparent',
-            boxShadow: 'none',
             outline: 'none',
           },
           '& .MuiDataGrid-columnHeader:focus, & .MuiDataGrid-columnHeader:focus-within':
             {
-              backgroundColor: 'inherit',
-              boxShadow: 'none',
               outline: 'none',
             },
         }}
@@ -530,10 +496,7 @@ export function FamilyMembersDataGridV2({
           columnHeaderHeight={42}
           disableRowSelectionOnClick
           hideFooter={!paginationNeeded}
-          onRowClick={({ row }) => {
-            onRowClick?.(row);
-            clearGridFocus();
-          }}
+          onRowClick={({ row }) => onRowClick?.(row)}
           pageSizeOptions={[10, 25, 50]}
           initialState={{
             pagination: {
