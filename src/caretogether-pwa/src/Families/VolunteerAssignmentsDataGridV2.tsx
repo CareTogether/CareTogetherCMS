@@ -3,6 +3,7 @@ import { Box, Chip, Typography, useTheme } from '@mui/material';
 import { DataGrid, GridColDef, GridToolbar } from '@mui/x-data-grid';
 import { useRef } from 'react';
 import { VolunteerAssignmentRowV2 } from './volunteerAssignmentViewModel';
+import { v2Typography } from './v2Typography';
 
 type VolunteerAssignmentsDataGridV2Props = {
   onRowClick: (row: VolunteerAssignmentRowV2) => void;
@@ -17,7 +18,7 @@ function buildColumns(): GridColDef<VolunteerAssignmentRowV2>[] {
       minWidth: 160,
       flex: 0.8,
       renderCell: ({ row }) => (
-        <Typography className="ph-unmask" variant="body2" noWrap>
+        <Typography className="ph-unmask" {...v2Typography.browserCell} noWrap>
           {row.typeLabel}
         </Typography>
       ),
@@ -28,7 +29,12 @@ function buildColumns(): GridColDef<VolunteerAssignmentRowV2>[] {
       minWidth: 180,
       flex: 0.9,
       renderCell: ({ row }) => (
-        <Typography className="ph-unmask" variant="body2" noWrap>
+        <Typography
+          className="ph-unmask"
+          {...v2Typography.browserCell}
+          noWrap
+          sx={{ fontWeight: 600 }}
+        >
           {row.personLabel}
         </Typography>
       ),
@@ -47,7 +53,7 @@ function buildColumns(): GridColDef<VolunteerAssignmentRowV2>[] {
       headerName: 'Started',
       width: 120,
       renderCell: ({ row }) => (
-        <Typography variant="body2">{row.startedLabel}</Typography>
+        <Typography {...v2Typography.browserCell}>{row.startedLabel}</Typography>
       ),
     },
     {
@@ -55,7 +61,7 @@ function buildColumns(): GridColDef<VolunteerAssignmentRowV2>[] {
       headerName: 'Ended',
       width: 120,
       renderCell: ({ row }) => (
-        <Typography variant="body2">{row.endedLabel}</Typography>
+        <Typography {...v2Typography.browserCell}>{row.endedLabel}</Typography>
       ),
     },
     {
@@ -64,7 +70,7 @@ function buildColumns(): GridColDef<VolunteerAssignmentRowV2>[] {
       minWidth: 200,
       flex: 1,
       renderCell: ({ row }) => (
-        <Typography className="ph-unmask" variant="body2" noWrap>
+        <Typography className="ph-unmask" {...v2Typography.browserCell} noWrap>
           {row.currentLocationLabel}
         </Typography>
       ),
@@ -77,7 +83,7 @@ function buildColumns(): GridColDef<VolunteerAssignmentRowV2>[] {
       renderCell: ({ row }) => (
         <Typography
           className="ph-unmask"
-          variant="body2"
+          {...v2Typography.browserCell}
           noWrap
           sx={{
             color: row.nextPlanIsPastDue ? 'error.main' : undefined,
