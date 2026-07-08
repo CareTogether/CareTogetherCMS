@@ -17,6 +17,7 @@ import {
   GridColDef,
   GridToolbarContainer,
 } from '@mui/x-data-grid';
+import { useRef } from 'react';
 import { FamilyMemberRowV2 } from './familyMemberViewModel';
 
 type FamilyMembersDataGridV2Props = {
@@ -408,10 +409,22 @@ export function FamilyMembersDataGridV2({
   canAddChild = true,
 }: FamilyMembersDataGridV2Props) {
   const theme = useTheme();
+  const gridContainerRef = useRef<HTMLDivElement | null>(null);
   const columns = buildColumns({ onArrangementClick, onRowClick });
   const pageSize = 10;
   const paginationNeeded = rows.length > pageSize;
   const gridHeight = paginationNeeded ? pageSize * 56 + 112 : undefined;
+
+  const clearGridFocus = () => {
+    const activeElement = document.activeElement;
+
+    if (
+      activeElement instanceof HTMLElement &&
+      gridContainerRef.current?.contains(activeElement)
+    ) {
+      activeElement.blur();
+    }
+  };
 
   if (rows.length === 0) {
     return (
@@ -431,6 +444,7 @@ export function FamilyMembersDataGridV2({
     <Stack spacing={1}>
       <Typography variant="h6">Family Members</Typography>
       <Box
+        ref={gridContainerRef}
         sx={{
           height: gridHeight,
           width: '100%',
@@ -485,10 +499,14 @@ export function FamilyMembersDataGridV2({
             borderBottomColor: theme.palette.divider,
           },
           '& .MuiDataGrid-cell:focus, & .MuiDataGrid-cell:focus-within': {
+            backgroundColor: 'transparent',
+            boxShadow: 'none',
             outline: 'none',
           },
           '& .MuiDataGrid-columnHeader:focus, & .MuiDataGrid-columnHeader:focus-within':
             {
+              backgroundColor: 'inherit',
+              boxShadow: 'none',
               outline: 'none',
             },
         }}
@@ -501,7 +519,10 @@ export function FamilyMembersDataGridV2({
           columnHeaderHeight={42}
           disableRowSelectionOnClick
           hideFooter={!paginationNeeded}
-          onRowClick={({ row }) => onRowClick?.(row)}
+          onRowClick={({ row }) => {
+            onRowClick?.(row);
+            clearGridFocus();
+          }}
           pageSizeOptions={[10, 25, 50]}
           initialState={{
             pagination: {
