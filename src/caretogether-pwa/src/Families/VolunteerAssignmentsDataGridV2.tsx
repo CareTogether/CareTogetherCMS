@@ -1,7 +1,7 @@
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import { Box, Chip, Typography, useTheme } from '@mui/material';
 import { DataGrid, GridColDef, GridToolbar } from '@mui/x-data-grid';
-import { useRef } from 'react';
+import { useMemo } from 'react';
 import { VolunteerAssignmentRowV2 } from './volunteerAssignmentViewModel';
 import { v2Typography } from './v2Typography';
 
@@ -117,28 +117,23 @@ function buildColumns(): GridColDef<VolunteerAssignmentRowV2>[] {
   ];
 }
 
+function clearActiveGridElement() {
+  const activeElement = document.activeElement;
+
+  if (!(activeElement instanceof HTMLElement)) return;
+
+  activeElement.blur();
+}
+
 export function VolunteerAssignmentsDataGridV2({
   onRowClick,
   rows,
 }: VolunteerAssignmentsDataGridV2Props) {
   const theme = useTheme();
-  const gridContainerRef = useRef<HTMLDivElement | null>(null);
-  const columns = buildColumns();
-
-  const clearGridFocus = () => {
-    const activeElement = document.activeElement;
-
-    if (
-      activeElement instanceof HTMLElement &&
-      gridContainerRef.current?.contains(activeElement)
-    ) {
-      activeElement.blur();
-    }
-  };
+  const columns = useMemo(() => buildColumns(), []);
 
   return (
     <Box
-      ref={gridContainerRef}
       sx={{
         width: '100%',
         border: 1,
@@ -149,10 +144,16 @@ export function VolunteerAssignmentsDataGridV2({
         '& .MuiDataGrid-row': {
           cursor: 'pointer',
           minHeight: 56,
-          transition: theme.transitions.create('background-color', {
-            duration: theme.transitions.duration.shortest,
-          }),
+          transition: theme.transitions.create(
+            ['background-color', 'box-shadow'],
+            {
+              duration: theme.transitions.duration.shortest,
+            }
+          ),
           '&:hover': {
+            backgroundColor: theme.palette.action.hover,
+          },
+          '&:hover .MuiDataGrid-cell': {
             backgroundColor: theme.palette.action.hover,
           },
           '&:hover .MuiSvgIcon-root': {
@@ -163,16 +164,8 @@ export function VolunteerAssignmentsDataGridV2({
           alignItems: 'center',
           cursor: 'inherit',
           display: 'flex',
+          py: 1,
         },
-        '& .MuiDataGrid-cell:hover': {
-          backgroundColor: 'transparent',
-        },
-        '& .MuiDataGrid-cell:focus, & .MuiDataGrid-cell:focus-within, & .MuiDataGrid-cell.Mui-selected':
-          {
-            backgroundColor: 'transparent',
-            boxShadow: 'none',
-            outline: 'none',
-          },
         '& .MuiDataGrid-root': {
           border: 0,
         },
@@ -180,10 +173,11 @@ export function VolunteerAssignmentsDataGridV2({
           backgroundColor: theme.palette.action.hover,
           borderBottomColor: theme.palette.divider,
         },
+        '& .MuiDataGrid-cell:focus, & .MuiDataGrid-cell:focus-within': {
+          outline: 'none',
+        },
         '& .MuiDataGrid-columnHeader:focus, & .MuiDataGrid-columnHeader:focus-within':
           {
-            backgroundColor: 'transparent',
-            boxShadow: 'none',
             outline: 'none',
           },
       }}
@@ -199,8 +193,8 @@ export function VolunteerAssignmentsDataGridV2({
         onRowClick={({ row }) => {
           if (!row.childFamilyId) return;
 
-          clearGridFocus();
           onRowClick(row);
+          clearActiveGridElement();
         }}
         slots={{ toolbar: GridToolbar }}
         slotProps={{
