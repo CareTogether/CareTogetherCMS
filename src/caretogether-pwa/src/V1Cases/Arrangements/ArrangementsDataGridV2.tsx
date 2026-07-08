@@ -15,6 +15,7 @@ import {
   FunctionRequirement,
 } from '../../GeneratedClient';
 import { v2Typography } from '../../Families/v2Typography';
+import { useMemo } from 'react';
 import type { ArrangementRowV2 } from './arrangementViewModel';
 
 type ArrangementsDataGridV2Props = {
@@ -319,7 +320,7 @@ export function ArrangementsDataGridV2({
   rows,
 }: ArrangementsDataGridV2Props) {
   const theme = useTheme();
-  const columns = buildColumns();
+  const columns = useMemo(() => buildColumns(), []);
   const pageSize = 10;
   const paginationNeeded = rows.length > pageSize;
   const gridHeight = paginationNeeded ? pageSize * 72 + 112 : undefined;

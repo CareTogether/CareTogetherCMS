@@ -17,6 +17,7 @@ import {
   GridColDef,
   GridToolbarContainer,
 } from '@mui/x-data-grid';
+import { useMemo } from 'react';
 import { FamilyMemberRowV2 } from './familyMemberViewModel';
 import { v2Typography } from './v2Typography';
 
@@ -417,7 +418,10 @@ export function FamilyMembersDataGridV2({
   canAddChild = true,
 }: FamilyMembersDataGridV2Props) {
   const theme = useTheme();
-  const columns = buildColumns({ onArrangementClick, onRowClick });
+  const columns = useMemo(
+    () => buildColumns({ onArrangementClick, onRowClick }),
+    [onArrangementClick, onRowClick]
+  );
   const pageSize = 10;
   const paginationNeeded = rows.length > pageSize;
   const gridHeight = paginationNeeded ? pageSize * 56 + 112 : undefined;

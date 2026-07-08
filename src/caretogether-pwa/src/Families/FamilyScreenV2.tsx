@@ -327,13 +327,24 @@ export function FamilyScreenV2() {
     arrangementIdFromQuery ?? arrangementIdFromState;
 
   const communitiesLoadable = useLoadable(visibleCommunitiesQuery);
-  const allCommunities = (communitiesLoadable || [])
-    .map((x) => x.community!)
-    .sort((a, b) => (a.name! < b.name! ? -1 : a.name! > b.name! ? 1 : 0));
+  const allCommunities = useMemo(
+    () =>
+      (communitiesLoadable || [])
+        .map((x) => x.community!)
+        .sort((a, b) => (a.name! < b.name! ? -1 : a.name! > b.name! ? 1 : 0)),
+    [communitiesLoadable]
+  );
   const communityLookup = useCommunityLookup();
-  const allCommunityInfo = allCommunities.map((c) => communityLookup(c.id)!);
-  const familyCommunityInfo = allCommunityInfo?.filter((c) =>
-    c.community?.memberFamilies?.includes(familyId)
+  const allCommunityInfo = useMemo(
+    () => allCommunities.map((c) => communityLookup(c.id)!),
+    [allCommunities, communityLookup]
+  );
+  const familyCommunityInfo = useMemo(
+    () =>
+      allCommunityInfo?.filter((c) =>
+        c.community?.memberFamilies?.includes(familyId)
+      ),
+    [allCommunityInfo, familyId]
   );
 
   const referralInfos = useRecoilValue(visibleReferralsQuery);
@@ -390,13 +401,12 @@ export function FamilyScreenV2() {
   }, [openV1Cases, closedV1Cases]);
   const [closeCaseDrawerOpen, setCloseCaseDrawerOpen] = useState(false);
   const v1CasesModel = useV1CasesModel();
-  const referralInfosLoadable = useLoadable(visibleReferralsQuery);
-  const openReferralId =
-    referralInfosLoadable
-      ?.map((referralInfo) => referralInfo.referral)
-      .find(
-        (r) => r.familyId === familyId && r.status === V1ReferralStatus.Open
-      )?.referralId ?? undefined;
+  const openReferralId = useMemo(
+    () =>
+      familyReferrals.find((r) => r.status === V1ReferralStatus.Open)
+        ?.referralId,
+    [familyReferrals]
+  );
   const [openNewV1CaseDialogOpen, setOpenNewV1CaseDialogOpen] = useState(false);
   const [uploadDocumentDialogOpen, setUploadDocumentDialogOpen] =
     useState(false);
@@ -432,8 +442,9 @@ export function FamilyScreenV2() {
   const [selectedV1CaseId, setSelectedV1CaseId] = useState<string | undefined>(
     v1CaseIdFromNavigation || firstV1CaseId
   );
-  const selectedV1Case = allV1Cases.find(
-    (v1Case) => v1Case.id === selectedV1CaseId
+  const selectedV1Case = useMemo(
+    () => allV1Cases.find((v1Case) => v1Case.id === selectedV1CaseId),
+    [allV1Cases, selectedV1CaseId]
   );
 
   const hasOpenV1Case = openV1Cases.length > 0;
@@ -2261,24 +2272,22 @@ export function FamilyScreenV2() {
         </FormControl>
       )}
       <Grid container spacing={0}>
-        <Grid
-          item
-          xs={12}
-          spacing={0}
-          sx={{ display: showTimelineAndNotes ? undefined : 'none' }}
-        >
-          <ActivityTimelineV2
-            family={family}
-            referrals={familyReferrals}
-            printContentRef={printContentRef}
-          />
-        </Grid>
-        <Grid
-          item
-          xs={12}
-          lg={showOverview ? 8 : 12}
-          sx={{ display: 'flex', flexDirection: 'column' }}
-        >
+        {showTimelineAndNotes && (
+          <Grid item xs={12} spacing={0}>
+            <ActivityTimelineV2
+              family={family}
+              referrals={familyReferrals}
+              printContentRef={printContentRef}
+            />
+          </Grid>
+        )}
+        {!showTimelineAndNotes && (
+          <Grid
+            item
+            xs={12}
+            lg={showOverview ? 8 : 12}
+            sx={{ display: 'flex', flexDirection: 'column' }}
+          >
           <Grid container spacing={2}>
             {showArrangementsOrAssignments && isVolunteerFamily && family && (
               <AssignmentsSection family={family} hideTitle />
@@ -2524,7 +2533,7 @@ export function FamilyScreenV2() {
                 </Grid>
               )}
           </Grid>
-          <Grid container spacing={0} sx={{ order: 1 }}>
+            <Grid container spacing={0} sx={{ order: 1 }}>
             {showArrangementsOrAssignments &&
               !isVolunteerFamily &&
               selectedV1Case && (
@@ -2537,26 +2546,21 @@ export function FamilyScreenV2() {
                 />
               )}
 
-            <Grid
-              item
-              xs={12}
-              sx={{ display: showOverview ? undefined : 'none' }}
-            >
-              <FamilyMembersDataGridV2
-                rows={familyMemberRows}
-                onAddAdult={openAddAdultDialog}
-                onAddChild={openAddChildDialog}
-                onArrangementClick={openArrangementFromFamilyMember}
-                onRowClick={openFamilyMemberDrawer}
-                canAddAdult={canEditFamilyInfo}
-                canAddChild={canEditFamilyInfo}
-              />
-            </Grid>
-            <Grid
-              item
-              xs={12}
-              sx={{ display: showOverview ? undefined : 'none' }}
-            >
+            {showOverview && (
+              <Grid item xs={12}>
+                <FamilyMembersDataGridV2
+                  rows={familyMemberRows}
+                  onAddAdult={openAddAdultDialog}
+                  onAddChild={openAddChildDialog}
+                  onArrangementClick={openArrangementFromFamilyMember}
+                  onRowClick={openFamilyMemberDrawer}
+                  canAddAdult={canEditFamilyInfo}
+                  canAddChild={canEditFamilyInfo}
+                />
+              </Grid>
+            )}
+            {showOverview && (
+              <Grid item xs={12}>
               {permissions(Permission.ViewFamilyCustomFields) &&
                 orderCustomFieldsByPolicy(
                   Array<CustomFieldRenderInfo>()
@@ -2637,15 +2641,13 @@ export function FamilyScreenV2() {
                       />
                     ))}
               </Grid>
+              </Grid>
+            )}
             </Grid>
           </Grid>
-        </Grid>
-        <Grid
-          item
-          xs={12}
-          lg={4}
-          sx={{ display: showOverview ? undefined : 'none' }}
-        >
+        )}
+        {showOverview && (
+          <Grid item xs={12} lg={4}>
           <Box
             sx={{
               border: 1,
@@ -2800,7 +2802,8 @@ export function FamilyScreenV2() {
               </Box>
             )}
           </Box>
-        </Grid>
+          </Grid>
+        )}
       </Grid>
     </Container>
   );
