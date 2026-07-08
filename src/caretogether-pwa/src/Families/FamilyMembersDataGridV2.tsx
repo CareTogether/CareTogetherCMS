@@ -26,7 +26,7 @@ type FamilyMembersDataGridV2Props = {
   onAddAdult: () => void;
   onAddChild: () => void;
   onArrangementClick?: (arrangementId: string, v1CaseId: string) => void;
-  onRowClick?: (row: FamilyMemberRowV2) => void;
+  onRowClick: (row: FamilyMemberRowV2) => void;
   canAddAdult?: boolean;
   canAddChild?: boolean;
 };
@@ -116,10 +116,9 @@ function tooltipTitle(fullText?: string) {
 
 function buildColumns({
   onArrangementClick,
-  onRowClick,
 }: Pick<
   FamilyMembersDataGridV2Props,
-  'onArrangementClick' | 'onRowClick'
+  'onArrangementClick'
 >): GridColDef<FamilyMemberRowV2>[] {
   return [
     {
@@ -341,19 +340,26 @@ function buildColumns({
       sortable: false,
       filterable: false,
       disableColumnMenu: true,
-      renderCell: () =>
-        onRowClick ? (
-          <ChevronRightIcon
-            fontSize="small"
-            sx={{
-              color: 'text.secondary',
-              opacity: 0,
-              transition: 'opacity 120ms ease-in-out',
-            }}
-          />
-        ) : null,
+      renderCell: () => (
+        <ChevronRightIcon
+          fontSize="small"
+          sx={{
+            color: 'text.secondary',
+            opacity: 0,
+            transition: 'opacity 120ms ease-in-out',
+          }}
+        />
+      ),
     },
   ];
+}
+
+function clearActiveGridElement() {
+  const activeElement = document.activeElement;
+
+  if (!(activeElement instanceof HTMLElement)) return;
+
+  activeElement.blur();
 }
 
 function EmptyFamilyMembersState({
@@ -419,8 +425,8 @@ export function FamilyMembersDataGridV2({
 }: FamilyMembersDataGridV2Props) {
   const theme = useTheme();
   const columns = useMemo(
-    () => buildColumns({ onArrangementClick, onRowClick }),
-    [onArrangementClick, onRowClick]
+    () => buildColumns({ onArrangementClick }),
+    [onArrangementClick]
   );
   const pageSize = 10;
   const paginationNeeded = rows.length > pageSize;
@@ -453,7 +459,7 @@ export function FamilyMembersDataGridV2({
           bgcolor: 'background.paper',
           overflow: 'hidden',
           '& .MuiDataGrid-row': {
-            cursor: onRowClick ? 'pointer' : undefined,
+            cursor: 'pointer',
             minHeight: 56,
             transition: theme.transitions.create(
               ['background-color', 'box-shadow'],
@@ -473,8 +479,9 @@ export function FamilyMembersDataGridV2({
           },
           '& .MuiDataGrid-cell': {
             alignItems: 'center',
-            cursor: onRowClick ? 'inherit' : undefined,
+            cursor: 'inherit',
             display: 'flex',
+            py: 1,
           },
           '& .MuiDataGrid-root': {
             border: 0,
@@ -500,7 +507,10 @@ export function FamilyMembersDataGridV2({
           columnHeaderHeight={42}
           disableRowSelectionOnClick
           hideFooter={!paginationNeeded}
-          onRowClick={({ row }) => onRowClick?.(row)}
+          onRowClick={({ row }) => {
+            onRowClick(row);
+            clearActiveGridElement();
+          }}
           pageSizeOptions={[10, 25, 50]}
           initialState={{
             pagination: {
