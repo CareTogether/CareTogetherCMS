@@ -346,5 +346,126 @@ namespace CareTogether.Core.Test.ApprovalCalculationTests
                 );
             }
         }
+
+        [TestMethod]
+        public void ExpiredSupersededIndividualRoleShowsActiveVersionApplication()
+        {
+            var family = CreateTestFamily();
+            var locationPolicy = CreateIndividualRenewalPolicy();
+            var completedIndividualRequirements = H.CompletedIndividualRequirementsWithExpiry(
+                (H.guid1, "LegacyApplication", 1, 10),
+                (H.guid1, "LegacyApproval", 1, 10)
+            );
+
+            var result = ApprovalCalculations.CalculateCombinedFamilyApprovals(
+                locationPolicy: locationPolicy,
+                family: family,
+                completedFamilyRequirements: ImmutableList<Resources.CompletedRequirementInfo>.Empty,
+                exemptedFamilyRequirements: ImmutableList<Resources.ExemptedRequirementInfo>.Empty,
+                familyRoleRemovals: ImmutableList<RoleRemoval>.Empty,
+                completedIndividualRequirements: completedIndividualRequirements,
+                exemptedIndividualRequirements: ImmutableDictionary<
+                    Guid,
+                    ImmutableList<Resources.ExemptedRequirementInfo>
+                >.Empty,
+                individualRoleRemovals: ImmutableDictionary<Guid, ImmutableList<RoleRemoval>>.Empty
+            );
+
+            var availableApplications = result
+                .CurrentAvailableIndividualApplications.Where(x => x.PersonId == H.guid1)
+                .Select(x => x.ActionName)
+                .ToImmutableList();
+
+            CollectionAssert.AreEqual(
+                new[] { "CurrentApplication" },
+                availableApplications.ToArray()
+            );
+            Assert.IsFalse(
+                result.CurrentMissingIndividualRequirements.Any(x =>
+                    x.PersonId == H.guid1 && x.ActionName == "LegacyApproval"
+                )
+            );
+        }
+
+        [TestMethod]
+        public void ExpiredSupersededIndividualRoleShowsActiveVersionMissingApproval()
+        {
+            var family = CreateTestFamily();
+            var locationPolicy = CreateIndividualRenewalPolicy();
+            var completedIndividualRequirements = H.CompletedIndividualRequirementsWithExpiry(
+                (H.guid1, "LegacyApplication", 1, 10),
+                (H.guid1, "LegacyApproval", 1, 10),
+                (H.guid1, "CurrentApplication", 11, null)
+            );
+
+            var result = ApprovalCalculations.CalculateCombinedFamilyApprovals(
+                locationPolicy: locationPolicy,
+                family: family,
+                completedFamilyRequirements: ImmutableList<Resources.CompletedRequirementInfo>.Empty,
+                exemptedFamilyRequirements: ImmutableList<Resources.ExemptedRequirementInfo>.Empty,
+                familyRoleRemovals: ImmutableList<RoleRemoval>.Empty,
+                completedIndividualRequirements: completedIndividualRequirements,
+                exemptedIndividualRequirements: ImmutableDictionary<
+                    Guid,
+                    ImmutableList<Resources.ExemptedRequirementInfo>
+                >.Empty,
+                individualRoleRemovals: ImmutableDictionary<Guid, ImmutableList<RoleRemoval>>.Empty
+            );
+
+            var missingRequirements = result
+                .CurrentMissingIndividualRequirements.Where(x => x.PersonId == H.guid1)
+                .Select(x => x.ActionName)
+                .ToImmutableList();
+
+            CollectionAssert.AreEqual(new[] { "CurrentApproval" }, missingRequirements.ToArray());
+        }
+
+        private static EffectiveLocationPolicy CreateIndividualRenewalPolicy() =>
+            new(
+                ImmutableDictionary<string, ActionRequirement>.Empty,
+                ImmutableList<CustomField>.Empty,
+                new V1CasePolicy(
+                    ImmutableList<string>.Empty,
+                    ImmutableList<CustomField>.Empty,
+                    ImmutableList<ArrangementPolicy>.Empty,
+                    ImmutableList<FunctionPolicy>.Empty
+                ),
+                new VolunteerPolicy(
+                    ImmutableDictionary<string, VolunteerRolePolicy>.Empty.Add(
+                        "Role1",
+                        new VolunteerRolePolicy(
+                            "Role1",
+                            ImmutableList<VolunteerRolePolicyVersion>
+                                .Empty.Add(
+                                    new VolunteerRolePolicyVersion(
+                                        "legacy",
+                                        DateTime.UtcNow.AddDays(-1),
+                                        H.IndividualApprovalRequirements(
+                                            (
+                                                RequirementStage.Application,
+                                                "LegacyApplication"
+                                            ),
+                                            (RequirementStage.Approval, "LegacyApproval")
+                                        )
+                                    )
+                                )
+                                .Add(
+                                    new VolunteerRolePolicyVersion(
+                                        "current",
+                                        SupersededAtUtc: null,
+                                        Requirements: H.IndividualApprovalRequirements(
+                                            (
+                                                RequirementStage.Application,
+                                                "CurrentApplication"
+                                            ),
+                                            (RequirementStage.Approval, "CurrentApproval")
+                                        )
+                                    )
+                                )
+                        )
+                    ),
+                    ImmutableDictionary<string, VolunteerFamilyRolePolicy>.Empty
+                )
+            );
     }
 }

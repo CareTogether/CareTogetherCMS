@@ -22,6 +22,7 @@ import {
   buildArrangementRowsV2,
 } from '../arrangementViewModel';
 import { CreateArrangementDialog } from '../CreateArrangementDialog';
+import { isArrangementPolicyAvailable } from '../arrangementPolicyVersions';
 import { getFilteredArrangements } from './getFilteredArrangements';
 
 type ArrangementSectionProps = {
@@ -120,10 +121,8 @@ export function ArrangementsSection({
             }}
           >
             {policy.referralPolicy?.arrangementPolicies
-              ?.filter(
-                (arrangementPolicy) =>
-                  !arrangementPolicy.supersededAtUtc ||
-                  new Date(arrangementPolicy.supersededAtUtc) > new Date()
+              ?.filter((arrangementPolicy) =>
+                isArrangementPolicyAvailable(arrangementPolicy)
               )
               .map((arrangementPolicy) => (
                 <Box key={arrangementPolicy.arrangementType}>

@@ -330,7 +330,8 @@ namespace CareTogether.Resources.V1Cases
                                 ImmutableSortedSet<ChildLocationHistoryEntry>.Empty,
                                 ImmutableSortedSet<ChildLocationHistoryEntry>.Empty,
                                 Comments: null,
-                                Reason: c.Reason
+                                Reason: c.Reason,
+                                ArrangementPolicyVersion: c.ArrangementPolicyVersion
                             ),
                             null
                         ),

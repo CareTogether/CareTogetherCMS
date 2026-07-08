@@ -7,6 +7,7 @@ import { ArrangementCardTitle } from './ArrangementCardTitle';
 import { ArrangementCardHeaderSection } from './ArrangementCardHeaderSection';
 import { ArrangementCardDetailsSection } from './ArrangementCardDetailsSection';
 import { useRequirementContextData } from './useRequirementContextData';
+import { resolveArrangementPolicy } from './arrangementPolicyVersions';
 
 export type ArrangementCardProps = {
   partneringFamily: CombinedFamilyInfo;
@@ -23,8 +24,9 @@ export function ArrangementCard({
 }: ArrangementCardProps) {
   const policy = useRecoilValue(policyData);
 
-  const arrangementPolicy = policy.referralPolicy?.arrangementPolicies?.find(
-    (a) => a.arrangementType === arrangement.arrangementType
+  const arrangementPolicy = resolveArrangementPolicy(
+    policy.referralPolicy?.arrangementPolicies,
+    arrangement
   );
 
   const requirementsData = useRequirementContextData(

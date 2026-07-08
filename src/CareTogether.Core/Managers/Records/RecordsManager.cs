@@ -293,13 +293,22 @@ namespace CareTogether.Managers.Records
             try
             {
                 await ValidateCommandAsync(organizationId, locationId, command);
+
+                var commandResultRenderingContext =
+                    await CreateCommandResultRenderingContextAsync(
+                        organizationId,
+                        locationId,
+                        command
+                    );
+
                 await ExecuteCommandAsync(organizationId, locationId, user, command);
 
                 return await RenderCommandResultAsync(
                     organizationId,
                     locationId,
                     userContext,
-                    command
+                    command,
+                    commandResultRenderingContext
                 );
             }
             catch
@@ -1129,11 +1138,69 @@ namespace CareTogether.Managers.Records
         private static bool IsApprovedOrOnboarded(RoleApprovalStatus? status) =>
             status is RoleApprovalStatus.Approved or RoleApprovalStatus.Onboarded;
 
+        private sealed record CommandResultRenderingContext(
+            ImmutableDictionary<
+                Guid,
+                ImmutableHashSet<Guid>
+            > PreviouslyLinkedReferralFamilyIdsByReferralId
+        )
+        {
+            public static CommandResultRenderingContext Empty { get; } =
+                new(ImmutableDictionary<Guid, ImmutableHashSet<Guid>>.Empty);
+        }
+
+        private async Task<CommandResultRenderingContext> CreateCommandResultRenderingContextAsync(
+            Guid organizationId,
+            Guid locationId,
+            AtomicRecordsCommand command
+        )
+        {
+            if (command is not V1ReferralRecordsCommand { Command: UpdateV1ReferralFamily update })
+                return CommandResultRenderingContext.Empty;
+
+            var referral = await v1ReferralsResource.GetReferralAsync(
+                organizationId,
+                locationId,
+                update.ReferralId
+            );
+
+            if (referral?.FamilyId is not Guid familyId)
+                return CommandResultRenderingContext.Empty;
+
+            return new CommandResultRenderingContext(
+                ImmutableDictionary<Guid, ImmutableHashSet<Guid>>.Empty.SetItem(
+                    update.ReferralId,
+                    ImmutableHashSet.Create(familyId)
+                )
+            );
+        }
+
+        private async Task<RecordsAggregate?> RenderFamilyRecordsAggregateAsync(
+            Guid organizationId,
+            EffectiveLocationPolicy locationPolicy,
+            Guid locationId,
+            Guid familyId,
+            SessionUserContext userContext
+        )
+        {
+            var familyResult = await combinedFamilyInfoFormatter.RenderCombinedFamilyInfoAsync(
+                organizationId,
+                locationPolicy,
+                locationId,
+                familyId,
+                null,
+                userContext
+            );
+
+            return familyResult == null ? null : new FamilyRecordsAggregate(familyResult);
+        }
+
         private async Task<ImmutableList<RecordsAggregate>> RenderCommandResultAsync(
             Guid organizationId,
             Guid locationId,
             SessionUserContext userContext,
-            AtomicRecordsCommand command
+            AtomicRecordsCommand command,
+            CommandResultRenderingContext? commandResultRenderingContext = null
         )
         {
             var locationPolicy = await policiesResource.GetCurrentPolicy(
@@ -1164,21 +1231,31 @@ namespace CareTogether.Managers.Records
                 var results = ImmutableList.CreateBuilder<RecordsAggregate>();
                 results.Add(new ReferralRecordsAggregate(renderedReferral));
 
+                var linkedFamilyIds = commandResultRenderingContext != null
+                    && commandResultRenderingContext
+                        .PreviouslyLinkedReferralFamilyIdsByReferralId.TryGetValue(
+                        referralId,
+                        out var previousFamilyIds
+                    )
+                    ? previousFamilyIds
+                    : ImmutableHashSet<Guid>.Empty;
+
                 if (renderedReferral.Referral.FamilyId.HasValue)
-                {
-                    var familyResult =
-                        await combinedFamilyInfoFormatter.RenderCombinedFamilyInfoAsync(
+                    linkedFamilyIds = linkedFamilyIds.Add(renderedReferral.Referral.FamilyId.Value);
+
+                var linkedFamilyResults = await Task.WhenAll(
+                    linkedFamilyIds.Select(familyId =>
+                        RenderFamilyRecordsAggregateAsync(
                             organizationId,
                             locationPolicy,
                             locationId,
-                            renderedReferral.Referral.FamilyId.Value,
-                            null,
+                            familyId,
                             userContext
-                        );
+                        )
+                    )
+                );
 
-                    if (familyResult != null)
-                        results.Add(new FamilyRecordsAggregate(familyResult));
-                }
+                results.AddRange(linkedFamilyResults.WhereNotNull());
 
                 return results.ToImmutable();
             }
@@ -1234,21 +1311,17 @@ namespace CareTogether.Managers.Records
 
                 var familyResults = await Task.WhenAll(
                     familyIds.Select(familyId =>
-                        combinedFamilyInfoFormatter.RenderCombinedFamilyInfoAsync(
+                        RenderFamilyRecordsAggregateAsync(
                             organizationId,
                             locationPolicy,
                             locationId,
                             familyId,
-                            null,
                             userContext
                         )
                     )
                 );
 
-                return familyResults
-                    .OfType<CombinedFamilyInfo>() // Filters out null values
-                    .Select(result => new FamilyRecordsAggregate(result))
-                    .ToImmutableList<RecordsAggregate>();
+                return familyResults.WhereNotNull().ToImmutableList();
             }
         }
 
@@ -1273,7 +1346,7 @@ namespace CareTogether.Managers.Records
             ).SelectMany(results => results);
 
             return renderedAggregates
-                .GroupBy(aggregate => (aggregate.Id, AggregateType: aggregate.GetType()))
+                .GroupBy(aggregate => aggregate.Id)
                 .Select(group => group.Last())
                 .ToImmutableList();
         }

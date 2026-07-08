@@ -181,14 +181,16 @@ function buildColumns(): GridColDef<ArrangementRowV2>[] {
       minWidth: 160,
       flex: 0.85,
       renderCell: ({ row }) => (
-        <Typography
-          className="ph-unmask"
-          variant="body2"
-          sx={{ fontWeight: 600 }}
-          noWrap
-        >
-          {row.arrangementType}
-        </Typography>
+        <Stack className="ph-unmask" spacing={0.25} sx={{ minWidth: 0 }}>
+          <Typography variant="body2" sx={{ fontWeight: 600 }} noWrap>
+            {row.arrangementType}
+          </Typography>
+          {row.source.arrangementPolicyVersion && (
+            <Typography color="text.secondary" variant="caption" noWrap>
+              {row.source.arrangementPolicyVersion}
+            </Typography>
+          )}
+        </Stack>
       ),
     },
     {

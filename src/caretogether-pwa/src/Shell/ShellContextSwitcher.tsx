@@ -56,6 +56,7 @@ export function ShellContextSwitcher({
         position: contained ? 'static' : 'absolute',
         minWidth: 0,
         width: contained ? '100%' : undefined,
+        overflow: 'hidden',
       }}
     >
       {organizationConfiguration ? (
@@ -63,7 +64,17 @@ export function ShellContextSwitcher({
           className="ph-unmask"
           variant="subtitle1"
           component="h1"
-          sx={{ position: 'relative', top: -4, left: 8 }}
+          noWrap
+          title={organizationConfiguration.organizationName}
+          sx={{
+            position: 'relative',
+            top: -4,
+            boxSizing: 'border-box',
+            maxWidth: '100%',
+            px: 1,
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
+          }}
         >
           {organizationConfiguration.organizationName}
         </Typography>
@@ -139,7 +150,17 @@ export function ShellContextSwitcher({
           <Typography
             variant="subtitle2"
             component="h2"
-            sx={{ position: 'relative', top: -8, left: 8 }}
+            noWrap
+            title={locationConfiguration.name}
+            sx={{
+              position: 'relative',
+              top: -8,
+              boxSizing: 'border-box',
+              maxWidth: '100%',
+              px: 1,
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+            }}
           >
             {locationConfiguration.name}
           </Typography>

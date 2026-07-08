@@ -73,7 +73,8 @@ import {
 import { AssignmentRoleFilters } from '../FunctionAssignments/AssignmentRoleFilters';
 
 const PARTNERING_FAMILIES_SORT_STORAGE_KEY = 'partnering-families-sortMode';
-const ARRANGEMENTS_FILTER_STORAGE_KEY = 'partnering-families-arrangementsFilter';
+const ARRANGEMENTS_FILTER_STORAGE_KEY =
+  'partnering-families-arrangementsFilter';
 
 function normalizeArrangementsFilter(
   value: ArrangementsFilter | null | undefined
@@ -361,8 +362,8 @@ function PartneringFamilies() {
   const tableMinWidth = Math.max(700, tableColumnCount * 160);
   const hasFeaturebaseChat = globalPermissions(Permission.AccessSupportScreen);
 
-  // const showAddFamilyButton = !referralsEnabled && canCreateFamily;
-  const showAddFamilyButton = true;
+  const referralsEnabled = useFeatureFlagEnabled('referrals');
+  const showAddFamilyButton = !referralsEnabled && canCreateFamily;
 
   useScreenTitle('Clients');
 
@@ -534,9 +535,7 @@ function PartneringFamilies() {
               <MenuItem value="lastNameAsc">Last name (ascending)</MenuItem>
               <MenuItem value="lastNameDesc">Last name (descending)</MenuItem>
               <MenuItem value="firstNameAsc">First name (ascending)</MenuItem>
-              <MenuItem value="firstNameDesc">
-                First name (descending)
-              </MenuItem>
+              <MenuItem value="firstNameDesc">First name (descending)</MenuItem>
               <MenuItem value="dateOpenedDesc">
                 Date opened (descending)
               </MenuItem>

@@ -171,6 +171,7 @@ namespace CareTogether.Engines.PolicyEvaluation
             return new FamilyRoleVersionApprovalStatus(
                 rolePolicy.VolunteerFamilyRoleType,
                 policyVersion.Version,
+                policyVersion.SupersededAtUtc,
                 roleVersionApprovalStatus,
                 requirementCompletions
             );

@@ -2383,6 +2383,13 @@
             "type": "string",
             "format": "date-time",
             "nullable": true
+          },
+          "policyVersions": {
+            "type": "array",
+            "nullable": true,
+            "items": {
+              "$ref": "#/components/schemas/ArrangementPolicyVersion"
+            }
           }
         }
       },
@@ -2701,6 +2708,97 @@
           },
           "recurrence": {
             "$ref": "#/components/schemas/RecurrencePolicy"
+          }
+        }
+      },
+      "ArrangementPolicyVersion": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "requiredSetupActions_PRE_MIGRATION",
+          "requiredMonitoringActions_PRE_MIGRATION",
+          "requiredCloseoutActionNames_PRE_MIGRATION",
+          "version",
+          "childInvolvement",
+          "arrangementFunctions",
+          "requiredSetupActionNames",
+          "requiredMonitoringActions",
+          "requiredCloseoutActionNames"
+        ],
+        "properties": {
+          "requiredSetupActions_PRE_MIGRATION": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RequirementDefinition"
+            }
+          },
+          "requiredMonitoringActions_PRE_MIGRATION": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/MonitoringRequirement"
+            }
+          },
+          "requiredCloseoutActionNames_PRE_MIGRATION": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RequirementDefinition"
+            }
+          },
+          "version": {
+            "type": "string"
+          },
+          "supersededAtUtc": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "childInvolvement": {
+            "$ref": "#/components/schemas/ChildInvolvement"
+          },
+          "arrangementFunctions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ArrangementFunction"
+            }
+          },
+          "requiredSetupActionNames": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "requiredMonitoringActions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/MonitoringRequirementOld"
+            }
+          },
+          "requiredCloseoutActionNames": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "requiredSetupActions": {
+            "type": "array",
+            "nullable": true,
+            "items": {
+              "$ref": "#/components/schemas/RequirementDefinition"
+            }
+          },
+          "requiredMonitoringActionsNew": {
+            "type": "array",
+            "nullable": true,
+            "items": {
+              "$ref": "#/components/schemas/MonitoringRequirement"
+            }
+          },
+          "requiredCloseoutActions": {
+            "type": "array",
+            "nullable": true,
+            "items": {
+              "$ref": "#/components/schemas/RequirementDefinition"
+            }
           }
         }
       },
@@ -4494,6 +4592,10 @@
           "reason": {
             "type": "string",
             "nullable": true
+          },
+          "arrangementPolicyVersion": {
+            "type": "string",
+            "nullable": true
           }
         }
       },
@@ -4903,6 +5005,11 @@
           "version": {
             "type": "string"
           },
+          "supersededAtUtc": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
           "status": {
             "nullable": true,
             "oneOf": [
@@ -5230,6 +5337,11 @@
           "version": {
             "type": "string"
           },
+          "supersededAtUtc": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
           "status": {
             "nullable": true,
             "oneOf": [
@@ -5371,6 +5483,10 @@
             "nullable": true
           },
           "reason": {
+            "type": "string",
+            "nullable": true
+          },
+          "arrangementPolicyVersion": {
             "type": "string",
             "nullable": true
           }
@@ -6071,6 +6187,10 @@
                 "format": "guid"
               },
               "reason": {
+                "type": "string",
+                "nullable": true
+              },
+              "arrangementPolicyVersion": {
                 "type": "string",
                 "nullable": true
               }

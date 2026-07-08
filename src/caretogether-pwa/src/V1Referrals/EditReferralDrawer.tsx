@@ -54,7 +54,6 @@ export function EditReferralDrawer({
 
   const onSubmit = async (data: AddReferralFormValues) => {
     await updateReferralDetails(referral.referralId, {
-      familyId: data.familyId,
       openedAtUtc: data.openedAtLocal,
       title: data.title,
       comment: data.comment || undefined,

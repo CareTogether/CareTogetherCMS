@@ -3044,6 +3044,7 @@ export class ArrangementPolicy implements IArrangementPolicy {
     requiredMonitoringActionsNew?: MonitoringRequirement[] | undefined;
     requiredCloseoutActions?: RequirementDefinition[] | undefined;
     supersededAtUtc?: Date | undefined;
+    policyVersions?: ArrangementPolicyVersion[] | undefined;
 
     constructor(data?: IArrangementPolicy) {
         if (data) {
@@ -3118,6 +3119,11 @@ export class ArrangementPolicy implements IArrangementPolicy {
                     this.requiredCloseoutActions!.push(RequirementDefinition.fromJS(item));
             }
             this.supersededAtUtc = _data["supersededAtUtc"] ? new Date(_data["supersededAtUtc"].toString()) : undefined as any;
+            if (Array.isArray(_data["policyVersions"])) {
+                this.policyVersions = [] as any;
+                for (let item of _data["policyVersions"])
+                    this.policyVersions!.push(ArrangementPolicyVersion.fromJS(item));
+            }
         }
     }
 
@@ -3183,6 +3189,11 @@ export class ArrangementPolicy implements IArrangementPolicy {
                 data["requiredCloseoutActions"].push(item ? item.toJSON() : undefined as any);
         }
         data["supersededAtUtc"] = this.supersededAtUtc ? this.supersededAtUtc.toISOString() : undefined as any;
+        if (Array.isArray(this.policyVersions)) {
+            data["policyVersions"] = [];
+            for (let item of this.policyVersions)
+                data["policyVersions"].push(item ? item.toJSON() : undefined as any);
+        }
         return data;
     }
 }
@@ -3201,6 +3212,7 @@ export interface IArrangementPolicy {
     requiredMonitoringActionsNew?: MonitoringRequirement[] | undefined;
     requiredCloseoutActions?: RequirementDefinition[] | undefined;
     supersededAtUtc?: Date | undefined;
+    policyVersions?: ArrangementPolicyVersion[] | undefined;
 }
 
 export class MonitoringRequirement implements IMonitoringRequirement {
@@ -3802,6 +3814,179 @@ export class MonitoringRequirementOld implements IMonitoringRequirementOld {
 export interface IMonitoringRequirementOld {
     actionName: string;
     recurrence: RecurrencePolicy;
+}
+
+export class ArrangementPolicyVersion implements IArrangementPolicyVersion {
+    requiredSetupActions_PRE_MIGRATION!: RequirementDefinition[];
+    requiredMonitoringActions_PRE_MIGRATION!: MonitoringRequirement[];
+    requiredCloseoutActionNames_PRE_MIGRATION!: RequirementDefinition[];
+    version!: string;
+    supersededAtUtc?: Date | undefined;
+    childInvolvement!: ChildInvolvement;
+    arrangementFunctions!: ArrangementFunction[];
+    requiredSetupActionNames!: string[];
+    requiredMonitoringActions!: MonitoringRequirementOld[];
+    requiredCloseoutActionNames!: string[];
+    requiredSetupActions?: RequirementDefinition[] | undefined;
+    requiredMonitoringActionsNew?: MonitoringRequirement[] | undefined;
+    requiredCloseoutActions?: RequirementDefinition[] | undefined;
+
+    constructor(data?: IArrangementPolicyVersion) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (this as any)[property] = (data as any)[property];
+            }
+        }
+        if (!data) {
+            this.requiredSetupActions_PRE_MIGRATION = [];
+            this.requiredMonitoringActions_PRE_MIGRATION = [];
+            this.requiredCloseoutActionNames_PRE_MIGRATION = [];
+            this.arrangementFunctions = [];
+            this.requiredSetupActionNames = [];
+            this.requiredMonitoringActions = [];
+            this.requiredCloseoutActionNames = [];
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            if (Array.isArray(_data["requiredSetupActions_PRE_MIGRATION"])) {
+                this.requiredSetupActions_PRE_MIGRATION = [] as any;
+                for (let item of _data["requiredSetupActions_PRE_MIGRATION"])
+                    this.requiredSetupActions_PRE_MIGRATION!.push(RequirementDefinition.fromJS(item));
+            }
+            if (Array.isArray(_data["requiredMonitoringActions_PRE_MIGRATION"])) {
+                this.requiredMonitoringActions_PRE_MIGRATION = [] as any;
+                for (let item of _data["requiredMonitoringActions_PRE_MIGRATION"])
+                    this.requiredMonitoringActions_PRE_MIGRATION!.push(MonitoringRequirement.fromJS(item));
+            }
+            if (Array.isArray(_data["requiredCloseoutActionNames_PRE_MIGRATION"])) {
+                this.requiredCloseoutActionNames_PRE_MIGRATION = [] as any;
+                for (let item of _data["requiredCloseoutActionNames_PRE_MIGRATION"])
+                    this.requiredCloseoutActionNames_PRE_MIGRATION!.push(RequirementDefinition.fromJS(item));
+            }
+            this.version = _data["version"];
+            this.supersededAtUtc = _data["supersededAtUtc"] ? new Date(_data["supersededAtUtc"].toString()) : undefined as any;
+            this.childInvolvement = _data["childInvolvement"];
+            if (Array.isArray(_data["arrangementFunctions"])) {
+                this.arrangementFunctions = [] as any;
+                for (let item of _data["arrangementFunctions"])
+                    this.arrangementFunctions!.push(ArrangementFunction.fromJS(item));
+            }
+            if (Array.isArray(_data["requiredSetupActionNames"])) {
+                this.requiredSetupActionNames = [] as any;
+                for (let item of _data["requiredSetupActionNames"])
+                    this.requiredSetupActionNames!.push(item);
+            }
+            if (Array.isArray(_data["requiredMonitoringActions"])) {
+                this.requiredMonitoringActions = [] as any;
+                for (let item of _data["requiredMonitoringActions"])
+                    this.requiredMonitoringActions!.push(MonitoringRequirementOld.fromJS(item));
+            }
+            if (Array.isArray(_data["requiredCloseoutActionNames"])) {
+                this.requiredCloseoutActionNames = [] as any;
+                for (let item of _data["requiredCloseoutActionNames"])
+                    this.requiredCloseoutActionNames!.push(item);
+            }
+            if (Array.isArray(_data["requiredSetupActions"])) {
+                this.requiredSetupActions = [] as any;
+                for (let item of _data["requiredSetupActions"])
+                    this.requiredSetupActions!.push(RequirementDefinition.fromJS(item));
+            }
+            if (Array.isArray(_data["requiredMonitoringActionsNew"])) {
+                this.requiredMonitoringActionsNew = [] as any;
+                for (let item of _data["requiredMonitoringActionsNew"])
+                    this.requiredMonitoringActionsNew!.push(MonitoringRequirement.fromJS(item));
+            }
+            if (Array.isArray(_data["requiredCloseoutActions"])) {
+                this.requiredCloseoutActions = [] as any;
+                for (let item of _data["requiredCloseoutActions"])
+                    this.requiredCloseoutActions!.push(RequirementDefinition.fromJS(item));
+            }
+        }
+    }
+
+    static fromJS(data: any): ArrangementPolicyVersion {
+        data = typeof data === 'object' ? data : {};
+        let result = new ArrangementPolicyVersion();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        if (Array.isArray(this.requiredSetupActions_PRE_MIGRATION)) {
+            data["requiredSetupActions_PRE_MIGRATION"] = [];
+            for (let item of this.requiredSetupActions_PRE_MIGRATION)
+                data["requiredSetupActions_PRE_MIGRATION"].push(item ? item.toJSON() : undefined as any);
+        }
+        if (Array.isArray(this.requiredMonitoringActions_PRE_MIGRATION)) {
+            data["requiredMonitoringActions_PRE_MIGRATION"] = [];
+            for (let item of this.requiredMonitoringActions_PRE_MIGRATION)
+                data["requiredMonitoringActions_PRE_MIGRATION"].push(item ? item.toJSON() : undefined as any);
+        }
+        if (Array.isArray(this.requiredCloseoutActionNames_PRE_MIGRATION)) {
+            data["requiredCloseoutActionNames_PRE_MIGRATION"] = [];
+            for (let item of this.requiredCloseoutActionNames_PRE_MIGRATION)
+                data["requiredCloseoutActionNames_PRE_MIGRATION"].push(item ? item.toJSON() : undefined as any);
+        }
+        data["version"] = this.version;
+        data["supersededAtUtc"] = this.supersededAtUtc ? this.supersededAtUtc.toISOString() : undefined as any;
+        data["childInvolvement"] = this.childInvolvement;
+        if (Array.isArray(this.arrangementFunctions)) {
+            data["arrangementFunctions"] = [];
+            for (let item of this.arrangementFunctions)
+                data["arrangementFunctions"].push(item ? item.toJSON() : undefined as any);
+        }
+        if (Array.isArray(this.requiredSetupActionNames)) {
+            data["requiredSetupActionNames"] = [];
+            for (let item of this.requiredSetupActionNames)
+                data["requiredSetupActionNames"].push(item);
+        }
+        if (Array.isArray(this.requiredMonitoringActions)) {
+            data["requiredMonitoringActions"] = [];
+            for (let item of this.requiredMonitoringActions)
+                data["requiredMonitoringActions"].push(item ? item.toJSON() : undefined as any);
+        }
+        if (Array.isArray(this.requiredCloseoutActionNames)) {
+            data["requiredCloseoutActionNames"] = [];
+            for (let item of this.requiredCloseoutActionNames)
+                data["requiredCloseoutActionNames"].push(item);
+        }
+        if (Array.isArray(this.requiredSetupActions)) {
+            data["requiredSetupActions"] = [];
+            for (let item of this.requiredSetupActions)
+                data["requiredSetupActions"].push(item ? item.toJSON() : undefined as any);
+        }
+        if (Array.isArray(this.requiredMonitoringActionsNew)) {
+            data["requiredMonitoringActionsNew"] = [];
+            for (let item of this.requiredMonitoringActionsNew)
+                data["requiredMonitoringActionsNew"].push(item ? item.toJSON() : undefined as any);
+        }
+        if (Array.isArray(this.requiredCloseoutActions)) {
+            data["requiredCloseoutActions"] = [];
+            for (let item of this.requiredCloseoutActions)
+                data["requiredCloseoutActions"].push(item ? item.toJSON() : undefined as any);
+        }
+        return data;
+    }
+}
+
+export interface IArrangementPolicyVersion {
+    requiredSetupActions_PRE_MIGRATION: RequirementDefinition[];
+    requiredMonitoringActions_PRE_MIGRATION: MonitoringRequirement[];
+    requiredCloseoutActionNames_PRE_MIGRATION: RequirementDefinition[];
+    version: string;
+    supersededAtUtc?: Date | undefined;
+    childInvolvement: ChildInvolvement;
+    arrangementFunctions: ArrangementFunction[];
+    requiredSetupActionNames: string[];
+    requiredMonitoringActions: MonitoringRequirementOld[];
+    requiredCloseoutActionNames: string[];
+    requiredSetupActions?: RequirementDefinition[] | undefined;
+    requiredMonitoringActionsNew?: MonitoringRequirement[] | undefined;
+    requiredCloseoutActions?: RequirementDefinition[] | undefined;
 }
 
 export class FunctionPolicy implements IFunctionPolicy {
@@ -6899,6 +7084,7 @@ export class Arrangement implements IArrangement {
     childLocationPlan!: ChildLocationHistoryEntry[];
     comments?: string | undefined;
     reason?: string | undefined;
+    arrangementPolicyVersion?: string | undefined;
 
     constructor(data?: IArrangement) {
         if (data) {
@@ -6973,6 +7159,7 @@ export class Arrangement implements IArrangement {
             }
             this.comments = _data["comments"];
             this.reason = _data["reason"];
+            this.arrangementPolicyVersion = _data["arrangementPolicyVersion"];
         }
     }
 
@@ -7037,6 +7224,7 @@ export class Arrangement implements IArrangement {
         }
         data["comments"] = this.comments;
         data["reason"] = this.reason;
+        data["arrangementPolicyVersion"] = this.arrangementPolicyVersion;
         return data;
     }
 }
@@ -7062,6 +7250,7 @@ export interface IArrangement {
     childLocationPlan: ChildLocationHistoryEntry[];
     comments?: string | undefined;
     reason?: string | undefined;
+    arrangementPolicyVersion?: string | undefined;
 }
 
 export enum ArrangementPhase {
@@ -7767,6 +7956,7 @@ export enum RoleApprovalStatus {
 export class FamilyRoleVersionApprovalStatus implements IFamilyRoleVersionApprovalStatus {
     roleName!: string;
     version!: string;
+    supersededAtUtc?: Date | undefined;
     status?: DateOnlyTimelineOfRoleApprovalStatus | undefined;
     requirements!: FamilyRoleRequirementCompletionStatus[];
 
@@ -7786,6 +7976,7 @@ export class FamilyRoleVersionApprovalStatus implements IFamilyRoleVersionApprov
         if (_data) {
             this.roleName = _data["roleName"];
             this.version = _data["version"];
+            this.supersededAtUtc = _data["supersededAtUtc"] ? new Date(_data["supersededAtUtc"].toString()) : undefined as any;
             this.status = _data["status"] ? DateOnlyTimelineOfRoleApprovalStatus.fromJS(_data["status"]) : undefined as any;
             if (Array.isArray(_data["requirements"])) {
                 this.requirements = [] as any;
@@ -7806,6 +7997,7 @@ export class FamilyRoleVersionApprovalStatus implements IFamilyRoleVersionApprov
         data = typeof data === 'object' ? data : {};
         data["roleName"] = this.roleName;
         data["version"] = this.version;
+        data["supersededAtUtc"] = this.supersededAtUtc ? this.supersededAtUtc.toISOString() : undefined as any;
         data["status"] = this.status ? this.status.toJSON() : undefined as any;
         if (Array.isArray(this.requirements)) {
             data["requirements"] = [];
@@ -7819,6 +8011,7 @@ export class FamilyRoleVersionApprovalStatus implements IFamilyRoleVersionApprov
 export interface IFamilyRoleVersionApprovalStatus {
     roleName: string;
     version: string;
+    supersededAtUtc?: Date | undefined;
     status?: DateOnlyTimelineOfRoleApprovalStatus | undefined;
     requirements: FamilyRoleRequirementCompletionStatus[];
 }
@@ -8423,6 +8616,7 @@ export interface IIndividualRoleApprovalStatus {
 export class IndividualRoleVersionApprovalStatus implements IIndividualRoleVersionApprovalStatus {
     roleName!: string;
     version!: string;
+    supersededAtUtc?: Date | undefined;
     status?: DateOnlyTimelineOfRoleApprovalStatus | undefined;
     requirements!: IndividualRoleRequirementCompletionStatus[];
 
@@ -8442,6 +8636,7 @@ export class IndividualRoleVersionApprovalStatus implements IIndividualRoleVersi
         if (_data) {
             this.roleName = _data["roleName"];
             this.version = _data["version"];
+            this.supersededAtUtc = _data["supersededAtUtc"] ? new Date(_data["supersededAtUtc"].toString()) : undefined as any;
             this.status = _data["status"] ? DateOnlyTimelineOfRoleApprovalStatus.fromJS(_data["status"]) : undefined as any;
             if (Array.isArray(_data["requirements"])) {
                 this.requirements = [] as any;
@@ -8462,6 +8657,7 @@ export class IndividualRoleVersionApprovalStatus implements IIndividualRoleVersi
         data = typeof data === 'object' ? data : {};
         data["roleName"] = this.roleName;
         data["version"] = this.version;
+        data["supersededAtUtc"] = this.supersededAtUtc ? this.supersededAtUtc.toISOString() : undefined as any;
         data["status"] = this.status ? this.status.toJSON() : undefined as any;
         if (Array.isArray(this.requirements)) {
             data["requirements"] = [];
@@ -8475,6 +8671,7 @@ export class IndividualRoleVersionApprovalStatus implements IIndividualRoleVersi
 export interface IIndividualRoleVersionApprovalStatus {
     roleName: string;
     version: string;
+    supersededAtUtc?: Date | undefined;
     status?: DateOnlyTimelineOfRoleApprovalStatus | undefined;
     requirements: IndividualRoleRequirementCompletionStatus[];
 }
@@ -8542,6 +8739,7 @@ export class ArrangementEntry implements IArrangementEntry {
     childLocationPlan!: ChildLocationHistoryEntry[];
     comments?: string | undefined;
     reason?: string | undefined;
+    arrangementPolicyVersion?: string | undefined;
 
     constructor(data?: IArrangementEntry) {
         if (data) {
@@ -8604,6 +8802,7 @@ export class ArrangementEntry implements IArrangementEntry {
             }
             this.comments = _data["comments"];
             this.reason = _data["reason"];
+            this.arrangementPolicyVersion = _data["arrangementPolicyVersion"];
         }
     }
 
@@ -8658,6 +8857,7 @@ export class ArrangementEntry implements IArrangementEntry {
         }
         data["comments"] = this.comments;
         data["reason"] = this.reason;
+        data["arrangementPolicyVersion"] = this.arrangementPolicyVersion;
         return data;
     }
 }
@@ -8681,6 +8881,7 @@ export interface IArrangementEntry {
     childLocationPlan: ChildLocationHistoryEntry[];
     comments?: string | undefined;
     reason?: string | undefined;
+    arrangementPolicyVersion?: string | undefined;
 }
 
 export class Note implements INote {
@@ -9791,6 +9992,7 @@ export class CreateArrangement extends ArrangementsCommand implements ICreateArr
     requestedAtUtc!: Date;
     partneringFamilyPersonId!: string;
     reason?: string | undefined;
+    arrangementPolicyVersion?: string | undefined;
 
     constructor(data?: ICreateArrangement) {
         super(data);
@@ -9804,6 +10006,7 @@ export class CreateArrangement extends ArrangementsCommand implements ICreateArr
             this.requestedAtUtc = _data["requestedAtUtc"] ? new Date(_data["requestedAtUtc"].toString()) : undefined as any;
             this.partneringFamilyPersonId = _data["partneringFamilyPersonId"];
             this.reason = _data["reason"];
+            this.arrangementPolicyVersion = _data["arrangementPolicyVersion"];
         }
     }
 
@@ -9820,6 +10023,7 @@ export class CreateArrangement extends ArrangementsCommand implements ICreateArr
         data["requestedAtUtc"] = this.requestedAtUtc ? this.requestedAtUtc.toISOString() : undefined as any;
         data["partneringFamilyPersonId"] = this.partneringFamilyPersonId;
         data["reason"] = this.reason;
+        data["arrangementPolicyVersion"] = this.arrangementPolicyVersion;
         super.toJSON(data);
         return data;
     }
@@ -9830,6 +10034,7 @@ export interface ICreateArrangement extends IArrangementsCommand {
     requestedAtUtc: Date;
     partneringFamilyPersonId: string;
     reason?: string | undefined;
+    arrangementPolicyVersion?: string | undefined;
 }
 
 export class DeleteArrangements extends ArrangementsCommand implements IDeleteArrangements {

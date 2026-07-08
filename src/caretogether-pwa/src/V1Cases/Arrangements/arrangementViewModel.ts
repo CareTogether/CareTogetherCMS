@@ -11,6 +11,7 @@ import {
   V1Case,
 } from '../../GeneratedClient';
 import { personNameString } from '../../Families/PersonName';
+import { resolveArrangementPolicy } from './arrangementPolicyVersions';
 
 export type ArrangementFunctionSummaryV2 = {
   functionName: string;
@@ -237,8 +238,9 @@ export function buildArrangementRowsV2({
   v1Case,
 }: BuildArrangementRowsV2Parameters): ArrangementRowV2[] {
   return arrangements.map((arrangement) => {
-    const arrangementPolicy = arrangementPolicies?.find(
-      (policy) => policy.arrangementType === arrangement.arrangementType
+    const arrangementPolicy = resolveArrangementPolicy(
+      arrangementPolicies,
+      arrangement
     );
     const individualAssignmentLabels = arrangement.individualVolunteerAssignments
       ?.map((assignment) =>
