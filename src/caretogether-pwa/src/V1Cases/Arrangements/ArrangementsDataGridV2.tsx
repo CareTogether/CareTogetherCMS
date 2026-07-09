@@ -323,12 +323,10 @@ export function ArrangementsDataGridV2({
   const columns = useMemo(() => buildColumns(), []);
   const pageSize = 10;
   const paginationNeeded = rows.length > pageSize;
-  const gridHeight = paginationNeeded ? pageSize * 72 + 112 : undefined;
 
   return (
     <Box
       sx={{
-        height: gridHeight,
         width: '100%',
         border: 1,
         borderColor: 'divider',
@@ -380,7 +378,7 @@ export function ArrangementsDataGridV2({
       }}
     >
       <DataGrid
-        autoHeight={!paginationNeeded}
+        autoHeight
         rows={rows}
         columns={columns}
         getRowHeight={() => 'auto'}
