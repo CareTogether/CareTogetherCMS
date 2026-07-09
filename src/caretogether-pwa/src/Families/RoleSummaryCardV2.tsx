@@ -8,7 +8,10 @@ import {
 } from '@mui/material';
 import { alpha, Theme } from '@mui/material/styles';
 import { format } from 'date-fns';
-import { RoleApprovalStatus } from '../GeneratedClient';
+import {
+  roleApprovalStatusChipColor,
+  roleApprovalStatusLabel,
+} from '../Volunteers/roleApprovalStatusPresentation';
 import type {
   RemovedRoleSummary,
   RoleSummaryCard,
@@ -19,22 +22,9 @@ type RoleSummaryCardV2Props = {
   onClick?: () => void;
 };
 
-function statusColor(status: RoleApprovalStatus) {
-  switch (status) {
-    case RoleApprovalStatus.Prospective:
-      return 'secondary';
-    case RoleApprovalStatus.Approved:
-      return 'success';
-    case RoleApprovalStatus.Onboarded:
-      return 'primary';
-    default:
-      return 'default';
-  }
-}
-
-function statusSx(status: RoleApprovalStatus) {
+function statusSx(status: RoleSummaryCard['status']) {
   return (theme: Theme) => {
-    const color = statusColor(status);
+    const color = roleApprovalStatusChipColor(status);
 
     if (color === 'default') {
       return {
@@ -57,7 +47,7 @@ function isRemovedRoleSummary(
 }
 
 function statusLabel(card: RoleSummaryCard) {
-  const label = RoleApprovalStatus[card.status];
+  const label = roleApprovalStatusLabel(card.status);
 
   return card.effectiveDate
     ? `${label} • ${format(card.effectiveDate, 'MMM d, yyyy')}`
