@@ -49,6 +49,7 @@ interface ManageUserDrawerProps {
   familyId: string;
   adult: Person;
   user?: UserInfo;
+  fullWidth?: boolean;
 }
 
 export function ManageUserDrawer({
@@ -56,6 +57,7 @@ export function ManageUserDrawer({
   familyId,
   adult,
   user,
+  fullWidth = false,
 }: ManageUserDrawerProps) {
   const { organizationId, locationId } = useRecoilValue(
     selectedLocationContextState
@@ -170,7 +172,14 @@ export function ManageUserDrawer({
   }
 
   return (
-    <Grid container spacing={2} sx={{ maxWidth: 500 }}>
+    <Grid
+      container
+      spacing={2}
+      sx={{
+        maxWidth: fullWidth ? 'none' : 500,
+        width: fullWidth ? '100%' : undefined,
+      }}
+    >
       <Grid size={12}>
         <h3>Manage User: {personNameString(adult)}</h3>
       </Grid>

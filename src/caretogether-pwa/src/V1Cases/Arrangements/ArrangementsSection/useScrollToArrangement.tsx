@@ -12,6 +12,10 @@ export const useScrollToArrangement = (
     scrollToArrangementId ?? searchParams.get('arrangementId') ?? undefined;
 
   useEffect(() => {
+    hasScrolledRef.current = false;
+  }, [targetArrangementId]);
+
+  useEffect(() => {
     if (!targetArrangementId || hasScrolledRef.current) return;
 
     const ref = arrangementRefs.current[targetArrangementId];

@@ -21,6 +21,7 @@ import {
   Tab,
   Tabs,
   TextField,
+  Typography,
 } from '@mui/material';
 import {
   CombinedFamilyInfo,
@@ -66,12 +67,14 @@ interface ChildLocationTimelineProps {
   v1CaseId: string;
   arrangement: Arrangement;
   recordChildLocationPlan: (entry: ChildLocationHistoryEntry) => void;
+  presentation?: 'dialog' | 'drawer';
 }
-function ChildLocationTimeline({
+export function ChildLocationTimeline({
   partneringFamily,
   v1CaseId,
   arrangement,
   recordChildLocationPlan,
+  presentation = 'dialog',
 }: ChildLocationTimelineProps) {
   const personLookup = usePersonLookup();
   const v1CasesModel = useV1CasesModel();
@@ -137,18 +140,34 @@ function ChildLocationTimeline({
 
   const now = new Date();
 
+  const drawerPresentation = presentation === 'drawer';
+
   return (
-    <AppTimeline position="right">
+    <AppTimeline
+      position="right"
+      sx={drawerPresentation ? { m: 0, p: 0 } : undefined}
+    >
       {allEntries.map((entry, i) => (
-        <AppTimelineItem key={i}>
-          <AppTimelineOppositeContent>
-            <span
-              style={{
+        <AppTimelineItem
+          key={i}
+          sx={drawerPresentation ? { minHeight: 72 } : undefined}
+        >
+          <AppTimelineOppositeContent
+            sx={
+              drawerPresentation
+                ? { flex: 0.42, pr: 1.25, py: 1, textAlign: 'right' }
+                : undefined
+            }
+          >
+            <Typography
+              component="span"
+              variant={drawerPresentation ? 'caption' : 'body2'}
+              sx={{
                 fontWeight: entry === currentLocationEntry ? 'bold' : 'normal',
               }}
             >
               {format(entry.timestampUtc!, 'M/d/yy h:mm a')}
-            </span>
+            </Typography>
             {!entry.noteId && (
               <IconButton
                 onClick={() => recordChildLocationPlan(entry)}
@@ -191,9 +210,11 @@ function ChildLocationTimeline({
             </AppTimelineDot>
             <AppTimelineConnector sx={{ opacity: entry.noteId ? 1.0 : 0.5 }} />
           </AppTimelineSeparator>
-          <AppTimelineContent>
-            <span
-              style={{
+          <AppTimelineContent sx={drawerPresentation ? { py: 1 } : undefined}>
+            <Typography
+              component="div"
+              variant={drawerPresentation ? 'body2' : 'body1'}
+              sx={{
                 fontWeight: entry === currentLocationEntry ? 'bold' : 'normal',
               }}
             >
@@ -203,15 +224,19 @@ function ChildLocationTimeline({
                   entry.childLocationReceivingAdultId
                 )}
               />
-            </span>
-            <br />
-            <span style={{ fontStyle: 'italic', color: 'grey' }}>
+            </Typography>
+            <Typography
+              color="text.secondary"
+              component="div"
+              variant="caption"
+              sx={{ fontStyle: 'italic' }}
+            >
               {entry.plan === ChildLocationPlan.DaytimeChildCare
                 ? 'daytime child care'
                 : entry.plan === ChildLocationPlan.OvernightHousing
                   ? 'overnight housing'
                   : 'with parent'}
-            </span>
+            </Typography>
           </AppTimelineContent>
         </AppTimelineItem>
       ))}
@@ -224,6 +249,8 @@ interface TrackChildLocationDialogProps {
   v1CaseId: string;
   arrangement: Arrangement;
   onClose: () => void;
+  initialMode?: 'record' | 'plan';
+  initialPlannedEntry?: ChildLocationHistoryEntry;
 }
 
 export function TrackChildLocationDialog({
@@ -231,6 +258,8 @@ export function TrackChildLocationDialog({
   v1CaseId,
   arrangement,
   onClose,
+  initialMode,
+  initialPlannedEntry,
 }: TrackChildLocationDialogProps) {
   const policy = useRecoilValue(policyData);
   const arrangementPolicy = policy.referralPolicy!.arrangementPolicies!.find(
@@ -250,10 +279,24 @@ export function TrackChildLocationDialog({
     arrangement.phase === ArrangementPhase.ReadyToStart ||
     arrangement.phase === ArrangementPhase.Cancelled;
 
-  const [tabValue, setTabValue] = useState(arrangementHasNotStartedYet ? 1 : 0);
-  const [selectedAssigneeKey, setSelectedAssigneeKey] = useState('');
-  const [changeAtLocal, setChangeAtLocal] = useState(null as Date | null);
-  const [plan, setPlan] = useState<ChildLocationPlan | null>(null);
+  const initialTabValue =
+    initialPlannedEntry || initialMode === 'record'
+      ? 0
+      : initialMode === 'plan' || arrangementHasNotStartedYet
+        ? 1
+        : 0;
+  const [tabValue, setTabValue] = useState(initialTabValue);
+  const [selectedAssigneeKey, setSelectedAssigneeKey] = useState(
+    initialPlannedEntry
+      ? `${initialPlannedEntry.childLocationFamilyId!}|${initialPlannedEntry.childLocationReceivingAdultId!}`
+      : ''
+  );
+  const [changeAtLocal, setChangeAtLocal] = useState(
+    initialPlannedEntry?.timestampUtc ?? (null as Date | null)
+  );
+  const [plan, setPlan] = useState<ChildLocationPlan | null>(
+    initialPlannedEntry?.plan ?? null
+  );
   const [notes, setNotes] = useState('');
 
   function recordChildLocationPlan(entry: ChildLocationHistoryEntry) {
