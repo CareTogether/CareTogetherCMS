@@ -26,6 +26,7 @@ import {
   RequirementManagementDrawerV2,
   type RequirementManagementMode,
 } from './RequirementManagementDrawerV2';
+import { v2Typography } from './v2Typography';
 
 type ApprovalDetailsDrawerV2Props = {
   row: ApprovalLedgerRow | null;
@@ -73,14 +74,10 @@ function DetailField({
 }) {
   return (
     <Box>
-      <Typography color="text.secondary" variant="caption">
+      <Typography {...v2Typography.fieldLabel}>
         {label}
       </Typography>
-      <Typography
-        className="ph-unmask"
-        variant="body2"
-        sx={{ fontWeight: 600 }}
-      >
+      <Typography {...v2Typography.primaryValue}>
         {children}
       </Typography>
     </Box>
@@ -111,7 +108,7 @@ function DocumentList({
 }) {
   if (!canReadDocuments) {
     return (
-      <Typography color="text.secondary" variant="body2">
+      <Typography {...v2Typography.secondaryValue}>
         You do not have permission to view documents.
       </Typography>
     );
@@ -119,7 +116,7 @@ function DocumentList({
 
   if (documents.length === 0) {
     return (
-      <Typography color="text.secondary" variant="body2">
+      <Typography {...v2Typography.secondaryValue}>
         No documents.
       </Typography>
     );
@@ -138,10 +135,10 @@ function DocumentList({
             p: 1,
           }}
         >
-          <Typography className="ph-unmask" variant="body2">
+          <Typography {...v2Typography.browserCell}>
             {document.uploadedFileName}
           </Typography>
-          <Typography color="text.secondary" variant="caption">
+          <Typography {...v2Typography.fieldLabel}>
             Uploaded by <PersonName person={userLookup(document.userId)} />
             {document.timestampUtc
               ? ` on ${formatUtcDateOnly(document.timestampUtc)}`
@@ -164,7 +161,7 @@ function NoteList({
 }) {
   if (notes.length === 0 && textNotes.length === 0) {
     return (
-      <Typography color="text.secondary" variant="body2">
+      <Typography {...v2Typography.secondaryValue}>
         No notes.
       </Typography>
     );
@@ -184,12 +181,12 @@ function NoteList({
               borderColor: 'divider',
               borderRadius: 1,
               p: 1,
-            }}
-          >
-            <Typography className="ph-unmask" variant="body2">
+          }}
+        >
+            <Typography {...v2Typography.browserCell}>
               {note.contents}
             </Typography>
-            <Typography color="text.secondary" variant="caption">
+            <Typography {...v2Typography.fieldLabel}>
               <PersonName person={noteAuthorLookup(note)} />
               {date ? ` on ${formatUtcDateOnly(date)}` : ''}
             </Typography>
@@ -207,7 +204,7 @@ function NoteList({
             p: 1,
           }}
         >
-          <Typography className="ph-unmask" variant="body2">
+          <Typography {...v2Typography.browserCell}>
             {note}
           </Typography>
         </Box>
@@ -225,7 +222,7 @@ function DrawerSection({
 }) {
   return (
     <Stack spacing={1}>
-      <Typography variant="subtitle2">{title}</Typography>
+      <Typography {...v2Typography.sectionTitle}>{title}</Typography>
       {children}
     </Stack>
   );
@@ -234,11 +231,7 @@ function DrawerSection({
 function RoleChipList({ labels }: { labels: string[] }) {
   if (labels.length === 0) {
     return (
-      <Typography
-        className="ph-unmask"
-        variant="body2"
-        sx={{ fontWeight: 600 }}
-      >
+      <Typography {...v2Typography.primaryValue}>
         None
       </Typography>
     );
@@ -384,16 +377,17 @@ export function ApprovalDetailsDrawerV2({
             >
               <Box sx={{ minWidth: 0, flex: 1 }}>
                 <Typography
-                  color="text.secondary"
-                  sx={{ textTransform: 'uppercase' }}
-                  variant="caption"
+                  {...v2Typography.fieldLabel}
+                  sx={[
+                    v2Typography.fieldLabel.sx,
+                    { textTransform: 'uppercase' },
+                  ]}
                 >
                   Requirement
                 </Typography>
                 <Typography
                   id="approval-details-title"
-                  className="ph-unmask"
-                  variant="h5"
+                  {...v2Typography.workspaceTitle}
                 >
                   {row.requirementName}
                 </Typography>
@@ -429,7 +423,7 @@ export function ApprovalDetailsDrawerV2({
               </DetailField>
 
               <Box>
-                <Typography color="text.secondary" variant="caption">
+                <Typography {...v2Typography.fieldLabel}>
                   Needed For Roles
                 </Typography>
                 <RoleChipList labels={row.neededForRoleLabels} />
