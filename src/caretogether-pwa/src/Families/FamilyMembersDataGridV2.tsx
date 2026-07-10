@@ -354,14 +354,6 @@ function buildColumns({
   ];
 }
 
-function clearActiveGridElement() {
-  const activeElement = document.activeElement;
-
-  if (!(activeElement instanceof HTMLElement)) return;
-
-  activeElement.blur();
-}
-
 function EmptyFamilyMembersState({
   onAddAdult,
   onAddChild,
@@ -490,10 +482,11 @@ export function FamilyMembersDataGridV2({
             backgroundColor: theme.palette.action.hover,
             borderBottomColor: theme.palette.divider,
           },
-          '& .MuiDataGrid-cell:focus, & .MuiDataGrid-cell:focus-within': {
-            outline: 'none',
-          },
-          '& .MuiDataGrid-columnHeader:focus, & .MuiDataGrid-columnHeader:focus-within':
+          '& .MuiDataGrid-root .MuiDataGrid-cell:focus, & .MuiDataGrid-root .MuiDataGrid-cell:focus-within':
+            {
+              outline: 'none',
+            },
+          '& .MuiDataGrid-root .MuiDataGrid-columnHeader:focus, & .MuiDataGrid-root .MuiDataGrid-columnHeader:focus-within':
             {
               outline: 'none',
             },
@@ -507,10 +500,7 @@ export function FamilyMembersDataGridV2({
           columnHeaderHeight={42}
           disableRowSelectionOnClick
           hideFooter={!paginationNeeded}
-          onRowClick={({ row }) => {
-            onRowClick(row);
-            clearActiveGridElement();
-          }}
+          onRowClick={({ row }) => onRowClick(row)}
           pageSizeOptions={[10, 25, 50]}
           initialState={{
             pagination: {

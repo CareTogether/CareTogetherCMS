@@ -2,11 +2,7 @@ import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import WarningIcon from '@mui/icons-material/Warning';
 import { Box, Chip, Stack, Typography, useTheme } from '@mui/material';
-import {
-  DataGrid,
-  GridColDef,
-  GridToolbar,
-} from '@mui/x-data-grid';
+import { DataGrid, GridColDef, GridToolbar } from '@mui/x-data-grid';
 import {
   Arrangement,
   ArrangementPhase,
@@ -38,12 +34,15 @@ function arrangementPhaseColor(phase?: ArrangementPhase) {
 function usesChildLocation(arrangementPolicy?: ArrangementPolicy) {
   return (
     arrangementPolicy?.childInvolvement === ChildInvolvement.ChildHousing ||
-    arrangementPolicy?.childInvolvement === ChildInvolvement.DaytimeChildCareOnly
+    arrangementPolicy?.childInvolvement ===
+      ChildInvolvement.DaytimeChildCareOnly
   );
 }
 
 function formatArrangementDate(date?: Date) {
-  return date ? `${date.getMonth() + 1}/${date.getDate()}/${date.getFullYear()}` : '-';
+  return date
+    ? `${date.getMonth() + 1}/${date.getDate()}/${date.getFullYear()}`
+    : '-';
 }
 
 function ArrangementDurationSummary({
