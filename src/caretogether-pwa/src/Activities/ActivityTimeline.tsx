@@ -35,6 +35,7 @@ import { useAccessLevelDialog } from '../Notes/AccessLevelDialog/useAccessLevelD
 import { FormControl, InputLabel, Select, MenuItem } from '@mui/material';
 import { useMemo, useState } from 'react';
 import { buildGroupedV1ReferralTimelineEntries } from '../V1Referrals/referralTimelineHelpers';
+import { formatTimelineTimestamp } from './timelineTimestampFormatting';
 
 type ActivityTimelineProps = {
   family: CombinedFamilyInfo;
@@ -92,20 +93,6 @@ const composeNoteType = (activity: Activity): string | null => {
   }
 
   return null;
-};
-
-const shouldShowTimelineTime = (item: MergedTimelineItem) => {
-  if (item.kind !== 'family-activity') return false;
-
-  return item.activity instanceof ChildLocationChanged;
-};
-
-const formatTimelineTimestamp = (item: MergedTimelineItem) => {
-  if (shouldShowTimelineTime(item)) {
-    return format(item.timestamp, 'M/d/yy h:mm a');
-  }
-
-  return format(item.timestamp, 'M/d/yy');
 };
 
 function embedNotesInActivities(notes: Note[], activities: Activity[]) {
