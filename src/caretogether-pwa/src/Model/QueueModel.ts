@@ -39,7 +39,8 @@ const childrenOver18Query = selector<ChildOver18[]>({
   get: ({ get }) => {
     const visibleFamilies = get(visibleFamiliesQuery);
     return visibleFamilies
-      ?.flatMap((family) => {
+      ?.filter((family) => family.volunteerFamilyInfo)
+      .flatMap((family) => {
         const children = family.family?.children ?? [];
         return children
           .filter(
