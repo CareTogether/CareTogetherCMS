@@ -89,8 +89,8 @@ function RolePolicyVersionsTable({
                   <TableCell align="right">
                     <Stack
                       direction="row"
-                      justifyContent="flex-end"
                       spacing={0.5}
+                      sx={{ justifyContent: 'flex-end' }}
                     >
                       {onDuplicate && (
                         <DuplicateRowAction
@@ -523,4 +523,3 @@ export function VolunteerPolicyTab({
     </Box>
   );
 }
-

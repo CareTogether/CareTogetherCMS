@@ -1,5 +1,6 @@
-import { Autocomplete, Button, FormControlLabel, Grid, MenuItem, Switch, TextField, Typography } from '@mui/material';
+import { Autocomplete, Button, FormControlLabel, MenuItem, Switch, TextField, Typography } from '@mui/material';
 import { useState } from 'react';
+import Grid from '../../../../Generic/GridLegacyCompat';
 import {
   ActionRequirement,
   ArrangementFunction,
@@ -221,7 +222,7 @@ export function ActionDefinitionSidePanel({
                   ? undefined
                   : 'Enter a positive whole number.'
               }
-              inputProps={{ inputMode: 'numeric' }}
+              slotProps={{ htmlInput: { inputMode: 'numeric' } }}
               onChange={(event) =>
                 setDraft((current) => ({
                   ...current,
@@ -720,7 +721,7 @@ export function MonitoringRequirementSidePanel({
                   ? undefined
                   : 'Enter a positive whole number.'
               }
-              inputProps={{ inputMode: 'numeric' }}
+              slotProps={{ htmlInput: { inputMode: 'numeric' } }}
               onChange={(event) =>
                 setDraft((current) => ({
                   ...current,
@@ -1297,7 +1298,7 @@ export function ArrangementPolicySidePanel({
             type="datetime-local"
             label="Superseded Date"
             value={draft.supersededAtUtc}
-            InputLabelProps={{ shrink: true }}
+            slotProps={{ inputLabel: { shrink: true } }}
             onChange={(event) =>
               setDraft((current) => ({
                 ...current,
@@ -1479,7 +1480,7 @@ export function VolunteerRolePolicyVersionSidePanel({
             type="datetime-local"
             label="Superseded Date"
             value={draft.supersededAtUtc}
-            InputLabelProps={{ shrink: true }}
+            slotProps={{ inputLabel: { shrink: true } }}
             onChange={(event) =>
               setDraft((current) => ({
                 ...current,
@@ -1530,4 +1531,3 @@ export function VolunteerRolePolicyVersionSidePanel({
     </Grid>
   );
 }
-

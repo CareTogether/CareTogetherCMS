@@ -80,8 +80,8 @@ export function FunctionAssignmentPoliciesTable({
                   <TableCell align="right">
                     <Stack
                       direction="row"
-                      justifyContent="flex-end"
                       spacing={0.5}
+                      sx={{ justifyContent: 'flex-end' }}
                     >
                       {onDuplicate && (
                         <DuplicateRowAction
@@ -187,8 +187,8 @@ export function RequirementsTable({
                   <TableCell align="right">
                     <Stack
                       direction="row"
-                      justifyContent="flex-end"
                       spacing={0.5}
+                      sx={{ justifyContent: 'flex-end' }}
                     >
                       {onDuplicate && (
                         <DuplicateRowAction
@@ -264,8 +264,8 @@ export function MonitoringRequirementsTable({
                   <TableCell align="right">
                     <Stack
                       direction="row"
-                      justifyContent="flex-end"
                       spacing={0.5}
+                      sx={{ justifyContent: 'flex-end' }}
                     >
                       {onDuplicate && (
                         <DuplicateRowAction
@@ -290,4 +290,3 @@ export function MonitoringRequirementsTable({
     </TableContainer>
   );
 }
-

@@ -180,7 +180,9 @@ export function CasePolicyTab({
                       <Stack
                         direction={{ xs: 'column', sm: 'row' }}
                         spacing={1}
-                        alignItems={{ xs: 'flex-start', sm: 'center' }}
+                        sx={{
+                          alignItems: { xs: 'flex-start', sm: 'center' },
+                        }}
                       >
                         <Typography>{arrangement.arrangementType}</Typography>
                         <Typography variant="body2" color="text.secondary">
@@ -301,4 +303,3 @@ export function CasePolicyTab({
     </Box>
   );
 }
-

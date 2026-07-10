@@ -346,8 +346,8 @@ export function ArrangementPolicyDetails({
                         <TableCell align="right">
                           <Stack
                             direction="row"
-                            justifyContent="flex-end"
                             spacing={0.5}
+                            sx={{ justifyContent: 'flex-end' }}
                           >
                             <DuplicateRowAction
                               label={arrangementFunction.functionName}
@@ -494,4 +494,3 @@ export function ArrangementPolicyDetails({
     </Stack>
   );
 }
-

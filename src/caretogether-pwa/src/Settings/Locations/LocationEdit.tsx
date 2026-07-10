@@ -41,7 +41,7 @@ import { api } from '../../Api/Api';
 import {
   DESKTOP_BOTTOM_SAFE_AREA,
   MOBILE_BOTTOM_SAFE_AREA,
-} from '../../Shell/ShellRootLayout';
+} from '../../Shell/shellLayoutConstants';
 import { useFeatureFlagEnabled, usePostHog } from 'posthog-js/react';
 import { POLICY_SELF_SERVICE_FEATURE_FLAG } from '../../featureFlags';
 

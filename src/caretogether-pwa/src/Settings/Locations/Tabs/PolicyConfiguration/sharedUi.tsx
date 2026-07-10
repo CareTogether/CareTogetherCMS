@@ -9,7 +9,12 @@ export function ValuesText({ values }: { values?: string[] }) {
 
 export function EditableActions({ onAdd }: { onAdd: () => void }) {
   return (
-    <Stack direction="row" spacing={1} useFlexGap flexWrap="wrap">
+    <Stack
+      direction="row"
+      spacing={1}
+      useFlexGap
+      sx={{ flexWrap: 'wrap' }}
+    >
       <Button
         size="small"
         variant="contained"
@@ -36,8 +41,10 @@ export function SectionHeader({
       <Stack
         direction={{ xs: 'column', sm: 'row' }}
         spacing={1}
-        alignItems={{ xs: 'stretch', sm: 'center' }}
-        justifyContent="space-between"
+        sx={{
+          alignItems: { xs: 'stretch', sm: 'center' },
+          justifyContent: 'space-between',
+        }}
       >
         <Typography variant="h6">{title}</Typography>
         {actions}
@@ -157,4 +164,3 @@ export function DeleteRowAction({
     />
   );
 }
-
