@@ -41,7 +41,8 @@ namespace CareTogether.Resources.V1Cases
         ImmutableSortedSet<ChildLocationHistoryEntry> ChildLocationHistory,
         ImmutableSortedSet<ChildLocationHistoryEntry> ChildLocationPlan,
         string? Comments,
-        string? Reason
+        string? Reason,
+        string? ArrangementPolicyVersion = null
     );
 
     public enum V1CaseCloseReason
@@ -195,7 +196,8 @@ namespace CareTogether.Resources.V1Cases
         string ArrangementType,
         DateTime RequestedAtUtc,
         Guid PartneringFamilyPersonId,
-        string? Reason
+        string? Reason,
+        string? ArrangementPolicyVersion = null
     ) : ArrangementsCommand(FamilyId, ReferralId, ArrangementIds);
 
     public sealed record AssignIndividualVolunteer(

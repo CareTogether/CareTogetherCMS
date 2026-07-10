@@ -1,4 +1,4 @@
-import Grid from '@mui/material/GridLegacy';
+import Grid from '@mui/material/Grid';
 import {
   Alert,
   Autocomplete,
@@ -97,11 +97,11 @@ export function AddRoleAssignmentForm({
       null);
 
   return (
-    <Grid container spacing={2} maxWidth={500}>
-      <Grid item xs={12}>
+    <Grid container spacing={2} sx={{ maxWidth: 500 }}>
+      <Grid size={12}>
         <h3>Add Community Role Assignments</h3>
       </Grid>
-      <Grid item xs={12}>
+      <Grid size={12}>
         <FormControl required fullWidth size="small" sx={{ marginTop: 1 }}>
           <Autocomplete
             clearOnEscape
@@ -120,7 +120,7 @@ export function AddRoleAssignmentForm({
           />
         </FormControl>
       </Grid>
-      <Grid item xs={12}>
+      <Grid size={12}>
         <FormControl required>
           <FormLabel id="role">Role</FormLabel>
           <RadioGroup
@@ -139,14 +139,14 @@ export function AddRoleAssignmentForm({
           </RadioGroup>
         </FormControl>
       </Grid>
-      <Grid item xs={12}>
+      <Grid size={12}>
         {duplicate && (
           <Alert severity="error">
             {person?.label} already has the {role} role in this community!
           </Alert>
         )}
       </Grid>
-      <Grid item xs={12} sx={{ textAlign: 'right' }}>
+      <Grid size={12} sx={{ textAlign: 'right' }}>
         <Button
           color="secondary"
           variant="contained"

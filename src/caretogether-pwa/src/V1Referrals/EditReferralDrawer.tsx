@@ -1,4 +1,4 @@
-import Grid from '@mui/material/GridLegacy';
+import Grid from '@mui/material/Grid';
 import { Button, Drawer, TextField, Typography } from '@mui/material';
 import { Controller, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -54,7 +54,6 @@ export function EditReferralDrawer({
 
   const onSubmit = async (data: AddReferralFormValues) => {
     await updateReferralDetails(referral.referralId, {
-      familyId: data.familyId,
       openedAtUtc: data.openedAtLocal,
       title: data.title,
       comment: data.comment || undefined,
@@ -87,11 +86,11 @@ export function EditReferralDrawer({
     >
       <form onSubmit={handleSubmit(onSubmit)}>
         <Grid container spacing={2}>
-          <Grid item xs={12}>
+          <Grid size={12}>
             <Typography variant="h6">Edit Referral</Typography>
           </Grid>
 
-          <Grid item xs={12}>
+          <Grid size={12}>
             <Controller
               name="openedAtLocal"
               control={control}
@@ -112,7 +111,7 @@ export function EditReferralDrawer({
             />
           </Grid>
 
-          <Grid item xs={12}>
+          <Grid size={12}>
             <Controller
               name="title"
               control={control}
@@ -130,10 +129,10 @@ export function EditReferralDrawer({
           </Grid>
 
           {referralCustomFields.length > 0 && (
-            <Grid item xs={12}>
+            <Grid size={12}>
               <Grid container spacing={2}>
                 {referralCustomFields.map((field) => (
-                  <Grid item xs={12} key={field.name}>
+                  <Grid size={12} key={field.name}>
                     <Typography
                       variant="body2"
                       sx={{ mb: 0.5 }}
@@ -159,7 +158,7 @@ export function EditReferralDrawer({
             </Grid>
           )}
 
-          <Grid item xs={12}>
+          <Grid size={12}>
             <Controller
               name="comment"
               control={control}
@@ -175,7 +174,7 @@ export function EditReferralDrawer({
             />
           </Grid>
 
-          <Grid item xs={12} sx={{ textAlign: 'right' }}>
+          <Grid size={12} sx={{ textAlign: 'right' }}>
             <Button
               color="secondary"
               variant="contained"

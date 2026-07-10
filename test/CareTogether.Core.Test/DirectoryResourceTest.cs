@@ -237,7 +237,7 @@ namespace CareTogether.Core.Test
                 new UpdatePersonAge(guid6, new ExactAge(new DateTime(2021, 7, 1))),
                 guid0
             );
-            await Assert.ThrowsExceptionAsync<KeyNotFoundException>(
+            await Assert.ThrowsExactlyAsync<KeyNotFoundException>(
                 () =>
                     dut.ExecutePersonCommandAsync(
                         guid1,
@@ -246,7 +246,7 @@ namespace CareTogether.Core.Test
                         guid0
                     )
             );
-            await Assert.ThrowsExceptionAsync<KeyNotFoundException>(
+            await Assert.ThrowsExactlyAsync<KeyNotFoundException>(
                 () =>
                     dut.ExecutePersonCommandAsync(
                         guid2,

@@ -13,13 +13,13 @@ import { useFeaturebase } from '../Hooks/useFeaturebase';
 import React from 'react';
 import { ProgressBackdrop } from './ProgressBackdrop';
 import { useGlobalSnackBar } from '../Hooks/useGlobalSnackBar';
-
-const CHAT_WIDGET_SAFE_HEIGHT = 96;
-const MOBILE_BOTTOM_NAV_HEIGHT = 56;
-
-export const DESKTOP_BOTTOM_SAFE_AREA = CHAT_WIDGET_SAFE_HEIGHT;
-export const MOBILE_BOTTOM_SAFE_AREA =
-  CHAT_WIDGET_SAFE_HEIGHT + MOBILE_BOTTOM_NAV_HEIGHT;
+import {
+  COLLAPSED_DRAWER_WIDTH,
+  DESKTOP_BOTTOM_SAFE_AREA,
+  EXPANDED_DRAWER_WIDTH,
+  MOBILE_BOTTOM_SAFE_AREA,
+  SHELL_APP_BAR_HEIGHT,
+} from './shellLayoutConstants';
 
 function ShellRootLayout({ children }: React.PropsWithChildren) {
   const theme = useTheme();
@@ -30,7 +30,9 @@ function ShellRootLayout({ children }: React.PropsWithChildren) {
     isDesktop
   );
 
-  const drawerWidth = menuDrawerOpen ? 190 : 48;
+  const drawerWidth = menuDrawerOpen
+    ? EXPANDED_DRAWER_WIDTH
+    : COLLAPSED_DRAWER_WIDTH;
 
   const { message, resetSnackBar } = useGlobalSnackBar();
 
@@ -57,7 +59,8 @@ function ShellRootLayout({ children }: React.PropsWithChildren) {
         <Container
           maxWidth={false}
           sx={{
-            marginTop: { xs: 7, sm: 8, md: 6 },
+            marginTop: SHELL_APP_BAR_HEIGHT,
+            px: { xs: 2, sm: 3 },
             paddingBottom: {
               xs: `${MOBILE_BOTTOM_SAFE_AREA}px`,
               md: `${DESKTOP_BOTTOM_SAFE_AREA}px`,

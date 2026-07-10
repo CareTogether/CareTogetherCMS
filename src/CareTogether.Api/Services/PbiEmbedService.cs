@@ -13,7 +13,6 @@ namespace CareTogether.Api.Controllers.AppOwnsData.Services
     using AppOwnsData.Models;
     using Microsoft.PowerBI.Api;
     using Microsoft.PowerBI.Api.Models;
-    using Microsoft.Rest;
 
     public class PbiEmbedService
     {
@@ -32,8 +31,7 @@ namespace CareTogether.Api.Controllers.AppOwnsData.Services
         public async Task<PowerBIClient> GetPowerBIClient()
         {
             var accessToken = await aadService.GetAccessToken();
-            var tokenCredentials = new TokenCredentials(accessToken, "Bearer");
-            return new PowerBIClient(new Uri(powerBiApiUrl), tokenCredentials);
+            return new PowerBIClient(accessToken, new Uri(powerBiApiUrl));
         }
 
         /// <summary>
@@ -50,7 +48,7 @@ namespace CareTogether.Api.Controllers.AppOwnsData.Services
             PowerBIClient pbiClient = await this.GetPowerBIClient();
 
             // Get report info
-            var pbiReport = pbiClient.Reports.GetReportInGroup(workspaceId, reportId);
+            var pbiReport = pbiClient.Reports.GetReportInGroup(workspaceId, reportId).Value;
 
             //  Check if dataset is present for the corresponding report
             //  If isRDLReport is true then it is a RDL Report
@@ -130,7 +128,7 @@ namespace CareTogether.Api.Controllers.AppOwnsData.Services
             foreach (var reportId in reportIds)
             {
                 // Get report info
-                var pbiReport = pbiClient.Reports.GetReportInGroup(workspaceId, reportId);
+                var pbiReport = pbiClient.Reports.GetReportInGroup(workspaceId, reportId).Value;
 
                 datasetIds.Add(Guid.Parse(pbiReport.DatasetId));
 
@@ -181,28 +179,15 @@ namespace CareTogether.Api.Controllers.AppOwnsData.Services
 
             // Create a request for getting Embed token
             // This method works only with new Power BI V2 workspace experience
-            var tokenRequest = new GenerateTokenRequestV2(
-                reports: new List<GenerateTokenRequestV2Report>()
-                {
-                    new GenerateTokenRequestV2Report(reportId),
-                },
+            var tokenRequest = CreateGenerateTokenRequest(
+                reports: [new GenerateTokenRequestV2Report(reportId)],
                 datasets: datasetIds
                     .Select(datasetId => new GenerateTokenRequestV2Dataset(datasetId.ToString()))
                     .ToList(),
                 targetWorkspaces: targetWorkspaceId != Guid.Empty
-                    ? new List<GenerateTokenRequestV2TargetWorkspace>()
-                    {
-                        new GenerateTokenRequestV2TargetWorkspace(targetWorkspaceId),
-                    }
-                    : null,
-                identities: new List<EffectiveIdentity>()
-                {
-                    new EffectiveIdentity(
-                        username: userId.ToString(),
-                        datasets: datasetIds.Select(datasetId => datasetId.ToString()).ToList(),
-                        roles: [ "Dynamic" ]
-                    ),
-                }
+                    ? [new GenerateTokenRequestV2TargetWorkspace(targetWorkspaceId)]
+                    : [],
+                identities: [CreateEffectiveIdentity(userId, datasetIds, ["Dynamic"])]
             );
 
             // Generate Embed token
@@ -239,22 +224,13 @@ namespace CareTogether.Api.Controllers.AppOwnsData.Services
 
             // Create a request for getting Embed token
             // This method works only with new Power BI V2 workspace experience
-            var tokenRequest = new GenerateTokenRequestV2(
-                datasets: datasets,
-                reports: reports,
-                targetWorkspaces: targetWorkspaceId != Guid.Empty
-                    ? new List<GenerateTokenRequestV2TargetWorkspace>()
-                    {
-                        new GenerateTokenRequestV2TargetWorkspace(targetWorkspaceId),
-                    }
-                    : null,
-                identities: new List<EffectiveIdentity>()
-                {
-                    new EffectiveIdentity(
-                        username: userId.ToString(),
-                        datasets: datasetIds.Select(datasetId => datasetId.ToString()).ToList()
-                    ),
-                }
+            var tokenRequest = CreateGenerateTokenRequest(
+                reports,
+                datasets,
+                targetWorkspaceId != Guid.Empty
+                    ? [new GenerateTokenRequestV2TargetWorkspace(targetWorkspaceId)]
+                    : [],
+                [CreateEffectiveIdentity(userId, datasetIds, [])]
             );
 
             // Generate Embed token
@@ -290,29 +266,20 @@ namespace CareTogether.Api.Controllers.AppOwnsData.Services
                 .ToList();
 
             // Convert target workspace Ids to required types
-            IList<GenerateTokenRequestV2TargetWorkspace> targetWorkspaces = null;
-            if (targetWorkspaceIds != null)
-            {
-                targetWorkspaces = targetWorkspaceIds
-                    .Select(targetWorkspaceId => new GenerateTokenRequestV2TargetWorkspace(
+            var targetWorkspaces =
+                targetWorkspaceIds
+                    ?.Select(targetWorkspaceId => new GenerateTokenRequestV2TargetWorkspace(
                         targetWorkspaceId
                     ))
-                    .ToList();
-            }
+                    .ToList() ?? [];
 
             // Create a request for getting Embed token
             // This method works only with new Power BI V2 workspace experience
-            var tokenRequest = new GenerateTokenRequestV2(
-                datasets: datasets,
-                reports: reports,
-                targetWorkspaces: targetWorkspaceIds != null ? targetWorkspaces : null,
-                identities: new List<EffectiveIdentity>()
-                {
-                    new EffectiveIdentity(
-                        username: userId.ToString(),
-                        datasets: datasetIds.Select(datasetId => datasetId.ToString()).ToList()
-                    ),
-                }
+            var tokenRequest = CreateGenerateTokenRequest(
+                reports,
+                datasets,
+                targetWorkspaces,
+                [CreateEffectiveIdentity(userId, datasetIds, [])]
             );
 
             // Generate Embed token
@@ -334,7 +301,10 @@ namespace CareTogether.Api.Controllers.AppOwnsData.Services
             PowerBIClient pbiClient = await this.GetPowerBIClient();
 
             // Generate token request for RDL Report
-            var generateTokenRequestParameters = new GenerateTokenRequest(accessLevel: accessLevel);
+            var generateTokenRequestParameters = new GenerateTokenRequest
+            {
+                AccessLevel = Enum.Parse<TokenAccessLevel>(accessLevel, ignoreCase: true),
+            };
 
             // Generate Embed token
             var embedToken = pbiClient.Reports.GenerateTokenInGroup(
@@ -344,6 +314,47 @@ namespace CareTogether.Api.Controllers.AppOwnsData.Services
             );
 
             return embedToken;
+        }
+
+        private static GenerateTokenRequestV2 CreateGenerateTokenRequest(
+            IEnumerable<GenerateTokenRequestV2Report> reports,
+            IEnumerable<GenerateTokenRequestV2Dataset> datasets,
+            IEnumerable<GenerateTokenRequestV2TargetWorkspace> targetWorkspaces,
+            IEnumerable<EffectiveIdentity> identities
+        )
+        {
+            var request = new GenerateTokenRequestV2();
+
+            foreach (var report in reports)
+                request.Reports.Add(report);
+
+            foreach (var dataset in datasets)
+                request.Datasets.Add(dataset);
+
+            foreach (var targetWorkspace in targetWorkspaces)
+                request.TargetWorkspaces.Add(targetWorkspace);
+
+            foreach (var identity in identities)
+                request.Identities.Add(identity);
+
+            return request;
+        }
+
+        private static EffectiveIdentity CreateEffectiveIdentity(
+            Guid userId,
+            IEnumerable<Guid> datasetIds,
+            IEnumerable<string> roles
+        )
+        {
+            var identity = new EffectiveIdentity { Username = userId.ToString() };
+
+            foreach (var datasetId in datasetIds)
+                identity.Datasets.Add(datasetId.ToString());
+
+            foreach (var role in roles)
+                identity.Roles.Add(role);
+
+            return identity;
         }
     }
 }

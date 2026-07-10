@@ -281,6 +281,116 @@ namespace CareTogether.Core.Test.V1CaseCalculationTests
         );
 
         [TestMethod]
+        public void ArrangementWithPolicyVersionUsesThatVersionForEvaluation()
+        {
+            var locationPolicy = new EffectiveLocationPolicy(
+                ImmutableDictionary<string, ActionRequirement>.Empty,
+                ImmutableList<CustomField>.Empty,
+                new V1CasePolicy(
+                    RequiredIntakeActionNames: [],
+                    CustomFields: ImmutableList<CustomField>.Empty,
+                    ArrangementPolicies:
+                    [
+                        new ArrangementPolicy(
+                            ArrangementType: "Hosting",
+                            ChildInvolvement: ChildInvolvement.ChildHousing,
+                            ArrangementFunctions: [],
+                            RequiredSetupActionNames: [],
+                            RequiredMonitoringActions: [],
+                            RequiredCloseoutActionNames: [],
+                            PolicyVersions:
+                            [
+                                new ArrangementPolicyVersion(
+                                    Version: "v1",
+                                    SupersededAtUtc: null,
+                                    ChildInvolvement: ChildInvolvement.ChildHousing,
+                                    ArrangementFunctions: [],
+                                    RequiredSetupActionNames: [],
+                                    RequiredMonitoringActions: [],
+                                    RequiredCloseoutActionNames: [],
+                                    RequiredSetupActions:
+                                    [
+                                        new RequirementDefinition("Version 1 Setup", true),
+                                    ],
+                                    RequiredMonitoringActionsNew: [],
+                                    RequiredCloseoutActions: []
+                                ),
+                                new ArrangementPolicyVersion(
+                                    Version: "v2",
+                                    SupersededAtUtc: null,
+                                    ChildInvolvement: ChildInvolvement.ChildHousing,
+                                    ArrangementFunctions: [],
+                                    RequiredSetupActionNames: [],
+                                    RequiredMonitoringActions: [],
+                                    RequiredCloseoutActionNames: [],
+                                    RequiredSetupActions:
+                                    [
+                                        new RequirementDefinition("Version 2 Setup", true),
+                                    ],
+                                    RequiredMonitoringActionsNew: [],
+                                    RequiredCloseoutActions: []
+                                ),
+                            ]
+                        ),
+                    ],
+                    FunctionPolicies: []
+                ),
+                new VolunteerPolicy(
+                    ImmutableDictionary<string, VolunteerRolePolicy>.Empty,
+                    ImmutableDictionary<string, VolunteerFamilyRolePolicy>.Empty
+                )
+            );
+
+            var arrangementId = Guid.NewGuid();
+            var result = CareTogether.Engines.PolicyEvaluation.V1CaseCalculations.CalculateV1CaseStatus(
+                locationPolicy,
+                locationPolicy.ReferralPolicy,
+                new CareTogether.Engines.PolicyEvaluation.V1CaseEntry(
+                    CompletedRequirements: [],
+                    ExemptedRequirements: [],
+                    CompletedCustomFields: ImmutableDictionary<
+                        string,
+                        CompletedCustomFieldInfo
+                    >.Empty,
+                    Arrangements: ImmutableDictionary<
+                        Guid,
+                        CareTogether.Engines.PolicyEvaluation.ArrangementEntry
+                    >
+                        .Empty.Add(
+                            arrangementId,
+                            new CareTogether.Engines.PolicyEvaluation.ArrangementEntry(
+                                ArrangementType: "Hosting",
+                                StartedAt: null,
+                                EndedAt: null,
+                                CancelledAt: null,
+                                PartneringFamilyPersonId: Guid.NewGuid(),
+                                CompletedRequirements: [],
+                                ExemptedRequirements: [],
+                                IndividualVolunteerAssignments: [],
+                                FamilyVolunteerAssignments: [],
+                                ChildLocationHistory: [],
+                                ArrangementPolicyVersion: "v1"
+                            )
+                        )
+                ),
+                today: new DateOnly(2024, 1, 1)
+            );
+
+            AssertEx.SequenceIs(
+                result.IndividualArrangements[arrangementId].MissingRequirements,
+                new CareTogether.Engines.PolicyEvaluation.MissingArrangementRequirement(
+                    null,
+                    null,
+                    null,
+                    null,
+                    new RequirementDefinition("Version 1 Setup", true),
+                    null,
+                    null
+                )
+            );
+        }
+
+        [TestMethod]
         public void Test()
         {
             Assert.Inconclusive("Not implemented");

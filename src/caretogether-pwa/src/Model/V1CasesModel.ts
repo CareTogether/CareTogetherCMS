@@ -526,7 +526,8 @@ export function useV1CasesModel() {
       arrangementType: string,
       requestedAtLocal: Date,
       partneringFamilyPersonId: string,
-      reason: string | null
+      reason: string | null,
+      arrangementPolicyVersion?: string | null
     ) => {
       const command = commandFactory(CreateArrangement, {
         familyId: partneringFamilyId,
@@ -536,6 +537,7 @@ export function useV1CasesModel() {
         requestedAtUtc: requestedAtLocal,
         partneringFamilyPersonId: partneringFamilyPersonId,
         reason: reason || undefined,
+        arrangementPolicyVersion: arrangementPolicyVersion || undefined,
       });
       return command;
     }

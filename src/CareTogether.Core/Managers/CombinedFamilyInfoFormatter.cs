@@ -367,7 +367,8 @@ namespace CareTogether.Managers
                     entry.ChildLocationHistory,
                     entry.ChildLocationPlan,
                     entry.Comments,
-                    entry.Reason
+                    entry.Reason,
+                    entry.ArrangementPolicyVersion
                 );
         }
 
@@ -449,8 +450,8 @@ namespace CareTogether.Managers
 
             var volunteerFamilyInfo = new VolunteerFamilyInfo(
                 combinedFamilyApprovals.FamilyRoleApprovals,
-                approvalCalculation.CompletedFamilyRequirementsWithExpiration,
-                entry.ExemptedRequirements,
+                approvalCalculation.CompletedFamilyRequirements,
+                approvalCalculation.ExemptedFamilyRequirements,
                 combinedFamilyApprovals.CurrentAvailableFamilyApplications,
                 combinedFamilyApprovals.CurrentMissingFamilyRequirements,
                 entry.RoleRemovals,
@@ -459,15 +460,19 @@ namespace CareTogether.Managers
                     x =>
                     {
                         entry.IndividualEntries.TryGetValue(x.Key, out var individualEntry);
-                        approvalCalculation.CompletedIndividualRequirementsWithExpiration.TryGetValue(
+                        approvalCalculation.CompletedIndividualRequirements.TryGetValue(
                             x.Key,
                             out var completedRequirements
+                        );
+                        approvalCalculation.ExemptedIndividualRequirements.TryGetValue(
+                            x.Key,
+                            out var exemptedRequirements
                         );
                         return new VolunteerInfo(
                             x.Value.ApprovalStatusByRole,
                             completedRequirements
                                 ?? ImmutableList<Resources.CompletedRequirementInfo>.Empty,
-                            individualEntry?.ExemptedRequirements
+                            exemptedRequirements
                                 ?? ImmutableList<Resources.ExemptedRequirementInfo>.Empty,
                             combinedFamilyApprovals
                                 .CurrentAvailableIndividualApplications.Where(y =>

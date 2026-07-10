@@ -33,7 +33,8 @@ namespace CareTogether.Engines.PolicyEvaluation
         ImmutableList<ExemptedRequirementInfo> ExemptedRequirements,
         ImmutableList<IndividualVolunteerAssignment> IndividualVolunteerAssignments,
         ImmutableList<FamilyVolunteerAssignment> FamilyVolunteerAssignments,
-        ImmutableList<ChildLocation> ChildLocationHistory
+        ImmutableList<ChildLocation> ChildLocationHistory,
+        string? ArrangementPolicyVersion = null
     );
 
     public sealed record IndividualVolunteerAssignment(

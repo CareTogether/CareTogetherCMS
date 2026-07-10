@@ -1,18 +1,24 @@
 import { MutableRefObject, useRef, useEffect } from 'react';
 
 export const useScrollToArrangement = (
-  arrangementRefs: MutableRefObject<Record<string, HTMLDivElement | null>>
+  arrangementRefs: MutableRefObject<Record<string, HTMLDivElement | null>>,
+  scrollToArrangementId?: string
 ) => {
   const hasScrolledRef = useRef(false);
 
   const searchParams = new URLSearchParams(location.search);
 
-  const arrangementIdFromQuery = searchParams.get('arrangementId') ?? undefined;
+  const targetArrangementId =
+    scrollToArrangementId ?? searchParams.get('arrangementId') ?? undefined;
 
   useEffect(() => {
-    if (!arrangementIdFromQuery || hasScrolledRef.current) return;
+    hasScrolledRef.current = false;
+  }, [targetArrangementId]);
 
-    const ref = arrangementRefs.current[arrangementIdFromQuery];
+  useEffect(() => {
+    if (!targetArrangementId || hasScrolledRef.current) return;
+
+    const ref = arrangementRefs.current[targetArrangementId];
 
     if (ref) {
       hasScrolledRef.current = true;
@@ -31,5 +37,5 @@ export const useScrollToArrangement = (
         });
       }, 300);
     }
-  }, [arrangementIdFromQuery, arrangementRefs]);
+  }, [targetArrangementId, arrangementRefs]);
 };

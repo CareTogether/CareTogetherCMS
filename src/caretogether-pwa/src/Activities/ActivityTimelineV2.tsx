@@ -1,0 +1,658 @@
+import {
+  AppTimeline,
+  AppTimelineConnector,
+  AppTimelineContent,
+  AppTimelineDot,
+  AppTimelineItem,
+  AppTimelineOppositeContent,
+  AppTimelineSeparator,
+} from '../Generic/AppTimeline';
+import { format } from 'date-fns';
+import {
+  Activity,
+  ArrangementRequirementCompleted,
+  ChildLocationChanged,
+  ChildLocationPlan,
+  CombinedFamilyInfo,
+  Note,
+  ReferralOpened as V1CaseOpened,
+  ReferralRequirementCompleted as V1CaseRequirementCompleted,
+  V1Referral,
+} from '../GeneratedClient';
+import {
+  Edit as EditIcon,
+  PersonPinCircle as PersonPinCircleIcon,
+} from '@mui/icons-material';
+import {
+  useNoteAuthorLookup,
+  usePersonLookup,
+  useUserLookup,
+} from '../Model/DirectoryModel';
+import { PersonName } from '../Families/PersonName';
+import { Box, Stack, Typography, Link } from '@mui/material';
+import { NoteCardV2 } from '../Notes/NoteCardV2';
+import { useAccessLevelDialog } from '../Notes/AccessLevelDialog/useAccessLevelDialog';
+import { FormControl, InputLabel, Select, MenuItem } from '@mui/material';
+import { useMemo, useState } from 'react';
+import { buildGroupedV1ReferralTimelineEntries } from '../V1Referrals/referralTimelineHelpers';
+
+type ActivityTimelineProps = {
+  family: CombinedFamilyInfo;
+  referrals: V1Referral[];
+  printContentRef: React.RefObject<HTMLDivElement | null>;
+};
+
+type ActivitySorting = 'activity' | 'created' | 'edited' | 'approved';
+
+type ReferralNoteEntry = NonNullable<V1Referral['notes']>[number];
+
+type MergedTimelineItem =
+  | {
+      kind: 'family-activity';
+      timestamp: Date;
+      userId?: string;
+      activity: Activity;
+      note?: Note;
+    }
+  | {
+      kind: 'referral';
+      timestamp: Date;
+      userId?: string;
+      label: string;
+      referralId: string;
+      referralTitle: string;
+      documentName?: string | null;
+      note?: ReferralNoteEntry;
+    }
+  | {
+      kind: 'referral-note';
+      timestamp: Date;
+      userId?: string;
+      label: string;
+      referralId: string;
+      referralTitle: string;
+      referralNote: ReferralNoteEntry;
+    };
+
+const composeNoteType = (activity: Activity): string | null => {
+  if (activity instanceof V1CaseRequirementCompleted) {
+    return 'Case requirement completed';
+  }
+
+  if (activity instanceof ArrangementRequirementCompleted) {
+    return 'Arrangement requirement completed';
+  }
+
+  if (activity instanceof ChildLocationChanged) {
+    return 'Child location changed';
+  }
+
+  if (activity instanceof V1CaseOpened) {
+    return 'Case opened';
+  }
+
+  return null;
+};
+
+function embedNotesInActivities(notes: Note[], activities: Activity[]) {
+  const unlinkedNotes = notes.slice() || [];
+  function noteLookup(noteId?: string) {
+    const noteIndex = unlinkedNotes.findIndex((n) => n.id === noteId);
+    if (noteIndex === -1) return undefined;
+    const note = unlinkedNotes.splice(noteIndex, 1)[0];
+    return note;
+  }
+
+  return activities.map((activity) => {
+    return {
+      activity,
+      note: noteLookup(activity.noteId),
+    };
+  });
+}
+
+export function ActivityTimelineV2({
+  family,
+  referrals,
+  printContentRef,
+}: ActivityTimelineProps) {
+  const userLookup = useUserLookup();
+  const personLookup = usePersonLookup();
+  const noteAuthorLookup = useNoteAuthorLookup();
+
+  const activities = (
+    family.partneringFamilyInfo?.history?.slice() || []
+  ).concat(family.volunteerFamilyInfo?.history?.slice() || []);
+
+  const unmatchedNotesAsActivities =
+    family.notes
+      ?.filter((note) => activities?.every((a) => a.noteId !== note.id))
+      ?.map(
+        (note) =>
+          ({
+            userId: note.authorUserId ?? '',
+            activityTimestampUtc:
+              note.backdatedTimestampUtc ??
+              note.createdTimestampUtc ??
+              note.lastEditTimestampUtc,
+            auditTimestampUtc:
+              note.createdTimestampUtc ?? note.lastEditTimestampUtc,
+            noteId: note.id,
+          }) as Activity
+      ) || [];
+
+  const allActivitiesSorted = activities
+    ?.concat(unmatchedNotesAsActivities)
+    ?.sort((a, b) =>
+      a.activityTimestampUtc! < b.activityTimestampUtc!
+        ? 1
+        : a.activityTimestampUtc! > b.activityTimestampUtc!
+          ? -1
+          : 0
+    );
+
+  function arrangementPartneringPerson(arrangementId?: string) {
+    const allArrangements = (
+      family.partneringFamilyInfo?.openV1Case?.arrangements || []
+    ).concat(
+      family.partneringFamilyInfo?.closedV1Cases?.flatMap(
+        (r) => r.arrangements || []
+      ) || []
+    );
+    const arrangement = allArrangements.find((a) => a.id === arrangementId);
+    const partneringPerson = personLookup(
+      family.family!.id!,
+      arrangement?.partneringFamilyPersonId
+    );
+    return partneringPerson;
+  }
+
+  function documentLookup(uploadedDocumentId?: string) {
+    const document = family.uploadedDocuments?.find(
+      (d) => d.uploadedDocumentId === uploadedDocumentId
+    );
+    return document;
+  }
+
+  const { noteAccessLevelDialog, open } = useAccessLevelDialog({
+    familyId: family.family.id,
+  });
+
+  const [sortBy, setSortBy] = useState<ActivitySorting>('activity');
+
+  const getDateValue = (value?: string | Date | null): number => {
+    if (!value) return 0;
+    if (value instanceof Date) return value.getTime();
+    return new Date(value).getTime();
+  };
+
+  const activitiesWithEmbeddedNotes = embedNotesInActivities(
+    family.notes || [],
+    allActivitiesSorted
+  );
+
+  type ActivityWithNote = {
+    activity: Activity;
+    note: Note | undefined;
+  };
+
+  const sortStrategies: Record<
+    ActivitySorting,
+    (a: ActivityWithNote, b: ActivityWithNote) => number
+  > = {
+    created: (a, b) =>
+      getDateValue(
+        b.note?.createdTimestampUtc ?? b.activity.activityTimestampUtc
+      ) -
+      getDateValue(
+        a.note?.createdTimestampUtc ?? a.activity.activityTimestampUtc
+      ),
+    edited: (a, b) =>
+      getDateValue(
+        b.note?.lastEditTimestampUtc ?? b.activity.activityTimestampUtc
+      ) -
+      getDateValue(
+        a.note?.lastEditTimestampUtc ?? a.activity.activityTimestampUtc
+      ),
+    approved: (a, b) =>
+      getDateValue(
+        b.note?.approvedTimestampUtc ?? b.activity.activityTimestampUtc
+      ) -
+      getDateValue(
+        a.note?.approvedTimestampUtc ?? a.activity.activityTimestampUtc
+      ),
+    activity: (a, b) =>
+      getDateValue(b.activity.activityTimestampUtc) -
+      getDateValue(a.activity.activityTimestampUtc),
+  };
+
+  const sortedActivitiesWithNotes = [...activitiesWithEmbeddedNotes].sort(
+    sortStrategies[sortBy]
+  );
+
+  const pinnedActivitiesWithNotes = sortedActivitiesWithNotes
+    .filter((item) => item.note?.isPinned)
+    .sort(
+      (a, b) =>
+        getDateValue(b.note?.pinnedAtUtc ?? b.activity.activityTimestampUtc) -
+        getDateValue(a.note?.pinnedAtUtc ?? a.activity.activityTimestampUtc)
+    );
+
+  const unpinnedActivitiesWithNotes = sortedActivitiesWithNotes.filter(
+    (item) => !item.note?.isPinned
+  );
+
+  const displayActivitiesWithNotes = [
+    ...pinnedActivitiesWithNotes,
+    ...unpinnedActivitiesWithNotes,
+  ].filter((item) => Boolean(item.note));
+
+  const pinnedFamilyTimelineItems: MergedTimelineItem[] =
+    pinnedActivitiesWithNotes.map(({ activity, note }) => ({
+      kind: 'family-activity',
+      timestamp: activity.activityTimestampUtc ?? new Date(0),
+      userId: activity.userId,
+      activity,
+      note,
+    }));
+
+  const unpinnedFamilyTimelineItems: MergedTimelineItem[] =
+    unpinnedActivitiesWithNotes.map(({ activity, note }) => ({
+      kind: 'family-activity',
+      timestamp: activity.activityTimestampUtc ?? new Date(0),
+      userId: activity.userId,
+      activity,
+      note,
+    }));
+
+  const referralTimelineItems = useMemo<MergedTimelineItem[]>(() => {
+    return referrals.flatMap((referral) => {
+      return buildGroupedV1ReferralTimelineEntries(referral).map((entry) => {
+        if (entry.kind === 'note') {
+          return {
+            kind: 'referral-note',
+            timestamp: entry.timestamp,
+            userId: entry.userId,
+            label: entry.label,
+            referralId: referral.referralId,
+            referralTitle: referral.title,
+            referralNote: entry.note,
+          };
+        }
+
+        return {
+          kind: 'referral',
+          timestamp: entry.timestamp,
+          userId: entry.userId,
+          label: entry.label,
+          referralId: referral.referralId,
+          referralTitle: referral.title,
+          documentName:
+            entry.kind === 'activity'
+              ? entry.document?.uploadedFileName
+              : undefined,
+          note: entry.kind === 'activity' ? entry.note : undefined,
+        };
+      });
+    });
+  }, [referrals]);
+
+  const mergedTimelineItems = [
+    ...pinnedFamilyTimelineItems,
+    ...[...unpinnedFamilyTimelineItems, ...referralTimelineItems].sort(
+      (a, b) => b.timestamp.getTime() - a.timestamp.getTime()
+    ),
+  ];
+
+  function renderVisibility(note?: Note) {
+    return (
+      <Typography>
+        Visible to{' '}
+        {note ? (
+          <Link
+            component="button"
+            type="button"
+            underline="hover"
+            onClick={() => {
+              open(note);
+            }}
+          >
+            {note.accessLevel ?? 'Everyone'}
+          </Link>
+        ) : (
+          'Everyone'
+        )}
+      </Typography>
+    );
+  }
+
+  function renderActivitySummary(activity: Activity) {
+    if (
+      activity instanceof V1CaseRequirementCompleted ||
+      activity instanceof ArrangementRequirementCompleted
+    ) {
+      return activity.requirementName;
+    }
+
+    if (activity instanceof ChildLocationChanged) {
+      return (
+        <>
+          <PersonName
+            person={arrangementPartneringPerson(activity.arrangementId)}
+          />
+          <span> &rarr; </span>
+          <PersonName
+            person={personLookup(
+              activity.childLocationFamilyId,
+              activity.childLocationReceivingAdultId
+            )}
+          />
+          <span> </span>(
+          {activity.plan === ChildLocationPlan.DaytimeChildCare
+            ? 'daytime'
+            : activity.plan === ChildLocationPlan.OvernightHousing
+              ? 'overnight'
+              : 'parent'}
+          )
+        </>
+      );
+    }
+
+    if (activity instanceof V1CaseOpened) {
+      return 'Case opened';
+    }
+
+    return null;
+  }
+
+  return (
+    <>
+      <div ref={printContentRef}>
+        <style>
+          {`
+            @page {
+              margin: 60px 40px !important;
+              size: auto;
+              font-size: 12pt;
+            }
+          `}
+        </style>
+        <Stack
+          className="print-container"
+          spacing={2}
+          sx={{
+            display: 'none',
+            '@media print': {
+              display: 'block',
+            },
+          }}
+        >
+          {displayActivitiesWithNotes.map(({ activity, note }) => {
+            if (!note) return null;
+
+            const arrangementId =
+              'arrangementId' in activity &&
+              typeof activity.arrangementId === 'string'
+                ? activity.arrangementId
+                : null;
+
+            const requirementName =
+              activity instanceof V1CaseRequirementCompleted ||
+              activity instanceof ArrangementRequirementCompleted
+                ? activity.requirementName
+                : null;
+
+            const activityType = composeNoteType(activity);
+
+            return (
+              <Box
+                key={activity.activityTimestampUtc?.toString()}
+                sx={{
+                  p: 2,
+                  border: note.isPinned ? 2 : 1,
+                  borderRadius: 2,
+                  breakInside: 'avoid',
+                  borderColor: note.isPinned ? 'primary.main' : undefined,
+                  backgroundColor: note.isPinned
+                    ? 'rgba(25, 118, 210, 0.06)'
+                    : undefined,
+                }}
+              >
+                <Typography gutterBottom>
+                  <strong>Author: </strong>
+                  <PersonName person={noteAuthorLookup(note)} /> at{' '}
+                  {note.createdTimestampUtc
+                    ? format(note.createdTimestampUtc, 'M/d/yy h:mm a')
+                    : null}
+                </Typography>
+
+                <Typography gutterBottom>
+                  <strong>Approver: </strong>
+                  {note.approverId ? (
+                    <>
+                      <PersonName person={userLookup(note.approverId)} /> at{' '}
+                      {note.approvedTimestampUtc
+                        ? format(note.approvedTimestampUtc, 'M/d/yy h:mm a')
+                        : null}
+                    </>
+                  ) : (
+                    'N/A'
+                  )}
+                </Typography>
+
+                {activityType && (
+                  <Typography gutterBottom>
+                    <strong>Activity type: </strong>
+
+                    {activityType}
+                  </Typography>
+                )}
+
+                {arrangementId && (
+                  <Typography gutterBottom>
+                    <strong>Partnering person: </strong>
+
+                    <PersonName
+                      person={arrangementPartneringPerson(arrangementId)}
+                    />
+                  </Typography>
+                )}
+
+                {requirementName && (
+                  <Typography gutterBottom>
+                    <strong>Requirement name: </strong> {requirementName}
+                  </Typography>
+                )}
+
+                {activity instanceof ChildLocationChanged && (
+                  <Typography gutterBottom>
+                    <strong>Location changed to: </strong>
+                    <PersonName
+                      person={personLookup(
+                        activity.childLocationFamilyId,
+                        activity.childLocationReceivingAdultId
+                      )}
+                    />{' '}
+                    (
+                    {activity.plan === ChildLocationPlan.DaytimeChildCare
+                      ? 'daytime'
+                      : activity.plan === ChildLocationPlan.OvernightHousing
+                        ? 'overnight'
+                        : 'parent'}
+                    )
+                  </Typography>
+                )}
+
+                {activity.uploadedDocumentId && (
+                  <Typography gutterBottom>
+                    <strong>Document: </strong>
+                    {
+                      documentLookup(activity.uploadedDocumentId)
+                        ?.uploadedFileName
+                    }
+                  </Typography>
+                )}
+
+                <Typography gutterBottom>
+                  <strong>Note: </strong>
+                  <em>{note.contents}</em>
+                </Typography>
+              </Box>
+            );
+          })}
+        </Stack>
+      </div>
+
+      <AppTimeline position="right" sx={{ m: 0, p: 0 }}>
+        <Typography className="ph-unmask" variant="h3" sx={{ mb: 1 }}>
+          Timeline
+        </Typography>
+        <Box sx={{ display: 'flex', justifyContent: 'flex-start', mb: 1 }}>
+          <FormControl size="small" sx={{ minWidth: 160 }}>
+            <InputLabel>Sort by</InputLabel>
+            <Select
+              value={sortBy}
+              label="Sort by"
+              onChange={(e) => setSortBy(e.target.value as ActivitySorting)}
+            >
+              <MenuItem value="activity">Activity date (default)</MenuItem>
+              <MenuItem value="created">Note created date</MenuItem>
+              <MenuItem value="edited">Note last edited date</MenuItem>
+              <MenuItem value="approved">Note approved date</MenuItem>
+            </Select>
+          </FormControl>
+        </Box>
+
+        {mergedTimelineItems.map((item, i) => {
+          const nextItem =
+            i < mergedTimelineItems.length - 1
+              ? mergedTimelineItems[i + 1]
+              : null;
+          const hideBottomConnector =
+            item.kind === 'family-activity' && item.note?.isPinned
+              ? true
+              : nextItem?.kind === 'family-activity' &&
+                Boolean(nextItem.note?.isPinned);
+
+          return (
+            <AppTimelineItem key={`${item.kind}:${i}`}>
+              <AppTimelineOppositeContent sx={{ display: 'none' }} />
+              <AppTimelineSeparator>
+                <AppTimelineDot
+                  sx={{
+                    width: 36,
+                    height: 36,
+                    textAlign: 'center',
+                    display: 'block',
+                  }}
+                >
+                  {item.kind === 'family-activity' ? (
+                    item.activity instanceof V1CaseRequirementCompleted ||
+                    item.activity instanceof ArrangementRequirementCompleted ? (
+                      '✔'
+                    ) : item.activity instanceof ChildLocationChanged ? (
+                      <PersonPinCircleIcon fontSize="medium" />
+                    ) : (
+                      <EditIcon fontSize="small" />
+                    )
+                  ) : (
+                    <EditIcon fontSize="small" />
+                  )}
+                </AppTimelineDot>
+                {!hideBottomConnector && i < mergedTimelineItems.length - 1 && (
+                  <AppTimelineConnector />
+                )}
+              </AppTimelineSeparator>
+              <AppTimelineContent
+                style={{
+                  width: 200,
+                  wordWrap: 'break-word',
+                  whiteSpace: 'pre-wrap',
+                }}
+              >
+                <Box sx={{ color: 'text.disabled', margin: 0, padding: 0 }}>
+                  <span className="ph-unmask" style={{ marginRight: 16 }}>
+                    {format(item.timestamp, 'M/d/yy h:mm a')}
+                  </span>
+                  {item.userId ? (
+                    <PersonName person={userLookup(item.userId)} />
+                  ) : null}
+                </Box>
+
+                {item.kind !== 'family-activity' && (
+                  <Typography variant="body2" sx={{ fontWeight: 600, mb: 0.5 }}>
+                    Referral: {item.referralTitle}
+                  </Typography>
+                )}
+
+                {item.kind === 'family-activity' ? (
+                  <>
+                    {renderActivitySummary(item.activity)}
+
+                    {item.activity.uploadedDocumentId && (
+                      <Box sx={{ margin: 0, padding: 0 }}>
+                        📃{' '}
+                        {
+                          documentLookup(item.activity.uploadedDocumentId)
+                            ?.uploadedFileName
+                        }
+                      </Box>
+                    )}
+
+                    {renderVisibility(item.note)}
+
+                    {item.note && (
+                      <NoteCardV2
+                        familyId={family.family!.id!}
+                        note={item.note}
+                        showPinAction={true}
+                        isPinnedPresentation={item.note.isPinned}
+                      />
+                    )}
+                  </>
+                ) : item.kind === 'referral' ? (
+                  <>
+                    <Typography variant="body2" sx={{ mb: 0.5 }}>
+                      {item.label}
+                    </Typography>
+                    {item.documentName && (
+                      <Typography variant="body2" sx={{ mb: 0.5 }}>
+                        Document: {item.documentName}
+                      </Typography>
+                    )}
+                    {item.note?.contents?.trim() && (
+                      <Typography
+                        variant="body2"
+                        sx={{ fontStyle: 'italic', opacity: 0.85 }}
+                      >
+                        {item.note.contents.trim()}
+                      </Typography>
+                    )}
+                  </>
+                ) : (
+                  <>
+                    <Typography variant="body2" sx={{ mb: 0.5 }}>
+                      {item.label}
+                    </Typography>
+                    <Box
+                      sx={{ p: 1, border: '1px solid', borderColor: 'divider' }}
+                    >
+                      <Typography variant="body2" sx={{ mb: 0.5 }}>
+                        {item.referralNote.contents}
+                      </Typography>
+                      <Typography variant="caption" color="text.secondary">
+                        Visible to {item.referralNote.accessLevel ?? 'Everyone'}
+                      </Typography>
+                    </Box>
+                  </>
+                )}
+              </AppTimelineContent>
+            </AppTimelineItem>
+          );
+        })}
+
+        {noteAccessLevelDialog}
+      </AppTimeline>
+    </>
+  );
+}

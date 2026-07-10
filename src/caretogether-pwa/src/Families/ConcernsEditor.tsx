@@ -1,4 +1,4 @@
-import Grid from '@mui/material/GridLegacy';
+import Grid from '@mui/material/Grid';
 import { InputAdornment, TextField } from '@mui/material';
 import { Permission } from '../GeneratedClient';
 import { useDirectoryModel } from '../Model/DirectoryModel';
@@ -26,7 +26,7 @@ export function ConcernsEditor({ familyId, person }: PersonEditorProps) {
     <Grid container spacing={2}>
       {editor.editing ? (
         <>
-          <Grid item xs={12}>
+          <Grid size={12}>
             <TextField
               id="concerns"
               label="Concerns"
@@ -50,13 +50,13 @@ export function ConcernsEditor({ familyId, person }: PersonEditorProps) {
               onChange={(e) => editor.setValue(e.target.value)}
             />
           </Grid>
-          <Grid item xs={12}>
+          <Grid size={12}>
             {editor.cancelButton}
             {editor.saveButton}
           </Grid>
         </>
       ) : (
-        <Grid item xs={12}>
+        <Grid size={12}>
           Concerns: {person.concerns}
           {permissions(Permission.EditPersonConcerns) && editor.editButton}
         </Grid>

@@ -119,6 +119,7 @@ namespace CareTogether.Engines.Authorization
                     UpdatePersonPhoneNumber => Permission.EditPersonContactInfo,
                     AddPersonEmailAddress => Permission.EditPersonContactInfo,
                     UpdatePersonEmailAddress => Permission.EditPersonContactInfo,
+                    UpdateCustomFamilyMemberField => Permission.EditFamilyInfo,
                     _ => throw new NotImplementedException(
                         $"The command type '{command.GetType().FullName}' has not been implemented."
                     ),
@@ -1280,6 +1281,11 @@ namespace CareTogether.Engines.Authorization
                 )
                     ? person.PreferredPhoneNumberId
                     : null,
+                CompletedCustomFields = contextPermissions.Contains(
+                    Permission.ViewFamilyCustomFields
+                )
+                    ? person.CompletedCustomFields
+                    : ImmutableList<CompletedCustomFieldInfo>.Empty,
                 Age =
                     person.Age != null
                         ? contextPermissions.Contains(Permission.ViewPersonDateOfBirth)
