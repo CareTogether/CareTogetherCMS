@@ -77,10 +77,7 @@ function DetailField({
       <Typography {...v2Typography.fieldLabel}>
         {label}
       </Typography>
-      <Typography
-        className="ph-unmask"
-        {...v2Typography.primaryValue}
-      >
+      <Typography {...v2Typography.primaryValue}>
         {children}
       </Typography>
     </Box>
@@ -138,7 +135,7 @@ function DocumentList({
             p: 1,
           }}
         >
-          <Typography className="ph-unmask" {...v2Typography.browserCell}>
+          <Typography {...v2Typography.browserCell}>
             {document.uploadedFileName}
           </Typography>
           <Typography {...v2Typography.fieldLabel}>
@@ -186,7 +183,7 @@ function NoteList({
               p: 1,
           }}
         >
-            <Typography className="ph-unmask" {...v2Typography.browserCell}>
+            <Typography {...v2Typography.browserCell}>
               {note.contents}
             </Typography>
             <Typography {...v2Typography.fieldLabel}>
@@ -207,7 +204,7 @@ function NoteList({
             p: 1,
           }}
         >
-          <Typography className="ph-unmask" {...v2Typography.browserCell}>
+          <Typography {...v2Typography.browserCell}>
             {note}
           </Typography>
         </Box>
@@ -234,10 +231,7 @@ function DrawerSection({
 function RoleChipList({ labels }: { labels: string[] }) {
   if (labels.length === 0) {
     return (
-      <Typography
-        className="ph-unmask"
-        {...v2Typography.primaryValue}
-      >
+      <Typography {...v2Typography.primaryValue}>
         None
       </Typography>
     );
@@ -393,7 +387,6 @@ export function ApprovalDetailsDrawerV2({
                 </Typography>
                 <Typography
                   id="approval-details-title"
-                  className="ph-unmask"
                   {...v2Typography.workspaceTitle}
                 >
                   {row.requirementName}
