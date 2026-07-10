@@ -25,7 +25,6 @@ type FamilyMembersDataGridV2Props = {
   rows: FamilyMemberRowV2[];
   onAddAdult: () => void;
   onAddChild: () => void;
-  onArrangementClick?: (arrangementId: string, v1CaseId: string) => void;
   onRowClick: (row: FamilyMemberRowV2) => void;
   canAddAdult?: boolean;
   canAddChild?: boolean;
@@ -114,12 +113,7 @@ function tooltipTitle(fullText?: string) {
   );
 }
 
-function buildColumns({
-  onArrangementClick,
-}: Pick<
-  FamilyMembersDataGridV2Props,
-  'onArrangementClick'
->): GridColDef<FamilyMemberRowV2>[] {
+function buildColumns(): GridColDef<FamilyMemberRowV2>[] {
   return [
     {
       field: 'displayName',
@@ -193,71 +187,6 @@ function buildColumns({
           )}
         </Stack>
       ),
-    },
-    {
-      field: 'activeArrangements',
-      headerName: 'Arrangements',
-      minWidth: 170,
-      flex: 0.8,
-      sortable: false,
-      renderCell: ({ row }) => {
-        if (row.activeArrangements.length === 0) {
-          return (
-            <Typography color="text.secondary" {...v2Typography.browserCell}>
-              {'\u2014'}
-            </Typography>
-          );
-        }
-
-        return (
-          <Box
-            sx={{
-              display: 'flex',
-              flexWrap: 'nowrap',
-              gap: 0.5,
-              minWidth: 0,
-              overflow: 'hidden',
-            }}
-          >
-            {row.activeArrangements.slice(0, 2).map((arrangement) => (
-              <Tooltip
-                key={arrangement.arrangementId}
-                title={arrangement.label}
-                disableInteractive
-              >
-                <Chip
-                  clickable
-                  className="ph-unmask"
-                  label={arrangement.label}
-                  size="small"
-                  variant="outlined"
-                  onClick={(event) => {
-                    event.stopPropagation();
-                    onArrangementClick?.(
-                      arrangement.arrangementId,
-                      arrangement.v1CaseId
-                    );
-                  }}
-                  sx={{
-                    maxWidth: 100,
-                    '& .MuiChip-label': {
-                      overflow: 'hidden',
-                      textOverflow: 'ellipsis',
-                    },
-                  }}
-                />
-              </Tooltip>
-            ))}
-            {row.activeArrangements.length > 2 && (
-              <Chip
-                label={`+${row.activeArrangements.length - 2}`}
-                size="small"
-                variant="outlined"
-              />
-            )}
-          </Box>
-        );
-      },
     },
     {
       field: 'householdStatusLabel',
@@ -354,14 +283,6 @@ function buildColumns({
   ];
 }
 
-function clearActiveGridElement() {
-  const activeElement = document.activeElement;
-
-  if (!(activeElement instanceof HTMLElement)) return;
-
-  activeElement.blur();
-}
-
 function EmptyFamilyMembersState({
   onAddAdult,
   onAddChild,
@@ -418,16 +339,12 @@ export function FamilyMembersDataGridV2({
   rows,
   onAddAdult,
   onAddChild,
-  onArrangementClick,
   onRowClick,
   canAddAdult = true,
   canAddChild = true,
 }: FamilyMembersDataGridV2Props) {
   const theme = useTheme();
-  const columns = useMemo(
-    () => buildColumns({ onArrangementClick }),
-    [onArrangementClick]
-  );
+  const columns = useMemo(() => buildColumns(), []);
   const pageSize = 10;
   const paginationNeeded = rows.length > pageSize;
   const gridHeight = paginationNeeded ? pageSize * 56 + 112 : undefined;
@@ -507,10 +424,7 @@ export function FamilyMembersDataGridV2({
           columnHeaderHeight={42}
           disableRowSelectionOnClick
           hideFooter={!paginationNeeded}
-          onRowClick={({ row }) => {
-            onRowClick(row);
-            clearActiveGridElement();
-          }}
+          onRowClick={({ row }) => onRowClick(row)}
           pageSizeOptions={[10, 25, 50]}
           initialState={{
             pagination: {

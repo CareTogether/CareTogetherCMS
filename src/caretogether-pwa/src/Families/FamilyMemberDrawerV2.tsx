@@ -158,23 +158,20 @@ export function FamilyMemberDrawerV2({
     FAMILY_MEMBER_CUSTOM_FIELDS_FEATURE_FLAG
   );
 
-  if (!row) {
-    return (
-      <Drawer anchor="right" open={open} onClose={onClose}>
-        <Box />
-      </Drawer>
-    );
-  }
-
-  const personEditorProps = { familyId, person: row.person } as PersonEditorProps;
-  const adultSource = 'adult' in row.source ? row.source : undefined;
-  const childSource = 'child' in row.source ? row.source : undefined;
+  const personEditorProps = row
+    ? ({ familyId, person: row.person } as PersonEditorProps)
+    : null;
+  const adultSource = row && 'adult' in row.source ? row.source : undefined;
+  const childSource = row && 'child' in row.source ? row.source : undefined;
   const familyAdults =
     family.family?.adults?.flatMap((adult) =>
       adult.item1?.id && adult.item1.active ? [adult.item1] : []
     ) ?? [];
-  const customFieldPolicies = customFieldPoliciesForMember(family, policy, row);
+  const customFieldPolicies = row
+    ? customFieldPoliciesForMember(family, policy, row)
+    : [];
   const showCustomFields =
+    !!row &&
     customFieldsEnabled &&
     row.permissionFlags.canViewCustomFields &&
     customFieldPolicies.length > 0;
@@ -183,11 +180,13 @@ export function FamilyMemberDrawerV2({
     ((featureFlags?.inviteUser && permissions(Permission.InvitePersonUser)) ||
       permissions(Permission.EditPersonUserStandardRoles) ||
       permissions(Permission.EditPersonUserProtectedRoles));
-  const childIsAdult = !!childSource && isAdultAge(row);
+  const childIsAdult = !!row && !!childSource && isAdultAge(row);
   const canConvertToAdult =
-    childIsAdult && row.permissionFlags.canConvertChildToAdult;
+    childIsAdult && !!row && row.permissionFlags.canConvertChildToAdult;
   const hasManagementActions =
-    canManageUser || canConvertToAdult || row.permissionFlags.canDelete;
+    canManageUser ||
+    canConvertToAdult ||
+    (!!row && row.permissionFlags.canDelete);
 
   async function handleConvertToAdult() {
     if (!childSource) return;
@@ -237,7 +236,8 @@ export function FamilyMemberDrawerV2({
           },
         }}
       >
-        <Stack spacing={2}>
+        {row && personEditorProps && (
+          <Stack spacing={2}>
           <Box
             sx={{
               display: 'flex',
@@ -519,10 +519,11 @@ export function FamilyMemberDrawerV2({
               )}
             </Box>
           )}
-        </Stack>
+          </Stack>
+        )}
       </Drawer>
 
-      {deleteDialogHandle.open && (
+      {row && deleteDialogHandle.open && (
         <DeletePersonDialog
           key={deleteDialogHandle.key}
           handle={deleteDialogHandle}

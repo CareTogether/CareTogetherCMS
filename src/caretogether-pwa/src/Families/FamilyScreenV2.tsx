@@ -8,6 +8,7 @@ import {
   useTheme,
   Box,
   IconButton,
+  Card,
   ListItemText,
   Menu,
   MenuItem,
@@ -37,6 +38,8 @@ import {
   Note,
   NoteStatus,
   V1ReferralNoteStatus,
+  Arrangement,
+  ArrangementPhase,
   ArrangementRequirementCompleted,
   ChildLocationChanged,
   ReferralOpened as V1CaseOpened,
@@ -167,6 +170,13 @@ type RecentOverviewTimelineItem = {
   referralId?: string;
   icon: 'check' | 'edit' | 'location';
 };
+type ActiveCaseArrangementSummaryV2 = {
+  id: string;
+  arrangementType: string;
+  arrangedPersonLabel: string;
+  phase: ArrangementPhase;
+  statusLabel: string;
+};
 type FamilyScreenTabValue =
   | 'overview'
   | 'caseHistory'
@@ -180,6 +190,30 @@ type FamilyScreenTab = {
   desktopLabel: React.ReactNode;
   mobileLabel: string;
 };
+
+function isActiveCaseArrangement(arrangement: Arrangement) {
+  return (
+    arrangement.phase === ArrangementPhase.SettingUp ||
+    arrangement.phase === ArrangementPhase.ReadyToStart ||
+    arrangement.phase === ArrangementPhase.Started
+  );
+}
+
+function familyPersonName(person?: { firstName?: string; lastName?: string }) {
+  return [person?.firstName, person?.lastName].filter(Boolean).join(' ');
+}
+
+function arrangementAccentColor(phase?: ArrangementPhase) {
+  if (phase === ArrangementPhase.Started) return 'info.main';
+  return 'warning.main';
+}
+
+function activeArrangementStatusLabel(phase?: ArrangementPhase) {
+  if (phase === ArrangementPhase.SettingUp) return 'Setting up';
+  if (phase === ArrangementPhase.ReadyToStart) return 'Ready to start';
+  if (phase === ArrangementPhase.Started) return 'Active';
+  return 'Active';
+}
 
 function stringFromLocationState(state: unknown, key: string) {
   if (!state || typeof state !== 'object' || !(key in state)) {
@@ -490,6 +524,29 @@ export function FamilyScreenV2() {
     );
   }, [caseReferralTable.caseRows, familyReferrals, selectedV1Case?.id]);
 
+  const activeCaseArrangements = useMemo<ActiveCaseArrangementSummaryV2[]>(() => {
+    return (selectedV1Case?.arrangements ?? [])
+      .filter((arrangement) => arrangement.id && isActiveCaseArrangement(arrangement))
+      .map((arrangement) => {
+        const arrangedPerson =
+          family?.family?.adults?.find(
+            (adult) => adult.item1?.id === arrangement.partneringFamilyPersonId
+          )?.item1 ??
+          family?.family?.children?.find(
+            (child) => child.id === arrangement.partneringFamilyPersonId
+          );
+        const arrangedPersonLabel = familyPersonName(arrangedPerson);
+
+        return {
+          id: arrangement.id!,
+          arrangementType: arrangement.arrangementType || 'Arrangement',
+          arrangedPersonLabel: arrangedPersonLabel || 'Unassigned',
+          phase: arrangement.phase,
+          statusLabel: activeArrangementStatusLabel(arrangement.phase),
+        };
+      });
+  }, [family?.family, selectedV1Case?.arrangements]);
+
   async function reopenCaseNow() {
     if (!selectedV1Case?.id) return;
 
@@ -644,15 +701,6 @@ export function FamilyScreenV2() {
 
   function openFamilyMemberDrawer(row: FamilyMemberRowV2) {
     setSelectedFamilyMemberRow(row);
-  }
-
-  function openArrangementFromFamilyMember(
-    arrangementId: string,
-    v1CaseId: string
-  ) {
-    setSelectedV1CaseId(v1CaseId);
-    setSelectedTab('arrangementsOrAssignments');
-    setArrangementIdToScrollTo(arrangementId);
   }
 
   function openAddNoteDialog() {
@@ -1957,7 +2005,7 @@ export function FamilyScreenV2() {
                         textTransform: 'uppercase',
                       }}
                     >
-                      Current Case
+                      Case
                     </Typography>
                     <Box
                       sx={{
@@ -1969,35 +2017,17 @@ export function FamilyScreenV2() {
                         mb: 0.5,
                       }}
                     >
-                      <Box
-                        sx={{
-                          alignItems: 'center',
-                          display: 'flex',
-                          flexWrap: 'wrap',
-                          gap: 1,
-                          minWidth: 0,
-                        }}
-                      >
+                      <Stack spacing={0.25} sx={{ minWidth: 0 }}>
+                        <Typography {...v2Typography.fieldLabel}>
+                          Opened
+                        </Typography>
                         <Typography
                           className="ph-unmask"
-                          color="text.secondary"
-                          variant="subtitle1"
-                          sx={{ fontWeight: 600, m: 0 }}
+                          {...v2Typography.primaryValue}
                         >
-                          {selectedV1Case.closedAtUtc
-                            ? 'Closed Case'
-                            : 'Open Case'}
+                          {format(selectedV1Case.openedAtUtc, 'MMM d, yyyy')}
                         </Typography>
-                        <Chip
-                          size="small"
-                          color={
-                            selectedV1Case.closedAtUtc ? 'default' : 'success'
-                          }
-                          label={
-                            selectedV1Case.closedAtUtc ? 'Closed' : 'Open'
-                          }
-                        />
-                      </Box>
+                      </Stack>
                       <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
                         {!selectedV1Case.closedAtUtc && canCloseV1Case && (
                           <Button
@@ -2022,41 +2052,63 @@ export function FamilyScreenV2() {
                           )}
                       </Box>
                     </Box>
+                  </Box>
+                  {activeCaseArrangements.length > 0 && (
                     <Box
                       sx={{
                         display: 'flex',
-                        alignItems: 'center',
-                        gap: 1.25,
                         flexWrap: 'wrap',
+                        gap: 1,
                       }}
                     >
-                      <Typography
-                        className="ph-unmask"
-                        variant="body2"
-                        color="text.secondary"
-                      >
-                        Opened {format(selectedV1Case.openedAtUtc, 'M/d/yy')}
-                      </Typography>
-                      {selectedV1Case.closedAtUtc && (
-                        <Typography
-                          className="ph-unmask"
-                          variant="body2"
-                          color="text.secondary"
+                      {activeCaseArrangements.map((arrangement) => (
+                        <Card
+                          key={arrangement.id}
+                          variant="outlined"
+                          sx={{
+                            borderColor: 'divider',
+                            borderLeft: 3,
+                            borderLeftColor: arrangementAccentColor(
+                              arrangement.phase
+                            ),
+                            maxWidth: '100%',
+                            minWidth: 0,
+                            width: 'fit-content',
+                          }}
                         >
-                          Closed {format(selectedV1Case.closedAtUtc, 'M/d/yy')}
-                        </Typography>
-                      )}
-                      {selectedV1Case.closeReason && (
-                        <Typography
-                          className="ph-unmask"
-                          variant="body2"
-                          color="text.secondary"
-                        >
-                          {selectedV1Case.closeReason}
-                        </Typography>
-                      )}
+                          <Box sx={{ minWidth: 0, px: 1.25, py: 1 }}>
+                            <Typography
+                              className="ph-unmask"
+                              {...v2Typography.primaryValue}
+                              noWrap
+                            >
+                              {arrangement.arrangementType}
+                            </Typography>
+                            <Typography
+                              className="ph-unmask"
+                              color="text.secondary"
+                              {...v2Typography.browserSecondary}
+                              noWrap
+                            >
+                              {arrangement.statusLabel}
+                            </Typography>
+                            <Typography
+                              className="ph-unmask"
+                              color={
+                                arrangement.arrangedPersonLabel === 'Unassigned'
+                                  ? 'text.secondary'
+                                  : 'text.primary'
+                              }
+                              {...v2Typography.browserSecondary}
+                              noWrap
+                            >
+                              {arrangement.arrangedPersonLabel}
+                            </Typography>
+                          </Box>
+                        </Card>
+                      ))}
                     </Box>
-                  </Box>
+                  )}
                   {currentReferral && (
                     <Box
                       sx={{
@@ -2147,7 +2199,7 @@ export function FamilyScreenV2() {
                       textTransform: 'uppercase',
                     }}
                   >
-                    Current Case
+                    Case
                   </Typography>
                   <Typography className="ph-unmask" variant="h3">
                     No current case
@@ -2552,7 +2604,6 @@ export function FamilyScreenV2() {
                   rows={familyMemberRows}
                   onAddAdult={openAddAdultDialog}
                   onAddChild={openAddChildDialog}
-                  onArrangementClick={openArrangementFromFamilyMember}
                   onRowClick={openFamilyMemberDrawer}
                   canAddAdult={canEditFamilyInfo}
                   canAddChild={canEditFamilyInfo}
