@@ -31,9 +31,7 @@ import { useAppNavigate } from '../../Hooks/useAppNavigate';
 import AccessLevels from './Tabs/AccessLevels/AccessLevels';
 import { Breadcrumbs } from '../../Generic/Breadcrumbs';
 import { useSearchParams } from 'react-router-dom';
-import {
-  PolicyConfiguration,
-} from './Tabs/PolicyConfiguration';
+import { PolicyConfiguration } from './Tabs/PolicyConfiguration';
 import {
   ApiException,
   EffectiveLocationPolicy,
@@ -211,7 +209,7 @@ export function LocationEdit() {
 
   if (!canAccessSettings || !location) {
     return (
-      <Box className="ph-unmask" mt={10} textAlign="center">
+      <Box className="ph-unmask" sx={{ mt: 10, textAlign: 'center' }}>
         <Typography>
           Oops! You can't edit this Location. It may be restricted or
           unavailable.
@@ -235,7 +233,8 @@ export function LocationEdit() {
     caseCloseReasons: configuration?.caseCloseReasons || [],
     referralCloseReasons: configuration?.referralCloseReasons || [],
   };
-  const locationRoles = configuration?.roles?.map((role) => role.roleName) ?? [];
+  const locationRoles =
+    configuration?.roles?.map((role) => role.roleName) ?? [];
 
   return (
     <Stack
@@ -266,7 +265,14 @@ export function LocationEdit() {
         />
       </Box>
 
-      <Box display="flex" flex={1} minHeight={0} sx={{ overflow: 'auto' }}>
+      <Box
+        sx={{
+          display: 'flex',
+          flex: 1,
+          minHeight: 0,
+          overflow: 'auto',
+        }}
+      >
         <Box
           sx={{
             width: isMobile && isSidebarCollapsed ? 40 : 240,
@@ -303,7 +309,7 @@ export function LocationEdit() {
           )}
         </Box>
 
-        <Box flex={1} paddingLeft={4} paddingTop={2} sx={{ overflow: 'auto' }}>
+        <Box sx={{ flex: 1, paddingLeft: 4, paddingTop: 2, overflow: 'auto' }}>
           {isPolicyTabActive && policySaveErrors.length > 0 && (
             <Alert severity="error" sx={{ mb: 2 }}>
               <Stack spacing={0.5}>
@@ -332,60 +338,70 @@ export function LocationEdit() {
             </Box>
           )}
 
-          {showPolicySelfService === true && policyDraft && activeTab === 'actionDefinitions' && (
-            <Box key="actionDefinitions">
-              <PolicyConfiguration
-                policy={policyDraft}
-                locationRoles={locationRoles}
-                onPolicyChange={savePolicy}
-                section="actionDefinitions"
-              />
-            </Box>
-          )}
+          {showPolicySelfService === true &&
+            policyDraft &&
+            activeTab === 'actionDefinitions' && (
+              <Box key="actionDefinitions">
+                <PolicyConfiguration
+                  policy={policyDraft}
+                  locationRoles={locationRoles}
+                  onPolicyChange={savePolicy}
+                  section="actionDefinitions"
+                />
+              </Box>
+            )}
 
-          {showPolicySelfService === true && policyDraft && activeTab === 'customFamilyFields' && (
-            <Box key="customFamilyFields">
-              <PolicyConfiguration
-                policy={policyDraft}
-                locationRoles={locationRoles}
-                onPolicyChange={savePolicy}
-                section="customFamilyFields"
-              />
-            </Box>
-          )}
+          {showPolicySelfService === true &&
+            policyDraft &&
+            activeTab === 'customFamilyFields' && (
+              <Box key="customFamilyFields">
+                <PolicyConfiguration
+                  policy={policyDraft}
+                  locationRoles={locationRoles}
+                  onPolicyChange={savePolicy}
+                  section="customFamilyFields"
+                />
+              </Box>
+            )}
 
-          {showPolicySelfService === true && policyDraft && activeTab === 'casePolicy' && (
-            <Box key="casePolicy">
-              <PolicyConfiguration
-                policy={policyDraft}
-                locationRoles={locationRoles}
-                onPolicyChange={savePolicy}
-                section="casePolicy"
-              />
-            </Box>
-          )}
+          {showPolicySelfService === true &&
+            policyDraft &&
+            activeTab === 'casePolicy' && (
+              <Box key="casePolicy">
+                <PolicyConfiguration
+                  policy={policyDraft}
+                  locationRoles={locationRoles}
+                  onPolicyChange={savePolicy}
+                  section="casePolicy"
+                />
+              </Box>
+            )}
 
-          {showPolicySelfService === true && policyDraft && activeTab === 'v1ReferralPolicy' && (
-            <Box key="v1ReferralPolicy">
-              <PolicyConfiguration
-                policy={policyDraft}
-                locationRoles={locationRoles}
-                onPolicyChange={savePolicy}
-                section="v1ReferralPolicy"
-              />
-            </Box>
-          )}
+          {showPolicySelfService === true &&
+            policyDraft &&
+            activeTab === 'v1ReferralPolicy' && (
+              <Box key="v1ReferralPolicy">
+                <PolicyConfiguration
+                  policy={policyDraft}
+                  locationRoles={locationRoles}
+                  onPolicyChange={savePolicy}
+                  section="v1ReferralPolicy"
+                />
+              </Box>
+            )}
 
-          {showPolicySelfService === true && policyDraft && activeTab === 'volunteerPolicy' && (
-            <Box key="volunteerPolicy">
-              <PolicyConfiguration
-                policy={policyDraft}
-                locationRoles={locationRoles}
-                onPolicyChange={savePolicy}
-                section="volunteerPolicy"
-              />
-            </Box>
-          )}
+          {showPolicySelfService === true &&
+            policyDraft &&
+            activeTab === 'volunteerPolicy' && (
+              <Box key="volunteerPolicy">
+                <PolicyConfiguration
+                  policy={policyDraft}
+                  locationRoles={locationRoles}
+                  onPolicyChange={savePolicy}
+                  section="volunteerPolicy"
+                />
+              </Box>
+            )}
         </Box>
       </Box>
     </Stack>
@@ -394,7 +410,11 @@ export function LocationEdit() {
 
 function getPolicySaveErrors(error: unknown) {
   if (!(error instanceof ApiException)) {
-    return [error instanceof Error ? error.message : 'Policy changes could not be saved.'];
+    return [
+      error instanceof Error
+        ? error.message
+        : 'Policy changes could not be saved.',
+    ];
   }
 
   if (error.status === 403) {
@@ -404,14 +424,18 @@ function getPolicySaveErrors(error: unknown) {
   const parsedErrors = parseValidationErrors(error.response);
   if (parsedErrors.length > 0) return parsedErrors;
 
-  return [error.response || error.message || 'Policy changes could not be saved.'];
+  return [
+    error.response || error.message || 'Policy changes could not be saved.',
+  ];
 }
 
 function parseValidationErrors(response: string) {
   try {
     const parsed = JSON.parse(response) as { errors?: unknown };
     return Array.isArray(parsed.errors)
-      ? parsed.errors.filter((error): error is string => typeof error === 'string')
+      ? parsed.errors.filter(
+          (error): error is string => typeof error === 'string'
+        )
       : [];
   } catch {
     return [];

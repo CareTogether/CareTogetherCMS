@@ -1,5 +1,5 @@
-import Grid from '@mui/material/GridLegacy';
 import {
+  Box,
   Button,
   FormControl,
   InputBase,
@@ -11,7 +11,6 @@ import {
   Table,
   TableBody,
   TableCell,
-  TableContainer,
   TableHead,
   TableRow,
   ToggleButton,
@@ -36,7 +35,10 @@ import { policyData } from '../Model/ConfigurationModel';
 import { SearchBar } from '../Shell/SearchBar';
 import { filterFamiliesByText } from '../Families/FamilyUtils';
 import { usePersonAndFamilyLookup } from '../Model/DirectoryModel';
-import { useAllPartneringFamiliesPermissions } from '../Model/SessionModel';
+import {
+  useAllPartneringFamiliesPermissions,
+  useGlobalPermissions,
+} from '../Model/SessionModel';
 import { useScreenTitle } from '../Shell/ShellScreenTitle';
 import { useLoadable } from '../Hooks/useLoadable';
 import { ProgressBackdrop } from '../Shell/ProgressBackdrop';
@@ -48,7 +50,9 @@ import { forceCheck } from '../Utilities/reactLazyLoadInterop';
 import { PartneringFamilyTableItem } from './PartneringFamilies/PartneringFamilyTableItem';
 import { arrangementStatusSummary } from './PartneringFamilies/arrangementStatusSummary';
 import { ArrangementsFilter } from './PartneringFamilies/types';
-import { stickyHeaderTableSx } from '../Utilities/stickyHeaderTableSx';
+import { containedStickyHeaderTableSx } from '../Utilities/stickyHeaderTableSx';
+import { WideTableContainer } from '../Utilities/WideTableContainer';
+import { wideTablePageSx } from '../Utilities/wideTablePageSx';
 import { getFamilyCounty } from '../Utilities/getFamilyCounty';
 import { CountyFilter } from '../V1Referrals/CountyFilter';
 import { visibleReferralsQuery } from '../Model/Data';
@@ -69,6 +73,24 @@ import {
 import { AssignmentRoleFilters } from '../FunctionAssignments/AssignmentRoleFilters';
 
 const PARTNERING_FAMILIES_SORT_STORAGE_KEY = 'partnering-families-sortMode';
+const ARRANGEMENTS_FILTER_STORAGE_KEY =
+  'partnering-families-arrangementsFilter';
+
+function normalizeArrangementsFilter(
+  value: ArrangementsFilter | null | undefined
+): ArrangementsFilter {
+  switch (value) {
+    case 'All':
+    case 'Intake':
+    case 'Active':
+    case 'Setup':
+    case 'Active + Setup':
+      return value;
+
+    default:
+      return 'All';
+  }
+}
 
 function isSetupOrActiveArrangementPhase(phase: ArrangementPhase | undefined) {
   return (
@@ -81,6 +103,7 @@ function isSetupOrActiveArrangementPhase(phase: ArrangementPhase | undefined) {
 function PartneringFamilies() {
   const appNavigate = useAppNavigate();
   const personAndFamilyLookup = usePersonAndFamilyLookup();
+  const globalPermissions = useGlobalPermissions();
   const {
     SidePanel: CustomFieldFiltersSidePanel,
     openSidePanel: openCustomFieldFiltersSidePanel,
@@ -202,11 +225,23 @@ function PartneringFamilies() {
     }
   };
 
-  const [arrangementsFilter, setArrangementsFilter] =
-    useLocalStorage<ArrangementsFilter>(
-      'partnering-families-arrangementsFilter',
+  const [storedArrangementsFilter, setStoredArrangementsFilter] =
+    useLocalStorage<ArrangementsFilter | null>(
+      ARRANGEMENTS_FILTER_STORAGE_KEY,
       'All'
     );
+  const arrangementsFilter = normalizeArrangementsFilter(
+    storedArrangementsFilter
+  );
+
+  function setArrangementsFilter(value: ArrangementsFilter | null) {
+    if (value === null) {
+      return;
+    }
+
+    setStoredArrangementsFilter(value);
+  }
+
   const sortedPartneringFamilies = React.useMemo(
     () =>
       sortPartneringFamilies(
@@ -319,9 +354,16 @@ function PartneringFamilies() {
   const canCreateFamily =
     permissions(Permission.EditFamilyInfo) &&
     permissions(Permission.CreateV1Case);
+  const tableColumnCount =
+    3 +
+    assignmentRoles.length +
+    referralCustomFields.length +
+    (expandedView ? 0 : (arrangementTypes?.length ?? 0));
+  const tableMinWidth = Math.max(700, tableColumnCount * 160);
+  const hasFeaturebaseChat = globalPermissions(Permission.AccessSupportScreen);
 
-  // const showAddFamilyButton = !referralsEnabled && canCreateFamily;
-  const showAddFamilyButton = true;
+  const referralsEnabled = useFeatureFlagEnabled('referrals');
+  const showAddFamilyButton = !referralsEnabled && canCreateFamily;
 
   useScreenTitle('Clients');
 
@@ -330,8 +372,8 @@ function PartneringFamilies() {
       <p>Loading families...</p>
     </ProgressBackdrop>
   ) : (
-    <Grid container>
-      <Grid item xs={12}>
+    <Box sx={wideTablePageSx(hasFeaturebaseChat)}>
+      <Box sx={{ flex: '0 0 auto' }}>
         <Stack
           direction="row"
           sx={{
@@ -479,7 +521,7 @@ function PartneringFamilies() {
           </ToggleButtonGroup>
         </Stack>
 
-        <Stack my={2} direction="row" justifyContent="flex-end">
+        <Stack direction="row" sx={{ my: 2, justifyContent: 'flex-end' }}>
           <FormControl size="small" sx={{ minWidth: 140 }}>
             <InputLabel id="partnering-families-sort-label">Sort by</InputLabel>
             <Select
@@ -492,6 +534,8 @@ function PartneringFamilies() {
             >
               <MenuItem value="lastNameAsc">Last name (ascending)</MenuItem>
               <MenuItem value="lastNameDesc">Last name (descending)</MenuItem>
+              <MenuItem value="firstNameAsc">First name (ascending)</MenuItem>
+              <MenuItem value="firstNameDesc">First name (descending)</MenuItem>
               <MenuItem value="dateOpenedDesc">
                 Date opened (descending)
               </MenuItem>
@@ -509,17 +553,18 @@ function PartneringFamilies() {
             onClose={closeCustomFieldFiltersSidePanel}
           />
         </CustomFieldFiltersSidePanel>
-      </Grid>
-      <Grid item xs={12} className="cases-table">
-        <TableContainer
-          sx={{
-            borderBottom: '1px solid rgba(224, 224, 224, 1)',
-            overflow: 'visible',
-          }}
-        >
+      </Box>
+      <Box
+        className="cases-table"
+        sx={{ display: 'flex', flex: 1, flexDirection: 'column', minHeight: 0 }}
+      >
+        <WideTableContainer>
           <Table
             stickyHeader
-            sx={{ ...stickyHeaderTableSx, minWidth: '700px' }}
+            sx={{
+              ...containedStickyHeaderTableSx,
+              minWidth: tableMinWidth,
+            }}
             size="small"
           >
             <TableHead>
@@ -581,7 +626,7 @@ function PartneringFamilies() {
               ))}
             </TableBody>
           </Table>
-        </TableContainer>
+        </WideTableContainer>
 
         {createPartneringFamilyDialogOpen && (
           <CreatePartneringFamilyDrawer
@@ -596,8 +641,8 @@ function PartneringFamilies() {
             }}
           />
         )}
-      </Grid>
-    </Grid>
+      </Box>
+    </Box>
   );
 }
 

@@ -43,6 +43,11 @@ export function ArrangementCardTitle({
   return (
     <div className="ph-unmask">
       <span>{arrangement.arrangementType}</span>
+      {arrangement.arrangementPolicyVersion && (
+        <span style={{ marginLeft: 8, color: '#666', fontSize: 12 }}>
+          {arrangement.arrangementPolicyVersion}
+        </span>
+      )}
       {summaryOnly && (
         <span style={{ marginLeft: 40, float: 'right' }}>
           {arrangement.phase === ArrangementPhase.Cancelled

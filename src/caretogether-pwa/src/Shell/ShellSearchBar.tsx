@@ -120,18 +120,21 @@ export function ShellSearchBar({
         return familyNameString(family) || family.family!.id!;
       }}
       onChange={selectFamily}
-      PaperComponent={(params) => (
-        <Paper
-          {...params}
-          sx={{
+      slots={{ paper: Paper }}
+      slotProps={{
+        paper: {
+          sx: {
             backgroundColor: theme.palette.primary.light,
             color: theme.palette.primary.contrastText,
-          }}
-        />
-      )}
+          },
+        },
+      }}
       renderInput={(params) => (
         <TextField
-          {...params}
+          id={params.id}
+          disabled={params.disabled}
+          fullWidth={params.fullWidth}
+          size={params.size}
           variant="outlined"
           placeholder="Search families and people"
           sx={{
@@ -146,14 +149,20 @@ export function ShellSearchBar({
                 borderColor: '#fff8',
               },
           }}
-          InputProps={{
-            ...params.InputProps,
-            type: 'search',
-            endAdornment: (
-              <InputAdornment position="end">
-                <SearchIcon />
-              </InputAdornment>
-            ),
+          slotProps={{
+            ...params.slotProps,
+            input: {
+              ...params.slotProps.input,
+              endAdornment: (
+                <InputAdornment position="end">
+                  <SearchIcon />
+                </InputAdornment>
+              ),
+            },
+            htmlInput: {
+              ...params.slotProps.htmlInput,
+              type: 'search',
+            },
           }}
         />
       )}

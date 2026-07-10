@@ -46,8 +46,9 @@ namespace CareTogether.Engines.PolicyEvaluation
                 arrangement => arrangement.Key,
                 arrangement =>
                 {
-                    ArrangementPolicy arrangementPolicy = v1CasePolicy.ArrangementPolicies.Single(
-                        p => p.ArrangementType == arrangement.Value.ArrangementType
+                    var arrangementPolicy = GetArrangementPolicyForEvaluation(
+                        v1CasePolicy,
+                        arrangement.Value
                     );
 
                     return CalculateArrangementStatus(
@@ -63,6 +64,40 @@ namespace CareTogether.Engines.PolicyEvaluation
                 missingIntakeRequirements,
                 missingCustomFields,
                 individualArrangements
+            );
+        }
+
+        internal static ArrangementPolicy GetArrangementPolicyForEvaluation(
+            V1CasePolicy v1CasePolicy,
+            ArrangementEntry arrangement
+        )
+        {
+            var arrangementPolicy = v1CasePolicy.ArrangementPolicies.Single(p =>
+                p.ArrangementType == arrangement.ArrangementType
+            );
+
+            if (arrangement.ArrangementPolicyVersion == null)
+                return arrangementPolicy;
+
+            var policyVersion =
+                arrangementPolicy.PolicyVersions?.SingleOrDefault(version =>
+                    version.Version == arrangement.ArrangementPolicyVersion
+                )
+                ?? throw new InvalidOperationException(
+                    $"The arrangement policy version '{arrangement.ArrangementPolicyVersion}' does not exist for arrangement type '{arrangement.ArrangementType}'."
+                );
+
+            return new ArrangementPolicy(
+                arrangementPolicy.ArrangementType,
+                policyVersion.ChildInvolvement,
+                policyVersion.ArrangementFunctions,
+                policyVersion.RequiredSetupActionNames,
+                policyVersion.RequiredMonitoringActions,
+                policyVersion.RequiredCloseoutActionNames,
+                policyVersion.RequiredSetupActions,
+                policyVersion.RequiredMonitoringActionsNew,
+                policyVersion.RequiredCloseoutActions,
+                policyVersion.SupersededAtUtc
             );
         }
 

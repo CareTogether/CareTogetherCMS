@@ -1,12 +1,12 @@
 import {
-  Timeline,
-  TimelineItem,
-  TimelineOppositeContent,
-  TimelineSeparator,
-  TimelineDot,
-  TimelineConnector,
-  TimelineContent,
-} from '@mui/lab';
+  AppTimeline,
+  AppTimelineConnector,
+  AppTimelineContent,
+  AppTimelineDot,
+  AppTimelineItem,
+  AppTimelineOppositeContent,
+  AppTimelineSeparator,
+} from '../Generic/AppTimeline';
 import { format } from 'date-fns';
 import {
   Activity,
@@ -39,7 +39,7 @@ import { buildGroupedV1ReferralTimelineEntries } from '../V1Referrals/referralTi
 type ActivityTimelineProps = {
   family: CombinedFamilyInfo;
   referrals: V1Referral[];
-  printContentRef: React.RefObject<HTMLDivElement>;
+  printContentRef: React.RefObject<HTMLDivElement | null>;
 };
 
 type ActivitySorting = 'activity' | 'created' | 'edited' | 'approved';
@@ -92,6 +92,20 @@ const composeNoteType = (activity: Activity): string | null => {
   }
 
   return null;
+};
+
+const shouldShowTimelineTime = (item: MergedTimelineItem) => {
+  if (item.kind !== 'family-activity') return false;
+
+  return item.activity instanceof ChildLocationChanged;
+};
+
+const formatTimelineTimestamp = (item: MergedTimelineItem) => {
+  if (shouldShowTimelineTime(item)) {
+    return format(item.timestamp, 'M/d/yy h:mm a');
+  }
+
+  return format(item.timestamp, 'M/d/yy');
 };
 
 function embedNotesInActivities(notes: Note[], activities: Activity[]) {
@@ -414,10 +428,10 @@ export function ActivityTimeline({
             return (
               <Box
                 key={activity.activityTimestampUtc?.toString()}
-                p={2}
-                border={note.isPinned ? 2 : 1}
-                borderRadius={2}
                 sx={{
+                  p: 2,
+                  border: note.isPinned ? 2 : 1,
+                  borderRadius: 2,
                   breakInside: 'avoid',
                   borderColor: note.isPinned ? 'primary.main' : undefined,
                   backgroundColor: note.isPinned
@@ -510,7 +524,7 @@ export function ActivityTimeline({
         </Stack>
       </div>
 
-      <Timeline position="right" sx={{ padding: 0 }}>
+      <AppTimeline position="right" sx={{ padding: 0 }}>
         <Box sx={{ display: 'flex', justifyContent: 'flex-start', mb: 1 }}>
           <FormControl size="small" sx={{ minWidth: 160 }}>
             <InputLabel>Sort by</InputLabel>
@@ -539,10 +553,10 @@ export function ActivityTimeline({
                 Boolean(nextItem.note?.isPinned);
 
           return (
-            <TimelineItem key={`${item.kind}:${i}`}>
-              <TimelineOppositeContent sx={{ display: 'none' }} />
-              <TimelineSeparator>
-                <TimelineDot
+            <AppTimelineItem key={`${item.kind}:${i}`}>
+              <AppTimelineOppositeContent sx={{ display: 'none' }} />
+              <AppTimelineSeparator>
+                <AppTimelineDot
                   sx={{
                     width: 36,
                     height: 36,
@@ -562,12 +576,12 @@ export function ActivityTimeline({
                   ) : (
                     <EditIcon fontSize="small" />
                   )}
-                </TimelineDot>
+                </AppTimelineDot>
                 {!hideBottomConnector && i < mergedTimelineItems.length - 1 && (
-                  <TimelineConnector />
+                  <AppTimelineConnector />
                 )}
-              </TimelineSeparator>
-              <TimelineContent
+              </AppTimelineSeparator>
+              <AppTimelineContent
                 style={{
                   width: 200,
                   wordWrap: 'break-word',
@@ -576,7 +590,7 @@ export function ActivityTimeline({
               >
                 <Box sx={{ color: 'text.disabled', margin: 0, padding: 0 }}>
                   <span className="ph-unmask" style={{ marginRight: 16 }}>
-                    {format(item.timestamp, 'M/d/yy h:mm a')}
+                    {formatTimelineTimestamp(item)}
                   </span>
                   {item.userId ? (
                     <PersonName person={userLookup(item.userId)} />
@@ -650,13 +664,13 @@ export function ActivityTimeline({
                     </Box>
                   </>
                 )}
-              </TimelineContent>
-            </TimelineItem>
+              </AppTimelineContent>
+            </AppTimelineItem>
           );
         })}
 
         {noteAccessLevelDialog}
-      </Timeline>
+      </AppTimeline>
     </>
   );
 }
