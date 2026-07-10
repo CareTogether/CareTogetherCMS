@@ -14,6 +14,7 @@ import {
   formatApprovalLedgerDate,
   subjectKey,
 } from './approvalLedgerDataGridViewModel';
+import { v2DataGridStyles } from './v2DataGridStyles';
 import { v2Typography } from './v2Typography';
 
 type ApprovalsDataGridV2Props = {
@@ -229,61 +230,35 @@ export function ApprovalsDataGridV2({
   return (
     <Box
       ref={gridContainerRef}
-      sx={{
-        width: '100%',
-        border: 1,
-        borderColor: 'divider',
-        borderRadius: 1,
-        bgcolor: 'background.paper',
-        overflow: 'hidden',
-        '& .MuiDataGrid-row': {
-          cursor: 'pointer',
-          minHeight: 56,
-          transition: theme.transitions.create('background-color', {
-            duration: theme.transitions.duration.shortest,
-          }),
-          '&:hover': {
-            backgroundColor: theme.palette.action.hover,
+      sx={[
+        v2DataGridStyles(theme),
+        {
+          '& .MuiDataGrid-cell': {
+            pointerEvents: 'none',
           },
-          '&:hover .MuiSvgIcon-root': {
-            opacity: 1,
-          },
-        },
-        '& .MuiDataGrid-cell': {
-          alignItems: 'center',
-          cursor: 'inherit',
-          display: 'flex',
-          pointerEvents: 'none',
-        },
-        '& .MuiDataGrid-cell:hover, & .MuiDataGrid-cell.Mui-selected, & .MuiDataGrid-cell--editing':
-          {
-            backgroundColor: 'transparent',
-          },
-        '& .MuiDataGrid-root .MuiDataGrid-cell:focus, & .MuiDataGrid-root .MuiDataGrid-cell:focus-visible, & .MuiDataGrid-root .MuiDataGrid-cell:focus-within, & .MuiDataGrid-cell.Mui-selected':
-          {
+          '& .MuiDataGrid-cell:hover, & .MuiDataGrid-cell.Mui-selected, & .MuiDataGrid-cell--editing':
+            {
+              backgroundColor: 'transparent',
+            },
+          '& .MuiDataGrid-root .MuiDataGrid-cell:focus, & .MuiDataGrid-root .MuiDataGrid-cell:focus-visible, & .MuiDataGrid-root .MuiDataGrid-cell:focus-within, & .MuiDataGrid-cell.Mui-selected':
+            {
+              backgroundColor: 'transparent',
+              boxShadow: 'none',
+              outline: 'none',
+            },
+          '& .MuiDataGrid-columnHeader:focus, & .MuiDataGrid-columnHeader:focus-within':
+            {
+              backgroundColor: 'transparent',
+              boxShadow: 'none',
+              outline: 'none',
+            },
+          '& .MuiDataGrid-columnHeader:focus-visible': {
             backgroundColor: 'transparent',
             boxShadow: 'none',
             outline: 'none',
           },
-        '& .MuiDataGrid-root': {
-          border: 0,
         },
-        '& .MuiDataGrid-columnHeaders': {
-          backgroundColor: theme.palette.action.hover,
-          borderBottomColor: theme.palette.divider,
-        },
-        '& .MuiDataGrid-columnHeader:focus, & .MuiDataGrid-columnHeader:focus-within':
-          {
-            backgroundColor: 'transparent',
-            boxShadow: 'none',
-            outline: 'none',
-          },
-        '& .MuiDataGrid-columnHeader:focus-visible': {
-          backgroundColor: 'transparent',
-          boxShadow: 'none',
-          outline: 'none',
-        },
-      }}
+      ]}
     >
       <DataGrid
         autoHeight
