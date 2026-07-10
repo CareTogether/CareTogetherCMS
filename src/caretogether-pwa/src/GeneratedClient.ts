@@ -325,10 +325,10 @@ export class ConfigurationClient {
     putEffectiveLocationPolicy(organizationId: string, locationId: string, policy: EffectiveLocationPolicy): Promise<EffectiveLocationPolicy> {
         let url_ = this.baseUrl + "/api/{organizationId}/{locationId}/Configuration/policy";
         if (organizationId === undefined || organizationId === null)
-            throw new Error("The parameter 'organizationId' must be defined.");
+            throw new globalThis.Error("The parameter 'organizationId' must be defined.");
         url_ = url_.replace("{organizationId}", encodeURIComponent("" + organizationId));
         if (locationId === undefined || locationId === null)
-            throw new Error("The parameter 'locationId' must be defined.");
+            throw new globalThis.Error("The parameter 'locationId' must be defined.");
         url_ = url_.replace("{locationId}", encodeURIComponent("" + locationId));
         url_ = url_.replace(/[?&]$/, "");
 

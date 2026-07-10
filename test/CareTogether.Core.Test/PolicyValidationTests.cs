@@ -76,8 +76,8 @@ namespace CareTogether.Core.Test
             {
                 CustomFamilyFields =
                 [
-                    new CustomField("Church", CustomFieldType.String, null, null),
-                    new CustomField("church", CustomFieldType.String, null, null),
+                    new CustomField("Church", CustomFieldType.String, null, null, null),
+                    new CustomField("church", CustomFieldType.String, null, null, null),
                 ],
             };
 
