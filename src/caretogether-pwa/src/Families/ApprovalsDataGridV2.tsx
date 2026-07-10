@@ -259,7 +259,7 @@ export function ApprovalsDataGridV2({
           {
             backgroundColor: 'transparent',
           },
-        '& .MuiDataGrid-cell:focus, & .MuiDataGrid-cell:focus-visible, & .MuiDataGrid-cell:focus-within, & .MuiDataGrid-cell.Mui-selected':
+        '& .MuiDataGrid-root .MuiDataGrid-cell:focus, & .MuiDataGrid-root .MuiDataGrid-cell:focus-visible, & .MuiDataGrid-root .MuiDataGrid-cell:focus-within, & .MuiDataGrid-cell.Mui-selected':
           {
             backgroundColor: 'transparent',
             boxShadow: 'none',
