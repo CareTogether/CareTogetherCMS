@@ -62,7 +62,7 @@ import {
   Phone as PhoneIcon,
   Print as PrintIcon,
 } from '@mui/icons-material';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { type KeyboardEvent, useEffect, useMemo, useRef, useState } from 'react';
 import { AddAdultDialog } from './AddAdultDialog';
 import { AddChildDialog } from './AddChildDialog';
 import { AddEditNoteDialog } from '../Notes/AddEditNoteDialog';
@@ -96,6 +96,7 @@ import {
   useCommunityLookup,
   useFamilyLookup,
   useNoteAuthorLookup,
+  usePersonLookup,
   useUserLookup,
   useDirectoryModel,
 } from '../Model/DirectoryModel';
@@ -115,6 +116,12 @@ import { AssignmentsSection } from '../Families/AssignmentsSectionV2';
 import { useBackdrop } from '../Hooks/useBackdrop';
 import { useSyncV1CaseIdInURL } from '../Hooks/useSyncV1CaseIdInURL';
 import { ArrangementsSection } from '../V1Cases/Arrangements/ArrangementsSection/ArrangementsSectionV2';
+import { getFilteredArrangements } from '../V1Cases/Arrangements/ArrangementsSection/getFilteredArrangements';
+import { ArrangementDetailsDrawerV2 } from '../V1Cases/Arrangements/ArrangementDetailsDrawerV2';
+import {
+  ArrangementRowV2,
+  buildArrangementRowsV2,
+} from '../V1Cases/Arrangements/arrangementViewModel';
 import { useFeatureFlagEnabled } from 'posthog-js/react';
 import { TestFamilyBadge } from './TestFamilyBadge';
 import { visibleReferralsQuery } from '../Model/Data';
@@ -124,7 +131,7 @@ import { useV1CasesModel } from '../Model/V1CasesModel';
 import { formatStatusWithDate } from '../V1Referrals/formatStatusWithDate';
 import { policyData } from '../Model/ConfigurationModel';
 import { FAMILY_MEMBER_PRINT_INFORMATION_FEATURE_FLAG } from '../featureFlags';
-import { PersonName } from './PersonName';
+import { PersonName, personNameString } from './PersonName';
 import { buildGroupedV1ReferralTimelineEntries } from '../V1Referrals/referralTimelineHelpers';
 import { useGlobalSnackBar } from '../Hooks/useGlobalSnackBar';
 import { ClampTypography } from '../Generic/ClampTypography';
@@ -197,10 +204,6 @@ function isActiveCaseArrangement(arrangement: Arrangement) {
     arrangement.phase === ArrangementPhase.ReadyToStart ||
     arrangement.phase === ArrangementPhase.Started
   );
-}
-
-function familyPersonName(person?: { firstName?: string; lastName?: string }) {
-  return [person?.firstName, person?.lastName].filter(Boolean).join(' ');
 }
 
 function arrangementAccentColor(phase?: ArrangementPhase) {
@@ -392,6 +395,7 @@ export function FamilyScreenV2() {
   const appNavigate = useAppNavigate();
 
   const familyLookup = useFamilyLookup();
+  const personLookup = usePersonLookup();
   const noteAuthorLookup = useNoteAuthorLookup();
   const userLookup = useUserLookup();
   const family = familyLookup(familyId);
@@ -480,6 +484,9 @@ export function FamilyScreenV2() {
     () => allV1Cases.find((v1Case) => v1Case.id === selectedV1CaseId),
     [allV1Cases, selectedV1CaseId]
   );
+  const [selectedArrangementRowId, setSelectedArrangementRowId] = useState<
+    string | null
+  >(null);
 
   const hasOpenV1Case = openV1Cases.length > 0;
   const latestClosedV1Case = closedV1Cases[0];
@@ -524,28 +531,66 @@ export function FamilyScreenV2() {
     );
   }, [caseReferralTable.caseRows, familyReferrals, selectedV1Case?.id]);
 
-  const activeCaseArrangements = useMemo<ActiveCaseArrangementSummaryV2[]>(() => {
-    return (selectedV1Case?.arrangements ?? [])
-      .filter((arrangement) => arrangement.id && isActiveCaseArrangement(arrangement))
-      .map((arrangement) => {
-        const arrangedPerson =
-          family?.family?.adults?.find(
-            (adult) => adult.item1?.id === arrangement.partneringFamilyPersonId
-          )?.item1 ??
-          family?.family?.children?.find(
-            (child) => child.id === arrangement.partneringFamilyPersonId
-          );
-        const arrangedPersonLabel = familyPersonName(arrangedPerson);
+  const selectedCaseArrangementRows = useMemo<ArrangementRowV2[]>(() => {
+    if (!family || !selectedV1Case) return [];
 
+    return buildArrangementRowsV2({
+      arrangements: getFilteredArrangements(selectedV1Case, []),
+      arrangementPolicies: policy.referralPolicy?.arrangementPolicies,
+      family,
+      v1Case: selectedV1Case,
+      personLabel: (personFamilyId, personId) =>
+        personNameString(personLookup(personFamilyId, personId)),
+      familyLabel: (arrangementFamilyId) => {
+        const matchedFamily = familyLookup(arrangementFamilyId);
+        const primaryContactPerson = matchedFamily?.family?.adults?.find(
+          (adult) =>
+            adult.item1?.id ===
+            matchedFamily.family?.primaryFamilyContactPersonId
+        )?.item1;
+
+        return primaryContactPerson
+          ? `${personNameString(primaryContactPerson)} Family`
+          : 'Family';
+      },
+    });
+  }, [family, familyLookup, personLookup, policy, selectedV1Case]);
+
+  const selectedArrangementRow = useMemo(
+    () =>
+      selectedCaseArrangementRows.find(
+        (row) => row.id === selectedArrangementRowId
+      ) ?? null,
+    [selectedCaseArrangementRows, selectedArrangementRowId]
+  );
+
+  function openArrangementWorkspace(row: ArrangementRowV2) {
+    setSelectedArrangementRowId(row.id);
+  }
+
+  function openArrangementWorkspaceFromSummaryCard(
+    event: KeyboardEvent,
+    rowId: string
+  ) {
+    if (event.key !== 'Enter' && event.key !== ' ') return;
+
+    event.preventDefault();
+    setSelectedArrangementRowId(rowId);
+  }
+
+  const activeCaseArrangements = useMemo<ActiveCaseArrangementSummaryV2[]>(() => {
+    return selectedCaseArrangementRows
+      .filter((row) => row.id && isActiveCaseArrangement(row.source))
+      .map((row) => {
         return {
-          id: arrangement.id!,
-          arrangementType: arrangement.arrangementType || 'Arrangement',
-          arrangedPersonLabel: arrangedPersonLabel || 'Unassigned',
-          phase: arrangement.phase,
-          statusLabel: activeArrangementStatusLabel(arrangement.phase),
+          id: row.id,
+          arrangementType: row.arrangementType,
+          arrangedPersonLabel: row.childOrPersonLabel || 'Unassigned',
+          phase: row.source.phase,
+          statusLabel: activeArrangementStatusLabel(row.source.phase),
         };
       });
-  }, [family?.family, selectedV1Case?.arrangements]);
+  }, [selectedCaseArrangementRows]);
 
   async function reopenCaseNow() {
     if (!selectedV1Case?.id) return;
@@ -1968,6 +2013,11 @@ export function FamilyScreenV2() {
           setSelectedRemovedRoleId(null);
         }}
       />
+      <ArrangementDetailsDrawerV2
+        row={selectedArrangementRow}
+        open={selectedArrangementRow !== null}
+        onClose={() => setSelectedArrangementRowId(null)}
+      />
       {isPartneringFamily && (
         <Box
           sx={{
@@ -2064,16 +2114,41 @@ export function FamilyScreenV2() {
                       {activeCaseArrangements.map((arrangement) => (
                         <Card
                           key={arrangement.id}
+                          role="button"
+                          tabIndex={0}
                           variant="outlined"
+                          onClick={() =>
+                            setSelectedArrangementRowId(arrangement.id)
+                          }
+                          onKeyDown={(event) =>
+                            openArrangementWorkspaceFromSummaryCard(
+                              event,
+                              arrangement.id
+                            )
+                          }
                           sx={{
                             borderColor: 'divider',
                             borderLeft: 3,
                             borderLeftColor: arrangementAccentColor(
                               arrangement.phase
                             ),
+                            cursor: 'pointer',
                             maxWidth: '100%',
                             minWidth: 0,
+                            transition: theme.transitions.create(
+                              ['box-shadow'],
+                              {
+                                duration: theme.transitions.duration.shortest,
+                              }
+                            ),
                             width: 'fit-content',
+                            '&:hover': {
+                              boxShadow: 2,
+                            },
+                            '&:focus-visible': {
+                              outline: `2px solid ${theme.palette.primary.main}`,
+                              outlineOffset: 2,
+                            },
                           }}
                         >
                           <Box sx={{ minWidth: 0, px: 1.25, py: 1 }}>
@@ -2590,10 +2665,11 @@ export function FamilyScreenV2() {
               !isVolunteerFamily &&
               selectedV1Case && (
                 <ArrangementsSection
+                  arrangementRows={selectedCaseArrangementRows}
                   v1Case={selectedV1Case}
-                  family={family}
                   permissions={permissions}
                   hideTitle
+                  onArrangementRowClick={openArrangementWorkspace}
                   scrollToArrangementId={arrangementIdToScrollTo}
                 />
               )}
