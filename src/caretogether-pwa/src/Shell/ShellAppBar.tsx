@@ -21,6 +21,7 @@ import {
 import { useRecoilValue } from 'recoil';
 import { ShellSearchBar } from './ShellSearchBar';
 import { ShellUserProfileMenu } from './ShellUserProfileMenu';
+import { SHELL_APP_BAR_HEIGHT } from './shellLayoutConstants';
 
 interface ShellAppBarProps {
   menuDrawerOpen: boolean;
@@ -48,6 +49,7 @@ export function ShellAppBar({
         zIndex: 1201,
         backgroundColor: theme.palette.primary.main,
         paddingLeft: isDesktop ? (menuDrawerOpen ? 0 : 0) : 0,
+        minHeight: SHELL_APP_BAR_HEIGHT,
       }}
     >
       <Toolbar
@@ -56,20 +58,28 @@ export function ShellAppBar({
           paddingLeft: isDesktop ? 0 : undefined,
           display: 'flex',
           justifyContent: 'center',
+          minHeight: SHELL_APP_BAR_HEIGHT,
         }}
       >
         {isDesktop && (
           <Box sx={{ display: 'flex', alignItems: 'center' }}>
             {menuDrawerOpen ? (
               <Box
-                sx={{ width: drawerWidth, flexShrink: 0, position: 'relative' }}
+                sx={{
+                  width: drawerWidth,
+                  flexShrink: 0,
+                  display: 'flex',
+                  alignItems: 'flex-start',
+                }}
               >
-                <ShellContextSwitcher />
+                <Box sx={{ flex: 1, minWidth: 0, overflow: 'hidden' }}>
+                  <ShellContextSwitcher contained />
+                </Box>
                 <IconButton
                   size={isDesktop ? 'medium' : 'large'}
                   color="inherit"
                   aria-label="close drawer"
-                  sx={{ float: 'right' }}
+                  sx={{ flexShrink: 0 }}
                   onClick={() => setMenuDrawerOpen(!menuDrawerOpen)}
                 >
                   <MenuOpen />

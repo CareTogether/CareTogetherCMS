@@ -1,8 +1,8 @@
+import Grid from '../../Generic/GridLegacyCompat';
 import {
   Box,
   Checkbox,
   Chip,
-  Grid,
   TableCell,
   TableRow,
   Typography,
@@ -43,9 +43,12 @@ function getRowGroupHeight(
   return 39 + (activeAdultsCount + activeChildrenCount) * 33;
 }
 
-function renderCustomFieldValue(value: unknown, validValues?: string[]): React.ReactNode {
-  if (value === null || typeof(value) === 'undefined') {
-    return "";
+function renderCustomFieldValue(
+  value: unknown,
+  validValues?: string[]
+): React.ReactNode {
+  if (value === null || typeof value === 'undefined') {
+    return '';
   }
   if (value === true) {
     return 'Yes';
@@ -54,9 +57,10 @@ function renderCustomFieldValue(value: unknown, validValues?: string[]): React.R
     return 'No';
   }
   if (Array.isArray(value)) {
-    const sortedValue = validValues && validValues.length > 0
-      ? sortByPolicyOrder(value.map(String), validValues)
-      : value;
+    const sortedValue =
+      validValues && validValues.length > 0
+        ? sortByPolicyOrder(value.map(String), validValues)
+        : value;
     return (
       <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: '.25rem' }}>
         {sortedValue.map((item) => (
@@ -304,7 +308,7 @@ function VolunteerApprovalTableRows(props: VolunteerApprovalTableItemProps) {
                         return prev;
                       }
                       return prev.concat(curr);
-                    }, [] as JSX.Element[])}
+                    }, [] as React.ReactElement[])}
                 </Grid>
               </Grid>
             </>
@@ -322,10 +326,14 @@ function VolunteerApprovalTableRows(props: VolunteerApprovalTableItemProps) {
             volunteerFamily.volunteerFamilyInfo?.completedCustomFields?.find(
               (value) => value?.customFieldName === customFieldName
             );
-          const familyCustomFieldValue = familyCustomField?.value ?? volunteerFamilyCustomField?.value;
+          const familyCustomFieldValue =
+            familyCustomField?.value ?? volunteerFamilyCustomField?.value;
           return (
             <TableCell key={customFieldName}>
-              {renderCustomFieldValue(familyCustomFieldValue, fieldPolicy?.validValues)}
+              {renderCustomFieldValue(
+                familyCustomFieldValue,
+                fieldPolicy?.validValues
+              )}
             </TableCell>
           );
         })}

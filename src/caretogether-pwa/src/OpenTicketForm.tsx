@@ -6,7 +6,7 @@ export function OpenTicketForm() {
       <Typography variant="h6" gutterBottom>
         Submit a ticket (faster turnaround)
       </Typography>
-      <Typography variant="body1" paragraph>
+      <Typography variant="body1" sx={{ mb: 2 }}>
         Need help with something specific? Sending us a ticket is usually the
         fastest way to get your issue addressed.
       </Typography>

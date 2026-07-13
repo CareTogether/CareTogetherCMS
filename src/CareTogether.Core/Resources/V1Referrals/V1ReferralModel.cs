@@ -66,6 +66,8 @@ namespace CareTogether.Resources.V1Referrals
             Guid,
             V1Referral
         >.Empty;
+        private ImmutableDictionary<Guid, ImmutableSortedSet<Guid>> referralIdsByFamilyId =
+            ImmutableDictionary<Guid, ImmutableSortedSet<Guid>>.Empty;
 
         public long LastKnownSequenceNumber { get; private set; } = -1;
 
@@ -102,7 +104,13 @@ namespace CareTogether.Resources.V1Referrals
                 OnCommit: () =>
                 {
                     LastKnownSequenceNumber++;
+                    referrals.TryGetValue(updatedReferral.ReferralId, out var existingReferral);
                     referrals = referrals.SetItem(updatedReferral.ReferralId, updatedReferral);
+                    referralIdsByFamilyId = UpdateFamilyReferralIndex(
+                        referralIdsByFamilyId,
+                        existingReferral,
+                        updatedReferral
+                    );
                 }
             );
         }
@@ -112,6 +120,13 @@ namespace CareTogether.Resources.V1Referrals
 
         public ImmutableList<V1Referral> FindReferrals(Func<V1Referral, bool> predicate) =>
             referrals.Values.Where(predicate).ToImmutableList();
+
+        public ImmutableList<V1Referral> GetFamilyReferrals(Guid familyId)
+        {
+            return referralIdsByFamilyId.TryGetValue(familyId, out var referralIds)
+                ? referralIds.Select(referralId => referrals[referralId]).ToImmutableList()
+                : ImmutableList<V1Referral>.Empty;
+        }
 
         private (V1Referral Referral, Activity? Activity) ExecuteCommand(
             V1ReferralCommand command,
@@ -421,6 +436,61 @@ namespace CareTogether.Resources.V1Referrals
                 throw new InvalidOperationException("Closed referrals cannot be edited.");
 
             return existingReferral;
+        }
+
+        private static ImmutableDictionary<
+            Guid,
+            ImmutableSortedSet<Guid>
+        > UpdateFamilyReferralIndex(
+            ImmutableDictionary<Guid, ImmutableSortedSet<Guid>> index,
+            V1Referral? previousReferral,
+            V1Referral nextReferral
+        )
+        {
+            var result = index;
+
+            if (previousReferral != null)
+            {
+                if (previousReferral.FamilyId != null)
+                    result = RemoveFamilyReferralId(
+                        result,
+                        previousReferral.FamilyId.Value,
+                        previousReferral.ReferralId
+                    );
+            }
+
+            return nextReferral.FamilyId == null
+                ? result
+                : AddFamilyReferralId(result, nextReferral.FamilyId.Value, nextReferral.ReferralId);
+        }
+
+        private static ImmutableDictionary<Guid, ImmutableSortedSet<Guid>> AddFamilyReferralId(
+            ImmutableDictionary<Guid, ImmutableSortedSet<Guid>> index,
+            Guid familyId,
+            Guid referralId
+        )
+        {
+            return index.SetItem(
+                familyId,
+                index.TryGetValue(familyId, out var existingReferralIds)
+                    ? existingReferralIds.Add(referralId)
+                    : ImmutableSortedSet.Create(referralId)
+            );
+        }
+
+        private static ImmutableDictionary<Guid, ImmutableSortedSet<Guid>> RemoveFamilyReferralId(
+            ImmutableDictionary<Guid, ImmutableSortedSet<Guid>> index,
+            Guid familyId,
+            Guid referralId
+        )
+        {
+            if (!index.TryGetValue(familyId, out var existingReferralIds))
+                return index;
+
+            var updatedReferralIds = existingReferralIds.Remove(referralId);
+            return updatedReferralIds.IsEmpty
+                ? index.Remove(familyId)
+                : index.SetItem(familyId, updatedReferralIds);
         }
 
         private void ReplayEvent(V1ReferralEvent domainEvent, long sequenceNumber)

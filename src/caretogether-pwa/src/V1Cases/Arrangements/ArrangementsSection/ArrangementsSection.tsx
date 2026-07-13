@@ -1,6 +1,7 @@
-import { Masonry } from '@mui/lab';
+import { AppMasonry } from '../../../Generic/AppMasonry';
 import { AddCircle as AddCircleIcon } from '@mui/icons-material';
-import { Grid, Typography, Button, useTheme } from '@mui/material';
+import Grid from '../../../Generic/GridLegacyCompat';
+import { Typography, Button, useTheme } from '@mui/material';
 import { Box, useMediaQuery } from '@mui/system';
 import {
   ArrangementPolicy,
@@ -16,6 +17,7 @@ import { useRecoilValue } from 'recoil';
 import { policyData } from '../../../Model/ConfigurationModel';
 import { getFilteredArrangements } from './getFilteredArrangements';
 import { useScrollToArrangement } from './useScrollToArrangement';
+import { isArrangementPolicyAvailable } from '../arrangementPolicyVersions';
 
 type ArrangementSectionProps = {
   v1Case: V1Case;
@@ -73,12 +75,14 @@ export function ArrangementsSection({
           }}
         >
           <Box
-            display="flex"
-            alignItems="center"
-            justifyContent="space-between"
-            flexWrap="wrap"
-            gap={2}
-            mb={2}
+            sx={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              flexWrap: 'wrap',
+              gap: 2,
+              mb: 2,
+            }}
           >
             <Typography
               className="ph-unmask"
@@ -116,10 +120,8 @@ export function ArrangementsSection({
           >
             {v1Case &&
               policy.referralPolicy?.arrangementPolicies
-                ?.filter(
-                  (arrangementPolicy) =>
-                    !arrangementPolicy.supersededAtUtc ||
-                    new Date(arrangementPolicy.supersededAtUtc) > new Date()
+                ?.filter((arrangementPolicy) =>
+                  isArrangementPolicyAvailable(arrangementPolicy)
                 )
                 .map(
                 (arrangementPolicy) => (
@@ -142,7 +144,10 @@ export function ArrangementsSection({
         )}
       </Box>
       {filteredArrangements.length > 0 && (
-        <Masonry columns={isDesktop ? (isWideScreen ? 3 : 2) : 1} spacing={2}>
+        <AppMasonry
+          columns={isDesktop ? (isWideScreen ? 3 : 2) : 1}
+          spacing={2}
+        >
           {filteredArrangements.map((arrangement) => (
             <div
               key={arrangement.id}
@@ -159,7 +164,7 @@ export function ArrangementsSection({
               />
             </div>
           ))}
-        </Masonry>
+        </AppMasonry>
       )}
 
       {createArrangementDialogParameter && (

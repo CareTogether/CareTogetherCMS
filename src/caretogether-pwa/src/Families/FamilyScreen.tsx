@@ -1,8 +1,9 @@
-import { useReactToPrint } from 'react-to-print';
+import Grid from '../Generic/GridLegacyCompat';
+import {
+  useReactToPrint } from 'react-to-print';
 import {
   Container,
   Toolbar,
-  Grid,
   Button,
   useMediaQuery,
   useTheme,
@@ -32,7 +33,6 @@ import {
   V1Referral,
   RoleRemovalReason,
   V1ReferralStatus,
-  V1CaseCloseReason,
 } from '../GeneratedClient';
 import { useParams } from 'react-router';
 import {
@@ -50,11 +50,11 @@ import { AddChildDialog } from './AddChildDrawer';
 import { AddEditNoteDialog } from '../Notes/AddEditNoteDialog';
 import { format } from 'date-fns';
 import { UploadFamilyDocumentsDialog } from './UploadFamilyDocumentsDialog';
-import { ConfirmCloseV1CaseDialog } from '../V1Cases/ConfirmCloseV1CaseDialog';
+import { CloseV1CaseDrawer } from '../V1Cases/CloseV1CaseDrawer';
 import { OpenNewV1CaseDialog } from '../V1Cases/OpenNewV1CaseDialog';
 import { FamilyDocuments } from './FamilyDocuments';
 import { useFamilyPermissions } from '../Model/SessionModel';
-import { Masonry } from '@mui/lab';
+import { AppMasonry } from '../Generic/AppMasonry';
 import { MissingRequirementRow } from '../Requirements/MissingRequirementRow';
 import { ExemptedRequirementRow } from '../Requirements/ExemptedRequirementRow';
 import { CompletedRequirementRow } from '../Requirements/CompletedRequirementRow';
@@ -88,7 +88,6 @@ import { familyLastName } from './FamilyUtils';
 import { useLoadable } from '../Hooks/useLoadable';
 import { visibleCommunitiesQuery } from '../Model/Data';
 import { useAppNavigate } from '../Hooks/useAppNavigate';
-import FamilyScreenPageVersionSwitch from './FamilyScreenPageVersionSwitch';
 import posthog from 'posthog-js';
 import { AssignmentsSection } from '../Families/AssignmentsSection';
 import { useMemo } from 'react';
@@ -220,7 +219,7 @@ export function FamilyScreen() {
   const allV1Cases: V1Case[] = useMemo(() => {
     return [...openV1Cases, ...closedV1Cases];
   }, [openV1Cases, closedV1Cases]);
-  const [confirmCloseOpen, setConfirmCloseOpen] = useState(false);
+  const [closeCaseDrawerOpen, setCloseCaseDrawerOpen] = useState(false);
   const v1CasesModel = useV1CasesModel();
   const referralInfosLoadable = useLoadable(visibleReferralsQuery);
   const openReferralId =
@@ -283,21 +282,6 @@ export function FamilyScreen() {
     return { caseRows, unlinkedReferrals };
   }, [allV1Cases, familyReferrals]);
 
-  async function closeCaseNow() {
-    if (!selectedV1Case?.id) return;
-
-    await withBackdrop(async () => {
-      const defaultReason = V1CaseCloseReason.NeedMet;
-      const closedAtLocal = new Date();
-
-      await v1CasesModel.closeV1Case(
-        familyId,
-        selectedV1Case.id,
-        defaultReason,
-        closedAtLocal
-      );
-    });
-  }
   async function reopenCaseNow() {
     if (!selectedV1Case?.id) return;
 
@@ -455,7 +439,7 @@ export function FamilyScreen() {
 
   if (!family) {
     return (
-      <Box mt={10} textAlign="center">
+      <Box sx={{ mt: 10, textAlign: 'center' }}>
         <Typography>
           Oops! You can’t view this family. It may be restricted or unavailable.
         </Typography>
@@ -682,7 +666,6 @@ export function FamilyScreen() {
             familyId={familyId}
           />
         )}
-        <FamilyScreenPageVersionSwitch />
       </Toolbar>
       <Grid container spacing={0}>
         <Grid item xs={12} md={4} spacing={0}>
@@ -812,8 +795,10 @@ export function FamilyScreen() {
                     <ListItemText
                       sx={{ alignSelf: 'baseline' }}
                       primary={communityInfo.community?.name}
-                      primaryTypographyProps={{
-                        color: theme.palette.primary.main,
+                      slotProps={{
+                        primary: {
+                          color: theme.palette.primary.main,
+                        },
                       }}
                     ></ListItemText>
                   </ListItemButton>
@@ -889,6 +874,10 @@ export function FamilyScreen() {
                             const isSelected = selectedV1Case?.id === v1Case.id;
 
                             const isOpenV1Case = !v1Case.closedAtUtc;
+                            const caseCloseReasonText =
+                              !isOpenV1Case && v1Case.closeReason
+                                ? v1Case.closeReason
+                                : undefined;
 
                             const showCloseButton =
                               isSelected &&
@@ -929,12 +918,21 @@ export function FamilyScreen() {
                                         : 'Open Case'}
                                     </Typography>
 
+                                    {caseCloseReasonText && (
+                                      <Typography
+                                        className="ph-unmask"
+                                        color="text.secondary"
+                                      >
+                                        {caseCloseReasonText}
+                                      </Typography>
+                                    )}
+
                                     {showCloseButton && (
                                       <Button
                                         className="ph-unmask"
                                         onClick={(e) => {
                                           e.stopPropagation();
-                                          setConfirmCloseOpen(true);
+                                          setCloseCaseDrawerOpen(true);
                                         }}
                                         variant="contained"
                                         size="small"
@@ -1163,13 +1161,11 @@ export function FamilyScreen() {
             </Grid>
 
             <Grid item xs={6} md={4}>
-              {confirmCloseOpen && (
-                <ConfirmCloseV1CaseDialog
-                  onClose={() => setConfirmCloseOpen(false)}
-                  onConfirm={async () => {
-                    setConfirmCloseOpen(false);
-                    await closeCaseNow();
-                  }}
+              {closeCaseDrawerOpen && selectedV1Case?.id && (
+                <CloseV1CaseDrawer
+                  partneringFamilyId={familyId}
+                  v1CaseId={selectedV1Case.id}
+                  onClose={() => setCloseCaseDrawerOpen(false)}
                 />
               )}
               {openNewV1CaseDialogOpen && (
@@ -1371,7 +1367,7 @@ export function FamilyScreen() {
               <Typography className="ph-unmask" variant="h3" sx={{ mb: 1 }}>
                 Family Members
               </Typography>
-              <Masonry
+              <AppMasonry
                 columns={isDesktop ? (isWideScreen ? 3 : 2) : 1}
                 spacing={2}
               >
@@ -1398,7 +1394,7 @@ export function FamilyScreen() {
                       />
                     )
                 )}
-              </Masonry>
+              </AppMasonry>
             </Grid>
           </Grid>
         </Grid>

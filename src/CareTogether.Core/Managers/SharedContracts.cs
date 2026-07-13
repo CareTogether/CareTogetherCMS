@@ -41,7 +41,7 @@ namespace CareTogether.Managers
         Guid Id,
         DateTime OpenedAtUtc,
         DateTime? ClosedAtUtc,
-        V1CaseCloseReason? CloseReason,
+        string? CloseReason,
         ImmutableList<Resources.CompletedRequirementInfo> CompletedRequirements,
         ImmutableList<Resources.ExemptedRequirementInfo> ExemptedRequirements,
         ImmutableList<RequirementDefinition> MissingRequirements,
@@ -73,7 +73,8 @@ namespace CareTogether.Managers
         ImmutableSortedSet<ChildLocationHistoryEntry> ChildLocationHistory,
         ImmutableSortedSet<ChildLocationHistoryEntry> ChildLocationPlan,
         string? Comments,
-        string? Reason
+        string? Reason,
+        string? ArrangementPolicyVersion = null
     );
 
     public sealed record Note(

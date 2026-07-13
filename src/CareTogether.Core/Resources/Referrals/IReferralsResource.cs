@@ -13,7 +13,7 @@ namespace CareTogether.Resources.V1Cases
         ImmutableList<Guid> LinkedV1ReferralIds,
         DateTime OpenedAtUtc,
         DateTime? ClosedAtUtc,
-        V1CaseCloseReason? CloseReason,
+        string? CloseReason,
         ImmutableList<CompletedRequirementInfo> CompletedRequirements,
         ImmutableList<ExemptedRequirementInfo> ExemptedRequirements,
         ImmutableDictionary<string, CompletedCustomFieldInfo> CompletedCustomFields,
@@ -41,7 +41,8 @@ namespace CareTogether.Resources.V1Cases
         ImmutableSortedSet<ChildLocationHistoryEntry> ChildLocationHistory,
         ImmutableSortedSet<ChildLocationHistoryEntry> ChildLocationPlan,
         string? Comments,
-        string? Reason
+        string? Reason,
+        string? ArrangementPolicyVersion = null
     );
 
     public enum V1CaseCloseReason
@@ -174,6 +175,13 @@ namespace CareTogether.Resources.V1Cases
         DateTime ClosedAtUtc
     ) : V1CaseCommand(FamilyId, ReferralId);
 
+    public sealed record CloseReferralWithReason(
+        Guid FamilyId,
+        Guid ReferralId,
+        string CloseReason,
+        DateTime ClosedAtUtc
+    ) : V1CaseCommand(FamilyId, ReferralId);
+
     [JsonHierarchyBase]
     public abstract partial record ArrangementsCommand(
         Guid FamilyId,
@@ -188,7 +196,8 @@ namespace CareTogether.Resources.V1Cases
         string ArrangementType,
         DateTime RequestedAtUtc,
         Guid PartneringFamilyPersonId,
-        string? Reason
+        string? Reason,
+        string? ArrangementPolicyVersion = null
     ) : ArrangementsCommand(FamilyId, ReferralId, ArrangementIds);
 
     public sealed record AssignIndividualVolunteer(
@@ -507,6 +516,18 @@ namespace CareTogether.Resources.V1Cases
     public interface IV1CasesResource
     {
         Task<ImmutableList<V1CaseEntry>> ListV1CasessAsync(Guid organizationId, Guid locationId);
+
+        Task<ImmutableList<V1CaseEntry>> ListV1CasesForFamilyAsync(
+            Guid organizationId,
+            Guid locationId,
+            Guid familyId
+        );
+
+        Task<ImmutableList<V1CaseEntry>> ListV1CasesAssignedToVolunteerFamilyAsync(
+            Guid organizationId,
+            Guid locationId,
+            Guid volunteerFamilyId
+        );
 
         Task<V1CaseEntry> ExecuteV1CaseCommandAsync(
             Guid organizationId,

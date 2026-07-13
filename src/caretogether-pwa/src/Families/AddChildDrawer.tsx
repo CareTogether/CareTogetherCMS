@@ -1,3 +1,4 @@
+import Grid from '@mui/material/Grid';
 import { useState } from 'react';
 import {
   Box,
@@ -7,7 +8,6 @@ import {
   FormControl,
   FormControlLabel,
   FormLabel,
-  Grid,
   InputAdornment,
   InputLabel,
   MenuItem,
@@ -117,12 +117,14 @@ export function AddChildDrawer({ onClose }: AddChildDrawerProps) {
       anchor="right"
       open
       onClose={onClose}
-      PaperProps={{
-        sx: {
-          width: { xs: '100%', sm: 600 },
-          top: 45,
-          height: 'calc(100% - 45px)',
-          display: 'flex',
+      slotProps={{
+        paper: {
+          sx: {
+            width: { xs: '100%', sm: 600 },
+            top: 45,
+            height: 'calc(100% - 45px)',
+            display: 'flex',
+          },
         },
       }}
     >
@@ -132,7 +134,7 @@ export function AddChildDrawer({ onClose }: AddChildDrawerProps) {
         </Typography>
         <form noValidate autoComplete="off">
           <Grid container spacing={2}>
-            <Grid item xs={12} sm={6}>
+            <Grid size={{ xs: 12, sm: 6 }}>
               <TextField
                 required
                 id="first-name"
@@ -145,7 +147,7 @@ export function AddChildDrawer({ onClose }: AddChildDrawerProps) {
                 }
               />
             </Grid>
-            <Grid item xs={12} sm={6}>
+            <Grid size={{ xs: 12, sm: 6 }}>
               <TextField
                 required
                 id="last-name"
@@ -158,7 +160,7 @@ export function AddChildDrawer({ onClose }: AddChildDrawerProps) {
                 }
               />
             </Grid>
-            <Grid item xs={12} sx={{ overflowX: 'auto' }}>
+            <Grid size={12} sx={{ overflowX: 'auto' }}>
               <table style={{ width: '100%' }}>
                 <thead>
                   <tr>
@@ -233,10 +235,10 @@ export function AddChildDrawer({ onClose }: AddChildDrawerProps) {
                 </tbody>
               </table>
             </Grid>
-            <Grid item xs={12}>
+            <Grid size={12}>
               <Divider />
             </Grid>
-            <Grid item xs={12}>
+            <Grid size={12}>
               <FormControl component="fieldset">
                 <FormLabel component="legend">Gender:</FormLabel>
                 <RadioGroup
@@ -269,7 +271,7 @@ export function AddChildDrawer({ onClose }: AddChildDrawerProps) {
                 </RadioGroup>
               </FormControl>
             </Grid>
-            <Grid item xs={12} sm={6}>
+            <Grid size={{ xs: 12, sm: 6 }}>
               <ValidateDatePicker
                 label="Date of birth"
                 value={dateOfBirth}
@@ -285,7 +287,7 @@ export function AddChildDrawer({ onClose }: AddChildDrawerProps) {
                 }}
               />
             </Grid>
-            <Grid item xs={12} sm={6}>
+            <Grid size={{ xs: 12, sm: 6 }}>
               <FormControl fullWidth size="small">
                 <InputLabel id="ethnicity-label">Ethnicity</InputLabel>
                 <Select
@@ -311,8 +313,8 @@ export function AddChildDrawer({ onClose }: AddChildDrawerProps) {
                 </Select>
               </FormControl>
             </Grid>
-            <Grid item xs={12}></Grid>
-            <Grid item xs={12}>
+            <Grid size={12}></Grid>
+            <Grid size={12}>
               <TextField
                 id="concerns"
                 label="Concerns"
@@ -323,12 +325,14 @@ export function AddChildDrawer({ onClose }: AddChildDrawerProps) {
                 minRows={2}
                 maxRows={5}
                 size="small"
-                InputProps={{
-                  startAdornment: (
-                    <InputAdornment position="start">
-                      <WarningIcon />
-                    </InputAdornment>
-                  ),
+                slotProps={{
+                  input: {
+                    startAdornment: (
+                      <InputAdornment position="start">
+                        <WarningIcon />
+                      </InputAdornment>
+                    ),
+                  },
                 }}
                 value={concerns == null ? '' : concerns}
                 onChange={(e) =>
@@ -336,7 +340,7 @@ export function AddChildDrawer({ onClose }: AddChildDrawerProps) {
                 }
               />
             </Grid>
-            <Grid item xs={12}>
+            <Grid size={12}>
               <TextField
                 id="notes"
                 label="Notes"

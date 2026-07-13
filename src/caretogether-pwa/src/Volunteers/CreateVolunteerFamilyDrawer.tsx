@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import Grid from '../Generic/GridLegacyCompat';
 import {
   Button,
   Checkbox,
@@ -9,7 +10,6 @@ import {
   FormControlLabel,
   FormGroup,
   FormLabel,
-  Grid,
   InputAdornment,
   InputLabel,
   MenuItem,
@@ -132,12 +132,14 @@ export function CreateVolunteerFamilyDrawer({
       anchor="right"
       open
       onClose={() => onClose()}
-      PaperProps={{
-        sx: {
-          width: { xs: '100%', sm: 600 },
-          top: 45,
-          height: 'calc(100% - 45px)',
-          display: 'flex',
+      slotProps={{
+        paper: {
+          sx: {
+            width: { xs: '100%', sm: 600 },
+            top: 45,
+            height: 'calc(100% - 45px)',
+            display: 'flex',
+          },
         },
       }}
     >
@@ -430,12 +432,14 @@ export function CreateVolunteerFamilyDrawer({
                     minRows={2}
                     maxRows={5}
                     size="small"
-                    InputProps={{
-                      startAdornment: (
-                        <InputAdornment position="start">
-                          <WarningIcon />
-                        </InputAdornment>
-                      ),
+                    slotProps={{
+                      input: {
+                        startAdornment: (
+                          <InputAdornment position="start">
+                            <WarningIcon />
+                          </InputAdornment>
+                        ),
+                      },
                     }}
                     value={concerns == null ? '' : concerns}
                     onChange={(e) =>

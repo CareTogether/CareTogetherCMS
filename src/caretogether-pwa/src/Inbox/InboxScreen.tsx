@@ -21,12 +21,13 @@ import { FamilyName } from '../Families/FamilyName';
 import { EmojiPeople } from '@mui/icons-material';
 import { AppNavigate, useAppNavigate } from '../Hooks/useAppNavigate';
 import { QueueItem, queueItemsQuery } from '../Model/QueueModel';
+import { ReactElement } from 'react';
 
 interface InboxMessageProps {
-  icon: JSX.Element;
+  icon: ReactElement;
   onClick: () => void;
-  primaryContent: JSX.Element;
-  secondaryContent?: JSX.Element;
+  primaryContent: ReactElement;
+  secondaryContent?: ReactElement;
 }
 
 function getMessageProps(

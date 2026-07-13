@@ -1,4 +1,5 @@
-import { FormControl, Grid, MenuItem, Select } from '@mui/material';
+import Grid from '@mui/material/Grid';
+import { FormControl, MenuItem, Select } from '@mui/material';
 import { useDirectoryModel } from '../Model/DirectoryModel';
 import { useInlineEditor } from '../Hooks/useInlineEditor';
 import { PersonEditorProps } from './PersonEditorProps';
@@ -48,7 +49,7 @@ export function ChildCustodyRelationshipEditor({
     <Grid container spacing={2}>
       {editor.editing ? (
         <>
-          <Grid item xs={12}>
+          <Grid size={12}>
             <PersonName person={adult} />
             <FormControl required fullWidth size="small">
               <Select
@@ -86,13 +87,13 @@ export function ChildCustodyRelationshipEditor({
               </Select>
             </FormControl>
           </Grid>
-          <Grid item xs={12}>
+          <Grid size={12}>
             {editor.cancelButton}
             {editor.saveButton}
           </Grid>
         </>
       ) : (
-        <Grid item xs={12}>
+        <Grid size={12}>
           <PersonName person={adult} />:<span> </span>
           {editor.value === CustodialRelationshipType.LegalGuardian
             ? 'legal guardian'

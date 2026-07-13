@@ -1,4 +1,4 @@
-import { Card, CardContent, Typography, Box } from '@mui/material';
+import { Card, CardContent, Typography, Box, Chip } from '@mui/material';
 import {
   CalendarToday as CalendarTodayIcon,
   PersonPinCircle as PersonPinCircleIcon,
@@ -13,6 +13,7 @@ import { partneringFamiliesData } from '../Model/V1CasesModel';
 import { useAppNavigate } from '../Hooks/useAppNavigate';
 import { format } from 'date-fns';
 import { FamilyName } from './FamilyName';
+import { getAssignmentStatus } from './assignmentStatus';
 
 interface AssignmentCardProps {
   assignment: ArrangementEntry;
@@ -43,9 +44,7 @@ export function AssignmentCard({ assignment }: AssignmentCardProps) {
   const partneringFamilies = useLoadable(partneringFamiliesData);
   const navigate = useAppNavigate();
 
-  const isCompleted = assignment.endedAtUtc !== undefined;
-  const progressWidth = isCompleted ? '100%' : '50%';
-  const statusColor = isCompleted ? '#2E7D32' : '#E3AE01';
+  const status = getAssignmentStatus(assignment);
 
   const personInfo = assignment.partneringFamilyPersonId
     ? personAndFamilyLookup(assignment.partneringFamilyPersonId)
@@ -102,16 +101,36 @@ export function AssignmentCard({ assignment }: AssignmentCardProps) {
       <Box
         sx={{
           height: 8,
-          backgroundColor: statusColor,
-          width: progressWidth,
+          backgroundColor: status.color,
+          width: status.progressWidth,
           transition: 'width 0.5s ease-in-out',
         }}
       />
 
       <CardContent>
-        <Typography variant="h6" sx={{ marginBottom: 1 }}>
-          {assignment.arrangementType || 'Unknown Type'}
-        </Typography>
+        <Box
+          sx={{
+            alignItems: 'flex-start',
+            display: 'flex',
+            gap: 1,
+            justifyContent: 'space-between',
+            marginBottom: 1,
+          }}
+        >
+          <Typography variant="h6">
+            {assignment.arrangementType || 'Unknown Type'}
+          </Typography>
+          <Chip
+            label={status.label}
+            size="small"
+            sx={{
+              backgroundColor: status.color,
+              color: 'white',
+              flexShrink: 0,
+              fontWeight: 600,
+            }}
+          />
+        </Box>
 
         <Typography variant="body1" sx={{ fontWeight: 'bold' }}>
           {personInfo?.person

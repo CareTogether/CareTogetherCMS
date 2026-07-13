@@ -1,7 +1,7 @@
 import { Person, RoleRemovalReason } from '../GeneratedClient';
 import { useVolunteersModel } from '../Model/VolunteersModel';
 import { UpdateDialog } from '../Generic/UpdateDialog';
-import { Grid } from '@mui/material';
+import Grid from '@mui/material/Grid';
 import { ValidateDatePicker } from '../Generic/Forms/ValidateDatePicker';
 import { useState } from 'react';
 
@@ -50,7 +50,7 @@ export function ResetIndividualRoleDialog({
     >
       <form noValidate autoComplete="off">
         <Grid container spacing={2}>
-          <Grid item xs={12}>
+          <Grid size={12}>
             <p>
               The current status of this role is{' '}
               {RoleRemovalReason[removalReason]}. Additional comments were:
@@ -58,7 +58,7 @@ export function ResetIndividualRoleDialog({
               <i>{removalAdditionalComments}</i>
             </p>
           </Grid>
-          <Grid item xs={12}>
+          <Grid size={12}>
             <ValidateDatePicker
               label="Effective Through (optional - leave blank to use the current date)"
               value={effectiveThrough}

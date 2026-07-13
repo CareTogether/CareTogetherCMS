@@ -10,8 +10,7 @@ import {
   EndArrangements,
   AssignVolunteerFamily,
   AssignIndividualVolunteer,
-  V1CaseCloseReason,
-  CloseReferral as CloseV1Case,
+  CloseReferralWithReason as CloseV1Case,
   CreateReferral as CreateV1Case,
   ReopenReferral as ReopenV1Case,
   TrackChildLocationChange,
@@ -527,7 +526,8 @@ export function useV1CasesModel() {
       arrangementType: string,
       requestedAtLocal: Date,
       partneringFamilyPersonId: string,
-      reason: string | null
+      reason: string | null,
+      arrangementPolicyVersion?: string | null
     ) => {
       const command = commandFactory(CreateArrangement, {
         familyId: partneringFamilyId,
@@ -537,6 +537,7 @@ export function useV1CasesModel() {
         requestedAtUtc: requestedAtLocal,
         partneringFamilyPersonId: partneringFamilyPersonId,
         reason: reason || undefined,
+        arrangementPolicyVersion: arrangementPolicyVersion || undefined,
       });
       return command;
     }
@@ -927,7 +928,7 @@ export function useV1CasesModel() {
     async (
       partneringFamilyId: string,
       v1CaseId: string,
-      reason: V1CaseCloseReason,
+      reason: string,
       closedAtLocal: Date
     ) => {
       const command = commandFactory(CloseV1Case, {

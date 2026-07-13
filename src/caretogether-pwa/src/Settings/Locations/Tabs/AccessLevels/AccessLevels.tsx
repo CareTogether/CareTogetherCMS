@@ -84,12 +84,14 @@ export default function AccessLevels({ locationConfiguration }: Props) {
         size="small"
         fullWidth
         sx={{ maxWidth: 300 }}
-        InputProps={{
-          startAdornment: (
-            <InputAdornment position="start">
-              <SearchIcon />
-            </InputAdornment>
-          ),
+        slotProps={{
+          input: {
+            startAdornment: (
+              <InputAdornment position="start">
+                <SearchIcon />
+              </InputAdornment>
+            ),
+          },
         }}
         value={searchTerm}
         onChange={(e) => setSearchTerm(e.target.value)}

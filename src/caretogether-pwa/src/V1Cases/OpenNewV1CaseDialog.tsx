@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Grid } from '@mui/material';
+import Grid from '@mui/material/Grid';
 import { UpdateDialog } from '../Generic/UpdateDialog';
 import { useV1CasesModel } from '../Model/V1CasesModel';
 import { ValidateDatePicker } from '../Generic/Forms/ValidateDatePicker';
@@ -47,7 +47,7 @@ export function OpenNewV1CaseDialog({
     >
       <form noValidate autoComplete="off">
         <Grid container spacing={2}>
-          <Grid item xs={12}>
+          <Grid size={12}>
             <ValidateDatePicker
               label="When was this Case opened?"
               value={openedAtLocal}

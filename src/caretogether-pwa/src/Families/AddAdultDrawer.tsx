@@ -1,3 +1,4 @@
+import Grid from '@mui/material/Grid';
 import { useState } from 'react';
 import {
   Box,
@@ -9,7 +10,6 @@ import {
   FormControlLabel,
   FormGroup,
   FormLabel,
-  Grid,
   InputAdornment,
   InputLabel,
   MenuItem,
@@ -138,12 +138,14 @@ export function AddAdultDrawer({ onClose }: AddAdultDrawerProps) {
       anchor="right"
       open
       onClose={onClose}
-      PaperProps={{
-        sx: {
-          width: { xs: '100%', sm: 600 },
-          top: 45,
-          height: 'calc(100% - 45px)',
-          display: 'flex',
+      slotProps={{
+        paper: {
+          sx: {
+            width: { xs: '100%', sm: 600 },
+            top: 45,
+            height: 'calc(100% - 45px)',
+            display: 'flex',
+          },
         },
       }}
     >
@@ -153,7 +155,7 @@ export function AddAdultDrawer({ onClose }: AddAdultDrawerProps) {
         </Typography>
         <form noValidate autoComplete="off">
           <Grid container spacing={2}>
-            <Grid item xs={12} sm={6}>
+            <Grid size={{ xs: 12, sm: 6 }}>
               <TextField
                 required
                 id="first-name"
@@ -166,7 +168,7 @@ export function AddAdultDrawer({ onClose }: AddAdultDrawerProps) {
                 }
               />
             </Grid>
-            <Grid item xs={12} sm={6}>
+            <Grid size={{ xs: 12, sm: 6 }}>
               <TextField
                 required
                 id="last-name"
@@ -179,7 +181,7 @@ export function AddAdultDrawer({ onClose }: AddAdultDrawerProps) {
                 }
               />
             </Grid>
-            <Grid item xs={12} sm={6}>
+            <Grid size={{ xs: 12, sm: 6 }}>
               <FormControl required fullWidth size="small">
                 <InputLabel id="family-relationship-label">
                   Relationship to Family
@@ -207,7 +209,7 @@ export function AddAdultDrawer({ onClose }: AddAdultDrawerProps) {
                 </Select>
               </FormControl>
             </Grid>
-            <Grid item xs={12} sm={6}>
+            <Grid size={{ xs: 12, sm: 6 }}>
               <FormGroup row>
                 <FormControlLabel
                   control={
@@ -228,10 +230,10 @@ export function AddAdultDrawer({ onClose }: AddAdultDrawerProps) {
                 />
               </FormGroup>
             </Grid>
-            <Grid item xs={12}>
+            <Grid size={12}>
               <Divider />
             </Grid>
-            <Grid item xs={12}>
+            <Grid size={12}>
               <FormControl component="fieldset">
                 <FormLabel component="legend">Gender:</FormLabel>
                 <RadioGroup
@@ -264,7 +266,7 @@ export function AddAdultDrawer({ onClose }: AddAdultDrawerProps) {
                 </RadioGroup>
               </FormControl>
             </Grid>
-            <Grid item xs={12} sm={6}>
+            <Grid size={{ xs: 12, sm: 6 }}>
               <ValidateDatePicker
                 label="Date of birth"
                 value={dateOfBirth}
@@ -278,7 +280,7 @@ export function AddAdultDrawer({ onClose }: AddAdultDrawerProps) {
                 }}
               />
             </Grid>
-            <Grid item xs={12} sm={6}>
+            <Grid size={{ xs: 12, sm: 6 }}>
               <FormControl fullWidth size="small">
                 <InputLabel id="ethnicity-label">Ethnicity</InputLabel>
                 <Select
@@ -304,8 +306,8 @@ export function AddAdultDrawer({ onClose }: AddAdultDrawerProps) {
                 </Select>
               </FormControl>
             </Grid>
-            <Grid item xs={12}></Grid>
-            <Grid item xs={12} sm={6}>
+            <Grid size={12}></Grid>
+            <Grid size={{ xs: 12, sm: 6 }}>
               <TextField
                 id="phone-number"
                 label="Phone Number"
@@ -318,7 +320,7 @@ export function AddAdultDrawer({ onClose }: AddAdultDrawerProps) {
                 }
               />
             </Grid>
-            <Grid item xs={12} sm={6}>
+            <Grid size={{ xs: 12, sm: 6 }}>
               <FormControl component="fieldset">
                 <RadioGroup
                   aria-label="phoneType"
@@ -354,7 +356,7 @@ export function AddAdultDrawer({ onClose }: AddAdultDrawerProps) {
                 </RadioGroup>
               </FormControl>
             </Grid>
-            <Grid item xs={12} sm={6}>
+            <Grid size={{ xs: 12, sm: 6 }}>
               <TextField
                 id="email-address"
                 label="Email Address"
@@ -367,7 +369,7 @@ export function AddAdultDrawer({ onClose }: AddAdultDrawerProps) {
                 }
               />
             </Grid>
-            <Grid item xs={12} sm={6}>
+            <Grid size={{ xs: 12, sm: 6 }}>
               <FormControl component="fieldset">
                 <RadioGroup
                   aria-label="emailType"
@@ -397,13 +399,13 @@ export function AddAdultDrawer({ onClose }: AddAdultDrawerProps) {
                 </RadioGroup>
               </FormControl>
             </Grid>
-            <Grid item xs={12}></Grid>
+            <Grid size={12}></Grid>
             <AddressFormFields
               address={address}
               onEdit={(value) => setFields({ ...fields, address: value })}
             />
-            <Grid item xs={12}></Grid>
-            <Grid item xs={12}>
+            <Grid size={12}></Grid>
+            <Grid size={12}>
               <TextField
                 id="concerns"
                 label="Concerns"
@@ -414,12 +416,14 @@ export function AddAdultDrawer({ onClose }: AddAdultDrawerProps) {
                 minRows={2}
                 maxRows={5}
                 size="small"
-                InputProps={{
-                  startAdornment: (
-                    <InputAdornment position="start">
-                      <WarningIcon />
-                    </InputAdornment>
-                  ),
+                slotProps={{
+                  input: {
+                    startAdornment: (
+                      <InputAdornment position="start">
+                        <WarningIcon />
+                      </InputAdornment>
+                    ),
+                  },
                 }}
                 value={concerns == null ? '' : concerns}
                 onChange={(e) =>
@@ -427,7 +431,7 @@ export function AddAdultDrawer({ onClose }: AddAdultDrawerProps) {
                 }
               />
             </Grid>
-            <Grid item xs={12}>
+            <Grid size={12}>
               <TextField
                 id="notes"
                 label="Notes"

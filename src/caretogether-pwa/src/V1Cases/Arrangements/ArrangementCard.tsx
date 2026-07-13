@@ -7,6 +7,7 @@ import { ArrangementCardTitle } from './ArrangementCardTitle';
 import { ArrangementCardHeaderSection } from './ArrangementCardHeaderSection';
 import { ArrangementCardDetailsSection } from './ArrangementCardDetailsSection';
 import { useRequirementContextData } from './useRequirementContextData';
+import { resolveArrangementPolicy } from './arrangementPolicyVersions';
 
 export type ArrangementCardProps = {
   partneringFamily: CombinedFamilyInfo;
@@ -23,8 +24,9 @@ export function ArrangementCard({
 }: ArrangementCardProps) {
   const policy = useRecoilValue(policyData);
 
-  const arrangementPolicy = policy.referralPolicy?.arrangementPolicies?.find(
-    (a) => a.arrangementType === arrangement.arrangementType
+  const arrangementPolicy = resolveArrangementPolicy(
+    policy.referralPolicy?.arrangementPolicies,
+    arrangement
   );
 
   const requirementsData = useRequirementContextData(
@@ -47,8 +49,10 @@ export function ArrangementCard({
         sx={{
           paddingTop: 0.5,
           paddingBottom: 0,
-          '& .MuiCardHeader-title': {
-            fontSize: '16px',
+        }}
+        slotProps={{
+          title: {
+            sx: { fontSize: '16px' },
           },
         }}
         title={

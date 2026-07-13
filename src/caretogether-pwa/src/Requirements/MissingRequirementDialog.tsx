@@ -1,3 +1,4 @@
+import Grid from '../Generic/GridLegacyCompat';
 import {
   Checkbox,
   DialogContentText,
@@ -6,7 +7,6 @@ import {
   FormControlLabel,
   FormGroup,
   FormLabel,
-  Grid,
   InputLabel,
   Link,
   MenuItem,

@@ -127,7 +127,7 @@ export function LocationEdit() {
 
   if (!canEdit || !location) {
     return (
-      <Box className="ph-unmask" mt={10} textAlign="center">
+      <Box className="ph-unmask" sx={{ mt: 10, textAlign: 'center' }}>
         <Typography>
           Oops! You can't edit this Location. It may be restricted or
           unavailable.
@@ -151,6 +151,7 @@ export function LocationEdit() {
     ethnicities: location.ethnicities || [],
     adultFamilyRelationships: location.adultFamilyRelationships || [],
     arrangementReasons: location.arrangementReasons || [],
+    caseCloseReasons: configuration?.caseCloseReasons || [],
     referralCloseReasons: configuration?.referralCloseReasons || [],
   };
 
@@ -176,7 +177,14 @@ export function LocationEdit() {
         />
       </Box>
 
-      <Box display="flex" flex={1} minHeight={0} sx={{ overflow: 'auto' }}>
+      <Box
+        sx={{
+          display: 'flex',
+          flex: 1,
+          minHeight: 0,
+          overflow: 'auto',
+        }}
+      >
         <Box
           sx={{
             width: isMobile && isSidebarCollapsed ? 40 : 240,
@@ -213,7 +221,7 @@ export function LocationEdit() {
           )}
         </Box>
 
-        <Box flex={1} paddingLeft={4} paddingTop={2}>
+        <Box sx={{ flex: 1, paddingLeft: 4, paddingTop: 2 }}>
           {/* Render the active tab component */}
           {activeTab === 'basic' && (
             <Box key="basic">

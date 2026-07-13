@@ -1,3 +1,4 @@
+import Grid from '@mui/material/Grid';
 import {
   Button,
   Checkbox,
@@ -5,7 +6,6 @@ import {
   FormControl,
   FormControlLabel,
   FormLabel,
-  Grid,
   Radio,
   RadioGroup,
   TextField,
@@ -97,11 +97,11 @@ export function EmailAddressEditor({
     <Grid container rowSpacing={0} columnSpacing={2}>
       {editor.editing ? (
         <>
-          <Grid item xs={12}>
+          <Grid size={12}>
             <Divider />
             <br />
           </Grid>
-          <Grid item xs={12} sm={6}>
+          <Grid size={{ xs: 12, sm: 6 }}>
             <TextField
               id="email-address"
               label="Email Address"
@@ -114,7 +114,7 @@ export function EmailAddressEditor({
               }
             />
           </Grid>
-          <Grid item xs={12} sm={6}>
+          <Grid size={{ xs: 12, sm: 6 }}>
             <FormControl component="fieldset">
               <FormLabel component="legend">Email Type:</FormLabel>
               <RadioGroup
@@ -144,7 +144,7 @@ export function EmailAddressEditor({
               </RadioGroup>
             </FormControl>
           </Grid>
-          <Grid item xs={12} sm={6}>
+          <Grid size={{ xs: 12, sm: 6 }}>
             <FormControlLabel
               control={
                 <Checkbox
@@ -162,17 +162,17 @@ export function EmailAddressEditor({
               label="Is Preferred Email Address"
             />
           </Grid>
-          <Grid item xs={12} sm={6}>
+          <Grid size={{ xs: 12, sm: 6 }}>
             {editor.cancelButton}
             {editor.saveButton}
           </Grid>
-          <Grid item xs={12}>
+          <Grid size={12}>
             <Divider />
             <br />
           </Grid>
         </>
       ) : (
-        <Grid item xs={12}>
+        <Grid size={12}>
           {add ? (
             <Button
               onClick={handleAdd}

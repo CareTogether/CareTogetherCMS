@@ -4,33 +4,24 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import {
   useRecoilRefresher_UNSTABLE,
   useRecoilValueLoadable,
-  useSetRecoilState,
 } from 'recoil';
 import { useBackdrop } from '../Hooks/useBackdrop';
-import {
-  inviteReviewInfoQuery,
-  redemptionSessionIdState,
-} from '../Model/SessionModel';
+import { inviteReviewInfoQuery } from '../Model/SessionModel';
 import { ProgressBackdrop } from '../Shell/ProgressBackdrop';
 import { useScreenTitle } from '../Shell/ShellScreenTitle';
 import { api } from '../Api/Api';
 import { userOrganizationAccessQuery } from '../Model/Data';
 
 function RedeemPersonInvite() {
-  // Start by configuring the current redemption session, if there is one.
   const [searchParams] = useSearchParams();
   const redemptionSessionId = searchParams.get('state');
-  const setRedemptionSessionId = useSetRecoilState(redemptionSessionIdState);
-  useEffect(() => {
-    if (redemptionSessionId) {
-      setRedemptionSessionId(redemptionSessionId);
-    }
-  }, [redemptionSessionId, setRedemptionSessionId]);
 
   // Attempt to retrieve the invite review info for the redemption session.
   // If it can be retrieved, then render the invite review to allow the user the
   // option to confirm accepting the invite.
-  const inviteReviewInfo = useRecoilValueLoadable(inviteReviewInfoQuery);
+  const inviteReviewInfo = useRecoilValueLoadable(
+    inviteReviewInfoQuery(redemptionSessionId)
+  );
 
   const withBackdrop = useBackdrop();
   const navigate = useNavigate();

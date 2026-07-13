@@ -68,6 +68,7 @@ interface ListItemLinkCollapsibleProps {
   defaultOpen?: boolean;
   className?: string;
   paddingLeft?: number;
+  collapsed?: boolean;
   darkColor?: boolean;
   buttonProps?: Omit<ListItemButtonProps, 'onClick' | 'selected' | 'sx'> &
     Record<string, unknown>;
@@ -82,6 +83,7 @@ export function ListItemLink(props: ListItemLinkCollapsibleProps) {
     defaultOpen,
     className,
     paddingLeft = 1.5,
+    collapsed = false,
     darkColor,
     buttonProps,
   } = props;
@@ -103,7 +105,7 @@ export function ListItemLink(props: ListItemLinkCollapsibleProps) {
     defaultOpen || false
   );
 
-  const hasSubitems = subitems && subitems.length > 0;
+  const hasSubitems = !collapsed && subitems && subitems.length > 0;
 
   // TODO: Those names are a bit confusing, we should rename them
   const desktopColor = selected ? '#fff' : '#fff8';
@@ -117,32 +119,51 @@ export function ListItemLink(props: ListItemLinkCollapsibleProps) {
           <ListItemButton
             component={to ? renderLink : 'button'}
             selected={selected}
+            aria-label={collapsed ? primary : undefined}
             sx={{
-              paddingLeft,
+              paddingLeft: collapsed ? 0 : paddingLeft,
+              paddingRight: collapsed ? 0 : undefined,
+              minHeight: 48,
               flexGrow: 1,
               color,
+              alignItems: 'center',
+              justifyContent: collapsed ? 'center' : 'flex-start',
             }}
             {...buttonProps}
           >
-            {icon ? <ListItemIcon sx={{ color }}>{icon}</ListItemIcon> : null}
-
-            <TruncatedTooltip title={primary}>
-              <ListItemText
-                primary={primary}
+            {icon ? (
+              <ListItemIcon
                 sx={{
-                  marginLeft: -2,
                   color,
-                  // Ensure the text container allows truncation
-                  minWidth: 0,
-                  flex: 1,
-                  '& .MuiListItemText-primary': {
-                    whiteSpace: 'nowrap',
-                    overflow: 'hidden',
-                    textOverflow: 'ellipsis',
-                  },
+                  minWidth: collapsed ? 0 : 40,
+                  mr: collapsed ? 0 : 1,
+                  justifyContent: 'center',
+                  flexShrink: 0,
                 }}
-              />
-            </TruncatedTooltip>
+              >
+                {icon}
+              </ListItemIcon>
+            ) : null}
+
+            {!collapsed && (
+              <TruncatedTooltip title={primary}>
+                <ListItemText
+                  primary={primary}
+                  sx={{
+                    color,
+                    // Ensure the text container allows truncation
+                    minWidth: 0,
+                    flex: 1,
+                    my: 0,
+                    '& .MuiListItemText-primary': {
+                      whiteSpace: 'nowrap',
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                    },
+                  }}
+                />
+              </TruncatedTooltip>
+            )}
           </ListItemButton>
 
           {hasSubitems && (

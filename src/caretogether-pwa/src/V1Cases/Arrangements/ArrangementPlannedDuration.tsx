@@ -1,4 +1,5 @@
-import { Box, Grid, Stack } from '@mui/material';
+import Grid from '@mui/material/Grid';
+import { Box, Stack } from '@mui/material';
 import { useFamilyIdPermissions } from '../../Model/SessionModel';
 import {
   Arrangement,
@@ -24,15 +25,16 @@ interface ArrangementPlannedDurationProps {
 function Cell({ children }: { children: React.ReactNode }) {
   return (
     <Grid
-      item
-      p={1}
-      xs={12}
-      lg={6}
-      display="flex"
-      alignItems="center"
-      justifyContent="space-between"
-      border="1px solid"
-      borderColor="grey.200"
+      size={1}
+      sx={{
+        p: 1,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        minWidth: 0,
+        border: '1px solid',
+        borderColor: 'grey.200',
+      }}
     >
       {children}
     </Grid>
@@ -90,9 +92,14 @@ export function ArrangementPlannedDuration({
       className="ph-unmask"
       container
       spacing={0}
-      mt={6}
-      mb={1}
-      sx={{ border: '1px solid', borderColor: 'grey.200' }}
+      columns={{ xs: 1, sm: 2 }}
+      sx={{
+        clear: 'both',
+        mt: 2,
+        mb: 1,
+        border: '1px solid',
+        borderColor: 'grey.200',
+      }}
     >
       <Cell>
         <DateDisplayEditor

@@ -18,7 +18,13 @@ import {
   selectedLocationContextState,
 } from '../Model/Data';
 
-export function ShellContextSwitcher() {
+interface ShellContextSwitcherProps {
+  contained?: boolean;
+}
+
+export function ShellContextSwitcher({
+  contained = false,
+}: ShellContextSwitcherProps) {
   const organizationConfiguration = useLoadable(organizationConfigurationQuery);
   const locationConfiguration = useLoadable(locationConfigurationQuery);
   const selectedLocationContext = useLoadable(selectedLocationContextState);
@@ -45,13 +51,30 @@ export function ShellContextSwitcher() {
   }
 
   return (
-    <Stack sx={{ position: 'absolute' }}>
+    <Stack
+      sx={{
+        position: contained ? 'static' : 'absolute',
+        minWidth: 0,
+        width: contained ? '100%' : undefined,
+        overflow: 'hidden',
+      }}
+    >
       {organizationConfiguration ? (
         <Typography
           className="ph-unmask"
           variant="subtitle1"
           component="h1"
-          sx={{ position: 'relative', top: -4, left: 8 }}
+          noWrap
+          title={organizationConfiguration.organizationName}
+          sx={{
+            position: 'relative',
+            top: -4,
+            boxSizing: 'border-box',
+            maxWidth: '100%',
+            px: 1,
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
+          }}
         >
           {organizationConfiguration.organizationName}
         </Typography>
@@ -76,6 +99,8 @@ export function ShellContextSwitcher() {
               marginLeft: 0.5,
               marginTop: isDesktop ? -1 : 0,
               height: isDesktop ? 24 : 56,
+              minWidth: 0,
+              maxWidth: '100%',
               '& .MuiInputBase-input': {
                 backgroundColor: theme.palette.primary.main,
                 color: theme.palette.primary.contrastText,
@@ -83,6 +108,9 @@ export function ShellContextSwitcher() {
                 paddingBottom: isDesktop ? 0 : 2,
                 paddingLeft: isDesktop ? 0.5 : 2,
                 paddingRight: isDesktop ? 0.5 : 2,
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+                whiteSpace: 'nowrap',
               },
               '.MuiSelect-iconOutlined': {
                 color: theme.palette.primary.contrastText,
@@ -96,10 +124,12 @@ export function ShellContextSwitcher() {
                 },
             }}
             MenuProps={{
-              MenuListProps: {
-                sx: {
-                  backgroundColor: theme.palette.primary.light,
-                  color: theme.palette.primary.contrastText,
+              slotProps: {
+                list: {
+                  sx: {
+                    backgroundColor: theme.palette.primary.light,
+                    color: theme.palette.primary.contrastText,
+                  },
                 },
               },
             }}
@@ -120,7 +150,17 @@ export function ShellContextSwitcher() {
           <Typography
             variant="subtitle2"
             component="h2"
-            sx={{ position: 'relative', top: -8, left: 8 }}
+            noWrap
+            title={locationConfiguration.name}
+            sx={{
+              position: 'relative',
+              top: -8,
+              boxSizing: 'border-box',
+              maxWidth: '100%',
+              px: 1,
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+            }}
           >
             {locationConfiguration.name}
           </Typography>

@@ -1,4 +1,5 @@
-import { Grid, InputAdornment, TextField } from '@mui/material';
+import Grid from '@mui/material/Grid';
+import { InputAdornment, TextField } from '@mui/material';
 import { Permission } from '../GeneratedClient';
 import { useDirectoryModel } from '../Model/DirectoryModel';
 import { useInlineEditor } from '../Hooks/useInlineEditor';
@@ -25,7 +26,7 @@ export function ConcernsEditor({ familyId, person }: PersonEditorProps) {
     <Grid container spacing={2}>
       {editor.editing ? (
         <>
-          <Grid item xs={12}>
+          <Grid size={12}>
             <TextField
               id="concerns"
               label="Concerns"
@@ -36,24 +37,26 @@ export function ConcernsEditor({ familyId, person }: PersonEditorProps) {
               minRows={2}
               maxRows={5}
               size="small"
-              InputProps={{
-                startAdornment: (
-                  <InputAdornment position="start">
-                    <WarningIcon />
-                  </InputAdornment>
-                ),
+              slotProps={{
+                input: {
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <WarningIcon />
+                    </InputAdornment>
+                  ),
+                },
               }}
               value={editor.value == null ? '' : editor.value}
               onChange={(e) => editor.setValue(e.target.value)}
             />
           </Grid>
-          <Grid item xs={12}>
+          <Grid size={12}>
             {editor.cancelButton}
             {editor.saveButton}
           </Grid>
         </>
       ) : (
-        <Grid item xs={12}>
+        <Grid size={12}>
           Concerns: {person.concerns}
           {permissions(Permission.EditPersonConcerns) && editor.editButton}
         </Grid>

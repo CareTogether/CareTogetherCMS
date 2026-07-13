@@ -1,4 +1,5 @@
-import { Button, Grid, Typography } from '@mui/material';
+import Grid from '@mui/material/Grid';
+import { Button, Typography } from '@mui/material';
 import { CustomField } from '../../GeneratedClient';
 import { CustomFieldsFilter } from '../../Generic/CustomFieldsFilter/CustomFieldsFilter';
 import {
@@ -29,10 +30,9 @@ export function PartneringFamilyCustomFieldFiltersSidePanel({
     <Grid
       container
       spacing={2}
-      maxWidth={500}
-      sx={{ paddingBottom: { xs: 10, sm: 4 } }}
+      sx={{ maxWidth: 500, paddingBottom: { xs: 10, sm: 4 } }}
     >
-      <Grid item xs={12}>
+      <Grid size={12}>
         <h3>Custom Field Filters</h3>
         <Typography>
           Select one or more values for each custom field to narrow the client
@@ -40,7 +40,7 @@ export function PartneringFamilyCustomFieldFiltersSidePanel({
         </Typography>
       </Grid>
 
-      <Grid item xs={12}>
+      <Grid size={12}>
         <CustomFieldsFilter
           customFields={customFields}
           optionsByField={optionsByField}
@@ -51,7 +51,7 @@ export function PartneringFamilyCustomFieldFiltersSidePanel({
         />
       </Grid>
 
-      <Grid item xs={12} sx={{ textAlign: 'right' }}>
+      <Grid size={12} sx={{ textAlign: 'right' }}>
         <Button color="secondary" variant="contained" onClick={onClose}>
           Close
         </Button>

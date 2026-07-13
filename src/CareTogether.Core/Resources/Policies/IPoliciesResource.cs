@@ -11,7 +11,8 @@ namespace CareTogether.Resources.Policies
         ImmutableList<LocationConfiguration> Locations,
         ImmutableList<RoleDefinition> Roles,
         ImmutableList<string> CommunityRoles,
-        ImmutableList<string>? ReferralCloseReasons
+        ImmutableList<string>? ReferralCloseReasons,
+        ImmutableList<string>? CaseCloseReasons
     );
 
     public sealed record LocationConfiguration(
@@ -111,9 +112,30 @@ namespace CareTogether.Resources.Policies
         VolunteerPolicy VolunteerPolicy
     )
     {
+        public FamilyMemberCustomFieldPolicy CustomFields { get; init; } =
+            FamilyMemberCustomFieldPolicy.Empty;
+
         public V1ReferralPolicy V1ReferralPolicy { get; init; } =
             new(ImmutableList<FunctionAssignmentPolicy>.Empty);
     };
+
+    public sealed record FamilyMemberCustomFieldPolicy(
+        FamilyMemberCustomFields PartneringFamily,
+        FamilyMemberCustomFields VolunteerFamily
+    )
+    {
+        public static FamilyMemberCustomFieldPolicy Empty { get; } =
+            new(FamilyMemberCustomFields.Empty, FamilyMemberCustomFields.Empty);
+    }
+
+    public sealed record FamilyMemberCustomFields(
+        ImmutableList<CustomField> Adult,
+        ImmutableList<CustomField> Child
+    )
+    {
+        public static FamilyMemberCustomFields Empty { get; } =
+            new(ImmutableList<CustomField>.Empty, ImmutableList<CustomField>.Empty);
+    }
 
     public enum DocumentLinkRequirement
     {
@@ -189,7 +211,8 @@ namespace CareTogether.Resources.Policies
         string Name,
         CustomFieldType Type,
         CustomFieldValidation? Validation,
-        ImmutableList<string>? ValidValues
+        ImmutableList<string>? ValidValues,
+        string? GroupingKey
     );
 
     public enum CustomFieldType
@@ -215,7 +238,44 @@ namespace CareTogether.Resources.Policies
         ImmutableList<RequirementDefinition>? RequiredSetupActions = null,
         ImmutableList<MonitoringRequirement>? RequiredMonitoringActionsNew = null, // TODO: Rename to RequiredMonitoringActions after migration (see TODO in ReferralPolicy)
         ImmutableList<RequirementDefinition>? RequiredCloseoutActions = null,
-        DateTime? SupersededAtUtc = null
+        DateTime? SupersededAtUtc = null,
+        ImmutableList<ArrangementPolicyVersion>? PolicyVersions = null
+    )
+    {
+        public ImmutableList<RequirementDefinition> RequiredSetupActions_PRE_MIGRATION =
+            RequiredSetupActionNames
+                .Select(requirementName => new RequirementDefinition(requirementName, true))
+                .Concat(RequiredSetupActions ?? ImmutableList<RequirementDefinition>.Empty)
+                .ToImmutableList();
+
+        public ImmutableList<MonitoringRequirement> RequiredMonitoringActions_PRE_MIGRATION =
+            RequiredMonitoringActions
+                .Select(requirement => new MonitoringRequirement(
+                    new RequirementDefinition(requirement.ActionName, true),
+                    requirement.Recurrence
+                ))
+                .Concat(RequiredMonitoringActionsNew ?? ImmutableList<MonitoringRequirement>.Empty)
+                .ToImmutableList();
+
+        public ImmutableList<RequirementDefinition> RequiredCloseoutActionNames_PRE_MIGRATION =
+            RequiredCloseoutActionNames
+                .Select(requirementName => new RequirementDefinition(requirementName, true))
+                .Concat(RequiredCloseoutActions ?? ImmutableList<RequirementDefinition>.Empty)
+                .ToImmutableList();
+    };
+
+    public sealed record ArrangementPolicyVersion(
+        string Version,
+        DateTime? SupersededAtUtc,
+        ChildInvolvement ChildInvolvement,
+        ImmutableList<ArrangementFunction> ArrangementFunctions,
+        ImmutableList<string> RequiredSetupActionNames,
+        ImmutableList<MonitoringRequirementOld> RequiredMonitoringActions,
+        ImmutableList<string> RequiredCloseoutActionNames,
+        // TODO: See TODO in ReferralPolicy
+        ImmutableList<RequirementDefinition>? RequiredSetupActions = null,
+        ImmutableList<MonitoringRequirement>? RequiredMonitoringActionsNew = null, // TODO: Rename to RequiredMonitoringActions after migration (see TODO in ReferralPolicy)
+        ImmutableList<RequirementDefinition>? RequiredCloseoutActions = null
     )
     {
         public ImmutableList<RequirementDefinition> RequiredSetupActions_PRE_MIGRATION =
@@ -410,6 +470,12 @@ namespace CareTogether.Resources.Policies
         )> UpsertLocationDefinitionAsync(
             Guid organizationId,
             LocationConfiguration locationConfiguration
+        );
+
+        Task<OrganizationConfiguration> UpsertOrganizationConfigurationAsync(
+            Guid organizationId,
+            ImmutableList<string>? referralCloseReasons,
+            ImmutableList<string>? caseCloseReasons
         );
 
         Task<EffectiveLocationPolicy> UpsertEffectiveLocationPolicyAsync(
