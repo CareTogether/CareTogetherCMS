@@ -181,7 +181,9 @@ type ActiveCaseArrangementSummaryV2 = {
   id: string;
   arrangementType: string;
   arrangedPersonLabel: string;
+  currentLocationLabel: string;
   phase: ArrangementPhase;
+  relevantDateLabel?: string;
   statusLabel: string;
 };
 type FamilyScreenTabValue =
@@ -586,7 +588,14 @@ export function FamilyScreenV2() {
           id: row.id,
           arrangementType: row.arrangementType,
           arrangedPersonLabel: row.childOrPersonLabel || 'Unassigned',
+          currentLocationLabel:
+            row.currentLocationLabel || 'Location unspecified',
           phase: row.source.phase,
+          relevantDateLabel: row.startedDate
+            ? `Started ${row.startedDate}`
+            : row.requestedDate
+              ? `Requested ${row.requestedDate}`
+              : undefined,
           statusLabel: activeArrangementStatusLabel(row.source.phase),
         };
       });
@@ -2179,6 +2188,24 @@ export function FamilyScreenV2() {
                             >
                               {arrangement.arrangedPersonLabel}
                             </Typography>
+                            <Typography
+                              className="ph-unmask"
+                              color="text.secondary"
+                              {...v2Typography.browserSecondary}
+                              noWrap
+                            >
+                              {arrangement.currentLocationLabel}
+                            </Typography>
+                            {arrangement.relevantDateLabel && (
+                              <Typography
+                                className="ph-unmask"
+                                color="text.secondary"
+                                {...v2Typography.browserSecondary}
+                                noWrap
+                              >
+                                {arrangement.relevantDateLabel}
+                              </Typography>
+                            )}
                           </Box>
                         </Card>
                       ))}
