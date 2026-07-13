@@ -43,7 +43,7 @@ import {
   MOBILE_BOTTOM_SAFE_AREA,
 } from '../../Shell/shellLayoutConstants';
 import { useFeatureFlagEnabled, usePostHog } from 'posthog-js/react';
-import { POLICY_SELF_SERVICE_FEATURE_FLAG } from '../../featureFlags';
+import { SELF_SERVICE_POLICY_FEATURE_FLAG } from '../../featureFlags';
 
 export function LocationEdit() {
   const { locationId, editingLocationId } = useParams<{
@@ -76,7 +76,7 @@ export function LocationEdit() {
   const policy = useLoadable(policyData);
   const posthog = usePostHog();
   const showPolicySelfService = useFeatureFlagEnabled(
-    POLICY_SELF_SERVICE_FEATURE_FLAG
+    SELF_SERVICE_POLICY_FEATURE_FLAG
   );
   const featureFlagsLoaded = posthog.featureFlags.hasLoadedFlags;
   const [policyDraft, setPolicyDraft] =
