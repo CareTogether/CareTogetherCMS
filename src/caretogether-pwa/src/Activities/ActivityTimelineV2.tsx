@@ -509,16 +509,25 @@ export function ActivityTimelineV2({
         </Typography>
         <Box sx={{ display: 'flex', justifyContent: 'flex-start', mb: 1 }}>
           <FormControl size="small" sx={{ minWidth: 160 }}>
-            <InputLabel>Sort by</InputLabel>
+            <InputLabel className="ph-unmask">Sort by</InputLabel>
             <Select
+              className="ph-unmask"
               value={sortBy}
               label="Sort by"
               onChange={(e) => setSortBy(e.target.value as ActivitySorting)}
             >
-              <MenuItem value="activity">Activity date (default)</MenuItem>
-              <MenuItem value="created">Note created date</MenuItem>
-              <MenuItem value="edited">Note last edited date</MenuItem>
-              <MenuItem value="approved">Note approved date</MenuItem>
+              <MenuItem className="ph-unmask" value="activity">
+                Activity date (default)
+              </MenuItem>
+              <MenuItem className="ph-unmask" value="created">
+                Note created date
+              </MenuItem>
+              <MenuItem className="ph-unmask" value="edited">
+                Note last edited date
+              </MenuItem>
+              <MenuItem className="ph-unmask" value="approved">
+                Note approved date
+              </MenuItem>
             </Select>
           </FormControl>
         </Box>
@@ -571,7 +580,7 @@ export function ActivityTimelineV2({
                 }}
               >
                 <Box sx={{ color: 'text.disabled', margin: 0, padding: 0 }}>
-                  <span className="ph-unmask" style={{ marginRight: 16 }}>
+                  <span style={{ marginRight: 16 }}>
                     {format(item.timestamp, 'M/d/yy h:mm a')}
                   </span>
                   {item.userId ? (

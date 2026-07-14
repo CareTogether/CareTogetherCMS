@@ -76,11 +76,7 @@ function DetailField({
       <Typography color="text.secondary" variant="caption">
         {label}
       </Typography>
-      <Typography
-        className="ph-unmask"
-        variant="body2"
-        sx={{ fontWeight: 600 }}
-      >
+      <Typography variant="body2" sx={{ fontWeight: 600 }}>
         {children}
       </Typography>
     </Box>
@@ -138,7 +134,7 @@ function DocumentList({
             p: 1,
           }}
         >
-          <Typography className="ph-unmask" variant="body2">
+          <Typography variant="body2">
             {document.uploadedFileName}
           </Typography>
           <Typography color="text.secondary" variant="caption">
@@ -186,7 +182,7 @@ function NoteList({
               p: 1,
             }}
           >
-            <Typography className="ph-unmask" variant="body2">
+            <Typography variant="body2">
               {note.contents}
             </Typography>
             <Typography color="text.secondary" variant="caption">
@@ -207,7 +203,7 @@ function NoteList({
             p: 1,
           }}
         >
-          <Typography className="ph-unmask" variant="body2">
+          <Typography variant="body2">
             {note}
           </Typography>
         </Box>

@@ -17,10 +17,7 @@ function DetailField({
       <Typography color="text.secondary" variant="caption">
         {label}
       </Typography>
-      <Typography
-        className="ph-unmask"
-        {...v2Typography.primaryValue}
-      >
+      <Typography {...v2Typography.primaryValue}>
         {children || '-'}
       </Typography>
     </Box>
@@ -41,11 +38,7 @@ export function ArrangementOverviewSectionV2({
         <Typography color="text.secondary" variant="caption">
           Arrangement Reason
         </Typography>
-        <Typography
-          className="ph-unmask"
-          component="div"
-          {...v2Typography.primaryValue}
-        >
+        <Typography component="div" {...v2Typography.primaryValue}>
           <ArrangementReason
             arrangement={row.source}
             hideLabel
@@ -58,11 +51,7 @@ export function ArrangementOverviewSectionV2({
         <Typography color="text.secondary" variant="caption">
           Arrangement Comments
         </Typography>
-        <Typography
-          className="ph-unmask"
-          component="div"
-          {...v2Typography.primaryValue}
-        >
+        <Typography component="div" {...v2Typography.primaryValue}>
           <ArrangementComments
             arrangement={row.source}
             partneringFamily={row.partneringFamily}

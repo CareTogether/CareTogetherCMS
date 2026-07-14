@@ -264,7 +264,6 @@ export function FamilyMemberDrawerV2({
                     Family Member
                   </Typography>
                   <Typography
-                    className="ph-unmask"
                     id="family-member-drawer-title"
                     variant="h5"
                   >

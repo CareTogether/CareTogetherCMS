@@ -330,7 +330,6 @@ export function ApprovalLedgerSection({ rows }: ApprovalLedgerSectionProps) {
                           size="small"
                           variant="outlined"
                           label={subject.label}
-                          className="ph-unmask"
                         />
                       ))}
                     </Box>
@@ -369,7 +368,7 @@ export function ApprovalLedgerSection({ rows }: ApprovalLedgerSectionProps) {
                       'notes'
                     )}
                   </TableCell>
-                  <TableCell className="ph-unmask">
+                  <TableCell>
                     {row.completedOrExemptedByUserId ? (
                       <PersonName
                         person={userLookup(row.completedOrExemptedByUserId)}

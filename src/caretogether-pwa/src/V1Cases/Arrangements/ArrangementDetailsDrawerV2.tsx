@@ -310,7 +310,7 @@ function CompletedRequirementActionRowV2({
         }
       >
         <>
-          <span className="ph-unmask">
+          <span>
             {completed.requirementName}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
             {completed.completedAtUtc && (
               <span style={{ float: 'right' }}>
@@ -501,7 +501,7 @@ function ArrangementRequirementsSectionV2({ row }: { row: ArrangementRowV2 }) {
   const completedCount = completedStable.length + exemptedStable.length;
 
   return (
-    <Stack className="ph-unmask" spacing={1.5}>
+    <Stack spacing={1.5}>
       <RequirementGroupV2 title="Needs Attention" count={needsAttentionCount}>
         {missingNeedsAttention.map(({ context, missing }, index) => (
           <MissingRequirementActionRowV2

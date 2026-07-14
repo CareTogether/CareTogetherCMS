@@ -145,7 +145,6 @@ export function ArrangementParticipantManagementDrawerV2({
             {summaries.map((summary) => (
               <Box
                 key={summary.functionName}
-                className="ph-unmask"
                 onClick={() => setSelectedFunctionSummary(summary)}
                 sx={{
                   borderBottom: 1,
@@ -603,7 +602,7 @@ function ArrangementAssignmentDetailDrawerV2({
                     }}
                   >
                     <Stack spacing={0.25}>
-                      <Typography className="ph-unmask" variant="body2">
+                      <Typography variant="body2">
                         <AssignmentLabel assignment={assignment} />
                       </Typography>
                       {assignment.arrangementFunctionVariant && (
@@ -643,7 +642,7 @@ function ArrangementAssignmentDetailDrawerV2({
             }}
           >
             <Typography variant="subtitle2">Confirm Unassignment</Typography>
-            <Typography className="ph-unmask" variant="body2">
+            <Typography variant="body2">
               Unassign <AssignmentLabel assignment={unassignmentParameter} />?
             </Typography>
             <Stack

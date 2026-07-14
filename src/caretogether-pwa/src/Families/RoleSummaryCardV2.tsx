@@ -65,11 +65,7 @@ export function RoleSummaryCardV2({ card, onClick }: RoleSummaryCardV2Props) {
   const content = (
     <Stack spacing={1}>
       <Stack spacing={0.25}>
-        <Typography
-          className="ph-unmask"
-          color="text.secondary"
-          variant="body2"
-        >
+        <Typography color="text.secondary" variant="body2">
           {card.subject.label}
         </Typography>
         <Typography

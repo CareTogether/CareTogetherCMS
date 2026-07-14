@@ -41,10 +41,13 @@ export function ArrangementCardTitle({
     useState(false);
 
   return (
-    <div className="ph-unmask">
-      <span>{arrangement.arrangementType}</span>
+    <div>
+      <span className="ph-unmask">{arrangement.arrangementType}</span>
       {arrangement.arrangementPolicyVersion && (
-        <span style={{ marginLeft: 8, color: '#666', fontSize: 12 }}>
+        <span
+          className="ph-unmask"
+          style={{ marginLeft: 8, color: '#666', fontSize: 12 }}
+        >
           {arrangement.arrangementPolicyVersion}
         </span>
       )}

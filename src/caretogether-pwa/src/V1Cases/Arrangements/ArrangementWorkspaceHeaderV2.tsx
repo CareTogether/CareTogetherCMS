@@ -62,7 +62,6 @@ export function ArrangementWorkspaceHeaderV2({
           >
             <Chip label={row.statusLabel} size="small" />
             <Typography
-              className="ph-unmask"
               color="text.secondary"
               variant="body2"
             >
