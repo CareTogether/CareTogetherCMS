@@ -123,6 +123,12 @@ namespace CareTogether.Engines.Authorization
             SessionUserContext user
         );
 
+        Task<bool> AuthorizeLocationPolicyEditAsync(
+            Guid organizationId,
+            Guid locationId,
+            SessionUserContext user
+        );
+
         Task<CombinedFamilyInfo> DiscloseFamilyAsync(
             SessionUserContext user,
             Guid organizationId,
@@ -130,11 +136,27 @@ namespace CareTogether.Engines.Authorization
             CombinedFamilyInfo family
         );
 
+        Task<CombinedFamilyInfo> DiscloseFamilyAsync(
+            SessionUserContext user,
+            Guid organizationId,
+            Guid locationId,
+            CombinedFamilyInfo family,
+            ImmutableList<Permission> contextPermissions
+        );
+
         Task<CommunityInfo> DiscloseCommunityAsync(
             SessionUserContext user,
             Guid organizationId,
             Guid locationId,
             CommunityInfo community
+        );
+
+        Task<CommunityInfo> DiscloseCommunityAsync(
+            SessionUserContext user,
+            Guid organizationId,
+            Guid locationId,
+            CommunityInfo community,
+            ImmutableList<Permission> contextPermissions
         );
     }
 }

@@ -19,7 +19,8 @@ namespace CareTogether.Api.OData
             builder.EntitySet<FamilyRoleApproval>("FamilyRoleApprovals");
             builder.EntitySet<IndividualRoleApproval>("IndividualRoleApprovals");
             builder.EntitySet<FamilyRoleRemovedIndividual>("FamilyRoleRemovedIndividuals");
-            builder.EntitySet<Referral>("Referral");
+            builder.EntitySet<Case>("Cases");
+            builder.EntitySet<Referral>("Referrals");
             builder.EntitySet<Arrangement>("Arrangement");
             builder.EntitySet<ArrangementType>("ArrangementType");
             builder.EntitySet<ChildLocationRecord>("ChildLocationRecords");

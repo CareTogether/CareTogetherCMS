@@ -81,7 +81,8 @@ namespace CareTogether.Resources.Directory
             ImmutableList<EmailAddress> EmailAddresses,
             Guid? PreferredEmailAddressId,
             string? Concerns,
-            string? Notes
+            string? Notes,
+            ImmutableDictionary<string, CompletedCustomFieldInfo> CompletedCustomFields
         )
         {
             internal Person ToPerson() =>
@@ -101,7 +102,10 @@ namespace CareTogether.Resources.Directory
                     PreferredEmailAddressId,
                     Concerns,
                     Notes
-                );
+                )
+                {
+                    CompletedCustomFields = CompletedCustomFields.Values.ToImmutableList(),
+                };
         }
 
         private ImmutableDictionary<Guid, PersonEntry> people = ImmutableDictionary<
@@ -330,7 +334,11 @@ namespace CareTogether.Resources.Directory
                     c.EmailAddresses,
                     c.PreferredEmailAddressId,
                     c.Concerns,
-                    c.Notes
+                    c.Notes,
+                    CompletedCustomFields: ImmutableDictionary<
+                        string,
+                        CompletedCustomFieldInfo
+                    >.Empty
                 ),
                 _ => people.TryGetValue(command.PersonId, out var personEntry)
                     ? command switch
@@ -396,6 +404,20 @@ namespace CareTogether.Resources.Directory
                             PreferredEmailAddressId = c.IsPreferredEmailAddress
                                 ? c.EmailAddress.Id
                                 : personEntry.PreferredEmailAddressId,
+                        },
+                        UpdateCustomFamilyMemberField c => personEntry with
+                        {
+                            CompletedCustomFields = personEntry.CompletedCustomFields.SetItem(
+                                c.CustomFieldName,
+                                new CompletedCustomFieldInfo(
+                                    userId,
+                                    timestampUtc,
+                                    c.CompletedCustomFieldId,
+                                    c.CustomFieldName,
+                                    c.CustomFieldType,
+                                    c.Value
+                                )
+                            ),
                         },
                         _ => throw new NotImplementedException(
                             $"The command type '{command.GetType().FullName}' has not been implemented."

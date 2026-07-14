@@ -1,6 +1,5 @@
-import Grid from '@mui/material/GridLegacy';
-import {
-  useReactToPrint } from 'react-to-print';
+import Grid from '../Generic/GridLegacyCompat';
+import { useReactToPrint } from 'react-to-print';
 import {
   Container,
   Toolbar,
@@ -45,8 +44,8 @@ import {
 import { AdultCard } from './AdultCard';
 import { ChildCard } from './ChildCard';
 import { useEffect, useRef, useState } from 'react';
-import { AddAdultDialog } from './AddAdultDialog';
-import { AddChildDialog } from './AddChildDialog';
+import { AddAdultDialog } from './AddAdultDrawer';
+import { AddChildDialog } from './AddChildDrawer';
 import { AddEditNoteDialog } from '../Notes/AddEditNoteDialog';
 import { format } from 'date-fns';
 import { UploadFamilyDocumentsDialog } from './UploadFamilyDocumentsDialog';
@@ -54,7 +53,7 @@ import { CloseV1CaseDrawer } from '../V1Cases/CloseV1CaseDrawer';
 import { OpenNewV1CaseDialog } from '../V1Cases/OpenNewV1CaseDialog';
 import { FamilyDocuments } from './FamilyDocuments';
 import { useFamilyPermissions } from '../Model/SessionModel';
-import { Masonry } from '@mui/lab';
+import { AppMasonry } from '../Generic/AppMasonry';
 import { MissingRequirementRow } from '../Requirements/MissingRequirementRow';
 import { ExemptedRequirementRow } from '../Requirements/ExemptedRequirementRow';
 import { CompletedRequirementRow } from '../Requirements/CompletedRequirementRow';
@@ -88,7 +87,6 @@ import { familyLastName } from './FamilyUtils';
 import { useLoadable } from '../Hooks/useLoadable';
 import { visibleCommunitiesQuery } from '../Model/Data';
 import { useAppNavigate } from '../Hooks/useAppNavigate';
-import FamilyScreenPageVersionSwitch from './FamilyScreenPageVersionSwitch';
 import posthog from 'posthog-js';
 import { AssignmentsSection } from '../Families/AssignmentsSection';
 import { useMemo } from 'react';
@@ -440,7 +438,7 @@ export function FamilyScreen() {
 
   if (!family) {
     return (
-      <Box mt={10} textAlign="center">
+      <Box sx={{ mt: 10, textAlign: 'center' }}>
         <Typography>
           Oops! You can’t view this family. It may be restricted or unavailable.
         </Typography>
@@ -484,17 +482,17 @@ export function FamilyScreen() {
         )}
         {permissions(Permission.EditFamilyInfo) &&
           permissions(Permission.ViewFamilyChildren) && (
-          <Button
-            className="ph-unmask"
-            onClick={() => setAddChildDialogOpen(true)}
-            variant="contained"
-            size="small"
-            sx={{ margin: 1 }}
-            startIcon={<AddCircleIcon />}
-          >
-            Child
-          </Button>
-        )}
+            <Button
+              className="ph-unmask"
+              onClick={() => setAddChildDialogOpen(true)}
+              variant="contained"
+              size="small"
+              sx={{ margin: 1 }}
+              startIcon={<AddCircleIcon />}
+            >
+              Child
+            </Button>
+          )}
         {(permissions(Permission.AddEditDraftNotes) ||
           permissions(Permission.AddEditOwnDraftNotes)) && (
           <Button
@@ -668,7 +666,6 @@ export function FamilyScreen() {
             familyId={familyId}
           />
         )}
-        <FamilyScreenPageVersionSwitch />
       </Toolbar>
       <Grid container spacing={0}>
         <Grid item xs={12} md={4} spacing={0}>
@@ -705,9 +702,15 @@ export function FamilyScreen() {
                 family.volunteerFamilyInfo &&
                 orderCustomFieldsByPolicy(
                   Array<CustomFieldRenderInfo>()
-                    .concat(family.volunteerFamilyInfo.completedCustomFields || [])
-                    .concat(family.volunteerFamilyInfo.missingCustomFields || []),
-                  policy.volunteerPolicy?.customFields?.map((field) => field.name) ?? []
+                    .concat(
+                      family.volunteerFamilyInfo.completedCustomFields || []
+                    )
+                    .concat(
+                      family.volunteerFamilyInfo.missingCustomFields || []
+                    ),
+                  policy.volunteerPolicy?.customFields?.map(
+                    (field) => field.name
+                  ) ?? []
                 ).map((customField) => (
                   <VolunteerFamilyCustomField
                     key={
@@ -1364,7 +1367,7 @@ export function FamilyScreen() {
               <Typography className="ph-unmask" variant="h3" sx={{ mb: 1 }}>
                 Family Members
               </Typography>
-              <Masonry
+              <AppMasonry
                 columns={isDesktop ? (isWideScreen ? 3 : 2) : 1}
                 spacing={2}
               >
@@ -1392,7 +1395,7 @@ export function FamilyScreen() {
                         />
                       )
                   )}
-              </Masonry>
+              </AppMasonry>
             </Grid>
           </Grid>
         </Grid>

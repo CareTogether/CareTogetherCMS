@@ -44,7 +44,7 @@ export function LocationsSection() {
         sx={{ mb: 2 }}
       />
 
-      <Typography variant="h2" mt={2}>
+      <Typography variant="h2" sx={{ mt: 2 }}>
         Locations
       </Typography>
 

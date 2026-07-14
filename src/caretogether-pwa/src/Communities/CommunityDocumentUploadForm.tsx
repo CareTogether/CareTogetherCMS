@@ -68,7 +68,7 @@ export function CommunityDocumentUpload({
   }
 
   return (
-    <Grid container spacing={2} maxWidth={500}>
+    <Grid container spacing={2} sx={{ maxWidth: 500 }}>
       <Grid size={12}>
         <h3>Upload Community Documents</h3>
       </Grid>

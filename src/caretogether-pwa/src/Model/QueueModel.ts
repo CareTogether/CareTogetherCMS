@@ -3,6 +3,7 @@ import {
   CombinedFamilyInfo,
   ExactAge,
   Person,
+  RoleApprovalStatus,
   V1Case,
 } from '../GeneratedClient';
 import { visibleFamiliesQuery } from './Data';
@@ -37,10 +38,16 @@ export interface ChildNotReturned {
 const childrenOver18Query = selector<ChildOver18[]>({
   key: 'childrenOver18Query',
   get: ({ get }) => {
+    // Only show these alerts for volunteer families with active family roles.
     const visibleFamilies = get(visibleFamiliesQuery);
     return visibleFamilies
       ?.filter((family) => family.volunteerFamilyInfo)
       .flatMap((family) => {
+        if (Object.entries(family.volunteerFamilyInfo!.familyRoleApprovals).every(([, approvalStatus]) =>
+          approvalStatus.currentStatus === RoleApprovalStatus.Inactive ||
+          approvalStatus.currentStatus === RoleApprovalStatus.Denied))
+          return [];
+        
         const children = family.family?.children ?? [];
         return children
           .filter(
@@ -49,7 +56,7 @@ const childrenOver18Query = selector<ChildOver18[]>({
               differenceInYears(
                 new Date(),
                 (child.age as ExactAge).dateOfBirth!
-              ) > 18
+              ) >= 18
           )
           .map((child) => ({ type: 'ChildOver18', family, child }));
       });
