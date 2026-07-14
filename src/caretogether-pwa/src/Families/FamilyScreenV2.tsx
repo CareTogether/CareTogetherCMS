@@ -573,7 +573,7 @@ export function FamilyScreenV2() {
   }
 
   function openArrangementWorkspaceFromSummaryCard(
-    event: KeyboardEvent,
+    event: React.KeyboardEvent,
     rowId: string
   ) {
     if (event.key !== 'Enter' && event.key !== ' ') return;
