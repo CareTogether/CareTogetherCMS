@@ -181,8 +181,8 @@ function NoteList({
               borderColor: 'divider',
               borderRadius: 1,
               p: 1,
-          }}
-        >
+            }}
+          >
             <Typography {...v2Typography.browserCell}>
               {note.contents}
             </Typography>

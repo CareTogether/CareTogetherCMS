@@ -227,7 +227,7 @@ function ParticipantsSection({
             justifyContent: 'space-between',
           }}
         >
-          <Typography className="ph-unmask" variant="body2">
+          <Typography variant="body2">
             {participant.label}
           </Typography>
           <Chip
@@ -489,7 +489,6 @@ export function RoleDetailsDrawerV2({
                   {role.roleName}
                 </Typography>
                 <Typography
-                  className="ph-unmask"
                   color="text.secondary"
                   variant="body2"
                 >
@@ -514,7 +513,6 @@ export function RoleDetailsDrawerV2({
                       />
                       {effectiveDate && (
                         <Chip
-                          className="ph-unmask"
                           label={effectiveDate}
                           size="small"
                           variant="outlined"
@@ -526,7 +524,6 @@ export function RoleDetailsDrawerV2({
                       <Chip color="default" label="Removed" size="small" />
                       {removedDate && (
                         <Chip
-                          className="ph-unmask"
                           label={removedDate}
                           size="small"
                           variant="outlined"

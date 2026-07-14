@@ -96,7 +96,6 @@ export function ArrangementTimelineSectionV2({
 
   return (
     <Box
-      className="ph-unmask"
       sx={{
         display: 'grid',
         gridTemplateColumns: {

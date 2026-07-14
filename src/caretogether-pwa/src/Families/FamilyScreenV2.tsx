@@ -8,6 +8,7 @@ import {
   useTheme,
   Box,
   IconButton,
+  Card,
   ListItemText,
   Menu,
   MenuItem,
@@ -37,6 +38,8 @@ import {
   Note,
   NoteStatus,
   V1ReferralNoteStatus,
+  Arrangement,
+  ArrangementPhase,
   ArrangementRequirementCompleted,
   ChildLocationChanged,
   ReferralOpened as V1CaseOpened,
@@ -82,6 +85,7 @@ import {
   V1CaseContext,
 } from '../Requirements/RequirementContext';
 import { ActivityTimelineV2 } from '../Activities/ActivityTimelineV2';
+import { formatTimelineTimestamp } from '../Activities/timelineTimestampFormatting';
 import { V1CaseCommentsV2 } from '../V1Cases/V1CaseCommentsV2';
 import { V1CaseCustomField } from '../V1Cases/V1CaseCustomField';
 import { PrimaryContactEditor } from './PrimaryContactEditor';
@@ -93,6 +97,7 @@ import {
   useCommunityLookup,
   useFamilyLookup,
   useNoteAuthorLookup,
+  usePersonLookup,
   useUserLookup,
   useDirectoryModel,
 } from '../Model/DirectoryModel';
@@ -112,6 +117,12 @@ import { AssignmentsSection } from '../Families/AssignmentsSectionV2';
 import { useBackdrop } from '../Hooks/useBackdrop';
 import { useSyncV1CaseIdInURL } from '../Hooks/useSyncV1CaseIdInURL';
 import { ArrangementsSection } from '../V1Cases/Arrangements/ArrangementsSection/ArrangementsSectionV2';
+import { getFilteredArrangements } from '../V1Cases/Arrangements/ArrangementsSection/getFilteredArrangements';
+import { ArrangementDetailsDrawerV2 } from '../V1Cases/Arrangements/ArrangementDetailsDrawerV2';
+import {
+  ArrangementRowV2,
+  buildArrangementRowsV2,
+} from '../V1Cases/Arrangements/arrangementViewModel';
 import { useFeatureFlagEnabled } from 'posthog-js/react';
 import { TestFamilyBadge } from './TestFamilyBadge';
 import { visibleReferralsQuery } from '../Model/Data';
@@ -121,7 +132,7 @@ import { useV1CasesModel } from '../Model/V1CasesModel';
 import { formatStatusWithDate } from '../V1Referrals/formatStatusWithDate';
 import { policyData } from '../Model/ConfigurationModel';
 import { FAMILY_MEMBER_PRINT_INFORMATION_FEATURE_FLAG } from '../featureFlags';
-import { PersonName } from './PersonName';
+import { PersonName, personNameString } from './PersonName';
 import { buildGroupedV1ReferralTimelineEntries } from '../V1Referrals/referralTimelineHelpers';
 import { useGlobalSnackBar } from '../Hooks/useGlobalSnackBar';
 import { ClampTypography } from '../Generic/ClampTypography';
@@ -157,6 +168,7 @@ type CustomFieldRenderInfo = CompletedCustomFieldInfo | string;
 type ReferralNoteEntry = NonNullable<V1Referral['notes']>[number];
 type RecentNoteAction = 'edit' | 'approve' | 'delete';
 type RecentOverviewTimelineItem = {
+  activity?: Activity;
   id: string;
   timestamp: Date;
   title: string;
@@ -166,6 +178,15 @@ type RecentOverviewTimelineItem = {
   referralNote?: ReferralNoteEntry;
   referralId?: string;
   icon: 'check' | 'edit' | 'location';
+};
+type ActiveCaseArrangementSummaryV2 = {
+  id: string;
+  arrangementType: string;
+  arrangedPersonLabel: string;
+  currentLocationLabel: string;
+  phase: ArrangementPhase;
+  relevantDateLabel?: string;
+  statusLabel: string;
 };
 type FamilyScreenTabValue =
   | 'overview'
@@ -180,6 +201,26 @@ type FamilyScreenTab = {
   desktopLabel: React.ReactNode;
   mobileLabel: string;
 };
+
+function isActiveCaseArrangement(arrangement: Arrangement) {
+  return (
+    arrangement.phase === ArrangementPhase.SettingUp ||
+    arrangement.phase === ArrangementPhase.ReadyToStart ||
+    arrangement.phase === ArrangementPhase.Started
+  );
+}
+
+function arrangementAccentColor(phase?: ArrangementPhase) {
+  if (phase === ArrangementPhase.Started) return 'info.main';
+  return 'warning.main';
+}
+
+function activeArrangementStatusLabel(phase?: ArrangementPhase) {
+  if (phase === ArrangementPhase.SettingUp) return 'Setting up';
+  if (phase === ArrangementPhase.ReadyToStart) return 'Ready to start';
+  if (phase === ArrangementPhase.Started) return 'Active';
+  return 'Active';
+}
 
 function stringFromLocationState(state: unknown, key: string) {
   if (!state || typeof state !== 'object' || !(key in state)) {
@@ -358,6 +399,7 @@ export function FamilyScreenV2() {
   const appNavigate = useAppNavigate();
 
   const familyLookup = useFamilyLookup();
+  const personLookup = usePersonLookup();
   const noteAuthorLookup = useNoteAuthorLookup();
   const userLookup = useUserLookup();
   const family = familyLookup(familyId);
@@ -446,6 +488,9 @@ export function FamilyScreenV2() {
     () => allV1Cases.find((v1Case) => v1Case.id === selectedV1CaseId),
     [allV1Cases, selectedV1CaseId]
   );
+  const [selectedArrangementRowId, setSelectedArrangementRowId] = useState<
+    string | null
+  >(null);
 
   const hasOpenV1Case = openV1Cases.length > 0;
   const latestClosedV1Case = closedV1Cases[0];
@@ -489,6 +534,76 @@ export function FamilyScreenV2() {
       )
     );
   }, [caseReferralTable.caseRows, familyReferrals, selectedV1Case?.id]);
+
+  const selectedCaseArrangementRows = useMemo<ArrangementRowV2[]>(() => {
+    if (!family || !selectedV1Case) return [];
+
+    return buildArrangementRowsV2({
+      arrangements: getFilteredArrangements(selectedV1Case, []),
+      arrangementPolicies: policy.referralPolicy?.arrangementPolicies,
+      family,
+      v1Case: selectedV1Case,
+      personLabel: (personFamilyId, personId) =>
+        personNameString(personLookup(personFamilyId, personId)),
+      familyLabel: (arrangementFamilyId) => {
+        const matchedFamily = familyLookup(arrangementFamilyId);
+        const primaryContactPerson = matchedFamily?.family?.adults?.find(
+          (adult) =>
+            adult.item1?.id ===
+            matchedFamily.family?.primaryFamilyContactPersonId
+        )?.item1;
+
+        return primaryContactPerson
+          ? `${personNameString(primaryContactPerson)} Family`
+          : 'Family';
+      },
+    });
+  }, [family, familyLookup, personLookup, policy, selectedV1Case]);
+
+  const selectedArrangementRow = useMemo(
+    () =>
+      selectedCaseArrangementRows.find(
+        (row) => row.id === selectedArrangementRowId
+      ) ?? null,
+    [selectedCaseArrangementRows, selectedArrangementRowId]
+  );
+
+  function openArrangementWorkspace(row: ArrangementRowV2) {
+    setSelectedArrangementRowId(row.id);
+  }
+
+  function openArrangementWorkspaceFromSummaryCard(
+    event: KeyboardEvent,
+    rowId: string
+  ) {
+    if (event.key !== 'Enter' && event.key !== ' ') return;
+
+    event.preventDefault();
+    setSelectedArrangementRowId(rowId);
+  }
+
+  const activeCaseArrangements = useMemo<
+    ActiveCaseArrangementSummaryV2[]
+  >(() => {
+    return selectedCaseArrangementRows
+      .filter((row) => row.id && isActiveCaseArrangement(row.source))
+      .map((row) => {
+        return {
+          id: row.id,
+          arrangementType: row.arrangementType,
+          arrangedPersonLabel: row.childOrPersonLabel || 'Unassigned',
+          currentLocationLabel:
+            row.currentLocationLabel || 'Location unspecified',
+          phase: row.source.phase,
+          relevantDateLabel: row.startedDate
+            ? `Started ${row.startedDate}`
+            : row.requestedDate
+              ? `Requested ${row.requestedDate}`
+              : undefined,
+          statusLabel: activeArrangementStatusLabel(row.source.phase),
+        };
+      });
+  }, [selectedCaseArrangementRows]);
 
   async function reopenCaseNow() {
     if (!selectedV1Case?.id) return;
@@ -644,15 +759,6 @@ export function FamilyScreenV2() {
 
   function openFamilyMemberDrawer(row: FamilyMemberRowV2) {
     setSelectedFamilyMemberRow(row);
-  }
-
-  function openArrangementFromFamilyMember(
-    arrangementId: string,
-    v1CaseId: string
-  ) {
-    setSelectedV1CaseId(v1CaseId);
-    setSelectedTab('arrangementsOrAssignments');
-    setArrangementIdToScrollTo(arrangementId);
   }
 
   function openAddNoteDialog() {
@@ -999,9 +1105,10 @@ export function FamilyScreenV2() {
   function tabLabel(label: string, count?: number, unapprovedCount?: number) {
     return (
       <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75 }}>
-        <span>{label}</span>
+        <span className="ph-unmask">{label}</span>
         {count !== undefined && (
           <Chip
+            className="ph-unmask"
             size="small"
             variant="outlined"
             label={count}
@@ -1010,6 +1117,7 @@ export function FamilyScreenV2() {
         )}
         {unapprovedCount !== undefined && unapprovedCount > 0 && (
           <Chip
+            className="ph-unmask"
             size="small"
             color="warning"
             label={`${unapprovedCount} Awaiting Review`}
@@ -1032,12 +1140,13 @@ export function FamilyScreenV2() {
           width: 'max-content',
         }}
       >
-        <Box component="span" sx={{ flexShrink: 0 }}>
+        <Box component="span" className="ph-unmask" sx={{ flexShrink: 0 }}>
           {label}
         </Box>
         {approvalAttentionCounts.missing > 0 && (
           <Tooltip title={`${approvalAttentionCounts.missing} missing`}>
             <Chip
+              className="ph-unmask"
               size="small"
               color="error"
               label={approvalAttentionCounts.missing}
@@ -1053,6 +1162,7 @@ export function FamilyScreenV2() {
         {approvalAttentionCounts.expired > 0 && (
           <Tooltip title={`${approvalAttentionCounts.expired} expired`}>
             <Chip
+              className="ph-unmask"
               size="small"
               color="warning"
               label={approvalAttentionCounts.expired}
@@ -1214,6 +1324,7 @@ export function FamilyScreenV2() {
 
         return {
           id: `activity:${activity.auditTimestampUtc?.toISOString()}`,
+          activity,
           timestamp: activity.activityTimestampUtc,
           title: recentActivityTitle(activity),
           subtitle: linkedNote?.contents?.trim(),
@@ -1503,13 +1614,15 @@ export function FamilyScreenV2() {
                 minWidth: 0,
               }}
             >
-              <Typography className="ph-unmask" variant="h4">
-                {familyLastName(family)} Family
+              <Typography variant="h4">
+                {familyLastName(family)}{' '}
+                <Box component="span" className="ph-unmask">
+                  Family
+                </Box>
               </Typography>
             </Box>
             {!isDesktop && hasFamilyActions && (
               <IconButton
-                className="ph-unmask"
                 aria-label="family actions"
                 onClick={(event) =>
                   setFamilyMoreMenuAnchor(event.currentTarget)
@@ -1538,12 +1651,11 @@ export function FamilyScreenV2() {
               rowGap: 0.5,
             }}
           >
-            <Box className="ph-unmask">
+            <Box>
               <PrimaryContactEditor family={family} />
             </Box>
             {primaryEmailAddress?.address && (
               <Box
-                className="ph-unmask"
                 sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}
               >
                 <EmailIcon fontSize="small" color="action" />
@@ -1559,7 +1671,6 @@ export function FamilyScreenV2() {
             )}
             {primaryPhoneNumber?.number && (
               <Box
-                className="ph-unmask"
                 sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}
               >
                 <PhoneIcon fontSize="small" color="action" />
@@ -1575,7 +1686,6 @@ export function FamilyScreenV2() {
             )}
             {primaryAddressText && (
               <Box
-                className="ph-unmask"
                 sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}
               >
                 <HomeIcon fontSize="small" color="action" />
@@ -1736,8 +1846,13 @@ export function FamilyScreenV2() {
                     <PrintIcon fontSize="small" />
                   </ListItemIcon>
                   <ListItemText
-                    className="ph-unmask"
-                    primary={`Print ${personFullName(member.person)} information`}
+                    primary={
+                      <>
+                        <span className="ph-unmask">Print </span>
+                        {personFullName(member.person)}
+                        <span className="ph-unmask"> information</span>
+                      </>
+                    }
                   />
                 </MenuItem>
               ))}
@@ -1920,6 +2035,11 @@ export function FamilyScreenV2() {
           setSelectedRemovedRoleId(null);
         }}
       />
+      <ArrangementDetailsDrawerV2
+        row={selectedArrangementRow}
+        open={selectedArrangementRow !== null}
+        onClose={() => setSelectedArrangementRowId(null)}
+      />
       {isPartneringFamily && (
         <Box
           sx={{
@@ -1957,7 +2077,7 @@ export function FamilyScreenV2() {
                         textTransform: 'uppercase',
                       }}
                     >
-                      Current Case
+                      Case
                     </Typography>
                     <Box
                       sx={{
@@ -1969,35 +2089,16 @@ export function FamilyScreenV2() {
                         mb: 0.5,
                       }}
                     >
-                      <Box
-                        sx={{
-                          alignItems: 'center',
-                          display: 'flex',
-                          flexWrap: 'wrap',
-                          gap: 1,
-                          minWidth: 0,
-                        }}
-                      >
-                        <Typography
-                          className="ph-unmask"
-                          color="text.secondary"
-                          variant="subtitle1"
-                          sx={{ fontWeight: 600, m: 0 }}
-                        >
-                          {selectedV1Case.closedAtUtc
-                            ? 'Closed Case'
-                            : 'Open Case'}
+                      <Stack spacing={0.25} sx={{ minWidth: 0 }}>
+                        <Typography {...v2Typography.fieldLabel}>
+                          Opened
                         </Typography>
-                        <Chip
-                          size="small"
-                          color={
-                            selectedV1Case.closedAtUtc ? 'default' : 'success'
-                          }
-                          label={
-                            selectedV1Case.closedAtUtc ? 'Closed' : 'Open'
-                          }
-                        />
-                      </Box>
+                        <Typography
+                          {...v2Typography.primaryValue}
+                        >
+                          {format(selectedV1Case.openedAtUtc, 'MMM d, yyyy')}
+                        </Typography>
+                      </Stack>
                       <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
                         {!selectedV1Case.closedAtUtc && canCloseV1Case && (
                           <Button
@@ -2022,41 +2123,98 @@ export function FamilyScreenV2() {
                           )}
                       </Box>
                     </Box>
+                  </Box>
+                  {activeCaseArrangements.length > 0 && (
                     <Box
                       sx={{
                         display: 'flex',
-                        alignItems: 'center',
-                        gap: 1.25,
                         flexWrap: 'wrap',
+                        gap: 1,
                       }}
                     >
-                      <Typography
-                        className="ph-unmask"
-                        variant="body2"
-                        color="text.secondary"
-                      >
-                        Opened {format(selectedV1Case.openedAtUtc, 'M/d/yy')}
-                      </Typography>
-                      {selectedV1Case.closedAtUtc && (
-                        <Typography
-                          className="ph-unmask"
-                          variant="body2"
-                          color="text.secondary"
+                      {activeCaseArrangements.map((arrangement) => (
+                        <Card
+                          key={arrangement.id}
+                          role="button"
+                          tabIndex={0}
+                          variant="outlined"
+                          onClick={() =>
+                            setSelectedArrangementRowId(arrangement.id)
+                          }
+                          onKeyDown={(event) =>
+                            openArrangementWorkspaceFromSummaryCard(
+                              event,
+                              arrangement.id
+                            )
+                          }
+                          sx={{
+                            borderColor: 'divider',
+                            borderLeft: 3,
+                            borderLeftColor: arrangementAccentColor(
+                              arrangement.phase
+                            ),
+                            cursor: 'pointer',
+                            maxWidth: '100%',
+                            minWidth: 0,
+                            transition: theme.transitions.create(
+                              ['box-shadow'],
+                              {
+                                duration: theme.transitions.duration.shortest,
+                              }
+                            ),
+                            width: 'fit-content',
+                            '&:hover': {
+                              boxShadow: 2,
+                            },
+                            '&:focus-visible': {
+                              outline: `2px solid ${theme.palette.primary.main}`,
+                              outlineOffset: 2,
+                            },
+                          }}
                         >
-                          Closed {format(selectedV1Case.closedAtUtc, 'M/d/yy')}
-                        </Typography>
-                      )}
-                      {selectedV1Case.closeReason && (
-                        <Typography
-                          className="ph-unmask"
-                          variant="body2"
-                          color="text.secondary"
-                        >
-                          {selectedV1Case.closeReason}
-                        </Typography>
-                      )}
+                          <Box sx={{ minWidth: 0, px: 1.25, py: 1 }}>
+                            <Typography {...v2Typography.primaryValue} noWrap>
+                              {arrangement.arrangementType}
+                            </Typography>
+                            <Typography
+                              color="text.secondary"
+                              {...v2Typography.browserSecondary}
+                              noWrap
+                            >
+                              {arrangement.statusLabel}
+                            </Typography>
+                            <Typography
+                              color={
+                                arrangement.arrangedPersonLabel === 'Unassigned'
+                                  ? 'text.secondary'
+                                  : 'text.primary'
+                              }
+                              {...v2Typography.browserSecondary}
+                              noWrap
+                            >
+                              {arrangement.arrangedPersonLabel}
+                            </Typography>
+                            <Typography
+                              color="text.secondary"
+                              {...v2Typography.browserSecondary}
+                              noWrap
+                            >
+                              {arrangement.currentLocationLabel}
+                            </Typography>
+                            {arrangement.relevantDateLabel && (
+                              <Typography
+                                color="text.secondary"
+                                {...v2Typography.browserSecondary}
+                                noWrap
+                              >
+                                {arrangement.relevantDateLabel}
+                              </Typography>
+                            )}
+                          </Box>
+                        </Card>
+                      ))}
                     </Box>
-                  </Box>
+                  )}
                   {currentReferral && (
                     <Box
                       sx={{
@@ -2089,13 +2247,11 @@ export function FamilyScreenV2() {
                         }}
                       >
                         <Typography
-                          className="ph-unmask"
                           {...v2Typography.primaryValue}
                         >
                           {currentReferral.title}
                         </Typography>
                         <Chip
-                          className="ph-unmask"
                           size="small"
                           label={
                             currentReferral.acceptedAtUtc
@@ -2112,7 +2268,6 @@ export function FamilyScreenV2() {
                           }
                         />
                         <Chip
-                          className="ph-unmask"
                           size="small"
                           variant="outlined"
                           label={`Received \u2022 ${format(
@@ -2147,7 +2302,7 @@ export function FamilyScreenV2() {
                       textTransform: 'uppercase',
                     }}
                   >
-                    Current Case
+                    Case
                   </Typography>
                   <Typography className="ph-unmask" variant="h3">
                     No current case
@@ -2224,7 +2379,6 @@ export function FamilyScreenV2() {
                 }}
               >
                 <Typography
-                  className="ph-unmask"
                   variant="caption"
                   color="text.secondary"
                 >
@@ -2233,7 +2387,7 @@ export function FamilyScreenV2() {
                     ? ` · ${format(note.createdTimestampUtc, 'M/d/yy h:mm a')}`
                     : ''}
                 </Typography>
-                <Typography className="ph-unmask" variant="body2">
+                <Typography variant="body2">
                   {note.contents}
                 </Typography>
               </Box>
@@ -2249,14 +2403,22 @@ export function FamilyScreenV2() {
             aria-label="Family screen sections"
           >
             {familyScreenTabs.map((tab) => (
-              <Tab key={tab.value} value={tab.value} label={tab.desktopLabel} />
+              <Tab
+                key={tab.value}
+                className="ph-unmask"
+                value={tab.value}
+                label={tab.desktopLabel}
+              />
             ))}
           </Tabs>
         </Box>
       ) : (
         <FormControl fullWidth size="small" sx={{ mb: 1.5 }}>
-          <InputLabel id="family-screen-section-label">Section</InputLabel>
+          <InputLabel className="ph-unmask" id="family-screen-section-label">
+            Section
+          </InputLabel>
           <Select
+            className="ph-unmask"
             labelId="family-screen-section-label"
             id="family-screen-section-select"
             value={selectedTab}
@@ -2264,7 +2426,7 @@ export function FamilyScreenV2() {
             onChange={handleSelectedTabChange}
           >
             {familyScreenTabs.map((tab) => (
-              <MenuItem key={tab.value} value={tab.value}>
+              <MenuItem className="ph-unmask" key={tab.value} value={tab.value}>
                 {tab.mobileLabel}
               </MenuItem>
             ))}
@@ -2288,520 +2450,553 @@ export function FamilyScreenV2() {
             lg={showOverview ? 8 : 12}
             sx={{ display: 'flex', flexDirection: 'column' }}
           >
-          <Grid container spacing={2}>
-            {showArrangementsOrAssignments && isVolunteerFamily && family && (
-              <AssignmentsSection family={family} hideTitle />
-            )}
-          </Grid>
-
-          <Grid container spacing={0} sx={{ order: 2 }}>
-            {showOverview &&
-              permissions(Permission.ViewV1CaseProgress) &&
-              !referralsEnabled &&
-              selectedV1Case &&
-              v1CaseRequirementContext && (
-                <>
-                  <Grid item xs={12} sm={6} md={4} style={{ paddingRight: 20 }}>
-                    <Typography
-                      className="ph-unmask"
-                      variant="h3"
-                      style={{ marginBottom: 0 }}
-                    >
-                      Incomplete
-                    </Typography>
-                    {selectedV1Case?.missingRequirements?.map((missing, i) => (
-                      <MissingRequirementRow
-                        key={`${missing}:${i}`}
-                        requirement={missing}
-                        context={v1CaseRequirementContext}
-                        v1CaseId={selectedV1Case.id}
-                      />
-                    ))}
-                  </Grid>
-                  <Grid item xs={12} sm={6} md={4} style={{ paddingRight: 20 }}>
-                    <Typography
-                      className="ph-unmask"
-                      variant="h3"
-                      style={{ marginBottom: 0 }}
-                    >
-                      Completed
-                    </Typography>
-                    {selectedV1Case?.completedRequirements?.map(
-                      (completed, i) => (
-                        <CompletedRequirementRow
-                          key={`${completed.completedRequirementId}:${i}`}
-                          requirement={completed}
-                          context={v1CaseRequirementContext}
-                        />
-                      )
-                    )}
-                    {selectedV1Case?.exemptedRequirements?.map(
-                      (exempted, i) => (
-                        <ExemptedRequirementRow
-                          key={`${exempted.requirementName}:${i}`}
-                          requirement={exempted}
-                          context={v1CaseRequirementContext}
-                        />
-                      )
-                    )}
-                  </Grid>
-                </>
+            <Grid container spacing={2}>
+              {showArrangementsOrAssignments && isVolunteerFamily && family && (
+                <AssignmentsSection family={family} hideTitle />
               )}
-            {showCaseHistory && (
-              <Grid item xs={12}>
-                <Box
-                  sx={{
-                    border: 1,
-                    borderColor: 'divider',
-                    borderRadius: 1,
-                    bgcolor: 'background.paper',
-                    p: 2,
-                    mb: 2,
-                  }}
-                >
-                  <Typography className="ph-unmask" variant="h3" sx={{ mb: 2 }}>
-                    Case History
-                  </Typography>
-                  <Box
-                    sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}
-                  >
-                    {caseReferralTable.caseRows.length === 0 ? (
-                      <Typography color="text.secondary" variant="body2">
-                        No cases yet.
-                      </Typography>
-                    ) : (
-                      caseReferralTable.caseRows.map(
-                        ({ v1Case, linkedReferrals }) => {
-                          const isSelected = selectedV1Case?.id === v1Case.id;
-                          const caseStatus = v1Case.closedAtUtc
-                            ? 'Closed'
-                            : 'Open';
+            </Grid>
 
-                          return (
-                            <ListItemButton
-                              key={v1Case.id}
-                              selected={isSelected}
-                              onClick={() => setSelectedV1CaseId(v1Case.id)}
-                              sx={{
-                                alignItems: 'flex-start',
-                                border: 1,
-                                borderColor: isSelected
-                                  ? 'primary.main'
-                                  : 'divider',
-                                borderRadius: 1,
-                                gap: 2,
-                              }}
-                            >
-                              <Box sx={{ flexGrow: 1, minWidth: 0 }}>
-                                <Box
-                                  sx={{
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    gap: 1,
-                                    flexWrap: 'wrap',
-                                    mb: 0.5,
-                                  }}
-                                >
-                                  <Typography
-                                    className="ph-unmask"
-                                    variant="body2"
-                                    sx={{ fontWeight: 600 }}
-                                  >
-                                    {v1Case.closedAtUtc
-                                      ? 'Closed Case'
-                                      : 'Open Case'}
-                                  </Typography>
-                                  <Chip
-                                    size="small"
-                                    color={
-                                      v1Case.closedAtUtc ? 'default' : 'success'
-                                    }
-                                    label={caseStatus}
-                                  />
-                                </Box>
-                                <Typography
-                                  className="ph-unmask"
-                                  variant="caption"
-                                  color="text.secondary"
-                                >
-                                  Opened {format(v1Case.openedAtUtc, 'M/d/yy')}
-                                  {v1Case.closedAtUtc
-                                    ? ` · Closed ${format(
-                                        v1Case.closedAtUtc,
-                                        'M/d/yy'
-                                      )}`
-                                    : ''}
-                                  {v1Case.closeReason
-                                    ? ` · ${v1Case.closeReason}`
-                                    : ''}
-                                </Typography>
-                                {linkedReferrals.length > 0 && (
+            <Grid container spacing={0} sx={{ order: 2 }}>
+              {showOverview &&
+                permissions(Permission.ViewV1CaseProgress) &&
+                !referralsEnabled &&
+                selectedV1Case &&
+                v1CaseRequirementContext && (
+                  <>
+                    <Grid
+                      item
+                      xs={12}
+                      sm={6}
+                      md={4}
+                      style={{ paddingRight: 20 }}
+                    >
+                      <Typography
+                        className="ph-unmask"
+                        variant="h3"
+                        style={{ marginBottom: 0 }}
+                      >
+                        Incomplete
+                      </Typography>
+                      {selectedV1Case?.missingRequirements?.map(
+                        (missing, i) => (
+                          <MissingRequirementRow
+                            key={`${missing}:${i}`}
+                            requirement={missing}
+                            context={v1CaseRequirementContext}
+                            v1CaseId={selectedV1Case.id}
+                          />
+                        )
+                      )}
+                    </Grid>
+                    <Grid
+                      item
+                      xs={12}
+                      sm={6}
+                      md={4}
+                      style={{ paddingRight: 20 }}
+                    >
+                      <Typography
+                        className="ph-unmask"
+                        variant="h3"
+                        style={{ marginBottom: 0 }}
+                      >
+                        Completed
+                      </Typography>
+                      {selectedV1Case?.completedRequirements?.map(
+                        (completed, i) => (
+                          <CompletedRequirementRow
+                            key={`${completed.completedRequirementId}:${i}`}
+                            requirement={completed}
+                            context={v1CaseRequirementContext}
+                          />
+                        )
+                      )}
+                      {selectedV1Case?.exemptedRequirements?.map(
+                        (exempted, i) => (
+                          <ExemptedRequirementRow
+                            key={`${exempted.requirementName}:${i}`}
+                            requirement={exempted}
+                            context={v1CaseRequirementContext}
+                          />
+                        )
+                      )}
+                    </Grid>
+                  </>
+                )}
+              {showCaseHistory && (
+                <Grid item xs={12}>
+                  <Box
+                    sx={{
+                      border: 1,
+                      borderColor: 'divider',
+                      borderRadius: 1,
+                      bgcolor: 'background.paper',
+                      p: 2,
+                      mb: 2,
+                    }}
+                  >
+                    <Typography
+                      className="ph-unmask"
+                      variant="h3"
+                      sx={{ mb: 2 }}
+                    >
+                      Case History
+                    </Typography>
+                    <Box
+                      sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}
+                    >
+                      {caseReferralTable.caseRows.length === 0 ? (
+                        <Typography color="text.secondary" variant="body2">
+                          No cases yet.
+                        </Typography>
+                      ) : (
+                        caseReferralTable.caseRows.map(
+                          ({ v1Case, linkedReferrals }) => {
+                            const isSelected = selectedV1Case?.id === v1Case.id;
+                            const caseStatus = v1Case.closedAtUtc
+                              ? 'Closed'
+                              : 'Open';
+
+                            return (
+                              <ListItemButton
+                                key={v1Case.id}
+                                selected={isSelected}
+                                onClick={() => setSelectedV1CaseId(v1Case.id)}
+                                sx={{
+                                  alignItems: 'flex-start',
+                                  border: 1,
+                                  borderColor: isSelected
+                                    ? 'primary.main'
+                                    : 'divider',
+                                  borderRadius: 1,
+                                  gap: 2,
+                                }}
+                              >
+                                <Box sx={{ flexGrow: 1, minWidth: 0 }}>
                                   <Box
                                     sx={{
                                       display: 'flex',
-                                      flexWrap: 'wrap',
+                                      alignItems: 'center',
                                       gap: 1,
-                                      mt: 1,
+                                      flexWrap: 'wrap',
+                                      mb: 0.5,
                                     }}
                                   >
-                                    {linkedReferrals.map((referral) => (
-                                      <Chip
-                                        key={referral.referralId}
-                                        clickable
-                                        size="small"
-                                        label={`${referral.title} · ${formatStatusWithDate(
-                                          referral.status,
-                                          referral.createdAtUtc,
-                                          referral.acceptedAtUtc,
-                                          referral.closedAtUtc
-                                        )}`}
-                                        onClick={(event) => {
-                                          event.stopPropagation();
-                                          appNavigate.referral(
-                                            referral.referralId
-                                          );
-                                        }}
-                                      />
-                                    ))}
+                                    <Typography
+                                      className="ph-unmask"
+                                      variant="body2"
+                                      sx={{ fontWeight: 600 }}
+                                    >
+                                      {v1Case.closedAtUtc
+                                        ? 'Closed Case'
+                                        : 'Open Case'}
+                                    </Typography>
+                                    <Chip
+                                      size="small"
+                                      color={
+                                        v1Case.closedAtUtc
+                                          ? 'default'
+                                          : 'success'
+                                      }
+                                      label={caseStatus}
+                                    />
                                   </Box>
-                                )}
-                              </Box>
-                            </ListItemButton>
-                          );
-                        }
-                      )
-                    )}
-
-                    {referralsEnabled &&
-                      caseReferralTable.unlinkedReferrals.length > 0 && (
-                        <Box sx={{ mt: 1 }}>
-                          <Typography
-                            variant="caption"
-                            color="text.secondary"
-                            sx={{ display: 'block', mb: 1 }}
-                          >
-                            Referrals not linked to a case
-                          </Typography>
-                          <Box
-                            sx={{
-                              display: 'flex',
-                              flexWrap: 'wrap',
-                              gap: 1,
-                            }}
-                          >
-                            {caseReferralTable.unlinkedReferrals.map(
-                              (referral) => (
-                                <Chip
-                                  key={referral.referralId}
-                                  clickable
-                                  size="small"
-                                  label={`${referral.title} · ${formatStatusWithDate(
-                                    referral.status,
-                                    referral.createdAtUtc,
-                                    referral.acceptedAtUtc,
-                                    referral.closedAtUtc
-                                  )}`}
-                                  onClick={() =>
-                                    appNavigate.referral(referral.referralId)
-                                  }
-                                />
-                              )
-                            )}
-                          </Box>
-                        </Box>
+                                  <Typography
+                                    variant="caption"
+                                    color="text.secondary"
+                                  >
+                                    Opened{' '}
+                                    {format(v1Case.openedAtUtc, 'M/d/yy')}
+                                    {v1Case.closedAtUtc
+                                      ? ` · Closed ${format(
+                                          v1Case.closedAtUtc,
+                                          'M/d/yy'
+                                        )}`
+                                      : ''}
+                                    {v1Case.closeReason
+                                      ? ` · ${v1Case.closeReason}`
+                                      : ''}
+                                  </Typography>
+                                  {linkedReferrals.length > 0 && (
+                                    <Box
+                                      sx={{
+                                        display: 'flex',
+                                        flexWrap: 'wrap',
+                                        gap: 1,
+                                        mt: 1,
+                                      }}
+                                    >
+                                      {linkedReferrals.map((referral) => (
+                                        <Chip
+                                          key={referral.referralId}
+                                          clickable
+                                          size="small"
+                                          label={`${referral.title} · ${formatStatusWithDate(
+                                            referral.status,
+                                            referral.createdAtUtc,
+                                            referral.acceptedAtUtc,
+                                            referral.closedAtUtc
+                                          )}`}
+                                          onClick={(event) => {
+                                            event.stopPropagation();
+                                            appNavigate.referral(
+                                              referral.referralId
+                                            );
+                                          }}
+                                        />
+                                      ))}
+                                    </Box>
+                                  )}
+                                </Box>
+                              </ListItemButton>
+                            );
+                          }
+                        )
                       )}
+
+                      {referralsEnabled &&
+                        caseReferralTable.unlinkedReferrals.length > 0 && (
+                          <Box sx={{ mt: 1 }}>
+                            <Typography
+                              variant="caption"
+                              color="text.secondary"
+                              sx={{ display: 'block', mb: 1 }}
+                            >
+                              Referrals not linked to a case
+                            </Typography>
+                            <Box
+                              sx={{
+                                display: 'flex',
+                                flexWrap: 'wrap',
+                                gap: 1,
+                              }}
+                            >
+                              {caseReferralTable.unlinkedReferrals.map(
+                                (referral) => (
+                                  <Chip
+                                    key={referral.referralId}
+                                    clickable
+                                    size="small"
+                                    label={`${referral.title} · ${formatStatusWithDate(
+                                      referral.status,
+                                      referral.createdAtUtc,
+                                      referral.acceptedAtUtc,
+                                      referral.closedAtUtc
+                                    )}`}
+                                    onClick={() =>
+                                      appNavigate.referral(referral.referralId)
+                                    }
+                                  />
+                                )
+                              )}
+                            </Box>
+                          </Box>
+                        )}
+                    </Box>
                   </Box>
-                </Box>
-              </Grid>
-            )}
-
-            {showApprovals && family.volunteerFamilyInfo && (
-              <>
-                <Grid item xs={12}>
-                  <ApprovalLedgerSection rows={approvalLedgerRows} />
-                </Grid>
-              </>
-            )}
-
-            {showDocuments &&
-              permissions(Permission.ViewFamilyDocumentMetadata) && (
-                <Grid item xs={12} lg={8} xl={5} mb={2}>
-                  <FamilyDocuments
-                    family={family}
-                    referrals={familyReferrals}
-                  />
                 </Grid>
               )}
-          </Grid>
+
+              {showApprovals && family.volunteerFamilyInfo && (
+                <>
+                  <Grid item xs={12}>
+                    <ApprovalLedgerSection rows={approvalLedgerRows} />
+                  </Grid>
+                </>
+              )}
+
+              {showDocuments &&
+                permissions(Permission.ViewFamilyDocumentMetadata) && (
+                  <Grid item xs={12} lg={8} xl={5} mb={2}>
+                    <FamilyDocuments
+                      family={family}
+                      referrals={familyReferrals}
+                    />
+                  </Grid>
+                )}
+            </Grid>
             <Grid container spacing={0} sx={{ order: 1 }}>
-            {showArrangementsOrAssignments &&
-              !isVolunteerFamily &&
-              selectedV1Case && (
-                <ArrangementsSection
-                  v1Case={selectedV1Case}
-                  family={family}
-                  permissions={permissions}
-                  hideTitle
-                  scrollToArrangementId={arrangementIdToScrollTo}
-                />
+              {showArrangementsOrAssignments &&
+                !isVolunteerFamily &&
+                selectedV1Case && (
+                  <ArrangementsSection
+                    arrangementRows={selectedCaseArrangementRows}
+                    v1Case={selectedV1Case}
+                    permissions={permissions}
+                    hideTitle
+                    onArrangementRowClick={openArrangementWorkspace}
+                    scrollToArrangementId={arrangementIdToScrollTo}
+                  />
+                )}
+
+              {showOverview && (
+                <Grid item xs={12}>
+                  <FamilyMembersDataGridV2
+                    rows={familyMemberRows}
+                    onAddAdult={openAddAdultDialog}
+                    onAddChild={openAddChildDialog}
+                    onRowClick={openFamilyMemberDrawer}
+                    canAddAdult={canEditFamilyInfo}
+                    canAddChild={canEditFamilyInfo}
+                  />
+                </Grid>
               )}
-
-            {showOverview && (
-              <Grid item xs={12}>
-                <FamilyMembersDataGridV2
-                  rows={familyMemberRows}
-                  onAddAdult={openAddAdultDialog}
-                  onAddChild={openAddChildDialog}
-                  onArrangementClick={openArrangementFromFamilyMember}
-                  onRowClick={openFamilyMemberDrawer}
-                  canAddAdult={canEditFamilyInfo}
-                  canAddChild={canEditFamilyInfo}
-                />
-              </Grid>
-            )}
-            {showOverview && (
-              <Grid item xs={12}>
-              {permissions(Permission.ViewFamilyCustomFields) &&
-                orderCustomFieldsByPolicy(
-                  Array<CustomFieldRenderInfo>()
-                    .concat(family.family!.completedCustomFields)
-                    .concat(family.missingCustomFields || []),
-                  policy.customFamilyFields?.map((field) => field.name) ?? []
-                ).map((customField) => (
-                  <FamilyCustomField
-                    key={
-                      typeof customField === 'string'
-                        ? customField
-                        : customField.customFieldName
-                    }
-                    familyId={familyId}
-                    customField={customField}
-                  />
-                ))}
-              {permissions(Permission.ViewFamilyCustomFields) &&
-                family.volunteerFamilyInfo &&
-                orderCustomFieldsByPolicy(
-                  Array<CustomFieldRenderInfo>()
-                    .concat(
-                      family.volunteerFamilyInfo.completedCustomFields || []
-                    )
-                    .concat(
-                      family.volunteerFamilyInfo.missingCustomFields || []
-                    ),
-                  policy.volunteerPolicy?.customFields?.map(
-                    (field) => field.name
-                  ) ?? []
-                ).map((customField) => (
-                  <VolunteerFamilyCustomField
-                    key={
-                      typeof customField === 'string'
-                        ? customField
-                        : customField.customFieldName
-                    }
-                    familyId={familyId}
-                    customField={customField}
-                  />
-                ))}
-
-              <Grid item xs={12} md={4}>
-                {permissions(Permission.ViewV1CaseCustomFields) &&
-                  !referralsEnabled &&
-                  (
-                    selectedV1Case?.completedCustomFields ||
-                    ([] as Array<CompletedCustomFieldInfo | string>)
-                  )
-                    .concat(selectedV1Case?.missingCustomFields || [])
-                    .sort((a, b) =>
-                      (a instanceof CompletedCustomFieldInfo
-                        ? a.customFieldName!
-                        : a) <
-                      (b instanceof CompletedCustomFieldInfo
-                        ? b.customFieldName!
-                        : b)
-                        ? -1
-                        : (a instanceof CompletedCustomFieldInfo
-                              ? a.customFieldName!
-                              : a) >
-                            (b instanceof CompletedCustomFieldInfo
-                              ? b.customFieldName!
-                              : b)
-                          ? 1
-                          : 0
-                    )
-                    .map((customField) => (
-                      <V1CaseCustomField
+              {showOverview && (
+                <Grid item xs={12}>
+                  {permissions(Permission.ViewFamilyCustomFields) &&
+                    orderCustomFieldsByPolicy(
+                      Array<CustomFieldRenderInfo>()
+                        .concat(family.family!.completedCustomFields)
+                        .concat(family.missingCustomFields || []),
+                      policy.customFamilyFields?.map((field) => field.name) ??
+                        []
+                    ).map((customField) => (
+                      <FamilyCustomField
                         key={
                           typeof customField === 'string'
                             ? customField
                             : customField.customFieldName
                         }
-                        partneringFamilyId={familyId}
-                        v1CaseId={`${selectedV1Case!.id}`}
+                        familyId={familyId}
                         customField={customField}
                       />
                     ))}
-              </Grid>
-              </Grid>
-            )}
+                  {permissions(Permission.ViewFamilyCustomFields) &&
+                    family.volunteerFamilyInfo &&
+                    orderCustomFieldsByPolicy(
+                      Array<CustomFieldRenderInfo>()
+                        .concat(
+                          family.volunteerFamilyInfo.completedCustomFields || []
+                        )
+                        .concat(
+                          family.volunteerFamilyInfo.missingCustomFields || []
+                        ),
+                      policy.volunteerPolicy?.customFields?.map(
+                        (field) => field.name
+                      ) ?? []
+                    ).map((customField) => (
+                      <VolunteerFamilyCustomField
+                        key={
+                          typeof customField === 'string'
+                            ? customField
+                            : customField.customFieldName
+                        }
+                        familyId={familyId}
+                        customField={customField}
+                      />
+                    ))}
+
+                  <Grid item xs={12} md={4}>
+                    {permissions(Permission.ViewV1CaseCustomFields) &&
+                      !referralsEnabled &&
+                      (
+                        selectedV1Case?.completedCustomFields ||
+                        ([] as Array<CompletedCustomFieldInfo | string>)
+                      )
+                        .concat(selectedV1Case?.missingCustomFields || [])
+                        .sort((a, b) =>
+                          (a instanceof CompletedCustomFieldInfo
+                            ? a.customFieldName!
+                            : a) <
+                          (b instanceof CompletedCustomFieldInfo
+                            ? b.customFieldName!
+                            : b)
+                            ? -1
+                            : (a instanceof CompletedCustomFieldInfo
+                                  ? a.customFieldName!
+                                  : a) >
+                                (b instanceof CompletedCustomFieldInfo
+                                  ? b.customFieldName!
+                                  : b)
+                              ? 1
+                              : 0
+                        )
+                        .map((customField) => (
+                          <V1CaseCustomField
+                            key={
+                              typeof customField === 'string'
+                                ? customField
+                                : customField.customFieldName
+                            }
+                            partneringFamilyId={familyId}
+                            v1CaseId={`${selectedV1Case!.id}`}
+                            customField={customField}
+                          />
+                        ))}
+                  </Grid>
+                </Grid>
+              )}
             </Grid>
           </Grid>
         )}
         {showOverview && (
           <Grid item xs={12} lg={4}>
-          <Box
-            sx={{
-              border: 1,
-              borderColor: 'divider',
-              borderRadius: 1,
-              p: 2,
-              ml: { lg: 2 },
-              mb: 2,
-              bgcolor: 'background.paper',
-            }}
-          >
-            <Typography className="ph-unmask" variant="h3" sx={{ mb: 1 }}>
-              Communities
-            </Typography>
-            {familyCommunityInfo.length === 0 ? (
-              <Typography color="text.secondary" variant="body2">
-                No communities.
-              </Typography>
-            ) : (
-              familyCommunityInfo.map((communityInfo) => (
-                <ListItemButton
-                  key={communityInfo.community?.id}
-                  sx={{
-                    padding: '.5rem',
-                    border: '1px solid #e0e0e0',
-                    borderRadius: '5px',
-                  }}
-                  onClick={() =>
-                    communityInfo.community?.id
-                      ? appNavigate.community(communityInfo.community.id)
-                      : {}
-                  }
-                >
-                  <ListItemIcon
-                    sx={{ alignSelf: 'center', justifyContent: 'center' }}
-                  >
-                    <Diversity3Icon color="primary" />
-                  </ListItemIcon>
-                  <ListItemText
-                    sx={{ alignSelf: 'baseline' }}
-                    primary={communityInfo.community?.name}
-                    slotProps={{
-                      primary: {
-                        color: theme.palette.primary.main,
-                      },
-                    }}
-                  />
-                </ListItemButton>
-              ))
-            )}
-          </Box>
-          <Box
-            sx={{
-              border: 1,
-              borderColor: 'divider',
-              borderRadius: 1,
-              p: 2,
-              ml: { lg: 2 },
-              mt: { xs: 2, lg: 0 },
-              bgcolor: 'background.paper',
-            }}
-          >
             <Box
               sx={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'space-between',
+                border: 1,
+                borderColor: 'divider',
+                borderRadius: 1,
+                p: 2,
+                ml: { lg: 2 },
                 mb: 2,
+                bgcolor: 'background.paper',
               }}
             >
-              <Typography variant="h3" className="ph-unmask" sx={{ m: 0 }}>
-                Recent Activity: Last 7 days
+              <Typography className="ph-unmask" variant="h3" sx={{ mb: 1 }}>
+                Communities
               </Typography>
-              <Button
-                size="small"
-                onClick={() => setSelectedTab('timelineAndNotes')}
-              >
-                View All
-              </Button>
-            </Box>
-
-            {recentOverviewTimelineItems.length === 0 ? (
-              <Typography color="text.secondary" variant="body2">
-                No recent activity in the last 7 days.
-              </Typography>
-            ) : (
-              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                {recentOverviewTimelineItems.map((item) => (
-                  <Box
-                    key={item.id}
+              {familyCommunityInfo.length === 0 ? (
+                <Typography color="text.secondary" variant="body2">
+                  No communities.
+                </Typography>
+              ) : (
+                familyCommunityInfo.map((communityInfo) => (
+                  <ListItemButton
+                    key={communityInfo.community?.id}
                     sx={{
-                      display: 'grid',
-                      gridTemplateColumns: '32px 1fr',
-                      columnGap: 1.5,
+                      padding: '.5rem',
+                      border: '1px solid #e0e0e0',
+                      borderRadius: '5px',
                     }}
+                    onClick={() =>
+                      communityInfo.community?.id
+                        ? appNavigate.community(communityInfo.community.id)
+                        : {}
+                    }
                   >
+                    <ListItemIcon
+                      sx={{ alignSelf: 'center', justifyContent: 'center' }}
+                    >
+                      <Diversity3Icon color="primary" />
+                    </ListItemIcon>
+                    <ListItemText
+                      sx={{ alignSelf: 'baseline' }}
+                      primary={communityInfo.community?.name}
+                      slotProps={{
+                        primary: {
+                          color: theme.palette.primary.main,
+                        },
+                      }}
+                    />
+                  </ListItemButton>
+                ))
+              )}
+            </Box>
+            <Box
+              sx={{
+                border: 1,
+                borderColor: 'divider',
+                borderRadius: 1,
+                p: 2,
+                ml: { lg: 2 },
+                mt: { xs: 2, lg: 0 },
+                bgcolor: 'background.paper',
+              }}
+            >
+              <Box
+                sx={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  mb: 2,
+                }}
+              >
+                <Typography variant="h3" className="ph-unmask" sx={{ m: 0 }}>
+                  Recent Activity: Last 7 days
+                </Typography>
+                <Button
+                  className="ph-unmask"
+                  size="small"
+                  onClick={() => setSelectedTab('timelineAndNotes')}
+                >
+                  View All
+                </Button>
+              </Box>
+
+              {recentOverviewTimelineItems.length === 0 ? (
+                <Typography
+                  className="ph-unmask"
+                  color="text.secondary"
+                  variant="body2"
+                >
+                  No recent activity in the last 7 days.
+                </Typography>
+              ) : (
+                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                  {recentOverviewTimelineItems.map((item) => (
                     <Box
+                      key={item.id}
                       sx={{
-                        width: 32,
-                        height: 32,
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        color: 'text.secondary',
+                        display: 'grid',
+                        gridTemplateColumns: '32px 1fr',
+                        columnGap: 1.5,
                       }}
                     >
-                      {item.icon === 'check' ? (
-                        '✔'
-                      ) : item.icon === 'location' ? (
-                        <PersonPinCircleIcon fontSize="small" />
-                      ) : (
-                        <NotesIcon fontSize="small" />
-                      )}
-                    </Box>
-                    <Box sx={{ minWidth: 0 }}>
-                      <Typography
-                        className="ph-unmask"
-                        variant="caption"
-                        color="text.secondary"
+                      <Box
+                        sx={{
+                          width: 32,
+                          height: 32,
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          color: 'text.secondary',
+                        }}
                       >
-                        {format(item.timestamp, 'MMM d, h:mm a')}
-                      </Typography>
-                      <Typography className="ph-unmask" variant="body2">
-                        {item.userId ? (
-                          <PersonName person={userLookup(item.userId)} />
-                        ) : item.note ? (
-                          <PersonName person={noteAuthorLookup(item.note)} />
+                        {item.icon === 'check' ? (
+                          '✔'
+                        ) : item.icon === 'location' ? (
+                          <PersonPinCircleIcon fontSize="small" />
                         ) : (
-                          item.title
+                          <NotesIcon fontSize="small" />
                         )}
-                      </Typography>
-                      <Typography
-                        className="ph-unmask"
-                        variant="body2"
-                        sx={{ fontWeight: 600 }}
-                      >
-                        {item.title}
-                      </Typography>
-                      {item.subtitle && (
-                        <ClampTypography
-                          className="ph-unmask"
-                          variant="body2"
+                      </Box>
+                      <Box sx={{ minWidth: 0 }}>
+                        <Typography
+                          variant="caption"
                           color="text.secondary"
                         >
-                          {item.subtitle}
-                        </ClampTypography>
-                      )}
-                      {renderRecentNoteActions(item)}
+                          {formatTimelineTimestamp(
+                            {
+                              activity: item.activity,
+                              kind: item.activity ? 'family-activity' : 'recent',
+                              timestamp: item.timestamp,
+                            },
+                            {
+                              date: 'MMM d',
+                              dateTime: 'MMM d, h:mm a',
+                            }
+                          )}
+                        </Typography>
+                        <Typography variant="body2">
+                          {item.userId ? (
+                            <PersonName person={userLookup(item.userId)} />
+                          ) : item.note ? (
+                            <PersonName person={noteAuthorLookup(item.note)} />
+                          ) : (
+                            item.title
+                          )}
+                        </Typography>
+                        <Typography
+                          variant="body2"
+                          sx={{ fontWeight: 600 }}
+                        >
+                          {item.title}
+                        </Typography>
+                        {item.subtitle && (
+                          <ClampTypography
+                            variant="body2"
+                            color="text.secondary"
+                          >
+                            {item.subtitle}
+                          </ClampTypography>
+                        )}
+                        {renderRecentNoteActions(item)}
+                      </Box>
                     </Box>
-                  </Box>
-                ))}
-              </Box>
-            )}
-          </Box>
+                  ))}
+                </Box>
+              )}
+            </Box>
           </Grid>
         )}
       </Grid>

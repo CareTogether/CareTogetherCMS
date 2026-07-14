@@ -229,7 +229,7 @@ export function ArrangementManagementDrawerV2({
             <Typography id="arrangement-management-title" variant="h5">
               {title}
             </Typography>
-            <Typography className="ph-unmask" color="text.secondary" variant="body2">
+            <Typography color="text.secondary" variant="body2">
               {arrangement.arrangementType} for {personName}
             </Typography>
           </Box>
@@ -238,7 +238,7 @@ export function ArrangementManagementDrawerV2({
           </IconButton>
         </Box>
 
-        <Typography className="ph-unmask" variant="body2">
+        <Typography variant="body2">
           {prompt}
         </Typography>
 

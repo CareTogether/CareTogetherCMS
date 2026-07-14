@@ -26,7 +26,6 @@ type FamilyMembersDataGridV2Props = {
   rows: FamilyMemberRowV2[];
   onAddAdult: () => void;
   onAddChild: () => void;
-  onArrangementClick?: (arrangementId: string, v1CaseId: string) => void;
   onRowClick: (row: FamilyMemberRowV2) => void;
   canAddAdult?: boolean;
   canAddChild?: boolean;
@@ -53,11 +52,12 @@ function FamilyMembersToolbar({
         py: 1,
       }}
     >
-      <Typography color="text.secondary" variant="body2">
+      <Typography className="ph-unmask" color="text.secondary" variant="body2">
         Family members
       </Typography>
       <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
         <Button
+          className="ph-unmask"
           size="small"
           startIcon={<AddCircleIcon />}
           onClick={onAddAdult}
@@ -66,6 +66,7 @@ function FamilyMembersToolbar({
           Add Adult
         </Button>
         <Button
+          className="ph-unmask"
           size="small"
           startIcon={<AddCircleIcon />}
           onClick={onAddChild}
@@ -115,22 +116,17 @@ function tooltipTitle(fullText?: string) {
   );
 }
 
-function buildColumns({
-  onArrangementClick,
-}: Pick<
-  FamilyMembersDataGridV2Props,
-  'onArrangementClick'
->): GridColDef<FamilyMemberRowV2>[] {
+function buildColumns(): GridColDef<FamilyMemberRowV2>[] {
   return [
     {
       field: 'displayName',
+      headerClassName: 'ph-unmask',
       headerName: 'Name',
       minWidth: 240,
       flex: 1,
       renderCell: ({ row }) => (
         <Stack sx={{ height: '100%', justifyContent: 'center', minWidth: 0 }}>
           <Typography
-            className="ph-unmask"
             {...v2Typography.primaryValue}
             noWrap
           >
@@ -146,28 +142,31 @@ function buildColumns({
     },
     {
       field: 'ageLabel',
+      headerClassName: 'ph-unmask',
       headerName: 'Age',
       width: 90,
       valueGetter: (_value, row) => displayValue(row.ageLabel),
       renderCell: ({ row }) => (
-        <Typography className="ph-unmask" {...v2Typography.browserCell}>
+        <Typography {...v2Typography.browserCell}>
           {displayValue(row.ageLabel)}
         </Typography>
       ),
     },
     {
       field: 'genderLabel',
+      headerClassName: 'ph-unmask',
       headerName: 'Gender',
       width: 120,
       valueGetter: (_value, row) => displayValue(row.genderLabel),
       renderCell: ({ row }) => (
-        <Typography className="ph-unmask" {...v2Typography.browserCell}>
+        <Typography {...v2Typography.browserCell}>
           {displayValue(row.genderLabel)}
         </Typography>
       ),
     },
     {
       field: 'primaryContactSummary',
+      headerClassName: 'ph-unmask',
       headerName: 'Contact',
       minWidth: 200,
       flex: 1,
@@ -175,7 +174,6 @@ function buildColumns({
       renderCell: ({ row }) => (
         <Stack sx={{ height: '100%', justifyContent: 'center', minWidth: 0 }}>
           <Typography
-            className="ph-unmask"
             color={row.primaryPhone ? 'text.primary' : 'text.secondary'}
             {...v2Typography.browserCell}
             noWrap
@@ -184,7 +182,6 @@ function buildColumns({
           </Typography>
           {row.primaryEmail && (
             <Typography
-              className="ph-unmask"
               color="text.secondary"
               variant="caption"
               noWrap
@@ -196,72 +193,8 @@ function buildColumns({
       ),
     },
     {
-      field: 'activeArrangements',
-      headerName: 'Arrangements',
-      minWidth: 170,
-      flex: 0.8,
-      sortable: false,
-      renderCell: ({ row }) => {
-        if (row.activeArrangements.length === 0) {
-          return (
-            <Typography color="text.secondary" {...v2Typography.browserCell}>
-              {'\u2014'}
-            </Typography>
-          );
-        }
-
-        return (
-          <Box
-            sx={{
-              display: 'flex',
-              flexWrap: 'nowrap',
-              gap: 0.5,
-              minWidth: 0,
-              overflow: 'hidden',
-            }}
-          >
-            {row.activeArrangements.slice(0, 2).map((arrangement) => (
-              <Tooltip
-                key={arrangement.arrangementId}
-                title={arrangement.label}
-                disableInteractive
-              >
-                <Chip
-                  clickable
-                  className="ph-unmask"
-                  label={arrangement.label}
-                  size="small"
-                  variant="outlined"
-                  onClick={(event) => {
-                    event.stopPropagation();
-                    onArrangementClick?.(
-                      arrangement.arrangementId,
-                      arrangement.v1CaseId
-                    );
-                  }}
-                  sx={{
-                    maxWidth: 100,
-                    '& .MuiChip-label': {
-                      overflow: 'hidden',
-                      textOverflow: 'ellipsis',
-                    },
-                  }}
-                />
-              </Tooltip>
-            ))}
-            {row.activeArrangements.length > 2 && (
-              <Chip
-                label={`+${row.activeArrangements.length - 2}`}
-                size="small"
-                variant="outlined"
-              />
-            )}
-          </Box>
-        );
-      },
-    },
-    {
       field: 'householdStatusLabel',
+      headerClassName: 'ph-unmask',
       headerName: 'Household',
       width: 140,
       sortable: false,
@@ -272,6 +205,7 @@ function buildColumns({
     },
     {
       field: 'comments',
+      headerClassName: 'ph-unmask',
       headerName: 'Comments',
       minWidth: 180,
       flex: 0.8,
@@ -282,7 +216,6 @@ function buildColumns({
         return (
           <Tooltip title={tooltipTitle(summary.fullText)} disableInteractive>
             <Typography
-              className="ph-unmask"
               color={summary.fullText ? 'text.primary' : 'text.secondary'}
               {...v2Typography.browserCell}
               noWrap
@@ -298,6 +231,7 @@ function buildColumns({
     },
     {
       field: 'concernIndicator',
+      headerClassName: 'ph-unmask',
       headerName: 'Concerns',
       minWidth: 180,
       flex: 0.8,
@@ -319,7 +253,6 @@ function buildColumns({
             >
               {summary.fullText && <WarningIcon fontSize="small" />}
               <Typography
-                className="ph-unmask"
                 {...v2Typography.browserCell}
                 noWrap
                 sx={{
@@ -336,6 +269,7 @@ function buildColumns({
     },
     {
       field: 'openDetails',
+      headerClassName: 'ph-unmask',
       headerName: '',
       width: 44,
       sortable: false,
@@ -373,8 +307,15 @@ function EmptyFamilyMembersState({
         textAlign: 'center',
       }}
     >
-      <Typography variant="subtitle1">No family members yet.</Typography>
-      <Typography color="text.secondary" variant="body2" sx={{ mt: 0.5 }}>
+      <Typography className="ph-unmask" variant="subtitle1">
+        No family members yet.
+      </Typography>
+      <Typography
+        className="ph-unmask"
+        color="text.secondary"
+        variant="body2"
+        sx={{ mt: 0.5 }}
+      >
         Add an adult or child to start building this family record.
       </Typography>
       <Box
@@ -387,6 +328,7 @@ function EmptyFamilyMembersState({
         }}
       >
         <Button
+          className="ph-unmask"
           startIcon={<AddCircleIcon />}
           onClick={onAddAdult}
           disabled={!canAddAdult}
@@ -395,6 +337,7 @@ function EmptyFamilyMembersState({
           Add Adult
         </Button>
         <Button
+          className="ph-unmask"
           startIcon={<AddCircleIcon />}
           onClick={onAddChild}
           disabled={!canAddChild}
@@ -411,16 +354,12 @@ export function FamilyMembersDataGridV2({
   rows,
   onAddAdult,
   onAddChild,
-  onArrangementClick,
   onRowClick,
   canAddAdult = true,
   canAddChild = true,
 }: FamilyMembersDataGridV2Props) {
   const theme = useTheme();
-  const columns = useMemo(
-    () => buildColumns({ onArrangementClick }),
-    [onArrangementClick]
-  );
+  const columns = useMemo(() => buildColumns(), []);
   const pageSize = 10;
   const paginationNeeded = rows.length > pageSize;
   const gridHeight = paginationNeeded ? pageSize * 56 + 112 : undefined;
@@ -428,7 +367,9 @@ export function FamilyMembersDataGridV2({
   if (rows.length === 0) {
     return (
       <Stack spacing={1}>
-        <Typography variant="h6">Family Members</Typography>
+        <Typography className="ph-unmask" variant="h6">
+          Family Members
+        </Typography>
         <EmptyFamilyMembersState
           onAddAdult={onAddAdult}
           onAddChild={onAddChild}
@@ -441,7 +382,9 @@ export function FamilyMembersDataGridV2({
 
   return (
     <Stack spacing={1}>
-      <Typography variant="h6">Family Members</Typography>
+      <Typography className="ph-unmask" variant="h6">
+        Family Members
+      </Typography>
       <Box
         sx={v2DataGridStyles(theme, { height: gridHeight })}
       >

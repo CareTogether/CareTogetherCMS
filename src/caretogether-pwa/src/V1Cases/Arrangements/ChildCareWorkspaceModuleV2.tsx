@@ -31,11 +31,7 @@ function DetailField({
       <Typography color="text.secondary" variant="caption">
         {label}
       </Typography>
-      <Typography
-        className="ph-unmask"
-        component="div"
-        {...v2Typography.primaryValue}
-      >
+      <Typography component="div" {...v2Typography.primaryValue}>
         {children}
       </Typography>
     </Box>
