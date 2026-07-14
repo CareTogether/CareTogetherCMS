@@ -199,7 +199,7 @@ export function FamilyMemberPrintDocument({
     member.kind === 'adult' ? 'Parent Information' : 'Child Information';
 
   return (
-    <article className="family-member-print-document ph-unmask">
+    <article className="family-member-print-document">
       <style>
         {`
           .family-member-print-document {

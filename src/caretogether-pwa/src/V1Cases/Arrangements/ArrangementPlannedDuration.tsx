@@ -70,7 +70,7 @@ export function ArrangementPlannedDuration({
 
   if (summaryOnly) {
     return (
-      <Stack className="ph-unmask" direction="column" sx={{ clear: 'both' }}>
+      <Stack direction="column" sx={{ clear: 'both' }}>
         <Box>
           <span>Planned start:&nbsp;</span>
           {arrangement.plannedStartUtc
@@ -89,7 +89,6 @@ export function ArrangementPlannedDuration({
 
   return (
     <Grid
-      className="ph-unmask"
       container
       spacing={0}
       columns={{ xs: 1, sm: 2 }}

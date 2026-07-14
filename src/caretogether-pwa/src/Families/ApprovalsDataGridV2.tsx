@@ -48,7 +48,6 @@ function AppliesToChips({ row }: { row: ApprovalLedgerRow }) {
       {row.appliesTo.map((subject) => (
         <Chip
           key={subjectKey(subject.scope, subject.id)}
-          className="ph-unmask"
           label={
             <Typography {...v2Typography.browserCell}>
               {subject.label}
@@ -166,7 +165,7 @@ function buildColumns(
       valueGetter: (_value, row) => row.completedOrExemptedByUserId ?? '',
       renderCell: ({ row }) =>
         row.completedOrExemptedByUserId ? (
-          <Typography className="ph-unmask" {...v2Typography.browserCell} noWrap>
+          <Typography {...v2Typography.browserCell} noWrap>
             <PersonName
               person={userLookup(row.completedOrExemptedByUserId)}
             />

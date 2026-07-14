@@ -57,7 +57,7 @@ function ArrangementDurationSummary({
   const endDate = arrangement.endedAtUtc ?? arrangement.plannedEndUtc;
 
   return (
-    <Stack className="ph-unmask" spacing={0.5}>
+    <Stack spacing={0.5}>
       <Box>
         <Typography component="span" variant="caption" color="text.secondary">
           {startLabel}:&nbsp;
@@ -88,7 +88,7 @@ function ArrangementLocationSummary({ row }: { row: ArrangementRowV2 }) {
   }
 
   return (
-    <Stack className="ph-unmask" spacing={0.5}>
+    <Stack spacing={0.5}>
       <Box>
         <Typography variant="caption" color="text.secondary">
           Current Location
@@ -153,7 +153,7 @@ function AssignmentHealthSummary({ row }: { row: ArrangementRowV2 }) {
     missingRequiredSummaries.length - visibleMissingSummaries.length;
 
   return (
-    <Stack spacing={0.35} className="ph-unmask">
+    <Stack spacing={0.35}>
       <Stack direction="row" spacing={0.75} sx={{ alignItems: 'center' }}>
         <WarningIcon color="warning" fontSize="small" />
         <Typography {...v2Typography.primaryValue}>
@@ -187,7 +187,7 @@ function buildColumns(): GridColDef<ArrangementRowV2>[] {
       minWidth: 160,
       flex: 0.85,
       renderCell: ({ row }) => (
-        <Stack className="ph-unmask" spacing={0.25} sx={{ minWidth: 0 }}>
+        <Stack spacing={0.25} sx={{ minWidth: 0 }}>
           <Typography {...v2Typography.primaryValue} noWrap>
             {row.arrangementType}
           </Typography>
@@ -206,7 +206,7 @@ function buildColumns(): GridColDef<ArrangementRowV2>[] {
       flex: 0.8,
       valueGetter: (_value, row) => displayValue(row.caseLabel),
       renderCell: ({ row }) => (
-        <Typography className="ph-unmask" {...v2Typography.browserCell} noWrap>
+        <Typography {...v2Typography.browserCell} noWrap>
           {displayValue(row.caseLabel)}
         </Typography>
       ),
@@ -239,7 +239,7 @@ function buildColumns(): GridColDef<ArrangementRowV2>[] {
       flex: 1,
       valueGetter: (_value, row) => displayValue(row.childOrPersonLabel),
       renderCell: ({ row }) => (
-        <Typography className="ph-unmask" {...v2Typography.browserCell} noWrap>
+        <Typography {...v2Typography.browserCell} noWrap>
           {displayValue(row.childOrPersonLabel)}
         </Typography>
       ),
