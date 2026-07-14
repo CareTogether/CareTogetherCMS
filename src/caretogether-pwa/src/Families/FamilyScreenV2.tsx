@@ -91,6 +91,7 @@ import {
   V1CaseContext,
 } from '../Requirements/RequirementContext';
 import { ActivityTimelineV2 } from '../Activities/ActivityTimelineV2';
+import { formatTimelineTimestamp } from '../Activities/timelineTimestampFormatting';
 import { V1CaseCommentsV2 } from '../V1Cases/V1CaseCommentsV2';
 import { V1CaseCustomField } from '../V1Cases/V1CaseCustomField';
 import { PrimaryContactEditor } from './PrimaryContactEditor';
@@ -173,6 +174,7 @@ type CustomFieldRenderInfo = CompletedCustomFieldInfo | string;
 type ReferralNoteEntry = NonNullable<V1Referral['notes']>[number];
 type RecentNoteAction = 'edit' | 'approve' | 'delete';
 type RecentOverviewTimelineItem = {
+  activity?: Activity;
   id: string;
   timestamp: Date;
   title: string;
@@ -1328,6 +1330,7 @@ export function FamilyScreenV2() {
 
         return {
           id: `activity:${activity.auditTimestampUtc?.toISOString()}`,
+          activity,
           timestamp: activity.activityTimestampUtc,
           title: recentActivityTitle(activity),
           subtitle: linkedNote?.contents?.trim(),
@@ -2958,7 +2961,17 @@ export function FamilyScreenV2() {
                           variant="caption"
                           color="text.secondary"
                         >
-                          {format(item.timestamp, 'MMM d, h:mm a')}
+                          {formatTimelineTimestamp(
+                            {
+                              activity: item.activity,
+                              kind: item.activity ? 'family-activity' : 'recent',
+                              timestamp: item.timestamp,
+                            },
+                            {
+                              date: 'MMM d',
+                              dateTime: 'MMM d, h:mm a',
+                            }
+                          )}
                         </Typography>
                         <Typography variant="body2">
                           {item.userId ? (

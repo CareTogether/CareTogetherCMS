@@ -1,4 +1,4 @@
-import { atom, selector } from 'recoil';
+import { selectorFamily } from 'recoil';
 import {
   CombinedFamilyInfo,
   CommunityInfo,
@@ -10,16 +10,9 @@ import { api } from '../Api/Api';
 import { currentLocationQuery } from './Data';
 import { ORGANIZATION_ADMINISTRATOR } from '../constants';
 
-export const redemptionSessionIdState = atom<string | null>({
-  key: 'redemptionSessionIdState',
-  default: null,
-});
-
-export const inviteReviewInfoQuery = selector({
+export const inviteReviewInfoQuery = selectorFamily({
   key: 'inviteReviewInfoQuery',
-  get: async ({ get }) => {
-    const redemptionSessionId = get(redemptionSessionIdState);
-
+  get: (redemptionSessionId: string | null) => async () => {
     if (redemptionSessionId) {
       const inviteReviewInfo =
         await api.users.examinePersonInviteRedemptionSession(

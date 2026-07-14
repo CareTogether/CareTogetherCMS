@@ -19,6 +19,7 @@ import {
 } from '@mui/x-data-grid';
 import { useMemo } from 'react';
 import { FamilyMemberRowV2 } from './familyMemberViewModel';
+import { v2DataGridStyles } from './v2DataGridStyles';
 import { v2Typography } from './v2Typography';
 
 type FamilyMembersDataGridV2Props = {
@@ -385,54 +386,7 @@ export function FamilyMembersDataGridV2({
         Family Members
       </Typography>
       <Box
-        sx={{
-          height: gridHeight,
-          width: '100%',
-          border: 1,
-          borderColor: 'divider',
-          borderRadius: 1,
-          bgcolor: 'background.paper',
-          overflow: 'hidden',
-          '& .MuiDataGrid-row': {
-            cursor: 'pointer',
-            minHeight: 56,
-            transition: theme.transitions.create(
-              ['background-color', 'box-shadow'],
-              {
-                duration: theme.transitions.duration.shortest,
-              }
-            ),
-            '&:hover': {
-              backgroundColor: theme.palette.action.hover,
-            },
-            '&:hover .MuiDataGrid-cell': {
-              backgroundColor: theme.palette.action.hover,
-            },
-            '&:hover .MuiSvgIcon-root': {
-              opacity: 1,
-            },
-          },
-          '& .MuiDataGrid-cell': {
-            alignItems: 'center',
-            cursor: 'inherit',
-            display: 'flex',
-            py: 1,
-          },
-          '& .MuiDataGrid-root': {
-            border: 0,
-          },
-          '& .MuiDataGrid-columnHeaders': {
-            backgroundColor: theme.palette.action.hover,
-            borderBottomColor: theme.palette.divider,
-          },
-          '& .MuiDataGrid-cell:focus, & .MuiDataGrid-cell:focus-within': {
-            outline: 'none',
-          },
-          '& .MuiDataGrid-columnHeader:focus, & .MuiDataGrid-columnHeader:focus-within':
-            {
-              outline: 'none',
-            },
-        }}
+        sx={v2DataGridStyles(theme, { height: gridHeight })}
       >
         <DataGrid
           autoHeight={!paginationNeeded}

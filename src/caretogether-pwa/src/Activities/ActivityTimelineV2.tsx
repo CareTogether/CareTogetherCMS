@@ -35,6 +35,7 @@ import { useAccessLevelDialog } from '../Notes/AccessLevelDialog/useAccessLevelD
 import { FormControl, InputLabel, Select, MenuItem } from '@mui/material';
 import { useMemo, useState } from 'react';
 import { buildGroupedV1ReferralTimelineEntries } from '../V1Referrals/referralTimelineHelpers';
+import { formatTimelineTimestamp } from './timelineTimestampFormatting';
 
 type ActivityTimelineProps = {
   family: CombinedFamilyInfo;
@@ -581,7 +582,7 @@ export function ActivityTimelineV2({
               >
                 <Box sx={{ color: 'text.disabled', margin: 0, padding: 0 }}>
                   <span style={{ marginRight: 16 }}>
-                    {format(item.timestamp, 'M/d/yy h:mm a')}
+                    {formatTimelineTimestamp(item)}
                   </span>
                   {item.userId ? (
                     <PersonName person={userLookup(item.userId)} />

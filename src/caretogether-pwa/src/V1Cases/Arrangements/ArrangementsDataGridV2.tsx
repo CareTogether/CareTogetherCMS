@@ -2,11 +2,7 @@ import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import WarningIcon from '@mui/icons-material/Warning';
 import { Box, Chip, Stack, Typography, useTheme } from '@mui/material';
-import {
-  DataGrid,
-  GridColDef,
-  GridToolbar,
-} from '@mui/x-data-grid';
+import { DataGrid, GridColDef, GridToolbar } from '@mui/x-data-grid';
 import {
   Arrangement,
   ArrangementPhase,
@@ -14,6 +10,7 @@ import {
   ChildInvolvement,
   FunctionRequirement,
 } from '../../GeneratedClient';
+import { v2DataGridStyles } from '../../Families/v2DataGridStyles';
 import { v2Typography } from '../../Families/v2Typography';
 import { useMemo } from 'react';
 import type { ArrangementRowV2 } from './arrangementViewModel';
@@ -38,12 +35,15 @@ function arrangementPhaseColor(phase?: ArrangementPhase) {
 function usesChildLocation(arrangementPolicy?: ArrangementPolicy) {
   return (
     arrangementPolicy?.childInvolvement === ChildInvolvement.ChildHousing ||
-    arrangementPolicy?.childInvolvement === ChildInvolvement.DaytimeChildCareOnly
+    arrangementPolicy?.childInvolvement ===
+      ChildInvolvement.DaytimeChildCareOnly
   );
 }
 
 function formatArrangementDate(date?: Date) {
-  return date ? `${date.getMonth() + 1}/${date.getDate()}/${date.getFullYear()}` : '-';
+  return date
+    ? `${date.getMonth() + 1}/${date.getDate()}/${date.getFullYear()}`
+    : '-';
 }
 
 function ArrangementDurationSummary({
@@ -323,64 +323,16 @@ export function ArrangementsDataGridV2({
   const columns = useMemo(() => buildColumns(), []);
   const pageSize = 10;
   const paginationNeeded = rows.length > pageSize;
-  const gridHeight = paginationNeeded ? pageSize * 72 + 112 : undefined;
 
   return (
     <Box
-      sx={{
-        height: gridHeight,
-        width: '100%',
-        border: 1,
-        borderColor: 'divider',
-        borderRadius: 1,
-        bgcolor: 'background.paper',
-        overflow: 'hidden',
-        '& .MuiDataGrid-row': {
-          cursor: 'pointer',
-          minHeight: 56,
-          transition: theme.transitions.create(
-            ['background-color', 'box-shadow'],
-            {
-              duration: theme.transitions.duration.shortest,
-            }
-          ),
-          '&:hover': {
-            backgroundColor: theme.palette.action.hover,
-          },
-          '&:hover .MuiDataGrid-cell': {
-            backgroundColor: theme.palette.action.hover,
-          },
-          '&:hover .MuiSvgIcon-root': {
-            opacity: 1,
-          },
-          '&.arrangement-row-highlight': {
-            boxShadow: `inset 3px 0 0 ${theme.palette.primary.main}`,
-          },
-        },
-        '& .MuiDataGrid-cell': {
-          alignItems: 'center',
-          cursor: 'inherit',
-          display: 'flex',
-          py: 1,
-        },
-        '& .MuiDataGrid-root': {
-          border: 0,
-        },
-        '& .MuiDataGrid-columnHeaders': {
-          backgroundColor: theme.palette.action.hover,
-          borderBottomColor: theme.palette.divider,
-        },
-        '& .MuiDataGrid-cell:focus, & .MuiDataGrid-cell:focus-within': {
-          outline: 'none',
-        },
-        '& .MuiDataGrid-columnHeader:focus, & .MuiDataGrid-columnHeader:focus-within':
-          {
-            outline: 'none',
-          },
-      }}
+      sx={v2DataGridStyles(theme, {
+        highlightedRowClassName: 'arrangement-row-highlight',
+        highlightedRowColor: theme.palette.primary.main,
+      })}
     >
       <DataGrid
-        autoHeight={!paginationNeeded}
+        autoHeight
         rows={rows}
         columns={columns}
         getRowHeight={() => 'auto'}

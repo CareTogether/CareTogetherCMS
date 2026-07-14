@@ -39,6 +39,7 @@ import { Reports } from './Reports/Reports';
 import { Settings } from './Settings/SettingsRoutes';
 import { Support } from './Support';
 import { UserProfile } from './UserProfile/UserProfile';
+import { RedeemPersonInvite } from './UserProfile/RedeemPersonInvite';
 
 function RouteMigrator() {
   const trace = useScopedTrace('RouteMigrator');
@@ -267,6 +268,10 @@ export function AppRoutes() {
       <Route
         path="/org/:organizationId/:locationId/*"
         element={<LocationContextWrapper />}
+      />
+      <Route
+        path="/me/redeemPersonInvite"
+        element={<RedeemPersonInvite />}
       />
       <Route
         path="/me/*"
