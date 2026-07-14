@@ -62,15 +62,9 @@ import {
   Phone as PhoneIcon,
   Print as PrintIcon,
 } from '@mui/icons-material';
-import {
-  type KeyboardEvent,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from 'react';
-import { AddAdultDialog } from './AddAdultDialog';
-import { AddChildDialog } from './AddChildDialog';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { AddAdultDrawer } from './AddAdultDrawer';
+import { AddChildDrawer } from './AddChildDrawer';
 import { AddEditNoteDialog } from '../Notes/AddEditNoteDialog';
 import { ApproveNoteDialog } from '../Notes/ApproveNoteDialog';
 import { DiscardNoteDialog } from '../Notes/DiscardNoteDialog';
@@ -579,7 +573,7 @@ export function FamilyScreenV2() {
   }
 
   function openArrangementWorkspaceFromSummaryCard(
-    event: KeyboardEvent,
+    event: React.KeyboardEvent,
     rowId: string
   ) {
     if (event.key !== 'Enter' && event.key !== ' ') return;
@@ -1924,14 +1918,14 @@ export function FamilyScreenV2() {
           />
         )}
         {addAdultDialogOpen && (
-          <AddAdultDialog
+          <AddAdultDrawer
             onClose={(_event: object | undefined, reason: string) =>
               !isBackdropClick(reason) ? setAddAdultDialogOpen(false) : {}
             }
-          ></AddAdultDialog>
+          />
         )}
         {addChildDialogOpen && (
-          <AddChildDialog
+          <AddChildDrawer
             onClose={(_event: object | undefined, reason: string) =>
               !isBackdropClick(reason) ? setAddChildDialogOpen(false) : {}
             }

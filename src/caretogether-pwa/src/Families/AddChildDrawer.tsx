@@ -1,17 +1,12 @@
 import Grid from '@mui/material/Grid';
+import { useState } from 'react';
 import {
-  useState } from 'react';
-import {
+  Box,
   Button,
-  Checkbox,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
   Divider,
+  Drawer,
   FormControl,
   FormControlLabel,
-  FormGroup,
   FormLabel,
   InputAdornment,
   InputLabel,
@@ -20,40 +15,31 @@ import {
   RadioGroup,
   Select,
   TextField,
+  Typography,
 } from '@mui/material';
 import {
+  CombinedFamilyInfo,
   ExactAge,
   Gender,
-  EmailAddressType,
-  PhoneNumberType,
-  CombinedFamilyInfo,
-  IAddress,
-  Address,
+  CustodialRelationshipType,
+  CustodialRelationship,
 } from '../GeneratedClient';
 import { useDirectoryModel } from '../Model/DirectoryModel';
 import { Warning as WarningIcon } from '@mui/icons-material';
 import { ValidateDatePicker } from '../Generic/Forms/ValidateDatePicker';
 import { useRecoilValue } from 'recoil';
-import {
-  adultFamilyRelationshipsData,
-  ethnicitiesData,
-} from '../Model/ConfigurationModel';
+import { ethnicitiesData } from '../Model/ConfigurationModel';
 import { useParams } from 'react-router-dom';
 import { useBackdrop } from '../Hooks/useBackdrop';
 import { subYears } from 'date-fns';
 import { visibleFamiliesQuery } from '../Model/Data';
-import { AddressFormFields } from './AddressEditor';
 import { familyLastName } from './FamilyUtils';
 
-interface AddAdultDialogProps {
+interface AddChildDrawerProps {
   onClose: (event: object | undefined, reason: string) => void;
 }
 
-function optional(arg: string) {
-  return arg.length > 0 ? arg : null;
-}
-
-export function AddAdultDialog({ onClose }: AddAdultDialogProps) {
+export function AddChildDrawer({ onClose }: AddChildDrawerProps) {
   const { familyId } = useParams<{ familyId: string }>();
   const visibleFamilies = useRecoilValue(visibleFamiliesQuery);
   const family = visibleFamilies.find(
@@ -66,13 +52,14 @@ export function AddAdultDialog({ onClose }: AddAdultDialogProps) {
     gender: null as Gender | null,
     dateOfBirth: null as Date | null,
     ethnicity: '',
-    isInHousehold: true,
-    relationshipToFamily: '',
-    address: null as IAddress | null,
-    phoneNumber: '',
-    phoneType: PhoneNumberType.Mobile,
-    emailAddress: '',
-    emailType: EmailAddressType.Personal,
+    custodialRelationships: family
+      .family!.adults!.filter((adult) => adult.item1!.active)
+      .map((adult) => ({
+        adult: adult.item1!,
+        relationship: CustodialRelationshipType.ParentWithCustody as
+          | CustodialRelationshipType
+          | -1,
+      })),
     notes: null as string | null,
     concerns: null as string | null,
   });
@@ -82,50 +69,40 @@ export function AddAdultDialog({ onClose }: AddAdultDialogProps) {
     gender,
     dateOfBirth,
     ethnicity,
-    isInHousehold,
-    relationshipToFamily,
-    address,
-    phoneNumber,
-    phoneType,
-    emailAddress,
-    emailType,
+    custodialRelationships,
     notes,
     concerns,
   } = fields;
   const directoryModel = useDirectoryModel();
 
-  const relationshipTypes = useRecoilValue(adultFamilyRelationshipsData);
   const ethnicities = useRecoilValue(ethnicitiesData);
+
   const [dobError, setDobError] = useState(false);
 
   const withBackdrop = useBackdrop();
 
-  async function addAdult() {
+  async function addChild() {
     await withBackdrop(async () => {
       if (firstName.length <= 0 || lastName.length <= 0) {
         alert('First and last name are required. Try again.');
-      } else if (relationshipToFamily === '') {
-        //TODO: Actual validation!
-        alert('Family relationship was not selected. Try again.');
       } else {
         const age = dateOfBirth == null ? null : new ExactAge();
         if (dateOfBirth != null) age!.dateOfBirth = dateOfBirth;
-        await directoryModel.addAdult(
-          family.family!.id!,
+        await directoryModel.addChild(
+          family.family?.id as string,
           firstName,
           lastName,
-          gender,
+          gender as Gender,
           age,
-          optional(ethnicity),
-          isInHousehold,
-          relationshipToFamily,
-          address == null
-            ? null
-            : new Address({ ...address, id: crypto.randomUUID() }),
-          optional(phoneNumber),
-          phoneType,
-          optional(emailAddress),
-          emailType,
+          ethnicity,
+          custodialRelationships
+            .filter((cr) => cr.relationship !== -1)
+            .map((cr) => {
+              const result = new CustodialRelationship();
+              result.personId = cr.adult.id;
+              result.type = cr.relationship as CustodialRelationshipType;
+              return result;
+            }),
           notes == null ? undefined : notes,
           concerns == null ? undefined : concerns
         );
@@ -136,19 +113,25 @@ export function AddAdultDialog({ onClose }: AddAdultDialogProps) {
   }
 
   return (
-    <Dialog
-      open={true}
+    <Drawer
+      anchor="right"
+      open
       onClose={onClose}
-      scroll="body"
-      aria-labelledby="add-adult-title"
+      slotProps={{
+        paper: {
+          sx: {
+            width: { xs: '100%', sm: 600 },
+            top: 45,
+            height: 'calc(100% - 45px)',
+            display: 'flex',
+          },
+        },
+      }}
     >
-      <DialogTitle id="add-adult-title">
-        Add Adult to {familyLastName(family)}
-      </DialogTitle>
-      <DialogContent>
-        {/* <DialogContentText>
-          Provide the basic information needed for this adult.
-        </DialogContentText> */}
+      <Box sx={{ flex: 1, minHeight: 0, overflowY: 'auto', p: 3 }}>
+        <Typography id="add-child-title" variant="h6" sx={{ mb: 2 }}>
+          Add Child to {familyLastName(family)}
+        </Typography>
         <form noValidate autoComplete="off">
           <Grid container spacing={2}>
             <Grid size={{ xs: 12, sm: 6 }}>
@@ -177,54 +160,80 @@ export function AddAdultDialog({ onClose }: AddAdultDialogProps) {
                 }
               />
             </Grid>
-            <Grid size={{ xs: 12, sm: 6 }}>
-              <FormControl required fullWidth size="small">
-                <InputLabel id="family-relationship-label">
-                  Relationship to Family
-                </InputLabel>
-                <Select
-                  labelId="family-relationship-label"
-                  label="Relationship to Family"
-                  id="family-relationship"
-                  value={relationshipToFamily}
-                  onChange={(e) =>
-                    setFields({
-                      ...fields,
-                      relationshipToFamily: e.target.value as string,
-                    })
-                  }
-                >
-                  <MenuItem key="placeholder" value="" disabled>
-                    Select a relationship type
-                  </MenuItem>
-                  {relationshipTypes.map((relationshipType) => (
-                    <MenuItem key={relationshipType} value={relationshipType}>
-                      {relationshipType}
-                    </MenuItem>
+            <Grid size={12} sx={{ overflowX: 'auto' }}>
+              <table style={{ width: '100%' }}>
+                <thead>
+                  <tr>
+                    <td>Adult</td>
+                    <td>Custodial Relationship</td>
+                  </tr>
+                </thead>
+                <tbody>
+                  {custodialRelationships.map((custodialRelationship) => (
+                    <tr key={custodialRelationship.adult.id}>
+                      <td>
+                        {custodialRelationship.adult.firstName +
+                          ' ' +
+                          custodialRelationship.adult.lastName}
+                      </td>
+                      <td>
+                        <FormControl required fullWidth size="small">
+                          <Select
+                            id={
+                              'custodial-relationship-' +
+                              custodialRelationship.adult.id
+                            }
+                            value={custodialRelationship.relationship}
+                            onChange={(e) =>
+                              setFields({
+                                ...fields,
+                                custodialRelationships:
+                                  custodialRelationships.map((cr) =>
+                                    cr.adult.id ===
+                                    custodialRelationship.adult.id
+                                      ? {
+                                          adult: custodialRelationship.adult,
+                                          relationship: e.target.value as
+                                            | CustodialRelationshipType
+                                            | -1,
+                                        }
+                                      : cr
+                                  ),
+                              })
+                            }
+                          >
+                            <MenuItem key="none" value={-1}>
+                              None
+                            </MenuItem>
+                            <MenuItem
+                              key="ParentWithCustody"
+                              value={
+                                CustodialRelationshipType.ParentWithCustody
+                              }
+                            >
+                              Parent with custody
+                            </MenuItem>
+                            <MenuItem
+                              key="ParentWithCourtAppointedCustody"
+                              value={
+                                CustodialRelationshipType.ParentWithCourtAppointedCustody
+                              }
+                            >
+                              Parent with court-appointed custody
+                            </MenuItem>
+                            <MenuItem
+                              key="LegalGuardian"
+                              value={CustodialRelationshipType.LegalGuardian}
+                            >
+                              Legal guardian
+                            </MenuItem>
+                          </Select>
+                        </FormControl>
+                      </td>
+                    </tr>
                   ))}
-                </Select>
-              </FormControl>
-            </Grid>
-            <Grid size={{ xs: 12, sm: 6 }}>
-              <FormGroup row>
-                <FormControlLabel
-                  control={
-                    <Checkbox
-                      checked={isInHousehold}
-                      onChange={(e) =>
-                        setFields({
-                          ...fields,
-                          isInHousehold: e.target.checked,
-                        })
-                      }
-                      name="isInHousehold"
-                      color="primary"
-                      size="small"
-                    />
-                  }
-                  label="In Household"
-                />
-              </FormGroup>
+                </tbody>
+              </table>
             </Grid>
             <Grid size={12}>
               <Divider />
@@ -267,12 +276,14 @@ export function AddAdultDialog({ onClose }: AddAdultDialogProps) {
                 label="Date of birth"
                 value={dateOfBirth}
                 onChange={(date) => setFields({ ...fields, dateOfBirth: date })}
-                maxDate={subYears(new Date(), 18)}
-                openTo="year"
+                minDate={subYears(new Date(), 18)}
                 disableFuture
+                openTo="year"
                 onErrorChange={setDobError}
                 textFieldProps={{
+                  required: true,
                   size: 'small',
+                  fullWidth: true,
                 }}
               />
             </Grid>
@@ -302,104 +313,6 @@ export function AddAdultDialog({ onClose }: AddAdultDialogProps) {
                 </Select>
               </FormControl>
             </Grid>
-            <Grid size={12}></Grid>
-            <Grid size={{ xs: 12, sm: 6 }}>
-              <TextField
-                id="phone-number"
-                label="Phone Number"
-                fullWidth
-                size="small"
-                type="tel"
-                value={phoneNumber}
-                onChange={(e) =>
-                  setFields({ ...fields, phoneNumber: e.target.value })
-                }
-              />
-            </Grid>
-            <Grid size={{ xs: 12, sm: 6 }}>
-              <FormControl component="fieldset">
-                <RadioGroup
-                  aria-label="phoneType"
-                  name="phoneType"
-                  row
-                  value={PhoneNumberType[phoneType]}
-                  onChange={(e) =>
-                    setFields({
-                      ...fields,
-                      phoneType:
-                        PhoneNumberType[
-                          e.target.value as keyof typeof PhoneNumberType
-                        ],
-                    })
-                  }
-                >
-                  <FormControlLabel
-                    value={PhoneNumberType[PhoneNumberType.Mobile]}
-                    control={<Radio size="small" />}
-                    label="Mobile"
-                  />
-                  <FormControlLabel
-                    value={PhoneNumberType[PhoneNumberType.Home]}
-                    control={<Radio size="small" />}
-                    label="Home"
-                  />
-                  <FormControlLabel
-                    value={PhoneNumberType[PhoneNumberType.Work]}
-                    control={<Radio size="small" />}
-                    label="Work"
-                  />
-                  {/* <FormControlLabel value={PhoneNumberType[PhoneNumberType.Fax]} control={<Radio size="small" />} label="Fax" /> */}
-                </RadioGroup>
-              </FormControl>
-            </Grid>
-            <Grid size={{ xs: 12, sm: 6 }}>
-              <TextField
-                id="email-address"
-                label="Email Address"
-                fullWidth
-                size="small"
-                type="email"
-                value={emailAddress}
-                onChange={(e) =>
-                  setFields({ ...fields, emailAddress: e.target.value })
-                }
-              />
-            </Grid>
-            <Grid size={{ xs: 12, sm: 6 }}>
-              <FormControl component="fieldset">
-                <RadioGroup
-                  aria-label="emailType"
-                  name="emailType"
-                  row
-                  value={EmailAddressType[emailType]}
-                  onChange={(e) =>
-                    setFields({
-                      ...fields,
-                      emailType:
-                        EmailAddressType[
-                          e.target.value as keyof typeof EmailAddressType
-                        ],
-                    })
-                  }
-                >
-                  <FormControlLabel
-                    value={EmailAddressType[EmailAddressType.Personal]}
-                    control={<Radio size="small" />}
-                    label="Personal"
-                  />
-                  <FormControlLabel
-                    value={EmailAddressType[EmailAddressType.Work]}
-                    control={<Radio size="small" />}
-                    label="Work"
-                  />
-                </RadioGroup>
-              </FormControl>
-            </Grid>
-            <Grid size={12}></Grid>
-            <AddressFormFields
-              address={address}
-              onEdit={(value) => setFields({ ...fields, address: value })}
-            />
             <Grid size={12}></Grid>
             <Grid size={12}>
               <TextField
@@ -446,20 +359,33 @@ export function AddAdultDialog({ onClose }: AddAdultDialogProps) {
             </Grid>
           </Grid>
         </form>
-      </DialogContent>
-      <DialogActions sx={{ marginBottom: 4 }}>
+      </Box>
+      <Box
+        sx={{
+          borderTop: 1,
+          borderColor: 'divider',
+          display: 'flex',
+          gap: 1,
+          justifyContent: 'flex-end',
+          p: 2,
+          pb: 'calc(16px + env(safe-area-inset-bottom))',
+          backgroundColor: 'background.paper',
+        }}
+      >
         <Button onClick={() => onClose(undefined, 'cancel')} color="secondary">
           Cancel
         </Button>
         <Button
-          onClick={addAdult}
-          disabled={dobError}
+          onClick={addChild}
           variant="contained"
           color="primary"
+          disabled={!dateOfBirth || dobError}
         >
           Add to Family
         </Button>
-      </DialogActions>
-    </Dialog>
+      </Box>
+    </Drawer>
   );
 }
+
+export { AddChildDrawer as AddChildDialog };

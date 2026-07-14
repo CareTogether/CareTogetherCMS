@@ -45,8 +45,8 @@ import {
 import { AdultCard } from './AdultCard';
 import { ChildCard } from './ChildCard';
 import { useEffect, useRef, useState } from 'react';
-import { AddAdultDialog } from './AddAdultDialog';
-import { AddChildDialog } from './AddChildDialog';
+import { AddAdultDialog } from './AddAdultDrawer';
+import { AddChildDialog } from './AddChildDrawer';
 import { AddEditNoteDialog } from '../Notes/AddEditNoteDialog';
 import { format } from 'date-fns';
 import { UploadFamilyDocumentsDialog } from './UploadFamilyDocumentsDialog';
@@ -702,9 +702,15 @@ export function FamilyScreen() {
                 family.volunteerFamilyInfo &&
                 orderCustomFieldsByPolicy(
                   Array<CustomFieldRenderInfo>()
-                    .concat(family.volunteerFamilyInfo.completedCustomFields || [])
-                    .concat(family.volunteerFamilyInfo.missingCustomFields || []),
-                  policy.volunteerPolicy?.customFields?.map((field) => field.name) ?? []
+                    .concat(
+                      family.volunteerFamilyInfo.completedCustomFields || []
+                    )
+                    .concat(
+                      family.volunteerFamilyInfo.missingCustomFields || []
+                    ),
+                  policy.volunteerPolicy?.customFields?.map(
+                    (field) => field.name
+                  ) ?? []
                 ).map((customField) => (
                   <VolunteerFamilyCustomField
                     key={

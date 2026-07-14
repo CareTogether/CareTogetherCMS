@@ -42,7 +42,7 @@ import {
   UnfoldLess as UnfoldLessIcon,
   UnfoldMore as UnfoldMoreIcon,
 } from '@mui/icons-material';
-import { CreateVolunteerFamilyDialog } from '../CreateVolunteerFamilyDialog';
+import { CreateVolunteerFamilyDrawer } from '../CreateVolunteerFamilyDrawer';
 import { Link, useLocation } from 'react-router-dom';
 import { SearchBar } from '../../Shell/SearchBar';
 import { useLocalStorage } from '../../Hooks/useLocalStorage';
@@ -551,7 +551,7 @@ function VolunteerApproval(props: { onOpen: () => void }) {
   function openFamily(familyId: string) {
     appNavigate.family(familyId);
   }
-  const [createVolunteerFamilyDialogOpen, setCreateVolunteerFamilyDialogOpen] =
+  const [createVolunteerFamilyDrawerOpen, setCreateVolunteerFamilyDrawerOpen] =
     useState(false);
 
   const theme = useTheme();
@@ -866,7 +866,7 @@ function VolunteerApproval(props: { onOpen: () => void }) {
                 <Button
                   variant="contained"
                   startIcon={<AddIcon />}
-                  onClick={() => setCreateVolunteerFamilyDialogOpen(true)}
+                  onClick={() => setCreateVolunteerFamilyDrawerOpen(true)}
                   sx={{
                     marginRight: 'auto',
                     width: { xs: '100%', sm: 'auto' },
@@ -986,15 +986,11 @@ function VolunteerApproval(props: { onOpen: () => void }) {
             </Table>
           </WideTableContainer>
 
-          {createVolunteerFamilyDialogOpen && (
-            <CreateVolunteerFamilyDialog
+          {createVolunteerFamilyDrawerOpen && (
+            <CreateVolunteerFamilyDrawer
               onClose={(volunteerFamilyId) => {
-                setCreateVolunteerFamilyDialogOpen(false);
-
-                if (!volunteerFamilyId) {
-                  return;
-                }
-
+                setCreateVolunteerFamilyDrawerOpen(false);
+                if (!volunteerFamilyId) return;
                 openFamily(volunteerFamilyId);
               }}
             />
