@@ -2,19 +2,11 @@ import Grid from '../Generic/GridLegacyCompat';
 import { useReactToPrint } from 'react-to-print';
 import {
   Container,
-  Toolbar,
   Button,
   useMediaQuery,
   useTheme,
   Box,
-  IconButton,
-  ListItemText,
-  Menu,
-  MenuItem,
-  MenuList,
   Chip,
-  Divider,
-  ListItemIcon,
   Typography,
   Tooltip,
 } from '@mui/material';
@@ -38,13 +30,9 @@ import {
 } from '../GeneratedClient';
 import { useParams } from 'react-router';
 import {
-  AddCircle as AddCircleIcon,
   Check as CheckIcon,
-  CloudUpload as CloudUploadIcon,
   DeleteForever as DeleteForeverIcon,
   Edit as EditIcon,
-  MoreVert as MoreVertIcon,
-  Print as PrintIcon,
 } from '@mui/icons-material';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { FamilyDocuments } from './FamilyDocuments';
@@ -111,6 +99,7 @@ import {
   type PrintableFamilyMember,
 } from './FamilyMemberPrintData';
 import { FamilyMemberPrintDocument } from './FamilyMemberPrintDocument';
+import { FamilyScreenActionsMenuV2 } from './FamilyScreenActionsMenuV2';
 import { FamilyPrimaryHeaderInfoV2 } from './FamilyPrimaryHeaderInfoV2';
 import {
   ActiveCaseArrangementSummaryV2,
@@ -979,6 +968,20 @@ export function FamilyScreenV2() {
     setFamilyMemberPrintRequested(true);
   }
 
+  async function toggleTestFamilyFlag() {
+    if (!family) return;
+
+    setFamilyMoreMenuAnchor(null);
+
+    const isCurrentlyTest = family.family?.isTestFamily ?? false;
+    await withBackdrop(async () => {
+      await directoryModel.updateTestFamilyFlag(
+        family.family.id,
+        !isCurrentlyTest
+      );
+    });
+  }
+
   function tabLabel(label: string, count?: number, unapprovedCount?: number) {
     return (
       <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75 }}>
@@ -1478,6 +1481,29 @@ export function FamilyScreenV2() {
     canEditFamilyInfo ||
     canAddNotes ||
     hasMoreMenuActions;
+  const roleRemovalActions = permissions(
+    Permission.EditVolunteerRoleParticipation
+  )
+    ? participatingFamilyRoles.map(([role]) => ({
+        key: role,
+        label: `Remove from ${role} role`,
+        onClick: () => selectRemoveRole(role),
+      }))
+    : [];
+  const roleResetActions = permissions(Permission.EditVolunteerRoleParticipation)
+    ? (family.volunteerFamilyInfo?.roleRemovals || [])
+        .filter((removedRole) => !removedRole.effectiveUntil)
+        .map((removedRole) => ({
+          key: removedRole.roleName!,
+          label: `Reset ${removedRole.roleName} participation`,
+          onClick: () =>
+            selectResetRole(
+              removedRole.roleName!,
+              removedRole.reason!,
+              removedRole.additionalComments!
+            ),
+        }))
+    : [];
 
   return (
     <Container maxWidth={false} sx={{ paddingLeft: '12px' }}>
@@ -1505,308 +1531,101 @@ export function FamilyScreenV2() {
           </div>
         </Box>
       )}
-      <Toolbar
-        variant="dense"
-        disableGutters={true}
-        sx={{
-          alignItems: 'flex-start',
-          justifyContent: 'space-between',
-          flexWrap: 'wrap',
-          gap: 2,
-          py: 1,
+      <FamilyScreenActionsMenuV2
+        canAddNotes={canAddNotes}
+        canEditFamilyInfo={canEditFamilyInfo}
+        canUploadDocuments={canUploadDocuments}
+        familyMemberPrintInformationEnabled={familyMemberPrintInformationEnabled}
+        hasFamilyActions={hasFamilyActions}
+        hasMoreMenuActions={hasMoreMenuActions}
+        header={
+          <FamilyPrimaryHeaderInfoV2
+            family={family}
+            primaryEmailAddress={primaryEmailAddress?.address}
+            primaryPhoneNumber={primaryPhoneNumber?.number}
+            primaryAddressText={primaryAddressText}
+            onCopied={setAndShowGlobalSnackBar}
+          />
+        }
+        isDesktop={isDesktop}
+        menuAnchor={familyMoreMenuAnchor}
+        onAddAdult={openAddAdultDialog}
+        onAddChild={openAddChildDialog}
+        onAddNote={openAddNoteDialog}
+        onCloseMenu={() => setFamilyMoreMenuAnchor(null)}
+        onCompleteOther={() => {
+          setFamilyCompleteOtherOpen(true);
+          setFamilyMoreMenuAnchor(null);
         }}
-      >
-        <Box sx={{ flex: '1 1 320px', minWidth: 0 }}>
-          <Box
-            sx={{
-              display: 'flex',
-              alignItems: 'flex-start',
-              justifyContent: 'space-between',
-              gap: 1,
-            }}
-          >
-            <FamilyPrimaryHeaderInfoV2
-              family={family}
-              primaryEmailAddress={primaryEmailAddress?.address}
-              primaryPhoneNumber={primaryPhoneNumber?.number}
-              primaryAddressText={primaryAddressText}
-              onCopied={setAndShowGlobalSnackBar}
-            />
-            {!isDesktop && hasFamilyActions && (
-              <IconButton
-                aria-label="family actions"
-                onClick={(event) =>
-                  setFamilyMoreMenuAnchor(event.currentTarget)
-                }
-                size="small"
-                sx={{
-                  border: 1,
-                  borderColor: 'primary.main',
-                  borderRadius: 1,
-                  color: 'primary.main',
-                  flex: '0 0 auto',
-                  width: 36,
-                  height: 36,
-                }}
-              >
-                <MoreVertIcon fontSize="small" />
-              </IconButton>
-            )}
-          </Box>
-        </Box>
-        <Box
-          sx={{
-            display: 'flex',
-            flex: '0 1 auto',
-            flexWrap: 'wrap',
-            justifyContent: 'flex-end',
-            gap: 1,
-          }}
-        >
-          {isDesktop && canUploadDocuments && (
-            <Button
-              className="ph-unmask"
-              onClick={() => setUploadDocumentDialogOpen(true)}
-              variant="contained"
-              size="small"
-              startIcon={<CloudUploadIcon />}
-            >
-              Upload
-            </Button>
-          )}
-          {isDesktop && canEditFamilyInfo && (
-            <Button
-              className="ph-unmask"
-              onClick={() => setAddAdultDialogOpen(true)}
-              variant="contained"
-              size="small"
-              startIcon={<AddCircleIcon />}
-            >
-              Adult
-            </Button>
-          )}
-          {isDesktop && canEditFamilyInfo && (
-            <Button
-              className="ph-unmask"
-              onClick={() => setAddChildDialogOpen(true)}
-              variant="contained"
-              size="small"
-              startIcon={<AddCircleIcon />}
-            >
-              Child
-            </Button>
-          )}
-          {isDesktop && canAddNotes && (
-            <Button
-              className="ph-unmask"
-              onClick={() => setAddNoteDialogOpen(true)}
-              variant="contained"
-              size="small"
-              startIcon={<AddCircleIcon />}
-            >
-              Note
-            </Button>
-          )}
-          {isDesktop && hasMoreMenuActions && (
-            <IconButton
-              onClick={(event) => setFamilyMoreMenuAnchor(event.currentTarget)}
-              size="small"
-            >
-              <MoreVertIcon />
-            </IconButton>
-          )}
-        </Box>
-        <Menu
-          id="family-more-menu"
-          anchorEl={familyMoreMenuAnchor}
-          keepMounted
-          open={Boolean(familyMoreMenuAnchor)}
-          onClose={() => setFamilyMoreMenuAnchor(null)}
-        >
-          <MenuList dense={isDesktop}>
-            {!isDesktop && canUploadDocuments && (
-              <MenuItem onClick={openUploadDocumentDialog}>
-                <ListItemIcon>
-                  <CloudUploadIcon fontSize="small" />
-                </ListItemIcon>
-                <ListItemText className="ph-unmask" primary="Upload" />
-              </MenuItem>
-            )}
-            {!isDesktop && canEditFamilyInfo && (
-              <MenuItem onClick={openAddAdultDialog}>
-                <ListItemIcon>
-                  <AddCircleIcon fontSize="small" />
-                </ListItemIcon>
-                <ListItemText className="ph-unmask" primary="Adult" />
-              </MenuItem>
-            )}
-            {!isDesktop && canEditFamilyInfo && (
-              <MenuItem onClick={openAddChildDialog}>
-                <ListItemIcon>
-                  <AddCircleIcon fontSize="small" />
-                </ListItemIcon>
-                <ListItemText className="ph-unmask" primary="Child" />
-              </MenuItem>
-            )}
-            {!isDesktop && canAddNotes && (
-              <MenuItem onClick={openAddNoteDialog}>
-                <ListItemIcon>
-                  <AddCircleIcon fontSize="small" />
-                </ListItemIcon>
-                <ListItemText className="ph-unmask" primary="Note" />
-              </MenuItem>
-            )}
-            {!isDesktop &&
-              (canUploadDocuments || canEditFamilyInfo || canAddNotes) &&
-              hasMoreMenuActions && <Divider />}
-            {permissions(Permission.EditVolunteerRoleParticipation) &&
-              participatingFamilyRoles.flatMap(([role]) => (
-                <MenuItem key={role} onClick={() => selectRemoveRole(role)}>
-                  <ListItemText primary={`Remove from ${role} role`} />
-                </MenuItem>
-              ))}
-            {permissions(Permission.EditVolunteerRoleParticipation) &&
-              (family.volunteerFamilyInfo?.roleRemovals || [])
-                .filter((removedRole) => !removedRole.effectiveUntil)
-                .map((removedRole) => (
-                  <MenuItem
-                    key={removedRole.roleName}
-                    onClick={() =>
-                      selectResetRole(
-                        removedRole.roleName!,
-                        removedRole.reason!,
-                        removedRole.additionalComments!
-                      )
-                    }
-                  >
-                    <ListItemText
-                      primary={`Reset ${removedRole.roleName} participation`}
-                    />
-                  </MenuItem>
-                ))}
-
-            <MenuItem onClick={() => reactToPrintFn()}>
-              <ListItemText primary="Print notes" />
-            </MenuItem>
-
-            {familyMemberPrintInformationEnabled &&
-              printableFamilyMembers.map((member) => (
-                <MenuItem
-                  key={`${member.kind}:${member.person.id}`}
-                  onClick={() => printFamilyMemberInformation(member)}
-                >
-                  <ListItemIcon>
-                    <PrintIcon fontSize="small" />
-                  </ListItemIcon>
-                  <ListItemText
-                    primary={
-                      <>
-                        <span className="ph-unmask">Print </span>
-                        {personFullName(member.person)}
-                        <span className="ph-unmask"> information</span>
-                      </>
-                    }
-                  />
-                </MenuItem>
-              ))}
-
-            {family.volunteerFamilyInfo != null &&
-              permissions(Permission.EditApprovalRequirementCompletion) && (
-                <MenuItem
-                  onClick={() => {
-                    setFamilyCompleteOtherOpen(true);
-                    setFamilyMoreMenuAnchor(null);
-                  }}
-                >
-                  <ListItemText primary="Complete other..." />
-                </MenuItem>
-              )}
-
-            {permissions(Permission.EditFamilyInfo) &&
-              updateTestFamilyFlagEnabled && (
-                <MenuItem
-                  onClick={async (e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-
-                    setFamilyMoreMenuAnchor(null);
-
-                    const isCurrentlyTest =
-                      family.family?.isTestFamily ?? false;
-                    await withBackdrop(async () => {
-                      await directoryModel.updateTestFamilyFlag(
-                        family.family.id,
-                        !isCurrentlyTest
-                      );
-                    });
-                  }}
-                >
-                  <ListItemText
-                    className="ph-unmask"
-                    primary={
-                      family.family?.isTestFamily
-                        ? 'Unmark as test family'
-                        : 'Mark as test family'
-                    }
-                  />
-                </MenuItem>
-              )}
-
-            {permissions(Permission.EditFamilyInfo) && (
-              <MenuItem onClick={deleteFamilyDialogHandle.openDialog}>
-                <ListItemText className="ph-unmask" primary="Delete family" />
-              </MenuItem>
-            )}
-          </MenuList>
-        </Menu>
-        <FamilyScreenWorkflowCoordinatorV2
-          addAdultDialogOpen={addAdultDialogOpen}
-          addChildDialogOpen={addChildDialogOpen}
-          addNoteDialogOpen={addNoteDialogOpen}
-          closeCaseDrawerOpen={closeCaseDrawerOpen}
-          deleteFamilyDialogHandle={deleteFamilyDialogHandle}
-          family={family}
-          familyCompleteOtherOpen={familyCompleteOtherOpen}
-          familyId={familyId}
-          openNewV1CaseDialogOpen={openNewV1CaseDialogOpen}
-          openReferralId={openReferralId}
-          recentFamilyNoteAction={recentFamilyNoteAction}
-          recentReferralNoteAction={recentReferralNoteAction}
-          removeRoleParameter={removeRoleParameter}
-          resetRoleParameter={resetRoleParameter}
-          selectedArrangementRow={selectedArrangementRow}
-          selectedFamilyMemberRow={selectedFamilyMemberRow}
-          selectedRemovedRole={selectedRemovedRole}
-          selectedRoleSummaryCard={selectedRoleSummaryCard}
-          selectedV1Case={selectedV1Case}
-          uploadDocumentDialogOpen={uploadDocumentDialogOpen}
-          onAddAdultClose={(_event: object | undefined, reason: string) =>
-            !isBackdropClick(reason) ? setAddAdultDialogOpen(false) : {}
-          }
-          onAddChildClose={(_event: object | undefined, reason: string) =>
-            !isBackdropClick(reason) ? setAddChildDialogOpen(false) : {}
-          }
-          onAddNoteClose={() => setAddNoteDialogOpen(false)}
-          onArrangementClose={() => setSelectedArrangementRowId(null)}
-          onCloseCaseDrawerClose={() => setCloseCaseDrawerOpen(false)}
-          onFamilyCompleteOtherClose={() => setFamilyCompleteOtherOpen(false)}
-          onFamilyMemberClose={() => setSelectedFamilyMemberRow(null)}
-          onOpenNewV1CaseDialogClose={() =>
-            setOpenNewV1CaseDialogOpen(false)
-          }
-          onRecentFamilyNoteActionClose={() => setRecentFamilyNoteAction(null)}
-          onRecentReferralNoteActionClose={() =>
-            setRecentReferralNoteAction(null)
-          }
-          onRemoveRoleClose={() => setRemoveRoleParameter(null)}
-          onResetRoleClose={() => setResetRoleParameter(null)}
-          onRoleDetailsClose={() => {
-            setSelectedRoleSummaryCardId(null);
-            setSelectedRemovedRoleId(null);
-          }}
-          onUploadDocumentClose={() => setUploadDocumentDialogOpen(false)}
-        />
-      </Toolbar>
+        onDeleteFamily={deleteFamilyDialogHandle.openDialog}
+        onOpenMenu={(event) => setFamilyMoreMenuAnchor(event.currentTarget)}
+        onPrintFamilyMemberInformation={printFamilyMemberInformation}
+        onPrintNotes={() => reactToPrintFn()}
+        onToggleTestFamily={() => void toggleTestFamilyFlag()}
+        onUploadDocuments={openUploadDocumentDialog}
+        printableFamilyMembers={printableFamilyMembers}
+        roleRemovalActions={roleRemovalActions}
+        roleResetActions={roleResetActions}
+        showCompleteOtherAction={
+          family.volunteerFamilyInfo != null &&
+          permissions(Permission.EditApprovalRequirementCompletion)
+        }
+        showDeleteFamilyAction={permissions(Permission.EditFamilyInfo)}
+        showToggleTestFamilyAction={
+          permissions(Permission.EditFamilyInfo) &&
+          updateTestFamilyFlagEnabled === true
+        }
+        toggleTestFamilyLabel={
+          family.family?.isTestFamily
+            ? 'Unmark as test family'
+            : 'Mark as test family'
+        }
+      />
+      <FamilyScreenWorkflowCoordinatorV2
+        addAdultDialogOpen={addAdultDialogOpen}
+        addChildDialogOpen={addChildDialogOpen}
+        addNoteDialogOpen={addNoteDialogOpen}
+        closeCaseDrawerOpen={closeCaseDrawerOpen}
+        deleteFamilyDialogHandle={deleteFamilyDialogHandle}
+        family={family}
+        familyCompleteOtherOpen={familyCompleteOtherOpen}
+        familyId={familyId}
+        openNewV1CaseDialogOpen={openNewV1CaseDialogOpen}
+        openReferralId={openReferralId}
+        recentFamilyNoteAction={recentFamilyNoteAction}
+        recentReferralNoteAction={recentReferralNoteAction}
+        removeRoleParameter={removeRoleParameter}
+        resetRoleParameter={resetRoleParameter}
+        selectedArrangementRow={selectedArrangementRow}
+        selectedFamilyMemberRow={selectedFamilyMemberRow}
+        selectedRemovedRole={selectedRemovedRole}
+        selectedRoleSummaryCard={selectedRoleSummaryCard}
+        selectedV1Case={selectedV1Case}
+        uploadDocumentDialogOpen={uploadDocumentDialogOpen}
+        onAddAdultClose={(_event: object | undefined, reason: string) =>
+          !isBackdropClick(reason) ? setAddAdultDialogOpen(false) : {}
+        }
+        onAddChildClose={(_event: object | undefined, reason: string) =>
+          !isBackdropClick(reason) ? setAddChildDialogOpen(false) : {}
+        }
+        onAddNoteClose={() => setAddNoteDialogOpen(false)}
+        onArrangementClose={() => setSelectedArrangementRowId(null)}
+        onCloseCaseDrawerClose={() => setCloseCaseDrawerOpen(false)}
+        onFamilyCompleteOtherClose={() => setFamilyCompleteOtherOpen(false)}
+        onFamilyMemberClose={() => setSelectedFamilyMemberRow(null)}
+        onOpenNewV1CaseDialogClose={() => setOpenNewV1CaseDialogOpen(false)}
+        onRecentFamilyNoteActionClose={() => setRecentFamilyNoteAction(null)}
+        onRecentReferralNoteActionClose={() =>
+          setRecentReferralNoteAction(null)
+        }
+        onRemoveRoleClose={() => setRemoveRoleParameter(null)}
+        onResetRoleClose={() => setResetRoleParameter(null)}
+        onRoleDetailsClose={() => {
+          setSelectedRoleSummaryCardId(null);
+          setSelectedRemovedRoleId(null);
+        }}
+        onUploadDocumentClose={() => setUploadDocumentDialogOpen(false)}
+      />
       <RoleSummaryCardsSection
         cards={roleSummaryCards}
         removedRoles={removedRoleSummaries}
