@@ -15,12 +15,9 @@ import {
   V1Case,
   V1Referral,
   RoleRemovalReason,
-  V1ReferralStatus,
   Note,
   NoteStatus,
   V1ReferralNoteStatus,
-  Arrangement,
-  ArrangementPhase,
 } from '../GeneratedClient';
 import { useParams } from 'react-router';
 import {
@@ -62,11 +59,7 @@ import { AssignmentsSection } from '../Families/AssignmentsSectionV2';
 import { useBackdrop } from '../Hooks/useBackdrop';
 import { useSyncV1CaseIdInURL } from '../Hooks/useSyncV1CaseIdInURL';
 import { ArrangementsSection } from '../V1Cases/Arrangements/ArrangementsSection/ArrangementsSectionV2';
-import { getFilteredArrangements } from '../V1Cases/Arrangements/ArrangementsSection/getFilteredArrangements';
-import {
-  ArrangementRowV2,
-  buildArrangementRowsV2,
-} from '../V1Cases/Arrangements/arrangementViewModel';
+import { ArrangementRowV2 } from '../V1Cases/Arrangements/arrangementViewModel';
 import { useFeatureFlagEnabled } from 'posthog-js/react';
 import { TestFamilyBadge } from './TestFamilyBadge';
 import { visibleReferralsQuery } from '../Model/Data';
@@ -92,10 +85,7 @@ import {
 import { FamilyMemberPrintDocument } from './FamilyMemberPrintDocument';
 import { FamilyScreenActionsMenuV2 } from './FamilyScreenActionsMenuV2';
 import { FamilyPrimaryHeaderInfoV2 } from './FamilyPrimaryHeaderInfoV2';
-import {
-  ActiveCaseArrangementSummaryV2,
-  FamilyCaseWorkspaceHeaderV2,
-} from './FamilyCaseWorkspaceHeaderV2';
+import { FamilyCaseWorkspaceHeaderV2 } from './FamilyCaseWorkspaceHeaderV2';
 import { FamilyCaseHistoryTabV2 } from './FamilyCaseHistoryTabV2';
 import { FamilyOverviewTabV2 } from './FamilyOverviewTabV2';
 import {
@@ -109,25 +99,11 @@ import {
 } from './FamilyRecentOverviewV2';
 import { FamilyScreenWorkflowCoordinatorV2 } from './FamilyScreenWorkflowCoordinatorV2';
 import { FamilyMemberRowV2 } from './familyMemberViewModel';
+import { useFamilyCaseViewModel } from './useFamilyCaseViewModel';
 import { useFamilyOverviewViewModel } from './useFamilyOverviewViewModel';
 
 type ReferralNoteEntry = NonNullable<V1Referral['notes']>[number];
 type RecentNoteAction = 'edit' | 'approve' | 'delete';
-function isActiveCaseArrangement(arrangement: Arrangement) {
-  return (
-    arrangement.phase === ArrangementPhase.SettingUp ||
-    arrangement.phase === ArrangementPhase.ReadyToStart ||
-    arrangement.phase === ArrangementPhase.Started
-  );
-}
-
-function activeArrangementStatusLabel(phase?: ArrangementPhase) {
-  if (phase === ArrangementPhase.SettingUp) return 'Setting up';
-  if (phase === ArrangementPhase.ReadyToStart) return 'Ready to start';
-  if (phase === ArrangementPhase.Started) return 'Active';
-  return 'Active';
-}
-
 function stringFromLocationState(state: unknown, key: string) {
   if (!state || typeof state !== 'object' || !(key in state)) {
     return undefined;
@@ -230,12 +206,6 @@ export function FamilyScreenV2() {
   }, [openV1Cases, closedV1Cases]);
   const [closeCaseDrawerOpen, setCloseCaseDrawerOpen] = useState(false);
   const v1CasesModel = useV1CasesModel();
-  const openReferralId = useMemo(
-    () =>
-      familyReferrals.find((r) => r.status === V1ReferralStatus.Open)
-        ?.referralId,
-    [familyReferrals]
-  );
   const [openNewV1CaseDialogOpen, setOpenNewV1CaseDialogOpen] = useState(false);
   const [uploadDocumentDialogOpen, setUploadDocumentDialogOpen] =
     useState(false);
@@ -271,13 +241,38 @@ export function FamilyScreenV2() {
   const [selectedV1CaseId, setSelectedV1CaseId] = useState<string | undefined>(
     v1CaseIdFromNavigation || firstV1CaseId
   );
-  const selectedV1Case = useMemo(
-    () => allV1Cases.find((v1Case) => v1Case.id === selectedV1CaseId),
-    [allV1Cases, selectedV1CaseId]
-  );
   const [selectedArrangementRowId, setSelectedArrangementRowId] = useState<
     string | null
   >(null);
+  const {
+    activeCaseArrangements,
+    caseReferralTable,
+    currentReferral,
+    openReferralId,
+    selectedArrangementRow,
+    selectedCaseArrangementRows,
+    selectedV1Case,
+  } = useFamilyCaseViewModel({
+    allV1Cases,
+    family,
+    familyLabel: (arrangementFamilyId) => {
+      const matchedFamily = familyLookup(arrangementFamilyId);
+      const primaryContactPerson = matchedFamily?.family?.adults?.find(
+        (adult) =>
+          adult.item1?.id === matchedFamily.family?.primaryFamilyContactPersonId
+      )?.item1;
+
+      return primaryContactPerson
+        ? `${personNameString(primaryContactPerson)} Family`
+        : 'Family';
+    },
+    familyReferrals,
+    personLabel: (personFamilyId, personId) =>
+      personNameString(personLookup(personFamilyId, personId)),
+    policy,
+    selectedArrangementRowId,
+    selectedV1CaseId,
+  });
 
   const hasOpenV1Case = openV1Cases.length > 0;
   const latestClosedV1Case = closedV1Cases[0];
@@ -288,99 +283,9 @@ export function FamilyScreenV2() {
     selectedV1Case.id === latestClosedV1Case?.id &&
     permissions(Permission.CloseV1Case);
 
-  const caseReferralTable = useMemo(() => {
-    const linkedReferralIds = new Set(
-      allV1Cases.flatMap((c) => c.linkedV1ReferralIds ?? [])
-    );
-
-    const unlinkedReferrals = familyReferrals.filter(
-      (r) => !linkedReferralIds.has(r.referralId)
-    );
-
-    const caseRows = allV1Cases.map((v1Case) => {
-      const caseLinkedReferralIds = new Set(v1Case.linkedV1ReferralIds ?? []);
-      const linkedReferrals = familyReferrals.filter((r) =>
-        caseLinkedReferralIds.has(r.referralId)
-      );
-
-      return { v1Case, linkedReferrals };
-    });
-
-    return { caseRows, unlinkedReferrals };
-  }, [allV1Cases, familyReferrals]);
-
-  const currentReferral = useMemo(() => {
-    const selectedCaseRow = caseReferralTable.caseRows.find(
-      ({ v1Case }) => v1Case.id === selectedV1Case?.id
-    );
-
-    return (
-      selectedCaseRow?.linkedReferrals[0] ??
-      familyReferrals.find(
-        (referral) => referral.status === V1ReferralStatus.Open
-      )
-    );
-  }, [caseReferralTable.caseRows, familyReferrals, selectedV1Case?.id]);
-
-  const selectedCaseArrangementRows = useMemo<ArrangementRowV2[]>(() => {
-    if (!family || !selectedV1Case) return [];
-
-    return buildArrangementRowsV2({
-      arrangements: getFilteredArrangements(selectedV1Case, []),
-      arrangementPolicies: policy.referralPolicy?.arrangementPolicies,
-      family,
-      v1Case: selectedV1Case,
-      personLabel: (personFamilyId, personId) =>
-        personNameString(personLookup(personFamilyId, personId)),
-      familyLabel: (arrangementFamilyId) => {
-        const matchedFamily = familyLookup(arrangementFamilyId);
-        const primaryContactPerson = matchedFamily?.family?.adults?.find(
-          (adult) =>
-            adult.item1?.id ===
-            matchedFamily.family?.primaryFamilyContactPersonId
-        )?.item1;
-
-        return primaryContactPerson
-          ? `${personNameString(primaryContactPerson)} Family`
-          : 'Family';
-      },
-    });
-  }, [family, familyLookup, personLookup, policy, selectedV1Case]);
-
-  const selectedArrangementRow = useMemo(
-    () =>
-      selectedCaseArrangementRows.find(
-        (row) => row.id === selectedArrangementRowId
-      ) ?? null,
-    [selectedCaseArrangementRows, selectedArrangementRowId]
-  );
-
   function openArrangementWorkspace(row: ArrangementRowV2) {
     setSelectedArrangementRowId(row.id);
   }
-
-  const activeCaseArrangements = useMemo<
-    ActiveCaseArrangementSummaryV2[]
-  >(() => {
-    return selectedCaseArrangementRows
-      .filter((row) => row.id && isActiveCaseArrangement(row.source))
-      .map((row) => {
-        return {
-          id: row.id,
-          arrangementType: row.arrangementType,
-          arrangedPersonLabel: row.childOrPersonLabel || 'Unassigned',
-          currentLocationLabel:
-            row.currentLocationLabel || 'Location unspecified',
-          phase: row.source.phase,
-          relevantDateLabel: row.startedDate
-            ? `Started ${row.startedDate}`
-            : row.requestedDate
-              ? `Requested ${row.requestedDate}`
-              : undefined,
-          statusLabel: activeArrangementStatusLabel(row.source.phase),
-        };
-      });
-  }, [selectedCaseArrangementRows]);
 
   async function reopenCaseNow() {
     if (!selectedV1Case?.id) return;
