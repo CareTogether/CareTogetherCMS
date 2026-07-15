@@ -8,7 +8,6 @@ import {
   useTheme,
   Box,
   IconButton,
-  Card,
   ListItemText,
   Menu,
   MenuItem,
@@ -19,7 +18,6 @@ import {
   ListItemIcon,
   Typography,
   Tooltip,
-  Stack,
 } from '@mui/material';
 import {
   CompletedCustomFieldInfo,
@@ -76,7 +74,6 @@ import {
 } from '../Requirements/RequirementContext';
 import { ActivityTimelineV2 } from '../Activities/ActivityTimelineV2';
 import { formatTimelineTimestamp } from '../Activities/timelineTimestampFormatting';
-import { V1CaseCommentsV2 } from '../V1Cases/V1CaseCommentsV2';
 import { V1CaseCustomField } from '../V1Cases/V1CaseCustomField';
 import {
   useScreenTitleComponent,
@@ -149,6 +146,10 @@ import { FamilyMembersDataGridV2 } from './FamilyMembersDataGridV2';
 import { FamilyMemberDrawerV2 } from './FamilyMemberDrawerV2';
 import { FamilyPrimaryHeaderInfoV2 } from './FamilyPrimaryHeaderInfoV2';
 import {
+  ActiveCaseArrangementSummaryV2,
+  FamilyCaseWorkspaceHeaderV2,
+} from './FamilyCaseWorkspaceHeaderV2';
+import {
   FamilyScreenTab,
   FamilyScreenTabsV2,
   FamilyScreenTabValue,
@@ -157,7 +158,6 @@ import {
   buildFamilyMemberRowsV2,
   FamilyMemberRowV2,
 } from './familyMemberViewModel';
-import { v2Typography } from './v2Typography';
 
 type CustomFieldRenderInfo = CompletedCustomFieldInfo | string;
 type ReferralNoteEntry = NonNullable<V1Referral['notes']>[number];
@@ -174,26 +174,12 @@ type RecentOverviewTimelineItem = {
   referralId?: string;
   icon: 'check' | 'edit' | 'location';
 };
-type ActiveCaseArrangementSummaryV2 = {
-  id: string;
-  arrangementType: string;
-  arrangedPersonLabel: string;
-  currentLocationLabel: string;
-  phase: ArrangementPhase;
-  relevantDateLabel?: string;
-  statusLabel: string;
-};
 function isActiveCaseArrangement(arrangement: Arrangement) {
   return (
     arrangement.phase === ArrangementPhase.SettingUp ||
     arrangement.phase === ArrangementPhase.ReadyToStart ||
     arrangement.phase === ArrangementPhase.Started
   );
-}
-
-function arrangementAccentColor(phase?: ArrangementPhase) {
-  if (phase === ArrangementPhase.Started) return 'info.main';
-  return 'warning.main';
 }
 
 function activeArrangementStatusLabel(phase?: ArrangementPhase) {
@@ -509,16 +495,6 @@ export function FamilyScreenV2() {
 
   function openArrangementWorkspace(row: ArrangementRowV2) {
     setSelectedArrangementRowId(row.id);
-  }
-
-  function openArrangementWorkspaceFromSummaryCard(
-    event: React.KeyboardEvent,
-    rowId: string
-  ) {
-    if (event.key !== 'Enter' && event.key !== ' ') return;
-
-    event.preventDefault();
-    setSelectedArrangementRowId(rowId);
   }
 
   const activeCaseArrangements = useMemo<
@@ -1907,318 +1883,38 @@ export function FamilyScreenV2() {
         onClose={() => setSelectedArrangementRowId(null)}
       />
       {isPartneringFamily && (
-        <Box
-          sx={{
-            borderLeft: 4,
-            borderColor: selectedV1Case?.closedAtUtc
-              ? 'divider'
-              : 'primary.main',
-            borderRadius: 1,
-            bgcolor: 'background.paper',
-            boxShadow: 1,
-            px: { xs: 1.5, sm: 2 },
-            py: 1.5,
-            mb: 1.5,
-          }}
-        >
-          <Box
-            sx={{
-              display: 'grid',
-              gap: { xs: 1.25, md: 2 },
-              gridTemplateColumns: { xs: '1fr', md: 'minmax(280px, 2fr) 3fr' },
-              alignItems: 'start',
-            }}
-          >
-            <Box sx={{ minWidth: 0 }}>
-              {selectedV1Case ? (
-                <Stack spacing={1}>
-                  <Box>
-                    <Typography
-                      variant="caption"
-                      color="text.secondary"
-                      sx={{
-                        display: 'block',
-                        fontWeight: 700,
-                        letterSpacing: 0.4,
-                        textTransform: 'uppercase',
-                      }}
-                    >
-                      Case
-                    </Typography>
-                    <Box
-                      sx={{
-                        display: 'flex',
-                        alignItems: 'flex-start',
-                        justifyContent: 'space-between',
-                        gap: 1.5,
-                        flexWrap: 'wrap',
-                        mb: 0.5,
-                      }}
-                    >
-                      <Stack spacing={0.25} sx={{ minWidth: 0 }}>
-                        <Typography {...v2Typography.fieldLabel}>
-                          Opened
-                        </Typography>
-                        <Typography
-                          {...v2Typography.primaryValue}
-                        >
-                          {format(selectedV1Case.openedAtUtc, 'MMM d, yyyy')}
-                        </Typography>
-                      </Stack>
-                      <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
-                        {!selectedV1Case.closedAtUtc && canCloseV1Case && (
-                          <Button
-                            className="ph-unmask"
-                            onClick={() => setCloseCaseDrawerOpen(true)}
-                            variant="contained"
-                            size="small"
-                          >
-                            Close Case
-                          </Button>
-                        )}
-                        {selectedV1Case.closedAtUtc &&
-                          canReopenSelectedV1Case && (
-                            <Button
-                              className="ph-unmask"
-                              onClick={() => void reopenCaseNow()}
-                              variant="contained"
-                              size="small"
-                            >
-                              Reopen Case
-                            </Button>
-                          )}
-                      </Box>
-                    </Box>
-                  </Box>
-                  {activeCaseArrangements.length > 0 && (
-                    <Box
-                      sx={{
-                        display: 'flex',
-                        flexWrap: 'wrap',
-                        gap: 1,
-                      }}
-                    >
-                      {activeCaseArrangements.map((arrangement) => (
-                        <Card
-                          key={arrangement.id}
-                          role="button"
-                          tabIndex={0}
-                          variant="outlined"
-                          onClick={() =>
-                            setSelectedArrangementRowId(arrangement.id)
-                          }
-                          onKeyDown={(event) =>
-                            openArrangementWorkspaceFromSummaryCard(
-                              event,
-                              arrangement.id
-                            )
-                          }
-                          sx={{
-                            borderColor: 'divider',
-                            borderLeft: 3,
-                            borderLeftColor: arrangementAccentColor(
-                              arrangement.phase
-                            ),
-                            cursor: 'pointer',
-                            maxWidth: '100%',
-                            minWidth: 0,
-                            transition: theme.transitions.create(
-                              ['box-shadow'],
-                              {
-                                duration: theme.transitions.duration.shortest,
-                              }
-                            ),
-                            width: 'fit-content',
-                            '&:hover': {
-                              boxShadow: 2,
-                            },
-                            '&:focus-visible': {
-                              outline: `2px solid ${theme.palette.primary.main}`,
-                              outlineOffset: 2,
-                            },
-                          }}
-                        >
-                          <Box sx={{ minWidth: 0, px: 1.25, py: 1 }}>
-                            <Typography {...v2Typography.primaryValue} noWrap>
-                              {arrangement.arrangementType}
-                            </Typography>
-                            <Typography
-                              color="text.secondary"
-                              {...v2Typography.browserSecondary}
-                              noWrap
-                            >
-                              {arrangement.statusLabel}
-                            </Typography>
-                            <Typography
-                              color={
-                                arrangement.arrangedPersonLabel === 'Unassigned'
-                                  ? 'text.secondary'
-                                  : 'text.primary'
-                              }
-                              {...v2Typography.browserSecondary}
-                              noWrap
-                            >
-                              {arrangement.arrangedPersonLabel}
-                            </Typography>
-                            <Typography
-                              color="text.secondary"
-                              {...v2Typography.browserSecondary}
-                              noWrap
-                            >
-                              {arrangement.currentLocationLabel}
-                            </Typography>
-                            {arrangement.relevantDateLabel && (
-                              <Typography
-                                color="text.secondary"
-                                {...v2Typography.browserSecondary}
-                                noWrap
-                              >
-                                {arrangement.relevantDateLabel}
-                              </Typography>
-                            )}
-                          </Box>
-                        </Card>
-                      ))}
-                    </Box>
-                  )}
-                  {currentReferral && (
-                    <Box
-                      sx={{
-                        borderLeft: 2,
-                        borderColor: 'divider',
-                        ml: { xs: 0, sm: 0.5 },
-                        pl: 1.5,
-                        py: 0.25,
-                      }}
-                    >
-                      <Typography
-                        variant="caption"
-                        color="text.secondary"
-                        sx={{
-                          display: 'block',
-                          fontWeight: 600,
-                          letterSpacing: 0.3,
-                          mb: 0.25,
-                          textTransform: 'uppercase',
-                        }}
-                      >
-                        Linked Referral
-                      </Typography>
-                      <Box
-                        sx={{
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: 1.25,
-                          flexWrap: 'wrap',
-                        }}
-                      >
-                        <Typography
-                          {...v2Typography.primaryValue}
-                        >
-                          {currentReferral.title}
-                        </Typography>
-                        <Chip
-                          size="small"
-                          label={
-                            currentReferral.acceptedAtUtc
-                              ? `Accepted \u2022 ${format(
-                                  currentReferral.acceptedAtUtc,
-                                  'MMM d, yyyy'
-                                )}`
-                              : formatStatusWithDate(
-                                  currentReferral.status,
-                                  currentReferral.createdAtUtc,
-                                  currentReferral.acceptedAtUtc,
-                                  currentReferral.closedAtUtc
-                                )
-                          }
-                        />
-                        <Chip
-                          size="small"
-                          variant="outlined"
-                          label={`Received \u2022 ${format(
-                            currentReferral.createdAtUtc,
-                            'MMM d, yyyy'
-                          )}`}
-                        />
-                        <Button
-                          className="ph-unmask"
-                          onClick={() =>
-                            appNavigate.referral(currentReferral.referralId)
-                          }
-                          variant="text"
-                          size="small"
-                        >
-                          View Referral
-                        </Button>
-                      </Box>
-                    </Box>
-                  )}
-                </Stack>
-              ) : (
-                <Box>
-                  <Typography
-                    variant="caption"
-                    color="text.secondary"
-                    sx={{
-                      display: 'block',
-                      fontWeight: 700,
-                      letterSpacing: 0.4,
-                      mb: 0.25,
-                      textTransform: 'uppercase',
-                    }}
-                  >
-                    Case
-                  </Typography>
-                  <Typography className="ph-unmask" variant="h3">
-                    No current case
-                  </Typography>
-                  {!referralsEnabled &&
-                    permissions(Permission.CreateV1Case) && (
-                      <Button
-                        className="ph-unmask"
-                        onClick={() => setOpenNewV1CaseDialogOpen(true)}
-                        variant="contained"
-                        size="small"
-                        sx={{ mt: 1 }}
-                      >
-                        Open New Case
-                      </Button>
-                    )}
-                </Box>
-              )}
-              {closeCaseDrawerOpen && selectedV1Case?.id && (
-                <CloseV1CaseDrawer
-                  partneringFamilyId={familyId}
-                  v1CaseId={selectedV1Case.id}
-                  onClose={() => setCloseCaseDrawerOpen(false)}
-                />
-              )}
-              {openNewV1CaseDialogOpen && (
-                <OpenNewV1CaseDialog
-                  partneringFamilyId={family.family!.id!}
-                  referralId={openReferralId}
-                  onClose={() => setOpenNewV1CaseDialogOpen(false)}
-                />
-              )}
-            </Box>
-
-            {permissions(Permission.ViewV1CaseComments) && selectedV1Case && (
-              <Box
-                sx={{
-                  minWidth: 0,
-                  pt: { xs: 0.25, md: 0 },
-                }}
-              >
-                <V1CaseCommentsV2
-                  compact
-                  partneringFamily={family}
-                  v1CaseId={selectedV1Case.id!}
-                />
-              </Box>
-            )}
-          </Box>
-        </Box>
+        <>
+          <FamilyCaseWorkspaceHeaderV2
+            activeCaseArrangements={activeCaseArrangements}
+            canCloseV1Case={!!canCloseV1Case}
+            canOpenNewCase={permissions(Permission.CreateV1Case)}
+            canReopenSelectedV1Case={canReopenSelectedV1Case}
+            canViewV1CaseComments={permissions(Permission.ViewV1CaseComments)}
+            currentReferral={currentReferral}
+            family={family}
+            referralsEnabled={referralsEnabled}
+            selectedV1Case={selectedV1Case}
+            onArrangementOpen={setSelectedArrangementRowId}
+            onCloseCase={() => setCloseCaseDrawerOpen(true)}
+            onOpenNewCase={() => setOpenNewV1CaseDialogOpen(true)}
+            onReopenCase={() => void reopenCaseNow()}
+            onViewReferral={(referralId) => appNavigate.referral(referralId)}
+          />
+          {closeCaseDrawerOpen && selectedV1Case?.id && (
+            <CloseV1CaseDrawer
+              partneringFamilyId={familyId}
+              v1CaseId={selectedV1Case.id}
+              onClose={() => setCloseCaseDrawerOpen(false)}
+            />
+          )}
+          {openNewV1CaseDialogOpen && (
+            <OpenNewV1CaseDialog
+              partneringFamilyId={family.family!.id!}
+              referralId={openReferralId}
+              onClose={() => setOpenNewV1CaseDialogOpen(false)}
+            />
+          )}
+        </>
       )}
 
       {pinnedNotes.length > 0 && (
