@@ -18,15 +18,9 @@ import {
   ListItemButton,
   ListItemIcon,
   Typography,
-  Tab,
-  Tabs,
   Tooltip,
-  FormControl,
-  InputLabel,
-  Select,
   Stack,
 } from '@mui/material';
-import { SelectChangeEvent } from '@mui/material/Select';
 import {
   CompletedCustomFieldInfo,
   Permission,
@@ -155,6 +149,11 @@ import { FamilyMembersDataGridV2 } from './FamilyMembersDataGridV2';
 import { FamilyMemberDrawerV2 } from './FamilyMemberDrawerV2';
 import { FamilyPrimaryHeaderInfoV2 } from './FamilyPrimaryHeaderInfoV2';
 import {
+  FamilyScreenTab,
+  FamilyScreenTabsV2,
+  FamilyScreenTabValue,
+} from './FamilyScreenTabsV2';
+import {
   buildFamilyMemberRowsV2,
   FamilyMemberRowV2,
 } from './familyMemberViewModel';
@@ -184,20 +183,6 @@ type ActiveCaseArrangementSummaryV2 = {
   relevantDateLabel?: string;
   statusLabel: string;
 };
-type FamilyScreenTabValue =
-  | 'overview'
-  | 'caseHistory'
-  | 'approvals'
-  | 'arrangementsOrAssignments'
-  | 'documents'
-  | 'timelineAndNotes';
-type FamilyScreenTab = {
-  value: FamilyScreenTabValue;
-  label: string;
-  desktopLabel: React.ReactNode;
-  mobileLabel: string;
-};
-
 function isActiveCaseArrangement(arrangement: Arrangement) {
   return (
     arrangement.phase === ArrangementPhase.SettingUp ||
@@ -1238,11 +1223,6 @@ export function FamilyScreenV2() {
     }
   }, [isPartneringFamily, isVolunteerFamily, selectedTab]);
 
-  function handleSelectedTabChange(
-    event: SelectChangeEvent<FamilyScreenTabValue>
-  ) {
-    setSelectedTab(event.target.value as FamilyScreenTabValue);
-  }
   const pinnedNotes = useMemo(() => {
     return (family?.notes ?? [])
       .filter((note) => note.isPinned)
@@ -2281,44 +2261,12 @@ export function FamilyScreenV2() {
           </Box>
         </Box>
       )}
-      {isDesktop ? (
-        <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 1.5 }}>
-          <Tabs
-            value={selectedTab}
-            onChange={(_, nextTab) => setSelectedTab(nextTab)}
-            aria-label="Family screen sections"
-          >
-            {familyScreenTabs.map((tab) => (
-              <Tab
-                key={tab.value}
-                className="ph-unmask"
-                value={tab.value}
-                label={tab.desktopLabel}
-              />
-            ))}
-          </Tabs>
-        </Box>
-      ) : (
-        <FormControl fullWidth size="small" sx={{ mb: 1.5 }}>
-          <InputLabel className="ph-unmask" id="family-screen-section-label">
-            Section
-          </InputLabel>
-          <Select
-            className="ph-unmask"
-            labelId="family-screen-section-label"
-            id="family-screen-section-select"
-            value={selectedTab}
-            label="Section"
-            onChange={handleSelectedTabChange}
-          >
-            {familyScreenTabs.map((tab) => (
-              <MenuItem className="ph-unmask" key={tab.value} value={tab.value}>
-                {tab.mobileLabel}
-              </MenuItem>
-            ))}
-          </Select>
-        </FormControl>
-      )}
+      <FamilyScreenTabsV2
+        tabs={familyScreenTabs}
+        selectedTab={selectedTab}
+        isDesktop={isDesktop}
+        onChange={setSelectedTab}
+      />
       <Grid container spacing={0}>
         {showTimelineAndNotes && (
           <Grid item xs={12} spacing={0}>
