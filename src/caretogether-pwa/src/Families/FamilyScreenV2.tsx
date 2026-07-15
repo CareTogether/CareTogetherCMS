@@ -11,22 +11,16 @@ import {
   Tooltip,
 } from '@mui/material';
 import {
-  CompletedCustomFieldInfo,
   Permission,
   V1Case,
   V1Referral,
   RoleRemovalReason,
   V1ReferralStatus,
-  Activity,
   Note,
   NoteStatus,
   V1ReferralNoteStatus,
   Arrangement,
   ArrangementPhase,
-  ArrangementRequirementCompleted,
-  ChildLocationChanged,
-  ReferralOpened as V1CaseOpened,
-  ReferralRequirementCompleted as V1CaseRequirementCompleted,
 } from '../GeneratedClient';
 import { useParams } from 'react-router';
 import {
@@ -81,7 +75,6 @@ import { useV1CasesModel } from '../Model/V1CasesModel';
 import { policyData } from '../Model/ConfigurationModel';
 import { FAMILY_MEMBER_PRINT_INFORMATION_FEATURE_FLAG } from '../featureFlags';
 import { personNameString } from './PersonName';
-import { buildGroupedV1ReferralTimelineEntries } from '../V1Referrals/referralTimelineHelpers';
 import { useGlobalSnackBar } from '../Hooks/useGlobalSnackBar';
 import { ApprovalLedgerSection } from './ApprovalLedgerSection';
 import { buildApprovalLedgerRows } from './approvalLedgerViewModel';
@@ -92,9 +85,7 @@ import {
 import { RoleSummaryCardsSection } from './RoleSummaryCardsSection';
 import { accountInfoState } from '../Authentication/Auth';
 import { useLocation } from 'react-router-dom';
-import { combineCustomFieldPolicies } from './familyMemberCustomFieldPolicies';
 import {
-  buildPrintableCustomFieldSections,
   personFullName,
   type PrintableFamilyMember,
 } from './FamilyMemberPrintData';
@@ -117,12 +108,9 @@ import {
   RecentOverviewTimelineItem,
 } from './FamilyRecentOverviewV2';
 import { FamilyScreenWorkflowCoordinatorV2 } from './FamilyScreenWorkflowCoordinatorV2';
-import {
-  buildFamilyMemberRowsV2,
-  FamilyMemberRowV2,
-} from './familyMemberViewModel';
+import { FamilyMemberRowV2 } from './familyMemberViewModel';
+import { useFamilyOverviewViewModel } from './useFamilyOverviewViewModel';
 
-type CustomFieldRenderInfo = CompletedCustomFieldInfo | string;
 type ReferralNoteEntry = NonNullable<V1Referral['notes']>[number];
 type RecentNoteAction = 'edit' | 'approve' | 'delete';
 function isActiveCaseArrangement(arrangement: Arrangement) {
@@ -147,83 +135,6 @@ function stringFromLocationState(state: unknown, key: string) {
 
   const value = (state as Record<string, unknown>)[key];
   return typeof value === 'string' ? value : undefined;
-}
-
-function customFieldName(customField: CustomFieldRenderInfo) {
-  return customField instanceof CompletedCustomFieldInfo
-    ? customField.customFieldName!
-    : customField;
-}
-
-function orderCustomFieldsByPolicy(
-  customFields: CustomFieldRenderInfo[],
-  policyFieldNames: string[]
-) {
-  const customFieldsByName = new Map(
-    customFields.map((customField) => [
-      customFieldName(customField),
-      customField,
-    ])
-  );
-
-  return policyFieldNames.flatMap((fieldName) => {
-    const customField = customFieldsByName.get(fieldName);
-    return customField === undefined ? [] : [customField];
-  });
-}
-
-function getDateValue(value?: Date | string | null): number {
-  if (!value) return 0;
-  if (value instanceof Date) return value.getTime();
-  return new Date(value).getTime();
-}
-
-function getNoteTimestamp(note: Note | ReferralNoteEntry) {
-  return (
-    note.backdatedTimestampUtc ??
-    note.createdTimestampUtc ??
-    note.lastEditTimestampUtc
-  );
-}
-
-function recentActivityTitle(activity: Activity) {
-  if (
-    activity instanceof V1CaseRequirementCompleted ||
-    activity instanceof ArrangementRequirementCompleted
-  ) {
-    return activity.requirementName || 'Requirement completed';
-  }
-
-  if (activity instanceof ChildLocationChanged) {
-    return 'Child location changed';
-  }
-
-  if (activity instanceof V1CaseOpened) {
-    return 'Case opened';
-  }
-
-  if (activity.uploadedDocumentId) {
-    return 'Document uploaded';
-  }
-
-  return 'Family activity';
-}
-
-function recentActivityIcon(
-  activity: Activity
-): RecentOverviewTimelineItem['icon'] {
-  if (
-    activity instanceof V1CaseRequirementCompleted ||
-    activity instanceof ArrangementRequirementCompleted
-  ) {
-    return 'check';
-  }
-
-  if (activity instanceof ChildLocationChanged) {
-    return 'location';
-  }
-
-  return 'edit';
 }
 
 export function FamilyScreenV2() {
@@ -604,6 +515,11 @@ export function FamilyScreenV2() {
   const familyMemberPrintInformationEnabled =
     useFeatureFlagEnabled(FAMILY_MEMBER_PRINT_INFORMATION_FEATURE_FLAG) ===
     true;
+  const canViewFamilyCustomFields = permissions(
+    Permission.ViewFamilyCustomFields
+  );
+  const canViewV1CaseCustomFields =
+    permissions(Permission.ViewV1CaseCustomFields) && !referralsEnabled;
 
   useScreenTitle(family ? `${familyLastName(family)} Family` : '...');
   useScreenTitleComponent(family ? <TestFamilyBadge family={family} /> : null);
@@ -649,96 +565,30 @@ export function FamilyScreenV2() {
   });
   const isVolunteerFamily = family?.volunteerFamilyInfo != null;
   const isPartneringFamily = family?.partneringFamilyInfo != null;
-  const activeAdults = useMemo<PrintableFamilyMember[]>(() => {
-    return (family?.family?.adults ?? []).flatMap((adult) =>
-      adult.item1?.id && adult.item1.active && adult.item2
-        ? [
-            {
-              kind: 'adult' as const,
-              person: adult.item1,
-              relationshipToFamily: adult.item2,
-            },
-          ]
-        : []
-    );
-  }, [family?.family?.adults]);
-  const activeChildren = useMemo<PrintableFamilyMember[]>(() => {
-    return (family?.family?.children ?? []).flatMap((child) =>
-      child.id && child.active
-        ? [
-            {
-              kind: 'child' as const,
-              person: child,
-            },
-          ]
-        : []
-    );
-  }, [family?.family?.children]);
-  const familyMemberRows = useMemo(
-    () =>
-      family
-        ? buildFamilyMemberRowsV2({
-            family,
-            permissions,
-            v1Cases: allV1Cases,
-          })
-        : [],
-    [allV1Cases, family, permissions]
-  );
-  const printableFamilyMembers = useMemo(
-    () => activeAdults.concat(activeChildren),
-    [activeAdults, activeChildren]
-  );
-  const adultCustomFieldPolicies = useMemo(
-    () =>
-      combineCustomFieldPolicies(
-        family?.partneringFamilyInfo != null
-          ? (policy.customFields?.partneringFamily?.adult ?? [])
-          : [],
-        family?.volunteerFamilyInfo != null
-          ? (policy.customFields?.volunteerFamily?.adult ?? [])
-          : []
-      ),
-    [
-      family?.partneringFamilyInfo,
-      family?.volunteerFamilyInfo,
-      policy.customFields?.partneringFamily?.adult,
-      policy.customFields?.volunteerFamily?.adult,
-    ]
-  );
-  const childCustomFieldPolicies = useMemo(
-    () =>
-      combineCustomFieldPolicies(
-        family?.partneringFamilyInfo != null
-          ? (policy.customFields?.partneringFamily?.child ?? [])
-          : [],
-        family?.volunteerFamilyInfo != null
-          ? (policy.customFields?.volunteerFamily?.child ?? [])
-          : []
-      ),
-    [
-      family?.partneringFamilyInfo,
-      family?.volunteerFamilyInfo,
-      policy.customFields?.partneringFamily?.child,
-      policy.customFields?.volunteerFamily?.child,
-    ]
-  );
-  const familyMemberPrintCustomFieldSections = useMemo(() => {
-    if (!familyMemberToPrint) return [];
-    if (!permissions(Permission.ViewFamilyCustomFields)) return [];
-
-    return buildPrintableCustomFieldSections(
-      familyMemberToPrint.person.completedCustomFields,
-      familyMemberToPrint.kind === 'adult'
-        ? adultCustomFieldPolicies
-        : childCustomFieldPolicies
-    );
-  }, [
-    adultCustomFieldPolicies,
-    childCustomFieldPolicies,
+  const {
+    activeAdults,
+    activeChildren,
+    familyMemberPrintCustomFieldSections,
+    familyMemberRows,
+    overviewCommunityRows,
+    overviewFamilyCustomFields,
+    overviewV1CaseCustomFields,
+    overviewVolunteerFamilyCustomFields,
+    pinnedNotes,
+    printableFamilyMembers,
+    recentOverviewTimelineItems,
+  } = useFamilyOverviewViewModel({
+    allV1Cases,
+    canViewFamilyCustomFields,
+    canViewV1CaseCustomFields,
+    family,
+    familyCommunityInfo,
     familyMemberToPrint,
+    familyReferrals,
     permissions,
-  ]);
+    policy,
+    selectedV1Case,
+  });
   const primaryContactPerson = family?.family?.adults?.find(
     (adult) => adult.item1?.id === family.family?.primaryFamilyContactPersonId
   )?.item1;
@@ -1164,97 +1014,6 @@ export function FamilyScreenV2() {
     }
   }, [isPartneringFamily, isVolunteerFamily, selectedTab]);
 
-  const pinnedNotes = useMemo(() => {
-    return (family?.notes ?? [])
-      .filter((note) => note.isPinned)
-      .sort(
-        (a, b) =>
-          getDateValue(b.pinnedAtUtc ?? getNoteTimestamp(b)) -
-          getDateValue(a.pinnedAtUtc ?? getNoteTimestamp(a))
-      );
-  }, [family?.notes]);
-  const recentOverviewTimelineItems = useMemo(() => {
-    const now = new Date();
-    const sevenDaysAgo = new Date();
-    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-
-    const familyActivityRecords = [
-      ...(family?.partneringFamilyInfo?.history ?? []),
-      ...(family?.volunteerFamilyInfo?.history ?? []),
-    ];
-    const familyNotesById = new Map(
-      (family?.notes ?? []).map((note) => [note.id, note])
-    );
-    const linkedFamilyNoteIds = new Set(
-      familyActivityRecords.flatMap((activity) =>
-        activity.noteId ? [activity.noteId] : []
-      )
-    );
-
-    const familyActivities: RecentOverviewTimelineItem[] =
-      familyActivityRecords.map((activity) => {
-        const linkedNote = activity.noteId
-          ? familyNotesById.get(activity.noteId)
-          : undefined;
-
-        return {
-          id: `activity:${activity.auditTimestampUtc?.toISOString()}`,
-          activity,
-          timestamp: activity.activityTimestampUtc,
-          title: recentActivityTitle(activity),
-          subtitle: linkedNote?.contents?.trim(),
-          userId: activity.userId,
-          note: linkedNote,
-          icon: recentActivityIcon(activity),
-        };
-      });
-
-    const familyNotes: RecentOverviewTimelineItem[] =
-      family?.notes
-        ?.filter((note) => !linkedFamilyNoteIds.has(note.id))
-        .map((note) => ({
-          id: `note:${note.id}`,
-          timestamp: getNoteTimestamp(note),
-          title: 'Family note',
-          subtitle: note.contents?.trim(),
-          userId: note.authorUserId,
-          note,
-          icon: 'edit',
-        })) ?? [];
-
-    const referralActivities: RecentOverviewTimelineItem[] =
-      familyReferrals.flatMap((referral) =>
-        buildGroupedV1ReferralTimelineEntries(referral).map((entry) => ({
-          id: `referral-${entry.kind}:${referral.referralId}:${entry.timestamp.toISOString()}`,
-          timestamp: entry.timestamp,
-          title: entry.label,
-          subtitle:
-            entry.kind === 'note'
-              ? entry.note.contents?.trim()
-              : `Referral: ${referral.title}`,
-          userId: entry.userId,
-          referralNote: entry.kind === 'note' ? entry.note : undefined,
-          referralId: referral.referralId,
-          icon: 'edit',
-        }))
-      );
-
-    return [...familyActivities, ...familyNotes, ...referralActivities]
-      .filter((item) => {
-        const timestamp = getDateValue(item.timestamp);
-        return (
-          timestamp >= sevenDaysAgo.getTime() && timestamp <= now.getTime()
-        );
-      })
-      .sort((a, b) => getDateValue(b.timestamp) - getDateValue(a.timestamp))
-      .slice(0, 6);
-  }, [
-    family?.notes,
-    family?.partneringFamilyInfo?.history,
-    family?.volunteerFamilyInfo?.history,
-    familyReferrals,
-  ]);
-
   if (!family) {
     return (
       <Box sx={{ mt: 10, textAlign: 'center' }}>
@@ -1278,55 +1037,11 @@ export function FamilyScreenV2() {
     permissions(Permission.AddEditDraftNotes) ||
     permissions(Permission.AddEditOwnDraftNotes);
   const canManageReferralNotes = globalPermissions(Permission.EditV1Referral);
-  const canViewFamilyCustomFields = permissions(Permission.ViewFamilyCustomFields);
-  const canViewV1CaseCustomFields =
-    permissions(Permission.ViewV1CaseCustomFields) && !referralsEnabled;
   const showV1CaseRequirements =
     permissions(Permission.ViewV1CaseProgress) &&
     !referralsEnabled &&
     selectedV1Case !== undefined &&
     v1CaseRequirementContext !== undefined;
-  const overviewFamilyCustomFields = canViewFamilyCustomFields
-    ? orderCustomFieldsByPolicy(
-        Array<CustomFieldRenderInfo>()
-          .concat(family.family!.completedCustomFields)
-          .concat(family.missingCustomFields || []),
-        policy.customFamilyFields?.map((field) => field.name) ?? []
-      )
-    : [];
-  const overviewVolunteerFamilyCustomFields =
-    canViewFamilyCustomFields && family.volunteerFamilyInfo
-      ? orderCustomFieldsByPolicy(
-          Array<CustomFieldRenderInfo>()
-            .concat(family.volunteerFamilyInfo.completedCustomFields || [])
-            .concat(family.volunteerFamilyInfo.missingCustomFields || []),
-          policy.volunteerPolicy?.customFields?.map((field) => field.name) ?? []
-        )
-      : [];
-  const overviewV1CaseCustomFields = canViewV1CaseCustomFields
-    ? (
-        selectedV1Case?.completedCustomFields ||
-        ([] as Array<CompletedCustomFieldInfo | string>)
-      )
-        .concat(selectedV1Case?.missingCustomFields || [])
-        .sort((a, b) =>
-          (a instanceof CompletedCustomFieldInfo ? a.customFieldName! : a) <
-          (b instanceof CompletedCustomFieldInfo ? b.customFieldName! : b)
-            ? -1
-            : (a instanceof CompletedCustomFieldInfo
-                  ? a.customFieldName!
-                  : a) >
-                (b instanceof CompletedCustomFieldInfo
-                  ? b.customFieldName!
-                  : b)
-              ? 1
-              : 0
-        )
-    : [];
-  const overviewCommunityRows = familyCommunityInfo.map((communityInfo) => ({
-    id: communityInfo.community?.id,
-    name: communityInfo.community?.name,
-  }));
 
   function getRecentFamilyNotePermissions(note: Note) {
     const isOwnNote = note.authorUserId === currentUserId;
