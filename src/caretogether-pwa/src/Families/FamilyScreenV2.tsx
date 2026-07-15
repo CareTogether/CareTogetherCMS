@@ -45,9 +45,7 @@ import {
   DeleteForever as DeleteForeverIcon,
   Diversity3 as Diversity3Icon,
   Edit as EditIcon,
-  Notes as NotesIcon,
   MoreVert as MoreVertIcon,
-  PersonPinCircle as PersonPinCircleIcon,
   Print as PrintIcon,
 } from '@mui/icons-material';
 import { useEffect, useMemo, useRef, useState } from 'react';
@@ -73,7 +71,6 @@ import {
   V1CaseContext,
 } from '../Requirements/RequirementContext';
 import { ActivityTimelineV2 } from '../Activities/ActivityTimelineV2';
-import { formatTimelineTimestamp } from '../Activities/timelineTimestampFormatting';
 import { V1CaseCustomField } from '../V1Cases/V1CaseCustomField';
 import {
   useScreenTitleComponent,
@@ -118,10 +115,9 @@ import { useV1CasesModel } from '../Model/V1CasesModel';
 import { formatStatusWithDate } from '../V1Referrals/formatStatusWithDate';
 import { policyData } from '../Model/ConfigurationModel';
 import { FAMILY_MEMBER_PRINT_INFORMATION_FEATURE_FLAG } from '../featureFlags';
-import { PersonName, personNameString } from './PersonName';
+import { personNameString } from './PersonName';
 import { buildGroupedV1ReferralTimelineEntries } from '../V1Referrals/referralTimelineHelpers';
 import { useGlobalSnackBar } from '../Hooks/useGlobalSnackBar';
-import { ClampTypography } from '../Generic/ClampTypography';
 import { ApprovalLedgerSection } from './ApprovalLedgerSection';
 import { buildApprovalLedgerRows } from './approvalLedgerViewModel';
 import {
@@ -155,6 +151,11 @@ import {
   FamilyScreenTabValue,
 } from './FamilyScreenTabsV2';
 import {
+  FamilyPinnedNotesV2,
+  FamilyRecentOverviewV2,
+  RecentOverviewTimelineItem,
+} from './FamilyRecentOverviewV2';
+import {
   buildFamilyMemberRowsV2,
   FamilyMemberRowV2,
 } from './familyMemberViewModel';
@@ -162,18 +163,6 @@ import {
 type CustomFieldRenderInfo = CompletedCustomFieldInfo | string;
 type ReferralNoteEntry = NonNullable<V1Referral['notes']>[number];
 type RecentNoteAction = 'edit' | 'approve' | 'delete';
-type RecentOverviewTimelineItem = {
-  activity?: Activity;
-  id: string;
-  timestamp: Date;
-  title: string;
-  subtitle?: string;
-  userId?: string;
-  note?: Note;
-  referralNote?: ReferralNoteEntry;
-  referralId?: string;
-  icon: 'check' | 'edit' | 'location';
-};
 function isActiveCaseArrangement(arrangement: Arrangement) {
   return (
     arrangement.phase === ArrangementPhase.SettingUp ||
@@ -1917,46 +1906,10 @@ export function FamilyScreenV2() {
         </>
       )}
 
-      {pinnedNotes.length > 0 && (
-        <Box
-          sx={{
-            border: 1,
-            borderColor: 'primary.light',
-            borderRadius: 1,
-            bgcolor: 'rgba(25, 118, 210, 0.06)',
-            p: 1.5,
-            mb: 1.5,
-          }}
-        >
-          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-            {pinnedNotes.map((note) => (
-              <Box
-                key={note.id}
-                sx={{
-                  border: 1,
-                  borderColor: 'divider',
-                  borderRadius: 1,
-                  bgcolor: 'background.paper',
-                  p: 1.25,
-                }}
-              >
-                <Typography
-                  variant="caption"
-                  color="text.secondary"
-                >
-                  <PersonName person={noteAuthorLookup(note)} />
-                  {note.createdTimestampUtc
-                    ? ` · ${format(note.createdTimestampUtc, 'M/d/yy h:mm a')}`
-                    : ''}
-                </Typography>
-                <Typography variant="body2">
-                  {note.contents}
-                </Typography>
-              </Box>
-            ))}
-          </Box>
-        </Box>
-      )}
+      <FamilyPinnedNotesV2
+        notes={pinnedNotes}
+        noteAuthorLookup={noteAuthorLookup}
+      />
       <FamilyScreenTabsV2
         tabs={familyScreenTabs}
         selectedTab={selectedTab}
@@ -2412,121 +2365,13 @@ export function FamilyScreenV2() {
                 ))
               )}
             </Box>
-            <Box
-              sx={{
-                border: 1,
-                borderColor: 'divider',
-                borderRadius: 1,
-                p: 2,
-                ml: { lg: 2 },
-                mt: { xs: 2, lg: 0 },
-                bgcolor: 'background.paper',
-              }}
-            >
-              <Box
-                sx={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'space-between',
-                  mb: 2,
-                }}
-              >
-                <Typography variant="h3" className="ph-unmask" sx={{ m: 0 }}>
-                  Recent Activity: Last 7 days
-                </Typography>
-                <Button
-                  className="ph-unmask"
-                  size="small"
-                  onClick={() => setSelectedTab('timelineAndNotes')}
-                >
-                  View All
-                </Button>
-              </Box>
-
-              {recentOverviewTimelineItems.length === 0 ? (
-                <Typography
-                  className="ph-unmask"
-                  color="text.secondary"
-                  variant="body2"
-                >
-                  No recent activity in the last 7 days.
-                </Typography>
-              ) : (
-                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                  {recentOverviewTimelineItems.map((item) => (
-                    <Box
-                      key={item.id}
-                      sx={{
-                        display: 'grid',
-                        gridTemplateColumns: '32px 1fr',
-                        columnGap: 1.5,
-                      }}
-                    >
-                      <Box
-                        sx={{
-                          width: 32,
-                          height: 32,
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          color: 'text.secondary',
-                        }}
-                      >
-                        {item.icon === 'check' ? (
-                          '✔'
-                        ) : item.icon === 'location' ? (
-                          <PersonPinCircleIcon fontSize="small" />
-                        ) : (
-                          <NotesIcon fontSize="small" />
-                        )}
-                      </Box>
-                      <Box sx={{ minWidth: 0 }}>
-                        <Typography
-                          variant="caption"
-                          color="text.secondary"
-                        >
-                          {formatTimelineTimestamp(
-                            {
-                              activity: item.activity,
-                              kind: item.activity ? 'family-activity' : 'recent',
-                              timestamp: item.timestamp,
-                            },
-                            {
-                              date: 'MMM d',
-                              dateTime: 'MMM d, h:mm a',
-                            }
-                          )}
-                        </Typography>
-                        <Typography variant="body2">
-                          {item.userId ? (
-                            <PersonName person={userLookup(item.userId)} />
-                          ) : item.note ? (
-                            <PersonName person={noteAuthorLookup(item.note)} />
-                          ) : (
-                            item.title
-                          )}
-                        </Typography>
-                        <Typography
-                          variant="body2"
-                          sx={{ fontWeight: 600 }}
-                        >
-                          {item.title}
-                        </Typography>
-                        {item.subtitle && (
-                          <ClampTypography
-                            variant="body2"
-                            color="text.secondary"
-                          >
-                            {item.subtitle}
-                          </ClampTypography>
-                        )}
-                        {renderRecentNoteActions(item)}
-                      </Box>
-                    </Box>
-                  ))}
-                </Box>
-              )}
-            </Box>
+            <FamilyRecentOverviewV2
+              items={recentOverviewTimelineItems}
+              noteAuthorLookup={noteAuthorLookup}
+              renderRecentNoteActions={renderRecentNoteActions}
+              userLookup={userLookup}
+              onViewAll={() => setSelectedTab('timelineAndNotes')}
+            />
           </Grid>
         )}
       </Grid>
