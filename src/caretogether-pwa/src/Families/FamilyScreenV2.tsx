@@ -54,7 +54,6 @@ import { AddChildDrawer } from './AddChildDrawer';
 import { AddEditNoteDialog } from '../Notes/AddEditNoteDialog';
 import { ApproveNoteDialog } from '../Notes/ApproveNoteDialog';
 import { DiscardNoteDialog } from '../Notes/DiscardNoteDialog';
-import { format } from 'date-fns';
 import { UploadFamilyDocumentsDialog } from './UploadFamilyDocumentsDialog';
 import { CloseV1CaseDrawer } from '../V1Cases/CloseV1CaseDrawer';
 import { OpenNewV1CaseDialog } from '../V1Cases/OpenNewV1CaseDialog';
@@ -112,7 +111,6 @@ import { visibleReferralsQuery } from '../Model/Data';
 import { useRecoilValue } from 'recoil';
 import { FamilyCompleteOtherController } from '../Requirements/FamilyCompleteOtherController';
 import { useV1CasesModel } from '../Model/V1CasesModel';
-import { formatStatusWithDate } from '../V1Referrals/formatStatusWithDate';
 import { policyData } from '../Model/ConfigurationModel';
 import { FAMILY_MEMBER_PRINT_INFORMATION_FEATURE_FLAG } from '../featureFlags';
 import { personNameString } from './PersonName';
@@ -145,6 +143,7 @@ import {
   ActiveCaseArrangementSummaryV2,
   FamilyCaseWorkspaceHeaderV2,
 } from './FamilyCaseWorkspaceHeaderV2';
+import { FamilyCaseHistoryTabV2 } from './FamilyCaseHistoryTabV2';
 import {
   FamilyScreenTab,
   FamilyScreenTabsV2,
@@ -2008,177 +2007,19 @@ export function FamilyScreenV2() {
                 )}
               {showCaseHistory && (
                 <Grid item xs={12}>
-                  <Box
-                    sx={{
-                      border: 1,
-                      borderColor: 'divider',
-                      borderRadius: 1,
-                      bgcolor: 'background.paper',
-                      p: 2,
-                      mb: 2,
-                    }}
-                  >
-                    <Typography
-                      className="ph-unmask"
-                      variant="h3"
-                      sx={{ mb: 2 }}
-                    >
-                      Case History
-                    </Typography>
-                    <Box
-                      sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}
-                    >
-                      {caseReferralTable.caseRows.length === 0 ? (
-                        <Typography color="text.secondary" variant="body2">
-                          No cases yet.
-                        </Typography>
-                      ) : (
-                        caseReferralTable.caseRows.map(
-                          ({ v1Case, linkedReferrals }) => {
-                            const isSelected = selectedV1Case?.id === v1Case.id;
-                            const caseStatus = v1Case.closedAtUtc
-                              ? 'Closed'
-                              : 'Open';
-
-                            return (
-                              <ListItemButton
-                                key={v1Case.id}
-                                selected={isSelected}
-                                onClick={() => setSelectedV1CaseId(v1Case.id)}
-                                sx={{
-                                  alignItems: 'flex-start',
-                                  border: 1,
-                                  borderColor: isSelected
-                                    ? 'primary.main'
-                                    : 'divider',
-                                  borderRadius: 1,
-                                  gap: 2,
-                                }}
-                              >
-                                <Box sx={{ flexGrow: 1, minWidth: 0 }}>
-                                  <Box
-                                    sx={{
-                                      display: 'flex',
-                                      alignItems: 'center',
-                                      gap: 1,
-                                      flexWrap: 'wrap',
-                                      mb: 0.5,
-                                    }}
-                                  >
-                                    <Typography
-                                      className="ph-unmask"
-                                      variant="body2"
-                                      sx={{ fontWeight: 600 }}
-                                    >
-                                      {v1Case.closedAtUtc
-                                        ? 'Closed Case'
-                                        : 'Open Case'}
-                                    </Typography>
-                                    <Chip
-                                      size="small"
-                                      color={
-                                        v1Case.closedAtUtc
-                                          ? 'default'
-                                          : 'success'
-                                      }
-                                      label={caseStatus}
-                                    />
-                                  </Box>
-                                  <Typography
-                                    variant="caption"
-                                    color="text.secondary"
-                                  >
-                                    Opened{' '}
-                                    {format(v1Case.openedAtUtc, 'M/d/yy')}
-                                    {v1Case.closedAtUtc
-                                      ? ` · Closed ${format(
-                                          v1Case.closedAtUtc,
-                                          'M/d/yy'
-                                        )}`
-                                      : ''}
-                                    {v1Case.closeReason
-                                      ? ` · ${v1Case.closeReason}`
-                                      : ''}
-                                  </Typography>
-                                  {linkedReferrals.length > 0 && (
-                                    <Box
-                                      sx={{
-                                        display: 'flex',
-                                        flexWrap: 'wrap',
-                                        gap: 1,
-                                        mt: 1,
-                                      }}
-                                    >
-                                      {linkedReferrals.map((referral) => (
-                                        <Chip
-                                          key={referral.referralId}
-                                          clickable
-                                          size="small"
-                                          label={`${referral.title} · ${formatStatusWithDate(
-                                            referral.status,
-                                            referral.createdAtUtc,
-                                            referral.acceptedAtUtc,
-                                            referral.closedAtUtc
-                                          )}`}
-                                          onClick={(event) => {
-                                            event.stopPropagation();
-                                            appNavigate.referral(
-                                              referral.referralId
-                                            );
-                                          }}
-                                        />
-                                      ))}
-                                    </Box>
-                                  )}
-                                </Box>
-                              </ListItemButton>
-                            );
-                          }
-                        )
-                      )}
-
-                      {referralsEnabled &&
-                        caseReferralTable.unlinkedReferrals.length > 0 && (
-                          <Box sx={{ mt: 1 }}>
-                            <Typography
-                              variant="caption"
-                              color="text.secondary"
-                              sx={{ display: 'block', mb: 1 }}
-                            >
-                              Referrals not linked to a case
-                            </Typography>
-                            <Box
-                              sx={{
-                                display: 'flex',
-                                flexWrap: 'wrap',
-                                gap: 1,
-                              }}
-                            >
-                              {caseReferralTable.unlinkedReferrals.map(
-                                (referral) => (
-                                  <Chip
-                                    key={referral.referralId}
-                                    clickable
-                                    size="small"
-                                    label={`${referral.title} · ${formatStatusWithDate(
-                                      referral.status,
-                                      referral.createdAtUtc,
-                                      referral.acceptedAtUtc,
-                                      referral.closedAtUtc
-                                    )}`}
-                                    onClick={() =>
-                                      appNavigate.referral(referral.referralId)
-                                    }
-                                  />
-                                )
-                              )}
-                            </Box>
-                          </Box>
-                        )}
-                    </Box>
-                  </Box>
+                  <FamilyCaseHistoryTabV2
+                    caseRows={caseReferralTable.caseRows}
+                    referralsEnabled={referralsEnabled}
+                    selectedV1CaseId={selectedV1Case?.id}
+                    unlinkedReferrals={caseReferralTable.unlinkedReferrals}
+                    onReferralOpen={(referralId) =>
+                      appNavigate.referral(referralId)
+                    }
+                    onSelectCase={setSelectedV1CaseId}
+                  />
                 </Grid>
               )}
+
 
               {showApprovals && family.volunteerFamilyInfo && (
                 <>
