@@ -50,16 +50,12 @@ import {
   AddCircle as AddCircleIcon,
   Check as CheckIcon,
   CloudUpload as CloudUploadIcon,
-  ContentCopy as ContentCopyIcon,
   DeleteForever as DeleteForeverIcon,
   Diversity3 as Diversity3Icon,
   Edit as EditIcon,
   Notes as NotesIcon,
-  Email as EmailIcon,
-  Home as HomeIcon,
   MoreVert as MoreVertIcon,
   PersonPinCircle as PersonPinCircleIcon,
-  Phone as PhoneIcon,
   Print as PrintIcon,
 } from '@mui/icons-material';
 import { useEffect, useMemo, useRef, useState } from 'react';
@@ -88,7 +84,6 @@ import { ActivityTimelineV2 } from '../Activities/ActivityTimelineV2';
 import { formatTimelineTimestamp } from '../Activities/timelineTimestampFormatting';
 import { V1CaseCommentsV2 } from '../V1Cases/V1CaseCommentsV2';
 import { V1CaseCustomField } from '../V1Cases/V1CaseCustomField';
-import { PrimaryContactEditor } from './PrimaryContactEditor';
 import {
   useScreenTitleComponent,
   useScreenTitle,
@@ -158,6 +153,7 @@ import {
 import { FamilyMemberPrintDocument } from './FamilyMemberPrintDocument';
 import { FamilyMembersDataGridV2 } from './FamilyMembersDataGridV2';
 import { FamilyMemberDrawerV2 } from './FamilyMemberDrawerV2';
+import { FamilyPrimaryHeaderInfoV2 } from './FamilyPrimaryHeaderInfoV2';
 import {
   buildFamilyMemberRowsV2,
   FamilyMemberRowV2,
@@ -306,48 +302,6 @@ function recentActivityIcon(
   }
 
   return 'edit';
-}
-
-type ContactInfoCopyButtonProps = {
-  value: string;
-  label: string;
-  onCopied: (message: string) => void;
-};
-
-function ContactInfoCopyButton({
-  value,
-  label,
-  onCopied,
-}: ContactInfoCopyButtonProps) {
-  const [copied, setCopied] = useState(false);
-
-  async function handleCopy() {
-    try {
-      await navigator.clipboard.writeText(value);
-      setCopied(true);
-      onCopied(`${label} copied`);
-      setTimeout(() => setCopied(false), 1500);
-    } catch {
-      onCopied(`Unable to copy ${label.toLowerCase()}`);
-    }
-  }
-
-  return (
-    <Tooltip title={copied ? 'Copied' : `Copy ${label.toLowerCase()}`}>
-      <IconButton
-        size="small"
-        aria-label={`copy ${label.toLowerCase()}`}
-        onClick={() => void handleCopy()}
-        sx={{ p: 0.25 }}
-      >
-        {copied ? (
-          <CheckIcon color="success" fontSize="small" />
-        ) : (
-          <ContentCopyIcon fontSize="small" />
-        )}
-      </IconButton>
-    </Tooltip>
-  );
 }
 
 export function FamilyScreenV2() {
@@ -1602,25 +1556,15 @@ export function FamilyScreenV2() {
               alignItems: 'flex-start',
               justifyContent: 'space-between',
               gap: 1,
-              mb: 0.5,
             }}
           >
-            <Box
-              sx={{
-                display: 'flex',
-                alignItems: 'center',
-                flexWrap: 'wrap',
-                gap: 1,
-                minWidth: 0,
-              }}
-            >
-              <Typography variant="h4">
-                {familyLastName(family)}{' '}
-                <Box component="span" className="ph-unmask">
-                  Family
-                </Box>
-              </Typography>
-            </Box>
+            <FamilyPrimaryHeaderInfoV2
+              family={family}
+              primaryEmailAddress={primaryEmailAddress?.address}
+              primaryPhoneNumber={primaryPhoneNumber?.number}
+              primaryAddressText={primaryAddressText}
+              onCopied={setAndShowGlobalSnackBar}
+            />
             {!isDesktop && hasFamilyActions && (
               <IconButton
                 aria-label="family actions"
@@ -1640,64 +1584,6 @@ export function FamilyScreenV2() {
               >
                 <MoreVertIcon fontSize="small" />
               </IconButton>
-            )}
-          </Box>
-          <Box
-            sx={{
-              display: 'flex',
-              flexWrap: 'wrap',
-              alignItems: 'center',
-              columnGap: 2,
-              rowGap: 0.5,
-            }}
-          >
-            <Box>
-              <PrimaryContactEditor family={family} />
-            </Box>
-            {primaryEmailAddress?.address && (
-              <Box
-                sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}
-              >
-                <EmailIcon fontSize="small" color="action" />
-                <Typography {...v2Typography.browserCell}>
-                  {primaryEmailAddress.address}
-                </Typography>
-                <ContactInfoCopyButton
-                  value={primaryEmailAddress.address}
-                  label="Email"
-                  onCopied={setAndShowGlobalSnackBar}
-                />
-              </Box>
-            )}
-            {primaryPhoneNumber?.number && (
-              <Box
-                sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}
-              >
-                <PhoneIcon fontSize="small" color="action" />
-                <Typography {...v2Typography.browserCell}>
-                  {primaryPhoneNumber.number}
-                </Typography>
-                <ContactInfoCopyButton
-                  value={primaryPhoneNumber.number}
-                  label="Phone number"
-                  onCopied={setAndShowGlobalSnackBar}
-                />
-              </Box>
-            )}
-            {primaryAddressText && (
-              <Box
-                sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}
-              >
-                <HomeIcon fontSize="small" color="action" />
-                <Typography {...v2Typography.browserCell}>
-                  {primaryAddressText}
-                </Typography>
-                <ContactInfoCopyButton
-                  value={primaryAddressText}
-                  label="Address"
-                  onCopied={setAndShowGlobalSnackBar}
-                />
-              </Box>
             )}
           </Box>
         </Box>
