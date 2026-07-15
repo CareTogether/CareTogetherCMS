@@ -49,14 +49,6 @@ import {
   Print as PrintIcon,
 } from '@mui/icons-material';
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { AddAdultDrawer } from './AddAdultDrawer';
-import { AddChildDrawer } from './AddChildDrawer';
-import { AddEditNoteDialog } from '../Notes/AddEditNoteDialog';
-import { ApproveNoteDialog } from '../Notes/ApproveNoteDialog';
-import { DiscardNoteDialog } from '../Notes/DiscardNoteDialog';
-import { UploadFamilyDocumentsDialog } from './UploadFamilyDocumentsDialog';
-import { CloseV1CaseDrawer } from '../V1Cases/CloseV1CaseDrawer';
-import { OpenNewV1CaseDialog } from '../V1Cases/OpenNewV1CaseDialog';
 import { FamilyDocuments } from './FamilyDocuments';
 import {
   useFamilyPermissions,
@@ -83,12 +75,9 @@ import {
   useUserLookup,
   useDirectoryModel,
 } from '../Model/DirectoryModel';
-import { RemoveFamilyRoleDialog } from '../Volunteers/RemoveFamilyRoleDialog';
-import { ResetFamilyRoleDialog } from '../Volunteers/ResetFamilyRoleDialog';
 import { FamilyCustomField } from './FamilyCustomField';
 import { VolunteerFamilyCustomField } from '../Volunteers/VolunteerFamilyCustomField';
 import { isBackdropClick } from '../Utilities/handleBackdropClick';
-import { DeleteFamilyDialog } from './DeleteFamilyDialog';
 import { useDialogHandle } from '../Hooks/useDialogHandle';
 import { familyLastName } from './FamilyUtils';
 import { useLoadable } from '../Hooks/useLoadable';
@@ -100,7 +89,6 @@ import { useBackdrop } from '../Hooks/useBackdrop';
 import { useSyncV1CaseIdInURL } from '../Hooks/useSyncV1CaseIdInURL';
 import { ArrangementsSection } from '../V1Cases/Arrangements/ArrangementsSection/ArrangementsSectionV2';
 import { getFilteredArrangements } from '../V1Cases/Arrangements/ArrangementsSection/getFilteredArrangements';
-import { ArrangementDetailsDrawerV2 } from '../V1Cases/Arrangements/ArrangementDetailsDrawerV2';
 import {
   ArrangementRowV2,
   buildArrangementRowsV2,
@@ -109,7 +97,6 @@ import { useFeatureFlagEnabled } from 'posthog-js/react';
 import { TestFamilyBadge } from './TestFamilyBadge';
 import { visibleReferralsQuery } from '../Model/Data';
 import { useRecoilValue } from 'recoil';
-import { FamilyCompleteOtherController } from '../Requirements/FamilyCompleteOtherController';
 import { useV1CasesModel } from '../Model/V1CasesModel';
 import { policyData } from '../Model/ConfigurationModel';
 import { FAMILY_MEMBER_PRINT_INFORMATION_FEATURE_FLAG } from '../featureFlags';
@@ -123,11 +110,7 @@ import {
   buildRoleSummaryCards,
 } from './roleSummaryViewModel';
 import { RoleSummaryCardsSection } from './RoleSummaryCardsSection';
-import { RoleDetailsDrawerV2 } from './RoleDetailsDrawerV2';
 import { accountInfoState } from '../Authentication/Auth';
-import { AddEditV1ReferralNoteDialog } from '../V1Referrals/AddEditV1ReferralNoteDialog';
-import { ApproveV1ReferralNoteDialog } from '../V1Referrals/ApproveV1ReferralNoteDialog';
-import { DiscardV1ReferralNoteDialog } from '../V1Referrals/DiscardV1ReferralNoteDialog';
 import { useLocation } from 'react-router-dom';
 import { combineCustomFieldPolicies } from './familyMemberCustomFieldPolicies';
 import {
@@ -137,7 +120,6 @@ import {
 } from './FamilyMemberPrintData';
 import { FamilyMemberPrintDocument } from './FamilyMemberPrintDocument';
 import { FamilyMembersDataGridV2 } from './FamilyMembersDataGridV2';
-import { FamilyMemberDrawerV2 } from './FamilyMemberDrawerV2';
 import { FamilyPrimaryHeaderInfoV2 } from './FamilyPrimaryHeaderInfoV2';
 import {
   ActiveCaseArrangementSummaryV2,
@@ -154,6 +136,7 @@ import {
   FamilyRecentOverviewV2,
   RecentOverviewTimelineItem,
 } from './FamilyRecentOverviewV2';
+import { FamilyScreenWorkflowCoordinatorV2 } from './FamilyScreenWorkflowCoordinatorV2';
 import {
   buildFamilyMemberRowsV2,
   FamilyMemberRowV2,
@@ -1736,113 +1719,53 @@ export function FamilyScreenV2() {
             )}
           </MenuList>
         </Menu>
-        <FamilyCompleteOtherController
-          familyId={familyId}
-          open={familyCompleteOtherOpen}
-          onClose={() => setFamilyCompleteOtherOpen(false)}
-        />
-        {uploadDocumentDialogOpen && (
-          <UploadFamilyDocumentsDialog
-            family={family}
-            onClose={() => setUploadDocumentDialogOpen(false)}
-          />
-        )}
-        {addAdultDialogOpen && (
-          <AddAdultDrawer
-            onClose={(_event: object | undefined, reason: string) =>
-              !isBackdropClick(reason) ? setAddAdultDialogOpen(false) : {}
-            }
-          />
-        )}
-        {addChildDialogOpen && (
-          <AddChildDrawer
-            onClose={(_event: object | undefined, reason: string) =>
-              !isBackdropClick(reason) ? setAddChildDialogOpen(false) : {}
-            }
-          />
-        )}
-        <FamilyMemberDrawerV2
+        <FamilyScreenWorkflowCoordinatorV2
+          addAdultDialogOpen={addAdultDialogOpen}
+          addChildDialogOpen={addChildDialogOpen}
+          addNoteDialogOpen={addNoteDialogOpen}
+          closeCaseDrawerOpen={closeCaseDrawerOpen}
+          deleteFamilyDialogHandle={deleteFamilyDialogHandle}
           family={family}
-          row={selectedFamilyMemberRow}
-          open={selectedFamilyMemberRow !== null}
-          onClose={() => setSelectedFamilyMemberRow(null)}
+          familyCompleteOtherOpen={familyCompleteOtherOpen}
+          familyId={familyId}
+          openNewV1CaseDialogOpen={openNewV1CaseDialogOpen}
+          openReferralId={openReferralId}
+          recentFamilyNoteAction={recentFamilyNoteAction}
+          recentReferralNoteAction={recentReferralNoteAction}
+          removeRoleParameter={removeRoleParameter}
+          resetRoleParameter={resetRoleParameter}
+          selectedArrangementRow={selectedArrangementRow}
+          selectedFamilyMemberRow={selectedFamilyMemberRow}
+          selectedRemovedRole={selectedRemovedRole}
+          selectedRoleSummaryCard={selectedRoleSummaryCard}
+          selectedV1Case={selectedV1Case}
+          uploadDocumentDialogOpen={uploadDocumentDialogOpen}
+          onAddAdultClose={(_event: object | undefined, reason: string) =>
+            !isBackdropClick(reason) ? setAddAdultDialogOpen(false) : {}
+          }
+          onAddChildClose={(_event: object | undefined, reason: string) =>
+            !isBackdropClick(reason) ? setAddChildDialogOpen(false) : {}
+          }
+          onAddNoteClose={() => setAddNoteDialogOpen(false)}
+          onArrangementClose={() => setSelectedArrangementRowId(null)}
+          onCloseCaseDrawerClose={() => setCloseCaseDrawerOpen(false)}
+          onFamilyCompleteOtherClose={() => setFamilyCompleteOtherOpen(false)}
+          onFamilyMemberClose={() => setSelectedFamilyMemberRow(null)}
+          onOpenNewV1CaseDialogClose={() =>
+            setOpenNewV1CaseDialogOpen(false)
+          }
+          onRecentFamilyNoteActionClose={() => setRecentFamilyNoteAction(null)}
+          onRecentReferralNoteActionClose={() =>
+            setRecentReferralNoteAction(null)
+          }
+          onRemoveRoleClose={() => setRemoveRoleParameter(null)}
+          onResetRoleClose={() => setResetRoleParameter(null)}
+          onRoleDetailsClose={() => {
+            setSelectedRoleSummaryCardId(null);
+            setSelectedRemovedRoleId(null);
+          }}
+          onUploadDocumentClose={() => setUploadDocumentDialogOpen(false)}
         />
-        {addNoteDialogOpen && (
-          <AddEditNoteDialog
-            familyId={family.family!.id!}
-            onClose={() => setAddNoteDialogOpen(false)}
-          />
-        )}
-        {recentFamilyNoteAction?.action === 'edit' && (
-          <AddEditNoteDialog
-            familyId={family.family!.id!}
-            note={recentFamilyNoteAction.note}
-            onClose={() => setRecentFamilyNoteAction(null)}
-          />
-        )}
-        {recentFamilyNoteAction?.action === 'approve' && (
-          <ApproveNoteDialog
-            familyId={family.family!.id!}
-            note={recentFamilyNoteAction.note}
-            onClose={() => setRecentFamilyNoteAction(null)}
-          />
-        )}
-        {recentFamilyNoteAction?.action === 'delete' && (
-          <DiscardNoteDialog
-            familyId={family.family!.id!}
-            note={recentFamilyNoteAction.note}
-            onClose={() => setRecentFamilyNoteAction(null)}
-          />
-        )}
-        {recentReferralNoteAction?.action === 'edit' && (
-          <AddEditV1ReferralNoteDialog
-            referralId={recentReferralNoteAction.referralId}
-            note={recentReferralNoteAction.note}
-            onClose={() => setRecentReferralNoteAction(null)}
-          />
-        )}
-        {recentReferralNoteAction?.action === 'approve' && (
-          <ApproveV1ReferralNoteDialog
-            referralId={recentReferralNoteAction.referralId}
-            note={recentReferralNoteAction.note}
-            onClose={() => setRecentReferralNoteAction(null)}
-          />
-        )}
-        {recentReferralNoteAction?.action === 'delete' && (
-          <DiscardV1ReferralNoteDialog
-            referralId={recentReferralNoteAction.referralId}
-            note={recentReferralNoteAction.note}
-            onClose={() => setRecentReferralNoteAction(null)}
-          />
-        )}
-
-        {(removeRoleParameter && (
-          <RemoveFamilyRoleDialog
-            volunteerFamilyId={familyId}
-            role={removeRoleParameter.role}
-            onClose={() => setRemoveRoleParameter(null)}
-          />
-        )) ||
-          null}
-        {(resetRoleParameter && (
-          <ResetFamilyRoleDialog
-            volunteerFamilyId={familyId}
-            role={resetRoleParameter.role}
-            removalReason={resetRoleParameter.removalReason}
-            removalAdditionalComments={
-              resetRoleParameter.removalAdditionalComments
-            }
-            onClose={() => setResetRoleParameter(null)}
-          />
-        )) ||
-          null}
-        {deleteFamilyDialogHandle.open && (
-          <DeleteFamilyDialog
-            key={deleteFamilyDialogHandle.key}
-            handle={deleteFamilyDialogHandle}
-            familyId={familyId}
-          />
-        )}
       </Toolbar>
       <RoleSummaryCardsSection
         cards={roleSummaryCards}
@@ -1856,53 +1779,23 @@ export function FamilyScreenV2() {
           setSelectedRemovedRoleId(removedRole.id);
         }}
       />
-      <RoleDetailsDrawerV2
-        card={selectedRoleSummaryCard}
-        removedRole={selectedRemovedRole}
-        open={selectedRoleSummaryCard !== null || selectedRemovedRole !== null}
-        onClose={() => {
-          setSelectedRoleSummaryCardId(null);
-          setSelectedRemovedRoleId(null);
-        }}
-      />
-      <ArrangementDetailsDrawerV2
-        row={selectedArrangementRow}
-        open={selectedArrangementRow !== null}
-        onClose={() => setSelectedArrangementRowId(null)}
-      />
       {isPartneringFamily && (
-        <>
-          <FamilyCaseWorkspaceHeaderV2
-            activeCaseArrangements={activeCaseArrangements}
-            canCloseV1Case={!!canCloseV1Case}
-            canOpenNewCase={permissions(Permission.CreateV1Case)}
-            canReopenSelectedV1Case={canReopenSelectedV1Case}
-            canViewV1CaseComments={permissions(Permission.ViewV1CaseComments)}
-            currentReferral={currentReferral}
-            family={family}
-            referralsEnabled={referralsEnabled}
-            selectedV1Case={selectedV1Case}
-            onArrangementOpen={setSelectedArrangementRowId}
-            onCloseCase={() => setCloseCaseDrawerOpen(true)}
-            onOpenNewCase={() => setOpenNewV1CaseDialogOpen(true)}
-            onReopenCase={() => void reopenCaseNow()}
-            onViewReferral={(referralId) => appNavigate.referral(referralId)}
-          />
-          {closeCaseDrawerOpen && selectedV1Case?.id && (
-            <CloseV1CaseDrawer
-              partneringFamilyId={familyId}
-              v1CaseId={selectedV1Case.id}
-              onClose={() => setCloseCaseDrawerOpen(false)}
-            />
-          )}
-          {openNewV1CaseDialogOpen && (
-            <OpenNewV1CaseDialog
-              partneringFamilyId={family.family!.id!}
-              referralId={openReferralId}
-              onClose={() => setOpenNewV1CaseDialogOpen(false)}
-            />
-          )}
-        </>
+        <FamilyCaseWorkspaceHeaderV2
+          activeCaseArrangements={activeCaseArrangements}
+          canCloseV1Case={!!canCloseV1Case}
+          canOpenNewCase={permissions(Permission.CreateV1Case)}
+          canReopenSelectedV1Case={canReopenSelectedV1Case}
+          canViewV1CaseComments={permissions(Permission.ViewV1CaseComments)}
+          currentReferral={currentReferral}
+          family={family}
+          referralsEnabled={referralsEnabled}
+          selectedV1Case={selectedV1Case}
+          onArrangementOpen={setSelectedArrangementRowId}
+          onCloseCase={() => setCloseCaseDrawerOpen(true)}
+          onOpenNewCase={() => setOpenNewV1CaseDialogOpen(true)}
+          onReopenCase={() => void reopenCaseNow()}
+          onViewReferral={(referralId) => appNavigate.referral(referralId)}
+        />
       )}
 
       <FamilyPinnedNotesV2
