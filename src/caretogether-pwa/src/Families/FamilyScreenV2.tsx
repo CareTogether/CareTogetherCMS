@@ -14,7 +14,6 @@ import {
   MenuList,
   Chip,
   Divider,
-  ListItemButton,
   ListItemIcon,
   Typography,
   Tooltip,
@@ -43,7 +42,6 @@ import {
   Check as CheckIcon,
   CloudUpload as CloudUploadIcon,
   DeleteForever as DeleteForeverIcon,
-  Diversity3 as Diversity3Icon,
   Edit as EditIcon,
   MoreVert as MoreVertIcon,
   Print as PrintIcon,
@@ -54,15 +52,11 @@ import {
   useFamilyPermissions,
   useGlobalPermissions,
 } from '../Model/SessionModel';
-import { MissingRequirementRow } from '../Requirements/MissingRequirementRow';
-import { ExemptedRequirementRow } from '../Requirements/ExemptedRequirementRow';
-import { CompletedRequirementRow } from '../Requirements/CompletedRequirementRow';
 import {
   IndividualVolunteerContext,
   V1CaseContext,
 } from '../Requirements/RequirementContext';
 import { ActivityTimelineV2 } from '../Activities/ActivityTimelineV2';
-import { V1CaseCustomField } from '../V1Cases/V1CaseCustomField';
 import {
   useScreenTitleComponent,
   useScreenTitle,
@@ -75,8 +69,6 @@ import {
   useUserLookup,
   useDirectoryModel,
 } from '../Model/DirectoryModel';
-import { FamilyCustomField } from './FamilyCustomField';
-import { VolunteerFamilyCustomField } from '../Volunteers/VolunteerFamilyCustomField';
 import { isBackdropClick } from '../Utilities/handleBackdropClick';
 import { useDialogHandle } from '../Hooks/useDialogHandle';
 import { familyLastName } from './FamilyUtils';
@@ -119,13 +111,13 @@ import {
   type PrintableFamilyMember,
 } from './FamilyMemberPrintData';
 import { FamilyMemberPrintDocument } from './FamilyMemberPrintDocument';
-import { FamilyMembersDataGridV2 } from './FamilyMembersDataGridV2';
 import { FamilyPrimaryHeaderInfoV2 } from './FamilyPrimaryHeaderInfoV2';
 import {
   ActiveCaseArrangementSummaryV2,
   FamilyCaseWorkspaceHeaderV2,
 } from './FamilyCaseWorkspaceHeaderV2';
 import { FamilyCaseHistoryTabV2 } from './FamilyCaseHistoryTabV2';
+import { FamilyOverviewTabV2 } from './FamilyOverviewTabV2';
 import {
   FamilyScreenTab,
   FamilyScreenTabsV2,
@@ -133,7 +125,6 @@ import {
 } from './FamilyScreenTabsV2';
 import {
   FamilyPinnedNotesV2,
-  FamilyRecentOverviewV2,
   RecentOverviewTimelineItem,
 } from './FamilyRecentOverviewV2';
 import { FamilyScreenWorkflowCoordinatorV2 } from './FamilyScreenWorkflowCoordinatorV2';
@@ -1284,6 +1275,55 @@ export function FamilyScreenV2() {
     permissions(Permission.AddEditDraftNotes) ||
     permissions(Permission.AddEditOwnDraftNotes);
   const canManageReferralNotes = globalPermissions(Permission.EditV1Referral);
+  const canViewFamilyCustomFields = permissions(Permission.ViewFamilyCustomFields);
+  const canViewV1CaseCustomFields =
+    permissions(Permission.ViewV1CaseCustomFields) && !referralsEnabled;
+  const showV1CaseRequirements =
+    permissions(Permission.ViewV1CaseProgress) &&
+    !referralsEnabled &&
+    selectedV1Case !== undefined &&
+    v1CaseRequirementContext !== undefined;
+  const overviewFamilyCustomFields = canViewFamilyCustomFields
+    ? orderCustomFieldsByPolicy(
+        Array<CustomFieldRenderInfo>()
+          .concat(family.family!.completedCustomFields)
+          .concat(family.missingCustomFields || []),
+        policy.customFamilyFields?.map((field) => field.name) ?? []
+      )
+    : [];
+  const overviewVolunteerFamilyCustomFields =
+    canViewFamilyCustomFields && family.volunteerFamilyInfo
+      ? orderCustomFieldsByPolicy(
+          Array<CustomFieldRenderInfo>()
+            .concat(family.volunteerFamilyInfo.completedCustomFields || [])
+            .concat(family.volunteerFamilyInfo.missingCustomFields || []),
+          policy.volunteerPolicy?.customFields?.map((field) => field.name) ?? []
+        )
+      : [];
+  const overviewV1CaseCustomFields = canViewV1CaseCustomFields
+    ? (
+        selectedV1Case?.completedCustomFields ||
+        ([] as Array<CompletedCustomFieldInfo | string>)
+      )
+        .concat(selectedV1Case?.missingCustomFields || [])
+        .sort((a, b) =>
+          (a instanceof CompletedCustomFieldInfo ? a.customFieldName! : a) <
+          (b instanceof CompletedCustomFieldInfo ? b.customFieldName! : b)
+            ? -1
+            : (a instanceof CompletedCustomFieldInfo
+                  ? a.customFieldName!
+                  : a) >
+                (b instanceof CompletedCustomFieldInfo
+                  ? b.customFieldName!
+                  : b)
+              ? 1
+              : 0
+        )
+    : [];
+  const overviewCommunityRows = familyCommunityInfo.map((communityInfo) => ({
+    id: communityInfo.community?.id,
+    name: communityInfo.community?.name,
+  }));
 
   function getRecentFamilyNotePermissions(note: Note) {
     const isOwnNote = note.authorUserId === currentUserId;
@@ -1818,11 +1858,39 @@ export function FamilyScreenV2() {
             />
           </Grid>
         )}
-        {!showTimelineAndNotes && (
+        {!showTimelineAndNotes && showOverview && (
+          <FamilyOverviewTabV2
+            canAddAdult={canEditFamilyInfo}
+            canAddChild={canEditFamilyInfo}
+            communityNameColor={theme.palette.primary.main}
+            communityRows={overviewCommunityRows}
+            completedRequirements={selectedV1Case?.completedRequirements ?? []}
+            exemptedRequirements={selectedV1Case?.exemptedRequirements ?? []}
+            familyCustomFields={overviewFamilyCustomFields}
+            familyId={familyId}
+            familyMemberRows={familyMemberRows}
+            missingRequirements={selectedV1Case?.missingRequirements ?? []}
+            noteAuthorLookup={noteAuthorLookup}
+            recentOverviewTimelineItems={recentOverviewTimelineItems}
+            renderRecentNoteActions={renderRecentNoteActions}
+            showV1CaseRequirements={showV1CaseRequirements}
+            userLookup={userLookup}
+            v1CaseCustomFields={overviewV1CaseCustomFields}
+            v1CaseId={selectedV1Case?.id}
+            v1CaseRequirementContext={v1CaseRequirementContext}
+            volunteerFamilyCustomFields={overviewVolunteerFamilyCustomFields}
+            onAddAdult={openAddAdultDialog}
+            onAddChild={openAddChildDialog}
+            onCommunityClick={(communityId) => appNavigate.community(communityId)}
+            onFamilyMemberClick={openFamilyMemberDrawer}
+            onViewAllRecentActivity={() => setSelectedTab('timelineAndNotes')}
+          />
+        )}
+        {!showTimelineAndNotes && !showOverview && (
           <Grid
             item
             xs={12}
-            lg={showOverview ? 8 : 12}
+            lg={12}
             sx={{ display: 'flex', flexDirection: 'column' }}
           >
             <Grid container spacing={2}>
@@ -1832,72 +1900,6 @@ export function FamilyScreenV2() {
             </Grid>
 
             <Grid container spacing={0} sx={{ order: 2 }}>
-              {showOverview &&
-                permissions(Permission.ViewV1CaseProgress) &&
-                !referralsEnabled &&
-                selectedV1Case &&
-                v1CaseRequirementContext && (
-                  <>
-                    <Grid
-                      item
-                      xs={12}
-                      sm={6}
-                      md={4}
-                      style={{ paddingRight: 20 }}
-                    >
-                      <Typography
-                        className="ph-unmask"
-                        variant="h3"
-                        style={{ marginBottom: 0 }}
-                      >
-                        Incomplete
-                      </Typography>
-                      {selectedV1Case?.missingRequirements?.map(
-                        (missing, i) => (
-                          <MissingRequirementRow
-                            key={`${missing}:${i}`}
-                            requirement={missing}
-                            context={v1CaseRequirementContext}
-                            v1CaseId={selectedV1Case.id}
-                          />
-                        )
-                      )}
-                    </Grid>
-                    <Grid
-                      item
-                      xs={12}
-                      sm={6}
-                      md={4}
-                      style={{ paddingRight: 20 }}
-                    >
-                      <Typography
-                        className="ph-unmask"
-                        variant="h3"
-                        style={{ marginBottom: 0 }}
-                      >
-                        Completed
-                      </Typography>
-                      {selectedV1Case?.completedRequirements?.map(
-                        (completed, i) => (
-                          <CompletedRequirementRow
-                            key={`${completed.completedRequirementId}:${i}`}
-                            requirement={completed}
-                            context={v1CaseRequirementContext}
-                          />
-                        )
-                      )}
-                      {selectedV1Case?.exemptedRequirements?.map(
-                        (exempted, i) => (
-                          <ExemptedRequirementRow
-                            key={`${exempted.requirementName}:${i}`}
-                            requirement={exempted}
-                            context={v1CaseRequirementContext}
-                          />
-                        )
-                      )}
-                    </Grid>
-                  </>
-                )}
               {showCaseHistory && (
                 <Grid item xs={12}>
                   <FamilyCaseHistoryTabV2
@@ -1912,7 +1914,6 @@ export function FamilyScreenV2() {
                   />
                 </Grid>
               )}
-
 
               {showApprovals && family.volunteerFamilyInfo && (
                 <>
@@ -1945,167 +1946,7 @@ export function FamilyScreenV2() {
                     scrollToArrangementId={arrangementIdToScrollTo}
                   />
                 )}
-
-              {showOverview && (
-                <Grid item xs={12}>
-                  <FamilyMembersDataGridV2
-                    rows={familyMemberRows}
-                    onAddAdult={openAddAdultDialog}
-                    onAddChild={openAddChildDialog}
-                    onRowClick={openFamilyMemberDrawer}
-                    canAddAdult={canEditFamilyInfo}
-                    canAddChild={canEditFamilyInfo}
-                  />
-                </Grid>
-              )}
-              {showOverview && (
-                <Grid item xs={12}>
-                  {permissions(Permission.ViewFamilyCustomFields) &&
-                    orderCustomFieldsByPolicy(
-                      Array<CustomFieldRenderInfo>()
-                        .concat(family.family!.completedCustomFields)
-                        .concat(family.missingCustomFields || []),
-                      policy.customFamilyFields?.map((field) => field.name) ??
-                        []
-                    ).map((customField) => (
-                      <FamilyCustomField
-                        key={
-                          typeof customField === 'string'
-                            ? customField
-                            : customField.customFieldName
-                        }
-                        familyId={familyId}
-                        customField={customField}
-                      />
-                    ))}
-                  {permissions(Permission.ViewFamilyCustomFields) &&
-                    family.volunteerFamilyInfo &&
-                    orderCustomFieldsByPolicy(
-                      Array<CustomFieldRenderInfo>()
-                        .concat(
-                          family.volunteerFamilyInfo.completedCustomFields || []
-                        )
-                        .concat(
-                          family.volunteerFamilyInfo.missingCustomFields || []
-                        ),
-                      policy.volunteerPolicy?.customFields?.map(
-                        (field) => field.name
-                      ) ?? []
-                    ).map((customField) => (
-                      <VolunteerFamilyCustomField
-                        key={
-                          typeof customField === 'string'
-                            ? customField
-                            : customField.customFieldName
-                        }
-                        familyId={familyId}
-                        customField={customField}
-                      />
-                    ))}
-
-                  <Grid item xs={12} md={4}>
-                    {permissions(Permission.ViewV1CaseCustomFields) &&
-                      !referralsEnabled &&
-                      (
-                        selectedV1Case?.completedCustomFields ||
-                        ([] as Array<CompletedCustomFieldInfo | string>)
-                      )
-                        .concat(selectedV1Case?.missingCustomFields || [])
-                        .sort((a, b) =>
-                          (a instanceof CompletedCustomFieldInfo
-                            ? a.customFieldName!
-                            : a) <
-                          (b instanceof CompletedCustomFieldInfo
-                            ? b.customFieldName!
-                            : b)
-                            ? -1
-                            : (a instanceof CompletedCustomFieldInfo
-                                  ? a.customFieldName!
-                                  : a) >
-                                (b instanceof CompletedCustomFieldInfo
-                                  ? b.customFieldName!
-                                  : b)
-                              ? 1
-                              : 0
-                        )
-                        .map((customField) => (
-                          <V1CaseCustomField
-                            key={
-                              typeof customField === 'string'
-                                ? customField
-                                : customField.customFieldName
-                            }
-                            partneringFamilyId={familyId}
-                            v1CaseId={`${selectedV1Case!.id}`}
-                            customField={customField}
-                          />
-                        ))}
-                  </Grid>
-                </Grid>
-              )}
             </Grid>
-          </Grid>
-        )}
-        {showOverview && (
-          <Grid item xs={12} lg={4}>
-            <Box
-              sx={{
-                border: 1,
-                borderColor: 'divider',
-                borderRadius: 1,
-                p: 2,
-                ml: { lg: 2 },
-                mb: 2,
-                bgcolor: 'background.paper',
-              }}
-            >
-              <Typography className="ph-unmask" variant="h3" sx={{ mb: 1 }}>
-                Communities
-              </Typography>
-              {familyCommunityInfo.length === 0 ? (
-                <Typography color="text.secondary" variant="body2">
-                  No communities.
-                </Typography>
-              ) : (
-                familyCommunityInfo.map((communityInfo) => (
-                  <ListItemButton
-                    key={communityInfo.community?.id}
-                    sx={{
-                      padding: '.5rem',
-                      border: '1px solid #e0e0e0',
-                      borderRadius: '5px',
-                    }}
-                    onClick={() =>
-                      communityInfo.community?.id
-                        ? appNavigate.community(communityInfo.community.id)
-                        : {}
-                    }
-                  >
-                    <ListItemIcon
-                      sx={{ alignSelf: 'center', justifyContent: 'center' }}
-                    >
-                      <Diversity3Icon color="primary" />
-                    </ListItemIcon>
-                    <ListItemText
-                      sx={{ alignSelf: 'baseline' }}
-                      primary={communityInfo.community?.name}
-                      slotProps={{
-                        primary: {
-                          color: theme.palette.primary.main,
-                        },
-                      }}
-                    />
-                  </ListItemButton>
-                ))
-              )}
-            </Box>
-            <FamilyRecentOverviewV2
-              items={recentOverviewTimelineItems}
-              noteAuthorLookup={noteAuthorLookup}
-              renderRecentNoteActions={renderRecentNoteActions}
-              userLookup={userLookup}
-              onViewAll={() => setSelectedTab('timelineAndNotes')}
-            />
           </Grid>
         )}
       </Grid>
