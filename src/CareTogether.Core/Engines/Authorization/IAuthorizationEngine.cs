@@ -66,7 +66,8 @@ namespace CareTogether.Engines.Authorization
         Task<bool> AuthorizeV1ReferralReadAsync(
             Guid organizationId,
             Guid locationId,
-            SessionUserContext userContext
+            SessionUserContext userContext,
+            Guid referralId
         );
 
         Task<bool> AuthorizeArrangementsCommandAsync(

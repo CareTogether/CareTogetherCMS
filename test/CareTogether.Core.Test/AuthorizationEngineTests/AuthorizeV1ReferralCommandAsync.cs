@@ -168,5 +168,50 @@ namespace CareTogether.Core.Test.AuthorizationEngineTests
 
             Assert.IsTrue(response);
         }
+
+        [TestMethod]
+        public async Task ReferralReadUsesReferralAuthorizationContext()
+        {
+            var userAccessCalculation = new Mock<IUserAccessCalculation>();
+            userAccessCalculation
+                .Setup(x =>
+                    x.AuthorizeUserAccessAsync(
+                        OrganizationId,
+                        LocationId,
+                        It.IsAny<SessionUserContext>(),
+                        It.IsAny<AuthorizationContext>()
+                    )
+                )
+                .ReturnsAsync(
+                    (
+                        Guid _,
+                        Guid _,
+                        SessionUserContext _,
+                        AuthorizationContext context
+                    ) =>
+                        context is V1ReferralAuthorizationContext referralContext
+                        && referralContext.ReferralId == ReferralId
+                            ? ImmutableList.Create(Permission.ViewV1Referral)
+                            : ImmutableList<Permission>.Empty
+                );
+
+            var dut = new AuthorizationEngine(
+                Mock.Of<IPoliciesResource>(),
+                Mock.Of<IDirectoryResource>(),
+                Mock.Of<IAccountsResource>(),
+                Mock.Of<INotesResource>(),
+                userAccessCalculation.Object,
+                Mock.Of<IV1ReferralsResource>()
+            );
+
+            var response = await dut.AuthorizeV1ReferralReadAsync(
+                OrganizationId,
+                LocationId,
+                UserContext(),
+                ReferralId
+            );
+
+            Assert.IsTrue(response);
+        }
     }
 }
