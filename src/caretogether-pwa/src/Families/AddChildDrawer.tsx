@@ -1,13 +1,10 @@
-import Grid from '@mui/material/GridLegacy';
+import Grid from '@mui/material/Grid';
+import { useState } from 'react';
 import {
-  useState } from 'react';
-import {
+  Box,
   Button,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
   Divider,
+  Drawer,
   FormControl,
   FormControlLabel,
   FormLabel,
@@ -18,6 +15,7 @@ import {
   RadioGroup,
   Select,
   TextField,
+  Typography,
 } from '@mui/material';
 import {
   CombinedFamilyInfo,
@@ -37,11 +35,11 @@ import { subYears } from 'date-fns';
 import { visibleFamiliesQuery } from '../Model/Data';
 import { familyLastName } from './FamilyUtils';
 
-interface AddChildDialogProps {
+interface AddChildDrawerProps {
   onClose: (event: object | undefined, reason: string) => void;
 }
 
-export function AddChildDialog({ onClose }: AddChildDialogProps) {
+export function AddChildDrawer({ onClose }: AddChildDrawerProps) {
   const { familyId } = useParams<{ familyId: string }>();
   const visibleFamilies = useRecoilValue(visibleFamiliesQuery);
   const family = visibleFamilies.find(
@@ -115,22 +113,28 @@ export function AddChildDialog({ onClose }: AddChildDialogProps) {
   }
 
   return (
-    <Dialog
-      open={true}
+    <Drawer
+      anchor="right"
+      open
       onClose={onClose}
-      scroll="body"
-      aria-labelledby="add-child-title"
+      slotProps={{
+        paper: {
+          sx: {
+            width: { xs: '100%', sm: 600 },
+            top: 45,
+            height: 'calc(100% - 45px)',
+            display: 'flex',
+          },
+        },
+      }}
     >
-      <DialogTitle id="add-child-title">
-        Add Child to {familyLastName(family)}
-      </DialogTitle>
-      <DialogContent>
-        {/* <DialogContentText>
-          Provide the basic information needed for this child.
-        </DialogContentText> */}
+      <Box sx={{ flex: 1, minHeight: 0, overflowY: 'auto', p: 3 }}>
+        <Typography id="add-child-title" variant="h6" sx={{ mb: 2 }}>
+          Add Child to {familyLastName(family)}
+        </Typography>
         <form noValidate autoComplete="off">
           <Grid container spacing={2}>
-            <Grid item xs={12} sm={6}>
+            <Grid size={{ xs: 12, sm: 6 }}>
               <TextField
                 required
                 id="first-name"
@@ -143,7 +147,7 @@ export function AddChildDialog({ onClose }: AddChildDialogProps) {
                 }
               />
             </Grid>
-            <Grid item xs={12} sm={6}>
+            <Grid size={{ xs: 12, sm: 6 }}>
               <TextField
                 required
                 id="last-name"
@@ -156,8 +160,8 @@ export function AddChildDialog({ onClose }: AddChildDialogProps) {
                 }
               />
             </Grid>
-            <Grid item xs={12}>
-              <table>
+            <Grid size={12} sx={{ overflowX: 'auto' }}>
+              <table style={{ width: '100%' }}>
                 <thead>
                   <tr>
                     <td>Adult</td>
@@ -231,10 +235,10 @@ export function AddChildDialog({ onClose }: AddChildDialogProps) {
                 </tbody>
               </table>
             </Grid>
-            <Grid item xs={12}>
+            <Grid size={12}>
               <Divider />
             </Grid>
-            <Grid item xs={12}>
+            <Grid size={12}>
               <FormControl component="fieldset">
                 <FormLabel component="legend">Gender:</FormLabel>
                 <RadioGroup
@@ -267,7 +271,7 @@ export function AddChildDialog({ onClose }: AddChildDialogProps) {
                 </RadioGroup>
               </FormControl>
             </Grid>
-            <Grid item xs={12} sm={6}>
+            <Grid size={{ xs: 12, sm: 6 }}>
               <ValidateDatePicker
                 label="Date of birth"
                 value={dateOfBirth}
@@ -283,7 +287,7 @@ export function AddChildDialog({ onClose }: AddChildDialogProps) {
                 }}
               />
             </Grid>
-            <Grid item xs={12} sm={6}>
+            <Grid size={{ xs: 12, sm: 6 }}>
               <FormControl fullWidth size="small">
                 <InputLabel id="ethnicity-label">Ethnicity</InputLabel>
                 <Select
@@ -309,8 +313,8 @@ export function AddChildDialog({ onClose }: AddChildDialogProps) {
                 </Select>
               </FormControl>
             </Grid>
-            <Grid item xs={12}></Grid>
-            <Grid item xs={12}>
+            <Grid size={12}></Grid>
+            <Grid size={12}>
               <TextField
                 id="concerns"
                 label="Concerns"
@@ -336,7 +340,7 @@ export function AddChildDialog({ onClose }: AddChildDialogProps) {
                 }
               />
             </Grid>
-            <Grid item xs={12}>
+            <Grid size={12}>
               <TextField
                 id="notes"
                 label="Notes"
@@ -355,8 +359,19 @@ export function AddChildDialog({ onClose }: AddChildDialogProps) {
             </Grid>
           </Grid>
         </form>
-      </DialogContent>
-      <DialogActions sx={{ marginBottom: 4 }}>
+      </Box>
+      <Box
+        sx={{
+          borderTop: 1,
+          borderColor: 'divider',
+          display: 'flex',
+          gap: 1,
+          justifyContent: 'flex-end',
+          p: 2,
+          pb: 'calc(16px + env(safe-area-inset-bottom))',
+          backgroundColor: 'background.paper',
+        }}
+      >
         <Button onClick={() => onClose(undefined, 'cancel')} color="secondary">
           Cancel
         </Button>
@@ -368,7 +383,9 @@ export function AddChildDialog({ onClose }: AddChildDialogProps) {
         >
           Add to Family
         </Button>
-      </DialogActions>
-    </Dialog>
+      </Box>
+    </Drawer>
   );
 }
+
+export { AddChildDrawer as AddChildDialog };

@@ -105,8 +105,8 @@ export default function BasicConfiguration({
         Basic configuration
       </Typography>
 
-      <Stack direction="column" spacing={3} alignItems="stretch">
-        <Stack direction="row" spacing={2} alignItems="flex-start">
+      <Stack direction="column" spacing={3} sx={{ alignItems: 'stretch' }}>
+        <Stack direction="row" spacing={2} sx={{ alignItems: 'flex-start' }}>
           <Controller
             name="name"
             control={control}
@@ -138,6 +138,18 @@ export default function BasicConfiguration({
               </MenuItem>
             ))}
           </TextField> */}
+
+          <TextField
+            label="Time zone"
+            value={currentLocationDefinition.timeZone?.id ?? ''}
+            helperText={
+              currentLocationDefinition.timeZone
+                ? currentLocationDefinition.timeZone.displayName
+                : 'Not configured'
+            }
+            size="small"
+            disabled
+          />
         </Stack>
         <Typography variant="h6">Ethnicities</Typography>
         <Typography variant="body2">
@@ -238,7 +250,7 @@ export default function BasicConfiguration({
           minTypingAreaWidth={120}
         />
 
-        <Stack direction="row" spacing={2} justifyContent="flex-start">
+        <Stack direction="row" spacing={2} sx={{ justifyContent: 'flex-start' }}>
           <Button
             variant="contained"
             color="secondary"

@@ -136,6 +136,12 @@ namespace CareTogether.Resources.V1Referrals
 
         Task<ImmutableList<V1Referral>> ListReferralsAsync(Guid organizationId, Guid locationId);
 
+        Task<ImmutableList<V1Referral>> ListReferralsForFamilyAsync(
+            Guid organizationId,
+            Guid locationId,
+            Guid familyId
+        );
+
         Task<Uri> GetV1ReferralDocumentReadValetUrl(
             Guid organizationId,
             Guid locationId,

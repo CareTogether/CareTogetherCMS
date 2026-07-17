@@ -27,8 +27,9 @@ namespace CareTogether.Core.Test.ApprovalCalculationTests
                 return new IndividualRoleVersionApprovalStatus(
                     "TestRole",
                     version,
-                    timeline,
-                    ImmutableList<IndividualRoleRequirementCompletionStatus>.Empty
+                    SupersededAtUtc: null,
+                    Status: timeline,
+                    Requirements: ImmutableList<IndividualRoleRequirementCompletionStatus>.Empty
                 );
             }
 
@@ -172,8 +173,9 @@ namespace CareTogether.Core.Test.ApprovalCalculationTests
                 return new FamilyRoleVersionApprovalStatus(
                     "TestRole",
                     version,
-                    timeline,
-                    ImmutableList<FamilyRoleRequirementCompletionStatus>.Empty
+                    SupersededAtUtc: null,
+                    Status: timeline,
+                    Requirements: ImmutableList<FamilyRoleRequirementCompletionStatus>.Empty
                 );
             }
 

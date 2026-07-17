@@ -1,4 +1,4 @@
-import Grid from '@mui/material/GridLegacy';
+import Grid from '@mui/material/Grid';
 import { useDirectoryModel } from '../Model/DirectoryModel';
 import { useInlineEditor } from '../Hooks/useInlineEditor';
 import { PersonEditorProps } from './PersonEditorProps';
@@ -32,7 +32,7 @@ export function AgeEditor({ familyId, person }: PersonEditorProps) {
     <Grid container spacing={2}>
       {editor.editing ? (
         <>
-          <Grid item xs={12}>
+          <Grid size={12}>
             Saved age: <AgeText age={person.age} />
             {person.age
               ? person.age instanceof ExactAge
@@ -40,7 +40,7 @@ export function AgeEditor({ familyId, person }: PersonEditorProps) {
                 : ` (${ageInYears} as of ${format(ageAsOf!, 'M/d/yy')})`
               : ``}
           </Grid>
-          <Grid item xs={12} sm={6}>
+          <Grid size={{ xs: 12, sm: 6 }}>
             <ValidateDatePicker
               label="Date of birth"
               value={editor.value ?? null}
@@ -54,13 +54,13 @@ export function AgeEditor({ familyId, person }: PersonEditorProps) {
               }}
             />
           </Grid>
-          <Grid item xs={6}>
+          <Grid size={6}>
             {editor.cancelButton}
             {editor.saveButton}
           </Grid>
         </>
       ) : (
-        <Grid item xs={12}>
+        <Grid size={12}>
           Age: <AgeText age={person.age} />
           {person.age
             ? person.age instanceof ExactAge

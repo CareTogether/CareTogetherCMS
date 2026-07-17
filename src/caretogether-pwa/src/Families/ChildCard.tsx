@@ -12,22 +12,33 @@ import {
   Gender,
   Permission,
 } from '../GeneratedClient';
+import { useRecoilValue } from 'recoil';
 import { AgeText } from './AgeText';
 import { Edit as EditIcon } from '@mui/icons-material';
 import { useDialogHandle } from '../Hooks/useDialogHandle';
 import { EditChildDialog } from './EditChildDialog';
 import { useFamilyPermissions } from '../Model/SessionModel';
 import { useFamilyLookup } from '../Model/DirectoryModel';
+import { policyData } from '../Model/ConfigurationModel';
 import { differenceInYears } from 'date-fns';
 import { DateOfBirth } from './DateOfBirth';
 import { WithComma } from '../Utilities/WithComma';
+import { useFeatureFlagEnabled } from 'posthog-js/react';
+import { FAMILY_MEMBER_CUSTOM_FIELDS_FEATURE_FLAG } from '../featureFlags';
+import { FamilyMemberCustomFields } from './FamilyMemberCustomFields';
+import { combineCustomFieldPolicies } from './familyMemberCustomFieldPolicies';
 
 type ChildCardProps = {
   familyId: string;
   personId: string;
+  showCustomFields?: boolean;
 };
 
-export function ChildCard({ familyId, personId }: ChildCardProps) {
+export function ChildCard({
+  familyId,
+  personId,
+  showCustomFields = false,
+}: ChildCardProps) {
   const familyLookup = useFamilyLookup();
   const family = familyLookup(familyId)!;
 
@@ -40,6 +51,18 @@ export function ChildCard({ familyId, personId }: ChildCardProps) {
   const editDialogHandle = useDialogHandle();
 
   const permissions = useFamilyPermissions(family);
+  const policy = useRecoilValue(policyData);
+  const familyMemberCustomFieldsEnabled = useFeatureFlagEnabled(
+    FAMILY_MEMBER_CUSTOM_FIELDS_FEATURE_FLAG
+  );
+  const customFieldPolicies = combineCustomFieldPolicies(
+    family.partneringFamilyInfo != null
+      ? (policy.customFields?.partneringFamily?.child ?? [])
+      : [],
+    family.volunteerFamilyInfo != null
+      ? (policy.customFields?.volunteerFamily?.child ?? [])
+      : []
+  );
 
   return (
     <>
@@ -100,28 +123,47 @@ export function ChildCard({ familyId, personId }: ChildCardProps) {
                       family.family?.adults?.filter(
                         (x) => x.item1?.id === relationship.personId
                       )[0]?.item1?.firstName ?? '(adult not found)';
+                    const relationshipLabel =
+                      relationship.type ===
+                      CustodialRelationshipType.LegalGuardian
+                        ? 'legal guardian'
+                        : relationship.type ===
+                            CustodialRelationshipType.ParentWithCustody
+                          ? 'parent with custody'
+                          : relationship.type ===
+                              CustodialRelationshipType.ParentWithCourtAppointedCustody
+                            ? 'parent with court-appointed sole custody'
+                            : null;
 
                     return (
-                      <li key={relationship.personId} style={{ marginTop: 4 }}>
-                        {adult}
-                        :&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-                        <span style={{ float: 'right' }}>
-                          {relationship.type ===
-                          CustodialRelationshipType.LegalGuardian
-                            ? 'legal guardian'
-                            : relationship.type ===
-                                CustodialRelationshipType.ParentWithCustody
-                              ? 'parent with custody'
-                              : relationship.type ===
-                                  CustodialRelationshipType.ParentWithCourtAppointedCustody
-                                ? 'parent with court-appointed sole custody'
-                                : null}
+                      <li
+                        key={relationship.personId}
+                        style={{
+                          display: 'flex',
+                          gap: 8,
+                          justifyContent: 'space-between',
+                          marginTop: 4,
+                        }}
+                      >
+                        <span>{adult}:</span>
+                        <span style={{ textAlign: 'right' }}>
+                          {relationshipLabel}
                         </span>
                       </li>
                     );
-                  })}
+                })}
               </ul>
             </Typography>
+            {showCustomFields &&
+              familyMemberCustomFieldsEnabled &&
+              permissions(Permission.ViewFamilyCustomFields) && (
+                <FamilyMemberCustomFields
+                  familyId={familyId}
+                  personId={personId}
+                  customFieldPolicies={customFieldPolicies}
+                  completedCustomFields={child.completedCustomFields}
+                />
+              )}
           </CardContent>
           {editDialogHandle.open && (
             <EditChildDialog
