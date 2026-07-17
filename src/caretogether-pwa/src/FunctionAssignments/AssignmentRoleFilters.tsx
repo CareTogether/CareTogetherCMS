@@ -1,4 +1,5 @@
 import { AssignedIndividualVolunteer, Person } from '../GeneratedClient';
+import type { SelectProps } from '@mui/material';
 import { CustomFieldsFilterSelect } from '../Generic/CustomFieldsFilter/CustomFieldsFilterSelect';
 import {
   CustomFieldFilterOption,
@@ -13,6 +14,8 @@ type AssignmentRoleFiltersProps = {
   selectedValuesByRole: AssignmentFilterSelectionsByRole;
   onChange: (assignmentRole: string, selectedValues: (string | null)[]) => void;
   personLookup: (personId: string) => Person | undefined;
+  size?: SelectProps<string[]>['size'];
+  variant?: SelectProps<string[]>['variant'];
 };
 
 function assignmentFilterOptions(
@@ -63,6 +66,8 @@ export function AssignmentRoleFilters({
   selectedValuesByRole,
   onChange,
   personLookup,
+  size,
+  variant,
 }: AssignmentRoleFiltersProps) {
   return (
     <>
@@ -80,6 +85,8 @@ export function AssignmentRoleFilters({
               personLookup
             )}
             selectedValues={selectedValues}
+            size={size}
+            variant={variant}
             onChange={(selectedValues) =>
               onChange(assignmentRole, assignmentFilterValues(selectedValues))
             }

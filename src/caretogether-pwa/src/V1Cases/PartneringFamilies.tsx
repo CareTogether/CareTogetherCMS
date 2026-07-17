@@ -49,7 +49,10 @@ import { useFeatureFlagEnabled } from 'posthog-js/react';
 import { forceCheck } from '../Utilities/reactLazyLoadInterop';
 import { PartneringFamilyTableItem } from './PartneringFamilies/PartneringFamilyTableItem';
 import { arrangementStatusSummary } from './PartneringFamilies/arrangementStatusSummary';
-import { ArrangementsFilter } from './PartneringFamilies/types';
+import {
+  ArrangementsFilter,
+  normalizeArrangementsFilter,
+} from './PartneringFamilies/types';
 import { containedStickyHeaderTableSx } from '../Utilities/stickyHeaderTableSx';
 import { WideTableContainer } from '../Utilities/WideTableContainer';
 import { wideTablePageSx } from '../Utilities/wideTablePageSx';
@@ -75,22 +78,6 @@ import { AssignmentRoleFilters } from '../FunctionAssignments/AssignmentRoleFilt
 const PARTNERING_FAMILIES_SORT_STORAGE_KEY = 'partnering-families-sortMode';
 const ARRANGEMENTS_FILTER_STORAGE_KEY =
   'partnering-families-arrangementsFilter';
-
-function normalizeArrangementsFilter(
-  value: ArrangementsFilter | null | undefined
-): ArrangementsFilter {
-  switch (value) {
-    case 'All':
-    case 'Intake':
-    case 'Active':
-    case 'Setup':
-    case 'Active + Setup':
-      return value;
-
-    default:
-      return 'All';
-  }
-}
 
 function isSetupOrActiveArrangementPhase(phase: ArrangementPhase | undefined) {
   return (

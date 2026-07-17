@@ -7,6 +7,7 @@ import {
   Select,
   SelectChangeEvent,
 } from '@mui/material';
+import type { SelectProps } from '@mui/material';
 import { FilterList as FilterListIcon } from '@mui/icons-material';
 import { CustomFieldFilterOption, CustomFieldFilterValue } from './types';
 
@@ -16,6 +17,8 @@ type Props = {
   selectedValues: CustomFieldFilterValue[];
   onChange: (selected: CustomFieldFilterValue[]) => void;
   fullWidth?: boolean;
+  size?: SelectProps<string[]>['size'];
+  variant?: SelectProps<string[]>['variant'];
 };
 
 function encodeValue(value: CustomFieldFilterValue) {
@@ -48,6 +51,8 @@ export function CustomFieldsFilterSelect({
   selectedValues,
   onChange,
   fullWidth = false,
+  size,
+  variant = 'standard',
 }: Props) {
   const selectedCount = selectedValues.length;
   const selectedOptionValues = selectedValues.map(encodeValue);
@@ -82,7 +87,8 @@ export function CustomFieldsFilterSelect({
         }}
         multiple
         value={selectedOptionValues}
-        variant="standard"
+        variant={variant}
+        size={size}
         label={`${label} Filters`}
         onChange={(event: SelectChangeEvent<string[]>) => {
           const selected = event.target.value;
@@ -90,8 +96,9 @@ export function CustomFieldsFilterSelect({
             onChange(selected.map(decodeValue));
           }
         }}
-        input={<InputBase />}
-        IconComponent={FilterListIcon}
+        {...(variant === 'standard'
+          ? { input: <InputBase />, IconComponent: FilterListIcon }
+          : {})}
         SelectDisplayProps={{ title: displayText }}
         renderValue={() => displayText}
       >
