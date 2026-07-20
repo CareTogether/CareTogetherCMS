@@ -1,4 +1,4 @@
-import { Box, Chip, Stack, Typography, useTheme } from '@mui/material';
+import { Box, Stack, Typography, useTheme } from '@mui/material';
 import {
   DataGrid,
   GridColDef,
@@ -87,7 +87,9 @@ function buildColumns(
       headerName: 'Status',
       minWidth: 150,
       renderCell: ({ row }) => (
-        <Chip label={displayValue(row.status)} size="small" variant="outlined" />
+        <Typography {...v2Typography.browserCell} noWrap>
+          {displayValue(row.status)}
+        </Typography>
       ),
     },
     {

@@ -15,7 +15,11 @@ export function ClientFamilyCellV2({
 }: ClientFamilyCellV2Props) {
   return (
     <Stack spacing={0.5} sx={{ minWidth: 0 }}>
-      <Typography {...v2Typography.primaryValue} noWrap sx={{ minWidth: 0 }}>
+      <Typography
+        {...v2Typography.primaryValue}
+        noWrap
+        sx={{ ...v2Typography.primaryValue.sx, fontWeight: 700, minWidth: 0 }}
+      >
         {familyName}
       </Typography>
       {(primaryContactName || phoneNumber) && (
