@@ -1,3 +1,4 @@
+import Grid from '../Generic/GridLegacyCompat';
 import {
   Card,
   CardHeader,
@@ -12,10 +13,10 @@ import {
   AccordionSummary,
   AccordionDetails,
   Badge,
-  Grid,
   Tooltip,
 } from '@mui/material';
 import { useState } from 'react';
+import { useRecoilValue } from 'recoil';
 import {
   Gender,
   Person,
@@ -42,7 +43,7 @@ import { useDialogHandle } from '../Hooks/useDialogHandle';
 import { EditAdultDialog } from './EditAdultDialog';
 import { useCollapsed } from '../Hooks/useCollapsed';
 import { useFamilyLookup } from '../Model/DirectoryModel';
-import { useFeatureFlags } from '../Model/ConfigurationModel';
+import { policyData, useFeatureFlags } from '../Model/ConfigurationModel';
 import { useDrawer } from '../Generic/ShellDrawer';
 import { ManageUserDrawer } from './ManageUserDrawer';
 import { format } from 'date-fns';
@@ -50,13 +51,26 @@ import { DateOfBirth } from './DateOfBirth';
 import { CompleteOtherController } from '../Requirements/CompleteOtherController';
 import { WithComma } from '../Utilities/WithComma';
 import { ReadMoreText } from '../Generic/Forms/ReadMoreText';
+import { useFeatureFlagEnabled } from 'posthog-js/react';
+import { FAMILY_MEMBER_CUSTOM_FIELDS_FEATURE_FLAG } from '../featureFlags';
+import { FamilyMemberCustomFields } from './FamilyMemberCustomFields';
+import { combineCustomFieldPolicies } from './familyMemberCustomFieldPolicies';
 
 type AdultCardProps = {
   familyId: string;
   personId: string;
+  showCustomFields?: boolean;
+  showApprovalContent?: boolean;
+  showRequirementWorkflow?: boolean;
 };
 
-export function AdultCard({ familyId, personId }: AdultCardProps) {
+export function AdultCard({
+  familyId,
+  personId,
+  showCustomFields = false,
+  showApprovalContent = true,
+  showRequirementWorkflow = true,
+}: AdultCardProps) {
   const familyLookup = useFamilyLookup();
   const family = familyLookup(familyId)!;
 
@@ -71,6 +85,18 @@ export function AdultCard({ familyId, personId }: AdultCardProps) {
   const editDialogHandle = useDialogHandle();
 
   const featureFlags = useFeatureFlags();
+  const policy = useRecoilValue(policyData);
+  const familyMemberCustomFieldsEnabled = useFeatureFlagEnabled(
+    FAMILY_MEMBER_CUSTOM_FIELDS_FEATURE_FLAG
+  );
+  const customFieldPolicies = combineCustomFieldPolicies(
+    family.partneringFamilyInfo != null
+      ? (policy.customFields?.partneringFamily?.adult ?? [])
+      : [],
+    family.volunteerFamilyInfo != null
+      ? (policy.customFields?.volunteerFamily?.adult ?? [])
+      : []
+  );
 
   const [completeOtherOpen, setCompleteOtherOpen] = useState(false);
 
@@ -157,6 +183,12 @@ export function AdultCard({ familyId, personId }: AdultCardProps) {
   const removedRoles =
     family.volunteerFamilyInfo?.individualVolunteers?.[personId]
       ?.roleRemovals || [];
+  const volunteerInfo =
+    family.volunteerFamilyInfo?.individualVolunteers?.[personId];
+  const completedRequirements = volunteerInfo?.completedRequirements ?? [];
+  const exemptedRequirements = volunteerInfo?.exemptedRequirements ?? [];
+  const missingRequirements = volunteerInfo?.missingRequirements ?? [];
+  const availableApplications = volunteerInfo?.availableApplications ?? [];
 
   return (
     <>
@@ -186,7 +218,8 @@ export function AdultCard({ familyId, personId }: AdultCardProps) {
                     <EditIcon color="primary" />
                   </IconButton>
                 )}
-                {((permissions(Permission.EditVolunteerRoleParticipation) &&
+                {((showApprovalContent &&
+                  permissions(Permission.EditVolunteerRoleParticipation) &&
                   (participatingFamilyRoles.length > 0 ||
                     participatingIndividualRoles.length > 0 ||
                     removedRoles.length > 0)) ||
@@ -229,33 +262,34 @@ export function AdultCard({ familyId, personId }: AdultCardProps) {
               }}
               component="div"
             >
-              {Object.entries(
-                family.volunteerFamilyInfo?.individualVolunteers?.[
-                  adult.item1.id
-                ].approvalStatusByRole || {}
-              ).map(([role, roleApprovalStatus]) => (
-                <VolunteerRoleApprovalStatusChip
-                  key={role}
-                  roleName={role}
-                  status={roleApprovalStatus.effectiveRoleApprovalStatus}
-                />
-              ))}
-              {(
-                family.volunteerFamilyInfo?.individualVolunteers?.[personId]
-                  ?.roleRemovals || []
-              ).map((removedRole) => (
-                <Tooltip
-                  key={removedRole.roleName}
-                  title={`Removed from ${removedRole.roleName} - ${RoleRemovalReason[removedRole.reason!]} - ${removedRole.additionalComments}${removedRole.effectiveSince ? ' - effective ' + format(removedRole.effectiveSince, 'M/d/yy') : ''}${removedRole.effectiveUntil ? ' - through ' + format(removedRole.effectiveUntil, 'M/d/yy') : ''}`}
-                  arrow
-                >
-                  <Chip
-                    key={removedRole.roleName}
-                    size="small"
-                    label={`${removedRole.roleName} - ${RoleRemovalReason[removedRole.reason!]} - ${removedRole.additionalComments}${removedRole.effectiveSince ? ' - effective ' + format(removedRole.effectiveSince, 'M/d/yy') : ''}${removedRole.effectiveUntil ? ' - through ' + format(removedRole.effectiveUntil, 'M/d/yy') : ''}`}
-                  />
-                </Tooltip>
-              ))}
+              {showApprovalContent && (
+                <>
+                  {Object.entries(
+                    family.volunteerFamilyInfo?.individualVolunteers?.[
+                      adult.item1.id
+                    ].approvalStatusByRole || {}
+                  ).map(([role, roleApprovalStatus]) => (
+                    <VolunteerRoleApprovalStatusChip
+                      key={role}
+                      roleName={role}
+                      status={roleApprovalStatus.effectiveRoleApprovalStatus}
+                    />
+                  ))}
+                  {removedRoles.map((removedRole) => (
+                    <Tooltip
+                      key={removedRole.roleName}
+                      title={`Removed from ${removedRole.roleName} - ${RoleRemovalReason[removedRole.reason!]} - ${removedRole.additionalComments}${removedRole.effectiveSince ? ' - effective ' + format(removedRole.effectiveSince, 'M/d/yy') : ''}${removedRole.effectiveUntil ? ' - through ' + format(removedRole.effectiveUntil, 'M/d/yy') : ''}`}
+                      arrow
+                    >
+                      <Chip
+                        key={removedRole.roleName}
+                        size="small"
+                        label={`${removedRole.roleName} - ${RoleRemovalReason[removedRole.reason!]} - ${removedRole.additionalComments}${removedRole.effectiveSince ? ' - effective ' + format(removedRole.effectiveSince, 'M/d/yy') : ''}${removedRole.effectiveUntil ? ' - through ' + format(removedRole.effectiveUntil, 'M/d/yy') : ''}`}
+                      />
+                    </Tooltip>
+                  ))}
+                </>
+              )}
               {(adult.item2.relationshipToFamily && (
                 <Chip size="small" label={adult.item2.relationshipToFamily} />
               )) ||
@@ -289,119 +323,107 @@ export function AdultCard({ familyId, personId }: AdultCardProps) {
             <Typography variant="body2" component="div">
               <ContactDisplay person={adult.item1} />
             </Typography>
-            <Accordion
-              expanded={!collapsed}
-              onChange={(_event, isExpanded) => setCollapsed(!isExpanded)}
-              variant="outlined"
-              square
-              disableGutters
-              sx={{ marginLeft: -2, marginRight: -2, border: 'none' }}
-            >
-              <AccordionSummary
-                expandIcon={<ExpandMoreIcon />}
-                sx={{
-                  marginTop: 1,
-                  paddingTop: 1,
-                  backgroundColor: '#0000000a',
-                }}
+            {showCustomFields &&
+              familyMemberCustomFieldsEnabled &&
+              permissions(Permission.ViewFamilyCustomFields) && (
+                <FamilyMemberCustomFields
+                  familyId={familyId}
+                  personId={personId}
+                  customFieldPolicies={customFieldPolicies}
+                  completedCustomFields={adult.item1.completedCustomFields}
+                />
+              )}
+            {showApprovalContent && showRequirementWorkflow && (
+              <Accordion
+                expanded={!collapsed}
+                onChange={(_event, isExpanded) => setCollapsed(!isExpanded)}
+                variant="outlined"
+                square
+                disableGutters
+                sx={{ marginLeft: -2, marginRight: -2, border: 'none' }}
               >
-                <Grid container>
-                  <Grid item xs={3}>
-                    <Badge
-                      color="success"
-                      badgeContent={
-                        family.volunteerFamilyInfo?.individualVolunteers?.[
-                          adult.item1.id
-                        ].completedRequirements?.length
-                      }
-                    >
-                      ✅
-                    </Badge>
+                <AccordionSummary
+                  expandIcon={<ExpandMoreIcon />}
+                  sx={{
+                    marginTop: 1,
+                    paddingTop: 1,
+                    backgroundColor: '#0000000a',
+                  }}
+                >
+                  <Grid container>
+                    <Grid item xs={3}>
+                      <Badge
+                        color="success"
+                        badgeContent={completedRequirements.length}
+                      >
+                        ✅
+                      </Badge>
+                    </Grid>
+                    <Grid item xs={3}>
+                      <Badge
+                        color="warning"
+                        badgeContent={exemptedRequirements.length}
+                      >
+                        🚫
+                      </Badge>
+                    </Grid>
+                    <Grid item xs={3}>
+                      <Badge
+                        color="error"
+                        badgeContent={missingRequirements.length}
+                      >
+                        ❌
+                      </Badge>
+                    </Grid>
+                    <Grid item xs={3}>
+                      <Badge
+                        color="info"
+                        badgeContent={availableApplications.length}
+                      >
+                        💤
+                      </Badge>
+                    </Grid>
                   </Grid>
-                  <Grid item xs={3}>
-                    <Badge
-                      color="warning"
-                      badgeContent={
-                        family.volunteerFamilyInfo?.individualVolunteers?.[
-                          adult.item1.id
-                        ].exemptedRequirements?.length
-                      }
-                    >
-                      🚫
-                    </Badge>
-                  </Grid>
-                  <Grid item xs={3}>
-                    <Badge
-                      color="error"
-                      badgeContent={
-                        family.volunteerFamilyInfo?.individualVolunteers?.[
-                          adult.item1.id
-                        ].missingRequirements?.length
-                      }
-                    >
-                      ❌
-                    </Badge>
-                  </Grid>
-                  <Grid item xs={3}>
-                    <Badge
-                      color="info"
-                      badgeContent={
-                        family.volunteerFamilyInfo?.individualVolunteers?.[
-                          adult.item1.id
-                        ].availableApplications?.length
-                      }
-                    >
-                      💤
-                    </Badge>
-                  </Grid>
-                </Grid>
-              </AccordionSummary>
-              <AccordionDetails>
-                <Typography variant="body2" component="div">
-                  {family.volunteerFamilyInfo?.individualVolunteers?.[
-                    adult.item1.id
-                  ].completedRequirements?.map((completed, i) => (
-                    <CompletedRequirementRow
-                      key={`${completed.completedRequirementId}:${i}`}
-                      requirement={completed}
-                      context={requirementContext}
-                    />
-                  ))}
-                  {family.volunteerFamilyInfo?.individualVolunteers?.[
-                    adult.item1.id
-                  ].exemptedRequirements?.map((exempted, i) => (
-                    <ExemptedRequirementRow
-                      key={`${exempted.requirementName}:${i}`}
-                      requirement={exempted}
-                      context={requirementContext}
-                    />
-                  ))}
-                  {family.volunteerFamilyInfo?.individualVolunteers?.[
-                    adult.item1.id
-                  ].missingRequirements?.map((missing, i) => (
-                    <MissingRequirementRow
-                      key={`${missing}:${i}`}
-                      requirement={missing.item1!}
-                      policyVersions={missing.item2?.map((v) => ({
-                        version: v.item1 ?? '',
-                        roleName: v.item2 ?? '',
-                      }))}
-                      context={requirementContext}
-                    />
-                  ))}
-                  {family.volunteerFamilyInfo?.individualVolunteers?.[
-                    adult.item1.id
-                  ].availableApplications?.map((application, i) => (
-                    <MissingRequirementRow
-                      key={`${application}:${i}`}
-                      requirement={application}
-                      context={requirementContext}
-                      isAvailableApplication={true}
-                    />
-                  ))}
-                </Typography>
-              </AccordionDetails>
-            </Accordion>
+                </AccordionSummary>
+                <AccordionDetails>
+                  <Typography variant="body2" component="div">
+                    {completedRequirements.map((completed, i) => (
+                      <CompletedRequirementRow
+                        key={`${completed.completedRequirementId}:${i}`}
+                        requirement={completed}
+                        context={requirementContext}
+                      />
+                    ))}
+                    {exemptedRequirements.map((exempted, i) => (
+                      <ExemptedRequirementRow
+                        key={`${exempted.requirementName}:${i}`}
+                        requirement={exempted}
+                        context={requirementContext}
+                      />
+                    ))}
+                    {missingRequirements.map((missing, i) => (
+                      <MissingRequirementRow
+                        key={`${missing}:${i}`}
+                        requirement={missing.item1!}
+                        policyVersions={missing.item2?.map((v) => ({
+                          version: v.item1 ?? '',
+                          roleName: v.item2 ?? '',
+                        }))}
+                        context={requirementContext}
+                      />
+                    ))}
+                    {availableApplications.map((application, i) => (
+                      <MissingRequirementRow
+                        key={`${application}:${i}`}
+                        requirement={application}
+                        context={requirementContext}
+                        isAvailableApplication={true}
+                      />
+                    ))}
+                  </Typography>
+                </AccordionDetails>
+              </Accordion>
+            )}
           </CardContent>
           <Menu
             id="adult-more-menu"
@@ -410,7 +432,8 @@ export function AdultCard({ familyId, personId }: AdultCardProps) {
             open={Boolean(adultMoreMenuAnchor)}
             onClose={() => setAdultMoreMenuAnchor(null)}
           >
-            {permissions(Permission.EditVolunteerRoleParticipation) &&
+            {showApprovalContent &&
+              permissions(Permission.EditVolunteerRoleParticipation) &&
               participatingFamilyRoles.flatMap(([role]) => (
                 <MenuItem
                   key={role}
@@ -422,7 +445,8 @@ export function AdultCard({ familyId, personId }: AdultCardProps) {
                   <ListItemText primary={`Remove from ${role} role`} />
                 </MenuItem>
               ))}
-            {permissions(Permission.EditVolunteerRoleParticipation) &&
+            {showApprovalContent &&
+              permissions(Permission.EditVolunteerRoleParticipation) &&
               participatingIndividualRoles.flatMap(([role]) => (
                 <MenuItem
                   key={role}
@@ -434,7 +458,8 @@ export function AdultCard({ familyId, personId }: AdultCardProps) {
                   <ListItemText primary={`Remove from ${role} role`} />
                 </MenuItem>
               ))}
-            {permissions(Permission.EditVolunteerRoleParticipation) &&
+            {showApprovalContent &&
+              permissions(Permission.EditVolunteerRoleParticipation) &&
               removedRoles
                 .filter((removedRole) => !removedRole.effectiveUntil)
                 .map((removedRole) => (
@@ -461,14 +486,16 @@ export function AdultCard({ familyId, personId }: AdultCardProps) {
               permissions(Permission.EditPersonUserProtectedRoles)) && (
               <MenuItem
                 onClick={() => {
-                  adultMoreMenuAnchor?.adult && manageUserDrawer.openDrawer();
+                  if (adultMoreMenuAnchor?.adult) {
+                    manageUserDrawer.openDrawer();
+                  }
                   setAdultMoreMenuAnchor(null); //TODO: Is this why we had needed the null check on the previous line?
                 }}
               >
                 <ListItemText primary="Manage user..." />
               </MenuItem>
             )}
-            {isVolunteerFamily && (
+            {showApprovalContent && isVolunteerFamily && (
               <MenuItem
                 onClick={() => {
                   setCompleteOtherOpen(true);
@@ -480,14 +507,16 @@ export function AdultCard({ familyId, personId }: AdultCardProps) {
             )}
           </Menu>
 
-          <CompleteOtherController
-            familyId={familyId}
-            personId={personId}
-            open={completeOtherOpen}
-            onClose={() => setCompleteOtherOpen(false)}
-          />
+          {showApprovalContent && (
+            <CompleteOtherController
+              familyId={familyId}
+              personId={personId}
+              open={completeOtherOpen}
+              onClose={() => setCompleteOtherOpen(false)}
+            />
+          )}
 
-          {(removeRoleParameter && (
+          {(showApprovalContent && removeRoleParameter && (
             <RemoveIndividualRoleDialog
               volunteerFamilyId={familyId}
               person={removeRoleParameter.person}
@@ -496,7 +525,7 @@ export function AdultCard({ familyId, personId }: AdultCardProps) {
             />
           )) ||
             null}
-          {(resetRoleParameter && (
+          {(showApprovalContent && resetRoleParameter && (
             <ResetIndividualRoleDialog
               volunteerFamilyId={familyId}
               person={resetRoleParameter.person}

@@ -34,6 +34,7 @@ import { ListItemLink } from './ListItemLink';
 import { useAppNavigate } from '../Hooks/useAppNavigate';
 import WhatsNew from './WhatsNew';
 import { useFeatureFlagEnabledWithLocalOverride } from '../Utilities/Instrumentation/useFeatureFlagWithLocalOverride';
+import { SHELL_DRAWER_TOP_OFFSET } from './shellLayoutConstants';
 
 interface SideNavigationMenuProps {
   open: boolean;
@@ -52,6 +53,7 @@ function SideNavigationMenu({ open }: SideNavigationMenuProps) {
   const reportSubmenuItems = useRecoilValue(reportSubmenuItemsAtom);
 
   const referralsEnabled = useFeatureFlagEnabledWithLocalOverride('referrals');
+  const collapsed = !open;
 
   return (
     <List
@@ -63,7 +65,7 @@ function SideNavigationMenu({ open }: SideNavigationMenuProps) {
     >
       {flags === null ? (
         <>
-          <Stack padding={1} spacing={1}>
+          <Stack spacing={1} sx={{ p: 1 }}>
             <Stack direction="row">
               <Skeleton variant="circular" width={30} height={30} />
               {open && (
@@ -95,6 +97,7 @@ function SideNavigationMenu({ open }: SideNavigationMenuProps) {
             to={`${locationPrefix}`}
             primary="Dashboard"
             icon={<DashboardIcon />}
+            collapsed={collapsed}
           />
           <ListItemLink
             className="ph-unmask"
@@ -105,14 +108,16 @@ function SideNavigationMenu({ open }: SideNavigationMenuProps) {
                 <Inbox />
               </Badge>
             }
+            collapsed={collapsed}
           />
           {permissions(Permission.ViewV1Referral) && referralsEnabled && (
-              <ListItemLink
-                className="ph-unmask"
-                to={`${locationPrefix}/referrals`}
-                primary="Referrals"
-                icon={<PermPhoneMsgIcon />}
-              />
+            <ListItemLink
+              className="ph-unmask"
+              to={`${locationPrefix}/referrals`}
+              primary="Referrals"
+              icon={<PermPhoneMsgIcon />}
+              collapsed={collapsed}
+            />
           )}
 
           {permissions(Permission.AccessPartneringFamiliesScreen) && (
@@ -121,6 +126,7 @@ function SideNavigationMenu({ open }: SideNavigationMenuProps) {
               to={`${locationPrefix}/clients`}
               primary="Clients"
               icon={<HandshakeIcon />}
+              collapsed={collapsed}
             />
           )}
           {permissions(Permission.AccessVolunteersScreen) && (
@@ -129,6 +135,7 @@ function SideNavigationMenu({ open }: SideNavigationMenuProps) {
               to={`${locationPrefix}/volunteers`}
               primary="Volunteers"
               icon={<PeopleIcon />}
+              collapsed={collapsed}
             />
           )}
           {permissions(Permission.AccessCommunitiesScreen) && (
@@ -137,6 +144,7 @@ function SideNavigationMenu({ open }: SideNavigationMenuProps) {
               to={`${locationPrefix}/communities`}
               primary="Communities"
               icon={<Diversity3Icon />}
+              collapsed={collapsed}
             />
           )}
 
@@ -148,6 +156,7 @@ function SideNavigationMenu({ open }: SideNavigationMenuProps) {
               icon={<InsightsIcon />}
               subitems={reportSubmenuItems}
               defaultOpen
+              collapsed={collapsed}
             />
           )}
 
@@ -160,6 +169,7 @@ function SideNavigationMenu({ open }: SideNavigationMenuProps) {
               to={`${locationPrefix}/settings`}
               primary="Settings"
               icon={<SettingsIcon sx={{ color: '#fff8' }} />}
+              collapsed={collapsed}
               {...(open && {
                 subitems: [
                   {
@@ -183,9 +193,10 @@ function SideNavigationMenu({ open }: SideNavigationMenuProps) {
               to={`${locationPrefix}/support`}
               primary="Support"
               icon={<SupportIcon />}
+              collapsed={collapsed}
             />
           )}
-          <WhatsNew />
+          <WhatsNew collapsed={collapsed} />
         </>
       )}
     </List>
@@ -208,19 +219,24 @@ export function ShellSideNavigation({ open, width }: ShellSideNavigationProps) {
         flexShrink: 0,
         whiteSpace: 'nowrap',
         overflowX: 'hidden',
-        '& .MuiDrawer-paper': {
-          width: width, // Force fixed width
-          minWidth: width, // Prevent shrinking
-          maxWidth: width, // Prevent expanding
-          backgroundColor: theme.palette.primary.dark,
-          color: theme.palette.primary.contrastText,
-          overflowX: 'hidden',
-          display: 'flex',
-          flexDirection: 'column',
+      }}
+      slotProps={{
+        paper: {
+          sx: {
+            width: width, // Force fixed width
+            minWidth: width, // Prevent shrinking
+            maxWidth: width, // Prevent expanding
+            boxSizing: 'border-box',
+            backgroundColor: theme.palette.primary.dark,
+            color: theme.palette.primary.contrastText,
+            overflowX: 'hidden',
+            display: 'flex',
+            flexDirection: 'column',
+          },
         },
       }}
     >
-      <Box sx={{ paddingTop: { xs: 7, sm: 8, md: 6 } }}>
+      <Box sx={{ height: SHELL_DRAWER_TOP_OFFSET, flexShrink: 0 }}>
         {/* Spacer for top app bar */}
       </Box>
       <Box
@@ -239,8 +255,11 @@ export function ShellSideNavigation({ open, width }: ShellSideNavigationProps) {
             borderTop: `1px solid ${theme.palette.divider}`,
           }}
         >
-          <Stack className="ph-unmask" alignItems="center" sx={{ py: 2 }}>
-            <Box mb={2}>
+          <Stack
+            className="ph-unmask"
+            sx={{ alignItems: 'center', py: 2 }}
+          >
+            <Box sx={{ mb: 2 }}>
               <Feedback />
             </Box>
             <Version />

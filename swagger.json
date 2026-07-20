@@ -102,48 +102,6 @@
             }
           }
         }
-      },
-      "put": {
-        "tags": [
-          "Configuration"
-        ],
-        "operationId": "Configuration_PutLocationDefinition",
-        "parameters": [
-          {
-            "name": "organizationId",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "guid"
-            },
-            "x-position": 1
-          }
-        ],
-        "requestBody": {
-          "x-name": "newLocationPayload",
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/PutLocationPayload"
-              }
-            }
-          },
-          "required": true,
-          "x-position": 2
-        },
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/OrganizationConfiguration"
-                }
-              }
-            }
-          }
-        }
       }
     },
     "/api/{organizationId}/Configuration/roles/{roleName}": {
@@ -238,6 +196,94 @@
         }
       }
     },
+    "/api/{organizationId}/Configuration/location": {
+      "put": {
+        "tags": [
+          "Configuration"
+        ],
+        "operationId": "Configuration_PutLocationDefinition",
+        "parameters": [
+          {
+            "name": "organizationId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "guid"
+            },
+            "x-position": 1
+          }
+        ],
+        "requestBody": {
+          "x-name": "newLocationPayload",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PutLocationPayload"
+              }
+            }
+          },
+          "required": true,
+          "x-position": 2
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OrganizationConfiguration"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/{organizationId}/Configuration/organization": {
+      "put": {
+        "tags": [
+          "Configuration"
+        ],
+        "operationId": "Configuration_PutOrganizationConfiguration",
+        "parameters": [
+          {
+            "name": "organizationId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "guid"
+            },
+            "x-position": 1
+          }
+        ],
+        "requestBody": {
+          "x-name": "payload",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PutOrganizationConfigurationPayload"
+              }
+            }
+          },
+          "required": true,
+          "x-position": 2
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OrganizationConfiguration"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/{organizationId}/{locationId}/Configuration/policy": {
       "get": {
         "tags": [
@@ -266,6 +312,58 @@
             "x-position": 2
           }
         ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EffectiveLocationPolicy"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "Configuration"
+        ],
+        "operationId": "Configuration_PutEffectiveLocationPolicy",
+        "parameters": [
+          {
+            "name": "organizationId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "guid"
+            },
+            "x-position": 1
+          },
+          {
+            "name": "locationId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "guid"
+            },
+            "x-position": 2
+          }
+        ],
+        "requestBody": {
+          "x-name": "policy",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EffectiveLocationPolicy"
+              }
+            }
+          },
+          "required": true,
+          "x-position": 3
+        },
         "responses": {
           "200": {
             "description": "",
@@ -1323,6 +1421,13 @@
             "items": {
               "type": "string"
             }
+          },
+          "caseCloseReasons": {
+            "type": "array",
+            "nullable": true,
+            "items": {
+              "type": "string"
+            }
           }
         }
       },
@@ -1521,6 +1626,8 @@
             "AllVolunteerFamiliesPermissionContext": "#/components/schemas/AllVolunteerFamiliesPermissionContext",
             "AssignedFunctionsInReferralCoAssigneeFamiliesPermissionContext": "#/components/schemas/AssignedFunctionsInReferralCoAssigneeFamiliesPermissionContext",
             "AssignedFunctionsInReferralPartneringFamilyPermissionContext": "#/components/schemas/AssignedFunctionsInReferralPartneringFamilyPermissionContext",
+            "AssignedVolunteerInV1CasePermissionContext": "#/components/schemas/AssignedVolunteerInV1CasePermissionContext",
+            "AssignedVolunteerInV1ReferralPermissionContext": "#/components/schemas/AssignedVolunteerInV1ReferralPermissionContext",
             "CommunityCoMemberFamiliesAssignedFunctionsInReferralCoAssignedFamiliesPermissionContext": "#/components/schemas/CommunityCoMemberFamiliesAssignedFunctionsInReferralCoAssignedFamiliesPermissionContext",
             "CommunityCoMemberFamiliesAssignedFunctionsInReferralPartneringFamilyPermissionContext": "#/components/schemas/CommunityCoMemberFamiliesAssignedFunctionsInReferralPartneringFamilyPermissionContext",
             "CommunityCoMemberFamiliesPermissionContext": "#/components/schemas/CommunityCoMemberFamiliesPermissionContext",
@@ -1608,6 +1715,54 @@
                 "nullable": true
               },
               "whenOwnFunctionIsIn": {
+                "type": "array",
+                "nullable": true,
+                "items": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        ]
+      },
+      "AssignedVolunteerInV1CasePermissionContext": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/PermissionContext"
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "whenCaseIsOpen": {
+                "type": "boolean",
+                "nullable": true
+              },
+              "whenAssignmentRoleIsIn": {
+                "type": "array",
+                "nullable": true,
+                "items": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        ]
+      },
+      "AssignedVolunteerInV1ReferralPermissionContext": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/PermissionContext"
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "whenReferralIsOpen": {
+                "type": "boolean",
+                "nullable": true
+              },
+              "whenAssignmentRoleIsIn": {
                 "type": "array",
                 "nullable": true,
                 "items": {
@@ -1794,6 +1949,8 @@
           "ViewV1Referral",
           "EditV1ReferralRequirementCompletion",
           "EditV1ReferralRequirementExemption",
+          "ViewV1ReferralFunctionAssignments",
+          "EditV1ReferralFunctionAssignments",
           "CreateV1Case",
           "EditV1Case",
           "CloseV1Case",
@@ -1803,6 +1960,8 @@
           "EditV1CaseRequirementCompletion",
           "EditV1CaseRequirementExemption",
           "ViewV1CaseHistory",
+          "ViewV1CaseFunctionAssignments",
+          "EditV1CaseFunctionAssignments",
           "CreateArrangement",
           "EditArrangement",
           "ViewAssignments",
@@ -1872,6 +2031,8 @@
           264,
           265,
           266,
+          267,
+          268,
           300,
           301,
           302,
@@ -1881,6 +2042,8 @@
           306,
           307,
           308,
+          309,
+          310,
           350,
           351,
           352,
@@ -1921,6 +2084,26 @@
           }
         }
       },
+      "PutOrganizationConfigurationPayload": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "referralCloseReasons": {
+            "type": "array",
+            "nullable": true,
+            "items": {
+              "type": "string"
+            }
+          },
+          "caseCloseReasons": {
+            "type": "array",
+            "nullable": true,
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      },
       "EffectiveLocationPolicy": {
         "type": "object",
         "additionalProperties": false,
@@ -1928,7 +2111,9 @@
           "actionDefinitions",
           "customFamilyFields",
           "referralPolicy",
-          "volunteerPolicy"
+          "volunteerPolicy",
+          "customFields",
+          "v1ReferralPolicy"
         ],
         "properties": {
           "actionDefinitions": {
@@ -1948,6 +2133,12 @@
           },
           "volunteerPolicy": {
             "$ref": "#/components/schemas/VolunteerPolicy"
+          },
+          "customFields": {
+            "$ref": "#/components/schemas/FamilyMemberCustomFieldPolicy"
+          },
+          "v1ReferralPolicy": {
+            "$ref": "#/components/schemas/V1ReferralPolicy"
           }
         }
       },
@@ -2052,6 +2243,10 @@
             "items": {
               "type": "string"
             }
+          },
+          "groupingKey": {
+            "type": "string",
+            "nullable": true
           }
         }
       },
@@ -2060,11 +2255,13 @@
         "description": "",
         "x-enumNames": [
           "Boolean",
-          "String"
+          "String",
+          "StringArray"
         ],
         "enum": [
           0,
-          1
+          1,
+          2
         ]
       },
       "CustomFieldValidation": {
@@ -2084,7 +2281,8 @@
           "intakeRequirements_PRE_MIGRATION",
           "requiredIntakeActionNames",
           "customFields",
-          "arrangementPolicies"
+          "arrangementPolicies",
+          "functionAssignmentPolicies"
         ],
         "properties": {
           "intakeRequirements_PRE_MIGRATION": {
@@ -2123,6 +2321,12 @@
             "nullable": true,
             "items": {
               "$ref": "#/components/schemas/RequirementDefinition"
+            }
+          },
+          "functionAssignmentPolicies": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/FunctionAssignmentPolicy"
             }
           }
         }
@@ -2225,6 +2429,18 @@
             "nullable": true,
             "items": {
               "$ref": "#/components/schemas/RequirementDefinition"
+            }
+          },
+          "supersededAtUtc": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "policyVersions": {
+            "type": "array",
+            "nullable": true,
+            "items": {
+              "$ref": "#/components/schemas/ArrangementPolicyVersion"
             }
           }
         }
@@ -2547,6 +2763,97 @@
           }
         }
       },
+      "ArrangementPolicyVersion": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "requiredSetupActions_PRE_MIGRATION",
+          "requiredMonitoringActions_PRE_MIGRATION",
+          "requiredCloseoutActionNames_PRE_MIGRATION",
+          "version",
+          "childInvolvement",
+          "arrangementFunctions",
+          "requiredSetupActionNames",
+          "requiredMonitoringActions",
+          "requiredCloseoutActionNames"
+        ],
+        "properties": {
+          "requiredSetupActions_PRE_MIGRATION": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RequirementDefinition"
+            }
+          },
+          "requiredMonitoringActions_PRE_MIGRATION": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/MonitoringRequirement"
+            }
+          },
+          "requiredCloseoutActionNames_PRE_MIGRATION": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RequirementDefinition"
+            }
+          },
+          "version": {
+            "type": "string"
+          },
+          "supersededAtUtc": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "childInvolvement": {
+            "$ref": "#/components/schemas/ChildInvolvement"
+          },
+          "arrangementFunctions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ArrangementFunction"
+            }
+          },
+          "requiredSetupActionNames": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "requiredMonitoringActions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/MonitoringRequirementOld"
+            }
+          },
+          "requiredCloseoutActionNames": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "requiredSetupActions": {
+            "type": "array",
+            "nullable": true,
+            "items": {
+              "$ref": "#/components/schemas/RequirementDefinition"
+            }
+          },
+          "requiredMonitoringActionsNew": {
+            "type": "array",
+            "nullable": true,
+            "items": {
+              "$ref": "#/components/schemas/MonitoringRequirement"
+            }
+          },
+          "requiredCloseoutActions": {
+            "type": "array",
+            "nullable": true,
+            "items": {
+              "$ref": "#/components/schemas/RequirementDefinition"
+            }
+          }
+        }
+      },
       "FunctionPolicy": {
         "type": "object",
         "additionalProperties": false,
@@ -2593,6 +2900,59 @@
           }
         }
       },
+      "FunctionAssignmentPolicy": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "assignmentRole",
+          "eligibility"
+        ],
+        "properties": {
+          "assignmentRole": {
+            "type": "string"
+          },
+          "eligibility": {
+            "$ref": "#/components/schemas/FunctionAssignmentEligibility"
+          }
+        }
+      },
+      "FunctionAssignmentEligibility": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "eligibleLocationRoles",
+          "eligibleIndividualVolunteerRoles",
+          "eligibleVolunteerFamilyRoles",
+          "eligiblePeople"
+        ],
+        "properties": {
+          "eligibleLocationRoles": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "eligibleIndividualVolunteerRoles": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "eligibleVolunteerFamilyRoles": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "eligiblePeople": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "guid"
+            }
+          }
+        }
+      },
       "VolunteerPolicy": {
         "type": "object",
         "additionalProperties": false,
@@ -2611,6 +2971,13 @@
             "type": "object",
             "additionalProperties": {
               "$ref": "#/components/schemas/VolunteerFamilyRolePolicy"
+            }
+          },
+          "customFields": {
+            "type": "array",
+            "nullable": true,
+            "items": {
+              "$ref": "#/components/schemas/CustomField"
             }
           }
         }
@@ -2764,6 +3131,59 @@
           1,
           2
         ]
+      },
+      "FamilyMemberCustomFieldPolicy": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "partneringFamily",
+          "volunteerFamily"
+        ],
+        "properties": {
+          "partneringFamily": {
+            "$ref": "#/components/schemas/FamilyMemberCustomFields"
+          },
+          "volunteerFamily": {
+            "$ref": "#/components/schemas/FamilyMemberCustomFields"
+          }
+        }
+      },
+      "FamilyMemberCustomFields": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "adult",
+          "child"
+        ],
+        "properties": {
+          "adult": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CustomField"
+            }
+          },
+          "child": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CustomField"
+            }
+          }
+        }
+      },
+      "V1ReferralPolicy": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "functionAssignmentPolicies"
+        ],
+        "properties": {
+          "functionAssignmentPolicies": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/FunctionAssignmentPolicy"
+            }
+          }
+        }
       },
       "CurrentFeatureFlags": {
         "type": "object",
@@ -3144,7 +3564,8 @@
           "lastName",
           "addresses",
           "phoneNumbers",
-          "emailAddresses"
+          "emailAddresses",
+          "completedCustomFields"
         ],
         "properties": {
           "id": {
@@ -3220,6 +3641,12 @@
           "notes": {
             "type": "string",
             "nullable": true
+          },
+          "completedCustomFields": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CompletedCustomFieldInfo"
+            }
           }
         }
       },
@@ -3409,6 +3836,40 @@
           1
         ]
       },
+      "CompletedCustomFieldInfo": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "userId",
+          "timestampUtc",
+          "completedCustomFieldId",
+          "customFieldName",
+          "customFieldType"
+        ],
+        "properties": {
+          "userId": {
+            "type": "string",
+            "format": "guid"
+          },
+          "timestampUtc": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "completedCustomFieldId": {
+            "type": "string",
+            "format": "guid"
+          },
+          "customFieldName": {
+            "type": "string"
+          },
+          "customFieldType": {
+            "$ref": "#/components/schemas/CustomFieldType"
+          },
+          "value": {
+            "nullable": true
+          }
+        }
+      },
       "FamilyAdultRelationshipInfo": {
         "type": "object",
         "additionalProperties": false,
@@ -3461,40 +3922,6 @@
           2
         ]
       },
-      "CompletedCustomFieldInfo": {
-        "type": "object",
-        "additionalProperties": false,
-        "required": [
-          "userId",
-          "timestampUtc",
-          "completedCustomFieldId",
-          "customFieldName",
-          "customFieldType"
-        ],
-        "properties": {
-          "userId": {
-            "type": "string",
-            "format": "guid"
-          },
-          "timestampUtc": {
-            "type": "string",
-            "format": "date-time"
-          },
-          "completedCustomFieldId": {
-            "type": "string",
-            "format": "guid"
-          },
-          "customFieldName": {
-            "type": "string"
-          },
-          "customFieldType": {
-            "$ref": "#/components/schemas/CustomFieldType"
-          },
-          "value": {
-            "nullable": true
-          }
-        }
-      },
       "Activity": {
         "type": "object",
         "discriminator": {
@@ -3504,8 +3931,12 @@
             "ChildLocationChanged": "#/components/schemas/ChildLocationChanged",
             "ReferralOpened": "#/components/schemas/ReferralOpened",
             "ReferralRequirementCompleted": "#/components/schemas/ReferralRequirementCompleted",
+            "V1CaseIndividualVolunteerAssigned": "#/components/schemas/V1CaseIndividualVolunteerAssigned",
+            "V1CaseIndividualVolunteerUnassigned": "#/components/schemas/V1CaseIndividualVolunteerUnassigned",
             "V1ReferralAccepted": "#/components/schemas/V1ReferralAccepted",
             "V1ReferralClosed": "#/components/schemas/V1ReferralClosed",
+            "V1ReferralIndividualVolunteerAssigned": "#/components/schemas/V1ReferralIndividualVolunteerAssigned",
+            "V1ReferralIndividualVolunteerUnassigned": "#/components/schemas/V1ReferralIndividualVolunteerUnassigned",
             "V1ReferralOpened": "#/components/schemas/V1ReferralOpened",
             "V1ReferralRequirementCompleted": "#/components/schemas/V1ReferralRequirementCompleted"
           }
@@ -3672,6 +4103,54 @@
           }
         ]
       },
+      "V1CaseIndividualVolunteerAssigned": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/Activity"
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "personId",
+              "assignmentRole"
+            ],
+            "properties": {
+              "personId": {
+                "type": "string",
+                "format": "guid"
+              },
+              "assignmentRole": {
+                "type": "string"
+              }
+            }
+          }
+        ]
+      },
+      "V1CaseIndividualVolunteerUnassigned": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/Activity"
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "personId",
+              "assignmentRole"
+            ],
+            "properties": {
+              "personId": {
+                "type": "string",
+                "format": "guid"
+              },
+              "assignmentRole": {
+                "type": "string"
+              }
+            }
+          }
+        ]
+      },
       "V1ReferralAccepted": {
         "allOf": [
           {
@@ -3710,6 +4189,54 @@
                 "format": "date-time"
               },
               "closeReason": {
+                "type": "string"
+              }
+            }
+          }
+        ]
+      },
+      "V1ReferralIndividualVolunteerAssigned": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/Activity"
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "personId",
+              "assignmentRole"
+            ],
+            "properties": {
+              "personId": {
+                "type": "string",
+                "format": "guid"
+              },
+              "assignmentRole": {
+                "type": "string"
+              }
+            }
+          }
+        ]
+      },
+      "V1ReferralIndividualVolunteerUnassigned": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/Activity"
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "personId",
+              "assignmentRole"
+            ],
+            "properties": {
+              "personId": {
+                "type": "string",
+                "format": "guid"
+              },
+              "assignmentRole": {
                 "type": "string"
               }
             }
@@ -3827,6 +4354,7 @@
           "completedCustomFields",
           "missingCustomFields",
           "arrangements",
+          "assignedIndividualVolunteers",
           "linkedV1ReferralIds"
         ],
         "properties": {
@@ -3844,12 +4372,8 @@
             "nullable": true
           },
           "closeReason": {
-            "nullable": true,
-            "oneOf": [
-              {
-                "$ref": "#/components/schemas/V1CaseCloseReason"
-              }
-            ]
+            "type": "string",
+            "nullable": true
           },
           "completedRequirements": {
             "type": "array",
@@ -3887,6 +4411,12 @@
               "$ref": "#/components/schemas/Arrangement"
             }
           },
+          "assignedIndividualVolunteers": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AssignedIndividualVolunteer"
+            }
+          },
           "comments": {
             "type": "string",
             "nullable": true
@@ -3899,24 +4429,6 @@
             }
           }
         }
-      },
-      "V1CaseCloseReason": {
-        "type": "integer",
-        "description": "",
-        "x-enumNames": [
-          "NotAppropriate",
-          "NoCapacity",
-          "NoLongerNeeded",
-          "Resourced",
-          "NeedMet"
-        ],
-        "enum": [
-          0,
-          1,
-          2,
-          3,
-          4
-        ]
       },
       "CompletedRequirementInfo": {
         "type": "object",
@@ -3962,6 +4474,13 @@
             "type": "string",
             "format": "guid",
             "nullable": true
+          },
+          "roleNames": {
+            "type": "array",
+            "nullable": true,
+            "items": {
+              "type": "string"
+            }
           }
         }
       },
@@ -3998,6 +4517,13 @@
             "type": "string",
             "format": "date-time",
             "nullable": true
+          },
+          "roleNames": {
+            "type": "array",
+            "nullable": true,
+            "items": {
+              "type": "string"
+            }
           }
         }
       },
@@ -4116,6 +4642,10 @@
             "nullable": true
           },
           "reason": {
+            "type": "string",
+            "nullable": true
+          },
+          "arrangementPolicyVersion": {
             "type": "string",
             "nullable": true
           }
@@ -4291,6 +4821,33 @@
           }
         }
       },
+      "AssignedIndividualVolunteer": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "personId",
+          "assignmentRole",
+          "assignedAtUtc",
+          "assignedByUserId"
+        ],
+        "properties": {
+          "personId": {
+            "type": "string",
+            "format": "guid"
+          },
+          "assignmentRole": {
+            "type": "string"
+          },
+          "assignedAtUtc": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "assignedByUserId": {
+            "type": "string",
+            "format": "guid"
+          }
+        }
+      },
       "VolunteerFamilyInfo": {
         "type": "object",
         "additionalProperties": false,
@@ -4358,6 +4915,20 @@
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/ArrangementEntry"
+            }
+          },
+          "completedCustomFields": {
+            "type": "array",
+            "nullable": true,
+            "items": {
+              "$ref": "#/components/schemas/CompletedCustomFieldInfo"
+            }
+          },
+          "missingCustomFields": {
+            "type": "array",
+            "nullable": true,
+            "items": {
+              "type": "string"
             }
           }
         }
@@ -4485,6 +5056,11 @@
           },
           "version": {
             "type": "string"
+          },
+          "supersededAtUtc": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
           },
           "status": {
             "nullable": true,
@@ -4813,6 +5389,11 @@
           "version": {
             "type": "string"
           },
+          "supersededAtUtc": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
           "status": {
             "nullable": true,
             "oneOf": [
@@ -4956,6 +5537,10 @@
           "reason": {
             "type": "string",
             "nullable": true
+          },
+          "arrangementPolicyVersion": {
+            "type": "string",
+            "nullable": true
           }
         }
       },
@@ -5058,11 +5643,30 @@
             ],
             "properties": {
               "referral": {
-                "$ref": "#/components/schemas/V1Referral"
+                "$ref": "#/components/schemas/V1ReferralInfo"
               }
             }
           }
         ]
+      },
+      "V1ReferralInfo": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "referral",
+          "userPermissions"
+        ],
+        "properties": {
+          "referral": {
+            "$ref": "#/components/schemas/V1Referral"
+          },
+          "userPermissions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Permission"
+            }
+          }
+        }
       },
       "V1Referral": {
         "type": "object",
@@ -5077,6 +5681,7 @@
           "exemptedRequirements",
           "uploadedDocuments",
           "deletedDocuments",
+          "assignedIndividualVolunteers",
           "history",
           "notes",
           "missingIntakeRequirements"
@@ -5148,6 +5753,12 @@
             "items": {
               "type": "string",
               "format": "guid"
+            }
+          },
+          "assignedIndividualVolunteers": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AssignedIndividualVolunteer"
             }
           },
           "history": {
@@ -5628,6 +6239,10 @@
                 "format": "guid"
               },
               "reason": {
+                "type": "string",
+                "nullable": true
+              },
+              "arrangementPolicyVersion": {
                 "type": "string",
                 "nullable": true
               }
@@ -6674,6 +7289,7 @@
             "RemoveVolunteerFamilyRole": "#/components/schemas/RemoveVolunteerFamilyRole",
             "ResetVolunteerFamilyRole": "#/components/schemas/ResetVolunteerFamilyRole",
             "UnexemptVolunteerFamilyRequirement": "#/components/schemas/UnexemptVolunteerFamilyRequirement",
+            "UpdateCustomVolunteerFamilyField": "#/components/schemas/UpdateCustomVolunteerFamilyField",
             "UploadVolunteerFamilyDocument": "#/components/schemas/UploadVolunteerFamilyDocument"
           }
         },
@@ -6875,6 +7491,37 @@
             "properties": {
               "requirementName": {
                 "type": "string"
+              }
+            }
+          }
+        ]
+      },
+      "UpdateCustomVolunteerFamilyField": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/VolunteerFamilyCommand"
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "completedCustomFieldId",
+              "customFieldName",
+              "customFieldType"
+            ],
+            "properties": {
+              "completedCustomFieldId": {
+                "type": "string",
+                "format": "guid"
+              },
+              "customFieldName": {
+                "type": "string"
+              },
+              "customFieldType": {
+                "$ref": "#/components/schemas/CustomFieldType"
+              },
+              "value": {
+                "nullable": true
               }
             }
           }
@@ -7772,6 +8419,7 @@
             "AddPersonPhoneNumber": "#/components/schemas/AddPersonPhoneNumber",
             "CreatePerson": "#/components/schemas/CreatePerson",
             "UndoCreatePerson": "#/components/schemas/UndoCreatePerson",
+            "UpdateCustomFamilyMemberField": "#/components/schemas/UpdateCustomFamilyMemberField",
             "UpdatePersonAddress": "#/components/schemas/UpdatePersonAddress",
             "UpdatePersonAge": "#/components/schemas/UpdatePersonAge",
             "UpdatePersonConcerns": "#/components/schemas/UpdatePersonConcerns",
@@ -7963,6 +8611,37 @@
           {
             "type": "object",
             "additionalProperties": false
+          }
+        ]
+      },
+      "UpdateCustomFamilyMemberField": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/PersonCommand"
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "completedCustomFieldId",
+              "customFieldName",
+              "customFieldType"
+            ],
+            "properties": {
+              "completedCustomFieldId": {
+                "type": "string",
+                "format": "guid"
+              },
+              "customFieldName": {
+                "type": "string"
+              },
+              "customFieldType": {
+                "$ref": "#/components/schemas/CustomFieldType"
+              },
+              "value": {
+                "nullable": true
+              }
+            }
           }
         ]
       },
@@ -8174,6 +8853,7 @@
           "propertyName": "discriminator",
           "mapping": {
             "CloseReferral": "#/components/schemas/CloseReferral",
+            "CloseReferralWithReason": "#/components/schemas/CloseReferralWithReason",
             "CompleteReferralRequirement": "#/components/schemas/CompleteReferralRequirement",
             "CreateReferral": "#/components/schemas/CreateReferral",
             "ExemptReferralRequirement": "#/components/schemas/ExemptReferralRequirement",
@@ -8182,7 +8862,9 @@
             "ReopenReferral": "#/components/schemas/ReopenReferral",
             "UnexemptReferralRequirement": "#/components/schemas/UnexemptReferralRequirement",
             "UpdateCustomReferralField": "#/components/schemas/UpdateCustomReferralField",
-            "UpdateReferralComments": "#/components/schemas/UpdateReferralComments"
+            "UpdateReferralComments": "#/components/schemas/UpdateReferralComments",
+            "AssignIndividualVolunteer": "#/components/schemas/AssignIndividualVolunteer2",
+            "UnassignIndividualVolunteer": "#/components/schemas/UnassignIndividualVolunteer2"
           }
         },
         "x-abstract": true,
@@ -8221,6 +8903,48 @@
             "properties": {
               "closeReason": {
                 "$ref": "#/components/schemas/V1CaseCloseReason"
+              },
+              "closedAtUtc": {
+                "type": "string",
+                "format": "date-time"
+              }
+            }
+          }
+        ]
+      },
+      "V1CaseCloseReason": {
+        "type": "integer",
+        "description": "",
+        "x-enumNames": [
+          "NotAppropriate",
+          "NoCapacity",
+          "NoLongerNeeded",
+          "Resourced",
+          "NeedMet"
+        ],
+        "enum": [
+          0,
+          1,
+          2,
+          3,
+          4
+        ]
+      },
+      "CloseReferralWithReason": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/V1CaseCommand"
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "closeReason",
+              "closedAtUtc"
+            ],
+            "properties": {
+              "closeReason": {
+                "type": "string"
               },
               "closedAtUtc": {
                 "type": "string",
@@ -8448,6 +9172,54 @@
           }
         ]
       },
+      "AssignIndividualVolunteer2": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/V1CaseCommand"
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "personId",
+              "assignmentRole"
+            ],
+            "properties": {
+              "personId": {
+                "type": "string",
+                "format": "guid"
+              },
+              "assignmentRole": {
+                "type": "string"
+              }
+            }
+          }
+        ]
+      },
+      "UnassignIndividualVolunteer2": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/V1CaseCommand"
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "personId",
+              "assignmentRole"
+            ],
+            "properties": {
+              "personId": {
+                "type": "string",
+                "format": "guid"
+              },
+              "assignmentRole": {
+                "type": "string"
+              }
+            }
+          }
+        ]
+      },
       "V1ReferralNoteRecordsCommand": {
         "allOf": [
           {
@@ -8633,6 +9405,7 @@
           "propertyName": "discriminator",
           "mapping": {
             "AcceptV1Referral": "#/components/schemas/AcceptV1Referral",
+            "AssignIndividualVolunteer": "#/components/schemas/AssignIndividualVolunteer3",
             "CloseV1Referral": "#/components/schemas/CloseV1Referral",
             "CompleteReferralRequirement": "#/components/schemas/CompleteReferralRequirement2",
             "CreateV1Referral": "#/components/schemas/CreateV1Referral",
@@ -8640,6 +9413,7 @@
             "ExemptReferralRequirement": "#/components/schemas/ExemptReferralRequirement2",
             "MarkReferralRequirementIncomplete": "#/components/schemas/MarkReferralRequirementIncomplete2",
             "ReopenV1Referral": "#/components/schemas/ReopenV1Referral",
+            "UnassignIndividualVolunteer": "#/components/schemas/UnassignIndividualVolunteer3",
             "UnexemptReferralRequirement": "#/components/schemas/UnexemptReferralRequirement2",
             "UpdateCustomV1ReferralField": "#/components/schemas/UpdateCustomV1ReferralField",
             "UpdateV1ReferralDetails": "#/components/schemas/UpdateV1ReferralDetails",
@@ -8678,6 +9452,30 @@
               "acceptedAtUtc": {
                 "type": "string",
                 "format": "date-time"
+              }
+            }
+          }
+        ]
+      },
+      "AssignIndividualVolunteer3": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/V1ReferralCommand"
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "personId",
+              "assignmentRole"
+            ],
+            "properties": {
+              "personId": {
+                "type": "string",
+                "format": "guid"
+              },
+              "assignmentRole": {
+                "type": "string"
               }
             }
           }
@@ -8866,6 +9664,30 @@
               "reopenedAtUtc": {
                 "type": "string",
                 "format": "date-time"
+              }
+            }
+          }
+        ]
+      },
+      "UnassignIndividualVolunteer3": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/V1ReferralCommand"
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "personId",
+              "assignmentRole"
+            ],
+            "properties": {
+              "personId": {
+                "type": "string",
+                "format": "guid"
+              },
+              "assignmentRole": {
+                "type": "string"
               }
             }
           }

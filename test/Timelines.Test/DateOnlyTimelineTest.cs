@@ -21,7 +21,7 @@ public class DateOnlyTimelineTest
     [TestMethod]
     public void ConstructorForbidsEmptyList()
     {
-        Assert.ThrowsException<ArgumentException>(
+        Assert.ThrowsExactly<ArgumentException>(
             () => new DateOnlyTimeline(ImmutableList<DateRange>.Empty)
         );
     }
@@ -29,13 +29,13 @@ public class DateOnlyTimelineTest
     [TestMethod]
     public void ConstructorForbidsOverlappingRanges()
     {
-        Assert.ThrowsException<ArgumentException>(() => new DateOnlyTimeline([DR(1, 2), DR(2, 3)]));
+        Assert.ThrowsExactly<ArgumentException>(() => new DateOnlyTimeline([DR(1, 2), DR(2, 3)]));
     }
 
     [TestMethod]
     public void ConstructorForbidsOverlappingRanges2()
     {
-        Assert.ThrowsException<ArgumentException>(() => new DateOnlyTimeline([DR(1, 3), DR(2, 4)]));
+        Assert.ThrowsExactly<ArgumentException>(() => new DateOnlyTimeline([DR(1, 3), DR(2, 4)]));
     }
 
     [TestMethod]
@@ -99,8 +99,8 @@ public class DateOnlyTimelineTest
     public void TakeDaysThrowsForNonPositiveValue()
     {
         var dut = new DateOnlyTimeline([DR(1, 5)]);
-        Assert.ThrowsException<ArgumentException>(() => dut.TakeDays(0));
-        Assert.ThrowsException<ArgumentException>(() => dut.TakeDays(-1));
+        Assert.ThrowsExactly<ArgumentException>(() => dut.TakeDays(0));
+        Assert.ThrowsExactly<ArgumentException>(() => dut.TakeDays(-1));
     }
 
     [TestMethod]
@@ -831,7 +831,7 @@ public class DateOnlyTimelineTest
     [TestMethod]
     public void TaggedConstructorForbidsEmptyList()
     {
-        Assert.ThrowsException<ArgumentException>(
+        Assert.ThrowsExactly<ArgumentException>(
             () => new DateOnlyTimeline<char>(ImmutableList<DateRange<char>>.Empty)
         );
     }
@@ -839,7 +839,7 @@ public class DateOnlyTimelineTest
     [TestMethod]
     public void TaggedConstructorForbidsOverlappingRanges()
     {
-        Assert.ThrowsException<ArgumentException>(
+        Assert.ThrowsExactly<ArgumentException>(
             () => new DateOnlyTimeline<char>([DR(1, 2, 'A'), DR(2, 3, 'A')])
         );
     }
@@ -847,7 +847,7 @@ public class DateOnlyTimelineTest
     [TestMethod]
     public void TaggedConstructorForbidsOverlappingRanges2()
     {
-        Assert.ThrowsException<ArgumentException>(
+        Assert.ThrowsExactly<ArgumentException>(
             () => new DateOnlyTimeline<char>([DR(1, 3, 'A'), DR(2, 4, 'A')])
         );
     }

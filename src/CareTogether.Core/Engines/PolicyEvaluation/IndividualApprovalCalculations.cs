@@ -98,6 +98,7 @@ namespace CareTogether.Engines.PolicyEvaluation
             return new IndividualRoleVersionApprovalStatus(
                 rolePolicy.VolunteerRoleType,
                 policyVersion.Version,
+                policyVersion.SupersededAtUtc,
                 roleVersionApprovalStatus,
                 requirementCompletionStatus
             );

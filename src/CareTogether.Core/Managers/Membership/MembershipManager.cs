@@ -70,49 +70,61 @@ namespace CareTogether.Managers.Membership
                 account.Organizations.Select(async organization =>
                 {
                     var organizationId = organization.OrganizationId;
+                    var organizationConfiguration = await policiesResource.GetConfigurationAsync(
+                        organizationId
+                    );
+                    // Only include account locations that still exist in configuration.
+                    var configuredLocationIds = organizationConfiguration
+                        .Locations.Select(location => location.Id)
+                        .OfType<Guid>()
+                        .ToImmutableHashSet();
 
                     var locationsAccess = await Task.WhenAll(
-                        organization.Locations.Select(async location =>
-                        {
-                            var locationId = location.LocationId;
+                        organization
+                            .Locations.Where(location =>
+                                configuredLocationIds.Contains(location.LocationId)
+                            )
+                            .Select(async location =>
+                            {
+                                var locationId = location.LocationId;
 
-                            var userContext = await CreateSessionUserContext(
-                                user,
-                                organizationId,
-                                locationId
-                            );
-
-                            var globalContextPermissions =
-                                await userAccessCalculation.AuthorizeUserAccessAsync(
+                                var userContext = await CreateSessionUserContext(
+                                    user,
                                     organizationId,
-                                    locationId,
-                                    userContext,
-                                    new GlobalAuthorizationContext()
-                                );
-                            var allVolunteerFamiliesContextPermissions =
-                                await userAccessCalculation.AuthorizeUserAccessAsync(
-                                    organizationId,
-                                    locationId,
-                                    userContext,
-                                    new AllVolunteerFamiliesAuthorizationContext()
-                                );
-                            var allPartneringFamiliesContextPermissions =
-                                await userAccessCalculation.AuthorizeUserAccessAsync(
-                                    organizationId,
-                                    locationId,
-                                    userContext,
-                                    new AllPartneringFamiliesAuthorizationContext()
+                                    locationId
                                 );
 
-                            return new UserLocationAccess(
-                                locationId,
-                                location.PersonId,
-                                location.Roles,
-                                globalContextPermissions,
-                                allVolunteerFamiliesContextPermissions,
-                                allPartneringFamiliesContextPermissions
-                            );
-                        })
+                                var globalContextPermissions =
+                                    await userAccessCalculation.AuthorizeUserAccessAsync(
+                                        organizationId,
+                                        locationId,
+                                        userContext,
+                                        new GlobalAuthorizationContext()
+                                    );
+                                var allVolunteerFamiliesContextPermissions =
+                                    await userAccessCalculation.AuthorizeUserAccessAsync(
+                                        organizationId,
+                                        locationId,
+                                        userContext,
+                                        new AllVolunteerFamiliesAuthorizationContext()
+                                    );
+                                var allPartneringFamiliesContextPermissions =
+                                    await userAccessCalculation.AuthorizeUserAccessAsync(
+                                        organizationId,
+                                        locationId,
+                                        userContext,
+                                        new AllPartneringFamiliesAuthorizationContext()
+                                    );
+
+                                return new UserLocationAccess(
+                                    locationId,
+                                    location.PersonId,
+                                    location.Roles,
+                                    globalContextPermissions,
+                                    allVolunteerFamiliesContextPermissions,
+                                    allPartneringFamiliesContextPermissions
+                                );
+                            })
                     );
 
                     return new UserOrganizationAccess(

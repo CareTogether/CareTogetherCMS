@@ -7,6 +7,9 @@
 
 # testing
 /coverage
+/playwright/.auth
+/playwright-report
+/test-results
 
 # production
 /build

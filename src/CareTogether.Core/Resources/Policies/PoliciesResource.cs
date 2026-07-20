@@ -160,20 +160,46 @@ namespace CareTogether.Resources.Policies
             return (Render(newConfig), locationConfiguration);
         }
 
+        public async Task<OrganizationConfiguration> UpsertOrganizationConfigurationAsync(
+            Guid organizationId,
+            ImmutableList<string>? referralCloseReasons,
+            ImmutableList<string>? caseCloseReasons
+        )
+        {
+            var config = await configurationStore.GetAsync(organizationId, Guid.Empty, CONFIG);
+            var newConfig = config with
+            {
+                ReferralCloseReasons = referralCloseReasons ?? config.ReferralCloseReasons,
+                CaseCloseReasons = caseCloseReasons ?? config.CaseCloseReasons,
+            };
+            await configurationStore.UpsertAsync(organizationId, Guid.Empty, CONFIG, newConfig);
+            return Render(newConfig);
+        }
+
         public async Task<EffectiveLocationPolicy> UpsertEffectiveLocationPolicyAsync(
             Guid organizationId,
             Guid locationId,
             EffectiveLocationPolicy effectiveLocationPolicy
         )
         {
+            var sanitizedPolicy = EffectiveLocationPolicySanitizer.Sanitize(effectiveLocationPolicy);
+            var config = await configurationStore.GetAsync(organizationId, Guid.Empty, CONFIG);
+            var validationErrors = EffectiveLocationPolicyValidator.Validate(
+                sanitizedPolicy,
+                config
+            );
+
+            if (validationErrors.Count > 0)
+                throw new PolicyValidationException(validationErrors);
+
             await locationPoliciesStore.UpsertAsync(
                 organizationId,
                 locationId,
                 "policy",
-                effectiveLocationPolicy
+                sanitizedPolicy
             );
 
-            return effectiveLocationPolicy;
+            return sanitizedPolicy;
         }
 
         public async Task<EffectiveLocationPolicy> GetCurrentPolicy(
@@ -250,6 +276,15 @@ namespace CareTogether.Resources.Policies
                 "Need met"
             );
 
+        private static readonly ImmutableList<string> DefaultCaseCloseReasons =
+            ImmutableList.Create(
+                "Not appropriate",
+                "No capacity",
+                "No longer needed",
+                "Resourced",
+                "Need met"
+            );
+
         private OrganizationConfiguration Render(OrganizationConfiguration config) =>
             config with
             {
@@ -271,6 +306,7 @@ namespace CareTogether.Resources.Policies
                     )
                 ),
                 ReferralCloseReasons = config.ReferralCloseReasons ?? DefaultReferralCloseReasons,
+                CaseCloseReasons = config.CaseCloseReasons ?? DefaultCaseCloseReasons,
             };
     }
 }

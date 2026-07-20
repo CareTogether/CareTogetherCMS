@@ -55,6 +55,7 @@ import {
   UnpinNote,
   UpdateTestFamilyFlag,
   Person,
+  UpdateCustomFamilyMemberField,
 } from '../GeneratedClient';
 import {
   useAtomicRecordsCommandCallback,
@@ -354,6 +355,23 @@ export function useDirectoryModel() {
     ) => {
       const command = commandFactory(UpdateCustomFamilyField, {
         familyId: familyId,
+        completedCustomFieldId: crypto.randomUUID(),
+        customFieldName: customField.name,
+        customFieldType: customField.type,
+        value: value,
+      });
+      return command;
+    }
+  );
+  const updateCustomFamilyMemberField = usePersonCommandCallback(
+    async (
+      _familyId: string,
+      personId: string,
+      customField: CustomField,
+      value: boolean | string | string[] | null
+    ) => {
+      const command = commandFactory(UpdateCustomFamilyMemberField, {
+        personId: personId,
         completedCustomFieldId: crypto.randomUUID(),
         customFieldName: customField.name,
         customFieldType: customField.type,
@@ -856,6 +874,7 @@ export function useDirectoryModel() {
     removeCustodialRelationship,
     updatePrimaryFamilyContact,
     updateCustomFamilyField,
+    updateCustomFamilyMemberField,
     updatePersonName,
     updatePersonGender,
     updatePersonAge,

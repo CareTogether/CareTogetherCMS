@@ -266,6 +266,7 @@ namespace CareTogether.Api
                 policiesResource,
                 directoryResource,
                 v1CasesResource,
+                v1ReferralsResource,
                 approvalsResource,
                 communitiesResource
             );
@@ -311,6 +312,7 @@ namespace CareTogether.Api
                     policyEvaluationEngine,
                     userAccessCalculation,
                     directoryResource,
+                    accountsResource,
                     approvalsResource,
                     v1CasesResource,
                     v1ReferralsResource,

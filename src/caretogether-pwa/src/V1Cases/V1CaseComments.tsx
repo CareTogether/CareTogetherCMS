@@ -58,7 +58,7 @@ export function V1CaseComments({
   }
 
   return (
-    <Box sx={{ width: '100%' }} mb={2}>
+    <Box sx={{ width: '100%', mb: 2 }}>
       <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
         <Typography className="ph-unmask" variant="h3">
           Comments

@@ -14,12 +14,14 @@ type ArrangementReasonProps = {
   partneringFamily: CombinedFamilyInfo;
   v1CaseId: string;
   arrangement: Arrangement;
+  hideLabel?: boolean;
 };
 
 export function ArrangementReason({
   partneringFamily,
   v1CaseId,
   arrangement,
+  hideLabel,
 }: ArrangementReasonProps) {
   const savedValue = arrangement.reason;
 
@@ -43,14 +45,15 @@ export function ArrangementReason({
     <>
       {arrangementReasons && arrangementReasons.length > 0 ? (
         <>
-          Reason:&nbsp;
+          {!hideLabel && <>Reason:&nbsp;</>}
           {editor.editing ? (
             <FormControl required fullWidth size="small">
-              <InputLabel id="arrangement-reason">
+              <InputLabel id="arrangement-reason-label">
                 Reason for Request
               </InputLabel>
               <Select
                 labelId="arrangement-reason-label"
+                label="Reason for Request"
                 id="arrangement-reason"
                 value={editor.value || ''}
                 onChange={(e) => editor.setValue(e.target.value)}

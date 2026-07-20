@@ -15,6 +15,12 @@ using CareTogether.Resources.Policies;
 using CareTogether.Resources.V1Cases;
 using CareTogether.Resources.V1Referrals;
 using Nito.AsyncEx;
+using ArrangementAssignIndividualVolunteer = CareTogether.Resources.V1Cases.AssignIndividualVolunteer;
+using ArrangementUnassignIndividualVolunteer = CareTogether.Resources.V1Cases.UnassignIndividualVolunteer;
+using V1CaseAssignIndividualVolunteer = CareTogether.Resources.V1Cases.V1CaseCommands.AssignIndividualVolunteer;
+using V1CaseUnassignIndividualVolunteer = CareTogether.Resources.V1Cases.V1CaseCommands.UnassignIndividualVolunteer;
+using V1ReferralAssignIndividualVolunteer = CareTogether.Resources.V1Referrals.AssignIndividualVolunteer;
+using V1ReferralUnassignIndividualVolunteer = CareTogether.Resources.V1Referrals.UnassignIndividualVolunteer;
 
 namespace CareTogether.Engines.Authorization
 {
@@ -113,6 +119,7 @@ namespace CareTogether.Engines.Authorization
                     UpdatePersonPhoneNumber => Permission.EditPersonContactInfo,
                     AddPersonEmailAddress => Permission.EditPersonContactInfo,
                     UpdatePersonEmailAddress => Permission.EditPersonContactInfo,
+                    UpdateCustomFamilyMemberField => Permission.EditFamilyInfo,
                     _ => throw new NotImplementedException(
                         $"The command type '{command.GetType().FullName}' has not been implemented."
                     ),
@@ -147,8 +154,11 @@ namespace CareTogether.Engines.Authorization
                         Permission.EditV1CaseRequirementExemption,
                     UpdateCustomReferralField => Permission.EditV1Case,
                     UpdateReferralComments => Permission.EditV1Case,
+                    V1CaseAssignIndividualVolunteer => Permission.EditV1CaseFunctionAssignments,
+                    V1CaseUnassignIndividualVolunteer => Permission.EditV1CaseFunctionAssignments,
                     LinkReferralToCase => Permission.EditV1Case,
                     CloseReferral => Permission.CloseV1Case,
+                    CloseReferralWithReason => Permission.CloseV1Case,
                     ReopenReferral => Permission.CloseV1Case,
                     _ => throw new NotImplementedException(
                         $"The command type '{command.GetType().FullName}' has not been implemented."
@@ -174,9 +184,9 @@ namespace CareTogether.Engines.Authorization
                 command switch
                 {
                     CreateArrangement => Permission.CreateArrangement,
-                    AssignIndividualVolunteer => Permission.EditAssignments,
+                    ArrangementAssignIndividualVolunteer => Permission.EditAssignments,
                     AssignVolunteerFamily => Permission.EditAssignments,
-                    UnassignIndividualVolunteer => Permission.EditAssignments,
+                    ArrangementUnassignIndividualVolunteer => Permission.EditAssignments,
                     UnassignVolunteerFamily => Permission.EditAssignments,
                     PlanArrangementStart => Permission.EditArrangement,
                     StartArrangements => Permission.EditArrangement,
@@ -236,7 +246,9 @@ namespace CareTogether.Engines.Authorization
                 organizationId,
                 locationId,
                 userContext,
-                new GlobalAuthorizationContext()
+                command is CreateV1Referral
+                    ? new GlobalAuthorizationContext()
+                    : new V1ReferralAuthorizationContext(command.ReferralId)
             );
 
             return permissions.Contains(
@@ -263,6 +275,10 @@ namespace CareTogether.Engines.Authorization
 
                     UploadV1ReferralDocument => Permission.EditV1Referral,
                     DeleteUploadedV1ReferralDocument => Permission.EditV1Referral,
+                    V1ReferralAssignIndividualVolunteer =>
+                        Permission.EditV1ReferralFunctionAssignments,
+                    V1ReferralUnassignIndividualVolunteer =>
+                        Permission.EditV1ReferralFunctionAssignments,
 
                     _ => throw new NotImplementedException(
                         $"The command type '{command.GetType().FullName}' has not been implemented."
@@ -285,6 +301,22 @@ namespace CareTogether.Engines.Authorization
             );
 
             return permissions.Contains(Permission.ViewV1Referral);
+        }
+
+        public async Task<bool> AuthorizeLocationPolicyEditAsync(
+            Guid organizationId,
+            Guid locationId,
+            SessionUserContext userContext
+        )
+        {
+            var permissions = await userAccessCalculation.AuthorizeUserAccessAsync(
+                organizationId,
+                locationId,
+                userContext,
+                new GlobalAuthorizationContext()
+            );
+
+            return permissions.Contains(Permission.AccessSettingsScreen);
         }
 
         public async Task<bool> AuthorizeNoteCommandAsync(
@@ -687,6 +719,7 @@ namespace CareTogether.Engines.Authorization
                     UploadVolunteerFamilyDocument => Permission.UploadFamilyDocuments,
                     RemoveVolunteerFamilyRole => Permission.EditVolunteerRoleParticipation,
                     ResetVolunteerFamilyRole => Permission.EditVolunteerRoleParticipation,
+                    UpdateCustomVolunteerFamilyField => Permission.EditFamilyInfo,
                     _ => throw new NotImplementedException(
                         $"The command type '{command.GetType().FullName}' has not been implemented."
                     ),
@@ -835,6 +868,23 @@ namespace CareTogether.Engines.Authorization
                 new FamilyAuthorizationContext(family.Family.Id, family.Family)
             );
 
+            return await DiscloseFamilyAsync(
+                userContext,
+                organizationId,
+                locationId,
+                family,
+                contextPermissions
+            );
+        }
+
+        public async Task<CombinedFamilyInfo> DiscloseFamilyAsync(
+            SessionUserContext userContext,
+            Guid organizationId,
+            Guid locationId,
+            CombinedFamilyInfo family,
+            ImmutableList<Permission> contextPermissions
+        )
+        {
             return family with
             {
                 PartneringFamilyInfo =
@@ -895,18 +945,37 @@ namespace CareTogether.Engines.Authorization
                 new CommunityAuthorizationContext(community.Community.Id)
             );
 
-            return community with
-            {
-                Community = community.Community with
+            return await DiscloseCommunityAsync(
+                userContext,
+                organizationId,
+                locationId,
+                community,
+                contextPermissions
+            );
+        }
+
+        public Task<CommunityInfo> DiscloseCommunityAsync(
+            SessionUserContext userContext,
+            Guid organizationId,
+            Guid locationId,
+            CommunityInfo community,
+            ImmutableList<Permission> contextPermissions
+        )
+        {
+            return Task.FromResult(
+                community with
                 {
-                    UploadedDocuments = contextPermissions.Contains(
-                        Permission.ViewCommunityDocumentMetadata
-                    )
-                        ? community.Community.UploadedDocuments
-                        : ImmutableList<UploadedDocumentInfo>.Empty,
-                },
-                UserPermissions = contextPermissions,
-            };
+                    Community = community.Community with
+                    {
+                        UploadedDocuments = contextPermissions.Contains(
+                            Permission.ViewCommunityDocumentMetadata
+                        )
+                            ? community.Community.UploadedDocuments
+                            : ImmutableList<UploadedDocumentInfo>.Empty,
+                    },
+                    UserPermissions = contextPermissions,
+                }
+            );
         }
 
         internal PartneringFamilyInfo DisclosePartneringFamilyInfo(
@@ -931,7 +1000,17 @@ namespace CareTogether.Engines.Authorization
                     )
                     .ToImmutableList(),
                 History = contextPermissions.Contains(Permission.ViewV1CaseHistory)
-                    ? partneringFamilyInfo.History
+                    // Existing history activities are authorized by ViewV1CaseHistory as a list.
+                    // Staff assignment activities reveal separately-permissioned staff assignment data,
+                    // so hide them from users who cannot view assignments to avoid assignee inference.
+                    ? partneringFamilyInfo
+                        .History.Where(activity =>
+                            contextPermissions.Contains(Permission.ViewV1CaseFunctionAssignments)
+                            || activity
+                                is not V1CaseIndividualVolunteerAssigned
+                                    and not V1CaseIndividualVolunteerUnassigned
+                        )
+                        .ToImmutableList()
                     : ImmutableList<Activity>.Empty,
             };
         }
@@ -958,6 +1037,11 @@ namespace CareTogether.Engines.Authorization
                 ExemptedRequirements = contextPermissions.Contains(Permission.ViewV1CaseProgress)
                     ? v1Case.ExemptedRequirements
                     : ImmutableList<Resources.ExemptedRequirementInfo>.Empty,
+                AssignedIndividualVolunteers = contextPermissions.Contains(
+                    Permission.ViewV1CaseFunctionAssignments
+                )
+                    ? v1Case.AssignedIndividualVolunteers
+                    : ImmutableList<AssignedIndividualVolunteer>.Empty,
                 MissingRequirements = contextPermissions.Contains(Permission.ViewV1CaseProgress)
                     ? v1Case.MissingRequirements
                     : ImmutableList<RequirementDefinition>.Empty,
@@ -1213,6 +1297,11 @@ namespace CareTogether.Engines.Authorization
                 )
                     ? person.PreferredPhoneNumberId
                     : null,
+                CompletedCustomFields = contextPermissions.Contains(
+                    Permission.ViewFamilyCustomFields
+                )
+                    ? person.CompletedCustomFields
+                    : ImmutableList<CompletedCustomFieldInfo>.Empty,
                 Age =
                     person.Age != null
                         ? contextPermissions.Contains(Permission.ViewPersonDateOfBirth)

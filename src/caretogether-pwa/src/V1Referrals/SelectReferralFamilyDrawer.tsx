@@ -1,9 +1,12 @@
-import { useEffect, useMemo, useState } from 'react';
+import Grid from '@mui/material/Grid';
+import {
+  useEffect,
+  useMemo,
+  useState } from 'react';
 import {
   Autocomplete,
   Button,
   Drawer,
-  Grid,
   TextField,
   Typography,
 } from '@mui/material';
@@ -46,7 +49,7 @@ export function SelectReferralFamilyDrawer({
       anchor="right"
       open={open}
       onClose={onCancel}
-      PaperProps={{ sx: { width: 500, p: 3, top: 45 } }}
+      slotProps={{ paper: { sx: { width: 500, p: 3, top: 45 } } }}
     >
       <form
         onSubmit={(e) => {
@@ -55,11 +58,11 @@ export function SelectReferralFamilyDrawer({
         }}
       >
         <Grid container spacing={2}>
-          <Grid item xs={12}>
+          <Grid size={12}>
             <Typography variant="h6">Select Family</Typography>
           </Grid>
 
-          <Grid item xs={12}>
+          <Grid size={12}>
             <Autocomplete
               disablePortal
               options={familyOptions}
@@ -75,14 +78,14 @@ export function SelectReferralFamilyDrawer({
             />
           </Grid>
 
-          <Grid item xs={12}>
+          <Grid size={12}>
             <Typography variant="body2" color="text.secondary">
               After selecting and saving a family, it cannot be edited or
               removed from this referral.
             </Typography>
           </Grid>
 
-          <Grid item xs={12} sx={{ textAlign: 'right' }}>
+          <Grid size={12} sx={{ textAlign: 'right' }}>
             <Button
               color="secondary"
               variant="contained"

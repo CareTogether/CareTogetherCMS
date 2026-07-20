@@ -1,4 +1,5 @@
-import { Button, Grid, TextField } from '@mui/material';
+import Grid from '@mui/material/Grid';
+import { Button, TextField } from '@mui/material';
 import { useRecoilValue, useSetRecoilState } from 'recoil';
 import { api } from '../../../../Api/Api';
 import {
@@ -92,15 +93,15 @@ export function AddAccessLevel({
     <Grid
       container
       spacing={2}
-      maxWidth={500}
+      sx={{ maxWidth: 500 }}
       component="form" // This allows easier editing & submitting via the keyboard
       onSubmit={handleSubmit(save)}
     >
-      <Grid item xs={12}>
+      <Grid size={12}>
         <h3>Add New Access Level</h3>
       </Grid>
 
-      <Grid item xs={12}>
+      <Grid size={12}>
         <Controller
           name="name"
           control={control}
@@ -118,7 +119,7 @@ export function AddAccessLevel({
         ></Controller>
       </Grid>
 
-      <Grid item xs={12}>
+      <Grid size={12}>
         <CTAutocomplete
           name="organizationRoles"
           label="Organization Roles"
@@ -133,7 +134,7 @@ export function AddAccessLevel({
         />
       </Grid>
 
-      <Grid item xs={12} sx={{ textAlign: 'right' }}>
+      <Grid size={12} sx={{ textAlign: 'right' }}>
         <Button
           color="secondary"
           variant="contained"

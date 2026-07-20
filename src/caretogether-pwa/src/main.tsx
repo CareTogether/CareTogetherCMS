@@ -1,4 +1,5 @@
 import React from 'react';
+import './Utilities/react19RecoilCompat';
 import ReactDOM from 'react-dom/client';
 import { AppInsightsContext } from '@microsoft/applicationinsights-react-js';
 import { aiReactPlugin } from './ApplicationInsightsService';
@@ -6,7 +7,7 @@ import { ThemeProvider } from '@mui/material/styles';
 import { theme } from './theme';
 import { CssBaseline } from '@mui/material';
 import { LocalizationProvider } from '@mui/x-date-pickers';
-import { AdapterDateFns as DateAdapter } from '@mui/x-date-pickers/AdapterDateFnsV3';
+import { AdapterDateFns as DateAdapter } from '@mui/x-date-pickers/AdapterDateFns';
 import { GlobalErrorBoundary } from './GlobalErrorBoundary';
 import { RecoilRoot } from 'recoil';
 import { BrowserRouter as Router } from 'react-router-dom';

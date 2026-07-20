@@ -111,11 +111,13 @@ export function BulkSmsSideSheet({
       variant="persistent"
       anchor={isMobile ? 'bottom' : 'right'}
       open
-      PaperProps={{
-        sx: {
-          padding: isMobile ? 1 : 2,
-          width: isMobile ? null : 400,
-          height: isMobile ? 500 : null,
+      slotProps={{
+        paper: {
+          sx: {
+            padding: isMobile ? 1 : 2,
+            width: isMobile ? null : 400,
+            height: isMobile ? 500 : null,
+          },
         },
       }}
     >
@@ -131,6 +133,7 @@ export function BulkSmsSideSheet({
         <InputLabel id="sourcenumber-label">Source number</InputLabel>
         <Select
           labelId="sourcenumber-label"
+          label="Source number"
           id="sourcenumber"
           value={selectedSourceNumber}
           onChange={(e) => setSelectedSourceNumber(e.target.value as string)}

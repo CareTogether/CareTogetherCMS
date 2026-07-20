@@ -9,6 +9,7 @@ using CareTogether.Resources.Directory;
 using CareTogether.Resources.Notes;
 using CareTogether.Resources.Policies;
 using CareTogether.Resources.V1Cases;
+using CareTogether.Resources.V1Referrals;
 
 namespace CareTogether.Managers
 {
@@ -31,17 +32,23 @@ namespace CareTogether.Managers
         ImmutableList<Activity> History
     );
 
+    public sealed record V1ReferralInfo(
+        V1Referral Referral,
+        ImmutableList<Permission> UserPermissions
+    );
+
     public sealed record V1Case(
         Guid Id,
         DateTime OpenedAtUtc,
         DateTime? ClosedAtUtc,
-        V1CaseCloseReason? CloseReason,
+        string? CloseReason,
         ImmutableList<Resources.CompletedRequirementInfo> CompletedRequirements,
         ImmutableList<Resources.ExemptedRequirementInfo> ExemptedRequirements,
         ImmutableList<RequirementDefinition> MissingRequirements,
         ImmutableList<CompletedCustomFieldInfo> CompletedCustomFields,
         ImmutableList<string> MissingCustomFields,
         ImmutableList<Arrangement> Arrangements,
+        ImmutableList<AssignedIndividualVolunteer> AssignedIndividualVolunteers,
         string? Comments,
         ImmutableList<Guid> LinkedV1ReferralIds
     );
@@ -66,7 +73,8 @@ namespace CareTogether.Managers
         ImmutableSortedSet<ChildLocationHistoryEntry> ChildLocationHistory,
         ImmutableSortedSet<ChildLocationHistoryEntry> ChildLocationPlan,
         string? Comments,
-        string? Reason
+        string? Reason,
+        string? ArrangementPolicyVersion = null
     );
 
     public sealed record Note(
@@ -98,7 +106,9 @@ namespace CareTogether.Managers
         ImmutableList<RoleRemoval> RoleRemovals,
         ImmutableDictionary<Guid, VolunteerInfo> IndividualVolunteers,
         ImmutableList<Activity> History,
-        ImmutableList<Resources.V1Cases.ArrangementEntry> Assignments
+        ImmutableList<Resources.V1Cases.ArrangementEntry> Assignments,
+        ImmutableList<Resources.CompletedCustomFieldInfo>? CompletedCustomFields = null,
+        ImmutableList<string>? MissingCustomFields = null
     );
 
     public sealed record VolunteerInfo(

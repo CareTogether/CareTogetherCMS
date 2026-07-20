@@ -19,16 +19,14 @@ import {
   AcceptV1Referral,
   LinkReferralToCaseAndAcceptCommand,
   OpenCaseForReferralAndAcceptCommand,
+  AssignIndividualVolunteer3 as AssignIndividualVolunteer,
+  UnassignIndividualVolunteer3 as UnassignIndividualVolunteer,
 } from '../GeneratedClient';
 import { commandFactory } from './CommandFactory';
-import { api } from '../Api/Api';
 import {
-  selectedLocationContextState,
   useAtomicRecordsCommandCallback,
   useCompositeRecordsCommandCallback,
-  visibleAggregatesState,
 } from '../Model/Data';
-import { useRecoilValue, useSetRecoilState } from 'recoil';
 
 interface CreateReferralPayload {
   familyId: string | null;
@@ -38,7 +36,6 @@ interface CreateReferralPayload {
 }
 
 interface UpdateReferralDetailsPayload {
-  familyId?: string | null;
   title: string;
   comment?: string;
   openedAtUtc: Date;
@@ -57,21 +54,7 @@ function useV1ReferralCommandCallback<T extends unknown[]>(
 }
 
 export function useV1ReferralsModel() {
-  const setVisibleAggregates = useSetRecoilState(visibleAggregatesState);
-  const { organizationId, locationId } = useRecoilValue(
-    selectedLocationContextState
-  );
-
-  async function refreshVisibleAggregates() {
-    const updatedAggregates = await api.records.listVisibleAggregates(
-      organizationId,
-      locationId
-    );
-
-    setVisibleAggregates(updatedAggregates);
-  }
-
-  const createReferralCommand = useAtomicRecordsCommandCallback(
+  const createReferral = useAtomicRecordsCommandCallback(
     async (referralId: string, payload: CreateReferralPayload) => {
       const command = new V1ReferralRecordsCommand();
 
@@ -87,19 +70,11 @@ export function useV1ReferralsModel() {
     }
   );
 
-  const createReferral = async (
-    referralId: string,
-    payload: CreateReferralPayload
-  ) => {
-    await createReferralCommand(referralId, payload);
-    await refreshVisibleAggregates();
-  };
-
-  const updateCustomReferralFieldCommand = useAtomicRecordsCommandCallback(
+  const updateCustomReferralField = useAtomicRecordsCommandCallback(
     async (
       referralId: string,
       customField: CustomField,
-      value: boolean | string | null
+      value: boolean | string | string[] | null
     ) => {
       const command = new V1ReferralRecordsCommand();
 
@@ -115,16 +90,7 @@ export function useV1ReferralsModel() {
     }
   );
 
-  const updateCustomReferralField = async (
-    referralId: string,
-    customField: CustomField,
-    value: boolean | string | null
-  ) => {
-    await updateCustomReferralFieldCommand(referralId, customField, value);
-    await refreshVisibleAggregates();
-  };
-
-  const updateReferralFamilyCommand = useAtomicRecordsCommandCallback(
+  const updateReferralFamily = useAtomicRecordsCommandCallback(
     async (referralId: string, familyId: string) => {
       const command = new V1ReferralRecordsCommand();
 
@@ -137,18 +103,12 @@ export function useV1ReferralsModel() {
     }
   );
 
-  const updateReferralFamily = async (referralId: string, familyId: string) => {
-    await updateReferralFamilyCommand(referralId, familyId);
-    await refreshVisibleAggregates();
-  };
-
-  const updateReferralDetailsCommand = useAtomicRecordsCommandCallback(
+  const updateReferralDetails = useAtomicRecordsCommandCallback(
     async (referralId: string, payload: UpdateReferralDetailsPayload) => {
       const command = new V1ReferralRecordsCommand();
 
       command.command = commandFactory(UpdateV1ReferralDetails, {
         referralId,
-        familyId: payload.familyId ?? undefined,
         title: payload.title,
         comment: payload.comment,
         createdAtUtc: payload.openedAtUtc,
@@ -158,15 +118,7 @@ export function useV1ReferralsModel() {
     }
   );
 
-  const updateReferralDetails = async (
-    referralId: string,
-    payload: UpdateReferralDetailsPayload
-  ) => {
-    await updateReferralDetailsCommand(referralId, payload);
-    await refreshVisibleAggregates();
-  };
-
-  const closeReferralCommand = useV1ReferralCommandCallback(
+  const closeReferral = useV1ReferralCommandCallback(
     async (referralId: string, reason: string, closedAtLocal: Date) =>
       commandFactory(CloseV1Referral, {
         referralId,
@@ -175,16 +127,7 @@ export function useV1ReferralsModel() {
       })
   );
 
-  const closeReferral = async (
-    referralId: string,
-    reason: string,
-    closedAtLocal: Date
-  ) => {
-    await closeReferralCommand(referralId, reason, closedAtLocal);
-    await refreshVisibleAggregates();
-  };
-
-  const reopenReferralCommand = useV1ReferralCommandCallback(
+  const reopenReferral = useV1ReferralCommandCallback(
     async (referralId: string) =>
       commandFactory(ReopenV1Referral, {
         referralId,
@@ -192,23 +135,13 @@ export function useV1ReferralsModel() {
       })
   );
 
-  const reopenReferral = async (referralId: string) => {
-    await reopenReferralCommand(referralId);
-    await refreshVisibleAggregates();
-  };
-
-  const acceptReferralCommand = useV1ReferralCommandCallback(
+  const acceptReferral = useV1ReferralCommandCallback(
     async (referralId: string, acceptedAtLocal?: Date) =>
       commandFactory(AcceptV1Referral, {
         referralId,
         acceptedAtUtc: acceptedAtLocal ?? new Date(),
       })
   );
-
-  const acceptReferral = async (referralId: string, acceptedAtLocal?: Date) => {
-    await acceptReferralCommand(referralId, acceptedAtLocal);
-    await refreshVisibleAggregates();
-  };
 
   const linkReferralToCaseAndAcceptCommand = useCompositeRecordsCommandCallback(
     async (
@@ -239,15 +172,16 @@ export function useV1ReferralsModel() {
     );
   };
 
-  const openCaseForReferralAndAcceptCommand = useCompositeRecordsCommandCallback(
-    async (familyId: string, referralId: string, openedAtLocal: Date) =>
-      commandFactory(OpenCaseForReferralAndAcceptCommand, {
-        familyId,
-        caseId: crypto.randomUUID(),
-        referralId,
-        openedAtUtc: openedAtLocal,
-      })
-  );
+  const openCaseForReferralAndAcceptCommand =
+    useCompositeRecordsCommandCallback(
+      async (familyId: string, referralId: string, openedAtLocal: Date) =>
+        commandFactory(OpenCaseForReferralAndAcceptCommand, {
+          familyId,
+          caseId: crypto.randomUUID(),
+          referralId,
+          openedAtUtc: openedAtLocal,
+        })
+    );
 
   const openCaseForReferralAndAccept = async (
     familyId: string,
@@ -261,7 +195,7 @@ export function useV1ReferralsModel() {
     );
   };
 
-  const completeReferralRequirementCommand = useV1ReferralCommandCallback(
+  const completeReferralRequirement = useV1ReferralCommandCallback(
     async (
       referralId: string,
       requirementName: string,
@@ -280,26 +214,7 @@ export function useV1ReferralsModel() {
       })
   );
 
-  const completeReferralRequirement = async (
-    referralId: string,
-    requirementName: string,
-    requirement: ActionRequirement,
-    completedAtLocal: Date,
-    documentId: string | null,
-    noteId: string | null
-  ) => {
-    await completeReferralRequirementCommand(
-      referralId,
-      requirementName,
-      requirement,
-      completedAtLocal,
-      documentId,
-      noteId
-    );
-    await refreshVisibleAggregates();
-  };
-
-  const markReferralRequirementIncompleteCommand = useV1ReferralCommandCallback(
+  const markReferralRequirementIncomplete = useV1ReferralCommandCallback(
     async (
       referralId: string,
       completedRequirement: CompletedRequirementInfo
@@ -311,18 +226,7 @@ export function useV1ReferralsModel() {
       })
   );
 
-  const markReferralRequirementIncomplete = async (
-    referralId: string,
-    completedRequirement: CompletedRequirementInfo
-  ) => {
-    await markReferralRequirementIncompleteCommand(
-      referralId,
-      completedRequirement
-    );
-    await refreshVisibleAggregates();
-  };
-
-  const exemptReferralRequirementCommand = useV1ReferralCommandCallback(
+  const exemptReferralRequirement = useV1ReferralCommandCallback(
     async (
       referralId: string,
       requirementName: string,
@@ -337,22 +241,7 @@ export function useV1ReferralsModel() {
       })
   );
 
-  const exemptReferralRequirement = async (
-    referralId: string,
-    requirementName: string,
-    additionalComments: string,
-    exemptionExpiresAtLocal: Date | null
-  ) => {
-    await exemptReferralRequirementCommand(
-      referralId,
-      requirementName,
-      additionalComments,
-      exemptionExpiresAtLocal
-    );
-    await refreshVisibleAggregates();
-  };
-
-  const unexemptReferralRequirementCommand = useV1ReferralCommandCallback(
+  const unexemptReferralRequirement = useV1ReferralCommandCallback(
     async (referralId: string, exemptedRequirement: ExemptedRequirementInfo) =>
       commandFactory(UnexemptReferralRequirement2, {
         referralId,
@@ -360,15 +249,7 @@ export function useV1ReferralsModel() {
       })
   );
 
-  const unexemptReferralRequirement = async (
-    referralId: string,
-    exemptedRequirement: ExemptedRequirementInfo
-  ) => {
-    await unexemptReferralRequirementCommand(referralId, exemptedRequirement);
-    await refreshVisibleAggregates();
-  };
-
-  const uploadReferralDocumentMetadataCommand = useAtomicRecordsCommandCallback(
+  const uploadReferralDocumentMetadata = useAtomicRecordsCommandCallback(
     async (
       referralId: string,
       documentId: string,
@@ -386,18 +267,23 @@ export function useV1ReferralsModel() {
     }
   );
 
-  const uploadReferralDocumentMetadata = async (
-    referralId: string,
-    documentId: string,
-    uploadedFileName: string
-  ) => {
-    await uploadReferralDocumentMetadataCommand(
-      referralId,
-      documentId,
-      uploadedFileName
-    );
-    await refreshVisibleAggregates();
-  };
+  const assignIndividualVolunteerToReferral = useV1ReferralCommandCallback(
+    async (referralId: string, personId: string, assignmentRole: string) =>
+      commandFactory(AssignIndividualVolunteer, {
+        referralId,
+        personId,
+        assignmentRole,
+      })
+  );
+
+  const unassignIndividualVolunteerFromReferral = useV1ReferralCommandCallback(
+    async (referralId: string, personId: string, assignmentRole: string) =>
+      commandFactory(UnassignIndividualVolunteer, {
+        referralId,
+        personId,
+        assignmentRole,
+      })
+  );
 
   return {
     createReferral,
@@ -414,5 +300,7 @@ export function useV1ReferralsModel() {
     exemptReferralRequirement,
     unexemptReferralRequirement,
     uploadReferralDocumentMetadata,
+    assignIndividualVolunteerToReferral,
+    unassignIndividualVolunteerFromReferral,
   };
 }

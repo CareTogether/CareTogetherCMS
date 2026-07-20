@@ -1,4 +1,4 @@
-import { useState, memo, useRef, useEffect } from 'react';
+import { useState, memo, useRef, useLayoutEffect } from 'react';
 import { Box, Button, Typography, Collapse } from '@mui/material';
 
 type ReadMoreTextProps = {
@@ -13,33 +13,57 @@ export const ReadMoreText = memo(function ReadMoreText({
   const [expanded, setExpanded] = useState(false);
   const [isOverflowing, setIsOverflowing] = useState(false);
   const textRef = useRef<HTMLDivElement>(null);
+  const lineHeight = 1.45;
 
-  useEffect(() => {
-    // Check if content is overflowing by temporarily rendering without clamp
-    if (textRef.current && !expanded) {
+  useLayoutEffect(() => {
+    function updateOverflow() {
+      if (!textRef.current) {
+        return;
+      }
+
       const element = textRef.current;
-      // Check if content would overflow with the line clamp
-      const lineHeight = parseFloat(getComputedStyle(element).lineHeight);
-      const maxHeight = lineHeight * limit;
+      const computedLineHeight = parseFloat(getComputedStyle(element).lineHeight);
+      const maxHeight = computedLineHeight * limit;
       setIsOverflowing(element.scrollHeight > maxHeight);
     }
-  }, [text, limit, expanded]);
+
+    updateOverflow();
+
+    const observer =
+      typeof ResizeObserver === 'undefined'
+        ? undefined
+        : new ResizeObserver(updateOverflow);
+
+    if (textRef.current) {
+      observer?.observe(textRef.current);
+    }
+
+    return () => observer?.disconnect();
+  }, [text, limit]);
+
+  const textContent = (
+    <Typography
+      ref={textRef}
+      sx={{
+        whiteSpace: 'pre-wrap',
+        overflowWrap: 'break-word',
+        lineHeight,
+      }}
+    >
+      {text}
+    </Typography>
+  );
 
   return (
     <Box>
       <Box sx={{ position: 'relative' }}>
-        <Collapse in={expanded} collapsedSize={`${limit * 1.45 * 1.5}em`}>
-          <Typography
-            ref={textRef}
-            sx={{
-              whiteSpace: 'pre-wrap',
-              overflowWrap: 'break-word',
-              lineHeight: 1.45,
-            }}
-          >
-            {text}
-          </Typography>
-        </Collapse>
+        {isOverflowing ? (
+          <Collapse in={expanded} collapsedSize={`${limit * lineHeight}em`}>
+            {textContent}
+          </Collapse>
+        ) : (
+          textContent
+        )}
         {!expanded && isOverflowing && (
           <Box
             sx={{

@@ -1,4 +1,5 @@
-import { Grid, TextField } from '@mui/material';
+import Grid from '@mui/material/Grid';
+import { TextField } from '@mui/material';
 import { useState } from 'react';
 import { useParams } from 'react-router';
 import { Arrangement, Person } from '../../GeneratedClient';
@@ -52,7 +53,7 @@ export function ReopenArrangementDialog({
       onSave={save}
     >
       <Grid container spacing={0}>
-        <Grid item xs={12}>
+        <Grid size={12}>
           <TextField
             id="notes"
             label="Notes"

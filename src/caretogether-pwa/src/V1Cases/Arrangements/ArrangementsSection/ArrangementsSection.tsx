@@ -1,6 +1,7 @@
-import { Masonry } from '@mui/lab';
+import { AppMasonry } from '../../../Generic/AppMasonry';
 import { AddCircle as AddCircleIcon } from '@mui/icons-material';
-import { Grid, Typography, Button, useTheme } from '@mui/material';
+import Grid from '../../../Generic/GridLegacyCompat';
+import { Typography, Button, useTheme } from '@mui/material';
 import { Box, useMediaQuery } from '@mui/system';
 import {
   ArrangementPolicy,
@@ -16,6 +17,7 @@ import { useRecoilValue } from 'recoil';
 import { policyData } from '../../../Model/ConfigurationModel';
 import { getFilteredArrangements } from './getFilteredArrangements';
 import { useScrollToArrangement } from './useScrollToArrangement';
+import { isArrangementPolicyAvailable } from '../arrangementPolicyVersions';
 
 type ArrangementSectionProps = {
   v1Case: V1Case;
@@ -52,30 +54,35 @@ export function ArrangementsSection({
   useScrollToArrangement(arrangementRefs);
 
   return (
-    <Grid item xs={12}>
-      <div
-        style={{
-          display: `flex`,
-          justifyContent: `space-between`,
-          maxWidth: `100%`,
-          flexWrap: `wrap`,
+    <Grid item xs={12} sx={{ mb: 3 }}>
+      <Box
+        sx={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'flex-start',
+          maxWidth: '100%',
+          flexWrap: 'wrap',
+          gap: 2,
+          mb: 2,
         }}
       >
-        <div
-          style={{
-            display: `flex`,
-            justifyContent: `flex-start`,
-            maxWidth: `100%`,
-            flexWrap: `wrap`,
+        <Box
+          sx={{
+            display: 'flex',
+            justifyContent: 'flex-start',
+            maxWidth: '100%',
+            flexWrap: 'wrap',
           }}
         >
           <Box
-            display="flex"
-            alignItems="center"
-            justifyContent="space-between"
-            flexWrap="wrap"
-            gap={2}
-            mb={2}
+            sx={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              flexWrap: 'wrap',
+              gap: 2,
+              mb: 2,
+            }}
           >
             <Typography
               className="ph-unmask"
@@ -98,19 +105,25 @@ export function ArrangementsSection({
               <ToggleButton value="Cancelled">Cancelled</ToggleButton>
             </ToggleButtonGroup>
           </Box>
-        </div>
+        </Box>
         {permissions(Permission.CreateArrangement) && (
           <Box
             sx={{
               textAlign: 'center',
-              display: `flex`,
-              flexDirection: `row`,
-              maxWidth: `100%`,
-              flexWrap: `wrap`,
+              display: 'flex',
+              flexDirection: 'row',
+              justifyContent: 'flex-end',
+              maxWidth: '100%',
+              flexWrap: 'wrap',
+              gap: 1,
             }}
           >
             {v1Case &&
-              policy.referralPolicy?.arrangementPolicies?.map(
+              policy.referralPolicy?.arrangementPolicies
+                ?.filter((arrangementPolicy) =>
+                  isArrangementPolicyAvailable(arrangementPolicy)
+                )
+                .map(
                 (arrangementPolicy) => (
                   <Box key={arrangementPolicy.arrangementType}>
                     <Button
@@ -120,7 +133,6 @@ export function ArrangementsSection({
                       }
                       variant="contained"
                       size="small"
-                      sx={{ margin: 1 }}
                       startIcon={<AddCircleIcon />}
                     >
                       {arrangementPolicy.arrangementType}
@@ -130,25 +142,30 @@ export function ArrangementsSection({
               )}
           </Box>
         )}
-      </div>
-      <Masonry columns={isDesktop ? (isWideScreen ? 3 : 2) : 1} spacing={2}>
-        {filteredArrangements.map((arrangement) => (
-          <div
-            key={arrangement.id}
-            ref={(el) => {
-              if (arrangement.id) {
-                arrangementRefs.current[arrangement.id] = el;
-              }
-            }}
-          >
-            <ArrangementCard
-              partneringFamily={family}
-              v1CaseId={v1Case.id!}
-              arrangement={arrangement}
-            />
-          </div>
-        ))}
-      </Masonry>
+      </Box>
+      {filteredArrangements.length > 0 && (
+        <AppMasonry
+          columns={isDesktop ? (isWideScreen ? 3 : 2) : 1}
+          spacing={2}
+        >
+          {filteredArrangements.map((arrangement) => (
+            <div
+              key={arrangement.id}
+              ref={(el) => {
+                if (arrangement.id) {
+                  arrangementRefs.current[arrangement.id] = el;
+                }
+              }}
+            >
+              <ArrangementCard
+                partneringFamily={family}
+                v1CaseId={v1Case.id!}
+                arrangement={arrangement}
+              />
+            </div>
+          ))}
+        </AppMasonry>
+      )}
 
       {createArrangementDialogParameter && (
         <CreateArrangementDialog

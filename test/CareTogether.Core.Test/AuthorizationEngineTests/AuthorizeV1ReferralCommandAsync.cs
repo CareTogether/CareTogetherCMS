@@ -26,7 +26,9 @@ namespace CareTogether.Core.Test.AuthorizationEngineTests
             "33333333-3333-3333-3333-333333333333"
         );
 
-        private static AuthorizationEngine CreateAuthorizationEngine(params Permission[] permissions)
+        private static AuthorizationEngine CreateAuthorizationEngine(
+            params Permission[] permissions
+        )
         {
             var userAccessCalculation = new Mock<IUserAccessCalculation>();
             userAccessCalculation
@@ -64,12 +66,11 @@ namespace CareTogether.Core.Test.AuthorizationEngineTests
                     null,
                     null
                 ),
-                nameof(MarkReferralRequirementIncomplete) =>
-                    new MarkReferralRequirementIncomplete(
-                        ReferralId,
-                        Guid.NewGuid(),
-                        "Intake Form"
-                    ),
+                nameof(MarkReferralRequirementIncomplete) => new MarkReferralRequirementIncomplete(
+                    ReferralId,
+                    Guid.NewGuid(),
+                    "Intake Form"
+                ),
                 nameof(ExemptReferralRequirement) => new ExemptReferralRequirement(
                     ReferralId,
                     "Intake Form",
@@ -79,6 +80,16 @@ namespace CareTogether.Core.Test.AuthorizationEngineTests
                 nameof(UnexemptReferralRequirement) => new UnexemptReferralRequirement(
                     ReferralId,
                     "Intake Form"
+                ),
+                nameof(AssignIndividualVolunteer) => new AssignIndividualVolunteer(
+                    ReferralId,
+                    Guid.NewGuid(),
+                    "Intake Coordinator"
+                ),
+                nameof(UnassignIndividualVolunteer) => new UnassignIndividualVolunteer(
+                    ReferralId,
+                    Guid.NewGuid(),
+                    "Intake Coordinator"
                 ),
                 _ => throw new ArgumentOutOfRangeException(nameof(commandName), commandName, null),
             };
@@ -115,19 +126,13 @@ namespace CareTogether.Core.Test.AuthorizationEngineTests
         }
 
         [DataTestMethod]
-        [DataRow(
-            nameof(CompleteReferralRequirement),
-            Permission.EditV1CaseRequirementCompletion
-        )]
+        [DataRow(nameof(CompleteReferralRequirement), Permission.EditV1CaseRequirementCompletion)]
         [DataRow(
             nameof(MarkReferralRequirementIncomplete),
             Permission.EditV1CaseRequirementCompletion
         )]
         [DataRow(nameof(ExemptReferralRequirement), Permission.EditV1CaseRequirementExemption)]
-        [DataRow(
-            nameof(UnexemptReferralRequirement),
-            Permission.EditV1CaseRequirementExemption
-        )]
+        [DataRow(nameof(UnexemptReferralRequirement), Permission.EditV1CaseRequirementExemption)]
         public async Task ReferralRequirementCommandsDoNotUseV1CaseRequirementPermissions(
             string commandName,
             Permission permission
@@ -143,6 +148,25 @@ namespace CareTogether.Core.Test.AuthorizationEngineTests
             );
 
             Assert.IsFalse(response);
+        }
+
+        [DataTestMethod]
+        [DataRow(nameof(AssignIndividualVolunteer))]
+        [DataRow(nameof(UnassignIndividualVolunteer))]
+        public async Task ReferralFunctionAssignmentCommandsRequireReferralFunctionAssignmentEditPermission(
+            string commandName
+        )
+        {
+            var dut = CreateAuthorizationEngine(Permission.EditV1ReferralFunctionAssignments);
+
+            var response = await dut.AuthorizeV1ReferralCommandAsync(
+                OrganizationId,
+                LocationId,
+                UserContext(),
+                CommandFor(commandName)
+            );
+
+            Assert.IsTrue(response);
         }
     }
 }

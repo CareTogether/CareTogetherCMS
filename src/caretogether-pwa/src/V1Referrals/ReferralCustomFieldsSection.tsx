@@ -1,4 +1,5 @@
-import { Grid, Typography } from '@mui/material';
+import Grid from '@mui/material/Grid';
+import { Typography } from '@mui/material';
 import { Controller, Control, FieldValues, Path } from 'react-hook-form';
 import { CustomField } from '../GeneratedClient';
 import { CustomFieldInput } from '../Generic/CustomFieldInput';
@@ -17,7 +18,7 @@ export function ReferralCustomFieldsSection<T extends FieldValues>({
   if (!customFields.length) return null;
 
   return (
-    <Grid item xs={12}>
+    <Grid size={12}>
       {/* <Typography sx={{ fontWeight: 600, mb: 1 }}>
         Referral Custom Fields
       </Typography> */}
@@ -27,7 +28,7 @@ export function ReferralCustomFieldsSection<T extends FieldValues>({
           const fieldName = `${namePrefix}.${field.name}` as Path<T>;
 
           return (
-            <Grid item xs={12} key={field.name}>
+            <Grid size={12} key={field.name}>
               <Typography
                 variant="body2"
                 sx={{ mb: 0.5 }}

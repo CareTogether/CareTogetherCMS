@@ -4,6 +4,8 @@ using System.Collections.Immutable;
 using System.Linq;
 using System.Threading.Tasks;
 using JsonPolymorph;
+using V1CaseAssignIndividualVolunteer = CareTogether.Resources.V1Cases.V1CaseCommands.AssignIndividualVolunteer;
+using V1CaseUnassignIndividualVolunteer = CareTogether.Resources.V1Cases.V1CaseCommands.UnassignIndividualVolunteer;
 
 namespace CareTogether.Resources.V1Cases
 {
@@ -59,11 +61,34 @@ namespace CareTogether.Resources.V1Cases
         Guid? NoteId
     ) : Activity(UserId, AuditTimestampUtc, ChangedAtUtc, null, NoteId);
 
+    public sealed record V1CaseIndividualVolunteerAssigned(
+        Guid UserId,
+        DateTime AuditTimestampUtc,
+        Guid PersonId,
+        string AssignmentRole
+    ) : Activity(UserId, AuditTimestampUtc, AuditTimestampUtc, null, null);
+
+    public sealed record V1CaseIndividualVolunteerUnassigned(
+        Guid UserId,
+        DateTime AuditTimestampUtc,
+        Guid PersonId,
+        string AssignmentRole
+    ) : Activity(UserId, AuditTimestampUtc, AuditTimestampUtc, null, null);
+
     public sealed class V1CaseModel
     {
         private ImmutableDictionary<Guid, V1CaseEntry> v1Cases = ImmutableDictionary<
             Guid,
             V1CaseEntry
+        >.Empty;
+        private ImmutableDictionary<Guid, ImmutableSortedSet<Guid>> v1CaseIdsByFamilyId =
+            ImmutableDictionary<Guid, ImmutableSortedSet<Guid>>.Empty;
+        private ImmutableDictionary<
+            Guid,
+            ImmutableSortedSet<Guid>
+        > v1CaseIdsByAssignedVolunteerFamilyId = ImmutableDictionary<
+            Guid,
+            ImmutableSortedSet<Guid>
         >.Empty;
 
         public long LastKnownSequenceNumber { get; private set; } = -1;
@@ -101,6 +126,7 @@ namespace CareTogether.Resources.V1Cases
                         ImmutableList<ExemptedRequirementInfo>.Empty,
                         ImmutableDictionary<string, CompletedCustomFieldInfo>.Empty,
                         ImmutableDictionary<Guid, ArrangementEntry>.Empty,
+                        ImmutableList<AssignedIndividualVolunteer>.Empty,
                         ImmutableList<Activity>.Empty,
                         Comments: null
                     ),
@@ -195,7 +221,27 @@ namespace CareTogether.Resources.V1Cases
                             null
                         ),
                         LinkReferralToCase c => (LinkReferralToCaseEntry(v1CaseEntry, c), null),
+                        V1CaseAssignIndividualVolunteer c => AssignIndividualVolunteer(
+                            v1CaseEntry,
+                            c,
+                            userId,
+                            timestampUtc
+                        ),
+                        V1CaseUnassignIndividualVolunteer c => UnassignIndividualVolunteer(
+                            v1CaseEntry,
+                            c,
+                            userId,
+                            timestampUtc
+                        ),
                         CloseReferral c => (
+                            v1CaseEntry with
+                            {
+                                CloseReason = FormatV1CaseCloseReason(c.CloseReason),
+                                ClosedAtUtc = c.ClosedAtUtc,
+                            },
+                            null
+                        ),
+                        CloseReferralWithReason c => (
                             v1CaseEntry with
                             {
                                 CloseReason = c.CloseReason,
@@ -226,18 +272,22 @@ namespace CareTogether.Resources.V1Cases
                 OnCommit: () =>
                 {
                     LastKnownSequenceNumber++;
-                    v1Cases = v1Cases.SetItem(
-                        v1CaseEntryToUpsert.Item1.Id,
-                        v1CaseEntryToUpsert.Item1 with
-                        {
-                            History =
-                                v1CaseEntryToUpsert.Item2 == null
-                                    ? v1CaseEntryToUpsert.Item1.History
-                                    : v1CaseEntryToUpsert.Item1.History.Add(
-                                        v1CaseEntryToUpsert.Item2
-                                    ),
-                        }
-                    );
+                    v1Cases.TryGetValue(v1CaseEntryToUpsert.Item1.Id, out var existingV1CaseEntry);
+                    var updatedV1CaseEntry = v1CaseEntryToUpsert.Item1 with
+                    {
+                        History =
+                            v1CaseEntryToUpsert.Item2 == null
+                                ? v1CaseEntryToUpsert.Item1.History
+                                : v1CaseEntryToUpsert.Item1.History.Add(v1CaseEntryToUpsert.Item2),
+                    };
+                    v1Cases = v1Cases.SetItem(updatedV1CaseEntry.Id, updatedV1CaseEntry);
+                    (v1CaseIdsByFamilyId, v1CaseIdsByAssignedVolunteerFamilyId) =
+                        UpdateV1CaseIndexes(
+                            v1CaseIdsByFamilyId,
+                            v1CaseIdsByAssignedVolunteerFamilyId,
+                            existingV1CaseEntry,
+                            updatedV1CaseEntry
+                        );
                 }
             );
         }
@@ -280,7 +330,8 @@ namespace CareTogether.Resources.V1Cases
                                 ImmutableSortedSet<ChildLocationHistoryEntry>.Empty,
                                 ImmutableSortedSet<ChildLocationHistoryEntry>.Empty,
                                 Comments: null,
-                                Reason: c.Reason
+                                Reason: c.Reason,
+                                ArrangementPolicyVersion: c.ArrangementPolicyVersion
                             ),
                             null
                         ),
@@ -857,8 +908,85 @@ namespace CareTogether.Resources.V1Cases
                 OnCommit: () =>
                 {
                     LastKnownSequenceNumber++;
+                    v1Cases.TryGetValue(v1CaseEntryToUpsert.Id, out var existingV1CaseEntry);
                     v1Cases = v1Cases.SetItem(v1CaseEntryToUpsert.Id, v1CaseEntryToUpsert);
+                    (v1CaseIdsByFamilyId, v1CaseIdsByAssignedVolunteerFamilyId) =
+                        UpdateV1CaseIndexes(
+                            v1CaseIdsByFamilyId,
+                            v1CaseIdsByAssignedVolunteerFamilyId,
+                            existingV1CaseEntry,
+                            v1CaseEntryToUpsert
+                        );
                 }
+            );
+        }
+
+        private static (V1CaseEntry V1CaseEntry, Activity? Activity) AssignIndividualVolunteer(
+            V1CaseEntry v1CaseEntry,
+            V1CaseAssignIndividualVolunteer command,
+            Guid userId,
+            DateTime timestampUtc
+        )
+        {
+            if (
+                v1CaseEntry.AssignedIndividualVolunteers.Any(assignment =>
+                    assignment.PersonId == command.PersonId
+                    && assignment.AssignmentRole == command.AssignmentRole
+                )
+            )
+                return (v1CaseEntry, null);
+
+            return (
+                v1CaseEntry with
+                {
+                    AssignedIndividualVolunteers = v1CaseEntry.AssignedIndividualVolunteers.Add(
+                        new AssignedIndividualVolunteer(
+                            command.PersonId,
+                            command.AssignmentRole,
+                            timestampUtc,
+                            userId
+                        )
+                    ),
+                },
+                new V1CaseIndividualVolunteerAssigned(
+                    userId,
+                    timestampUtc,
+                    command.PersonId,
+                    command.AssignmentRole
+                )
+            );
+        }
+
+        private static (V1CaseEntry V1CaseEntry, Activity? Activity) UnassignIndividualVolunteer(
+            V1CaseEntry v1CaseEntry,
+            V1CaseUnassignIndividualVolunteer command,
+            Guid userId,
+            DateTime timestampUtc
+        )
+        {
+            if (
+                !v1CaseEntry.AssignedIndividualVolunteers.Any(assignment =>
+                    assignment.PersonId == command.PersonId
+                    && assignment.AssignmentRole == command.AssignmentRole
+                )
+            )
+                return (v1CaseEntry, null);
+
+            return (
+                v1CaseEntry with
+                {
+                    AssignedIndividualVolunteers =
+                        v1CaseEntry.AssignedIndividualVolunteers.RemoveAll(assignment =>
+                            assignment.PersonId == command.PersonId
+                            && assignment.AssignmentRole == command.AssignmentRole
+                        ),
+                },
+                new V1CaseIndividualVolunteerUnassigned(
+                    userId,
+                    timestampUtc,
+                    command.PersonId,
+                    command.AssignmentRole
+                )
             );
         }
 
@@ -867,7 +995,35 @@ namespace CareTogether.Resources.V1Cases
             return v1Cases.Values.Where(predicate).ToImmutableList();
         }
 
+        public ImmutableList<V1CaseEntry> GetV1CaseEntriesForFamily(Guid familyId) =>
+            GetIndexedV1CaseEntries(v1CaseIdsByFamilyId, familyId);
+
+        public ImmutableList<V1CaseEntry> GetV1CaseEntriesAssignedToVolunteerFamily(
+            Guid volunteerFamilyId
+        ) => GetIndexedV1CaseEntries(v1CaseIdsByAssignedVolunteerFamilyId, volunteerFamilyId);
+
         public V1CaseEntry GetV1CaseEntry(Guid v1CaseId) => v1Cases[v1CaseId];
+
+        private ImmutableList<V1CaseEntry> GetIndexedV1CaseEntries(
+            ImmutableDictionary<Guid, ImmutableSortedSet<Guid>> index,
+            Guid familyId
+        )
+        {
+            return index.TryGetValue(familyId, out var v1CaseIds)
+                ? v1CaseIds.Select(v1CaseId => v1Cases[v1CaseId]).ToImmutableList()
+                : ImmutableList<V1CaseEntry>.Empty;
+        }
+
+        private static string FormatV1CaseCloseReason(V1CaseCloseReason closeReason) =>
+            closeReason switch
+            {
+                V1CaseCloseReason.NotAppropriate => "Not appropriate",
+                V1CaseCloseReason.NoCapacity => "No capacity",
+                V1CaseCloseReason.NoLongerNeeded => "No longer needed",
+                V1CaseCloseReason.Resourced => "Resourced",
+                V1CaseCloseReason.NeedMet => "Need met",
+                _ => closeReason.ToString(),
+            };
 
         private V1CaseEntry LinkReferralToCaseEntry(
             V1CaseEntry v1CaseEntry,
@@ -898,7 +1054,7 @@ namespace CareTogether.Resources.V1Cases
             if (v1CaseEntry.CloseReason == null)
                 throw new InvalidOperationException("The case is already open.");
 
-            var familyCases = v1Cases.Values.Where(x => x.FamilyId == command.FamilyId).ToList();
+            var familyCases = GetV1CaseEntriesForFamily(command.FamilyId).ToList();
 
             var hasAnotherOpenCase = familyCases.Any(x =>
                 x.Id != command.ReferralId && x.CloseReason == null
@@ -924,6 +1080,102 @@ namespace CareTogether.Resources.V1Cases
                 CloseReason = null,
                 ClosedAtUtc = null,
             };
+        }
+
+        private static (
+            ImmutableDictionary<Guid, ImmutableSortedSet<Guid>> V1CaseIdsByFamilyId,
+            ImmutableDictionary<Guid, ImmutableSortedSet<Guid>> V1CaseIdsByAssignedVolunteerFamilyId
+        ) UpdateV1CaseIndexes(
+            ImmutableDictionary<Guid, ImmutableSortedSet<Guid>> v1CaseIdsByFamilyId,
+            ImmutableDictionary<
+                Guid,
+                ImmutableSortedSet<Guid>
+            > v1CaseIdsByAssignedVolunteerFamilyId,
+            V1CaseEntry? previousEntry,
+            V1CaseEntry nextEntry
+        )
+        {
+            var updatedV1CaseIdsByFamilyId = v1CaseIdsByFamilyId;
+            var updatedV1CaseIdsByAssignedVolunteerFamilyId = v1CaseIdsByAssignedVolunteerFamilyId;
+
+            if (previousEntry != null)
+            {
+                updatedV1CaseIdsByFamilyId = RemoveIndexedV1CaseId(
+                    updatedV1CaseIdsByFamilyId,
+                    previousEntry.FamilyId,
+                    previousEntry.Id
+                );
+
+                foreach (
+                    var assignedVolunteerFamilyId in GetAssignedVolunteerFamilyIds(previousEntry)
+                )
+                {
+                    updatedV1CaseIdsByAssignedVolunteerFamilyId = RemoveIndexedV1CaseId(
+                        updatedV1CaseIdsByAssignedVolunteerFamilyId,
+                        assignedVolunteerFamilyId,
+                        previousEntry.Id
+                    );
+                }
+            }
+
+            updatedV1CaseIdsByFamilyId = AddIndexedV1CaseId(
+                updatedV1CaseIdsByFamilyId,
+                nextEntry.FamilyId,
+                nextEntry.Id
+            );
+
+            foreach (var assignedVolunteerFamilyId in GetAssignedVolunteerFamilyIds(nextEntry))
+            {
+                updatedV1CaseIdsByAssignedVolunteerFamilyId = AddIndexedV1CaseId(
+                    updatedV1CaseIdsByAssignedVolunteerFamilyId,
+                    assignedVolunteerFamilyId,
+                    nextEntry.Id
+                );
+            }
+
+            return (updatedV1CaseIdsByFamilyId, updatedV1CaseIdsByAssignedVolunteerFamilyId);
+        }
+
+        private static ImmutableHashSet<Guid> GetAssignedVolunteerFamilyIds(V1CaseEntry entry) =>
+            entry
+                .Arrangements.SelectMany(arrangement =>
+                    arrangement
+                        .Value.FamilyVolunteerAssignments.Select(assignment => assignment.FamilyId)
+                        .Concat(
+                            arrangement.Value.IndividualVolunteerAssignments.Select(assignment =>
+                                assignment.FamilyId
+                            )
+                        )
+                )
+                .ToImmutableHashSet();
+
+        private static ImmutableDictionary<Guid, ImmutableSortedSet<Guid>> AddIndexedV1CaseId(
+            ImmutableDictionary<Guid, ImmutableSortedSet<Guid>> index,
+            Guid familyId,
+            Guid v1CaseId
+        )
+        {
+            return index.SetItem(
+                familyId,
+                index.TryGetValue(familyId, out var existingV1CaseIds)
+                    ? existingV1CaseIds.Add(v1CaseId)
+                    : ImmutableSortedSet.Create(v1CaseId)
+            );
+        }
+
+        private static ImmutableDictionary<Guid, ImmutableSortedSet<Guid>> RemoveIndexedV1CaseId(
+            ImmutableDictionary<Guid, ImmutableSortedSet<Guid>> index,
+            Guid familyId,
+            Guid v1CaseId
+        )
+        {
+            if (!index.TryGetValue(familyId, out var existingV1CaseIds))
+                return index;
+
+            var updatedV1CaseIds = existingV1CaseIds.Remove(v1CaseId);
+            return updatedV1CaseIds.IsEmpty
+                ? index.Remove(familyId)
+                : index.SetItem(familyId, updatedV1CaseIds);
         }
 
         private void ReplayEvent(V1CaseEvent domainEvent, long sequenceNumber)

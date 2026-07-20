@@ -6,6 +6,8 @@ using System.Security.Claims;
 using System.Threading.Tasks;
 using CareTogether.Engines.Authorization;
 using CareTogether.Engines.PolicyEvaluation;
+using CareTogether.Resources;
+using CareTogether.Resources.Accounts;
 using CareTogether.Resources.Approvals;
 using CareTogether.Resources.Communities;
 using CareTogether.Resources.Directory;
@@ -16,6 +18,11 @@ using CareTogether.Resources.V1ReferralNotes;
 using CareTogether.Resources.V1Referrals;
 using Nito.AsyncEx;
 using Nito.Disposables.Internals;
+using ArrangementAssignIndividualVolunteer = CareTogether.Resources.V1Cases.AssignIndividualVolunteer;
+using ArrangementUnassignIndividualVolunteer = CareTogether.Resources.V1Cases.UnassignIndividualVolunteer;
+using V1CaseAssignIndividualVolunteer = CareTogether.Resources.V1Cases.V1CaseCommands.AssignIndividualVolunteer;
+using V1CaseUnassignIndividualVolunteer = CareTogether.Resources.V1Cases.V1CaseCommands.UnassignIndividualVolunteer;
+using V1ReferralAssignIndividualVolunteer = CareTogether.Resources.V1Referrals.AssignIndividualVolunteer;
 
 namespace CareTogether.Managers.Records
 {
@@ -26,6 +33,7 @@ namespace CareTogether.Managers.Records
         private readonly IPolicyEvaluationEngine policyEvaluationEngine;
         private readonly IUserAccessCalculation userAccessCalculation;
         private readonly IDirectoryResource directoryResource;
+        private readonly IAccountsResource accountsResource;
         private readonly IApprovalsResource approvalsResource;
         private readonly IV1CasesResource v1CasesResource;
         private readonly IV1ReferralsResource v1ReferralsResource;
@@ -42,6 +50,7 @@ namespace CareTogether.Managers.Records
             IPolicyEvaluationEngine policyEvaluationEngine,
             IUserAccessCalculation userAccessCalculation,
             IDirectoryResource directoryResource,
+            IAccountsResource accountsResource,
             IApprovalsResource approvalsResource,
             IV1CasesResource v1CasesResource,
             IV1ReferralsResource v1ReferralsResource,
@@ -56,6 +65,7 @@ namespace CareTogether.Managers.Records
             this.policyEvaluationEngine = policyEvaluationEngine;
             this.userAccessCalculation = userAccessCalculation;
             this.directoryResource = directoryResource;
+            this.accountsResource = accountsResource;
             this.approvalsResource = approvalsResource;
             this.v1CasesResource = v1CasesResource;
             this.v1ReferralsResource = v1ReferralsResource;
@@ -91,10 +101,32 @@ namespace CareTogether.Managers.Records
         )
         {
             var userContext = await CreateSessionUserContext(user, organizationId, locationId);
-
-            var locationPolicy = await policiesResource.GetCurrentPolicy(
+            var familiesTask = directoryResource.ListFamiliesAsync(organizationId, locationId);
+            var locationPolicyTask = policiesResource.GetCurrentPolicy(organizationId, locationId);
+            var communitiesTask = communitiesResource.ListLocationCommunitiesAsync(
                 organizationId,
                 locationId
+            );
+            var referralsTask = v1ReferralsResource.ListReferralsAsync(organizationId, locationId);
+
+            await Task.WhenAll(familiesTask, locationPolicyTask, communitiesTask, referralsTask);
+            var families = await familiesTask;
+            var locationPolicy = await locationPolicyTask;
+            var communities = await communitiesTask;
+            var referrals = await referralsTask;
+            var authorizationSnapshot = await userAccessCalculation.CreateSnapshotAsync(
+                organizationId,
+                locationId,
+                userContext,
+                families,
+                referrals,
+                communities
+            );
+            var renderingSnapshot = await combinedFamilyInfoFormatter.CreateRenderingSnapshotAsync(
+                organizationId,
+                locationId,
+                locationPolicy,
+                referrals
             );
 
             // The following permissions should not be construed as granting access to an actual aggregate.
@@ -106,38 +138,35 @@ namespace CareTogether.Managers.Records
                 Permission.AccessVolunteersScreen
             );
 
-            var families = await directoryResource.ListFamiliesAsync(organizationId, locationId);
-
             var visibleFamilies = (
-                await families
-                    .Select(async family =>
-                    {
-                        var permissions = await userAccessCalculation.AuthorizeUserAccessAsync(
-                            organizationId,
-                            locationId,
-                            userContext,
-                            new FamilyAuthorizationContext(family.Id, family)
-                        );
-                        return (
-                            family,
-                            hasPermissions: permissions.Except(irrelevantPermissions).Any()
-                        );
-                    })
-                    .WhenAll()
-            ).Where(x => x.hasPermissions).Select(x => x.family).ToImmutableList();
+                families.Select(family =>
+                {
+                    var permissions = userAccessCalculation.AuthorizeUserAccess(
+                        authorizationSnapshot,
+                        new FamilyAuthorizationContext(family.Id, family)
+                    );
+                    return (
+                        family,
+                        permissions,
+                        hasPermissions: permissions.Except(irrelevantPermissions).Any()
+                    );
+                })
+            ).Where(x => x.hasPermissions).ToImmutableList();
 
             var renderedFamilies = (
                 await visibleFamilies
-                    .Select(async family =>
+                    .Select(async familyAccess =>
                     {
                         var renderedFamily =
                             await combinedFamilyInfoFormatter.RenderCombinedFamilyInfoAsync(
                                 organizationId,
                                 locationPolicy,
                                 locationId,
-                                family.Id,
-                                family,
-                                userContext
+                                familyAccess.family.Id,
+                                familyAccess.family,
+                                userContext,
+                                familyAccess.permissions.ToImmutableList(),
+                                renderingSnapshot
                             );
                         if (renderedFamily == null)
                             return null;
@@ -146,65 +175,56 @@ namespace CareTogether.Managers.Records
                     .WhenAll()
             ).WhereNotNull().ToImmutableList();
 
-            var communities = await communitiesResource.ListLocationCommunitiesAsync(
-                organizationId,
-                locationId
-            );
-
-            var referrals = await v1ReferralsResource.ListReferralsAsync(
-                organizationId,
-                locationId
-            );
-
-            var canViewReferrals = await authorizationEngine.AuthorizeV1ReferralReadAsync(
-                organizationId,
-                locationId,
-                userContext
-            );
-
-            var renderedReferrals = canViewReferrals
-                ? (
-                    await referrals
-                        .Select(async referral =>
-                        {
-                            var renderedReferral = await RenderReferralAsync(
-                                organizationId,
-                                locationId,
-                                referral
-                            );
-                            return (RecordsAggregate)new ReferralRecordsAggregate(renderedReferral);
-                        })
-                        .WhenAll()
-                ).ToImmutableList()
-                : ImmutableList<RecordsAggregate>.Empty;
-
-            var visibleCommunities = (
-                await communities
-                    .Select(async community =>
+            var renderedReferrals = (
+                await referrals
+                    .Select(async referral =>
                     {
-                        var permissions = await userAccessCalculation.AuthorizeUserAccessAsync(
+                        var permissions = userAccessCalculation.AuthorizeUserAccess(
+                            authorizationSnapshot,
+                            new V1ReferralAuthorizationContext(referral.ReferralId)
+                        );
+                        if (!permissions.Contains(Permission.ViewV1Referral))
+                            return null;
+
+                        var renderedReferral = await RenderReferralAsync(
                             organizationId,
                             locationId,
                             userContext,
-                            new CommunityAuthorizationContext(community.Id)
+                            referral
                         );
-                        return (
-                            community,
-                            hasPermissions: permissions.Except(irrelevantPermissions).Any()
-                        );
+                        return (RecordsAggregate)new ReferralRecordsAggregate(renderedReferral);
                     })
                     .WhenAll()
-            ).Where(x => x.hasPermissions).Select(x => x.community).ToImmutableList();
+            ).WhereNotNull().ToImmutableList();
+
+            var visibleCommunities = (
+                communities.Select(community =>
+                {
+                    var permissions = userAccessCalculation.AuthorizeUserAccess(
+                        authorizationSnapshot,
+                        new CommunityAuthorizationContext(community.Id)
+                    );
+                    return (
+                        community,
+                        permissions,
+                        hasPermissions: permissions.Except(irrelevantPermissions).Any()
+                    );
+                })
+            ).Where(x => x.hasPermissions).ToImmutableList();
 
             var renderedCommunities = await visibleCommunities
-                .Select(async community =>
+                .Select(async communityAccess =>
                 {
                     //TODO: Rendering actions (e.g., permissions - which can be on a base aggregate type along with ID!)
                     var renderedCommunity = await authorizationEngine.DiscloseCommunityAsync(
                         userContext,
                         organizationId,
                         locationId,
-                        new CommunityInfo(community, ImmutableList<Permission>.Empty)
+                        new CommunityInfo(
+                            communityAccess.community,
+                            ImmutableList<Permission>.Empty
+                        ),
+                        communityAccess.permissions
                     );
                     return new CommunityRecordsAggregate(renderedCommunity);
                 })
@@ -226,28 +246,36 @@ namespace CareTogether.Managers.Records
         {
             var userContext = await CreateSessionUserContext(user, organizationId, locationId);
 
-            var atomicCommands = GenerateAtomicCommandsForCompositeCommand(command)
-                .ToImmutableList();
+            var commandPlan = await GenerateCompositeCommandPlanAsync(
+                organizationId,
+                locationId,
+                command
+            );
 
-            foreach (var atomicCommand in atomicCommands)
+            // User commands are the requested workflow steps and must pass authorization.
+            // Derived commands are workflow side effects covered by the authorized user commands.
+            foreach (var userCommand in commandPlan.UserCommands)
                 if (
                     !await AuthorizeCommandAsync(
                         organizationId,
                         locationId,
                         userContext,
-                        atomicCommand
+                        userCommand
                     )
                 )
                     throw new Exception("The user is not authorized to perform this command.");
 
-            foreach (var atomicCommand in atomicCommands)
-                await ExecuteCommandAsync(organizationId, locationId, user, atomicCommand);
+            foreach (var userCommand in commandPlan.UserCommands)
+                await ValidateCommandAsync(organizationId, locationId, userCommand);
+
+            foreach (var plannedCommand in commandPlan.AllCommands)
+                await ExecuteCommandAsync(organizationId, locationId, user, plannedCommand);
 
             return await RenderCompositeCommandResultAsync(
                 organizationId,
                 locationId,
                 userContext,
-                atomicCommands
+                commandPlan.AllCommands
             );
         }
 
@@ -264,13 +292,23 @@ namespace CareTogether.Managers.Records
                 throw new Exception("The user is not authorized to perform this command.");
             try
             {
+                await ValidateCommandAsync(organizationId, locationId, command);
+
+                var commandResultRenderingContext =
+                    await CreateCommandResultRenderingContextAsync(
+                        organizationId,
+                        locationId,
+                        command
+                    );
+
                 await ExecuteCommandAsync(organizationId, locationId, user, command);
 
                 return await RenderCommandResultAsync(
                     organizationId,
                     locationId,
                     userContext,
-                    command
+                    command,
+                    commandResultRenderingContext
                 );
             }
             catch
@@ -452,6 +490,31 @@ namespace CareTogether.Managers.Records
                 referralId,
                 documentId
             );
+        }
+
+        private sealed record CompositeCommandPlan(
+            ImmutableList<AtomicRecordsCommand> UserCommands,
+            ImmutableList<AtomicRecordsCommand> DerivedCommands
+        )
+        {
+            public ImmutableList<AtomicRecordsCommand> AllCommands =>
+                UserCommands.Concat(DerivedCommands).ToImmutableList();
+        }
+
+        private async Task<CompositeCommandPlan> GenerateCompositeCommandPlanAsync(
+            Guid organizationId,
+            Guid locationId,
+            CompositeRecordsCommand command
+        )
+        {
+            var userCommands = GenerateAtomicCommandsForCompositeCommand(command).ToImmutableList();
+            var derivedCommands = await GenerateDerivedAtomicCommandsForCompositeCommandAsync(
+                organizationId,
+                locationId,
+                command
+            );
+
+            return new CompositeCommandPlan(userCommands, derivedCommands);
         }
 
         private IEnumerable<AtomicRecordsCommand> GenerateAtomicCommandsForCompositeCommand(
@@ -656,6 +719,82 @@ namespace CareTogether.Managers.Records
             }
         }
 
+        private async Task<
+            ImmutableList<AtomicRecordsCommand>
+        > GenerateDerivedAtomicCommandsForCompositeCommandAsync(
+            Guid organizationId,
+            Guid locationId,
+            CompositeRecordsCommand command
+        )
+        {
+            var derivedV1CaseCommands = command switch
+            {
+                LinkReferralToCaseAndAcceptCommand c =>
+                    await GenerateReferralVolunteerAssignmentCopyCommandsAsync(
+                        organizationId,
+                        locationId,
+                        c.FamilyId,
+                        c.CaseId,
+                        c.ReferralId
+                    ),
+                OpenCaseForReferralAndAcceptCommand c =>
+                    await GenerateReferralVolunteerAssignmentCopyCommandsAsync(
+                        organizationId,
+                        locationId,
+                        c.FamilyId,
+                        c.CaseId,
+                        c.ReferralId
+                    ),
+                _ => ImmutableList<V1CaseCommand>.Empty,
+            };
+
+            return derivedV1CaseCommands
+                .Select(command => (AtomicRecordsCommand)new ReferralRecordsCommand(command))
+                .ToImmutableList();
+        }
+
+        private async Task<
+            ImmutableList<V1CaseCommand>
+        > GenerateReferralVolunteerAssignmentCopyCommandsAsync(
+            Guid organizationId,
+            Guid locationId,
+            Guid familyId,
+            Guid caseId,
+            Guid referralId
+        )
+        {
+            var referral = await v1ReferralsResource.GetReferralAsync(
+                organizationId,
+                locationId,
+                referralId
+            );
+            if (referral == null)
+                return ImmutableList<V1CaseCommand>.Empty;
+
+            var locationPolicy = await policiesResource.GetCurrentPolicy(
+                organizationId,
+                locationId
+            );
+            var caseFunctionAssignmentRoles = locationPolicy
+                .ReferralPolicy.FunctionAssignmentPolicies.Select(policy => policy.AssignmentRole)
+                .ToImmutableHashSet();
+
+            return referral
+                .AssignedIndividualVolunteers.Where(assignment =>
+                    caseFunctionAssignmentRoles.Contains(assignment.AssignmentRole)
+                )
+                .Select(assignment =>
+                    (V1CaseCommand)
+                        new V1CaseAssignIndividualVolunteer(
+                            familyId,
+                            caseId,
+                            assignment.PersonId,
+                            assignment.AssignmentRole
+                        )
+                )
+                .ToImmutableList();
+        }
+
         private Task<bool> AuthorizeCommandAsync(
             Guid organizationId,
             Guid locationId,
@@ -735,87 +874,333 @@ namespace CareTogether.Managers.Records
                 ),
             };
 
-        private Task ExecuteCommandAsync(
+        private async Task ExecuteCommandAsync(
             Guid organizationId,
             Guid locationId,
             ClaimsPrincipal user,
             AtomicRecordsCommand command
+        )
+        {
+            switch (command)
+            {
+                case FamilyRecordsCommand c:
+                    await directoryResource.ExecuteFamilyCommandAsync(
+                        organizationId,
+                        locationId,
+                        c.Command,
+                        user.UserId()
+                    );
+                    return;
+                case PersonRecordsCommand c:
+                    await directoryResource.ExecutePersonCommandAsync(
+                        organizationId,
+                        locationId,
+                        c.Command,
+                        user.UserId()
+                    );
+                    return;
+                case FamilyApprovalRecordsCommand c:
+                    await approvalsResource.ExecuteVolunteerFamilyCommandAsync(
+                        organizationId,
+                        locationId,
+                        c.Command,
+                        user.UserId()
+                    );
+                    return;
+                case IndividualApprovalRecordsCommand c:
+                    await approvalsResource.ExecuteVolunteerCommandAsync(
+                        organizationId,
+                        locationId,
+                        c.Command,
+                        user.UserId()
+                    );
+                    return;
+                case ReferralRecordsCommand c:
+                    await v1CasesResource.ExecuteV1CaseCommandAsync(
+                        organizationId,
+                        locationId,
+                        c.Command,
+                        user.UserId()
+                    );
+                    return;
+                case V1ReferralRecordsCommand c:
+                    await v1ReferralsResource.ExecuteV1ReferralCommandAsync(
+                        organizationId,
+                        locationId,
+                        c.Command,
+                        user.UserId()
+                    );
+                    return;
+                case ArrangementRecordsCommand c:
+                    await v1CasesResource.ExecuteArrangementsCommandAsync(
+                        organizationId,
+                        locationId,
+                        c.Command,
+                        user.UserId()
+                    );
+                    return;
+                case NoteRecordsCommand c:
+                    await notesResource.ExecuteNoteCommandAsync(
+                        organizationId,
+                        locationId,
+                        c.Command,
+                        user.UserId()
+                    );
+                    return;
+                case CommunityRecordsCommand c:
+                    await communitiesResource.ExecuteCommunityCommandAsync(
+                        organizationId,
+                        locationId,
+                        c.Command,
+                        user.UserId()
+                    );
+                    return;
+                case V1ReferralNoteRecordsCommand c:
+                    await v1ReferralNotesResource.ExecuteReferralNoteCommandAsync(
+                        organizationId,
+                        locationId,
+                        c.Command,
+                        user.UserId()
+                    );
+                    return;
+                default:
+                    throw new NotImplementedException(
+                        $"The command type '{command.GetType().FullName}' has not been implemented."
+                    );
+            }
+        }
+
+        private Task ValidateCommandAsync(
+            Guid organizationId,
+            Guid locationId,
+            AtomicRecordsCommand command
         ) =>
             command switch
             {
-                FamilyRecordsCommand c => directoryResource.ExecuteFamilyCommandAsync(
+                ReferralRecordsCommand
+                {
+                    Command: V1CaseAssignIndividualVolunteer assignIndividualVolunteer
+                } => ValidateIndividualVolunteerAssignmentCommandAsync(
                     organizationId,
                     locationId,
-                    c.Command,
-                    user.UserId()
+                    assignIndividualVolunteer
                 ),
-                PersonRecordsCommand c => directoryResource.ExecutePersonCommandAsync(
+                V1ReferralRecordsCommand
+                {
+                    Command: V1ReferralAssignIndividualVolunteer assignIndividualVolunteer
+                } => ValidateIndividualVolunteerAssignmentCommandAsync(
                     organizationId,
                     locationId,
-                    c.Command,
-                    user.UserId()
+                    assignIndividualVolunteer
                 ),
-                FamilyApprovalRecordsCommand c =>
-                    approvalsResource.ExecuteVolunteerFamilyCommandAsync(
-                        organizationId,
-                        locationId,
-                        c.Command,
-                        user.UserId()
-                    ),
-                IndividualApprovalRecordsCommand c =>
-                    approvalsResource.ExecuteVolunteerCommandAsync(
-                        organizationId,
-                        locationId,
-                        c.Command,
-                        user.UserId()
-                    ),
-                ReferralRecordsCommand c => v1CasesResource.ExecuteV1CaseCommandAsync(
-                    organizationId,
-                    locationId,
-                    c.Command,
-                    user.UserId()
-                ),
-                V1ReferralRecordsCommand c => v1ReferralsResource.ExecuteV1ReferralCommandAsync(
-                    organizationId,
-                    locationId,
-                    c.Command,
-                    user.UserId()
-                ),
-                ArrangementRecordsCommand c => v1CasesResource.ExecuteArrangementsCommandAsync(
-                    organizationId,
-                    locationId,
-                    c.Command,
-                    user.UserId()
-                ),
-                NoteRecordsCommand c => notesResource.ExecuteNoteCommandAsync(
-                    organizationId,
-                    locationId,
-                    c.Command,
-                    user.UserId()
-                ),
-                CommunityRecordsCommand c => communitiesResource.ExecuteCommunityCommandAsync(
-                    organizationId,
-                    locationId,
-                    c.Command,
-                    user.UserId()
-                ),
-                V1ReferralNoteRecordsCommand c =>
-                    v1ReferralNotesResource.ExecuteReferralNoteCommandAsync(
-                        organizationId,
-                        locationId,
-                        c.Command,
-                        user.UserId()
-                    ),
-                _ => throw new NotImplementedException(
-                    $"The command type '{command.GetType().FullName}' has not been implemented."
-                ),
+                _ => Task.CompletedTask,
             };
+
+        private async Task ValidateIndividualVolunteerAssignmentCommandAsync(
+            Guid organizationId,
+            Guid locationId,
+            V1ReferralAssignIndividualVolunteer assignIndividualVolunteer
+        )
+        {
+            var locationPolicy = await policiesResource.GetCurrentPolicy(
+                organizationId,
+                locationId
+            );
+            var assignmentPolicy =
+                locationPolicy.V1ReferralPolicy.FunctionAssignmentPolicies.SingleOrDefault(policy =>
+                    policy.AssignmentRole == assignIndividualVolunteer.AssignmentRole
+                );
+
+            if (assignmentPolicy == null)
+                throw new InvalidOperationException(
+                    "The volunteer assignment role is not configured for referrals."
+                );
+
+            if (
+                !await IsEligibleVolunteerAssigneeAsync(
+                    organizationId,
+                    locationId,
+                    assignIndividualVolunteer.PersonId,
+                    assignmentPolicy.Eligibility
+                )
+            )
+                throw new InvalidOperationException(
+                    "The selected person is not eligible for this volunteer assignment role."
+                );
+        }
+
+        private async Task ValidateIndividualVolunteerAssignmentCommandAsync(
+            Guid organizationId,
+            Guid locationId,
+            V1CaseAssignIndividualVolunteer assignIndividualVolunteer
+        )
+        {
+            var locationPolicy = await policiesResource.GetCurrentPolicy(
+                organizationId,
+                locationId
+            );
+            var assignmentPolicy =
+                locationPolicy.ReferralPolicy.FunctionAssignmentPolicies.SingleOrDefault(policy =>
+                    policy.AssignmentRole == assignIndividualVolunteer.AssignmentRole
+                );
+
+            if (assignmentPolicy == null)
+                throw new InvalidOperationException(
+                    "The volunteer assignment role is not configured for cases."
+                );
+
+            if (
+                !await IsEligibleVolunteerAssigneeAsync(
+                    organizationId,
+                    locationId,
+                    assignIndividualVolunteer.PersonId,
+                    assignmentPolicy.Eligibility
+                )
+            )
+                throw new InvalidOperationException(
+                    "The selected person is not eligible for this volunteer assignment role."
+                );
+        }
+
+        private async Task<bool> IsEligibleVolunteerAssigneeAsync(
+            Guid organizationId,
+            Guid locationId,
+            Guid personId,
+            FunctionAssignmentEligibility eligibility
+        )
+        {
+            var person = (
+                await directoryResource.ListPeopleAsync(organizationId, locationId)
+            ).SingleOrDefault(person => person.Id == personId);
+
+            if (person == null || !person.Active)
+                return false;
+
+            var locationRoles =
+                await accountsResource.TryGetPersonRolesAsync(organizationId, locationId, personId)
+                ?? ImmutableList<string>.Empty;
+            if (locationRoles.Intersect(eligibility.EligibleLocationRoles).Any())
+                return true;
+
+            if (eligibility.EligiblePeople.Contains(personId))
+                return true;
+
+            if (
+                eligibility.EligibleIndividualVolunteerRoles.IsEmpty
+                && eligibility.EligibleVolunteerFamilyRoles.IsEmpty
+            )
+                return false;
+
+            var family = await directoryResource.FindPersonFamilyAsync(
+                organizationId,
+                locationId,
+                personId
+            );
+            if (family == null || !family.Active)
+                return false;
+
+            var volunteerFamily = await approvalsResource.TryGetVolunteerFamilyAsync(
+                organizationId,
+                locationId,
+                family.Id
+            );
+            if (volunteerFamily == null)
+                return false;
+
+            var approvalCalculation =
+                await policyEvaluationEngine.CalculateVolunteerFamilyApprovalsAsync(
+                    organizationId,
+                    locationId,
+                    family,
+                    volunteerFamily
+                );
+            var combinedApprovals = approvalCalculation.ApprovalStatus;
+
+            var hasEligibleIndividualRole =
+                combinedApprovals.IndividualApprovals.TryGetValue(
+                    personId,
+                    out var individualApproval
+                )
+                && individualApproval.ApprovalStatusByRole.Any(role =>
+                    eligibility.EligibleIndividualVolunteerRoles.Contains(role.Key)
+                    && IsApprovedOrOnboarded(role.Value.CurrentStatus)
+                );
+
+            if (hasEligibleIndividualRole)
+                return true;
+
+            return combinedApprovals.FamilyRoleApprovals.Any(role =>
+                eligibility.EligibleVolunteerFamilyRoles.Contains(role.Key)
+                && IsApprovedOrOnboarded(role.Value.CurrentStatus)
+            );
+        }
+
+        private static bool IsApprovedOrOnboarded(RoleApprovalStatus? status) =>
+            status is RoleApprovalStatus.Approved or RoleApprovalStatus.Onboarded;
+
+        private sealed record CommandResultRenderingContext(
+            ImmutableDictionary<
+                Guid,
+                ImmutableHashSet<Guid>
+            > PreviouslyLinkedReferralFamilyIdsByReferralId
+        )
+        {
+            public static CommandResultRenderingContext Empty { get; } =
+                new(ImmutableDictionary<Guid, ImmutableHashSet<Guid>>.Empty);
+        }
+
+        private async Task<CommandResultRenderingContext> CreateCommandResultRenderingContextAsync(
+            Guid organizationId,
+            Guid locationId,
+            AtomicRecordsCommand command
+        )
+        {
+            if (command is not V1ReferralRecordsCommand { Command: UpdateV1ReferralFamily update })
+                return CommandResultRenderingContext.Empty;
+
+            var referral = await v1ReferralsResource.GetReferralAsync(
+                organizationId,
+                locationId,
+                update.ReferralId
+            );
+
+            if (referral?.FamilyId is not Guid familyId)
+                return CommandResultRenderingContext.Empty;
+
+            return new CommandResultRenderingContext(
+                ImmutableDictionary<Guid, ImmutableHashSet<Guid>>.Empty.SetItem(
+                    update.ReferralId,
+                    ImmutableHashSet.Create(familyId)
+                )
+            );
+        }
+
+        private async Task<RecordsAggregate?> RenderFamilyRecordsAggregateAsync(
+            Guid organizationId,
+            EffectiveLocationPolicy locationPolicy,
+            Guid locationId,
+            Guid familyId,
+            SessionUserContext userContext
+        )
+        {
+            var familyResult = await combinedFamilyInfoFormatter.RenderCombinedFamilyInfoAsync(
+                organizationId,
+                locationPolicy,
+                locationId,
+                familyId,
+                null,
+                userContext
+            );
+
+            return familyResult == null ? null : new FamilyRecordsAggregate(familyResult);
+        }
 
         private async Task<ImmutableList<RecordsAggregate>> RenderCommandResultAsync(
             Guid organizationId,
             Guid locationId,
             SessionUserContext userContext,
-            AtomicRecordsCommand command
+            AtomicRecordsCommand command,
+            CommandResultRenderingContext? commandResultRenderingContext = null
         )
         {
             var locationPolicy = await policiesResource.GetCurrentPolicy(
@@ -839,27 +1224,38 @@ namespace CareTogether.Managers.Records
                 var renderedReferral = await RenderReferralAsync(
                     organizationId,
                     locationId,
+                    userContext,
                     referral
                 );
 
                 var results = ImmutableList.CreateBuilder<RecordsAggregate>();
                 results.Add(new ReferralRecordsAggregate(renderedReferral));
 
-                if (renderedReferral.FamilyId.HasValue)
-                {
-                    var familyResult =
-                        await combinedFamilyInfoFormatter.RenderCombinedFamilyInfoAsync(
+                var linkedFamilyIds = commandResultRenderingContext != null
+                    && commandResultRenderingContext
+                        .PreviouslyLinkedReferralFamilyIdsByReferralId.TryGetValue(
+                        referralId,
+                        out var previousFamilyIds
+                    )
+                    ? previousFamilyIds
+                    : ImmutableHashSet<Guid>.Empty;
+
+                if (renderedReferral.Referral.FamilyId.HasValue)
+                    linkedFamilyIds = linkedFamilyIds.Add(renderedReferral.Referral.FamilyId.Value);
+
+                var linkedFamilyResults = await Task.WhenAll(
+                    linkedFamilyIds.Select(familyId =>
+                        RenderFamilyRecordsAggregateAsync(
                             organizationId,
                             locationPolicy,
                             locationId,
-                            renderedReferral.FamilyId.Value,
-                            null,
+                            familyId,
                             userContext
-                        );
+                        )
+                    )
+                );
 
-                    if (familyResult != null)
-                        results.Add(new FamilyRecordsAggregate(familyResult));
-                }
+                results.AddRange(linkedFamilyResults.WhereNotNull());
 
                 return results.ToImmutable();
             }
@@ -880,6 +1276,7 @@ namespace CareTogether.Managers.Records
                 var renderedReferral = await RenderReferralAsync(
                     organizationId,
                     locationId,
+                    userContext,
                     referral
                 );
 
@@ -914,21 +1311,17 @@ namespace CareTogether.Managers.Records
 
                 var familyResults = await Task.WhenAll(
                     familyIds.Select(familyId =>
-                        combinedFamilyInfoFormatter.RenderCombinedFamilyInfoAsync(
+                        RenderFamilyRecordsAggregateAsync(
                             organizationId,
                             locationPolicy,
                             locationId,
                             familyId,
-                            null,
                             userContext
                         )
                     )
                 );
 
-                return familyResults
-                    .OfType<CombinedFamilyInfo>() // Filters out null values
-                    .Select(result => new FamilyRecordsAggregate(result))
-                    .ToImmutableList<RecordsAggregate>();
+                return familyResults.WhereNotNull().ToImmutableList();
             }
         }
 
@@ -953,7 +1346,7 @@ namespace CareTogether.Managers.Records
             ).SelectMany(results => results);
 
             return renderedAggregates
-                .GroupBy(aggregate => (aggregate.Id, AggregateType: aggregate.GetType()))
+                .GroupBy(aggregate => aggregate.Id)
                 .Select(group => group.Last())
                 .ToImmutableList();
         }
@@ -988,12 +1381,12 @@ namespace CareTogether.Managers.Records
                         actualCommand.FamilyId,
                         actualCommand.VolunteerFamilyId,
                     ],
-                    AssignIndividualVolunteer actualCommand =>
+                    ArrangementAssignIndividualVolunteer actualCommand =>
                     [
                         actualCommand.FamilyId,
                         actualCommand.VolunteerFamilyId,
                     ],
-                    UnassignIndividualVolunteer actualCommand =>
+                    ArrangementUnassignIndividualVolunteer actualCommand =>
                     [
                         actualCommand.FamilyId,
                         actualCommand.VolunteerFamilyId,
@@ -1006,9 +1399,10 @@ namespace CareTogether.Managers.Records
                 ),
             };
 
-        private async Task<V1Referral> RenderReferralAsync(
+        private async Task<V1ReferralInfo> RenderReferralAsync(
             Guid organizationId,
             Guid locationId,
+            SessionUserContext userContext,
             V1Referral referral
         )
         {
@@ -1024,10 +1418,35 @@ namespace CareTogether.Managers.Records
                 referral.ReferralId
             );
 
-            return referral with
+            var permissions = await userAccessCalculation.AuthorizeUserAccessAsync(
+                organizationId,
+                locationId,
+                userContext,
+                new V1ReferralAuthorizationContext(referral.ReferralId)
+            );
+
+            var canViewFunctionAssignments = permissions.Contains(
+                Permission.ViewV1ReferralFunctionAssignments
+            );
+
+            var disclosedReferral = referral with
             {
                 Notes = notes,
+                AssignedIndividualVolunteers = canViewFunctionAssignments
+                    ? referral.AssignedIndividualVolunteers
+                    : ImmutableList<AssignedIndividualVolunteer>.Empty,
+                History = canViewFunctionAssignments
+                    ? referral.History
+                    : referral
+                        .History.Where(activity =>
+                            activity
+                                is not V1ReferralIndividualVolunteerAssigned
+                                    and not V1ReferralIndividualVolunteerUnassigned
+                        )
+                        .ToImmutableList(),
             };
+
+            return new V1ReferralInfo(disclosedReferral, permissions);
         }
 
         private async Task<V1Referral> PopulateMissingReferralIntakeRequirementsAsync(

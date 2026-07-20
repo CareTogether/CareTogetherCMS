@@ -20,6 +20,7 @@ export type ExtendedOrganizationConfiguration = OrganizationConfiguration & {
   ethnicities?: string[];
   adultFamilyRelationships?: string[];
   arrangementReasons?: string[];
+  caseCloseReasons?: string[];
   referralCloseReasons?: string[];
 };
 
@@ -64,6 +65,14 @@ export const referralCloseReasonsData = selector({
   get: ({ get }) => {
     const organizationConfiguration = get(organizationConfigurationQuery);
     return organizationConfiguration?.referralCloseReasons ?? [];
+  },
+});
+
+export const caseCloseReasonsData = selector({
+  key: 'COMPATIBILITY__caseCloseReasonsData',
+  get: ({ get }) => {
+    const organizationConfiguration = get(organizationConfigurationQuery);
+    return organizationConfiguration?.caseCloseReasons ?? [];
   },
 });
 
@@ -230,6 +239,18 @@ export const allFunctionsInPolicyQuery = selector({
       ) || [];
     const uniqueFunctions = Array.from(new Set(allFunctions));
     return uniqueFunctions;
+  },
+});
+
+export const allFunctionAssignmentRolesInPolicyQuery = selector({
+  key: 'allFunctionAssignmentRolesInPolicyQuery',
+  get: ({ get }) => {
+    const policy = get(policyData);
+    const allFunctionAssignmentRoles = [
+      ...(policy.referralPolicy?.functionAssignmentPolicies ?? []),
+      ...(policy.v1ReferralPolicy?.functionAssignmentPolicies ?? []),
+    ].map((volunteerAssignmentPolicy) => volunteerAssignmentPolicy.assignmentRole);
+    return Array.from(new Set(allFunctionAssignmentRoles)).filter(Boolean);
   },
 });
 

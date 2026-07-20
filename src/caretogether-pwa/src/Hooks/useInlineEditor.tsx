@@ -4,7 +4,7 @@ import {
   Save as SaveIcon,
   Undo as UndoIcon,
 } from '@mui/icons-material';
-import { useState } from 'react';
+import { ReactElement, useState } from 'react';
 import { useBackdrop } from './useBackdrop';
 
 export interface IInlineEditor<T> {
@@ -12,9 +12,9 @@ export interface IInlineEditor<T> {
   setValue: React.Dispatch<React.SetStateAction<T | undefined>>;
   editing: boolean;
   setEditing: React.Dispatch<React.SetStateAction<boolean>>;
-  editButton: false | JSX.Element;
-  cancelButton: false | JSX.Element;
-  saveButton: false | JSX.Element;
+  editButton: false | ReactElement;
+  cancelButton: false | ReactElement;
+  saveButton: false | ReactElement;
 }
 
 export function useInlineEditor<T, U>(

@@ -54,6 +54,155 @@ namespace CareTogether.Engines.PolicyEvaluation
             );
         }
 
+        public async Task<VolunteerFamilyApprovalCalculationResult> CalculateVolunteerFamilyApprovalsAsync(
+            Guid organizationId,
+            Guid locationId,
+            Family family,
+            VolunteerFamilyEntry volunteerFamily
+        )
+        {
+            var policy = await policiesResource.GetCurrentPolicy(organizationId, locationId);
+
+            var applyValidity = (Resources.CompletedRequirementInfo completed) =>
+                ApplyValidityPolicyToCompletedRequirement(policy, completed);
+            var completedFamilyRequirementsWithExpiration = volunteerFamily
+                .CompletedRequirements.Select(applyValidity)
+                .ToImmutableList();
+            var completedIndividualRequirementsWithExpiration = volunteerFamily
+                .IndividualEntries.ToImmutableDictionary(
+                    entry => entry.Key,
+                    entry => entry.Value.CompletedRequirements.Select(applyValidity).ToImmutableList()
+                );
+
+            var approvalStatus = ApprovalCalculations.CalculateCombinedFamilyApprovals(
+                policy,
+                family,
+                completedFamilyRequirementsWithExpiration,
+                volunteerFamily.ExemptedRequirements,
+                volunteerFamily.RoleRemovals,
+                completedIndividualRequirementsWithExpiration,
+                volunteerFamily.IndividualEntries.ToImmutableDictionary(
+                    entry => entry.Key,
+                    entry => entry.Value.ExemptedRequirements
+                ),
+                volunteerFamily.IndividualEntries.ToImmutableDictionary(
+                    entry => entry.Key,
+                    entry => entry.Value.RoleRemovals
+                )
+            );
+
+            var completedFamilyRequirements = completedFamilyRequirementsWithExpiration
+                .Select(requirement =>
+                    requirement with
+                    {
+                        RoleNames = RequirementRoleAttribution.GetFamilyRequirementRoleNames(
+                            policy,
+                            approvalStatus.FamilyRoleApprovals,
+                            requirement.RequirementName
+                        ),
+                    }
+                )
+                .ToImmutableList();
+
+            var exemptedFamilyRequirements = volunteerFamily
+                .ExemptedRequirements.Select(requirement =>
+                    requirement with
+                    {
+                        RoleNames = RequirementRoleAttribution.GetFamilyRequirementRoleNames(
+                            policy,
+                            approvalStatus.FamilyRoleApprovals,
+                            requirement.RequirementName
+                        ),
+                    }
+                )
+                .ToImmutableList();
+
+            var completedIndividualRequirements = completedIndividualRequirementsWithExpiration
+                .ToImmutableDictionary(
+                    entry => entry.Key,
+                    entry =>
+                        entry
+                            .Value.Select(requirement =>
+                                requirement with
+                                {
+                                    RoleNames =
+                                        GetIndividualRequirementRoleNames(
+                                            policy,
+                                            approvalStatus,
+                                            entry.Key,
+                                            requirement.RequirementName
+                                        ),
+                                }
+                            )
+                            .ToImmutableList()
+                );
+
+            var exemptedIndividualRequirements = volunteerFamily
+                .IndividualEntries.ToImmutableDictionary(
+                    entry => entry.Key,
+                    entry =>
+                        entry
+                            .Value.ExemptedRequirements.Select(requirement =>
+                                requirement with
+                                {
+                                    RoleNames =
+                                        GetIndividualRequirementRoleNames(
+                                            policy,
+                                            approvalStatus,
+                                            entry.Key,
+                                            requirement.RequirementName
+                                        ),
+                                }
+                            )
+                            .ToImmutableList()
+                );
+
+            return new VolunteerFamilyApprovalCalculationResult(
+                approvalStatus,
+                completedFamilyRequirements,
+                exemptedFamilyRequirements,
+                completedIndividualRequirements,
+                exemptedIndividualRequirements
+            );
+        }
+
+        private static ImmutableList<string> GetIndividualRequirementRoleNames(
+            EffectiveLocationPolicy policy,
+            FamilyApprovalStatus approvalStatus,
+            Guid personId,
+            string requirementName
+        )
+        {
+            approvalStatus.IndividualApprovals.TryGetValue(personId, out var individualApproval);
+
+            return RequirementRoleAttribution.GetIndividualRequirementRoleNames(
+                policy,
+                approvalStatus.FamilyRoleApprovals,
+                individualApproval?.ApprovalStatusByRole
+                    ?? ImmutableDictionary<string, IndividualRoleApprovalStatus>.Empty,
+                personId,
+                requirementName
+            );
+        }
+
+        private static Resources.CompletedRequirementInfo ApplyValidityPolicyToCompletedRequirement(
+            EffectiveLocationPolicy policy,
+            Resources.CompletedRequirementInfo completed
+        )
+        {
+            return policy.ActionDefinitions.TryGetValue(
+                completed.RequirementName,
+                out var actionDefinition
+            )
+                ? completed with
+                {
+                    ExpiresAtUtc = actionDefinition.Validity.HasValue
+                        ? completed.CompletedAtUtc + actionDefinition.Validity
+                        : null,
+                }
+                : completed;
+        }
+
         internal CompletedRequirementInfo ToCompletedRequirementsForCalculation(
             Resources.CompletedRequirementInfo entry,
             TimeZoneInfo locationTimeZone
@@ -188,7 +337,8 @@ namespace CareTogether.Engines.PolicyEvaluation
                 exemptedRequirements,
                 individualVolunteerAssignments,
                 familyVolunteerAssignments,
-                ChildLocationHistory
+                ChildLocationHistory,
+                entry.ArrangementPolicyVersion
             );
         }
 

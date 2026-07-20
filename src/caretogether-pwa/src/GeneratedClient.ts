@@ -116,47 +116,6 @@ export class ConfigurationClient {
         return Promise.resolve<OrganizationConfiguration>(null as any);
     }
 
-    putLocationDefinition(organizationId: string, newLocationPayload: PutLocationPayload): Promise<OrganizationConfiguration> {
-        let url_ = this.baseUrl + "/api/{organizationId}/Configuration";
-        if (organizationId === undefined || organizationId === null)
-            throw new globalThis.Error("The parameter 'organizationId' must be defined.");
-        url_ = url_.replace("{organizationId}", encodeURIComponent("" + organizationId));
-        url_ = url_.replace(/[?&]$/, "");
-
-        const content_ = JSON.stringify(newLocationPayload);
-
-        let options_: RequestInit = {
-            body: content_,
-            method: "PUT",
-            headers: {
-                "Content-Type": "application/json",
-                "Accept": "application/json"
-            }
-        };
-
-        return this.http.fetch(url_, options_).then((_response: Response) => {
-            return this.processPutLocationDefinition(_response);
-        });
-    }
-
-    protected processPutLocationDefinition(response: Response): Promise<OrganizationConfiguration> {
-        const status = response.status;
-        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
-        if (status === 200) {
-            return response.text().then((_responseText) => {
-            let result200: any = null;
-            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
-            result200 = OrganizationConfiguration.fromJS(resultData200);
-            return result200;
-            });
-        } else if (status !== 200 && status !== 204) {
-            return response.text().then((_responseText) => {
-            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
-            });
-        }
-        return Promise.resolve<OrganizationConfiguration>(null as any);
-    }
-
     putRoleDefinition(organizationId: string, roleName: string, role: RoleDefinition): Promise<OrganizationConfiguration> {
         let url_ = this.baseUrl + "/api/{organizationId}/Configuration/roles/{roleName}";
         if (organizationId === undefined || organizationId === null)
@@ -241,6 +200,88 @@ export class ConfigurationClient {
         return Promise.resolve<OrganizationConfiguration>(null as any);
     }
 
+    putLocationDefinition(organizationId: string, newLocationPayload: PutLocationPayload): Promise<OrganizationConfiguration> {
+        let url_ = this.baseUrl + "/api/{organizationId}/Configuration/location";
+        if (organizationId === undefined || organizationId === null)
+            throw new globalThis.Error("The parameter 'organizationId' must be defined.");
+        url_ = url_.replace("{organizationId}", encodeURIComponent("" + organizationId));
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(newLocationPayload);
+
+        let options_: RequestInit = {
+            body: content_,
+            method: "PUT",
+            headers: {
+                "Content-Type": "application/json",
+                "Accept": "application/json"
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processPutLocationDefinition(_response);
+        });
+    }
+
+    protected processPutLocationDefinition(response: Response): Promise<OrganizationConfiguration> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result200 = OrganizationConfiguration.fromJS(resultData200);
+            return result200;
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<OrganizationConfiguration>(null as any);
+    }
+
+    putOrganizationConfiguration(organizationId: string, payload: PutOrganizationConfigurationPayload): Promise<OrganizationConfiguration> {
+        let url_ = this.baseUrl + "/api/{organizationId}/Configuration/organization";
+        if (organizationId === undefined || organizationId === null)
+            throw new globalThis.Error("The parameter 'organizationId' must be defined.");
+        url_ = url_.replace("{organizationId}", encodeURIComponent("" + organizationId));
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(payload);
+
+        let options_: RequestInit = {
+            body: content_,
+            method: "PUT",
+            headers: {
+                "Content-Type": "application/json",
+                "Accept": "application/json"
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processPutOrganizationConfiguration(_response);
+        });
+    }
+
+    protected processPutOrganizationConfiguration(response: Response): Promise<OrganizationConfiguration> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result200 = OrganizationConfiguration.fromJS(resultData200);
+            return result200;
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<OrganizationConfiguration>(null as any);
+    }
+
     getEffectiveLocationPolicy(organizationId: string, locationId: string): Promise<EffectiveLocationPolicy> {
         let url_ = this.baseUrl + "/api/{organizationId}/{locationId}/Configuration/policy";
         if (organizationId === undefined || organizationId === null)
@@ -264,6 +305,50 @@ export class ConfigurationClient {
     }
 
     protected processGetEffectiveLocationPolicy(response: Response): Promise<EffectiveLocationPolicy> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result200 = EffectiveLocationPolicy.fromJS(resultData200);
+            return result200;
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<EffectiveLocationPolicy>(null as any);
+    }
+
+    putEffectiveLocationPolicy(organizationId: string, locationId: string, policy: EffectiveLocationPolicy): Promise<EffectiveLocationPolicy> {
+        let url_ = this.baseUrl + "/api/{organizationId}/{locationId}/Configuration/policy";
+        if (organizationId === undefined || organizationId === null)
+            throw new globalThis.Error("The parameter 'organizationId' must be defined.");
+        url_ = url_.replace("{organizationId}", encodeURIComponent("" + organizationId));
+        if (locationId === undefined || locationId === null)
+            throw new globalThis.Error("The parameter 'locationId' must be defined.");
+        url_ = url_.replace("{locationId}", encodeURIComponent("" + locationId));
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(policy);
+
+        let options_: RequestInit = {
+            body: content_,
+            method: "PUT",
+            headers: {
+                "Content-Type": "application/json",
+                "Accept": "application/json"
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processPutEffectiveLocationPolicy(_response);
+        });
+    }
+
+    protected processPutEffectiveLocationPolicy(response: Response): Promise<EffectiveLocationPolicy> {
         const status = response.status;
         let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
         if (status === 200) {
@@ -1309,6 +1394,7 @@ export class OrganizationConfiguration implements IOrganizationConfiguration {
     roles!: RoleDefinition[];
     communityRoles!: string[];
     referralCloseReasons?: string[] | undefined;
+    caseCloseReasons?: string[] | undefined;
 
     constructor(data?: IOrganizationConfiguration) {
         if (data) {
@@ -1347,6 +1433,11 @@ export class OrganizationConfiguration implements IOrganizationConfiguration {
                 for (let item of _data["referralCloseReasons"])
                     this.referralCloseReasons!.push(item);
             }
+            if (Array.isArray(_data["caseCloseReasons"])) {
+                this.caseCloseReasons = [] as any;
+                for (let item of _data["caseCloseReasons"])
+                    this.caseCloseReasons!.push(item);
+            }
         }
     }
 
@@ -1380,6 +1471,11 @@ export class OrganizationConfiguration implements IOrganizationConfiguration {
             for (let item of this.referralCloseReasons)
                 data["referralCloseReasons"].push(item);
         }
+        if (Array.isArray(this.caseCloseReasons)) {
+            data["caseCloseReasons"] = [];
+            for (let item of this.caseCloseReasons)
+                data["caseCloseReasons"].push(item);
+        }
         return data;
     }
 }
@@ -1390,6 +1486,7 @@ export interface IOrganizationConfiguration {
     roles: RoleDefinition[];
     communityRoles: string[];
     referralCloseReasons?: string[] | undefined;
+    caseCloseReasons?: string[] | undefined;
 }
 
 export class LocationConfiguration implements ILocationConfiguration {
@@ -1814,6 +1911,16 @@ export abstract class PermissionContext implements IPermissionContext {
             result.init(data);
             return result;
         }
+        if (data["discriminator"] === "AssignedVolunteerInV1CasePermissionContext") {
+            let result = new AssignedVolunteerInV1CasePermissionContext();
+            result.init(data);
+            return result;
+        }
+        if (data["discriminator"] === "AssignedVolunteerInV1ReferralPermissionContext") {
+            let result = new AssignedVolunteerInV1ReferralPermissionContext();
+            result.init(data);
+            return result;
+        }
         if (data["discriminator"] === "CommunityCoMemberFamiliesAssignedFunctionsInReferralCoAssignedFamiliesPermissionContext") {
             let result = new CommunityCoMemberFamiliesAssignedFunctionsInReferralCoAssignedFamiliesPermissionContext();
             result.init(data);
@@ -2020,6 +2127,98 @@ export class AssignedFunctionsInReferralPartneringFamilyPermissionContext extend
 export interface IAssignedFunctionsInReferralPartneringFamilyPermissionContext extends IPermissionContext {
     whenReferralIsOpen?: boolean | undefined;
     whenOwnFunctionIsIn?: string[] | undefined;
+}
+
+export class AssignedVolunteerInV1CasePermissionContext extends PermissionContext implements IAssignedVolunteerInV1CasePermissionContext {
+    whenCaseIsOpen?: boolean | undefined;
+    whenAssignmentRoleIsIn?: string[] | undefined;
+
+    constructor(data?: IAssignedVolunteerInV1CasePermissionContext) {
+        super(data);
+        this._discriminator = "AssignedVolunteerInV1CasePermissionContext";
+    }
+
+    override init(_data?: any) {
+        super.init(_data);
+        if (_data) {
+            this.whenCaseIsOpen = _data["whenCaseIsOpen"];
+            if (Array.isArray(_data["whenAssignmentRoleIsIn"])) {
+                this.whenAssignmentRoleIsIn = [] as any;
+                for (let item of _data["whenAssignmentRoleIsIn"])
+                    this.whenAssignmentRoleIsIn!.push(item);
+            }
+        }
+    }
+
+    static override fromJS(data: any): AssignedVolunteerInV1CasePermissionContext {
+        data = typeof data === 'object' ? data : {};
+        let result = new AssignedVolunteerInV1CasePermissionContext();
+        result.init(data);
+        return result;
+    }
+
+    override toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["whenCaseIsOpen"] = this.whenCaseIsOpen;
+        if (Array.isArray(this.whenAssignmentRoleIsIn)) {
+            data["whenAssignmentRoleIsIn"] = [];
+            for (let item of this.whenAssignmentRoleIsIn)
+                data["whenAssignmentRoleIsIn"].push(item);
+        }
+        super.toJSON(data);
+        return data;
+    }
+}
+
+export interface IAssignedVolunteerInV1CasePermissionContext extends IPermissionContext {
+    whenCaseIsOpen?: boolean | undefined;
+    whenAssignmentRoleIsIn?: string[] | undefined;
+}
+
+export class AssignedVolunteerInV1ReferralPermissionContext extends PermissionContext implements IAssignedVolunteerInV1ReferralPermissionContext {
+    whenReferralIsOpen?: boolean | undefined;
+    whenAssignmentRoleIsIn?: string[] | undefined;
+
+    constructor(data?: IAssignedVolunteerInV1ReferralPermissionContext) {
+        super(data);
+        this._discriminator = "AssignedVolunteerInV1ReferralPermissionContext";
+    }
+
+    override init(_data?: any) {
+        super.init(_data);
+        if (_data) {
+            this.whenReferralIsOpen = _data["whenReferralIsOpen"];
+            if (Array.isArray(_data["whenAssignmentRoleIsIn"])) {
+                this.whenAssignmentRoleIsIn = [] as any;
+                for (let item of _data["whenAssignmentRoleIsIn"])
+                    this.whenAssignmentRoleIsIn!.push(item);
+            }
+        }
+    }
+
+    static override fromJS(data: any): AssignedVolunteerInV1ReferralPermissionContext {
+        data = typeof data === 'object' ? data : {};
+        let result = new AssignedVolunteerInV1ReferralPermissionContext();
+        result.init(data);
+        return result;
+    }
+
+    override toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["whenReferralIsOpen"] = this.whenReferralIsOpen;
+        if (Array.isArray(this.whenAssignmentRoleIsIn)) {
+            data["whenAssignmentRoleIsIn"] = [];
+            for (let item of this.whenAssignmentRoleIsIn)
+                data["whenAssignmentRoleIsIn"].push(item);
+        }
+        super.toJSON(data);
+        return data;
+    }
+}
+
+export interface IAssignedVolunteerInV1ReferralPermissionContext extends IPermissionContext {
+    whenReferralIsOpen?: boolean | undefined;
+    whenAssignmentRoleIsIn?: string[] | undefined;
 }
 
 export class CommunityCoMemberFamiliesAssignedFunctionsInReferralCoAssignedFamiliesPermissionContext extends PermissionContext implements ICommunityCoMemberFamiliesAssignedFunctionsInReferralCoAssignedFamiliesPermissionContext {
@@ -2339,6 +2538,8 @@ export enum Permission {
     ViewV1Referral = 264,
     EditV1ReferralRequirementCompletion = 265,
     EditV1ReferralRequirementExemption = 266,
+    ViewV1ReferralFunctionAssignments = 267,
+    EditV1ReferralFunctionAssignments = 268,
     CreateV1Case = 300,
     EditV1Case = 301,
     CloseV1Case = 302,
@@ -2348,6 +2549,8 @@ export enum Permission {
     EditV1CaseRequirementCompletion = 306,
     EditV1CaseRequirementExemption = 307,
     ViewV1CaseHistory = 308,
+    ViewV1CaseFunctionAssignments = 309,
+    EditV1CaseFunctionAssignments = 310,
     CreateArrangement = 350,
     EditArrangement = 351,
     ViewAssignments = 352,
@@ -2414,11 +2617,69 @@ export interface IPutLocationPayload {
     copyPoliciesFromLocationId?: string | undefined;
 }
 
+export class PutOrganizationConfigurationPayload implements IPutOrganizationConfigurationPayload {
+    referralCloseReasons?: string[] | undefined;
+    caseCloseReasons?: string[] | undefined;
+
+    constructor(data?: IPutOrganizationConfigurationPayload) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (this as any)[property] = (data as any)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            if (Array.isArray(_data["referralCloseReasons"])) {
+                this.referralCloseReasons = [] as any;
+                for (let item of _data["referralCloseReasons"])
+                    this.referralCloseReasons!.push(item);
+            }
+            if (Array.isArray(_data["caseCloseReasons"])) {
+                this.caseCloseReasons = [] as any;
+                for (let item of _data["caseCloseReasons"])
+                    this.caseCloseReasons!.push(item);
+            }
+        }
+    }
+
+    static fromJS(data: any): PutOrganizationConfigurationPayload {
+        data = typeof data === 'object' ? data : {};
+        let result = new PutOrganizationConfigurationPayload();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        if (Array.isArray(this.referralCloseReasons)) {
+            data["referralCloseReasons"] = [];
+            for (let item of this.referralCloseReasons)
+                data["referralCloseReasons"].push(item);
+        }
+        if (Array.isArray(this.caseCloseReasons)) {
+            data["caseCloseReasons"] = [];
+            for (let item of this.caseCloseReasons)
+                data["caseCloseReasons"].push(item);
+        }
+        return data;
+    }
+}
+
+export interface IPutOrganizationConfigurationPayload {
+    referralCloseReasons?: string[] | undefined;
+    caseCloseReasons?: string[] | undefined;
+}
+
 export class EffectiveLocationPolicy implements IEffectiveLocationPolicy {
     actionDefinitions!: { [key: string]: ActionRequirement; };
     customFamilyFields!: CustomField[];
     referralPolicy!: V1CasePolicy;
     volunteerPolicy!: VolunteerPolicy;
+    customFields!: FamilyMemberCustomFieldPolicy;
+    v1ReferralPolicy!: V1ReferralPolicy;
 
     constructor(data?: IEffectiveLocationPolicy) {
         if (data) {
@@ -2432,6 +2693,8 @@ export class EffectiveLocationPolicy implements IEffectiveLocationPolicy {
             this.customFamilyFields = [];
             this.referralPolicy = new V1CasePolicy();
             this.volunteerPolicy = new VolunteerPolicy();
+            this.customFields = new FamilyMemberCustomFieldPolicy();
+            this.v1ReferralPolicy = new V1ReferralPolicy();
         }
     }
 
@@ -2451,6 +2714,8 @@ export class EffectiveLocationPolicy implements IEffectiveLocationPolicy {
             }
             this.referralPolicy = _data["referralPolicy"] ? V1CasePolicy.fromJS(_data["referralPolicy"]) : new V1CasePolicy();
             this.volunteerPolicy = _data["volunteerPolicy"] ? VolunteerPolicy.fromJS(_data["volunteerPolicy"]) : new VolunteerPolicy();
+            this.customFields = _data["customFields"] ? FamilyMemberCustomFieldPolicy.fromJS(_data["customFields"]) : new FamilyMemberCustomFieldPolicy();
+            this.v1ReferralPolicy = _data["v1ReferralPolicy"] ? V1ReferralPolicy.fromJS(_data["v1ReferralPolicy"]) : new V1ReferralPolicy();
         }
     }
 
@@ -2477,6 +2742,8 @@ export class EffectiveLocationPolicy implements IEffectiveLocationPolicy {
         }
         data["referralPolicy"] = this.referralPolicy ? this.referralPolicy.toJSON() : undefined as any;
         data["volunteerPolicy"] = this.volunteerPolicy ? this.volunteerPolicy.toJSON() : undefined as any;
+        data["customFields"] = this.customFields ? this.customFields.toJSON() : undefined as any;
+        data["v1ReferralPolicy"] = this.v1ReferralPolicy ? this.v1ReferralPolicy.toJSON() : undefined as any;
         return data;
     }
 }
@@ -2486,6 +2753,8 @@ export interface IEffectiveLocationPolicy {
     customFamilyFields: CustomField[];
     referralPolicy: V1CasePolicy;
     volunteerPolicy: VolunteerPolicy;
+    customFields: FamilyMemberCustomFieldPolicy;
+    v1ReferralPolicy: V1ReferralPolicy;
 }
 
 export class ActionRequirement implements IActionRequirement {
@@ -2577,6 +2846,7 @@ export class CustomField implements ICustomField {
     type!: CustomFieldType;
     validation?: CustomFieldValidation | undefined;
     validValues?: string[] | undefined;
+    groupingKey?: string | undefined;
 
     constructor(data?: ICustomField) {
         if (data) {
@@ -2597,6 +2867,7 @@ export class CustomField implements ICustomField {
                 for (let item of _data["validValues"])
                     this.validValues!.push(item);
             }
+            this.groupingKey = _data["groupingKey"];
         }
     }
 
@@ -2617,6 +2888,7 @@ export class CustomField implements ICustomField {
             for (let item of this.validValues)
                 data["validValues"].push(item);
         }
+        data["groupingKey"] = this.groupingKey;
         return data;
     }
 }
@@ -2626,11 +2898,13 @@ export interface ICustomField {
     type: CustomFieldType;
     validation?: CustomFieldValidation | undefined;
     validValues?: string[] | undefined;
+    groupingKey?: string | undefined;
 }
 
 export enum CustomFieldType {
     Boolean = 0,
     String = 1,
+    StringArray = 2,
 }
 
 export enum CustomFieldValidation {
@@ -2644,6 +2918,7 @@ export class V1CasePolicy implements IV1CasePolicy {
     arrangementPolicies!: ArrangementPolicy[];
     functionPolicies?: FunctionPolicy[] | undefined;
     intakeRequirements?: RequirementDefinition[] | undefined;
+    functionAssignmentPolicies!: FunctionAssignmentPolicy[];
 
     constructor(data?: IV1CasePolicy) {
         if (data) {
@@ -2657,6 +2932,7 @@ export class V1CasePolicy implements IV1CasePolicy {
             this.requiredIntakeActionNames = [];
             this.customFields = [];
             this.arrangementPolicies = [];
+            this.functionAssignmentPolicies = [];
         }
     }
 
@@ -2691,6 +2967,11 @@ export class V1CasePolicy implements IV1CasePolicy {
                 this.intakeRequirements = [] as any;
                 for (let item of _data["intakeRequirements"])
                     this.intakeRequirements!.push(RequirementDefinition.fromJS(item));
+            }
+            if (Array.isArray(_data["functionAssignmentPolicies"])) {
+                this.functionAssignmentPolicies = [] as any;
+                for (let item of _data["functionAssignmentPolicies"])
+                    this.functionAssignmentPolicies!.push(FunctionAssignmentPolicy.fromJS(item));
             }
         }
     }
@@ -2734,6 +3015,11 @@ export class V1CasePolicy implements IV1CasePolicy {
             for (let item of this.intakeRequirements)
                 data["intakeRequirements"].push(item ? item.toJSON() : undefined as any);
         }
+        if (Array.isArray(this.functionAssignmentPolicies)) {
+            data["functionAssignmentPolicies"] = [];
+            for (let item of this.functionAssignmentPolicies)
+                data["functionAssignmentPolicies"].push(item ? item.toJSON() : undefined as any);
+        }
         return data;
     }
 }
@@ -2745,6 +3031,7 @@ export interface IV1CasePolicy {
     arrangementPolicies: ArrangementPolicy[];
     functionPolicies?: FunctionPolicy[] | undefined;
     intakeRequirements?: RequirementDefinition[] | undefined;
+    functionAssignmentPolicies: FunctionAssignmentPolicy[];
 }
 
 export class RequirementDefinition implements IRequirementDefinition {
@@ -2800,6 +3087,8 @@ export class ArrangementPolicy implements IArrangementPolicy {
     requiredSetupActions?: RequirementDefinition[] | undefined;
     requiredMonitoringActionsNew?: MonitoringRequirement[] | undefined;
     requiredCloseoutActions?: RequirementDefinition[] | undefined;
+    supersededAtUtc?: Date | undefined;
+    policyVersions?: ArrangementPolicyVersion[] | undefined;
 
     constructor(data?: IArrangementPolicy) {
         if (data) {
@@ -2873,6 +3162,12 @@ export class ArrangementPolicy implements IArrangementPolicy {
                 for (let item of _data["requiredCloseoutActions"])
                     this.requiredCloseoutActions!.push(RequirementDefinition.fromJS(item));
             }
+            this.supersededAtUtc = _data["supersededAtUtc"] ? new Date(_data["supersededAtUtc"].toString()) : undefined as any;
+            if (Array.isArray(_data["policyVersions"])) {
+                this.policyVersions = [] as any;
+                for (let item of _data["policyVersions"])
+                    this.policyVersions!.push(ArrangementPolicyVersion.fromJS(item));
+            }
         }
     }
 
@@ -2937,6 +3232,12 @@ export class ArrangementPolicy implements IArrangementPolicy {
             for (let item of this.requiredCloseoutActions)
                 data["requiredCloseoutActions"].push(item ? item.toJSON() : undefined as any);
         }
+        data["supersededAtUtc"] = this.supersededAtUtc ? this.supersededAtUtc.toISOString() : undefined as any;
+        if (Array.isArray(this.policyVersions)) {
+            data["policyVersions"] = [];
+            for (let item of this.policyVersions)
+                data["policyVersions"].push(item ? item.toJSON() : undefined as any);
+        }
         return data;
     }
 }
@@ -2954,6 +3255,8 @@ export interface IArrangementPolicy {
     requiredSetupActions?: RequirementDefinition[] | undefined;
     requiredMonitoringActionsNew?: MonitoringRequirement[] | undefined;
     requiredCloseoutActions?: RequirementDefinition[] | undefined;
+    supersededAtUtc?: Date | undefined;
+    policyVersions?: ArrangementPolicyVersion[] | undefined;
 }
 
 export class MonitoringRequirement implements IMonitoringRequirement {
@@ -3557,6 +3860,179 @@ export interface IMonitoringRequirementOld {
     recurrence: RecurrencePolicy;
 }
 
+export class ArrangementPolicyVersion implements IArrangementPolicyVersion {
+    requiredSetupActions_PRE_MIGRATION!: RequirementDefinition[];
+    requiredMonitoringActions_PRE_MIGRATION!: MonitoringRequirement[];
+    requiredCloseoutActionNames_PRE_MIGRATION!: RequirementDefinition[];
+    version!: string;
+    supersededAtUtc?: Date | undefined;
+    childInvolvement!: ChildInvolvement;
+    arrangementFunctions!: ArrangementFunction[];
+    requiredSetupActionNames!: string[];
+    requiredMonitoringActions!: MonitoringRequirementOld[];
+    requiredCloseoutActionNames!: string[];
+    requiredSetupActions?: RequirementDefinition[] | undefined;
+    requiredMonitoringActionsNew?: MonitoringRequirement[] | undefined;
+    requiredCloseoutActions?: RequirementDefinition[] | undefined;
+
+    constructor(data?: IArrangementPolicyVersion) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (this as any)[property] = (data as any)[property];
+            }
+        }
+        if (!data) {
+            this.requiredSetupActions_PRE_MIGRATION = [];
+            this.requiredMonitoringActions_PRE_MIGRATION = [];
+            this.requiredCloseoutActionNames_PRE_MIGRATION = [];
+            this.arrangementFunctions = [];
+            this.requiredSetupActionNames = [];
+            this.requiredMonitoringActions = [];
+            this.requiredCloseoutActionNames = [];
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            if (Array.isArray(_data["requiredSetupActions_PRE_MIGRATION"])) {
+                this.requiredSetupActions_PRE_MIGRATION = [] as any;
+                for (let item of _data["requiredSetupActions_PRE_MIGRATION"])
+                    this.requiredSetupActions_PRE_MIGRATION!.push(RequirementDefinition.fromJS(item));
+            }
+            if (Array.isArray(_data["requiredMonitoringActions_PRE_MIGRATION"])) {
+                this.requiredMonitoringActions_PRE_MIGRATION = [] as any;
+                for (let item of _data["requiredMonitoringActions_PRE_MIGRATION"])
+                    this.requiredMonitoringActions_PRE_MIGRATION!.push(MonitoringRequirement.fromJS(item));
+            }
+            if (Array.isArray(_data["requiredCloseoutActionNames_PRE_MIGRATION"])) {
+                this.requiredCloseoutActionNames_PRE_MIGRATION = [] as any;
+                for (let item of _data["requiredCloseoutActionNames_PRE_MIGRATION"])
+                    this.requiredCloseoutActionNames_PRE_MIGRATION!.push(RequirementDefinition.fromJS(item));
+            }
+            this.version = _data["version"];
+            this.supersededAtUtc = _data["supersededAtUtc"] ? new Date(_data["supersededAtUtc"].toString()) : undefined as any;
+            this.childInvolvement = _data["childInvolvement"];
+            if (Array.isArray(_data["arrangementFunctions"])) {
+                this.arrangementFunctions = [] as any;
+                for (let item of _data["arrangementFunctions"])
+                    this.arrangementFunctions!.push(ArrangementFunction.fromJS(item));
+            }
+            if (Array.isArray(_data["requiredSetupActionNames"])) {
+                this.requiredSetupActionNames = [] as any;
+                for (let item of _data["requiredSetupActionNames"])
+                    this.requiredSetupActionNames!.push(item);
+            }
+            if (Array.isArray(_data["requiredMonitoringActions"])) {
+                this.requiredMonitoringActions = [] as any;
+                for (let item of _data["requiredMonitoringActions"])
+                    this.requiredMonitoringActions!.push(MonitoringRequirementOld.fromJS(item));
+            }
+            if (Array.isArray(_data["requiredCloseoutActionNames"])) {
+                this.requiredCloseoutActionNames = [] as any;
+                for (let item of _data["requiredCloseoutActionNames"])
+                    this.requiredCloseoutActionNames!.push(item);
+            }
+            if (Array.isArray(_data["requiredSetupActions"])) {
+                this.requiredSetupActions = [] as any;
+                for (let item of _data["requiredSetupActions"])
+                    this.requiredSetupActions!.push(RequirementDefinition.fromJS(item));
+            }
+            if (Array.isArray(_data["requiredMonitoringActionsNew"])) {
+                this.requiredMonitoringActionsNew = [] as any;
+                for (let item of _data["requiredMonitoringActionsNew"])
+                    this.requiredMonitoringActionsNew!.push(MonitoringRequirement.fromJS(item));
+            }
+            if (Array.isArray(_data["requiredCloseoutActions"])) {
+                this.requiredCloseoutActions = [] as any;
+                for (let item of _data["requiredCloseoutActions"])
+                    this.requiredCloseoutActions!.push(RequirementDefinition.fromJS(item));
+            }
+        }
+    }
+
+    static fromJS(data: any): ArrangementPolicyVersion {
+        data = typeof data === 'object' ? data : {};
+        let result = new ArrangementPolicyVersion();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        if (Array.isArray(this.requiredSetupActions_PRE_MIGRATION)) {
+            data["requiredSetupActions_PRE_MIGRATION"] = [];
+            for (let item of this.requiredSetupActions_PRE_MIGRATION)
+                data["requiredSetupActions_PRE_MIGRATION"].push(item ? item.toJSON() : undefined as any);
+        }
+        if (Array.isArray(this.requiredMonitoringActions_PRE_MIGRATION)) {
+            data["requiredMonitoringActions_PRE_MIGRATION"] = [];
+            for (let item of this.requiredMonitoringActions_PRE_MIGRATION)
+                data["requiredMonitoringActions_PRE_MIGRATION"].push(item ? item.toJSON() : undefined as any);
+        }
+        if (Array.isArray(this.requiredCloseoutActionNames_PRE_MIGRATION)) {
+            data["requiredCloseoutActionNames_PRE_MIGRATION"] = [];
+            for (let item of this.requiredCloseoutActionNames_PRE_MIGRATION)
+                data["requiredCloseoutActionNames_PRE_MIGRATION"].push(item ? item.toJSON() : undefined as any);
+        }
+        data["version"] = this.version;
+        data["supersededAtUtc"] = this.supersededAtUtc ? this.supersededAtUtc.toISOString() : undefined as any;
+        data["childInvolvement"] = this.childInvolvement;
+        if (Array.isArray(this.arrangementFunctions)) {
+            data["arrangementFunctions"] = [];
+            for (let item of this.arrangementFunctions)
+                data["arrangementFunctions"].push(item ? item.toJSON() : undefined as any);
+        }
+        if (Array.isArray(this.requiredSetupActionNames)) {
+            data["requiredSetupActionNames"] = [];
+            for (let item of this.requiredSetupActionNames)
+                data["requiredSetupActionNames"].push(item);
+        }
+        if (Array.isArray(this.requiredMonitoringActions)) {
+            data["requiredMonitoringActions"] = [];
+            for (let item of this.requiredMonitoringActions)
+                data["requiredMonitoringActions"].push(item ? item.toJSON() : undefined as any);
+        }
+        if (Array.isArray(this.requiredCloseoutActionNames)) {
+            data["requiredCloseoutActionNames"] = [];
+            for (let item of this.requiredCloseoutActionNames)
+                data["requiredCloseoutActionNames"].push(item);
+        }
+        if (Array.isArray(this.requiredSetupActions)) {
+            data["requiredSetupActions"] = [];
+            for (let item of this.requiredSetupActions)
+                data["requiredSetupActions"].push(item ? item.toJSON() : undefined as any);
+        }
+        if (Array.isArray(this.requiredMonitoringActionsNew)) {
+            data["requiredMonitoringActionsNew"] = [];
+            for (let item of this.requiredMonitoringActionsNew)
+                data["requiredMonitoringActionsNew"].push(item ? item.toJSON() : undefined as any);
+        }
+        if (Array.isArray(this.requiredCloseoutActions)) {
+            data["requiredCloseoutActions"] = [];
+            for (let item of this.requiredCloseoutActions)
+                data["requiredCloseoutActions"].push(item ? item.toJSON() : undefined as any);
+        }
+        return data;
+    }
+}
+
+export interface IArrangementPolicyVersion {
+    requiredSetupActions_PRE_MIGRATION: RequirementDefinition[];
+    requiredMonitoringActions_PRE_MIGRATION: MonitoringRequirement[];
+    requiredCloseoutActionNames_PRE_MIGRATION: RequirementDefinition[];
+    version: string;
+    supersededAtUtc?: Date | undefined;
+    childInvolvement: ChildInvolvement;
+    arrangementFunctions: ArrangementFunction[];
+    requiredSetupActionNames: string[];
+    requiredMonitoringActions: MonitoringRequirementOld[];
+    requiredCloseoutActionNames: string[];
+    requiredSetupActions?: RequirementDefinition[] | undefined;
+    requiredMonitoringActionsNew?: MonitoringRequirement[] | undefined;
+    requiredCloseoutActions?: RequirementDefinition[] | undefined;
+}
+
 export class FunctionPolicy implements IFunctionPolicy {
     functionName!: string;
     eligibility!: FunctionEligibility;
@@ -3673,9 +4149,139 @@ export interface IFunctionEligibility {
     eligiblePeople: string[];
 }
 
+export class FunctionAssignmentPolicy implements IFunctionAssignmentPolicy {
+    assignmentRole!: string;
+    eligibility!: FunctionAssignmentEligibility;
+
+    constructor(data?: IFunctionAssignmentPolicy) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (this as any)[property] = (data as any)[property];
+            }
+        }
+        if (!data) {
+            this.eligibility = new FunctionAssignmentEligibility();
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.assignmentRole = _data["assignmentRole"];
+            this.eligibility = _data["eligibility"] ? FunctionAssignmentEligibility.fromJS(_data["eligibility"]) : new FunctionAssignmentEligibility();
+        }
+    }
+
+    static fromJS(data: any): FunctionAssignmentPolicy {
+        data = typeof data === 'object' ? data : {};
+        let result = new FunctionAssignmentPolicy();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["assignmentRole"] = this.assignmentRole;
+        data["eligibility"] = this.eligibility ? this.eligibility.toJSON() : undefined as any;
+        return data;
+    }
+}
+
+export interface IFunctionAssignmentPolicy {
+    assignmentRole: string;
+    eligibility: FunctionAssignmentEligibility;
+}
+
+export class FunctionAssignmentEligibility implements IFunctionAssignmentEligibility {
+    eligibleLocationRoles!: string[];
+    eligibleIndividualVolunteerRoles!: string[];
+    eligibleVolunteerFamilyRoles!: string[];
+    eligiblePeople!: string[];
+
+    constructor(data?: IFunctionAssignmentEligibility) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (this as any)[property] = (data as any)[property];
+            }
+        }
+        if (!data) {
+            this.eligibleLocationRoles = [];
+            this.eligibleIndividualVolunteerRoles = [];
+            this.eligibleVolunteerFamilyRoles = [];
+            this.eligiblePeople = [];
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            if (Array.isArray(_data["eligibleLocationRoles"])) {
+                this.eligibleLocationRoles = [] as any;
+                for (let item of _data["eligibleLocationRoles"])
+                    this.eligibleLocationRoles!.push(item);
+            }
+            if (Array.isArray(_data["eligibleIndividualVolunteerRoles"])) {
+                this.eligibleIndividualVolunteerRoles = [] as any;
+                for (let item of _data["eligibleIndividualVolunteerRoles"])
+                    this.eligibleIndividualVolunteerRoles!.push(item);
+            }
+            if (Array.isArray(_data["eligibleVolunteerFamilyRoles"])) {
+                this.eligibleVolunteerFamilyRoles = [] as any;
+                for (let item of _data["eligibleVolunteerFamilyRoles"])
+                    this.eligibleVolunteerFamilyRoles!.push(item);
+            }
+            if (Array.isArray(_data["eligiblePeople"])) {
+                this.eligiblePeople = [] as any;
+                for (let item of _data["eligiblePeople"])
+                    this.eligiblePeople!.push(item);
+            }
+        }
+    }
+
+    static fromJS(data: any): FunctionAssignmentEligibility {
+        data = typeof data === 'object' ? data : {};
+        let result = new FunctionAssignmentEligibility();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        if (Array.isArray(this.eligibleLocationRoles)) {
+            data["eligibleLocationRoles"] = [];
+            for (let item of this.eligibleLocationRoles)
+                data["eligibleLocationRoles"].push(item);
+        }
+        if (Array.isArray(this.eligibleIndividualVolunteerRoles)) {
+            data["eligibleIndividualVolunteerRoles"] = [];
+            for (let item of this.eligibleIndividualVolunteerRoles)
+                data["eligibleIndividualVolunteerRoles"].push(item);
+        }
+        if (Array.isArray(this.eligibleVolunteerFamilyRoles)) {
+            data["eligibleVolunteerFamilyRoles"] = [];
+            for (let item of this.eligibleVolunteerFamilyRoles)
+                data["eligibleVolunteerFamilyRoles"].push(item);
+        }
+        if (Array.isArray(this.eligiblePeople)) {
+            data["eligiblePeople"] = [];
+            for (let item of this.eligiblePeople)
+                data["eligiblePeople"].push(item);
+        }
+        return data;
+    }
+}
+
+export interface IFunctionAssignmentEligibility {
+    eligibleLocationRoles: string[];
+    eligibleIndividualVolunteerRoles: string[];
+    eligibleVolunteerFamilyRoles: string[];
+    eligiblePeople: string[];
+}
+
 export class VolunteerPolicy implements IVolunteerPolicy {
     volunteerRoles!: { [key: string]: VolunteerRolePolicy; };
     volunteerFamilyRoles!: { [key: string]: VolunteerFamilyRolePolicy; };
+    customFields?: CustomField[] | undefined;
 
     constructor(data?: IVolunteerPolicy) {
         if (data) {
@@ -3706,6 +4312,11 @@ export class VolunteerPolicy implements IVolunteerPolicy {
                         (this.volunteerFamilyRoles as any)![key] = _data["volunteerFamilyRoles"][key] ? VolunteerFamilyRolePolicy.fromJS(_data["volunteerFamilyRoles"][key]) : new VolunteerFamilyRolePolicy();
                 }
             }
+            if (Array.isArray(_data["customFields"])) {
+                this.customFields = [] as any;
+                for (let item of _data["customFields"])
+                    this.customFields!.push(CustomField.fromJS(item));
+            }
         }
     }
 
@@ -3732,6 +4343,11 @@ export class VolunteerPolicy implements IVolunteerPolicy {
                     (data["volunteerFamilyRoles"] as any)[key] = this.volunteerFamilyRoles[key] ? this.volunteerFamilyRoles[key].toJSON() : undefined as any;
             }
         }
+        if (Array.isArray(this.customFields)) {
+            data["customFields"] = [];
+            for (let item of this.customFields)
+                data["customFields"].push(item ? item.toJSON() : undefined as any);
+        }
         return data;
     }
 }
@@ -3739,6 +4355,7 @@ export class VolunteerPolicy implements IVolunteerPolicy {
 export interface IVolunteerPolicy {
     volunteerRoles: { [key: string]: VolunteerRolePolicy; };
     volunteerFamilyRoles: { [key: string]: VolunteerFamilyRolePolicy; };
+    customFields?: CustomField[] | undefined;
 }
 
 export class VolunteerRolePolicy implements IVolunteerRolePolicy {
@@ -4047,6 +4664,157 @@ export enum VolunteerFamilyRequirementScope {
     OncePerFamily = 0,
     AllAdultsInTheFamily = 1,
     AllParticipatingAdultsInTheFamily = 2,
+}
+
+export class FamilyMemberCustomFieldPolicy implements IFamilyMemberCustomFieldPolicy {
+    partneringFamily!: FamilyMemberCustomFields;
+    volunteerFamily!: FamilyMemberCustomFields;
+
+    constructor(data?: IFamilyMemberCustomFieldPolicy) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (this as any)[property] = (data as any)[property];
+            }
+        }
+        if (!data) {
+            this.partneringFamily = new FamilyMemberCustomFields();
+            this.volunteerFamily = new FamilyMemberCustomFields();
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.partneringFamily = _data["partneringFamily"] ? FamilyMemberCustomFields.fromJS(_data["partneringFamily"]) : new FamilyMemberCustomFields();
+            this.volunteerFamily = _data["volunteerFamily"] ? FamilyMemberCustomFields.fromJS(_data["volunteerFamily"]) : new FamilyMemberCustomFields();
+        }
+    }
+
+    static fromJS(data: any): FamilyMemberCustomFieldPolicy {
+        data = typeof data === 'object' ? data : {};
+        let result = new FamilyMemberCustomFieldPolicy();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["partneringFamily"] = this.partneringFamily ? this.partneringFamily.toJSON() : undefined as any;
+        data["volunteerFamily"] = this.volunteerFamily ? this.volunteerFamily.toJSON() : undefined as any;
+        return data;
+    }
+}
+
+export interface IFamilyMemberCustomFieldPolicy {
+    partneringFamily: FamilyMemberCustomFields;
+    volunteerFamily: FamilyMemberCustomFields;
+}
+
+export class FamilyMemberCustomFields implements IFamilyMemberCustomFields {
+    adult!: CustomField[];
+    child!: CustomField[];
+
+    constructor(data?: IFamilyMemberCustomFields) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (this as any)[property] = (data as any)[property];
+            }
+        }
+        if (!data) {
+            this.adult = [];
+            this.child = [];
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            if (Array.isArray(_data["adult"])) {
+                this.adult = [] as any;
+                for (let item of _data["adult"])
+                    this.adult!.push(CustomField.fromJS(item));
+            }
+            if (Array.isArray(_data["child"])) {
+                this.child = [] as any;
+                for (let item of _data["child"])
+                    this.child!.push(CustomField.fromJS(item));
+            }
+        }
+    }
+
+    static fromJS(data: any): FamilyMemberCustomFields {
+        data = typeof data === 'object' ? data : {};
+        let result = new FamilyMemberCustomFields();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        if (Array.isArray(this.adult)) {
+            data["adult"] = [];
+            for (let item of this.adult)
+                data["adult"].push(item ? item.toJSON() : undefined as any);
+        }
+        if (Array.isArray(this.child)) {
+            data["child"] = [];
+            for (let item of this.child)
+                data["child"].push(item ? item.toJSON() : undefined as any);
+        }
+        return data;
+    }
+}
+
+export interface IFamilyMemberCustomFields {
+    adult: CustomField[];
+    child: CustomField[];
+}
+
+export class V1ReferralPolicy implements IV1ReferralPolicy {
+    functionAssignmentPolicies!: FunctionAssignmentPolicy[];
+
+    constructor(data?: IV1ReferralPolicy) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (this as any)[property] = (data as any)[property];
+            }
+        }
+        if (!data) {
+            this.functionAssignmentPolicies = [];
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            if (Array.isArray(_data["functionAssignmentPolicies"])) {
+                this.functionAssignmentPolicies = [] as any;
+                for (let item of _data["functionAssignmentPolicies"])
+                    this.functionAssignmentPolicies!.push(FunctionAssignmentPolicy.fromJS(item));
+            }
+        }
+    }
+
+    static fromJS(data: any): V1ReferralPolicy {
+        data = typeof data === 'object' ? data : {};
+        let result = new V1ReferralPolicy();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        if (Array.isArray(this.functionAssignmentPolicies)) {
+            data["functionAssignmentPolicies"] = [];
+            for (let item of this.functionAssignmentPolicies)
+                data["functionAssignmentPolicies"].push(item ? item.toJSON() : undefined as any);
+        }
+        return data;
+    }
+}
+
+export interface IV1ReferralPolicy {
+    functionAssignmentPolicies: FunctionAssignmentPolicy[];
 }
 
 export class CurrentFeatureFlags implements ICurrentFeatureFlags {
@@ -4794,6 +5562,7 @@ export class Person implements IPerson {
     preferredEmailAddressId?: string | undefined;
     concerns?: string | undefined;
     notes?: string | undefined;
+    completedCustomFields!: CompletedCustomFieldInfo[];
 
     constructor(data?: IPerson) {
         if (data) {
@@ -4806,6 +5575,7 @@ export class Person implements IPerson {
             this.addresses = [];
             this.phoneNumbers = [];
             this.emailAddresses = [];
+            this.completedCustomFields = [];
         }
     }
 
@@ -4838,6 +5608,11 @@ export class Person implements IPerson {
             this.preferredEmailAddressId = _data["preferredEmailAddressId"];
             this.concerns = _data["concerns"];
             this.notes = _data["notes"];
+            if (Array.isArray(_data["completedCustomFields"])) {
+                this.completedCustomFields = [] as any;
+                for (let item of _data["completedCustomFields"])
+                    this.completedCustomFields!.push(CompletedCustomFieldInfo.fromJS(item));
+            }
         }
     }
 
@@ -4877,6 +5652,11 @@ export class Person implements IPerson {
         data["preferredEmailAddressId"] = this.preferredEmailAddressId;
         data["concerns"] = this.concerns;
         data["notes"] = this.notes;
+        if (Array.isArray(this.completedCustomFields)) {
+            data["completedCustomFields"] = [];
+            for (let item of this.completedCustomFields)
+                data["completedCustomFields"].push(item ? item.toJSON() : undefined as any);
+        }
         return data;
     }
 }
@@ -4897,6 +5677,7 @@ export interface IPerson {
     preferredEmailAddressId?: string | undefined;
     concerns?: string | undefined;
     notes?: string | undefined;
+    completedCustomFields: CompletedCustomFieldInfo[];
 }
 
 export enum Gender {
@@ -5179,6 +5960,62 @@ export enum EmailAddressType {
     Work = 1,
 }
 
+export class CompletedCustomFieldInfo implements ICompletedCustomFieldInfo {
+    userId!: string;
+    timestampUtc!: Date;
+    completedCustomFieldId!: string;
+    customFieldName!: string;
+    customFieldType!: CustomFieldType;
+    value?: any | undefined;
+
+    constructor(data?: ICompletedCustomFieldInfo) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (this as any)[property] = (data as any)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.userId = _data["userId"];
+            this.timestampUtc = _data["timestampUtc"] ? new Date(_data["timestampUtc"].toString()) : undefined as any;
+            this.completedCustomFieldId = _data["completedCustomFieldId"];
+            this.customFieldName = _data["customFieldName"];
+            this.customFieldType = _data["customFieldType"];
+            this.value = _data["value"];
+        }
+    }
+
+    static fromJS(data: any): CompletedCustomFieldInfo {
+        data = typeof data === 'object' ? data : {};
+        let result = new CompletedCustomFieldInfo();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["userId"] = this.userId;
+        data["timestampUtc"] = this.timestampUtc ? this.timestampUtc.toISOString() : undefined as any;
+        data["completedCustomFieldId"] = this.completedCustomFieldId;
+        data["customFieldName"] = this.customFieldName;
+        data["customFieldType"] = this.customFieldType;
+        data["value"] = this.value;
+        return data;
+    }
+}
+
+export interface ICompletedCustomFieldInfo {
+    userId: string;
+    timestampUtc: Date;
+    completedCustomFieldId: string;
+    customFieldName: string;
+    customFieldType: CustomFieldType;
+    value?: any | undefined;
+}
+
 export class FamilyAdultRelationshipInfo implements IFamilyAdultRelationshipInfo {
     relationshipToFamily?: string | undefined;
     isInHousehold!: boolean;
@@ -5269,62 +6106,6 @@ export enum CustodialRelationshipType {
     LegalGuardian = 2,
 }
 
-export class CompletedCustomFieldInfo implements ICompletedCustomFieldInfo {
-    userId!: string;
-    timestampUtc!: Date;
-    completedCustomFieldId!: string;
-    customFieldName!: string;
-    customFieldType!: CustomFieldType;
-    value?: any | undefined;
-
-    constructor(data?: ICompletedCustomFieldInfo) {
-        if (data) {
-            for (var property in data) {
-                if (data.hasOwnProperty(property))
-                    (this as any)[property] = (data as any)[property];
-            }
-        }
-    }
-
-    init(_data?: any) {
-        if (_data) {
-            this.userId = _data["userId"];
-            this.timestampUtc = _data["timestampUtc"] ? new Date(_data["timestampUtc"].toString()) : undefined as any;
-            this.completedCustomFieldId = _data["completedCustomFieldId"];
-            this.customFieldName = _data["customFieldName"];
-            this.customFieldType = _data["customFieldType"];
-            this.value = _data["value"];
-        }
-    }
-
-    static fromJS(data: any): CompletedCustomFieldInfo {
-        data = typeof data === 'object' ? data : {};
-        let result = new CompletedCustomFieldInfo();
-        result.init(data);
-        return result;
-    }
-
-    toJSON(data?: any) {
-        data = typeof data === 'object' ? data : {};
-        data["userId"] = this.userId;
-        data["timestampUtc"] = this.timestampUtc ? this.timestampUtc.toISOString() : undefined as any;
-        data["completedCustomFieldId"] = this.completedCustomFieldId;
-        data["customFieldName"] = this.customFieldName;
-        data["customFieldType"] = this.customFieldType;
-        data["value"] = this.value;
-        return data;
-    }
-}
-
-export interface ICompletedCustomFieldInfo {
-    userId: string;
-    timestampUtc: Date;
-    completedCustomFieldId: string;
-    customFieldName: string;
-    customFieldType: CustomFieldType;
-    value?: any | undefined;
-}
-
 export abstract class Activity implements IActivity {
     userId!: string;
     auditTimestampUtc!: Date;
@@ -5376,6 +6157,16 @@ export abstract class Activity implements IActivity {
             result.init(data);
             return result;
         }
+        if (data["discriminator"] === "V1CaseIndividualVolunteerAssigned") {
+            let result = new V1CaseIndividualVolunteerAssigned();
+            result.init(data);
+            return result;
+        }
+        if (data["discriminator"] === "V1CaseIndividualVolunteerUnassigned") {
+            let result = new V1CaseIndividualVolunteerUnassigned();
+            result.init(data);
+            return result;
+        }
         if (data["discriminator"] === "V1ReferralAccepted") {
             let result = new V1ReferralAccepted();
             result.init(data);
@@ -5383,6 +6174,16 @@ export abstract class Activity implements IActivity {
         }
         if (data["discriminator"] === "V1ReferralClosed") {
             let result = new V1ReferralClosed();
+            result.init(data);
+            return result;
+        }
+        if (data["discriminator"] === "V1ReferralIndividualVolunteerAssigned") {
+            let result = new V1ReferralIndividualVolunteerAssigned();
+            result.init(data);
+            return result;
+        }
+        if (data["discriminator"] === "V1ReferralIndividualVolunteerUnassigned") {
+            let result = new V1ReferralIndividualVolunteerUnassigned();
             result.init(data);
             return result;
         }
@@ -5589,6 +6390,82 @@ export interface IReferralRequirementCompleted extends IActivity {
     completedAtUtc: Date;
 }
 
+export class V1CaseIndividualVolunteerAssigned extends Activity implements IV1CaseIndividualVolunteerAssigned {
+    personId!: string;
+    assignmentRole!: string;
+
+    constructor(data?: IV1CaseIndividualVolunteerAssigned) {
+        super(data);
+        this._discriminator = "V1CaseIndividualVolunteerAssigned";
+    }
+
+    override init(_data?: any) {
+        super.init(_data);
+        if (_data) {
+            this.personId = _data["personId"];
+            this.assignmentRole = _data["assignmentRole"];
+        }
+    }
+
+    static override fromJS(data: any): V1CaseIndividualVolunteerAssigned {
+        data = typeof data === 'object' ? data : {};
+        let result = new V1CaseIndividualVolunteerAssigned();
+        result.init(data);
+        return result;
+    }
+
+    override toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["personId"] = this.personId;
+        data["assignmentRole"] = this.assignmentRole;
+        super.toJSON(data);
+        return data;
+    }
+}
+
+export interface IV1CaseIndividualVolunteerAssigned extends IActivity {
+    personId: string;
+    assignmentRole: string;
+}
+
+export class V1CaseIndividualVolunteerUnassigned extends Activity implements IV1CaseIndividualVolunteerUnassigned {
+    personId!: string;
+    assignmentRole!: string;
+
+    constructor(data?: IV1CaseIndividualVolunteerUnassigned) {
+        super(data);
+        this._discriminator = "V1CaseIndividualVolunteerUnassigned";
+    }
+
+    override init(_data?: any) {
+        super.init(_data);
+        if (_data) {
+            this.personId = _data["personId"];
+            this.assignmentRole = _data["assignmentRole"];
+        }
+    }
+
+    static override fromJS(data: any): V1CaseIndividualVolunteerUnassigned {
+        data = typeof data === 'object' ? data : {};
+        let result = new V1CaseIndividualVolunteerUnassigned();
+        result.init(data);
+        return result;
+    }
+
+    override toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["personId"] = this.personId;
+        data["assignmentRole"] = this.assignmentRole;
+        super.toJSON(data);
+        return data;
+    }
+}
+
+export interface IV1CaseIndividualVolunteerUnassigned extends IActivity {
+    personId: string;
+    assignmentRole: string;
+}
+
 export class V1ReferralAccepted extends Activity implements IV1ReferralAccepted {
     acceptedAtUtc!: Date;
 
@@ -5659,6 +6536,82 @@ export class V1ReferralClosed extends Activity implements IV1ReferralClosed {
 export interface IV1ReferralClosed extends IActivity {
     closedAtUtc: Date;
     closeReason: string;
+}
+
+export class V1ReferralIndividualVolunteerAssigned extends Activity implements IV1ReferralIndividualVolunteerAssigned {
+    personId!: string;
+    assignmentRole!: string;
+
+    constructor(data?: IV1ReferralIndividualVolunteerAssigned) {
+        super(data);
+        this._discriminator = "V1ReferralIndividualVolunteerAssigned";
+    }
+
+    override init(_data?: any) {
+        super.init(_data);
+        if (_data) {
+            this.personId = _data["personId"];
+            this.assignmentRole = _data["assignmentRole"];
+        }
+    }
+
+    static override fromJS(data: any): V1ReferralIndividualVolunteerAssigned {
+        data = typeof data === 'object' ? data : {};
+        let result = new V1ReferralIndividualVolunteerAssigned();
+        result.init(data);
+        return result;
+    }
+
+    override toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["personId"] = this.personId;
+        data["assignmentRole"] = this.assignmentRole;
+        super.toJSON(data);
+        return data;
+    }
+}
+
+export interface IV1ReferralIndividualVolunteerAssigned extends IActivity {
+    personId: string;
+    assignmentRole: string;
+}
+
+export class V1ReferralIndividualVolunteerUnassigned extends Activity implements IV1ReferralIndividualVolunteerUnassigned {
+    personId!: string;
+    assignmentRole!: string;
+
+    constructor(data?: IV1ReferralIndividualVolunteerUnassigned) {
+        super(data);
+        this._discriminator = "V1ReferralIndividualVolunteerUnassigned";
+    }
+
+    override init(_data?: any) {
+        super.init(_data);
+        if (_data) {
+            this.personId = _data["personId"];
+            this.assignmentRole = _data["assignmentRole"];
+        }
+    }
+
+    static override fromJS(data: any): V1ReferralIndividualVolunteerUnassigned {
+        data = typeof data === 'object' ? data : {};
+        let result = new V1ReferralIndividualVolunteerUnassigned();
+        result.init(data);
+        return result;
+    }
+
+    override toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["personId"] = this.personId;
+        data["assignmentRole"] = this.assignmentRole;
+        super.toJSON(data);
+        return data;
+    }
+}
+
+export interface IV1ReferralIndividualVolunteerUnassigned extends IActivity {
+    personId: string;
+    assignmentRole: string;
 }
 
 export class V1ReferralOpened extends Activity implements IV1ReferralOpened {
@@ -5856,13 +6809,14 @@ export class V1Case implements IV1Case {
     id!: string;
     openedAtUtc!: Date;
     closedAtUtc?: Date | undefined;
-    closeReason?: V1CaseCloseReason | undefined;
+    closeReason?: string | undefined;
     completedRequirements!: CompletedRequirementInfo[];
     exemptedRequirements!: ExemptedRequirementInfo[];
     missingRequirements!: RequirementDefinition[];
     completedCustomFields!: CompletedCustomFieldInfo[];
     missingCustomFields!: string[];
     arrangements!: Arrangement[];
+    assignedIndividualVolunteers!: AssignedIndividualVolunteer[];
     comments?: string | undefined;
     linkedV1ReferralIds!: string[];
 
@@ -5880,6 +6834,7 @@ export class V1Case implements IV1Case {
             this.completedCustomFields = [];
             this.missingCustomFields = [];
             this.arrangements = [];
+            this.assignedIndividualVolunteers = [];
             this.linkedV1ReferralIds = [];
         }
     }
@@ -5919,6 +6874,11 @@ export class V1Case implements IV1Case {
                 this.arrangements = [] as any;
                 for (let item of _data["arrangements"])
                     this.arrangements!.push(Arrangement.fromJS(item));
+            }
+            if (Array.isArray(_data["assignedIndividualVolunteers"])) {
+                this.assignedIndividualVolunteers = [] as any;
+                for (let item of _data["assignedIndividualVolunteers"])
+                    this.assignedIndividualVolunteers!.push(AssignedIndividualVolunteer.fromJS(item));
             }
             this.comments = _data["comments"];
             if (Array.isArray(_data["linkedV1ReferralIds"])) {
@@ -5972,6 +6932,11 @@ export class V1Case implements IV1Case {
             for (let item of this.arrangements)
                 data["arrangements"].push(item ? item.toJSON() : undefined as any);
         }
+        if (Array.isArray(this.assignedIndividualVolunteers)) {
+            data["assignedIndividualVolunteers"] = [];
+            for (let item of this.assignedIndividualVolunteers)
+                data["assignedIndividualVolunteers"].push(item ? item.toJSON() : undefined as any);
+        }
         data["comments"] = this.comments;
         if (Array.isArray(this.linkedV1ReferralIds)) {
             data["linkedV1ReferralIds"] = [];
@@ -5986,23 +6951,16 @@ export interface IV1Case {
     id: string;
     openedAtUtc: Date;
     closedAtUtc?: Date | undefined;
-    closeReason?: V1CaseCloseReason | undefined;
+    closeReason?: string | undefined;
     completedRequirements: CompletedRequirementInfo[];
     exemptedRequirements: ExemptedRequirementInfo[];
     missingRequirements: RequirementDefinition[];
     completedCustomFields: CompletedCustomFieldInfo[];
     missingCustomFields: string[];
     arrangements: Arrangement[];
+    assignedIndividualVolunteers: AssignedIndividualVolunteer[];
     comments?: string | undefined;
     linkedV1ReferralIds: string[];
-}
-
-export enum V1CaseCloseReason {
-    NotAppropriate = 0,
-    NoCapacity = 1,
-    NoLongerNeeded = 2,
-    Resourced = 3,
-    NeedMet = 4,
 }
 
 export class CompletedRequirementInfo implements ICompletedRequirementInfo {
@@ -6014,6 +6972,7 @@ export class CompletedRequirementInfo implements ICompletedRequirementInfo {
     expiresAtUtc?: Date | undefined;
     uploadedDocumentId?: string | undefined;
     noteId?: string | undefined;
+    roleNames?: string[] | undefined;
 
     constructor(data?: ICompletedRequirementInfo) {
         if (data) {
@@ -6034,6 +6993,11 @@ export class CompletedRequirementInfo implements ICompletedRequirementInfo {
             this.expiresAtUtc = _data["expiresAtUtc"] ? new Date(_data["expiresAtUtc"].toString()) : undefined as any;
             this.uploadedDocumentId = _data["uploadedDocumentId"];
             this.noteId = _data["noteId"];
+            if (Array.isArray(_data["roleNames"])) {
+                this.roleNames = [] as any;
+                for (let item of _data["roleNames"])
+                    this.roleNames!.push(item);
+            }
         }
     }
 
@@ -6054,6 +7018,11 @@ export class CompletedRequirementInfo implements ICompletedRequirementInfo {
         data["expiresAtUtc"] = this.expiresAtUtc ? this.expiresAtUtc.toISOString() : undefined as any;
         data["uploadedDocumentId"] = this.uploadedDocumentId;
         data["noteId"] = this.noteId;
+        if (Array.isArray(this.roleNames)) {
+            data["roleNames"] = [];
+            for (let item of this.roleNames)
+                data["roleNames"].push(item);
+        }
         return data;
     }
 }
@@ -6067,6 +7036,7 @@ export interface ICompletedRequirementInfo {
     expiresAtUtc?: Date | undefined;
     uploadedDocumentId?: string | undefined;
     noteId?: string | undefined;
+    roleNames?: string[] | undefined;
 }
 
 export class ExemptedRequirementInfo implements IExemptedRequirementInfo {
@@ -6076,6 +7046,7 @@ export class ExemptedRequirementInfo implements IExemptedRequirementInfo {
     dueDate?: Date | undefined;
     additionalComments!: string;
     exemptionExpiresAtUtc?: Date | undefined;
+    roleNames?: string[] | undefined;
 
     constructor(data?: IExemptedRequirementInfo) {
         if (data) {
@@ -6094,6 +7065,11 @@ export class ExemptedRequirementInfo implements IExemptedRequirementInfo {
             this.dueDate = _data["dueDate"] ? new Date(_data["dueDate"].toString()) : undefined as any;
             this.additionalComments = _data["additionalComments"];
             this.exemptionExpiresAtUtc = _data["exemptionExpiresAtUtc"] ? new Date(_data["exemptionExpiresAtUtc"].toString()) : undefined as any;
+            if (Array.isArray(_data["roleNames"])) {
+                this.roleNames = [] as any;
+                for (let item of _data["roleNames"])
+                    this.roleNames!.push(item);
+            }
         }
     }
 
@@ -6112,6 +7088,11 @@ export class ExemptedRequirementInfo implements IExemptedRequirementInfo {
         data["dueDate"] = this.dueDate ? this.dueDate.toISOString() : undefined as any;
         data["additionalComments"] = this.additionalComments;
         data["exemptionExpiresAtUtc"] = this.exemptionExpiresAtUtc ? this.exemptionExpiresAtUtc.toISOString() : undefined as any;
+        if (Array.isArray(this.roleNames)) {
+            data["roleNames"] = [];
+            for (let item of this.roleNames)
+                data["roleNames"].push(item);
+        }
         return data;
     }
 }
@@ -6123,6 +7104,7 @@ export interface IExemptedRequirementInfo {
     dueDate?: Date | undefined;
     additionalComments: string;
     exemptionExpiresAtUtc?: Date | undefined;
+    roleNames?: string[] | undefined;
 }
 
 export class Arrangement implements IArrangement {
@@ -6146,6 +7128,7 @@ export class Arrangement implements IArrangement {
     childLocationPlan!: ChildLocationHistoryEntry[];
     comments?: string | undefined;
     reason?: string | undefined;
+    arrangementPolicyVersion?: string | undefined;
 
     constructor(data?: IArrangement) {
         if (data) {
@@ -6220,6 +7203,7 @@ export class Arrangement implements IArrangement {
             }
             this.comments = _data["comments"];
             this.reason = _data["reason"];
+            this.arrangementPolicyVersion = _data["arrangementPolicyVersion"];
         }
     }
 
@@ -6284,6 +7268,7 @@ export class Arrangement implements IArrangement {
         }
         data["comments"] = this.comments;
         data["reason"] = this.reason;
+        data["arrangementPolicyVersion"] = this.arrangementPolicyVersion;
         return data;
     }
 }
@@ -6309,6 +7294,7 @@ export interface IArrangement {
     childLocationPlan: ChildLocationHistoryEntry[];
     comments?: string | undefined;
     reason?: string | undefined;
+    arrangementPolicyVersion?: string | undefined;
 }
 
 export enum ArrangementPhase {
@@ -6586,6 +7572,54 @@ export interface IChildLocationHistoryEntry {
     noteId?: string | undefined;
 }
 
+export class AssignedIndividualVolunteer implements IAssignedIndividualVolunteer {
+    personId!: string;
+    assignmentRole!: string;
+    assignedAtUtc!: Date;
+    assignedByUserId!: string;
+
+    constructor(data?: IAssignedIndividualVolunteer) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (this as any)[property] = (data as any)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.personId = _data["personId"];
+            this.assignmentRole = _data["assignmentRole"];
+            this.assignedAtUtc = _data["assignedAtUtc"] ? new Date(_data["assignedAtUtc"].toString()) : undefined as any;
+            this.assignedByUserId = _data["assignedByUserId"];
+        }
+    }
+
+    static fromJS(data: any): AssignedIndividualVolunteer {
+        data = typeof data === 'object' ? data : {};
+        let result = new AssignedIndividualVolunteer();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["personId"] = this.personId;
+        data["assignmentRole"] = this.assignmentRole;
+        data["assignedAtUtc"] = this.assignedAtUtc ? this.assignedAtUtc.toISOString() : undefined as any;
+        data["assignedByUserId"] = this.assignedByUserId;
+        return data;
+    }
+}
+
+export interface IAssignedIndividualVolunteer {
+    personId: string;
+    assignmentRole: string;
+    assignedAtUtc: Date;
+    assignedByUserId: string;
+}
+
 export class VolunteerFamilyInfo implements IVolunteerFamilyInfo {
     familyRoleApprovals!: { [key: string]: FamilyRoleApprovalStatus; };
     completedRequirements!: CompletedRequirementInfo[];
@@ -6596,6 +7630,8 @@ export class VolunteerFamilyInfo implements IVolunteerFamilyInfo {
     individualVolunteers!: { [key: string]: VolunteerInfo; };
     history!: Activity[];
     assignments!: ArrangementEntry[];
+    completedCustomFields?: CompletedCustomFieldInfo[] | undefined;
+    missingCustomFields?: string[] | undefined;
 
     constructor(data?: IVolunteerFamilyInfo) {
         if (data) {
@@ -6668,6 +7704,16 @@ export class VolunteerFamilyInfo implements IVolunteerFamilyInfo {
                 for (let item of _data["assignments"])
                     this.assignments!.push(ArrangementEntry.fromJS(item));
             }
+            if (Array.isArray(_data["completedCustomFields"])) {
+                this.completedCustomFields = [] as any;
+                for (let item of _data["completedCustomFields"])
+                    this.completedCustomFields!.push(CompletedCustomFieldInfo.fromJS(item));
+            }
+            if (Array.isArray(_data["missingCustomFields"])) {
+                this.missingCustomFields = [] as any;
+                for (let item of _data["missingCustomFields"])
+                    this.missingCustomFields!.push(item);
+            }
         }
     }
 
@@ -6729,6 +7775,16 @@ export class VolunteerFamilyInfo implements IVolunteerFamilyInfo {
             for (let item of this.assignments)
                 data["assignments"].push(item ? item.toJSON() : undefined as any);
         }
+        if (Array.isArray(this.completedCustomFields)) {
+            data["completedCustomFields"] = [];
+            for (let item of this.completedCustomFields)
+                data["completedCustomFields"].push(item ? item.toJSON() : undefined as any);
+        }
+        if (Array.isArray(this.missingCustomFields)) {
+            data["missingCustomFields"] = [];
+            for (let item of this.missingCustomFields)
+                data["missingCustomFields"].push(item);
+        }
         return data;
     }
 }
@@ -6743,6 +7799,8 @@ export interface IVolunteerFamilyInfo {
     individualVolunteers: { [key: string]: VolunteerInfo; };
     history: Activity[];
     assignments: ArrangementEntry[];
+    completedCustomFields?: CompletedCustomFieldInfo[] | undefined;
+    missingCustomFields?: string[] | undefined;
 }
 
 export class FamilyRoleApprovalStatus implements IFamilyRoleApprovalStatus {
@@ -6942,6 +8000,7 @@ export enum RoleApprovalStatus {
 export class FamilyRoleVersionApprovalStatus implements IFamilyRoleVersionApprovalStatus {
     roleName!: string;
     version!: string;
+    supersededAtUtc?: Date | undefined;
     status?: DateOnlyTimelineOfRoleApprovalStatus | undefined;
     requirements!: FamilyRoleRequirementCompletionStatus[];
 
@@ -6961,6 +8020,7 @@ export class FamilyRoleVersionApprovalStatus implements IFamilyRoleVersionApprov
         if (_data) {
             this.roleName = _data["roleName"];
             this.version = _data["version"];
+            this.supersededAtUtc = _data["supersededAtUtc"] ? new Date(_data["supersededAtUtc"].toString()) : undefined as any;
             this.status = _data["status"] ? DateOnlyTimelineOfRoleApprovalStatus.fromJS(_data["status"]) : undefined as any;
             if (Array.isArray(_data["requirements"])) {
                 this.requirements = [] as any;
@@ -6981,6 +8041,7 @@ export class FamilyRoleVersionApprovalStatus implements IFamilyRoleVersionApprov
         data = typeof data === 'object' ? data : {};
         data["roleName"] = this.roleName;
         data["version"] = this.version;
+        data["supersededAtUtc"] = this.supersededAtUtc ? this.supersededAtUtc.toISOString() : undefined as any;
         data["status"] = this.status ? this.status.toJSON() : undefined as any;
         if (Array.isArray(this.requirements)) {
             data["requirements"] = [];
@@ -6994,6 +8055,7 @@ export class FamilyRoleVersionApprovalStatus implements IFamilyRoleVersionApprov
 export interface IFamilyRoleVersionApprovalStatus {
     roleName: string;
     version: string;
+    supersededAtUtc?: Date | undefined;
     status?: DateOnlyTimelineOfRoleApprovalStatus | undefined;
     requirements: FamilyRoleRequirementCompletionStatus[];
 }
@@ -7598,6 +8660,7 @@ export interface IIndividualRoleApprovalStatus {
 export class IndividualRoleVersionApprovalStatus implements IIndividualRoleVersionApprovalStatus {
     roleName!: string;
     version!: string;
+    supersededAtUtc?: Date | undefined;
     status?: DateOnlyTimelineOfRoleApprovalStatus | undefined;
     requirements!: IndividualRoleRequirementCompletionStatus[];
 
@@ -7617,6 +8680,7 @@ export class IndividualRoleVersionApprovalStatus implements IIndividualRoleVersi
         if (_data) {
             this.roleName = _data["roleName"];
             this.version = _data["version"];
+            this.supersededAtUtc = _data["supersededAtUtc"] ? new Date(_data["supersededAtUtc"].toString()) : undefined as any;
             this.status = _data["status"] ? DateOnlyTimelineOfRoleApprovalStatus.fromJS(_data["status"]) : undefined as any;
             if (Array.isArray(_data["requirements"])) {
                 this.requirements = [] as any;
@@ -7637,6 +8701,7 @@ export class IndividualRoleVersionApprovalStatus implements IIndividualRoleVersi
         data = typeof data === 'object' ? data : {};
         data["roleName"] = this.roleName;
         data["version"] = this.version;
+        data["supersededAtUtc"] = this.supersededAtUtc ? this.supersededAtUtc.toISOString() : undefined as any;
         data["status"] = this.status ? this.status.toJSON() : undefined as any;
         if (Array.isArray(this.requirements)) {
             data["requirements"] = [];
@@ -7650,6 +8715,7 @@ export class IndividualRoleVersionApprovalStatus implements IIndividualRoleVersi
 export interface IIndividualRoleVersionApprovalStatus {
     roleName: string;
     version: string;
+    supersededAtUtc?: Date | undefined;
     status?: DateOnlyTimelineOfRoleApprovalStatus | undefined;
     requirements: IndividualRoleRequirementCompletionStatus[];
 }
@@ -7717,6 +8783,7 @@ export class ArrangementEntry implements IArrangementEntry {
     childLocationPlan!: ChildLocationHistoryEntry[];
     comments?: string | undefined;
     reason?: string | undefined;
+    arrangementPolicyVersion?: string | undefined;
 
     constructor(data?: IArrangementEntry) {
         if (data) {
@@ -7779,6 +8846,7 @@ export class ArrangementEntry implements IArrangementEntry {
             }
             this.comments = _data["comments"];
             this.reason = _data["reason"];
+            this.arrangementPolicyVersion = _data["arrangementPolicyVersion"];
         }
     }
 
@@ -7833,6 +8901,7 @@ export class ArrangementEntry implements IArrangementEntry {
         }
         data["comments"] = this.comments;
         data["reason"] = this.reason;
+        data["arrangementPolicyVersion"] = this.arrangementPolicyVersion;
         return data;
     }
 }
@@ -7856,6 +8925,7 @@ export interface IArrangementEntry {
     childLocationPlan: ChildLocationHistoryEntry[];
     comments?: string | undefined;
     reason?: string | undefined;
+    arrangementPolicyVersion?: string | undefined;
 }
 
 export class Note implements INote {
@@ -7952,12 +9022,12 @@ export enum NoteStatus {
 }
 
 export class ReferralRecordsAggregate extends RecordsAggregate implements IReferralRecordsAggregate {
-    referral!: V1Referral;
+    referral!: V1ReferralInfo;
 
     constructor(data?: IReferralRecordsAggregate) {
         super(data);
         if (!data) {
-            this.referral = new V1Referral();
+            this.referral = new V1ReferralInfo();
         }
         this._discriminator = "ReferralRecordsAggregate";
     }
@@ -7965,7 +9035,7 @@ export class ReferralRecordsAggregate extends RecordsAggregate implements IRefer
     override init(_data?: any) {
         super.init(_data);
         if (_data) {
-            this.referral = _data["referral"] ? V1Referral.fromJS(_data["referral"]) : new V1Referral();
+            this.referral = _data["referral"] ? V1ReferralInfo.fromJS(_data["referral"]) : new V1ReferralInfo();
         }
     }
 
@@ -7985,7 +9055,59 @@ export class ReferralRecordsAggregate extends RecordsAggregate implements IRefer
 }
 
 export interface IReferralRecordsAggregate extends IRecordsAggregate {
+    referral: V1ReferralInfo;
+}
+
+export class V1ReferralInfo implements IV1ReferralInfo {
+    referral!: V1Referral;
+    userPermissions!: Permission[];
+
+    constructor(data?: IV1ReferralInfo) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (this as any)[property] = (data as any)[property];
+            }
+        }
+        if (!data) {
+            this.referral = new V1Referral();
+            this.userPermissions = [];
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.referral = _data["referral"] ? V1Referral.fromJS(_data["referral"]) : new V1Referral();
+            if (Array.isArray(_data["userPermissions"])) {
+                this.userPermissions = [] as any;
+                for (let item of _data["userPermissions"])
+                    this.userPermissions!.push(item);
+            }
+        }
+    }
+
+    static fromJS(data: any): V1ReferralInfo {
+        data = typeof data === 'object' ? data : {};
+        let result = new V1ReferralInfo();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["referral"] = this.referral ? this.referral.toJSON() : undefined as any;
+        if (Array.isArray(this.userPermissions)) {
+            data["userPermissions"] = [];
+            for (let item of this.userPermissions)
+                data["userPermissions"].push(item);
+        }
+        return data;
+    }
+}
+
+export interface IV1ReferralInfo {
     referral: V1Referral;
+    userPermissions: Permission[];
 }
 
 export class V1Referral implements IV1Referral {
@@ -8003,6 +9125,7 @@ export class V1Referral implements IV1Referral {
     exemptedRequirements!: ExemptedRequirementInfo[];
     uploadedDocuments!: UploadedDocumentInfo[];
     deletedDocuments!: string[];
+    assignedIndividualVolunteers!: AssignedIndividualVolunteer[];
     history!: Activity[];
     notes!: V1ReferralNoteEntry[];
     missingIntakeRequirements!: RequirementDefinition[];
@@ -8020,6 +9143,7 @@ export class V1Referral implements IV1Referral {
             this.exemptedRequirements = [];
             this.uploadedDocuments = [];
             this.deletedDocuments = [];
+            this.assignedIndividualVolunteers = [];
             this.history = [];
             this.notes = [];
             this.missingIntakeRequirements = [];
@@ -8063,6 +9187,11 @@ export class V1Referral implements IV1Referral {
                 this.deletedDocuments = [] as any;
                 for (let item of _data["deletedDocuments"])
                     this.deletedDocuments!.push(item);
+            }
+            if (Array.isArray(_data["assignedIndividualVolunteers"])) {
+                this.assignedIndividualVolunteers = [] as any;
+                for (let item of _data["assignedIndividualVolunteers"])
+                    this.assignedIndividualVolunteers!.push(AssignedIndividualVolunteer.fromJS(item));
             }
             if (Array.isArray(_data["history"])) {
                 this.history = [] as any;
@@ -8127,6 +9256,11 @@ export class V1Referral implements IV1Referral {
             for (let item of this.deletedDocuments)
                 data["deletedDocuments"].push(item);
         }
+        if (Array.isArray(this.assignedIndividualVolunteers)) {
+            data["assignedIndividualVolunteers"] = [];
+            for (let item of this.assignedIndividualVolunteers)
+                data["assignedIndividualVolunteers"].push(item ? item.toJSON() : undefined as any);
+        }
         if (Array.isArray(this.history)) {
             data["history"] = [];
             for (let item of this.history)
@@ -8161,6 +9295,7 @@ export interface IV1Referral {
     exemptedRequirements: ExemptedRequirementInfo[];
     uploadedDocuments: UploadedDocumentInfo[];
     deletedDocuments: string[];
+    assignedIndividualVolunteers: AssignedIndividualVolunteer[];
     history: Activity[];
     notes: V1ReferralNoteEntry[];
     missingIntakeRequirements: RequirementDefinition[];
@@ -8901,6 +10036,7 @@ export class CreateArrangement extends ArrangementsCommand implements ICreateArr
     requestedAtUtc!: Date;
     partneringFamilyPersonId!: string;
     reason?: string | undefined;
+    arrangementPolicyVersion?: string | undefined;
 
     constructor(data?: ICreateArrangement) {
         super(data);
@@ -8914,6 +10050,7 @@ export class CreateArrangement extends ArrangementsCommand implements ICreateArr
             this.requestedAtUtc = _data["requestedAtUtc"] ? new Date(_data["requestedAtUtc"].toString()) : undefined as any;
             this.partneringFamilyPersonId = _data["partneringFamilyPersonId"];
             this.reason = _data["reason"];
+            this.arrangementPolicyVersion = _data["arrangementPolicyVersion"];
         }
     }
 
@@ -8930,6 +10067,7 @@ export class CreateArrangement extends ArrangementsCommand implements ICreateArr
         data["requestedAtUtc"] = this.requestedAtUtc ? this.requestedAtUtc.toISOString() : undefined as any;
         data["partneringFamilyPersonId"] = this.partneringFamilyPersonId;
         data["reason"] = this.reason;
+        data["arrangementPolicyVersion"] = this.arrangementPolicyVersion;
         super.toJSON(data);
         return data;
     }
@@ -8940,6 +10078,7 @@ export interface ICreateArrangement extends IArrangementsCommand {
     requestedAtUtc: Date;
     partneringFamilyPersonId: string;
     reason?: string | undefined;
+    arrangementPolicyVersion?: string | undefined;
 }
 
 export class DeleteArrangements extends ArrangementsCommand implements IDeleteArrangements {
@@ -10605,6 +11744,11 @@ export abstract class VolunteerFamilyCommand implements IVolunteerFamilyCommand 
             result.init(data);
             return result;
         }
+        if (data["discriminator"] === "UpdateCustomVolunteerFamilyField") {
+            let result = new UpdateCustomVolunteerFamilyField();
+            result.init(data);
+            return result;
+        }
         if (data["discriminator"] === "UploadVolunteerFamilyDocument") {
             let result = new UploadVolunteerFamilyDocument();
             result.init(data);
@@ -10907,6 +12051,52 @@ export class UnexemptVolunteerFamilyRequirement extends VolunteerFamilyCommand i
 
 export interface IUnexemptVolunteerFamilyRequirement extends IVolunteerFamilyCommand {
     requirementName: string;
+}
+
+export class UpdateCustomVolunteerFamilyField extends VolunteerFamilyCommand implements IUpdateCustomVolunteerFamilyField {
+    completedCustomFieldId!: string;
+    customFieldName!: string;
+    customFieldType!: CustomFieldType;
+    value?: any | undefined;
+
+    constructor(data?: IUpdateCustomVolunteerFamilyField) {
+        super(data);
+        this._discriminator = "UpdateCustomVolunteerFamilyField";
+    }
+
+    override init(_data?: any) {
+        super.init(_data);
+        if (_data) {
+            this.completedCustomFieldId = _data["completedCustomFieldId"];
+            this.customFieldName = _data["customFieldName"];
+            this.customFieldType = _data["customFieldType"];
+            this.value = _data["value"];
+        }
+    }
+
+    static override fromJS(data: any): UpdateCustomVolunteerFamilyField {
+        data = typeof data === 'object' ? data : {};
+        let result = new UpdateCustomVolunteerFamilyField();
+        result.init(data);
+        return result;
+    }
+
+    override toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["completedCustomFieldId"] = this.completedCustomFieldId;
+        data["customFieldName"] = this.customFieldName;
+        data["customFieldType"] = this.customFieldType;
+        data["value"] = this.value;
+        super.toJSON(data);
+        return data;
+    }
+}
+
+export interface IUpdateCustomVolunteerFamilyField extends IVolunteerFamilyCommand {
+    completedCustomFieldId: string;
+    customFieldName: string;
+    customFieldType: CustomFieldType;
+    value?: any | undefined;
 }
 
 export class UploadVolunteerFamilyDocument extends VolunteerFamilyCommand implements IUploadVolunteerFamilyDocument {
@@ -12514,6 +13704,11 @@ export abstract class PersonCommand implements IPersonCommand {
             result.init(data);
             return result;
         }
+        if (data["discriminator"] === "UpdateCustomFamilyMemberField") {
+            let result = new UpdateCustomFamilyMemberField();
+            result.init(data);
+            return result;
+        }
         if (data["discriminator"] === "UpdatePersonAddress") {
             let result = new UpdatePersonAddress();
             result.init(data);
@@ -12834,6 +14029,52 @@ export class UndoCreatePerson extends PersonCommand implements IUndoCreatePerson
 }
 
 export interface IUndoCreatePerson extends IPersonCommand {
+}
+
+export class UpdateCustomFamilyMemberField extends PersonCommand implements IUpdateCustomFamilyMemberField {
+    completedCustomFieldId!: string;
+    customFieldName!: string;
+    customFieldType!: CustomFieldType;
+    value?: any | undefined;
+
+    constructor(data?: IUpdateCustomFamilyMemberField) {
+        super(data);
+        this._discriminator = "UpdateCustomFamilyMemberField";
+    }
+
+    override init(_data?: any) {
+        super.init(_data);
+        if (_data) {
+            this.completedCustomFieldId = _data["completedCustomFieldId"];
+            this.customFieldName = _data["customFieldName"];
+            this.customFieldType = _data["customFieldType"];
+            this.value = _data["value"];
+        }
+    }
+
+    static override fromJS(data: any): UpdateCustomFamilyMemberField {
+        data = typeof data === 'object' ? data : {};
+        let result = new UpdateCustomFamilyMemberField();
+        result.init(data);
+        return result;
+    }
+
+    override toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["completedCustomFieldId"] = this.completedCustomFieldId;
+        data["customFieldName"] = this.customFieldName;
+        data["customFieldType"] = this.customFieldType;
+        data["value"] = this.value;
+        super.toJSON(data);
+        return data;
+    }
+}
+
+export interface IUpdateCustomFamilyMemberField extends IPersonCommand {
+    completedCustomFieldId: string;
+    customFieldName: string;
+    customFieldType: CustomFieldType;
+    value?: any | undefined;
 }
 
 export class UpdatePersonAddress extends PersonCommand implements IUpdatePersonAddress {
@@ -13231,6 +14472,11 @@ export abstract class V1CaseCommand implements IV1CaseCommand {
             result.init(data);
             return result;
         }
+        if (data["discriminator"] === "CloseReferralWithReason") {
+            let result = new CloseReferralWithReason();
+            result.init(data);
+            return result;
+        }
         if (data["discriminator"] === "CompleteReferralRequirement") {
             let result = new CompleteReferralRequirement();
             result.init(data);
@@ -13273,6 +14519,16 @@ export abstract class V1CaseCommand implements IV1CaseCommand {
         }
         if (data["discriminator"] === "UpdateReferralComments") {
             let result = new UpdateReferralComments();
+            result.init(data);
+            return result;
+        }
+        if (data["discriminator"] === "AssignIndividualVolunteer") {
+            let result = new AssignIndividualVolunteer2();
+            result.init(data);
+            return result;
+        }
+        if (data["discriminator"] === "UnassignIndividualVolunteer") {
+            let result = new UnassignIndividualVolunteer2();
             result.init(data);
             return result;
         }
@@ -13328,6 +14584,52 @@ export class CloseReferral extends V1CaseCommand implements ICloseReferral {
 
 export interface ICloseReferral extends IV1CaseCommand {
     closeReason: V1CaseCloseReason;
+    closedAtUtc: Date;
+}
+
+export enum V1CaseCloseReason {
+    NotAppropriate = 0,
+    NoCapacity = 1,
+    NoLongerNeeded = 2,
+    Resourced = 3,
+    NeedMet = 4,
+}
+
+export class CloseReferralWithReason extends V1CaseCommand implements ICloseReferralWithReason {
+    closeReason!: string;
+    closedAtUtc!: Date;
+
+    constructor(data?: ICloseReferralWithReason) {
+        super(data);
+        this._discriminator = "CloseReferralWithReason";
+    }
+
+    override init(_data?: any) {
+        super.init(_data);
+        if (_data) {
+            this.closeReason = _data["closeReason"];
+            this.closedAtUtc = _data["closedAtUtc"] ? new Date(_data["closedAtUtc"].toString()) : undefined as any;
+        }
+    }
+
+    static override fromJS(data: any): CloseReferralWithReason {
+        data = typeof data === 'object' ? data : {};
+        let result = new CloseReferralWithReason();
+        result.init(data);
+        return result;
+    }
+
+    override toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["closeReason"] = this.closeReason;
+        data["closedAtUtc"] = this.closedAtUtc ? this.closedAtUtc.toISOString() : undefined as any;
+        super.toJSON(data);
+        return data;
+    }
+}
+
+export interface ICloseReferralWithReason extends IV1CaseCommand {
+    closeReason: string;
     closedAtUtc: Date;
 }
 
@@ -13675,6 +14977,82 @@ export class UpdateReferralComments extends V1CaseCommand implements IUpdateRefe
 
 export interface IUpdateReferralComments extends IV1CaseCommand {
     comments?: string | undefined;
+}
+
+export class AssignIndividualVolunteer2 extends V1CaseCommand implements IAssignIndividualVolunteer2 {
+    personId!: string;
+    assignmentRole!: string;
+
+    constructor(data?: IAssignIndividualVolunteer2) {
+        super(data);
+        this._discriminator = "AssignIndividualVolunteer";
+    }
+
+    override init(_data?: any) {
+        super.init(_data);
+        if (_data) {
+            this.personId = _data["personId"];
+            this.assignmentRole = _data["assignmentRole"];
+        }
+    }
+
+    static override fromJS(data: any): AssignIndividualVolunteer2 {
+        data = typeof data === 'object' ? data : {};
+        let result = new AssignIndividualVolunteer2();
+        result.init(data);
+        return result;
+    }
+
+    override toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["personId"] = this.personId;
+        data["assignmentRole"] = this.assignmentRole;
+        super.toJSON(data);
+        return data;
+    }
+}
+
+export interface IAssignIndividualVolunteer2 extends IV1CaseCommand {
+    personId: string;
+    assignmentRole: string;
+}
+
+export class UnassignIndividualVolunteer2 extends V1CaseCommand implements IUnassignIndividualVolunteer2 {
+    personId!: string;
+    assignmentRole!: string;
+
+    constructor(data?: IUnassignIndividualVolunteer2) {
+        super(data);
+        this._discriminator = "UnassignIndividualVolunteer";
+    }
+
+    override init(_data?: any) {
+        super.init(_data);
+        if (_data) {
+            this.personId = _data["personId"];
+            this.assignmentRole = _data["assignmentRole"];
+        }
+    }
+
+    static override fromJS(data: any): UnassignIndividualVolunteer2 {
+        data = typeof data === 'object' ? data : {};
+        let result = new UnassignIndividualVolunteer2();
+        result.init(data);
+        return result;
+    }
+
+    override toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["personId"] = this.personId;
+        data["assignmentRole"] = this.assignmentRole;
+        super.toJSON(data);
+        return data;
+    }
+}
+
+export interface IUnassignIndividualVolunteer2 extends IV1CaseCommand {
+    personId: string;
+    assignmentRole: string;
 }
 
 export class V1ReferralNoteRecordsCommand extends AtomicRecordsCommand implements IV1ReferralNoteRecordsCommand {
@@ -14028,6 +15406,11 @@ export abstract class V1ReferralCommand implements IV1ReferralCommand {
             result.init(data);
             return result;
         }
+        if (data["discriminator"] === "AssignIndividualVolunteer") {
+            let result = new AssignIndividualVolunteer3();
+            result.init(data);
+            return result;
+        }
         if (data["discriminator"] === "CloseV1Referral") {
             let result = new CloseV1Referral();
             result.init(data);
@@ -14060,6 +15443,11 @@ export abstract class V1ReferralCommand implements IV1ReferralCommand {
         }
         if (data["discriminator"] === "ReopenV1Referral") {
             let result = new ReopenV1Referral();
+            result.init(data);
+            return result;
+        }
+        if (data["discriminator"] === "UnassignIndividualVolunteer") {
+            let result = new UnassignIndividualVolunteer3();
             result.init(data);
             return result;
         }
@@ -14135,6 +15523,44 @@ export class AcceptV1Referral extends V1ReferralCommand implements IAcceptV1Refe
 
 export interface IAcceptV1Referral extends IV1ReferralCommand {
     acceptedAtUtc: Date;
+}
+
+export class AssignIndividualVolunteer3 extends V1ReferralCommand implements IAssignIndividualVolunteer3 {
+    personId!: string;
+    assignmentRole!: string;
+
+    constructor(data?: IAssignIndividualVolunteer3) {
+        super(data);
+        this._discriminator = "AssignIndividualVolunteer";
+    }
+
+    override init(_data?: any) {
+        super.init(_data);
+        if (_data) {
+            this.personId = _data["personId"];
+            this.assignmentRole = _data["assignmentRole"];
+        }
+    }
+
+    static override fromJS(data: any): AssignIndividualVolunteer3 {
+        data = typeof data === 'object' ? data : {};
+        let result = new AssignIndividualVolunteer3();
+        result.init(data);
+        return result;
+    }
+
+    override toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["personId"] = this.personId;
+        data["assignmentRole"] = this.assignmentRole;
+        super.toJSON(data);
+        return data;
+    }
+}
+
+export interface IAssignIndividualVolunteer3 extends IV1ReferralCommand {
+    personId: string;
+    assignmentRole: string;
 }
 
 export class CloseV1Referral extends V1ReferralCommand implements ICloseV1Referral {
@@ -14417,6 +15843,44 @@ export class ReopenV1Referral extends V1ReferralCommand implements IReopenV1Refe
 
 export interface IReopenV1Referral extends IV1ReferralCommand {
     reopenedAtUtc: Date;
+}
+
+export class UnassignIndividualVolunteer3 extends V1ReferralCommand implements IUnassignIndividualVolunteer3 {
+    personId!: string;
+    assignmentRole!: string;
+
+    constructor(data?: IUnassignIndividualVolunteer3) {
+        super(data);
+        this._discriminator = "UnassignIndividualVolunteer";
+    }
+
+    override init(_data?: any) {
+        super.init(_data);
+        if (_data) {
+            this.personId = _data["personId"];
+            this.assignmentRole = _data["assignmentRole"];
+        }
+    }
+
+    static override fromJS(data: any): UnassignIndividualVolunteer3 {
+        data = typeof data === 'object' ? data : {};
+        let result = new UnassignIndividualVolunteer3();
+        result.init(data);
+        return result;
+    }
+
+    override toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["personId"] = this.personId;
+        data["assignmentRole"] = this.assignmentRole;
+        super.toJSON(data);
+        return data;
+    }
+}
+
+export interface IUnassignIndividualVolunteer3 extends IV1ReferralCommand {
+    personId: string;
+    assignmentRole: string;
 }
 
 export class UnexemptReferralRequirement2 extends V1ReferralCommand implements IUnexemptReferralRequirement2 {

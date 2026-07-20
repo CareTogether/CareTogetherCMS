@@ -14,6 +14,7 @@ using CareTogether.Resources.Accounts;
 using CareTogether.Resources.Directory;
 using CareTogether.Resources.Policies;
 using CareTogether.Resources.V1Cases;
+using CareTogether.Resources.V1Referrals;
 using LazyCache;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -152,8 +153,8 @@ namespace CareTogether.Api.OData
         [property: Key] string Name
     );
 
-    public sealed record Referral(
-        [property: Key] Guid Id,
+    public sealed record Case(
+        [property: Key] Guid CaseId,
         [property: ForeignKey("OrganizationId")] Organization Organization,
         [property: Key] Guid OrganizationId,
         [property: ForeignKey("LocationId")] Location Location,
@@ -163,8 +164,23 @@ namespace CareTogether.Api.OData
         DateOnly Opened,
         DateOnly? Closed,
         string? ReferralSource,
-        V1CaseCloseReason? CloseReason,
+        string? CloseReason,
         string? PrimaryReasonForReferral
+    );
+
+    public sealed record Referral(
+        [property: Key] Guid ReferralId,
+        [property: Key] Guid OrganizationId,
+        [property: Key] Guid LocationId,
+        Guid? FamilyId,
+        Guid? CaseId,
+        DateTime CreatedAtUtc,
+        string Title,
+        V1ReferralStatus Status,
+        string? Comment,
+        DateTime? AcceptedAtUtc,
+        DateTime? ClosedAtUtc,
+        string? CloseReason
     );
 
     public sealed record Arrangement(
@@ -175,15 +191,16 @@ namespace CareTogether.Api.OData
         [property: Key] Guid LocationId,
         [property: ForeignKey("TypeName")] ArrangementType Type,
         string TypeName,
-        [property: ForeignKey("ReferralId")] Referral Referral,
-        Guid ReferralId,
+        [property: ForeignKey("CaseId")] Case Case,
+        Guid CaseId,
         [property: ForeignKey("PersonId")] Person? Person,
         Guid? PersonId,
         DateOnly Requested,
         DateTime? StartedUtc,
         DateTime? EndedUtc,
         ArrangementPhase Phase,
-        string? Reason
+        string? Reason,
+        string? PolicyVersion
     );
 
     public sealed record ArrangementType(
@@ -286,12 +303,12 @@ namespace CareTogether.Api.OData
         string RlsKey
     );
 
-    public sealed record FamilyRequirementStatus (
+    public sealed record FamilyRequirementStatus(
         Guid OrganizationId,
         Guid LocationId,
         [property: Key] Guid FamilyId,
         [property: Key] string RequirementName,
-        string Status,
+        [property: Key] string Status,
         DateTimeOffset? Date,
         DateTimeOffset? ExpireDate
     );
@@ -301,7 +318,7 @@ namespace CareTogether.Api.OData
         Guid LocationId,
         [property: Key] Guid PersonId,
         [property: Key] string RequirementName,
-        string Status,
+        [property: Key] string Status,
         DateTimeOffset? Date,
         DateTimeOffset? ExpireDate
     );
@@ -316,6 +333,7 @@ namespace CareTogether.Api.OData
         IEnumerable<FamilyRoleApproval> FamilyRoleApprovals,
         IEnumerable<IndividualRoleApproval> IndividualRoleApprovals,
         IEnumerable<FamilyRoleRemovedIndividual> FamilyRoleRemovedIndividuals,
+        IEnumerable<Case> Cases,
         IEnumerable<Referral> Referrals,
         IEnumerable<Arrangement> Arrangements,
         IEnumerable<ArrangementType> ArrangementTypes,
@@ -416,7 +434,14 @@ namespace CareTogether.Api.OData
             return liveModel.FamilyRoleRemovedIndividuals;
         }
 
-        [HttpGet("Referral")]
+        [HttpGet("Cases")]
+        public async Task<IEnumerable<Case>> GetCasesAsync()
+        {
+            var liveModel = await RenderLiveModelAsync();
+            return liveModel.Cases;
+        }
+
+        [HttpGet("Referrals")]
         public async Task<IEnumerable<Referral>> GetReferralsAsync()
         {
             var liveModel = await RenderLiveModelAsync();
@@ -498,7 +523,9 @@ namespace CareTogether.Api.OData
 
         [HttpGet("IndividualRequirementStatuses")]
         [EnableQuery]
-        public async Task<IEnumerable<IndividualRequirementStatus>> GetIndividualRequirementStatusesAsync()
+        public async Task<
+            IEnumerable<IndividualRequirementStatus>
+        > GetIndividualRequirementStatusesAsync()
         {
             var liveModel = await RenderLiveModelAsync();
             return liveModel.IndividualRequirementStatuses;
@@ -566,6 +593,7 @@ namespace CareTogether.Api.OData
                     Enumerable.Empty<FamilyRoleApproval>(),
                     Enumerable.Empty<IndividualRoleApproval>(),
                     Enumerable.Empty<FamilyRoleRemovedIndividual>(),
+                    Enumerable.Empty<Case>(),
                     Enumerable.Empty<Referral>(),
                     Enumerable.Empty<Arrangement>(),
                     Enumerable.Empty<ArrangementType>(),
@@ -589,6 +617,7 @@ namespace CareTogether.Api.OData
                         acc.FamilyRoleApprovals.Concat(model.FamilyRoleApprovals),
                         acc.IndividualRoleApprovals.Concat(model.IndividualRoleApprovals),
                         acc.FamilyRoleRemovedIndividuals.Concat(model.FamilyRoleRemovedIndividuals),
+                        acc.Cases.Concat(model.Cases),
                         acc.Referrals.Concat(model.Referrals),
                         acc.Arrangements.Concat(model.Arrangements),
                         acc.ArrangementTypes.Concat(model.ArrangementTypes),
@@ -601,7 +630,9 @@ namespace CareTogether.Api.OData
                         acc.CommunityRoleAssignments.Concat(model.CommunityRoleAssignments),
                         acc.RoleApprovals.Concat(model.RoleApprovals),
                         acc.FamilyRequirementStatuses.Concat(model.FamilyRequirementStatuses),
-                        acc.IndividualRequirementStatuses.Concat(model.IndividualRequirementStatuses)
+                        acc.IndividualRequirementStatuses.Concat(
+                            model.IndividualRequirementStatuses
+                        )
                     )
             );
 
@@ -630,6 +661,10 @@ namespace CareTogether.Api.OData
                     )
                 )
                 .WhenAll();
+            var locationPolicyById = locationPolicies.ToDictionary(
+                locationPolicy => locationPolicy.location.Id ?? Guid.Empty,
+                locationPolicy => locationPolicy.policy
+            );
 
             // Currently, roles are defined at the organization level and assigned to users at the location level.
             var roles = locationPolicies
@@ -685,7 +720,9 @@ namespace CareTogether.Api.OData
                 .ToArrayAsync();
 
             var familiesByLocation = visibleAggregatesByLocation
-                .Where(zipResult => zipResult.Item2 is FamilyRecordsAggregate fra && !fra.Family.Family.IsTestFamily)
+                .Where(zipResult =>
+                    zipResult.Item2 is FamilyRecordsAggregate fra && !fra.Family.Family.IsTestFamily
+                )
                 .Select(zipResult => (zipResult.Item1, (FamilyRecordsAggregate)zipResult.Item2))
                 .Select(zipResult =>
                     (
@@ -716,14 +753,26 @@ namespace CareTogether.Api.OData
                 )
                 .ToArray();
 
+            var referralsByLocation = visibleAggregatesByLocation
+                .Where(zipResult => zipResult.Item2 is ReferralRecordsAggregate)
+                .Select(zipResult =>
+                    (
+                        zipResult.Item1.location,
+                        ((ReferralRecordsAggregate)zipResult.Item2).Referral.Referral
+                    )
+                )
+                .ToArray();
+
             var familiesWithInfo = familiesByLocation
                 .Select(x => RenderFamily(organization, x.Item1, x.Item2.Family))
                 .ToArray();
             var families = familiesWithInfo.Select(family => family.Item2).ToArray();
+            LogDuplicateFamiliesDataQualityIssues(logger, families);
 
             var people = familiesWithInfo
                 .SelectMany(x => RenderPeople(organization, x.Item1, x.Item2))
                 .ToArray();
+            LogDuplicatePeopleDataQualityIssues(logger, people);
 
             var userRolesWithAccess = await people
                 .Select(person =>
@@ -823,8 +872,36 @@ namespace CareTogether.Api.OData
                 )
                 .ToArray();
 
-            var referrals = familiesWithInfo
-                .SelectMany(x => RenderReferrals(organization, x.Item1, x.Item2))
+            var cases = familiesWithInfo
+                .SelectMany(x => RenderCases(organization, x.Item1, x.Item2))
+                .ToArray();
+
+            var caseIdsByReferralId = familiesWithInfo
+                .SelectMany(x =>
+                    (x.Item1.PartneringFamilyInfo?.ClosedV1Cases ?? []).AddRange(
+                        x.Item1.PartneringFamilyInfo?.OpenV1Case == null
+                            ? []
+                            : [x.Item1.PartneringFamilyInfo.OpenV1Case]
+                    )
+                )
+                .SelectMany(v1Case =>
+                    v1Case.LinkedV1ReferralIds.Select(referralId =>
+                        (ReferralId: referralId, CaseId: v1Case.Id)
+                    )
+                )
+                .ToDictionary(link => link.ReferralId, link => link.CaseId);
+
+            var referrals = referralsByLocation
+                .Select(item =>
+                    RenderReferral(
+                        item.location,
+                        item.Referral,
+                        caseIdsByReferralId.TryGetValue(item.Referral.ReferralId, out var caseId)
+                            ? caseId
+                            : null,
+                        anonymize
+                    )
+                )
                 .ToArray();
 
             var arrangementTypes = locationPolicies
@@ -853,7 +930,7 @@ namespace CareTogether.Api.OData
                         x.Item1,
                         x.Item2,
                         people,
-                        referrals,
+                        cases,
                         arrangementTypes
                     )
                 )
@@ -921,52 +998,60 @@ namespace CareTogether.Api.OData
             var familyRequirementStatuses = new List<FamilyRequirementStatus>();
             foreach (var family in families)
             {
-                if (family.VolunteerFamilyInfo?.CompletedRequirements != null)
+                var volunteerFamilyInfo = family.VolunteerFamilyInfo;
+
+                if (volunteerFamilyInfo?.CompletedRequirements != null)
                 {
-                    foreach (var req in family.VolunteerFamilyInfo.CompletedRequirements)
+                    foreach (var req in volunteerFamilyInfo.CompletedRequirements)
                     {
-                        familyRequirementStatuses.Add(new FamilyRequirementStatus(
-                            organization.Id,
-                            family.LocationId,
-                            family.Id, 
-                            req.RequirementName,
-                            "Complete", 
-                            req.CompletedAtUtc,
-                            req.ExpiresAtUtc
-                        ));
+                        familyRequirementStatuses.Add(
+                            new FamilyRequirementStatus(
+                                organization.Id,
+                                family.LocationId,
+                                family.Id,
+                                req.RequirementName,
+                                "Complete",
+                                req.CompletedAtUtc,
+                                req.ExpiresAtUtc
+                            )
+                        );
                     }
                 }
 
-                if (family.VolunteerFamilyInfo?.ExemptedRequirements != null)
+                if (volunteerFamilyInfo?.ExemptedRequirements != null)
                 {
-                    foreach (var req in family.VolunteerFamilyInfo.ExemptedRequirements)
+                    foreach (var req in volunteerFamilyInfo.ExemptedRequirements)
                     {
-                        familyRequirementStatuses.Add(new FamilyRequirementStatus(
-                            organization.Id,
-                            family.LocationId,
-                            family.Id,
-                            req.RequirementName,
-                            "Exempted",
-                            req.DueDate,
-                            req.ExemptionExpiresAtUtc
-                        ));
+                        familyRequirementStatuses.Add(
+                            new FamilyRequirementStatus(
+                                organization.Id,
+                                family.LocationId,
+                                family.Id,
+                                req.RequirementName,
+                                "Exempted",
+                                req.DueDate,
+                                req.ExemptionExpiresAtUtc
+                            )
+                        );
                     }
                 }
 
                 // 3. Missing Requirements: Pablo told me these are calculated on the flight
-                if (family.VolunteerFamilyInfo?.MissingRequirements != null)
+                if (volunteerFamilyInfo?.MissingRequirements != null)
                 {
-                    foreach (var missing in family.VolunteerFamilyInfo.MissingRequirements)
+                    foreach (var missing in volunteerFamilyInfo.MissingRequirements)
                     {
-                        familyRequirementStatuses.Add(new FamilyRequirementStatus(
-                            organization.Id,
-                            family.LocationId,
-                            family.Id, 
-                            missing.ActionName, 
-                            "Pending", 
-                            null,
-                            null
-                        ));
+                        familyRequirementStatuses.Add(
+                            new FamilyRequirementStatus(
+                                organization.Id,
+                                family.LocationId,
+                                family.Id,
+                                missing.ActionName,
+                                "Pending",
+                                null,
+                                null
+                            )
+                        );
                     }
                 }
             }
@@ -974,9 +1059,11 @@ namespace CareTogether.Api.OData
             var individualRequirementStatuses = new List<IndividualRequirementStatus>();
             foreach (var family in families)
             {
-                if (family.VolunteerFamilyInfo?.IndividualVolunteers != null)
+                var volunteerFamilyInfo = family.VolunteerFamilyInfo;
+
+                if (volunteerFamilyInfo?.IndividualVolunteers != null)
                 {
-                    foreach (var ivPair in family.VolunteerFamilyInfo.IndividualVolunteers)
+                    foreach (var ivPair in volunteerFamilyInfo.IndividualVolunteers)
                     {
                         var personId = ivPair.Key;
                         var volunteerData = ivPair.Value;
@@ -985,15 +1072,17 @@ namespace CareTogether.Api.OData
                         {
                             foreach (var req in volunteerData.CompletedRequirements)
                             {
-                                individualRequirementStatuses.Add(new IndividualRequirementStatus(
-                                    organization.Id,
-                                    family.LocationId,
-                                    personId, 
-                                    req.RequirementName, 
-                                    "Complete", 
-                                    req.CompletedAtUtc,
-                                    req.ExpiresAtUtc
-                                ));
+                                individualRequirementStatuses.Add(
+                                    new IndividualRequirementStatus(
+                                        organization.Id,
+                                        family.LocationId,
+                                        personId,
+                                        req.RequirementName,
+                                        "Complete",
+                                        req.CompletedAtUtc,
+                                        req.ExpiresAtUtc
+                                    )
+                                );
                             }
                         }
 
@@ -1001,15 +1090,17 @@ namespace CareTogether.Api.OData
                         {
                             foreach (var missing in volunteerData.MissingRequirements)
                             {
-                                individualRequirementStatuses.Add(new IndividualRequirementStatus(
-                                    organization.Id,
-                                    family.LocationId,
-                                    personId,
-                                    missing.ActionName,
-                                    "Pending", 
-                                    null,
-                                    null
-                                ));
+                                individualRequirementStatuses.Add(
+                                    new IndividualRequirementStatus(
+                                        organization.Id,
+                                        family.LocationId,
+                                        personId,
+                                        missing.ActionName,
+                                        "Pending",
+                                        null,
+                                        null
+                                    )
+                                );
                             }
                         }
 
@@ -1017,15 +1108,17 @@ namespace CareTogether.Api.OData
                         {
                             foreach (var exempt in volunteerData.ExemptedRequirements)
                             {
-                                individualRequirementStatuses.Add(new IndividualRequirementStatus(
-                                    organization.Id,
-                                    family.LocationId,
-                                    personId,
-                                    exempt.RequirementName,
-                                    "Exempted",
-                                    exempt.DueDate,
-                                    exempt.ExemptionExpiresAtUtc
-                                ));
+                                individualRequirementStatuses.Add(
+                                    new IndividualRequirementStatus(
+                                        organization.Id,
+                                        family.LocationId,
+                                        personId,
+                                        exempt.RequirementName,
+                                        "Exempted",
+                                        exempt.DueDate,
+                                        exempt.ExemptionExpiresAtUtc
+                                    )
+                                );
                             }
                         }
                     }
@@ -1042,6 +1135,7 @@ namespace CareTogether.Api.OData
                 familyRoleApprovals,
                 individualRoleApprovals,
                 familyRoleRemovedIndividuals,
+                cases,
                 referrals,
                 arrangements,
                 arrangementTypes,
@@ -1717,6 +1811,161 @@ namespace CareTogether.Api.OData
             );
         }
 
+        private static void LogDuplicatePeopleDataQualityIssues(
+            ILogger<LiveODataModelController> logger,
+            Person[] people
+        )
+        {
+            var duplicatePeopleById = people
+                .GroupBy(person => new
+                {
+                    person.OrganizationId,
+                    person.LocationId,
+                    person.FamilyId,
+                    person.Id,
+                })
+                .Select(group => new
+                {
+                    group.Key.OrganizationId,
+                    group.Key.LocationId,
+                    group.Key.FamilyId,
+                    PersonId = group.Key.Id,
+                    People = group.ToArray(),
+                })
+                .Where(group => group.People.Length > 1)
+                .ToArray();
+
+            foreach (var duplicateGroup in duplicatePeopleById)
+            {
+                var entries = duplicateGroup
+                    .People.Select(person =>
+                        $"OrganizationId={person.OrganizationId}, LocationId={person.LocationId}, FamilyId={person.FamilyId}, Name={person.FirstName} {person.LastName}, Type={person.PersonType}, DateOfBirth={person.DateOfBirth}"
+                    )
+                    .ToArray();
+
+                logger.LogWarning(
+                    "Duplicate person entries detected while rendering live OData model. OrganizationId={OrganizationId}, LocationId={LocationId}, FamilyId={FamilyId}, PersonId={PersonId}, Count={Count}, Entries={Entries}",
+                    duplicateGroup.OrganizationId,
+                    duplicateGroup.LocationId,
+                    duplicateGroup.FamilyId,
+                    duplicateGroup.PersonId,
+                    duplicateGroup.People.Length,
+                    string.Join(" | ", entries)
+                );
+            }
+        }
+
+        private static void LogDuplicateFamiliesDataQualityIssues(
+            ILogger<LiveODataModelController> logger,
+            Family[] families
+        )
+        {
+            var duplicateFamiliesById = families
+                .GroupBy(family => new
+                {
+                    family.OrganizationId,
+                    family.LocationId,
+                    family.Id,
+                })
+                .Select(group => new
+                {
+                    group.Key.OrganizationId,
+                    group.Key.LocationId,
+                    FamilyId = group.Key.Id,
+                    Families = group.ToArray(),
+                })
+                .Where(group => group.Families.Length > 1)
+                .ToArray();
+
+            foreach (var duplicateGroup in duplicateFamiliesById)
+            {
+                var entries = duplicateGroup
+                    .Families.Select(family =>
+                        $"OrganizationId={family.OrganizationId}, LocationId={family.LocationId}, Name={family.Name}"
+                    )
+                    .ToArray();
+
+                logger.LogWarning(
+                    "Duplicate family entries detected while rendering live OData model. OrganizationId={OrganizationId}, LocationId={LocationId}, FamilyId={FamilyId}, Count={Count}, Entries={Entries}",
+                    duplicateGroup.OrganizationId,
+                    duplicateGroup.LocationId,
+                    duplicateGroup.FamilyId,
+                    duplicateGroup.Families.Length,
+                    string.Join(" | ", entries)
+                );
+            }
+        }
+
+        private static Family FindFamilyInLocation(
+            Family[] families,
+            Guid familyId,
+            Guid organizationId,
+            Guid locationId
+        )
+        {
+            return TryFindFamilyInLocation(families, familyId, organizationId, locationId)
+                ?? throw new InvalidOperationException(
+                    $"Expected to find family while rendering live OData model. OrganizationId={organizationId}, LocationId={locationId}, FamilyId={familyId}."
+                );
+        }
+
+        private static Family? TryFindFamilyInLocation(
+            Family[] families,
+            Guid familyId,
+            Guid organizationId,
+            Guid locationId
+        )
+        {
+            return families.SingleOrDefault(family =>
+                family.Id == familyId
+                && family.OrganizationId == organizationId
+                && family.LocationId == locationId
+            );
+        }
+
+        private static Person FindPersonInFamily(Person[] people, Guid personId, Family family)
+        {
+            return TryFindPersonInFamily(people, personId, family)
+                ?? throw new InvalidOperationException(
+                    $"Expected to find person while rendering live OData model. OrganizationId={family.OrganizationId}, LocationId={family.LocationId}, FamilyId={family.Id}, PersonId={personId}."
+                );
+        }
+
+        private static Person? TryFindPersonInFamily(Person[] people, Guid personId, Family family)
+        {
+            return people.SingleOrDefault(person =>
+                person.Id == personId
+                && person.FamilyId == family.Id
+                && person.OrganizationId == family.OrganizationId
+                && person.LocationId == family.LocationId
+            );
+        }
+
+        private static Person FindPersonInLocation(
+            Person[] people,
+            Guid personId,
+            Guid organizationId,
+            Guid locationId
+        )
+        {
+            var matches = people
+                .Where(person =>
+                    person.Id == personId
+                    && person.OrganizationId == organizationId
+                    && person.LocationId == locationId
+                )
+                .ToArray();
+
+            if (matches.Length == 1)
+            {
+                return matches[0];
+            }
+
+            throw new InvalidOperationException(
+                $"Expected exactly one person while rendering live OData model. Found {matches.Length}. OrganizationId={organizationId}, LocationId={locationId}, PersonId={personId}."
+            );
+        }
+
         private static IEnumerable<FamilyRoleApproval> RenderFamilyRoleApprovals(
             Organization organization,
             CombinedFamilyInfo familyInfo,
@@ -1761,7 +2010,7 @@ namespace CareTogether.Api.OData
                                 organization.Id,
                                 family.Location,
                                 family.Location.Id,
-                                people.Single(person => person.Id == individual.Key),
+                                FindPersonInFamily(people, individual.Key, family),
                                 individual.Key,
                                 roles.Single(role =>
                                     role.Name == ira.Key && role.OrganizationId == organization.Id
@@ -1798,7 +2047,7 @@ namespace CareTogether.Api.OData
                             organization.Id,
                             family.Location,
                             family.Location.Id,
-                            people.Single(person => person.Id == individual.Key),
+                            FindPersonInFamily(people, individual.Key, family),
                             individual.Key,
                             roles.Single(role =>
                                 role.Name == removal.RoleName
@@ -1813,7 +2062,7 @@ namespace CareTogether.Api.OData
                 ) ?? [];
         }
 
-        private static IEnumerable<Referral> RenderReferrals(
+        private static IEnumerable<Case> RenderCases(
             Organization organization,
             CombinedFamilyInfo familyInfo,
             Family family
@@ -1824,7 +2073,7 @@ namespace CareTogether.Api.OData
                     ? []
                     : new[] { familyInfo.PartneringFamilyInfo.OpenV1Case }
             );
-            return allReferralsInfo.Select(referralInfo => new Referral(
+            return allReferralsInfo.Select(referralInfo => new Case(
                 referralInfo.Id,
                 organization,
                 organization.Id,
@@ -1851,12 +2100,35 @@ namespace CareTogether.Api.OData
             ));
         }
 
+        private static Referral RenderReferral(
+            Location location,
+            V1Referral referral,
+            Guid? caseId,
+            bool anonymize
+        ) =>
+            new(
+                referral.ReferralId,
+                location.OrganizationId,
+                location.Id,
+                referral.FamilyId,
+                caseId,
+                referral.CreatedAtUtc,
+                anonymize ? $"anon_{referral.Title.Length}" : referral.Title,
+                referral.Status,
+                anonymize && referral.Comment != null
+                    ? $"anon_{referral.Comment.Length}"
+                    : referral.Comment,
+                referral.AcceptedAtUtc,
+                referral.ClosedAtUtc,
+                referral.CloseReason
+            );
+
         private static IEnumerable<Arrangement> RenderArrangements(
             Organization organization,
             CombinedFamilyInfo familyInfo,
             Family family,
             Person[] people,
-            Referral[] referrals,
+            Case[] cases,
             ArrangementType[] arrangementTypes
         )
         {
@@ -1867,11 +2139,14 @@ namespace CareTogether.Api.OData
             );
             return allReferralsInfo.SelectMany(referralInfo =>
             {
-                var referral = referrals.Single(r => r.Id == referralInfo.Id);
+                var caseRecord = cases.Single(c => c.CaseId == referralInfo.Id);
                 return referralInfo.Arrangements.Select(arrangement =>
                 {
                     var arrangementPerson = people.SingleOrDefault(p =>
                         p.Id == arrangement.PartneringFamilyPersonId
+                        && p.FamilyId == family.Id
+                        && p.OrganizationId == organization.Id
+                        && p.LocationId == family.Location.Id
                     );
                     return new Arrangement(
                         arrangement.Id,
@@ -1885,15 +2160,16 @@ namespace CareTogether.Api.OData
                             && type.LocationId == family.Location.Id
                         ),
                         arrangement.ArrangementType,
-                        referral,
-                        referral.Id,
+                        caseRecord,
+                        caseRecord.CaseId,
                         arrangementPerson,
                         arrangement.PartneringFamilyPersonId,
                         DateOnly.FromDateTime(arrangement.RequestedAtUtc),
                         arrangement.StartedAtUtc,
                         arrangement.EndedAtUtc,
                         arrangement.Phase,
-                        arrangement.Reason
+                        arrangement.Reason,
+                        arrangement.ArrangementPolicyVersion
                     );
                 });
             });
@@ -1932,13 +2208,16 @@ namespace CareTogether.Api.OData
                             arrangement.Id
                         );
                         throw new InvalidOperationException(
-                            $"Expected exactly one arrangement for child location record generation. ArrangementId={arrangement.Id}."
+                            $"Expected exactly one arrangement for child location record generation. Found {matchingArrangements.Length}. OrganizationId={organization.Id}, LocationId={family.Location.Id}, FamilyId={family.Id}, ReferralId={referralInfo.Id}, ArrangementId={arrangement.Id}."
                         );
                     }
 
                     var arrangementRecord = matchingArrangements.Single();
                     var arrangementPerson = people.SingleOrDefault(p =>
                         p.Id == arrangement.PartneringFamilyPersonId
+                        && p.FamilyId == family.Id
+                        && p.OrganizationId == organization.Id
+                        && p.LocationId == family.Location.Id
                     );
                     return arrangement.ChildLocationHistory.Select(
                         (history, i) =>
@@ -1950,11 +2229,10 @@ namespace CareTogether.Api.OData
                                     && f.LocationId == family.Location.Id
                                 )
                                 .ToArray();
-                            if (matchingFamilies.Length != 1)
+                            if (matchingFamilies.Length == 0)
                             {
                                 logger.LogError(
-                                    "Expected exactly one receiving family while rendering child location records. Found {MatchCount}. OrganizationId={OrganizationId}, LocationId={LocationId}, FamilyId={FamilyId}, ReferralId={ReferralId}, ArrangementId={ArrangementId}, ChildLocationFamilyId={ChildLocationFamilyId}, ChildId={ChildId}, HistoryTimestampUtc={HistoryTimestampUtc}.",
-                                    matchingFamilies.Length,
+                                    "Expected at least one receiving family while rendering child location records. Found 0. OrganizationId={OrganizationId}, LocationId={LocationId}, FamilyId={FamilyId}, ReferralId={ReferralId}, ArrangementId={ArrangementId}, ChildLocationFamilyId={ChildLocationFamilyId}, ChildId={ChildId}, HistoryTimestampUtc={HistoryTimestampUtc}.",
                                     organization.Id,
                                     family.Location.Id,
                                     family.Id,
@@ -1965,7 +2243,22 @@ namespace CareTogether.Api.OData
                                     history.TimestampUtc
                                 );
                                 throw new InvalidOperationException(
-                                    $"Expected exactly one receiving family for child location record generation. ChildLocationFamilyId={history.ChildLocationFamilyId}."
+                                    $"Expected at least one receiving family for child location record generation. OrganizationId={organization.Id}, LocationId={family.Location.Id}, FamilyId={family.Id}, ReferralId={referralInfo.Id}, ArrangementId={arrangement.Id}, ChildLocationFamilyId={history.ChildLocationFamilyId}, ChildId={arrangement.PartneringFamilyPersonId}, HistoryTimestampUtc={history.TimestampUtc}."
+                                );
+                            }
+                            if (matchingFamilies.Length > 1)
+                            {
+                                logger.LogWarning(
+                                    "Duplicate receiving family entries detected while rendering child location records. Found {MatchCount}. OrganizationId={OrganizationId}, LocationId={LocationId}, FamilyId={FamilyId}, ReferralId={ReferralId}, ArrangementId={ArrangementId}, ChildLocationFamilyId={ChildLocationFamilyId}, ChildId={ChildId}, HistoryTimestampUtc={HistoryTimestampUtc}.",
+                                    matchingFamilies.Length,
+                                    organization.Id,
+                                    family.Location.Id,
+                                    family.Id,
+                                    referralInfo.Id,
+                                    arrangement.Id,
+                                    history.ChildLocationFamilyId,
+                                    arrangement.PartneringFamilyPersonId,
+                                    history.TimestampUtc
                                 );
                             }
 
@@ -2032,10 +2325,11 @@ namespace CareTogether.Api.OData
                             family.Location.Id,
                             arrangementRecord,
                             arrangement.Id,
-                            families.Single(f =>
-                                f.Id == fva.FamilyId
-                                && f.OrganizationId == organization.Id
-                                && f.LocationId == family.Location.Id
+                            FindFamilyInLocation(
+                                families,
+                                fva.FamilyId,
+                                organization.Id,
+                                family.Location.Id
                             ),
                             fva.FamilyId,
                             fva.ArrangementFunction
@@ -2067,7 +2361,11 @@ namespace CareTogether.Api.OData
                     return arrangement
                         .IndividualVolunteerAssignments.Select(fva =>
                         {
-                            var person = people.SingleOrDefault(p => p.Id == fva.PersonId);
+                            var person = TryFindPersonInFamily(
+                                people,
+                                fva.PersonId,
+                                family
+                            );
                             if (person == null)
                             {
                                 return null;
@@ -2106,7 +2404,12 @@ namespace CareTogether.Api.OData
                     community.Location.Id,
                     community,
                     community.Id,
-                    families.Single(f => f.Id == familyId),
+                    FindFamilyInLocation(
+                        families,
+                        familyId,
+                        organization.Id,
+                        community.Location.Id
+                    ),
                     familyId
                 ));
         }
@@ -2129,7 +2432,12 @@ namespace CareTogether.Api.OData
                     community.Location.Id,
                     community,
                     community.Id,
-                    people.Single(p => p.Id == roleAssignment.PersonId),
+                    FindPersonInLocation(
+                        people,
+                        roleAssignment.PersonId,
+                        organization.Id,
+                        community.Location.Id
+                    ),
                     roleAssignment.PersonId,
                     roleAssignment.CommunityRole
                 ));

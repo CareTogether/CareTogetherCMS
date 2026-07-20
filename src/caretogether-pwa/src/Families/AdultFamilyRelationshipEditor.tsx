@@ -1,9 +1,9 @@
+import Grid from '@mui/material/Grid';
 import {
   Checkbox,
   FormControl,
   FormControlLabel,
   FormGroup,
-  Grid,
   InputLabel,
   MenuItem,
   Select,
@@ -48,13 +48,14 @@ export function AdultFamilyRelationshipEditor({
     <Grid container spacing={2}>
       {editor.editing ? (
         <>
-          <Grid item xs={12} sm={6}>
+          <Grid size={{ xs: 12, sm: 6 }}>
             <FormControl required fullWidth size="small">
               <InputLabel id="family-relationship-label">
                 Relationship to Family
               </InputLabel>
               <Select
                 labelId="family-relationship-label"
+                label="Relationship to Family"
                 id="family-relationship"
                 value={editor.value?.relationshipToFamily}
                 onChange={(e) =>
@@ -75,7 +76,7 @@ export function AdultFamilyRelationshipEditor({
               </Select>
             </FormControl>
           </Grid>
-          <Grid item xs={12} sm={6}>
+          <Grid size={{ xs: 12, sm: 6 }}>
             <FormGroup row>
               <FormControlLabel
                 control={
@@ -97,13 +98,13 @@ export function AdultFamilyRelationshipEditor({
               />
             </FormGroup>
           </Grid>
-          <Grid item xs={12}>
+          <Grid size={12}>
             {editor.cancelButton}
             {editor.saveButton}
           </Grid>
         </>
       ) : (
-        <Grid item xs={12}>
+        <Grid size={12}>
           Relationship type: {relationship.relationshipToFamily},{' '}
           {relationship.isInHousehold ? 'household member' : 'not in household'}
           {editor.editButton}

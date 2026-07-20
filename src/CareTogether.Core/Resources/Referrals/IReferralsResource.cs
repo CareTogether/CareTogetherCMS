@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Immutable;
 using System.Threading.Tasks;
+using CareTogether.Resources;
 using CareTogether.Resources.Policies;
 using JsonPolymorph;
 
@@ -12,11 +13,12 @@ namespace CareTogether.Resources.V1Cases
         ImmutableList<Guid> LinkedV1ReferralIds,
         DateTime OpenedAtUtc,
         DateTime? ClosedAtUtc,
-        V1CaseCloseReason? CloseReason,
+        string? CloseReason,
         ImmutableList<CompletedRequirementInfo> CompletedRequirements,
         ImmutableList<ExemptedRequirementInfo> ExemptedRequirements,
         ImmutableDictionary<string, CompletedCustomFieldInfo> CompletedCustomFields,
         ImmutableDictionary<Guid, ArrangementEntry> Arrangements,
+        ImmutableList<AssignedIndividualVolunteer> AssignedIndividualVolunteers,
         ImmutableList<Activity> History,
         string? Comments
     );
@@ -39,7 +41,8 @@ namespace CareTogether.Resources.V1Cases
         ImmutableSortedSet<ChildLocationHistoryEntry> ChildLocationHistory,
         ImmutableSortedSet<ChildLocationHistoryEntry> ChildLocationPlan,
         string? Comments,
-        string? Reason
+        string? Reason,
+        string? ArrangementPolicyVersion = null
     );
 
     public enum V1CaseCloseReason
@@ -144,11 +147,38 @@ namespace CareTogether.Resources.V1Cases
 
     public sealed record UpdateReferralComments(Guid FamilyId, Guid ReferralId, string? Comments)
         : V1CaseCommand(FamilyId, ReferralId);
+}
 
+namespace CareTogether.Resources.V1Cases.V1CaseCommands
+{
+    public sealed record AssignIndividualVolunteer(
+        Guid FamilyId,
+        Guid ReferralId,
+        Guid PersonId,
+        string AssignmentRole
+    ) : V1CaseCommand(FamilyId, ReferralId);
+
+    public sealed record UnassignIndividualVolunteer(
+        Guid FamilyId,
+        Guid ReferralId,
+        Guid PersonId,
+        string AssignmentRole
+    ) : V1CaseCommand(FamilyId, ReferralId);
+}
+
+namespace CareTogether.Resources.V1Cases
+{
     public sealed record CloseReferral(
         Guid FamilyId,
         Guid ReferralId,
         V1CaseCloseReason CloseReason,
+        DateTime ClosedAtUtc
+    ) : V1CaseCommand(FamilyId, ReferralId);
+
+    public sealed record CloseReferralWithReason(
+        Guid FamilyId,
+        Guid ReferralId,
+        string CloseReason,
         DateTime ClosedAtUtc
     ) : V1CaseCommand(FamilyId, ReferralId);
 
@@ -166,7 +196,8 @@ namespace CareTogether.Resources.V1Cases
         string ArrangementType,
         DateTime RequestedAtUtc,
         Guid PartneringFamilyPersonId,
-        string? Reason
+        string? Reason,
+        string? ArrangementPolicyVersion = null
     ) : ArrangementsCommand(FamilyId, ReferralId, ArrangementIds);
 
     public sealed record AssignIndividualVolunteer(
@@ -485,6 +516,18 @@ namespace CareTogether.Resources.V1Cases
     public interface IV1CasesResource
     {
         Task<ImmutableList<V1CaseEntry>> ListV1CasessAsync(Guid organizationId, Guid locationId);
+
+        Task<ImmutableList<V1CaseEntry>> ListV1CasesForFamilyAsync(
+            Guid organizationId,
+            Guid locationId,
+            Guid familyId
+        );
+
+        Task<ImmutableList<V1CaseEntry>> ListV1CasesAssignedToVolunteerFamilyAsync(
+            Guid organizationId,
+            Guid locationId,
+            Guid volunteerFamilyId
+        );
 
         Task<V1CaseEntry> ExecuteV1CaseCommandAsync(
             Guid organizationId,

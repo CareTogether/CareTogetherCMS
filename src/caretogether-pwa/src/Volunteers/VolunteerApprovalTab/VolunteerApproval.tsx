@@ -1,7 +1,5 @@
 import {
-  Grid,
   Table,
-  TableContainer,
   TableBody,
   TableCell,
   TableHead,
@@ -14,8 +12,10 @@ import {
   IconButton,
   FormControl,
   InputBase,
+  InputLabel,
   MenuItem,
   Select,
+  SelectChangeEvent,
   Stack,
   ToggleButton,
   ToggleButtonGroup,
@@ -33,7 +33,7 @@ import {
   organizationConfigurationQuery,
   policyData,
 } from '../../Model/ConfigurationModel';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import {
   Add as AddIcon,
   Email as EmailIcon,
@@ -42,12 +42,15 @@ import {
   UnfoldLess as UnfoldLessIcon,
   UnfoldMore as UnfoldMoreIcon,
 } from '@mui/icons-material';
-import { CreateVolunteerFamilyDialog } from '../CreateVolunteerFamilyDialog';
+import { CreateVolunteerFamilyDrawer } from '../CreateVolunteerFamilyDrawer';
 import { Link, useLocation } from 'react-router-dom';
 import { SearchBar } from '../../Shell/SearchBar';
 import { useLocalStorage } from '../../Hooks/useLocalStorage';
 import { useScrollMemory } from '../../Hooks/useScrollMemory';
-import { useAllVolunteerFamiliesPermissions } from '../../Model/SessionModel';
+import {
+  useAllVolunteerFamiliesPermissions,
+  useGlobalPermissions,
+} from '../../Model/SessionModel';
 import { BulkSmsSideSheet } from '../BulkSmsSideSheet';
 import { useWindowSize } from '../../Hooks/useWindowSize';
 import { useScreenTitle } from '../../Shell/ShellScreenTitle';
@@ -58,7 +61,6 @@ import { useAppNavigate } from '../../Hooks/useAppNavigate';
 import { useGlobalSnackBar } from '../../Hooks/useGlobalSnackBar';
 import { statusFiltersState } from './statusFiltersState';
 import { checkStatusEquivalence } from './checkStatusEquivalence';
-import { familyLastName } from './familyLastName';
 import { simplify } from './simplify';
 import { filterType } from './filterType';
 import { roleFiltersState } from './roleFiltersState';
@@ -73,24 +75,48 @@ import { useFeatureFlagEnabled } from 'posthog-js/react';
 import { forceCheck } from '../../Utilities/reactLazyLoadInterop';
 import { VolunteerApprovalTableItem } from './VolunteerApprovalTableItem';
 import { VolunteerCustomFieldFiltersSidePanel } from './VolunteerCustomFieldFiltersSidePanel';
+import { VolunteerAssignmentFiltersSidePanel } from './VolunteerAssignmentFiltersSidePanel';
 import { useSidePanel } from '../../Hooks/useSidePanel';
-import { stickyHeaderTableSx } from '../../Utilities/stickyHeaderTableSx';
+import { containedStickyHeaderTableSx } from '../../Utilities/stickyHeaderTableSx';
+import { WideTableContainer } from '../../Utilities/WideTableContainer';
+import { wideTablePageSx } from '../../Utilities/wideTablePageSx';
+import {
+  FamilyNameSortMode,
+  normalizeFamilyNameSortMode,
+  sortFamiliesByName,
+} from '../../Families/FamilyUtils';
+import {
+  AssignmentFilterSelectionsByArrangementType,
+  AssignmentFilterValue,
+  matchesAssignmentFilters,
+} from './assignmentFilters';
+
+const VOLUNTEER_APPROVAL_SORT_STORAGE_KEY = 'volunteer-approval-sortMode';
 
 function VolunteerApproval(props: { onOpen: () => void }) {
   const { onOpen } = props;
   useEffect(onOpen);
   const appNavigate = useAppNavigate();
+  const globalPermissions = useGlobalPermissions();
   const [uncheckedFamilies, setUncheckedFamilies] = useState<string[]>([]);
   const {
     SidePanel: CustomFieldFiltersSidePanel,
     openSidePanel: openCustomFieldFiltersSidePanel,
     closeSidePanel: closeCustomFieldFiltersSidePanel,
   } = useSidePanel();
+  const {
+    SidePanel: AssignmentFiltersSidePanel,
+    openSidePanel: openAssignmentFiltersSidePanel,
+    closeSidePanel: closeAssignmentFiltersSidePanel,
+  } = useSidePanel();
 
   const policy = useRecoilValue(policyData);
 
-  const customFieldNames =
-    policy.customFamilyFields?.map((field) => field.name) || [];
+  const customFieldNames = (
+    policy.customFamilyFields?.map((field) => field.name) || []
+  ).concat(
+    policy.volunteerPolicy?.customFields?.map((field) => field.name) || []
+  );
 
   //#region Role/Status Selection Code
   const [roleFilters, setRoleFilters] = useRecoilState(roleFiltersState);
@@ -119,45 +145,119 @@ function VolunteerApproval(props: { onOpen: () => void }) {
     setUncheckedFamilies([]);
     setCustomFieldFilter(fieldName, value);
   }
+
+  function changeAssignmentFilter(
+    arrangementType: string,
+    selectedValues: AssignmentFilterValue[]
+  ) {
+    setUncheckedFamilies([]);
+    setAssignmentFilters((previous) => ({
+      ...previous,
+      [arrangementType]: selectedValues,
+    }));
+  }
   //#endregion
 
   // The array object returned by Recoil is read-only. We need to copy it before we can do an in-place sort.
   const volunteerFamiliesLoadable = useLoadable(volunteerFamiliesData);
-  const volunteerFamilies = (volunteerFamiliesLoadable || [])
-    .map((x) => x)
-    .sort((a, b) =>
-      familyLastName(a) < familyLastName(b)
-        ? -1
-        : familyLastName(a) > familyLastName(b)
-          ? 1
-          : 0
+  const [storedSortMode, setStoredSortMode] =
+    useLocalStorage<FamilyNameSortMode>(
+      VOLUNTEER_APPROVAL_SORT_STORAGE_KEY,
+      'lastNameAsc'
     );
+  const sortMode = normalizeFamilyNameSortMode(storedSortMode);
+
+  function setSortMode(value: FamilyNameSortMode) {
+    setStoredSortMode(value);
+  }
+
+  const volunteerFamilies = sortFamiliesByName(
+    volunteerFamiliesLoadable || [],
+    sortMode
+  );
 
   const {
     selectedValuesByField: customFieldFilters,
     setSelectedValuesForField: setCustomFieldFilter,
     optionsByField: customFieldFilterOptionsByField,
   } = useCustomFieldFilters({
-    customFields: policy.customFamilyFields ?? [],
+    customFields: (policy.customFamilyFields ?? []).concat(
+      policy.volunteerPolicy?.customFields ?? []
+    ),
     items: volunteerFamilies,
     isBlank: (family, fieldName) => {
-      const field = family.family?.completedCustomFields?.find(
+      const familyField = family.family?.completedCustomFields?.find(
         (customField) => customField.customFieldName === fieldName
       );
-      return !field || field.value === undefined || field.value === null;
+      if (
+        familyField &&
+        familyField.value !== undefined &&
+        familyField.value !== null
+      )
+        return false;
+      const volunteerField =
+        family.volunteerFamilyInfo?.completedCustomFields?.find(
+          (customField) => customField.customFieldName === fieldName
+        );
+      return (
+        !volunteerField ||
+        volunteerField.value === undefined ||
+        volunteerField.value === null
+      );
     },
     getValue: (family, fieldName) => {
-      const field = family.family?.completedCustomFields?.find(
+      const familyField = family.family?.completedCustomFields?.find(
         (customField) => customField.customFieldName === fieldName
       );
-      return field?.value;
+      if (familyField?.value !== undefined && familyField?.value !== null)
+        return familyField.value;
+      const volunteerField =
+        family.volunteerFamilyInfo?.completedCustomFields?.find(
+          (customField) => customField.customFieldName === fieldName
+        );
+      return volunteerField?.value;
     },
   });
   const [filterText, setFilterText] = useState('');
-  const customFieldCount = (policy.customFamilyFields || []).length;
+  const arrangementTypes = useMemo(
+    () =>
+      Array.from(
+        new Set(
+          (policy.referralPolicy?.arrangementPolicies ?? [])
+            .map((arrangementPolicy) => arrangementPolicy.arrangementType)
+            .filter(
+              (arrangementType): arrangementType is string => !!arrangementType
+            )
+        )
+      ),
+    [policy.referralPolicy?.arrangementPolicies]
+  );
+  const [assignmentFilters, setAssignmentFilters] =
+    useState<AssignmentFilterSelectionsByArrangementType>({});
+  const activeAssignmentFilterCount = Object.values(assignmentFilters).filter(
+    (selectedValues) => selectedValues.length > 0
+  ).length;
+  const customFieldCount =
+    (policy.customFamilyFields || []).length +
+    (policy.volunteerPolicy?.customFields || []).length;
   const activeCustomFieldFilterCount = Object.values(customFieldFilters).filter(
     (selectedValues) => selectedValues.length > 0
   ).length;
+
+  useEffect(() => {
+    setAssignmentFilters((currentFilters) => {
+      const validFilters = Object.fromEntries(
+        Object.entries(currentFilters).filter(([arrangementType]) =>
+          arrangementTypes.includes(arrangementType)
+        )
+      );
+
+      return Object.keys(validFilters).length ===
+        Object.keys(currentFilters).length
+        ? currentFilters
+        : validFilters;
+    });
+  }, [arrangementTypes]);
 
   //#region Family/Individual Filtering Code
   const selectedFamilyRoleKeys = roleFilters
@@ -374,19 +474,41 @@ function VolunteerApproval(props: { onOpen: () => void }) {
   function familyMatchesCustomFieldFilters(family: CombinedFamilyInfo) {
     return matchesCustomFieldFilters({
       item: family,
-      customFields: policy.customFamilyFields ?? [],
+      customFields: (policy.customFamilyFields ?? []).concat(
+        policy.volunteerPolicy?.customFields ?? []
+      ),
       selectedValuesByField: customFieldFilters,
       isBlank: (f, fieldName) => {
-        const field = f.family?.completedCustomFields?.find(
+        const familyField = f.family?.completedCustomFields?.find(
           (customField) => customField.customFieldName === fieldName
         );
-        return !field || field.value === undefined || field.value === null;
+        if (
+          familyField &&
+          familyField.value !== undefined &&
+          familyField.value !== null
+        )
+          return false;
+        const volunteerField =
+          f.volunteerFamilyInfo?.completedCustomFields?.find(
+            (customField) => customField.customFieldName === fieldName
+          );
+        return (
+          !volunteerField ||
+          volunteerField.value === undefined ||
+          volunteerField.value === null
+        );
       },
       getValue: (f, fieldName) => {
-        const field = f.family?.completedCustomFields?.find(
+        const familyField = f.family?.completedCustomFields?.find(
           (customField) => customField.customFieldName === fieldName
         );
-        return field?.value;
+        if (familyField?.value !== undefined && familyField?.value !== null)
+          return familyField.value;
+        const volunteerField =
+          f.volunteerFamilyInfo?.completedCustomFields?.find(
+            (customField) => customField.customFieldName === fieldName
+          );
+        return volunteerField?.value;
       },
     });
   }
@@ -405,12 +527,20 @@ function VolunteerApproval(props: { onOpen: () => void }) {
           )
         )) &&
       familyOrFamilyMembersMeetFilterCriteria(family) &&
+      matchesAssignmentFilters(family, assignmentFilters) &&
       familyMatchesCustomFieldFilters(family)
   );
 
   useEffect(() => {
     forceCheck();
-  }, [customFieldFilters, filterText, roleFilters, statusFilters]);
+  }, [
+    customFieldFilters,
+    filterText,
+    assignmentFilters,
+    roleFilters,
+    sortMode,
+    statusFilters,
+  ]);
 
   const selectedFamilies = filteredVolunteerFamilies.filter(
     (family) => !uncheckedFamilies.some((f) => f === family.family!.id!)
@@ -421,7 +551,7 @@ function VolunteerApproval(props: { onOpen: () => void }) {
   function openFamily(familyId: string) {
     appNavigate.family(familyId);
   }
-  const [createVolunteerFamilyDialogOpen, setCreateVolunteerFamilyDialogOpen] =
+  const [createVolunteerFamilyDrawerOpen, setCreateVolunteerFamilyDrawerOpen] =
     useState(false);
 
   const theme = useTheme();
@@ -486,6 +616,10 @@ function VolunteerApproval(props: { onOpen: () => void }) {
   const windowSize = useWindowSize();
 
   const permissions = useAllVolunteerFamiliesPermissions();
+  const tableColumnCount = 2 + customFieldNames.length + (smsMode ? 1 : 0);
+  const tableMinWidth = Math.max(700, tableColumnCount * 160);
+  const hasFeaturebaseChat = globalPermissions(Permission.AccessSupportScreen);
+  const tablePageSx = wideTablePageSx(hasFeaturebaseChat);
 
   useScreenTitle('Volunteers');
 
@@ -495,16 +629,17 @@ function VolunteerApproval(props: { onOpen: () => void }) {
     </ProgressBackdrop>
   ) : (
     <>
-      <Grid
-        container
+      <Box
         sx={{
-          paddingRight: smsMode && !isMobile ? '400px' : null,
+          ...tablePageSx,
+          ...(smsMode && !isMobile ? { paddingRight: '400px' } : {}),
           height:
-            smsMode && isMobile ? `${windowSize.height - 500 - 24}px` : null,
-          overflow: smsMode && isMobile ? 'scroll' : null,
+            smsMode && isMobile
+              ? `${windowSize.height - 500 - 24}px`
+              : tablePageSx.height,
         }}
       >
-        <Grid item xs={12}>
+        <Box sx={{ flex: '0 0 auto' }}>
           <Stack
             direction={{ xs: 'column', md: 'row' }}
             sx={{
@@ -573,6 +708,45 @@ function VolunteerApproval(props: { onOpen: () => void }) {
                   options={statusFilters}
                   setSelected={changeStatusFilterSelection}
                 />
+                {arrangementTypes.length > 0 && (
+                  <FormControl
+                    sx={{
+                      position: 'relative',
+                      minWidth: { xs: '100%', sm: 0 },
+                      maxWidth: { xs: '100%', sm: '16rem' },
+                    }}
+                  >
+                    <Select
+                      labelId="volunteerAssignmentsFilter"
+                      displayEmpty
+                      value=""
+                      open={false}
+                      variant="standard"
+                      onClick={() => openAssignmentFiltersSidePanel()}
+                      sx={{
+                        minWidth: { xs: '100%', sm: 0 },
+                        maxWidth: '100%',
+                        '& .MuiSelect-iconOpen': { transform: 'none' },
+                        '& .MuiSelect-select': {
+                          overflow: 'hidden',
+                          textOverflow: 'ellipsis',
+                          whiteSpace: 'nowrap',
+                          cursor: 'pointer',
+                        },
+                      }}
+                      input={<InputBase />}
+                      IconComponent={FilterListIcon}
+                      SelectDisplayProps={{
+                        title: `Assignments (${activeAssignmentFilterCount}/${arrangementTypes.length})`,
+                      }}
+                      renderValue={() =>
+                        `Assignments (${activeAssignmentFilterCount}/${arrangementTypes.length})`
+                      }
+                    >
+                      <MenuItem value="" sx={{ display: 'none' }} />
+                    </Select>
+                  </FormControl>
+                )}
                 {customFieldCount > 0 && (
                   <FormControl
                     sx={{
@@ -677,42 +851,89 @@ function VolunteerApproval(props: { onOpen: () => void }) {
               </Stack>
             </Stack>
           </Stack>
+          <Stack
+            direction="row"
+            sx={{
+              alignItems: 'center',
+              flexWrap: 'wrap',
+              gap: 1,
+              justifyContent: 'flex-end',
+              my: 2,
+            }}
+          >
+            {permissions(Permission.EditFamilyInfo) &&
+              permissions(Permission.ActivateVolunteerFamily) && (
+                <Button
+                  variant="contained"
+                  startIcon={<AddIcon />}
+                  onClick={() => setCreateVolunteerFamilyDrawerOpen(true)}
+                  sx={{
+                    marginRight: 'auto',
+                    width: { xs: '100%', sm: 'auto' },
+                  }}
+                >
+                  Add new volunteer family
+                </Button>
+              )}
+            <FormControl
+              size="small"
+              sx={{ minWidth: 180, width: { xs: '100%', sm: 'auto' } }}
+            >
+              <InputLabel id="volunteer-approval-sort-label">
+                Sort by
+              </InputLabel>
+              <Select
+                labelId="volunteer-approval-sort-label"
+                value={sortMode}
+                label="Sort by"
+                onChange={(event: SelectChangeEvent) =>
+                  setSortMode(event.target.value as FamilyNameSortMode)
+                }
+              >
+                <MenuItem value="lastNameAsc">Last name (ascending)</MenuItem>
+                <MenuItem value="lastNameDesc">Last name (descending)</MenuItem>
+                <MenuItem value="firstNameAsc">First name (ascending)</MenuItem>
+                <MenuItem value="firstNameDesc">
+                  First name (descending)
+                </MenuItem>
+              </Select>
+            </FormControl>
+          </Stack>
           <CustomFieldFiltersSidePanel>
             <VolunteerCustomFieldFiltersSidePanel
-              customFields={policy.customFamilyFields || []}
+              customFields={(policy.customFamilyFields || []).concat(
+                policy.volunteerPolicy?.customFields || []
+              )}
               optionsByField={customFieldFilterOptionsByField}
               selectedValuesByField={customFieldFilters}
               onFieldChange={changeCustomFieldFilter}
               onClose={closeCustomFieldFiltersSidePanel}
             />
           </CustomFieldFiltersSidePanel>
-
-          {permissions(Permission.EditFamilyInfo) &&
-            permissions(Permission.ActivateVolunteerFamily) && (
-              <Button
-                variant="contained"
-                startIcon={<AddIcon />}
-                onClick={() => setCreateVolunteerFamilyDialogOpen(true)}
-                sx={{
-                  marginRight: 'auto',
-                  marginY: 2,
-                  width: { xs: '100%', sm: 'auto' },
-                }}
-              >
-                Add new volunteer family
-              </Button>
-            )}
-        </Grid>
-        <Grid item xs={12}>
-          <TableContainer
-            sx={{
-              borderBottom: '1px solid rgba(224, 224, 224, 1)',
-              overflow: 'visible',
-            }}
-          >
+          <AssignmentFiltersSidePanel>
+            <VolunteerAssignmentFiltersSidePanel
+              arrangementTypes={arrangementTypes}
+              selectedValuesByArrangementType={assignmentFilters}
+              onArrangementTypeChange={changeAssignmentFilter}
+              onClose={closeAssignmentFiltersSidePanel}
+            />
+          </AssignmentFiltersSidePanel>
+        </Box>
+        <Box
+          sx={{
+            display: 'flex',
+            flex: 1,
+            flexDirection: 'column',
+            minHeight: 0,
+          }}
+        >
+          <WideTableContainer>
             <Table
               stickyHeader
-              sx={{ ...stickyHeaderTableSx, minWidth: '700px' }}
+              sx={{
+                ...containedStickyHeaderTableSx,
+                minWidth: tableMinWidth,
+              }}
               size="small"
             >
               <TableHead>
@@ -763,18 +984,19 @@ function VolunteerApproval(props: { onOpen: () => void }) {
                 ))}
               </TableBody>
             </Table>
-          </TableContainer>
+          </WideTableContainer>
 
-          {createVolunteerFamilyDialogOpen && (
-            <CreateVolunteerFamilyDialog
+          {createVolunteerFamilyDrawerOpen && (
+            <CreateVolunteerFamilyDrawer
               onClose={(volunteerFamilyId) => {
-                setCreateVolunteerFamilyDialogOpen(false);
-                volunteerFamilyId && openFamily(volunteerFamilyId);
+                setCreateVolunteerFamilyDrawerOpen(false);
+                if (!volunteerFamilyId) return;
+                openFamily(volunteerFamilyId);
               }}
             />
           )}
-        </Grid>
-      </Grid>
+        </Box>
+      </Box>
       {smsMode && (
         <BulkSmsSideSheet
           selectedFamilies={selectedFamilies}

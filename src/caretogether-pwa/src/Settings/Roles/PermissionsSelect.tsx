@@ -50,7 +50,7 @@ export function PermissionsSelect({
   );
 
   return (
-    <Stack mt={1} direction="row" spacing={1} alignItems="center">
+    <Stack direction="row" spacing={1} sx={{ mt: 1, alignItems: 'center' }}>
       <Autocomplete
         sx={{ mt: 1, flexGrow: 1 }}
         fullWidth
@@ -70,6 +70,7 @@ export function PermissionsSelect({
             {...params}
             label="Add Permissions"
             placeholder="Start typing to search..."
+            helperText="Hold Ctrl (or Cmd) to select multiple permissions"
           />
         )}
       />

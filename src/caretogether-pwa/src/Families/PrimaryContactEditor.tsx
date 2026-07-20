@@ -44,6 +44,7 @@ export function PrimaryContactEditor({ family }: PrimaryContactEditorProps) {
         <InputLabel id="primarycontact-label">Primary Contact</InputLabel>
         <Select
           labelId="primarycontact-label"
+          label="Primary Contact"
           id="primarycontact"
           value={editor.value}
           onChange={(e) => editor.setValue(e.target.value as string)}

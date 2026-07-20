@@ -1,3 +1,4 @@
+import Grid from '../../Generic/GridLegacyCompat';
 import { useState } from 'react';
 import {
   Button,
@@ -8,7 +9,6 @@ import {
   FormControl,
   FormControlLabel,
   FormLabel,
-  Grid,
   InputLabel,
   MenuItem,
   Radio,
@@ -28,6 +28,12 @@ import { useV1CasesModel } from '../../Model/V1CasesModel';
 import { visibleFamiliesQuery } from '../../Model/Data';
 import { locationConfigurationQuery } from '../../Model/ConfigurationModel';
 import { isBackdropClick } from '../../Utilities/handleBackdropClick';
+import {
+  getAutomaticPolicyVersion,
+  getAvailablePolicyVersions,
+  hasPolicyVersions,
+  withPolicyVersion,
+} from './arrangementPolicyVersions';
 
 interface CreateArrangementDialogProps {
   v1CaseId: string;
@@ -50,6 +56,28 @@ export function CreateArrangementDialog({
     locationConfigurationQuery
   )?.arrangementReasons;
   const isReasonRequired = arrangementReasons && arrangementReasons.length > 0;
+  const availablePolicyVersions = getAvailablePolicyVersions(arrangementPolicy);
+  const policyHasVersions = hasPolicyVersions(arrangementPolicy);
+
+  const [fields, setFields] = useState({
+    requestedAtLocal: null as Date | null,
+    partneringFamilyPersonId: null as string | null,
+    reason: null as string | null,
+    arrangementPolicyVersion: getAutomaticPolicyVersion(arrangementPolicy),
+  });
+  const {
+    requestedAtLocal,
+    partneringFamilyPersonId,
+    reason,
+    arrangementPolicyVersion,
+  } = fields;
+
+  const selectedPolicyVersion = availablePolicyVersions.find(
+    (policyVersion) => policyVersion.version === arrangementPolicyVersion
+  );
+  const effectiveArrangementPolicy = selectedPolicyVersion
+    ? withPolicyVersion(arrangementPolicy, selectedPolicyVersion)
+    : arrangementPolicy;
 
   const activeAdults = family
     .family!.adults!.filter((adult) => adult.item1!.active)
@@ -57,19 +85,13 @@ export function CreateArrangementDialog({
   const children = family.family!.children!;
 
   const applicableFamilyMembers =
-    arrangementPolicy.childInvolvement === ChildInvolvement.NoChildInvolvement
+    effectiveArrangementPolicy.childInvolvement ===
+    ChildInvolvement.NoChildInvolvement
       ? activeAdults
-      : arrangementPolicy.childInvolvement ===
+      : effectiveArrangementPolicy.childInvolvement ===
           ChildInvolvement.ChildOrAdultInvolvement
         ? activeAdults.concat(children)
         : children;
-
-  const [fields, setFields] = useState({
-    requestedAtLocal: null as Date | null,
-    partneringFamilyPersonId: null as string | null,
-    reason: null as string | null,
-  });
-  const { requestedAtLocal, partneringFamilyPersonId, reason } = fields;
 
   const [dobError, setDobError] = useState(false);
 
@@ -85,6 +107,8 @@ export function CreateArrangementDialog({
         alert('A date is required.');
       } else if (isReasonRequired && (reason == null || reason.length == 0)) {
         alert('A reason for the request is required.');
+      } else if (policyHasVersions && !arrangementPolicyVersion) {
+        alert('A policy version is required.');
       } else {
         await v1CasesModel.createArrangement(
           family.family?.id as string,
@@ -92,7 +116,8 @@ export function CreateArrangementDialog({
           arrangementPolicy.arrangementType!,
           requestedAtLocal,
           partneringFamilyPersonId,
-          reason && reason.length > 0 ? reason : null
+          reason && reason.length > 0 ? reason : null,
+          arrangementPolicyVersion
         );
         //TODO: Error handling (start with a basic error dialog w/ request to share a screenshot, and App Insights logging)
         onClose();
@@ -162,6 +187,7 @@ export function CreateArrangementDialog({
                   </InputLabel>
                   <Select
                     labelId="arrangement-reason-label"
+                    label="Reason for Request"
                     id="arrangement-reason"
                     value={reason || ''}
                     onChange={(e) =>
@@ -183,6 +209,40 @@ export function CreateArrangementDialog({
                 </FormControl>
               </Grid>
             )}
+            {policyHasVersions && availablePolicyVersions.length > 1 && (
+              <Grid item xs={12} sm={6}>
+                <FormControl required fullWidth size="small">
+                  <InputLabel id="arrangement-policy-version-label">
+                    Policy Version
+                  </InputLabel>
+                  <Select
+                    labelId="arrangement-policy-version-label"
+                    label="Policy Version"
+                    id="arrangement-policy-version"
+                    value={arrangementPolicyVersion || ''}
+                    onChange={(e) =>
+                      setFields({
+                        ...fields,
+                        arrangementPolicyVersion: e.target.value as string,
+                        partneringFamilyPersonId: null,
+                      })
+                    }
+                  >
+                    <MenuItem key="placeholder" value="" disabled>
+                      Select a version
+                    </MenuItem>
+                    {availablePolicyVersions.map((policyVersion) => (
+                      <MenuItem
+                        key={policyVersion.version}
+                        value={policyVersion.version}
+                      >
+                        {policyVersion.version}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+              </Grid>
+            )}
           </Grid>
         </form>
       </DialogContent>
@@ -197,6 +257,7 @@ export function CreateArrangementDialog({
           disabled={
             !partneringFamilyPersonId ||
             (isReasonRequired && (!reason || reason.length === 0)) ||
+            (policyHasVersions && !arrangementPolicyVersion) ||
             dobError
           }
         >
