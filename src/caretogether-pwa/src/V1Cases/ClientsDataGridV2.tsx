@@ -195,7 +195,6 @@ export function ClientsDataGridV2({
         columnHeaderHeight={42}
         density="comfortable"
         disableRowSelectionOnClick
-        hideFooter
         getRowHeight={() => 'auto'}
         getEstimatedRowHeight={() => 72}
         loading={loading}
