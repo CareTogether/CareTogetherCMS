@@ -133,8 +133,7 @@ function customFieldValues(
   family: CombinedFamilyInfo,
   customFields: CustomField[]
 ) {
-  const completedFields =
-    family.partneringFamilyInfo?.openV1Case?.completedCustomFields ?? [];
+  const completedFields = family.family?.completedCustomFields ?? [];
 
   return Object.fromEntries(
     customFields.map((field) => {
@@ -222,6 +221,10 @@ export function useClientsBrowserViewModel({
   const referralCustomFields = useMemo(
     () => policy?.referralPolicy?.customFields ?? [],
     [policy?.referralPolicy?.customFields]
+  );
+  const clientFamilyCustomFields = useMemo(
+    () => policy?.customFamilyFields ?? [],
+    [policy?.customFamilyFields]
   );
   const assignmentFilterAssignments = useMemo(
     () =>
@@ -358,7 +361,7 @@ export function useClientsBrowserViewModel({
         county: getFamilyCounty(family) ?? '',
         arrangementRows,
         arrangements: arrangementSummary(arrangementRows),
-        customFieldValues: customFieldValues(family, referralCustomFields),
+        customFieldValues: customFieldValues(family, clientFamilyCustomFields),
         assignmentRoleValues: Object.fromEntries(
           assignmentFilterOptions.map((assignmentRole) => [
             assignmentRole,
@@ -385,8 +388,8 @@ export function useClientsBrowserViewModel({
     arrangementRowsByFamily,
     assignmentFilterOptions,
     filteredFamilies,
+    clientFamilyCustomFields,
     personAndFamilyLookup,
-    referralCustomFields,
   ]);
   const counties = useMemo(
     () =>
@@ -424,6 +427,6 @@ export function useClientsBrowserViewModel({
       : [],
     assignmentFilterAssignments,
     assignmentFilterOptions,
-    customFieldDefinitions: referralCustomFields,
+    customFieldDefinitions: clientFamilyCustomFields,
   };
 }

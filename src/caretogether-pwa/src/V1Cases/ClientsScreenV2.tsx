@@ -92,6 +92,7 @@ export function ClientsScreenV2() {
     assignmentFilterAssignments,
     assignmentColumnRoles,
     assignmentFilterOptions,
+    customFieldDefinitions: clientFamilyCustomFieldDefinitions,
     counties,
     isLoading,
     rows,
@@ -158,7 +159,7 @@ export function ClientsScreenV2() {
         />
         <ClientsDataGridV2
           assignmentRoles={assignmentColumnRoles}
-          customFields={customFieldDefinitions}
+          customFields={clientFamilyCustomFieldDefinitions}
           loading={isLoading}
           rows={rows}
           onRowClick={(row) => appNavigate.family(row.familyId)}
