@@ -74,6 +74,7 @@ namespace CareTogether.Api
 
             services.AddApplicationInsightsTelemetry();
 
+            services.AddHttpContextAccessor();
             services.AddSingleton<ITargetingContextAccessor, UserTargetingContextAccessor>();
             services.AddFeatureManagement().AddFeatureFilter<TargetingFilter>();
 
