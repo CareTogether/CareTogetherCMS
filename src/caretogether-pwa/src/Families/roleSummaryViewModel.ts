@@ -4,10 +4,11 @@ import type {
   ExemptedRequirementInfo,
   FamilyRoleApprovalStatus,
   IndividualRoleApprovalStatus,
+  RoleApprovalStatus,
   RoleRemoval,
   ValueTupleOfStringAndValueTuple_2Of,
 } from '../GeneratedClient';
-import { RoleApprovalStatus } from '../GeneratedClient';
+import { isRoleApprovalStatusVisibleInSummary } from '../Volunteers/roleApprovalStatusPresentation';
 import type {
   IndividualVolunteerContext,
   RequirementContext,
@@ -95,12 +96,6 @@ export type BuildRoleSummaryCardsInput = {
 };
 
 const EXPIRING_APPROVAL_DAYS = 30;
-
-const qualifyingStatuses = new Set<RoleApprovalStatus>([
-  RoleApprovalStatus.Approved,
-  RoleApprovalStatus.Onboarded,
-  RoleApprovalStatus.Prospective,
-]);
 
 const DEFAULT_FAMILY_SUBJECT: RoleSummarySubject = {
   scope: 'family',
@@ -341,7 +336,7 @@ function qualifyingRoleEntries<T extends FamilyRoleApprovalStatus | IndividualRo
     .filter(
       ([roleName, approval]) =>
         approval.currentStatus !== undefined &&
-        qualifyingStatuses.has(approval.currentStatus) &&
+        isRoleApprovalStatusVisibleInSummary(approval.currentStatus) &&
         !isActiveRoleRemoval(roleRemovals, roleName)
     )
     .sort(([a], [b]) => normalizeRoleName(a).localeCompare(normalizeRoleName(b)))

@@ -25,12 +25,13 @@ interface ArrangementPlannedDurationProps {
 function Cell({ children }: { children: React.ReactNode }) {
   return (
     <Grid
-      size={{ xs: 12, lg: 6 }}
+      size={1}
       sx={{
         p: 1,
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-between',
+        minWidth: 0,
         border: '1px solid',
         borderColor: 'grey.200',
       }}
@@ -69,7 +70,7 @@ export function ArrangementPlannedDuration({
 
   if (summaryOnly) {
     return (
-      <Stack className="ph-unmask" direction="column" sx={{ clear: 'both' }}>
+      <Stack direction="column" sx={{ clear: 'both' }}>
         <Box>
           <span>Planned start:&nbsp;</span>
           {arrangement.plannedStartUtc
@@ -88,10 +89,16 @@ export function ArrangementPlannedDuration({
 
   return (
     <Grid
-      className="ph-unmask"
       container
       spacing={0}
-      sx={{ mt: 6, mb: 1, border: '1px solid', borderColor: 'grey.200' }}
+      columns={{ xs: 1, sm: 2 }}
+      sx={{
+        clear: 'both',
+        mt: 2,
+        mb: 1,
+        border: '1px solid',
+        borderColor: 'grey.200',
+      }}
     >
       <Cell>
         <DateDisplayEditor

@@ -141,7 +141,6 @@ export function RoleManagementDrawerV2({
                 {content.title}
               </Typography>
               <Typography
-                className="ph-unmask"
                 color="text.secondary"
                 variant="body2"
               >

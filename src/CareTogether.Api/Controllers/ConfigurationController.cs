@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Immutable;
 using System.Linq;
 using System.Threading.Tasks;
@@ -452,6 +452,38 @@ namespace CareTogether.Api.Controllers
         {
             var result = await policiesResource.GetCurrentPolicy(organizationId, locationId);
             return Ok(result);
+        }
+
+        [HttpPut("/api/{organizationId:guid}/{locationId:guid}/[controller]/policy")]
+        public async Task<ActionResult<EffectiveLocationPolicy>> PutEffectiveLocationPolicy(
+            Guid organizationId,
+            Guid locationId,
+            [FromBody] EffectiveLocationPolicy policy
+        )
+        {
+            var userContext = new SessionUserContext(User, null);
+            if (
+                !await authorizationEngine.AuthorizeLocationPolicyEditAsync(
+                    organizationId,
+                    locationId,
+                    userContext
+                )
+            )
+                return Forbid();
+
+            try
+            {
+                var result = await policiesResource.UpsertEffectiveLocationPolicyAsync(
+                    organizationId,
+                    locationId,
+                    policy
+                );
+                return Ok(result);
+            }
+            catch (PolicyValidationException ex)
+            {
+                return BadRequest(new { errors = ex.Errors });
+            }
         }
 
         [HttpGet("/api/{organizationId:guid}/{locationId:guid}/[controller]/flags")]

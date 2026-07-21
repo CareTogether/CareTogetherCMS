@@ -15,13 +15,17 @@ import {
   CombinedFamilyInfo,
   Permission,
   Person,
-  RoleApprovalStatus,
   RoleRemoval,
   RoleRemovalReason,
 } from '../GeneratedClient';
+import type { RoleApprovalStatus } from '../GeneratedClient';
 import { useFamilyLookup } from '../Model/DirectoryModel';
 import { useFamilyIdPermissions } from '../Model/SessionModel';
 import { formatUtcDateOnly } from '../Utilities/dateUtils';
+import {
+  roleApprovalStatusChipColor,
+  roleApprovalStatusLabel,
+} from '../Volunteers/roleApprovalStatusPresentation';
 import type {
   ApprovalLedgerRow,
   ApprovalLedgerStatus,
@@ -57,23 +61,6 @@ const participantStateLabels: Record<ParticipantState, string> = {
   optedOut: 'Opted Out',
   denied: 'Denied',
 };
-
-function statusLabel(status: RoleApprovalStatus) {
-  return RoleApprovalStatus[status];
-}
-
-function roleStatusColor(status: RoleApprovalStatus) {
-  switch (status) {
-    case RoleApprovalStatus.Prospective:
-      return 'secondary';
-    case RoleApprovalStatus.Approved:
-      return 'success';
-    case RoleApprovalStatus.Onboarded:
-      return 'primary';
-    default:
-      return 'default';
-  }
-}
 
 const requirementStatusLabels: Record<ApprovalLedgerStatus, string> = {
   missing: 'Missing',
@@ -215,7 +202,7 @@ function buildRoleParticipants(
     }
   );
 
-  return participants; // Maintain the standard order of family members
+  return participants;
 }
 
 function ParticipantsSection({
@@ -240,7 +227,7 @@ function ParticipantsSection({
             justifyContent: 'space-between',
           }}
         >
-          <Typography className="ph-unmask" variant="body2">
+          <Typography variant="body2">
             {participant.label}
           </Typography>
           <Chip
@@ -502,7 +489,6 @@ export function RoleDetailsDrawerV2({
                   {role.roleName}
                 </Typography>
                 <Typography
-                  className="ph-unmask"
                   color="text.secondary"
                   variant="body2"
                 >
@@ -521,13 +507,12 @@ export function RoleDetailsDrawerV2({
                   {card ? (
                     <Stack direction="row" spacing={1}>
                       <Chip
-                        color={roleStatusColor(card.status)}
-                        label={statusLabel(card.status)}
+                        color={roleApprovalStatusChipColor(card.status)}
+                        label={roleApprovalStatusLabel(card.status)}
                         size="small"
                       />
                       {effectiveDate && (
                         <Chip
-                          className="ph-unmask"
                           label={effectiveDate}
                           size="small"
                           variant="outlined"
@@ -539,7 +524,6 @@ export function RoleDetailsDrawerV2({
                       <Chip color="default" label="Removed" size="small" />
                       {removedDate && (
                         <Chip
-                          className="ph-unmask"
                           label={removedDate}
                           size="small"
                           variant="outlined"

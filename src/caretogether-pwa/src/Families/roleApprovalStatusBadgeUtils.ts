@@ -1,20 +1,14 @@
 import {
   FamilyRoleApprovalStatus,
   IndividualRoleApprovalStatus,
-  RoleApprovalStatus,
   RoleRemoval,
 } from '../GeneratedClient';
+import { isRoleApprovalStatusVisibleInSummary } from '../Volunteers/roleApprovalStatusPresentation';
 
 export type RoleApproval =
   | FamilyRoleApprovalStatus
   | IndividualRoleApprovalStatus
   | undefined;
-
-const qualifyingStatuses = new Set<RoleApprovalStatus>([
-  RoleApprovalStatus.Approved,
-  RoleApprovalStatus.Onboarded,
-  RoleApprovalStatus.Prospective,
-]);
 
 function isActiveRoleRemoval(roleRemovals: RoleRemoval[] | undefined, role: string) {
   const normalizedRole = normalizeRoleName(role);
@@ -44,7 +38,7 @@ export function qualifyingRoleApprovals(
     .filter(
       ([role, approval]) =>
         approval?.currentStatus !== undefined &&
-        qualifyingStatuses.has(approval.currentStatus) &&
+        isRoleApprovalStatusVisibleInSummary(approval.currentStatus) &&
         !isActiveRoleRemoval(roleRemovals, role)
     )
     .sort(([a], [b]) => normalizeRoleName(a).localeCompare(normalizeRoleName(b)))

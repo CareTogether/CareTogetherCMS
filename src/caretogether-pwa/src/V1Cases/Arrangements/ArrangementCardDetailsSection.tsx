@@ -167,7 +167,7 @@ export function ArrangementCardDetailsSection({
             </Table>
           </TableContainer>
           {arrangement.phase !== ArrangementPhase.Cancelled && (
-            <Typography className="ph-unmask" variant="body2" component="div">
+            <Typography variant="body2" component="div">
               {completedRequirementsWithContext.map((x, i) => (
                 <CompletedRequirementRow
                   key={`${x.completed.completedRequirementId}:${i}`}
