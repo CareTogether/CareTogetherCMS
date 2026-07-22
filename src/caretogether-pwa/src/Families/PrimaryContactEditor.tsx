@@ -11,6 +11,7 @@ import { useInlineEditor } from '../Hooks/useInlineEditor';
 import { CombinedFamilyInfo, Permission } from '../GeneratedClient';
 import { PersonName } from './PersonName';
 import { useFamilyPermissions } from '../Model/SessionModel';
+import ContactEmergencyIcon from '@mui/icons-material/ContactEmergency';
 
 type PrimaryContactEditorProps = {
   family: CombinedFamilyInfo;
@@ -83,7 +84,12 @@ export function PrimaryContactEditor({ family }: PrimaryContactEditorProps) {
           />
           <br />
         </>
-      )}
+      )}{' '}
+      <ContactEmergencyIcon
+        fontSize="small"
+        sx={{ verticalAlign: 'text-top', marginRight: 1 }}
+        color="action"
+      />
       <span className="ph-unmask">Primary Contact:</span>{' '}
       <PersonName person={primaryContactPerson} />
       {permissions(Permission.EditFamilyInfo) && editor.editButton}

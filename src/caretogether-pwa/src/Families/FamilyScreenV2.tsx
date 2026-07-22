@@ -122,6 +122,7 @@ import { ArrangementDetailsDrawerV2 } from '../V1Cases/Arrangements/ArrangementD
 import {
   ArrangementRowV2,
   buildArrangementRowsV2,
+  ChildcareArrangementRowV2,
 } from '../V1Cases/Arrangements/arrangementViewModel';
 import { useFeatureFlagEnabled } from 'posthog-js/react';
 import { TestFamilyBadge } from './TestFamilyBadge';
@@ -163,6 +164,11 @@ import {
   FamilyMemberRowV2,
 } from './familyMemberViewModel';
 import { v2Typography } from './v2Typography';
+import LocationPinIcon from '@mui/icons-material/LocationPin';
+import EventIcon from '@mui/icons-material/Event';
+import HandshakeIcon from '@mui/icons-material/Handshake';
+import PermPhoneMsgIcon from '@mui/icons-material/PermPhoneMsg';
+import ContactEmergencyIcon from '@mui/icons-material/ContactEmergency';
 
 type CustomFieldRenderInfo = CompletedCustomFieldInfo | string;
 type ReferralNoteEntry = NonNullable<V1Referral['notes']>[number];
@@ -181,9 +187,10 @@ type RecentOverviewTimelineItem = {
 };
 type ActiveCaseArrangementSummaryV2 = {
   id: string;
+  childInvolvement: boolean;
   arrangementType: string;
   arrangedPersonLabel: string;
-  currentLocationLabel: string;
+  currentLocationLabel?: string;
   phase: ArrangementPhase;
   relevantDateLabel?: string;
   statusLabel: string;
@@ -590,10 +597,14 @@ export function FamilyScreenV2() {
       .map((row) => {
         return {
           id: row.id,
+          childInvolvement: row.arrangementType === 'Childcare',
           arrangementType: row.arrangementType,
           arrangedPersonLabel: row.childOrPersonLabel || 'Unassigned',
           currentLocationLabel:
-            row.currentLocationLabel || 'Location unspecified',
+            row.arrangementType === 'Childcare'
+              ? (row as ChildcareArrangementRowV2).currentLocationLabel ||
+                'not yet placed'
+              : undefined,
           phase: row.source.phase,
           relevantDateLabel: row.startedDate
             ? `Started ${row.startedDate}`
@@ -1620,6 +1631,7 @@ export function FamilyScreenV2() {
                   Family
                 </Box>
               </Typography>
+              <Chip icon={<HandshakeIcon />} label="Client" />
             </Box>
             {!isDesktop && hasFamilyActions && (
               <IconButton
@@ -1655,9 +1667,7 @@ export function FamilyScreenV2() {
               <PrimaryContactEditor family={family} />
             </Box>
             {primaryEmailAddress?.address && (
-              <Box
-                sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}
-              >
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
                 <EmailIcon fontSize="small" color="action" />
                 <Typography {...v2Typography.browserCell}>
                   {primaryEmailAddress.address}
@@ -1670,9 +1680,7 @@ export function FamilyScreenV2() {
               </Box>
             )}
             {primaryPhoneNumber?.number && (
-              <Box
-                sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}
-              >
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
                 <PhoneIcon fontSize="small" color="action" />
                 <Typography {...v2Typography.browserCell}>
                   {primaryPhoneNumber.number}
@@ -1685,9 +1693,7 @@ export function FamilyScreenV2() {
               </Box>
             )}
             {primaryAddressText && (
-              <Box
-                sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}
-              >
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
                 <HomeIcon fontSize="small" color="action" />
                 <Typography {...v2Typography.browserCell}>
                   {primaryAddressText}
@@ -1918,14 +1924,10 @@ export function FamilyScreenV2() {
           />
         )}
         {addAdultDialogOpen && (
-          <AddAdultDrawer
-            onClose={() => setAddAdultDialogOpen(false)}
-          />
+          <AddAdultDrawer onClose={() => setAddAdultDialogOpen(false)} />
         )}
         {addChildDialogOpen && (
-          <AddChildDrawer
-            onClose={() => setAddChildDialogOpen(false)}
-          />
+          <AddChildDrawer onClose={() => setAddChildDialogOpen(false)} />
         )}
         <FamilyMemberDrawerV2
           family={family}
@@ -2039,16 +2041,12 @@ export function FamilyScreenV2() {
       {isPartneringFamily && (
         <Box
           sx={{
-            borderLeft: 4,
-            borderColor: selectedV1Case?.closedAtUtc
-              ? 'divider'
-              : 'primary.main',
+            border: 1,
+            borderColor: 'divider',
             borderRadius: 1,
+            p: 2,
+            mb: 2,
             bgcolor: 'background.paper',
-            boxShadow: 1,
-            px: { xs: 1.5, sm: 2 },
-            py: 1.5,
-            mb: 1.5,
           }}
         >
           <Box
@@ -2064,16 +2062,20 @@ export function FamilyScreenV2() {
                 <Stack spacing={1}>
                   <Box>
                     <Typography
-                      variant="caption"
+                      variant="h3"
                       color="text.secondary"
                       sx={{
                         display: 'block',
-                        fontWeight: 700,
-                        letterSpacing: 0.4,
-                        textTransform: 'uppercase',
                       }}
                     >
+                      {/* <HandshakeIcon
+                        fontSize="small"
+                        sx={{ verticalAlign: 'text-top' }}
+                      /> &nbsp; */}
                       Case
+                    </Typography>
+                    <Typography>
+                      Opened {format(selectedV1Case.openedAtUtc, 'M/d/yy')}
                     </Typography>
                     <Box
                       sx={{
@@ -2085,16 +2087,6 @@ export function FamilyScreenV2() {
                         mb: 0.5,
                       }}
                     >
-                      <Stack spacing={0.25} sx={{ minWidth: 0 }}>
-                        <Typography {...v2Typography.fieldLabel}>
-                          Opened
-                        </Typography>
-                        <Typography
-                          {...v2Typography.primaryValue}
-                        >
-                          {format(selectedV1Case.openedAtUtc, 'MMM d, yyyy')}
-                        </Typography>
-                      </Stack>
                       <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
                         {!selectedV1Case.closedAtUtc && canCloseV1Case && (
                           <Button
@@ -2120,6 +2112,81 @@ export function FamilyScreenV2() {
                       </Box>
                     </Box>
                   </Box>
+                  {currentReferral && (
+                    <Box>
+                      <Chip
+                        key={currentReferral.referralId}
+                        clickable
+                        size="medium"
+                        color="primary"
+                        variant="outlined"
+                        icon={<PermPhoneMsgIcon />}
+                        label={`${currentReferral.title} · ${formatStatusWithDate(
+                          currentReferral.status,
+                          currentReferral.createdAtUtc,
+                          currentReferral.acceptedAtUtc,
+                          currentReferral.closedAtUtc
+                        )}`}
+                        onClick={(event) => {
+                          event.stopPropagation();
+                          appNavigate.referral(currentReferral.referralId);
+                        }}
+                      />
+                    </Box>
+                  )}
+                  {/* {currentReferral && (
+                    <Card
+                      onClick={() =>
+                        appNavigate.referral(currentReferral.referralId)
+                      }
+                      sx={{
+                        borderLeft: 2,
+                        borderColor: 'divider',
+                        ml: { xs: 0, sm: 0.5 },
+                        pl: 1.5,
+                        py: 0.25,
+                        cursor: 'pointer',
+                        backgroundColor: 'background.paper',
+                        transition: theme.transitions.create(['box-shadow'], {
+                          duration: theme.transitions.duration.shortest,
+                        }),
+                        '&:hover': {
+                          boxShadow: 2,
+                        },
+                        '&:focus-visible': {
+                          outline: `2px solid ${theme.palette.primary.main}`,
+                          outlineOffset: 2,
+                        },
+                      }}
+                    >
+                      <Box
+                        sx={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: 1.25,
+                          flexWrap: 'wrap',
+                        }}
+                      >
+                        <PermPhoneMsgIcon fontsize="inherit" color="primary" />
+                        <Typography {...v2Typography.primaryValue}>
+                          {currentReferral.title}
+                        </Typography>
+                        <Typography>
+                          {currentReferral.acceptedAtUtc
+                            ? `Accepted \u2022 ${format(
+                                currentReferral.acceptedAtUtc,
+                                'MMM d, yyyy'
+                              )}`
+                            : formatStatusWithDate(
+                                currentReferral.status,
+                                currentReferral.createdAtUtc,
+                                currentReferral.acceptedAtUtc,
+                                currentReferral.closedAtUtc
+                              )}
+                        </Typography>
+                      </Box>
+                    </Card>
+                  )} */}
                   {activeCaseArrangements.length > 0 && (
                     <Box
                       sx={{
@@ -2169,33 +2236,29 @@ export function FamilyScreenV2() {
                           }}
                         >
                           <Box sx={{ minWidth: 0, px: 1.25, py: 1 }}>
-                            <Typography {...v2Typography.primaryValue} noWrap>
+                            <Typography
+                              {...v2Typography.browserSecondary}
+                              noWrap
+                            >
                               {arrangement.arrangementType}
                             </Typography>
-                            <Typography
+                            {/* <Typography
                               color="text.secondary"
                               {...v2Typography.browserSecondary}
                               noWrap
                             >
                               {arrangement.statusLabel}
-                            </Typography>
+                            </Typography> */}
                             <Typography
                               color={
                                 arrangement.arrangedPersonLabel === 'Unassigned'
                                   ? 'text.secondary'
                                   : 'text.primary'
                               }
-                              {...v2Typography.browserSecondary}
+                              {...v2Typography.primaryValue}
                               noWrap
                             >
                               {arrangement.arrangedPersonLabel}
-                            </Typography>
-                            <Typography
-                              color="text.secondary"
-                              {...v2Typography.browserSecondary}
-                              noWrap
-                            >
-                              {arrangement.currentLocationLabel}
                             </Typography>
                             {arrangement.relevantDateLabel && (
                               <Typography
@@ -2203,85 +2266,31 @@ export function FamilyScreenV2() {
                                 {...v2Typography.browserSecondary}
                                 noWrap
                               >
+                                <EventIcon
+                                  fontSize="inherit"
+                                  sx={{ verticalAlign: 'text-top' }}
+                                />
+                                &nbsp;
                                 {arrangement.relevantDateLabel}
+                              </Typography>
+                            )}
+                            {arrangement.childInvolvement && (
+                              <Typography
+                                color="text.secondary"
+                                {...v2Typography.browserSecondary}
+                                noWrap
+                              >
+                                <LocationPinIcon
+                                  fontSize="inherit"
+                                  sx={{ verticalAlign: 'text-top' }}
+                                />
+                                &nbsp;
+                                {arrangement.currentLocationLabel}
                               </Typography>
                             )}
                           </Box>
                         </Card>
                       ))}
-                    </Box>
-                  )}
-                  {currentReferral && (
-                    <Box
-                      sx={{
-                        borderLeft: 2,
-                        borderColor: 'divider',
-                        ml: { xs: 0, sm: 0.5 },
-                        pl: 1.5,
-                        py: 0.25,
-                      }}
-                    >
-                      <Typography
-                        variant="caption"
-                        color="text.secondary"
-                        sx={{
-                          display: 'block',
-                          fontWeight: 600,
-                          letterSpacing: 0.3,
-                          mb: 0.25,
-                          textTransform: 'uppercase',
-                        }}
-                      >
-                        Linked Referral
-                      </Typography>
-                      <Box
-                        sx={{
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: 1.25,
-                          flexWrap: 'wrap',
-                        }}
-                      >
-                        <Typography
-                          {...v2Typography.primaryValue}
-                        >
-                          {currentReferral.title}
-                        </Typography>
-                        <Chip
-                          size="small"
-                          label={
-                            currentReferral.acceptedAtUtc
-                              ? `Accepted \u2022 ${format(
-                                  currentReferral.acceptedAtUtc,
-                                  'MMM d, yyyy'
-                                )}`
-                              : formatStatusWithDate(
-                                  currentReferral.status,
-                                  currentReferral.createdAtUtc,
-                                  currentReferral.acceptedAtUtc,
-                                  currentReferral.closedAtUtc
-                                )
-                          }
-                        />
-                        <Chip
-                          size="small"
-                          variant="outlined"
-                          label={`Received \u2022 ${format(
-                            currentReferral.createdAtUtc,
-                            'MMM d, yyyy'
-                          )}`}
-                        />
-                        <Button
-                          className="ph-unmask"
-                          onClick={() =>
-                            appNavigate.referral(currentReferral.referralId)
-                          }
-                          variant="text"
-                          size="small"
-                        >
-                          View Referral
-                        </Button>
-                      </Box>
                     </Box>
                   )}
                 </Stack>
@@ -2374,18 +2383,13 @@ export function FamilyScreenV2() {
                   p: 1.25,
                 }}
               >
-                <Typography
-                  variant="caption"
-                  color="text.secondary"
-                >
+                <Typography variant="caption" color="text.secondary">
                   <PersonName person={noteAuthorLookup(note)} />
                   {note.createdTimestampUtc
                     ? ` · ${format(note.createdTimestampUtc, 'M/d/yy h:mm a')}`
                     : ''}
                 </Typography>
-                <Typography variant="body2">
-                  {note.contents}
-                </Typography>
+                <Typography variant="body2">{note.contents}</Typography>
               </Box>
             ))}
           </Box>
@@ -2627,6 +2631,7 @@ export function FamilyScreenV2() {
                                           key={referral.referralId}
                                           clickable
                                           size="small"
+                                          icon={<PermPhoneMsgIcon />}
                                           label={`${referral.title} · ${formatStatusWithDate(
                                             referral.status,
                                             referral.createdAtUtc,
@@ -2947,14 +2952,13 @@ export function FamilyScreenV2() {
                         )}
                       </Box>
                       <Box sx={{ minWidth: 0 }}>
-                        <Typography
-                          variant="caption"
-                          color="text.secondary"
-                        >
+                        <Typography variant="caption" color="text.secondary">
                           {formatTimelineTimestamp(
                             {
                               activity: item.activity,
-                              kind: item.activity ? 'family-activity' : 'recent',
+                              kind: item.activity
+                                ? 'family-activity'
+                                : 'recent',
                               timestamp: item.timestamp,
                             },
                             {
@@ -2972,10 +2976,7 @@ export function FamilyScreenV2() {
                             item.title
                           )}
                         </Typography>
-                        <Typography
-                          variant="body2"
-                          sx={{ fontWeight: 600 }}
-                        >
+                        <Typography variant="body2" sx={{ fontWeight: 600 }}>
                           {item.title}
                         </Typography>
                         {item.subtitle && (

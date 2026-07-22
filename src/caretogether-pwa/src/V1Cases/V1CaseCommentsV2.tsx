@@ -79,7 +79,7 @@ export function V1CaseCommentsV2({
           color={compact ? 'text.secondary' : undefined}
           sx={compact ? { fontWeight: 600 } : undefined}
         >
-          Case Comment
+          Case Comments
         </Typography>
 
         {permissions(Permission.EditV1Case) && (
@@ -106,7 +106,7 @@ export function V1CaseCommentsV2({
         {comment ? (
           <ReadMoreText text={comment} />
         ) : (
-          <Typography color="text.secondary">No case comments yet.</Typography>
+          <Typography color="textDisabled">No case comments yet.</Typography>
         )}
       </Box>
       <Dialog
