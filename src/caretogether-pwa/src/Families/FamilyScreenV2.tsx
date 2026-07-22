@@ -167,8 +167,8 @@ import { v2Typography } from './v2Typography';
 import LocationPinIcon from '@mui/icons-material/LocationPin';
 import EventIcon from '@mui/icons-material/Event';
 import HandshakeIcon from '@mui/icons-material/Handshake';
+import PeopleIcon from '@mui/icons-material/People';
 import PermPhoneMsgIcon from '@mui/icons-material/PermPhoneMsg';
-import ContactEmergencyIcon from '@mui/icons-material/ContactEmergency';
 
 type CustomFieldRenderInfo = CompletedCustomFieldInfo | string;
 type ReferralNoteEntry = NonNullable<V1Referral['notes']>[number];
@@ -1631,7 +1631,11 @@ export function FamilyScreenV2() {
                   Family
                 </Box>
               </Typography>
-              <Chip icon={<HandshakeIcon />} label="Client" />
+              {isPartneringFamily ? (
+                <Chip icon={<HandshakeIcon />} label="Client" />
+              ) : (
+                <Chip icon={<PeopleIcon />} label="Volunteer" />
+              )}
             </Box>
             {!isDesktop && hasFamilyActions && (
               <IconButton
@@ -1652,6 +1656,73 @@ export function FamilyScreenV2() {
               >
                 <MoreVertIcon fontSize="small" />
               </IconButton>
+            )}
+
+            {isDesktop && (
+              <Box
+                sx={{
+                  display: 'flex',
+                  flex: '0 1 auto',
+                  flexWrap: 'wrap',
+                  justifyContent: 'flex-end',
+                  gap: 1,
+                }}
+              >
+                {isDesktop && canUploadDocuments && (
+                  <Button
+                    className="ph-unmask"
+                    onClick={() => setUploadDocumentDialogOpen(true)}
+                    variant="contained"
+                    size="small"
+                    startIcon={<CloudUploadIcon />}
+                  >
+                    Upload
+                  </Button>
+                )}
+                {isDesktop && canEditFamilyInfo && (
+                  <Button
+                    className="ph-unmask"
+                    onClick={() => setAddAdultDialogOpen(true)}
+                    variant="contained"
+                    size="small"
+                    startIcon={<AddCircleIcon />}
+                  >
+                    Adult
+                  </Button>
+                )}
+                {isDesktop && canEditFamilyInfo && (
+                  <Button
+                    className="ph-unmask"
+                    onClick={() => setAddChildDialogOpen(true)}
+                    variant="contained"
+                    size="small"
+                    startIcon={<AddCircleIcon />}
+                  >
+                    Child
+                  </Button>
+                )}
+                {isDesktop && canAddNotes && (
+                  <Button
+                    className="ph-unmask"
+                    onClick={() => setAddNoteDialogOpen(true)}
+                    variant="contained"
+                    size="small"
+                    startIcon={<AddCircleIcon />}
+                  >
+                    Note
+                  </Button>
+                )}
+                {isDesktop && hasMoreMenuActions && (
+                  <IconButton
+                    onClick={(event) =>
+                      setFamilyMoreMenuAnchor(event.currentTarget)
+                    }
+                    size="small"
+                  >
+                    <MoreVertIcon />
+                  </IconButton>
+                )}
+              </Box>
             )}
           </Box>
           <Box
@@ -1707,68 +1778,7 @@ export function FamilyScreenV2() {
             )}
           </Box>
         </Box>
-        <Box
-          sx={{
-            display: 'flex',
-            flex: '0 1 auto',
-            flexWrap: 'wrap',
-            justifyContent: 'flex-end',
-            gap: 1,
-          }}
-        >
-          {isDesktop && canUploadDocuments && (
-            <Button
-              className="ph-unmask"
-              onClick={() => setUploadDocumentDialogOpen(true)}
-              variant="contained"
-              size="small"
-              startIcon={<CloudUploadIcon />}
-            >
-              Upload
-            </Button>
-          )}
-          {isDesktop && canEditFamilyInfo && (
-            <Button
-              className="ph-unmask"
-              onClick={() => setAddAdultDialogOpen(true)}
-              variant="contained"
-              size="small"
-              startIcon={<AddCircleIcon />}
-            >
-              Adult
-            </Button>
-          )}
-          {isDesktop && canEditFamilyInfo && (
-            <Button
-              className="ph-unmask"
-              onClick={() => setAddChildDialogOpen(true)}
-              variant="contained"
-              size="small"
-              startIcon={<AddCircleIcon />}
-            >
-              Child
-            </Button>
-          )}
-          {isDesktop && canAddNotes && (
-            <Button
-              className="ph-unmask"
-              onClick={() => setAddNoteDialogOpen(true)}
-              variant="contained"
-              size="small"
-              startIcon={<AddCircleIcon />}
-            >
-              Note
-            </Button>
-          )}
-          {isDesktop && hasMoreMenuActions && (
-            <IconButton
-              onClick={(event) => setFamilyMoreMenuAnchor(event.currentTarget)}
-              size="small"
-            >
-              <MoreVertIcon />
-            </IconButton>
-          )}
-        </Box>
+
         <Menu
           id="family-more-menu"
           anchorEl={familyMoreMenuAnchor}
@@ -2389,7 +2399,9 @@ export function FamilyScreenV2() {
                     ? ` · ${format(note.createdTimestampUtc, 'M/d/yy h:mm a')}`
                     : ''}
                 </Typography>
-                <Typography variant="body2">{note.contents}</Typography>
+                <Typography variant="body2" sx={{ whiteSpace: 'pre-wrap' }}>
+                  {note.contents}
+                </Typography>
               </Box>
             ))}
           </Box>
