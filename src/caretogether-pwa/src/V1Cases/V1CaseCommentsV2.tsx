@@ -14,7 +14,6 @@ import { useEffect, useState } from 'react';
 import { CombinedFamilyInfo, Permission, V1Case } from '../GeneratedClient';
 import { useV1CasesModel } from '../Model/V1CasesModel';
 import { useFamilyPermissions } from '../Model/SessionModel';
-import { ReadMoreText } from '../Generic/Forms/ReadMoreText';
 
 type V1CaseCommentsV2Props = {
   partneringFamily: CombinedFamilyInfo;
@@ -79,7 +78,7 @@ export function V1CaseCommentsV2({
           color={compact ? 'text.secondary' : undefined}
           sx={compact ? { fontWeight: 600 } : undefined}
         >
-          Case Comment
+          Comments
         </Typography>
 
         {permissions(Permission.EditV1Case) && (
@@ -100,13 +99,12 @@ export function V1CaseCommentsV2({
           whiteSpace: 'pre-wrap',
           overflowWrap: 'break-word',
           lineHeight: compact ? 1.45 : 1.5,
-          fontSize: compact ? '0.875rem' : '0.95rem',
         }}
       >
         {comment ? (
-          <ReadMoreText text={comment} />
+          comment
         ) : (
-          <Typography color="text.secondary">No case comments yet.</Typography>
+          <Typography color="textDisabled">No case comments yet.</Typography>
         )}
       </Box>
       <Dialog

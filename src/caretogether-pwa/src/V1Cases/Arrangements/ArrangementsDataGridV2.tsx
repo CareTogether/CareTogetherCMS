@@ -13,7 +13,10 @@ import {
 import { v2DataGridStyles } from '../../Families/v2DataGridStyles';
 import { v2Typography } from '../../Families/v2Typography';
 import { useMemo } from 'react';
-import type { ArrangementRowV2 } from './arrangementViewModel';
+import type {
+  ArrangementRowV2,
+  ChildcareArrangementRowV2,
+} from './arrangementViewModel';
 
 type ArrangementsDataGridV2Props = {
   highlightedArrangementId?: string;
@@ -38,6 +41,12 @@ function usesChildLocation(arrangementPolicy?: ArrangementPolicy) {
     arrangementPolicy?.childInvolvement ===
       ChildInvolvement.DaytimeChildCareOnly
   );
+}
+
+function hasLocationLabels(
+  row: ArrangementRowV2
+): row is ChildcareArrangementRowV2 {
+  return row.arrangementType === 'Childcare';
 }
 
 function formatArrangementDate(date?: Date) {
@@ -87,6 +96,13 @@ function ArrangementLocationSummary({ row }: { row: ArrangementRowV2 }) {
     );
   }
 
+  const currentLocationLabel = hasLocationLabels(row)
+    ? row.currentLocationLabel
+    : undefined;
+  const nextPlannedLocationLabel = hasLocationLabels(row)
+    ? row.nextPlannedLocationLabel
+    : undefined;
+
   return (
     <Stack spacing={0.5}>
       <Box>
@@ -94,16 +110,16 @@ function ArrangementLocationSummary({ row }: { row: ArrangementRowV2 }) {
           Current Location
         </Typography>
         <Typography {...v2Typography.browserCell}>
-          {row.currentLocationLabel || <strong>Location unspecified</strong>}
+          {currentLocationLabel || <strong>Location unspecified</strong>}
         </Typography>
       </Box>
-      {row.nextPlannedLocationLabel && (
+      {nextPlannedLocationLabel && (
         <Box>
           <Typography variant="caption" color="text.secondary">
             Next Planned Location
           </Typography>
           <Typography {...v2Typography.browserCell}>
-            {row.nextPlannedLocationLabel}
+            {nextPlannedLocationLabel}
           </Typography>
         </Box>
       )}
@@ -267,9 +283,11 @@ function buildColumns(): GridColDef<ArrangementRowV2>[] {
       minWidth: 220,
       flex: 1,
       valueGetter: (_value, row) =>
-        [row.currentLocationLabel, row.nextPlannedLocationLabel]
-          .filter(Boolean)
-          .join(' '),
+        hasLocationLabels(row)
+          ? [row.currentLocationLabel, row.nextPlannedLocationLabel]
+              .filter(Boolean)
+              .join(' ')
+          : '',
       renderCell: ({ row }) => <ArrangementLocationSummary row={row} />,
     },
     {
