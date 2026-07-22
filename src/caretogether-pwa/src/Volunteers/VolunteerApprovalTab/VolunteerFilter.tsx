@@ -1,13 +1,11 @@
 import {
   Checkbox,
-  FormControl,
-  InputBase,
   ListItemText,
+  Menu,
   MenuItem,
-  Select,
-  SelectChangeEvent,
 } from '@mui/material';
-import { FilterList as FilterListIcon } from '@mui/icons-material';
+import { useState } from 'react';
+import { VolunteerBrowserFilterButtonV2 } from '../VolunteerBrowserFilterButtonV2';
 import { filterOption } from './filterOption';
 type VolunteerFilterProps = {
   label: string;
@@ -20,55 +18,33 @@ export function VolunteerFilter({
   options,
   setSelected,
 }: VolunteerFilterProps) {
+  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const selectedCount = options.filter((option) => option.selected).length;
-  const displayText =
-    selectedCount === options.length
-      ? label
-      : `${label} (${selectedCount}/${options.length})`;
 
-  const handleChange = (event: SelectChangeEvent<string[]>) => {
-    const allOptionKeysPlusSelectedOptionValue = event.target.value;
-    setSelected(allOptionKeysPlusSelectedOptionValue);
-  };
+  function handleOptionClick(option: filterOption) {
+    setSelected(options.map((option) => option.key).concat(option.value ?? ''));
+  }
 
   return (
-    <FormControl
-      sx={{
-        position: 'relative',
-        minWidth: { xs: '100%', sm: 0 },
-        maxWidth: { xs: '100%', sm: '16rem' },
-      }}
-    >
-      <Select
-        labelId={`volunteer${label}Filter`}
-        sx={{
-          minWidth: { xs: '100%', sm: 0 },
-          maxWidth: '100%',
-          color: selectedCount === options.length ? '#bdbdbd' : null,
-          '& .MuiSelect-iconOpen': { transform: 'none' },
-          '& .MuiSelect-select': {
-            overflow: 'hidden',
-            textOverflow: 'ellipsis',
-            whiteSpace: 'nowrap',
-          },
-        }}
-        multiple
-        value={options.map((o) => o.key)}
-        variant="standard"
-        label={`${label} Filters`}
-        onChange={handleChange}
-        input={<InputBase />}
-        IconComponent={FilterListIcon}
-        SelectDisplayProps={{ title: displayText }}
-        renderValue={() => displayText}
+    <>
+      <VolunteerBrowserFilterButtonV2
+        activeCount={selectedCount}
+        label={label}
+        totalCount={options.length}
+        onClick={(event) => setAnchorEl(event.currentTarget)}
+      />
+      <Menu
+        anchorEl={anchorEl}
+        open={Boolean(anchorEl)}
+        onClose={() => setAnchorEl(null)}
       >
         {options.map((option) => (
-          <MenuItem key={option.key} value={option.value ?? ''}>
+          <MenuItem key={option.key} onClick={() => handleOptionClick(option)}>
             <Checkbox checked={option.selected} />
             <ListItemText primary={option.key} />
           </MenuItem>
         ))}
-      </Select>
-    </FormControl>
+      </Menu>
+    </>
   );
 }
