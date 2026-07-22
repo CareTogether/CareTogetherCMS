@@ -1,0 +1,126 @@
+name: CI - Pull Requests - AppHost E2E
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "src/CareTogether.Api/**"
+      - "src/CareTogether.AppHost/**"
+      - "src/CareTogether.ServiceDefaults/**"
+      - "src/CareTogether.Core/**"
+      - "src/caretogether-pwa/**"
+      - "test/CareTogether.TestData/**"
+      - "test/CareTogether.AppHost.Tests/**"
+      - ".github/workflows/playwright.yml"
+
+jobs:
+  apphost-e2e:
+    timeout-minutes: 60
+    runs-on: ubuntu-latest
+
+    concurrency:
+      group: ci-pr-apphost-e2e-${{ github.event.pull_request.number || github.ref }}
+      cancel-in-progress: true
+
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+
+      - name: Set up .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24.x
+          cache: npm
+          cache-dependency-path: src/caretogether-pwa/package-lock.json
+
+      - name: Check Docker daemon
+        run: |
+          docker version
+          docker info
+
+      - name: Install Azurite storage emulator
+        run: npm install -g azurite
+
+      - name: Start Azurite storage emulator
+        shell: bash
+        run: |
+          azurite-blob --loose --silent > "${RUNNER_TEMP}/azurite.log" 2>&1 &
+          for attempt in {1..30}; do
+            if nc -z 127.0.0.1 10000; then
+              echo "Azurite Blob service is ready."
+              exit 0
+            fi
+
+            sleep 1
+          done
+
+          echo "Azurite Blob service did not become ready on 127.0.0.1:10000."
+          cat "${RUNNER_TEMP}/azurite.log"
+          exit 1
+
+      - name: Install frontend dependencies
+        run: npm ci
+        working-directory: src/caretogether-pwa
+
+      - name: Install Playwright Chromium browser
+        run: npx playwright install --with-deps chromium
+        working-directory: src/caretogether-pwa
+
+      - name: Restore AppHost E2E dependencies
+        run: dotnet restore test/CareTogether.AppHost.Tests/CareTogether.AppHost.Tests.csproj
+
+      - name: Build AppHost E2E test project
+        run: dotnet build test/CareTogether.AppHost.Tests/CareTogether.AppHost.Tests.csproj --no-restore
+
+      - name: Run AppHost Playwright E2E
+        run: >
+          dotnet test test/CareTogether.AppHost.Tests/CareTogether.AppHost.Tests.csproj
+          --no-build
+          --verbosity normal
+          --logger "trx;LogFileName=apphost-e2e.trx"
+          --results-directory TestResults
+
+      - name: Show Docker containers on failure
+        if: ${{ failure() }}
+        run: docker ps -a
+
+      - name: Upload Playwright report
+        uses: actions/upload-artifact@v4
+        if: ${{ failure() }}
+        with:
+          name: apphost-e2e-playwright-report
+          path: src/caretogether-pwa/playwright-report/
+          if-no-files-found: ignore
+          retention-days: 14
+
+      - name: Upload Playwright test results
+        uses: actions/upload-artifact@v4
+        if: ${{ failure() }}
+        with:
+          name: apphost-e2e-playwright-test-results
+          path: src/caretogether-pwa/test-results/
+          if-no-files-found: ignore
+          retention-days: 14
+
+      - name: Upload .NET test results
+        uses: actions/upload-artifact@v4
+        if: ${{ always() }}
+        with:
+          name: apphost-e2e-dotnet-test-results
+          path: TestResults/
+          if-no-files-found: ignore
+          retention-days: 14
+
+      - name: Upload Azurite log
+        uses: actions/upload-artifact@v4
+        if: ${{ failure() }}
+        with:
+          name: apphost-e2e-azurite-log
+          path: ${{ runner.temp }}/azurite.log
+          if-no-files-found: ignore
+          retention-days: 14

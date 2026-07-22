@@ -31,6 +31,7 @@ using idunno.Authentication.Basic;
 using LazyCache;
 using LazyCache.Providers;
 using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -46,6 +47,7 @@ using Microsoft.FeatureManagement;
 using Microsoft.FeatureManagement.FeatureFilters;
 using Microsoft.Identity.Web;
 using Microsoft.IdentityModel.Logging;
+using Microsoft.IdentityModel.Tokens;
 
 namespace CareTogether.Api
 {
@@ -72,6 +74,7 @@ namespace CareTogether.Api
 
             services.AddApplicationInsightsTelemetry();
 
+            services.AddHttpContextAccessor();
             services.AddSingleton<ITargetingContextAccessor, UserTargetingContextAccessor>();
             services.AddFeatureManagement().AddFeatureFilter<TargetingFilter>();
 
@@ -332,7 +335,7 @@ namespace CareTogether.Api
                 )
             );
 
-            services
+            var authenticationBuilder = services
                 .AddAuthentication("Basic")
                 .AddBasic(
                     "Basic",
@@ -447,8 +450,28 @@ namespace CareTogether.Api
                             },
                         };
                     }
-                )
-                .AddMicrosoftIdentityWebApi(Configuration.GetSection("AzureAdB2C"));
+                );
+
+            if (UseLocalKeycloakAuthentication())
+            {
+                authenticationBuilder.AddJwtBearer(options =>
+                {
+                    options.Authority =
+                        Configuration["Keycloak:Authority"]
+                        ?? "http://localhost:8080/realms/caretogether-local";
+                    options.RequireHttpsMetadata = false;
+                    options.TokenValidationParameters = new TokenValidationParameters
+                    {
+                        ValidAudience = "caretogether-api",
+                    };
+                });
+            }
+            else
+            {
+                authenticationBuilder.AddMicrosoftIdentityWebApi(
+                    Configuration.GetSection("AzureAdB2C")
+                );
+            }
 
             services.AddTransient<IClaimsTransformation, TenantUserClaimsTransformation>();
 
@@ -570,5 +593,13 @@ namespace CareTogether.Api
                 endpoints.MapHealthChecks("/robots933456.txt").AllowAnonymous();
             });
         }
+
+        private bool UseLocalKeycloakAuthentication() =>
+            HostEnvironment.IsDevelopment()
+            && string.Equals(
+                Configuration["Authentication:Provider"],
+                "Keycloak",
+                StringComparison.OrdinalIgnoreCase
+            );
     }
 }

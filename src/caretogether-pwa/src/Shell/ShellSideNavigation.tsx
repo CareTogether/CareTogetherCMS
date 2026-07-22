@@ -33,7 +33,7 @@ import { reportSubmenuItemsAtom } from '../Model/UI';
 import { ListItemLink } from './ListItemLink';
 import { useAppNavigate } from '../Hooks/useAppNavigate';
 import WhatsNew from './WhatsNew';
-import { useFeatureFlagEnabled } from 'posthog-js/react';
+import { useFeatureFlagEnabledWithLocalOverride } from '../Utilities/Instrumentation/useFeatureFlagWithLocalOverride';
 import { SHELL_DRAWER_TOP_OFFSET } from './shellLayoutConstants';
 
 interface SideNavigationMenuProps {
@@ -52,7 +52,7 @@ function SideNavigationMenu({ open }: SideNavigationMenuProps) {
 
   const reportSubmenuItems = useRecoilValue(reportSubmenuItemsAtom);
 
-  const referralsEnabled = useFeatureFlagEnabled('referrals');
+  const referralsEnabled = useFeatureFlagEnabledWithLocalOverride('referrals');
   const collapsed = !open;
 
   return (
