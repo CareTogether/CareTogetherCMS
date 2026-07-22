@@ -46,6 +46,7 @@ import { useAppNavigate } from '../Hooks/useAppNavigate';
 import { useCustomFieldFilters } from '../Generic/CustomFieldsFilter/useCustomFieldFilters';
 import { matchesCustomFieldFilters } from '../Generic/CustomFieldsFilter/matchesCustomFieldFilters';
 import { useFeatureFlagEnabled } from 'posthog-js/react';
+import { useFeatureFlagEnabledWithLocalOverride } from '../Utilities/Instrumentation/useFeatureFlagWithLocalOverride';
 import { forceCheck } from '../Utilities/reactLazyLoadInterop';
 import { PartneringFamilyTableItem } from './PartneringFamilies/PartneringFamilyTableItem';
 import { arrangementStatusSummary } from './PartneringFamilies/arrangementStatusSummary';
@@ -362,7 +363,7 @@ function PartneringFamilies() {
   const tableMinWidth = Math.max(700, tableColumnCount * 160);
   const hasFeaturebaseChat = globalPermissions(Permission.AccessSupportScreen);
 
-  const referralsEnabled = useFeatureFlagEnabled('referrals');
+  const referralsEnabled = useFeatureFlagEnabledWithLocalOverride('referrals');
   const showAddFamilyButton = !referralsEnabled && canCreateFamily;
 
   useScreenTitle('Clients');
@@ -633,9 +634,7 @@ function PartneringFamilies() {
             onClose={(partneringFamilyId) => {
               setCreatePartneringFamilyDialogOpen(false);
 
-              if (!partneringFamilyId) {
-                return;
-              }
+              if (!partneringFamilyId) return;
 
               openFamily(partneringFamilyId);
             }}
