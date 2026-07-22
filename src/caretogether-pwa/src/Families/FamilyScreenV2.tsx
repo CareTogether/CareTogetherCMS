@@ -2144,59 +2144,6 @@ export function FamilyScreenV2() {
                       />
                     </Box>
                   )}
-                  {/* {currentReferral && (
-                    <Card
-                      onClick={() =>
-                        appNavigate.referral(currentReferral.referralId)
-                      }
-                      sx={{
-                        borderLeft: 2,
-                        borderColor: 'divider',
-                        ml: { xs: 0, sm: 0.5 },
-                        pl: 1.5,
-                        py: 0.25,
-                        cursor: 'pointer',
-                        backgroundColor: 'background.paper',
-                        transition: theme.transitions.create(['box-shadow'], {
-                          duration: theme.transitions.duration.shortest,
-                        }),
-                        '&:hover': {
-                          boxShadow: 2,
-                        },
-                        '&:focus-visible': {
-                          outline: `2px solid ${theme.palette.primary.main}`,
-                          outlineOffset: 2,
-                        },
-                      }}
-                    >
-                      <Box
-                        sx={{
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: 1.25,
-                          flexWrap: 'wrap',
-                        }}
-                      >
-                        <PermPhoneMsgIcon fontsize="inherit" color="primary" />
-                        <Typography {...v2Typography.primaryValue}>
-                          {currentReferral.title}
-                        </Typography>
-                        <Typography>
-                          {currentReferral.acceptedAtUtc
-                            ? `Accepted \u2022 ${format(
-                                currentReferral.acceptedAtUtc,
-                                'MMM d, yyyy'
-                              )}`
-                            : formatStatusWithDate(
-                                currentReferral.status,
-                                currentReferral.createdAtUtc,
-                                currentReferral.acceptedAtUtc,
-                                currentReferral.closedAtUtc
-                              )}
-                        </Typography>
-                      </Box>
-                    </Card>
-                  )} */}
                   {activeCaseArrangements.length > 0 && (
                     <Box
                       sx={{
@@ -2252,13 +2199,6 @@ export function FamilyScreenV2() {
                             >
                               {arrangement.arrangementType}
                             </Typography>
-                            {/* <Typography
-                              color="text.secondary"
-                              {...v2Typography.browserSecondary}
-                              noWrap
-                            >
-                              {arrangement.statusLabel}
-                            </Typography> */}
                             <Typography
                               color={
                                 arrangement.arrangedPersonLabel === 'Unassigned'

@@ -14,7 +14,6 @@ import { useEffect, useState } from 'react';
 import { CombinedFamilyInfo, Permission, V1Case } from '../GeneratedClient';
 import { useV1CasesModel } from '../Model/V1CasesModel';
 import { useFamilyPermissions } from '../Model/SessionModel';
-import { ReadMoreText } from '../Generic/Forms/ReadMoreText';
 
 type V1CaseCommentsV2Props = {
   partneringFamily: CombinedFamilyInfo;
