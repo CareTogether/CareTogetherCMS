@@ -5,7 +5,6 @@ import { Box, Chip, Stack, Typography, useTheme } from '@mui/material';
 import { DataGrid, GridColDef, GridToolbar } from '@mui/x-data-grid';
 import {
   Arrangement,
-  ArrangementPhase,
   ArrangementPolicy,
   ChildInvolvement,
   FunctionRequirement,
@@ -14,6 +13,7 @@ import { v2DataGridStyles } from '../../Families/v2DataGridStyles';
 import { v2Typography } from '../../Families/v2Typography';
 import { useMemo } from 'react';
 import type { ArrangementRowV2 } from './arrangementViewModel';
+import { arrangementPhaseColor } from './arrangementPresentationV2';
 
 type ArrangementsDataGridV2Props = {
   highlightedArrangementId?: string;
@@ -23,13 +23,6 @@ type ArrangementsDataGridV2Props = {
 
 function displayValue(value?: string) {
   return value || '-';
-}
-
-function arrangementPhaseColor(phase?: ArrangementPhase) {
-  if (phase === ArrangementPhase.Ended) return 'success';
-  if (phase === ArrangementPhase.Cancelled) return 'default';
-  if (phase === ArrangementPhase.Started) return 'info';
-  return 'warning';
 }
 
 function usesChildLocation(arrangementPolicy?: ArrangementPolicy) {
