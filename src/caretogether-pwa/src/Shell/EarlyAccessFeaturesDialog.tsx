@@ -14,16 +14,7 @@ import {
   Typography,
 } from '@mui/material';
 import type { EarlyAccessFeature } from 'posthog-js';
-import {
-  useActiveFeatureFlags,
-  useFeatureFlagEnabled,
-  usePostHog,
-} from 'posthog-js/react';
-import {
-  FAMILY_SCREEN_V2_EARLY_ACCESS_FEATURE_FLAG,
-  FAMILY_SCREEN_V2_FEATURE_FLAG,
-} from '../featureFlags';
-import { getEarlyAccessEnrollment } from '../Utilities/Instrumentation/earlyAccessEnrollment';
+import { useActiveFeatureFlags, usePostHog } from 'posthog-js/react';
 
 type EarlyAccessFeaturesDialogProps = {
   open: boolean;
@@ -40,33 +31,10 @@ export function EarlyAccessFeaturesDialog({
 }: EarlyAccessFeaturesDialogProps) {
   const posthog = usePostHog();
   const activeFeatureFlags = useActiveFeatureFlags();
-  const familyScreenV2RolloutEnabled = useFeatureFlagEnabled(
-    FAMILY_SCREEN_V2_FEATURE_FLAG
-  );
   const [features, setFeatures] = useState<EarlyAccessFeature[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [updatingFlagKey, setUpdatingFlagKey] = useState<string | null>(null);
-  const [familyScreenV2Enrollment, setFamilyScreenV2Enrollment] = useState<
-    boolean | undefined
-  >(() =>
-    getEarlyAccessEnrollment(posthog, FAMILY_SCREEN_V2_EARLY_ACCESS_FEATURE_FLAG)
-  );
-
-  useEffect(() => {
-    function updateFamilyScreenV2Enrollment() {
-      setFamilyScreenV2Enrollment(
-        getEarlyAccessEnrollment(
-          posthog,
-          FAMILY_SCREEN_V2_EARLY_ACCESS_FEATURE_FLAG
-        )
-      );
-    }
-
-    updateFamilyScreenV2Enrollment();
-
-    return posthog.onFeatureFlags(updateFamilyScreenV2Enrollment);
-  }, [posthog]);
 
   useEffect(() => {
     if (!open) {
@@ -111,9 +79,6 @@ export function EarlyAccessFeaturesDialog({
         checked,
         feature.stage
       );
-      if (feature.flagKey === FAMILY_SCREEN_V2_EARLY_ACCESS_FEATURE_FLAG) {
-        setFamilyScreenV2Enrollment(checked);
-      }
     } catch (updateError) {
       setError(`Unable to update beta feature enrollment. ${updateError}`);
     } finally {
@@ -126,15 +91,7 @@ export function EarlyAccessFeaturesDialog({
       return false;
     }
 
-    if (feature.flagKey !== FAMILY_SCREEN_V2_EARLY_ACCESS_FEATURE_FLAG) {
-      return activeFeatureFlags.includes(feature.flagKey);
-    }
-
-    return (
-      familyScreenV2Enrollment ??
-      (familyScreenV2RolloutEnabled === true ||
-        activeFeatureFlags.includes(feature.flagKey))
-    );
+    return activeFeatureFlags.includes(feature.flagKey);
   }
 
   return (
@@ -177,7 +134,7 @@ export function EarlyAccessFeaturesDialog({
                     </Typography>
                   </Box>
                   <FormControlLabel
-                    label="Enrolled"
+                    label="Enabled"
                     labelPlacement="start"
                     control={
                       <Switch
