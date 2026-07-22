@@ -61,6 +61,11 @@ import {
   PersonPinCircle as PersonPinCircleIcon,
   Phone as PhoneIcon,
   Print as PrintIcon,
+  LocationPin as LocationPinIcon,
+  Event as EventIcon,
+  Handshake as HandshakeIcon,
+  People as PeopleIcon,
+  PermPhoneMsg as PermPhoneMsgIcon,
 } from '@mui/icons-material';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { AddAdultDrawer } from './AddAdultDrawer';
@@ -164,11 +169,6 @@ import {
   FamilyMemberRowV2,
 } from './familyMemberViewModel';
 import { v2Typography } from './v2Typography';
-import LocationPinIcon from '@mui/icons-material/LocationPin';
-import EventIcon from '@mui/icons-material/Event';
-import HandshakeIcon from '@mui/icons-material/Handshake';
-import PeopleIcon from '@mui/icons-material/People';
-import PermPhoneMsgIcon from '@mui/icons-material/PermPhoneMsg';
 
 type CustomFieldRenderInfo = CompletedCustomFieldInfo | string;
 type ReferralNoteEntry = NonNullable<V1Referral['notes']>[number];
