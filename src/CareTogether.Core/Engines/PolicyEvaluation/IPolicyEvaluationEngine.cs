@@ -66,12 +66,11 @@ namespace CareTogether.Engines.PolicyEvaluation
             FamilyRoleApprovalStatus familyRoleStatus
         )
         {
-            // Determine the highest status among the versions for this family role.
-            // If there is a definitive max status, only consider missing requirements from
-            // versions that have that same status; this hides missing requirements from
-            // other versions of the same policy regardless of requirement stage.
+            // Older policy versions can prove the role is already approved/onboarded.
+            // Only active policy versions can ask for missing requirements.
             var promptableVersions = PolicyEvaluationHelpers.SelectPromptableVersions(
-                familyRoleStatus.RoleVersionApprovals
+                familyRoleStatus.RoleVersionApprovals,
+                familyRoleStatus.CurrentStatus
             );
             var maxVersionStatus = PolicyEvaluationHelpers.GetMaxRoleStatus(
                 promptableVersions
@@ -113,11 +112,11 @@ namespace CareTogether.Engines.PolicyEvaluation
             return individualStatus.ApprovalStatusByRole.SelectMany(kv =>
             {
                 var roleName = kv.Key;
-                // Hide missing requirements from other versions of the same role
-                // if there exists a version with a higher/equivalent max status. This
-                // is independent of requirement stage.
+                // Older policy versions can prove the role is already approved/onboarded.
+                // Only active policy versions can ask for missing requirements.
                 var promptableVersions = PolicyEvaluationHelpers.SelectPromptableVersions(
-                    kv.Value.RoleVersionApprovals
+                    kv.Value.RoleVersionApprovals,
+                    kv.Value.CurrentStatus
                 );
                 var maxVersionStatus = PolicyEvaluationHelpers.GetMaxRoleStatus(
                     promptableVersions
@@ -151,17 +150,16 @@ namespace CareTogether.Engines.PolicyEvaluation
                     {
                         var roleName = kv.Key;
 
-                        // If role has achieved Prospective or higher status, hide applications
+                        if (
+                            !PolicyEvaluationHelpers.ShouldShowApplicationPrompt(
+                                kv.Value.CurrentStatus
+                            )
+                        )
+                            return Enumerable.Empty<(Guid, string)>();
+
                         var promptableVersions = PolicyEvaluationHelpers.SelectPromptableVersions(
                             kv.Value.RoleVersionApprovals
                         );
-                        var individualHighestStatus = PolicyEvaluationHelpers.GetMaxRoleStatus(
-                            promptableVersions
-                        );
-
-                        if (individualHighestStatus >= RoleApprovalStatus.Prospective)
-                            return Enumerable.Empty<(Guid, string)>();
-
                         return promptableVersions
                             .Where(r => r.CurrentStatus == null)
                             .SelectMany(r => r.CurrentAvailableApplications)
@@ -212,10 +210,11 @@ namespace CareTogether.Engines.PolicyEvaluation
         {
             get
             {
-                // Prefer active policy versions for user prompts, falling back to superseded
-                // versions only when there is no active version for the role.
+                // Older policy versions can prove the role is already approved/onboarded.
+                // Only active policy versions can ask for missing requirements.
                 var promptableVersions = PolicyEvaluationHelpers.SelectPromptableVersions(
-                    RoleVersionApprovals
+                    RoleVersionApprovals,
+                    CurrentStatus
                 );
                 var missingRequirements = promptableVersions
                     .SelectMany(r =>
@@ -233,14 +232,14 @@ namespace CareTogether.Engines.PolicyEvaluation
         }
 
         public ImmutableList<string> CurrentAvailableApplications =>
-            // Prefer active policy versions for user prompts, falling back to superseded
-            // versions only when there is no active version for the role.
-            PolicyEvaluationHelpers
-                .SelectPromptableVersions(RoleVersionApprovals)
-                .Where(r => r.CurrentStatus == null)
-                .SelectMany(r => r.CurrentAvailableApplications)
-                .Select(r => r.ActionName)
-                .ToImmutableList();
+            !PolicyEvaluationHelpers.ShouldShowApplicationPrompt(CurrentStatus)
+                ? ImmutableList<string>.Empty
+                : PolicyEvaluationHelpers
+                    .SelectPromptableVersions(RoleVersionApprovals)
+                    .Where(r => r.CurrentStatus == null)
+                    .SelectMany(r => r.CurrentAvailableApplications)
+                    .Select(r => r.ActionName)
+                    .ToImmutableList();
     }
 
     public sealed record IndividualRoleVersionApprovalStatus(
@@ -311,12 +310,11 @@ namespace CareTogether.Engines.PolicyEvaluation
         {
             get
             {
-                // Determine the highest status across role versions. If there is a max
-                // status, only consider missing requirements from versions that share
-                // that status, which hides missing requirements from other versions
-                // of the same policy (independent of requirement stage).
+                // Older policy versions can prove the role is already approved/onboarded.
+                // Only active policy versions can ask for missing requirements.
                 var promptableVersions = PolicyEvaluationHelpers.SelectPromptableVersions(
-                    RoleVersionApprovals
+                    RoleVersionApprovals,
+                    CurrentStatus
                 );
                 var maxVersionStatus = PolicyEvaluationHelpers.GetMaxRoleStatus(
                     promptableVersions
@@ -343,15 +341,10 @@ namespace CareTogether.Engines.PolicyEvaluation
         {
             get
             {
-                var promptableVersions = PolicyEvaluationHelpers.SelectPromptableVersions(
-                    RoleVersionApprovals
-                );
-                var highestStatus =
-                    PolicyEvaluationHelpers.GetMaxRoleStatus(promptableVersions) ?? default;
-
-                return highestStatus >= RoleApprovalStatus.Prospective
+                return !PolicyEvaluationHelpers.ShouldShowApplicationPrompt(CurrentStatus)
                     ? ImmutableList<string>.Empty
-                    : promptableVersions
+                    : PolicyEvaluationHelpers
+                        .SelectPromptableVersions(RoleVersionApprovals)
                         .Where(r => r.CurrentStatus == null)
                         .SelectMany(r => r.CurrentAvailableApplications)
                         .Where(r => r.Scope == VolunteerFamilyRequirementScope.OncePerFamily)
@@ -370,7 +363,8 @@ namespace CareTogether.Engines.PolicyEvaluation
             {
                 // Extract all missing requirements that apply to individuals, grouped by person and action
                 var promptableVersions = PolicyEvaluationHelpers.SelectPromptableVersions(
-                    RoleVersionApprovals
+                    RoleVersionApprovals,
+                    CurrentStatus
                 );
                 var missingRequirements = promptableVersions
                     .SelectMany(r =>
