@@ -229,6 +229,21 @@ function activeArrangementStatusLabel(phase?: ArrangementPhase) {
   return 'Active';
 }
 
+function getCaseOverviewGridColumns(
+  comments: string | undefined,
+  arrangements: ActiveCaseArrangementSummaryV2[]
+) {
+  const commentLength = comments?.trim().length ?? 0;
+  const arrangementsNeedSpace = arrangements.length >= 3;
+
+  if (commentLength >= 240) return { caseInformation: 6, comments: 6 };
+  if (arrangementsNeedSpace && commentLength <= 160) {
+    return { caseInformation: 8, comments: 4 };
+  }
+
+  return { caseInformation: 7, comments: 5 };
+}
+
 function stringFromLocationState(state: unknown, key: string) {
   if (!state || typeof state !== 'object' || !(key in state)) {
     return undefined;
@@ -615,6 +630,15 @@ export function FamilyScreenV2() {
         };
       });
   }, [selectedCaseArrangementRows]);
+
+  const caseOverviewGridColumns = useMemo(
+    () =>
+      getCaseOverviewGridColumns(
+        selectedV1Case?.comments,
+        activeCaseArrangements
+      ),
+    [activeCaseArrangements, selectedV1Case?.comments]
+  );
 
   async function reopenCaseNow() {
     if (!selectedV1Case?.id) return;
@@ -2059,15 +2083,21 @@ export function FamilyScreenV2() {
             bgcolor: 'background.paper',
           }}
         >
-          <Box
-            sx={{
-              display: 'grid',
-              gap: { xs: 1.25, md: 2 },
-              gridTemplateColumns: { xs: '1fr', md: 'minmax(280px, 2fr) 3fr' },
-              alignItems: 'start',
-            }}
+          <Grid
+            container
+            spacing={{ xs: 1.25, md: 2 }}
+            sx={{ alignItems: 'flex-start' }}
           >
-            <Box sx={{ minWidth: 0 }}>
+            <Grid
+              item
+              xs={12}
+              md={
+                permissions(Permission.ViewV1CaseComments) && selectedV1Case
+                  ? caseOverviewGridColumns.caseInformation
+                  : 12
+              }
+              sx={{ minWidth: 0 }}
+            >
               {selectedV1Case ? (
                 <Stack spacing={1}>
                   <Box>
@@ -2078,10 +2108,6 @@ export function FamilyScreenV2() {
                         display: 'block',
                       }}
                     >
-                      {/* <HandshakeIcon
-                        fontSize="small"
-                        sx={{ verticalAlign: 'text-top' }}
-                      /> &nbsp; */}
                       Case
                     </Typography>
                     <Typography>
@@ -2145,103 +2171,105 @@ export function FamilyScreenV2() {
                     </Box>
                   )}
                   {activeCaseArrangements.length > 0 && (
-                    <Box
-                      sx={{
-                        display: 'flex',
-                        flexWrap: 'wrap',
-                        gap: 1,
-                      }}
-                    >
+                    <Grid container spacing={1}>
                       {activeCaseArrangements.map((arrangement) => (
-                        <Card
+                        <Grid
+                          item
+                          xs="auto"
                           key={arrangement.id}
-                          role="button"
-                          tabIndex={0}
-                          variant="outlined"
-                          onClick={() =>
-                            setSelectedArrangementRowId(arrangement.id)
-                          }
-                          onKeyDown={(event) =>
-                            openArrangementWorkspaceFromSummaryCard(
-                              event,
-                              arrangement.id
-                            )
-                          }
-                          sx={{
-                            borderColor: 'divider',
-                            borderLeft: 3,
-                            borderLeftColor: arrangementAccentColor(
-                              arrangement.phase
-                            ),
-                            cursor: 'pointer',
-                            maxWidth: '100%',
-                            minWidth: 0,
-                            transition: theme.transitions.create(
-                              ['box-shadow'],
-                              {
-                                duration: theme.transitions.duration.shortest,
-                              }
-                            ),
-                            width: 'fit-content',
-                            '&:hover': {
-                              boxShadow: 2,
-                            },
-                            '&:focus-visible': {
-                              outline: `2px solid ${theme.palette.primary.main}`,
-                              outlineOffset: 2,
-                            },
-                          }}
+                          sx={{ maxWidth: '100%', minWidth: 0 }}
                         >
-                          <Box sx={{ minWidth: 0, px: 1.25, py: 1 }}>
-                            <Typography
-                              {...v2Typography.browserSecondary}
-                              noWrap
-                            >
-                              {arrangement.arrangementType}
-                            </Typography>
-                            <Typography
-                              color={
-                                arrangement.arrangedPersonLabel === 'Unassigned'
-                                  ? 'text.secondary'
-                                  : 'text.primary'
-                              }
-                              {...v2Typography.primaryValue}
-                              noWrap
-                            >
-                              {arrangement.arrangedPersonLabel}
-                            </Typography>
-                            {arrangement.relevantDateLabel && (
+                          <Card
+                            role="button"
+                            tabIndex={0}
+                            variant="outlined"
+                            onClick={() =>
+                              setSelectedArrangementRowId(arrangement.id)
+                            }
+                            onKeyDown={(event) =>
+                              openArrangementWorkspaceFromSummaryCard(
+                                event,
+                                arrangement.id
+                              )
+                            }
+                            sx={{
+                              borderColor: 'divider',
+                              borderLeft: 3,
+                              borderLeftColor: arrangementAccentColor(
+                                arrangement.phase
+                              ),
+                              cursor: 'pointer',
+                              height: '100%',
+                              maxWidth: '100%',
+                              minWidth: 0,
+                              transition: theme.transitions.create(
+                                ['box-shadow'],
+                                {
+                                  duration: theme.transitions.duration.shortest,
+                                }
+                              ),
+                              width: 'fit-content',
+                              '&:hover': {
+                                boxShadow: 2,
+                              },
+                              '&:focus-visible': {
+                                outline: `2px solid ${theme.palette.primary.main}`,
+                                outlineOffset: 2,
+                              },
+                            }}
+                          >
+                            <Box sx={{ minWidth: 0, px: 1.25, py: 1 }}>
                               <Typography
-                                color="text.secondary"
                                 {...v2Typography.browserSecondary}
                                 noWrap
                               >
-                                <EventIcon
-                                  fontSize="inherit"
-                                  sx={{ verticalAlign: 'text-top' }}
-                                />
-                                &nbsp;
-                                {arrangement.relevantDateLabel}
+                                {arrangement.arrangementType}
                               </Typography>
-                            )}
-                            {arrangement.childInvolvement && (
                               <Typography
-                                color="text.secondary"
-                                {...v2Typography.browserSecondary}
+                                color={
+                                  arrangement.arrangedPersonLabel ===
+                                  'Unassigned'
+                                    ? 'text.secondary'
+                                    : 'text.primary'
+                                }
+                                {...v2Typography.primaryValue}
                                 noWrap
                               >
-                                <LocationPinIcon
-                                  fontSize="inherit"
-                                  sx={{ verticalAlign: 'text-top' }}
-                                />
-                                &nbsp;
-                                {arrangement.currentLocationLabel}
+                                {arrangement.arrangedPersonLabel}
                               </Typography>
-                            )}
-                          </Box>
-                        </Card>
+                              {arrangement.relevantDateLabel && (
+                                <Typography
+                                  color="text.secondary"
+                                  {...v2Typography.browserSecondary}
+                                  noWrap
+                                >
+                                  <EventIcon
+                                    fontSize="inherit"
+                                    sx={{ verticalAlign: 'text-top' }}
+                                  />
+                                  &nbsp;
+                                  {arrangement.relevantDateLabel}
+                                </Typography>
+                              )}
+                              {arrangement.childInvolvement && (
+                                <Typography
+                                  color="text.secondary"
+                                  {...v2Typography.browserSecondary}
+                                  noWrap
+                                >
+                                  <LocationPinIcon
+                                    fontSize="inherit"
+                                    sx={{ verticalAlign: 'text-top' }}
+                                  />
+                                  &nbsp;
+                                  {arrangement.currentLocationLabel}
+                                </Typography>
+                              )}
+                            </Box>
+                          </Card>
+                        </Grid>
                       ))}
-                    </Box>
+                    </Grid>
                   )}
                 </Stack>
               ) : (
@@ -2290,10 +2318,13 @@ export function FamilyScreenV2() {
                   onClose={() => setOpenNewV1CaseDialogOpen(false)}
                 />
               )}
-            </Box>
+            </Grid>
 
             {permissions(Permission.ViewV1CaseComments) && selectedV1Case && (
-              <Box
+              <Grid
+                item
+                xs={12}
+                md={caseOverviewGridColumns.comments}
                 sx={{
                   minWidth: 0,
                   pt: { xs: 0.25, md: 0 },
@@ -2304,9 +2335,9 @@ export function FamilyScreenV2() {
                   partneringFamily={family}
                   v1CaseId={selectedV1Case.id!}
                 />
-              </Box>
+              </Grid>
             )}
-          </Box>
+          </Grid>
         </Box>
       )}
 
