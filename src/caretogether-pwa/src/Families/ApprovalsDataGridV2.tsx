@@ -1,5 +1,5 @@
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
-import { Box, Chip, Typography, useTheme } from '@mui/material';
+import { Box, Chip, Tooltip, Typography, useTheme } from '@mui/material';
 import { DataGrid, GridColDef, GridToolbar } from '@mui/x-data-grid';
 import { useRef } from 'react';
 import { useUserLookup } from '../Model/DirectoryModel';
@@ -22,14 +22,28 @@ type ApprovalsDataGridV2Props = {
   rows: ApprovalLedgerRow[];
 };
 
-function ChipList({ labels }: { labels: string[] }) {
+const MAX_VISIBLE_ROLE_CHIPS = 3;
+
+function OverflowRoleChipList({ labels }: { labels: string[] }) {
   if (labels.length === 0) {
     return <Typography {...v2Typography.browserSecondary}>-</Typography>;
   }
 
+  const visibleLabels = labels.slice(0, MAX_VISIBLE_ROLE_CHIPS);
+  const hiddenLabels = labels.slice(MAX_VISIBLE_ROLE_CHIPS);
+
   return (
-    <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
-      {labels.map((label) => (
+    <Box
+      sx={{
+        alignItems: 'center',
+        display: 'flex',
+        flexWrap: 'nowrap',
+        gap: 0.5,
+        minWidth: 0,
+        overflow: 'hidden',
+      }}
+    >
+      {visibleLabels.map((label) => (
         <Chip
           key={label}
           className="ph-unmask"
@@ -38,6 +52,33 @@ function ChipList({ labels }: { labels: string[] }) {
           variant="outlined"
         />
       ))}
+      {hiddenLabels.length > 0 && (
+        <Tooltip
+          arrow
+          title={
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
+              {hiddenLabels.map((label) => (
+                <Typography
+                  key={label}
+                  className="ph-unmask"
+                  {...v2Typography.browserCell}
+                >
+                  {label}
+                </Typography>
+              ))}
+            </Box>
+          }
+        >
+          <Chip
+            aria-label={`${hiddenLabels.length} more roles: ${hiddenLabels.join(', ')}`}
+            label={`+${hiddenLabels.length} more`}
+            size="small"
+            sx={{ pointerEvents: 'auto' }}
+            tabIndex={0}
+            variant="outlined"
+          />
+        </Tooltip>
+      )}
     </Box>
   );
 }
@@ -128,7 +169,7 @@ function buildColumns(
       flex: 0.9,
       valueGetter: (_value, row) => row.neededForRoleLabels.join(', '),
       renderCell: ({ row }) => (
-        <ChipList labels={row.neededForRoleLabels} />
+        <OverflowRoleChipList labels={row.neededForRoleLabels} />
       ),
     },
     {
