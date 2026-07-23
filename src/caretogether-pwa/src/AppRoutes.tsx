@@ -33,7 +33,7 @@ import { InboxScreen } from './Inbox/InboxScreen';
 import { FamilyScreenRoute } from './Families/FamilyScreenRoute';
 import { V1Cases } from './V1Cases/V1Cases';
 import { V1Referrals } from './V1Referrals/V1Referrals';
-import { Volunteers } from './Volunteers/Volunteers';
+import { VolunteersScreenRoute } from './Volunteers/VolunteersScreenRoute';
 import { Communities } from './Communities/Communities';
 import { Reports } from './Reports/Reports';
 import { Settings } from './Settings/SettingsRoutes';
@@ -191,7 +191,7 @@ function AuthorizedLocationContextWrapper({
           <Route path="clients/*" element={<V1Cases />} />
           <Route path="cases/*" element={<CasesToClientsRedirect />} />
           <Route path="referrals/*" element={<V1Referrals />} />
-          <Route path="volunteers/*" element={<Volunteers />} />
+          <Route path="volunteers/*" element={<VolunteersScreenRoute />} />
           <Route path="communities/*" element={<Communities />} />
           <Route path="reports/*" element={<Reports />} />
           <Route path="settings/*" element={<Settings />} />
