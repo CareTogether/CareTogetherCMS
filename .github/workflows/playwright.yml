@@ -31,6 +31,14 @@ jobs:
         with:
           dotnet-version: 10.0.x
 
+      - name: Cache NuGet packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.nuget/packages
+          key: nuget-${{ runner.os }}-${{ hashFiles('**/*.csproj', '**/*.props', '**/*.targets', '**/packages.lock.json', 'NuGet.config', 'global.json') }}
+          restore-keys: |
+            nuget-${{ runner.os }}-
+
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
@@ -38,13 +46,22 @@ jobs:
           cache: npm
           cache-dependency-path: src/caretogether-pwa/package-lock.json
 
+      - name: Cache Playwright browsers
+        id: playwright-cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ hashFiles('src/caretogether-pwa/package-lock.json') }}
+          restore-keys: |
+            playwright-${{ runner.os }}-
+
       - name: Check Docker daemon
         run: |
           docker version
           docker info
 
       - name: Install Azurite storage emulator
-        run: npm install -g azurite
+        run: npm install -g azurite --prefer-offline --no-audit --fund=false
 
       - name: Start Azurite storage emulator
         shell: bash
@@ -64,11 +81,16 @@ jobs:
           exit 1
 
       - name: Install frontend dependencies
-        run: npm ci
+        run: npm ci --prefer-offline --no-audit --fund=false
+        working-directory: src/caretogether-pwa
+
+      - name: Install Playwright Chromium system dependencies
+        run: npx playwright install-deps chromium
         working-directory: src/caretogether-pwa
 
       - name: Install Playwright Chromium browser
-        run: npx playwright install --with-deps chromium
+        if: steps.playwright-cache.outputs.cache-hit != 'true'
+        run: npx playwright install chromium
         working-directory: src/caretogether-pwa
 
       - name: Restore AppHost E2E dependencies
