@@ -162,7 +162,7 @@ import {
   type PrintableFamilyMember,
 } from './FamilyMemberPrintData';
 import { FamilyMemberPrintDocument } from './FamilyMemberPrintDocument';
-import { FamilyMembersDataGridV2 } from './FamilyMembersDataGridV2';
+import { FamilyMembersSectionV2 } from './FamilyMembersSectionV2';
 import { FamilyMemberDrawerV2 } from './FamilyMemberDrawerV2';
 import {
   buildFamilyMemberRowsV2,
@@ -476,8 +476,9 @@ export function FamilyScreenV2() {
     useState(false);
   const [addAdultDialogOpen, setAddAdultDialogOpen] = useState(false);
   const [addChildDialogOpen, setAddChildDialogOpen] = useState(false);
-  const [selectedFamilyMemberRow, setSelectedFamilyMemberRow] =
-    useState<FamilyMemberRowV2 | null>(null);
+  const [selectedFamilyMemberId, setSelectedFamilyMemberId] = useState<
+    string | null
+  >(null);
   const [addNoteDialogOpen, setAddNoteDialogOpen] = useState(false);
   const [recentFamilyNoteAction, setRecentFamilyNoteAction] = useState<{
     action: RecentNoteAction;
@@ -793,7 +794,7 @@ export function FamilyScreenV2() {
   }
 
   function openFamilyMemberDrawer(row: FamilyMemberRowV2) {
-    setSelectedFamilyMemberRow(row);
+    setSelectedFamilyMemberId(row.id);
   }
 
   function openAddNoteDialog() {
@@ -853,6 +854,14 @@ export function FamilyScreenV2() {
           })
         : [],
     [allV1Cases, family, permissions]
+  );
+  const selectedFamilyMemberRow = useMemo(
+    () =>
+      selectedFamilyMemberId
+        ? (familyMemberRows.find((row) => row.id === selectedFamilyMemberId) ??
+          null)
+        : null,
+    [familyMemberRows, selectedFamilyMemberId]
   );
   const printableFamilyMembers = useMemo(
     () => activeAdults.concat(activeChildren),
@@ -1967,7 +1976,7 @@ export function FamilyScreenV2() {
           family={family}
           row={selectedFamilyMemberRow}
           open={selectedFamilyMemberRow !== null}
-          onClose={() => setSelectedFamilyMemberRow(null)}
+          onClose={() => setSelectedFamilyMemberId(null)}
         />
         {addNoteDialogOpen && (
           <AddEditNoteDrawer
@@ -2715,13 +2724,9 @@ export function FamilyScreenV2() {
 
               {showOverview && (
                 <Grid item xs={12}>
-                  <FamilyMembersDataGridV2
+                  <FamilyMembersSectionV2
                     rows={familyMemberRows}
-                    onAddAdult={openAddAdultDialog}
-                    onAddChild={openAddChildDialog}
-                    onRowClick={openFamilyMemberDrawer}
-                    canAddAdult={canEditFamilyInfo}
-                    canAddChild={canEditFamilyInfo}
+                    onMemberClick={openFamilyMemberDrawer}
                   />
                 </Grid>
               )}
