@@ -6,16 +6,20 @@ import { execSync } from 'child_process';
 const getCommitHash = () => {
   try {
     return execSync('git rev-parse --short HEAD').toString().trim();
-  } catch (error) {
+  } catch {
     return 'unknown';
   }
 };
+
+const port = Number(process.env.PORT) || 3000;
 
 // https://vitejs.dev/config/
 export default defineConfig({
   plugins: [react()],
   server: {
-    port: 3000,
+    host: 'localhost',
+    port,
+    strictPort: true,
   },
   build: {
     sourcemap: true,

@@ -15,7 +15,7 @@ import { ArrangementDetailsDrawerV2 } from '../V1Cases/Arrangements/ArrangementD
 import { FamilyCompleteOtherController } from '../Requirements/FamilyCompleteOtherController';
 import { RemoveFamilyRoleDialog } from '../Volunteers/RemoveFamilyRoleDialog';
 import { ResetFamilyRoleDialog } from '../Volunteers/ResetFamilyRoleDialog';
-import { AddEditNoteDialog } from '../Notes/AddEditNoteDialog';
+import { AddEditNoteDrawer } from '../Notes/AddEditNoteDrawer';
 import { ApproveNoteDialog } from '../Notes/ApproveNoteDialog';
 import { DiscardNoteDialog } from '../Notes/DiscardNoteDialog';
 import { AddAdultDrawer } from './AddAdultDrawer';
@@ -23,7 +23,7 @@ import { AddChildDrawer } from './AddChildDrawer';
 import { DeleteFamilyDialog } from './DeleteFamilyDialog';
 import { FamilyMemberDrawerV2 } from './FamilyMemberDrawerV2';
 import { RoleDetailsDrawerV2 } from './RoleDetailsDrawerV2';
-import { UploadFamilyDocumentsDialog } from './UploadFamilyDocumentsDialog';
+import { UploadFamilyDocumentsDrawer } from './UploadFamilyDocumentsDrawer';
 import { ArrangementRowV2 } from '../V1Cases/Arrangements/arrangementViewModel';
 import { FamilyMemberRowV2 } from './familyMemberViewModel';
 
@@ -130,7 +130,7 @@ export function FamilyScreenWorkflowCoordinatorV2({
         onClose={onFamilyCompleteOtherClose}
       />
       {uploadDocumentDialogOpen && (
-        <UploadFamilyDocumentsDialog
+        <UploadFamilyDocumentsDrawer
           family={family}
           onClose={onUploadDocumentClose}
         />
@@ -144,10 +144,13 @@ export function FamilyScreenWorkflowCoordinatorV2({
         onClose={onFamilyMemberClose}
       />
       {addNoteDialogOpen && (
-        <AddEditNoteDialog familyId={family.family!.id!} onClose={onAddNoteClose} />
+        <AddEditNoteDrawer
+          familyId={family.family!.id!}
+          onClose={onAddNoteClose}
+        />
       )}
       {recentFamilyNoteAction?.action === 'edit' && (
-        <AddEditNoteDialog
+        <AddEditNoteDrawer
           familyId={family.family!.id!}
           note={recentFamilyNoteAction.note}
           onClose={onRecentFamilyNoteActionClose}

@@ -6,6 +6,11 @@ import {
   Stack,
   Typography,
 } from '@mui/material';
+import {
+  Event as EventIcon,
+  LocationPin as LocationPinIcon,
+  PermPhoneMsg as PermPhoneMsgIcon,
+} from '@mui/icons-material';
 import { KeyboardEvent } from 'react';
 import { format } from 'date-fns';
 import {
@@ -22,7 +27,8 @@ export type ActiveCaseArrangementSummaryV2 = {
   id: string;
   arrangementType: string;
   arrangedPersonLabel: string;
-  currentLocationLabel: string;
+  childInvolvement: boolean;
+  currentLocationLabel?: string;
   phase: ArrangementPhase;
   relevantDateLabel?: string;
   statusLabel: string;
@@ -217,20 +223,32 @@ export function FamilyCaseWorkspaceHeaderV2({
                         >
                           {arrangement.arrangedPersonLabel}
                         </Typography>
-                        <Typography
-                          color="text.secondary"
-                          {...v2Typography.browserSecondary}
-                          noWrap
-                        >
-                          {arrangement.currentLocationLabel}
-                        </Typography>
                         {arrangement.relevantDateLabel && (
                           <Typography
                             color="text.secondary"
                             {...v2Typography.browserSecondary}
                             noWrap
                           >
+                            <EventIcon
+                              fontSize="inherit"
+                              sx={{ verticalAlign: 'text-top' }}
+                            />
+                            &nbsp;
                             {arrangement.relevantDateLabel}
+                          </Typography>
+                        )}
+                        {arrangement.childInvolvement && (
+                          <Typography
+                            color="text.secondary"
+                            {...v2Typography.browserSecondary}
+                            noWrap
+                          >
+                            <LocationPinIcon
+                              fontSize="inherit"
+                              sx={{ verticalAlign: 'text-top' }}
+                            />
+                            &nbsp;
+                            {arrangement.currentLocationLabel}
                           </Typography>
                         )}
                       </Box>
@@ -269,6 +287,7 @@ export function FamilyCaseWorkspaceHeaderV2({
                       flexWrap: 'wrap',
                     }}
                   >
+                    <PermPhoneMsgIcon color="primary" fontSize="small" />
                     <Typography {...v2Typography.primaryValue}>
                       {currentReferral.title}
                     </Typography>

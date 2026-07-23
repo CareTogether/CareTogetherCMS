@@ -73,7 +73,9 @@ export function FamilyPinnedNotesV2({
                 </>
               )}
             </Typography>
-            <Typography variant="body2">{note.contents}</Typography>
+            <Typography variant="body2" sx={{ whiteSpace: 'pre-wrap' }}>
+              {note.contents}
+            </Typography>
           </Box>
         ))}
       </Box>

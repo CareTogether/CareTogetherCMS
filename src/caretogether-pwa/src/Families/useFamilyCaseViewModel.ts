@@ -12,6 +12,7 @@ import { getFilteredArrangements } from '../V1Cases/Arrangements/ArrangementsSec
 import {
   ArrangementRowV2,
   buildArrangementRowsV2,
+  ChildcareArrangementRowV2,
 } from '../V1Cases/Arrangements/arrangementViewModel';
 import { ActiveCaseArrangementSummaryV2 } from './FamilyCaseWorkspaceHeaderV2';
 
@@ -128,8 +129,12 @@ export function useFamilyCaseViewModel({
           id: row.id,
           arrangementType: row.arrangementType,
           arrangedPersonLabel: row.childOrPersonLabel || 'Unassigned',
+          childInvolvement: row.arrangementType === 'Childcare',
           currentLocationLabel:
-            row.currentLocationLabel || 'Location unspecified',
+            row.arrangementType === 'Childcare'
+              ? (row as ChildcareArrangementRowV2).currentLocationLabel ||
+                'not yet placed'
+              : undefined,
           phase: row.source.phase,
           relevantDateLabel: row.startedDate
             ? `Started ${row.startedDate}`

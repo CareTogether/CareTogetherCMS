@@ -4,6 +4,7 @@ import {
   ListItemButton,
   Typography,
 } from '@mui/material';
+import { PermPhoneMsg as PermPhoneMsgIcon } from '@mui/icons-material';
 import { format } from 'date-fns';
 import { V1Case, V1Referral } from '../GeneratedClient';
 import { formatStatusWithDate } from '../V1Referrals/formatStatusWithDate';
@@ -128,6 +129,7 @@ export function FamilyCaseHistoryTabV2({
                           key={referral.referralId}
                           clickable
                           size="small"
+                          icon={<PermPhoneMsgIcon />}
                           label={referralSummaryLabel(referral)}
                           onClick={(event) => {
                             event.stopPropagation();

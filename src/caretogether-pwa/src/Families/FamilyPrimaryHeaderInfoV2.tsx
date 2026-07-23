@@ -1,5 +1,6 @@
 import {
   Box,
+  Chip,
   IconButton,
   Tooltip,
   Typography,
@@ -8,7 +9,9 @@ import {
   Check as CheckIcon,
   ContentCopy as ContentCopyIcon,
   Email as EmailIcon,
+  Handshake as HandshakeIcon,
   Home as HomeIcon,
+  People as PeopleIcon,
   Phone as PhoneIcon,
 } from '@mui/icons-material';
 import { useState } from 'react';
@@ -74,6 +77,12 @@ export function FamilyPrimaryHeaderInfoV2({
   primaryPhoneNumber,
   onCopied,
 }: FamilyPrimaryHeaderInfoV2Props) {
+  const familyTypeChip = family.partneringFamilyInfo ? (
+    <Chip icon={<HandshakeIcon />} label="Client" />
+  ) : family.volunteerFamilyInfo ? (
+    <Chip icon={<PeopleIcon />} label="Volunteer" />
+  ) : null;
+
   return (
     <Box sx={{ flex: '1 1 auto', minWidth: 0 }}>
       <Box
@@ -92,6 +101,7 @@ export function FamilyPrimaryHeaderInfoV2({
             Family
           </Box>
         </Typography>
+        {familyTypeChip}
       </Box>
       <Box
         sx={{

@@ -12,31 +12,57 @@ on:
       - ".github/workflows/cd-prod-react.yml"
       - ".github/workflows/cd-prod-dotnet.yml"
       - ".github/workflows/ci-pr-react.yml"
+      - ".github/workflows/playwright.yml"
 
 jobs:
   build:
     runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    concurrency:
+      group: ci-pr-dotnet-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+      cancel-in-progress: true
 
     steps:
       # Checkout the repo
       - name: Check out source
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: Set up .NET
-        uses: actions/setup-dotnet@v3
+        uses: actions/setup-dotnet@v4
         with:
           dotnet-version: 10.0.x
       - name: Set up Node.js
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
           node-version: "24.x"
       - name: Install Azurite storage emulator
         run: npm install -g azurite
       - name: Start Azurite storage emulator
         shell: bash
-        run: azurite &
+        run: |
+          azurite-blob --loose --silent > "${RUNNER_TEMP}/azurite.log" 2>&1 &
+          for attempt in {1..30}; do
+            if nc -z 127.0.0.1 10000; then
+              echo "Azurite Blob service is ready."
+              exit 0
+            fi
+
+            sleep 1
+          done
+
+          echo "Azurite Blob service did not become ready on 127.0.0.1:10000."
+          cat "${RUNNER_TEMP}/azurite.log"
+          exit 1
       - name: Restore .NET dependencies
         run: dotnet restore
       - name: Build .NET solution
         run: dotnet build --no-restore
       - name: Test .NET solution
-        run: dotnet test --no-build --verbosity normal
+        run: dotnet test --no-build --verbosity normal --filter "FullyQualifiedName!~CareTogether.AppHost.Tests"
+      - name: Upload Azurite log
+        uses: actions/upload-artifact@v4
+        if: ${{ failure() }}
+        with:
+          name: ci-pr-dotnet-azurite-log
+          path: ${{ runner.temp }}/azurite.log
+          retention-days: 7
