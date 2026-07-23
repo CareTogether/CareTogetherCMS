@@ -56,6 +56,21 @@ function arrangementAccentColor(phase?: ArrangementPhase) {
   return 'warning.main';
 }
 
+function getCaseOverviewGridColumns(
+  comments: string | undefined,
+  arrangements: ActiveCaseArrangementSummaryV2[]
+) {
+  const commentLength = comments?.trim().length ?? 0;
+  const arrangementsNeedSpace = arrangements.length >= 3;
+
+  if (commentLength >= 240) return { caseInformation: 6, comments: 6 };
+  if (arrangementsNeedSpace && commentLength <= 160) {
+    return { caseInformation: 8, comments: 4 };
+  }
+
+  return { caseInformation: 7, comments: 5 };
+}
+
 export function FamilyCaseWorkspaceHeaderV2({
   activeCaseArrangements,
   canCloseV1Case,
@@ -82,6 +97,12 @@ export function FamilyCaseWorkspaceHeaderV2({
     onArrangementOpen(arrangementId);
   }
 
+  const showCaseComments = canViewV1CaseComments && selectedV1Case;
+  const caseOverviewGridColumns = getCaseOverviewGridColumns(
+    selectedV1Case?.comments,
+    activeCaseArrangements
+  );
+
   return (
     <Box
       sx={{
@@ -99,7 +120,12 @@ export function FamilyCaseWorkspaceHeaderV2({
         sx={{
           display: 'grid',
           gap: { xs: 1.25, md: 2 },
-          gridTemplateColumns: { xs: '1fr', md: 'minmax(280px, 2fr) 3fr' },
+          gridTemplateColumns: {
+            xs: '1fr',
+            md: showCaseComments
+              ? `${caseOverviewGridColumns.caseInformation}fr ${caseOverviewGridColumns.comments}fr`
+              : '1fr',
+          },
           alignItems: 'start',
         }}
       >
@@ -360,7 +386,7 @@ export function FamilyCaseWorkspaceHeaderV2({
           )}
         </Box>
 
-        {canViewV1CaseComments && selectedV1Case && (
+        {showCaseComments && (
           <Box
             sx={{
               minWidth: 0,
