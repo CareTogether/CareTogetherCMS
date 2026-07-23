@@ -962,7 +962,9 @@ export function FamilyScreenV2() {
         onClick: () => selectRemoveRole(role),
       }))
     : [];
-  const roleResetActions = permissions(Permission.EditVolunteerRoleParticipation)
+  const roleResetActions = permissions(
+    Permission.EditVolunteerRoleParticipation
+  )
     ? (family.volunteerFamilyInfo?.roleRemovals || [])
         .filter((removedRole) => !removedRole.effectiveUntil)
         .map((removedRole) => ({
@@ -1007,7 +1009,9 @@ export function FamilyScreenV2() {
         canAddNotes={canAddNotes}
         canEditFamilyInfo={canEditFamilyInfo}
         canUploadDocuments={canUploadDocuments}
-        familyMemberPrintInformationEnabled={familyMemberPrintInformationEnabled}
+        familyMemberPrintInformationEnabled={
+          familyMemberPrintInformationEnabled
+        }
         hasFamilyActions={hasFamilyActions}
         hasMoreMenuActions={hasMoreMenuActions}
         header={
@@ -1114,9 +1118,7 @@ export function FamilyScreenV2() {
         <FamilyCaseWorkspaceHeaderV2
           activeCaseArrangements={activeCaseArrangements}
           canCloseV1Case={!!canCloseV1Case}
-          canOpenNewCase={permissions(Permission.CreateV1Case)}
           canReopenSelectedV1Case={canReopenSelectedV1Case}
-          canViewV1CaseComments={permissions(Permission.ViewV1CaseComments)}
           currentReferral={currentReferral}
           family={family}
           referralsEnabled={referralsEnabled}
@@ -1125,7 +1127,6 @@ export function FamilyScreenV2() {
           onCloseCase={() => setCloseCaseDrawerOpen(true)}
           onOpenNewCase={() => setOpenNewV1CaseDialogOpen(true)}
           onReopenCase={() => void reopenCaseNow()}
-          onViewReferral={(referralId) => appNavigate.referral(referralId)}
         />
       )}
 
@@ -1172,7 +1173,9 @@ export function FamilyScreenV2() {
             volunteerFamilyCustomFields={overviewVolunteerFamilyCustomFields}
             onAddAdult={openAddAdultDialog}
             onAddChild={openAddChildDialog}
-            onCommunityClick={(communityId) => appNavigate.community(communityId)}
+            onCommunityClick={(communityId) =>
+              appNavigate.community(communityId)
+            }
             onFamilyMemberClick={openFamilyMemberDrawer}
             onViewAllRecentActivity={() => setSelectedTab('timelineAndNotes')}
           />

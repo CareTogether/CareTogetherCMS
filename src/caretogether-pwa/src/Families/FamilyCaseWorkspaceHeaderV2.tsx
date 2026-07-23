@@ -1,11 +1,5 @@
-import {
-  Box,
-  Button,
-  Card,
-  Chip,
-  Stack,
-  Typography,
-} from '@mui/material';
+import Grid from '../Generic/GridLegacyCompat';
+import { Box, Button, Card, Chip, Stack, Typography } from '@mui/material';
 import {
   Event as EventIcon,
   LocationPin as LocationPinIcon,
@@ -16,12 +10,15 @@ import { format } from 'date-fns';
 import {
   ArrangementPhase,
   CombinedFamilyInfo,
+  Permission,
   V1Case,
   V1Referral,
 } from '../GeneratedClient';
 import { V1CaseCommentsV2 } from '../V1Cases/V1CaseCommentsV2';
 import { formatStatusWithDate } from '../V1Referrals/formatStatusWithDate';
 import { v2Typography } from './v2Typography';
+import { useFamilyPermissions } from '../Model/SessionModel';
+import { useAppNavigate } from '../Hooks/useAppNavigate';
 
 export type ActiveCaseArrangementSummaryV2 = {
   id: string;
@@ -37,9 +34,7 @@ export type ActiveCaseArrangementSummaryV2 = {
 type FamilyCaseWorkspaceHeaderV2Props = {
   activeCaseArrangements: ActiveCaseArrangementSummaryV2[];
   canCloseV1Case: boolean;
-  canOpenNewCase: boolean;
   canReopenSelectedV1Case: boolean;
-  canViewV1CaseComments: boolean;
   currentReferral?: V1Referral;
   family: CombinedFamilyInfo;
   referralsEnabled: boolean | undefined;
@@ -48,7 +43,6 @@ type FamilyCaseWorkspaceHeaderV2Props = {
   onCloseCase: () => void;
   onOpenNewCase: () => void;
   onReopenCase: () => void;
-  onViewReferral: (referralId: string) => void;
 };
 
 function arrangementAccentColor(phase?: ArrangementPhase) {
@@ -74,9 +68,7 @@ function getCaseOverviewGridColumns(
 export function FamilyCaseWorkspaceHeaderV2({
   activeCaseArrangements,
   canCloseV1Case,
-  canOpenNewCase,
   canReopenSelectedV1Case,
-  canViewV1CaseComments,
   currentReferral,
   family,
   referralsEnabled,
@@ -85,7 +77,6 @@ export function FamilyCaseWorkspaceHeaderV2({
   onCloseCase,
   onOpenNewCase,
   onReopenCase,
-  onViewReferral,
 }: FamilyCaseWorkspaceHeaderV2Props) {
   function handleArrangementKeyDown(
     event: KeyboardEvent,
@@ -97,53 +88,55 @@ export function FamilyCaseWorkspaceHeaderV2({
     onArrangementOpen(arrangementId);
   }
 
-  const showCaseComments = canViewV1CaseComments && selectedV1Case;
   const caseOverviewGridColumns = getCaseOverviewGridColumns(
     selectedV1Case?.comments,
     activeCaseArrangements
   );
 
+  const permissions = useFamilyPermissions(family);
+
+  const appNavigate = useAppNavigate();
+
   return (
     <Box
       sx={{
-        borderLeft: 4,
-        borderColor: selectedV1Case?.closedAtUtc ? 'divider' : 'primary.main',
+        border: 1,
+        borderColor: 'divider',
         borderRadius: 1,
+        p: 2,
+        mb: 2,
         bgcolor: 'background.paper',
-        boxShadow: 1,
-        px: { xs: 1.5, sm: 2 },
-        py: 1.5,
-        mb: 1.5,
       }}
     >
-      <Box
-        sx={{
-          display: 'grid',
-          gap: { xs: 1.25, md: 2 },
-          gridTemplateColumns: {
-            xs: '1fr',
-            md: showCaseComments
-              ? `${caseOverviewGridColumns.caseInformation}fr ${caseOverviewGridColumns.comments}fr`
-              : '1fr',
-          },
-          alignItems: 'start',
-        }}
+      <Grid
+        container
+        spacing={{ xs: 1.25, md: 2 }}
+        sx={{ alignItems: 'flex-start' }}
       >
-        <Box sx={{ minWidth: 0 }}>
+        <Grid
+          item
+          xs={12}
+          md={
+            permissions(Permission.ViewV1CaseComments) && selectedV1Case
+              ? caseOverviewGridColumns.caseInformation
+              : 12
+          }
+          sx={{ minWidth: 0 }}
+        >
           {selectedV1Case ? (
             <Stack spacing={1}>
               <Box>
                 <Typography
-                  variant="caption"
+                  variant="h3"
                   color="text.secondary"
                   sx={{
                     display: 'block',
-                    fontWeight: 700,
-                    letterSpacing: 0.4,
-                    textTransform: 'uppercase',
                   }}
                 >
                   Case
+                </Typography>
+                <Typography>
+                  Opened {format(selectedV1Case.openedAtUtc, 'M/d/yy')}
                 </Typography>
                 <Box
                   sx={{
@@ -155,14 +148,6 @@ export function FamilyCaseWorkspaceHeaderV2({
                     mb: 0.5,
                   }}
                 >
-                  <Stack spacing={0.25} sx={{ minWidth: 0 }}>
-                    <Typography {...v2Typography.fieldLabel}>
-                      Opened
-                    </Typography>
-                    <Typography {...v2Typography.primaryValue}>
-                      {format(selectedV1Case.openedAtUtc, 'MMM d, yyyy')}
-                    </Typography>
-                  </Stack>
                   <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
                     {!selectedV1Case.closedAtUtc && canCloseV1Case && (
                       <Button
@@ -187,170 +172,116 @@ export function FamilyCaseWorkspaceHeaderV2({
                   </Box>
                 </Box>
               </Box>
-              {activeCaseArrangements.length > 0 && (
-                <Box
-                  sx={{
-                    display: 'flex',
-                    flexWrap: 'wrap',
-                    gap: 1,
-                  }}
-                >
-                  {activeCaseArrangements.map((arrangement) => (
-                    <Card
-                      key={arrangement.id}
-                      role="button"
-                      tabIndex={0}
-                      variant="outlined"
-                      onClick={() => onArrangementOpen(arrangement.id)}
-                      onKeyDown={(event) =>
-                        handleArrangementKeyDown(event, arrangement.id)
-                      }
-                      sx={(theme) => ({
-                        borderColor: 'divider',
-                        borderLeft: 3,
-                        borderLeftColor: arrangementAccentColor(
-                          arrangement.phase
-                        ),
-                        cursor: 'pointer',
-                        maxWidth: '100%',
-                        minWidth: 0,
-                        transition: theme.transitions.create(['box-shadow'], {
-                          duration: theme.transitions.duration.shortest,
-                        }),
-                        width: 'fit-content',
-                        '&:hover': {
-                          boxShadow: 2,
-                        },
-                        '&:focus-visible': {
-                          outline: `2px solid ${theme.palette.primary.main}`,
-                          outlineOffset: 2,
-                        },
-                      })}
-                    >
-                      <Box sx={{ minWidth: 0, px: 1.25, py: 1 }}>
-                        <Typography {...v2Typography.primaryValue} noWrap>
-                          {arrangement.arrangementType}
-                        </Typography>
-                        <Typography
-                          color="text.secondary"
-                          {...v2Typography.browserSecondary}
-                          noWrap
-                        >
-                          {arrangement.statusLabel}
-                        </Typography>
-                        <Typography
-                          color={
-                            arrangement.arrangedPersonLabel === 'Unassigned'
-                              ? 'text.secondary'
-                              : 'text.primary'
-                          }
-                          {...v2Typography.browserSecondary}
-                          noWrap
-                        >
-                          {arrangement.arrangedPersonLabel}
-                        </Typography>
-                        {arrangement.relevantDateLabel && (
-                          <Typography
-                            color="text.secondary"
-                            {...v2Typography.browserSecondary}
-                            noWrap
-                          >
-                            <EventIcon
-                              fontSize="inherit"
-                              sx={{ verticalAlign: 'text-top' }}
-                            />
-                            &nbsp;
-                            {arrangement.relevantDateLabel}
-                          </Typography>
-                        )}
-                        {arrangement.childInvolvement && (
-                          <Typography
-                            color="text.secondary"
-                            {...v2Typography.browserSecondary}
-                            noWrap
-                          >
-                            <LocationPinIcon
-                              fontSize="inherit"
-                              sx={{ verticalAlign: 'text-top' }}
-                            />
-                            &nbsp;
-                            {arrangement.currentLocationLabel}
-                          </Typography>
-                        )}
-                      </Box>
-                    </Card>
-                  ))}
+              {currentReferral && (
+                <Box>
+                  <Chip
+                    key={currentReferral.referralId}
+                    clickable
+                    size="medium"
+                    color="primary"
+                    variant="outlined"
+                    icon={<PermPhoneMsgIcon />}
+                    label={`${currentReferral.title} · ${formatStatusWithDate(
+                      currentReferral.status,
+                      currentReferral.createdAtUtc,
+                      currentReferral.acceptedAtUtc,
+                      currentReferral.closedAtUtc
+                    )}`}
+                    onClick={(event) => {
+                      event.stopPropagation();
+                      appNavigate.referral(currentReferral.referralId);
+                    }}
+                  />
                 </Box>
               )}
-              {currentReferral && (
-                <Box
-                  sx={{
-                    borderLeft: 2,
-                    borderColor: 'divider',
-                    ml: { xs: 0, sm: 0.5 },
-                    pl: 1.5,
-                    py: 0.25,
-                  }}
-                >
-                  <Typography
-                    variant="caption"
-                    color="text.secondary"
-                    sx={{
-                      display: 'block',
-                      fontWeight: 600,
-                      letterSpacing: 0.3,
-                      mb: 0.25,
-                      textTransform: 'uppercase',
-                    }}
-                  >
-                    Linked Referral
-                  </Typography>
-                  <Box
-                    sx={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: 1.25,
-                      flexWrap: 'wrap',
-                    }}
-                  >
-                    <PermPhoneMsgIcon color="primary" fontSize="small" />
-                    <Typography {...v2Typography.primaryValue}>
-                      {currentReferral.title}
-                    </Typography>
-                    <Chip
-                      size="small"
-                      label={
-                        currentReferral.acceptedAtUtc
-                          ? `Accepted \u2022 ${format(
-                              currentReferral.acceptedAtUtc,
-                              'MMM d, yyyy'
-                            )}`
-                          : formatStatusWithDate(
-                              currentReferral.status,
-                              currentReferral.createdAtUtc,
-                              currentReferral.acceptedAtUtc,
-                              currentReferral.closedAtUtc
-                            )
-                      }
-                    />
-                    <Chip
-                      size="small"
-                      variant="outlined"
-                      label={`Received \u2022 ${format(
-                        currentReferral.createdAtUtc,
-                        'MMM d, yyyy'
-                      )}`}
-                    />
-                    <Button
-                      className="ph-unmask"
-                      onClick={() => onViewReferral(currentReferral.referralId)}
-                      variant="text"
-                      size="small"
+              {activeCaseArrangements.length > 0 && (
+                <Grid container spacing={1}>
+                  {activeCaseArrangements.map((arrangement) => (
+                    <Grid
+                      item
+                      xs="auto"
+                      key={arrangement.id}
+                      sx={{ maxWidth: '100%', minWidth: 0 }}
                     >
-                      View Referral
-                    </Button>
-                  </Box>
-                </Box>
+                      <Card
+                        role="button"
+                        tabIndex={0}
+                        variant="outlined"
+                        onClick={() => onArrangementOpen(arrangement.id)}
+                        onKeyDown={(event) =>
+                          handleArrangementKeyDown(event, arrangement.id)
+                        }
+                        sx={(theme) => ({
+                          borderColor: 'divider',
+                          borderLeft: 3,
+                          borderLeftColor: arrangementAccentColor(
+                            arrangement.phase
+                          ),
+                          cursor: 'pointer',
+                          height: '100%',
+                          maxWidth: '100%',
+                          minWidth: 0,
+                          transition: theme.transitions.create(['box-shadow'], {
+                            duration: theme.transitions.duration.shortest,
+                          }),
+                          width: 'fit-content',
+                          '&:hover': {
+                            boxShadow: 2,
+                          },
+                          '&:focus-visible': {
+                            outline: `2px solid ${theme.palette.primary.main}`,
+                            outlineOffset: 2,
+                          },
+                        })}
+                      >
+                        <Box sx={{ minWidth: 0, px: 1.25, py: 1 }}>
+                          <Typography {...v2Typography.browserSecondary} noWrap>
+                            {arrangement.arrangementType}
+                          </Typography>
+                          <Typography
+                            color={
+                              arrangement.arrangedPersonLabel === 'Unassigned'
+                                ? 'text.secondary'
+                                : 'text.primary'
+                            }
+                            {...v2Typography.primaryValue}
+                            noWrap
+                          >
+                            {arrangement.arrangedPersonLabel}
+                          </Typography>
+                          {arrangement.relevantDateLabel && (
+                            <Typography
+                              color="text.secondary"
+                              {...v2Typography.browserSecondary}
+                              noWrap
+                            >
+                              <EventIcon
+                                fontSize="inherit"
+                                sx={{ verticalAlign: 'text-top' }}
+                              />
+                              &nbsp;
+                              {arrangement.relevantDateLabel}
+                            </Typography>
+                          )}
+                          {arrangement.childInvolvement && (
+                            <Typography
+                              color="text.secondary"
+                              {...v2Typography.browserSecondary}
+                              noWrap
+                            >
+                              <LocationPinIcon
+                                fontSize="inherit"
+                                sx={{ verticalAlign: 'text-top' }}
+                              />
+                              &nbsp;
+                              {arrangement.currentLocationLabel}
+                            </Typography>
+                          )}
+                        </Box>
+                      </Card>
+                    </Grid>
+                  ))}
+                </Grid>
               )}
             </Stack>
           ) : (
@@ -371,7 +302,7 @@ export function FamilyCaseWorkspaceHeaderV2({
               <Typography className="ph-unmask" variant="h3">
                 No current case
               </Typography>
-              {!referralsEnabled && canOpenNewCase && (
+              {!referralsEnabled && permissions(Permission.CreateV1Case) && (
                 <Button
                   className="ph-unmask"
                   onClick={onOpenNewCase}
@@ -384,10 +315,13 @@ export function FamilyCaseWorkspaceHeaderV2({
               )}
             </Box>
           )}
-        </Box>
+        </Grid>
 
-        {showCaseComments && (
-          <Box
+        {permissions(Permission.ViewV1CaseComments) && selectedV1Case && (
+          <Grid
+            item
+            xs={12}
+            md={caseOverviewGridColumns.comments}
             sx={{
               minWidth: 0,
               pt: { xs: 0.25, md: 0 },
@@ -398,9 +332,9 @@ export function FamilyCaseWorkspaceHeaderV2({
               partneringFamily={family}
               v1CaseId={selectedV1Case.id!}
             />
-          </Box>
+          </Grid>
         )}
-      </Box>
+      </Grid>
     </Box>
   );
 }
