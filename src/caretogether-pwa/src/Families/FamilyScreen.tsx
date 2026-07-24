@@ -1,6 +1,5 @@
 import Grid from '../Generic/GridLegacyCompat';
-import {
-  useReactToPrint } from 'react-to-print';
+import { useReactToPrint } from 'react-to-print';
 import {
   Container,
   Toolbar,
@@ -481,18 +480,19 @@ export function FamilyScreen() {
             Adult
           </Button>
         )}
-        {permissions(Permission.EditFamilyInfo) && (
-          <Button
-            className="ph-unmask"
-            onClick={() => setAddChildDialogOpen(true)}
-            variant="contained"
-            size="small"
-            sx={{ margin: 1 }}
-            startIcon={<AddCircleIcon />}
-          >
-            Child
-          </Button>
-        )}
+        {permissions(Permission.EditFamilyInfo) &&
+          permissions(Permission.ViewFamilyChildren) && (
+            <Button
+              className="ph-unmask"
+              onClick={() => setAddChildDialogOpen(true)}
+              variant="contained"
+              size="small"
+              sx={{ margin: 1 }}
+              startIcon={<AddCircleIcon />}
+            >
+              Child
+            </Button>
+          )}
         {(permissions(Permission.AddEditDraftNotes) ||
           permissions(Permission.AddEditOwnDraftNotes)) && (
           <Button
@@ -1380,16 +1380,17 @@ export function FamilyScreen() {
                       />
                     )
                 )}
-                {family.family?.children?.map(
-                  (child) =>
-                    child.active && (
-                      <ChildCard
-                        key={child.id!}
-                        familyId={familyId}
-                        personId={child.id!}
-                      />
-                    )
-                )}
+                {permissions(Permission.ViewFamilyChildren) &&
+                  family.family?.children?.map(
+                    (child) =>
+                      child.active && (
+                        <ChildCard
+                          key={child.id!}
+                          familyId={familyId}
+                          personId={child.id!}
+                        />
+                      )
+                  )}
               </AppMasonry>
             </Grid>
           </Grid>
