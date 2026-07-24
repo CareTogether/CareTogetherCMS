@@ -20,6 +20,8 @@ type ClientsDataGridV2Props = {
   rows: ClientBrowserRowV2[];
 };
 
+const CLIENTS_GRID_PAGE_SIZE = 100;
+
 function displayValue(value: string) {
   return value || '-';
 }
@@ -186,9 +188,8 @@ export function ClientsDataGridV2({
   }, [customFields]);
 
   return (
-    <Box sx={v2DataGridStyles(theme)}>
+    <Box sx={v2DataGridStyles(theme, { height: '100%' })}>
       <DataGrid
-        autoHeight
         rows={rows}
         columns={columns}
         columnVisibilityModel={columnVisibilityModel}
@@ -200,6 +201,12 @@ export function ClientsDataGridV2({
         loading={loading}
         onColumnVisibilityModelChange={setColumnVisibilityModel}
         onRowClick={({ row }) => onRowClick(row)}
+        pageSizeOptions={[CLIENTS_GRID_PAGE_SIZE]}
+        initialState={{
+          pagination: {
+            paginationModel: { pageSize: CLIENTS_GRID_PAGE_SIZE },
+          },
+        }}
         slots={{
           noRowsOverlay: ClientsEmptyState,
         }}

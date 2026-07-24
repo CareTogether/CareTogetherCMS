@@ -18,7 +18,10 @@ import {
   normalizeArrangementsFilter,
 } from './PartneringFamilies/types';
 import { FUNCTION_ASSIGNMENTS_FEATURE_FLAG } from '../featureFlags';
-import { useAllPartneringFamiliesPermissions } from '../Model/SessionModel';
+import {
+  useAllPartneringFamiliesPermissions,
+  useGlobalPermissions,
+} from '../Model/SessionModel';
 import { usePersonAndFamilyLookup } from '../Model/DirectoryModel';
 import type { AssignmentFilterSelectionsByRole } from '../FunctionAssignments/assignmentRoleColumns';
 import { useCustomFieldFilters } from '../Generic/CustomFieldsFilter/useCustomFieldFilters';
@@ -27,6 +30,7 @@ import { PartneringFamilyCustomFieldFiltersSidePanel } from './PartneringFamilie
 import { useLoadable } from '../Hooks/useLoadable';
 import { partneringFamiliesData } from '../Model/V1CasesModel';
 import { policyData } from '../Model/ConfigurationModel';
+import { wideTablePageSx } from '../Utilities/wideTablePageSx';
 
 const PARTNERING_FAMILIES_SORT_STORAGE_KEY = 'partnering-families-sortMode';
 const ARRANGEMENTS_FILTER_STORAGE_KEY =
@@ -36,6 +40,7 @@ export function ClientsScreenV2() {
   useScreenTitle('Clients');
   const appNavigate = useAppNavigate();
   const personAndFamilyLookup = usePersonAndFamilyLookup();
+  const globalPermissions = useGlobalPermissions();
   const permissions = useAllPartneringFamiliesPermissions();
   const functionAssignmentsEnabled = useFeatureFlagEnabled(
     FUNCTION_ASSIGNMENTS_FEATURE_FLAG
@@ -105,10 +110,13 @@ export function ClientsScreenV2() {
     selectedCustomFieldValuesByField,
     sortMode,
   });
+  const hasFeaturebaseChat = globalPermissions(Permission.AccessSupportScreen);
 
   return (
     <Box
       sx={{
+        ...wideTablePageSx(hasFeaturebaseChat),
+        boxSizing: 'border-box',
         display: 'flex',
         flexDirection: 'column',
         gap: 2,
@@ -116,7 +124,7 @@ export function ClientsScreenV2() {
         py: { xs: 2, md: 3 },
       }}
     >
-      <Stack spacing={2.5}>
+      <Stack spacing={2.5} sx={{ flex: 1, minHeight: 0 }}>
         <Box>
           <Typography className="ph-unmask" {...v2Typography.pageTitle}>
             Clients
@@ -157,23 +165,25 @@ export function ClientsScreenV2() {
           onMoreFiltersClick={openCustomFieldFiltersSidePanel}
           onSortChange={setStoredSortMode}
         />
-        <ClientsDataGridV2
-          assignmentRoles={assignmentColumnRoles}
-          customFields={clientFamilyCustomFieldDefinitions}
-          loading={isLoading}
-          rows={rows}
-          onRowClick={(row) => appNavigate.family(row.familyId)}
-        />
-        <CustomFieldFiltersSidePanel>
-          <PartneringFamilyCustomFieldFiltersSidePanel
-            customFields={customFieldDefinitions}
-            optionsByField={customFieldFilterOptionsByField}
-            selectedValuesByField={selectedCustomFieldValuesByField}
-            onFieldChange={setSelectedCustomFieldValuesForField}
-            onClose={closeCustomFieldFiltersSidePanel}
+        <Box sx={{ flex: 1, minHeight: 0 }}>
+          <ClientsDataGridV2
+            assignmentRoles={assignmentColumnRoles}
+            customFields={clientFamilyCustomFieldDefinitions}
+            loading={isLoading}
+            rows={rows}
+            onRowClick={(row) => appNavigate.family(row.familyId)}
           />
-        </CustomFieldFiltersSidePanel>
+        </Box>
       </Stack>
+      <CustomFieldFiltersSidePanel>
+        <PartneringFamilyCustomFieldFiltersSidePanel
+          customFields={customFieldDefinitions}
+          optionsByField={customFieldFilterOptionsByField}
+          selectedValuesByField={selectedCustomFieldValuesByField}
+          onFieldChange={setSelectedCustomFieldValuesForField}
+          onClose={closeCustomFieldFiltersSidePanel}
+        />
+      </CustomFieldFiltersSidePanel>
     </Box>
   );
 }
