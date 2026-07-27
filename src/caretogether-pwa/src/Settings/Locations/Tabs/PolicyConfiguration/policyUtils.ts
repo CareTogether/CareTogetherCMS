@@ -453,10 +453,16 @@ export function upsertByName<T>(
   item: T,
   getName: (item: T) => string
 ) {
-  return [
-    ...(items ?? []).filter((existing) => getName(existing) !== previousName),
-    item,
-  ];
+  const rows = items ?? [];
+  const existingIndex = rows.findIndex(
+    (existing) => getName(existing) === previousName
+  );
+
+  if (existingIndex === -1) return [...rows, item];
+
+  return rows.map((existing, index) =>
+    index === existingIndex ? item : existing
+  );
 }
 
 export function removeByName<T>(
@@ -689,4 +695,3 @@ export function removeVolunteerFamilyRolePolicyVersion(
     volunteerFamilyRoles,
   });
 }
-
