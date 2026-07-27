@@ -3,8 +3,9 @@ import {
   DataGrid,
   GridColDef,
   GridColumnVisibilityModel,
+  GridRowParams,
 } from '@mui/x-data-grid';
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { v2DataGridStyles } from '../Families/v2DataGridStyles';
 import { v2Typography } from '../Families/v2Typography';
 import { ClientBrowserRowV2 } from './useClientsBrowserViewModel';
@@ -21,6 +22,23 @@ type ClientsDataGridV2Props = {
 };
 
 const CLIENTS_GRID_PAGE_SIZE = 100;
+const clientsGridPageSizeOptions = [CLIENTS_GRID_PAGE_SIZE];
+const clientsGridInitialState = {
+  pagination: {
+    paginationModel: { pageSize: CLIENTS_GRID_PAGE_SIZE },
+  },
+};
+const clientsGridSlots = {
+  noRowsOverlay: ClientsEmptyState,
+};
+
+function getClientsRowHeight() {
+  return 'auto' as const;
+}
+
+function getEstimatedClientsRowHeight() {
+  return 72;
+}
 
 function displayValue(value: string) {
   return value || '-';
@@ -161,6 +179,10 @@ export function ClientsDataGridV2({
   ]);
   const [columnVisibilityModel, setColumnVisibilityModel] =
     useState<GridColumnVisibilityModel>({});
+  const handleRowClick = useCallback(
+    ({ row }: GridRowParams<ClientBrowserRowV2>) => onRowClick(row),
+    [onRowClick]
+  );
 
   useEffect(() => {
     setColumnVisibilityModel((current) => {
@@ -196,20 +218,14 @@ export function ClientsDataGridV2({
         columnHeaderHeight={42}
         density="comfortable"
         disableRowSelectionOnClick
-        getRowHeight={() => 'auto'}
-        getEstimatedRowHeight={() => 72}
+        getRowHeight={getClientsRowHeight}
+        getEstimatedRowHeight={getEstimatedClientsRowHeight}
         loading={loading}
         onColumnVisibilityModelChange={setColumnVisibilityModel}
-        onRowClick={({ row }) => onRowClick(row)}
-        pageSizeOptions={[CLIENTS_GRID_PAGE_SIZE]}
-        initialState={{
-          pagination: {
-            paginationModel: { pageSize: CLIENTS_GRID_PAGE_SIZE },
-          },
-        }}
-        slots={{
-          noRowsOverlay: ClientsEmptyState,
-        }}
+        onRowClick={handleRowClick}
+        pageSizeOptions={clientsGridPageSizeOptions}
+        initialState={clientsGridInitialState}
+        slots={clientsGridSlots}
       />
     </Box>
   );

@@ -6,7 +6,6 @@ import {
   V1Case,
 } from '../GeneratedClient';
 import type { CustomField } from '../GeneratedClient';
-import { filterFamiliesByText } from '../Families/FamilyUtils';
 import { familyNameString } from '../Families/FamilyName';
 import { personNameString } from '../Families/PersonName';
 import {
@@ -38,6 +37,7 @@ import {
   PartneringFamiliesSortMode,
   sortPartneringFamilies,
 } from './PartneringFamilies/sortPartneringFamilies';
+import { simplify } from '../Utilities/stringUtils';
 
 export type ClientBrowserRowV2 = {
   arrangementRows: ArrangementRowV2[];
@@ -51,6 +51,11 @@ export type ClientBrowserRowV2 = {
   phoneNumber?: string;
   primaryContactName?: string;
   status: string;
+};
+
+type ClientBrowserPresentationRowV2 = ClientBrowserRowV2 & {
+  searchTexts: string[];
+  sourceFamily: CombinedFamilyInfo;
 };
 
 type UseClientsBrowserViewModelParameters = {
@@ -103,6 +108,29 @@ function primaryContact(family: CombinedFamilyInfo) {
   return family.family?.adults?.find(
     (adult) => adult.item1?.id === family.family?.primaryFamilyContactPersonId
   )?.item1;
+}
+
+function clientFamilySearchTexts(family: CombinedFamilyInfo) {
+  return [
+    ...(family.family?.adults?.map((adult) =>
+      simplify(`${adult.item1?.firstName} ${adult.item1?.lastName}`)
+    ) ?? []),
+    ...(family.family?.children?.map((child) =>
+      simplify(`${child?.firstName} ${child?.lastName}`)
+    ) ?? []),
+  ];
+}
+
+function matchesSearchText(
+  row: ClientBrowserPresentationRowV2,
+  inputText: string
+) {
+  return (
+    inputText.length === 0 ||
+    row.searchTexts.some((searchText) =>
+      searchText.includes(inputText.toLowerCase())
+    )
+  );
 }
 
 function arrangementSummary(arrangementRows: ArrangementRowV2[]) {
@@ -276,7 +304,7 @@ export function useClientsBrowserViewModel({
         })
         .filter((entry): entry is readonly [string, ArrangementRowV2[]] =>
           Boolean(entry)
-        )
+      )
     );
   }, [
     arrangementsFilter,
@@ -285,65 +313,8 @@ export function useClientsBrowserViewModel({
     personLookup,
     policy?.referralPolicy?.arrangementPolicies,
   ]);
-  const filteredFamilies = useMemo(() => {
-    return sortPartneringFamilies(
-      filterFamiliesByText(partneringFamilies, filterText)
-        .filter((family) =>
-          matchesCustomFieldFilters({
-            item: family,
-            customFields: referralCustomFields,
-            selectedValuesByField: selectedCustomFieldValuesByField,
-            isBlank: (item, fieldName) =>
-              item.partneringFamilyInfo?.openV1Case?.missingCustomFields?.includes(
-                fieldName
-              ) ?? false,
-            getValue: (item, fieldName) =>
-              item.partneringFamilyInfo?.openV1Case?.completedCustomFields?.find(
-                (field) => field.customFieldName === fieldName
-              )?.value,
-          })
-        )
-        .filter((family) => {
-          if (countyFilter.length === 0) return true;
-
-          const county = getFamilyCounty(family);
-          return county === null
-            ? countyFilter.includes(null)
-            : countyFilter.includes(county);
-        })
-        .filter((family) => {
-          if (!canViewFunctionAssignments) return true;
-
-          return matchesAssignmentFilters(
-            family.partneringFamilyInfo?.openV1Case
-              ?.assignedIndividualVolunteers ?? [],
-            assignmentFilters
-          );
-        })
-        .filter((family) =>
-          matchesArrangementsFilter(
-            family,
-            arrangementsFilter,
-            openReferralByFamily
-          )
-        ),
-      sortMode,
-      openReferralByFamily
-    );
-  }, [
-    arrangementsFilter,
-    assignmentFilters,
-    canViewFunctionAssignments,
-    countyFilter,
-    filterText,
-    openReferralByFamily,
-    partneringFamilies,
-    referralCustomFields,
-    selectedCustomFieldValuesByField,
-    sortMode,
-  ]);
-  const rows = useMemo<ClientBrowserRowV2[]>(() => {
-    return filteredFamilies.flatMap((family) => {
+  const presentationRows = useMemo<ClientBrowserPresentationRowV2[]>(() => {
+    return partneringFamilies.flatMap((family) => {
       const familyId = family.family?.id;
 
       if (!familyId) return [];
@@ -353,7 +324,7 @@ export function useClientsBrowserViewModel({
       const assignments =
         family.partneringFamilyInfo?.openV1Case
           ?.assignedIndividualVolunteers ?? [];
-      const row: ClientBrowserRowV2 = {
+      const row: ClientBrowserPresentationRowV2 = {
         id: familyId,
         familyId,
         family: familyNameString(family),
@@ -372,6 +343,8 @@ export function useClientsBrowserViewModel({
             ),
           ])
         ),
+        searchTexts: clientFamilySearchTexts(family),
+        sourceFamily: family,
       };
 
       return [
@@ -387,9 +360,80 @@ export function useClientsBrowserViewModel({
   }, [
     arrangementRowsByFamily,
     assignmentFilterOptions,
-    filteredFamilies,
     clientFamilyCustomFields,
+    partneringFamilies,
     personAndFamilyLookup,
+  ]);
+  const presentationRowByFamilyId = useMemo(
+    () => new Map(presentationRows.map((row) => [row.familyId, row])),
+    [presentationRows]
+  );
+  const rows = useMemo<ClientBrowserRowV2[]>(() => {
+    const filteredPresentationRows = presentationRows
+      .filter((row) => matchesSearchText(row, filterText))
+      .filter((row) =>
+        matchesCustomFieldFilters({
+          item: row.sourceFamily,
+          customFields: referralCustomFields,
+          selectedValuesByField: selectedCustomFieldValuesByField,
+          isBlank: (item, fieldName) =>
+            item.partneringFamilyInfo?.openV1Case?.missingCustomFields?.includes(
+              fieldName
+            ) ?? false,
+          getValue: (item, fieldName) =>
+            item.partneringFamilyInfo?.openV1Case?.completedCustomFields?.find(
+              (field) => field.customFieldName === fieldName
+            )?.value,
+        })
+      )
+      .filter((row) => {
+        if (countyFilter.length === 0) return true;
+
+        const county = getFamilyCounty(row.sourceFamily);
+        return county === null
+          ? countyFilter.includes(null)
+          : countyFilter.includes(county);
+      })
+      .filter((row) => {
+        if (!canViewFunctionAssignments) return true;
+
+        return matchesAssignmentFilters(
+          row.sourceFamily.partneringFamilyInfo?.openV1Case
+            ?.assignedIndividualVolunteers ?? [],
+          assignmentFilters
+        );
+      })
+      .filter((row) =>
+        matchesArrangementsFilter(
+          row.sourceFamily,
+          arrangementsFilter,
+          openReferralByFamily
+        )
+      );
+    const sortedFamilies = sortPartneringFamilies(
+      filteredPresentationRows.map((row) => row.sourceFamily),
+      sortMode,
+      openReferralByFamily
+    );
+
+    return sortedFamilies.flatMap((family) => {
+      const familyId = family.family?.id;
+      const row = familyId ? presentationRowByFamilyId.get(familyId) : undefined;
+
+      return row ? [row] : [];
+    });
+  }, [
+    arrangementsFilter,
+    assignmentFilters,
+    canViewFunctionAssignments,
+    countyFilter,
+    filterText,
+    openReferralByFamily,
+    presentationRowByFamilyId,
+    presentationRows,
+    referralCustomFields,
+    selectedCustomFieldValuesByField,
+    sortMode,
   ]);
   const counties = useMemo(
     () =>

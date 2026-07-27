@@ -1,5 +1,5 @@
 import { Box, Stack, Typography } from '@mui/material';
-import { useState } from 'react';
+import { useCallback, useDeferredValue, useState } from 'react';
 import { useFeatureFlagEnabled } from 'posthog-js/react';
 import { Permission } from '../GeneratedClient';
 import { useScreenTitle } from '../Shell/ShellScreenTitle';
@@ -7,7 +7,10 @@ import { v2Typography } from '../Families/v2Typography';
 import { useLocalStorage } from '../Hooks/useLocalStorage';
 import { ClientsBrowserToolbarV2 } from './ClientsBrowserToolbarV2';
 import { ClientsDataGridV2 } from './ClientsDataGridV2';
-import { useClientsBrowserViewModel } from './useClientsBrowserViewModel';
+import {
+  ClientBrowserRowV2,
+  useClientsBrowserViewModel,
+} from './useClientsBrowserViewModel';
 import { useAppNavigate } from '../Hooks/useAppNavigate';
 import {
   normalizePartneringFamiliesSortMode,
@@ -54,6 +57,7 @@ export function ClientsScreenV2() {
     functionAssignmentsEnabled === true &&
     permissions(Permission.ViewV1CaseFunctionAssignments);
   const [searchValue, setSearchValue] = useState('');
+  const deferredSearchValue = useDeferredValue(searchValue);
   const [countyFilter, setCountyFilter] = useState<(string | null)[]>([]);
   const [assignmentFilters, setAssignmentFilters] =
     useState<AssignmentFilterSelectionsByRole>({});
@@ -93,6 +97,22 @@ export function ClientsScreenV2() {
   const activeCustomFieldFilterCount = Object.values(
     selectedCustomFieldValuesByField
   ).filter((selectedValues) => selectedValues.length > 0).length;
+  const assignmentPersonLookup = useCallback(
+    (personId: string) => personAndFamilyLookup(personId).person,
+    [personAndFamilyLookup]
+  );
+  const handleAssignmentFilterChange = useCallback(
+    (assignmentRole: string, selectedValues: (string | null)[]) =>
+      setAssignmentFilters((current) => ({
+        ...current,
+        [assignmentRole]: selectedValues,
+      })),
+    []
+  );
+  const handleRowClick = useCallback(
+    (row: ClientBrowserRowV2) => appNavigate.family(row.familyId),
+    [appNavigate]
+  );
   const {
     assignmentFilterAssignments,
     assignmentColumnRoles,
@@ -106,7 +126,7 @@ export function ClientsScreenV2() {
     assignmentFilters,
     canViewFunctionAssignments,
     countyFilter,
-    filterText: searchValue,
+    filterText: deferredSearchValue,
     selectedCustomFieldValuesByField,
     sortMode,
   });
@@ -145,20 +165,13 @@ export function ClientsScreenV2() {
           sortValue={sortMode}
           assignmentFilterAssignments={assignmentFilterAssignments}
           assignmentFilters={assignmentFilters}
-          assignmentPersonLookup={(personId) =>
-            personAndFamilyLookup(personId).person
-          }
+          assignmentPersonLookup={assignmentPersonLookup}
           assignmentRoles={
             canViewFunctionAssignments ? assignmentFilterOptions : []
           }
           activeCustomFieldFilterCount={activeCustomFieldFilterCount}
           customFieldCount={customFieldDefinitions.length}
-          onAssignmentFilterChange={(assignmentRole, selectedValues) =>
-            setAssignmentFilters((current) => ({
-              ...current,
-              [assignmentRole]: selectedValues,
-            }))
-          }
+          onAssignmentFilterChange={handleAssignmentFilterChange}
           onSearchChange={setSearchValue}
           onStatusChange={setStoredArrangementsFilter}
           onCountyChange={setCountyFilter}
@@ -171,7 +184,7 @@ export function ClientsScreenV2() {
             customFields={clientFamilyCustomFieldDefinitions}
             loading={isLoading}
             rows={rows}
-            onRowClick={(row) => appNavigate.family(row.familyId)}
+            onRowClick={handleRowClick}
           />
         </Box>
       </Stack>
