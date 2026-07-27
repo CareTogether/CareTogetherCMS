@@ -1,5 +1,6 @@
 import CloseIcon from '@mui/icons-material/Close';
 import {
+  Alert,
   Box,
   Button,
   Checkbox,
@@ -73,6 +74,58 @@ type ArrangementRequirementManagementDrawerV2Props = {
 };
 
 const UPLOAD_NEW = '__uploadnew__';
+const NON_ISO_8859_1_CODE_POINT_ERROR =
+  'String contains non ISO-8859-1 code point.';
+
+class RequirementDocumentUploadError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = 'RequirementDocumentUploadError';
+  }
+}
+
+function errorMessage(error: unknown) {
+  return error instanceof Error ? error.message : '';
+}
+
+function nonIso88591FilenameCharacters(fileName: string) {
+  return Array.from(
+    new Set(
+      Array.from(fileName).filter(
+        (character) => character.codePointAt(0)! > 255
+      )
+    )
+  );
+}
+
+function formatCodePoint(character: string) {
+  return `U+${character.codePointAt(0)!.toString(16).toUpperCase().padStart(4, '0')}`;
+}
+
+function formatUnsupportedFilenameCharacters(fileName: string) {
+  return nonIso88591FilenameCharacters(fileName)
+    .map((character) => `"${character}" (${formatCodePoint(character)})`)
+    .join(', ');
+}
+
+function formatDocumentUploadError(error: unknown, fileName: string) {
+  const message = errorMessage(error);
+  const unsupportedCharacters = formatUnsupportedFilenameCharacters(fileName);
+
+  if (message.includes(NON_ISO_8859_1_CODE_POINT_ERROR)) {
+    if (unsupportedCharacters !== '') {
+      return `Upload failed. Rename the file without ${unsupportedCharacters}. Use basic letters, numbers, spaces, hyphens, or underscores.`;
+    }
+
+    return 'Upload failed. Rename the file using basic letters, numbers, spaces, hyphens, or underscores, then try again.';
+  }
+
+  if (message.trim() !== '') {
+    return `Upload failed: ${message}`;
+  }
+
+  return 'Upload failed. Please try again.';
+}
 
 function requirementName(workflow: ArrangementRequirementWorkflowV2) {
   if (workflow.kind === 'missing') {
@@ -214,6 +267,7 @@ export function ArrangementRequirementManagementDrawerV2({
   const [applyToArrangements, setApplyToArrangements] = useState<Arrangement[]>(
     []
   );
+  const [uploadError, setUploadError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
 
   const requirementTitle = workflow ? requirementName(workflow) : '';
@@ -307,6 +361,7 @@ export function ArrangementRequirementManagementDrawerV2({
     setExemptionExpiresAtLocal(null);
     setExemptionExpiresAtError(false);
     setExemptAll(false);
+    setUploadError(null);
     setSaving(false);
   }, [open, workflow]);
 
@@ -374,12 +429,19 @@ export function ArrangementRequirementManagementDrawerV2({
       throw new Error('No document file selected.');
     }
 
-    const uploadedDocumentId = await uploadFamilyFileToTenant(
-      organizationId,
-      locationId,
-      familyId,
-      documentFile
-    );
+    let uploadedDocumentId: string;
+    try {
+      uploadedDocumentId = await uploadFamilyFileToTenant(
+        organizationId,
+        locationId,
+        familyId,
+        documentFile
+      );
+    } catch (error: unknown) {
+      throw new RequirementDocumentUploadError(
+        formatDocumentUploadError(error, documentFile.name)
+      );
+    }
 
     await directory.uploadFamilyDocument(
       familyId,
@@ -591,6 +653,7 @@ export function ArrangementRequirementManagementDrawerV2({
 
   const save = async () => {
     setSaving(true);
+    setUploadError(null);
 
     try {
       await withBackdrop(async () => {
@@ -606,6 +669,13 @@ export function ArrangementRequirementManagementDrawerV2({
 
         onClose();
       });
+    } catch (error: unknown) {
+      if (error instanceof RequirementDocumentUploadError) {
+        setUploadError(error.message);
+        return;
+      }
+
+      throw error;
     } finally {
       setSaving(false);
     }
@@ -789,9 +859,10 @@ export function ArrangementRequirementManagementDrawerV2({
                         labelId="requirement-document-label"
                         label="Document"
                         value={documentId}
-                        onChange={(event) =>
-                          setDocumentId(event.target.value as string)
-                        }
+                        onChange={(event) => {
+                          setDocumentId(event.target.value as string);
+                          setUploadError(null);
+                        }}
                       >
                         <MenuItem value="">None</MenuItem>
                         <MenuItem value={UPLOAD_NEW}>Upload new...</MenuItem>
@@ -813,9 +884,10 @@ export function ArrangementRequirementManagementDrawerV2({
                           id="requirement-document-file"
                           multiple={false}
                           type="file"
-                          onChange={(event) =>
-                            setDocumentFile(event.target.files?.[0] ?? null)
-                          }
+                          onChange={(event) => {
+                            setDocumentFile(event.target.files?.[0] ?? null);
+                            setUploadError(null);
+                          }}
                         />
                       </Box>
                     )}
@@ -933,6 +1005,8 @@ export function ArrangementRequirementManagementDrawerV2({
             )}
           </Stack>
         )}
+
+        {uploadError && <Alert severity="error">{uploadError}</Alert>}
 
         <Stack direction="row" spacing={1} sx={{ justifyContent: 'flex-end' }}>
           <Button color="secondary" disabled={saving} onClick={closeDrawer}>

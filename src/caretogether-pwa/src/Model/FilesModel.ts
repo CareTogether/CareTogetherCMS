@@ -2,8 +2,14 @@ import { AnonymousCredential, BlockBlobClient } from '@azure/storage-blob';
 import { api } from '../Api/Api';
 import type { IDocumentUploadInfo } from '../GeneratedClient';
 
-type GenerateUploadValetUrl = (documentId: string) => Promise<IDocumentUploadInfo>;
+type GenerateUploadValetUrl = (
+  documentId: string
+) => Promise<IDocumentUploadInfo>;
 type GetReadValetUrl = () => Promise<string>;
+
+function contentDispositionForDownload(fileName: string) {
+  return `attachment; filename*=UTF-8''${encodeURIComponent(fileName)}`;
+}
 
 async function uploadFileToTenant(
   formFile: File,
@@ -20,7 +26,7 @@ async function uploadFileToTenant(
   await blobClient.uploadData(fileBuffer, {
     blobHTTPHeaders: {
       blobContentType: 'application/octet-stream; charset=utf-8',
-      blobContentDisposition: `attachment; filename="${formFile.name}"`,
+      blobContentDisposition: contentDispositionForDownload(formFile.name),
     },
   });
 
@@ -38,7 +44,7 @@ export async function uploadFamilyFileToTenant(
   familyId: string,
   formFile: File
 ) {
-  return uploadFileToTenant(formFile, documentId =>
+  return uploadFileToTenant(formFile, (documentId) =>
     api.files.generateFamilyDocumentUploadValetUrl(
       organizationId,
       locationId,
@@ -70,7 +76,7 @@ export async function uploadCommunityFileToTenant(
   communityId: string,
   formFile: File
 ) {
-  return uploadFileToTenant(formFile, documentId =>
+  return uploadFileToTenant(formFile, (documentId) =>
     api.files.generateCommunityDocumentUploadValetUrl(
       organizationId,
       locationId,
@@ -102,7 +108,7 @@ export async function uploadV1ReferralFileToTenant(
   referralId: string,
   formFile: File
 ) {
-  return uploadFileToTenant(formFile, documentId =>
+  return uploadFileToTenant(formFile, (documentId) =>
     api.files.generateV1ReferralDocumentUploadValetUrl(
       organizationId,
       locationId,
