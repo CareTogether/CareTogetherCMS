@@ -4,6 +4,7 @@ import {
   ArrangementFunction,
   ArrangementPhase,
   ArrangementPolicy,
+  ChildInvolvement,
   CombinedFamilyInfo,
   FamilyVolunteerAssignment,
   FunctionRequirement,
@@ -38,8 +39,6 @@ export type ArrangementRowV2 = {
   cancelledDate?: string;
   plannedStartDate?: string;
   plannedEndDate?: string;
-  currentLocationLabel?: string;
-  nextPlannedLocationLabel?: string;
   reason?: string;
   comments?: string;
   functionSummaries: ArrangementFunctionSummaryV2[];
@@ -49,12 +48,21 @@ export type ArrangementRowV2 = {
   v1Case: V1Case;
 };
 
+export type ChildcareArrangementRowV2 = ArrangementRowV2 & {
+  arrangementType: 'Childcare';
+  currentLocationLabel?: string;
+  nextPlannedLocationLabel?: string;
+};
+
 type BuildArrangementRowsV2Parameters = {
   arrangements: Arrangement[];
   arrangementPolicies?: ArrangementPolicy[];
   family: CombinedFamilyInfo;
   v1Case: V1Case;
-  personLabel: (familyId: string | undefined, personId: string | undefined) => string;
+  personLabel: (
+    familyId: string | undefined,
+    personId: string | undefined
+  ) => string;
   familyLabel: (familyId: string | undefined) => string;
 };
 
@@ -80,7 +88,7 @@ function caseLabel(v1Case: V1Case) {
 }
 
 function formatDate(date?: Date) {
-  return date ? format(date, 'M/d/yyyy') : undefined;
+  return date ? format(date, 'M/d/yy') : undefined;
 }
 
 function functionRequirementLabel(requirement?: FunctionRequirement) {
@@ -142,7 +150,8 @@ function nextPlannedLocationLabel(
           .reverse()
           .find(
             (entry) =>
-              entry.childLocationFamilyId !== currentLocation?.childLocationFamilyId
+              entry.childLocationFamilyId !==
+              currentLocation?.childLocationFamilyId
           )
       : undefined;
 
@@ -214,7 +223,9 @@ function buildFunctionSummaries({
             functionPolicy.variants.length > 0 &&
             !assignment.arrangementFunctionVariant
         )
-        .map((assignment) => assignmentLabel(assignment, personLabel, familyLabel));
+        .map((assignment) =>
+          assignmentLabel(assignment, personLabel, familyLabel)
+        );
 
       return {
         functionName: functionPolicy.functionName,
@@ -242,16 +253,17 @@ export function buildArrangementRowsV2({
       arrangementPolicies,
       arrangement
     );
-    const individualAssignmentLabels = arrangement.individualVolunteerAssignments
-      ?.map((assignment) =>
-        personLabel(assignment.familyId, assignment.personId)
-      )
-      .filter(Boolean);
+    const individualAssignmentLabels =
+      arrangement.individualVolunteerAssignments
+        ?.map((assignment) =>
+          personLabel(assignment.familyId, assignment.personId)
+        )
+        .filter(Boolean);
     const familyAssignmentLabels = arrangement.familyVolunteerAssignments
       ?.map((assignment) => familyLabel(assignment.familyId))
       .filter(Boolean);
 
-    return {
+    const arrangementRow: ArrangementRowV2 = {
       id: arrangement.id,
       arrangementType: arrangement.arrangementType || 'Arrangement',
       caseLabel: caseLabel(v1Case),
@@ -271,11 +283,6 @@ export function buildArrangementRowsV2({
       cancelledDate: formatDate(arrangement.cancelledAtUtc),
       plannedStartDate: formatDate(arrangement.plannedStartUtc),
       plannedEndDate: formatDate(arrangement.plannedEndUtc),
-      currentLocationLabel: currentLocationLabel(arrangement, familyLabel),
-      nextPlannedLocationLabel: nextPlannedLocationLabel(
-        arrangement,
-        familyLabel
-      ),
       reason: arrangement.reason,
       comments: arrangement.comments,
       functionSummaries: buildFunctionSummaries({
@@ -289,5 +296,23 @@ export function buildArrangementRowsV2({
       partneringFamily: family,
       v1Case,
     };
+
+    if (
+      arrangementPolicy?.childInvolvement ===
+      ChildInvolvement.NoChildInvolvement
+    ) {
+      return arrangementRow;
+    } else {
+      const childcareArrangementRow: ChildcareArrangementRowV2 = {
+        ...arrangementRow,
+        arrangementType: 'Childcare',
+        currentLocationLabel: currentLocationLabel(arrangement, familyLabel),
+        nextPlannedLocationLabel: nextPlannedLocationLabel(
+          arrangement,
+          familyLabel
+        ),
+      };
+      return childcareArrangementRow;
+    }
   });
 }

@@ -1,11 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useFeatureFlagEnabled, usePostHog } from 'posthog-js/react';
 import { Navigate, Route, Routes, useParams } from 'react-router-dom';
-import {
-  FAMILY_SCREEN_V2_EARLY_ACCESS_FEATURE_FLAG,
-  FAMILY_SCREEN_V2_FEATURE_FLAG,
-} from '../featureFlags';
-import { getEarlyAccessEnrollment } from '../Utilities/Instrumentation/earlyAccessEnrollment';
+import { FAMILY_SCREEN_V2_EARLY_ACCESS_FEATURE_FLAG } from '../featureFlags';
 import { ProgressBackdrop } from '../Shell/ProgressBackdrop';
 import { V1Cases } from './V1Cases';
 import { ClientsScreenV2 } from './ClientsScreenV2';
@@ -18,35 +14,18 @@ function ClientFamilyRedirect() {
 
 export function ClientsScreenRoute() {
   const posthog = usePostHog();
-  const rolloutEnabled = useFeatureFlagEnabled(FAMILY_SCREEN_V2_FEATURE_FLAG);
+  const earlyAccessEnabled = useFeatureFlagEnabled(
+    FAMILY_SCREEN_V2_EARLY_ACCESS_FEATURE_FLAG
+  );
   const [featureFlagsLoaded, setFeatureFlagsLoaded] = useState(
     () => posthog.featureFlags.hasLoadedFlags
   );
-  const [earlyAccessEnrollment, setEarlyAccessEnrollment] = useState<
-    boolean | undefined
-  >(() =>
-    getEarlyAccessEnrollment(
-      posthog,
-      FAMILY_SCREEN_V2_EARLY_ACCESS_FEATURE_FLAG
-    )
-  );
 
   useEffect(() => {
-    function updateEarlyAccessEnrollment() {
-      setEarlyAccessEnrollment(
-        getEarlyAccessEnrollment(
-          posthog,
-          FAMILY_SCREEN_V2_EARLY_ACCESS_FEATURE_FLAG
-        )
-      );
-    }
-
     setFeatureFlagsLoaded(posthog.featureFlags.hasLoadedFlags);
-    updateEarlyAccessEnrollment();
 
     return posthog.onFeatureFlags(() => {
       setFeatureFlagsLoaded(true);
-      updateEarlyAccessEnrollment();
     });
   }, [posthog]);
 
@@ -58,8 +37,7 @@ export function ClientsScreenRoute() {
     );
   }
 
-  const showClientsScreenV2 =
-    earlyAccessEnrollment ?? (rolloutEnabled === true);
+  const showClientsScreenV2 = earlyAccessEnabled === true;
 
   if (!showClientsScreenV2) {
     return <V1Cases />;

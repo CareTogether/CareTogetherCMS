@@ -6,9 +6,12 @@ import { ReactPlugin } from '@microsoft/applicationinsights-react-js';
 import { globalMsalInstance } from './Authentication/Auth';
 
 const aiReactPlugin = new ReactPlugin();
-const appInsights = new ApplicationInsights({
+const appInsightsConnectionString = import.meta.env
+  .VITE_APP_APPINSIGHTS_CONNECTIONSTRING;
+const appInsightsEnabled = Boolean(appInsightsConnectionString?.trim());
+const configuredAppInsights = new ApplicationInsights({
   config: {
-    connectionString: import.meta.env.VITE_APP_APPINSIGHTS_CONNECTIONSTRING,
+    connectionString: appInsightsConnectionString,
     enableAutoRouteTracking: true,
     enableCorsCorrelation: true,
     enableRequestHeaderTracking: true,
@@ -33,6 +36,8 @@ const appInsights = new ApplicationInsights({
     // ['*.auth0.com'] to exclude correlation headers from requests sent to the
     // Auth0 identity provider.
     correlationHeaderExcludedDomains: [
+      'localhost',
+      '127.0.0.1',
       '*.featurebase.app',
       'do.featurebase.app',
       'featurebase.app',
@@ -40,14 +45,24 @@ const appInsights = new ApplicationInsights({
     extensions: [aiReactPlugin],
   },
 });
-appInsights.loadAppInsights();
 
-appInsights.addTelemetryInitializer((env: ITelemetryItem) => {
-  const activeAccount = globalMsalInstance.getActiveAccount();
-  if (activeAccount) {
-    env.tags = env.tags || [];
-    env.tags['caretogether.userId'] = activeAccount.localAccountId;
-  }
-});
+if (appInsightsEnabled) {
+  configuredAppInsights.loadAppInsights();
+
+  configuredAppInsights.addTelemetryInitializer((env: ITelemetryItem) => {
+    const activeAccount = globalMsalInstance.getActiveAccount();
+    if (activeAccount) {
+      env.tags = env.tags || [];
+      env.tags['caretogether.userId'] = activeAccount.localAccountId;
+    }
+  });
+}
+
+const appInsights = appInsightsEnabled
+  ? configuredAppInsights
+  : {
+      trackEvent: () => undefined,
+      trackTrace: () => undefined,
+    };
 
 export { aiReactPlugin, appInsights };

@@ -239,7 +239,9 @@ export function ArrangementRequirementManagementDrawerV2({
       ? workflow.context
       : null;
   const selectedV1Case = arrangementContext
-    ? v1CasesForFamily.find((v1Case) => v1Case.id === arrangementContext.v1CaseId)
+    ? v1CasesForFamily.find(
+        (v1Case) => v1Case.id === arrangementContext.v1CaseId
+      )
     : undefined;
   const availableArrangements = useMemo(
     () =>
@@ -247,44 +249,44 @@ export function ArrangementRequirementManagementDrawerV2({
       selectedV1Case &&
       workflow.requirement instanceof MissingArrangementRequirement
         ? selectedV1Case.arrangements!.filter((arrangement) =>
-          [
-            ...(arrangement.missingRequirements ?? []),
-            ...(arrangement.missingOptionalRequirements ?? []),
-          ].some((missingRequirementInfo) => {
-            if (workflow.context.kind === 'Family Volunteer Assignment') {
+            [
+              ...(arrangement.missingRequirements ?? []),
+              ...(arrangement.missingOptionalRequirements ?? []),
+            ].some((missingRequirementInfo) => {
+              if (workflow.context.kind === 'Family Volunteer Assignment') {
+                return (
+                  missingRequirementInfo.action?.actionName ===
+                    workflow.requirement.action?.actionName &&
+                  missingRequirementInfo.arrangementFunction ===
+                    workflow.context.assignment.arrangementFunction &&
+                  missingRequirementInfo.arrangementFunctionVariant ===
+                    workflow.context.assignment.arrangementFunctionVariant &&
+                  missingRequirementInfo.volunteerFamilyId ===
+                    workflow.context.assignment.familyId
+                );
+              }
+
+              if (workflow.context.kind === 'Individual Volunteer Assignment') {
+                return (
+                  missingRequirementInfo.action?.actionName ===
+                    workflow.requirement.action?.actionName &&
+                  missingRequirementInfo.arrangementFunction ===
+                    workflow.context.assignment.arrangementFunction &&
+                  missingRequirementInfo.arrangementFunctionVariant ===
+                    workflow.context.assignment.arrangementFunctionVariant &&
+                  missingRequirementInfo.volunteerFamilyId ===
+                    workflow.context.assignment.familyId &&
+                  missingRequirementInfo.personId ===
+                    workflow.context.assignment.personId
+                );
+              }
+
               return (
                 missingRequirementInfo.action?.actionName ===
-                  workflow.requirement.action?.actionName &&
-                missingRequirementInfo.arrangementFunction ===
-                  workflow.context.assignment.arrangementFunction &&
-                missingRequirementInfo.arrangementFunctionVariant ===
-                  workflow.context.assignment.arrangementFunctionVariant &&
-                missingRequirementInfo.volunteerFamilyId ===
-                  workflow.context.assignment.familyId
+                workflow.requirement.action?.actionName
               );
-            }
-
-            if (workflow.context.kind === 'Individual Volunteer Assignment') {
-              return (
-                missingRequirementInfo.action?.actionName ===
-                  workflow.requirement.action?.actionName &&
-                missingRequirementInfo.arrangementFunction ===
-                  workflow.context.assignment.arrangementFunction &&
-                missingRequirementInfo.arrangementFunctionVariant ===
-                  workflow.context.assignment.arrangementFunctionVariant &&
-                missingRequirementInfo.volunteerFamilyId ===
-                  workflow.context.assignment.familyId &&
-                missingRequirementInfo.personId ===
-                  workflow.context.assignment.personId
-              );
-            }
-
-            return (
-              missingRequirementInfo.action?.actionName ===
-              workflow.requirement.action?.actionName
-            );
-          })
-        )
+            })
+          )
         : [],
     [selectedV1Case, workflow]
   );
@@ -312,7 +314,7 @@ export function ArrangementRequirementManagementDrawerV2({
     if (!open || workflow?.kind !== 'missing') return;
 
     setApplyToArrangements(
-      arrangementContext?.kind === 'Arrangement'
+      arrangementContext
         ? availableArrangements.filter(
             (arrangement) => arrangement.id === arrangementContext.arrangementId
           )
@@ -345,7 +347,8 @@ export function ArrangementRequirementManagementDrawerV2({
         !completedAtError &&
         ((documentId === UPLOAD_NEW && documentFile) ||
           (documentId !== UPLOAD_NEW && documentId !== '') ||
-          requirementPolicy.documentLink !== DocumentLinkRequirement.Required) &&
+          requirementPolicy.documentLink !==
+            DocumentLinkRequirement.Required) &&
         (notes !== '' ||
           requirementPolicy.noteEntry !== NoteEntryRequirement.Required)
       : additionalComments !== '' && !exemptionExpiresAtError);
@@ -406,7 +409,9 @@ export function ArrangementRequirementManagementDrawerV2({
   const completeMissingRequirement = async () => {
     if (!requirementPolicy || workflow.kind !== 'missing') return;
     if (!isArrangementRequirementContext(workflow.context)) {
-      throw new Error(`Invalid requirement context '${workflow.context.kind}'.`);
+      throw new Error(
+        `Invalid requirement context '${workflow.context.kind}'.`
+      );
     }
 
     const document = await uploadDocument();
@@ -460,7 +465,9 @@ export function ArrangementRequirementManagementDrawerV2({
   const exemptMissingRequirement = async () => {
     if (workflow.kind !== 'missing') return;
     if (!isArrangementRequirementContext(workflow.context)) {
-      throw new Error(`Invalid requirement context '${workflow.context.kind}'.`);
+      throw new Error(
+        `Invalid requirement context '${workflow.context.kind}'.`
+      );
     }
 
     const arrangementIds = applyToArrangements.map(
@@ -509,7 +516,9 @@ export function ArrangementRequirementManagementDrawerV2({
   const markRequirementIncomplete = async () => {
     if (workflow.kind !== 'completed') return;
     if (!isArrangementRequirementContext(workflow.context)) {
-      throw new Error(`Invalid requirement context '${workflow.context.kind}'.`);
+      throw new Error(
+        `Invalid requirement context '${workflow.context.kind}'.`
+      );
     }
 
     if (workflow.context.kind === 'Arrangement') {
@@ -545,7 +554,9 @@ export function ArrangementRequirementManagementDrawerV2({
   const removeRequirementExemption = async () => {
     if (workflow.kind !== 'exempted') return;
     if (!isArrangementRequirementContext(workflow.context)) {
-      throw new Error(`Invalid requirement context '${workflow.context.kind}'.`);
+      throw new Error(
+        `Invalid requirement context '${workflow.context.kind}'.`
+      );
     }
 
     if (workflow.context.kind === 'Arrangement') {
@@ -649,7 +660,10 @@ export function ArrangementRequirementManagementDrawerV2({
               {contextLabel(workflow.context)}
             </Typography>
           </Box>
-          <IconButton aria-label="Close requirement management" onClick={onClose}>
+          <IconButton
+            aria-label="Close requirement management"
+            onClick={onClose}
+          >
             <CloseIcon />
           </IconButton>
         </Stack>
@@ -807,12 +821,14 @@ export function ArrangementRequirementManagementDrawerV2({
                     )}
                   </Stack>
                 )}
-                {(requirementPolicy.noteEntry === NoteEntryRequirement.Allowed ||
+                {(requirementPolicy.noteEntry ===
+                  NoteEntryRequirement.Allowed ||
                   requirementPolicy.noteEntry ===
                     NoteEntryRequirement.Required) && (
                   <TextField
                     required={
-                      requirementPolicy.noteEntry === NoteEntryRequirement.Required
+                      requirementPolicy.noteEntry ===
+                      NoteEntryRequirement.Required
                     }
                     label="Notes"
                     placeholder="Space for any general notes"
@@ -877,7 +893,9 @@ export function ArrangementRequirementManagementDrawerV2({
                   minRows={2}
                   maxRows={5}
                   value={additionalComments}
-                  onChange={(event) => setAdditionalComments(event.target.value)}
+                  onChange={(event) =>
+                    setAdditionalComments(event.target.value)
+                  }
                 />
                 <ValidateDatePicker
                   label="When does this exemption expire? (Default is never)"
