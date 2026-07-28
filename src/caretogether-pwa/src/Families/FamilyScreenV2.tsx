@@ -204,8 +204,9 @@ export function FamilyScreenV2() {
     useState(false);
   const [addAdultDialogOpen, setAddAdultDialogOpen] = useState(false);
   const [addChildDialogOpen, setAddChildDialogOpen] = useState(false);
-  const [selectedFamilyMemberRow, setSelectedFamilyMemberRow] =
-    useState<FamilyMemberRowV2 | null>(null);
+  const [selectedFamilyMemberRowId, setSelectedFamilyMemberRowId] = useState<
+    string | null
+  >(null);
   const [addNoteDialogOpen, setAddNoteDialogOpen] = useState(false);
   const [recentFamilyNoteAction, setRecentFamilyNoteAction] = useState<{
     action: RecentNoteAction;
@@ -438,7 +439,7 @@ export function FamilyScreenV2() {
   }
 
   function openFamilyMemberDrawer(row: FamilyMemberRowV2) {
-    setSelectedFamilyMemberRow(row);
+    setSelectedFamilyMemberRowId(row.id);
   }
 
   function openAddNoteDialog() {
@@ -487,6 +488,12 @@ export function FamilyScreenV2() {
     policy,
     selectedV1Case,
   });
+  const selectedFamilyMemberRow = useMemo(
+    () =>
+      familyMemberRows.find((row) => row.id === selectedFamilyMemberRowId) ??
+      null,
+    [familyMemberRows, selectedFamilyMemberRowId]
+  );
   const primaryContactPerson = family?.family?.adults?.find(
     (adult) => adult.item1?.id === family.family?.primaryFamilyContactPersonId
   )?.item1;
@@ -1088,7 +1095,7 @@ export function FamilyScreenV2() {
         onArrangementClose={() => setSelectedArrangementRowId(null)}
         onCloseCaseDrawerClose={() => setCloseCaseDrawerOpen(false)}
         onFamilyCompleteOtherClose={() => setFamilyCompleteOtherOpen(false)}
-        onFamilyMemberClose={() => setSelectedFamilyMemberRow(null)}
+        onFamilyMemberClose={() => setSelectedFamilyMemberRowId(null)}
         onOpenNewV1CaseDialogClose={() => setOpenNewV1CaseDialogOpen(false)}
         onRecentFamilyNoteActionClose={() => setRecentFamilyNoteAction(null)}
         onRecentReferralNoteActionClose={() =>
