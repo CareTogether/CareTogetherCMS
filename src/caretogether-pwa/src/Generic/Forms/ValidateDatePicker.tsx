@@ -45,6 +45,9 @@ export function ValidateDatePicker({
     if (onErrorChange) onErrorChange(hasError);
   }, [value, onErrorChange]);
 
+  const displayedError = error || Boolean(textFieldProps?.error);
+  const displayedHelperText = helperText || textFieldProps?.helperText;
+
   const commonProps = {
     ...props,
     value,
@@ -56,8 +59,8 @@ export function ValidateDatePicker({
     slotProps: {
       textField: {
         ...textFieldProps,
-        error,
-        helperText,
+        error: displayedError,
+        helperText: displayedHelperText,
         fullWidth: true,
       },
     },

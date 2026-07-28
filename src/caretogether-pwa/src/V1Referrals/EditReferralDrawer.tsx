@@ -1,14 +1,16 @@
 import Grid from '@mui/material/Grid';
-import { Button, Drawer, TextField, Typography } from '@mui/material';
+import { Alert, Button, Drawer, TextField, Typography } from '@mui/material';
 import { Controller, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useRecoilValue } from 'recoil';
+import { useState } from 'react';
 
 import { ValidateDatePicker } from '../Generic/Forms/ValidateDatePicker';
 import { useV1ReferralsModel } from '../Model/V1ReferralsModel';
 import { policyData } from '../Model/ConfigurationModel';
 import { CustomField, V1Referral } from '../GeneratedClient';
 import { CustomFieldInput } from '../Generic/CustomFieldInput';
+import { useBackdrop } from '../Hooks/useBackdrop';
 
 import {
   addReferralSchema,
@@ -25,6 +27,8 @@ export function EditReferralDrawer({
   onClose,
 }: EditReferralDrawerProps) {
   const policy = useRecoilValue(policyData);
+  const withBackdrop = useBackdrop();
+  const [saveError, setSaveError] = useState<string | null>(null);
 
   const { updateReferralDetails, updateCustomReferralField } =
     useV1ReferralsModel();
@@ -53,20 +57,30 @@ export function EditReferralDrawer({
   });
 
   const onSubmit = async (data: AddReferralFormValues) => {
-    await updateReferralDetails(referral.referralId, {
-      openedAtUtc: data.openedAtLocal,
-      title: data.title,
-      comment: data.comment || undefined,
-    });
+    setSaveError(null);
 
-    for (const field of referralCustomFields) {
-      const value = data.customFields?.[field.name];
+    try {
+      await withBackdrop(async () => {
+        await updateReferralDetails(referral.referralId, {
+          openedAtUtc: data.openedAtLocal,
+          title: data.title,
+          comment: data.comment || undefined,
+        });
 
-      if (value !== undefined) {
-        await updateCustomReferralField(referral.referralId, field, value);
-      }
+        for (const field of referralCustomFields) {
+          const value = data.customFields?.[field.name];
+
+          if (value !== undefined) {
+            await updateCustomReferralField(referral.referralId, field, value);
+          }
+        }
+        onClose();
+      });
+    } catch {
+      setSaveError(
+        'We could not save the referral. Some changes may have been saved. Please try again.'
+      );
     }
-    onClose();
   };
 
   return (
@@ -84,7 +98,11 @@ export function EditReferralDrawer({
         },
       }}
     >
-      <form onSubmit={handleSubmit(onSubmit)}>
+      <form
+        onSubmit={handleSubmit(onSubmit, () =>
+          setSaveError('Please fix the highlighted fields and try again.')
+        )}
+      >
         <Grid container spacing={2}>
           <Grid size={12}>
             <Typography variant="h6">Edit Referral</Typography>
@@ -174,6 +192,12 @@ export function EditReferralDrawer({
             />
           </Grid>
 
+          {saveError && (
+            <Grid size={12}>
+              <Alert severity="error">{saveError}</Alert>
+            </Grid>
+          )}
+
           <Grid size={12} sx={{ textAlign: 'right' }}>
             <Button
               color="secondary"
@@ -191,7 +215,7 @@ export function EditReferralDrawer({
               type="submit"
               disabled={isSubmitting}
             >
-              Save
+              {isSubmitting ? 'Saving...' : 'Save'}
             </Button>
           </Grid>
         </Grid>

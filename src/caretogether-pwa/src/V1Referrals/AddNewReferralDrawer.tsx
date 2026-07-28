@@ -1,8 +1,9 @@
 import Grid from '@mui/material/Grid';
-import { Button, Drawer, TextField, Typography } from '@mui/material';
+import { Alert, Button, Drawer, TextField, Typography } from '@mui/material';
 import { Controller, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useRecoilValue } from 'recoil';
+import { useState } from 'react';
 
 import { ValidateDatePicker } from '../Generic/Forms/ValidateDatePicker';
 import { useV1ReferralsModel } from '../Model/V1ReferralsModel';
@@ -14,6 +15,7 @@ import {
 } from '../V1Referrals/ReferralSchema';
 import { useAppNavigate } from '../Hooks/useAppNavigate';
 import { ReferralCustomFieldsSection } from '../V1Referrals/ReferralCustomFieldsSection';
+import { useBackdrop } from '../Hooks/useBackdrop';
 
 interface AddNewReferralDrawerProps {
   onClose: () => void;
@@ -22,6 +24,8 @@ interface AddNewReferralDrawerProps {
 export function AddNewReferralDrawer({ onClose }: AddNewReferralDrawerProps) {
   const policy = useRecoilValue(policyData);
   const { createReferral, updateCustomReferralField } = useV1ReferralsModel();
+  const withBackdrop = useBackdrop();
+  const [saveError, setSaveError] = useState<string | null>(null);
 
   const referralCustomFields: CustomField[] =
     policy.referralPolicy?.customFields ?? [];
@@ -45,24 +49,33 @@ export function AddNewReferralDrawer({ onClose }: AddNewReferralDrawerProps) {
 
   const onSubmit = async (data: AddReferralFormValues) => {
     const referralId = crypto.randomUUID();
+    setSaveError(null);
 
-    await createReferral(referralId, {
-      familyId: data.familyId,
-      openedAtUtc: data.openedAtLocal,
-      title: data.title,
-      comment: data.comment || undefined,
-    });
+    try {
+      await withBackdrop(async () => {
+        await createReferral(referralId, {
+          familyId: data.familyId,
+          openedAtUtc: data.openedAtLocal,
+          title: data.title,
+          comment: data.comment || undefined,
+        });
 
-    for (const customField of referralCustomFields) {
-      const value = data.customFields?.[customField.name];
+        for (const customField of referralCustomFields) {
+          const value = data.customFields?.[customField.name];
 
-      if (value !== undefined && value !== null && value !== '') {
-        await updateCustomReferralField(referralId, customField, value);
-      }
+          if (value !== undefined && value !== null && value !== '') {
+            await updateCustomReferralField(referralId, customField, value);
+          }
+        }
+
+        navigate.referral(referralId);
+        onClose();
+      });
+    } catch {
+      setSaveError(
+        'We could not create the referral. Some changes may have been saved. Please try again.'
+      );
     }
-
-    navigate.referral(referralId);
-    onClose();
   };
 
   return (
@@ -80,7 +93,11 @@ export function AddNewReferralDrawer({ onClose }: AddNewReferralDrawerProps) {
         },
       }}
     >
-      <form onSubmit={handleSubmit(onSubmit)}>
+      <form
+        onSubmit={handleSubmit(onSubmit, () =>
+          setSaveError('Please fix the highlighted fields and try again.')
+        )}
+      >
         <Grid container spacing={2}>
           <Grid size={12}>
             <Typography variant="h6">Open New Referral</Typography>
@@ -150,6 +167,12 @@ export function AddNewReferralDrawer({ onClose }: AddNewReferralDrawerProps) {
             </Typography>
           </Grid>
 
+          {saveError && (
+            <Grid size={12}>
+              <Alert severity="error">{saveError}</Alert>
+            </Grid>
+          )}
+
           <Grid size={12} sx={{ textAlign: 'right' }}>
             <Button
               color="secondary"
@@ -167,7 +190,7 @@ export function AddNewReferralDrawer({ onClose }: AddNewReferralDrawerProps) {
               type="submit"
               disabled={isSubmitting}
             >
-              Save
+              {isSubmitting ? 'Saving...' : 'Save'}
             </Button>
           </Grid>
         </Grid>
