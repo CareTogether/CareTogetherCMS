@@ -61,6 +61,18 @@ function buildColumns({
       ),
     },
     {
+      field: 'uploadedAtUtc',
+      headerClassName: 'ph-unmask',
+      headerName: 'Upload Date',
+      width: 130,
+      valueGetter: (_value, row) => row.uploadedAtUtc?.getTime() ?? null,
+      renderCell: ({ row }) => (
+        <Typography {...v2Typography.browserSecondary}>
+          {row.uploadDateLabel}
+        </Typography>
+      ),
+    },
+    {
       field: 'uploadedByLabel',
       headerClassName: 'ph-unmask',
       headerName: 'Uploaded By',
@@ -71,18 +83,6 @@ function buildColumns({
       renderCell: ({ row }) => (
         <Typography {...v2Typography.browserSecondary} noWrap>
           {row.uploadedByLabel ?? row.uploadedByUserId ?? '-'}
-        </Typography>
-      ),
-    },
-    {
-      field: 'uploadedAtUtc',
-      headerClassName: 'ph-unmask',
-      headerName: 'Upload Date',
-      width: 130,
-      valueGetter: (_value, row) => row.uploadedAtUtc?.getTime() ?? null,
-      renderCell: ({ row }) => (
-        <Typography {...v2Typography.browserSecondary}>
-          {row.uploadDateLabel}
         </Typography>
       ),
     },
@@ -210,7 +210,11 @@ export function FamilyDocumentsDataGridV2({
           columns: {
             columnVisibilityModel: {
               searchText: false,
+              sourceLabel: false,
             },
+          },
+          sorting: {
+            sortModel: [{ field: 'uploadedAtUtc', sort: 'desc' }],
           },
         }}
         onRowClick={({ row }) => onRowClick(row)}
