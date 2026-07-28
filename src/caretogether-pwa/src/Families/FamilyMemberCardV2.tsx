@@ -82,7 +82,9 @@ function ArrangementSummary({ row }: { row: FamilyMemberRowV2 }) {
         <Box
           key={`${arrangement.v1CaseId}:${arrangement.arrangementId}`}
           sx={{
-            bgcolor: 'action.hover',
+            bgcolor: 'background.default',
+            border: 1,
+            borderColor: 'divider',
             borderRadius: 0.75,
             minWidth: 0,
             px: 0.75,
@@ -121,7 +123,9 @@ function ArrangementSummary({ row }: { row: FamilyMemberRowV2 }) {
               .map((arrangement) => arrangement.label)
               .join(', ')}`}
             sx={{
-              bgcolor: 'action.hover',
+              bgcolor: 'background.default',
+              border: 1,
+              borderColor: 'divider',
               borderRadius: 0.75,
               color: 'text.secondary',
               flex: '0 0 auto',
@@ -172,14 +176,26 @@ function DetailPreview({
           alignItems: 'flex-start',
           color,
           display: 'flex',
-          gap: 0.5,
+          gap: 0.75,
           minWidth: 0,
         }}
       >
-        <Box sx={{ display: 'flex', pt: 0.2 }}>{icon}</Box>
+        <Box sx={{ color, display: 'flex', opacity: 0.72, pt: 0.2 }}>
+          {icon}
+        </Box>
         <Box sx={{ minWidth: 0 }}>
-          <Typography {...v2Typography.fieldLabel}>{label}</Typography>
-          <Typography {...v2Typography.browserSecondary} sx={multilineTextSx(2)}>
+          <Typography
+            color="text.secondary"
+            variant="caption"
+            sx={{ display: 'block', lineHeight: 1.25 }}
+          >
+            {label}
+          </Typography>
+          <Typography
+            {...v2Typography.browserSecondary}
+            color="text.secondary"
+            sx={multilineTextSx(2)}
+          >
             {text}
           </Typography>
         </Box>
@@ -197,7 +213,7 @@ function StatusDetails({ row }: { row: FamilyMemberRowV2 }) {
   }
 
   return (
-    <Stack spacing={0.35}>
+    <Stack spacing={0.65}>
       {row.householdStatusLabel && (
         <Typography {...v2Typography.browserSecondary} color="text.secondary">
           {row.householdStatusLabel}
@@ -205,7 +221,7 @@ function StatusDetails({ row }: { row: FamilyMemberRowV2 }) {
       )}
       {concerns && (
         <DetailPreview
-          color="warning.dark"
+          color="warning.main"
           icon={<WarningAmberIcon fontSize="small" />}
           label="Concerns"
           text={concerns}
@@ -266,12 +282,12 @@ export function FamilyMemberCardV2({ row, onClick }: FamilyMemberCardV2Props) {
           },
         }}
       >
-        <Stack spacing={1.25} sx={{ minWidth: 0, p: 2, width: '100%' }}>
+        <Stack spacing={1} sx={{ minWidth: 0, p: 2, width: '100%' }}>
           <Stack direction="row" spacing={1} sx={{ alignItems: 'flex-start' }}>
             <Box sx={{ flex: 1, minWidth: 0 }}>
               <Stack
                 direction="row"
-                spacing={0.75}
+                spacing={0.6}
                 sx={{ alignItems: 'center', minWidth: 0 }}
               >
                 <Typography {...v2Typography.primaryValue} noWrap>
@@ -280,7 +296,13 @@ export function FamilyMemberCardV2({ row, onClick }: FamilyMemberCardV2Props) {
                 <Typography
                   color="text.secondary"
                   variant="caption"
-                  sx={{ flex: '0 0 auto' }}
+                  sx={{
+                    bgcolor: 'action.hover',
+                    borderRadius: 0.75,
+                    flex: '0 0 auto',
+                    lineHeight: 1.5,
+                    px: 0.6,
+                  }}
                 >
                   {row.personType}
                 </Typography>
@@ -290,6 +312,7 @@ export function FamilyMemberCardV2({ row, onClick }: FamilyMemberCardV2Props) {
                   {...v2Typography.browserSecondary}
                   color="text.secondary"
                   noWrap
+                  sx={{ opacity: 0.86 }}
                 >
                   {items.join(' • ')}
                 </Typography>
@@ -304,8 +327,14 @@ export function FamilyMemberCardV2({ row, onClick }: FamilyMemberCardV2Props) {
           <ContactSummary row={row} />
 
           {hasActiveArrangements && (
-            <Stack spacing={0.75}>
-              <Typography {...v2Typography.fieldLabel}>Arrangements</Typography>
+            <Stack spacing={0.5}>
+              <Typography
+                color="text.secondary"
+                variant="caption"
+                sx={{ lineHeight: 1.25 }}
+              >
+                Arrangements
+              </Typography>
               <ArrangementSummary row={row} />
             </Stack>
           )}
