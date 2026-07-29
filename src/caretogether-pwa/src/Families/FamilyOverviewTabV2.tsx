@@ -13,7 +13,7 @@ import { MissingRequirementRow } from '../Requirements/MissingRequirementRow';
 import { V1CaseContext } from '../Requirements/RequirementContext';
 import Grid from '../Generic/GridLegacyCompat';
 import { FamilyCustomField } from './FamilyCustomField';
-import { FamilyMembersDataGridV2 } from './FamilyMembersDataGridV2';
+import { FamilyMembersSectionV2 } from './FamilyMembersSectionV2';
 import {
   FamilyRecentOverviewV2,
   RecentOverviewTimelineItem,
@@ -33,8 +33,6 @@ type CommunityOverviewRowV2 = {
 };
 
 type FamilyOverviewTabV2Props = {
-  canAddAdult: boolean;
-  canAddChild: boolean;
   communityNameColor: string;
   communityRows: CommunityOverviewRowV2[];
   completedRequirements: NonNullable<
@@ -58,8 +56,6 @@ type FamilyOverviewTabV2Props = {
   v1CaseId?: string;
   v1CaseRequirementContext?: V1CaseContext;
   volunteerFamilyCustomFields: CustomFieldRenderInfo[];
-  onAddAdult: () => void;
-  onAddChild: () => void;
   onCommunityClick: (communityId: string) => void;
   onFamilyMemberClick: (row: FamilyMemberRowV2) => void;
   onViewAllRecentActivity: () => void;
@@ -72,8 +68,6 @@ function customFieldKey(customField: CustomFieldRenderInfo) {
 }
 
 export function FamilyOverviewTabV2({
-  canAddAdult,
-  canAddChild,
   communityNameColor,
   communityRows,
   completedRequirements,
@@ -91,8 +85,6 @@ export function FamilyOverviewTabV2({
   v1CaseId,
   v1CaseRequirementContext,
   volunteerFamilyCustomFields,
-  onAddAdult,
-  onAddChild,
   onCommunityClick,
   onFamilyMemberClick,
   onViewAllRecentActivity,
@@ -153,13 +145,9 @@ export function FamilyOverviewTabV2({
         </Grid>
         <Grid container spacing={0} sx={{ order: 1 }}>
           <Grid item xs={12}>
-            <FamilyMembersDataGridV2
+            <FamilyMembersSectionV2
               rows={familyMemberRows}
-              onAddAdult={onAddAdult}
-              onAddChild={onAddChild}
-              onRowClick={onFamilyMemberClick}
-              canAddAdult={canAddAdult}
-              canAddChild={canAddChild}
+              onMemberClick={onFamilyMemberClick}
             />
           </Grid>
           <Grid item xs={12}>
