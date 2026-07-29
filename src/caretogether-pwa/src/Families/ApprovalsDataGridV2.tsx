@@ -29,11 +29,28 @@ function OverflowRoleChipList({ labels }: { labels: string[] }) {
     return <Typography {...v2Typography.browserSecondary}>-</Typography>;
   }
 
+  const hasRoleTooltip = labels.length > 1;
   const visibleLabels = labels.slice(0, MAX_VISIBLE_ROLE_CHIPS);
   const hiddenLabels = labels.slice(MAX_VISIBLE_ROLE_CHIPS);
+  const roleTooltipTitle = (
+    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
+      {labels.map((label) => (
+        <Typography
+          key={label}
+          className="ph-unmask"
+          {...v2Typography.browserCell}
+        >
+          {label}
+        </Typography>
+      ))}
+    </Box>
+  );
 
-  return (
+  const chipList = (
     <Box
+      aria-label={
+        hasRoleTooltip ? `Needed for roles: ${labels.join(', ')}` : undefined
+      }
       sx={{
         alignItems: 'center',
         display: 'flex',
@@ -41,6 +58,7 @@ function OverflowRoleChipList({ labels }: { labels: string[] }) {
         gap: 0.5,
         minWidth: 0,
         overflow: 'hidden',
+        pointerEvents: 'auto',
       }}
     >
       {visibleLabels.map((label) => (
@@ -53,33 +71,26 @@ function OverflowRoleChipList({ labels }: { labels: string[] }) {
         />
       ))}
       {hiddenLabels.length > 0 && (
-        <Tooltip
-          arrow
-          title={
-            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
-              {hiddenLabels.map((label) => (
-                <Typography
-                  key={label}
-                  className="ph-unmask"
-                  {...v2Typography.browserCell}
-                >
-                  {label}
-                </Typography>
-              ))}
-            </Box>
-          }
-        >
-          <Chip
-            aria-label={`${hiddenLabels.length} more roles: ${hiddenLabels.join(', ')}`}
-            label={`+${hiddenLabels.length} more`}
-            size="small"
-            sx={{ pointerEvents: 'auto' }}
-            tabIndex={0}
-            variant="outlined"
-          />
-        </Tooltip>
+        <Chip
+          aria-label={`${hiddenLabels.length} more roles: ${hiddenLabels.join(', ')}`}
+          label={`+${hiddenLabels.length} more`}
+          size="small"
+          sx={{ pointerEvents: 'auto' }}
+          tabIndex={0}
+          variant="outlined"
+        />
       )}
     </Box>
+  );
+
+  if (!hasRoleTooltip) {
+    return chipList;
+  }
+
+  return (
+    <Tooltip arrow title={roleTooltipTitle}>
+      {chipList}
+    </Tooltip>
   );
 }
 
