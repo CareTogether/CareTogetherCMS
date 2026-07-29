@@ -7,7 +7,6 @@ import {
 import {
   Box,
   Button,
-  Divider,
   IconButton,
   InputAdornment,
   Menu,
@@ -114,32 +113,28 @@ export function VolunteersToolbarV2({
     : '';
 
   return (
-    <Stack
-      direction={{ xs: 'column', lg: 'row' }}
-      spacing={1.25}
-      sx={{ alignItems: { xs: 'stretch', lg: 'center' } }}
-    >
-      <TextField
-        size="small"
-        label="Search"
-        value={searchValue}
-        onChange={(event) => onSearchChange(event.target.value)}
-        sx={{ minWidth: { md: 280 } }}
-        slotProps={{
-          input: {
-            startAdornment: (
-              <InputAdornment position="start">
-                <SearchIcon fontSize="small" />
-              </InputAdornment>
-            ),
-          },
-        }}
-      />
+    <Stack spacing={1}>
       <Stack
         direction="row"
         spacing={1}
         sx={{ alignItems: 'center', flexWrap: 'wrap' }}
       >
+        <TextField
+          size="small"
+          label="Search"
+          value={searchValue}
+          onChange={(event) => onSearchChange(event.target.value)}
+          sx={{ minWidth: { xs: '100%', sm: 260 } }}
+          slotProps={{
+            input: {
+              startAdornment: (
+                <InputAdornment position="start">
+                  <SearchIcon fontSize="small" />
+                </InputAdornment>
+              ),
+            },
+          }}
+        />
         <VolunteerFilter
           label="Roles"
           options={roleFilters}
@@ -172,6 +167,11 @@ export function VolunteersToolbarV2({
             onClick={onCustomFieldFiltersClick}
           />
         )}
+        <VolunteerBrowserFilterButtonV2
+          label="Sort"
+          selectedLabel={`Sort (${sortLabelByMode[selectedSort]})`}
+          onClick={(event) => setSortMenuAnchorEl(event.currentTarget)}
+        />
       </Stack>
       <Menu
         anchorEl={sortMenuAnchorEl}
@@ -228,18 +228,11 @@ export function VolunteersToolbarV2({
           </MenuItem>
         ))}
       </Menu>
-      <Box sx={{ flex: 1 }} />
       <Stack
         direction="row"
         spacing={1}
         sx={{ alignItems: 'center', flexWrap: 'wrap' }}
       >
-        <VolunteerBrowserFilterButtonV2
-          label="Sort"
-          selectedLabel={`Sort (${sortLabelByMode[selectedSort]})`}
-          onClick={(event) => setSortMenuAnchorEl(event.currentTarget)}
-        />
-        <Divider flexItem orientation="vertical" />
         <Stack direction="row" spacing={0.5} sx={{ alignItems: 'center' }}>
           <Typography color="text.secondary" variant="body2">
             {selectedVolunteerCount} selected
@@ -278,6 +271,7 @@ export function VolunteersToolbarV2({
             </Tooltip>
           )}
         </Stack>
+        <Box sx={{ display: { xs: 'none', sm: 'block' }, flex: 1 }} />
         {canCreateVolunteerFamily && (
           <Button
             variant="contained"
