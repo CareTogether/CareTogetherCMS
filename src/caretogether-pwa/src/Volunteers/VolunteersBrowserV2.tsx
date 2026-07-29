@@ -40,9 +40,9 @@ export function VolunteersBrowserV2() {
     arrangementTypes,
     assignmentFilters,
     customFieldCount,
-    customFieldFilterOptionsByField,
     customFieldFilters,
     customFields,
+    getCustomFieldFilterOptionsForField,
     loading,
     requirementFilter,
     requirementFilterOptions,
@@ -246,7 +246,7 @@ export function VolunteersBrowserV2() {
       <CustomFieldFiltersSidePanel>
         <VolunteerCustomFieldFiltersSidePanel
           customFields={customFields}
-          optionsByField={customFieldFilterOptionsByField}
+          getOptionsForField={getCustomFieldFilterOptionsForField}
           selectedValuesByField={customFieldFilters}
           onFieldChange={handleCustomFieldFilterChange}
           onClose={closeCustomFieldFiltersSidePanel}

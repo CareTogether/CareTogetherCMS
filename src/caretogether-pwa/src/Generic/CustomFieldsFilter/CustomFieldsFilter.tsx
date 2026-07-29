@@ -9,7 +9,7 @@ import {
 
 type Props = {
   customFields: CustomField[];
-  optionsByField: Record<string, CustomFieldFilterOption[]>;
+  getOptionsForField: (field: CustomField) => CustomFieldFilterOption[];
   selectedValuesByField: CustomFieldFilterSelectionsByField;
   onFieldChange: (
     fieldName: string,
@@ -21,7 +21,7 @@ type Props = {
 
 export function CustomFieldsFilter({
   customFields,
-  optionsByField,
+  getOptionsForField,
   selectedValuesByField,
   onFieldChange,
   direction = 'row',
@@ -40,14 +40,13 @@ export function CustomFieldsFilter({
       {customFields.map((field) => {
         if (!field.name) return null;
 
-        const options = optionsByField[field.name] ?? [];
         const selectedValues = selectedValuesByField[field.name] ?? [];
 
         return (
           <CustomFieldsFilterSelect
             key={field.name}
             label={field.name}
-            options={options}
+            getOptions={() => getOptionsForField(field)}
             selectedValues={selectedValues}
             onChange={(selected) => onFieldChange(field.name, selected)}
             fullWidth={fullWidthSelects}

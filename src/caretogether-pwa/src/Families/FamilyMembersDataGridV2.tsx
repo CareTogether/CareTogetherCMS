@@ -126,10 +126,7 @@ function buildColumns(): GridColDef<FamilyMemberRowV2>[] {
       flex: 1,
       renderCell: ({ row }) => (
         <Stack sx={{ height: '100%', justifyContent: 'center', minWidth: 0 }}>
-          <Typography
-            {...v2Typography.primaryValue}
-            noWrap
-          >
+          <Typography {...v2Typography.primaryValue} noWrap>
             {row.displayName}
           </Typography>
           <Typography color="text.secondary" variant="caption" noWrap>
@@ -181,11 +178,7 @@ function buildColumns(): GridColDef<FamilyMemberRowV2>[] {
             {row.primaryPhone || '-'}
           </Typography>
           {row.primaryEmail && (
-            <Typography
-              color="text.secondary"
-              variant="caption"
-              noWrap
-            >
+            <Typography color="text.secondary" variant="caption" noWrap>
               {row.primaryEmail}
             </Typography>
           )}
@@ -385,9 +378,7 @@ export function FamilyMembersDataGridV2({
       <Typography className="ph-unmask" variant="h6">
         Family Members
       </Typography>
-      <Box
-        sx={v2DataGridStyles(theme, { height: gridHeight })}
-      >
+      <Box sx={v2DataGridStyles(theme, { height: gridHeight })}>
         <DataGrid
           autoHeight={!paginationNeeded}
           rows={rows}

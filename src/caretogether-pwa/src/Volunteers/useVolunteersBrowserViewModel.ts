@@ -65,10 +65,12 @@ type VolunteersBrowserViewModel = {
   arrangementTypes: string[];
   assignmentFilters: AssignmentFilterSelectionsByArrangementType;
   customFieldCount: number;
-  customFieldFilterOptionsByField: Record<string, CustomFieldFilterOption[]>;
   customFieldFilters: CustomFieldFilterSelectionsByField;
   customFields: CustomField[];
   empty: boolean;
+  getCustomFieldFilterOptionsForField: (
+    field: CustomField
+  ) => CustomFieldFilterOption[];
   loading: boolean;
   requirementFilter: RequirementFilterValue | undefined;
   requirementFilterOptions: string[];
@@ -326,7 +328,7 @@ export function useVolunteersBrowserViewModel(): VolunteersBrowserViewModel {
   const {
     selectedValuesByField: customFieldFilters,
     setSelectedValuesForField: setCustomFieldFilter,
-    optionsByField: customFieldFilterOptionsByField,
+    getOptionsForField: getCustomFieldFilterOptionsForField,
   } = useCustomFieldFilters({
     customFields,
     items: sourceFamilies,
@@ -439,10 +441,10 @@ export function useVolunteersBrowserViewModel(): VolunteersBrowserViewModel {
     arrangementTypes,
     assignmentFilters,
     customFieldCount,
-    customFieldFilterOptionsByField,
     customFieldFilters,
     customFields,
     empty: !loading && rows.length === 0,
+    getCustomFieldFilterOptionsForField,
     loading,
     requirementFilter,
     requirementFilterOptions: requirementNames ?? [],

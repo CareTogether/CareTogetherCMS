@@ -8,11 +8,20 @@ export const usePostHogIdentify = () => {
 
   // Passing the properties to the deps array avoids calling the effect twice.
   useEffect(() => {
-    if (accountInfo?.userId) {
-      posthog.identify(accountInfo.userId, {
-        email: accountInfo.email,
-        name: accountInfo.name,
-      });
+    if (!accountInfo?.userId) {
+      return;
+    }
+
+    const userProperties = {
+      email: accountInfo.email,
+      name: accountInfo.name,
+    };
+    const distinctIdBeforeIdentify = posthog.get_distinct_id();
+
+    posthog.identify(accountInfo.userId, userProperties);
+
+    if (distinctIdBeforeIdentify === accountInfo.userId) {
+      posthog.setPersonPropertiesForFlags(userProperties);
     }
   }, [accountInfo?.userId, accountInfo?.email, accountInfo?.name]);
 };

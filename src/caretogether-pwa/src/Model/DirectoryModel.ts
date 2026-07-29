@@ -1,4 +1,5 @@
 import { useRecoilValue } from 'recoil';
+import { useCallback, useMemo } from 'react';
 import {
   AddAdultToFamilyCommand,
   AddChildToFamilyCommand,
@@ -98,11 +99,18 @@ function trackNoteAuthorLookupError(note: Note, reason: string) {
 
 export function usePersonLookup() {
   const visibleFamilies = useRecoilValue(visibleFamiliesQuery);
+  const familyById = useMemo(
+    () =>
+      new Map(
+        visibleFamilies.flatMap((family) =>
+          family.family?.id ? [[family.family.id, family] as const] : []
+        )
+      ),
+    [visibleFamilies]
+  );
 
-  return (familyId?: string, personId?: string) => {
-    const family = visibleFamilies.find(
-      (family) => family.family!.id === familyId
-    );
+  return useCallback((familyId?: string, personId?: string) => {
+    const family = familyId ? familyById.get(familyId) : undefined;
     const adult = family?.family?.adults?.find(
       (adult) => adult.item1!.id === personId
     );
@@ -110,26 +118,38 @@ export function usePersonLookup() {
       adult?.item1 ||
       family?.family?.children?.find((child) => child.id === personId);
     return person;
-  };
+  }, [familyById]);
 }
 
 export function usePersonAndFamilyLookup() {
   const visibleFamilies = useRecoilValue(visibleFamiliesQuery);
+  const personAndFamilyByPersonId = useMemo(
+    () =>
+      new Map(
+        visibleFamilies.flatMap((family) => [
+          ...(family.family?.adults?.flatMap((adult) =>
+            adult.item1?.id
+              ? [[adult.item1.id, { family: family.family, person: adult.item1 }] as const]
+              : []
+          ) ?? []),
+          ...(family.family?.children?.flatMap((child) =>
+            child.id
+              ? [[child.id, { family: family.family, person: child }] as const]
+              : []
+          ) ?? []),
+        ])
+      ),
+    [visibleFamilies]
+  );
 
-  return (personId?: string) => {
-    const family = visibleFamilies.find(
-      (family) =>
-        family.family!.adults!.some((adult) => adult.item1!.id === personId) ||
-        family.family!.children!.some((child) => child.id === personId)
-    );
-    const adult = family?.family?.adults?.find(
-      (adult) => adult.item1!.id === personId
-    );
-    const person =
-      adult?.item1 ||
-      family?.family?.children?.find((child) => child.id === personId);
-    return { family: family?.family, person: person };
-  };
+  return useCallback(
+    (personId?: string) =>
+      (personId ? personAndFamilyByPersonId.get(personId) : undefined) ?? {
+        family: undefined,
+        person: undefined,
+      },
+    [personAndFamilyByPersonId]
+  );
 }
 
 export function useUserLookup() {
@@ -193,13 +213,20 @@ export function useNoteAuthorLookup() {
 
 export function useFamilyLookup() {
   const visibleFamilies = useRecoilValue(visibleFamiliesQuery);
+  const familyById = useMemo(
+    () =>
+      new Map(
+        visibleFamilies.flatMap((family) =>
+          family.family?.id ? [[family.family.id, family] as const] : []
+        )
+      ),
+    [visibleFamilies]
+  );
 
-  return (familyId?: string) => {
-    const family = visibleFamilies.find(
-      (family) => family.family!.id === familyId
-    );
-    return family;
-  };
+  return useCallback(
+    (familyId?: string) => (familyId ? familyById.get(familyId) : undefined),
+    [familyById]
+  );
 }
 
 export function useCommunityLookup() {

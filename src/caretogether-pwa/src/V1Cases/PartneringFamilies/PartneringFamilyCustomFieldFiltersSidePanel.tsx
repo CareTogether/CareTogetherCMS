@@ -10,7 +10,7 @@ import {
 
 type Props = {
   customFields: CustomField[];
-  optionsByField: Record<string, CustomFieldFilterOption[]>;
+  getOptionsForField: (field: CustomField) => CustomFieldFilterOption[];
   selectedValuesByField: CustomFieldFilterSelectionsByField;
   onFieldChange: (
     fieldName: string,
@@ -21,7 +21,7 @@ type Props = {
 
 export function PartneringFamilyCustomFieldFiltersSidePanel({
   customFields,
-  optionsByField,
+  getOptionsForField,
   selectedValuesByField,
   onFieldChange,
   onClose,
@@ -43,7 +43,7 @@ export function PartneringFamilyCustomFieldFiltersSidePanel({
       <Grid size={12}>
         <CustomFieldsFilter
           customFields={customFields}
-          optionsByField={optionsByField}
+          getOptionsForField={getOptionsForField}
           selectedValuesByField={selectedValuesByField}
           onFieldChange={onFieldChange}
           direction="column"
