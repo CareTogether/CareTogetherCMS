@@ -179,7 +179,7 @@ function VolunteerApproval(props: { onOpen: () => void }) {
   const {
     selectedValuesByField: customFieldFilters,
     setSelectedValuesForField: setCustomFieldFilter,
-    optionsByField: customFieldFilterOptionsByField,
+    getOptionsForField: getCustomFieldFilterOptionsForField,
   } = useCustomFieldFilters({
     customFields: (policy.customFamilyFields ?? []).concat(
       policy.volunteerPolicy?.customFields ?? []
@@ -904,7 +904,7 @@ function VolunteerApproval(props: { onOpen: () => void }) {
               customFields={(policy.customFamilyFields || []).concat(
                 policy.volunteerPolicy?.customFields || []
               )}
-              optionsByField={customFieldFilterOptionsByField}
+              getOptionsForField={getCustomFieldFilterOptionsForField}
               selectedValuesByField={customFieldFilters}
               onFieldChange={changeCustomFieldFilter}
               onClose={closeCustomFieldFiltersSidePanel}

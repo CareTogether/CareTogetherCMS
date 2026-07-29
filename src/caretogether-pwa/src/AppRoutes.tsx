@@ -31,7 +31,7 @@ import { RootRoute } from './Access/RootRoute';
 import { Dashboard } from './Dashboard/Dashboard';
 import { InboxScreen } from './Inbox/InboxScreen';
 import { FamilyScreenRoute } from './Families/FamilyScreenRoute';
-import { V1Cases } from './V1Cases/V1Cases';
+import { ClientsScreenRoute } from './V1Cases/ClientsScreenRoute';
 import { V1Referrals } from './V1Referrals/V1Referrals';
 import { Volunteers } from './Volunteers/Volunteers';
 import { Communities } from './Communities/Communities';
@@ -188,7 +188,7 @@ function AuthorizedLocationContextWrapper({
             path="families/:familyId"
             element={<FamilyScreenRoute />}
           />
-          <Route path="clients/*" element={<V1Cases />} />
+          <Route path="clients/*" element={<ClientsScreenRoute />} />
           <Route path="cases/*" element={<CasesToClientsRedirect />} />
           <Route path="referrals/*" element={<V1Referrals />} />
           <Route path="volunteers/*" element={<Volunteers />} />
