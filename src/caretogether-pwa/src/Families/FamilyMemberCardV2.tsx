@@ -1,5 +1,7 @@
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
+import EmailIcon from '@mui/icons-material/Email';
 import NotesIcon from '@mui/icons-material/Notes';
+import PhoneIcon from '@mui/icons-material/Phone';
 import WarningAmberIcon from '@mui/icons-material/WarningAmber';
 import {
   Box,
@@ -22,10 +24,10 @@ const MAX_VISIBLE_ARRANGEMENTS = 3;
 
 function metadataItems(row: FamilyMemberRowV2) {
   return [
-    row.relationshipSummary,
     row.ageLabel ? `Age ${row.ageLabel}` : undefined,
     row.genderLabel,
     row.ethnicity,
+    row.householdStatusLabel,
   ].filter(Boolean) as string[];
 }
 
@@ -37,18 +39,28 @@ function ContactSummary({ row }: { row: FamilyMemberRowV2 }) {
   return (
     <Stack spacing={0.25} sx={{ minWidth: 0 }}>
       {row.primaryPhone && (
-        <Typography {...v2Typography.browserCell} noWrap>
-          {row.primaryPhone}
-        </Typography>
+        <Stack
+          direction="row"
+          spacing={0.75}
+          sx={{ alignItems: 'center', minWidth: 0 }}
+        >
+          <PhoneIcon color="action" fontSize="small" sx={{ flex: '0 0 auto' }} />
+          <Typography {...v2Typography.browserCell} noWrap sx={{ minWidth: 0 }}>
+            {row.primaryPhone}
+          </Typography>
+        </Stack>
       )}
       {row.primaryEmail && (
-        <Typography
-          {...v2Typography.browserSecondary}
-          color="text.secondary"
-          noWrap
+        <Stack
+          direction="row"
+          spacing={0.75}
+          sx={{ alignItems: 'center', minWidth: 0 }}
         >
-          {row.primaryEmail}
-        </Typography>
+          <EmailIcon color="action" fontSize="small" sx={{ flex: '0 0 auto' }} />
+          <Typography {...v2Typography.browserCell} noWrap sx={{ minWidth: 0 }}>
+            {row.primaryEmail}
+          </Typography>
+        </Stack>
       )}
     </Stack>
   );
@@ -82,13 +94,14 @@ function ArrangementSummary({ row }: { row: FamilyMemberRowV2 }) {
         <Box
           key={`${arrangement.v1CaseId}:${arrangement.arrangementId}`}
           sx={{
-            bgcolor: 'background.default',
+            bgcolor: 'action.hover',
             border: 1,
-            borderColor: 'divider',
+            borderColor: 'transparent',
             borderRadius: 0.75,
+            color: 'text.secondary',
             minWidth: 0,
             px: 0.75,
-            py: 0.25,
+            py: 0.125,
           }}
         >
           <Typography
@@ -125,12 +138,12 @@ function ArrangementSummary({ row }: { row: FamilyMemberRowV2 }) {
             sx={{
               bgcolor: 'background.default',
               border: 1,
-              borderColor: 'divider',
+              borderColor: 'transparent',
               borderRadius: 0.75,
               color: 'text.secondary',
               flex: '0 0 auto',
               px: 0.75,
-              py: 0.25,
+              py: 0.125,
             }}
             tabIndex={0}
           >
@@ -155,14 +168,12 @@ function multilineTextSx(lines: number) {
 }
 
 function DetailPreview({
-  color = 'text.secondary',
   icon,
-  label,
+  iconColor = 'text.secondary',
   text,
 }: {
-  color?: string;
   icon: ReactNode;
-  label: string;
+  iconColor?: string;
   text: string;
 }) {
   return (
@@ -174,26 +185,18 @@ function DetailPreview({
       <Box
         sx={{
           alignItems: 'flex-start',
-          color,
           display: 'flex',
-          gap: 0.75,
+          gap: 0.7,
           minWidth: 0,
         }}
       >
-        <Box sx={{ color, display: 'flex', opacity: 0.72, pt: 0.2 }}>
+        <Box sx={{ color: iconColor, display: 'flex', opacity: 0.68, pt: 0.2 }}>
           {icon}
         </Box>
         <Box sx={{ minWidth: 0 }}>
           <Typography
-            color="text.secondary"
-            variant="caption"
-            sx={{ display: 'block', lineHeight: 1.25 }}
-          >
-            {label}
-          </Typography>
-          <Typography
-            {...v2Typography.browserSecondary}
-            color="text.secondary"
+            variant="body2"
+            color="text.primary"
             sx={multilineTextSx(2)}
           >
             {text}
@@ -204,35 +207,25 @@ function DetailPreview({
   );
 }
 
-function StatusDetails({ row }: { row: FamilyMemberRowV2 }) {
+function MemberHighlights({ row }: { row: FamilyMemberRowV2 }) {
   const concerns = row.person.concerns?.trim();
   const notes = row.person.notes?.trim();
 
-  if (!row.householdStatusLabel && !concerns && !notes) {
+  if (!concerns && !notes) {
     return null;
   }
 
   return (
-    <Stack spacing={0.65}>
-      {row.householdStatusLabel && (
-        <Typography {...v2Typography.browserSecondary} color="text.secondary">
-          {row.householdStatusLabel}
-        </Typography>
-      )}
+    <Stack spacing={0.6}>
       {concerns && (
         <DetailPreview
-          color="warning.main"
           icon={<WarningAmberIcon fontSize="small" />}
-          label="Concerns"
+          iconColor="warning.main"
           text={concerns}
         />
       )}
       {notes && (
-        <DetailPreview
-          icon={<NotesIcon fontSize="small" />}
-          label="Comments"
-          text={notes}
-        />
+        <DetailPreview icon={<NotesIcon fontSize="small" />} text={notes} />
       )}
     </Stack>
   );
@@ -241,6 +234,9 @@ function StatusDetails({ row }: { row: FamilyMemberRowV2 }) {
 export function FamilyMemberCardV2({ row, onClick }: FamilyMemberCardV2Props) {
   const items = metadataItems(row);
   const hasActiveArrangements = row.activeArrangements.length > 0;
+  const hasHighlights = Boolean(
+    row.person.concerns?.trim() || row.person.notes?.trim()
+  );
 
   return (
     <Card
@@ -282,39 +278,46 @@ export function FamilyMemberCardV2({ row, onClick }: FamilyMemberCardV2Props) {
           },
         }}
       >
-        <Stack spacing={1} sx={{ minWidth: 0, p: 2, width: '100%' }}>
+        <Stack spacing={1.15} sx={{ minWidth: 0, p: 2, width: '100%' }}>
           <Stack direction="row" spacing={1} sx={{ alignItems: 'flex-start' }}>
             <Box sx={{ flex: 1, minWidth: 0 }}>
               <Stack
                 direction="row"
-                spacing={0.6}
-                sx={{ alignItems: 'center', minWidth: 0 }}
+                spacing={0.75}
+                sx={{ alignItems: 'baseline', minWidth: 0 }}
               >
-                <Typography {...v2Typography.primaryValue} noWrap>
+                <Typography
+                  variant="subtitle1"
+                  noWrap
+                  sx={{
+                    fontWeight: 700,
+                    lineHeight: 1.2,
+                  }}
+                >
                   {row.displayName}
                 </Typography>
                 <Typography
                   color="text.secondary"
                   variant="caption"
                   sx={{
-                    bgcolor: 'action.hover',
-                    borderRadius: 0.75,
                     flex: '0 0 auto',
-                    lineHeight: 1.5,
-                    px: 0.6,
+                    fontSize: '0.6875rem',
+                    letterSpacing: 0,
+                    lineHeight: 1.25,
+                    textTransform: 'uppercase',
                   }}
                 >
                   {row.personType}
                 </Typography>
               </Stack>
-              {items.length > 0 && (
+              {row.relationshipSummary && (
                 <Typography
                   {...v2Typography.browserSecondary}
                   color="text.secondary"
                   noWrap
-                  sx={{ opacity: 0.86 }}
+                  sx={{ lineHeight: 1.35 }}
                 >
-                  {items.join(' • ')}
+                  {row.relationshipSummary}
                 </Typography>
               )}
             </Box>
@@ -324,22 +327,28 @@ export function FamilyMemberCardV2({ row, onClick }: FamilyMemberCardV2Props) {
             />
           </Stack>
 
+          {items.length > 0 && (
+            <Typography
+              {...v2Typography.browserSecondary}
+              color="text.secondary"
+              noWrap
+              sx={{ lineHeight: 1.35, opacity: 0.78 }}
+            >
+              {items.join(' | ')}
+            </Typography>
+          )}
+
           <ContactSummary row={row} />
 
           {hasActiveArrangements && (
-            <Stack spacing={0.5}>
-              <Typography
-                color="text.secondary"
-                variant="caption"
-                sx={{ lineHeight: 1.25 }}
-              >
-                Arrangements
-              </Typography>
-              <ArrangementSummary row={row} />
-            </Stack>
+            <ArrangementSummary row={row} />
           )}
 
-          <StatusDetails row={row} />
+          {hasHighlights && (
+            <Box sx={{ pt: 0.35 }}>
+              <MemberHighlights row={row} />
+            </Box>
+          )}
         </Stack>
       </CardActionArea>
     </Card>
