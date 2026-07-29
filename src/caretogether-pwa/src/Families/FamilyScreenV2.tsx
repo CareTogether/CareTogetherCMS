@@ -1180,8 +1180,6 @@ export function FamilyScreenV2() {
         )}
         {!showTimelineAndNotes && showOverview && (
           <FamilyOverviewTabV2
-            canAddAdult={canEditFamilyInfo}
-            canAddChild={canEditFamilyInfo}
             canAddCommunity={canAddCommunity}
             communityNameColor={theme.palette.primary.main}
             communityRows={overviewCommunityRows}
@@ -1200,8 +1198,6 @@ export function FamilyScreenV2() {
             v1CaseId={selectedV1Case?.id}
             v1CaseRequirementContext={v1CaseRequirementContext}
             volunteerFamilyCustomFields={overviewVolunteerFamilyCustomFields}
-            onAddAdult={openAddAdultDialog}
-            onAddChild={openAddChildDialog}
             onAddCommunity={openAddCommunityDrawer}
             onCommunityClick={(communityId) =>
               appNavigate.community(communityId)
