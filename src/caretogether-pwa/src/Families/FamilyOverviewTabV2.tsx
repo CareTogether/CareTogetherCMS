@@ -1,11 +1,15 @@
 import {
   Box,
+  Button,
   ListItemButton,
   ListItemIcon,
   ListItemText,
   Typography,
 } from '@mui/material';
-import { Diversity3 as Diversity3Icon } from '@mui/icons-material';
+import {
+  Diversity3 as Diversity3Icon,
+  GroupAdd as GroupAddIcon,
+} from '@mui/icons-material';
 import { CompletedCustomFieldInfo } from '../GeneratedClient';
 import { CompletedRequirementRow } from '../Requirements/CompletedRequirementRow';
 import { ExemptedRequirementRow } from '../Requirements/ExemptedRequirementRow';
@@ -33,6 +37,7 @@ type CommunityOverviewRowV2 = {
 };
 
 type FamilyOverviewTabV2Props = {
+  canAddCommunity: boolean;
   communityNameColor: string;
   communityRows: CommunityOverviewRowV2[];
   completedRequirements: NonNullable<
@@ -56,6 +61,7 @@ type FamilyOverviewTabV2Props = {
   v1CaseId?: string;
   v1CaseRequirementContext?: V1CaseContext;
   volunteerFamilyCustomFields: CustomFieldRenderInfo[];
+  onAddCommunity: () => void;
   onCommunityClick: (communityId: string) => void;
   onFamilyMemberClick: (row: FamilyMemberRowV2) => void;
   onViewAllRecentActivity: () => void;
@@ -68,6 +74,7 @@ function customFieldKey(customField: CustomFieldRenderInfo) {
 }
 
 export function FamilyOverviewTabV2({
+  canAddCommunity,
   communityNameColor,
   communityRows,
   completedRequirements,
@@ -85,6 +92,7 @@ export function FamilyOverviewTabV2({
   v1CaseId,
   v1CaseRequirementContext,
   volunteerFamilyCustomFields,
+  onAddCommunity,
   onCommunityClick,
   onFamilyMemberClick,
   onViewAllRecentActivity,
@@ -192,9 +200,30 @@ export function FamilyOverviewTabV2({
             bgcolor: 'background.paper',
           }}
         >
-          <Typography className="ph-unmask" variant="h3" sx={{ mb: 1 }}>
-            Communities
-          </Typography>
+          <Box
+            sx={{
+              alignItems: 'center',
+              display: 'flex',
+              justifyContent: 'space-between',
+              gap: 1,
+              mb: 1,
+            }}
+          >
+            <Typography className="ph-unmask" variant="h3">
+              Communities
+            </Typography>
+            {canAddCommunity && (
+              <Button
+                className="ph-unmask"
+                onClick={onAddCommunity}
+                size="small"
+                startIcon={<GroupAddIcon />}
+                variant="text"
+              >
+                Add
+              </Button>
+            )}
+          </Box>
           {communityRows.length === 0 ? (
             <Typography color="text.secondary" variant="body2">
               No communities.

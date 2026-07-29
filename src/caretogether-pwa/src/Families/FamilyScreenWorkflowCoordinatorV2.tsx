@@ -20,6 +20,7 @@ import { ApproveNoteDialog } from '../Notes/ApproveNoteDialog';
 import { DiscardNoteDialog } from '../Notes/DiscardNoteDialog';
 import { AddAdultDrawer } from './AddAdultDrawer';
 import { AddChildDrawer } from './AddChildDrawer';
+import { AddFamilyCommunitiesDrawerV2 } from './AddFamilyCommunitiesDrawerV2';
 import { DeleteFamilyDialog } from './DeleteFamilyDialog';
 import { FamilyMemberDrawerV2 } from './FamilyMemberDrawerV2';
 import { RoleDetailsDrawerV2 } from './RoleDetailsDrawerV2';
@@ -52,7 +53,11 @@ type ResetRoleParameter = {
 type FamilyScreenWorkflowCoordinatorV2Props = {
   addAdultDialogOpen: boolean;
   addChildDialogOpen: boolean;
+  addCommunityDrawerOpen: boolean;
   addNoteDialogOpen: boolean;
+  addCommunityCandidateCommunities: ComponentProps<
+    typeof AddFamilyCommunitiesDrawerV2
+  >['candidateCommunities'];
   closeCaseDrawerOpen: boolean;
   deleteFamilyDialogHandle: ComponentProps<typeof DeleteFamilyDialog>['handle'];
   family: CombinedFamilyInfo;
@@ -72,6 +77,7 @@ type FamilyScreenWorkflowCoordinatorV2Props = {
   uploadDocumentDialogOpen: boolean;
   onAddAdultClose: ComponentProps<typeof AddAdultDrawer>['onClose'];
   onAddChildClose: ComponentProps<typeof AddChildDrawer>['onClose'];
+  onAddCommunityClose: () => void;
   onAddNoteClose: () => void;
   onArrangementClose: () => void;
   onCloseCaseDrawerClose: () => void;
@@ -89,6 +95,8 @@ type FamilyScreenWorkflowCoordinatorV2Props = {
 export function FamilyScreenWorkflowCoordinatorV2({
   addAdultDialogOpen,
   addChildDialogOpen,
+  addCommunityDrawerOpen,
+  addCommunityCandidateCommunities,
   addNoteDialogOpen,
   closeCaseDrawerOpen,
   deleteFamilyDialogHandle,
@@ -109,6 +117,7 @@ export function FamilyScreenWorkflowCoordinatorV2({
   uploadDocumentDialogOpen,
   onAddAdultClose,
   onAddChildClose,
+  onAddCommunityClose,
   onAddNoteClose,
   onArrangementClose,
   onCloseCaseDrawerClose,
@@ -137,6 +146,13 @@ export function FamilyScreenWorkflowCoordinatorV2({
       )}
       {addAdultDialogOpen && <AddAdultDrawer onClose={onAddAdultClose} />}
       {addChildDialogOpen && <AddChildDrawer onClose={onAddChildClose} />}
+      {addCommunityDrawerOpen && (
+        <AddFamilyCommunitiesDrawerV2
+          candidateCommunities={addCommunityCandidateCommunities}
+          familyId={familyId}
+          onClose={onAddCommunityClose}
+        />
+      )}
       <FamilyMemberDrawerV2
         family={family}
         row={selectedFamilyMemberRow}

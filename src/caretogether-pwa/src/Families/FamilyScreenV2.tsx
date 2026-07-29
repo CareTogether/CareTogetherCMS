@@ -143,6 +143,18 @@ export function FamilyScreenV2() {
       ),
     [allCommunityInfo, familyId]
   );
+  const addCommunityCandidateCommunities = useMemo(
+    () =>
+      allCommunityInfo.filter(
+        (communityInfo) =>
+          communityInfo.community?.id &&
+          !(communityInfo.community.memberFamilies ?? []).includes(familyId) &&
+          communityInfo.userPermissions?.includes(
+            Permission.EditCommunityMemberFamilies
+          )
+      ),
+    [allCommunityInfo, familyId]
+  );
 
   const referralInfos = useRecoilValue(visibleReferralsQuery);
 
@@ -204,6 +216,7 @@ export function FamilyScreenV2() {
     useState(false);
   const [addAdultDialogOpen, setAddAdultDialogOpen] = useState(false);
   const [addChildDialogOpen, setAddChildDialogOpen] = useState(false);
+  const [addCommunityDrawerOpen, setAddCommunityDrawerOpen] = useState(false);
   const [selectedFamilyMemberRowId, setSelectedFamilyMemberRowId] = useState<
     string | null
   >(null);
@@ -436,6 +449,10 @@ export function FamilyScreenV2() {
   function openAddChildDialog() {
     setFamilyMoreMenuAnchor(null);
     setAddChildDialogOpen(true);
+  }
+
+  function openAddCommunityDrawer() {
+    setAddCommunityDrawerOpen(true);
   }
 
   function openFamilyMemberDrawer(row: FamilyMemberRowV2) {
@@ -797,6 +814,7 @@ export function FamilyScreenV2() {
 
   const canUploadDocuments = permissions(Permission.UploadFamilyDocuments);
   const canEditFamilyInfo = permissions(Permission.EditFamilyInfo);
+  const canAddCommunity = addCommunityCandidateCommunities.length > 0;
   const canAddNotes =
     permissions(Permission.AddEditDraftNotes) ||
     permissions(Permission.AddEditOwnDraftNotes);
@@ -1067,6 +1085,8 @@ export function FamilyScreenV2() {
       <FamilyScreenWorkflowCoordinatorV2
         addAdultDialogOpen={addAdultDialogOpen}
         addChildDialogOpen={addChildDialogOpen}
+        addCommunityCandidateCommunities={addCommunityCandidateCommunities}
+        addCommunityDrawerOpen={addCommunityDrawerOpen}
         addNoteDialogOpen={addNoteDialogOpen}
         closeCaseDrawerOpen={closeCaseDrawerOpen}
         deleteFamilyDialogHandle={deleteFamilyDialogHandle}
@@ -1091,6 +1111,7 @@ export function FamilyScreenV2() {
         onAddChildClose={(_event: object | undefined, reason: string) =>
           !isBackdropClick(reason) ? setAddChildDialogOpen(false) : {}
         }
+        onAddCommunityClose={() => setAddCommunityDrawerOpen(false)}
         onAddNoteClose={() => setAddNoteDialogOpen(false)}
         onArrangementClose={() => setSelectedArrangementRowId(null)}
         onCloseCaseDrawerClose={() => setCloseCaseDrawerOpen(false)}
@@ -1159,6 +1180,7 @@ export function FamilyScreenV2() {
         )}
         {!showTimelineAndNotes && showOverview && (
           <FamilyOverviewTabV2
+            canAddCommunity={canAddCommunity}
             communityNameColor={theme.palette.primary.main}
             communityRows={overviewCommunityRows}
             completedRequirements={selectedV1Case?.completedRequirements ?? []}
@@ -1176,6 +1198,7 @@ export function FamilyScreenV2() {
             v1CaseId={selectedV1Case?.id}
             v1CaseRequirementContext={v1CaseRequirementContext}
             volunteerFamilyCustomFields={overviewVolunteerFamilyCustomFields}
+            onAddCommunity={openAddCommunityDrawer}
             onCommunityClick={(communityId) =>
               appNavigate.community(communityId)
             }
