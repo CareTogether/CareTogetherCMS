@@ -9,11 +9,13 @@ import {
 } from '@mui/material';
 import type { SelectProps } from '@mui/material';
 import { FilterList as FilterListIcon } from '@mui/icons-material';
+import { useMemo, useState } from 'react';
 import { CustomFieldFilterOption, CustomFieldFilterValue } from './types';
 
 type Props = {
   label: string;
-  options: CustomFieldFilterOption[];
+  options?: CustomFieldFilterOption[];
+  getOptions?: () => CustomFieldFilterOption[];
   selectedValues: CustomFieldFilterValue[];
   onChange: (selected: CustomFieldFilterValue[]) => void;
   fullWidth?: boolean;
@@ -47,19 +49,31 @@ function decodeValue(value: string): CustomFieldFilterValue {
 
 export function CustomFieldsFilterSelect({
   label,
-  options,
+  getOptions,
+  options: providedOptions,
   selectedValues,
   onChange,
   fullWidth = false,
   size,
   variant = 'standard',
 }: Props) {
+  const [open, setOpen] = useState(false);
   const selectedCount = selectedValues.length;
-  const selectedOptionValues = selectedValues.map(encodeValue);
-  const displayText =
-    selectedCount === options.length
-      ? label
-      : `${label} (${selectedCount}/${options.length})`;
+  const shouldLoadOptions = open || selectedCount > 0 || !getOptions;
+  const options = useMemo(
+    () => (shouldLoadOptions ? (getOptions?.() ?? providedOptions ?? []) : []),
+    [getOptions, providedOptions, shouldLoadOptions]
+  );
+  const selectedOptionValues = useMemo(
+    () => selectedValues.map(encodeValue),
+    [selectedValues]
+  );
+  const displayText = (() => {
+    if (selectedCount === 0) return label;
+    if (options.length === 0) return `${label} (${selectedCount})`;
+    if (selectedCount === options.length) return label;
+    return `${label} (${selectedCount}/${options.length})`;
+  })();
 
   return (
     <FormControl
@@ -90,6 +104,9 @@ export function CustomFieldsFilterSelect({
         variant={variant}
         size={size}
         label={`${label} Filters`}
+        open={open}
+        onOpen={() => setOpen(true)}
+        onClose={() => setOpen(false)}
         onChange={(event: SelectChangeEvent<string[]>) => {
           const selected = event.target.value;
           if (typeof selected !== 'string') {

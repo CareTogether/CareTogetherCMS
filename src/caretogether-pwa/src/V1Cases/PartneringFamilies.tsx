@@ -150,7 +150,7 @@ function PartneringFamilies() {
   const {
     selectedValuesByField: selectedCustomFieldValuesByField,
     setSelectedValuesForField: setSelectedCustomFieldValuesForField,
-    optionsByField: customFieldFilterOptionsByField,
+    getOptionsForField: getCustomFieldFilterOptionsForField,
   } = useCustomFieldFilters({
     customFields: referralCustomFields,
     items: partneringFamilies,
@@ -535,7 +535,7 @@ function PartneringFamilies() {
         <CustomFieldFiltersSidePanel>
           <PartneringFamilyCustomFieldFiltersSidePanel
             customFields={referralCustomFields}
-            optionsByField={customFieldFilterOptionsByField}
+            getOptionsForField={getCustomFieldFilterOptionsForField}
             selectedValuesByField={selectedCustomFieldValuesByField}
             onFieldChange={setSelectedCustomFieldValuesForField}
             onClose={closeCustomFieldFiltersSidePanel}

@@ -1,9 +1,9 @@
 import { Box, Chip } from '@mui/material';
-import { ArrangementRowV2 } from './Arrangements/arrangementViewModel';
 import { arrangementPhaseColor } from './Arrangements/arrangementPresentationV2';
+import type { ClientArrangementSummaryItemV2 } from './useClientsBrowserViewModel';
 
 type ClientArrangementSummaryCellV2Props = {
-  arrangementRows: ArrangementRowV2[];
+  arrangementRows: ClientArrangementSummaryItemV2[];
 };
 
 const maxVisibleArrangements = 4;
@@ -22,7 +22,7 @@ export function ClientArrangementSummaryCellV2({
     <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.75, minWidth: 0 }}>
       {visibleArrangements.map((row) => (
         <Chip
-          color={arrangementPhaseColor(row.source.phase)}
+          color={arrangementPhaseColor(row.phase)}
           key={row.id}
           label={`${row.arrangementType} - ${row.statusLabel}`}
           size="small"

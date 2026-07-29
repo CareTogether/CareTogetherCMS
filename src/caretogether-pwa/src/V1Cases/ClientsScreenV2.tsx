@@ -1,5 +1,5 @@
 import { Box, Stack, Typography } from '@mui/material';
-import { useCallback, useDeferredValue, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useFeatureFlagEnabled } from 'posthog-js/react';
 import { Permission } from '../GeneratedClient';
 import { useScreenTitle } from '../Shell/ShellScreenTitle';
@@ -38,6 +38,19 @@ import { wideTablePageSx } from '../Utilities/wideTablePageSx';
 const PARTNERING_FAMILIES_SORT_STORAGE_KEY = 'partnering-families-sortMode';
 const ARRANGEMENTS_FILTER_STORAGE_KEY =
   'partnering-families-arrangementsFilter';
+const CLIENT_SEARCH_DEBOUNCE_MS = 200;
+
+function useDebouncedValue<T>(value: T, delayMs: number) {
+  const [debouncedValue, setDebouncedValue] = useState(value);
+
+  useEffect(() => {
+    const timeoutId = window.setTimeout(() => setDebouncedValue(value), delayMs);
+
+    return () => window.clearTimeout(timeoutId);
+  }, [delayMs, value]);
+
+  return debouncedValue;
+}
 
 export function ClientsScreenV2() {
   useScreenTitle('Clients');
@@ -57,7 +70,10 @@ export function ClientsScreenV2() {
     functionAssignmentsEnabled === true &&
     permissions(Permission.ViewV1CaseFunctionAssignments);
   const [searchValue, setSearchValue] = useState('');
-  const deferredSearchValue = useDeferredValue(searchValue);
+  const debouncedSearchValue = useDebouncedValue(
+    searchValue,
+    CLIENT_SEARCH_DEBOUNCE_MS
+  );
   const [countyFilter, setCountyFilter] = useState<(string | null)[]>([]);
   const [assignmentFilters, setAssignmentFilters] =
     useState<AssignmentFilterSelectionsByRole>({});
@@ -78,21 +94,29 @@ export function ClientsScreenV2() {
   const customFieldFilterItems = useLoadable(partneringFamiliesData) ?? [];
   const customFieldDefinitions =
     useLoadable(policyData)?.referralPolicy?.customFields ?? [];
-  const {
-    selectedValuesByField: selectedCustomFieldValuesByField,
-    setSelectedValuesForField: setSelectedCustomFieldValuesForField,
-    optionsByField: customFieldFilterOptionsByField,
-  } = useCustomFieldFilters({
-    customFields: customFieldDefinitions,
-    items: customFieldFilterItems,
-    isBlank: (family, fieldName) =>
+  const isBlankCustomFieldValue = useCallback(
+    (family: (typeof customFieldFilterItems)[number], fieldName: string) =>
       family.partneringFamilyInfo?.openV1Case?.missingCustomFields?.includes(
         fieldName
       ) ?? false,
-    getValue: (family, fieldName) =>
+    []
+  );
+  const getCustomFieldValue = useCallback(
+    (family: (typeof customFieldFilterItems)[number], fieldName: string) =>
       family.partneringFamilyInfo?.openV1Case?.completedCustomFields?.find(
         (field) => field.customFieldName === fieldName
       )?.value,
+    []
+  );
+  const {
+    selectedValuesByField: selectedCustomFieldValuesByField,
+    setSelectedValuesForField: setSelectedCustomFieldValuesForField,
+    getOptionsForField: getCustomFieldFilterOptionsForField,
+  } = useCustomFieldFilters({
+    customFields: customFieldDefinitions,
+    items: customFieldFilterItems,
+    isBlank: isBlankCustomFieldValue,
+    getValue: getCustomFieldValue,
   });
   const activeCustomFieldFilterCount = Object.values(
     selectedCustomFieldValuesByField
@@ -126,7 +150,7 @@ export function ClientsScreenV2() {
     assignmentFilters,
     canViewFunctionAssignments,
     countyFilter,
-    filterText: deferredSearchValue,
+    filterText: debouncedSearchValue,
     selectedCustomFieldValuesByField,
     sortMode,
   });
@@ -191,7 +215,7 @@ export function ClientsScreenV2() {
       <CustomFieldFiltersSidePanel>
         <PartneringFamilyCustomFieldFiltersSidePanel
           customFields={customFieldDefinitions}
-          optionsByField={customFieldFilterOptionsByField}
+          getOptionsForField={getCustomFieldFilterOptionsForField}
           selectedValuesByField={selectedCustomFieldValuesByField}
           onFieldChange={setSelectedCustomFieldValuesForField}
           onClose={closeCustomFieldFiltersSidePanel}

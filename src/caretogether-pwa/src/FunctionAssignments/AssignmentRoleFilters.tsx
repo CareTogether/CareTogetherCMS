@@ -1,3 +1,4 @@
+import { useMemo } from 'react';
 import { AssignedIndividualVolunteer, Person } from '../GeneratedClient';
 import type { SelectProps } from '@mui/material';
 import { CustomFieldsFilterSelect } from '../Generic/CustomFieldsFilter/CustomFieldsFilterSelect';
@@ -69,6 +70,22 @@ export function AssignmentRoleFilters({
   size,
   variant,
 }: AssignmentRoleFiltersProps) {
+  const optionsByAssignmentRole = useMemo(
+    () =>
+      Object.fromEntries(
+        assignmentRoles.map((assignmentRole) => [
+          assignmentRole,
+          assignmentFilterOptions(
+            assignmentRole,
+            assignments,
+            selectedValuesByRole[assignmentRole] ?? [],
+            personLookup
+          ),
+        ])
+      ),
+    [assignmentRoles, assignments, personLookup, selectedValuesByRole]
+  );
+
   return (
     <>
       {assignmentRoles.map((assignmentRole) => {
@@ -78,12 +95,7 @@ export function AssignmentRoleFilters({
           <CustomFieldsFilterSelect
             key={assignmentRole}
             label={assignmentRole}
-            options={assignmentFilterOptions(
-              assignmentRole,
-              assignments,
-              selectedValues,
-              personLookup
-            )}
+            options={optionsByAssignmentRole[assignmentRole]}
             selectedValues={selectedValues}
             size={size}
             variant={variant}

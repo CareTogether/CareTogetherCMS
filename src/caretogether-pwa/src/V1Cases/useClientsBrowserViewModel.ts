@@ -2,6 +2,7 @@ import { useMemo } from 'react';
 import { format } from 'date-fns';
 import {
   ArrangementPhase,
+  Arrangement,
   CombinedFamilyInfo,
   V1Case,
 } from '../GeneratedClient';
@@ -9,9 +10,7 @@ import type { CustomField } from '../GeneratedClient';
 import { familyNameString } from '../Families/FamilyName';
 import { personNameString } from '../Families/PersonName';
 import {
-  useFamilyLookup,
   usePersonAndFamilyLookup,
-  usePersonLookup,
 } from '../Model/DirectoryModel';
 import { useLoadable } from '../Hooks/useLoadable';
 import { partneringFamiliesData } from '../Model/V1CasesModel';
@@ -26,10 +25,6 @@ import {
   assignmentRolesForColumns,
   matchesAssignmentFilters,
 } from '../FunctionAssignments/assignmentRoleColumns';
-import {
-  buildArrangementRowsV2,
-  ArrangementRowV2,
-} from './Arrangements/arrangementViewModel';
 import { matchingArrangements } from './PartneringFamilies/arrangementHelpers';
 import { ArrangementsFilter } from './PartneringFamilies/types';
 import {
@@ -40,7 +35,7 @@ import {
 import { simplify } from '../Utilities/stringUtils';
 
 export type ClientBrowserRowV2 = {
-  arrangementRows: ArrangementRowV2[];
+  arrangementRows: ClientArrangementSummaryItemV2[];
   arrangements: string;
   assignmentRoleValues: Record<string, string>;
   county: string;
@@ -53,8 +48,15 @@ export type ClientBrowserRowV2 = {
   status: string;
 };
 
+export type ClientArrangementSummaryItemV2 = {
+  arrangementType: string;
+  id: string;
+  phase?: ArrangementPhase;
+  statusLabel: string;
+};
+
 type ClientBrowserPresentationRowV2 = ClientBrowserRowV2 & {
-  searchTexts: string[];
+  searchText: string;
   sourceFamily: CombinedFamilyInfo;
 };
 
@@ -110,7 +112,7 @@ function primaryContact(family: CombinedFamilyInfo) {
   )?.item1;
 }
 
-function clientFamilySearchTexts(family: CombinedFamilyInfo) {
+function clientFamilySearchText(family: CombinedFamilyInfo) {
   return [
     ...(family.family?.adults?.map((adult) =>
       simplify(`${adult.item1?.firstName} ${adult.item1?.lastName}`)
@@ -118,29 +120,41 @@ function clientFamilySearchTexts(family: CombinedFamilyInfo) {
     ...(family.family?.children?.map((child) =>
       simplify(`${child?.firstName} ${child?.lastName}`)
     ) ?? []),
-  ];
+  ].join(' ');
 }
 
-function matchesSearchText(
-  row: ClientBrowserPresentationRowV2,
-  inputText: string
-) {
-  return (
-    inputText.length === 0 ||
-    row.searchTexts.some((searchText) =>
-      searchText.includes(inputText.toLowerCase())
-    )
-  );
+function matchesSearchText(row: ClientBrowserPresentationRowV2, inputText: string) {
+  return inputText.length === 0 || row.searchText.includes(inputText);
 }
 
-function arrangementSummary(arrangementRows: ArrangementRowV2[]) {
+function arrangementPhaseLabel(phase?: ArrangementPhase) {
+  if (phase === ArrangementPhase.SettingUp) return 'Setting up';
+  if (phase === ArrangementPhase.ReadyToStart) return 'Ready to start';
+  if (phase === ArrangementPhase.Started) return 'Started';
+  if (phase === ArrangementPhase.Ended) return 'Ended';
+  if (phase === ArrangementPhase.Cancelled) return 'Cancelled';
+  return 'Unknown';
+}
+
+function arrangementSummaryRows(
+  arrangements: Arrangement[]
+): ClientArrangementSummaryItemV2[] {
+  return arrangements.map((arrangement) => ({
+    arrangementType: arrangement.arrangementType || 'Arrangement',
+    id: arrangement.id,
+    phase: arrangement.phase,
+    statusLabel: arrangementPhaseLabel(arrangement.phase),
+  }));
+}
+
+function arrangementSummary(arrangementRows: ClientArrangementSummaryItemV2[]) {
   if (arrangementRows.length === 0) return '';
 
   const activeCount = arrangementRows.filter(
-    (row) => row.source.phase === ArrangementPhase.Started
+    (row) => row.phase === ArrangementPhase.Started
   ).length;
   const setupCount = arrangementRows.filter((row) =>
-    isSetupOrActiveArrangementPhase(row.source.phase)
+    isSetupOrActiveArrangementPhase(row.phase)
   ).length;
 
   if (activeCount > 0) return `${activeCount} active`;
@@ -234,13 +248,12 @@ export function useClientsBrowserViewModel({
     [visibleReferralsLoadable]
   );
   const policy = useLoadable(policyData);
-  const personLookup = usePersonLookup();
   const personAndFamilyLookup = usePersonAndFamilyLookup();
-  const familyLookup = useFamilyLookup();
   const isLoading =
     partneringFamiliesLoadable === null ||
     visibleReferralsLoadable === null ||
     policy === null;
+  const normalizedFilterText = useMemo(() => simplify(filterText), [filterText]);
 
   const openReferralByFamily = useMemo(
     () => openReferralByFamilyId(visibleReferrals),
@@ -287,32 +300,20 @@ export function useClientsBrowserViewModel({
 
           return [
             familyId,
-            buildArrangementRowsV2({
-              arrangements: matchingArrangements(
+            arrangementSummaryRows(
+              matchingArrangements(
                 family.partneringFamilyInfo!,
                 arrangementsFilter
-              ).map((entry) => entry.arrangement),
-              arrangementPolicies: policy?.referralPolicy?.arrangementPolicies,
-              family,
-              v1Case: openCase,
-              personLabel: (personFamilyId, personId) =>
-                personNameString(personLookup(personFamilyId, personId)),
-              familyLabel: (arrangementFamilyId) =>
-                familyNameString(familyLookup(arrangementFamilyId)),
-            }),
+              ).map((entry) => entry.arrangement)
+            ),
           ] as const;
         })
-        .filter((entry): entry is readonly [string, ArrangementRowV2[]] =>
-          Boolean(entry)
-      )
+        .filter(
+          (entry): entry is readonly [string, ClientArrangementSummaryItemV2[]] =>
+            Boolean(entry)
+        )
     );
-  }, [
-    arrangementsFilter,
-    familyLookup,
-    partneringFamilies,
-    personLookup,
-    policy?.referralPolicy?.arrangementPolicies,
-  ]);
+  }, [arrangementsFilter, partneringFamilies]);
   const presentationRows = useMemo<ClientBrowserPresentationRowV2[]>(() => {
     return partneringFamilies.flatMap((family) => {
       const familyId = family.family?.id;
@@ -343,7 +344,7 @@ export function useClientsBrowserViewModel({
             ),
           ])
         ),
-        searchTexts: clientFamilySearchTexts(family),
+        searchText: clientFamilySearchText(family),
         sourceFamily: family,
       };
 
@@ -368,9 +369,8 @@ export function useClientsBrowserViewModel({
     () => new Map(presentationRows.map((row) => [row.familyId, row])),
     [presentationRows]
   );
-  const rows = useMemo<ClientBrowserRowV2[]>(() => {
+  const searchableRows = useMemo<ClientBrowserPresentationRowV2[]>(() => {
     const filteredPresentationRows = presentationRows
-      .filter((row) => matchesSearchText(row, filterText))
       .filter((row) =>
         matchesCustomFieldFilters({
           item: row.sourceFamily,
@@ -427,7 +427,6 @@ export function useClientsBrowserViewModel({
     assignmentFilters,
     canViewFunctionAssignments,
     countyFilter,
-    filterText,
     openReferralByFamily,
     presentationRowByFamilyId,
     presentationRows,
@@ -435,6 +434,13 @@ export function useClientsBrowserViewModel({
     selectedCustomFieldValuesByField,
     sortMode,
   ]);
+  const rows = useMemo<ClientBrowserRowV2[]>(
+    () =>
+      searchableRows.filter((row) =>
+        matchesSearchText(row, normalizedFilterText)
+      ),
+    [normalizedFilterText, searchableRows]
+  );
   const counties = useMemo(
     () =>
       Array.from(
@@ -446,6 +452,31 @@ export function useClientsBrowserViewModel({
       ).sort((a, b) => a.localeCompare(b)),
     [partneringFamilies]
   );
+  const activeFamilies = useMemo(
+    () =>
+      partneringFamilies.filter(
+        (family) =>
+          family.partneringFamilyInfo &&
+          matchingArrangements(family.partneringFamilyInfo, 'Active').length > 0
+      ).length,
+    [partneringFamilies]
+  );
+  const intakeFamilies = useMemo(
+    () =>
+      partneringFamilies.filter((family) =>
+        hasIntakeStatus(family, openReferralByFamily)
+      ).length,
+    [openReferralByFamily, partneringFamilies]
+  );
+  const setupFamilies = useMemo(
+    () =>
+      partneringFamilies.filter(
+        (family) =>
+          family.partneringFamilyInfo &&
+          matchingArrangements(family.partneringFamilyInfo, 'Setup').length > 0
+      ).length,
+    [partneringFamilies]
+  );
 
   return {
     rows,
@@ -453,19 +484,9 @@ export function useClientsBrowserViewModel({
     counties,
     isLoading,
     totalFamilies: partneringFamilies.length,
-    activeFamilies: partneringFamilies.filter(
-      (family) =>
-        family.partneringFamilyInfo &&
-        matchingArrangements(family.partneringFamilyInfo, 'Active').length > 0
-    ).length,
-    intakeFamilies: partneringFamilies.filter((family) =>
-      hasIntakeStatus(family, openReferralByFamily)
-    ).length,
-    setupFamilies: partneringFamilies.filter(
-      (family) =>
-        family.partneringFamilyInfo &&
-        matchingArrangements(family.partneringFamilyInfo, 'Setup').length > 0
-    ).length,
+    activeFamilies,
+    intakeFamilies,
+    setupFamilies,
     assignmentColumnRoles: canViewFunctionAssignments
       ? assignmentFilterOptions
       : [],
