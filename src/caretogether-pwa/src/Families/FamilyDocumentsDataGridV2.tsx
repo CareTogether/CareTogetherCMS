@@ -8,7 +8,7 @@ import {
   useTheme,
 } from '@mui/material';
 import {
-  DeleteOutlined as DeleteIcon,
+  Delete as DeleteIcon,
   Download as DownloadIcon,
   Visibility as PreviewIcon,
 } from '@mui/icons-material';
@@ -125,7 +125,7 @@ function buildColumns({
         <Stack
           direction="row"
           spacing={0.5}
-          sx={{ justifyContent: 'flex-end', width: '100%' }}
+          sx={{ alignItems: 'center', justifyContent: 'flex-end', width: '100%' }}
           onClick={(event) => event.stopPropagation()}
         >
           <Tooltip title="Preview">
@@ -156,14 +156,16 @@ function buildColumns({
           </Tooltip>
           {row.permissionFlags.canDelete && (
             <Tooltip title="Delete">
-              <IconButton
-                className="ph-unmask"
-                aria-label={`Delete ${row.documentName}`}
-                onClick={() => onDelete(row)}
-                size="small"
-              >
-                <DeleteIcon fontSize="small" />
-              </IconButton>
+              <span>
+                <IconButton
+                  className="ph-unmask"
+                  aria-label={`Delete ${row.documentName}`}
+                  onClick={() => onDelete(row)}
+                  size="small"
+                >
+                  <DeleteIcon fontSize="small" />
+                </IconButton>
+              </span>
             </Tooltip>
           )}
         </Stack>
