@@ -3,9 +3,10 @@ import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import WarningIcon from '@mui/icons-material/Warning';
 import { Box, Chip, Stack, Typography, useTheme } from '@mui/material';
 import { DataGrid, GridColDef, GridToolbar } from '@mui/x-data-grid';
+import type { GridComparatorFn } from '@mui/x-data-grid';
 import {
-  Arrangement,
   ArrangementPolicy,
+  ArrangementPhase,
   ChildInvolvement,
   FunctionRequirement,
 } from '../../GeneratedClient';
@@ -28,6 +29,14 @@ function displayValue(value?: string) {
   return value || '-';
 }
 
+function arrangementPhaseSortValue(phase?: ArrangementPhase) {
+  return phase ?? Number.MAX_SAFE_INTEGER;
+}
+
+function requestedAtSortValue(row: ArrangementRowV2 | null) {
+  return row?.source.requestedAtUtc?.getTime() ?? 0;
+}
+
 function usesChildLocation(arrangementPolicy?: ArrangementPolicy) {
   return (
     arrangementPolicy?.childInvolvement === ChildInvolvement.ChildHousing ||
@@ -40,44 +49,6 @@ function hasLocationLabels(
   row: ArrangementRowV2
 ): row is ChildcareArrangementRowV2 {
   return row.arrangementType === 'Childcare';
-}
-
-function formatArrangementDate(date?: Date) {
-  return date
-    ? `${date.getMonth() + 1}/${date.getDate()}/${date.getFullYear()}`
-    : '-';
-}
-
-function ArrangementDurationSummary({
-  arrangement,
-}: {
-  arrangement: Arrangement;
-}) {
-  const startLabel = arrangement.startedAtUtc ? 'Started' : 'Planned start';
-  const startDate = arrangement.startedAtUtc ?? arrangement.plannedStartUtc;
-  const endLabel = arrangement.endedAtUtc ? 'Ended' : 'Planned end';
-  const endDate = arrangement.endedAtUtc ?? arrangement.plannedEndUtc;
-
-  return (
-    <Stack spacing={0.5}>
-      <Box>
-        <Typography component="span" variant="caption" color="text.secondary">
-          {startLabel}:&nbsp;
-        </Typography>
-        <Typography component="span" {...v2Typography.browserCell}>
-          {formatArrangementDate(startDate)}
-        </Typography>
-      </Box>
-      <Box>
-        <Typography component="span" variant="caption" color="text.secondary">
-          {endLabel}:&nbsp;
-        </Typography>
-        <Typography component="span" {...v2Typography.browserCell}>
-          {formatArrangementDate(endDate)}
-        </Typography>
-      </Box>
-    </Stack>
-  );
 }
 
 function ArrangementLocationSummary({ row }: { row: ArrangementRowV2 }) {
@@ -134,6 +105,25 @@ function assignmentHealth(row: ArrangementRowV2) {
     missingRequiredSummaries,
   };
 }
+
+const compareStatusThenRequestedAt: GridComparatorFn<string> = (
+  _phase1,
+  _phase2,
+  cellParams1,
+  cellParams2
+) => {
+  const row1 = cellParams1.api.getRow(cellParams1.id) as ArrangementRowV2 | null;
+  const row2 = cellParams2.api.getRow(cellParams2.id) as ArrangementRowV2 | null;
+  const phaseComparison =
+    arrangementPhaseSortValue(row1?.source.phase) -
+    arrangementPhaseSortValue(row2?.source.phase);
+
+  if (phaseComparison !== 0) {
+    return phaseComparison;
+  }
+
+  return requestedAtSortValue(row2) - requestedAtSortValue(row1);
+};
 
 function AssignmentHealthSummary({ row }: { row: ArrangementRowV2 }) {
   const { missingRequiredSummaries, requiredCount } = assignmentHealth(row);
@@ -195,10 +185,12 @@ function buildColumns(): GridColDef<ArrangementRowV2>[] {
       headerName: 'Type',
       minWidth: 160,
       flex: 0.85,
+      valueGetter: (_value, row) =>
+        row.source.arrangementType ?? row.arrangementType,
       renderCell: ({ row }) => (
         <Stack spacing={0.25} sx={{ minWidth: 0 }}>
           <Typography {...v2Typography.primaryValue} noWrap>
-            {row.arrangementType}
+            {row.source.arrangementType ?? row.arrangementType}
           </Typography>
           {row.source.arrangementPolicyVersion && (
             <Typography color="text.secondary" variant="caption" noWrap>
@@ -233,6 +225,7 @@ function buildColumns(): GridColDef<ArrangementRowV2>[] {
         'Cancelled',
         'Unknown',
       ],
+      sortComparator: compareStatusThenRequestedAt,
       renderCell: ({ row }) => (
         <Chip
           label={row.statusLabel}
@@ -254,20 +247,51 @@ function buildColumns(): GridColDef<ArrangementRowV2>[] {
       ),
     },
     {
-      field: 'duration',
-      headerName: 'Duration',
-      minWidth: 170,
-      flex: 0.9,
-      valueGetter: (_value, row) =>
-        [
-          row.source.startedAtUtc ?? row.source.plannedStartUtc,
-          row.source.endedAtUtc ?? row.source.plannedEndUtc,
-        ]
-          .filter(Boolean)
-          .map((date) => (date as Date).getTime())
-          .join('|'),
+      field: 'plannedStartDate',
+      headerName: 'Planned Start',
+      minWidth: 130,
+      flex: 0.65,
+      valueGetter: (_value, row) => row.source.plannedStartUtc?.getTime(),
       renderCell: ({ row }) => (
-        <ArrangementDurationSummary arrangement={row.source} />
+        <Typography {...v2Typography.browserCell} noWrap>
+          {displayValue(row.plannedStartDate)}
+        </Typography>
+      ),
+    },
+    {
+      field: 'plannedEndDate',
+      headerName: 'Planned End',
+      minWidth: 130,
+      flex: 0.65,
+      valueGetter: (_value, row) => row.source.plannedEndUtc?.getTime(),
+      renderCell: ({ row }) => (
+        <Typography {...v2Typography.browserCell} noWrap>
+          {displayValue(row.plannedEndDate)}
+        </Typography>
+      ),
+    },
+    {
+      field: 'startedDate',
+      headerName: 'Actual Start',
+      minWidth: 130,
+      flex: 0.65,
+      valueGetter: (_value, row) => row.source.startedAtUtc?.getTime(),
+      renderCell: ({ row }) => (
+        <Typography {...v2Typography.browserCell} noWrap>
+          {displayValue(row.startedDate)}
+        </Typography>
+      ),
+    },
+    {
+      field: 'endedDate',
+      headerName: 'Actual End',
+      minWidth: 130,
+      flex: 0.65,
+      valueGetter: (_value, row) => row.source.endedAtUtc?.getTime(),
+      renderCell: ({ row }) => (
+        <Typography {...v2Typography.browserCell} noWrap>
+          {displayValue(row.endedDate)}
+        </Typography>
       ),
     },
     {
@@ -359,6 +383,9 @@ export function ArrangementsDataGridV2({
         initialState={{
           pagination: {
             paginationModel: { pageSize },
+          },
+          sorting: {
+            sortModel: [{ field: 'statusLabel', sort: 'asc' }],
           },
         }}
         slots={{
