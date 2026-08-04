@@ -1,17 +1,53 @@
 import { Box, Stack, Typography, useTheme } from '@mui/material';
-import { DataGrid, GridColDef, GridRowParams } from '@mui/x-data-grid';
+import {
+  DataGrid,
+  GridColDef,
+  GridFilterModel,
+  GridRowParams,
+  GridToolbar,
+} from '@mui/x-data-grid';
+import { getGridSingleSelectOperators } from '@mui/x-data-grid/colDef';
 import { useCallback, useMemo } from 'react';
 import type { ReactNode } from 'react';
 import { v2DataGridStyles } from '../Families/v2DataGridStyles';
 import { v2Typography } from '../Families/v2Typography';
 import type { ReferralRowModel } from './referralBrowserTypes';
+import {
+  gridFilterModelFromReferralFilters,
+  REFERRAL_COUNTY_BLANK_FILTER_VALUE,
+  referralAssignmentFilterField,
+  referralFiltersFromGridFilterModel,
+  type ReferralAssignmentGridFilter,
+  type ReferralsGridFilterLogicOperator,
+} from './referralsGridFilterAdapter';
+import type { ReferralStatusFilter } from './referralStatusFilter';
+
+type ReferralGridValueOption = {
+  label: string;
+  value: string;
+};
 
 type ReferralsDataGridV2Props = {
+  assignmentFilterLogicOperator: ReferralsGridFilterLogicOperator;
+  assignmentFilters: ReferralAssignmentGridFilter[];
   assignmentRoles?: string[];
+  countyFilter: (string | null)[];
+  countyValueOptions: ReferralGridValueOption[];
   expanded?: boolean;
+  filterText: string;
   loading?: boolean;
+  onAssignmentFilterLogicOperatorChange: (
+    logicOperator: ReferralsGridFilterLogicOperator
+  ) => void;
+  onAssignmentFiltersChange: (
+    assignmentFilters: ReferralAssignmentGridFilter[]
+  ) => void;
+  onCountyFilterChange: (countyFilter: (string | null)[]) => void;
+  onFilterTextChange: (filterText: string) => void;
   onRowClick: (row: ReferralRowModel) => void;
+  onStatusFilterChange: (statusFilter: ReferralStatusFilter) => void;
   rows: ReferralRowModel[];
+  statusFilter: ReferralStatusFilter;
 };
 
 const REFERRALS_GRID_PAGE_SIZE = 100;
@@ -23,8 +59,30 @@ const referralsGridInitialState = {
 };
 const referralsGridSlots = {
   noRowsOverlay: ReferralsEmptyState,
+  toolbar: GridToolbar,
+};
+const referralsGridSlotProps = {
+  toolbar: {
+    showQuickFilter: true,
+    quickFilterProps: {
+      quickFilterFormatter: (values: unknown[]) => values.join(' '),
+      quickFilterParser: (searchText: string) =>
+        searchText.trim() === '' ? [] : [searchText],
+    },
+  },
 };
 const REFERRALS_CELL_MIN_HEIGHT = 48;
+const referralStatusFilterOperators = getGridSingleSelectOperators().filter(
+  (operator) => operator.value === 'is'
+);
+const referralCountyFilterOperators = getGridSingleSelectOperators().filter(
+  (operator) => operator.value === 'isAnyOf'
+);
+const referralStatusValueOptions = [
+  { label: 'Open', value: 'OPEN' },
+  { label: 'Accepted', value: 'ACCEPTED' },
+  { label: 'Closed', value: 'CLOSED' },
+];
 
 function getReferralsRowHeight() {
   return 'auto' as const;
@@ -108,7 +166,8 @@ function buildAssignmentColumns(
   assignmentRoles: string[]
 ): GridColDef<ReferralRowModel>[] {
   return assignmentRoles.map((assignmentRole) => ({
-    field: `assignmentRole:${assignmentRole}`,
+    field: referralAssignmentFilterField(assignmentRole),
+    filterable: true,
     flex: 1,
     headerName: assignmentRole,
     minWidth: 160,
@@ -121,17 +180,19 @@ function buildAssignmentColumns(
     ),
     sortable: false,
     valueGetter: (_value, row) =>
-      row.assignmentNamesByRole[assignmentRole] ?? '',
+      displayValue(row.assignmentNamesByRole[assignmentRole]),
   }));
 }
 
 function buildColumns(
   assignmentRoles: string[],
+  countyValueOptions: ReferralGridValueOption[],
   expanded: boolean
 ): GridColDef<ReferralRowModel>[] {
   return [
     {
       field: 'title',
+      filterable: false,
       flex: 1.3,
       headerName: 'Referral Title',
       minWidth: 220,
@@ -169,6 +230,8 @@ function buildColumns(
     },
     {
       field: 'status',
+      filterOperators: referralStatusFilterOperators,
+      filterable: true,
       flex: 1,
       headerName: 'Status',
       minWidth: 160,
@@ -179,10 +242,13 @@ function buildColumns(
           </Typography>
         </ReferralsCellContent>
       ),
+      type: 'singleSelect',
+      valueOptions: referralStatusValueOptions,
       valueGetter: (_value, row) => statusText(row),
     },
     {
       field: 'clientFamilyName',
+      filterable: false,
       flex: 1,
       headerName: 'Client Family',
       minWidth: 180,
@@ -196,6 +262,8 @@ function buildColumns(
     },
     {
       field: 'county',
+      filterOperators: referralCountyFilterOperators,
+      filterable: true,
       flex: 1,
       headerName: 'County',
       minWidth: 140,
@@ -206,26 +274,76 @@ function buildColumns(
           </Typography>
         </ReferralsCellContent>
       ),
+      type: 'singleSelect',
+      valueGetter: (_value, row) =>
+        row.county ?? REFERRAL_COUNTY_BLANK_FILTER_VALUE,
+      valueOptions: countyValueOptions,
     },
     ...buildAssignmentColumns(assignmentRoles),
   ];
 }
 
 export function ReferralsDataGridV2({
+  assignmentFilterLogicOperator,
+  assignmentFilters,
   assignmentRoles = [],
+  countyFilter,
+  countyValueOptions,
   expanded = false,
+  filterText,
   loading = false,
+  onAssignmentFilterLogicOperatorChange,
+  onAssignmentFiltersChange,
+  onCountyFilterChange,
+  onFilterTextChange,
   onRowClick,
+  onStatusFilterChange,
   rows,
+  statusFilter,
 }: ReferralsDataGridV2Props) {
   const theme = useTheme();
   const columns = useMemo(
-    () => buildColumns(assignmentRoles, expanded),
-    [assignmentRoles, expanded]
+    () => buildColumns(assignmentRoles, countyValueOptions, expanded),
+    [assignmentRoles, countyValueOptions, expanded]
   );
   const handleRowClick = useCallback(
     ({ row }: GridRowParams<ReferralRowModel>) => onRowClick(row),
     [onRowClick]
+  );
+  const filterModel = useMemo(
+    () =>
+      gridFilterModelFromReferralFilters(
+        statusFilter,
+        countyFilter,
+        assignmentFilters,
+        assignmentFilterLogicOperator,
+        filterText
+      ),
+    [
+      assignmentFilterLogicOperator,
+      assignmentFilters,
+      countyFilter,
+      filterText,
+      statusFilter,
+    ]
+  );
+  const handleFilterModelChange = useCallback(
+    (filterModel: GridFilterModel) => {
+      const nextFilters = referralFiltersFromGridFilterModel(filterModel);
+
+      onStatusFilterChange(nextFilters.statusFilter);
+      onCountyFilterChange(nextFilters.countyFilter);
+      onAssignmentFiltersChange(nextFilters.assignmentFilters);
+      onAssignmentFilterLogicOperatorChange(nextFilters.logicOperator);
+      onFilterTextChange(nextFilters.searchText);
+    },
+    [
+      onAssignmentFilterLogicOperatorChange,
+      onAssignmentFiltersChange,
+      onCountyFilterChange,
+      onFilterTextChange,
+      onStatusFilterChange,
+    ]
   );
 
   return (
@@ -236,13 +354,17 @@ export function ReferralsDataGridV2({
         columnHeaderHeight={42}
         density="comfortable"
         disableRowSelectionOnClick
+        filterMode="server"
+        filterModel={filterModel}
         getRowHeight={getReferralsRowHeight}
         getEstimatedRowHeight={getEstimatedReferralsRowHeight}
         loading={loading}
+        onFilterModelChange={handleFilterModelChange}
         onRowClick={handleRowClick}
         pageSizeOptions={referralsGridPageSizeOptions}
         initialState={referralsGridInitialState}
         slots={referralsGridSlots}
+        slotProps={referralsGridSlotProps}
       />
     </Box>
   );

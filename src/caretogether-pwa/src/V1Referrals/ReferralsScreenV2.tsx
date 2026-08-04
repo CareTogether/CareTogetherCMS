@@ -1,5 +1,6 @@
-import { useCallback, useEffect, useState } from 'react';
-import { Box, Drawer, Paper, Stack, Typography } from '@mui/material';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import { Add as AddIcon } from '@mui/icons-material';
+import { Box, Button, Drawer, Paper, Stack, Typography } from '@mui/material';
 import { useRecoilValueLoadable } from 'recoil';
 import { useScreenTitle } from '../Shell/ShellScreenTitle';
 import { AddNewReferralDrawer } from './AddNewReferralDrawer';
@@ -12,14 +13,18 @@ import {
   useFeatureFlagEnabledWithLocalOverride,
   useFeatureFlagsLoadedWithLocalOverride,
 } from '../Utilities/Instrumentation/useFeatureFlagWithLocalOverride';
-import { AssignmentFilterSelectionsByRole } from '../FunctionAssignments/assignmentRoleColumns';
 import { wideTablePageSx } from '../Utilities/wideTablePageSx';
 import { useReferralsBrowserViewModel } from './useReferralsBrowserViewModel';
 import { ReferralsDataGridV2 } from './ReferralsDataGridV2';
 import type { ReferralRowModel } from './referralBrowserTypes';
-import { ReferralsToolbarV2 } from './ReferralsToolbarV2';
 import type { ReferralStatusFilter } from './referralStatusFilter';
 import { v2Typography } from '../Families/v2Typography';
+import { getFamilyCounty } from '../Utilities/getFamilyCounty';
+import {
+  REFERRAL_COUNTY_BLANK_FILTER_VALUE,
+  type ReferralAssignmentGridFilter,
+  type ReferralsGridFilterLogicOperator,
+} from './referralsGridFilterAdapter';
 
 const REFERRALS_FEATURE_FLAG = 'referrals';
 
@@ -84,18 +89,20 @@ function ReferralsScreenV2Content() {
   const [statusFilter, setStatusFilter] = useState<ReferralStatusFilter>('ALL');
   const [openNewReferral, setOpenNewReferral] = useState(false);
   const [countyFilter, setCountyFilter] = useState<(string | null)[]>([]);
-  const [assignmentFilters, setAssignmentFilters] =
-    useState<AssignmentFilterSelectionsByRole>({});
+  const [assignmentFilters, setAssignmentFilters] = useState<
+    ReferralAssignmentGridFilter[]
+  >([]);
+  const [assignmentFilterLogicOperator, setAssignmentFilterLogicOperator] =
+    useState<ReferralsGridFilterLogicOperator>('and');
 
   const {
-    assignmentFilterAssignments,
-    assignmentPersonLookup,
     assignmentRoles,
     canViewFunctionAssignments,
     familiesForCountyFilter,
     filteredRows,
     isLoading,
   } = useReferralsBrowserViewModel({
+    assignmentFilterLogicOperator,
     assignmentFilters,
     countyFilter,
     filterText,
@@ -107,6 +114,20 @@ function ReferralsScreenV2Content() {
     (row: ReferralRowModel) => appNavigate.referral(row.id),
     [appNavigate]
   );
+  const countyValueOptions = useMemo(() => {
+    const counties = Array.from(
+      new Set(
+        familiesForCountyFilter
+          .map(getFamilyCounty)
+          .filter((county): county is string => Boolean(county))
+      )
+    ).sort((a, b) => a.localeCompare(b));
+
+    return [
+      { label: 'Unspecified', value: REFERRAL_COUNTY_BLANK_FILTER_VALUE },
+      ...counties.map((county) => ({ label: county, value: county })),
+    ];
+  }, [familiesForCountyFilter]);
 
   return (
     <Box
@@ -131,31 +152,28 @@ function ReferralsScreenV2Content() {
           </Typography>
         </Box>
 
-        <Paper variant="outlined" sx={{ borderRadius: 1, p: 2 }}>
-          <ReferralsToolbarV2
-            filterText={filterText}
-            setFilterText={setFilterText}
-            canAddNewReferral={permissions(Permission.CreateV1Referral)}
-            onAddNewReferral={() => setOpenNewReferral(true)}
-            statusFilter={statusFilter}
-            setStatusFilter={setStatusFilter}
-            countyFilter={countyFilter}
-            setCountyFilter={setCountyFilter}
-            assignmentRoles={canViewFunctionAssignments ? assignmentRoles : []}
-            assignmentsForAssignmentFilter={
-              canViewFunctionAssignments ? assignmentFilterAssignments : []
-            }
-            assignmentFilters={assignmentFilters}
-            setAssignmentFilter={(assignmentRole, selectedValues) =>
-              setAssignmentFilters((current) => ({
-                ...current,
-                [assignmentRole]: selectedValues,
-              }))
-            }
-            assignmentPersonLookup={assignmentPersonLookup}
-            familiesForCountyFilter={familiesForCountyFilter}
-          />
-        </Paper>
+        {permissions(Permission.CreateV1Referral) && (
+          <Box
+            sx={{
+              display: 'flex',
+              justifyContent: 'flex-end',
+            }}
+          >
+            <Button
+              size="small"
+              variant="contained"
+              startIcon={<AddIcon />}
+              sx={{
+                alignSelf: { xs: 'stretch', md: 'center' },
+                flexShrink: 0,
+                whiteSpace: 'nowrap',
+              }}
+              onClick={() => setOpenNewReferral(true)}
+            >
+              Add new referral
+            </Button>
+          </Box>
+        )}
 
         <Paper
           variant="outlined"
@@ -170,10 +188,23 @@ function ReferralsScreenV2Content() {
         >
           <ReferralsDataGridV2
             assignmentRoles={canViewFunctionAssignments ? assignmentRoles : []}
+            countyFilter={countyFilter}
+            countyValueOptions={countyValueOptions}
             expanded
+            filterText={filterText}
             loading={isLoading}
             rows={filteredRows}
+            statusFilter={statusFilter}
+            assignmentFilters={assignmentFilters}
+            assignmentFilterLogicOperator={assignmentFilterLogicOperator}
+            onAssignmentFiltersChange={setAssignmentFilters}
+            onAssignmentFilterLogicOperatorChange={
+              setAssignmentFilterLogicOperator
+            }
+            onCountyFilterChange={setCountyFilter}
+            onFilterTextChange={setFilterText}
             onRowClick={handleRowClick}
+            onStatusFilterChange={setStatusFilter}
           />
         </Paper>
       </Stack>
