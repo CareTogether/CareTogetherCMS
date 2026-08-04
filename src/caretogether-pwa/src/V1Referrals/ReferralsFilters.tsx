@@ -13,7 +13,7 @@ import {
   CombinedFamilyInfo,
   Person,
 } from '../GeneratedClient';
-import { CountyFilter } from '../V1Referrals/CountyFilter';
+import { CountyFilter } from '../Generic/CountyFilter';
 import {
   Add as AddIcon,
   UnfoldLess as UnfoldLessIcon,
