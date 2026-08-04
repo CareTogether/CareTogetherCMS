@@ -58,7 +58,7 @@ import { containedStickyHeaderTableSx } from '../Utilities/stickyHeaderTableSx';
 import { WideTableContainer } from '../Utilities/WideTableContainer';
 import { wideTablePageSx } from '../Utilities/wideTablePageSx';
 import { getFamilyCounty } from '../Utilities/getFamilyCounty';
-import { CountyFilter } from '../V1Referrals/CountyFilter';
+import { CountyFilter } from '../Generic/CountyFilter';
 import { visibleReferralsQuery } from '../Model/Data';
 import {
   normalizePartneringFamiliesSortMode,
