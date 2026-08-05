@@ -1,13 +1,11 @@
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
-import CheckCircleIcon from '@mui/icons-material/CheckCircle';
-import WarningIcon from '@mui/icons-material/Warning';
-import { Box, Chip, Stack, Typography, useTheme } from '@mui/material';
+import { Box, Chip, Stack, Tooltip, Typography, useTheme } from '@mui/material';
 import { DataGrid, GridColDef, GridToolbar } from '@mui/x-data-grid';
+import type { GridComparatorFn } from '@mui/x-data-grid';
 import {
-  Arrangement,
   ArrangementPolicy,
+  ArrangementPhase,
   ChildInvolvement,
-  FunctionRequirement,
 } from '../../GeneratedClient';
 import { v2DataGridStyles } from '../../Families/v2DataGridStyles';
 import { v2Typography } from '../../Families/v2Typography';
@@ -28,6 +26,14 @@ function displayValue(value?: string) {
   return value || '-';
 }
 
+function arrangementPhaseSortValue(phase?: ArrangementPhase) {
+  return phase ?? Number.MAX_SAFE_INTEGER;
+}
+
+function requestedAtSortValue(row: ArrangementRowV2 | null) {
+  return row?.source.requestedAtUtc?.getTime() ?? 0;
+}
+
 function usesChildLocation(arrangementPolicy?: ArrangementPolicy) {
   return (
     arrangementPolicy?.childInvolvement === ChildInvolvement.ChildHousing ||
@@ -42,44 +48,6 @@ function hasLocationLabels(
   return row.arrangementType === 'Childcare';
 }
 
-function formatArrangementDate(date?: Date) {
-  return date
-    ? `${date.getMonth() + 1}/${date.getDate()}/${date.getFullYear()}`
-    : '-';
-}
-
-function ArrangementDurationSummary({
-  arrangement,
-}: {
-  arrangement: Arrangement;
-}) {
-  const startLabel = arrangement.startedAtUtc ? 'Started' : 'Planned start';
-  const startDate = arrangement.startedAtUtc ?? arrangement.plannedStartUtc;
-  const endLabel = arrangement.endedAtUtc ? 'Ended' : 'Planned end';
-  const endDate = arrangement.endedAtUtc ?? arrangement.plannedEndUtc;
-
-  return (
-    <Stack spacing={0.5}>
-      <Box>
-        <Typography component="span" variant="caption" color="text.secondary">
-          {startLabel}:&nbsp;
-        </Typography>
-        <Typography component="span" {...v2Typography.browserCell}>
-          {formatArrangementDate(startDate)}
-        </Typography>
-      </Box>
-      <Box>
-        <Typography component="span" variant="caption" color="text.secondary">
-          {endLabel}:&nbsp;
-        </Typography>
-        <Typography component="span" {...v2Typography.browserCell}>
-          {formatArrangementDate(endDate)}
-        </Typography>
-      </Box>
-    </Stack>
-  );
-}
-
 function ArrangementLocationSummary({ row }: { row: ArrangementRowV2 }) {
   if (!usesChildLocation(row.arrangementPolicy)) {
     return (
@@ -92,97 +60,83 @@ function ArrangementLocationSummary({ row }: { row: ArrangementRowV2 }) {
   const currentLocationLabel = hasLocationLabels(row)
     ? row.currentLocationLabel
     : undefined;
-  const nextPlannedLocationLabel = hasLocationLabels(row)
-    ? row.nextPlannedLocationLabel
-    : undefined;
 
   return (
-    <Stack spacing={0.5}>
-      <Box>
-        <Typography variant="caption" color="text.secondary">
-          Current Location
-        </Typography>
-        <Typography {...v2Typography.browserCell}>
-          {currentLocationLabel || <strong>Location unspecified</strong>}
-        </Typography>
-      </Box>
-      {nextPlannedLocationLabel && (
-        <Box>
-          <Typography variant="caption" color="text.secondary">
-            Next Planned Location
-          </Typography>
-          <Typography {...v2Typography.browserCell}>
-            {nextPlannedLocationLabel}
-          </Typography>
-        </Box>
-      )}
-    </Stack>
+    <Typography {...v2Typography.browserCell} noWrap>
+      {currentLocationLabel || 'Unspecified'}
+    </Typography>
   );
 }
 
-function assignmentHealth(row: ArrangementRowV2) {
-  const requiredSummaries = row.functionSummaries.filter(
-    (summary) =>
-      summary.functionPolicy.requirement !== FunctionRequirement.ZeroOrMore
-  );
-  const missingRequiredSummaries = requiredSummaries.filter(
-    (summary) => summary.assignments.length === 0
-  );
+const compareStatusThenRequestedAt: GridComparatorFn<string> = (
+  _phase1,
+  _phase2,
+  cellParams1,
+  cellParams2
+) => {
+  const row1 = cellParams1.api.getRow(cellParams1.id) as ArrangementRowV2 | null;
+  const row2 = cellParams2.api.getRow(cellParams2.id) as ArrangementRowV2 | null;
+  const phaseComparison =
+    arrangementPhaseSortValue(row1?.source.phase) -
+    arrangementPhaseSortValue(row2?.source.phase);
 
-  return {
-    requiredCount: requiredSummaries.length,
-    missingRequiredSummaries,
-  };
-}
-
-function AssignmentHealthSummary({ row }: { row: ArrangementRowV2 }) {
-  const { missingRequiredSummaries, requiredCount } = assignmentHealth(row);
-
-  if (requiredCount === 0) {
-    return (
-      <Typography color="text.secondary" {...v2Typography.browserCell}>
-        Optional only
-      </Typography>
-    );
+  if (phaseComparison !== 0) {
+    return phaseComparison;
   }
 
-  if (missingRequiredSummaries.length === 0) {
+  return requestedAtSortValue(row2) - requestedAtSortValue(row1);
+};
+
+function AssignmentSummary({ row }: { row: ArrangementRowV2 }) {
+  const assignmentRows = row.functionSummaries
+    .filter((summary) => summary.assignmentLabels.length > 0)
+    .map((summary) => ({
+      functionName: summary.functionName,
+      assignmentText: summary.assignmentLabels.join(', '),
+    }));
+
+  if (assignmentRows.length === 0) {
     return (
-      <Stack direction="row" spacing={0.75} sx={{ alignItems: 'center' }}>
-        <CheckCircleIcon color="success" fontSize="small" />
-        <Typography {...v2Typography.browserCell}>
-          All required assigned
+      <Stack
+        spacing={0.35}
+        sx={{ justifyContent: 'center', minHeight: 48 }}
+      >
+        <Typography color="text.secondary" {...v2Typography.browserCell}>
+          -
         </Typography>
       </Stack>
     );
   }
 
-  const visibleMissingSummaries = missingRequiredSummaries.slice(0, 2);
-  const remainingCount =
-    missingRequiredSummaries.length - visibleMissingSummaries.length;
+  const visibleAssignmentRows = assignmentRows.slice(0, 2);
+  const remainingRows = assignmentRows.slice(visibleAssignmentRows.length);
 
   return (
-    <Stack spacing={0.35}>
-      <Stack direction="row" spacing={0.75} sx={{ alignItems: 'center' }}>
-        <WarningIcon color="warning" fontSize="small" />
-        <Typography {...v2Typography.primaryValue}>
-          {missingRequiredSummaries.length} required missing
-        </Typography>
-      </Stack>
-      {visibleMissingSummaries.map((summary) => (
+    <Stack spacing={0.35} sx={{ minHeight: 48 }}>
+      {visibleAssignmentRows.map((summary) => (
         <Typography
           key={summary.functionName}
-          color="text.secondary"
-          variant="caption"
+          {...v2Typography.browserCell}
           noWrap
         >
-          {summary.functionName}
+          <Box component="span" sx={{ fontWeight: 600 }}>
+            {summary.functionName}:
+          </Box>{' '}
+          {summary.assignmentText}
         </Typography>
       ))}
-      {remainingCount > 0 && (
-        <Typography color="text.secondary" variant="caption">
-          +{remainingCount} more
-        </Typography>
+      {remainingRows.length > 0 && (
+        <Tooltip
+          title={remainingRows
+            .map(
+              (summary) => `${summary.functionName}: ${summary.assignmentText}`
+            )
+            .join('\n')}
+        >
+          <Typography color="text.secondary" variant="caption">
+            +{remainingRows.length} more
+          </Typography>
+        </Tooltip>
       )}
     </Stack>
   );
@@ -195,10 +149,12 @@ function buildColumns(): GridColDef<ArrangementRowV2>[] {
       headerName: 'Type',
       minWidth: 160,
       flex: 0.85,
+      valueGetter: (_value, row) =>
+        row.source.arrangementType ?? row.arrangementType,
       renderCell: ({ row }) => (
         <Stack spacing={0.25} sx={{ minWidth: 0 }}>
           <Typography {...v2Typography.primaryValue} noWrap>
-            {row.arrangementType}
+            {row.source.arrangementType ?? row.arrangementType}
           </Typography>
           {row.source.arrangementPolicyVersion && (
             <Typography color="text.secondary" variant="caption" noWrap>
@@ -209,14 +165,14 @@ function buildColumns(): GridColDef<ArrangementRowV2>[] {
       ),
     },
     {
-      field: 'caseLabel',
-      headerName: 'Case',
-      minWidth: 160,
-      flex: 0.8,
-      valueGetter: (_value, row) => displayValue(row.caseLabel),
+      field: 'person',
+      headerName: 'Person',
+      minWidth: 180,
+      flex: 1,
+      valueGetter: (_value, row) => displayValue(row.childOrPersonLabel),
       renderCell: ({ row }) => (
         <Typography {...v2Typography.browserCell} noWrap>
-          {displayValue(row.caseLabel)}
+          {displayValue(row.childOrPersonLabel)}
         </Typography>
       ),
     },
@@ -233,6 +189,7 @@ function buildColumns(): GridColDef<ArrangementRowV2>[] {
         'Cancelled',
         'Unknown',
       ],
+      sortComparator: compareStatusThenRequestedAt,
       renderCell: ({ row }) => (
         <Chip
           label={row.statusLabel}
@@ -242,45 +199,72 @@ function buildColumns(): GridColDef<ArrangementRowV2>[] {
       ),
     },
     {
-      field: 'person',
-      headerName: 'Person',
-      minWidth: 180,
-      flex: 1,
-      valueGetter: (_value, row) => displayValue(row.childOrPersonLabel),
+      field: 'caseLabel',
+      headerName: 'Case',
+      minWidth: 160,
+      flex: 0.8,
+      valueGetter: (_value, row) => displayValue(row.caseLabel),
       renderCell: ({ row }) => (
         <Typography {...v2Typography.browserCell} noWrap>
-          {displayValue(row.childOrPersonLabel)}
+          {displayValue(row.caseLabel)}
         </Typography>
       ),
     },
     {
-      field: 'duration',
-      headerName: 'Duration',
-      minWidth: 170,
-      flex: 0.9,
-      valueGetter: (_value, row) =>
-        [
-          row.source.startedAtUtc ?? row.source.plannedStartUtc,
-          row.source.endedAtUtc ?? row.source.plannedEndUtc,
-        ]
-          .filter(Boolean)
-          .map((date) => (date as Date).getTime())
-          .join('|'),
+      field: 'plannedStartDate',
+      headerName: 'Planned Start',
+      minWidth: 130,
+      flex: 0.65,
+      valueGetter: (_value, row) => row.source.plannedStartUtc?.getTime(),
       renderCell: ({ row }) => (
-        <ArrangementDurationSummary arrangement={row.source} />
+        <Typography {...v2Typography.browserCell} noWrap>
+          {displayValue(row.plannedStartDate)}
+        </Typography>
+      ),
+    },
+    {
+      field: 'plannedEndDate',
+      headerName: 'Planned End',
+      minWidth: 130,
+      flex: 0.65,
+      valueGetter: (_value, row) => row.source.plannedEndUtc?.getTime(),
+      renderCell: ({ row }) => (
+        <Typography {...v2Typography.browserCell} noWrap>
+          {displayValue(row.plannedEndDate)}
+        </Typography>
+      ),
+    },
+    {
+      field: 'startedDate',
+      headerName: 'Actual Start',
+      minWidth: 130,
+      flex: 0.65,
+      valueGetter: (_value, row) => row.source.startedAtUtc?.getTime(),
+      renderCell: ({ row }) => (
+        <Typography {...v2Typography.browserCell} noWrap>
+          {displayValue(row.startedDate)}
+        </Typography>
+      ),
+    },
+    {
+      field: 'endedDate',
+      headerName: 'Actual End',
+      minWidth: 130,
+      flex: 0.65,
+      valueGetter: (_value, row) => row.source.endedAtUtc?.getTime(),
+      renderCell: ({ row }) => (
+        <Typography {...v2Typography.browserCell} noWrap>
+          {displayValue(row.endedDate)}
+        </Typography>
       ),
     },
     {
       field: 'location',
-      headerName: 'Location',
+      headerName: 'Current Location',
       minWidth: 220,
       flex: 1,
       valueGetter: (_value, row) =>
-        hasLocationLabels(row)
-          ? [row.currentLocationLabel, row.nextPlannedLocationLabel]
-              .filter(Boolean)
-              .join(' ')
-          : '',
+        hasLocationLabels(row) ? row.currentLocationLabel ?? 'Unspecified' : '',
       renderCell: ({ row }) => <ArrangementLocationSummary row={row} />,
     },
     {
@@ -289,20 +273,15 @@ function buildColumns(): GridColDef<ArrangementRowV2>[] {
       minWidth: 210,
       flex: 1,
       sortable: false,
-      valueGetter: (_value, row) => {
-        const { missingRequiredSummaries, requiredCount } =
-          assignmentHealth(row);
-
-        if (requiredCount === 0) return 'Optional only';
-        if (missingRequiredSummaries.length === 0) {
-          return 'All required assigned';
-        }
-
-        return `${missingRequiredSummaries.length} required missing ${missingRequiredSummaries
-          .map((summary) => summary.functionName)
-          .join(' ')}`;
-      },
-      renderCell: ({ row }) => <AssignmentHealthSummary row={row} />,
+      valueGetter: (_value, row) =>
+        row.functionSummaries
+          .filter((summary) => summary.assignmentLabels.length > 0)
+          .map(
+            (summary) =>
+              `${summary.functionName}: ${summary.assignmentLabels.join(', ')}`
+          )
+          .join(' '),
+      renderCell: ({ row }) => <AssignmentSummary row={row} />,
     },
     {
       field: 'openDetails',
@@ -359,6 +338,9 @@ export function ArrangementsDataGridV2({
         initialState={{
           pagination: {
             paginationModel: { pageSize },
+          },
+          sorting: {
+            sortModel: [{ field: 'statusLabel', sort: 'asc' }],
           },
         }}
         slots={{
